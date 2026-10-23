@@ -1,0 +1,22 @@
+<view class="tb-cell" bindtap="onOpen" aria-role="button" aria-label="查看主题徽章{{name ? '：' + name : ''}}" hover-class="tb-pressed" hover-stay-time="80">
+  <text class="tb-label">主题徽章</text>
+  <view class="tb-hex metal {{reducedMotion ? '' : 'metal--idle'}}">
+    <image wx:if="{{img}}" class="tb-img" src="{{img}}" mode="aspectFill" />
+    <view wx:else class="tb-glyph tb-glyph--{{productType == 2 ? 'free' : 'city'}}"></view>
+  </view>
+</view>
+
+<view wx:if="{{open}}" class="tb-layer {{reducedMotion ? 'tb-layer--reduced' : ''}}" catchtouchmove="noop">
+  <view class="tb-dim" bindtap="onClose" aria-role="button" aria-label="收起徽章" hover-class="tb-dim--press" hover-stay-time="80"></view>
+  <view class="tb-big {{reducedMotion ? '' : 'tb-big--pop'}}" style="{{tilt}}">
+    <view class="tb-big__hex metal {{shine ? '' : 'metal--idle'}}" style="{{shine}}">
+      <image wx:if="{{img}}" class="tb-img" src="{{img}}" mode="aspectFill" />
+      <view wx:else class="tb-glyph tb-glyph--big tb-glyph--{{productType == 2 ? 'free' : 'city'}}"></view>
+    </view>
+  </view>
+  <view class="tb-copy">
+    <text class="tb-name">{{name || '主题徽章'}}</text>
+    <text class="tb-sub">{{productType == 2 ? '有效期内去完全部商家获得' : '走完全部章节获得'}}</text>
+    <text class="tb-hint">倾斜手机看反光</text>
+  </view>
+</view>

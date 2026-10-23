@@ -40,19 +40,21 @@ function assertWalletContract(wxml, wxss, json) {
      点击分区仍由 cta 文案分流(见下)。
      ⚠️ wTitle 在缺 cmsTopic/cmsActivity 时给的是「路线信息待同步 / 活动信息待同步」,
         不是空串 —— 2026-08-19 A39 实拍拍到过整片空黑,那会被读成「坏了」。 */
-  assert.match(wxml, /class="tk-face"/)
-  assert.match(wxml, /\{\{ item\.wImg \}\}/)
-  assert.doesNotMatch(wxml, /tk-meta|tk-stub|tk-perf/, '票名/时间/状态/入口文字不得回到票面')
+  /* 2026-10-22 业主:票夹「和 HTML 一模一样」(v13)—— 叠放卡组,卡上写票名、类型 · 剩几天、底部入口,
+     照片在卡的下半。票名与状态仍保留在 aria-label 里。 */
+  assert.match(wxml, /class="wc"/)
+  assert.match(wxml, /src="\{\{item\.wImg\}\}"/)
+  assert.match(wxml, /class="wc__b">\{\{item\.wTitle\}\}/)
   assert.match(wxml, /aria-label="\{\{tk\.cta\(item\) \|\| tk\.label\(item\)\}\}，\{\{item\.wTitle\}\}"/,
     '票名与状态必须以 aria-label 保留(读屏等价物),不能连同可见文字一起消失')
-  assert.match(wxml, /<cy-nav-bar overlay pill pillDark tint="light"\s*\/>/,
-    '全屏主题图上只保留悬浮返回按钮,不得重新长出实底导航条')
+  /* 2026-10-22 业主:票夹标题放回顶栏居中。仍是悬浮(overlay)导航 —— 不长出实底导航条。 */
+  assert.match(wxml, /<cy-nav-bar overlay pill pillDark tint="light" title=""\s*\/>/,
+    '全屏主题图上只保留悬浮导航(返回),不得重新长出实底导航条')
+  assert.match(wxml, /class="wl-nav__b">票夹</, 'v13:顶栏居中写「票夹」+「N 张可用」')
   assert.match(wxss, /\.signup \.ztbg\s*\{[^}]*pointer-events:\s*none/s)
   assert.match(wxss, /\.davidwu\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*1/s,
     '加载/失败/空态必须浮在主题背景之上')
-  assert.match(wxss, /\.signup \.ticket-name\s*\{[^}]*width:\s*520rpx/s)
-  assert.match(wxss, /\.signup \.slides swiper\s*\{[^}]*height:\s*1064rpx/s)
-  assert.match(wxss, /\.swiper-item-content\s*\{[^}]*height:\s*924rpx/s)
+  assert.match(wxss, /\.deck\s*\{[^}]*width:\s*577rpx;[^}]*height:\s*865rpx/s, 'v13 卡组 300×450')
   assert.match(wxss, /\.team-entry\s*\{[^}]*position:\s*absolute;[^}]*bottom:\s*env\(safe-area-inset-bottom\)/s,
     '队伍入口不得参与票卡居中列的 flex 分配')
   const shortScreen = wxss.slice(wxss.indexOf('@media (max-height: 700px)'))
@@ -63,10 +65,10 @@ function assertWalletContract(wxml, wxss, json) {
      订单有订单的页面,而且只有订单页能来票夹,反过来不行。
      所以 cta 不再出现「查看详情」(它以前指的就是订单页),没有下一步的档整颗不渲染。
      待支付是唯一例外:那还不是一张票,是一笔没付完的单,文案写「去支付」。 */
-  assert.doesNotMatch(wxml, /(?:进入游玩|出示入场码)\s*›/)
+  assert.doesNotMatch(wxml, /(?:进入游玩|开始游戏|出示入场码)\s*›/)
   const cta = wxml.slice(wxml.indexOf('function cta('), wxml.indexOf('module.exports'))
   assert.doesNotMatch(cta, /return '查看详情'/, '票夹不能再给一条通往订单页的入口')
-  assert.match(cta, /if \(s === 'ready'\) return '进入游玩'/)
+  assert.match(cta, /if \(s === 'ready'\) return '开始游戏'/)
   assert.match(cta, /if \(s === 'pending'\) return '去支付'/, '没付完的单要能去付,文案照实写')
   assert.equal(json.usingComponents?.['cy-icon'], '/components/cy/icon/index')
 }

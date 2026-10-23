@@ -6,7 +6,7 @@
 //
 // 为什么另开一页而不是复用 pages/merchant/relation:那页标题就叫「合作」,
 // 职责是「找新的合作对象」,跟「谁在我这儿消费过」是两件事。
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 /* 原生 showModal / showActionSheet 由微信自己渲染,读不到 WXSS token,只收字面色值。
    值是 --cy-text-title 的镜像,改主色时两处都要动(tokens 才是真源)。
@@ -501,7 +501,7 @@ Page({
         that.data.emptyAction = empty.emptyAction;
         that._hasMore = rowCount < total;
         that.setData({ castCount: total, hasMore: that._hasMore });
-        that.setData(Object.assign({
+        if (!append) pageMotion.enter(that, 'pmList'); that.setData(Object.assign({
           everLoaded: true,
           pageNum,
           availableTags: shapeTags(data.availableTags),

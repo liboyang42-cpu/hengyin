@@ -1,7 +1,7 @@
 // 集邮册:散落 collage(参考 STAMPA 的月份视图)。【乱才是魅力,不是网格】。
 // 数百枚必须分页 + 懒加载,不能一次拉光(接口上限 50/页)。
 const app = getApp();
-const session = require('../../../../utils/session/login-reload.js');
+const session = require('../../../../utils/session/login-reload.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const LAYOUT = require('./layout.js');
 
 const COLS = 4;
@@ -91,7 +91,7 @@ Page({
         const items = merged.map(function (m, i) {
           return { id: m.id, picUrl: m.picUrl, x: pos[i].x, y: pos[i].y, rot: pos[i].rot, z: pos[i].z };
         });
-        that.setData({
+        pageMotion.enter(that, 'pmList'); that.setData({
           items: items,
           total: d.total,
           stageH: Math.ceil(merged.length / COLS) * that._cellH + 60,

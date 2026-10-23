@@ -63,7 +63,7 @@
     <view class="gc-board" wx:key="animKey">
 
       <!-- PODIUM -->
-      <view class="gc-podium">
+      <view class="gc-podium" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
         <!-- 2nd -->
         <view class="gc-pod gc-pod-side">
           <block wx:if="{{top3[1]}}">
@@ -115,7 +115,7 @@
       </view>
 
       <!-- list rows 4+ -->
-      <view class="gc-list">
+      <view class="gc-list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
         <view class="gc-row" wx:for="{{rest}}" wx:key="memberId">
           <view class="gc-row-rank">{{item.rank}}</view>
           <view class="gc-avatar" style="background:{{item.bg}}">

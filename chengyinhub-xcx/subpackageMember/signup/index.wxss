@@ -37,48 +37,6 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* UI-17 二次返修:导航以下、底部安全区以上的区域里,把票名 + 卡 + 指示点这一列
-   水平垂直居中。名称带与指示点区等高(各 140rpx,见下),所以卡的上下留白对称 ——
-   卡的几何中心正好落在区域中点,不是「名字+卡+点」整体的中点。 */
-.signup .wrap {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
-}
-
-/* 票名:卡外、紧贴卡顶之上。140rpx 高与 swiper 的指示点区等高 ⇒ 卡上下留白对称;
-   文字压在带底,留 20rpx 与卡顶的呼吸。文字色/字号走 token,不硬编码;字号用 L1 页标题(用户嫌卡片标题字号太小)。 */
-.signup .ticket-name {
-  width: 520rpx;
-  height: 140rpx;
-  box-sizing: border-box;
-  padding-bottom: var(--cy-space-2-5);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.signup .ticket-name__state {
-  display: block;
-  width: 100%;
-  margin-top: var(--cy-space-1);
-  text-align: center;
-  font-size: var(--cy-font-caption);
-  color: var(--cy-text-secondary);
-}
-
-.signup .ticket-name__t {
-  display: block;
-  width: 100%;
-  text-align: center;
-  font-size: var(--cy-font-page-title);
-  font-weight: 700;
-  color: var(--cy-text-title);
-}
-
 .signup .toolbar {
   position: relative;
   margin: 44rpx var(--cy-page-x) var(--cy-legacy-18) var(--cy-page-x); /* ds-ok: 44rpx 是 r1-c04-order-ticket-contract.test.js 锁定的横向边距修复值,不改 */
@@ -99,69 +57,12 @@
 }
 
 /*
-.signup .slides {
-  padding-top: var(--cy-space-4);
-  width: 610rpx;
-  margin: 0 auto;
-}*/
 
 /* .signup .slides swiper {
   height: 92%;
   box-shadow: none !important;
 } */
-/* UI-17 二次返修:卡整体放大到约屏宽 69%(520rpx;上一版 450rpx,600rpx 用户嫌太大),
-   居中交给 .wrap,卡顶不再顶到导航下面。flex-shrink:0 防小屏被挤扁。 */
-.signup .slides {
-  width: 100%;
-  flex-shrink: 0;
-}
 
-/* 卡高 = 520rpx × 16/9(上一版 450×800 的原比例)≈ 924rpx;swiper 再加 140rpx 指示点区。
-   放大后连同票名一起仍完整落在安全区内,不压导航、不被指示点截断。 */
-.signup .slides swiper {
-  height: 1064rpx;
-  box-shadow: none !important;
-}
-
-.swiper-item-content {
-  width: 100%;
-  height: 924rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* .active 只改 height/transform;transition: all 会把未来新增的任何属性一并卷入。 */
-  transition: height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* ds-ok: 沿用改写前 `transition: all 0.4s cubic-bezier(...)` 的实测时长与曲线,只把属性显式化 */
-  transform-origin: center center;
-  position: relative;
-}
-
-.swiper-item-content.active {
-  height: 924rpx !important;
-  transform: scale(1);
-}
-
-.swiper-item-content.inactive {
-  height: 924rpx !important;
-  transform: scale(0.9);
-  filter: blur(6rpx);
-}
-/* 票结构(ADA §二E):非活跃卡靠 transform:scale(.9)+blur 退到次级即可,
-   原来那条「图缩到 80%」会把上下两段的比例一起拆散 ⇒ 改由整张票统一缩放。 */
-
-/* UI-17 返修(2026-09-18):卡面就是一张完整票图 —— 上段票面 + 打孔虚线 + 下段票根(含
-   票名/状态/入口文字)整体撤掉,不再叠任何可见文字。整卡点击由 swiper-item 的 goTicket 承接,
-   票名与状态只留在 aria-label(读屏可达)。路线票与场次票仍是同一外形,由 aspectFill 统一裁切。 */
-.tk{ width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--cy-radius-lg); }
-.tk-face{ position: relative; width: 100%; height: 100%; overflow: hidden; }
-
-.signup .slides image {
-  border-radius: var(--cy-radius-lg);
-  width: 100%;
-  height: 100%;
-  /*border: 4rpx solid rgba(255, 255, 255, 0.9); */
-}
-/* 票面图的圆角交给 .tk(overflow:hidden)统一裁,图自身留方角,否则票面四角会被图自己的圆角削进去。 */
-.signup .slides .tk-face image { border-radius: 0; }
 /* .signup .slides image {
   border-radius: 60rpx;
   width: 576rpx;
@@ -241,10 +142,6 @@
     overflow: visible;
   }
 
-  .signup .wrap {
-    flex: none;
-    height: 1204rpx;
-  }
 
   .team-entry {
     position: static;
@@ -277,3 +174,37 @@
   font-size: var(--cy-font-caption);
   color: var(--cy-text-muted);
 }
+
+
+/* ===== v13 票夹(业主 2026-10-22「和 HTML 一模一样」) ===== */
+/* ds-ok: 本段颜色/尺寸逐项照 v13 原型取值 */
+.signup { background: #050505; } /* ds-ok */
+.signup .ztbg.wbg { top: -77rpx; left: -77rpx; width: calc(100% + 154rpx); height: calc(100% + 154rpx); filter: blur(42rpx) saturate(1.15); transform: scale(1.1); opacity: 0; transition: opacity .8s ease; }
+.signup .ztbg.wbg.vis { opacity: 1; }
+.signup-scrim.wmask { background: linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.35) 35%, rgba(0,0,0,.82) 78%, #050505 100%); } /* ds-ok */
+.wl-nav { position: fixed; left: 0; right: 0; z-index: 95; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; pointer-events: none; }
+.wl-nav__b { font-size: 33rpx; font-weight: 600; color: #fff; } /* ds-ok */
+.wl-nav__s { font-size: 21rpx; color: rgba(255,255,255,.65); } /* ds-ok */
+.deck { position: fixed; left: 50%; top: calc(50vh - 414rpx); width: 577rpx; height: 865rpx; margin-left: -288rpx; z-index: 2; }
+.wc { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 54rpx; overflow: hidden; clip-path: inset(0 round 54rpx); transform-origin: 50% 0; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+  background: linear-gradient(180deg, #1c1d1f, #0f1011); box-shadow: inset 0 0 0 1rpx rgba(255,255,255,.1), 0 46rpx 96rpx rgba(0,0,0,.55); /* ds-ok */
+  transition: transform .45s cubic-bezier(.2,.8,.2,1), filter .45s, opacity .3s; }
+.deck--still .wc { transition: none; }
+.wc__ic { position: absolute; left: 35rpx; top: 35rpx; width: 38rpx; height: 38rpx; opacity: .85; }
+.wc__go { position: absolute; right: 31rpx; top: 27rpx; width: 62rpx; height: 62rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.wc__go image { width: 27rpx; height: 27rpx; }
+.wc__t { position: absolute; left: 46rpx; right: 46rpx; top: 100rpx; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.wc__b { font-size: 48rpx; font-weight: 600; line-height: 1.18; letter-spacing: 1rpx; color: #fff; } /* ds-ok */
+.wc__s { margin-top: 15rpx; font-size: 21rpx; letter-spacing: 2rpx; color: rgba(255,255,255,.65); } /* ds-ok */
+.wc__im { position: absolute; left: 27rpx; right: 27rpx; top: 288rpx; bottom: 27rpx; border-radius: 38rpx; overflow: hidden; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.wc__im image { width: 100%; height: 100%; display: block; }
+.wc__im::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 65%, rgba(0,0,0,.6)); } /* ds-ok */
+.wc__cta { position: absolute; left: 0; right: 0; bottom: 23rpx; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 8rpx; font-size: 21rpx; font-weight: 600; color: #fff; } /* ds-ok */
+.wc__im .wc__play { flex: none; width: 17rpx; height: 17rpx; display: block; }
+.deck-empty { position: absolute; top: 40%; left: 0; right: 0; text-align: center; font-size: 27rpx; color: rgba(255,255,255,.65); } /* ds-ok */
+.wl-tab { position: fixed; left: 50%; bottom: calc(58rpx + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 5; display: flex; gap: 8rpx; padding: 10rpx; border-radius: 58rpx; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+  background: rgba(40,40,42,.72); backdrop-filter: blur(31rpx); -webkit-backdrop-filter: blur(31rpx); box-shadow: inset 0 0 0 1rpx rgba(255,255,255,.12); } /* ds-ok */
+.wl-tab__b { height: 77rpx; padding: 0 35rpx; border-radius: 38rpx; display: flex; align-items: center; font-size: 25rpx; color: rgba(255,255,255,.65); white-space: nowrap; } /* ds-ok */
+.wl-tab__b.on { background: rgba(255,255,255,.16); color: #fff; font-weight: 600; } /* ds-ok */
+.signup .team-entry { bottom: calc(190rpx + env(safe-area-inset-bottom)); left: 50%; right: auto; transform: translateX(-50%); z-index: 4; padding: 12rpx 27rpx; gap: 15rpx; border-radius: 40rpx; background: rgba(40,40,42,.72); backdrop-filter: blur(31rpx); -webkit-backdrop-filter: blur(31rpx); } /* ds-ok */
+

@@ -47,3 +47,19 @@
   flex: 1;
   justify-content: center;
 }
+
+/* pm20 */
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.al-item { filter: opacity(calc(1 - var(--pm-s, 0))); scale: calc(1 + var(--pm-s, 0) * .18); transition: filter var(--pm-s-d, 0s) ease, scale var(--pm-s-d, 0s) cubic-bezier(.2,.82,.2,1); }
+.al-item:nth-child(2) { transition-delay: calc(var(--pm-s-s, 0) * 40ms), calc(var(--pm-s-s, 0) * 40ms); }
+.al-item:nth-child(3) { transition-delay: calc(var(--pm-s-s, 0) * 80ms), calc(var(--pm-s-s, 0) * 80ms); }
+.al-item:nth-child(4) { transition-delay: calc(var(--pm-s-s, 0) * 120ms), calc(var(--pm-s-s, 0) * 120ms); }
+.al-item:nth-child(5) { transition-delay: calc(var(--pm-s-s, 0) * 160ms), calc(var(--pm-s-s, 0) * 160ms); }
+.al-item:nth-child(6) { transition-delay: calc(var(--pm-s-s, 0) * 200ms), calc(var(--pm-s-s, 0) * 200ms); }
+.al-item:nth-child(7) { transition-delay: calc(var(--pm-s-s, 0) * 240ms), calc(var(--pm-s-s, 0) * 240ms); }
+.al-item:nth-child(8) { transition-delay: calc(var(--pm-s-s, 0) * 280ms), calc(var(--pm-s-s, 0) * 280ms); }
+.al-item:nth-child(9) { transition-delay: calc(var(--pm-s-s, 0) * 320ms), calc(var(--pm-s-s, 0) * 320ms); }
+.al-item:nth-child(10) { transition-delay: calc(var(--pm-s-s, 0) * 360ms), calc(var(--pm-s-s, 0) * 360ms); }
+.al-item:nth-child(11) { transition-delay: calc(var(--pm-s-s, 0) * 400ms), calc(var(--pm-s-s, 0) * 400ms); }
+.al-item:nth-child(12) { transition-delay: calc(var(--pm-s-s, 0) * 440ms), calc(var(--pm-s-s, 0) * 440ms); }
+.al-item:nth-child(n+13) { transition-delay: calc(var(--pm-s-s, 0) * 480ms), calc(var(--pm-s-s, 0) * 480ms); }

@@ -2,7 +2,7 @@
 <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill title="据点暂时打不开" sub="{{errorText}}" retry="重试" bind:retry="retry" />
 <cy-empty class="cy-fade-in" wx:elif="{{state === 'unavailable'}}" fill title="据点未开放或已下线" sub="{{errorText}}" cta="返回地图" bind:cta="close" />
 <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty'}}" fill size="lg" kind="missing-param" title="找不到这个据点" sub="该点位可能已经下线，请返回地图继续探索。" cta="返回地图" bind:cta="close" />
-<view wx:elif="{{state === 'ready'}}" class="poi-body cy-fade-in">
+<view wx:elif="{{state === 'ready'}}" class="poi-body cy-fade-in" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
   <view wx:if="{{merchant}}" class="poi-hero">
     <image wx:if="{{merchant.coverImage}}" class="poi-cover" src="{{merchant.coverImage}}" mode="aspectFill" />
     <view class="poi-identity"><cy-avatar class="poi-logo" size="96" src="{{merchant.logo || ''}}" name="{{merchant.displayName}}" /><view class="poi-identity__copy"><text class="poi-name">{{merchant.displayName}}</text><text class="poi-status">{{merchant.businessStatusText}}</text><text wx:if="{{merchant.cityRole}}" class="poi-role">{{merchant.cityRole}}</text></view></view>

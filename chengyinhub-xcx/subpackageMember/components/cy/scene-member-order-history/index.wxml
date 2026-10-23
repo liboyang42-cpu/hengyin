@@ -6,7 +6,7 @@
     <cy-tabs tabs="{{orderTabs}}" active="{{activeTab}}" variant="chip" sticky bind:change="switchTab" />
   </view>
 
-  <view class="moh-body">
+  <view class="moh-body" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <cy-skeleton wx:if="{{loading && list.length==0}}" type="list" count="3" />
     <cy-error load-failure="{{!orderAuthRequired && !orderAccessDenied}}" class="cy-fade-in"
       wx:elif="{{errorMsg && list.length==0}}"
@@ -29,7 +29,7 @@
 
     <!-- D04 行卡范式:订单号 + 状态 chip + 时间 + 地点 + 实付款 + 双动作。
          原来整卡是 <navigator> 会压新页;场景里必须改成 tap → open 事件推 H10 子层。 -->
-    <view class="orderbox_li" wx:for="{{list}}" wx:key="id" bindtap="openDetail" hover-class="orderbox_li--press" hover-stay-time="80" data-id="{{item.id}}">
+    <view class="orderbox_li" wx:for="{{list}}" wx:key="id" bindtap="openDetail" hover-class="orderbox_li--press" hover-stay-time="80" data-id="{{item.id}}" style="--pmi:{{index}};">
       <view class="orderbox_li_top">
         <view class="orderbox_li_top_left">订单号：<text class="moh-no">{{item.registrationNo}}</text></view>
         <view class="orderbox_li_top_right"><text class="moh-state order-state-{{item.orderStateKey}}">{{item.orderStateText}}</text></view>

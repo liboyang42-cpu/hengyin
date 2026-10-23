@@ -1,6 +1,6 @@
 // 官方路线列表。GET /api/preset/route/list(只读,后端只回已上架路线)。
 const app = getApp()
-const { isBizOk } = require('../../utils/response-shape.js')
+const { isBizOk } = require('../../utils/response-shape.js'); const pageMotion = require('../../utils/page-motion.js')
 const { normalizeRouteList } = require('../utils/official-route.js')
 
 Page({
@@ -22,7 +22,7 @@ Page({
         const list = isBizOk(res) ? normalizeRouteList(res.data) : null
         if (!list) { that.setData({ state: 'error' }); return }
         const routes = list.map((r) => Object.assign({}, r, { cover: r.previewImg ? app.getImgUrl(r.previewImg) : '' }))
-        that.setData({ routes, state: routes.length ? 'ready' : 'empty' })
+        pageMotion.enter(that, 'pmList'); that.setData({ routes, state: routes.length ? 'ready' : 'empty' })
       },
       fail() { if (seq === that._seq) that.setData({ state: 'error' }) },
     })

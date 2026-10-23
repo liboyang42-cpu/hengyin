@@ -1,6 +1,6 @@
 'use strict'
 
-const modal = require('../../../../utils/modal.js');
+const modal = require('../../../../utils/modal.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const cyLoading = require('../../../../utils/loading.js');
 const toast = require('../../../../utils/toast.js');
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
@@ -225,7 +225,7 @@ Component({
             const list = activeTab === '0'
               ? allRows
               : allRows.filter((item) => item.orderStateKey === activeTab)
-            that.setData({
+            if (replace) pageMotion.enter(that, 'pmList'); that.setData({
               list: replace ? list : that.data.list.concat(list),
               hasOrders: replace ? rows.length > 0 : (that.data.hasOrders || rows.length > 0),
               // 后端 list 返回全量(total=全量),再上拉会重复,关闭分页追加一次性渲染

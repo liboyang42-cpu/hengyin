@@ -565,8 +565,8 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   const wxml = readXcx('pages/play/index.wxml')
   const js = readXcx('pages/play/index.js')
 
-  // ① 通关卡统计格:该格的数字必须是 doneCount
-  const cell = wxml.match(/<view class="fst"><text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  // ① 通关卡统计格:该格的数字必须是 doneCount(2026-10-22 起格首可带一枚字形图标)
+  const cell = wxml.match(/<view class="fst">(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
   assert.ok(cell, '找不到「点亮坐标」统计格')
   assert.equal(cell[1], 'doneCount', '「点亮坐标」绑的必须是 doneCount,不能是 total')
 
@@ -593,10 +593,10 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
 test('负控:「点亮坐标」退回 total 时上面那条契约必须判红', () => {
   const wxml = readXcx('pages/play/index.wxml')
   const mutated = wxml.replace(
-    '<view class="fst"><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>',
-    '<view class="fst"><text class="fst__v">{{total}}</text><text class="fst__l">点亮坐标</text></view>')
+    '<text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>',
+    '<text class="fst__v">{{total}}</text><text class="fst__l">点亮坐标</text></view>')
   assert.notEqual(mutated, wxml, '负控必须真的把绑定改回 total')
-  const cell = mutated.match(/<view class="fst"><text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  const cell = mutated.match(/<view class="fst">(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
   assert.ok(cell)
   // 断言「上面那条契约会判红」，判据是抛出 AssertionError 本身，不是它的消息文案。
   // 2026-08-27:原来写的是 /doneCount|total/ 去匹配 Node 内部的错误消息 —— 那串文案

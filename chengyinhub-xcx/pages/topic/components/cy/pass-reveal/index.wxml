@@ -1,0 +1,40 @@
+<view wx:if="{{show}}" class="pr {{phase}} {{reducedMotion ? 'pr--reduced' : ''}}" style="--pr-tier: {{tierColor}};" catchtouchmove="noop" aria-role="dialog" aria-label="通行证已到账">
+  <view class="pr__blur"></view>
+  <view class="pr__black"></view>
+  <view class="pr__edge">
+    <view class="pr__bar pr__bar--t"></view><view class="pr__bar pr__bar--r"></view>
+    <view class="pr__bar pr__bar--b"></view><view class="pr__bar pr__bar--l"></view>
+    <view class="pr__spk pr__spk--1"></view><view class="pr__spk pr__spk--2"></view><view class="pr__spk pr__spk--3"></view><view class="pr__spk pr__spk--4"></view>
+  </view>
+  <view class="pr__head">
+    <view class="pr__title"><text wx:for="{{title}}" wx:key="index" class="pr__ch" style="animation-delay: {{item.d}}ms;">{{item.c}}</text></view>
+    <view class="pr__sub"><text wx:for="{{sub}}" wx:key="index" class="pr__ch" style="animation-delay: {{item.d}}ms;">{{item.c}}</text></view>
+  </view>
+  <view class="pr__rise"></view>
+  <view class="pr__orb"></view>
+  <canvas type="2d" id="prfx" class="pr__fx"></canvas>
+  <view class="pr__card {{fly ? 'is-fly' : ''}}">
+    <view class="pr__in">
+      <view class="pr__f">
+        <image wx:if="{{cover}}" class="pr__img" src="{{cover}}" mode="aspectFill" />
+        <image class="pr__mk" src="/images/cy_logo_mark.png" mode="aspectFit" />
+        <view class="pr__t"><text class="pr__kind">{{kindText}}</text><text class="pr__name">{{name}}</text></view>
+        <view class="pr__row">
+          <view class="pr__cell"><text class="pr__k">可玩至</text><text class="pr__v">{{untilText || '—'}}</text></view>
+          <view class="pr__cell" wx:if="{{daysText}}"><text class="pr__k">剩余</text><text class="pr__v">{{daysText || 0}} 天</text></view>
+          <view class="pr__cell"><text class="pr__k">票种</text><text class="pr__v">{{skuText}}</text></view>
+        </view>
+        <view class="pr__holo"></view>
+      </view>
+      <view class="pr__b">
+        <view class="pr__metal"></view>
+        <image class="pr__logo" src="/images/cy_logo_mark.png" mode="aspectFit" />
+        <text class="pr__brand">城 瘾</text>
+      </view>
+    </view>
+  </view>
+  <view class="pr__btns {{btns ? 'is-on' : ''}}">
+    <view class="pr__btn pr__btn--s" bindtap="onWallet" aria-role="button" aria-label="放进票夹" hover-class="pr-pressed" hover-stay-time="80">放进票夹</view>
+    <view class="pr__btn pr__btn--w" bindtap="onPlay" aria-role="button" aria-label="开始游戏" hover-class="pr-pressed" hover-stay-time="80">开始游戏</view>
+  </view>
+</view>

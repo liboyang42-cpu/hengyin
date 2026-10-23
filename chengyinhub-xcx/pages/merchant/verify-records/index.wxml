@@ -23,7 +23,7 @@
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="vrl-scroll"
                enhanced show-scrollbar="{{false}}">
-    <view class="vrl-shell">
+    <view class="vrl-shell" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <cy-tabs class="vrl-filter" variant="chip" tabs="{{tabs}}"
         active="{{bucket}}" bind:change="switchBucket" />
       <view class="fin-group vrl-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key">

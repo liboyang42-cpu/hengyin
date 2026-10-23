@@ -1,7 +1,7 @@
 // 城瘾 · 俱乐部/发布者财务(报告§B9 · T7)
 // 主理人视角:按主题看「我的分润 / 商家应收 / 打款状态 / 到账时间」。接后端 /api/coop/finance
 const app = getApp()
-const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js'); const pageMotion = require('../../../utils/page-motion.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 // 2026-09-15 起「提现」不再跳银行卡表单:平台不打款,一律弹平台客服微信线下处理。
 const withdrawCs = require('../../../utils/withdraw-cs.js');
@@ -215,7 +215,7 @@ Component({
           const withdrawState = myIncomeTotal == null ? 'unknown' : (canWithdraw ? 'positive' : 'zero');
           const pendingCount = rows.filter(function (row) { return weight(row) < 3; }).length;
           that._dataIdentity = that._loadIdentity;
-          that.setData({
+          pageMotion.enter(that, 'pmList'); that.setData({
             topics: rows,
             myIncomeTotal: myIncomeTotal,
             canWithdraw: canWithdraw,

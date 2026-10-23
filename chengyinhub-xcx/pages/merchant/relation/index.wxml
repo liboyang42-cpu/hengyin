@@ -23,7 +23,7 @@ module.exports = { valid: valid };
        本页职责收窄为「找新的合作对象」,按商家/俱乐部分 tab。 -->
   <cy-tabs class="rel-tabs" variant="fill" wide="{{true}}" tabs="{{tabs}}" active="{{activeTab}}" bind:change="onTabChange" />
 
-  <view class="body">
+  <view class="body" style="{{pmList === 1 ? '--pm-q:1;' : (pmList === 2 ? '--pm-q-d:.32s;--pm-q-s:1;' : '')}}">
     <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="{{3}}" loading-label="合作对象加载中" />
     <!-- 未登录不再整屏拦:静默登录后自动加载;登录失败只留这条内联错误 + 重试。 -->
     <cy-inline-error load-failure class="rel-inline-error" wx:elif="{{pageState === 'error'}}" kind="data"

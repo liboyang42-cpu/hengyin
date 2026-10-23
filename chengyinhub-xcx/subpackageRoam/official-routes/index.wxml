@@ -11,7 +11,7 @@
       <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有上架的官方线路" sub="过阵子再来看看" />
       <block wx:else>
         <view class="orl-card" wx:for="{{routes}}" wx:key="id" data-id="{{item.id}}" bindtap="openRoute"
-              aria-role="button" aria-label="查看线路 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+              aria-role="button" aria-label="查看线路 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
           <image wx:if="{{item.cover}}" class="orl-card__cover" src="{{item.cover}}" mode="aspectFill" />
           <view class="orl-card__body">
             <text class="orl-card__name">{{item.name}}</text>

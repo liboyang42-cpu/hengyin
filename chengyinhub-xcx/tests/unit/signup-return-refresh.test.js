@@ -96,7 +96,7 @@ test('指定原票消失时明确未定位，不把用户滑到的其他票当�
   reply(requests[3], []); reply(requests[4], [topic(100), topic(101)]); reply(requests[5], []);
   assert.equal(requests[6].url, '/api/registration/info'); requests[6].success({ code: 404 });
   assert.equal(page._focusId, '115'); assert.equal(page.data.focusState, 'missing');
-  page.onTicketSwiperChange({ detail: { current: 1 } });
+  page.setData({ currentSwiperTicket: 1 }); // v13 卡组:用户把别的票甩到了最前
   page.goTicket({ currentTarget: { dataset: { index: 1 } } }); assert.equal(navigations.length, 0);
   page.onHide(); page.onShow(); assert.equal(page._focusId, '115');
 });
