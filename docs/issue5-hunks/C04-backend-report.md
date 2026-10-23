@@ -84,3 +84,32 @@ Head（本车道）：`58113ef7c3818671ac31aa2c394562715b3c1087`（报告本次�
 | 78921f6b32b4df8b8fa0bbedcb74e11cb1afd9acfb152c12ba37c5348c5442de | 9333 | TeamClubEligibilityAuthority.java |
 | fab552aa09d16086fffbd33be181e574f713f6ffc35fa1bdcafc0d34118af728 | 17341 | EventScoreVersioning.java |
 | 62abc03dab0b4b6ec097c93b65ee56e8164552664db7a3f517323c548c09b5c2 | 6941 | EventResultDispute.java |
+
+## 7. Addendum 2026-10-23 15:45 America/Los_Angeles
+
+HEAD `5b89fb6505189e6a26ccf2e808f10445199d44f0`
+
+`EventScoreVersioning.recoverUnknown` / `TeamClubEligibilityAuthority.recoverUnknown` / `EventResultDispute.recoverUnknown`：
+
+- 缺 / 空 requestId → typed `NOT_FOUND`，`originalRequestId` 保持 Java null，`mintedNewRequest=false`，不 throw、不占账
+- 从未见过的 `fin-unknow` / `reg-unknow` / `dsp-unknow` → `NOT_FOUND` 且不写入 ledger
+- 之后对该 id 的 finish / register / open 仍是唯一原文写入
+- 既有 `readback(null)` 仍 throw `EVENT_NOT_FOUND`
+
+命令：
+
+```
+mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteering.*Test -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **19 run, 0 fail, 0 error, 0 skip**（2026-10-23T22:45:39Z）。`C04AccountSwitchRestartIsolationTest` 4/0。
+
+生产 SHA256（本 HEAD 字节）：
+
+| SHA256 | bytes | path |
+|---|---|---|
+| 91ea62936018ffcb0d7759e998bf7235c05626dd6cf79e9664fad84d34fe05b0 | 11091 | TeamClubEligibilityAuthority.java |
+| 5fce0bc309e37a430a48b18a64245c9d3930ff4be0eb6c62fa38024adf56e0d4 | 19116 | EventScoreVersioning.java |
+| e2e873d98c1da74d9047d7b925818c917c2e8ec7a3879da491ffec105d19e2a5 | 9078 | EventResultDispute.java |
+
+Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
