@@ -21,6 +21,8 @@ const COUNT_MS = 900;
 const COUNT_STEPS = 24;
 // 进度格点亮:首格延迟 400ms(等卡片模糊入场)+ 每格 45ms + 300ms 过渡 ≈ 1105ms 亮满,再停一拍退回
 const PIP_SWEEP_HOLD_MS = 1300;
+// 入场期长度:最后一张主题卡 600ms 延迟 + 750ms 飞入,之后撤掉飞入过渡
+const LANDING_MS = 1500;
 // 卡片 → 底部弹层的形变时长,与 wxss .ts-ghost transition 对齐
 const MORPH_MS = 430;
 
@@ -80,6 +82,8 @@ Page({
     grown: false,         // 柱子/进度条从 0 长到位的开关(数据落地后下一拍打开)
     shown: false,         // 区块模糊入场的开关(类切换 + transition,不新增 @keyframes)
     pipSweep: false,      // 核销进度 10 格:每次打开先整排点亮一遍,再退回真实格数(零也要有这一下)
+    landing: false,       // 入场期:主题卡/商家卡只在这段时间带飞入过渡,结束后按压反馈不受延迟拖累
+    replay: false,        // 重播入场的复位帧:先无过渡回到隐藏态,下一拍再飞入
     reducedMotion: false, // 「减少动态效果」:不滚数字、不形变,只保留淡入
     scrimOn: false,
     sheetTopic: null,     // 推荐主题详情弹层
@@ -115,6 +119,8 @@ Page({
       this._skipNextShowReload = false;
       return;
     }
+    // owner 2026-10-23:每次打开都要有入场(卡片飞入),不只首次;旧数据先播,新数据回来再静默更新
+    this._replayIn();
     this.load();
   },
   onHide() {
@@ -193,7 +199,10 @@ Page({
             : (attributionCounts.some(function (value) { return value > 0; }) ? 'ready' : 'empty');
           const profile = d.profile || {};
           const firstPaint = !that.data.facts;
+          // 返回页面重播入场时,新数据若在数字滚完前就到,接着从 0 滚到新值,不直接跳数
+          const replaying = !firstPaint && that._replayAt > 0 && Date.now() - that._replayAt < 1500;
           that._trends = that._indexTrends(d.trends);
+          const hero = that._buildHero(d.facts, that.data.win, that._metric || 'visitors', firstPaint || replaying);
           that.setData({
             facts: d.facts,
             ai: d.ai || null,
@@ -202,7 +211,7 @@ Page({
             profile: d.profile || null,
             storeName: String(profile.storeName || '').trim(),
             factState,
-            hero: that._buildHero(d.facts, that.data.win, that._metric || 'visitors', firstPaint),
+            hero,
             slots: that._buildSlots(d.facts),
             sources: that._buildSources(d.facts),
             valueCard: that._buildValueCard(d.facts, that.data.win),
@@ -224,6 +233,7 @@ Page({
           });
           // 回到页面的静默刷新不重播:数字直接落位,只有首帧入场才滚动
           if (firstPaint) that._playIn();
+          else if (replaying) that._countTo(hero.target);
           // owner 2026-10-23:核销进度条每次打开都扫一遍,不因暂无核销就一动不动
           that._sweepPips();
         } else if (res && res.code !== '200' && res.code !== 200) {
@@ -260,6 +270,8 @@ Page({
       grown: false,
       shown: false,
       pipSweep: false,
+      landing: false,
+      replay: false,
       sheetTopic: null,
       sheetPhase: '',
       ghostStyle: '',
@@ -493,6 +505,23 @@ Page({
     if (this._showTimer) { clearTimeout(this._showTimer); this._showTimer = null; }
     if (this._sheetTimer) { clearTimeout(this._sheetTimer); this._sheetTimer = null; }
     if (this._pipTimer) { clearTimeout(this._pipTimer); this._pipTimer = null; }
+    if (this._landTimer) { clearTimeout(this._landTimer); this._landTimer = null; }
+    if (this._replayTimer) { clearTimeout(this._replayTimer); this._replayTimer = null; }
+  },
+
+  /** 返回页面:先无过渡复位到隐藏态(区块、柱子、卡片、数字归 0),下一拍整套入场再播一遍 */
+  _replayIn() {
+    if (!this.data.facts || typeof setTimeout !== 'function') return;
+    this._stopMotion();
+    this._replayAt = Date.now();
+    if (this.data.hero) this.setData({ replay: true, shown: false, grown: false, landing: false, 'hero.num': '0' });
+    else this.setData({ replay: true, shown: false, grown: false, landing: false });
+    this._replayTimer = setTimeout(() => {
+      this._replayTimer = null;
+      if (this._hidden || this._unloaded) return;
+      this.setData({ replay: false });
+      this._playIn();
+    }, 50);
   },
 
   /** 核销进度:10 格自左向右整排点亮,停一拍,再自左向右退回真实格数(可能全空)。减少动态效果时不扫。 */
@@ -512,6 +541,12 @@ Page({
     if (typeof setTimeout !== 'function') { this.setData({ shown: true, grown: true }); return; }
     if (this._growTimer) clearTimeout(this._growTimer);
     if (this._showTimer) clearTimeout(this._showTimer);
+    if (this._landTimer) clearTimeout(this._landTimer);
+    this.setData({ landing: true });
+    this._landTimer = setTimeout(() => {
+      this._landTimer = null;
+      if (!this._hidden && !this._unloaded) this.setData({ landing: false });
+    }, LANDING_MS);
     this._showTimer = setTimeout(() => {
       this._showTimer = null;
       if (!this._hidden && !this._unloaded && this.data.facts) this.setData({ shown: true });

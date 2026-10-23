@@ -814639,7 +814639,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:273"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:285"
       }
     },
     {
@@ -814707,7 +814707,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:656"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:691"
       }
     },
     {
@@ -814774,7 +814774,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:572"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:607"
       }
     },
     {
@@ -814844,7 +814844,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:651"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:686"
       }
     },
     {
@@ -814953,7 +814953,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:273"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:285"
       }
     },
     {
@@ -815020,7 +815020,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:605"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:640"
       }
     },
     {
@@ -815088,7 +815088,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:621"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:656"
       }
     },
     {
@@ -815156,7 +815156,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:621"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:656"
       }
     },
     {
@@ -815223,7 +815223,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:605"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:640"
       }
     },
     {
@@ -815290,7 +815290,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:605"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:640"
       }
     },
     {
@@ -815359,7 +815359,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:616"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:651"
       }
     },
     {
@@ -815426,7 +815426,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:445"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:457"
       }
     },
     {
@@ -815493,7 +815493,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:445"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:457"
       }
     },
     {
@@ -815560,7 +815560,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:445"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:457"
       }
     },
     {
@@ -815627,7 +815627,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:451"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:463"
       }
     },
     {
@@ -815697,7 +815697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:135"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:141"
       }
     },
     {
@@ -815806,7 +815806,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:273"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:285"
       }
     },
     {
@@ -815874,7 +815874,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/marketing/ai-insight/index.js:656"
+        "staticSource": "pages/merchant/marketing/ai-insight/index.js:691"
       }
     },
     {
