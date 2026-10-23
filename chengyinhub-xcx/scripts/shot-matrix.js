@@ -2,7 +2,7 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 341
+ *   total 339
  *   按 priority 计全部行：P0 133 / P1 198 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
  *   ⇒ actionable（本轮真要拍）：P0 124 / P1 191 / P2 2 = 317
@@ -645,10 +645,11 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // total 332→341、P1 189→198、actionable 308→317、B 67→68、C 54→56、D 39→44、F 92→93、setData 171→179、identity+setData 116→117。
 // 2026-10-20 与新主干两条官方线路按唯一ID并集，blocked/已验证不增加，计数由实列复算。
 // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页:D93/D94 两条 P1 setData 行退场,total 341、P1 198、actionable 317(P1 191)、D 42、setData 179。
+// 2026-10-23 起名页 templateadd 退役删除:B46(P0 real-data)/E21(P0 identity+setData)两行退场,total 341→339、P0 133→131、actionable 317→315(P0 124→122)、B 70→69、E 27→26、identity+setData 117→116、real-data 38→37。
 const STATS = {
-  "total": 341,
+  "total": 339,
   "byPriority": {
-    "P0": 133,
+    "P0": 131,
     "P1": 198,
     "P2": 10
   },
@@ -658,24 +659,24 @@ const STATS = {
     "P2": 8
   },
   "actionable": {
-    "P0": 124,
+    "P0": 122,
     "P1": 191,
     "P2": 2,
-    "total": 317
+    "total": 315
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 70,
+    "B": 69,
     "C": 56,
     "D": 42,
-    "E": 27,
+    "E": 26,
     "F": 93
   },
   "control": {
     "setData": 179,
-    "identity+setData": 117,
-    "real-data": 38,
+    "identity+setData": 116,
+    "real-data": 37,
     "real-device": 7
   },
   "fixtureVerified": 16
