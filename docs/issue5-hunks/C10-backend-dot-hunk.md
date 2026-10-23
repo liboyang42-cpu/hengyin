@@ -10,7 +10,7 @@ Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`
 
 生产（仅新目录 `chengyinhub-system/.../service/workshop/`）：
 
-- `WorkshopOriginalRequestBinder.java` `95a58bfb21f41348fdb4675aee1565a84a7c2dcc5110f66f893c95158ac58e41`
+- `WorkshopOriginalRequestBinder.java` `ccc0d447bbc143feebd684af3644ef38bec0c4dfad7186b34eefc31866b0e0c3`
 - `WorkshopModuleImportGate.java` `6d2f9aa265f0be3465b4f9a107ef857e96601cc4a775724aa6be29640c385e1d`
 - `WorkshopPackageVersionPublish.java` `b2bba3df5de1292b307e09297c62160c95686d4b245963c97869fca79a2b2701`
 - `WorkshopInstallUpgradeRollback.java` `d838164d2c58bccfcd33e899e7af4319b299b1f8947ec67263e613c5bcd979ac`

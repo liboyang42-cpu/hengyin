@@ -121,9 +121,12 @@ public final class WorkshopOriginalRequestBinder {
     }
 
     public Map<String, Object> recover(String requestId) {
+        if (requestId == null || requestId.isBlank()) {
+            return unknown(null, null, "originalRequestId missing");
+        }
         Entry entry = existing(requestId);
         if (entry == null) {
-            return markUnknown(requestId, "no original receipt");
+            return unknown(requestId, null, "no original receipt");
         }
         Map<String, Object> out = copy(entry.result);
         out.put("originalRequestId", entry.requestId);

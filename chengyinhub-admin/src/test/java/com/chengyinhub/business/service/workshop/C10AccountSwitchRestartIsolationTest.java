@@ -127,6 +127,20 @@ class C10AccountSwitchRestartIsolationTest {
         WorkshopModuleImportGate.Decision recoveredMissing = new WorkshopModuleImportGate().recover(null);
         assertNull(recoveredMissing.originalRequestId());
 
+        WorkshopOriginalRequestBinder ledger = new WorkshopOriginalRequestBinder();
+        Map<String, Object> neverSeen = ledger.recover("c10-never-seen");
+        assertEquals("c10-never-seen", neverSeen.get("originalRequestId"));
+        assertEquals(WorkshopOriginalRequestBinder.UNKNOWN, neverSeen.get("status"));
+        assertFalse(Boolean.TRUE.equals(neverSeen.get("mintedNewRequestId")));
+        assertNull(ledger.existing("c10-never-seen"));
+        WorkshopModuleImportGate later = new WorkshopModuleImportGate(ledger);
+        WorkshopModuleImportGate.Decision firstWrite = later.importPreview(qmod("c10-never-seen", "mod-later"));
+        assertEquals(WorkshopModuleImportGate.Outcome.WAITING_SOURCE, firstWrite.outcome());
+        assertEquals("c10-never-seen", firstWrite.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, ledger.existing("c10-never-seen").status());
+        assertNull(ledger.recover("").get("originalRequestId"));
+        assertNull(ledger.existing(""));
+
         WorkshopRunServerVerification.Decision js = new WorkshopRunServerVerification()
                 .rejectJsSelfReport(JS_REPORT_ID, true);
         assertEquals(WorkshopRunServerVerification.Outcome.REJECTED, js.outcome());
