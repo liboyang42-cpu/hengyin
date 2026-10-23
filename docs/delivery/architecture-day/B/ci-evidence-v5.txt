@@ -1,0 +1,9 @@
+Candidate dda99e55508bbbc43be93aaa39a054aa758b6e1d
+Main CI https://github.com/liboyang42-cpu/hengyin/actions/runs/40017893312
+Secret scan 120634575692: SUCCESS.
+Migration layout 120634778769: SUCCESS.
+Migration safety 120634778681: FAILURE, new migration missing explicit dependency registration. Static fix adds only independent entry 20261023_wx_pay_order_intent: []. No rule/allowlist/workflow change.
+Backend tests 120634778697: FAILURE as of 2026-10-23 20:22 UTC. Not a passing result.
+Prior backend failure 120631279330: failure in Build and test backend. Logs connector returns Transport closed; no reports artifact. Public page exposes exit code1 only. Coordinator asked for Maven failure summary.
+Independent code-review fix: error-query unit fixture omitted intent JDBC; injected it so 404/5xx tests reach actual SDK doubles. This is not a claim that all CI failures are diagnosed.
+No new intent-table DDL or real WeChat/production operation executed.

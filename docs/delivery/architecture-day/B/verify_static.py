@@ -9,6 +9,7 @@ from zipfile import ZipFile
 ROOT = Path(__file__).resolve().parents[4]
 BASE = "2ec68899099a1e250df0949a8383bf85b5d3ffe0"
 ALLOWED = {
+    "ci/migration-dependencies.json",
     "chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql",
     *[f"chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/{name}.java" for name in (
         "WechatPayServiceImpl", "MerchantCommerceService", "ClubMembershipServiceImpl", "RegistrationCheckoutServiceImpl")],

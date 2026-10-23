@@ -82,6 +82,7 @@ class WechatPayOrderQueryTest {
 
     private WechatPayServiceImpl serviceFailingWith(int status, String body) {
         WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
         ReflectionTestUtils.setField(service, "wxPayConfig", mock(WxPayConfig.class));
         JsapiService jsapi = mock(JsapiService.class);
         HttpRequest request = new HttpRequest.Builder().httpMethod(HttpMethod.GET)

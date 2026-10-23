@@ -191,6 +191,9 @@ class ClubMembershipServiceImplTest {
             assertThrows(ServiceException.class,
                     () -> service.closeInvoice(MEMBER, action(invoice.getId(), "close-" + state)));
             verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
+            verify(pay).queryOrderStatus(invoice.getOutTradeNo());
+            verify(pay).closeOrder(invoice.getOutTradeNo());
+            org.mockito.Mockito.clearInvocations(pay, mapper);
         }
     }
 

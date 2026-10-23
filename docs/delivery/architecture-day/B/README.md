@@ -8,7 +8,7 @@
 - 原 `/workspace/hengyin`、分支 `work` 保持原状；B 独立工作树 `/workspace/architecture-day-b`、分支 `codex/architecture-day-b-pay-gateway`，历史 HEAD `3bca5e05328ded4dc47fddd4614f30eff13a28fa`。
 - 历史转账 `090291402461c91377f5a494e92f01cf0887746a`、旧错误 Source 候选 `4f270d0451cc5f13737d0be2b40819fc3629445a` 均保留、不重写。不要直接集成历史 HEAD。
 - 此前未编译测试即提交，是我的执行失误，环境受限不能替代提交门禁。用户后续明确批准“审查/秘密扫描后的独立 codex CI 候选可先 commit/push”例外；本轮仅按该例外发布隔离候选，编译测试通过才可正式集成。不合并、不部署。
-- 最新完整补丁、拆分补丁及 SHA256 见 `artifact-sha256-v5.txt`；旧 v1/v2/v3 工件保留。`files-v4.txt` 列出精确 Java 文件。
+- 最新完整补丁、拆分补丁及 SHA256 见 `artifact-sha256-v6.txt`；旧 v1/v2/v3 工件保留。`files-v4.txt` 列出精确 Java 文件。
 
 ## 已授权的精确领域方法与实际修改
 
@@ -20,7 +20,7 @@
 | ApiCoopController.depositCreate、depositStatus | 缺 openid 也会先置保证金支付中；状态入口只读本地漏单无法恢复 | 先确认 openid 再 prepareDeposit；事务外统一查单，仅核验 SUCCESS 后调用已有三参数 markDepositPaid，保留领域金额/交易号/CAS |
 | ApiCoopController.depositCreateApp | 已无外层事务、prepareDeposit 返回后才 SDK | 只核对，未改 |
 
-未改非支付业务/权限/G 结算；没有改 mapper、接口签名、根 pom、CI 或依赖；新增迁移仅登记于规范目录，未运行。没有新增 Agent、后端实例、数据库或生产操作。
+未改非支付业务/权限/G 结算；没有改 mapper、接口签名、根 pom、CI 工作流或软件依赖；新增迁移登记于规范目录，并仅在共享 ci/migration-dependencies.json 增加本表的一条空依赖登记，由协调者统一集成，未运行 DDL。没有新增 Agent、后端实例、数据库或生产操作。
 
 ## 四域创建、永久事实、确认路径
 
@@ -87,3 +87,5 @@ DDL 仅 `chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql`，从
 仍阻塞：受控 Java 编译和相关单测；新表执行审批与真实 MySQL 并发/提交/回滚证据；历史活跃 UNKNOWN 预检/原参数补证；四域真实端到端金额/交易绑定与到账后乱序验收。现有报名 mutation+DONE 原子提交保留，不声称其他三路已迁入 inbox。
 
 首次 CI（efa5c06f）完整 gitleaks 通过；迁移布局/清单门禁因 SQL 放在 docs/proposals 失败，已移至规范 chengyinhub-admin/sql 并补 PR 影响分类。保留原候选提交与所有原始证据。后端编译/单测结果另见 CI 回读文件。
+
+追加静态修正：查单异常测试夹具补齐意图数据库，使 SDK 404/5xx 真正被调用；会员非 CLOSED 负控断言实际查单/关单。dda99e55 迁移布局通过，迁移安全门还要求本表显式依赖登记，已追加单条空依赖。主 CI 后端失败摘要的日志连接器返回 Transport closed，已请求协调者提供 Maven 摘要，不能声称 B 支付用例通过。
