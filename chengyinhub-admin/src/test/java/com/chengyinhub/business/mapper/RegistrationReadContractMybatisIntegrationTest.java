@@ -352,7 +352,7 @@ class RegistrationReadContractMybatisIntegrationTest {
         }
         // 负控:退款票 / 失效权益 / 没有本商家 offer 的主题 —— 都打过卡,一条都不许进
         seedVisit(++reg, 6004, 100, 1, 11, 4, 3, 0, today.atTime(12, 0), today.atTime(12, 30), sqlTime);
-        seedVisit(++reg, 6005, 100, 1, 11, 2, 2, 3, today.atTime(13, 0), null, sqlTime);
+        seedVisit(++reg, 6005, 100, 1, 11, 2, 2, 2, today.atTime(13, 0), null, sqlTime);
         seedVisit(++reg, 6006, 101, 2, 22, 2, 2, 0, today.atTime(14, 0), null, sqlTime);
         for (long m = 5000; m <= 6006; m = m == 5029 ? 6001 : m + 1) members.add("(" + m + ",'p" + m + "','player',0,1)");
         exec("INSERT INTO ums_member(id,nickname,role,del_flag,sex) VALUES " + String.join(",", members));
