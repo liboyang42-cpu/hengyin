@@ -1,0 +1,113 @@
+{
+  "observed_commit": "089790aaf3254f62ebbc79394b8aaf5fa66cb2b5",
+  "audit_parent": "202826bd63bbea0abd859ea172ce49bde7fe0ebe",
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "runtime_database_inspected": false,
+  "ci_dispatched": false,
+  "source_comparison": {
+    "status": "ahead",
+    "ahead_by": 5,
+    "file_count": 135,
+    "audited_source_files": 54,
+    "audited_files_changed": [],
+    "changed_java": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+        "github_blob": "c6f872f1f9e5ec4538504dc76c76a6e617f67567",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+        "github_blob": "842691524c571f8aed114b2c7875280b1dea2b39",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java",
+        "github_blob": "0c72da0224bf9d49dfb3c3c5394990fb7a6d9353",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java",
+        "github_blob": "b8dd0555ba409b642f085fd3fc7fe7a01def54ef",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CashWithdrawFundFact.java",
+        "github_blob": "16b949120f95bcc54c0126d3baa00e41aaf3101e",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/OfficialBroadcastLog.java",
+        "github_blob": "bdfbc22f8548ff3dfaf130cd8191f961beabe58d",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubLeadMapper.java",
+        "github_blob": "1e63e9720421a70745b9bd70dd4cb6b5c9d33b8c",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java",
+        "github_blob": "cfb70ada293e477ebbceaaf920be5bcc7912d99a",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialBroadcastLogMapper.java",
+        "github_blob": "202dc951bdebf93f34e43fd83bbd04c8ecd19072",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+        "github_blob": "0bed3a8a8d918cb0e539b06e13cdff049defb301",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+        "github_blob": "aa7738a412336d849e109e60d96d18e37297c4db",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java",
+        "github_blob": "99c3ca7142f6c7012a034224113cb3caf82fb6c6",
+        "callback_reference_lines": [
+          99,
+          100
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+        "github_blob": "36660c8275fefeebfff08f7dc3358f6c4dcac62e",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteServiceImpl.java",
+        "github_blob": "e78c468eb37fe8b1e32baa6b61442e6f9336ddba",
+        "callback_reference_lines": []
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+        "github_blob": "c4df6ef111bf6a219d6c0c1866ce2068cd9448ff",
+        "callback_reference_lines": []
+      }
+    ]
+  },
+  "coordinator_reported_evidence": [
+    {
+      "run_id": 40016650848,
+      "scope": "OfficialBroadcastDeliveryMySqlIT",
+      "tests": 7,
+      "result": "pass and CLEAN",
+      "directly_downloaded_by_D": false
+    },
+    {
+      "candidate": "db5db8b212f6257d3fe75f5119e0efbca971c009",
+      "scope": "new member frequency concurrency IT",
+      "result": "pending coordinator integration and real MySQL verification"
+    },
+    {
+      "candidate": "928d779419e796e1fa357f916804adde141afacd",
+      "scope": "controller null fixture and Node contracts",
+      "result": "Node locally passed; Java rerun pending"
+    }
+  ]
+}
