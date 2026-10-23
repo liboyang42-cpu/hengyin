@@ -22,6 +22,17 @@ test('精度阈值 80m:>80 不足,=80/缺失/非法放行', () => {
   assert.equal(A.LOW_ACCURACY_HINT, '定位精度不足 · 可扫码完成');
 });
 
+test('O-01 删空精度放行:自动到达只在精度已知且 ≤80m 时发(缺失/非法后端必拒 ARRIVE_ACCURACY_MISSING/INVALID)', () => {
+  assert.equal(A.canAutoArrive(0), true);
+  assert.equal(A.canAutoArrive(80), true);
+  assert.equal(A.canAutoArrive(80.1), false);
+  for (const v of [undefined, null, '', NaN, -1, '30']) assert.equal(A.canAutoArrive(v), false, String(v));
+  assert.match(src, /\(node\.vm === 0 \|\| node\.vm === 5\) && playAccuracy\.canAutoArrive\(loc\.accuracy\)\) that\.arrive\(node\.nodeId, 'gps'\)/);
+  // 两个定位来源都把 accuracy 原样带进 _loc,arrive 请求从 _loc 取
+  const locWrites = src.match(/_loc = \{ longitude: loc\.longitude, latitude: loc\.latitude, accuracy: loc\.accuracy \}/g) || [];
+  assert.equal(locWrites.length, 2);
+});
+
 test('游玩页:4 处 InnerAudioContext 全部经 audioSession.register', () => {
   const creates = src.match(/wx\.createInnerAudioContext\(\)/g) || [];
   const wrapped = src.match(/audioSession\.register\(wx\.createInnerAudioContext\(\)/g) || [];

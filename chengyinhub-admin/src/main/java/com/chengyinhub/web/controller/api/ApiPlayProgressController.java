@@ -2072,20 +2072,22 @@ public class ApiPlayProgressController extends BaseController
             double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
             if (!Double.isFinite(dist)) return error("定位无效");
             // B1:定位精度闸(仅坐标判定路径)。accuracy 为端上 wx.getLocation 的水平精度(米);
-            // 空白=旧版小程序未上报,放行并留痕;非有限/负数=定位无效;>80m 要求去开阔处或扫码,先于距离判断。
-            // O-01:空精度放行仍是默认;只有 owner 定下最低小程序版本后打开 play.arrive.require_accuracy 才拒。
-            Double acc = null;
+            // 空白=未上报,拒(ARRIVE_ACCURACY_MISSING);非有限/负数/坏文本=定位无效(ARRIVE_ACCURACY_INVALID);
+            // >80m 要求去开阔处或扫码,先于距离判断。
+            // O-01(owner 2026-10-23 拍板:尚无真实用户,不设过渡期):原「空精度放行」与开关
+            // play.arrive.require_accuracy 已删除。这两种拒绝不是作弊判定,不入守卫表、不可申诉,重新定位或扫码即可。
             if (StringUtils.isBlank(accuracy)) {
-                if (arriveLocationGuard != null && arriveLocationGuard.requireAccuracy()) {
-                    return error("当前版本未上报定位精度，请更新小程序后重试或扫码完成")
-                            .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING);
-                }
-                logger.info("arrive 未上报定位精度 memberId={} nodeId={}", memberId, nId);
-            } else {
-                acc = parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
-                if (acc == null) return error("定位无效");
-                if (acc > GEOFENCE_ACCURACY_METERS) return error("定位精度不足，请到开阔处或扫码完成");
+                return error("未获取到定位精度，请重新定位后重试或扫码完成")
+                        .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING)
+                        .put("appealable", false);
             }
+            Double acc = parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
+            if (acc == null) {
+                return error("定位无效")
+                        .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_INVALID)
+                        .put("appealable", false);
+            }
+            if (acc > GEOFENCE_ACCURACY_METERS) return error("定位精度不足，请到开阔处或扫码完成");
             if (dist > GEOFENCE_METERS) return error("还没到这一站附近");
             // O-01 第 4–7 层(节流/速度/窗口位移/不确定性扣减):开关 off 时不读不写,行为与改动前一致。
             if (arriveLocationGuard != null) {

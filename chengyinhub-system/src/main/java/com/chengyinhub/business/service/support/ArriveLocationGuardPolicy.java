@@ -11,13 +11,14 @@ import java.util.Locale;
  * <p>「七层」与现有代码的对应(前三层是既有逻辑,一字未改,仍在 ApiPlayProgressController#arrive):
  * <ol>
  *   <li>坐标完整且合法(缺坐标 = 请开启定位;NaN/越界 = 定位无效)—— 既有</li>
- *   <li>精度闸:上报精度 &gt; 80m 拒(请到开阔处或扫码);空精度按开关 play.arrive.require_accuracy —— 既有 + 新开关</li>
+ *   <li>精度闸:上报精度 &gt; 80m 拒(请到开阔处或扫码);空精度 / 非法精度一律拒(ARRIVE_ACCURACY_MISSING /
+ *       ARRIVE_ACCURACY_INVALID,2026-10-23 删除原空精度放行与开关) —— 既有</li>
  *   <li>50m 围栏 —— 既有</li>
  *   <li>节流:与上一次被评估的到达间隔 &lt; 5s 拒({@link #THROTTLE},可重试,不算作弊)</li>
  *   <li>速度:与上一次放行的到达之间,保守位移 / 时间差 &gt; 8 m/s 拒({@link #SPEED},可申诉)</li>
  *   <li>窗口:近 60 分钟放行链 + 本次的保守位移累计 &gt; 40 km 拒({@link #WINDOW_DISTANCE},可申诉)</li>
  *   <li>位移不确定性扣减:第 5、6 层用的都是「保守位移」= 两站站点距离 − 两端不确定半径
- *       (围栏 50m + 上报精度;精度缺失按 80m 计)。粗定位 / 旧版不报精度只会让判定更宽,
+ *       (围栏 50m + 上报精度;精度缺失(仅历史行)按 80m 计)。粗定位只会让判定更宽,
  *       不会因为「定位粗」本身被判作弊。</li>
  * </ol>
  *

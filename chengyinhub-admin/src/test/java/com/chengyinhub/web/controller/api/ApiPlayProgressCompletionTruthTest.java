@@ -310,16 +310,16 @@ class ApiPlayProgressCompletionTruthTest
 
         AjaxResult missing = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
         assertEquals("请开启定位", missing.get("msg"));
-        AjaxResult outside = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "120", "30", null);
+        AjaxResult outside = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "120", "30", null, null, null, "10");
         assertEquals("还没到这一站附近", outside.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
 
-        AjaxResult arrived = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null);
+        AjaxResult arrived = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
         assertEquals(200, arrived.get("code"));
         verify(templateService, never()).selectCmsMemberTemplateById(0L);
 
         node.setTemplateId(999L);
-        AjaxResult dangling = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null);
+        AjaxResult dangling = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
         assertEquals("该站配置异常，暂时无法打卡", dangling.get("msg"));
     }
 
@@ -344,8 +344,8 @@ class ApiPlayProgressCompletionTruthTest
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":5}"));when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,null)).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));when(runtime.recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"GPS")).thenReturn(Collections.singletonMap("version",1));
-        assertEquals(500,controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"NaN","31.23",null).get("code"));assertEquals(500,controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"120","30",null).get("code"));
-        AjaxResult result=controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"121.47","31.23",null);assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
+        assertEquals(500,controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"NaN","31.23",null, null, null, "10").get("code"));assertEquals(500,controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"120","30",null, null, null, "10").get("code"));
+        AjaxResult result=controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"121.47","31.23",null, null, null, "10");assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
         verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"GPS");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
@@ -613,7 +613,7 @@ class ApiPlayProgressCompletionTruthTest
         assertEquals(500, controller.checkin(String.valueOf(ACTIVITY), "WRONG-CODE", null).get("code"));
         verifyOnlyEligibilityReads();
         topic.setProductType(ProductType.FREE_EXPLORE);
-        controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null);
+        controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
         verifyOnlyEligibilityReads();
     }
 
