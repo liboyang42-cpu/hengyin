@@ -6,11 +6,13 @@ import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationScanMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.SettlementRule;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
@@ -43,6 +45,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -171,6 +174,7 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "committedBusinessNotice",
                 new com.chengyinhub.business.service.support.CommittedBusinessNotice(
                         mock(INotifyService.class), mock(AlarmService.class), transactionManager, noticeExecutor));
+        wireSignupNoticeFixture(target);
         TransactionInterceptor interceptor = new TransactionInterceptor(transactionManager, new AnnotationTransactionAttributeSource());
         ProxyFactory proxyFactory = new ProxyFactory(target);
         proxyFactory.setInterfaces(ICmsRegistrationService.class, IRegistrationCreationTransaction.class);
@@ -200,6 +204,29 @@ class RegistrationFundsMybatisIntegrationTest {
         // 客诉期提现闸:暂扣/欠款两张表的真库行为由 ComplaintPeriodWithdrawalGateMybatisIntegrationTest 覆盖
         ReflectionTestUtils.setField(refundService, "activitySettlementHoldMapper", mock(com.chengyinhub.business.mapper.ActivitySettlementHoldMapper.class));
         ReflectionTestUtils.setField(refundService, "settlementDebtLedger", mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
+    }
+
+    /** Notification persistence is covered by D's dedicated IT; keep this suite's real financial writes. */
+    private void wireSignupNoticeFixture(CmsRegistrationServiceImpl target) {
+        ISystemNotificationIntentService intents = mock(ISystemNotificationIntentService.class);
+        // Mockito's boxed Long default is 0, which the production guard correctly rejects as an invalid receipt.
+        when(intents.findIntentId(org.mockito.ArgumentMatchers.anyString())).thenReturn(null);
+        when(intents.enqueue(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString())).thenReturn(1L);
+        ReflectionTestUtils.setField(target, "systemNotificationIntents", intents);
+        IImService im = mock(IImService.class);
+        when(im.deliverSystemNotification(org.mockito.ArgumentMatchers.anyLong())).thenReturn(1L);
+        ReflectionTestUtils.setField(target, "imService", im);
+
+        // Read only actual rows from this suite's narrow topic fixture, without inventing missing topic facts.
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        when(topics.selectCmsTopicById(any(Long.class))).thenAnswer(call -> {
+            List<CmsTopic> rows = new JdbcTemplate(dataSource).query("SELECT * FROM cms_topic WHERE id = ?",
+                    new BeanPropertyRowMapper<>(CmsTopic.class), call.getArgument(0, Long.class));
+            return rows.isEmpty() ? null : rows.get(0);
+        });
+        ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
     }
 
     @BeforeEach
@@ -710,7 +737,7 @@ class RegistrationFundsMybatisIntegrationTest {
         long registrationId = createOrReplay(request).getPrimary().getId();
         // 期事实在【建单之后】才补齐：归因判定发生在冻结那一刻，先建单再补事实不削弱本用例，
         // 反而把两跳拆得更干净 —— 第一跳证明 create 没写归因列，第二跳证明冻结也造不出来。
-        // (本套件的 service fixture 没有接 cmsTopicMapper，建单期间 activity.topic_id 必须保持为空。)
+        // (保留原夹具：建单时活动未绑定主题，随后才补齐归因冻结所需事实。)
         execute("INSERT INTO cms_topic(id,club_id,selling_started_at,sale_end_at) VALUES"
                         + " (23,7,'2020-01-01 00:00:00','2030-01-01 00:00:00')",
                 "UPDATE cms_activity SET topic_id=23,club_id=7 WHERE id=55",

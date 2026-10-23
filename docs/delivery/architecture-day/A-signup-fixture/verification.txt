@@ -1,0 +1,20 @@
+2026-10-23T21:38:38.272078+00:00
+COMMAND: python3 docs/delivery/architecture-day/A-signup-fixture/verify-static.py
+PASS SOURCE: all 92 existing test bodies/assertions, real funds mapper wiring, DDL and helpers preserved; only fixture addition/imports/comment differ
+PASS SOURCE: explicit absent intent and positive receipt/delivery stubs; topic adapter reads actual existing fixture rows, not invented facts
+PASS SOURCE: only assigned test fixture and delivery docs changed; production/D/B/G/CI/schema unchanged; frozen candidates clean
+NOT RUN: Java compilation, all 92 Java/MySQL tests, real notification atomicity, D18, CI dispatch
+COMMAND: python3 -m unittest ci.test_signup_intent_producer
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.007s
+
+OK
+COMMAND: python3 ci/secret-file-gate.py
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文
+COMMAND: git diff --check b6267613693d0c067040002c3df431ac39b35feb
+(no output; exit 0)
+PASS: changed/untracked files pass project secret-file and known-credential scans
+LIMIT: no full gitleaks entropy/history scan
+NOT RUN: Java compile, 92 existing funds MySQL tests, D18 notification IT; no actual notification storage/delivery/atomicity validation
+NO ACTION: CI dispatch, backend/database/VPS access, DDL, B/D production methods, merges/deployment
