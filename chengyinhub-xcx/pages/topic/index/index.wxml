@@ -191,7 +191,7 @@
         </view>
 
         <view class="topic-shops" wx:if="{{isExplore && merchantCards.length}}">
-          <view class="det-type">参与商家 · {{merchantCards.length}} 家</view>
+          <view class="det-type">参与商家 · {{merchantCards.length || 0}} 家</view>
           <cy-merchant-cards items="{{merchantCards}}" owned="{{is_join == 1}}" bind:open="onMerchantOpen" />
         </view>
         <view wx:if="{{is_join == 1}}" class="topic-audio" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text><cy-icon name="chevron-right" size="28" /></view>
@@ -321,11 +321,11 @@
         <view class="topic-teams" wx:if="{{teams.rows.length}}">
           <view class="det-type">组队</view>
           <view class="topic-teams__card">
-            <view class="topic-teams__hd"><text class="topic-teams__n">已组 {{teams.rows.length}} 支队伍</text><text class="topic-teams__need" wx:if="{{teams.need > 0}}">还差 {{teams.need}} 人</text></view>
+            <view class="topic-teams__hd"><text class="topic-teams__n">已组 {{teams.rows.length}} 支队伍</text><text class="topic-teams__need" wx:if="{{teams.need > 0}}">还差 {{teams.need || 0}} 人</text></view>
             <view class="topic-teams__row" wx:for="{{teams.rows}}" wx:key="teamId">
               <view class="topic-teams__av"><cy-avatar wx:for="{{item.faces}}" wx:for-item="f" wx:key="index" size="xs" src="{{f}}" bordered /></view>
               <view class="topic-teams__tx"><text class="topic-teams__t">{{item.title}}</text><text class="topic-teams__s">{{item.sub}}</text></view>
-              <view class="topic-teams__cnt"><text class="topic-teams__c">{{item.count}}</text><text class="topic-teams__m" wx:if="{{item.missing > 0}}">还差 {{item.missing}} 人</text></view>
+              <view class="topic-teams__cnt"><text class="topic-teams__c">{{item.count}}</text><text class="topic-teams__m" wx:if="{{item.missing > 0}}">还差 {{item.missing || 0}} 人</text></view>
             </view>
             <view class="topic-teams__ft">购买后可在地图上发起或加入组队</view>
           </view>
@@ -528,8 +528,8 @@
       <view class="hticket__n hticket__n--t"></view><view class="hticket__n hticket__n--b"></view>
     </view>
     <view class="bseg" aria-role="tablist">
-      <view wx:for="{{buyOpts}}" wx:key="key" class="bseg__b {{index === buySel ? 'on' : ''}}" style="flex-basis: {{100 / (buyOpts.length < 3 ? 3 : buyOpts.length)}}%;" data-i="{{index}}" bindtap="onBuyPick" aria-role="tab" aria-selected="{{index === buySel}}" aria-label="{{item.name}} {{item.priceText}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bseg__ic" src="/pages/topic/images/icon_{{item.icon}}.svg" /><text class="bseg__t">{{item.name}}</text><text class="bseg__s">{{item.priceText}}</text></view>
-      <view class="bseg__u" style="width: {{100 / (buyOpts.length < 3 ? 3 : buyOpts.length)}}%; transform: translateX({{buySel * 100}}%);"></view>
+      <view wx:for="{{buyOpts}}" wx:key="key" class="bseg__b {{index === buySel ? 'on' : ''}}" style="flex-basis: {{(100 / (buyOpts.length < 3 ? 3 : buyOpts.length)) || 0}}%;" data-i="{{index}}" bindtap="onBuyPick" aria-role="tab" aria-selected="{{index === buySel}}" aria-label="{{item.name}} {{item.priceText}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bseg__ic" src="/pages/topic/images/icon_{{item.icon}}.svg" /><text class="bseg__t">{{item.name}}</text><text class="bseg__s">{{item.priceText}}</text></view>
+      <view class="bseg__u" style="width: {{(100 / (buyOpts.length < 3 ? 3 : buyOpts.length)) || 0}}%; transform: translateX({{(buySel * 100) || 0}}%);"></view>
     </view>
     <view class="bchips"><text class="bchip" wx:for="{{buyChips}}" wx:key="*this">{{item}}</text></view>
     <text class="bsheet__note">期间可随时开玩本{{info.productType == 2 ? '主题' : '路线'}}。请遵守安全须知，注意交通与人身安全。</text>

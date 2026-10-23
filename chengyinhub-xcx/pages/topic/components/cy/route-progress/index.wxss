@@ -8,8 +8,8 @@
 .rp__msg { display: block; margin-top: 4rpx; font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); transition: color .3s; }
 .rp.is-win .rp__msg { color: var(--cy-color-status-warning); }
 .rp__track { position: relative; height: 112rpx; margin: 24rpx 28rpx 0 8rpx; }
-.rp__rail { position: absolute; left: 0; right: 0; top: 50rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-color-bg-surface-strong); }
-.rp__fill { position: absolute; left: 0; top: 50rpx; height: 12rpx; border-radius: 6rpx; width: 100%; transform-origin: 0 50%; background-color: var(--rp-light);
+.rp__rail { position: absolute; left: 0; right: 0; top: 50rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-color-bg-surface-strong); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.rp__fill { position: absolute; left: 0; top: 50rpx; height: 12rpx; border-radius: 6rpx; width: 100%; transform-origin: 0 50%; background-color: var(--rp-light); /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   transition: transform 2.2s cubic-bezier(.22, .61, .36, 1), background-color 2.2s linear, box-shadow 2.2s linear; }
 .rp.is-run .rp__fill, .rp.is-win .rp__fill { background-color: var(--rp-deep); box-shadow: 0 0 24rpx var(--rp-deep); }
 .rp__fill::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: inherit;
@@ -23,8 +23,8 @@
   transform: rotate(-45deg) translate(1rpx, -2rpx); opacity: 0; transition: opacity .2s; }
 .rp__m.is-lit .rp__ck { opacity: 1; }
 @keyframes rp-pop { 0% { transform: scale(.6); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
-.rp__lb { position: absolute; top: 88rpx; transform: translateX(-50%); font-size: 20rpx; color: var(--cy-color-text-secondary); white-space: nowrap; }
-.rp__plus { position: absolute; top: -4rpx; transform: translateX(-50%); font-size: 22rpx; font-weight: 700; color: var(--cy-color-text-primary);
+.rp__lb { position: absolute; top: 88rpx; transform: translateX(-50%); font-size: 20rpx; color: var(--cy-color-text-secondary); white-space: nowrap; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.rp__plus { position: absolute; top: -4rpx; transform: translateX(-50%); font-size: 22rpx; font-weight: 700; color: var(--cy-color-text-primary); /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   animation: rp-plus .9s ease-out both; white-space: nowrap; }
 @keyframes rp-plus { 0% { opacity: 0; transform: translate(-50%, 12rpx); } 30% { opacity: 1; transform: translate(-50%, -12rpx); } 100% { opacity: 0; transform: translate(-50%, -36rpx); } }
 /* 宝箱:箱体 + 盖子,完成时盖子翻开、发光、弹一下 */
@@ -40,7 +40,7 @@
 .rp.is-win .rp__chest { animation: rp-bump .6s cubic-bezier(.34, 1.32, .64, 1); }
 @keyframes rp-bump { 40% { transform: scale(1.25) rotate(-6deg); } 100% { transform: none; } }
 .rp__conf { position: absolute; right: 12rpx; top: 30rpx; width: 0; height: 0; }
-.rp__c { position: absolute; width: 10rpx; height: 18rpx; border-radius: 3rpx; animation: rp-conf 1.5s cubic-bezier(.2, .7, .4, 1) forwards; opacity: 0; }
+.rp__c { position: absolute; width: 10rpx; height: 18rpx; border-radius: 3rpx; animation: rp-conf 1.5s cubic-bezier(.2, .7, .4, 1) forwards; opacity: 0; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .rp__c--0, .rp__c--6, .rp__c--12 { background: #F5B301; } /* ds-ok 彩纸 */
 .rp__c--1, .rp__c--7, .rp__c--13 { background: #FF8A3D; } /* ds-ok 彩纸 */
 .rp__c--2, .rp__c--8, .rp__c--14 { background: #7CF0A0; } /* ds-ok 彩纸 */

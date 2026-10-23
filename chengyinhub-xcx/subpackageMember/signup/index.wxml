@@ -43,7 +43,7 @@ module.exports = { state: state, label: label, cta: cta };
   <image wx:if="{{wbg[1]}}" src="{{wbg[1]}}" mode="aspectFill" class="ztbg wbg {{wbgOn === 1 ? 'vis' : ''}}" />
   <view class="signup-scrim wmask"></view>
   <cy-nav-bar overlay pill pillDark tint="light" title="" />
-  <view class="wl-nav" style="top: {{navTop - navH}}px; height: {{navH}}px;" aria-role="heading" aria-label="票夹"><text class="wl-nav__b">票夹</text><text class="wl-nav__s" wx:if="{{walletState === 'ready'}}">{{tabCount[0]}} 张可用</text></view>
+  <view class="wl-nav" style="top: {{navTop - navH}}px; height: {{navH}}px;" aria-role="heading" aria-label="票夹"><text class="wl-nav__b">票夹</text><text class="wl-nav__s" wx:if="{{walletState === 'ready'}}">{{tabCount[0] || 0}} 张可用</text></view>
 
   <!-- 2026-07-31:优惠券已独立(subpackageMember/coupon),「票夹/优惠券」那层 tab 已删。
        2026-09-09 用户裁决:「路线 / 场次」这层 tab 也删掉,两种票放一起。
@@ -74,7 +74,7 @@ module.exports = { state: state, label: label, cta: cta };
   <view class="flex-a flex-col main" wx:if="{{walletState === 'ready' && (!focusState || focusState === 'ready')}}" style="padding-top:{{navTop}}px;">
     <!-- v13 票夹:卡片叠放(后面几张往上错开、缩小、变暗),最前一张跟手拖,甩出去下一张上来;点卡进入 -->
     <view class="deck {{deckStill ? 'deck--still' : ''}}" bindtouchstart="onDeckStart" bindtouchmove="onDeckMove" bindtouchend="onDeckEnd" bindtouchcancel="onDeckEnd">
-      <view wx:for="{{ticketList}}" wx:key="wKey" class="wc" style="{{deckPoses[index]}}" bindtap="goTicket" data-index="{{index}}"
+      <view wx:for="{{ticketList}}" wx:key="wKey" class="wc" style="{{deckPoses[index]}}{{index === currentSwiperTicket ? '' : 'pointer-events: none;'}}" bindtap="goTicket" data-index="{{index}}"
         aria-role="button" aria-label="{{tk.cta(item) || tk.label(item)}}，{{item.wTitle}}" aria-hidden="{{index !== currentSwiperTicket}}" hover-class="cy-pressed" hover-stay-time="80">
         <image class="wc__ic" src="./icon_ticket.svg" mode="aspectFit" />
         <view class="wc__go" style="background: {{item.wColor}};"><image src="./icon_go.svg" mode="aspectFit" /></view>

@@ -91,7 +91,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 
 /* ===== 2026-10-22 业主:筛选行(计数条下面)· 三类点位色 · 点位卡 ===== */
 .mt-filter { position: absolute; left: 0; right: 0; z-index: 19; white-space: nowrap; padding: 0 23rpx; box-sizing: border-box; }
-.mt-chip { display: inline-flex; align-items: center; gap: 10rpx; height: 64rpx; padding: 0 26rpx; margin-right: 14rpx; border-radius: 32rpx; vertical-align: top;
+.mt-chip { display: inline-flex; align-items: center; gap: 10rpx; height: 64rpx; padding: 0 26rpx; margin-right: 14rpx; border-radius: 32rpx; vertical-align: top; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   font-size: 25rpx; font-weight: 600; color: rgba(255,255,255,.78); background: rgba(28,28,30,.92); backdrop-filter: blur(24rpx); } /* ds-ok 与计数条同一玻璃 */
 .mt-chip.is-on { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); }
 .mt-chip__caret { width: 0; height: 0; border-left: 8rpx solid transparent; border-right: 8rpx solid transparent; border-top: 10rpx solid currentColor; opacity: .7; }
@@ -117,7 +117,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-badge--team { background: rgba(10,132,255,.18); color: #5AA9FF; } /* ds-ok */
 .mt-badge--place { background: rgba(124,240,160,.16); color: #7CF0A0; } /* ds-ok */
 .mt-badge--shop { background: rgba(255,159,10,.16); color: #FFB547; } /* ds-ok */
-.mt-row__im { flex: none; width: 88rpx; height: 88rpx; border-radius: 23rpx; }
+.mt-row__im { flex: none; width: 88rpx; height: 88rpx; border-radius: 23rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .mt-row__im.is-r { border-radius: 50%; }
 .mt-row__im--ph { background: #2C2C2E; } /* ds-ok */
 .mt-row--list { padding: 19rpx 27rpx; }
@@ -130,7 +130,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pc.is-in { opacity: 1; transform: none; transition: transform .5s cubic-bezier(.34,1.32,.64,1), opacity .12s ease; }
 .pc.is-x { width: calc(100% - 46rpx); margin-left: calc(-50% + 23rpx); height: auto; }
 .pc--reduced, .pc--reduced .pc__in { transition: none; }
-.pc__chip { position: absolute; left: 50%; top: -31rpx; z-index: 4; transform: translateX(-50%); display: flex; align-items: center; gap: 12rpx; padding: 10rpx 23rpx 10rpx 12rpx; border-radius: 35rpx; white-space: nowrap;
+.pc__chip { position: absolute; left: 50%; top: -31rpx; z-index: 4; transform: translateX(-50%); display: flex; align-items: center; gap: 12rpx; padding: 10rpx 23rpx 10rpx 12rpx; border-radius: 35rpx; white-space: nowrap; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   background: #2C2C2E; color: #fff; font-size: 29rpx; font-weight: 800; box-shadow: 0 12rpx 31rpx rgba(0,0,0,.4); } /* ds-ok */
 .pc__chip-i { width: 46rpx; height: 46rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 25rpx; color: #fff; } /* ds-ok */
 .pc__in { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3,.7,.2,1); }
@@ -153,7 +153,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pc__st { color: #fff; font-weight: 600; } /* ds-ok */
 .pc__tail { position: absolute; left: 50%; bottom: -21rpx; z-index: -1; width: 42rpx; height: 42rpx; margin-left: -21rpx; background: #1C1C1E; transform: rotate(45deg); border-radius: 6rpx; } /* ds-ok */
 .pb__hd { display: flex; align-items: flex-start; gap: 19rpx; }
-.pb__t { flex: 1; font-size: 40rpx; line-height: 1.2; font-weight: 700; }
+.pb__t { flex: 1; font-size: 40rpx; line-height: 1.2; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .pb__x { flex: none; width: 58rpx; height: 58rpx; border-radius: 50%; background: #2C2C2E; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; } /* ds-ok */
 .pc.is-x .pb__x { opacity: 1; }
 .pb__xi { width: 14rpx; height: 14rpx; border-right: 4rpx solid #fff; border-bottom: 4rpx solid #fff; transform: translateY(-4rpx) rotate(45deg); } /* ds-ok */
@@ -164,12 +164,12 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pc.is-x .pb__d { display: block; color: rgba(255,255,255,.86); } /* ds-ok */
 .pb__more { display: block; margin: 12rpx 0 19rpx; font-size: 23rpx; color: #0A84FF; } /* ds-ok */
 .pb__th { display: flex; gap: 12rpx; }
-.pb__th image { flex: 1; height: 123rpx; border-radius: 19rpx; }
+.pb__th image { flex: 1; height: 123rpx; border-radius: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .pb__info { margin-top: 27rpx; }
 .pb__row { display: flex; justify-content: space-between; gap: 23rpx; padding: 21rpx 0; border-top: 1rpx solid rgba(255,255,255,.08); font-size: 27rpx; } /* ds-ok */
 .pb__rk { flex: none; color: #8E8E93; } /* ds-ok */
 .pb__cta { display: flex; gap: 19rpx; margin-top: 31rpx; padding-bottom: 12rpx; }
-.pb__btn { flex: 1; height: 88rpx; border-radius: 44rpx; display: flex; align-items: center; justify-content: center; font-size: 29rpx; font-weight: 600; }
+.pb__btn { flex: 1; height: 88rpx; border-radius: 44rpx; display: flex; align-items: center; justify-content: center; font-size: 29rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .pb__btn--w { background: #fff; color: #000; } /* ds-ok */
 .pb__btn--s { background: #2C2C2E; color: #fff; } /* ds-ok */
 .pb__ft { display: flex; align-items: center; justify-content: space-between; margin-top: 19rpx; font-size: 23rpx; color: #8E8E93; } /* ds-ok */

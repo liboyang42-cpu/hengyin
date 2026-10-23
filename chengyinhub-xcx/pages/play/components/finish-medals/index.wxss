@@ -9,7 +9,7 @@
 .ms--reduced .ms__card { transition: none; }
 .ms__hex { position: relative; width: 200rpx; height: 228rpx; overflow: hidden; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
   background:
-    conic-gradient(from 20deg at 50% 55%, #7d5e22, #f7e7a8, #a98232, #fff6cf, #8a6a2a, #ecd28a, #9c742c, #f7e7a8, #7d5e22),
+    conic-gradient(from 20deg at 50% 55%, #7d5e22, #f7e7a8, #a98232, #fff6cf, #8a6a2a, #ecd28a, #9c742c, #f7e7a8, #7d5e22), /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
     repeating-linear-gradient(100deg, rgba(255, 255, 255, .07) 0 2rpx, rgba(0, 0, 0, .06) 2rpx 6rpx); /* ds-ok 金属色带是材质 */
   background-blend-mode: normal, overlay; }
 .ms__img { position: absolute; left: 12%; top: 12%; width: 76%; height: 76%; mix-blend-mode: multiply; opacity: .92;
@@ -20,5 +20,5 @@
 .ms__n { margin-top: 12rpx; max-width: 300rpx; font-size: 32rpx; font-weight: 700; color: #FFFFFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok 黑卡上的字;完成面板是浅色,主题 token 会被换成深色或品牌蓝 */
 .ms__s { font-size: var(--cy-type-label); color: var(--cy-color-play-ink-muted); }
 .ms__dots { display: flex; gap: 10rpx; margin-top: var(--cy-space-3); }
-.ms__dot { width: 12rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-color-play-story-muted); opacity: .4; transition: transform .3s ease, opacity .3s ease; }
+.ms__dot { width: 12rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-color-play-story-muted); opacity: .4; transition: transform .3s ease, opacity .3s ease; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ms__dot.is-on { transform: scaleX(2.4); margin: 0 10rpx; opacity: 1; background: var(--cy-color-play-story-text); }

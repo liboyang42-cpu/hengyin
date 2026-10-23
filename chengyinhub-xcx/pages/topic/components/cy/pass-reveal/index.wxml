@@ -21,7 +21,7 @@
         <view class="pr__t"><text class="pr__kind">{{kindText}}</text><text class="pr__name">{{name}}</text></view>
         <view class="pr__row">
           <view class="pr__cell"><text class="pr__k">可玩至</text><text class="pr__v">{{untilText || '—'}}</text></view>
-          <view class="pr__cell" wx:if="{{daysText}}"><text class="pr__k">剩余</text><text class="pr__v">{{daysText}} 天</text></view>
+          <view class="pr__cell" wx:if="{{daysText}}"><text class="pr__k">剩余</text><text class="pr__v">{{daysText || 0}} 天</text></view>
           <view class="pr__cell"><text class="pr__k">票种</text><text class="pr__v">{{skuText}}</text></view>
         </view>
         <view class="pr__holo"></view>

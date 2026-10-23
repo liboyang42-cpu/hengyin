@@ -1825,7 +1825,7 @@ button::after {
 .hero-by__k { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
 .hero-title { font-size: var(--cy-type-page-title); font-weight: 700; line-height: var(--cy-leading-tight); color: var(--cy-color-text-primary); }
 .hero-acts { display: flex; align-items: center; gap: 20rpx; margin-top: var(--cy-space-4); min-height: 88rpx; }
-.hero-cta { flex: none; height: 88rpx; padding: 0 40rpx; border-radius: 999rpx; display: flex; align-items: center; justify-content: center;
+.hero-cta { flex: none; height: 88rpx; padding: 0 40rpx; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg); }
 .hero-fav { flex: none; width: 88rpx; height: 88rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   color: var(--cy-color-text-primary); border: 1rpx solid var(--cy-color-play-line); background: var(--cy-color-bg-surface-subtle); }
@@ -1837,11 +1837,11 @@ button::after {
 .hero-type--free { color: #2FD27A; } /* ds-ok:业主定 自由探索=绿;暗底上可读的绿 */
 
 /* 停靠层:价格按钮在右下角,收藏在顶栏胶囊左侧(带胶囊同款描边) */
-.dock-cta { position: fixed; z-index: 60; box-sizing: border-box; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; padding: 0 32rpx;
+.dock-cta { position: fixed; z-index: 60; box-sizing: border-box; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; padding: 0 32rpx; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg);
   box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, .45); /* ds-ok:浮层投影 */ }
 .dock-cta.is-merged { opacity: 0; pointer-events: none; } /* 落进详情底栏主按钮后让位给它 */
-.dock-fav { position: fixed; z-index: 120; box-sizing: border-box; border-radius: 999rpx; display: flex; align-items: center; justify-content: center;
+.dock-fav { position: fixed; z-index: 120; box-sizing: border-box; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   color: var(--cy-color-text-primary); background: rgba(0, 0, 0, .25); /* ds-ok:与微信胶囊同款半透明底 */
   border: 1rpx solid rgba(255, 255, 255, .25); /* ds-ok:微信胶囊描边 */ }
 
@@ -1891,7 +1891,7 @@ button::after {
 
 /* 故事扇收进顶栏:胶囊左侧的小卡堆 */
 .story-mini { position: fixed; z-index: 120; width: 72rpx; pointer-events: none; animation: hero-up .3s ease both; }
-.story-mini__c { position: absolute; top: 0; left: 0; width: 44rpx; height: 100%; border-radius: 8rpx; background: var(--cy-color-bg-surface-strong);
+.story-mini__c { position: absolute; top: 0; left: 0; width: 44rpx; height: 100%; border-radius: 8rpx; background: var(--cy-color-bg-surface-strong); /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   box-shadow: 0 4rpx 12rpx rgba(0,0,0,.4); /* ds-ok */ }
 .story-mini__c--0 { transform: translateX(24rpx) rotate(8deg); z-index: 3; }
 .story-mini__c--1 { transform: translateX(12rpx) rotate(0deg); z-index: 2; }
@@ -1900,7 +1900,7 @@ button::after {
 /* A11 路线/地点:进度条 + 路线说明 */
 .route-top { padding-top: var(--cy-space-5); padding-bottom: var(--cy-space-4); }
 .route-note { display: flex; align-items: center; gap: 16rpx; margin: 8rpx 0 var(--cy-space-5); font-size: var(--cy-type-caption); }
-.route-note__k { flex: none; padding: 4rpx 16rpx; border-radius: 999rpx; font-weight: 600; }
+.route-note__k { flex: none; padding: 4rpx 16rpx; border-radius: 999rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .route-note--city .route-note__k { color: #4D9BFF; background: rgba(77,155,255,.14); } /* ds-ok:城市定向=蓝 */
 .route-note--free .route-note__k { color: #2FD27A; background: rgba(47,210,122,.14); } /* ds-ok:自由探索=绿 */
 .route-note__v { color: var(--cy-color-text-secondary); }
@@ -1958,14 +1958,14 @@ button::after {
 .topic .hero-by__k { font-size: 23rpx; color: rgba(255,255,255,.6); } /* ds-ok */
 .topic .hero-title { font-size: 69rpx; line-height: 1.08; font-weight: 600; letter-spacing: -1rpx; color: #fff; } /* ds-ok */
 .hero-desc { margin-top: 27rpx; height: 173rpx; overflow: hidden; font-size: 27rpx; line-height: 1.6; color: rgba(255,255,255,.8); /* ds-ok */
-  -webkit-mask: linear-gradient(180deg, #000 55%, transparent); mask: linear-gradient(180deg, #000 55%, transparent); }
+  -webkit-mask: linear-gradient(180deg, #000 55%, transparent); mask: linear-gradient(180deg, #000 55%, transparent); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .topic .hero-acts { display: flex; align-items: center; gap: 19rpx; margin-top: 42rpx; min-height: 96rpx; }
 .topic .hero-cta { height: 96rpx; min-width: 288rpx; padding: 0 50rpx; border-radius: 48rpx; background: #fff; color: #000; font-size: 29rpx; font-weight: 600; box-sizing: border-box; } /* ds-ok */
 .topic .hero-cta.is-off { background: #2C2C2E; color: #8E8E93; } /* ds-ok */
 .topic .hero-fav { width: 96rpx; height: 96rpx; border-radius: 27rpx; background: rgba(255,255,255,.12); border: 1rpx solid rgba(255,255,255,.3); box-sizing: border-box; } /* ds-ok */
 .topic .hero-fav.is-on { background: #fff; } /* ds-ok */
 .bm-ic { width: 35rpx; height: 35rpx; display: block; }
-.topic .hero-type { padding-left: 8rpx; font-size: 25rpx; font-weight: 600; }
+.topic .hero-type { padding-left: 8rpx; font-size: 25rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .topic .hero-type--city { color: #5AA9FF; } /* ds-ok: v13 城市定向蓝 */
 .topic .hero-type--free { color: #7CF0A0; } /* ds-ok: v13 自由探索绿 */
 .topic .dt .bm-closed { margin-top: 19rpx; font-size: 23rpx; color: #FFC46B; } /* ds-ok */
@@ -2004,7 +2004,7 @@ button::after {
 .topic .det4 .temp-list .ul { display: flex; gap: 27rpx; overflow-x: auto; padding: 0 31rpx; }
 .topic .det4 .temp-list .li { flex: none; width: 288rpx; margin: 0; padding: 0; background: none; }
 .topic .det4 .temp-list .item { background: none; padding: 0; border: 0; }
-.topic .det4 .temp-list .pic { width: 288rpx !important; height: 212rpx !important; border-radius: 23rpx; display: block; margin-bottom: 15rpx; }
+.topic .det4 .temp-list .pic { width: 288rpx !important; height: 212rpx !important; border-radius: 23rpx; display: block; margin-bottom: 15rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .topic .det4 .temp-list .tit { font-size: 27rpx; font-weight: 600; color: #fff; } /* ds-ok */
 .topic .det4 .temp-list .david_mbxi { display: flex; gap: 0; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
 .topic .det4 .temp-list .david_mbxi_li { background: none; padding: 0; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
@@ -2043,7 +2043,7 @@ button::after {
 .story-lead { margin-top: 23rpx; font-size: 29rpx; line-height: 1.8; color: #d6d6da; } /* ds-ok */
 .topic .story-sec { margin-top: 38rpx; }
 .topic .story-cards { padding: 0; gap: 23rpx; }
-.topic .story-cc { height: 162rpx; border-radius: 38rpx; clip-path: inset(0 round 38rpx); }
+.topic .story-cc { height: 162rpx; border-radius: 38rpx; clip-path: inset(0 round 38rpx); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .topic .story-cc.is-open { height: 577rpx; }
 .topic .story-cc__sh { background: linear-gradient(180deg, rgba(0,0,0,.78), rgba(0,0,0,.25) 70%); transition: background .4s; } /* ds-ok */
 .topic .story-cc.is-open .story-cc__sh { background: linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 28%, rgba(22,20,18,.55) 56%, rgba(18,18,18,.94) 100%); } /* ds-ok */
@@ -2069,7 +2069,7 @@ button::after {
 .topic .rmap .route-map { width: 100%; height: 100%; }
 .topic .rmap .route-map-tip { position: absolute; left: 15rpx; bottom: 12rpx; font-size: 19rpx; padding: 4rpx 12rpx; border-radius: 10rpx; background: rgba(0,0,0,.55); color: rgba(255,255,255,.7); } /* ds-ok */
 .topic .route-note { display: flex; gap: 19rpx; align-items: flex-start; margin: 23rpx 0 0; padding: 23rpx 27rpx; border-radius: 27rpx; background: #1C1C1E; font-size: 25rpx; line-height: 1.55; } /* ds-ok */
-.topic .route-note__k { flex: none; margin-top: 2rpx; font-size: 21rpx; font-weight: 700; padding: 6rpx 15rpx; border-radius: 15rpx; }
+.topic .route-note__k { flex: none; margin-top: 2rpx; font-size: 21rpx; font-weight: 700; padding: 6rpx 15rpx; border-radius: 15rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .topic .route-note--city .route-note__k { background: #FF8A3D; color: #000; } /* ds-ok: v13 固定路线橙底 */
 .topic .route-note--free .route-note__k { background: #7CF0A0; color: #05210f; } /* ds-ok: v13 没有固定路线绿底 */
 .topic .route-note__v { color: #cfcfd3; } /* ds-ok */
@@ -2078,7 +2078,7 @@ button::after {
 .topic .davidxfxi .list { padding: 0; margin: 0; }
 .topic .davidxfxi .li.item { position: relative; display: flex; align-items: center; gap: 23rpx; margin-top: 19rpx; padding: 19rpx; border-radius: 27rpx; background: #1C1C1E; border: 0; } /* ds-ok */
 .topic .davidxfxi .xh { position: static; flex: none; width: 50rpx; height: 50rpx; border-radius: 50%; background: #FF8A3D; color: #000; font-size: 25rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0; } /* ds-ok */
-.topic .davidxfxi .item-pic { flex: none; width: 115rpx; height: 115rpx; border-radius: 19rpx; }
+.topic .davidxfxi .item-pic { flex: none; width: 115rpx; height: 115rpx; border-radius: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .topic .davidxfxi .node-card-foot { flex: 1; min-width: 0; padding: 0; margin: 0; background: none; display: block; }
 .topic .davidxfxi .david_hp_con_txt { font-size: 29rpx; font-weight: 600; color: #fff; } /* ds-ok */
 .topic .davidxfxi .dz, .topic .davidxfxi .david_hp_con_time { margin-top: 6rpx; font-size: 23rpx; color: #8E8E93; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok */
@@ -2107,14 +2107,14 @@ button::after {
 .bsheet__xi { position: relative; width: 23rpx; height: 23rpx; }
 .bsheet__xi::before, .bsheet__xi::after { content: ''; position: absolute; left: 50%; top: 0; width: 5rpx; height: 100%; margin-left: -2rpx; border-radius: 2rpx; background: #fff; transform: rotate(45deg); } /* ds-ok */
 .bsheet__xi::after { transform: rotate(-45deg); }
-.bsheet__h { display: block; margin-top: 8rpx; font-size: 42rpx; font-weight: 700; }
+.bsheet__h { display: block; margin-top: 8rpx; font-size: 42rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .bsheet__sub { display: block; margin-top: 4rpx; font-size: 25rpx; color: #8E8E93; } /* ds-ok */
 .hticket { position: relative; display: flex; height: 288rpx; margin: 31rpx auto 0; border-radius: 31rpx; overflow: hidden; box-shadow: 0 35rpx 77rpx rgba(0,0,0,.5); } /* ds-ok */
 .hticket__im { width: 42%; height: 100%; }
 .hticket__in { position: relative; flex: 1; padding: 27rpx; background: linear-gradient(140deg, #2a2d35, #17181c); } /* ds-ok */
 .hticket__k { display: block; font-size: 21rpx; letter-spacing: 1rpx; color: rgba(255,255,255,.6); } /* ds-ok */
-.hticket__b { display: block; margin-top: 12rpx; font-size: 33rpx; font-weight: 700; line-height: 1.25; }
-.hticket__p { position: absolute; left: 27rpx; bottom: 23rpx; font-size: 50rpx; font-weight: 800; font-style: italic; }
+.hticket__b { display: block; margin-top: 12rpx; font-size: 33rpx; font-weight: 700; line-height: 1.25; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.hticket__p { position: absolute; left: 27rpx; bottom: 23rpx; font-size: 50rpx; font-weight: 800; font-style: italic; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .hticket__u { position: absolute; right: 27rpx; bottom: 31rpx; font-size: 19rpx; color: rgba(255,255,255,.55); } /* ds-ok */
 .hticket__perf { position: absolute; left: 42%; top: 23rpx; bottom: 23rpx; z-index: 3; border-left: 4rpx dashed rgba(255,255,255,.25); } /* ds-ok */
 .hticket__n { position: absolute; left: 42%; z-index: 3; width: 35rpx; height: 35rpx; margin-left: -17rpx; border-radius: 50%; background: #1C1C1E; } /* ds-ok */
@@ -2130,15 +2130,15 @@ button::after {
 .bseg__b.on { color: #fff; } /* ds-ok */
 .bseg__t { max-width: 96%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bseg__ic { width: 50rpx; height: 50rpx; }
-.bseg__t { font-size: 25rpx; font-weight: 700; }
-.bseg__s { font-size: 21rpx; }
+.bseg__t { font-size: 25rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.bseg__s { font-size: 21rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .bseg__u { position: absolute; left: 0; bottom: -1rpx; width: 33.33%; height: 5rpx; border-radius: 4rpx; background: #fff; transition: transform .4s cubic-bezier(.34,1.32,.64,1); } /* ds-ok */
 .bchips { display: flex; flex-wrap: wrap; gap: 15rpx; margin-top: 27rpx; }
 .bchip { height: 62rpx; padding: 0 23rpx; border-radius: 31rpx; display: flex; align-items: center; font-size: 25rpx; background: #2C2C2E; } /* ds-ok */
 .bsheet__note { display: block; margin-top: 19rpx; font-size: 21rpx; color: #8E8E93; } /* ds-ok */
 .btotal { display: flex; justify-content: space-between; align-items: baseline; margin: 31rpx 4rpx 23rpx; }
 .btotal__k { font-size: 25rpx; color: #8E8E93; } /* ds-ok */
-.btotal__v { font-size: 54rpx; font-weight: 800; font-style: italic; }
+.btotal__v { font-size: 54rpx; font-weight: 800; font-style: italic; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .bsheet__go { height: 96rpx; border-radius: 48rpx; display: flex; align-items: center; justify-content: center; background: #fff; color: #000; font-size: 31rpx; font-weight: 600; } /* ds-ok */
 .det6-rule { margin-top: 19rpx; font-size: 21rpx; line-height: 1.5; color: #8E8E93; } /* ds-ok 积分口径小字 */
 /* v13 路线站点:全局 style/common.wxss 里旧时间轴(竖线 / 灰圈编号 / 左缩进)选择器更具体,这里按同级再压一层 */
@@ -2164,3 +2164,5 @@ button::after {
 .topic .tabcont > view:nth-child(6), .topic .tabcont > text:nth-child(6) { transition-delay: .25s; } .topic .tabcont > view:nth-child(7), .topic .tabcont > text:nth-child(7) { transition-delay: .3s; }
 .topic .tabcont > view:nth-child(n+8), .topic .tabcont > text:nth-child(n+8) { transition-delay: .35s; }
 .topic .tab-pre .story-cc { opacity: 0; transform: translateY(77rpx) rotateX(-25deg) scale(.96); transition: none; }
+
+.bsheet__x::after { content: ""; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); } /* 透明热区撑到 44px,视觉尺寸按原型不变 */

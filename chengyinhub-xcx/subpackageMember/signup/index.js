@@ -56,7 +56,7 @@ Page({
     autoplay: false,
     interval: 2000,
     duration: 500,
-    topicBg: app.getImgUrl('zt1.jpg'),
+    // topicBg 已退役:v13 票夹背景由 wbg 两层交替承担,原字段无人读取(2026-10-23)
     walletList: [{
       pic: app.getImgUrl('zt1.jpg'),
     }, {
@@ -144,7 +144,7 @@ Page({
       this._focusId = '';
       this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
       this._focusLookupPending = null;
-      this.setData({ currentSwiperTicket: i, topicBg: list[i].wImg || this.data.topicBg,
+      this.setData({ currentSwiperTicket: i,
         focusState: this._explicitFocus ? 'ready' : '', focusError: '' });
       this.syncCurrentTeam();
       return;
@@ -295,9 +295,9 @@ Page({
     this.setData({
       ticketList: list,
       currentSwiperTicket: currentIndex,
+      // (原 topicBg 字段已退役,见 data 注释)
       walletState: state, tabCount,
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
-      topicBg: cur.wImg || this.data.topicBg,
     });
     if (!this._entering && (state !== 'ready' || this._entered)) this._deckLay(); this._bgTo(cur.wImg); // 入场 / 新卡落入动画进行中不重排,否则第二路列表回来会把动画打断
     if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._entered = true; this._playArrive(); } else if (state === 'ready' && !this._entered) { this._entered = true; this._playEnter(false); }
@@ -527,7 +527,7 @@ Page({
   _bgTo(src) {
     if (!src || src === this.data.wbg[this.data.wbgOn]) return;
     const on = 1 - this.data.wbgOn;
-    this.setData({ ['wbg[' + on + ']']: src, wbgOn: on, topicBg: src });
+    this.setData({ ['wbg[' + on + ']']: src, wbgOn: on });
   },
   onWalletTab(e) {
     const i = Number(e.currentTarget.dataset.i) || 0;

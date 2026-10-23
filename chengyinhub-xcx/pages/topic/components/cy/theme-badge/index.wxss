@@ -11,8 +11,8 @@
 /* 金属着色:一束高光(位置跟倾斜走)+ 锥形渐变的金属带 + 细拉丝。--mx/--my/--ma 由组件逐帧写入。 */
 .metal {
   background:
-    radial-gradient(circle at var(--mx, 30%) var(--my, 22%), rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 32%),
-    conic-gradient(from var(--ma, 0deg) at 50% 55%, #7d5e22, #f7e7a8, #a98232, #fff6cf, #8a6a2a, #ecd28a, #9c742c, #f7e7a8, #7d5e22),
+    radial-gradient(circle at var(--mx, 30%) var(--my, 22%), rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 32%), /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+    conic-gradient(from var(--ma, 0deg) at 50% 55%, #7d5e22, #f7e7a8, #a98232, #fff6cf, #8a6a2a, #ecd28a, #9c742c, #f7e7a8, #7d5e22), /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
     repeating-linear-gradient(100deg, rgba(255, 255, 255, .07) 0 2rpx, rgba(0, 0, 0, .06) 2rpx 6rpx); /* ds-ok 金属色带是材质,不是界面色 */
   background-blend-mode: screen, normal, overlay;
 }
@@ -27,7 +27,7 @@
 .tb-glyph--city::after { content: ''; position: absolute; left: 2rpx; right: 2rpx; top: 3rpx; height: 10rpx;
   border-bottom: 3rpx solid rgba(58, 42, 8, .85); transform: skewY(-18deg); } /* ds-ok 信封折线 */
 .tb-glyph--free { border-radius: 50%; }
-.tb-glyph--big { width: 150rpx; height: 150rpx; margin: -75rpx 0 0 -75rpx; border-width: 8rpx; border-radius: 16rpx; }
+.tb-glyph--big { width: 150rpx; height: 150rpx; margin: -75rpx 0 0 -75rpx; border-width: 8rpx; border-radius: 16rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .tb-glyph--big.tb-glyph--free { border-radius: 50%; }
 .tb-glyph--big.tb-glyph--city::after { left: 8rpx; right: 8rpx; top: 10rpx; height: 50rpx; border-bottom-width: 8rpx; }
 
@@ -44,7 +44,7 @@
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
 .tb-copy { position: relative; margin-top: 56rpx; display: flex; flex-direction: column; align-items: center; gap: 10rpx;
   animation: tb-fade .45s .2s ease both; }
-.tb-name { font-size: 42rpx; font-weight: 700; color: var(--cy-color-text-primary); }
+.tb-name { font-size: 42rpx; font-weight: 700; color: var(--cy-color-text-primary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .tb-sub { font-size: var(--cy-font-body); color: var(--cy-color-text-secondary); }
 .tb-hint { margin-top: 6rpx; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
 

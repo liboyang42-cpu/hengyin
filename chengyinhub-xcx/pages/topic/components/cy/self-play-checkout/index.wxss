@@ -8,36 +8,36 @@
 .ck__chev { width: 18rpx; height: 18rpx; border-left: 4rpx solid var(--cy-color-text-primary); border-bottom: 4rpx solid var(--cy-color-text-primary); transform: rotate(45deg); margin-left: 6rpx; }
 .ck__title { font-size: var(--cy-font-title, 34rpx); font-weight: 600; color: var(--cy-color-text-primary); line-height: 72rpx; }
 .ck__body { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 var(--cy-page-x); box-sizing: border-box; }
-.ck__sec { display: block; margin: 36rpx 4rpx 16rpx; font-size: 28rpx; font-weight: 600; color: var(--cy-color-text-secondary); }
+.ck__sec { display: block; margin: 36rpx 4rpx 16rpx; font-size: 28rpx; font-weight: 600; color: var(--cy-color-text-secondary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__card { background: var(--cy-bg-card); border-radius: var(--cy-radius-xl); }
 .ck__who { display: flex; align-items: center; justify-content: space-between; padding: 28rpx; }
 .ck__who-main { display: flex; align-items: baseline; gap: 16rpx; }
-.ck__who-n { font-size: 30rpx; color: var(--cy-color-text-primary); }
-.ck__who-p, .ck__more { font-size: 26rpx; color: var(--cy-color-text-secondary); }
-.ck__who-miss { font-size: 28rpx; color: var(--cy-color-status-warning); }
+.ck__who-n { font-size: 30rpx; color: var(--cy-color-text-primary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.ck__who-p, .ck__more { font-size: 26rpx; color: var(--cy-color-text-secondary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.ck__who-miss { font-size: 28rpx; color: var(--cy-color-status-warning); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__item { display: flex; gap: 24rpx; padding: 24rpx; align-items: center; }
-.ck__cover { flex: none; width: 144rpx; height: 144rpx; border-radius: 24rpx; }
+.ck__cover { flex: none; width: 144rpx; height: 144rpx; border-radius: 24rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__item-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
-.ck__item-n { font-size: 32rpx; font-weight: 600; color: var(--cy-color-text-primary); }
-.ck__item-s { font-size: 24rpx; color: var(--cy-color-text-secondary); }
+.ck__item-n { font-size: 32rpx; font-weight: 600; color: var(--cy-color-text-primary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.ck__item-s { font-size: 24rpx; color: var(--cy-color-text-secondary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__row { display: flex; justify-content: space-between; align-items: center; padding: 30rpx 28rpx; border-top: 1rpx solid var(--cy-color-border-subtle); }
 .ck__row:first-child { border-top: 0; }
-.ck__k { font-size: 28rpx; color: var(--cy-color-text-secondary); }
-.ck__v { font-size: 28rpx; color: var(--cy-color-text-primary); }
+.ck__k { font-size: 28rpx; color: var(--cy-color-text-secondary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.ck__v { font-size: 28rpx; color: var(--cy-color-text-primary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__k--sum { color: var(--cy-color-text-primary); font-weight: 600; }
-.ck__v--sum { font-size: 34rpx; font-weight: 700; }
+.ck__v--sum { font-size: 34rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__consent { margin-top: 32rpx; }
-.ck__hint { display: block; margin-top: 12rpx; font-size: 24rpx; color: var(--cy-color-status-warning); }
-.ck__err { display: flex; gap: 16rpx; margin-top: 12rpx; font-size: 24rpx; color: var(--cy-color-status-danger); }
+.ck__hint { display: block; margin-top: 12rpx; font-size: 24rpx; color: var(--cy-color-status-warning); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.ck__err { display: flex; gap: 16rpx; margin-top: 12rpx; font-size: 24rpx; color: var(--cy-color-status-danger); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__err-act { text-decoration: underline; }
 .ck__pad { height: 240rpx; }
 .ck__bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 28rpx; padding: 24rpx var(--cy-page-x) calc(24rpx + env(safe-area-inset-bottom));
   background: var(--cy-bg-page); border-top: 1rpx solid var(--cy-color-border-subtle); }
 .ck__sum { display: flex; flex-direction: column; }
-.ck__sum-k { font-size: 22rpx; color: var(--cy-color-text-secondary); }
-.ck__sum-v { font-size: 44rpx; font-weight: 800; color: var(--cy-color-text-primary); }
-.ck__pay { margin-left: auto; height: var(--cy-btn-h); padding: 0 64rpx; border-radius: 999rpx; display: flex; align-items: center;
-  background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-size: 30rpx; font-weight: 700; }
+.ck__sum-k { font-size: 22rpx; color: var(--cy-color-text-secondary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.ck__sum-v { font-size: 44rpx; font-weight: 800; color: var(--cy-color-text-primary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.ck__pay { margin-left: auto; height: var(--cy-btn-h); padding: 0 64rpx; border-radius: 999rpx; display: flex; align-items: center; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+  background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-size: 30rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__pay.is-busy { opacity: .6; }
 /* v13 原型对齐:深灰卡 16px 圆角;主题信息「时间 / 地点」小字在上、值在下;合计斜体粗数字 */
 /* ds-ok: 本段颜色照 v13 原型取值 */
@@ -47,14 +47,16 @@
 .ck__sec { margin: 35rpx 4rpx 15rpx; font-size: 27rpx; color: #ddd; } /* ds-ok */
 .ck__card { background: #1C1C1E; border-radius: 31rpx; } /* ds-ok */
 .ck__item { gap: 23rpx; padding: 23rpx; }
-.ck__cover { width: 138rpx; height: 138rpx; border-radius: 23rpx; }
+.ck__cover { width: 138rpx; height: 138rpx; border-radius: 23rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__item-tx { gap: 2rpx; }
-.ck__item-n { font-size: 31rpx; margin-bottom: 4rpx; }
+.ck__item-n { font-size: 31rpx; margin-bottom: 4rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__item-s { font-size: 23rpx; color: #8E8E93; } /* ds-ok */
 .ck__item-v { font-size: 29rpx; font-weight: 500; color: #fff; margin-bottom: 4rpx; } /* ds-ok */
 .ck__row { padding: 27rpx; border-top-color: rgba(255,255,255,.08); } /* ds-ok */
 .ck__v { font-weight: 500; }
 .ck__v--sum, .ck__sum-v { font-style: italic; font-weight: 800; }
-.ck__sum-v { font-size: 50rpx; }
+.ck__sum-v { font-size: 50rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__bar { background: #000; border-top-color: rgba(255,255,255,.08); } /* ds-ok */
 .ck__pay { height: 96rpx; padding: 0 58rpx; background: #fff; color: #000; font-size: 31rpx; font-weight: 600; } /* ds-ok */
+
+.ck__back::after { content: ""; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); } /* 透明热区撑到 44px,视觉尺寸按原型不变 */

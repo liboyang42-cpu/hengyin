@@ -8,10 +8,10 @@
     <view class="rp__rail"></view>
     <view class="rp__fill {{reducedMotion ? 'rp__fill--still' : ''}}" style="transform: scaleX({{fill / 100}});"></view>
     <block wx:for="{{marks}}" wx:key="left">
-      <view class="rp__m {{index < lit ? 'is-lit' : ''}}" style="left: {{item.left}}%;"><view class="rp__ck"></view></view>
-      <text class="rp__lb" style="left: {{item.left}}%;">{{item.label}}</text>
+      <view class="rp__m {{index < lit ? 'is-lit' : ''}}" style="left: {{item.left || 0}}%;"><view class="rp__ck"></view></view>
+      <text class="rp__lb" style="left: {{item.left || 0}}%;">{{item.label}}</text>
     </block>
-    <text wx:if="{{plus}}" class="rp__plus" style="left: {{plusLeft}}%;">{{plus}}</text>
+    <text wx:if="{{plus}}" class="rp__plus" style="left: {{plusLeft || 0}}%;">{{plus}}</text>
     <view class="rp__chest">
       <view class="rp__glow"></view>
       <view class="rp__box"></view>
