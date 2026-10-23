@@ -72,4 +72,20 @@ class WebhookSsrfHopGuardTest {
                 InMemoryNotifyFixtures.publicHop(),
                 InMemoryNotifyFixtures.publicHop())).decision);
     }
+
+    @Test
+    void recoverOriginalParsesRequestIdAndDoesNotOccupyThenPublicHopAllows() {
+        WebhookSsrfHopGuard.ChainVerdict original = guard.recoverOriginal(
+                "evt-E", Collections.singletonList(InMemoryNotifyFixtures.publicHop()));
+        assertTrue(original.allowed());
+        assertEquals(WebhookSsrfHopGuard.Decision.ALLOW, original.decision);
+        WebhookSsrfHopGuard.ChainVerdict blank = guard.recoverOriginal(
+                null, Collections.singletonList(InMemoryNotifyFixtures.publicHop()));
+        assertTrue(blank.allowed());
+        assertEquals(WebhookSsrfHopGuard.Decision.ALLOW, blank.decision);
+        WebhookSsrfHopGuard.ChainVerdict empty = guard.recoverOriginal(
+                "  ", Collections.singletonList(InMemoryNotifyFixtures.publicHop()));
+        assertTrue(empty.allowed());
+        assertEquals(WebhookSsrfHopGuard.Decision.ALLOW, empty.decision);
+    }
 }

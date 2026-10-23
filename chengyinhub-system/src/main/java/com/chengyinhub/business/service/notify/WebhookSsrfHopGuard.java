@@ -97,6 +97,15 @@ public final class WebhookSsrfHopGuard {
         }
     }
 
+    /**
+     * 对齐 iOS {@code recoverOriginal}:解析 requestId 后只检查链,不占账、不跟真实跳。
+     * 缺 requestId 仍检查链,不抛。
+     */
+    public ChainVerdict recoverOriginal(String originalRequestId, List<Hop> hops) {
+        ImmutableReceiptProducer.parseRequestId(originalRequestId);
+        return inspectChain(hops);
+    }
+
     static List<InetAddress> resolveLocally(String host, List<InetAddress> provided) {
         List<InetAddress> out = new ArrayList<InetAddress>();
         InetAddress literal = parseIpv4Literal(host);
