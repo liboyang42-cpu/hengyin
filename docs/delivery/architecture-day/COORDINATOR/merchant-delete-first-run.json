@@ -1,0 +1,15 @@
+{
+  "source_sha": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+  "run": 40036839154,
+  "class": "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT",
+  "tests": 15,
+  "passed": 14,
+  "failures": 1,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": "CLEAN",
+  "raw_xml_sha256": "a1cb63816c68768f270c87a24fc0f15bb03d34c828941ccaa4925731a460ff90",
+  "cause": "Added test219 expected Long1 but JDBC integer column returned Integer1; no numeric-state mismatch. Original8 passed; all14 others passed. Root changes only expected literal1L to1 and reruns exact15; no SQL/production change.",
+  "full_109_batch": "NOT_YET_TERMINAL",
+  "accepted": false
+}

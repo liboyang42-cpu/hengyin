@@ -216,7 +216,7 @@ class MerchantRegistrationCancellationMySqlIT {
                 return null;
             });
         } finally { worker.shutdownNow(); assertTrue(worker.awaitTermination(10, TimeUnit.SECONDS)); }
-        assertEquals(1L, row(id).get("audit_status"));
+        assertEquals(1, row(id).get("audit_status"));
         assertEquals(0, row(id).get("del_flag"));
     }
 
