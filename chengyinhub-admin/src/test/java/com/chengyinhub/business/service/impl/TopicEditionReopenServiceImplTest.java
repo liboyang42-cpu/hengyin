@@ -191,6 +191,23 @@ class TopicEditionReopenServiceImplTest {
     }
 
     @Test
+    void sourceTemplateMissingAtCopyTime_failsClosedInsteadOfSharingAsNoNpcRefs() {
+        // 使用权闸读到了模板,复制节点时再读已不存在(并发删除):不能当成「未引用 NPC」继续共享。
+        when(templateMapper.selectCmsMemberTemplateById(701L))
+                .thenReturn(usableTemplate(PLATFORM_MEMBER))
+                .thenReturn(null);
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.reopenNextEdition(SOURCE, "template-vanished"));
+
+        assertTrue(error.getMessage().contains("来源模板不存在"), error.getMessage());
+        assertTrue(error.getMessage().contains("701"), error.getMessage());
+        verify(reopenMapper, never()).insertReopenedNode(any(CmsTopicNode.class));
+        verify(reopenMapper, never()).completeReopenRequest(any(Long.class), any(Long.class));
+        verify(templateMapper, never()).insertCmsMemberTemplate(any(CmsMemberTemplate.class));
+    }
+
+    @Test
     void revshareWithNonPlatformContent_requiresTermsReconfigurationAndWritesNothing() {
         when(reopenMapper.selectSourceContentForUpdate(SOURCE)).thenReturn(content(RoleEntityType.MEMBER, 88L));
         when(reopenMapper.selectSourceChapters(SOURCE)).thenReturn(Collections.singletonList(sourceChapter("REVSHARE")));

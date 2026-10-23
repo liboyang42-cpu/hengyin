@@ -414,6 +414,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 runPayload(command, "reason");
                 if (Arrays.asList("CANCELLED", "INTERRUPTED").contains(run.path("operationStatus").asText())) throw error("GAME_RUN_TERMINAL", "本局已运营中止");
                 run.put("operationReason", runReason(command));
+                if ("RUN_PAUSE".equals(action) && !"PAUSED".equals(run.path("operationStatus").asText())) run.put("pausedAt", clock.now().getTime());
                 run.put("operationStatus", "RUN_PAUSE".equals(action) ? "PAUSED" : "RUN_CANCEL".equals(action) ? "CANCELLED" : "INTERRUPTED");
                 if (!"RUN_PAUSE".equals(action)) releaseUnexecutedRouteReservations(session, run);
                 break;
@@ -421,6 +422,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 runPayload(command, "reason");
                 if (!"PAUSED".equals(run.path("operationStatus").asText()) || !"ONLINE".equals(run.path("authorityMode").asText())) throw error("GAME_STATE_CONFLICT", "人工模式须先完成校账");
                 requireActivityServiceWindow(activity, clock.now());
+                resumeFrozenTimers(session, run);
                 run.put("operationReason", runReason(command)); run.put("operationStatus", "RUNNING");
                 break;
             case "ARRIVAL_ISSUE": return issueArrival(actor, activity, session, command, run);
@@ -430,7 +432,12 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 runPayload(command, "teamId", "questKey", "operationKind", "operationKey", "reason"); runReason(command);
                 JsonNode revokeQuest = arrivalTarget(session, command);
                 Long revokeTeam = requireFrozenTeam(session, command.getPayload().get("teamId"));
-                run.with("arrivals").remove(arrivalKey(revokeTeam, revokeQuest.path("locationKey").asText()));
+                String revokeKey = arrivalKey(revokeTeam, revokeQuest.path("locationKey").asText());
+                if (!run.path("arrivals").path(revokeKey).isObject()) throw error("GAME_STATE_CONFLICT", "该队在此地点没有可撤销的到达记录");
+                if (run.path("arrivalRevocations").size() >= 500) throw error("GAME_EVENT_LIMIT", "本局撤销记录达到支持容量");
+                run.with("arrivals").remove(revokeKey);
+                run.with("arrivalRevocations").putObject(String.valueOf(receiptId)).put("teamId", revokeTeam).put("locationKey", revokeQuest.path("locationKey").asText())
+                        .put("revokedBy", actor.getMemberId()).put("reason", runReason(command)).put("at", clock.now().getTime());
                 break;
             case "ACT_UNLOCK":
                 runPayload(command, "actKey", "reason"); requireOnlineRun(run); runReason(command);
@@ -453,6 +460,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             case "STAFF_TEAM_EXIT":
                 runPayload(command, "teamId", "reason"); runReason(command);
                 Long exiting = requireFrozenTeam(session, command.getPayload().get("teamId"));
+                if (run.path("exitedTeams").has(String.valueOf(exiting))) throw error("GAME_STATE_CONFLICT", "该队已退出本局");
                 run.with("exitedTeams").put(String.valueOf(exiting), receiptId);
                 releaseTeamReservations(session, exiting);
                 releaseCooperationReservations(session, exiting);
@@ -495,7 +503,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 for (JsonNode unknown : run.path("manual").path("unknownRequests")) if (Arrays.asList("UNKNOWN", "PENDING", "CONFLICT").contains(unknown.path("outcome").asText())) throw error("GAME_MANUAL_UNRESOLVED", "未知在线回执尚未复核");
                 for (JsonNode signature : run.path("manual").path("signatures")) if (!signature.path("used").asBoolean()) throw error("GAME_MANUAL_UNRESOLVED", "人工事件尚未逐条执行或复核");
                 run.with("manual").put("resolvedBy", actor.getMemberId()).put("closedAt", clock.now().getTime());
-                run.put("authorityEpoch", run.path("authorityEpoch").asInt(1) + 1).put("authorityMode", "ONLINE").put("operationStatus", "PAUSED");
+                run.put("authorityEpoch", run.path("authorityEpoch").asInt(1) + 1).put("authorityMode", "ONLINE").put("operationStatus", "PAUSED").put("pausedAt", clock.now().getTime());
                 run.remove("nonces"); run.remove("arrivals");
                 for (GameStoryState owner : safe(runtimeMapper.selectStoryStates(session.getId()))) if ("TEAM".equals(owner.getOwnerType())) {
                     TopicRouteEngine.State state = routeOwnerState(owner);
@@ -512,9 +520,37 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     private void saveRouteOwner(GameSession session, GameStoryState owner, TopicRouteEngine.State state) {
-        if ("TEAM".equals(owner.getOwnerType())) survivalEngine.syncChallenge(sessionConfig(session), routeRules(session), state, clock.now().getTime());
+        if ("TEAM".equals(owner.getOwnerType())) survivalEngine.syncChallenge(sessionConfig(session), routeRules(session), state, survivalTime(session));
+        saveOwnerWithoutSurvival(owner, state);
+    }
+
+    /** 运营取消/中止/退队只释放占用，不推进归零 HP 或挑战计时，因此不会顺带写入 HP 结局。 */
+    private void saveOwnerWithoutSurvival(GameStoryState owner, TopicRouteEngine.State state) {
         owner.setVariablesJson(writeJson(state)); owner.setUpdateTime(clock.now());
         if (runtimeMapper.updateStoryStateCas(owner) != 1) throw error("GAME_STATE_CONFLICT", "归属账已更新");
+    }
+
+    /** 在线暂停期间，归零 HP 与挑战计时停在暂停时刻。 */
+    private long survivalTime(GameSession session) {
+        JsonNode run = runControl(session);
+        if ("PAUSED".equals(run.path("operationStatus").asText()) && "ONLINE".equals(run.path("authorityMode").asText()) && run.path("pausedAt").isIntegralNumber()) return run.path("pausedAt").asLong();
+        return clock.now().getTime();
+    }
+
+    /** 恢复时把未结的归零 HP / 挑战截止时间顺延暂停时长。 */
+    private void resumeFrozenTimers(GameSession session, ObjectNode run) {
+        if (!run.path("pausedAt").isIntegralNumber()) return;
+        long paused = Math.max(0L, clock.now().getTime() - run.path("pausedAt").asLong());
+        run.remove("pausedAt");
+        if (paused == 0L) return;
+        for (GameStoryState owner : safe(runtimeMapper.selectStoryStates(session.getId()))) if ("TEAM".equals(owner.getOwnerType())) {
+            TopicRouteEngine.State state = routeOwnerState(owner); ObjectNode runtime = state.getThemeRuntime(); boolean shifted = false;
+            JsonNode zero = runtime.path("zeroHp");
+            if (zero.isObject() && !zero.path("resolved").asBoolean() && zero.path("deadlineAt").isIntegralNumber()) { ((ObjectNode) zero).put("deadlineAt", Math.addExact(zero.path("deadlineAt").asLong(), paused)); shifted = true; }
+            JsonNode challenge = runtime.path("challenge");
+            if (challenge.isObject() && !challenge.path("resolved").asBoolean() && challenge.path("deadlineAt").isIntegralNumber()) { ((ObjectNode) challenge).put("deadlineAt", Math.addExact(challenge.path("deadlineAt").asLong(), paused)); shifted = true; }
+            if (shifted) saveOwnerWithoutSurvival(owner, state);
+        }
     }
 
     private Long requireFrozenTeam(GameSession session, Object raw) {
@@ -527,7 +563,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private void releaseTeamReservations(GameSession session, Long teamId) {
         GameStoryState owner = requireRouteOwner(session, teamId);
         TopicRouteEngine.State state = routeOwnerState(owner); state.getThemeRuntime().with("gameplay").remove("activeQuest"); state.getThemeRuntime().with("gameplay").remove("pendingTaskEffects"); state.getThemeRuntime().remove("activeOperation"); state.getThemeRuntime().remove("operationFacts");
-        saveRouteOwner(session, owner, state);
+        saveOwnerWithoutSurvival(owner, state);
     }
 
     private void releaseUnexecutedRouteReservations(GameSession session, ObjectNode run) {
@@ -541,7 +577,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         CooperationScope scope = cooperationScope(session, true);
         if (exitingTeam != null) cooperationEngine.exit(scope.world, exitingTeam);
         else for (Long teamId : scope.teams.keySet()) cooperationEngine.exit(scope.world, teamId);
-        persistCooperation(scope);
+        persistCooperation(scope, false);
     }
 
     private String digest(String value) {
@@ -717,7 +753,10 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         data.put("balances", routeBalances(session));
         data.put("highWaterHash", digest(writeJson(routeBalances(session)) + ":" + session.getRevision() + ":" + run.path("eventSeq").asInt()));
         data.put("events", run.path("events").deepCopy()); data.put("operationStatus", run.path("operationStatus").asText());
-        data.put("authorityMode", run.path("authorityMode").asText()); data.put("manual", run.path("manual").deepCopy());
+        // 导出不带一次性到达凭证：人工签署中的 nonce 只用于当时核验
+        JsonNode manual = run.path("manual").deepCopy();
+        for (JsonNode signature : manual.path("signatures")) if (signature.path("command").path("payload").isObject()) ((ObjectNode) signature.path("command").path("payload")).remove("nonce");
+        data.put("authorityMode", run.path("authorityMode").asText()); data.put("manual", manual);
         return data;
     }
 
@@ -803,6 +842,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             item.put("outcome", conflict ? "CONFLICT" : receipt == null ? "UNKNOWN" : receipt.getOutcome());
             if (conflict) manual.put("needsReview", true);
         }
+        resumeFrozenTimers(session, run);
         run.put("authorityMode", "MANUAL");
         saveRun(session, run); bumpSession(session, session.getStatus(), session.getCurrentChapterId(), actor.getMemberId(), clock.now());
         return result(session, singleton("manual", manual.deepCopy()));
@@ -1132,10 +1172,13 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         return scope;
     }
 
-    private void persistCooperation(CooperationScope scope) {
+    private void persistCooperation(CooperationScope scope) { persistCooperation(scope, true); }
+
+    private void persistCooperation(CooperationScope scope, boolean survival) {
         for (Map.Entry<Long, TopicRouteEngine.State> team : scope.teams.entrySet()) {
             GameStoryState owner = scope.owners.get(team.getKey());
-            if (!writeJson(team.getValue()).equals(owner.getVariablesJson())) saveRouteOwner(scope.session, owner, team.getValue());
+            if (writeJson(team.getValue()).equals(owner.getVariablesJson())) continue;
+            if (survival) saveRouteOwner(scope.session, owner, team.getValue()); else saveOwnerWithoutSurvival(owner, team.getValue());
         }
         if (scope.world.getThemeRuntime().path("cooperation").has("result")) {
             JsonNode ending=scope.world.getThemeRuntime().path("cooperation").path("result");
@@ -1735,10 +1778,11 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         JsonNode survival=routeGameplay(session).path("survival");String policy=survival.path("zeroHpPolicy").asText();
         if(!GameSession.RUNNING.equals(session.getStatus()) || !(Arrays.asList("THEME_FAIL","WAIT","STEPS").contains(policy) || "CHALLENGE".equals(policy) && survival.path("zeroChallenge").path("version").asInt()==2))return session;
         if(runControl(session).path("exitedTeams").has(String.valueOf(teamId)))return session;
+        if(Arrays.asList("CANCELLED","INTERRUPTED").contains(runControl(session).path("operationStatus").asText()))return session;
         GameSession locked=runtimeMapper.selectSessionByActivityForUpdate(session.getActivityId());
         if(locked==null || !Objects.equals(locked.getId(),session.getId()))throw error("GAME_STATE_CONFLICT","Play-through changed");
         GameStoryState owner=requireRouteOwner(locked,teamId);TopicRouteEngine.State state=routeOwnerState(owner);String before=writeJson(state);
-        survivalEngine.syncChallenge(sessionConfig(locked),routeRules(locked),state,clock.now().getTime());
+        survivalEngine.syncChallenge(sessionConfig(locked),routeRules(locked),state,survivalTime(locked));
         if(!before.equals(writeJson(state))) {
             themeEngine.reconcileHeld(sessionConfig(locked).path("themeConfig"),state,routeRules(locked));JourneyInitialState.clamp(routeRules(locked),state);
             saveRouteOwner(locked,owner,state);bumpSession(locked,locked.getStatus(),locked.getCurrentChapterId(),memberId,clock.now());
@@ -2378,7 +2422,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             TopicRouteEngine.State owner="TEAM".equals(scope)?state:world;
             if(owner==null)continue;
             for(Map.Entry<String,Number> entry:owner.getVariables().entrySet()) {
-                if(!entry.getKey().startsWith("clue.") || entry.getValue()==null || entry.getValue().intValue()!=1 || !labels.containsKey(entry.getKey()))continue;
+                if(!entry.getKey().startsWith("clue.") || entry.getValue()==null || entry.getValue().doubleValue()<1 || !labels.containsKey(entry.getKey()))continue;
                 ObjectNode row=out.addObject().put("id",entry.getKey()).put("name",labels.get(entry.getKey())).put("scope",scope);
                 row.set("sources",clueSources(snapshot,entry.getKey(),scope,state,world));
             }

@@ -14,6 +14,8 @@ const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js')
 const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
 const { shouldUseAr, arSupported, pillOf } = require('./ar-gate.js');
+// C1:扫码比对节点静态码 —— 只证明码对得上,不证明人在现场
+const { SCAN_MATCH_NOTE } = require('../../utils/sensor-contract.js');
 
 const TITLE = '扫一下门口的码';
 // AR 迟迟放不下 / 认不出:15 秒后自动回落屏幕叠加 —— 服务端早已算过这一站,画面不能一直卡在「找地面」
@@ -65,6 +67,7 @@ Component({
     // 同上:写回被监听的 kind 会自触发死循环
     kindKey: '文字',
     titleText: TITLE,
+    matchNote: SCAN_MATCH_NOTE,
     playing: false,
     /* 语音条那七根竖线的高度,逐值照原型 .pv-wave i:nth-child(n)。
        ⚠️ 组件 wxss 里 :nth-child 不生效(静默失效,不报错),所以高度走 data。 */

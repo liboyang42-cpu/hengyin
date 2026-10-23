@@ -40,6 +40,8 @@ function tierLabel(diff, tolSeconds) {
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
+// C1:停表毫秒是本机自报;挑战身份与奖励上限只搬服务端的
+const { withAttempt, freshAttempt, rewardNote } = require('../../utils/sensor-contract.js');
 
 Component({
   behaviors: [reducedMotionBehavior],
@@ -50,6 +52,9 @@ Component({
     targetSeconds: { type: Number, value: 10 },
     toleranceMs: { type: Number, value: 300 },
     tries: { type: Number, value: 0 },      // 0 = 不限
+    // C1:服务端开表发的挑战身份(0 = 没有)与奖励上限(空 = 服务端没说,什么都不承诺)
+    attemptId: { type: Number, value: 0 },
+    rewardCeiling: { type: String, value: '' },
   },
   data: {
     phase: 'intro',                          // intro | run | paused | over
@@ -63,11 +68,13 @@ Component({
     tolText: '0.300',
     dev: '',                                 // 没停准时的偏差「早 2.40 秒」
     left: 0,                                 // 没停准时还剩几次(台面记账,这里只读来显示)
+    rewardNote: '',
   },
   /* ⚠️ 这里监听的四个全是**属性**,组件内部一个都不许写(targetText / tolText 才是
      内部那份)。observer 监听它、内部又写它,会自己触发自己,死循环把运行时打挂,
      而且一条错都不报 —— 掷骰子那屏踩过一次,查了很久才发现不是环境的问题。 */
   observers: {
+    rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, kicker, targetSeconds, toleranceMs, tries': function (show, kicker, target, tol) {
       this._stop();
       if (!show) return;
@@ -101,6 +108,8 @@ Component({
 
     onRun() {
       this._t0 = Date.now();
+      // 开局那一刻手里的号是上一局的;只有这一局开表后服务端新发的号才随成绩交
+      this._attemptAtRun = this.data.attemptId;
       this.setData({ phase: 'run', big: '0.00', hidden: false, timeText: '00:00.00', cap: CAP_ON });
       this._stop();
       this._timer = setInterval(() => this._tick(), TICK_MS);
@@ -166,7 +175,8 @@ Component({
         if (hit) stage.win(tierLabel(diff, tol) + ' · ' + detail);
         else if (exhausted) stage.fail(false);
       }
-      this.triggerEvent('submit', { elapsedMs: elapsed, deviationMs: diff * 1000, hit: hit });
+      this.triggerEvent('submit', withAttempt({ elapsedMs: elapsed, deviationMs: diff * 1000, hit: hit },
+        { attemptId: freshAttempt(this.data.attemptId, this._attemptAtRun) }));
     },
 
     onVerdict(e) { this.triggerEvent('verdict', e.detail); },

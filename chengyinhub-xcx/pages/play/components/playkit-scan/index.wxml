@@ -7,6 +7,8 @@
     <!-- 显形档是整屏相机(上面不留玩法页的地址栏,用户 2026-09-22 纠正):
          标题跟着内容走 —— 取景时在底部说明条里,相机起不来时是旁路块的第一行。 -->
     <view class="sc__q" wx:if="{{kindKey !== '显形'}}">{{titleText}}</view>
+    <!-- C1:比对的是这一站的静态任务码 —— 说清是码对得上,不是到场核验 -->
+    <view class="sc__sub" wx:if="{{kindKey !== '显形'}}">{{matchNote}}</view>
 
     <view class="sc__wrap">
       <!-- 取景框是正方形,而且摆在屏幕正中 —— 扫码这件事人是举着手机对准的,
@@ -64,6 +66,7 @@
             <view class="sc__pill">
               <view class="sc__pill-t">{{titleText}}</view>
               <view class="sc__pill-s">对准这一站的码</view>
+              <view class="sc__pill-s">{{matchNote}}</view>
             </view>
           </block>
           <!-- 显形:不是「啪」一下出现,是从镜头里浮出来。只动透明度与 transform(transition,不新增 keyframes)。

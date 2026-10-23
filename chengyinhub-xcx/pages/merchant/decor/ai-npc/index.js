@@ -11,6 +11,7 @@ const toast = require('../../../../utils/toast.js');
 const modal = require('../../../../utils/modal.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const pixelAvatar = require('../../../../utils/pixel-avatar.js');
+const profileReview = require('../../../../utils/profile-review.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
 // 单文件限额与共享上传入口同一真源(生产 application.yml 10MB),避免页面自定 20MB 与服务端脱节。
 const { MAX_UPLOAD_FILE_SIZE } = require('../../../../utils/transport/upload-client.js');
@@ -63,6 +64,8 @@ Page({
     knowledge: '',
     auditStatus: null,
     auditReason: '',
+    // W10b #25:服务端审核回执翻成的一句话(人设审核 / 玩家能否看到 / 形象图复核);读不到为空,不编造。
+    reviewText: '',
     savedAvatar: '',
     hasProfile: false,
     presetVisible: false,
@@ -151,8 +154,9 @@ Page({
           if (res && String(res.code) === '200') resolve(res);
           else reject(Error((res && res.msg) || '请求失败，请重试'));
         },
-        successStatusAbnormal: (res) => reject(Error((res && res.msg) || '请求失败，请重试')),
-        fail: () => reject(Error('网络异常，请稍后重试')),
+        // transport=true:没拿到业务回执,写请求可能已在服务端生效(H 原音色:只有这类才进入 UNKNOWN)
+        successStatusAbnormal: (res) => reject(Object.assign(Error((res && res.msg) || '请求失败，请重试'), { transport: true })),
+        fail: () => reject(Object.assign(Error('网络异常，请稍后重试'), { transport: true })),
       })
     );
   },
@@ -169,11 +173,29 @@ Page({
         this._saved = { avatar, name: d.name || '', greeting: d.greeting || '', persona: d.persona || '', knowledge: d.knowledge || '' };
         (Object.assign(this.data, {hasProfile: !!avatar, savedAvatar: avatar}), this.setData({loading: false, name: this._saved.name, greeting: this._saved.greeting, persona: this._saved.persona, knowledge: this._saved.knowledge, auditStatus: d.auditStatus == null ? null : Number(d.auditStatus), auditReason: d.auditReason || '', voiceStatus: Number(d.voiceStatus) || 0}, () => this.restoreAvatar()));
         this.refreshVoice();
+        this._loadReview();
       })
       .catch((e) => {
         if (current()) this.setData({ loading: false, loadError: e.message });
       });
     this._loadStorePoint();
+  },
+  _loadReview() {
+    const memberId = String(app.getUserID() || '');
+    const seq = (this._reviewSeq || 0) + 1;
+    this._reviewSeq = seq;
+    const current = () => !this._destroyed && seq === this._reviewSeq && String(app.getUserID() || '') === memberId;
+    app.sendRequest({
+      url: '/api/merchant/npc/review',
+      method: 'GET',
+      hideLoading: true,
+      autoErrorToast: false,
+      success: (res) => {
+        if (!current()) return;
+        this.setData({ reviewText: res && String(res.code) === '200' ? profileReview.merchantNpcText(res.data) : '' });
+      },
+      fail: () => { if (current()) this.setData({ reviewText: '' }); },
+    });
   },
 
   /**
@@ -552,13 +574,18 @@ Page({
     if (this.data.saving) return;
     this.setData({ saving: true, saveError: '' });
     return this._request('/api/merchant/npc/save', payload)
-      .then(() => {
+      .then((res) => {
         if (!current()) return;
+        const receipt = res && res.receipt;
         this._saved = Object.assign({}, payload);
         this._portrait = null;
         (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
+        this._reviewSeq = (this._reviewSeq || 0) + 1;
+        this.setData({ reviewText: profileReview.merchantNpcText(receipt) });
+        if (!receipt) this._loadReview();
         if (onSuccess) onSuccess();
-        toast.success('角色已更新');
+        // 保存 ≠ 上线:改动会回到待审,审核通过前玩家看不到。
+        toast.success(receipt && receipt.review === 'APPROVED' ? '角色已更新' : '已提交审核');
       })
       .catch((e) => {
         if (current()) this.setData({ saving: false, saveError: e.message });
@@ -634,14 +661,14 @@ Page({
         const value = res.data || res,
           status = Number(value.voiceStatus);
         if (![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
-        const confirmed =
-          (status === 1 || status === 2) &&
-          this.data.voiceFile &&
-          value.voiceSample === this.data.voiceFile.url;
+        // PRIVATE-GROUP-H-voice-original-result:UNKNOWN 只能由「服务端样本 = 原录音」解除;
+        // 状态有效但样本还是旧的,说明原提交没确认,继续锁住重录/上传,等再次查询。
+        const original = !!(this.data.voiceFile && this.data.voiceFile.url) && value.voiceSample === this.data.voiceFile.url;
+        const confirmed = (status === 1 || status === 2) && original;
         this.setData({
           voiceStatus: status,
           voiceSample: value.voiceSample || '',
-          voiceUnknown: false,
+          voiceUnknown: this.data.voiceUnknown && !original,
           voiceFile: confirmed ? null : this.data.voiceFile,
         });
         if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
@@ -931,9 +958,15 @@ Page({
       .then((res) => {
         if (!current()) return;
         const d = res.data || res;
+        // enroll 成功只会回 1(生成中)/2(已就绪);类型不对就当结果未知,保留原录音去回读
+        if (!(d.voiceStatus === 1 || d.voiceStatus === 2)) {
+          this.setData({ voiceBusy: false, voiceError: '声音结果待确认，请查询生成状态', voiceUnknown: true });
+          this.refreshVoice();
+          return;
+        }
         this.setData({
           voiceBusy: false,
-          voiceStatus: Number(d.voiceStatus),
+          voiceStatus: d.voiceStatus,
           voiceFile: null,
           voiceUnknown: false,
         });
@@ -941,9 +974,12 @@ Page({
       })
       .catch((e) => {
         if (!current()) return;
-        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: !!this._voiceSubmitted });
+        // 只有已发出 enroll 且没拿到明确业务回执(断网/HTTP 异常/后端「结果待确认」)才是 UNKNOWN;
+        // 明确的业务拒绝(未开通、上游拒绝等)是确定失败,保留录音可直接重试。
+        const unknown = !!this._voiceSubmitted && (e.transport === true || e.message === '声音结果待确认，请稍后查询状态');
+        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: unknown });
         // 可能已经提交成功，先查状态再允许重试，避免重复生成。
-        if (this._voiceSubmitted) this.refreshVoice();
+        if (unknown) this.refreshVoice();
       })
       .finally(() => {
         if (current()) this._voiceSubmitted = false;

@@ -79,6 +79,8 @@ class AuditWorkbenchControllerTest {
     void reviewAllowsEscalatedToRejected() {
         AuditTask task = task(11L, AuditTask.STATUS_ESCALATED, 1);
         AuditReviewDTO request = review(AuditTask.STATUS_REJECTED, "risk");
+        // #334 F10:裁决升级单须带升级后的版本(审核台 UI 恒带 row.version)
+        request.setExpectedVersion(1);
         when(auditTaskMapper.selectAuditTaskById(11L)).thenReturn(task);
         when(auditTaskMapper.updateAuditTaskReviewCas(eq(11L), eq(AuditTask.STATUS_ESCALATED),
                 eq(AuditTask.STATUS_REJECTED), eq(100L), eq(1), any())).thenReturn(1);

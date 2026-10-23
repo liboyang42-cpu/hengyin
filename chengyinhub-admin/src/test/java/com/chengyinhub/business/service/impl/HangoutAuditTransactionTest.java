@@ -140,7 +140,9 @@ class HangoutAuditTransactionTest {
         assertEquals(1, service.review(40L, 100L, request(3)));
         assertEquals(1, service.review(40L, 100L, request(3)));
         assertEquals(3, value("select status from task")); assertEquals(0, count("notice")); assertEquals(1, count("timeline"));
-        assertEquals(1, service.review(40L, 100L, request(2)));
+        AuditReviewDTO escalatedLevel = request(2);
+        escalatedLevel.setExpectedVersion(1); // #334 F10:裁决升级单须带升级后的版本
+        assertEquals(1, service.review(40L, 100L, escalatedLevel));
         assertEquals(3, count("notice"));
     }
 

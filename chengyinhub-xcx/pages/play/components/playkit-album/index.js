@@ -8,6 +8,8 @@ Component({
     completionEnabled: { type: Boolean, value: false },
     done: { type: Boolean, value: false },
     uploaded: { type: Boolean, value: false },
+    // '' | 'retry'（网络/服务暂时异常，可重传同一张）| 'reselect'（请重新选图）
+    uploadFailure: { type: String, value: '' },
   },
   data: { cur: 0 },
   methods: {
@@ -15,7 +17,7 @@ Component({
     close() { this.triggerEvent('close'); },
     onCta() {
       if (!this.data.completionEnabled || this.data.done) { this.close(); return; }
-      if (this.data.uploaded) { this.triggerEvent('submit'); return; }
+      if (this.data.uploaded || this.data.uploadFailure === 'retry') { this.triggerEvent('submit'); return; }
       this.choosePhoto();
     },
     choosePhoto() {

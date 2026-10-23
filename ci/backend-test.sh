@@ -73,6 +73,9 @@ MYBATIS_ITS=(
   #   FINISH 后复盘=结果行、订单/库存/权益/奖励=实际履约、二次 FINISH 不改任何行。真库真 mapper 才验得动。
   GameSessionScanLegalMySqlIT
   GameSessionCityEndMySqlIT
+  # 2026-10-22 发布验收 P1(导演台/商家城市节点/玩家城市局):准备→商家就绪→名单→开局、并发准备、
+  #   全员/定向广播与存活范围、同 requestId 只补发失败投递、单站暂停/恢复与玩家读回、队伍/账号隔离。
+  CityDirectorConsoleMySqlIT
   HangoutAuditLockMyBatisIT
   ImSendIdempotencyMybatisIntegrationTest
   # R9-02 迟到下注竞态:两个真事务交错(结算等锁定读、锁定读拒已结算),Mock 单测测不到
@@ -87,13 +90,33 @@ MYBATIS_ITS=(
   CityNodePendingVisibilityMySqlIT
   # MySQL leader session, failover fence, strict Druid wall and transactional duplicate definitions.
   SchedulerSessionLockMySqlIT
+  # 2026-10-22 发布验收 P1 俱乐部:入会通过/驳回、封禁/解封、举报工单在真库上的归属与幂等(真服务+真 mapper)。
+  ClubJoinGovernanceMySqlIT
+  # 2026-10-22 发布验收 P1 商家自由探索:节点编辑只改本行且审核痕迹真重置、非法提交零写入、
+  #   入驻服务端定字段+唯一键挡重复、撤回只动自己的供给、邀约收发两侧条款一致。
+  FreeExploreNodeSupplyMySqlIT
   ClubGatherArrivalMySqlIT
   ClubAttendanceTimeMappingMyBatisIT
+  # 2026-10-22 W3 #334 F7:领队改集合时间/地点=单条「未售出才生效」条件 UPDATE;在途下单/修改在先两种交错都要真库。
+  ClubLeadOpsSoldLockMySqlIT
   VerificationRiskQueueMySqlIT
   AccountDeregistrationRaceMySqlIT
   # R12-E2E 旅程全链路:建局→到店→问问题→判错→检定→推进→阶段结算→结局全走真库真 mapper;
   #   并发 settle 幂等另有一条负控(测试内临时摘掉动作/回执两把唯一键,断言并发重放消失后再还原)。
   JourneyFullFlowMySqlIT
+  # Lane W10b:资料版本号递增 / 头像回执读 inbox / 分享版本 CAS 列与按令牌撤销,真迁移跑两遍证幂等。
+  LaneW10bReadbackMySqlIT
+  # 2026-10-22 AC1 发布验收 P0 链(docs/delivery/release-closeout-20261022/acceptance-p0-backend.md):
+  #   核销(扫码/团码/撤销/双店员竞态)、跨账号、城市跑恢复竞态与冻结、自由探索供给闸、注销清理范围。
+  P0RedemptionChainMySqlIT
+  P0CrossAccountMySqlIT
+  P0CityRunChainMySqlIT
+  P0FreeExploreSupplyGateMySqlIT
+  P0DeregistrationMySqlIT
+  # 2026-10-22 发布验收 P1 玩家念头(领取/步数基线/达成加运气上限仅一次)与隐私(按用途撤回、到访头像窗口、
+  #   导出不跨账号且外人游标被拒、注销申请幂等与仅本人可撤)。
+  JourneyThoughtProgressMySqlIT
+  PrivacyVisibilityExportMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,

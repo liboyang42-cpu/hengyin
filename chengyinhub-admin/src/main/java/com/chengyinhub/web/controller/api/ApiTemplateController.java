@@ -13,6 +13,7 @@ import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.ICmsTemplateLibraryService;
 import com.chengyinhub.business.service.ICouponRewardAuthorizationService;
 import com.chengyinhub.business.service.ITemplatePublishService;
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.util.JourneyReviewTexts;
@@ -266,16 +267,13 @@ public class ApiTemplateController extends BaseController {
 
             // 内容安全(X02):上架 = 重新对所有用户可见,必须复检一次。
             // 下架不检 —— 把违规内容撤下来的动作不该被内容安全拦住。
-            if (publishStatus == 1) {
-                String secMsg = libraryRecordTextSecurity(memberTemplateId, memberId);
-                if (secMsg != null) {
-                    return error(secMsg);
-                }
-            }
+            TemplateLibraryRepublishReview review = publishStatus == 1
+                    ? libraryRecordTextSecurity(memberTemplateId, memberId) : null;
 
-            // 调用事务方法更新状态
-            boolean result = templatePublishService.updateTemplateLibraryStatus(
-                    memberTemplateId, publishStatus, memberId);
+            // 网络复检在锁外完成；事务内绑定完整被检内容后才允许写入。
+            boolean result = publishStatus == 1
+                    ? templatePublishService.updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId, review)
+                    : templatePublishService.updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId);
 
             String statusText = publishStatus == 1 ? "上架" : "下架";
             if (result) {
@@ -404,35 +402,47 @@ public class ApiTemplateController extends BaseController {
     }
 
 
-    /**
-     * 上架前复检模板库记录的文本(X02)。
-     *
-     * <p>与 {@link #templateTextSecurity} 分开:那条检的是提交上来的 request,
-     * 这条检的是库里已有的记录 —— 上架动作不带正文,必须先读回来。
-     * 读不到记录时返回 null 放行,归属校验由 service 层负责,不在这里替它判。
-     */
-    private String libraryRecordTextSecurity(Long memberTemplateId, Long memberId) {
-        CmsTemplateLibrary record;
+    /** 上架前按我的模板与归属复检全部有效玩法库投影；读取失败不允许跳过审核。 */
+    private TemplateLibraryRepublishReview libraryRecordTextSecurity(Long memberTemplateId, Long memberId) {
+        final String unavailable = "上架复检暂不可用，请刷新后重试";
+        if (memberTemplateId == null || memberTemplateId <= 0 || memberId == null || memberId <= 0) {
+            throw new ServiceException(unavailable, 500);
+        }
+        CmsTemplateLibrary query = new CmsTemplateLibrary();
+        query.setMemberTemplateId(memberTemplateId);
+        query.setMemberId(memberId);
+        query.setDelFlag(0);
+        List<CmsTemplateLibrary> records;
         try {
-            record = templateLibraryService.selectCmsTemplateLibraryById(memberTemplateId);
+            records = templateLibraryService.selectCmsTemplateLibraryList(query);
         } catch (Exception e) {
-            logger.warn("上架复检读取模板库记录失败 id={}", memberTemplateId, e);
-            return null;
+            logger.warn("上架复检读取模板库投影失败 memberTemplateId={}", memberTemplateId, e);
+            throw new ServiceException(unavailable, 500);
         }
-        if (record == null) {
-            return null;
+        if (records == null || records.isEmpty()) {
+            throw new ServiceException(unavailable, 500);
         }
-        String content = IWxContentSecurityService.joinText(record.getTitle(), record.getDescription());
+        // 固化完整内容及坐标；送检只读取不可变文本，不能再读取可变领域对象。
+        TemplateLibraryRepublishReview review = TemplateLibraryRepublishReview.freeze(
+                memberTemplateId, memberId, records);
         String openid = openidOfMember(memberId);
-        if (!StringUtils.isEmpty(content)) {
-            String secMsg = wxContentSecurityService.checkText(content, openid);
+        for (TemplateLibraryRepublishReview.ReviewedText record : review.getReviewedTexts()) {
+            String content = IWxContentSecurityService.joinText(
+                    record.getFreeTextFields().toArray(new String[0]));
+            if (!StringUtils.isEmpty(content)) {
+                String secMsg = wxContentSecurityService.checkText(content, openid);
+                if (secMsg != null) {
+                    throw new ServiceException(secMsg, 500);
+                }
+            }
+            // R12:上架复检同样覆盖块配置叙事段。
+            String secMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
+                    JourneyReviewTexts.collectBlocks(record.getAdvancedConfigJson()));
             if (secMsg != null) {
-                return secMsg;
+                throw new ServiceException(secMsg, 500);
             }
         }
-        // R12:上架复检同样覆盖块配置叙事段 —— 记录里已同步 advancedConfigJson,别只检标题/描述。
-        return JourneyReviewTexts.check(wxContentSecurityService, openid,
-                JourneyReviewTexts.collectBlocks(record.getAdvancedConfigJson()));
+        return review;
     }
 
     private String openidOfMember(Long memberId) {

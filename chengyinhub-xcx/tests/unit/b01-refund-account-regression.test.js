@@ -1,7 +1,7 @@
 'use strict';
 // Refund/account lifecycle regression ported from public PR #33 (E05).
-// Refund behaviour is unchanged; master keeps refund-cancel subscription opt-in disabled
-// (see longrun-e05-03/04), so a refund must dispatch without any subscription request.
+// Refund behaviour is unchanged. B9(L21):确认退款这一下同步申请 refund/refundRejected 两个订阅模板
+// (真 utils/subscribe.js,断言 wx.requestSubscribeMessage 在确认手势内被调用),失效确认不申请。
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -64,7 +64,7 @@ function mount(file, kind = 'Component') {
 }
 
 for (const [label, file, handler] of entries) {
-  test(`${label}: refund dispatches on confirmation without subscription opt-in`, async () => {
+  test(`${label}: refund dispatches on confirmation with refund-result subscription in the same gesture`, async () => {
     const h = mount(file);
     h.tap(handler);
     assert.equal(h.requests.length, 0);
@@ -73,7 +73,8 @@ for (const [label, file, handler] of entries) {
     assert.equal(h.requests[0].url, '/api/registration/cancel-refund');
     assert.equal(h.requests[0].data.id, 7);
     assert.equal(h.requests[0].sentAs, '11');
-    assert.equal(h.subscriptions.length, 0);
+    assert.equal(h.subscriptions.length, 1, 'one refund confirmation asks for one subscription prompt');
+    assert.equal(h.subscriptions[0].tmplIds.length, 2, 'refund + refundRejected');
     const before = plain(h.page.data);
     h.account('22');
     await Promise.resolve();
