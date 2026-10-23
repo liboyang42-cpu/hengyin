@@ -522,6 +522,7 @@ Page({
     sceneDirty: false,
     sceneBackGuardOff: false,
     sceneConfirm: false,
+    // clubId 是页面内部状态(WXML 不渲染):只直写 this.data,不走 setData 白传一次视图层(U4)。
     clubId: null,
     club: null,
     manageTopics: [],
@@ -766,7 +767,7 @@ Page({
       // 从项目详情 → 找俱乐部 → 这里,主题一路带过来
       topicId: (opt && opt.topicId) || '',
     });
-    if (id) { this.setData({ clubId: id }); this.loadAll(); return; }
+    if (id) { this.data.clubId = id; this.loadAll(); return; }
     // owner 入口(承接原 club/index 管理台):无 id → 解析我拥有的俱乐部
     if (opt && opt.owner) { this._ownerEntry = true; this.resolveOwnerEntry(); return; }
     this.setData({ detailLoaded: true, notFound: true }); cyToast('缺少俱乐部');
@@ -819,7 +820,7 @@ Page({
           setTimeout(function () { wx.navigateBack({ fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } }); }, 900);
           return;
         }
-        if (owned.length === 1) { that.setData({ clubId: Number(owned[0].id) }); that.loadAll(); return; }
+        if (owned.length === 1) { that.data.clubId = Number(owned[0].id); that.loadAll(); return; }
         that.setData({ ownerClubs: owned, ownerPickerShow: true, detailLoaded: true });
       },
       fail(res, statusCode) {
@@ -839,7 +840,8 @@ Page({
   onPickOwnerClub(e) {
     const cid = Number(e.currentTarget.dataset.id);
     if (!cid) return;
-    this.setData({ ownerPickerShow: false, clubId: cid });
+    this.data.clubId = cid;
+    this.setData({ ownerPickerShow: false });
     this.loadAll();
   },
   closeOwnerPicker() { this.setData({ ownerPickerShow: false }); wx.navigateBack({ fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } }); },
