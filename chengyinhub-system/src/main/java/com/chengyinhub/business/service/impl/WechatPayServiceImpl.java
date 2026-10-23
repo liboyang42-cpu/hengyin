@@ -225,22 +225,26 @@ public class WechatPayServiceImpl implements IWechatPayService {
 
     /**
      * 商家转账到零钱(批量转账 API,单笔一批)。微信按 (mchid, out_batch_no) 幂等。
-     * 返回 ok=true 表示微信已受理(WAIT_PAY/ACCEPTED);失败返回 ok=false + error,调用方须兜底退回余额。
+     * ok=true 仅表示受理。进入 SDK 后的异常一律保留原号查证，不能据此回补余额。
+     * 仅本地调用前拒绝返回 ok=false, ambiguous=false；调用方仍须校验原回执与扣款状态。
      */
     @Override
     public Map<String, String> transferToBalance(String outBatchNo, String outDetailNo,
                                                   java.math.BigDecimal amountYuan, String openid, String remark,
                                                   String appid) {
         Map<String, String> r = new HashMap<>();
+        r.put("ambiguous", "false");
         if (transferBatchService == null) {
             r.put("ok", "false");
             r.put("error", "转账服务未就绪(商户号需开通「商家转账到零钱」并配置证书)");
             return r;
         }
         if (amountYuan == null || amountYuan.compareTo(java.math.BigDecimal.ZERO) <= 0
-                || openid == null || openid.isEmpty()) {
+                || openid == null || openid.trim().isEmpty()
+                || outBatchNo == null || !outBatchNo.matches("[A-Za-z0-9]{1,32}")
+                || outDetailNo == null || !outDetailNo.matches("[A-Za-z0-9]{1,32}")) {
             r.put("ok", "false");
-            r.put("error", "转账参数不合法(金额或openid为空)");
+            r.put("error", "转账参数不合法(金额、openid或原批次/明细号)");
             return r;
         }
         // appid 不再由本方法私自决定 —— 它必须与 openid 同源,而只有调用方知道
@@ -280,31 +284,41 @@ public class WechatPayServiceImpl implements IWechatPayService {
             request.setTransferDetailList(details);
 
             InitiateBatchTransferResponse resp = transferBatchService.initiateBatchTransfer(request);
-            r.put("ok", "true");
-            if (resp != null) {
-                r.put("batchId", resp.getBatchId());
-                r.put("batchStatus", resp.getBatchStatus());
+            if (resp == null || !outBatchNo.equals(resp.getOutBatchNo())
+                    || resp.getBatchId() == null || resp.getBatchId().trim().isEmpty()) {
+                r.put("ok", "false");
+                r.put("ambiguous", "true");
+                r.put("error", "转账受理响应缺失或身份不符，须按原号查证");
+                return r;
             }
+            r.put("ok", "true");
+            r.remove("ambiguous");
+            r.put("batchId", resp.getBatchId());
+            r.put("batchStatus", resp.getBatchStatus());
             return r;
         } catch (com.wechat.pay.java.core.exception.ServiceException e) {
-            // 微信已明确响应错误(HTTP 非 2xx):批次未受理,钱未出 → 确定性失败,调用方可安全退款
-            logger.error("微信商家转账被拒 outBatchNo={} openid={} code={}: {}", outBatchNo, openid, e.getErrorCode(), e.getErrorMessage());
+            // 官方批量转账协议：SYSTEM_ERROR/429 必须原号原参数重试；INVALID_REQUEST
+            // 还包含创建冲突/超出重试期。即使本次请求被拒，也不能证明同号原意图未被受理。
+            // 不从 HTTP 非 2xx、异常类型或易变的错误文案推导可退款，统一交原号查询/人工核实。
+            logger.warn("微信商家转账结果待查证 outBatchNo={} status={} code={}",
+                    outBatchNo, e.getHttpStatusCode(), e.getErrorCode());
             r.put("ok", "false");
-            r.put("error", "微信拒绝(" + e.getErrorCode() + ")");
+            r.put("ambiguous", "true");
+            r.put("error", "微信转账结果不确定，须按原批次号及原参数查证");
             return r;
         } catch (Exception e) {
             // ★结果不确定:网络超时/连接中断/响应验签或解析失败——微信可能已受理并已打款。
             // 打上 ambiguous 标记,调用方禁止退款+置终态,须保持处理中交查询任务用 out_batch_no 核实,避免双花丢钱。
-            logger.error("微信商家转账结果不确定(疑似超时/网络异常) outBatchNo={} openid={}: {}", outBatchNo, openid, e.getMessage());
+            logger.warn("微信商家转账结果不确定 outBatchNo={} type={}", outBatchNo, e.getClass().getSimpleName());
             r.put("ok", "false");
             r.put("ambiguous", "true");
-            r.put("error", e.getMessage() == null ? "转账结果不确定" : e.getMessage());
+            r.put("error", "转账结果不确定，须按原号查证");
             return r;
         }
     }
 
     /**
-     * 查询商家转账最终结果:先查批次(CLOSED=整批关闭失败),再查明细最终态。
+     * 查询商家转账最终结果:FINISHED 后查明细；单纯 CLOSED 不推断资金未达。
      * result: SUCCESS=到账 / FAIL=失败(调用方应退余额) / PROCESSING=处理中(保持) / UNKNOWN=查询异常(勿判失败,重试)。
      */
     @Override
@@ -320,20 +334,51 @@ public class WechatPayServiceImpl implements IWechatPayService {
             bq.setOutBatchNo(outBatchNo);
             bq.setNeedQueryDetail(false);
             TransferBatchEntity be = transferBatchService.getTransferBatchByOutNo(bq);
-            String batchStatus = (be != null && be.getTransferBatch() != null) ? be.getTransferBatch().getBatchStatus() : null;
+            var batch = be == null ? null : be.getTransferBatch();
+            if (batch == null || outBatchNo == null || !outBatchNo.equals(batch.getOutBatchNo())
+                    || batch.getMchid() == null || !batch.getMchid().equals(wxPayConfig.getMerchantId())
+                    || batch.getBatchId() == null || batch.getBatchId().trim().isEmpty()
+                    || batch.getAppid() == null || batch.getAppid().trim().isEmpty()
+                    || !Integer.valueOf(1).equals(batch.getTotalNum())
+                    || batch.getTotalAmount() == null || batch.getTotalAmount() <= 0) {
+                r.put("result", "UNKNOWN");
+                r.put("error", "批次身份或单笔事实缺失/不符");
+                return r;
+            }
+            String batchStatus = batch.getBatchStatus();
             r.put("batchStatus", batchStatus == null ? "" : batchStatus);
-            if ("CLOSED".equals(batchStatus)) {
-                r.put("result", "FAIL");
+            r.put("batchId", batch.getBatchId());
+            r.put("mchid", batch.getMchid());
+            r.put("appid", batch.getAppid());
+            r.put("outBatchNo", batch.getOutBatchNo());
+            if (!"FINISHED".equals(batchStatus)) {
+                // 官方仅将 CLOSED 描述为“已关闭，查关闭原因”；不足以推导本明细资金未达。
+                // WAIT_PAY/ACCEPTED/PROCESSING 也不能查明细终态；保留原意图等待确认。
+                boolean pending = "WAIT_PAY".equals(batchStatus) || "ACCEPTED".equals(batchStatus)
+                        || "PROCESSING".equals(batchStatus);
+                r.put("result", pending ? "PROCESSING" : "UNKNOWN");
+                if (!pending) r.put("error", "批次无明确明细终态，须按原号核实");
                 return r;
             }
             GetTransferDetailByOutNoRequest dq = new GetTransferDetailByOutNoRequest();
             dq.setOutBatchNo(outBatchNo);
             dq.setOutDetailNo(outDetailNo);
             TransferDetailEntity de = transferBatchService.getTransferDetailByOutNo(dq);
+            if (de == null || !outBatchNo.equals(de.getOutBatchNo()) || outDetailNo == null
+                    || !outDetailNo.equals(de.getOutDetailNo()) || !batch.getBatchId().equals(de.getBatchId())
+                    || !batch.getMchid().equals(de.getMchid()) || !batch.getAppid().equals(de.getAppid())
+                    || de.getDetailId() == null || de.getDetailId().trim().isEmpty()
+                    || !batch.getTotalAmount().equals(de.getTransferAmount())) {
+                r.put("result", "UNKNOWN");
+                r.put("error", "明细身份或金额事实缺失/不符");
+                return r;
+            }
             String detailStatus = de == null ? null : de.getDetailStatus();
             r.put("detailStatus", detailStatus == null ? "" : detailStatus);
             String detailId = de == null ? null : de.getDetailId();
             r.put("detailId", detailId == null ? "" : detailId);
+            r.put("outDetailNo", de.getOutDetailNo());
+            r.put("transferAmount", String.valueOf(de.getTransferAmount()));
             String failReasonCode = (de != null && de.getFailReason() != null) ? de.getFailReason().name() : "";
             r.put("failReasonCode", failReasonCode);
             if ("SUCCESS".equals(detailStatus)) {
@@ -341,13 +386,16 @@ public class WechatPayServiceImpl implements IWechatPayService {
             } else if ("FAIL".equals(detailStatus)) {
                 r.put("result", "FAIL");
             } else {
-                r.put("result", "PROCESSING");
+                boolean pending = "INIT".equals(detailStatus) || "WAIT_PAY".equals(detailStatus)
+                        || "PROCESSING".equals(detailStatus);
+                r.put("result", pending ? "PROCESSING" : "UNKNOWN");
             }
             return r;
         } catch (Exception e) {
-            logger.warn("查询转账结果异常 outBatchNo={} outDetailNo={}: {}", outBatchNo, outDetailNo, e.getMessage());
+            logger.warn("查询转账结果异常 outBatchNo={} outDetailNo={} type={}",
+                    outBatchNo, outDetailNo, e.getClass().getSimpleName());
             r.put("result", "UNKNOWN");
-            r.put("error", e.getMessage() == null ? "查询异常" : e.getMessage());
+            r.put("error", "查询结果暂无法核实，须保留原号查证");
             return r;
         }
     }
