@@ -40,6 +40,7 @@ class CashWithdrawServiceTest {
     // R1 起 withdraw 要按来源选同源 appid,新依赖不注入就是 NPE(10/12 个用例连坐)
     private com.chengyinhub.common.config.WxPayConfig wxPayConfig;
     private CashWithdrawServiceImpl svc;
+    private CashWithdrawEvidenceFixture evidence;
 
     @BeforeEach
     void setUp() {
@@ -81,6 +82,7 @@ class CashWithdrawServiceTest {
             return 1;
         });
         when(mapper.selectById(500L)).thenAnswer(inv -> created.get() == null ? new MemberCashWithdraw() : created.get());
+        evidence = new CashWithdrawEvidenceFixture(mapper);
     }
 
     private UmsMember member(String openid, String balance) {
@@ -92,7 +94,12 @@ class CashWithdrawServiceTest {
     private Map<String, String> transferResult(boolean ok, String batchIdOrErr) {
         Map<String, String> r = new HashMap<>();
         r.put("ok", ok ? "true" : "false");
-        if (ok) r.put("batchId", batchIdOrErr); else r.put("error", batchIdOrErr);
+        if (ok) {
+            r.put("batchId", batchIdOrErr);
+        } else {
+            r.put("error", batchIdOrErr);
+            r.put("ambiguous", "false");
+        }
         return r;
     }
 
@@ -124,7 +131,7 @@ class CashWithdrawServiceTest {
         when(umsMemberService.addBalance(900002L, new BigDecimal("30.00"))).thenReturn(true);
         when(wechatPayService.transferToBalance(any(), any(), any(), any(), any(), any()))
                 .thenReturn(transferResult(false, "转账服务未就绪"));
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
         assertThrows(IllegalStateException.class, () -> svc.withdraw(900002L, new BigDecimal("30")));
 
@@ -251,7 +258,7 @@ class CashWithdrawServiceTest {
      * 不得自动退款、不得标已退款、必须告警+置待人工(3)。*/
     @Test
     void withdraw_deductThrows_marksManualAndAlarms() {
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
         when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
         when(merchantReferralBountyService.frozenAmount(900002L)).thenReturn(new BigDecimal("60"));
         doThrow(new RuntimeException("DB connection lost"))
@@ -274,7 +281,7 @@ class CashWithdrawServiceTest {
      */
     @Test
     void withdraw_deductThrowsIllegalState_goesManualNotZombie() {
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
         when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
         when(merchantReferralBountyService.frozenAmount(900002L)).thenReturn(new BigDecimal("60"));
         doThrow(new IllegalStateException("db down"))

@@ -137,6 +137,7 @@ class FundIdempotencyConcurrencyTest {
         final BigDecimal amount = new BigDecimal("30.00");
         MemberCashWithdraw pending = new MemberCashWithdraw();
         pending.setId(withdrawalId);
+        pending.setDelFlag(0);
         pending.setMemberId(memberId);
         pending.setAmount(amount);
         pending.setOutBatchNo("CW" + withdrawalId);
@@ -177,11 +178,13 @@ class FundIdempotencyConcurrencyTest {
                     "发起线程应等待对账线程先领取同一提现单");
             Map<String, String> result = new HashMap<>();
             result.put("ok", "false");
+            result.put("ambiguous", "false");
             result.put("error", "微信明确拒绝");
             return result;
         });
         Map<String, String> queryFailure = new HashMap<>();
         queryFailure.put("result", "FAIL");
+        queryFailure.put("detailStatus", "FAIL");
         queryFailure.put("batchStatus", "CLOSED");
         when(wechatPayService.queryTransferResult("CW" + withdrawalId, "CD" + withdrawalId))
                 .thenReturn(queryFailure);
@@ -206,6 +209,11 @@ class FundIdempotencyConcurrencyTest {
                 new WithdrawalFrozenAmountResolver(bountyService, cooldownService));
         ReflectionTestUtils.setField(service, "balanceAdmissionService",
                 com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(memberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver")));
+        // Keep the original single-winner assertion, and persist that winner's lifecycle for later fact checks.
+        org.mockito.Mockito.doAnswer(invocation -> {
+            if (!statusClaimed.compareAndSet(false, true)) return 0;
+            pending.setStatus(invocation.getArgument(0, MemberCashWithdraw.class).getStatus()); return 1;
+        }).when(mapper).updateStatusIfProcessing(any());
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
@@ -219,8 +227,8 @@ class FundIdempotencyConcurrencyTest {
             assertTrue(failure.getCause() instanceof IllegalStateException,
                     "发起线程应以提现失败异常结束，实际=" + failure.getCause());
             IllegalStateException cause = (IllegalStateException) failure.getCause();
-            assertTrue(cause.getMessage().contains("微信明确拒绝"),
-                    "发起线程仍应返回本次渠道确定性失败的具体原因");
+            assertTrue(cause.getMessage().contains("待核查"),
+                    "原单已由对账终结，迟到本地拒绝不能重新领取回补或覆盖原回执");
         } finally {
             allowDeterministicFailure.countDown();
             pool.shutdownNow();
@@ -228,7 +236,7 @@ class FundIdempotencyConcurrencyTest {
 
         verify(memberService, times(1)).addBalance(memberId, amount);
         ArgumentCaptor<MemberCashWithdraw> claims = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, times(2)).updateStatusIfProcessing(claims.capture());
+        verify(mapper, times(1)).updateStatusIfProcessing(claims.capture());
         List<MemberCashWithdraw> actualClaims = claims.getAllValues();
         assertTrue(actualClaims.stream().allMatch(claim ->
                         Long.valueOf(withdrawalId).equals(claim.getId())

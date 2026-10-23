@@ -100,6 +100,12 @@ class CashWithdrawFrozenRequeryH2Test {
 
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute(DDL);
+        // Legacy H2 regression fixture only; MySQL fund guarantees are tested separately.
+        jdbc.execute("create table member_cash_withdraw_fund_fact (id bigint primary key auto_increment,"
+                + "withdrawal_id bigint, member_id bigint, amount decimal(15,2), out_batch_no varchar(64), out_detail_no varchar(64),"
+                + "kind varchar(20), submission_intent_id bigint, balance_before decimal(15,2), balance_after decimal(15,2), create_time datetime,"
+                + "channel_batch_status varchar(32), channel_detail_status varchar(32), channel_detail_id varchar(64), channel_error_code varchar(64),"
+                + "unique(withdrawal_id, kind))");
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(dataSource);
@@ -109,6 +115,7 @@ class CashWithdrawFrozenRequeryH2Test {
         mapper = new SqlSessionTemplate(sqlSessionFactory).getMapper(MemberCashWithdrawMapper.class);
 
         umsMemberService = mock(IUmsMemberService.class);
+        when(umsMemberService.addBalance(any(), any())).thenReturn(true);
         wechatPayService = mock(IWechatPayService.class);
 
         CashWithdrawServiceImpl target = new CashWithdrawServiceImpl();
@@ -323,6 +330,14 @@ class CashWithdrawFrozenRequeryH2Test {
         idc.setOutBatchNo("CW" + id);
         idc.setOutDetailNo("CD" + id);
         mapper.updateMemberCashWithdraw(idc);
+        // Explicit fixture evidence for an already debited/submitted original; no real debit is claimed by H2.
+        w.setOutBatchNo(idc.getOutBatchNo()); w.setOutDetailNo(idc.getOutDetailNo());
+        com.chengyinhub.business.domain.CashWithdrawFundFact debit =
+                com.chengyinhub.business.domain.CashWithdrawFundFact.of(w, "DEBIT");
+        debit.setBalanceBefore(new BigDecimal("100.00")); debit.setBalanceAfter(new BigDecimal("50.00"));
+        mapper.insertFundFact(debit);
+        jdbc.update("update member_cash_withdraw set balance_deduct_id=? where id=?", debit.getId(), id);
+        mapper.insertFundFact(com.chengyinhub.business.domain.CashWithdrawFundFact.of(w, "SUBMIT_INTENT"));
         jdbc.update("update member_cash_withdraw set frozen = ?, frozen_reason = ?, frozen_by = ? where id = ?",
                 frozen, frozen == 1 ? "风控核查中" : null, frozen == 1 ? "finance01" : null, id);
         return id;
@@ -331,6 +346,7 @@ class CashWithdrawFrozenRequeryH2Test {
     private Map<String, String> failResponse() {
         Map<String, String> q = new HashMap<>();
         q.put("result", "FAIL");
+        q.put("detailStatus", "FAIL");
         q.put("batchStatus", "CLOSED");
         q.put("failReasonCode", "ACCOUNT_FROZEN");
         return q;

@@ -1,0 +1,31 @@
+PASS: Mapper XML well-formed; 25 statement IDs match Java interface; fact properties mapped
+PASS: no fact UPDATE/DELETE statements; generic receipt writer cannot replace evidence pointers
+PASS: B/shared production/CI and existing migrations unchanged; only the new authorized schema candidate allowed
+PASS: seven bank/freeze/bounty/points methods remain byte-for-byte unchanged
+SOURCE ONLY: CashWithdrawFundEvidenceTest.java has 21 @Test methods; NOT EXECUTED
+SOURCE ONLY: CashWithdrawFundEvidenceMySqlIT.java has 19 @Test methods; NOT EXECUTED
+PASS: dedicated new tests contain no conditional skip or H2 fallback
+SOURCE chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21Test.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_22Test.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawEvidenceFixture.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceMySqlIT.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceTest.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java
+SOURCE chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CashWithdrawAdminControllerSafetyTest.java
+SOURCE chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql
+SOURCE chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CashWithdrawFundFact.java
+SOURCE chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java
+SOURCE chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java
+SOURCE chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java
+SOURCE chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml
+SOURCE chengyinhub-ui/src/views/business/cashwithdraw/index.vue
+SOURCE chengyinhub-ui/tests/unit/cashwithdraw-migration-contract.test.js
+SOURCE sql/migration_20261023_cash_withdraw_fund_fact.sql
+SOURCE_SHA256 6e701ea138f9098b1ad60b5ce1435343ef3fe8ab6b15878527bc7752ee026cd6
+NOT RUN: Java compilation/unit tests, H2 tests, MySQL tests, Redis/backend/WeChat integration

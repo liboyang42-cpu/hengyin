@@ -37,6 +37,7 @@ class OWN_C04_21MySqlIT {
     @Configuration @EnableTransactionManagement(proxyTargetClass = true)
     static class Transactions { }
     private String schema;
+    private long cashId = 7000;
     private boolean created;
     private JdbcTemplate admin, db;
     private DriverManagerDataSource source;
@@ -67,6 +68,11 @@ class OWN_C04_21MySqlIT {
                 + "fail_reason VARCHAR(1000), channel_error_code VARCHAR(255), create_time DATETIME, finish_time DATETIME, wechat_batch_status VARCHAR(255), "
                 + "submit_time DATETIME, last_query_time DATETIME, balance_deduct_id BIGINT, balance_refund_id BIGINT, manual_operator BIGINT, manual_verifier BIGINT, "
                 + "manual_note VARCHAR(1000), trace_id VARCHAR(255), audit_by BIGINT, audit_time DATETIME, frozen_reason VARCHAR(255), frozen_by BIGINT, frozen_at DATETIME) ENGINE=InnoDB");
+        try (Connection connection = source.getConnection()) {
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource(java.nio.file.Path.of(
+                            System.getProperty("architecture.a.repo", ".."), "sql/migration_20261023_cash_withdraw_fund_fact.sql")));
+        }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
@@ -94,7 +100,8 @@ class OWN_C04_21MySqlIT {
         otherConnection = Executors.newSingleThreadExecutor();
     }
     @BeforeEach void reset() {
-        for (String table : new String[]{"member_cash_withdraw", "player_withdrawal_cooldown", "merchant_referral_bounty", "ums_member"}) db.execute("DELETE FROM " + table);
+        cashId++; // Retain append-only original/fund facts; each cash test uses a new original ID.
+        for (String table : new String[]{"player_withdrawal_cooldown", "merchant_referral_bounty", "ums_member"}) db.execute("DELETE FROM " + table);
         db.update("INSERT INTO ums_member(id,balance) VALUES(42,100)");
     }
     @AfterAll void cleanup() throws Exception {
@@ -133,12 +140,12 @@ class OWN_C04_21MySqlIT {
         money("70", db.queryForObject("SELECT balance FROM ums_member WHERE id=42", BigDecimal.class));
     }
     @Test void cashRequiresNewCommitsAndReleasesFinancialRowsBeforeCallerContinues() {
-        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag) VALUES(7,42,30,0,0,0)");
+        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag,out_batch_no,out_detail_no) VALUES(?,42,30,0,0,0,?,?)", cashId, "CW" + cashId, "CD" + cashId);
         db.update("INSERT INTO player_withdrawal_cooldown VALUES(1,42,10,DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 1 DAY))");
         db.update("INSERT INTO merchant_referral_bounty VALUES(1,42,1,10,DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 1 DAY),'0')");
         rr().executeWithoutResult(outer -> {
             db.queryForObject("SELECT balance FROM ums_member WHERE id=42", BigDecimal.class);
-            WithdrawalBalanceAdmissionService.Admission result = admission.debitCash(7L,42L,new BigDecimal("30"));
+            WithdrawalBalanceAdmissionService.Admission result = admission.debitCash(cashId,42L,new BigDecimal("30"));
             assertTrue(result.deducted); money("100",result.before); money("70",result.after);
             // A real independent connection must acquire these locks while outer is still alive.
             awaitWriter(() -> {
@@ -148,7 +155,7 @@ class OWN_C04_21MySqlIT {
                     try (ResultSet row = statement.executeQuery("SELECT balance FROM ums_member WHERE id=42 FOR UPDATE")) {
                         assertTrue(row.next()); money("70", row.getBigDecimal(1));
                     }
-                    statement.executeQuery("SELECT id FROM member_cash_withdraw WHERE id=7 FOR UPDATE").close();
+                    statement.executeQuery("SELECT id FROM member_cash_withdraw WHERE id=" + cashId + " FOR UPDATE").close();
                     statement.executeQuery("SELECT id FROM merchant_referral_bounty WHERE inviter_member_id=42 FOR UPDATE").close();
                     statement.executeQuery("SELECT id FROM player_withdrawal_cooldown WHERE member_id=42 FOR UPDATE").close();
                     connection.commit();
@@ -157,14 +164,14 @@ class OWN_C04_21MySqlIT {
         });
     }
     @Test void insufficientCashAdmissionFinalizesOriginalRowAndCannotDebitAfterLaterCredit() {
-        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag) VALUES(7,42,120,0,0,0)");
-        WithdrawalBalanceAdmissionService.Admission first = admission.debitCash(7L,42L,new BigDecimal("120"));
+        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag,out_batch_no,out_detail_no) VALUES(?,42,120,0,0,0,?,?)", cashId, "CW" + cashId, "CD" + cashId);
+        WithdrawalBalanceAdmissionService.Admission first = admission.debitCash(cashId,42L,new BigDecimal("120"));
         assertFalse(first.deducted); assertTrue(first.currentRequestEligible);
-        assertEquals(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT, db.queryForObject("SELECT status FROM member_cash_withdraw WHERE id=7", Integer.class));
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT, db.queryForObject("SELECT status FROM member_cash_withdraw WHERE id=?", Integer.class, cashId));
         awaitWriter(() -> rr().executeWithoutResult(writer -> db.update("UPDATE ums_member SET balance=200 WHERE id=42")));
-        WithdrawalBalanceAdmissionService.Admission late = admission.debitCash(7L,42L,new BigDecimal("120"));
+        WithdrawalBalanceAdmissionService.Admission late = admission.debitCash(cashId,42L,new BigDecimal("120"));
         assertFalse(late.currentRequestEligible); assertFalse(late.deducted);
         money("200", db.queryForObject("SELECT balance FROM ums_member WHERE id=42", BigDecimal.class));
-        assertEquals(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT, db.queryForObject("SELECT status FROM member_cash_withdraw WHERE id=7", Integer.class));
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT, db.queryForObject("SELECT status FROM member_cash_withdraw WHERE id=?", Integer.class, cashId));
     }
 }

@@ -80,6 +80,9 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
                 com.chengyinhub.business.longrun.OWN_C04_21Test.bankFixture(umsMemberMapper, resolver));
 
         wechatLeg = new CashWithdrawServiceImpl();
+        org.springframework.transaction.PlatformTransactionManager cashTransactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(cashTransactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        ReflectionTestUtils.setField(wechatLeg, "transactionManager", cashTransactions);
         ReflectionTestUtils.setField(wechatLeg, "mapper", cashMapper);
         ReflectionTestUtils.setField(wechatLeg, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(wechatLeg, "wechatPayService", wechatPayService);
@@ -171,7 +174,7 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
             return 1;
         });
         when(cashMapper.selectById(500L)).thenAnswer(invocation -> original.get());
-        when(cashMapper.updateMemberCashWithdraw(any())).thenReturn(1); // 原提现单写入 CW/CD 原业务号
+        // cashFixture retains the inserted original and binds an explicit DEBIT fact.
 
         when(wechatPayService.transferToBalance(any(), any(), any(), any(), any(), any()))
                 .thenReturn(java.util.Collections.singletonMap("ok", "true"));
