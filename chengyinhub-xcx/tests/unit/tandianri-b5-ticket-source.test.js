@@ -196,3 +196,38 @@ test('negative control:storage 被手改成别的 clubId 但 topicId 不匹配 �
   store[ts.STORAGE_KEY] = JSON.stringify({ topicId: 99, sourceClubId: 7 })
   assert.deepEqual(ts.attributionPayload(77), {})
 })
+
+// ---------- 账号维度(P1-075 / U-030) ----------
+
+test('登录后捕获的归因绑定当前账号;同机换到别的账号下单 ⇒ 不带标记(归平台)', () => {
+  const ts = load()
+  store.user_id = 1001
+  assert.equal(ts.captureFromQuery({ id: '77', sourceClubId: '7' }).captured, true)
+  assert.deepEqual(ts.attributionPayload(77), { sourceClubId: 7 })
+  store.user_id = 2002
+  assert.deepEqual(ts.attributionPayload(77), {}, 'A 号的归因不能跟到 B 号的订单上')
+  delete store.user_id
+  assert.deepEqual(ts.attributionPayload(77), {}, '退出登录后也不再带 A 号的归因')
+  store.user_id = 1001
+  assert.deepEqual(ts.attributionPayload(77), { sourceClubId: 7 }, 'A 号重新登录仍是自己的归因')
+})
+
+test('登录前捕获的归因由第一次下单的账号认领,之后换号不跟随', () => {
+  const ts = load()
+  assert.equal(ts.captureFromQuery({ id: '77', sourceClubId: '7' }).captured, true)
+  store.user_id = 1001
+  assert.deepEqual(ts.attributionPayload(77), { sourceClubId: 7 })
+  store.user_id = 2002
+  assert.deepEqual(ts.attributionPayload(77), {})
+})
+
+test('别的账号留下的归因(含冲突墓碑)不挡当前账号自己的捕获', () => {
+  const ts = load()
+  store.user_id = 1001
+  ts.captureFromQuery({ id: '77', sourceClubId: '7' })
+  ts.captureFromQuery({ id: '77', sourceClubId: '8' })
+  assert.deepEqual(ts.attributionPayload(77), {}, 'A 号本期已冲突')
+  store.user_id = 2002
+  assert.equal(ts.captureFromQuery({ id: '77', sourceClubId: '8' }).captured, true)
+  assert.deepEqual(ts.attributionPayload(77), { sourceClubId: 8 })
+})

@@ -197,3 +197,20 @@ test('没有真实取消时刻的正常待使用订单不变，非法取消值�
     assert.equal(summarizeOrderState(row,NOW).key,'not_started');
   }
 });
+
+test('U-023:人工案件下退款已到账(payout 1/4)显示已退款，未到账仍是人工售后', () => {
+  for (const payoutStatus of [1, 4]) {
+    const row = registration({ verificationStatus: 1, manualRefundCaseStatus: 'MANUAL_REFUND_EVIDENCE_VERIFIED',
+      refundApplication: { status: 1, payoutStatus, refundAmount: 9 },
+      refundInfo: { refundable: false, reason: '人工案件权威处理结果' } });
+    const summary = summarizeOrderState(row, NOW);
+    assert.equal(summary.key, 'refunded', 'payout=' + payoutStatus + ' 已到账不能被人工售后遮住');
+    assert.equal(summary.text, '已退款');
+    assert.equal(canRequestOrderRefund(row), false);
+  }
+  for (const payoutStatus of [0, 2, 3, 5, 6]) {
+    const row = registration({ manualRefundCaseStatus: 'MANUAL_REFUND_REQUIRED',
+      refundApplication: { status: 1, payoutStatus, refundAmount: 9 } });
+    assert.equal(summarizeOrderState(row, NOW).key, 'manual_refund', 'payout=' + payoutStatus + ' 未到账仍走人工售后');
+  }
+});

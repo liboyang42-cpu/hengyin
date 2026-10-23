@@ -40,11 +40,13 @@ function payoutSummary(application) {
 
 function summarizeOrderState(row, now) {
   const value = row || {};
+  const refund = payoutSummary(value.refundApplication);
+  // 钱已到账(payout 1/4)是终态事实，人工案件不能把「已退款」盖回「人工售后」。
+  if (refund && refund.key === 'refunded') return refund;
   if (value.manualRefundCaseStatus) {
     return { key: 'manual_refund', text: '人工售后',
       refundText: value.refundInfo && value.refundInfo.reason || '请查看订单的人工处理进度' };
   }
-  const refund = payoutSummary(value.refundApplication);
   if (refund) return refund;
 
   // 主办取消是活动事实，不推导报名、支付或退款已经结束；真实售后进度仍优先。

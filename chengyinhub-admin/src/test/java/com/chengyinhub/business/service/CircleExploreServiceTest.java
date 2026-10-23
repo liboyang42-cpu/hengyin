@@ -135,6 +135,40 @@ class CircleExploreServiceTest {
     }
 
     @Test
+    void createRetriesWithAFreshInviteCodeWhenTheCodeCollides() {
+        when(supplyService.listPublicSupplies(9L)).thenReturn(
+                Collections.singletonList(new MerchantCircleSupplyProfile()));
+        java.util.List<String> triedCodes = new java.util.ArrayList<>();
+        org.mockito.Mockito.doAnswer(invocation -> {
+            CircleExploreSession attempt = invocation.getArgument(0);
+            triedCodes.add(attempt.getInviteCode());
+            if (triedCodes.size() == 1) throw new org.springframework.dao.DuplicateKeyException("uk_circle_session_invite");
+            attempt.setId(56L);
+            return 1;
+        }).when(exploreMapper).insertSession(any());
+
+        CircleExploreSession session = service.create(9L, 100L);
+
+        assertEquals(Long.valueOf(56L), session.getId());
+        assertEquals(2, triedCodes.size(), "撞码后必须换码重试一次");
+        assertTrue(!triedCodes.get(0).equals(triedCodes.get(1)), "重试必须换一个新邀请码");
+        verify(exploreMapper).insertMember(56L, 100L);
+    }
+
+    @Test
+    void createStopsAfterThreeInviteCodeCollisionsWithoutAddingAMember() {
+        when(supplyService.listPublicSupplies(9L)).thenReturn(
+                Collections.singletonList(new MerchantCircleSupplyProfile()));
+        when(exploreMapper.insertSession(any()))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("uk_circle_session_invite"));
+
+        assertThrows(IllegalStateException.class, () -> service.create(9L, 100L));
+
+        verify(exploreMapper, org.mockito.Mockito.times(3)).insertSession(any());
+        verify(exploreMapper, never()).insertMember(any(), any());
+    }
+
+    @Test
     void nightSessionRejectsAMemberWithoutAConfirmedAdultBirthday() {
         when(supplyService.listPublicSupplies(9L)).thenReturn(
                 Collections.singletonList(new MerchantCircleSupplyProfile()));
