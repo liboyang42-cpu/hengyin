@@ -1331,11 +1331,7 @@
       <!-- 照玩家故事流的样子排:故事底色 → 流里这张玩法卡 → 「继续故事」。
            不再在外面另印一行标题 —— 作者没起名时它回落成题目,和玩法自己的题目印两遍。 -->
       <view class="cg-pv-inline-kit">
-        <!-- D20 三档在玩家页是故事流里那张检定卡(不走 cy-playkit),试玩照挂同一个组件 -->
-        <cy-playkit-journey-check wx:if="{{pvKit.type === 'journeycheck'}}" show="{{true}}" loading="{{false}}"
-          skill="{{pvKit.skill}}" tier="{{pvKit.tier}}" mods="{{pvKit.mods}}" advantage="{{pvKit.advantage}}" disadvantage="{{pvKit.disadvantage}}"
-          receipt="{{pvKit.receipt}}" r5="{{false}}" allowed-actions="{{[]}}" bind:action="onPvCheckAction" bind:close="closePreview" />
-        <cy-playkit wx:else class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" kit="{{pvKit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPvKitAction" />
+        <cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" kit="{{pvKit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPvKitAction" />
       </view>
       <view class="cg-pv-inline-end"><view class="cg-pv-inline-continue">继续故事</view></view>
     </scroll-view>

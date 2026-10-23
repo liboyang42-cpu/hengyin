@@ -4,7 +4,7 @@
    2026-10-23 主人定稿(城瘾 D20 与盲品试玩原型):三维二十面骰、按住摇骰、难度线。
    皮肤与台面语言都来自 play-surface(--ink/--sub/--soft 由 stage 的 skin 传下来),
    这里只画检定自己那几块。 */
-.jc { overflow-y: auto; }
+.jc { overflow-y: auto; align-items: center; text-align: center; }   /* 内嵌档默认靠左;检定卡的眉标、档位、骰子统一居中 */
 
 .jc__tiers { margin-top: var(--cy-space-3); display: flex; justify-content: center; gap: var(--cy-space-2); }
 .jc__tier {

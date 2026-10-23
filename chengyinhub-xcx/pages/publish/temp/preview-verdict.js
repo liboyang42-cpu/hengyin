@@ -16,6 +16,22 @@ function judge(advanced, kit, action, detail) {
     const answer = advanced && advanced.blindTaste && advanced.blindTaste.answerKey;
     return d.key && answer ? (d.key === answer ? 'win' : 'fail') : '';
   }
+  // 排序 / 连线 / 分类:与服务端同一条——整体全对才算过(顺序逐位相等 / 连线集合相等 / 每条都进了对的箱)
+  if (kit.type === 'sort' && action === 'submit') {
+    const want = (advanced && advanced.sort && advanced.sort.answerOrder) || [];
+    const got = Array.isArray(d.order) ? d.order : [];
+    return want.length && got.length === want.length && got.every((id, i) => id === want[i]) ? 'win' : 'fail';
+  }
+  if (kit.type === 'match' && action === 'submit') {
+    const key = p => p[0] + '>' + p[1];
+    const want = ((advanced && advanced.match && advanced.match.pairs) || []).map(key).sort().join('|');
+    return want && (Array.isArray(d.pairs) ? d.pairs : []).map(key).sort().join('|') === want ? 'win' : 'fail';
+  }
+  if (kit.type === 'classify' && action === 'submit') {
+    const want = (advanced && advanced.classify && advanced.classify.answer) || {}, got = d.placement || {};
+    const ids = Object.keys(want);
+    return ids.length && ids.length === Object.keys(got).length && ids.every(id => got[id] === want[id]) ? 'win' : 'fail';
+  }
   const qa = advanced && advanced.qa;
   if (kit.type !== 'qa' || !qa) return '';
   if (action === 'shoot') return 'win';

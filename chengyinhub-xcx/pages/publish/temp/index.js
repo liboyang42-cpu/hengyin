@@ -2834,7 +2834,7 @@ Page({
     if (result) {
       this._pvTypeStartedAt = result.startedAt;
       this.setData({ pvKit: result.kit });
-      if (!(result.ready && result.kit.type === 'typein' && this.showPvVerdict(result.kit, d))) { if (result.message) app.tips(result.message); }
+      if (!(result.ready && (result.kit.type === 'typein' || result.kit.type === 'journeycheck') && this.showPvVerdict(result.kit, d))) { if (result.message) app.tips(result.message); }
     } else if (d.action === 'verdict' || d.action === 'drawn' || d.action === 'scanned') { if (!this.showPvVerdict(kit, d)) this.pvNext(); }
     // CU-C-11:问答类提交在预览里不判定,原来静默吞掉 ⇒ 点「提交」像坏了。明说,别让商家以为答错/没反应。
     else if (d.action === 'answer' || d.action === 'submit' || d.action === 'shoot') { if (!this.showPvVerdict(kit, d)) app.tips('试玩只看样子，不判对错'); }

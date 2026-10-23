@@ -96,20 +96,6 @@ const methods = {
     this.setData({ pvVerdict: { show: true, kind, text: fb.text, images: fb.images } });
     return true;
   },
-  // D20 三档的试玩:本机掷一个 d20,按默认难度线判(简单 10 / 标准 13 / 困难 16,与服务端 JourneyRulesValidator 默认值同;
-  // 主题里改过难度线的,以正式游玩为准)。「结算」后弹判定屏
-  onPvCheckAction(e) {
-    const kit = this.data.pvKit, action = e.detail && e.detail.action;
-    if (!kit || kit.type !== 'journeycheck') return;
-    if (action === 'roll' && !kit.receipt) {
-      const dc = { easy: 10, medium: 13, hard: 16 }[kit.tier] || 13, roll = 1 + Math.floor(Math.random() * 20);
-      this.setData({ 'pvKit.receipt': { rolled: true, tier: kit.tier, dc, dice: [roll], kept: roll, total: roll, success: roll >= dc,
-        nat: roll === 20 ? 'CRIT' : (roll === 1 ? 'FUMBLE' : ''), rerolled: false, settled: false, text: '', failCostLabel: '', hp: null, luck: null, exhausted: false, mods: [] } });
-    } else if (action === 'settle' && kit.receipt && !kit.receipt.settled) {
-      const receipt = Object.assign({}, kit.receipt, { settled: true, text: kit.receipt.success ? kit.successText : kit.failText });
-      this.setData({ 'pvKit.receipt': receipt }, () => this.showPvVerdict(this.data.pvKit, { action: 'settle' }));
-    }
-  },
   closePvVerdict() {
     const kind = this.data.pvVerdict.kind, kit = this.data.pvKit;
     this.setData({ pvVerdict: { show: false, kind: 'win', text: '', images: [] } });

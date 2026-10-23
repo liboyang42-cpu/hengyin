@@ -239,6 +239,11 @@
   attempts="{{kit.attempts}}" passed="{{kit.passed}}" last-correct="{{kit.lastCorrect}}"
   bind:submit="onSubmit" bind:close="onClose" />
 
+<cy-playkit-journey-check wx:elif="{{kit.type === 'journeycheck'}}"
+  show="{{show}}" loading="{{false}}" skill="{{kit.skill}}" tier="{{kit.tier}}" mods="{{kit.mods}}"
+  advantage="{{kit.advantage}}" disadvantage="{{kit.disadvantage}}" receipt="{{kit.receipt}}"
+  r5="{{false}}" allowed-actions="{{[]}}" bind:action="onCheckAction" bind:close="onClose" />
+
 <cy-playkit-album wx:if="{{kit.type === 'album'}}" show="{{show}}" title="{{kit.title}}" images="{{kit.images}}"
   completion-enabled="{{kit.completionEnabled}}" done="{{kit.done}}" uploaded="{{kit.uploaded}}" upload-failure="{{kit.uploadFailure}}"
   bind:shoot="onShoot" bind:submit="onSubmit" bind:close="onClose" />

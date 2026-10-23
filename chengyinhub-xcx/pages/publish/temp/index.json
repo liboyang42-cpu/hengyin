@@ -15,7 +15,6 @@
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-playkit": "/pages/play/components/playkit/index",
     "cy-play-verdict": "/pages/play/components/play-verdict/index",
-    "cy-playkit-journey-check": "/pages/play/components/playkit-journey-check/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
@@ -24,8 +23,7 @@
   },
   "componentPlaceholder": {
     "cy-playkit": "view",
-    "cy-play-verdict": "view",
-    "cy-playkit-journey-check": "view"
+    "cy-play-verdict": "view"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black"

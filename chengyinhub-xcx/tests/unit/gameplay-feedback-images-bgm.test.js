@@ -151,6 +151,17 @@ test('试玩台里原来没法试玩的三屏(闭眼盲品 / 今日城市签 / D
   assert.equal(sign.kit.revealed && sign.kit.claimed, true); assert.equal(sign.kit.myText, '来过');
 });
 
+test('排序 / 连线 / 分类试玩也照作者填的答案本地判,整体全对才算过', () => {
+  const pv = require('../../pages/publish/temp/preview-verdict.js');
+  const adv = { sort: { answerOrder: ['a', 'b', 'c'] }, match: { pairs: [['l1', 'r1'], ['l2', 'r2']] }, classify: { answer: { i1: 'b1', i2: 'b2' } } };
+  assert.equal(pv.judge(adv, { type: 'sort' }, 'submit', { order: ['a', 'b', 'c'] }), 'win');
+  assert.equal(pv.judge(adv, { type: 'sort' }, 'submit', { order: ['b', 'a', 'c'] }), 'fail');
+  assert.equal(pv.judge(adv, { type: 'match' }, 'submit', { pairs: [['l2', 'r2'], ['l1', 'r1']] }), 'win', '连线不看先后');
+  assert.equal(pv.judge(adv, { type: 'match' }, 'submit', { pairs: [['l1', 'r2'], ['l2', 'r1']] }), 'fail');
+  assert.equal(pv.judge(adv, { type: 'classify' }, 'submit', { placement: { i1: 'b1', i2: 'b2' } }), 'win');
+  assert.equal(pv.judge(adv, { type: 'classify' }, 'submit', { placement: { i1: 'b2', i2: 'b2' } }), 'fail');
+});
+
 test('试玩左上角有一颗退出,全屏玩法自己那颗在试玩里藏掉', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8');
   assert.match(wxml, /class="cg-pv-exit" wx:if="\{\{ pvStepKey === 'challenge' && pvKit \}\}"[^>]*bindtap="closePreview"/);
