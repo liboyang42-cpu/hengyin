@@ -50,4 +50,4 @@
 - 本地：`mvn -pl chengyinhub-admin test -Dtest=ApiClubSettlementControllerTest,ApiPlayCheckinDuplicateCodeTest,ApiPlayCheckinLiveCodeTest,BizFunnelDailyMapperSqlTest,BizFunnelDailyMapperMyBatisTest,AnalyticsControllerTest,ClubSettlement*` → 43 run, 0 fail（6 个 MySQL IT 本地跳过）。
 - 负控：回退三处主代码后，三个新回归用例均失败。
 - 无新依赖、无新迁移、未动鉴权/RBAC/JWT/Redis 配置、未动小程序 UI 与 C00 保留文件、未提交台账。
-- CI run IDs：见 PR 检查（填写于下方）。
+- CI（PR #555，head `638ccdf8`，35 个检查全部 success/按变更范围 skipped）：run 39956437478（主 CI：Backend tests、小程序 20 分片与静态门、迁移门、gitleaks）、39956437342（Funds MySQL IT + 自检）、39956437433（Followup 39 backend cases）、39956437590（isolated-authenticated-redis-recovery）。
