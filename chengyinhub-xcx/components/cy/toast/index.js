@@ -25,6 +25,11 @@ Component({
   lifetimes: {
     detached() { this._clearTimers(); this._flushCommit(); },
   },
+  // 页面被盖住 / 小程序切到后台:未决的撤销条立即提交。后台可能被系统回收,等不到 4 秒到期,
+  // 而用户没点撤销 = 同意 —— 不能让「已移出」的成员因为切了后台又回来。
+  pageLifetimes: {
+    hide() { if (this._onCommit) this.hide(); },
+  },
   methods: {
     // show({ title, kind, duration }) —— 同一实例连续 show 时直接换文案并重置计时,不排队叠层
     show(options) {

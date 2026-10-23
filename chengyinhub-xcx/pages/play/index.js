@@ -6310,13 +6310,13 @@ Page({
     wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
   },
   blockSceneTouch() {},
-  openSessionTools() { this.setData({ sessionToolsOpen: true }); },
+  openSessionTools() { this.setData({ sessionToolsOpen: true, toolsOut: false }); },
   // 收进菜单的动作:先关菜单再执行,与其它 *FromTools 同一条规矩。
   onScanArriveFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onScanArrive()); },
   onRunToggleFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onRunToggle()); },
   openStackOrChaptersFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openStackOrChapters()); },
-  toggleSessionTools() { this.setData({ sessionToolsOpen: !this.data.sessionToolsOpen }); },
-  closeSessionTools() { this.setData({ sessionToolsOpen: false }); },
+  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else this.setData({ sessionToolsOpen: true, toolsOut: false }); },
+  closeSessionTools() { this._toolsClose(); },
   /* 定位驱动的两行(自动记录足迹 / 到点提醒)在这一页翻不动:它们跟着系统定位权限走。
    * 没开就去要权限,已经开着就说清楚它由谁决定 —— 不留一枚按下去毫无反应的开关。 */
   onLocationRowTap() {
@@ -8112,4 +8112,13 @@ Page({
     setTimeout(() => { if (still()) unmount(); }, 280);
   },
 
+  // 2026-10-23 弹层动效:右上角工具菜单原来一帧收起;点遮罩 / 再点按钮先淡出(--cy-motion-fast 140ms)再卸载。
+  // 菜单里点某一项去别处(扫码、打开章节…)仍是直接收起,马上接下一层,不会两层同时动。
+  _toolsClose() {
+    if (!this.data.sessionToolsOpen) return;
+    if (this.data.reducedMotion) { this.setData({ sessionToolsOpen: false, toolsOut: false }); return; }
+    if (this.data.toolsOut) return;
+    this.setData({ toolsOut: true });
+    setTimeout(() => { if (this.data.toolsOut) this.setData({ sessionToolsOpen: false, toolsOut: false }); }, 140);
+  },
 });

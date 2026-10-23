@@ -224,3 +224,47 @@ test('③ 参与交接的弹层都接了遮罩交接类', () => {
     assert.match(s, new RegExp(`\\.${p}--keep-mask \\.${p}__mask \\{ opacity: 1 !important; \\}`), `${wxss}: 被接替的遮罩要保持全暗`)
   }
 })
+
+test('④ 收尾:漫游主题半屏 / 附近的人 / 模板编辑器 / 游玩工具菜单都有进出场', () => {
+  const roamJs = read('pages/roam/index.js'), roamWxml = read('pages/roam/index.wxml')
+  assert.match(roamJs, /closeTopicView\(\) \{ this\._topicLeave\(\); \}/)
+  assert.match(roamJs, /_topicLeave\(\) \{[\s\S]*?\}, 250\);/, '250 = --cy-motion-sheet-out')
+  assert.match(roamWxml, /id="roam-topic-sheet" class="psheet psheet--half \{\{topicIn \? 'is-in' : ''\}\}/, '不能再是静态 is-in')
+  assert.match(roamWxml, /class="tstrip \{\{topicIn \? 'is-in' : ''\}\}" style="\{\{tstripStyle\}\}"/, '照片条按半屏真实高度贴上沿')
+
+  const nearby = read('subpackageRoam/nearby/index.js')
+  assert.match(nearby, /closeSheet\(\) \{[\s\S]*?this\.setData\(\{ sheetIn: false \}\);[\s\S]*?\}, 250\);/)
+  assert.match(nearby, /if \(this\._sheetOutTimer\) \{ this\._pendingSheet = name; return; \}/, '上一层还在落下就等它落完')
+
+  const temp = read('pages/publish/temp/index.wxml')
+  const masks = temp.match(/class="cg-mask[^"]*"[^>]*bindtap="cgDismiss"/g) || []
+  assert.equal(masks.length, 10, '10 个页面自绘半屏的遮罩都走 cgDismiss')
+  assert.doesNotMatch(temp, /class="cg-mask[^"]*"[^>]*bindtap="close/, '遮罩不再直接一帧关闭')
+  const tw = strip(read('pages/publish/temp/index.wxss'))
+  assert.match(tw, /\.cg-sheet \{[^}]*animation: cy-rise var\(--cy-motion-sheet-in\) var\(--cy-ease-standard\);/)
+  assert.match(tw, /\.cg-sheet\.is-out \{ animation: none; transform: translateY\(100%\); transition: transform var\(--cy-motion-sheet-out\)/)
+  assert.match(read('pages/publish/temp/r5-editor.js'), /cgDismiss\(e\) \{[\s\S]*?\}, 250\);/)
+
+  const play = read('pages/play/index.js')
+  assert.match(play, /closeSessionTools\(\) \{ this\._toolsClose\(\); \}/)
+  assert.match(play, /_toolsClose\(\) \{[\s\S]*?\}, 140\);/, '140 = --cy-motion-fast')
+  assert.match(strip(read('pages/play/index.wxss')), /\.tools--corner\.is-out\{ animation:none; opacity:0; transition:opacity var\(--cy-motion-fast\)/)
+})
+
+test('④ 撤销条:页面被盖住 / 切后台时未决的那一笔立即提交', () => {
+  let def = null
+  const prev = { Component: global.Component, Behavior: global.Behavior, wx: global.wx, getApp: global.getApp }
+  global.Component = (o) => { def = o }; global.Behavior = (o) => o; global.wx = {}; global.getApp = () => ({ globalData: {} })
+  try {
+    delete require.cache[path.join(ROOT, 'components/cy/toast/index.js')]
+    require(path.join(ROOT, 'components/cy/toast/index.js'))
+  } finally { Object.assign(global, prev) }
+  const vm = Object.assign({}, def.methods, { data: Object.assign({ reducedMotion: true }, def.data), setData(p) { Object.assign(this.data, p) } })
+  let committed = 0
+  vm.show({ title: '已将「小林」移出俱乐部', actionText: '撤销', onCommit: () => { committed += 1 } })
+  def.pageLifetimes.hide.call(vm)
+  assert.equal(committed, 1)
+  def.pageLifetimes.hide.call(vm)
+  assert.equal(committed, 1, '只提交一次')
+  vm._clearTimers()
+})

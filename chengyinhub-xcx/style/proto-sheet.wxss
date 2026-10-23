@@ -129,8 +129,8 @@
    2026-09-11 从 subpackageRoam/nearby 抽出来,一行未改 —— 漫游点主题针(原型 f-topic / f-city)
    出的是同一件。⚠️ .tstrip 的 bottom 跟着半屏高走,用它的页要按自己那档半屏高覆盖。 */
 .tstrip{ position:fixed; left:31rpx; right:0; bottom:calc(70vh - 19rpx); z-index:65; height:227rpx; white-space:nowrap;
-  opacity:0; transition:opacity .26s cubic-bezier(.2,.82,.2,1); } /* ds-ok 原型 .tstrip left:16px / 图 118px 高 */
-.tstrip.is-in{ opacity:1; }
+  opacity:0; transition:opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); } /* ds-ok 原型 .tstrip left:16px / 图 118px 高;2026-10-23 与半屏同档同曲线 */
+.tstrip.is-in{ opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 .tstrip__i{ display:inline-block; width:323rpx; height:227rpx; border-radius:31rpx; margin-right:15rpx; } /* ds-ok 原型 .tstrip img 168×118 / radius 16 / gap 8 */
 .trow{ display:flex; align-items:center; gap:19rpx; margin-top:35rpx; } /* ds-ok 原型 .row gap 10px / 上 18px */
 .ph1--tight{ margin-top:15rpx; } /* ds-ok 原型 .h1 在这屏是 margin-top:8px */

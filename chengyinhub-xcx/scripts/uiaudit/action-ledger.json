@@ -803181,7 +803181,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/toast/index.js:61"
+        "staticSource": "components/cy/toast/index.js:66"
       }
     },
     {
@@ -1078217,7 +1078217,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:203"
+        "staticSource": "pages/publish/temp/r5-editor.js:220"
       }
     },
     {
@@ -1078299,7 +1078299,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:211"
+        "staticSource": "pages/publish/temp/r5-editor.js:228"
       }
     },
     {
@@ -1078382,7 +1078382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:217"
+        "staticSource": "pages/publish/temp/r5-editor.js:234"
       }
     },
     {
@@ -1078511,7 +1078511,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:212"
+        "staticSource": "pages/publish/temp/r5-editor.js:229"
       }
     },
     {
@@ -1078578,7 +1078578,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:182"
+        "staticSource": "pages/publish/temp/r5-editor.js:199"
       }
     },
     {
@@ -1078727,7 +1078727,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:182"
+        "staticSource": "pages/publish/temp/r5-editor.js:199"
       }
     },
     {
@@ -1078809,7 +1078809,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:134"
+        "staticSource": "pages/publish/temp/r5-editor.js:151"
       }
     },
     {
@@ -1080202,7 +1080202,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:245"
+        "staticSource": "pages/publish/temp/r5-editor.js:262"
       }
     },
     {
@@ -1081697,7 +1081697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:118"
+        "staticSource": "pages/publish/temp/r5-editor.js:135"
       }
     },
     {
@@ -1081764,7 +1081764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:251"
+        "staticSource": "pages/publish/temp/r5-editor.js:268"
       }
     },
     {
@@ -1081914,7 +1081914,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:254"
+        "staticSource": "pages/publish/temp/r5-editor.js:271"
       }
     },
     {
@@ -1081981,7 +1081981,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:234"
+        "staticSource": "pages/publish/temp/r5-editor.js:251"
       }
     },
     {
@@ -1082794,7 +1082794,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:99"
+        "staticSource": "pages/publish/temp/r5-editor.js:116"
       }
     },
     {
@@ -1084161,7 +1084161,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1478:bindtap:closeAddSheet:350",
+      "id": "pages/publish/temp/index.wxml:1478:bindtap:cgDismiss:350",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084183,7 +1084183,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeAddSheet",
+        "handler": "cgDismiss",
         "line": 1478,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ showAddSheet }}",
@@ -1084224,11 +1084224,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/index.js:2187"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1481:bindtap:closeAddSheet:351",
+      "id": "pages/publish/temp/index.wxml:1481:bindtap:cgDismiss:351",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084250,7 +1084250,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeAddSheet",
+        "handler": "cgDismiss",
         "line": 1481,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1084291,7 +1084291,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/index.js:2187"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1084445,7 +1084445,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1496:bindtap:closeR5GameSheet:354",
+      "id": "pages/publish/temp/index.wxml:1496:bindtap:cgDismiss:354",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084467,7 +1084467,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeR5GameSheet",
+        "handler": "cgDismiss",
         "line": 1496,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ gameSheetOpen }}",
@@ -1084508,11 +1084508,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:146"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1499:bindtap:closeR5GameSheet:355",
+      "id": "pages/publish/temp/index.wxml:1499:bindtap:cgDismiss:355",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084534,7 +1084534,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeR5GameSheet",
+        "handler": "cgDismiss",
         "line": 1499,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1084575,7 +1084575,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:146"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1084658,7 +1084658,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:149"
+        "staticSource": "pages/publish/temp/r5-editor.js:166"
       }
     },
     {
@@ -1084725,7 +1084725,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:147"
+        "staticSource": "pages/publish/temp/r5-editor.js:164"
       }
     },
     {
@@ -1084792,7 +1084792,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:166"
+        "staticSource": "pages/publish/temp/r5-editor.js:183"
       }
     },
     {
@@ -1084859,7 +1084859,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:148"
+        "staticSource": "pages/publish/temp/r5-editor.js:165"
       }
     },
     {
@@ -1084930,7 +1084930,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1527:bindtap:closeToolPicker:361",
+      "id": "pages/publish/temp/index.wxml:1527:bindtap:cgDismiss:361",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1084952,7 +1084952,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeToolPicker",
+        "handler": "cgDismiss",
         "line": 1527,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ toolPickerOpen }}",
@@ -1084993,11 +1084993,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:235"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1530:bindtap:closeToolPicker:362",
+      "id": "pages/publish/temp/index.wxml:1530:bindtap:cgDismiss:362",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085019,7 +1085019,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeToolPicker",
+        "handler": "cgDismiss",
         "line": 1530,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1085060,7 +1085060,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:235"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1085127,7 +1085127,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:235"
+        "staticSource": "pages/publish/temp/r5-editor.js:252"
       }
     },
     {
@@ -1085209,11 +1085209,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:236"
+        "staticSource": "pages/publish/temp/r5-editor.js:253"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1544:bindtap:closeVoiceSheet:365",
+      "id": "pages/publish/temp/index.wxml:1544:bindtap:cgDismiss:365",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085235,7 +1085235,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeVoiceSheet",
+        "handler": "cgDismiss",
         "line": 1544,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ voiceSheetOpen }}",
@@ -1085276,11 +1085276,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:252"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1546:bindtap:closeVoiceSheet:366",
+      "id": "pages/publish/temp/index.wxml:1546:bindtap:cgDismiss:366",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085302,7 +1085302,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeVoiceSheet",
+        "handler": "cgDismiss",
         "line": 1546,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1085343,7 +1085343,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:252"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1085410,7 +1085410,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:252"
+        "staticSource": "pages/publish/temp/r5-editor.js:269"
       }
     },
     {
@@ -1085868,11 +1085868,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:253"
+        "staticSource": "pages/publish/temp/r5-editor.js:270"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1569:bindtap:closeMusicSheet:373",
+      "id": "pages/publish/temp/index.wxml:1569:bindtap:cgDismiss:373",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085894,7 +1085894,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeMusicSheet",
+        "handler": "cgDismiss",
         "line": 1569,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ musicSheetOpen }}",
@@ -1085935,11 +1085935,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:255"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1571:bindtap:closeMusicSheet:374",
+      "id": "pages/publish/temp/index.wxml:1571:bindtap:cgDismiss:374",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1085961,7 +1085961,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeMusicSheet",
+        "handler": "cgDismiss",
         "line": 1571,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1086002,7 +1086002,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:255"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1086085,7 +1086085,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:260"
+        "staticSource": "pages/publish/temp/r5-editor.js:277"
       }
     },
     {
@@ -1086152,7 +1086152,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:256"
+        "staticSource": "pages/publish/temp/r5-editor.js:273"
       }
     },
     {
@@ -1086219,7 +1086219,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:259"
+        "staticSource": "pages/publish/temp/r5-editor.js:276"
       }
     },
     {
@@ -1086333,7 +1086333,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:258"
+        "staticSource": "pages/publish/temp/r5-editor.js:275"
       }
     },
     {
@@ -1086400,7 +1086400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:257"
+        "staticSource": "pages/publish/temp/r5-editor.js:274"
       }
     },
     {
@@ -1086483,11 +1086483,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:267"
+        "staticSource": "pages/publish/temp/r5-editor.js:284"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1590:bindtap:closeScanSheet:381",
+      "id": "pages/publish/temp/index.wxml:1590:bindtap:cgDismiss:381",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086509,7 +1086509,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeScanSheet",
+        "handler": "cgDismiss",
         "line": 1590,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{scanSheetOpen}}",
@@ -1086525,11 +1086525,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -1086537,39 +1086536,25 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:115"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1592:bindtap:closeScanSheet:382",
+      "id": "pages/publish/temp/index.wxml:1592:bindtap:cgDismiss:382",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1086591,7 +1086576,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeScanSheet",
+        "handler": "cgDismiss",
         "line": 1592,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1086607,11 +1086592,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -1086619,35 +1086603,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:115"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1086714,7 +1086684,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:116"
+        "staticSource": "pages/publish/temp/r5-editor.js:133"
       }
     },
     {
@@ -1087825,7 +1087795,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1644:bindtap:closeR5ToolSheet:395",
+      "id": "pages/publish/temp/index.wxml:1644:bindtap:cgDismiss:395",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1087847,7 +1087817,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeR5ToolSheet",
+        "handler": "cgDismiss",
         "line": 1644,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{toolSheetKey && !toolSheetOpen}}",
@@ -1087863,11 +1087833,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -1087875,39 +1087844,25 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:125"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1646:bindtap:closeR5ToolSheet:396",
+      "id": "pages/publish/temp/index.wxml:1646:bindtap:cgDismiss:396",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1087929,7 +1087884,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeR5ToolSheet",
+        "handler": "cgDismiss",
         "line": 1646,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1087945,11 +1087900,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -1087957,35 +1087911,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:125"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1088068,7 +1088008,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:126"
+        "staticSource": "pages/publish/temp/r5-editor.js:143"
       }
     },
     {
@@ -1089217,11 +1089157,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:131"
+        "staticSource": "pages/publish/temp/r5-editor.js:148"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1694:bindtap:closeAfterSheet:412",
+      "id": "pages/publish/temp/index.wxml:1694:bindtap:cgDismiss:412",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1089243,7 +1089183,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeAfterSheet",
+        "handler": "cgDismiss",
         "line": 1694,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{afterEditor.show}}",
@@ -1089259,11 +1089199,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -1089271,39 +1089210,25 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:183"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1696:bindtap:closeAfterSheet:413",
+      "id": "pages/publish/temp/index.wxml:1696:bindtap:cgDismiss:413",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1089325,7 +1089250,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeAfterSheet",
+        "handler": "cgDismiss",
         "line": 1696,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1089341,11 +1089266,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -1089353,35 +1089277,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:183"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1089464,7 +1089374,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:279"
+        "staticSource": "pages/publish/temp/r5-editor.js:296"
       }
     },
     {
@@ -1089531,7 +1089441,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:269"
+        "staticSource": "pages/publish/temp/r5-editor.js:286"
       }
     },
     {
@@ -1089681,7 +1089591,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:185"
+        "staticSource": "pages/publish/temp/r5-editor.js:202"
       }
     },
     {
@@ -1089802,7 +1089712,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:184"
+        "staticSource": "pages/publish/temp/r5-editor.js:201"
       }
     },
     {
@@ -1089869,7 +1089779,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:132"
+        "staticSource": "pages/publish/temp/r5-editor.js:149"
       }
     },
     {
@@ -1089936,7 +1089846,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:271"
+        "staticSource": "pages/publish/temp/r5-editor.js:288"
       }
     },
     {
@@ -1090003,7 +1089913,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:278"
+        "staticSource": "pages/publish/temp/r5-editor.js:295"
       }
     },
     {
@@ -1090070,7 +1089980,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:270"
+        "staticSource": "pages/publish/temp/r5-editor.js:287"
       }
     },
     {
@@ -1090137,7 +1090047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:132"
+        "staticSource": "pages/publish/temp/r5-editor.js:149"
       }
     },
     {
@@ -1090204,7 +1090114,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:133"
+        "staticSource": "pages/publish/temp/r5-editor.js:150"
       }
     },
     {
@@ -1090271,7 +1090181,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:271"
+        "staticSource": "pages/publish/temp/r5-editor.js:288"
       }
     },
     {
@@ -1090338,7 +1090248,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:278"
+        "staticSource": "pages/publish/temp/r5-editor.js:295"
       }
     },
     {
@@ -1090405,7 +1090315,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:270"
+        "staticSource": "pages/publish/temp/r5-editor.js:287"
       }
     },
     {
@@ -1090487,7 +1090397,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:292"
+        "staticSource": "pages/publish/temp/r5-editor.js:309"
       }
     },
     {
@@ -1090554,11 +1090464,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:268"
+        "staticSource": "pages/publish/temp/r5-editor.js:285"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1736:bindtap:closeR5ToolSheet:429",
+      "id": "pages/publish/temp/index.wxml:1736:bindtap:cgDismiss:429",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1090580,7 +1090490,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeR5ToolSheet",
+        "handler": "cgDismiss",
         "line": 1736,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{toolSheetOpen}}",
@@ -1090596,11 +1090506,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -1090608,39 +1090517,25 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:125"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1739:bindtap:closeR5ToolSheet:430",
+      "id": "pages/publish/temp/index.wxml:1739:bindtap:cgDismiss:430",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1090662,7 +1090557,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closeR5ToolSheet",
+        "handler": "cgDismiss",
         "line": 1739,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
@@ -1090678,11 +1090573,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
@@ -1090690,35 +1090584,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:125"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1090801,7 +1090681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:126"
+        "staticSource": "pages/publish/temp/r5-editor.js:143"
       }
     },
     {
@@ -1093765,11 +1093645,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:131"
+        "staticSource": "pages/publish/temp/r5-editor.js:148"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1842:bindtap:closePickerSheet:476",
+      "id": "pages/publish/temp/index.wxml:1842:bindtap:cgDismiss:476",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1093791,7 +1093671,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closePickerSheet",
+        "handler": "cgDismiss",
         "line": 1842,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ pickerSheet.open }}",
@@ -1093832,11 +1093712,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/index.js:1634"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1847:bindtap:closePickerSheet:477",
+      "id": "pages/publish/temp/index.wxml:1847:bindtap:cgDismiss:477",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1093858,7 +1093738,7 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "closePickerSheet",
+        "handler": "cgDismiss",
         "line": 1847,
         "selectorHint": ".cg-sheet-close",
         "visibleCondition": null,
@@ -1093899,7 +1093779,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/index.js:1634"
+        "staticSource": "pages/publish/temp/r5-editor.js:93"
       }
     },
     {
@@ -1094343,7 +1094223,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:175"
+        "staticSource": "pages/publish/temp/r5-editor.js:192"
       }
     },
     {
@@ -1094569,7 +1094449,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:220"
+        "staticSource": "pages/publish/temp/r5-editor.js:237"
       }
     },
     {
@@ -1094718,7 +1094598,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:114"
+        "staticSource": "pages/publish/temp/r5-editor.js:131"
       }
     },
     {
@@ -1094801,7 +1094681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:245"
+        "staticSource": "pages/publish/temp/r5-editor.js:262"
       }
     },
     {
@@ -1094868,7 +1094748,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:141"
+        "staticSource": "pages/publish/temp/r5-editor.js:158"
       }
     },
     {
@@ -1094935,7 +1094815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:141"
+        "staticSource": "pages/publish/temp/r5-editor.js:158"
       }
     },
     {
@@ -1130175,7 +1130055,7 @@
         "event": "catchtap",
         "handler": "noop",
         "line": 588,
-        "selectorHint": ".psheet",
+        "selectorHint": "#roam-topic-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -1260039,7 +1259919,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:642"
+        "staticSource": "subpackageRoam/nearby/index.js:656"
       }
     },
     {
@@ -1260181,7 +1260061,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:642"
+        "staticSource": "subpackageRoam/nearby/index.js:656"
       }
     },
     {
@@ -1260248,7 +1260128,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:507"
+        "staticSource": "subpackageRoam/nearby/index.js:510"
       }
     },
     {
@@ -1260316,7 +1260196,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:526"
       }
     },
     {
@@ -1260383,7 +1260263,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:507"
+        "staticSource": "subpackageRoam/nearby/index.js:510"
       }
     },
     {
@@ -1260500,7 +1260380,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:680"
+        "staticSource": "subpackageRoam/nearby/index.js:694"
       }
     },
     {
@@ -1260863,7 +1260743,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:740"
+        "staticSource": "subpackageRoam/nearby/index.js:754"
       }
     },
     {
@@ -1260930,7 +1260810,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:507"
+        "staticSource": "subpackageRoam/nearby/index.js:510"
       }
     },
     {
@@ -1260998,7 +1260878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:526"
       }
     },
     {
@@ -1261065,7 +1260945,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:507"
+        "staticSource": "subpackageRoam/nearby/index.js:510"
       }
     },
     {
@@ -1261133,7 +1261013,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:780"
+        "staticSource": "subpackageRoam/nearby/index.js:794"
       }
     },
     {
@@ -1261200,7 +1261080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:856"
+        "staticSource": "subpackageRoam/nearby/index.js:870"
       }
     },
     {
@@ -1261267,7 +1261147,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:850"
+        "staticSource": "subpackageRoam/nearby/index.js:864"
       }
     },
     {
@@ -1261334,7 +1261214,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:957"
+        "staticSource": "subpackageRoam/nearby/index.js:971"
       }
     },
     {
@@ -1261401,7 +1261281,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:921"
+        "staticSource": "subpackageRoam/nearby/index.js:935"
       }
     },
     {
@@ -1261469,7 +1261349,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:920"
+        "staticSource": "subpackageRoam/nearby/index.js:934"
       }
     },
     {
@@ -1261578,7 +1261458,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:915"
+        "staticSource": "subpackageRoam/nearby/index.js:929"
       }
     },
     {
@@ -1261645,7 +1261525,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:957"
+        "staticSource": "subpackageRoam/nearby/index.js:971"
       }
     },
     {
@@ -1261713,7 +1261593,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:939"
+        "staticSource": "subpackageRoam/nearby/index.js:953"
       }
     },
     {
@@ -1261830,7 +1261710,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:928"
+        "staticSource": "subpackageRoam/nearby/index.js:942"
       }
     },
     {
@@ -1261897,7 +1261777,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:941"
+        "staticSource": "subpackageRoam/nearby/index.js:955"
       }
     },
     {
@@ -1262164,7 +1262044,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:755"
+        "staticSource": "subpackageRoam/nearby/index.js:769"
       }
     },
     {
@@ -1262233,7 +1262113,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:756"
+        "staticSource": "subpackageRoam/nearby/index.js:770"
       }
     },
     {
@@ -1262300,7 +1262180,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:755"
+        "staticSource": "subpackageRoam/nearby/index.js:769"
       }
     },
     {
@@ -1262501,7 +1262381,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:831"
+        "staticSource": "subpackageRoam/nearby/index.js:845"
       }
     },
     {
@@ -1262568,7 +1262448,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:831"
+        "staticSource": "subpackageRoam/nearby/index.js:845"
       }
     },
     {
@@ -1262635,7 +1262515,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:831"
+        "staticSource": "subpackageRoam/nearby/index.js:845"
       }
     },
     {
@@ -1262702,7 +1262582,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:831"
+        "staticSource": "subpackageRoam/nearby/index.js:845"
       }
     },
     {
@@ -1263150,7 +1263030,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:507"
+        "staticSource": "subpackageRoam/nearby/index.js:510"
       }
     },
     {
@@ -1263218,7 +1263098,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:526"
       }
     },
     {
@@ -1263355,7 +1263235,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:507"
+        "staticSource": "subpackageRoam/nearby/index.js:510"
       }
     },
     {
@@ -1263469,7 +1263349,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:544"
+        "staticSource": "subpackageRoam/nearby/index.js:558"
       }
     },
     {
@@ -1263613,7 +1263493,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:553"
+        "staticSource": "subpackageRoam/nearby/index.js:567"
       }
     },
     {
@@ -1263680,7 +1263560,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:507"
+        "staticSource": "subpackageRoam/nearby/index.js:510"
       }
     },
     {
@@ -1263748,7 +1263628,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:512"
+        "staticSource": "subpackageRoam/nearby/index.js:526"
       }
     },
     {
@@ -1263815,7 +1263695,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/nearby/index.js:507"
+        "staticSource": "subpackageRoam/nearby/index.js:510"
       }
     },
     {

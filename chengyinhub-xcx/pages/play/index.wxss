@@ -1707,7 +1707,13 @@ page { background: var(--cy-color-bg-page); }
 .tools-mask{ position:absolute; inset:0; z-index:40; }
 .tools--corner{ position:absolute; top:calc(var(--cy-btn-h) + var(--cy-space-6)); right:var(--cy-page-x);
   z-index:41; width:560rpx; max-height:60vh; border-radius:var(--cy-radius-lg);
-  background:var(--cy-color-bg-elevated); box-shadow:var(--cy-shadow-card); }
+  background:var(--cy-color-bg-elevated); box-shadow:var(--cy-shadow-card);
+  /* 2026-10-23 弹层动效:菜单原来一帧出现 / 消失。出现淡入 standard 220(全局 cy-fade-in,不新增关键帧),
+     收起淡出 fast 140(index.js 的 _toolsClose) */
+  animation:cy-fade-in var(--cy-motion-standard) var(--cy-ease-out); }
+.tools--corner.is-out{ animation:none; opacity:0; transition:opacity var(--cy-motion-fast) var(--cy-ease-standard); pointer-events:none; }
+.tools-mask.is-out{ pointer-events:none; }
+.play--reduced-motion .tools--corner{ animation:none; }
 
 /* 菜单里的只读行(思维阁进度):没有箭头、不可点,与可点的 .drow 区分开。 */
 .drow--static { opacity: 1; }

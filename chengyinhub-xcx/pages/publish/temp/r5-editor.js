@@ -83,10 +83,27 @@ function feedbackRows(config, rows) {
 // 选择玩法的标签条:每个分类最多四行,标签按顺序轮流落到各行(宽度随字数,不强行对齐)。
 function tagRows(items) { const rows = [[], [], [], []]; items.forEach((item, i) => rows[i % 4].push(item)); return rows.filter(row => row.length); }
 function summary(row) { return !row ? '未配置' : [row.reply, (row.costs || []).length ? '消耗 ' + row.costs.length + ' 项' : '', (row.effects || []).length ? '效果 ' + row.effects.length + ' 项' : '', row.nextStepId ? '进入 ' + row.nextStepId : ''].filter(Boolean).join(' · ') || '无额外处理'; }
-const data = { pvVerdict: { show: false, kind: 'win', text: '', images: [] }, fbOpenPass: false, fbOpenFail: false, sheetPick: '', sheetPickItem: null, sheetNavAnchor: '', toolPickerOpen: false, toolPickerItems: [], toolPickerHint: '', voiceSheetOpen: false, musicSheetOpen: false, musicDraft: { title: '', audioUrl: '', fileName: '', loop: true }, musicError: '',
+const data = { cgOut: '', pvVerdict: { show: false, kind: 'win', text: '', images: [] }, fbOpenPass: false, fbOpenFail: false, sheetPick: '', sheetPickItem: null, sheetNavAnchor: '', toolPickerOpen: false, toolPickerItems: [], toolPickerHint: '', voiceSheetOpen: false, musicSheetOpen: false, musicDraft: { title: '', audioUrl: '', fileName: '', loop: true }, musicError: '',
   scanReplyKinds: [{ key: 'TEXT', label: '文字' }, { key: 'VOICE', label: '语音' }, { key: 'IMAGE', label: '图片' }, { key: 'OVERLAY', label: '显形' }],
   gameConfigOpen: false, scanSheetOpen: false, toolSheetKey: '', afterOpOptions: [{ key: 'INC', label: '增加' }, { key: 'FLOOR', label: '恢复到至少' }], effectScopeOptions: [], r5Editor: view({}, 0), afterEditor: { show: false, path: '', draft: after.empty(), error: '' } };
 const methods = {
+  /* 2026-10-23 弹层动效:编辑器里页面自绘的半屏原来开合都是一帧切换。点遮罩 / 退出时先挂 is-out
+     落下(--cy-motion-sheet-out 250ms)再调原来的关闭函数 —— 关闭逻辑(快照还原、清错误)一行不改,只是晚 250ms。
+     程序里的一关一开(选完玩法直接进工具等)不走这里,仍是直接切换,不会两层同时动。 */
+  cgDismiss(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const fn = ds.close;
+    if (!fn || typeof this[fn] !== 'function') return;
+    if (this.data.reducedMotion) { this[fn](); return; }
+    if (this.data.cgOut) return;
+    this.setData({ cgOut: ds.out || 'x' });
+    if (this._cgOutTimer) clearTimeout(this._cgOutTimer);
+    this._cgOutTimer = setTimeout(() => {
+      this._cgOutTimer = null;
+      this.setData({ cgOut: '' });
+      this[fn]();
+    }, 250);
+  },
   // 试玩判定屏(照试玩台):判得出对错才弹,返回是否弹了。成功「继续」进下一步;失败回到玩法开头再来。
   // 按哪份配置判:选择玩法里的「预览」用那份范例(_pvAdvanced),其余用作者正在填的这份
   showPvVerdict(kit, detail, action) {

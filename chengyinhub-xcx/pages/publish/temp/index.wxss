@@ -789,8 +789,12 @@ page {
 }
 /* ============ 通用遮罩 / sheet ============ */
 .cg-mask { position: fixed; inset: 0; z-index: 95; background: rgba(15,25,45,.26); }
+/* 2026-10-23 弹层动效:原来一帧出现。进场用全局 cy-fade-in / cy-rise(app.wxss 已有,不新增关键帧),
+   时长 / 曲线同弹层规范 half 档;退场见下方 .is-out(r5-editor.js 的 cgDismiss) */
+.cg-mask { animation: cy-fade-in var(--cy-motion-sheet-in) var(--cy-ease-standard); }
 .cg-sheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 96;
+  animation: cy-rise var(--cy-motion-sheet-in) var(--cy-ease-standard);
   background: var(--cy-bg-card);
   backdrop-filter: blur(80rpx) saturate(200%);
   border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; border-top: 1rpx solid var(--cy-border-card);
@@ -799,6 +803,9 @@ page {
   max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y: auto;
 }
 .cg-sheet.picker { padding-left: 0; padding-right: 0; }
+.cg-mask.is-out { animation: none; opacity: 0; transition: opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); pointer-events: none; }
+.cg-sheet.is-out { animation: none; transform: translateY(100%); transition: transform var(--cy-motion-sheet-out) var(--cy-ease-standard); pointer-events: none; }
+.cg--reduced-motion .cg-mask, .cg--reduced-motion .cg-sheet { animation: none; }
 .cg-sheet-bar { width: 76rpx; height: 8rpx; border-radius: 4rpx; background: var(--cy-border-line); margin: 0 auto var(--cy-space-3-5); } /* ds-ok */
 .cg-sheet-tit { font-size: var(--cy-comp-sheet-title-size); font-weight: 700; line-height: var(--cy-comp-sheet-title-leading); color: var(--cy-text-title); margin-bottom: var(--cy-legacy-6); }
 .cg-sheet-tit.center { text-align: left; font-size: var(--cy-comp-sheet-title-size); font-weight: 700; margin-bottom: 16rpx; }
