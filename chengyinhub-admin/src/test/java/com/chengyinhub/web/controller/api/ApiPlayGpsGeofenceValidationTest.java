@@ -172,13 +172,13 @@ class ApiPlayGpsGeofenceValidationTest
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     /** 坐标判定路径必须带精度(O-01 已删空精度放行);本组用例只验坐标,精度给合法值 */
     private AjaxResult arrive(String longitude, String latitude)
     {
-        return controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
-                longitude, latitude, null, null, null, VALID_ACCURACY);
+        return BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), longitude, latitude, null, null, null, VALID_ACCURACY);
     }
 
     private void verifyNoProgressAndNoReward()
@@ -281,8 +281,7 @@ class ApiPlayGpsGeofenceValidationTest
 
     private AjaxResult arriveWithAccuracy(String accuracy)
     {
-        return controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
-                NODE_LNG, NODE_LAT, null, null, null, accuracy);
+        return BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), NODE_LNG, NODE_LAT, null, null, null, accuracy);
     }
 
     /** O-01 终态:空精度不再放行,无论守卫是否装配、开关如何;拒绝在守卫之前,不落守卫表、不可申诉。 */
@@ -295,9 +294,8 @@ class ApiPlayGpsGeofenceValidationTest
             assertEquals("ARRIVE_ACCURACY_MISSING", result.get("errorCode"));
             assertEquals(Boolean.FALSE, result.get("appealable"));
         }
-        // 7 参重载(不带精度)同样被拒
-        AjaxResult legacy = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
-                NODE_LNG, NODE_LAT, null, null, null);
+        // 完整身份的合法命令省略精度时仍须命中原精度拒绝规则
+        AjaxResult legacy = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), NODE_LNG, NODE_LAT, null, null, null);
         assertEquals("ARRIVE_ACCURACY_MISSING", legacy.get("errorCode"));
         verifyNoProgressAndNoReward();
     }
@@ -402,8 +400,7 @@ class ApiPlayGpsGeofenceValidationTest
         node.setLongitude(null);
         node.setLatitude(null);
 
-        assertEquals(200, controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
-                null, null, null, null, null, "500").get("code"), "无坐标节点不走坐标判定,精度闸不适用");
+        assertEquals(200, BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null, null, null, "500").get("code"), "无坐标节点不走坐标判定,精度闸不适用");
     }
 
     private void stubGpsValidationNode()

@@ -88,11 +88,12 @@ class DeadlockRetryEntryPointContractTest {
     void everyPlayEndpointThatAdvancesProgressOwnsTheRetryBoundary() throws Exception {
         TreeSet<String> callers = new TreeSet<>();
         List<String> violations = new ArrayList<>();
-        for (Map.Entry<String, String[]> method : methods(source(PLAY)).entrySet()) {
+        Map<String, String[]> playMethods = methods(source(PLAY));
+        for (Map.Entry<String, String[]> method : playMethods.entrySet()) {
             String name = method.getKey();
             String annotations = method.getValue()[0];
             String body = method.getValue()[1];
-            if (!annotations.contains("Mapping(") || !body.contains("advanceProgress(")) {
+            if (!annotations.contains("Mapping(") || !reachesAdvanceProgress(playMethods, name, new java.util.HashSet<>())) {
                 continue;
             }
             callers.add(name);
@@ -106,6 +107,20 @@ class DeadlockRetryEntryPointContractTest {
         assertEquals(List.of(), violations);
         assertTrue(callers.containsAll(List.of("answer", "arrive", "checkin", "photo", "revealPuzzle",
                 "sensorResult", "submitPreference")), "advanceProgress 调用方识别失败: " + callers);
+    }
+
+    /** 命令入口仍拥有最外层事务；沿真实私有 helper 调用查找推进，不能把未映射 helper 当入口。 */
+    private static boolean reachesAdvanceProgress(Map<String, String[]> methods, String name, java.util.Set<String> seen) {
+        if (!seen.add(name)) return false;
+        String body = methods.get(name)[1];
+        if (body.contains("advanceProgress(")) return true;
+        for (Map.Entry<String, String[]> helper : methods.entrySet()) {
+            if (!helper.getValue()[1].stripLeading().startsWith("private ")) continue;
+            String helperName = helper.getKey().replaceFirst("#\\d+$", "");
+            if (Pattern.compile("\\b" + Pattern.quote(helperName) + "\\s*\\(").matcher(body).find()
+                    && reachesAdvanceProgress(methods, helper.getKey(), seen)) return true;
+        }
+        return false;
     }
 
     /** 服务层重试边界的调用方必须不开事务，否则进入服务时已有活动事务、重试不生效。 */

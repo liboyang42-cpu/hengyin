@@ -4387,7 +4387,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         Integer version=session.getVersion();session.setStateJson(write(state));session.setUpdateTime(new Date(clock.millis()));
         if(routeMapper.updateStateCas(session)!=1)throw new ServiceException("本局已更新，请刷新",409);
         session.setVersion(version+1);Map<String,Object> view=themeViewOf(session);
-        if(routeMapper.updateActionResponse(action.getId(),write(view))!=1)throw new IllegalStateException("扫码回执保存失败");return view;
+        String savedResponse=write(view);
+        if(routeMapper.updateActionResponse(action.getId(),savedResponse)!=1)throw new IllegalStateException("扫码回执保存失败");
+        return JSON.convertValue(validator.readTree(savedResponse),new TypeReference<Map<String,Object>>(){});
     }
 
     @Override
@@ -4537,7 +4539,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if(routeMapper.updateStateCas(session)!=1)throw new ServiceException("本局已更新，请刷新",409);
         session.setVersion(version+1);Map<String,Object> view=themeViewOf(session);
         JourneyInitialState.redactHidden(rules,result);view.put("settlement",JSON.convertValue(result,new TypeReference<Map<String,Object>>(){}));
-        if(routeMapper.updateActionResponse(action.getId(),write(view))!=1)throw new IllegalStateException("动作回执保存失败");return view;
+        String savedResponse=write(view);
+        if(routeMapper.updateActionResponse(action.getId(),savedResponse)!=1)throw new IllegalStateException("动作回执保存失败");
+        return JSON.convertValue(validator.readTree(savedResponse),new TypeReference<Map<String,Object>>(){});
     }
 
     @Override

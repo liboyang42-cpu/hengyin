@@ -134,10 +134,12 @@ class ApiPlayRouteConflictHttpContractTest {
                 new TopicRouteCompletionCoordinator(runtimeService));
 
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(nodeEntity()));
+        when(nodeService.selectCmsTopicNodeById(NODE)).thenReturn(nodeEntity());
         when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(linearTopic());
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity());
-        when(registrationService.selectCmsRegistrationList(any()))
-                .thenReturn(Collections.singletonList(new CmsRegistration()));
+        CmsRegistration ticket = new CmsRegistration(); ticket.setId(901L); ticket.setMemberId(MEMBER);
+        ticket.setOwnerType(2L); ticket.setOwnerId(ACTIVITY); ticket.setRegistrationStatus(2);
+        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(ticket));
         when(progressService.insertPlayerNodeProgress(any())).thenAnswer(inv -> {
             PlayerNodeProgress progress = inv.getArgument(0);
             progress.setId(701L);
@@ -166,6 +168,8 @@ class ApiPlayRouteConflictHttpContractTest {
         mockMvc.perform(post("/api/play/checkin")
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
+                        .param("nodeId", String.valueOf(NODE))
+                        .param("routeSessionId", "0")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -187,6 +191,8 @@ class ApiPlayRouteConflictHttpContractTest {
         mockMvc.perform(post("/api/play/checkin")
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
+                        .param("nodeId", String.valueOf(NODE))
+                        .param("routeSessionId", "0")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -203,6 +209,8 @@ class ApiPlayRouteConflictHttpContractTest {
         mockMvc.perform(post("/api/play/checkin")
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
+                        .param("nodeId", String.valueOf(NODE))
+                        .param("routeSessionId", "0")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -242,7 +250,11 @@ class ApiPlayRouteConflictHttpContractTest {
         when(runtimeService.canPlay(anyLong(), anyLong(), anyLong(), anyLong(), any()))
                 .thenThrow(new IllegalStateException("本站尚未开放或已暂停，请联系带队主理人"));
         mockMvc.perform(post("/api/play/checkin")
-                        .param("activityId", String.valueOf(ACTIVITY)).param("code", "CHECKIN"))
+                        .param("activityId", String.valueOf(ACTIVITY)).param("code", "CHECKIN")
+                        .param("nodeId", String.valueOf(NODE))
+                        .param("routeSessionId", "0")
+                        .param("routeActionId", "paused-route-action")
+                        .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.msg").value("本站尚未开放或已暂停，请联系带队主理人"));

@@ -124,7 +124,7 @@ class ThemeRuntimeMySqlIT {
             CmsTopic topic = sql.getMapper(CmsTopicMapper.class).selectCmsTopicById(topicId);
             assertEquals(JSON.readTree(topic.getPublishedRouteGraphJson()).path("nodeConfigs"), JSON.readTree(runtime.freezePublishedJourney(topic)).path("nodeConfigs"));
             Map<String, Object> view = runtime.themeView(7L, topicId, 0L, null); long sessionId = ((Number) view.get("sessionId")).longValue();
-            Map<String, Object> arrived = runtime.recordPlayerArrival(7L, topicId, 0L, nodeId, "scan", null);
+            Map<String, Object> arrived = runtime.recordPlayerArrival(7L, topicId, 0L, nodeId, "scan", ((Number) view.get("version")).intValue());
             Map<String, Object> started = runtime.gameplayAction(7L, sessionId, ((Number) arrived.get("version")).intValue(), "start", "QUEST_START", "node_" + nodeId, null);
             Map<String, Object> done = runtime.gameplayAction(7L, sessionId, ((Number) started.get("version")).intValue(), "resolve", "QUEST_RESOLVE", "node_" + nodeId, null);
             TopicRouteSession stored = sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(sessionId, 7L);
@@ -133,7 +133,7 @@ class ThemeRuntimeMySqlIT {
             assertEquals(topicId == 10 ? 5 : 4, state.path("variables").path("counter.x").asInt());
             assertEquals(1, state.path("themeRuntime").path("inventory").path(topicId == 10 ? "a" : "b").asInt());
             assertEquals(0, state.path("themeRuntime").path("inventory").path(topicId == 10 ? "b" : "a").asInt());
-            assertEquals(JSON.readTree(JSON.writeValueAsString(done)), JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L, sessionId, 0, "resolve", "QUEST_RESOLVE", "node_" + nodeId, null))));
+            assertEquals(JSON.readTree(JSON.writeValueAsString(done)), JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L, sessionId, ((Number) started.get("version")).intValue(), "resolve", "QUEST_RESOLVE", "node_" + nodeId, null))));
             assertEquals(stored.getStateJson(), sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(sessionId, 7L).getStateJson());
         }
     }
@@ -195,8 +195,8 @@ class ThemeRuntimeMySqlIT {
             CmsTopic topic=sql.getMapper(CmsTopicMapper.class).selectCmsTopicById(10L);
             try(PreparedStatement st=c.prepareStatement("UPDATE cms_topic SET published_route_graph_json=? WHERE id=10")){st.setString(1,runtime.freezePublication(topic,null));st.executeUpdate();}
         }
-        runtime.themeView(7L,10L,0L,null);
-        return runtime.recordPlayerArrival(7L,10L,0L,11L,"scan",null,basicMethod!=null && basicMethod==5?"GPS":basicMethod!=null && (basicMethod==1 || basicMethod==3)?"ANSWER":"SCAN");
+        Map<String,Object> original=runtime.themeView(7L,10L,0L,null);
+        return runtime.recordPlayerArrival(7L,10L,0L,11L,"scan",((Number)original.get("version")).intValue(),basicMethod!=null && basicMethod==5?"GPS":basicMethod!=null && (basicMethod==1 || basicMethod==3)?"ANSWER":"SCAN");
     }
     private final java.util.concurrent.atomic.AtomicLong advancedNow=new java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis());
     @Test void r5OutcomeOnlyTemplateAdoptsRealTasksWithoutTheRemovedCostTool() throws Exception {
@@ -207,7 +207,7 @@ class ThemeRuntimeMySqlIT {
             CmsTopic topic=sql.getMapper(CmsTopicMapper.class).selectCmsTopicById(10L);assertEquals(2,JSON.readTree(runtime.compileTemplateRules(topic)).path("gameplayRuntime").path("quests").size());
             try(PreparedStatement st=c.prepareStatement("UPDATE cms_topic SET published_route_graph_json=? WHERE id=10")){st.setString(1,runtime.freezePublication(topic,null));st.executeUpdate();}
         }
-        runtime.themeView(7L,10L,0L,null);Map<String,Object> arrived=runtime.recordPlayerArrival(7L,10L,0L,11L,"scan-r5",null);long id=((Number)arrived.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)arrived.get("version")).intValue(),"start-r5","QUEST_START","node_11",null);
+        Map<String,Object> original=runtime.themeView(7L,10L,0L,null);Map<String,Object> arrived=runtime.recordPlayerArrival(7L,10L,0L,11L,"scan-r5",((Number)original.get("version")).intValue());long id=((Number)arrived.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)arrived.get("version")).intValue(),"start-r5","QUEST_START","node_11",null);
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced=advancedService();Map<String,Object> started=advanced.start(7L,0L,10L,11L,null);
         advanced.act(7L,((Number)started.get("sessionId")).longValue(),((Number)started.get("version")).intValue(),"wrong-r5","SUBMIT_QA",Collections.singletonMap("input","错误"));
         assertEquals(3,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());
@@ -267,7 +267,8 @@ class ThemeRuntimeMySqlIT {
     @Test void r5ChallengeTwoActualCoinSessionsRestoreOnceWithoutCompletingTheRegularTask() throws Exception {
         Map<String,Object> initial=personalTask(false,null,"CHALLENGE");long id=((Number)initial.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"start","QUEST_START","north",null);
         runtime.recordGameplayOutcome(7L,10L,0L,11L,runtime.gameplayInstance(7L,10L,0L,11L),"advanced:1:1",JSON.createObjectNode().put("nodeId",11).put("outcome","FAIL"),Collections.emptyList());
-        runtime.recordPlayerArrival(7L,10L,0L,13L,"recovery-arrival",null);
+        Map<String,Object> recoveryContext=runtime.themeView(7L,10L,0L,id);
+        runtime.recordPlayerArrival(7L,10L,0L,13L,"recovery-arrival",((Number)recoveryContext.get("version")).intValue());
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced=advancedService();Map<String,Object> first=advanced.start(7L,0L,10L,13L,null);long firstId=((Number)first.get("sessionId")).longValue();
         JsonNode before=JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson());long deadline=before.path("themeRuntime").path("challenge").path("deadlineAt").asLong();
         Map<String,Object> firstCompleted=advanced.act(7L,firstId,((Number)first.get("version")).intValue(),"first-coin","FLIP_COIN",Collections.emptyMap());
@@ -428,7 +429,7 @@ class ThemeRuntimeMySqlIT {
         assertEquals(3,JSON.readTree(stored.getStateJson()).path("variables").path("sys.hp").asInt());
         Map<String,Object> done=runtime.gameplayAction(7L,id,stored.getVersion(),"r5-confirm","QUEST_RESOLVE","north",null);
         assertEquals(2,((Number)done.get("hp")).intValue());
-        assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,0,"r5-confirm","QUEST_RESOLVE","north",null))));
+        assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,stored.getVersion(),"r5-confirm","QUEST_RESOLVE","north",null))));
         try(Connection independent=ds.getConnection();Statement st=independent.createStatement();ResultSet rs=st.executeQuery("SELECT state_json FROM topic_route_session WHERE id="+id)){assertTrue(rs.next());assertEquals(2,JSON.readTree(rs.getString(1)).path("variables").path("sys.hp").asInt());}
     }
     @Test void r5ZeroFailureFreezesFailureCardFromActualFeeTransaction() throws Exception {
@@ -464,7 +465,7 @@ class ThemeRuntimeMySqlIT {
     }
     private long readyPersonalOperation() throws Exception {
         Map<String,Object> initial=personalTask(true);long id=((Number)initial.get("sessionId")).longValue();
-        Map<String,Object> arrived=runtime.recordPlayerArrival(7L,10L,0L,12L,"operation-scan",null);
+        Map<String,Object> arrived=runtime.recordPlayerArrival(7L,10L,0L,12L,"operation-scan",((Number)initial.get("version")).intValue());
         runtime.gameplayAction(7L,id,((Number)arrived.get("version")).intValue(),"operation-start","OPERATION_START","warm",null);
         runtime.recordNodeResult(7L,10L,0L,12L,runtime.gameplayInstance(7L,10L,0L,12L),"operation-proof",true,false,0,Collections.emptyList());return id;
     }
@@ -473,7 +474,7 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> result=runtime.gameplayAction(7L,id,((Number)before.get("version")).intValue(),"operation-use","FACILITY_USE","warm",null);
         assertEquals(7,((Number)result.get("hp")).intValue());assertEquals(1,((Number)result.get("used")).intValue());
         assertNull(result.get("activeOperation"));assertThrows(RuntimeException.class,()->runtime.gameplayAction(7L,id,((Number)result.get("version")).intValue(),"operation-again","FACILITY_USE","warm",null));
-        assertEquals(JSON.readTree(JSON.writeValueAsString(result)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,0,"operation-use","FACILITY_USE","warm",null))));
+        assertEquals(JSON.readTree(JSON.writeValueAsString(result)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,((Number)before.get("version")).intValue(),"operation-use","FACILITY_USE","warm",null))));
     }
     @Test void concurrentPersonalOperationCannotUseTheSameProofTwice() throws Exception {
         long id=readyPersonalOperation();int version=((Number)runtime.themeView(7L,10L,0L,id).get("version")).intValue();CountDownLatch go=new CountDownLatch(1);ExecutorService pool=Executors.newFixedThreadPool(2);
@@ -489,7 +490,7 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> ready=runtime.themeView(7L,10L,0L,id);
         Map<String,Object> done=runtime.gameplayAction(7L,id,((Number)ready.get("version")).intValue(),"done","QUEST_RESOLVE","north",null);
         assertEquals("COMPLETED",done.get("status"));assertEquals(5,((Number)done.get("hp")).intValue());assertEquals(2,((Number)done.get("used")).intValue());
-        assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,0,"done","QUEST_RESOLVE","north",null))));
+        assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,((Number)ready.get("version")).intValue(),"done","QUEST_RESOLVE","north",null))));
         assertThrows(RuntimeException.class,()->runtime.themeAction(7L,id,((Number)done.get("version")).intValue(),"bypass","CHAPTER_END","0"));
     }
     @Test void personalTaskDatabaseFailureRollsBackInventoryStateAndReceipt() throws Exception {

@@ -1,6 +1,9 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.IPlayCheckinCodeService;
@@ -39,7 +42,16 @@ class ApiPlayCheckinDuplicateCodeTest {
         ReflectionTestUtils.setField(controller, "playCheckinCodeService", liveCodes);
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
         ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        when(nodeService.selectCmsTopicNodeById(77L)).thenReturn(node(77L,44L));
+        CmsActivity activity = new CmsActivity(); activity.setId(43L); activity.setTopicId(44L);
+        when(activityService.selectCmsActivityById(43L)).thenReturn(activity);
+        CmsRegistration ticket = new CmsRegistration(); ticket.setId(91L); ticket.setMemberId(41L);
+        ticket.setOwnerType(2L); ticket.setOwnerId(43L); ticket.setRegistrationStatus(2);
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(java.util.Collections.singletonList(ticket));
+        ReflectionTestUtils.setField(controller,"cmsRegistrationService",registrations);
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller,44L);
         when(liveCodes.inspect(STATIC)).thenReturn(ConsumeResult.invalid());
     }
 
@@ -52,14 +64,14 @@ class ApiPlayCheckinDuplicateCodeTest {
     }
 
     @Test
-    void duplicateStaticCodeIsRejectedBeforeAnyContextLookup() {
+    void duplicateStaticCodeIsRejectedAfterOriginalTargetAuthorizationWithoutProgressWrites() {
         when(nodeService.selectCmsTopicNodeList(any()))
                 .thenReturn(Arrays.asList(node(77L, 44L), node(78L, 45L)));
 
-        AjaxResult r = controller.checkin("43", STATIC, null);
+        AjaxResult r = BasicPlayCommandFixtures.checkin(controller,"43",STATIC,null,null,null,null,"77");
 
         assertEquals(500, r.get(AjaxResult.CODE_TAG));
         assertEquals("该打卡码对应多个站点，请联系商家处理", r.get(AjaxResult.MSG_TAG));
-        verifyNoInteractions(activityService);
+        org.mockito.Mockito.verify((com.chengyinhub.business.mapper.CmsActivityMapper)ReflectionTestUtils.getField(controller,"currentPlayActivityMapper"),org.mockito.Mockito.never()).selectCmsActivityByIdForUpdate(any());
     }
 }

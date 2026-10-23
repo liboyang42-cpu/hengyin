@@ -1365,15 +1365,18 @@ public class ApiPlayProgressController extends BaseController
                 scope.denied = error("该节点不属于本主题"); return scope;
             }
         } catch (IllegalArgumentException e) { scope.denied = error("参数有误"); return scope; }
-        // 读回执仍须证明当前主体拥有本场/本主题的已支付报名。时效和实体版本仅在新写时校验。
+        // 读回执仍须证明原报名归属；普通免费报名沿用现有资格，探索票才以已付为前提。
+        // 时效和实体版本仅在新写时校验，不能把普通免费报名误升级为付费要求。
         CmsRegistration query = new CmsRegistration(); query.setMemberId(memberId);
         query.setOwnerType(scope.activityId > 0 ? 2L : 1L);
         query.setOwnerId(scope.activityId > 0 ? scope.activityId : scope.topicId);
-        query.setPaymentStatus(2); query.setRegistrationStatus(2);
+        query.setRegistrationStatus(2);
         List<CmsRegistration> registrations = cmsRegistrationService.selectCmsRegistrationList(query);
         if (registrations == null || registrations.stream().noneMatch(row -> row != null
                 && memberId.equals(row.getMemberId()) && query.getOwnerType().equals(row.getOwnerType())
-                && query.getOwnerId().equals(row.getOwnerId()) && Integer.valueOf(2).equals(row.getPaymentStatus())
+                && query.getOwnerId().equals(row.getOwnerId())
+                && (!Integer.valueOf(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS).equals(row.getPurchaseKind())
+                    || Integer.valueOf(2).equals(row.getPaymentStatus()))
                 && Integer.valueOf(2).equals(row.getRegistrationStatus()))) scope.denied = error("无权读取本次游玩命令");
         return scope;
     }

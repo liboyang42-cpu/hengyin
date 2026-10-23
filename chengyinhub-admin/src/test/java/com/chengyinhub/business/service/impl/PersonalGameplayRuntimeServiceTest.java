@@ -215,7 +215,7 @@ class PersonalGameplayRuntimeServiceTest {
         assertEquals(0,stored().path("variables").path("sys.actions").asInt());
         send("start-north","QUEST_START","north",null);service.recordNodeResult(7L,10L,0L,11L,service.gameplayInstance(7L,10L,0L,11L),"pass",true,false,0,Collections.emptyList());
         Map<String,Object> result=send("done","QUEST_RESOLVE","north","food");assertEquals("COMPLETED",result.get("status"));assertEquals(2,stored().path("themeRuntime").path("inventory").path("food").asInt());assertEquals(1,stored().path("variables").path("sys.actions").asInt());
-        assertEquals(json.writeValueAsString(result),json.writeValueAsString(service.gameplayAction(7L,99L,0,"done","QUEST_RESOLVE","north","food")));
+        assertEquals(json.writeValueAsString(result),json.writeValueAsString(service.gameplayAction(7L,99L,originalVersions.get("done"),"done","QUEST_RESOLVE","north","food")));
         assertThrows(ServiceException.class,()->send("done","QUEST_RESOLVE","north",null));
     }
     @Test void ownerVersionArrivalAndOldRoutesFailClosedWithoutMaterialChanges() throws Exception {

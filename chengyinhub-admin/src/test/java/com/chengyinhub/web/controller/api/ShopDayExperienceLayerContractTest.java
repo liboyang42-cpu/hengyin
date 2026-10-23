@@ -201,6 +201,7 @@ class ShopDayExperienceLayerContractTest
         when(progressService.selectPlayerNodeProgressList(any()))
                 .thenReturn(Collections.singletonList(arrived));
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     @SuppressWarnings("unchecked")
@@ -343,7 +344,7 @@ class ShopDayExperienceLayerContractTest
         topic.setProductType(ProductType.ORIENTEERING);
         template.setValidationMethod(6);
 
-        AjaxResult result = controller.arrive(ACTIVITY.toString(), NODE.toString(), null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, ACTIVITY.toString(), NODE.toString(), null, null, null);
 
         assertEquals(500, result.get("code"));
         assertEquals("该站需完成对应任务后才能打卡", result.get("msg"));
@@ -354,7 +355,7 @@ class ShopDayExperienceLayerContractTest
     @Test
     void shopDayCheckinShipsNormalizedTaskCardFieldNames()
     {
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE));
 
         assertEquals(200, result.get("code"));
         Map<String, Object> data = (Map<String, Object>) result.get("data");
@@ -373,7 +374,7 @@ class ShopDayExperienceLayerContractTest
         template.setSensorType("filter_shot");
         template.setSensorConfig("{\"filterStyle\":\"night_vision\"}");
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE));
 
         assertEquals(200, result.get("code"));
         Map<String, Object> data = (Map<String, Object>) result.get("data");
@@ -397,7 +398,7 @@ class ShopDayExperienceLayerContractTest
         assertEquals(6, listed.get("validationMethod"));
         assertFalse(listed.containsKey("preferenceJson"));
 
-        AjaxResult checkin = controller.checkin(String.valueOf(ACTIVITY), CODE, null);
+        AjaxResult checkin = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE));
         Map<String, Object> data = (Map<String, Object>) checkin.get("data");
         assertEquals(Boolean.TRUE, data.get("hasGame"));
         assertEquals(6, data.get("validationMethod"));
