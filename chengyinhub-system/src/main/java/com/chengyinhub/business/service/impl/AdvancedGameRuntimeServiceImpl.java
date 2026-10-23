@@ -366,18 +366,29 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (StringUtils.isBlank(idempotencyKey) || idempotencyKey.length() > 64) {
             throw new IllegalArgumentException("幂等键不能为空且最多 64 位");
         }
+        if (expectedVersion == null || expectedVersion < 0) {
+            throw new IllegalArgumentException("原期望版本不能为空且不能为负数");
+        }
+        String normalizedAction = StringUtils.defaultString(action).trim().toUpperCase(java.util.Locale.ROOT);
+        if (normalizedAction.isEmpty()) throw new IllegalArgumentException("高级玩法动作不能为空");
         GameRuntimeSession session = requireAccessible(sessionId, memberId);
+        // 在任何会改写输入的 helper 之前冻结指纹；原期望不得替换成实体当前版本。
+        Map<String, Object> commandPayload = objectMapper.convertValue(
+                objectMapper.valueToTree(payload == null ? Collections.emptyMap() : payload),
+                new TypeReference<Map<String, Object>>() {});
+        String requestFingerprint = commandFingerprint(session, memberId, expectedVersion,
+                idempotencyKey, normalizedAction, commandPayload);
         boolean zeroChallengeSession = objectState(session.getStateJson()).has("zeroChallengeInstance");
         if (zeroChallengeSession) idempotencyKey = themeActionKey(sessionId, memberId + ":" + idempotencyKey);
         else if (themeScoped(memberId, session)) idempotencyKey = themeActionKey(sessionId, idempotencyKey);
         PlayAttemptLog replay = attemptMapper.selectByIdempotencyKey(idempotencyKey);
-        if (replay != null) return replay(replay, memberId, sessionId);
+        if (replay != null) return replay(replay, memberId, sessionId, requestFingerprint);
 
 
-        if("CHOOSE".equalsIgnoreCase(action) && readJson(session.getConfigSnapshotJson(),"玩法配置不可用").has("outcomeRules")) {
+        if("CHOOSE".equals(normalizedAction) && readJson(session.getConfigSnapshotJson(),"玩法配置不可用").has("outcomeRules")) {
             if(expectedVersion==null || !expectedVersion.equals(session.getVersion()))throw versionConflict(session,memberId);
-            ObjectNode state=objectState(session.getStateJson());JsonNode branch=outcomeFeedback(memberId,session,state,text(payload==null?Collections.emptyMap():payload,"optionId"));
-            if(branch==null)throw new IllegalStateException("结果尚未结算，不能进入下一段");state.set("branch",branch.deepCopy());int old=session.getVersion();session.setStateJson(writeJson(state));session.setUpdateTime(clock.now());if(sessionMapper.updateFeedbackStateCas(session)!=1)throw new IllegalStateException("状态已更新，请刷新后重试");session.setVersion(old+1);Map<String,Object> result=toView(session,memberId);appendJourneyWorld(result,memberId,session);logAction(session,memberId,idempotencyKey,result);return result;
+            ObjectNode state=objectState(session.getStateJson());JsonNode branch=outcomeFeedback(memberId,session,state,text(commandPayload,"optionId"));
+            if(branch==null)throw new IllegalStateException("结果尚未结算，不能进入下一段");state.set("branch",branch.deepCopy());int old=session.getVersion();session.setStateJson(writeJson(state));session.setUpdateTime(clock.now());if(sessionMapper.updateFeedbackStateCas(session)!=1)throw new IllegalStateException("状态已更新，请刷新后重试");session.setVersion(old+1);Map<String,Object> result=toView(session,memberId);appendJourneyWorld(result,memberId,session);logAction(session,memberId,idempotencyKey,requestFingerprint,result);return result;
         }
         session=synchronizePredictSession(session,memberId);
         if(objectState(session.getStateJson()).path("predict").path("revealRecorded").asBoolean())return toView(session,memberId);
@@ -390,7 +401,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         requireRouteNodeAccess(memberId, session.getActivityId(), session.getTopicId(), session.getNodeId());
         JsonNode sharedRun = gameSessionRuntimeService == null ? null : gameSessionRuntimeService.sharedRouteSnapshot(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId());
         if (zeroChallengeSession && "RETRY".equalsIgnoreCase(StringUtils.defaultString(action).trim())) {
-            return retryZeroChallenge(session, memberId, expectedVersion, idempotencyKey, sharedRun);
+            return retryZeroChallenge(session, memberId, expectedVersion, idempotencyKey, requestFingerprint, sharedRun);
         }
         if (sharedRun != null && (!session.getPlayInstanceId().equals(sharedInstance(sharedRun))
                 || !Long.valueOf(sharedRun.path("teamId").asLong()).equals(session.getOwnerId()) || session.getOwnerType() != GameRuntimeSession.OWNER_TEAM)) {
@@ -413,7 +424,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 retryMembers = teamMapper.selectActiveMembers(session.getOwnerId());
             }
             Map<String, Object> restarted = restart(session, retryTeam, retryMembers, memberId);
-            logAction(session, memberId, idempotencyKey, restarted);
+            logAction(session, memberId, idempotencyKey, requestFingerprint, restarted);
             return restarted;
         }
         if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) {
@@ -427,8 +438,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 session.getTopicId(), session.getActivityId(), session.getNodeId());
         JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         ObjectNode state = objectState(session.getStateJson());
-        Map<String, Object> safePayload = payload == null ? Collections.emptyMap() : payload;
-        String normalizedAction = StringUtils.defaultString(action).trim().toUpperCase();
+        Map<String, Object> safePayload = commandPayload;
         String selectedChallenge=zeroChallengeSession && state.path("challenge").path("nodeId").asLong()==session.getNodeId()?state.path("challenge").path("gameplayKey").asText():"";
         String selectedAction="coinFlip".equals(selectedChallenge)?"FLIP_COIN":"diceRoll".equals(selectedChallenge)?"ROLL_DICE":"random".equals(selectedChallenge)?"DRAW":"SUBMIT_"+selectedChallenge.replaceAll("([a-z])([A-Z])","$1_$2").toUpperCase();
         if(!selectedChallenge.isEmpty() && (normalizedAction.startsWith("SUBMIT_") || Arrays.asList("FLIP_COIN","ROLL_DICE","DRAW").contains(normalizedAction)) && !normalizedAction.equals(selectedAction))throw new IllegalArgumentException("恢复挑战只能提交选定玩法");
@@ -703,7 +713,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         Map<String, Object> view = toView(session, memberId);
         appendJourneyWorld(view, memberId, session);
-        logAction(session, memberId, idempotencyKey, view);
+        logAction(session, memberId, idempotencyKey, requestFingerprint, view);
         // 待铸卡挂在 logAction 之后:幂等回放存的是上面那一刻的回包,不带这个内部标记,
         // 同一个 idempotencyKey 重放不会再铸一次。
         if (pendingCardMint != null) {
@@ -1589,13 +1599,66 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> replay(PlayAttemptLog log, Long memberId, Long sessionId) {
+    private Map<String, Object> replay(PlayAttemptLog log, Long memberId, Long sessionId, String requestFingerprint) {
         if (!memberId.equals(log.getMemberId()) || log.getAttemptType() == null
                 || log.getAttemptType() != ATTEMPT_TYPE_ADVANCED) throw new IllegalStateException("幂等键已被占用");
         Map<String, Object> result = objectMapper.convertValue(readJson(log.getResultJson(), "幂等回执不可用"), Map.class);
         if (!sessionId.equals(longValue(result.get("sessionId")))
                 && !sessionId.equals(longValue(result.get("retrySourceSessionId")))) throw new IllegalStateException("幂等键已被占用");
+        String original = log.getRequestFingerprint();
+        if (original == null || !original.matches("[0-9a-f]{64}")) {
+            throw new ServiceException("历史动作身份无法证明，请保留原命令并联系核验", 409);
+        }
+        if (!original.equals(requestFingerprint)) {
+            throw new ServiceException("同一动作身份的输入或原期望版本已改变", 409);
+        }
         return result;
+    }
+
+    /**
+     * 高级动作专属规范化；只绑定原请求与不会随玩法推进改变的会话 scope。
+     * 不读取当前 version/status/epoch，确保已执行命令可在实体推进后回读原结果。
+     */
+    private String commandFingerprint(GameRuntimeSession session, Long memberId, Integer expectedVersion,
+            String clientKey, String action, Map<String, Object> payload) {
+        ObjectNode command = objectMapper.createObjectNode();
+        command.put("schema", "advanced-act:v1");
+        command.put("memberId", memberId); command.put("sessionId", session.getId());
+        command.set("activityId", objectMapper.valueToTree(session.getActivityId()));
+        command.set("topicId", objectMapper.valueToTree(session.getTopicId()));
+        command.set("nodeId", objectMapper.valueToTree(session.getNodeId()));
+        command.set("ownerType", objectMapper.valueToTree(session.getOwnerType()));
+        command.set("ownerId", objectMapper.valueToTree(session.getOwnerId()));
+        command.set("playInstanceId", objectMapper.valueToTree(session.getPlayInstanceId()));
+        command.put("expectedVersion", expectedVersion); command.put("clientKey", clientKey);
+        command.put("action", StringUtils.defaultString(action).trim().toUpperCase(java.util.Locale.ROOT));
+        command.set("payload", canonicalCommandValue(objectMapper.valueToTree(
+                payload == null ? Collections.emptyMap() : payload)));
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(objectMapper.writeValueAsBytes(command));
+            StringBuilder hash = new StringBuilder(64);
+            for (byte part : digest) hash.append(String.format(java.util.Locale.ROOT, "%02x", part & 0xff));
+            return hash.toString();
+        } catch (java.security.NoSuchAlgorithmException | com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException("动作身份无法计算", e);
+        }
+    }
+
+    private JsonNode canonicalCommandValue(JsonNode value) {
+        if (value.isObject()) {
+            ObjectNode ordered = objectMapper.createObjectNode();
+            java.util.TreeSet<String> fields = new java.util.TreeSet<>();
+            value.fieldNames().forEachRemaining(fields::add);
+            for (String field : fields) ordered.set(field, canonicalCommandValue(value.get(field)));
+            return ordered;
+        }
+        if (value.isArray()) {
+            ArrayNode ordered = objectMapper.createArrayNode();
+            for (JsonNode item : value) ordered.add(canonicalCommandValue(item));
+            return ordered;
+        }
+        return value.deepCopy();
     }
 
     /** R14:一次提交里判定的选择。branch 是「步骤 id + 选项 id」,其余是「玩法名 + 选项 id / null(通过)」。 */
@@ -1738,7 +1801,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     private void logAction(GameRuntimeSession session, Long memberId, String idempotencyKey,
-            Map<String, Object> view) {
+            String requestFingerprint, Map<String, Object> view) {
+        if (requestFingerprint == null || !requestFingerprint.matches("[0-9a-f]{64}")) {
+            throw new IllegalStateException("动作请求指纹缺失");
+        }
         PlayAttemptLog log = new PlayAttemptLog();
         log.setMemberId(memberId);
         log.setTopicId(session.getTopicId());
@@ -1749,6 +1815,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         log.setDurationS((int) Math.max(0, (clock.now().getTime() - session.getStartedAt().getTime()) / 1000L));
         log.setResultJson(writeJson(view));
         log.setIdempotencyKey(idempotencyKey);
+        log.setRequestFingerprint(requestFingerprint);
         log.setCreatedAt(clock.now());
         try {
             int inserted = attemptMapper.insertPlayAttemptLog(log);
@@ -1756,7 +1823,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         } catch (DuplicateKeyException e) {
             PlayAttemptLog existing = attemptMapper.selectByIdempotencyKey(idempotencyKey);
             if (existing == null) throw e;
-            replay(existing, memberId, session.getId());
+            replay(existing, memberId, session.getId(), requestFingerprint);
+            // 已发生本地写入的失败事务不能借旧回执提交；先抛错回滚，再以原命令读赢家。
+            throw new ServiceException("动作回执已提交，请使用原动作身份读回", 409);
         }
     }
 
@@ -4134,7 +4203,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     private Map<String, Object> retryZeroChallenge(GameRuntimeSession source, Long memberId, Integer expectedVersion,
-            String idempotencyKey, JsonNode shared) {
+            String idempotencyKey, String requestFingerprint, JsonNode shared) {
         if (source.getOwnerType() == GameRuntimeSession.OWNER_TEAM) {
             PlayTeam team = requireTeam(source.getOwnerId(), memberId, source.getActivityId(), true);
             if (!memberId.equals(team.getLeaderMemberId())) throw new ServiceException("只有本队队长可重试", 403);
@@ -4160,7 +4229,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (sessionMapper.updateFeedbackStateCas(source) != 1) throw versionConflict(requireAccessible(source.getId(), memberId), memberId);
         source.setVersion(oldVersion + 1);
         result.put("retrySourceSessionId", source.getId());
-        logAction(source, memberId, idempotencyKey, result);
+        logAction(source, memberId, idempotencyKey, requestFingerprint, result);
         return result;
     }
 
