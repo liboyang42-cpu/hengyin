@@ -127,6 +127,8 @@ MYBATIS_ITS=(
   # 2026-10-22 O-14 city_code 回填(RV3 B-519-1):南京西路(上海)/北京路(广州)反例、人工值不覆盖、重跑零变更、
   #   修正重跑只改本回填写过的行、只读预览与真实执行逐行一致 —— 真迁移 + 真 MySQL 才验得动。
   O14CityCodeBackfillMySqlIT
+  # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
+  AuditTrailProjectionMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,
