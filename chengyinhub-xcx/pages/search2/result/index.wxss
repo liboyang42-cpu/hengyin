@@ -45,43 +45,38 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
 .topic-result-card__title { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); line-height: var(--cy-leading-tight); font-weight: 700; }
 .topic-result-card__detail { margin-top: var(--cy-space-1); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
 
-/* 2026-10-22 owner:模板结果与模板页同一套行样式 —— 以下照抄 pages/template/index.wxss 的 .cml-*,改那边要同步这里 */
-.cml-card {
-  display: flex; align-items: center; gap: var(--cy-space-3);
-  padding: var(--cy-space-1-5) 0;
+/* 2026-10-22 owner:搜索里的主题/玩法模板是大卡,照抄「我的订单」卡
+   (subpackageMember/components/cy/profile 的 .pc-ord-*:400rpx 高、40rpx 圆角、深灰渐变、白字、黑色胶囊),改那边要同步这里。
+   卡面内是照片语境,字色固定白、按钮固定黑,不随主题翻转。 */
+.tpl-big {
+  position: relative; display: block; width: 100%; height: 400rpx; box-sizing: border-box; /* ds-ok: 同订单卡高度 */
+  overflow: hidden; border-radius: 40rpx; /* ds-ok: 同订单卡大圆角 */
+  background: linear-gradient(160deg, #5B6670 0%, #2A2F35 100%); /* ds-ok: 同订单卡无封面时的照片感底色 */
 }
-.cml-pic {
-  width: 176rpx; height: 132rpx;   /* ds-ok: 行内小图几何,画板05 的 88×66pt(同模板页) */
-  border-radius: var(--cy-radius-md);
-  background: var(--cy-bg-page);
-  flex-shrink: 0;
+.tpl-big__img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.tpl-big__art { position: absolute; left: 50%; top: 40%; width: 200rpx; height: 200rpx; transform: translate(-50%, -50%); } /* ds-ok: 无封面时居中放玩法具象图标 */
+.tpl-big__shade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 88%;
+  background: linear-gradient(180deg, rgba(48,48,48,0) 0%, rgba(48,48,48,.5) 45%, rgba(58,58,58,.85) 100%); /* ds-ok: 同订单卡下半段深灰渐变 */
 }
-.cml-info { flex: 1; min-width: 0; }
-.cml-name {
-  display: block;
-  font-size: var(--cy-font-body);
-  font-weight: 600;
-  color: var(--cy-text-title);
-  line-height: 1.2;
+.tpl-big__tag {
+  position: absolute; left: var(--cy-space-3); top: var(--cy-space-3);
+  padding: 6rpx var(--cy-space-2); border-radius: var(--cy-radius-pill);
+  font-size: var(--cy-type-caption); font-weight: 700; line-height: 1.5;
+  background: rgba(255,255,255,.92); color: #141414; /* ds-ok: 同订单卡浅色状态章 */
 }
-.cml-meta {
-  display: flex; align-items: center;
-  font-size: var(--cy-font-label);
-  color: var(--cy-text-secondary);
-  margin-top: var(--cy-space-1);
+.tpl-big__body {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 0 var(--cy-space-4) var(--cy-space-4);
+  display: flex; flex-direction: column; gap: 6rpx;
 }
-.cml-dot { margin: 0 var(--cy-space-1-5); }
-.cml-pic--art { background: var(--cy-bg-card-2); padding: var(--cy-space-2); box-sizing: border-box; }
-/* 无封面:与模板页同一个「封面暂不可用」错误态 */
-.cover-error {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--cy-space-1);
-  background: var(--cy-bg-card-2);
-  color: var(--cy-text-secondary);
+.tpl-big__title {
+  font-size: 40rpx; font-weight: 800; color: #FFFFFF; line-height: 1.25; letter-spacing: -0.5rpx; /* ds-ok: 同订单卡白色标题 */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.cover-error .cover-error-icon { width: 96rpx; height: 72rpx; flex: 0 0 auto; }
-.cover-error-text { font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
+.tpl-big__foot { margin-top: var(--cy-space-2); display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
+.tpl-big__meta { flex: 1; min-width: 0; font-size: var(--cy-type-caption); color: rgba(255,255,255,.72); line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok: 同订单卡次级白 */
+.tpl-big__btn {
+  flex: none; height: 76rpx; line-height: 76rpx; padding: 0 var(--cy-space-4); /* ds-ok: 同订单卡胶囊按钮 */
+  border-radius: var(--cy-radius-pill); font-size: var(--cy-type-body); font-weight: 700; text-align: center;
+  background: #141414; color: #FFFFFF; /* ds-ok: 同订单卡黑色胶囊按钮 */
+}

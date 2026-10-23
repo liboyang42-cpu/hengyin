@@ -47,21 +47,18 @@
             tags="{{item.tags}}" category-name="{{item.cardCategoryName}}" />
           <cy-club-card wx:elif="{{item.type === 'club'}}" interactive="{{true}}" club="{{item.clubCard}}" cta="查看" aria-label="查看俱乐部：{{item.title}}"
             data-id="{{item.id}}" data-path="{{item.path}}" bind:tap="goResult" bind:action="goResult" />
-          <!-- 2026-10-22 owner:模板结果和模板页长得一样(模板页 cml 行:圆角小图/具象图标 + 名称 + meta),不另起样式 -->
-          <view wx:elif="{{item.tplRow}}" class="cml-card" data-id="{{item.id}}" data-path="{{item.path}}" bindtap="goResult"
+          <!-- 2026-10-22 owner:搜索里的模板是大卡,和「我的订单」卡同一套(封面铺满 + 底部渐变 + 白字 + 黑色胶囊) -->
+          <view wx:elif="{{item.tplRow}}" class="tpl-big" data-id="{{item.id}}" data-path="{{item.path}}" bindtap="goResult"
             hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看{{item.typeLabel}}：{{item.title}}">
-            <image wx:if="{{item.art}}" class="cml-pic cml-pic--art" src="{{item.art}}" mode="aspectFit" aria-hidden="true" />
-            <image wx:elif="{{item.cover}}" class="cml-pic" src="{{item.cover}}" mode="aspectFill" />
-            <view wx:else class="cml-pic cover-error" aria-role="img" aria-label="{{item.title}} 的封面未能加载">
-              <image class="cover-error-icon" src="/images/no_data.svg" mode="aspectFit" />
-              <text class="cover-error-text">封面暂不可用</text>
-            </view>
-            <view class="cml-info">
-              <text class="cml-name ep1">{{item.title}}</text>
-              <view class="cml-meta">
-                <text>{{item.typeLabel}}</text>
-                <text class="cml-dot">·</text>
-                <text class="ep1">{{item.detail}}</text>
+            <image wx:if="{{item.cover}}" class="tpl-big__img" src="{{item.cover}}" mode="aspectFill" lazy-load="true" />
+            <image wx:elif="{{item.art}}" class="tpl-big__art" src="{{item.art}}" mode="aspectFit" aria-hidden="true" />
+            <view class="tpl-big__shade"></view>
+            <view class="tpl-big__tag">{{item.typeLabel}}</view>
+            <view class="tpl-big__body">
+              <view class="tpl-big__title">{{item.title}}</view>
+              <view class="tpl-big__foot">
+                <view class="tpl-big__meta">{{item.detail}}</view>
+                <view class="tpl-big__btn">查看</view>
               </view>
             </view>
           </view>

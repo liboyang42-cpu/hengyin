@@ -30,12 +30,21 @@ test('模板结果按模板页行样式画:具象图标优先,meta 为人数 · 
   assert.equal(theme.tplRow, true);
   assert.equal(theme.art, '');
   assert.equal(discover.decorateItem('club', { id: 1, name: '城市乐居人' }).tplRow, false);
+  // owner 2026-10-22:搜索里的模板是大卡,和「我的订单」卡同一套
   const wxml = read('pages/search2/result/index.wxml');
-  assert.match(wxml, /wx:elif="\{\{item\.tplRow\}\}" class="cml-card"/);
+  assert.match(wxml, /wx:elif="\{\{item\.tplRow\}\}" class="tpl-big"/);
+  assert.match(wxml, /<image wx:if="\{\{item\.cover\}\}" class="tpl-big__img"/, '有封面优先铺封面');
   const wxss = read('pages/search2/result/index.wxss');
-  const pageWxss = read('pages/template/index.wxss');
-  ['.cml-pic {', '.cml-name {', '.cml-meta {'].forEach((sel) => {
-    const grab = (s) => s.slice(s.indexOf(sel), s.indexOf('}', s.indexOf(sel))).replace(/\/\*.*?\*\//g, '').replace(/\s+/g, ' ');
-    assert.equal(grab(wxss), grab(pageWxss), `${sel} 与模板页一致`);
+  const order = read('subpackageMember/components/cy/profile/index.wxss');
+  const decl = (src, sel, prop) => {
+    const start = src.indexOf(sel + ' {');
+    const body = src.slice(start, src.indexOf('}', start));
+    const m = body.match(new RegExp('(?:^|[;{\\s])' + prop + ':\\s*([^;]+);'));
+    return m && m[1].trim();
+  };
+  [['.tpl-big', '.pc-ord-card', 'height'], ['.tpl-big', '.pc-ord-card', 'border-radius'], ['.tpl-big', '.pc-ord-card', 'background'],
+    ['.tpl-big__shade', '.pc-ord-shade', 'background'], ['.tpl-big__shade', '.pc-ord-shade', 'height'],
+    ['.tpl-big__title', '.pc-ord-title', 'font-size'], ['.tpl-big__btn', '.pc-ord-btn', 'background']].forEach(([mine, theirs, prop]) => {
+    assert.equal(decl(wxss, mine, prop), decl(order, theirs, prop), `${mine} ${prop} 与订单卡一致`);
   });
 });
