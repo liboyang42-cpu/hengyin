@@ -1,0 +1,79 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java
+@@ -116,6 +116,76 @@
+                 + "(1,'registration',1,1,11,0,0,0),(2,'registration',1,1,11,1,1,0),(3,'registration',1,1,11,2,0,0)");
+         assertEquals(List.of(1L,2L), tx.execute(status -> mapper.selectCashBasisBlockingRefundIdsForUpdate(11L)).stream().sorted().toList());
+     }
++    @Test void cashBasisGuardCannotRemainEmptyAfterCurrentEvidenceSeesCommittedActivityCash() throws Exception {
++        db.update("UPDATE cms_registration SET payment_status=1,verification_status=0 WHERE owner_type=2");
++        java.util.concurrent.ExecutorService callback = java.util.concurrent.Executors.newSingleThreadExecutor();
++        try {
++            tx.execute(status -> {
++                assertEquals(0, mapper.countPaidActivityRegistrations(11L)); // establish RR read view
++                java.util.concurrent.Future<Integer> paid = callback.submit(() -> db.update(
++                        "UPDATE cms_registration SET payment_status=2,registration_status=2 WHERE id=2"));
++                try {
++                    assertEquals(1, paid.get(5, java.util.concurrent.TimeUnit.SECONDS));
++                } catch (Exception failure) {
++                    throw new IllegalStateException("payment fixture did not commit independently", failure);
++                }
++                List<CoopSettlementCandidate> locked = mapper.selectTopicEvidenceCandidatesForUpdate(
++                        snapshot("TOPIC",11), List.of(201L), cutoff());
++                CoopSettlementCandidate activity = locked.stream()
++                        .filter(row -> Long.valueOf(2L).equals(row.getRegistrationId())).findFirst().orElseThrow();
++                assertEquals(2, activity.getPaymentStatus()); // FOR UPDATE sees the committed payment
++                assertEquals(0, activity.getVerificationStatus()); // originLines excludes it before context validation
++                assertEquals(1, mapper.countPaidActivityRegistrations(11L),
++                        "cash guard must agree with current locked financial facts, not an earlier cached/RR miss");
++                return null;
++            });
++        } finally {
++            callback.shutdownNow();
++        }
++        // This isolates the real Mapper/transaction race; it does not claim full payment callback or settlement acceptance.
++    }
++
++    @Test void realPlatformSettlementLineMustInsertAndReadBackAgainstRepositorySchema() throws Exception {
++        Path baseline = Path.of("../sql/base_schema_20260818.sql");
++        if (!Files.isRegularFile(baseline)) baseline = Path.of("sql/base_schema_20260818.sql");
++        Matcher ddl = Pattern.compile("(?s)CREATE TABLE `coop_settlement` \\(.*?\\) ENGINE=.*?;")
++                .matcher(Files.readString(baseline));
++        assertTrue(ddl.find());
++        db.execute(ddl.group()); // only the existing fixture's isolated UUID database
++        try {
++            SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
++            factory.setDataSource(db.getDataSource());
++            factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
++            factory.setMapperLocations(new ClassPathResource("mapper/business/CoopSettlementMapper.xml"));
++            com.chengyinhub.business.mapper.CoopSettlementMapper settlements =
++                    new SqlSessionTemplate(factory.getObject()).getMapper(
++                            com.chengyinhub.business.mapper.CoopSettlementMapper.class);
++            com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
++            topic.setId(11L);
++            com.chengyinhub.business.domain.CoopSettlement platform =
++                    org.springframework.test.util.ReflectionTestUtils.invokeMethod(
++                            new com.chengyinhub.business.service.impl.CmsTopicServiceImpl(),
++                            "newSettlementLine", topic, null, new java.math.BigDecimal("1.00"),
++                            "PLATFORM", "platform", 1, new Date(), new Date(), 1,
++                            new java.math.BigDecimal("10.00"), "1");
++            // Do not invent a fake member ID/default or weaken the real DDL to make this pass.
++            tx.execute(status -> {
++                assertEquals(1, settlements.insertCoopSettlement(platform));
++                assertNotNull(platform.getId());
++                assertEquals("PLATFORM", db.queryForObject(
++                        "SELECT line_type FROM coop_settlement WHERE id=?", String.class, platform.getId()));
++                assertEquals(1, db.queryForObject(
++                        "SELECT status FROM coop_settlement WHERE id=?", Integer.class, platform.getId()));
++                assertEquals(0, new java.math.BigDecimal("1.00").compareTo(db.queryForObject(
++                        "SELECT amount FROM coop_settlement WHERE id=?", java.math.BigDecimal.class, platform.getId())));
++                return null;
++            });
++        } finally {
++            db.execute("DROP TABLE coop_settlement");
++        }
++        // Covers this positive header write only; full claims/payout/balance acceptance remains separate.
++    }
++
+     private void registration(int id,int type,int owner,int ticket) {
+         db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,"
+                 + "original_amount,total_amount,payable_amount,payment_status,registration_status,verification_status,purchase_kind,pay_expire_time)"

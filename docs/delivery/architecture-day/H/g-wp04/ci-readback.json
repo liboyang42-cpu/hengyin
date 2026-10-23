@@ -1,0 +1,163 @@
+{
+  "artifact_id": 12530933640,
+  "zip_sha256": "b746a623649befef59dabdd7b760b95fd1d9cac0668155163bc32ae7a5a1d007",
+  "files": {
+    "maven.log": {
+      "sha256": "9227bc752c721ed9e21bc443cbadca9425f9018a4051980c018cead689597b9b",
+      "bytes": 780400
+    },
+    "receipt.json": {
+      "sha256": "2cbd81b57002c99e1d61c010b0f5d68f44ff2b6d72196e9cde3ec7f4ad0c2271",
+      "bytes": 5642
+    },
+    "surefire-reports/TEST-com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT.xml": {
+      "sha256": "bea9dc841c1fd610fd293a5d624dcc6787c785bbe1e12363b777563676cc87d1",
+      "bytes": 53427
+    },
+    "surefire-reports/com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT.txt": {
+      "sha256": "c46a17a3ceaf844a0ad67d89139534ed9b8beed9490117f9049d0d07a3375091",
+      "bytes": 372
+    }
+  },
+  "xml": {
+    "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation": "https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd",
+    "version": "3.0.2",
+    "name": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+    "time": "3.383",
+    "tests": "7",
+    "errors": "0",
+    "skipped": "0",
+    "failures": "0",
+    "flakes": "0"
+  },
+  "testcases": [
+    {
+      "name": "pendingAndExecutedApprovedRefundsRemainBlockingUntilNetBasisExists",
+      "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "status": "passed"
+    },
+    {
+      "name": "groupEvidenceRequiresSameTopicActivityOrderMerchantAndBothWindows",
+      "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "status": "passed"
+    },
+    {
+      "name": "ticketOwnerTimeScanTypeAndReversalAreEnforced",
+      "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "status": "passed"
+    },
+    {
+      "name": "nullOrEmptyActivitySetNeverGuessesActivityIdFromTopic",
+      "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "status": "passed"
+    },
+    {
+      "name": "actualActivityParentExcludesCollidingIdAndDeletedShell",
+      "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "status": "passed"
+    },
+    {
+      "name": "nodeMustHaveActualParentAndScansCannotProveNodeIdentity",
+      "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "status": "passed"
+    },
+    {
+      "name": "activityScopeUsesActualOwnerInsteadOfTopicNumber",
+      "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "status": "passed"
+    }
+  ],
+  "receipt_fields": {
+    "source_sha": "8304e74de6393bd3d650d04e290e47aef2e8ff5d",
+    "registered_source": "be00cb35689ef76bf7c06489bf23de10391f032e",
+    "registered_source_match": false,
+    "layer": "REAL_STORAGE",
+    "expected_tests": 7,
+    "executed": {
+      "classes": [
+        "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT"
+      ],
+      "errors": 0,
+      "failures": 0,
+      "passed": 7,
+      "skipped": 0,
+      "testcases": [
+        {
+          "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+          "name": "pendingAndExecutedApprovedRefundsRemainBlockingUntilNetBasisExists",
+          "status": "passed",
+          "time": "0.361"
+        },
+        {
+          "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+          "name": "groupEvidenceRequiresSameTopicActivityOrderMerchantAndBothWindows",
+          "status": "passed",
+          "time": "0.451"
+        },
+        {
+          "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+          "name": "ticketOwnerTimeScanTypeAndReversalAreEnforced",
+          "status": "passed",
+          "time": "0.308"
+        },
+        {
+          "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+          "name": "nullOrEmptyActivitySetNeverGuessesActivityIdFromTopic",
+          "status": "passed",
+          "time": "0.192"
+        },
+        {
+          "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+          "name": "actualActivityParentExcludesCollidingIdAndDeletedShell",
+          "status": "passed",
+          "time": "0.244"
+        },
+        {
+          "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+          "name": "nodeMustHaveActualParentAndScansCannotProveNodeIdentity",
+          "status": "passed",
+          "time": "0.197"
+        },
+        {
+          "classname": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+          "name": "activityScopeUsesActualOwnerInsteadOfTopicNumber",
+          "status": "passed",
+          "time": "0.206"
+        }
+      ],
+      "tests": 7
+    },
+    "problems": [],
+    "workflow": {
+      "job": "storage_it",
+      "repository": "liboyang42-cpu/hengyin",
+      "run_attempt": "1",
+      "run_id": "40023300267",
+      "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40023300267",
+      "workflow_ref": "refs/heads/codex/architecture-day-g-ci-20261023",
+      "workflow_sha": "8304e74de6393bd3d650d04e290e47aef2e8ff5d"
+    },
+    "cleanup": {
+      "mysql_leftover_schemas": [],
+      "mysql_schemas_after": [
+        "information_schema",
+        "mysql",
+        "performance_schema",
+        "sys"
+      ],
+      "status": "CLEAN"
+    },
+    "toolchain": {
+      "java": "openjdk version \"21.0.12.1\" 2026-08-18 LTS",
+      "maven": "Apache Maven 3.9.15 (98b2cdbfdb5f1ac8781f537ea9acccaed7922349)",
+      "surefire": "3.5.6"
+    }
+  },
+  "mysql": {
+    "version": "8.0.45",
+    "image": "mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff",
+    "transaction_isolation": "REPEATABLE-READ",
+    "sql_mode": "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION",
+    "time_zone": "+00:00"
+  }
+}

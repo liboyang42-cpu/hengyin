@@ -1,0 +1,34 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java
+@@ -71,6 +71,31 @@
+         verify(f.pricing).initiatorGuaranteeRateOf(f.topic,1);
+         verify(f.inviteService).requestTopicDepositRefunds(11L);
+     }
++    @Test void zeroSalesCannotCloseAnUnresolvedFrozenFixedCashObligation() {
++        Fixture f = new Fixture();
++        CoopOrder order = new CoopOrder();
++        order.setId(701L); order.setTopicId(11L); order.setToType("merchant"); order.setToId(88L);
++        order.setStatus(0); order.setDelFlag(0); order.setTermsVersion("v1");
++        order.setRoleSnapshot("SUPPLY"); order.setScopeTypeSnapshot("TOPIC"); order.setScopeIdSnapshot(11L);
++        order.setEligiblePurchaseKindsSnapshot("GUIDED_TICKET");
++        order.setFulfillmentEvidenceRuleSnapshot("REGISTRATION_SCAN");
++        order.setShareMode(2); order.setFixedFee(new BigDecimal("2.00"));
++        order.setTermsSnapshot("{\"shareMode\":2,\"compensationMode\":\"FIXED_PER_FULFILLMENT\",\"fixedFee\":2.00}");
++        when(f.orders.selectEffectiveOrdersByTopicId(11L)).thenReturn(List.of(order));
++        when(f.topics.claimTopicForSettlement(11L)).thenReturn(1);
++        when(f.registrations.selectTotalSalesByTopicId(11L)).thenReturn(BigDecimal.ZERO);
++        // A fixed fee may remain due for a verified zero-price ticket. No policy is inferred here:
++        // an unresolved positive obligation must fail closed, not disappear in the zero-GMV shortcut.
++        when(f.claims.prepare(eq(order), any())).thenThrow(
++                new IllegalStateException("MANUAL_REPAIR:FIXED_OBLIGATION_WITHOUT_PROVEN_CASH_BASIS"));
++
++        assertThrows(RuntimeException.class, () -> ReflectionTestUtils.invokeMethod(
++                f.service, "settleTopic", f.topic, new SettlementRule()));
++        verify(f.inviteService, never()).requestTopicDepositRefunds(any());
++        verify(f.heads, never()).insertCoopSettlement(any());
++        // This is a service branch regression only; actual CAS rollback needs the MySQL outer transaction.
++    }
++
+     private static final class Fixture {
+         final CmsTopicServiceImpl service = new CmsTopicServiceImpl(); final CmsTopic topic = new CmsTopic();
+         final CoopSettlementMapper heads = mock(CoopSettlementMapper.class);

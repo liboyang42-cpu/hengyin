@@ -1,0 +1,20 @@
+[
+  {
+    "path": "zero-sales-frozen-obligation.review.patch",
+    "sha256": "78971f99288aa044dbafbb93c8f7fd25223de531b6c71a9884a1174409a383e6",
+    "added_tests": 1,
+    "g657_apply_check": "PASS",
+    "root8304_apply_check": "PASS",
+    "java_compile": "NOT_RUN",
+    "test_execution": "NOT_RUN"
+  },
+  {
+    "path": "sql-cash-guard-and-platform.review.patch",
+    "sha256": "23f98ca0598af003022f081eea53685f6ac26eed9df73139e64e36f285cf6524",
+    "added_tests": 2,
+    "g657_apply_check": "PASS",
+    "root8304_apply_check": "PASS",
+    "java_compile": "NOT_RUN",
+    "test_execution": "NOT_RUN"
+  }
+]

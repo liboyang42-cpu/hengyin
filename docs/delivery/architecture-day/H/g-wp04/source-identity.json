@@ -1,0 +1,247 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java",
+    "blob": "1c291d7f5cae3473b92e0d12a3bff207a98ca727",
+    "sha256": "c9997c547346a49422b05a775332a37265ec2c88a624930b0725e8a380acfd21"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java",
+    "blob": "f805d3909067522df2fbd29c5bba1cd7143388c9",
+    "sha256": "3e7698ca6e1ab42900b27c7a4ba8c3953debe0bbcf15fe2e1f351889149cbf63"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java",
+    "blob": "6358e5f7b94efdc6ed2714805f9581b43df2449c",
+    "sha256": "bc1236235e1da4c469e4c0bf71c5028380307bafafe7c64fbe4a9cc57baa376a"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java",
+    "blob": "6ba41a52d2556f7310001d11685474d6691bdda1",
+    "sha256": "a67e4767cb4191c9adb73c77423fe8be937b091d06da78537cedc9709bbd9424"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java",
+    "blob": "fb36267dc8b563ef66bdb232f405abdb3b5ef6e8",
+    "sha256": "7cc4aa7b76f5c0d763b6e8c21f0a2460d6fc3e03bf446dd5f4f153e36d7f5000"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java",
+    "blob": "808a7c29f81650d8e743952ea9b898f8eaf6a881",
+    "sha256": "311fc0fb14dd6c801902b3399c5a403db304b08a213a1433a0aebde5c8dcda9b"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java",
+    "blob": "19d01315d84ca153bd021e79730695557f89e01f",
+    "sha256": "def5bd6000114b892be1f283e384269b3e15f62e035b7214c9f781a9f0ee9918"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementEvidenceServiceTest.java",
+    "blob": "5cfc3ee66b1ae06158b338526a0cc88e5ddd8950",
+    "sha256": "f615154e36695026aa40a9cea45796f16c47daf594719fbcf778d3bfeba52cb3"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java",
+    "blob": "61695fd38947aab66cccaac507542716c078eccb",
+    "sha256": "d4459543b56c1de9eedd8a88a15de91188e80bca6b112ef92a1c78b9a1d71831"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java",
+    "blob": "7c124dc7ee548ec37884303b70621f32d898db33",
+    "sha256": "4d519c9ed7fca63026a422086b986892d74020067d7d6fc9ebe020fcd2a58974"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java",
+    "blob": "5c7a3f8592e7ab3294207138dadd53e3e545054f",
+    "sha256": "23fadab5b3b03721f072e2f61f1b52c0917d158464d4c3d1cb68553196095002"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java",
+    "blob": "d2de014e1cd4556848bc8486f763d08cdec4fa31",
+    "sha256": "8cd2e0ec65e5019e0167cfb4fa68c8b404298ea6923bff70363c688c491fff01"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+    "blob": "b111c48955ffd23115323b25dbd7c3a1795beb58",
+    "sha256": "195ee91a9097043faed2e05d4ee3b3c5771f0ec0c14c157b4db19f696430c06c"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PreparedCoopPlanFixture.java",
+    "blob": "77e73babe7d46f638634bf49abe0a10152cd05e0",
+    "sha256": "2df2c025ea5a17cfe0ca28ee8f97cb26cf4432f201043e2e388756268dd7e2a3"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java",
+    "blob": "3422238ff4ae85bb13f77c6e687698a12db19e35",
+    "sha256": "6d1992ae53d1fd907eb4a7f07e57a6435a6b3dc270e46cf3956ea18a5a6b9e74"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+    "blob": "6586b214fabe5c8ea756c3129b989f4bf5bf1f3a",
+    "sha256": "f6546b6ea763654e42534f74d87d2b8ac86ce1a968be9993886b49d4dcbacaf3"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopSettlementCandidate.java",
+    "blob": "3f64d43d2255bc1eded986d2cdc509e9009791f5",
+    "sha256": "bb7f029ce24a5ae3bd75dd6665f89eacee9026fcd62ad3d64074013717d042ea"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopSettlementSnapshot.java",
+    "blob": "a6bfabe1fef595ae050fc385cc707939631e7494",
+    "sha256": "964ffd1b3d8c7672fab97add3154bafde32349d9dca3df3ceeffaf1da9c86fe2"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CompletedRouteFactMapper.java",
+    "blob": "0e509cd27d4a018e789d2b04a0e2063df0a53f47",
+    "sha256": "eb6c8390c6690685d958b19a0550910a9e4ed76911f28129cf53f7848b1ebdda"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementEvidenceMapper.java",
+    "blob": "cd8918a68fe51c96fbd2e45b633020902569023e",
+    "sha256": "8d9b2d7d05d02e429aa69b35f9d2d6797ecef8c4a83b4cbaabfc523f9f49d3d9"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+    "blob": "19d12bc3beb33f662eb51e86eaf8111021e5c938",
+    "sha256": "558d55f2b4bac3ab8c7c1892aff9e883f38cf3179e79fd80d744c8b29260b352"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+    "blob": "4ca02c4ddd10acf2e3fbf0d08ef7f475a67f0327",
+    "sha256": "04211a4ed5274c4afb8b17ba310507c9e12f729c05ea5c95598ba984c3690658"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java",
+    "blob": "a035993c09da20b8d46240f3519812465e33d6fa",
+    "sha256": "f09149912f8898e0d2d3cb4c942cd513c103f1e0f2a878698e7bfc5b3f6cfad4"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java",
+    "blob": "7a51c33a2b7d4801f9bad4b766c09704a8e03256",
+    "sha256": "c1fb393bf2cc6b277290aceef87cdd23755b964ba7d340aaae1bb23bc6e1fc7a"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java",
+    "blob": "5a1897981a4ab8da91fbc8b33f1d70bd12a322f5",
+    "sha256": "e6bff8e217a1ec1cf087f19f8b0dc67f078b73d8478a8f61d0dff624ab4ef0d3"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java",
+    "blob": "567fb16a164617bac1519804a41c9a022a706dca",
+    "sha256": "a64d94bd1cd258980fdb15eecc048012c9af0cc6fd6625eae057ae9d3c484f08"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CoopSettlementContract.java",
+    "blob": "a17f8e77940b3e14bace71d08941f2026d589032",
+    "sha256": "18e851706129c9bbe528ac41bde1a7171c9d772cb0c7caeee7abae27044532a2"
+  },
+  {
+    "path": "chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml",
+    "blob": "53e4641e9433093c460848b6eacbff300a96f1ac",
+    "sha256": "48cacbc75efd3abc2685e45d909da33a683fd3b678b9111bef19885ddde6bf80"
+  },
+  {
+    "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementEvidenceMapper.xml",
+    "blob": "1fa09dc1e27aac69b5b88056fbaff68facd28693",
+    "sha256": "bb4e481a04034ea633390eb17bd175d2c704adacf70643647bab09129ab57df1"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/README.md",
+    "blob": "7fe1579ec1b1379ffc7eb805375239e0c1c83b9d",
+    "sha256": "565490463e506de8d59ce76aa1cea2e001972e80e28de17fe98861d230e68c19"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/WP04/README.md",
+    "blob": "8bc7fc1494c517a0c3c247fe4f926e5bc94a2e24",
+    "sha256": "39bd5ab074a9b1cd44ef90299690bc4d91e5b4a0cc930cfc1570f327dfa88d76"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/WP04/caller-inventory.txt",
+    "blob": "d8fb00e0b2e090ccb2774a99faf88178fbe7e364",
+    "sha256": "b915840a52562c73ca74f627c87bde07d3926d24a809124bc39972717de361a3"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/WP04/source-hashes.json",
+    "blob": "4e2e4b6c0ba09c53e1e712cc0d6f08e9c3ad0925",
+    "sha256": "19ca788843409089c8986b0e82f057cd8b0cf632790a663f46cb89c6ddf9e082"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/WP04/test-status.json",
+    "blob": "c5ae35d2302eea4196cbf848b996eb59d77f9573",
+    "sha256": "a3dba36deef3b1ea34cf70956c215f47cef914631504ba97fa5089384ce9279b"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/WP04/validation-output.txt",
+    "blob": "62fac559732abe728e4f8d7311c3279a50faecf5",
+    "sha256": "59b28b021a578b5a5175d1c68717d8ff98d4a84fae6be88ae9bd90537360a181"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/WP04/verify_static.py",
+    "blob": "916b8b3dac4e506ce27ade2fdbc43fa2582f366b",
+    "sha256": "2dc5446424f9685ceb395c4c1065a1bd76bf64fea5ad5fbad7fb3116e4507ea7"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/acceptance-fixtures.md",
+    "blob": "0a90fba73afacddfbf38a5491ef20147d28a248c",
+    "sha256": "e7769c2e4c8fbd7e75bcf0210ac19a84349e38444075bbbf40b737ce56cedfe7"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/approved-contract-review.md",
+    "blob": "237b8c9943b8f3de3e877aafd854bbf0ab2388fd",
+    "sha256": "da870c84a9597c612fcbf48010b5258e40d4a7f35537b86adfa51c8217b7beb4"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/artifact-manifest.json",
+    "blob": "0bf822447aad977863f6bd75d7ee9d61795b24ac",
+    "sha256": "4f8d4ecdbeb4f1d31c484cbf9201d3947990fad70c7de8da90fb5c64058f09db"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/caller-inventory.txt",
+    "blob": "e6f87067973a93dc401840383c36019df6f3f1d0",
+    "sha256": "6d47407c89677dd7c5cf35aae229655dcede6b7c3ee8aeb9fa69126c9156e761"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/completion-contract.md",
+    "blob": "91ee3a20685c77188ebabb9a1bb56b161ec88767",
+    "sha256": "48627451857081bfaec4d1630d2dbacfc12258448b2778e24372dd58d5583bfc"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/fixtures.json",
+    "blob": "2c8262c0acb702e5d56d322fa3ef73586e98e5c7",
+    "sha256": "6171a36b6b08de174a87d482a34a4af971b95f978bcadca397ae973ab8bf8e55"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/implementation.md",
+    "blob": "1b0a49dc39c287f68c9327b09c67e64aa3f66fb5",
+    "sha256": "1fe992af06a58711631ae4ccbe376e055f48a2743192003e19d6ab1ad9477f7d"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/java-execution-status.json",
+    "blob": "4e608924b00c3c71451d261ebc39d79717b747dd",
+    "sha256": "45ed11e6f4ab1997ba1616d3cd34992faca287c8c36b0a3875ae8c20b2e41881"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/patch-scan.txt",
+    "blob": "5824462931b991e527b1ec338167f29998911e09",
+    "sha256": "bf486f210b7c2e4989d63da3f728822784ab18910d97b2b7ae3cb0c7b1b3c908"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/settlement-contract.md",
+    "blob": "1e666846591bcf8f34e15033d208f64b1d922743",
+    "sha256": "e284e257ac653e61c8ad3ce38a36da54aae31b59e991c04b3e5d1cc26b859b2e"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/source-evidence.json",
+    "blob": "6a69aa294e8b55a07ae1a20ab7df03857cd85327",
+    "sha256": "253a96eaaa52d3ff0389ebc5e32e97888119e2e2a774a5ce8951b6e54c319345"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/validation-output.txt",
+    "blob": "e4a05a93f68748b7621b27ce2e72b6a3ff8e5994",
+    "sha256": "58e6c905ae63c979aad0d59aa5d39c8de9e725cc3e14f9229f195a7b2aa11976"
+  },
+  {
+    "path": "docs/delivery/architecture-day/G/verify_contract.py",
+    "blob": "8ae36dc6e8481044522034d484784fde45dfcee9",
+    "sha256": "2bde059d59806a4d5d3aec305cb8ecc00e8fd9eba8ac4a6504c23d199019953d"
+  }
+]

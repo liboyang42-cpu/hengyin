@@ -1,0 +1,424 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate": {
+    "commit": "65780b036d9e44e3ab8705bb8c244558a09213af",
+    "tree": "ca907c001d9ded38ef9de3dbad0fc02cdd19d171",
+    "parent": "051c1c108653eeb1cbc4f3b69f8ae25728c99e34",
+    "branch": "codex/architecture-day-g-fact-contracts",
+    "files_from_base": 49,
+    "files_from_parent": 28
+  },
+  "reviewer": {
+    "starting_head": "5b416fbcb738c913b774d91dc399fa0e0cdf2fee",
+    "branch": "codex/architecture-day-h-review",
+    "worktree": "/workspace/hengyin-h-review"
+  },
+  "ci": {
+    "source": "8304e74de6393bd3d650d04e290e47aef2e8ff5d",
+    "run": 40023300267,
+    "attempt": 1,
+    "job": 120653288074,
+    "artifact": 12530933640
+  },
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "1c291d7f5cae3473b92e0d12a3bff207a98ca727",
+      "ci_blob": "1c291d7f5cae3473b92e0d12a3bff207a98ca727",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "f805d3909067522df2fbd29c5bba1cd7143388c9",
+      "ci_blob": "137193e417af470c5f446436dfdeeff9f46f25fd",
+      "identical": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "6358e5f7b94efdc6ed2714805f9581b43df2449c",
+      "ci_blob": "6358e5f7b94efdc6ed2714805f9581b43df2449c",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "6ba41a52d2556f7310001d11685474d6691bdda1",
+      "ci_blob": "6ba41a52d2556f7310001d11685474d6691bdda1",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "fb36267dc8b563ef66bdb232f405abdb3b5ef6e8",
+      "ci_blob": "fb36267dc8b563ef66bdb232f405abdb3b5ef6e8",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "808a7c29f81650d8e743952ea9b898f8eaf6a881",
+      "ci_blob": "808a7c29f81650d8e743952ea9b898f8eaf6a881",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "19d01315d84ca153bd021e79730695557f89e01f",
+      "ci_blob": "19d01315d84ca153bd021e79730695557f89e01f",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementEvidenceServiceTest.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "5cfc3ee66b1ae06158b338526a0cc88e5ddd8950",
+      "ci_blob": "5cfc3ee66b1ae06158b338526a0cc88e5ddd8950",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "61695fd38947aab66cccaac507542716c078eccb",
+      "ci_blob": "61695fd38947aab66cccaac507542716c078eccb",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "7c124dc7ee548ec37884303b70621f32d898db33",
+      "ci_blob": "7c124dc7ee548ec37884303b70621f32d898db33",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "5c7a3f8592e7ab3294207138dadd53e3e545054f",
+      "ci_blob": "5c7a3f8592e7ab3294207138dadd53e3e545054f",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "d2de014e1cd4556848bc8486f763d08cdec4fa31",
+      "ci_blob": "d2de014e1cd4556848bc8486f763d08cdec4fa31",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "b111c48955ffd23115323b25dbd7c3a1795beb58",
+      "ci_blob": "b111c48955ffd23115323b25dbd7c3a1795beb58",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PreparedCoopPlanFixture.java",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "77e73babe7d46f638634bf49abe0a10152cd05e0",
+      "ci_blob": "77e73babe7d46f638634bf49abe0a10152cd05e0",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "3422238ff4ae85bb13f77c6e687698a12db19e35",
+      "ci_blob": "3422238ff4ae85bb13f77c6e687698a12db19e35",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "6586b214fabe5c8ea756c3129b989f4bf5bf1f3a",
+      "ci_blob": "6586b214fabe5c8ea756c3129b989f4bf5bf1f3a",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopSettlementCandidate.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "3f64d43d2255bc1eded986d2cdc509e9009791f5",
+      "ci_blob": "3f64d43d2255bc1eded986d2cdc509e9009791f5",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopSettlementSnapshot.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "a6bfabe1fef595ae050fc385cc707939631e7494",
+      "ci_blob": "a6bfabe1fef595ae050fc385cc707939631e7494",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CompletedRouteFactMapper.java",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "0e509cd27d4a018e789d2b04a0e2063df0a53f47",
+      "ci_blob": "0e509cd27d4a018e789d2b04a0e2063df0a53f47",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementEvidenceMapper.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "cd8918a68fe51c96fbd2e45b633020902569023e",
+      "ci_blob": "cd8918a68fe51c96fbd2e45b633020902569023e",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "19d12bc3beb33f662eb51e86eaf8111021e5c938",
+      "ci_blob": "19d12bc3beb33f662eb51e86eaf8111021e5c938",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "4ca02c4ddd10acf2e3fbf0d08ef7f475a67f0327",
+      "ci_blob": "4ca02c4ddd10acf2e3fbf0d08ef7f475a67f0327",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "a035993c09da20b8d46240f3519812465e33d6fa",
+      "ci_blob": "a035993c09da20b8d46240f3519812465e33d6fa",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "7a51c33a2b7d4801f9bad4b766c09704a8e03256",
+      "ci_blob": "7a51c33a2b7d4801f9bad4b766c09704a8e03256",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "5a1897981a4ab8da91fbc8b33f1d70bd12a322f5",
+      "ci_blob": "5a1897981a4ab8da91fbc8b33f1d70bd12a322f5",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "567fb16a164617bac1519804a41c9a022a706dca",
+      "ci_blob": "567fb16a164617bac1519804a41c9a022a706dca",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CoopSettlementContract.java",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "a17f8e77940b3e14bace71d08941f2026d589032",
+      "ci_blob": "a17f8e77940b3e14bace71d08941f2026d589032",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "53e4641e9433093c460848b6eacbff300a96f1ac",
+      "ci_blob": "53e4641e9433093c460848b6eacbff300a96f1ac",
+      "identical": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementEvidenceMapper.xml",
+      "status": "modified",
+      "wp04_delta": true,
+      "candidate_blob": "1fa09dc1e27aac69b5b88056fbaff68facd28693",
+      "ci_blob": "1fa09dc1e27aac69b5b88056fbaff68facd28693",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/README.md",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "7fe1579ec1b1379ffc7eb805375239e0c1c83b9d",
+      "ci_blob": "7fe1579ec1b1379ffc7eb805375239e0c1c83b9d",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/WP04/README.md",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "8bc7fc1494c517a0c3c247fe4f926e5bc94a2e24",
+      "ci_blob": "8bc7fc1494c517a0c3c247fe4f926e5bc94a2e24",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/WP04/caller-inventory.txt",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "d8fb00e0b2e090ccb2774a99faf88178fbe7e364",
+      "ci_blob": "d8fb00e0b2e090ccb2774a99faf88178fbe7e364",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/WP04/source-hashes.json",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "4e2e4b6c0ba09c53e1e712cc0d6f08e9c3ad0925",
+      "ci_blob": "4e2e4b6c0ba09c53e1e712cc0d6f08e9c3ad0925",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/WP04/test-status.json",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "c5ae35d2302eea4196cbf848b996eb59d77f9573",
+      "ci_blob": "c5ae35d2302eea4196cbf848b996eb59d77f9573",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/WP04/validation-output.txt",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "62fac559732abe728e4f8d7311c3279a50faecf5",
+      "ci_blob": "62fac559732abe728e4f8d7311c3279a50faecf5",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/WP04/verify_static.py",
+      "status": "added",
+      "wp04_delta": true,
+      "candidate_blob": "916b8b3dac4e506ce27ade2fdbc43fa2582f366b",
+      "ci_blob": "916b8b3dac4e506ce27ade2fdbc43fa2582f366b",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/acceptance-fixtures.md",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "0a90fba73afacddfbf38a5491ef20147d28a248c",
+      "ci_blob": "0a90fba73afacddfbf38a5491ef20147d28a248c",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/approved-contract-review.md",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "237b8c9943b8f3de3e877aafd854bbf0ab2388fd",
+      "ci_blob": "237b8c9943b8f3de3e877aafd854bbf0ab2388fd",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/artifact-manifest.json",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "0bf822447aad977863f6bd75d7ee9d61795b24ac",
+      "ci_blob": "0bf822447aad977863f6bd75d7ee9d61795b24ac",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/caller-inventory.txt",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "e6f87067973a93dc401840383c36019df6f3f1d0",
+      "ci_blob": "e6f87067973a93dc401840383c36019df6f3f1d0",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/completion-contract.md",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "91ee3a20685c77188ebabb9a1bb56b161ec88767",
+      "ci_blob": "91ee3a20685c77188ebabb9a1bb56b161ec88767",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/fixtures.json",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "2c8262c0acb702e5d56d322fa3ef73586e98e5c7",
+      "ci_blob": "2c8262c0acb702e5d56d322fa3ef73586e98e5c7",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/implementation.md",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "1b0a49dc39c287f68c9327b09c67e64aa3f66fb5",
+      "ci_blob": "1b0a49dc39c287f68c9327b09c67e64aa3f66fb5",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/java-execution-status.json",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "4e608924b00c3c71451d261ebc39d79717b747dd",
+      "ci_blob": "4e608924b00c3c71451d261ebc39d79717b747dd",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/patch-scan.txt",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "5824462931b991e527b1ec338167f29998911e09",
+      "ci_blob": "5824462931b991e527b1ec338167f29998911e09",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/settlement-contract.md",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "1e666846591bcf8f34e15033d208f64b1d922743",
+      "ci_blob": "1e666846591bcf8f34e15033d208f64b1d922743",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/source-evidence.json",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "6a69aa294e8b55a07ae1a20ab7df03857cd85327",
+      "ci_blob": "6a69aa294e8b55a07ae1a20ab7df03857cd85327",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/validation-output.txt",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "e4a05a93f68748b7621b27ce2e72b6a3ff8e5994",
+      "ci_blob": "e4a05a93f68748b7621b27ce2e72b6a3ff8e5994",
+      "identical": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/verify_contract.py",
+      "status": "added",
+      "wp04_delta": false,
+      "candidate_blob": "8ae36dc6e8481044522034d484784fde45dfcee9",
+      "ci_blob": "8ae36dc6e8481044522034d484784fde45dfcee9",
+      "identical": true
+    }
+  ],
+  "limits": [
+    "All 13 production blobs match CI, including all 10 WP04 production files.",
+    "Only Wp04CoopSettlementEvidenceMySqlIT changed: explicit env validation and own-schema cleanup.",
+    "27 new unit test declarations do not prove execution.",
+    "No complete write-side/payout/refund acceptance is inferred from the 7 evidence SQL tests."
+  ]
+}
