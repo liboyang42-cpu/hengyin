@@ -8,10 +8,11 @@
           aria-role="button" aria-label="{{title ? '关闭' + title : '关闭当前弹窗'}}"
           hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
     <view class="mo__title" wx:if="{{title}}">{{title}}</view>
-    <view class="mo__content">
+    <!-- 正文是卡片里唯一的滚动区(2026-10-23):说明偏长时在这里滚,按钮固定在卡片底部 -->
+    <scroll-view class="mo__content" scroll-y enhanced show-scrollbar="{{false}}" bounces="{{false}}">
       <text wx:if="{{content}}">{{content}}</text>
       <slot wx:else></slot>
-    </view>
+    </scroll-view>
     <!-- 后果清单(照 Revolut 185 / Threads 78):一行一个 icon + 一句人话,讲会发生什么。
          没传 consequences 时整块不渲染,老调用点行为不变。 -->
     <view class="mo__consq" wx:if="{{consequences.length}}">

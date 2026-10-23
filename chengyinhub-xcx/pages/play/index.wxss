@@ -194,7 +194,7 @@ page { background: var(--cy-color-bg-page); }
 .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:109; background:#000000; /* ds-ok 原型 .sheet */
   border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 28px */
   /* 88% 在刘海机上顶边会落进胶囊行(12% 高≈101px vs 胶囊底≈103px)——与 .psheet 同法,页面根给实测值,取两者较小 */
-  height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); max-height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); overflow-y:auto; animation:sheetUp .4s var(--cy-ease-out); }
+  height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto; animation:sheetUp .4s var(--cy-ease-out); }
 .sheet-cover{ position:relative; height:364rpx; background: var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 .sheet-cover image{ width:100%; height:100%; position:absolute; inset:0; } /* ds-ok Figma 实测(用户裁决字面值) */
 /* 原占位字在封面底上实测 3.68:1,不达 4.5 ⇒ 收编 text-tertiary(4.72:1) */
@@ -587,7 +587,7 @@ page { background: var(--cy-color-bg-page); }
 /* ===================== 任务页 p03 重做(新语言) ===================== */
 .gp2mask{ position:absolute; inset:0; z-index:69; background:rgba(0,0,0,.55); } /* ds-ok Figma 实测(用户裁决字面值) */
 /* 任务=弹窗不是全屏(用户裁决):底部半屏 sheet,地图还看得见 */
-.gp2{ position:absolute; left:0; right:0; bottom:0; z-index:70; height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); max-height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); box-sizing:border-box;
+.gp2{ position:absolute; left:0; right:0; bottom:0; z-index:70; height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); box-sizing:border-box;
   background:#0A0A0A; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; display:flex; flex-direction:column; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:#4A5565; margin:23rpx auto 8rpx; flex:none; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__head{ flex:none; display:flex; align-items:center; padding:0 31rpx 8rpx; }
@@ -676,7 +676,7 @@ page { background: var(--cy-color-bg-page); }
 
 /* ===================== 章节结算半屏(用户裁决:非全屏,底部=继续) ===================== */
 .finmask{ position:absolute; inset:0; z-index:118; background:rgba(0,0,0,.55); } /* ds-ok Figma 实测(用户裁决字面值) */
-.finsheet{ position:absolute; left:0; right:0; bottom:0; z-index:119; box-sizing:border-box; height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); max-height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); overflow-y:auto;
+.finsheet{ position:absolute; left:0; right:0; bottom:0; z-index:119; box-sizing:border-box; height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto;
   --cy-color-text-primary:var(--cy-color-play-story-text); --cy-color-text-secondary:var(--cy-color-play-story-muted); --cy-color-text-tertiary:var(--cy-color-play-story-muted);
   --cy-color-bg-surface-subtle:var(--cy-color-play-story-surface); --cy-color-play-line:var(--cy-color-play-story-line); --cy-color-play-surface-solid:var(--cy-color-play-story-surface); --cy-color-play-accent:var(--cy-color-play-story-accent);
   --cy-color-action-primary-bg:var(--cy-color-play-story-accent); --cy-color-action-primary-fg:var(--cy-color-play-story-cta-fg);

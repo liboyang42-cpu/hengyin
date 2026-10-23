@@ -796,7 +796,7 @@ page {
   border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; border-top: 1rpx solid var(--cy-border-card);
   padding: var(--cy-space-4) var(--cy-space-4) calc(var(--cy-space-4) + env(safe-area-inset-bottom));
   box-sizing: border-box;
-  max-height: min(70vh, var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y: auto;
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y: auto;
 }
 .cg-sheet.picker { padding-left: 0; padding-right: 0; }
 .cg-sheet-bar { width: 76rpx; height: 8rpx; border-radius: 4rpx; background: var(--cy-border-line); margin: 0 auto var(--cy-space-3-5); } /* ds-ok */
@@ -1198,7 +1198,7 @@ page {
 .cg-adv-correct { min-height: var(--cy-btn-h); font-size: var(--cy-font-label); }
 
 /* ===== 选择玩法 sheet ===== */
-.cg-gsheet { display: flex; flex-direction: column; height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); overflow: hidden; }
+.cg-gsheet { display: flex; flex-direction: column; height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow: hidden; }
 .cg-gsheet-head { border-bottom: 1rpx solid var(--cy-color-border-subtle); padding-bottom: var(--cy-space-2); }
 .cg-gsheet-titrow { display: flex; align-items: flex-start; gap: var(--cy-space-2-5); }
 .cg-gsheet-titbox { flex: 1; min-width: 0; }

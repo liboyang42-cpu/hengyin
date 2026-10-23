@@ -639,6 +639,13 @@ page {
   --cy-comp-sheet-top-gap:    16rpx;   /* 8px:面板顶与胶囊底之间的视觉余量(2026-09-02 用户定) */
   --cy-comp-sheet-max-height: calc(100vh - var(--cy-safe-top) - var(--cy-comp-sheet-top-gap));
   --cy-comp-sheet-full-height: var(--cy-comp-sheet-max-height);
+  /* 2026-10-23 业主定:底部弹窗三档 peek / half / full = 屏高 30% / 60% / 80%。
+     弹窗贴内容高,取放得下的最小一档;放不下就停在该档、只让正文滚动(所以默认上限就是 full)。
+     打开后内容会变的(搜索、加载、分页签、多步)固定在所属档的高度,不随内容跳。
+     任何一档同时受胶囊底 +5px 封顶(上面的 --cy-comp-sheet-max-height / 组件下发的 --cy-comp-sheet-max-h)。 */
+  --cy-comp-sheet-peek: 30vh;
+  --cy-comp-sheet-half: 60vh;
+  --cy-comp-sheet-full: 80vh;
   --cy-comp-sheet-border-width: 0.714px;
   /* 375px 设备上 44px = 88rpx:热区与 Figma 31.996px 视觉圆分离。 */
   --cy-comp-sheet-close-hit-size: 88rpx;

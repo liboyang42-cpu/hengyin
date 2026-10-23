@@ -161,6 +161,16 @@ function run(opts) {
 
   // ---- D2 守卫 + D3 文案 ----
   for (const entry of registry.sites) {
+    // 2026-10-23 业主定:少数动作改成「先做、提示条里可撤销」(utils/toast.js 的 toast.undo)。
+    // 守卫换成撤销窗口:请求只能在 onCommit 里发,撤销 = 请求没发。登记 guard:"undo" 的调用点,
+    // 文件里必须真的有 toast.undo 调用,且 endpoint 只出现在 onCommit 走到的那条路径上(后者靠行为测试)。
+    if (entry.guard === 'undo') {
+      const src = readFile(entry.file);
+      if (src === null || !/\.undo\(/.test(src)) {
+        errors.push(`D2 ${entry.endpoint}(${entry.file})登记为 guard:undo,但文件里找不到 toast.undo(…) —— 没有撤销窗口把关。`);
+      }
+      continue;
+    }
     if (!entry.irreversible && !entry.confirmKey) continue;
 
     if (!entry.confirmKey) {

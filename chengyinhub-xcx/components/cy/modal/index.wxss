@@ -21,8 +21,14 @@
   position: relative;
   width: 640rpx;
   max-width: calc(100% - var(--cy-page-x) * 2);
-  max-height: var(--cy-comp-sheet-max-height);
-  overflow-y: auto;
+  /* 2026-10-23 弹层规范:确认弹窗最高 60%(half 档),仍不越过胶囊。
+     卡片自己不滚 —— 整层 catchtouchmove 下 view 的 overflow 在真机上滑不动,而且按钮会跟着滚走;
+     改成纵向 flex,只让 .mo__content(scroll-view)滚,标题 / 后果清单 / 按钮固定。
+     比这更长的说明不该用确认弹窗,改用 full 底部弹窗。 */
+  max-height: min(var(--cy-comp-sheet-half), var(--cy-comp-sheet-max-height));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-sizing: border-box;
   padding: var(--cy-space-2) var(--cy-space-4) var(--cy-space-3);
   border-radius: var(--cy-radius-lg);
@@ -65,6 +71,9 @@
   margin-bottom: var(--cy-space-2);
 }
 .mo__content {
+  flex: 0 1 auto;
+  min-height: 0;
+  width: auto;
   text-align: center;
   font-size: var(--cy-font-body);       /* 28rpx */
   line-height: var(--cy-leading-normal);/* 1.6 */
@@ -142,6 +151,7 @@
  * 全部新增块在没传对应属性时不渲染,老的 13 个 cy-modal 调用点渲染结果不变。 */
 
 /* 说明与弹窗使用同一底色。 */
+.mo__close, .mo__title, .mo__consq, .mo__btns { flex: none; }
 .mo__consq {
   background: transparent;
   border-radius: var(--cy-radius-md);

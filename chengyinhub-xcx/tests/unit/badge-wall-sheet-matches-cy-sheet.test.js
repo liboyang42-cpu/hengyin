@@ -53,7 +53,7 @@ test('★详情保留系统字体和滚动上限，短内容不撑满，长标�
   assert.doesNotMatch(sheet, /border-(left|right|top):/)
   assert.doesNotMatch(sheet, /(^|[;\s])height:/, '短内容不能固定撑成全屏')
   assert.match(sheet, /box-shadow:\s*var\(--cy-comp-sheet-player-inset-shadow\)/)
-  assert.match(sheet, /max-height:\s*var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-max-height\)\)/, '长说明使用胶囊实测的统一上限')
+  assert.match(sheet, /max-height:\s*min\(var\(--cy-comp-sheet-full\), var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-max-height\)\)\)/, '长说明使用胶囊实测的统一上限')
   assert.match(wxss, /\.bw-sh-rar, \.bw-sh-desc, \.bw-sh-meta, \.bw-sh-3d \{ flex: none; \}/, '正文子项会被压扁')
   assert.match(rule('.bw-sh-body'), /overflow-y:\s*(auto|scroll)/, '正文要能滚')
   const name = rule('.bw-sh-name')

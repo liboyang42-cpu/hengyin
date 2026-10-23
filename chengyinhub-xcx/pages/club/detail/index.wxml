@@ -735,7 +735,7 @@
     </view>
   </cy-sheet>
 
-  <cy-sheet show="{{settingsShow}}" title="俱乐部设置" handle closable maskClosable bind:close="closeSettings">
+  <cy-sheet show="{{settingsShow}}" title="俱乐部设置" fixed="full" handle closable maskClosable bind:close="closeSettings">
     <view class="cset">
       <text class="cset-group" wx:if="{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}">客户与项目</text>
       <view class="cset-row" wx:if="{{club.isOwner || club.viewerIsAdmin}}" catchtap="goCustomers" aria-role="button" aria-label="查看客户" hover-class="cy-pressed" hover-stay-time="80">
@@ -1133,5 +1133,4 @@
 <cy-danger-confirm id="dcPost" bind:confirm="onConfirmDeletePost" />
 <cy-danger-confirm id="dcComment" bind:confirm="onConfirmDeleteComment" />
 <cy-danger-confirm id="dcQuit" bind:confirm="onConfirmQuit" bind:alt="onQuitAlt" />
-<cy-danger-confirm id="dcMember" bind:confirm="onConfirmRemoveMember" />
 

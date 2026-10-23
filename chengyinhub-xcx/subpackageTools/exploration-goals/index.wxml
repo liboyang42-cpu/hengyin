@@ -63,3 +63,4 @@
 
   <view class="tu-fab" wx:if="{{!creating}}" bindtap="toggleCreate" aria-role="button" aria-label="定一个新目标" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="46" /></view>
 </view>
+<cy-modal-host id="cy-modal-host" />

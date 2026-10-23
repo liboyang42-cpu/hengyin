@@ -97,10 +97,10 @@ test('③ 浮层面板不许用绝对像素钉死高度', () => {
 
 test('④ 三个曾经打架的口径都已收编到同一个 token', () => {
   assert.match(read('components/cy/sheet/index.wxss'),
-    new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?height:\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
+    new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?height:\\s*min\\(var\\(--cy-comp-sheet-full\\),\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
     'cy-sheet 的 full 变体(原 96vh)必须走安全上限')
   const scene = read('components/cy/scene-sheet/index.wxss')
-  assert.match(scene, new RegExp(`\\.ss__panel \\{[\\s\\S]*?max-height:\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
+  assert.match(scene, new RegExp(`\\.ss__panel \\{[\\s\\S]*?max-height:\\s*min\\(var\\(--cy-comp-sheet-full\\),\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
     'scene-sheet 面板通用上限(原 100vh)必须走安全上限')
   assert.match(read('style/tokens.wxss'),
     new RegExp(`--cy-comp-sheet-full-height:\\s*var\\(${SAFE}\\)`),
@@ -113,7 +113,7 @@ test('负控:浮层里写回 96vh 必须判红', () => {
   const real = overlayFiles()
   assert.deepEqual(findUnsafeHeights(real), [], '干净输入不该报')
   const mutated = real.map(([p, s]) => p.endsWith('sheet/index.wxss')
-    ? [p, s.replace('height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));', 'height: 96vh;')] : [p, s])
+    ? [p, s.replace('height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));', 'height: 96vh;')] : [p, s])
   assert.notEqual(JSON.stringify(mutated), JSON.stringify(real), '负控变异注入失败')
   const bad = findUnsafeHeights(mutated)
   assert.ok(bad.length > 0 && bad.some((b) => b.includes('96vh')), `没抓到注入的 96vh:${bad.join()}`)
@@ -331,7 +331,7 @@ function assertFullVariantGeometry(overrides = {}) {
   // 2026-10-23 业主:bottom 档也按胶囊实测封顶(高度跟内容走,长内容到胶囊底下),不再是独立的 70vh 档位
   assert.match(wxml, /style="\{\{_dragStyle\}\}\{\{fullMaxH\}\}"/,
     '(c) 胶囊实测上限对所有档位下发')
-  assert.match(wxss, new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?\\n\\s*height:\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
+  assert.match(wxss, new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?\\n\\s*height:\\s*min\\(var\\(--cy-comp-sheet-full\\),\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
     `(c) wxss 必须「实测通道优先、${SAFE} 保底」,拿不到胶囊信息时仍退回安全区 token`)
 }
 
@@ -357,7 +357,7 @@ test('负控:⑦ 面板顶退回 env() 算不出来的字面数必须判红', ()
 test('负控:⑦ 顶边通道整条摘掉(退回只吃 token)必须判红', () => {
   const wxss = read(SHEET_WXSS)
   // 锚到行首的 `  height:`(full 档那条);2026-10-23 起面板基础规则多了一条同表达式的 max-height,不能误伤它
-  const mutated = wxss.replace(`\n  height: var(${SAFE_H}, var(${SAFE}));`, `\n  height: var(${SAFE});`)
+  const mutated = wxss.replace(`\n  height: min(var(--cy-comp-sheet-full), var(${SAFE_H}, var(${SAFE})));`, `\n  height: var(${SAFE});`)
   assert.notEqual(mutated, wxss, '负控变异注入失败:面板高度锚点要先同步')
   assert.throws(() => assertFullVariantGeometry({ [SHEET_WXSS]: mutated }), /\(c\) wxss/)
 })

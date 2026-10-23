@@ -26,13 +26,13 @@
   /* ⚠️ token 的 --cy-safe-top 走 env(safe-area-inset-top),在模拟器和无刘海真机上解析为 0,
      顶边会落进胶囊行(2026-09-18 全站顶边复查)。宿主(play/roam 两页都已接
      resolveMenuChrome)在页面根上给 --cy-psheet-max-h 传胶囊实测值时以它为准,拿不到才退回 token。 */
-  max-height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); overflow-y:auto;
+  max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto;
   transform:translateY(46rpx); opacity:0; /* ds-ok 原型 @keyframes up 的 24px */
   transition:transform .26s cubic-bezier(.2,.82,.2,1), opacity .26s cubic-bezier(.2,.82,.2,1); }
 .psheet.is-in{ transform:none; opacity:1; }
 /* 半屏档:原型给这几屏设的 top 大致就是七成屏高 */
-.psheet--full{ height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); }
-.psheet--half{ max-height:min(70vh, var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
+.psheet--full{ height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
+.psheet--half{ max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
 /* ⚠️ 满屏档**不要**再给它让胶囊带。上面的 max-height 已经是
      calc(100vh - --cy-safe-top - 顶部留白),半屏是贴底的 ⇒ 它的上沿本来就落在胶囊下面。
    2026-09-11 实拍抓到:这里原来还叠了一层 padding-top:var(--cy-safe-top),
@@ -73,7 +73,7 @@
    原型 f-more:.sheet.drw 从 top:330px 起,里面一行行 .drow。
    现码复用上面那层 .psheet(同一件黑面),只把高度换成「从 330px 起」的等价写法。
    1px = 1.923rpx。 */
-.psheet--drw{ max-height:min(70vh, var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); } /* ds-ok 原型 drawer top:330px */
+.psheet--drw{ max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); } /* ds-ok 原型 drawer top:330px */
 .drow{ display:flex; align-items:center; gap:27rpx; padding:29rpx 0; min-height:112rpx; box-sizing:border-box;
   border-top:1rpx solid rgba(255,255,255,.07); } /* ds-ok 原型 .drow gap 14px / padding 15px 0 / min-height 58px / 上边框 1px 白 7% */
 /* 分隔线是「行与行之间」的:紧跟拖杆的第一行不画(原型 .drw .grab + .drow)。 */

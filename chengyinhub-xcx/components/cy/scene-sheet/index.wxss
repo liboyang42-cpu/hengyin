@@ -40,7 +40,7 @@
   /* 稿上是 392.975px(iPhone 14 画板绝对宽),但那是画板宽不是面板约束:面板本就该满宽。 */
   width: 100%;
   /* 任何档位的面板都不许越过胶囊 —— 见 --cy-comp-sheet-max-height 的算式 */
-  max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -57,14 +57,14 @@
   animation: ss-up var(--cy-motion-standard) var(--cy-ease-out);
 }
 .ss--full .ss__panel {
-  height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-full-height));
+  height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-full-height)));
 }
 /* T1 底部弹窗(Brand Handbook 弹层四型):一次选择、短表单、一段说明,≤70vh。
    2026-09-02 合并掉 .ss--peek —— 它与 half 的 min-height 完全相同、只有上限差 12vh,
    内容不够长时两档渲染结果像素级相同;而 min-height:42vh 会把短内容强行撑高,
    一句话的说明也占掉近半屏。两个毛病一起治:删下限、并成一档。 */
 .ss--half .ss__panel {
-  max-height: min(70vh, var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
 }
 .ss--player {
   /* 玩家记录/明细卡以 scene-roam-history 的 .hs-card 为单一真源。 */

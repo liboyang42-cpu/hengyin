@@ -65,7 +65,9 @@
      不再卡在 70vh 把下半截截掉。上限一律按胶囊实测(index.js attached 下发到根节点),拿不到才退 token。
      ⚠️ 面板自己不再滚动(overflow 在 view 上 + 整层 catchtouchmove = 实机上「弹窗滑不动、底下的页面反而在动」):
      面板是纵向 flex,只有 .sh__body(scroll-view)一个滚动区,头部 / 抓手 / 底部按钮固定不动。 */
-  max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
+  /* 2026-10-23 同日再定三档:peek 30% / half 60% / full 80%。贴内容高 = 自动落在放得下的最小一档,
+     所以默认上限就是 full(80%),并且仍不越过胶囊底 +5px。固定档见文件末尾 .sh--fixed-*。 */
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -216,8 +218,8 @@
      真机上解析为 0 ⇒ 顶边照样落进胶囊行。组件现在按胶囊实测下发 --cy-comp-sheet-max-h
      (见 index.js 的 attached)。两条并存是取更保守的那个:实测值更高时由 max-height 收住,
      拿不到实测值时 token 独扛 —— 哪种都不会越进胶囊行。 */
-  height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
-  max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
+  height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
   display: flex;
   flex-direction: column;
   padding-bottom: 0;              /* footer 自己处理安全区 */
@@ -431,3 +433,10 @@
   flex: 1 1 auto;
   min-height: 0;
 }
+
+/* 固定档(fixed="peek|half|full"):打开后内容会变的弹窗定在所属档高度,搜索 / 加载 / 切页签时面板不跳。
+ * 档位值来自 tokens(30 / 60 / 80vh),并且仍受胶囊底 +5px 封顶;正文 scroll-view 撑满剩余高度。 */
+.sh--fixed-peek .sh__panel { height: min(var(--cy-comp-sheet-peek), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); }
+.sh--fixed-half .sh__panel { height: min(var(--cy-comp-sheet-half), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); }
+.sh--fixed-full .sh__panel { height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); }
+.sh--fixed .sh__body { flex: 1 1 auto; min-height: 0; }

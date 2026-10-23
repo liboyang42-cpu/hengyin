@@ -29,7 +29,7 @@
      给 .ds-pop 定 0 档,整块面板(底 + 顶部操作)一起回到遮罩之上。 */
   z-index: 0;
   width: 100%;
-  max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
   border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0;
   padding: 0 var(--cy-page-x) env(safe-area-inset-bottom);
   box-sizing: border-box;
@@ -109,7 +109,7 @@
    ⚠️ 高度必须是【确定值】不能改 auto —— 调用方的 .time-picker-view 是 height:100%,
    父级一旦变成 auto 就塌成 0,滚轮直接消失。
    overflow 保持 hidden:父级滚动会和内部 picker-view 抢手势。入驻经营时段靠压矮滚轮塞进 50vh。 */
-.ds-body { overflow: hidden; height: min(50vh, calc(var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)) - 240rpx - env(safe-area-inset-bottom))); margin: 0 calc(-1 * var(--cy-page-x)); padding: 0 var(--cy-page-x); }
+.ds-body { overflow: hidden; height: min(50vh, calc(min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))) - 240rpx - env(safe-area-inset-bottom))); margin: 0 calc(-1 * var(--cy-page-x)); padding: 0 var(--cy-page-x); }
 
 .ds-pop--dark::before {
   background: rgba(28, 28, 30, 0.96);

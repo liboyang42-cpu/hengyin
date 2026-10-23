@@ -50,6 +50,10 @@ Component({
     /* dirty:有未保存输入。为 true 时遮罩不再直接关闭,只发 requestclose,
      * 由父页面决定"保存草稿/放弃"。组件自己不清业务状态(状态所有权留在发起页)。 */
     dirty:   { type: Boolean, value: false },
+    /* fixed:打开后内容会变(搜索 / 加载 / 分页签 / 多步)时固定在某档高度,不随内容跳。
+     * '' = 贴内容高(默认,上限 full 80%);'peek' | 'half' | 'full' = 30% / 60% / 80%。
+     * 大编辑器与筛选弹窗一律 fixed="full"(2026-10-23 业主定)。 */
+    fixed:   { type: String,  value: '' },
 
   },
   data: {

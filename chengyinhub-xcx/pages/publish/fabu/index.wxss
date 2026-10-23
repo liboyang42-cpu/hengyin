@@ -285,7 +285,7 @@ page{background: var(--cy-bg-card);}
   height: auto;
   padding-bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom));
 }
-.pop-chapter-settings { max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); color: var(--cy-color-text-primary); }
+.pop-chapter-settings { max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); color: var(--cy-color-text-primary); }
 .pop-chapter-settings.show { display: flex; flex-direction: column; }
 .pop-chapter-settings::before { background: var(--cy-color-bg-surface); border-top-color: var(--cy-color-border-subtle); backdrop-filter: none; }
 .pop-chapter-settings .pop-top { flex: none; padding: var(--cy-space-3) 0; color: var(--cy-color-text-primary); }

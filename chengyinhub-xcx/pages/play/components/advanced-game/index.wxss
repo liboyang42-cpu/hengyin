@@ -5,7 +5,7 @@
 .ag-mask { position: fixed; inset: 0; z-index: var(--cy-z-sheet); background: var(--cy-color-overlay); }
 /* 2026-09-18 顶边复查:token 的 env 在模拟器/无刘海机解析为 0 ⇒ 面板顶落进胶囊行。
    宿主(play 页)量到胶囊底后经 --cy-comp-sheet-max-h 传实测上限,拿不到才退 token。 */
-.ag { position: fixed; z-index: calc(var(--cy-z-sheet) + 1); left: 0; right: 0; bottom: 0; height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; background: var(--cy-bg-page); color: var(--cy-text-title); overflow: hidden; }
+.ag { position: fixed; z-index: calc(var(--cy-z-sheet) + 1); left: 0; right: 0; bottom: 0; height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; background: var(--cy-bg-page); color: var(--cy-text-title); overflow: hidden; }
 .ag__grab { width: 72rpx; height: 8rpx; border-radius: var(--cy-radius-pill); background: var(--cy-border-line); margin: 16rpx auto; }
 .ag__head { display: flex; justify-content: space-between; align-items: center; padding: 12rpx 32rpx 24rpx; }
 .ag__eyebrow,.ag__title { display:block; }.ag__eyebrow { color:var(--cy-text-secondary);font-size:var(--cy-font-caption);}.ag__title {font-size:var(--cy-font-title);font-weight:800;margin-top:6rpx;}
@@ -21,7 +21,7 @@
   height: 88rpx;
   transform: translate(-50%, -50%);
 }
-.ag__scroll { height: calc(var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)) - 210rpx); padding: 0 28rpx; box-sizing:border-box; }
+.ag__scroll { height: calc(min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))) - 210rpx); padding: 0 28rpx; box-sizing:border-box; }
 .ag__status { display:flex;gap:12rpx;flex-wrap:wrap;margin-bottom:20rpx;}.ag__status-text {background:var(--cy-bg-card-2);padding:8rpx 16rpx;border-radius:var(--cy-radius-pill);font-size:var(--cy-font-caption);}
 .ag-card { background:var(--cy-bg-card);border:1rpx solid var(--cy-border-card);border-radius:var(--cy-radius-md);padding:28rpx;margin-bottom:20rpx; }
 .ag-card__title { display:block;font-size:var(--cy-font-subtitle);font-weight:800; }.ag-card__sub,.ag-card__body {display:block;color:var(--cy-text-secondary);font-size:var(--cy-font-label);margin:10rpx 0 18rpx;line-height:1.6;}

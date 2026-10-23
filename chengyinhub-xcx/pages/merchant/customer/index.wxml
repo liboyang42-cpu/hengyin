@@ -125,7 +125,7 @@
 
   </view>
   </cy-sheet>
-  <cy-sheet show="{{filterOpen}}" class="cu-filter-sheet" title="筛选客户" handle="{{true}}" inset="{{true}}" footer="{{true}}" bind:close="closeFilters">
+  <cy-sheet show="{{filterOpen}}" class="cu-filter-sheet" title="筛选客户" handle="{{true}}" fixed="full" footer="{{true}}" bind:close="closeFilters">
     <view class="cu-filter">
       <cy-inline-error wx:if="{{savedSegmentsError}}" title="保存分群暂未更新" sub="{{savedSegmentsError}}" action="重试" bind:action="loadSavedSegments" />
       <text class="cu-filter-title">客户类型</text>

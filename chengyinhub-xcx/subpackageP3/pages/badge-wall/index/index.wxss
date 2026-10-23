@@ -48,7 +48,7 @@ page { background: var(--cy-color-bg-page); }
             /* 与 .ss__panel 同:不越过胶囊,正文超长时在 .bw-sh-body 里滚。
                场景弹窗是 js 量胶囊底再算;这页根上已挂 --sbh/--nbh(状态栏 + 导航栏 = 胶囊底之下),直接用。
                token 版 --cy-comp-sheet-max-height 靠 env() 反算,模拟器/无刘海机上会顶过胶囊(实拍抓到)。 */
-            max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); display: flex; flex-direction: column;
+            max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); display: flex; flex-direction: column;
             transition: transform .42s cubic-bezier(.34,1.28,.44,1); }
 .bw-sheet.on { transform: translateY(0); }
 /* 标题行 = .ss__head:只放标题与叉,标题占满剩余宽度 */
