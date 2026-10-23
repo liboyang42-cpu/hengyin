@@ -4,7 +4,7 @@ Issue：https://github.com/liboyang42-cpu/chengyin-remote-ops/issues/5 领取组
 仓库：`github.com/liboyang42-cpu/hengyin` 仅写本仓（不写 `chengyin`）  
 Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`  
 分支：`cursor/c09-notify-webhook-producers-266c`  
-Head：`cf81c5a9ec774e870c7fceeb094e1b24c6fd0407`（本文件若再提交会前进）。本文件不替代生产凭据、真实外发 Webhook 或公共 IM 协议。
+Head：`eb5fdd24c01b497348ade3028d137ed1811907d4`（本文件若再提交会前进）。本文件不替代生产凭据、真实外发 Webhook 或公共 IM 协议。
 
 ## 1. 白名单（实际写入）
 
@@ -61,7 +61,7 @@ mvn -pl chengyinhub-admin -am test \
 ```
 
 环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
-真实结果（2026-10-23T20:11:18Z，`BUILD SUCCESS`）：
+真实结果（2026-10-23T22:33:03Z，`BUILD SUCCESS`）：
 
 ```
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- C09FirstJourneyIsolationTest
@@ -71,16 +71,17 @@ Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- WebhookSameEventRetryTest
 Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- WebhookSsrfHopGuardTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- ImmutableReceiptProducerTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- WebhookDeliveryLogProducerTest
-Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- C09AccountSwitchRestartIsolationTest
+Tests run: 14, Failures: 0, Errors: 0, Skipped: 0
 chengyinhub-admin .................................. SUCCESS
 BUILD SUCCESS
 ```
 
 SHA256（生产 6 类）：
 
-- `ImmutableReceiptProducer.java` `d30f6adf07bd21a817a4ba2666e8f09b45f81d241da56dc9dec62d6b16a14471`
+- `ImmutableReceiptProducer.java` `e8ba9b1fe8850a8f1d637721621d6c635e51481a7c9b65f626ca86d2cb51e0c5`
 - `AttachmentReviewProducer.java` `b105176804dd3654631b97ddf4b0200840b8cfa34f14fe8f380ea8f762552838`
-- `DevicePushRegistrationLifecycle.java` `f46a22c9cbb3e643f94df62e3e87f32994933e389eb4d21b69eb2f83ca1100ef`
+- `DevicePushRegistrationLifecycle.java` `595e7a432dd12a4865f6264da7b3441adcda20e24f306fa99e3872f264960b92`
 - `WebhookDeliveryLogProducer.java` `f48e7da1b77fab22a93f9e4d8f422943f0c0518b6921642977a41518875bad95`
 - `WebhookSameEventRetry.java` `3378e3db7fee28932a3620dd01767781bfbaf8aca7f7fefd741d63dc0916b06b`
 - `WebhookSsrfHopGuard.java` `da151c7857fb7f15f92b6aed16be8a051be7d28b6468d061dc08a37a75b4aa30`
