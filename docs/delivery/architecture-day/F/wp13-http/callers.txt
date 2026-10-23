@@ -1,0 +1,30 @@
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/Pr69V3PhotoCheckCrossAccountTest.java:66:        when(vision.chatVision(anyString(), anyString(), anyString()))
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/Pr69V3PhotoCheckCrossAccountTest.java:93:        verify(vision, never()).chatVision(any(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/Pr69V3PhotoCheckCrossAccountTest.java:101:        verify(vision).chatVision(anyString(), anyString(), anyString());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java:134:                new OpenAiCompatibleLlmClient("vision", "https://dashscope.aliyuncs.com/compatible-mode/v1",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientLogRedactionTest.java:56:        return new OpenAiCompatibleLlmClient("text", baseUrl,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java:48:            OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java:51:            String answer = client.chatVision("你是照片审核员", "https://cdn.example.com/window.jpg", "要拍到窗外");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java:73:        OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java:77:                () -> client.chatVision("你是照片审核员", "https://cdn.example.com/window.jpg", "要拍到窗外"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java:91:        OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java:109:            OpenAiCompatibleLlmClient bad = new OpenAiCompatibleLlmClient("safe", base, key, "model", true, 1000, gate);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java:114:            OpenAiCompatibleLlmClient bad = new OpenAiCompatibleLlmClient("safe", invalidBase, "synthetic", "model", true, 1000, gate);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java:117:        OpenAiCompatibleLlmClient badModel = new OpenAiCompatibleLlmClient("safe", base, "synthetic", " ", true, 1000, gate);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java:119:        OpenAiCompatibleLlmClient badTimeout = new OpenAiCompatibleLlmClient("safe", base, "synthetic", "model", true, 0, gate);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java:121:        OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient("safe", base, "synthetic", "model", true, 1000, gate);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java:202:                    OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient("safe", endpoint, "synthetic", model, true, 5000, gate);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java:207:            OpenAiCompatibleLlmClient fifth = new OpenAiCompatibleLlmClient("safe", endpoints.get(2), "synthetic", "c", true, 1000, gate);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_16Test.java:12:            OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_16Test.java:16:        OpenAiCompatibleLlmClient configured = new OpenAiCompatibleLlmClient(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_15Test.java:12:        OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_20Test.java:14:        Object[] owners = {new AiGatewayServiceImpl(), new OpenAiCompatibleLlmClient(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ObjectCardMintHookTest.java:472:                new OpenAiCompatibleLlmClient("vision", "https://dashscope.aliyuncs.com/compatible-mode/v1",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitPhotoCheckRuntimeTest.java:448:                new OpenAiCompatibleLlmClient("vision", "https://dashscope.aliyuncs.com/compatible-mode/v1",
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:43:        return new OpenAiCompatibleLlmClient("qwen", config.getBaseUrl(), config.getApiKey(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:50:        return new OpenAiCompatibleLlmClient("deepseek", config.getBaseUrl(), config.getApiKey(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:61:        return new OpenAiCompatibleLlmClient("vision", config.getBaseUrl(), config.getApiKey(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java:81:        return new OpenAiCompatibleLlmClient("minimax", cfg.getBaseUrl(), cfg.getApiKey(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:206:            modelText = client.chat(systemPrompt, userPrompt);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java:151:            answer = visionClient.chatVision(SYSTEM_PROMPT, encoded.getDataUrl(), buildUserPrompt(requirement));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ObjectNamer.java:97:            answer = visionClient.chatVision(SYSTEM_PROMPT, encoded.getDataUrl(), USER_PROMPT);

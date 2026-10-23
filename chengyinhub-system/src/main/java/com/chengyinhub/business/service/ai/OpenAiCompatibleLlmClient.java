@@ -7,10 +7,10 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.common.config.AiModelConfig;
-import com.chengyinhub.common.utils.StringUtils;
 
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
+import java.util.concurrent.TimeUnit;
+import com.chengyinhub.common.utils.http.HttpUtils;
+import com.chengyinhub.common.utils.http.HttpRequestException;
 
 /**
  * OpenAI 兼容协议的大模型客户端(qwen DashScope / deepseek 共用)。
@@ -34,9 +34,10 @@ public class OpenAiCompatibleLlmClient implements LlmClient
     private final String model;
     private final boolean enabled;
     private final int timeoutMs;
+    private final AiHttpAdmission admission;
 
     /**
-     * 从 AiModelConfig 构造(qwen/deepseek 旧路径)。
+     * 保留旧签名供本地 readiness/parser 调用；未显式注入 admission 时禁止网络发送。
      */
     public OpenAiCompatibleLlmClient(String name, AiModelConfig config)
     {
@@ -44,9 +45,16 @@ public class OpenAiCompatibleLlmClient implements LlmClient
     }
 
     /**
-     * 多 Provider 构造(MiniMax 等,从 AiProviderProperties.ProviderConfig 取值)。
+     * 保留旧签名；网络发送必须使用带启动 admission 的构造器。
      */
     public OpenAiCompatibleLlmClient(String name, String baseUrl, String apiKey, String model, boolean enabled, int timeoutMs)
+    {
+        this(name, baseUrl, apiKey, model, enabled, timeoutMs, AiHttpAdmission.closed());
+    }
+
+    /** Production callers must supply the single startup admission bean. */
+    public OpenAiCompatibleLlmClient(String name, String baseUrl, String apiKey, String model,
+            boolean enabled, int timeoutMs, AiHttpAdmission admission)
     {
         this.name = name;
         this.baseUrl = baseUrl;
@@ -54,6 +62,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         this.model = model;
         this.enabled = enabled;
         this.timeoutMs = timeoutMs;
+        this.admission = admission == null ? AiHttpAdmission.closed() : admission;
     }
 
     @Override
@@ -131,52 +140,79 @@ public class OpenAiCompatibleLlmClient implements LlmClient
     /** Local configuration check only; never sends a provider request. */
     public void requireReady()
     {
-        if (!enabled)
+        if (!enabled || apiKey == null || apiKey.isBlank()
+                || apiKey.chars().anyMatch(c -> c <= 32 || c >= 127)
+                || model == null || model.isBlank() || timeoutMs <= 0)
         {
-            throw new IllegalStateException("AI 模型未启用(" + name + ".enabled=false),请改用 mock 或配置后开启");
+            throw new AiProviderNotSentException();
         }
-        if (apiKey == null || apiKey.trim().isEmpty())
-        {
-            throw new IllegalStateException("AI 模型 " + name + " 未配置 apiKey");
-        }
+        AiHttpAdmission.origin(completionUrl(baseUrl));
     }
 
-    /** 文本/视觉两条路共用的 HTTP 出口:POST {baseUrl}/chat/completions,解析 choices[0].message.content。 */
+    static String completionUrl(String baseUrl)
+    {
+        if (baseUrl == null || baseUrl.isBlank()) throw new AiProviderNotSentException();
+        return baseUrl.replaceAll("/+$", "") + "/chat/completions";
+    }
+
+    /** Text/vision share one bounded authenticated POST; no provider retry is allowed. */
     private String post(JSONObject body)
     {
-        String url = StringUtils.isEmpty(baseUrl)
-                ? "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
-                : baseUrl.replaceAll("/+$", "") + "/chat/completions";
-
+        requireReady();
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.min(timeoutMs, 10_000));
+        String url = completionUrl(baseUrl);
         int status = -1;
-        String phase = "transport";
-        try (HttpResponse resp = HttpRequest.post(url)
-                .header("Authorization", "Bearer " + apiKey)
-                .header("Content-Type", "application/json")
-                .body(body.toJSONString())
-                .timeout(timeoutMs)
-                .execute())
+        String phase = "local";
+        try (HttpUtils.AttemptLease lease = admission.acquire(url))
         {
-            status = resp.getStatus();
-            phase = "response";
-            String result = resp.body();
-            if (!resp.isOk())
+            String json;
+            try
             {
-                // Provider bodies can echo prompts, retrieved facts or credentials. Never log them.
-                throw new RuntimeException("AI 模型调用失败(" + resp.getStatus() + ")");
+                json = body.toJSONString();
             }
+            catch (RuntimeException invalid)
+            {
+                throw new AiProviderNotSentException();
+            }
+            phase = "transport";
+            String result = HttpUtils.sendJsonPost(url, json, apiKey, deadline, lease);
+            // The String-only common API does not expose a success status; do not invent one.
             phase = "parse";
             return responseText(result);
         }
-        catch (Exception e)
+        catch (AiProviderNotSentException notSent)
         {
-            // Parser/transport exception messages and causes can contain response bytes or URLs.
-            // Keep bounded operational diagnostics only, including no raw throwable in the log.
-            String diagnosticName = name != null && name.matches("[A-Za-z0-9_-]{1,32}") ? name : "provider";
-            log.error("[LlmClient:{}] request-failed phase={} httpStatus={} errorType={}",
-                    diagnosticName, phase, status, e.getClass().getSimpleName());
-            throw new RuntimeException("AI 模型调用失败 (phase=" + phase + ", HTTP=" + status + ")");
+            logFailure("not-sent", 0, "NOT_SENT");
+            throw notSent;
         }
+        catch (HttpRequestException transport)
+        {
+            status = transport.getStatusCode();
+            if (transport.getSendDisposition() == HttpRequestException.SendDisposition.NOT_SENT)
+            {
+                logFailure("not-sent", status, "NOT_SENT");
+                throw new AiProviderNotSentException();
+            }
+            logFailure(phase, status, "PROVIDER_OUTCOME_UNKNOWN");
+            throw failure(phase, status);
+        }
+        catch (Exception unknown)
+        {
+            logFailure(phase, status, "PROVIDER_OUTCOME_UNKNOWN");
+            throw failure(phase, status);
+        }
+    }
+
+    private RuntimeException failure(String phase, int status)
+    {
+        // No raw throwable, URL, auth, prompt, body, parser message or suppressed exception.
+        return new RuntimeException("AI 模型调用失败 (phase=" + phase + ", HTTP=" + status + ")");
+    }
+
+    private void logFailure(String phase, int status, String code)
+    {
+        String diagnosticName = name != null && name.matches("[A-Za-z0-9_-]{1,32}") ? name : "provider";
+        log.error("[LlmClient:{}] request-failed phase={} httpStatus={} code={}", diagnosticName, phase, status, code);
     }
 
     /** The existing reply contract is plain text, never a coerced JSON value. */

@@ -9,11 +9,13 @@ import java.net.HttpURLConnection;
 import java.net.NoRouteToHostException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.URI;
+import java.util.Objects;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -129,6 +131,88 @@ public class HttpUtils
         return execute("POST", url, body, contentType, Constants.UTF8, false, false);
     }
 
+    /**
+     * Authenticated JSON POST, exactly one secure attempt. deadlineNanos is absolute System.nanoTime.
+     * The lease is consumed once; caller close cannot release a submitted/running physical attempt.
+     */
+    public static String sendJsonPost(String url, String json, String bearer,
+            long deadlineNanos, AttemptLease lease)
+    {
+        if (lease == null || !lease.transfer())
+        {
+            throw notSent("third-party HTTP lease unavailable");
+        }
+        boolean handedToAttempt = false;
+        try
+        {
+            URL target = jsonTarget(url);
+            if (bearer == null || bearer.isBlank() || bearer.chars().anyMatch(c -> c <= 32 || c >= 127))
+            {
+                throw notSent("invalid third-party HTTP authorization");
+            }
+            if (json == null || Thread.currentThread().isInterrupted())
+            {
+                throw notSent("third-party HTTP request not started");
+            }
+            RequestPolicy current = RequestPolicy.current();
+            RequestPolicy policy = new RequestPolicy(
+                    Math.min(current.connectTimeoutMs, DEFAULT_CONNECT_TIMEOUT_MS),
+                    Math.min(current.readTimeoutMs, DEFAULT_READ_TIMEOUT_MS),
+                    Math.min(current.totalTimeoutMs, DEFAULT_TOTAL_TIMEOUT_MS));
+            long now = System.nanoTime();
+            long remaining = deadlineNanos - now;
+            if (remaining <= 0) throw notSent("third-party HTTP total timeout");
+            long boundedDeadline = now + Math.min(remaining,
+                    TimeUnit.MILLISECONDS.toNanos(policy.totalTimeoutMs));
+            byte[] body = json.getBytes(StandardCharsets.UTF_8);
+            if (remainingMillis(boundedDeadline) <= 0) throw notSent("third-party HTTP total timeout");
+            handedToAttempt = true;
+            return executeAttempt("POST", target, body, MediaType.APPLICATION_JSON_VALUE,
+                    Constants.UTF8, false, policy, boundedDeadline, bearer, lease).body;
+        }
+        catch (HttpRequestException error)
+        {
+            throw error;
+        }
+        catch (RuntimeException error)
+        {
+            // Never export a URL/header/serializer exception or its original cause.
+            if (handedToAttempt) throw new HttpRequestException("third-party HTTP request failed", 0, false);
+            throw notSent("invalid third-party HTTP request");
+        }
+        finally
+        {
+            if (!handedToAttempt) lease.complete();
+        }
+    }
+
+    private static URL jsonTarget(String url)
+    {
+        try
+        {
+            URI target = new URI(url);
+            String scheme = target.getScheme();
+            if (!("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    || target.getHost() == null || target.getRawUserInfo() != null
+                    || target.getRawQuery() != null || target.getRawFragment() != null
+                    || target.getPort() == 0 || target.getPort() > 65535)
+            {
+                throw notSent("invalid third-party HTTP URL");
+            }
+            return target.toURL();
+        }
+        catch (Exception error)
+        {
+            throw notSent("invalid third-party HTTP URL");
+        }
+    }
+
+    private static HttpRequestException notSent(String message)
+    {
+        return new HttpRequestException(message, 0, false, null,
+                HttpRequestException.SendDisposition.NOT_SENT);
+    }
+
     public static String sendSSLPost(String url, String param)
     {
         return sendSSLPost(url, param, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
@@ -196,54 +280,87 @@ public class HttpUtils
             String requestContentType, String responseCharset, boolean trustAnyCertificate,
             RequestPolicy policy, long deadlineNanos)
     {
+        return executeAttempt(method, target, body, requestContentType, responseCharset,
+                trustAnyCertificate, policy, deadlineNanos, null, null);
+    }
+
+    private static AttemptResult executeAttempt(String method, URL target, byte[] body,
+            String requestContentType, String responseCharset, boolean trustAnyCertificate,
+            RequestPolicy policy, long deadlineNanos, String bearer, AttemptLease lease)
+    {
         AtomicReference<HttpRequestBase> activeRequest = new AtomicReference<>();
         AtomicBoolean cancelled = new AtomicBoolean(false);
-        Future<AttemptResult> attempt;
+        AttemptState state = lease == null ? null : new AttemptState(lease);
+        FutureTask<AttemptResult> attempt = new FutureTask<>(() -> {
+            try
+            {
+                if (state != null && !state.startWorker()) throw notSent("third-party HTTP request cancelled");
+                return executeBlocking(method, target, body, requestContentType, responseCharset,
+                        trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state);
+            }
+            finally
+            {
+                if (state != null) state.finishWorker();
+            }
+        });
         try
         {
-            attempt = HTTP_EXECUTOR.submit(() -> executeBlocking(method, target, body,
-                    requestContentType, responseCharset, trustAnyCertificate, policy,
-                    deadlineNanos, activeRequest, cancelled));
+            HTTP_EXECUTOR.execute(attempt);
         }
-        catch (RejectedExecutionException e)
+        catch (RejectedExecutionException error)
         {
-            throw new HttpRequestException("third-party HTTP client capacity exceeded", 0, false);
+            if (state != null) state.cancelBeforeDispatch();
+            throw classify(new HttpRequestException("third-party HTTP client capacity exceeded", 0, false), state);
         }
         try
         {
             return attempt.get(remainingMillis(deadlineNanos), TimeUnit.MILLISECONDS);
         }
-        catch (TimeoutException e)
+        catch (TimeoutException error)
         {
-            cancelled.set(true);
-            attempt.cancel(true);
-            abortAsync(activeRequest.get(), target);
-            throw new HttpRequestException("third-party HTTP total timeout", 0, true);
+            cancelAttempt(attempt, state, cancelled, activeRequest, target);
+            throw classify(new HttpRequestException("third-party HTTP total timeout", 0, true), state);
         }
-        catch (InterruptedException e)
+        catch (InterruptedException error)
         {
-            cancelled.set(true);
-            attempt.cancel(true);
-            abortAsync(activeRequest.get(), target);
+            cancelAttempt(attempt, state, cancelled, activeRequest, target);
             Thread.currentThread().interrupt();
-            throw new HttpRequestException("third-party HTTP request interrupted", 0, false);
+            throw classify(new HttpRequestException("third-party HTTP request interrupted", 0, false), state);
         }
-        catch (ExecutionException e)
+        catch (ExecutionException error)
         {
-            Throwable cause = e.getCause();
-            if (cause instanceof HttpRequestException)
-            {
-                throw (HttpRequestException) cause;
-            }
-            throw new HttpRequestException("third-party HTTP client failure ("
-                    + cause.getClass().getSimpleName() + ")", 0, false);
+            Throwable cause = error.getCause();
+            HttpRequestException failure = cause instanceof HttpRequestException
+                    ? (HttpRequestException) cause
+                    : new HttpRequestException("third-party HTTP client failure", 0, false);
+            throw classify(failure, state);
         }
+    }
+
+    private static void cancelAttempt(FutureTask<?> attempt, AttemptState state,
+            AtomicBoolean cancelled, AtomicReference<HttpRequestBase> activeRequest, URL target)
+    {
+        if (state != null) state.cancelBeforeDispatch();
+        cancelled.set(true);
+        attempt.cancel(true);
+        // This is our own task only. Never purge or cancel another caller's queued work.
+        if (state != null) HTTP_EXECUTOR.remove(attempt);
+        abortAsync(activeRequest.get(), target);
+    }
+
+    private static HttpRequestException classify(HttpRequestException error, AttemptState state)
+    {
+        if (state == null) return error; // Keep all legacy exception/retry contracts unchanged.
+        return new HttpRequestException(error.getMessage(), error.getStatusCode(), false,
+                error.getRequestId(), state.isNotSent() ? HttpRequestException.SendDisposition.NOT_SENT
+                        : HttpRequestException.SendDisposition.MAY_HAVE_BEEN_SENT);
     }
 
     private static AttemptResult executeBlocking(String method, URL target, byte[] body,
             String requestContentType, String responseCharset, boolean trustAnyCertificate,
             RequestPolicy policy, long deadlineNanos,
-            AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled)
+            AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled,
+            String bearer, AttemptState state)
     {
         HttpRequestBase request = null;
         boolean reusable = false;
@@ -255,6 +372,12 @@ public class HttpUtils
             }
             request = createRequest(method, target, body, requestContentType,
                     policy, deadlineNanos);
+            if (bearer != null)
+            {
+                request.setHeader("Authorization", "Bearer " + bearer);
+                // A provider/proxy auth challenge must not automatically replay an authenticated POST.
+                request.setConfig(RequestConfig.copy(request.getConfig()).setAuthenticationEnabled(false).build());
+            }
             activeRequest.set(request);
             if (cancelled.get() || Thread.currentThread().isInterrupted())
             {
@@ -262,6 +385,11 @@ public class HttpUtils
             }
             CloseableHttpClient client = trustAnyCertificate
                     ? TRUST_ANY_HTTP_CLIENT : HTTP_CLIENT;
+            if (state != null && (remainingMillis(deadlineNanos) <= 0 || !state.enterDispatch()))
+            {
+                throw notSent("third-party HTTP request cancelled");
+            }
+            // DISPATCH_ENTERED is conservative: even a DNS/connect error after this point is UNKNOWN.
             try (CloseableHttpResponse response = client.execute(request))
             {
                 int statusCode = response.getStatusLine().getStatusCode();
@@ -594,6 +722,80 @@ public class HttpUtils
                     positiveIntProperty(CONNECT_TIMEOUT_PROPERTY, DEFAULT_CONNECT_TIMEOUT_MS, 60_000),
                     positiveIntProperty(READ_TIMEOUT_PROPERTY, DEFAULT_READ_TIMEOUT_MS, 60_000),
                     positiveIntProperty(TOTAL_TIMEOUT_PROPERTY, DEFAULT_TOTAL_TIMEOUT_MS, 120_000));
+        }
+    }
+
+    /** A release-only lease: close releases only if transport has not claimed ownership. */
+    public static final class AttemptLease implements AutoCloseable
+    {
+        private final Runnable release;
+        private final AtomicReference<LeaseOwner> owner = new AtomicReference<>(LeaseOwner.CALLER);
+        private final AtomicBoolean released = new AtomicBoolean();
+
+        public AttemptLease(Runnable release)
+        {
+            this.release = Objects.requireNonNull(release, "release is required");
+        }
+
+        boolean transfer() { return owner.compareAndSet(LeaseOwner.CALLER, LeaseOwner.TRANSPORT); }
+
+        @Override
+        public void close()
+        {
+            if (owner.compareAndSet(LeaseOwner.CALLER, LeaseOwner.CLOSED)) complete();
+        }
+
+        void complete()
+        {
+            if (released.compareAndSet(false, true)) release.run();
+        }
+    }
+
+    private enum LeaseOwner { CALLER, TRANSPORT, CLOSED }
+
+    /** Package visibility is only for deterministic cancellation/lifetime tests. */
+    static final class AttemptState
+    {
+        private enum Phase { QUEUED, PREPARING, DISPATCH_ENTERED, CANCELLED_QUEUED,
+            CANCELLED_PREPARING, FINISHED_NOT_SENT, FINISHED_DISPATCHED }
+        private final AtomicReference<Phase> phase = new AtomicReference<>(Phase.QUEUED);
+        private final AttemptLease lease;
+
+        AttemptState(AttemptLease lease) { this.lease = lease; }
+        boolean startWorker() { return phase.compareAndSet(Phase.QUEUED, Phase.PREPARING); }
+        boolean enterDispatch() { return phase.compareAndSet(Phase.PREPARING, Phase.DISPATCH_ENTERED); }
+
+        boolean cancelBeforeDispatch()
+        {
+            for (;;)
+            {
+                Phase current = phase.get();
+                if (current == Phase.QUEUED)
+                {
+                    if (!phase.compareAndSet(current, Phase.CANCELLED_QUEUED)) continue;
+                    lease.complete(); // No worker won startWorker; every future start is forbidden.
+                    return true;
+                }
+                if (current == Phase.PREPARING)
+                {
+                    if (!phase.compareAndSet(current, Phase.CANCELLED_PREPARING)) continue;
+                    return true; // A physical worker exists; only its finally may release.
+                }
+                return isNotSent();
+            }
+        }
+
+        boolean isNotSent()
+        {
+            Phase current = phase.get();
+            return current != Phase.DISPATCH_ENTERED && current != Phase.FINISHED_DISPATCHED;
+        }
+
+        void finishWorker()
+        {
+            phase.updateAndGet(current -> current == Phase.DISPATCH_ENTERED || current == Phase.FINISHED_DISPATCHED
+                    ? Phase.FINISHED_DISPATCHED : Phase.FINISHED_NOT_SENT);
+            lease.complete();
         }
     }
 
