@@ -1,0 +1,28 @@
+{
+  "parent": "e190fcbf502693c08bb0d43474ca1c221604f3bb",
+  "source": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java",
+  "sha256": "ea0d093e22a3d9beca9f5c9ed37d93cdaa1430c78373dd112d566220f195777d",
+  "checks": {
+    "lexical_delimiters": "PASS",
+    "referenced_mapper_xml": "6 parsed; not MyBatis loading",
+    "canonical_ddl_extraction": "exactly 1 each; not MySQL execution",
+    "controller_unchanged_from_parent": true
+  },
+  "canonical_ddl_sha256": {
+    "ums_member_points_detail": "7c83fce1315511f22f5c6610d6c0fb0b84d501b738ed358ae4b84ea717328633",
+    "cms_points_setting": "3cf51e5145338bd4a4f9f7a200de0c48809ab6f35579d3bf78c46dcbee9ff19d"
+  },
+  "source_methods": {
+    "test": 8,
+    "parameterized": 1,
+    "parameterized_cases": 2
+  },
+  "java_compile": "NOT RUN",
+  "junit": "NOT RUN",
+  "mysql": "NOT RUN",
+  "executed_static_checks": [
+    "Python source delimiter check: exit 0",
+    "Python canonical DDL extraction, mapper XML parse and parent Controller byte comparison: exit 0",
+    "Gitleaks 8.24.3 existing config/ignore, new owned files: exit 0, ~28083 bytes, no leaks found"
+  ]
+}
