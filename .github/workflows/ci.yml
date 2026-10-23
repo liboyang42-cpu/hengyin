@@ -589,6 +589,12 @@ jobs:
                       'startupPassedInThisJob': True, 'mainResourceProof': resources}
           jar.with_suffix('.build.json').write_text(json.dumps(metadata, indent=2) + '\n')
           PYARTIFACT
+          # F JDK21 module observation: begin (no baseline or new acceptance gate)
+          python3 ci/architecture/collect_jdeps.py --source . \
+            --artifact chengyinhub-admin/target/chengyinhub-admin.jar \
+            --identity chengyinhub-admin/target/chengyinhub-admin.build.json \
+            --output chengyinhub-admin/target/architecture-jdeps
+          # F JDK21 module observation: end
       - name: Preserve tested Boot Jar for test VPS UAT
         uses: actions/upload-artifact@v4
         with:
@@ -597,6 +603,7 @@ jobs:
             chengyinhub-admin/target/chengyinhub-admin.jar
             chengyinhub-admin/target/chengyinhub-admin.jar.sha256
             chengyinhub-admin/target/chengyinhub-admin.build.json
+            chengyinhub-admin/target/architecture-jdeps/
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
