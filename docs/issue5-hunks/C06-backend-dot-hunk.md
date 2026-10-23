@@ -21,6 +21,7 @@ Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`
 - `MerchantNpcDraftApprovalGateTest.java`
 - `MerchantNpcQualificationRevokeTest.java`
 - `C06FirstJourneyIsolationTest.java`
+- `C06AccountSwitchRestartIsolationTest.java`（账号切换 / 进程内重启恢复 / timeout UNKNOWN 不被后到 APPROVED 投影改写）
 - `InMemoryNpcFixtures.java`（内存夹具，无 MySQL / HTTP）
 
 未改（FORBIDDEN shared owners / D4）：任何 Controller / Mapper / migration、订单/发布原 writer、`AiGateway` public auth、`CmsTopicServiceImpl`、`TopicRouteRuntimeServiceImpl`、`RouteEffects`、`RpgAuthoringCaller`、`DynamicAttributeAuthoringService`、JWT / RBAC、生产 yml。无生产 DDL。本文件只列接线，不授权 Cursor 改那些文件。
@@ -57,16 +58,24 @@ mvn -pl chengyinhub-admin -am \
 ```
 
 环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
-真实结果（2026-10-23T20:50:08Z，`BUILD SUCCESS`）：
+真实结果（父复验 2026-10-23T20:54:05Z，HEAD `322b939d3`，`BUILD SUCCESS` 13 tests）：
 
 ```
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- MerchantNpcQualificationRevokeTest
 Tests run: 9, Failures: 0, Errors: 0, Skipped: 0 -- MerchantNpcDraftApprovalGateTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- C06FirstJourneyIsolationTest
 Tests run: 13, Failures: 0, Errors: 0, Skipped: 0
-chengyinhub-admin .................................. SUCCESS
+```
+
+随后独占补测账号切换 / 进程内重启恢复 / timeout UNKNOWN（不改生产类）。2026-10-23T20:58:41Z：
+
+```
+Tests run: 3 -- C06AccountSwitchRestartIsolationTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
+
+App / 真库 / CI = NOT_RUN。
 
 SHA256（生产 4 类）：
 
