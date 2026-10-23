@@ -85,21 +85,23 @@ test('CU-M-64 主题模板:接口没有 keyword,按名称客户端硬筛,清掉�
   const h = mountTemplatePage()
   h.page.data.tab = 'topic'
   h.page.getTopicTemplates()
-  // 2026-10-22 owner:主题 tab = 上半主题模板大横卡(themeCards)+ 下半玩法模板,不再有头牌 banner
-  const titles = () => h.page.data.themeCards.map(c => c._title)
   lastRequest(h, TOPIC_URL).success({ code: '200', data: TWO_TOPICS })
-  assert.deepEqual(titles(), ['主题A', '主题B'])
+  assert.equal(h.page.data.banner._title, '主题A')
+  assert.equal(h.page.data.topList.length, 1)
 
   h.page.startTemplateSearch('主题B')
   const topic = lastRequest(h, TOPIC_URL)
   assert.equal(topic.data.keyword, undefined, '主题模板列表接口没有 keyword,不许装样子发过去')
   topic.success({ code: '200', data: TWO_TOPICS })
-  assert.deepEqual(titles(), ['主题B'], '搜索是硬筛:没命中的卡不得留在屏上')
+  assert.equal(h.page.data.banner._title, '主题B', '搜索是硬筛:没命中的卡不得留在屏上')
+  assert.deepEqual(h.page.data.topList, [])
+  assert.match(h.page.data.topTitle, /搜索「主题B」/)
 
   h.page.clearTemplateSearch()
   assert.equal(h.page.data.searchKeyword, '')
   lastRequest(h, TOPIC_URL).success({ code: '200', data: TWO_TOPICS })
-  assert.deepEqual(titles(), ['主题A', '主题B'], '清掉搜索要回到全量,不能被上次的过滤结果粘住')
+  assert.equal(h.page.data.banner._title, '主题A', '清掉搜索要回到全量,不能被上次的过滤结果粘住')
+  assert.equal(h.page.data.topList.length, 1)
 })
 
 test('CU-M-64 搜不到时不冒充「这个品类还没有玩法」,给的是搜索空态', () => {

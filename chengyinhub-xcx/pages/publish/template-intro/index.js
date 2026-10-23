@@ -1,9 +1,10 @@
 const { applyTheme } = require('../../../utils/theme.js');
 // 创建节点玩法 · 第0页(价值主张)
 //
-// 位置:publish-sheet 卡2 →【本页】→ templateadd(命名)→ temp(编辑器)
-// 引导、命名、编辑器各保留一层页面栈:用户在编辑器返回时先回命名,再回引导,
-// 不会因为 redirectTo 连续替换页面而直接掉回发布首页。
+// 位置:publish-sheet 卡2 →【本页】→ temp(编辑器)
+// 2026-10-22 owner:去掉「起名字」这一步,直接进编辑器新建;名字在编辑器顶部的名称栏里填。
+// 引导、编辑器各保留一层页面栈:用户在编辑器返回时回到引导,
+// 不会因为 redirectTo 替换页面而直接掉回发布首页。
 //
 // 2026-10-22 owner 定稿(原型 KGxHWjCsqbYUKt5m8SYJM2):三张扇形卡换成一串漂浮圆圈(运动规则见 orbit.js),
 // 深底;去掉「跳过」;文案左对齐、在屏幕中间偏左。圆圈只是氛围、不能点(owner:没有「玩法预览」这一页),
@@ -287,12 +288,12 @@ Page({
     if (this.data.navigating) return;
     this.setData({ navigating: true, navigationError: '' }, () => this._measureHole());
     const merchant = this.data.operationScope === 'MERCHANT';
-    // 下一页就是正常的命名页(templateadd),新建玩法模板。
+    // 直接进编辑器新建玩法模板(owner:不要单独的起名页)。
     // navigateTo 而非 redirectTo:引导页必须留在栈里(publish-editor-return-flow 合同)。
     // CU-M-31:成功也要放闸 —— 本页留在栈里,从创建页返回后 navigating 还是 true 会把按钮挡死。
     const success = () => this.setData({ navigating: false });
     const fail = () => this.setData({ navigating: false, morph: false, navigationError: '创建页面没有打开，请重试' }, () => this._measureHole());
-    const go = () => wx.navigateTo({ url: '/pages/publish/templateadd/templateadd' + (merchant ? '?scope=MERCHANT' : ''), success, fail });
+    const go = () => wx.navigateTo({ url: '/pages/publish/temp/index' + (merchant ? '?scope=MERCHANT' : ''), success, fail });
     if (this.data.reducedMotion || typeof setTimeout !== 'function') { go(); return; }
     this.setData({ morph: true });
     setTimeout(go, 420);

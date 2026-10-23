@@ -30,16 +30,16 @@ test('开始创建成功后返回,再点开始创建仍能进入创建页', () =
   assert.equal(page.data.navigating, false, '按钮不得停在加载态');
 });
 
-// owner 2026-10-22 复审:圆圈不能点、没有「玩法预览」;开始创建的下一页就是正常的命名页。
-test('开始创建总是去命名页新建,商家身份带 scope', () => {
+// owner 2026-10-22 复审:圆圈不能点、没有「玩法预览」;去掉起名页,开始创建直接进编辑器新建。
+test('开始创建直接进编辑器新建,商家身份带 scope', () => {
   const urls = [];
   const page = loadPage({ navigateTo: (opts) => { urls.push(opts.url); if (opts.success) opts.success(); } });
   page.goCreate();
   page.data.operationScope = 'MERCHANT';
   page.goCreate();
   assert.deepEqual(urls, [
-    '/pages/publish/templateadd/templateadd',
-    '/pages/publish/templateadd/templateadd?scope=MERCHANT',
+    '/pages/publish/temp/index',
+    '/pages/publish/temp/index?scope=MERCHANT',
   ]);
 });
 

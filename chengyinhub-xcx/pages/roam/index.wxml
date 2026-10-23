@@ -146,7 +146,8 @@
     </swiper>
     <view class="intro-dots"><view class="intro-dot {{index==introCardIdx?'is-on':''}}" wx:for="{{introCards}}" wx:key="key"></view></view>
     <view class="intro-map-space"></view>
-  <view class="entry-peek">
+  <!-- 2026-10-22 owner:附近没有活动时「附近活动」这一块整块不出(连标题带空态文案) -->
+  <view class="entry-peek" wx:if="{{entryReadAccess || entryLoadError || entryCards.length}}">
     <view class="entry-peek__head"><text>附近活动</text></view>
     <!-- 2026-10-17 合并 master:附近内容读权限态(未登录 / 无权)先于错误与列表 -->
     <cy-state-shell wx:if="{{entryReadAccess}}" kind="no-permission"

@@ -44,3 +44,44 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
 .topic-result-card__body { padding: var(--cy-space-3); }
 .topic-result-card__title { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); line-height: var(--cy-leading-tight); font-weight: 700; }
 .topic-result-card__detail { margin-top: var(--cy-space-1); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+
+/* 2026-10-22 owner:模板结果与模板页同一套行样式 —— 以下照抄 pages/template/index.wxss 的 .cml-*,改那边要同步这里 */
+.cml-card {
+  display: flex; align-items: center; gap: var(--cy-space-3);
+  padding: var(--cy-space-1-5) 0;
+}
+.cml-pic {
+  width: 176rpx; height: 132rpx;   /* ds-ok: 行内小图几何,画板05 的 88×66pt(同模板页) */
+  border-radius: var(--cy-radius-md);
+  background: var(--cy-bg-page);
+  flex-shrink: 0;
+}
+.cml-info { flex: 1; min-width: 0; }
+.cml-name {
+  display: block;
+  font-size: var(--cy-font-body);
+  font-weight: 600;
+  color: var(--cy-text-title);
+  line-height: 1.2;
+}
+.cml-meta {
+  display: flex; align-items: center;
+  font-size: var(--cy-font-label);
+  color: var(--cy-text-secondary);
+  margin-top: var(--cy-space-1);
+}
+.cml-dot { margin: 0 var(--cy-space-1-5); }
+.cml-pic--art { background: var(--cy-bg-card-2); padding: var(--cy-space-2); box-sizing: border-box; }
+/* 无封面:与模板页同一个「封面暂不可用」错误态 */
+.cover-error {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cy-space-1);
+  background: var(--cy-bg-card-2);
+  color: var(--cy-text-secondary);
+}
+.cover-error .cover-error-icon { width: 96rpx; height: 72rpx; flex: 0 0 auto; }
+.cover-error-text { font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }

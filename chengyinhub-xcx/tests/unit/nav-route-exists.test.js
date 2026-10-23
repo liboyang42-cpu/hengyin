@@ -192,6 +192,8 @@ const ORPHAN_EXEMPT = new Map([
   ['/pages/coop/withdraw/index', '旧提现入口路由壳,唯一动作改为弹平台客服微信'],
   ['/pages/merchant/profile/index', '旧商家主页路由壳'],
   ['/pages/publish/topicadd/topicadd', '旧发布路由壳,2026-10 到期删(见 topicadd.js:19)'],
+  // 2026-10-22 owner:创建节点玩法去掉「起名字」一步,引导页直接进编辑器;app.json 注册由 C00 撤(CY-HANDOFF #508)
+  ['/pages/publish/templateadd/templateadd', '起名页已退役,待 C00 从 app.json 撤注册后删页'],
   // 已知孤儿,待接线/拍板(三端审核清单 §7):接上后从这里删掉
   // 2026-09-17 B-06 曾把 pricing/partner 整页退役(全仓零入口);2026-09-19 批复1-a=2 裁决复活并
   // 接进定价页「合作阵容」(pricing/index.js goPartner)——页有真实入口,不再需要豁免条目。

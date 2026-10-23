@@ -2,6 +2,8 @@
 // 页面只负责请求与跳转；这里不依赖 wx/app，便于单测且避免四处手写字段兜底。
 
 const { merchantHomeUrl } = require('./merchant-home-link.js');
+const { templateArt } = require('./template-art.js');
+const { formatDurationMinutes } = require('./template-display.js');
 
 // 商家的落点是统一主页,主体 ID 是 memberId 而不是列表行 id ——「前缀 + id」这种形状拼不出来,
 // 所以它给 pathOf 而不是 path。其余三类的 path 前缀一字未改。
@@ -62,7 +64,8 @@ function decorateItem(type, item) {
     club: item.city || item.description || '城市俱乐部',
     merchant: item.cityRole || item.address || item.slogan || item.description || '合作商家',
     topicTemplate: item.subtitle || item.description || '主题模板',
-    gameTemplate: item.players || item.description || '玩法模板',
+    // 与模板页玩法行同一条 meta:人数 · 时长
+    gameTemplate: [item.players, formatDurationMinutes(item.duration)].filter(Boolean).join(' · ') || item.description || '玩法模板',
   }[type];
   const image = {
     topic: firstImage(item.imgArr || item.imgUrl),
@@ -83,6 +86,9 @@ function decorateItem(type, item) {
     cover: image,
     icon: type === 'club' ? 'users' : (type === 'merchant' ? 'poi-shop' : (type === 'topicTemplate' || type === 'gameTemplate' ? 'route' : 'map')),
     tags: tagsOf(item),
+    // 模板结果按模板页的行样式画(cml 行):玩法模板优先用具象图标
+    tplRow: type === 'topicTemplate' || type === 'gameTemplate',
+    art: type === 'gameTemplate' ? templateArt(item) : '',
     cardCover: type === 'merchant' ? firstImage(item.coverImage) : '',
     cardLogo: type === 'merchant' ? firstImage(item.logo) : '',
     cardStatus: type === 'merchant'
