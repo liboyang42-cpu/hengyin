@@ -38,10 +38,15 @@ public final class CompensationEntryProjection {
     /**
      * 按 requestId + topicId 读原冻结补偿入口。viewer 必须持有既有 EXTRA 审批权限码。
      *
+     * Missing requestId stays Java {@code null}, never {@code ""}.
+     *
      * @param currentFinal 当前 FINAL 投影，仅作对照，不得覆盖冻结条款
      */
     public View project(String requestId, Long topicId, ViewerGrant viewer, FinalCompensationFacts currentFinal) {
-        String id = SupportEventLocator.requireRequestId(requestId);
+        String id = SupportEventLocator.parseRequestId(requestId);
+        if (id == null) {
+            return null;
+        }
         if (topicId == null || topicId <= 0L) {
             throw new IllegalArgumentException("topicId 不合法");
         }

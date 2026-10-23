@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.support.ops;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,8 +14,8 @@ import com.chengyinhub.business.domain.BusinessAuditEvent;
 
 /**
  * C12 isolation: another requestId cannot rewrite the original UNKNOWN event;
- * in-process requery keeps original outcome; missing requestId is rejected
- * rather than stored as {@code ""}.
+ * in-process requery keeps original outcome; missing requestId stays Java
+ * {@code null}, never {@code ""}.
  */
 class C11AccountSwitchRestartIsolationTest {
 
@@ -80,9 +81,9 @@ class C11AccountSwitchRestartIsolationTest {
         SupportEventLocator locator = new SupportEventLocator(source);
         SupportEventLocator.CurrentProjection projection = new SupportEventLocator.CurrentProjection(
                 ORIGINAL, SupportEventLocator.PROJECTION_APPLIED_SUCCESS);
-        assertThrows(IllegalArgumentException.class, () -> locator.locateByRequestId(null, projection));
-        assertThrows(IllegalArgumentException.class, () -> locator.locateByRequestId("  ", projection));
-        assertThrows(IllegalArgumentException.class, () -> locator.requery("", projection));
+        assertNull(locator.locateByRequestId(null, projection));
+        assertNull(locator.locateByRequestId("  ", projection));
+        assertNull(locator.requery("", projection));
         assertEquals(ORIGINAL, locator.locateByRequestId(ORIGINAL, projection).getRequestId());
         assertNotEquals("", locator.locateByRequestId(ORIGINAL, projection).getRequestId());
         assertThrows(IllegalArgumentException.class,

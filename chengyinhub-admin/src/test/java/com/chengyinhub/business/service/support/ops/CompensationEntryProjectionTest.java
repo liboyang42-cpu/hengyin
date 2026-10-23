@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.support.ops;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -99,6 +100,30 @@ class CompensationEntryProjectionTest {
         CompensationEntryProjection.ViewerGrant forged = new CompensationEntryProjection.ViewerGrant(
                 88L, Set.of("business:compensation:view"));
         assertThrows(SecurityException.class, () -> projection.project("comp-req-1", 10L, forged, null));
+    }
+
+    @Test
+    void missingRequestIdStaysNullNeverEmptyString() {
+        CompensationEntryProjection projection = new CompensationEntryProjection(
+                topicId -> {
+                    throw new AssertionError("missing requestId must not read terms");
+                },
+                new CompensationAuditSource() {
+                    @Override
+                    public List<BusinessAuditEvent> eventsForRequest(String requestId) {
+                        throw new AssertionError("missing requestId must not read audit");
+                    }
+
+                    @Override
+                    public List<AuditTrailEntryVO> trailForTopic(Long topicId) {
+                        throw new AssertionError("missing requestId must not read trail");
+                    }
+                });
+        CompensationEntryProjection.ViewerGrant viewer = new CompensationEntryProjection.ViewerGrant(
+                88L, Set.of(ExtraApproverReachability.APPROVE_PERMISSION));
+        assertNull(projection.project(null, 10L, viewer, null));
+        assertNull(projection.project("  ", 10L, viewer, null));
+        assertNull(projection.requery("", 10L, viewer, null));
     }
 
     private static ClubEditionCompensationTerms frozenTerms() {

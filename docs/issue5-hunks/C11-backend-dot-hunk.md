@@ -24,6 +24,7 @@ Head：`628996ae99e921c81285b2e144956f25042e3aa7`（本文件若再提交会前�
 - `VersionedLocaleDisplayTest.java`
 - `ReviewResultVisibilityAdapterTest.java`
 - `C11FirstJourneyIsolationTest.java`
+- `C11AccountSwitchRestartIsolationTest.java`（换 request 不改写原 UNKNOWN；缺 requestId 保持 Java null）
 - `InMemoryOriginalEventSource.java`（隔离夹具，只装原 `BusinessAuditEvent`）
 
 未改：JWT / RBAC / 政策、生产配置、Controller / Mapper / migration、`TopicRouteRuntimeServiceImpl`、`CmsTopicServiceImpl`、`RouteEffects`、小程序、旧 `chengyin` 仓。无生产 DDL。无共享文件 hunk。
@@ -78,8 +79,8 @@ BUILD SUCCESS
 
 SHA256（生产 5 类）：
 
-- `SupportEventLocator.java` `82faef4f78ead9b8a582a3de1b57d3ffe41beeebdb86221225076ca03ddff37e`
-- `CompensationEntryProjection.java` `4374e44d0a23ef3887b9bce712c34abb320aee865e08785a0ea7383b5182c09c`
+- `SupportEventLocator.java` `50ba7223d64992a201d000db0478e4339f00e24a36509c70ef3939cf49754d14`
+- `CompensationEntryProjection.java` `b13959c8cd130cfbb04c68e6b4f996e3194385d040126ea2700cff737bc2f218`
 - `DataDeletionEvidenceTable.java` `23ff2480afea59da48b2a85bb82dffce2c3c3635e8fa81c10b674045a504de97`
 - `VersionedLocaleDisplay.java` `4476d80b0f0a4e3bfa28004f54f251d002ba97853388d236fd41914138ccb98c`
 - `ReviewResultVisibilityAdapter.java` `7764ded15db376a87ab9d8f01ff1a1265dfac1b788243e3510e18e1b05d20e57`

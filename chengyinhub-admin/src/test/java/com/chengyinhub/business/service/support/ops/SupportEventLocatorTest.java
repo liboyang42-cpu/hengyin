@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.support.ops;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -67,6 +68,17 @@ class SupportEventLocatorTest {
         SupportEventLocator.CurrentProjection projection = new SupportEventLocator.CurrentProjection(
                 "ghost", SupportEventLocator.PROJECTION_APPLIED_SUCCESS);
         assertThrows(IllegalStateException.class, () -> locator.locateByRequestId("ghost", projection));
+    }
+
+    @Test
+    void missingRequestIdStaysNullNeverEmptyString() {
+        SupportEventLocator locator = new SupportEventLocator(new InMemoryOriginalEventSource());
+        assertNull(locator.locateByRequestId(null, null));
+        assertNull(locator.locateByRequestId("  ", null));
+        assertNull(locator.requery("", null));
+        assertNull(SupportEventLocator.parseRequestId(null));
+        assertNull(SupportEventLocator.parseRequestId(""));
+        assertNotEquals("", SupportEventLocator.parseRequestId("req-unknown-1"));
     }
 
     private static BusinessAuditEvent event(String requestId, String targetType, Long targetId,

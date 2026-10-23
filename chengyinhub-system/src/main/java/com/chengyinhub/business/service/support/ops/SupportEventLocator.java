@@ -30,11 +30,15 @@ public final class SupportEventLocator {
     /**
      * 按 requestId 定位原事件。currentProjection 只作对照，不得覆盖原结果。
      *
-     * @throws IllegalArgumentException requestId 为空
-     * @throws IllegalStateException    原事件不存在
+     * Missing requestId stays Java {@code null}, never {@code ""}.
+     *
+     * @throws IllegalStateException 原事件不存在
      */
     public LocatedEvent locateByRequestId(String requestId, CurrentProjection currentProjection) {
-        String id = requireRequestId(requestId);
+        String id = parseRequestId(requestId);
+        if (id == null) {
+            return null;
+        }
         List<BusinessAuditEvent> originals = originalEvents.findByRequestId(id);
         if (originals == null || originals.isEmpty()) {
             throw new IllegalStateException("原事件不存在 requestId=" + id);
@@ -75,13 +79,22 @@ public final class SupportEventLocator {
         return locateByRequestId(found.getRequestId(), currentProjection);
     }
 
-    static String requireRequestId(String requestId) {
+    /** Missing requestId stays Java {@code null}, never {@code ""}. */
+    static String parseRequestId(String requestId) {
         if (isBlank(requestId)) {
-            throw new IllegalArgumentException("requestId 不能为空");
+            return null;
         }
         String id = requestId.trim();
         if (id.length() > 64) {
-            throw new IllegalArgumentException("requestId 长度不能超过 64");
+            return null;
+        }
+        return id;
+    }
+
+    static String requireRequestId(String requestId) {
+        String id = parseRequestId(requestId);
+        if (id == null) {
+            throw new IllegalArgumentException("requestId 不能为空");
         }
         return id;
     }
