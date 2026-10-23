@@ -43,6 +43,16 @@ public final class WebhookSameEventRetry {
         }
     }
 
+    /**
+     * 对齐 iOS {@code recoverOriginal}:解析 requestId 后只读原投递,不占账。
+     * 缺 eventId 仍 UNKNOWN_NOT_RECOVERED,不抛。
+     */
+    public RecoveredRetry recoverOriginal(String originalEventId, String appliedProjection,
+                                          WebhookDeliveryLogProducer.WebhookConfig config,
+                                          List<WebhookSsrfHopGuard.Hop> hops) {
+        return recoverUnknown(originalEventId, appliedProjection, config, hops);
+    }
+
     public boolean keepsOriginalIds(WebhookDeliveryLogProducer.DeliveryLog original,
                                     WebhookDeliveryLogProducer.DeliveryLog retried) {
         return original != null && retried != null

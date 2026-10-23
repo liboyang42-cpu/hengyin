@@ -85,6 +85,18 @@ public final class ImmutableReceiptProducer {
         return recovered;
     }
 
+    /**
+     * 对齐 iOS {@code recoverUnknown}/{@code recoverOriginal}:只读原 requestId。
+     * 未见过的 id 不 insert。缺 requestId 保持 Java null。
+     */
+    public OriginalReceipt recoverUnknown(String requestId, AppliedProjection projection) {
+        return unknownRecover(requestId, projection);
+    }
+
+    public OriginalReceipt recoverOriginal(String requestId, AppliedProjection projection) {
+        return unknownRecover(requestId, projection);
+    }
+
     public OriginalReceipt recover(String requestId, AppliedProjection projection) {
         String id = requireRequestId(requestId);
         OriginalReceipt original = store.find(id);

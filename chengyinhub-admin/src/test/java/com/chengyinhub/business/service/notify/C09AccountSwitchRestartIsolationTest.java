@@ -49,6 +49,30 @@ class C09AccountSwitchRestartIsolationTest {
     }
 
     @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyLedgerThenAcceptApplies() {
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store);
+        ImmutableReceiptProducer.OriginalReceipt blank = producer.recoverOriginal(null, null);
+        assertNull(blank.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, blank.outcome);
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.OriginalReceipt recovered = producer.recoverOriginal("evt-recover-never-c09", null);
+        assertEquals("evt-recover-never-c09", recovered.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, recovered.outcome);
+        assertNull(store.find("evt-recover-never-c09"));
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.OriginalReceipt first = producer.accept(
+                new ImmutableReceiptProducer.OriginalRequest("evt-recover-never-c09",
+                        ImmutableReceiptProducer.Kind.PIN, "{\"op\":\"pin\"}",
+                        ImmutableReceiptProducer.OUTCOME_ACCEPTED));
+        assertEquals(ImmutableReceiptProducer.OUTCOME_ACCEPTED, first.outcome);
+        assertEquals("evt-recover-never-c09", first.requestId);
+        assertEquals(1, store.size());
+        assertEquals(ImmutableReceiptProducer.OUTCOME_ACCEPTED,
+                producer.recoverOriginal("evt-recover-never-c09", null).outcome);
+    }
+
+    @Test
     void revokedDeviceDoesNotReauthorizeOtherDeviceOrAppliedProjection() {
         InMemoryNotifyFixtures.MemoryDeviceStore store = new InMemoryNotifyFixtures.MemoryDeviceStore();
         DevicePushRegistrationLifecycle lifecycle = new DevicePushRegistrationLifecycle(store);

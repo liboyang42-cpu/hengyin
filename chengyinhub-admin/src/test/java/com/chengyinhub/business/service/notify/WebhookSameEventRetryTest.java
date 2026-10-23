@@ -53,5 +53,19 @@ class WebhookSameEventRetryTest {
         assertNull(store.findByEventId("evt-ghost"));
         assertEquals(occupied, store.size());
         assertEquals(2, transport.urls.size());
+
+        WebhookSameEventRetry.RecoveredRetry originalBlank = retry.recoverOriginal(null,
+                ImmutableReceiptProducer.PROJECTION_APPLIED, config,
+                Collections.singletonList(InMemoryNotifyFixtures.publicHop()));
+        assertFalse(originalBlank.recovered());
+        assertNull(originalBlank.log);
+        assertEquals(WebhookSameEventRetry.UNKNOWN_NOT_RECOVERED, originalBlank.note);
+        WebhookSameEventRetry.RecoveredRetry originalGhost = retry.recoverOriginal("evt-recover-ghost",
+                ImmutableReceiptProducer.PROJECTION_APPLIED, config,
+                Collections.singletonList(InMemoryNotifyFixtures.publicHop()));
+        assertFalse(originalGhost.recovered());
+        assertNull(store.findByEventId("evt-recover-ghost"));
+        assertEquals(occupied, store.size());
+        assertEquals(2, transport.urls.size());
     }
 }
