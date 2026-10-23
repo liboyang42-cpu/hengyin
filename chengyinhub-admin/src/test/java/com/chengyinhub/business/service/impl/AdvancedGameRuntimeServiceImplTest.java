@@ -1914,6 +1914,41 @@ class AdvancedGameRuntimeServiceImplTest {
         verify(shared,never()).recordSharedRouteResult(any(),any(),any(),any(),any(),any(),any(),any(),any());
     }
 
+    /** C1:归零挑战按成员各存一份挑战身份(zeroChallengeAttempts);拿队友的号交作废,本人的号交过即作废,队友那份不受影响。 */
+    @Test void challengeAttemptIdsAreKeptPerMemberAndConsumedOnlyForTheSubmitter() throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
+        com.chengyinhub.business.service.IGameSessionRuntimeService shared=sharedRuntime();
+        com.fasterxml.jackson.databind.node.ObjectNode snapshot=json.createObjectNode().put("teamId",88).put("gameSessionId",50).put("authorityEpoch",3).put("runtimeInstance","game:50:challenge:one");
+        snapshot.putObject("challenge").put("instanceId","one").put("goal",10).put("progress",0);
+        when(shared.sharedRouteSnapshot(any(),any(),any(),any())).thenReturn(snapshot);
+        when(teamMapper.hasPaidRegistration(8L,2,ACTIVITY_ID)).thenReturn(1);
+        GameRuntimeSession session=runningSession(ballShakeConfig().replace("30","10"),"{\"runtimeAuthorityEpoch\":3,\"zeroChallengeInstance\":\"one\"}");
+        session.setOwnerType(GameRuntimeSession.OWNER_TEAM);session.setOwnerId(88L);session.setPlayInstanceId("game:50:challenge:one");
+        when(sessionMapper.selectAccessibleById(51L,7L)).thenReturn(session);when(sessionMapper.selectAccessibleById(51L,8L)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(shared.recordSharedZeroChallengeResult(any(),any(),any(),any(),any(),any(),org.mockito.ArgumentMatchers.anyBoolean(),any(),org.mockito.ArgumentMatchers.anyBoolean(),any()))
+                .thenReturn(json.createObjectNode().put("instanceId","one").put("goal",10).put("progress",1).put("success",false));
+        final long[] next={9_001L};
+        ReflectionTestUtils.setField(service,"attemptIdSource",(java.util.function.LongSupplier)()->next[0]++);
+        Map<String,Object> start=new LinkedHashMap<>();start.put("game","ballShake");
+        service.act(7L,51L,0,"start-7","START_CHALLENGE",start);
+        service.act(8L,51L,1,"start-8","START_CHALLENGE",start);
+        com.fasterxml.jackson.databind.JsonNode stored=json.readTree(session.getStateJson()).path("zeroChallengeAttempts");
+        assertEquals(9_001L,stored.path("7").path("ballShake").path("id").asLong());
+        assertEquals(7L,stored.path("7").path("ballShake").path("memberId").asLong());
+        assertEquals(9_002L,stored.path("8").path("ballShake").path("id").asLong());
+
+        Map<String,Object> foreign=new LinkedHashMap<>();foreign.put("hits",1);foreign.put("attemptId",9_002L);
+        assertThrows(IllegalStateException.class,()->service.act(7L,51L,2,"submit-7-foreign","SUBMIT_BALL_SHAKE",foreign));
+        Map<String,Object> own=new LinkedHashMap<>();own.put("hits",1);own.put("attemptId",9_001L);
+        service.act(7L,51L,2,"submit-7","SUBMIT_BALL_SHAKE",own);
+        stored=json.readTree(session.getStateJson()).path("zeroChallengeAttempts");
+        assertTrue(stored.path("7").path("ballShake").isMissingNode(),"本人交过即清掉本人那份");
+        assertEquals(9_002L,stored.path("8").path("ballShake").path("id").asLong(),"队友那份不受影响");
+        Map<String,Object> teammate=new LinkedHashMap<>();teammate.put("hits",1);teammate.put("attemptId",9_002L);
+        service.act(8L,51L,3,"submit-8","SUBMIT_BALL_SHAKE",teammate);
+    }
+
     @Test void challengeTimeoutWritesFreeRetryInsteadOfOrdinaryFailureEffects() throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
         com.chengyinhub.business.service.IGameSessionRuntimeService shared=sharedRuntime();
