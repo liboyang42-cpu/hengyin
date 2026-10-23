@@ -1,0 +1,10 @@
+test_green (test_assert_it_ran.T.test_green) ... ok
+test_red_when_failed (test_assert_it_ran.T.test_red_when_failed) ... ok
+test_red_when_missing (test_assert_it_ran.T.test_red_when_missing) ... ok
+test_red_when_skipped (test_assert_it_ran.T.test_red_when_skipped) ... ok
+test_red_when_zero_tests (test_assert_it_ran.T.test_red_when_zero_tests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK

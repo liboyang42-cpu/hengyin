@@ -1,0 +1,87 @@
+{
+  "all_rule_counts": {
+    "LOCKING_SELECT_CACHE": 5
+  },
+  "comparison_base_sha": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "kind": "LOCAL_STATIC_DIAGNOSTIC_NOT_TRUSTED_CI",
+  "locking_findings": [
+    {
+      "detail": "explicit FOR UPDATE requires useCache=false AND flushCache=true",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/ClubLeadMapper.xml#lockClubOwner",
+      "rule": "LOCKING_SELECT_CACHE",
+      "statement": {
+        "analysis": "LOCKING_SELECT",
+        "body_sha256": "0d6a6e11aa562487ba3b96a9e923abd329065ce3b24a7e0f8d051bf65c52110d",
+        "flushCache": null,
+        "id": "lockClubOwner",
+        "namespace": "com.chengyinhub.business.mapper.ClubLeadMapper",
+        "statement_sha256": "be62c27d3d14f5d5fca3d3f4d1c524c4797e7d1bdd97544d92b27cc3220cfd66",
+        "unknown": [],
+        "useCache": null
+      }
+    },
+    {
+      "detail": "explicit FOR UPDATE requires useCache=false AND flushCache=true",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/ClubLeadMapper.xml#selectByActivityForUpdate",
+      "rule": "LOCKING_SELECT_CACHE",
+      "statement": {
+        "analysis": "LOCKING_SELECT",
+        "body_sha256": "25e27dddb564c68daf0f766185a22881ce48e8117b42cf7863acd349ec6a440b",
+        "flushCache": null,
+        "id": "selectByActivityForUpdate",
+        "namespace": "com.chengyinhub.business.mapper.ClubLeadMapper",
+        "statement_sha256": "9b280a9de0ff5600918579308771b07eba10b44501274dd7689f94e8ec02a4b7",
+        "unknown": [],
+        "useCache": null
+      }
+    },
+    {
+      "detail": "explicit FOR UPDATE requires useCache=false AND flushCache=true",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementEvidenceMapper.xml#selectCashBasisBlockingRefundIdsForUpdate",
+      "rule": "LOCKING_SELECT_CACHE",
+      "statement": {
+        "analysis": "LOCKING_SELECT",
+        "body_sha256": "0ff986f1fe17940f675c0e22d9e3a02e46de94fadfb2b6410abb5d005adfb217",
+        "flushCache": null,
+        "id": "selectCashBasisBlockingRefundIdsForUpdate",
+        "namespace": "com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper",
+        "statement_sha256": "b7b8c827ec736386438ab3462f5d4c5def0c7f0403079b2d406378533a19fd4c",
+        "unknown": [],
+        "useCache": null
+      }
+    },
+    {
+      "detail": "explicit FOR UPDATE requires useCache=false AND flushCache=true",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#selectByKeyForUpdate",
+      "rule": "LOCKING_SELECT_CACHE",
+      "statement": {
+        "analysis": "LOCKING_SELECT",
+        "body_sha256": "cf1ebb792aa5d709bdad37fb07c10a4ca1098dc29121392f21b5062929ecb7ab",
+        "flushCache": null,
+        "id": "selectByKeyForUpdate",
+        "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+        "statement_sha256": "352c623fbf7d430bb2ad1849bcb116b779d8e61bdcb1d3a94d3f2e14c69fdc26",
+        "unknown": [],
+        "useCache": null
+      }
+    },
+    {
+      "detail": "explicit FOR UPDATE requires useCache=false AND flushCache=true",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml#selectForUpdate",
+      "rule": "LOCKING_SELECT_CACHE",
+      "statement": {
+        "analysis": "LOCKING_SELECT",
+        "body_sha256": "7dab2806f992351f38e058c4e40637dfb23d99300beae5d1f70686101de77c33",
+        "flushCache": null,
+        "id": "selectForUpdate",
+        "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+        "statement_sha256": "9b03076585de6214305ffbdff191be4a8ab4b91d51c9d8f257f6792e79948a9c",
+        "unknown": [],
+        "useCache": null
+      }
+    }
+  ],
+  "locking_unknown_review_count": 2,
+  "note": "This is deliberately a local public2ec diagnostic; not a full source command/CI event/acceptance proof.",
+  "source_sha": "2631846bd618df7afe6b341351ea694c712bc40b"
+}

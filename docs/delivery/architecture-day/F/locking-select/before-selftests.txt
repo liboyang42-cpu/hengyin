@@ -1,0 +1,238 @@
+test_both_explicit_flags_are_green (test_locking_select.LockingSelectTest.test_both_explicit_flags_are_green) ... ok
+test_candidate_cannot_edit_proposal (test_locking_select.LockingSelectTest.test_candidate_cannot_edit_proposal) ... FAIL
+test_case_comments_and_terminal_lock_options_are_recognized (test_locking_select.LockingSelectTest.test_case_comments_and_terminal_lock_options_are_recognized) ...
+  test_case_comments_and_terminal_lock_options_are_recognized (test_locking_select.LockingSelectTest.test_case_comments_and_terminal_lock_options_are_recognized) (suffix='') ... FAIL
+  test_case_comments_and_terminal_lock_options_are_recognized (test_locking_select.LockingSelectTest.test_case_comments_and_terminal_lock_options_are_recognized) (suffix=' NOWAIT') ... FAIL
+  test_case_comments_and_terminal_lock_options_are_recognized (test_locking_select.LockingSelectTest.test_case_comments_and_terminal_lock_options_are_recognized) (suffix=' SKIP LOCKED') ... FAIL
+test_deleted_legacy_then_reintroduced_is_red (test_locking_select.LockingSelectTest.test_deleted_legacy_then_reintroduced_is_red) ... FAIL
+test_disabling_only_l2_is_red (test_locking_select.LockingSelectTest.test_disabling_only_l2_is_red) ... FAIL
+test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) ...
+  test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql='select id from orders /*! for update */') ... FAIL
+  test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql='select id from orders; select id from orders for update') ... FAIL
+  test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql='select id from orders for update trailing_unknown') ... FAIL
+  test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql="select 'unterminated for update") ... FAIL
+  test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql='select id from orders # for update') ... FAIL
+test_fixed_legacy_then_flags_removed_is_red (test_locking_select.LockingSelectTest.test_fixed_legacy_then_flags_removed_is_red) ... FAIL
+test_flush_only_is_red (test_locking_select.LockingSelectTest.test_flush_only_is_red) ... FAIL
+test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) ...
+  test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) (sql='select <include refid="columns"/> from orders for update') ... FAIL
+  test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) (sql='select id from orders <if test="id != null">where id=#{id}</if> for update') ... FAIL
+  test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) (sql='select id from ${table} for update') ... FAIL
+  test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) (sql='<include refid="unknownLock"/>') ... FAIL
+test_missing_both_flags_is_red (test_locking_select.LockingSelectTest.test_missing_both_flags_is_red) ... FAIL
+test_modified_legacy_lock_requires_flags (test_locking_select.LockingSelectTest.test_modified_legacy_lock_requires_flags) ... FAIL
+test_proposal_drift_in_trusted_checkout_cannot_self_accept (test_locking_select.LockingSelectTest.test_proposal_drift_in_trusted_checkout_cannot_self_accept) ... ERROR
+test_proposal_is_exact_identity_and_canonical_body_not_candidate_exemption (test_locking_select.LockingSelectTest.test_proposal_is_exact_identity_and_canonical_body_not_candidate_exemption) ... ERROR
+test_quoted_or_commented_for_update_is_not_a_lock (test_locking_select.LockingSelectTest.test_quoted_or_commented_for_update_is_not_a_lock) ... ok
+test_same_mapper_other_statement_edit_does_not_reflag_legacy_lock (test_locking_select.LockingSelectTest.test_same_mapper_other_statement_edit_does_not_reflag_legacy_lock) ... ok
+test_unchanged_legacy_lock_does_not_block_unrelated_pr (test_locking_select.LockingSelectTest.test_unchanged_legacy_lock_does_not_block_unrelated_pr) ... ok
+test_wrong_or_substituted_flags_are_red (test_locking_select.LockingSelectTest.test_wrong_or_substituted_flags_are_red) ...
+  test_wrong_or_substituted_flags_are_red (test_locking_select.LockingSelectTest.test_wrong_or_substituted_flags_are_red) (attrs='useCache="true" flushCache="true"') ... FAIL
+  test_wrong_or_substituted_flags_are_red (test_locking_select.LockingSelectTest.test_wrong_or_substituted_flags_are_red) (attrs='useCache="false" flushCache="false"') ... FAIL
+  test_wrong_or_substituted_flags_are_red (test_locking_select.LockingSelectTest.test_wrong_or_substituted_flags_are_red) (attrs='useCache="${cache}" flushCache="true"') ... FAIL
+
+======================================================================
+ERROR: test_proposal_drift_in_trusted_checkout_cannot_self_accept (test_locking_select.LockingSelectTest.test_proposal_drift_in_trusted_checkout_cannot_self_accept)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 142, in test_proposal_drift_in_trusted_checkout_cannot_self_accept
+    data = json.loads(path.read_text())
+                      ^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmp4hiduyre/.git/trusted/ci/architecture/locking-select-baseline.proposal.json'
+
+======================================================================
+ERROR: test_proposal_is_exact_identity_and_canonical_body_not_candidate_exemption (test_locking_select.LockingSelectTest.test_proposal_is_exact_identity_and_canonical_body_not_candidate_exemption)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 125, in test_proposal_is_exact_identity_and_canonical_body_not_candidate_exemption
+    proposal = gate.locking_debt_proposal(old, details)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'architecture_gate' has no attribute 'locking_debt_proposal'
+
+======================================================================
+FAIL: test_candidate_cannot_edit_proposal (test_locking_select.LockingSelectTest.test_candidate_cannot_edit_proposal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 151, in test_candidate_cannot_edit_proposal
+    with self.assertRaisesRegex(gate.GateError, "POLICY_CHANGE"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_case_comments_and_terminal_lock_options_are_recognized (test_locking_select.LockingSelectTest.test_case_comments_and_terminal_lock_options_are_recognized) (suffix='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 54, in test_case_comments_and_terminal_lock_options_are_recognized
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_case_comments_and_terminal_lock_options_are_recognized (test_locking_select.LockingSelectTest.test_case_comments_and_terminal_lock_options_are_recognized) (suffix=' NOWAIT')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 54, in test_case_comments_and_terminal_lock_options_are_recognized
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_case_comments_and_terminal_lock_options_are_recognized (test_locking_select.LockingSelectTest.test_case_comments_and_terminal_lock_options_are_recognized) (suffix=' SKIP LOCKED')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 54, in test_case_comments_and_terminal_lock_options_are_recognized
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_deleted_legacy_then_reintroduced_is_red (test_locking_select.LockingSelectTest.test_deleted_legacy_then_reintroduced_is_red)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 110, in test_deleted_legacy_then_reintroduced_is_red
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_disabling_only_l2_is_red (test_locking_select.LockingSelectTest.test_disabling_only_l2_is_red)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 32, in test_disabling_only_l2_is_red
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql='select id from orders /*! for update */')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 80, in test_executable_comments_and_unsupported_shapes_are_unknown
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql='select id from orders; select id from orders for update')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 80, in test_executable_comments_and_unsupported_shapes_are_unknown
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql='select id from orders for update trailing_unknown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 80, in test_executable_comments_and_unsupported_shapes_are_unknown
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql="select 'unterminated for update")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 80, in test_executable_comments_and_unsupported_shapes_are_unknown
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_executable_comments_and_unsupported_shapes_are_unknown (test_locking_select.LockingSelectTest.test_executable_comments_and_unsupported_shapes_are_unknown) (sql='select id from orders # for update')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 80, in test_executable_comments_and_unsupported_shapes_are_unknown
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_fixed_legacy_then_flags_removed_is_red (test_locking_select.LockingSelectTest.test_fixed_legacy_then_flags_removed_is_red)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 119, in test_fixed_legacy_then_flags_removed_is_red
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_flush_only_is_red (test_locking_select.LockingSelectTest.test_flush_only_is_red)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 36, in test_flush_only_is_red
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) (sql='select <include refid="columns"/> from orders for update')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 71, in test_include_and_dynamic_sql_are_unknown_not_blocked
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) (sql='select id from orders <if test="id != null">where id=#{id}</if> for update')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 71, in test_include_and_dynamic_sql_are_unknown_not_blocked
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) (sql='select id from ${table} for update')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 71, in test_include_and_dynamic_sql_are_unknown_not_blocked
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_include_and_dynamic_sql_are_unknown_not_blocked (test_locking_select.LockingSelectTest.test_include_and_dynamic_sql_are_unknown_not_blocked) (sql='<include refid="unknownLock"/>')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 71, in test_include_and_dynamic_sql_are_unknown_not_blocked
+    self.assertTrue(any(r["reason"] == "UNKNOWN_LOCKING_SELECT" for r in self.review))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_missing_both_flags_is_red (test_locking_select.LockingSelectTest.test_missing_both_flags_is_red)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 28, in test_missing_both_flags_is_red
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_modified_legacy_lock_requires_flags (test_locking_select.LockingSelectTest.test_modified_legacy_lock_requires_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 94, in test_modified_legacy_lock_requires_flags
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_wrong_or_substituted_flags_are_red (test_locking_select.LockingSelectTest.test_wrong_or_substituted_flags_are_red) (attrs='useCache="true" flushCache="true"')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 48, in test_wrong_or_substituted_flags_are_red
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_wrong_or_substituted_flags_are_red (test_locking_select.LockingSelectTest.test_wrong_or_substituted_flags_are_red) (attrs='useCache="false" flushCache="false"')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 48, in test_wrong_or_substituted_flags_are_red
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+======================================================================
+FAIL: test_wrong_or_substituted_flags_are_red (test_locking_select.LockingSelectTest.test_wrong_or_substituted_flags_are_red) (attrs='useCache="${cache}" flushCache="true"')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-locking-select/ci/architecture/test_locking_select.py", line 48, in test_wrong_or_substituted_flags_are_red
+    self.assertIn("LOCKING_SELECT_CACHE", self.rules())
+AssertionError: 'LOCKING_SELECT_CACHE' not found in []
+
+----------------------------------------------------------------------
+Ran 17 tests in 1.162s
+
+FAILED (failures=22, errors=2)

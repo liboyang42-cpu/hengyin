@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import functools
 import hashlib
 import importlib.util
 import json
@@ -86,6 +87,70 @@ def xml(data):
         return ET.fromstring(data)
     except ET.ParseError as error:
         raise GateError("invalid XML: %s" % error) from error
+
+
+@functools.lru_cache(maxsize=1)
+def sql_splitter():
+    # The existing project scanner owns quoting/comments; no second SQL lexer.
+    spec = importlib.util.spec_from_file_location("architecture_sql_splitter", SQL_SPLITTER_PATH)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def locking_select(node, namespace):
+    """Only a static, single SELECT with an explicit terminal FOR UPDATE.
+
+    Attribute safety is not a complete fresh-read or SQL correctness proof.
+    Includes/dynamic SQL stay UNKNOWN even if their expanded text looks static.
+    """
+    # C14N normalizes XML attribute order/line endings, preserving SQL literal
+    # whitespace. Exclude the outside tail: it belongs to the next XML sibling.
+    clean = ET.Element(node.tag, node.attrib)
+    clean.text = node.text
+    clean.extend(node)
+    canonical = ET.tostring(clean, encoding="unicode")
+    record = {"namespace": namespace, "id": node.get("id"),
+              "body_sha256": digest(ET.canonicalize(canonical, exclude_attrs={"id", "useCache", "flushCache"}).encode()),
+              "statement_sha256": digest(ET.canonicalize(canonical).encode()),
+              "useCache": node.get("useCache"), "flushCache": node.get("flushCache")}
+    text = node.text or ""
+    reasons = []
+    if list(node):
+        reasons.append("include_or_dynamic_xml")
+    if "${" in text:
+        reasons.append("text_substitution")
+    # Replace only MyBatis value placeholders before using the shared scanner,
+    # whose documented '#' line-comment limitation otherwise applies here.
+    syntax_input = re.sub(r"#\{[^{}]*\}", "?", text)
+    if "#" in syntax_input or "/*!" in text or "/*+" in text:
+        reasons.append("unsupported_sql_token_or_executable_comment")
+    splitter = sql_splitter()
+    if splitter.unterminated_token(syntax_input) or splitter.delimiter_error(syntax_input):
+        reasons.append("unterminated_or_delimiter_sql")
+    code = splitter.split_code_statements_with_delimiters(syntax_input)
+    syntax = code[0][0] if len(code) == 1 else ""
+    if len(code) != 1 or not re.match(r"\s*select\b", syntax, re.I):
+        reasons.append("not_single_literal_select")
+    lock = re.search(r"\bfor\s+update\b", syntax, re.I)
+    if lock and not re.search(r"\bfor\s+update(?:\s+nowait|\s+skip\s+locked)?\s*$", syntax, re.I):
+        reasons.append("unsupported_lock_suffix")
+    record.update(analysis="UNKNOWN" if reasons else "LOCKING_SELECT" if lock else "NOT_LOCKING_SELECT",
+                  unknown=sorted(set(reasons)))
+    return record
+
+
+def locking_debt_proposal(frozen, details):
+    """Public-base observation for human approval, NEVER an exemption list."""
+    return {"schema": 1, "base_sha": frozen["base_sha"],
+            "status": "PROPOSAL_NOT_APPROVED_NOT_AN_ALLOWLIST",
+            "normalization": "XML C14N; SQL whitespace/literals preserved; namespace/id explicit",
+            "statements": {key: details[key]["locking_select"]
+                           for key, statement in sorted(frozen["statements"].items())
+                           if statement["kind"] == "select"
+                           and details[key]["locking_select"]["analysis"] == "LOCKING_SELECT"
+                           and (details[key]["locking_select"]["useCache"] != "false"
+                                or details[key]["locking_select"]["flushCache"] != "true")}}
 
 
 def sql_shape(node, fragments, namespace, details=None):
@@ -179,6 +244,8 @@ def inventory(root, ref, sql_details=None):
             shape.update({"kind": node.tag, "owner": owner})
             statements[path + "#" + name] = shape
             if sql_details is not None:
+                if node.tag == "select":
+                    details["locking_select"] = locking_select(node, namespace)
                 sql_details[path + "#" + name] = details
             if node.tag == "select":
                 continue
@@ -224,9 +291,7 @@ def scope_violation(kind, details):
     if kind not in {"update", "delete"} or dynamic:
         return None
     # Reuse the project's existing quote/comment-aware SQL scanner.
-    spec = importlib.util.spec_from_file_location("architecture_sql_splitter", SQL_SPLITTER_PATH)
-    splitter = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(splitter)
+    splitter = sql_splitter()
     text = details["text"]
     if splitter.unterminated_token(text) or splitter.delimiter_error(text) or "/*!" in text:
         return None
@@ -277,6 +342,13 @@ def static_findings(base, current, changed, sql_details, base_details):
         details = sql_details[key]
         kind = statement["kind"]
         if kind == "select":
+            lock = details["locking_select"]
+            if lock["analysis"] == "UNKNOWN":
+                review.append({"key": key, "reason": "UNKNOWN_LOCKING_SELECT", "detail": lock})
+            elif lock["analysis"] == "LOCKING_SELECT" and (lock["useCache"] != "false" or lock["flushCache"] != "true"):
+                blockers.append({"rule": "LOCKING_SELECT_CACHE", "key": key,
+                                 "detail": "explicit FOR UPDATE requires useCache=false AND flushCache=true",
+                                 "statement": lock})
             mutation = re.match(r"\s*(insert|replace|update|delete)\b", details["text"], re.I)
             kind = mutation.group(1).lower() if mutation else "select"
             kind = "insert" if kind == "replace" else kind
@@ -400,14 +472,18 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
         raise GateError("candidate checkout is dirty; commit/isolate changes before verification")
     git(root, "merge-base", "--is-ancestor", BASE, candidate)
     comparison_base(root, candidate, compare_base, context)
-    frozen = inventory(root, BASE)
+    frozen_details = {}
+    frozen = inventory(root, BASE, frozen_details)
     if baseline_path.read_bytes() != encode_inventory(frozen):
         raise GateError("BASELINE_LAUNDERING: baseline must exactly reproduce pinned public git blobs")
+    proposal = HERE / "locking-select-baseline.proposal.json"
+    if proposal.read_bytes() != encode_inventory(locking_debt_proposal(frozen, frozen_details)):
+        raise GateError("LOCKING_BASELINE_LAUNDERING: proposal must exactly reproduce pinned public git blobs")
     # Protect only executable verifier and frozen exceptions. A documentation or
     # test-file edit is not itself an architecture violation. CI executes trusted
     # selftests, not arbitrary additional files supplied by the candidate.
     names = set(tree(root, candidate))
-    for filename in ("gate.py", "baseline.json"):
+    for filename in ("gate.py", "baseline.json", "locking-select-baseline.proposal.json"):
         relative = "ci/architecture/" + filename
         if relative not in names or blob(root, candidate, relative) != (HERE / filename).read_bytes():
             raise GateError("POLICY_CHANGE: candidate changed trusted policy: " + relative)
@@ -422,6 +498,7 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
             "verdict": "BLOCKED" if blockers else "PASS_WITH_REVIEW_ITEMS" if review else "PASS",
             "findings": blockers, "review_items": review, "changed_files": sorted(changed),
             "not_proven": ["Java/SQL authorization semantics", "transaction atomicity",
+                           "complete fresh-read semantics (RR current SQL/transactions still require tests)",
                            "persistent intent/recovery", "Java or real storage test execution"]}
 
 
