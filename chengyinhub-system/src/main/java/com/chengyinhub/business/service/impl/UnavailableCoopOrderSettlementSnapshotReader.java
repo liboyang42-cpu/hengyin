@@ -3,10 +3,10 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
 import com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader;
-import org.springframework.stereotype.Service;
 
 /**
- * 返回 null 使写侧 fail-closed，而不是从 live CoopOrder 猜。
+ * 显式不可用的负控实现，不再注册为运行时 bean；实际接线由 FrozenCoopOrderSettlementSnapshotReader 提供。
+ * 以下保留替换前的历史排查记录。
  *
  * <p><b>★2026-09-11:接通过一次,又撤回了。把结论留在这里,免得下一轮从头再查一遍。</b>
  *
@@ -41,7 +41,6 @@ import org.springframework.stereotype.Service;
  * <p>⇒ 结算要真跑通,得连着改分账判据(动钱的路),不是把这个 seam 接上就完事。
  * 那一轮要单独做,带真库端到端用例:<b>断言「落了一行且金额不为零」,而不是断言字段搬运对了。</b>
  */
-@Service
 public class UnavailableCoopOrderSettlementSnapshotReader implements ICoopOrderSettlementSnapshotReader {
     @Override
     public CoopSettlementSnapshot read(CoopOrder order) { return null; }

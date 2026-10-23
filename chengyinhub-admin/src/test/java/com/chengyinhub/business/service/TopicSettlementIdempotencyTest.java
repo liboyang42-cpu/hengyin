@@ -64,6 +64,7 @@ class TopicSettlementIdempotencyTest {
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
+        ReflectionTestUtils.setField(svc, "coopSettlementEvidenceMapper", mock(com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper.class));
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "settlementRuleService", settlementRuleService);
         ReflectionTestUtils.setField(svc, "transactionManager", transactionManager);

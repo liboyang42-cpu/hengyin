@@ -148,6 +148,9 @@ class CoopSettlementContractTest {
             String compensationMode, String fixedFee, String shareRate) {
         CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
         snapshot.setOrderId(701L);
+        snapshot.setTopicId(11L);
+        snapshot.setFulfillmentStartInclusive(new Date(0));
+        snapshot.setFulfillmentEndExclusive(CUTOFF);
         snapshot.setCommercialContextType("TOPIC_EDITION");
         snapshot.setCommercialContextId(11L);
         snapshot.setBeneficiaryRole(role);
@@ -168,6 +171,11 @@ class CoopSettlementContractTest {
             long evidenceAt, boolean scan, boolean guided) {
         CoopSettlementCandidate c = new CoopSettlementCandidate();
         c.setRegistrationId(id);
+        c.setSourceTopicId(11L);
+        c.setOrderQuantity(1L);
+        c.setTicketOwnerMatches(true);
+        c.setFulfillmentStartInclusive(new Date(0));
+        c.setFulfillmentEndExclusive(CUTOFF);
         c.setOwnerType(1L);
         c.setOwnerId(11L);
         c.setRegistrationStatus(2);
