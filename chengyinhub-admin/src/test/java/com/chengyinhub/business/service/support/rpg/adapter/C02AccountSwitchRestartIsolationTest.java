@@ -158,4 +158,44 @@ class C02AccountSwitchRestartIsolationTest {
         assertEquals("c02-growth-never", replay.get("requestId"));
         assertEquals(1, run.getThemeRuntime().path("sources").size());
     }
+
+    @Test
+    void emptyEffectsOfPresentNeverSeenIdDoesNotOccupyStorySourceThenUniqueWriteApplies() throws Exception {
+        TopicRouteEngine.State run = state();
+        enableInventory(run);
+        RpgAdapterSpec spec = new RpgAdapterSpec();
+        spec.setResources(new RpgAdapterSpec.Resources());
+        spec.getResources().setSuccessEffects(JSON.readTree("[]"));
+        RpgAdapterContext unseen = ctx(rules(null), run,
+                JSON.readTree("{\"enabled\":true,\"checkId\":\"ask_arong\",\"tier\":\"easy\"}"),
+                spec, BEFORE, dice(12));
+        unseen.setWriteResources(true);
+        unseen.setOriginalRequestId("c02-resource-never");
+        PlayCheckReceipt receipt = new PlayCheckReceipt();
+        receipt.setSuccess(Boolean.TRUE);
+        unseen.setReceipt(receipt);
+
+        ResourceSourceAdapter adapter = new ResourceSourceAdapter();
+        Map<String, Object> empty = adapter.writeOriginal(unseen);
+        assertEquals(Boolean.FALSE, empty.get("applied"));
+        assertEquals(Boolean.TRUE, empty.get("emptyEffects"));
+        assertEquals("c02-resource-never", empty.get("requestId"));
+        assertFalse(run.getThemeRuntime().path("sources").has("story:1:clue_page"),
+                "空效果观察不得占 story:1:clue_page");
+        assertTrue(run.getStoryGrants().isEmpty());
+
+        spec.getResources().setSuccessEffects(JSON.readTree(
+                "[{\"op\":\"ADD_ITEM\",\"itemId\":\"clue_page\",\"quantity\":1}]"));
+        Map<String, Object> first = adapter.writeOriginal(unseen);
+        assertEquals(Boolean.TRUE, first.get("applied"));
+        assertEquals("c02-resource-never", first.get("requestId"));
+        assertEquals(1, ((Number) first.get("sourcesDelta")).intValue());
+        assertTrue(run.getThemeRuntime().path("sources").path("story:1:clue_page").asBoolean());
+
+        Map<String, Object> replay = adapter.writeOriginal(unseen);
+        assertEquals(Boolean.TRUE, replay.get("applied"));
+        assertEquals("c02-resource-never", replay.get("requestId"));
+        assertEquals(0, ((Number) replay.get("sourcesDelta")).intValue(), "同一 originalRequestId 不二发物资");
+        assertEquals(1, run.getThemeRuntime().path("sources").size());
+    }
 }
