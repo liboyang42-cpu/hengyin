@@ -345,6 +345,15 @@
       "classes": [
         "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT"
       ]
+    },
+    "architecture-day-w19-owner-notice": {
+      "lineage": "D2ed owner notification durable original intent on root reviewed assembly",
+      "registered_source": "08b3feaea460533112da40991254b7777bf19bd3",
+      "note": "29 exact ordinary@Test cases, new21 real owner intent + original8 supply regression;11 new unit and old10/10+8 controllers in full backend CI. Actual source, zero-skip XML and independent cleanup required.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT",
+        "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -1061,6 +1070,24 @@
       ],
       "gates": {},
       "note": "Real PlayTeam quit transaction + IM service/mappers on7 tables, then all existing permission entry variants with independent full-table readback. Controlled external boundaries; not strict in-flight revocation/HTTP JWT."
+    },
+    "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT": {
+      "tests": 21,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "note": "Real offer/application and IM intent/consumer SQL with explicit topic/chapter/audit fixtures; original event atomic rollback, recovery/duplicate/ACK-loss/frozen payload. WX mock only, not full review/financial/Quartz/process-kill acceptance."
+    },
+    "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT": {
+      "tests": 8,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Original8 supply/card/terms assertions retained; only new owner notification dependencies explicitly wired as boundary mocks. Not owner intent persistence proof."
     }
   }
 }

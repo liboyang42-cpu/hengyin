@@ -103,7 +103,8 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-state-recovery": 50,
                     "architecture-day-runtime-governance": 36,
                     "architecture-day-registration-write": 109,
-                    "architecture-day-im-revocation": 2}
+                    "architecture-day-im-revocation": 2,
+                    "architecture-day-w19-owner-notice": 29}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -143,6 +144,21 @@ class RegistryContractTest(unittest.TestCase):
         revoked = "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT"
         self.assertEqual([revoked], reg["batches"]["architecture-day-im-revocation"]["classes"])
         expected[revoked] = (2, {})
+        for fqcn, (count, gates) in expected.items():
+            self.assertEqual(count, reg["classes"][fqcn]["tests"])
+            self.assertEqual(gates, reg["classes"][fqcn]["gates"])
+            facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+            self.assertEqual([], problems)
+            self.assertEqual(count, facts["declared_tests"])
+            self.assertEqual([], facts["nested"])
+
+    def test_w19_owner_notification_requires_new_intent_and_original_supply_regression(self):
+        reg = registry()
+        expected = {
+            "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT": (21, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
+            "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT": (8, {}),
+        }
+        self.assertEqual(list(expected), reg["batches"]["architecture-day-w19-owner-notice"]["classes"])
         for fqcn, (count, gates) in expected.items():
             self.assertEqual(count, reg["classes"][fqcn]["tests"])
             self.assertEqual(gates, reg["classes"][fqcn]["gates"])
