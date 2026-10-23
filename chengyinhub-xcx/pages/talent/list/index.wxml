@@ -92,7 +92,7 @@
           <view class="club-member-info">
             <view class="club-member-name">{{item.nickname || '城瘾玩家'}}</view>
             <view class="club-member-meta" wx:if="{{item.isOwner}}">主理人</view>
-            <view class="club-member-meta" wx:else>加入时间 {{item.joinTime || '待确认'}}</view>
+            <view class="club-member-meta" wx:else>加入时间 {{item.joinTime || '—'}}</view>
           </view>
           <view wx:if="{{!item.isOwner}}" class="club-member-remove" catchtap="removeClubMember" data-member-id="{{item.memberId}}" data-member-name="{{item.nickname || '这位成员'}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="移除{{item.nickname || '该成员'}}">移除</view>
         </view>

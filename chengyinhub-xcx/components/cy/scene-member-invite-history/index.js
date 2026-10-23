@@ -114,7 +114,7 @@ function buildGroups(records, rewards, rewardReady) {
       statusText: earned
         ? '首购奖励已到账' + (!recordTime && rewardTime ? ' · ' + rewardTime : '')
         : (rewardReady ? '已加入 · 首购待完成' : '已加入 · 奖励发放中'),
-      rewardText: earned ? '+' + rewardValue + ' 积分' : (rewardReady ? '待解锁' : '待同步'),
+      rewardText: earned ? '+' + rewardValue + ' 积分' : (rewardReady ? '待解锁' : '发放中'),
     })
   })
   groups.forEach((group) => {
