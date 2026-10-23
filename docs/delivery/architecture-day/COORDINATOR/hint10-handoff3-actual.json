@@ -1,0 +1,46 @@
+{
+  "run": 40039899867,
+  "source_sha": "ad7e59fbf6a20e85e741318afe654c5411bf1101",
+  "verified_business_subset_tests": 13,
+  "classes": [
+    {
+      "class": "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "8d876f9de39bc05eebde72c432a53f8a5b3b3d4bdc0345a178c802f1007cadd4",
+      "receipt_sha256": "ae26add59d71d0d831cdb4e83153443e49f9372996a7fb4e27f2ba69dd8d7e2c",
+      "case_names": [
+        "dequeuedOldEpochCallbackCannotStartAfterTheSameCoordinatorReacquiresLeadership",
+        "oldLeaderPausedAfterFirstOwnershipCheckCannotRunAfterLateTaskLockAcquisition",
+        "inFlightTaskSessionSurvivesLeaderDisconnectAndBlocksSameCanonicalSuccessor"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "18b42fbdcf93c3de2e92028f92c25063d61a09d749398dbb468e4ef3f396fd8e",
+      "receipt_sha256": "dd2074f1827d42b7b737e61b6d8e141f2c0a7960189d1d3b6179bc03eb148ae3",
+      "case_names": [
+        "balanceLostAfterPrecheckRollsBackHintLedgerButRetainsOtherCommittedSpend",
+        "twoConnectionsSerializeOriginalRegistrationAndDebitOnce",
+        "disabledRuleStillRequiresEntitlementAndWritesNoPoints",
+        "legalActivityUsesOneRealDebitAndOriginalEventIdentity",
+        "unauthorizedOrWrongScopeNeverReturnsHintsOrChangesEconomicState",
+        "ledgerWriteThenThrowRollsBackRealRowAndLeavesDebitUntouched",
+        "duplicateAfterLostReplyAndReconstructionKeepsOneDebitAcrossAuthorizedScopes",
+        "debitWriteThenThrowRollsBackBothRealBalanceAndLedgerBeforeOriginalRetry",
+        "legalSelfPlayUsesOneRealDebitAndOriginalEventIdentity",
+        "revokedRegistrationBlocksPreviouslyPurchasedHintWithoutChangingItsOriginalLedger"
+      ]
+    }
+  ],
+  "batch_result": "FAIL: original scheduler3 cleanup LEFTOVER; not full16 accepted",
+  "scope": "Hint current controller real entitlement/ledger/debit10 and scheduler new3 actual coordination/session races; no application extraction/HTTP/strict multi-process/DR evidence."
+}

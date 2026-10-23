@@ -28,6 +28,11 @@ import static org.mockito.Mockito.*;
 public final class AdvancedActionTestFixtures {
     private AdvancedActionTestFixtures() { }
 
+    private static void assertWritablePhotoTransaction() {
+        assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+        assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+    }
+
     /** Check the exact fresh-refusal contract through the production exception response mapper. */
     public static void assertPhotoNotExecuted(Executable command, String message) {
         ServiceException refusal = assertThrowsExactly(ServiceException.class, command);
@@ -59,23 +64,30 @@ public final class AdvancedActionTestFixtures {
             Function<PhotoCheckIntentCommand, PhotoCheckVisionResult> result) {
         GameRuntimeSessionMapper sessions = (GameRuntimeSessionMapper) ReflectionTestUtils.getField(service, "sessionMapper");
         PlayAttemptLogMapper attempts = (PlayAttemptLogMapper) ReflectionTestUtils.getField(service, "attemptMapper");
-        when(sessions.selectAccessibleByIdForUpdate(anyLong(), anyLong()))
-                .thenAnswer(i -> sessions.selectAccessibleById(i.getArgument(0), i.getArgument(1)));
-        when(sessions.selectByIdForUpdate(anyLong())).thenAnswer(i -> {
+        doAnswer(i -> {
+            assertWritablePhotoTransaction();
+            return sessions.selectAccessibleById(i.getArgument(0), i.getArgument(1));
+        }).when(sessions).selectAccessibleByIdForUpdate(anyLong(), anyLong());
+        doAnswer(i -> {
+            assertWritablePhotoTransaction();
             Long id = i.getArgument(0), actor = null;
             for (org.mockito.invocation.Invocation read : mockingDetails(sessions).getInvocations()) {
                 if ("selectAccessibleById".equals(read.getMethod().getName()) && id.equals(read.getArgument(0))) actor = read.getArgument(1);
             }
             if (actor == null) throw new AssertionError("Photo fixture must declare original read authorization");
             return sessions.selectAccessibleById(id, actor);
-        });
+        }).when(sessions).selectByIdForUpdate(anyLong());
         Map<String, PlayAttemptLog> receipts = new LinkedHashMap<>();
-        when(attempts.selectByIdempotencyKey(anyString())).thenAnswer(i -> receipts.get(i.getArgument(0)));
-        when(attempts.selectByIdempotencyKeyForUpdate(anyString())).thenAnswer(i -> receipts.get(i.getArgument(0)));
-        when(attempts.insertPlayAttemptLog(any())).thenAnswer(i -> {
+        doAnswer(i -> receipts.get(i.getArgument(0))).when(attempts).selectByIdempotencyKey(anyString());
+        doAnswer(i -> {
+            assertWritablePhotoTransaction();
+            return receipts.get(i.getArgument(0));
+        }).when(attempts).selectByIdempotencyKeyForUpdate(anyString());
+        doAnswer(i -> {
+            assertWritablePhotoTransaction();
             PlayAttemptLog row = i.getArgument(0); row.setId(100L + receipts.size());
             receipts.put(row.getIdempotencyKey(), row); return 1;
-        });
+        }).when(attempts).insertPlayAttemptLog(any());
         com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
         when(media.processingUrl(anyString(), anyLong(), eq("IMAGE"))).thenAnswer(i -> i.getArgument(0));
         ReflectionTestUtils.setField(service, "mediaReferences", media);

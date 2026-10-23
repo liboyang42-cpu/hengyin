@@ -273,7 +273,7 @@ class PlayKitPhotoCheckRuntimeTest {
         clearInvocations(quota, visionService, photoIntents, sessionMapper, attemptMapper);
         AdvancedActionTestFixtures.assertPhotoNotExecuted(
                 () -> service.act(MEMBER_ID, SESSION_ID, session.getVersion(), "photo-score-3",
-                        "SUBMIT_PHOTO_CHECK", onlyScore), "照片地址不能为空且最多512字");
+                        "SUBMIT_PHOTO_CHECK", onlyScore), "照片地址不能为空且最多 512 字");
         assertEquals("{}", session.getStateJson());
         assertEquals(0, session.getVersion());
         assertEquals(0, session.getScore());
