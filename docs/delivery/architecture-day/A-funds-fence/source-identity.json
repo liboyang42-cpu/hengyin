@@ -1,0 +1,207 @@
+{
+  "repository": "https://github.com/liboyang42-cpu/hengyin",
+  "source_sha": "65780b036d9e44e3ab8705bb8c244558a09213af",
+  "source_tree": "ca907c001d9ded38ef9de3dbad0fc02cdd19d171",
+  "h_review_sha": "9de37f77b4d19389f7dadf6c6a88da4eece09e1b",
+  "d_notice_sha": "b6267613693d0c067040002c3df431ac39b35feb",
+  "reviewed_files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "sha256": "01ba91d4b11db77576167fbabf107e3a234a133d090befab9b11dd4023aa615f",
+      "git_blob": "844aafeb77318757c12c194e4c194a59ecf1f0c1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "7cb41e27de48229c10688084fd7450defe590ea07b78673db25a9485a0846cda",
+      "git_blob": "50b0652f389754e6bbe7ba3d9901e79a7c3d48d6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "sha256": "4b10e279bee96375bd6d46765247f08f692e89aae38faf5fc03224740d292643",
+      "git_blob": "f873632d2946552d9fc6d10f2fe50e687ff654b5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
+      "sha256": "58bfc591ec1c5d7ac776cbf1f1c5a64b547241be83eec949877e5e484617b030",
+      "git_blob": "5556c8c4eb6c1a5089463f97070ac7380d21cc79"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubTopicSettingServiceImpl.java",
+      "sha256": "cb2f087c678d05c4a9e9a92eabe05b44891557f893abe4e5ed7c1c42a0075062",
+      "git_blob": "af272af30f64da5ae6693049f670ca48a151667f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java",
+      "sha256": "a2b5e55d37268dd1ae946ce7da50b7c86018b7a6131f09f2503b80915ecaadb0",
+      "git_blob": "eea8a81d172b4cd1388152227a662a19531f63bf"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "sha256": "b31de7d54a83df85071bb721a2a2711bbb95a1186ba471e10861132c2818cbd0",
+      "git_blob": "030ef0c01328f496b3b18c9f20fd7f5a226efec0"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+      "sha256": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32",
+      "git_blob": "100f684ba7169d1db0ab056aac2ddcc5ab6d8b2b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+      "sha256": "6586ffab6c410351fb027f56532dbbcfa06e6936c2f585090e0543bd0e2a073a",
+      "git_blob": "66b3180ef351fc433ee5a09a712b164b41ee3a67"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+      "sha256": "04211a4ed5274c4afb8b17ba310507c9e12f729c05ea5c95598ba984c3690658",
+      "git_blob": "4ca02c4ddd10acf2e3fbf0d08ef7f475a67f0327"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "sha256": "558d55f2b4bac3ab8c7c1892aff9e883f38cf3179e79fd80d744c8b29260b352",
+      "git_blob": "19d12bc3beb33f662eb51e86eaf8111021e5c938"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java",
+      "sha256": "c1fb393bf2cc6b277290aceef87cdd23755b964ba7d340aaae1bb23bc6e1fc7a",
+      "git_blob": "7a51c33a2b7d4801f9bad4b766c09704a8e03256"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxPaymentCallbackInbox.java",
+      "sha256": "439f8db394669ed04c7fe315d8ce0473c560f8ad6a91a1f7c70df26fdacacbdf",
+      "git_blob": "8a7f708f443bedf0d9ecb95f3ba5099e26481a5b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxPaymentCallbackOutbox.java",
+      "sha256": "ea13fe946ae46b4e8233164643c440734ecfc0aea1eda6bc841aaf89e1e37924",
+      "git_blob": "3c42f8c7da8013b0946fa25e84942be031446d2a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlement.java",
+      "sha256": "685d5a13081b3612d016f3994b4c0500629fec57853ba29dec2c676a14cd5a07",
+      "git_blob": "51b9f66db7ffe51c5a0833b694ec99d95c4d7526"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java",
+      "sha256": "367d944cf8621084c818ce4121e6ae7d03fb29dd55314eb216d1464c4bbb1c14",
+      "git_blob": "1f0f6b6916e7840a5f03efce8709019ee9ca3bf7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ExploreAccountTicketGate.java",
+      "sha256": "c703b31e4ce314c27719cef82b210492a3b6d1a5a5ba94b1850517da280a3ca2",
+      "git_blob": "d8151ed6023fcfa954221e122d4518ba17840e03"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml",
+      "sha256": "d0b4bbdafb1ca6aa32a8bd6c71d5f1a740f3708d099e95e27e5cccfa363295b0",
+      "git_blob": "d5e6c24888ed7f28a1412c99d7d96cb6518e6c77"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml",
+      "sha256": "ea65005310fc6b616379d1deb54d7c888599793a69ff5dbf605291e892b194fd",
+      "git_blob": "6b2e23243623a5590c9f5cf776528ab766bbe0c0"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "sha256": "2e0c38d4d8426aacf10b8759507992b319c791cc3b1a178d4ff01f0bb1e07c44",
+      "git_blob": "294c21f6c141975126d1197bd44f711d7e8e7db1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "sha256": "810b764c0711cacc27b37611865a546345edc1babaeec96a3fd1b10e5841365a",
+      "git_blob": "d1cc5eefe6cd08a54665b60f75704cf8d47ea5d3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml",
+      "sha256": "7b9aa593e1fa04dbe213544896a30f4d4f8ec6cfc8d8ec21450c6be89f579de7",
+      "git_blob": "32181a20f33a62391eafaff5d752ab9c5d68dd0b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml",
+      "sha256": "29431c2d4667cd60073a6b4d794f5eaa0239a5c8ab158fda2b530f55bd6bc3ee",
+      "git_blob": "b7e4ed48ab3323696b2ecb8a436aee1df4327841"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementEvidenceMapper.xml",
+      "sha256": "bb4e481a04034ea633390eb17bd175d2c704adacf70643647bab09129ab57df1",
+      "git_blob": "1fa09dc1e27aac69b5b88056fbaff68facd28693"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementDetailMapper.xml",
+      "sha256": "a86cea0ff482e8931b62b1088f316f4818209986dd433bafada53b3baf5559ff",
+      "git_blob": "a97a72695d5f1b52bde8ca173238d68e10670820"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementAdjustmentMapper.xml",
+      "sha256": "392b20be5fda2a4735ffdb0b2510f72fd70e4136e2296d86853452b0302a01b3",
+      "git_blob": "99bc7d55726ea4911ba055a5d0fb54104ed4bef6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/SettlementClaimMapper.xml",
+      "sha256": "01025c1590e90e6efa356bf72a43694e3d1abdee53f65793136c75c5dcd5a7ae",
+      "git_blob": "15cc1295213845364cea326ad3d8ae87c3286a7f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberSettlementDebtMapper.xml",
+      "sha256": "bb83719bf536c8d3be9f5c4ff3afc20f16f101961eaebd35a7e788a6c7956c2e",
+      "git_blob": "8346af6af37b4aec9f53afbdd9af92a6e792928b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_settlement_claim_20260811.sql",
+      "sha256": "4b9d487914fb146fb0d1de7625b398ccbd2143c7fa77d5d7ccc0a471b511394a",
+      "git_blob": "8d00c9931d8ed626bf5bbd0323b957be6f22afb7"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "65026cbd9893b1458b2a7ceb46466486edcb1947b14603e105076ca947101ded",
+      "git_blob": "ee7aeda9c2279d5c6f5987b7b01abf7098fb3a19"
+    }
+  ],
+  "existing_test_source_inventory_only": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java",
+      "sha256": "5793c98e6312ace0f71fbfa889484d5d86383a279d9ba50a3f0b2f1569d01aea",
+      "source_test_annotations": 1,
+      "executed_by_A_this_batch": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java",
+      "sha256": "2d8de27676210a0cc2c7affc54efa8ed27a973c198dd088be7c473dab2d5a3e9",
+      "source_test_annotations": 9,
+      "executed_by_A_this_batch": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "sha256": "1584d370816602a99296f78accdc24c9f8302eec58e86ebba9fbfe5d7c513c27",
+      "source_test_annotations": 92,
+      "executed_by_A_this_batch": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundMultiPartyClawbackTest.java",
+      "sha256": "18dc0af6cc07aa1f3379125ef6177ceb5fd7fcf1b536d1f04a79acc2d7d2fb8f",
+      "source_test_annotations": 1,
+      "executed_by_A_this_batch": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java",
+      "sha256": "992aeef0ed92ae5d331af582defa9e4b8e01ab6483ab672d85bac7fb4fc4c160",
+      "source_test_annotations": 8,
+      "executed_by_A_this_batch": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPayoutMybatisIntegrationTest.java",
+      "sha256": "d44e09b1160b48a2833709783f5219dc63045ce952ffdd88c9120bdb46ccc4b4",
+      "source_test_annotations": 30,
+      "executed_by_A_this_batch": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPayoutTransactionTest.java",
+      "sha256": "6d1f440755bbb8e069c7416ece73d957866bafc61b2e5369b5e6325d1eeecbce",
+      "source_test_annotations": 3,
+      "executed_by_A_this_batch": false
+    }
+  ],
+  "java_tests_executed": 0,
+  "mysql_tests_executed": 0,
+  "ddl_executed": false,
+  "ci_dispatched": false
+}

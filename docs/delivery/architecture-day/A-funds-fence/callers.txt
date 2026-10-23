@@ -1,0 +1,40 @@
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java:182:                        String result = cmsRegistrationService.handleWechatPayCallback(wxOrder);
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java:1089:                    teamGroupService.cancelTopicByHost(tid, hostMemberId, actorMemberId, reason.trim());
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java:371:            if (teamGroupService.cancelPaidRegistration(registrationId, memberId) == com.chengyinhub.business.service.ITeamGroupService.CANCEL_MANUAL_REVIEW) {
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java:395:            if (teamGroupService.cancelPaidRegistrationByOwner(registrationId, memberId) == com.chengyinhub.business.service.ITeamGroupService.CANCEL_MANUAL_REVIEW) {
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java:55:        int rows = refundService.reviewRefund(request, getUserId());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IClubEventOpsService.java:44:    ActivityCancelResult cancelActivityForAuthorizedTopicCancellation(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITeamGroupService.java:25:    int cancelPaidRegistration(Long registrationId, Long operatorMemberId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITeamGroupService.java:33:    int cancelPaidRegistrationByOwner(Long registrationId, Long ownerMemberId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITeamGroupService.java:52:    ActivityCancelResult cancelActivityByClubOperator(Long activityId, Long ownerMemberId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITeamGroupService.java:69:    ActivityCancelResult cancelTopicByHost(Long topicId, Long hostMemberId, Long actorMemberId, String reason);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IRefundService.java:25:    int reviewRefund(RefundReviewDTO request, Long operatorId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopSettlementClaimService.java:12:    void appendExecutedAdjustment(Long claimId, String eventKey, java.math.BigDecimal signedAmount);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java:204:    public String handleWechatPayCallback(Map<String, String> resultMap);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java:211:    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java:214:    public String completeZeroAmountPayment(String registrationNo);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1126:                Boolean settled = tx.execute(status -> settleTopic(topic, topicRule));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1226:    private boolean settleTopic(CmsTopic topic, SettlementRule rule) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1700:                CoopSettlement paidSettlement = tx.execute(status -> payoutOneDueCoopSettlement(snapshot.getId(), now));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1730:    private CoopSettlement payoutOneDueCoopSettlement(Long settlementId, Date now) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java:129:            if (!"SUCCESS".equals(registrationService.completeZeroAmountPayment(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2090:    public String handleWechatPayCallback(Map<String, String> resultMap) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2164:    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2192:                String paymentResult = completePaymentSuccess(registration, transactionId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2276:    public String completeZeroAmountPayment(String registrationNo) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2284:        return completePaymentSuccess(registration, "");
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2303:    private String completePaymentSuccess(CmsRegistration registration, String transactionId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:135:    public int cancelPaidRegistration(Long registrationId, Long operatorMemberId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:304:    public int cancelPaidRegistrationByOwner(Long registrationId, Long ownerMemberId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:375:    public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityByClubOperator(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:417:    public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelTopicByHost(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:442:                    ? clubEventOpsService.cancelActivityForAuthorizedTopicCancellation(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:885:                            cmsRegistrationService.applyConfirmedWechatPaymentWithinTransaction(plan.wxOrder))) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:1471:            refundService.reviewRefund(rev, SYSTEM_OPERATOR);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:582:    public int reviewRefund(RefundReviewDTO request, Long operatorId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:54:    public void appendExecutedAdjustment(Long claimId, String eventKey, BigDecimal signedAmount) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubTopicSettingServiceImpl.java:150:                    ActivityCancelResult res = teamGroupService.cancelActivityByClubOperator(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java:500:        ActivityCancelResult refund = teamGroupService.cancelActivityByClubOperator(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java:565:    public ActivityCancelResult cancelActivityForAuthorizedTopicCancellation(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java:633:                : teamGroupService.cancelActivityByClubOperator(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java:750:                result = registrationService.handleWechatPayCallback(resultMap);

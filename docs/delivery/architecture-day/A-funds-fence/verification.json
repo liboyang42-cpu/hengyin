@@ -1,0 +1,24 @@
+{
+  "source_sha": "65780b036d9e44e3ab8705bb8c244558a09213af",
+  "production_diff_files": 0,
+  "test_diff_files": 0,
+  "ddl_diff_files": 0,
+  "new_regression_tests": 0,
+  "java_executed": 0,
+  "mysql_executed": 0,
+  "ci_dispatched": false,
+  "checks": {
+    "reviewed_source_hashes": "PASS (30 source/schema/instruction + 7 suite sources)",
+    "callers": "40 main-source lines captured",
+    "git_diff_check": "PASS",
+    "tracked_secret_file_gate": "PASS",
+    "delivery_scan_paths": "PASS",
+    "limited_credential_pattern_scan": "PASS"
+  },
+  "not_run": [
+    "Java compile/tests",
+    "MySQL transactions/DDL",
+    "cross-domain concurrency",
+    "full entropy/history scanner (gitleaks unavailable)"
+  ]
+}
