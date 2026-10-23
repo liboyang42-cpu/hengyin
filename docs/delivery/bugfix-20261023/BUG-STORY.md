@@ -51,4 +51,5 @@
 
 - 本地：`mvn -pl chengyinhub-admin -am test -Dtest=TopicChapterVOCountTest,TemplatePublishAuditQueueTest,AiGatewayServiceImplTest,AiCreatorServiceImplTest,GameSessionRuntimeServiceImplTest,ApiMedalControllerTest`，共 234 个测试全部通过。
 - 没有新增迁移，没有改动小程序文件，也没有改动 C00 保留文件，所以没有 CY-HANDOFF。台账没有重新生成。
-- CI 运行记录：见 PR 检查（下文补充 run ID）。
+- 本地全量 `mvn test`：13,697 个用例 0 失败；另有 29 个 error，全部是需要 MySQL 的 MyBatis IT（本地连不上库），CI 上会启 MySQL 跑。
+- CI（PR #557，head `f5b19ac4`，全部 success）：GitHub CI 39957492977、Funds MySQL IT 39957492942、Mini followup focused regression 39957492947、Isolated authenticated Redis recovery 39957492991。
