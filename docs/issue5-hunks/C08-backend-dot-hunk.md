@@ -136,3 +136,21 @@ BUILD SUCCESS
 ```
 
 IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 18:54 America/Los_Angeles
+
+HEAD `33472e804` tests. Class-level occupancy on `ChannelGovernanceProjectionTest`: unused cataloged `assignMemberRole(MEMBER)` throws ROLE_REQUIRED without occupying member (role stays NONE, phase CATALOGED); unique assign after applicant is the first MEMBER write. Did not invent `recoverOriginal`. Invite / leave / vote-read / appeal occupancy remain.
+
+Parent surefire `com.chengyinhub.business.service.channel.*Test` **20/0** 2026-10-24T01:54:22Z：
+
+```
+Tests run: 7 -- ChannelGovernanceProjectionTest
+Tests run: 4 -- C08AccountSwitchRestartIsolationTest
+Tests run: 3 -- ChannelRevokeIsolationTest
+Tests run: 4 -- C08FirstJourneyIsolationTest
+Tests run: 2 -- FriendPermissionDistinctFromChannelTest
+Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
