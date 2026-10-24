@@ -1,0 +1,20 @@
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -323,7 +323,7 @@
+         uses: actions/checkout@v4
+         with:
+           repository: liboyang42-cpu/hengyin
+-          ref: 3d3a63d4120c83eaecd8b2bf70a12b51d5f4988c
++          ref: 0297c2cc9d093e8127103da26325e7da0f1f18e1
+           path: .architecture-gate
+           fetch-depth: 0
+           persist-credentials: false
+@@ -569,7 +569,7 @@
+         uses: actions/checkout@v4
+         with:
+           repository: liboyang42-cpu/hengyin
+-          ref: 3d3a63d4120c83eaecd8b2bf70a12b51d5f4988c
++          ref: 0297c2cc9d093e8127103da26325e7da0f1f18e1
+           path: chengyinhub-admin/target/f-private-port-verifier
+           fetch-depth: 1
+           persist-credentials: false
