@@ -167,3 +167,22 @@ mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteeri
 结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **24 run, 0 fail, 0 error, 0 skip**（2026-10-24T01:21:14Z）。EventScoreVersioningTest 5/0。Isolation 5/0。
 
 Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## 10. Addendum 2026-10-23 19:01 America/Los_Angeles — unused pending/ineligible/restore/GPS occupancy
+
+HEAD `8a99d1c1c`（`test(c04): 待审完赛/不合格报名/缺失争议恢复/GPS 证据观察不占账再唯一写入 [skip ci]`）。未发明 recoverOriginal。未发明 iOS `dispute()`。OrdinaryCityTeamEventJourney 只是 composer，不另造账。
+
+- `EventScoreVersioningTest.unusedPendingFinishDoesNotOccupyThenUniqueFinishApplies`：待审 `finish(c04-fin-pend)` 抛 `PENDING_REVIEW` 且 `recoverOriginal`/`readback` 仍 `NOT_FOUND`；清 PENDING 后同一键唯一 finish 才是 FINISHED。
+- `EventScoreVersioningTest.unusedGpsEvidenceDoesNotOccupyThenUniqueScanApplies`：GPS 证据抛 `GPS_FORBIDDEN` 不占 evidence；同一键唯一 SCAN 才是原文。
+- `TeamClubEligibilityAuthorityTest.unusedIneligibleRegisterDoesNotOccupyThenUniqueRegisterApplies`：局外人 `register(c04-reg-inelig)` 抛 `TEAM_INELIGIBLE` 不占账；合格 roster 同一键唯一 register 才是 REGISTERED。
+- `EventResultDisputeTest.unusedRestoreOfMissingDisputeDoesNotOccupyThenUniqueRestoreApplies`：缺失争议上的 `restoreOriginalReward(c04-rst-never)` 抛 `NOT_FOUND` 不占恢复账；open 后再唯一 restore 才是原文。
+
+命令：
+
+```
+mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteering.*Test -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **28 run, 0 fail, 0 error, 0 skip**（2026-10-24T02:01:15Z）。EventScoreVersioningTest 7/0。TeamClubEligibilityAuthorityTest 6/0。EventResultDisputeTest 3/0。Isolation 5/0。
+
+Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
