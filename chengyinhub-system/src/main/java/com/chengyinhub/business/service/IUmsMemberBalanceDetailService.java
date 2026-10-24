@@ -112,4 +112,10 @@ public interface IUmsMemberBalanceDetailService
      * 按事件类型+事件ID获取收益
      */
     BigDecimal selectIncomeByEventTypeAndEventId(Long memberId, Long eventType, Long eventId);
+
+    /** 商家看板累计收入:change_type=1 全量 SQL 求和,不拉明细。 */
+    BigDecimal sumDashboardIncome(Long memberId);
+
+    /** 商家看板 since 起按自然日(yyyy-MM-dd)汇总的收入;没有流水的天不出现。 */
+    Map<String, BigDecimal> sumDashboardIncomeByDay(Long memberId, java.util.Date since);
 }
