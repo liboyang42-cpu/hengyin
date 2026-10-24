@@ -117,7 +117,7 @@ class AiThemeDraftIntentMySqlRedisIT {
         ReflectionTestUtils.setField(fixture.gateway,"llmClientsByBeanName",Map.of("deepseekLlmClient",fixture.model));
         Object modelConfig=ReflectionTestUtils.getField(fixture.gateway,"aiModelConfig");
         ReflectionTestUtils.setField(modelConfig,"enabled",true);ReflectionTestUtils.setField(modelConfig,"timeoutMs",8000);
-        AiQuotaRecoveryService recovery=new AiQuotaRecoveryService(quotas,production,transactions);
+        AiQuotaRecoveryService recovery=new AiQuotaRecoveryService(quotas,production,transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         ReflectionTestUtils.setField(fixture.gateway,"redisTemplate",production);
         ReflectionTestUtils.setField(fixture.gateway,"quotaRecovery",recovery);
         UmsMember original=new UmsMember();original.setId(member);original.setStatus(1L);original.setDelFlag(0);original.setRole("player");

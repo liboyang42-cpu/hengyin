@@ -7,6 +7,8 @@
     <result property="nodeId" column="node_id"/><result property="merchantMemberId" column="merchant_member_id"/>
     <result property="audioSha256" column="audio_sha256"/><result property="audioFormat" column="audio_format"/>
     <result property="claimToken" column="claim_token"/><result property="state" column="state"/>
+    <result property="quotaReservation" column="quota_reservation"/>
+    <result property="quotaRefundPending" column="quota_refund_pending"/>
     <result property="transcript" column="transcript"/><result property="bodyErased" column="body_erased"/>
     <result property="handoffStarted" column="handoff_started"/><result property="textAdmitted" column="text_admitted"/>
     <result property="bodyExpiresAt" column="body_expires_at"/>
@@ -15,12 +17,12 @@
     SELECT id,user_id,request_id,node_id,merchant_member_id,audio_sha256,audio_format,claim_token,state,
       CASE WHEN body_erased=0 AND body_expires_at&gt;NOW(6) THEN transcript ELSE NULL END AS transcript,
       (body_erased=1 OR (body_expires_at IS NOT NULL AND body_expires_at&lt;=NOW(6))) AS body_erased,
-      handoff_started,text_admitted,body_expires_at
+      handoff_started,text_admitted,body_expires_at,quota_reservation,quota_refund_pending
     FROM npc_asr_intent WHERE user_id=#{userId} AND request_id=#{requestId} FOR UPDATE
   </select>
   <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO npc_asr_intent(user_id,request_id,node_id,merchant_member_id,audio_sha256,audio_format,claim_token,state)
-    VALUES(#{userId},#{requestId},#{nodeId},#{merchantMemberId},#{audioSha256},#{audioFormat},#{claimToken},'IN_FLIGHT')
+    INSERT INTO npc_asr_intent(user_id,request_id,node_id,merchant_member_id,audio_sha256,audio_format,claim_token,state,quota_reservation)
+    VALUES(#{userId},#{requestId},#{nodeId},#{merchantMemberId},#{audioSha256},#{audioFormat},#{claimToken},'IN_FLIGHT',#{quotaReservation})
   </insert>
   <update id="finish">
     UPDATE npc_asr_intent SET state=#{state},transcript=#{transcript},
@@ -29,16 +31,41 @@
     WHERE user_id=#{userId} AND request_id=#{requestId} AND claim_token=#{claimToken}
       AND state='IN_FLIGHT' AND body_erased=0
   </update>
+  <update id="finishNotSent">
+    UPDATE npc_asr_intent SET state='NOT_SENT',transcript=NULL,body_expires_at=NULL,
+      quota_refund_pending=1,update_time=NOW(6)
+    WHERE user_id=#{userId} AND request_id=#{requestId} AND claim_token=#{claimToken}
+      AND quota_reservation=#{quotaReservation} AND handoff_started=0 AND text_admitted=0
+      AND state IN ('IN_FLIGHT','UNKNOWN')
+  </update>
+  <select id="selectQuotaRefundPending" resultMap="Receipt" useCache="false" flushCache="true">
+    SELECT id,user_id,request_id,node_id,merchant_member_id,claim_token,state,
+      quota_reservation,quota_refund_pending,handoff_started,text_admitted
+    FROM npc_asr_intent WHERE quota_refund_pending=1 AND state='NOT_SENT'
+      AND quota_reservation IS NOT NULL ORDER BY id LIMIT #{limit}
+  </select>
+  <select id="selectQuotaRefundProof" resultMap="Receipt" useCache="false" flushCache="true">
+    SELECT id,user_id,request_id,node_id,merchant_member_id,claim_token,state,
+      quota_reservation,quota_refund_pending,handoff_started,text_admitted
+    FROM npc_asr_intent WHERE user_id=#{userId} AND request_id=#{requestId}
+  </select>
+  <update id="completeQuotaRefund">
+    UPDATE npc_asr_intent SET quota_refund_pending=0,update_time=NOW(6)
+    WHERE user_id=#{userId} AND request_id=#{requestId} AND quota_reservation=#{reservation}
+      AND quota_refund_pending=1 AND state='NOT_SENT' AND handoff_started=0 AND text_admitted=0
+  </update>
   <update id="beginHandoff">
     UPDATE npc_asr_intent SET handoff_started=1,update_time=NOW(6)
     WHERE user_id=#{userId} AND request_id=#{requestId} AND state='RECEIVED' AND handoff_started=0
       AND body_erased=0 AND body_expires_at&gt;NOW(6) AND transcript IS NOT NULL AND transcript&lt;&gt;''
+      AND quota_reservation IS NOT NULL
   </update>
   <update id="claimTextAdmission">
     UPDATE npc_asr_intent SET text_admitted=1,update_time=NOW(6)
     WHERE user_id=#{userId} AND request_id=#{requestId} AND node_id=-#{sessionId}
       AND state='RECEIVED' AND handoff_started=1 AND text_admitted=0
       AND body_erased=0 AND body_expires_at&gt;NOW(6)
+      AND quota_reservation IS NOT NULL
   </update>
   <update id="redactForUser">
     UPDATE npc_asr_intent SET transcript=NULL,body_erased=1,

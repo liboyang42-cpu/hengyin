@@ -11,6 +11,8 @@ public class NpcAsrIntent {
     private String audioFormat;
     private String claimToken;
     private String state;
+    private String quotaReservation;
+    private boolean quotaRefundPending;
     private String transcript;
     private boolean bodyErased;
     private boolean handoffStarted;
@@ -34,6 +36,10 @@ public class NpcAsrIntent {
     public void setClaimToken(String value) { claimToken=value; }
     public String getState() { return state; }
     public void setState(String value) { state=value; }
+    public String getQuotaReservation() { return quotaReservation; }
+    public void setQuotaReservation(String value) { quotaReservation=value; }
+    public boolean isQuotaRefundPending() { return quotaRefundPending; }
+    public void setQuotaRefundPending(boolean value) { quotaRefundPending=value; }
     public String getTranscript() { return transcript; }
     public void setTranscript(String value) { transcript=value; }
     public boolean isBodyErased() { return bodyErased; }

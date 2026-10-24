@@ -109,4 +109,73 @@ class NpcAsrIntentServiceTest {
         var f=new Fixture();new TransactionTemplate(f.manager).executeWithoutResult(status->assertThrows(IllegalStateException.class,f::recognize));
         assertTrue(f.stored.isEmpty());verifyNoInteractions(f.speech,f.rows,f.users);
     }
+
+    @Test void originalQuotaIsCommittedAndReservedBeforeTheSingleAsrCall() {
+        var f=new Fixture();f.recognize();f.recognize();
+        String reservation=f.original().getQuotaReservation();assertNotNull(reservation);
+        assertTrue(reservation.startsWith("ai:gen:limit:gen:7:"));
+        assertTrue(reservation.endsWith("|"+f.original().getClaimToken().replace("-","")));
+        var order=inOrder(f.quota,f.speech);
+        order.verify(f.quota).planQuotaReservation(eq(7L),eq("npc_shop_chat"),anyString());
+        order.verify(f.quota).consumePlannedQuota(7L,"npc_shop_chat",reservation);
+        order.verify(f.quota).stageQuota(7L,"npc_shop_chat",reservation,"ASR_STARTED");
+        order.verify(f.speech).transcribe(AUDIO,"wav");
+        verify(f.quota,times(1)).consumePlannedQuota(anyLong(),anyString(),anyString());
+        verify(f.quota,never()).refundNpcAsrNotSent(anyLong(),anyString());
+    }
+    @Test void unavailableReservationIsLocallyNotSentAndNeverReentersProvider() {
+        var f=new Fixture();doThrow(new IllegalStateException("controlled reserve acknowledgement loss"))
+                .when(f.quota).consumePlannedQuota(anyLong(),anyString(),anyString());
+        assertEquals("NOT_SENT",f.recognize().getState());assertTrue(f.original().isQuotaRefundPending());
+        assertEquals("NOT_SENT",f.recognize().getState());verifyNoInteractions(f.speech);
+        verify(f.quota).refundNpcAsrNotSent(7L,RID);
+        verify(f.quota,times(1)).consumePlannedQuota(anyLong(),anyString(),anyString());
+    }
+    @Test void uncertainStageCommitStopsBeforeAsrAndKeepsDurableNotSentProof() {
+        var f=new Fixture();doThrow(new IllegalStateException("controlled stage commit uncertainty"))
+                .when(f.quota).stageQuota(anyLong(),anyString(),anyString(),eq("ASR_STARTED"));
+        assertEquals("NOT_SENT",f.recognize().getState());assertTrue(f.original().isQuotaRefundPending());
+        verifyNoInteractions(f.speech);verify(f.quota).refundNpcAsrNotSent(7L,RID);
+    }
+    @Test void unknownShowsQuotaProcessingAndNeverRequestsCompensation() {
+        var f=new Fixture();when(f.speech.transcribe(any(),anyString())).thenThrow(new AiServiceException("controlled timeout"));
+        assertEquals("UNKNOWN",f.recognize().getState());
+        var result=f.service().readOutcome("shop",21L,RID,7L);
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());assertEquals("PROCESSING",result.getQuotaStatus());
+        assertTrue(result.getSafeText().contains("额度状态处理中"));assertFalse(result.isRetryable());
+        f.recognize();verify(f.quota,never()).refundNpcAsrNotSent(anyLong(),anyString());
+        verify(f.quota,never()).retainQuota(anyLong(),anyString(),anyString(),anyString());
+        verify(f.speech,times(1)).transcribe(any(),anyString());
+    }
+    @Test void receivedEmptyTextStillHoldsTheSingleFunctionQuota() {
+        var f=new Fixture();when(f.speech.transcribe(any(),anyString())).thenReturn("");
+        assertEquals("",f.recognize().getTranscript());assertEquals("HELD",f.service().readOutcome("shop",21L,RID,7L).getQuotaStatus());
+        verify(f.quota).retainQuota(7L,"npc_shop_chat",f.original().getQuotaReservation(),"ASR_RECEIVED");
+        verify(f.quota,never()).refundNpcAsrNotSent(anyLong(),anyString());
+    }
+    @Test void provenNotSentAfterDeletionQueuesOnlyTheOriginalRefundWithoutRestoringBody() {
+        var f=new Fixture();when(f.speech.transcribe(any(),anyString())).thenAnswer(call -> {
+            f.rows.redactForUser(7L);throw new AiServiceException("not sent",new AiProviderNotSentException());
+        });
+        var result=f.recognize();assertEquals("NOT_SENT",result.getState());assertTrue(result.isBodyErased());
+        assertNull(result.getTranscript());assertTrue(result.isQuotaRefundPending());
+        verify(f.quota).refundNpcAsrNotSent(7L,RID);assertNotNull(f.original().getQuotaReservation());
+    }
+    @Test void legacyWithoutQuotaIdentityIsReadOnlyAndCannotForgeAHandoff() {
+        var f=new Fixture();f.recognize();f.original().setQuotaReservation(null);
+        assertEquals("ASR_QUOTA_UNAVAILABLE",f.service().readOutcome("shop",21L,RID,7L).getAsrReason());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",f.service().readOutcome("shop",21L,RID,7L).getErrorCode());
+        assertThrows(IllegalStateException.class,()->f.service().beginHandoff(7L,RID,21L,41L));
+        f.recognize();verify(f.quota,times(1)).consumePlannedQuota(anyLong(),anyString(),anyString());
+        verify(f.speech,times(1)).transcribe(any(),anyString());
+    }
+
+
+    @Test void committedTextWinnerUnderTheSameMemberFencePreventsAnyAsrReservation() {
+        var f=new Fixture();var text=new com.chengyinhub.business.domain.NpcChatRequest();
+        text.setUserId(7L);text.setRequestId(RID);text.setSessionId(-21L);
+        when(f.users.selectByUserAndRequestId(7L,RID)).thenReturn(text);
+        assertThrows(IllegalStateException.class,f::recognize);
+        verifyNoInteractions(f.quota,f.speech);verify(f.rows,never()).insert(any());
+    }
 }

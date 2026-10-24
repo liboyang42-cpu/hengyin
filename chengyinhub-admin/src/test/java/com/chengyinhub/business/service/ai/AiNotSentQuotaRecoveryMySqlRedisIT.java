@@ -121,7 +121,7 @@ class AiNotSentQuotaRecoveryMySqlRedisIT
                 return production.execute(script, argsSerializer, resultSerializer, keys, args);
             }
         };
-        recovery = new AiQuotaRecoveryService(quotas, faultBoundary, transactions);
+        recovery = new AiQuotaRecoveryService(quotas, faultBoundary, transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         ReflectionTestUtils.setField(fixture.gateway, "redisTemplate", production);
         ReflectionTestUtils.setField(fixture.gateway, "quotaRecovery", recovery);
     }
@@ -171,7 +171,7 @@ class AiNotSentQuotaRecoveryMySqlRedisIT
         assertEquals("REFUND_DUE", state(receipt)); assertEquals("1", raw.opsForValue().get(counter));
         assertOriginal(receipt, "merchant_plan", "gen", counter);
         forceDue(receipt);
-        AiQuotaRecoveryService restarted = new AiQuotaRecoveryService(quotas, production, transactions);
+        AiQuotaRecoveryService restarted = new AiQuotaRecoveryService(quotas, production, transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         restarted.runDue(); restarted.runDue();
         assertEquals("REFUNDED", state(receipt)); assertEquals("0", raw.opsForValue().get(counter));
         assertEquals("0", raw.opsForValue().get(receipt));
@@ -190,7 +190,7 @@ class AiNotSentQuotaRecoveryMySqlRedisIT
         String receipt = receipt(); String counter = counter(receipt); assertEquals("RESERVED", state(receipt));
         String originalRedisReceipt = raw.opsForValue().get(receipt); assertNotNull(originalRedisReceipt);
         assertEquals("MODEL_STARTED", db.queryForObject("SELECT stage FROM ai_quota_reservation WHERE receipt_key=?", String.class, receipt));
-        forceDue(receipt); new AiQuotaRecoveryService(quotas, production, transactions).runDue();
+        forceDue(receipt); new AiQuotaRecoveryService(quotas, production, transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class)).runDue();
         assertEquals("UNCERTAIN", state(receipt)); assertEquals("1", raw.opsForValue().get(counter));
         assertEquals(originalRedisReceipt, raw.opsForValue().get(receipt));
         assertOriginal(receipt, "merchant_plan", "gen", counter);
@@ -209,7 +209,7 @@ class AiNotSentQuotaRecoveryMySqlRedisIT
         assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, failure.getReason());
         String receipt = receipt(); String counter = counter(receipt); assertEquals("RESERVED", state(receipt));
         assertEquals("1", raw.opsForValue().get(counter));
-        forceDue(receipt); new AiQuotaRecoveryService(quotas, production, transactions).runDue();
+        forceDue(receipt); new AiQuotaRecoveryService(quotas, production, transactions,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class)).runDue();
         assertEquals("UNCERTAIN", state(receipt)); assertEquals("1", raw.opsForValue().get(counter));
         verify(fixture.model, times(1)).chat(anyString(), anyString());
     }

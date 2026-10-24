@@ -216,7 +216,7 @@ class AiQuotaRefundRulesD08Test {
         recoveryRedis = mock(RedisTemplate.class);
         PlatformTransactionManager tx = mock(PlatformTransactionManager.class);
         when(tx.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
-        recovery = new AiQuotaRecoveryService(mapper, recoveryRedis, tx);
+        recovery = new AiQuotaRecoveryService(mapper, recoveryRedis, tx,org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         row = new AiQuotaReservationRecord();
         row.setId(1L); row.setFenceVersion(0L); row.setCounterKey(OLD_KEY); row.setReceiptKey(OLD_RECEIPT);
         row.setState(state); row.setStage("RESULT_CLASSIFIED"); row.setGeneration("g1");

@@ -6,6 +6,7 @@ import com.chengyinhub.business.mapper.NpcAsrIntentMapper;
 import com.chengyinhub.business.mapper.NpcChatRequestMapper;
 import com.chengyinhub.business.service.ai.AiProviderNotSentException;
 import com.chengyinhub.business.service.ai.SpeechToTextService;
+import com.chengyinhub.business.service.ai.AiGatewayService;
 import com.chengyinhub.common.utils.http.HttpRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -22,15 +23,18 @@ import java.util.function.Supplier;
 /** NPC ASR only. Original member fence, committed claim, at most one provider invocation; no retries/leases. */
 @Service
 public class NpcAsrIntentService {
+    private static final String QUOTA_BIZ="npc_shop_chat";
+    private static final org.slf4j.Logger log=org.slf4j.LoggerFactory.getLogger(NpcAsrIntentService.class);
     private final NpcAsrIntentMapper intents;
     private final NpcChatRequestMapper requests;
     private final SpeechToTextService speech;
+    private final AiGatewayService quota;
     private final TransactionTemplate transaction;
     private record Admission(NpcAsrIntent receipt,boolean winner) { }
 
     public NpcAsrIntentService(NpcAsrIntentMapper intents,NpcChatRequestMapper requests,
-                               PlatformTransactionManager transactions,SpeechToTextService speech) {
-        this.intents=intents;this.requests=requests;this.speech=speech;
+                               PlatformTransactionManager transactions,SpeechToTextService speech,AiGatewayService quota) {
+        this.intents=intents;this.requests=requests;this.speech=speech;this.quota=quota;
         transaction=new TransactionTemplate(transactions);
         transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -77,9 +81,15 @@ public class NpcAsrIntentService {
                     throw new IllegalArgumentException("NPC ASR original input conflict");
                 return new Admission(old,false);
             }
+            // Text and ASR admission share this member fence. A text winner must not acquire a second ASR quota.
+            if (requests.selectByUserAndRequestId(user,rid)!=null)
+                throw new IllegalStateException("Original NPC text request already exists; read its receipt");
             NpcAsrIntent row=new NpcAsrIntent();row.setUserId(user);row.setRequestId(rid);
             row.setNodeId(node);row.setMerchantMemberId(merchant);row.setAudioSha256(digest);row.setAudioFormat(format);
             row.setClaimToken(UUID.randomUUID().toString());row.setState("IN_FLIGHT");
+            row.setQuotaReservation(quota.planQuotaReservation(user,QUOTA_BIZ,row.getClaimToken().replace("-","")));
+            if (row.getQuotaReservation()==null || row.getQuotaReservation().isBlank())
+                throw new IllegalStateException("NPC ASR quota identity unavailable");
             if (intents.insert(row)!=1) throw new IllegalStateException("NPC ASR admission failed");
             NpcAsrIntent stored=intents.selectForUpdate(user,rid);
             if (stored==null || !row.getClaimToken().equals(stored.getClaimToken()) || !"IN_FLIGHT".equals(stored.getState()))
@@ -88,6 +98,16 @@ public class NpcAsrIntentService {
         }); // A commit failure/unknown never reaches the provider; a later read is never a send grant.
         if (admitted==null) throw new IllegalStateException("NPC ASR admission commit unavailable");
         if (!admitted.winner()) return admitted.receipt();
+        try {
+            String reservation=admitted.receipt().getQuotaReservation();
+            if (!reservation.equals(quota.consumePlannedQuota(user,QUOTA_BIZ,reservation)))
+                throw new IllegalStateException("NPC ASR original reservation unavailable");
+            // Persist the cost boundary before the provider. Expiry cannot prove an ASR was not sent.
+            quota.stageQuota(user,QUOTA_BIZ,reservation,"ASR_STARTED");
+        } catch(RuntimeException notDispatched) {
+            // No speech call has occurred on this path; persist this local NOT_SENT proof before compensation.
+            return finish(admitted.receipt(),"NOT_SENT",null);
+        }
         String text;
         try { text=speech.transcribe(audio,format); }
         catch(RuntimeException failure) {
@@ -97,15 +117,28 @@ public class NpcAsrIntentService {
         return finish(admitted.receipt(),"RECEIVED",text==null?"":text.trim());
     }
     private NpcAsrIntent finish(NpcAsrIntent original,String state,String text) {
-        return locked(original.getUserId(),() -> {
+        NpcAsrIntent stored=locked(original.getUserId(),() -> {
             NpcAsrIntent update=new NpcAsrIntent();update.setUserId(original.getUserId());
             update.setRequestId(original.getRequestId());update.setClaimToken(original.getClaimToken());
             update.setState(state);update.setTranscript(text);
-            intents.finish(update); // Deletion revokes this exact owner; never return its in-memory text.
-            NpcAsrIntent stored=intents.selectForUpdate(original.getUserId(),original.getRequestId());
-            if (stored==null) throw new IllegalStateException("NPC ASR result readback unavailable");
-            return stored;
+            update.setQuotaReservation(original.getQuotaReservation());
+            if ("NOT_SENT".equals(state)) intents.finishNotSent(update);
+            else intents.finish(update); // Deletion revokes body ownership; never return in-memory text.
+            NpcAsrIntent current=intents.selectForUpdate(original.getUserId(),original.getRequestId());
+            if (current==null) throw new IllegalStateException("NPC ASR result readback unavailable");
+            return current;
         });
+        try {
+            if ("NOT_SENT".equals(stored.getState()) && stored.isQuotaRefundPending())
+                quota.refundNpcAsrNotSent(stored.getUserId(),stored.getRequestId());
+            else if ("RECEIVED".equals(state))
+                quota.retainQuota(original.getUserId(),QUOTA_BIZ,original.getQuotaReservation(),"ASR_RECEIVED");
+            // UNKNOWN stays at ASR_STARTED. The original recovery owner records UNCERTAIN, never a completed debit/refund.
+        } catch(RuntimeException pending) {
+            // NOT_SENT is queued in the ASR row; otherwise ASR_STARTED remains a durable do-not-refund boundary.
+            log.warn("NPC ASR quota outcome pending code=QUOTA_PERSISTENCE_UNAVAILABLE");
+        }
+        return stored;
     }
     /** Commit this one-way handoff before calling the original text service. Unknown commit means stop. */
     public boolean beginHandoff(Long user,String rawRid,Long node,Long merchant) {
@@ -116,6 +149,7 @@ public class NpcAsrIntentService {
             NpcAsrIntent row=intents.selectForUpdate(user,rid);
             if (row==null || !node.equals(row.getNodeId()) || !Objects.equals(merchant,row.getMerchantMemberId()))
                 throw new IllegalArgumentException("NPC ASR handoff scope conflict");
+            if (row.getQuotaReservation()==null) throw new IllegalStateException("Original ASR quota identity unavailable");
             return intents.beginHandoff(user,rid)==1;
         }));
     }
@@ -128,18 +162,23 @@ public class NpcAsrIntentService {
         catch(RuntimeException unavailable) { return unavailable(rid,"ASR_STATE_UNAVAILABLE"); }
     }
     public static NpcChatResp outcome(NpcAsrIntent row) {
-        String code=row.isBodyErased()?"ASR_TEXT_UNAVAILABLE":row.isHandoffStarted()?"ASR_TEXT_HANDOFF_STARTED"
+        String code=row.isBodyErased()?"ASR_TEXT_UNAVAILABLE"
+                :row.getQuotaReservation()==null && !"NOT_SENT".equals(row.getState())?"ASR_QUOTA_UNAVAILABLE"
+                :row.isHandoffStarted()?"ASR_TEXT_HANDOFF_STARTED"
                 :"RECEIVED".equals(row.getState())?(row.getTranscript()==null?"ASR_TEXT_UNAVAILABLE"
                     :row.getTranscript().isEmpty()?"ASR_EMPTY_TEXT":"ASR_RECEIVED")
                 :"NOT_SENT".equals(row.getState())?"ASR_NOT_SENT"
                 :"IN_FLIGHT".equals(row.getState())?"ASR_IN_FLIGHT":"ASR_OUTCOME_UNKNOWN";
         NpcChatResp response=unavailable(row.getRequestId(),code);
         response.setAsrState(row.getState());
+        response.setQuotaStatus(row.getQuotaReservation()==null?"PROCESSING"
+                :"NOT_SENT".equals(row.getState())?(row.isQuotaRefundPending()?"RELEASE_PENDING":"RELEASED")
+                :"RECEIVED".equals(row.getState())?"HELD":"PROCESSING");
         return response;
     }
     public static NpcChatResp unavailable(String rid,String reason) {
         boolean unknown="ASR_OUTCOME_UNKNOWN".equals(reason) || "ASR_STATE_UNAVAILABLE".equals(reason)
-                || "ASR_TEXT_HANDOFF_STARTED".equals(reason);
+                || "ASR_TEXT_HANDOFF_STARTED".equals(reason) || "ASR_QUOTA_UNAVAILABLE".equals(reason);
         boolean waiting=unknown || "ASR_IN_FLIGHT".equals(reason) || "ASR_RECEIVED".equals(reason);
         NpcChatResp response=new NpcChatResp();response.setRequestId(rid);
         // Keep the original client recovery contract; ASR detail must not masquerade as a new terminal error.
@@ -147,8 +186,9 @@ public class NpcAsrIntentService {
         response.setSafetyDecision(unknown?"UNKNOWN":"NOT_RUN");
         response.setErrorCode(unknown?"REQUEST_OUTCOME_UNKNOWN":waiting?"REQUEST_IN_PROGRESS":reason);
         response.setAsrReason(reason);response.setAsrResumable("ASR_RECEIVED".equals(reason));
+        if (waiting) response.setQuotaStatus("PROCESSING");
         response.setRetryable(false);response.setAi(false);
-        response.setSafeText(unknown?"原请求结果待确认，请稍后查看原请求。"
+        response.setSafeText(unknown?"原请求结果待确认，额度状态处理中，请稍后查看原请求。"
                 :"ASR_RECEIVED".equals(reason)?"原语音已转写，可继续原请求；不会重新识别。"
                 :"ASR_IN_FLIGHT".equals(reason)?"原语音仍在处理中，请查看原请求；不会重复识别。"
                 :"ASR_TEXT_UNAVAILABLE".equals(reason)?"原语音正文不可恢复；原请求身份仍保留，不会重新识别。"

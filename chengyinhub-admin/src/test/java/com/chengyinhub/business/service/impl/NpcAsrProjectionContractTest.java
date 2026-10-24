@@ -33,4 +33,14 @@ class NpcAsrProjectionContractTest {
             assertFalse(actual.has("transcript"));assertFalse(actual.has("claimToken"));assertFalse(actual.has("audioSha256"));
         }
     }
+
+    @org.junit.jupiter.api.Test void quotaUnknownProjectionIsProcessingAndNeverClaimsACompletedDebit() {
+        var response=NpcAsrIntentService.unavailable("original-rid","ASR_OUTCOME_UNKNOWN");
+        var json=new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(response);
+        org.junit.jupiter.api.Assertions.assertEquals("PROCESSING",json.path("quotaStatus").asText());
+        org.junit.jupiter.api.Assertions.assertEquals("REQUEST_OUTCOME_UNKNOWN",json.path("errorCode").asText());
+        org.junit.jupiter.api.Assertions.assertTrue(json.path("safeText").asText().contains("额度状态处理中"));
+        org.junit.jupiter.api.Assertions.assertFalse(response.isRetryable());
+    }
+
 }

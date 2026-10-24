@@ -115,6 +115,16 @@ class NpcChatUserDataMyBatisIT {
                     if(!java.nio.file.Files.exists(asrMigration))asrMigration=java.nio.file.Paths.get("sql/migration_20261024_d_npc_asr_intent.sql");
                     org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(s.getConnection(),
                             new org.springframework.core.io.FileSystemResource(asrMigration.toFile()));
+
+                }
+            }
+            try (java.sql.ResultSet columns=st.executeQuery("SELECT COUNT(*) FROM information_schema.columns "
+                    +"WHERE table_schema=DATABASE() AND table_name='npc_asr_intent' AND column_name='quota_reservation'")) {
+                if (columns.next() && columns.getInt(1)==0) {
+                    java.nio.file.Path asrQuotaMigration=java.nio.file.Paths.get("chengyinhub-admin/sql/migration_20261024_d_npc_asr_shared_quota.sql");
+                    if(!java.nio.file.Files.exists(asrQuotaMigration))asrQuotaMigration=java.nio.file.Paths.get("sql/migration_20261024_d_npc_asr_shared_quota.sql");
+                    org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(s.getConnection(),
+                            new org.springframework.core.io.FileSystemResource(asrQuotaMigration.toFile()));
                 }
             }
             st.execute("DELETE FROM npc_chat_request");

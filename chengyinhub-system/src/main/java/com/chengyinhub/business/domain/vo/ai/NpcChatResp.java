@@ -22,6 +22,8 @@ public class NpcChatResp
     private String asrReason;
     /** Advisory: explicit POST may continue this saved transcript using the same requestId, never re-ASR. */
     private boolean asrResumable;
+    /** User function quota only; PROCESSING is neither a completed debit nor proof of provider billing. */
+    private String quotaStatus;
 
     public NpcChatResp() {}
 
@@ -49,6 +51,9 @@ public class NpcChatResp
     public void setAsrReason(String value) { this.asrReason = value; }
     public boolean isAsrResumable() { return asrResumable; }
     public void setAsrResumable(boolean value) { this.asrResumable = value; }
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    public String getQuotaStatus() { return quotaStatus; }
+    public void setQuotaStatus(String value) { this.quotaStatus=value; }
     public boolean isAi() { return ai; }
     public void setAi(boolean ai) { this.ai = ai; }
 }
