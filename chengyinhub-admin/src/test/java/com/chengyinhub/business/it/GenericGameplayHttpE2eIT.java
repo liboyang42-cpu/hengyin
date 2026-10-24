@@ -604,7 +604,7 @@ class GenericGameplayHttpE2eIT {
         ResponseEntity<JsonNode> play=http.exchange("/api/play/theme/state?topicId="+topicId,org.springframework.http.HttpMethod.GET,new org.springframework.http.HttpEntity<>(headers),JsonNode.class);
         record("GET","/api/play/theme/state?topicId="+topicId,null,play);
         rejected(play.getBody());assertTrue(play.getBody().path("msg").asText().contains("通行证"),play.getBody().toString());
-        assertFreshTemplateCopyIsGated(topicId,headers);
+        assertFreshTemplateCopyFollowsPublishedEligibility(topicId,headers);
     }
     @Test void terminalVoteAdoptionUsesThePersistedFinalChapter() throws Exception {
         org.springframework.http.HttpHeaders headers=loginHeaders("13800000003","结局测试作者");
@@ -641,7 +641,7 @@ class GenericGameplayHttpE2eIT {
         JsonNode plan=frozen.path("published").path("gameplayRuntime").path("plans").path(0);
         assertTrue(plan.path("terminal").asBoolean());assertEquals("ending1",plan.path("storyEndingId").asText());
         assertEquals(frozen.path("story").path("ending").path("endings").path(0).path("chapterId"),plan.path("endingChapterId"));
-        assertFreshTemplateCopyIsGated(topicId,headers);
+        assertFreshTemplateCopyFollowsPublishedEligibility(topicId,headers);
     }
     /**
      * F2 RPG P0(T01/T02):属性定义 PUT / validate 与角色卡 GET 走真实 HTTP。
@@ -1098,16 +1098,26 @@ class GenericGameplayHttpE2eIT {
         JsonNode reopened=success(get("/api/game/session/view?activityId="+activity+"&perspective=PLAYER",s.headers));assertEquals("PASS",reopened.path("player").path("lastOutcome").path("outcome").asText(),reopened.toString());assertFalse(reopened.path("player").has("resultCard"),reopened.toString());JsonNode usage=null;for(JsonNode tool:reopened.path("player").path("interactionTools"))if(plan.equals(tool.path("endingKey").asText()))usage=tool;assertNotNull(usage,reopened.toString());assertEquals(1,usage.path("count").asInt());assertEquals(0,usage.path("remainingCount").asInt());success(form("/api/topic/edit-detail",s.topicId,s.headers));success(form("/api/template/myinfo",s.templateId,s.headers));
     }
 
-    private void assertFreshTemplateCopyIsGated(long topicId,org.springframework.http.HttpHeaders headers) throws Exception {
+    /**
+     * 2026-10-22 owner 裁决(L07, cc79f341)：/use 与公共货架同口径，只要求已审核、在架且是模板，不再要求 VERIFIED。
+     * 负控保留：另存为模板之前直链 /use 必须被拒且不落新行；另存后(无 VERIFIED 元数据)可复制出归属本人的新草稿。
+     */
+    private void assertFreshTemplateCopyFollowsPublishedEligibility(long topicId,org.springframework.http.HttpHeaders headers) throws Exception {
+        int rows=database.queryForObject("SELECT COUNT(*) FROM cms_topic",Integer.class);
+        JsonNode notTemplate=form("/api/template/topic-template/use",topicId,headers);
+        rejected(notTemplate);assertEquals("该主题不是可用模板",notTemplate.path("msg").asText());
+        assertEquals(rows,database.queryForObject("SELECT COUNT(*) FROM cms_topic",Integer.class));
         String before=database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId);
-        success(form("/api/template/topic-template/save-as",topicId,headers));persistedTopic(topicId,"marked-as-template");
+        success(form("/api/template/topic-template/save-as",topicId,headers));JsonNode source=persistedTopic(topicId,"marked-as-template");
         assertEquals(1,database.queryForObject("SELECT is_template FROM cms_topic WHERE id=?",Integer.class,topicId));
         assertEquals(0,database.queryForObject("SELECT COUNT(*) FROM cms_topic_template_meta WHERE topic_id=? AND template_status='VERIFIED' AND del_flag=0",Integer.class,topicId));
         assertEquals(before,database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId));
-        int rows=database.queryForObject("SELECT COUNT(*) FROM cms_topic",Integer.class);
-        JsonNode result=form("/api/template/topic-template/use",topicId,headers);
-        rejected(result);assertEquals("该主题不是可用模板",result.path("msg").asText());
-        assertEquals(rows,database.queryForObject("SELECT COUNT(*) FROM cms_topic",Integer.class));
+        JsonNode copied=success(form("/api/template/topic-template/use",topicId,headers));
+        long copyId=copied.path("topicId").asLong();
+        assertTrue(copyId>0&&copyId!=topicId,copied.toString());
+        assertEquals(rows+1,database.queryForObject("SELECT COUNT(*) FROM cms_topic",Integer.class));
+        assertEquals(source.path("memberId").asLong(),database.queryForObject("SELECT member_id FROM cms_topic WHERE id=?",Long.class,copyId));
+        assertEquals(before,database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId));
     }
     private ObjectNode topicRequest(String name) {
         ObjectNode request=json.createObjectNode().put("name",name).put("saveDraft",1).put("publishMode","simple").put("productType",1).put("routeMode","LINEAR");
