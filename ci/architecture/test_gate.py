@@ -1161,6 +1161,20 @@ class OriginalProducerWiringPolicyTest(unittest.TestCase):
         self.put_write("coop_settlement_manual_case", "CoopSettlementManualCaseReadMapper")
         self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
 
+    def test_candidate_cannot_self_approve_settlement_reader_consumers_or_mapper_writes(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("consumer", "mapper"):
+            with self.subTest(change=change):
+                value = copy.deepcopy(original)
+                owner = next(o for o in value["technical_dependency_policy"]["owners"] if o["id"] == "G_SETTLEMENT_SEAT_READER")
+                if change == "consumer": owner["allowed_consumers"].append("example.Foreign")
+                else: owner["restricted_packages"]["com.chengyinhub.business.mapper."].append("com.chengyinhub.business.mapper.AiQuotaReservationMapper")
+                self.write("ci/architecture/owners.json", gate.encode(value))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
     def test_candidate_cannot_clear_manual_fact_or_add_an_unapproved_consumer(self):
         trusted, _ = self.prepare_policy()
         original = json.loads((trusted / "owners.json").read_text())

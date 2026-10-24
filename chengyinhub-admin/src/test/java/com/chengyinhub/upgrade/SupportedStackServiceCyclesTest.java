@@ -61,6 +61,8 @@ import com.chengyinhub.business.task.CommittedOfficialNoticeTask;
 import com.chengyinhub.business.service.support.SettlementDebtLedger;
 import com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService;
 import com.chengyinhub.business.service.RegistrationSeatService;
+import com.chengyinhub.business.service.RegistrationSeatSettlementReader;
+import com.chengyinhub.business.mapper.RegistrationSeatMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper;
 import com.chengyinhub.business.service.ISystemNotificationIntentService;
 import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;
@@ -310,7 +312,8 @@ class SupportedStackServiceCyclesTest
                     CommittedOfficialNoticeTask.class, ChapterApplicationInviteNotice.class,
                     WxSubscribeMsgServiceImpl.class, ImServiceImpl.class, NotifyServiceImpl.class,
                     InAppNotifyChannel.class, CmsRegistrationServiceImpl.class,
-                    TopicSettlementEvidenceService.class, RegistrationSeatService.class))
+                    TopicSettlementEvidenceService.class, RegistrationSeatService.class,
+                    RegistrationSeatSettlementReader.class))
             {
                 assertThat(context).hasSingleBean(service);
                 Object target = AopTestUtils.getUltimateTargetObject(context.getBean(service));
@@ -343,6 +346,26 @@ class SupportedStackServiceCyclesTest
             Object seats = AopTestUtils.getUltimateTargetObject(context.getBean(RegistrationSeatService.class));
             assertThat(ReflectionTestUtils.getField(seats, "registrationService"))
                     .isSameAs(context.getBean(CmsRegistrationServiceImpl.class));
+            Object seatReader = context.getBean(RegistrationSeatSettlementReader.class);
+            Object evidence = AopTestUtils.getUltimateTargetObject(context.getBean(TopicSettlementEvidenceService.class));
+            assertThat(ReflectionTestUtils.getField(evidence, "registrationSeats")).isSameAs(seatReader);
+            assertThat(ReflectionTestUtils.getField(seats, "settlementReader")).isSameAs(seatReader);
+            Object seatReaderTarget = AopTestUtils.getUltimateTargetObject(seatReader);
+            assertThat(ReflectionTestUtils.getField(seatReaderTarget, "seats"))
+                    .isSameAs(context.getBean(RegistrationSeatMapper.class));
+            assertThat(seatReader).isInstanceOf(Advised.class);
+            TransactionInterceptor seatTransaction = Arrays.stream(((Advised) seatReader).getAdvisors())
+                    .map(advisor -> advisor.getAdvice()).filter(TransactionInterceptor.class::isInstance)
+                    .map(TransactionInterceptor.class::cast).findFirst().orElseThrow();
+            Method seatRead = org.springframework.util.ReflectionUtils.findMethod(RegistrationSeatSettlementReader.class,
+                    "verifiedSeatsForGroup", Long.class, Long.class, java.util.Date.class);
+            assertThat(seatRead).isNotNull();
+            assertThat(seatTransaction.getTransactionAttributeSource()).isNotNull();
+            var seatTransactionContract = seatTransaction.getTransactionAttributeSource()
+                    .getTransactionAttribute(seatRead, RegistrationSeatSettlementReader.class);
+            assertThat(seatTransactionContract).isNotNull();
+            assertThat(seatTransactionContract.getPropagationBehavior())
+                    .isEqualTo(org.springframework.transaction.TransactionDefinition.PROPAGATION_MANDATORY);
             Object ledger = context.getBean(CoopSettlementOriginalLedger.class);
             assertThat(ReflectionTestUtils.getField(claim, "originalLedger")).isSameAs(ledger);
             Object recovery = context.getBean(CoopClosedPaymentRecovery.class);
@@ -536,6 +559,41 @@ class SupportedStackServiceCyclesTest
                 });
     }
 
+    @Test
+    void settlementSeatReaderCallingRegistrationWriterRecreatesTheRealCycle()
+    {
+        List<Method> unexpectedCalls = new ArrayList<>();
+        boolean[] replaced = { false };
+        runner(unexpectedCalls, null, CmsRegistrationServiceImpl.class, CoopSettlementClaimServiceImpl.class)
+                .withInitializer(context -> context.addBeanFactoryPostProcessor(factory -> {
+                    for (String name : factory.getBeanDefinitionNames())
+                    {
+                        var definition = factory.getBeanDefinition(name);
+                        if (RegistrationSeatSettlementReader.class.getName().equals(definition.getBeanClassName()))
+                        {
+                            ((AbstractBeanDefinition) definition).setBeanClass(SeatReaderCallingRegistration.class);
+                            replaced[0] = true;
+                        }
+                    }
+                }))
+                .run(context -> {
+                    assertThat(replaced[0]).isTrue();
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .hasRootCauseInstanceOf(BeanCurrentlyInCreationException.class)
+                            .hasStackTraceContaining("forbiddenRegistrationWriter");
+                    assertThat(unexpectedCalls).isEmpty();
+                });
+    }
+
+    static class SeatReaderCallingRegistration extends RegistrationSeatSettlementReader
+    {
+        SeatReaderCallingRegistration(RegistrationSeatMapper seats) { super(seats); }
+
+        @Autowired
+        private com.chengyinhub.business.service.ICmsRegistrationService forbiddenRegistrationWriter;
+    }
+
     static class EvidenceCallingSeatWriter extends TopicSettlementEvidenceService
     {
         EvidenceCallingSeatWriter(com.chengyinhub.business.mapper.CmsActivityMapper activities,
@@ -583,7 +641,7 @@ class SupportedStackServiceCyclesTest
                 || assembly.contains(CoopSettlementOriginalLedger.class))
         {
             assembly.addAll(List.of(CoopSettlementClaimServiceImpl.class, CoopSettlementOriginalLedger.class,
-                    TopicSettlementEvidenceService.class, RegistrationSeatService.class,
+                    TopicSettlementEvidenceService.class, RegistrationSeatService.class, RegistrationSeatSettlementReader.class,
                     CmsRegistrationServiceImpl.class, SettlementDebtLedger.class,
                     WechatVerifiedPaymentFactService.class, RegistrationPaymentConsumptionReadService.class,
                     CoopClosedPaymentRecovery.class, WxPaymentCallbackOutboxServiceImpl.class));

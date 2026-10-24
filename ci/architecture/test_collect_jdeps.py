@@ -1202,6 +1202,55 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                                       if not line.strip().startswith(member + " -> ")).encode())
                 self.assert_unknown(self.check_directions())
 
+    def test_settlement_seat_reader_exact_consumers_and_original_mapper_are_scoped(self):
+        port = "com.chengyinhub.business.mapper.RegistrationSeatMapper"
+        writer = "com.chengyinhub.business.service.RegistrationSeatService"
+        self.system_entries[port.replace(".", "/") + ".class"] = b"NOT_COMPILED_ORIGINAL_SEAT_MAPPER"
+        self.write_system(); self.output = self.output.with_name("seat-settlement-reader"); self.collect()
+        reader = self.owner_member("G_SETTLEMENT_SEAT_READER")
+        self.reference(self.owner_member("G_SETTLEMENT_EVIDENCE"), reader)
+        self.reference(writer, reader)
+        self.reference(reader, port)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertIn(["G_SETTLEMENT_EVIDENCE", "G_SETTLEMENT_SEAT_READER"], report["technical_dependencies"]["owner_edges"])
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertNotIn("chengyinhub-system:" + port, producer.shared.business_policy()["writers"])
+        self.assertEqual(3, len(producer.shared.business_policy()["private_ports"]))
+
+    def test_settlement_seat_reader_rejects_other_consumers_and_reintroduced_writer_cycle(self):
+        reader = self.owner_member("G_SETTLEMENT_SEAT_READER")
+        nested = "com.chengyinhub.business.service.RegistrationSeatService$Nested"
+        self.system_entries[nested.replace(".", "/") + ".class"] = b"NOT_COMPILED_SEAT_PREFIX_BYPASS"
+        self.write_system(); self.output = self.output.with_name("seat-reader-negative"); self.collect()
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for source in (self.foreign, nested, self.owner_member("B_PAYMENT_SDK")):
+            with self.subTest(source=source):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(source, reader)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "EXACT_STORAGE_PORT_CONSUMER" and f["source_class"] == source for f in report["findings"]))
+        for target in self.dependencies["owners"]["G_SETTLEMENT_SEAT_READER"]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(reader, target)
+                self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in self.check_directions()["findings"]})
+        self.replace_evidence("jdeps.stdout.txt", original)
+        evidence = self.owner_member("G_SETTLEMENT_EVIDENCE")
+        self.reference(evidence, reader); self.reference(reader, evidence)
+        self.assertIn("NEW_OWNER_CYCLE", {f["rule"] for f in self.check_directions()["findings"]})
+
+    def test_settlement_seat_reader_missing_raw_rows_or_wrong_mapper_cannot_pass(self):
+        reader = self.owner_member("G_SETTLEMENT_SEAT_READER")
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.decode().splitlines()
+                              if not line.strip().startswith(reader + " -> ")).encode())
+        self.assert_unknown(self.check_directions())
+        self.replace_evidence("jdeps.stdout.txt", original)
+        self.reference(reader, "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper")
+        self.assertIn("RESTRICTED_OWNER_PACKAGE_REFERENCE", {f["rule"] for f in self.check_directions()["findings"]})
+
     def test_original_producer_manual_callback_and_quota_handoff_exact_directions(self):
         edges = [("G_ORIGINAL_PRODUCER", target) for target in
                  ("G_ORIGINAL_SETTLEMENT_LEDGER", "G_ORIGINAL_MANUAL_CASES", "G_ORIGINAL_ALLOCATION",
