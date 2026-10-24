@@ -13,8 +13,12 @@ import com.chengyinhub.business.mapper.OrientSessionMapper;
 import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.service.OrientTaskEvidenceVerifier;
+import com.chengyinhub.business.service.orienteering.EventScoreVersioning;
 import com.chengyinhub.business.service.support.OrientSessionException;
+import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.web.controller.api.ApiOrientSessionController;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DuplicateKeyException;
 
@@ -37,8 +41,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -212,9 +218,30 @@ class OrientSessionServiceImplTest {
         assertEquals(((Number) first.get("serverNow")).longValue(), ((Number) replay.get("serverNow")).longValue());
         assertErr("ORIENT_IDEMPOTENCY_CONFLICT", () -> service.start(MEMBER, SESSION, CONFIG_VERSION + 9, "key-start-1"));
 
+        int written = actions.size();
         Map<String, Object> readBack = service.receipt(MEMBER, SESSION, "key-start-1");
+        assertEquals(true, readBack.get("replayed"));
         assertEquals(((Number) first.get("serverNow")).longValue(), ((Number) readBack.get("serverNow")).longValue());
+        assertEquals(written, actions.size());
         assertErr("ORIENT_RECEIPT_NOT_FOUND", () -> service.receipt(MEMBER, SESSION, "key-never-sent"));
+        ApiOrientSessionController controller = spy(new ApiOrientSessionController());
+        ReflectionTestUtils.setField(controller, "orientSessionService", service);
+        doReturn(MEMBER).when(controller).getAppUserId();
+        AjaxResult read = controller.receipt(SESSION, "key-start-1");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) read.get(AjaxResult.DATA_TAG);
+        assertEquals(200, ((Number) read.get(AjaxResult.CODE_TAG)).intValue());
+        assertEquals(true, body.get("replayed"));
+        assertEquals(SESSION, ((Number) body.get("sessionId")).longValue());
+        assertEquals(written, actions.size());
+        AjaxResult missing = controller.receipt(SESSION, "key-never-sent");
+        assertEquals(404, ((Number) missing.get(AjaxResult.CODE_TAG)).intValue());
+        assertEquals(EventScoreVersioning.SESSION_RECEIPT_NOT_FOUND, missing.get("err"));
+        assertEquals(written, actions.size());
+        doReturn(OTHER).when(controller).getAppUserId();
+        AjaxResult other = controller.receipt(SESSION, "key-start-1");
+        assertEquals("ORIENT_SESSION_NOT_FOUND", other.get("err"));
+        assertEquals(written, actions.size());
         assertErr("ORIENT_IDEMPOTENCY_KEY_REQUIRED", () -> service.start(MEMBER, SESSION, CONFIG_VERSION, null));
         assertErr("ORIENT_IDEMPOTENCY_KEY_REQUIRED", () -> service.abandon(MEMBER, SESSION, "bad key!"));
     }
