@@ -213,6 +213,7 @@ public final class ImmutableReceiptProducer {
     /**
      * 新实例从既有 {@link IImService#readSentMessage} 回读。缺端口 WAITING_SOURCE。
      * 未见过的 clientMessageId 返回 UNKNOWN，不写入内存 store。缺/空 requestId 保持 Java {@code null}。
+     * 行上的会话或发送者与本次请求不一致时，正文保持 {@code null}。
      * 不把 IM {@code msgType} 翻译成本组 Kind。
      */
     public OriginalReceipt recoverFromJournal(Long memberId, Long conversationId, String clientMessageId) {
@@ -223,9 +224,15 @@ public final class ImmutableReceiptProducer {
         if (journal == null) {
             throw new WaitingSourceException(IM_READ_SENT);
         }
+        if (memberId == null || memberId.longValue() <= 0L
+                || conversationId == null || conversationId.longValue() <= 0L) {
+            return unknownReceipt(id, null);
+        }
         ImMessage original = journal.readSent(memberId, conversationId, id);
         if (original == null || isBlank(original.getRequestHash())
-                || !id.equals(parseRequestId(original.getClientMessageId()))) {
+                || !id.equals(parseRequestId(original.getClientMessageId()))
+                || original.getConversationId() == null || !conversationId.equals(original.getConversationId())
+                || original.getSenderId() == null || !memberId.equals(original.getSenderId())) {
             return unknownReceipt(id, null);
         }
         return fromMessage(original);

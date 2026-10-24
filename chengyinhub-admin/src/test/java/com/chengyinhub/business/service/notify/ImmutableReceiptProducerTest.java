@@ -106,6 +106,8 @@ class ImmutableReceiptProducerTest {
         bare.setContent("visible-without-digest");
         ImMessage original = new ImMessage();
         original.setClientMessageId("c09-im-1");
+        original.setConversationId(12L);
+        original.setSenderId(7L);
         original.setRequestHash("hash-im-1");
         original.setContent("{\"op\":\"pin\"}");
         ImmutableReceiptProducer wired = new ImmutableReceiptProducer(store, (memberId, conversationId, clientMessageId) -> {
@@ -131,6 +133,33 @@ class ImmutableReceiptProducerTest {
         assertEquals("{\"op\":\"pin\"}", recovered.originalBody);
         assertNull(recovered.kind, "不把 IM msgType 翻译成本组 Kind");
         assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, recovered.outcome);
+        ImMessage otherConversation = new ImMessage();
+        otherConversation.setClientMessageId("c09-im-1");
+        otherConversation.setConversationId(99L);
+        otherConversation.setSenderId(7L);
+        otherConversation.setRequestHash("hash-im-1");
+        otherConversation.setContent("other-conversation");
+        ImMessage otherSender = new ImMessage();
+        otherSender.setClientMessageId("c09-im-other-sender");
+        otherSender.setConversationId(12L);
+        otherSender.setSenderId(8L);
+        otherSender.setRequestHash("hash-im-other");
+        otherSender.setContent("other-sender");
+        ImmutableReceiptProducer mismatched = new ImmutableReceiptProducer(store,
+                (memberId, conversationId, clientMessageId) -> {
+                    if ("c09-im-other-sender".equals(clientMessageId)) {
+                        return otherSender;
+                    }
+                    return otherConversation;
+                }, null);
+        ImmutableReceiptProducer.OriginalReceipt wrongConversation =
+                mismatched.recoverFromJournal(7L, 12L, "c09-im-1");
+        assertEquals("c09-im-1", wrongConversation.requestId);
+        assertNull(wrongConversation.originalBody);
+        ImmutableReceiptProducer.OriginalReceipt wrongSender =
+                mismatched.recoverFromJournal(7L, 12L, "c09-im-other-sender");
+        assertEquals("c09-im-other-sender", wrongSender.requestId);
+        assertNull(wrongSender.originalBody);
         assertEquals(0, store.size(), "journal 回读不得占内存 store");
         ImmutableReceiptProducer.WaitingSourceException stillNoSend = assertThrows(
                 ImmutableReceiptProducer.WaitingSourceException.class,
