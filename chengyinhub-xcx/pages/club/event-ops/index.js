@@ -5,7 +5,7 @@ const toast = require('../../../utils/toast.js');
 const app = getApp()
 const motion = require('../../../utils/motion.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
-const { bizFailureMessage } = require('../../../utils/response-shape.js')
+const { bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js')
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js')
 
 const RECURRENCES = [
@@ -91,7 +91,7 @@ function correctionWindowText(window) {
 }
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
-function ok(res) { return !!res && (res.code === 200 || res.code === '200') }
+function ok(res) { return isBizOk(res) }
 function conflict(res) { return !!res && Number(res.code) === 409 }
 function requestId(prefix) {
   return prefix + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)

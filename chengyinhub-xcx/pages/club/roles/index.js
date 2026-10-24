@@ -1,6 +1,6 @@
 const toast = require('../../../utils/toast.js');
 const app = getApp()
-const { isRecord, isRecordList, bizFailureMessage } = require('../../../utils/response-shape.js')
+const { isRecord, isRecordList, bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js')
 
 const ROLE_REQUEST_INTENT_STORAGE_KEY = 'club_role_request_intents_v1'
 const ROLE_REQUEST_INTENT_TTL_MS = 24 * 60 * 60 * 1000
@@ -13,7 +13,7 @@ const ROLE_SUMMARY = {
 
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
-function isSuccess(res) { return !!res && (res.code === 200 || res.code === '200') }
+function isSuccess(res) { return isBizOk(res) }
 function isClientError(res) {
   const code = Number(res && res.code)
   return code >= 400 && code < 500

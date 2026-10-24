@@ -1,7 +1,7 @@
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp()
-const { isRecord, isRecordList, bizFailureMessage } = require('../../../utils/response-shape.js')
+const { isRecord, isRecordList, bizFailureMessage, isBizOk } = require('../../../utils/response-shape.js')
 
 const ALLOWED_STATUSES = ['ACTIVE', 'UNBANNED', 'EXPIRED']
 const ALLOWED_SOURCES = ['CLUB', 'PLATFORM']
@@ -15,7 +15,7 @@ const DURATION_OPTIONS = [
 
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
-function isSuccess(res) { return !!res && (res.code === 200 || res.code === '200') }
+function isSuccess(res) { return isBizOk(res) }
 function positiveId(value) {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null

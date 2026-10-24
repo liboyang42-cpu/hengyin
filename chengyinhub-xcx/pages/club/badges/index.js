@@ -3,11 +3,12 @@
 // create/grant 仅主理人(/api/club/detail 的 isOwner);其他人只读列表,不渲染任何管理控件。
 const toast = require('../../../utils/toast.js')
 const clubBadge = require('../utils/club-badge.js')
+const { isBizOk } = require('../../../utils/response-shape.js')
 const app = getApp()
 
 function jsonBody(data) { return JSON.stringify(data || {}) }
 function jsonHeader() { return { 'Content-Type': 'application/json' } }
-function isSuccess(res) { return !!res && (res.code === 200 || res.code === '200') }
+function isSuccess(res) { return isBizOk(res) }
 function emptyForm() { return { name: '', desc: '' } }
 // 账号世代:同一页面实例里换号(A 登出 → B 登录)时,旧身份/名单/弹层/草稿与迟到响应都不能带给 B。
 function accountKey() { return String((app.getUserID && app.getUserID()) || '') }
