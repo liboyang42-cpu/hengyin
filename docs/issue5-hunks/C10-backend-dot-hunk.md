@@ -111,3 +111,17 @@ BUILD SUCCESS
 - 答案：客户端包不得携带；判定走 `H5AnswerProtection` 的冻结作者版本。
 
 WAITING_SOURCE：未 push 的 iOS `e2d86c4`、后端 `e16c2c5` `5b92889`、232 pack、v12 DOCX、H5/SDK/qmod 原文。
+
+## 8. Parent addendum 2026-10-23 17:21 America/Los_Angeles
+
+`H5AnswerProtectionTest.recoverOfNeverSeenIdDoesNotOccupyThenUniqueMatchApplies`：未见 `c10-ans-never-c10` 的 `recover` 保持 UNKNOWN 且 `existing==null`；后续唯一 `evaluate` SERVER_MATCH 才是第一笔 APPLIED。未发明 `recoverOriginal`。H5 evaluate 的 WAITING_SOURCE / REJECTED oneShot 占账仍视为该 id 的唯一原文（leave）。
+
+父进程独立 surefire（`/tmp/hy-c10-rev`，HEAD `979fba0f1`，2026-10-24T00:21:17Z）：
+
+```
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- H5AnswerProtectionTest
+Tests run: 29, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
