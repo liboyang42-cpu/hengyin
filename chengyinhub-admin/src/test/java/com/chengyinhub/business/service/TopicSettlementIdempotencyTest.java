@@ -69,6 +69,7 @@ class TopicSettlementIdempotencyTest {
         ReflectionTestUtils.setField(svc, "settlementRuleService", settlementRuleService);
         ReflectionTestUtils.setField(svc, "transactionManager", transactionManager);
         // 无销售收口也要登记该主题的保证金退款意图(d7593ff37)
+        ReflectionTestUtils.setField(svc, "coopInviteMapper", mock(com.chengyinhub.business.mapper.CoopInviteMapper.class));
         coopInviteService = mock(ICoopInviteService.class);
         ReflectionTestUtils.setField(svc, "coopInviteService", coopInviteService);
 

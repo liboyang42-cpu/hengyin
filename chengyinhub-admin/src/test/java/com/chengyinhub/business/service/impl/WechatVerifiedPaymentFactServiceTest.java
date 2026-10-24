@@ -119,12 +119,80 @@ class WechatVerifiedPaymentFactServiceTest {
         verifyNoInteractions(original);verify(claims).release(hash,"owner",1L);
     }
 
-    @Test void conflictAuditHasAnExplicitIndependentCommitContract() throws Exception {
-        var tx=WechatVerifiedPaymentFactService.class.getMethod("recordVerified",WechatVerifiedPaymentFact.class)
-                .getAnnotation(org.springframework.transaction.annotation.Transactional.class);
-        assertEquals(org.springframework.transaction.annotation.Propagation.REQUIRES_NEW,tx.propagation());
-        assertTrue(java.util.List.of(tx.noRollbackFor()).contains(WechatVerifiedPaymentFactService.ConflictException.class));
+    @Test void conflictAuditHasAnExplicitIndependentCommitContract() {
+        var commits=new java.util.concurrent.atomic.AtomicInteger();
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"factWriteTransactions",new org.springframework.transaction.support.AbstractPlatformTransactionManager(){
+            @Override protected Object doGetTransaction(){return new Object();}
+            @Override protected void doBegin(Object tx,org.springframework.transaction.TransactionDefinition definition){
+                assertEquals(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW,definition.getPropagationBehavior());
+                assertFalse(definition.isReadOnly());
+            }
+            @Override protected void doCommit(org.springframework.transaction.support.DefaultTransactionStatus status){commits.incrementAndGet();}
+            @Override protected void doRollback(org.springframework.transaction.support.DefaultTransactionStatus status){fail("conflict evidence must commit before rejection");}
+        });
+        var first=service.recordVerified(payment("TX1","REG1",1000));
+        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.recordVerified(payment("TX1","REG1",1001)));
+        assertEquals(2,commits.get());assertEquals(1,rows.rejections.size());assertEquals(1000,service.requireVerified(first).facts().totalFen());
+        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+            assertThrows(IllegalStateException.class,()->service.recordVerified(payment("TX1","REG1",1000)));
+        });
+        assertEquals(2,commits.get(),"outer owner rejected before suspending/acquiring another business lock");
     }
+    @Test void lateSuccessRetainsOneOriginalManualTicketAndCompletionRequiresTheOwnersTransaction() {
+        var jdbc=(org.springframework.jdbc.core.JdbcTemplate)ReflectionTestUtils.getField(service,"factIntentJdbc");
+        ReflectionTestUtils.setField(service,"factIntentJdbc",new org.springframework.jdbc.core.JdbcTemplate(){
+            @Override public java.util.List<Map<String,Object>> queryForList(String sql,Object... args) {
+                if(sql.startsWith("SELECT closed_confirmed_at")) return java.util.List.of(Map.of("closed_confirmed_at",java.time.Instant.EPOCH));
+                return jdbc.queryForList(sql,args);
+            }
+        });
+        var candidate=payment("TX1","REG1",1000);var reference=service.recordVerified(candidate);
+        assertEquals(reference,service.recordVerified(candidate));
+        var ticket=service.findPaymentRecovery(reference).orElseThrow();
+        assertEquals(1L,ticket.businessId());assertEquals(4,ticket.state());
+        assertEquals(candidate,ticket.original().facts());assertEquals("VERIFIED_SUCCESS_AFTER_CLOSED",ticket.reason());
+        assertEquals(1,rows.rows.size());assertEquals(1,rows.recoveries.size());assertEquals(1,rows.rejections.size());
+        assertThrows(IllegalStateException.class,()->service.completePaymentRecovery(reference,1));
+        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+            assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.completePaymentRecovery(reference,2));
+            // This unit models only the owner's boundary. Actual consumption proof remains the A-owned mapper/transaction.
+            service.completePaymentRecovery(reference,1);service.completePaymentRecovery(reference,1);
+        });
+        assertEquals(2,service.findPaymentRecovery(reference).orElseThrow().state());
+        assertEquals(reference,service.recordVerified(candidate));
+        assertEquals(2,service.findPaymentRecovery(reference).orElseThrow().state(),"verified replay cannot re-open a resolved handoff");
+    }
+
+    @Test void actualLocalStateConflictQueuesOriginalSuccessButMissingBusinessNeverInventsAnOwner() {
+        var owner=(com.chengyinhub.business.service.WechatPaymentOrderOwner)ReflectionTestUtils.getField(service,"factBusinessOwner");
+        when(owner.lock("REG1")).thenReturn(new com.chengyinhub.business.service.WechatPaymentOrderOwner.Snapshot(
+                "REGISTRATION",1L,java.math.BigDecimal.TEN,false,false));
+        var reference=service.recordVerified(payment("TX1","REG1",1000));
+        assertEquals("VERIFIED_SUCCESS_LOCAL_CONFLICT",service.findPaymentRecovery(reference).orElseThrow().reason());
+        when(owner.lock("REG2")).thenThrow(new com.chengyinhub.business.service.WechatPaymentOrderOwner.MissingOrderException());
+        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.recordVerified(payment("TX2","REG2",1000)));
+        assertNotNull(service.findPaymentSuccess("merchant","REG2","TX2"));
+        assertEquals(1,rows.recoveries.size(),"no fabricated business id for a missing original row");
+        assertTrue(rows.rejections.values().stream().anyMatch(r->"VERIFIED_SUCCESS_BUSINESS_MISSING".equals(r.get("rejection_reason"))));
+    }
+
+    @Test void wrongOriginalAttemptOwnerOrRequestHashIsRejectedBeforeAReferenceCanBeConsumed() {
+        var jdbc=(org.springframework.jdbc.core.JdbcTemplate)ReflectionTestUtils.getField(service,"factIntentJdbc");
+        ReflectionTestUtils.setField(service,"factIntentJdbc",new org.springframework.jdbc.core.JdbcTemplate(){
+            @Override public java.util.List<Map<String,Object>> queryForList(String sql,Object... args) {
+                if(sql.startsWith("SELECT business_out_trade_no")) return java.util.List.of(Map.of(
+                        "business_out_trade_no","REG1","biz_type","REGISTRATION","biz_id",99L));
+                return jdbc.queryForList(sql,args);
+            }
+        });
+        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.recordVerified(payment("TX1","REG1",1000)));
+        ReflectionTestUtils.setField(service,"factIntentJdbc",jdbc);
+        var wrongHash=new WechatVerifiedPaymentFact(Kind.PAYMENT,"merchant","wx-original","REG1","REG1","REG1",
+                "TX1","TX1","APP","CNY",1000,1000,Instant.parse("2026-10-24T00:00:00Z"),"b".repeat(64),"SUCCESS");
+        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.recordVerified(wrongHash));
+        assertEquals(0,rows.rows.size());assertEquals(2,rows.rejections.size());
+    }
+
     public static WechatVerifiedPaymentFact payment(String transaction,String order,long fen) {
         return new WechatVerifiedPaymentFact(Kind.PAYMENT,"merchant","wx-original",order,order,order,transaction,transaction,
                 "APP","CNY",fen,fen,Instant.parse("2026-10-24T00:00:00Z"),"a".repeat(64),"SUCCESS");

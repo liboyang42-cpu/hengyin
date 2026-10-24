@@ -139,6 +139,10 @@ public interface ICoopInviteService {
 
     /** 仅供已验证渠道归属/币种的回调或查单结果调用，实际金额/交易号与CAS仍在此校验。 */
     boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId);
+
+    /** Exact verified SUCCESS reference; original paid CAS and any recovery ticket complete in one transaction. */
+    boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference);
     void requestDepositRefund(Long inviteId, Long operatorMemberId);
     void requestTopicDepositRefunds(Long topicId);
     boolean handleDepositRefundResult(java.util.Map<String,String> facts);

@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;
 import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;
+import com.chengyinhub.business.service.WechatPaymentOrderOwner;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -17,25 +18,130 @@ import org.springframework.transaction.annotation.Transactional;
 public class WechatVerifiedPaymentFactService {
     @Autowired private WechatVerifiedPaymentFactMapper mapper;
     @Autowired private org.springframework.transaction.PlatformTransactionManager factReadTransactions;
+    @Autowired private org.springframework.transaction.PlatformTransactionManager factWriteTransactions;
+    @Autowired private WechatPaymentOrderOwner factBusinessOwner;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate factIntentJdbc;
     public record Stored(Reference reference, WechatVerifiedPaymentFact facts) { }
+    public record RecoveryTicket(long id, long businessId, Stored original, int state, String reason) { }
+    private record WriteResult(Reference reference, ConflictException rejected) { }
     public static class ConflictException extends IllegalStateException {
         public ConflictException() { super("Verified payment fact identity conflict; evidence retained"); }
     }
 
-    @Transactional(propagation=Propagation.REQUIRES_NEW, noRollbackFor=ConflictException.class)
+    /** SDK observation is complete before entry. Never suspend an outer owner of the same business row. */
     public Reference recordVerified(WechatVerifiedPaymentFact candidate) {
         candidate.requireValid();
-        Map<String,Object> insert = columns(candidate);
-        mapper.insertIgnore(insert);
-        List<Map<String,Object>> matches = mapper.selectMatching(candidate.kind().name(), candidate.mchid(),
-                candidate.providerId(), candidate.merchantEventNo());
-        if (matches.size() == 1) {
-            Stored existing = checked(matches.get(0));
-            if (existing.reference().hash().equals(candidate.factHash())) return existing.reference();
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("渠道事实必须在原业务事务外持久化，不能悬挂持行锁的调用方");
+        var transaction=new org.springframework.transaction.support.TransactionTemplate(factWriteTransactions);
+        transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        WriteResult result=transaction.execute(status -> recordSerialized(candidate));
+        if (result==null) throw new IllegalStateException("Verified fact transaction has no result");
+        if (result.rejected()!=null) throw result.rejected(); // Rejection evidence has already committed.
+        return result.reference();
+    }
+
+    private WriteResult recordSerialized(WechatVerifiedPaymentFact candidate) {
+        WechatPaymentOrderOwner.Snapshot business;
+        try { business=factBusinessOwner.lock(candidate.businessOutTradeNo()); }
+        catch (WechatPaymentOrderOwner.MissingOrderException missing) { business=null; }
+        // The original business row is shared by guard/CAS, all attempts and this fact producer.
+        // No SDK, business mutation or callback-DONE write runs in this independent short transaction.
+        if (business!=null && (business.id()==null || business.id().longValue()<=0))
+            throw new IllegalStateException("原业务锁身份不完整");
+        if (!matchesFrozenIntent(candidate,business)) {
+            var original=mapper.selectMatchingCurrent(candidate.kind().name(),candidate.mchid(),candidate.providerId(),candidate.merchantEventNo());
+            reject(candidate,original.isEmpty()?null:number(original.get(0),"id"),null,"ORIGINAL_INTENT_CONFLICT");
+            return new WriteResult(null,new ConflictException());
         }
-        if (matches.isEmpty()) throw new IllegalStateException("Verified fact insert has no durable readback");
-        reject(candidate, number(matches.get(0),"id"), null, "PROVIDER_IDENTITY");
-        throw new ConflictException();
+        Map<String,Object> insert=columns(candidate);
+        boolean inserted=mapper.insertIgnore(insert)==1;
+        var matches=mapper.selectMatchingCurrent(candidate.kind().name(),candidate.mchid(),candidate.providerId(),candidate.merchantEventNo());
+        if (matches.size()!=1 || !checked(matches.get(0)).reference().hash().equals(candidate.factHash())) {
+            if (matches.isEmpty()) throw new IllegalStateException("Verified fact insert has no durable readback");
+            reject(candidate,number(matches.get(0),"id"),null,"PROVIDER_IDENTITY");
+            return new WriteResult(null,new ConflictException());
+        }
+        Stored stored=checked(matches.get(0));
+        if (business==null) {
+            reject(candidate,stored.reference().id(),null,"VERIFIED_SUCCESS_BUSINESS_MISSING");
+            return new WriteResult(stored.reference(),new ConflictException());
+        }
+        if (candidate.kind()==WechatVerifiedPaymentFact.Kind.PAYMENT) {
+            var attempts=factIntentJdbc.queryForList("SELECT closed_confirmed_at FROM wx_pay_order_intent WHERE mchid=? AND out_trade_no=?",
+                    candidate.mchid(),candidate.wxOutTradeNo());
+            boolean closed=attempts.size()==1 && attempts.get(0).get("closed_confirmed_at")!=null;
+            if (closed || (inserted && !business.payable())) {
+                String reason=closed?"VERIFIED_SUCCESS_AFTER_CLOSED":"VERIFIED_SUCCESS_LOCAL_CONFLICT";
+                reject(candidate,stored.reference().id(),null,reason);
+                enqueueRecovery(stored,business.id().longValue(),reason);
+            }
+        }
+        return new WriteResult(stored.reference(),null);
+    }
+
+    private boolean matchesFrozenIntent(WechatVerifiedPaymentFact fact,WechatPaymentOrderOwner.Snapshot business) {
+        var rows=factIntentJdbc.queryForList("SELECT appid,trade_type,currency,total_fen FROM wx_pay_order_intent WHERE mchid=? AND out_trade_no=?",
+                fact.mchid(),fact.wxOutTradeNo());
+        if (rows.isEmpty()) return fact.intentRequestHash()==null; // Historical actual provider original, never guessed channel defaults.
+        if (rows.size()!=1) return false;
+        var row=rows.get(0);
+        if (!fact.appid().equals(row.get("appid")) || !fact.tradeType().equals(row.get("trade_type"))
+                || !fact.currency().equals(row.get("currency")) || !(row.get("total_fen") instanceof Number total)
+                || total.longValue()!=fact.totalFen()) return false;
+        var binding=factIntentJdbc.queryForList("SELECT business_out_trade_no,biz_type,biz_id FROM wx_pay_order_intent WHERE mchid=? AND out_trade_no=?",
+                fact.mchid(),fact.wxOutTradeNo());
+        if (binding.size()!=1 || !fact.businessOutTradeNo().equals(binding.get(0).get("business_out_trade_no"))) return false;
+        if (business!=null && (!business.type().equals(binding.get(0).get("biz_type"))
+                || !(binding.get(0).get("biz_id") instanceof Number id) || id.longValue()!=business.id().longValue())) return false;
+        var hashes=factIntentJdbc.queryForList("SELECT request_hash FROM wx_pay_order_intent WHERE mchid=? AND out_trade_no=?",
+                fact.mchid(),fact.wxOutTradeNo());
+        return hashes.size()==1 && fact.intentRequestHash()!=null && fact.intentRequestHash().equals(hashes.get(0).get("request_hash"));
+    }
+
+    private static String recoveryKey(Reference reference) { return "VERIFIED:"+reference.id()+":"+reference.hash(); }
+    private void enqueueRecovery(Stored stored,long businessId,String reason) {
+        Map<String,Object> row=new HashMap<>(); row.put("idempotency_key",recoveryKey(stored.reference()));
+        row.put("biz_id",businessId);row.put("reason",reason);mapper.insertRecovery(row);
+        var actual=mapper.selectRecovery(recoveryKey(stored.reference()));
+        if (actual==null || number(actual,"biz_id")!=businessId || number(actual,"biz_type")!=1
+                || number(actual,"money_affecting")!=0 || (number(actual,"state")!=4 && number(actual,"state")!=2))
+            throw new IllegalStateException("成功冲突恢复队列持久回读不一致");
+    }
+
+    /** Durable manual handoff, not a current provider status and never authority to refund/reopen capacity. */
+    public java.util.Optional<RecoveryTicket> findPaymentRecovery(Reference reference) {
+        Stored original=requireVerified(reference);
+        if (original.facts().kind()!=WechatVerifiedPaymentFact.Kind.PAYMENT) throw new IllegalArgumentException("原支付事实引用必填");
+        return readFresh(() -> {
+            var row=mapper.selectRecovery(recoveryKey(reference));
+            if (row==null) return java.util.Optional.empty();
+            if (number(row,"biz_id")<=0 || number(row,"biz_type")!=1 || number(row,"money_affecting")!=0)
+                throw new IllegalStateException("原支付恢复身份不完整");
+            return java.util.Optional.of(new RecoveryTicket(number(row,"id"),number(row,"biz_id"),original,
+                    Math.toIntExact(number(row,"state")),(String)row.get("last_error_code")));
+        });
+    }
+
+    /** Owner calls only after its own exact consumption proof, in that original successful mutation/DONE transaction. */
+    @Transactional(propagation=Propagation.MANDATORY)
+    public void completePaymentRecovery(Reference reference,long businessId) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("恢复完成必须与原业务成功消费同事务");
+        var stored=requireVerified(reference);
+        if (stored.facts().kind()!=WechatVerifiedPaymentFact.Kind.PAYMENT) throw new IllegalArgumentException("原支付事实必填");
+        var original=factBusinessOwner.lock(stored.facts().businessOutTradeNo());
+        if (original==null || original.id()==null || original.id().longValue()!=businessId)
+            throw new ConflictException();
+        var queued=mapper.selectRecoveryCurrent(recoveryKey(reference));
+        if (queued==null) return;
+        if (number(queued,"biz_id")!=businessId || number(queued,"biz_type")!=1 || number(queued,"money_affecting")!=0
+                || (number(queued,"state")!=4 && number(queued,"state")!=2)) throw new ConflictException();
+        if (number(queued,"state")==4 && mapper.completeRecovery(recoveryKey(reference),businessId)!=1)
+            throw new IllegalStateException("原支付恢复完成回写冲突");
+        var completed=mapper.selectRecoveryCurrent(recoveryKey(reference));
+        if (completed==null || number(completed,"biz_id")!=businessId || number(completed,"state")!=2)
+            throw new IllegalStateException("原支付恢复完成持久回读不一致");
     }
 
     public Stored requireVerified(Reference reference) {

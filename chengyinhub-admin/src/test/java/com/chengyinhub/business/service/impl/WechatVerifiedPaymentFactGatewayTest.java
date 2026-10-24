@@ -115,6 +115,16 @@ class WechatVerifiedPaymentFactGatewayTest {
         assertEquals(1,f.rows.rows.size());
         verify(f.refundOwner,times(2)).handleRefundNotify(anyMap());
     }
+    @Test void activeBusinessTransactionCannotReachTheOfficialQueryOrCloseSdk() {
+        Fixture fixture=new Fixture();
+        new org.springframework.transaction.support.TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+            assertThrows(RuntimeException.class,()->fixture.gateway.queryOrderStatus("REG1"));
+            assertThrows(IllegalStateException.class,()->fixture.gateway.closePaymentAttempt("REG1","REG1"));
+        });
+        verifyNoInteractions(fixture.payments,fixture.refunds);
+        assertTrue(fixture.rows.rows.isEmpty());
+    }
+
     private static WechatVerifiedPaymentFact.Reference reference(Map<String,String> facts) {
         return new WechatVerifiedPaymentFact.Reference(Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash"));
     }
@@ -144,6 +154,11 @@ class WechatVerifiedPaymentFactGatewayTest {
             WechatVerifiedFactTestSupport.setField(gateway,"paymentIntentJdbc",new JdbcTemplate(){
                 @Override public java.util.List<Map<String,Object>> queryForList(String sql,Object... args) {
                     if (sql.startsWith("SELECT appid")) return java.util.List.of(Map.of("appid","wx-original","trade_type","APP","currency","CNY","total_fen",1000L));
+                    if (sql.startsWith("SELECT business_out_trade_no")) {
+                        String no=original.getOutTradeNo();String kind=no.startsWith("CLM")?"CLM":no.startsWith("DEP")?"DEP":
+                                no.startsWith("TPLTM_")?"COMMERCE":"REGISTRATION";
+                        return java.util.List.of(Map.of("business_out_trade_no",no,"biz_type",kind,"biz_id",1L));
+                    }
                     if (sql.startsWith("SELECT request_hash")) {var row=new java.util.HashMap<String,Object>();row.put("request_hash",frozenHash);return java.util.List.of(row);}
                     return java.util.List.of();
                 }

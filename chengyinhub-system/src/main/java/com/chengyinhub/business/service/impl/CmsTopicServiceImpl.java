@@ -143,6 +143,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     // A3-7(P0):每主题独立事务用(照抄活动线),替代原整批单 @Transactional。
     @Autowired
     private PlatformTransactionManager transactionManager;
+    @Autowired private WechatVerifiedPaymentFactService depositVerifiedFacts;
 
     @Autowired
     private CoopInviteMapper coopInviteMapper;
@@ -573,6 +574,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         IllegalStateException failure = new IllegalStateException();
         for (CmsTopic topic : topics) {
             try {
+                reconcileTopicPendingDepositPayments(topic.getId());
                 Boolean settled = tx.execute(status -> settleTopic(topic, rule));
                 if (Boolean.TRUE.equals(settled)) {
                     settledCount++;
@@ -1087,52 +1089,91 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * 结算撞上支付中时,必须先问支付渠道的真实状态,不能把本地 status=1 猜成未缴。
      * 已支付转冻结(随后统一退款);未支付先关闭微信订单再转待缴,才可安全从应收抵扣。
      */
+    private void reconcileTopicPendingDepositPayments(Long topicId) {
+        requireDepositProofOutsideTransaction();
+        CoopInvite query = new CoopInvite(); query.setTopicId(topicId); query.setStatus(1);
+        List<CoopInvite> candidates = coopInviteMapper.selectCoopInviteList(query);
+        if (candidates == null) throw new IllegalStateException("保证金查证范围缺失 topicId=" + topicId);
+        for (CoopInvite candidate : candidates) {
+            if (candidate == null || !topicId.equals(candidate.getTopicId()) || !Integer.valueOf(1).equals(candidate.getStatus()))
+                throw new IllegalStateException("保证金查证范围变化 topicId=" + topicId);
+            if (!Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(candidate.getInviteType())
+                    && Integer.valueOf(1).equals(candidate.getDepositStatus())) resolvePendingDepositPaymentForSettlement(candidate);
+        }
+    }
+
+    private static void requireDepositProofOutsideTransaction() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("保证金渠道查证必须在业务事务与行锁之外执行");
+    }
+
     private boolean resolvePendingDepositPaymentForSettlement(CoopInvite invite) {
-        if (invite.getDepositOutTradeNo() == null) {
-            throw new IllegalStateException("保证金支付单缺失 inviteId=" + invite.getId());
+        requireDepositProofOutsideTransaction();
+        if (invite == null || invite.getId() == null || invite.getTopicId() == null
+                || invite.getDepositOutTradeNo() == null || invite.getDepositOutTradeNo().isBlank()
+                || invite.getDepositAmount() == null || !Integer.valueOf(1).equals(invite.getDepositStatus()))
+            throw new IllegalStateException("保证金支付原身份缺失");
+        // Freeze the observation; a later current read must never retarget an old provider result.
+        CoopInvite observed = new CoopInvite(); observed.setId(invite.getId()); observed.setTopicId(invite.getTopicId());
+        observed.setDepositOutTradeNo(invite.getDepositOutTradeNo()); observed.setDepositAmount(invite.getDepositAmount());
+        Map<String, String> queried = wechatPayService.queryOrderStatus(observed.getDepositOutTradeNo());
+        if (queried == null || !observed.getDepositOutTradeNo().equals(queried.get("out_trade_no")))
+            throw new IllegalStateException("保证金支付查单归属不匹配 inviteId=" + observed.getId());
+        Map<String, String> payment = new HashMap<>(queried);
+        String attempt = payment.get("wx_out_trade_no");
+        if (attempt == null || attempt.isBlank()) throw new IllegalStateException("保证金支付尝试身份缺失 inviteId=" + observed.getId());
+        String state = payment.get("trade_state");
+        if ("NOTPAY".equalsIgnoreCase(state) || "USERPAYING".equalsIgnoreCase(state) || "PAYERROR".equalsIgnoreCase(state)) {
+            // The gateway persists original CLOSED/SUCCESS evidence before this method opens a mutation transaction.
+            if (!wechatPayService.closePaymentAttempt(observed.getDepositOutTradeNo(), attempt))
+                throw new IllegalStateException("保证金支付单关闭未确认,须按原号重查 inviteId=" + observed.getId());
+            payment.put("trade_state", "CLOSED");
+        } else if (!"SUCCESS".equalsIgnoreCase(state) && !"CLOSED".equalsIgnoreCase(state)) {
+            throw new IllegalStateException("保证金支付状态无法确认 inviteId=" + observed.getId());
         }
-        Map<String, String> payment = wechatPayService.queryOrderStatus(invite.getDepositOutTradeNo());
-        if (payment == null || !invite.getDepositOutTradeNo().equals(payment.get("out_trade_no"))) {
-            throw new IllegalStateException("保证金支付查单归属不匹配 inviteId=" + invite.getId());
-        }
-        final String observedWxOutTradeNo = payment.get("wx_out_trade_no");
-        if (observedWxOutTradeNo == null || observedWxOutTradeNo.isBlank()) {
-            throw new IllegalStateException("保证金支付尝试身份缺失 inviteId=" + invite.getId());
-        }
-        String tradeState = payment.get("trade_state");
-        if ("SUCCESS".equalsIgnoreCase(tradeState)) {
-            if (!"CNY".equals(payment.get("currency"))) {
-                throw new IllegalStateException("保证金支付单号或币种不匹配 inviteId=" + invite.getId());
-            }
+        TransactionTemplate mutation = new TransactionTemplate(transactionManager);
+        mutation.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        Boolean unpaid = mutation.execute(status -> applyObservedDepositPaymentForSettlement(observed, payment));
+        if (Boolean.TRUE.equals(unpaid)) invite.setDepositStatus(5); // Only after the short business transaction commits.
+        return Boolean.TRUE.equals(unpaid);
+    }
+
+    /** No provider I/O. Current topic -> invite -> observed attempt fence precedes the original local CAS. */
+    private boolean applyObservedDepositPaymentForSettlement(CoopInvite observed, Map<String, String> payment) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("保证金状态复核必须加入原业务短事务");
+        lockSettlementTopic(observed.getTopicId());
+        CoopInvite current = coopInviteMapper.selectCoopInviteByIdForUpdate(observed.getId());
+        if (current == null || !observed.getId().equals(current.getId())
+                || !observed.getTopicId().equals(current.getTopicId()) || !Integer.valueOf(1).equals(current.getStatus())
+                || Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(current.getInviteType())
+                || !observed.getDepositOutTradeNo().equals(current.getDepositOutTradeNo())
+                || current.getDepositAmount() == null || observed.getDepositAmount().compareTo(current.getDepositAmount()) != 0)
+            throw new IllegalStateException("保证金原身份或金额已变化 inviteId=" + observed.getId());
+        String business = observed.getDepositOutTradeNo(); String attempt = payment.get("wx_out_trade_no");
+        if ("SUCCESS".equalsIgnoreCase(payment.get("trade_state"))) {
+            CoopInviteServiceImpl.checkedDepositPaymentReference(payment);
+            if (!"CNY".equals(payment.get("currency"))) throw new IllegalStateException("保证金币种不匹配");
             Long paidCents;
-            try { paidCents = payment.get("total") == null ? null : Long.valueOf(payment.get("total")); }
-            catch (NumberFormatException failure) { throw new IllegalStateException("保证金支付金额无法确认 inviteId=" + invite.getId(), failure); }
-            if (!coopInviteService.markDepositPaid(invite.getDepositOutTradeNo(), paidCents, payment.get("transaction_id"))) {
-                throw new IllegalStateException("保证金支付事实不匹配 inviteId=" + invite.getId());
-            }
-            CoopInvite confirmed = coopInviteMapper.selectCoopInviteByIdForUpdate(invite.getId());
-            if (confirmed == null || !Integer.valueOf(2).equals(confirmed.getDepositStatus())) {
-                throw new IllegalStateException("保证金支付状态读回失败 inviteId=" + invite.getId());
-            }
+            try { paidCents = Long.valueOf(payment.get("total")); }
+            catch (RuntimeException invalid) { throw new IllegalStateException("保证金支付金额无法确认", invalid); }
+            if (!wechatPayService.lockPaymentAttemptForUpdate(business, attempt)
+                    || !coopInviteService.markDepositPaid(business, paidCents, payment.get("transaction_id")))
+                throw new IllegalStateException("保证金支付事实不匹配 inviteId=" + observed.getId());
+            CoopInvite confirmed = coopInviteMapper.selectCoopInviteByIdForUpdate(observed.getId());
+            if (confirmed == null || !Integer.valueOf(2).equals(confirmed.getDepositStatus())
+                    || !business.equals(confirmed.getDepositOutTradeNo())
+                    || !java.util.Objects.equals(payment.get("transaction_id"), confirmed.getDepositPaidTransactionId()))
+                throw new IllegalStateException("保证金支付状态读回失败 inviteId=" + observed.getId());
+            CoopInviteServiceImpl.completeConsumedDepositRecovery(depositVerifiedFacts, coopInviteMapper, observed.getId(), payment);
             return false;
         }
-        if ("NOTPAY".equalsIgnoreCase(tradeState) || "USERPAYING".equalsIgnoreCase(tradeState)
-                || "PAYERROR".equalsIgnoreCase(tradeState)) {
-            // 关闭并查回同一个原尝试的 CLOSED；不能把 PAYERROR 或一次未支付观察当作未扣款终态。
-            if (!wechatPayService.closePaymentAttempt(invite.getDepositOutTradeNo(), observedWxOutTradeNo)) {
-                throw new IllegalStateException("保证金支付单关闭失败 inviteId=" + invite.getId());
-            }
-        } else if (!"CLOSED".equalsIgnoreCase(tradeState)) {
-            throw new IllegalStateException("保证金支付状态无法确认 inviteId=" + invite.getId());
-        }
-        // 与下方邀约 CAS 共用原事务/行锁，旧尝试的关闭事实不得作用于新尝试。
-        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invite.getDepositOutTradeNo(), observedWxOutTradeNo)) {
-            throw new IllegalStateException("保证金支付尝试已变化 inviteId=" + invite.getId());
-        }
-        if (coopInviteMapper.updateDepositIfCurrent(invite.getId(), 1, invite.getDepositAmount(), 5, invite.getDepositAmount()) != 1) {
-            throw new IllegalStateException("保证金关闭支付后状态冲突 inviteId=" + invite.getId());
-        }
-        invite.setDepositStatus(5);
+        if (!Integer.valueOf(1).equals(current.getDepositStatus())
+                || !"CLOSED".equalsIgnoreCase(payment.get("trade_state"))
+                || !wechatPayService.lockClosablePaymentAttemptForUpdate(business, attempt))
+            throw new IllegalStateException("保证金支付尝试已变化 inviteId=" + observed.getId());
+        if (coopInviteMapper.updateDepositIfCurrent(current.getId(), 1, current.getDepositAmount(), 5, current.getDepositAmount()) != 1)
+            throw new IllegalStateException("保证金关闭支付后状态冲突 inviteId=" + current.getId());
         return true;
     }
 
@@ -1194,6 +1235,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     /** 完成退保证金:退还该主题所有已接受合作的冻结(2)保证金。失败保留冻结态并告警,可由退款重试入口重放。 */
     private void refundTopicDeposits(Long topicId) {
+        // Includes the zero-sales path: a new prepay in the observation gap rolls back this whole close.
+        List<CoopInvite> current = coopInviteMapper.selectAcceptedByTopicForUpdate(topicId);
+        if (current == null || current.stream().anyMatch(row -> row == null
+                || (!Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(row.getInviteType())
+                    && Integer.valueOf(1).equals(row.getDepositStatus()))))
+            throw new IllegalStateException("MANUAL_REPAIR:DEPOSIT_PAYMENT_RECONCILIATION_REQUIRED topicId=" + topicId);
         coopInviteService.requestTopicDepositRefunds(topicId);
     }
 

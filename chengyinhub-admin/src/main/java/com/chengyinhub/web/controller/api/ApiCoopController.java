@@ -170,7 +170,9 @@ public class ApiCoopController extends BaseController {
                         && "SUCCESS".equals(facts.get("trade_state")) && "CNY".equals(facts.get("currency"))
                         && facts.get("total") != null && facts.get("total").matches("[0-9]{1,10}")) {
                     // Gateway verifies original merchant/app/channel; domain keeps amount, transaction binding and CAS.
-                    if (!coopInviteService.markDepositPaid(originalNo, Long.valueOf(facts.get("total")), facts.get("transaction_id"))) {
+                    if (!coopInviteService.markDepositPaid(originalNo, Long.valueOf(facts.get("total")), facts.get("transaction_id"),
+                            new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                                    Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash")))) {
                         return new AjaxResult(409, "支付已成功，本地确认尚未完成，请稍后重试");
                     }
                     invite = coopInviteService.selectCoopInviteById(inviteId);

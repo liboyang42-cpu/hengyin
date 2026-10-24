@@ -480,11 +480,12 @@
       "note": "Eight actual MySQL source cases: original six retained plus exact rejected replay and audit SQL failure rollback. Existing BusinessAuditEventMapper owns all audit writes; no second writer namespace or new audit schema. No actual provider/alarm webhook acceptance."
     },
     "architecture-day-chapter-application-round": {
-      "registered_source": "31ec329768ecc2b23e09466bf46754d12fe569d6",
+      "registered_source": "fe32ef5595a8a595dc29959054a612a3bbc5dd0d",
       "classes": [
-        "com.chengyinhub.business.service.impl.ChapterApplicationRoundMySqlIT"
+        "com.chengyinhub.business.service.impl.ChapterApplicationRoundMySqlIT",
+        "com.chengyinhub.business.service.impl.ChapterApplicationOutcomeMySqlIT"
       ],
-      "note": "Ten actual application Mapper/CAS/service/IM storage tests. Invite only, old49 cases retained elsewhere. Parent-lock JDBC adapter and qualification/WX/other notice collaborators controlled; full audit-task interleaving and HTTP remain separate. Legacy NULL stays unknown; source-only migration not executed in persistent DB."
+      "note": "Original invite10 plus outcome10; no skipped or replaced original cases. Ten original-round outcome MySQL cases: actual production service/CAS/IM transaction and current application locking; controlled qualification/node/task boundaries. Covers winning original event, replay, rollback, legacy unknown, RR/current read and approval-withdrawal contention. Java/DB not yet executed on this integration."
     },
     "architecture-day-citynode-original-receipt": {
       "registered_source": "c7e0ff743f834345098651abe90ef4f55c2c8923",
@@ -1450,7 +1451,7 @@
       "note": "Six fixed existing equity real-MyBatis tests including new city-node actual application receipt/rollback/current RR scenarios. Original scratch-only gate retained, class env supplied explicitly; actor/merchant permission controlled, no live HTTP/device acceptance."
     },
     "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT": {
-      "tests": 13,
+      "tests": 14,
       "storage": [
         "mysql"
       ],
@@ -1466,7 +1467,7 @@
       "note": "Four real MySQL intent/commit/concurrency contracts, actual gateway and SDK doubles, JDBC-backed domain mapper adapter. Dedicated UUID scratch only; no real payment/provider or full MyBatis four-domain acceptance."
     },
     "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT": {
-      "tests": 8,
+      "tests": 9,
       "storage": [
         "mysql"
       ],
@@ -1486,6 +1487,14 @@
         "mysql"
       ],
       "gates": {}
+    },
+    "com.chengyinhub.business.service.impl.ChapterApplicationOutcomeMySqlIT": {
+      "tests": 10,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Ten original-round outcome MySQL cases: actual production service/CAS/IM transaction and current application locking; controlled qualification/node/task boundaries. Covers winning original event, replay, rollback, legacy unknown, RR/current read and approval-withdrawal contention. Java/DB not yet executed on this integration."
     }
   }
 }

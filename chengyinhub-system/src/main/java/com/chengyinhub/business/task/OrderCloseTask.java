@@ -104,6 +104,9 @@ public class OrderCloseTask {
      * cron 建议每 10 分钟(见 migration_registration_paying_reconcile_job_20260915.sql)。
      */
     public void reconcileExpiredPaying() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("支付对账必须在原业务事务外执行");
+        }
         if (wechatPayService == null || !wechatPayService.isReady()) {
             log.warn("微信支付能力未就绪,跳过支付中过期订单对账");
             return;

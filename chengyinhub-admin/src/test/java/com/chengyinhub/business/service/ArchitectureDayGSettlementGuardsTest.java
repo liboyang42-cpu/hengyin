@@ -79,6 +79,7 @@ class ArchitectureDayGSettlementGuardsTest {
         ReflectionTestUtils.setField(service, "coopSettlementMapper", settlements);
         ReflectionTestUtils.setField(service, "pointsAwardService", points);
         ReflectionTestUtils.setField(service, "umsMemberService", members);
+        ReflectionTestUtils.setField(service, "coopInviteMapper", mock(com.chengyinhub.business.mapper.CoopInviteMapper.class));
         ReflectionTestUtils.setField(service, "coopInviteService", invites);
         ReflectionTestUtils.setField(service, "settlementRuleService", rules);
         ReflectionTestUtils.setField(service, "transactionManager", tx);

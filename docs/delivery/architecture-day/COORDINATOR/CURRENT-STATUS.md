@@ -1,17 +1,16 @@
-# Current integration status
+# 当前施工状态（2026-10-24 13:15 UTC）
 
-Whole architecture upgrade is incomplete. The fixed funds batch is a diagnostic CI candidate, not an accepted or deployable release.
+**整体未完成；当前没有获准合并或部署的完整候选。** WP00–WP17 / Q1–Q10 / A01–A15 / T01–T22 / G0–G5 全范围仍保留。事实明细见 ACTIVE-WORK.json 与逐次 CI 回执。
 
-Latest verified CI remains run40085356128 on exact251dbdd8 source: source/test compilation and only4 verified-payment-fact MySQL cases passed, cleanup CLEAN. No later candidate inherits that result.
+| 证据层 | 当前已核验 | 尚未覆盖 |
+|---|---|---|
+| 公共隔离源码 | 最新推送477696c8；C查询归位已提交bdb，外部共享常量调用已修477 | 下一工作区B9d/e1、A84/f079、Ga96、E5f6、Dfe32、Ff35/aaa尚未完成组合回归 |
+| 支付回调真库 | 8d78上原13项13PASS、0失败/错误/跳过、CLEAN（40094924513） | 新mutex第14例、下一候选整体 |
+| 其他资金真库 | 8d78上paid-half5、approved-refund5、fact4通过；477上original-refund12通过 | 不混为同一SHA全量通过 |
+| 最新失败子集 | 477/40096453368：163实跑，128PASS、21FAIL、14ERROR、0跳过，4/4库CLEAN | Funds21失败待追真实根因；Topic4与Notice9夹具遗漏正式nullable-ticket迁移/完整原schema种子 |
+| 静态与约束 | C原40非查询方法+共享桥、90原测试声明/断言保留；Node12PASS；六trusted文件逐字f35，7新正反控制与23工具/登记测试通过 | 不是Java执行、Spring启动、真实jdeps/JAR或业务验收 |
+| 发布 | 未执行生产DDL、合并、部署、微信上传或真实付费供应商调用 | 生产schema/runtime、真实身份和故障恢复验收 |
 
-Current composition: A409 closed callers, B30 combined callback/known-success guards, G8ca approved-refund and late-payment recovery, D80b single audit-table owner. Root preserved topic-first closure, supplied current-transaction consumption readback, original fixtures and actual A inline-to-G rollback recovery scenario.109 registered source classes match;189 declared funds tests are grouped into8 unique jobs, max parallel20.
+当前代码任务：A完成报名/团取消锁外观察与原事务消费；B一次修齐真实SQL事实工厂/依赖/种子并区分实际BUG；C拆出扫码核销簇；D补ASR同rid永久身份与单次外呼；E补CLM/Commerce原Reference消费凭据和typed入口；F维护真实依赖/唯一表写owner及装配断言；G关闭保证金旧3参旁路并完成typed调用者；H独立检查未被当前任务覆盖的高回报缺口。
 
-Known blocker: a separately committed SUCCESS may arrive between the guard read and local close CAS. A/B are implementing one original-business-row protocol and auditing transaction-internal SDK callers. Late SUCCESS needs visible durable recovery, not invented refunds or capacity. This remains unresolved even if current scoped tests pass.
-
-Other pending work: C fixture early-exit corrections; F real Spring/raw graph evidence; G retry owner fixtures; queued controller query extraction, voice intent/STT and D round notices. Full WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5 scope remains open.
-
-No production DDL, deployment, live paid provider or WeChat upload.
-
-Latest diagnostic: run40091200759 at54ab failed testCompile in3 fixture files (4 source locations).189 expected,0 executed;8/8 independent scratch receipts CLEAN.Production compilation passed in the observed job.Three fixture corrections are ready; next recheck targets only13 callback cases first.
-
-Second diagnostic40091766066 onfacc: main and test compilation passed.JUnit reports13 failures, all at@BeforeEach line106 because workflow omitted the original A consumption admission marker; no business body reached.Cleanup CLEAN.Marker mapping now names exactly the3 actual consuming classes; original refusal checks remain.
+下一验证规则：先补全已知依赖与实际调用者再冻结；只复跑受影响范围。旧候选绿色不能证明新候选，也不以HTTP200、测试声明数或源码存在代替业务结果。

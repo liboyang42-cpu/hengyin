@@ -863,6 +863,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     }
 
     private Map<String,String> queryRefundFactsForOriginal(String outRefundNo,WechatVerifiedPaymentFactService.Stored expected) {
+        requireObservationOutsideBusinessTransaction();
         VerifiedProviderClients clients = verifiedProviderClients;
         if (expected!=null && (clients==null || !expected.facts().mchid().equals(clients.mchid()))) return null;
         if (clients == null || outRefundNo == null || !outRefundNo.matches("[A-Za-z0-9_-]{1,64}")) return null;
@@ -967,6 +968,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     /** 回调与主动确认共用官方查单事实；不能将串单/缺字段应答交领域写入支付终态。 */
     private Transaction queryVerifiedOrder(String outTradeNo) {
+        requireObservationOutsideBusinessTransaction();
         VerifiedProviderClients clients = verifiedProviderClients;
         if (clients == null) throw new IllegalStateException("原商户SDK查询client缺失");
         QueryOrderByOutTradeNoRequest request = new QueryOrderByOutTradeNoRequest();
@@ -1017,6 +1019,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     @Override
     public boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo) {
+        requireObservationOutsideBusinessTransaction();
         if (businessOutTradeNo == null || observedWxOutTradeNo == null
                 || !businessOutTradeNo.equals(businessPaymentOrderNo(observedWxOutTradeNo))) {
             throw new IllegalArgumentException("关单必须携带原业务及所观察的微信尝试身份");
@@ -1091,9 +1094,11 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
         return intents.lockClosablePaymentAttemptForUpdate(businessNo,observedWxNo,verifiedProviderMerchant());
     }
     Transaction parsePaymentNotification(String body, Map<String, String> headers) {
+        requireObservationOutsideBusinessTransaction();
         return notificationParser.parse(notification(body, headers), Transaction.class);
     }
     RefundNotification parseRefundNotification(String body, Map<String, String> headers) {
+        requireObservationOutsideBusinessTransaction();
         return notificationParser.parse(notification(body, headers), RefundNotification.class);
     }
     private RequestParam notification(String body, Map<String, String> headers) {
@@ -1183,6 +1188,11 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 original.getOutTradeNo(),original.getTransactionId(),original.getTransactionId(),original.getTradeType().name(),
                 original.getAmount().getCurrency(),original.getAmount().getTotal(),original.getAmount().getTotal(),
                 providerSuccessTime(original.getSuccessTime()),frozenRequestHash(original),original.getTradeState().name()));
+    }
+
+    private static void requireObservationOutsideBusinessTransaction() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("官方SDK查证及独立事实写入必须在原业务事务外执行");
     }
 
     private String verifiedProviderMerchant() {

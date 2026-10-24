@@ -846,51 +846,17 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
-    void renewalSuspendsAmbientTransactionAroundWechatAndRestoresCallerAfterShortTransactions() {
-        ClubMembershipInvoice invoice = validPayingInvoice();
-        invoice.setPayParamsJson(null);
-        invoice.setVersion(1);
-        invoice.setIdempotencyKey("ambient-renew");
-        when(mapper.selectSetting(CLUB)).thenReturn(enabledSetting());
+    void renewalRejectsAmbientTransactionWithoutSuspendingCallerLocks() {
         TrackingTransactionManager tracker = useTrackingTransactions();
-        AtomicBoolean preparedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.selectInvoiceByIdempotency(CLUB, MEMBER, "ambient-renew")).thenAnswer(call -> {
-            preparedInsideShortTransaction.set(tracker.isTransactionActive());
-            return invoice;
+        new TransactionTemplate(tracker).execute(status -> {
+            assertTrue(tracker.isTransactionActive());
+            assertThrows(org.springframework.transaction.IllegalTransactionStateException.class,
+                    () -> transactionalService(tracker).renew(MEMBER, renew(9L, "ambient-renew")));
+            assertTrue(tracker.isTransactionActive(), "rejected call must not suspend or end the caller transaction");
+            return null;
         });
-        UmsMember member = new UmsMember();
-        member.setId(MEMBER);
-        member.setWxOpenId("openid-71");
-        when(members.selectUmsMemberById(MEMBER)).thenReturn(member);
-        Map<String, String> params = payParams("prepay_id=ambient-renew");
-        AtomicBoolean wechatInsideLocalTransaction = new AtomicBoolean(false);
-        when(pay.createGenericOrder(eq(invoice.getOutTradeNo()), any(), any(), eq("openid-71")))
-                .thenAnswer(call -> {
-                    wechatInsideLocalTransaction.set(tracker.isTransactionActive());
-                    return params;
-                });
-        AtomicBoolean attachedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.selectInvoiceByOutTradeNoForUpdate(invoice.getOutTradeNo())).thenAnswer(call -> {
-            attachedInsideShortTransaction.set(tracker.isTransactionActive());
-            return invoice;
-        });
-        when(mapper.attachPayParamsCas(eq(invoice.getId()), eq(1), any(), any())).thenReturn(1);
-        AtomicBoolean callerTransactionRestored = new AtomicBoolean(false);
-
-        ClubMembershipRenewalVO result = new TransactionTemplate(tracker).execute(status -> {
-            ClubMembershipRenewalVO renewal = transactionalService(tracker).renew(
-                    MEMBER, renew(9L, "ambient-renew"));
-            callerTransactionRestored.set(tracker.isTransactionActive());
-            return renewal;
-        });
-
-        assertNotNull(result);
-        assertEquals(ClubMembershipInvoice.STATUS_PAYING, result.getPaymentState());
-        assertTrue(preparedInsideShortTransaction.get());
-        assertTrue(attachedInsideShortTransaction.get());
-        assertFalse(wechatInsideLocalTransaction.get());
-        assertTrue(callerTransactionRestored.get());
         assertFalse(tracker.isTransactionActive());
+        org.mockito.Mockito.verifyNoInteractions(feature, access, mapper, clubs, clubMembers, members, pay, audits);
     }
 
     @Test
@@ -1422,34 +1388,17 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
-    void resumeSuspendsAmbientTransactionAroundWechatQueryAndRestoresCaller() {
-        ClubMembershipInvoice invoice = validPayingInvoice();
+    void resumeRejectsAmbientTransactionWithoutSuspendingCallerLocks() {
         TrackingTransactionManager tracker = useTrackingTransactions();
-        AtomicBoolean preparedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.selectInvoiceById(invoice.getId())).thenAnswer(call -> {
-            preparedInsideShortTransaction.set(tracker.isTransactionActive());
-            return invoice;
+        new TransactionTemplate(tracker).execute(status -> {
+            assertTrue(tracker.isTransactionActive());
+            assertThrows(org.springframework.transaction.IllegalTransactionStateException.class,
+                    () -> transactionalService(tracker).resumeInvoice(MEMBER, action(100L, "resume-ambient-tx-100")));
+            assertTrue(tracker.isTransactionActive(), "rejected call must not suspend or end the caller transaction");
+            return null;
         });
-        AtomicBoolean queriedInsideLocalTransaction = new AtomicBoolean(false);
-        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenAnswer(call -> {
-            queriedInsideLocalTransaction.set(tracker.isTransactionActive());
-            return wxOrder(invoice, "NOTPAY");
-        });
-        AtomicBoolean callerTransactionRestored = new AtomicBoolean(false);
-
-        ClubMembershipRenewalVO result = new TransactionTemplate(tracker).execute(status -> {
-            ClubMembershipRenewalVO resumed = transactionalService(tracker).resumeInvoice(
-                    MEMBER, action(invoice.getId(), "resume-ambient-tx-100"));
-            callerTransactionRestored.set(tracker.isTransactionActive());
-            return resumed;
-        });
-
-        assertNotNull(result);
-        assertEquals(ClubMembershipInvoice.STATUS_PAYING, result.getPaymentState());
-        assertTrue(preparedInsideShortTransaction.get());
-        assertFalse(queriedInsideLocalTransaction.get());
-        assertTrue(callerTransactionRestored.get());
         assertFalse(tracker.isTransactionActive());
+        org.mockito.Mockito.verifyNoInteractions(feature, access, mapper, clubs, clubMembers, members, pay, audits);
     }
 
     @Test
@@ -1618,48 +1567,17 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
-    void explicitCancelSuspendsAmbientTransactionAroundWechatAndRestoresCaller() {
-        ClubMembershipInvoice invoice = validPayingInvoice();
-        invoice.setVersion(2);
+    void explicitCancelRejectsAmbientTransactionWithoutSuspendingCallerLocks() {
         TrackingTransactionManager tracker = useTrackingTransactions();
-        AtomicBoolean preparedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.selectInvoiceById(invoice.getId())).thenAnswer(call -> {
-            preparedInsideShortTransaction.set(tracker.isTransactionActive());
-            return invoice;
+        new TransactionTemplate(tracker).execute(status -> {
+            assertTrue(tracker.isTransactionActive());
+            assertThrows(org.springframework.transaction.IllegalTransactionStateException.class,
+                    () -> transactionalService(tracker).closeInvoice(MEMBER, action(100L, "cancel-ambient-tx-100")));
+            assertTrue(tracker.isTransactionActive(), "rejected call must not suspend or end the caller transaction");
+            return null;
         });
-        AtomicBoolean externalCallInsideLocalTransaction = new AtomicBoolean(false);
-        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenAnswer(call -> {
-            if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
-            return wxOrder(invoice, "NOTPAY");
-        }).thenAnswer(call -> {
-            if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
-            return wxOrder(invoice, "CLOSED");
-        });
-        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenAnswer(call -> {
-            if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
-            return true;
-        });
-        AtomicBoolean appliedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenAnswer(call -> {
-            appliedInsideShortTransaction.set(tracker.isTransactionActive());
-            return 1;
-        });
-        AtomicBoolean callerTransactionRestored = new AtomicBoolean(false);
-
-        ClubMembershipRenewalVO result = new TransactionTemplate(tracker).execute(status -> {
-            ClubMembershipRenewalVO closed = transactionalService(tracker).closeInvoice(
-                    MEMBER, action(invoice.getId(), "cancel-ambient-tx-100"));
-            callerTransactionRestored.set(tracker.isTransactionActive());
-            return closed;
-        });
-
-        assertNotNull(result);
-        assertEquals(ClubMembershipInvoice.STATUS_CLOSED, result.getPaymentState());
-        assertTrue(preparedInsideShortTransaction.get());
-        assertTrue(appliedInsideShortTransaction.get());
-        assertFalse(externalCallInsideLocalTransaction.get());
-        assertTrue(callerTransactionRestored.get());
         assertFalse(tracker.isTransactionActive());
+        org.mockito.Mockito.verifyNoInteractions(feature, access, mapper, clubs, clubMembers, members, pay, audits);
     }
 
     @Test
@@ -2078,7 +1996,13 @@ class ClubMembershipServiceImplTest {
         when(transactions.getTransaction(any(org.springframework.transaction.TransactionDefinition.class)))
                 .thenAnswer(call -> {
                     TransactionDefinition definition = call.getArgument(0, TransactionDefinition.class);
-                    if (definition.getPropagationBehavior()
+                    if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NEVER) {
+                        if (depth.get() > 0) throw new org.springframework.transaction.IllegalTransactionStateException("outer transaction rejected");
+                        frames.push(new TrackedTransactionFrame(false, 0));
+                    } else if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+                        int suspendedDepth = depth.getAndSet(1);
+                        frames.push(new TrackedTransactionFrame(true, suspendedDepth));
+                    } else if (definition.getPropagationBehavior()
                             == TransactionDefinition.PROPAGATION_NOT_SUPPORTED) {
                         int suspendedDepth = depth.getAndSet(0);
                         frames.push(new TrackedTransactionFrame(false, suspendedDepth));
@@ -2158,6 +2082,15 @@ class ClubMembershipServiceImplTest {
 
         @Override
         public TransactionStatus getTransaction(TransactionDefinition definition) {
+            if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NEVER) {
+                if (activeDepth > 0) throw new org.springframework.transaction.IllegalTransactionStateException("outer transaction rejected");
+                return new TrackingTransactionStatus(false, 0);
+            }
+            if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+                int suspendedDepth = activeDepth;
+                activeDepth = 1;
+                return new TrackingTransactionStatus(true, suspendedDepth);
+            }
             if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NOT_SUPPORTED) {
                 int suspendedDepth = activeDepth;
                 activeDepth = 0;
@@ -2356,4 +2289,31 @@ class ClubMembershipServiceImplTest {
         return new ClubAccessContext(OWNER, CLUB, OWNER, null,
                 Collections.singleton(ClubRoleCode.CLUB_OWNER));
     }
+    @Test
+    void paymentNetworkEntriesRejectActualOuterTransactionBeforeIntentOrSdk() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            assertThrows(IllegalStateException.class, () -> service.renew(MEMBER, null));
+            assertThrows(IllegalStateException.class, () -> service.resumeInvoice(MEMBER, null));
+            assertThrows(IllegalStateException.class, () -> service.closeInvoice(MEMBER, null));
+            org.mockito.Mockito.verifyNoInteractions(feature, access, mapper, clubs, clubMembers, members, pay, audits, transactions);
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    @Test
+    void paymentNetworkEntriesNeverSuspendLocksAndLocalPhasesStayRequiresNew() throws Exception {
+        for (java.lang.reflect.Method method : ClubMembershipServiceImpl.class.getMethods()) {
+            if (java.util.Set.of("renew", "resumeInvoice", "closeInvoice").contains(method.getName())) {
+                assertEquals(org.springframework.transaction.annotation.Propagation.NEVER,
+                        method.getAnnotation(org.springframework.transaction.annotation.Transactional.class).propagation());
+            }
+        }
+        org.springframework.transaction.support.TransactionTemplate transaction =
+                org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "transaction");
+        assertNotNull(transaction);
+        assertEquals(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW, transaction.getPropagationBehavior());
+    }
+
 }

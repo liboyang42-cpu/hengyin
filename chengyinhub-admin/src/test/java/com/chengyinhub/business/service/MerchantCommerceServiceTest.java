@@ -414,4 +414,34 @@ class MerchantCommerceServiceTest {
         rule.setEntitlementDays(30);
         return rule;
     }
+    @Test
+    void paymentNetworkEntriesRejectActualOuterTransactionBeforeIntentOrSdk() {
+        MerchantCommerceService enabled = enabledService();
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            assertThrows(IllegalStateException.class, () -> enabled.createOrder(12L, 34L, "openid",
+                    MerchantCommerceService.BIZ_PREMIUM_TEMPLATE, "req-1234567890123456"));
+            assertThrows(IllegalStateException.class, () -> enabled.reconcileOrder("TPLTM_8"));
+            org.mockito.Mockito.verifyNoInteractions(subscriptionMapper, orderMapper, settlementRuleService, wechatPayService, permissionService);
+            assertEquals(0, transactions.commits);
+            assertEquals(0, transactions.rollbacks);
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    @Test
+    void paymentNetworkEntriesNeverSuspendLocksAndLocalPhasesStayRequiresNew() throws Exception {
+        for (java.lang.reflect.Method method : MerchantCommerceService.class.getMethods()) {
+            if (java.util.Set.of("createOrder", "reconcileOrder").contains(method.getName())) {
+                assertEquals(org.springframework.transaction.annotation.Propagation.NEVER,
+                        method.getAnnotation(org.springframework.transaction.annotation.Transactional.class).propagation());
+            }
+        }
+        org.springframework.transaction.support.TransactionTemplate transaction =
+                ReflectionTestUtils.invokeMethod(service, "paymentTransaction");
+        assertNotNull(transaction);
+        assertEquals(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW, transaction.getPropagationBehavior());
+    }
+
 }

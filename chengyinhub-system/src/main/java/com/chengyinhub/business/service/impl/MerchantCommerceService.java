@@ -53,9 +53,10 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     }
 
     @Override
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public Map<String, String> createOrder(Long memberId, Long merchantId, String openid, String bizType,
                                            String requestId) {
+        requirePaymentOutsideTransaction();
         if (!selfCheckoutEnabled) {
             throw new IllegalStateException("自助开通暂未开放，请联系官方人工开通");
         }
@@ -159,8 +160,9 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     }
 
     @Override
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public void reconcileOrder(String outTradeNo) {
+        requirePaymentOutsideTransaction();
         OmsOrder order = orderMapper.selectOmsOrderByOrderSn(outTradeNo);
         if (order == null || !Long.valueOf(0L).equals(order.getStatus())) return;
         requireBizType(order.getBizType());
@@ -316,4 +318,11 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         public int getUsed() { return used; }
         public int getRemaining() { return remaining; }
     }
+    /** NEVER rejects proxied outer transactions; this also protects self/direct invocation before any local intent. */
+    private static void requirePaymentOutsideTransaction() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("支付外呼必须在原业务事务外，不能挂起持锁事务继续执行");
+        }
+    }
+
 }

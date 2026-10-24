@@ -62,6 +62,7 @@ public final class WechatPayTestWiring {
         }
         if ("paymentIntentJdbc".equals(name)) {
             ReflectionTestUtils.setField(ReflectionTestUtils.getField(actual, "businessOwner"), name, value);
+            ReflectionTestUtils.setField(ReflectionTestUtils.getField(sdk(facade),"verifiedFacts"),"factIntentJdbc",value);
         }
     }
 

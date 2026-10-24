@@ -615,6 +615,108 @@ class RegistrationCallbackIntentMySqlIT {
         assertEquals(1,db.queryForObject("SELECT attempt_count FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)",Integer.class,staleHash));
     }
 
+    @Test
+    void originalBusinessRowSerializesFactCommitAndCloseCasAndRetainsLateSuccessForRecovery() throws Exception {
+        // Both closers use the real original mapper CAS. This test does not simulate resource release/refund policy.
+        var facts=(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService)
+                WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts");
+        var writerLocked=new java.util.concurrent.CountDownLatch(1);
+        var releaseWriter=new java.util.concurrent.CountDownLatch(1);
+        var closerEntered=new java.util.concurrent.CountDownLatch(1);
+        var closeGuardRead=new java.util.concurrent.CountDownLatch(1);
+        var lateWriterEntered=new java.util.concurrent.CountDownLatch(1);
+        var releaseCloseCas=new java.util.concurrent.CountDownLatch(1);
+        String lateNo="REG_CALLBACK_LATE_12";
+        var owner=new com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner(){
+            @Override public com.chengyinhub.business.service.WechatPaymentOrderOwner.Snapshot lock(String no) {
+                assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+                if(lateNo.equals(no)) lateWriterEntered.countDown();
+                var locked=super.lock(no); // Original cms_registration SELECT ... FOR UPDATE, not a mock lock.
+                if(BUSINESS_NO.equals(no)) { writerLocked.countDown();awaitGate(releaseWriter); }
+                return locked;
+            }
+        };
+        WechatVerifiedFactTestSupport.setField(owner,"paymentIntentJdbc",db);
+        WechatVerifiedFactTestSupport.setField(facts,"factBusinessOwner",owner);
+        providerOrders.put(BUSINESS_NO,original(BUSINESS_NO,"wx-mini","JSAPI","CLOSED","WX-FIRST"));
+        assertEquals("CLOSED",gateway.queryOrderStatus(BUSINESS_NO).get("trade_state"));
+        String originalHash=db.queryForObject("SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?",String.class,BUSINESS_NO);
+        providerOrders.put(BUSINESS_NO,original(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS","WX-FIRST"));
+        try(var threads=java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var writer=threads.submit(()->gateway.queryOrderStatus(BUSINESS_NO));
+            try {
+                assertTrue(writerLocked.await(10,TimeUnit.SECONDS));
+                var close=threads.submit(()->new org.springframework.transaction.support.TransactionTemplate(transactions).execute(status->{
+                    closerEntered.countDown();
+                    if(!gateway.lockClosablePaymentAttemptForUpdate(BUSINESS_NO,BUSINESS_NO)) return 0;
+                    return sql.getMapper(CmsRegistrationMapper.class).closeExpiredPaying(11L,"fact-race",3);
+                }));
+                assertTrue(closerEntered.await(10,TimeUnit.SECONDS));releaseWriter.countDown();
+                assertEquals("SUCCESS",writer.get(20,TimeUnit.SECONDS).get("trade_state"));
+                assertEquals(0,close.get(20,TimeUnit.SECONDS).intValue(),"writer commits before closer can pass its guard");
+            } finally { releaseWriter.countDown(); }
+        }
+        assertEquals(1,number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1,number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(originalHash,db.queryForObject("SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?",String.class,BUSINESS_NO));
+
+        db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,"
+                +"original_amount,total_amount,point_used,point_payment_amount,payable_amount,wechat_payment_amount,fee_platform_rate,"
+                +"payment_status,registration_status,pay_expire_time,purchase_kind,points_returned)"
+                +" VALUES(12,?,1,23,9,10.00,7,1,10.00,10.00,0,0.00,10.00,10.00,0.1234,1,1,DATE_ADD(NOW(),INTERVAL 1 HOUR),1,0)",lateNo);
+        assertEquals(lateNo,WechatVerifiedFactTestSupport.invokeMethod(gateway,"freezePaymentIntent",lateNo,MERCHANT,
+                "wx-mini","JSAPI","CNY",1000,"openid-original","late-success integration","https://example.test/notify"));
+        providerOrders.put(lateNo,original(lateNo,"wx-mini","JSAPI","CLOSED","WX-LATE"));
+        assertEquals("CLOSED",gateway.queryOrderStatus(lateNo).get("trade_state"));
+        String lateHash=db.queryForObject("SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?",String.class,lateNo);
+        providerOrders.put(lateNo,original(lateNo,"wx-mini","JSAPI","SUCCESS","WX-LATE"));
+        Map<String,String> lateResult;
+        try(var threads=java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var close=threads.submit(()->new org.springframework.transaction.support.TransactionTemplate(transactions).execute(status->{
+                assertTrue(gateway.lockClosablePaymentAttemptForUpdate(lateNo,lateNo));
+                closeGuardRead.countDown();awaitGate(releaseCloseCas);
+                return sql.getMapper(CmsRegistrationMapper.class).closeExpiredPaying(12L,"fact-race",3);
+            }));
+            try {
+                assertTrue(closeGuardRead.await(10,TimeUnit.SECONDS));
+                var writer=threads.submit(()->gateway.queryOrderStatus(lateNo));
+                assertTrue(lateWriterEntered.await(10,TimeUnit.SECONDS));releaseCloseCas.countDown();
+                assertEquals(1,close.get(20,TimeUnit.SECONDS).intValue());
+                lateResult=writer.get(20,TimeUnit.SECONDS);
+            } finally { releaseCloseCas.countDown(); }
+        }
+        assertEquals("SUCCESS",lateResult.get("trade_state"),"actual official SDK observation, never a historical status fallback");
+        var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                Long.parseLong(lateResult.get("verified_fact_id")),lateResult.get("verified_fact_hash"));
+        var ticket=facts.findPaymentRecovery(reference).orElseThrow();
+        assertEquals(12L,ticket.businessId());assertEquals(4,ticket.state());
+        assertEquals("VERIFIED_SUCCESS_AFTER_CLOSED",ticket.reason());
+        assertEquals(reference,ticket.original().reference());
+        var original=ticket.original().facts();
+        assertEquals(lateNo,original.businessOutTradeNo());assertEquals(lateNo,original.wxOutTradeNo());
+        assertEquals("WX-LATE",original.transactionId());assertEquals(MERCHANT,original.mchid());
+        assertEquals("wx-mini",original.appid());assertEquals("JSAPI",original.tradeType());
+        assertEquals("CNY",original.currency());assertEquals(1000L,original.totalFen());assertEquals(lateHash,original.intentRequestHash());
+        assertEquals(3,number("SELECT payment_status FROM cms_registration WHERE id=12"));
+        assertEquals(3,number("SELECT registration_status FROM cms_registration WHERE id=12"));
+        assertNull(db.queryForObject("SELECT transaction_id FROM cms_registration WHERE id=12",String.class));
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact_rejection WHERE original_fact_id=? AND rejection_reason=?",Integer.class,reference.id(),ticket.reason()));
+        assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox WHERE id=? AND state IN (0,3)",Integer.class,ticket.id()),"manual handoff cannot enter automatic dispatch");
+        assertEquals(reference,new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                Long.parseLong(gateway.queryOrderStatus(lateNo).get("verified_fact_id")),reference.hash()));
+        assertEquals(ticket.id(),facts.findPaymentRecovery(reference).orElseThrow().id());
+        assertEquals(2,number("SELECT COUNT(*) FROM wx_pay_order_intent"));
+        assertEquals(2,number("SELECT COUNT(*) FROM wx_verified_payment_fact"));
+        assertEquals(2,number("SELECT COUNT(*) FROM wx_payment_callback_outbox"));
+        assertEquals(0,number("SELECT COUNT(*) FROM cms_registration_payment_fact"));
+        assertPendingResources();verify(sdk,never()).closeOrder(any());
+    }
+
+    private static void awaitGate(java.util.concurrent.CountDownLatch gate) {
+        try { assertTrue(gate.await(15,TimeUnit.SECONDS),"bounded deterministic transaction barrier"); }
+        catch(InterruptedException interrupted) { Thread.currentThread().interrupt();throw new AssertionError(interrupted); }
+    }
+
     private record CallbackContext(Map<String,String> facts,
             com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference,
             com.chengyinhub.business.service.IWxPaymentCallbackInboxService inbox,

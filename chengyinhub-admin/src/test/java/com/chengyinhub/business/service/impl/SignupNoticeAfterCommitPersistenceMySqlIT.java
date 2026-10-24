@@ -69,6 +69,7 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
     private final AtomicReference<Throwable> unexpectedImFailure = new AtomicReference<>();
     private Connection unrelatedConnection;
     private WechatVerifiedPaymentFactService fixturePaymentFacts;
+    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference fixturePaymentReference;
 
     @BeforeEach
     void setup() throws Exception {
@@ -85,8 +86,9 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         db.execute("create table fixture_payment_consumption(registration_id bigint primary key,registration_no varchar(64),"
                 + "payment_fact_id bigint unique,payment_fact_hash char(64),transaction_id varchar(64),"
                 + "foreign key(registration_id) references registration_fact(id)) engine=InnoDB");
-        fixturePaymentFacts = new WechatVerifiedPaymentFactService();
-        WechatVerifiedFactTestSupport.setField(fixturePaymentFacts, "mapper", new WechatVerifiedFactTestSupport.MemoryMapper());
+        fixturePaymentFacts = WechatVerifiedFactTestSupport.memoryHistoricalFacts();
+        // Provider evidence exists before any local payment transaction; callbacks only reuse this exact reference.
+        fixturePaymentReference = fixturePaymentFacts.recordVerified(originalPaymentFact());
         Path sqlRoot = Paths.get("chengyinhub-admin/sql");
         if (!sqlRoot.toFile().isDirectory()) sqlRoot = Paths.get("sql");
         new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve("migration_im.sql").toFile()),
@@ -503,15 +505,20 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         Map<String, String> values = new HashMap<>();
         values.put("out_trade_no", "REG99"); values.put("transaction_id", "fixture-tx99");
         values.put("trade_state", "SUCCESS"); values.put("total", "6800");
-        var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
-                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
-                "fixture-mch", "fixture-app", "REG99", "REG99", "REG99", "fixture-tx99", "fixture-tx99",
-                "JSAPI", "CNY", 6800, 6800, java.time.Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME), null, "SUCCESS");
-        var reference = fixturePaymentFacts.recordVerified(fact);
+        var fact = originalPaymentFact();
+        var reference = fixturePaymentReference;
+        assertEquals(fact, fixturePaymentFacts.requireVerified(reference).facts());
         values.put("verified_fact_id", Long.toString(reference.id())); values.put("verified_fact_hash", reference.hash());
         values.put("wx_out_trade_no", fact.wxOutTradeNo()); values.put("mchid", fact.mchid()); values.put("appid", fact.appid());
         values.put("trade_type", fact.tradeType()); values.put("currency", fact.currency());
         return values;
+    }
+
+    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact originalPaymentFact() {
+        return new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "fixture-mch", "fixture-app", "REG99", "REG99", "REG99", "fixture-tx99", "fixture-tx99",
+                "JSAPI", "CNY", 6800, 6800, java.time.Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME), null, "SUCCESS");
     }
 
     private CmsRegistration readRegistration() { return readRegistration(99L, false); }

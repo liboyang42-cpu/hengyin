@@ -44,7 +44,9 @@ public class WechatPaymentCallbackRouter {
                 new Owner("coop-deposit", no -> no != null && no.startsWith("DEP"), facts ->
                         ack(coop != null && paid(facts) && "CNY".equals(facts.get("currency"))
                                 && coop.markDepositPaid(facts.get("out_trade_no"),
-                                        cents(facts) == null ? null : cents(facts).longValue(), facts.get("transaction_id")))),
+                                        cents(facts) == null ? null : cents(facts).longValue(), facts.get("transaction_id"),
+                                        new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                                                Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash"))))),
                 new Owner("registration", no -> no != null && registration != null && registration.getByRegistrationNo(no) != null, facts ->
                         registration == null ? "FAIL" : registration.handleWechatPayCallback(facts)));
         depositRefund = facts -> coop != null && coop.handleDepositRefundResult(facts);

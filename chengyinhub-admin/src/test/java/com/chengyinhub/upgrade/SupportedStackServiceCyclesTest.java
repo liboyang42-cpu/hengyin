@@ -49,6 +49,9 @@ import com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger;
 import com.chengyinhub.business.service.impl.CoopClosedPaymentRecovery;
 import com.chengyinhub.business.service.impl.WxPaymentCallbackOutboxServiceImpl;
 import com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper;
+import com.chengyinhub.business.mapper.AuditTaskMapper;
+import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
+import com.chengyinhub.business.service.impl.AlarmService;
 import com.chengyinhub.business.service.impl.TopicSettlementEvidenceService;
 import com.chengyinhub.business.service.support.CommittedBusinessNotice;
 import com.chengyinhub.business.service.support.CommittedOfficialNoticeService;
@@ -82,6 +85,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ContextAnnotationAutowireCandidateResolver;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
@@ -270,7 +274,7 @@ class SupportedStackServiceCyclesTest
         runner(unexpectedCalls, null, services).run(context -> {
             assertThat(context).hasNotFailed();
             for (Class<?> service : List.of(WechatVerifiedPaymentFactService.class,
-                    WechatPaymentSdkGateway.class, CoopSettlementClaimServiceImpl.class,
+                    JdbcWechatPaymentOrderOwner.class, WechatPaymentSdkGateway.class, CoopSettlementClaimServiceImpl.class,
                     CoopSettlementOriginalLedger.class, CoopClosedPaymentRecovery.class,
                     WxPaymentCallbackOutboxServiceImpl.class, SettlementDebtLedger.class,
                     RegistrationPaymentConsumptionReadService.class,
@@ -291,6 +295,17 @@ class SupportedStackServiceCyclesTest
             // B f6f382 reader: the existing PTM is required, not another mocked fact service.
             assertThat(ReflectionTestUtils.getField(reader, "factReadTransactions"))
                     .isSameAs(context.getBean(PlatformTransactionManager.class));
+            // B 9d592: the write lane uses the real row-lock owner, never an inert domain success stub.
+            assertThat(ReflectionTestUtils.getField(reader, "factWriteTransactions"))
+                    .isSameAs(context.getBean(PlatformTransactionManager.class));
+            assertThat(ReflectionTestUtils.getField(reader, "factBusinessOwner"))
+                    .isSameAs(context.getBean(JdbcWechatPaymentOrderOwner.class));
+            assertThat(ReflectionTestUtils.getField(reader, "factIntentJdbc"))
+                    .isSameAs(context.getBean(JdbcTemplate.class));
+            Object deposit = AopTestUtils.getUltimateTargetObject(context.getBean(CoopInviteServiceImpl.class));
+            assertThat(ReflectionTestUtils.getField(deposit, "depositPaymentTransactions"))
+                    .isSameAs(context.getBean(PlatformTransactionManager.class));
+            assertThat(ReflectionTestUtils.getField(deposit, "depositVerifiedFacts")).isSameAs(facts);
             Object sdk = AopTestUtils.getUltimateTargetObject(context.getBean(WechatPaymentSdkGateway.class));
             assertThat(ReflectionTestUtils.getField(sdk, "verifiedFacts")).isSameAs(facts);
             Object claim = AopTestUtils.getUltimateTargetObject(context.getBean(CoopSettlementClaimServiceImpl.class));
@@ -351,8 +366,18 @@ class SupportedStackServiceCyclesTest
             Object chapterApplication = AopTestUtils.getUltimateTargetObject(context.getBean(MerchantChapterApplicationServiceImpl.class));
             Object invitation = context.getBean(ChapterApplicationInviteNotice.class);
             assertThat(ReflectionTestUtils.getField(chapterApplication, "inviteNotice")).isSameAs(invitation);
-            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(invitation), "notices"))
+            Object invitationTarget = AopTestUtils.getUltimateTargetObject(invitation);
+            assertThat(ReflectionTestUtils.getField(invitationTarget, "notices"))
                     .isSameAs(context.getBean(CommittedOfficialNoticeService.class));
+            // D fe32: these are required Spring collaborators; SQL/diagnostic effects remain explicit inert boundaries.
+            assertThat(ReflectionTestUtils.getField(chapterApplication, "auditTaskMapper"))
+                    .isSameAs(context.getBean(AuditTaskMapper.class));
+            assertThat(ReflectionTestUtils.getField(invitationTarget, "audit"))
+                    .isSameAs(context.getBean(BusinessAuditEventMapper.class));
+            assertThat(ReflectionTestUtils.getField(invitationTarget, "alarm"))
+                    .isSameAs(context.getBean(AlarmService.class));
+            assertThat(ReflectionTestUtils.getField(invitationTarget, "executor"))
+                    .isSameAs(context.getBean("scheduledExecutorService"));
             assertThat(unexpectedCalls).isEmpty();
         });
     }
@@ -467,7 +492,8 @@ class SupportedStackServiceCyclesTest
                     JdbcWechatPaymentOrderOwner.class, WechatPaymentCallbackRouter.class));
         }
         if (assembly.contains(WechatPaymentSdkGateway.class) || assembly.contains(CmsRegistrationServiceImpl.class)
-                || assembly.contains(RefundServiceImpl.class))
+                || assembly.contains(RefundServiceImpl.class) || assembly.contains(CoopInviteServiceImpl.class)
+                || assembly.contains(CmsTopicServiceImpl.class))
         {
             assembly.add(WechatVerifiedPaymentFactService.class);
         }
@@ -496,6 +522,11 @@ class SupportedStackServiceCyclesTest
         {
             assembly.addAll(List.of(CommittedBusinessNotice.class, NotifyServiceImpl.class,
                     InAppNotifyChannel.class, WxSubscribeChannel.class, ImServiceImpl.class));
+        }
+        // All fact entry points, including the standalone missing-collaborator controls, require the real owner.
+        if (assembly.contains(WechatVerifiedPaymentFactService.class))
+        {
+            assembly.add(JdbcWechatPaymentOrderOwner.class);
         }
         return assembly.toArray(Class<?>[]::new);
     }

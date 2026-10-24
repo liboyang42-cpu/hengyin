@@ -645,6 +645,21 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
                           "com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"))
         self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_TABLE_WRITER")
 
+    def test_chapter_notice_technical_direction_does_not_grant_another_audit_namespace(self):
+        self.write("chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml",
+                   mapper('<insert id="append">insert into business_audit_event(action) values(#{action})</insert>',
+                          "com.chengyinhub.business.mapper.BusinessAuditEventMapper"))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        policy = json.loads((trusted / "owners.json").read_text())
+        self.assertIn(["D_CHAPTER_INVITE_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"],
+                      policy["technical_dependency_policy"]["allowed_directions"])
+        self.write("chengyinhub-system/src/main/resources/mapper/business/ChapterApplicationAuditMapper.xml",
+                   mapper('<insert id="append">insert into business_audit_event(action) values(#{action})</insert>',
+                          "com.chengyinhub.business.mapper.ChapterApplicationAuditMapper"))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_TABLE_WRITER")
+
     def test_same_owner_both_facts_are_green_and_scope_is_partial(self):
         trusted, _ = self.prepare_policy()
         for table, writer in self.facts:

@@ -219,8 +219,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.NEVER)
     public ClubMembershipRenewalVO renew(Long principalMemberId, ClubMembershipRenewRequest request) {
+        requirePaymentOutsideTransaction();
         requireRequest(request, request == null ? null : request.getClubId());
         requireMember(principalMemberId, request.getClubId());
         if (request.getPlanId() == null || request.getPlanId() <= 0
@@ -264,8 +265,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.NEVER)
     public ClubMembershipRenewalVO resumeInvoice(Long principalMemberId, ClubMembershipActionRequest request) {
+        requirePaymentOutsideTransaction();
         requireAction(request);
         InvoiceActionIntent intent = transaction().execute(status ->
                 prepareResumeIntent(principalMemberId, request));
@@ -313,8 +315,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.NEVER)
     public ClubMembershipRenewalVO closeInvoice(Long principalMemberId, ClubMembershipActionRequest request) {
+        requirePaymentOutsideTransaction();
         requireAction(request);
         InvoiceActionIntent intent = transaction().execute(status ->
                 prepareCloseIntent(principalMemberId, request));
@@ -962,7 +965,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     private TransactionTemplate transaction() {
-        return new TransactionTemplate(transactionManager);
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return transaction;
     }
 
     private static final class RenewalIntent {
@@ -1446,4 +1451,11 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     private void bad(String message) { throw new ServiceException(message, HttpStatus.BAD_REQUEST); }
     private void forbidden() { throw new ServiceException("俱乐部身份无效或权限不足", HttpStatus.FORBIDDEN); }
     private void conflict() { throw new ServiceException("数据已变化或幂等键冲突", HttpStatus.CONFLICT); }
+    /** NEVER rejects proxied outer transactions; this also protects self/direct invocation before any local intent. */
+    private static void requirePaymentOutsideTransaction() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("支付外呼必须在原业务事务外，不能挂起持锁事务继续执行");
+        }
+    }
+
 }

@@ -439,15 +439,6 @@
     "Actual Spring/jdeps fixture must include new G recovery dependencies (F)",
     "CoopInvite reopen existing owner fixtures must match new permanent-businessNo/closed-intent gate (G)"
   ],
-  "current_ci_pending": {
-    "run_id": 40092412302,
-    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40092412302",
-    "source_sha": "0cb8115ee34e4647a76c76bda608fae62bbd51e1",
-    "immutable_branch": "codex/architecture-day-funds-0cb-20261024",
-    "scope": "RegistrationCallbackIntentMySqlIT only,13 expected",
-    "last_observed": "terminal FAIL;13 executed/13 failures,0 errors/skips;independent scratch cleanup CLEAN; real notification intent owner omitted in fixture; not 13 independently proven business bugs",
-    "status": "FAIL_SOURCE_FIX_RECHECK_PENDING"
-  },
   "queued_sources": {
     "C_query": "30676682dfa161dba593167cb06ffef9ee21a109",
     "D_round_notices": "c643faf54b3cfc65298a099421ced9cc294a73d6",
@@ -471,5 +462,58 @@
     "G": "a379a994 reopen fixtures,411e3942 consumed fallback denial guard; originalrefund12/funds190",
     "C": "d89eb3dd verified-reader/scope fixtures; old payment REFUND rejects without original refund proof",
     "D": "89b05c3d privacy-safe bounded failure origin"
+  },
+  "previous_ci_failure": {
+    "run_id": 40094484426,
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40094484426",
+    "source_sha": "c8bbcea8f0e7cde67a23cb5fdd4f40b5d5c6db9d",
+    "immutable_branch": "codex/architecture-day-funds-c8bb-20261024",
+    "scope": "RegistrationCallbackIntentMySqlIT13 original cases",
+    "status": "FAIL_8_PASS_5_FAIL_0_ERROR_0_SKIP_CLEAN",
+    "source_scan": "staged secret gate and gitleaks diff+commit PASS",
+    "not_acceptance": "No production migration,merge,deployment or full-system acceptance"
+  },
+  "current_ci_pending": {
+    "run_id": 40096453368,
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40096453368",
+    "source_sha": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+    "status": "TERMINAL_FAIL_BATCH_SOURCE_REPAIR_IN_PROGRESS",
+    "executed": {
+      "tests": 163,
+      "passed": 128,
+      "failures": 21,
+      "errors": 14,
+      "skipped": 0
+    },
+    "cleanup": "4of4CLEAN",
+    "not_live": "No additional CI dispatched until shared factory prerequisites are corrected"
+  },
+  "current_cloud_assignment": {
+    "A": "Registration original-row locking and SDK outside transaction callers",
+    "B": "Actual A4/G2 fact factories plus3 failed suite seed/schema/proof sequencing; no more per-null CI",
+    "C": "Original query/controller extraction306 composable patch and unchanged caller checks; fixture d89 integrated",
+    "D": "NPC ASR durable same-rid single dispatch and cold recovery implementation",
+    "E": "CLM/Commerce exact local original-fact consumption receipts with additive source migration and typed caller patches",
+    "F": "Exact immutable c8bb fixture readback; no duplicate Java/CI",
+    "G": "Typed deposit Router/ApiCoop caller fixture completion",
+    "H": "Independent remaining high-risk plan-to-code gaps excluding current active ownership"
+  },
+  "next_wave_dirty": {
+    "D": "fe32 round-outcome production+oldfixtures/newSQL10 applied; existinground10+new10=20; not Java verified",
+    "E": "5f6 CLM/Commerce NEVER/fiveoutside boundaries+fixture adaptations applied; E now implementing exact originalReference consumption proof migration and typed callers",
+    "G": "a726+a96 APPLIED;G closing public3arg bypass and migrating sharedfixtures. Existing typed4 proof/recovery works source-only; next delta pending.",
+    "B": "9d core+barrier1 and e1 complete factories APPLIED; duplicated existingSignup Gmock hunk retained once. B ownsA4/G2 actualsource migrations/proof-order/seed repair.",
+    "F": "f35/aaa exactpolicy/pins APPLIED; a243+6e8 realfacts+JdbcBusinessOwner context/binding assertions APPLIED;33cases preserved but NOTRUN. F audits new-unowned-boundary ratchet next.",
+    "C": "bdb query+two shared bridges+ffea cleanup committed/pushed;477 shared ApiMerchant constant owner fixed. C now extracting exact scan/redemption cluster from Controller, not yet integrated",
+    "A": "f079 checkout/claim locked-current fence and NEVER+OrderClose outerTx refusal;84d7 exact local consumption completeRecovery and closed-order original ticket guard nowAPPLIED. TeamGroup/ClubEventOps still separate active work. New2dedicated test files present; recovery scenarios queued, not Java verified."
+  },
+  "current_source_head": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+  "current_source_manifest_counts": {
+    "registered_sql_classes": 110,
+    "funds_declared_tests": 191,
+    "callback_declared_tests": 14,
+    "deposit_declared_tests": 9,
+    "round_declared_tests": 20,
+    "not_execution": "Counters describe dirty source only; latest CI477 used original13/190/8/10."
   }
 }
