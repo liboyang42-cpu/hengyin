@@ -32,7 +32,7 @@ function component() {
   const file = path.resolve(__dirname, '../../components/cy/scene-qr-ticket/index.js');
   let definition, owner = '11';
   const disk = storage(), requests = [];
-  const app = { _featureFlagsEpoch: 0, getUserID: () => owner, getAuthorization: () => 'fixture-auth-' + owner,
+  const app = { getSession: () => ({ getRevision: () => 0 }), _featureFlagsEpoch: 0, getUserID: () => owner, getAuthorization: () => 'fixture-auth-' + owner,
     sendRequest(options) { requests.push(options); } };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Component(value) { definition = value; }, getApp: () => app, wx: disk,
     require: id => require(path.resolve(path.dirname(file), id)), Date, setInterval: () => 1, clearInterval() {} });

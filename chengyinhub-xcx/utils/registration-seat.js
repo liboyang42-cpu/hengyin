@@ -44,14 +44,16 @@ function validSeatReceipt(data, target) {
 }
 function captureLogin(app, storage) {
   try {
-    return { owner: String(app.getUserID && app.getUserID() || ''), authorization: app.getAuthorization && app.getAuthorization(),
+    const revision = app.getSession().getRevision();
+    if (!Number.isSafeInteger(revision) || revision < 0) return null;
+    return { revision, owner: String(app.getUserID && app.getUserID() || ''), authorization: app.getAuthorization && app.getAuthorization(),
       generation: String(app._featureFlagsEpoch || 0) + ':' + String(storage.getStorageSync && storage.getStorageSync('authorization_issued_at') || '') };
   } catch (error) { return null; }
 }
 function loginCurrent(app, storage, original) {
   const now = captureLogin(app, storage);
   return !!(original && original.owner && now && now.owner === original.owner
-    && now.authorization === original.authorization && now.generation === original.generation);
+    && now.authorization === original.authorization && now.generation === original.generation && now.revision === original.revision);
 }
 function seatRecovery(app, target, isCurrent) {
   return { target, isCurrent, readReceipt(original, done) {

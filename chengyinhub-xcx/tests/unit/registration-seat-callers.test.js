@@ -16,7 +16,7 @@ function method(file, name) {
 const files = ['pages/club/detail/index.js', 'pages/merchant/index/index.js', 'subpackageMember/components/cy/profile/index.js',
   'subpackageMember/components/scene-member-participation-detail/index.js'];
 for (const file of files) test(file + ' 相机开启后A→B→A不能用新登录提交旧扫码', () => {
-  const scans = [], sends = [], disk = {}, app = { _featureFlagsEpoch: 0, getUserID: () => 11, getAuthorization: () => 'synthetic' };
+  const scans = [], sends = [], disk = {}, app = { _featureFlagsEpoch: 0, getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic' };
   const wx = { scanCode: options => scans.push(options), getStorageSync: key => disk[key] };
   const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent',
     'return ({' + method(file, file.includes('/club/') ? 'onClubScan' : 'goScanQR') + '});')(app, wx, seats.captureLogin, seats.loginCurrent);
@@ -30,14 +30,14 @@ function lead() {
   const scans = [], requests = [], messages = [], rows = {}, haptics = [], timers = [];
   const disk = { scanCode: options => scans.push(options), getStorageSync: key => rows[key],
     setStorageSync(key, value) { rows[key] = JSON.parse(JSON.stringify(value)); }, removeStorageSync(key) { delete rows[key]; } };
-  const app = { _featureFlagsEpoch: 0, getUserID: () => 11, getAuthorization: () => 'synthetic',
+  const app = { _featureFlagsEpoch: 0, getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic',
     sendRequest: options => requests.push(options) };
   const login = seats.captureLogin(app, disk);
   const names = ['leadVerifyMemberTicket', '_leadOperationContext', '_isLeadOperationContextCurrent', '_canUseLeadTools'];
-  const page = new Function('app', 'wx', 'seatTarget', 'seatKey', 'seatRecovery', 'createVerificationWorkflow',
+  const page = new Function('app', 'wx', 'seatTarget', 'seatKey', 'seatRecovery', 'captureLogin', 'loginCurrent', 'createVerificationWorkflow',
     'classifyVerificationOutcome', 'resolveLeadMemberTicket', 'motion', 'cyLoading', 'req',
     'return ({' + names.map(name => method('pages/play/index.js', name)).join(',') + '});')(
-    app, disk, seats.seatTarget, seats.seatKey, seats.seatRecovery,
+    app, disk, seats.seatTarget, seats.seatKey, seats.seatRecovery, seats.captureLogin, seats.loginCurrent,
     options => verification.createVerificationWorkflow({ ...options, setTimer(fn) { timers.push(fn); return timers.length; }, clearTimer() {} }),
     verification.classifyVerificationOutcome, require('../../pages/play/utils/lead-ticket-scan.js').resolveLeadMemberTicket,
     { haptic: options => haptics.push(options) }, { show() { throw Error('seat must not own global loading'); }, hide() { throw Error('seat cannot hide global loading'); } },
@@ -75,10 +75,10 @@ test('带队入口A→B→A迟回执与离页回执不触UI或清理待办', () 
 });
 test('优惠券旧出码调用遇多人选择信息时移交同一显式选席组件，绝不默认第一席', async () => {
   const requests = [], scenes = [], updates = [];
-  const page = new Function('req', 'seatChoice', 'app', 'cyToast',
+  const page = new Function('req', 'seatChoice', 'app', 'cyToast', 'wx', 'captureLogin', 'loginCurrent',
     'return ({' + method('pages/play/index.js', 'ensureTicket') + '});')(
     (...args) => { requests.push(args); return Promise.resolve({ code: 200, data: { requiresSeatSelection: true, registrationId: 71, seatCount: 3 } }); },
-    seats.seatChoice, {}, () => {});
+    seats.seatChoice, { getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }) }, () => {}, {}, seats.captureLogin, seats.loginCurrent);
   Object.assign(page, { data: { regId: 71, ticket: {} }, _playOwner: '11', _boundPlayOwner: () => '11',
     _sessionKey: () => 'session', _isPlayAccountCurrent: () => true, setData: patch => updates.push(patch),
     openScene: (...args) => scenes.push(args) });
@@ -90,7 +90,7 @@ test('优惠券旧出码调用遇多人选择信息时移交同一显式选席�
 
 
 test('俱乐部A→B→A选择递增页面代次，原相机回调不能提交到新页面上下文', () => {
-  const scans = [], sends = [], app = { getUserID: () => 11, getAuthorization: () => 'synthetic' };
+  const scans = [], sends = [], app = { getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic' };
   const wx = { scanCode: options => scans.push(options), getStorageSync() {} };
   const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent', 'loading',
     'return ({' + ['onClubScan', 'onPickOwnerClub'].map(name => method('pages/club/detail/index.js', name)).join(',') + '});')(
@@ -107,7 +107,7 @@ test('参与详情复用组件切换记录A→B→A时，原扫码不得落入�
   const file = 'subpackageMember/components/scene-member-participation-detail/index.js';
   const source = fs.readFileSync(path.join(root, file), 'utf8');
   const lexical = source.slice(source.indexOf('function trimmedString('), source.indexOf('// H12'));
-  const scans = [], sends = [], app = { getUserID: () => 11, getAuthorization: () => 'synthetic' };
+  const scans = [], sends = [], app = { getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic' };
   const wx = { scanCode: options => scans.push(options), getStorageSync() {} };
   const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent', 'resolveVerificationScan', 'cyLoading',
     lexical + 'return ({' + ['goScanQR', '_applyRecordId'].map(name => method(file, name)).join(',') + '});')(
@@ -126,7 +126,7 @@ test('参与详情换记录保留原UNKNOWN，迟到回包不能清新待办，�
   const rows = {}, requests = [], messages = [];
   const wx = { getStorageSync: key => rows[key], setStorageSync(key, value) { rows[key] = JSON.parse(JSON.stringify(value)); },
     removeStorageSync(key) { delete rows[key]; } };
-  const app = { getUserID: () => 11, getAuthorization: () => 'synthetic', sendRequest(options) { requests.push(options); return { abort() {} }; } };
+  const app = { getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic', sendRequest(options) { requests.push(options); return { abort() {} }; } };
   const functions = ['seatTarget', 'seatKey', 'captureLogin', 'loginCurrent', 'seatRecovery'];
   const page = new Function('app', 'wx', 'cyLoading', 'cyToast', 'createVerificationWorkflow', 'classifyVerificationOutcome', 'offerVerificationReadback',
     ...functions, lexical + 'return ({' + ['_submitVerification', '_applyRecordId'].map(name => method(file, name)).join(',') + '});')(

@@ -45,7 +45,7 @@ function harness(file, method, transport, request, sharedStorage, sourceOverride
   const requests = [], messages = [];
   let memberId = 11;
   let deadline;
-  const app = { getUserID: () => memberId, getAvatar: () => '', getNickname: () => '', sendRequest(options) { requests.push(options); return { abort() {} }; } };
+  const app = { getSession: () => ({ getRevision: () => 0 }), getUserID: () => memberId, getAvatar: () => '', getNickname: () => '', sendRequest(options) { requests.push(options); return { abort() {} }; } };
   if (transport) {
     const { createRequestClient } = require('../../utils/transport/request-client.js');
     const client = createRequestClient({ getBaseUrl: () => 'https://example.invalid', getUserID: () => memberId,

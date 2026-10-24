@@ -16,7 +16,7 @@ const recommend = require('./utils/play-recommend.js'); // P0 推荐评分(纯�
 const { buildPlayRoute, createSessionClock, formatElapsed } = require('../../utils/play-ui-contract.js');
 const { readPausedRun, writePausedRun, clearRunSession, saveServerPausedRun, clearServerRunSession, readServerPausedRun, newerPausedRun } = require('./utils/play-run-session.js');
 const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
-const { seatTarget, seatKey, seatRecovery, seatChoice } = require('../../utils/registration-seat.js');
+const { seatTarget, seatKey, seatRecovery, seatChoice, captureLogin, loginCurrent } = require('../../utils/registration-seat.js');
 const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../utils/merchant-verification.js');
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
@@ -4836,6 +4836,7 @@ Page({
     const that = this;
     if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
     const context = this._leadOperationContext();
+    const seatLogin = captureLogin(app, wx);
     const sequence = this._leadTicketScanSequence = (this._leadTicketScanSequence || 0) + 1;
     const isCurrent = () => that._isLeadOperationContextCurrent(context, true)
       && sequence === that._leadTicketScanSequence;
@@ -4855,6 +4856,8 @@ Page({
           data: { code: ticket.code, activityId: context.activityId } };
         const target = seatTarget(request);
         if (target) {
+          const seatCurrent = () => isCurrent() && loginCurrent(app, wx, seatLogin);
+          if (!seatCurrent()) return;
           if (!that._leadVerificationWorkflow) that._leadVerificationWorkflow = createVerificationWorkflow({
             deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
           const key = seatKey(context.owner, target);
@@ -4864,12 +4867,12 @@ Page({
             fail: (r, status) => done(classifyVerificationOutcome(r, 'fail', status, request)),
             successStatusAbnormal: (r, status) => done(classifyVerificationOutcome(r, 'abnormal', status, request))
           })), result => {
-            if (!isCurrent()) return;
+            if (!seatCurrent()) return;
             if (result.status === 'success') motion.haptic({ type: 'medium', reducedMotion: that.data.reducedMotion });
             that.diegetic(result.status === 'unknown'
               ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发'
               : result.response && result.response.msg || '核销未提交');
-          }, seatRecovery(app, target, isCurrent));
+          }, seatRecovery(app, target, seatCurrent));
           return;
         }
         loadingShown = true; cyLoading.show('正在核销');
@@ -6495,8 +6498,10 @@ Page({
     const regId = this.data.regId;
     if (!regId) { this._explainMissingEntryQr(); return; }
     const owner = this._boundPlayOwner(), sessionKey = this._sessionKey();
+    const login = captureLogin(app, wx);
+    if (!loginCurrent(app, wx, login)) return;
     const sequence = this._ticketIssueSequence = (this._ticketIssueSequence || 0) + 1;
-    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+    const current = () => loginCurrent(app, wx, login) && this._isPlayAccountCurrent() && owner === this._playOwner
       && !this.data.isPreview && !this.data.isMock && this.data.regId === regId
       && sequence === this._ticketIssueSequence && sessionKey === this._sessionKey();
     this.setData({ ticket: { show: this.data.ticket.show, url: '', code: '', loading: true, expiresAt: 0 } });

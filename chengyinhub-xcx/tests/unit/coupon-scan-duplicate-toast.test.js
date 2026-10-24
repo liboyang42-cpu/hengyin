@@ -37,6 +37,7 @@ function mountProfile(options = {}) {
   }
   const app = {
     globalData: {},
+    getSession: () => ({ getRevision: () => 0 }),
     getUserID: () => '9002',
     getUserRole: () => 'merchant',
     getUserType: () => 2,
