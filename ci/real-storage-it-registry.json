@@ -397,6 +397,22 @@
         "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT"
       ],
       "note": "25 ordinary@Test; no dynamic count/skip fallback. Source-bound XML/CLEAN required; pair with independently executed old-source25 before mechanical equivalence claim."
+    },
+    "architecture-day-theme-intent": {
+      "registered_source": "78559677c472fe58e7583158482d17d0aa138dba",
+      "note": "Exact19 ordinary Test cases. Source binding, zero-skip XML and CLEAN MySQL/Redis mandatory; default feature and maintenance remain off.",
+      "classes": [
+        "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT"
+      ],
+      "lineage": "E785 v2 durable intent plus Aef080 prepared generation; root Controller/maintenance wiring"
+    },
+    "architecture-day-payment-intent": {
+      "registered_source": "254744aa21139b44374a151b7922f7575086cdd8",
+      "lineage": "B failed create_tree exact30-file root preservation on published218 parent",
+      "note": "Four ordinary Test cases; exact class-only scratch DDL admission in workflow, zero-skip XML and independent CLEAN required.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -1188,6 +1204,23 @@
       ],
       "gates": {},
       "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports."
+    },
+    "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT": {
+      "tests": 19,
+      "storage": [
+        "mysql",
+        "redis"
+      ],
+      "gates": {},
+      "note": "Durable original prepare/claim commit certainty, fixed 24h body retention/purge, owner recovery all states and EXPLAIN. Actual E/A services and production mappers/Lua; model/review/member doubles. No HTTP, live model or production proof."
+    },
+    "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Four real MySQL intent/commit/concurrency contracts, actual gateway and SDK doubles, JDBC-backed domain mapper adapter. Dedicated UUID scratch only; no real payment/provider or full MyBatis four-domain acceptance."
     }
   }
 }
