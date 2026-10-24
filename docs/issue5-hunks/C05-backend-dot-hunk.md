@@ -232,3 +232,23 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 19:57 America/Los_Angeles
+
+HEAD `c6c4c398c` tests. Did not invent recoverOriginal.
+
+`OfflinePackOperationTest.unusedFinishUpdateOfIdleDoesNotOccupyThenUniqueUpdateThenFinishApplies`：IDLE `finishUpdate` 抛 `NOT_DOWNLOADING` 且 phase 仍 IDLE、operationId 仍空；后续唯一 startDownload+finishDownload+applyUpdate+finishUpdate 才是 v2 READY。与 unused resume 的 v1 READY、unused applyUpdate 的 UPDATING 占账不同。
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **20/0** 2026-10-24T02:57:24Z：
+
+```
+Tests run: 7 -- OfflinePackOperationTest
+Tests run: 5 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
