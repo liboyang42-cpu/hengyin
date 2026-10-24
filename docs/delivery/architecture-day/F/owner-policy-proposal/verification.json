@@ -1,0 +1,63 @@
+{
+  "status": "DOC_ONLY_PROPOSAL_NOT_IMPLEMENTED_POLICY",
+  "parent": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "branch": "codex/architecture-day-f-owner-policy-proposal",
+  "source_record_hashes_checked": 13,
+  "scope_rule_ids": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15"
+  ],
+  "relative_links_checked": 3,
+  "frozen_code_equal": [
+    {
+      "path": "ci/architecture/gate.py",
+      "frozen_commit": "155c88ef52f7f75023de464c8a886c29d017cdba",
+      "equal_git_blob": "6cac5f19e6c7dd1380d1e800187fba6eb6da5680"
+    },
+    {
+      "path": "ci/architecture/baseline.json",
+      "frozen_commit": "155c88ef52f7f75023de464c8a886c29d017cdba",
+      "equal_git_blob": "b4a4f466adac7ecbe10e4cf19d49af8826762556"
+    },
+    {
+      "path": "ci/architecture/locking-select-baseline.proposal.json",
+      "frozen_commit": "155c88ef52f7f75023de464c8a886c29d017cdba",
+      "equal_git_blob": "7892137354f74b4774b0158935fd9768d1ebeb38"
+    },
+    {
+      "path": "ci/architecture/collect_jdeps.py",
+      "frozen_commit": "685743902d32252adb2cb320a5f5e59b4af2f866",
+      "equal_git_blob": "302baf9428d08d2dbea617ae60a3e2012e502022"
+    }
+  ],
+  "doc_only_scope": "PASS",
+  "secret_file_gate": "PASS scoped documents",
+  "gitleaks": "PASS 4 scoped documents, 0 findings",
+  "actual_read_only_query": "existing gate.inventory(root,source_sha)+literal_write_target; no new parser/caller scanner",
+  "source_gate_execution": "NOT_RUN",
+  "new_policy_or_controls_implemented": false,
+  "new_policy_selftests": "NOT_WRITTEN_NOT_RUN; acceptance design only",
+  "architecture_tests": "NOT_RUN_THIS_TASK",
+  "java_mysql_redis_models_ci": "NOT_RUN",
+  "current_root_sourcegate_compiled_jdeps": "UNKNOWN_NOT_READ_BACK",
+  "business_owner_bindings_assigned": 0,
+  "new_baseline_or_allowlist_entries": 0,
+  "artifact_sha256": {
+    "A01-A15.md": "ac47aa8b268a3fdc001b35a1694650b2c9c6b0ac7056e2bf5ec69d6b48965b1d",
+    "REPORT.md": "3f53483e044918d7d0590cf5bfd15a975590e3d2d804c853dc1b80d509f448c3",
+    "evidence.json": "d985db685327253234a49f85ebddeb59cd3bed4a7cab90972e06e5bf22f5da8d"
+  }
+}

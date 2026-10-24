@@ -1,0 +1,173 @@
+{
+  "status": "READ_ONLY_EXISTING_GATE_OBSERVATION_NOT_A_BUSINESS_AUTHORIZATION_OR_SOURCE_GATE_VERDICT",
+  "source_sha": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "verifier_pin": "155c88ef52f7f75023de464c8a886c29d017cdba",
+  "statement_kinds": {
+    "select": 1663,
+    "insert": 398,
+    "update": 731,
+    "delete": 198
+  },
+  "observed_hints_tables": 389,
+  "literal_target_tables": 368,
+  "literal_target_namespace_owners": 247,
+  "literal_multiwriter_tables": {
+    "club": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubGovernanceMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMapper"
+    ],
+    "club_member": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubGovernanceMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubMemberMapper"
+    ],
+    "cms_registration": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsRegistrationMapper"
+    ],
+    "cms_topic": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionReopenMapper"
+    ],
+    "cms_topic_chapter": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicChapterMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionReopenMapper"
+    ],
+    "cms_topic_node": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.CmsTopicNodeMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicEditionReopenMapper"
+    ],
+    "member_cash_withdraw": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.MemberCashWithdrawMapper"
+    ],
+    "merchant_lead": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantLeadMapper"
+    ],
+    "official_event": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.OfficialEventV2Mapper"
+    ],
+    "oms_order": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.OmsOrderMapper"
+    ],
+    "oms_ticket": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.ClubEventOpsMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.OmsTicketMapper"
+    ],
+    "pms_product": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantDeskMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.PmsProductMapper"
+    ],
+    "pms_sku": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantDeskMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.PmsSkuMapper"
+    ],
+    "refund_application": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.MerchantAftercareTimeoutMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.RefundApplicationMapper"
+    ],
+    "topic_route_session": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.OrientSessionMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.TopicRouteSessionMapper"
+    ],
+    "ums_member": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberMapper"
+    ],
+    "ums_member_address": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberAddressMapper"
+    ],
+    "ums_member_identity": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberIdentityMapper"
+    ],
+    "ums_member_withdrawal": [
+      "chengyinhub-system:com.chengyinhub.business.mapper.AccountDeregistrationMapper",
+      "chengyinhub-system:com.chengyinhub.business.mapper.UmsMemberWithdrawalMapper"
+    ]
+  },
+  "dml_unknown_reason_counts": {
+    "dynamic_tag": 528,
+    "text_substitution": 1,
+    "unsupported_sql_shape": 95
+  },
+  "column_hint_typeHandler_examples": [
+    "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml#backfillRegistrationPii",
+    "chengyinhub-system/src/main/resources/mapper/business/OmsOrderMapper.xml#backfillOrderReceiverPii",
+    "chengyinhub-system/src/main/resources/mapper/business/UserInvoiceMapper.xml#updateTitle"
+  ],
+  "source_records": [
+    {
+      "path": "ci/architecture/gate.py",
+      "sha256": "4a3831c9040acc03ad5f13ffd8b60a7ec452b5921bae8ecaefae064fd24ac623",
+      "git_blob": "6cac5f19e6c7dd1380d1e800187fba6eb6da5680"
+    },
+    {
+      "path": "ci/architecture/owners.json",
+      "sha256": "62946a220c83acb101ec14b84d207f961305b7b54803f12e4dd683a9f35b0567",
+      "git_blob": "b56d1d37a21ce6ca2192db42d6fb37a327837180"
+    },
+    {
+      "path": "ci/architecture/commands.json",
+      "sha256": "020f1988bc83793a2bb118ae6f48fd608c573f8325324e550564ba446098e5d1",
+      "git_blob": "0380bd593189bc819829c80bddaf972b4407a987"
+    },
+    {
+      "path": "ci/architecture/baseline.json",
+      "sha256": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+      "git_blob": "b4a4f466adac7ecbe10e4cf19d49af8826762556"
+    },
+    {
+      "path": "ci/architecture/locking-select-baseline.proposal.json",
+      "sha256": "c71bbc7fdbf4996b68f5977ebd344dac150f56128dea4837c69ec3f91b83e52b",
+      "git_blob": "7892137354f74b4774b0158935fd9768d1ebeb38"
+    },
+    {
+      "path": "ci/architecture/collect_jdeps.py",
+      "sha256": "44f1bdb9194429a7bdce0686bc4d0fa5be530175c8841255c998ada5891308bf",
+      "git_blob": "302baf9428d08d2dbea617ae60a3e2012e502022"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "5995bcab2c0927c10b4b01f0adddd7198a88690b43eefcc7d404fe98bb8414c1",
+      "git_blob": "c7b0a57a05ebf7ed054092c2bc45cf1c4dc96bed"
+    },
+    {
+      "path": "ci/assert_it_ran.py",
+      "sha256": "d29f61ea2c554b310fb2dbe6b26299c65a38327e399f4659f26f86ffc3d53b6d",
+      "git_blob": "27f92671b4149a03040f9dd7467123bd054c2de5"
+    },
+    {
+      "path": "ci/real_storage_it.py",
+      "sha256": "269813582a0ae72efc2d397cca9376658cadf9bdcd5c635fb1dd95dce1084678",
+      "git_blob": "2adfc60ea104859c2c59ea917d2b8b7ffaba7551"
+    },
+    {
+      "path": "ci/sql_splitter.py",
+      "sha256": "a46e731d99c707bd5cd3b769fe8b2225e2b60298696d0de82a29c50bf96e0ce1",
+      "git_blob": "349510ecde628a57e5760b1d1a9a5e4946adae82"
+    },
+    {
+      "path": "ci/migration_gates.py",
+      "sha256": "3a9a8c73d583fa9de8df90442d28dab20678bbf48251e1bd134c39caca0dc6ce",
+      "git_blob": "bc271ec3f1955e5893a5a709689403b895522f51"
+    },
+    {
+      "path": "ci/release_manifest.py",
+      "sha256": "765f634e9008b1cf3e309cd23aaa1b73a6452b9f8fc85c5e23cbf3e971d3455b",
+      "git_blob": "4b2a2faa5def4782178bcfcacc66a8a703a4ac8d"
+    },
+    {
+      "path": "docs/delivery/architecture-day/COORDINATOR/governance-scope.md",
+      "sha256": "aa0469b16953b604639305f1db13400e16545519d9c386a4f6a5c2ab8da24043",
+      "git_blob": "083ffae0db6c6c02d019de1b1766e786a2a9af4a"
+    }
+  ],
+  "business_owners_approved_in_this_proposal": 0,
+  "current_sourcegate_verdict": "UNKNOWN_NOT_RUN",
+  "current_compiled_jdeps": "UNKNOWN_NOT_READ_BACK",
+  "java_db_ci_executed": false
+}
