@@ -2,12 +2,16 @@ package com.chengyinhub.business.service.fulfillment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.chengyinhub.business.domain.RegistrationEntitlement;
 import com.chengyinhub.business.service.fulfillment.EntitlementHoldProjection.HoldFact;
 import com.chengyinhub.business.service.fulfillment.EntitlementHoldProjection.HoldView;
 import com.chengyinhub.business.service.fulfillment.EntitlementHoldProjection.Outcome;
@@ -74,5 +78,40 @@ class EntitlementHoldProjectionTest {
                         EntitlementHoldProjection.STATUS_REDEEMED, END, ""), NOW);
         assertEquals(Outcome.HELD, steal.outcome());
         assertEquals(1, holds.occupyCount("c07-hold-never-seen"));
+    }
+
+    @Test
+    void projectFromLedgerRequiresPerkListAndNewInstanceReadsExistingEntitlement() {
+        EntitlementHoldProjection missing = new EntitlementHoldProjection();
+        EntitlementHoldProjection.WaitingSourceException waiting = assertThrows(
+                EntitlementHoldProjection.WaitingSourceException.class,
+                () -> missing.projectFromLedger("c07-hold-led1", 78L, 124L, 9L, END, NOW));
+        assertEquals(EntitlementHoldProjection.PERK_LIST, waiting.getWaitingCapability());
+        assertEquals(0, missing.occupyCount("c07-hold-led1"));
+
+        RegistrationEntitlement row = new RegistrationEntitlement();
+        row.setRegistrationId(78L);
+        row.setChapterId(124L);
+        row.setStatus(EntitlementHoldProjection.STATUS_HELD);
+        EntitlementHoldProjection.OriginalEntitlementSource source = registrationId -> {
+            if (!Long.valueOf(78L).equals(registrationId)) {
+                return Collections.emptyList();
+            }
+            return List.of(row);
+        };
+        EntitlementHoldProjection wired = new EntitlementHoldProjection(source);
+        HoldView neverSeen = wired.projectFromLedger("c07-hold-led1", 78L, 999L, 9L, END, NOW);
+        assertEquals(Outcome.UNKNOWN, neverSeen.outcome());
+        assertEquals(0, wired.occupyCount("c07-hold-led1"));
+        HoldView held = wired.projectFromLedger("c07-hold-led1", 78L, 124L, 9L, END, NOW);
+        assertEquals(Outcome.HELD, held.outcome());
+        assertTrue(held.occupiesCapacity());
+        assertFalse(held.executedReserve());
+        assertFalse(held.executedRedeem());
+        assertEquals(1, wired.occupyCount("c07-hold-led1"));
+        EntitlementHoldProjection restarted = new EntitlementHoldProjection(source);
+        assertEquals(Outcome.HELD, restarted.projectFromLedger("c07-hold-led1", 78L, 124L, 9L, END, NOW).outcome());
+        assertEquals(Outcome.UNKNOWN, restarted.recoverOriginal("c07-hold-missing").outcome());
+        assertEquals(0, restarted.occupyCount("c07-hold-missing"));
     }
 }

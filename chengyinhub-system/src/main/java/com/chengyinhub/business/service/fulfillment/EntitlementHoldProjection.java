@@ -1,9 +1,12 @@
 package com.chengyinhub.business.service.fulfillment;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.chengyinhub.business.domain.RegistrationEntitlement;
+import com.chengyinhub.business.service.IPerkLedgerService;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 
 /**
@@ -13,8 +16,13 @@ import com.chengyinhub.common.constant.EntitlementInvalidReason;
  * occupies capacity; 1 already redeemed; 2 invalid. Projects a hold keyed by the
  * original requestId. Does not call {@code IPerkLedgerService#reserveEntitlements}
  * or {@code #redeemChapter}, and does not write the mapper.
+ *
+ * <p>原权益行走既有 {@link IPerkLedgerService#listEntitlements}；缺端口 WAITING_SOURCE。
+ * 商家/有效期仍是扫码上下文，不从 entitlement 表发明 merchantId。
  */
 public final class EntitlementHoldProjection {
+
+    public static final String PERK_LIST = "perkLedger.listEntitlements";
 
     /** {@code registration_entitlement.status}: 已售未核销, occupies capacity. */
     public static final int STATUS_HELD = 0;
@@ -65,6 +73,15 @@ public final class EntitlementHoldProjection {
             new ConcurrentHashMap<String, HoldView>();
     private final ConcurrentHashMap<String, Integer> occupyCountByRequestId =
             new ConcurrentHashMap<String, Integer>();
+    private final OriginalEntitlementSource source;
+
+    public EntitlementHoldProjection() {
+        this(null);
+    }
+
+    public EntitlementHoldProjection(OriginalEntitlementSource source) {
+        this.source = source;
+    }
 
     /**
      * Project the hold that already belongs to {@code originalRequestId}.
@@ -100,6 +117,28 @@ public final class EntitlementHoldProjection {
         }
         HoldView original = originalIntentByRequestId.get(id);
         return original == null ? unknown(id) : original;
+    }
+
+    /**
+     * 从既有权益账回读一章。缺 {@link IPerkLedgerService#listEntitlements} 为 WAITING_SOURCE。
+     * 未见过的 registration/chapter 保持 UNKNOWN，不占容量。不调用 reserve/redeem。
+     */
+    public HoldView projectFromLedger(String originalRequestId, Long registrationId, Long chapterId,
+            Long merchantId, Instant validEndExclusive, Instant serverNow) {
+        Objects.requireNonNull(serverNow, "serverNow");
+        if (source == null) {
+            throw new WaitingSourceException(PERK_LIST);
+        }
+        if (registrationId == null || registrationId.longValue() <= 0L) {
+            throw new WaitingSourceException(PERK_LIST);
+        }
+        List<RegistrationEntitlement> rows = source.listEntitlements(registrationId);
+        RegistrationEntitlement match = findChapter(rows, chapterId);
+        if (match == null) {
+            return recoverOriginal(originalRequestId);
+        }
+        return project(new HoldFact(originalRequestId, registrationId, chapterId, merchantId,
+                match.getStatus(), validEndExclusive, match.getInvalidReason()), serverNow);
     }
 
     public int occupyCount(String originalRequestId) {
@@ -151,5 +190,52 @@ public final class EntitlementHoldProjection {
 
     private static HoldView unknown(String requestId) {
         return new HoldView(requestId, Outcome.UNKNOWN, false, false, false, false);
+    }
+
+    private static RegistrationEntitlement findChapter(List<RegistrationEntitlement> rows, Long chapterId) {
+        if (rows == null || chapterId == null) {
+            return null;
+        }
+        for (RegistrationEntitlement row : rows) {
+            if (row != null && chapterId.equals(row.getChapterId())) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    /** 只读既有权益账；不 reserve / redeem。 */
+    public interface OriginalEntitlementSource {
+        List<RegistrationEntitlement> listEntitlements(Long registrationId);
+    }
+
+    public static final class PerkLedgerOriginalEntitlementSource implements OriginalEntitlementSource {
+        private final IPerkLedgerService ledger;
+
+        public PerkLedgerOriginalEntitlementSource(IPerkLedgerService ledger) {
+            this.ledger = ledger;
+        }
+
+        @Override
+        public List<RegistrationEntitlement> listEntitlements(Long registrationId) {
+            if (ledger == null) {
+                throw new WaitingSourceException(PERK_LIST);
+            }
+            return ledger.listEntitlements(registrationId);
+        }
+    }
+
+    public static final class WaitingSourceException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+        private final String waitingCapability;
+
+        public WaitingSourceException(String waitingCapability) {
+            super("WAITING_SOURCE " + waitingCapability);
+            this.waitingCapability = waitingCapability;
+        }
+
+        public String getWaitingCapability() {
+            return waitingCapability;
+        }
     }
 }

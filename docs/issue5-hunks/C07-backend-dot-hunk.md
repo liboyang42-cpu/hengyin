@@ -143,3 +143,9 @@ mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.fulfillmen
 结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **31 run, 0 fail, 0 error, 0 skip**（2026-10-24T00:53:58Z）。Supply 6/0。FourLedger 6/0。Hold 4/0。Evidence 3/0。Invoice 3/0。TransferSold 4/0。Isolation 4/0。FirstJourney 1/0。
 
 Mapper / Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## Parent addendum 2026-10-23 20:40 America/Los_Angeles
+
+生产接线：`EntitlementHoldProjection.projectFromLedger` 只读既有 `IPerkLedgerService.listEntitlements`（`PerkLedgerOriginalEntitlementSource`）。缺端口 WAITING_SOURCE `perkLedger.listEntitlements`。未见 registration/chapter 保持 UNKNOWN，不占容量。不调用 `reserveEntitlements` / `redeemChapter`。merchantId / validEnd 仍是扫码上下文，不从 entitlement 表发明。
+
+BundleBooking / 资金原 writer 仍归 Dot。App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
