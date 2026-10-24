@@ -31,6 +31,8 @@ public final class CompensationEntryProjection {
     public static final String FROZEN_TERMS = "clubEditionCompensation.requireFrozenTerms";
     public static final String EXTRA_APPROVE = "extraApprover.canApproveExtraHours";
     public static final String AUDIT_TRAIL = "auditTrail.trail";
+    /** 同一数字在不同 bizType 不是同一授权资源。公开 trail 不提供这个绑定。 */
+    public static final String AUDIT_RESOURCE_BINDING = "auditTrail.resourceBinding";
 
     private final FrozenTermsSource termsSource;
     private final CompensationAuditSource auditSource;
@@ -125,10 +127,7 @@ public final class CompensationEntryProjection {
         if (!bizId.equals(authorized.getTopicId())) {
             throw new SecurityException(DENIED);
         }
-        if (reader == null) {
-            throw new WaitingSourceException(AUDIT_TRAIL);
-        }
-        return reader.trail(bizType.trim(), bizId);
+        throw new WaitingSourceException(AUDIT_RESOURCE_BINDING);
     }
 
     public static AuditTrailReader fromAuditTrail(AuditTrailProjectionService service) {

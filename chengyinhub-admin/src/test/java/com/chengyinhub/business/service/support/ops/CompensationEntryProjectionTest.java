@@ -267,28 +267,19 @@ class CompensationEntryProjectionTest {
         assertNull(projection.recoverTrail(authorized, grant, "  ", 10L, counting));
         assertNull(projection.recoverTrail(authorized, grant, "ACTIVITY", 0L, counting));
         assertEquals(0, trailReads.get());
-        CompensationEntryProjection.WaitingSourceException waiting = assertThrows(
+        CompensationEntryProjection.WaitingSourceException unbound = assertThrows(
                 CompensationEntryProjection.WaitingSourceException.class,
-                () -> projection.recoverTrail(authorized, grant, "ACTIVITY", 10L, null));
-        assertEquals(CompensationEntryProjection.AUDIT_TRAIL, waiting.getWaitingCapability());
+                () -> projection.recoverTrail(authorized, grant, "ACTIVITY", 10L, counting));
+        assertEquals(CompensationEntryProjection.AUDIT_RESOURCE_BINDING, unbound.getWaitingCapability());
+        CompensationEntryProjection.WaitingSourceException otherType = assertThrows(
+                CompensationEntryProjection.WaitingSourceException.class,
+                () -> projection.recoverTrail(authorized, grant, "ORDER", 10L, counting));
+        assertEquals(CompensationEntryProjection.AUDIT_RESOURCE_BINDING, otherType.getWaitingCapability());
+        assertEquals(0, trailReads.get());
         CompensationEntryProjection.WaitingSourceException missingService = assertThrows(
                 CompensationEntryProjection.WaitingSourceException.class,
                 () -> CompensationEntryProjection.fromAuditTrail(null).trail("ACTIVITY", 10L));
         assertEquals(CompensationEntryProjection.AUDIT_TRAIL, missingService.getWaitingCapability());
-
-        AuditTrailEntryVO row = new AuditTrailEntryVO();
-        row.setSource(AuditTrailEntryVO.SOURCE_BUSINESS_AUDIT_EVENT);
-        row.setAction("COMPENSATION_FREEZE");
-        List<AuditTrailEntryVO> recovered = projection.recoverTrail(authorized, grant, " ACTIVITY ", 10L,
-                (bizType, bizId) -> {
-                    trailReads.incrementAndGet();
-                    assertEquals("ACTIVITY", bizType);
-                    assertEquals(Long.valueOf(10L), bizId);
-                    return List.of(row);
-                });
-        assertEquals(1, trailReads.get());
-        assertEquals(1, recovered.size());
-        assertEquals("COMPENSATION_FREEZE", recovered.get(0).getAction());
     }
 
     private static ClubEditionCompensationTerms frozenTerms() {
