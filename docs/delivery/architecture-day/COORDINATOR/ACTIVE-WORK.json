@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T16:20:00Z",
+  "updated_utc": "2026-10-24T16:50:00Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -9,50 +9,50 @@
   "mode": "Fixed payment/refund/settlement integration batch; finish current other slices then queue; grouped regression after callers and fixtures close",
   "current_worker_assignments": {
     "A": {
-      "state": "ready_for_ci_failure",
-      "task": "Acceptance gaps delivered; original funds/cancellation failures only",
+      "state": "delivered_waiting_ci",
+      "task": "Owned source/fixture delivered and integrated; concrete CI failures only",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable"
     },
     "B": {
-      "state": "ready_for_ci_failure",
-      "task": "Six-argument interface closure reviewed; backend gateway failure repair only",
+      "state": "delivered_waiting_ci",
+      "task": "Owned source/fixture delivered and integrated; concrete CI failures only",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable"
     },
     "C": {
-      "state": "active",
-      "task": "Migration safety controller hash/permission contract exact adaptation",
+      "state": "delivered_waiting_ci",
+      "task": "Owned source/fixture delivered and integrated; concrete CI failures only",
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable"
     },
     "D": {
-      "state": "active",
-      "task": "Two actual citynode Node CI failures, scanner async and chrome lifecycle",
+      "state": "delivered_waiting_ci",
+      "task": "Owned source/fixture delivered and integrated; concrete CI failures only",
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable"
     },
     "E": {
       "state": "active",
-      "task": "Action ledger four exact CI failures, actual route/variant causality",
+      "task": "Action ledger causal parser/registry and four exact backend fixture failures",
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable"
     },
     "F": {
-      "state": "active",
-      "task": "Refund storage entry failure then precise trusted recovery writer registration",
+      "state": "delivered_waiting_ci",
+      "task": "Owned source/fixture delivered and integrated; concrete CI failures only",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable"
     },
     "G": {
-      "state": "active",
-      "task": "Actual FOR UPDATE cache-attribute violation in settlement debt mapper",
+      "state": "delivered_waiting_ci",
+      "task": "Owned source/fixture delivered and integrated; concrete CI failures only",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable"
     },
     "H": {
       "state": "active",
-      "task": "Actual club VM loader missing registration-seat dependency, all related fixtures",
+      "task": "Exact U5 visible error/UNKNOWN handling registration",
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable"
     }
@@ -407,22 +407,24 @@
     "not_acceptance": "No production migration,merge,deployment or full-system acceptance"
   },
   "current_ci_pending": {
-    "run": 40110342853,
-    "source": "9b284f0111b4337e388fc18d797b11c62112cd82",
-    "state": "FAIL_PLAN_CONTROLS_JAVA_NOT_STARTED",
-    "passed_controls": 69,
-    "failed_controls": 1,
-    "failure": "RefundRetryAndRemainderMySqlIT missing precise A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED consumer",
-    "owner": "F",
-    "standard": {
-      "run": 40110542516,
-      "source": "9b284f0111b4337e388fc18d797b11c62112cd82",
-      "state": "RUNNING_WITH_KNOWN_FAILURES",
-      "source_gate_findings": 3,
-      "backend": "in_progress",
-      "mini_failures": "registration-seat loader common root; citynode 2; action ledger 4",
-      "migration_safety": "controller source snapshot drift under review"
-    }
+    "integrated_storage": {
+      "source": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
+      "batch": "architecture-day-integrated-changes",
+      "unique_classes": 62,
+      "declared_tests": 782,
+      "max_parallel": 20,
+      "state": "DISPATCHED_NOT_YET_ACCEPTED",
+      "run": 40113327584
+    },
+    "core_verified": {
+      "source": "759291b481b0ca9c3fd0f7b2572f16072bac54bc",
+      "run": 40112395102,
+      "tests": 14,
+      "pass": 14,
+      "skipped": 0,
+      "cleanup": "INDEPENDENT_CLEAN"
+    },
+    "standard": "Pending E/H exact fixes; do not reuse 9b28 old CI as current acceptance"
   },
   "current_cloud_assignment": {
     "A": "Environment-offline. Complete TeamGroup/ClubEventOps diff in chat, no unscanned GitHub publishing",
@@ -444,7 +446,7 @@
     "A": "f079 checkout/claim locked-current fence and NEVER+OrderClose outerTx refusal;84d7 exact local consumption completeRecovery and closed-order original ticket guard nowAPPLIED. TeamGroup/ClubEventOps still separate active work. New2dedicated test files present; recovery scenarios queued, not Java verified.",
     "root_guard_factory": "WechatVerifiedFactTestSupport.realPaymentGuards: real same-source JdbcOrderOwner+IntentStore+SdkGateway local guard, outbound doubles kept separate. No SDK init/network. B factory callers pending."
   },
-  "current_source_head": "9b284f0111b4337e388fc18d797b11c62112cd82",
+  "current_source_head": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
   "current_source_manifest_counts": {
     "registered_sql_classes": 110,
     "funds_declared_tests": 191,
@@ -475,7 +477,7 @@
   "pending_business_questions": [
     "ASR: same NPC quota reserved before first ASR then handed to text once, or separate ASR budget. User reply pending; do not select budget/charges automatically."
   ],
-  "current_working_tree": "Production source frozen and secret-scanned in 9b284f0; documentation updates only; F gate delta pending",
+  "current_working_tree": "Candidate8490 frozen and pushed; progress document updates only",
   "new_source_blockers_current": [
     "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
   ]
