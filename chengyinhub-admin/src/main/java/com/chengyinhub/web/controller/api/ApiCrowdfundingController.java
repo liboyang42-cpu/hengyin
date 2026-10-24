@@ -28,13 +28,16 @@ import org.slf4j.LoggerFactory;
 import com.chengyinhub.common.exception.ServiceException;
 
 /**
- * 众筹礼品
+ * 众筹礼品赠送
+ *
+ * <p>与 {@link ApiGiftController}（礼品列表）共用 {@code /api/gift} 前缀：子路径 {@code /give} 与 {@code /list}
+ * 不重叠，且已发版客户端按该路径调用，故不改路径；仅用独立 Tag 名区分 Swagger 分组。</p>
  *
  * @author webxh
  * @date 2025-08-28
  */
 @RestController
-@Tag(name = "众筹礼品")
+@Tag(name = "众筹礼品赠送")
 @RequestMapping("/api/gift")
 public class ApiCrowdfundingController extends BaseController {
 
