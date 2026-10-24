@@ -93,6 +93,9 @@ Component({
       const id = trimmedString(String(value == null ? '' : value))
       if (!id) return
       if (String(this.data.id) === id) return
+      this._detailGeneration = (this._detailGeneration || 0) + 1;
+      if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; }
+      if (this._verificationLoadingOwners) { this._verificationLoadingOwners.forEach(() => cyLoading.hide()); this._verificationLoadingOwners.clear(); }
       this._invalidateParticipationCancellation();
       this._cancelRecordPending = true;
       // 后到的 id 要把「缺参」态翻回加载中,否则界面还停在死文字上而请求已经在路上。

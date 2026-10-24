@@ -11,9 +11,9 @@ const entries = [
   ['subpackageMember/components/scene-member-participation-detail/index.js', '_submitVerification'],
 ];
 // 执行生产 adapter 方法本体及真实 workflow，隔离无关页面加载/相机 UI。
-function harness(file, method, transport, request, sharedStorage) {
+function harness(file, method, transport, request, sharedStorage, sourceOverride) {
   request = request || { url: '/api/registration/scan_qr_code', method: 'POST', data: { type: 'activity', code: 'ticket' } };
-  const source = fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
+  const source = sourceOverride || fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
   const match = source.match(new RegExp('^( +)' + method + '(?:\\(|: function)', 'm'));
   assert.ok(match);
   const start = match.index + match[1].length;
@@ -59,7 +59,7 @@ function harness(file, method, transport, request, sharedStorage) {
     'jsonHeader', 'readReducedMotion', 'applyTheme', 'merchantTheme', 'createVerificationWorkflow', 'wx', 'classifyVerificationOutcome', 'offerVerificationReadback',
     'seatTarget', 'seatKey', 'captureLogin', 'loginCurrent', 'seatRecovery',
     'return ({' + body + '});')(app, loading, loading, m => messages.push(m),
-      { show: o => messages.push(o.content) }, () => ({}), () => false, () => {}, { merchantPageRestore() {}, merchantPageShow() {} }, workflow, storage,
+      { show: o => messages.push(o.content) }, () => ({ 'Content-Type': 'application/json' }), () => false, () => {}, { merchantPageRestore() {}, merchantPageShow() {} }, workflow, storage,
       verification.classifyVerificationOutcome, () => {},
       seats.seatTarget, seats.seatKey, seats.captureLogin, seats.loginCurrent, seats.seatRecovery);
   const owner = { ...methodObject, clearGroupCodeTimer() {}, resetGameStationSummaries() {}, _invalidateParticipationCancellation() {},
@@ -370,7 +370,7 @@ test('历史登录拒绝仅接受fail通道的精确status2与code2，其余仍U
 });
 
 
-const seatEntries = entries.filter(([file]) => !file.includes('/club/'));
+const seatEntries = entries;
 const seatRequest = nonce => ({ url: '/api/registration/scan_dynamic_code', method: 'POST',
   data: { code: 'v1.71.activity_seat_2.1999999999999.' + nonce + '.signature' } });
 const actualSeat = { code: 200, msg: '该席位已核销，请勿重复提供权益', data: {
@@ -407,3 +407,30 @@ for (const [file, method] of seatEntries) {
     assert.equal(h.requests.length, 0); assert.match(h.messages[0], /本次未提交/); h.dispose();
   });
 }
+
+for (const [url, data] of [
+  ['/api/registration/scan_dynamic_code', { code: 'v1.71.activity_seat_2.1999999999999.7.signature' }],
+  ['/api/registration/scan_qr_code', { type: 'activity', code: 'original-static-ticket' }],
+  ['/api/verify/groupcode/redeem', { code: 'v1.2.group_v2_3_4.1999999999999.7.signature' }],
+  ['/api/coupon/verification', { code: 'cq1.71.1999999999.signature' }],
+]) test('club scan actual request-client encodes Spring form parameters: ' + url, () => {
+  const h = harness('pages/club/detail/index.js', 'submitClubScan', true, { url, method: 'POST', data });
+  h.invoke(); const wire = h.requests[0];
+  assert.equal(wire.method, 'POST');
+  const contentType = Object.entries(wire.header).find(([key]) => key.toLowerCase() === 'content-type');
+  assert.match(contentType && contentType[1], /^application\/x-www-form-urlencoded(?:;|$)/);
+  assert.deepEqual(wire.data, data); h.dispose();
+});
+
+
+test('club original JSON header mutation fails the actual Spring form wire contract', () => {
+  const file = 'pages/club/detail/index.js';
+  const source = fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
+  const original = source.replace("url: url, data: scan.data, method: 'POST',", "url: url, data: scan.data, method: 'POST', header: jsonHeader(),");
+  assert.notEqual(original, source, 'original header mutation anchor must remain exact');
+  const h = harness(file, 'submitClubScan', true, seatRequest(7), undefined, original); h.invoke();
+  const contentType = Object.entries(h.requests[0].header).find(([key]) => key.toLowerCase() === 'content-type');
+  assert.equal(contentType[1], 'application/json');
+  assert.throws(() => assert.match(contentType[1], /^application\/x-www-form-urlencoded(?:;|$)/), assert.AssertionError);
+  h.dispose();
+});

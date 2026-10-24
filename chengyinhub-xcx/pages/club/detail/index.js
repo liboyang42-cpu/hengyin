@@ -34,6 +34,7 @@ const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/displ
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
+const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../utils/registration-seat.js');
 const loading = require('../../../utils/loading.js');
 const { postExcerpt } = require('../../../utils/danger-actions.js');
 const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
@@ -840,6 +841,9 @@ Page({
   onPickOwnerClub(e) {
     const cid = Number(e.currentTarget.dataset.id);
     if (!cid) return;
+    this._scanGeneration = (this._scanGeneration || 0) + 1;
+    if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; }
+    if (this._scanLoadingOwners) { this._scanLoadingOwners.forEach(() => loading.hide()); this._scanLoadingOwners.clear(); }
     this.data.clubId = cid;
     this.setData({ ownerPickerShow: false });
     this.loadAll();
@@ -854,7 +858,8 @@ Page({
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
   onUnload() {
     this._scanDisposed = true; this._scanGeneration = (this._scanGeneration || 0) + 1;
-    if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; loading.hide(); }
+    if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; }
+    if (this._scanLoadingOwners) { this._scanLoadingOwners.forEach(() => loading.hide()); this._scanLoadingOwners.clear(); }
     this._sceneGuardDestroyed = true;
     this._clubAiToken = (this._clubAiToken || 0) + 1;
     this._detailRequestSeq = (this._detailRequestSeq || 0) + 1;
@@ -964,8 +969,14 @@ Page({
     const club = this.data.club;
     if (!club || !(this.canGovern(club) || this.data.canManageActivities)) return;
     const that = this;
+    const login = captureLogin(app, wx), generation = this._scanGeneration || 0;
+    const clubId = this.data.clubId;
+    const current = () => !that._scanDisposed && generation === (that._scanGeneration || 0)
+      && clubId === that.data.clubId && loginCurrent(app, wx, login)
+      && (that.canGovern(that.data.club) || that.data.canManageActivities);
     wx.scanCode({
       success(res) {
+        if (!current()) return;
         const scan = resolveVerificationScan(res && res.result);
         if (scan.kind === 'invalid') {
           // 码是好的、只是入口不对时给一条能点过去的指路,不弹一个 2 秒就消失的 toast。
@@ -975,7 +986,7 @@ Page({
               content: scan.message,
               confirmText: scan.confirmText || '我知道了',
               cancelText: '留在这里',
-              success(r) { if (r && r.confirm) wx.navigateTo({ url: scan.path }); },
+              success(r) { if (current() && r && r.confirm) wx.navigateTo({ url: scan.path }); },
             });
           } else {
             cyToast(scan.message);
@@ -986,6 +997,7 @@ Page({
       },
       // 用户自己取消不是错误(与 play/merchant 页同一口径);相机/系统失败才提示。
       fail(error) {
+        if (!current()) return;
         if (/cancel/i.test((error && error.errMsg) || '')) return;
         cyToast('未能打开扫码，请检查相机权限');
       },
@@ -1003,14 +1015,26 @@ Page({
     const owner = String(app.getUserID && app.getUserID() || '');
     const generation = this._scanGeneration || 0;
     const ownerPage = this;
+    const login = captureLogin(app, wx), clubId = this.data.clubId;
+    const target = seatTarget({ url, data: scan.data });
+    const current = () => !ownerPage._scanDisposed && generation === (ownerPage._scanGeneration || 0)
+      && clubId === ownerPage.data.clubId && loginCurrent(app, wx, login);
+    if (target && !current()) return;
     if (!this._scanWorkflow) this._scanWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
-    const key = owner + ':' + url + ':' + (scan.code || '');
-    if (this._scanWorkflow.isBusy(key)) { cyToast('核销处理中，请勿重复提交'); return; }
-    loading.show(scan.loadingTitle);
-    this._scanWorkflow.run(key, function (done) {
+    const key = target ? seatKey(owner, target) : owner + ':' + url + ':' + (scan.code || '');
+    if (!target && this._scanWorkflow.isBusy(key)) { cyToast('核销处理中，请勿重复提交'); return; }
+    const loadingOwner = {};
+    if (!target) {
+      if (!this._scanLoadingOwners) this._scanLoadingOwners = new Set();
+      this._scanLoadingOwners.add(loadingOwner); loading.show(scan.loadingTitle);
+    }
+    const finishLoading = () => {
+      if (ownerPage._scanLoadingOwners && ownerPage._scanLoadingOwners.delete(loadingOwner)) loading.hide();
+    };
+    const submitted = this._scanWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, {
-        url: url, data: scan.data, method: 'POST', header: jsonHeader(),
-        autoErrorToast: false,
+        url: url, data: scan.data, method: 'POST',
+        autoErrorToast: false, hideLoading: !!target, silentError: !!target,
         success(res) { done(classifyVerificationOutcome(res, 'success', undefined, { url: url, data: scan.data })); },
         fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, { url: url, data: scan.data })); },
         successStatusAbnormal(res, status) {
@@ -1018,16 +1042,20 @@ Page({
         },
       }));
     }, function (result) {
-      loading.hide();
+      finishLoading();
+      if (target && !current()) return;
       if (ownerPage._scanDisposed || generation !== (ownerPage._scanGeneration || 0)
           || owner !== String(app.getUserID && app.getUserID() || '')) return;
       // 结果未知 = 服务端可能已经写入。提示重试等于把「未知」变成重复核销。
-      if (result.status === 'unknown') { cyToast('核销结果待确认，请勿重复核销'); return; }
+      if (result.status === 'unknown') {
+        cyToast(target ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发' : '核销结果待确认，请勿重复核销'); return;
+      }
       const res = result.response || {};
       // 成功用确认框留住结果(全仓成功 toast 只减不增:两秒就消失的提示替代不了「这张码已核销」这个状态)
       if (res.code == '200') modal.show({ title: scan.successTitle || '核销成功', content: res.msg || '', showCancel: false, confirmText: '知道了' });
       else cyToast(res.msg || '核销失败');
-    });
+    }, target ? seatRecovery(app, target, current) : undefined);
+    if (!submitted) finishLoading();
   },
 
   // 快捷动作「结算」:主理人按主题看分润 / 商家应收 / 打款状态(scene-merchant-profit)。

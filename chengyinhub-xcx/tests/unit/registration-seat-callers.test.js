@@ -13,14 +13,16 @@ function method(file, name) {
   const end = source.indexOf('\n' + match[1] + '},', start); assert.ok(end > start, name);
   return source.slice(start, end + match[1].length + 2);
 }
-const files = ['pages/merchant/index/index.js', 'subpackageMember/components/cy/profile/index.js',
+const files = ['pages/club/detail/index.js', 'pages/merchant/index/index.js', 'subpackageMember/components/cy/profile/index.js',
   'subpackageMember/components/scene-member-participation-detail/index.js'];
 for (const file of files) test(file + ' 相机开启后A→B→A不能用新登录提交旧扫码', () => {
   const scans = [], sends = [], disk = {}, app = { _featureFlagsEpoch: 0, getUserID: () => 11, getAuthorization: () => 'synthetic' };
   const wx = { scanCode: options => scans.push(options), getStorageSync: key => disk[key] };
   const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent',
-    'return ({' + method(file, 'goScanQR') + '});')(app, wx, seats.captureLogin, seats.loginCurrent);
-  page._submitVerification = () => sends.push('sent'); page.goScanQR(); app._featureFlagsEpoch += 2;
+    'return ({' + method(file, file.includes('/club/') ? 'onClubScan' : 'goScanQR') + '});')(app, wx, seats.captureLogin, seats.loginCurrent);
+  page.data = { clubId: 7, club: { isOwner: true } }; page.canGovern = club => club && club.isOwner;
+  page._submitVerification = page.submitClubScan = () => sends.push('sent');
+  page[file.includes('/club/') ? 'onClubScan' : 'goScanQR'](); app._featureFlagsEpoch += 2;
   scans[0].success({ result: 'v1.71.activity_seat_2.1999999999999.7.signature' });
   assert.deepEqual(sends, []);
 });
@@ -84,4 +86,61 @@ test('优惠券旧出码调用遇多人选择信息时移交同一显式选席�
   assert.deepEqual(requests[0][2], { registrationId: 71 });
   assert.deepEqual(scenes, [['qr-ticket', { registrationId: 71 }]]);
   assert.ok(updates.some(patch => patch['ticket.code'] === ''));
+});
+
+
+test('俱乐部A→B→A选择递增页面代次，原相机回调不能提交到新页面上下文', () => {
+  const scans = [], sends = [], app = { getUserID: () => 11, getAuthorization: () => 'synthetic' };
+  const wx = { scanCode: options => scans.push(options), getStorageSync() {} };
+  const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent', 'loading',
+    'return ({' + ['onClubScan', 'onPickOwnerClub'].map(name => method('pages/club/detail/index.js', name)).join(',') + '});')(
+      app, wx, seats.captureLogin, seats.loginCurrent, { hide() {} });
+  Object.assign(page, { data: { clubId: 7, club: { isOwner: true } }, canGovern: club => club && club.isOwner,
+    submitClubScan: () => sends.push('sent'), setData() {}, loadAll() {} });
+  page.onClubScan();
+  for (const id of [8, 7]) page.onPickOwnerClub({ currentTarget: { dataset: { id } } });
+  scans[0].success({ result: 'v1.71.activity_seat_2.1999999999999.7.signature' });
+  assert.deepEqual(sends, []); assert.equal(page._scanGeneration, 2);
+});
+
+test('参与详情复用组件切换记录A→B→A时，原扫码不得落入新记录代次', () => {
+  const file = 'subpackageMember/components/scene-member-participation-detail/index.js';
+  const source = fs.readFileSync(path.join(root, file), 'utf8');
+  const lexical = source.slice(source.indexOf('function trimmedString('), source.indexOf('// H12'));
+  const scans = [], sends = [], app = { getUserID: () => 11, getAuthorization: () => 'synthetic' };
+  const wx = { scanCode: options => scans.push(options), getStorageSync() {} };
+  const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent', 'resolveVerificationScan', 'cyLoading',
+    lexical + 'return ({' + ['goScanQR', '_applyRecordId'].map(name => method(file, name)).join(',') + '});')(
+    app, wx, seats.captureLogin, seats.loginCurrent, require('../../utils/verification-scan.js').resolveVerificationScan, { hide() {} });
+  Object.assign(page, { data: { id: '71' }, _invalidateParticipationCancellation() {}, getData() {},
+    setData(patch) { Object.assign(this.data, patch); }, _submitVerification: () => sends.push('sent') });
+  page.goScanQR(); page._applyRecordId('72'); page._applyRecordId('71');
+  scans[0].success({ result: 'v1.71.activity_seat_2.1999999999999.7.signature' });
+  assert.deepEqual(sends, []); assert.equal(page._detailGeneration, 2);
+});
+
+test('参与详情换记录保留原UNKNOWN，迟到回包不能清新待办，返回原记录只读回执', () => {
+  const file = 'subpackageMember/components/scene-member-participation-detail/index.js';
+  const source = fs.readFileSync(path.join(root, file), 'utf8');
+  const lexical = source.slice(source.indexOf('function trimmedString('), source.indexOf('// H12'));
+  const rows = {}, requests = [], messages = [];
+  const wx = { getStorageSync: key => rows[key], setStorageSync(key, value) { rows[key] = JSON.parse(JSON.stringify(value)); },
+    removeStorageSync(key) { delete rows[key]; } };
+  const app = { getUserID: () => 11, getAuthorization: () => 'synthetic', sendRequest(options) { requests.push(options); return { abort() {} }; } };
+  const functions = ['seatTarget', 'seatKey', 'captureLogin', 'loginCurrent', 'seatRecovery'];
+  const page = new Function('app', 'wx', 'cyLoading', 'cyToast', 'createVerificationWorkflow', 'classifyVerificationOutcome', 'offerVerificationReadback',
+    ...functions, lexical + 'return ({' + ['_submitVerification', '_applyRecordId'].map(name => method(file, name)).join(',') + '});')(
+      app, wx, { hide() {} }, () => {}, options => verification.createVerificationWorkflow({ ...options, setTimer: () => 1, clearTimer() {} }),
+      verification.classifyVerificationOutcome, () => {}, ...functions.map(name => seats[name]));
+  Object.assign(page, { data: { id: '71' }, _invalidateParticipationCancellation() {}, getData() {},
+    setData(patch) { Object.assign(this.data, patch); } });
+  const submit = id => page._submitVerification('ignored-raw-code', '核销中', { url: '/api/registration/scan_dynamic_code', method: 'POST',
+    data: { code: `v1.${id}.activity_seat_2.1999999999999.7.signature` } }, response => messages.push(response));
+  submit(71); page._applyRecordId('72'); submit(72);
+  const bothPending = JSON.stringify(rows); requests[0].success(receipt);
+  assert.equal(JSON.stringify(rows), bothPending); assert.deepEqual(messages, []);
+  page._applyRecordId('71'); submit(71);
+  assert.deepEqual(requests.map(r => r.url), ['/api/registration/scan_dynamic_code', '/api/registration/scan_dynamic_code', '/api/verify/seat/receipt']);
+  assert.deepEqual(requests[2].data, { registrationId: '71', seatNo: 2 });
+  requests[2].success(receipt); assert.equal(Object.keys(rows).length, 1); assert.equal(messages.at(-1).data.registrationId, 71);
 });
