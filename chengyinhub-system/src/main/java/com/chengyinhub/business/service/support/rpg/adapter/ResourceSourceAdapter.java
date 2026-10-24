@@ -121,6 +121,7 @@ public class ResourceSourceAdapter {
      * 新实例从既有 {@code selectActionByAction} 回读。调用方传入已解析的 actionId，
      * 本适配器不发明 {@code rpg2:} SHA-256。缺端口 WAITING_SOURCE {@link #RPG_REQUEST_RECEIPTS}；
      * 缺/空 session、member、actionId 返回 {@code null}；未见过的键返回 {@code null}，不占进程 sources。
+     * 行上的 session、member、actionId 必须与本次请求一致，否则返回 {@code null}，不把别的动作号当成重放。
      */
     public OriginalReceipt recoverFromRouteAction(Long sessionId, Long memberId, String actionId) {
         String id = RpgAdapterSupport.blankToNull(actionId);
@@ -131,10 +132,12 @@ public class ResourceSourceAdapter {
             throw new WaitingSourceException(RPG_REQUEST_RECEIPTS);
         }
         TopicRouteAction row = routeActions.selectActionByAction(sessionId, memberId, id);
-        if (row == null) {
+        if (row == null || row.getActionId() == null || !id.equals(row.getActionId())
+                || row.getSessionId() == null || !sessionId.equals(row.getSessionId())
+                || row.getMemberId() == null || !memberId.equals(row.getMemberId())) {
             return null;
         }
-        return new OriginalReceipt(row.getActionId() == null ? id : row.getActionId(), true);
+        return new OriginalReceipt(id, true);
     }
 
     /**

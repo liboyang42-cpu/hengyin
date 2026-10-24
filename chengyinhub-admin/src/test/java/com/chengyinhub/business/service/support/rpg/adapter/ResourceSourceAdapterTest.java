@@ -210,6 +210,33 @@ class ResourceSourceAdapterTest {
                 restarted.recoverFromRouteAction(30L, 7L, "ask:40:why");
         assertEquals("ask:40:why", recovered.requestId);
         assertTrue(recovered.replay);
+
+        TopicRouteAction swapped = new TopicRouteAction();
+        swapped.setSessionId(30L);
+        swapped.setMemberId(7L);
+        swapped.setActionId("other-action");
+        rows.put("30:7:c02-swapped", swapped);
+        assertNull(restarted.recoverFromRouteAction(30L, 7L, "c02-swapped"));
+
+        TopicRouteAction otherSession = new TopicRouteAction();
+        otherSession.setSessionId(99L);
+        otherSession.setMemberId(7L);
+        otherSession.setActionId("ask:40:other-session");
+        rows.put("30:7:ask:40:other-session", otherSession);
+        assertNull(restarted.recoverFromRouteAction(30L, 7L, "ask:40:other-session"));
+
+        TopicRouteAction otherMember = new TopicRouteAction();
+        otherMember.setSessionId(30L);
+        otherMember.setMemberId(8L);
+        otherMember.setActionId("ask:40:other-member");
+        rows.put("30:7:ask:40:other-member", otherMember);
+        assertNull(restarted.recoverFromRouteAction(30L, 7L, "ask:40:other-member"));
+
+        TopicRouteAction blankAction = new TopicRouteAction();
+        blankAction.setSessionId(30L);
+        blankAction.setMemberId(7L);
+        rows.put("30:7:c02-blank-action", blankAction);
+        assertNull(restarted.recoverFromRouteAction(30L, 7L, "c02-blank-action"));
         assertEquals(sourcesBefore, run.getThemeRuntime().path("sources").size());
     }
 
