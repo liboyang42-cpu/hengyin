@@ -188,4 +188,27 @@ public class UmsMemberBalanceDetailServiceImpl implements IUmsMemberBalanceDetai
         if (value instanceof BigDecimal) return (BigDecimal) value;
         return new BigDecimal(value.toString());
     }
+
+    @Override
+    public BigDecimal sumDashboardIncome(Long memberId)
+    {
+        BigDecimal total = umsMemberBalanceDetailMapper.selectDashboardIncomeTotal(memberId);
+        return total == null ? BigDecimal.ZERO : total;
+    }
+
+    @Override
+    public Map<String, BigDecimal> sumDashboardIncomeByDay(Long memberId, java.util.Date since)
+    {
+        Map<String, BigDecimal> byDay = new java.util.HashMap<>();
+        List<Map<String, Object>> rows = umsMemberBalanceDetailMapper.selectDashboardIncomeDaily(memberId, since);
+        if (rows == null) return byDay;
+        for (Map<String, Object> row : rows)
+        {
+            Object day = row.get("day");
+            Object amount = row.get("amount");
+            if (day == null || amount == null) continue;
+            byDay.put(String.valueOf(day), new BigDecimal(String.valueOf(amount)));
+        }
+        return byDay;
+    }
 }

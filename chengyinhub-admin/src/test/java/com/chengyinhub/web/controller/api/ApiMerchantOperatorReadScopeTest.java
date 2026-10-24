@@ -80,8 +80,6 @@ class ApiMerchantOperatorReadScopeTest {
         IUmsMemberBalanceDetailService balance = mock(IUmsMemberBalanceDetailService.class);
         IOmsOrderService orders = mock(IOmsOrderService.class);
         IMerchantInsightService insight = mock(IMerchantInsightService.class);
-        when(balance.selectUmsMemberBalanceDetailList(any(UmsMemberBalanceDetail.class)))
-                .thenReturn(Collections.emptyList());
         when(orders.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
         ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balance);
         ReflectionTestUtils.setField(controller, "omsOrderService", orders);
@@ -93,11 +91,13 @@ class ApiMerchantOperatorReadScopeTest {
         Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
         assertEquals("0.00", data.get("revenue"));
         assertNotNull(data.get("revenue7d"));
-        org.mockito.ArgumentCaptor<UmsMemberBalanceDetail> balanceQuery =
-                org.mockito.ArgumentCaptor.forClass(UmsMemberBalanceDetail.class);
-        verify(balance).selectUmsMemberBalanceDetailList(balanceQuery.capture());
-        assertEquals(OWNER, balanceQuery.getValue().getMemberId());
+        verify(balance).sumDashboardIncome(OWNER);
+        verify(balance).sumDashboardIncomeByDay(eq(OWNER), any(java.util.Date.class));
         verify(insight, never()).dashboard(any(Long.class));
+        Map<?, ?> windows = (Map<?, ?>) data.get("windows");
+        assertEquals(false, windows.containsKey("insight.exposure"));
+        assertEquals(false, windows.containsKey("insight.checkin"));
+        assertEquals(false, windows.containsKey("insight.supplyCount"));
     }
 
     @Test
@@ -230,3 +230,4 @@ class ApiMerchantOperatorReadScopeTest {
         }
     }
 }
+

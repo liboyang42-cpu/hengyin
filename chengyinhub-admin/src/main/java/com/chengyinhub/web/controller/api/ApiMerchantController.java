@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.service.support.MerchantMetricWindow;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -1349,20 +1350,17 @@ public class ApiMerchantController extends BaseController {
                 principalMemberId, MerchantPermission.BASIC_READ);
         Long ownerMemberId = access.getOwnerMemberId();
         Map<String, Object> data = new HashMap<>();
+        // 按实际字段声明窗口：到店统计按报名创建时间取 cohort，在架供给和待处理订单是当前快照。
+        Map<String, Object> windows = new LinkedHashMap<>();
 
         // 品牌收入与趋势属于资金域，非财务角色连查询都不执行。
         if (access.hasPermission(MerchantPermission.FINANCE_READ)) {
-            UmsMemberBalanceDetail balanceQuery = new UmsMemberBalanceDetail();
-            balanceQuery.setMemberId(ownerMemberId);
-            balanceQuery.setChangeType(1L); // 1=收入
-            List<UmsMemberBalanceDetail> balanceList =
-                    umsMemberBalanceDetailService.selectUmsMemberBalanceDetailList(balanceQuery);
-            BigDecimal revenue = balanceList.stream()
-                    .filter(b -> b.getChangeBalance() != null)
-                    .reduce(BigDecimal.ZERO, (sum, b) -> sum.add(b.getChangeBalance()), BigDecimal::add);
+            // 累计收入与近7日分桶都在 SQL 聚合(SUM / GROUP BY 日),不再把全量流水拉回内存。
+            BigDecimal revenue = umsMemberBalanceDetailService.sumDashboardIncome(ownerMemberId);
+            if (revenue == null) revenue = BigDecimal.ZERO;
             data.put("revenue", revenue.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
 
-            // 近7日收入趋势(按天):对已取的收入流水(changeType=1)分桶,缺天补0
+            // 近7日收入趋势(按天):收入流水(changeType=1)按自然日分桶,缺天补0
             java.text.SimpleDateFormat keyFmt = new java.text.SimpleDateFormat("yyyy-MM-dd");
             java.text.SimpleDateFormat labelFmt = new java.text.SimpleDateFormat("MM-dd");
             java.util.Calendar cal = java.util.Calendar.getInstance();
@@ -1371,6 +1369,8 @@ public class ApiMerchantController extends BaseController {
             cal.set(java.util.Calendar.SECOND, 0);
             cal.set(java.util.Calendar.MILLISECOND, 0);
             cal.add(java.util.Calendar.DATE, -6);
+            Map<String, BigDecimal> incomeByDay =
+                    umsMemberBalanceDetailService.sumDashboardIncomeByDay(ownerMemberId, cal.getTime());
             String[] dayKeys = new String[7];
             String[] dayLabels = new String[7];
             Map<String, BigDecimal> dayMap = new HashMap<>();
@@ -1378,13 +1378,9 @@ public class ApiMerchantController extends BaseController {
                 String k = keyFmt.format(cal.getTime());
                 dayKeys[i] = k;
                 dayLabels[i] = labelFmt.format(cal.getTime());
-                dayMap.put(k, BigDecimal.ZERO);
+                BigDecimal amount = incomeByDay == null ? null : incomeByDay.get(k);
+                dayMap.put(k, amount == null ? BigDecimal.ZERO : amount);
                 cal.add(java.util.Calendar.DATE, 1);
-            }
-            for (UmsMemberBalanceDetail b : balanceList) {
-                if (b.getCreateTime() == null || b.getChangeBalance() == null) continue;
-                String k = keyFmt.format(b.getCreateTime());
-                if (dayMap.containsKey(k)) dayMap.put(k, dayMap.get(k).add(b.getChangeBalance()));
             }
             java.util.List<Map<String, Object>> revenue7d = new java.util.ArrayList<>();
             for (int i = 0; i < 7; i++) {
@@ -1395,6 +1391,8 @@ public class ApiMerchantController extends BaseController {
                 revenue7d.add(row);
             }
             data.put("revenue7d", revenue7d);
+            windows.put("revenue", MerchantMetricWindow.ALL_TIME.code());
+            windows.put("revenue7d", MerchantMetricWindow.CALENDAR_7D_INCL_TODAY.code());
         }
 
         if (access.hasPermission(MerchantPermission.ORDER_READ)) {
@@ -1406,6 +1404,7 @@ public class ApiMerchantController extends BaseController {
                     .filter(o -> o.getDelFlag() == null || o.getDelFlag() != 2)
                     .collect(java.util.stream.Collectors.toList());
             data.put("pendingOrders", pendingOrders.size());
+            windows.put("pendingOrders", MerchantMetricWindow.CURRENT_SNAPSHOT.code());
         }
 
         // 升级5:曝光/到店/核销率/复购率/在架供给 —— 与店铺参谋同一 facts 口径,数字直出不走 AI。
@@ -1413,10 +1412,14 @@ public class ApiMerchantController extends BaseController {
         if (access.hasPermission(MerchantPermission.MARKETING_READ)) {
             try {
                 data.put("insight", merchantInsightService.dashboard(ownerMemberId));
+                windows.put("insight.exposure", MerchantMetricWindow.ROLLING_30D.code());
+                windows.put("insight.checkin", MerchantMetricWindow.REGISTRATION_COHORT_ROLLING_30D.code());
+                windows.put("insight.supplyCount", MerchantMetricWindow.CURRENT_SNAPSHOT.code());
             } catch (Exception e) {
                 logger.warn("商家看板 insight 块聚合失败 memberId={}", ownerMemberId, e);
             }
         }
+        data.put("windows", windows);
 
         return success(data);
     }
