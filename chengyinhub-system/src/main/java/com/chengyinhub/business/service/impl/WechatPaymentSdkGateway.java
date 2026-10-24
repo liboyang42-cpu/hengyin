@@ -176,32 +176,65 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     public RefundRequestResult submitRefund(String outTradeNo, String outRefundNo,
                                             java.math.BigDecimal refundAmount,
                                             java.math.BigDecimal totalAmount, String reason) {
-        if (refundService == null) {
-            return RefundRequestResult.UNKNOWN;
-        }
-        if (refundAmount == null || refundAmount.compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            return RefundRequestResult.DEFINITIVE_FAILED;
-        }
-        java.math.BigDecimal effectiveTotal = totalAmount == null ? refundAmount : totalAmount;
-        final long refundCents;
-        final long totalCents;
+        requireObservationOutsideBusinessTransaction();
         try {
-            refundCents = toWechatRefundCents(refundAmount);
-            totalCents = toWechatRefundCents(effectiveTotal);
-            if (refundCents > totalCents) {
+            if (toWechatRefundCents(refundAmount)>toWechatRefundCents(totalAmount)
+                    || outRefundNo==null || !outRefundNo.matches("[A-Za-z0-9_-]{1,64}"))
                 return RefundRequestResult.DEFINITIVE_FAILED;
-            }
         } catch (ArithmeticException | IllegalArgumentException invalidAmount) {
             return RefundRequestResult.DEFINITIVE_FAILED;
         }
         try {
+            var original=verifiedFacts.findPaymentSuccess(outTradeNo);
+            if (original==null) return RefundRequestResult.UNKNOWN;
+            return submitRefund(original.reference(),outTradeNo,outRefundNo,refundAmount,totalAmount,reason);
+        } catch (RuntimeException unavailableOrConflicting) {
+            return RefundRequestResult.UNKNOWN;
+        }
+    }
+
+    @Override
+    public RefundRequestResult submitRefund(WechatVerifiedPaymentFact.Reference originalPayment,
+                                            String outTradeNo, String outRefundNo, java.math.BigDecimal refundAmount,
+                                            java.math.BigDecimal totalAmount, String reason) {
+        requireObservationOutsideBusinessTransaction();
+        final long refundCents;
+        final long totalCents;
+        try {
+            refundCents=toWechatRefundCents(refundAmount);
+            totalCents=toWechatRefundCents(totalAmount);
+            if (refundCents>totalCents || outRefundNo==null || !outRefundNo.matches("[A-Za-z0-9_-]{1,64}"))
+                return RefundRequestResult.DEFINITIVE_FAILED;
+        } catch (ArithmeticException | IllegalArgumentException invalidAmount) {
+            return RefundRequestResult.DEFINITIVE_FAILED;
+        }
+        VerifiedProviderClients clients=verifiedProviderClients;
+        if (clients==null || clients.refunds()==null) return RefundRequestResult.UNKNOWN;
+        try {
+            var paid=verifiedFacts.requireVerified(originalPayment).facts();
+            if (paid.kind()!=WechatVerifiedPaymentFact.Kind.PAYMENT || !paid.businessOutTradeNo().equals(outTradeNo)
+                    || !paid.mchid().equals(clients.mchid())
+                    || !"CNY".equals(paid.currency()) || paid.totalFen()!=totalCents
+                    || paid.amountFen()!=paid.totalFen()) return RefundRequestResult.UNKNOWN;
+            assertOriginalFactSnapshot(paid);
+            // WeChat transaction_id identifies the paid attempt, even when another alias is now current.
+            return submitRefundRequest(clients.refunds(),paid.wxOutTradeNo(),paid.transactionId(),
+                    outRefundNo,refundCents,totalCents,reason);
+        } catch (RuntimeException unavailable) {
+            logger.warn("原支付事实约束的退款提交未知 type={}",unavailable.getClass().getSimpleName());
+            return RefundRequestResult.UNKNOWN;
+        }
+    }
+
+    private RefundRequestResult submitRefundRequest(RefundService client,String wxOrderNo,String transactionId,
+            String outRefundNo,long refundCents,long totalCents,String reason) {
+        try {
             CreateRequest request = new CreateRequest();
-            request.setOutTradeNo(currentWechatPaymentNo(outTradeNo));
+            request.setTransactionId(transactionId);
             request.setOutRefundNo(outRefundNo);
             if (reason != null && !reason.isEmpty()) {
                 request.setReason(reason.length() > 80 ? reason.substring(0, 80) : reason);
             }
-            // 退款结果通知回调:配了才设,未配则依赖商户平台默认退款回调(P3 异步回写 payout 终态)
             String refundNotifyUrl = wxPayConfig.getRefundNotifyUrl();
             if (refundNotifyUrl != null && !refundNotifyUrl.trim().isEmpty()) {
                 request.setNotifyUrl(refundNotifyUrl);
@@ -211,19 +244,18 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             amount.setTotal(totalCents);
             amount.setCurrency("CNY");
             request.setAmount(amount);
-
-            Refund refund = refundService.create(request);
+            Refund refund = client.create(request);
+            if (transactionId!=null && (refund==null || !transactionId.equals(refund.getTransactionId())
+                    || !wxOrderNo.equals(refund.getOutTradeNo()) || !outRefundNo.equals(refund.getOutRefundNo())
+                    || refund.getAmount()==null || refund.getAmount().getTotal()==null || refund.getAmount().getRefund()==null
+                    || refund.getAmount().getTotal()!=totalCents || refund.getAmount().getRefund()!=refundCents
+                    || !"CNY".equals(refund.getAmount().getCurrency()))) return RefundRequestResult.UNKNOWN;
             Status st = (refund == null) ? null : refund.getStatus();
-            if (st == Status.SUCCESS || st == Status.PROCESSING) {
-                return RefundRequestResult.ACCEPTED;
-            }
-            if (st == Status.CLOSED || st == Status.ABNORMAL) {
-                return RefundRequestResult.DEFINITIVE_FAILED;
-            }
+            if (st == Status.SUCCESS || st == Status.PROCESSING) return RefundRequestResult.ACCEPTED;
+            if (st == Status.CLOSED || st == Status.ABNORMAL) return RefundRequestResult.DEFINITIVE_FAILED;
             return RefundRequestResult.UNKNOWN;
         } catch (Exception e) {
-            logger.warn("微信原路退款结果未知 outTradeNo={} outRefundNo={}: {}",
-                    outTradeNo, outRefundNo, e.getMessage());
+            logger.warn("微信原路退款结果未知 outRefundNo={}: {}",outRefundNo,e.getMessage());
             return RefundRequestResult.UNKNOWN;
         }
     }

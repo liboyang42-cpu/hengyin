@@ -37,6 +37,13 @@ public class WechatPayServiceImpl implements IWechatPayService {
                                             java.math.BigDecimal totalAmount, String reason){ return gateway.submitRefund(outTradeNo, outRefundNo, refundAmount, totalAmount, reason); }
 
     @Override
+    public RefundRequestResult submitRefund(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment,
+                                            String outTradeNo, String outRefundNo, java.math.BigDecimal refundAmount,
+                                            java.math.BigDecimal totalAmount, String reason) {
+        return gateway.submitRefund(originalPayment,outTradeNo,outRefundNo,refundAmount,totalAmount,reason);
+    }
+
+    @Override
     public Map<String, String> transferToBalance(String outBatchNo, String outDetailNo,
                                                   java.math.BigDecimal amountYuan, String openid, String remark,
                                                   String appid){ return gateway.transferToBalance(outBatchNo, outDetailNo, amountYuan, openid, remark, appid); }

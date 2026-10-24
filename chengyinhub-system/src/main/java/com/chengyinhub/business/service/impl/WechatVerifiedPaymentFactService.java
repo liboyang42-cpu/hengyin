@@ -196,6 +196,22 @@ public class WechatVerifiedPaymentFactService {
         return transaction.execute(status -> read.get());
     }
 
+    /** Compatibility submission still requires one original verified PAYMENT, never the latest alias. */
+    public Stored findPaymentSuccess(String businessNo) {
+        if (businessNo==null || businessNo.isBlank()) throw new IllegalArgumentException("Original business identity required");
+        return readFresh(() -> {
+            Stored payment=null;
+            for (var row:mapper.selectSuccessesByBusiness(businessNo)) {
+                Stored stored=checked(row);
+                if (!businessNo.equals(stored.facts().businessOutTradeNo())) throw new ConflictException();
+                if (stored.facts().kind()!=WechatVerifiedPaymentFact.Kind.PAYMENT) continue;
+                if (payment!=null) throw new ConflictException();
+                payment=stored;
+            }
+            return payment;
+        });
+    }
+
     public Stored findPaymentSuccess(String mchid,String wxNo,String transactionId) {
         return findSuccess(WechatVerifiedPaymentFact.Kind.PAYMENT,mchid,transactionId,wxNo);
     }

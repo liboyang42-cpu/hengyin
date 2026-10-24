@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CoopInvite;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.mapper.CoopInviteMapper;
 import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.RefundRequestResult;
@@ -23,6 +24,7 @@ public class CoopDepositRefundService {
     private WechatPaymentOperations wechatPayService;
     @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private AlarmService alarmService;
+    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     /** 调用方必须已在业务事务内锁定邀约并完成退款资格校验。 */
     public void requestLocked(CoopInvite invite) {
@@ -112,19 +114,71 @@ public class CoopDepositRefundService {
             alarm(inviteId, "原路退款结果未知，等待按原退款号对账");
             return;
         }
-        // 查询与调用之间可能先收到回调；失去租约或已确认处理时不能再派发。
-        if (!Boolean.TRUE.equals(newTransaction().execute(status ->
-                mapper.renewDepositRefundDispatch(inviteId, token) == 1))) return;
+        // Re-read the original consumption/lease under the same invite lock before freezing SDK inputs.
+        // Original paid TX + business number select the immutable fact, never the current alias.
+        RefundDispatch dispatch;
+        try { dispatch = newTransaction().execute(status -> prepareDispatch(owned, token)); }
+        catch (OriginalPaymentUnconfirmed missing) {
+            // Missing proof is not a definitive provider failure; retain the same reconcilable intent.
+            finish(owned, token, "UNKNOWN");
+            alarm(inviteId, "保证金原成功消费证据缺失或冲突，保留原退款号人工核验");
+            return;
+        }
+        if (dispatch == null) return; // Callback/another lease won; no external submission.
         // 只有渠道明确退款单不存在才允许同号恢复；超时/null 不等于不存在。
         RefundRequestResult result;
         try {
-            result = wechatPayService.submitRefund(owned.getDepositOutTradeNo(), owned.getDepositRefundNo(),
-                    owned.getDepositRefundAmount(), owned.getDepositRefundAmount(), "合作保证金退款");
+            result = wechatPayService.submitRefund(dispatch.originalPayment(), dispatch.outTradeNo(),
+                    dispatch.refundNo(), dispatch.refundAmount(), dispatch.totalAmount(), "合作保证金退款");
         } catch (Exception e) { result = RefundRequestResult.UNKNOWN; }
         String next = result == RefundRequestResult.ACCEPTED ? "PROCESSING"
                 : result == RefundRequestResult.DEFINITIVE_FAILED ? "MANUAL" : "UNKNOWN";
         finish(owned, token, next);
         if (!"PROCESSING".equals(next)) alarm(inviteId, "原路退款" + next + "，请核对渠道结果");
+    }
+
+    private record RefundDispatch(WechatVerifiedPaymentFact.Reference originalPayment,
+            String outTradeNo, String refundNo, BigDecimal refundAmount, BigDecimal totalAmount) { }
+    private static final class OriginalPaymentUnconfirmed extends IllegalStateException { }
+
+    /** No SDK/current-attempt read. The caller's short transaction owns this exact invite/lease. */
+    private RefundDispatch prepareDispatch(CoopInvite observed, String token) {
+        CoopInvite current = mapper.selectDepositFactByIdForUpdate(observed.getId());
+        if (current == null || !token.equals(current.getDepositRefundLeaseToken())
+                || !Integer.valueOf(2).equals(current.getDepositStatus())
+                || !Integer.valueOf(0).equals(current.getDelFlag())
+                || !("DISPATCHING".equals(current.getDepositRefundState())
+                    || "UNKNOWN".equals(current.getDepositRefundState()))) return null;
+        if (!linked(current) || !java.util.Objects.equals(observed.getDepositOutTradeNo(), current.getDepositOutTradeNo())
+                || !java.util.Objects.equals(observed.getDepositRefundNo(), current.getDepositRefundNo())
+                || !sameAmount(observed.getDepositRefundAmount(), current.getDepositRefundAmount())
+                || !sameAmount(observed.getDepositAmount(), current.getDepositAmount())
+                || !java.util.Objects.equals(observed.getDepositPaidTransactionId(), current.getDepositPaidTransactionId())
+                || blank(current.getDepositPaidTransactionId())) throw new OriginalPaymentUnconfirmed();
+        var matches = mapper.selectDepositPaidFactReferences(current.getDepositOutTradeNo(), current.getDepositPaidTransactionId());
+        if (matches == null || matches.size() != 1 || !(matches.get(0).get("id") instanceof Number id)
+                || id.longValue() <= 0 || !(matches.get(0).get("fact_hash") instanceof String hash)
+                || !hash.matches("[0-9a-f]{64}")) throw new OriginalPaymentUnconfirmed();
+        WechatVerifiedPaymentFactService.Stored original;
+        try { original = verifiedPaymentFacts.requireVerified(new WechatVerifiedPaymentFact.Reference(id.longValue(), hash)); }
+        catch (WechatVerifiedPaymentFactService.ConflictException conflict) { throw new OriginalPaymentUnconfirmed(); }
+        var paid = original.facts();
+        if (paid.kind() != WechatVerifiedPaymentFact.Kind.PAYMENT || !"CNY".equals(paid.currency())
+                || !current.getDepositOutTradeNo().equals(paid.businessOutTradeNo())
+                || !current.getDepositPaidTransactionId().equals(paid.transactionId())
+                || paid.amountFen() != paid.totalFen()) throw new OriginalPaymentUnconfirmed();
+        BigDecimal total = BigDecimal.valueOf(paid.totalFen(), 2);
+        if (!sameAmount(current.getDepositAmount(), total) || !positive(current.getDepositRefundAmount())
+                || current.getDepositRefundAmount().compareTo(total) > 0) throw new OriginalPaymentUnconfirmed();
+        try { current.getDepositRefundAmount().movePointRight(2).longValueExact(); }
+        catch (ArithmeticException invalid) { throw new OriginalPaymentUnconfirmed(); }
+        if (mapper.renewDepositRefundDispatch(current.getId(), token) != 1) return null;
+        return new RefundDispatch(original.reference(), current.getDepositOutTradeNo(), current.getDepositRefundNo(),
+                current.getDepositRefundAmount(), total);
+    }
+
+    private static boolean sameAmount(BigDecimal left, BigDecimal right) {
+        return left != null && right != null && left.compareTo(right) == 0;
     }
 
     /** 验签回调与主动查单共用；不接受只凭前缀或只凭状态的资金终态。 */
@@ -142,8 +196,10 @@ public class CoopDepositRefundService {
                     ? row.getDepositAmount() : row.getDepositRefundAmount();
             try {
                 long cents = expected.movePointRight(2).longValueExact();
-                if (cents != Long.parseLong(facts.get("refund"))
-                        || cents != Long.parseLong(facts.get("total"))) return false;
+                long originalCents = row.getDepositAmount().movePointRight(2).longValueExact();
+                if (cents <= 0 || originalCents <= 0 || cents > originalCents
+                        || cents != Long.parseLong(facts.get("refund"))
+                        || originalCents != Long.parseLong(facts.get("total"))) return false;
             } catch (RuntimeException e) { return false; }
             if (!Integer.valueOf(2).equals(row.getDepositStatus())
                     && !Integer.valueOf(4).equals(row.getDepositStatus())) return false;

@@ -214,6 +214,14 @@ public class E2eWechatPayStub implements IWechatPayService {
     }
 
     @Override
+    public RefundRequestResult submitRefund(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment,
+                                            String outTradeNo, String outRefundNo, BigDecimal refundAmount,
+                                            BigDecimal totalAmount, String reason) {
+        // No original provider proof or real refund client in this E2E fixture.
+        return RefundRequestResult.UNKNOWN;
+    }
+
+    @Override
     public Map<String, String> queryTransferResult(String outBatchNo, String outDetailNo) {
         return new LinkedHashMap<String, String>();
     }

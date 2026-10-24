@@ -78,7 +78,7 @@ public final class WechatVerifiedFactTestSupport {
         });
         return facts;
     }
-    static org.springframework.transaction.PlatformTransactionManager unitWriteTransactions() {
+    public static org.springframework.transaction.PlatformTransactionManager unitWriteTransactions() {
         return new org.springframework.transaction.support.AbstractPlatformTransactionManager(){
             @Override protected Object doGetTransaction(){return new Object();}
             @Override protected void doBegin(Object tx,org.springframework.transaction.TransactionDefinition definition){
@@ -91,6 +91,49 @@ public final class WechatVerifiedFactTestSupport {
     }
     public static Object getField(Object target,String name) { return WechatPayTestWiring.getField(target,name); }
     public static <T> T invokeMethod(Object target,String name,Object... args) { return WechatPayTestWiring.invokeMethod(target,name,args); }
+    /** Explicit SDK unit fixture. Memory provider facts and controlled original-order query; no SQL/provider proof. */
+    static void installRefundOriginal(WechatPayServiceImpl facade,RefundService refunds,String businessNo,
+            String wxNo,String transactionId,java.math.BigDecimal paid) {
+        long total=paid.movePointRight(2).longValueExact();
+        String kind=businessNo.startsWith("DEP")?"DEP":"REGISTRATION";
+        var facts=new WechatVerifiedPaymentFactService();
+        setField(facts,"mapper",new MemoryMapper());
+        var owner=org.mockito.Mockito.mock(com.chengyinhub.business.service.WechatPaymentOrderOwner.class);
+        org.mockito.Mockito.when(owner.lock(businessNo)).thenReturn(
+                new com.chengyinhub.business.service.WechatPaymentOrderOwner.Snapshot(kind,1L,paid,false,true));
+        ReflectionTestUtils.setField(facts,"factBusinessOwner",owner);
+        var snapshot=Map.<String,Object>of("appid","wx-original","trade_type","JSAPI","currency","CNY","total_fen",total);
+        ReflectionTestUtils.setField(facts,"factIntentJdbc",new org.springframework.jdbc.core.JdbcTemplate(){
+            @Override public List<Map<String,Object>> queryForList(String sql,Object... params) {
+                if(sql.startsWith("SELECT appid")) return List.of(snapshot);
+                if(sql.startsWith("SELECT business_out_trade_no")) return List.of(Map.of(
+                        "business_out_trade_no",businessNo,"biz_type",kind,"biz_id",1L));
+                if(sql.startsWith("SELECT request_hash")) return List.of(Map.of("request_hash","a".repeat(64)));
+                if(sql.startsWith("SELECT closed_confirmed_at")) return List.of();
+                throw new AssertionError("Unexpected original-payment fixture SQL: "+sql);
+            }
+        });
+        facts.recordVerified(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original",
+                businessNo,wxNo,wxNo,transactionId,transactionId,"JSAPI","CNY",total,total,
+                java.time.Instant.parse(SUCCESS_TIME),"a".repeat(64),"SUCCESS"));
+        var intents=org.mockito.Mockito.mock(WechatPaymentIntentStore.class);
+        org.mockito.Mockito.when(intents.businessPaymentOrderNo(wxNo,"merchant")).thenReturn(businessNo);
+        org.mockito.Mockito.when(intents.frozenFacts("merchant",wxNo)).thenReturn(List.of(snapshot));
+        org.mockito.Mockito.when(intents.frozenRequestHash("merchant",wxNo)).thenReturn("a".repeat(64));
+        setField(facade,"verifiedFacts",facts);setField(facade,"intents",intents);setField(facade,"refundService",refunds);
+        var payment=org.mockito.Mockito.mock(JsapiService.class);
+        var original=new com.wechat.pay.java.service.payments.model.Transaction();
+        original.setOutTradeNo(wxNo);original.setMchid("merchant");original.setAppid("wx-original");
+        original.setTransactionId(transactionId);original.setTradeType(com.wechat.pay.java.service.payments.model.Transaction.TradeTypeEnum.JSAPI);
+        original.setTradeState(com.wechat.pay.java.service.payments.model.Transaction.TradeStateEnum.REFUND);
+        original.setSuccessTime(SUCCESS_TIME);
+        var amount=new com.wechat.pay.java.service.payments.model.TransactionAmount();
+        amount.setTotal(Math.toIntExact(total));amount.setCurrency("CNY");original.setAmount(amount);
+        org.mockito.Mockito.when(payment.queryOrderByOutTradeNo(org.mockito.ArgumentMatchers.any())).thenReturn(original);
+        bind(facade,payment,refunds,"merchant");
+    }
+
     static void refreshSdkBinding(WechatPaymentSdkGateway gateway) {
         var config=(com.chengyinhub.common.config.WxPayConfig)ReflectionTestUtils.getField(gateway,"wxPayConfig");
         var payment=(JsapiService)ReflectionTestUtils.getField(gateway,"jsapiService");

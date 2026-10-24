@@ -102,6 +102,10 @@ public interface IWechatPayService extends WechatPaymentOperations {
     RefundRequestResult submitRefund(String outTradeNo, String outRefundNo, BigDecimal refundAmount,
                                      BigDecimal totalAmount, String reason);
 
+    /** Submit only against an immutable original PAYMENT reference; missing proof remains UNKNOWN. */
+    RefundRequestResult submitRefund(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment,
+                                     String outTradeNo, String outRefundNo, BigDecimal refundAmount, BigDecimal totalAmount, String reason);
+
     /** 兼容保证金等旧调用；UNKNOWN 与确定失败都返回 false，资金退款编排必须调用 submitRefund。 */
     default boolean refund(String outTradeNo, String outRefundNo, BigDecimal refundAmount,
                            BigDecimal totalAmount, String reason) {

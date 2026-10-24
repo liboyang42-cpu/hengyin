@@ -38,13 +38,17 @@ class RefundPayoutAtomicityContractTest {
         RefundApplication refund = refund(7L, RefundApplication.PAYOUT_DISPATCH_PENDING);
         when(mapper.selectRefundApplicationById(7L)).thenReturn(refund);
         when(mapper.claimPayoutDispatch(eq(7L), anyLong(), anyString())).thenReturn(0);
+        when(mapper.selectRegistrationHistoryForUpdate(7L)).thenReturn(java.util.List.of(refund));
         RefundPayoutServiceImpl service = new RefundPayoutServiceImpl();
         ReflectionTestUtils.setField(service, "refundApplicationMapper", mapper);
+        ReflectionTestUtils.setField(service, "payoutTransactions", com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.unitWriteTransactions());
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", mock(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(service, "refundService", mock(IRefundService.class));
         ReflectionTestUtils.setField(service, "wechatPayService", wechat);
 
         service.payoutAfterReview(7L);
+        verify(mapper).claimPayoutDispatch(eq(7L), anyLong(), anyString());
+        verify(wechat, never()).submitRefund(any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class),anyString(),anyString(),any(),any(),anyString());
 
         verify(wechat, never()).submitRefund(anyString(), anyString(), any(), any(), anyString());
     }

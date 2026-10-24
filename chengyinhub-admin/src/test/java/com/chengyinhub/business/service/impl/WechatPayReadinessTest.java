@@ -73,14 +73,14 @@ class WechatPayReadinessTest {
         RefundService refundAdapter = mock(RefundService.class);
         when(refundAdapter.create(any())).thenThrow(new RuntimeException("response lost"));
         WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
-        WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
         WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
-        WechatVerifiedFactTestSupport.setField(service, "refundService", refundAdapter);
+        WechatVerifiedFactTestSupport.installRefundOriginal(service,refundAdapter,"REG-1","REG-1","TX1",BigDecimal.ONE);
 
         RefundRequestResult result = service.submitRefund("REG-1", "RF1",
                 new BigDecimal("1.00"), new BigDecimal("1.00"), "测试");
 
         org.junit.jupiter.api.Assertions.assertEquals(RefundRequestResult.UNKNOWN, result);
+        verify(refundAdapter).create(any());
     }
 
     @Test

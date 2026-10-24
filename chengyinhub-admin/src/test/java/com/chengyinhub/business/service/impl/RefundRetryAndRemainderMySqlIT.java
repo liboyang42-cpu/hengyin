@@ -2,6 +2,9 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.domain.dto.RefundReviewDTO;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
+import com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService;
+import org.springframework.transaction.support.TransactionTemplate;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
@@ -48,6 +51,10 @@ class RefundRetryAndRemainderMySqlIT {
     private IWechatPayService wechat;
     private SettlementDetailMapper settlements;
     private WechatVerifiedPaymentFactService factsReader;
+    private CmsRegistrationPaymentFactMapper consumptionMapper;
+    private DataSourceTransactionManager transactions;
+    private DriverManagerDataSource dataSource;
+    private Path schemaRoot;
 
     @BeforeAll
     void setup() throws Exception {
@@ -55,7 +62,7 @@ class RefundRetryAndRemainderMySqlIT {
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject("select version()", String.class)));
         admin.execute("create database " + mysql.databaseName() + " character set utf8mb4");
         schemaCreated = true;
-        DriverManagerDataSource dataSource = source(mysql.databaseUrl());
+        dataSource = source(mysql.databaseUrl());
         db = new JdbcTemplate(dataSource);
         Path root = Files.exists(Paths.get("sql/base_schema_20260818.sql")) ? Paths.get("") : Paths.get("..");
         String snapshot = new String(Files.readAllBytes(root.resolve("sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
@@ -68,6 +75,8 @@ class RefundRetryAndRemainderMySqlIT {
             db.execute(snapshot.substring(from, to + 1));
         }
         assertEquals("1", System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
+        assertEquals("1", System.getenv("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"));
+        schemaRoot = root;
         new ResourceDatabasePopulator(
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql").toFile()),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql").toFile()),
@@ -80,6 +89,7 @@ class RefundRetryAndRemainderMySqlIT {
         factory.setDataSource(dataSource);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new ClassPathResource("mapper/business/CmsRegistrationMapper.xml"),
+                new ClassPathResource("mapper/business/CmsRegistrationPaymentFactMapper.xml"),
                 new ClassPathResource("mapper/business/RefundApplicationMapper.xml"),
                 new ClassPathResource("mapper/business/WxPaymentCallbackInboxMapper.xml"),
                 new ClassPathResource("mapper/business/CmsActivityMapper.xml"),
@@ -88,6 +98,8 @@ class RefundRetryAndRemainderMySqlIT {
         refunds = sql.getMapper(RefundApplicationMapper.class);
         factsReader = WechatVerifiedFactTestSupport.realFacts(dataSource);
         DataSourceTransactionManager manager = new DataSourceTransactionManager(dataSource);
+        transactions = manager;
+        consumptionMapper = sql.getMapper(CmsRegistrationPaymentFactMapper.class);
         settlements = mock(SettlementDetailMapper.class);
         RefundServiceImpl target = new RefundServiceImpl();
         ReflectionTestUtils.setField(target, "refundApplicationMapper", refunds);
@@ -129,11 +141,17 @@ class RefundRetryAndRemainderMySqlIT {
         ReflectionTestUtils.setField(payout, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(payout, "refundService", service);
         ReflectionTestUtils.setField(payout, "wechatPayService", wechat);
+        ReflectionTestUtils.setField(payout, "payoutTransactions", manager);
+        ReflectionTestUtils.setField(payout, "paymentConsumption", transactional(new RegistrationPaymentConsumptionReadService(consumptionMapper), manager));
         payouts = payout;
     }
 
     @BeforeEach
     void clear() {
+        // Only this class-owned scratch schema: reset the append-only receipt by canonical DDL, never disable its triggers.
+        db.execute("DROP TABLE IF EXISTS cms_registration_payment_fact");
+        new ResourceDatabasePopulator(new FileSystemResource(schemaRoot.resolve(
+                "chengyinhub-admin/sql/migration_20261024_registration_payment_fact.sql").toFile())).execute(dataSource);
         db.update("delete from wx_payment_callback_fact_link");
         db.update("delete from wx_payment_callback_inbox");
         db.update("delete from wx_verified_payment_fact_rejection"); db.update("delete from wx_verified_payment_fact");
@@ -142,7 +160,7 @@ class RefundRetryAndRemainderMySqlIT {
         db.update("insert into cms_activity(id,member_id,topic_id,is_settlement,del_flag) values(20,3,NULL,0,0)");
         reset(wechat, settlements);
         when(settlements.selectSettledDetails(anyString(), anyLong())).thenReturn(Collections.emptyList());
-        when(wechat.submitRefund(anyString(), anyString(), any(), any(), any())).thenReturn(RefundRequestResult.ACCEPTED);
+        when(wechat.submitRefund(any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class), anyString(), anyString(), any(), any(), any())).thenReturn(RefundRequestResult.ACCEPTED);
     }
 
     @AfterAll
@@ -167,8 +185,8 @@ class RefundRetryAndRemainderMySqlIT {
         assertNotEquals(first.getRefundNo(), second.getRefundNo());
         assertEquals(1, service.reviewRefund(review(second.getId(), 1), 8L));
         payouts.payoutAfterReview(second.getId());
-        verify(wechat).submitRefund(eq("REG99"), eq(first.getRefundNo()), eq(new BigDecimal("20.00")), eq(new BigDecimal("68.00")), any());
-        verify(wechat).submitRefund(eq("REG99"), eq(second.getRefundNo()), eq(new BigDecimal("48.00")), eq(new BigDecimal("68.00")), any());
+        verify(wechat).submitRefund(eq(consumptionMapper.selectByRegistration(99L).reference()), eq("REG99"), eq(first.getRefundNo()), eq(new BigDecimal("20.00")), eq(new BigDecimal("68.00")), any());
+        verify(wechat).submitRefund(eq(consumptionMapper.selectByRegistration(99L).reference()), eq("REG99"), eq(second.getRefundNo()), eq(new BigDecimal("48.00")), eq(new BigDecimal("68.00")), any());
         assertTrue(service.handleRefundNotify(facts(first)));
         assertEquals(RefundApplication.PAYOUT_SUCCESS, refunds.selectRefundApplicationById(first.getId()).getPayoutStatus());
         assertEquals(RefundApplication.PAYOUT_PROCESSING, refunds.selectRefundApplicationById(second.getId()).getPayoutStatus());
@@ -247,6 +265,32 @@ class RefundRetryAndRemainderMySqlIT {
         assertEquals(2, db.queryForObject("select registration_status from cms_registration where id=99", Integer.class));
     }
 
+    @Test
+    void unknownSubmitRecoversOnlySameOriginalVerifiedRefundWithoutSecondCreate() {
+        paid(99L, null, "68.00");
+        RefundApplication refund = save("20.00");
+        assertEquals(1,service.reviewRefund(review(refund.getId(),1),7L));
+        when(wechat.submitRefund(any(WechatVerifiedPaymentFact.Reference.class),anyString(),anyString(),any(),any(),any()))
+                .thenReturn(RefundRequestResult.UNKNOWN);
+        payouts.payoutAfterReview(refund.getId());
+        assertEquals(RefundApplication.PAYOUT_DISPATCHING,refunds.selectRefundApplicationById(refund.getId()).getPayoutStatus());
+        var original=consumptionMapper.selectByRegistration(99L).reference();
+        when(wechat.queryRefundFacts(original,refund.getRefundNo())).thenReturn(Map.of("status","NOT_FOUND"));
+        db.update("update refund_application set update_time=date_sub(now(),interval 31 minute) where id=?",refund.getId());
+        payouts.payoutAfterReview(refund.getId());
+        assertEquals(RefundApplication.PAYOUT_DISPATCHING,refunds.selectRefundApplicationById(refund.getId()).getPayoutStatus());
+        Map<String,String> verifiedRefund=facts(refund);
+        when(wechat.queryRefundFacts(original,refund.getRefundNo())).thenReturn(verifiedRefund);
+        db.update("update refund_application set update_time=date_sub(now(),interval 31 minute) where id=?",refund.getId());
+        payouts.payoutAfterReview(refund.getId());
+        assertEquals(RefundApplication.PAYOUT_SUCCESS,refunds.selectRefundApplicationById(refund.getId()).getPayoutStatus());
+        payouts.payoutAfterReview(refund.getId());
+        verify(wechat,times(1)).submitRefund(eq(original),eq("REG99"),eq(refund.getRefundNo()),
+                eq(new BigDecimal("20.00")),eq(new BigDecimal("68.00")),any());
+        assertEquals(1,db.queryForObject("select count(*) from wx_payment_callback_inbox where biz_type=2 and state=2",Integer.class));
+        assertEquals(original,consumptionMapper.selectByRegistration(99L).reference());
+    }
+
     private Map<String, String> facts(RefundApplication refund) {
         return ARefundFactFixture.bindSuccess(factsReader,
                 Map.of("outRefundNo", refund.getRefundNo(), "outTradeNo", "REG99", "status", "SUCCESS",
@@ -290,8 +334,17 @@ class RefundRetryAndRemainderMySqlIT {
     }
 
     private void paid(Long id, String parent, String cash) {
-        db.update("insert into cms_registration(id,registration_no,parent_order_no,owner_type,owner_id,ticket_id,ticket_price,member_id,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,pay_expire_time) values(?,?,?,2,20,1,?,9,?,?,?, ?,2,2,0,date_add(now(),interval 1 day))", id, "REG" + id, parent, cash, cash, cash, cash, cash);
-        db.update("update cms_registration set transaction_id='TX99' where id=?", id);
+        db.update("insert into cms_registration(id,registration_no,parent_order_no,owner_type,owner_id,ticket_id,ticket_price,member_id,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,pay_expire_time) values(?,?,?,2,20,1,?,9,?,?,?, ?,1,1,0,date_add(now(),interval 1 day))", id, "REG" + id, parent, cash, cash, cash, cash, cash);
+        String transactionId = "TX" + id;
+        long total = new BigDecimal(cash).movePointRight(2).longValueExact();
+        var original = factsReader.recordVerified(new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "merchant","wx-original","REG"+id,"REG"+id,"REG"+id,transactionId,transactionId,"JSAPI","CNY",total,total,
+                java.time.Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME),null,"SUCCESS"));
+        new TransactionTemplate(transactions).executeWithoutResult(status -> {
+            db.update("update cms_registration set payment_status=2,registration_status=2,transaction_id=? where id=?", transactionId,id);
+            assertEquals(1,consumptionMapper.insertConsumed(id,original.id(),original.hash()));
+        });
+        assertEquals(original,consumptionMapper.selectByRegistration(id).reference());
     }
 
     private <T> T transactional(T target, DataSourceTransactionManager manager) {
