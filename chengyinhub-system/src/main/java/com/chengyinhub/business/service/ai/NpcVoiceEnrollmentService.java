@@ -80,13 +80,7 @@ public class NpcVoiceEnrollmentService
     {
         outsideBusinessTransaction();
         validate(scopeType, scopeId, npcId);
-        Snapshot snapshot = tx(() -> {
-            NpcProfile current = profile(scopeType, scopeId, npcId);
-            NpcVoiceEnrollment row = current.getVoiceSample() == null ? null
-                    : intents.find(npcId, fingerprint(current.getVoiceSample()));
-            if (row != null) { requireScope(row, scopeType, scopeId); return new Snapshot(project(current, row), row); }
-            return new Snapshot(legacy(current), null);
-        });
+        Snapshot snapshot = snapshot(scopeType, scopeId, npcId, null);
         if (snapshot.intent() != null)
         {
             NpcVoiceEnrollment row = snapshot.intent();
@@ -99,7 +93,7 @@ public class NpcVoiceEnrollmentService
         if (Integer.valueOf(1).equals(current.getVoiceStatus()) && current.getVoiceId() != null && provider.usable())
         {
             boolean ready;
-            try { ready = provider.isReady(current.getVoiceId()); } catch (RuntimeException unavailable) { return current; }
+            try { ready = provider.isReady(current.getVoiceId()); } catch (RuntimeException unavailable) { return snapshot(scopeType, scopeId, npcId, null).profile(); }
             if (ready) return tx(() -> {
                 NpcProfile fresh = profile(scopeType, scopeId, npcId);
                 if (Objects.equals(fresh.getVoiceVersion(), current.getVoiceVersion())
@@ -112,8 +106,21 @@ public class NpcVoiceEnrollmentService
                 }
                 return legacy(fresh);
             });
+            return snapshot(scopeType, scopeId, npcId, null).profile();
         }
         return current;
+    }
+
+    private Snapshot snapshot(int scopeType, Long scopeId, Long npcId, String originalHash)
+    {
+        return tx(() -> {
+            NpcProfile current = profile(scopeType, scopeId, npcId);
+            String hash = originalHash != null ? originalHash
+                    : current.getVoiceSample() == null ? null : fingerprint(current.getVoiceSample());
+            NpcVoiceEnrollment row = hash == null ? null : intents.find(npcId, hash);
+            if (row != null) { requireScope(row, scopeType, scopeId); return new Snapshot(project(current, row), row); }
+            return new Snapshot(legacy(current), null);
+        });
     }
 
     private Decision inspect(int scopeType, Long scopeId, Long npcId, String sample, String hash,
@@ -154,7 +161,10 @@ public class NpcVoiceEnrollmentService
     private NpcProfile refresh(int scopeType, Long scopeId, Long npcId, String hash, String voiceId, NpcProfile known)
     {
         if (!provider.usable()) return known;
-        try { if (!provider.isReady(voiceId)) return known; } catch (RuntimeException unavailable) { return known; }
+        boolean ready;
+        try { ready = provider.isReady(voiceId); }
+        catch (RuntimeException unavailable) { return snapshot(scopeType, scopeId, npcId, hash).profile(); }
+        if (!ready) return snapshot(scopeType, scopeId, npcId, hash).profile();
         return finish(scopeType, scopeId, npcId, hash, "READY", voiceId, null);
     }
 

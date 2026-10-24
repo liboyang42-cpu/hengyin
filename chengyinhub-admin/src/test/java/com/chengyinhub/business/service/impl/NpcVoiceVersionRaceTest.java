@@ -48,6 +48,7 @@ class NpcVoiceVersionRaceTest {
         final IChapterMerchantNodeService nodeAccess=mock(IChapterMerchantNodeService.class);
         final AtomicInteger enrollCalls = new AtomicInteger();
         final NodeNpcService node;
+        final com.chengyinhub.business.service.ai.NpcVoiceEnrollmentFixture enrollment;
         final ApiMerchantController controller;
         NpcProfile stored = new NpcProfile();
         Runnable onRead, onEnroll, onReady;
@@ -55,7 +56,8 @@ class NpcVoiceVersionRaceTest {
         Harness(boolean merchant, int status, String voiceId) {
             this.merchant = merchant;
             stored.setId(555L); stored.setScopeId(31L); stored.setScopeType(merchant ? 2 : 4);
-            stored.setVoiceStatus(status); stored.setVoiceId(voiceId); stored.setVoiceSample(SAMPLE);
+            stored.setVoiceStatus(status); stored.setVoiceId(voiceId);
+            if(status!=0 || voiceId!=null) stored.setVoiceSample(SAMPLE);
             when(mapper.selectNodeNpcByNodeId(31L)).thenAnswer(i -> read());
             when(mapper.selectMerchantNpcList(31L, null)).thenAnswer(i -> Collections.singletonList(read()));
             when(mapper.updateNodeNpcVoice(any())).thenAnswer(i -> update(i.getArgument(0)));
@@ -92,6 +94,10 @@ class NpcVoiceVersionRaceTest {
             ReflectionTestUtils.setField(controller, "merchantAccessService", access);
             ReflectionTestUtils.setField(controller, "npcProfileMapper", mapper);
             ReflectionTestUtils.setField(controller, "voiceCloneClient", voice);
+            enrollment=new com.chengyinhub.business.service.ai.NpcVoiceEnrollmentFixture(
+                    mapper,voice,merchant?2:4,31L,this::read);
+            ReflectionTestUtils.setField(node,"voiceEnrollmentService",enrollment.service);
+            ReflectionTestUtils.setField(controller,"voiceEnrollmentService",enrollment.service);
         }
 
         NpcProfile read() {
@@ -139,7 +145,7 @@ class NpcVoiceVersionRaceTest {
     @Test void normalEnrollResetAndPollRemainUsable() {
         for (boolean merchant : new boolean[]{false, true}) {
             Harness h = new Harness(merchant, 0, null); h.enroll();
-            assertEquals(2, h.stored.getVoiceStatus()); assertEquals(2L, h.stored.getVoiceVersion());
+            assertEquals(2, h.stored.getVoiceStatus()); assertEquals(3L, h.stored.getVoiceVersion());
             assertEquals(1, h.enrollCalls.get()); h.reset();
             assertEquals(0, h.status()); assertNull(h.stored.getVoiceId());
             h = new Harness(merchant, 1, "old"); assertEquals(2, h.status());
@@ -156,15 +162,21 @@ class NpcVoiceVersionRaceTest {
     @Test void oldEnrollmentCannotResurrectAResetVoice() {
         for (boolean merchant : new boolean[]{false, true}) {
             Harness h = new Harness(merchant, 0, null); h.onEnroll = h::reset;
-            assertThrows(IllegalStateException.class, h::enroll);
+            h.enroll();
             assertEquals(0, h.stored.getVoiceStatus()); assertNull(h.stored.getVoiceId());
+            assertEquals("READY",h.enrollment.state(555L,SAMPLE));
+            assertEquals(1,h.enrollCalls.get());
         }
     }
 
     @Test void oldResultCannotOverwriteAReplacementUsingTheSameSample() {
         for (boolean merchant : new boolean[]{false, true}) {
-            Harness h = new Harness(merchant, 0, null); h.onEnroll = () -> { h.reset(); h.enroll(); };
-            assertThrows(IllegalStateException.class, h::enroll);
+            Harness h = new Harness(merchant, 0, null);
+            // Adversarial committed profile fixture, NOT a second permitted provider creation.
+            h.onEnroll = () -> { h.reset(); h.stored.setVoiceId("voice-2");
+                h.stored.setVoiceStatus(2); h.stored.setVoiceVersion(h.stored.getVoiceVersion()+1); };
+            h.enroll();
+            assertEquals(1,h.enrollCalls.get());
             assertEquals("voice-2", h.stored.getVoiceId()); assertEquals(2, h.stored.getVoiceStatus());
         }
     }
@@ -172,8 +184,13 @@ class NpcVoiceVersionRaceTest {
     @Test void oldFailureCannotClearTheNewSuccessfulVoice() {
         for (boolean merchant : new boolean[]{false, true}) {
             Harness h = new Harness(merchant, 0, null);
-            h.onEnroll = () -> { h.reset(); h.enroll(); throw new AiServiceException("old failure"); };
-            assertThrows(IllegalStateException.class, h::enroll);
+            // Existing replacement fact is an adversarial DB fixture, not an authorized extra charge.
+            h.onEnroll = () -> { h.reset(); h.stored.setVoiceId("voice-2");
+                h.stored.setVoiceStatus(2); h.stored.setVoiceVersion(h.stored.getVoiceVersion()+1);
+                throw new AiServiceException("old failure"); };
+            h.enroll();
+            assertEquals("UNKNOWN",h.enrollment.state(555L,SAMPLE));
+            assertEquals(1,h.enrollCalls.get());
             assertEquals("voice-2", h.stored.getVoiceId()); assertEquals(2, h.stored.getVoiceStatus());
         }
     }

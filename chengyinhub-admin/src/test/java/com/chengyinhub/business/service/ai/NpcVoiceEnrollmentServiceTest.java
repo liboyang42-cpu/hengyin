@@ -153,6 +153,20 @@ public class NpcVoiceEnrollmentServiceTest
         assertEquals(0,f.enroll().getVoiceStatus());verify(f.provider,times(1)).enroll(anyString());
     }
 
+    @Test void resetDuringFailedOrPendingQueryReturnsCurrentProfileWithoutLosingKnownIntentId() {
+        for (boolean failed : new boolean[]{false,true}) {
+            Fixture f=new Fixture(4);
+            doAnswer(i->{f.reset();if(failed)throw new AiServiceException("query unavailable");return false;})
+                    .when(f.provider).isReady("voice-original");
+            NpcProfile result=f.enroll();
+            assertEquals(0,result.getVoiceStatus());assertNull(result.getVoiceId());
+            assertEquals("PENDING",result.getVoiceIntentState());assertEquals("VOICE_PROFILE_CHANGED",result.getVoiceReasonCode());
+            assertEquals("voice-original",f.row().getVoiceId());Long intent=f.row().getId();
+            assertEquals(intent,f.enroll().getVoiceIntentId());assertEquals(0,f.stored.getVoiceStatus());
+            verify(f.provider,times(1)).enroll(anyString());verify(f.provider,times(1)).isReady("voice-original");
+        }
+    }
+
     @Test void resetAndDifferentSampleDoNotMakeUnconfirmedExternalAttemptSafeToRepeat() {
         Fixture f=new Fixture(4);doThrow(new AiServiceException("lost")).when(f.provider).enroll(anyString());
         f.enroll();Long original=f.row().getId();f.reset();assertEquals(original,f.enroll().getVoiceIntentId());
