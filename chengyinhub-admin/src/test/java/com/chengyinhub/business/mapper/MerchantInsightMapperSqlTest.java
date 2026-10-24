@@ -116,4 +116,10 @@ class MerchantInsightMapperSqlTest {
         assertTrue(pv.contains("count(*)"), "PV 仍为浏览次数");
         assertTrue(uv.replace("count(distinct b.member_id)", "count(*)").equals(pv), "UV 与 PV 只差聚合函数");
     }
+
+    @Test
+    void supplyFactsSelectTopicIdAsAggregationKey() throws Exception {
+        assertTrue(sql(parse(), "selectSupplyFacts").contains("o.topic_id"),
+                "供给事实必须带 topic_id,主题去重按 id 不按名字");
+    }
 }

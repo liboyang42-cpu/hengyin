@@ -234,6 +234,31 @@ class MerchantInsightServiceImplTest {
         assertTrue(facts.getBooleanValue("lowSample"));
     }
 
+    @Test
+    void supplyTopicsAreKeyedByTopicIdNotName() {
+        // 两个不同主题同名「城市漫步」各算一个;同一主题(id=7)承接两章只算一次
+        MerchantInsightSupplyFact a = supplyFact(5L, "城市漫步");
+        MerchantInsightSupplyFact b = supplyFact(6L, "城市漫步");
+        MerchantInsightSupplyFact c1 = supplyFact(7L, "咖啡地图");
+        MerchantInsightSupplyFact c2 = supplyFact(7L, "咖啡地图");
+        when(mapper.selectSupplyFacts(MERCHANT_ID)).thenReturn(Arrays.asList(a, b, c1, c2));
+
+        JSONObject supply = service.insight(MERCHANT_ID).getFacts().getJSONObject("supply");
+
+        assertEquals(4, supply.getIntValue("activeOffers"));
+        assertEquals(Arrays.asList("城市漫步", "城市漫步", "咖啡地图"),
+                supply.getJSONArray("topics").toJavaList(String.class));
+    }
+
+    private static MerchantInsightSupplyFact supplyFact(Long topicId, String name) {
+        MerchantInsightSupplyFact f = new MerchantInsightSupplyFact();
+        f.setTopicId(topicId);
+        f.setTopicName(name);
+        f.setQuotaTotal(1);
+        f.setQuotaUsed(0);
+        return f;
+    }
+
     // ---- lowSample 闸在服务端:summary 被固定模板覆盖,audiences/suggestions 保留 ----
 
     @Test

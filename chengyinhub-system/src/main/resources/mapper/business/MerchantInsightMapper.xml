@@ -23,6 +23,7 @@
         <result property="redeemedAt" column="redeemed_at"/>
     </resultMap>
     <resultMap id="supplyFact" type="com.chengyinhub.business.domain.dto.MerchantInsightSupplyFact">
+        <result property="topicId" column="topic_id"/>
         <result property="topicName" column="topic_name"/>
         <result property="quotaTotal" column="quota_total"/>
         <result property="quotaUsed" column="quota_used"/>
@@ -69,7 +70,7 @@
     </select>
 
     <select id="selectSupplyFacts" resultMap="supplyFact">
-        select t.name topic_name, o.quota_total, o.quota_used
+        select o.topic_id, t.name topic_name, o.quota_total, o.quota_used
           from merchant_chapter_offer o
           join cms_topic t on t.id = o.topic_id and t.del_flag = 0
          where o.merchant_id = #{merchantMemberId} and o.status = 1
