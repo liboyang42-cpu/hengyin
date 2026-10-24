@@ -1,0 +1,73 @@
+diff --git a/chengyinhub-xcx/pages/roam/index.js b/chengyinhub-xcx/pages/roam/index.js
+index 2965313f..be31b3a3 100644
+--- a/chengyinhub-xcx/pages/roam/index.js
++++ b/chengyinhub-xcx/pages/roam/index.js
+@@ -38,6 +38,7 @@ const { readNonNegative } = require('../../utils/roam-history-metrics.js');
+ const { createIdleDetector } = require('../../utils/roam-idle.js');
+ const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
+ const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
++const { planMovePatch, trackPolyline } = require('../../utils/roam-progress.js');
+ const { isRecordList } = require('../../utils/response-shape.js');
+ const readSession = require('../../utils/session/login-reload.js');
+ const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
+@@ -3615,15 +3616,7 @@ Page({
+ 
+   _flushTrackLine() {
+     if (!this._track || !this._track.length) return;
+-    this.setData({
+-      polyline: [{
+-        points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
+-        color: '#FFFFFF',
+-        width: 3,
+-        borderColor: '#FFFFFF66',
+-        borderWidth: 1,
+-      }],
+-    });
++    this.setData({ polyline: trackPolyline(this._track) });
+   },
+ 
+   _enterWalkZoom() {
+@@ -3894,35 +3887,15 @@ Page({
+     this._fetchRunners(p);
+ 
+     const km = ((this._dist || 0) / 1000).toFixed(2);
+-    const patch = {};
+     if (km !== this._stats.distance) { this._stats.distance = km; this._rollStat('distance', km); }
+-
+-    const now = Date.now();
+-    if (!this._zoomLock && (!this._hold || now - this._hold > 3000)) {
+-      if (!this._centerTimer || now - this._centerTimer >= CENTER_MS) {
+-        this._centerTimer = now;
+-        patch.center = { lat: p.lat, lng: p.lng };
+-      }
+-    }
+-    if (!this._lineTimer || now - this._lineTimer >= LINE_MS) {
+-      this._lineTimer = now;
+-      if (this._track.length > 1) {
+-        patch.polyline = [{
+-          points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
+-          color: '#FFFFFF',
+-          width: 3,
+-          borderColor: '#FFFFFF66',
+-          borderWidth: 1,
+-        }];
+-      }
+-    }
+-
+-    if (Object.keys(patch).length) this.setData(patch);
+-    // markers 全量重发节流(每 tick 重发是图层闪烁源之一);转向时 _updateHeading 会即时同步
+-    if (!this._mkTimer || now - this._mkTimer >= 600) {
+-      this._mkTimer = now;
+-      this._syncMarkers();
+-    }
++    // 镜头跟随 / 轨迹线 / marker 重发三条节流收口到 utils/roam-progress(C:U-091),纯函数有单测。
++    const plan = planMovePatch({
++      now: Date.now(), player: p, track: this._track, zoomLocked: !!this._zoomLock,
++      holdAt: this._hold, centerAt: this._centerTimer, lineAt: this._lineTimer, markerAt: this._mkTimer,
++    }, { centerMs: CENTER_MS, lineMs: LINE_MS });
++    this._centerTimer = plan.centerAt; this._lineTimer = plan.lineAt; this._mkTimer = plan.markerAt;
++    if (Object.keys(plan.patch).length) this.setData(plan.patch);
++    if (plan.syncMarkers) this._syncMarkers();
+   },
+ 
+   _syncStats() {
