@@ -25,6 +25,8 @@ final class PreparedCoopPlanFixture {
     static void install(CmsTopicServiceImpl service, CmsRegistrationMapper registrations,
             CoopOrderMapper orders, CoopGroupVerifyMapper groups, CoopSettlementMapper heads) {
         ICoopSettlementClaimService claims = mock(ICoopSettlementClaimService.class);
+        // This old aggregate/plan-double fixture is not a proof of the new original-component producer.
+        when(claims.freezeSingleOrderOriginals(any(), any(), any())).thenReturn("NOT_ENABLED_LEGACY_AGGREGATE_FIXTURE");
         when(claims.prepare(any(), any())).thenAnswer(call -> {
             CoopOrder order = call.getArgument(0);
             Long topicId = order.getTopicId();

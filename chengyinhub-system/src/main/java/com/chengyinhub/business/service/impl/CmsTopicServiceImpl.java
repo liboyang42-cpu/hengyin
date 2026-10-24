@@ -967,6 +967,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 coopSettlementClaimService.persist(originPlan, s);
             }
         }
+        String originalFreeze = coopSettlementClaimService.freezeSingleOrderOriginals(topic, cashBasis, now);
+        if (originalFreeze == null) throw new IllegalStateException("ORIGINAL_PRODUCER_RESULT_REQUIRED");
+        if (!"FROZEN_EXACT_SINGLE_ORDER".equals(originalFreeze)) {
+            logger.warn("ORIGINAL_COMPONENT_PRODUCER_NOT_ENABLED topicId={} reason={}", topic.getId(),
+                    originalFreeze);
+        }
         logger.info("coop分项结算: topicId={} 平台={} 保底={}(率{}) 承接商家={} 毛利={} 核销商家数={}",
                 topic.getId(), platformAmount, guaranteeAmount, guaranteeRate, merchantTotal, marginAmount, verifiedMerchantCount);
 

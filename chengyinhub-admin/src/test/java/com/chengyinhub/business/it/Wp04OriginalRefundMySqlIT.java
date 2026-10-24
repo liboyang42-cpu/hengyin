@@ -40,6 +40,7 @@ class Wp04OriginalRefundMySqlIT {
     CoopSettlementOriginalMapper originals;
     CoopSettlementCashEvidenceMapper cash;
     CoopSettlementOriginalLedger owner;
+    com.chengyinhub.business.service.ICoopSettlementClaimService producerClaims;
     WechatVerifiedPaymentFactService facts;
     WechatVerifiedPaymentFact.Reference originalPayment, refundFact;
     AtomicBoolean failAfterWalletReceipt=new AtomicBoolean();
@@ -89,18 +90,21 @@ class Wp04OriginalRefundMySqlIT {
         applyNewSchemaAndFreezeOriginalOrder(paid,refundApp,true);
     }
     void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt) throws Exception {
+        applyNewSchemaAndFreezeOriginalOrder(paid,refundApp,bindOriginalPaymentReceipt,false);
+    }
+    void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt, boolean useProductionProducer) throws Exception {
         P0AcceptanceSchema.migrations(source,MIGRATION);
         SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper",
-                "CoopSettlementMapper","CoopSettlementAdjustmentMapper","WechatVerifiedPaymentFactMapper",
+                "CoopSettlementMapper","CoopSettlementDetailMapper","CoopSettlementAdjustmentMapper","WechatVerifiedPaymentFactMapper",
                 "UmsMemberSettlementDebtMapper","UmsMemberBalanceDetailMapper");
         originals=sql.getMapper(CoopSettlementOriginalMapper.class); cash=sql.getMapper(CoopSettlementCashEvidenceMapper.class);
         facts=new WechatVerifiedPaymentFactService(); ReflectionTestUtils.setField(facts,"mapper",sql.getMapper(WechatVerifiedPaymentFactMapper.class));
         // Committed via B's real storage owner before the business transaction, never by a G VERIFIED table/flag.
-        originalPayment=facts.recordVerified(payment()); refundFact=facts.recordVerified(refund(refundApp));
+        originalPayment=facts.recordVerified(payment());
+        if (!bindOriginalPaymentReceipt) facts.recordVerified(refund(refundApp));
         db.update("INSERT INTO ums_member(id,balance) VALUES(7,2.00),(77,0.00)");
         db.update("INSERT INTO cms_topic(id,name,product_type,member_id,is_settlement,fee_platform_rate,fee_guarantee_base_rate,fee_guarantee_step_rate,fee_guarantee_max_merchant) VALUES(11,'G original refund fixture',1,7,1,0.10,0,0,0)");
         db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,original_amount,total_amount,payable_amount,payment_status,registration_status,verification_status,purchase_kind,pay_expire_time,transaction_id,wechat_payment_amount) VALUES(1,'REG1',1,11,21,10,77,1,10,10,10,2,2,0,1,'2026-10-01 08:00:00','WXTX1',10)");
-        db.update("INSERT INTO refund_application(id,refund_no,source_type,source_id,owner_type,owner_id,status,payout_status,refund_amount,paid_amount,del_flag) VALUES(901,'RF901','registration',1,1,11,1,0,10,10,0)");
         db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(11,11,NULL,'ACCOUNTING','PLATFORM','platform',1,1,0),(12,11,7,'MEMBER','INITIATOR_MARGIN','initiator',?,9,0)",paid?1:0);
         if (paid) {
             db.update("INSERT INTO ums_member_balance_detail(member_id,current_balance,after_balance,change_balance,change_reason,event_type,event_id,change_type,del_flag,create_time) VALUES(7,0,9,9,'Coop结算打款 - 主题11',5,12,1,0,NOW())");
@@ -110,12 +114,11 @@ class Wp04OriginalRefundMySqlIT {
         String paymentHash=WxPaymentCallbackInboxServiceImpl.sha256Hex("PAY:WXTX1:SUCCESS");
         db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(900,UNHEX(?),1,1,'SUCCESS',2)",paymentHash);
         if (bindOriginalPaymentReceipt) facts.bindNewInbox(900,paymentHash,originalPayment,true);
-        String notifyHash=WxPaymentCallbackInboxServiceImpl.sha256Hex("REFUND:RF901:SUCCESS");
-        db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(901,UNHEX(?),2,901,'SUCCESS',0)",notifyHash);
-        facts.bindNewInbox(901,notifyHash,refundFact,true);
         CmsTopicMapper topics=mock(CmsTopicMapper.class);
-        when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call -> db.queryForObject("SELECT id,is_settlement FROM cms_topic WHERE id=11 FOR UPDATE",(rs,n)->{
-            CmsTopic row=new CmsTopic(); row.setId(rs.getLong(1)); row.setIsSettlement(rs.getInt(2)); return row;
+        when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call -> db.queryForObject("SELECT id,is_settlement,member_id,fee_platform_rate,fee_guarantee_base_rate,fee_guarantee_step_rate,fee_guarantee_max_merchant FROM cms_topic WHERE id=11 FOR UPDATE",(rs,n)->{
+            CmsTopic row=new CmsTopic(); row.setId(rs.getLong(1)); row.setIsSettlement(rs.getInt(2));row.setMemberId(rs.getLong(3));
+            row.setFeePlatformRate(rs.getBigDecimal(4));row.setFeeGuaranteeBaseRate(rs.getBigDecimal(5));
+            row.setFeeGuaranteeStepRate(rs.getBigDecimal(6));row.setFeeGuaranteeMaxMerchant(rs.getInt(7));return row;
         }));
         UmsMemberMapper members=mock(UmsMemberMapper.class);
         when(members.selectBalanceForUpdate(7L)).thenAnswer(call -> db.queryForObject("SELECT balance FROM ums_member WHERE id=7 FOR UPDATE",BigDecimal.class));
@@ -144,17 +147,49 @@ class Wp04OriginalRefundMySqlIT {
         contribution.setSnapshotPaymentStatus(2); contribution.setSnapshotRegistrationStatus(2); contribution.setSnapshotVerificationStatus(0);
         contribution.setSnapshotPayableAmount(money("10")); contribution.setSalesBasisAmount(money("10"));
         contribution.setRegistrationSnapshot("{\"wechatPaymentAmount\":10.00}"); contribution.setSourceFingerprint(HASH);
-        tx.executeWithoutResult(status -> owner.freezeOriginals(close,List.of(contribution),List.of(component(11L,null,"ACCOUNTING","PLATFORM","1"),component(12L,7L,"MEMBER","INITIATOR_MARGIN","9"))));
+        if (useProductionProducer) {
+            CoopSettlementClaimServiceImpl claimOwner=new CoopSettlementClaimServiceImpl(null,null,null,null,
+                    sql.getMapper(CoopSettlementMapper.class),sql.getMapper(CoopSettlementDetailMapper.class),sql.getMapper(CoopSettlementAdjustmentMapper.class));
+            ReflectionTestUtils.setField(claimOwner,"topicMapper",topics);
+            ReflectionTestUtils.setField(claimOwner,"originalLedger",owner);
+            ReflectionTestUtils.setField(claimOwner,"originalProducer",new CoopSettlementOriginalProducer(topics,originals,cash,owner));
+            producerClaims=claimOwner;
+            CmsTopic originalTopic=new CmsTopic();originalTopic.setId(11L);originalTopic.setMemberId(7L);originalTopic.setFeePlatformRate(new BigDecimal("0.10"));
+            originalTopic.setFeeGuaranteeBaseRate(BigDecimal.ZERO);originalTopic.setFeeGuaranteeStepRate(BigDecimal.ZERO);originalTopic.setFeeGuaranteeMaxMerchant(0);
+            tx.executeWithoutResult(status -> {
+                var basis=com.chengyinhub.business.domain.dto.TopicSettlementCashBasis.fromLockedRows(11L,originals.selectOriginalRegistrationsForUpdate(11L));
+                assertEquals("FROZEN_EXACT_SINGLE_ORDER",producerClaims.freezeSingleOrderOriginals(originalTopic,basis,new Date(1700000000123L)));
+            });
+        } else {
+            tx.executeWithoutResult(status -> owner.freezeOriginals(close,List.of(contribution),List.of(component(11L,null,"ACCOUNTING","PLATFORM","1"),component(12L,7L,"MEMBER","INITIATOR_MARGIN","9"))));
+        }
         assertEquals(2,count("coop_settlement_original_component"));
+        db.update("INSERT INTO refund_application(id,refund_no,source_type,source_id,owner_type,owner_id,status,payout_status,refund_amount,paid_amount,del_flag) VALUES(901,'RF901','registration',1,1,11,1,0,10,10,0)");
+        refundFact=facts.recordVerified(refund(refundApp));
+        String notifyHash=WxPaymentCallbackInboxServiceImpl.sha256Hex("REFUND:RF901:SUCCESS");
+        db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(901,UNHEX(?),2,901,'SUCCESS',0)",notifyHash);
+        facts.bindNewInbox(901,notifyHash,refundFact,true);
+
     }
 
     void terminalSuccessAndHook() {
         tx.executeWithoutResult(status -> {
             db.queryForObject("SELECT id FROM cms_topic WHERE id=11 FOR UPDATE",Long.class);
             db.update("UPDATE refund_application SET payout_status=1 WHERE id=901 AND payout_status=0");
-            owner.reverseCompletedRegistrationRefund(901L);
+            if (producerClaims==null) owner.reverseCompletedRegistrationRefund(901L);
+            else producerClaims.reverseCompletedRegistrationRefund(901L);
             db.update("UPDATE wx_payment_callback_inbox SET state=2 WHERE id=901");
         });
+    }
+
+    @Test void realClaimProducerBridgeFreezesOriginalsThenSameRefundHookConsumesThoseExactRows() throws Exception {
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original",true,true);
+        assertEquals("CLASSIC_SINGLE_ORDER_ORIGIN_V1",db.queryForObject("SELECT origin_calculation_version FROM coop_settlement_cash_close",String.class));
+        terminalSuccessAndHook();terminalSuccessAndHook();
+        assertEquals(1,count("coop_settlement_refund_receipt"));assertEquals(2,count("coop_settlement_original_adjustment"));
+        assertMoney("-10",db.queryForObject("SELECT SUM(amount) FROM coop_settlement_original_adjustment",BigDecimal.class));
+        assertMoney("10",db.queryForObject("SELECT SUM(original_amount) FROM coop_settlement_original_component",BigDecimal.class));
+        assertEquals(2,count("wx_verified_payment_fact"));assertMoney("2",balance());
     }
 
     @Test void actualBinaryInboxAndHexSidecarYieldExactBReferenceAndFullRefundOnce() throws Exception {

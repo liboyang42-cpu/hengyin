@@ -7,6 +7,9 @@ import com.chengyinhub.business.domain.dto.CoopSettlementPlan;
 import java.util.Date;
 
 public interface ICoopSettlementClaimService {
+    /** 原head/detail持久化后，同事务冻结可证的一对一原件；返回明确FROZEN或NOT_ENABLED原因。 */
+    String freezeSingleOrderOriginals(com.chengyinhub.business.domain.CmsTopic topic,
+            com.chengyinhub.business.domain.dto.TopicSettlementCashBasis basis, Date frozenAt);
     /** 加入A终态事务；仅原渠道SUCCESS/既有人工双审完成后冲回原冻结分项。 */
     void reverseCompletedRegistrationRefund(Long refundId);
 

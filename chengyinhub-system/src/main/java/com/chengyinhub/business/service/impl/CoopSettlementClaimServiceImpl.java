@@ -43,6 +43,18 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
     @Autowired
     private CoopSettlementOriginalLedger originalLedger;
 
+    @Autowired
+    private CoopSettlementOriginalProducer originalProducer;
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public String freezeSingleOrderOriginals(com.chengyinhub.business.domain.CmsTopic topic,
+            com.chengyinhub.business.domain.dto.TopicSettlementCashBasis basis, Date frozenAt) {
+        lockTopic(topic == null ? null : topic.getId());
+        return originalProducer.freezeSingleOrder(topic,basis,frozenAt);
+    }
+
+
     @Override
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public void reverseCompletedRegistrationRefund(Long refundId) {

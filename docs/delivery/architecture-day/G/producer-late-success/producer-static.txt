@@ -1,0 +1,1 @@
+SOURCE ONLY PASS: exact Mapper/interface IDs, FOR UPDATE flags; original10 IT bodies/assertions byte-identical; new6 unit +1 IT declarations, 0 executed; real producer call after persisted heads before deposit refund. Java/MySQL/CI NOT_RUN.

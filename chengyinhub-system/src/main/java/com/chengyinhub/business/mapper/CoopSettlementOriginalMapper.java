@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 
 /** 原close内部的逐订单分项与成功冲回；所有写调用必须加入原topic资金事务。 */
 public interface CoopSettlementOriginalMapper {
+    List<CmsRegistration> selectOriginalRegistrationsForUpdate(@Param("topicId") Long topicId);
+    WechatVerifiedPaymentFact.Reference selectPaymentVerifiedReferenceForUpdate(@Param("registrationId") Long registrationId);
+    List<CoopSettlementDetail> selectOriginalDetailsForHeadForUpdate(@Param("settlementId") Long settlementId);
     int insertComponent(CoopSettlementOriginalComponent component);
     List<CoopSettlementOriginalComponent> selectComponentsForPayerForUpdate(
             @Param("cashCloseId") Long cashCloseId, @Param("payerRegistrationId") Long payerRegistrationId);
