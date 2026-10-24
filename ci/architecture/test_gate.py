@@ -1161,6 +1161,37 @@ class OriginalProducerWiringPolicyTest(unittest.TestCase):
         self.put_write("coop_settlement_manual_case", "CoopSettlementManualCaseReadMapper")
         self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
 
+    def test_b626_candidate_cannot_widen_or_drop_exact_direction_contracts(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("drop", "kind", "city"):
+            with self.subTest(change=change):
+                data = copy.deepcopy(original)
+                policy = data["technical_dependency_policy"]
+                if change == "drop": policy["exact_directions"] = []
+                elif change == "kind":
+                    pair = policy["exact_directions"][1]["references"][0]
+                    policy["exact_directions"][1]["references"].append([pair[0], pair[1] + "$Kind"])
+                else: policy["allowed_directions"].append(["C_CITY_NODE_REDEMPTION_APPLICATION", "C_REGISTRATION_TICKET_APPLICATION"])
+                self.write("ci/architecture/owners.json", gate.encode(data))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_b626_trusted_policy_cannot_silently_remove_exact_limits_or_add_wildcards(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("missing", "empty", "wildcard"):
+            with self.subTest(change=change):
+                data = copy.deepcopy(original)
+                policy = data["technical_dependency_policy"]
+                if change == "missing": del policy["exact_directions"]
+                elif change == "empty": policy["exact_directions"] = []
+                else: policy["exact_directions"][1]["references"][0][1] += "$*"
+                (trusted / "owners.json").write_bytes(gate.encode(data))
+                with patch.object(gate, "HERE", trusted), self.assertRaisesRegex(gate.GateError, "OWNER_DEPENDENCY_POLICY_INVALID"):
+                    gate.technical_dependency_policy()
+
     def test_candidate_cannot_self_approve_settlement_reader_consumers_or_mapper_writes(self):
         trusted, _ = self.prepare_policy()
         original = json.loads((trusted / "owners.json").read_text())

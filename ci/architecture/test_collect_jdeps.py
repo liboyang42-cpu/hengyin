@@ -699,9 +699,108 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         members = self.dependencies["owners"][id_]["members"]
         return next((m for m in members if ".impl." in m), members[0])
 
+    def payment_original_fact_reference_fixture(self):
+        dto = "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact"
+        lock = "com.chengyinhub.business.service.WechatPaymentOrderOwner"
+        reference = dto + "$Reference"
+        for name in (reference, lock + "$Snapshot", lock + "$MissingOrderException"):
+            self.system_entries[name.replace(".", "/") + ".class"] = ("SYNTHETIC_NOT_COMPILED_B626_REFERENCE_" + name).encode()
+        self.write_system(); self.output = self.output.with_name("b626-four-reviewed-directions"); self.collect()
+        refs = [(source, target) for source in self.dependencies["owners"]["G_CASH_CLAIM"]["members"]
+                for target in (dto, reference)]
+        refs += [(self.owner_member("B_PAYMENT_ROUTER"), target) for target in (dto, reference)]
+        refs += [(self.owner_member("B_VERIFIED_PAYMENT_FACT_STORE"), target)
+                 for target in (lock, lock + "$Snapshot", lock + "$MissingOrderException")]
+        refs += [(self.owner_member("B_PAYMENT_INTENTS"), self.owner_member("B_VERIFIED_PAYMENT_FACT_STORE"))]
+        return refs
+
+    def test_b626_ten_original_fact_references_use_only_four_precise_owner_directions(self):
+        refs = self.payment_original_fact_reference_fixture()
+        self.assertEqual(10, len(refs))
+        for source, target in refs: self.reference(source, target)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual({("G_CASH_CLAIM", "B_VERIFIED_PAYMENT_FACT_DTO"),
+                          ("B_PAYMENT_ROUTER", "B_VERIFIED_PAYMENT_FACT_DTO"),
+                          ("B_VERIFIED_PAYMENT_FACT_STORE", "B_PAYMENT_ORDER_LOCK"),
+                          ("B_PAYMENT_INTENTS", "B_VERIFIED_PAYMENT_FACT_STORE")},
+                         set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertEqual(3, len(report["references"]))
+
+    def test_b626_exact_binary_contracts_do_not_grant_kind_concrete_lock_or_store_companions(self):
+        dto = "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact"
+        store = self.owner_member("B_VERIFIED_PAYMENT_FACT_STORE")
+        lock = "com.chengyinhub.business.service.WechatPaymentOrderOwner"
+        router = self.owner_member("B_PAYMENT_ROUTER")
+        intent = self.owner_member("B_PAYMENT_INTENTS")
+        violations = [(router, dto + "$Kind"), (self.owner_member("G_CASH_CLAIM"), dto + "$Kind"),
+                      (store, self.owner_member("B_PAYMENT_ORDER_LOCK")),
+                      (store, lock + "$Other"), (store + "$Nested", lock),
+                      (intent, store + "$Stored"),
+                      ("com.chengyinhub.business.service.WechatPaymentCallbackOwner", dto)]
+        for source, target in violations:
+            for name in (source, target):
+                if name.replace(".", "/") + ".class" not in self.system_entries:
+                    self.system_entries[name.replace(".", "/") + ".class"] = ("SYNTHETIC_NOT_COMPILED_UNAPPROVED_BINARY_" + name).encode()
+        self.write_system(); self.output = self.output.with_name("b626-no-companion-grants"); self.collect()
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for source, target in violations:
+            with self.subTest(source=source, target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(source, target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "OWNER_REFERENCE_OUTSIDE_CONTRACT" and f["source_class"] == source
+                                    and f["target_class"] == target for f in report["findings"]))
+
+    def test_b626_city_to_ticket_is_not_granted_for_a_constant_reference(self):
+        self.reference(self.owner_member("C_CITY_NODE_REDEMPTION_APPLICATION"),
+                       self.owner_member("C_REGISTRATION_TICKET_APPLICATION"))
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertTrue(any(f["rule"] == "NEW_OWNER_DEPENDENCY_DIRECTION"
+                            and f["source_technical_owner"] == "C_CITY_NODE_REDEMPTION_APPLICATION"
+                            and f["target_technical_owner"] == "C_REGISTRATION_TICKET_APPLICATION"
+                            for f in report["findings"]))
+
+    def test_b626_four_forward_directions_do_not_allow_reverse_edges_or_cycles(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for a, b in (("G_CASH_CLAIM", "B_VERIFIED_PAYMENT_FACT_DTO"),
+                     ("B_PAYMENT_ROUTER", "B_VERIFIED_PAYMENT_FACT_DTO"),
+                     ("B_VERIFIED_PAYMENT_FACT_STORE", "B_PAYMENT_ORDER_LOCK"),
+                     ("B_PAYMENT_INTENTS", "B_VERIFIED_PAYMENT_FACT_STORE")):
+            with self.subTest(a=a, b=b):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(a), self.owner_member(b))
+                self.reference(self.owner_member(b), self.owner_member(a))
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                rules = {f["rule"] for f in report["findings"]}
+                self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", rules)
+                self.assertIn("NEW_OWNER_CYCLE", rules)
+
+    def test_b626_new_directions_preserve_sdk_domain_and_missing_raw_controls(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for a, target in (("B_VERIFIED_PAYMENT_FACT_STORE", self.owner_member("B_PAYMENT_SDK")),
+                          ("B_PAYMENT_INTENTS", self.owner_member("B_PAYMENT_ROUTER")),
+                          ("G_CASH_CLAIM", "com.chengyinhub.business.service.impl.CmsTopicServiceImpl")):
+            with self.subTest(a=a, target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(a), target)
+                self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in self.check_directions()["findings"]})
+        for owner in ("G_CASH_CLAIM", "B_PAYMENT_ROUTER", "B_VERIFIED_PAYMENT_FACT_STORE", "B_PAYMENT_INTENTS"):
+            member = self.owner_member(owner)
+            with self.subTest(owner=owner):
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.decode().splitlines()
+                                      if not line.strip().startswith(member + " -> ")).encode())
+                self.assert_unknown(self.check_directions())
+
     def test_declared_owner_directions_use_verified_same_module_refs_without_a_second_jdeps(self):
         for a, b in self.dependencies["allowed_directions"]:
-            self.reference(self.owner_member(a), self.owner_member(b))
+            exact = self.dependencies.get("exact_directions", {}).get((a, b))
+            source, target = sorted(exact)[0] if exact else (self.owner_member(a), self.owner_member(b))
+            self.reference(source, target)
         calls = len(self.calls)
         report = self.check_directions()
         self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)

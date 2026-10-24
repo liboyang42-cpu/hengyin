@@ -283,6 +283,7 @@ def technical_dependency_findings(index, selected, policy, input_complete=True):
     relaxes the private Mapper checker's exact allowed Service consumer.
     """
     owners, allowed = policy["owners"], policy["allowed_directions"]
+    exact = policy.get("exact_directions", {})
     result = {"coverage": "DECLARED_TECHNICAL_OWNER_TYPES_ONLY", "graph_complete": False,
               "observed_source": policy["observed_source"], "owner_edges": [], "scc": [],
               "findings": [], "review_items": [], "unscoped_reference_count": 0,
@@ -335,6 +336,9 @@ def technical_dependency_findings(index, selected, policy, input_complete=True):
                 witnesses.setdefault(edge, ref)
                 if edge not in allowed:
                     result["findings"].append({"rule": "NEW_OWNER_DEPENDENCY_DIRECTION", "source_technical_owner": a,
+                                               "target_technical_owner": b, **ref})
+                elif edge in exact and (ref["source_class"], ref["target_class"]) not in exact[edge]:
+                    result["findings"].append({"rule": "OWNER_REFERENCE_OUTSIDE_CONTRACT", "source_technical_owner": a,
                                                "target_technical_owner": b, **ref})
     result["owner_edges"] = [list(e) for e in sorted(edges)]
     result["scc"] = owner_components(owners, edges)

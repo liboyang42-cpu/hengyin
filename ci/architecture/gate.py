@@ -443,7 +443,7 @@ def technical_dependency_policy():
             raise GateError("OWNER_DEPENDENCY_POLICY_INVALID")
     try:
         policy = json.loads((HERE / "owners.json").read_text())["technical_dependency_policy"]
-        require(set(policy) == {"schema", "coverage", "observed_source", "meaning", "owners", "allowed_directions"})
+        require(set(policy) == {"schema", "coverage", "observed_source", "meaning", "owners", "allowed_directions", "exact_directions"})
         require(type(policy["schema"]) is int and policy["schema"] == 1 and policy["coverage"] == "PARTIAL")
         require(isinstance(policy["observed_source"], str) and SHA.fullmatch(policy["observed_source"]))
         modules = json.loads((HERE / "owners.json").read_text())["modules"]
@@ -483,6 +483,32 @@ def technical_dependency_policy():
             require(isinstance(edge, list) and len(edge) == 2 and all(n in owners for n in edge) and edge[0] != edge[1])
             require(tuple(edge) not in edges)
             edges.add(tuple(edge))
+        # These four new contracts approve exact binary references, not every
+        # member/companion within an owner group. Missing limits cannot disable them.
+        required_exact = {("G_CASH_CLAIM", "B_VERIFIED_PAYMENT_FACT_DTO"),
+                          ("B_PAYMENT_ROUTER", "B_VERIFIED_PAYMENT_FACT_DTO"),
+                          ("B_VERIFIED_PAYMENT_FACT_STORE", "B_PAYMENT_ORDER_LOCK"),
+                          ("B_PAYMENT_INTENTS", "B_VERIFIED_PAYMENT_FACT_STORE")}
+        require(isinstance(policy["exact_directions"], list))
+        exact = {}
+        binary = fqcn + r"(?:\$[A-Za-z0-9_]+)*"
+        for contract in policy["exact_directions"]:
+            require(set(contract) == {"source_owner", "target_owner", "references"})
+            edge = (contract["source_owner"], contract["target_owner"])
+            require(edge in required_exact and edge in edges and edge not in exact)
+            references = contract["references"]
+            require(isinstance(references, list) and references)
+            pairs = set()
+            for reference in references:
+                require(isinstance(reference, list) and len(reference) == 2
+                        and all(isinstance(n, str) and re.fullmatch(binary, n) for n in reference))
+                require(tuple(reference) not in pairs)
+                require(all(any(name == member or name.startswith(member + "$")
+                                for member in owners[owner]["members"])
+                            for name, owner in zip(reference, edge)))
+                pairs.add(tuple(reference))
+            exact[edge] = pairs
+        require(set(exact) == required_exact)
         # This new responsibility cut is explicitly acyclic. Do not bless a
         # candidate-generated SCC or reclassify global legacy debt as approved.
         pending = set(owners)
@@ -490,7 +516,8 @@ def technical_dependency_policy():
             leaves = {n for n in pending if not any(a == n and b in pending for a, b in edges)}
             require(leaves)
             pending -= leaves
-        return {"owners": owners, "allowed_directions": edges, "observed_source": policy["observed_source"]}
+        return {"owners": owners, "allowed_directions": edges, "exact_directions": exact,
+                "observed_source": policy["observed_source"]}
     except GateError:
         raise
     except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
