@@ -92,3 +92,23 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 19:36 America/Los_Angeles
+
+HEAD `f0b38b667` tests. Did not invent recoverOriginal.
+
+`SideQuestAcceptHoldTest.unusedSubmitProofBeforeHoldDoesNotOccupyThenUniqueSubmitApplies`：DISCOVERED `submitProof` 抛 `HOLD_REQUIRED` 且 phase 仍 DISCOVERED、hold/original 仍 null；后续唯一 acceptHold+submitProof 才是 PROOF_PENDING。
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **13/0** 2026-10-24T02:36:24Z：
+
+```
+Tests run: 1 -- OfflinePackOperationTest
+Tests run: 4 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 13, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
