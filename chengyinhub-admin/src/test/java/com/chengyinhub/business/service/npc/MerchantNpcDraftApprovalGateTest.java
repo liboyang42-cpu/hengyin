@@ -259,4 +259,25 @@ class MerchantNpcDraftApprovalGateTest {
         isolation.publish(first, fx.scope());
         assertArrayEquals(first.facts(), isolation.playerProjection(fx.scope(), qualification));
     }
+
+    @Test
+    void unusedVerifyBeforeIngestDoesNotOccupyThenUniqueIngestThenVerifyApplies() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        MerchantNpcDraftApprovalGate gate = fx.gateWithRecordingPublisher();
+        assertEquals(Failure.UNPUBLISHED,
+                assertThrows(GateException.class, () -> gate.verifyByAuthorizer(fx.authorizer()))
+                        .failure());
+        assertEquals(Phase.IDLE, gate.phase(), "未见草稿 verify 观察不得占 phase");
+        assertNull(gate.authorizer(), "未见草稿 verify 观察不得占 authorizer");
+        assertNull(gate.origin());
+        assertNull(fx.qualification().cachedPublic(fx.scope()));
+        gate.ingestAiDraft(fx.draft());
+        assertEquals(Phase.AI_DRAFT, gate.phase());
+        assertNull(gate.authorizer());
+        gate.verifyByAuthorizer(fx.authorizer());
+        assertEquals(Phase.AUTHORIZER_VERIFIED, gate.phase());
+        assertEquals(fx.authorizer(), gate.authorizer());
+        assertEquals(Origin.AI, gate.origin());
+        assertNull(fx.qualification().cachedPublic(fx.scope()), "核实不得占 published 账");
+    }
 }
