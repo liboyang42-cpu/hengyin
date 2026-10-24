@@ -3,7 +3,7 @@
 const app = getApp()
 const { buildGroupCodeIssuePayload, listGroupCodeActivities } = require('../../../utils/group-code-session.js')
 
-function ok(res) { return res && (res.code === 200 || res.code === '200') }
+const { isBizOk: ok } = require('../../../utils/response-shape.js')
 function ttlSeconds(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 1000
     ? Math.floor(value / 1000)

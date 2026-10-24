@@ -181,6 +181,18 @@ class TopicSaleCanonicalV1Test {
                 ((ObjectNode) json.path("contentRightsPackage")).remove("assetRef"));
     }
 
+    /** C:U-016:开关只认显式 false;不是布尔的值按 true 处理而失败(fail-closed),不能被当成 false。 */
+    @Test
+    void nonBooleanPolicyFlagsFailClosed() throws Exception {
+        assertNestedHole("refundReschedulePolicy", "SALE_SNAPSHOT_MISSING_REFUND_RESCHEDULE_POLICY", json ->
+                ((ObjectNode) json.path("refundReschedulePolicy")).set("crossEditionTransferAllowed",
+                        JSON.createObjectNode()));
+        assertNestedHole("ticketPricingPolicy", "SALE_SNAPSHOT_MISSING_TICKET_PRICE", json ->
+                ((ObjectNode) json.path("ticketPricingPolicy")).set("pointsAllowed", JSON.createArrayNode()));
+        assertNestedHole("merchantCashSettlementMode", "SALE_SNAPSHOT_MISSING_MERCHANT_SETTLEMENT", json ->
+                ((ObjectNode) json.path("merchantCashSettlementMode")).put("merchantDepositRequired", "maybe"));
+    }
+
     @Test
     void unknownSchemaAndWeakTopLevelShapeAreRejected() {
         IllegalStateException schema = assertThrows(IllegalStateException.class,

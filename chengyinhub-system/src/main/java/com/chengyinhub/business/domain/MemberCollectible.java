@@ -4,7 +4,7 @@ import java.util.Date;
 
 /**
  * FE-01 玩家收集(碎片/彩蛋)member 级持久化。
- * coll_type:1=碎片(mode2 完成节点)/ 2=彩蛋(途中触发)。
+ * coll_type:1=碎片(mode2 完成节点)/ 2=彩蛋(途中触发)/ 3~5 见下方 TYPE_* 常量;ref_id 含义随类型而定。
  *
  * @author cy
  * @date 2026-07-07
@@ -13,9 +13,9 @@ public class MemberCollectible
 {
     private Long id;
     private Long memberId;
-    private Integer collType;   // 1=碎片 2=彩蛋
+    private Integer collType;   // TYPE_* 常量:1=碎片 2=彩蛋 3=节点收藏 4=活动徽章 5=探店章凭证
     private Long topicId;
-    private Long refId;         // 碎片=node_id / 彩蛋=egg_id
+    private Long refId;         // 随 collType:node_id / egg_id / roam_poi.id / official_event.id / chapter_id
     private String content;
     private Date createTime;
 

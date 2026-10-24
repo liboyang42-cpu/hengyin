@@ -1,6 +1,8 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "cms_topic_node_status_comment_20261024": [],
+    "member_collectible_type_comment_20261024": ["member_collectible"],
     "merchant_wechat_qrcode_20261022": [],
     "merchant_category_ids_20261022": [],
     "orient_session_lifecycle_20261022": ["20260823_topic_route_graph"],

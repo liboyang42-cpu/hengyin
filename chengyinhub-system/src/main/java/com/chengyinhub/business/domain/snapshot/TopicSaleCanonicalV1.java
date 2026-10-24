@@ -18,6 +18,13 @@ public class TopicSaleCanonicalV1 {
 
     public static final String SCHEMA_VERSION = "CANONICAL_15_V1";
 
+    /**
+     * fail-closed 默认值(C:U-016):crossEditionTransferAllowed / pointsAllowed / merchantDepositRequired
+     * 这些开关本快照只接受显式的 false。值缺失或不是布尔(对象、数组、乱写的字符串)时,
+     * {@code asBoolean} 返回本默认值 true,于是校验按「开关被打开」处理而失败,不会被当成 false 放行。
+     */
+    private static final boolean UNPROVEN_FLAG_COUNTS_AS_TRUE = true;
+
     public static final List<String> FIELD_NAMES = Collections.unmodifiableList(Arrays.asList(
             "storeCount", "ticketPricingPolicy", "salesTargetTotal", "sessionWindows",
             "participationUnitPolicy", "sessionVenues", "merchantCashSettlementMode", "storeCluster",
@@ -97,7 +104,7 @@ public class TopicSaleCanonicalV1 {
         requireObjectFields(refundReschedulePolicy, "SALE_SNAPSHOT_MISSING_REFUND_RESCHEDULE_POLICY",
                 "rescheduleDeadline", "rescheduleLimit", "cancellationPolicy", "merchantAbsencePolicy",
                 "noShowPolicy", "crossEditionTransferAllowed");
-        if (refundReschedulePolicy.path("crossEditionTransferAllowed").asBoolean(true)) {
+        if (refundReschedulePolicy.path("crossEditionTransferAllowed").asBoolean(UNPROVEN_FLAG_COUNTS_AS_TRUE)) {
             fail("SALE_SNAPSHOT_MISSING_REFUND_RESCHEDULE_POLICY");
         }
     }
@@ -183,7 +190,7 @@ public class TopicSaleCanonicalV1 {
     private void validatePricing() {
         String code = "SALE_SNAPSHOT_MISSING_TICKET_PRICE";
         requireObject(ticketPricingPolicy, code);
-        if (!ticketPricingPolicy.has("pointsAllowed") || ticketPricingPolicy.path("pointsAllowed").asBoolean(true)
+        if (!ticketPricingPolicy.has("pointsAllowed") || ticketPricingPolicy.path("pointsAllowed").asBoolean(UNPROVEN_FLAG_COUNTS_AS_TRUE)
                 || !"NONE".equals(ticketPricingPolicy.path("discountMode").asText())) fail(code);
         requireArrayItems(ticketPricingPolicy.get("tickets"), code, "id", "price", "totalInventory");
     }
@@ -223,7 +230,7 @@ public class TopicSaleCanonicalV1 {
         String code = "SALE_SNAPSHOT_MISSING_MERCHANT_SETTLEMENT";
         requireObject(merchantCashSettlementMode, code);
         if (!merchantCashSettlementMode.has("merchantDepositRequired")
-                || merchantCashSettlementMode.path("merchantDepositRequired").asBoolean(true)) fail(code);
+                || merchantCashSettlementMode.path("merchantDepositRequired").asBoolean(UNPROVEN_FLAG_COUNTS_AS_TRUE)) fail(code);
         JsonNode chapters = requireArrayItems(merchantCashSettlementMode.get("chapters"), code,
                 "id", "termsMode");
         JsonNode offers = requireArrayItems(merchantCashSettlementMode.get("offers"), code,
@@ -338,7 +345,7 @@ public class TopicSaleCanonicalV1 {
         String code = "SALE_SNAPSHOT_MISSING_REFUND_RESCHEDULE_POLICY";
         requireObjectFields(refundReschedulePolicy, code, "rescheduleDeadline", "rescheduleLimit",
                 "cancellationPolicy", "merchantAbsencePolicy", "noShowPolicy", "crossEditionTransferAllowed");
-        if (refundReschedulePolicy.path("crossEditionTransferAllowed").asBoolean(true)) fail(code);
+        if (refundReschedulePolicy.path("crossEditionTransferAllowed").asBoolean(UNPROVEN_FLAG_COUNTS_AS_TRUE)) fail(code);
         requireArrayItems(refundReschedulePolicy.get("ticketPolicies"), code,
                 "id", "refundRule", "signupDeadline");
     }
@@ -358,7 +365,7 @@ public class TopicSaleCanonicalV1 {
         String settlementCode = "SALE_SNAPSHOT_MISSING_MERCHANT_SETTLEMENT";
         requireObject(merchantCashSettlementMode, settlementCode);
         if (!merchantCashSettlementMode.has("merchantDepositRequired")
-                || merchantCashSettlementMode.path("merchantDepositRequired").asBoolean(true)) fail(settlementCode);
+                || merchantCashSettlementMode.path("merchantDepositRequired").asBoolean(UNPROVEN_FLAG_COUNTS_AS_TRUE)) fail(settlementCode);
         requireArrayItems(merchantCashSettlementMode.get("chapters"), settlementCode, "id", "termsMode");
         JsonNode offers = requireArrayItems(merchantCashSettlementMode.get("offers"), true, settlementCode,
                 "id", "chapterId", "merchantId", "termsMode");
@@ -428,7 +435,7 @@ public class TopicSaleCanonicalV1 {
         String refundCode = "SALE_SNAPSHOT_MISSING_REFUND_RESCHEDULE_POLICY";
         requireObjectFields(refundReschedulePolicy, refundCode, "rescheduleDeadline", "rescheduleLimit",
                 "cancellationPolicy", "merchantAbsencePolicy", "noShowPolicy", "crossEditionTransferAllowed");
-        if (refundReschedulePolicy.path("crossEditionTransferAllowed").asBoolean(true)) fail(refundCode);
+        if (refundReschedulePolicy.path("crossEditionTransferAllowed").asBoolean(UNPROVEN_FLAG_COUNTS_AS_TRUE)) fail(refundCode);
         requireArrayItems(refundReschedulePolicy.get("ticketPolicies"), refundCode, "id", "refundRule");
     }
 

@@ -1,5 +1,7 @@
 package com.chengyinhub.common.exception;
 
+import java.util.Set;
+
 /**
  * 业务异常
  * 
@@ -8,6 +10,15 @@ package com.chengyinhub.common.exception;
 public final class ServiceException extends RuntimeException
 {
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 允许随 ServiceException 下发的业务码白名单(按 HTTP 语义取值)。
+     * 由 ServiceExceptionCodeWhitelistContractTest 扫描全部 {@code new ServiceException(msg, code)}
+     * 的字面量/HttpStatus 常量逐一校验;新增码值先在这里登记并说明语义。
+     * 不带 code 的构造(code 为 null)由各调用方兜底(多数回 500),见 {@link #ServiceException(String)}。
+     */
+    public static final Set<Integer> ALLOWED_CODES = Set.of(
+            400, 401, 403, 404, 409, 410, 413, 422, 426, 429, 500, 501, 503);
 
     /**
      * 错误码
@@ -39,6 +50,10 @@ public final class ServiceException extends RuntimeException
     {
     }
 
+    /**
+     * 不带业务码:code 为 null,由捕获方决定兜底码(通常 500)。
+     * 可预期的业务失败(参数错/无权/冲突/不存在)请用 {@link #ServiceException(String, Integer)} 显式给出白名单内的码。
+     */
     public ServiceException(String message)
     {
         this.message = message;

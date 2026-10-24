@@ -3,7 +3,7 @@
 // 纯函数:喂 access/me 的响应,回 allow / deny / unknown。unknown = 响应坏了,不拦(后端仍然拦),别把网络问题栽成没权限。
 const { normalizeMerchantAccess } = require('./merchant-access-policy.js');
 
-function okCode(res) { return !!res && (res.code === 200 || res.code === '200'); }
+const { isBizOk: okCode } = require('./response-shape.js');
 
 // 两个 access/me 在没有身份时走 RuoYi 的 error("请先登录") —— HTTP 200 + code 500,
 // 不认它就会把「压根没登录」判成「响应坏了」而放行(实测 ApiMerchantOperatorController:44 / ApiClubRoleController:49)。

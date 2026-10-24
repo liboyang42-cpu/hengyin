@@ -79,6 +79,8 @@
         CASE WHEN EXISTS(SELECT 1 FROM community_post_member_action pa
                          WHERE pa.post_id=p.id AND pa.member_id=#{viewerId} AND pa.action_type='BOOKMARK') THEN 1 ELSE 0 END viewer_bookmarked
     </sql>
+    <!-- 访问规则(作者本人/lifecycle/audience/拉黑/屏蔽)与 CommunityPostLifecyclePolicy.canView 一致;
+         其后三段负反馈(NOT_INTERESTED/SEE_LESS_AUTHOR/SEE_LESS_TOPIC)是个性化过滤,canView 刻意不含。 -->
     <sql id="visibilityPolicy">
         AND (
           (p.author_id = #{viewerId} AND p.lifecycle&lt;&gt;'DELETED')

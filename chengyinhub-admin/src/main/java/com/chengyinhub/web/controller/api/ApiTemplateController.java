@@ -508,6 +508,9 @@ public class ApiTemplateController extends BaseController {
         Integer packType = parsePackType(pack_type);
         if (packType != null) {
             cmsTemplateLibrary.setPackType(packType);
+        } else if (isUnrecognizedPackType(pack_type)) {
+            // 不改返回(仍按不过滤),但不再静默:留一条告警便于发现前端传错或新形态先于后端发版。
+            logger.warn("template list: unrecognized pack_type={}, falling back to no filter", pack_type);
         }
 
         cmsTemplateLibrary.setDelFlag(0);
@@ -542,6 +545,11 @@ public class ApiTemplateController extends BaseController {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    /** 传了非空值但认不出(非 0/1/2)。不传/空白不算,那是「看全部」的正常用法。 */
+    static boolean isUnrecognizedPackType(String raw) {
+        return raw != null && !raw.trim().isEmpty() && parsePackType(raw) == null;
     }
 
     @Operation(summary = "按分类分组获取模板列表")

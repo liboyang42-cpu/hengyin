@@ -6,6 +6,7 @@
 // 通关 / 游戏会话结束)把门 —— 服务端说结束就不恢复,清掉本机那份并在服务端留 ENDED 墓碑
 // (另一台设备重进时墓碑比它本机快照新,就不再把已结束的局恢复回来)。
 const KEY_PREFIX = 'play_paused_run_v2:'
+const { isBizOk } = require('./response-shape.js')
 const LEGACY_KEY_PREFIX = 'play_paused_run_v1:'
 // 一次步行行程不可能按天计;超过这个值的快照只可能是脏数据,不当成可恢复会话。
 const MAX_PAUSED_SECONDS = 7 * 24 * 3600
@@ -94,7 +95,7 @@ function runSessionRequestScope(scope) {
 }
 
 function isOk(res) {
-  return !!res && (res.code === 200 || res.code === '200')
+  return isBizOk(res)
 }
 
 /** O-09:服务端按自己的时钟给这次落盘定先后(data.savedAt)。本机那份若仍是这次写的,改记服务端时刻,

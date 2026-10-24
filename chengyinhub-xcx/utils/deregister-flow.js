@@ -1,7 +1,7 @@
 const modal = require('./modal.js');
 const app = getApp();
 const { sendUiStateRequest } = require('./ui-state-request.js');
-const { bizFailureMessage } = require('./response-shape.js');
+const { bizFailureMessage, isBizOk } = require('./response-shape.js');
 const { formatRefundDeadline } = require('./order-status.js');
 const { toTimestamp } = require('./datetime.js');
 
@@ -12,7 +12,7 @@ function requestId() {
 }
 
 function isOk(res) {
-  return !!(res && (res.code === 200 || res.code === '200'));
+  return isBizOk(res);
 }
 
 function isRecord(value) {

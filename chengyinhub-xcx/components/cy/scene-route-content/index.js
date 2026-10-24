@@ -12,7 +12,7 @@ const withdrawCs = require('../../../utils/withdraw-cs.js')
 const publisherIdentity = require('../../../utils/publisher-identity.js')
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js')
 
-const isOk = (res) => res && (res.code === 200 || res.code === '200')
+const { isBizOk: isOk } = require('../../../utils/response-shape.js')
 
 function payloadOf(res) {
   return res && res.data !== undefined ? res.data : null

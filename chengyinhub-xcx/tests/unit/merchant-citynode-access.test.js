@@ -244,6 +244,7 @@ function mountRouteContent() {
         // 发布者实名:场景表单在 data 里就要读它的两句文案,用真模块而不是桩
         if (request.includes('publisher-identity')) return require('../../utils/publisher-identity.js');
         if (request.includes('code-text')) return require('../../pages/merchant/utils/code-text.js');
+        if (request.includes('response-shape')) return require('../../utils/response-shape.js');
         throw new Error('unexpected require: ' + request);
       },
       wx: { showToast() {}, showModal() {}, navigateTo() {} },

@@ -1,5 +1,5 @@
 'use strict'
-
+const { isBizOk } = require('../../../utils/response-shape.js')
 const app = getApp()
 
 Component({
@@ -64,7 +64,7 @@ Component({
         silentError: true,
         success: (res) => {
           if (token !== this._loadToken) return
-          if (!(res && (res.code === 200 || res.code === '200') && res.data)) {
+          if (!(isBizOk(res) && res.data)) {
             this.setData({ state: 'error', errorText: (res && res.msg) || '入场码生成失败' })
             return
           }
