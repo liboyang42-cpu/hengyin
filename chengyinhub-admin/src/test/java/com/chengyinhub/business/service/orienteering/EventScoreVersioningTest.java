@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -122,5 +123,32 @@ class EventScoreVersioningTest {
         assertEquals(1, ranked.get(0).rank);
         assertEquals(1, ranked.get(1).rank);
         assertEquals(5000, ranked.get(0).result.scoreCenti);
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueFinishApplies() {
+        EventScoreVersioning.OriginalReceipt blank = scores.recoverOriginal(null);
+        assertNull(blank.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, blank.outcome);
+        assertEquals(false, blank.mintedNewRequest);
+        EventScoreVersioning.OriginalReceipt neverFinish = scores.recoverOriginal("c04-fin-never");
+        assertEquals("c04-fin-never", neverFinish.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, neverFinish.outcome);
+        assertEquals(false, neverFinish.mintedNewRequest);
+        assertNull(neverFinish.result);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback("c04-fin-never")).getErrorCode());
+        EventScoreVersioning.EventRun run = scores.start(registration, frozen, safety, 7L, "c04-start-never");
+        scores.appendScore(run.id, 5000, "TASK", "TASK_DONE", "c04-scr-never");
+        ResultVersion first = scores.finish(run.id, "c04-fin-never");
+        assertEquals("c04-fin-never", first.requestId);
+        assertEquals(EventScoreVersioning.OUTCOME_FINISHED, first.outcome);
+        assertSame(first, scores.readback("c04-fin-never"));
+        EventScoreVersioning.OriginalReceipt recovered = scores.recoverOriginal("c04-fin-never");
+        assertEquals("c04-fin-never", recovered.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_FINISHED, recovered.outcome);
+        assertEquals(false, recovered.mintedNewRequest);
+        assertSame(first, recovered.result);
+        assertSame(first, scores.finish(run.id, "c04-fin-never"));
     }
 }

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -108,6 +109,31 @@ class TeamClubEligibilityAuthorityTest {
     void unknownRegistrationReadbackDoesNotInventARequest() {
         assertEquals(OrienteeringEventException.NOT_FOUND,
                 assertThrows(OrienteeringEventException.class, () -> authority.readback("reg-missing")).getErrorCode());
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueRegisterApplies() {
+        CmsTopic course = PublishedRuleSelectorTest.publishedCity(7L, 9L);
+        TeamClubEligibilityAuthority.OriginalReceipt blank = authority.recoverOriginal(null);
+        assertNull(blank.originalRequestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_NOT_FOUND, blank.outcome);
+        assertEquals(false, blank.mintedNewRequest);
+        TeamClubEligibilityAuthority.OriginalReceipt neverReg = authority.recoverOriginal("c04-reg-never");
+        assertEquals("c04-reg-never", neverReg.originalRequestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_NOT_FOUND, neverReg.outcome);
+        assertEquals(false, neverReg.mintedNewRequest);
+        assertNull(neverReg.registration);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> authority.readback("c04-reg-never")).getErrorCode());
+        TeamClubEligibilityAuthority.Registration first = authority.register(course,
+                TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(OWNER_A, MEMBER_A), List.of(CLUB_A), "c04-reg-never");
+        assertEquals("c04-reg-never", first.requestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_REGISTERED,
+                authority.recoverOriginal("c04-reg-never").outcome);
+        assertSame(first, authority.readback("c04-reg-never"));
+        assertSame(first, authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(OWNER_A, MEMBER_A), List.of(CLUB_A), "c04-reg-never"));
     }
 
     static Club club(long id, long ownerId) {

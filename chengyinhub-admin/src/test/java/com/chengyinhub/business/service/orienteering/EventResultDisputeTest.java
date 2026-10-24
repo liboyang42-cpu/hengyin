@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -67,5 +68,25 @@ class EventResultDisputeTest {
         assertEquals(EventResultDispute.STATUS_RESTORED, disputes.readback("dsp-01xxxx").status());
         assertEquals(OrienteeringEventException.NOT_FOUND,
                 assertThrows(OrienteeringEventException.class, () -> disputes.readRestore("rst-missing")).getErrorCode());
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueOpenApplies() {
+        EventResultDispute.OriginalReceipt blank = disputes.recoverOriginal(null);
+        assertNull(blank.originalRequestId);
+        assertEquals(EventResultDispute.OUTCOME_NOT_FOUND, blank.outcome);
+        assertEquals(false, blank.mintedNewRequest);
+        EventResultDispute.OriginalReceipt neverDispute = disputes.recoverOriginal("c04-dsp-never");
+        assertEquals("c04-dsp-never", neverDispute.originalRequestId);
+        assertEquals(EventResultDispute.OUTCOME_NOT_FOUND, neverDispute.outcome);
+        assertEquals(false, neverDispute.mintedNewRequest);
+        assertNull(neverDispute.dispute);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> disputes.readback("c04-dsp-never")).getErrorCode());
+        EventResultDispute.Dispute first = disputes.open("fin-disp-01", "原争议键首次写入", "c04-dsp-never");
+        assertEquals("c04-dsp-never", first.requestId);
+        assertEquals(EventResultDispute.OUTCOME_PENDING, disputes.recoverOriginal("c04-dsp-never").outcome);
+        assertSame(first, disputes.recoverOriginal("c04-dsp-never").dispute);
+        assertSame(first, disputes.open("fin-disp-01", "原争议键首次写入", "c04-dsp-never"));
     }
 }
