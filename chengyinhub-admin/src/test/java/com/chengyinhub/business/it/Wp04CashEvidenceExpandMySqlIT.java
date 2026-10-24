@@ -423,6 +423,59 @@ class Wp04CashEvidenceExpandMySqlIT {
         assertEquals(0,count(CONTRIBUTION)); assertEquals(0,count(EVENT));
     }
 
+
+    @Test void independentOrdersWithNullParentCannotBorrowEachOthersPaymentIdentity() throws Exception {
+        expand();
+        CoopSettlementCashClose request=close(11); request.setOriginalContributionCount(2);
+        CoopSettlementCashClose c=fenced(11,()->mapper.recordClose(request));
+        CoopSettlementCashContribution waiting=contribution(c.getId(),102,11,"0.00");
+        waiting.setSnapshotPaymentStatus(0); waiting.setSnapshotRegistrationStatus(1);
+        waiting.setSnapshotPayableAmount(new BigDecimal("90.00"));
+        waiting.setRegistrationSnapshot("{\"paymentStatus\":0,\"registrationStatus\":1,\"verificationStatus\":0}");
+        fenced(11,()->mapper.recordContribution(waiting));
+        CoopSettlementCashContribution wrong=contribution(c.getId(),101,11,"10.00");
+        wrong.setPayerRegistrationId(102L); wrong.setPayerOrderNo("G-REG-102");
+        assertThrows(IllegalStateException.class,()->fenced(11,()->mapper.recordContribution(wrong)),
+                "NULL parent is absence of a payment group, not proof that two independent orders share a payer");
+        assertEquals(1,count(CONTRIBUTION));
+        assertNull(fenced(11,()->mapper.selectContributionForUpdate(101L))); assertLegacy();
+    }
+    @Test void zeroPayableSiblingCannotSelfDeclareAsTheParentPaymentIdentity() throws Exception {
+        expand();
+        CoopSettlementCashClose request=close(33); request.setOriginalContributionCount(2);
+        CoopSettlementCashClose saved=fenced(33,()->mapper.recordClose(request));
+        CoopSettlementCashContribution child=contribution(saved.getId(),301,33,"0.00");
+        child.setParentOrderNo("PARENT-302");
+        assertThrows(IllegalStateException.class,()->fenced(33,()->mapper.recordContribution(child)),
+                "fixture302 is the original100 payment subject; sibling301 is not made payer by caller choice");
+        assertEquals(0,count(CONTRIBUTION)); assertLegacy();
+    }
+    @Test void reservedAdjustmentIndexNameCollisionMustBeRejectedBeforeAnyDdl() {
+        db.execute("ALTER TABLE coop_settlement_adjustment ADD UNIQUE KEY uk_g_cash_adjustment_event(id)");
+        assertEquals(1,preflight(),"existing planned index name is a migration blocker even without new columns");
+        assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
+        assertEquals(0,newTables()); assertEquals(0,newHeadColumns()); assertLegacy();
+        assertEquals(List.of("id"),indexColumns("coop_settlement_adjustment","uk_g_cash_adjustment_event"));
+    }
+    @Test void interruptedEmptyMigrationNeedsSafeRollbackBeforeAdjustmentAlterExists() throws Exception {
+        List<Map<String,Object>> columns=legacyColumns(); List<Map<String,Object>> indexes=legacyIndexes();
+        assertEquals(0,preflight());
+        String text=Files.readString(sql.resolve("migration_20261023_g_cash_evidence_expand.sql"))
+                .replaceAll("(?m)^\\s*--.*$","");
+        int executed=0;
+        for (String part:text.split(";")) {
+            String statement=part.trim(); if (statement.isEmpty()) continue;
+            if (statement.startsWith("ALTER TABLE coop_settlement_adjustment")) break;
+            db.execute(statement); executed++;
+        }
+        assertEquals(5,executed); // preflight SELECT, three CREATEs, first ALTER each actually auto-committed
+        assertEquals(3,newTables()); assertEquals(1,newHeadColumns());
+        assertEquals(0,count(CLOSE)); assertEquals(0,count(CONTRIBUTION)); assertEquals(0,count(EVENT));
+        assertDoesNotThrow(()->run("_deploy_g_cash_evidence_empty_rollback_20261023.sql"),
+                "empty partial apply must have a reviewed recovery route; no money/evidence row may be removed");
+        assertEquals(0,newTables()); assertEquals(columns,legacyColumns()); assertEquals(indexes,legacyIndexes()); assertLegacy();
+    }
+
     private void expand() throws Exception {
         run("migration_20261023_g_cash_evidence_expand.sql");
         SqlSessionFactoryBean factory=new SqlSessionFactoryBean(); factory.setDataSource(source);
