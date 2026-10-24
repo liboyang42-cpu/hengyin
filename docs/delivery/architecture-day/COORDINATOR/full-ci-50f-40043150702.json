@@ -1,0 +1,55 @@
+{
+  "run_id": 40043150702,
+  "source_sha": "50f3c4d3c67383b8ea2e3e230d7f16f2e73f3eb6",
+  "workflow_conclusion": "success",
+  "source_identity_file_sha256": "50989e8c9d208d4d417d2c612549bb60dcf096c9902121a5fa11095c6a46ed8c",
+  "verified_all_report_hashes": 1834,
+  "raw_xml_totals": {
+    "tests": 14416,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 619
+  },
+  "selected_suites": [
+    {
+      "name": "com.chengyinhub.business.it.ThemeRuntimeMySqlIT",
+      "tests": "58",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.AiCreatorServiceImplTest",
+      "tests": "37",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "architecture": {
+    "verdict": "PASS_WITH_REVIEW_ITEMS",
+    "blocking_findings": 0,
+    "review_items": 87
+  },
+  "limits": [
+    "619 reported skips are not execution success",
+    "Raw XML totals span multiple CI test phases and report replacement; not a unique business scenario count",
+    "Compiled JAR/jdeps artifact independent readback pending",
+    "No deployment, production DDL, real-role/device/provider acceptance",
+    "This source predates F663/E359/C76"
+  ]
+}

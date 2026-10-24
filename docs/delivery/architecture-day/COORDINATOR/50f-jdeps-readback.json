@@ -1,0 +1,109 @@
+{
+  "run_id": 40043150702,
+  "source_sha": "50f3c4d3c67383b8ea2e3e230d7f16f2e73f3eb6",
+  "source_tree": "94f320510353713a93700b81a5c8124da12a7eaf",
+  "boot_jar_sha256": "e1055a6d6220462545ac6f706489fad8192ca95e2f301008e5e69fc6e2882470",
+  "build_identity_sha256": "9e52b2be0cfe9c9a6350284a2c14a938ebe4e597f8dc243f3ebf50c25d7abf09",
+  "all_evidence_hashes_verified": 11,
+  "jdk_version": "21.0.12.1",
+  "module_edges": [
+    [
+      "chengyinhub-admin",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-framework"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-quartz"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-system"
+    ],
+    [
+      "chengyinhub-framework",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-framework",
+      "chengyinhub-system"
+    ],
+    [
+      "chengyinhub-generator",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-quartz",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-system",
+      "chengyinhub-common"
+    ]
+  ],
+  "module_static_reference_metrics": {
+    "chengyinhub-admin": {
+      "fan_in": 0,
+      "fan_out": 4,
+      "compiled_classes": 336
+    },
+    "chengyinhub-common": {
+      "fan_in": 5,
+      "fan_out": 0,
+      "compiled_classes": 177
+    },
+    "chengyinhub-framework": {
+      "fan_in": 1,
+      "fan_out": 2,
+      "compiled_classes": 69
+    },
+    "chengyinhub-generator": {
+      "fan_in": 0,
+      "fan_out": 1,
+      "compiled_classes": 13
+    },
+    "chengyinhub-quartz": {
+      "fan_in": 1,
+      "fan_out": 1,
+      "compiled_classes": 28
+    },
+    "chengyinhub-system": {
+      "fan_in": 2,
+      "fan_out": 1,
+      "compiled_classes": 2287
+    }
+  },
+  "module_static_reference_scc": [
+    [
+      "chengyinhub-admin"
+    ],
+    [
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-framework"
+    ],
+    [
+      "chengyinhub-generator"
+    ],
+    [
+      "chengyinhub-quartz"
+    ],
+    [
+      "chengyinhub-system"
+    ]
+  ],
+  "jdeps_exit_code": 0,
+  "missing_dependencies": [],
+  "status": "OBSERVATION_ONLY; no approved architecture baseline or all-dependency claim",
+  "limits": [
+    "reflection/runtime/XML dependencies",
+    "business-domain ownership within System",
+    "baseline approval",
+    "Java tests or business correctness",
+    "Computed SCC applies only to these nine resolved compiled module edges; bean/XML/reflection and business-domain cycles not measured"
+  ]
+}

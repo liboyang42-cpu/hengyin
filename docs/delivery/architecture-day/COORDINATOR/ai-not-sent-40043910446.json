@@ -1,0 +1,32 @@
+{
+  "run_id": 40043910446,
+  "source_sha": "a0fbc49b87564e65697bf5be1ce06674e99d9056",
+  "tests": 4,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "redis_dbsize_after": 0,
+    "status": "CLEAN"
+  },
+  "xml_sha256": "8e7cd8f6af13af9dc426bc34a1ba80d681024b8411e9b0ec98d7d1df8af95d04",
+  "receipt_sha256": "ffcd3e3212d75439ec18191ea98e1178bddb355ba96e05af729c3323487f3a50",
+  "cases": [
+    "genericProviderFailureRetainsOriginalReservationAcrossRecoveryInsteadOfRefunding",
+    "typedNotSentDecisionSurvivesRedisOutageAndRestartRefundsOnlyOriginalReceiptOnce",
+    "expiredCompensationDecisionCasCannotBypassFenceOrDirectlyRefundRedis",
+    "originalPhotoIntentStoresNotSentAndReplaysOldDayNonceWithoutAnotherProviderAttempt"
+  ],
+  "scope": "Real Gateway/Vision/Intent/recovery SQL and Redis Lua; model/consent/media/encoder doubles",
+  "not_proven": [
+    "HTTP/admission tests not yet run",
+    "No real provider, full NPC economic chain or all WP13 observability/capacity acceptance"
+  ]
+}
