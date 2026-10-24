@@ -89,12 +89,23 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual({}, reg['classes'][fqcn]['gates'])
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
-        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT') && '1' || '' }}", line)
+        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT') && '1' || '' }}", line)
         flag = "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ":"))
         self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}", line)
         self.assertEqual({flag: "1"}, rs.child_env({flag: "1"}, {}))
+
+    def test_registered_literal_scratch_admissions_are_present_in_workflow(self):
+        workflow = WORKFLOW.read_text().splitlines()
+        for fqcn in registry()['classes']:
+            source = _HERE.parent / 'chengyinhub-admin/src/test/java' / (fqcn.replace('.', '/') + '.java')
+            for flag in re.findall(r'assertEquals\(\s*"1"\s*,\s*System.getenv\("([A-Z0-9_]+)"\)\)',
+                                   rs.strip_java_comments(source.read_text())):
+                with self.subTest(fqcn=fqcn, flag=flag):
+                    line = next(line.strip() for line in workflow if line.strip().startswith(flag + ':'))
+                    consumers = re.findall(r"matrix.simple == '([^']+)'", line)
+                    self.assertIn(fqcn.rsplit('.', 1)[1], consumers)
 
     def test_topic_cash_fixture_admission_survives_child_environment_filter(self):
         flag = 'WP04_TOPIC_CASH_DDL_APPROVED'
@@ -116,7 +127,7 @@ class RegistryContractTest(unittest.TestCase):
         flag = 'B_PAYMENT_FACT_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
-        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' && '1' || '' }}", line)
+        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}", line)
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)

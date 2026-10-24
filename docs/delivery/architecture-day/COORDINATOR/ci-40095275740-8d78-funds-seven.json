@@ -1,0 +1,78 @@
+{
+  "run_id": 40095275740,
+  "source_sha": "8d7839aac1b22288831bb672d5bf132420ff9bfb",
+  "verdict": "FAIL",
+  "expected_tests": 177,
+  "executed_tests": 29,
+  "classes": [
+    {
+      "class": "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT",
+      "cleanup": "CLEAN",
+      "executed": 1,
+      "expected": 46,
+      "run_attempt": "1",
+      "verdict": "FAIL"
+    },
+    {
+      "class": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+      "cleanup": "CLEAN",
+      "executed": 1,
+      "expected": 96,
+      "run_attempt": "1",
+      "verdict": "FAIL"
+    },
+    {
+      "class": "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
+      "cleanup": "CLEAN",
+      "executed": 1,
+      "expected": 9,
+      "run_attempt": "1",
+      "verdict": "FAIL"
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT",
+      "cleanup": "CLEAN",
+      "executed": 12,
+      "expected": 12,
+      "run_attempt": "1",
+      "verdict": "FAIL"
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT",
+      "cleanup": "CLEAN",
+      "executed": 5,
+      "expected": 5,
+      "run_attempt": "1",
+      "verdict": "PASS"
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
+      "cleanup": "CLEAN",
+      "executed": 5,
+      "expected": 5,
+      "run_attempt": "1",
+      "verdict": "PASS"
+    },
+    {
+      "class": "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
+      "cleanup": "CLEAN",
+      "executed": 4,
+      "expected": 4,
+      "run_attempt": "1",
+      "verdict": "PASS"
+    }
+  ],
+  "failures": [
+    "Three suites stopped at source scratch B_PAYMENT_FACT_DDL_APPROVED before business bodies:46/96/9 not executed",
+    "OriginalRefund11of12passed; nonempty recovery case hit shape conflict because canonical schema lacked newly introduced A append-only triggers"
+  ],
+  "repair": "Precise source-declared workflow admission consumers plus test that checks every registered literal marker; move canonical A migration into shared actual/reference prerequisites, preserve full schema shape and nonempty rejection checks",
+  "repair_status": "SOURCE_ONLY_RECHECK_PENDING",
+  "not_covered": [
+    "runtime HTTP with real identities",
+    "device or business acceptance",
+    "integrated cross-branch candidate",
+    "migration execution on a persistent database",
+    "merge or deployment"
+  ]
+}

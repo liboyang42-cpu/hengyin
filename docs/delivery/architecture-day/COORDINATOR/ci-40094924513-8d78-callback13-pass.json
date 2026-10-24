@@ -1,0 +1,22 @@
+{
+  "run_id": 40094924513,
+  "source_sha": "8d7839aac1b22288831bb672d5bf132420ff9bfb",
+  "verdict": "PASS13_CLEAN",
+  "scope": "RegistrationCallbackIntentMySqlIT original13 only",
+  "executed": {
+    "tests": 13,
+    "passed": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "cleanup": "CLEAN",
+  "not_covered": [
+    "other7 funds classes",
+    "next wave C/D/B/A/E/G sources",
+    "complete notification worker delivery",
+    "production migration",
+    "merge/deployment",
+    "full-system acceptance"
+  ]
+}

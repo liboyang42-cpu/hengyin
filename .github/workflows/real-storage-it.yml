@@ -176,9 +176,9 @@ jobs:
       VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}
       BATCH: ${{ inputs.batch }}
       TIMEZONE: ${{ inputs.timezone }}
-      B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT') && '1' || '' }}
+      B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT') && '1' || '' }}
       WP04_TOPIC_CASH_DDL_APPROVED: ${{ matrix.simple == 'Wp04TopicCashFenceMySqlIT' && '1' || '' }}
-      B_PAYMENT_FACT_DDL_APPROVED: ${{ matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' && '1' || '' }}
+      B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}
       WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalRefundMySqlIT' && '1' || '' }}
       WP04_PAID_HALF_STATE_DDL_APPROVED: ${{ (matrix.simple == 'Wp04PaidHalfStateMySqlIT' || matrix.simple == 'Wp04ApprovedRefundFenceMySqlIT') && '1' || '' }}
       A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}

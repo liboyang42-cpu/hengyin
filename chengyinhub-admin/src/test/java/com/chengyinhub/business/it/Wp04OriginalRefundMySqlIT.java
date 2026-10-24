@@ -73,7 +73,7 @@ class Wp04OriginalRefundMySqlIT {
                 "coop_settlement","coop_settlement_adjustment","settlement_claim","coop_settlement_detail",
                 "ums_member_balance_detail","wx_payment_callback_inbox");
         P0AcceptanceSchema.migrations(source,"migration_20261023_g_cash_evidence_expand.sql",FACT_MIGRATION,
-                "migration_complaint_period_funds_gate_20260917.sql");
+                "migration_complaint_period_funds_gate_20260917.sql", "migration_20261024_registration_payment_fact.sql");
     }
 
     @AfterEach void dropOnlyThisSuccessfullyCreatedDatabase() {
@@ -93,7 +93,7 @@ class Wp04OriginalRefundMySqlIT {
     }
     void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt,
             boolean bindConsumedPaymentReceipt) throws Exception {
-        P0AcceptanceSchema.migrations(source,MIGRATION,"migration_20261024_registration_payment_fact.sql");
+        P0AcceptanceSchema.migrations(source,MIGRATION);
         SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CmsRegistrationPaymentFactMapper","CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper","CoopSettlementEvidenceMapper",
 
                 "CoopSettlementMapper","CoopSettlementAdjustmentMapper","WechatVerifiedPaymentFactMapper",
