@@ -28,6 +28,7 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -95,6 +96,17 @@ class ApiActivityInfoLifecycleContractTest
         linked.setTopicId(990027L);
         assertEquals(4, info(linked).getPlayNodeCount());
         assertEquals(0, info(activity(1L, 1L, daysAgo(1), daysAhead(1))).getPlayNodeCount());
+    }
+
+    @Test
+    void activityInfo_stampsServerNowForSignupGreying()
+    {
+        // U-168:报名页置灰改按服务器时刻。负控:删掉控制器里的 setServerNow → 这里为 null 而红。
+        long before = System.currentTimeMillis();
+        ActivityInfoVO vo = info(activity(1L, 1L, daysAgo(1), daysAhead(5)));
+        long after = System.currentTimeMillis();
+        assertNotNull(vo.getServerNow(), "/api/activity/info 必须带 serverNow,否则报名页只能退回手机时钟");
+        assertTrue(vo.getServerNow() >= before && vo.getServerNow() <= after, "serverNow 应是本次读的服务端时刻");
     }
 
     private static CmsActivity activity(Long status, Long publishStatus, Date start, Date end)
