@@ -122,6 +122,11 @@ class SupportEventLocatorTest {
         assertEquals(42L, byRun.getRunId());
         assertTrue(byRun.originalIsNotProjectionSuccess());
         assertTrue(byRun.currentProjectionClaimsSuccess());
+        BusinessAuditEvent otherTarget = event("req-other", "ORDER", 99L, "PAY", "UNKNOWN");
+        when(mapper.selectByTarget("RUN", 7L)).thenReturn(List.of(otherTarget));
+        IllegalStateException mismatch = assertThrows(IllegalStateException.class,
+                () -> locator.locateByRunId(7L, null));
+        assertTrue(mismatch.getMessage().contains("runId=7"));
     }
 
     private static BusinessAuditEvent event(String requestId, String targetType, Long targetId,

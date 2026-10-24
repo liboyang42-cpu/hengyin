@@ -187,7 +187,12 @@ public final class SupportEventLocator {
             if (rows == null || rows.isEmpty()) {
                 return null;
             }
-            return rows.get(0);
+            for (BusinessAuditEvent row : rows) {
+                if (row != null && targetType.equals(row.getTargetType()) && targetId.equals(row.getTargetId())) {
+                    return row;
+                }
+            }
+            return null;
         }
     }
 
