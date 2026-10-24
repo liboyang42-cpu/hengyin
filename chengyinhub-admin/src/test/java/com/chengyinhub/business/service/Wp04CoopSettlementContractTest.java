@@ -160,7 +160,7 @@ class Wp04CoopSettlementContractTest {
         when(f.details.insertIgnoreDetail(any())).thenReturn(1);
         when(f.details.refreshOriginAggregate(51L)).thenReturn(1);
         CoopSettlementPlan plan = f.service.prepare(f.order, new Date(11_000));
-        CoopSettlement head = new CoopSettlement(); f.service.persist(plan, head);
+        CoopSettlement head = new CoopSettlement(); head.setTopicId(11L); f.service.persist(plan, head);
         assertEquals(new BigDecimal("2.00"), plan.getOriginAmount());
         assertEquals(new BigDecimal("2.00"), head.getAmount());
         assertEquals(1, head.getVerifiedHeads());
@@ -212,6 +212,8 @@ class Wp04CoopSettlementContractTest {
             reader = new FrozenCoopOrderSettlementSnapshotReader(new FailClosedCoopOrderLineupSource(orders, invites), topics, nodes, tickets);
             service = new CoopSettlementClaimServiceImpl(reader, new SnapshotFulfillmentWindowResolver(), evidence, claims,
                     heads, details, mock(CoopSettlementAdjustmentMapper.class));
+            org.springframework.test.util.ReflectionTestUtils.setField(service,"topicMapper",topics);
+            when(topics.selectCmsTopicByIdForUpdate(11L)).thenReturn(topic);
             when(evidence.lockCandidates(any(), any())).thenAnswer(call -> List.of(candidate()));
         }
         CoopSettlementSnapshot snapshot() { CoopSettlementSnapshot s = reader.read(order); s.setSettlementSnapshotAt(new Date(11_000)); return s; }

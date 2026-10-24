@@ -8,7 +8,7 @@ import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IMinorProtectionService;
 import com.chengyinhub.business.service.IRegistrationCheckoutService;
 import com.chengyinhub.business.service.IRegistrationOrderService;
-import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.PaymentPreorderException;
 import com.chengyinhub.business.service.RegistrationCheckoutException;
 import com.chengyinhub.business.service.RegistrationCheckoutResult;
@@ -35,7 +35,8 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     @Autowired
     private IRegistrationOrderService registrationOrderService;
     @Autowired
-    private IWechatPayService wechatPayService;
+    @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private WechatPaymentOperations wechatPayService;
     /** DOC2 F7 未成年支付挂点；开关 feature.flag.minorMode + minorPaymentGate 缺省关闭时恒放行。 */
     @Autowired
     private IMinorProtectionService minorProtectionService;

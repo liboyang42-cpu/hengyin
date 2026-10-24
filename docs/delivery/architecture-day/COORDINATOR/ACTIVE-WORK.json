@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T07:10:50.220713+00:00",
-  "source_parent": "06a571b1247620a9bdcea068be0ded973671d17c",
+  "updated_utc": "2026-10-24T07:20:19.808850+00:00",
+  "source_parent": "95c5f1c719c75beaaa5c42d2e9285036ee440695",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -138,7 +138,8 @@
     "gate_selftests_initial": "56 executed: 51 passed, 3 metadata/count failures and 2 loopback-bind environment errors. Metadata/count wiring corrected; non-network targeted rerun pending result. No business/Java/DB acceptance.",
     "gate_metadata_targeted_after_fix": "21 non-network gate contract/source-count tests PASS; original2 loopback environment errors not rerun locally, final hosted CI still required",
     "A_strict_precheck": "53 declared_tests; dynamic/nested/gates/conditions empty; real precheck errors=[]; Java/DB NOT_RUN",
-    "registry_after_A": "2 targeted registry validation/batch totals selftests PASS; secret-file-gate and diff check PASS"
+    "registry_after_A": "2 targeted registry validation/batch totals selftests PASS; secret-file-gate and diff check PASS",
+    "batch_registry": "15 targeted tests PASS; all96 registered source prechecks PASS"
   },
   "unified_regression_pending": [
     "A53 boundary and original-fact Java/DB acceptance; strict source parser/registry metadata PASS",
@@ -164,5 +165,16 @@
     "exact_candidate_bytes": true,
     "fixed_test_count": 53,
     "Java_DB": "NOT_RUN"
+  },
+  "new_batch_composition": {
+    "receipt": "batch-ABCFG-composition-20261024.json",
+    "source_candidates": {
+      "A": "5c269087e611e8d87de7ba3c060074fa3433f409",
+      "B": "0ffb9c8fee278c11fe47aa6bcfd95745c9e73850",
+      "C": "f8b53ab54ab4d50b5a997ffa440da1ce5ed86cea",
+      "F": "1fb99670c066496c3b19da6b3ac4b132e14ab785",
+      "G": "2457bf1851c0573df7a69270a4532b00b9e8404c"
+    },
+    "status": "reviewed staged source; Java/DB NOT_RUN"
   }
 }

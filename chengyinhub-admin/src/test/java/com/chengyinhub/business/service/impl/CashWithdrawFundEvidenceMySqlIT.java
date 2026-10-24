@@ -263,11 +263,11 @@ class CashWithdrawFundEvidenceMySqlIT {
 
     private com.wechat.pay.java.service.transferbatch.TransferBatchService sdkForAmountBoundary() throws Exception {
         var sdk = mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
-        WechatPayServiceImpl gateway = new WechatPayServiceImpl();
-        Class<?> binding = Class.forName(WechatPayServiceImpl.class.getName() + "$TransferClientBinding");
+        WechatPayServiceImpl gateway = WechatPayTestWiring.facade();
+        Class<?> binding = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding");
         var constructor = binding.getDeclaredConstructor(com.wechat.pay.java.service.transferbatch.TransferBatchService.class, String.class);
         constructor.setAccessible(true);
-        ReflectionTestUtils.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant"));
+        WechatPayTestWiring.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant"));
         ReflectionTestUtils.setField(target, "wechatPayService", gateway); return sdk;
     }
 
@@ -757,13 +757,13 @@ class CashWithdrawFundEvidenceMySqlIT {
     private void actualImmutableDtoFlowsThroughActualGatewayAndOriginalFinancialReceipt(String outcome) throws Exception {
         com.wechat.pay.java.service.transferbatch.TransferBatchService sdk =
                 mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
-        WechatPayServiceImpl gateway = new WechatPayServiceImpl();
+        WechatPayServiceImpl gateway = WechatPayTestWiring.facade();
         // Reuse B's exact narrow fixture binding; this does not prove real certificate/client initialization.
-        Class<?> binding = Class.forName(WechatPayServiceImpl.class.getName() + "$TransferClientBinding");
+        Class<?> binding = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding");
         java.lang.reflect.Constructor<?> constructor = binding.getDeclaredConstructor(
                 com.wechat.pay.java.service.transferbatch.TransferBatchService.class, String.class);
         constructor.setAccessible(true);
-        ReflectionTestUtils.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant"));
+        WechatPayTestWiring.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant"));
         ReflectionTestUtils.setField(target, "wechatPayService", gateway);
         when(sdk.initiateBatchTransfer(any())).thenAnswer(i -> {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());

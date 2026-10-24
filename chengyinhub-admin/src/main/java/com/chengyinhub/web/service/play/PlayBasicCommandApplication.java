@@ -398,11 +398,12 @@ public class PlayBasicCommandApplication {
                 activityIdArg,
                 hasTopic ? String.valueOf(request.getTopicId()) : null, node);
         if (ctx.error != null) return ctx.error;
+        // canPlay may initialize a route: refuse lead state before entering that writable context.
+        String leadErr = playNodeContext.leadGateError(ctx.actId, node);
+        if (leadErr != null) return error(leadErr);
         String unlockErr = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, node, request.getRouteActionId());
         if (unlockErr != null) return error(unlockErr);
         int mode = playNodeContext.resolveMode(ctx.actId, ctx.topicId);
-        String leadErr = playNodeContext.leadGateError(ctx.actId, node);
-        if (leadErr != null) return error(leadErr);
         if (mode == PlayMode.FREE_COLLECT && !playNodeContext.isPureOnlineNode(node)
                 && !shopDayProofService.hasArrived(memberId, ctx.actId, node.getId())) {
             return error("先扫店内静态码进店，再开始任务");

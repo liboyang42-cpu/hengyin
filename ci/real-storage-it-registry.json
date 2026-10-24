@@ -423,6 +423,16 @@
       "classes": ["com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT"],
       "note": "3 ordinary@Test; actual original schema/XML and business/inbox transaction proxies, controlled SDK query. Exact zero-skip XML and independent CLEAN required; no real WeChat/HTTP acceptance."
     },
+    "architecture-day-topic-cash-fence": {
+      "registered_source": "2457bf1851c0573df7a69270a4532b00b9e8404c",
+      "classes": ["com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT"],
+      "note": "Five fixed tests: shared topic lock ordering and original adjustment/payout atomicity. Coordinator fixture admission replaces inherited stripped funds env with exact class-only WP04_TOPIC_CASH_DDL_APPROVED; actual source_sha and CLEAN must match run. No real provider or original-allocation refund acceptance."
+    },
+    "architecture-day-scheduler-two-process": {
+      "registered_source": "5c269087e611e8d87de7ba3c060074fa3433f409",
+      "classes": ["com.chengyinhub.quartz.util.SchedulerWorkFenceTwoProcessMySqlIT"],
+      "note": "Three fixed tests with actual child JVMs and owned-session disconnects. Probe receipt is fixture-only, not actual economic-task idempotency. Original XML, same-source class hashes, process exit and CLEAN required."
+    },
     "architecture-day-payment-intent": {
       "registered_source": "254744aa21139b44374a151b7922f7575086cdd8",
       "lineage": "B failed create_tree exact30-file root preservation on published218 parent",
@@ -433,6 +443,16 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT": {
+      "tests": 5,
+      "storage": ["mysql"],
+      "gates": {}
+    },
+    "com.chengyinhub.quartz.util.SchedulerWorkFenceTwoProcessMySqlIT": {
+      "tests": 3,
+      "storage": ["mysql"],
+      "gates": {}
+    },
     "com.chengyinhub.business.longrun.E04_13Test": {
       "tests": 2,
       "storage": [

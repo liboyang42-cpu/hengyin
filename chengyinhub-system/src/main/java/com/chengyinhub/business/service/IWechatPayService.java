@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * 微信支付服务接口
  */
-public interface IWechatPayService {
+public interface IWechatPayService extends WechatPaymentOperations {
     /** 支付下单、回调验签和退款服务是否都已就绪。 */
     boolean isReady();
 

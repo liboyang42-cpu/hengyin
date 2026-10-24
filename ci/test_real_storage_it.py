@@ -91,6 +91,15 @@ class RegistryContractTest(unittest.TestCase):
                     if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
         self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT') && '1' || '' }}", line)
 
+    def test_topic_cash_fixture_admission_survives_child_environment_filter(self):
+        flag = 'WP04_TOPIC_CASH_DDL_APPROVED'
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith(flag + ':'))
+        self.assertEqual("WP04_TOPIC_CASH_DDL_APPROVED: ${{ matrix.simple == 'Wp04TopicCashFenceMySqlIT' && '1' || '' }}", line)
+        source = _HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04TopicCashFenceMySqlIT.java'
+        self.assertIn('assertEquals("1", System.getenv("' + flag + '"))', source.read_text())
+        self.assertEqual({flag: '1'}, rs.child_env({flag: '1', 'CHENGYIN_FUNDS_MYSQL_IT': '1'}, {}))
+
     def test_registry_is_valid(self):
         self.assertEqual([], rs.validate_registry(registry()))
 
@@ -125,7 +134,9 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4,
                     "architecture-day-payment-inbox": 3,
-                    "architecture-day-deposit-attempt": 8}
+                    "architecture-day-deposit-attempt": 8,
+                    "architecture-day-topic-cash-fence": 5,
+                    "architecture-day-scheduler-two-process": 3}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

@@ -318,6 +318,31 @@ class LogAspectAuditTest
         }
     }
 
+    @Test
+    void actualAsyncManagerInlineExecutionRestoresContextEvenWhenTaskThrows()
+    {
+        org.slf4j.MDC.put("requestId", "audit_original_123");
+        org.slf4j.MDC.put("commandId", "audit-command");
+        org.slf4j.MDC.put("Authorization", "private-header-fixture");
+        java.util.Map<String, String> before = org.slf4j.MDC.getCopyOfContextMap();
+        IllegalStateException original = new IllegalStateException("private-payload-fixture");
+        try
+        {
+            org.junit.jupiter.api.Assertions.assertSame(original, assertThrows(IllegalStateException.class,
+                    () -> AsyncManager.me().execute(new java.util.TimerTask() {
+                        @Override public void run() {
+                            org.junit.jupiter.api.Assertions.assertEquals("audit_original_123", org.slf4j.MDC.get("requestId"));
+                            org.junit.jupiter.api.Assertions.assertEquals("audit-command", org.slf4j.MDC.get("commandId"));
+                            assertNull(org.slf4j.MDC.get("Authorization"));
+                            org.slf4j.MDC.put("requestId", "changed_inside_task");
+                            throw original;
+                        }
+                    })));
+            org.junit.jupiter.api.Assertions.assertEquals(before, org.slf4j.MDC.getCopyOfContextMap());
+        }
+        finally { org.slf4j.MDC.clear(); }
+    }
+
     /** Avoid eager class initialization in the static field reflection helper. */
     private static final class SpringUtilsHolder
     {

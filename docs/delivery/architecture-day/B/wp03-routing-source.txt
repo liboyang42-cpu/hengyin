@@ -1,0 +1,27 @@
+WP03 源码候选：只含 dc87 之后的 SDK/意图/领域路由拆分，不重复携带其他 owner 的修复。
+Parent: dc87a41ebc4a18d696d094554e5f91a08f32a03f
+协调公共基线（只读核对，不重写）：cc91b0845e3abd4a2060d54a857c8c179bd22d4f
+复用 e461fe6a1c48e0459eab44e2c7ce8830903453ea 的36文件提取；复用源逐blob核对一致。
+工作树：/workspace/b-payment-routing；分支：codex/architecture-day-b-payment-routing。
+
+依赖方向：facade 先调 SDK 验签/原意图验单，再调唯一 owner router -> 原领域事务。
+领域出站 -> @Qualifier(wechatPaymentSdkGateway) WechatPaymentOperations；SDK 不再依赖领域 service/router。
+保留 dc87 两重载、requireValid/唯一DTO hash、同 credential/mchid 绑定、openid/原明细核验与 UNKNOWN。
+冻结身份/原业务行锁/attempt 锁/CLOSED CAS 仅从 e461 复用，顺序与SQL不改；本片无新schema。
+四域调用仍为 handlePaidInvoice/handlePaidOrder/markDepositPaid/handleWechatPayCallback。
+报名正向归属用已有 getByRegistrationNo 只读查询；随后仍由原服务再读/加锁/CAS，不复用预读决定写入。
+所有 owner 先 claims，恰好一个才 apply；未知/多重匹配 FAIL，固定 payment.callback.routing 脱敏诊断。
+原域 callback、inbox mutation+DONE 及事务代理未拆；只有原领域返回成功才ACK，大小写兼容保留。
+保证金私有补记/退款/settlement方法与其他域业务方法零改动，只改支付字段类型/Qualifier。
+ApiRegistrationController、#586 WechatCallbackHttpAckTest、A DTO/提现、CI/registry/schema均未修改。
+
+新增 WechatPaymentCallbackRouterTest：9个@Test源码，包含4路线、原事实、零/多重匹配零写入、异常及实际facade诊断。
+旧Gateway/intent/真实inbox/MySQL/HTTP fixture仅按提取后的对象接线；原@Test数、barrier、业务/CAS/金额断言保留。
+报名多一次只读归属查询，真实冲突fixture相应精确断言2次读取；缺单改为路由拒绝，仍断言无inbox/写入与一次告警。
+NOT_RUN：Java编译/JUnit/MySQL/Redis/CI/真实SDK请求。没有将旧8d3 CI作为本候选验收。
+已执行：git diff --check、秘密标记扫描、Java词法括号检查、dc87完整init/转账段字节比较、原方法/SQL搬移核对。
+
+剩余：A DTO组合与同头统一回归由root安排；四项真实intent和三项真实报名inbox须实际执行。
+完整依赖图还需CmsTopic owner采用随附wp03-topic-outbound.review.patch（只读核对cc91字段在154行）。
+该patch只换出站依赖，不动G保证金close/补记/settlement私有helper；本候选未改该共享Java文件。
+不得在owner接线/同头编译及真实测试前声称全图无环或可上线。

@@ -46,6 +46,8 @@ import java.util.Map;
  */
 @Service
 public class TopicEditionFinalizationServiceImpl implements ITopicEditionFinalizationService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.CmsTopicMapper topicMapper;
 
     private final ClubPayableMapper mapper;
     private final IClubEditionCompensationService compensationService;
@@ -74,7 +76,8 @@ public class TopicEditionFinalizationServiceImpl implements ITopicEditionFinaliz
         if (topicId == null || now == null || operatorId == null) {
             throw new IllegalArgumentException("EDITION_FINAL_ARGUMENT_REQUIRED");
         }
-        // 1. 先锁 finalization 行：重放与并发都在这里收敛成同一结果，不会重复应付。
+        lockTopic(topicId);
+        // 1. topic 在最外层；随后锁 finalization 行，重放与并发收敛到同一结果。
         TopicEditionFinalization existing = mapper.selectFinalizationForUpdate(topicId);
         if (existing != null) return existing;
 
@@ -141,6 +144,7 @@ public class TopicEditionFinalizationServiceImpl implements ITopicEditionFinaliz
         if (topicId == null || now == null || operatorId == null || isBlank(reason)) {
             throw new IllegalArgumentException("CLUB_PAYABLE_ARGUMENT_REQUIRED");
         }
+        lockTopic(topicId);
         TopicEditionFinalization head = mapper.selectFinalizationForUpdate(topicId);
         if (head == null) throw new IllegalStateException("EDITION_FINAL_NOT_FOUND");
 
@@ -209,6 +213,7 @@ public class TopicEditionFinalizationServiceImpl implements ITopicEditionFinaliz
         if (topicId == null || payableId == null || operatorId == null || isBlank(reason)) {
             throw new IllegalArgumentException("CLUB_PAYABLE_ARGUMENT_REQUIRED");
         }
+        lockTopic(topicId);
         // ★锁定读，不是快照读。「读到 batch_id 为空 → 插反向行」两步之间，并发的 createBatch
         //   能把这一行整条挂进批次并提交（反向行是纯 INSERT，不与它的行锁冲突）⇒ 正额进了付款单、
         //   抵消它的反向行落在批次之外 ⇒ 多付一笔且零告警。这与本改动在 upsertPlannedHours 与
@@ -330,6 +335,7 @@ public class TopicEditionFinalizationServiceImpl implements ITopicEditionFinaliz
         if (topicId == null || clubId == null || operatorId == null) {
             throw new IllegalArgumentException("CLUB_PAYABLE_ARGUMENT_REQUIRED");
         }
+        lockTopic(topicId);
         // 归属回读：clubId 必须是一个存在且未删除的俱乐部（selectClubById 自带 del_flag = 0）。
         // 拿一个不存在的 clubId 建批次 = 造一张没人认领的付款单据。
         if (clubService.selectClubById(clubId) == null) {
@@ -440,6 +446,7 @@ public class TopicEditionFinalizationServiceImpl implements ITopicEditionFinaliz
      * {@code club_payable_batch.topic_id} 本轮已经是非空列，所以这不是「表达不了」，是「有列要用」。
      */
     private ClubPayableBatch requireBatchOfEdition(Long topicId, Long batchId) {
+        lockTopic(topicId);
         ClubPayableBatch batch = mapper.selectBatch(batchId);
         if (batch == null) throw new IllegalStateException("CLUB_PAYABLE_BATCH_NOT_FOUND");
         if (!topicId.equals(batch.getTopicId())) {
@@ -466,6 +473,13 @@ public class TopicEditionFinalizationServiceImpl implements ITopicEditionFinaliz
 
     private static String finalKey(Long topicId) {
         return "FINAL:" + topicId;
+    }
+
+    private void lockTopic(Long topicId) {
+        com.chengyinhub.business.domain.CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (topic == null || !topicId.equals(topic.getId())) {
+            throw new IllegalStateException("EDITION_FINAL_TOPIC_NOT_FOUND");
+        }
     }
 
     private static boolean isBlank(String value) {

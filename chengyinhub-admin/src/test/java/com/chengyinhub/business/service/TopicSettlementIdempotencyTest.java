@@ -76,6 +76,7 @@ class TopicSettlementIdempotencyTest {
         t.setId(100L);
         t.setProductType(ProductType.ORIENTEERING);
         when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
 
         // 费率真源 settlement_rule(小数);merchant+creator ≤ 1.0 让 validateCommissionSettings 通过
         topicRule = new SettlementRule();
@@ -115,6 +116,7 @@ class TopicSettlementIdempotencyTest {
         t.setId(100L);
         t.setProductType(ProductType.FREE_EXPLORE);
         when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
         when(cmsTopicMapper.claimTopicForSettlement(100L)).thenReturn(1);
 
         assertThrows(IllegalStateException.class, svc::executeTopicSettlement,
@@ -131,6 +133,7 @@ class TopicSettlementIdempotencyTest {
         t.setId(100L);
         t.setProductType(null);
         when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
         when(cmsTopicMapper.claimTopicForSettlement(100L)).thenReturn(1, 0);
         when(cmsRegistrationMapper.selectTotalSalesByTopicId(100L)).thenReturn(BigDecimal.ZERO);
 
@@ -150,6 +153,7 @@ class TopicSettlementIdempotencyTest {
         t.setId(100L);
         t.setProductType(null);
         when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
         when(cmsTopicMapper.claimTopicForSettlement(100L)).thenReturn(1);
         when(cmsRegistrationMapper.selectTotalSalesByTopicId(100L)).thenReturn(new BigDecimal("69.00"));
 

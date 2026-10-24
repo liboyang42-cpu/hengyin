@@ -3,6 +3,9 @@ package com.chengyinhub.quartz.util;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.mockito.ArgumentCaptor;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -66,6 +69,7 @@ class AbstractQuartzJobFailureTest
     @AfterEach
     void tearDown()
     {
+        MDC.clear();
         ReflectionTestUtils.setField(SpringUtils.class, "beanFactory", originalBeanFactory);
     }
 
@@ -79,7 +83,9 @@ class AbstractQuartzJobFailureTest
         ArgumentCaptor<SysJobLog> captor = ArgumentCaptor.forClass(SysJobLog.class);
         verify(jobLogService).addJobLog(captor.capture());
         assertEquals(Constants.FAIL, captor.getValue().getStatus());
-        assertTrue(captor.getValue().getExceptionInfo().contains("task-boom"));
+        assertEquals("IllegalStateException", captor.getValue().getExceptionInfo());
+        assertEquals("task-boom", thrown.getCause().getMessage(), "original caller exception is unchanged");
+        assertTrue(captor.getValue().getJobMessage().contains("jobRunId="));
     }
 
     @Test
@@ -114,6 +120,40 @@ class AbstractQuartzJobFailureTest
         });
         when(jobs.isCurrentInvocation(any(), anyBoolean())).thenReturn(false);
         assertDoesNotThrow(() -> new StubJob(new IllegalStateException("must-not-run")).execute(context));
+        verifyNoInteractions(jobLogService);
+    }
+
+    @Test
+    void failedInvocationKeepsItsRunInJobLogAndRestoresWorkerContext()
+    {
+        MDC.put("requestId", "previous_123"); MDC.put("commandId", "another-command");
+        Map<String, String> previous = MDC.getCopyOfContextMap();
+        AtomicReference<Map<String, String>> during = new AtomicReference<>();
+        assertThrows(JobExecutionException.class, () -> new StubJob(null) {
+            @Override protected void doExecute(JobExecutionContext context, SysJob job) {
+                during.set(MDC.getCopyOfContextMap());
+                throw new IllegalStateException("private-payload-fixture");
+            }
+        }.execute(context));
+        String run = during.get().get("jobRunId");
+        assertTrue(run.matches("[0-9a-f]{32}"));
+        assertEquals(run, during.get().get("requestId"));
+        assertEquals("99", during.get().get("jobId"));
+        assertEquals(previous, MDC.getCopyOfContextMap());
+        verify(context).put(QuartzJobCorrelation.RUN_ATTRIBUTE, run);
+        ArgumentCaptor<SysJobLog> captor = ArgumentCaptor.forClass(SysJobLog.class);
+        verify(jobLogService).addJobLog(captor.capture());
+        assertTrue(captor.getValue().getJobMessage().contains("jobRunId=" + run));
+        assertEquals("IllegalStateException", captor.getValue().getExceptionInfo());
+    }
+
+    @Test
+    void skippedInvocationRestoresContextWithoutWritingSuccess()
+    {
+        MDC.put("requestId", "previous_123");
+        when(coordinator.execute(anyString(), nullable(java.util.Date.class), any(Runnable.class))).thenReturn(false);
+        assertDoesNotThrow(() -> new StubJob(new IllegalStateException("must-not-run")).execute(context));
+        assertEquals(Map.of("requestId", "previous_123"), MDC.getCopyOfContextMap());
         verifyNoInteractions(jobLogService);
     }
 

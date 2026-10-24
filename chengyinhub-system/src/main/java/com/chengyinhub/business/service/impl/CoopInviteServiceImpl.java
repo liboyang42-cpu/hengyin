@@ -74,7 +74,8 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     private CoopInviteMapper coopInviteMapper;
 
     @Autowired private CoopDepositRefundService depositRefundService;
-    @Autowired private com.chengyinhub.business.service.IWechatPayService wechatPayService;
+    @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private com.chengyinhub.business.service.WechatPaymentOperations wechatPayService;
 
     @Autowired
     private CoopOrderMapper coopOrderMapper;

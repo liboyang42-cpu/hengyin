@@ -23,6 +23,11 @@ public interface CoopSettlementMapper {
     /** 在单行事务内锁定并重新校验一张仍到期、仍待打款的结算单。 */
     public CoopSettlement selectDuePayoutForUpdate(@Param("id") Long id, @Param("now") Date now);
 
+    /** 非锁定位；取得 topic 锁后必须按主键当前锁读并复核归属。 */
+    CoopSettlement selectByClaimId(@Param("claimId") Long claimId);
+
+    CoopSettlement selectByIdForUpdate(@Param("id") Long id);
+
     /** 锁定后以 status=0→1 CAS 写入打款终态；调用方必须校验恰好影响 1 行。 */
     public int markPaidIfPending(@Param("id") Long id, @Param("payoutTime") Date payoutTime);
 

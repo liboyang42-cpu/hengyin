@@ -158,6 +158,7 @@ class Wp04TopicSettlementEntryGuardsTest {
             cash.setPayableAmount(new BigDecimal("10.00"));
             when(evidence.selectTopicCashRowsForUpdate(11L)).thenReturn(List.of(cash));
             topic.setId(11L); topic.setMemberId(77L); topic.setProductType(1);
+            when(topics.selectCmsTopicByIdForUpdate(11L)).thenReturn(topic);
             CoopOrder order = new CoopOrder(); order.setId(701L); order.setTopicId(11L); order.setToType("merchant"); order.setToId(88L);
             order.setShareMode(1); order.setShareRate(new BigDecimal("99")); // live 值不能代替 prepare 输出。
             when(orders.selectEffectiveOrdersByTopicId(11L)).thenReturn(List.of(order));

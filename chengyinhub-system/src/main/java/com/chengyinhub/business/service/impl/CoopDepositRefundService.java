@@ -2,7 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CoopInvite;
 import com.chengyinhub.business.mapper.CoopInviteMapper;
-import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.RefundRequestResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,8 @@ import java.util.UUID;
 @Service
 public class CoopDepositRefundService {
     @Autowired private CoopInviteMapper mapper;
-    @Autowired private IWechatPayService wechatPayService;
+    @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private WechatPaymentOperations wechatPayService;
     @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private AlarmService alarmService;
 

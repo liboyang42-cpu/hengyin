@@ -42,6 +42,16 @@
         line_type, payee_type, create_time, del_flag
     </sql>
 
+    <select id="selectByClaimId" resultMap="CoopSettlementResult" useCache="false" flushCache="true">
+        select <include refid="cols"/> from coop_settlement
+        where exists (select 1 from coop_settlement_detail d
+                      where d.settlement_id = coop_settlement.id and d.claim_id = #{claimId})
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="CoopSettlementResult" useCache="false" flushCache="true">
+        select <include refid="cols"/> from coop_settlement where id = #{id} for update
+    </select>
+
     <!-- D1 历史 type2 仅保留只读展示：既有合作单衍生的结算也不得再发生状态或资金写入。 -->
     <sql id="excludeLegacyType2Settlement">
         and not exists (

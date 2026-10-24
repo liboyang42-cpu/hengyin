@@ -37,6 +37,11 @@ import com.chengyinhub.business.service.impl.MerchantCommerceService;
 import com.chengyinhub.business.service.impl.UmsMemberBalanceDetailServiceImpl;
 import com.chengyinhub.business.service.impl.UmsMemberServiceImpl;
 import com.chengyinhub.business.service.impl.WechatPayServiceImpl;
+import com.chengyinhub.business.service.impl.WechatPaymentSdkGateway;
+import com.chengyinhub.business.service.impl.WechatPaymentIntentStore;
+import com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner;
+import com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter;
+
 import com.chengyinhub.business.service.impl.WxContentSecurityServiceImpl;
 import com.chengyinhub.common.config.WxPayConfig;
 import org.junit.jupiter.api.Test;
@@ -84,6 +89,7 @@ class SupportedStackServiceCyclesTest
             }
         }
 
+        boolean paymentBoundary() { return "invite/payment".equals(name) || "merchant/payment".equals(name); }
         @Override
         public String toString()
         {
@@ -135,11 +141,11 @@ class SupportedStackServiceCyclesTest
                 new Cycle("topic/balance", UmsMemberBalanceDetailServiceImpl.class,
                         "cmsTopicService", CmsTopicServiceImpl.class,
                         CmsTopicServiceImpl.class, UmsMemberBalanceDetailServiceImpl.class),
-                new Cycle("invite/payment", WechatPayServiceImpl.class,
-                        "coopInviteService", CoopInviteServiceImpl.class,
-                        CoopInviteServiceImpl.class, WechatPayServiceImpl.class),
-                new Cycle("merchant/payment", WechatPayServiceImpl.class,
-                        "merchantCommerceService", MerchantCommerceService.class,
+                new Cycle("invite/payment", CoopInviteServiceImpl.class,
+                        "wechatPayService", WechatPaymentSdkGateway.class,
+                        CoopInviteServiceImpl.class, CoopDepositRefundService.class, WechatPayServiceImpl.class),
+                new Cycle("merchant/payment", MerchantCommerceService.class,
+                        "wechatPayService", WechatPaymentSdkGateway.class,
                         MerchantCommerceService.class, WechatPayServiceImpl.class),
                 new Cycle("post/media-review/content-security", WxContentSecurityServiceImpl.class,
                         "clubPostService", ClubPostServiceImpl.class,
@@ -173,8 +179,20 @@ class SupportedStackServiceCyclesTest
 
             Object source = AopTestUtils.getUltimateTargetObject(context.getBean(cycle.source()));
             Object lazyEdge = ReflectionTestUtils.getField(source, cycle.field());
-            assertThat(AopUtils.isAopProxy(lazyEdge)).isTrue();
             Object managedTarget = context.getBean(cycle.target());
+            if (cycle.paymentBoundary()) {
+                // These former cycles now have an eager outbound SDK edge and no callback dependency.
+                assertThat(lazyEdge).isSameAs(managedTarget);
+                assertThat(context).hasSingleBean(WechatPaymentSdkGateway.class);
+                Object facade = AopTestUtils.getUltimateTargetObject(context.getBean(WechatPayServiceImpl.class));
+                assertThat(ReflectionTestUtils.getField(facade, "gateway")).isSameAs(managedTarget);
+                assertThat(Arrays.stream(WechatPaymentSdkGateway.class.getDeclaredFields())
+                        .anyMatch(field -> field.getType() == com.chengyinhub.business.service.IWechatPayService.class
+                                || field.getType() == WechatPaymentCallbackRouter.class)).isFalse();
+                assertThat(unexpectedCalls).isEmpty();
+                return;
+            }
+            assertThat(AopUtils.isAopProxy(lazyEdge)).isTrue();
             // Resolving a lazy reference must preserve the managed transaction proxy,
             // rather than introducing a raw/self-invoked business-service instance.
             assertThat(((Advised) lazyEdge).getTargetSource().getTarget()).isSameAs(managedTarget);
@@ -185,15 +203,20 @@ class SupportedStackServiceCyclesTest
         });
     }
 
-    @ParameterizedTest(name = "{0} rejects an all-eager internal cycle")
+    @ParameterizedTest(name = "{0} keeps the expected dependency contract with eager internal edges")
     @MethodSource("cycles")
-    void sameRealCycleFailsWhenAllInternalLazyEdgesAreMadeEager(Cycle cycle)
+    void eagerEdgesPreserveExpectedCycleOrOutboundBoundary(Cycle cycle)
     {
         List<Method> unexpectedCalls = new ArrayList<>();
         runner(unexpectedCalls, cycle, cycle.services()).run(context -> {
-            assertThat(context).hasFailed();
-            assertThat(context.getStartupFailure())
-                    .hasRootCauseInstanceOf(BeanCurrentlyInCreationException.class);
+            if (cycle.paymentBoundary()) {
+                assertThat(context).hasNotFailed();
+                Object source = AopTestUtils.getUltimateTargetObject(context.getBean(cycle.source()));
+                assertThat(ReflectionTestUtils.getField(source, cycle.field())).isSameAs(context.getBean(cycle.target()));
+            } else {
+                assertThat(context).hasFailed();
+                assertThat(context.getStartupFailure()).hasRootCauseInstanceOf(BeanCurrentlyInCreationException.class);
+            }
             assertThat(unexpectedCalls).isEmpty();
         });
     }
@@ -217,13 +240,17 @@ class SupportedStackServiceCyclesTest
     private ApplicationContextRunner runner(List<Method> unexpectedCalls, Cycle eagerCycle,
                                              Class<?>... realServices)
     {
+        Class<?>[] assembly = Arrays.stream(realServices).anyMatch(type -> type == WechatPayServiceImpl.class)
+                ? Stream.concat(Arrays.stream(realServices), Stream.of(WechatPaymentSdkGateway.class,
+                        WechatPaymentIntentStore.class, JdbcWechatPaymentOrderOwner.class,
+                        WechatPaymentCallbackRouter.class)).distinct().toArray(Class<?>[]::new) : realServices;
         return new ApplicationContextRunner()
                 .withInitializer(context -> {
                     DefaultListableBeanFactory factory =
                             (DefaultListableBeanFactory) context.getBeanFactory();
                     // ApplicationContextRunner does not apply SpringApplication defaults.
                     factory.setAllowCircularReferences(false);
-                    registerInertCollaborators(factory, unexpectedCalls, realServices);
+                    registerInertCollaborators(factory, unexpectedCalls, assembly);
                     if (eagerCycle != null)
                     {
                         context.addBeanFactoryPostProcessor(ignored ->
@@ -247,7 +274,7 @@ class SupportedStackServiceCyclesTest
                     }
                 })
                 .withUserConfiguration(TransactionProxyConfiguration.class)
-                .withUserConfiguration(realServices);
+                .withUserConfiguration(assembly);
     }
 
     private void registerInertCollaborators(DefaultListableBeanFactory factory,
@@ -298,7 +325,7 @@ class SupportedStackServiceCyclesTest
             if ("hashCode".equals(method.getName())) return System.identityHashCode(proxy);
             if ("equals".equals(method.getName())) return proxy == args[0];
         }
-        // Exercise the real WechatPayServiceImpl @PostConstruct disabled branch;
+        // Exercise the real WechatPaymentSdkGateway @PostConstruct disabled branch;
         // no SDK construction, credential read, certificate download or provider call.
         if (type == WxPayConfig.class && "isWechatPayEnabled".equals(method.getName())) return false;
         unexpectedCalls.add(method);

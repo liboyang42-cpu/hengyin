@@ -12,6 +12,7 @@ import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
 import com.chengyinhub.business.mapper.CoopSettlementDetailMapper;
 import com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper;
 import com.chengyinhub.business.mapper.CoopSettlementMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.service.FulfillmentWindowResolver;
 import com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader;
 import com.chengyinhub.business.service.ICoopSettlementClaimService;
@@ -20,6 +21,7 @@ import com.chengyinhub.business.service.support.CoopSettlementContract;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -34,6 +36,9 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
     private final CoopSettlementMapper settlementMapper;
     private final CoopSettlementDetailMapper detailMapper;
     private final CoopSettlementAdjustmentMapper adjustmentMapper;
+
+    @Autowired
+    private CmsTopicMapper topicMapper;
 
     @Autowired
     public CoopSettlementClaimServiceImpl(ICoopOrderSettlementSnapshotReader snapshotReader,
@@ -56,10 +61,19 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
                 || signedAmount == null || signedAmount.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("claim 调整必须有 claimId/不可变 eventKey/非零 signedAmount");
         }
-        CoopSettlementDetail origin = detailMapper.selectByClaimIdForUpdate(claimId);
-        if (origin == null) {
+        CoopSettlement observed = settlementMapper.selectByClaimId(claimId);
+        if (observed == null || observed.getId() == null) {
             throw new IllegalStateException(CoopSettlementContract.LEDGER_CONFLICT
                     + ":调整找不到原始 coop claimId=" + claimId);
+        }
+        lockTopic(observed.getTopicId());
+        CoopSettlement head = settlementMapper.selectByIdForUpdate(observed.getId());
+        if (head == null || !same(head.getId(), observed.getId()) || !same(head.getTopicId(), observed.getTopicId())) {
+            throw new IllegalStateException(CoopSettlementContract.LEDGER_CONFLICT + ":调整原头主题变化 claimId=" + claimId);
+        }
+        CoopSettlementDetail origin = detailMapper.selectByClaimIdForUpdate(claimId);
+        if (origin == null || !same(origin.getSettlementId(), head.getId()) || !same(origin.getClaimId(), claimId)) {
+            throw new IllegalStateException(CoopSettlementContract.LEDGER_CONFLICT + ":调整原明细归属变化 claimId=" + claimId);
         }
         CoopSettlementAdjustment adjustment = new CoopSettlementAdjustment();
         adjustment.setSettlementId(origin.getSettlementId());
@@ -81,6 +95,7 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
     }
 
     @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public CoopSettlementPlan prepare(CoopOrder order, Date settlementSnapshotAt) {
         if (order == null || order.getId() == null || !Integer.valueOf(0).equals(order.getStatus())
                 || !Integer.valueOf(0).equals(order.getDelFlag())) {
@@ -89,6 +104,7 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
         CoopSettlementSnapshot snapshot = snapshotReader.read(order);
         if (snapshot == null) throw manualRepair("coop_order 冻结快照尚未接入");
         CoopSettlementContract.requireSupportedCashPath(snapshot);
+        lockTopic(snapshot.getTopicId());
         snapshot.setSettlementSnapshotAt(settlementSnapshotAt);
         Date cutoff = windowResolver.endExclusive(snapshot);
         if (cutoff == null || !cutoff.equals(snapshot.getFulfillmentEndExclusive())
@@ -108,14 +124,18 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public void persist(CoopSettlementPlan plan, CoopSettlement head) {
         if (plan == null) throw new IllegalArgumentException("plan 不能为空");
+        lockTopic(plan.getSnapshot() == null ? null : plan.getSnapshot().getTopicId());
         if ("NONE".equals(plan.getRoute())) {
             for (CoopSettlementOriginLine line : plan.getOriginLines()) claim(plan, line);
             return;
         }
         if (head == null) throw new IllegalArgumentException("COOP_ORDER 聚合头不能为空");
+        if (!same(head.getTopicId(), plan.getSnapshot().getTopicId())) {
+            throw new IllegalStateException(CoopSettlementContract.LEDGER_CONFLICT + ":聚合头与原计划主题不一致");
+        }
         applyHeaderAttribution(head, plan.getSnapshot());
         BigDecimal expectedAmount = plan.getOriginAmount();
         head.setAmount(BigDecimal.ZERO.setScale(2));
@@ -152,6 +172,12 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
                 s.getCommercialContextId(), "REGISTRATION", line.getRegistrationId(),
                 s.getBeneficiaryRole(), s.getBeneficiaryId(), s.getServiceUnit(), plan.getRoute(),
                 "COOP_ORDER", s.getOrderId()));
+    }
+
+    private void lockTopic(Long topicId) {
+        if (topicId == null) throw manualRepair("SETTLEMENT_TOPIC_REQUIRED");
+        com.chengyinhub.business.domain.CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (topic == null || !topicId.equals(topic.getId())) throw manualRepair("SETTLEMENT_TOPIC_NOT_FOUND");
     }
 
     private static void applyHeaderAttribution(CoopSettlement head, CoopSettlementSnapshot s) {
