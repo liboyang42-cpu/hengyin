@@ -105,6 +105,7 @@ class AuditTopicApprovalQuotaTest {
         topic.setId(TOPIC_ID);
         topic.setMemberId(OWNER_ID);
         when(cmsTopicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
         when(cmsTopicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
     }
 

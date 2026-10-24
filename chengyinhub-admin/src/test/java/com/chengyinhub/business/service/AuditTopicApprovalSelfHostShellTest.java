@@ -84,6 +84,7 @@ class AuditTopicApprovalSelfHostShellTest {
         exist.setId(TOPIC);
         exist.setMemberId(5L);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(exist);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(exist);
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         // 配额未满 → 过审自动上架
         when(quotaService.lockAndCheckThemeOnline(5L, TOPIC)).thenReturn(null);

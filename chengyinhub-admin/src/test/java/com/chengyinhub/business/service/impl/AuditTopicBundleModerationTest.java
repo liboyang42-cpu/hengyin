@@ -74,6 +74,7 @@ class AuditTopicBundleModerationTest {
         topic.setId(77L);
         topic.setMemberId(5L);
         when(topics.selectCmsTopicById(77L)).thenReturn(topic);
+        when(topics.selectCmsTopicByIdForUpdate(77L)).thenReturn(topic);
         when(topics.updateCmsTopic(any())).thenReturn(1);
         when(quota.lockAndCheckThemeOnline(5L, 77L)).thenReturn(null);
         when(im.sendSystem(anyLong(), anyInt(), anyString(), anyString())).thenReturn(1L);

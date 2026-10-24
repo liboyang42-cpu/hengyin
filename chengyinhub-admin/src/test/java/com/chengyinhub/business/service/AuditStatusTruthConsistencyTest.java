@@ -237,6 +237,7 @@ class AuditStatusTruthConsistencyTest {
             exist.setId(77L);
             exist.setMemberId(5L);
             when(topics.selectCmsTopicById(77L)).thenReturn(exist);
+            when(topics.selectCmsTopicByIdForUpdate(77L)).thenReturn(exist);
             when(topics.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
             when(quotaService.lockAndCheckThemeOnline(5L, 77L)).thenReturn(null);
         }
