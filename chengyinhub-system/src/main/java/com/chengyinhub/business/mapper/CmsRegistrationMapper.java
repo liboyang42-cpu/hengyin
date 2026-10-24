@@ -271,11 +271,15 @@ public interface CmsRegistrationMapper
             @Param("maxId") long maxId, @Param("limit") int limit);
 
     /**
-     * RUN-01 到期自动核销:已支付未核销、所属活动结束满 bufferDays 的场次票(owner_type=2)id,限批 200/轮。
+     * RUN-01 到期自动核销:已支付未核销、所属活动结束满 bufferDays 的场次票(owner_type=2)id,每页限批 200。
      * 退款在途(status 0/1)与缺 end_date 锚点的单不扫(fail-closed 转人工),口径详见 XML 注释。
      */
     public List<Long> selectExpiredUnverifiedIds(@Param("now") java.util.Date now,
                                                  @Param("bufferDays") int bufferDays);
+
+    /** 保持相同到期判据，按 id 升序读取 afterId 之后的下一页(最多 200 单)。 */
+    public List<Long> selectExpiredUnverifiedIdsAfter(@Param("now") java.util.Date now,
+            @Param("bufferDays") int bufferDays, @Param("afterId") long afterId);
 
     /**
      * RUN-01 到期自动核销:条件置位(0 行 = 竞态下已被商家真核销/进入退款流/活动被改期,调用方跳过)。
