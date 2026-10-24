@@ -151,4 +151,23 @@ class EventScoreVersioningTest {
         assertSame(first, recovered.result);
         assertSame(first, scores.finish(run.id, "c04-fin-never"));
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenStartIdDoesNotOccupyThenUniqueStartApplies() {
+        EventScoreVersioning.OriginalReceipt neverStart = scores.recoverOriginal("c04-sta-never");
+        assertEquals("c04-sta-never", neverStart.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, neverStart.outcome);
+        assertEquals(false, neverStart.mintedNewRequest);
+        assertNull(neverStart.result);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback("c04-sta-never")).getErrorCode());
+        EventScoreVersioning.EventRun first = scores.start(registration, frozen, safety, 7L, "c04-sta-never");
+        assertEquals("c04-sta-never", first.startRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_RUNNING, first.outcome());
+        EventScoreVersioning.EventRun replay = scores.start(registration, frozen, safety, 7L, "c04-sta-never");
+        assertEquals(first.id, replay.id);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, scores.recoverOriginal("c04-sta-never").outcome);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback("c04-sta-never")).getErrorCode());
+    }
 }
