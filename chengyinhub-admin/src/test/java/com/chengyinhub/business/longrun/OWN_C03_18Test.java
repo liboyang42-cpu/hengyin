@@ -54,7 +54,7 @@ class OWN_C03_18Test {
                 .when(nodes).insertCmsTopicNode(any(CmsTopicNode.class));
     }
     @Test void createDraftWithMissingNodeDurationStoresZeroTotal() {
-        assertEquals(Long.valueOf(700), service.createTopic(fill(new TopicCreateDTO()), 42L, "creator"));
+        assertEquals(Long.valueOf(700), com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(fill(new TopicCreateDTO()), 42L, "creator"));
         ArgumentCaptor<CmsTopic> inserted = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topics).insertCmsTopic(inserted.capture());
         assertEquals(Long.valueOf(0), inserted.getValue().getTotalTime());
@@ -62,7 +62,7 @@ class OWN_C03_18Test {
     @Test void editDraftWithMissingNodeDurationStoresZeroTotal() {
         TopicUpdateDTO dto = fill(new TopicUpdateDTO());
         dto.setId(700L);
-        assertEquals(Long.valueOf(700), service.updateTopicByOwner(dto, 42L, "creator"));
+        assertEquals(Long.valueOf(700), com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator"));
         ArgumentCaptor<CmsTopic> patch = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topics).updateCmsTopic(patch.capture());
         assertEquals(Long.valueOf(0), patch.getValue().getTotalTime());

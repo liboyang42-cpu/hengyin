@@ -184,7 +184,7 @@ class TopicSaleReviewDecouplingTest {
 
     @Test
     void storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask() {
-        svc.updateTopicByOwner(dto("新名字", null, "5"), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto("新名字", null, "5"), ME, "me");
 
         verify(canonicalMutationService, never()).invalidateApprovedCanonical(anyLong(), anyString());
         verify(commercialReviewService, times(1)).submitSaleReview(TOPIC, ME);
@@ -192,7 +192,7 @@ class TopicSaleReviewDecouplingTest {
 
     @Test
     void priceEdit_resetsSaleReview() {
-        svc.updateTopicByOwner(dto("旧名字", null, "8"), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto("旧名字", null, "8"), ME, "me");
 
         verify(canonicalMutationService, times(1)).invalidateApprovedCanonical(eq(TOPIC), eq("topic-content-rebuild"));
         verify(commercialReviewService, never()).submitSaleReview(anyLong(), anyLong());

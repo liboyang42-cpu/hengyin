@@ -95,7 +95,7 @@ class TopicPublishJourneyStoryGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("clue.page"), error.getMessage());
         assertTrue(error.getMessage().contains("剧情配置"), "要说明这个键是剧情配置要的:" + error.getMessage());
@@ -110,7 +110,7 @@ class TopicPublishJourneyStoryGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("clue.voice"), error.getMessage());
         assertTrue(error.getMessage().contains("剧情配置"), error.getMessage());
@@ -127,7 +127,7 @@ class TopicPublishJourneyStoryGateTest {
                 registered("clue.page"), registered("tag.hurried"), registered("clue.voice")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(anyLong(), any(), any());
     }
@@ -143,7 +143,7 @@ class TopicPublishJourneyStoryGateTest {
         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(npc));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(keyMapper, never()).selectByTopicId(anyLong());
     }
@@ -155,7 +155,7 @@ class TopicPublishJourneyStoryGateTest {
                 .thenReturn(Collections.singletonList(chapter(CHAPTER)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("引用无效"), error.getMessage());
         assertTrue(error.getMessage().contains("章节"), error.getMessage());
@@ -175,7 +175,7 @@ class TopicPublishJourneyStoryGateTest {
         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(available));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("引用无效"), error.getMessage());
         assertTrue(error.getMessage().contains("NPC"), error.getMessage());
@@ -190,7 +190,7 @@ class TopicPublishJourneyStoryGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("relation.arong"), error.getMessage());
         assertTrue(error.getMessage().contains("剧情配置"), error.getMessage());
@@ -207,7 +207,7 @@ class TopicPublishJourneyStoryGateTest {
                 registered("relation.arong", ThemeStateKey.TYPE_FLAG)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("relation.arong"), error.getMessage());
         assertTrue(error.getMessage().contains("relation"), error.getMessage());
@@ -229,7 +229,7 @@ class TopicPublishJourneyStoryGateTest {
         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(available));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(anyLong(), any(), any());
     }
@@ -237,7 +237,7 @@ class TopicPublishJourneyStoryGateTest {
     @Test
     void legacyTopicWithoutStoryPublishesUntouched() {
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(keyMapper, never()).selectByTopicId(anyLong());
     }
@@ -263,7 +263,7 @@ class TopicPublishJourneyStoryGateTest {
                 .thenReturn(Collections.singletonList(withThought));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
         assertTrue(error.getMessage().contains("念头"), error.getMessage());
         assertTrue(error.getMessage().contains("nosuch"), "要报出是哪个 key 对不上:" + error.getMessage());
     }
@@ -280,7 +280,7 @@ class TopicPublishJourneyStoryGateTest {
                 .thenReturn(Collections.singletonList(withThought));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
     }
 
     private static CmsTopic draft() {

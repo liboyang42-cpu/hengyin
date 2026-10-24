@@ -80,7 +80,7 @@ class TopicDraftSubmittedOrderTest {
         dto.setChapters(Arrays.asList(chapter("章甲", 11L, "甲1", "甲2"),
                 chapter("章乙", 12L, "乙1", "乙2")));
 
-        assertEquals(TOPIC, service.createTopic(dto, MEMBER, "creator"));
+        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(dto, MEMBER, "creator"));
 
         assertInsertedOrder(Arrays.asList("章甲", "章乙"), Arrays.asList("甲1", "甲2", "乙1", "乙2"));
         verify(topics).updateTopicDraftState(TOPIC, 1);
@@ -111,7 +111,7 @@ class TopicDraftSubmittedOrderTest {
         Collections.reverse(second.getNodes());
         dto.setChapters(Arrays.asList(first, second));
 
-        assertEquals(TOPIC, service.updateTopicByOwner(dto, MEMBER, "creator"));
+        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, MEMBER, "creator"));
 
         verify(chapters).deleteCmsTopicChapterById(11L);
         verify(nodes).deleteCmsTopicNodeById(101L);

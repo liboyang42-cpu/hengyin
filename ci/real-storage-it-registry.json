@@ -398,9 +398,15 @@
       ],
       "note": "25 ordinary@Test; no dynamic count/skip fallback. Source-bound XML/CLEAN required; pair with independently executed old-source25 before mechanical equivalence claim."
     },
+    "architecture-day-topic-authoring": {
+      "registered_source": "dbbb2350abe95f22fcc7b6fb291fcd0f66d7a004",
+      "lineage": "D six-production-file content graph extraction rebased onto reviewed4197",
+      "classes": ["com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT"],
+      "note": "32 ordinary@Test with62 named scenarios; exact original mapper/transaction fixture, old/new full receipts compared separately. Source-bound zero-skip XML and independent CLEAN required; not full economic or HTTP acceptance."
+    },
     "architecture-day-theme-intent": {
       "registered_source": "c65c7ac90ecddeed9c4e1d95eaee4348ee7c2b58",
-      "note": "22 exact ordinary@Test MySQL/Redis cases: original19 plus2 gen quota/late-failure and1 original-mode recovery. A ef080 plus root Controller/maintenance wiring must be in actual tested source. Defaults remain off; no provider or production DDL. Source-bound XML, zero skipped and CLEAN required.",
+      "note": "23 exact ordinary@Test MySQL/Redis cases: original22 from registered_source plus H 4f3e29c review.patch committed-PREPARE ACK-loss case, transplanted into root candidate; registered_source identifies the original22 lineage, not the new23 source. A ef080 plus root Controller/maintenance wiring must be in actual tested source. Defaults remain off; no provider or production DDL. Source-bound XML, zero skipped and CLEAN required.",
       "classes": [
         "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT"
       ],
@@ -1205,8 +1211,14 @@
       "gates": {},
       "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports."
     },
+    "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT": {
+      "tests": 32,
+      "storage": ["mysql"],
+      "gates": {},
+      "note": "Actual production content mappers and Spring transactions; explicit controlled outer participants; strict owner-mode source assertion. Equivalence receipts are not substitutes for XML and CLEAN."
+    },
     "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT": {
-      "tests": 22,
+      "tests": 23,
       "storage": [
         "mysql",
         "redis"

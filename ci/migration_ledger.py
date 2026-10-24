@@ -63,6 +63,7 @@ EXPLICIT_AUXILIARY_SQL = {
     "chengyinhub-admin/sql/seed_official_content_template.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/wp10-content-copy-scratch.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/wp10-content-graph-scratch.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/coop-it-schema.sql": "TEST_FIXTURE",
     # #398 F1 移植:view_coupon_history 联表视图的测试建表资源(SELECT 照抄 base_schema_20260818),
     # 只在 H2 内存库里执行,不进发布台账、不在生产跑。

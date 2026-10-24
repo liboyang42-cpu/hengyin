@@ -63,6 +63,7 @@ on:
           - architecture-day-ai-not-sent
           - architecture-day-lead-admission
           - architecture-day-topic-copy
+          - architecture-day-topic-authoring
           - architecture-day-theme-intent
           - architecture-day-payment-intent
       classes:

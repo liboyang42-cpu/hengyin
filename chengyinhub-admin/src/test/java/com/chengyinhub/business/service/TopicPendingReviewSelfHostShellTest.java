@@ -120,7 +120,7 @@ class TopicPendingReviewSelfHostShellTest {
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(pending, pending, topic(1, "pro"));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        assertTrue(svc.publishDraft(TOPIC));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
 
         ArgumentCaptor<CmsTopic> topicCap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(topicCap.capture());
@@ -141,7 +141,7 @@ class TopicPendingReviewSelfHostShellTest {
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft, published);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        assertTrue(svc.publishDraft(TOPIC));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
 
         ArgumentCaptor<CmsTopic> topicCap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(topicCap.capture());
@@ -268,7 +268,7 @@ class TopicPendingReviewSelfHostShellTest {
                 .when(ledger()).requireNoOverdueDebt(OWNER);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        ServiceException e = assertThrows(ServiceException.class, () -> svc.publishDraft(TOPIC));
+        ServiceException e = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
 
         assertTrue(e.getMessage().startsWith("SETTLEMENT_DEBT_OVERDUE"), e.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));

@@ -98,7 +98,7 @@ class TopicCreateSaveDraftSideEffectTest {
     @Test
     void draftCreateSkipsSelfHostShellAndAudit() {
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(dto(1), 42L, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(1), 42L, "tester");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).insertCmsTopic(cap.capture());
@@ -112,7 +112,7 @@ class TopicCreateSaveDraftSideEffectTest {
     @Test
     void publishedProCreateSubmitsPostReviewAndBuildsPublicShell() {
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(dto(null), 42L, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(null), 42L, "tester");
 
         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
         verify(auditTaskService).submit(anyString(), anyLong(), anyLong(), anyString(), anyString());
@@ -125,7 +125,7 @@ class TopicCreateSaveDraftSideEffectTest {
         TopicCreateDTO simple = dto(null);
         simple.setPublishMode("simple");
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(simple, 42L, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(simple, 42L, "tester");
 
         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), anyString());
@@ -140,7 +140,7 @@ class TopicCreateSaveDraftSideEffectTest {
     @Test
     void proAndDraftCreateDoNotClaimMachinePassed() {
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(dto(1), 42L, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(1), 42L, "tester");
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).insertCmsTopic(cap.capture());
         assertTrue(!Integer.valueOf(1).equals(cap.getValue().getCheckStatus()), "草稿不得写 check_status=1");
@@ -158,7 +158,7 @@ class TopicCreateSaveDraftSideEffectTest {
                 .when(ledger).requireNoOverdueDebt(42L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        ServiceException e = assertThrows(ServiceException.class, () -> svc.createTopic(dto(null), 42L, "tester"));
+        ServiceException e = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(null), 42L, "tester"));
 
         assertTrue(e.getMessage().startsWith("SETTLEMENT_DEBT_OVERDUE"), e.getMessage());
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));

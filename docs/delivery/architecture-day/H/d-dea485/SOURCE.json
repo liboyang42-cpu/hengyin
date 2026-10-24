@@ -1,0 +1,142 @@
+{
+  "source": "dea48565cc8789df7a9aac44a01657d2924e0985",
+  "tree": "7ada3a2ecb728eb25368a7c49bee335a23ab619a",
+  "parent": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "review_start_head": "b44a98bd2c8662567a9990064168e503b6b912dd",
+  "read_files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicContentGraphAuthoringService.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "14dbe7269c87bba85e186e3108cdf828436f1c93",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "501147cf06b164d0d93eff0b58e4edfc8d714004",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentGraphAuthoringServiceImpl.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "c9a74ab353b368012274896b883e82b422ed1d37",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicAuthoredGraphIds.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "7fb08f2d90cb28feaaf4eec875c6ff12df2f2193",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicContentWriteGuard.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "211d44a30b1a177035ec3dd19e96756adeb0b633",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteOutcomeReader.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "94650162f406bd350c861f82ad0f97ea6b719795",
+      "folder": "tree"
+    },
+    {
+      "path": "docs/delivery/architecture-day/D/wp10-graph/REPORT.md",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "7c936fcb7763bd5478a52cc80388b526a9bbbd3d",
+      "folder": "tree"
+    },
+    {
+      "path": "docs/delivery/architecture-day/D/wp10-graph/verify_scope.py",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "825626b2e8a82c3c16244a3a081b7b8c68ec2212",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicGraphTestWiring.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "b44e583c5e5492a46aa0aa279aca44d2957b1da6",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlIT.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "33793321700490528518f14d185244ddc01d6818",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "e7b9f22805e8d28292b46e36c68c62e5d5a1d41a",
+      "folder": "base"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlFixture.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "d628b4654592420cdeb8bf5ba1b2dca6947c3e92",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicAuthoredGraphIdsTest.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "a200151f4257f04e3ca325ed3cd394ab2ac6024e",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsMemberTemplateServiceImpl.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "7c4e07750745c2f56160bbcd804eb7ae58514365",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "63c0abc5f26f1a7aba4037c34677154ac2955bf9",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteConfigValidator.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "b36ca1ff82031bb2c80fef22c0366458ae7c7bc0",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "7b81b323c84cbd3fa641751023b35e07fb61849e",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/JourneyStory.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "08bb1c432ccb90509758d049e92ec6b02fdf0def",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "890f5332e87cf441c2bb2bf72a231bacb8cd0430",
+      "folder": "base"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "a9d553189c69d3a71b8497573a62f2580f7019d8",
+      "folder": "tree"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "9f1c74dc25c56d0fcd85f5148cadcc91127b4693",
+      "folder": "base"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+      "ref": "dea48565cc8789df7a9aac44a01657d2924e0985",
+      "sha": "0e52c3768ba6e20c90cd883b5b2821fc94a54f2c",
+      "folder": "tree"
+    }
+  ],
+  "runtime": "NOT_RUN"
+}

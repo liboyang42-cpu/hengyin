@@ -62,14 +62,14 @@ class TopicProductTypeTest {
         org.mockito.Mockito.when(roles.activeContentSlot(31L)).thenReturn(role);
         ChapterDTO chapter = new ChapterDTO(); chapter.setTermsMode("REVSHARE");
         chapter.setMaxPerHeadFee(new java.math.BigDecimal("0.01"));
-        assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(service, "assertChapterShapeForTopic", chapter, 31L));
+        assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShapeForTopic", chapter, 31L));
         chapter.setMaxPerHeadFee(null);
-        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(service, "assertChapterShapeForTopic", chapter, 31L));
+        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShapeForTopic", chapter, 31L));
         chapter.setMaxPerHeadFee(new java.math.BigDecimal("0.01"));
         role.setEntityType("MEMBER");
-        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(service, "assertChapterShapeForTopic", chapter, 31L));
+        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShapeForTopic", chapter, 31L));
         role.setEntityType("CLUB"); topic.setCircleThemeCode("circle-test");
-        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(service, "assertChapterShapeForTopic", chapter, 31L));
+        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShapeForTopic", chapter, 31L));
     }
 
     private CmsTopicServiceImpl service;
@@ -111,7 +111,7 @@ class TopicProductTypeTest {
     }
 
     private void assertChapterShape(ChapterDTO chapter) {
-        ReflectionTestUtils.invokeMethod(service, "assertChapterShape", chapter);
+        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShape", chapter);
     }
 
     // ------------------------------------------------ resolveProductType:定型

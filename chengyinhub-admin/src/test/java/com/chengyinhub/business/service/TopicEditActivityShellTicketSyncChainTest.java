@@ -161,7 +161,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
 
         OmsTicket shell = row(shellTicketId);
         assertNotNull(shell, "已售壳票不能被删:它被订单的 ticket_id 引用");
@@ -178,7 +178,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         assertEquals(2, ticketRows.size(), "未改票不得增删任何一行");
         assertNotNull(row(topicTicketId));
@@ -192,7 +192,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(
                         dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me"));
 
         assertEquals(409, error.getCode());
@@ -207,7 +207,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 30L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me");
 
         assertNull(row(topicTicketId), "被移出编辑的主题票要真删掉");
         assertNull(row(shellTicketId), "未售孤儿壳票必须被条件删除清掉");
@@ -219,7 +219,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long foreignTicketId = seedTopicTicket(OTHER_TOPIC, LUNCH, PRICE, 30L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         OmsTicket foreign = row(foreignTicketId);
         assertNotNull(foreign, "别的主题的同名同价票不得被本次编辑接管");
@@ -235,7 +235,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(
                         dtoWithTickets(ticketRequest(LUNCH, new BigDecimal("99.00"), 30)), ME, "me"));
 
         assertEquals(409, error.getCode());
@@ -251,7 +251,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long secondShell = seedShellTicket(second, LUNCH, PRICE, 30L, 30L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(
                 dtoWithTickets(ticketRequest(LUNCH, PRICE, 30), ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         assertEquals(4, ticketRows.size(), "同键重复票按 id 升序做多重集配对，不得因歧义把主题卡成不可编辑");
@@ -268,7 +268,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         org.mockito.Mockito.doReturn(0).when(ticketMapper).updateTopicTicketOnRebuild(any(OmsTicket.class));
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me"));
 
         assertEquals(409, error.getCode());
         assertTrue(error.getMessage().contains("TOPIC_TICKET_REBUILD_RACE"), error.getMessage());
@@ -286,7 +286,7 @@ class TopicEditActivityShellTicketSyncChainTest {
                 .deleteUnsoldActivityOrphanTicket(any(), any(), any());
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(
                         dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me"));
 
         assertEquals(409, error.getCode());
@@ -300,7 +300,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(foreignTicketId, LUNCH, PRICE, 30L, 5L);
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me"));
 
         assertEquals(409, error.getCode());
         assertTrue(error.getMessage().contains("ORPHAN_ALREADY_SOLD"), error.getMessage());
@@ -323,7 +323,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         ticketMapper.insertOmsTicket(foreignShell);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
 
         assertEquals(Long.valueOf(30L), row(foreignShell.getId()).getTotalInventory(),
                 "同步只准动本活动的壳票:别的活动的壳票不在 owner scope 内");
@@ -354,7 +354,7 @@ class TopicEditActivityShellTicketSyncChainTest {
 
         // ② 写侧没被毒到:主题编辑仍然点得动
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
         assertEquals(topicTicketId, row(shellTicketId).getSourceTicketId());
     }
 
@@ -405,7 +405,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         }
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(classicDto(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(classicDto(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         assertEquals(topicTicketId, row(selfHostClassicShellTicketId).getSourceTicketId(),
                 "自办①主题的壳票必须仍钉在同一张主题票上");

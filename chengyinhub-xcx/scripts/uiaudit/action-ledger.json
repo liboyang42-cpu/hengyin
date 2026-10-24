@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5105,
+  "controlCount": 5111,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -42414,6 +42414,104 @@
         {
           "route": "pages/publish/simple/index",
           "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 9
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
             {
               "selector": "cy-btn",
               "index": 1
@@ -253134,6 +253232,7 @@
         "pages/member/index/index",
         "pages/merchant/index/index",
         "pages/play/index",
+        "pages/publish/simple/index",
         "pages/roam/index",
         "pages/square/detail/index",
         "pages/square/list/index",
@@ -253240,6 +253339,15 @@
               "selector": "cy-scene-roam-poi-detail",
               "index": 0
             },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
             {
               "selector": "cy-option-sheet",
               "index": 0
@@ -253568,6 +253676,7 @@
         "pages/member/index/index",
         "pages/merchant/index/index",
         "pages/play/index",
+        "pages/publish/simple/index",
         "pages/roam/index",
         "pages/square/detail/index",
         "pages/square/list/index",
@@ -253674,6 +253783,15 @@
               "selector": "cy-scene-roam-poi-detail",
               "index": 0
             },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
             {
               "selector": "cy-option-sheet",
               "index": 0
@@ -254002,6 +254120,7 @@
         "pages/member/index/index",
         "pages/merchant/index/index",
         "pages/play/index",
+        "pages/publish/simple/index",
         "pages/roam/index",
         "pages/square/detail/index",
         "pages/square/list/index",
@@ -254108,6 +254227,15 @@
               "selector": "cy-scene-roam-poi-detail",
               "index": 0
             },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
             {
               "selector": "cy-option-sheet",
               "index": 0
@@ -254436,6 +254564,7 @@
         "pages/member/index/index",
         "pages/merchant/index/index",
         "pages/play/index",
+        "pages/publish/simple/index",
         "pages/roam/index",
         "pages/square/detail/index",
         "pages/square/list/index",
@@ -254542,6 +254671,15 @@
               "selector": "cy-scene-roam-poi-detail",
               "index": 0
             },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
             {
               "selector": "cy-option-sheet",
               "index": 0
@@ -400556,6 +400694,32 @@
           ]
         },
         {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/publish/temp/index",
           "segments": [
             {
@@ -437951,6 +438115,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -475353,6 +475543,32 @@
           ]
         },
         {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/publish/temp/index",
           "segments": [
             {
@@ -512747,6 +512963,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -550149,6 +550391,32 @@
           ]
         },
         {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/publish/temp/index",
           "segments": [
             {
@@ -587543,6 +587811,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -624946,6 +625240,32 @@
           ]
         },
         {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/publish/temp/index",
           "segments": [
             {
@@ -662341,6 +662661,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -699744,6 +700090,32 @@
           ]
         },
         {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/publish/temp/index",
           "segments": [
             {
@@ -737143,6 +737515,32 @@
           ]
         },
         {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/publish/temp/index",
           "segments": [
             {
@@ -774538,6 +774936,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -1068942,6 +1069366,410 @@
       }
     },
     {
+      "id": "pages/publish/simple/index.wxml:105:bindinput:onAiIdeaInput:13",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "textarea",
+        "event": "bindinput",
+        "handler": "onAiIdeaInput",
+        "line": 105,
+        "selectorHint": ".simple-ai__input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "路线灵感",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:173"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:107:bindtap:generateAiPlan:14",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "generateAiPlan",
+        "line": 107,
+        "selectorHint": ".simple-ai__send",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{aiDraftPending ? '查看上一次起草结果' : '生成主题草稿'}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": "{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0)}}",
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/template/index"
+        ],
+        "apis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/quota",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:205"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:116:bind:cancel:onAiHistoryCancel:16",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-option-sheet",
+        "event": "bind:cancel",
+        "handler": "onAiHistoryCancel",
+        "line": 116,
+        "selectorHint": "cy-option-sheet[bind:cancel]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:473"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:116:bind:select:onAiHistorySelect:15",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-option-sheet",
+        "event": "bind:select",
+        "handler": "onAiHistorySelect",
+        "line": 116,
+        "selectorHint": "cy-option-sheet[bind:select]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/template/index"
+        ],
+        "apis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/quota",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:474"
+      }
+    },
+    {
       "id": "pages/publish/simple/index.wxml:20:bind:cta:onCreatorLogin:0",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
@@ -1069006,7 +1069834,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:59"
+        "staticSource": "pages/publish/simple/index.js:41"
       }
     },
     {
@@ -1069073,11 +1069901,552 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:114"
+        "staticSource": "pages/publish/simple/index.js:174"
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:57:bindinput:onAiPlanTitleInput:2",
+      "id": "pages/publish/simple/index.wxml:52:bindtap:openAiHistory:2",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "openAiHistory",
+        "line": 52,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/template/index"
+        ],
+        "apis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/quota",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:387"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:53:bindtap:openLocalAiHistory:3",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "openLocalAiHistory",
+        "line": 53,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/template/index"
+        ],
+        "apis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/quota",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:448"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:57:bindtap:continueAiDraft:4",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "continueAiDraft",
+        "line": 57,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": "{{aiCanContinue}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/template/index"
+        ],
+        "apis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/quota",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:225"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:58:bindtap:requestConfirmedNewAiAction:5",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "wx.showModal",
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "requestConfirmedNewAiAction",
+        "line": 58,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": "{{aiCanConfirmNew}}",
+        "disabledCondition": "{{aiGenerating || aiRecoveryLoading}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/template/index"
+        ],
+        "apis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/quota",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:517"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:68:bindinput:onAiPlanTitleInput:6",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1069100,10 +1070469,10 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAiPlanTitleInput",
-        "line": 57,
+        "line": 68,
         "selectorHint": ".simple-ai__field-input",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{!aiPlanModeKnown}}",
         "ariaLabel": "主题名称",
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -1069140,11 +1070509,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:257"
+        "staticSource": "pages/publish/simple/index.js:590"
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:59:bindinput:onAiPlanStoryInput:3",
+      "id": "pages/publish/simple/index.wxml:70:bindinput:onAiPlanStoryInput:7",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1069167,10 +1070536,10 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onAiPlanStoryInput",
-        "line": 59,
+        "line": 70,
         "selectorHint": ".simple-ai__story",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{!aiPlanModeKnown}}",
         "ariaLabel": "故事简介",
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -1069207,11 +1070576,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:260"
+        "staticSource": "pages/publish/simple/index.js:593"
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:72:bindinput:onAiNodeNameInput:4",
+      "id": "pages/publish/simple/index.wxml:83:bindinput:onAiNodeNameInput:8",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1069234,10 +1070603,10 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAiNodeNameInput",
-        "line": 72,
+        "line": 83,
         "selectorHint": ".simple-ai__node-name",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{!aiPlanModeKnown}}",
         "ariaLabel": null,
         "ariaLabelExpression": "第{{nodeIndex + 1 || 1}}个节点名称",
         "ariaRole": null,
@@ -1069274,11 +1070643,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:261"
+        "staticSource": "pages/publish/simple/index.js:594"
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:73:bindinput:onAiNodeStoryInput:5",
+      "id": "pages/publish/simple/index.wxml:84:bindinput:onAiNodeStoryInput:9",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1069301,10 +1070670,10 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onAiNodeStoryInput",
-        "line": 73,
+        "line": 84,
         "selectorHint": ".simple-ai__node-story",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{!aiPlanModeKnown}}",
         "ariaLabel": null,
         "ariaLabelExpression": "第{{nodeIndex + 1 || 1}}个节点故事",
         "ariaRole": null,
@@ -1069341,11 +1070710,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:262"
+        "staticSource": "pages/publish/simple/index.js:595"
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:76:bindtap:confirmAiNodePoi:6",
+      "id": "pages/publish/simple/index.wxml:87:bindtap:confirmAiNodePoi:10",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1069371,7 +1070740,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmAiNodePoi",
-        "line": 76,
+        "line": 87,
         "selectorHint": ".simple-ai__poi",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1069388,11 +1070757,13 @@
       },
       "actionClass": "external",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
+        "navigation",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [
         "choosePoi"
       ],
@@ -1069400,304 +1070771,24 @@
         "choosePoi"
       ],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "cancelled",
-        "denied"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:263"
-      }
-    },
-    {
-      "id": "pages/publish/simple/index.wxml:84:bind:disabledtap:enterAiEditor:8",
-      "route": "pages/publish/simple/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/simple/index.wxml",
-        "js": "pages/publish/simple/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bind:disabledtap",
-        "handler": "enterAiEditor",
-        "line": 84,
-        "selectorHint": "cy-btn[bind:disabledtap]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!canEnterAiEditor}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
         "routes": [
-          "pages/publish/fabu/index?mode="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:279"
-      }
-    },
-    {
-      "id": "pages/publish/simple/index.wxml:84:bindtap:enterAiEditor:7",
-      "route": "pages/publish/simple/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/simple/index.wxml",
-        "js": "pages/publish/simple/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "enterAiEditor",
-        "line": 84,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!canEnterAiEditor}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/publish/fabu/index?mode="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:279"
-      }
-    },
-    {
-      "id": "pages/publish/simple/index.wxml:94:bindinput:onAiIdeaInput:9",
-      "route": "pages/publish/simple/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/simple/index.wxml",
-        "js": "pages/publish/simple/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "textarea",
-        "event": "bindinput",
-        "handler": "onAiIdeaInput",
-        "line": 94,
-        "selectorHint": ".simple-ai__input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "路线灵感",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:113"
-      }
-    },
-    {
-      "id": "pages/publish/simple/index.wxml:96:bindtap:generateAiPlan:10",
-      "route": "pages/publish/simple/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/simple/index.wxml",
-        "js": "pages/publish/simple/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "generateAiPlan",
-        "line": 96,
-        "selectorHint": ".simple-ai__send",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{aiDraftPending ? '查看上一次起草结果' : '生成主题草稿'}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0)}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/template/index"
         ],
         "apis": [
-          "/api/ai/theme/draft",
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
           "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
           "/api/ai/theme/draft/request",
           "/api/config/features",
           "/api/login/code"
         ],
         "primaryApis": [
-          "/api/ai/theme/draft",
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
           "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
           "/api/ai/theme/draft/request",
           "/api/config/features"
         ],
@@ -1069706,7 +1070797,13 @@
         ],
         "apiContracts": [
           {
-            "url": "/api/ai/theme/draft",
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1069714,6 +1070811,12 @@
           {
             "url": "/api/ai/theme/draft/quota",
             "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1069738,7 +1070841,149 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:596"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:95:bind:disabledtap:enterAiEditor:12",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bind:disabledtap",
+        "handler": "enterAiEditor",
+        "line": 95,
+        "selectorHint": "cy-btn[bind:disabledtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{!canEnterAiEditor}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/publish/fabu/index?mode=",
+          "pages/template/index"
+        ],
+        "apis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/quota",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -1069749,7 +1070994,143 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:115"
+        "staticSource": "pages/publish/simple/index.js:618"
+      }
+    },
+    {
+      "id": "pages/publish/simple/index.wxml:95:bindtap:enterAiEditor:11",
+      "route": "pages/publish/simple/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/simple/index.wxml",
+        "js": "pages/publish/simple/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "enterAiEditor",
+        "line": 95,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{!canEnterAiEditor}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/publish/fabu/index?mode=",
+          "pages/template/index"
+        ],
+        "apis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "primaryApis": [
+          "/api/ai/theme/draft/execute",
+          "/api/ai/theme/draft/prepare",
+          "/api/ai/theme/draft/quota",
+          "/api/ai/theme/draft/recovery",
+          "/api/ai/theme/draft/request",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/ai/theme/draft/execute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/prepare",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/quota",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/recovery",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/ai/theme/draft/request",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/simple/index.js:618"
       }
     },
     {

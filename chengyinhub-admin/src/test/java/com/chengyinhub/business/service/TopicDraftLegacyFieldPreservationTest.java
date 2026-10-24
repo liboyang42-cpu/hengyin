@@ -94,7 +94,7 @@ class TopicDraftLegacyFieldPreservationTest {
     }
 
     private CmsTopic savedPatch(TopicUpdateDTO dto) {
-        assertEquals(TOPIC, service.updateTopicByOwner(dto, MEMBER, "creator"));
+        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, MEMBER, "creator"));
         ArgumentCaptor<CmsTopic> patch = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(patch.capture());
         verify(topicMapper, never()).insertCmsTopic(any(CmsTopic.class));
@@ -155,7 +155,7 @@ class TopicDraftLegacyFieldPreservationTest {
         TopicUpdateDTO dto = legacyEdit();
         dto.setTeamMode(7);
         assertThrows(IllegalArgumentException.class,
-                () -> service.updateTopicByOwner(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, MEMBER, "creator"));
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
     }
 }

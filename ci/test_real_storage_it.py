@@ -110,7 +110,8 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-ai-not-sent": 4,
                     "architecture-day-lead-admission": 14,
                     "architecture-day-topic-copy": 25,
-                    "architecture-day-theme-intent": 22,
+                    "architecture-day-topic-authoring": 32,
+                    "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
