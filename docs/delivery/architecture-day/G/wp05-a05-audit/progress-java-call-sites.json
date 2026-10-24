@@ -1,0 +1,578 @@
+[
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiStatsController.java",
+    "line": 103,
+    "method_candidate": "club",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> progs = playerNodeProgressService.selectPlayerNodeProgressList(progProbe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+    "line": 296,
+    "method_candidate": "enrichSportFeedBatch",
+    "statement_name": "selectProgressCountsByMemberActivities",
+    "text": "viewCreativeSquareService.selectProgressCountsByMemberActivities(activityPairs), \"memberId\", \"activityId\", \"cnt\");",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+    "line": 298,
+    "method_candidate": "enrichSportFeedBatch",
+    "statement_name": "selectProgressCountsByMemberTopics",
+    "text": "viewCreativeSquareService.selectProgressCountsByMemberTopics(topicPairs), \"memberId\", \"topicId\", \"cnt\");",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+    "line": 1192,
+    "method_candidate": "creativeSquareSummary",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> all = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMedalController.java",
+    "line": 59,
+    "method_candidate": "wall",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> progs = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 429,
+    "method_candidate": "nodes",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> doneList = playerNodeProgressService.selectPlayerNodeProgressList(progProbe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 518,
+    "method_candidate": "nodes",
+    "statement_name": "selectInStoreLoads",
+    "text": ": topicOnsiteMetricsMapper.selectInStoreLoads(tId)) {",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 925,
+    "method_candidate": "nodes",
+    "statement_name": "selectPuzzlePersonalBest",
+    "text": "Integer personalBest = playerNodeProgressService.selectPuzzlePersonalBest(memberId, tId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 1124,
+    "method_candidate": "ending",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> doneList = playerNodeProgressService.selectPlayerNodeProgressList(progProbe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 1296,
+    "method_candidate": "companionLine",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "for (PlayerNodeProgress doneRow : playerNodeProgressService.selectPlayerNodeProgressList(doneProbe)) {",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 3121,
+    "method_candidate": "advanceProgress",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> found = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 3228,
+    "method_candidate": "advanceProgress",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "for (PlayerNodeProgress doneRow : playerNodeProgressService.selectPlayerNodeProgressList(doneProbe)) {",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 3304,
+    "method_candidate": "advanceProgress",
+    "statement_name": "selectPuzzlePersonalBest",
+    "text": "Integer personalBest = playerNodeProgressService.selectPuzzlePersonalBest(memberId, node.getTopicId());",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 3340,
+    "method_candidate": "myCompleted",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> all = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 3543,
+    "method_candidate": "leaderboard",
+    "statement_name": "selectRouteLeaderboard",
+    "text": "? playerNodeProgressService.selectRouteLeaderboard(boardActivityId, boardTopicId, 50)",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 3544,
+    "method_candidate": "leaderboard",
+    "statement_name": "selectActivityLeaderboard",
+    "text": ": playerNodeProgressService.selectActivityLeaderboard(",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 3554,
+    "method_candidate": "leaderboard",
+    "statement_name": "selectRouteLeaderboardRow",
+    "text": "me = playerNodeProgressService.selectRouteLeaderboardRow(boardActivityId, boardTopicId, memberId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "line": 3574,
+    "method_candidate": "leaderboard",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "for (PlayerNodeProgress p : playerNodeProgressService.selectPlayerNodeProgressList(probe)) {",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+    "line": 418,
+    "method_candidate": "teamProgress",
+    "statement_name": "selectPaidRoster",
+    "text": "for (Map<String, Object> row : clubEventOpsMapper.selectPaidRoster(activityId)) {",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+    "line": 448,
+    "method_candidate": "teamProgress",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> progress = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+    "line": 1806,
+    "method_candidate": "topicInfo",
+    "statement_name": "countPlayersByTopicId",
+    "text": "topicInfoVO.setPlayerCount(playerNodeProgressService.countPlayersByTopicId(topicId));",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PureContentExploreService.java",
+    "line": 59,
+    "method_candidate": "completionFacts",
+    "statement_name": "selectPureContentExploreCompletion",
+    "text": "List<Map<String, Object>> rows = registrationMapper.selectPureContentExploreCompletion(topicId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PureContentExploreService.java",
+    "line": 79,
+    "method_candidate": "completedChapters",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> progress = progressMapper.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+    "line": 128,
+    "method_candidate": "findNodeProgressEntity",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+    "line": 143,
+    "method_candidate": "isPrevDone",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> done = playerNodeProgressService.selectPlayerNodeProgressList(doneProbe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+    "line": 182,
+    "method_candidate": "unlockGateError",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java",
+    "line": 536,
+    "method_candidate": "progress",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = progressMapper.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "line": 3843,
+    "method_candidate": "merchantStationRecaps",
+    "statement_name": "selectMerchantStationRecaps",
+    "text": "List<Map<String, Object>> rows = runtimeMapper.selectMerchantStationRecaps(sessionId, merchantMemberId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "line": 3959,
+    "method_candidate": "clubView",
+    "statement_name": "selectClubRouteTeamProgressProjection",
+    "text": "? runtimeMapper.selectClubRouteTeamProgressProjection(session.getId())",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "line": 3968,
+    "method_candidate": "clubView",
+    "statement_name": "selectActivityLeaderboard",
+    "text": "club.put(\"leaderboardRows\", safe(playerNodeProgressService.selectActivityLeaderboard(",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "line": 3989,
+    "method_candidate": "buildClubRecap",
+    "statement_name": "selectClubRecapAggregate",
+    "text": "Map<String, Object> aggregate = runtimeMapper.selectClubRecapAggregate(session.getId(), activity.getId());",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "line": 3990,
+    "method_candidate": "buildClubRecap",
+    "statement_name": "selectClubStationRecaps",
+    "text": "List<Map<String, Object>> stationRows = runtimeMapper.selectClubStationRecaps(session.getId());",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "line": 4263,
+    "method_candidate": "hasArrived",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "for (PlayerNodeProgress progress : safe(playerNodeProgressService.selectPlayerNodeProgressList(query))) {",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcMemoryBuilder.java",
+    "line": 45,
+    "method_candidate": "build",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> nodes = playProgressMapper.selectPlayerNodeProgressList(query);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SensorChallengeServiceImpl.java",
+    "line": 54,
+    "method_candidate": "alreadyCompleted",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOnsiteMetricsServiceImpl.java",
+    "line": 26,
+    "method_candidate": "get",
+    "statement_name": "selectTicketFacts",
+    "text": "List<TopicOnsiteTicketFact> all = safe(mapper.selectTicketFacts(topicId));",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOnsiteMetricsServiceImpl.java",
+    "line": 63,
+    "method_candidate": "get",
+    "statement_name": "selectWaitFacts",
+    "text": "computeWaitGate(result, safe(mapper.selectWaitFacts(topicId)));",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOnsiteMetricsServiceImpl.java",
+    "line": 71,
+    "method_candidate": "chapterWaits",
+    "statement_name": "selectWaitFacts",
+    "text": "computeWaitGate(waitOnly, safe(mapper.selectWaitFacts(topicId)));",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "line": 38,
+    "method_candidate": "selectPlayerNodeProgressList",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "return playerNodeProgressMapper.selectPlayerNodeProgressList(playerNodeProgress);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "line": 44,
+    "method_candidate": "selectPlayerNodeProgressById",
+    "statement_name": "selectPlayerNodeProgressById",
+    "text": "return playerNodeProgressMapper.selectPlayerNodeProgressById(id);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "line": 50,
+    "method_candidate": "countPlayersByTopicId",
+    "statement_name": "countPlayersByTopicId",
+    "text": "return playerNodeProgressMapper.countPlayersByTopicId(topicId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "line": 70,
+    "method_candidate": "selectPuzzlePersonalBest",
+    "statement_name": "selectPuzzlePersonalBest",
+    "text": "return playerNodeProgressMapper.selectPuzzlePersonalBest(memberId, topicId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "line": 76,
+    "method_candidate": "selectActivityLeaderboard",
+    "statement_name": "selectActivityLeaderboard",
+    "text": "return playerNodeProgressMapper.selectActivityLeaderboard(activityId, topicId, limit);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "line": 82,
+    "method_candidate": "selectRouteLeaderboard",
+    "statement_name": "selectRouteLeaderboard",
+    "text": "return playerNodeProgressMapper.selectRouteLeaderboard(activityId, topicId, limit);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "line": 88,
+    "method_candidate": "selectRouteLeaderboardRow",
+    "statement_name": "selectRouteLeaderboardRow",
+    "text": "return playerNodeProgressMapper.selectRouteLeaderboardRow(activityId, topicId, memberId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java",
+    "line": 143,
+    "method_candidate": "selectProgressCountsByMemberActivities",
+    "statement_name": "selectProgressCountsByMemberActivities",
+    "text": "return viewCreativeSquareMapper.selectProgressCountsByMemberActivities(pairs);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java",
+    "line": 148,
+    "method_candidate": "selectProgressCountsByMemberTopics",
+    "statement_name": "selectProgressCountsByMemberTopics",
+    "text": "return viewCreativeSquareMapper.selectProgressCountsByMemberTopics(pairs);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayBingoServiceImpl.java",
+    "line": 300,
+    "method_candidate": "loadProgress",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = progressMapper.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMemberServiceImpl.java",
+    "line": 559,
+    "method_candidate": "selectClubLeaderboard",
+    "statement_name": "selectClubContribution",
+    "text": "List<Map<String, Object>> rows = clubMemberMapper.selectClubContribution(clubId, currentWeekStart());",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java",
+    "line": 114,
+    "method_candidate": "insight",
+    "statement_name": "selectVisitFacts",
+    "text": "List<MerchantInsightVisitFact> visits = merchantInsightMapper.selectVisitFacts(merchantMemberId, since);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java",
+    "line": 115,
+    "method_candidate": "insight",
+    "statement_name": "selectCrowdFacts",
+    "text": "List<MerchantInsightCrowdFact> crowd = merchantInsightMapper.selectCrowdFacts(merchantMemberId, since);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java",
+    "line": 118,
+    "method_candidate": "insight",
+    "statement_name": "selectVisitorEvents",
+    "text": "merchantInsightMapper.selectVisitorEvents(merchantMemberId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java",
+    "line": 165,
+    "method_candidate": "dashboard",
+    "statement_name": "selectVisitFacts",
+    "text": "List<MerchantInsightVisitFact> visits = merchantInsightMapper.selectVisitFacts(merchantMemberId, since);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "line": 2461,
+    "method_candidate": "hasCompleted",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = progressMapper.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "line": 2468,
+    "method_candidate": "completed",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = progressMapper.selectPlayerNodeProgressList(progressProbe(scope));",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "line": 3901,
+    "method_candidate": "routeStarted",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = progressMapper.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "line": 3965,
+    "method_candidate": "syncTheme",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "for(PlayerNodeProgress progress:progressMapper.selectPlayerNodeProgressList(probe))if(Integer.valueOf(1).equals(progress.getStatus()) && themeNodeMedals.selectRankByProgress(nodeId,session.getMemberId(),progress.getId())!=null)themeEngine.legacyMedal(config,state,rules,medal.path(\"id\").asText());",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NodeProgressOrientTaskEvidenceVerifier.java",
+    "line": 22,
+    "method_candidate": "verifiedCompletion",
+    "statement_name": "selectVerifiedCompletion",
+    "text": "return orientMapper.selectVerifiedCompletion(c.memberId, c.activityId, c.topicId, c.taskId,",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTeamBoardServiceImpl.java",
+    "line": 237,
+    "method_candidate": "facts",
+    "statement_name": "selectCompletionFacts",
+    "text": "for (Map<String, Object> row : orientMapper.selectCompletionFacts(owner.activityId, owner.topicId, memberIds)) {",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+    "line": 44,
+    "method_candidate": "markArrived",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> existing = playerNodeProgressMapper.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+    "line": 66,
+    "method_candidate": "markArrived",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> raced = playerNodeProgressMapper.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+    "line": 103,
+    "method_candidate": "hasProgressRow",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+    "line": 145,
+    "method_candidate": "hasArrived",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+    "line": 157,
+    "method_candidate": "submitPhoto",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+    "line": 180,
+    "method_candidate": "submitPhoto",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> readback = playerNodeProgressMapper.selectPlayerNodeProgressList(",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImpl.java",
+    "line": 205,
+    "method_candidate": "recordReveal",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> existing = progressMapper.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventAttendanceServiceImpl.java",
+    "line": 49,
+    "method_candidate": "roster",
+    "statement_name": "selectPaidRoster",
+    "text": "for (Map<String, Object> raw : safeMaps(mapper.selectPaidRoster(activityId))) {",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventAttendanceServiceImpl.java",
+    "line": 102,
+    "method_candidate": "correct",
+    "statement_name": "selectAttendanceTargetForUpdate",
+    "text": "Map<String, Object> target = mapper.selectAttendanceTargetForUpdate(",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientScoringServiceImpl.java",
+    "line": 249,
+    "method_candidate": "syncSession",
+    "statement_name": "selectClearedProgress",
+    "text": "List<PlayerNodeProgress> cleared = mapper.selectClearedProgress(session.getMemberId(), session.getActivityId(),",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTaskServiceImpl.java",
+    "line": 338,
+    "method_candidate": "completedVia",
+    "statement_name": "countLegacyNodeDone",
+    "text": "if (orientMapper.countLegacyNodeDone(scope.memberId, scope.activityId, scope.topicId,",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java",
+    "line": 268,
+    "method_candidate": "revisit",
+    "statement_name": "selectPlayerNodeProgressList",
+    "text": "List<PlayerNodeProgress> rows = playerNodeProgressService.selectPlayerNodeProgressList(probe);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayMerchantRosterServiceImpl.java",
+    "line": 48,
+    "method_candidate": "list",
+    "statement_name": "selectRoster",
+    "text": "List<ShopDayMerchantRosterFact> facts = rosterMapper.selectRoster(topicId, merchantMemberId);",
+    "binding": "TEXT_CALL_SITE_REQUIRES_RECEIVER_CONFIRMATION"
+  }
+]

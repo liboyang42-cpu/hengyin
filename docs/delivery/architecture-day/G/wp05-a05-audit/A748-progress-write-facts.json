@@ -1,0 +1,111 @@
+{
+  "reference_sha": "748ad71bd1de141396fd8e2d9685c35706fd5b84",
+  "observed_source": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "not_a_new_authorization_baseline": true,
+  "selected_original_rows": [
+    {
+      "analysis": "UNKNOWN",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml#insertPlayerNodeProgress",
+      "kind": "insert",
+      "line": 55,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "player_node_progress",
+      "namespace": "com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+      "sha256": "daba0ff70304cd5cccae54c6f1863e1d0b591ecc644fc6508d8630e63a20dfe9",
+      "statement_id": "insertPlayerNodeProgress",
+      "table_hints": [
+        "player_node_progress"
+      ],
+      "unknown": [
+        "dynamic_tag:if",
+        "dynamic_tag:trim"
+      ],
+      "xml_file_git_blob": "74841d0349abc059663a2486a767a5707222a61e",
+      "xml_file_sha256": "ca10b337c901c6aecc3aef6f08b7ba10ca0392665f8677b4bf875897a77684fc",
+      "xml_node_sha256": "17bd5fe904aaec9bc6a899d181ebb9184ad05c9b3fa86ee6897da19633228b97"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "checkin_time",
+        "review_status",
+        "status"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml#markPhotoMachineApproved",
+      "kind": "update",
+      "line": 109,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "player_node_progress",
+      "namespace": "com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+      "sha256": "a2dfeee397a972f811b8dc16c48f3e403c48bc6aa4f4feda884cca0ad4cf3811",
+      "statement_id": "markPhotoMachineApproved",
+      "table_hints": [
+        "player_node_progress"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "74841d0349abc059663a2486a767a5707222a61e",
+      "xml_file_sha256": "ca10b337c901c6aecc3aef6f08b7ba10ca0392665f8677b4bf875897a77684fc",
+      "xml_node_sha256": "323ca8710ce0d395b20d63e0de82e5e823043cfc428f97fdc201a186379d61cc"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "status"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml#markShopDayGameDone",
+      "kind": "update",
+      "line": 117,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "player_node_progress",
+      "namespace": "com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+      "sha256": "ea6ff9c0921db1b899eb88c40f5e18941ed286a8a8a63288b05a8c11eb05af80",
+      "statement_id": "markShopDayGameDone",
+      "table_hints": [
+        "player_node_progress"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "74841d0349abc059663a2486a767a5707222a61e",
+      "xml_file_sha256": "ca10b337c901c6aecc3aef6f08b7ba10ca0392665f8677b4bf875897a77684fc",
+      "xml_node_sha256": "e07ae807a9488de90efeca34874632352b38d363fe6bd93739f97698e163fb6a"
+    },
+    {
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "authorization": "NOT_DETERMINED",
+      "baseline_statement": true,
+      "column_hints": [
+        "pic_url",
+        "review_status"
+      ],
+      "column_status": "HINTS_ONLY_NOT_COMPLETE_COLUMN_PROOF",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml#updateShopDayPhoto",
+      "kind": "update",
+      "line": 99,
+      "literal_target_status": "KNOWN_LITERAL_TARGET_ONLY",
+      "literal_write_target": "player_node_progress",
+      "namespace": "com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.PlayerNodeProgressMapper",
+      "sha256": "07877e7fedb8dbe6babbe57120b765ef2bea6b5c616508d2fb65efef27fe81d7",
+      "statement_id": "updateShopDayPhoto",
+      "table_hints": [
+        "player_node_progress"
+      ],
+      "unknown": [],
+      "xml_file_git_blob": "74841d0349abc059663a2486a767a5707222a61e",
+      "xml_file_sha256": "ca10b337c901c6aecc3aef6f08b7ba10ca0392665f8677b4bf875897a77684fc",
+      "xml_node_sha256": "c6882c2a4babded9d29b7e74a51633e16909638858905dae2316b96fbbae32f4"
+    }
+  ]
+}

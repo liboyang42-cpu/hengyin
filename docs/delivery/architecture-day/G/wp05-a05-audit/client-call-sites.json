@@ -1,0 +1,870 @@
+[
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-ui/src/api/business/topicFunnel.js",
+    "line": 10,
+    "text": "url: '/business/topicFunnel/' + topicId,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+    "line": 417,
+    "text": "url: '/api/topic/info-to-user', method: 'POST', data: { id: topicId }, hideLoading: true, silentError: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "line": 1090,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "line": 1209,
+    "text": "url: '/api/stats/club',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "line": 1616,
+    "text": "// 本团贡献榜(/api/club/leaderboard)",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "line": 1623,
+    "text": "hideLoading: true, url: '/api/club/leaderboard', method: 'POST',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "line": 2716,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "line": 2930,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "line": 2955,
+    "text": "// /api/topic/info-to-user 本来就是按主题问的,调用点手里一直有它,只是以前没往下传。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "line": 3042,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/group-code/index.js",
+    "line": 151,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-detail/index.js",
+    "line": 232,
+    "text": "// HO-26 集合时间(承接方领队改运营详情):显示值取 /api/topic/info-to-user 的 activityList",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-detail/index.js",
+    "line": 331,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-detail/index.js",
+    "line": 350,
+    "text": "// P0(2026-09-05 审核):/api/topic/info-to-user 不返回 preparingAt/startedAt/endedAt 这类场次字段,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-detail/index.js",
+    "line": 351,
+    "text": "// 按 raw 推永远落 confirmed。进了导演台就以 /api/game/session/view 的 projection.status 为准",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-detail/plan-fallback.js",
+    "line": 16,
+    "text": "const sendRequest = request || (options => getApp().sendRequest({ ...options, url: '/api/game/session/shared/control', method: 'GET' }));",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-detail/plan-fallback.js",
+    "line": 29,
+    "text": "return new Promise(resolve => sendRequest({ url: '/api/game/session/shared/control', method: 'GET', data: { activityId }, autoErrorToast: false,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-story/index.js",
+    "line": 5,
+    "text": "//   路线/玩法陈列 → /api/topic/info-to-user(玩家视角公开投影,模板已过 TemplateSecrets.strip,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-story/index.js",
+    "line": 8,
+    "text": "//                  ★ 绝不复用 /api/play/nodes:那条是玩家视角,揭示要走 member_spoiler_reveal",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/topic-story/index.js",
+    "line": 174,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/utils/club-game-director-adapter.js",
+    "line": 6,
+    "text": "} = require('../../../utils/game-session-client.js')",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/club/utils/club-game-director-adapter.js",
+    "line": 191,
+    "text": "return require('../../../utils/game-session-client.js')",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/merchant/game-node/index.js",
+    "line": 8,
+    "text": "const { createGameSessionClient } = require('../../../utils/game-session-client.js')",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/merchant/index/index.js",
+    "line": 49,
+    "text": "const { createGameSessionClient } = require('../../../utils/game-session-client.js');",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/merchant/index/index.js",
+    "line": 949,
+    "text": "url: '/api/merchant/dashboard',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/merchant/marketing/ai-insight/index.js",
+    "line": 180,
+    "text": "url: '/api/ai/merchant/insight',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/merchant/marketing/index.js",
+    "line": 27,
+    "text": "// 店铺参谋走 /api/ai/merchant/insight,要 MARKETING_READ(运营/店长);核销员/财务没有。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/mylike/mylike.js",
+    "line": 184,
+    "text": "url: '/api/creativesquare/list',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+    "line": 119,
+    "text": "return this.request('/api/play/advanced/state', 'GET', { sessionId: restored.value.command.sessionId }).then(res => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+    "line": 130,
+    "text": "this.request('/api/play/advanced/start', 'POST', {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+    "line": 250,
+    "text": "return this.request('/api/play/advanced/action', 'POST', command).then(res => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+    "line": 312,
+    "text": "return this.request('/api/play/advanced/action', 'POST', originalCommand).then(res => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+    "line": 351,
+    "text": "return this.request('/api/play/advanced/state', 'GET', { sessionId })",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+    "line": 514,
+    "text": "this.request('/api/play/advanced/leaderboard', 'GET', {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+    "line": 553,
+    "text": "return this.request('/api/play/advanced/state', 'GET', { sessionId: state.sessionId })",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 3,
+    "text": "// 数据:GET /api/play/nodes(现网) — 缺坐标/章节/模板呈现字段时做降级;扫码 /checkin、答题 /answer、到达 /arrive。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 21,
+    "text": "const gameSessionClient = require('../../utils/game-session-client.js');",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 3308,
+    "text": "/** 升级3:同行者榜(GET /api/play/leaderboard,score=完成关数)。入口在通关 sheet。 */",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 3317,
+    "text": "req('/api/play/leaderboard', 'GET', params).then((res) => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 3475,
+    "text": "return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId },",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 3807,
+    "text": "return this._withThoughtSync(() => req('/api/play/journey/opening/complete', 'POST', Object.assign({}, payload, {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 3998,
+    "text": "req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 4029,
+    "text": "/* 故事变量的两个来源之一(另一个是 advanced 会话视图):/api/play/nodes 回包 data.vars。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 4210,
+    "text": "// 模板呈现字段(/api/play/nodes 已下发)",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 4302,
+    "text": "// /api/play/nodes 一直在下发章节 blocks(文字/节点/图片/音频),此前本页没人读它。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 4691,
+    "text": "return req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }, undefined, true).then((res) => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 6534,
+    "text": "// 由服务端拼成 map。与 /api/play/nodes 那份走同一套合并口径(见 _mergeStoryVars)。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 6657,
+    "text": "req('/api/play/nodes', 'GET', params).then((res) => { // 补拉",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 7057,
+    "text": "req('/api/play/encounter', 'GET', params, undefined, true).then((r) => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 7398,
+    "text": "req('/api/play/journey/ending', 'GET', params).then((res) => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 7718,
+    "text": "// 档位数字必须是真的:累计完成主题数取 /api/play/my-completed(成长中心同一条只读接口),",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 7778,
+    "text": "url: '/api/play/my-completed', method: 'POST', hideLoading: true, silentError: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 7812,
+    "text": "req('/api/play/journey/stage-end', 'GET', params, undefined, true).then((res) => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "line": 8037,
+    "text": "// 通关→广场发布:发帖时活动选择器列出已通关活动(本场已在 /api/play/my-completed 中),选中即关联",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/merchant/index.js",
+    "line": 199,
+    "text": "/** 答题 unknown 的权威回读:/api/play/nodes 的 gameDone 位是服务端自己产生的事实。 */",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/merchant/index.js",
+    "line": 296,
+    "text": "// 一句「请勿重复核销」拦不住手 —— 改成锁着不放,只能由 /api/play/nodes 权威回读解锁。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/merchant/index.js",
+    "line": 312,
+    "text": "/** unknown 只能由服务端自己产生的事实解除:重新拉 /api/play/nodes,看这个节点到底动没动。 */",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/merchant/index.js",
+    "line": 376,
+    "text": "url: '/api/play/nodes', method: 'GET', hideLoading: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/finish-medals.js",
+    "line": 3,
+    "text": "只放真拿到的:① 主题通关徽章 —— 后端 /api/play/nodes 的 reward.finishMedalName(全部完成才算);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/life-archive.js",
+    "line": 4,
+    "text": "* 两个来源同一个形状:真玩家读服务端 /api/play/journey/ending 的 archive,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/playkit-view.js",
+    "line": 427,
+    "text": "* @param {Object} view  /api/play/advanced/{start,action,state} 的返回体",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-backpack.js",
+    "line": 1,
+    "text": "const sessionClient = require('../../../utils/game-session-client.js');",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-backpack.js",
+    "line": 181,
+    "text": "const loading = req('/api/play/theme/state', 'GET', Object.assign({ topicId: this.data.topicId }, this._sessionParams()), null, true).then(res => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-backpack.js",
+    "line": 232,
+    "text": "return req('/api/play/theme/action', 'POST', command, { 'content-type': 'application/json' }, true).then(res => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-backpack.js",
+    "line": 348,
+    "text": "return req(team ? '/api/game/session/shared/preview' : '/api/play/theme/gameplay-preview', 'POST', command, { 'content-type': 'application/json' }, true).then(res => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-backpack.js",
+    "line": 478,
+    "text": "return req(team ? '/api/game/session/command' : '/api/play/theme/gameplay-action', 'POST', command, { 'content-type': 'application/json' }, true).then(res => {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-plans.js",
+    "line": 1,
+    "text": "const sessionClient = require('../../../utils/game-session-client.js');",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-player-ops.js",
+    "line": 1,
+    "text": "const sessionClient = require('../../../utils/game-session-client.js');",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-trade.js",
+    "line": 1,
+    "text": "const sessionClient = require('../../../utils/game-session-client.js');",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/play/utils/theme-trade.js",
+    "line": 86,
+    "text": "const res = await req('/api/game/session/shared/preview', 'POST', { activityId: view.activityId, action: 'TRADE_OPEN', payload: data }, { 'content-type': 'application/json' }, true);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/publish/utils/publish/gameplay-support-matrix.js",
+    "line": 20,
+    "text": "app.sendRequest({ url: '/api/play/theme/support-matrix', method: 'GET', auth: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/roam/index.js",
+    "line": 567,
+    "text": "所以这里必须真拉一次 /api/topic/info-to-user;拉不到就退回原来那张商家白卡,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/roam/index.js",
+    "line": 572,
+    "text": "url: '/api/topic/info-to-user', method: 'POST', data: { id: poi.topicId },",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/square/components/activity-picker/index.js",
+    "line": 44,
+    "text": "url: '/api/play/my-completed?for_public_reference=true',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/square/components/route-map/index.js",
+    "line": 37,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/square/detail/index.js",
+    "line": 995,
+    "text": "url: '/api/creativesquare/info',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/square/list/index.js",
+    "line": 1218,
+    "text": "url: '/api/creativesquare/list',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/index/index.js",
+    "line": 711,
+    "text": "// 路线进度:已购才读本人进度(/api/play/nodes 的 total/doneCount);未购就是 0,不演示假进度",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/index/index.js",
+    "line": 721,
+    "text": "app.sendRequest({ url: '/api/play/nodes', method: 'GET', hideLoading: true, autoErrorToast: false,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/index/index.js",
+    "line": 882,
+    "text": "通关给不给勋章和券」—— 这四件事全在 /api/topic/info-to-user 的返回里,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/index/index.js",
+    "line": 2033,
+    "text": "url: '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 562,
+    "text": ": '/api/topic/info-to-user',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 1591,
+    "text": "通关给不给勋章和券」—— 这四件事全在 /api/topic/info-to-user 的返回里,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 2293,
+    "text": "「客户」走 /api/project/players,那道闸认的是发布者或有报名行的人,他没有报名行 ⇒ 点了必被拒;",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 2348,
+    "text": "url: '/api/project/players', method: 'POST',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 2483,
+    "text": "// CU-C-64:主题名在 /api/topic/info-to-user 里是 info.name(TopicInfoVO 没有 topicName),",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 3118,
+    "text": "客户·谁要来谁还没来 / 暂停接待)入口都走 /api/game/session/merchant/entries,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 3138,
+    "text": "url: '/api/game/session/merchant/entries', method: 'GET', hideLoading: true, silentError: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 3211,
+    "text": "url: '/api/topic/info-to-user', method: 'POST', hideLoading: true, silentError: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 3334,
+    "text": "/* 章节招商开关的三段文案。数据来自 /api/topic/info-to-user 的 chaptersList[].recruitEnabled",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 3572,
+    "text": "中间靠 /api/game/session/merchant/entries 拿本商家的站点入口,按 topicId 过滤。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 3618,
+    "text": "url: '/api/game/session/merchant/entries', method: 'GET', hideLoading: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 3663,
+    "text": "/api/topic/info-to-user。按需拉一次,不打开就不拉;拉过就不再拉。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+    "line": 3678,
+    "text": "url: '/api/topic/info-to-user', method: 'POST', hideLoading: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageB/pages/im/chat/index.js",
+    "line": 458,
+    "text": "url: '/api/topic/info-to-user', method: 'POST', hideLoading: true,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+    "line": 1203,
+    "text": "return Promise.all([req('/api/play/growth', {}), req('/api/growth/center', {})]).then(function (arr) {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+    "line": 1237,
+    "text": "medals: that.data.identityCard.medals, // BE-01 勋章单真源:勋章数只由 loadMedals(/api/medal/wall)写,growth 不再返 badgeCount",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+    "line": 1266,
+    "text": "return req('/api/play/my-completed', {}).then(function (res) {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+    "line": 1299,
+    "text": "return req('/api/medal/wall', {}).then(function (res) {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+    "line": 1966,
+    "text": "return req('/api/creativesquare/list', data).then(function (res) {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js",
+    "line": 122,
+    "text": "// /api/medal/wall 的模板勋章由「已完成节点 + 模板 medalImg 非空」推导,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js",
+    "line": 271,
+    "text": "Promise.all([req('/api/medal/wall', recover), req('/api/badge/wall-v2', recover)]).then(function (arr) {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js",
+    "line": 306,
+    "text": "// 2) /api/medal/wall:模板勋章与成就行各自保留来源,不混入身份卡(PRD §3.2)",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js",
+    "line": 347,
+    "text": "/** 玩法侧「查看收藏」的权威回读:墙的数据来自 /api/badge/wall-v2 与 /api/medal/wall,",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js",
+    "line": 431,
+    "text": "requestGrowthData('/api/play/growth', res => this._recoverGrowthSession(res, undefined, epoch, 'overview')),",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js",
+    "line": 432,
+    "text": "requestGrowthData('/api/play/my-completed', res => this._recoverGrowthSession(res, undefined, epoch, 'overview'))",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/community-post-api.js",
+    "line": 215,
+    "text": "if (url === '/api/creativesquare/list' || url === '/api/comment/list') {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/community-post-api.js",
+    "line": 234,
+    "text": "} else if (url === '/api/creativesquare/info') {",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/game-session-client.js",
+    "line": 265,
+    "text": "url: '/api/game/session/view',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/game-session-client.js",
+    "line": 298,
+    "text": "url: '/api/game/session/merchant/entries',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/game-session-client.js",
+    "line": 336,
+    "text": "url: '/api/game/session/recap/export',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/game-session-client.js",
+    "line": 393,
+    "text": "url: '/api/game/session/command',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/game-session-client.js",
+    "line": 456,
+    "text": "url: exported ? '/api/game/session/shared/export' : '/api/game/session/shared/control', method: 'GET', data: { activityId: activityId },",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/game-session-client.js",
+    "line": 480,
+    "text": "sendRequest({ url: '/api/game/session/shared/export/anchor', method: 'POST', data: { activityId: activityId },",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/game-session-client.js",
+    "line": 514,
+    "text": "url: '/api/game/session/receipt',",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/index/continue-explore.js",
+    "line": 24,
+    "text": "// 直达游玩页;能不能继续仍由游玩页 /api/play/nodes 的权威态把门,这里不绕过。",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/theme-records.js",
+    "line": 39,
+    "text": "const res = await req('/api/play/theme/history', 'GET', query, null, true);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/theme-records.js",
+    "line": 62,
+    "text": "const card = await req('/api/play/theme/card', 'GET', { sessionId: view.sessionId }, null, true);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/theme-records.js",
+    "line": 66,
+    "text": "const state = await req('/api/play/theme/state', 'GET', { topicId: view.topicId || this.data.topicId || this.data.id, sessionId: view.sessionId }, null, true);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/theme-records.js",
+    "line": 114,
+    "text": "const res = await req('/api/play/theme/state', 'GET', { topicId: old.topicId, ...(old.activityId ? { activityId: old.activityId } : {}) }, null, true);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/theme-records.js",
+    "line": 127,
+    "text": "const fresh = await req('/api/play/theme/state', 'GET', { topicId: old.topicId || this.data.topicId || this.data.id, sessionId: old.sessionId }, null, true);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/theme-records.js",
+    "line": 134,
+    "text": "const replay = await req('/api/play/theme/replay', 'POST', { sessionId: old.sessionId }, { 'content-type': 'application/json' }, true);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/theme-records.js",
+    "line": 137,
+    "text": "const state = await req('/api/play/theme/state', 'GET', { topicId: this._themeReplayAttempt.topicId, sessionId: replay.data.sessionId }, null, true);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  },
+  {
+    "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+    "path": "chengyinhub-xcx/utils/ui-state-request.js",
+    "line": 43,
+    "text": "case '/api/medal/wall': return sendKnown(app, '/api/medal/wall', options);",
+    "evidence": "LITERAL_OR_COMMENT_NOT_EXECUTION"
+  }
+]

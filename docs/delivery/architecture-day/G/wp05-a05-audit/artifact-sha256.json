@@ -1,0 +1,18 @@
+{
+  "algorithm": "SHA-256",
+  "excludes_self": true,
+  "files": {
+    "A748-progress-write-facts.json": "98bd832a36f8a534eb91a9ab6fc2575672cb89cb6f9e8c434865fbeff39f6fd6",
+    "CONSUMERS.md": "33f42921665297fbbd2ec18e4392140c8f5605587ed379150e31d22265c259fb",
+    "CONTRACT.md": "2e9345edf6fa95ee6f88554b018701e67694c9b0c282cd6ef9d7322f60cd3dc5",
+    "JAVA-CALL-SITES.md": "efe4a2ef5d2f7da07ac88e806367dfcfe690c5419cd101943e5206d4ae0eafcd",
+    "README.md": "b73488160132b678cd51c5ff8a9d2d304d93a681e8fa2aca832a5cff5d7ee554",
+    "RUNTIMES.md": "9eba92bc14dbbfa7e55a7d9e31238f124f1303856c9a37ff11c66ef54a490329",
+    "VALIDATION.md": "6f841af9c7c6e39bc23cd5cbc8ae57e691c1b0fc0ff416eb130428a4cd80d08e",
+    "client-call-sites.json": "b476613f812a91c131a8644907e5fdc29b3a3fd1c127b61cfe5077e42675f2f7",
+    "progress-java-call-sites.json": "b3662e192892bbb2603de7a4ce0eef31ff3c0d132ed53869ade08a92c4183354",
+    "progress-statements.json": "69cf272b0ce88891bda83937b021941191235c6e34ab56b524ed61e4148cbe9d",
+    "replay-arrival.review.patch": "179d1afc382cc6b6b2680b2be3f3345328cb06d087323eb4d4f1a6007a52ae8d",
+    "source-identity.json": "5e7a21fd73c58ef3184a5569bd9f1a5243e2876d42f959579bab29af2fdd8bdc"
+  }
+}

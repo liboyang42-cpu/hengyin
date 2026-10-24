@@ -1,0 +1,1014 @@
+{
+  "audit_source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+  "comparison_source": "2b4024cdcb185c56ee05126e02b9a0c79fcff34a",
+  "comparison_scope": "git diff --name-only -- *.java",
+  "comparison_changed_paths": [],
+  "A748_observed_source": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "A748_two_progress_xml_byte_unchanged": [
+    "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml",
+    "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml"
+  ],
+  "hash_scope_notice": "Identity/literal/source-reference evidence only. All detailed semantic findings are individually cited in prose; no claim all hashed files are fully audited or run.",
+  "files": [
+    {
+      "path": "chengyinhub-admin/sql/migration_20260902_node_medal_claim.sql",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "5c5705393f886224a0781a53b8cc2e698bdba895",
+      "sha256": "4a7b8a71c0d36c1de6e960a8dc4c1cc0f00f510fe55a405bef9d05e439009495",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_theme_runtime_20261004.sql",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "35a987f891f9c5dc9c63b96270975d660da84f9e",
+      "sha256": "61794ccd8681bfaac0d07208c7d0f3108780f919ee5aeff17951518f999d9007",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "e86afcf9befdc4836be50d76d6b609b7e01aa711",
+      "sha256": "c376128aeddb3c47f64369341452a78b47ef10db36341a733ee6bb889a45c985",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "5470ba47cf79fe95bb37bc7087e886f44c56d3f5",
+      "sha256": "425657497b964ee73ba1fb2e53b8adad2e1561878e7482d27d9a4a711f5e0b0d",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "adbb3b4ce29ef195870c92f5208f01af5563c514",
+      "sha256": "64d5d2bde7d375e0de4b2feb4b16c2315dfd13579aa22b1faeeae6fba051035e",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "e0d38249b9e42251e8fb71dd4bdf8d6e385c5681",
+      "sha256": "935ce612a8c70ae5f3876c631a8297bc529a29b53e2bf2cbff1fa4e54b9db1b6",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "116d3a232afe74551dfbfdbbf3cb22191b4f306c",
+      "sha256": "293e56991e759657297897940b2928cb849714aa636313d335b5c283b5543136",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "0892ec72021833403fc3a32863930c470a85d89d",
+      "sha256": "8f737a735c002baa8eb94432ece30789e37f279c15b5e0680c1e569d45749999",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMedalController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "484d7ba3244af52d87bf7f1279a3dd867c75ecde",
+      "sha256": "c37f6b56c975f56b4ca4fff73ed278bcf5b941d6ff26119b86222d4d327b131f",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "05a83b7f6dc55df549fb3bfe67db96fd872ab5b8",
+      "sha256": "61d830384e48eadec6c0d709f412b7aad9fbf48081a8d5e4c6092be9eaeed559",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "e718489ad9b71fae6c7ab2bc9eff4149a443740f",
+      "sha256": "107c34591c45f05cb614fe08753e3b8247eb9957a24352234f6fecefb70dccb3",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientScoringController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "ebe9b1a003398ce9a70c98718112dcc37a1b97bf",
+      "sha256": "254609b3fadea05694a44dc3e49cfbedc4a74137519e5beb644434006d61ece8",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayEncounterController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "b3ebeafc1918252c8e52b220fec9dee216e1746f",
+      "sha256": "be40cca747fb54c74c7d86d59909d53815aeab6b8f67e35f1bc437445681fd79",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "233aa498dcef018398d6d981e8d19984039522ff",
+      "sha256": "203650fa215b6b360287bc3da23aed35a3d05adce68e310fbc856dbc7b8836a3",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyReadController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "5f801df44e8829444eb04468c12b251fd2ef9bc2",
+      "sha256": "e384820a49f7d9923c77b56c7c004a178c36c44941645e7eae097ac350b5e0aa",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "8495e648e29ddb538ce84f2a92f4654083834d78",
+      "sha256": "7dae1fb4b87a98c3a588180b930ceb6ef36ba38e06add40cfa6936507fbea89a",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiProjectController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "9658d624a743100ae0e03c377adfdc4897002504",
+      "sha256": "587b7048a718e66f53f761269c546ec5febc242abe958f38809b556b327d6e32",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiStatsController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "3d933133aaec01497247e1f35dd419aac9070ce7",
+      "sha256": "5a849bd73b281b6bb16b47a773ba7d7a871fa0c828ce68152f487a7f4e336e59",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "577a065640735cbd4580904f3e24fdbe1638f1cb",
+      "sha256": "826fcf4f3b89d696c2fee57a848019bd424d4c97c14da511d631b4b24dbe6b33",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "fe2d26e7220104a01f9927cd7d384741d0111ff0",
+      "sha256": "7d93a2829f7a37159bf1130ccbecc7422044ab4f8045c339a2e027df7177c406",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/TopicOnsiteMetricsController.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "8aa3a387e53780228b14e9aa375ca82b413a7bd5",
+      "sha256": "9e251f8408570201931bbad28bb2d19f0a8fe466f09bca360fad1823aa12f775",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/TopicRouteCompletionCoordinator.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "7434f23389bd4587fcaa26468644298782b6be2b",
+      "sha256": "0eb5ca449c3cf14cc3c89104f3e572114dc0b1e78d12f587bf5911c9ea44c9d9",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/JourneyFullFlowMySqlIT.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "2f8dbb0b0ea457ad144ff69b771e4cc51c8cac91",
+      "sha256": "37ab1d23c945fe7192c16062d43e7ef5e8f441ee0e6b62964405e65548ae7220",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeCompletionRewardCapMySqlIT.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "2c2d5c7015381d5b3298cfb635e16dfa4115d580",
+      "sha256": "19ec0533cef00838e9dd3cb199f2a11e51fb690f9d7020bbb4cd61567423bd6b",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "dc807d26dbf2ec226a9f99d53f989de60451a83e",
+      "sha256": "6c9d3536cd4c23a7ff85fefa0fad9639d8ae6cfeeacb048ef22452c3ddd900e0",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/GameSessionRuntimeMapperSqlTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "f29796443f058fcf85b26fdf96a3852b336899b6",
+      "sha256": "0563b7fed4962f3ebc0229196e57c45b08b811b3226e4f7551e1275faa15822b",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ShopDayMerchantDataBoundaryMyBatisIT.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "36947e33e3d8d01f013a775e4e4517bd87ef431d",
+      "sha256": "3ffc880ec1a33caa1423fd02ac25c73be04c9d8c5abbff5528b5a63204ef3e35",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreCompletionBatchTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "e2b1e888b38a214c807c6b95c20f493bfa079999",
+      "sha256": "9dd35383ed6eef2a40c3013427e8e6af9e517c8571da4814a865ecc5bc393463",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayOneTicketMySqlIT.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "05e96a96da14a220bb4a45304b2206b3b724cc5e",
+      "sha256": "9ba40a2ae2b18f5db18652994a6a76dae0fce31dcb71aebf98664b210c39ba06",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "113eaa7d0c7db36f70840a4fb3671f0625af006a",
+      "sha256": "45de8f0106b0c0df09c8c6eeb189237ddff219609cd7eaa37eff255ed4fbcfdf",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "21f3319370be49b7c04459ff469d23ef22be8c1b",
+      "sha256": "ac3dc5be1f40841fb7a6c2072b1b39f450e505f40df9d5f6e48602129f2386b8",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GenericRouteRuntimeServiceTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "25b47e5a100ec9602552efcb3f0f36035fa41ab3",
+      "sha256": "691c809ccfd732398d1c313d02a249048b544c6fbdf4429fc122c7aedd605691",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "d8ca7d3ac517713ba0377355b20c923a1d96fbb9",
+      "sha256": "7925c48d50f8fc81ed54863dcd787b42cbdeb003929e4fbda544f2d2258e210d",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/PureContentExploreServiceTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "76ba524d5887e4901b1576fa55605c669385e673",
+      "sha256": "0e36f88792e590f7aeafe37d85a7871f1d27f9057950368f351edc8c28129168",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "78eba76c7c1dd7601db36e0aff3aa94f3f1148fa",
+      "sha256": "e93bd1971838db6e44ef44c0bce7eacbc3286469f887fa254347c1ef3470dd84",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiStatsClubCompletionFactTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "4992c07b6eec15e3007ea350fd4e519587b975ea",
+      "sha256": "bf09bdb5f5b51f553a714bc10da01d3875c2762d002f30ece5ceffe20dc94551",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "3a56923b88935f0010a953da11e2b2d19802cbe7",
+      "sha256": "8767bf17f87e70e85461c7c93dce1d859f016740df47f7e033d88a452f9c743d",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "925d538276dd804958a5b06f3022d2fd360ba37d",
+      "sha256": "2c24aed8c3fad0b187bf3c8b97aa9fe803eb35e5a72e933318392e84be815b1c",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ShopDayExperienceLayerContractTest.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "9fb0cce424f534cf9c23aa59c03b11240d652f7b",
+      "sha256": "a1353815111a288ca5a19175aab5c60d51050d8596a182a864fb993d8ce46b0f",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IProjectPlayerReadService.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "586d78e480cd5176cfc182c9b99e6615a4002b0d",
+      "sha256": "2549c0f1a972995998e5602422cbd2456ffafae9d183604a92e512b4621cf199",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "a657dd8c6cdc0301ef81a2b22fbf53e74ac207e0",
+      "sha256": "3ad4a9f11d6803908fec8e9ce1b083dcf5fc9d39ad750649e672539fb67daf7c",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventAttendanceServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "f0161d17a0edf5e89c9d01a10d1740ac270a499a",
+      "sha256": "f16f3b46efd7c5ce598a2900c0c01e7d557812f0b1c847b9039cf1d629b6f537",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMemberServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "ec2c4b6e5d98e05521767b40a40a4ebbd558025d",
+      "sha256": "45d4ea5eb03c6be7c2da8c5fcc192a716fb860de54f5a05612b38dbbb20b2be2",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "e53043d60ec2ab3e01d4141eda5b1c146350e22d",
+      "sha256": "e923e5a71d5221040f1d4aa2bda26f230f3471e91d894bcf80367ba2e7301916",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "28261fd4c73a94fc6f8b0f0dd18395d2ccc825a3",
+      "sha256": "59707a87140c58a7fb6471e5847024134b6629deffd5a8ad2721e6014450ee03",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NodeProgressOrientTaskEvidenceVerifier.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "45e2ee3fd15207f6b600a4077bbf3821a8334caa",
+      "sha256": "d9a573e9346f4cb72bc3b1c930058a978e41f815fa401be14349eb9a0724bd6f",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "c9d88eca1295cd7ec63bf6d1a15a278b585b312c",
+      "sha256": "6b6c2d203f6c6f038b882e2bccb4d8743df18723bf1cad40d6ce676e3bedca77",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcMemoryBuilder.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "b0ec7ee2224bb397125d37ee87f7f0a5ea51fbea",
+      "sha256": "9f4943a015c1c6ea12e59d7f0f88f56900245672e940f507f8fc02acbadfe89e",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientScoringServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "b7d008c2fe28c20c08e2e0e7145ffec8aafd8362",
+      "sha256": "0625d227f01d074cb695d5493e3da0977384a6d564347ad27fc023e63fd295aa",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTaskServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "7534f2bac05736d59455929db210740d8ef53150",
+      "sha256": "ba8ca2802951b5237d834f389efae3bd9c725d6abb49eed06986ca5bede281ac",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTeamBoardServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "18bca3055f4a9f4ee914e023a96c6d170de3bd14",
+      "sha256": "64175195cc7f2d16e0cf2d8a45e8bdb200d385e83aaffed6d3d64dd3602c78e1",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "fe562dc12107cc975240f78b45ab3bfe110cfdf4",
+      "sha256": "1be9f2658b999eb0d9019f5688309a7ec3c4dea5d9b509e588f4868ccae681d6",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayBingoServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "58e1aa868ce110d7989921cc2f86e80cfb2af98f",
+      "sha256": "5d7816dd333ffbbae592caa54a1620ac27521e145c74c3dd17bbf3553b637761",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "0d1e0f26ec456f5f94ae66fbe0d46f28bc2875b0",
+      "sha256": "61686ccae65d27a2779c7c27ad86bb078c012ffb5f71a8f8e6f9367689c8d1a0",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "0ecf115361893bc1f18fff2a18748a2b6d33b4ba",
+      "sha256": "1b15996b74570312eba79495b10441600375e406becd59219838c8d176c9f26f",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "ac3d260753ba81d9e3de3766378914466bbc937f",
+      "sha256": "33029a66e2fbc95471c64bd5e98186b738aef031fc359807c9e8e4006a930011",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "eb92491589751b24ec22ae689ef0fb9be2fa8fe7",
+      "sha256": "178c773b2b0a4b76a56befcc57cd8636ec7c5962a48790da7bbc551b27ea1215",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProjectPlayerReadServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "29207e8c81e92922e838bdf147da08878e244380",
+      "sha256": "023bda283273197ae1463ddfc3cab8c80fac54e9df704bd28612b762293ece42",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "7a66a3c6e2f26124ee808bb26296a7a890e7b18a",
+      "sha256": "b21f201e97e0bc151e33a57e1d1539c1675627ad47277fb49c4a3b58ad5d09e8",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SensorChallengeServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "f01a045d51bfc0ed0070a31432ddb5e9b66f95b5",
+      "sha256": "953026f0dfccbb885f3002dac8c8a03873668595692172d9ea92c3dccc11f190",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayMerchantRosterServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "000bc05794edbef6dea7a37daeef5196443174a8",
+      "sha256": "763069bad95cb724e72d68d5ac1647bbadbcbb2c10baf7b7adafdda088925bc8",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "4d8a2c74de18850d47a7cf3a0faa7a6e6a5259c6",
+      "sha256": "4faca67b9a759a09d583a62f6c148a7d5abdbb30fd6fbf4079fb70ff21dd9272",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "20018a7dbf72ac44fce2d15b115fd52cf93f3c29",
+      "sha256": "32ac9398456da157b4b08407a8179d07db77ac9d3c5621239be7b1e373b6cb1b",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOnsiteMetricsServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "9631ececc23f1f7dbbfd7aaab600b6668532fa4f",
+      "sha256": "59c155b7581337c04c984ca668657ab0628f611ad042242c94320694289378fd",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "63c0abc5f26f1a7aba4037c34677154ac2955bf9",
+      "sha256": "6426ef799fa77f7313fb1554c668033dde11817baacafa45a499b75ee3dc31e9",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "4b01d22e9fb80b720fee92ae28cb04fdf895399f",
+      "sha256": "a3766306ea6098915d834d395816cee9592f2e1e697da087e331177db0516268",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "567fb16a164617bac1519804a41c9a022a706dca",
+      "sha256": "a64d94bd1cd258980fdb15eecc048012c9af0cc6fd6625eae057ae9d3c484f08",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CurrentPlayRegistration.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "e55bb8cbe816ef12429d63324bc5e009583a1759",
+      "sha256": "53495a67081e3c3215a872f340796a66cbb8af05ebc685118a2228fded2e6ebe",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayTaskEngine.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "870e9db303271059586ad9f7ab8e7d4e5f8ebe93",
+      "sha256": "87ffefc2cf5bc83917116d8ad07382639e6b5bae872792618f5b77967d8befe7",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "e6f66fdbda2a2c1847c61fa4b796dbc9494eeb19",
+      "sha256": "afcf088aba1e6cd81d690ad910ebb47717f599ac4fa8b4676b6af6f21cf16353",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PureContentExploreService.java",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "26056b0add2f200ffd64e0e05b0b94016b11c601",
+      "sha256": "84dbe5f1ed50417597bbdbff0c5f03438ad3a99b0c7727b07bcb39e9be5bf972",
+      "evidence_role": "PROGRESS_JAVA_DIRECT_CALLER_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "ac1c108edceb71917ffb75ba9d662e1cd4e6e505",
+      "sha256": "394ae928be65e666110e66ef2344da539901b8d640b123a4d6cdbce7807b7cbf",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubMemberMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "3d8d86246aaa0dc7a04c6ebe3591115bcb52f46d",
+      "sha256": "098860979c2ff6756f403f310359dd7e333dd3d25cdc9cdc49e594ac89a2cb77",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "294c21f6c141975126d1197bd44f711d7e8e7db1",
+      "sha256": "2e0c38d4d8426aacf10b8759507992b319c791cc3b1a178d4ff01f0bb1e07c44",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "53e4641e9433093c460848b6eacbff300a96f1ac",
+      "sha256": "48cacbc75efd3abc2685e45d909da33a683fd3b678b9111bef19885ddde6bf80",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "111e293fa6887087306d6cad68457b385a17bf91",
+      "sha256": "96753ea2c7d484c673fd70e3fd73a322a19a09c96d31cf02d5f6239b066276da",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantInsightMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "286cc059c45eef61669f488dcfab520c5598777a",
+      "sha256": "08358a19e8950f7d0f5f767eab460498cec942020d3e8fca51049770bbc9fe7e",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OrientMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "b21a104884c1744baabe34492c0179e5a60b19b9",
+      "sha256": "41eb5bbaf97de8dc725ee03183c52e85328dec2f7b780bea8ae84a7e10af22a9",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OrientScoringMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "1d14674383200f37456c736f2ec75c71b43ae571",
+      "sha256": "1823aa7e5e2667ff434ae76f342c6864346e223377f655d372f76642e42d199e",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OrientSessionMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "4f02bffaab70f95302e6683d547db2f1b05cf3c7",
+      "sha256": "8d4d8c4c5f3d13b623d9cd27265631a6906e0fb7a2f2441f03bd7cbbb00d326c",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "74841d0349abc059663a2486a767a5707222a61e",
+      "sha256": "ca10b337c901c6aecc3aef6f08b7ba10ca0392665f8677b4bf875897a77684fc",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ShopDayMerchantRosterMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "1e2f875ae96b68e61463d5507c63879a168d01b0",
+      "sha256": "8eb3fea704c3f841114749d4d31768782f184eec8cd0228fc5c7150be8bd4642",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TopicOnsiteMetricsMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "04117adacb3e981eb5c1dada74c73d2792d9e6e6",
+      "sha256": "c08a48aa21e5dda91b9f5e75ce30319781f69c0afffe0c787883be7cb5a506e8",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "768bcbd3cbe132aca673ab8b56c9f70c4156b7a4",
+      "sha256": "7e05fb1cad8af4507aa6fb44be1d10449b9b4041376b5b91cc37a5789742d5ee",
+      "evidence_role": "TARGETED_RUNTIME_CHAIN_OR_EXISTING_FIXTURE_REFERENCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "7af0106201dad71b78c949cb06c4c21c1191f99a",
+      "sha256": "63a2d123678518055cd0e570d8c6afd40e3763bc18729a2ef016210e08343cce",
+      "evidence_role": "PROGRESS_STATEMENT_SOURCE",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-ui/src/api/business/topicFunnel.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "e335f73598541e52defa296b73669647c7aabcc0",
+      "sha256": "4399e3564bf4e01f5872e38dc2f60017e28e0d11cec54c5bccfc8af162f30518",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "f3a15ae36856d0191cdba401980313c26dafb354",
+      "sha256": "55fefa9cefd8c4d75ddb7ba0b90aeec98080fd8bd1d5d2afa192f52cb222bd39",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/club/detail/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "57248ebe6d49478ab946ba34023d45149e70948c",
+      "sha256": "c1f1567869baeff9b79abbe5378c2af64d8efe7a9ef9184d9438554b8ce7f407",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/club/group-code/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "de663bae90b933aa8a19c1047cc9f1876f3fcb32",
+      "sha256": "2bf0e059c81f786e5f1f683eaed3075c90a88ab9876a4c304bafde4d6ab53f5a",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/club/topic-detail/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "c8e23861f3679f725890c8502d02dc8af92b56b8",
+      "sha256": "ceae8f7849aa057c15b08b90b3e3c445dc3734ba00f7121213d4ab926330713c",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/club/topic-detail/plan-fallback.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "8f93b9ec97f8d6717ef3a0e025919e05a6545a67",
+      "sha256": "85eb550e22ea9c0ce4a025a9a14f0bfc00271ea68ce9249dfd83d0e8486ee9f4",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/club/topic-story/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "b6f67570049f0552a8b70394a4d744d9340b5376",
+      "sha256": "7f091c2ef5467ebaf497ef7c081b91d0cd6f3f18f03ee10978a1b1eb6e1719a5",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/club/utils/club-game-director-adapter.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "9be29838e10f9eedacfc2855b0bc7d994ac9f268",
+      "sha256": "b18f355139031cf7cc5ab806764fe2a500f00dceabe7249763a1c29613b1040c",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/merchant/game-node/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "c6b1b7d6b5f3773367fb57fe6f264df4d4d02df2",
+      "sha256": "0585fcf05c4c718d7a50e47729ad9ba99d401b8c280ec992d345cb099db72845",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/merchant/index/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "0198c00910113ee46feecc8bf82fa5a964aab5b1",
+      "sha256": "e22c1d17daa869735b3fcd886e76112aec9ac1c206bc05af2a721c6c8252e5d8",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/merchant/marketing/ai-insight/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "1c2209c7b96c4a2fcc94401c3d473a204f0097f1",
+      "sha256": "bc0903e5c327172bd9b8287eaef43a1eed3a01f9e1a659f6fd4715980c6c4670",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/merchant/marketing/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "59a934f307600b0c9d2b437b0846ed64bb79aa81",
+      "sha256": "08dfe3c7d6f15817dde22663e9a451e080e038ac1052d8df66af2de4fe1c3cee",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/mylike/mylike.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "b110723fc36863a860f7c81a685c8b861bf37e39",
+      "sha256": "877e9a23e72b2277721c1667418c64a553ce9325d8f56b9e1d653fe0c6132a79",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "ef23d7dc80d66a130fc269bdde362b062d23fdde",
+      "sha256": "263684c469708279897cd512600e1dad1d653fe1ce4aafe9e94a59b25ee9deb2",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "0cc202e2842040e4d3df26ee86d842c9a78088e9",
+      "sha256": "fe90c9772815db21db143985517003ae6ced60c59fedb4aa0fa68af11fa7c9d9",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/merchant/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "5673bfb4ed11000abd48583e59a653ef4ac60184",
+      "sha256": "ccc46df197a4845bbb1559c9b167a6c272deb79ed894aacae9d902d5afc26405",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/finish-medals.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "31cdbd5f96b8a34ff587ee10b4c6fd0837c13f16",
+      "sha256": "884e722350d85b932f5ebd0a4982ed3057cdfba89296d2ddf1516a9ab7e61455",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/life-archive.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "9e82ac5d1d02cffdf0b403691159779a2b345ac2",
+      "sha256": "3f1760abc1feaefa008245080764a66865b416cb427de5bd2f809fa4c13535e1",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/playkit-view.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "0d564cc7b01b34da9cab00e6aaf18f869b540678",
+      "sha256": "79d32a60360096de5bded0d3c744dffdfa6ca32dcd53b510ef9698d7a61b9db3",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/theme-backpack.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "9eb15c2f9b801a6fbac3b71d5d4559086103712a",
+      "sha256": "0ed185665089c90ad68a053eedd86af854e83339525d2c6691d3f65d67a3c5a0",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/theme-plans.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "50b9cfa5af88402250c3d1aba10c51279d9db950",
+      "sha256": "dd893e8ccf80f7755a3a1d8ddeb8a4fdabdd45606ffdf9da2f860e6174d8f893",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/theme-player-ops.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "719b3c22e8472d5f2c20b7935440405a95c2673a",
+      "sha256": "6bddc00517ff9449e28a964b3b8d0c722d10e40a8dcb3cd74b1d7fee21fb8b28",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/theme-trade.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "1c5eeaf9c2e8c5edd118604802827b6ac643cedd",
+      "sha256": "a1b3c77a65f095275a0e880f7bdcc330794c607716f3018be40bff09af38d9e4",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/utils/publish/gameplay-support-matrix.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "36b35a6bdb93d9fa3a05ba5a9919e1dfdb76fb45",
+      "sha256": "23ef1c852c19eaea7e077146c18a5c65aad617aefdcda6f56dd51f87456a90b4",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/roam/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "5078312289937ad5f82393e33e7ba2bc62cc6eda",
+      "sha256": "cfdb59b9381975b9dd36641a97511723496383fc1c3f2c896db70f6a729e47ac",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/components/activity-picker/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "3482d7849a4e09bd11cd07420f235696e4938d34",
+      "sha256": "8496a56c2e2bdf1686dcaa792b73e8ec0c566eda3380380fa6bacd8a51122c89",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/components/route-map/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "69486c12e9d052e8f7282e761ff26490c184c788",
+      "sha256": "30283db5ab58b7c656e9f71dfafef7d83362e8286a8ef52a28f01165fa430ed4",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/detail/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "7f0a3f8752020e5ffb637564a4cd687d7c6d99d0",
+      "sha256": "d313112f39031d901f659d6eaeca88cae164c9d3ac98536f9f4089acaada4c69",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/list/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "a53480fd330b956e4fb1b3cd47e049c9bbf3e160",
+      "sha256": "092d5d340a1c9c39d293bf3e3a6ef7eacfb51b161c666de1eae8b8530eba3005",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/topic/index/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "cfa52e0b8c2f23d16cc41bd23979a2e4bfdae754",
+      "sha256": "d2be67a0bbe23d9b0fedfc4bec8bf7073b552cae76c6cc6b50f543369ad99471",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "37f25e6bdb863cd50c32845bcb9d86cafc44b44e",
+      "sha256": "2b283d50943b8c123798d8ae640bec761f464ea1263dd2febf62155b1e590c93",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageB/pages/im/chat/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "1c517e83429b9a581d17f8019ba038d1a75e0e54",
+      "sha256": "c1c83adbffaf856b3df80302ee1132ce31a22eb24a6bb45a36c0cd00aa822a18",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "55f955ba8e33ff019ff5645669ad4a3fdc769710",
+      "sha256": "7afac41dd6bfb89e837066b98aa59f51d4a24d1402fa4d3d3ae547a07c722956",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "b2750e1838722fbb4d0209f536c2a51dd6881629",
+      "sha256": "8ee1567bed679bb793b02234154507c893c2cf3ae5209d87d1ce8e708b6044a7",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "5c0cb9da994cd9b64cee5f5f5cf06a4b75a511fd",
+      "sha256": "720173a44e14eab6f4eef3c0fd516a44c10b2506b4056d23b161bdc58fd3ab6d",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/utils/community-post-api.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "26eb186b8e1e0fd79f1e9c11af5c7e46159a2ecc",
+      "sha256": "3163e0fde37e79bc3e04479a1717cd625d4de1642f86a2ee1863c90a23267512",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/utils/game-session-client.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "dd48bdeb04d12dede3002903e90796d9836b5764",
+      "sha256": "508aea315c144c6370a3d725fbe6d9ae6bf3d58755a22857e854c190cc910b53",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/utils/index/continue-explore.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "00270d8dc09e95bf98b7d3d4efdaf3ad1c0c471c",
+      "sha256": "5b39246b4acb4187b19bd019707d7fa15b0d242e179fb1147d509ca03084a9fb",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/utils/theme-records.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "2b02f5fff0e299d436cf765cbf0e3b18bc3ae833",
+      "sha256": "8ac9fd3927734075d4f7f0e96611550d2d0c0e12270299bbd442b6088bacffd7",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    },
+    {
+      "path": "chengyinhub-xcx/utils/ui-state-request.js",
+      "source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "git_blob": "bbc9fc522ed833ecb4f25317f7890cac2cd4bb6b",
+      "sha256": "8a2fadb1d8047b216908393f9dd3431665c96ef256c4287f85867e9468773d55",
+      "evidence_role": "CLIENT_LITERAL_OR_COMMENT_ONLY",
+      "identity_hash_is_not_full_semantic_or_execution_verification": true
+    }
+  ]
+}
