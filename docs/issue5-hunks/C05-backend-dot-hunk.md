@@ -252,3 +252,23 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 20:13 America/Los_Angeles
+
+HEAD `03df83ec9`. Dot Issue #5 C05 comment 2026-10-24T03:05:41Z.
+
+`expire(now)` now requires `now >= expiresAt`; DOWNLOADING/READY/PAUSED no longer expire early. No-arg `finishDownload`/`finishUpdate` throw WAITING_SOURCE `offlinePack.payloadConsumer` without occupying READY; unique `finishDownload(byte[])` SHA-256+byteSize matches then READY. `Proof.create(APPROVED_ALTERNATIVE)` requires attested plus approvalAuthority. `acceptHold` without `PlaceCapacitySource` is WAITING_SOURCE `sideQuest.placeCapacitySource` without occupying hold.
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **21/0** 2026-10-24T03:13:26Z：
+
+```
+Tests run: 7 -- OfflinePackOperationTest
+Tests run: 6 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 21, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+Still missing original download/storage consumer implementation (typed WAITING_SOURCE, not invented HTTP). PlaceCapacitySource is a port; MemoryPlaceCapacity is tests only, not registration_entitlement. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
