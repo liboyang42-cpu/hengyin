@@ -301,11 +301,7 @@ Page({
       this._nearbyAll = [];
       this.setData({ myClubs: [], joinedClubs: [], nearbyClubs: [], myClubId: null, myClubCount: 0, clubsLoaded: false, clubsState: 'idle' });
     }
-    if (!owner) {
-      this.setData({ clubsLoginRequired: true, clubsPermissionDenied: false, clubsError: true,
-        clubsState: 'error', clubsErrorText: '' });
-      return;
-    }
+    if (!owner) { this.loadGuestClubs(); return; }
     if (this._clubHomeLoading) return;
     var that = this;
     var hasSnapshot = ['ready', 'empty', 'stale-error'].indexOf(this.data.clubsState) >= 0
@@ -376,6 +372,36 @@ Page({
       },
       successStatusAbnormal: function (res, statusCode) { fail(res, 'http', statusCode); },
       fail: function (res, statusCode) { fail(res, 'network', statusCode); }
+    });
+  },
+
+  // 2026-10-24 owner 拍板「游客可浏览」:游客读公开俱乐部目录(/api/club/list,匿名可读、只出公开可见团),
+  // 卡片照常可点进详情;「加入」走写前登录弹窗。目录读失败才退回原「登录后查看我的俱乐部」入口态。
+  loadGuestClubs() {
+    const that = this;
+    const requestId = (this._clubHomeRequestId || 0) + 1;
+    this._clubHomeRequestId = requestId;
+    const isCurrent = () => !that._unloaded && requestId === that._clubHomeRequestId && !String(app.getUserID() || '');
+    const loginEntry = () => {
+      if (!isCurrent()) return;
+      that.setData({ clubsLoginRequired: true, clubsPermissionDenied: false, clubsError: true,
+        clubsState: 'error', clubsErrorText: '' });
+    };
+    app.sendRequest({
+      complete() { wx.stopPullDownRefresh(); },
+      hideLoading: true,
+      url: '/api/club/list', method: 'POST', data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
+      success: function (res) {
+        if (!isCurrent()) return;
+        if (!isOkRes(res) || !isRecordList(res.data)) return loginEntry();
+        const nearby = res.data.map(normalizeClub);
+        that._nearbyAll = nearby;
+        that.setData({ myClubs: [], joinedClubs: [], nearbyClubs: nearby, myClubId: null, myClubCount: 0,
+          clubsLoaded: true, clubsError: false, clubsLoginRequired: false, clubsPermissionDenied: false,
+          clubsState: nearby.length ? 'ready' : 'empty', clubsErrorText: '' });
+      },
+      successStatusAbnormal: loginEntry,
+      fail: loginEntry,
     });
   },
 
@@ -616,6 +642,7 @@ Page({
 
   // 加入俱乐部(即时)
   onClubJoin(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('club', () => this.onClubJoin(e))) return; // 2026-10-24 游客写前登录
     var id = e.currentTarget.dataset.id;
     if (!id) return;
     var that = this;

@@ -329,24 +329,42 @@ test('App 同账号真实续期失败仍清理旧会话', async () => {
   assert.equal(await new Promise(resolve => f.app.reLogin(resolve)), false);
   assert.ok(!f.session.getUserID()); assert.ok(!f.session.getAuthorization());
 });
+// 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:匿名读请求 401 不再静默 wx.login 建号;
+// 只有写请求会弹「登录后继续」,用户点「微信登录」后首登落地,再用真实新会话重发原请求。
 for (const method of ['GET', 'POST']) {
-  test('App 实际装配让首登后的原匿名 ' + method + ' 请求使用真实新会话', async () => {
-    const f = loadOwnerApp();
-    const manager = createSessionManager({ session: f.session, wxLogin: async () => ({ code: 'CODE' }), exchangeCode: async () => okBody });
+  test('App 实际装配:游客匿名读 ' + method + ' 401 不登录、不建号', async () => {
+    const f = loadOwnerApp(); let logins = 0;
+    const manager = createSessionManager({ session: f.session, wxLogin: async () => { logins++; return { code: 'CODE' }; }, exchangeCode: async () => okBody });
     f.app.getSessionManager = () => manager;
     f.app.globalData.siteBaseUrl = 'https://fixture';
-    f.app.getRequestClient().send({ url: '/api/fixture', method });
+    const events = [];
+    f.app.getRequestClient().send({ url: '/api/fixture', method, fail: (body, status) => events.push('fail:' + status) });
     f.requests[0].success({ statusCode: 401, data: {} }); f.requests[0].complete({});
     for (let i = 0; i < 15; i++) await Promise.resolve();
-    const retries = f.requests.filter(request => request.url.endsWith('/api/fixture'));
-    const features = f.requests.filter(request => request.url.endsWith('/api/config/features'));
-    assert.equal(retries.length, 2); assert.equal(retries[1].header.Authorization, okBody.token);
-    assert.equal(features.length, 1); assert.equal(features[0].header.Authorization, okBody.token);
-    features[0].success({ statusCode: 200, data: { code: 200, data: { communityPostRead: false, communityPostWrite: false } } });
-    features[0].complete({});
-    assert.equal(f.session.getUserID(), '7');
+    assert.equal(logins, 0); assert.equal(f.requests.filter(r => r.url.endsWith('/api/fixture')).length, 1);
+    assert.deepEqual(events, ['fail:401']); assert.ok(!f.session.getUserID());
   });
 }
+test('App 实际装配让游客写请求在弹窗登录后使用真实新会话重发一次', async () => {
+  const f = loadOwnerApp();
+  const manager = createSessionManager({ session: f.session, wxLogin: async () => ({ code: 'CODE' }), exchangeCode: async () => okBody });
+  f.app.getSessionManager = () => manager;
+  f.app.globalData.siteBaseUrl = 'https://fixture';
+  const prompts = [];
+  // 用户在「登录后继续」里点了「微信登录」:与 utils/auth/require-login.js 一样走 app.firstLogin。
+  f.app.requireLogin = options => { prompts.push(options); return f.app.firstLogin().then(r => !!r.ok); };
+  f.app.getRequestClient().send({ url: '/api/fixture/create', method: 'POST', loginReason: 'post' });
+  f.requests[0].success({ statusCode: 401, data: {} }); f.requests[0].complete({});
+  for (let i = 0; i < 15; i++) await Promise.resolve();
+  const retries = f.requests.filter(request => request.url.endsWith('/api/fixture/create'));
+  const features = f.requests.filter(request => request.url.endsWith('/api/config/features'));
+  assert.equal(prompts.length, 1); assert.equal(prompts[0].reason, 'post');
+  assert.equal(retries.length, 2); assert.equal(retries[1].header.Authorization, okBody.token);
+  assert.equal(features.length, 1); assert.equal(features[0].header.Authorization, okBody.token);
+  features[0].success({ statusCode: 200, data: { code: 200, data: { communityPostRead: false, communityPostWrite: false } } });
+  features[0].complete({});
+  assert.equal(f.session.getUserID(), '7');
+});
 test('App 实际请求装配在换号后拒绝旧 POST 登录和重发', () => {
   const f = loadOwnerApp(); let loginCalls = 0;
   f.app.globalData.siteBaseUrl = 'https://fixture';
@@ -372,11 +390,13 @@ test('App 登录成功落地后、回调前换号，匿名旧请求也不能借�
   f.app.getSessionManager = () => ({ refresh: () => new Promise(resolve => { deliver = resolve; }) });
   f.session.clearSession();
   const events = [];
+  // 2026-10-24:游客读请求 401 直接按 401 失败,压根不进静默续期(refresh 不会被调用)。
   f.app.getRequestClient().send({ url: '/api/fixture', method: 'GET',
-    fail: body => { events.push('fail'); assert.equal(body.reason, 'sessionChanged'); },
+    fail: (body, status) => { events.push('fail'); assert.equal(status, 401); },
     complete: () => events.push('complete') });
   f.requests[0].success({ statusCode: 401, data: {} }); f.requests[0].complete({});
-  f.session.setUserID('9'); f.session.setAuthorization('B'); deliver(completed);
+  f.session.setUserID('9'); f.session.setAuthorization('B');
+  assert.equal(deliver, undefined, '游客读请求不得触发静默续期'); deliver = () => {}; deliver(completed);
   for (let i = 0; i < 4; i++) await Promise.resolve();
   assert.equal(f.requests.length, 1); assert.deepEqual(events, ['fail', 'complete']);
   assert.equal(f.session.getUserID(), '9'); assert.equal(f.session.getAuthorization(), 'B');
