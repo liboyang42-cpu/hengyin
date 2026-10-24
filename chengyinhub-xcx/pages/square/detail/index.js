@@ -964,9 +964,15 @@ Page({
       bizId: this.data.id
     });
     const info = this.data.info && this.data.info.id != null ? this.data.info : { id: this.data.id, status: -1 };
+    const shareBizId = this.data.id;
     return Object.assign(buildSquareShare(info), {
+      // U-171 分享回执:只有老基础库会回调 success/fail,新基础库不回调 —— 能拿到时如实记一笔。
       success: function (res) {
+        analytics.track('square_share_complete', { bizType: 'square', bizId: shareBizId });
         toast.success('分享成功');
+      },
+      fail: function () {
+        analytics.track('square_share_fail', { bizType: 'square', bizId: shareBizId, properties: { reason: 'cancelled' } });
       }
     });
   },

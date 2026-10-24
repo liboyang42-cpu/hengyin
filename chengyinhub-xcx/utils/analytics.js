@@ -55,6 +55,13 @@ const ALLOWED_EVENTS = {
   roam_exploreday_reco_shown: true,
   roam_exploreday_reco_click: true,
   roam_share_channel: true,
+  // U-171 分享回执(漫游 / 广场):只放渠道码、结果码与业务 id
+  roam_share_complete: true,
+  roam_share_fail: true,
+  square_share_complete: true,
+  square_share_fail: true,
+  // P1-021 章节块流形状不对、故事流回落 description:只放章节 id 与原因码
+  chapter_blocks_parse_failed: true,
   // 漫游 NPC Event 轨:profile 到货 / 气泡真实展示(properties 无原文无坐标)
   npc_profile_loaded: true,
   npc_bubble_impression: true,
