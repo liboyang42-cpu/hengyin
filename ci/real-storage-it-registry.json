@@ -367,7 +367,7 @@
     },
     "architecture-day-cash-expand": {
       "lineage": "G c829 reviewed storage fixes assembled by root; original30 + H4 + new11",
-      "registered_source": "4b85984c7a86af59240ab5698337041b590813bd",
+      "registered_source": "9d79e696ebdb15ed91e647055c9b2f9d24c8bcba",
       "note": "45 exact ordinary@Test methods on exclusive UUID scratch: payer identity, DDL name preflight, empty staged recovery; not settlement/payment/refund algorithm acceptance. Actual source-bound zero-skip XML and cleanup required.",
       "classes": [
         "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT"
