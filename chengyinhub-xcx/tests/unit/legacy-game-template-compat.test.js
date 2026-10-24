@@ -77,7 +77,7 @@ test('七款封面在包内且详情共用；作者封面不替换，源记录�
   for (const title of ['闭眼味觉师', '沉默点单', '便利店调酒师', '治愈音乐角', '午夜电台', '低碳行动', '今日城市签']) {
     const source = { title, imgUrl: '' };
     const cover = gameTemplateCover(source);
-    assert.ok(fs.existsSync(path.join(root, 'chengyinhub-xcx', cover)));
+    assert.ok(fs.existsSync(path.join(root, 'docs/assets/template-photos-20261023', path.basename(cover))));
     assert.equal(detail.normalizeTemplateDetail(source).coverUrl, cover);
     assert.equal(source.imgUrl, '', '显示补图不得将客户端路径写进业务数据');
     assert.equal(gameTemplateCover({ title, imgUrl: 'https://www.chengyinhub.com/author.jpg' }), 'https://www.chengyinhub.com/author.jpg');

@@ -38,8 +38,10 @@ function buildGallery(info) {
     list.push(url);
   }
 
-  parseImgUrls(info.imgUrls).forEach(push);
-  push(info.imgUrl);
+  parseImgUrls(info.imgUrls).forEach(function (url) {
+    push(gameTemplateCover(Object.assign({}, info, { imgUrl: url })));
+  });
+  push(gameTemplateCover(info));
   push(info.storyImg);
   if (!list.length) push(gameTemplateCover(info));
 

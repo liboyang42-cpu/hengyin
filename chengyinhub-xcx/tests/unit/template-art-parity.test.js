@@ -24,7 +24,8 @@ test('模板结果按模板页行样式画:具象图标优先,meta 为人数 · 
   const discover = require('../../utils/discover-search.js');
   const game = discover.decorateItem('gameTemplate', { id: 9, title: '今晚的暗号', players: '1-4 人', duration: 15 });
   assert.equal(game.tplRow, true);
-  assert.equal(game.art, '/images/interaction-templates/merchant-secret-code.svg');
+  assert.equal(game.art, '');
+  assert.equal(game.cover, 'https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/coffee.webp');
   assert.equal(game.detail, '1-4 人 · 15分钟');
   const theme = discover.decorateItem('topicTemplate', { id: 3, name: '咖啡探店月', subtitle: '自由探索' });
   assert.equal(theme.tplRow, true);

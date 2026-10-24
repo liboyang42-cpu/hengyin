@@ -3,7 +3,7 @@
 
 const { merchantHomeUrl } = require('./merchant-home-link.js');
 const { templateArt } = require('./template-art.js');
-const { formatDurationMinutes } = require('./template-display.js');
+const { formatDurationMinutes, gameTemplateCover } = require('./template-display.js');
 
 // 商家的落点是统一主页,主体 ID 是 memberId 而不是列表行 id ——「前缀 + id」这种形状拼不出来,
 // 所以它给 pathOf 而不是 path。其余三类的 path 前缀一字未改。
@@ -72,8 +72,8 @@ function decorateItem(type, item) {
     activity: firstImage(item.imgArr || item.imgUrl),
     club: item.cover || item.logo || '',
     merchant: item.coverImage || item.logo || '',
-    topicTemplate: firstImage(item.imgArr || item.imgUrl),
-    gameTemplate: firstImage(item.imgUrl || item.imgArr),
+    topicTemplate: gameTemplateCover(item) || firstImage(item.imgArr),
+    gameTemplate: gameTemplateCover(item) || firstImage(item.imgArr),
   }[type];
 
   return {

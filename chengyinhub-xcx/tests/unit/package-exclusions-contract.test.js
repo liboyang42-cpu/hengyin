@@ -166,16 +166,14 @@ test('new component, generic, template, WXS and stylesheet references fail in me
   assert.deepEqual(violations('pages/test.wxml', '<!-- <include src="/parts/old.wxml"/> -->', targets), []);
 });
 
-test('seven dynamically selected interaction covers and the MIT license remain packaged', () => {
+test('seven photography covers use the existing image host; the MIT license remains packaged', () => {
   const { gameTemplateCover } = require('../../utils/template-display.js');
-  const covers = { '闭眼味觉师': 'blind-taste', '沉默点单': 'silent-order', '便利店调酒师': 'diy-drink',
-    '治愈音乐角': 'music-corner', '午夜电台': 'midnight-radio', '低碳行动': 'low-carbon', '今日城市签': 'daily-city-sign' };
+  const covers = { '闭眼味觉师': 'coffee', '沉默点单': 'coffee', '便利店调酒师': 'night',
+    '治愈音乐角': 'music', '午夜电台': 'night', '低碳行动': 'travel', '今日城市签': 'street' };
   for (const [title, name] of Object.entries(covers)) {
-    const file = 'images/interaction-templates/' + name + '.svg';
-    assert.equal(gameTemplateCover({ title }), '/' + file);
-    assert.ok(!excluded(file), file);
-    assert.ok(fs.statSync(path.join(ROOT, file)).isFile());
+    assert.equal(gameTemplateCover({ title }), 'https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/' + name + '.webp');
   }
+  assert.equal(fs.existsSync(path.join(ROOT, 'images/template-photos')), false, '摄影不增加主包体积');
   const license = 'images/publish-quick/LICENSE';
   assert.ok(!excluded(license));
   assert.match(fs.readFileSync(path.join(ROOT, license), 'utf8'), /MIT License[\s\S]*Permission is hereby granted/);

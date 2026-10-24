@@ -372,6 +372,7 @@ Page({
       if (dur) meta.push(dur);
       return Object.assign({}, item, {
         _kind: 'topic',
+        imgUrl: gameTemplateCover(item),
         _title: item.name || '',
         _subText: item.subtitle || '',
         _metaText: meta.join(' · '),
@@ -393,7 +394,7 @@ Page({
         _title: item.title || '',
         _subText: item.description || '',
         _metaText: meta.join(' · '),
-        _iconUrl: INTERACTION_ICON_BY_TITLE[item.title || ''] || (!item.imgUrl ? gameTemplateCover(item) : ''),
+        _iconUrl: /\.svg$/.test(gameTemplateCover(item)) ? gameTemplateCover(item) : '',
         // 后端按 FIND_IN_SET(activity_categoryids) 过滤,前端置顶排序照抄同一个字段;
         // 不要拿 categoryId —— 那是另一列,两者并不同步。
         _cats: String(item.activityCategoryids == null ? '' : item.activityCategoryids)

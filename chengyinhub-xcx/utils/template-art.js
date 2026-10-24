@@ -29,7 +29,8 @@ const INTERACTION_ICON_BY_TITLE = {
 /** 模板页同一套取图:已登记标题用具象图标;作者没传封面时按玩法机制补图;都没有就空(走封面或兜底)。 */
 function templateArt(item) {
   const source = item || {};
-  return INTERACTION_ICON_BY_TITLE[source.title || ''] || (!source.imgUrl ? gameTemplateCover(source) : '');
+  const cover = gameTemplateCover(source);
+  return /\.svg$/.test(cover) ? cover : '';
 }
 
 module.exports = { INTERACTION_ICON_BY_TITLE, templateArt };

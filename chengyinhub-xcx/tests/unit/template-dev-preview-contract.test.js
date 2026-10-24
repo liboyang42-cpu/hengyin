@@ -96,7 +96,7 @@ test('七款旧玩法缺图时推荐大卡也有封面，作者图和来源记�
     const source = { id: 1, title, imgUrl: null };
     page._gameRows = page.decorateGame([source]);
     page.rebuildLists();
-    assert.match(page.data.banner.imgUrl, /^\/images\/interaction-templates\/.+\.svg$/, title);
+    assert.match(page.data.banner.imgUrl, /^https:\/\/www\.chengyinhub\.com\/prod-api\/profile\/template-photos-20261023\/.+\.webp$/, title);
     assert.equal(source.imgUrl, null, '展示补图不能改来源记录');
     const author = { id: 2, title, imgUrl: 'https://www.chengyinhub.com/author.jpg' };
     page._gameRows = page.decorateGame([author]);
@@ -108,17 +108,18 @@ test('七款旧玩法缺图时推荐大卡也有封面，作者图和来源记�
   assert.equal(page.data.banner.imgUrl, '', '未知玩法继续显示明确缺图态');
 });
 
-test('12 个交互模板使用具象游戏图标，未知模板使用设计系统兜底图标', () => {
+test('12 个交互模板使用真实摄影封面，未知模板保留明确缺图态', () => {
   // 2026-08-26:首页四刀切退役,玩法走单一列表(gameRows ← decorateGame)。
   // 图标映射这条不变量原样保留,只是取样口从「四个切片」换成「装饰器输出」。
   const dev = mountTemplatePage('develop');
   const decorated = dev.page.decorateGame(mockData.getTemplates());
 
-  Object.entries(INTERACTION_ICON_PATHS).forEach(([title, iconPath]) => {
+  INTERACTION_TITLES.forEach((title) => {
     const item = decorated.find((row) => row.title === title);
     assert.ok(item, `页面切片中找不到交互模板:${title}`);
-    assert.equal(item._iconUrl, iconPath, `${title} 图标映射不正确`);
-    assert.equal(fs.existsSync(path.join(ROOT, iconPath.slice(1))), true, `${title} 图标资源不存在`);
+    assert.equal(item._iconUrl, '', `${title} 不应由旧插画盖住照片`);
+    assert.match(item.imgUrl, /^https:\/\/www\.chengyinhub\.com\/prod-api\/profile\/template-photos-20261023\/.+\.webp$/);
+    assert.equal(fs.existsSync(path.join(ROOT, '../docs/assets/template-photos-20261023', path.basename(item.imgUrl))), true, `${title} 摄影源文件不存在`);
   });
 
   const wxml = fs.readFileSync(PAGE_WXML, 'utf8');

@@ -1,0 +1,122 @@
+[
+  {
+    "key": "friends",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/friends.webp",
+    "sha256": "e1e5d5db3ec4794a51d4840a01aea361efc86e9ab1d304164370189634844b08",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "coffee",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/coffee.webp",
+    "sha256": "6c000f839933f572613cecb11827873ca4ccad6ab8d598856f7d67867b49c2ad",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "street",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/street.webp",
+    "sha256": "0a2cd5528056f8f74548edf76a6f661966645bced7ee008f4adced81440ab647",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "night",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/night.webp",
+    "sha256": "2d54184953ad1cdbb78d4a31e0bdb8a5bdd6b6e32b30af6a58e2e4e374f75574",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "music",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/music.webp",
+    "sha256": "8996919cce25a37da4bd6d029eba48f79a2ccb80b4b62616b5d981b938d41f6b",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "travel",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/travel.webp",
+    "sha256": "1fea30e14d34745eaf0553c982525b4df8fef2ed482874c0c64864bdf12d744e",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "style",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/style.webp",
+    "sha256": "e1b8355662c05456a89310b38b1afc3ce05eff306e6f914db4c2ec85a5212978",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "camera",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/camera.webp",
+    "sha256": "4788f348d8133ac1db45681ddbb1a9120583b24b73b6396e5589f969057e48fd",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "gifts",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/gifts.webp",
+    "sha256": "9c7b80296dadb82a12779726dd86484c8903b695fba524dd5a550f4fd6a01eda",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "tools",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/tools.webp",
+    "sha256": "d89ac286900b2614f3775cae85c6ccbff1b5dcbd0072826913a73cbd9efaa972",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "fitness",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/fitness.webp",
+    "sha256": "cb46d9dce5fede28bb3ca2c3b9cf4f90ca3d7127403162164356effec2fb40cb",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  },
+  {
+    "key": "cat",
+    "url": "https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/cat.webp",
+    "sha256": "2578db1e53f4accddf1aa08bdad5a50993924a22bedf77427bc419906d2e5fec",
+    "dimensions": [
+      480,
+      360
+    ],
+    "decoded": true
+  }
+]

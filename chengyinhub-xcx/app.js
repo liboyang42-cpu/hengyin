@@ -10,6 +10,7 @@ const { applyTheme } = require('./utils/theme.js');
 const { createSessionStore } = require('./utils/session/session-store.js');
 const { createSessionManager } = require('./utils/session/session-manager.js');
 const { createRequestClient } = require('./utils/transport/request-client.js');
+const { filterRetiredContent } = require('./utils/retired-content.js');
 const { readClientVersion } = require('./utils/client-version.js');
 const { createUploadClient } = require('./utils/transport/upload-client.js');
 const { createPageBoundOperation } = require('./utils/page-bound-operation.js');
@@ -509,7 +510,10 @@ App({
   //api统一请求函数(请求参数,请求地址)。行为收口到 request-client(Phase 1.3),
   //认证头自动注入,页面无需再手拼 Authorization。
   sendRequest: function (param, customSiteUrl) {
-    return this.getRequestClient().send(param, customSiteUrl);
+    if (typeof param.success !== 'function') return this.getRequestClient().send(param, customSiteUrl);
+    return this.getRequestClient().send(Object.assign({}, param, {
+      success: function (body) { param.success(filterRetiredContent(param.url, body)); }
+    }), customSiteUrl);
   },
   //获取当前时间戳
   getTimestamp: function () {

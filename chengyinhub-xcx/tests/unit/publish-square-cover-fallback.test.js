@@ -64,10 +64,11 @@ const detailErrEvent = (target, key) => ({ currentTarget: { dataset: { target, k
 
 // ---------- 行为 ----------
 
-test('decorateGame 只给已登记模板绑定真实图标，未知内容不伪造首字或渐变占位', () => {
+test('decorateGame 只给已登记模板绑定摄影封面，未知内容不伪造首字或渐变占位', () => {
   const page = makePage();
   const out = page.decorateGame([{ title: '今晚的暗号' }, { name: '街角密码' }, {}]);
-  assert.equal(out[0]._iconUrl, '/images/interaction-templates/merchant-secret-code.svg');
+  assert.equal(out[0]._iconUrl, '');
+  assert.equal(out[0].imgUrl, 'https://www.chengyinhub.com/prod-api/profile/template-photos-20261023/coffee.webp');
   assert.equal(out[1]._iconUrl, '', '未知 name 不得被首字或 CSS 图块冒充为内容图标');
   assert.equal(out[2]._iconUrl, '', '无标题内容不得生成假资产');
   out.forEach((item) => {

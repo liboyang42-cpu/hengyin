@@ -1,3 +1,4 @@
+const { templatePhotoCover } = require('./template-photo-covers.js');
 // 发布广场模板摘要的展示归一化。
 // 后端历史数据同时存在数字分钟与已带「分钟」单位的字符串，展示层只应补一次单位。
 function formatDurationMinutes(value) {
@@ -15,13 +16,15 @@ module.exports = {
 
 // 只补缺失封面，不替换作者上传的图；本地展示值不写回服务器。
 function gameTemplateCover(template) {
+  const photo = templatePhotoCover(template);
+  if (photo) return photo;
   var covers = {
     '闭眼味觉师': 'blind-taste', '沉默点单': 'silent-order',
     '便利店调酒师': 'diy-drink', '治愈音乐角': 'music-corner',
     '午夜电台': 'midnight-radio', '低碳行动': 'low-carbon', '今日城市签': 'daily-city-sign'
   };
   var source = template || {};
-  var name = covers[source.title];
+  var name = Object.prototype.hasOwnProperty.call(covers, source.title) ? covers[source.title] : '';
   // 采用后改名仍按原玩法补图；配置不能读取时保持其它页面既有缺图态。
   if (!name && source.advancedConfigJson) {
     try {

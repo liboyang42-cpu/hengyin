@@ -1,0 +1,12 @@
+Command: node --test --test-concurrency=4 tests/unit/**/*.test.js
+Exit code: 0
+
+✔ 负控:cy-advanced-game 必须已经归位到分档 token (0.202916ms)
+ℹ tests 13913
+ℹ suites 0
+ℹ pass 13913
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 132839.421458
