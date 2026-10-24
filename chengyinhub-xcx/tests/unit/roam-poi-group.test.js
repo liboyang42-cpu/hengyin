@@ -246,3 +246,23 @@ test('空/异常输入不炸', () => {
 test('[meta] SAME_SHOP_M 是 30m —— 改这个阈值必须同步重估上面的分店用例', () => {
   assert.strictEqual(SAME_SHOP_M, 30);
 });
+
+// C:U-107:shopProgress 一次归组同时给出集章进度与本次探店数,与两个兼容包装逐值一致。
+test('U-107 shopProgress 与 stampProgress / doneShopCount 同口径交叉校验', () => {
+  const { shopProgress } = require('../../utils/roam-poi-group.js');
+  const at = (k) => ({ lat: 31.23 + k * 0.001, lng: 121.47 });
+  const fixtures = [
+    [],
+    [{ id: 1, cat: 'merchant', name: 'A', state: 'done', ...at(0) }, { id: 'r1', cat: 'merchant', name: 'A', state: 'fog', ...at(0) }],
+    [{ id: 1, cat: 'merchant', name: 'A', state: 'passed', ...at(0) }, { id: 2, cat: 'merchant', name: 'B', state: 'done', ...at(1) },
+      { id: 3, cat: 'merchant', name: 'B', state: 'done', ...at(1) }, { id: 4, cat: 'park', name: 'P', state: 'done', ...at(2) },
+      { id: 5, cat: 'merchant', name: '商家', nameKnown: false, state: 'done', ...at(3) },
+      { id: 6, cat: 'merchant', name: '商家', nameKnown: false, state: 'seen', ...at(3) }],
+  ];
+  fixtures.forEach((pois, i) => {
+    const p = shopProgress(pois);
+    assert.deepStrictEqual(stampProgress(pois), { done: p.collected, total: p.total }, 'fixture ' + i);
+    assert.strictEqual(doneShopCount(pois), p.doneInSession, 'fixture ' + i);
+  });
+  assert.deepStrictEqual(shopProgress(fixtures[2]), { total: 4, collected: 3, doneInSession: 2 });
+});

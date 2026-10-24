@@ -92,19 +92,32 @@ function groupMerchantsByName(pois) {
 }
 
 /**
- * 集章进度:分母=可见商家组数,分子=已集(done|passed)组数。
+ * 商家进度一次归组算全(C:U-107):原 stampProgress / doneShopCount 各自归组一遍,口径靠两份代码手工对齐。
+ *   total            = 可见商家组数(集章分母)
+ *   collected        = 已集(done|passed)组数(集章分子)
+ *   doneInSession    = 本次会话探店数(去重后)。#23 的落库口径依赖它,不能把同店两条数成两家。
  * 生产上 _fetchNearbyMerchants 会用真商家整批替换演示种子(见 index.js 的 others 过滤),
  * 所以这里数的就是屏幕上真实可见的店。
  */
-function stampProgress(pois) {
+function shopProgress(pois) {
   var groups = groupMerchantsByName(pois);
-  var done = groups.filter(function (g) { return g.collected; }).length;
-  return { done: done, total: groups.length };
+  var collected = 0, doneInSession = 0;
+  groups.forEach(function (g) {
+    if (g.collected) collected++;
+    if (g.doneInSession) doneInSession++;
+  });
+  return { total: groups.length, collected: collected, doneInSession: doneInSession };
 }
 
-/** 本次会话探店数(去重后)。#23 的落库口径依赖它,不能把同店两条数成两家。 */
+/** 集章进度 { done, total };同 shopProgress 口径。 */
+function stampProgress(pois) {
+  var p = shopProgress(pois);
+  return { done: p.collected, total: p.total };
+}
+
+/** 本次会话探店数(去重后);同 shopProgress 口径。 */
 function doneShopCount(pois) {
-  return groupMerchantsByName(pois).filter(function (g) { return g.doneInSession; }).length;
+  return shopProgress(pois).doneInSession;
 }
 
 /**
@@ -138,6 +151,7 @@ module.exports = {
   normName: normName,
   pickRep: pickRep,
   groupMerchantsByName: groupMerchantsByName,
+  shopProgress: shopProgress,
   stampProgress: stampProgress,
   doneShopCount: doneShopCount,
   selectNearShopGroups: selectNearShopGroups,
