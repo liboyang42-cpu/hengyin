@@ -216,6 +216,7 @@ public class AiThemeDraftRequestService
         // Match the current simple caller boundary; preserve the original bytes for context/hash.
         if (req == null || req.idea() == null || req.idea().length() > 300 || req.idea().trim().isEmpty())
             throw rejected(400, "AI_DRAFT_INVALID_REQUEST", null);
+        if (!validProductType(req.productType())) throw rejected(400, "AI_DRAFT_INVALID_REQUEST", null);
         requireIntentAdmission(); requireNoIntentTransaction(); requireMember(memberId);
         if (!isValidRequestId(req.prepareKey())) throw rejected(400, "AI_DRAFT_INVALID_REQUEST", null);
         String prepareKey = req.prepareKey().trim().toLowerCase(Locale.ROOT);
@@ -239,7 +240,7 @@ public class AiThemeDraftRequestService
         catch (RuntimeException planning) { throw unavailable("Original planning unavailable"); }
         AiThemeDraftIntentRow row = new AiThemeDraftIntentRow();
         row.setMemberId(memberId); row.setPrepareKey(prepareKey); row.setRequestId("td2_" + uuid());
-        row.setRequestHash(requestHash); copyPlan(row, plan); row.setPlanHash(planHash(plan));
+        row.setRequestHash(requestHash); row.setProductType(req.productType()); copyPlan(row, plan); row.setPlanHash(planHash(plan));
         row.setState("PREPARED"); row.setCreatedAt(now); row.setContextExpiresAt(now.plus(BODY_RETENTION));
         validateIntent(row);
         if (!plan.originalDay().equals(LocalDate.ofInstant(now, INTENT_ZONE).format(DateTimeFormatter.BASIC_ISO_DATE)))
@@ -349,7 +350,7 @@ public class AiThemeDraftRequestService
                 : AiThemeDraftIntentState.valueOf(legacy.getState());
         return new AiThemeDraftIntentView(legacy.getRequestId(), state, true, false,
                 state == AiThemeDraftIntentState.SUCCEEDED && legacy.getResult() != null,
-                legacy.getResult(), state == AiThemeDraftIntentState.UNKNOWN ? "LEGACY_UNBOUND" : null, null, null);
+                legacy.getResult(), state == AiThemeDraftIntentState.UNKNOWN ? "LEGACY_UNBOUND" : null, null, null, null);
     }
 
     public AiThemeDraftIntentView readPrepared(Long memberId, String prepareKey)
@@ -360,7 +361,7 @@ public class AiThemeDraftRequestService
                 prepareKey.trim().toLowerCase(Locale.ROOT)));
         if (row != null) requirePrepareBinding(row, memberId, prepareKey.trim().toLowerCase(Locale.ROOT));
         return row == null ? new AiThemeDraftIntentView(null, AiThemeDraftIntentState.UNKNOWN, true, false,
-                false, null, "AI_DRAFT_PREPARE_UNCONFIRMED", null, null) : intentView(row, true);
+                false, null, "AI_DRAFT_PREPARE_UNCONFIRMED", null, null, null) : intentView(row, true);
     }
 
     /** Fixed newest-first owner metadata lookahead, including known terminal facts. No body access. */
@@ -377,7 +378,7 @@ public class AiThemeDraftRequestService
             if (!Objects.equals(memberId, row.getMemberId()) || row.getId() == null || row.getId() <= 0
                     || (previous != null && row.getId() >= previous)
                     || !serverId(row.getRequestId()) || !isValidRequestId(row.getPrepareKey())
-                    || row.getCreatedAt() == null || row.getExecuteBefore() == null)
+                    || row.getCreatedAt() == null || row.getExecuteBefore() == null || !validProductType(row.getProductType()))
                 throw unavailable("Recovery projection invalid");
             AiThemeDraftIntentState state;
             try { state = AiThemeDraftIntentState.valueOf(row.getState()); }
@@ -386,7 +387,7 @@ public class AiThemeDraftRequestService
                 throw unavailable("Recovery result deadline missing");
             previous = row.getId();
             items.add(new AiThemeDraftRecoveryItem(row.getId(), row.getPrepareKey(), row.getRequestId(), state,
-                    row.getReasonCode(), row.getCreatedAt(), row.getExecuteBefore(), row.getResultExpiresAt()));
+                    row.getReasonCode(), row.getCreatedAt(), row.getExecuteBefore(), row.getResultExpiresAt(), row.getProductType()));
         }
         return List.copyOf(items);
     }
@@ -470,7 +471,7 @@ public class AiThemeDraftRequestService
             }
         }
         return new AiThemeDraftIntentView(row.getRequestId(), state, replayed, context, result != null,
-                result, reason, row.getExecuteBefore(), row.getResultExpiresAt());
+                result, reason, row.getExecuteBefore(), row.getResultExpiresAt(), row.getProductType());
     }
 
     private AiThemeDraftIntentView projectExecution(AiThemeDraftIntentView view)
@@ -550,6 +551,7 @@ public class AiThemeDraftRequestService
                 throw unavailable("Original context invalid");
             AiThemeDraftReq req = new AiThemeDraftReq(); req.setRequestId(row.getRequestId());
             req.setIdea(original.getString(1)); req.setProductType(original.getInteger(2));
+            if (!Objects.equals(req.getProductType(), row.getProductType())) throw unavailable("Original product type binding invalid");
             if (original.get(3) != null) req.setExistingNodeNames(original.getJSONArray(3).toJavaList(String.class));
             return req;
         }
@@ -590,7 +592,7 @@ public class AiThemeDraftRequestService
         {
             if (row == null || row.getMemberId() == null || row.getMemberId() <= 0 || !serverId(row.getRequestId())
                     || !isValidRequestId(row.getPrepareKey()) || !hash(row.getRequestHash()) || !hash(row.getPlanHash())
-                    || !hash(row.getCreatorConfigHash()) || !hash(row.getGatewayConfigHash())
+                    || !hash(row.getCreatorConfigHash()) || !hash(row.getGatewayConfigHash()) || !validProductType(row.getProductType())
                     || row.getRole() == null || row.getRole().isBlank() || row.getRole().length() > 32
                     || row.getNonce() == null || !row.getNonce().matches("[a-f0-9]{32}")
                     || row.getCreatedAt() == null || row.getContextExpiresAt() == null || row.getExecuteBefore() == null)
@@ -632,6 +634,7 @@ public class AiThemeDraftRequestService
     private Instant intentNow() { return intentClock.instant().truncatedTo(ChronoUnit.MILLIS); }
     private static String uuid() { return UUID.randomUUID().toString().replace("-", ""); }
     private static boolean serverId(String id) { return id != null && id.matches("td2_[a-f0-9]{32}"); }
+    private static boolean validProductType(Integer value) { return value == null || value == 1 || value == 2; }
     private static boolean hash(String s) { return s != null && s.matches("[a-f0-9]{64}"); }
     private static String sha256(String text)
     {

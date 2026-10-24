@@ -9,6 +9,7 @@ public class AiThemeDraftIntentRow {
     private String prepareKey;
     private String requestId;
     private String requestHash;
+    private Integer productType;
     private String planHash;
     private String role;
     private String pool;
@@ -45,6 +46,8 @@ public class AiThemeDraftIntentRow {
     public void setRequestId(String value) { requestId = value; }
     public String getRequestHash() { return requestHash; }
     public void setRequestHash(String value) { requestHash = value; }
+    public Integer getProductType() { return productType; }
+    public void setProductType(Integer value) { productType = value; }
     public String getPlanHash() { return planHash; }
     public void setPlanHash(String value) { planHash = value; }
     public String getRole() { return role; }

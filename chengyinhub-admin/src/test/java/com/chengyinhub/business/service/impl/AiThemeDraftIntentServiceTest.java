@@ -136,7 +136,7 @@ class AiThemeDraftIntentServiceTest {
     }
     @Test void failedTerminalCommitKeepsOriginalClaimWithoutResend() {
         var v=prepare();String nonce=rows.get(v.requestId()).getNonce();
-        when(mapper.complete(any())).thenThrow(new IllegalStateException("controlled terminal database failure"));
+        doThrow(new IllegalStateException("controlled terminal database failure")).when(mapper).complete(any());
         assertThrows(AiThemeDraftRequestService.StateUnavailableException.class,()->execute(v));
         assertEquals(AiThemeDraftIntentState.PROCESSING,service.readIntent(MEMBER,v.requestId()).state());
         clock.at.set(clock.instant().plusMillis(AiThemeDraftRequestService.LEASE_MILLIS+1));
@@ -282,8 +282,8 @@ class AiThemeDraftIntentServiceTest {
         }
         assertEquals(java.util.stream.LongStream.rangeClosed(1,42).boxed().sorted(Comparator.reverseOrder()).toList(),shown);
         assertEquals(1,service.readRecovery(MEMBER+1,null).size());assertTrue(service.readRecovery(MEMBER+2,null).isEmpty());
-        var encoded=com.alibaba.fastjson2.JSON.parseObject(com.alibaba.fastjson2.JSON.toJSONString(service.readRecovery(MEMBER,null).get(0)));
-        assertEquals(Set.of("cursor","prepareKey","requestId","state","reasonCode","createdAt","executeBefore","resultExpiresAt"),encoded.keySet());
+        var encoded=com.alibaba.fastjson2.JSON.parseObject(com.alibaba.fastjson2.JSON.toJSONString(service.readRecovery(MEMBER,null).get(0),com.alibaba.fastjson2.JSONWriter.Feature.WriteNulls));
+        assertEquals(Set.of("cursor","prepareKey","requestId","state","reasonCode","createdAt","executeBefore","resultExpiresAt","productType"),encoded.keySet());
     }
     @Test void recoveryNonPositiveCursorAndDatabaseFailureNeverBecomeEmptySuccess() {
         for(Long cursor:List.of(0L,-1L)) {
@@ -332,7 +332,7 @@ class AiThemeDraftIntentServiceTest {
         }
     }
 
-    // Input-boundary delta: all original 24 v2 cases above remain byte-for-byte unchanged.
+    // Input-boundary delta: original 24 scenarios and assertion semantics are retained.
     @Test void prepareRejectsNullIdeaBeforeAnyDependencyAccess() {
         for (boolean enabled : new boolean[]{true,false}) {
             ReflectionTestUtils.setField(service,"intentEnabled",enabled);
@@ -377,6 +377,49 @@ class AiThemeDraftIntentServiceTest {
                 ()->service.prepare(MEMBER,req(PREPARE_ID,original.trim(),null)));
         assertEquals("AI_DRAFT_REQUEST_CONFLICT",changed.getErrorCode());
         verify(creator,times(1)).planThemeDraft(eq(MEMBER),anyString());
+        verify(creator,never()).themeDraftPrepared(any(),anyLong(),any());
+    }
+
+    @Test void prepareRejectsUnknownProductTypesBeforeAnyDependencyAccess() {
+        for (Integer invalid : List.of(-1,0,3,Integer.MAX_VALUE)) {
+            var rejected=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
+                    ()->service.prepare(MEMBER,new AiThemeDraftPrepareReq(PREPARE_ID,"idea",invalid,null)));
+            assertEquals(Integer.valueOf(400),rejected.getCode());assertEquals("AI_DRAFT_INVALID_REQUEST",rejected.getErrorCode());
+        }
+        verifyNoInteractions(mapper,manager,creator);assertTrue(rows.isEmpty());assertEquals(0,bodies.reads);assertEquals(0,bodies.writes);
+    }
+    @SuppressWarnings("unchecked")
+    @Test void originalProductTypeSurvivesAllViewsAndNullIsNeverDefaulted() {
+        for (Integer mode : Arrays.asList(null,1,2)) {
+            String id=UUID.randomUUID().toString();var request=new AiThemeDraftPrepareReq(id,"idea",mode,null);
+            var prepared=service.prepare(MEMBER,request);assertEquals(mode,prepared.productType());
+            assertEquals(mode,service.readPrepared(MEMBER,id).productType());assertEquals(mode,service.readIntent(MEMBER,prepared.requestId()).productType());
+            Integer different=mode==null?Integer.valueOf(1):mode==1?Integer.valueOf(2):null;
+            var conflict=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
+                    ()->service.prepare(MEMBER,new AiThemeDraftPrepareReq(id,"idea",different,null)));
+            assertEquals("AI_DRAFT_REQUEST_CONFLICT",conflict.getErrorCode());
+            var completed=execute(prepared);assertEquals(mode,completed.productType());
+            assertEquals(mode,service.readRecovery(MEMBER,null).stream().filter(v->v.requestId().equals(prepared.requestId())).findFirst().orElseThrow().productType());
+            bodies.values.remove(bodyKey("result",prepared.requestId()));
+            var unavailable=service.readIntent(MEMBER,prepared.requestId());assertEquals(AiThemeDraftIntentState.SUCCEEDED,unavailable.state());
+            assertFalse(unavailable.resultAvailable());assertEquals(mode,unavailable.productType());
+        }
+        assertNull(service.readPrepared(MEMBER,UUID.randomUUID().toString()).productType());
+        AiThemeDraftRequestService legacy=new AiThemeDraftRequestService();
+        RedisTemplate<Object,Object> redis=mock(RedisTemplate.class);
+        org.springframework.data.redis.core.ValueOperations<Object,Object> values=mock(org.springframework.data.redis.core.ValueOperations.class);
+        when(redis.opsForValue()).thenReturn(values);
+        com.alibaba.fastjson2.JSONObject record=new com.alibaba.fastjson2.JSONObject();record.put("state","SUCCEEDED");record.put("result",draft());
+        when(values.get(any())).thenReturn(record.toJSONString());ReflectionTestUtils.setField(legacy,"redisTemplate",redis);
+        var old=legacy.readIntent(MEMBER,PREPARE_ID);assertEquals(AiThemeDraftIntentState.SUCCEEDED,old.state());assertTrue(old.resultAvailable());
+        assertNull(old.productType(),"legacy result text never supplies a guessed mode");
+        verify(creator,times(3)).themeDraftPrepared(any(),eq(MEMBER),any());
+    }
+    @Test void mismatchedStoredProductTypeCannotReinterpretOriginalContext() {
+        var prepared=service.prepare(MEMBER,new AiThemeDraftPrepareReq(PREPARE_ID,"idea",1,null));
+        rows.get(prepared.requestId()).setProductType(2); // controlled corrupt metadata, not an application writer
+        assertThrows(AiThemeDraftRequestService.StateUnavailableException.class,()->execute(prepared));
+        verify(mapper,never()).claim(anyLong(),anyLong(),anyString(),anyString(),anyString(),any(Instant.class));
         verify(creator,never()).themeDraftPrepared(any(),anyLong(),any());
     }
 }

@@ -21,6 +21,7 @@ CREATE TABLE ai_theme_draft_request_intent (
   prepare_key CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   request_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   request_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  product_type INT NULL,
   plan_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   role VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   pool VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
@@ -60,6 +61,7 @@ CREATE TABLE ai_theme_draft_request_intent (
     AND plan_hash REGEXP '^[0-9a-f]{64}$' AND nonce REGEXP '^[0-9a-f]{32}$'
     AND creator_config_hash REGEXP '^[0-9a-f]{64}$' AND gateway_config_hash REGEXP '^[0-9a-f]{64}$' THEN 1 ELSE 0 END=1),
   CONSTRAINT chk_atdi_v2_plan CHECK (CASE WHEN CHAR_LENGTH(role)>0 AND original_day REGEXP '^[0-9]{8}$'
+    AND (product_type IS NULL OR product_type IN (1,2))
     AND ((role='player' AND pool='player-draft'
       AND counter_key=CONCAT('ai:theme:draft:player:',member_id,':',original_day)
       AND receipt_key=CONCAT('ai:player:theme:draft:reservation:',counter_key,':',nonce))
@@ -90,7 +92,9 @@ CREATE TABLE ai_theme_draft_request_intent (
 -- runner: assert=scalar-true
 SELECT CAST(IF(
   (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()
-    AND table_name='ai_theme_draft_request_intent')=30
+    AND table_name='ai_theme_draft_request_intent')=31
+  AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()
+    AND table_name='ai_theme_draft_request_intent' AND column_name='product_type' AND data_type='int' AND is_nullable='YES')=1
   AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()
     AND table_name='ai_theme_draft_request_intent' AND data_type IN ('json','text','mediumtext','longtext'))=0
   AND (SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE()

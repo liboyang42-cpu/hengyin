@@ -358,7 +358,7 @@ class AiThemeDraftIntentMySqlRedisIT {
         assertThrows(RuntimeException.class,()->applyMigration(conflict,migration()));
         assertEquals(0,conflict.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='ai_theme_draft_request_intent'",Integer.class));
         JdbcTemplate partial=new JdbcTemplate(source(newSchema("partial")));
-        String broken=migration().replace("table_name='ai_theme_draft_request_intent')=30","table_name='ai_theme_draft_request_intent')=31");
+        String broken=migration().replace("table_name='ai_theme_draft_request_intent')=31","table_name='ai_theme_draft_request_intent')=32");
         assertNotEquals(broken,migration());assertThrows(RuntimeException.class,()->applyMigration(partial,broken));
         assertEquals(1,partial.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='ai_theme_draft_request_intent'",Integer.class));
         assertThrows(RuntimeException.class,()->applyMigration(partial,migration()));
@@ -499,4 +499,131 @@ class AiThemeDraftIntentMySqlRedisIT {
     private static List<String> statements(String sql){return Arrays.stream(sql.replaceAll("(?m)--[^\\r\\n]*","").split(";")).map(String::trim).filter(s->!s.isEmpty()).toList();}
     private static void applyMigration(JdbcTemplate target,String sql){for(String s:statements(sql)){if(s.startsWith("SELECT"))assertEquals(1,target.queryForObject(s,Integer.class));else target.execute(s);}}
     private static String required(String name,boolean empty){String value=System.getenv(name);assertNotNull(value,"explicit task configuration: "+name);if(!empty)assertFalse(value.isBlank(),name);return value;}
+
+    @Test void genLatePlanRejectedAfterRealRetainIsFailedWithoutUnsentProofOrReplayEffects() {
+        role.set("club");var prepared=prepare();Map<String,Object> original=row(prepared);
+        assertEquals("gen",original.get("pool"));assertEquals(0,quotaRows());
+        String receipt=String.valueOf(original.get("receipt_key"));
+        AiQuotaRecoveryService actual=(AiQuotaRecoveryService)ReflectionTestUtils.getField(fixture.gateway,"quotaRecovery");
+        AiQuotaRecoveryService observed=spy(actual);AtomicBoolean injected=new AtomicBoolean();
+        ReflectionTestUtils.setField(fixture.gateway,"quotaRecovery",observed);
+        ReflectionTestUtils.setField(creator,"quotaRecovery",observed);
+        doAnswer(call->{
+            // The real original reserve/Lua and INPUT_REVIEW_STARTED already committed.
+            assertEquals("RESERVED",quotaRow().get("state"));
+            assertEquals("INPUT_REVIEW_STARTED",quotaRow().get("stage"));
+            assertOriginalGenIdentity(prepared,original);
+            call.callRealMethod(); // real independent SQL RETAINED, never a fake success
+            assertEquals("RETAINED",quotaRow().get("state"));
+            assertEquals("INPUT_REJECTED",quotaRow().get("decision_reason"));
+            if(injected.compareAndSet(false,true))throw new AiThemeDraftPlanRejectedException(
+                    AiThemeDraftPlanRejectedException.Code.CHECK_UNAVAILABLE);
+            return null;
+        }).when(observed).retain(receipt,"INPUT_REJECTED");
+        when(fixture.safety.checkText(anyString(),anyString())).thenReturn("内容违规");
+
+        var failed=execute(prepared);assertTrue(injected.get());
+        assertEquals(AiThemeDraftIntentState.FAILED,failed.state());assertEquals("AI_DRAFT_FAILED",failed.reasonCode());
+        assertNull(row(prepared).get("provider_state"),"a post-consumption failure is not zero-effect NOT_SENT");
+        assertEquals("RETAINED",quotaRow().get("state"));assertEquals("RESULT_CLASSIFIED",quotaRow().get("stage"));
+        assertOriginalGenIdentity(prepared,original);
+        String originalRedisReceipt=raw.opsForValue().get(receipt);assertNotNull(originalRedisReceipt);assertNotEquals("0",originalRedisReceipt);
+        int reviews=mockingDetails(fixture.safety).getInvocations().size();
+        assertEquals(AiThemeDraftIntentState.FAILED,execute(prepared).state());
+        assertEquals(prepared.requestId(),prepare().requestId());
+        assertEquals(AiThemeDraftIntentState.FAILED,service.readIntent(member,prepared.requestId()).state());
+        assertEquals(reviews,mockingDetails(fixture.safety).getInvocations().size());
+        assertEquals(originalRedisReceipt,raw.opsForValue().get(receipt));assertOriginalGenIdentity(prepared,original);
+        verify(creator,times(1)).themeDraftPrepared(any(),eq(member),any());
+        verify(fixture.model,never()).chat(anyString(),anyString());
+        verify(observed,times(1)).prepare(member,"theme_draft","gen",String.valueOf(original.get("counter_key")),receipt);
+        verify(observed,times(1)).reserved(receipt,1L);verify(observed,times(1)).retain(receipt,"INPUT_REJECTED");
+        verify(observed,never()).requireRefund(anyString(),anyString());
+    }
+
+    @Test void genReceivedOutputReviewFailurePersistsReceivedAndRetainsOriginalQuotaOnReplay() {
+        role.set("club");var prepared=prepare();Map<String,Object> original=row(prepared);
+        assertEquals("gen",original.get("pool"));assertEquals(0,quotaRows());
+        String receipt=String.valueOf(original.get("receipt_key"));
+        AiQuotaRecoveryService actual=(AiQuotaRecoveryService)ReflectionTestUtils.getField(fixture.gateway,"quotaRecovery");
+        AiQuotaRecoveryService observed=spy(actual);AtomicBoolean outputReviewFailed=new AtomicBoolean();
+        ReflectionTestUtils.setField(fixture.gateway,"quotaRecovery",observed);
+        ReflectionTestUtils.setField(creator,"quotaRecovery",observed);
+        when(fixture.safety.checkText(anyString(),anyString())).thenAnswer(call->{
+            if(ANSWER.equals(call.getArgument(0))) {
+                outputReviewFailed.set(true);throw new IllegalStateException("controlled received-output review outage");
+            }
+            return null;
+        });
+
+        var failed=execute(prepared);assertTrue(outputReviewFailed.get());
+        assertEquals(AiThemeDraftIntentState.FAILED,failed.state());assertEquals("AI_DRAFT_FAILED",failed.reasonCode());
+        assertFalse(failed.resultAvailable());assertEquals("RECEIVED",row(prepared).get("provider_state"));
+        assertEquals("RETAINED",quotaRow().get("state"));assertEquals("OUTPUT_REVIEW_UNKNOWN",quotaRow().get("decision_reason"));
+        assertEquals("RESULT_CLASSIFIED",quotaRow().get("stage"));assertOriginalGenIdentity(prepared,original);
+        String originalRedisReceipt=raw.opsForValue().get(receipt);assertNotNull(originalRedisReceipt);assertNotEquals("0",originalRedisReceipt);
+        int reviews=mockingDetails(fixture.safety).getInvocations().size();
+        assertEquals(AiThemeDraftIntentState.FAILED,execute(prepared).state());assertEquals(prepared.requestId(),prepare().requestId());
+        assertEquals(AiThemeDraftIntentState.FAILED,service.readPrepared(member,prepareKey).state());
+        assertEquals(reviews,mockingDetails(fixture.safety).getInvocations().size());
+        assertEquals(originalRedisReceipt,raw.opsForValue().get(receipt));assertOriginalGenIdentity(prepared,original);
+        verify(creator,times(1)).themeDraftPrepared(any(),eq(member),any());
+        verify(fixture.model,times(1)).chat(anyString(),anyString());
+        verify(observed,times(1)).prepare(member,"theme_draft","gen",String.valueOf(original.get("counter_key")),receipt);
+        verify(observed,times(1)).reserved(receipt,1L);verify(observed,times(1)).retain(receipt,"OUTPUT_REVIEW_UNKNOWN");
+        verify(observed,never()).requireRefund(anyString(),anyString());
+    }
+
+    private void assertOriginalGenIdentity(AiThemeDraftIntentView intent,Map<String,Object> original) {
+        Map<String,Object> current=row(intent),quota=quotaRow();
+        for(String field:List.of("member_id","role","pool","original_day","counter_key","nonce","receipt_key","reservation",
+                "request_id","prepare_key","request_hash","product_type","plan_hash","creator_config_hash","gateway_config_hash","execute_before","context_expires_at"))
+            assertEquals(original.get(field),current.get(field),"original intent binding: "+field);
+        for(String field:List.of("member_id","pool","original_day","counter_key","nonce","receipt_key"))
+            assertEquals(original.get(field),quota.get(field),"original quota binding: "+field);
+        assertEquals("gen",quota.get("pool"));assertEquals(1,quotaRows());
+        assertEquals("1",raw.opsForValue().get(String.valueOf(original.get("counter_key"))));
+    }
+
+    @Test void originalProductTypeRemainsAcrossPrepareExecutionRecoveryAndNullableUnknown() {
+        role.set("club");int executed=0;
+        for (Integer mode : Arrays.asList(null,1,2)) {
+            prepareKey=UUID.randomUUID().toString();var request=new AiThemeDraftPrepareReq(prepareKey,"private-idea",mode,null);
+            var prepared=service.prepare(member,request);Map<String,Object> original=row(prepared);
+            assertEquals(mode,original.get("product_type"));assertEquals(mode,prepared.productType());
+            assertEquals(mode,service.readPrepared(member,prepareKey).productType());assertEquals(mode,service.readIntent(member,prepared.requestId()).productType());
+            int priorQuota=quotaRows();Integer different=mode==null?Integer.valueOf(1):mode==1?Integer.valueOf(2):null;
+            var conflict=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
+                    ()->service.prepare(member,new AiThemeDraftPrepareReq(prepareKey,"private-idea",different,null)));
+            assertEquals("AI_DRAFT_REQUEST_CONFLICT",conflict.getErrorCode());assertEquals(priorQuota,quotaRows());
+            assertThrows(RuntimeException.class,()->db.update("UPDATE ai_theme_draft_request_intent SET product_type=3 WHERE request_id=?",prepared.requestId()));
+            assertEquals(mode,row(prepared).get("product_type"));
+            doAnswer(call->{
+                var input=JSON.parseObject((String)call.getArgument(1));assertEquals(mode,input.getInteger("productType"));return ANSWER;
+            }).when(fixture.model).chat(anyString(),anyString());
+            var completed=execute(prepared);executed++;
+            assertEquals(AiThemeDraftIntentState.SUCCEEDED,completed.state());assertEquals(mode,completed.productType());
+            assertEquals(mode,service.readIntent(member,prepared.requestId()).productType());assertEquals(mode,service.readPrepared(member,prepareKey).productType());
+            var recovery=service.readRecovery(member,null).stream().filter(v->v.requestId().equals(prepared.requestId())).findFirst().orElseThrow();
+            assertEquals(mode,recovery.productType());assertEquals(completed.resultExpiresAt(),recovery.resultExpiresAt());
+            assertEquals(prepared.requestId(),service.prepare(member,request).requestId());assertEquals(mode,execute(prepared).productType());
+            raw.delete(bodyKey("result",prepared.requestId()));var missing=service.readIntent(member,prepared.requestId());
+            assertEquals(AiThemeDraftIntentState.SUCCEEDED,missing.state());assertFalse(missing.resultAvailable());assertEquals(mode,missing.productType());
+            Map<String,Object> persisted=row(prepared);
+            for(String field:List.of("member_id","pool","original_day","counter_key","nonce","receipt_key","request_hash","plan_hash","product_type"))
+                assertEquals(original.get(field),persisted.get(field),"original fact: "+field);
+            var quota=db.queryForMap("SELECT * FROM ai_quota_reservation WHERE member_id=? AND receipt_key=?",member,original.get("receipt_key"));
+            assertEquals(original.get("nonce"),quota.get("nonce"));assertEquals("RETAINED",quota.get("state"));
+            assertEquals(executed,quotaRows());verify(fixture.model,times(executed)).chat(anyString(),anyString());
+        }
+        assertNull(service.readPrepared(member,UUID.randomUUID().toString()).productType());
+        int count=quotaRows();
+        for(Integer invalid:List.of(0,3)) {
+            var rejected=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
+                    ()->service.prepare(member,new AiThemeDraftPrepareReq(UUID.randomUUID().toString(),"private-idea",invalid,null)));
+            assertEquals(Integer.valueOf(400),rejected.getCode());assertEquals("AI_DRAFT_INVALID_REQUEST",rejected.getErrorCode());
+        }
+        assertEquals(count,quotaRows());verify(fixture.model,times(3)).chat(anyString(),anyString());
+        verify(creator,times(3)).themeDraftPrepared(any(),eq(member),any());
+    }
 }
