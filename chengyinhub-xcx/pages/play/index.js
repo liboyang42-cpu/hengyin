@@ -21,8 +21,7 @@ const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-sta
 const gameSessionClient = require('../../utils/game-session-client.js');
 const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
-const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
-const { VM } = require('../../utils/validation-method-labels.js'); // 核验方式码值(与后端 ValidationMethod 同值)
+const playAccuracy = require('./utils/play-accuracy.js'); const { VM } = require('../../utils/validation-method-labels.js'); // 到达定位精度阈值(80m)与提示;VM=核验方式码值(与后端 ValidationMethod 同值)
 const {
   normalizePlayerProjection,
   buildPlayerChoiceInput,
