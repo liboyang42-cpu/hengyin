@@ -11,7 +11,7 @@ const { isBizOk } = require('../../utils/response-shape.js');
 const ROOT = path.join(__dirname, '..', '..');
 const MIGRATED = [
   'utils/access-gate.js',
-  'utils/citynode-redeem-outcome.js',
+  'pages/merchant/utils/citynode-redeem-outcome.js',
   'utils/deregister-flow.js',
   'utils/play-run-session.js',
   'components/cy/scene-member-invite-history/index.js',

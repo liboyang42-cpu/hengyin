@@ -3,7 +3,7 @@
 // PRIVATE-GROUP-nucleation-original-request:据点核销(/api/verify/citynode/redeem)的回执分类。
 // 与 merchant-verification.js 同一口径——只有能绑定到原请求的明确回执才算 success/failed,其余一律 unknown。
 const UNKNOWN_MESSAGE = '核销结果待确认，请勿重复核销';
-const { isBizOk } = require('./response-shape.js');
+const { isBizOk } = require('../../../utils/response-shape.js');
 const record = value => value && typeof value === 'object' && !Array.isArray(value);
 const positiveId = value => (typeof value === 'number' || typeof value === 'string')
   && /^[1-9]\d*$/.test(String(value)) && Number.isSafeInteger(Number(value));
