@@ -1,15 +1,15 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T22:08:02Z",
+  "updated_utc": "2026-10-24T22:21:18Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
   "all_complete": false,
-  "mode": "All actual final residual source collected: C e1 constant and F d582 verifier/4b3239 tool integrated, sixfile/dualpin proof done; scanning then freezing one next complete candidate, no extra audit",
+  "mode": "All190a original jobs ended; Backend plus storage independently PASS, only original Mini source assertion/aggregate FAIL. C83 exact test-only fix applied, all necessary source collected, scan then freeze one final candidate",
   "current_worker_assignments": {
     "A": {
-      "state": "DELIVERED_FROZEN_PENDING_B626_UNIFIED_VALIDATION",
+      "state": "DELIVERED_FROZEN_PENDING_190A_UNIFIED_VALIDATION",
       "task": "Original Activity authoritative-topic case canonical parent row, one-line fixture only; original SUCCESS/scans/template assertions preserved",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
@@ -22,7 +22,7 @@
       "residual_delivery": "Complete2 chatdiff blocks8files applied,184original methods retained"
     },
     "B": {
-      "state": "DELIVERED_EXACT_GATE_SEMANTICS_NO_CODE_CHANGE",
+      "state": "DELIVERED_FROZEN_PENDING_190A_UNIFIED_VALIDATION",
       "task": "Explain original three exact B payment directions and reverse refs only; F owns policy; no new code audit",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
@@ -33,8 +33,8 @@
       "residual_delivery": "Complete2 main chatdiff blocks4files plus1shared historical factory review hunk applied,22original cases retained"
     },
     "C": {
-      "state": "DELIVERED_APPLIED_PENDING_NEXT_FINAL_CANDIDATE",
-      "task": "Remove peer CityNode→Ticket constant-only dependency preserving exact300000 TTL; no broad class grant or new helper",
+      "state": "DELIVERED_APPLIED_PENDING_NEXT_UNIFIED_VALIDATION",
+      "task": "registration-ticket-application-source.test.js:51 preserve same300000 signing/localPNG contract, compare real two constants and prohibit peer reference; only exact Node file check",
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable",
       "owned_symbols": [
@@ -42,10 +42,10 @@
         "Direct voice fixtures and additive migration if needed"
       ],
       "delivery_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
-      "residual_delivery": "e1f22fda55b0a26a4261eba49dcd048932cbbec6 constant-only peer edge removed, exact300000 unchanged"
+      "residual_delivery": "83d39082f591d654b76d15870cfb637df13b979b single JS source-contract case, parent190a; both actual TTL300000/equal, no peer reference, ttlMs/expiresAt, original signing/PNG/permissions retained; one direct Node run PASS"
     },
     "D": {
-      "state": "DELIVERED_FROZEN_PENDING_B626_UNIFIED_VALIDATION",
+      "state": "DELIVERED_FROZEN_PENDING_190A_UNIFIED_VALIDATION",
       "task": "ci/test_merchant_offer_withdrawal_columns_mysql_integration.py canonical round+withdrawal fixture chain; original2 case assertions/negative/replay/history preserved",
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable",
@@ -57,7 +57,7 @@
       "residual_delivery": "804d70bf91dda7807d5106fb9b2921b393378901; only original six-case Python fixture; canonical round migration and NULL historic proof; no original assertions removed"
     },
     "E": {
-      "state": "DELIVERED_FROZEN_PENDING_B626_UNIFIED_VALIDATION",
+      "state": "DELIVERED_FROZEN_PENDING_190A_UNIFIED_VALIDATION",
       "task": "保留你原未交ledger工作，root已采用D等价完整实现，不继续旧ledger重复任务。现在新隔离分支只修主题/内容共同装配失败，拥有这些unit：TopicCreativePostVisibilitySyncTest（缺CmsTopicChapterMapper）、TopicSizeLimitsTest（预期IllegalState却NPE）、OWN_C03_13Test五例、OrdinarySupplyResumeTest十例（缺CmsTopicNodeMapper等）、CmsTopicPublishStateKeyGuardTest六例（预期ServiceException却NPE）、AuditTopicBudgetDecisionTest（当前锁读期望1次实为2次）；storage TopicContentGraphMySqlIT.runtimeBindingsUseCorrectOldAndCreatedClientMaps（工具costs报尚无通用结算完成证明）。复用现有内容/发布真实facade和共享测试fixture一次补正确装配；保留原limits、thought/statekey、发布归属、当前锁、内容复制客户端ID映射断言，不为了旧fixture放宽能力证明。只改这些测试+必要主题/内容直接根因，别碰别人资金/语音文件。若原执行器仍不可用，使用GitHub工具读公共源后交完整聊天diff，不重置/删除原工作区，立刻报告精确可用能力。",
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
@@ -70,14 +70,14 @@
       "residual_delivery": "2f09aa52011938785e686a42f0e1f58eb57833cc"
     },
     "F": {
-      "state": "DELIVERED_APPLIED_PENDING_NEXT_FINAL_CANDIDATE",
+      "state": "DELIVERED_FROZEN_PENDING_190A_UNIFIED_VALIDATION",
       "task": "b626 run40135082606/job120994889568 11 NEW_OWNER_DEPENDENCY_DIRECTION refs/5 directions; prove semantic direction and minimal exact policy/controls, no broad grant or gate weakening",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
       "residual_delivery": "verifier d58288edc65e4c57bc98ef61253fb084f38642f1; tool4b3239a559d2a81f057ab7356cb21e58e855b537; exact10 class refs/4 directions, C not granted; root6file+pin hashes exact"
     },
     "G": {
-      "state": "DELIVERED_FROZEN_PENDING_B626_UNIFIED_VALIDATION",
+      "state": "DELIVERED_FROZEN_PENDING_190A_UNIFIED_VALIDATION",
       "task": "Break CmsRegistration→CoopSettlementClaim→TopicSettlementEvidence→RegistrationSeat→CmsRegistration via minimal original seat-read boundary; preserve locks/fee/filters and money rules",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
@@ -92,7 +92,7 @@
       "residual_delivery": "4e5ee6e1acafa5cd4efbf366c29445d5d5c1249e"
     },
     "H": {
-      "state": "DELIVERED_FROZEN_PENDING_B626_UNIFIED_VALIDATION",
+      "state": "DELIVERED_FROZEN_PENDING_190A_UNIFIED_VALIDATION",
       "task": "P0Deregistration verified_payment_fact_id canonical schema chain; no production deregistration changes",
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable",
@@ -626,42 +626,40 @@
     "permissions": "Existing business:settlement:list; GET only; no raw payment identity, resolve or debit API"
   },
   "current_final_candidate": {
-    "sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
-    "branch": "codex/architecture-day-final-b626-20261024",
-    "standard_ci_run": 40135082606,
-    "real_storage_run": 40135087066,
+    "sha": "190a97098e9ba8c1db3d0439e19adf28c9848468",
+    "branch": "codex/architecture-day-final-190a-20261024",
+    "standard_ci_run": 40137286127,
+    "real_storage_run": 40137293464,
     "unique_storage_classes": 65,
     "declared_storage_cases": 810,
-    "status": "STANDARD_FAIL_COMPILED_OWNER_DIRECTIONS_STORAGE_PASS",
-    "new_scope": "Only canonical round dependency in existing six-case Python legacy withdrawal fixture and evidence docs; production Java unchanged from55",
+    "status": "BACKEND_AND_STORAGE_PASS_MINI_ASSERTION_FAIL_FIXED_NEXT_SOURCE",
+    "new_scope": "C peer constant coupling removal preserving exactTTL; F four exact owner directions/ten class pairs and strict negative controls; all prior ASR/funds/startup/fixture fixes included",
     "full_scope_complete": false,
+    "verification": "IN_PROGRESS_NOT_ACCEPTED",
     "missing_acceptance": [
       "Same-candidate standard CI, compiled architecture and real-storage class batch",
       "Real HTTP identities and provider unknown-result scenarios",
       "Process termination/recovery, rollback and resource-capacity evidence"
     ],
-    "verification": "IN_PROGRESS_NOT_ACCEPTED",
+    "known_actual_failure": {
+      "job": 121001506357,
+      "type": "STALE_TEST_ASSERTS_REMOVED_PEER_CONSTANT_REFERENCE",
+      "owner": "C",
+      "test": "chengyinhub-xcx/tests/unit/registration-ticket-application-source.test.js:51"
+    },
     "real_storage_readback": {
-      "status": "PASS",
+      "source_sha": "190a97098e9ba8c1db3d0439e19adf28c9848468",
       "classes": 65,
-      "actual_testcases": 810,
-      "passed": 810,
+      "actual_passed": 810,
       "failure": 0,
       "error": 0,
-      "skipped": 0,
-      "duplicates": 0,
+      "skip": 0,
+      "duplicate": 0,
       "clean": 65,
-      "source_sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
       "all_first_attempt": true,
-      "original_xml_and_receipt_readback": "b626-real-storage-readback.json"
+      "summary": "190a-real-storage-readback.json"
     },
-    "compiled_failure": {
-      "findings": 11,
-      "distinct_owner_directions": 5,
-      "owner": "F",
-      "evidence": "b626-final-backend-artifact-readback.json",
-      "negative_restored": "SKIPPED"
-    }
+    "compiled_and_jar_readback": "190a-final-backend-artifact-readback.json,292evidence hashes verified; 3 actual negative/restored pairs PASS"
   },
   "final_source_reviews": {
     "record": "final-source-review-ee815.json",
@@ -715,35 +713,34 @@
   "shared_repair_base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
   "source_storage_declarations": 810,
   "final_candidate": {
-    "sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
-    "branch": "codex/architecture-day-final-b626-20261024",
-    "standard_ci_run": 40135082606,
-    "real_storage_run": 40135087066,
+    "sha": "190a97098e9ba8c1db3d0439e19adf28c9848468",
+    "branch": "codex/architecture-day-final-190a-20261024",
+    "standard_ci_run": 40137286127,
+    "real_storage_run": 40137293464,
     "unique_storage_classes": 65,
     "declared_storage_cases": 810,
-    "status": "STANDARD_FAIL_COMPILED_OWNER_DIRECTIONS_STORAGE_PASS",
-    "new_scope": "Only canonical round dependency in existing six-case Python legacy withdrawal fixture and evidence docs; production Java unchanged from55",
+    "status": "BACKEND_AND_STORAGE_PASS_MINI_ASSERTION_FAIL_FIXED_NEXT_SOURCE",
+    "new_scope": "C peer constant coupling removal preserving exactTTL; F four exact owner directions/ten class pairs and strict negative controls; all prior ASR/funds/startup/fixture fixes included",
+    "full_scope_complete": false,
+    "known_actual_failure": {
+      "job": 121001506357,
+      "type": "STALE_TEST_ASSERTS_REMOVED_PEER_CONSTANT_REFERENCE",
+      "owner": "C",
+      "test": "chengyinhub-xcx/tests/unit/registration-ticket-application-source.test.js:51"
+    },
     "real_storage_readback": {
-      "status": "PASS",
+      "source_sha": "190a97098e9ba8c1db3d0439e19adf28c9848468",
       "classes": 65,
-      "actual_testcases": 810,
-      "passed": 810,
+      "actual_passed": 810,
       "failure": 0,
       "error": 0,
-      "skipped": 0,
-      "duplicates": 0,
+      "skip": 0,
+      "duplicate": 0,
       "clean": 65,
-      "source_sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
       "all_first_attempt": true,
-      "original_xml_and_receipt_readback": "b626-real-storage-readback.json"
+      "summary": "190a-real-storage-readback.json"
     },
-    "compiled_failure": {
-      "findings": 11,
-      "distinct_owner_directions": 5,
-      "owner": "F",
-      "evidence": "b626-final-backend-artifact-readback.json",
-      "negative_restored": "SKIPPED"
-    }
+    "compiled_and_jar_readback": "190a-final-backend-artifact-readback.json,292evidence hashes verified; 3 actual negative/restored pairs PASS"
   },
   "previous_final_candidates": [
     {
@@ -819,6 +816,37 @@
         "2": 5
       },
       "full_application_startup": "PASS actualjob120988405767 step before atomic Python; packaged application ready, MySQL/RedisUP, cache roundtrip, protectedHTTP401, jobs disabled"
+    },
+    {
+      "sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
+      "branch": "codex/architecture-day-final-b626-20261024",
+      "standard_ci_run": 40135082606,
+      "real_storage_run": 40135087066,
+      "unique_storage_classes": 65,
+      "declared_storage_cases": 810,
+      "status": "STANDARD_FAIL_COMPILED_OWNER_DIRECTIONS_STORAGE_PASS",
+      "new_scope": "Only canonical round dependency in existing six-case Python legacy withdrawal fixture and evidence docs; production Java unchanged from55",
+      "real_storage_readback": {
+        "status": "PASS",
+        "classes": 65,
+        "actual_testcases": 810,
+        "passed": 810,
+        "failure": 0,
+        "error": 0,
+        "skipped": 0,
+        "duplicates": 0,
+        "clean": 65,
+        "source_sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
+        "all_first_attempt": true,
+        "original_xml_and_receipt_readback": "b626-real-storage-readback.json"
+      },
+      "compiled_failure": {
+        "findings": 11,
+        "distinct_owner_directions": 5,
+        "owner": "F",
+        "evidence": "b626-final-backend-artifact-readback.json",
+        "negative_restored": "SKIPPED"
+      }
     }
   ],
   "historical_ca0e_candidate": {
@@ -905,10 +933,9 @@
     "B": "Three directions legitimate original public fact/row-lock dependencies with no reverse edge; precise symbols/lines in compiled-owner-direction-semantics-b626.json"
   },
   "next_candidate_source": {
-    "C": "e1f22fda55b0a26a4261eba49dcd048932cbbec6",
-    "F_verifier": "d58288edc65e4c57bc98ef61253fb084f38642f1",
-    "F_tool": "4b3239a559d2a81f057ab7356cb21e58e855b537",
-    "unified_validation": "NOT_RUN",
-    "source_checks": "C file exact; six trusted source files digest and donor exact; dualrefs/tool same; original baseline/commands/locking unchanged"
+    "test_only_C": "83d39082f591d654b76d15870cfb637df13b979b",
+    "parent": "190a97098e9ba8c1db3d0439e19adf28c9848468",
+    "production_code": "UNCHANGED_FROM_190A",
+    "next_unified_acceptance": "NOT_RUN"
   }
 }

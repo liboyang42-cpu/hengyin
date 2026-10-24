@@ -48,10 +48,23 @@ test('application owns no HTTP context, callback to controller, optional depende
   assert.match(read('chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java'),
     /@Transactional\(rollbackFor = Exception.class\)\s+public AjaxResult redeemCityNodeCode/);
 });
-test('the original five-minute TTL and signing configuration have one shared value and keep local PNG generation', () => {
+test('the original five-minute TTL and signing configuration have equal local values and keep local PNG generation', () => {
   const source = read(applicationPath);
-  assert.match(source, /public static final long DYN_TTL_MS = 300_000L/);
-  assert.match(read('chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java'), /private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS/);
+  const cityNode = read('chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java');
+  const ticketTtl = source.match(/\bpublic static final long DYN_TTL_MS\s*=\s*([0-9][0-9_]*)L\s*;/);
+  const cityNodeTtl = cityNode.match(/\bprivate static final long DYN_TTL_MS\s*=\s*([0-9][0-9_]*)L\s*;/);
+  assert.ok(ticketTtl, 'ticket owner must declare its actual numeric TTL');
+  assert.ok(cityNodeTtl, 'city-node owner must declare its actual numeric TTL');
+  const ticketMs = Number(ticketTtl[1].replace(/_/g, ''));
+  const cityNodeMs = Number(cityNodeTtl[1].replace(/_/g, ''));
+  assert.equal(ticketMs, 300000);
+  assert.equal(cityNodeMs, 300000);
+  assert.equal(ticketMs, cityNodeMs);
+  assert.doesNotMatch(cityNode, /\bRegistrationTicketApplication\b/);
+  for (const owner of [source, cityNode]) {
+    assert.match(owner, /data.put\("ttlMs", DYN_TTL_MS\)/);
+    assert.match(owner, /data.put\("expiresAt", now \+ DYN_TTL_MS\)/);
+  }
   assert.match(source, /@Value\("\$\{verify.dyncode-secret:\$\{token.secret\}\}"\) String dynSecret/);
   assert.match(source, /VerifyDynCodeUtil.issue\(reg.getId\(\), type, now, DYN_TTL_MS, nonce, dynSecret\)/);
   assert.match(source, /qrcodeService.generateInlineQrcode\(code, 300, 300\)/);
