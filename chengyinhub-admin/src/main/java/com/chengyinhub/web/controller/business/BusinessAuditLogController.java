@@ -1,7 +1,10 @@
 package com.chengyinhub.web.controller.business;
 
 import com.chengyinhub.business.domain.dto.BusinessAuditLogQueryDTO;
+import com.chengyinhub.business.domain.vo.BusinessAuditLogPageVO;
+import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
 import com.chengyinhub.business.service.IBusinessAuditLogQueryService;
+import com.chengyinhub.business.service.support.ops.SupportOriginalReadFactory;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -20,13 +23,34 @@ public class BusinessAuditLogController extends BaseController {
     @Autowired
     private IBusinessAuditLogQueryService businessAuditLogQueryService;
 
+    @Autowired
+    private BusinessAuditEventMapper businessAuditEventMapper;
+
     @PreAuthorize("@ss.hasPermi('business:audit:log:list') and @ss.hasRole('admin')")
     @GetMapping("/list")
     public AjaxResult list(BusinessAuditLogQueryDTO query) {
         try {
-            return success(businessAuditLogQueryService.query(query, SysUser.isAdmin(getUserId())));
+            SupportOriginalReadFactory reads = new SupportOriginalReadFactory(
+                    businessAuditLogQueryService, businessAuditEventMapper);
+            BusinessAuditLogPageVO page = reads.list(query, SysUser.isAdmin(getUserId()));
+            confirmOriginalTarget(reads, query);
+            return success(page);
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage());
+        } catch (IllegalStateException e) {
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+
+    /** An order or run filter must match the original event. Other targets stay on their own entries. */
+    private static void confirmOriginalTarget(SupportOriginalReadFactory reads, BusinessAuditLogQueryDTO query) {
+        if (query == null || query.getTargetId() == null) {
+            return;
+        }
+        if ("ORDER".equals(query.getTargetType())) {
+            reads.locateOrder(query.getTargetId(), null);
+        } else if ("RUN".equals(query.getTargetType())) {
+            reads.locateRun(query.getTargetId(), null);
         }
     }
 }
