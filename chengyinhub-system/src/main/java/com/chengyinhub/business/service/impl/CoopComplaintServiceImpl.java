@@ -29,6 +29,8 @@ public class CoopComplaintServiceImpl implements ICoopComplaintService {
     @Autowired
     private com.chengyinhub.business.service.support.CommittedBusinessNotice businessNotice;
     @Autowired
+    private com.chengyinhub.business.service.support.CommittedOfficialNoticeService committedOfficialNoticeService;
+    @Autowired
     private IUmsMemberService umsMemberService;
     @Autowired
     private IUmsMemberBalanceDetailService umsMemberBalanceDetailService;
@@ -94,9 +96,8 @@ public class CoopComplaintServiceImpl implements ICoopComplaintService {
         // 禁止按 complaintId 二次模糊查「刚才那条」，也禁止把它挪到事务外。
         playerWithdrawalCooldownService.registerFromPositiveComplaintDetail(
                 detail.getId(), c.getReporterMemberId(), id, amount);
-        businessNotice.sendAfterCommit(c.getReporterMemberId(), "投诉处理有进展",
-                "工单#" + id + "已先行垫付 ¥" + amount.toPlainString() + "，请在投诉记录查看处理进度。",
-                "complaint-advance", id);
+        committedOfficialNoticeService.enqueueOfficial("complaint-advance:" + id, c.getReporterMemberId(), "投诉处理有进展",
+                "工单#" + id + "已先行垫付 ¥" + amount.toPlainString() + "，请在投诉记录查看处理进度。");
         return 1;
     }
 

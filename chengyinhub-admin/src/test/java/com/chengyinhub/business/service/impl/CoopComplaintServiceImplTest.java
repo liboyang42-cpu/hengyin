@@ -35,6 +35,7 @@ class CoopComplaintServiceImplTest {
     private IPlayerWithdrawalCooldownService cooldownService;
     private CoopComplaintServiceImpl svc;
     private com.chengyinhub.business.service.support.CommittedBusinessNotice notices;
+    private com.chengyinhub.business.service.support.CommittedOfficialNoticeService durableNotices;
 
     private final com.chengyinhub.business.service.support.SettlementDebtLedger debtLedger = org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class);
 
@@ -46,6 +47,8 @@ class CoopComplaintServiceImplTest {
         svc = new CoopComplaintServiceImpl();
         notices = mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class);
         ReflectionTestUtils.setField(svc, "businessNotice", notices);
+        durableNotices = mock(com.chengyinhub.business.service.support.CommittedOfficialNoticeService.class);
+        ReflectionTestUtils.setField(svc, "committedOfficialNoticeService", durableNotices);
         ReflectionTestUtils.setField(svc, "settlementDebtLedger", debtLedger);
         ReflectionTestUtils.setField(svc, "coopComplaintMapper", mapper);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
@@ -94,7 +97,9 @@ class CoopComplaintServiceImplTest {
         verify(mapper).claimAcceptedForAdvance(eq(1L), eq(new BigDecimal("50")), eq(999L), any());
         // 资金状态迁移不得再走无旧状态条件的通用 UPDATE —— 那正是双付的成因。
         verify(mapper, never()).updateCoopComplaint(any());
-        verify(notices).sendAfterCommit(eq(100L), any(), any(), eq("complaint-advance"), eq(1L));
+        verify(durableNotices).enqueueOfficial(eq("complaint-advance:1"), eq(100L),
+                eq("投诉处理有进展"), eq("工单#1已先行垫付 ¥50，请在投诉记录查看处理进度。"));
+        org.mockito.Mockito.verifyNoInteractions(notices);
     }
 
     /** ★并发双付:第二个 advance 抢不到 CAS,必须在任何余额变动之前出局。 */
@@ -111,7 +116,7 @@ class CoopComplaintServiceImplTest {
         verify(umsMemberService, never()).addBalance(any(), any());
         verify(balanceDetailService, never()).insertUmsMemberBalanceDetail(any());
         verify(cooldownService, never()).registerFromPositiveComplaintDetail(any(), any(), any(), any());
-        org.mockito.Mockito.verifyNoInteractions(notices);
+        org.mockito.Mockito.verifyNoInteractions(notices, durableNotices);
     }
 
     /** 冷静期必须挂在刚插入那条明细的 generated id 上,不许按 complaintId 二次模糊查。 */

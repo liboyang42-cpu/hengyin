@@ -1,6 +1,6 @@
 # 投诉先行垫付通知：可恢复候选，待业务 owner 接线
 
-Parent `7da3e4ea385596aa850dc760f2cf6adc6c554602`。新增 5 个生产源码/Mapper 文件、1 个 additive migration、2 个专属测试文件；不直接改 A/G/B/E 文件。`review.patch` 是 A 的唯一业务调用替换、G 的精确任务白名单及 2 个旧测试最小装配，**尚未应用**；root 必须一并审核接线，当前不能宣称真实业务路径已启用。
+基础设施 parent `7da3e4ea385596aa850dc760f2cf6adc6c554602`、冻结源码 `974f6af8a25f76baa31c39f8f4e48ffcf31f7846`。其后续候选已在 `CoopComplaintServiceImpl.advance` 原通知提交点实接同事务 durable owner，并同步 2 个原投诉测试夹具；资金/CAS/冷静期算法未改。当前 `review.patch` **仅保留 G 的精确任务白名单**，不再重复提交已实接的业务 hook。参见 ../complaint-notice-hook/README.md；仍待 root 统一 Java/真库验收。
 
 ## 确证与复用
 
@@ -34,3 +34,5 @@ Parent `7da3e4ea385596aa850dc760f2cf6adc6c554602`。新增 5 个生产源码/Map
 13 个普通 @Test 真库源码：原事务回滚、提交后 executor 拒绝与重建任务、CAS重复、相同身份复用、title/body歧义冲突、冻结受众与文案、false/异常UNKNOWN、外部受理后回执丢失、IM回滚独立恢复、双worker/丢本地ACK、owner fence、MANDATORY与暂停注册。实际生产 IM mappers/消费者/新 owner + canonical migration；业务 CAS 为 JDBC fact adapter，不冒充完整真实资金 mapper。WX为受控替身，真实外呼0；重建对象不等于 process-kill 证明。
 
 实际仅 Python/XML/范围与 review.patch 应用静态检查；Java/MySQL/Spring完整启动/CI/生产 DDL 全部 **NOT_RUN**。原投诉单测全部 case 和经济/异常断言保留，通知断言迁到新 typed owner 并加强冻结文案；旧真库金融竞争夹具只补注入。本候选没有删除/skip/放宽旧场景。
+
+后续 7 项真实生产者回归复用原投诉金融 scratch 与生产投诉/会员余额/明细 mapper，实际 Controller/Service→事务内意图→postcommit/恢复任务接线见 complaint-notice-hook；仍无完整冷静期/权限过滤器/HTTP/真实WX实证。

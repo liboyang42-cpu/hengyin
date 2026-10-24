@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
+import javax.sql.DataSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -56,7 +57,23 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject("select version()", String.class)));
         admin.execute("create database " + mysql.databaseName() + " character set utf8mb4"); created = true;
         DriverManagerDataSource source = new DriverManagerDataSource(mysql.databaseUrl(), mysql.user(), mysql.password());
+        initialize(source, new DataSourceTransactionManager(source));
+        db.execute("create table complaint_notice_fact(id bigint primary key,status int,recipient bigint,"
+                + "title varchar(200),body text) engine=InnoDB");
+        db.update("insert into complaint_notice_fact values(1,0,100,'投诉处理有进展',"
+                + "'工单#1已先行垫付 ¥50，请在投诉记录查看处理进度。')");
+    }
+
+    /** Reuse the financial fixture's exact DataSource/transaction manager; never create another business database. */
+    void attach(DataSourceTransactionManager original) throws Exception {
+        for (String key : List.of("CHENGYIN_TEST_MYSQL_PORT", "CHENGYIN_TEST_MYSQL_USER", "CHENGYIN_TEST_MYSQL_PASSWORD"))
+            assertNotNull(System.getenv(key), "controlled runner must supply " + key);
+        initialize(original.getDataSource(), original);
+    }
+
+    private void initialize(DataSource source, DataSourceTransactionManager original) throws Exception {
         db = new JdbcTemplate(source);
+        assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(db.queryForObject("select version()", String.class)));
         sqlRoot = Paths.get("chengyinhub-admin/sql");
         if (!sqlRoot.toFile().isDirectory()) sqlRoot = Paths.get("sql");
         new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve("migration_im.sql")),
@@ -67,11 +84,7 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
                 + "create_by varchar(64),create_time datetime,remark text) engine=InnoDB");
         new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve("migration_20261013_b_im_notification_intent.sql")),
                 new FileSystemResource(sqlRoot.resolve("migration_20261024_d_committed_official_notice_wx.sql"))).execute(source);
-        db.execute("create table complaint_notice_fact(id bigint primary key,status int,recipient bigint,"
-                + "title varchar(200),body text) engine=InnoDB");
-        db.update("insert into complaint_notice_fact values(1,0,100,'投诉处理有进展',"
-                + "'工单#1已先行垫付 ¥50，请在投诉记录查看处理进度。')");
-        manager = new DataSourceTransactionManager(source); tx = new TransactionTemplate(manager);
+        manager = original; tx = new TransactionTemplate(manager);
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new ClassPathResource("mapper/business/ImConversationMapper.xml"),
