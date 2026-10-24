@@ -151,7 +151,7 @@ test('节点详情场景保留节点/商家真实接口，并将核销码推入�
   assert.match(componentJs, /url: '\/api\/merchant\/public-detail'/)
   assert.match(componentJs, /id: 'qr-citynode'/)
   assert.match(componentWxml, /节点无法打开/)
-  assert.match(componentWxml, /开始互动/)
+  assert.match(componentWxml, /开始挑战/)
   assert.match(componentWxml, /店铺相册/)
   assert.doesNotMatch(componentJs, /wx\.navigateTo/)
 })

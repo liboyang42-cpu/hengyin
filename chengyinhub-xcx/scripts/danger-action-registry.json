@@ -338,6 +338,13 @@
     },
     {
       "endpoint": "/api/comment/delete",
+      "file": "subpackageMember/components/cy/scene-roam-poi-detail/index.js",
+      "irreversible": true,
+      "confirmKey": "club.comment.delete",
+      "reason": "仅删除本人地点游玩评价；复用评论删除确认，删除后重新读取评分与评价"
+    },
+    {
+      "endpoint": "/api/comment/delete",
       "file": "pages/square/detail/index.js",
       "irreversible": true,
       "confirmKey": "club.comment.delete",

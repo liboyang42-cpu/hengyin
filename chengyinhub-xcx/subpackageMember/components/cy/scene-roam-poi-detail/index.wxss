@@ -3,9 +3,8 @@
 :host { display: block; height: 100%; }
 .poi-body { padding-bottom: calc(180rpx + env(safe-area-inset-bottom)); }
 .poi-full-photo { display: block; width: 100%; height: auto; border-radius: var(--cy-radius-md); }
-.poi-node__actions .poi-action--primary { display: none; }
 .poi-footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; gap: var(--cy-space-2); padding: var(--cy-space-3); padding-bottom: calc(var(--cy-space-3) + env(safe-area-inset-bottom)); background: var(--cy-color-bg-surface); border-top: 1rpx solid var(--cy-color-border-subtle); }
-.poi-footer cy-btn { flex: 1; }
+.poi-footer__button { flex: 1; }
 .poi-credit { min-height: 88rpx; display: flex; align-items: center; color: var(--cy-color-text-secondary); }
 .poi-review { margin-top: var(--cy-space-3); padding: var(--cy-space-3); background: var(--cy-color-bg-surface-subtle); border-radius: var(--cy-radius-md); }
 .poi-review__name { display: block; color: var(--cy-color-text-primary); font-weight: 600; }

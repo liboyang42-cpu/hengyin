@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261024_official_roam_challenges": ["roam", "city_merchant_node"],
     "20261024_cash_withdraw_transfer_intent": [],
     "20261023_wx_pay_order_intent": [],
     "merchant_wechat_qrcode_20261022": [],

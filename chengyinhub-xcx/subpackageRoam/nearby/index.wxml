@@ -198,9 +198,9 @@
         <scroll-view class="pb__sc" scroll-y="{{poiExpand}}" enhanced show-scrollbar="{{false}}">
           <text class="pb__d">{{poiCard.desc || '这里还没有介绍。'}}</text>
           <text class="pb__more" wx:if="{{!poiExpand}}">上滑看全部</text>
-          <view class="pb__th" wx:if="{{poiCard.thumbs.length}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" src="{{item}}" mode="aspectFill" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{index + 1}}张高清照片" /></view>
+          <view class="pb__th" wx:if="{{poiCard.thumbs.length}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" src="{{item}}" mode="aspectFill" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{index + 1}}张高清照片" hover-class="cy-pressed" hover-stay-time="80" /></view>
           <view class="pb__photo-note" wx:if="{{poiCard.thumbs.length}}">点击照片查看原图</view>
-          <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
+          <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
           <text class="pb__photo-note" wx:if="{{poiCard.creditOpen}}" user-select>{{poiCard.photoCredit}}</text>
           <view class="pb__info" wx:if="{{poiExpand}}"><view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text>{{item.v}}</text></view></view>
           <view class="pb__cta" wx:if="{{poiExpand}}">

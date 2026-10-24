@@ -22,10 +22,12 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
   '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java'
 );
 
-// 当前源码102个GET调用点的显式权限清单（直接68 + req包装29 + 作者媒体包装5）。
+// GET调用点显式权限清单；新增调用逐条复核。static = /profile/** 已公开的平台相册元数据。
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  ['subpackageRoam/nearby/index.js', "url, method: 'GET', auth: false", 'static', 'visitor/member', 'public-profile-gallery'],
+  ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/profile/' + key.replace", 'static', 'visitor/member', 'public-profile-gallery'],
   // 实际作者页面的受控requestOwnMedia不属于req简写；五个caller逐个归真实本人资产。
   ['pages/privacy/index.js', "this.requestOwnMedia('/api/media/asset/list', 'GET'", 'required', 'author', 'owned-media-asset'],
   ['pages/privacy/index.js', 'loadOlderMedia() {', 'required', 'author', 'owned-media-asset'],
@@ -197,7 +199,7 @@ const VALID_SCOPES = new Set([
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
   'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
-  'controlled-event-operator',
+  'controlled-event-operator', 'public-profile-gallery',
 ]);
 
 function productionJsFiles(dir) {
@@ -321,7 +323,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-22 W9 帖子处置(F0521):设置页本人处置列表 GET /api/v1/community/me/enforcements(后端 withAuthenticatedPrincipal,按本人过滤),69 → 70(batch2 集成在 W10b 的 69 上叠加)。
   // 2026-10-22 L21 BL-185:fabu 云端草稿发布前 GET /api/topic/publish-check(本人主题/商家 Owner),70 → 71(batch3 集成在 batch2 的 70 上叠加;L21 原写 65 → 66)。
   // 2026-10-23 v13 动效落地(PR #528):主题页 NPC 资料 / 附近队伍 / 站点 + 地图页据点四处直接 GET,71 → 75(权限档见 MATRIX 同日注释)。
-  assert.equal(directCount, 75, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-24 地点详情和地图新增两处已公开 /profile/** 相册元数据 GET。
+  assert.equal(directCount, 77, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -335,8 +338,14 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
     assert.notEqual(at, -1, `${file} 缺少已登记 GET: ${marker}`);
     const call = registeredCallSource(source, marker, at);
     assert.match(call, /['"]GET['"]/, `${file} 的 ${marker} method 已漂移`);
-    assert.doesNotMatch(call, /auth\s*:\s*false/, `${file} 的 ${marker} 不能降为匿名请求`);
-    assert.ok(mode === 'required' || mode === 'optional');
+    if (mode === 'static') {
+      assert.equal(scope, 'public-profile-gallery');
+      assert.match(call, /auth\s*:\s*false/, '公开静态资源不携带会话');
+      assert.match(source, /(?:url: '\/profile\/'|L\.poiGalleryPath\(poi\.coverImg\))/);
+    } else {
+      assert.doesNotMatch(call, /auth\s*:\s*false/, `${file} 的 ${marker} 不能降为匿名请求`);
+      assert.ok(mode === 'required' || mode === 'optional');
+    }
     assert.ok(role.length > 0, `${file} 的 ${marker} 缺角色分类`);
     assert.ok(VALID_SCOPES.has(scope), `${file} 的 ${marker} scope 未进入受控枚举: ${scope}`);
   });

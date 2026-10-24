@@ -185,6 +185,7 @@ class ApiCityNodeSearchTest {
                     + "radius_m int, node_level int, tags varchar(255), cover_img varchar(255), city_code varchar(32), "
                     + "status int, audit_status int, application_type int, type int, merchant_id bigint, template_id bigint, sort int)");
             statement.execute("create table roam_poi_reward_log (poi_id bigint, member_id bigint, coupon_id bigint, status int)");
+            statement.execute("create table ums_comment (owner_type int, owner_id bigint, rating int, status int, del_flag int, reply_id bigint)");
 
             insertMerchant(statement, 101, "咖啡一号", 9, "街区客厅");
             insertMerchant(statement, 102, "咖啡二号", 9, "街区客厅");

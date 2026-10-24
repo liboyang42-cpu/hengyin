@@ -507,7 +507,7 @@ Component({
       const id = e.currentTarget.dataset.id, poiId = this.data.poiId, actor = ownerId(), token = this._loadToken
       if (!this.data.reviews.some(row => String(row.id) === String(id) && row.mine)) return
       const current = () => !this._closed && token === this._loadToken && actor === ownerId() && poiId === this.data.poiId
-      modal.show({ title: '删除我的评价', content: '删除后会重新计算此地点评分。', success: result => {
+      modal.show({ dangerKey: 'club.comment.delete', success: result => {
         if (!result.confirm || !current()) return
         app.sendRequest({ url: '/api/comment/delete', method: 'POST', hideLoading: true, silentError: true, data: { id },
           success: res => {
