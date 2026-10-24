@@ -97,4 +97,22 @@ class OfflinePackOperationTest {
         assertEquals(OfflinePackOperation.Phase.CORRUPT, pack.phase());
         assertEquals("op-cor", pack.operationId());
     }
+
+    @Test
+    void unusedRecordFullDiskOfIdleDoesNotOccupyThenUniqueStartThenFullDiskApplies() {
+        OfflinePackOperation pack = new OfflinePackOperation();
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase());
+        assertNull(pack.operationId());
+        assertEquals(OfflinePackOperation.Failure.NOT_DOWNLOADING,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, pack::recordFullDisk).code);
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase(), "未见下载 recordFullDisk 观察不得占 FULL_DISK");
+        assertNull(pack.operationId());
+        pack.startDownload(manifest("op-disk"), NOW);
+        assertEquals("op-disk", pack.operationId());
+        assertEquals(OfflinePackOperation.Phase.DOWNLOADING, pack.phase());
+        assertEquals(OfflinePackOperation.Failure.FULL_DISK,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, pack::recordFullDisk).code);
+        assertEquals(OfflinePackOperation.Phase.FULL_DISK, pack.phase());
+        assertEquals("op-disk", pack.operationId());
+    }
 }
