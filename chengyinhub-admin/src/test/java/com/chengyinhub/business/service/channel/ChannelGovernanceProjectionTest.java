@@ -76,4 +76,25 @@ class ChannelGovernanceProjectionTest {
         assertEquals(grant.identity, journey.grant().identity);
         assertEquals(ChannelGovernancePhase.AUTHORIZED_READ_WRITE, journey.phase());
     }
+
+    @Test
+    void unusedAppealDoesNotOccupyBanThenUniqueBanApplies() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelGovernanceProjection journey = new ChannelGovernanceProjection(
+                new ChannelCatalogEntry(21, 12, ConversationKind.GROUP, new ChannelRulesCas(3, Integer.valueOf(4), 3)),
+                identity);
+        journey.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        journey.submitInviteOrApply();
+        journey.assignMemberRole(ChannelRole.MEMBER);
+        assertNotNull(journey.authorizeReadWrite());
+        assertEquals(ChannelAuthorizationException.Code.REVOKED,
+                assertThrows(ChannelAuthorizationException.class, journey::appeal).code);
+        assertEquals(ChannelGovernancePhase.AUTHORIZED_READ_WRITE, journey.phase());
+        assertNotNull(journey.grant(), "在籍未封禁申诉不得占 ban");
+        journey.ban();
+        assertEquals(ChannelGovernancePhase.BANNED, journey.phase());
+        assertNull(journey.grant());
+        journey.appeal();
+        assertEquals(ChannelGovernancePhase.APPEALING, journey.phase());
+    }
 }
