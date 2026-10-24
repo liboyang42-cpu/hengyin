@@ -259,6 +259,12 @@ class ImmutableReceiptProducerTest {
         assertThrows(IllegalArgumentException.class, () -> producer.sendOriginal(shortKey, 7L, 12L, Integer.valueOf(1),
                 "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
         assertEquals(1, calls.size());
+        ImmutableReceiptProducer.OriginalRequest padded = new ImmutableReceiptProducer.OriginalRequest(
+                " c09-send-key-0001 ", ImmutableReceiptProducer.Kind.REPLY, "{\"fp\":1}",
+                ImmutableReceiptProducer.OUTCOME_ACCEPTED);
+        assertThrows(IllegalArgumentException.class, () -> producer.sendOriginal(padded, 7L, 12L, Integer.valueOf(1),
+                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
+        assertEquals(1, calls.size());
         ImmutableReceiptProducer.ChannelMessageOriginalSend splitIds = (actor, conversation, client, type, content,
                 extra, replyTo, members, roles, everyone) -> {
             java.util.Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
@@ -269,6 +275,18 @@ class ImmutableReceiptProducerTest {
         };
         ImmutableReceiptProducer contradicted = new ImmutableReceiptProducer(store, null, null, splitIds);
         assertThrows(IllegalStateException.class, () -> contradicted.sendOriginal(reply, 7L, 12L, Integer.valueOf(1),
+                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.ChannelMessageOriginalSend illegalAlias = (actor, conversation, client, type,
+                content, extra, replyTo, members, roles, everyone) -> {
+            java.util.Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
+            sent.put("message_id", Boolean.TRUE);
+            sent.put("id", Long.valueOf(42L));
+            sent.put("request_id", client);
+            return sent;
+        };
+        ImmutableReceiptProducer badAlias = new ImmutableReceiptProducer(store, null, null, illegalAlias);
+        assertThrows(IllegalStateException.class, () -> badAlias.sendOriginal(reply, 7L, 12L, Integer.valueOf(1),
                 "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
         assertEquals(0, store.size());
     }
@@ -312,7 +330,38 @@ class ImmutableReceiptProducerTest {
         assertNull(recovered.get("content"));
         assertEquals(0, store.size());
         assertThrows(IllegalArgumentException.class, () -> producer.recoverChannelReceipt(7L, "c09-send-01"));
+        assertThrows(IllegalArgumentException.class,
+                () -> producer.recoverChannelReceipt(7L, " c09-send-key-0001 "));
         assertEquals(1, receipts[0]);
+        java.util.Map<String, Object> applied = new java.util.LinkedHashMap<String, Object>();
+        applied.put("request_id", key);
+        applied.put("state", "APPLIED");
+        applied.put("outcome_confirmed", Boolean.TRUE);
+        applied.put("operation", "SEND");
+        applied.put("conversation_id", Long.valueOf(12L));
+        applied.put("result_redacted", Boolean.TRUE);
+        ImmutableReceiptProducer.ChannelMessageOriginalSend appliedRead =
+                new ImmutableReceiptProducer.ChannelMessageOriginalSend() {
+                    @Override
+                    public java.util.Map<String, Object> send(Long actor, Long conversation, String client, Integer type,
+                            String content, String extra, Long replyTo, java.util.List<Long> members,
+                            java.util.List<Long> roles, boolean everyone) {
+                        throw new AssertionError("applied read does not send");
+                    }
+
+                    @Override
+                    public java.util.Map<String, Object> receipt(Long actor, String requestId) {
+                        return applied;
+                    }
+                };
+        java.util.Map<String, Object> passed = new ImmutableReceiptProducer(store, null, null, appliedRead)
+                .recoverChannelReceipt(7L, key);
+        assertEquals("APPLIED", passed.get("state"));
+        assertEquals("SEND", passed.get("operation"));
+        assertEquals(Long.valueOf(12L), passed.get("conversation_id"));
+        assertEquals(Boolean.TRUE, passed.get("result_redacted"));
+        assertEquals(Boolean.TRUE, passed.get("outcome_confirmed"));
+        assertEquals(0, store.size());
         ImmutableReceiptProducer.WaitingSourceException missing = assertThrows(
                 ImmutableReceiptProducer.WaitingSourceException.class,
                 () -> new ImmutableReceiptProducer(store).recoverChannelReceipt(7L, key));

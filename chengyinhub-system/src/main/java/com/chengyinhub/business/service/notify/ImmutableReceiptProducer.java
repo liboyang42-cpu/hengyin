@@ -191,15 +191,17 @@ public final class ImmutableReceiptProducer {
         if (channelSend == null) {
             throw new WaitingSourceException(CHANNEL_MESSAGE_SEND);
         }
-        if (!required.requestId.matches("[A-Za-z0-9_-]{16,64}")) {
+        // 原 send 对整串做 16–64 校验，不 trim。裁完再发会换成另一个键。
+        String key = request.requestId;
+        if (key == null || !key.matches("[A-Za-z0-9_-]{16,64}")) {
             throw new IllegalArgumentException("INVALID_REQUEST_ID");
         }
-        Map<String, Object> sent = channelSend.send(actorId, conversationId, required.requestId, msgType, content,
+        Map<String, Object> sent = channelSend.send(actorId, conversationId, key, msgType, content,
                 extraJson, replyToId, mentionMemberIds, mentionRoleIds, mentionEveryone);
-        if (!sameChannelReceipt(sent, required.requestId)) {
+        if (!sameChannelReceipt(sent, key)) {
             throw new IllegalStateException("channel send receipt is not this request");
         }
-        return new OriginalReceipt(required.requestId, required.kind, null, OUTCOME_UNKNOWN, null);
+        return new OriginalReceipt(key, required.kind, null, OUTCOME_UNKNOWN, null);
     }
 
     /**
@@ -243,20 +245,58 @@ public final class ImmutableReceiptProducer {
         if (!requestId.equals(id)) {
             return false;
         }
-        Long messageId = exactPositiveLong(sent.get("message_id"));
-        Long topId = exactPositiveLong(sent.get("id"));
+        ChannelId messageId = channelId(sent, "message_id");
+        ChannelId topId = channelId(sent, "id");
+        ChannelId nestedId = nestedMessageId(sent);
+        if (messageId.invalid || topId.invalid || nestedId.invalid) {
+            return false;
+        }
+        if (messageId.value != null && topId.value != null && !messageId.value.equals(topId.value)) {
+            return false;
+        }
+        if (messageId.value != null && nestedId.value != null && !messageId.value.equals(nestedId.value)) {
+            return false;
+        }
+        if (topId.value != null && nestedId.value != null && !topId.value.equals(nestedId.value)) {
+            return false;
+        }
+        return messageId.value != null || topId.value != null || nestedId.value != null;
+    }
+
+    /** 缺席不是非法。键在场但不是正整数时不能当成没提供。 */
+    private static ChannelId channelId(Map<?, ?> source, Object field) {
+        if (source == null || !source.containsKey(field)) {
+            return ChannelId.ABSENT;
+        }
+        Long id = exactPositiveLong(source.get(field));
+        return id == null ? ChannelId.INVALID : new ChannelId(id);
+    }
+
+    private static ChannelId nestedMessageId(Map<String, Object> sent) {
+        if (!sent.containsKey("message")) {
+            return ChannelId.ABSENT;
+        }
         Object nested = sent.get("message");
-        Long nestedId = nested instanceof Map ? exactPositiveLong(((Map<?, ?>) nested).get("id")) : null;
-        if (messageId != null && topId != null && !messageId.equals(topId)) {
-            return false;
+        if (!(nested instanceof Map)) {
+            return ChannelId.INVALID;
         }
-        if (messageId != null && nestedId != null && !messageId.equals(nestedId)) {
-            return false;
+        return channelId((Map<?, ?>) nested, "id");
+    }
+
+    private static final class ChannelId {
+        private static final ChannelId ABSENT = new ChannelId(false, null);
+        private static final ChannelId INVALID = new ChannelId(true, null);
+        private final boolean invalid;
+        private final Long value;
+
+        private ChannelId(Long value) {
+            this(false, value);
         }
-        if (topId != null && nestedId != null && !topId.equals(nestedId)) {
-            return false;
+
+        private ChannelId(boolean invalid, Long value) {
+            this.invalid = invalid;
+            this.value = value;
         }
-        return messageId != null || topId != null || nestedId != null;
     }
 
     public static final class NotASendException extends IllegalStateException {
