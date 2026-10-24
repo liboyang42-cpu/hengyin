@@ -344,6 +344,7 @@ class ApiMerchantLedgerControllerTest {
         assertEquals("ALL_TIME", windows.get("revenue"));
         assertEquals("CALENDAR_7D_INCL_TODAY", windows.get("revenue7d"));
         assertEquals("ROLLING_30D", windows.get("insight"), "三种窗口并存时逐块声明");
+        assertEquals("OK", data.get("insightStatus"));
         for (int i = 0; i < 6; i++) {
             assertEquals("0.00", ((java.util.Map<?, ?>) trend.get(i)).get("amount"), "无流水的天补 0");
         }
@@ -357,6 +358,31 @@ class ApiMerchantLedgerControllerTest {
         start.set(java.util.Calendar.MILLISECOND, 0);
         start.add(java.util.Calendar.DATE, -6);
         assertEquals(start.getTime(), since.getValue());
+    }
+
+    @Test
+    void dashboardInsightFailureIsReportedAsErrorNotSilentlyMissing() {
+        IUmsMemberBalanceDetailService balanceService = mock(IUmsMemberBalanceDetailService.class);
+        IOmsOrderService orderService = mock(IOmsOrderService.class);
+        IMerchantInsightService insightService = mock(IMerchantInsightService.class);
+        ApiMerchantController controller = new LoggedInOwnerController();
+        attachOwnerAccess(controller);
+        ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balanceService);
+        ReflectionTestUtils.setField(controller, "omsOrderService", orderService);
+        ReflectionTestUtils.setField(controller, "merchantInsightService", insightService);
+        when(orderService.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
+        when(insightService.dashboard(OWNER_MEMBER_ID)).thenThrow(new IllegalStateException("boom"));
+        long before = ApiMerchantController.DASHBOARD_INSIGHT_FAILURES.get();
+
+        AjaxResult result = controller.getDashboard();
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), "insight 失败不拖垮收入/订单面板");
+        java.util.Map<?, ?> data = (java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG);
+        assertEquals("ERROR", data.get("insightStatus"));
+        assertEquals(false, data.containsKey("insight"));
+        assertEquals(null, ((java.util.Map<?, ?>) data.get("windows")).get("insight"), "没下发的块不声明窗口");
+        assertEquals("0.00", data.get("revenue"));
+        assertEquals(before + 1, ApiMerchantController.DASHBOARD_INSIGHT_FAILURES.get());
     }
 
     @Test
@@ -380,6 +406,7 @@ class ApiMerchantLedgerControllerTest {
                 (java.util.Map<?, ?>) ((java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("windows");
         assertEquals(java.util.Collections.singletonMap("insight", "ROLLING_30D"), new java.util.HashMap<>(windows),
                 "只声明实际下发的块");
+        assertEquals("OK", ((java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("insightStatus"));
         verify(orderService).selectOmsOrderList(any(OmsOrder.class));
         verify(insightService).dashboard(OWNER_MEMBER_ID);
     }

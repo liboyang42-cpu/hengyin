@@ -94,6 +94,7 @@ class ApiMerchantOperatorReadScopeTest {
         verify(balance).sumDashboardIncome(OWNER);
         verify(balance).sumDashboardIncomeByDay(eq(OWNER), any(java.util.Date.class));
         verify(insight, never()).dashboard(any(Long.class));
+        assertEquals("FORBIDDEN", data.get("insightStatus"), "无 MARKETING_READ 要明说无权,不是静默缺键");
     }
 
     @Test

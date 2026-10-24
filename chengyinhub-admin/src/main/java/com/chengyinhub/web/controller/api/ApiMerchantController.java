@@ -1337,6 +1337,13 @@ public class ApiMerchantController extends BaseController {
     }
 
 
+    static final String INSIGHT_STATUS_OK = "OK";
+    static final String INSIGHT_STATUS_FORBIDDEN = "FORBIDDEN";
+    static final String INSIGHT_STATUS_ERROR = "ERROR";
+    /** 进程内 insight 聚合失败计数,随日志输出,便于从日志看失败是否持续 */
+    static final java.util.concurrent.atomic.AtomicLong DASHBOARD_INSIGHT_FAILURES =
+            new java.util.concurrent.atomic.AtomicLong();
+
     @Operation(summary = "商家数据面板")
     @PostMapping("/dashboard")
     public AjaxResult getDashboard() {
@@ -1408,13 +1415,19 @@ public class ApiMerchantController extends BaseController {
 
         // 升级5:曝光/到店/核销率/复购率/在架供给 —— 与店铺参谋同一 facts 口径,数字直出不走 AI。
         // best-effort:insight 块取不到不拖垮既有收入面板;分享无埋点不造字段。
+        // insightStatus 三态:OK / FORBIDDEN(岗位无 MARKETING_READ) / ERROR(聚合异常),端上据此区分「无权」与「出错」。
         if (access.hasPermission(MerchantPermission.MARKETING_READ)) {
             try {
                 data.put("insight", merchantInsightService.dashboard(ownerMemberId));
                 windows.put("insight", MerchantMetricWindow.ROLLING_30D.code());
+                data.put("insightStatus", INSIGHT_STATUS_OK);
             } catch (Exception e) {
-                logger.warn("商家看板 insight 块聚合失败 memberId={}", ownerMemberId, e);
+                long failures = DASHBOARD_INSIGHT_FAILURES.incrementAndGet();
+                logger.warn("商家看板 insight 块聚合失败 memberId={} failuresSinceStart={}", ownerMemberId, failures, e);
+                data.put("insightStatus", INSIGHT_STATUS_ERROR);
             }
+        } else {
+            data.put("insightStatus", INSIGHT_STATUS_FORBIDDEN);
         }
         data.put("windows", windows);
 
