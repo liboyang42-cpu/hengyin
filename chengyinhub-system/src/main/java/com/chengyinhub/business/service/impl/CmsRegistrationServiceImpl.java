@@ -89,6 +89,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private AlarmService alarmService;
     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
+    @Autowired private CmsRegistrationPaymentFactMapper registrationPaymentFactMapper;
 
     @Autowired
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IWechatPayService> paymentAttemptGateway;
@@ -2128,9 +2129,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (resultMap == null) {
             return registrationPaymentCallbackFailure(null, "payload_missing");
         }
-        String outTradeNo = resultMap.get("out_trade_no");
-        String transactionId = resultMap.get("transaction_id");
-        String tradeState = resultMap.get("trade_state");
+        final Map<String, String> originalFacts = java.util.Collections.unmodifiableMap(new java.util.HashMap<>(resultMap));
+        String outTradeNo = originalFacts.get("out_trade_no");
+        String transactionId = originalFacts.get("transaction_id");
+        String tradeState = originalFacts.get("trade_state");
 
         if (outTradeNo == null || outTradeNo.trim().isEmpty()
                 || tradeState == null || tradeState.trim().isEmpty()) {
@@ -2142,7 +2144,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         final WechatVerifiedPaymentFact.Reference verifiedReference;
         try {
-            verifiedReference = "SUCCESS".equals(tradeState) ? checkedVerifiedPayment(resultMap).reference() : null;
+            verifiedReference = "SUCCESS".equals(tradeState) ? checkedVerifiedPayment(originalFacts).reference() : null;
         } catch (RuntimeException unavailableOrConflicting) {
             return registrationPaymentCallbackFailure(outTradeNo, "verified_fact_missing_or_conflicting");
         }
@@ -2156,7 +2158,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             return "FAIL";
         }
         // 金额在登记前核对:同一笔回调换了金额不会进 inbox,更不会被当作重复成功。
-        if ("SUCCESS".equals(tradeState) && !matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
+        if ("SUCCESS".equals(tradeState) && !matchesFrozenWechatAmount(registration, originalFacts.get("total"))) {
             return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
         }
 
@@ -2190,7 +2192,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
                     @Override
                     public boolean apply(WxPaymentCallbackInbox inbox) {
-                        outcome[0] = applyWechatPayCallback(registration, resultMap);
+                        outcome[0] = applyWechatPayCallback(registration, originalFacts);
                         return "SUCCESS".equalsIgnoreCase(outcome[0]);
                     }
                 };
@@ -2224,7 +2226,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
             return registrationPaymentCallbackFailure(resultMap.get("out_trade_no"), "amount_mismatch");
         }
-        return applyWechatPayCallback(registration, resultMap);
+        // Freeze this internal call's exact reference; do not create/claim an independent inbox under topic locks.
+        Map<String, String> originalFacts = java.util.Collections.unmodifiableMap(new java.util.HashMap<>(resultMap));
+        return applyWechatPayCallback(registration, originalFacts);
     }
 
     /** 支付回调的业务状态机;只在 inbox fence 的事务或调用方已开启的事务内执行。 */
@@ -2239,7 +2243,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 根据交易状态处理不同的业务逻辑
         switch (tradeState) {
             case "SUCCESS": // 支付成功
-                WechatVerifiedPaymentFact verified = checkedVerifiedPayment(resultMap).facts();
+                WechatVerifiedPaymentFactService.Stored consumed = checkedVerifiedPayment(resultMap);
+                WechatVerifiedPaymentFact verified = consumed.facts();
                 if (!verified.businessOutTradeNo().equals(registration.getRegistrationNo())
                         || !matchesFrozenWechatAmount(registration, Long.toString(verified.totalFen()))) {
                     return registrationPaymentCallbackFailure(outTradeNo, "verified_original_order_mismatch");
@@ -2254,6 +2259,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     return registrationPaymentCallbackFailure(outTradeNo, "topic_closed_original_payment_recovery_required");
                 }
                 String paymentResult = completePaymentSuccess(lockedOrder, verified.transactionId());
+                if ("SUCCESS".equals(paymentResult)) recordPaymentConsumption(registration.getId(), consumed);
                 return "SUCCESS".equalsIgnoreCase(paymentResult) ? paymentResult
                         : registrationPaymentCallbackFailure(outTradeNo, "payment_state_conflict");
 
@@ -3462,6 +3468,25 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new IllegalStateException("核销审计写入失败");
         }
     }
+    /** Existing caller transaction owns topic/order locks and all local effects, including this immutable receipt. */
+    private void recordPaymentConsumption(Long registrationId, WechatVerifiedPaymentFactService.Stored verified) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("原支付消费关联必须与报名成功同事务提交");
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
+        WechatVerifiedPaymentFact fact = verified.facts();
+        if (current == null || !fact.businessOutTradeNo().equals(current.getRegistrationNo())
+                || !isSameCompletedPayment(current, fact.transactionId())
+                || !matchesFrozenWechatAmount(current, Long.toString(fact.totalFen())))
+            throw new IllegalStateException("原支付消费关联缺少本地成功事实");
+        registrationPaymentFactMapper.insertConsumed(registrationId, verified.reference().id(), verified.reference().hash());
+        var receipt = registrationPaymentFactMapper.selectByRegistrationForUpdate(registrationId);
+        if (receipt == null || !registrationId.equals(receipt.registrationId())
+                || !fact.businessOutTradeNo().equals(receipt.registrationNo())
+                || !fact.transactionId().equals(receipt.transactionId())
+                || !verified.reference().equals(receipt.reference()))
+            throw new IllegalStateException("原支付消费事实关联冲突或未持久化");
+    }
+
     private WechatVerifiedPaymentFactService.Stored checkedVerifiedPayment(Map<String, String> facts) {
         WechatVerifiedPaymentFact.Reference reference = new WechatVerifiedPaymentFact.Reference(
                 Long.parseLong(facts.get("verified_fact_id")), facts.get("verified_fact_hash"));

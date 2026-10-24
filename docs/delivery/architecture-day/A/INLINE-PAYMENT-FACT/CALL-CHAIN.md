@@ -1,6 +1,6 @@
 # inline 原支付消费事实：冻结调用链/存储合同
 
-观察父 `e6dc689acd16f8354096fa6017cec85b36171c4e`。此文件是先行可审事实/实现合同，尚非代码完成；后续同分支源码不改fd350兄弟片、366席位guard、e6终态hook。未运行Java/DB/CI或生产DDL。
+观察父 `e6dc689acd16f8354096fa6017cec85b36171c4e`。此文件在146f956先行冻结为可审调用链；后续本分支已写源码，实际未运行状态见README。后续同分支源码不改fd350兄弟片、366席位guard、e6终态hook。未运行Java/DB/CI或生产DDL。
 
 生产唯一inline caller：`TeamGroupServiceImpl.settlePayingRegistrationsBeforeCancel` 在原取消事务/topic→activity锁内查原PAYING清单，微信SUCCESS走 `ICmsRegistrationService.applyConfirmedWechatPaymentWithinTransaction`（MANDATORY）→ `applyWechatPayCallback`（原topic/父从单当前锁、真实B Stored/Reference核验）→ `completePaymentSuccess`（CAS/历史半态校验、全部同单支付效果）。之后同一取消事务可能继续走原退款；任何失败整体回滚。普通入口是B callback router与OrderCloseTask调 `handleWechatPayCallback`，先绑定verified inbox再进入同一个付款私有入口。
 
