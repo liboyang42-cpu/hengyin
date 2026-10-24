@@ -1,0 +1,18 @@
+test_all_raw_typed_rows_and_traces_are_preserved_by_the_proposal (__main__.ForeignKeyJoinReview.test_all_raw_typed_rows_and_traces_are_preserved_by_the_proposal) ... ok
+test_changed_amount_still_fails (__main__.ForeignKeyJoinReview.test_changed_amount_still_fails) ... ok
+test_cross_source_member_id_type_drift_is_still_canonical_drift (__main__.ForeignKeyJoinReview.test_cross_source_member_id_type_drift_is_still_canonical_drift) ... ok
+test_final_member_identity_type_change_still_fails (__main__.ForeignKeyJoinReview.test_final_member_identity_type_change_still_fails) ... ok
+test_frozen_rule_rejects_a_mathematically_conserving_unsigned_pk_signed_fk (__main__.ForeignKeyJoinReview.test_frozen_rule_rejects_a_mathematically_conserving_unsigned_pk_signed_fk) ... ok
+test_lost_committed_ledger_row_cannot_disappear_into_the_join (__main__.ForeignKeyJoinReview.test_lost_committed_ledger_row_cannot_disappear_into_the_join) ... ok
+test_orphan_member_ledger_is_rejected_even_when_traces_match (__main__.ForeignKeyJoinReview.test_orphan_member_ledger_is_rejected_even_when_traces_match) ... ok
+test_rollback_and_reversed_ledger_member_order_still_fail (__main__.ForeignKeyJoinReview.test_rollback_and_reversed_ledger_member_order_still_fail) ... ok
+test_boundary_proof_does_not_modify_any_raw_row_trace_or_timestamp (__main__.LedgerRoundingEndpointReview.test_boundary_proof_does_not_modify_any_raw_row_trace_or_timestamp) ... ok
+test_exact_datetime0_rounding_of_original_committed_bind_is_admitted (__main__.LedgerRoundingEndpointReview.test_exact_datetime0_rounding_of_original_committed_bind_is_admitted) ... ok
+test_missing_bind_rollback_or_wrong_business_identity_cannot_prove_boundary (__main__.LedgerRoundingEndpointReview.test_missing_bind_rollback_or_wrong_business_identity_cannot_prove_boundary) ... ok
+test_one_millisecond_beyond_boundary_and_wrong_or_future_bound_date_fail (__main__.LedgerRoundingEndpointReview.test_one_millisecond_beyond_boundary_and_wrong_or_future_bound_date_fail) ... ok
+test_other_precision_column_or_truncation_mode_cannot_gain_boundary (__main__.LedgerRoundingEndpointReview.test_other_precision_column_or_truncation_mode_cannot_gain_boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.025s
+
+OK

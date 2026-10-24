@@ -1,0 +1,24 @@
+--- a/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/compare_receipts.py
++++ b/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/compare_receipts.py
+@@ -80,6 +80,10 @@
+     need(active==set(txs),'missing transaction completion')
+     first=document['initial']['tables'];last=document['final']['tables']
+     initial_members={stable(r['id']):number(r['point']) for r in first['ums_member']['rows']}
++    # SQL FK equality is numeric across BIGINT UNSIGNED (BigInteger) and BIGINT (Long).
++    # Keep all raw typed identities and canonical snapshots unchanged.
++    member_keys={number(r['id']):stable(r['id']) for r in first['ums_member']['rows']}
++    need(len(member_keys)==len(initial_members),'duplicate numeric member identity')
+     final_members={stable(r['id']):number(r['point']) for r in last['ums_member']['rows']}
+     need(initial_members.keys()==final_members.keys(),'member identity set changed')
+     need(not first['ums_member_points_detail']['rows'],'fixture starts with an unexpected prior ledger')
+@@ -99,7 +103,9 @@
+             if all(number(p[a])==number(row[b]) for a,b in fields.items()) and txs[event['transaction']]==0:related.append(event)
+         need(related,'committed ledger row has no matching actual INSERT in a committed transaction')
+         need(number(row['change_type'])==2,'unexpected ledger change type')
+-        spending[stable(row['member_id'])]+=number(row['change_points'])
++        member=number(row['member_id'])
++        need(member in member_keys,'ledger refers to a member outside the complete fixture member set')
++        spending[member_keys[member]]+=number(row['change_points'])
+     for member,before in initial_members.items():need(before-spending[member]==final_members[member],'committed balance/complete ledger rows do not conserve points')
+     if document['case']=='twoConnectionsSerializeOriginalRegistrationAndDebitOnce':
+         ids=document['originalObservations']['testConnectionIds'];need(len(ids)==2 and len({stable(v) for v in ids})==2,'original two-connection proof missing')
