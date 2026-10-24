@@ -43,4 +43,40 @@ class SideQuestAcceptHoldTest {
                         .code);
         assertEquals("sq-class-unk", quest.original().originalRequestId);
     }
+
+    @Test
+    void unusedAcceptHoldBeforeDiscoverDoesNotOccupyThenUniqueHoldApplies() {
+        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        assertEquals(SideQuestAcceptHold.Failure.NOT_COMPLIANT,
+                assertThrows(SideQuestAcceptHold.SideQuestException.class,
+                        () -> quest.acceptHold("hold-idle", "sq-idle-unk", 1)).code);
+        assertNull(quest.hold(), "未发现地点的 hold 观察不得占账");
+        assertNull(quest.original());
+        assertEquals(SideQuestAcceptHold.Phase.IDLE, quest.phase());
+        quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
+        assertEquals(SideQuestAcceptHold.Phase.DISCOVERED, quest.phase());
+        assertNull(quest.hold());
+        quest.acceptHold("hold-idle", "sq-idle-unk", 1);
+        assertEquals("sq-idle-unk", quest.hold().originalRequestId);
+        assertEquals(SideQuestAcceptHold.Phase.HOLD_ACCEPTED, quest.phase());
+        assertNull(quest.original());
+    }
+
+    @Test
+    void unusedCompleteBeforeHoldDoesNotOccupyThenUniqueCompleteApplies() {
+        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
+        assertEquals(SideQuestAcceptHold.Failure.HOLD_REQUIRED,
+                assertThrows(SideQuestAcceptHold.SideQuestException.class, quest::complete).code);
+        assertNull(quest.original(), "未预占完赛观察不得占原文");
+        assertNull(quest.hold());
+        assertEquals(SideQuestAcceptHold.Phase.DISCOVERED, quest.phase());
+        quest.acceptHold("hold-comp", "sq-comp-unk", 1);
+        quest.submitProof(SideQuestAcceptHold.Proof.create(SideQuestAcceptHold.ProofKind.QR, true, false, null));
+        quest.complete();
+        assertEquals(SideQuestAcceptHold.Phase.COMPLETED, quest.phase());
+        assertEquals("sq-comp-unk", quest.original().originalRequestId);
+        assertEquals(SideQuestAcceptHold.Terminal.COMPLETED, quest.original().terminal);
+        assertEquals("sq-comp-unk", quest.recoverOriginal("sq-comp-unk").originalRequestId);
+    }
 }
