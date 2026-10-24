@@ -1878,8 +1878,9 @@ public class AdvancedGameConfigValidator {
     private void validateCondition(JsonNode item, String label) {
         String op = item.path("op").asText("");
         if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
-            if (!item.path("itemId").asText().matches("[a-z][a-z0-9_]{0,31}") || !item.path("quantity").isIntegralNumber()
-                    || item.path("quantity").asInt() < 1 || item.path("quantity").asLong() > 999) throw new IllegalArgumentException(label + " 的物资条件不合法");
+            JsonNode quantity = item.path("quantity");
+            if (!item.path("itemId").asText().matches("[a-z][a-z0-9_]{0,31}") || !quantity.isIntegralNumber()
+                    || !quantity.canConvertToLong() || quantity.asLong() < 1 || quantity.asLong() > 999) throw new IllegalArgumentException(label + " 的物资条件不合法");
             return;
         }
         if ("NODE_COMPLETED".equals(op)) {
