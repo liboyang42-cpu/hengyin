@@ -1,0 +1,626 @@
+{
+  "base": "d49c12b820419308236010e0710f96d7bf48c4c9",
+  "tree": "c3a3ce6d95abc054d0183bb27b409b058476757a",
+  "production_modified": false,
+  "draft_target": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImpl.java",
+  "draft_preimage_blob": "c0675aaa3ef31f272883e7f775d9776a184ef0e5",
+  "draft_result_sha256": "6b01c97ba695b56ab4294d4325979c7f82b2e8a8a1928ca5fa8c080feb11edb9",
+  "source_files": [
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_b_im_notification_intent.sql",
+      "git_blob": "6c09db416845fc0ed38ee979778c6522e6a746d0",
+      "sha256": "9225abc336584d27262982eddbde50eef404656222afeff7032db4bcf964aec6",
+      "anchors": [
+        {
+          "line": 23,
+          "text": "SELECT '原站内通知意图投递', 'DEFAULT', 'imNotificationDeliveryTask.deliverPending()',"
+        },
+        {
+          "line": 27,
+          "text": "SELECT 1 FROM sys_job WHERE invoke_target = 'imNotificationDeliveryTask.deliverPending()'"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiChapterMerchantNodeController.java",
+      "git_blob": "d39654db9fc89a41266f2d8bc8f59cc5e2b2b1eb",
+      "sha256": "53b327960a4b8505f599e78dac25d1a1b82d4636ce59da64524447a1850efcfc",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeAuditFreezeAcceptanceTest.java",
+      "git_blob": "783961e53a5c464150b076735e59841a3081b8c1",
+      "sha256": "27b4cd7a849a0cfaa39a0cc3a2da701ceb7c376064c886e662bf3b4fad19a2fb",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImplTest.java",
+      "git_blob": "6ef5234ba8443175d163caba8a8c8546779af04b",
+      "sha256": "ff7b5f2622612b83d8f8cbedddecb0d2ab52d580706f6181c0f26ec7f5657ede",
+      "anchors": [
+        {
+          "line": 748,
+          "text": "verify(offerMapper, never()).approveReplacement(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong());"
+        },
+        {
+          "line": 752,
+          "text": "void replacementApprovalChecksSupplyPointAndTemplateBeforeActivation() {"
+        },
+        {
+          "line": 779,
+          "text": "verify(offerMapper, never()).approveReplacement(801L, ME);"
+        },
+        {
+          "line": 780,
+          "text": "givenTemplate(ME, 1, null); when(offerMapper.approveReplacement(801L, ME)).thenReturn(1);"
+        },
+        {
+          "line": 783,
+          "text": "verify(offerMapper).approveReplacement(801L, ME);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImNotificationIntentTest.java",
+      "git_blob": "e18df923ae286f22b73b18c8520c97e02dc530a7",
+      "sha256": "603d50cc146e1563d40290a56f712d1a220a47adb04e71a1ec0f3368657a8301",
+      "anchors": [
+        {
+          "line": 49,
+          "text": "assertEquals(61L, service.deliverSystemNotification(8L));"
+        },
+        {
+          "line": 60,
+          "text": "assertEquals(61L, service.deliverSystemNotification(8L));"
+        },
+        {
+          "line": 75,
+          "text": "assertEquals(61L, service.deliverSystemNotification(8L));"
+        },
+        {
+          "line": 80,
+          "text": "assertThrows(ServiceException.class, () -> service.deliverSystemNotification(8L));"
+        },
+        {
+          "line": 81,
+          "text": "assertNotNull(ImServiceImpl.class.getMethod(\"deliverSystemNotification\", Long.class)"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/CommittedBusinessNoticeTest.java",
+      "git_blob": "f4a1943c1d163d0ca99fcb6f8bfb0134496b79fd",
+      "sha256": "9bd77c8875f9cbf8ab2858ff62bcc08d27e69fc4e20296b40ab89fe6479cd15e",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/ImNotificationDeliveryTaskTest.java",
+      "git_blob": "b3f6f2df3e7583e145192c5e0a9055417e2edf49",
+      "sha256": "feac185acd12b11581c0128fded2eba9f3d3cd621915941d872f7aef957c9bb2",
+      "anchors": [
+        {
+          "line": 19,
+          "text": "when(messages.deliverSystemNotification(2L)).thenThrow(new RuntimeException(\"unavailable\"));"
+        },
+        {
+          "line": 21,
+          "text": "verify(messages).deliverSystemNotification(1L); verify(messages).deliverSystemNotification(2L);"
+        },
+        {
+          "line": 22,
+          "text": "verify(messages).deliverSystemNotification(100L); verify(messages).deliverSystemNotification(149L);"
+        },
+        {
+          "line": 23,
+          "text": "verify(messages).deliverSystemNotification(150L); verify(messages, never()).deliverSystemNotification(151L);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java",
+      "git_blob": "f16897cd73a2a5a5cddb5bf3549a32f2b3f1bb23",
+      "sha256": "90dd7154c56fa192e467b80ebfd88e5a96147f70ff6cc652c20503fdf2f31c11",
+      "anchors": [
+        {
+          "line": 40,
+          "text": "Map.entry(\"imNotificationDeliveryTask.deliverPending()\", \"com.chengyinhub.business.task.ImNotificationDeliveryTask\"),"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImNotificationIntentMapper.java",
+      "git_blob": "aa3ffe1c150a70b3efa22be3f624bed7407ed9bf",
+      "sha256": "6912c731bc8608ed38769e2f1e75c2388eb23ef9bf74fcac84f3e918abb9d30e",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantChapterOfferMapper.java",
+      "git_blob": "4b6ab1772ca1a42ee0d01aa068332d495fa9e939",
+      "sha256": "c67b7705312277e780810d3a75c3a068b906b3181a8c9370dffaefff5d8aef24",
+      "anchors": [
+        {
+          "line": 58,
+          "text": "int approveReplacement(@Param(\"id\") Long id, @Param(\"merchantId\") Long merchantId);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RegistrationEntitlementMapper.java",
+      "git_blob": "d6d504c941de0eebd8a2f98bb4da5157517575b5",
+      "sha256": "1d4734b5cc71e113cf1073e5253e06c016132b1210c7dcc4fe5c6394e085a803",
+      "anchors": [
+        {
+          "line": 12,
+          "text": "List<Long> selectAffectedPaidMembers(@Param(\"topicId\") Long topicId, @Param(\"chapterId\") Long chapterId);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/notify/InAppNotifyChannel.java",
+      "git_blob": "f250a8be81f8d3d6ac0ea0a48282110a4dbcf32b",
+      "sha256": "e37204002713f2d0e6a56a37d3cb391b8fb577abd913500e438c08a21bd48227",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/notify/NotifyChannel.java",
+      "git_blob": "2bf97e3104f3f1a50a4518df3d06a2d6b8c6de21",
+      "sha256": "4b6b9898cf66a8363a063c3212d323c8fe6b80c711115053a4a8e1e6658d2d39",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/notify/WxSubscribeChannel.java",
+      "git_blob": "215cd421295c5229b7129b49ce6a0d22ec755260",
+      "sha256": "596ae863f73bc985e67fb223937f9e707a95509de226749f032302886f172af6",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IImService.java",
+      "git_blob": "c9a103283072e78f989b5752e01e73303f8298e5",
+      "sha256": "d8ce2ed5393adcbfa63e7006e9bc62d4f55d63dda4a192f53889f788f356548c",
+      "anchors": [
+        {
+          "line": 89,
+          "text": "Long enqueueSystemNotification(Long toMemberId, Integer msgType, String content, String extraJson, String eventKey);"
+        },
+        {
+          "line": 92,
+          "text": "Long deliverSystemNotification(Long intentId);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java",
+      "git_blob": "02c2bc297446820d81fc40e5baf9af0db7d33a53",
+      "sha256": "efc7f6a956738131dd1eb1b70a424a6020822e790c68690f2fa3e30bba696d0c",
+      "anchors": [
+        {
+          "line": 6,
+          "text": "Long findIntentId(String eventKey);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImpl.java",
+      "git_blob": "c0675aaa3ef31f272883e7f775d9776a184ef0e5",
+      "sha256": "ebf6facc82a946998f82c98fe20aa695abfee4c2cf6049635e9f22d47065e291",
+      "anchors": [
+        {
+          "line": 311,
+          "text": "if (offerMapper.approveReplacement(confirmed.getId(), confirmed.getMerchantId()) != 1) {"
+        },
+        {
+          "line": 316,
+          "text": "notifyPlayersOfReplacement(topic, node.getChapterId(), confirmed.getId());"
+        },
+        {
+          "line": 332,
+          "text": "private void notifyPlayersOfReplacement(CmsTopic topic, Long chapterId, Long replacementOfferId) {"
+        },
+        {
+          "line": 334,
+          "text": "businessNotice.executeAfterCommit(\"chapter-supply-replace-players\", replacementOfferId, () -> {"
+        },
+        {
+          "line": 335,
+          "text": "List<Long> affected = registrationEntitlementMapper.selectAffectedPaidMembers(topic.getId(), chapterId);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+      "git_blob": "769d66ba1fe7f6dead853f64d66fbfa745d46ba0",
+      "sha256": "9659303de11fd32b98d617cf908901041da68562268d1c38debb8ee81bf932d9",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java",
+      "git_blob": "52420d22efc9798c337e2324d65be2e3b37b0922",
+      "sha256": "f1d97648913cb8c5026da8606d16977e5aca3f00ce46d0cf0fa16240d71d5e7e",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicSupplyReviewService.java",
+      "git_blob": "8ec23d09aa54274f81ab3a09a8bd1bb02d361ccf",
+      "sha256": "e2d6e1bb9016527e232254c59cd03397b8965e63c9349c454376a6629abb7d3a",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml",
+      "git_blob": "bed49425ea21b8dab581ee044a931e67668dd426",
+      "sha256": "d1036113aa06903155a3a414851ca7ce212f55942c94b18f1ecde45f5eb41f53",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantChapterOfferMapper.xml",
+      "git_blob": "beb8b19420ebc16e853a91c79f637bb23805b482",
+      "sha256": "3259ded45f1dc6275115f5d125b5e816dd99e31a3be91db38f41ef2f3978c212",
+      "anchors": [
+        {
+          "line": 106,
+          "text": "<update id=\"approveReplacement\">"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml",
+      "git_blob": "d6ba70de0d81775a204c14ab1cb332c039e033a9",
+      "sha256": "25ac8dc50c37bd645f868ee9863571d53f2da2e4ec3f490953d1594ee0b9db81",
+      "anchors": [
+        {
+          "line": 141,
+          "text": "<select id=\"selectAffectedPaidMembers\" resultType=\"Long\">"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "git_blob": "7e1183b7eff711ce65208c6747ff19967ca43dca",
+      "sha256": "c42698d6d21525fd17921e5f1beaaa757b92d5f8ace5af8e4a6327693b1d1c4b",
+      "anchors": [
+        {
+          "line": 1320,
+          "text": "public Long findIntentId(String eventKey) {"
+        },
+        {
+          "line": 1330,
+          "text": "return enqueueSystemNotification(recipient, msgType, content, extraJson, eventKey);"
+        },
+        {
+          "line": 1335,
+          "text": "public Long enqueueSystemNotification(Long toMemberId, Integer msgType, String content, String extraJson, String eventKey)"
+        },
+        {
+          "line": 1353,
+          "text": "public Long deliverSystemNotification(Long intentId)"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantOfferServiceImpl.java",
+      "git_blob": "caf0ac05ac8ef129711df70ea5d6eff1a30ffab3",
+      "sha256": "31e479d0ab69e0c9ce38bbbd53b3552507ea968d869b2ce6845305cda9366f54",
+      "anchors": [
+        {
+          "line": 484,
+          "text": "List<Long> affected = registrationEntitlementMapper.selectAffectedPaidMembers(topic.getId(), chapterId);"
+        },
+        {
+          "line": 505,
+          "text": "Long intentId = systemNotificationIntents.findIntentId(eventKey);"
+        },
+        {
+          "line": 525,
+          "text": "Long messageId = imService.deliverSystemNotification(originalIntentId);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NotifyServiceImpl.java",
+      "git_blob": "3a97795bba2f36e8a5109e5fb10d5e71a1e985be",
+      "sha256": "afc7297a53273ad49bf3740977c35caf1881550fc909fd8ee2a7d1fa58d6174a",
+      "anchors": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java",
+      "git_blob": "b52aff3914ea2ddefda4390b9373a99e57b79565",
+      "sha256": "4b7e09df442d7311e24fbc52def8022fb0db22e98e16bbc4563c35e8304bff2d",
+      "anchors": [
+        {
+          "line": 29,
+          "text": "try { imService.deliverSystemNotification(id); }"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql",
+      "git_blob": "c81b3300478ab8589599add672bdc3d9d9a6e3ba",
+      "sha256": "9d5b05113ddbf878735ae391313814540a855bd41f21aeaa61b63578e76ee7ab",
+      "anchors": [
+        {
+          "line": 40,
+          "text": "(CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY),CAST('roamRewardDeliveryTask.run()' AS BINARY))"
+        },
+        {
+          "line": 50,
+          "text": "(CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY),CAST('roamRewardDeliveryTask.run()' AS BINARY)));"
+        },
+        {
+          "line": 53,
+          "text": "SELECT '原站内通知意图投递','DEFAULT','imNotificationDeliveryTask.deliverPending()','0 0/1 * * * ?','3','1','1','system',NOW(),"
+        },
+        {
+          "line": 55,
+          "text": "WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE CAST(TRIM(invoke_target) AS BINARY)=CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY));"
+        },
+        {
+          "line": 64,
+          "text": "(CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY),CAST('roamRewardDeliveryTask.run()' AS BINARY));"
+        }
+      ]
+    }
+  ],
+  "exact_local_snapshot_files": 2441,
+  "exact_local_main_java": 2432,
+  "remote_non_ai_missing_files": 12,
+  "excluded_unmaterialized_ai_files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b6a74b194f80ac9c6de808bc0a8b871be2d6ad23",
+      "size": 19871,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/b6a74b194f80ac9c6de808bc0a8b871be2d6ad23"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ai/AiThemeDraftIntentState.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b95dd7ecb95b3002d03c1372e15c5e4620420629",
+      "size": 141,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/b95dd7ecb95b3002d03c1372e15c5e4620420629"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ai/AiThemeDraftIntentView.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7774c86eb445c60162374b4de1f86ded497b8757",
+      "size": 363,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/7774c86eb445c60162374b4de1f86ded497b8757"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ai/AiThemeDraftRecoveryItem.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7a1d231cd64900ff47c23c38af57a59b3c16899f",
+      "size": 414,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/7a1d231cd64900ff47c23c38af57a59b3c16899f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AiThemeDraftIntentMapper.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "716da961b06d210f2e9ce282862baf4739837cf2",
+      "size": 1605,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/716da961b06d210f2e9ce282862baf4739837cf2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dae442a4ed9033607ab5e762effb9c6becff3c3f",
+      "size": 3515,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/dae442a4ed9033607ab5e762effb9c6becff3c3f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7c1db5029e1bcc78dea157a4347983605720cf96",
+      "size": 4182,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/7c1db5029e1bcc78dea157a4347983605720cf96"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiHttpAdmission.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cd54f35107b0462f11e1a05d2d54df4e16c4fcc4",
+      "size": 2949,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/cd54f35107b0462f11e1a05d2d54df4e16c4fcc4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderNotSentException.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d36567ac74ca13c6f8ed4e733b7b8e0c846ba08",
+      "size": 570,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/9d36567ac74ca13c6f8ed4e733b7b8e0c846ba08"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlan.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "42e3a65a862b5b4483fd1cfd386dbe22b6fd005e",
+      "size": 416,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/42e3a65a862b5b4483fd1cfd386dbe22b6fd005e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlanRejectedException.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a90db54ae95025a8f6fb8a60a09d974acb647ef",
+      "size": 597,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/2a90db54ae95025a8f6fb8a60a09d974acb647ef"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "08ce08d358b0faacdbdd4825b90e121ef21347ed",
+      "size": 3628,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/08ce08d358b0faacdbdd4825b90e121ef21347ed"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22436f32cd0da298ce06eb22a67e2eb0b5b4e94f",
+      "size": 9122,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/22436f32cd0da298ce06eb22a67e2eb0b5b4e94f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9fc48a7387e4383bf0fbcab255fe9ae46c0b741c",
+      "size": 14098,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/9fc48a7387e4383bf0fbcab255fe9ae46c0b741c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "160d931dac6d344acde9b9c95ab82897af2cb91a",
+      "size": 42732,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/160d931dac6d344acde9b9c95ab82897af2cb91a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0588449ff30f465f374a30cdfb8e7b6a2dd869e7",
+      "size": 49959,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/0588449ff30f465f374a30cdfb8e7b6a2dd869e7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8fb0e0f0ed3d62096dcd4f066d527daab5fd9dbf",
+      "size": 37096,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/8fb0e0f0ed3d62096dcd4f066d527daab5fd9dbf"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/AiQuotaRecoveryTask.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3163ead68f8213d2441a266b3d365b0dac2b1d45",
+      "size": 998,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/3163ead68f8213d2441a266b3d365b0dac2b1d45"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/AiThemeDraftIntentRow.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a33ca10e256ad60485218e0ae654269684885909",
+      "size": 5096,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/a33ca10e256ad60485218e0ae654269684885909"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/ai/AiThemeDraftExecuteReq.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "857160644b209a2c3f343137c035a5db527181f7",
+      "size": 108,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/857160644b209a2c3f343137c035a5db527181f7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/ai/AiThemeDraftPrepareReq.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4057cd3487f0d858f9d685304daceb28bb25c449",
+      "size": 524,
+      "url": "https://api.github.com/repos/liboyang42-cpu/hengyin/git/blobs/4057cd3487f0d858f9d685304daceb28bb25c449"
+    }
+  ],
+  "execution": {
+    "java": false,
+    "mysql": false,
+    "ci_dispatch": false,
+    "production_ddl": false
+  },
+  "patch_bytes": 6831,
+  "remote_non_ai_callsite_scan": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "sha": "8495e648e29ddb538ce84f2a92f4654083834d78",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpRequestException.java",
+      "sha": "c0bd512ee63994b22f1af36c24882e4144fe8669",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java",
+      "sha": "65776364bfa89dbb27e3567710e06d8214d9ce0a",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashClose.java",
+      "sha": "cf27092cec3fef467950470649c58a03b4683ac0",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashContribution.java",
+      "sha": "c172545990d778f0cb15f3510eb9f3e5aed8e7d3",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashEvent.java",
+      "sha": "b1d3560d1095746f1425b2700d575463c7b64c94",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/NodeHintUnlockCommand.java",
+      "sha": "1fa6a300a61f30937c40010377697336db7bfa58",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/NodeHintUnlockResult.java",
+      "sha": "86f3cb4d4ee97145040aa4269414c9cd762946e4",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java",
+      "sha": "3847e4541294e238b86733b37838a69f02fa4409",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPuzzlePlayService.java",
+      "sha": "3ab1377f9532f7ba31d1df7ee516eb86217135f9",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImpl.java",
+      "sha": "7a66a3c6e2f26124ee808bb26296a7a890e7b18a",
+      "hits": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+      "sha": "e6f66fdbda2a2c1847c61fa4b796dbc9494eeb19",
+      "hits": []
+    }
+  ],
+  "checks": {
+    "git_apply_check_exit": 0,
+    "patch_applied": false,
+    "max_event_key_characters": 69,
+    "java_executed": false,
+    "mysql_executed": false,
+    "ci_dispatch": false,
+    "frozen_graph_57_sha256_unchanged": true,
+    "draft_outside_helper_and_exclusive_injection_bytes_unchanged": true
+  },
+  "original_observation": {
+    "base": "dbbb2350abe95f22fcc7b6fb291fcd0f66d7a004",
+    "tree": "a80aa504bd92bc7045669cfaa3f5b7ddb21cadb9"
+  },
+  "revalidation": {
+    "complete_public_tree_entries": 13552,
+    "truncated": false,
+    "all_28_evidence_blobs_unchanged": true,
+    "all_non_ai_main_java_blobs_unchanged": true,
+    "only_main_java_changed_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+    "source_java_or_mysql_test_result_claimed": false
+  }
+}

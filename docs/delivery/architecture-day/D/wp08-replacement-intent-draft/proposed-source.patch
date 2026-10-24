@@ -1,0 +1,105 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImpl.java
+@@ -51,7 +51,14 @@
+     @Autowired
+     private com.chengyinhub.business.service.support.CommittedBusinessNotice businessNotice;
+     @Autowired
+-    private com.chengyinhub.business.service.INotifyService notifyService;
++    private com.chengyinhub.business.service.ISystemNotificationIntentService replacementIntents;
++    @Autowired
++    private com.chengyinhub.business.service.IImService replacementImService;
++    @Autowired
++    private com.chengyinhub.business.notify.WxSubscribeChannel replacementWxChannel;
++    @Autowired
++    @org.springframework.beans.factory.annotation.Qualifier("scheduledExecutorService")
++    private java.util.concurrent.ScheduledExecutorService replacementNoticeExecutor;
+ 
+     public ChapterMerchantNodeServiceImpl(ICmsTopicNodeService nodeService,
+                                           ICmsTopicChapterService chapterService,
+@@ -329,19 +336,75 @@
+         return node;
+     }
+ 
++    /** 仅补位供给首次0→1的原事务登记；恢复任务只消费原站内意图。 */
+     private void notifyPlayersOfReplacement(CmsTopic topic, Long chapterId, Long replacementOfferId) {
+-        if (businessNotice == null) return;
+-        businessNotice.executeAfterCommit("chapter-supply-replace-players", replacementOfferId, () -> {
+-            List<Long> affected = registrationEntitlementMapper.selectAffectedPaidMembers(topic.getId(), chapterId);
+-            boolean delivered = true;
+-            if (affected != null) for (Long playerId : new java.util.LinkedHashSet<>(affected)) {
+-                if (playerId != null && playerId > 0 && !playerId.equals(topic.getMemberId())) {
+-                    delivered = notifyService.notifyOfficialBroadcast(playerId, "已购章节供给有变化",
+-                            "主题「" + topic.getName() + "」有待核销章节已由新商家补位，请在出发前查看最新点位，如有疑问请联系主办方。") && delivered;
++        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
++                || !org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
++            throw new IllegalStateException("补位通知原意图必须与供给生效同事务登记");
++        }
++        if (topic == null || topic.getId() == null || chapterId == null
++                || replacementOfferId == null || replacementOfferId <= 0) {
++            throw new IllegalStateException("补位通知原事件身份无效");
++        }
++        final String title = "已购章节供给有变化";
++        final String body = "主题「" + topic.getName()
++                + "」有待核销章节已由新商家补位，请在出发前查看最新点位，如有疑问请联系主办方。";
++        List<Long> affected = registrationEntitlementMapper.selectAffectedPaidMembers(topic.getId(), chapterId);
++        java.util.SortedSet<Long> recipients = new java.util.TreeSet<>();
++        if (affected != null) for (Long memberId : affected) {
++            if (memberId != null && memberId > 0 && !memberId.equals(topic.getMemberId())) {
++                recipients.add(memberId);
++            }
++        }
++        for (Long recipient : recipients) {
++            String eventKey = "chapter-supply-replace-player:" + replacementOfferId + ":" + recipient;
++            Long intentId = replacementIntents.findIntentId(eventKey);
++            final boolean freshIntent = intentId == null;
++            if (freshIntent) {
++                intentId = replacementIntents.enqueue(recipient,
++                        com.chengyinhub.business.domain.ImMessage.MSG_TEXT, title + "\n" + body, null, eventKey);
++            }
++            if (intentId == null || intentId <= 0) throw new IllegalStateException("补位通知原意图未保存");
++            final Long originalIntentId = intentId;
++            final Long originalRecipient = recipient;
++            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
++                    new org.springframework.transaction.support.TransactionSynchronization() {
++                @Override public void afterCommit() {
++                    businessNotice.dispatchInNewTransaction("chapter-supply-replace-player", replacementOfferId,
++                            () -> {
++                                Long messageId = replacementImService.deliverSystemNotification(originalIntentId);
++                                return messageId != null && messageId > 0;
++                            });
++                    if (freshIntent) scheduleReplacementWx(replacementOfferId, originalRecipient, title, body);
+                 }
+-            }
+-            return delivered;
+-        });
++            });
++        }
++    }
++
++    /** 延续既有微信的一次尝试；无回执/查询合同，不参加站内意图恢复。 */
++    private void scheduleReplacementWx(Long replacementOfferId, Long recipient, String title, String body) {
++        try {
++            replacementNoticeExecutor.schedule(() -> {
++                if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
++                    org.slf4j.LoggerFactory.getLogger(ChapterMerchantNodeServiceImpl.class)
++                            .error("补位微信未执行：仍有数据库事务 offerId={} recipient={}", replacementOfferId, recipient);
++                    return;
++                }
++                try {
++                    if (replacementWxChannel.send(com.chengyinhub.business.notify.NotifyMessage.of(
++                            com.chengyinhub.business.notify.NotifyEvent.OFFICIAL_BROADCAST, recipient)
++                            .with("title", title).with("sub", body))) return;
++                } catch (Throwable unknown) {
++                    // 未确认不能重投，也不能把站内成功当成微信成功。
++                }
++                org.slf4j.LoggerFactory.getLogger(ChapterMerchantNodeServiceImpl.class)
++                        .warn("补位微信未确认，保留原事件人工核实，不自动重发 offerId={} recipient={}",
++                                replacementOfferId, recipient);
++            }, 10, java.util.concurrent.TimeUnit.MILLISECONDS);
++        } catch (Throwable rejected) {
++            org.slf4j.LoggerFactory.getLogger(ChapterMerchantNodeServiceImpl.class)
++                    .warn("补位微信未调度，不自动补发 offerId={} recipient={}", replacementOfferId, recipient);
++        }
+     }
+ 
+     @Override
