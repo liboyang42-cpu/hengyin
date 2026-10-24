@@ -33,3 +33,23 @@ HEAD `6a82b4cae`：`discover` 在已有 original 时抛 `ALREADY_TERMINAL`，不
 命令：`mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.offline.*Test -Dsurefire.failIfNoSpecifiedTests=false test`
 
 结果：`BUILD SUCCESS` **7/0** 2026-10-23T23:22:52Z。`C05AccountSwitchRestartIsolationTest` 4/0。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## Addendum 2026-10-23 18:00 America/Los_Angeles
+
+HEAD `90808494c` tests. Class-level occupancy without inventing `recoverOriginal` on Navigation:
+
+- `NavigationDestinationConsentTest`: unused start does not occupy nav grant; unique nav grant does not occupy share; unique `LOCATION_SHARE` grant is the first share write. Restarted instance stays ungranted.
+- `SideQuestAcceptHoldTest`: `recoverOriginal` of never-seen `sq-class-unk` throws `ORIGINAL_RECORD_UNKNOWN` without occupying `original`/`hold`; later unique `acceptHold` then complete is the first original. Isolation occupancy on `sq-orig-unk` remains.
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **9/0** 2026-10-24T01:00:24Z：
+
+```
+Tests run: 1 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
