@@ -1116,6 +1116,12 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             rejectPaymentNotification(transaction);
             return null;
         }
+        if (transaction.getTradeState()==Transaction.TradeStateEnum.CLOSED
+                && verifiedFacts.hasConfirmedExternalSuccess(businessPaymentOrderNo(original.getOutTradeNo()))) {
+            // A signed CLOSED observation cannot undo earlier immutable payment/refund success evidence.
+            rejectPaymentNotification(transaction);
+            return null;
+        }
         Map<String, String> facts = new HashMap<>();
         facts.put("out_trade_no", businessPaymentOrderNo(transaction.getOutTradeNo()));
         facts.put("wx_out_trade_no", transaction.getOutTradeNo());
@@ -1258,23 +1264,25 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     /** Signature/decryption has already succeeded; persisted success never bypasses that SDK boundary. */
     Map<String,String> verifiedRefundFacts(RefundNotification notification) {
         if (notification==null) return null;
-        if (notification.getRefundStatus()==Status.SUCCESS) {
-            try {
-                var stored=verifiedFacts.findRefundSuccess(verifiedProviderMerchant(),notification.getOutRefundNo(),notification.getRefundId());
-                if (stored!=null) {
-                    var fact=stored.facts();assertOriginalFactSnapshot(fact);
-                    Map<String,String> result=new HashMap<>();
-                    result.put("outRefundNo",fact.merchantEventNo());result.put("outTradeNo",fact.businessOutTradeNo());
-                    result.put("wxOutTradeNo",fact.wxOutTradeNo());result.put("status","SUCCESS");
-                    result.put("refund",Long.toString(fact.amountFen()));result.put("total",Long.toString(fact.totalFen()));
-                    result.put("currency",fact.currency());result.put("mchid",fact.mchid());result.put("appid",fact.appid());
-                    result.put("tradeType",fact.tradeType());result.put("refundId",fact.providerId());result.put("transactionId",fact.transactionId());
-                    result.put("successTime",fact.successAt().toString());addVerifiedReference(result,stored.reference());return result;
+        try {
+            var stored=verifiedFacts.findRefundSuccess(verifiedProviderMerchant(),notification.getOutRefundNo(),notification.getRefundId());
+            if (stored!=null) {
+                if (notification.getRefundStatus()!=Status.SUCCESS) {
+                    recordRejectedRefundNotification(notification,null);
+                    return null; // Keep UNKNOWN; never manufacture a SUCCESS callback from a conflicting status.
                 }
-            } catch (WechatVerifiedPaymentFactService.ConflictException | IllegalArgumentException inconsistent) {
-                recordRejectedRefundNotification(notification,null);
-                return null;
+                var fact=stored.facts();assertOriginalFactSnapshot(fact);
+                Map<String,String> result=new HashMap<>();
+                result.put("outRefundNo",fact.merchantEventNo());result.put("outTradeNo",fact.businessOutTradeNo());
+                result.put("wxOutTradeNo",fact.wxOutTradeNo());result.put("status","SUCCESS");
+                result.put("refund",Long.toString(fact.amountFen()));result.put("total",Long.toString(fact.totalFen()));
+                result.put("currency",fact.currency());result.put("mchid",fact.mchid());result.put("appid",fact.appid());
+                result.put("tradeType",fact.tradeType());result.put("refundId",fact.providerId());result.put("transactionId",fact.transactionId());
+                result.put("successTime",fact.successAt().toString());addVerifiedReference(result,stored.reference());return result;
             }
+        } catch (WechatVerifiedPaymentFactService.ConflictException | IllegalArgumentException inconsistent) {
+            recordRejectedRefundNotification(notification,null);
+            return null;
         }
         return queryRefundFacts(notification.getOutRefundNo());
     }

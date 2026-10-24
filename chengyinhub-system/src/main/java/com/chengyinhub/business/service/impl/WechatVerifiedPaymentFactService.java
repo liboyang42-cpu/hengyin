@@ -89,6 +89,20 @@ public class WechatVerifiedPaymentFactService {
         });
     }
 
+    /** Denial-only guard for owners holding the original business row; never selects a replacement merchant. */
+    public boolean hasConfirmedExternalSuccess(String businessNo) {
+        if (businessNo==null || businessNo.isBlank())
+            throw new IllegalArgumentException("Original business identity required");
+        return readFresh(() -> {
+            var rows=mapper.selectSuccessesByBusiness(businessNo);
+            for (var row:rows) {
+                var fact=checked(row).facts();
+                if (!businessNo.equals(fact.businessOutTradeNo())) throw new ConflictException();
+            }
+            return !rows.isEmpty();
+        });
+    }
+
     /** Caller has already locked its inbox row. Linking never upgrades an old unbound receipt. */
     public void bindNewInbox(long inboxId, String notifyHash, Reference reference, boolean newInbox) {
         notifyHash=canonicalNotifyHash(notifyHash);
