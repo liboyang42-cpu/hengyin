@@ -380,6 +380,15 @@
       "classes": [
         "com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT"
       ]
+    },
+    "architecture-day-lead-admission": {
+      "lineage": "C dfe083 +76b107 lead fail-closed/preference order on root reviewed assembly",
+      "registered_source": "a716d92abaa97f07c6af84ae6476b7062ddf4ef4",
+      "note": "4 new ordinary@Test admission/failure/actual route creation cases plus original hint10 regression; direct production handler/transactions/MyBatis, not real HTTP or JWT. Source-bound XML0skip and independent CLEAN required.",
+      "classes": [
+        "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+        "com.chengyinhub.business.it.PlayHintUnlockMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -1155,6 +1164,14 @@
       ],
       "gates": {},
       "note": "Original quota receipt/day compensation and UNKNOWN retention, compensation CAS loss, durable Photo NOT_SENT replay. Real Lua/MySQL; trusted no-network model double."
+    },
+    "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Actual ClubLead table-unavailable503/NOT_RUN, original claim rollback, no branch/journey session on denied GET/POST and real route creation after recovery; catalogue/node/template double."
     }
   }
 }

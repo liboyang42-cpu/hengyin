@@ -2008,13 +2008,13 @@ public class ApiPlayProgressController extends BaseController
         if (out.node == null) { out.error = error("节点不存在"); return out; }
         out.playCtx = resolveCtx(memberId, activityId, topicId, out.node);
         if (out.playCtx.error != null) { out.error = out.playCtx.error; return out; }
+        String leadErr = leadGateError(out.playCtx.actId, out.node);
+        if (leadErr != null) { out.error = error(leadErr); return out; }
         String unlockErr = unlockGateError(memberId, out.playCtx.actId, out.node);
         if (unlockErr == null) {
             unlockErr = routeAccessError(memberId, out.playCtx.actId, out.playCtx.topicId, out.node, routeActionId);
         }
         if (unlockErr != null) { out.error = error(unlockErr); return out; }
-        String leadErr = leadGateError(out.playCtx.actId, out.node);
-        if (leadErr != null) { out.error = error(leadErr); return out; }
         int mode = resolveMode(out.playCtx.actId, out.playCtx.topicId);
         if (mode == PlayMode.FREE_COLLECT
                 && !isPureOnlineNode(out.node)
@@ -3033,21 +3033,30 @@ public class ApiPlayProgressController extends BaseController
      */
     private String leadGateError(Long actId, CmsTopicNode node) {
         if (actId == null || actId <= 0) return null; // 自玩会话无带领
-        String routeStatus = gameSessionRuntimeService == null ? null
-                : gameSessionRuntimeService.routeSessionStatus(actId);
-        if (routeStatus != null) {
-            return "RUNNING".equals(routeStatus) ? null : "本场带队尚未开局或已结束";
+        try {
+            String routeStatus = gameSessionRuntimeService == null ? null
+                    : gameSessionRuntimeService.routeSessionStatus(actId);
+            if (routeStatus != null) {
+                return "RUNNING".equals(routeStatus) ? null : "本场带队尚未开局或已结束";
+            }
+            com.chengyinhub.business.domain.ClubLeadState st = clubLeadMapper.selectByActivity(actId);
+            if (st == null || st.getStatus() == null || st.getStatus() == 3) return null;
+            if (st.getStatus() == 1) return "队伍集合中,等队长开始行程";
+            if (node == null || node.getChapterId() == null || st.getCurrentChapterId() == null) return null;
+            if (node.getChapterId().equals(st.getCurrentChapterId())) return null;
+            CmsTopicChapter cur = cmsTopicChapterService.selectCmsTopicChapterById(st.getCurrentChapterId());
+            CmsTopicChapter mine = cmsTopicChapterService.selectCmsTopicChapterById(node.getChapterId());
+            if (cur == null || mine == null || cur.getSortId() == null || mine.getSortId() == null) return null;
+            return mine.getSortId() > cur.getSortId() ? "本章还没开启,等队长放行" : null;
+        } catch (ServiceException refusal) {
+            // 已有业务/权限拒绝沿原 code/data 传播，不能改写成依赖故障或非带领场。
+            throw refusal;
+        } catch (RuntimeException unavailable) {
+            // 只有成功查无记录才是非带领场。故障必须越过写入口，使原事务及动作 claim 回滚。
+            logger.warn("带领状态读取失败 activityId={} failureType={}", actId, unavailable.getClass().getSimpleName());
+            throw new ServiceException("带领状态暂时不可用，请稍后重试", 503)
+                    .setData(java.util.Collections.singletonMap("outcome", "NOT_RUN"));
         }
-        com.chengyinhub.business.domain.ClubLeadState st;
-        try { st = clubLeadMapper.selectByActivity(actId); } catch (Exception e) { return null; }
-        if (st == null || st.getStatus() == null || st.getStatus() == 3) return null;
-        if (st.getStatus() == 1) return "队伍集合中,等队长开始行程";
-        if (node == null || node.getChapterId() == null || st.getCurrentChapterId() == null) return null;
-        if (node.getChapterId().equals(st.getCurrentChapterId())) return null;
-        CmsTopicChapter cur = cmsTopicChapterService.selectCmsTopicChapterById(st.getCurrentChapterId());
-        CmsTopicChapter mine = cmsTopicChapterService.selectCmsTopicChapterById(node.getChapterId());
-        if (cur == null || mine == null || cur.getSortId() == null || mine.getSortId() == null) return null;
-        return mine.getSortId() > cur.getSortId() ? "本章还没开启,等队长放行" : null;
     }
 
     /** M9 埋点:记录一次节点尝试(best-effort,失败不影响主流程)。attemptType 1答题2扫码3GPS4拍照;result 1过0错2放弃 */
