@@ -83,6 +83,9 @@ public interface WechatPaymentOperations {
     /** Must run inside the domain mutation transaction. Locks business then latest attempt; false means stale. */
     boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo);
 
+    /** Additional predicate for domain CLOSED CAS only; caller must already have verified original CLOSED evidence. */
+    boolean lockClosablePaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo);
+
 
     /**
      * 微信原路退款(退回付款人原支付账户)。

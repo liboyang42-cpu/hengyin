@@ -15,7 +15,7 @@ class WechatVerifiedPaymentFactMapperXmlTest {
             new XMLMapperBuilder(in,config,resource,config.getSqlFragments()).parse();
         }
         String prefix=WechatVerifiedPaymentFactMapper.class.getName()+".";
-        for(String name:new String[]{"insertIgnore","selectMatching","selectById","insertRejection","insertInboxLink","selectInboxLink"})
+        for(String name:new String[]{"insertIgnore","selectMatching","selectSuccessesByBusiness","selectById","insertRejection","insertInboxLink","selectInboxLink"})
             assertTrue(config.hasStatement(prefix+name),name);
         String read=config.getMappedStatement(prefix+"selectMatching").getBoundSql(
                 Map.of("kind","PAYMENT","mchid","merchant","providerId","TX1","eventNo","REG1")).getSql();
@@ -25,6 +25,6 @@ class WechatVerifiedPaymentFactMapperXmlTest {
         assertTrue(link.contains("FOR SHARE"));assertTrue(link.contains("LOWER(") && link.contains("UPPER("));
         assertFalse(config.getMappedStatement(prefix+"selectInboxLink").isUseCache());
         assertTrue(config.getMappedStatement(prefix+"selectInboxLink").isFlushCacheRequired());
-        assertEquals(6,java.util.Arrays.stream(WechatVerifiedPaymentFactMapper.class.getDeclaredMethods()).count());
+        assertEquals(7,java.util.Arrays.stream(WechatVerifiedPaymentFactMapper.class.getDeclaredMethods()).count());
     }
 }

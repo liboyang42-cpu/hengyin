@@ -14,6 +14,9 @@
         SELECT * FROM wx_verified_payment_fact WHERE fact_kind=#{kind} AND mchid=#{mchid}
           AND (provider_id=#{providerId} OR merchant_event_no=#{eventNo}) ORDER BY id
     </select>
+    <select id="selectSuccessesByBusiness" resultType="map" useCache="false">
+        SELECT * FROM wx_verified_payment_fact WHERE business_out_trade_no=#{businessNo} ORDER BY id
+    </select>
     <select id="selectById" resultType="map">SELECT * FROM wx_verified_payment_fact WHERE id=#{id}</select>
     <insert id="insertRejection" parameterType="map">
         INSERT IGNORE INTO wx_verified_payment_fact_rejection

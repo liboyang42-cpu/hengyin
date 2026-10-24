@@ -39,6 +39,20 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
     /** event_type 列 VARCHAR(32);超长按列上限截断(纯信息字段,不影响幂等)。 */
     private static final int MAX_EVENT_TYPE_LENGTH = 32;
 
+    // Bound to this bean and the actual transaction; not a process-wide or account/thread cache.
+    private final Object transactionWorkKey = new Object();
+    private record InboxIdentity(Long id, Integer bizType, Long bizId, String eventType, String owner, Long fence) { }
+    private static final class TransactionWork {
+        final java.util.Map<String, Invocation> notifications = new java.util.HashMap<>();
+    }
+    private static final class Invocation {
+        final com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference;
+        InboxIdentity identity;
+        boolean finished;
+        boolean completed;
+        Invocation(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) { this.reference=reference; }
+    }
+
     @Autowired
     private WxPaymentCallbackInboxMapper mapper;
     @Autowired
@@ -117,7 +131,7 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
         if (StringUtils.isEmpty(notifyId) || mutation == null) return false;
         // Avoid the caller's old RR view and do not hold an inbox lock before the independent claim.
         if (!verifiedFacts.hasInboxLinkForNotify(sha256Hex(notifyId),reference)) return false;
-        return process(notifyId,new Mutation() {
+        return processInTransaction(notifyId,new Mutation() {
             @Override public boolean isCurrent(WxPaymentCallbackInbox lockedInbox) {
                 // Executed by the original mutation service after inbox and business target locks,
                 // in the same transaction that owns the business mutation and DONE.
@@ -127,7 +141,7 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
                 return mutation.isCurrent(lockedInbox);
             }
             @Override public boolean apply(WxPaymentCallbackInbox lockedInbox) { return mutation.apply(lockedInbox); }
-        });
+        },reference);
     }
 
     @Override
@@ -138,6 +152,12 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
 
     @Override
     public boolean process(String notifyId, Mutation mutation)
+    {
+        return processInTransaction(notifyId,mutation,null);
+    }
+
+    private boolean processInTransaction(String notifyId, Mutation mutation,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference)
     {
         if (StringUtils.isEmpty(notifyId) || mutation == null)
         {
@@ -152,14 +172,25 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
             return false;
         }
         String notifyHash = sha256Hex(notifyId);
+        TransactionWork work = outerTransaction ? transactionWork() : null;
+        Invocation invocation = new Invocation(reference);
+        if (work != null)
+        {
+            Invocation previous = work.notifications.putIfAbsent(notifyHash, invocation);
+            if (previous != null) return repeatedInTransaction(notifyHash,reference,previous);
+        }
         WxPaymentCallbackClaim claim = claimService.claim(notifyHash);
         if (claim.getState() == WxPaymentCallbackClaim.State.DONE
                 || claim.getState() == WxPaymentCallbackClaim.State.STALE)
         {
+            if (work != null) invocation.identity=identity(mapper.selectForUpdate(notifyHash));
+            invocation.finished=true;
+            invocation.completed=true;
             return true;
         }
         if (claim.getState() != WxPaymentCallbackClaim.State.ACQUIRED)
         {
+            invocation.finished=true;
             return false;
         }
         final boolean[] completed = {false};
@@ -180,7 +211,13 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
         }
         try
         {
-            completed[0] = mutationService.apply(claim, mutation);
+            completed[0] = mutationService.apply(claim, new Mutation() {
+                @Override public boolean isCurrent(WxPaymentCallbackInbox row) {
+                    invocation.identity=identity(row);
+                    return mutation.isCurrent(row);
+                }
+                @Override public boolean apply(WxPaymentCallbackInbox row) { return mutation.apply(row); }
+            });
             if (!completed[0] && !outerTransaction)
             {
                 releaseClaim(claim);
@@ -198,6 +235,53 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
             log.error("[支付回调] inbox 事务失败，释放遵循原事务完成及 owner/fence；未记录回调内容");
             return false;
         }
+        finally
+        {
+            invocation.completed=completed[0];
+            invocation.finished=true;
+        }
+    }
+
+    private TransactionWork transactionWork()
+    {
+        Object existing=TransactionSynchronizationManager.getResource(transactionWorkKey);
+        if (existing instanceof TransactionWork work) return work;
+        TransactionWork work=new TransactionWork();
+        TransactionSynchronizationManager.bindResource(transactionWorkKey,work);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override public void suspend() {
+                if (TransactionSynchronizationManager.unbindResource(transactionWorkKey)!=work)
+                    throw new IllegalStateException("Payment inbox transaction scope changed");
+            }
+            @Override public void resume() {
+                TransactionSynchronizationManager.bindResource(transactionWorkKey,work);
+            }
+            @Override public void afterCompletion(int status) {
+                if (TransactionSynchronizationManager.getResource(transactionWorkKey)==work)
+                    TransactionSynchronizationManager.unbindResource(transactionWorkKey);
+                work.notifications.clear();
+            }
+        });
+        return work;
+    }
+
+    private boolean repeatedInTransaction(String notifyHash,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference, Invocation previous)
+    {
+        // A legacy/unbound call cannot prove the immutable economic identity for an uncommitted replay.
+        if (reference==null || !reference.equals(previous.reference) || !previous.finished || !previous.completed
+                || previous.identity==null) return false;
+        WxPaymentCallbackInbox current=mapper.selectForUpdate(notifyHash); // same transaction, never a new claim
+        if (!previous.identity.equals(identity(current))
+                || !verifiedFacts.hasInboxLink(current.getId(),notifyHash,reference)) return false;
+        return Integer.valueOf(WxPaymentCallbackInbox.STATE_DONE).equals(current.getState())
+                || Integer.valueOf(WxPaymentCallbackInbox.STATE_IGNORED_STALE).equals(current.getState());
+    }
+
+    private static InboxIdentity identity(WxPaymentCallbackInbox row)
+    {
+        return row==null ? null : new InboxIdentity(row.getId(),row.getBizType(),row.getBizId(),
+                row.getEventType(),row.getOwnerToken(),row.getFenceToken());
     }
 
     private void releaseClaim(WxPaymentCallbackClaim claim)
