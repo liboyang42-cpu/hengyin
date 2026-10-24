@@ -147,6 +147,7 @@ class RegistrationTopicFenceMySqlIT {
         ReflectionTestUtils.setField(refundTarget, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(refundTarget, "wxPaymentCallbackInboxService", inboxService);
         ReflectionTestUtils.setField(refundTarget, "verifiedPaymentFacts", verifiedFacts);
+        ReflectionTestUtils.setField(refundTarget, "alarmService", mock(AlarmService.class));
         // This A seam fixture has no G original components. G's real ledger has its own dedicated IT.
         refundOwner = mock(ICoopSettlementClaimService.class);
         when(refundOwner.hasFrozenOriginalRefundComponents(anyLong())).thenReturn(false);
@@ -740,6 +741,181 @@ class RegistrationTopicFenceMySqlIT {
         assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_inbox", Integer.class));
         assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
         assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+    }
+
+    private IWechatPayService closedAttemptGate() {
+        IWechatPayService gateway = mock(IWechatPayService.class);
+        // The B adapter/SDK/intent SQL are tested by B. This seam uses the real canonical fact reader
+        // and proves A has already taken its topic/order locks before invoking the narrow port.
+        when(gateway.lockPaymentAttemptForUpdate("REG1", "REG1")).thenReturn(true);
+        when(gateway.lockClosablePaymentAttemptForUpdate("REG1", "REG1")).thenAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(0L, requestedTopic.getCount());
+            return !verifiedFacts.hasConfirmedExternalSuccess("mch-origin", "REG1");
+        });
+        var attempts = mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(attempts.getObject()).thenReturn(gateway);
+        ReflectionTestUtils.setField(paymentTarget, "paymentAttemptGateway", attempts);
+        return gateway;
+    }
+
+    private Map<String, String> closedPaymentObservation() {
+        return new java.util.HashMap<>(Map.of("out_trade_no", "REG1", "wx_out_trade_no", "REG1", "trade_state", "CLOSED"));
+    }
+
+    @Test void durablePaymentSuccessBlocksAStaleClosedCallbackBeforeAnyFailureCas() {
+        paymentFacts();
+        db.update("UPDATE cms_registration SET payment_status=1,point_used=20,points_returned=0 WHERE id=1");
+        IWechatPayService gateway = closedAttemptGate();
+        CmsRegistrationMapper writes = mock(CmsRegistrationMapper.class, delegatesTo(registrations));
+        ReflectionTestUtils.setField(paymentTarget, "cmsRegistrationMapper", writes);
+
+        assertEquals("FAIL", payments.handleWechatPayCallback(closedPaymentObservation()));
+
+        verify(writes, never()).claimPaymentFailure(anyLong(), any());
+        verify(writes, never()).claimPointsReturn(anyLong(), anyString(), any());
+        verify(gateway).lockClosablePaymentAttemptForUpdate("REG1", "REG1");
+        verify(gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        assertEquals(1, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT points_returned FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact WHERE fact_kind='PAYMENT'", Integer.class));
+        assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM cms_registration_payment_fact", Integer.class));
+    }
+
+    @Test void originalClosedCallbackWithoutDurableSuccessStillCommitsItsFirstFailure() {
+        db.update("UPDATE cms_registration SET payment_status=1,point_used=0 WHERE id=1");
+        closedAttemptGate();
+
+        assertEquals("SUCCESS", payments.handleWechatPayCallback(closedPaymentObservation()));
+
+        assertEquals(3, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM cms_registration_payment_fact", Integer.class));
+    }
+
+    @Test void originalClosedAttemptReleasesItsResourcesOnceThroughTheDomainOwner() {
+        db.update("UPDATE cms_registration SET payment_status=1,ticket_id=NULL,point_used=0 WHERE id=1");
+        IWechatPayService gateway = closedAttemptGate();
+        IPerkLedgerService perks = mock(IPerkLedgerService.class);
+        ReflectionTestUtils.setField(paymentTarget, "perkLedgerService", perks);
+        CmsRegistration observed = registrations.selectCmsRegistrationById(1L);
+
+        assertTrue(payments.settleClosedPayingOne(observed, "REG1", "ORGANIZER_CANCEL", "fixture", 4));
+        assertFalse(payments.settleClosedPayingOne(observed, "REG1", "ORGANIZER_CANCEL", "fixture", 4));
+
+        assertEquals(4, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=1", Integer.class));
+        verify(perks, times(1)).releaseOnRefund(1L, "ORGANIZER_CANCEL");
+        verify(gateway, times(2)).lockClosablePaymentAttemptForUpdate("REG1", "REG1");
+        verify(gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+    }
+
+    @Test void closedAttemptCannotHoldRegistrationBeforeTopicAndSeesASuccessCommittedWhileWaiting() throws Exception {
+        db.update("UPDATE cms_registration SET payment_status=1,ticket_id=NULL,point_used=0 WHERE id=1");
+        closedAttemptGate();
+        CmsRegistration observed = registrations.selectCmsRegistrationById(1L);
+        CmsRegistrationMapper writes = mock(CmsRegistrationMapper.class, delegatesTo(registrations));
+        ReflectionTestUtils.setField(paymentTarget, "cmsRegistrationMapper", writes);
+
+        assertFalse(afterTopicRelease(() -> payments.settleClosedPayingOne(observed, "REG1", "ORGANIZER_CANCEL", "fixture", 4),
+                false, () -> paymentFacts()));
+
+        verify(writes, never()).closeExpiredPaying(anyLong(), anyString(), anyInt());
+        assertEquals(1, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact WHERE fact_kind='PAYMENT'", Integer.class));
+    }
+
+    @Test void staleObservedWxAttemptCannotCloseOrReleaseTheOriginalOrder() {
+        db.update("UPDATE cms_registration SET payment_status=1,ticket_id=NULL,point_used=0 WHERE id=1");
+        IWechatPayService gateway = closedAttemptGate();
+        when(gateway.lockPaymentAttemptForUpdate("REG1", "WX-OLD")).thenReturn(true);
+        when(gateway.lockClosablePaymentAttemptForUpdate("REG1", "WX-OLD")).thenReturn(false);
+        IPerkLedgerService perks = mock(IPerkLedgerService.class);
+        ReflectionTestUtils.setField(paymentTarget, "perkLedgerService", perks);
+
+        assertFalse(payments.settleClosedPayingOne(registrations.selectCmsRegistrationById(1L),
+                "WX-OLD", "ORGANIZER_CANCEL", "fixture", 4));
+
+        verify(gateway).lockClosablePaymentAttemptForUpdate("REG1", "WX-OLD");
+        verify(gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verifyNoInteractions(perks);
+        assertEquals(1, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=1", Integer.class));
+    }
+
+    @Test void closedResourceReleaseFailureRollsBackTheOriginalCloseCas() {
+        db.update("UPDATE cms_registration SET payment_status=1,ticket_id=NULL,point_used=0 WHERE id=1");
+        closedAttemptGate();
+        IPerkLedgerService perks = mock(IPerkLedgerService.class);
+        doThrow(new IllegalStateException("fixture release failed")).when(perks).releaseOnRefund(1L, "ORGANIZER_CANCEL");
+        ReflectionTestUtils.setField(paymentTarget, "perkLedgerService", perks);
+
+        assertThrows(RuntimeException.class, () -> payments.settleClosedPayingOne(registrations.selectCmsRegistrationById(1L),
+                "REG1", "ORGANIZER_CANCEL", "fixture", 4));
+
+        verify(perks).releaseOnRefund(1L, "ORGANIZER_CANCEL");
+        assertEquals(1, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=1", Integer.class));
+    }
+
+    @Test void changedOriginalOrderIdentityFailsBeforeAttemptGuardOrCloseCas() {
+        db.update("UPDATE cms_registration SET payment_status=1 WHERE id=1");
+        IWechatPayService gateway = closedAttemptGate();
+        CmsRegistration observed = registrations.selectCmsRegistrationById(1L);
+        db.update("UPDATE cms_registration SET member_id=22 WHERE id=1");
+
+        assertThrows(RuntimeException.class, () -> payments.settleClosedPayingOne(observed, "REG1", "ORGANIZER_CANCEL", "fixture", 4));
+
+        verify(gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
+        assertEquals(1, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=1", Integer.class));
+    }
+
+    @Test void durableRefundSuccessBlocksStaleAbnormalAndTheOriginalSuccessCanStillReplay() {
+        assertDurableRefundSuccessBlocksFailure("ABNORMAL");
+    }
+
+    @Test void durableRefundSuccessBlocksStaleClosedAndTheOriginalSuccessCanStillReplay() {
+        assertDurableRefundSuccessBlocksFailure("CLOSED");
+    }
+
+    private void assertDurableRefundSuccessBlocksFailure(String status) {
+        Map<String, String> success = refundFacts();
+        Map<String, String> stale = new java.util.HashMap<>(success);
+        stale.put("status", status); stale.remove("verified_fact_id"); stale.remove("verified_fact_hash");
+
+        assertFalse(refundService.handleRefundNotify(stale));
+
+        assertEquals(0, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+        assertEquals(3, db.queryForObject("SELECT state FROM wx_payment_callback_inbox WHERE event_type=?", Integer.class, status));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact WHERE fact_kind='REFUND'", Integer.class));
+        verifyNoInteractions(refundOwner, notices);
+        assertTrue(refundService.handleRefundNotify(success));
+        assertEquals(1, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox WHERE event_type='SUCCESS'", Integer.class));
+        verify(refundOwner).reverseCompletedRegistrationRefund(9L);
+        verify(notices, times(1)).notifyRefund(eq(11L), anyString(), eq("10.00"));
+    }
+
+    @Test void abnormalWithoutPersistedSuccessKeepsTheExistingManualInvestigationPath() {
+        assertUnconfirmedRefundFailureProjectsToManual("ABNORMAL");
+    }
+
+    @Test void closedWithoutPersistedSuccessKeepsTheExistingManualInvestigationPath() {
+        assertUnconfirmedRefundFailureProjectsToManual("CLOSED");
+    }
+
+    private void assertUnconfirmedRefundFailureProjectsToManual(String status) {
+        Map<String, String> facts = new java.util.HashMap<>(Map.of("outRefundNo", "RF1", "outTradeNo", "REG1", "status", status,
+                "refund", "1000", "total", "3000", "currency", "CNY", "mchid", "mch-origin", "refundId", "WXREF1"));
+
+        assertTrue(refundService.handleRefundNotify(facts));
+
+        assertEquals(2, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
+        assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class));
+        verifyNoInteractions(refundOwner, notices);
     }
 
     @AfterAll void cleanup() {

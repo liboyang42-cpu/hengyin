@@ -30,8 +30,8 @@ class PayingSettlementSingleImplementationContractTest {
         String cancelPaying = section(teamGroup, "private void settlePayingRegistrationsBeforeCancel")
                 + section(teamGroup, "private void closeLocally");
 
-        assertTrue(cancelPaying.contains("cmsRegistrationService.settlePayingOne("),
-                "取消活动路径必须复用 settlePayingOne");
+        assertTrue(cancelPaying.contains("cmsRegistrationService.settleClosedPayingOne("),
+                "取消活动路径必须复用原 attempt 守卫和 settlePayingOne 资源释放");
         assertFalse(cancelPaying.contains("closeExpiredPaying("),
                 "不得自己再调条件关单:关单与回补必须同一份实现");
         for (String local : new String[] {"restoreInventory(", "returnPoints(", "releasePerks("}) {
@@ -45,10 +45,17 @@ class PayingSettlementSingleImplementationContractTest {
         String task = read(Paths.get(
                 "..", "chengyinhub-system", "src", "main", "java", "com", "chengyinhub",
                 "business", "task", "OrderCloseTask.java"));
-        assertTrue(task.contains("cmsRegistrationService.settlePayingOne("),
-                "对账任务必须复用 settlePayingOne");
+        assertTrue(task.contains("cmsRegistrationService.settleClosedPayingOne("),
+                "对账任务必须复用原 attempt 守卫和 settlePayingOne 资源释放");
         assertFalse(task.contains("restoreInventory(") || task.contains("addPoints("),
                 "对账任务不得自己回补库存/积分");
+        String registration = read(Paths.get("..", "chengyinhub-system", "src", "main", "java", "com", "chengyinhub",
+                "business", "service", "impl", "CmsRegistrationServiceImpl.java"));
+        String guardedClose = section(registration, "public boolean settleClosedPayingOne");
+        assertTrue(guardedClose.contains("RegistrationTopicFence.lock("));
+        assertTrue(guardedClose.contains("lockClosablePaymentAttemptForUpdate("));
+        assertTrue(guardedClose.contains("return settlePayingOne(current.getId(), releaseReason, updateBy, finalStatus)"));
+        assertFalse(guardedClose.contains("closeExpiredPaying("));
     }
 
     /**

@@ -2275,7 +2275,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if ("CLOSED".equals(tradeState)
                         && (resultMap.get("wx_out_trade_no") == null || paymentAttemptGateway == null
                             || !paymentAttemptGateway.getObject()
-                            .lockPaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
+                            .lockClosablePaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
                     return registrationPaymentCallbackFailure(outTradeNo, "payment_attempt_conflict");
                 }
                 Date failedAt = new Date();
@@ -2846,6 +2846,20 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         releaseHeldResources(r, EntitlementInvalidReason.ORGANIZER_CANCEL, "order-close-task");
         logger.info("过期未支付订单已关单 registrationId={}, memberId={}", registrationId, r.getMemberId());
         return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean settleClosedPayingOne(CmsRegistration observed, String observedWxOutTradeNo,
+                                         String releaseReason, String updateBy, int finalStatus) {
+        CmsRegistration current = RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
+                cmsActivityMapper, cmsTopicMapper).registration();
+        if (StringUtils.isBlank(observedWxOutTradeNo) || paymentAttemptGateway == null
+                || !paymentAttemptGateway.getObject().lockClosablePaymentAttemptForUpdate(
+                        current.getRegistrationNo(), observedWxOutTradeNo)) {
+            return false;
+        }
+        return settlePayingOne(current.getId(), releaseReason, updateBy, finalStatus);
     }
 
     /**

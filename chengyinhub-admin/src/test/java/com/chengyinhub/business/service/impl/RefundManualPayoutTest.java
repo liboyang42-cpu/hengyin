@@ -216,6 +216,8 @@ class RefundManualPayoutTest {
         facts.put("refund", "1250");
         facts.put("total", "3000");
         facts.put("currency", "CNY");
+        facts.put("mchid", "merchant");
+        facts.put("refundId", "WX-" + refundNo);
         return "SUCCESS".equals(status) && "RF88".equals(refundNo)
                 ? com.chengyinhub.business.service.ARefundFactFixture.bindSuccess(factsReader, facts, "TX88") : facts;
     }
@@ -288,6 +290,48 @@ class RefundManualPayoutTest {
                 .thenReturn(0);
 
         assertEquals(false, svc.handleRefundNotify(facts("RF88", "SUCCESS")));
+    }
+
+    @Test
+    void persistedSuccessPreventsStaleAbnormalFromOpeningManualPayout() {
+        assertPersistedSuccessBlocksFailure("ABNORMAL");
+    }
+
+    @Test
+    void persistedSuccessPreventsStaleClosedFromOpeningManualPayout() {
+        assertPersistedSuccessBlocksFailure("CLOSED");
+    }
+
+    private void assertPersistedSuccessBlocksFailure(String status) {
+        byRefundNo(3L);
+        Map<String, String> success = facts("RF88", "SUCCESS");
+        assertEquals(false, svc.handleRefundNotify(facts("RF88", status)));
+        verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(notifyService);
+        assertTrue(svc.handleRefundNotify(success));
+        verify(refundApplicationMapper).updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_SUCCESS), any());
+    }
+
+    @Test
+    void unavailableSuccessReaderCannotOpenManualPayout() {
+        byRefundNo(3L);
+        WechatVerifiedPaymentFactService reader = mock(WechatVerifiedPaymentFactService.class);
+        when(reader.findRefundSuccess("merchant", "RF88", "WX-RF88"))
+                .thenThrow(new IllegalStateException("fixture reader unavailable"));
+        ReflectionTestUtils.setField(svc, "verifiedPaymentFacts", reader);
+        assertEquals(false, svc.handleRefundNotify(facts("RF88", "ABNORMAL")));
+        verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(notifyService);
+    }
+
+    @Test
+    void missingOriginalRefundProviderIdentityCannotOpenManualPayout() {
+        byRefundNo(3L);
+        Map<String, String> incomplete = facts("RF88", "CLOSED");
+        incomplete.remove("refundId");
+        assertEquals(false, svc.handleRefundNotify(incomplete));
+        verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(notifyService);
     }
 
     @Test
