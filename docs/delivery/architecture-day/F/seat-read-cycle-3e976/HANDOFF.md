@@ -1,0 +1,11 @@
+# 结算席位真实Spring环回归（第一片）
+
+Parent公开 `3e976bcefb2a14b19600e6bc4a20029767d58b75`；只改SupportedStackServiceCyclesTest及本目录。根报告run40130007237/job120979619091在隔离整应用启动暴露 Reg→Claim→Evidence→RegistrationSeatService→Reg。
+
+旧fixture在Claim/evidence闭包将RegistrationSeatService当inert外部collaborator。本片让Reg/Claim/原ledger相关闭包纳入真实RegistrationSeatService和CmsRegistrationServiceImpl，原整体正控明确检查这两类及Evidence非mock，逐跳same-instance验证Reg→Claim、Claim→Evidence、Seat writer→Reg。不以Lazy/Provider/可选注入或允许circular绕过。
+
+原33例和全部负控/断言保留，新增1例=34源码case：使用真实Evidence父类及原四Mapper构造，加一条显式必需forbiddenSeatWriter字段重建实际旧环。必须失败为BeanCurrentlyInCreationException、栈包含该反向字段、unexpectedCalls为空。Mapper/Jdbc/Redis/executor等仍仅是既有inert外部边界，未执行业务/外呼。
+
+这是与G生产拆分合用的回归源码，不是单独绿色候选；原3e976的真实环在本正控下仍应失败。待G交精确新reader/FQN/构造及原方法合同，再追加真实reader到闭包和字段绑定断言，并沿4a149机制登记精确owner/consumer及fixed pin。本片不预猜类型，不改任何policy/旧baseline/生产/workflow。
+
+Java/DB/编译/CI均NOT_RUN，未签整应用启动通过。原测试源码/场景均保留，只做必要差分静态/秘密扫描后交root串行集成。
