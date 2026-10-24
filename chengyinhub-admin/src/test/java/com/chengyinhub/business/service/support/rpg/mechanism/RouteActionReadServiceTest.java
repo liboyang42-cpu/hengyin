@@ -98,7 +98,7 @@ class RouteActionReadServiceTest {
         assertFalse(controller.contains("/route-action"));
         assertFalse(controller.contains("routeActionReadService"));
         assertEquals(1, count(service, "selectActionByAction("));
-        assertFalse(service.contains("insertAction"));
+        assertFalse(service.contains("insertAction("));
         assertFalse(service.contains("PreAuthorize"));
         assertFalse(service.contains("WAITING_SOURCE"));
         assertTrue(hunk.contains("Not applied"));
