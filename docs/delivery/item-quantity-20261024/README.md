@@ -3,6 +3,7 @@
 本分支从公开 master `e2e05b9614a3c5d62b774718797f9a6792a3eeca` 开始，不导入旧 carrier 历史。
 
 - 当前修复：`ITEM_HELD` / `ITEM_ACQUIRED` 数量必须为 1..999 的整数，保存期与运行期都拒绝截断／非整数输入。合法持有阈值、累计获得事实及不消耗库存的语义保持不变。
+- 后续审查补齐 `JourneyStoryValidator` 与 `TopicRouteConfigValidator` 的 `canConvertToLong()`，回归覆盖 `18446744073709551617`、`-18446744073709551615`（两者 asLong 可截成 1）和合法 1／999。剧情创建／编辑／发布重验均经前者，条件原值由 `PlayJourneyStoryServiceImpl.pickEnding` 交给路线引擎；路线发布另有 `TopicRoutePublishGate` 的引擎二次门禁，不据此声称能绕过路线发布。
 - 历史 8 PR 的完整逐项分流：[historical-pr-disposition.json](historical-pr-disposition.json)。已完整读取全部 /files 分页，共 2,316 条文件记录；包含各 PR 精确 head、已承接子项、明确遗漏、待定项和关闭建议。分流不是旧 head 的运行时验收。
 - #338：[调用链与真实触摸复现步骤](sheet-readonly-reproduction.md)。用户影响仍为 unknown，不修改 sheet。
 - 自动核销游标遗漏由 #596 独立处理，本分支不重复实现。
