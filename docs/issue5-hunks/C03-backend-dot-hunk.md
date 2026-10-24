@@ -177,3 +177,18 @@ Class-level `MechanismRequestIdBinderTest.recoverOriginalOfNeverSeenIdDoesNotOcc
 HEAD `d3e1e1c8d`. Parent surefire `com.chengyinhub.business.service.support.rpg.mechanism.*Test` **35/0** 2026-10-24T01:28:11Z. Isolation 5/0. FirstJourney 2/0. Binder 4/0.
 
 DB / HTTP / App / CI = NOT_RUN. Did not write D1–D6 shared files. Runtime still unwired. Not 100%.
+
+## 9. Parent addendum 2026-10-24 04:10Z
+
+`MechanismOriginalActionAdapter.recoverFromRouteAction` 只读既有
+`TopicRouteSessionMapper.selectActionByAction`。缺端口
+WAITING_SOURCE `topicRouteSessionMapper.selectActionByAction`。
+未见 actionId `c03-route-missing` 返回 null，不占 `MechanismRequestIdBinder`；
+已有行 `check:1:alarm:tick` 回读原 `responseJson`，仍不写入内存账，不 `insertAction`。
+
+HEAD `023afced7`. Surefire `MechanismRequestIdBinderTest` **5/0** 2026-10-24T04:10:02Z
+（Failures 0, Errors 0, Skipped 0）.
+
+DB / HTTP / App / CI = NOT_RUN. 未改 RouteEffects、Runtime、CmsTopicServiceImpl、
+RpgAuthoringCaller、DynamicAttributeAuthoringService、Controller、Mapper、migration、AppSession。
+Runtime 仍未接线。Not 100%。
