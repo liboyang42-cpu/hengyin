@@ -1,0 +1,6 @@
+git diff --check: PASS
+Original @Test method bodies byte-identical: 117/117
+Ordinary source declarations: 117 -> 120; parameterized: 0
+Production changes: 0
+Limited patch secret pattern check: PASS (not gitleaks)
+Java/MySQL/CI/provider: NOT_RUN
