@@ -1,5 +1,15 @@
 -- REVIEW/CONTROLLED-TEST ONLY. Never rollback populated evidence/accounting rows.
 -- DDL auto-commits; this hard guard is before ANY rollback DDL. No DELETE/TRUNCATE or fabricated ID.
+-- FULL stage only. For committed prefixes use GCashEvidenceEmptyRecovery after exact shape/empty verification.
+-- runner: assert=scalar-true
+SELECT CAST(IF(
+  (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()
+    AND table_name IN ('coop_settlement_cash_close','coop_settlement_cash_contribution','coop_settlement_cash_event') AND engine='InnoDB')=3
+  AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()
+    AND ((table_name='coop_settlement' AND column_name IN ('cash_head_kind','cash_close_id','cash_member_id','cash_initiator_member_id','cash_global_line_type'))
+      OR (table_name='coop_settlement_adjustment' AND column_name IN ('cash_close_id','cash_event_id'))))=7,
+  1, JSON_EXTRACT('ASSERT_FAILED__g_cash_evidence_full_rollback_stage_required','$')
+) AS UNSIGNED) AS assertion_ok;
 -- runner: assert=scalar-true
 SELECT CAST(IF(
   (SELECT COUNT(*) FROM coop_settlement_cash_event)=0
