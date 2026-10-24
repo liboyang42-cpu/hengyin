@@ -60,4 +60,22 @@ class RewardAcceptLedgerTest {
         assertEquals(RewardAcceptLedger.Outcome.UNKNOWN, original.outcome());
         assertFalse(original.mintedNewRequestId());
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueAcceptApplies() {
+        RewardAcceptLedger ledger = new RewardAcceptLedger();
+        RewardAcceptLedger.Decision recovered = ledger.recoverOriginal("c03-rew-class-never");
+        assertEquals("c03-rew-class-never", recovered.originalRequestId());
+        assertEquals(RewardAcceptLedger.Outcome.UNKNOWN, recovered.outcome());
+        assertFalse(recovered.mintedNewRequestId());
+        assertNull(ledger.existing("c03-rew-class-never"), "未见 id 的 recoverOriginal 不得占账");
+        RewardAcceptLedger.Decision firstWrite = ledger.accept(new RewardAcceptLedger.AcceptFact(
+                "c03-rew-class-never", "player-7", "badge", "frozen-grant-hash", 0L, true));
+        assertEquals(RewardAcceptLedger.Outcome.ACCEPTED, firstWrite.outcome());
+        assertEquals("c03-rew-class-never", firstWrite.originalRequestId());
+        assertFalse(firstWrite.secondEffect());
+        assertEquals(RewardAcceptLedger.APPLIED, ledger.existing("c03-rew-class-never").status());
+        assertEquals(RewardAcceptLedger.Outcome.ACCEPTED,
+                ledger.recoverOriginal("c03-rew-class-never").outcome());
+    }
 }
