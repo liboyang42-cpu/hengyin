@@ -126,13 +126,13 @@ def stage_inputs(root, artifact, output, library_dir, report):
                     raise shared.GateError("ambiguous class owner: " + classname)
                 index[classname] = {"owner": module, "sha256": sha}
         for name in libraries:
-            if not any(name.startswith("BOOT-INF/lib/" + module + "-") for module in modules):
+            if library_dir is not None and not any(name.startswith("BOOT-INF/lib/" + module + "-") for module in modules):
                 (library_dir / Path(name).name).write_bytes(archive.read(name))
     write_json(output / "class-index.json", index)
     return modules, index, paths
 
 
-def parse_output(text, index, inputs):
+def parse_output(text, index, inputs, selected_references=None):
     references, missing, unknown, seen = {}, [], [], set()
     names = {p.name for p in inputs}
     for line in text.splitlines():
@@ -153,6 +153,10 @@ def parse_output(text, index, inputs):
                     unknown.append({"reason": "TARGET_OWNER_LOCATION_MISMATCH", "line": line})
                     continue
                 a, b = index[source]["owner"], index[target]["owner"]
+                if selected_references is not None and target in selected_references:
+                    selected_references[target][source + "->" + target] = {
+                        "source_class": source, "target_class": target, "source_owner": a, "target_owner": b,
+                        "source_sha256": index[source]["sha256"], "target_sha256": index[target]["sha256"]}
                 if a != b:
                     key = source + "->" + target
                     references[key] = {"source_class": source, "target_class": target,
@@ -238,6 +242,107 @@ def collect(root, artifact, identity_path, output, env, runner=subprocess.run):
                                 for p in sorted(output.rglob("*")) if p.is_file() and p.name != "observation.json"}
     write_json(output / "observation.json", report)
     return report
+
+
+def check_private_ports(root, artifact, identity_path, observation, env, ports):
+    """Post-build readback of two private types, not a new graph or JDK run.
+
+    Re-enumerate the actual original/Boot/target class bytes using stage_inputs;
+    candidate JSON is not the authority for class hashes, owners or policy.
+    Raw output must have been collected by the trusted producer in this CI job.
+    Hash coherence alone cannot attest an arbitrary producer's honesty.
+    """
+    result = {"schema": 1, "kind": "TWO_PRIVATE_MAPPER_COMPILED_REFERENCES",
+              "verdict": "UNKNOWN", "coverage": "TWO_DECLARED_TARGET_TYPES_ONLY",
+              "evidence_verified": False, "coverage_complete": False,
+              "targets": ports, "references": {}, "findings": [], "review_items": [],
+              "not_proven": ["reflection/XML/runtime dependencies", "method calls or mandatory Service path",
+                             "runtime authorization", "other business owners", "full graph or SCC acceptance"],
+              "trust_requirement": "same-job raw collection by immutable trusted producer, not candidate self-attestation"}
+
+    def require(condition, reason):
+        if not condition:
+            raise shared.GateError(reason)
+
+    try:
+        root = root.resolve()
+        artifact, identity_path, observation = [p if p.is_absolute() else root / p
+                                                for p in (artifact, identity_path, observation)]
+        for path in (artifact, identity_path, observation):
+            path.resolve().relative_to(root)
+            require(not any(p.is_symlink() for p in (path, *path.parents)
+                            if p == root or root in p.parents), "symlink artifact/identity/observation path")
+        identity_bytes = identity_path.read_bytes()
+        bound = bind_identity(root, artifact, json.loads(identity_bytes), env)
+        result.update(bound)
+        require(isinstance(ports, dict) and len(ports) == 2, "two declared target bindings required")
+        require(not (observation / "observation.json").is_symlink(), "symlink observation metadata")
+        declared = json.loads((observation / "observation.json").read_text())
+        require(all(declared.get(k) == v for k, v in bound.items()), "observation source/tree/Jar/run/attempt mismatch")
+        require(declared.get("build_identity_sha256") == shared.digest(identity_bytes), "build identity hash mismatch")
+        require(all(re.fullmatch(r"[1-9][0-9]*", str(bound[k])) for k in ("run_id", "run_attempt")), "invalid CI run identity")
+        with tempfile.TemporaryDirectory(prefix="private-ports-readback-") as directory:
+            staged = {"artifacts": {}}
+            # No external library extraction or tool execution on readback.
+            modules, index, inputs = stage_inputs(root, artifact, Path(directory), None, staged)
+            require(declared.get("artifacts") == staged["artifacts"], "original input artifacts/index metadata mismatch")
+            expected_files = {"jdeps-version.txt", "invocation.json", "class-index.json", "jdeps.stdout.txt", "jdeps.stderr.txt"}
+            expected_files.update("inputs/" + module + ".jar" for module in modules)
+            hashes = declared["evidence_sha256"]
+            require(set(hashes) == expected_files, "missing/foreign evidence files")
+            files = {}
+            for name in sorted(expected_files):
+                relative = Path(name)
+                require(not any((observation / p).is_symlink() for p in (relative, *relative.parents)), "symlink evidence file")
+                data = (observation / name).read_bytes()
+                require(shared.digest(data) == hashes[name], "evidence hash mismatch: " + name)
+                files[name] = data
+            require(json.loads(files["class-index.json"]) == index, "class-index differs from actual original/Boot/target class bytes")
+            for module, record in staged["artifacts"].items():
+                require(shared.digest(files[record["evidence_path"]]) == record["sha256"], "staged input differs from actual artifact: " + module)
+            tool = Path(env["JAVA_HOME"]) / "bin/jdeps"
+            require(declared.get("jdeps_tool_sha256") == shared.digest(tool.read_bytes()), "JDK tool identity mismatch")
+            require(declared.get("jdeps_version_exit_code") == 0 and re.fullmatch(
+                r"21(?:\.[0-9]+)*(?:[-+][^\s]+)?\s*", files["jdeps-version.txt"].decode()), "standard JDK21 version proof missing")
+            invocation = json.loads(files["invocation.json"])
+            args = invocation["argv"]
+            require(args[:6] == [str(tool), "--multi-release", "21", "-verbose:class", "-filter:none", "--class-path"]
+                    and len(args) == 7 + len(modules), "unsupported/incomplete jdeps invocation")
+            canonical = lambda path: (Path(path) if Path(path).is_absolute() else root / path).resolve()
+            original_inputs = [(observation / "inputs" / (m + ".jar")).resolve() for m in modules]
+            require([canonical(p) for p in args[7:]] == original_inputs, "jdeps input paths mismatch")
+            require([canonical(p) for p in args[6].split(os.pathsep)[:len(modules)]] == original_inputs
+                    and "*" not in args[6] and invocation["locale"] == "C" and invocation["timeout_seconds"] == 180,
+                    "jdeps classpath/locale/budget mismatch")
+            selected = {target: {} for target in ports}
+            _, _, missing, unknown, seen = parse_output(files["jdeps.stdout.txt"].decode(), index, inputs, selected)
+            result["evidence_verified"] = True
+            result["evidence_sha256"] = hashes
+            result["build_identity_sha256"] = shared.digest(identity_bytes)
+            result["review_items"].extend(unknown)
+            if missing:
+                result["review_items"].append({"reason": "MISSING_DEPENDENCIES", "detail": missing})
+            if seen != set(modules) or declared.get("jdeps_exit_code") != 0 or files["jdeps.stderr.txt"].strip():
+                result["review_items"].append({"reason": "INCOMPLETE_JDEPS_EXECUTION_OR_MODULE_COVERAGE"})
+            for target, binding in ports.items():
+                consumer = binding["consumer"]
+                if index.get(target, {}).get("owner") != binding["owner"]:
+                    result["review_items"].append({"reason": "TARGET_INDEX_UNKNOWN", "target": target})
+                    continue
+                if index.get(consumer, {}).get("owner") != binding["owner"]:
+                    result["review_items"].append({"reason": "CONSUMER_INDEX_UNKNOWN", "target": target})
+                refs = list(selected[target].values())
+                result["references"][target] = refs
+                if not any(ref["source_class"] == consumer for ref in refs):
+                    result["review_items"].append({"reason": "EXPECTED_CONSUMER_REFERENCE_MISSING", "target": target})
+                for ref in refs:
+                    if ref["source_class"] != consumer:
+                        result["findings"].append({"rule": "PRIVATE_MAPPER_CONSUMER", "allowed_consumer": consumer, **ref})
+    except (OSError, ValueError, TypeError, KeyError, AttributeError, zipfile.BadZipFile) as error:
+        result["review_items"].append({"reason": "INPUT_EVIDENCE_UNKNOWN", "detail": str(error)})
+    result["coverage_complete"] = result["evidence_verified"] and not result["review_items"]
+    result["verdict"] = "BLOCKED" if result["findings"] else "UNKNOWN" if not result["coverage_complete"] else "PASS_SCOPED_COMPILED_REFERENCES"
+    return result
 
 
 def main():

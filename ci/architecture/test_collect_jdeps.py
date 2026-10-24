@@ -1,5 +1,7 @@
 """ZIP/protocol fixtures only. No Java, javac, jdeps, database or network runs."""
 import importlib.util
+from contextlib import redirect_stdout
+import copy
 import io
 import json
 import os
@@ -261,12 +263,315 @@ class CollectorTest(unittest.TestCase):
         self.assertRaises(producer.shared.GateError, producer.class_entries, out.getvalue())
 
 
+class SelectedPrivateReferencesTest(unittest.TestCase):
+    def test_root_published_actual_rows_are_collected_without_module_self_edges(self):
+        path = Path(__file__).resolve().parents[2] / "docs/delivery/architecture-day/COORDINATOR/864e-private-mapper-raw-jdeps.json"
+        evidence = json.loads(path.read_text())
+        targets = {name: {} for name in evidence["class_index_exact_records"] if name.endswith("Mapper")}
+        text = "\n".join(evidence["actual_target_direction_lines"])
+        original = producer.parse_output(text, evidence["class_index_exact_records"], [Path("chengyinhub-system.jar")])
+        current = producer.parse_output(text, evidence["class_index_exact_records"], [Path("chengyinhub-system.jar")], targets)
+        self.assertEqual(original, current)
+        self.assertEqual(5, len(current))
+        self.assertEqual([], current[1])
+        self.assertEqual([1, 1], sorted(len(refs) for refs in targets.values()))
+        for target, refs in targets.items():
+            ref = next(iter(refs.values()))
+            self.assertEqual(target, ref["target_class"])
+            self.assertEqual("chengyinhub-system", ref["source_owner"])
+            self.assertEqual("chengyinhub-system", ref["target_owner"])
+            self.assertEqual(evidence["class_index_exact_records"][target]["sha256"], ref["target_sha256"])
+
+
+    def test_selected_collection_preserves_existing_nine_module_edges_and_five_return_values(self):
+        # Synthetic module rows exercise format invariance, not actual CI graphs.
+        classes = {m: "fixture." + m.split("-")[1] + ".Type" for m in MODULES}
+        index = {name: {"owner": owner, "sha256": "0" * 64} for owner, name in classes.items()}
+        path = Path(__file__).resolve().parents[2] / "docs/delivery/architecture-day/COORDINATOR/864e-private-mapper-raw-jdeps.json"
+        actual = json.loads(path.read_text())
+        index.update(actual["class_index_exact_records"])
+        module_edges = [("admin", "common"), ("admin", "framework"), ("admin", "quartz"), ("admin", "system"),
+                        ("framework", "common"), ("framework", "system"), ("generator", "common"),
+                        ("quartz", "common"), ("system", "common")]
+        rows = ["   %s -> %s %s.jar" % (classes["chengyinhub-" + a], classes["chengyinhub-" + b], "chengyinhub-" + b)
+                for a, b in module_edges]
+        text = "\n".join(rows + actual["actual_target_direction_lines"])
+        inputs = [Path(m + ".jar") for m in MODULES]
+        before = producer.parse_output(text, index, inputs)
+        selected = {t: {} for t in actual["class_index_exact_records"] if t.endswith("Mapper")}
+        after = producer.parse_output(text, index, inputs, selected)
+        self.assertEqual(before, after)
+        self.assertEqual(5, len(after))
+        self.assertEqual(9, len(after[1]))
+        self.assertTrue(all(a != b for a, b in after[1]))
+        self.assertEqual(2, sum(map(len, selected.values())))
+
+
+class PrivatePortsReadbackTest(unittest.TestCase):
+    """Protocol/ZIP fixtures, deliberately NOT compiled bytecode or real jdeps."""
+    git = CollectorTest.git
+    make_artifacts = CollectorTest.make_artifacts
+    runner = CollectorTest.runner
+    collect = CollectorTest.collect
+
+    def setUp(self):
+        CollectorTest.setUp(self)
+        self.ports = producer.shared.business_policy()["private_ports"]
+        self.foreign = "example.system.ForeignConsumer"
+        self.nested = next(iter(self.ports.values()))["consumer"] + "$Nested"
+        self.system_jar = self.root / "chengyinhub-system/target/chengyinhub-system-1.jar"
+        with zipfile.ZipFile(self.system_jar) as z:
+            self.system_entries = {name: z.read(name) for name in z.namelist()}
+        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested]:
+            self.system_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_FIXTURE_" + name).encode()
+        self.write_system()
+        for target, binding in self.ports.items():
+            self.stdout += "   " + binding["consumer"] + " -> " + target + " chengyinhub-system.jar\n"
+        report = self.collect()
+        self.assertTrue(report["static_graph_complete"], report)
+
+    def write_system(self):
+        classes = self.root / "chengyinhub-system/target/classes"
+        for path in classes.rglob("*.class"):
+            path.unlink()  # Only this test's TemporaryDirectory fixtures.
+        for name, value in self.system_entries.items():
+            path = classes / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(value)
+        self.system_jar.write_bytes(jar(self.system_entries))
+        with zipfile.ZipFile(self.boot) as z:
+            entries = {name: z.read(name) for name in z.namelist()}
+        entries["BOOT-INF/lib/chengyinhub-system-1.jar"] = self.system_jar.read_bytes()
+        self.boot.write_bytes(jar(entries))
+        value = json.loads(self.identity.read_text())
+        value["jarSha256"] = producer.shared.digest(self.boot.read_bytes())
+        self.identity.write_text(json.dumps(value))
+
+    def check(self, ports=None):
+        return producer.check_private_ports(self.root, self.boot, self.identity, self.output,
+                                            self.env, self.ports if ports is None else ports)
+
+    def replace_evidence(self, name, value):
+        (self.output / name).write_bytes(value)
+        report = json.loads((self.output / "observation.json").read_text())
+        report["evidence_sha256"][name] = producer.shared.digest(value)
+        (self.output / "observation.json").write_text(json.dumps(report))
+
+    def change_report(self, key, value):
+        report = json.loads((self.output / "observation.json").read_text())
+        report[key] = value
+        (self.output / "observation.json").write_text(json.dumps(report))
+
+    def add_reference(self, source):
+        target = next(iter(self.ports))
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", (text + "   " + source + " -> " + target + " chengyinhub-system.jar\n").encode())
+        return target
+
+    def assert_unknown(self, report):
+        self.assertEqual("UNKNOWN", report["verdict"], report)
+        self.assertFalse(report["coverage_complete"])
+        self.assertTrue(report["review_items"])
+        self.assertEqual([], report["findings"])
+
+    def test_exact_consumers_pass_only_scoped_static_references_without_running_java(self):
+        run = subprocess.run
+        def git_only(args, **kwargs):
+            self.assertEqual("git", args[0], "post-check must not execute Java/jdeps or other commands")
+            return run(args, **kwargs)
+        with patch.object(subprocess, "run", side_effect=git_only):
+            report = self.check()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertTrue(report["coverage_complete"])
+        self.assertTrue(report["evidence_verified"])
+        self.assertEqual(2, len(report["references"]))
+        self.assertEqual(2, len(self.calls), "only mocked producer version/analysis calls")
+        self.assertEqual("TWO_DECLARED_TARGET_TYPES_ONLY", report["coverage"])
+        self.assertNotIn("module_edges", report)
+        self.assertNotIn("scc", report)
+
+    def test_foreign_same_system_compiled_reference_is_blocked_with_no_XML_change(self):
+        target = self.add_reference(self.foreign)
+        report = self.check()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertEqual("PRIVATE_MAPPER_CONSUMER", report["findings"][0]["rule"])
+        self.assertEqual(self.foreign, report["findings"][0]["source_class"])
+        self.assertEqual(target, report["findings"][0]["target_class"])
+        old = json.loads((self.output / "observation.json").read_text())
+        self.assertEqual([["chengyinhub-admin", "chengyinhub-system"]], old["module_edges"])
+
+    def test_nested_class_is_not_implicitly_allowed_by_service_prefix(self):
+        self.add_reference(self.nested)
+        report = self.check()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertEqual(self.nested, report["findings"][0]["source_class"])
+
+    def test_missing_raw_or_empty_target_rows_are_unknown_not_empty_graph_pass(self):
+        for text in ("", "\n".join(line for line in self.stdout.splitlines() if not any(t in line for t in self.ports))):
+            with self.subTest(empty=not text):
+                self.replace_evidence("jdeps.stdout.txt", text.encode())
+                self.assert_unknown(self.check())
+        (self.output / "jdeps.stdout.txt").unlink()
+        self.assert_unknown(self.check())
+
+    def test_forged_safe_candidate_JSON_does_not_hide_foreign_raw_reference(self):
+        self.add_reference(self.foreign)
+        self.change_report("references", {})
+        self.change_report("findings", [])
+        self.change_report("static_graph_complete", True)
+        self.assertEqual("BLOCKED", self.check()["verdict"])
+
+    def test_index_sha_or_owner_forgery_is_unknown_even_with_resigned_manifest(self):
+        original = json.loads((self.output / "class-index.json").read_text())
+        target = next(iter(self.ports))
+        for field, value in (("sha256", "0" * 64), ("owner", "chengyinhub-admin")):
+            with self.subTest(field=field):
+                changed = copy.deepcopy(original)
+                changed[target][field] = value
+                self.replace_evidence("class-index.json", json.dumps(changed).encode())
+                self.assert_unknown(self.check())
+
+    def test_changed_input_bytes_cannot_be_approved_by_manifest_rehash(self):
+        self.replace_evidence("inputs/chengyinhub-system.jar", b"FORGED_NOT_THE_PACKAGED_JAR")
+        self.assert_unknown(self.check())
+
+    def test_changed_actual_class_or_original_artifact_is_unknown(self):
+        path = self.root / "chengyinhub-system/target/classes" / (next(iter(self.ports)).replace(".", "/") + ".class")
+        path.write_bytes(b"different actual target class")
+        self.assert_unknown(self.check())
+
+    def test_missing_actual_target_class_is_unknown(self):
+        target = next(iter(self.ports))
+        del self.system_entries[target.replace(".", "/") + ".class"]
+        self.write_system()
+        self.output = self.output.with_name("new-observation")
+        self.collect()
+        self.assert_unknown(self.check())
+
+    def test_missing_allowed_consumer_does_not_hide_definite_foreign_reference(self):
+        consumer = next(iter(self.ports.values()))["consumer"]
+        del self.system_entries[consumer.replace(".", "/") + ".class"]
+        self.write_system()
+        self.output = self.output.with_name("new-observation")
+        self.collect()
+        self.add_reference(self.foreign)
+        report = self.check()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertFalse(report["coverage_complete"])
+
+    def test_location_mismatch_unresolved_class_and_unparsed_lines_are_unknown(self):
+        original = self.stdout
+        target = next(iter(self.ports))
+        for text in (original.replace("-> " + target + " chengyinhub-system.jar", "-> " + target + " external-1.jar"),
+                     original.replace("-> " + target + " chengyinhub-system.jar", "-> " + target + " not found"),
+                     original + "unrecognized JDK format\n"):
+            with self.subTest(text=text[-80:]):
+                self.replace_evidence("jdeps.stdout.txt", text.encode())
+                self.assert_unknown(self.check())
+
+    def test_definite_bad_reference_still_blocks_when_other_parse_coverage_unknown(self):
+        self.add_reference(self.foreign)
+        raw = (self.output / "jdeps.stdout.txt").read_bytes()
+        self.replace_evidence("jdeps.stdout.txt", raw + b"unknown additional output\n")
+        report = self.check()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertFalse(report["coverage_complete"])
+
+    def test_raw_hash_mismatch_is_unknown_before_any_edges_are_trusted(self):
+        (self.output / "jdeps.stdout.txt").write_text(self.stdout + "forged")
+        self.assert_unknown(self.check())
+
+    def test_source_tree_run_attempt_and_boot_identity_are_bound(self):
+        for field in ("source_sha", "source_tree", "run_id", "run_attempt", "boot_artifact_sha256"):
+            with self.subTest(field=field):
+                original = (self.output / "observation.json").read_bytes()
+                self.change_report(field, "forged")
+                self.assert_unknown(self.check())
+                (self.output / "observation.json").write_bytes(original)
+        value = json.loads(self.identity.read_text())
+        value["jarSha256"] = "0" * 64
+        self.identity.write_text(json.dumps(value))
+        self.assert_unknown(self.check())
+
+    def test_untrusted_local_context_and_dirty_tree_are_unknown(self):
+        original = self.env.copy()
+        self.env.pop("GITHUB_ACTIONS")
+        self.assert_unknown(self.check())
+        self.env = original
+        (self.root / "untracked-source.java").write_text("dirty")
+        self.assert_unknown(self.check())
+
+    def test_jdk_tool_version_and_invocation_cannot_be_replaced(self):
+        original = (self.output / "invocation.json").read_bytes()
+        for token in ("-filter:none", "-verbose:class"):
+            with self.subTest(token=token):
+                data = json.loads(original)
+                data["argv"].remove(token)
+                self.replace_evidence("invocation.json", json.dumps(data).encode())
+                self.assert_unknown(self.check())
+        self.replace_evidence("invocation.json", original)
+        self.replace_evidence("jdeps-version.txt", b"17.0.13\n")
+        self.assert_unknown(self.check())
+
+    def test_wrong_input_path_locale_or_budget_is_unknown(self):
+        original = (self.output / "invocation.json").read_bytes()
+        for field, value in (("locale", "other"), ("timeout_seconds", 0)):
+            with self.subTest(field=field):
+                data = json.loads(original)
+                data[field] = value
+                self.replace_evidence("invocation.json", json.dumps(data).encode())
+                self.assert_unknown(self.check())
+        data = json.loads(original)
+        data["argv"][-1] = "/tmp/not-the-actual-input.jar"
+        self.replace_evidence("invocation.json", json.dumps(data).encode())
+        self.assert_unknown(self.check())
+
+    def test_missing_or_foreign_manifest_files_do_not_read_arbitrary_paths(self):
+        original = (self.output / "observation.json").read_bytes()
+        for change in ("missing", "foreign"):
+            with self.subTest(change=change):
+                data = json.loads(original)
+                if change == "missing": del data["evidence_sha256"]["class-index.json"]
+                else: data["evidence_sha256"]["../../outside"] = "0" * 64
+                (self.output / "observation.json").write_text(json.dumps(data))
+                self.assert_unknown(self.check())
+
+    def test_symlink_observation_and_evidence_are_unknown(self):
+        for name in ("observation.json", "class-index.json"):
+            with self.subTest(name=name):
+                path = self.output / name
+                saved = path.with_suffix(".saved")
+                path.rename(saved)
+                path.symlink_to(saved.name)
+                self.assert_unknown(self.check())
+                path.unlink()
+                saved.rename(path)
+
+    def test_empty_binding_or_replaced_JDK_binary_is_unknown(self):
+        self.assert_unknown(self.check({}))
+        self.tool.write_bytes(b"DIFFERENT_SYNTHETIC_TOOL")
+        self.assert_unknown(self.check())
+
+    def test_cli_reports_pass_blocked_unknown_as_0_1_2_and_persists_each(self):
+        output = self.boot.parent / "private-ports.json"
+        args = ["gate.py", "compiled-ports", "--source", str(self.root), "--artifact", str(self.boot),
+                "--identity", str(self.identity), "--observation", str(self.output), "--output", str(output)]
+        for expected in (0, 1, 2):
+            if expected == 1: self.add_reference(self.foreign)
+            if expected == 2: (self.output / "jdeps.stdout.txt").unlink()
+            with patch.dict(os.environ, self.env, clear=True), patch.object(sys, "argv", args), redirect_stdout(io.StringIO()) as stream:
+                self.assertEqual(expected, producer.shared.main())
+            self.assertEqual(json.loads(stream.getvalue()), json.loads(output.read_text()))
+            if expected == 2: self.assert_unknown(json.loads(output.read_text()))
+
+
 class WorkflowWiringTest(unittest.TestCase):
     def test_producer_follows_bound_packaged_artifact_and_reuses_its_upload(self):
         workflow = (Path(__file__).resolve().parents[2] / ".github/workflows/ci.yml").read_text()
         describe = workflow.index("      - name: Describe the tested Boot Jar")
         upload = workflow.index("      - name: Preserve tested Boot Jar for test VPS UAT", describe)
-        text = workflow[describe:upload]
+        next_step = workflow.index("\n      - ", describe + 1)
+        text = workflow[describe:next_step]  # Producer must stay in Describe itself.
         self.assertLess(text.index("PYARTIFACT\n"), text.index("collect_jdeps.py"))
         for option in ("--source .", "--artifact chengyinhub-admin/target/chengyinhub-admin.jar",
                        "--identity chengyinhub-admin/target/chengyinhub-admin.build.json",
@@ -281,7 +586,7 @@ class WorkflowWiringTest(unittest.TestCase):
         workflow = (Path(__file__).resolve().parents[2] / ".github/workflows/ci.yml").read_text()
         start = workflow.index("      - name: Describe the tested Boot Jar")
         start = workflow.index("        run: |\n", start) + len("        run: |\n")
-        end = workflow.index("      - name: Preserve tested Boot Jar", start)
+        end = workflow.index("      - ", start)  # The next step may be root's post-build check.
         script = "\n".join(line[10:] for line in workflow[start:end].splitlines()) + "\n"
         result = subprocess.run(["bash", "-n"], input=script, capture_output=True, text=True)
         self.assertEqual(0, result.returncode, result.stderr)

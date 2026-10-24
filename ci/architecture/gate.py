@@ -326,9 +326,9 @@ def business_policy():
         owners = json.loads((HERE / "owners.json").read_text())
         commands = json.loads((HERE / "commands.json").read_text())["business_commands"]
         policy = owners["business_policy"]
-        require(set(policy) == {"schema", "coverage", "scope", "facts", "pure_writers"})
+        require(set(policy) == {"schema", "coverage", "scope", "facts", "pure_writers", "private_ports"})
         require(type(policy["schema"]) is int and policy["schema"] == 1 and policy["coverage"] == "PARTIAL")
-        facts, writers, entries = {}, {}, {}
+        facts, writers, entries, ports = {}, {}, {}, {}
         require(isinstance(policy["facts"], list) and policy["facts"])
         for fact in policy["facts"]:
             require(set(fact) == {"id", "table", "coverage", "business_owner"})
@@ -356,7 +356,14 @@ def business_policy():
             require(writer["business_owner"] == entries[writer["command_id"]]["business_owner"])
             writers[key] = writer
         require(all(sum(f["id"] in entries[w["command_id"]]["writes"] for w in writers.values()) == 1 for f in facts.values()))
-        return {"facts": facts, "writers": writers, "commands": entries}
+        require(isinstance(policy["private_ports"], list) and len(policy["private_ports"]) == 2)
+        for port in policy["private_ports"]:
+            require(set(port) == {"target", "owner", "consumer"})
+            writer = writers[port["owner"] + ":" + port["target"]]
+            require(port["consumer"] in {m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]})
+            require(port["target"] not in ports)
+            ports[port["target"]] = {"owner": port["owner"], "consumer": port["consumer"]}
+        return {"facts": facts, "writers": writers, "commands": entries, "private_ports": ports}
     except GateError:
         raise
     except (OSError, ValueError, TypeError, KeyError, AttributeError) as error:
@@ -590,7 +597,7 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
     # Documentation/test edits alone are not violations. CI executes trusted
     # selftests, not arbitrary additional files supplied by the candidate.
     names = set(tree(root, candidate))
-    for filename in ("gate.py", "baseline.json", "locking-select-baseline.proposal.json", "owners.json", "commands.json"):
+    for filename in ("gate.py", "baseline.json", "locking-select-baseline.proposal.json", "owners.json", "commands.json", "collect_jdeps.py"):
         relative = "ci/architecture/" + filename
         if relative not in names or blob(root, candidate, relative) != (HERE / filename).read_bytes():
             raise GateError("POLICY_CHANGE: candidate changed trusted policy: " + relative)
@@ -680,6 +687,16 @@ def readback(plan, receipt, reports, assert_path=REPO / "ci/assert_it_ran.py"):
 
 
 
+def compiled_ports(root, artifact, identity, observation, env):
+    # Both parser and policy come from this immutable trusted checkout. No Java
+    # execution here; the same Backend job must run the trusted producer first.
+    spec = importlib.util.spec_from_file_location("trusted_private_ports", HERE / "collect_jdeps.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.check_private_ports(root, artifact, identity, observation, env,
+                                      business_policy()["private_ports"])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest="command", required=True)
@@ -696,6 +713,12 @@ def main():
     evidence.add_argument("--plan", type=Path, required=True)
     evidence.add_argument("--receipt", type=Path, required=True)
     evidence.add_argument("--reports", type=Path, required=True)
+    compiled = subs.add_parser("compiled-ports")
+    compiled.add_argument("--source", type=Path, required=True)
+    compiled.add_argument("--artifact", type=Path, required=True)
+    compiled.add_argument("--identity", type=Path, required=True)
+    compiled.add_argument("--observation", type=Path, required=True)
+    compiled.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "inventory":
@@ -706,6 +729,12 @@ def main():
             return 0
         elif args.command == "source":
             result = check_source(args.source, args.candidate, args.compare_base, ci_context(os.environ))
+        elif args.command == "compiled-ports":
+            result = compiled_ports(args.source, args.artifact, args.identity, args.observation, dict(os.environ))
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_bytes(encode(result))
+            print(encode(result).decode(), end="")
+            return 1 if result["findings"] else 2 if result["verdict"] == "UNKNOWN" else 0
         else:
             result = readback(json.loads(args.plan.read_text()), json.loads(args.receipt.read_text()), args.reports)
         print(encode(result).decode(), end="")

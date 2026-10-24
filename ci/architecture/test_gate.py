@@ -208,7 +208,7 @@ class InventoryAndDeltaTest(unittest.TestCase):
         (policy / "locking-select-baseline.proposal.json").write_bytes(
             gate.encode_inventory(gate.locking_debt_proposal(self.before, details)))
         (policy / "gate.py").write_bytes((gate.HERE / "gate.py").read_bytes())
-        for name in ("owners.json", "commands.json"):
+        for name in ("owners.json", "commands.json", "collect_jdeps.py"):
             (policy / name).write_bytes((gate.HERE / name).read_bytes())
         candidate = self.commit()
         # Trusted files are kept outside candidate to exercise PR policy changes.
@@ -816,6 +816,41 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         payload = gate.encode(data)
         self.write("ci/architecture/commands.json", payload)
         (trusted / "commands.json").write_bytes(payload)
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status)
+        self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
+
+
+class PrivatePortPolicyFreezeTest(unittest.TestCase):
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    source_cli = BusinessOwnerPolicyTest.source_cli
+
+    def test_candidate_producer_cannot_approve_its_own_output(self):
+        trusted, _ = self.prepare_policy()
+        self.write("ci/architecture/collect_jdeps.py", b"# forged collector emits safe-looking JSON")
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status, report)
+        self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_candidate_consumer_binding_cannot_self_approve(self):
+        trusted, _ = self.prepare_policy()
+        data = json.loads((trusted / "owners.json").read_text())
+        data["business_policy"]["private_ports"][0]["consumer"] = "foreign.Consumer"
+        self.write("ci/architecture/owners.json", gate.encode(data))
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status)
+        self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_malformed_trusted_consumer_binding_is_not_disabled(self):
+        trusted, _ = self.prepare_policy()
+        data = json.loads((trusted / "owners.json").read_text())
+        data["business_policy"]["private_ports"][0]["consumer"] = "foreign.Consumer"
+        value = gate.encode(data)
+        self.write("ci/architecture/owners.json", value)
+        (trusted / "owners.json").write_bytes(value)
         status, report = self.source_cli(trusted, self.commit())
         self.assertEqual(1, status)
         self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
