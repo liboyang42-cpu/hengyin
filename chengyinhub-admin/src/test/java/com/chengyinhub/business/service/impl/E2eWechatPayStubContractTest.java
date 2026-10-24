@@ -48,6 +48,8 @@ class E2eWechatPayStubContractTest {
         IWechatPayService stub = (IWechatPayService) stubClass.getDeclaredConstructor().newInstance();
         assertFalse(stub.closePaymentAttempt("REG1", "WXP-original"));
         assertFalse(stub.lockPaymentAttemptForUpdate("REG1", "WXP-original"));
+        assertEquals("true", stub.transferToBalance((com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent) null).get("ambiguous"));
+        assertEquals("UNKNOWN", stub.queryTransferResult((com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent) null).get("result"));
     }
 
     @Test

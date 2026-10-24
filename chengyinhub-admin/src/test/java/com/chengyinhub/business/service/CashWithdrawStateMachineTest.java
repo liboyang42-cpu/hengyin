@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.MemberCashWithdraw;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.service.impl.AlarmService;
@@ -85,6 +86,7 @@ class CashWithdrawStateMachineTest {
         ReflectionTestUtils.setField(svc, "wechatPayService", wechatPayService);
         { com.chengyinhub.common.config.WxPayConfig __cfg = org.mockito.Mockito.mock(com.chengyinhub.common.config.WxPayConfig.class);
           org.mockito.Mockito.when(__cfg.getAppid()).thenReturn("wx-mp-appid");
+          org.mockito.Mockito.when(__cfg.getMerchantId()).thenReturn("unit-merchant");
           org.mockito.Mockito.when(__cfg.getAppAppid()).thenReturn("wx-app-appid");
           // R1 起 withdraw 要按来源选同源 appid,不注入这个新依赖就是 NPE
           ReflectionTestUtils.setField(svc, "wxPayConfig", __cfg); }
@@ -120,7 +122,7 @@ class CashWithdrawStateMachineTest {
         MemberCashWithdraw w = new MemberCashWithdraw();
         w.setId(1L);
         w.setDelFlag(0);
-        w.setMemberId(9L);
+        w.setMemberId(9L); w.setOpenid("oABC123");
         w.setAmount(TEN);
         w.setOutBatchNo("CW1");
         w.setOutDetailNo("CD1");
@@ -133,6 +135,11 @@ class CashWithdrawStateMachineTest {
     private Map<String, String> qr(String result, String batchStatus) {
         Map<String, String> m = new HashMap<>();
         m.put("result", result);
+        m.put("mchid", "unit-merchant"); m.put("appid", "wx-mp-appid");
+        m.put("outBatchNo", "CW1"); m.put("outDetailNo", "CD1");
+        m.put("transferAmount", "1000"); m.put("openid", "oABC123");
+        m.put("batchId", "provider-batch"); m.put("detailId", "provider-detail");
+        if ("SUCCESS".equals(result)) m.put("detailStatus", "SUCCESS");
         if (batchStatus != null) m.put("batchStatus", batchStatus);
         if ("FAIL".equals(result)) m.put("detailStatus", "FAIL");
         return m;
@@ -149,7 +156,7 @@ class CashWithdrawStateMachineTest {
         res.put("ok", "true");
         res.put("batchId", "B1");
         res.put("batchStatus", "ACCEPTED");
-        when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
+        when(wechatPayService.transferToBalance(any(CashWithdrawTransferIntent.class))).thenReturn(res);
 
         MemberCashWithdraw current = svc.withdraw(9L, new BigDecimal("10.00"));
         assertEquals(Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING), current.getStatus());
@@ -176,7 +183,7 @@ class CashWithdrawStateMachineTest {
         assertThrows(IllegalStateException.class, () -> svc.withdraw(9L, new BigDecimal("10.00")));
 
         verify(umsMemberService, never()).deductWithdrawableBalance(anyLong(), any(), any());
-        verify(wechatPayService, never()).transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString());
+        verify(wechatPayService, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
     }
 
     // ③ 软查在途 → 直接拒绝
@@ -197,7 +204,7 @@ class CashWithdrawStateMachineTest {
 
         assertThrows(IllegalStateException.class, () -> svc.withdraw(9L, new BigDecimal("10.00")));
 
-        verify(wechatPayService, never()).transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString());
+        verify(wechatPayService, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
         // 未知异常 → STATUS_FAILED_MANUAL=3(非 FAILED_REFUNDED),且触发告警
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
         verify(mapper, org.mockito.Mockito.atLeastOnce()).updateStatusIfProcessing(cap.capture());
@@ -211,7 +218,7 @@ class CashWithdrawStateMachineTest {
     @Test
     void sync_success_marksSuccess() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("SUCCESS", "FINISHED"));
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(qr("SUCCESS", "FINISHED"));
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
         evidence.seedSubmissionIntent(1L);
@@ -229,7 +236,7 @@ class CashWithdrawStateMachineTest {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
         Map<String, String> q = qr("SUCCESS", "FINISHED");
         q.put("detailId", "1234567890abcdef");
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(q);
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(q);
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
         evidence.seedSubmissionIntent(1L);
@@ -244,7 +251,7 @@ class CashWithdrawStateMachineTest {
     @Test
     void sync_fail_claimThenRefundOnce() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(qr("FAIL", "FINISHED"));
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         // addBalance 成功(不抛异常)
 
@@ -267,10 +274,10 @@ class CashWithdrawStateMachineTest {
     @Test
     void sync_fail_capturesChannelErrorCode() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
-        Map<String, String> q = qr("FAIL", "CLOSED");
+        Map<String, String> q = qr("FAIL", "FINISHED");
         q.put("failReasonCode", "REAL_NAME_CHECK_FAIL");
         q.put("detailId", "detail-9");
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(q);
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(q);
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
 
         evidence.seedSubmissionIntent(1L);
@@ -286,7 +293,7 @@ class CashWithdrawStateMachineTest {
     @Test
     void sync_fail_lostClaim_noRefund() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(qr("FAIL", "FINISHED"));
         when(mapper.updateStatusIfProcessing(any())).thenReturn(0); // 抢占失败:别人已处理
 
         evidence.seedSubmissionIntent(1L);
@@ -300,7 +307,7 @@ class CashWithdrawStateMachineTest {
     @Test
     void sync_fail_refundClaimLost_failsClosedAndAlarms() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(qr("FAIL", "FINISHED"));
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         when(mapper.updateStatusIfManual(any())).thenReturn(0);     // 回补领取输掉
 
@@ -320,7 +327,7 @@ class CashWithdrawStateMachineTest {
     @Test
     void sync_fail_refundThrows_manualAndAlarm() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(qr("FAIL", "FINISHED"));
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         doThrow(new RuntimeException("增加余额失败")).when(umsMemberService).addBalance(eq(9L), any());
 
@@ -338,7 +345,7 @@ class CashWithdrawStateMachineTest {
     @Test
     void sync_unknown_staysProcessing_noRefund() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("UNKNOWN", null));
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(qr("UNKNOWN", null));
 
         evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
@@ -356,7 +363,7 @@ class CashWithdrawStateMachineTest {
         old.setCreateTime(old.getSubmitTime());
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(old));
         when(mapper.selectById(1L)).thenReturn(old); // Recovery reloads the current persisted receipt under its lock.
-        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("UNKNOWN", null));
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenReturn(qr("UNKNOWN", null));
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
         evidence.seedSubmissionIntent(1L);
@@ -378,7 +385,7 @@ class CashWithdrawStateMachineTest {
         res.put("ok", "false");
         res.put("ambiguous", "false");
         res.put("error", "转账服务未就绪");
-        when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
+        when(wechatPayService.transferToBalance(any(CashWithdrawTransferIntent.class))).thenReturn(res);
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
         // deductBalance 成功(不抛),addBalance 成功(不抛)
 
@@ -398,7 +405,7 @@ class CashWithdrawStateMachineTest {
         res.put("ok", "false");
         res.put("ambiguous", "false");
         res.put("error", "转账服务未就绪");
-        when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
+        when(wechatPayService.transferToBalance(any(CashWithdrawTransferIntent.class))).thenReturn(res);
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
         org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));

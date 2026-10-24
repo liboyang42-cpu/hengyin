@@ -6,6 +6,15 @@
 
     <resultMap id="FundFactResult" type="com.chengyinhub.business.domain.CashWithdrawFundFact">
         <id property="id" column="id"/>
+        <result property="requestMchid" column="request_mchid"/>
+        <result property="requestAppid" column="request_appid"/>
+        <result property="requestAmountFen" column="request_amount_fen"/>
+        <result property="requestOpenid" column="request_openid"/>
+        <result property="requestRemark" column="request_remark"/>
+        <result property="requestVersion" column="request_version"/>
+        <result property="requestHash" column="request_hash"/>
+        <result property="channelBatchId" column="channel_batch_id"/>
+
         <result property="withdrawalId" column="withdrawal_id"/>
         <result property="memberId" column="member_id"/>
         <result property="amount" column="amount"/>
@@ -24,6 +33,7 @@
 
     <select id="selectFundFacts" resultMap="FundFactResult" useCache="false" flushCache="true">
         select id, withdrawal_id, member_id, amount, out_batch_no, out_detail_no, kind, submission_intent_id,
+               request_mchid, request_appid, request_amount_fen, request_openid, request_remark, request_version, request_hash, channel_batch_id,
                balance_before, balance_after, create_time,
                channel_batch_status, channel_detail_status, channel_detail_id, channel_error_code
           from member_cash_withdraw_fund_fact where withdrawal_id = #{id} order by id for update
@@ -33,9 +43,11 @@
             useGeneratedKeys="true" keyProperty="id">
         insert into member_cash_withdraw_fund_fact
             (withdrawal_id, member_id, amount, out_batch_no, out_detail_no, kind, submission_intent_id,
+             request_mchid, request_appid, request_amount_fen, request_openid, request_remark, request_version, request_hash, channel_batch_id,
              balance_before, balance_after, create_time,
              channel_batch_status, channel_detail_status, channel_detail_id, channel_error_code)
         select id, member_id, amount, out_batch_no, out_detail_no, #{kind}, #{submissionIntentId},
+               #{requestMchid}, #{requestAppid}, #{requestAmountFen}, #{requestOpenid}, #{requestRemark}, #{requestVersion}, #{requestHash}, #{channelBatchId},
                #{balanceBefore}, #{balanceAfter}, #{createTime},
                #{channelBatchStatus}, #{channelDetailStatus}, #{channelDetailId}, #{channelErrorCode}
           from member_cash_withdraw

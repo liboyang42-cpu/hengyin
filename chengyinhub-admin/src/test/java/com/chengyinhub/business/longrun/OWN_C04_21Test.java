@@ -117,6 +117,7 @@ public class OWN_C04_21Test {
         when(members.selectUmsMemberById(7L)).thenReturn(member);
         com.chengyinhub.common.config.WxPayConfig config = mock(com.chengyinhub.common.config.WxPayConfig.class);
         when(config.getAppid()).thenReturn("wx-appid");
+        when(config.getMerchantId()).thenReturn("unit-merchant");
         MerchantReferralBountyService bounty = mock(MerchantReferralBountyService.class);
         IPlayerWithdrawalCooldownService cooldown = mock(IPlayerWithdrawalCooldownService.class);
         when(bounty.frozenAmount(7L)).thenReturn(BigDecimal.ZERO);

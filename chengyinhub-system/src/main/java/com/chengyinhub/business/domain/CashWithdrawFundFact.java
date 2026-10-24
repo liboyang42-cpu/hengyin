@@ -1,6 +1,7 @@
 package com.chengyinhub.business.domain;
 
 import java.math.BigDecimal;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import java.util.Date;
 
 /** Append-only facts for one original cash withdrawal; never inferred from its workflow status. */
@@ -13,6 +14,15 @@ public class CashWithdrawFundFact {
     public static final String FINAL_FAIL = "FINAL_FAIL";
     public static final String SUCCESS = "SUCCESS";
     public static final String REFUND = "REFUND";
+
+    private String requestMchid;
+    private String requestAppid;
+    private Long requestAmountFen;
+    private String requestOpenid;
+    private String requestRemark;
+    private Integer requestVersion;
+    private String requestHash;
+    private String channelBatchId;
 
     private Long id;
     private Long withdrawalId;
@@ -45,6 +55,35 @@ public class CashWithdrawFundFact {
                 && outBatchNo != null && outBatchNo.equals(w.getOutBatchNo())
                 && outDetailNo != null && outDetailNo.equals(w.getOutDetailNo());
     }
+
+    public void bindTransferIntent(CashWithdrawTransferIntent intent) {
+        requestMchid = intent.mchid(); requestAppid = intent.appid(); requestAmountFen = intent.amountFen();
+        requestOpenid = intent.openid(); requestRemark = intent.effectiveRemark();
+        requestVersion = intent.requestVersion(); requestHash = intent.requestHash();
+    }
+
+    public CashWithdrawTransferIntent transferIntent() {
+        return CashWithdrawTransferIntent.restore(withdrawalId, SUBMIT_INTENT.equals(kind) ? id : submissionIntentId,
+                requestMchid, requestAppid, outBatchNo, outDetailNo, requestAmountFen, requestOpenid,
+                requestRemark, requestVersion, requestHash);
+    }
+
+    public String getRequestMchid() { return requestMchid; }
+    public void setRequestMchid(String value) { requestMchid = value; }
+    public String getRequestAppid() { return requestAppid; }
+    public void setRequestAppid(String value) { requestAppid = value; }
+    public Long getRequestAmountFen() { return requestAmountFen; }
+    public void setRequestAmountFen(Long value) { requestAmountFen = value; }
+    public String getRequestOpenid() { return requestOpenid; }
+    public void setRequestOpenid(String value) { requestOpenid = value; }
+    public String getRequestRemark() { return requestRemark; }
+    public void setRequestRemark(String value) { requestRemark = value; }
+    public Integer getRequestVersion() { return requestVersion; }
+    public void setRequestVersion(Integer value) { requestVersion = value; }
+    public String getRequestHash() { return requestHash; }
+    public void setRequestHash(String value) { requestHash = value; }
+    public String getChannelBatchId() { return channelBatchId; }
+    public void setChannelBatchId(String value) { channelBatchId = value; }
 
     public Long getId() { return id; }
     public void setId(Long value) { id = value; }

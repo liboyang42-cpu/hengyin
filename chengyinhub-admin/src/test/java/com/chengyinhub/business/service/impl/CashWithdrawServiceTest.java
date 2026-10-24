@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.MemberCashWithdraw;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.service.IUmsMemberService;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -51,6 +53,7 @@ class CashWithdrawServiceTest {
         merchantReferralBountyService = mock(MerchantReferralBountyService.class);
         wxPayConfig = mock(com.chengyinhub.common.config.WxPayConfig.class);
         when(wxPayConfig.getAppid()).thenReturn("wx-mp-appid");
+        when(wxPayConfig.getMerchantId()).thenReturn("unit-merchant");
         when(wxPayConfig.getAppAppid()).thenReturn("wx-app-appid");
         svc = new CashWithdrawServiceImpl();
         org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
@@ -107,7 +110,8 @@ class CashWithdrawServiceTest {
     void withdraw_success_marksProcessing_noRefund() {
         when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
         when(umsMemberService.deductWithdrawableBalance(900002L, new BigDecimal("30.00"), BigDecimal.ZERO)).thenReturn(true);
-        when(wechatPayService.transferToBalance(eq("CW500"), eq("CD500"), eq(new BigDecimal("30.00")), eq("oXAbc"), any(), any()))
+        when(wechatPayService.transferToBalance(argThat(i -> i != null && "CW500".equals(i.outBatchNo()) && "CD500".equals(i.outDetailNo())
+                && new BigDecimal("30.00").equals(i.amountYuan()) && "oXAbc".equals(i.openid()))))
                 .thenReturn(transferResult(true, "BATCH123"));
 
         MemberCashWithdraw current = svc.withdraw(900002L, new BigDecimal("30"));
@@ -129,7 +133,7 @@ class CashWithdrawServiceTest {
         when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
         when(umsMemberService.deductWithdrawableBalance(900002L, new BigDecimal("30.00"), BigDecimal.ZERO)).thenReturn(true);
         when(umsMemberService.addBalance(900002L, new BigDecimal("30.00"))).thenReturn(true);
-        when(wechatPayService.transferToBalance(any(), any(), any(), any(), any(), any()))
+        when(wechatPayService.transferToBalance(any(CashWithdrawTransferIntent.class)))
                 .thenReturn(transferResult(false, "转账服务未就绪"));
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
@@ -155,7 +159,7 @@ class CashWithdrawServiceTest {
         ambiguous.put("ok", "false");
         ambiguous.put("ambiguous", "true");
         ambiguous.put("error", "connect timed out");
-        when(wechatPayService.transferToBalance(any(), any(), any(), any(), any(), any())).thenReturn(ambiguous);
+        when(wechatPayService.transferToBalance(any(CashWithdrawTransferIntent.class))).thenReturn(ambiguous);
 
         // 不确定态不应抛异常给用户(单已受理待查),正常返回处理中单
         MemberCashWithdraw current = svc.withdraw(900002L, new BigDecimal("30"));
@@ -178,7 +182,7 @@ class CashWithdrawServiceTest {
 
         verify(mapper, never()).insertMemberCashWithdraw(any());
         verify(umsMemberService, never()).deductWithdrawableBalance(any(), any(), any());
-        verify(wechatPayService, never()).transferToBalance(any(), any(), any(), any(), any(), any());
+        verify(wechatPayService, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
         verify(umsMemberService, never()).addBalance(any(), any());
     }
 
@@ -209,7 +213,7 @@ class CashWithdrawServiceTest {
 
         verify(mapper, never()).insertMemberCashWithdraw(any());
         verify(umsMemberService, never()).deductWithdrawableBalance(any(), any(), any());
-        verify(wechatPayService, never()).transferToBalance(any(), any(), any(), any(), any(), any());
+        verify(wechatPayService, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
     }
 
     /**
@@ -224,7 +228,7 @@ class CashWithdrawServiceTest {
         assertThrows(RuntimeException.class, () -> svc.withdraw(900002L, new BigDecimal("30")));
 
         verify(mapper, never()).insertMemberCashWithdraw(any());
-        verify(wechatPayService, never()).transferToBalance(any(), any(), any(), any(), any(), any());
+        verify(wechatPayService, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
     }
 
     /**
@@ -241,7 +245,7 @@ class CashWithdrawServiceTest {
 
         assertThrows(IllegalStateException.class, () -> svc.withdraw(900002L, new BigDecimal("30")));
 
-        verify(wechatPayService, never()).transferToBalance(any(), any(), any(), any(), any(), any());
+        verify(wechatPayService, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
         verify(umsMemberService, never()).addBalance(any(), any());
         verify(alarmService, never()).alarm(anyString(), anyString());
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
@@ -266,7 +270,7 @@ class CashWithdrawServiceTest {
 
         assertThrows(IllegalStateException.class, () -> svc.withdraw(900002L, new BigDecimal("30")));
 
-        verify(wechatPayService, never()).transferToBalance(any(), any(), any(), any(), any(), any());
+        verify(wechatPayService, never()).transferToBalance(any(CashWithdrawTransferIntent.class));
         verify(umsMemberService, never()).addBalance(any(), any());
         verify(alarmService, times(1)).alarm(anyString(), anyString());
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
@@ -302,7 +306,8 @@ class CashWithdrawServiceTest {
         when(umsMemberService.selectUmsMemberById(900002L)).thenReturn(member("oXAbc", "100"));
         when(umsMemberService.deductWithdrawableBalance(900002L, new BigDecimal("30.00"), BigDecimal.ZERO))
                 .thenReturn(true);
-        when(wechatPayService.transferToBalance(eq("CW500"), eq("CD500"), eq(new BigDecimal("30.00")), eq("oXAbc"), any(), any()))
+        when(wechatPayService.transferToBalance(argThat(i -> i != null && "CW500".equals(i.outBatchNo()) && "CD500".equals(i.outDetailNo())
+                && new BigDecimal("30.00").equals(i.amountYuan()) && "oXAbc".equals(i.openid()))))
                 .thenReturn(transferResult(true, "BATCH123"));
 
         svc.withdraw(900002L, new BigDecimal("30"));

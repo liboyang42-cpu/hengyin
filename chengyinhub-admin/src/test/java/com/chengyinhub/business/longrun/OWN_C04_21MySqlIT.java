@@ -72,6 +72,9 @@ class OWN_C04_21MySqlIT {
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
                     new org.springframework.core.io.FileSystemResource(java.nio.file.Path.of(
                             System.getProperty("architecture.a.repo", ".."), "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql")));
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource(java.nio.file.Path.of(
+                            System.getProperty("architecture.a.repo", ".."), "chengyinhub-admin/sql/migration_20261024_cash_withdraw_transfer_intent.sql")));
         }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);

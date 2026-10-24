@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CashWithdrawFundFact;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import org.mockito.invocation.InvocationOnMock;
@@ -74,6 +75,9 @@ public final class CashWithdrawEvidenceFixture {
         List<CashWithdrawFundFact> history = facts.get(id);
         if (history.stream().anyMatch(f -> CashWithdrawFundFact.SUBMIT_INTENT.equals(f.getKind()))) return;
         CashWithdrawFundFact intent = CashWithdrawFundFact.of(row(id), CashWithdrawFundFact.SUBMIT_INTENT);
+        MemberCashWithdraw original = row(id);
+        intent.bindTransferIntent(CashWithdrawTransferIntent.fromRequest(id, "unit-merchant", "wx-mp-appid",
+                original.getOutBatchNo(), original.getOutDetailNo(), original.getAmount(), original.getOpenid(), "城瘾分润提现"));
         intent.setId(++nextFact); history.add(intent);
     }
 }

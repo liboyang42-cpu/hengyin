@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Propagation;
 
 import com.chengyinhub.business.domain.MemberCashWithdraw;
 import com.chengyinhub.business.domain.CashWithdrawFundFact;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.service.ICashWithdrawService;
@@ -100,6 +101,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         }
         final String openid = channel[0];
         final String transferAppid = channel[1];
+        final String transferMchid = wxPayConfig.getMerchantId();
+
 
         // [冻结] 可用余额 = 余额 - 总冻结额,口径与 UmsMemberWithdrawalServiceImpl **同一个解析点**。
         // 银行卡提现早已刨掉赏金,微信零钱这条口子原来只走 deductBalance(护栏只认裸余额)⇒ 冻结款可从这里提走。
@@ -116,6 +119,11 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             throw new IllegalStateException(
                     frozenParts.isEmpty() ? "可用余额不足" : frozenParts.rejectionMessage());
         }
+
+        if (transferMchid == null || transferMchid.trim().isEmpty() || transferMchid.length() > 64
+                || transferAppid == null || transferAppid.trim().isEmpty() || transferAppid.length() > 64
+                || openid.trim().isEmpty() || openid.length() > 128)
+            throw new IllegalStateException("提现渠道原始身份未配置完整");
 
         Date now = DateUtils.getNowDate();
         String traceId = UUID.randomUUID().toString().replace("-", "");
@@ -148,6 +156,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         idc.setOutDetailNo(outDetailNo);
         if (mapper.updateMemberCashWithdraw(idc) != 1)
             throw new IllegalStateException("提现原业务号写入失败");
+        CashWithdrawTransferIntent request = CashWithdrawTransferIntent.fromRequest(id, transferMchid,
+                transferAppid, outBatchNo, outDetailNo, amount, openid, "城瘾分润提现");
 
         // 3. 原子扣余额,并给冻结赏金留底(护栏与扣款同一条 UPDATE ⇒ 并发也提不走冻结额)。
         boolean deducted;
@@ -177,21 +187,20 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
         // 4. 发起转账(外部调用)——只「受理」,不代表到账
         // appid 与 openid 同源,由上面的渠道判定给出(R1 已加 app_open_id 独立列)。
-        CashWithdrawFundFact submission = recordSubmissionIntent(id);
+        CashWithdrawTransferIntent submission = recordSubmissionIntent(id, request);
         if (submission == null)
             throw new IllegalStateException("提现单状态已更新，请刷新");
         Map<String, String> res;
         try {
-            res = wechatPayService.transferToBalance(
-                    outBatchNo, outDetailNo, amount, openid, "城瘾分润提现", transferAppid);
+            res = wechatPayService.transferToBalance(submission);
         } catch (Exception uncertain) {
             // Intent is already committed. Exception type never proves the channel did not act.
-            res = null;
+            res = Map.of("ok", "false", "ambiguous", "true", "errorCode", "SUBMIT_EXCEPTION");
             logger.warn("提现提交结果未知 id={} type={}", id, uncertain.getClass().getSimpleName());
         }
-        boolean accepted = res != null && "true".equals(res.get("ok"));
+        boolean accepted = res != null && "true".equals(res.get("ok")) && emptyToNull(res.get("batchId")) != null;
         if (accepted) {
-            recordChannelFact(id, CashWithdrawFundFact.ACCEPTED, res, submission.getId());
+            recordChannelFact(id, CashWithdrawFundFact.ACCEPTED, res, submission.submissionIntentId());
             // ★不直接置成功:置「处理中」,记录批次号/受理状态/提交时间,定时任务查询确认到账后才置成功
             MemberCashWithdraw upd = new MemberCashWithdraw();
             upd.setId(id);
@@ -211,7 +220,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         boolean ambiguous = res == null || !"false".equals(res.get("ok"))
                 || !"false".equals(res.get("ambiguous"));
         if (ambiguous) {
-            recordChannelFact(id, CashWithdrawFundFact.UNKNOWN, res, submission.getId());
+            recordChannelFact(id, CashWithdrawFundFact.UNKNOWN, res, submission.submissionIntentId());
             MemberCashWithdraw upd = new MemberCashWithdraw();
             upd.setId(id);
             upd.setSubmitTime(now);
@@ -226,7 +235,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         // 5b. 确定性未受理(微信拒绝/参数非法/服务未就绪),钱未出 → 原路退回余额一次(退款也失败则待人工,不丢钱)
         String err = res.get("error");
         Date failedAt = DateUtils.getNowDate();
-        if (!recordChannelFact(id, CashWithdrawFundFact.NOT_ACCEPTED, res, submission.getId()))
+        if (!recordChannelFact(id, CashWithdrawFundFact.NOT_ACCEPTED, res, submission.submissionIntentId()))
             throw new IllegalStateException("提现状态已变化，待核查");
         if (!claimFailedRefund(id, failedAt, err, null, null)) {
             throw new IllegalStateException("提现失败:" + (err == null ? "请稍后重试" : err));
@@ -266,24 +275,34 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
     private void syncOne(MemberCashWithdraw w) {
         // Serialize recovery with recordSubmissionIntent before doing any channel I/O.
-        w = prepareChannelQuery(w.getId());
-        if (w == null) return;
+        ChannelQuery query = prepareChannelQuery(w.getId());
+        if (query == null) return;
+        w = query.withdrawal();
         Long id = w.getId();
         Date now = DateUtils.getNowDate();
-        // 崩溃后 out_batch_no 可能为空:按确定性规则 CW+id 重算,保证能查到真实批次
-        String outBatchNo = w.getOutBatchNo() != null ? w.getOutBatchNo() : ("CW" + id);
-        String outDetailNo = w.getOutDetailNo() != null ? w.getOutDetailNo() : ("CD" + id);
-        Map<String, String> q = wechatPayService.queryTransferResult(outBatchNo, outDetailNo);
+        Map<String, String> q;
+        try { q = wechatPayService.queryTransferResult(query.intent()); }
+        catch (Exception uncertain) {
+            q = Map.of("result", "UNKNOWN", "errorCode", "QUERY_EXCEPTION");
+            logger.warn("提现查单结果未知 id={} intentId={} type={}", id,
+                    query.intent().submissionIntentId(), uncertain.getClass().getSimpleName());
+        }
+        if (q != null && ("SUCCESS".equals(q.get("result")) || "FAIL".equals(q.get("result")))
+                && (!queryMatchesIntent(query.intent(), q)
+                    || (query.batchId() != null && !query.batchId().equals(q.get("batchId"))))) {
+            logger.warn("提现查单事实与原意图不符 id={} intentId={}", id, query.intent().submissionIntentId());
+            q = Map.of("result", "UNKNOWN", "errorCode", "ORIGINAL_INTENT_MISMATCH");
+        }
         String result = q == null ? "UNKNOWN" : q.get("result");
 
         if ("SUCCESS".equals(result)) {
-            recordChannelFact(id, CashWithdrawFundFact.SUCCESS, q);
+            recordChannelFact(id, CashWithdrawFundFact.SUCCESS, q, query.intent().submissionIntentId());
             return;
         }
 
         // CLOSED alone has not been certified as proof that this detail can never succeed.
         if ("FAIL".equals(result) && "FAIL".equals(q.get("detailStatus"))) {
-            if (!recordChannelFact(id, CashWithdrawFundFact.FINAL_FAIL, q)) return;
+            if (!recordChannelFact(id, CashWithdrawFundFact.FINAL_FAIL, q, query.intent().submissionIntentId())) return;
             // ★先 CAS 抢占 status 0->3(暂置待人工),赢家独占退款;输者直接返回,绝不重复退款
             if (!claimFailedRefund(id, now, "微信转账失败",
                     emptyToNull(q.get("failReasonCode")), emptyToNull(q.get("detailId")))) {
@@ -304,7 +323,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         }
 
         // A query that cannot establish the final detail result never authorizes a later local rejection refund.
-        recordChannelFact(id, CashWithdrawFundFact.UNKNOWN, q);
+        recordChannelFact(id, CashWithdrawFundFact.UNKNOWN, q, query.intent().submissionIntentId());
         // PROCESSING / UNKNOWN:保持处理中,仅记录查询时间;超时兜底升级人工,避免永久卡死(阻断注销/静默冻结)
         MemberCashWithdraw upd = new MemberCashWithdraw();
         upd.setId(id);
@@ -334,7 +353,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
      * The original row lock chooses recovery or the first submission intent, never both.
      * Recovery keeps the original identity and uses the existing two-person manual flow.
      */
-    private MemberCashWithdraw prepareChannelQuery(Long id) {
+    private record ChannelQuery(MemberCashWithdraw withdrawal, CashWithdrawTransferIntent intent, String batchId) { }
+
+    private ChannelQuery prepareChannelQuery(Long id) {
         return new org.springframework.transaction.support.TransactionTemplate(transactionManager)
                 .execute(status -> {
                     MemberCashWithdraw original = mapper.selectByIdForUpdate(id);
@@ -348,7 +369,18 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     // REFUND is local too: repeated recovery after this manual refund needs no channel query.
                     boolean onlyLocalFacts = !facts.isEmpty() && facts.stream().allMatch(f ->
                             CashWithdrawFundFact.DEBIT.equals(f.getKind()) || CashWithdrawFundFact.REFUND.equals(f.getKind()));
-                    if (!onlyLocalFacts) return original;
+                    if (!onlyLocalFacts) {
+                        try {
+                            requireDebitEvidence(original, facts);
+                            return new ChannelQuery(original, requireOriginalIntent(original, facts), originalBatchId(original, facts));
+                        } catch (IllegalStateException unprovable) {
+                            MemberCashWithdraw investigation = new MemberCashWithdraw();
+                            investigation.setId(id); investigation.setStatus(MemberCashWithdraw.STATUS_FAILED_MANUAL);
+                            investigation.setManualNote("缺少完整原提交身份/扣款证据，保留原号人工调查；不补造、不换号");
+                            mapper.updateStatusIfProcessing(investigation);
+                            return null;
+                        }
+                    }
                     requireDebitEvidence(original, facts);
                     if (Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(original.getStatus())) {
                         requireRefundEvidence(original);
@@ -412,18 +444,18 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     }
 
     private CashWithdrawFundFact appendFact(MemberCashWithdraw w, String kind) {
-        return appendFact(w, kind, null);
-    }
-
-    private CashWithdrawFundFact appendFact(MemberCashWithdraw w, String kind, Map<String, String> observation) {
-        return appendFact(w, kind, observation, null);
+        return appendFact(w, kind, null, null);
     }
 
     private CashWithdrawFundFact appendFact(MemberCashWithdraw w, String kind, Map<String, String> observation,
-                                           Long submissionIntentId) {
+                                           CashWithdrawTransferIntent intent) {
         CashWithdrawFundFact fact = CashWithdrawFundFact.of(w, kind);
-        fact.setSubmissionIntentId(submissionIntentId);
+        if (intent != null) {
+            fact.bindTransferIntent(intent);
+            fact.setSubmissionIntentId(intent.submissionIntentId());
+        }
         if (observation != null) {
+            fact.setChannelBatchId(emptyToNull(observation.get("batchId")));
             fact.setChannelBatchStatus(emptyToNull(observation.get("batchStatus")));
             fact.setChannelDetailStatus(emptyToNull(observation.get("detailStatus")));
             fact.setChannelDetailId(emptyToNull(observation.get("detailId")));
@@ -467,20 +499,23 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (w.getBalanceRefundId() != null || hasFact(facts, CashWithdrawFundFact.REFUND)
                 || hasFact(facts, CashWithdrawFundFact.SUCCESS))
             throw new IllegalStateException("该提现单已回补或渠道已成功，禁止回补");
-        CashWithdrawFundFact intent = facts.stream().filter(f -> CashWithdrawFundFact.SUBMIT_INTENT.equals(f.getKind()))
+        CashWithdrawFundFact submission = facts.stream().filter(f -> CashWithdrawFundFact.SUBMIT_INTENT.equals(f.getKind()))
                 .findFirst().orElse(null);
-        boolean neverSubmitted = intent == null && facts.size() == 1;
+        boolean neverSubmitted = submission == null && facts.size() == 1;
+        CashWithdrawTransferIntent intent = submission == null ? null : requireOriginalIntent(w, facts);
         boolean originalAttemptNotSent = intent != null && !hasFact(facts, CashWithdrawFundFact.UNKNOWN)
                 && !hasFact(facts, CashWithdrawFundFact.ACCEPTED)
                 && facts.stream().anyMatch(f -> CashWithdrawFundFact.NOT_ACCEPTED.equals(f.getKind())
-                    && intent.getId() != null && intent.getId().equals(f.getSubmissionIntentId()));
-        boolean finalDetailFailure = facts.stream().anyMatch(f -> CashWithdrawFundFact.FINAL_FAIL.equals(f.getKind())
-                && "FAIL".equals(f.getChannelDetailStatus()));
+                    && boundToIntent(f, intent));
+        boolean finalDetailFailure = intent != null && facts.stream().anyMatch(f -> CashWithdrawFundFact.FINAL_FAIL.equals(f.getKind())
+                && "FAIL".equals(f.getChannelDetailStatus()) && "FINISHED".equals(f.getChannelBatchStatus())
+                && emptyToNull(f.getChannelBatchId()) != null && emptyToNull(f.getChannelDetailId()) != null
+                && boundToIntent(f, intent));
         if (!neverSubmitted && !originalAttemptNotSent && !finalDetailFailure)
             throw new IllegalStateException("渠道结果未确定，禁止回补，保留原号调查");
     }
 
-    private CashWithdrawFundFact recordSubmissionIntent(Long id) {
+    private CashWithdrawTransferIntent recordSubmissionIntent(Long id, CashWithdrawTransferIntent request) {
         return new org.springframework.transaction.support.TransactionTemplate(transactionManager)
                 .execute(status -> {
                     MemberCashWithdraw w = mapper.selectByIdForUpdate(id);
@@ -489,11 +524,12 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                     List<CashWithdrawFundFact> facts = checkedFacts(w);
                     requireDebitEvidence(w, facts);
                     if (facts.size() != 1 || w.getBalanceRefundId() != null) return null;
-                    return appendFact(w, CashWithdrawFundFact.SUBMIT_INTENT);
+                    requireIntentMatchesOriginal(w, request);
+                    return appendFact(w, CashWithdrawFundFact.SUBMIT_INTENT, null, request).transferIntent();
                 });
     }
 
-    /** Channel call already finished, so this short transaction holds no locks across network I/O. */
+    /** Channel call already finished; revalidate the captured original intent under the same financial row lock. */
     private boolean recordChannelFact(Long id, String kind, Map<String, String> observation) {
         return recordChannelFact(id, kind, observation, null);
     }
@@ -503,38 +539,100 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                 .execute(status -> {
                     MemberCashWithdraw w = mapper.selectByIdForUpdate(id);
                     if (w == null || Integer.valueOf(1).equals(w.getFrozen())) return false;
+                    List<CashWithdrawFundFact> facts = checkedFacts(w);
+                    CashWithdrawTransferIntent intent = requireOriginalIntent(w, facts);
+                    if (expectedIntentId != null && !expectedIntentId.equals(intent.submissionIntentId())) return false;
+                    boolean terminal = CashWithdrawFundFact.SUCCESS.equals(kind) || CashWithdrawFundFact.FINAL_FAIL.equals(kind);
+                    if (terminal && (expectedIntentId == null || !queryMatchesIntent(intent, observation)
+                            || (CashWithdrawFundFact.SUCCESS.equals(kind) && !"SUCCESS".equals(observation.get("result")))
+                            || (CashWithdrawFundFact.FINAL_FAIL.equals(kind) && !"FAIL".equals(observation.get("result")))
+                            || (originalBatchId(w, facts) != null && !originalBatchId(w, facts).equals(observation.get("batchId"))))) {
+                        logger.warn("提现渠道终态未通过原意图锁内核验 id={} intentId={}", id, intent.submissionIntentId());
+                        if (!hasFact(facts, CashWithdrawFundFact.UNKNOWN))
+                            appendFact(w, CashWithdrawFundFact.UNKNOWN,
+                                    Map.of("errorCode", "ORIGINAL_INTENT_MISMATCH"), intent);
+                        return false;
+                    }
                     if (CashWithdrawFundFact.SUCCESS.equals(kind)
                             && Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_REFUNDED).equals(w.getStatus())) {
-                        List<CashWithdrawFundFact> facts = checkedFacts(w);
-                        if (!hasFact(facts, kind)) appendFact(w, kind, observation);
+                        if (!hasFact(facts, kind)) appendFact(w, kind, observation, intent);
                         logger.error("已回补提现观察到渠道成功，保留冲突证据待调查 id={}", id);
                         return false;
                     }
                     if (!Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(w.getStatus())
                             && !Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(w.getStatus())
                             && !Integer.valueOf(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW).equals(w.getStatus())) return false;
-                    List<CashWithdrawFundFact> facts = checkedFacts(w);
                     if (w.getBalanceRefundId() != null || hasFact(facts, CashWithdrawFundFact.REFUND)) return false;
-                    if (!CashWithdrawFundFact.SUCCESS.equals(kind)
-                            && hasFact(facts, CashWithdrawFundFact.SUCCESS)) return false;
-                    CashWithdrawFundFact intent = facts.stream()
-                            .filter(f -> CashWithdrawFundFact.SUBMIT_INTENT.equals(f.getKind())).findFirst().orElse(null);
+                    if (!CashWithdrawFundFact.SUCCESS.equals(kind) && hasFact(facts, CashWithdrawFundFact.SUCCESS)) return false;
                     if (CashWithdrawFundFact.NOT_ACCEPTED.equals(kind)
-                            && (expectedIntentId == null || intent == null || !expectedIntentId.equals(intent.getId())
-                                || facts.size() != 2 || hasFact(facts, CashWithdrawFundFact.UNKNOWN)
-                                || hasFact(facts, CashWithdrawFundFact.ACCEPTED))) return false;
-                    if (!hasFact(facts, kind)) appendFact(w, kind, observation, intent == null ? null : intent.getId());
+                            && (expectedIntentId == null || facts.size() != 2
+                                || hasFact(facts, CashWithdrawFundFact.UNKNOWN) || hasFact(facts, CashWithdrawFundFact.ACCEPTED))) return false;
+                    if (!hasFact(facts, kind)) appendFact(w, kind, observation, intent);
                     if (CashWithdrawFundFact.SUCCESS.equals(kind)) {
                         MemberCashWithdraw success = new MemberCashWithdraw();
                         success.setId(id); success.setStatus(MemberCashWithdraw.STATUS_SUCCESS);
-                        success.setWechatBatchStatus(observation == null ? null : observation.get("batchStatus"));
-                        success.setWechatDetailId(emptyToNull(observation == null ? null : observation.get("detailId")));
+                        success.setWechatBatchStatus(observation.get("batchStatus"));
+                        success.setWechatDetailId(emptyToNull(observation.get("detailId")));
                         success.setFinishTime(DateUtils.getNowDate()); success.setLastQueryTime(DateUtils.getNowDate());
                         if (mapper.confirmChannelSuccess(success) != 1)
                             throw new IllegalStateException("提现成功事实与终态写入失败");
                     }
                     return true;
                 }));
+    }
+
+    private CashWithdrawTransferIntent requireOriginalIntent(MemberCashWithdraw w, List<CashWithdrawFundFact> facts) {
+        requireDebitEvidence(w, facts);
+        CashWithdrawFundFact stored = facts.stream().filter(f -> CashWithdrawFundFact.SUBMIT_INTENT.equals(f.getKind()))
+                .findFirst().orElseThrow(() -> new IllegalStateException("缺少原提交意图，保留调查"));
+        try {
+            CashWithdrawTransferIntent intent = stored.transferIntent();
+            if (intent.submissionIntentId() == null) throw new IllegalArgumentException("缺少原意图关联");
+            requireIntentMatchesOriginal(w, intent);
+            return intent;
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalStateException("原提交参数证据缺失或不一致，保留调查");
+        }
+    }
+
+    private void requireIntentMatchesOriginal(MemberCashWithdraw w, CashWithdrawTransferIntent intent) {
+        if (!intent.canonicalRequestHash().equals(intent.requestHash()))
+            throw new IllegalStateException("原提交参数指纹不一致");
+        if (!w.getId().equals(intent.withdrawalId()) || !w.getOutBatchNo().equals(intent.outBatchNo())
+                || !w.getOutDetailNo().equals(intent.outDetailNo()) || w.getOpenid() == null
+                || !w.getOpenid().equals(intent.openid()) || w.getAmount().compareTo(intent.amountYuan()) != 0)
+            throw new IllegalStateException("原提现与提交参数不一致，保留调查");
+    }
+
+    private boolean boundToIntent(CashWithdrawFundFact fact, CashWithdrawTransferIntent intent) {
+        try {
+            CashWithdrawTransferIntent recorded = fact.transferIntent();
+            return intent.submissionIntentId().equals(recorded.submissionIntentId())
+                    && intent.withdrawalId().equals(recorded.withdrawalId())
+                    && intent.requestHash().equals(recorded.requestHash());
+        } catch (IllegalArgumentException incomplete) { return false; }
+    }
+
+    private String originalBatchId(MemberCashWithdraw w, List<CashWithdrawFundFact> facts) {
+        String known = facts.stream().filter(f -> CashWithdrawFundFact.ACCEPTED.equals(f.getKind()))
+                .map(CashWithdrawFundFact::getChannelBatchId).filter(value -> emptyToNull(value) != null).findFirst().orElse(null);
+        String receipt = emptyToNull(w.getTransferBatchId());
+        if (known != null && receipt != null && !known.equals(receipt))
+            throw new IllegalStateException("原受理批次证据冲突，保留调查");
+        return known == null ? receipt : known;
+    }
+
+    private boolean queryMatchesIntent(CashWithdrawTransferIntent intent, Map<String, String> observation) {
+        if (observation == null || !"FINISHED".equals(observation.get("batchStatus"))
+                || emptyToNull(observation.get("batchId")) == null || emptyToNull(observation.get("detailId")) == null
+                || !intent.mchid().equals(observation.get("mchid")) || !intent.appid().equals(observation.get("appid"))
+                || !intent.outBatchNo().equals(observation.get("outBatchNo"))
+                || !intent.outDetailNo().equals(observation.get("outDetailNo"))
+                || !intent.openid().equals(observation.get("openid"))) return false;
+        String outcome = observation.get("result");
+        if (!("SUCCESS".equals(outcome) || "FAIL".equals(outcome)) || !outcome.equals(observation.get("detailStatus"))) return false;
+        try { return intent.amountFen() == Long.parseLong(observation.get("transferAmount")); }
+        catch (RuntimeException invalidAmount) { return false; }
     }
 
     private boolean isStuck(MemberCashWithdraw w, Date now) {

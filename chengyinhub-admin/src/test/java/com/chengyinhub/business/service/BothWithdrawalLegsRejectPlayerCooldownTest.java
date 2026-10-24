@@ -89,6 +89,7 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
         ReflectionTestUtils.setField(wechatLeg, "alarmService", mock(AlarmService.class));
         { com.chengyinhub.common.config.WxPayConfig __cfg = org.mockito.Mockito.mock(com.chengyinhub.common.config.WxPayConfig.class);
           org.mockito.Mockito.when(__cfg.getAppid()).thenReturn("wx-mp-appid");
+          org.mockito.Mockito.when(__cfg.getMerchantId()).thenReturn("unit-merchant");
           org.mockito.Mockito.when(__cfg.getAppAppid()).thenReturn("wx-app-appid");
           // R1 起 withdraw 要按来源选同源 appid,不注入这个新依赖就是 NPE
           ReflectionTestUtils.setField(wechatLeg, "wxPayConfig", __cfg); }
@@ -176,7 +177,7 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
         when(cashMapper.selectById(500L)).thenAnswer(invocation -> original.get());
         // cashFixture retains the inserted original and binds an explicit DEBIT fact.
 
-        when(wechatPayService.transferToBalance(any(), any(), any(), any(), any(), any()))
+        when(wechatPayService.transferToBalance(any(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.class)))
                 .thenReturn(java.util.Collections.singletonMap("ok", "true"));
         when(cashMapper.updateReceiptIfProcessing(any())).thenReturn(1);
 

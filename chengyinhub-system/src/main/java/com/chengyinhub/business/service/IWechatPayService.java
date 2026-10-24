@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -130,4 +131,11 @@ public interface IWechatPayService {
      *         ★UNKNOWN 表示查询本身异常(网络/服务未就绪),调用方不得据此判失败,应保持处理中并稍后重试。
      */
     Map<String, String> queryTransferResult(String outBatchNo, String outDetailNo);
+
+    /** Submit only the original immutable, hash-validated withdrawal intent; accepted is not settled. */
+    Map<String, String> transferToBalance(CashWithdrawTransferIntent intent);
+
+    /** Only original merchant/app/batch/detail/amount/receiver evidence may authorize a terminal result. */
+    Map<String, String> queryTransferResult(CashWithdrawTransferIntent intent);
+
 }

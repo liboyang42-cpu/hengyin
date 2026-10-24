@@ -195,4 +195,14 @@ public class E2eWechatPayStub implements IWechatPayService {
                                                  String openid, String remark, String appid) {
         return new LinkedHashMap<String, String>();
     }
+
+    @Override
+    public Map<String, String> transferToBalance(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        return java.util.Map.of("ok", "false", "ambiguous", "true", "error", "No real immutable transfer client in E2E fixture");
+    }
+
+    @Override
+    public Map<String, String> queryTransferResult(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        return java.util.Map.of("result", "UNKNOWN", "error", "No real transfer detail evidence in E2E fixture");
+    }
 }
