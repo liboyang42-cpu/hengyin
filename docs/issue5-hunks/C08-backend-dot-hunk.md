@@ -154,3 +154,9 @@ BUILD SUCCESS
 ```
 
 IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 20:40 America/Los_Angeles
+
+生产接线：`ChannelGovernanceProjection.authorizeFromMembership` 只读既有 `IImService.isActiveGroupMember`（`ImServiceChannelMembership`）。缺端口 WAITING_SOURCE `im.isActiveGroupMember`。非成员 NOT_MEMBER，不签发 grant。不把 ACCOUNT4 accountId 猜成 IM memberId。公共 send/receipt/journal 仍归 D5。
+
+Did not invent `recoverOriginal`. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。

@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.channel;
 
+import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAccount4Identity;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAuthorizationGrant;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelCapability;
@@ -14,8 +15,13 @@ import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelRo
 /**
  * C08 独占：创建/目录/规则同意/邀请申请/成员角色 → 读写与治理 → 退出/封禁/申诉。
  * 不拥有公共 IM send/receipt、journal、NativeWebhook*、43/45/46/47。
+ *
+ * <p>直播成员闸走既有 {@link IImService#isActiveGroupMember}；缺端口 WAITING_SOURCE。
+ * 不把 ACCOUNT4 accountId 猜成 memberId。
  */
 public final class ChannelGovernanceProjection {
+
+    public static final String IM_ACTIVE_GROUP_MEMBER = "im.isActiveGroupMember";
 
     public final ChannelCatalogEntry catalog;
     public final ChannelAccount4Identity identity;
@@ -24,8 +30,14 @@ public final class ChannelGovernanceProjection {
     private Integer consentedRulesVersion;
     private ChannelRole role;
     private ChannelRevokeReason revokeReason;
+    private final ChannelMembershipSource membership;
 
     public ChannelGovernanceProjection(ChannelCatalogEntry catalog, ChannelAccount4Identity identity) {
+        this(catalog, identity, null);
+    }
+
+    public ChannelGovernanceProjection(ChannelCatalogEntry catalog, ChannelAccount4Identity identity,
+            ChannelMembershipSource membership) {
         this.catalog = catalog;
         this.identity = identity;
         this.phase = ChannelGovernancePhase.CATALOGED;
@@ -33,6 +45,7 @@ public final class ChannelGovernanceProjection {
         this.consentedRulesVersion = null;
         this.role = ChannelRole.NONE;
         this.revokeReason = null;
+        this.membership = membership;
     }
 
     public ChannelGovernancePhase phase() {
@@ -124,6 +137,20 @@ public final class ChannelGovernanceProjection {
         return grant();
     }
 
+    /**
+     * 用既有群成员闸签发读写。缺 {@link IImService#isActiveGroupMember} 为 WAITING_SOURCE。
+     * memberId 由调用方提供，不把 ACCOUNT4 accountId 猜成 IM memberId。
+     */
+    public ChannelAuthorizationGrant authorizeFromMembership(long memberId) {
+        if (membership == null) {
+            throw new IllegalStateException("WAITING_SOURCE:" + IM_ACTIVE_GROUP_MEMBER);
+        }
+        if (!membership.isActiveGroupMember(memberId, catalog.conversationId)) {
+            throw new ChannelAuthorizationException(ChannelAuthorizationException.Code.NOT_MEMBER);
+        }
+        return authorizeReadWrite();
+    }
+
     public void govern() {
         authorizeReadWrite();
         ChannelMemberAuthorizationProjection.authorize(identity, catalog, role, consentedRulesVersion,
@@ -187,6 +214,27 @@ public final class ChannelGovernanceProjection {
         if (revokeReason != null || phase == ChannelGovernancePhase.ISOLATED || phase == ChannelGovernancePhase.LEFT
                 || phase == ChannelGovernancePhase.BANNED) {
             throw new ChannelAuthorizationException(ChannelAuthorizationException.Code.REVOKED);
+        }
+    }
+
+    /** 只读既有群成员闸；不发 IM、不改 journal。 */
+    public interface ChannelMembershipSource {
+        boolean isActiveGroupMember(long memberId, long conversationId);
+    }
+
+    public static final class ImServiceChannelMembership implements ChannelMembershipSource {
+        private final IImService im;
+
+        public ImServiceChannelMembership(IImService im) {
+            this.im = im;
+        }
+
+        @Override
+        public boolean isActiveGroupMember(long memberId, long conversationId) {
+            if (im == null) {
+                throw new IllegalStateException("WAITING_SOURCE:" + IM_ACTIVE_GROUP_MEMBER);
+            }
+            return im.isActiveGroupMember(Long.valueOf(memberId), Long.valueOf(conversationId));
         }
     }
 }

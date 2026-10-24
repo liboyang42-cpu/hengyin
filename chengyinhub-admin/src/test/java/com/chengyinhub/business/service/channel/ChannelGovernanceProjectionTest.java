@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -156,5 +157,39 @@ class ChannelGovernanceProjectionTest {
         assertEquals(ChannelRole.MEMBER, journey.role());
         assertEquals(ChannelGovernancePhase.MEMBER_ROLE_ASSIGNED, journey.phase());
         assertNull(journey.grant());
+    }
+
+    @Test
+    void authorizeFromMembershipRequiresImActiveGroupMemberThenLiveMemberIssuesGrant() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelCatalogEntry catalog = new ChannelCatalogEntry(21, 12, ConversationKind.GROUP,
+                new ChannelRulesCas(3, Integer.valueOf(4), 3));
+        ChannelGovernanceProjection missing = memberReady(catalog, identity, null);
+        IllegalStateException waiting = assertThrows(IllegalStateException.class,
+                () -> missing.authorizeFromMembership(70L));
+        assertTrue(waiting.getMessage().contains(ChannelGovernanceProjection.IM_ACTIVE_GROUP_MEMBER));
+        assertNull(missing.grant());
+        assertEquals(ChannelGovernancePhase.MEMBER_ROLE_ASSIGNED, missing.phase());
+
+        ChannelGovernanceProjection denied = memberReady(catalog, identity, (memberId, conversationId) -> false);
+        assertEquals(ChannelAuthorizationException.Code.NOT_MEMBER,
+                assertThrows(ChannelAuthorizationException.class, () -> denied.authorizeFromMembership(70L)).code);
+        assertNull(denied.grant());
+
+        ChannelGovernanceProjection live = memberReady(catalog, identity,
+                (memberId, conversationId) -> memberId == 70L && conversationId == 12L);
+        ChannelAuthorizationGrant grant = live.authorizeFromMembership(70L);
+        assertNotNull(grant);
+        assertEquals(ChannelGovernancePhase.AUTHORIZED_READ_WRITE, live.phase());
+        assertEquals(7, grant.identity.accountId);
+    }
+
+    private static ChannelGovernanceProjection memberReady(ChannelCatalogEntry catalog,
+            ChannelAccount4Identity identity, ChannelGovernanceProjection.ChannelMembershipSource membership) {
+        ChannelGovernanceProjection journey = new ChannelGovernanceProjection(catalog, identity, membership);
+        journey.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        journey.submitInviteOrApply();
+        journey.assignMemberRole(ChannelRole.MEMBER);
+        return journey;
     }
 }
