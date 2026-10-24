@@ -4,6 +4,8 @@
 # Passes currentMemberId() into RouteActionReadService.read.
 # does not change routeState(). Does not call the POST action writer.
 # Does not insert a route action. No permission string. No reward.
+# Surefire RouteActionReadServiceTest: Tests run: 4, Failures: 0, Errors: 0, Skipped: 0. BUILD SUCCESS 2026-10-24T22:00:28Z.
+# Mockito in memory. Not HTTP. Not MySQL.
 
 diff --git a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java
 --- a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java
