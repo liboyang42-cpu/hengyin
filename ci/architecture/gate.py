@@ -376,6 +376,53 @@ def business_policy():
         raise GateError("BUSINESS_POLICY_INVALID: " + str(error)) from error
 
 
+
+def technical_dependency_policy():
+    """Trusted explicit class cut only; never infer business owners from packages."""
+    def require(value):
+        if not value:
+            raise GateError("OWNER_DEPENDENCY_POLICY_INVALID")
+    try:
+        policy = json.loads((HERE / "owners.json").read_text())["technical_dependency_policy"]
+        require(set(policy) == {"schema", "coverage", "observed_source", "meaning", "owners", "allowed_directions"})
+        require(type(policy["schema"]) is int and policy["schema"] == 1 and policy["coverage"] == "PARTIAL")
+        require(isinstance(policy["observed_source"], str) and SHA.fullmatch(policy["observed_source"]))
+        modules = json.loads((HERE / "owners.json").read_text())["modules"]
+        require(isinstance(policy["owners"], list) and policy["owners"])
+        owners, members = {}, {}
+        fqcn = r"(?:" + IDENT + r"\.)+" + IDENT
+        for owner in policy["owners"]:
+            require(set(owner) == {"id", "module", "members", "forbidden_backrefs"})
+            id_ = owner["id"]
+            require(isinstance(id_, str) and re.fullmatch(r"[A-Z][A-Z0-9_]*", id_) and id_ not in owners)
+            require(owner["module"] in modules)
+            for field in ("members", "forbidden_backrefs"):
+                require(isinstance(owner[field], list) and owner[field] and len(owner[field]) == len(set(owner[field])))
+                require(all(isinstance(n, str) and re.fullmatch(fqcn, n) for n in owner[field]))
+            for member in owner["members"]:
+                require(member not in members)
+                members[member] = id_
+            owners[id_] = owner
+        require(isinstance(policy["allowed_directions"], list))
+        edges = set()
+        for edge in policy["allowed_directions"]:
+            require(isinstance(edge, list) and len(edge) == 2 and all(n in owners for n in edge) and edge[0] != edge[1])
+            require(tuple(edge) not in edges)
+            edges.add(tuple(edge))
+        # This new responsibility cut is explicitly acyclic. Do not bless a
+        # candidate-generated SCC or reclassify global legacy debt as approved.
+        pending = set(owners)
+        while pending:
+            leaves = {n for n in pending if not any(a == n and b in pending for a, b in edges)}
+            require(leaves)
+            pending -= leaves
+        return {"owners": owners, "allowed_directions": edges, "observed_source": policy["observed_source"]}
+    except GateError:
+        raise
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+        raise GateError("OWNER_DEPENDENCY_POLICY_INVALID: " + str(error)) from error
+
+
 def business_write_findings(key, statement, kind, details, previous, previous_details, policy):
     """Reuse literal targets, not column hints; compare only this statement edge.
 
@@ -608,6 +655,7 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
         if relative not in names or blob(root, candidate, relative) != (HERE / filename).read_bytes():
             raise GateError("POLICY_CHANGE: candidate changed trusted policy: " + relative)
     policy = business_policy()
+    technical = technical_dependency_policy()
     changed = set(git(root, "diff", "--name-only", "--no-renames", compare_base, candidate).decode().splitlines())
     details = {}
     current = inventory(root, candidate, details)
@@ -619,6 +667,7 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
             "verdict": "BLOCKED" if blockers else "PASS_WITH_REVIEW_ITEMS" if review else "PASS",
             "findings": blockers, "review_items": review, "changed_files": sorted(changed),
             "business_policy": {"coverage": "PARTIAL", "fact_ids": sorted(f["id"] for f in policy["facts"].values())},
+            "technical_dependencies": {"coverage": "PARTIAL", "owners": sorted(technical["owners"]), "compiled_inputs": "NOT_CHECKED_BY_SOURCE_GATE"},
             "not_proven": ["Java/SQL authorization semantics", "transaction atomicity",
                            "complete fresh-read semantics (RR current SQL/transactions still require tests)",
                            "persistent intent/recovery", "Java or real storage test execution",
@@ -700,7 +749,7 @@ def compiled_ports(root, artifact, identity, observation, env):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.check_private_ports(root, artifact, identity, observation, env,
-                                      business_policy()["private_ports"])
+                                      business_policy()["private_ports"], technical_dependency_policy())
 
 
 def main():

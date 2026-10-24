@@ -65,5 +65,123 @@
         "consumer": "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"
       }
     ]
+  },
+  "technical_dependency_policy": {
+    "schema": 1,
+    "coverage": "PARTIAL",
+    "observed_source": "d49c12b820419308236010e0710f96d7bf48c4c9",
+    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut.",
+    "owners": [
+      {
+        "id": "A_WITHDRAW_ADMISSION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl"
+        ]
+      },
+      {
+        "id": "C_HINT_APPLICATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.IPuzzlePlayService",
+          "com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController"
+        ]
+      },
+      {
+        "id": "C_NODE_ACCESS",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.PlayNodeAccessService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController"
+        ]
+      },
+      {
+        "id": "D_CONTENT_GRAPH",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ITopicContentGraphAuthoringService",
+          "com.chengyinhub.business.service.impl.TopicContentGraphAuthoringServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "D_CONTENT_COPY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ITopicContentCopyService",
+          "com.chengyinhub.business.service.impl.TopicContentCopyServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "D_CONTENT_RULES",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.TopicContentWriteGuard",
+          "com.chengyinhub.business.service.support.TopicRouteOutcomeReader",
+          "com.chengyinhub.business.service.support.TopicAuthoredGraphIds"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "E_QUOTA_RECOVERY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.AiQuotaRecoveryService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IAiCreatorService",
+          "com.chengyinhub.business.service.impl.AiCreatorServiceImpl",
+          "com.chengyinhub.business.service.ai.AiGatewayService"
+        ]
+      },
+      {
+        "id": "G_SETTLEMENT_EVIDENCE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      }
+    ],
+    "allowed_directions": [
+      [
+        "C_HINT_APPLICATION",
+        "C_NODE_ACCESS"
+      ],
+      [
+        "D_CONTENT_GRAPH",
+        "D_CONTENT_COPY"
+      ],
+      [
+        "D_CONTENT_GRAPH",
+        "D_CONTENT_RULES"
+      ],
+      [
+        "D_CONTENT_COPY",
+        "D_CONTENT_RULES"
+      ]
+    ]
   }
 }

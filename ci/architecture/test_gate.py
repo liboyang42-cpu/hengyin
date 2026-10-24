@@ -905,6 +905,34 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
         self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
 
 
+    def test_candidate_dependency_directions_cannot_self_approve_or_delete_owner(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("directions", "delete"):
+            data = copy.deepcopy(original)
+            if change == "delete": del data["technical_dependency_policy"]
+            else: data["technical_dependency_policy"]["allowed_directions"].append(["D_CONTENT_RULES", "D_CONTENT_GRAPH"])
+            self.write("ci/architecture/owners.json", gate.encode(data))
+            status, report = self.source_cli(trusted, self.commit())
+            self.assertEqual(1, status)
+            self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_cyclic_or_missing_trusted_dependency_policy_is_not_disabled(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("cycle", "delete"):
+            data = copy.deepcopy(original)
+            if change == "delete": del data["technical_dependency_policy"]
+            else: data["technical_dependency_policy"]["allowed_directions"].append(["D_CONTENT_RULES", "D_CONTENT_GRAPH"])
+            payload = gate.encode(data)
+            self.write("ci/architecture/owners.json", payload)
+            (trusted / "owners.json").write_bytes(payload)
+            status, report = self.source_cli(trusted, self.commit())
+            self.assertEqual(1, status)
+            self.assertIn("OWNER_DEPENDENCY_POLICY_INVALID", report["error"])
+
+
+
 class RegisteredReferencesTest(unittest.TestCase):
     def test_command_checklist_references_real_baseline_sources(self):
         registry = json.loads((gate.HERE / "commands.json").read_text())
