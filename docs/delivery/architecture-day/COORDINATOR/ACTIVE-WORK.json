@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T14:43:00Z",
+  "updated_utc": "2026-10-24T14:46:00Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -412,7 +412,17 @@
     "source_scan": "staged secret gate and gitleaks diff+commit PASS",
     "not_acceptance": "No production migration,merge,deployment or full-system acceptance"
   },
-  "current_ci_pending": "Known current-attempt guard and owner ratchet in progress. No new CI dispatched. Last terminal 40096453368 remains failed.",
+  "current_ci_pending": {
+    "run_id": 40103902405,
+    "source_sha": "def951bef36a94417d90259906f6bda6abe6efb3",
+    "classes": [
+      "RegistrationCallbackIntentMySqlIT"
+    ],
+    "expected": 14,
+    "status": "FAILED_IN_PLAN_NO_JAVA",
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40103902405",
+    "reason": "workflow batch choice order differs from registry; source ordered list corrected; full70 lightweight controls checked before retry"
+  },
   "current_cloud_assignment": {
     "A": "Environment-offline. Complete TeamGroup/ClubEventOps diff in chat, no unscanned GitHub publishing",
     "B": "Environment-offline. Complete A4/G2 canonical schemas/seeds/real guard/fact sequencing via chatdiff",
@@ -433,7 +443,7 @@
     "A": "f079 checkout/claim locked-current fence and NEVER+OrderClose outerTx refusal;84d7 exact local consumption completeRecovery and closed-order original ticket guard nowAPPLIED. TeamGroup/ClubEventOps still separate active work. New2dedicated test files present; recovery scenarios queued, not Java verified.",
     "root_guard_factory": "WechatVerifiedFactTestSupport.realPaymentGuards: real same-source JdbcOrderOwner+IntentStore+SdkGateway local guard, outbound doubles kept separate. No SDK init/network. B factory callers pending."
   },
-  "current_source_head": "173f24da622d81f9725345e2a4ac768f3a7eb5d9",
+  "current_source_head": "def951bef36a94417d90259906f6bda6abe6efb3",
   "current_source_manifest_counts": {
     "registered_sql_classes": 110,
     "funds_declared_tests": 191,
@@ -464,5 +474,5 @@
   "pending_business_questions": [
     "ASR: same NPC quota reserved before first ASR then handed to text once, or separate ASR budget. User reply pending; do not select budget/charges automatically."
   ],
-  "current_working_tree": "Pending freeze: A cancellation phases+B six factories+C800337+D ASR6f/b8b+E voice c7/STT385/proof9f+Hmedia0465"
+  "current_working_tree": "def951bef committed; source/test proof pending, G current-attempt fence and F owner ratchet not yet integrated"
 }
