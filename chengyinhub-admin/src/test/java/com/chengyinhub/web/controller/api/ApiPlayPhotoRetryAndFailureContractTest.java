@@ -108,7 +108,7 @@ class ApiPlayPhotoRetryAndFailureContractTest
                 new NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(sensorChallenges, "playerNodeProgressService", progressService);
+        ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
 
         node = new CmsTopicNode();

@@ -2,6 +2,20 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.CmsPointsSetting;
+import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.UmsMemberPointsDetail;
+import com.chengyinhub.business.domain.dto.NodeHintUnlockCommand;
+import com.chengyinhub.business.domain.vo.NodeHintUnlockResult;
+import com.chengyinhub.business.service.ICmsTopicNodeService;
+import com.chengyinhub.business.service.ICmsPointsSettingService;
+import com.chengyinhub.business.service.IUmsMemberService;
+import com.chengyinhub.business.service.IUmsMemberPointsDetailService;
+import com.chengyinhub.business.service.support.PlayNodeAccessService;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.chengyinhub.business.domain.PlayAttemptLog;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.domain.vo.PuzzleHintResult;
@@ -31,14 +45,24 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
     private final PlayAttemptLogMapper attemptLogMapper;
     private final PlayerNodeProgressMapper progressMapper;
     private final UmsMemberMapper memberMapper;
+    private final ICmsTopicNodeService nodeService;
+    private final PlayNodeAccessService accessService;
+    private final ICmsPointsSettingService settingsService;
+    private final IUmsMemberService memberService;
+    private final IUmsMemberPointsDetailService detailService;
 
     public PuzzlePlayServiceImpl(ICmsMemberTemplateService templateService, PlayAttemptLogMapper attemptLogMapper,
-            PlayerNodeProgressMapper progressMapper, UmsMemberMapper memberMapper)
+            PlayerNodeProgressMapper progressMapper, UmsMemberMapper memberMapper,
+            ICmsTopicNodeService nodeService, PlayNodeAccessService accessService,
+            ICmsPointsSettingService settingsService, IUmsMemberService memberService,
+            IUmsMemberPointsDetailService detailService)
     {
         this.templateService = templateService;
         this.attemptLogMapper = attemptLogMapper;
         this.progressMapper = progressMapper;
         this.memberMapper = memberMapper;
+        this.nodeService=nodeService; this.accessService=accessService; this.settingsService=settingsService;
+        this.memberService=memberService; this.detailService=detailService;
     }
 
     @Override
@@ -209,5 +233,107 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
                     memberId, topicId, nodeId, activityId, e);
             throw new IllegalStateException("答案揭示状态暂时不可用,请重试");
         }
+    }
+
+    /** Complete node-hint unlock. The original ledger claim must precede member debit. */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public NodeHintUnlockResult unlockNodeHint(NodeHintUnlockCommand command)
+    {
+        Long memberId = command == null ? null : command.memberId();
+        Long nodeId = command == null ? null : command.nodeId();
+        String activityId = command == null ? null : command.activityId();
+        String topicId = command == null ? null : command.topicId();
+        if (memberId == null || memberId <= 0) return hintFailure("请先登录");
+        if (nodeId == null || nodeId <= 0) return hintFailure("缺少节点ID");
+        CmsTopicNode node = nodeService.selectCmsTopicNodeById(nodeId);
+        if (node == null || node.getTemplateId() == null) return hintFailure("该节点无提示");
+        // ★ 与 /puzzle/hint 同口径的准入闸(2026-09-16 补):原来只验登录,任何登录用户拿到
+        //   nodeId 就能读走任意节点(含别人场次/付费内容)的提示正文,规则没开时还免费直出。
+        //   老客户端只发 nodeId:用节点自己的 topicId 兜底当自玩上下文(仍要持该主题通行证),
+        //   缺参数不是「有权读」,只是参数形态兼容。
+        String ctxTopicId = topicId;
+        if (StringUtils.isBlank(activityId) && StringUtils.isBlank(topicId)) {
+            ctxTopicId = node.getTopicId() == null ? null : String.valueOf(node.getTopicId());
+        }
+        PlayNodeAccessService.Context ctx = accessService.resolveContext(memberId, activityId, ctxTopicId, nodeScope(node));
+        if (ctx.failure() != null) return new NodeHintUnlockResult(null, new NodeHintUnlockResult.Failure(ctx.failure().originalAjaxCode(), ctx.failure().message()));
+        String leadErr = accessService.leadGateError(ctx.activityId(), nodeScope(node));
+        if (leadErr != null) return hintFailure(leadErr);
+        String routeErr = accessService.routeAccessError(memberId, ctx.activityId(), ctx.topicId(), nodeScope(node), null);
+        if (routeErr != null) return hintFailure(routeErr);
+        CmsMemberTemplate tpl = templateService.selectCmsMemberTemplateById(node.getTemplateId());
+        if (tpl == null || (StringUtils.isEmpty(tpl.getHint1()) && StringUtils.isEmpty(tpl.getHint2()))) {
+            return hintFailure("该节点无提示");
+        }
+
+        int cost = hintUnlockCost();
+        // 无规则/规则为0 = 功能未开闸,免费直出(兼容老版本客户端与灰度期)
+        if (cost <= 0) {
+            return hintResult(tpl, 0);
+        }
+        UmsMember member = memberService.selectUmsMemberById(memberId);
+        long before = (member != null && member.getPoint() != null) ? member.getPoint() : 0L;
+        if (before < cost) {
+            return hintFailure("积分不足");
+        }
+        // [资损] uk_member_event_once 是并发幂等真闸:先抢占唯一流水,成功者才有资格扣分。
+        // 不能先扣再插,否则后到请求即使撞唯一键也已经重复扣分。
+        UmsMemberPointsDetail d = new UmsMemberPointsDetail();
+        d.setMemberId(memberId);
+        d.setCurrentPoints(before);
+        d.setAfterPoints(before - cost);
+        d.setChangePoints((long) cost);
+        d.setChangeReason("解锁提示");
+        d.setEventType(14L);
+        d.setEventId(nodeId);
+        d.setChangeType(2L); // 2=支出
+        d.setDelFlag(0);
+        d.setCreateTime(new Date());
+        try {
+            detailService.insertUmsMemberPointsDetail(d);
+        } catch (DuplicateKeyException e) {
+            return hintResult(tpl, 0);
+        }
+
+        // 原子扣减(point >= cost 才扣)。若并发消费使余额不足，回滚刚抢到的流水后返回业务文案。
+        try {
+            memberService.deductPoints(memberId, cost);
+        } catch (RuntimeException e) {
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            }
+            return hintFailure("积分不足,请重试");
+        }
+
+        return hintResult(tpl, cost);
+
+    }
+
+    @Override
+    public int hintUnlockCost()
+    {
+        CmsPointsSetting q = new CmsPointsSetting();
+        q.setType(1L);
+        q.setEventType(14L);
+        List<CmsPointsSetting> rows = settingsService.selectCmsPointsSettingList(q);
+        if (rows == null || rows.isEmpty()) return 0;
+        CmsPointsSetting s = rows.get(0);
+        // 后台「积分规则」停用(status!=1)= 关闸免费:mapper 的 where 不带 status,必须在这里判,
+        // 否则管理员点了停用仍在收费(开关语义与展示不一致)
+        if (s.getStatus() != null && s.getStatus() != 1L) return 0;
+        if (s.getPointsNum() != null) return s.getPointsNum();
+        if (s.getValue() != null) return s.getValue().intValue();
+        return 0;
+    }
+
+    private static NodeHintUnlockResult hintFailure(String message) {
+        return new NodeHintUnlockResult(null, new NodeHintUnlockResult.Failure(500, message));
+    }
+    private static NodeHintUnlockResult hintResult(CmsMemberTemplate template, int cost) {
+        return new NodeHintUnlockResult(new NodeHintUnlockResult.Hints(template.getHint1(), template.getHint2(), cost), null);
+    }
+    private static PlayNodeAccessService.NodeScope nodeScope(CmsTopicNode node) {
+        return new PlayNodeAccessService.NodeScope(node.getId(),node.getTopicId(),node.getChapterId(),node.getSortId(),node.getStatus(),node.getUnlockAfterNodeId());
     }
 }

@@ -320,8 +320,7 @@ class O08PrivateLocationReadPathTest {
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                     mock(com.chengyinhub.business.service.IPlayerNodeProgressService.class));
-            ReflectionTestUtils.setField(controller, "cmsPointsSettingService",
-                    mock(com.chengyinhub.business.service.ICmsPointsSettingService.class));
+            var fixtureHintSettings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
             ReflectionTestUtils.setField(controller, "cmsMemberTemplateService",
                     mock(com.chengyinhub.business.service.ICmsMemberTemplateService.class));
             com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
@@ -351,6 +350,7 @@ class O08PrivateLocationReadPathTest {
             node.setLatitude("31.2304");
             node.setAddress("某小区 3 号楼");
             when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
+            com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
         }
     }
 
@@ -387,7 +387,7 @@ class O08PrivateLocationReadPathTest {
             ReflectionTestUtils.setField(controller, "capabilityService", capabilityService);
             ReflectionTestUtils.setField(controller, "clubLeaderService",
                     mock(com.chengyinhub.business.service.IClubLeaderService.class));
-            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", mock(ICmsTopicService.class));
+            ReflectionTestUtils.setField(controller, "cmsTopicService", mock(ICmsTopicService.class));
             ReflectionTestUtils.setField(controller, "umsMemberService",
                     mock(com.chengyinhub.business.service.IUmsMemberService.class));
             when(clubService.selectClubsByMemberId(VIEWER)).thenReturn(Collections.emptyList());

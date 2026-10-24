@@ -115,7 +115,7 @@ class PhotoOwnerBindingContractTest
                 new NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(sensorChallenges, "playerNodeProgressService", progressService);
+        ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
 
         CmsTopicNode node = new CmsTopicNode();

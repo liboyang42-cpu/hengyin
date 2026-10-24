@@ -71,7 +71,7 @@ class ApiPlaySensorResultTest {
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         mock(ICmsRegistrationMerchantService.class)));
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(sensorChallenges, "playerNodeProgressService", progressService);
+        ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
         ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
         clubLeadMapper = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);

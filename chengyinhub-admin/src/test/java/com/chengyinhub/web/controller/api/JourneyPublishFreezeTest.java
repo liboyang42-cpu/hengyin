@@ -119,7 +119,12 @@ class JourneyPublishFreezeTest {
     private final PlayAttemptLogMapper puzzleAttemptMapper = mock(PlayAttemptLogMapper.class);
     private final PuzzlePlayServiceImpl puzzlePlayService = new PuzzlePlayServiceImpl(
             mock(ICmsMemberTemplateService.class), puzzleAttemptMapper,
-            mock(PlayerNodeProgressMapper.class), memberMapper);
+            mock(PlayerNodeProgressMapper.class), memberMapper,
+                mock(com.chengyinhub.business.service.ICmsTopicNodeService.class),
+                mock(com.chengyinhub.business.service.support.PlayNodeAccessService.class),
+                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class));
     private final PreferencePlayService preferencePlayService = mock(PreferencePlayService.class);
     private final ApiPlayProgressController controller = spy(new ApiPlayProgressController());
 

@@ -70,7 +70,7 @@ class PlayProgressVarsTest {
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", pointsSettingService);
+        var fixtureHintSettings = pointsSettingService;
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", chapterService);
         ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzlePlayService);
         ReflectionTestUtils.setField(controller, "gameRuntimeSessionMapper", sessionMapper);
@@ -104,6 +104,7 @@ class PlayProgressVarsTest {
         when(pointsSettingService.selectCmsPointsSettingList(any())).thenReturn(Collections.emptyList());
         when(chapterService.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
         when(puzzlePlayService.selectHintLevels(any(), any(), any())).thenReturn(Collections.emptyMap());
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     @Test

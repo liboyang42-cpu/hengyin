@@ -58,8 +58,7 @@ class ApiPlayBranchNodeVisibilityTest {
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routeRuntimeService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                 mock(com.chengyinhub.business.service.IPlayerNodeProgressService.class));
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService",
-                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class));
+        var fixtureHintSettings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService",
                 mock(com.chengyinhub.business.service.ICmsMemberTemplateService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
@@ -84,6 +83,7 @@ class ApiPlayBranchNodeVisibilityTest {
         CmsTopicNode visible = node(101L, "已解锁地点", 1L);
         CmsTopicNode hidden = node(102L, "未选择支线秘密", 2L);
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Arrays.asList(visible, hidden));
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     @SuppressWarnings("unchecked")

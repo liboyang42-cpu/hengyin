@@ -86,8 +86,8 @@ class ApiPlayHintUnlockTest {
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", tplSvc);
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", settingSvc);
-        ReflectionTestUtils.setField(controller, "umsMemberService", memberSvc);
+
+
         ReflectionTestUtils.setField(controller, "umsMemberPointsDetailService", detailSvc);
         // nodes() 出口扣发用:活动会话解析 + 报名探针/进度/章节/模式解析(默认空返回即可)
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activitySvc);
@@ -150,6 +150,7 @@ class ApiPlayHintUnlockTest {
         // 默认:该会员尚无 event_type=14 消费流水 = 未解锁过
         when(detailSvc.selectUmsMemberPointsDetailList(any())).thenReturn(Collections.emptyList());
         CurrentPlayControllerFixtures.install(controller);
+        NodeHintUnlockTestFixtures.wire(controller, settingSvc, memberSvc, detailSvc, null);
     }
 
     @SuppressWarnings("unchecked")

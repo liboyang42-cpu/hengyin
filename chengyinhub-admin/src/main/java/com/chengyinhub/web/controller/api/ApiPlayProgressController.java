@@ -333,10 +333,6 @@ public class ApiPlayProgressController extends BaseController
 
     // 积分解锁提示:规则(cms_points_setting)/余额/消费流水(流水即解锁记录,不建新表)
     @Autowired
-    private com.chengyinhub.business.service.ICmsPointsSettingService cmsPointsSettingService;
-    @Autowired
-    private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
-    @Autowired
     private com.chengyinhub.business.service.IUmsMemberPointsDetailService umsMemberPointsDetailService;
 
     // FE-01 玩家收集(碎片/彩蛋)持久化
@@ -3652,84 +3648,15 @@ public class ApiPlayProgressController extends BaseController
     @Operation(summary = "积分解锁节点提示")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/hint/unlock")
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult unlockHint(Long nodeId, String activityId, String topicId)
     {
         Long memberId = currentMemberId();
         if (memberId <= 0) return error("请先登录");
-        if (nodeId == null || nodeId <= 0) return error("缺少节点ID");
-        CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
-        if (node == null || node.getTemplateId() == null) return error("该节点无提示");
-        // ★ 与 /puzzle/hint 同口径的准入闸(2026-09-16 补):原来只验登录,任何登录用户拿到
-        //   nodeId 就能读走任意节点(含别人场次/付费内容)的提示正文,规则没开时还免费直出。
-        //   老客户端只发 nodeId:用节点自己的 topicId 兜底当自玩上下文(仍要持该主题通行证),
-        //   缺参数不是「有权读」,只是参数形态兼容。
-        String ctxTopicId = topicId;
-        if (StringUtils.isBlank(activityId) && StringUtils.isBlank(topicId)) {
-            ctxTopicId = node.getTopicId() == null ? null : String.valueOf(node.getTopicId());
-        }
-        PlayCtx ctx = resolveCtx(memberId, activityId, ctxTopicId, node);
-        if (ctx.error != null) return ctx.error;
-        String leadErr = leadGateError(ctx.actId, node);
-        if (leadErr != null) return error(leadErr);
-        String routeErr = routeAccessError(memberId, ctx.actId, ctx.topicId, node, null);
-        if (routeErr != null) return error(routeErr);
-        CmsMemberTemplate tpl = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
-        if (tpl == null || (StringUtils.isEmpty(tpl.getHint1()) && StringUtils.isEmpty(tpl.getHint2()))) {
-            return error("该节点无提示");
-        }
-
-        int cost = hintUnlockCost();
-        // 无规则/规则为0 = 功能未开闸,免费直出(兼容老版本客户端与灰度期)
-        if (cost <= 0) {
-            Map<String, Object> data = new LinkedHashMap<>();
-            data.put("hint1", tpl.getHint1());
-            data.put("hint2", tpl.getHint2());
-            data.put("cost", 0);
-            return AjaxResult.success(data);
-        }
-        UmsMember member = umsMemberService.selectUmsMemberById(memberId);
-        long before = (member != null && member.getPoint() != null) ? member.getPoint() : 0L;
-        if (before < cost) {
-            return error("积分不足");
-        }
-        // [资损] uk_member_event_once 是并发幂等真闸:先抢占唯一流水,成功者才有资格扣分。
-        // 不能先扣再插,否则后到请求即使撞唯一键也已经重复扣分。
-        UmsMemberPointsDetail d = new UmsMemberPointsDetail();
-        d.setMemberId(memberId);
-        d.setCurrentPoints(before);
-        d.setAfterPoints(before - cost);
-        d.setChangePoints((long) cost);
-        d.setChangeReason("解锁提示");
-        d.setEventType(14L);
-        d.setEventId(nodeId);
-        d.setChangeType(2L); // 2=支出
-        d.setDelFlag(0);
-        d.setCreateTime(new Date());
-        try {
-            umsMemberPointsDetailService.insertUmsMemberPointsDetail(d);
-        } catch (DuplicateKeyException e) {
-            Map<String, Object> data = new LinkedHashMap<>();
-            data.put("hint1", tpl.getHint1());
-            data.put("hint2", tpl.getHint2());
-            data.put("cost", 0);
-            return AjaxResult.success(data);
-        }
-
-        // 原子扣减(point >= cost 才扣)。若并发消费使余额不足，回滚刚抢到的流水后返回业务文案。
-        try {
-            umsMemberService.deductPoints(memberId, cost);
-        } catch (RuntimeException e) {
-            if (TransactionSynchronizationManager.isActualTransactionActive()) {
-                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            }
-            return error("积分不足,请重试");
-        }
-
+        var result = puzzlePlayService.unlockNodeHint(
+                new com.chengyinhub.business.domain.dto.NodeHintUnlockCommand(memberId, nodeId, activityId, topicId));
+        if (result.failure() != null) return new AjaxResult(result.failure().originalAjaxCode(), result.failure().message());
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("hint1", tpl.getHint1());
-        data.put("hint2", tpl.getHint2());
-        data.put("cost", cost);
+        data.put("hint1", result.hints().hint1()); data.put("hint2", result.hints().hint2()); data.put("cost", result.hints().cost());
         return AjaxResult.success(data);
     }
 
@@ -3743,18 +3670,7 @@ public class ApiPlayProgressController extends BaseController
     /** 解锁提示的积分价:读积分规则(type=1, event_type=14),无规则/0=免费(功能关) */
     private int hintUnlockCost()
     {
-        CmsPointsSetting q = new CmsPointsSetting();
-        q.setType(1L);
-        q.setEventType(14L);
-        List<CmsPointsSetting> rows = cmsPointsSettingService.selectCmsPointsSettingList(q);
-        if (rows == null || rows.isEmpty()) return 0;
-        CmsPointsSetting s = rows.get(0);
-        // 后台「积分规则」停用(status!=1)= 关闸免费:mapper 的 where 不带 status,必须在这里判,
-        // 否则管理员点了停用仍在收费(开关语义与展示不一致)
-        if (s.getStatus() != null && s.getStatus() != 1L) return 0;
-        if (s.getPointsNum() != null) return s.getPointsNum();
-        if (s.getValue() != null) return s.getValue().intValue();
-        return 0;
+        return puzzlePlayService.hintUnlockCost();
     }
 
     /**

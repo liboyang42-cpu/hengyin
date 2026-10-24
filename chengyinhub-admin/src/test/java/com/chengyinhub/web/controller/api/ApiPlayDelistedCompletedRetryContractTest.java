@@ -151,7 +151,7 @@ class ApiPlayDelistedCompletedRetryContractTest
         ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
         ReflectionTestUtils.setField(controller, "preferencePlayService", preferencePlayService);
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
-        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(sensorChallenges, "playerNodeProgressService", progressService);
+        ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
 
         node = new CmsTopicNode();

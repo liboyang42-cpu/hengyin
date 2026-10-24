@@ -68,8 +68,7 @@ class ApiPlayNodeNpcPreferenceTest {
         ReflectionTestUtils.setField(controller, "npcProfileService", npcProfileService);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                 mock(IPlayerNodeProgressService.class));
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService",
-                mock(ICmsPointsSettingService.class));
+        var fixtureHintSettings = mock(ICmsPointsSettingService.class);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService",
                 mock(ICmsMemberTemplateService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
@@ -105,6 +104,7 @@ class ApiPlayNodeNpcPreferenceTest {
         node.setBusinessTime("10:00-20:00");
         node.setStatus(1L);
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     private static NpcProfileVO npc(String name) {

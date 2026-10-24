@@ -5,6 +5,8 @@ import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.support.PlayNodeAccessService;
 import org.springframework.test.util.ReflectionTestUtils;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyLong;
 
 /** Test setup adapter: each explicit owner replacement reconstructs the real shared service.
  * No production callback reads Controller fields during a command. */
@@ -32,7 +34,10 @@ public final class PlayNodeAccessTestFixtures {
     }
     private static void install(ApiPlayProgressController controller,PlayNodeAccessService previous,String field,Object value) {
         // These defaults explicitly describe an ordinary no-lead/unused-ticket fixture, never production fallback.
-        ClubLeadMapper leads=previous==null?mock(ClubLeadMapper.class):(ClubLeadMapper)ReflectionTestUtils.getField(previous,"clubLeadMapper");
+        ClubLeadMapper leads;
+        if(previous==null) {
+            leads=mock(ClubLeadMapper.class); when(leads.selectByActivity(anyLong())).thenReturn(null);
+        } else leads=(ClubLeadMapper)ReflectionTestUtils.getField(previous,"clubLeadMapper");
         IOmsTicketService tickets=previous==null?mock(IOmsTicketService.class):(IOmsTicketService)ReflectionTestUtils.getField(previous,"omsTicketService");
         if("clubLeadMapper".equals(field))leads=(ClubLeadMapper)value;
         if("omsTicketService".equals(field))tickets=(IOmsTicketService)value;
@@ -47,5 +52,12 @@ public final class PlayNodeAccessTestFixtures {
                 (ICmsTopicChapterService)ReflectionTestUtils.getField(controller,"cmsTopicChapterService"),
                 (ITopicRouteRuntimeService)ReflectionTestUtils.getField(controller,"topicRouteRuntimeService"));
         ReflectionTestUtils.setField(controller,"playNodeAccessService",service);
+        Object puzzle=ReflectionTestUtils.getField(controller,"puzzlePlayService");
+        if(puzzle instanceof org.springframework.aop.framework.Advised advised) {
+            try { puzzle=advised.getTargetSource().getTarget(); }
+            catch(Exception failed) { throw new IllegalStateException("Cannot rewire hint application fixture",failed); }
+        }
+        if(puzzle instanceof com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl)
+            ReflectionTestUtils.setField(puzzle,"accessService",service);
     }
 }

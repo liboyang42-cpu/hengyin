@@ -85,11 +85,11 @@ class PlayLeadAdmissionFailureTest {
         sensors = mock(ISensorChallengeService.class); proof = mock(IShopDayProofService.class);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progress);
         ReflectionTestUtils.setField(controller, "pointsAwardService", points);
-        ReflectionTestUtils.setField(controller, "umsMemberService", members);
+
         ReflectionTestUtils.setField(controller, "umsMemberPointsDetailService", ledger);
         ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzles);
         ReflectionTestUtils.setField(controller, "preferencePlayService", preferences);
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", settings);
+
         ReflectionTestUtils.setField(controller, "sensorChallengeService", sensors);
         ReflectionTestUtils.setField(controller, "shopDayProofService", proof);
         growth = mock(IGrowthService.class); drops = mock(IRewardDropService.class);
@@ -102,6 +102,8 @@ class PlayLeadAdmissionFailureTest {
         ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwards);
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper", attempts);
         CurrentPlayControllerFixtures.install(controller);
+        puzzles=spy(NodeHintUnlockTestFixtures.application(controller,settings,members,ledger,null));
+        ReflectionTestUtils.setField(controller,"puzzlePlayService",puzzles);
     }
 
     @Test void hintUnlockFaultReturnsNoHintAndNeverReachesPricingOrDebit() {
@@ -213,8 +215,15 @@ class PlayLeadAdmissionFailureTest {
         assertEquals(503, response.get("code")); assertEquals(error.getMessage(), response.get("msg"));
         assertEquals(Map.of("outcome", "NOT_RUN"), response.get("data")); assertFalse(response.containsKey("intentTerminal"));
         verify(leads).selectByActivity(500L); // Proves this was the lead failure, never an early missing-identity rejection.
-        verifyNoInteractions(progress, points, members, ledger, puzzles, preferences, settings, sensors, proof, growth, drops, progression, coupons, completionAwards, attempts);
+        verifyNoInteractions(progress, points, members, ledger, preferences, settings, sensors, proof, growth, drops, progression, coupons, completionAwards, attempts);
         GameSessionRuntimeMapper receipts = (GameSessionRuntimeMapper) ReflectionTestUtils.getField(controller, "playCommandReceiptMapper");
         verify(receipts, never()).completeReceipt(any());
+        verify(puzzles, never()).hintUnlockCost();
+        verify(puzzles, never()).requestHint(any(),any(),any(),any(),anyInt());
+        verify(puzzles, never()).selectPuzzleTemplate(any());
+        verify(puzzles, never()).recordReveal(any(),any(),any(),any());
+        verify(puzzles, never()).revealText(any());
+        verify(puzzles, never()).solvedScore(any(),any(),any(),any());
+        verify(puzzles, never()).selectHintLevels(any(),any(),any());
     }
 }

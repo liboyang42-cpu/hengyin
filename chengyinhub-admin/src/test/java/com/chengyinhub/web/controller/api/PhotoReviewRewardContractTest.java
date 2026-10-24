@@ -133,7 +133,7 @@ class PhotoReviewRewardContractTest
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
+        var fixtureHintSettings = mock(ICmsPointsSettingService.class);
         ReflectionTestUtils.setField(controller, "puzzlePlayService",
                 mock(com.chengyinhub.business.service.IPuzzlePlayService.class));
         chapterService = mock(ICmsTopicChapterService.class);
@@ -201,6 +201,7 @@ class PhotoReviewRewardContractTest
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
         CurrentPlayControllerFixtures.install(controller);
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     private AjaxResult submit()

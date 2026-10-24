@@ -116,7 +116,7 @@ class ShopDayExperienceLayerContractTest
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
+        var fixtureHintSettings = mock(ICmsPointsSettingService.class);
         ReflectionTestUtils.setField(controller, "umsMemberPointsDetailService",
                 mock(IUmsMemberPointsDetailService.class));
         ReflectionTestUtils.setField(controller, "topicOnsiteMetricsMapper", mock(TopicOnsiteMetricsMapper.class));
@@ -202,6 +202,7 @@ class ShopDayExperienceLayerContractTest
                 .thenReturn(Collections.singletonList(arrived));
         CurrentPlayControllerFixtures.install(controller);
         BasicPlayCommandFixtures.scope(controller, TOPIC);
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     @SuppressWarnings("unchecked")

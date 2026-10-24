@@ -105,7 +105,12 @@ class ApiPlayPuzzleHintTest
         when(memberMapper.lockMemberById(MEMBER)).thenReturn(MEMBER);
         ReflectionTestUtils.setField(controller, "puzzlePlayService",
                 new com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl(
-                        templateService, attemptMapper, progressMapper, memberMapper));
+                        templateService, attemptMapper, progressMapper, memberMapper,
+                mock(com.chengyinhub.business.service.ICmsTopicNodeService.class),
+                mock(com.chengyinhub.business.service.support.PlayNodeAccessService.class),
+                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class)));
         ReflectionTestUtils.setField(controller, "pointsAwardService",
                 mock(com.chengyinhub.business.service.IPointsAwardService.class));
         com.chengyinhub.business.service.IPlayerProgressionService progression =
