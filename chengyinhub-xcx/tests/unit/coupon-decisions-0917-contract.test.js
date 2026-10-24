@@ -18,7 +18,7 @@ const COUPON_PAGE = 'subpackageMember/coupon/coupon.js'
 const WALLET = 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js'
 const QR_SCENE = 'subpackageMember/components/cy/scene-qr-coupon/index.js'
 const QR_PAGE = 'subpackageMember/coupon-qr/index.js'
-const CREDENTIAL = 'utils/coupon-credential.js'
+const CREDENTIAL = 'subpackageMember/utils/coupon-credential.js'
 
 function mutated(source, from, to) {
   assert.ok(source.includes(from), '负控锚点失效: ' + from)
@@ -62,7 +62,7 @@ function loadCouponPage(source) {
     getApp: () => ({ getAuthorization: () => 'current-session', getUserID: () => 1, sendRequest: (options) => requests.push(options) }),
     Page: (value) => { definition = value },
     require: (id) => {
-      if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-credential.js'))
+      if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'subpackageMember/utils/coupon-credential.js'))
       if (/coupon-form\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-form.js'))
       if (/datetime\.js$/.test(id)) return require(path.join(ROOT, 'utils/datetime.js'))
       if (/\/modal\.js$/.test(id)) return { show: (opts) => modals.push(opts) }

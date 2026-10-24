@@ -43,7 +43,7 @@ const STATUS_TONE = {
   unknown: 'neutral',
 };
 const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../../utils/checkout/checkout-workflow.js');
-const teamUp = require('../../../../utils/team-up.js');
+const teamUp = require('../../../utils/team-up.js');
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js');
 const { isRecordList } = require('../../../../utils/response-shape.js');
 const marketingConsent = require('../../../../utils/marketing-consent-entry.js');
@@ -54,7 +54,7 @@ function toDisplayTime(value) {
 }
 
 function resolveHeroImage(info) {
-  const fallback = '/images/icon_ticket_empty.svg';
+  const fallback = '/subpackageMember/images/icon_ticket_empty.svg';
   if (!info) return fallback;
   if (info.cmsActivity && info.cmsActivity.imgUrl) return info.cmsActivity.imgUrl;
   const topic = info.cmsTopic;
@@ -265,7 +265,7 @@ Component({
       info: {},
       cancelling: false,
       paying: false,
-      heroImage: '/images/icon_ticket_empty.svg',
+      heroImage: '/subpackageMember/images/icon_ticket_empty.svg',
       productTitle: '',
       orderQty: 1,
       showPointPay: false,

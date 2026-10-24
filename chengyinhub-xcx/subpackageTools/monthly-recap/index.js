@@ -1,5 +1,5 @@
 const { page } = require('../cloud-ten-runtime');
-const { createMonthlyRecapClient } = require('../../utils/features/monthly-recap-client');
+const { createMonthlyRecapClient } = require('../utils/features/monthly-recap-client');
 const COVERAGE = '仅权威完成路线会话、已结算漫游地点与本人有效城市签；不从报名或客户端进度推测完成';
 function shanghai(ms) { return new Date(Number(ms) + 8 * 3600000); }
 function thisMonth() { const d = shanghai(Date.now()); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0'); }

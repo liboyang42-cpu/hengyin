@@ -50,7 +50,7 @@ const { createGameSessionClient } = require('../../../utils/game-session-client.
 const { attachMerchantGameEntries } = require('../utils/game-session-merchant.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
-const { buildInboxPreview } = require('../../../utils/inbox-preview.js');
+const { buildInboxPreview } = require('../utils/inbox-preview.js');
 const { decorate: decorateInvites } = require('../../../utils/coop-invite-view.js');
 
 // 累计收入滚动(2026-10-22 owner 裁决):慢-快-慢,约 1.3s、60fps;帧内金额没变就不 setData。

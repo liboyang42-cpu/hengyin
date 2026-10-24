@@ -12,7 +12,7 @@
   <!-- 设置钮放左上:右上是微信原生胶囊(···|⊙)的固定占位,放右边必被压住(2026-08-04 实拍) -->
   <view class="pc-nav" style="height:{{navBarHeight}}px;">
     <view wx:if="{{hostSelf}}" class="pc-nav-btn" bindtap="goSetting" aria-role="button" aria-label="打开设置" hover-class="cy-pressed" hover-stay-time="80">
-      <image class="pc-nav-ico" src="/images/icon_set.png" mode="aspectFit" />
+      <image class="pc-nav-ico" src="/subpackageMember/images/icon_set.png" mode="aspectFit" />
     </view>
     <view wx:else class="pc-nav-btn" bindtap="goBack" aria-role="button" aria-label="返回上一页" hover-class="cy-pressed" hover-stay-time="80">
       <cy-icon name="back" size="40" />
@@ -261,10 +261,10 @@
             </scroll-view>
             <view class="pc-post-tools">
               <view class="pc-tool" catchtap="lickClick" data-index="{{index}}" data-type="1" hover-class="cy-pressed" hover-stay-time="80">
-                <image class="pc-tool-ico" src="{{item.isLiked==1 ? '/images/icon_sjt_h.png' : '/images/icon_sjt.png'}}" mode="widthFix" />{{item.likeCount || 0}}
+                <image class="pc-tool-ico" src="{{item.isLiked==1 ? '/subpackageMember/images/icon_sjt_h.png' : '/subpackageMember/images/icon_sjt.png'}}" mode="widthFix" />{{item.likeCount || 0}}
               </view>
               <view class="pc-tool" catchtap="lickClick" aria-role="button" aria-label="点赞" data-index="{{index}}" data-type="2" hover-class="cy-pressed" hover-stay-time="80">
-                <image class="pc-tool-ico" src="{{item.isLiked==2 ? '/images/icon_xjt_h.png' : '/images/icon_xjt.png'}}" mode="widthFix" />
+                <image class="pc-tool-ico" src="{{item.isLiked==2 ? '/subpackageMember/images/icon_xjt_h.png' : '/subpackageMember/images/icon_xjt.png'}}" mode="widthFix" />
               </view>
               <view class="pc-tool {{item.isBookmarked==1 ? 'is-on' : ''}}" catchtap="favoriteClick" data-index="{{index}}" aria-role="button" aria-label="{{item.isBookmarked==1 ? '取消收藏' : '收藏动态'}}" aria-pressed="{{item.isBookmarked==1}}" hover-class="cy-pressed" hover-stay-time="80">
                 <cy-icon name="{{item.isBookmarked==1 ? 'star-filled' : 'star'}}" size="36" />

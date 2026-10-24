@@ -5,7 +5,7 @@
  * 作者在发布页配的那一档;这里只管底色之上的粒子、光晕、光束、散景)。
  * 场景名与环境音共用一张表(utils/story-audio.js 的 bedForMood),换景 = 换声。
  */
-const { bedForMood } = require('../../../utils/story-audio.js');
+const { bedForMood } = require('./story-audio.js');
 
 const SCENES = {
   void:      { n: 0.06, col: [255, 255, 255], size: 0.9, vx: 0,     vy: -0.04, alpha: 0.35, glow: 0,    gx: 0.3,  gy: 0.2, gcol: [255, 190, 120], beam: 0,    bokeh: 0 },

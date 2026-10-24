@@ -8,7 +8,7 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
-const { classifyCityNodeRedeem, cityNodeTarget } = require('../../utils/citynode-redeem-outcome.js')
+const { classifyCityNodeRedeem, cityNodeTarget } = require('../../pages/merchant/utils/citynode-redeem-outcome.js')
 
 const CODE = 'v1.12.citynode_34.9999999999999.5.sig'
 const OTHER_PLAYER = 'v1.12.citynode_35.9999999999999.6.sig'

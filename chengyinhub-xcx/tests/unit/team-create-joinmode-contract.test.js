@@ -19,7 +19,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const ROOT = path.resolve(__dirname, '../..');
-const teamUp = require(path.join(ROOT, 'utils/team-up.js'));
+const teamUp = require(path.join(ROOT, 'subpackageMember/utils/team-up.js'));
 
 /** 默认档的判据:body 里压根没有 joinMode 这个字段。 */
 function isDefaultPublic(body) { return !('joinMode' in body); }

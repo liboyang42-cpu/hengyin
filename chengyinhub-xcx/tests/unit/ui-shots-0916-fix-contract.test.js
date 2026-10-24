@@ -35,7 +35,7 @@ function loadCouponPage(source) {
     // 2026-09-17 起本页有「停发」动作,modal/toast 契约要真跑,不能再一律桩成主题对象。
     require: (id) => {
       if (/coupon-form\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-form.js'))
-      if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-credential.js'))
+      if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'subpackageMember/utils/coupon-credential.js'))
       if (/datetime\.js$/.test(id)) return require(path.join(ROOT, 'utils/datetime.js'))
       if (/\/modal\.js$/.test(id)) return { show: (opts) => modals.push(opts) }
       if (/\/toast\.js$/.test(id)) return Object.assign(() => {}, { success() {}, error() {} })
