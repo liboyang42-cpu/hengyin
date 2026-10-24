@@ -103,3 +103,19 @@ SHA256（生产 6 类；回执/重试 `a7be7a65a`）：
 - 生产接线：`OriginalReceiptStore` / `DeliveryLogStore` / `RegistrationStore` 尚未挂到 Mapper（禁止本组改 Mapper）。
 - 公共 IM send/receipt、journal、`NativeWebhook*` 仍归 D5，本组只交独占 producer。
 - 真实 App 推送 / 外发 Webhook / C12 旅程本组未跑。
+
+## 6. Parent addendum 2026-10-23 17:10 America/Los_Angeles
+
+DevicePush / AttachmentReview / DeliveryLog `recoverOriginal` of never-seen `dev-recover-never-c09` / `att-recover-never-c09` / `evt-dlv-never-c09` does not occupy; later unique register / submit / deliver is the first write.
+
+父进程独立 surefire（`/tmp/hy-c09`，HEAD `84c8bf246`，2026-10-24T00:10:50Z）：
+
+```
+Tests run: 2 -- DevicePushRegistrationLifecycleTest
+Tests run: 2 -- AttachmentReviewProducerTest
+Tests run: 2 -- WebhookDeliveryLogProducerTest
+Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
