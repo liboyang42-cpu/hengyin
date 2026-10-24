@@ -1,0 +1,12 @@
+{
+  "trusted_guard_source": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+  "source_files_exact": 14,
+  "workflow_trusted_ref_repin_count": 2,
+  "new_target": "com.chengyinhub.business.mapper.AiThemeDraftIntentMapper",
+  "sole_compiled_consumer": "com.chengyinhub.business.service.impl.AiThemeDraftRequestService",
+  "existing_two_targets_preserved": true,
+  "business_fact_scope": "Still2 whole-table facts;3 exact compiled private ports, not full domain ownership",
+  "actual_compiled_positive_negative": "NOT_RUN; wait consolidated source batch",
+  "author_Python153": "Author reported, not rerun as business proof",
+  "acceptance": false
+}

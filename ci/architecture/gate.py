@@ -310,7 +310,9 @@ def scope_violation(kind, details):
 
 
 def business_policy():
-    """Only reviewed whole-table facts/pure writers. Not an inferred domain map.
+    """Reviewed whole-table facts/pure writers and exact private compiled ports.
+
+    Private ports do not infer new business facts, table/field owners or commands.
 
     Both files come from HERE (the independent trusted verifier), never candidate
     observations. check_source protects their exact bytes before using them.
@@ -356,13 +358,17 @@ def business_policy():
             require(writer["business_owner"] == entries[writer["command_id"]]["business_owner"])
             writers[key] = writer
         require(all(sum(f["id"] in entries[w["command_id"]]["writes"] for w in writers.values()) == 1 for f in facts.values()))
-        require(isinstance(policy["private_ports"], list) and len(policy["private_ports"]) == 2)
+        require(isinstance(policy["private_ports"], list) and len(policy["private_ports"]) == 3)
         for port in policy["private_ports"]:
             require(set(port) == {"target", "owner", "consumer"})
-            writer = writers[port["owner"] + ":" + port["target"]]
-            require(port["consumer"] in {m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]})
+            require(port["owner"] in owners["modules"])
+            require(all(name(port[field], r"(?:" + IDENT + r"\.)+" + IDENT) for field in ("target", "consumer")))
+            writer = writers.get(port["owner"] + ":" + port["target"])
+            if writer is not None:
+                require(port["consumer"] in {m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]})
             require(port["target"] not in ports)
             ports[port["target"]] = {"owner": port["owner"], "consumer": port["consumer"]}
+        require(all(w["namespace"] in ports and ports[w["namespace"]]["owner"] == w["module"] for w in writers.values()))
         return {"facts": facts, "writers": writers, "commands": entries, "private_ports": ports}
     except GateError:
         raise

@@ -1,0 +1,148 @@
+{
+  "task": "F/theme-private-port",
+  "public_base": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+  "branch": "codex/architecture-day-f-theme-private-port",
+  "tested_before_commit": true,
+  "python": "Python 3.12.14",
+  "command": "python3 -m unittest discover -s ci/architecture -p 'test_*.py' -v",
+  "baseline": {
+    "tests": 141,
+    "pass": 141,
+    "skip": 0,
+    "seconds": 7.036
+  },
+  "candidate": {
+    "tests": 153,
+    "pass": 153,
+    "skip": 0,
+    "seconds": 7.665
+  },
+  "original_test_ids_retained": 141,
+  "new_test_ids": [
+    "test_collect_jdeps.PrivatePortsReadbackTest.test_original_two_bindings_cannot_claim_complete_three_target_coverage",
+    "test_collect_jdeps.PrivatePortsReadbackTest.test_third_actual_target_missing_is_unknown",
+    "test_collect_jdeps.PrivatePortsReadbackTest.test_third_cli_pass_blocked_unknown_are_zero_one_two",
+    "test_collect_jdeps.PrivatePortsReadbackTest.test_third_exact_service_is_resolved_inside_system_without_changing_module_edges",
+    "test_collect_jdeps.PrivatePortsReadbackTest.test_third_foreign_same_system_read_only_reference_is_blocked_without_XML",
+    "test_collect_jdeps.PrivatePortsReadbackTest.test_third_index_hash_or_location_forgery_is_unknown",
+    "test_collect_jdeps.PrivatePortsReadbackTest.test_third_missing_raw_reference_is_unknown_even_when_original_two_are_complete",
+    "test_collect_jdeps.PrivatePortsReadbackTest.test_third_nested_consumer_is_not_implicitly_allowed",
+    "test_gate.PrivatePortPolicyFreezeTest.test_adding_third_port_does_not_allow_removing_original_writer_port",
+    "test_gate.PrivatePortPolicyFreezeTest.test_candidate_third_binding_change_or_removal_requires_independent_trusted_revision",
+    "test_gate.PrivatePortPolicyFreezeTest.test_invalid_trusted_third_port_is_not_a_disabled_rule",
+    "test_gate.PrivatePortPolicyFreezeTest.test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command"
+  ],
+  "syntax_3_9_compatible": true,
+  "review_patch_exact_and_applied_to_isolated_public_base": true,
+  "owned_source": [
+    {
+      "path": "ci/architecture/gate.py",
+      "sha256": "fc446af8571866cf301083546335653b9281125cd37336d5e96478d26266de78"
+    },
+    {
+      "path": "ci/architecture/collect_jdeps.py",
+      "sha256": "fbc9e4360cbf69fb26da9c7af8ee0bd954970252d11bf80601bf19be0ef38e1e"
+    },
+    {
+      "path": "ci/architecture/owners.json",
+      "sha256": "ea30ee4a94d718de5ecdfda058c5d19170206e078c1165d0dc95d01f2e1e05eb"
+    },
+    {
+      "path": "ci/architecture/test_gate.py",
+      "sha256": "f34e58f9ef3ffb6e5939ec39484a99261868ce9bcbab73627148ce44a723dc75"
+    },
+    {
+      "path": "ci/architecture/test_collect_jdeps.py",
+      "sha256": "5fc675526d28ce577cfb8f246c6a5f95252ce276f809e878a8fbc9959471a2ca"
+    },
+    {
+      "path": "ci/architecture/README.md",
+      "sha256": "e091b1835e9a16f1b6e7e2be6a74365456a0e3233e7f4783c08c1cae028406d3"
+    }
+  ],
+  "observed_production_sources": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AiThemeDraftIntentMapper.java",
+      "git_blob": "716da961b06d210f2e9ce282862baf4739837cf2",
+      "sha256": "aa2c010b0c7e5a46d27b20a8d69259d691d22bfdf6b3397d28e60defc0e895eb"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java",
+      "git_blob": "8fb0e0f0ed3d62096dcd4f066d527daab5fd9dbf",
+      "sha256": "88c61a5451f71e0b1537b7ad54ec3d88d3d46fc24550675b9cfdbf58341c5d90"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiThemeDraftIntentMapper.xml",
+      "git_blob": "7595a253f713c872843dc2c07bbce66f0d387398",
+      "sha256": "606fb5964a72d07ad02be44b1756889d71bac584b257f1d867ed091b747d7a36"
+    }
+  ],
+  "scope": {
+    "private_compiled_ports": 3,
+    "approved_whole_table_facts": 2,
+    "approved_pure_writers": 2,
+    "approved_commands": 2,
+    "coverage": "PARTIAL"
+  },
+  "unmodified": [
+    "ci/architecture/baseline.json",
+    "ci/architecture/commands.json",
+    "ci/architecture/locking-select-baseline.proposal.json",
+    ".github/workflows/ci.yml",
+    ".github/workflows/real-storage-it.yml",
+    "ci/real_storage_it.py",
+    "ci/test_real_storage_it.py"
+  ],
+  "not_run": [
+    "Java/javac/jdeps",
+    "actual compiled third target positive/negative/remove-to-green CI",
+    "MySQL/Redis/SQL",
+    "provider/HTTP/WeChat",
+    "source gate in real CI context"
+  ],
+  "historical_root_report_only": {
+    "source_short": "86e",
+    "run": "40057561361",
+    "scope": "original two private targets only; F did not independently download in this task"
+  },
+  "evidence": [
+    {
+      "file": "evidence/baseline-141.txt",
+      "sha256": "f9a2d5d93e15e1c7e8251071b6e7eb9637b67ca30156dba11ea3065c068405e3"
+    },
+    {
+      "file": "evidence/candidate-153.txt",
+      "sha256": "1d584935a88b6ea503ccf4ba52b05c28cfe5e76e820ed636dcfc49bbf4fed63d"
+    },
+    {
+      "file": "evidence/ci-cost-6.txt",
+      "sha256": "268d02b10b065bfbee742aa211e0f37319efd6ac5d5329bccd027e8e160b542f"
+    },
+    {
+      "file": "evidence/production-callers.txt",
+      "sha256": "64ea95b6ac7afbcce333a6eb7db07adc6bacde619c565f332e53b9763c752b49"
+    },
+    {
+      "file": "review.patch",
+      "sha256": "0d6efefec6ea17852d73e6ef042e0232bd07490134dcc5fa8536e7fb93cf60b1"
+    },
+    {
+      "file": "ArchitectureThemeDraftIntentForeignReference.java.txt",
+      "sha256": "51e6588197ff9a8cd50b2bef89ed38ea25c3bac9fb7d84e995936faa75930fba"
+    }
+  ],
+  "ci_cost": {
+    "command": "python3 -m unittest discover -s ci -p 'test_ci_cost_contract.py' -v",
+    "tests": 6,
+    "pass": 6,
+    "skip": 0,
+    "note": "existing fixture tests only; not an actual Main/Funds run"
+  },
+  "review_patch_format": "git diff --binary --unified=0; git apply --unidiff-zero; applied bytes verified",
+  "secret_scan": {
+    "tool": "gitleaks 8.21.2 dir with unchanged repository config and original secret-file scan_paths",
+    "findings": 0,
+    "exceptions_added": false,
+    "scope": "six architecture files and this F delivery directory"
+  }
+}

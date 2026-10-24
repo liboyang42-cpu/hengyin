@@ -1,0 +1,13 @@
+test_all_production_jobs_reject_public_repository_even_for_manual_runs (test_verify_deploy_ci.ManualDeployCiTest.test_all_production_jobs_reject_public_repository_even_for_manual_runs) ... ok
+test_deploy_workflow_is_dispatch_only_and_runs_exact_sha_gate_before_classify (test_verify_deploy_ci.ManualDeployCiTest.test_deploy_workflow_is_dispatch_only_and_runs_exact_sha_gate_before_classify) ... ok
+test_full_same_sha_evidence_passes_and_branch_names_fail_before_network (test_verify_deploy_ci.ManualDeployCiTest.test_full_same_sha_evidence_passes_and_branch_names_fail_before_network) ... ok
+test_parallel_mini_requires_all_twenty_shards_and_static_gates (test_verify_deploy_ci.ManualDeployCiTest.test_parallel_mini_requires_all_twenty_shards_and_static_gates) ... ok
+test_removed_wrong_repository_and_or_bypass_guards_are_rejected (test_verify_deploy_ci.ManualDeployCiTest.test_removed_wrong_repository_and_or_bypass_guards_are_rejected) ... ok
+test_skipped_test_step_failed_latest_run_wrong_sha_and_foreign_repo_are_rejected (test_verify_deploy_ci.ManualDeployCiTest.test_skipped_test_step_failed_latest_run_wrong_sha_and_foreign_repo_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.016s
+
+OK
+Exact SHA has successful full Main and Funds CI; this check does not deploy
+Exact SHA has successful full Main and Funds CI; this check does not deploy
