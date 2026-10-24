@@ -1,0 +1,37 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -85,6 +85,9 @@
+     @Autowired
+     private AlarmService alarmService;
+ 
++    @Autowired
++    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IWechatPayService> paymentAttemptGateway;
++
+     @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
+     private Long platformMemberId;
+     private static final Logger logger = LoggerFactory.getLogger(CmsRegistrationServiceImpl.class);
+@@ -2237,6 +2240,14 @@
+             case "CLOSED": // 已关闭
+             case "REVOKED": // 已撤销
+             case "PAYERROR": // 支付失败
++                // Gateway notifications carry the exact provider attempt. Hold the same business lock
++                // as alias creation until this inbox mutation commits; old CLOSED cannot close a new attempt.
++                if ("CLOSED".equals(tradeState)
++                        && (resultMap.get("wx_out_trade_no") == null || paymentAttemptGateway == null
++                            || !paymentAttemptGateway.getObject()
++                            .lockPaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
++                    return registrationPaymentCallbackFailure(outTradeNo, "payment_attempt_conflict");
++                }
+                 Date failedAt = new Date();
+                 if (cmsRegistrationMapper.claimPaymentFailure(registration.getId(), failedAt) == 0) {
+                     CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(
+--- a/ci/migration-dependencies.json
++++ b/ci/migration-dependencies.json
+@@ -1,6 +1,7 @@
+ {
+   "schemaVersion": 1,
+   "dependencies": {
++    "20261023_wx_pay_order_intent": [],
+     "merchant_wechat_qrcode_20261022": [],
+     "merchant_category_ids_20261022": [],
+     "orient_session_lifecycle_20261022": ["20260823_topic_route_graph"],
