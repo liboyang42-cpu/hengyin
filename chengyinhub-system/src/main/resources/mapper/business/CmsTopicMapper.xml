@@ -857,6 +857,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           )
     </select>
 
+    <select id="lockTopicContentBudget" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from cms_topic where id = #{id} for update
+    </select>
+
     <select id="selectCmsTopicByIdForUpdate" parameterType="Long" resultMap="CmsTopicResult">
         <include refid="selectCmsTopicVo"/>
         where id = #{id} for update

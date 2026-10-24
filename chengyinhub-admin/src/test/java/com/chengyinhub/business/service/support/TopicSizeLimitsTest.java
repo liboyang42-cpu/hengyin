@@ -77,14 +77,14 @@ class TopicSizeLimitsTest {
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         List<CmsTopicChapter> thirtyOne = new ArrayList<>();
         for (int i = 0; i < 31; i++) thirtyOne.add(new CmsTopicChapter());
-        when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(thirtyOne);
-        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.<CmsTopicNode>emptyList());
+        when(chapterMapper.countContentByTopicForUpdate(5L)).thenReturn((long) thirtyOne.size());
+        when(nodeMapper.countContentByTopicForUpdate(5L)).thenReturn(0L);
 
         IllegalStateException e = assertThrows(IllegalStateException.class,
                 () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(service, "assertTopicSizeWithinLimits"), "assertTopicSizeWithinLimits", 5L));
         assertEquals("发布前请先调整:主题最多 30 章,当前 31 章,请合并或删减章节", e.getMessage());
 
-        when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(thirtyOne.subList(0, 30));
+        when(chapterMapper.countContentByTopicForUpdate(5L)).thenReturn((long) thirtyOne.subList(0, 30).size());
         ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(service, "assertTopicSizeWithinLimits"), "assertTopicSizeWithinLimits", 5L);
     }
 }

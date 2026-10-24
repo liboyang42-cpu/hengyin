@@ -12,6 +12,9 @@ import com.chengyinhub.business.domain.CmsTopicNode;
  */
 public interface CmsTopicNodeMapper 
 {
+    /** All physically retained content, independent of merchant/player visibility. */
+    Long countContentByTopicForUpdate(@Param("topicId") Long topicId);
+
     /**
      * 查询主题节点（路线）
      * 

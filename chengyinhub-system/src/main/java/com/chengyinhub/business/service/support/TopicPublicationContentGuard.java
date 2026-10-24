@@ -122,16 +122,7 @@ public class TopicPublicationContentGuard {
     }
 
     public void assertTopicSizeWithinLimits(Long topicId) {
-        CmsTopicChapter chapterQuery = new CmsTopicChapter();
-        chapterQuery.setTopicId(topicId);
-        CmsTopicNode nodeQuery = new CmsTopicNode();
-        nodeQuery.setTopicId(topicId);
-        String violation = com.chengyinhub.business.service.support.TopicSizeLimits.violation(
-                nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery)).size(),
-                nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(nodeQuery)).size());
-        if (violation != null) {
-            throw new IllegalStateException("发布前请先调整:" + violation);
-        }
+        contentWriteGuard.assertTopicSizeWithinLimits(topicId);
     }
 
     public void assertPublishReady(CmsTopic topic) {

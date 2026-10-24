@@ -12,6 +12,9 @@ import com.chengyinhub.business.domain.CmsTopicChapter;
  */
 public interface CmsTopicChapterMapper 
 {
+    /** All physically retained content, including hidden rows; caller holds the topic content fence. */
+    Long countContentByTopicForUpdate(@Param("topicId") Long topicId);
+
     /**
      * 查询主题章节
      * 

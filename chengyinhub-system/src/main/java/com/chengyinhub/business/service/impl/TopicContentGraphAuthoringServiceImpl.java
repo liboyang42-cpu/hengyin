@@ -208,6 +208,7 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteTopicChapterFlow(Long topicId) {
+        contentWriteGuard.lockTopicContent(topicId);
         CmsTopicNode nodeQ = new CmsTopicNode();
         nodeQ.setTopicId(topicId);
         for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(nodeQ))) {
@@ -228,6 +229,7 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
         }
 
         TopicSizeLimits.requireWithinLimits(chapters);
+        contentWriteGuard.lockTopicContent(topicId);
         long chapterSortId = 0L;
         for (ChapterDTO chapterDTO : chapters) {
             CmsTopicChapter chapter = new CmsTopicChapter();
@@ -256,6 +258,7 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
             saveNodes(chapterDTO.getNodes(), topicId, chapterId, username, memberId, routeNodeMaps,
                     allowBundledDraft);
         }
+        contentWriteGuard.assertTopicSizeWithinLimits(topicId);
         return routeNodeMaps;
     }
 
@@ -298,6 +301,7 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
         TopicSizeLimits.requireWithinLimits(chapters);
         ChapterFlowCompiler.CompiledFlow flow = ChapterFlowCompiler.compileChapterFlow(chapters);
         Builder routeNodeMaps = new Builder();
+        contentWriteGuard.lockTopicContent(topicId);
 
         // 所有既有章节/模板规则也先验完，再开始任何删除或插入。
         for (ChapterFlowCompiler.CompiledChapter compiled : flow.getChapters()) {
@@ -385,6 +389,7 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
                 throw e;
             }
         }
+        contentWriteGuard.assertTopicSizeWithinLimits(topicId);
         return routeNodeMaps.freeze();
     }
 
