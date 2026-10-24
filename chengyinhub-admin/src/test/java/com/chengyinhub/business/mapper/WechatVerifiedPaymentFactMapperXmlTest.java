@@ -23,6 +23,8 @@ class WechatVerifiedPaymentFactMapperXmlTest {
         assertFalse(read.toLowerCase().contains("for update"),"Immutable replay must not upgrade duplicate INSERT shared locks");
         String link=config.getMappedStatement(prefix+"selectInboxLink").getBoundSql(Map.of("notifyHash","a".repeat(64))).getSql();
         assertTrue(link.contains("FOR SHARE"));assertTrue(link.contains("LOWER(") && link.contains("UPPER("));
+        assertFalse(config.getMappedStatement(prefix+"selectInboxLink").isUseCache());
+        assertTrue(config.getMappedStatement(prefix+"selectInboxLink").isFlushCacheRequired());
         assertEquals(6,java.util.Arrays.stream(WechatVerifiedPaymentFactMapper.class.getDeclaredMethods()).count());
     }
 }

@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.chengyinhub.business.domain.WxPaymentCallbackClaim;
 import com.chengyinhub.business.domain.WxPaymentCallbackInbox;
@@ -141,6 +143,14 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
         {
             return false;
         }
+        // A participating mutation can retain its inbox X lock until the outer transaction ends.
+        // Refuse an unmanaged transaction before claiming: it has no safe completion callback.
+        boolean outerTransaction = TransactionSynchronizationManager.isActualTransactionActive();
+        if (outerTransaction && !TransactionSynchronizationManager.isSynchronizationActive())
+        {
+            log.error("[支付回调] 外层事务未提供完成同步，未领取回调");
+            return false;
+        }
         String notifyHash = sha256Hex(notifyId);
         WxPaymentCallbackClaim claim = claimService.claim(notifyHash);
         if (claim.getState() == WxPaymentCallbackClaim.State.DONE
@@ -152,22 +162,55 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
         {
             return false;
         }
+        final boolean[] completed = {false};
+        if (outerTransaction)
+        {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization()
+            {
+                @Override
+                public void afterCompletion(int status)
+                {
+                    // A successful participating mutation/DONE also disappears on an outer rollback.
+                    if (!completed[0] || status != TransactionSynchronization.STATUS_COMMITTED)
+                    {
+                        releaseClaim(claim);
+                    }
+                }
+            });
+        }
         try
         {
-            boolean completed = mutationService.apply(claim, mutation);
-            if (!completed)
+            completed[0] = mutationService.apply(claim, mutation);
+            if (!completed[0] && !outerTransaction)
             {
-                claimService.release(notifyHash, claim.getOwnerToken(), claim.getFenceToken());
+                releaseClaim(claim);
             }
-            return completed;
+            return completed[0];
         }
         catch (RuntimeException e)
         {
             CriticalPathEvents.failure(CriticalPathCode.CP_PAYMENT_INBOX_FAILED, "process", e);
-            claimService.release(notifyHash, claim.getOwnerToken(), claim.getFenceToken());
-            // 不记录 notifyId 原文与回调体,避免微信密文/单号进入日志。
-            log.error("[支付回调] inbox 事务失败,已按 owner/fence 释放;未记录 notifyId 或回调内容");
+            if (!outerTransaction)
+            {
+                releaseClaim(claim);
+            }
+            // An outer owner still holds its locks here. Never suspend it to release the same row.
+            log.error("[支付回调] inbox 事务失败，释放遵循原事务完成及 owner/fence；未记录回调内容");
             return false;
+        }
+    }
+
+    private void releaseClaim(WxPaymentCallbackClaim claim)
+    {
+        try
+        {
+            claimService.release(claim.getNotifyHash(), claim.getOwnerToken(), claim.getFenceToken());
+        }
+        catch (RuntimeException unavailable)
+        {
+            // Keep the original claim/lease for recovery; never invent DONE or release another owner's fence.
+            CriticalPathEvents.failure(CriticalPathCode.CP_PAYMENT_INBOX_FAILED, "release", unavailable);
+            log.error("[支付回调] 原 owner/fence 释放暂未确认，保留原回调身份等待恢复");
         }
     }
 

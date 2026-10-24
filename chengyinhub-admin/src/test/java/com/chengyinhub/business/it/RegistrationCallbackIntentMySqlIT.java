@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.WxPaymentCallbackInbox;
 import com.chengyinhub.business.mapper.CmsPointsSettingMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationScanMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
 import com.chengyinhub.business.mapper.WxPaymentCallbackInboxMapper;
@@ -116,11 +117,24 @@ class RegistrationCallbackIntentMySqlIT {
                 "migration_wx_payment_callback_inbox_outbox_20260725.sql",
                 "migration_20261023_wx_pay_order_intent.sql",
                 "migration_20261024_wx_verified_payment_fact.sql");
+        // Reuse the existing repository helper: exact cms_topic ALTERs from original migrations only.
+        // The original topic FOR UPDATE mapper selects these post-snapshot columns; no hand-shaped test table.
+        for (String migration : List.of("migration_20260820_new_city_setup_plan.sql",
+                "migration_20260821_topic_beta_zone.sql", "migration_20260821_topic_team_config.sql",
+                "migration_circle_theme_batch2_20260821.sql", "migration_20260823_game_session_runtime.sql",
+                "migration_20260823_topic_route_graph.sql", "migration_20260823_topic_route_published_snapshot.sql",
+                "migration_club_topic_display_settings_20260906.sql", "migration_topic_journey_rules_20260916.sql",
+                "migration_topic_journey_story_20260916.sql", "migration_theme_runtime_20261004.sql")) {
+            String script=java.nio.file.Files.readString(P0AcceptanceSchema.repoRoot().resolve("chengyinhub-admin/sql").resolve(migration));
+            List<String> alters=FreeExploreNodeSupplyMySqlIT.alterStatements(script,"cms_topic");
+            assertFalse(alters.isEmpty(),migration+" must supply the original topic schema");
+            for(String alter:alters) db.execute(alter);
+        }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(List.of("CmsRegistrationMapper", "UmsMemberMapper", "UmsMemberPointsDetailMapper",
-                        "CmsPointsSettingMapper", "CmsRegistrationScanMapper", "WxPaymentCallbackInboxMapper").stream()
+                        "CmsPointsSettingMapper", "CmsRegistrationScanMapper", "WxPaymentCallbackInboxMapper", "CmsTopicMapper").stream()
                 .map(name -> new ClassPathResource("mapper/business/" + name + ".xml"))
                 .toArray(ClassPathResource[]::new));
         factory.setPlugins(probe);
@@ -184,6 +198,8 @@ class RegistrationCallbackIntentMySqlIT {
         WechatVerifiedFactTestSupport.setField(claims, "mapper", inboxMapper);
         WxPaymentCallbackMutationService mutations = new WxPaymentCallbackMutationService();
         WechatVerifiedFactTestSupport.setField(mutations, "mapper", inboxMapper);
+        WechatVerifiedFactTestSupport.setField(mutations, "registrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        WechatVerifiedFactTestSupport.setField(mutations, "topicMapper", sql.getMapper(CmsTopicMapper.class));
         WxPaymentCallbackInboxServiceImpl inbox = new WxPaymentCallbackInboxServiceImpl();
         WechatVerifiedFactTestSupport.setField(inbox, "mapper", inboxMapper);
         WechatVerifiedFactTestSupport.setField(inbox, "claimService", transactional(claims));
@@ -192,6 +208,7 @@ class RegistrationCallbackIntentMySqlIT {
         WechatVerifiedFactTestSupport.setField(inbox,"verifiedFacts",WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts"));
         CmsRegistrationServiceImpl registration = new CmsRegistrationServiceImpl();
         WechatVerifiedFactTestSupport.setField(registration, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        WechatVerifiedFactTestSupport.setField(registration, "cmsTopicMapper", sql.getMapper(CmsTopicMapper.class));
         WechatVerifiedFactTestSupport.setField(registration, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
         WechatVerifiedFactTestSupport.setField(registration, "umsMemberPointsDetailMapper", sql.getMapper(UmsMemberPointsDetailMapper.class));
         WechatVerifiedFactTestSupport.setField(registration, "cmsRegistrationScanMapper", sql.getMapper(CmsRegistrationScanMapper.class));
@@ -348,6 +365,90 @@ class RegistrationCallbackIntentMySqlIT {
         assertEquals(0,number("SELECT COUNT(*) FROM wx_payment_callback_fact_link l JOIN wx_payment_callback_inbox i ON i.notify_hash=l.notify_hash"));
     }
 
+    @Test
+    void falseMutationReleasesOriginalOwnerAndFenceOnlyAfterOuterRollback() {
+        participatingCompletion("false");
+    }
+
+    @Test
+    void throwingMutationReleasesOriginalOwnerAndFenceOnlyAfterExplicitOuterRollback() {
+        participatingCompletion("exception");
+    }
+
+    @Test
+    void successfulMutationAndDoneRollBackTogetherAndThenReleaseTheSameClaimOnOuterRollback() {
+        participatingCompletion("rollback");
+    }
+
+    @Test
+    void successfulParticipatingMutationAndDoneCommitTogetherWithoutReleasingTheCompletedClaim() {
+        participatingCompletion("commit");
+    }
+
+    private void participatingCompletion(String ending) {
+        String transactionId="WX-OUTER-"+ending;
+        providerOrders.put(BUSINESS_NO,original(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS",transactionId));
+        Map<String,String> facts=gateway.queryOrderStatus(BUSINESS_NO);
+        var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash"));
+        var registration=(CmsRegistrationServiceImpl)WechatVerifiedFactTestSupport.getField(gateway,"registrationService");
+        var inbox=(com.chengyinhub.business.service.IWxPaymentCallbackInboxService)
+                WechatVerifiedFactTestSupport.getField(registration,"wxPaymentCallbackInboxService");
+        String notify="PAY:"+transactionId+":SUCCESS";
+        activeHash.set(WxPaymentCallbackInboxServiceImpl.sha256Hex(notify));
+        assertTrue(inbox.registerVerified(notify,1,11L,"SUCCESS",reference));
+        long inboxId=inboxNumber("id");
+        var originalOwner=new AtomicReference<String>();
+        var originalFence=new java.util.concurrent.atomic.AtomicLong();
+        Runnable work=()->new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(status->{
+            assertNotNull(sql.getMapper(CmsRegistrationMapper.class).selectByRegistrationNo(BUSINESS_NO));
+            boolean completed=inbox.processVerified(notify,reference,new com.chengyinhub.business.service.IWxPaymentCallbackInboxService.Mutation(){
+                @Override public boolean isCurrent(WxPaymentCallbackInbox row) {
+                    assertEquals(inboxId,row.getId().longValue());assertEquals(11L,row.getBizId().longValue());
+                    originalOwner.set(row.getOwnerToken());originalFence.set(row.getFenceToken());return true;
+                }
+                @Override public boolean apply(WxPaymentCallbackInbox row) {
+                    // Actual registration CAS, points, scans and original business transaction; no domain success stub.
+                    assertEquals("SUCCESS",registration.applyConfirmedWechatPaymentWithinTransaction(facts));
+                    if ("false".equals(ending)) return false;
+                    if ("exception".equals(ending)) throw new IllegalStateException("controlled failure after actual business SQL");
+                    return true;
+                }
+            });
+            boolean success="rollback".equals(ending) || "commit".equals(ending);
+            assertEquals(success,completed);
+            assertNotNull(originalOwner.get());assertEquals(1,originalFence.get());
+            assertEquals(0,probe.releaseProbes.get(),"no independent release while the outer owner still holds its X lock");
+            assertEquals(2,number("SELECT payment_status FROM cms_registration WHERE id=11"));
+            assertPaidResources();
+            assertEquals(success?WxPaymentCallbackInbox.STATE_DONE:WxPaymentCallbackInbox.STATE_PROCESSING,inboxNumber("state"));
+            assertVisibleOutside(1,WxPaymentCallbackInbox.STATE_PROCESSING,80,0,0);
+            assertEquals(0,scheduledNotices.get());
+            if ("rollback".equals(ending) || "exception".equals(ending)) status.setRollbackOnly();
+        });
+        if ("false".equals(ending)) {
+            assertThrows(org.springframework.transaction.UnexpectedRollbackException.class,work::run,
+                    "REQUIRED mutation failure marks the original outer transaction rollback-only");
+        } else work.run();
+        assertEquals(inboxId,inboxNumber("id"));assertEquals(originalFence.get(),inboxNumber("fence_token"));
+        assertEquals(1,inboxNumber("attempt_count"));
+        assertEquals(1,number("SELECT COUNT(*) FROM wx_verified_payment_fact"));
+        assertEquals(reference.hash(),db.queryForObject("SELECT fact_hash FROM wx_verified_payment_fact WHERE id=?",String.class,reference.id()));
+        if ("commit".equals(ending)) {
+            assertCompleted(transactionId,1);assertEquals(1,probe.doneProbes.get());
+            assertEquals(0,probe.releaseProbes.get());assertEquals(1,scheduledNotices.get());
+            assertEquals(originalOwner.get().toUpperCase(java.util.Locale.ROOT),
+                    db.queryForObject("SELECT HEX(owner_token) FROM wx_payment_callback_inbox WHERE id=?",String.class,inboxId));
+        } else {
+            assertPendingResources();assertEquals(WxPaymentCallbackInbox.STATE_RETRYABLE,inboxNumber("state"));
+            assertEquals(1,probe.releaseProbes.get());assertEquals(0,scheduledNotices.get());
+            assertEquals("rollback".equals(ending)?1:0,probe.doneProbes.get());
+            assertNull(db.queryForObject("SELECT owner_token FROM wx_payment_callback_inbox WHERE id=?",byte[].class,inboxId));
+            assertNull(db.queryForObject("SELECT lease_until FROM wx_payment_callback_inbox WHERE id=?",java.sql.Timestamp.class,inboxId));
+            assertEquals(1,number("SELECT COUNT(*) FROM wx_payment_callback_fact_link"));
+        }
+    }
+
     private String freeze(String appid, String channel) {
         return WechatVerifiedFactTestSupport.invokeMethod(gateway, "freezePaymentIntent", BUSINESS_NO, MERCHANT,
                 appid, channel, "CNY", 1000, "JSAPI".equals(channel) ? "openid-original" : "",
@@ -430,10 +531,20 @@ class RegistrationCallbackIntentMySqlIT {
     private final class AtomicCommitProbe implements Interceptor {
         final AtomicBoolean failAfterDone = new AtomicBoolean();
         final AtomicInteger doneProbes = new AtomicInteger();
+        final AtomicInteger releaseProbes = new AtomicInteger();
         final AtomicReference<Long> businessConnection = new AtomicReference<>();
-        void reset() { failAfterDone.set(false); doneProbes.set(0); businessConnection.set(null); }
+        void reset() { failAfterDone.set(false); doneProbes.set(0); releaseProbes.set(0); businessConnection.set(null); }
         @Override public Object intercept(Invocation invocation) throws Throwable {
             String id = ((MappedStatement)invocation.getArgs()[0]).getId();
+            if (id.equals(WxPaymentCallbackInboxMapper.class.getName() + ".release")) {
+                releaseProbes.incrementAndGet();
+                assertNotEquals(businessConnection.get(),mappedConnectionId(invocation),"release uses its original independent transaction after outer completion");
+                // Test-only bound: an unsafe pre-completion release must fail promptly, never hang CI for the server default.
+                try (var statement=((Executor)invocation.getTarget()).getTransaction().getConnection().createStatement()) {
+                    statement.execute("SET SESSION innodb_lock_wait_timeout=1");
+                }
+                return invocation.proceed();
+            }
             if (id.equals(CmsRegistrationMapper.class.getName() + ".claimPaymentSuccess")) {
                 assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
                 Object result = invocation.proceed();
