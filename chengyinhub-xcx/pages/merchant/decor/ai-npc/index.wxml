@@ -247,7 +247,8 @@
         <cy-btn variant="ghost" data-request="{{item.requestId}}" bindtap="readVoiceHistory">查看原结果</cy-btn>
       </view>
       <text wx:if="{{voiceHistoryResult}}">{{voiceHistoryResult}}</text>
-      <cy-inline-error kind="error" wx:if="{{voiceError}}" title="暂未完成" sub="{{voiceError}}" />
+      <cy-inline-error kind="error" wx:if="{{voiceError}}" title="暂未完成" sub="{{voiceError}}"
+        action="{{voiceUnknown ? '查询原请求' : ''}}" bind:action="refreshVoice" />
       <cy-btn wx:if="{{voiceUnknown}}" variant="secondary" bindtap="refreshVoice">查询生成状态</cy-btn>
     </view>
   </cy-sheet>
