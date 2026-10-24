@@ -56,6 +56,13 @@ public interface CmsTemplateLibraryMapper
      */
     public int insertCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary);
 
+    /**
+     * owner 2026-10-23 D5(U-036):同一作者在模板广场里其它未删除条目的标题(不含 memberTemplateId 自己的投影),
+     * 供提交广场时做「同名」判重;比较在 Java 里按 trim 后逐字相等做,不交给库排序规则(general_ci 大小写不敏感)。
+     */
+    List<String> selectAuthorLiveTitles(@Param("memberId") Long memberId,
+                                        @Param("excludeMemberTemplateId") Long excludeMemberTemplateId);
+
     /** O5b-5:模板广场在架条目的 id/title(排除指定作者),按 id 倒序取前 limit 条,供标题相似度提示。 */
     List<CmsTemplateLibrary> selectPublicTitlesForSimilarity(@Param("excludeMemberId") Long excludeMemberId,
                                                              @Param("limit") int limit);
