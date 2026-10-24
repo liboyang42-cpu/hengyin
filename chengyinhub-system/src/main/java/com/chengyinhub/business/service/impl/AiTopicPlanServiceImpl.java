@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import static com.chengyinhub.business.support.AiJsonResponses.PARSE_ERROR_MSG;
+import static com.chengyinhub.business.support.AiJsonResponses.parseAiJson;
 import com.chengyinhub.business.domain.AiMerchantMatchSnapshot;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.dto.ai.AiMerchantPlanReq;
@@ -47,7 +49,6 @@ public class AiTopicPlanServiceImpl implements IAiTopicPlanService
     private static final int MAX_RADIUS_M = 5000;
     private static final int CANDIDATE_SCAN_LIMIT = 60;
     private static final int CANDIDATE_TOP_LIMIT = 15;
-    private static final String PARSE_ERROR_MSG = "AI 响应格式异常,请重试";
 
     @Autowired
     private ApiAiMapper apiAiMapper;
@@ -278,26 +279,6 @@ public class AiTopicPlanServiceImpl implements IAiTopicPlanService
         node.setLongitude(fact.getLongitude());
         node.setLatitude(fact.getLatitude());
         node.setBusinessTime(fact.getBusinessTime());
-    }
-
-    private JSONObject parseAiJson(String text)
-    {
-        String source = stripJsonFence(text);
-        JSONObject json = JSON.parseObject(source);
-        if (json == null) throw new com.alibaba.fastjson2.JSONException("empty ai response");
-        return json;
-    }
-
-    private String stripJsonFence(String text)
-    {
-        if (text == null) return null;
-        String source = text.trim();
-        if (!source.startsWith("```")) return source;
-        int newline = source.indexOf('\n');
-        if (newline < 0) return source;
-        source = source.substring(newline + 1);
-        int close = source.lastIndexOf("```");
-        return (close >= 0 ? source.substring(0, close) : source).trim();
     }
 
     private String resolveRole(Long memberId)
