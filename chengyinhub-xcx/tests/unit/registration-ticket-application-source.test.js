@@ -45,7 +45,8 @@ test('application owns no HTTP context, callback to controller, optional depende
   assert.match(source, /@Service\s+public class RegistrationTicketApplication/);
   assert.doesNotMatch(source, /extends BaseController|ApiVerifyController|getAppUserId|HttpServlet|@Transactional|TransactionTemplate|@Lazy|required\s*=\s*false/);
   assert.equal((source.match(/private final (?:ICmsRegistrationService|RegistrationSeatService|ICmsActivityService|IPerkLedgerService|QrcodeServiceImpl) /g) || []).length, 5);
-  assert.match(read(controllerPath), /@Transactional\(rollbackFor = Exception.class\)\s+public AjaxResult redeemCityNodeCode/);
+  assert.match(read('chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java'),
+    /@Transactional\(rollbackFor = Exception.class\)\s+public AjaxResult redeemCityNodeCode/);
 });
 test('the original five-minute TTL and signing configuration have one shared value and keep local PNG generation', () => {
   const source = read(applicationPath);

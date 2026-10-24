@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
+
 import com.chengyinhub.business.access.merchant.MerchantAccessServiceImpl;
 import com.chengyinhub.business.access.merchant.MerchantRoleCode;
 import com.chengyinhub.business.domain.MerchantOperator;
@@ -88,8 +90,8 @@ class MerchantStaffRevocationAcceptanceTest {
         controller = new StaffController();
         ReflectionTestUtils.setField(controller, "merchantAccessService", access);
         ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
-        ReflectionTestUtils.setField(controller, "businessAuditEventMapper", auditMapper);
-        ReflectionTestUtils.setField(controller, "couponHistoryService", mock(ISmsCouponHistoryService.class));
+        ReflectionTestUtils.setField(controller, "cityNodeRedemptionApplication", new CityNodeRedemptionApplication(
+                access, roamMapper, mock(ISmsCouponHistoryService.class), auditMapper, SECRET));
         ReflectionTestUtils.setField(controller, "dynSecret", SECRET);
     }
 

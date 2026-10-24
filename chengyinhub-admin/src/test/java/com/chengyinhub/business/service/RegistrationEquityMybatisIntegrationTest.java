@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
+
 import com.chengyinhub.business.mapper.CmsRegistrationScanMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
@@ -262,14 +264,15 @@ class RegistrationEquityMybatisIntegrationTest {
                 new MerchantAccessContext(99L, 77L, 99L, MerchantRoleCode.MERCHANT_OWNER));
         ReflectionTestUtils.setField(target, "merchantAccessService", access);
         ReflectionTestUtils.setField(target, "roamMapper", mapper);
-        ReflectionTestUtils.setField(target, "couponHistoryService", couponHistoryService);
-        ReflectionTestUtils.setField(target, "businessAuditEventMapper", session.getMapper(BusinessAuditEventMapper.class));
         ReflectionTestUtils.setField(target, "dynSecret", "city-node-it-secret");
-        ProxyFactory factory = new ProxyFactory(target);
+        CityNodeRedemptionApplication application = new CityNodeRedemptionApplication(
+                access, mapper, couponHistoryService, session.getMapper(BusinessAuditEventMapper.class), "city-node-it-secret");
+        ProxyFactory factory = new ProxyFactory(application);
         factory.setProxyTargetClass(true);
         factory.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(dataSource),
                 new AnnotationTransactionAttributeSource()));
-        ApiVerifyController controller = (ApiVerifyController) factory.getProxy();
+        ReflectionTestUtils.setField(target, "cityNodeRedemptionApplication", (CityNodeRedemptionApplication) factory.getProxy());
+        ApiVerifyController controller = target;
         String code = VerifyDynCodeUtil.issue(51L, "citynode_7001", System.currentTimeMillis(),
                 60000L, 77L, "city-node-it-secret");
         com.chengyinhub.common.exception.ServiceException exhausted = assertThrows(
