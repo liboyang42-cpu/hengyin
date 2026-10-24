@@ -18,7 +18,7 @@ const TEAM_COMPLIANCE_FILES = [
   'pages/activity/baoming/baoming.wxml',
   'subpackageMember/components/cy/scene-member-order-detail/index.js',
   'subpackageMember/components/cy/scene-member-order-detail/index.wxml',
-  'utils/team-up.js',
+  'subpackageMember/utils/team-up.js',
 ]
 
 function teamComplianceSources(overrides) {
@@ -69,7 +69,7 @@ function assertTeamCompliance(sources) {
   assert.match(bFlow, /teamUp\.memberSheet/, 'B 模式的人数选项必须来自共享 helper')
   assert.match(bFlow, /teamUp\.createActivityTeam/, '真正建队仍要走共享 helper')
   assert.doesNotMatch(bFlow, /share/i, '报名后组队也不能以分享作为创建队伍的前置条件')
-  assert.doesNotMatch(sanitized['utils/team-up.js'], /share/i, '共享建队 helper 不能引入强制分享门槛')
+  assert.doesNotMatch(sanitized['subpackageMember/utils/team-up.js'], /share/i, '共享建队 helper 不能引入强制分享门槛')
 }
 
 function loadDetailPage(source) {
@@ -303,10 +303,10 @@ test('负控:分享门槛、分享奖励与匹配承诺任一回潮都必须判�
     'subpackageMember/components/cy/scene-member-order-detail/index.js': forcedBShare,
   })), assert.AssertionError)
 
-  const helperJs = read('utils/team-up.js')
+  const helperJs = read('subpackageMember/utils/team-up.js')
   const forcedHelperShare = helperJs + '\nfunction requireShareBeforeCreate() {}\n'
   assert.throws(() => assertTeamCompliance(teamComplianceSources({
-    'utils/team-up.js': forcedHelperShare,
+    'subpackageMember/utils/team-up.js': forcedHelperShare,
   })), assert.AssertionError)
 })
 

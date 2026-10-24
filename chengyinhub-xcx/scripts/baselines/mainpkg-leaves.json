@@ -1,0 +1,190 @@
+{
+  "sourceSha": "11c8055e179930cd63a1d6e296b8285b0586dd16",
+  "moves": [
+    {
+      "from": "utils/audit-timeline.js",
+      "to": "subpackageA/utils/audit-timeline.js",
+      "sourceBlob": "a41b88e7d374c140ad616eaadbc9fb6c37bbab75"
+    },
+    {
+      "from": "utils/citynode-redeem-outcome.js",
+      "to": "pages/merchant/utils/citynode-redeem-outcome.js",
+      "sourceBlob": "1bb991acbf15fbc4536fa4d237eabadbcdfce910"
+    },
+    {
+      "from": "utils/coop-invite-return.js",
+      "to": "subpackageMember/utils/coop-invite-return.js",
+      "sourceBlob": "52f726314d7554bc74a38cf9d90c844ef032600e"
+    },
+    {
+      "from": "utils/coop-publisher-access.js",
+      "to": "subpackageMember/utils/coop-publisher-access.js",
+      "sourceBlob": "ae793f02e77c058b5d4c670b95b35f3fca7fb9f1"
+    },
+    {
+      "from": "utils/coupon-credential.js",
+      "to": "subpackageMember/utils/coupon-credential.js",
+      "sourceBlob": "31d56fbd72ed5f307640a2aaac7e4cda22808144"
+    },
+    {
+      "from": "utils/features/capsule-client.js",
+      "to": "subpackageTools/utils/features/capsule-client.js",
+      "sourceBlob": "6f53e0792fa635ea5cffb28a97df0fe259023529"
+    },
+    {
+      "from": "utils/features/exploration-anniversary.js",
+      "to": "subpackageTools/utils/features/exploration-anniversary.js",
+      "sourceBlob": "11c3b9af60b5bdda9d87b78344bb5f1b828aee6b"
+    },
+    {
+      "from": "utils/features/exploration-export.js",
+      "to": "subpackageTools/utils/features/exploration-export.js",
+      "sourceBlob": "57beaac18ae289d6023566c7b32c8da79100853f"
+    },
+    {
+      "from": "utils/features/exploration-goals.js",
+      "to": "subpackageTools/utils/features/exploration-goals.js",
+      "sourceBlob": "6bd17e65c8796b0099369a2f58443432594b07e1"
+    },
+    {
+      "from": "utils/features/monthly-recap-client.js",
+      "to": "subpackageTools/utils/features/monthly-recap-client.js",
+      "sourceBlob": "f4e2362e6a69319b2bc12617e8f97b4b480d8cc2"
+    },
+    {
+      "from": "utils/inbox-preview.js",
+      "to": "pages/merchant/utils/inbox-preview.js",
+      "sourceBlob": "58dae0ecde308dac2f4e45c6de04b26f0ed74fc4"
+    },
+    {
+      "from": "utils/predict-entry.js",
+      "to": "subpackageB/utils/predict-entry.js",
+      "sourceBlob": "c68c63755d52403d3f58fabdb08c8f697d2b0783"
+    },
+    {
+      "from": "utils/publish/pro-editor-draft.js",
+      "to": "pages/square/utils/publish/pro-editor-draft.js",
+      "sourceBlob": "392c6ac6d7df119a69e87f465fa197a7b6c3a425"
+    },
+    {
+      "from": "utils/square-share.js",
+      "to": "pages/square/utils/square-share.js",
+      "sourceBlob": "bfafaf8e23ac2278f1aef7080dc8bd5e5c958c6b"
+    },
+    {
+      "from": "utils/story-audio.js",
+      "to": "pages/play/utils/story-audio.js",
+      "sourceBlob": "40a2ce1d728e83ec0173035ff119a0e7d4033e60"
+    },
+    {
+      "from": "utils/team-up.js",
+      "to": "subpackageMember/utils/team-up.js",
+      "sourceBlob": "4623d744af8ce3b19af58155e8af5650afea9e97"
+    },
+    {
+      "from": "utils/publish/pro-editor-policy.js",
+      "to": "pages/publish/utils/publish/pro-editor-policy.js",
+      "sourceBlob": "5688bf2ef3733ae7ef44417fd31f6416214741d8"
+    },
+    {
+      "from": "style/tool-ui.wxss",
+      "to": "subpackageTools/style/tool-ui.wxss",
+      "sourceBlob": "b82114c50f8889f49a878cd3eaef83c151eb1e3a"
+    },
+    {
+      "from": "utils/wxs/chapter-title.wxs",
+      "to": "pages/publish/utils/wxs/chapter-title.wxs",
+      "sourceBlob": "385f28718f654d9caea9119ad32f4d5355c7fcda"
+    },
+    {
+      "from": "images/d_frametu.jpg",
+      "to": "pages/club/images/d_frametu.jpg",
+      "sourceBlob": "24db5cc5363bf36108992959ba9d08c211b9c9fb"
+    },
+    {
+      "from": "images/d_location2.png",
+      "to": "pages/searchmap/images/d_location2.png",
+      "sourceBlob": "d2f9e5ef5d95b354b0a9c436c1570e49bb0d873a"
+    },
+    {
+      "from": "images/d_orderIcon.png",
+      "to": "subpackageMember/images/d_orderIcon.png",
+      "sourceBlob": "218f59f2cff77c5c3f4a24227ab1d3a50641fab5"
+    },
+    {
+      "from": "images/d_orderIcon2.png",
+      "to": "subpackageMember/images/d_orderIcon2.png",
+      "sourceBlob": "12a3abb9eff03ea1281875fa4a24d1781640a997"
+    },
+    {
+      "from": "images/icon_set.png",
+      "to": "subpackageMember/images/icon_set.png",
+      "sourceBlob": "61a2ba30de56b317449773ceaa0230daa798d0e4"
+    },
+    {
+      "from": "images/icon_sjt.png",
+      "to": "subpackageMember/images/icon_sjt.png",
+      "sourceBlob": "133afaaecea8a0a02021dad6e62989c39c536814"
+    },
+    {
+      "from": "images/icon_sjt_h.png",
+      "to": "subpackageMember/images/icon_sjt_h.png",
+      "sourceBlob": "523bb08fcd59d2c6cc69754bc780a80a6d98869b"
+    },
+    {
+      "from": "images/icon_tag_check.svg",
+      "to": "pages/publish/images/icon_tag_check.svg",
+      "sourceBlob": "139417df8d156926610a580130abb52c53749d0b"
+    },
+    {
+      "from": "images/icon_ticket_empty.svg",
+      "to": "subpackageMember/images/icon_ticket_empty.svg",
+      "sourceBlob": "51345a001d1757ec247e28aab2a8e734b33e9014"
+    },
+    {
+      "from": "images/icon_xjt.png",
+      "to": "subpackageMember/images/icon_xjt.png",
+      "sourceBlob": "6de41f0efdcd1a46923bf7e5d85711839208a984"
+    },
+    {
+      "from": "images/icon_xjt_h.png",
+      "to": "subpackageMember/images/icon_xjt_h.png",
+      "sourceBlob": "48a443131e65409217c275fd5a19b20eccc53e5f"
+    },
+    {
+      "from": "images/merchant/reviews/icon-star-filled.svg",
+      "to": "pages/merchant/images/merchant/reviews/icon-star-filled.svg",
+      "sourceBlob": "41e8bcb414f613ee2ce59a40c37c2b2031cf1f6c"
+    },
+    {
+      "from": "images/merchant/reviews/icon-star-muted.svg",
+      "to": "pages/merchant/images/merchant/reviews/icon-star-muted.svg",
+      "sourceBlob": "75137db3362723985cf9e316cbe703c952a9b691"
+    },
+    {
+      "from": "images/merchant/reviews/icon-star-small.svg",
+      "to": "pages/merchant/images/merchant/reviews/icon-star-small.svg",
+      "sourceBlob": "15346853bfeee9ed618b48e420829af78e488c5e"
+    },
+    {
+      "from": "components/cy/coop-invite-sheet/index.js",
+      "to": "subpackageMember/components/cy/coop-invite-sheet/index.js",
+      "sourceBlob": "b09c538aea7a278f475ba8ec3187c3f6d828bc3b"
+    },
+    {
+      "from": "components/cy/coop-invite-sheet/index.json",
+      "to": "subpackageMember/components/cy/coop-invite-sheet/index.json",
+      "sourceBlob": "eba73b051189410cc2cd28003184d9506c3e776c"
+    },
+    {
+      "from": "components/cy/coop-invite-sheet/index.wxml",
+      "to": "subpackageMember/components/cy/coop-invite-sheet/index.wxml",
+      "sourceBlob": "848d8005c4754f6053346190b3857caa03ddab80"
+    },
+    {
+      "from": "components/cy/coop-invite-sheet/index.wxss",
+      "to": "subpackageMember/components/cy/coop-invite-sheet/index.wxss",
+      "sourceBlob": "112ca72556ff90eb64487148bbce8054d6d0ca99"
+    }
+  ]
+}

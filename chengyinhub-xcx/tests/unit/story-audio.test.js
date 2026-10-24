@@ -1,7 +1,7 @@
 // 故事流的环境音与音效(2026-09-23 用户裁决「优化顺序第 2 项」):照原型用 WebAudio 合成,不用音频素材。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const storyAudio = require('../../utils/story-audio.js')
+const storyAudio = require('../../pages/play/utils/story-audio.js')
 
 function fakeContext() {
   const made = []

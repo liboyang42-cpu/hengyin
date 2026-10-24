@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createExplorationGoalsClient } = require('../../utils/features/exploration-goals');
+const { createExplorationGoalsClient } = require('../../subpackageTools/utils/features/exploration-goals');
 const draft = { requestId: 'personal-goal-0001', metric: 'DISTINCT_ROUTES', target: 2, startDate: '2026-10-12', endDateExclusive: '2026-11-01' };
 const row = { ...draft, id: '9007199254740999', progress: 0, state: 'ACTIVE', privateCommemoration: false, timeZone: 'Asia/Shanghai', countingVersion: 'COMPLETED_SESSION_AGGREGATE_V1', asOfMs: 1791763200000, createdAtMs: 1791763200000 };
 function setup(extra = {}) {

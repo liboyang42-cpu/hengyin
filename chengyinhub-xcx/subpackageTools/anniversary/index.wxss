@@ -1,4 +1,4 @@
-@import '../../style/tool-ui.wxss';
+@import '../style/tool-ui.wxss';
 .an-date { display: flex; align-items: flex-end; justify-content: space-between; padding: 0 31rpx 31rpx; }
 /* 原型 .mem:上半封面 + 下半正文;封面用路线色渐变,年数用 NRC 斜体 */
 .an-card { margin: 0 31rpx 23rpx; border-radius: var(--cy-radius-xl); overflow: hidden; background: var(--cy-comp-sheet-player-bg); }

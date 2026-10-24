@@ -34,7 +34,7 @@
           <text class="review-score-value">{{averageRating}}</text>
           <view class="review-rating-stars">
             <image wx:for="{{ratingStars}}" wx:key="value" class="review-score-star"
-                   src="{{item.filled ? '/images/merchant/reviews/icon-star-filled.svg' : '/images/merchant/reviews/icon-star-muted.svg'}}" mode="aspectFit" />
+                   src="{{item.filled ? '/pages/merchant/images/merchant/reviews/icon-star-filled.svg' : '/pages/merchant/images/merchant/reviews/icon-star-muted.svg'}}" mode="aspectFit" />
           </view>
           <text class="review-score-copy">{{total != null ? total + ' 条' : '—'}}已核销评价<block wx:if="{{mode === 'manage'}}"> · 商家不能改用户原评</block></text>
         </view>
@@ -158,7 +158,7 @@
             <view class="review-meta-line">
               <view class="review-card-stars">
                 <image wx:for="{{item.stars}}" wx:key="value" class="review-card-star"
-                       src="{{item.filled ? '/images/merchant/reviews/icon-star-small.svg' : '/images/merchant/reviews/icon-star-muted.svg'}}"
+                       src="{{item.filled ? '/pages/merchant/images/merchant/reviews/icon-star-small.svg' : '/pages/merchant/images/merchant/reviews/icon-star-muted.svg'}}"
                        mode="aspectFit" />
               </view>
               <text class="review-time">{{item.createTimeText}}</text>

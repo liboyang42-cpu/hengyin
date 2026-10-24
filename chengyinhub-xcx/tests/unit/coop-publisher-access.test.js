@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { readPublisherAccess } = require('../../utils/coop-publisher-access.js');
+const { readPublisherAccess } = require('../../subpackageMember/utils/coop-publisher-access.js');
 function setup(context) {
   let user = 10;
   const requests = [], results = [];

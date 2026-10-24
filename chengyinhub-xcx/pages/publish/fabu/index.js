@@ -29,7 +29,7 @@ const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeEx
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js');
 const { createServerDraftSaver, topicIdOf, confirmedPublication } = require('../utils/publish/server-draft.js');
 const publishIntent = require('../../../utils/publish/publish-intent.js');
-const proEditorPolicy = require('../../../utils/publish/pro-editor-policy.js');
+const proEditorPolicy = require('../utils/publish/pro-editor-policy.js');
 const proEditorDraft = require('../utils/publish/pro-editor-draft.js');
 
 function emptyChapterForm(name = '', opening = false) {

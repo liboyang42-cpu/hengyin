@@ -1,5 +1,5 @@
-const { readPublisherAccess } = require('../../../../utils/coop-publisher-access.js'); const pageMotion = require('../../../../utils/page-motion.js');
-const { returnToCoopOrigin } = require('../../../../utils/coop-invite-return.js');
+const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js'); const pageMotion = require('../../../../utils/page-motion.js');
+const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../../utils/modal.js');
 const cyLoading = require('../../../../utils/loading.js');
 const cyToast = require('../../../../utils/toast.js');

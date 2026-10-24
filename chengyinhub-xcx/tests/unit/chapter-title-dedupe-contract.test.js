@@ -23,7 +23,7 @@ function loadWxs(relativePath) {
   return sandbox.module.exports
 }
 
-const wxsLabel = loadWxs('utils/wxs/chapter-title.wxs').label
+const wxsLabel = loadWxs('pages/publish/utils/wxs/chapter-title.wxs').label
 
 /* ── 生产 JS 侧(发布确认预览用同一份判据) ──────────────────────────────── */
 
@@ -103,7 +103,7 @@ test('章节标题:名字自带编号时不重复加序号,两份实现逐例一
 
 test('章节卡与发布确认预览都走这一份判据,不再各拼一次前缀', () => {
   const wxml = read('pages/publish/fabu/index.wxml')
-  assert.match(wxml, /<wxs src="\.\.\/\.\.\/\.\.\/utils\/wxs\/chapter-title\.wxs" module="chapterTitle" \/>/,
+  assert.match(wxml, /<wxs src="\.\.\/utils\/wxs\/chapter-title\.wxs" module="chapterTitle" \/>/,
     '章节卡必须从 WXS 取标题')
   // 序号取 chapterNumbers(序章与结局章不占号,2026-09-24 #1137 合 master 时发现序章被算成第 1 章);结局章只显示章名 + 「结局」标签
   assert.match(wxml, /\{\{chapter\.ending \? chapter\.name : chapterTitle\.label\(\(chapterNumbers\[chapterIndex\] \|\| chapterIndex \+ 1\) - 1, chapter\.name\)\}\}/)

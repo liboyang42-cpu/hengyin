@@ -8,7 +8,7 @@ function setup() {
   let def, user = 10;
   const requests = [], events = [];
   const app = { getUserID: () => user, getImgUrl: s => s, sendRequest: r => requests.push(r) };
-  vm.runInNewContext(fs.readFileSync(path.join(root, 'components/cy/coop-invite-sheet/index.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'subpackageMember/components/cy/coop-invite-sheet/index.js'), 'utf8'), {
     Component: c => { def = c; }, getApp: () => app,
     require: name => name.includes('subscribe') ? { request: () => Promise.resolve() } : () => {},
   });
@@ -58,7 +58,7 @@ test('固定章节验证存在后发送，未选择或加载失败不能发邀�
 test('关闭弹窗后旧响应不回填；两排横滑无条款选择器', () => {
  const s=setup(); s.def.observers.show.call(s.c,false); s.requests[0].success({code:200,data:{rows:[{id:1,name:'旧主题'}]}});
  assert.equal(s.c.data.topics.length,0);
- const markup=fs.readFileSync(path.join(root,'components/cy/coop-invite-sheet/index.wxml'),'utf8');
+ const markup=fs.readFileSync(path.join(root,'subpackageMember/components/cy/coop-invite-sheet/index.wxml'),'utf8');
  assert.equal((markup.match(/<scroll-view/g)||[]).length,2); assert.ok(!markup.includes('onMode'));
 });
 test('回程只匹配原主题且已打开管理弹窗的导览台，首页不被带走', () => {
@@ -66,7 +66,7 @@ test('回程只匹配原主题且已打开管理弹窗的导览台，首页不�
   const host = { route: 'pages/topic/merchantinfo/merchantinfo', data: { topicId: 99, clubSheet: { show: true } }, loadProjectHome: () => reads++ };
   let pages = [host, { route: 'pages/merchant/relation/index' }, { route: 'pages/club/detail/index' }];
   const sandbox = { module: { exports: {} }, getCurrentPages: () => pages, wx: { navigateBack: v => navigations.push(v) } };
-  vm.runInNewContext(fs.readFileSync(path.join(root,'utils/coop-invite-return.js'),'utf8'), sandbox);
+  vm.runInNewContext(fs.readFileSync(path.join(root,'subpackageMember/utils/coop-invite-return.js'),'utf8'), sandbox);
   const finish = sandbox.module.exports.returnToCoopOrigin;
   assert.equal(finish(98), false);
   assert.equal(finish(99), true);
@@ -79,7 +79,7 @@ test('邀约返回不命中已卸载或属于旧账号的同主题页面',()=>{
  const host={route:'pages/topic/merchantinfo/merchantinfo',_projectMemberId:'10',data:{topicId:99,clubSheet:{show:true}},loadProjectHome:()=>reads++};
  let actor=20,reads=0;const navigations=[];
  const sandbox={module:{exports:{}},getApp:()=>({getUserID:()=>actor}),getCurrentPages:()=>[host,{route:'pages/club/detail/index'}],wx:{navigateBack:x=>navigations.push(x)}};
- vm.runInNewContext(fs.readFileSync(path.join(root,'utils/coop-invite-return.js'),'utf8'),sandbox);const finish=sandbox.module.exports.returnToCoopOrigin;
+ vm.runInNewContext(fs.readFileSync(path.join(root,'subpackageMember/utils/coop-invite-return.js'),'utf8'),sandbox);const finish=sandbox.module.exports.returnToCoopOrigin;
  assert.equal(finish(99),false);assert.equal(reads,0);assert.equal(navigations.length,0);
  actor=10;host._disposed=true;assert.equal(finish(99),false);
  host._disposed=false;assert.equal(finish(99),true);assert.equal(reads,1);assert.equal(navigations.length,1);

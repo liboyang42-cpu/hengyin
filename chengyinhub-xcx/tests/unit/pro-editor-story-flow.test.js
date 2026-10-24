@@ -146,7 +146,7 @@ test('故事玩法无需地点，保存并重新打开仍保留玩法位置和�
   saved.nodes[0]._localId = 'restored-game'
   const restored = storyFlow.materializeChapter(saved, () => 'new-key')
   assert.equal(restored.nodes[0]._storyGame, true)
-  const policy = require('../../utils/publish/pro-editor-policy')
+  const policy = require('../../pages/publish/utils/publish/pro-editor-policy')
   assert.equal(policy.chapterStatesOf({ productType: 1, chapters: [restored] })[0].nodesMissingCoords, 0)
   restored.nodes[0]._storyGame = false
   assert.equal(policy.chapterStatesOf({ productType: 1, chapters: [restored] })[0].nodesMissingCoords, 1)

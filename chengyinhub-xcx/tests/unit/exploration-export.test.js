@@ -1,5 +1,5 @@
 const test=require('node:test');const assert=require('node:assert/strict');
-const {createExplorationExportClient}=require('../../utils/features/exploration-export');
+const {createExplorationExportClient}=require('../../subpackageTools/utils/features/exploration-export');
 const C1='a'.repeat(70),C2='b'.repeat(70);
 const base={format:'chengyin-exploration-export-v1',timeZone:'Asia/Shanghai',snapshotId:'f'.repeat(64),startDate:'2026-10-01',endDateExclusive:'2026-10-13',asOfMs:Date.parse('2026-10-12T12:00:00+08:00'),expiresAtMs:Date.parse('2026-10-13T12:00:00+08:00'),upperRecordId:'9223372036854775807',expectedRows:2,pageSize:1};
 const row=(id='9223372036854775807')=>({recordId:id,completedAt:'2026-10-12T10:00:00.000+08:00',routeVersion:'2',elapsedSeconds:3600,routeAvailability:'AVAILABLE',routeTitle:'河岸 🌆'});
