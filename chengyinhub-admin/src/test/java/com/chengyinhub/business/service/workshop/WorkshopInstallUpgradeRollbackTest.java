@@ -40,4 +40,27 @@ class WorkshopInstallUpgradeRollbackTest {
         assertEquals(WorkshopInstallUpgradeRollback.Phase.UNKNOWN, snap.phase());
         assertNull(snap.originalRequestId());
     }
+
+    @Test
+    void recoverOfNeverSeenIdDoesNotOccupyThenUniqueInstallApplies() {
+        WorkshopOriginalRequestBinder binder = new WorkshopOriginalRequestBinder();
+        WorkshopInstallUpgradeRollback machine = new WorkshopInstallUpgradeRollback(binder);
+        WorkshopInstallUpgradeRollback.Snapshot blank = machine.recover("  ");
+        assertNull(blank.originalRequestId());
+        assertEquals(WorkshopInstallUpgradeRollback.Phase.UNKNOWN, blank.phase());
+        assertNull(binder.existing("  "));
+        WorkshopInstallUpgradeRollback.Snapshot recovered = machine.recover("c10-ins-never-c10");
+        assertEquals("c10-ins-never-c10", recovered.originalRequestId());
+        assertEquals(WorkshopInstallUpgradeRollback.Phase.UNKNOWN, recovered.phase());
+        assertNull(binder.existing("c10-ins-never-c10"));
+        WorkshopInstallUpgradeRollback.Snapshot first = machine.install("c10-ins-never-c10", "1.0.0");
+        assertEquals("c10-ins-never-c10", first.originalRequestId());
+        assertEquals(WorkshopInstallUpgradeRollback.Phase.WAITING_SOURCE, first.phase());
+        assertFalse(first.secondEffect());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, binder.existing("c10-ins-never-c10").status());
+        WorkshopInstallUpgradeRollback.Snapshot replay = machine.install("c10-ins-never-c10", "1.0.0");
+        assertEquals("c10-ins-never-c10", replay.originalRequestId());
+        assertEquals(WorkshopInstallUpgradeRollback.Phase.WAITING_SOURCE, replay.phase());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, binder.existing("c10-ins-never-c10").status());
+    }
 }

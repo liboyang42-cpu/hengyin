@@ -47,4 +47,33 @@ class WorkshopPackageVersionPublishTest {
         assertNull(decision.originalRequestId());
         assertFalse(decision.grantsPublish());
     }
+
+    @Test
+    void recoverOfNeverSeenIdDoesNotOccupyThenUniqueFreezeApplies() {
+        WorkshopOriginalRequestBinder binder = new WorkshopOriginalRequestBinder();
+        WorkshopPackageVersionPublish publish = new WorkshopPackageVersionPublish(binder);
+        WorkshopPackageVersionPublish.Decision blank = publish.recover("  ");
+        assertNull(blank.originalRequestId());
+        assertEquals(WorkshopPackageVersionPublish.Outcome.UNKNOWN, blank.outcome());
+        assertNull(binder.existing("  "));
+        WorkshopPackageVersionPublish.Decision recovered = publish.recover("c10-pub-never-c10");
+        assertEquals("c10-pub-never-c10", recovered.originalRequestId());
+        assertEquals(WorkshopPackageVersionPublish.Outcome.UNKNOWN, recovered.outcome());
+        assertFalse(recovered.grantsPublish());
+        assertNull(binder.existing("c10-pub-never-c10"));
+        assertNull(publish.frozen());
+        WorkshopPackageVersionPublish.Decision first = publish.freeze(new WorkshopPackageVersionPublish.FreezeFact(
+                "c10-pub-never-c10", "mod-1", "1.0.0", CONTENT, TERMS));
+        assertEquals(WorkshopPackageVersionPublish.Outcome.FROZEN, first.outcome());
+        assertEquals("c10-pub-never-c10", first.originalRequestId());
+        assertEquals(CONTENT, first.frozenContentHash());
+        assertFalse(first.wrotePublicRegistry());
+        assertEquals(WorkshopOriginalRequestBinder.APPLIED, binder.existing("c10-pub-never-c10").status());
+        WorkshopPackageVersionPublish.Decision replay = publish.freeze(new WorkshopPackageVersionPublish.FreezeFact(
+                "c10-pub-never-c10", "mod-1", "1.0.0", CONTENT, TERMS));
+        assertEquals(WorkshopPackageVersionPublish.Outcome.REPLAY, replay.outcome());
+        assertEquals("c10-pub-never-c10", replay.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.APPLIED, binder.existing("c10-pub-never-c10").status());
+        assertEquals(CONTENT, publish.frozen().contentHash());
+    }
 }
