@@ -375,7 +375,7 @@
     },
     "architecture-day-ai-not-sent": {
       "lineage": "F663 + E359 trusted NOT_SENT + H transport/admission combination on root assembled source",
-      "registered_source": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+      "registered_source": "a0fbc49b87564e65697bf5be1ce06674e99d9056",
       "note": "4 exact ordinary@Test MySQL/Redis methods; no provider call. Runtime source, zero skipped and independent schema/key cleanup required. HTTP/unit tests remain full backend CI. Not entire WP13 acceptance.",
       "classes": [
         "com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT"
