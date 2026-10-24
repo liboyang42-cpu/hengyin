@@ -98,6 +98,8 @@
     </sql>
     <insert id="insertComponent" useGeneratedKeys="true" keyProperty="id">
         <include refid="originalComponentInsertBase"/>
+          and not exists (select 1 from cms_registration_payment_fact consumed
+              where consumed.registration_id=payer.registration_id)
           and exists (select 1 from wx_payment_callback_inbox pi join wx_payment_callback_fact_link pl on pl.inbox_id=pi.id
                 and binary pl.notify_hash=binary lower(hex(pi.notify_hash))
               where pi.biz_type=1 and pi.biz_id=payer.registration_id and pi.event_type='SUCCESS' and pi.state=2

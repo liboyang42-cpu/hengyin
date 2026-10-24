@@ -1,0 +1,6 @@
+git diff --check: PASS
+XML parse / other statements byte-equivalent: PASS
+Original 11 cases and complete old fixture byte-equivalent: PASS
+Ordinary @Test declarations: 11 -> 12; parameterized: 0
+Limited added-patch secret pattern check: PASS (not gitleaks)
+Java / MySQL / CI: NOT_RUN

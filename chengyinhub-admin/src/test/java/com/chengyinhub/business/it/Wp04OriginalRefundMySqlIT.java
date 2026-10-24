@@ -194,6 +194,41 @@ class Wp04OriginalRefundMySqlIT {
         assertMoney("-10",db.queryForObject("SELECT SUM(amount) FROM coop_settlement_original_adjustment",BigDecimal.class));
     }
 
+    /** Storage branch isolation only: the extra head/component are rolled back, never paid or allocated. */
+    @Test void consumedAssociationDisablesLegacyDoneFallbackAndExactConsumedBranchStillWrites() throws Exception {
+        applyNewSchemaAndFreezeOriginalOrder(false,"wx-original");
+        var consumed = P0AcceptanceSchema.sql(source,"CmsRegistrationPaymentFactMapper")
+                .getMapper(CmsRegistrationPaymentFactMapper.class);
+        long closeId=db.queryForObject("SELECT id FROM coop_settlement_cash_close WHERE topic_id=11",Long.class);
+        // Both branches see the same real historical DONE/payment reference. A consumption takes precedence.
+        for (boolean hasConsumption : List.of(false,true)) {
+            tx.executeWithoutResult(status -> {
+                db.queryForObject("SELECT id FROM cms_topic WHERE id=11 FOR UPDATE",Long.class);
+                db.queryForObject("SELECT id FROM cms_registration WHERE id=1 FOR UPDATE",Long.class);
+                if (hasConsumption) assertEquals(1,consumed.insertConsumed(1L,originalPayment.id(),originalPayment.hash()));
+                db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_close_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(13,11,7,?,'MEMBER','INITIATOR_GUARANTEE','initiator',0,1,0)",closeId);
+                CoopSettlementOriginalComponent row=component(13L,7L,"MEMBER","INITIATOR_GUARANTEE","1");
+                row.setCashCloseId(closeId);row.setTopicId(11L);row.setSourceFingerprint(HASH);
+                if (hasConsumption) {
+                    assertEquals(0,originals.insertComponent(row),"A receipt forbids fallback even to an otherwise matching historical DONE");
+                    assertEquals(1,originals.insertConsumedPaymentComponent(row),"The exact consumed reference remains insertable");
+                } else {
+                    assertEquals(0,originals.insertConsumedPaymentComponent(row),"Missing A receipt cannot authorize the consumed branch");
+                    assertEquals(1,originals.insertComponent(row),"Strict historical DONE remains usable without a new association");
+                }
+                assertEquals(originalPayment.id(),db.queryForObject("SELECT payment_fact_id FROM coop_settlement_original_component WHERE settlement_id=13",Long.class));
+                assertEquals(originalPayment.hash(),db.queryForObject("SELECT payment_fact_hash FROM coop_settlement_original_component WHERE settlement_id=13",String.class));
+                status.setRollbackOnly();
+            });
+            assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM coop_settlement WHERE id=13",Integer.class));
+            assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM cms_registration_payment_fact",Integer.class));
+            assertEquals(2,count("coop_settlement_original_component"));
+        }
+        assertEquals(0,count("coop_settlement_original_adjustment"));assertEquals(0,count("coop_settlement_refund_receipt"));
+        assertMoney("10",db.queryForObject("SELECT SUM(amount) FROM coop_settlement",BigDecimal.class));
+        assertMoney("2",balance());assertEquals(0,count("ums_member_settlement_debt"));
+    }
+
     @Test void unboundPaymentFactCannotFreezeOriginalCashAndFailureRollsBackWholePlan() {
         assertEquals("ORIGINAL_COMPONENT_WRITE_CONFLICT",assertThrows(IllegalStateException.class,
                 ()->applyNewSchemaAndFreezeOriginalOrder(false,"wx-original",false)).getMessage());
