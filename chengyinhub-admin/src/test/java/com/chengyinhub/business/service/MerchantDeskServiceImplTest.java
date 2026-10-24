@@ -29,6 +29,7 @@ import static org.mockito.Mockito.RETURNS_DEFAULTS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.withSettings;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -336,6 +337,66 @@ class MerchantDeskServiceImplTest {
         assertEquals(STAFF, receipt.getValue().get("actorMemberId"));
         assertEquals("SKU_SAVE", receipt.getValue().get("action"));
         assertEquals("pms_sku", receipt.getValue().get("targetType"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void saveSku_detailReadbackKeepsFrozenSkuAndRestartDoesNotApplyLaterPrice() {
+        Map<String, Object> product = new HashMap<>();
+        product.put("productId", 900L);
+        product.put("publishStatus", 2);
+        when(mapper.selectProductForUpdate(MERCHANT_ID, 900L)).thenReturn(product);
+        when(mapper.insertSku(anyMap())).thenAnswer(i -> {
+            ((Map<String, Object>) i.getArgument(0)).put("id", 44L);
+            return 1;
+        });
+        Map<String, Object> body = new HashMap<>();
+        body.put("requestId", "req-sku-00004");
+        body.put("productId", 900L);
+        body.put("skuName", "周末场");
+        body.put("price", "88.00");
+        body.put("stock", 5);
+        Map<String, Object> saved = service.saveSku(access, body);
+        assertEquals(44L, saved.get("targetId"));
+        ArgumentCaptor<Map<String, Object>> receipt = ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertReceipt(receipt.capture());
+        when(mapper.selectReceipt(OWNER, "req-sku-00004")).thenReturn(receipt.getValue());
+
+        Map<String, Object> again = service.saveSku(access, new HashMap<>(body));
+        assertEquals(true, again.get("replayed"));
+        assertEquals("SKU_SAVE", again.get("action"));
+        assertEquals("pms_sku", again.get("targetType"));
+        assertEquals(44L, again.get("targetId"));
+        verify(mapper, times(1)).insertSku(anyMap());
+        verify(mapper, times(1)).insertReceipt(anyMap());
+
+        body.put("price", "99.00");
+        MerchantDeskException conflict = assertThrows(MerchantDeskException.class, () -> service.saveSku(access, body));
+        assertEquals(MerchantDeskException.IDEMPOTENCY_CONFLICT, conflict.getErrorCode());
+        verify(mapper, never()).updateSku(anyMap());
+
+        when(mapper.selectProduct(MERCHANT_ID, 900L)).thenReturn(product);
+        Map<String, Object> sku = new HashMap<>();
+        sku.put("skuId", 44L);
+        sku.put("skuName", "周末场");
+        sku.put("price", new BigDecimal("88.00"));
+        sku.put("stock", 5);
+        when(mapper.selectSkus(MERCHANT_ID, 900L)).thenReturn(Collections.singletonList(sku));
+        Map<String, Object> detail = service.productDetail(access, 900L);
+        List<Map<String, Object>> skus = (List<Map<String, Object>>) detail.get("skus");
+        assertEquals("周末场", skus.get(0).get("skuName"));
+        assertEquals(new BigDecimal("88.00"), skus.get(0).get("price"));
+        assertEquals(5, skus.get(0).get("stock"));
+        verify(mapper).selectProduct(MERCHANT_ID, 900L);
+
+        Map<String, Object> found = service.receipt(access, "req-sku-00004");
+        assertEquals("APPLIED", found.get("state"));
+        assertEquals("SKU_SAVE", found.get("action"));
+        assertEquals("pms_sku", found.get("targetType"));
+        assertEquals(44L, found.get("targetId"));
+        Map<String, Object> missing = service.receipt(access, "req-sku-miss");
+        assertEquals("NOT_FOUND", missing.get("state"));
+        assertEquals(null, missing.get("action"));
     }
 
     private static Map<String, Object> canonicalProduct(Map<String, Object> body) {
