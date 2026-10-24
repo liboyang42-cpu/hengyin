@@ -23,9 +23,11 @@
         "Only original verified successful refunds enter the cumulative basis",
         "Keep the original component precision and calculation version",
         "Duplicate and reordered callbacks cannot duplicate adjustment or debt",
-        "Refund SUCCESS CAS, adjustment, economic effect and receipt remain atomic"
+        "Refund SUCCESS CAS, adjustment, economic effect and receipt remain atomic",
+        "Current component deltas sum exactly to this actual successful refund",
+        "No negative delta, no reversal above original component amount, and no retraction of a prior committed reversal"
       ],
-      "pending_detail": "User clarification pending: conserve each actual refund across original components by remainder allocation, or allow temporary zero adjustments from cumulative floor. No automatic choice."
+      "subcent_decision": "Every successful refund conserves its actual amount across original order components; allocate remainder pennies within those components, not other orders"
     },
     {
       "id": "VERIFIED_SEAT_FEE_AND_NEGATIVE_MARGIN",
@@ -50,7 +52,8 @@
         "Duplicate, restart and lost ACK do not create another reservation or model call",
         "Handoff consumes or transfers the original reservation exactly once",
         "Existing text-admission tombstone and deletion fences remain effective"
-      ]
+      ],
+      "accounting_caveat": "One user feature quota is separate from provider billing. Show UNKNOWN as pending reservation, never successful delivery; approved release and handoff policies unchanged."
     },
     {
       "id": "VOICE_UNKNOWN_EXPLICIT_NEW_INTENT",
@@ -62,7 +65,8 @@
         "Refresh, reentry and repeated confirmation do not automatically dispatch again",
         "Late original results update only the original intent and do not replace a newer selection",
         "Pending payload and recovery records remain isolated by account"
-      ]
+      ],
+      "pricing_caveat": "Do not assert every voice creation is paid. Source default is CosyVoice-v2; official CosyVoice creation is free, Qwen creation has different billing; runtime overrides not inspected. Preserve explicit new-intent confirmation with accurate model-specific or neutral wording."
     }
   ],
   "shared_contracts": {
@@ -71,5 +75,6 @@
     "coordination": "G owns producer, seat-fee consumption and manual negative-margin path; B owns cumulative reversal; shared public signatures remain stable unless root integrates an explicit change"
   },
   "validation": "NOT_RUN; implement callers and test source first, then consolidated same-candidate review and regression",
-  "all_complete": false
+  "all_complete": false,
+  "public_benchmark": "五项业务规则-公开方案对照-20261024.md"
 }

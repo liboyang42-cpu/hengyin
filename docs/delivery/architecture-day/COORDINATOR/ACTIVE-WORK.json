@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T17:34:05Z",
+  "updated_utc": "2026-10-24T17:40:50Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -21,8 +21,8 @@
       "delivery": "Complete three-file diff based on 8490765f, received in cloud turn 01a16ed8-5796-748a-bb71-0c16ebb68105"
     },
     "B": {
-      "state": "implementation_dispatched",
-      "task": "Prepare cumulative refund identity/basis/dedup/transaction closure; sub-cent allocation rule pending single explicit user answer",
+      "state": "implementation_dispatched_policy_fully_confirmed",
+      "task": "Implement cumulative original-component refund with exact per-refund conservation and original-component penny allocation; all questioned rules confirmed",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable"
     },
@@ -92,11 +92,10 @@
     "Partial refunds: cumulative original-component reversal target minus prior reversal; full refund clears remaining original pennies",
     "Negative organizer margin from actual fulfillment cost: durable manual handling; no automatic balance or deposit debit",
     "NPC ASR and same subsequent NPC chat share existing quota: reserve before ASR, release only proven NOT_SENT, retain UNKNOWN, no second debit on text handoff; shop gen pool unchanged",
-    "Voice enrollment UNKNOWN can start a separate original request only after explicit duplicate-cost confirmation; retain original record, never auto-resend"
+    "Voice enrollment UNKNOWN can start a separate original request only after explicit duplicate-cost confirmation; retain original record, never auto-resend",
+    "Each successful partial-refund component reversal must sum exactly to that actual refund; allocate penny remainders within original order components; no temporary missing pennies"
   ],
-  "pending_business_decisions": [
-    "Partial-refund sub-cent allocation: each reversal must sum to actual refund with original-component remainder allocation, or per-component cumulative floor allowing temporary zero adjustments; user follow-up question pending. Prior approved rules remain effective."
-  ],
+  "pending_business_decisions": [],
   "actual_minimal_checks": {
     "m1_workflow_controls": "3 PASS",
     "merged_ui_static_gate": "PASS; not device or business evidence",
@@ -480,10 +479,8 @@
     "B": "exec transport disconnected; original workspace retained. Root supplied downloaded CI exact failures and real local-guard factory",
     "continuation": "Read public code through GitHub; deliver full source diff in chat. Root applies and scans before public writes; no executor rebuild or unscanned publishing."
   },
-  "pending_business_questions": [
-    "Original-order partial-refund penny conservation question sent after B confirmed no existing8490 rounding policy; do not select automatically."
-  ],
-  "current_working_tree": "6de0ebc ledger integration committed. All three policy questions answered; four non-overlapping implementation assignments dispatched to existing B/C/D/G cloud threads. No interim review or tests.",
+  "pending_business_questions": [],
+  "current_working_tree": "5a9cd52ea code/doc composition; final penny rule answered and forwarded to B. B/C/D/G implementation continues, no interim audit/tests/CI.",
   "new_source_blockers_current": [
     "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
   ],
@@ -497,7 +494,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: recorded explicit user business decisions and dispatched four scoped production implementation tasks to original cloud sessions",
+  "previous_goal_turn_classification": "PROGRESS: user confirmed exact partial-refund penny conservation; B unblocked and implementation instruction delivered",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
