@@ -1,0 +1,13 @@
+Source diff --check: PASS
+Private CAS body byte-identical: PASS
+Typed4 common admission precedes CAS/recovery: source PASS
+No duplicate JDBC/old bool guard; FactService/IntentStore untouched
+A production untouched; common helper has both preflight/consume callers; patch applies to ce4c: PASS
+Original test names retained; no skip/parameter changes
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java: ordinary declarations 29 -> 29
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopInviteServiceImplTest.java: ordinary declarations 122 -> 122
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java: ordinary declarations 9 -> 11
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java: ordinary declarations 16 -> 18
+Java delimiters: PASS (not compilation)
+Limited patch secret-pattern check: PASS (not gitleaks)
+Java/MySQL/provider/CI: NOT_RUN

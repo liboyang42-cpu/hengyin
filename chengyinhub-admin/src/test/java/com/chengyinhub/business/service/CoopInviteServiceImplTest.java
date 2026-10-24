@@ -2201,8 +2201,8 @@ class CoopInviteServiceImplTest {
     void missingOrMismatchedOriginalReferenceCannotReachThePrivatePaidCas() {
         originalDepositProof("DEP1",5000L,"wx1");
         var wrong=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(999L,"b".repeat(64));
-        when(verifiedPaymentFacts.requireVerified(null)).thenThrow(new IllegalArgumentException("Original reference required"));
-        when(verifiedPaymentFacts.requireVerified(wrong)).thenThrow(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.ConflictException());
+        when(verifiedPaymentFacts.requireConsumablePayment(null)).thenThrow(new IllegalArgumentException("Original reference required"));
+        when(verifiedPaymentFacts.requireConsumablePayment(wrong)).thenThrow(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.ConflictException());
         assertThrows(IllegalArgumentException.class,()->consumeDeposit("DEP1",5000L,"wx1",null));
         assertThrows(IllegalStateException.class,()->consumeDeposit("DEP1",5000L,"wx1",wrong));
         verify(coopInviteMapper,never()).selectByDepositOutTradeNoForUpdate(any());
@@ -2217,6 +2217,8 @@ class CoopInviteServiceImplTest {
         when(verifiedPaymentFacts.requireVerified(reference)).thenReturn(
                 new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
         when(verifiedPaymentFacts.findPaymentRecovery(reference)).thenReturn(java.util.Optional.empty());
+        when(verifiedPaymentFacts.requireConsumablePayment(reference)).thenReturn(
+                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
         ReflectionTestUtils.setField(svc,"depositVerifiedFacts",verifiedPaymentFacts);return reference;
     }
 

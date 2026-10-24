@@ -215,6 +215,7 @@ class CoopDepositRefundMybatisIntegrationTest {
                 java.time.Instant.ofEpochSecond(1700000000),"a".repeat(64),"SUCCESS");
         var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,proof.factHash());
         when(verified.requireVerified(reference)).thenReturn(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,proof));
+        when(verified.requireConsumablePayment(reference)).thenReturn(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,proof));
         when(verified.findPaymentRecovery(reference)).thenReturn(java.util.Optional.empty());
         WechatPayTestWiring.setField(invites,"depositVerifiedFacts",verified);
         fact.put("verified_fact_id","7"); fact.put("verified_fact_hash",reference.hash());
@@ -443,6 +444,7 @@ class CoopDepositRefundMybatisIntegrationTest {
                 java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
         var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,payment.factHash());
         when(verified.requireVerified(reference)).thenReturn(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
+        when(verified.requireConsumablePayment(reference)).thenReturn(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
         when(verified.findPaymentRecovery(reference)).thenReturn(java.util.Optional.empty());
         WechatPayTestWiring.setField(invites,"depositVerifiedFacts",verified);
         var consumer=transactionalInvites();
