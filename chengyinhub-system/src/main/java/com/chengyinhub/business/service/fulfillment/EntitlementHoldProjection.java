@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.chengyinhub.business.domain.Redemption;
 import com.chengyinhub.business.domain.RegistrationEntitlement;
 import com.chengyinhub.business.service.IPerkLedgerService;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
@@ -17,12 +18,14 @@ import com.chengyinhub.common.constant.EntitlementInvalidReason;
  * original requestId. Does not call {@code IPerkLedgerService#reserveEntitlements}
  * or {@code #redeemChapter}, and does not write the mapper.
  *
- * <p>原权益行走既有 {@link IPerkLedgerService#listEntitlements}；缺端口 WAITING_SOURCE。
- * 商家/有效期仍是扫码上下文，不从 entitlement 表发明 merchantId。
+ * <p>原权益行走既有 {@link IPerkLedgerService#listEntitlements}；原核销流水走
+ * {@link IPerkLedgerService#listRedemptions}。缺端口 WAITING_SOURCE。
+ * 商家/有效期仍是扫码上下文，不从 entitlement 表发明 merchantId。不调用 redeemChapter。
  */
 public final class EntitlementHoldProjection {
 
     public static final String PERK_LIST = "perkLedger.listEntitlements";
+    public static final String PERK_REDEMPTIONS = "perkLedger.listRedemptions";
 
     /** {@code registration_entitlement.status}: 已售未核销, occupies capacity. */
     public static final int STATUS_HELD = 0;
@@ -74,13 +77,19 @@ public final class EntitlementHoldProjection {
     private final ConcurrentHashMap<String, Integer> occupyCountByRequestId =
             new ConcurrentHashMap<String, Integer>();
     private final OriginalEntitlementSource source;
+    private final OriginalRedemptionSource redemptions;
 
     public EntitlementHoldProjection() {
         this(null);
     }
 
     public EntitlementHoldProjection(OriginalEntitlementSource source) {
+        this(source, null);
+    }
+
+    public EntitlementHoldProjection(OriginalEntitlementSource source, OriginalRedemptionSource redemptions) {
         this.source = source;
+        this.redemptions = redemptions;
     }
 
     /**
@@ -139,6 +148,44 @@ public final class EntitlementHoldProjection {
         }
         return project(new HoldFact(originalRequestId, registrationId, chapterId, merchantId,
                 match.getStatus(), validEndExclusive, match.getInvalidReason()), serverNow);
+    }
+
+    /**
+     * 从既有核销流水回读。缺 {@link IPerkLedgerService#listRedemptions} 为 WAITING_SOURCE。
+     * 未见过的章保持 UNKNOWN，不占容量，不调用 {@code redeemChapter}。
+     * 已撤销流水不是生效原核销。
+     */
+    public HoldView recoverFromRedemptions(String originalRequestId, Long registrationId, Long chapterId,
+            Instant serverNow) {
+        Objects.requireNonNull(serverNow, "serverNow");
+        if (redemptions == null) {
+            throw new WaitingSourceException(PERK_REDEMPTIONS);
+        }
+        if (registrationId == null || registrationId.longValue() <= 0L) {
+            throw new WaitingSourceException(PERK_REDEMPTIONS);
+        }
+        List<Redemption> rows = redemptions.listRedemptions(registrationId);
+        Redemption match = findActiveRedemption(rows, chapterId);
+        if (match == null) {
+            return recoverOriginal(originalRequestId);
+        }
+        return project(new HoldFact(originalRequestId, registrationId, chapterId, match.getMerchantId(),
+                STATUS_REDEEMED, null, ""), serverNow);
+    }
+
+    private static Redemption findActiveRedemption(List<Redemption> rows, Long chapterId) {
+        if (rows == null || chapterId == null) {
+            return null;
+        }
+        for (Redemption row : rows) {
+            if (row == null || !chapterId.equals(row.getChapterId()) || row.getReversedAt() != null) {
+                continue;
+            }
+            if ("ACTIVE".equals(row.getStatus())) {
+                return row;
+            }
+        }
+        return null;
     }
 
     public int occupyCount(String originalRequestId) {
@@ -207,6 +254,27 @@ public final class EntitlementHoldProjection {
     /** 只读既有权益账；不 reserve / redeem。 */
     public interface OriginalEntitlementSource {
         List<RegistrationEntitlement> listEntitlements(Long registrationId);
+    }
+
+    /** 只读既有核销流水；不 redeem / reverse。 */
+    public interface OriginalRedemptionSource {
+        List<Redemption> listRedemptions(Long registrationId);
+    }
+
+    public static final class PerkLedgerOriginalRedemptionSource implements OriginalRedemptionSource {
+        private final IPerkLedgerService ledger;
+
+        public PerkLedgerOriginalRedemptionSource(IPerkLedgerService ledger) {
+            this.ledger = ledger;
+        }
+
+        @Override
+        public List<Redemption> listRedemptions(Long registrationId) {
+            if (ledger == null) {
+                throw new WaitingSourceException(PERK_REDEMPTIONS);
+            }
+            return ledger.listRedemptions(registrationId);
+        }
     }
 
     public static final class PerkLedgerOriginalEntitlementSource implements OriginalEntitlementSource {
