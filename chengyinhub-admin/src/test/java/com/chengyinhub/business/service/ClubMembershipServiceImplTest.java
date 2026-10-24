@@ -1503,11 +1503,20 @@ class ClubMembershipServiceImplTest {
         paid.setStatus(ClubMembershipInvoice.STATUS_PAID);
         paid.setTransactionId("wx-w2-success");
         paid.setVersion(3);
-        // prepareCloseIntent reads the unlocked preview and the locked original separately.
-        when(mapper.selectInvoiceById(f.invoice.getId())).thenReturn(f.invoice, paid);
-        when(mapper.selectInvoiceByIdForUpdate(f.invoice.getId())).thenReturn(f.invoice);
         stubActiveCallback(f.invoice);
-        when(mapper.markInvoicePaidCas(eq(f.invoice.getId()), eq(2), eq("wx-w2-success"), any())).thenReturn(1);
+        AtomicReference<ClubMembershipInvoice> stored = new AtomicReference<>(f.invoice);
+        // Every read observes storage state; only the exact successful CAS advances it to PAID.
+        // Avoid ordered returns: preparation and locking can legitimately read the same row again.
+        org.mockito.Mockito.doAnswer(call -> stored.get()).when(mapper).selectInvoiceById(f.invoice.getId());
+        org.mockito.Mockito.doAnswer(call -> stored.get()).when(mapper).selectInvoiceByIdForUpdate(f.invoice.getId());
+        org.mockito.Mockito.doAnswer(call -> stored.get()).when(mapper).selectInvoiceByOutTradeNo(f.invoice.getOutTradeNo());
+        org.mockito.Mockito.doAnswer(call -> stored.get()).when(mapper).selectInvoiceByOutTradeNoForUpdate(f.invoice.getOutTradeNo());
+        when(mapper.markInvoicePaidCas(eq(f.invoice.getId()), eq(2), eq("wx-w2-success"), any())).thenAnswer(call -> {
+            org.junit.jupiter.api.Assertions.assertSame(f.invoice, stored.get());
+            assertEquals(ClubMembershipInvoice.STATUS_PAYING, stored.get().getStatus());
+            stored.set(paid);
+            return 1;
+        });
         when(mapper.insertTerm(any(ClubMembershipTerm.class))).thenReturn(1);
 
         ClubMembershipRenewalVO result = service.closeInvoice(
@@ -1517,6 +1526,11 @@ class ClubMembershipServiceImplTest {
         assertEquals("wx-w2-success", result.getInvoice().getTransactionId());
         assertEquals(f.invoice.getSnapshotHash(), result.getInvoice().getSnapshotHash());
         assertEquals(3, result.getInvoice().getVersion());
+        org.junit.jupiter.api.Assertions.assertSame(paid, stored.get());
+        org.junit.jupiter.api.Assertions.assertSame(paid, result.getInvoice());
+        InOrder persistedReadback = inOrder(mapper);
+        persistedReadback.verify(mapper).markInvoicePaidCas(eq(f.invoice.getId()), eq(2), eq("wx-w2-success"), any());
+        persistedReadback.verify(mapper).selectInvoiceById(f.invoice.getId());
         verify(mapper).markInvoicePaidCas(eq(f.invoice.getId()), eq(2), eq("wx-w2-success"), any());
         ArgumentCaptor<ClubMembershipTerm> term = ArgumentCaptor.forClass(ClubMembershipTerm.class);
         verify(mapper).insertTerm(term.capture());
