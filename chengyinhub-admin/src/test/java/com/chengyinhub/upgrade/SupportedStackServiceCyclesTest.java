@@ -280,7 +280,7 @@ class SupportedStackServiceCyclesTest
                     RegistrationPaymentConsumptionReadService.class,
                     CommittedBusinessNotice.class, CommittedOfficialNoticeService.class,
                     CommittedOfficialNoticeTask.class, ChapterApplicationInviteNotice.class,
-                    ImServiceImpl.class, NotifyServiceImpl.class,
+                    WxSubscribeMsgServiceImpl.class, ImServiceImpl.class, NotifyServiceImpl.class,
                     InAppNotifyChannel.class))
             {
                 assertThat(context).hasSingleBean(service);
@@ -356,6 +356,8 @@ class SupportedStackServiceCyclesTest
             assertThat(ReflectionTestUtils.getField(official, "intents")).isSameAs(context.getBean(ImServiceImpl.class));
             assertThat(ReflectionTestUtils.getField(official, "im")).isSameAs(context.getBean(ImServiceImpl.class));
             assertThat(ReflectionTestUtils.getField(official, "wx")).isSameAs(context.getBean(WxSubscribeChannel.class));
+            assertThat(ReflectionTestUtils.getField(official, "beforeStartWx"))
+                    .isSameAs(context.getBean(WxSubscribeMsgServiceImpl.class));
             assertThat(ReflectionTestUtils.getField(official, "executor"))
                     .isSameAs(context.getBean("scheduledExecutorService"));
             TransactionTemplate officialTransaction = (TransactionTemplate) ReflectionTestUtils.getField(official, "independent");
@@ -515,7 +517,7 @@ class SupportedStackServiceCyclesTest
         }
         if (assembly.contains(CommittedOfficialNoticeService.class))
         {
-            assembly.addAll(List.of(ImServiceImpl.class, WxSubscribeChannel.class));
+            assembly.addAll(List.of(ImServiceImpl.class, WxSubscribeChannel.class, WxSubscribeMsgServiceImpl.class));
         }
         if (assembly.contains(CmsRegistrationServiceImpl.class) || assembly.contains(MerchantChapterApplicationServiceImpl.class)
                 || assembly.contains(ChapterMerchantNodeServiceImpl.class) || assembly.contains(CommittedBusinessNotice.class))
