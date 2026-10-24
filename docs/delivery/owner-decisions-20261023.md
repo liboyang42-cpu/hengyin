@@ -43,6 +43,6 @@
 - Funds MySQL IT `39997838690`、Mini followup focused regression `39997838584`、Isolated authenticated Redis recovery `39997838594`:success
 - 首轮 run `39997374407`(head `af470ebd`)被新推送取消。
 
-### 待 owner 批准:源码指纹
+### 源码指纹(已处理)
 
-`Migration safety gate` 红在 `ci/test_prelaunch_business_seeds.py::test_source_hashes_and_real_controller_permissions`:`ci/prelaunch-seed-provenance.json` 钉了 `AnalyticsController.java`(D3)与 `settlementrule/index.vue`(D6)的 sha256。两处权限语义都没变,但按仓库先例(`69a9c6b4`)重钉指纹要 owner 明确批准,本 PR 没有自行改。批准后把这两行 sha256 换成当前文件值即可转绿。
+`Migration safety gate` 曾红在 `ci/test_prelaunch_business_seeds.py::test_source_hashes_and_real_controller_permissions`:`ci/prelaunch-seed-provenance.json` 的 `sourceFiles` 钉了 `AnalyticsController.java`(D3 必改)的 sha256。owner 2026-10-24 批准后在 `4f75035b` 重钉为当前文件指纹,`@ss.hasPermi('business:analytics:list')` 无改动。(更正:`settlementrule/index.vue` 只在 `viewCoverage` 里登记,没有钉指纹,不受影响。)
