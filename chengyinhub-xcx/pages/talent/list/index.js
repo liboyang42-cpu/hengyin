@@ -576,27 +576,25 @@ Page({
     if (club && club.id) this.loadClubMembers(club.id);
   },
 
+  // 2026-10-23 业主定:移出成员 = 先从列表拿掉,提示条留「撤销」4 秒;到期才真的发请求,撤销就什么都没发。
   removeClubMember(e) {
     var that = this;
     var memberId = e.currentTarget.dataset.memberId;
     var club = that.data.managingClub;
     if (!club || !memberId) return;
-    // 三段式第一段:确认。文案(后果 + 「此操作不可撤销」)在 utils/danger-actions.js。
-    var dc = this.selectComponent && this.selectComponent('#dc');
-    if (dc) dc.open('club.member.remove', {
-      name: e.currentTarget.dataset.memberName || '这位成员',
-      memberId: memberId,
+    var name = e.currentTarget.dataset.memberName || '这位成员';
+    var before = that.data.clubMembers || [];
+    that.setData({
+      clubMembers: before.filter(function (m) { return String(m.memberId) !== String(memberId); }),
+    });
+    toast.undo('已将「' + name + '」移出俱乐部', {
+      onUndo: function () { that.setData({ clubMembers: before }); },
+      onCommit: function () { that._doRemoveClubMember(club, memberId); },
     });
   },
 
-  /** 三段式第二段:确认弹窗里点了「移出成员」才真的发请求。 */
-  onConfirmRemoveClubMember: function (e) {
+  _doRemoveClubMember: function (club, memberId) {
     var that = this;
-    var club = this.data.managingClub;
-    var memberId = e.detail.params.memberId;
-    var dc = this.selectComponent && this.selectComponent('#dc');
-    if (!club || !memberId) return;
-    if (dc) dc.busyOn();
     // 后端 /api/club/remove-member 是 @RequestBody 端点,必须发 JSON;缺 header 会被当 urlencoded 导致移除永远失败
     app.sendRequest({
       url: '/api/club/remove-member',
@@ -605,12 +603,14 @@ Page({
       header: { 'Content-Type': 'application/json' },
       success: function (res) {
         if (res.code == '200') {
-          if (dc) dc.done();
           that.loadClubMembers(club.id);
           that.setData({ clubsLoaded: false }, function () { that.loadClubHome(); });
-        } else if (dc) dc.failed(res.msg || '移除失败');
+        } else {
+          toast(res.msg || '移除失败');
+          that.loadClubMembers(club.id);
+        }
       },
-      fail: function () { if (dc) dc.failed('网络错误，请重试'); }
+      fail: function () { toast('网络错误，请重试'); that.loadClubMembers(club.id); }
     });
   },
 

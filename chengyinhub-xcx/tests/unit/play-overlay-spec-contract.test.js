@@ -36,8 +36,8 @@ test('游玩页弹窗与全屏说明存在,且和现行 wxml 同一套层名', (
   // 长内容占满导航下方的可用高度，三类页内弹层使用同一个实测上限。
   for (const selector of ['gp2', 'finsheet', 'sheet']) {
     const block = wxss.match(new RegExp(`\\.${selector}\\s*\\{([^}]+)\\}`))[1]
-    assert.match(block, /height:\s*var\(--cy-psheet-max-h,\s*var\(--cy-comp-sheet-max-height\)\)/)
-    assert.match(block, /max-height:\s*var\(--cy-psheet-max-h,\s*var\(--cy-comp-sheet-max-height\)\)/)
+    assert.match(block, /height:\s*min\(var\(--cy-comp-sheet-full\),\s*var\(--cy-psheet-max-h,\s*var\(--cy-comp-sheet-max-height\)\)/)
+    assert.match(block, /max-height:\s*min\(var\(--cy-comp-sheet-full\),\s*var\(--cy-psheet-max-h,\s*var\(--cy-comp-sheet-max-height\)\)/)
     assert.doesNotMatch(block, /(?:height|max-height):\s*(?:86vh|88%)/)
   }
   // 手记仍复用本页弹层，不能另开 inset:0 的整屏幕布。

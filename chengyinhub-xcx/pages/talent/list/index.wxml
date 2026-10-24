@@ -108,4 +108,3 @@
 <tabBar dark="{{!isMerchantViewer}}" monochrome="{{!isMerchantViewer}}"/>
 
 <!-- 危险动作三段式确认:文案来自 utils/danger-actions.js,页面只给 key -->
-<cy-danger-confirm id="dc" bind:confirm="onConfirmRemoveClubMember" />

@@ -370,30 +370,30 @@ Component({
       this.setData({ draftsShow: false });
     },
 
-    // 走到这里时删除确认闸已经过完(闸长在 cy-post-drafts 里),页面直接删,别再加一道 modal。
+    // 2026-10-23 业主定:删草稿 = 先从列表拿掉,提示条留「撤销」4 秒,到期 / 被顶掉 / 页面卸载才真正删 storage。
     onDeleteDraft(e) {
       const key = ((e || {}).detail || {}).key;
-      const sheet = this.selectComponent && this.selectComponent('#drafts');
-      if (!key || !this._memberId) {
-        sheet && sheet.deleteFailed('草稿已不在了');
-        return;
-      }
-      // 「回执 ≠ 观测」:removeDraft 返回 true 只说明调用被接受,removeStorageSync 还可能抛。
-      // 判成没删,唯一算数的是**回头再读一遍 storage**,看这条 key 还在不在。
-      let left;
-      try {
-        proEditorDraft.removeDraft(wx, { topicId: key }, { memberId: this._memberId });
-        left = this.readDrafts();
-      } catch (err) {
-        sheet && sheet.deleteFailed('删除失败，请重试');
-        return;
-      }
-      this.setData({ drafts: left });
-      if (left.some((d) => d.key === key)) {
-        sheet && sheet.deleteFailed('删除失败，请重试');   // 删了还在 = 没删掉,别报「已删除」
-        return;
-      }
-      sheet && sheet.deleteDone();
+      if (!key || !this._memberId) { cyToast('草稿已不在了'); return; }
+      const memberId = this._memberId;
+      this.setData({ drafts: (this.data.drafts || []).filter((d) => d.key !== key) });
+      cyToast.undo('草稿已删除', {
+        onUndo: () => { this.setData({ drafts: this.readDrafts() }); },
+        onCommit: () => {
+          // 「回执 ≠ 观测」:removeStorageSync 还可能抛,唯一算数的是回头再读一遍 storage。
+          try {
+            proEditorDraft.removeDraft(wx, { topicId: key }, { memberId });
+          } catch (err) {
+            this.setData({ drafts: this.readDrafts() });
+            cyToast('删除失败，请重试');
+            return;
+          }
+          const left = this.readDrafts();
+          if (left.some((d) => d.key === key)) {
+            this.setData({ drafts: left });
+            cyToast('删除失败，请重试');   // 删了还在 = 没删掉,别报「已删除」
+          }
+        },
+      });
     },
 
     onPickImage() {

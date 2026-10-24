@@ -130,7 +130,7 @@
 </cy-sheet>
 
 <!-- 筛选(§11:Modal 走共享组件,原 .screen/.pop-cont 私有弹层已删) -->
-<cy-sheet show="{{popVisible}}" title="筛选" bind:close="popClose">
+<cy-sheet show="{{popVisible}}" title="筛选" fixed="full" bind:close="popClose">
   <view class="form-main">
     <view class="dl">
       <view class="dt">商家发现</view>

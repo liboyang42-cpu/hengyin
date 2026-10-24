@@ -1,5 +1,7 @@
-<view class="ct ct--{{kind}} {{entered ? 'ct--in' : ''}} {{reducedMotion ? 'ct--reduced-motion' : ''}}" wx:if="{{visible}}"
+<view class="ct ct--{{kind}} {{actionText ? 'ct--snack' : ''}} {{entered ? 'ct--in' : ''}} {{reducedMotion ? 'ct--reduced-motion' : ''}}" wx:if="{{visible}}"
       aria-role="alert" aria-label="{{title}}">
   <cy-icon wx:if="{{glyph}}" class="ct__icon" name="{{glyph}}" size="32" aria-hidden="true" />
   <text class="ct__text">{{title}}</text>
+  <!-- 可撤销提示条(2026-10-23):只有一个文字按钮,点了不提交;4 秒没点才提交 -->
+  <view wx:if="{{actionText}}" class="ct__action" bindtap="onAction" aria-role="button" aria-label="{{actionText}}" hover-class="ct__action--pressed" hover-stay-time="80">{{actionText}}</view>
 </view>

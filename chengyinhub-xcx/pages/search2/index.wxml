@@ -94,7 +94,7 @@
   </view>
 
   <!-- 筛选(§11:Modal 走共享组件,原 .screen/.pop-cont 私有弹层已删,对齐 pages/searchmap 同款筛选表单) -->
-  <cy-sheet show="{{popVisible}}" title="筛选" anchor-selector="#filter-trigger" bind:close="popClose">
+  <cy-sheet show="{{popVisible}}" title="筛选" fixed="full" anchor-selector="#filter-trigger" bind:close="popClose">
     <view class="form-main">
       <!-- 日期筛选 -->
       <view class="dl">

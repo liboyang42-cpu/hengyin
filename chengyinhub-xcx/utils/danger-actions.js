@@ -236,20 +236,8 @@ const DANGER_ACTIONS = {
   },
 
   // ===== 帖文草稿 =====
-  // 草稿是「还没发出去的东西」,删掉就真没了(本地 storage,服务端没有副本)。
-  // alt 为 null 不是偷懒:草稿本来就不对外可见,没有比「删」更轻的下架档可给。
-  'post.draft.delete': {
-    irreversible: true,
-    title: '删除这条草稿?',
-    content: '草稿只存在这台手机上,删掉不会同步到别处、也没有回收站。',
-    consequences: [
-      { icon: 'draft', text: '这条草稿里的文字会被删掉' },
-      { icon: 'warning', text: '此操作不可撤销,草稿内容无法找回' },
-    ],
-    confirmText: '删除草稿',
-    alt: null,
-    done: { title: '草稿已删除', text: '' },
-  },
+  // 2026-10-23 业主定:删草稿改成「先删、提示条里可撤销」(utils/toast.js 的 toast.undo),不再走确认弹窗,
+  // 原 'post.draft.delete' 登记条随之删除。
 
   // ===== 个人 =====
   // 2026-09-15 R9-13:这份资料页已明确「用于报名联系和到场核验,不用于配送」,

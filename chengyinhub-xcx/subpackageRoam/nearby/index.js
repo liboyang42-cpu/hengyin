@@ -499,14 +499,28 @@ Page({
 
   /* ---------- 半屏壳 ---------- */
 
+  /* 2026-10-23 弹层动效:关闭原来是一帧卸载;现在先落下(half 档 250ms = --cy-motion-sheet-out)再卸载。
+     上一层还在落下时又要开新的一层:等它落完再开(同一时刻只有一个弹层在动)。 */
   _openSheet(name) {
     if (this._sheetInTimer) { clearTimeout(this._sheetInTimer); this._sheetInTimer = null; }
+    if (this._sheetOutTimer) { this._pendingSheet = name; return; }
     this.setData({ sheet: name, sheetIn: false });
-    this._sheetInTimer = setTimeout(() => this.setData({ sheetIn: true }), 20);
+    this._sheetInTimer = setTimeout(() => this.setData({ sheetIn: true }), this.data.reducedMotion ? 0 : 20);
   },
   closeSheet() {
     if (this._sheetInTimer) { clearTimeout(this._sheetInTimer); this._sheetInTimer = null; }
-    this.setData({ sheet: '', sheetIn: false });
+    this._pendingSheet = '';
+    if (!this.data.sheet || this.data.reducedMotion) { this.setData({ sheet: '', sheetIn: false }); return; }
+    if (this._sheetOutTimer) return;
+    this.setData({ sheetIn: false });
+    this._sheetOutTimer = setTimeout(() => {
+      this._sheetOutTimer = null;
+      if (this._unloaded) return;
+      this.setData({ sheet: '' });
+      const next = this._pendingSheet;
+      this._pendingSheet = '';
+      if (next) this._openSheet(next);
+    }, 250);
   },
   /* 半屏本体吃掉冒泡,免得点正文把自己关了。 */
   noop() {},

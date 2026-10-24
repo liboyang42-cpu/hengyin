@@ -47,15 +47,15 @@
       "endpoint": "/api/club/remove-member",
       "file": "pages/club/detail/index.js",
       "irreversible": true,
-      "confirmKey": "club.member.remove",
-      "reason": "对方可以重新申请,但成员身份与加入时间不保留"
+      "guard": "undo",
+      "reason": "对方可以重新申请,但成员身份与加入时间不保留;2026-10-23 业主定改为提示条撤销:请求在 4 秒撤销窗口过后才发,撤销 = 请求没发"
     },
     {
       "endpoint": "/api/club/remove-member",
       "file": "pages/talent/list/index.js",
       "irreversible": true,
-      "confirmKey": "club.member.remove",
-      "reason": "同上,达人榜里的另一个入口"
+      "guard": "undo",
+      "reason": "同上,达人榜里的另一个入口;2026-10-23 业主定改为提示条撤销:请求在 4 秒撤销窗口过后才发,撤销 = 请求没发"
     },
     {
       "endpoint": "/api/merchant/aftercare/respond",

@@ -41,7 +41,7 @@
    ⚠️ 这是跨组件复制的公式,由 post-drafts-fullscreen-contract 钉住 cy-sheet 那侧,漂了即红。 */
 .pd {
   margin: 0 calc(var(--cy-page-x) * -1);
-  min-height: calc(var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))
+  min-height: calc(min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)))
                    - env(safe-area-inset-bottom) - 24rpx   /* .sh__panel 的 padding-bottom */
                    - 16rpx);                               /* .sh__body 的 padding: 8rpx 0,上下各一份 */
 }

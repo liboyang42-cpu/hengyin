@@ -424,6 +424,14 @@ page {
    * ⚠️ 进/出成对且**出必须短于进**(M3 exit 规则)—— sheet-modal-exit-motion-contract 判红。 */
   --cy-motion-sheet-in:   300ms;   /* 半屏 sheet 升起(Peloton Class Filter Sheet) */
   --cy-motion-sheet-out:  250ms;   /* 半屏 sheet 落下(Clubhouse「leave quietly」) */
+  /* 2026-10-23 业主定:弹窗按档位定速 —— 越高的面板走得越远,时长略长,三档看上去同一个速度。
+     half 档 = 上面的 sheet-in / sheet-out(300 / 250)。cy-sheet / cy-scene-sheet 在根节点按档位
+     把 --cy-motion-sheet-in / -out 重定义成下面这几条,面板与遮罩同档。JS 退场计时器镜像见 exit-motion.js。 */
+  --cy-motion-sheet-peek-in:  260ms;
+  --cy-motion-sheet-peek-out: 200ms;
+  --cy-motion-sheet-full-in:  340ms;
+  --cy-motion-sheet-full-out: 280ms;
+  --cy-motion-toast-out:      150ms;   /* 轻提示 / 可撤销提示条收起:比进场(standard 220)快一档 */
   --cy-motion-expand:     300ms;   /* 行内展开:折叠组 / 更多工具(M3 emphasized-decelerate) */
   --cy-motion-collapse:   200ms;   /* 行内收起(M3:exit/collapse 用更短时长) */
   --cy-motion-crossfade:  150ms;   /* chip 选中的白底 cross-fade;也是减动效兜底的统一时长
@@ -639,6 +647,13 @@ page {
   --cy-comp-sheet-top-gap:    16rpx;   /* 8px:面板顶与胶囊底之间的视觉余量(2026-09-02 用户定) */
   --cy-comp-sheet-max-height: calc(100vh - var(--cy-safe-top) - var(--cy-comp-sheet-top-gap));
   --cy-comp-sheet-full-height: var(--cy-comp-sheet-max-height);
+  /* 2026-10-23 业主定:底部弹窗三档 peek / half / full = 屏高 30% / 60% / 80%。
+     弹窗贴内容高,取放得下的最小一档;放不下就停在该档、只让正文滚动(所以默认上限就是 full)。
+     打开后内容会变的(搜索、加载、分页签、多步)固定在所属档的高度,不随内容跳。
+     任何一档同时受胶囊底 +5px 封顶(上面的 --cy-comp-sheet-max-height / 组件下发的 --cy-comp-sheet-max-h)。 */
+  --cy-comp-sheet-peek: 30vh;
+  --cy-comp-sheet-half: 60vh;
+  --cy-comp-sheet-full: 80vh;
   --cy-comp-sheet-border-width: 0.714px;
   /* 375px 设备上 44px = 88rpx:热区与 Figma 31.996px 视觉圆分离。 */
   --cy-comp-sheet-close-hit-size: 88rpx;

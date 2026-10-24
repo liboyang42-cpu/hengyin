@@ -2096,11 +2096,14 @@ button::after {
 .topic .statbar { box-sizing: border-box; width: 100%; }
 
 /* —— v13 购买半屏:票面(照片 + 齿孔 + 镭射)/ 票种 / 小牌 / 合计 / 去结算 —— */
-.bdim { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 180; background: rgba(0,0,0,.55); opacity: 0; transition: opacity .3s ease; } /* ds-ok */
-.bdim.is-in { opacity: 1; }
+.bdim { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 180; background: rgba(0,0,0,.55); opacity: 0; transition: opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); } /* ds-ok */
+.bdim.is-in { opacity: 1; transition-duration: var(--cy-motion-sheet-in); }
 .bsheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 181; padding: 19rpx 31rpx calc(58rpx + env(safe-area-inset-bottom)); border-radius: 54rpx 54rpx 0 0; background: #1C1C1E; color: #fff; /* ds-ok */
-  transform: translateY(100%); transition: transform .32s cubic-bezier(.5,0,.75,0); }
-.bsheet.is-in { transform: none; transition: transform .55s cubic-bezier(.34,1.18,.64,1); }
+  /* 2026-10-23 业主定:弹层不回弹、慢快慢,按档位定速(tokens 的 --cy-motion-sheet-*);原进场 .55s 过冲回弹、退场 .32s 已取消(业主确认去掉回弹) */
+  transform: translateY(100%); transition: transform var(--cy-motion-sheet-out) var(--cy-ease-standard);
+  /* 2026-10-23 弹层三档:贴内容高,上限 full(80%)且不越过胶囊 */
+  box-sizing: border-box; max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-height)); overflow-y: auto; }
+.bsheet.is-in { transform: none; transition: transform var(--cy-motion-sheet-in) var(--cy-ease-standard); }
 .bdim.is-still, .bsheet.is-still { transition: none; }
 .bsheet__grab { width: 73rpx; height: 10rpx; border-radius: 6rpx; margin: 0 auto 23rpx; background: rgba(255,255,255,.25); } /* ds-ok */
 .bsheet__x { position: absolute; right: 27rpx; top: 27rpx; width: 58rpx; height: 58rpx; border-radius: 50%; background: #2C2C2E; display: flex; align-items: center; justify-content: center; } /* ds-ok */

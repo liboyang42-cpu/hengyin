@@ -1986,11 +1986,12 @@ Page({
     });
   },
 
-  onTogglePin(e) {
+  // forcePinned:只给「撤销取消置顶」用 —— 撤销时列表可能还没回读,不能再按当前 isPinned 取反
+  onTogglePin(e, forcePinned) {
     const post = this.findPost(e.currentTarget.dataset.id);
     if (!post || !this.data.canModerateContent || Number(post.type) !== 2) return;
     const that = this;
-    const pinned = Number(post.isPinned) !== 1;
+    const pinned = typeof forcePinned === 'boolean' ? forcePinned : Number(post.isPinned) !== 1;
     this._postRequestIntents = this._postRequestIntents || {};
     const intent = planClubPostRequestIntent('club-post-pin', {
       clubId: this.data.clubId,
@@ -2012,7 +2013,14 @@ Page({
         else if (isExplicitClientFailure(res)) {
           clearClubPostRequestIntent(intent, that._postRequestIntents);
         }
-        cyToast((res && res.msg) || (res.code == '200' ? '已更新' : '操作失败'));
+        // 2026-10-23 弹层规范:取消置顶可撤销 —— 提示条留「撤销」,点了就按原样置顶回去
+        if (res.code == '200' && !pinned) {
+          cyToast.undo('已取消置顶', {
+            onUndo() { that.onTogglePin({ currentTarget: { dataset: { id: post.id } } }, true); },
+          });
+        } else {
+          cyToast((res && res.msg) || (res.code == '200' ? '已更新' : '操作失败'));
+        }
         if (res.code == '200') that.loadPosts();
       },
       fail() { cyToast('网络异常，请重试'); },
@@ -3276,24 +3284,30 @@ Page({
   },
 
   // 主理人移除成员
+  // 2026-10-23 业主定:移出成员改成「先移出、提示条里可撤销」—— 行先从列表拿掉,提示条留「撤销」4 秒;
+  // 到期(或被下一条提示顶掉 / 离开页面)才真的发 /api/club/remove-member。撤销 = 请求根本没发,对方不会收到通知。
   removeMember(e) {
     if (!this.data.club || !(this.canGovern() || this.data.canManageMembers)) return;
-    const dc = this.selectComponent && this.selectComponent('#dcMember');
-    if (dc) dc.open('club.member.remove', {
-      name: e.currentTarget.dataset.memberName || '这位成员',
-      memberId: e.currentTarget.dataset.memberId,
+    const memberId = e.currentTarget.dataset.memberId;
+    if (!memberId) return;
+    const name = e.currentTarget.dataset.memberName || '这位成员';
+    const that = this;
+    const before = this.data.members || [];
+    this.setData({ members: before.filter((m) => String(m.memberId) !== String(memberId)) });
+    cyToast.undo('已将「' + name + '」移出俱乐部', {
+      onUndo() { that.setData({ members: before }); },
+      onCommit() { that._doRemoveMember(memberId); },
     });
   },
   _doRemoveMember(memberId) {
-    const that = this, dc = this.selectComponent && this.selectComponent('#dcMember');
-    if (dc) dc.busyOn();
+    const that = this;
     app.sendRequest({
       url: '/api/club/remove-member', method: 'POST', data: jsonBody({ clubId: that.data.clubId, memberId: memberId }), header: jsonHeader(),
       success(res) {
-        if (res.code == '200') { if (dc) dc.done(); that.loadMembers(); that.loadDetail(); }
-        else if (dc) dc.failed((res && res.msg) || '移除失败');
+        if (res.code == '200') { that.loadMembers(); that.loadDetail(); }
+        else { cyToast((res && res.msg) || '移除失败'); that.loadMembers(); }
       },
-      fail() { if (dc) dc.failed('网络异常，请重试'); },
+      fail() { cyToast('网络异常，请重试'); that.loadMembers(); },
     });
   },
 
@@ -3303,7 +3317,6 @@ Page({
   onConfirmDeletePost(e) { this._doDeletePost(e.detail.params.id); },
   onConfirmDeleteComment(e) { this._doDeleteComment(e.detail.params.id, e.detail.params.postId); },
   onConfirmQuit() { this._doQuit(); },
-  onConfirmRemoveMember(e) { this._doRemoveMember(e.detail.params.memberId); },
 
   /** 退出俱乐部的更轻替代:留在俱乐部,只关掉群消息提醒。 */
   onQuitAlt() {

@@ -301,7 +301,8 @@ test('游玩工具抽屉:开关是真开关，用不了的行画成失效态，�
   assert.match(readXcx('style/proto-sheet.wxss'), /\.drow\.is-off/)
   assert.doesNotMatch(wxml, /bindtap="onLocationRowTap"[\s\S]{0,400}?class="darr"/)
   // 抽屉到屏底内部滚动,行数多不会把三键顶出屏外
-  assert.match(wxml, /<scroll-view class="tools tools--corner" wx:if="\{\{sessionToolsOpen\}\}" scroll-y/)
+  // 2026-10-23 弹层动效:收起先淡出(toolsOut → is-out),再卸载
+  assert.match(wxml, /<scroll-view class="tools tools--corner \{\{toolsOut \? 'is-out' : ''\}\}" wx:if="\{\{sessionToolsOpen\}\}" scroll-y/)
   assert.match(wxss, /\.tools\{[^}]*max-height/)
   // 标签和动作对不上的那一行已收口:onGoTap 与 onSheetGoTap 逐行同义,只留后者
   assert.doesNotMatch(wxml, /bindtap="onGoTap"/)
