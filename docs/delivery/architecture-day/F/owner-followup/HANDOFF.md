@@ -37,3 +37,5 @@ D4061的topic fence仍归已登记TopicContentWriteGuard，没有造新锁owner/
 - 实际静态检查：Python3.9语法、原69+89测试方法正文逐AST不变、原35/30/36及业务policy精确不变、diff与原配置秘密扫描。**Java/jdeps/JUnit/DB/CI均NOT_RUN，不启动新回归批次。** 缺新源/输入会UNKNOWN，不能拿本guard分支缺B/F类的生产树做空图验收。
 
 root独占两处trusted ref，应一起指向审定的新verifier，不可candidate自改policy批准自己；F仅交review.patch，不改workflow。下一项为root同批完整源上的真实SDK→router、DTO→facade、Common→Framework隔离编译负控及原3Mapper正控；必须同源JAR/raw回读，不能借本Python合成绿项。业务/锁/日志语义验证仍由各owner对应测试与root集中CI执行。
+
+执行verifier冻结 `5caf6b288c8df612d8420e4007032e4d9568e18e`（parent06a）。本交接提交只加[双ref review.patch](trusted-ref.review.patch)与说明，不再改冻结策略。补丁基于公开06a，精确两行7b3→5caf；`git apply --unidiff-zero --check` 的临时Git逐字应用模拟PASS。root仅按自己实际workflow逐hunk审定，若旧ref/上下文不同不得整旧文件覆盖；本分支没有编辑workflow。
