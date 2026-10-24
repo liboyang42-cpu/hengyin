@@ -53,7 +53,7 @@ public class RoamOrphanLocationRetentionService {
       || !java.util.Objects.equals(String.valueOf(candidate.get("sourceId")),String.valueOf(row.get("sourceId")))))continue;
     Date collectedAt=(Date)row.get("collectedAt");
     if(collectedAt==null) {
-     if(session!=null && Integer.valueOf(0).equals(session.getStatus()))continue;
+     if(session!=null && Integer.valueOf(RoamSession.STATUS_ACTIVE).equals(session.getStatus()))continue;
     } else if(collectedAt.after(cutoff) || session!=null)continue;
     if("shop".equals(kind))roam.recordAnonymousShopVisitor(member,((Number)row.get("sourceType")).intValue(),
       ((Number)row.get("sourceId")).longValue());

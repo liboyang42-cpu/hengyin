@@ -174,7 +174,7 @@ public class ApiRoamController extends BaseController {
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectSessionById(sid) : null;
         if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (!Integer.valueOf(RoamSession.STATUS_ACTIVE).equals(session.getStatus())) return error("本次漫游已结算");
         // C-17:与 /pois 同一审核口径 —— 未过审的商家投放不可发现、不可入账。
         List<RoamPoi> pois = roamMapper.selectPlayerPoisByIds(java.util.Collections.singletonList(poiId));
         if (pois.isEmpty()) return error("地点不存在或已下线");
@@ -275,7 +275,7 @@ public class ApiRoamController extends BaseController {
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
         if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (!Integer.valueOf(RoamSession.STATUS_ACTIVE).equals(session.getStatus())) return error("本次漫游已结算");
 
         // ★ 店名与坐标一律从来源表读,不采信客户端:
         //   坐标必须用库里的真坐标,否则伪造坐标可绕过到点校验;
@@ -581,7 +581,7 @@ public class ApiRoamController extends BaseController {
         if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
         if (clientSessionKey != null && !clientSessionKey.equals(session.getClientSessionKey()))
             return error("会话关联不一致");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (!Integer.valueOf(RoamSession.STATUS_ACTIVE).equals(session.getStatus())) return error("本次漫游已结算");
         // P0-23:格子是客户端上报的,服务端至少按会话时长封顶 —— 不能一次请求就把全城点亮刷里程碑勋章。
         //   超出预算的部分直接丢弃(不报错):报错会让客户端待传队列卡死、连带结算排不空。
         Date now = new Date();
@@ -671,7 +671,7 @@ public class ApiRoamController extends BaseController {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         RoamSession own = roamMapper.selectSessionById(Convert.toLong(sessionId, 0L));
-        if (own == null || !memberId.equals(own.getMemberId()) || !Integer.valueOf(0).equals(own.getStatus())) {
+        if (own == null || !memberId.equals(own.getMemberId()) || !Integer.valueOf(RoamSession.STATUS_ACTIVE).equals(own.getStatus())) {
             return success(false);
         }
         return success(Boolean.TRUE.equals(own.getPresenceVisible()));
@@ -695,7 +695,7 @@ public class ApiRoamController extends BaseController {
         Date occurredAt = new Date();
         if (visible) {
             RoamSession own = roamMapper.selectOwnedSessionForUpdate(sid, memberId);
-            if (own == null || !Integer.valueOf(0).equals(own.getStatus())) return error("请先开始漫游");
+            if (own == null || !Integer.valueOf(RoamSession.STATUS_ACTIVE).equals(own.getStatus())) return error("请先开始漫游");
         }
         // 关闭覆盖本人所有未结束会话，旧会话或在途心跳都不能重新打开。
         roamMapper.updatePresenceVisibility(null, memberId, false);
@@ -808,7 +808,7 @@ public class ApiRoamController extends BaseController {
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
         if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (!Integer.valueOf(RoamSession.STATUS_ACTIVE).equals(session.getStatus())) return error("本次漫游已结算");
 
         // ① POI:R6 只认服务端 /poi/discover 已校验到点的记录,不再采信客户端 poiIds(防伪造 poiId 刷 XP)
         List<RoamPoi> foundPois = roamMapper.selectFoundPoisBySession(sid);

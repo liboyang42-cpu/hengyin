@@ -37,7 +37,7 @@ const {
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { createIdleDetector } = require('../../utils/roam-idle.js');
 const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
-const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
+const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js'); const { monthDay } = require('../../utils/month-day.js'); // 同行:本页 ui-integrity 基线按行号键
 const { isRecordList } = require('../../utils/response-shape.js');
 const readSession = require('../../utils/session/login-reload.js');
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
@@ -116,7 +116,7 @@ const NEAR_M = 80;       // 略放宽,GPS 不准时仍能提示
    打卡按钮的可用半径必须与后端 /api/roam/shop/visit 的判定同一口径 ——
    SHOP_VISIT_RADIUS_M(100) + ROAM_GPS_TOLERANCE_M(30)。客户端算出来的「还差 X 米」
    和后端拒收的分界点必须一致,不然会出现「提示说能打,服务端说没到」的失败态。 */
-const CHECKIN_NEAR_M = 130;
+const { CHECKIN_NEAR_M } = require('../../utils/roam-geo-thresholds.js'); // = 100 + 30,后端对照见该文件
 // #23 三店连亮弹层的兜底阈值:配置拉不到时用它(fail-open,不比改动前差)。
 // 真源是后端 growth_badge.unlock_rule_json —— 改阈值改那里,这里只是网络挂了时的降级。
 const SHOP_BADGE_FALLBACK_THRESHOLD = 3;
@@ -308,7 +308,7 @@ Page({
     introTab: 'start',            // start=开始漫游 | passport=漫游护照
     introTabs: [{ key: 'start', label: '开始漫游' }, { key: 'passport', label: '漫游护照' }],
     avatar: '',
-    // 护照 tab 的读数全部来自本机 roam_sessions,拿不到就是空态,不摆假卡
+    // 护照 tab 的读数全部来自本机会话记忆(roam_memory_v1:<玩家ID>:sessions),拿不到就是空态,不摆假卡
     passport: { tiles: [], trips: [] }, ppOpen: { show: false, on: false, icon: '', title: '', value: '', style: '' }, // ppOpen:护照方卡放大层
     introCardIdx: 0,
     introCards: [
@@ -347,7 +347,7 @@ Page({
     endHoldPct: 0,
     mapLoad: 'pending',
     // 据点接口失败时为真；它只证明据点没加载出来，不能据此宣称整机或系统离线。
-    // 本地进度(roam_tiles 迷雾格)独立保留。
+    // 本地进度(roam_memory_v1:<玩家ID>:tiles 迷雾格)独立保留。
     // 商家图层(/api/map/nearby)失败时为真。与 poiOffline 同一层展示(离线横幅),
     // 但分开记:两个接口一好一坏时不能互相cover,也不能把「这一带没有店」当失败。
     merchantOffline: false,
@@ -715,7 +715,7 @@ Page({
     this.setData({ introTab });
     if (introTab === 'passport') { this._loadIntroPassport(); this._loadActiveRoamEvents(); }
   },
-  /** 护照 tab 读数:全部来自本机 roam_sessions,拿不到就是 0,不摆假数。
+  /** 护照 tab 读数:全部来自本机会话记忆(roam_memory_v1:<玩家ID>:sessions),拿不到就是 0,不摆假数。
    *  分两层(2026-08-08 定稿)——
    *    上排方卡 = 我的档案,按「回看频率 × 情感价值」排:记录 > 集邮 > 勋章 > 数据
    *    下排大卡 = 去玩什么,只留需要「被看见才会点」的:官方活动 / 发现店铺
@@ -803,7 +803,7 @@ Page({
   },
   openNearbyMap() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/nearby/index', complete: () => { this._navigating = false; } }); },
   openMyTeams() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/my-teams/index', complete: () => { this._navigating = false; } }); },
-  /** 护照 tab 的三格读数 + 旅程卡:唯一数据源是本机 roam_sessions(与 passport/history 两页同源)。
+  /** 护照 tab 的三格读数 + 旅程卡:唯一数据源是本机会话记忆 roam_memory_v1:<玩家ID>:sessions(与 passport/history 两页同源)。
    *  storage 读不出来 = 真的没有记录 ⇒ trips 空、三格全 0,由 wxml 出空态文案;不编数字。 */
   /* 设置页的权限状态:位置权限(scope.userLocation)与后台持续定位(scope.userLocationBackground)
      都从系统里读,不猜、不写死。拿不到就保持原值(宁可显示旧值,也不翻成「关」骗人)。 */
@@ -1463,7 +1463,7 @@ Page({
     // 唯一格子数计数器:_sessionTiles 只增不减,这里 ++ 与 Object.keys(...).length 恒等,
     // 但避免在 GPS 回调里对一个持续增长的对象做 O(n) 枚举(整场会话就是 O(n²))。
     this._sessionTileCount = (this._sessionTileCount || 0) + 1;
-    // 本地持久化:新格子增量记入 roam_tiles(与后端上报独立,离线也不丢)
+    // 本地持久化:新格子增量记入 roam_memory_v1:<玩家ID>:tiles(与后端上报独立,离线也不丢)
     if (!this._localTiles) this._localTiles = {};
     if (!this._localTiles[key]) {
       this._localTiles[key] = 1;
@@ -2693,7 +2693,7 @@ Page({
     if (Math.abs(deg - (this._heading || 0)) > 1.5) {
       this._heading = deg;
       this.setData({ heading: Math.round(deg) });
-      this._syncMarkers();
+      this._mkTimer = 0; // C:U-092 转向不另起全量同步:清节流戳,让 _applyMovePatch 本 tick 只同步一次
     }
   },
 
@@ -3918,7 +3918,7 @@ Page({
     }
 
     if (Object.keys(patch).length) this.setData(patch);
-    // markers 全量重发节流(每 tick 重发是图层闪烁源之一);转向时 _updateHeading 会即时同步
+    // markers 全量重发节流(每 tick 重发是图层闪烁源之一);转向时 _updateHeading 清戳 → 本 tick 同步一次
     if (!this._mkTimer || now - this._mkTimer >= 600) {
       this._mkTimer = now;
       this._syncMarkers();
@@ -4706,7 +4706,7 @@ Page({
     const mm = String(now.getMinutes()).padStart(2, '0');
     const fin = {
       zone: '这片街区',
-      date: (now.getMonth() + 1) + '月' + now.getDate() + '日',
+      date: monthDay(now),
       dateLine: '今天 · ' + (now.getHours() < 12 ? '上午' : '下午') + ' ' + hh + ':' + mm,
       shops,
       distance: ((this._dist || 0) / 1000).toFixed(1),
@@ -4881,7 +4881,7 @@ Page({
       sessionId: exactSessionId(session.sessionId),
       finish: {
         zone: (typeof session.zone === 'string' && session.zone.trim()) || '这片街区',
-        date: validDate ? (date.getMonth() + 1) + '月' + date.getDate() + '日' : '',
+        date: validDate ? monthDay(date) : '',
         shops: shops === null ? null : shops,
         distance: distance === null ? null : distance,
         explorePct: explorePct === null ? null : explorePct,

@@ -4,6 +4,10 @@ const { pruneSessions, THIRTY_DAYS } = require('./roam-location-retention.js')
 const { roamCacheEpoch, invalidateRoamCache } = require('./roam-cache-epoch.js')
 const PREFIX = 'roam_memory_v1'
 const PLAYER_MEMORY_KINDS = ['tiles', 'reveals', 'recovery', 'sessions']
+// 本机迷雾格容量上限(C:U-123):每格约 38 字节(格键 + 落盘时间),2 万格 ≈ 760KB,
+// 留在微信单 key 1MB 上限之内。超过上限时整次 setStorageSync 会失败、一格都存不下;
+// 宁可先舍掉最早点亮的格子(服务端仍有全量),也不能让新点亮的格子全部写不进去。
+const MAX_LOCAL_TILES = 20000
 
 function isPlayerMemoryKey(storageKey) {
   const parts = typeof storageKey === 'string' ? storageKey.split(':') : []
@@ -14,6 +18,18 @@ function isPlayerMemoryKey(storageKey) {
 function normalizePlayerId(playerId) {
   const value = String(playerId == null ? '' : playerId).trim()
   return value && value !== '0' ? value : ''
+}
+
+/** 超过 MAX_LOCAL_TILES 时保留进行中行程的格子,其余按落盘时间从新到旧保留。 */
+function capTiles(tiles, retentionAt, recovery, limit) {
+  const max = limit || MAX_LOCAL_TILES
+  const keys = Object.keys(tiles)
+  if (keys.length <= max) return { tiles, retentionAt }
+  const active = new Set(recovery && !recovery.finishedAt && Array.isArray(recovery.allTiles) ? recovery.allTiles : [])
+  const ranked = keys.slice().sort((a, b) => (active.has(b) - active.has(a)) || (Number(retentionAt[b]) || 0) - (Number(retentionAt[a]) || 0))
+  const keptTiles = {}, keptAt = {}
+  ranked.slice(0, max).forEach(tile => { keptTiles[tile] = tiles[tile]; keptAt[tile] = retentionAt[tile] })
+  return { tiles: keptTiles, retentionAt: keptAt }
 }
 
 function createPlayerRoamMemory(playerId, storage) {
@@ -84,8 +100,9 @@ function createPlayerRoamMemory(playerId, storage) {
         if (serverRetentionAt && Number(serverRetentionAt[tile]) > 0) retentionAt[tile] = Number(serverRetentionAt[tile])
         else if (!(tile in retentionAt)) retentionAt[tile] = previous.tiles && tile in previous.tiles ? 0 : Date.now()
       })
+      const capped = capTiles(values, retentionAt, read('recovery', null))
       try {
-        const serialized = JSON.stringify({ tiles: values, retentionAt, serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0 })
+        const serialized = JSON.stringify({ tiles: capped.tiles, retentionAt: capped.retentionAt, serverCursor: Number.isSafeInteger(cursor) && cursor > 0 ? cursor : 0 })
         if (!write('tiles', JSON.parse(serialized))) return false
         const result = readResult('tiles')
         return result.ok && JSON.stringify(result.value) === serialized
@@ -199,6 +216,8 @@ function clearStoragePreservingPlayerRoamMemory(storage) {
 }
 
 module.exports = {
+  MAX_LOCAL_TILES,
+  capTiles,
   bindPlayerRoamMemory,
   clearStoragePreservingPlayerRoamMemory,
   createPlayerRoamMemory,

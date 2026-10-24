@@ -36,7 +36,7 @@ public class RoamSessionWriteService {
         if (session == null || !memberId.equals(session.getMemberId())) throw new ServiceException("会话不存在");
         if (clientSessionKey != null && !clientSessionKey.equals(session.getClientSessionKey()))
             throw new ServiceException("会话关联不一致");
-        if (!Integer.valueOf(1).equals(session.getStatus()) || session.getStartedAt() == null || session.getFinishedAt() == null)
+        if (!Integer.valueOf(RoamSession.STATUS_FINISHED).equals(session.getStatus()) || session.getStartedAt() == null || session.getFinishedAt() == null)
             throw new ServiceException("原行程尚未确认结束");
         if (session.getLocationClearedAt() != null) throw new ServiceException("原行程位置已按保留期清除");
         List<Map<String, Object>> records = validateArchive(payload, session.getStartedAt(), session.getFinishedAt(), new Date());
@@ -90,7 +90,7 @@ public class RoamSessionWriteService {
         locationConsent.requireCurrentAgreement(memberId);
         RoamSession session = roamMapper.selectOwnedSessionForUpdate(sessionId, memberId);
         if (session == null || !memberId.equals(session.getMemberId())) throw new ServiceException("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) throw new ServiceException("本次漫游已结算");
+        if (!Integer.valueOf(RoamSession.STATUS_ACTIVE).equals(session.getStatus())) throw new ServiceException("本次漫游已结算");
         return roamMapper.insertPoiFoundIgnore(memberId, poiId, sessionId, new Date());
     }
 

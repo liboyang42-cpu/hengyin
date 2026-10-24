@@ -4,6 +4,15 @@ import java.util.Date;
 
 /** P2 漫游会话 roam_session。 */
 public class RoamSession {
+    /**
+     * status 只有两态,写入只走 0→1 的 CAS(RoamMapper.updateSessionFinish ... and status = 0)。
+     * 召回扫描索引 idx_roam_session_recall 以 status 为首列、只扫 status = 1;
+     * 库侧由 ck_roam_session_status(migration_roam_session_status_check_20261024.sql)兜底。
+     * Mapper XML 里的字面量 0/1 与这两个常量同义。
+     */
+    public static final int STATUS_ACTIVE = 0;
+    public static final int STATUS_FINISHED = 1;
+
     private Long id;
     private Long memberId;
     private String clientSessionKey;
@@ -11,6 +20,7 @@ public class RoamSession {
     private Date startedAt;
     private Date finishedAt;
     private Date locationClearedAt;
+    /** 客户端自报里程(米),不可信:落库前由 ApiRoamController.clampClientDistance 封顶,仅用于展示、不参与结算。 */
     private Integer distanceM;
     private Integer tilesRevealed;
     private Integer poisFound;
@@ -29,7 +39,7 @@ public class RoamSession {
     /** 客户端算的本次探索度 0-99。服务端只存不算 —— 它是本机 20×20 格的口径,后端没有等价物。 */
     private Integer explorePct;
     private Boolean presenceVisible;
-    /** 0 进行中 1 已结算 */
+    /** STATUS_ACTIVE(0) 进行中 / STATUS_FINISHED(1) 已结算 */
     private Integer status;
     private Date createTime;
 

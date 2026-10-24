@@ -48,7 +48,7 @@ public class RoamLocationRetentionService {
     public int clear(Long id, Long memberId, Date cutoff) {
         mapper.lockClaimOwner(memberId);
         RoamSession row = mapper.selectOwnedSessionForUpdate(id, memberId);
-        if (row == null || !Integer.valueOf(1).equals(row.getStatus())
+        if (row == null || !Integer.valueOf(RoamSession.STATUS_FINISHED).equals(row.getStatus())
                 || (row.getFinishedAt()!=null && row.getFinishedAt().after(cutoff)) || row.getLocationClearedAt() != null) return 0;
         mapper.requireClaimKey();
         String result = RoamLocationRetention.stripJson(row.getFinishResultJson());

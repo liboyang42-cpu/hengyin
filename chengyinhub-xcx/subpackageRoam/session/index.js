@@ -1,4 +1,4 @@
-// 城瘾 · 单次漫游回看 —— 读 roam_sessions 里指定 ts 的一次记录
+// 城瘾 · 单次漫游回看 —— 读本机会话记忆(roam_memory_v1:<玩家ID>:sessions)里指定 ts 的一次记录
 const modal = require('../../utils/modal.js');
 const loading = require('../../utils/loading.js');
 const toast = require('../../utils/toast.js');
@@ -9,7 +9,7 @@ const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { limitTrack } = require('../../utils/roam-track-simplify.js');
 const { publishShareSnapshot, readShareSnapshot } = require('../../utils/roam-share-snapshot.js');
 const app = typeof getApp === 'function' ? getApp() : { globalData: {} };
-const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+const { monthDay, monthDayWeek } = require('../../utils/month-day.js');
 // 路线图画布(ss-map:750-80=670rpx 宽,520rpx 高)
 const MW = 670, MH = 520, PAD = 60;
 // Canvas 读不到 WXSS token；这里逐字同步 Figma 浅色叙事 token(220:1415)，
@@ -96,7 +96,7 @@ Page({
           routeName: result.session.routeName || '城市漫游足迹',
           completeFact: '已完成本次漫游',
           time: result.session.time || '—',
-          dateFull: Number.isNaN(d.getTime()) ? '日期不可用' : `${d.getMonth() + 1}月${d.getDate()}日 周${WEEK[d.getDay()]}`,
+          dateFull: monthDayWeek(d, '日期不可用'),
         },
       });
       return true;
@@ -166,7 +166,7 @@ Page({
 
     const d = new Date(Number(s.ts));
     const validDate = !Number.isNaN(d.getTime());
-    s.dateFull = validDate ? `${d.getMonth() + 1}月${d.getDate()}日 周${WEEK[d.getDay()]}` : '日期不可用';
+    s.dateFull = monthDayWeek(d, '日期不可用');
     s.time = s.time || this._fmt(s.durSec);
     const zone = String(s.zone || '').trim();
     const poiNames = s.pois.map((poi) => String(poi.name || '').trim()).filter(Boolean);
@@ -178,7 +178,7 @@ Page({
         ? `${poiNames[0]}等${poiNames.length}处足迹回看`
         : (poiNames.length === 1
           ? `${poiNames[0]}周边足迹回看`
-          : (validDate ? `${d.getMonth() + 1}月${d.getDate()}日城市漫游足迹` : '城市漫游足迹')));
+          : (validDate ? monthDay(d) + '城市漫游足迹' : '城市漫游足迹')));
     s.distance = readNonNegative(s.distance);
     s.distanceText = s.distance === null ? '—' : String(s.distance);
     s.completeFact = '已完成本次漫游';
