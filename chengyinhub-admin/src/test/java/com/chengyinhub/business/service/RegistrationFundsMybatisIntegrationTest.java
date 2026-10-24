@@ -364,6 +364,15 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(java.util.Arrays.asList(8811L, 8812L, 8819L),
                 registrationService.listExpiredUnverifiedIds(),
                 "缓冲内/已核销/在途退款/缺锚点/已回单/主题单都不得入扫");
+        assertEquals(java.util.Arrays.asList(8811L, 8812L, 8819L),
+                registrationService.listExpiredUnverifiedIdsAfter(0L),
+                "游标从零扫描必须与旧接口的到期判据一致");
+        assertEquals(java.util.Arrays.asList(8812L, 8819L),
+                registrationService.listExpiredUnverifiedIdsAfter(8811L),
+                "游标必须排除已扫描的 ID 并保持升序");
+        assertEquals(java.util.Collections.emptyList(),
+                registrationService.listExpiredUnverifiedIdsAfter(8819L),
+                "超过最后一笔候选必须返回空页");
 
         execute(
                 "INSERT INTO cms_registration(id,registration_no,parent_order_no,owner_type,owner_id,member_id,"
