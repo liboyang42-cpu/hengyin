@@ -305,6 +305,10 @@ merchant:
 # AI 创作助手配置(2026-06-28):多 Provider 架构,dailyLimit/timeoutMs 上提为公共配置
 # key 只放后端,经环境变量注入,切勿下发到小程序前端
 ai:
+  # Enable maintenance only after the intent schema preflight; admission stays independent.
+  themeDraftIntent:
+    enabled: ${CHENGYIN_AI_THEME_DRAFT_INTENT_ENABLED:false}
+    maintenanceEnabled: ${CHENGYIN_AI_THEME_DRAFT_INTENT_MAINTENANCE_ENABLED:false}
   model:
     provider: deepseek  # 已切真模型上线;创作场景经 AiSceneRouter 路由到本 deepseek 客户端
     apiKey: ${CHENGYIN_AI_API_KEY:${CHENGYIN_DEEPSEEK_API_KEY:}}   # 生产必须注入(两个 env 名任一均可);未设则调用返回"AI 繁忙"

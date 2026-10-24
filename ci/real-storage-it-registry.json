@@ -399,8 +399,8 @@
       "note": "25 ordinary@Test; no dynamic count/skip fallback. Source-bound XML/CLEAN required; pair with independently executed old-source25 before mechanical equivalence claim."
     },
     "architecture-day-theme-intent": {
-      "registered_source": "78559677c472fe58e7583158482d17d0aa138dba",
-      "note": "Exact19 ordinary Test cases. Source binding, zero-skip XML and CLEAN MySQL/Redis mandatory; default feature and maintenance remain off.",
+      "registered_source": "c65c7ac90ecddeed9c4e1d95eaee4348ee7c2b58",
+      "note": "22 exact ordinary@Test MySQL/Redis cases: original19 plus2 gen quota/late-failure and1 original-mode recovery. A ef080 plus root Controller/maintenance wiring must be in actual tested source. Defaults remain off; no provider or production DDL. Source-bound XML, zero skipped and CLEAN required.",
       "classes": [
         "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT"
       ],
@@ -1206,7 +1206,7 @@
       "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports."
     },
     "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT": {
-      "tests": 19,
+      "tests": 22,
       "storage": [
         "mysql",
         "redis"

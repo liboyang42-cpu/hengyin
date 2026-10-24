@@ -71,7 +71,8 @@
     "reason": "HTTP cleanup saturation fixture raced before all existing workers entered; no production/gate violation conclusion",
     "corrected_source": "ef5331db7a4424acca5dfde5325e83149ff3e472",
     "corrected_run": "40055275716",
-    "corrected_outcome": "PENDING"
+    "corrected_outcome": "FAILED_BEFORE_TARGET_CHECK",
+    "second_reason": "Root fixture correction assumed core=max. Actual disconnect executor is core1/max4; awaiting4 initial blockers did not start all4. Independent fixture review assigned to A; no repeated CI yet."
   },
   "not_proven": [
     "Actual compiled forbidden-consumer negative until separate CI result",

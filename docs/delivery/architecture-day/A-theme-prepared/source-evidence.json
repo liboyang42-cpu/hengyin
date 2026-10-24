@@ -1,0 +1,287 @@
+{
+  "baseline": "e683b5a0ebc44cc217ac75e378c271fd96c80ae0",
+  "contract_sha": "ee96ffe45bab6126136e1c5582be53601c4f6fc3",
+  "files": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java": {
+      "base_sha256": "4d4c1349319f4af5b3282636613c4bfbcb22bac368286e08b3ec4d07b46c54c0",
+      "candidate_sha256": "997722b843e52ad92c145ca22c1bbd9a6632e8c35f08bfe1b0ca117dc1b02c3e"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java": {
+      "base_sha256": "7eb290955b6a3a5054154048660dddce2ca7ae4ac15dc19c62172ff93ab920b1",
+      "candidate_sha256": "5388516d3fd387d0386c1cd584e2a4c085369db4efbb2f08b788a51824e9a698"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlanRejectedException.java": {
+      "base_sha256": null,
+      "candidate_sha256": "2b402d5e96b3acbc78d93247a617535c089910bda1dc4fc8a2af2a1ec6cc8fa6"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java": {
+      "base_sha256": "19e60307f8a209cc70b91f4c4cc24ba0368d0e9aa61c6cc581396dba5ff159c9",
+      "candidate_sha256": "774a8cbaa978a444b3f9b1f007b3ee698cd17ca83e099dd1ab7cc04a45aa7e62"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java": {
+      "base_sha256": "0ee499dd00e5d4c1b1e6a6f7c51de7a064b17b00848d12dd8cffaefa5a30e7d8",
+      "candidate_sha256": "3e245cdfed0b67ecd118734e112ec077f1cbc25ea1a4760c2927c790476fc1d9"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorPreparedThemeDraftTest.java": {
+      "base_sha256": null,
+      "candidate_sha256": "a32f9a30709d08f09dc0fe9e7895734411efb53ff3a08f9d4a5c2f8ec02229e8"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayPreparedThemeDraftTest.java": {
+      "base_sha256": null,
+      "candidate_sha256": "5a1cabeefb47e6958f16dd218a022c53f1329c6dc391c1ffc74ebd11336c3bfa"
+    }
+  },
+  "protected_files_byte_preserved": [
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "sha256": "931779733e07189cfcf71c61933e8f54a7b05383e725c6612c8f730e6ad1bd1c"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClient.java",
+      "sha256": "b6aef8583c4d1f140842cdf29a919a9ed7c0710ffc1ef914cebd47f2cbeff40d"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiHttpAdmission.java",
+      "sha256": "f15ee61e7ad4f8d69be20ba9485d21ff24b90c875cb967edaa923a33d8e8a8f6"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "sha256": "d943ee2dcffe2ba25fb7027b74aeff65fc95eb9f33ece84de26e504c5e6e372f"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java",
+      "sha256": "00554c25aaaff36e31c2448ba2ec6452be8a7622668192cc37f5000ec83d72da"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+      "sha256": "36be3f1a0c904506e389b2e10fd19d73b47a89f3e7208f1e1e80873e5eb4bb1a"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+      "sha256": "285d2a7f9d385fb5c15e1aea2705f2926cc95dd615475eff408c38f457556f73"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java",
+      "sha256": "47cec4ec7f800207e7818cbbcb6ddde4ece9c055d6d505b00bc6cce309c8a694"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoleServiceImpl.java",
+      "sha256": "e14202bfcd177ccd65e480c830f47c4b7e95fe94113264d8652457472bfba3c6"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+      "sha256": "425657497b964ee73ba1fb2e53b8adad2e1561878e7482d27d9a4a711f5e0b0d"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/ai/AiThemeDraftReq.java",
+      "sha256": "3d37bfe8c8a17478d74368c4d7d068bb7aa5b1f87fee5c6782c1f0cae3a29a8b"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-xcx/pages/publish/simple/index.js",
+      "sha256": "e481d1c16e8f12fe1fbb7a59797d1d4ec7f43c3f6d22a97629fcfe9f71bb48fa"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "sha256": "cfe5a151b39ce394531b6eb6fe5856cec60d57cc98060a633617a90ed571638c"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+      "sha256": "4b205d7ae774f6011447fde2054e6334152a67caf7447806d79ac2930f95154e"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayNotSentQuotaTest.java",
+      "sha256": "67dc48b4938992118434dc7e2925b3111c313e33bbb789e82349d998dc4d5981"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayContentBlockReasonTest.java",
+      "sha256": "eeb47211232f20350c8ddf4fe24e81504f828e23f3e6c27e19409b661eaa2a17"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayRateLimitReasonTest.java",
+      "sha256": "d0e70ae5485b1d389bce1eb4d2bc0edd1aae11e9d8595f2a6f2c273060e93d1f"
+    }
+  ],
+  "unrelated_methods_byte_preserved": [
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#merchantPlan",
+      "sha256": "cbbdf6309c22fbf5f9cf2607f8450d1e4a5d3724c7fc2ba8aafc8ff3ad349c19"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#themeDraftQuota",
+      "sha256": "12b576cf2ffdb9aca20eb4bbf3b4f04b5d8ccef374058328bb8748aec39f6e42"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#nodeGenerate",
+      "sha256": "9e8a5470be8c33b856b62bf2fe88bc85c5df1195205cb2320337c40b23afa982"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#templateFill",
+      "sha256": "d8f398f3c396712a9ff0313f77faa6d6058cb05d0fde48a521aeda7751530c2e"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#safetyPrecheck",
+      "sha256": "40c6b13bf872eef1a800ca6d87c7bf63ec4be10b2e2d093d274079f625c7744e"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#chapterOverview",
+      "sha256": "b27e4e51f6cd8742a08c3364e3a3c46caca003fa1d74540c693b4552205987b1"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#merchantTaskSuggest",
+      "sha256": "2f5b5f58e93d4a6b475d0f795863b1154b84356860ce8fd92eacc7cdb7157119"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#clubDesign",
+      "sha256": "c90083c52f76fc573affe18c11a986b1d488a752eb45092e32f9177a3e3619d9"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#merchantInsight",
+      "sha256": "a05deb8a41d5c0ce4245ffede607b55398efd5015f766f8310298d1e496e9e4e"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#resolveRole",
+      "sha256": "ca7108aa801329ed64825f2888642db339d040066c9583d2f57a04574506f6aa"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#parseThemePlan",
+      "sha256": "99eba968a284a0b345d1be2d13286e8c5edd9d8cfb650a40b6133cebd8619b8a"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#parseAiJson",
+      "sha256": "f006692fa8a7e5b50d17be4924f1d3e4cdd23c79327fabf375f690cb2fbe53d2"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#isMockModel",
+      "sha256": "db993151f302959162e2a33872c97c47b6908de973ff88994b401fe5cddb7c86"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#isValidThemeDraft",
+      "sha256": "6ae5f6543182565180f3afd4785e05438d1cead4346e0ab4bce3a925192a5091"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#isValidTemplateFill",
+      "sha256": "e8436f1330f36548f1076be301d393270c95ca6776e8ddb72a224a2af4071a9e"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#playerThemeDraftUsed",
+      "sha256": "b2a2a327158554623e08b0a2ffbe3ce10377aaafe4a720d5c9d7b9f5fae461fa"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java#secondsUntilNextLocalMidnight",
+      "sha256": "2d99e08f7c1a047d56693c5a62c62d7c01ba3ea46b7671fa22fb893df9e7a875"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#remainingQuota",
+      "sha256": "83cda7c19808db9d110d08c1948d8e5945d44983e76146d4af6e1d0574600a3a"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#dailyQuota",
+      "sha256": "4b30fe91c1025505280e21868677ad57099f6c12c4ef0de191446309f6dbb7bf"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#consumeQuota",
+      "sha256": "1871ecae1b7f9268523398a0c68d0d18dfb19d378ebbf10094da616be2d32b06"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#planQuotaReservation",
+      "sha256": "e480196439b98f31421f0fc8547acfe0deb5528c063be67af6fe7c97627c2328"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#refundQuota",
+      "sha256": "5d9cf7d7927fd689409cff1f36d86d228b100a421cacf359342628b714216423"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#stageQuota",
+      "sha256": "26d200190faa1e211f4ebb1376bfb07acdeb4b01eeee02d284e726e711309198"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#retainQuota",
+      "sha256": "1fb6e71205e913983aa100d26e3fa97345efab19a632fb3cd43bc58bcee38ea6"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#retainQuotaAfterResult",
+      "sha256": "01a8639025c49334f92e0afbfd1ab1d0d2ab8a55114d951d70e95f0ffb4b55b8"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#traceIdOf",
+      "sha256": "b8bf3d42a4598c96f4f98a90016a2d2ce33546c90a63f62b1af7782a1fde238e"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#receiptOf",
+      "sha256": "461d778b5ead0f294a399f034aaa889ab513b0fb1525e00f11f0ba362a58d800"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#rateGroupOf",
+      "sha256": "e1bedec5bae13e7ad63cb852f72ffe31559d54af1bf11577cbf5a4ef951cb00a"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#dailyLimitOf",
+      "sha256": "7f628500902e958e0137265c3a818f9ce41acc8c5dc3bfd2bbee0ac32d50d492"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#resolveClient",
+      "sha256": "a459278d202e0f98466358b42ac57424d10edb4f0233070ce1d09d50d672d6dc"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#requireAvailableClient",
+      "sha256": "83f7d93eb0bf6efd9468205048f6d89d4f6780680325e69c2359087e2916e435"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#checkTextFully",
+      "sha256": "193724f0033e688b35c2bc4ca13dda8bee5eab4f4aa5e18a7300bd7a2ceee964"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#resolveOpenid",
+      "sha256": "e77332baadd0affc465b694f7f06aa315416b5c31286ad5d2ed868b1cfc3d039"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#estimateSingle",
+      "sha256": "375d4f193be5e6dc3b8817d5ff1b5a1c919de6aaced7f8a499bc0919c2bb3b09"
+    },
+    {
+      "source_path_or_symbol": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java#truncate",
+      "sha256": "0937d9ffc2392a7a162c2fc034413de35e353b3f6e214387e546573761705159"
+    }
+  ],
+  "legacy_creator_regression_source_cases_preserved": 37,
+  "new_test_source_counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorPreparedThemeDraftTest.java": {
+      "single_source_tests": 17,
+      "parameterized_source_cases": [
+        11,
+        2,
+        2,
+        5,
+        3,
+        3
+      ],
+      "source_expected_cases": 43,
+      "executed": 0
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayPreparedThemeDraftTest.java": {
+      "single_source_tests": 13,
+      "parameterized_source_cases": [
+        6,
+        4
+      ],
+      "source_expected_cases": 23,
+      "executed": 0
+    }
+  },
+  "new_test_source_expected_total": 66,
+  "java_compile": "NOT_RUN",
+  "java_unit_executed": 0,
+  "mysql_redis_http_model_executed": 0,
+  "ci_dispatches": 0,
+  "external_dependency": {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlan.java",
+    "status": "ABSENT_IN_BASE; E owns contract record; joint compile required"
+  },
+  "pool_literals": {
+    "player": "player-draft",
+    "club": "gen",
+    "merchant": "gen"
+  },
+  "lexical_delimiters": "PASS_NOT_A_JAVA_COMPILER",
+  "field_and_signature_checks": "SOURCE_ONLY_NOT_RUNTIME_PROOF"
+}

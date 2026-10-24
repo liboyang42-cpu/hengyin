@@ -22,6 +22,13 @@ public interface AiGatewayService
     AiGatewayResult generate(Long memberId, String role, String bizType,
                               String systemPrompt, String userPrompt);
 
+    /** Local configuration fingerprint only; excludes credentials and credential digests. */
+    String themeDraftConfigurationHash();
+
+    /** Consumes the original plan, never a newly planned quota identity. */
+    AiGatewayResult generateThemeDraftPrepared(Long memberId, AiThemeDraftPlan plan,
+            String systemPrompt, String userPrompt);
+
     /**
      * 查询某会员在指定场景所属额度池当日的剩余次数。
      *

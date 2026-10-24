@@ -1,0 +1,8 @@
+{
+  "author_source": "ef080379829f294c30ec85baef1dcc24e1b79e0b",
+  "file": "docs/delivery/architecture-day/A-theme-prepared/source-evidence.json",
+  "original_sha256": "d695fba9ae2718d5f9cfb8a9b764defe8f5643860653df0d45d7e3a1eaf004f2",
+  "integrated_sha256": "34b5a7efd72e7fdeffe16cfe3c67dd94319a8603f95b9c621ed107038607da7a",
+  "change": "Only metadata dictionary representation to explicit source_path_or_symbol and sha256 rows; all pairs retained. No scanner exception, production edit, test semantic change or retroactive author-result claim.",
+  "reason": "Six generic-api-key detections on source identity hashes. Author frozen source remains independently retrievable."
+}

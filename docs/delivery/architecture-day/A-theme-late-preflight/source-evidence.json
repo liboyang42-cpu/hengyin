@@ -1,0 +1,33 @@
+{
+  "new_source_expected_cases": 13,
+  "baseline_witness": {
+    "baseline": "40fdffaa345c4c239553f54f36a4ae9147191a1b",
+    "gateway_sha256": "3e245cdfed0b67ecd118734e112ec077f1cbc25ea1a4760c2927c790476fc1d9",
+    "creator_sha256": "5388516d3fd387d0386c1cd584e2a4c085369db4efbb2f08b788a51824e9a698",
+    "gen_consumed_before_unprotected_reserved_call": true,
+    "input_stage_and_review_already_wrapped_as_ordinary_ai_service_exception": true,
+    "actual_unprotected_site": "generateReserved -> retainQuota(..., INPUT_REJECTED)",
+    "fault_schedule": [
+      "valid gen plan preflight",
+      "consume original quota succeeds",
+      "input review returns explicit rejection",
+      "INPUT_REJECTED retain throws AiThemeDraftPlanRejectedException",
+      "old Gateway returns that outer type; old Creator gen branch rethrows it"
+    ],
+    "conclusion": "STATIC_FAULT_INJECTION_ESCAPE_WITNESS; not a production occurrence or executed JUnit failure",
+    "old_stage_review_negative_controls": "EXPECTED_TO_ALREADY_PASS; not claimed as old red tests",
+    "java_mysql_ci_executed": 0
+  },
+  "candidate_gateway_sha256": "e7abea0913695dd3419f05ccef160efd61062f8e13b098abf98baa8c9ac7f940",
+  "production_delta_exact_boundary_only": true,
+  "protected_files_byte_preserved": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java": "5388516d3fd387d0386c1cd584e2a4c085369db4efbb2f08b788a51824e9a698",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlanRejectedException.java": "2b402d5e96b3acbc78d93247a617535c089910bda1dc4fc8a2af2a1ec6cc8fa6",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java": "cfe5a151b39ce394531b6eb6fe5856cec60d57cc98060a633617a90ed571638c",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorPreparedThemeDraftTest.java": "a32f9a30709d08f09dc0fe9e7895734411efb53ff3a08f9d4a5c2f8ec02229e8",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayPreparedThemeDraftTest.java": "5a1cabeefb47e6958f16dd218a022c53f1329c6dc391c1ffc74ebd11336c3bfa"
+  },
+  "java_compile": "NOT_RUN_E_PLAN_REQUIRED",
+  "junit_executed": 0,
+  "ci_dispatches": 0
+}
