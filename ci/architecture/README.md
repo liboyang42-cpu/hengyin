@@ -28,9 +28,19 @@
 
 `findings` 是可识别阻断项，非空退出 1；`review_items` 是仍需审阅的未知/合同提示，单独存在不导致退出 1。`PASS` 或 `PASS_WITH_REVIEW_ITEMS` 只代表该源级检查，没有表示业务合同安全或后端测试通过。
 
-`owners.json.business_policy` 只启用两个whole-table事实及其唯一纯writer，`commands.json.business_commands` 引用原 AiQuotaRecoveryService / PhotoCheckIntentService 公开合同；整份owners/commands与gate/原baseline/locking proposal共五个文件按可信verifier字节冻结。未声明或无效policy不得静默关闭检查，candidate修改owner/删除fact/清空scope/伪造command都须独立review的trusted revision，不能自批准；本片不修改现有CI固定155引用，须root单独repin后才启用。
+`owners.json.business_policy` 只启用两个whole-table事实及其唯一纯writer，`commands.json.business_commands` 引用原 AiQuotaRecoveryService / PhotoCheckIntentService 公开合同；整份owners/commands与gate/原baseline/locking proposal/实际producer共六个文件按可信verifier字节冻结。未声明或无效policy不得静默关闭检查，candidate修改owner/删除fact/清空scope/伪造command都须独立review的trusted revision，不能自批准；CI固定ref由root单独repin；候选不能自改绑定或producer后批准自身。
 
 输出 `business_policy.coverage=PARTIAL`；范围外字面写列 `BUSINESS_WRITE_OUTSIDE_POLICY`，动态/未知目标或效果列 `UNKNOWN_BUSINESS_WRITE_EFFECT`，不把UNKNOWN叫安全或宣称完整A02。原四条高风险链仍是代码/恢复源/已有测试参考。所有command引用均不证明Java调用必经Service，不授权其它domain直接调用Mapper，不是新审批系统或运行时合规认证。scope、唯一身份、关键意图、版本/CAS、恢复调度和原子提交只有业务 owner+相应故障/并发测试才能确认；静态解析做不到的必须保留在 PR 审阅中。
+
+## 两项私有 Mapper 的编译引用回读
+
+`owners.business_policy.private_ports` 只声明 AiQuotaReservationMapper→AiQuotaRecoveryService、PhotoCheckIntentMapper→PhotoCheckIntentService 的精确class绑定（均system）；直接只读依赖也受限，`$`内部类不按前缀允许。它与SQL writer身份分开，不自动给其它fact增加私有依赖规则。新增绑定须独立trusted revision。
+
+`collect_jdeps.parse_output` 可在跨模块过滤前额外收集这两个目标；默认调用和原五项返回值、模块图格式/观察口径不变，不增加System自环或基线。`gate.py compiled-ports` 从实际Boot/original模块Jar/target classes重枚举并核对原11项证据、实际source/tree/run/attempt/JDK工具hash、class-index和invocation，再重读raw；不信候选JSON的references/findings/complete声明，不再运行Java/jdeps。
+
+新CLI退出码为0（仅两个声明目标的静态引用完整通过）、1（确定的其它consumer，PRIVATE_MAPPER_CONSUMER）、2（证据/目标/索引/位置/覆盖UNKNOWN）。已解析确定违规即使同时存在其它UNKNOWN也返回1，缺图/缺边不通过；不证明方法调用、反射/XML、运行授权或完整A01/A02。源级规则继续工作，source的既有退出码不变。CI只能采用同job固定可信producer产生的raw，hash自洽不是任意producer诚实的密码学证明。
+
+本候选不修改root工作流；post-build真实接线及同System真实编译负控尚待root完成。参数、忽略target可信checkout、单次采集及失败保留原artifacts的建议见 `docs/delivery/architecture-day/F/private-mapper-compiled/CONTRACT.md`。
 
 ## 运行与 CI 接线
 

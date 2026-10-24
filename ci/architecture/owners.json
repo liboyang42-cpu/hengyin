@@ -47,6 +47,18 @@
         "business_owner": "AI_PHOTO_INTENT",
         "command_id": "photo-check-intent"
       }
+    ],
+    "private_ports": [
+      {
+        "target": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+        "owner": "chengyinhub-system",
+        "consumer": "com.chengyinhub.business.service.ai.AiQuotaRecoveryService"
+      },
+      {
+        "target": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+        "owner": "chengyinhub-system",
+        "consumer": "com.chengyinhub.business.service.ai.PhotoCheckIntentService"
+      }
     ]
   }
 }

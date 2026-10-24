@@ -1,0 +1,34 @@
+{
+  "trusted_verifier_sha": "fe95acc58dd3049096e7dcea407d0728b4fa3f5f",
+  "root_parent": "1ff0aa77976579959eb0a0a0659f18557b51934e",
+  "protected_files_sha256": {
+    "ci/architecture/gate.py": "4ed706853cd6579424a2da3efb98621230b0ec216bfdf2fbc1bfdd750e67f535",
+    "ci/architecture/baseline.json": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+    "ci/architecture/locking-select-baseline.proposal.json": "c71bbc7fdbf4996b68f5977ebd344dac150f56128dea4837c69ec3f91b83e52b",
+    "ci/architecture/owners.json": "43038c6eb11e2938272822308ed1c09605aa9d859787eb7076da4b26559a5ee5",
+    "ci/architecture/commands.json": "55f5773dd613d6728985d3daea7e4fca6c3788171c5338d97d5919cf1ab7b0de",
+    "ci/architecture/collect_jdeps.py": "215ff69269c1df48040259733cb512528ba3dfe9111f51223028d7d8b8cd5f40"
+  },
+  "source_selftests": {
+    "executed": 141,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log_sha256": "ead86b59d080afa28b3ef3d01d2dd591d259b48b6b104fbd30322297819c06b5"
+  },
+  "prior_mac_fixture_result": {
+    "tests": 141,
+    "failures": 7,
+    "reason": "Fixture /var root and /private/var resolved root aliases differed",
+    "fix": "Normalize only CollectorTest temporary root with Path.resolve; production and all failure expectations unchanged"
+  },
+  "ci_cost_contract": "PASS",
+  "workflow": "One immutable source verifier; same immutable producer/post-check in existing Backend job; one jdeps collection; preserve artifact when post-check fails",
+  "actual_compiled_negative": "PENDING_CI",
+  "actual_compiled_green": "PENDING_CI",
+  "limits": [
+    "Only exact two Mapper target classes",
+    "No reflection/XML/runtime dependency proof",
+    "No claim of complete module graph, SCC or all WP01 acceptance"
+  ]
+}

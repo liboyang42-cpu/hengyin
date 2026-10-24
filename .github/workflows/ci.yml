@@ -323,7 +323,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: liboyang42-cpu/hengyin
-          ref: 8da17d4c4efed6ebbe426e6257ecaf174a349fa8
+          ref: fe95acc58dd3049096e7dcea407d0728b4fa3f5f
           path: .architecture-gate
           fetch-depth: 0
           persist-credentials: false
@@ -565,7 +565,16 @@ jobs:
         run: python3 ci/dup_create_table_gate.py --selftest
       - name: Duplicate CREATE TABLE gate
         run: python3 ci/dup_create_table_gate.py
+      - name: Checkout reviewed compiled-reference verifier
+        uses: actions/checkout@v4
+        with:
+          repository: liboyang42-cpu/hengyin
+          ref: fe95acc58dd3049096e7dcea407d0728b4fa3f5f
+          path: chengyinhub-admin/target/f-private-port-verifier
+          fetch-depth: 1
+          persist-credentials: false
       - name: Describe the tested Boot Jar
+        id: tested_artifact
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           bash ci/verify-built-jar.sh "$GITHUB_SHA"
@@ -592,12 +601,20 @@ jobs:
           jar.with_suffix('.build.json').write_text(json.dumps(metadata, indent=2) + '\n')
           PYARTIFACT
           # F JDK21 module observation: begin (no baseline or new acceptance gate)
-          python3 ci/architecture/collect_jdeps.py --source . \
+          python3 chengyinhub-admin/target/f-private-port-verifier/ci/architecture/collect_jdeps.py --source . \
             --artifact chengyinhub-admin/target/chengyinhub-admin.jar \
             --identity chengyinhub-admin/target/chengyinhub-admin.build.json \
             --output chengyinhub-admin/target/architecture-jdeps
           # F JDK21 module observation: end
+      - name: Check private Mapper compiled references
+        run: |
+          python3 chengyinhub-admin/target/f-private-port-verifier/ci/architecture/gate.py compiled-ports \
+            --source . --artifact chengyinhub-admin/target/chengyinhub-admin.jar \
+            --identity chengyinhub-admin/target/chengyinhub-admin.build.json \
+            --observation chengyinhub-admin/target/architecture-jdeps \
+            --output chengyinhub-admin/target/private-mapper-references.json
       - name: Preserve tested Boot Jar for test VPS UAT
+        if: ${{ !cancelled() && steps.tested_artifact.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: chengyin-tested-backend-${{ github.run_attempt }}
@@ -606,6 +623,7 @@ jobs:
             chengyinhub-admin/target/chengyinhub-admin.jar.sha256
             chengyinhub-admin/target/chengyinhub-admin.build.json
             chengyinhub-admin/target/architecture-jdeps/
+            chengyinhub-admin/target/private-mapper-references.json
           if-no-files-found: error
           compression-level: 0
           retention-days: 7

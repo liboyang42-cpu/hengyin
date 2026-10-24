@@ -1,0 +1,44 @@
+{
+  "status": "ROOT_PUBLISHED_ACTUAL_ROWS_REUSED_NOT_F_INDEPENDENT_FULL_ARTIFACT_READBACK",
+  "published_commit": "1c63e55a167f235930b5811bf28203a29231c8ef",
+  "published_path": "docs/delivery/architecture-day/COORDINATOR/864e-private-mapper-raw-jdeps.json",
+  "published_file_sha256": "ebec8d2d16781d7f7147a9ea1b53772bedd7c65e27ea7d2963613c9a9cc4c387",
+  "source_sha": "864e708e2f38130e21780485e462f8dc147bb76f",
+  "run_id": 40048901603,
+  "run_attempt": 1,
+  "artifact_id": 12542084119,
+  "actual_boot_jar_sha256_per_root": "1c0eccd17742e64c2ac18173f960c132d12bb5d651ef707763354f44148559b6",
+  "actual_target_direction_lines_per_root": [
+    "   com.chengyinhub.business.service.ai.AiQuotaRecoveryService -> com.chengyinhub.business.mapper.AiQuotaReservationMapper chengyinhub-system.jar",
+    "   com.chengyinhub.business.service.ai.PhotoCheckIntentService -> com.chengyinhub.business.mapper.PhotoCheckIntentMapper chengyinhub-system.jar"
+  ],
+  "class_index_exact_records_per_root": {
+    "com.chengyinhub.business.mapper.AiQuotaReservationMapper": {
+      "owner": "chengyinhub-system",
+      "sha256": "6f8ce586fbb7cc0b33862fbd82b1a86f09c4ca2c0fa3a90f40126a802c0b7639"
+    },
+    "com.chengyinhub.business.mapper.PhotoCheckIntentMapper": {
+      "owner": "chengyinhub-system",
+      "sha256": "03446bffd536cc73c8fea106c6dfbafa8d871fb70ce6308eff44e7fbb34b3633"
+    },
+    "com.chengyinhub.business.service.ai.AiQuotaRecoveryService": {
+      "owner": "chengyinhub-system",
+      "sha256": "cf578c30770aa68cda63632b1a581a350904fcc630163759d9387889a3e1e00a"
+    },
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentService": {
+      "owner": "chengyinhub-system",
+      "sha256": "61a4ee7290bf0083aa6679e84aa6838351dd015fbfff3806a9c8c97b91702d7c"
+    }
+  },
+  "evidence_hashes_per_root": {
+    "jdeps.stdout.txt": "38b5ef81baf25f500135a01cc767e4123f8194f585f36473db821cf39385e334",
+    "class-index.json": "151385a69da0ac6c254c08605c0ab7241122fe2266aa1fced28f6457ee7bfd8c",
+    "invocation.json": "bb6fc1d3719c637673b5ba24785098c81b288c433f4f9cd775df2d0e329826cc",
+    "observation.json": "a5983e97d4fe8a0cd6b02425b92f08c042806203474f68db3c133da60bd809c0"
+  },
+  "all11_evidence_hashes_verified_by_root": true,
+  "F_actual_readback": "Public JSON bytes + original producer parser on the two published actual lines/four index records; not full artifact/actual JDK execution",
+  "F_download_status_previous_read_only_turn": "Connector temporary file URL and gh artifact API both 403; no proxy/credential bypass",
+  "new_verifier_actual_compiled_positive_or_negative_CI": "NOT_RUN; root must execute same-System real class reference negative then remove and pass",
+  "new_baseline_or_allowlist_entries": 0
+}
