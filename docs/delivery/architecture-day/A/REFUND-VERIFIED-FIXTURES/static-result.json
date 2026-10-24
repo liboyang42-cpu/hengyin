@@ -1,0 +1,200 @@
+{
+  "status": "STATIC_ONLY",
+  "parent": "e6dc689acd16f8354096fa6017cec85b36171c4e",
+  "B_dependency": "f6f382500ff1a1dfd6fad120b3895f70ae563278",
+  "B_helper_sha256": "f393c189842db33ef3c788f3c07db3c02b776f4828d5391b83b6e8f50cd02703",
+  "Java_MySQL_CI_executed": false,
+  "source_counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java": {
+      "declared_tests": 9,
+      "dynamic": [],
+      "nested": [],
+      "gates": [
+        [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "1"
+        ]
+      ],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java": {
+      "declared_tests": 5,
+      "dynamic": [],
+      "nested": [],
+      "gates": [
+        [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "1"
+        ]
+      ],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java": {
+      "declared_tests": 11,
+      "dynamic": [
+        "ParameterizedTest"
+      ],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": {
+      "declared_tests": 19,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundServiceImplTest.java": {
+      "declared_tests": 30,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "preservation": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java": {
+      "original_assert_verify_calls": 61,
+      "candidate_assert_verify_calls": 63,
+      "original_case_methods": [
+        "confirmedCashRefundNotifiesPayerOnlyAfterCommitAndOnlyOnce",
+        "manualVerificationNotifiesAfterCommitButNeverOnRollback",
+        "cancellationNeverClaimsCashArrivedForCashZeroOrPointsOnly",
+        "rolledBackSuccessRemainsRetryableAndOnlyCommittedRetryNotifies",
+        "concurrentSuccessCallbacksProduceOneNotification",
+        "processingAndManualPendingCannotClaimArrival",
+        "failedOrThrowingChannelIsLoggedWithoutUndoingConfirmedRefund",
+        "malformedRecipientOrZeroAmountNeverBecomesFakeCashNotice",
+        "cancellationRollbackDispatchesNeitherMoneyNorArrivalNotification"
+      ],
+      "all_original_calls_in_order": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java": {
+      "original_assert_verify_calls": 45,
+      "candidate_assert_verify_calls": 46,
+      "original_case_methods": [
+        "rejectionThenTwentyAndFortyEightUseDistinctRefundNumbersAndCallbacks",
+        "pendingApplicationIsSupersededBySystemFullRefundInsteadOfBlockingCancellation",
+        "twoLegacyPendingEightyRefundsOnOneParentCanApproveOnlyOne",
+        "parentRemainingCashSubtractsBothPayerAndSiblingApprovedHistory",
+        "failedApprovalRollsBackApplicationAndRegistrationTogether"
+      ],
+      "all_original_calls_in_order": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java": {
+      "original_assert_verify_calls": 43,
+      "candidate_assert_verify_calls": 44,
+      "original_case_methods": [
+        "verifiedCallbackWrongRefundAmountIsRejectedBeforeAnyBusinessWrite",
+        "verifiedCallbackRejectsInconsistentOrMissingFacts",
+        "activeQueryRejectsInconsistentOrMissingFacts",
+        "missingEntireAmountIsRejectedByBothEntryPoints",
+        "missingOrBlankLocalOrderNumberCannotMatchAnEmptyProviderOrder",
+        "localMoneyCannotBeRoundedOverflowedOrExceedCashPaid",
+        "missingInvalidCashPaymentOrRegistrationCannotAdvanceEitherEntryPoint",
+        "queryRejectsAResponseForAnotherRefundEvenWhenOtherFactsMatch",
+        "partialRefundWithExactCashFactsCanSucceedThroughBothEntryPoints",
+        "processingAndFailureStatesNeverBecomeSuccessfulCashRefunds",
+        "alreadyPersistedSuccessAcknowledgesWithoutRepeatingCashNotice",
+        "manualTerminalCannotBeOverwrittenOrFalselyReportedAsSuccessfulQuery",
+        "unknownOwnedRefundRemainsRetryableButUnrelatedRefundStillAcknowledges"
+      ],
+      "all_original_calls_in_order": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": {
+      "original_assert_verify_calls": 31,
+      "candidate_assert_verify_calls": 31,
+      "original_case_methods": [
+        "payoutAccepted_marksProcessing",
+        "payoutRejected_marksPendingManual_noBalance",
+        "payoutResultZeroRowsRejectsDifferentDurableState",
+        "handleManualPayout_requiresMethod",
+        "handleManualPayout_ok_marksHandled",
+        "twoOperatorsCannotOwnTheSameManualPayout",
+        "lostCompletionResponseReadsBackTheSameFenceAsSuccess",
+        "verifyManualPayout_sameAsHandler_rejected",
+        "verifyManualPayout_differentReviewer_verifiesAndNotifies",
+        "verifyManualPayout_notFound_throws",
+        "notify_success_marksPayoutSuccess",
+        "notify_abnormal_marksPendingManual",
+        "notify_closed_marksPendingManual",
+        "notify_processing_noChange",
+        "notify_zeroAffectedOnlyAcksTheExactPersistedTerminal",
+        "notify_zeroAffectedRejectsDifferentPersistedTerminal",
+        "notify_ownRefundNoNotFoundYet_returnsFalseForRetry",
+        "notify_foreignRefundNo_acks",
+        "notify_nullRefundNo_acks"
+      ],
+      "all_original_calls_in_order": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundServiceImplTest.java": {
+      "original_assert_verify_calls": 99,
+      "candidate_assert_verify_calls": 99,
+      "original_case_methods": [
+        "unknownDepositRefundCannotBeAcknowledgedByRegistrationRefundFallback",
+        "refundFactsRejectMalformedCentsBeforeInboxOrTerminalWrite",
+        "acceptedRefundResultTreatsCallbackSuccessAsStrongerTerminal",
+        "acceptedRefundResultThrowsWhenReadBackShowsConflictingTerminal",
+        "saveRegistrationRefundResolvesMerchantFromActivityWhenMissing",
+        "rejectedRefundCanBeRetriedAndApprovedAmountsCapSubsequentRefunds",
+        "saveRefundRejectedForUnpaidRegistration",
+        "verifiedRegistrationCannotBeApproved",
+        "approvedSettledRefundCreatesNegativeAdjustmentOnce",
+        "approvedRefundResetsRegistrationStatus",
+        "systemFullRefundSupersedesOnlyPendingApplications",
+        "repeatedRefundApprovalDoesNotCreateAdjustment",
+        "approvingRegistrationAlreadyRefundedByAnotherPathIsRejected",
+        "concurrentApprovalsOfTwoRefundsForSameRegistrationPayOnce",
+        "backOfficePayerRefundCannotExceedOrderCashNotYetRefunded",
+        "backOfficePayerRefundBlockedWhileSiblingRefundPending",
+        "backOfficePayerRefundBlockedWhenSiblingVerified",
+        "backOfficePayerRefundApprovalRechecksOrderCash",
+        "systemWholeOrderApprovalIsNotRecheckedAgainstClaimedSiblings",
+        "repeatedAndConcurrentBackOfficePayerRefundCreatesOneApplication",
+        "zeroAffectedAdjustmentMustReadBackTheExactRefundTerminal",
+        "makerCannotApproveOwnBackofficeRefund",
+        "makerCanRejectOwnRefundGateFiresOnlyOnApprove",
+        "nonRegistrationRefundWithoutIdempotencyKeyGetsAutoAssignedDefault",
+        "twoNonRegistrationRefundsWithoutIdempotencyKeyDoNotCollapseToTheSameNullValue",
+        "alarmDeliveryFailureIsLoggedInsteadOfSwallowedAndKeepsPayoutResultFlowing",
+        "successfulAlarmDeliveryLeavesNoErrorNoise",
+        "saveRefundWithIdIsRejectedAndNeverUpdatesExistingRow",
+        "newRefundIgnoresClientStatusPayoutAndPaidAmount",
+        "refundAboveServerPaidAmountRejectedEvenIfClientInflatesPaidAmount"
+      ],
+      "all_original_calls_in_order": true
+    }
+  },
+  "parameter_source": "Exactly the original 13 arguments, used by 2 parameterized unit methods; 11 ordinary + 26 expected = 37 source instances, NOT execution",
+  "source_total_expected_instances": 100,
+  "real_storage_fixed_Test_declarations": 14,
+  "production_CI_DDL_sources_changed": false,
+  "mysql_fixture_contract": "Notification uses transactional pass-through; Retry preserves actual inbox SQL/claim/mutation/link and its original count assertion",
+  "sha256": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java": "152215f90edd55f65111d00b60b2e50f9025d59bab2146959a3e40aeabfbcd62",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java": "08dc9fae8d4372577f4c983ef71d412bfe4465207cb7c0fa2a85d6e0d9f76c3b",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java": "8a071df1e1100e8bf931d319f0ffe9d825ff8125f3d3fb9b1d388a8c8cc70439",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": "8e1090a477c8e31a2297509e3774ef2aaf1115181e799a0fc9c5ae7ccefb3d22",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundServiceImplTest.java": "01a89f2bedb89618a2f4201b5a49fecfac39dc57ccb98e7b3e94b2df48757b24",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ARefundFactFixture.java": "ecd526e6d7a1d010284df8a112eb72be76e40785834d641a27dbd023488d49be"
+  },
+  "not_run": [
+    "Java compilation",
+    "JUnit and parameter resolution",
+    "MySQL/real migration/rollback/concurrency/cleanup",
+    "SDK/provider verification",
+    "CI dispatch"
+  ],
+  "remaining": [
+    "root same-head integration with B f6 reader/support and G/e6 source",
+    "controlled runner flag and existing registry exact source counts",
+    "uniform Java/MySQL execution",
+    "inline payment consumption receipt implementation continues in separate preserved worktree"
+  ]
+}
