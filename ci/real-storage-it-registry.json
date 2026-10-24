@@ -13,6 +13,15 @@
   },
   "default_database_base": "cyit",
   "batches": {
+    "payment-intent-correctness": {
+      "lineage": "Reviewed payment correctness PR598 only; no architecture extraction",
+      "registered_source": "ae7b93f62bb62385bed8dc4110a85e4c0f315a8b",
+      "note": "Real MySQL intent freeze/alias fencing and signed registration callback mutation+inbox atomicity; SDK doubles are not external payment acceptance. Explicit hosted scratch DDL approval only.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT"
+      ]
+    },
     "core-funds": {
       "lineage": "CORE codex/mini-longrun-core-20261015",
       "registered_source": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
@@ -259,6 +268,26 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
+      },
+      "database_base": "cyit"
+    },
+    "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "B_PAYMENT_INTENT_DDL_APPROVED": "1"
+      },
+      "database_base": "cyit"
+    },
     "com.chengyinhub.business.longrun.E04_13Test": {
       "tests": 2,
       "storage": ["mysql"],

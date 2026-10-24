@@ -25,7 +25,8 @@ class WechatPayCallbackHttpAckTest {
         when(gateway.handlePayCallback(anyString(), anyMap())).thenReturn("{\"code\":\"SUCCESS\"}");
         mvc.perform(notification())
                 .andExpect(status().isNoContent()).andExpect(content().string(""));
-        verify(gateway).handlePayCallback(eq("{}"), argThat(headers -> "serial".equals(headers.get("wechatpay-serial"))));
+        verify(gateway).handlePayCallback(eq("{}"), argThat(headers -> headers.entrySet().stream()
+                .anyMatch(header -> "wechatpay-serial".equalsIgnoreCase(header.getKey()) && "serial".equals(header.getValue()))));
     }
     @Test void failureMissingAndMalformedAckAreNever200() throws Exception {
         for (String ack : new String[]{"{\"code\":\"FAIL\"}", null, "not-json", "{\"message\":\"SUCCESS\"}"}) {
