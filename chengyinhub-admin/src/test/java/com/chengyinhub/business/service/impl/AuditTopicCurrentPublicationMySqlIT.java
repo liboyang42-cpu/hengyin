@@ -99,7 +99,8 @@ class AuditTopicCurrentPublicationMySqlIT {
                 IAuditTaskService audit = (IAuditTaskService) proxy.getProxy();
                 AuditReviewDTO request = new AuditReviewDTO(); request.setStatus(AuditTask.STATUS_APPROVED);
                 request.setRequestId("rr-author-offline"); request.setReasonText("approved");
-                assertEquals(1, f.tx.execute(tx -> audit.review(9L, 11L, request)));
+                Integer reviewed = f.tx.execute(tx -> audit.review(9L, 11L, request));
+                assertEquals(Integer.valueOf(1), reviewed);
                 JdbcTemplate committed = new JdbcTemplate(f.manager.getDataSource());
                 assertEquals(0, committed.queryForObject("select user_status from cms_topic where id=100", Integer.class));
                 assertEquals(7L, committed.queryForObject("select published_config_version from cms_topic where id=100", Long.class));

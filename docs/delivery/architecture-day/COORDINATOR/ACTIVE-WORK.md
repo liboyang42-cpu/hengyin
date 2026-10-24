@@ -34,3 +34,5 @@ B外层失败release自锁已有源码证据并已派修，尚无真实MySQL验�
 完整范围 WP00–WP17 / Q1–Q10 / A01–A15 / T01–T22 / G0–G5 仍未完成；不把部分完成当全完成。历史失败保留各自源SHA；不借其他候选的绿色结果。未合并主干、未部署、未执行生产DDL、未触发微信或真实付费外呼。
 
 最新托管运行[40084928209](https://github.com/liboyang42-cpu/hengyin/actions/runs/40084928209)绑定独立冻结候选 `07359d3dac777b67090f7febfbaed68b3ec5d336`：Plan/precheck PASS，真存储类作业执行中；实际Java/4条XML报告和CLEAN尚待回读。
+
+上述run40084928209已失败于Admin testCompile：四个测试文件的checked Exception声明、两处静态导入和一处断言泛型歧义。实跑0/4，清理CLEAN。root已完成最小5增/2删夹具修复，保留原断言和用例，生产源码未改；待新冻结候选验证。

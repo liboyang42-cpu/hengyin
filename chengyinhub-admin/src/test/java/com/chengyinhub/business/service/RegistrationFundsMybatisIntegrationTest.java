@@ -380,7 +380,7 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
-    void disabledGenericAdminAddCannotCreateRefundablePointsOrInventory() {
+    void disabledGenericAdminAddCannotCreateRefundablePointsOrInventory() throws Exception {
         long registrations = number("SELECT COUNT(*) FROM cms_registration");
         long memberPoints = number("SELECT point FROM ums_member WHERE id=8");
         long inventory = number("SELECT remaining_inventory FROM oms_ticket WHERE id=9");

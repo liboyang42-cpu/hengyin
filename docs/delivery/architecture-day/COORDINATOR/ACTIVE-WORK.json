@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T10:14:54.491949+00:00",
+  "updated_utc": "2026-10-24T10:17:15.433175+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -268,11 +268,14 @@
     "frozen_branch": "codex/architecture-day-facts-rr-notice-ci2-20261024",
     "batch": "architecture-day-verified-payment-facts",
     "expected": 4,
-    "executed": "NOT_YET_READ_BACK",
-    "verdict": "IN_PROGRESS",
+    "executed": 0,
+    "verdict": "FAIL",
     "plan_precheck": "PASS",
     "current_step": "WechatVerifiedPaymentFactMySqlIT / Run class on real storage and read back",
-    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40084928209"
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40084928209",
+    "cleanup": "CLEAN",
+    "failure": "Admin testCompile: missing checked Exception declaration, two missing static imports, one generic assertEquals overload ambiguity; no cases executed",
+    "source_repairs": "4 test files,5 insertions/2 deletions, test bodies and assertions preserved; new candidate pending compile"
   },
   "map_input_P2": {
     "source": "H reviewed E8372, inherited input-node filtering changes cache route identity",
@@ -355,7 +358,7 @@
   "latest_combined_source_current": {
     "receipt": "batch-ACDEF-source-20261024.json",
     "parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
-    "status": "07359 isolated candidate pushed; hosted plan/precheck PASS, class job running; Java/test reports not yet read back",
+    "status": "07359 failed Admin testCompile,0/4,CLEAN; four minimal fixture compilation repairs assembled, production source unchanged",
     "Java_DB": "NOT_RUN",
     "registry_classes": 104,
     "integrated_at": "56d0e68e6bd2cdb2066af5940c497587df131d8c"
