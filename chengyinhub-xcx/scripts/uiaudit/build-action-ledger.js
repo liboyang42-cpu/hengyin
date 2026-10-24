@@ -1512,12 +1512,12 @@ function moduleFunctionBodies(file) {
 }
 
 /** 模块内递归:helper 调用同模块的其它 helper 时一并带上。 */
-function expandModuleFunction(file, name, seen) {
+function expandModuleFunction(file, name, seen, functionBodies) {
   seen = seen || new Set()
   const key = `${file}#${name}`
   if (seen.has(key)) return ''
   seen.add(key)
-  const bodies = moduleFunctionBodies(file)
+  const bodies = functionBodies || moduleFunctionBodies(file)
   const body = bodies.get(name)
   if (!body) return ''
   const inner = stripJsCommentsKeepStrings(body)
@@ -1525,7 +1525,7 @@ function expandModuleFunction(file, name, seen) {
   const callRe = /(^|[^\w$.])([A-Za-z_$][\w$]*)\s*\(/g
   let m
   while ((m = callRe.exec(inner))) {
-    if (bodies.has(m[2])) parts.push(expandModuleFunction(file, m[2], seen))
+    if (bodies.has(m[2])) parts.push(expandModuleFunction(file, m[2], seen, bodies))
   }
   return parts.join('\n')
 }
@@ -1543,14 +1543,40 @@ function namespaceDependencySource(file, aliases, source, inlineExports) {
       called.add(call[1])
     }
   }
+  return selectedDependencySource(file, full, called, false)
+}
+
+/** Only direct uses of proven named exports narrow the module; callbacks/aliases stay conservative. */
+function namedDependencySource(file, namedImports, source) {
+  const full = fs.readFileSync(file, 'utf8')
+  const code = maskNonCodeSafely(source)
+  const called = new Set()
+  for (const parts of namedImports) {
+    if (parts.length > 2 || parts.some(name => !/^[A-Za-z_$][\w$]*$/.test(name))) return full
+    const local = parts.at(-1)
+    const pattern = new RegExp(`(^|[^\\w$])${local.replace(/[$]/g, '\\$&')}(?![\\w$])`, 'g')
+    for (const reference of code.matchAll(pattern)) {
+      const start = reference.index + reference[1].length
+      if (code[start - 1] === '.' || !/^\s*\(/.test(code.slice(start + local.length))) return full
+      called.add(parts[0])
+    }
+  }
+  return selectedDependencySource(file, full, called, true)
+}
+
+/** Reuse the flat export proof and local function closure for both import forms. */
+function selectedDependencySource(file, full, called, named) {
   if (!called.size) return full
   let ast
   try { ast = parseJavaScript(full) } catch (error) {
     if (error.name === 'SyntaxError') return full
     throw error
   }
-  const bodies = moduleFunctionBodies(file)
+  // Named helpers may be pure expression arrows (registration-seat validators). Their AST
+  // body spans avoid the regex scanner borrowing a later, unrelated function's braces.
+  const bodies = named ? new Map() : moduleFunctionBodies(file)
   const functions = new Set()
+  const imports = new Set()
   const declarations = []
   // This actual module has primitive cache state; retain its declarations when following clear/load.
   // Other modules and executable/unresolved initializers keep the conservative whole-module path.
@@ -1560,13 +1586,28 @@ function namespaceDependencySource(file, aliases, source, inlineExports) {
   let exportsObject
   for (const statement of ast.body) {
     if (statement.type === 'FunctionDeclaration' && statement.id) {
-      if (bodies.get(statement.id.name) !== full.slice(statement.body.start, statement.body.end)) return full
+      if (named) {
+        if (statement.params.some(parameter => parameter.type !== 'Identifier')) return full
+        bodies.set(statement.id.name, full.slice(statement.body.start, statement.body.end))
+      } else if (bodies.get(statement.id.name) !== full.slice(statement.body.start, statement.body.end)) return full
       functions.add(statement.id.name)
+      continue
+    }
+    if (named && statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
+      id.type === 'Identifier' && init && ['FunctionExpression', 'ArrowFunctionExpression'].includes(init.type)
+      && init.params.every(parameter => parameter.type === 'Identifier'))) {
+      statement.declarations.forEach(({ id, init }) => {
+        functions.add(id.name)
+        bodies.set(id.name, full.slice(init.body.start, init.body.end))
+      })
       continue
     }
     if (statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
       id.type === 'Identifier' && init && init.type === 'CallExpression' && init.callee.name === 'require'
-      && init.arguments.length === 1 && typeof init.arguments[0].value === 'string')) continue
+      && init.arguments.length === 1 && typeof init.arguments[0].value === 'string')) {
+      statement.declarations.forEach(({ id }) => imports.add(id.name))
+      continue
+    }
     if (roleCache && statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
       id.type === 'Identifier' && primitive(init))) {
       declarations.push(full.slice(statement.start, statement.end))
@@ -1589,8 +1630,11 @@ function namespaceDependencySource(file, aliases, source, inlineExports) {
       || !functions.has(property.value.name))) return full
   const exported = new Set(exportsObject.properties.map(property => property.key.name))
   if ([...called].some(name => !exported.has(name))) return full
-  const selected = declarations.concat([...called].map(name => expandModuleFunction(file, name))).join('\n')
+  const selected = declarations.concat([...called].map(name => expandModuleFunction(file, name, null, bodies))).join('\n')
   const selectedCode = maskNonCodeSafely(selected)
+  // A second imported module is not a proven local closure. Keep the existing conservative envelope.
+  if (named && [...imports].some(name =>
+    new RegExp(`(^|[^\\w$])${name.replace(/[$]/g, '\\$&')}(?![\\w$])`).test(selectedCode))) return full
   // Passing a local helper as a callback/alias is not a proven direct-call closure.
   for (const name of functions) {
     const pattern = new RegExp(`\\b${name.replace(/[$]/g, '\\$&')}\\b`, 'g')
@@ -2181,7 +2225,9 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       }
     }
     dependencies.forEach(({ names, request, namedImports, inlineExports }) => {
-      if (!inlineExports && !names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
+      if (!inlineExports && !names.some((alias) => namedImports
+        ? new RegExp(`(^|[^\\w$])${alias.replace(/[$]/g, '\\$&')}(?![\\w$])`).test(maskNonCodeSafely(expandedSource))
+        : new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
       if (!dependency) return
       if (dependency === 'utils/community-post-api.js') return
@@ -2258,7 +2304,8 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         return
       }
       const dependencyFile = path.join(ROOT, dependency)
-      const dependencyTargets = extractTargets(namedImports ? fs.readFileSync(dependencyFile, 'utf8')
+      const dependencyTargets = extractTargets(namedImports
+        ? namedDependencySource(dependencyFile, namedImports, expandedSource)
         : namespaceDependencySource(dependencyFile, names, expandedSource, inlineExports))
       targets.routes.push(...dependencyTargets.routes)
       targets.apis.push(...dependencyTargets.apis)
