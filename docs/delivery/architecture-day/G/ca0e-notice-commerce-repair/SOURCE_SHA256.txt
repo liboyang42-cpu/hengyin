@@ -3,3 +3,6 @@ a3e88d8c5e4a1e7cdddaed79def6b6608797f07eb2d14e139eb8caf64283078c  chengyinhub-ad
 38684d4b181e596f84f254184f3eb14fbb2c35333ea06bc8de6840eb8805c30a  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java
 04c325c01279cc3f6a826c728caa396af8669bb585f8072ec4d56c73921f07cf  docs/delivery/architecture-day/G/ca0e-notice-commerce-repair/shared-consumption-denial.review.patch
 90fddb4619788a9431c127d57078fb3509665bef4a797dffc91a4bf25188bd16  docs/delivery/architecture-day/G/ca0e-notice-commerce-repair/README.md
+4eb07b8f7b6d592b9422eccac384d3a8886c9b718d6adfd75096ad73764be2b1  docs/delivery/architecture-day/G/ca0e-notice-commerce-repair/NOTICE_BLOCKER.md
+ec64cdd45a5d2192c406eacedeadcde75f875725c356100a092b58c5fe8ae65d  docs/delivery/architecture-day/G/ca0e-notice-commerce-repair/before-start-original-error.txt
+87dd61b78e6ab3b50956fcdf4504443415092862ea99f58666fd9617391cb03f  docs/delivery/architecture-day/G/ca0e-notice-commerce-repair/notice-preflight-readonly-diagnosis.sql
