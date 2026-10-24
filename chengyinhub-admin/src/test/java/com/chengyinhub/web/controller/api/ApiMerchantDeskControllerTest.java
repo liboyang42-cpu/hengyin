@@ -118,13 +118,15 @@ class ApiMerchantDeskControllerTest {
         Map<String, Object> applied = new HashMap<>();
         applied.put("requestId", "desk-req-03");
         applied.put("state", "APPLIED");
-        applied.put("action", "SAVE_SKU");
+        applied.put("action", "SKU_SAVE");
+        applied.put("targetType", "pms_sku");
         applied.put("targetId", 44L);
         when(deskService.receipt(access, "desk-req-03")).thenReturn(applied);
         body.put("requestId", "desk-req-03");
         @SuppressWarnings("unchecked")
         Map<String, Object> kept = (Map<String, Object>) controller.receipt(body).get(AjaxResult.DATA_TAG);
-        assertEquals("SAVE_SKU", kept.get("action"));
+        assertEquals("SKU_SAVE", kept.get("action"));
+        assertEquals("pms_sku", kept.get("targetType"));
         assertEquals(44L, kept.get("targetId"));
     }
 
