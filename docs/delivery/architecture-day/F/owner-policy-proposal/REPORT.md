@@ -6,7 +6,7 @@
 
 - 公共观察基线：`0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16`；分支 `codex/architecture-day-f-owner-policy-proposal`，独立 worktree；只写本目录。
 - transport `663c2c634e4cff53c876630fe4e166d3fcd29d20`、verifier `155c88ef52f7f75023de464c8a886c29d017cdba`、producer `685743902d32252adb2cb320a5f5e59b4af2f866` 不修改。H 的 ec65 复审/组合用例由 root 回读集成；本任务不重复改 transport 或代签其测试结果。E 接线仍归 E。
-- 依据完整规范 [第8节 A01–A15](../../COORDINATOR/governance-scope.md)，并结合5.1字段组写权、5.2公开边界及WP01验收；逐条差距见 [A01-A15.md](A01-A15.md)。当前 source gate verdict、当前 compiled jdeps 和整轮 root 验收未独立取得，均保留 UNKNOWN，不能用本地 inventory 代替。
+- 依据完整规范 [第8节 A01–A15](../../COORDINATOR/governance-scope.md)，并结合5.1字段组写权、5.2公开边界及WP01验收；逐条差距见 [A01-A15.md](A01-A15.md)。0c源码观察不是 source gate 执行。另有50f完整身份的CI/JAR/jdeps证据经root独立核验后报告，F仅引用、未独立下载回读，详见交接页；其静态模块图无环不能代替业务owner、运行时图或当前6ec候选验证。
 - 实际执行的只读查询是**原有** `gate.inventory(source)`、`literal_write_target` 和 Git blob 对照，不构造 Mapper→service→entry 全量图，避免与 A 的事实盘点重复。该 source 的 XML tag 语句：select1663/insert398/update731/delete198；原 hints 覆盖389表；字面目标样本368表/247技术 namespace，其中19表多个 namespace。统计只覆盖现有 gate 支持的 XML，排除“全生产写已完整覆盖”的解释。
 - `column_hints` 仍有 `typeHandler` 伪列样本（CmsRegistration/OmsOrder 的 PII backfill、UserInvoice.updateTitle），见 [evidence.json](evidence.json)。动态标签理由528次、text substitution1次、unsupported shape95次，是理由次数，不能相加当未知语句数。这证明不能用 hints 的补集/空集判定“未写字段/无副作用”。
 
@@ -88,4 +88,4 @@ UNKNOWN 在当前gate只输出 review_items，不能证明人审完成。未来�
 
 root需要确认的最少决定：首批fact/字段组及唯一owner；哪些writer真为纯域、哪些只能精确statement绑定；允许公开command及整行删除权；每条 UNKNOWN 的普通PR审阅/测试责任。决定前本候选不得变成active policy。doc-only可独立revert，无DB/账本/回执/迁移/工作流影响，原baseline和冻结候选不动。
 
-后续交接补页见 [HANDOFF.md](HANDOFF.md)：沿用A已有格式，明确事实identity/确定程度、root业务决定与既有gate的联结；追加协调方2026-10-24状态时保持E4/testCompile/transport49及在跑CI彼此隔离。
+后续交接补页见 [HANDOFF.md](HANDOFF.md)：沿用A已有格式，明确事实identity/确定程度、root业务决定与既有gate的联结；追加协调方2026-10-24的50f终态、完整source/JAR身份与九条静态边；保留E4/testCompile/transport49和在跑6ec的独立验证边界。619skip及跨phase原始计数不改写为全suite零跳过。

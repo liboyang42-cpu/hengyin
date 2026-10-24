@@ -20,7 +20,7 @@
     "A14",
     "A15"
   ],
-  "relative_links_checked": 4,
+  "relative_links_checked": 5,
   "frozen_code_equal": [
     {
       "path": "ci/architecture/gate.py",
@@ -52,17 +52,17 @@
   "new_policy_selftests": "NOT_WRITTEN_NOT_RUN; acceptance design only",
   "architecture_tests": "NOT_RUN_THIS_TASK",
   "java_mysql_redis_models_ci": "NOT_RUN",
-  "current_root_sourcegate_compiled_jdeps": "UNKNOWN_NOT_READ_BACK",
+  "current_root_sourcegate_compiled_jdeps": "50f ROOT_VERIFIED_STATIC_MODULE_GRAPH_ONLY; latest_6ec UNKNOWN; F_NOT_INDEPENDENTLY_READ_BACK",
   "business_owner_bindings_assigned": 0,
   "new_baseline_or_allowlist_entries": 0,
   "artifact_sha256": {
-    "A01-A15.md": "ac47aa8b268a3fdc001b35a1694650b2c9c6b0ac7056e2bf5ec69d6b48965b1d",
-    "HANDOFF.md": "326384ad80bb7fcbde8e22c54406e703e8dff89025627e4a244378516f65f274",
-    "REPORT.md": "7224d959f66fc3348e25b8c6aafed1d685686251a215a75e30f4624bc7e68318",
-    "evidence.json": "d985db685327253234a49f85ebddeb59cd3bed4a7cab90972e06e5bf22f5da8d"
+    "A01-A15.md": "d8c1aca5f1fc83ccb964ad41f07d006863dff7d52fb9cd1a1ddec758d31293c5",
+    "HANDOFF.md": "ad57a5d4b7ac1f48a285abf42a10f7649a5f24adcf79d14f474e1ef708a49d25",
+    "REPORT.md": "b49879ff55e4f6ce35572dc985f6f9501cc5562c3faaa48864e71935226aa2a4",
+    "evidence.json": "fa52496efd51fcd13446c0ef682c73c767330eac90a9714e422d6143b541fdb5"
   },
   "original_proposal_commit": "2e622cb9b4f6dbfb2dcccaf4af902db6e51da707",
-  "followup_parent": "2e622cb9b4f6dbfb2dcccaf4af902db6e51da707",
+  "followup_parent": "83a7d26a51082591a4ddb56f1ebc0b914ad2276b",
   "coordinator_reported_not_independently_verified": {
     "reported_date_utc": "2026-10-24",
     "run": 40043910446,
@@ -71,6 +71,15 @@
     "F663_H": "testCompile only; JUnit execution not demonstrated",
     "transport49": "NOT_PROVEN_EXECUTED",
     "other_ci_source_hint": "50f",
-    "other_ci_at_report_time": "startup passed; H8/JAR/jdeps running, not terminal"
+    "other_ci_at_report_time": "historical startup/running status superseded by root-verified 50f final SUCCESS; see evidence.json"
+  },
+  "compiled_evidence_update": "50f root-verified report cited; 9 static module edges only; graph_complete=false; no approved baseline or new owner bindings; 619skip retained",
+  "followup_document_checks": {
+    "changed_proposal_files": 5,
+    "source_record_hashes_checked": 13,
+    "frozen_git_blobs_checked": 4,
+    "scope_ids_checked": 15,
+    "relative_links_checked": 5,
+    "compiled_report_scope_flags_and_identity_format": "PASS; attribution root, no independent artifact readback"
   }
 }

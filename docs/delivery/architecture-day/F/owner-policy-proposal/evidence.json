@@ -167,7 +167,108 @@
     }
   ],
   "business_owners_approved_in_this_proposal": 0,
-  "current_sourcegate_verdict": "UNKNOWN_NOT_RUN",
-  "current_compiled_jdeps": "UNKNOWN_NOT_READ_BACK",
-  "java_db_ci_executed": false
+  "current_sourcegate_verdict": "0c OBSERVATION_NOT_GATE_EXECUTION; 50f ROOT_REPORTED_0_BLOCK_87_REVIEW; 6ec IN_PROGRESS",
+  "current_compiled_jdeps": "50f ROOT_VERIFIED_STATIC_MODULE_GRAPH_ONLY; latest_6ec UNKNOWN; F_NOT_INDEPENDENTLY_READ_BACK",
+  "java_db_ci_executed": false,
+  "root_verified_compiled_evidence_50f": {
+    "attribution": "root independently verified downloaded artifacts and reported; F cites report without independent artifact readback",
+    "source_sha": "50f3c4d3c67383b8ea2e3e230d7f16f2e73f3eb6",
+    "ci_run": 40043150702,
+    "ci_conclusion": "SUCCESS",
+    "run_attempt": "NOT_PROVIDED",
+    "tested_boot_jar_sha256": "e1055a6d6220462545ac6f706489fad8192ca95e2f301008e5e69fc6e2882470",
+    "source_tree_build_identity_match_per_root": true,
+    "jdk_version": "21.0.12.1",
+    "jdeps_exit_code": 0,
+    "verified_producer_artifact_hashes": 11,
+    "missing": [],
+    "static_graph_complete": true,
+    "graph_complete": false,
+    "verdict": "OBSERVATION_ONLY",
+    "static_module_edges": [
+      [
+        "chengyinhub-admin",
+        "chengyinhub-common"
+      ],
+      [
+        "chengyinhub-admin",
+        "chengyinhub-framework"
+      ],
+      [
+        "chengyinhub-admin",
+        "chengyinhub-quartz"
+      ],
+      [
+        "chengyinhub-admin",
+        "chengyinhub-system"
+      ],
+      [
+        "chengyinhub-framework",
+        "chengyinhub-common"
+      ],
+      [
+        "chengyinhub-framework",
+        "chengyinhub-system"
+      ],
+      [
+        "chengyinhub-generator",
+        "chengyinhub-common"
+      ],
+      [
+        "chengyinhub-quartz",
+        "chengyinhub-common"
+      ],
+      [
+        "chengyinhub-system",
+        "chengyinhub-common"
+      ]
+    ],
+    "root_computed_static_module_sccs": [
+      [
+        "chengyinhub-admin"
+      ],
+      [
+        "chengyinhub-common"
+      ],
+      [
+        "chengyinhub-framework"
+      ],
+      [
+        "chengyinhub-generator"
+      ],
+      [
+        "chengyinhub-quartz"
+      ],
+      [
+        "chengyinhub-system"
+      ]
+    ],
+    "scc_scope": "only these nine static module edges; not producer baseline/SCC approval or runtime/domain proof",
+    "baseline_approved": false,
+    "unknown": [
+      "bean",
+      "XML",
+      "reflection",
+      "runtime dependencies",
+      "System business domain ownership"
+    ],
+    "source_gate": {
+      "block": 0,
+      "review": 87
+    },
+    "raw_surefire": {
+      "xml_files_hash_verified": 1834,
+      "tests": 14416,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 619,
+      "count_scope": "raw cross-phase totals, not unique business cases or every required suite zero-skip"
+    },
+    "transport49_junit_execution": "NOT_DEMONSTRATED_BY_THIS_REPORT",
+    "later_ci": {
+      "source_hint_not_full_identity": "6ec",
+      "run": 40044336447,
+      "status_at_report": "unit in progress; excludes 01 new fix; cannot inherit 50f success"
+    }
+  }
 }
