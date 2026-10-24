@@ -18,8 +18,9 @@ import com.chengyinhub.business.service.IImService;
  * <p>回复 / mention / 编辑 / 撤回 / 置顶 / 搜索 → 原回执。断网重开与 UNKNOWN 恢复只读原回执，
  * 不造新 request。{@code APPLIED+} 当前投影不是原请求证明。
  *
- * <p>原发送仍走 {@link IImService#send}（D5/dot）；本类只读 {@link IImService#readSentMessage}。
- * 缺 journal / send 端口为 WAITING_SOURCE，不另造第二套 IM 账。
+ * <p>原发送仍走 {@link IImService#send}。路由字段（member、conversation、target、msgType）
+ * 必须由调用方传入；缺任一字段不发送。本类不实现第二套 send，也不写 Mapper。
+ * 缺 journal / send 端口为 WAITING_SOURCE。
  */
 public final class ImmutableReceiptProducer {
 
@@ -140,6 +141,38 @@ public final class ImmutableReceiptProducer {
             throw new WaitingSourceException(IM_SEND);
         }
         return persist.persist(request);
+    }
+
+    /**
+     * 把已带齐路由字段的原请求交给既有 {@link IImService#send}。
+     * 缺端口 WAITING_SOURCE。任一路由字段缺失返回 {@code null} 且不发送。
+     * 不写入内存 store。
+     */
+    public OriginalReceipt sendOriginal(OriginalRequest request, Long memberId, Long conversationId,
+            Long targetMemberId, Integer msgType, ImSendSource send) {
+        OriginalRequest required = requireRequest(request);
+        if (memberId == null || memberId.longValue() <= 0L || conversationId == null || conversationId.longValue() <= 0L
+                || targetMemberId == null || targetMemberId.longValue() <= 0L || msgType == null) {
+            return null;
+        }
+        if (send == null) {
+            throw new WaitingSourceException(IM_SEND);
+        }
+        ImMessage sent = send.send(memberId, conversationId, targetMemberId, msgType, required.body, null,
+                required.requestId);
+        if (sent == null) {
+            return unknownReceipt(required.requestId, null);
+        }
+        return fromMessage(sent);
+    }
+
+    public static ImSendSource fromIm(IImService im) {
+        if (im == null) {
+            return (memberId, conversationId, targetMemberId, msgType, content, extraJson, clientMessageId) -> {
+                throw new WaitingSourceException(IM_SEND);
+            };
+        }
+        return im::send;
     }
 
     /**
@@ -329,6 +362,12 @@ public final class ImmutableReceiptProducer {
     /** 只读既有 IM 原发送收据；不发、不改 journal。 */
     public interface OriginalReceiptJournal {
         ImMessage readSent(Long memberId, Long conversationId, String clientMessageId);
+    }
+
+    /** 既有 {@link IImService#send}；本生产者不另写一套发送。 */
+    public interface ImSendSource {
+        ImMessage send(Long memberId, Long conversationId, Long targetMemberId, Integer msgType,
+                String content, String extraJson, String clientMessageId);
     }
 
     /** D5/dot 持有的原发送；本生产者不实现第二套 send。 */

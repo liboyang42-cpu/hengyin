@@ -129,4 +129,47 @@ class ImmutableReceiptProducerTest {
                         ImmutableReceiptProducer.OUTCOME_ACCEPTED)));
         assertEquals(ImmutableReceiptProducer.IM_SEND, stillNoSend.getWaitingCapability());
     }
+
+    @Test
+    void sendOriginalDelegatesToExistingSendOnlyWhenRoutingFieldsArePresent() {
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store);
+        ImmutableReceiptProducer.OriginalRequest request = new ImmutableReceiptProducer.OriginalRequest(
+                "c09-send-01", ImmutableReceiptProducer.Kind.REPLY, "hello",
+                ImmutableReceiptProducer.OUTCOME_ACCEPTED);
+        assertNull(producer.sendOriginal(request, null, 12L, 8L, Integer.valueOf(1), (memberId, conversationId,
+                targetMemberId, msgType, content, extraJson, clientMessageId) -> {
+            throw new AssertionError("missing member must not send");
+        }));
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.WaitingSourceException waiting = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> producer.sendOriginal(request, 7L, 12L, 8L, Integer.valueOf(1), null));
+        assertEquals(ImmutableReceiptProducer.IM_SEND, waiting.getWaitingCapability());
+        ImmutableReceiptProducer.WaitingSourceException missingIm = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> ImmutableReceiptProducer.fromIm(null).send(7L, 12L, 8L, Integer.valueOf(1), "hello", null,
+                        "c09-send-01"));
+        assertEquals(ImmutableReceiptProducer.IM_SEND, missingIm.getWaitingCapability());
+
+        ImMessage sent = new ImMessage();
+        sent.setClientMessageId("c09-send-01");
+        sent.setContent("hello");
+        sent.setRequestHash("hash-send-01");
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        ImmutableReceiptProducer.OriginalReceipt receipt = producer.sendOriginal(request, 7L, 12L, 8L,
+                Integer.valueOf(1), (memberId, conversationId, targetMemberId, msgType, content, extraJson,
+                        clientMessageId) -> {
+                    calls.incrementAndGet();
+                    assertEquals(Long.valueOf(7L), memberId);
+                    assertEquals("c09-send-01", clientMessageId);
+                    assertEquals("hello", content);
+                    return sent;
+                });
+        assertEquals("c09-send-01", receipt.requestId);
+        assertEquals("hello", receipt.originalBody);
+        assertNull(receipt.kind);
+        assertEquals(1, calls.get());
+        assertEquals(0, store.size());
+    }
 }
