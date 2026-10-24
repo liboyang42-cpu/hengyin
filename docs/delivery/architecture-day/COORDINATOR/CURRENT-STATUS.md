@@ -78,3 +78,19 @@ C新增测试首次3PASS/1FAIL源于测试错把profile的var声明当const；Cc
 G4e5ee6e1窄读owner已集成：唯一构造RegistrationSeatMapper，原MANDATORY/rollbackFor/两个FOR UPDATE/current-read方法及legacy409原义搬入；TopicEvidence直依赖Reader，旧SeatService同签名委托，不经过报名命令链。Mapper/XML不变，新增4单测源码，原Seat真库case内增读回而声明数不变；严格65类source precheck无错误（非执行PASS）。F d7df真实图首片已合入，等最后精确owner/consumer及tool pin，未再次开CI。
 
 真实startup环的必要源码全部收齐：G4e5窄读owner；F首片d7df+最终verifier16ce2a26/tool3c25f3bb及35场景源码，精确两个incoming consumers、禁止反调，未授Mapper/table新写权；root六可信文件与donor逐字哈希一致、双workflow ref/VERIFIER一致、旧baseline/locking/commands不变。A原资金用例只补Topic3父行，原96方法/断言保留。下一完整候选编译、全启动和65类真实存储均未运行，禁止继承3e旧绿色或把567静态review线索写成已逐个审完。
+
+## 最新完整冻结候选
+
+`55b9e722fcfeeb118781a35ad077ed23849f86b0`，分支`codex/architecture-day-final-55b9-20261024`。标准统一CI [40132354873](https://github.com/liboyang42-cpu/hengyin/actions/runs/40132354873)、65类/810声明真实存储 [40132361105](https://github.com/liboyang42-cpu/hengyin/actions/runs/40132361105)已实际启动。包含窄read owner、精确约束与35Spring场景及A父主题fixture的完整组合。source扫描无秘密；Java/真实启动/DB均等待本SHA新证据，不继承旧3e绿色；旧3e startupFAIL及64/65存储结果仍完整保留。原8已交付者不派额外审查，只有实际失败回对应owner；未合并/部署/生产DDL/微信或付费外呼。
+
+55b9本轮环境失败：固定MySQL镜像在registry-1.docker.io拉层返回HTTP502，docker125发生在任何测试前；标准Backend120986684047及5存储作业受影响。不是源码/业务失败，未运行保持NOT_RUN。后续存储已有20类作业成功，继续保留原运行，全部结束后仅对同SHA失败job重试，不重新运行通过类、不改镜像/代理/权限/门禁、不回Mac/VPS绕预算。
+
+55b9标准CI首轮30项success，唯一Backend因镜像502在测试前失败；已仅重试job120986684047（同run40132354873/同SHA，30项通过者不重跑）。存储继续原矩阵，当前仅最初5个镜像拉取失败，无新增失败；结束后使用原summary支持的latest-attempt-per-class机制只重试失败类，保留全65类同SHA原回执，不新开完整批次、不改门禁。
+
+55b9同run40132361105最终真实存储已PASS；root独立回读65类精确集合、同SOURCE/precheck.sha55、原XML810/810PASS、0skip/0duplicate，65份CLEAN、无binding问题。60类使用原a1、5类仅环境重试a2，原失败回执保留；原汇总按类选最新attempt，未重跑已通过60类。原RegistrationFunds96/96及权威主题case实过。标准Backend仅环境重试中，完整新JAR启动尚待证据，未宣称总体验收完成。
+
+55b9标准Backend attempt2的Java步骤已成功，但下一原子迁移Python真MySQL阶段88例中2error，MerchantOfferWithdrawalColumns两个原例用当前Mapper projection却缺application_round列；实际1054，非Docker502，详见job120988405767。已交原D只修canonical round/withdrawal夹具依赖，历史/回放/缺列负控不删、旧migration/生产XML不改；其余65/810真库结果保持绑定55不假套新SHA。完整JAR启动步骤尚未执行，Reader启动环仍待关闭。
+
+状态更正：root之前按阶段名误将完整startup列为atomic之后，实际workflow535startup、544atomic。API明确Build/test=SUCCESS、full application startup=SUCCESS、atomic Python=FAIL。55b9/job120988405767原日志21:19:23确认packaged app ready、MySQL/RedisUP、缓存roundtrip、protectedHTTP401、jobs disabled；读边界启动P1在此源实际验证。后续compiled/privateMapper/JAR身份步骤确实SKIPPED，不能混成已通过；两旧Python夹具仍需D补齐。
+
+D804d70bf已集成（仅一Python夹具文件）：旧历史行后先通过原runner执行canonical Round迁移，原字段snapshot不变、application_round两历史行均NULL；被测旧withdraw迁移/全部6原case/缺列/历史/replay断言不删，新缺列断言明确replacement_of_offer_id。生产XML/旧SQL字节不改，AST语法已解析，真MySQL待新完整候选验证。55b9完整后端原XML已回读：15459唯一case、14826PASS/633skip/0failure/error/重复，Reader4、Spring真实场景35、ASR屏障3、注销1均实过；实际全JARstartup亦过，后置compiled/JAR metadata被Python失败阻断尚未跑。摘要`55b9-backend-readback.json`，绝不套新SHA。

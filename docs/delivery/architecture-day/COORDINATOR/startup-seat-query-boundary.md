@@ -1,6 +1,6 @@
 # P1：席位结算读边界导致整应用启动失败
 
-状态：已证实；修补源码已集成，完整组合启动验证待运行。不能据单测通过宣布已修复。
+状态：已证实；窄读修补在55b9候选的实际隔离JAR启动验证通过，生产未部署。不能扩大为全系统无环证明。
 
 失败来源：`3e976bcefb2a14b19600e6bc4a20029767d58b75`，[标准 CI 的真实隔离启动](https://github.com/liboyang42-cpu/hengyin/actions/runs/40130007237/job/120979619091)。JUnit XML 无 failure/error，Spring 完整应用仍因下列真实依赖环拒绝启动。未开启循环引用，未部署。
 
@@ -33,3 +33,5 @@ flowchart LR
 实施成本局限于一个窄读类、原服务委托、结算注入与直接测试装配，不扩展重构其他域。没有 schema/data 迁移成本。回滚需回到经过完整启动验证的整套候选；单独撤回窄读边会恢复该环，不应作为故障恢复方式。生产未部署，当前无需执行任何回滚操作。
 
 长期约束：结算消费席位域的窄读合同；席位命令仍由原 owner 承接。CI 保留精确 Mapper 消费者约束和真实完整启动门，新增业务不靠开启循环引用获得装配成功。自动静态零阻断不等于实际 Spring 图无环。
+
+实际关闭证据仅绑定`55b9e722fcfeeb118781a35ad077ed23849f86b0`：run40132354873/attempt2/job120988405767的完整startup步骤SUCCESS；日志21:19:23确认packaged application ready、MySQL/RedisUP、缓存往返、protectedHTTP401、jobs disabled。对应原XML的35个Spring场景、4个reader、3个ASR屏障均通过。后续两个旧Python夹具仍失败，编译结构/JAR身份后置步骤被跳过，因此整体流水线仍未签收。
