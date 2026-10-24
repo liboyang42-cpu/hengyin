@@ -1,0 +1,32 @@
+{
+  "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+  "run": 40138581031,
+  "attempt": 1,
+  "xml_files": 1934,
+  "unique_testcases": 15459,
+  "duplicate_testcases": 0,
+  "xml_counts": {
+    "passed": 14826,
+    "skipped": 633
+  },
+  "selected_suites": {
+    "NpcAsrTerminalFenceBarrierTest": {
+      "passed": 3
+    },
+    "RegistrationSeatSettlementReaderTest": {
+      "passed": 4
+    },
+    "SupportedStackServiceCyclesTest": {
+      "passed": 35
+    },
+    "P0DeregistrationMySqlIT": {
+      "passed": 1
+    }
+  },
+  "original_identity_sha256": "8aaecf71950a680d4b9e4ed2fe9279f89c2d91d2fd676cab87a328e79a88a503",
+  "report_hash_binding_problems": [],
+  "full_application_startup": "PASS_REAL_PACKAGED_HEALTH_MYSQL_REDIS_CACHE_HTTP401",
+  "atomic_python": "88PASS_0FAILURE_0ERROR",
+  "compiled_and_tested_jar_provenance": "PASS_INDEPENDENT_JAR_TREE_RUN_POLICY_TOOL_AND292EVIDENCE_HASHES_THREE_REAL_NEGATIVE_RESTORED_PAIRS",
+  "all_complete": false
+}

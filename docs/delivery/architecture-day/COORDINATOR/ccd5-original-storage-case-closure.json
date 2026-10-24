@@ -1,0 +1,689 @@
+{
+  "original_source_sha": "ca0e0d2598727f6e567c802b7a664f9634d945c6",
+  "original_run": 40122516880,
+  "final_source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+  "final_run": 40138589827,
+  "original_unique_classes": 65,
+  "original_class_verdicts": {
+    "PASS": 46,
+    "FAIL": 19
+  },
+  "original_actual_cases": 804,
+  "original_actual_counts": {
+    "passed": 672,
+    "error": 90,
+    "failure": 42
+  },
+  "all_original_case_keys_now_pass": 804,
+  "missing_or_skip_or_nonpass": [],
+  "classes": {
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentLockReadMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 1,
+      "original_counts": {
+        "passed": 1
+      },
+      "final_actual_cases": 1,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "9d326cc9ed546d77b6998811d186a994cf2f7775c88b11a87b8993552cb4dbf4"
+    },
+    "com.chengyinhub.business.it.Wp08DeliveryJobsMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 7,
+      "original_counts": {
+        "passed": 7
+      },
+      "final_actual_cases": 7,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "89aeab9c5213a45a1b229d4616fc6f690e73838b935812fd32295c9f256f5851"
+    },
+    "com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 12,
+      "original_counts": {
+        "error": 12
+      },
+      "final_actual_cases": 12,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "c2fc3b41d57f9677b8dddc5eba989e9047c61a1c290d40d7b363f033d7d4f874"
+    },
+    "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 4,
+      "original_counts": {
+        "passed": 4
+      },
+      "final_actual_cases": 4,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "bac58344b679620049a675add2019ee3fd231b3aafbdf6a40809a62677b5543a"
+    },
+    "com.chengyinhub.business.it.Wp04CurrentCashBasisMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 4,
+      "original_counts": {
+        "passed": 4
+      },
+      "final_actual_cases": 4,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "1b1daa993bb413302467c6a216592134410ffddc5c71bd081deef2572c559766"
+    },
+    "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 25,
+      "original_counts": {
+        "passed": 25
+      },
+      "final_actual_cases": 25,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "41aaf19603bd616e95d577b22f3c2ac8f5701cf0932334b8ad4d2b0da2275341"
+    },
+    "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 15,
+      "original_counts": {
+        "error": 1,
+        "passed": 14
+      },
+      "final_actual_cases": 15,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "607ff3de5eafed08c65f273455b447c3474ed7ef3e93eddc8347c14cee31a4bd"
+    },
+    "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 21,
+      "original_counts": {
+        "passed": 21
+      },
+      "final_actual_cases": 21,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "f4ee2e7c8d7f4aa4c8b30bcdc9a8c1719487fa4264326d8c2fc3a2ec03f722aa"
+    },
+    "com.chengyinhub.business.it.RegistrationSeatMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 7,
+      "original_counts": {
+        "passed": 7
+      },
+      "final_actual_cases": 7,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "533153e31a3461e98e61f874ea02f7a2c08895e3a41fdc3754d7f6910d6509d4"
+    },
+    "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 5,
+      "original_counts": {
+        "passed": 5
+      },
+      "final_actual_cases": 5,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "7b2b73cd20068d6650c3d8e2d13b67aef4c611c7040442b8ef736bdc30ea0a88"
+    },
+    "com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 1,
+      "original_counts": {
+        "passed": 1
+      },
+      "final_actual_cases": 1,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "85137e8db52a903d6d5082129ce50c7d88f99295156ea0b7cbd0d249fc90d452"
+    },
+    "com.chengyinhub.business.service.impl.ImConversationBatchReadMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 4,
+      "original_counts": {
+        "passed": 4
+      },
+      "final_actual_cases": 4,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "ada1f8bc39db999856e8d1accc307d11a0da319bfd3cdff02880edaa2ba4e4bb"
+    },
+    "com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 4,
+      "original_counts": {
+        "passed": 4
+      },
+      "final_actual_cases": 4,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "0dad1cfbfa838f263c6518238e0bfc826d756a5a79f05566b7d413e9d2a6fa74"
+    },
+    "com.chengyinhub.business.service.impl.ChapterApplicationRoundMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 10,
+      "original_counts": {
+        "error": 10
+      },
+      "final_actual_cases": 10,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "0fdd20048abd3fce97973c362e37d158036c5a497ce29fcdb2f490027860d839"
+    },
+    "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 36,
+      "original_counts": {
+        "passed": 36
+      },
+      "final_actual_cases": 36,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "3e56531b74f511371638ff4ffc2f898f192784dfb4149ba24a73f015c4a1e209"
+    },
+    "com.chengyinhub.business.it.OmsOrderCommerceGuardMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 6,
+      "original_counts": {
+        "error": 3,
+        "failure": 1,
+        "passed": 2
+      },
+      "final_actual_cases": 6,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "e398a3bff749c9455a19a2d79216dadcb0d9062576db1d92032c3677253332b6"
+    },
+    "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 6,
+      "original_counts": {
+        "error": 6
+      },
+      "final_actual_cases": 6,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "b4629368be51367f1c46f3bfb24b3762413403d1a3fb4d8b9bd3fdf5ccc57ecd"
+    },
+    "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 3,
+      "original_counts": {
+        "passed": 3
+      },
+      "final_actual_cases": 3,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "026a39a1063a479d5fafd57aad351ad14da4607143003279abed7fd883121c7b"
+    },
+    "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 53,
+      "original_counts": {
+        "passed": 53
+      },
+      "final_actual_cases": 53,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "2bc7a2d19dbf82081c6c77d7f770e35e8031ae838b58f18c3314219d2e16face"
+    },
+    "com.chengyinhub.business.it.NpcAsrIntentMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 10,
+      "original_counts": {
+        "passed": 9,
+        "error": 1
+      },
+      "final_actual_cases": 10,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "a54cbda74e98e92f5b878b26923a0d356c82938ca68f594a6a934ef6d7368184"
+    },
+    "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 4,
+      "original_counts": {
+        "passed": 4
+      },
+      "final_actual_cases": 4,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "1a5be96b5b3b1390a54d0f96fef8701c26bf14a819c6bb442ae4e52647e1f04e"
+    },
+    "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 10,
+      "original_counts": {
+        "passed": 10
+      },
+      "final_actual_cases": 10,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "5b081127f4718da5d0e1d0d38f3a46895236e79004fc2bb63eb730c1dec50ec9"
+    },
+    "com.chengyinhub.business.service.impl.SignupNoticeAfterCommitPersistenceMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 18,
+      "original_counts": {
+        "passed": 17,
+        "error": 1
+      },
+      "final_actual_cases": 18,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "1939a1f10a81d6ac3c8b8c6c2cb539597f16b922090fa014477d1bad6e281578"
+    },
+    "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 14,
+      "original_counts": {
+        "passed": 14
+      },
+      "final_actual_cases": 14,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "bba412fa60bd9090ef7b180ee32fa1abdfb2db4cc77f01dd5a20368e7e829fd2"
+    },
+    "com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 8,
+      "original_counts": {
+        "passed": 8
+      },
+      "final_actual_cases": 8,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "82a30559d42d0e0c75b127369f78be248321368259573ee9771102e6dff0193d"
+    },
+    "com.chengyinhub.business.service.impl.ChapterApplicationOutcomeMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 10,
+      "original_counts": {
+        "error": 10
+      },
+      "final_actual_cases": 10,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "54d80b40905dfce2941a4927f7baea19ead5022ccff0ab389648e9f22425d684"
+    },
+    "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 3,
+      "original_counts": {
+        "passed": 3
+      },
+      "final_actual_cases": 3,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "f64d2b9a26e39686846234be9d84efb8ecd08d065cceb3b9b655f502ea961f64"
+    },
+    "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 45,
+      "original_counts": {
+        "passed": 45
+      },
+      "final_actual_cases": 45,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "6db33fa9938b4f716334405f9316da6a910b0542d2a9740aa88c905332d2a052"
+    },
+    "com.chengyinhub.business.service.impl.ImConversationQueryScopeMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 7,
+      "original_counts": {
+        "passed": 7
+      },
+      "final_actual_cases": 7,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "8120cbc0aac635e0f8d8ecbf6bcc496e502d31101a2eb008c9a8d9841f32b558"
+    },
+    "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 13,
+      "original_counts": {
+        "error": 13
+      },
+      "final_actual_cases": 19,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "7066a7f23ae443cfb89f26813782f805176510e8384d9dc59a79f7fb8e3cc089"
+    },
+    "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 4,
+      "original_counts": {
+        "passed": 3,
+        "failure": 1
+      },
+      "final_actual_cases": 4,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "0d939c47b69be63bc72b9635d4fba366a07fe700110c13c362c2fe3f36027710"
+    },
+    "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 11,
+      "original_counts": {
+        "passed": 11
+      },
+      "final_actual_cases": 11,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "39913040348d21a44183a9d53690c83afb835c34a384d133ec44fffc9817df3b"
+    },
+    "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 4,
+      "original_counts": {
+        "passed": 4
+      },
+      "final_actual_cases": 4,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "036404a65c30459718913c6a7d3fb876671b3db20bd9cf4376b76bd65503b7db"
+    },
+    "com.chengyinhub.business.service.impl.CoopComplaintCommittedNoticeMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 11,
+      "original_counts": {
+        "error": 11
+      },
+      "final_actual_cases": 11,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "5185e32135a109b0b4fdd075cba0de39f6efe6b617448ea231a03226164d31f9"
+    },
+    "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 32,
+      "original_counts": {
+        "passed": 31,
+        "error": 1
+      },
+      "final_actual_cases": 32,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "8f460f7475086bcb0c5ca8152bed8aec5d1fcff881145f35465c1e5f7197a048"
+    },
+    "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 1,
+      "original_counts": {
+        "passed": 1
+      },
+      "final_actual_cases": 1,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "cc640e81c55aca3366d66e4addc10e058fd9209c2758d84daac26b65a9daa561"
+    },
+    "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 3,
+      "original_counts": {
+        "passed": 3
+      },
+      "final_actual_cases": 3,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "ca2003b07eb89a37f7ab1c973a568669e8e61c18e9c008a920d7d5b9bcff9cc2"
+    },
+    "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 15,
+      "original_counts": {
+        "passed": 15
+      },
+      "final_actual_cases": 15,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "d513a85fccc8b3c41402902e02731c5f344b3bb715c0b05e90f43de22cf3adb8"
+    },
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 4,
+      "original_counts": {
+        "passed": 4
+      },
+      "final_actual_cases": 4,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "fefe75f5c28236af4f60a11b9ed146576fcb392196dc51d76e3c6573bf54c9c9"
+    },
+    "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 46,
+      "original_counts": {
+        "passed": 31,
+        "failure": 7,
+        "error": 8
+      },
+      "final_actual_cases": 46,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "fb27b0a7bb7b15b320e2e4e71a1635acf67018fe5e3020e3ee093e4c94936a4c"
+    },
+    "com.chengyinhub.quartz.util.SchedulerWorkFenceTwoProcessMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 3,
+      "original_counts": {
+        "passed": 3
+      },
+      "final_actual_cases": 3,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "c8dbac5e2902d02edbdeeca942c70d6c7366ed48d7b8e9ed50c048bb898f05f8"
+    },
+    "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 8,
+      "original_counts": {
+        "passed": 8
+      },
+      "final_actual_cases": 8,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "32ffc6cf63170692547c21e79f4867f0cbea78eae390ec7f98c8c238368bbe2a"
+    },
+    "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 14,
+      "original_counts": {
+        "passed": 14
+      },
+      "final_actual_cases": 14,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "c92994479b150626b234868d1f6bfbfb13c4e416d9cb15a7751a6e1c36f259e7"
+    },
+    "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 3,
+      "original_counts": {
+        "passed": 3
+      },
+      "final_actual_cases": 3,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "a11fb6d58808622d2c272f41757f33032ab42045c4dce64d37e5ccfaee3129e5"
+    },
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 10,
+      "original_counts": {
+        "passed": 10
+      },
+      "final_actual_cases": 10,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "28ffb8332dd41d59d8d274fdb509918ef4ce1cd4523e4727a6953ba281f7c1e5"
+    },
+    "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 3,
+      "original_counts": {
+        "passed": 3
+      },
+      "final_actual_cases": 3,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "7a43bba99152a7bf5ac7b6acebf9f00fc340affcff606a11d23f1db4c23a169d"
+    },
+    "com.chengyinhub.web.controller.api.RoamLocationRetentionMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 21,
+      "original_counts": {
+        "passed": 20,
+        "failure": 1
+      },
+      "final_actual_cases": 21,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "836c9d2cf4cbf37274f188afda3223a462255983a60d0326fe2cb2e46927010a"
+    },
+    "com.chengyinhub.business.service.RegistrationEquityMybatisIntegrationTest": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 6,
+      "original_counts": {
+        "passed": 6
+      },
+      "final_actual_cases": 6,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "80cab8fd90efffcd1fd2ab6f059756c09f73ad5b20c76ef385939f513a334271"
+    },
+    "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 30,
+      "original_counts": {
+        "passed": 30
+      },
+      "final_actual_cases": 30,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "d7b4e93514154c75e87682298eae6e648952c9bb0cebd4d232828f2fb9de3f7a"
+    },
+    "com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 5,
+      "original_counts": {
+        "passed": 5
+      },
+      "final_actual_cases": 5,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "c1456b26e94febed15615e00293aafdc8db9cf0b6b82b5e8f3835b0e67d1457f"
+    },
+    "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 5,
+      "original_counts": {
+        "failure": 1,
+        "passed": 4
+      },
+      "final_actual_cases": 5,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "a64e9b4331a6f50319e60a590ef6cf36d3ae532b6fa998dcc4fef5e7702b98f6"
+    },
+    "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 2,
+      "original_counts": {
+        "passed": 2
+      },
+      "final_actual_cases": 2,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "ff2aab624250004e237e37766c1da4f73b07f64c5a64f27c032ff1442c1f58ec"
+    },
+    "com.chengyinhub.business.it.FreeSelfPlayCreateRealDbIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 1,
+      "original_counts": {
+        "passed": 1
+      },
+      "final_actual_cases": 1,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "fc540864ebdb4de17ca79a019fc2a0c13363280a1117f904cfbf83f8da0c3ee0"
+    },
+    "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 7,
+      "original_counts": {
+        "passed": 7
+      },
+      "final_actual_cases": 7,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "6d8ff5a1a8d624ef099c3d8b5b3f0b1f82367432754e6f526049c6f9220cff0b"
+    },
+    "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 9,
+      "original_counts": {
+        "passed": 9
+      },
+      "final_actual_cases": 9,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "f2161d72963bd486c558028cd5de1a8e17f446d2ee56955d4adc5c026412ecb6"
+    },
+    "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 15,
+      "original_counts": {
+        "passed": 15
+      },
+      "final_actual_cases": 15,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "b59d5c809e8573b94e36b848d2f90e346d0fe6e77a4659144fa23d7d9ebab8e2"
+    },
+    "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 96,
+      "original_counts": {
+        "passed": 73,
+        "failure": 23
+      },
+      "final_actual_cases": 96,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "82808e946dbffabf914de38e0196f1b406fde80c514d4fe8c8db32873201a7c2"
+    },
+    "com.chengyinhub.business.service.impl.ComplaintCloseReporterNoticeMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 8,
+      "original_counts": {
+        "error": 8
+      },
+      "final_actual_cases": 8,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "8d0e81a25d11fe81a38e463208ba65c2b35b67f12a73057c5b3bd3a953280e54"
+    },
+    "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 9,
+      "original_counts": {
+        "failure": 6,
+        "passed": 2,
+        "error": 1
+      },
+      "final_actual_cases": 9,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "8269e3aa96b86198353e6d5b623455014caef7fe42ede11ef9a46fc7f8351818"
+    },
+    "com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT": {
+      "original_verdict": "FAIL",
+      "original_actual_cases": 8,
+      "original_counts": {
+        "error": 4,
+        "passed": 2,
+        "failure": 2
+      },
+      "final_actual_cases": 8,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "0c67893d1c5fe232a2f8011cbf5c415713cb67e375d82ac61941bc2dea4dc798"
+    },
+    "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 23,
+      "original_counts": {
+        "passed": 23
+      },
+      "final_actual_cases": 23,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "48852a8e3f97e45e94e981e35d80a4618e05990dd70356c211f5dd052bc59da9"
+    },
+    "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 3,
+      "original_counts": {
+        "passed": 3
+      },
+      "final_actual_cases": 3,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "c20c2dbf3067244400325ce9b54516ba392a90a709008801f09d5ac999a01352"
+    },
+    "com.chengyinhub.business.it.PlayHintUnlockMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 10,
+      "original_counts": {
+        "passed": 10
+      },
+      "final_actual_cases": 10,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "5701128422e1794396489df17e6be89a4b7a8b6d8276615de434984d86292db5"
+    },
+    "com.chengyinhub.business.it.AdvancedCommandFingerprintMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 5,
+      "original_counts": {
+        "passed": 5
+      },
+      "final_actual_cases": 5,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "eb3f078245ef2729951bba0b23d5d892c52c8d5d6eddb91f510ce39da91d29a0"
+    },
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT": {
+      "original_verdict": "PASS",
+      "original_actual_cases": 3,
+      "original_counts": {
+        "passed": 3
+      },
+      "final_actual_cases": 3,
+      "final_verdict": "PASS",
+      "original_receipt_sha256": "e7410385330c27cff4ce32ab25b12ccd3d28c2a602ba42ebb2935d300e6215db"
+    }
+  },
+  "scope": "Exact original storage XML identities preserved and now PASS; not external business/production acceptance",
+  "original_case_identity_digest_sha256": "6c0331f8b25106a1564e2f3fc32985e443ef55d85d37cfc4df6f372bfd972512"
+}
