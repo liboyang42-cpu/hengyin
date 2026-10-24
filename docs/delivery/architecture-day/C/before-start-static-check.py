@@ -68,18 +68,24 @@ assert new_core.replace('(frozenPage ? page : (StringUtils.isEmpty(page) ? defau
 notifypath=SYS+'java/com/chengyinhub/business/service/impl/NotifyServiceImpl.java'
 for name in ['notifyBeforeStart','notifyOfficialBroadcast','notifyRefund','fanout']:
  assert method(read(notifypath),name)==method(old(notifypath),name),'legacy '+name+' drift'
-# Apply the one shared patch in memory only; actual TeamGroup source stays the complete root/A version.
+# Apply in memory against the pinned original, then identify the exact working-tree state.
 patch=Path(__file__).with_name('before-start-team-group.review.patch').read_text()
-assert re.findall(r'^\+\+\+ b/(.*)$',patch,re.M)==[TEAM]
-subprocess.run(['git','apply','--check',str(Path(__file__).with_name('before-start-team-group.review.patch'))],cwd=ROOT,check=True)
-assert read(TEAM)==old(TEAM),'root/A shared file edited'
-updated=read(TEAM)
-for hunk in re.split(r'^@@[^\n]*\n',patch,flags=re.M)[1:]:
- lines=hunk.splitlines(True)
- a=''.join(line[1:] for line in lines if line.startswith((' ','-')))
- b=''.join(line[1:] for line in lines if line.startswith((' ','+')))
- assert updated.count(a)==1,'shared hunk ambiguity'
- updated=updated.replace(a,b,1)
+def shared_patch_state(baseline,current,patch):
+ assert re.findall(r'^\+\+\+ b/(.*)$',patch,re.M)==[TEAM]
+ updated=baseline
+ for hunk in re.split(r'^@@[^\n]*\n',patch,flags=re.M)[1:]:
+  lines=hunk.splitlines(True)
+  a=''.join(line[1:] for line in lines if line.startswith((' ','-')))
+  b=''.join(line[1:] for line in lines if line.startswith((' ','+')))
+  assert updated.count(a)==1,'shared hunk ambiguity'
+  updated=updated.replace(a,b,1)
+ if current==baseline:return 'unapplied',updated
+ if current==updated:return 'applied',updated
+ raise AssertionError('shared file is partially applied or has unreviewed root/A drift')
+shared_state,updated=shared_patch_state(old(TEAM),read(TEAM),patch)
+check=['git','apply','--check']
+if shared_state=='applied':check.append('--reverse')
+subprocess.run(check+[str(Path(__file__).with_name('before-start-team-group.review.patch'))],cwd=ROOT,check=True)
 # The changed closure is only this method plus its immediately preceding documentation.
 def without_closure(s):
  pos=s.index('    public BeforeStartNotifyResult notifyBeforeStartBatch()')
@@ -104,4 +110,4 @@ counts={}
 for name in ['BeforeStartPreparedWxTest','BeforeStartNoticeMySqlIT','BeforeStartNotifyRetryContractTest']+protected_tests:
  p='chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/'+name+'.java'
  counts[name]=len(re.findall(r'@Test\b',read(p)))
-print(json.dumps({'baseline':BASE,'sourceChecks':'PASS (not Java/DB execution)','sharedPatch':'applies; all other TeamGroup/A code byte-identical','broadcastEnqueueAndLegacyHash':'unchanged','canonicalDMigration':'unchanged','testDeclarationsNotExecuted':counts},ensure_ascii=False,indent=2))
+print(json.dumps({'baseline':BASE,'sourceChecks':'PASS (not Java/DB execution)','sharedPatch':shared_state+'; all other TeamGroup/A code byte-identical','broadcastEnqueueAndLegacyHash':'unchanged','canonicalDMigration':'unchanged','testDeclarationsNotExecuted':counts},ensure_ascii=False,indent=2))
