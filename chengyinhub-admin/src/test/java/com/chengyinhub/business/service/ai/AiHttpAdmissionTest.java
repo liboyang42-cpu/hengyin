@@ -239,6 +239,7 @@ class AiHttpAdmissionTest
             assertTrue(System.nanoTime() - initialIdle < 0, "prior controlled fixtures must finish before measuring slots");
             Thread.sleep(10);
         }
+        int originalCleanupCore = cleanup.getCorePoolSize();
         CountDownLatch releaseCleanup = new CountDownLatch(1);
         CountDownLatch cleanupEntered = new CountDownLatch(cleanup.getMaximumPoolSize());
         CountDownLatch releaseBody = new CountDownLatch(1);
@@ -272,11 +273,23 @@ class AiHttpAdmissionTest
                 catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
             };
             int workers = cleanup.getMaximumPoolSize();
-            for (int i = 0; i < workers; i++) ownCleanup.add(cleanup.submit(blocker));
-            assertTrue(cleanupEntered.await(5, TimeUnit.SECONDS));
+            assertEquals(4, workers);
+            try {
+                // core=1 otherwise queues three blockers instead of starting four workers.
+                cleanup.setCorePoolSize(workers);
+                for (int i = 0; i < workers; i++) ownCleanup.add(cleanup.submit(blocker));
+                assertTrue(cleanupEntered.await(5, TimeUnit.SECONDS));
+            } finally {
+                cleanup.setCorePoolSize(originalCleanupCore);
+            }
+            // All four workers are inside our unreleased blocker before the queue is filled.
             int queued = cleanup.getQueue().remainingCapacity();
+            assertEquals(64, queued);
             for (int i = 0; i < queued; i++) ownCleanup.add(cleanup.submit(blocker));
             int capacity = workers + queued;
+            assertEquals(originalCleanupCore, cleanup.getCorePoolSize());
+            assertEquals(workers, cleanup.getActiveCount());
+            assertEquals(queued, cleanup.getQueue().size());
             for (int i = 0; i < 2; i++) replies.add(callers.submit(() ->
                     assertThrows(RuntimeException.class, () -> client.chat("s", largePrompt))));
             assertTrue(providerEntered.await(3, TimeUnit.SECONDS));
@@ -296,11 +309,21 @@ class AiHttpAdmissionTest
             assertEquals(2, calls.get());
         } finally {
             releaseBody.countDown(); releaseCleanup.countDown();
-            for (java.util.concurrent.Future<?> task : ownCleanup) task.get(5, TimeUnit.SECONDS);
-            long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(8);
-            while (http.getActiveCount() != 0 || !http.getQueue().isEmpty()) {
-                assertTrue(System.nanoTime() - end < 0, "controlled physical workers must actually exit");
-                Thread.sleep(10);
+            cleanup.setCorePoolSize(originalCleanupCore);
+            List<org.junit.jupiter.api.function.Executable> joins = new ArrayList<>();
+            for (java.util.concurrent.Future<?> task : ownCleanup)
+                joins.add(() -> task.get(5, TimeUnit.SECONDS));
+            for (java.util.concurrent.Future<?> reply : replies)
+                joins.add(() -> reply.get(5, TimeUnit.SECONDS));
+            try {
+                assertAll("all owned fixture futures must finish", joins);
+            } finally {
+                long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(8);
+                while (http.getActiveCount() != 0 || !http.getQueue().isEmpty()
+                        || cleanup.getActiveCount() != 0 || !cleanup.getQueue().isEmpty()) {
+                    assertTrue(System.nanoTime() - end < 0, "controlled physical workers must actually exit");
+                    Thread.sleep(10);
+                }
             }
         }
         try (HttpUtils.AttemptLease one = gate.acquire(base); HttpUtils.AttemptLease two = gate.acquire(base)) {
