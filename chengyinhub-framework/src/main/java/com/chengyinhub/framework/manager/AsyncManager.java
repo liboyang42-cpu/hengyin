@@ -4,6 +4,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import com.chengyinhub.common.utils.Threads;
+import com.chengyinhub.common.utils.LogCorrelation;
 import com.chengyinhub.common.utils.spring.SpringUtils;
 
 /**
@@ -42,7 +43,7 @@ public class AsyncManager
      */
     public void execute(TimerTask task)
     {
-        executor.schedule(task, OPERATE_DELAY_TIME, TimeUnit.MILLISECONDS);
+        executor.schedule(LogCorrelation.wrap(task), OPERATE_DELAY_TIME, TimeUnit.MILLISECONDS);
     }
 
     /**

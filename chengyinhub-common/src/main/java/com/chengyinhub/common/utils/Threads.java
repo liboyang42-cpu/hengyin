@@ -93,7 +93,8 @@ public class Threads
         }
         if (t != null)
         {
-            logger.error(t.getMessage(), t);
+            // The original exception remains in Future.get(); messages/causes can contain credentials.
+            logger.error("event=async.executor.failure errorType={}", t.getClass().getSimpleName());
         }
     }
 }
