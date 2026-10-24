@@ -1,0 +1,48 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java
+@@ -56,6 +56,7 @@
+     private UmsMemberPointsDetailServiceImpl ledger;
+     private final Set<Long> connectionIds = ConcurrentHashMap.newKeySet();
+     private CountDownLatch callerEntered;
++    private Wp09M1EquivalenceTrace.Capture equivalence;
+
+     @BeforeAll static void schema() throws Exception {
+         for (String name : new String[]{"HOST", "PORT", "USER", "PASSWORD", "DB_SUFFIX"}) {
+@@ -86,6 +87,7 @@
+             ItSchema.applyMigrations(connection, "sql/migration_20260930_registration_first_successful_scan.sql", "sql/migration_club_lead.sql");
+         }
+         Configuration config = new Configuration(new Environment("c-hint-unlock", new SpringManagedTransactionFactory(), ds));
++        config.addInterceptor(new Wp09M1EquivalenceTrace());
+         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
+         for (String mapper : List.of("CmsRegistrationMapper", "CmsActivityMapper", "ClubLeadMapper", "CmsPointsSettingMapper",
+                 "UmsMemberMapper", "UmsMemberPointsDetailMapper")) {
+@@ -112,7 +114,7 @@
+         }
+     }
+
+-    @BeforeEach void seedOnlyOwnedSchema() {
++    @BeforeEach void seedOnlyOwnedSchema(TestInfo testInfo) throws Exception {
+         for (String table : List.of("ums_member_points_detail", "cms_points_setting", "cms_registration", "club_lead_state", "cms_activity", "cms_topic", "ums_member")) {
+             jdbc.update("DELETE FROM " + table);
+         }
+@@ -129,6 +131,12 @@
+         members = new UmsMemberServiceImpl(); ReflectionTestUtils.setField(members, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
+         ledger = new UmsMemberPointsDetailServiceImpl(); ReflectionTestUtils.setField(ledger, "umsMemberPointsDetailMapper", sql.getMapper(UmsMemberPointsDetailMapper.class));
+         connectionIds.clear(); callerEntered = null;
++        equivalence=Wp09M1EquivalenceTrace.begin(getClass().getName(),testInfo.getTestMethod().orElseThrow().getName(),jdbc);
++    }
++
++    @AfterEach void writeEquivalence() throws Exception {
++        if(equivalence==null)throw new IllegalStateException("Missing M1 equivalence context");
++        equivalence.finish(Map.of("testConnectionIds",new ArrayList<>(connectionIds)));
+     }
+
+     private ApiPlayProgressController controller(long actor, IUmsMemberService memberService, IUmsMemberPointsDetailService details) {
+@@ -165,6 +173,7 @@
+         ReflectionTestUtils.setField(target, "umsMemberPointsDetailService", details);
+         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
+         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
++        proxy.addAdvice(0,Wp09M1EquivalenceTrace.controller(actor));
+         return (ApiPlayProgressController) proxy.getProxy();
+     }
+     private ApiPlayProgressController controller(long actor) { return controller(actor, members, ledger); }

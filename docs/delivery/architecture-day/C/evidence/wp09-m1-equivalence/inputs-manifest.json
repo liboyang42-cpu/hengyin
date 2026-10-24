@@ -1,0 +1,845 @@
+{
+  "format": "C-M1-EQUIVALENCE-INPUTS-1",
+  "owner_bases": {
+    "old": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+    "new": "1c63e55a167f235930b5811bf28203a29231c8ef"
+  },
+  "not_executed": true,
+  "cases": [
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "legalSelfPlayUsesOneRealDebitAndOriginalEventIdentity",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "legalActivityUsesOneRealDebitAndOriginalEventIdentity",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            "500",
+            null
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "unauthorizedOrWrongScopeNeverReturnsHintsOrChangesEconomicState",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "0"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "999"
+            },
+            null,
+            "300"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "301"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "9"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "duplicateAfterLostReplyAndReconstructionKeepsOneDebitAcrossAuthorizedScopes",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            "500",
+            null
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "twoConnectionsSerializeOriginalRegistrationAndDebitOnce",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        }
+      ],
+      "mode": "transaction-partial-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "balanceLostAfterPrecheckRollsBackHintLedgerButRetainsOtherCommittedSpend",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        }
+      ],
+      "mode": "transaction-partial-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "ledgerWriteThenThrowRollsBackRealRowAndLeavesDebitUntouched",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "debitWriteThenThrowRollsBackBothRealBalanceAndLedgerBeforeOriginalRetry",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "revokedRegistrationBlocksPreviouslyPurchasedHintWithoutChangingItsOriginalLedger",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "case": "disabledRuleStillRequiresEntitlementAndWritesNoPoints",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "9"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            null,
+            "300"
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "case": "preferenceLeadStorageFaultCannotCreateBranchSessionBeforeEitherHttpAdmission",
+      "inputs": [
+        {
+          "method": "preference",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            "500",
+            null
+          ]
+        },
+        {
+          "method": "submitPreference",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            {
+              "kind": "originalPreferenceInput",
+              "javaType": "com.chengyinhub.business.domain.dto.PreferenceSubmitRequest",
+              "fields": {
+                "activityId": "500",
+                "topicId": null,
+                "choices": {
+                  "one": "A"
+                },
+                "reuseTagCode": null,
+                "routeActionId": "preference-original",
+                "expectedRouteVersion": {
+                  "kind": "number",
+                  "javaType": "java.lang.Integer",
+                  "value": "0"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "method": "preference",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            "500",
+            null
+          ]
+        },
+        {
+          "method": "submitPreference",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            {
+              "kind": "originalPreferenceInput",
+              "javaType": "com.chengyinhub.business.domain.dto.PreferenceSubmitRequest",
+              "fields": {
+                "activityId": "500",
+                "topicId": null,
+                "choices": {
+                  "one": "A"
+                },
+                "reuseTagCode": null,
+                "routeActionId": "preference-original",
+                "expectedRouteVersion": {
+                  "kind": "number",
+                  "javaType": "java.lang.Integer",
+                  "value": "0"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "case": "preferenceLeadStorageFaultCannotCreateJourneySessionBeforeEitherHttpAdmission",
+      "inputs": [
+        {
+          "method": "preference",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            "500",
+            null
+          ]
+        },
+        {
+          "method": "submitPreference",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            {
+              "kind": "originalPreferenceInput",
+              "javaType": "com.chengyinhub.business.domain.dto.PreferenceSubmitRequest",
+              "fields": {
+                "activityId": "500",
+                "topicId": null,
+                "choices": {
+                  "one": "A"
+                },
+                "reuseTagCode": null,
+                "routeActionId": "preference-original",
+                "expectedRouteVersion": {
+                  "kind": "number",
+                  "javaType": "java.lang.Integer",
+                  "value": "0"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "method": "preference",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            "500",
+            null
+          ]
+        },
+        {
+          "method": "submitPreference",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            {
+              "kind": "originalPreferenceInput",
+              "javaType": "com.chengyinhub.business.domain.dto.PreferenceSubmitRequest",
+              "fields": {
+                "activityId": "500",
+                "topicId": null,
+                "choices": {
+                  "one": "A"
+                },
+                "reuseTagCode": null,
+                "routeActionId": "preference-original",
+                "expectedRouteVersion": {
+                  "kind": "number",
+                  "javaType": "java.lang.Integer",
+                  "value": "0"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "case": "realLeadStorageFaultReturnsNoHintAndHasZeroEconomicOrRegistrationEffect",
+      "inputs": [
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            "500",
+            null
+          ]
+        },
+        {
+          "method": "unlockHint",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "401"
+            },
+            "500",
+            null
+          ]
+        }
+      ],
+      "mode": "full-order"
+    },
+    {
+      "suite": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "case": "realLeadStorageFaultRollsBackTheOriginalBasicActionClaimWithoutTerminalReceipt",
+      "inputs": [
+        {
+          "method": "answer",
+          "actor": {
+            "kind": "number",
+            "javaType": "java.lang.Long",
+            "value": "7"
+          },
+          "arguments": [
+            "500",
+            "401",
+            "answer",
+            null,
+            "lead-storage-fault",
+            {
+              "kind": "number",
+              "javaType": "java.lang.Integer",
+              "value": "0"
+            },
+            {
+              "kind": "number",
+              "javaType": "java.lang.Long",
+              "value": "0"
+            },
+            null,
+            null
+          ]
+        }
+      ],
+      "mode": "full-order"
+    }
+  ],
+  "shared_source_files": [
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "sha256": "2e0c38d4d8426aacf10b8759507992b319c791cc3b1a178d4ff01f0bb1e07c44"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml",
+      "sha256": "ea65005310fc6b616379d1deb54d7c888599793a69ff5dbf605291e892b194fd"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubLeadMapper.xml",
+      "sha256": "8e14a91363772ebf2a1f598db128c3f524676a62099cecde94f9065a966dc65f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsPointsSettingMapper.xml",
+      "sha256": "b0513608ae6be667814ddf757547381ee48a8db3336d5a537f232fb77006bae3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml",
+      "sha256": "88899cba0960ce4be8909e91f528a6c7595394216b36f0d477bd300522b45e49"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml",
+      "sha256": "b786d51ce1249c1c434c12f3a3bfcc68aa713bdf72bc66a16ad30eb36868a809"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml",
+      "sha256": "96753ea2c7d484c673fd70e3fd73a322a19a09c96d31cf02d5f6239b066276da"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml",
+      "sha256": "7e05fb1cad8af4507aa6fb44be1d10449b9b4041376b5b91cc37a5789742d5ee"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/resources/it-schema/run41-prod-ddl.sql",
+      "sha256": "a2deb2ed4bbfe07fc1e005164ec18b7a0119219342c47ccca8a891087f0bbea5"
+    },
+    {
+      "path": "sql/base_schema_20260818.sql",
+      "sha256": "dcf816b8d735bb81b3aee7b921a6fc61d4b0355a02fc0e0e443e2ad1cca4b358"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260823_topic_route_graph.sql",
+      "sha256": "a3655b35c4616d60b753c1aa6b78befa964fbc0a6d8b3c0a5d9f88194775e811"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260930_registration_first_successful_scan.sql",
+      "sha256": "6d6e56f7d39585a2baaca825856496c893208a6a4b4511e1dc046144871e168f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_lead.sql",
+      "sha256": "9fb2cccf9a727887df51c47e587cdb76f851d462e36002069359139dbdc9e993"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260823_game_session_runtime.sql",
+      "sha256": "ca7e9c57cf3d82cdca79796a120fda6197a68a9fab0b3a241c45a3a83ee68250"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CurrentPlayRegistration.java",
+      "sha256": "53495a67081e3c3215a872f340796a66cbb8af05ebc685118a2228fded2e6ebe"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/PreferenceSubmitRequest.java",
+      "sha256": "63ce9c70e42864e2c5e95782c9b67bc7bb74f326a1ac8fc82e3edeb3ea6b548c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java",
+      "sha256": "48dd675353f103b9a7320987a1a0d2747e652b2e7b8f901086e52cd1a07f9d38"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberPointsDetailServiceImpl.java",
+      "sha256": "dce310336921026d52e8f2ff5283aab47d1615b3d69f8687597366bd0e6877c5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java",
+      "sha256": "3df1021ffe78cb9148096179a2b21a4db540a5b3242225826f4b1422aee73181"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsPointsSettingServiceImpl.java",
+      "sha256": "b42a60b40f1ffd36e471a6b68b05455e44f92a007e6a656ad6779dd709899f07"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "sha256": "6426ef799fa77f7313fb1554c668033dde11817baacafa45a499b75ee3dc31e9"
+    }
+  ],
+  "normalization": {
+    "seed_dates_unchanged": {
+      "cms_activity": [
+        "start_date",
+        "end_date"
+      ],
+      "cms_registration": [
+        "pay_expire_time",
+        "expires_at"
+      ]
+    },
+    "operation_dates": {
+      "ums_member_points_detail": [
+        "create_time"
+      ],
+      "topic_route_session": [
+        "create_time",
+        "update_time"
+      ],
+      "game_command_receipt": [
+        "create_time",
+        "update_time"
+      ]
+    },
+    "operation_parameters": {
+      "com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper.insertUmsMemberPointsDetail": [
+        "createTime"
+      ],
+      "com.chengyinhub.business.mapper.TopicRouteSessionMapper.insertSession": [
+        "createTime",
+        "updateTime"
+      ],
+      "com.chengyinhub.business.mapper.GameSessionRuntimeMapper.insertReceiptClaim": [
+        "createTime",
+        "updateTime"
+      ]
+    },
+    "operation_window": "JVM case-start/end with one-second DATETIME precision only; persisted timestamps use the recorded read-only setTimestamp/CAST(DATETIME(3))/getTimestamp codec delta. The complete fixed-anchor codec fact is compared verbatim; no arbitrary timezone/clock-skew allowance.",
+    "observation_labels": [
+      "seq",
+      "span",
+      "call",
+      "thread",
+      "jvmMillis",
+      "transaction",
+      "connectionHandle",
+      "testConnectionIds numeric labels (cardinality preserved)"
+    ],
+    "never_normalize": [
+      "amounts",
+      "member/node/activity/session/request/receipt/ledger primary IDs",
+      "qualification/status/version/authority",
+      "SQL text/statement IDs/parameters except registered operation Date parameters",
+      "root and driver exception text/codes",
+      "unregistered date fields",
+      "JSON payload strings"
+    ]
+  },
+  "comparison_preconditions": [
+    "same exact isolated schema name/suffix on old/new (driver missing-table prose is compared verbatim)",
+    "same per-suite case execution order and full column metadata; generated IDs are not normalized",
+    "same MySQL/timezone/sql_mode/connection charset/collation",
+    "14 original XML cases PASS0skip and two real-storage receipts CLEAN on EACH side, source SHA bound",
+    "sequential cases, inherited workers only; concurrent commands within the two race cases supported"
+  ],
+  "coverage": "actual MyBatis Executor attempts and StatementHandler prepare/query/update; no batch, no claim to trace arbitrary fixture JdbcTemplate SQL. Full all-table initial/final snapshots and per-call non-race snapshots retain fixture mutations.",
+  "no_production_code_or_schema_change": true
+}

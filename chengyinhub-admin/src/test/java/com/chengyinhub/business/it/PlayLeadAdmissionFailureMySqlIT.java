@@ -64,6 +64,7 @@ class PlayLeadAdmissionFailureMySqlIT {
     private UmsMemberPointsDetailServiceImpl ledger;
     private final AtomicInteger claims = new AtomicInteger();
     private GameSessionRuntimeMapper observedReceipts;
+    private Wp09M1EquivalenceTrace.Capture equivalence;
 
     @BeforeAll static void schema() throws Exception {
         for (String name : new String[]{"HOST", "PORT", "USER", "PASSWORD", "DB_SUFFIX"}) {
@@ -104,6 +105,7 @@ class PlayLeadAdmissionFailureMySqlIT {
             ItSchema.applyMigrations(connection, "sql/migration_20260930_registration_first_successful_scan.sql", "sql/migration_club_lead.sql", "sql/migration_20260823_game_session_runtime.sql");
         }
         Configuration config = new Configuration(new Environment("c-lead-admission-failure", new SpringManagedTransactionFactory(), ds));
+        config.addInterceptor(new Wp09M1EquivalenceTrace());
         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String mapper : List.of("CmsRegistrationMapper", "CmsActivityMapper", "ClubLeadMapper", "CmsPointsSettingMapper",
                 "UmsMemberMapper", "UmsMemberPointsDetailMapper", "GameSessionRuntimeMapper", "TopicRouteSessionMapper")) {
@@ -130,7 +132,7 @@ class PlayLeadAdmissionFailureMySqlIT {
         }
     }
 
-    @BeforeEach void seedOnlyOwnedSchema() {
+    @BeforeEach void seedOnlyOwnedSchema(TestInfo testInfo) throws Exception {
         for (String table : List.of("topic_route_action", "topic_route_session", "game_command_receipt", "player_node_progress", "ums_member_points_detail", "cms_points_setting", "cms_registration", "club_lead_state", "cms_activity", "cms_topic", "ums_member")) {
             jdbc.update("DELETE FROM " + table);
         }
@@ -147,6 +149,12 @@ class PlayLeadAdmissionFailureMySqlIT {
         members = new UmsMemberServiceImpl(); ReflectionTestUtils.setField(members, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
         ledger = new UmsMemberPointsDetailServiceImpl(); ReflectionTestUtils.setField(ledger, "umsMemberPointsDetailMapper", sql.getMapper(UmsMemberPointsDetailMapper.class));
         claims.set(0);
+        equivalence=Wp09M1EquivalenceTrace.begin(getClass().getName(),testInfo.getTestMethod().orElseThrow().getName(),jdbc);
+    }
+
+    @AfterEach void writeEquivalence() throws Exception {
+        if(equivalence==null)throw new IllegalStateException("Missing M1 equivalence context");
+        equivalence.finish(Map.of("claims",claims.get()));
     }
 
     private ApiPlayProgressController controller(long actor, IUmsMemberService memberService, IUmsMemberPointsDetailService details) {
@@ -195,6 +203,7 @@ class PlayLeadAdmissionFailureMySqlIT {
         com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.wire(target,settings,memberService,details,transactions);
         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
+        proxy.addAdvice(0,Wp09M1EquivalenceTrace.controller(actor));
         return (ApiPlayProgressController) proxy.getProxy();
     }
     private ApiPlayProgressController controller(long actor) { return controller(actor, members, ledger); }

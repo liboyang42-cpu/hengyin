@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "kind": "static-only-not-Java-compilation",
+  "owner_bases": {
+    "old": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+    "new": "1c63e55a167f235930b5811bf28203a29231c8ef"
+  },
+  "review_patches_checked": 4,
+  "original_cases_preserved": 14,
+  "shared_sources_byte_equal": 21,
+  "root_hint_file_untouched": true,
+  "helper_sha256": "e6ec0822c17a98ad86945dae18f361f1fe306eb15bf500b143fff3e3dccb8908",
+  "checks": [
+    "exact six observer anchors only",
+    "all original wrappers/assertions/helper tail and cleanup unchanged",
+    "four patches apply to exact old/new owner",
+    "manifest exact 14-case set",
+    "21 shared source hashes equal",
+    "8 mapper XMLs contain no inspected mutating BoundSql expressions",
+    "Java lexical delimiters only",
+    "test/C-evidence ownership whitelist"
+  ]
+}

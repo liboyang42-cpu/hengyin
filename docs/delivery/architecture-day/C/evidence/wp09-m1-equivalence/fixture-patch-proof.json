@@ -1,0 +1,82 @@
+[
+  {
+    "side": "old",
+    "owner_sha": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java",
+    "case_names": [
+      "legalSelfPlayUsesOneRealDebitAndOriginalEventIdentity",
+      "legalActivityUsesOneRealDebitAndOriginalEventIdentity",
+      "unauthorizedOrWrongScopeNeverReturnsHintsOrChangesEconomicState",
+      "duplicateAfterLostReplyAndReconstructionKeepsOneDebitAcrossAuthorizedScopes",
+      "twoConnectionsSerializeOriginalRegistrationAndDebitOnce",
+      "balanceLostAfterPrecheckRollsBackHintLedgerButRetainsOtherCommittedSpend",
+      "ledgerWriteThenThrowRollsBackRealRowAndLeavesDebitUntouched",
+      "debitWriteThenThrowRollsBackBothRealBalanceAndLedgerBeforeOriginalRetry",
+      "revokedRegistrationBlocksPreviouslyPurchasedHintWithoutChangingItsOriginalLedger",
+      "disabledRuleStillRequiresEntitlementAndWritesNoPoints"
+    ],
+    "case_tail_sha256": "99f6f09107bd332763ba7d97e545b4a86f3202d581fc9c7047ff13dfe8f159ec",
+    "cleanup_sha256": "1a991cde949de3d7a192c219d8e2543140e3be1b91c8cd3e1ffecfb801da702b",
+    "original_file_sha256": "5a3c14e88b0e11e33209492f59fb3350be8a22bb1eccea06f64226e2ce35c366",
+    "observed_file_sha256": "619970ddb13ade5794c7c39d4f68ee14d36ed7373ef4aa1ea41edf372d9fbc03",
+    "case_tail_unchanged": true,
+    "cleanup_unchanged": true
+  },
+  {
+    "side": "old",
+    "owner_sha": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+    "case_names": [
+      "preferenceLeadStorageFaultCannotCreateBranchSessionBeforeEitherHttpAdmission",
+      "preferenceLeadStorageFaultCannotCreateJourneySessionBeforeEitherHttpAdmission",
+      "realLeadStorageFaultReturnsNoHintAndHasZeroEconomicOrRegistrationEffect",
+      "realLeadStorageFaultRollsBackTheOriginalBasicActionClaimWithoutTerminalReceipt"
+    ],
+    "case_tail_sha256": "97dba5f19bd4a900216ce845212a83bb234c996d882479dcc55e3a64c2753b7d",
+    "cleanup_sha256": "3258fbc6fe7ae7239fc8f588a45dbc2c01ee014fa6dfed73de09150cfa8f5acc",
+    "original_file_sha256": "2a5c9939ec45bfd000f25d7c617cdf48b4ceff76c255b801ff67856f1e58c3b6",
+    "observed_file_sha256": "e66e3189c5fe11a3bc8dea5c148b89fa0e18512c45031df3d515a7574554ccd2",
+    "case_tail_unchanged": true,
+    "cleanup_unchanged": true
+  },
+  {
+    "side": "new",
+    "owner_sha": "1c63e55a167f235930b5811bf28203a29231c8ef",
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java",
+    "case_names": [
+      "legalSelfPlayUsesOneRealDebitAndOriginalEventIdentity",
+      "legalActivityUsesOneRealDebitAndOriginalEventIdentity",
+      "unauthorizedOrWrongScopeNeverReturnsHintsOrChangesEconomicState",
+      "duplicateAfterLostReplyAndReconstructionKeepsOneDebitAcrossAuthorizedScopes",
+      "twoConnectionsSerializeOriginalRegistrationAndDebitOnce",
+      "balanceLostAfterPrecheckRollsBackHintLedgerButRetainsOtherCommittedSpend",
+      "ledgerWriteThenThrowRollsBackRealRowAndLeavesDebitUntouched",
+      "debitWriteThenThrowRollsBackBothRealBalanceAndLedgerBeforeOriginalRetry",
+      "revokedRegistrationBlocksPreviouslyPurchasedHintWithoutChangingItsOriginalLedger",
+      "disabledRuleStillRequiresEntitlementAndWritesNoPoints"
+    ],
+    "case_tail_sha256": "99f6f09107bd332763ba7d97e545b4a86f3202d581fc9c7047ff13dfe8f159ec",
+    "cleanup_sha256": "1a991cde949de3d7a192c219d8e2543140e3be1b91c8cd3e1ffecfb801da702b",
+    "original_file_sha256": "4da9afb0f58d127d0a40de4d7019c3091d2af678eb0f74a11fdc5059298f93df",
+    "observed_file_sha256": "19c9b51207ffc760672131d490e17e05cb9050211c3114d8d512a41f4f01898b",
+    "case_tail_unchanged": true,
+    "cleanup_unchanged": true
+  },
+  {
+    "side": "new",
+    "owner_sha": "1c63e55a167f235930b5811bf28203a29231c8ef",
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+    "case_names": [
+      "preferenceLeadStorageFaultCannotCreateBranchSessionBeforeEitherHttpAdmission",
+      "preferenceLeadStorageFaultCannotCreateJourneySessionBeforeEitherHttpAdmission",
+      "realLeadStorageFaultReturnsNoHintAndHasZeroEconomicOrRegistrationEffect",
+      "realLeadStorageFaultRollsBackTheOriginalBasicActionClaimWithoutTerminalReceipt"
+    ],
+    "case_tail_sha256": "75f443eaa84a0510acf3bcb83f3db90fad5a9554c38fc3b765691e279980655c",
+    "cleanup_sha256": "3258fbc6fe7ae7239fc8f588a45dbc2c01ee014fa6dfed73de09150cfa8f5acc",
+    "original_file_sha256": "9d40dbfefac0278d0a4f44b787398967b62057417d842e6dd6399da3b36a5b1c",
+    "observed_file_sha256": "9c02c9c35338738237cd0a35c91cd276df68625c8a2bf681b3fe2b4f9093d223",
+    "case_tail_unchanged": true,
+    "cleanup_unchanged": true
+  }
+]
