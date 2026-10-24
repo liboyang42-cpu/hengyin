@@ -1074,6 +1074,39 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                               if not l.strip().startswith(member + " -> ")).encode())
         self.assert_unknown(self.check_directions())
 
+    def test_chapter_outcome_uses_only_the_existing_shared_audit_port(self):
+        self.reference(self.owner_member("D_CHAPTER_INVITE_NOTICE"), self.owner_member("SHARED_BUSINESS_AUDIT_PORT"))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual([["D_CHAPTER_INVITE_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"]],
+                         report["technical_dependencies"]["owner_edges"])
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_chapter_outcome_permission_does_not_allow_other_directions(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        pairs = (("D_CHAPTER_INVITE_NOTICE", "D_PUBLICATION"),
+                 ("D_CHAPTER_INVITE_NOTICE", "D_SELF_HOST_ACTIVITY"),
+                 ("D_PUBLICATION", "SHARED_BUSINESS_AUDIT_PORT"))
+        for source, target in pairs:
+            with self.subTest(source=source, target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(source), self.owner_member(target))
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "NEW_OWNER_DEPENDENCY_DIRECTION"
+                                    and f["source_technical_owner"] == source
+                                    and f["target_technical_owner"] == target for f in report["findings"]), report)
+
+    def test_shared_audit_callback_into_chapter_notice_is_a_new_cycle(self):
+        self.reference(self.owner_member("D_CHAPTER_INVITE_NOTICE"), self.owner_member("SHARED_BUSINESS_AUDIT_PORT"))
+        self.reference(self.owner_member("SHARED_BUSINESS_AUDIT_PORT"), self.owner_member("D_CHAPTER_INVITE_NOTICE"))
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", {f["rule"] for f in report["findings"]})
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["D_CHAPTER_INVITE_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"], cycle["owners"])
+        self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
     def test_retired_rejection_port_is_not_an_active_required_type_or_a_missing_input_exception(self):
         retired = "com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"
         self.assertNotIn("D_COMMITTED_NOTICE_REJECTION_PORT", self.dependencies["owners"])

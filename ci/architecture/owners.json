@@ -1151,6 +1151,10 @@
       [
         "C_CITY_NODE_REDEMPTION_APPLICATION",
         "SHARED_BUSINESS_AUDIT_PORT"
+      ],
+      [
+        "D_CHAPTER_INVITE_NOTICE",
+        "SHARED_BUSINESS_AUDIT_PORT"
       ]
     ]
   }
