@@ -1,0 +1,51 @@
+{
+  "candidate": "254744aa21139b44374a151b7922f7575086cdd8",
+  "java_or_database_or_ci_executed_here": false,
+  "source_blob_verifications": 41,
+  "mapper_xml_parse": "PASS",
+  "tests_inventory_not_execution": {
+    "WechatPaymentIntentMySqlIT": {
+      "authored_methods": 4,
+      "names": [
+        "fourDomainsRetainOriginalParametersAndConflictRollsBackWithoutOverwriting",
+        "concurrentChannelChoicesHaveOneCommittedWinner",
+        "oldClosedObservationCannotCloseNewAttemptAndNewSuccessCreditsExactlyOnce",
+        "sdkObservesCommittedIntentOnIndependentConnectionAndAmbientTransactionCannotSubmit"
+      ]
+    },
+    "WechatPayCallbackHttpAckTest": {
+      "authored_methods": 5,
+      "names": [
+        "committedSuccessReturns204WithoutBody",
+        "failureMissingAndMalformedAckAreNever200",
+        "unexpectedGatewayExceptionCannotBecomeGlobalHandler200",
+        "allFourRealGatewayRoutesRejectDomainFailuresAndExceptionsWith500",
+        "allFourRealGatewayRoutesAcknowledgeRepeatedCommittedSuccessWith204"
+      ]
+    }
+  },
+  "parent_preservation": {
+    "parent": "218ecae05a78185e689ad3bc115bea2e51aa752c",
+    "candidate": "254744aa21139b44374a151b7922f7575086cdd8",
+    "callback_bodies_unchanged": [
+      "verifiedRegistrationRefundConflictAlertsOnceAndKeepsFail",
+      "verifiedRegistrationCloseConflictAndDisappearedOrderEachAlertOnceAndKeepFail",
+      "verifiedRegistrationAlreadyClosedAcknowledgesSuccessWithoutFailureAlarm"
+    ],
+    "transferToBalance_byte_identical": true,
+    "fractional_and_overflow_test": "ok=false / preSDK never assertions retained; ambiguous absent assertions replaced with explicit false",
+    "runtime_result": "NOT_RUN"
+  },
+  "new_proven_production_P1_P2": [],
+  "runtime_verdict": "UNKNOWN",
+  "validation_gaps": [
+    "V01 restore repeated fresh alias MySQL assertion",
+    "V02 CLM post-close dynamic read; real inbox and four-domain combination"
+  ],
+  "delivery_checks": {
+    "git_diff_cached_check": "PASS",
+    "secret_file_gate": "PASS",
+    "bounded_token_scan": "PASS",
+    "gitleaks": "NOT_RUN; unavailable"
+  }
+}

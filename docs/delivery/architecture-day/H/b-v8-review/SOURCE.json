@@ -1,0 +1,337 @@
+{
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate": "254744aa21139b44374a151b7922f7575086cdd8",
+  "parent": "218ecae05a78185e689ad3bc115bea2e51aa752c",
+  "tree": "560d59f93a57b7821de3304b7cd6c6657b7dfef5",
+  "public_branch": "codex/architecture-day-b-v8-root-recovered-20261024",
+  "delta_files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayReadinessTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentMySqlIT.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentTestSupport.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderClosePayingReconcileTaskContractTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWechatPayService.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+      "status": "modified"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/README.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/artifact-sha256-v8.txt",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/files-v8.txt",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/migration-preflight.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/patch-apply-evidence-v8.txt",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/secret-review-v8.txt",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/shared-callback-http-proposal.md",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/shared-callback-http-proposal.patch",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/static-evidence-v8.txt",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/transfer-v2.patch.gz.base64",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/verify_static.py",
+      "status": "modified"
+    }
+  ],
+  "read_files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "sha": "88a160bfb470df5b9315818b7da7016f15b9dda8",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java",
+      "sha": "2e5057b1d1eb26b8388c72bca674521830496163",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java",
+      "sha": "13a5b7585a18519addf244b5bef508d017414c56",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java",
+      "sha": "20a5332a9123c43f8d674a6de97fb4f9408822a9",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "sha": "f6a75b5dec02029b03baa70c77b471c3d54ee2e2",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java",
+      "sha": "20a3d06c56daa05c0a05f700420be9850ce76c0b",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java",
+      "sha": "7faa8cc96f6e8ce5bae6f8f04235c24b04138ebb",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayReadinessTest.java",
+      "sha": "f0155793f19145a4001b9dfb105593026f698b1c",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentMySqlIT.java",
+      "sha": "100d36c5b9130c724968a32945c96f377040e52f",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentTestSupport.java",
+      "sha": "e7a6600276a1652b17228bb2d52dac8e29df1cd7",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderClosePayingReconcileTaskContractTest.java",
+      "sha": "81d733cfe65836617feb3eedee0c14e4c612b5c1",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java",
+      "sha": "7e06074ef906ee03d07d7b4f1c969ebc31cbace9",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWechatPayService.java",
+      "sha": "a7d6b07ad196215d2a9f87385f5c1e79edf48df8",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java",
+      "sha": "d919840d2b3d1f18274c0c51e5fb7b1a0ea92f2f",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha": "e4c5cbc84e76dd25026aa7c4cdf6f161ba6d84a4",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+      "sha": "9b2b812dcb4306b9beec48b5a1a3ac3b10703b62",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "sha": "a1faf6dc9e83d022d36381de1f36f47387b700fc",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+      "sha": "7ea1e5bd03b0f71eddd58ed21789430fda0f32fc",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+      "sha": "5b1ae5adac915aca46281748c11b78b1520362f0",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/README.md",
+      "sha": "4374512cd4ea33076d2089b3aa67cdbcba10b615",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/files-v8.txt",
+      "sha": "5b1a1de2a5fb6f95cdacc51f2bb02e11ee75cab9",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/shared-callback-http-proposal.md",
+      "sha": "f451c6cb4f6df4623ee915f81d521705e308daab",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/static-evidence-v8.txt",
+      "sha": "31707b241253cc2843640382077c75bd15be327c",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+      "sha": "66b3180ef351fc433ee5a09a712b164b41ee3a67",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml",
+      "sha": "32181a20f33a62391eafaff5d752ab9c5d68dd0b",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "sha": "294c21f6c141975126d1197bd44f711d7e8e7db1",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+      "sha": "d514bfc8b58b6af8b5a273905716663772dce042",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "sha": "224599a846fdaceb6b39c809c3c8dc39d0e5c05b",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTransferClassificationTest.java",
+      "sha": "d769bff1f9cb171b20a092153151c385feee2094",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql",
+      "sha": "5ac75efdcb4e5d58efdb262bdfd403fb54e62d9e",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackClaimService.java",
+      "sha": "88ce24134ce737cfb67802cd8c98280af87a0c63",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+      "sha": "100f684ba7169d1db0ab056aac2ddcc5ab6d8b2b",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "sha": "d7b8d7a03744c9b38ba697f2a5385f52ff7b48a6",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubMembershipMapper.xml",
+      "sha": "c802e5b77b048f7ae5f364832905c86e971be5d9",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OmsOrderMapper.xml",
+      "sha": "c1221cfb81756e0c2efb970aa1028232b74bfcff",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopInviteMapper.xml",
+      "sha": "2bcf2fd5a3e0993f0fe4d7ef8c00cdc0d61f4580",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java",
+      "sha": "7ec507c207f260e2f186dfaa57e7b2c65bbd3739",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java",
+      "ref": "218ecae05a78185e689ad3bc115bea2e51aa752c",
+      "sha": "d889b5a4f093bd27d02cfa39e338a139376b2983"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayReadinessTest.java",
+      "ref": "218ecae05a78185e689ad3bc115bea2e51aa752c",
+      "sha": "7aa3afbb012ffb05e5d9c12b85c476032ec1ade8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+      "ref": "218ecae05a78185e689ad3bc115bea2e51aa752c",
+      "sha": "043be49d5baf3d8c2cc809c2e434fabc23d906c3"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentLockTest.java",
+      "sha": "c8125125a88539bf4df632f04b861bed5896b5bf",
+      "ref": "254744aa21139b44374a151b7922f7575086cdd8"
+    }
+  ],
+  "failed_create_tree_comparison": "root reported exact 30blob; H independently reviewed this published candidate, not the original failed request"
+}
