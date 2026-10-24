@@ -1,0 +1,80 @@
+{
+  "id": "RECENT_EXTERNAL_EVIDENCE_ACK_20261018",
+  "owner": "C00",
+  "records": [
+    {
+      "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
+      "packet": "EVIDENCE_VPS_EXTRA_923170ab.json",
+      "totals": {
+        "tests": 35,
+        "failures": 0,
+        "errors": 7,
+        "skipped": 0,
+        "passed": 28
+      },
+      "verification_type": "ordinary targeted repair retest",
+      "result": "ORDINARY_TARGETED_35_NOT_PASS"
+    },
+    {
+      "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+      "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
+      "packet": "EVIDENCE_VPS_EXTRA_b034a4aa.json",
+      "totals": {
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 8
+      },
+      "verification_type": "targeted retest of original two error classes only",
+      "result": "PASS"
+    },
+    {
+      "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+      "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+      "packet": "EVIDENCE_VPS_EXTRA_530e7228.json",
+      "totals": {
+        "tests": 60,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 60
+      },
+      "verification_type": "two newly changed services: new regressions plus two directly affected existing classes",
+      "result": "PASS"
+    },
+    {
+      "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+      "evidence_commit": "1eb823ebad101e57e3be2e7f7b391bd7787e4988",
+      "packet": "EVIDENCE_VPS_EXTRA_6143c37f.json",
+      "totals": {
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 4
+      },
+      "verification_type": "new activity-reference visibility SQL: focused production XML H2 regression",
+      "result": "PASS"
+    },
+    {
+      "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+      "evidence_commit": "fb56b38de2e6eed9011023325789b7470aac06e6",
+      "packet": "EVIDENCE_SOURCE_EXTRA_6c6f82d7.json",
+      "totals": {
+        "tests": 0
+      },
+      "verification_type": "STATIC_ONLY",
+      "result": "STATIC_ONLY"
+    }
+  ],
+  "old35_history": "923170ab actual35=28PASS/0FAIL/7ERROR/0SKIP. H2 FOR Java method quoting fixture failure, not35 failed methods or7 productionbugs; retain exact six freshXML and two admission-refusal histories.",
+  "targeted8_closure": "b034a4aa only two affectedclasses8 actualPASS; originalE02 ACK/slotrelease evidence PR24#6217343282 actually read. No new35 rerun or inherited28.",
+  "sixty_count_audit": "530e7228 actual60 after original planned59 missed fullyqualified@Test; exact source methodnames=freshXML audited, original collector NOT_PASS/count receipt retained, no rerun/source adjustment.",
+  "four_boundary": "6143c37f actual4 H2 productionXML ordinaryPASS; no realMySQL/HTTP/transaction claim. New read dependency cms_activity exposes old scratch prerequisite gaps only.",
+  "sixc6": "6c6f82d7 one Java SQL string static ONLY, tests0/compileNOT_RUN/realMySQLNOT_RUN, no6143PASS inherited; four otherfixtures granted separately.",
+  "counter_correction": "OldE02 batch declarations18 missed6 CsvSource invocations: 6+(8ordinary+6parameter)+2+2=24; withE04 ordinary11, actual selectedbatch35. Test methodannotation counts are not executed invocation counts.",
+  "policy": "保持现有入口，不新增. RealMySQL/Redis/runtimeHTTP/device/business/crossbranch integration/migration/merge/deployment unaccepted; no new entry/CI changes.",
+  "not_internal_coordination_public_comments": true
+}

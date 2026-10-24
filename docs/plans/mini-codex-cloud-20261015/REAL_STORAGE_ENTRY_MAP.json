@@ -1,0 +1,1341 @@
+{
+  "protocol": "CY-EXISTING-REAL-STORAGE-ENTRY-MAP-20261015",
+  "status": "CURRENT_EXECUTION_EXISTS_AT_41F83_OLDER_MAPS_ARE_HISTORY",
+  "current_candidate_shas": {
+    "CORE": {
+      "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+      "task": "E01-19",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
+      "ordinary_classes": 2,
+      "source_declarations": 10
+    },
+    "EXTRA": {
+      "source_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "delivery_head_sha": "ad0ffc86b4275c802fd8a312ab016b6f7d3ff53e",
+      "task": "E02-24",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
+      "ordinary_classes": 2,
+      "source_declarations": 60
+    },
+    "THIRD": {
+      "source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+      "delivery_head_sha": "e80caf3958e9e0a636260b9b7a2dc905187bf673",
+      "tasks": [
+        "F3-STAT-02",
+        "F3-GROW-02"
+      ],
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
+      "ordinary_classes": 2,
+      "source_declarations": 28,
+      "mysql11": "NOT_RUN"
+    }
+  },
+  "core": {
+    "target_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "local_head": "1ec06a6fe83075cb1423330bde72a5c96d92a772",
+    "same_tree_verified": true,
+    "read_only_method": "Anonymous public git fetch, exact SHA git show, source/control reads only. No tests/builds/CI/VPS/DB operations.",
+    "status": "NOT_RUN",
+    "counts": {
+      "core_deferred_classes": 8,
+      "core_declared_tests": 27,
+      "real_mysql_declarations": 23,
+      "outer_unit_declarations": 4,
+      "supplemental_redis": 15,
+      "supplemental_mysql_redis": 7,
+      "source_counts_not_execution_results": true
+    },
+    "classes": [
+      {
+        "class": "com.chengyinhub.business.longrun.E04_13Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+        "source_declared_tests": 2,
+        "storage": "real MySQL",
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_and_fixture": {
+          "gate": {
+            "CHENGYIN_FUNDS_MYSQL_IT": "1"
+          },
+          "env_family": "funds_mysql",
+          "overrides": {
+            "CHENGYIN_TEST_MYSQL_DATABASE_BASE": "e04_scratch"
+          },
+          "required_explicit": [
+            "CHENGYIN_TEST_MYSQL_HOST",
+            "CHENGYIN_TEST_MYSQL_PORT",
+            "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+            "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+            "CHENGYIN_TEST_MYSQL_USER",
+            "CHENGYIN_TEST_MYSQL_PASSWORD"
+          ],
+          "scratch": "e04_scratch_e04_13_it${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX}; CREATE refuses existing; DROP only after successful create",
+          "checks": "MySQL>=8 (MariaDB rejected); fixed base=e04_scratch; nonempty suffix; password explicitly present",
+          "spring": "Real TransactionTemplate + SpringManagedTransactionFactory/SqlSessionTemplate; not full application/proxy/provider",
+          "cwd": "Ascends from CWD until sql/base_schema_20260818.sql exists; module/root CWD both work only when complete repo parent tree is present",
+          "risk": "Creates/drops owned DB and reads base schema to create two fixture tables; never pass production host"
+        },
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_19Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_19Test.java",
+        "source_declared_tests": 4,
+        "storage": "real MySQL",
+        "gate": {
+          "CHENGYIN_RUN_SESSION_ORDER_IT": "1"
+        },
+        "env_and_fixture": {
+          "gate": {
+            "CHENGYIN_RUN_SESSION_ORDER_IT": "1"
+          },
+          "env_family": "mybatis_it_mysql",
+          "required_explicit": [
+            "CHENGYIN_MYBATIS_IT_HOST",
+            "CHENGYIN_MYBATIS_IT_PORT",
+            "CHENGYIN_MYBATIS_IT_USER",
+            "CHENGYIN_MYBATIS_IT_PASSWORD",
+            "CHENGYIN_MYBATIS_IT_DB_SUFFIX"
+          ],
+          "scratch": "chengyin_mybatis_c04_run_order_${random12to16}${DB_SUFFIX}; helper DROP+CREATE on first URL access; owns randomized name",
+          "checks": "Source gate only; helper defaults to 127.0.0.1:3306 root/empty password if omitted. Explicit dedicated VPS test env mandatory in matrix. DB_SUFFIX must be short/safe to leave >=12 random chars.",
+          "spring": "Real MyBatis SQL, JDBC transactions; no Spring service proxy or deployed routing",
+          "cwd": "Checks chengyinhub-admin/sql/migration_20260917_player_run_session.sql then sql/...; choose repo root or admin module CWD",
+          "risk": "MybatisItDatabase recreates schema at URL construction; isolate server and suffix before enable"
+        },
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java",
+        "source_declared_tests": 2,
+        "storage": "real MySQL",
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_and_fixture": {
+          "gate": {
+            "CHENGYIN_FUNDS_MYSQL_IT": "1"
+          },
+          "env_family": "funds_mysql",
+          "required_explicit": [
+            "CHENGYIN_TEST_MYSQL_HOST",
+            "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"
+          ],
+          "scratch": "${base}_c04_pay_guard${suffix}; preemptive DROP DATABASE IF EXISTS then CREATE, cleanup DROP",
+          "checks": "Host must be present; suffix nonempty. Source permits other helper defaults; matrix requires all six explicit funds vars.",
+          "spring": "Actual MerchantPayable service ProxyFactory + TransactionInterceptor + real mapper/CAS",
+          "cwd": "Reads sql/base_schema_20260818.sql then ../sql/base_schema_20260818.sql; root/admin module CWD; do not run from unrelated folder",
+          "risk": "Deterministic schema name is dropped before creation; globally unique per-run suffix and dedicated server required"
+        },
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
+        "source_declared_tests": 3,
+        "storage": "real MySQL",
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_and_fixture": {
+          "gate": {
+            "CHENGYIN_FUNDS_MYSQL_IT": "1"
+          },
+          "env_family": "funds_mysql",
+          "required_explicit": [
+            "CHENGYIN_TEST_MYSQL_HOST",
+            "CHENGYIN_TEST_MYSQL_PORT",
+            "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+            "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+            "CHENGYIN_TEST_MYSQL_USER",
+            "CHENGYIN_TEST_MYSQL_PASSWORD"
+          ],
+          "scratch": "c0421_${uuid}; replaces configured schema in URL; creates minimal fixture tables; DROP only created UUID schema",
+          "checks": "Explicit six vars required (source checks not-null); MySQL>=8 and not MariaDB",
+          "spring": "Real Spring AnnotationConfigApplicationContext @EnableTransactionManagement + actual WithdrawalBalanceAdmissionService proxy + SqlSessionTemplate; independent connections",
+          "coverage": [
+            "bankAdmissionUsesCommittedBalanceAndBothFreezesAfterOuterOldRrSnapshot",
+            "cashRequiresNewCommitsAndReleasesFinancialRowsBeforeCallerContinues",
+            "insufficientCashAdmissionFinalizesOriginalRowAndCannotDebitAfterLaterCredit"
+          ],
+          "limits": "Does not prove complete bank/provider flow, application datasource routing or deployed NESTED transaction-manager behavior",
+          "cwd": "Production XML loaded by classpath; no migration/host working-tree DDL",
+          "risk": "Creates/drops UUID schema; provider/WeChat APIs are not invoked"
+        },
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25MySqlIT.java",
+        "source_declared_tests": 4,
+        "storage": "real MySQL; Redis mock",
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_and_fixture": {
+          "gate": {
+            "CHENGYIN_FUNDS_MYSQL_IT": "1"
+          },
+          "env_family": "funds_mysql",
+          "required_explicit": [
+            "CHENGYIN_TEST_MYSQL_HOST",
+            "CHENGYIN_TEST_MYSQL_PORT",
+            "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+            "CHENGYIN_TEST_MYSQL_USER",
+            "CHENGYIN_TEST_MYSQL_PASSWORD"
+          ],
+          "scratch": "${base}_c0525_${uuid}; source overrides DATABASE_SUFFIX with random _uuid; CREATE without adopting existing; DROP after create",
+          "checks": "Explicit nonblank host/port/base/user; password must be present (empty allowed); MySQL>=8 not MariaDB",
+          "spring": "Real TransactionTemplate + SpringManagedTransactionFactory + actual SysConfig/Cooldown services; RedisCache is Mockito mock",
+          "coverage": [
+            "competingWriterActuallyTimesOutThenRetriesAgainstCommittedBefore",
+            "currentReadBeatsAnAlreadyEstablishedRepeatableReadSnapshot",
+            "updateFailureRollsBackRealAuditAndDoesNotInvalidateCache",
+            "cacheDeleteFailureDoesNotUndoCommitOrBecomeAuthority"
+          ],
+          "limits": "No application context, routing aspect, scheduled job, external provider, real Redis or deployed AOP",
+          "cwd": "XML from classpath; task fixture DDL in test",
+          "risk": "Creates/drops UUID schema; mock Redis deletion error does not establish real Redis behavior"
+        },
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_10Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_10Test.java",
+        "source_declared_tests": 2,
+        "storage": "real MySQL",
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_and_fixture": {
+          "gate": {
+            "CHENGYIN_FUNDS_MYSQL_IT": "1"
+          },
+          "env_family": "funds_mysql",
+          "required_explicit": [
+            "CHENGYIN_TEST_MYSQL_HOST",
+            "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"
+          ],
+          "scratch": "${base}_c06_snapshot${suffix}; CREATE refuses existing; drops only after created",
+          "checks": "No extra class-specific env gate beyond FUNDS=1; explicit host/nonempty suffix; matrix requires all funds vars despite helper defaults",
+          "spring": "Real GameSession view Spring ProxyFactory and real MySQL snapshot_probe; mapper data is a minimal probe/mock adapter, not production mapper-schema coverage",
+          "coverage": [
+            "proxiedViewKeepsOldRevisionAndTeamThenNextRequestSeesNewState",
+            "negativeControlWithoutProxyMixesOldRevisionAndNewTeam"
+          ],
+          "cwd": "No source-file CWD dependency",
+          "risk": "Creates/drops configured scratch schema, no production app/provider"
+        },
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_30Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java",
+        "source_declared_tests": 5,
+        "storage": "real MySQL",
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_and_fixture": {
+          "gate": {
+            "CHENGYIN_FUNDS_MYSQL_IT": "1"
+          },
+          "env_family": "funds_mysql",
+          "required_explicit": [
+            "CHENGYIN_TEST_MYSQL_HOST",
+            "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"
+          ],
+          "scratch": "${base}_c06_week${suffix}; CREATE refuses existing; drops only after created",
+          "checks": "Explicit host/nonempty suffix; session SET time_zone='+00:00' and SET timestamp=UNIX_TIMESTAMP(...) must be supported",
+          "spring": "Real production MyBatis XML for balance/points; plain JDBC/MyBatis sessions, not application Spring proxy",
+          "coverage": [
+            "sundayUsesPreviousMondayAndRetainsMemberDirectionAndDeletionFilters",
+            "nextMondayStartsNewWeekAtMidnight",
+            "sundayPointsUseSameMondayBoundaryAndOriginalFilters",
+            "nextMondayPointsStartNewWeekAtMidnight",
+            "negativeControlOldSundayExpressionSelectsFutureWeekFixture"
+          ],
+          "cwd": "Both production XMLs from classpath; no external source file",
+          "risk": "Session-local test time only; future rows are explicit boundary probes, never change host/global time"
+        },
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.OWN_C01_51Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java",
+        "source_declared_tests": 5,
+        "storage": "4 outer unit + 1 nested real MySQL",
+        "gate": {
+          "CHENGYIN_RUN_OWN_C01_51_MYSQL": "true"
+        },
+        "env_and_fixture": {
+          "gate": {
+            "CHENGYIN_RUN_OWN_C01_51_MYSQL": "true"
+          },
+          "env_family": "funds_mysql",
+          "required_explicit": [
+            "CHENGYIN_TEST_MYSQL_HOST",
+            "CHENGYIN_TEST_MYSQL_PORT",
+            "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+            "CHENGYIN_TEST_MYSQL_USER",
+            "CHENGYIN_TEST_MYSQL_PASSWORD"
+          ],
+          "overrides": {
+            "CHENGYIN_TEST_MYSQL_HOST": "127.0.0.1"
+          },
+          "scratch": "${base}_own_c01_51_${uuid}${optionalSuffix}; CREATE refuses existing; DROP and information_schema cleanup check",
+          "checks": "Nested RealMysqlRepeatableRead only gated. Must use literal true, not 1. Host must equal127.0.0.1; MySQL>=8 not MariaDB; keep BASE/SUFFIX short enough for <=64 DB identifier.",
+          "spring": "Four outer Mockito tests; one nested real MyBatis/JDBC REPEATABLE_READ test; no actual bank/provider HTTP",
+          "counts": {
+            "outer_unit_methods": 4,
+            "nested_mysql_methods": 1,
+            "total_with_gate_open": 5,
+            "total_with_gate_closed_executed": 4,
+            "nested_with_gate_closed": "SKIPPED/DISABLED, not pass"
+          },
+          "cwd": "FundActionPreflightMapper.xml classpath; fixture table local constant",
+          "risk": "Explicit loopback CI MySQL socket required; same host string does not authorize production tunnel"
+        },
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+        "source_declared_tests": 15,
+        "storage": "real Redis",
+        "gate": {
+          "CHENGYIN_AI_RESERVATION_REDIS_IT": "1"
+        },
+        "required_env": {
+          "CHENGYIN_AI_REDIS_IT_HOST": "127.0.0.1 (asserted)",
+          "CHENGYIN_AI_REDIS_IT_PORT": "explicit dedicated port1..65535",
+          "CHENGYIN_AI_REDIS_IT_DATABASE": "explicit dedicated Redis DB0..15",
+          "CHENGYIN_AI_REDIS_IT_PASSWORD": "optional, set explicitly for VPS test service if configured"
+        },
+        "fixture": "redis://127.0.0.1:${PORT}/${DATABASE}; password optional",
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      },
+      {
+        "class": "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryMySqlRedisIT.java",
+        "source_declared_tests": 7,
+        "storage": "real MySQL + real Redis",
+        "gate": {
+          "CHENGYIN_AI_RECOVERY_IT": "1"
+        },
+        "required_env": {
+          "CHENGYIN_AI_MYSQL_IT_PORT": "explicit dedicated localhost MySQL port",
+          "CHENGYIN_AI_MYSQL_IT_USER": "explicit create/drop schema user",
+          "CHENGYIN_AI_MYSQL_IT_PASSWORD": "explicit, may be empty only for isolated CI",
+          "CHENGYIN_AI_REDIS_IT_PORT": "explicit",
+          "CHENGYIN_AI_REDIS_IT_DATABASE": "explicit0..15",
+          "CHENGYIN_AI_REDIS_IT_PASSWORD": "optional"
+        },
+        "fixture": "jdbc:mysql://127.0.0.1:${CHENGYIN_AI_MYSQL_IT_PORT}/?serverTimezone=UTC; Redis127.0.0.1 hardcoded (no HOST env)",
+        "existing_workflow_or_fixed_selector_mentions": [],
+        "status": "NOT_RUN"
+      }
+    ],
+    "not_real_storage": [
+      {
+        "class": "com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest",
+        "source_declarations": 6,
+        "storage": "pure H2 in-memory + real Spring transactions/MyBatis; not MySQL/Redis"
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C05_25Test",
+        "source_declarations": 4,
+        "storage": "mock storage + synchronization-only transaction manager; not real DB rollback/Redis"
+      }
+    ],
+    "existing_workflow_scope": {
+      "ci.yml": "GitHub-hosted backend job provisions MySQL8.0.45 dynamic loopback port; invokes ci/backend-test.sh. Initial clean test defaults do not include *IT; gated *Test remain disabled without their gates. Explicit MYBATIS_ITS fixed historical list, none of these10. Injects MYBATIS user/password/port, not new gates. Separate atomic-migration gate is unrelated.",
+      "funds-mysql-it.yml": "GitHub-hosted ubuntu-latest; PR funds path filter decides run, gate selftest required; MySQL8.0.45 dynamic127.0.0.1 port; ci/funds-mysql-it-gate.sh sets FUNDS=1 and uses exact fixed historical selector list. None of these10 appears. Shared FUNDS optin alone is not selector coverage.",
+      "mini-followup-regression.yml": "GitHub-hosted MySQL8.0.45 service; FUNDS=1,NPC_DELETE=1, funds/mybatis env; exact selectors NpcChatServiceTest,ApiAiNpcChatDataTest,NpcChatUserDataMyBatisIT,A02NpcDeleteBarrierMySqlIT,B02TopicEditDetailSnapshotMyBatisTest. None of these10.",
+      "redis": "No Redis provisioning, supplemental AI optins or supplemental AI env references in existing workflows or these two called scripts.",
+      "scope_only": "Existing workflow is capability/scope evidence only, not authorization to trigger CI or edit selectors."
+    },
+    "execution_boundary": {
+      "ordinary": "Existing VPS212 network none offline guard supports ordinary tests only; not a real MySQL/Redis entry.",
+      "integration": "Missing approved integration resource path for current task; no new real-storage VPS entry authorized. Need separately approved isolated scratch services/resource path before local coordinator can execute; do not add network exceptions or trigger Cloud/CI.",
+      "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+      "fresh_evidence": "Bind new reports to exact SHA, selectors and gates, inspect executed/skipped/errors including C01 nested report. Old231/22PASS or prior SHA reports are not current acceptance."
+    }
+  },
+  "extra_third": {
+    "status": "SOURCE_ENTRY_MAP_ONLY_NOT_RUN",
+    "extra_source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+    "third_source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+    "latest_head_warning": "Root independently confirmed faefbaf vs b456 includes production CommunityPostServiceImpl/E02_24Test; third bde356 vs2babbe includes production and tests. This map is pinned to requested older snapshots, no result inherited.",
+    "sources": [
+      "/tmp/local-verifier-extra474-summary.json",
+      "/tmp/third-2babbe-PlayerGrowthConcurrencyMySqlIT.java",
+      "docs/plans/mini-codex-cloud-20261015/BACKEND_VALIDATION_EXTRA_MATRIX.json",
+      "PR24@b5273c3233d1753c9488edc410e1a1c0d5b29fed ed598 gated_not_run selection read through GitHub connector",
+      "git show b45664de6136eb97c46ed0c86e95fc25686dc1b7"
+    ],
+    "extra_rows": [
+      {
+        "class": "com.chengyinhub.business.longrun.E01_06Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_06Test.java",
+        "declared_tests": 2,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 48,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 74,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01race_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 10));"
+          },
+          {
+            "line": 76,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)));"
+          },
+          {
+            "line": 77,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 239,
+            "text": "assertEquals(2, committed.queryForObject(\"select version from club_event_waitlist where id=81\", Integer.class));"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E01_09Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_09Test.java",
+        "declared_tests": 2,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 48,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 71,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01bind_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 10));"
+          },
+          {
+            "line": 73,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)));"
+          },
+          {
+            "line": 74,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 222,
+            "text": "return independent().queryForObject(\"select version from club_event_waitlist where id=?\", Integer.class, id);"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E01_10Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_10Test.java",
+        "declared_tests": 3,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 58,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 80,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01snap_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 10));"
+          },
+          {
+            "line": 82,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)));"
+          },
+          {
+            "line": 83,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 161,
+            "text": "assertEquals(1, independent().queryForObject(\"select version from club_event_series where id=61\", Integer.class));"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E01_18Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_18Test.java",
+        "declared_tests": 5,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 48,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 74,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01open_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 10));"
+          },
+          {
+            "line": 76,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)));"
+          },
+          {
+            "line": 77,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 242,
+            "text": "try (java.sql.Connection publisher = java.sql.DriverManager.getConnection(mysql.databaseUrl(), mysql.user(), mysql.password())) {"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_01Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+        "declared_tests": 1,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_01_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 26,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_01_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 45,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_01_it\");"
+          },
+          {
+            "line": 48,
+            "text": "admin.queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 50,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_06Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+        "declared_tests": 1,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_06_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 26,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_06_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 45,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_06_it\");"
+          },
+          {
+            "line": 48,
+            "text": "admin.queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 50,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_10Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_10Test.java",
+        "declared_tests": 1,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_10_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 26,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_10_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 45,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_10_it\");"
+          },
+          {
+            "line": 48,
+            "text": "admin.queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 50,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 110,
+            "text": "assertEquals(1, jdbc.queryForObject(\"select version from community_post where id=1\", Integer.class));"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_11Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+        "declared_tests": 1,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_11_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 26,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_11_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 45,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_11_it\");"
+          },
+          {
+            "line": 48,
+            "text": "admin.queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 50,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_15Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_15Test.java",
+        "declared_tests": 4,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_15_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 35,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_15_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 53,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_15_it\");"
+          },
+          {
+            "line": 55,
+            "text": "admin().queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 57,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 175,
+            "text": "assertEquals(1, jdbc.queryForObject(\"select version from community_post where id=7\", Integer.class));"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_16Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_16Test.java",
+        "declared_tests": 3,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_16_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 32,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_16_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 48,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_16_it\");"
+          },
+          {
+            "line": 50,
+            "text": "admin().queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 51,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_18Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_18Test.java",
+        "declared_tests": 1,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_18_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 32,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_18_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 48,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_18_it\");"
+          },
+          {
+            "line": 50,
+            "text": "admin().queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 51,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 89,
+            "text": "assertEquals(1L, jdbc.queryForObject(\"select version from community_member_governance_state where member_id=11\", Long.class));"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_20Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_20Test.java",
+        "declared_tests": 4,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_20_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 29,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_20_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 49,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_20_it\");"
+          },
+          {
+            "line": 51,
+            "text": "admin().queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 52,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_22Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_22Test.java",
+        "declared_tests": 9,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_E02_22_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 30,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_22_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 49,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_22_it\");"
+          },
+          {
+            "line": 51,
+            "text": "admin().queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 52,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_06Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_06Test.java",
+        "declared_tests": 2,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 45,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"e04_06_it\");"
+          },
+          {
+            "line": 64,
+            "text": "try (ResultSet version = s.executeQuery(\"SELECT VERSION()\")) {"
+          },
+          {
+            "line": 69,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_10Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_10Test.java",
+        "declared_tests": 3,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 45,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"e04_10_it\");"
+          },
+          {
+            "line": 63,
+            "text": "try (ResultSet version = s.executeQuery(\"SELECT VERSION()\")) {"
+          },
+          {
+            "line": 68,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_13Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+        "declared_tests": 2,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 41,
+            "text": "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+          },
+          {
+            "line": 44,
+            "text": "private static final MysqlIntegrationTestConfig MYSQL = MysqlIntegrationTestConfig.fromEnvironment(\"e04_13_it\");"
+          },
+          {
+            "line": 63,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"SELECT VERSION()\",String.class)));"
+          },
+          {
+            "line": 65,
+            "text": "admin.execute(\"CREATE DATABASE \"+MYSQL.databaseName()+\" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_14Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_14Test.java",
+        "declared_tests": 2,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 45,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"e04_14_it\");"
+          },
+          {
+            "line": 64,
+            "text": "try (ResultSet version = s.executeQuery(\"SELECT VERSION()\")) {"
+          },
+          {
+            "line": 69,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.A03EndingSnapshotMySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/A03EndingSnapshotMySqlIT.java",
+        "declared_tests": 3,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_ENDING_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 44,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_ENDING_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 76,
+            "text": "try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());"
+          },
+          {
+            "line": 77,
+            "text": "Statement st = c.createStatement(); ResultSet rs = st.executeQuery(\"SELECT VERSION()\")) {"
+          },
+          {
+            "line": 83,
+            "text": "try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());"
+          },
+          {
+            "line": 86,
+            "text": "st.execute(\"CREATE DATABASE `\" + database + \"` CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.B03CouponLifecycleMySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03CouponLifecycleMySqlIT.java",
+        "declared_tests": 4,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 45,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"e04_coupon_it\");"
+          },
+          {
+            "line": 62,
+            "text": "try (ResultSet version = s.executeQuery(\"SELECT VERSION()\")) {"
+          },
+          {
+            "line": 67,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ScheduleReadbackMySqlIT.java",
+        "declared_tests": 5,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 49,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 72,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 12));"
+          },
+          {
+            "line": 74,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)),"
+          },
+          {
+            "line": 77,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 174,
+            "text": "assertEquals(0, committed.queryForObject(\"select version from club_event_series where id=61\", Integer.class), fact);"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+        "declared_tests": 3,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_B05_MYSQL_IT"
+        ],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 24,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_B05_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 41,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"b05_visibility_it\");"
+          },
+          {
+            "line": 44,
+            "text": "admin.queryForObject(\"select version()\", String.class)), \"MySQL 8+ required\");"
+          },
+          {
+            "line": 46,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistTokenMybatisIntegrationTest.java",
+        "declared_tests": 7,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": true,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 48,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 68,
+            "text": "mysql = MysqlIntegrationTestConfig.from(env, \"it\");"
+          },
+          {
+            "line": 70,
+            "text": "String version = admin.queryForObject(\"SELECT VERSION()\", String.class);"
+          },
+          {
+            "line": 72,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName());"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponLifecycleMybatisIntegrationTest.java",
+        "declared_tests": 12,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": true,
+        "backend_fixed_selector": false,
+        "evidence": [
+          {
+            "line": 52,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 57,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"coupon_lifecycle_it\");"
+          },
+          {
+            "line": 68,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/JourneyFullFlowMySqlIT.java",
+        "declared_tests": 4,
+        "storage": "real_mysql",
+        "gate": [],
+        "funds_fixed_selector": false,
+        "backend_fixed_selector": true,
+        "source": "ed598 gated_not_run, inspected at b456"
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamShareSnapshotConcurrencyMySqlIT.java",
+        "declared_tests": 2,
+        "storage": "real_mysql",
+        "gate": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "funds_fixed_selector": true,
+        "backend_fixed_selector": false,
+        "source": "ed598 gated_not_run, inspected at b456"
+      }
+    ],
+    "h2_not_mysql": [
+      {
+        "class": "com.chengyinhub.business.longrun.E01_16Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_16Test.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 59,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:e01_16_\" + UUID.randomUUID().toString().replace(\"-\", \"\")"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E01_17Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_17Test.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 56,
+            "text": "source.setUrl(\"jdbc:h2:mem:e01_17_\" + UUID.randomUUID().toString().replace(\"-\", \"\")"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_03Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_03Test.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 41,
+            "text": "ds.setUrl(\"jdbc:h2:mem:e04_03;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_09Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_09Test.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 40,
+            "text": "ds.setUrl(\"jdbc:h2:mem:e04_09;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E04_11Test",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_11Test.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 28,
+            "text": "source.setUrl(\"jdbc:h2:mem:e04_11_\" + UUID.randomUUID().toString().replace(\"-\", \"\")"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.ClubWaitlistPromotionMembershipRaceTransactionTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistPromotionMembershipRaceTransactionTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 61,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:waitlist_promotion_member_race;MODE=MySQL;DB_CLOSE_DELAY=-1;\""
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.SmsCouponRedemptionTransactionBoundaryTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionTransactionBoundaryTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 35,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:coupon_redemption_audit_tx;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.SmsCouponReverseTransactionBoundaryTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponReverseTransactionBoundaryTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 42,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:coupon_reverse_audit_tx;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.community.CommunityPostMapperMyBatisTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostMapperMyBatisTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 436,
+            "text": "ds.setUrl(\"jdbc:h2:mem:community_post_mapper_\" + UUID.randomUUID()"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.mapper.ClubEventAccessDiscoveryMyBatisTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubEventAccessDiscoveryMyBatisTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 32,
+            "text": "\"jdbc:h2:mem:club_event_access_\" + System.nanoTime()"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.ClubEventCancellationTransactionBoundaryTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventCancellationTransactionBoundaryTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 66,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:club_event_cancel_tx;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.ClubOccurrenceCancellationTransactionBoundaryTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOccurrenceCancellationTransactionBoundaryTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 55,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:club_occurrence_cancel_tx_\" + System.nanoTime()"
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.ClubWaitlistClaimMembershipRaceTransactionTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistClaimMembershipRaceTransactionTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 67,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:waitlist_claim_member_race;MODE=MySQL;DB_CLOSE_DELAY=-1;\""
+          }
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.ClubWaitlistMaintenanceIsolationTransactionTest",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistMaintenanceIsolationTransactionTest.java",
+        "storage": "h2",
+        "evidence": [
+          {
+            "line": 45,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:waitlist_maintenance_isolation;MODE=MySQL;DB_CLOSE_DELAY=-1;\""
+          }
+        ]
+      }
+    ],
+    "deferred23_classification": "All 23 specifically listed in 474 summary resolve to real MySQL source setups at b456; this is not inferred merely from gated/JDBC names. H2/process-lock/nested tests elsewhere are not promoted to external storage evidence. Counts are lexical declarations, not executions.",
+    "real_redis": "No real Redis requirement in primary EXTRA matrix or these third/three direct suites; do not infer from mocked Redis mentions.",
+    "third_growth": {
+      "class": "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT",
+      "declared_tests": 11,
+      "gate": "CHENGYIN_FUNDS_MYSQL_IT=1",
+      "required_six_env": [
+        "CHENGYIN_TEST_MYSQL_HOST",
+        "CHENGYIN_TEST_MYSQL_PORT",
+        "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+        "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+        "CHENGYIN_TEST_MYSQL_USER",
+        "CHENGYIN_TEST_MYSQL_PASSWORD"
+      ],
+      "preconditions": "All six must be explicitly defined; suffix nonempty; MysqlIntegrationTestConfig.fromEnvironment(f3_growth); real MySQL8+ (not H2/MariaDB); config databaseName length <=47, appends UUID16; CREATE DATABASE and DROP/DDL/DML rights on isolated scratch; baseline sql/base_schema_20260818.sql player_growth/player_badge extracted; no running full app.",
+      "funds_fixed_selector": false,
+      "backend_fixed_selector": false,
+      "entry_status": "MISSING_EXISTING_FIXED_CI_ENTRY; gate name alone does not select this *IT class"
+    },
+    "entry_contracts": {
+      "funds": ".github/workflows/funds-mysql-it.yml -> bash ci/funds-mysql-it-gate.sh: fixed -Dtest list, exports FUNDS=1, scratch Oracle MySQL8.0.45 and CHENGYIN_TEST_MYSQL_HOST/PORT/USER/PASSWORD/DATABASE_SUFFIX; list includes ClubWaitlistToken/CouponLifecycle/RoamShare; does not include longrun E*, B03/B04/B05/A03, or PlayerGrowth. Changing selector/gates is outside scope.",
+      "backend": ".github/workflows/ci.yml -> bash ci/backend-test.sh: real MySQL8.0.45; CHENGYIN_MYBATIS_IT_USER/PASSWORD/PORT injected; fixed MYBATIS_ITS includes JourneyFullFlowMySqlIT and assert_it_ran skipped=0. Ordinary mvn test discovers *Test but gates unset skip gated suites.",
+      "A03": "No matching existing fixed CI entry. ENDING_MYSQL_IT=1 and explicit MYBATIS_IT_HOST=127.0.0.1, PORT, USER, PASSWORD (empty allowed), DB_SUFFIX matching _[a-z0-9_]{1,24}; MySQL8.0 specifically; collision-refusing CREATE, owned DROP/readback; no fallback gate.",
+      "local": "Existing212 network none cannot access true storage. User closed new entry proposal; no new resource/network path or repeated approval request; preserve uncoveredNOT_RUN."
+    },
+    "environment_notes": [
+      "For real DB use dedicated authorized scratch MySQL only, never production host/schema/account; supply CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD explicitly. Empty explicit PASSWORD may be allowed; other required fields nonempty. Enable only the intended class gate listed in entries.",
+      "Fresh SQL-safe unique suffix per run/class and combined identifier <=64 chars. E04 suites declaring e04_scratch base must receive that exact value. UUID suite fragments add isolation, not permission to reuse suffix. CREATE/DROP DB/table/DML privileges needed.",
+      "E01_06 requires PROCESS/information_schema.innodb_trx to observe exact connection LOCK WAIT; lack permission is failure. Session innodb_lock_wait_timeout changes remain connection scoped.",
+      "A03EndingSnapshotMySqlIT separately requires ENDING gate and CHENGYIN_MYBATIS_IT_HOST=127.0.0.1, PORT USER PASSWORD DB_SUFFIX. Suffix _[a-z0-9_]{1,24}; schema chengyin_mybatis_a03_ending_snapshot<suffix>. Source explicitly requires MySQL 8.0, so >=9 fails unlike generic helper >=8.",
+      "Per-class boundary lines preserve CREATE/DROP/guards; old adjacent helpers may pre-DROP a fixed derived name: run only unique authorized scratch. New collision-fail suites only drop schema they created; independently record cleanup."
+    ],
+    "verification": {
+      "executed_tests": false,
+      "java_maven_node_ci_triggered": false,
+      "database_vps_access": false,
+      "source_ci_changes": false,
+      "no_old_pass_inherited": true
+    },
+    "process_or_nested_not_storage_evidence": [],
+    "latest_supported_candidates": {
+      "extra": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+      "third": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+      "basis": "Root exact GitHub comparisons: these real-storage test files unchanged, while production changed; map source requirements only and inherit no outcomes"
+    }
+  },
+  "future_e02_25": "Delivered source29fe9236ede15a8f1bbd3aaf2b93e3fc25409726: E02_25MySqlIT2, gateCHENGYIN_E02_25_MYSQL_IT=1 and sixexplicit scratchbindings. RealRR NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; ordinary64 separatelyPASS. No new entry permitted.",
+  "authorization": "User decided existing entries only; new isolated MySQL/Redis entry proposal CLOSED. Preserve212/CI configuration, natural automaticCI only, no manual repeat trigger. Uncovered real storage staysNOT_RUN_EXISTING_ENTRY_COVERAGE_GAP; do not reask same proposal. Gate/selector listings are prerequisites, not run evidence or permission.",
+  "effective_validation_entry_decision": {
+    "packet": "VALIDATION_ENTRY_DECISION.json",
+    "user_decision": "保持现有入口，不新增",
+    "state": "EXISTING_ENTRIES_ONLY_NEW_PROPOSAL_CLOSED",
+    "new_entry_approval_pending": false,
+    "real_storage_uncovered_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary_run_only_for": "New real source candidate or unresolved failure via existing approved212",
+    "manual_ci_trigger_or_repeat": false,
+    "changes_to_212_ci_or_network": false,
+    "no_new_work_or_rerun_task": true
+  },
+  "current_executed_validation": {
+    "record": "LONGRUN_REMAINING.json#current_real_storage_evidence",
+    "state": "NINE_EXISTING_REAL_STORAGE_BATCHES_PASS_EXACT_41F83_SOURCE_ONLY",
+    "source_sha": "41f83e65797edd5c17511ea609659f9a55de8767",
+    "batch_count": 9,
+    "deduplicated_total": null,
+    "per_batch_counts_only": true,
+    "coupon_cleanup": "一类(4实际PASS)的类级cleanup=LEFTOVER；精确MySQL容器removed=true",
+    "later_source_sha": "41e04e061a66f7a028467de431d3bada1c4dcd6e",
+    "later_nine_batch_inherited": false,
+    "current_http_chain": "39427671750@8bc728ad99d0c748698c5210343e6f4ec782e894 PASS: five chains and all terminal readbacks; declared outbound stubs; previous a9/798 failures retained; final cross-branch/real device/payment not covered",
+    "business_source_frozen": true,
+    "historical_scope": "Older source mappings and NOT_RUN/entry-gap records below are historical original-candidate observations; current41f83 execution is recorded separately."
+  },
+  "legacy_fields_scope": "core, extra_third, future_e02_25, current_candidate_shas and authorization/effective-decision observations retain their original recorded source/time. They do not establish current workflow absence; existing real-storage-it.yml executed nine batches at41f83."
+}

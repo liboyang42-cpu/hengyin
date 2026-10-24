@@ -1,0 +1,62 @@
+{
+  "id": "CORE_B05_FIXTURE_ACTIVITY_PREREQUISITE",
+  "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+  "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+  "branch": "codex/core-b05-fixture-20261018",
+  "paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java"
+  ],
+  "owner": "CORE/B05",
+  "sole_writer": "/root/core_b05_fixture_sol",
+  "original_test_author": "EXTRA6/E02; formal takeover per latest user after source owner/read-only checks; receiver does not pretend to be original author",
+  "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+  "grant_ack": "Direct receiver explicitly ACKed complete public grant SHA and exactpath; C00 released onefile /tmp patch only after ACK",
+  "status": "SOURCE_DELIVERED_UNVERIFIED",
+  "verification_type": "STATIC_SOURCE_REVIEW_AND_LOCAL_VPS_TEST_COMPILE",
+  "source_diff": {
+    "added_lines": 1,
+    "deleted_lines": 0,
+    "exact_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+    "location": "schema after existing community_post_reference creation",
+    "old_file_sha256": "ea819e85946dd9336c430cb1f879884a3e61b8311f18373368571a5426f6fdfb",
+    "new_file_sha256": "cddbc58be63ccb9ba74bf5c466db72be199e92ce5666be41419eefab2bdd6f9a",
+    "exact_after_removing_added_line": true,
+    "production_changes": false,
+    "methods_assertions_gate_dependencies_unchanged": true,
+    "created_cleanup_unchanged": true
+  },
+  "public_readback": "Full public commit parent/exact1file/add1del0patch actually read; same source base26d, no wholebranch transfer or force",
+  "actual_source_writers": 0,
+  "author_stopped_lock_retained": true,
+  "compile_status": "TEST_COMPILE_PASS",
+  "actual_tests": 0,
+  "real_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+  "class": "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT",
+  "declared_methods": 3,
+  "gate": "CHENGYIN_B05_MYSQL_IT=1",
+  "env": [
+    "CHENGYIN_TEST_MYSQL_HOST",
+    "CHENGYIN_TEST_MYSQL_PORT",
+    "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+    "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+    "CHENGYIN_TEST_MYSQL_USER",
+    "CHENGYIN_TEST_MYSQL_PASSWORD"
+  ],
+  "scratch": "MySQL8+nonMariaDB, explicitunique suffix, fail on schema collision not predrop, created true only after ownCREATE; drop own schema after run only. User current existing-entry rule unchanged, no permitted newDB entry inferred.",
+  "ordinary_result_inherited": false,
+  "handoff": "Local root executes only applicable existing entry; no Cloudcompile/test/CI/VPS, no old6143 or231 result inherited",
+  "integration": "Branch commit based exact26d. EXTRA coordinator may integrate exact singlefile after its own3fixture commit by declared SHA; C00 did not change EXTRA source branch or mix CORE production branch. No merge/deploy/migration",
+  "validation_packet": "B05_2AC55_TEST_COMPILE_RESULT.json",
+  "local_validation": {
+    "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+    "status": "TEST_COMPILE_PASS",
+    "compile_status": "TEST_COMPILE_PASS",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "declared_mysql_methods": 3,
+    "repair_slot_opened": false
+  }
+}

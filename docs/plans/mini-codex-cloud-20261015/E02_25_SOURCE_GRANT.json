@@ -1,0 +1,91 @@
+{
+  "id": "E02-25",
+  "title": "评论创建重复键恢复按当前读取赢家",
+  "owner": "EXTRA6/E02",
+  "original_worker": "external_e02",
+  "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
+  "base_sha": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+  "request_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207443710",
+  "source_paths": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+    "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml"
+  ],
+  "test_paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java"
+  ],
+  "evidence_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-25.md",
+  "mapper_java_exact_added_method": "Map<String,Object> selectCommentByAuthorRequestForUpdate(@Param(\"authorId\") Long authorId,@Param(\"clientRequestId\") String clientRequestId)",
+  "source_limit": "Only DuplicateKey catch replay uses new exact author/request current read. Initial read stays ordinary; new XML same projection/WHERE with FOR UPDATE/useCache=false/flushCache=true. Preserve E02-24 post/body/normalized-parent identity. No isolation-level/config/auth/DDL/other interface edits.",
+  "basis": "Existing default transaction can inherit legal MySQL RR; plain read before competing committed insert establishes snapshot, catch ordinary read cannot see winner. Actual VPS isolation not observed/assumed.",
+  "old_writer_status": "Same original EXTRA E02 logical owner, priorfaef original writer source-delivered stopped and requests this exact method. No cross-team/source-owner transfer or parallel writer.",
+  "verification": "SOURCE_ONLY_NOT_RUN",
+  "mysql_regression_boundary": "Write guarded source only; no CI edits, no new VPS/network exception, existing approved true-DB resource entry still missing. Candidatefaef does not contain this proposedIT.",
+  "activation": "Original writer completed and stopped per public receipt6207773214; do not reapply prepared patch; only real local failure reopens repair slot.",
+  "owner_ack": {
+    "url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6207665975",
+    "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
+    "child": "/root/external_e02",
+    "branch": "codex/extra-e02-regression-20261015",
+    "worktree": "/workspace/hengyin-extra-e02",
+    "child_base_sha": "d9e5ed59885a2f614dc3ea317811e21b58cf6e6d",
+    "reported_service_blob": "4a1e436",
+    "reported_service_matches_candidate": "faefbaf8947b6ff202849385d28473fe2eaaa21e",
+    "actual_source_writers": 1,
+    "source_status": "IN_PROGRESS_SOURCE_ONLY_NOT_RUN"
+  },
+  "attached_existing_fixture": {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_24Test.java",
+    "owner": "EXTRA6/E02",
+    "scope": "Only duplicate replay fixture: ordinary null plus current-read winner; preserve five methods and all parent binding assertions. Do not modify old55."
+  },
+  "current_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+  "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+  "actual_source_writers": 0,
+  "latest_extra_e02_25_candidate": {
+    "source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "delivery_packet": "E02_25_SOURCE_DELIVERY.json",
+    "source_state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED",
+    "ordinary_status": "ORDINARY64_PASS_PUBLIC_EVIDENCE_READ",
+    "ordinary_source_declarations": 64,
+    "mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "mysql_source_declarations": 2,
+    "actual_source_writers": 0,
+    "no_inherited_results": true,
+    "ordinary_actual_tests": 64,
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json"
+  },
+  "ordinary_validation": "64_ACTUAL_PASS_0FAILURE_ERROR_SKIP",
+  "ordinary_evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+  "ordinary_result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+  "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+  "latest_extra_e02_25_validation": {
+    "candidate_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+    "result": "ORDINARY_TARGETED_PASS",
+    "actual_tests": 64,
+    "passed": 64,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fresh_exact_xml": true,
+    "guard_exit_code": 0,
+    "cleanup_observed_absent": true,
+    "evidence_commit": "0d3b6195203b0b963e0dd77df8412fde70b3923e",
+    "result_packet": "E02_25_ORDINARY_VPS_RESULT.json",
+    "mysql2": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "no_rr_acceptance_claim": true
+  },
+  "effective_validation_entry_decision": {
+    "packet": "VALIDATION_ENTRY_DECISION.json",
+    "user_decision": "保持现有入口，不新增",
+    "state": "EXISTING_ENTRIES_ONLY_NEW_PROPOSAL_CLOSED",
+    "new_entry_approval_pending": false,
+    "real_storage_uncovered_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary_run_only_for": "New real source candidate or unresolved failure via existing approved212",
+    "manual_ci_trigger_or_repeat": false,
+    "changes_to_212_ci_or_network": false,
+    "no_new_work_or_rerun_task": true
+  }
+}

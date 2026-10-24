@@ -1,0 +1,154 @@
+{
+  "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+  "previous_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+  "task": "cy-vps-extra-1bfa81a5-20261016",
+  "archive_sha256": "4947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb",
+  "validation_phase": "ordinary targeted tests",
+  "selectors": [
+    "com.chengyinhub.business.longrun.E02_12Test"
+  ],
+  "expected_declared_tests": 2,
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "not_validated": [
+    "true MySQL",
+    "true Redis",
+    "runtime HTTP",
+    "device",
+    "business acceptance",
+    "merge/deploy"
+  ],
+  "started_at": "2026-10-16T06:05:40.731295+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-extra-1bfa81a5",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-extra-1bfa81a5-20261016/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-extra-1bfa81a5-20261016/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-extra-1bfa81a5-20261016/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.longrun.E02_12Test",
+    "test"
+  ],
+  "memavailable_before": "MemAvailable:    3755152 kB",
+  "retry_after_normal_lock_release": true,
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"9cc6be5c1840de231920d742221aacaa46d87d9647a430475b301c03b54aed60\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-16T06:08:19.134125+00:00"
+  },
+  "guard_receipt": {
+    "exitCode": 0,
+    "reason": "completed",
+    "containerId": "9cc6be5c1840de231920d742221aacaa46d87d9647a430475b301c03b54aed60"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.longrun.E02_12Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_12Test.xml",
+      "sha256": "d831d22aef9fc5352c92ec5cde401b4e11e03e9ad93f7ec65c0be7d377a3822a",
+      "fresh": true,
+      "testcases": 2,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 2
+  },
+  "fresh_exact_xml": true,
+  "integrity_ok": true,
+  "log_sha256": "8c205892a87e41ab8496ef5036496af373065ecb9d3850f80fa85156cec48588",
+  "build_success": true,
+  "evidence_result": "PASS",
+  "admission_refusals": [
+    {
+      "run": {
+        "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+        "previous_source_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+        "task": "cy-vps-extra-1bfa81a5-20261016",
+        "archive_sha256": "4947dd9644898c08e412e88082cfb674da911b24c929c69d63bb044ef151aadb",
+        "validation_phase": "ordinary targeted tests",
+        "selectors": [
+          "com.chengyinhub.business.longrun.E02_12Test"
+        ],
+        "expected_declared_tests": 2,
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+        "not_validated": [
+          "true MySQL",
+          "true Redis",
+          "runtime HTTP",
+          "device",
+          "business acceptance",
+          "merge/deploy"
+        ],
+        "started_at": "2026-10-16T06:03:49.126651+00:00",
+        "command": [
+          "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+          "--name",
+          "cy-budget-212-extra-1bfa81a5",
+          "--source",
+          "/home/ubuntu/previews/cy-vps-extra-1bfa81a5-20261016/source",
+          "--cache",
+          "/home/ubuntu/previews/cy-vps-extra-1bfa81a5-20261016/cache",
+          "--",
+          "mvn",
+          "-o",
+          "-B",
+          "-ntp",
+          "-l",
+          "/home/ubuntu/previews/cy-vps-extra-1bfa81a5-20261016/source/vps-targeted.log",
+          "-pl",
+          "chengyinhub-admin",
+          "-am",
+          "-Dmaven.test.skip=false",
+          "-DskipTests=false",
+          "-Dsurefire.failIfNoSpecifiedTests=false",
+          "-DforkCount=1",
+          "-Dtest=com.chengyinhub.business.longrun.E02_12Test",
+          "test"
+        ],
+        "memavailable_before": "MemAvailable:    3355712 kB"
+      },
+      "guard": {
+        "returncode": 75,
+        "stdout": "{\"exitCode\": 75, \"reason\": \"another_build_holds_lock\", \"containerId\": null}\n",
+        "stderr": "",
+        "finished_at": "2026-10-16T06:03:49.191982+00:00"
+      }
+    }
+  ],
+  "cleanup": {
+    "observed_absent": true,
+    "endpoint": "chengyin-aws",
+    "container_id": "9cc6be5c1840de231920d742221aacaa46d87d9647a430475b301c03b54aed60"
+  },
+  "evidence_layer": "H2/MyBatis production XML regression; synthetic NULL compatibility negative control, no production NULL reachability claim",
+  "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+  "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1ae7b60cab62696ec0a9259907cfad265496c554/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_1bfa81a5/README.md",
+  "c00_read_public_readme_summary": true,
+  "c00_read_raw_vps_xml": false,
+  "cloud_manual_runs": 0,
+  "old64_inherited": false,
+  "production_null_reachability_proven": false
+}

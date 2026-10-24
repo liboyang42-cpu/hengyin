@@ -1,0 +1,243 @@
+{
+  "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+  "state": "FOUR_FIXTURE_SOURCE_COMPLETE_BOTH_INDEPENDENT_CANDIDATES_TEST_COMPILE_PASS_ONLY",
+  "basis": "Direct local verifier report in this chat; no Cloud run or raw VPS log access",
+  "entry_decision": "VALIDATION_ENTRY_DECISION.json",
+  "candidates": {
+    "CORE": {
+      "sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+      "action": "ordinary targeted repairedfixture only",
+      "source_declared_tests": 31,
+      "classes": 1,
+      "state": "TARGETED31_ACTUAL_PASS",
+      "actual_tests": 31,
+      "source_failure": "Notconfirmedproductionregression; oldfixtureidentitygapreview",
+      "repair_packet": "C03_TOPIC_UPDATE_FIXTURE_REPAIR.json",
+      "previous_failed_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+      "prior_failure_packet": "C03_ADF51_VPS_FAILURE.json",
+      "retest_full51": false,
+      "source_archive_sha256": "f82ec1b33dfc2a5bf6e132a2b6449827dd9e578ef83bfa1d48f90bd198718326",
+      "task": "cy-vps-core-5752ee6f-20261016",
+      "passed": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result_packet": "C03_5752_TARGETED_VPS_RESULT.json",
+      "evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+      "guard_exit_code": 0,
+      "fresh_exact_xml": true,
+      "repair_slot_released": true
+    },
+    "EXTRA": {
+      "sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+      "action": "ordinary H2 productionMapper regression",
+      "source_declared_tests": 2,
+      "classes": 1,
+      "state": "H2_PRODUCTION_XML_2_ACTUAL_PASS",
+      "actual_tests": 2,
+      "source_failure": false,
+      "passed": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+      "result_packet": "E02_12_ORDINARY_VPS_RESULT.json"
+    },
+    "FORWARD": {
+      "sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+      "action": "test-compile only",
+      "state": "TEST_COMPILE_PASS_ONLY",
+      "first_admission": {
+        "guard_exit_code": 75,
+        "container_id": null,
+        "actual_tests": 0,
+        "compilation_started": false,
+        "source_failure": false,
+        "reason": "another_build_holds_lock",
+        "observed_owner_description": "Other prelaunch task, reported by local verifier; not inspected or modified by Cloud",
+        "observed_at": "2026-10-16T05:52:29.388798+00:00"
+      },
+      "task": "cy-vps-forward-d592334a-20261016",
+      "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+      "public_evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+      "public_evidence_status": "C00readpublicREADMEandsummary; classhashes/freshness/cleanuprecorded, actualtests0",
+      "ordinary28_rerun": false,
+      "true_mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "actual_tests": 0,
+      "latest_compile_result": {
+        "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+        "result": "TEST_COMPILE_PASS_ONLY",
+        "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "environment": "ExistingVPS212",
+        "guard_exit_code": 0,
+        "actual_tests": 0,
+        "fresh_main_class_verified_by_local": true,
+        "fresh_anonymous_clock_class_verified_by_local": true,
+        "exact_artifact_paths_not_yet_supplied": false,
+        "container_cleanup_confirmed_by_local": true,
+        "container_id": "528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c",
+        "evidence_pr": 24,
+        "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+        "public_evidence_status": "C00readpublicREADMEandsummary; originalclassfilesretainedbylocal, notreadbyCloud",
+        "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+        "task": "cy-vps-forward-d592334a-20261016",
+        "first_shared_lock_refusal_retained": true,
+        "ordinary28_rerun": false,
+        "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+        "true_db_redis_http_device_merge_deploy_accepted": false,
+        "cloud_manual_runs": 0,
+        "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md",
+        "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json",
+        "guard_reason": "completed",
+        "started_at": "2026-10-16T06:08:19.135291+00:00",
+        "finished_at": "2026-10-16T06:10:59.528066+00:00",
+        "compiled_files": [
+          {
+            "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.class",
+            "sha256": "3fd6bb37e0213df11c7f45264781055ffd94849c4e8d27407bfcd5590e6d61d5",
+            "fresh": true
+          },
+          {
+            "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT$1.class",
+            "sha256": "a28ed9d73b5cd4a0cc4be9b61ae98fd2a87bd633feb85a56d576806bd2bbb2c1",
+            "fresh": true
+          }
+        ],
+        "log_sha256": "49c557f5c969ce3424f37bdc836f9030df80126b10e460de2db695d0fb0ab38f",
+        "reports": []
+      },
+      "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json"
+    }
+  },
+  "retry": "Uncompleted E02 compile resumed by local verifier after natural resource recovery and passed. No further compile retry or old ordinary rerun required; no Cloud substitute.",
+  "repair_slots": "RELEASED_CURRENT_ORDINARY_FAILURE_CLOSED_FILE_LOCK_RETAINED",
+  "source_work": "All four exact fixture source changes delivered after grant/ACK; ownership retained, no missing file permission or source failure from preparation block.",
+  "business_decisions": {
+    "state": "EARLIER_IDENTITY_COUPON_DECISIONS_ALREADY_RESOLVED_SOURCE_DELIVERED",
+    "pending_local_user_answers": false,
+    "earlier_question_snapshot": {
+      "pending_local_user_answers": true,
+      "questions_reported": 3,
+      "scope": [
+        "E02-23 authoritative legacy identity bridge or missing-map handling",
+        "E04-07 legacy missing history identity reversal behavior",
+        "E04-07 future exact historyID migration-source scope"
+      ],
+      "not_authorized": [
+        "identity bridge policy changes",
+        "coupon identity/legacy behavior choice",
+        "DDL source changes"
+      ],
+      "independent_source_blocked_by_wait": false
+    },
+    "source_batch": "BUSINESS_DECISIONS_SOURCE_BATCH.json",
+    "current_CORE_decision_packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "current_CORE_decision_state": "BOTH_NO_SOURCE_CHANGE",
+    "new_authorization_inferred": false
+  },
+  "prior_passes": "Preserved exact old SHAs; not inherited by current candidates",
+  "cloud_manual_runs": 0,
+  "forward_d592_public_compile_receipt": {
+    "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json",
+    "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+    "result": "COMPILE_PASS_ONLY",
+    "actual_tests": 0,
+    "fresh_class_files": 2,
+    "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary28_not_repeated": true
+  },
+  "local_java_active": false,
+  "four_fixture_local_validation": {
+    "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+    "source_delivery": "ALL_FOUR_COMPLETE_GRANTED_ACKED_FROZEN",
+    "B05": {
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "compile": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
+    },
+    "E02": {
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "compile": "TEST_COMPILE_PASS",
+      "state": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "fresh_selected_classes": 3,
+      "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+    },
+    "actual_source_writers": 0,
+    "locks_retained": true,
+    "repair_slot_opened": false,
+    "missing_file_authorization": false,
+    "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
+    "retry": "Uncompleted E02 compile resumed by local verifier after natural resource recovery and passed. No further compile retry or old ordinary rerun required; no Cloud substitute.",
+    "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "joint_four_file_candidate": false,
+    "latest_E02_evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "current_disk_blocker": false,
+    "current_compile_summary": "Both same-parent independent candidates test-compile PASS only, actual0 each; not joint four-file integration or real MySQL execution."
+  },
+  "latest_fixture_candidates": {
+    "B05": {
+      "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+      "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "status": "TEST_COMPILE_PASS",
+      "compile_status": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "fresh_surefire_xml": 0,
+      "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "declared_mysql_methods": 3,
+      "repair_slot_opened": false
+    },
+    "E02": {
+      "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+      "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "status": "TEST_COMPILE_PASS",
+      "compile_status": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "fresh_surefire_xml": 0,
+      "fresh_selected_classes": 3,
+      "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+      "declared_mysql_methods": 3,
+      "repair_slot_opened": false,
+      "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+    }
+  },
+  "core_compatibility_decision_receipt": {
+    "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "state": "BOTH_USER_CONFIRMED_EXISTING_CONTRACTS_NO_SOURCE_CHANGE",
+    "closed_items": [
+      "OWN-C04-01",
+      "OWN-C05-22"
+    ],
+    "remaining_CORE_decision_blocked": 0,
+    "new_source_changes": 0,
+    "new_tests_run": 0,
+    "new_bug_count": 0,
+    "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
+    "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
+    "fixture_validation_unchanged": "All four fixture sources delivered; B05 and E02 separate same-parent candidates both test-compile PASS only/actual0; all6 realMySQL methods NOT_RUN. Earlier E02 ENOSPC preserved as history; business decisions do not change verification acceptance."
+  },
+  "current_preparation_blocker": null,
+  "latest_E02_compile_result": {
+    "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+    "status": "TEST_COMPILE_PASS",
+    "compile_status": "TEST_COMPILE_PASS",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "fresh_selected_classes": 3,
+    "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "declared_mysql_methods": 3,
+    "repair_slot_opened": false,
+    "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+    "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+  }
+}

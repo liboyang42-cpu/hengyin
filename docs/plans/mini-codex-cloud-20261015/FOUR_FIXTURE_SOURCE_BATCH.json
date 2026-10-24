@@ -1,0 +1,95 @@
+{
+  "id": "FOUR_FIXTURE_SOURCE_BATCH_20261018",
+  "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+  "status": "ALL_FOUR_SOURCE_DELIVERED_UNVERIFIED",
+  "author_acknowledgements": {
+    "original_E02": "Full publicgrant personallyread beforeexact3file write; C00 directly read completedchildACK and source summary",
+    "CORE_B05": "Transparentnewreceiver explicitfullpublicgrantACK beforewrite; originaltestauthor separatelyfrozen/releasedB05",
+    "not_original_author_claim": "B05test creatorEXTRA/E02; formalCORE takeover perlatestuser, no invented oldCORE testwriter"
+  },
+  "deliveries": [
+    {
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "files": 3,
+      "added_lines": 3,
+      "deleted_lines": 0,
+      "packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
+      "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+      "validation_packet": "E02_6C446_TEST_COMPILE_RESULT.json"
+    },
+    {
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "files": 1,
+      "added_lines": 1,
+      "deleted_lines": 0,
+      "packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json",
+      "validation_packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
+    }
+  ],
+  "actual_source_writers_now": 0,
+  "locks_retained": true,
+  "compile_status": "BOTH_INDEPENDENT_CANDIDATES_TEST_COMPILE_PASS_ONLY",
+  "actual_tests": 0,
+  "real_mysql_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+  "already_reference_fixture": "6c6f82d7 only static2methodE02_25MySqlIT, not re-edited or re-tested",
+  "new_bug_count": 0,
+  "scope": "Existing table scratch prerequisite only; no production/gate/dependency/method/assertion/created cleanup change",
+  "not_done": [
+    "New realMySQL/Redis or runtimeHTTP acceptance",
+    "new verificationentry/CI/network",
+    "migration execution",
+    "merge/deploy",
+    "wholebranch integration"
+  ],
+  "remaining": "Existing CORE production/architecture actionable0; OWN-C04-01 and OWN-C05-22 closed by explicit user confirmation as NO_SOURCE_CHANGE, decisionblocked0. F3 READY0: maxdate actual MySQL warning/metric evidence and aggregation Mapper grant absent; RR actual isolation/legal parallel caller unproven. No filler task or new source grant. E01-13/E03-04/E02-03 remain delivered60/4 ordinary only.",
+  "integration_topology": "Two sibling candidates off26d: EXTRA rolling6c4463 changesonly3E02files; CORE2ac55d changesonlyB05. No joint4filecandidate/integration/test claim.",
+  "local_validation": {
+    "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+    "source_delivery": "ALL_FOUR_COMPLETE_GRANTED_ACKED_FROZEN",
+    "B05": {
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "compile": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
+    },
+    "E02": {
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "compile": "TEST_COMPILE_PASS",
+      "state": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "fresh_selected_classes": 3,
+      "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+    },
+    "actual_source_writers": 0,
+    "locks_retained": true,
+    "repair_slot_opened": false,
+    "missing_file_authorization": false,
+    "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
+    "retry": "Uncompleted E02 compile resumed by local verifier after natural resource recovery and passed. No further compile retry or old ordinary rerun required; no Cloud substitute.",
+    "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "joint_four_file_candidate": false,
+    "latest_E02_evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "current_disk_blocker": false,
+    "current_compile_summary": "Both same-parent independent candidates test-compile PASS only, actual0 each; not joint four-file integration or real MySQL execution."
+  },
+  "core_compatibility_decision_receipt": {
+    "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "state": "BOTH_USER_CONFIRMED_EXISTING_CONTRACTS_NO_SOURCE_CHANGE",
+    "closed_items": [
+      "OWN-C04-01",
+      "OWN-C05-22"
+    ],
+    "remaining_CORE_decision_blocked": 0,
+    "new_source_changes": 0,
+    "new_tests_run": 0,
+    "new_bug_count": 0,
+    "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
+    "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
+    "fixture_validation_unchanged": "All four fixture sources delivered; B05 and E02 separate same-parent candidates both test-compile PASS only/actual0; all6 realMySQL methods NOT_RUN. Earlier E02 ENOSPC preserved as history; business decisions do not change verification acceptance."
+  }
+}

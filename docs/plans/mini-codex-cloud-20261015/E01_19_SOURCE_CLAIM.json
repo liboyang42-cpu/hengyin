@@ -1,0 +1,125 @@
+{
+  "id": "E01-19",
+  "kind": "EXISTING_EXTRA_PACKET_ROUTED_TO_ORIGINAL_CORE_LANE",
+  "title": "显式取消主题收藏并发DELETE0仍成功",
+  "basis_comment": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6198507537",
+  "owner": "CORE/C03",
+  "worker": "/root/topic_like_cancel_sol",
+  "model": "gpt-6.1-sol",
+  "state": "SOURCE_DELIVERED_UNVERIFIED",
+  "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "worktree": "/workspace/hengyin-topic-like-20261015",
+  "worker_branch": "codex/core-topic-like-explicit-cancel-20261015",
+  "source_path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+  "source_scope": "topicLike method only; explicit type0 DELETE0 acknowledgment",
+  "test_path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicLikeExplicitCancelConcurrencyTest.java",
+  "evidence_path": "docs/verification/mini-longrun-20261015/CORE/E01-19.md",
+  "old_writer": "feature_points_rules_sol",
+  "old_writer_stopped_evidence": "Existing C03 source-owner SOURCE_FROZEN_UNVERIFIED_LOCK_RETAINED at0d; original authors completed/stopped; no live old agent, clean0d checkout and all historical CORE claims EXHAUSTED. No timeout-based lock release.",
+  "writer_transfer": "C00 explicit method-scoped new writer registration; original CORE/C03 logical owner retained; all other ApiTopicController methods remain read-only to this writer",
+  "contract": "B4 comment and existing ApiTopicLikeDirectionTest establish explicit1/0 desired-state idempotency; actual mylike sends0. For explicit cancel only, normal DELETE0 after both requests read old row succeeds. Legacy blank toggle DELETE0 remains old failure, exceptions propagate, IDs/member/topic filter/insert unchanged.",
+  "verification": "LOCAL_VPS_ORDINARY10_PASS_PUBLIC_REPORT_PENDING",
+  "no_new_bug_id": "Reuse original E01-19, not a duplicate extra task or50-item refill",
+  "next": "Root publishes claim then activates worker; complete small patch and NOT_RUN regressions, root serial source commit/public delivery",
+  "source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+  "public_branch": "codex/mini-longrun-core-20261015",
+  "pr": 44,
+  "writer_status": "STOPPED_AFTER_DELIVERY",
+  "actual_source_writers": 0,
+  "production_delta": "Only rows>0 || (!legacyToggle && rows==0) in topicLike deletion result",
+  "validation": {
+    "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "parent_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "status": "NOT_RUN",
+    "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": [
+      {
+        "name": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+        "source_declarations": 5,
+        "new": true
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+        "source_declarations": 5,
+        "new": false
+      }
+    ],
+    "source_declared_total": 10,
+    "actual_executed_tests": null,
+    "environment": "Existing local approved212 offline entry; existing test dependencies, no DB/Redis/new config or dependency",
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest,com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest test",
+    "new_database_acceptance": "NOT_RUN",
+    "runtime_HTTP": "NOT_RUN",
+    "no_inherited_results": "0d targeted157PASS does not cover new production SHA; old1e231/b4565/third24 separate",
+    "Cloud_execution": false
+  },
+  "ordinary_validation_result": {
+    "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "result": "ORDINARY_TARGETED_PASS",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 10,
+    "classes": [
+      "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+      "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest"
+    ],
+    "class_test_counts": [
+      5,
+      5
+    ],
+    "fresh_reports": true,
+    "exact_class_set_match": true,
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T03:35:37.743053+00:00",
+    "finished_at": "2026-10-16T03:38:22.314565+00:00",
+    "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0",
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0"
+    },
+    "task": "cy-vps-core-e0e3f517-20261016",
+    "source_archive_sha256": "077de1ece285e129060a22e382ffdae45f23cf39b5dc2818e48bfa8316b8dbf0",
+    "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "Dedicated VPS approved212 ordinary only",
+    "evidence_pr": 24,
+    "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_CORE_e0e3f517/summary.json",
+    "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+    "log_sha256": "4648f16ce7d3be5ee30fb9fc6c713e76ad89fa686d737b9f6e29559f67b2ec94",
+    "reports": [
+      {
+        "class": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "05cdd4e4d5e05a8adaf1c22ba040240d86a11f88a78afc3aefee479ac3bcce6a",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest.xml"
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "efc1aa532f2e7baa6cf7971a932c2c0ab19d2d140ed24e7ad4878d67df3495d7",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest.xml"
+      }
+    ],
+    "not_accepted": [
+      "true MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "candidate integration",
+      "merge/deployment/migrations",
+      "later source SHAs"
+    ],
+    "cloud_manual_runs": 0
+  }
+}
