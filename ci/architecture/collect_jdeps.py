@@ -316,6 +316,10 @@ def technical_dependency_findings(index, selected, policy, input_complete=True):
             for target in owners[a]["forbidden_backrefs"]:
                 if ref["target_class"] == target or ref["target_class"].startswith(target + "$"):
                     result["findings"].append({"rule": "OWNER_GOD_BACKREFERENCE", "source_technical_owner": a, **ref})
+            for package, exceptions in owners[a].get("restricted_packages", {}).items():
+                if ref["target_class"].startswith(package) and ref["target_class"] not in exceptions:
+                    result["findings"].append({"rule": "RESTRICTED_OWNER_PACKAGE_REFERENCE",
+                                               "source_technical_owner": a, "restricted_package": package, **ref})
             if b is None:
                 result["unscoped_reference_count"] += 1
                 continue
@@ -409,7 +413,10 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports, 
             selected = {target: {} for target in ports}
             if dependency_policy is not None:
                 roots = {n for owner in dependency_policy["owners"].values() for n in owner["members"] + owner["forbidden_backrefs"]}
-                selected.update({name: {} for name in index if any(name == n or name.startswith(n + "$") for n in roots)})
+                packages = tuple(p for owner in dependency_policy["owners"].values()
+                                 for p in owner.get("restricted_packages", {}))
+                selected.update({name: {} for name in index if name.startswith(packages)
+                                 or any(name == n or name.startswith(n + "$") for n in roots)})
             source_rows = set()
             _, _, missing, unknown, seen = parse_output(files["jdeps.stdout.txt"].decode(), index, inputs, selected, source_rows)
             result["evidence_verified"] = True

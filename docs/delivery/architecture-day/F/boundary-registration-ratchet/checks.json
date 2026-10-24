@@ -1,0 +1,42 @@
+{
+  "parent": "f35cf5cc49215017669061950e39071bbb5ce2fa",
+  "historical_source_cli": {
+    "verifier": "f35cf5cc49215017669061950e39071bbb5ce2fa",
+    "kind": "CONTROLLED_TEMP_GIT_EVENT_NOT_REAL_CI",
+    "new_unowned_service_result": "PASS",
+    "exit": 0,
+    "findings": []
+  },
+  "python": {
+    "command": "python -m unittest discover -s ci/architecture -p 'test_*.py'",
+    "tests": 249,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 26.557,
+    "initial_run": "one locking CLI fixture lacked new isolated BOUNDARY_BASE override; patched only fixture context, old assertions retained"
+  },
+  "read_only_source_scope_probe": {
+    "source": "7c8ae925c3705cb0e2c652afbc3c091fc4537469",
+    "kind": "PURE_HELPER_NOT_TRUSTED_CI_VERDICT",
+    "legacy_source": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+    "findings": [],
+    "review_items": [
+      {
+        "key": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+        "reason": "LEGACY_UNOWNED_BOUNDARY",
+        "type": "com.chengyinhub.web.controller.api.ApiMerchantController",
+        "legacy_source": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+        "legacy_sha256": "0b6224c57bcf68ea9827069df5be2e498c69fef147cbbf200e094ef9f16a8784"
+      },
+      {
+        "key": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+        "reason": "LEGACY_UNOWNED_BOUNDARY",
+        "type": "com.chengyinhub.web.controller.api.ApiRegistrationController",
+        "legacy_source": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+        "legacy_sha256": "29bbff1ec97af6349af89df45099af305f5c8358c60d972a30eeb73c5591bd49"
+      }
+    ]
+  },
+  "real_java_jdeps_db_ci": "NOT_RUN"
+}

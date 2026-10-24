@@ -170,7 +170,7 @@ class LockingSelectTest(unittest.TestCase):
                 # The function's default baseline path was bound at import;
                 # inject the isolated trusted fixture policy, as source_check does.
                 check = gate.check_source
-                with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), \
+                with patch.object(gate, "BASE", self.base), patch.object(gate, "BOUNDARY_BASE", self.base), patch.object(gate, "HERE", trusted), \
                      patch.object(gate, "check_source", side_effect=lambda *args: check(*args, baseline_path=trusted / "baseline.json")), \
                      patch.object(gate, "ci_context", return_value=context), \
                      patch.object(sys, "argv", argv), redirect_stdout(output):

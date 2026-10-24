@@ -210,6 +210,10 @@ class InventoryAndDeltaTest(unittest.TestCase):
         (policy / "gate.py").write_bytes((gate.HERE / "gate.py").read_bytes())
         for name in ("owners.json", "commands.json", "collect_jdeps.py"):
             (policy / name).write_bytes((gate.HERE / name).read_bytes())
+        # Isolated Git source-event fixture: pin the legacy snapshot to this fixture's immutable base.
+        data = json.loads((policy / "owners.json").read_text())
+        data["boundary_registration"]["legacy_source"] = self.base
+        (policy / "owners.json").write_bytes(gate.encode(data))
         candidate = self.commit()
         # Trusted files are kept outside candidate to exercise PR policy changes.
         trusted = self.root / ".git/trusted/ci/architecture"
@@ -223,7 +227,7 @@ class InventoryAndDeltaTest(unittest.TestCase):
         context = context or {"event": "push", "checkout_sha": candidate,
                               "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
                                           "before": compare, "after": candidate}}
-        with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), patch.object(gate, "REPO", trusted.parent.parent):
+        with patch.object(gate, "BASE", self.base), patch.object(gate, "BOUNDARY_BASE", self.base), patch.object(gate, "HERE", trusted), patch.object(gate, "REPO", trusted.parent.parent):
             return gate.check_source(self.root, candidate, compare, context, trusted / "baseline.json")
 
     def test_clean_exact_candidate_and_trusted_policy_are_green(self):
@@ -606,7 +610,7 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         check = gate.check_source
         # Same production CLI/parser/checker. Only isolated public-base/event and
         # trusted-checkout location replace real CI context; no mocked verdict.
-        with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), \
+        with patch.object(gate, "BASE", self.base), patch.object(gate, "BOUNDARY_BASE", self.base), patch.object(gate, "HERE", trusted), \
              patch.object(gate, "check_source", side_effect=lambda *args: check(*args, baseline_path=trusted / "baseline.json")), \
              patch.object(gate, "ci_context", return_value=context), \
              patch.object(sys, "argv", argv), redirect_stdout(output):
@@ -943,6 +947,133 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         status, report = self.source_cli(trusted, self.commit())
         self.assertEqual(1, status)
         self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
+
+
+class BoundaryRegistrationTest(unittest.TestCase):
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    source_cli = BusinessOwnerPolicyTest.source_cli
+    assert_rule = BusinessOwnerPolicyTest.assert_rule
+    path = "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/NewApplication.java"
+
+    def java(self, path, annotation="", body=""):
+        name = Path(path).stem
+        package = path.split("/src/main/java/", 1)[1].rsplit("/", 1)[0].replace("/", ".")
+        return ("package %s; %s public class %s { %s }" % (package, annotation, name, body)).encode()
+
+    def test_new_service_controller_application_mapper_are_blocked_by_actual_source_cli(self):
+        trusted, _ = self.prepare_policy()
+        paths = [self.path,
+                 "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NewService.java",
+                 "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/NewMapper.java",
+                 "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/NewController.java"]
+        for path in paths:
+            with self.subTest(path=path):
+                self.write(path, self.java(path))
+                result = self.source_cli(trusted, self.commit())
+                self.assert_rule(result, "NEW_UNOWNED_BOUNDARY")
+                self.assertTrue(any(f["key"] == path for f in result[1]["findings"]))
+
+    def test_service_annotation_without_service_suffix_cannot_escape_registration(self):
+        trusted, _ = self.prepare_policy()
+        path = self.path.replace("NewApplication", "ManagedThing")
+        self.write(path, self.java(path, "@org.springframework.stereotype.Service"))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
+
+    def test_earlier_unowned_feature_commit_is_not_hidden_by_a_later_documentation_commit(self):
+        trusted, _ = self.prepare_policy()
+        self.write(self.path, self.java(self.path))
+        self.commit()
+        self.write("docs/feature.md", b"second feature commit")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
+
+    def test_fixed_legacy_unowned_identity_can_change_without_becoming_new_permission(self):
+        self.write(self.path, self.java(self.path))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.write(self.path, self.java(self.path, body="int version = 2;"))
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        item = next(r for r in report["review_items"] if r["reason"] == "LEGACY_UNOWNED_BOUNDARY")
+        self.assertEqual(self.base, item["legacy_source"])
+        self.assertEqual(gate.digest(gate.blob(self.root, self.base, self.path)), item["legacy_sha256"])
+
+    def test_old_plain_helper_promoted_to_managed_service_is_a_new_boundary(self):
+        path = self.path.replace("NewApplication", "Helper")
+        self.write(path, self.java(path))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.write(path, self.java(path, "@org.springframework.stereotype.Service"))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
+
+    def test_dto_entity_private_helper_comments_and_strings_do_not_require_new_owners(self):
+        trusted, _ = self.prepare_policy()
+        for name in ("DraftDto", "Entity", "Helper"):
+            path = self.path.replace("NewApplication", name)
+            self.write(path, self.java(path, body='String note="@Service class Fake"; /* @Service */ private static class Leaf {}'))
+        private_helper = self.path.replace("NewApplication", "PrivateHelperService")
+        self.write(private_helper, self.java(private_helper).replace(b"public class", b"class"))
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertEqual([], report["findings"])
+
+    def test_registered_primary_type_is_not_blocked_and_compilation_is_still_unproven(self):
+        trusted, _ = self.prepare_policy()
+        path = self.path.replace("NewApplication", "RegistrationQueryApplication")
+        self.write(path, self.java(path))
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertEqual("NOT_CHECKED_BY_SOURCE_GATE", report["technical_dependencies"]["compiled_inputs"])
+
+    def test_candidate_cannot_remove_owner_or_clear_scope_or_grow_legacy_snapshot(self):
+        trusted, _ = self.prepare_policy()
+        original = (trusted / "owners.json").read_bytes()
+        for mutation in ("owner", "scope", "baseline"):
+            with self.subTest(mutation=mutation):
+                data = json.loads(original)
+                if mutation == "owner": data["technical_dependency_policy"]["owners"].pop()
+                elif mutation == "scope": data["boundary_registration"]["scope_roots"] = []
+                else: data["boundary_registration"]["legacy_source"] = "a" * 40
+                self.write("ci/architecture/owners.json", gate.encode(data))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_legacy_source_coedited_with_trusted_data_cannot_self_accept(self):
+        trusted, _ = self.prepare_policy()
+        self.write(self.path, self.java(self.path))
+        first = self.commit()
+        data = json.loads((trusted / "owners.json").read_text())
+        data["boundary_registration"]["legacy_source"] = first
+        payload = gate.encode(data)
+        self.write("ci/architecture/owners.json", payload)
+        (trusted / "owners.json").write_bytes(payload)
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status, report)
+        self.assertIn("BOUNDARY_POLICY_INVALID", report["error"])
+
+    def test_component_or_secondary_managed_type_is_unknown_without_forcing_helper_owners(self):
+        trusted, _ = self.prepare_policy()
+        path = self.path.replace("NewApplication", "ManagedHelper")
+        for annotation, body in (("@org.springframework.stereotype.Component", ""),
+                                 ("", "@org.springframework.stereotype.Service private static class Nested {}")):
+            with self.subTest(annotation=annotation, body=body):
+                self.write(path, self.java(path, annotation, body))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(0, status, report)
+                self.assertIn("BOUNDARY_ROLE_UNKNOWN", {r["reason"] for r in report["review_items"]})
+
+    def test_unparseable_primary_role_is_unknown_not_a_safe_boundary_claim(self):
+        trusted, _ = self.prepare_policy()
+        self.write(self.path, b"package other; public class NewApplication {}")
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertIn("BOUNDARY_ROLE_UNKNOWN", {r["reason"] for r in report["review_items"]})
+        self.assertEqual("UNKNOWN", report["boundary_registration"]["semantic_read_only"])
 
 
 class PrivatePortPolicyFreezeTest(unittest.TestCase):

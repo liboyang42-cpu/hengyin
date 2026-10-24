@@ -1223,6 +1223,84 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assert_unknown(report)
         self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
 
+    def test_registration_redemption_original_ports_and_one_way_shared_predicate_are_preserved(self):
+        ports = ["com.chengyinhub.business.service.ICmsRegistrationService",
+                 "com.chengyinhub.business.access.merchant.IMerchantAccessService",
+                 "com.chengyinhub.business.mapper.CoopOrderMapper",
+                 "com.chengyinhub.business.service.IClubMemberService",
+                 "com.chengyinhub.business.service.ICmsTopicService",
+                 "com.chengyinhub.business.service.ICmsActivityService",
+                 "com.chengyinhub.business.service.ICmsRegistrationMerchantService",
+                 "com.chengyinhub.business.service.IPerkLedgerService",
+                 "com.chengyinhub.business.service.IExploreCollectibleService",
+                 "com.chengyinhub.business.service.ICmsTopicChapterService",
+                 "com.chengyinhub.business.service.IPointsAwardService",
+                 "com.chengyinhub.business.service.IGrowthService",
+                 "com.chengyinhub.business.service.RegistrationSeatService"]
+        for target in ports:
+            self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_REDEMPTION_PORT_" + target).encode()
+        self.write_system()
+        self.output = self.output.with_name("registration-redemption-ports")
+        self.collect()
+        redemption = self.owner_member("C_REGISTRATION_REDEMPTION_APPLICATION")
+        for target in ports: self.reference(redemption, target)
+        self.reference(redemption, self.owner_member("C_REGISTRATION_QUERY_APPLICATION"))
+        self.reference("com.chengyinhub.web.controller.api.ApiRegistrationController", redemption)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual([["C_REGISTRATION_REDEMPTION_APPLICATION", "C_REGISTRATION_QUERY_APPLICATION"]],
+                         report["technical_dependencies"]["owner_edges"])
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_registration_redemption_does_not_grant_arbitrary_or_nested_mapper_access(self):
+        targets = ["com.chengyinhub.business.mapper.CmsRegistrationMapper",
+                   "com.chengyinhub.business.mapper.RegistrationSeatMapper",
+                   "com.chengyinhub.business.mapper.UnownedRedemptionWriteMapper",
+                   "com.chengyinhub.business.mapper.CoopOrderMapper$Foreign"]
+        for target in targets:
+            self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_FORBIDDEN_REDEMPTION_MAPPER_" + target).encode()
+        self.write_system()
+        self.output = self.output.with_name("registration-redemption-mapper-negatives")
+        self.collect()
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for target in targets:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member("C_REGISTRATION_REDEMPTION_APPLICATION"), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "RESTRICTED_OWNER_PACKAGE_REFERENCE")
+                self.assertEqual(target, bad["target_class"])
+                self.assertTrue(bad["source_sha256"] and bad["target_sha256"])
+
+    def test_registration_redemption_cannot_callback_http_and_query_cannot_callback_redemption(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "C_REGISTRATION_REDEMPTION_APPLICATION"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
+        self.replace_evidence("jdeps.stdout.txt", original)
+        self.reference(self.owner_member(owner), self.owner_member("C_REGISTRATION_QUERY_APPLICATION"))
+        self.reference(self.owner_member("C_REGISTRATION_QUERY_APPLICATION"), self.owner_member(owner))
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
+        self.assertIn("NEW_OWNER_CYCLE", {f["rule"] for f in report["findings"]})
+
+    def test_registration_redemption_missing_raw_is_unknown_despite_query_output(self):
+        owner = "C_REGISTRATION_REDEMPTION_APPLICATION"
+        member = self.owner_member(owner)
+        original = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.splitlines()
+                              if not line.strip().startswith(member + " -> ")).encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
+
     def test_city_node_actual_public_ports_and_http_inbound_remain_scoped(self):
         ports = ["com.chengyinhub.business.access.merchant.IMerchantAccessService",
                  "com.chengyinhub.business.mapper.RoamMapper",

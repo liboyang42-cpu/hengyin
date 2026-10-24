@@ -896,8 +896,26 @@
           "com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper",
           "com.chengyinhub.business.service.impl.RefundServiceImpl",
           "com.chengyinhub.business.mapper.RefundApplicationMapper",
-          "com.chengyinhub.business.service.impl.RegistrationCheckoutServiceImpl"
+          "com.chengyinhub.business.service.impl.RegistrationCheckoutServiceImpl",
+          "com.chengyinhub.web.service.registration.RegistrationRedemptionApplication"
         ]
+      },
+      {
+        "id": "C_REGISTRATION_REDEMPTION_APPLICATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.registration.RegistrationRedemptionApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiRegistrationController",
+          "com.chengyinhub.web.controller.api.ApiVerifyController",
+          "com.chengyinhub.common.core.controller.BaseController"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CoopOrderMapper"
+          ]
+        }
       }
     ],
     "allowed_directions": [
@@ -1172,7 +1190,21 @@
       [
         "D_CHAPTER_INVITE_NOTICE",
         "SHARED_BUSINESS_AUDIT_PORT"
+      ],
+      [
+        "C_REGISTRATION_REDEMPTION_APPLICATION",
+        "C_REGISTRATION_QUERY_APPLICATION"
       ]
+    ]
+  },
+  "boundary_registration": {
+    "schema": 1,
+    "legacy_source": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+    "scope_roots": [
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/",
+      "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/",
+      "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/"
     ]
   }
 }
