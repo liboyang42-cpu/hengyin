@@ -1,0 +1,87 @@
+{
+  "source_base": "e4bdaceb8c1eb800b38c93601bbbd82ca15b26e5",
+  "mode": "source patch only; NOT runtime acceptance",
+  "static_negative_positive": {
+    "base": {
+      "scan_budget": false,
+      "claim_budget": false,
+      "retry_budget": false,
+      "no_expired_reclaim": false,
+      "unknown_retains_owner_trace_fence": false
+    },
+    "candidate": {
+      "scan_budget": true,
+      "claim_budget": true,
+      "retry_budget": true,
+      "no_expired_reclaim": true,
+      "unknown_retains_owner_trace_fence": true
+    }
+  },
+  "xml_parse": "PASS",
+  "fixed_sql_split_precondition": "PASS",
+  "lexical_balance_only": "PASS",
+  "patch_apply_byte_comparison": "PASS",
+  "whitespace": "PASS",
+  "existing_secret_file_gate": "PASS",
+  "gitleaks": "NOT_RUN; binary unavailable; root scan required",
+  "java_compile": "NOT_RUN",
+  "junit": "NOT_RUN",
+  "mysql": "NOT_RUN",
+  "vendor": "NOT_RUN",
+  "declared_test_methods_not_execution": {
+    "ClubPostMediaReviewOutboxMapperMyBatisTest.java": 5,
+    "ClubPostMediaReviewOutboxMapperXmlTest.java": 1,
+    "ClubPostMediaReviewServiceTest.java": 13,
+    "ClubPostMediaReviewTransactionBoundaryTest.java": 4,
+    "ClubPostMediaReviewTransactionServiceTest.java": 5,
+    "ClubPostMediaReviewTaskTest.java": 2,
+    "ClubPostMediaReviewBudgetMySqlIT.java": 8
+  },
+  "changed_files": {
+    "chengyinhub-admin/sql/migration_club_post_media_review_budget_20261024.sql": {
+      "base_blob": null,
+      "sha256": "5d4f02c02dcd1b67c45ce6d05e575fd9a3045bfea30cb4094fce2063d492669e"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperMyBatisTest.java": {
+      "base_blob": "41616df40c641dd03d8d00647cb0717e24733b66",
+      "sha256": "6fd982c0c8e5d47348ae49d4a38a3b30db4a5422cbc89cc95997fd591094f6f2"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperXmlTest.java": {
+      "base_blob": "2a05a30e5e1f9650f39ee6da4e085ed658c180d6",
+      "sha256": "f23259ed30d5a771c7900ef8b3cf661ef906901af548350215fc2bc8a3561b2d"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewBudgetMySqlIT.java": {
+      "base_blob": null,
+      "sha256": "d6d1ff8811df418f214210ba6df0e3b7b1617c5cf034436c14403fb7466d6513"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceTest.java": {
+      "base_blob": "52036fcea6d91df6701c736867e86bd860421f99",
+      "sha256": "446b6cd6701e879ef50d649f1c63c6da4f060921789580cfc6ba6890d60439ce"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionServiceTest.java": {
+      "base_blob": "d0b204e23784b515e34fcc055fb1fd5b4dd13c65",
+      "sha256": "caf700c5316e32418b7f319ef0fcb8e2d5683e12895cb4fd7d9a90dbdb02b284"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ClubPostMediaReviewOutbox.java": {
+      "base_blob": "8067af3cef54d3d6bb7c76df9f86e95864d5dbbf",
+      "sha256": "919fe9bdbc422f7c5dde7187c710ed2c064605ce8ac5cd88737029954e6590b3"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapper.java": {
+      "base_blob": "1d8b5c558ef8b9f953469623c225da76eb872b42",
+      "sha256": "2b64d5623a6cb75a8c569d4ab8d5658e6fa00f593b9144af626340a44f0575a6"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceImpl.java": {
+      "base_blob": "43537f37351cc646f5f3c0dccd37e520e33b66fa",
+      "sha256": "dc54da834fe787db8cd0c4261a0d5069c131e1b0127bbfd783aa683ce4049bdc"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionService.java": {
+      "base_blob": "c44f1d48853a4f00732dc2f937d7d6bad83ccab0",
+      "sha256": "7e48a178c7e662e3d1e7b7404325aa587ef9b18b80f3f862fd5aab9569e2f06e"
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/ClubPostMediaReviewOutboxMapper.xml": {
+      "base_blob": "bde7ec301fa42754e83a1d87d275c67bd6dc224a",
+      "sha256": "8743bb5df3e882dc08c5b1ec0e8cf9e3843d5e9b9679fa0745580e1fc22abf76"
+    }
+  },
+  "patch_sha256": "6b62b21335def9d31d29193dc7f4ab62d52765c2c29faf4bea2fd8325b90c639"
+}

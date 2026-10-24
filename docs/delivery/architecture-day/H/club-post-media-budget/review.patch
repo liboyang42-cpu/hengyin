@@ -1,0 +1,1127 @@
+diff --git a/chengyinhub-admin/sql/migration_club_post_media_review_budget_20261024.sql b/chengyinhub-admin/sql/migration_club_post_media_review_budget_20261024.sql
+new file mode 100644
+--- /dev/null
++++ b/chengyinhub-admin/sql/migration_club_post_media_review_budget_20261024.sql
+@@ -0,0 +1,65 @@
++-- Follow-up to migration_club_role_media_review_outbox_20260824.sql.
++-- Source only: run the read-only preflight separately before approving any production DDL.
++-- No state renumbering, no task deletion/reset, no content mutation and no dispatch in this migration.
++-- State 5 remains stopped/manual. Keep the original claim owner/fence and known trace; never requeue UNKNOWN.
++-- MySQL 8 atomic ALTER supports repeating the same complete statement after uncertain DDL acknowledgement.
++
++-- runner: assert=scalar-true
++SELECT COUNT(*) = 1 AND SUM(t.engine = 'InnoDB') = 1 AS assertion_ok
++FROM information_schema.tables t
++WHERE t.table_schema = DATABASE() AND t.table_name = 'club_post_media_review_outbox';
++
++-- Accept exactly the original check or this follow-up check, never an arbitrary same-name constraint.
++-- runner: assert=scalar-true
++SELECT COUNT(*) = 2 AND SUM(CASE
++  WHEN tc.constraint_name = 'chk_club_post_media_review_trace' AND tc.enforced = 'YES'
++    AND REGEXP_REPLACE(LOWER(cc.check_clause), '[[:space:]`\\()]|_utf8mb[34]|_utf8|_latin1|_gbk', '') IN
++    ('ifstate=2,trace_hashisnotnull,trace_hashisnull=1',
++     'state=2andtrace_hashisnotnullorstate=5orstatenotin2,5andtrace_hashisnull') THEN 1
++  WHEN tc.constraint_name = 'chk_club_post_media_review_owner' AND tc.enforced = 'YES'
++    AND REGEXP_REPLACE(LOWER(cc.check_clause), '[[:space:]`\\()]|_utf8mb[34]|_utf8|_latin1|_gbk', '') IN
++    ('ifstate=1,owner_tokenisnotnull,owner_tokenisnull=1',
++     'state=1andowner_tokenisnotnullorstate=5orstatenotin1,5andowner_tokenisnull') THEN 1
++  ELSE 0 END) = 2 AS assertion_ok
++FROM information_schema.check_constraints cc
++JOIN information_schema.table_constraints tc
++  ON tc.constraint_schema = cc.constraint_schema AND tc.constraint_name = cc.constraint_name
++WHERE cc.constraint_schema = DATABASE() AND tc.table_name = 'club_post_media_review_outbox'
++  AND tc.constraint_name IN ('chk_club_post_media_review_trace','chk_club_post_media_review_owner')
++  AND tc.constraint_type = 'CHECK';
++
++ALTER TABLE club_post_media_review_outbox
++  DROP CHECK chk_club_post_media_review_trace,
++  DROP CHECK chk_club_post_media_review_owner,
++  ADD CONSTRAINT chk_club_post_media_review_owner CHECK
++    ((state = 1 AND owner_token IS NOT NULL) OR state = 5
++      OR (state NOT IN (1,5) AND owner_token IS NULL)),
++  ADD CONSTRAINT chk_club_post_media_review_trace CHECK
++    ((state = 2 AND trace_hash IS NOT NULL) OR state = 5
++      OR (state NOT IN (2,5) AND trace_hash IS NULL));
++
++-- runner: assert=scalar-true
++SELECT COUNT(*) = 2 AND SUM(CASE
++  WHEN tc.constraint_name = 'chk_club_post_media_review_trace' AND tc.enforced = 'YES'
++    AND REGEXP_REPLACE(LOWER(cc.check_clause), '[[:space:]`\\()]|_utf8mb[34]|_utf8|_latin1|_gbk', '') =
++    'state=2andtrace_hashisnotnullorstate=5orstatenotin2,5andtrace_hashisnull' THEN 1
++  WHEN tc.constraint_name = 'chk_club_post_media_review_owner' AND tc.enforced = 'YES'
++    AND REGEXP_REPLACE(LOWER(cc.check_clause), '[[:space:]`\\()]|_utf8mb[34]|_utf8|_latin1|_gbk', '') =
++    'state=1andowner_tokenisnotnullorstate=5orstatenotin1,5andowner_tokenisnull' THEN 1
++  ELSE 0 END) = 2 AS assertion_ok
++FROM information_schema.check_constraints cc
++JOIN information_schema.table_constraints tc
++  ON tc.constraint_schema = cc.constraint_schema AND tc.constraint_name = cc.constraint_name
++WHERE cc.constraint_schema = DATABASE() AND tc.table_name = 'club_post_media_review_outbox'
++  AND tc.constraint_name IN ('chk_club_post_media_review_trace','chk_club_post_media_review_owner')
++  AND tc.constraint_type = 'CHECK';
++
++-- Read-only operational inventory. Expired PROCESSING is uncertain even below the attempt budget.
++SELECT id,post_id,post_version,submitter_member_id,state,attempt_count,max_attempts,
++       HEX(media_hash) media_hash,HEX(trace_hash) trace_hash,last_error_code
++FROM club_post_media_review_outbox
++WHERE state IN (1,3,5) OR attempt_count >= LEAST(max_attempts,5)
++ORDER BY id;
++-- Rollback is not DELETE or resetting attempt_count. Stop dispatch and retain this expanded CHECK.
++-- Do not restore the old CHECKs while stopped rows have an original owner/trace; that would reject preserved facts.
++-- Do not roll back to the old dispatcher that blindly reclaims expired PROCESSING/ambiguous RETRYABLE.
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperMyBatisTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperMyBatisTest.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperMyBatisTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperMyBatisTest.java
+@@ -104,16 +104,17 @@
+     }
+ 
+     @Test
+-    void expiredLeaseCanBeReclaimedAndOnlyTheNewOwnerAndFenceCanSubmit() throws Exception {
++    void provenPreDispatchRetryAllowsOnlyTheNewOwnerAndFenceToSubmit() throws Exception {
+         long id = seedPending();
+         try (SqlSession session = factory.openSession(true)) {
+             ClubPostMediaReviewOutboxMapper mapper =
+                     session.getMapper(ClubPostMediaReviewOutboxMapper.class);
+             assertEquals(1, mapper.claim(id, WORKER_A));
+             assertEquals(Long.valueOf(1L), mapper.selectOwned(id, WORKER_A).getFenceToken());
+-        }
+-
+-        expireLease(id);
++            assertEquals(1, mapper.markRetryable(id, WORKER_A, 1L,
++                    new java.util.Date(System.currentTimeMillis() - 1000),
++                    ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
++        }
+ 
+         try (SqlSession session = factory.openSession(true)) {
+             ClubPostMediaReviewOutboxMapper mapper =
+@@ -128,6 +129,87 @@
+                     "the expired owner and its old fence must not complete the row");
+             assertEquals(1, mapper.markSubmitted(id, WORKER_B, 2L, TRACE_HASH),
+                     "only the current owner and fence may complete the row");
++        }
++    }
++
++    @Test
++    void fifthClaimMayCompleteButCannotScheduleASixthAttempt() throws Exception {
++        long id = seedPending();
++        update("update club_post_media_review_outbox set attempt_count=4 where id=" + id);
++        try (SqlSession session = factory.openSession(true)) {
++            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
++            assertEquals(1, mapper.claim(id, WORKER_A));
++            assertEquals(5, mapper.selectOwned(id, WORKER_A).getAttemptCount());
++            assertEquals(0, mapper.markRetryable(id, WORKER_A, 1L, new java.util.Date(0),
++                    ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
++            assertEquals(1, mapper.markSubmitted(id, WORKER_A, 1L, TRACE_HASH));
++            assertEquals(0, mapper.claim(id, WORKER_B));
++        }
++        assertEquals(5, number("select attempt_count from club_post_media_review_outbox where id=" + id));
++        assertEquals(2, number("select state from club_post_media_review_outbox where id=" + id));
++    }
++
++    @Test
++    void expiredProcessingStopsBelowAndAtBudgetAndRetainsLateOriginalTrace() throws Exception {
++        long id = seedPending();
++        try (SqlSession session = factory.openSession(true)) {
++            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
++            assertEquals(1, mapper.claim(id, WORKER_A));
++        }
++        expireLease(id);
++        try (SqlSession session = factory.openSession(true)) {
++            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
++            assertTrue(mapper.selectDueIds(50).isEmpty());
++            assertEquals(0, mapper.claim(id, WORKER_B));
++            assertEquals(1, mapper.retireUnsafeById(id));
++            assertEquals(0, mapper.claim(id, WORKER_B));
++            assertEquals(1, mapper.markManualReview(id, WORKER_A, 1L, TRACE_HASH,
++                    ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN));
++            assertEquals(0, mapper.markManualReview(id, WORKER_A, 1L, repeat('e',64),
++                    ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN));
++        }
++        assertEquals(1, number("select attempt_count from club_post_media_review_outbox where id=" + id));
++        assertEquals(5, number("select state from club_post_media_review_outbox where id=" + id));
++        update("update club_post_media_review_outbox set attempt_count=5 where id=" + id);
++        try (SqlSession session = factory.openSession(true)) {
++            assertEquals(0, session.getMapper(ClubPostMediaReviewOutboxMapper.class).claim(id, WORKER_B));
++        }
++    }
++
++    @Test
++    void exhaustedPendingAndAmbiguousLegacyRetryAreNeverDueOrClaimable() throws Exception {
++        long id = seedPending();
++        update("update club_post_media_review_outbox set attempt_count=5 where id=" + id);
++        try (SqlSession session = factory.openSession(true)) {
++            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
++            assertTrue(mapper.selectDueIds(50).isEmpty());
++            assertEquals(0, mapper.claim(id, WORKER_A));
++            assertEquals(1, mapper.retireUnsafeById(id));
++        }
++        assertEquals(5, number("select state from club_post_media_review_outbox where id=" + id));
++        update("update club_post_media_review_outbox set state=3,attempt_count=1,"
++                + "last_error_code='WX_NO_RECEIPT' where id=" + id);
++        try (SqlSession session = factory.openSession(true)) {
++            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
++            assertTrue(mapper.selectDueIds(50).isEmpty());
++            assertEquals(0, mapper.claim(id, WORKER_A));
++            assertEquals(1, mapper.retireUnsafeById(id));
++        }
++        assertEquals(1, number("select attempt_count from club_post_media_review_outbox where id=" + id));
++        assertEquals(5, number("select state from club_post_media_review_outbox where id=" + id));
++    }
++
++    private void update(String sql) throws Exception {
++        try (SqlSession session = factory.openSession(true); Statement statement=session.getConnection().createStatement()) {
++            statement.executeUpdate(sql);
++        }
++    }
++
++    private int number(String sql) throws Exception {
++        try (SqlSession session = factory.openSession(true); Statement statement=session.getConnection().createStatement();
++             java.sql.ResultSet rows=statement.executeQuery(sql)) {
++            assertTrue(rows.next());
++            return rows.getInt(1);
+         }
+     }
+ 
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperXmlTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperXmlTest.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperXmlTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapperXmlTest.java
+@@ -15,17 +15,25 @@
+     void mapperAndMigrationKeepUniqueClaimReceiptAndPoisonContracts() throws Exception {
+         String mapper = read("../chengyinhub-system/src/main/resources/mapper/business/ClubPostMediaReviewOutboxMapper.xml");
+         String migration = read("sql/migration_club_role_media_review_outbox_20260824.sql");
++        String expanded = read("sql/migration_club_post_media_review_budget_20261024.sql");
++        assertTrue(expanded.contains("DROP CHECK chk_club_post_media_review_trace"));
++        assertTrue(expanded.contains("OR state = 5"));
+         String jobMigration = read("sql/migration_club_role_media_review_outbox_job_20260825.sql");
+ 
+         assertTrue(mapper.contains("insert ignore into club_post_media_review_outbox"));
+         assertTrue(mapper.contains("state in (0, 3)"));
++        assertTrue(mapper.contains("LEAST(max_attempts, 5)"));
+         assertTrue(mapper.contains("owner_token = UNHEX(#{ownerToken})"));
+         assertTrue(mapper.contains("fence_token = #{fenceToken}"));
+         assertTrue(mapper.contains("lease_until = TIMESTAMPADD(SECOND, 120, NOW(3))"));
+         assertTrue(mapper.contains("trace_hash = UNHEX(#{traceHash})"));
+-        assertTrue(!mapper.contains("attempt_count &lt; max_attempts"),
+-                "微信/inbox 瞬时故障不能在固定次数后永久退出 due 集合");
+-        assertTrue(mapper.contains("where state in (0, 1, 3)"));
++        assertTrue(mapper.contains("attempt_count &lt; <include refid=\"retryBudget\"/>"),
++                "扫描和原子 claim 必须使用相同预算");
++        assertTrue(mapper.contains("last_error_code = 'PRE_DISPATCH_UNAVAILABLE'"));
++        assertTrue(mapper.contains("id=\"retireUnsafeBatch\""));
++        assertTrue(mapper.contains("id=\"markManualReview\""));
++        assertTrue(mapper.contains("THEN 'REVIEW_OUTCOME_UNKNOWN' ELSE 'REVIEW_ATTEMPTS_EXHAUSTED'"));
++        assertTrue(mapper.contains("where state in (0, 1, 3, 5)"));
+         assertTrue(mapper.contains("select min(create_time)"),
+                 "积压年龄必须基于不可被退避重写的创建时间");
+         assertTrue(migration.contains("UNIQUE KEY uk_club_post_media_review_identity (post_id, post_version, media_hash)"));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewBudgetMySqlIT.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewBudgetMySqlIT.java
+new file mode 100644
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewBudgetMySqlIT.java
+@@ -0,0 +1,340 @@
++package com.chengyinhub.business.service.impl;
++
++import com.chengyinhub.business.domain.ClubPost;
++import com.chengyinhub.business.domain.ClubPostMediaReviewOutbox;
++import com.chengyinhub.business.domain.UmsMember;
++import com.chengyinhub.business.domain.WxContentCallbackInbox;
++import com.chengyinhub.business.mapper.ClubPostMapper;
++import com.chengyinhub.business.mapper.ClubPostMediaReviewOutboxMapper;
++import com.chengyinhub.business.mapper.UmsMemberMapper;
++import com.chengyinhub.business.mapper.WxContentCallbackInboxMapper;
++import com.chengyinhub.business.service.IWxContentCallbackInboxService;
++import com.chengyinhub.business.service.IWxContentSecurityService;
++import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
++import org.junit.jupiter.api.AfterAll;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
++import org.mybatis.spring.SqlSessionFactoryBean;
++import org.mybatis.spring.SqlSessionTemplate;
++import org.springframework.aop.framework.ProxyFactory;
++import org.springframework.core.io.ClassPathResource;
++import org.springframework.jdbc.core.JdbcTemplate;
++import org.springframework.jdbc.datasource.DataSourceTransactionManager;
++import org.springframework.jdbc.datasource.DriverManagerDataSource;
++import org.springframework.test.util.ReflectionTestUtils;
++import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
++import org.springframework.transaction.interceptor.TransactionInterceptor;
++import org.springframework.transaction.support.TransactionTemplate;
++
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.sql.Connection;
++import java.sql.DriverManager;
++import java.sql.ResultSet;
++import java.sql.Statement;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.UUID;
++import java.util.concurrent.CountDownLatch;
++import java.util.concurrent.ExecutorService;
++import java.util.concurrent.Executors;
++import java.util.concurrent.Future;
++import java.util.concurrent.TimeUnit;
++import java.util.concurrent.atomic.AtomicInteger;
++
++import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.ArgumentMatchers.*;
++import static org.mockito.Mockito.*;
++
++/** Hosted/approved MySQL only. Real outbox/inbox XML, schema CHECKs and Spring transactions;
++ * provider and target reads are explicit doubles, not HTTP/WeChat or a full publication fixture. */
++@EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
++class ClubPostMediaReviewBudgetMySqlIT {
++    private static final long POST = 81L;
++    private static final long MEMBER = 42L;
++    private static final String MEDIA = "https://cdn.example.test/club/original.jpg";
++    private static final String HASH = WxContentCallbackInboxServiceImpl.sha256Hex(MEDIA);
++    private static MysqlIntegrationTestConfig mysql;
++    private static boolean created;
++    private DriverManagerDataSource source;
++    private JdbcTemplate db;
++    private DataSourceTransactionManager manager;
++    private ClubPostMediaReviewOutboxMapper mapper;
++    private ClubPostMediaReviewTransactionService transactions;
++    private WxContentCallbackInboxMapper callbackMapper;
++    private IWxContentCallbackInboxService callbacks;
++    private IWxContentSecurityService checker;
++    private ClubPostMediaReviewServiceImpl service;
++
++    @BeforeAll
++    static void createScratch() throws Exception {
++        Map<String,String> env = new HashMap<>(System.getenv());
++        for (String key : new String[]{"CHENGYIN_TEST_MYSQL_HOST", "CHENGYIN_TEST_MYSQL_PORT",
++                "CHENGYIN_TEST_MYSQL_USER", "CHENGYIN_TEST_MYSQL_PASSWORD"}) {
++            if (!env.containsKey(key)) throw new IllegalStateException("Missing explicit IT setting: " + key);
++        }
++        if (!"127.0.0.1".equals(env.get("CHENGYIN_TEST_MYSQL_HOST"))
++                && !"localhost".equals(env.get("CHENGYIN_TEST_MYSQL_HOST"))) {
++            throw new IllegalStateException("Media budget scratch requires an approved loopback MySQL");
++        }
++        env.put("CHENGYIN_TEST_MYSQL_DATABASE_BASE", "arch_h");
++        env.put("CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX", "_" + UUID.randomUUID().toString().replace("-", ""));
++        mysql = MysqlIntegrationTestConfig.from(env, "media_budget");
++        try (Connection c = DriverManager.getConnection(mysql.adminUrl(), mysql.user(), mysql.password());
++             Statement st = c.createStatement()) {
++            assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(c.getMetaData().getDatabaseProductVersion()));
++            // No IF NOT EXISTS / initial DROP: refuse an occupied identity.
++            st.execute("CREATE DATABASE " + mysql.databaseName() + " CHARACTER SET utf8mb4");
++            created = true;
++        }
++    }
++
++    @AfterAll
++    static void dropOwnScratch() throws Exception {
++        if (!created) return;
++        try (Connection c = DriverManager.getConnection(mysql.adminUrl(), mysql.user(), mysql.password());
++             Statement st = c.createStatement()) {
++            st.execute("DROP DATABASE " + mysql.databaseName());
++            try (ResultSet rows = st.executeQuery("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='"
++                    + mysql.databaseName() + "'")) {
++                assertTrue(rows.next()); assertEquals(0, rows.getInt(1));
++            }
++        }
++    }
++
++    @BeforeEach
++    void setUp() throws Exception {
++        source = new DriverManagerDataSource(mysql.databaseUrl(), mysql.user(), mysql.password());
++        source.setDriverClassName("com.mysql.cj.jdbc.Driver");
++        db = new JdbcTemplate(source);
++        db.execute("DROP TABLE IF EXISTS club_post_media_review_outbox");
++        db.execute("DROP TABLE IF EXISTS wx_content_callback_inbox");
++        db.execute("DROP TABLE IF EXISTS club_post");
++        executeMigration("migration_club_role_media_review_outbox_20260824.sql");
++        executeMigration("migration_club_post_media_review_budget_20261024.sql");
++        executeMigration("migration_wx_content_callback_inbox_20260724.sql");
++        // Read-target fixture only: no invented HOLD field; retain original del_flag/version/images.
++        db.execute("CREATE TABLE club_post(id BIGINT PRIMARY KEY,version INT NOT NULL,del_flag INT NOT NULL,images VARCHAR(500)) ENGINE=InnoDB");
++        db.update("INSERT INTO club_post VALUES (?,3,0,?)", POST, MEDIA);
++        manager = new DataSourceTransactionManager(source);
++        SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
++        factory.setDataSource(source);
++        factory.setMapperLocations(new ClassPathResource("mapper/business/ClubPostMediaReviewOutboxMapper.xml"),
++                new ClassPathResource("mapper/business/WxContentCallbackInboxMapper.xml"));
++        SqlSessionTemplate sql = new SqlSessionTemplate(factory.getObject());
++        mapper = sql.getMapper(ClubPostMediaReviewOutboxMapper.class);
++        callbackMapper = sql.getMapper(WxContentCallbackInboxMapper.class);
++        transactions = proxy(new ClubPostMediaReviewTransactionService(mapper));
++        WxContentCallbackClaimService claim = new WxContentCallbackClaimService();
++        ReflectionTestUtils.setField(claim, "mapper", callbackMapper);
++        WxContentCallbackMutationService mutation = new WxContentCallbackMutationService();
++        ReflectionTestUtils.setField(mutation, "mapper", callbackMapper);
++        WxContentCallbackInboxServiceImpl inbox = new WxContentCallbackInboxServiceImpl();
++        ReflectionTestUtils.setField(inbox, "mapper", callbackMapper);
++        ReflectionTestUtils.setField(inbox, "claimService", proxy(claim));
++        ReflectionTestUtils.setField(inbox, "mutationService", proxy(mutation));
++        callbacks = proxy(inbox);
++        ClubPostMapper posts = mock(ClubPostMapper.class);
++        when(posts.selectClubPostById(POST)).thenAnswer(call -> db.queryForObject(
++                "SELECT * FROM club_post WHERE id=?", (rs, n) -> {
++                    ClubPost p = new ClubPost(); p.setId(rs.getLong("id")); p.setVersion(rs.getInt("version"));
++                    p.setDelFlag(rs.getInt("del_flag")); p.setImages(rs.getString("images")); return p;
++                }, POST));
++        UmsMemberMapper members = mock(UmsMemberMapper.class);
++        UmsMember member = new UmsMember(); member.setId(MEMBER); member.setWxOpenId("original-openid");
++        when(members.selectUmsMemberById(MEMBER)).thenReturn(member);
++        checker = mock(IWxContentSecurityService.class);
++        when(checker.isEnabled()).thenReturn(true);
++        service = new ClubPostMediaReviewServiceImpl(mapper, transactions, posts, members, checker, callbacks, mock(AlarmService.class));
++    }
++
++    @Test
++    void lastAllowedClaimSucceedsAfterFourthKnownLocalFailure() {
++        long id = seed(3);
++        db.update("UPDATE club_post_media_review_outbox SET attempt_count=3 WHERE id=?", id);
++        ClubPostMediaReviewOutbox fourth = transactions.claim(id);
++        assertEquals(4, fourth.getAttemptCount());
++        assertTrue(transactions.retryTransient(fourth, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
++        db.update("UPDATE club_post_media_review_outbox SET next_attempt_at=TIMESTAMPADD(SECOND,-1,NOW(3)) WHERE id=?", id);
++        assertNotNull(transactions.claim(id));
++        ClubPostMediaReviewOutbox fifth = owned(id);
++        assertEquals(5, fifth.getAttemptCount());
++        assertTrue(callbacks.register("original-final", 3, POST, MEDIA));
++        assertTrue(transactions.markSubmitted(fifth, "original-final"));
++        assertNull(transactions.claim(id));
++        assertEquals(2L, number("state", id)); assertEquals(5L, number("attempt_count", id));
++        assertContent(0);
++    }
++
++    @Test
++    void finalKnownLocalFailureStopsWithoutSixthAttemptOrContentChange() {
++        long id = seed(3);
++        db.update("UPDATE club_post_media_review_outbox SET attempt_count=4 WHERE id=?", id);
++        ClubPostMediaReviewOutbox fifth = transactions.claim(id);
++        assertTrue(transactions.retryTransient(fifth, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
++        assertStopped(id, ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED, 5);
++        assertEquals(0, service.retryDue()); assertNull(transactions.claim(id));
++        verify(checker, never()).submitMediaCheckOne(anyInt(), anyLong(), anyString(), anyString());
++        assertContent(0);
++    }
++
++    @Test
++    void concurrentFinalClaimsHaveOneWinnerAndCannotConsumeSixthAttempt() throws Exception {
++        long id = seed(3);
++        db.update("UPDATE club_post_media_review_outbox SET attempt_count=4 WHERE id=?", id);
++        CountDownLatch ready = new CountDownLatch(2), start = new CountDownLatch(1);
++        ExecutorService workers = Executors.newFixedThreadPool(2);
++        try {
++            java.util.concurrent.Callable<ClubPostMediaReviewOutbox> call = () -> {
++                ready.countDown(); assertTrue(start.await(5, TimeUnit.SECONDS)); return transactions.claim(id);
++            };
++            Future<ClubPostMediaReviewOutbox> a = workers.submit(call), b = workers.submit(call);
++            assertTrue(ready.await(5, TimeUnit.SECONDS)); start.countDown();
++            ClubPostMediaReviewOutbox one = a.get(10, TimeUnit.SECONDS), two = b.get(10, TimeUnit.SECONDS);
++            assertEquals(1, (one == null ? 0 : 1) + (two == null ? 0 : 1));
++            assertEquals(5L, number("attempt_count", id));
++        } finally { start.countDown(); workers.shutdownNow(); }
++    }
++
++    @Test
++    void expiredProcessingBelowBudgetIsUnknownNotAFreeRetry() {
++        long id = seed(3); ClubPostMediaReviewOutbox first = transactions.claim(id);
++        expire(id); assertEquals(0, service.retryDue());
++        assertStopped(id, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN, 1);
++        assertNull(transactions.claim(id)); assertContent(0);
++        assertFalse(transactions.retryTransient(first, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
++    }
++
++    @Test
++    void expiredProcessingAtBudgetAndLegacyAmbiguousRetriesAreRetainedWithoutDispatch() {
++        long id = seed(3), legacy = seed(4), exhausted = seed(5);
++        db.update("UPDATE club_post_media_review_outbox SET attempt_count=4 WHERE id=?", id);
++        transactions.claim(id); expire(id);
++        db.update("UPDATE club_post_media_review_outbox SET state=3,attempt_count=1,last_error_code='WX_NO_RECEIPT' WHERE id=?", legacy);
++        db.update("UPDATE club_post_media_review_outbox SET attempt_count=5 WHERE id=?", exhausted);
++        assertEquals(0, service.retryDue());
++        assertStopped(id, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN, 5);
++        assertStopped(legacy, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN, 1);
++        assertStopped(exhausted, ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED, 5);
++        assertEquals(3L, db.queryForObject("SELECT COUNT(*) FROM club_post_media_review_outbox", Long.class).longValue());
++        verify(checker, never()).submitMediaCheckOne(anyInt(), anyLong(), anyString(), anyString());
++        assertContent(0);
++    }
++
++    @Test
++    void lostReplyDoesNotRepeatOrReviveContentTakenDownDuringTheCall() {
++        long id = seed(3); AtomicInteger calls = new AtomicInteger();
++        when(checker.submitMediaCheckOne(3, POST, MEDIA, "original-openid")).thenAnswer(call -> {
++            calls.incrementAndGet(); db.update("UPDATE club_post SET del_flag=2 WHERE id=?", POST); return null;
++        });
++        assertFalse(service.dispatchOne(id)); assertFalse(service.dispatchOne(id)); assertEquals(0, service.retryDue());
++        assertEquals(1, calls.get()); assertStopped(id, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN, 1);
++        assertContent(2);
++    }
++
++    @Test
++    void lateOriginalTraceAndCallbackSurviveExpiredLeaseWithoutResubmission() {
++        long id = seed(3); String trace = "known-original-trace"; AtomicInteger calls = new AtomicInteger();
++        when(checker.submitMediaCheckOne(3, POST, MEDIA, "original-openid")).thenAnswer(call -> {
++            calls.incrementAndGet(); assertTrue(callbacks.register(trace, 3, POST, MEDIA));
++            expire(id); assertEquals(1, transactions.retireUnsafe(50)); return trace;
++        });
++        assertFalse(service.dispatchOne(id));
++        assertStopped(id, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN, 1);
++        assertTrue(WxContentCallbackInboxServiceImpl.sha256Hex(trace).equalsIgnoreCase(
++                db.queryForObject("SELECT HEX(trace_hash) FROM club_post_media_review_outbox WHERE id=?", String.class, id)));
++        assertTrue(callbacks.process(trace, true, new IWxContentCallbackInboxService.Mutation() {
++            public boolean isCurrent(WxContentCallbackInbox row) { return HASH.equalsIgnoreCase(row.getMediaHash()); }
++            public boolean apply(WxContentCallbackInbox row, boolean risky) {
++                return risky && db.update("UPDATE club_post SET del_flag=2 WHERE id=?", row.getBizId()) == 1;
++            }
++        }));
++        assertEquals(2, callbackMapper.selectByTraceHash(WxContentCallbackInboxServiceImpl.sha256Hex(trace)).getState());
++        assertFalse(service.dispatchOne(id)); assertEquals(1, calls.get()); assertContent(2);
++        ClubPostMediaReviewOutbox original = manualSnapshot(id);
++        assertFalse(transactions.markUnknown(original, "different-trace"), "原 trace 不得覆盖");
++        original.setOwnerToken("ffffffffffffffffffffffffffffffff");
++        assertFalse(transactions.markUnknown(original, trace), "即使同 fence，非原 owner 不得附加结果");
++    }
++
++    @Test
++    void storedSmallerBudgetRemainsBindingAndLegacyTwentyCannotRaiseFive() {
++        long smaller = seed(3), legacy = seed(4);
++        db.update("UPDATE club_post_media_review_outbox SET max_attempts=2,attempt_count=1 WHERE id=?", smaller);
++        ClubPostMediaReviewOutbox second = transactions.claim(smaller);
++        assertEquals(2, second.getAttemptCount());
++        assertTrue(transactions.retryTransient(second, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
++        assertStopped(smaller, ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED, 2);
++        db.update("UPDATE club_post_media_review_outbox SET max_attempts=20,attempt_count=5 WHERE id=?", legacy);
++        assertNull(transactions.claim(legacy));
++        assertStopped(legacy, ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED, 5);
++        assertContent(0);
++    }
++
++    private long seed(int version) {
++        Integer inserted = new TransactionTemplate(manager).execute(status ->
++                transactions.enqueueUpdatedMedia(POST, version, MEMBER, MEDIA));
++        assertNotNull(inserted); assertEquals(1, inserted.intValue());
++        return mapper.selectByKey(POST, version, HASH).getId();
++    }
++
++    private ClubPostMediaReviewOutbox owned(long id) {
++        String token = db.queryForObject("SELECT HEX(owner_token) FROM club_post_media_review_outbox WHERE id=?", String.class, id);
++        return mapper.selectOwned(id, token);
++    }
++
++    private ClubPostMediaReviewOutbox manualSnapshot(long id) {
++        ClubPostMediaReviewOutbox row = new ClubPostMediaReviewOutbox(); row.setId(id);
++        row.setOwnerToken(db.queryForObject("SELECT HEX(owner_token) FROM club_post_media_review_outbox WHERE id=?", String.class, id));
++        row.setFenceToken(number("fence_token", id)); return row;
++    }
++
++    private void expire(long id) {
++        db.update("UPDATE club_post_media_review_outbox SET lease_until=TIMESTAMPADD(SECOND,-1,NOW(3)) WHERE id=?", id);
++    }
++
++    private long number(String column, long id) {
++        // Test-only closed column set.
++        if (!java.util.Set.of("state", "attempt_count", "fence_token").contains(column)) throw new IllegalArgumentException();
++        return db.queryForObject("SELECT " + column + " FROM club_post_media_review_outbox WHERE id=?", Long.class, id);
++    }
++
++    private void assertStopped(long id, String code, int attempts) {
++        assertEquals(5L, number("state", id)); assertEquals((long) attempts, number("attempt_count", id));
++        assertEquals(code, db.queryForObject("SELECT last_error_code FROM club_post_media_review_outbox WHERE id=?", String.class, id));
++        assertEquals(0L, db.queryForObject("SELECT COUNT(*) FROM club_post_media_review_outbox WHERE id=? AND lease_until IS NOT NULL", Long.class, id).longValue());
++    }
++
++    private void assertContent(int delFlag) {
++        assertEquals(delFlag, db.queryForObject("SELECT del_flag FROM club_post WHERE id=?", Integer.class, POST).intValue());
++        assertEquals(3, db.queryForObject("SELECT version FROM club_post WHERE id=?", Integer.class, POST).intValue());
++        assertEquals(MEDIA, db.queryForObject("SELECT images FROM club_post WHERE id=?", String.class, POST));
++    }
++
++    @SuppressWarnings("unchecked")
++    private <T> T proxy(T target) {
++        ProxyFactory factory = new ProxyFactory(target); factory.setProxyTargetClass(true);
++        factory.addAdvice(new TransactionInterceptor(manager, new AnnotationTransactionAttributeSource()));
++        return (T) factory.getProxy();
++    }
++
++    private void executeMigration(String name) throws Exception {
++        Path p = Path.of("sql", name);
++        if (!Files.exists(p)) p = Path.of("chengyinhub-admin", "sql", name);
++        String fixedScript = Files.readString(p).replaceAll("(?m)^\\s*--.*$", "");
++        // These three fixed scripts have no procedures or semicolons inside string literals.
++        try (Connection c = source.getConnection(); Statement st = c.createStatement()) {
++            for (String sql : fixedScript.split(";")) {
++                if (sql.isBlank()) continue;
++                if (st.execute(sql)) try (ResultSet rows = st.getResultSet()) {
++                    if (rows.getMetaData().getColumnCount() == 1
++                            && "assertion_ok".equalsIgnoreCase(rows.getMetaData().getColumnLabel(1))) {
++                        assertTrue(rows.next() && rows.getBoolean(1), "Migration metadata assertion failed: " + name);
++                    }
++                }
++            }
++        }
++    }
++}
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceTest.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceTest.java
+@@ -61,25 +61,27 @@
+     }
+ 
+     @Test
+-    void externalFailureKeepsCommittedTaskRetryableThenOneReceiptMakesItTerminal() {
++    void provenPreDispatchFailureRetriesOriginalTaskThenOneReceiptMakesItTerminal() {
+         ClubPostMediaReviewOutbox firstAttempt = task(1);
+         ClubPostMediaReviewOutbox secondAttempt = task(2);
+         when(transactionService.claim(TASK_ID)).thenReturn(firstAttempt, secondAttempt, null);
+         when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
+-        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
++        when(memberMapper.selectUmsMemberById(MEMBER_ID))
++                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("local read unavailable"))
++                .thenReturn(member());
+         when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
+                 POST_ID, MEDIA_URL, "wx-openid"))
+-                .thenReturn(null, "trace-success");
++                .thenReturn("trace-success");
+         when(callbackInboxService.isRegistered("trace-success")).thenReturn(true);
+         when(transactionService.markSubmitted(secondAttempt, "trace-success")).thenReturn(true);
+ 
+-        assertFalse(service.dispatchOne(TASK_ID), "微信外呼失败不能把任务误标成功");
++        assertFalse(service.dispatchOne(TASK_ID), "外呼前读取失败不能把任务误标成功");
+         assertTrue(service.dispatchOne(TASK_ID), "重试拿到 trace + inbox 回执后才能终态");
+         assertFalse(service.dispatchOne(TASK_ID), "终态任务不能再次送审");
+ 
+-        verify(transactionService).retryTransient(firstAttempt, "WX_NO_RECEIPT");
++        verify(transactionService).retryTransient(firstAttempt, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE);
+         verify(transactionService).markSubmitted(secondAttempt, "trace-success");
+-        verify(securityService, times(2)).submitMediaCheckOne(
++        verify(securityService, times(1)).submitMediaCheckOne(
+                 IWxContentSecurityService.BIZ_TYPE_CLUB_POST, POST_ID, MEDIA_URL, "wx-openid");
+     }
+ 
+@@ -173,7 +175,7 @@
+     }
+ 
+     @Test
+-    void firstExternalTransientFailureStopsTheBatchAndLeavesHealthyRowsForNextMinute() {
++    void firstUnknownOutcomeStopsTheBatchWithoutRequeueingIt() {
+         Long firstId = 18L;
+         Long secondId = 19L;
+         ClubPostMediaReviewOutbox first = task(1);
+@@ -187,7 +189,7 @@
+ 
+         assertEquals(0, service.retryDue());
+ 
+-        verify(transactionService).retryTransient(first, "WX_NO_RECEIPT");
++        verify(transactionService).markUnknown(first, null);
+         verify(transactionService, never()).claim(secondId);
+     }
+ 
+@@ -217,39 +219,70 @@
+     }
+ 
+     @Test
+-    void retryBeyondAlertThresholdUsesWebhookAlarmAndRemainsRecoverable() {
++    void finalPreDispatchFailureTriggersBudgetAlarmWithoutCallingProvider() {
+         ClubPostMediaReviewOutbox fifthAttempt = task(5);
+         when(transactionService.claim(TASK_ID)).thenReturn(fifthAttempt);
+-        when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
+-        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
+-        when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
+-                POST_ID, MEDIA_URL, "wx-openid")).thenReturn(null);
+-
+-        assertFalse(service.dispatchOne(TASK_ID));
+-
+-        verify(transactionService).retryTransient(fifthAttempt, "WX_NO_RECEIPT");
++        when(postMapper.selectClubPostById(POST_ID))
++                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("local read unavailable"));
++
++        assertFalse(service.dispatchOne(TASK_ID));
++
++        verify(transactionService).retryTransient(fifthAttempt, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE);
+         verify(alarmService).alarm(eq("俱乐部动态图片送审持续失败"), contains("attempts=5"));
+     }
+ 
+     @Test
+-    void terminalWriteLossLeavesTaskRecoverableAndDocumentsAtLeastOnceRepeatWindow() {
++    void terminalWriteLossPreservesOriginalTraceAndNeverAuthorizesResubmission() {
+         ClubPostMediaReviewOutbox firstLease = task(1);
+-        ClubPostMediaReviewOutbox recoveredLease = task(2);
+-        when(transactionService.claim(TASK_ID)).thenReturn(firstLease, recoveredLease);
+-        when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
+-        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
+-        when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
+-                POST_ID, MEDIA_URL, "wx-openid")).thenReturn("trace-before-crash", "trace-after-recovery");
++        when(transactionService.claim(TASK_ID)).thenReturn(firstLease, (ClubPostMediaReviewOutbox) null);
++        when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
++        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
++        when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
++                POST_ID, MEDIA_URL, "wx-openid")).thenReturn("trace-before-crash");
+         when(callbackInboxService.isRegistered("trace-before-crash")).thenReturn(true);
+-        when(callbackInboxService.isRegistered("trace-after-recovery")).thenReturn(true);
+         when(transactionService.markSubmitted(firstLease, "trace-before-crash")).thenReturn(false);
+-        when(transactionService.markSubmitted(recoveredLease, "trace-after-recovery")).thenReturn(true);
+-
+-        assertFalse(service.dispatchOne(TASK_ID), "微信已受理但本地终态写失败时必须保留可恢复状态");
+-        assertTrue(service.dispatchOne(TASK_ID), "lease 恢复后允许再次送审并收口，合同是 at-least-once");
+-
+-        verify(securityService, times(2)).submitMediaCheckOne(
++
++        assertFalse(service.dispatchOne(TASK_ID));
++        assertFalse(service.dispatchOne(TASK_ID), "原任务停止后不能再外呼");
++        verify(transactionService).markUnknown(firstLease, "trace-before-crash");
++        verify(securityService, times(1)).submitMediaCheckOne(
+                 IWxContentSecurityService.BIZ_TYPE_CLUB_POST, POST_ID, MEDIA_URL, "wx-openid");
++    }
++
++    @Test
++    void fifthAttemptCanStillStoreItsSuccessfulOriginalReceipt() {
++        ClubPostMediaReviewOutbox last = task(5);
++        when(transactionService.claim(TASK_ID)).thenReturn(last);
++        when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
++        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
++        when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
++                POST_ID, MEDIA_URL, "wx-openid")).thenReturn("trace-final");
++        when(callbackInboxService.isRegistered("trace-final")).thenReturn(true);
++        when(transactionService.markSubmitted(last, "trace-final")).thenReturn(true);
++        assertTrue(service.dispatchOne(TASK_ID));
++        verify(transactionService).markSubmitted(last, "trace-final");
++        verify(transactionService, never()).retryTransient(last, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE);
++    }
++
++    @Test
++    void providerExceptionAndMissingInboxReceiptBothStopWithUnknownOriginalIdentity() {
++        ClubPostMediaReviewOutbox first = task(1);
++        ClubPostMediaReviewOutbox second = task(1);
++        second.setId(18L);
++        when(transactionService.claim(TASK_ID)).thenReturn(first);
++        when(transactionService.claim(18L)).thenReturn(second);
++        when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
++        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
++        when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
++                POST_ID, MEDIA_URL, "wx-openid"))
++                .thenThrow(new IllegalStateException("reply lost")).thenReturn("original-trace");
++        assertFalse(service.dispatchOne(TASK_ID));
++        assertFalse(service.dispatchOne(18L));
++        verify(transactionService).markUnknown(first, null);
++        verify(transactionService).markUnknown(second, "original-trace");
++        verify(transactionService, never()).retryTransient(eq(first), anyString());
++        verify(transactionService, never()).retryTransient(eq(second), anyString());
++        verify(postMapper, never()).updateClubPost(org.mockito.ArgumentMatchers.any());
+     }
+ 
+     private ClubPostMediaReviewOutbox task(int attemptCount) {
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionServiceTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionServiceTest.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionServiceTest.java
+@@ -11,6 +11,7 @@
+ import java.lang.reflect.Method;
+ 
+ import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
+ import static org.junit.jupiter.api.Assertions.assertNotNull;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
+ import static org.mockito.ArgumentMatchers.any;
+@@ -69,24 +70,56 @@
+     }
+ 
+     @Test
+-    void transientExternalFailureAtTheAlertThresholdRemainsRetryable() {
++    void finalPreDispatchFailureStopsAtTheExistingAttemptBudget() {
+         ClubPostMediaReviewOutbox task = new ClubPostMediaReviewOutbox();
+         task.setId(17L);
+         task.setOwnerToken("00112233445566778899aabbccddeeff");
+         task.setFenceToken(2L);
+         task.setAttemptCount(5);
+         task.setMaxAttempts(5);
+-        when(mapper.markRetryable(org.mockito.ArgumentMatchers.eq(17L),
+-                org.mockito.ArgumentMatchers.eq(task.getOwnerToken()),
+-                org.mockito.ArgumentMatchers.eq(2L), any(),
+-                org.mockito.ArgumentMatchers.eq("WX_NO_RECEIPT"))).thenReturn(1);
++        when(mapper.markManualReview(17L, task.getOwnerToken(), 2L, null,
++                ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED)).thenReturn(1);
+ 
+-        assertTrue(service.retryTransient(task, "WX_NO_RECEIPT"));
++        assertTrue(service.retryTransient(task, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
+ 
+-        verify(mapper).markRetryable(org.mockito.ArgumentMatchers.eq(17L),
+-                org.mockito.ArgumentMatchers.eq(task.getOwnerToken()),
+-                org.mockito.ArgumentMatchers.eq(2L), any(),
+-                org.mockito.ArgumentMatchers.eq("WX_NO_RECEIPT"));
++        verify(mapper).markManualReview(17L, task.getOwnerToken(), 2L, null,
++                ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED);
++        verify(mapper, never()).markRetryable(any(), any(), any(), any(), any());
+         verify(mapper, never()).markPoisoned(any(), any(), any(), any());
+     }
++
++    @Test
++    void knownLocalFailureBeforeLastAttemptCanRetryButGenericFailureCannot() {
++        ClubPostMediaReviewOutbox task = ownedTask(4);
++        when(mapper.markRetryable(org.mockito.ArgumentMatchers.eq(17L),
++                org.mockito.ArgumentMatchers.eq(task.getOwnerToken()), org.mockito.ArgumentMatchers.eq(2L),
++                any(), org.mockito.ArgumentMatchers.eq(ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE)))
++                .thenReturn(1);
++        assertTrue(service.retryTransient(task, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
++        when(mapper.markManualReview(17L, task.getOwnerToken(), 2L, null,
++                ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN)).thenReturn(1);
++        assertTrue(service.retryTransient(task, "WX_NO_RECEIPT"));
++        verify(mapper).markManualReview(17L, task.getOwnerToken(), 2L, null,
++                ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN);
++    }
++
++    @Test
++    void staleAttemptSnapshotCannotBypassDatabaseBudgetOrFence() {
++        ClubPostMediaReviewOutbox task = ownedTask(4);
++        when(mapper.markManualReview(17L, task.getOwnerToken(), 2L, null,
++                ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED)).thenReturn(0);
++        assertFalse(service.retryTransient(task, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
++        verify(mapper).markManualReview(17L, task.getOwnerToken(), 2L, null,
++                ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED);
++    }
++
++    private ClubPostMediaReviewOutbox ownedTask(int attempts) {
++        ClubPostMediaReviewOutbox task = new ClubPostMediaReviewOutbox();
++        task.setId(17L);
++        task.setOwnerToken("00112233445566778899aabbccddeeff");
++        task.setFenceToken(2L);
++        task.setAttemptCount(attempts);
++        task.setMaxAttempts(5);
++        return task;
++    }
+ }
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ClubPostMediaReviewOutbox.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ClubPostMediaReviewOutbox.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ClubPostMediaReviewOutbox.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/domain/ClubPostMediaReviewOutbox.java
+@@ -10,6 +10,12 @@
+     public static final int STATE_RETRYABLE = 3;
+     public static final int STATE_STALE = 4;
+     public static final int STATE_POISONED = 5;
++    /** Existing stopped state; reason distinguishes invalid input, exhausted budget and UNKNOWN. */
++    public static final int STATE_MANUAL_REVIEW = STATE_POISONED;
++    public static final int MAX_ATTEMPTS = 5;
++    public static final String PRE_DISPATCH_UNAVAILABLE = "PRE_DISPATCH_UNAVAILABLE";
++    public static final String OUTCOME_UNKNOWN = "REVIEW_OUTCOME_UNKNOWN";
++    public static final String ATTEMPTS_EXHAUSTED = "REVIEW_ATTEMPTS_EXHAUSTED";
+ 
+     private Long id;
+     private Long postId;
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapper.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapper.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapper.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubPostMediaReviewOutboxMapper.java
+@@ -14,6 +14,17 @@
+                                            @Param("mediaHash") String mediaHash);
+ 
+     List<Long> selectDueIds(@Param("limit") int limit);
++
++    /** Stop expired in-flight, legacy ambiguous retries and exhausted rows without reclaiming them. */
++    int retireUnsafeBatch(@Param("limit") int limit);
++
++    int retireUnsafeById(@Param("id") Long id);
++
++    int markManualReview(@Param("id") Long id,
++                         @Param("ownerToken") String ownerToken,
++                         @Param("fenceToken") Long fenceToken,
++                         @Param("traceHash") String traceHash,
++                         @Param("errorCode") String errorCode);
+ 
+     long countBacklog();
+ 
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewServiceImpl.java
+@@ -65,6 +65,7 @@
+     public int retryDue() {
+         logBacklogIfNeeded();
+         if (!reviewEnabled()) return 0;
++        transactionService.retireUnsafe(BATCH_LIMIT);
+         List<Long> dueIds = outboxMapper.selectDueIds(BATCH_LIMIT);
+         return dispatch(dueIds);
+     }
+@@ -84,6 +85,8 @@
+             return DispatchOutcome.RETRYABLE_FAILURE;
+         }
+         if (task == null) return DispatchOutcome.SKIPPED;
++        String mediaUrl;
++        String openid;
+         try {
+             if (!validTask(task)) {
+                 transactionService.markPoisoned(task, "TASK_INVALID");
+@@ -94,38 +97,56 @@
+                 transactionService.markStale(task, "POST_NOT_ACTIVE");
+                 return DispatchOutcome.SKIPPED;
+             }
+-            String mediaUrl = mediaUrl(task.getMediaHash(), post.getImages());
++            mediaUrl = mediaUrl(task.getMediaHash(), post.getImages());
+             if (mediaUrl == null) {
+                 transactionService.markStale(task, "MEDIA_STALE");
+                 return DispatchOutcome.SKIPPED;
+             }
+             UmsMember member = memberMapper.selectUmsMemberById(task.getSubmitterMemberId());
+-            String openid = member == null ? null : member.getWxOpenId();
+-            String traceId = securityService.submitMediaCheckOne(
++            openid = member == null ? null : member.getWxOpenId();
++            if (openid == null || openid.trim().isEmpty()) {
++                transactionService.markPoisoned(task, "SUBMITTER_IDENTITY_UNAVAILABLE");
++                return DispatchOutcome.SKIPPED;
++            }
++        } catch (RuntimeException beforeDispatch) {
++            // No provider method has been entered on this path.
++            retryTransient(task, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE);
++            return DispatchOutcome.RETRYABLE_FAILURE;
++        }
++
++        String traceId = null;
++        try {
++            traceId = securityService.submitMediaCheckOne(
+                     IWxContentSecurityService.BIZ_TYPE_CLUB_POST, task.getPostId(), mediaUrl, openid);
+-            if (traceId == null || traceId.trim().isEmpty()) {
+-                retryTransient(task, "WX_NO_RECEIPT");
+-                return DispatchOutcome.RETRYABLE_FAILURE;
+-            }
+-            if (!callbackInboxService.isRegistered(traceId)) {
+-                retryTransient(task, "INBOX_RECEIPT_MISSING");
+-                return DispatchOutcome.RETRYABLE_FAILURE;
++            // The legacy checker collapses not-sent, transport UNKNOWN and inbox failure to null.
++            // Null or any exception after entry cannot authorize another submission.
++            if (traceId == null || traceId.trim().isEmpty()
++                    || !callbackInboxService.isRegistered(traceId)) {
++                unknown(task, traceId);
++                return DispatchOutcome.UNKNOWN;
+             }
+             if (!transactionService.markSubmitted(task, traceId)) {
+-                log.error("ClubPost media review terminal receipt write failed; lease will recover taskId={}",
+-                        task.getId());
+-                return DispatchOutcome.RETRYABLE_FAILURE;
++                unknown(task, traceId);
++                return DispatchOutcome.UNKNOWN;
+             }
+             return DispatchOutcome.SUBMITTED;
+-        } catch (RuntimeException dispatchFailure) {
+-            try {
+-                retryTransient(task, "DISPATCH_EXCEPTION");
+-            } catch (RuntimeException receiptFailure) {
+-                log.error("ClubPost media review failure receipt missing; lease will recover taskId={}",
+-                        task.getId(), receiptFailure);
+-            }
+-            return DispatchOutcome.RETRYABLE_FAILURE;
+-        }
++        } catch (RuntimeException afterDispatch) {
++            unknown(task, traceId);
++            return DispatchOutcome.UNKNOWN;
++        }
++    }
++
++    private void unknown(ClubPostMediaReviewOutbox task, String traceId) {
++        try {
++            if (!transactionService.markUnknown(task, traceId)) {
++                log.error("ClubPost media review UNKNOWN write lost ownership, taskId={}", task.getId());
++            }
++        } catch (RuntimeException receiptFailure) {
++            // Leave PROCESSING intact; expiration only stops it, never dispatches it again.
++            log.error("ClubPost media review UNKNOWN write unavailable, taskId={} type={}",
++                    task.getId(), receiptFailure.getClass().getSimpleName());
++        }
++        alarmSafely("俱乐部动态图片送审结果待确认", "taskId=" + task.getId() + ", postId=" + task.getPostId());
+     }
+ 
+     private int dispatch(List<Long> ids) {
+@@ -142,7 +163,7 @@
+                 DispatchOutcome outcome = dispatchClaimed(id);
+                 attempted++;
+                 if (outcome == DispatchOutcome.SUBMITTED) submitted++;
+-                if (outcome == DispatchOutcome.RETRYABLE_FAILURE) {
++                if (outcome == DispatchOutcome.RETRYABLE_FAILURE || outcome == DispatchOutcome.UNKNOWN) {
+                     log.warn("ClubPost media review batch circuit opened after retryable failure; taskId={}", id);
+                     break;
+                 }
+@@ -177,7 +198,7 @@
+     private void retryTransient(ClubPostMediaReviewOutbox task, String errorCode) {
+         transactionService.retryTransient(task, errorCode);
+         if (task.getAttemptCount() != null && task.getMaxAttempts() != null
+-                && task.getAttemptCount() >= task.getMaxAttempts()) {
++                && task.getAttemptCount() >= Math.min(ClubPostMediaReviewOutbox.MAX_ATTEMPTS, task.getMaxAttempts())) {
+             alarmSafely("俱乐部动态图片送审持续失败",
+                     "taskId=" + task.getId() + ", postId=" + task.getPostId()
+                             + ", attempts=" + task.getAttemptCount() + ", code=" + errorCode);
+@@ -232,6 +253,7 @@
+     private enum DispatchOutcome {
+         SUBMITTED,
+         SKIPPED,
+-        RETRYABLE_FAILURE
++        RETRYABLE_FAILURE,
++        UNKNOWN
+     }
+ }
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionService.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubPostMediaReviewTransactionService.java
+@@ -2,8 +2,6 @@
+ 
+ import com.chengyinhub.business.domain.ClubPostMediaReviewOutbox;
+ import com.chengyinhub.business.mapper.ClubPostMediaReviewOutboxMapper;
+-import org.slf4j.Logger;
+-import org.slf4j.LoggerFactory;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Propagation;
+ import org.springframework.transaction.annotation.Transactional;
+@@ -16,8 +14,7 @@
+ /** Short database transactions for enqueue, claim, and fenced state receipts. */
+ @Service
+ public class ClubPostMediaReviewTransactionService {
+-    private static final Logger log = LoggerFactory.getLogger(ClubPostMediaReviewTransactionService.class);
+-    private static final int MAX_ATTEMPTS = 5;
++    private static final int MAX_ATTEMPTS = ClubPostMediaReviewOutbox.MAX_ATTEMPTS;
+     private final ClubPostMediaReviewOutboxMapper mapper;
+ 
+     public ClubPostMediaReviewTransactionService(ClubPostMediaReviewOutboxMapper mapper) {
+@@ -58,6 +55,8 @@
+     public ClubPostMediaReviewOutbox claim(Long taskId) {
+         if (taskId == null || taskId <= 0) return null;
+         String ownerToken = UUID.randomUUID().toString().replace("-", "");
++        // A lease ending proves neither non-dispatch nor provider failure. Never reclaim it.
++        mapper.retireUnsafeById(taskId);
+         if (mapper.claim(taskId, ownerToken) != 1) return null;
+         ClubPostMediaReviewOutbox claimed = mapper.selectOwned(taskId, ownerToken);
+         if (claimed == null) throw new IllegalStateException("ClubPost media review claim receipt missing");
+@@ -72,17 +71,40 @@
+     }
+ 
+     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
++    public int retireUnsafe(int limit) {
++        if (limit < 1 || limit > 50) throw new IllegalArgumentException("Invalid media review batch limit");
++        return mapper.retireUnsafeBatch(limit);
++    }
++
++    /** Only the caller's pre-dispatch local failure is evidence for automatic retry. */
++    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+     public boolean retryTransient(ClubPostMediaReviewOutbox task, String errorCode) {
+         if (!owned(task)) return false;
++        if (!ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE.equals(errorCode)) {
++            return manual(task, null, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN);
++        }
+         int attempts = task.getAttemptCount() == null ? Integer.MAX_VALUE : task.getAttemptCount();
+-        int maxAttempts = task.getMaxAttempts() == null ? 0 : task.getMaxAttempts();
+-        if (maxAttempts > 0 && attempts >= maxAttempts) {
+-            log.error("ClubPost media review remains retryable beyond alert threshold, taskId={}, attempts={}, code={}",
+-                    task.getId(), attempts, safeCode(errorCode));
++        int budget = task.getMaxAttempts() == null ? 0 : Math.min(MAX_ATTEMPTS, task.getMaxAttempts());
++        if (budget <= 0 || attempts >= budget) {
++            return manual(task, null, ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED);
+         }
+         long delayMillis = (1L << Math.min(Math.max(attempts - 1, 0), 6)) * 60_000L;
+-        return mapper.markRetryable(task.getId(), task.getOwnerToken(), task.getFenceToken(),
+-                new Date(System.currentTimeMillis() + delayMillis), safeCode(errorCode)) == 1;
++        if (mapper.markRetryable(task.getId(), task.getOwnerToken(), task.getFenceToken(),
++                new Date(System.currentTimeMillis() + delayMillis), errorCode) == 1) return true;
++        // SQL, not the worker's snapshot, owns the final budget and fence decision.
++        return manual(task, null, ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED);
++    }
++
++    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
++    public boolean markUnknown(ClubPostMediaReviewOutbox task, String traceId) {
++        return owned(task) && manual(task, traceId, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN);
++    }
++
++    private boolean manual(ClubPostMediaReviewOutbox task, String traceId, String code) {
++        String traceHash = traceId == null || traceId.trim().isEmpty() ? null
++                : WxContentCallbackInboxServiceImpl.sha256Hex(traceId.trim());
++        return mapper.markManualReview(task.getId(), task.getOwnerToken(), task.getFenceToken(),
++                traceHash, code) == 1;
+     }
+ 
+     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+diff --git a/chengyinhub-system/src/main/resources/mapper/business/ClubPostMediaReviewOutboxMapper.xml b/chengyinhub-system/src/main/resources/mapper/business/ClubPostMediaReviewOutboxMapper.xml
+--- a/chengyinhub-system/src/main/resources/mapper/business/ClubPostMediaReviewOutboxMapper.xml
++++ b/chengyinhub-system/src/main/resources/mapper/business/ClubPostMediaReviewOutboxMapper.xml
+@@ -42,36 +42,60 @@
+           and media_hash = UNHEX(#{mediaHash})
+     </select>
+ 
+-    <select id="selectDueIds" resultType="long">
++    <!-- Five is the existing application budget; a smaller stored budget remains authoritative. -->
++    <sql id="retryBudget">LEAST(max_attempts, 5)</sql>
++    <sql id="eligibleDue">
++        attempt_count &lt; <include refid="retryBudget"/> AND next_attempt_at &lt;= NOW(3)
++        AND (state = 0 OR (state = 3 AND last_error_code = 'PRE_DISPATCH_UNAVAILABLE'))
++    </sql>
++    <sql id="unsafeToDispatch">
++        (state = 1 AND lease_until &lt;= NOW(3))
++        OR (state in (0, 3) AND attempt_count &gt;= <include refid="retryBudget"/>)
++        OR (state = 3 AND (last_error_code IS NULL OR last_error_code != 'PRE_DISPATCH_UNAVAILABLE'))
++    </sql>
++    <sql id="stopUnsafe">
++        update club_post_media_review_outbox
++        set last_error_code = CASE
++                WHEN state = 1 OR (state = 3 AND
++                    (last_error_code IS NULL OR last_error_code != 'PRE_DISPATCH_UNAVAILABLE'))
++                THEN 'REVIEW_OUTCOME_UNKNOWN' ELSE 'REVIEW_ATTEMPTS_EXHAUSTED' END,
++            state = 5, lease_until = null, update_time = NOW(3)
++    </sql>
++    <update id="retireUnsafeBatch">
++        <include refid="stopUnsafe"/>
++        where (<include refid="unsafeToDispatch"/>) order by id limit #{limit}
++    </update>
++    <update id="retireUnsafeById">
++        <include refid="stopUnsafe"/>
++        where id = #{id} AND (<include refid="unsafeToDispatch"/>)
++    </update>
++    <select id="selectDueIds" resultType="long" useCache="false" flushCache="true">
+         select id from club_post_media_review_outbox
+-        where ((state in (0, 3) and next_attempt_at &lt;= NOW(3))
+-               or (state = 1 and lease_until &lt;= NOW(3)))
++        where <include refid="eligibleDue"/>
+         order by next_attempt_at asc, id asc
+         limit #{limit}
+     </select>
+ 
+     <select id="countBacklog" resultType="long">
+         select count(*) from club_post_media_review_outbox
+-        where state in (0, 1, 3)
++        where state in (0, 1, 3, 5)
+     </select>
+ 
+     <select id="selectOldestBacklogCreatedAt" resultType="java.util.Date">
+         select min(create_time)
+         from club_post_media_review_outbox
+-        where state in (0, 1, 3)
++        where state in (0, 1, 3, 5)
+     </select>
+ 
+     <update id="claim">
+         update club_post_media_review_outbox
+         set state = 1, owner_token = UNHEX(#{ownerToken}), fence_token = fence_token + 1,
+             lease_until = TIMESTAMPADD(SECOND, 120, NOW(3)),
+-            attempt_count = attempt_count + 1, update_time = NOW(3)
+-        where id = #{id}
+-          and ((state in (0, 3) and next_attempt_at &lt;= NOW(3))
+-               or (state = 1 and lease_until &lt;= NOW(3)))
++            attempt_count = attempt_count + 1, last_error_code = null, update_time = NOW(3)
++        where id = #{id} AND (<include refid="eligibleDue"/>)
+     </update>
+ 
+-    <select id="selectOwned" resultMap="OutboxResult">
++    <select id="selectOwned" resultMap="OutboxResult" useCache="false" flushCache="true">
+         select <include refid="columns"/>
+         from club_post_media_review_outbox
+         where id = #{id} and state = 1 and owner_token = UNHEX(#{ownerToken})
+@@ -92,6 +116,24 @@
+             next_attempt_at = #{nextAttemptAt}, last_error_code = #{errorCode}, update_time = NOW(3)
+         where id = #{id} and state = 1
+           and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
++          and lease_until &gt; NOW(3) and attempt_count &lt; <include refid="retryBudget"/>
++          and #{errorCode} = 'PRE_DISPATCH_UNAVAILABLE'
++    </update>
++
++    <!-- State 5 is stopped/manual, never DONE. A late original worker may attach its trace
++         only to its unchanged fence, and cannot overwrite a different original trace. -->
++    <update id="markManualReview">
++        update club_post_media_review_outbox
++        set state = 5, lease_until = null,
++            trace_hash = COALESCE(trace_hash, UNHEX(#{traceHash})),
++            last_error_code = #{errorCode}, update_time = NOW(3)
++        where id = #{id} and fence_token = #{fenceToken} and owner_token = UNHEX(#{ownerToken})
++          and (state = 1 or (state = 5 and last_error_code = 'REVIEW_OUTCOME_UNKNOWN'
++                   and #{errorCode} = 'REVIEW_OUTCOME_UNKNOWN'))
++          and (#{traceHash} IS NULL or trace_hash IS NULL or trace_hash = UNHEX(#{traceHash}))
++          and (#{errorCode} = 'REVIEW_OUTCOME_UNKNOWN'
++               or (#{errorCode} = 'REVIEW_ATTEMPTS_EXHAUSTED'
++                   and attempt_count &gt;= <include refid="retryBudget"/>))
+     </update>
+ 
+     <update id="markStale">
