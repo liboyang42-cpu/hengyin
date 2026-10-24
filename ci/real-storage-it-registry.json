@@ -413,14 +413,6 @@
       "classes": [
         "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT"
       ]
-    },
-    "architecture-day-arrival-instance": {
-      "lineage": "Public4cf G negative acc4bf5: original34 plus2 replay arrival negatives; production unchanged",
-      "registered_source": "acc4bf5ea10bbefabb9d5db52dd17dc800b3a955",
-      "note": "Negative candidate only: 36 exact ordinary@Test methods. Preserve original34 and two actual MyBatis replay arrival assertions; only source-bound XML and CLEAN accepted. Negative branch must not merge or deploy.",
-      "classes": [
-        "com.chengyinhub.business.it.ThemeRuntimeMySqlIT"
-      ]
     }
   },
   "classes": {
@@ -1229,14 +1221,6 @@
       ],
       "gates": {},
       "note": "Four real MySQL intent/commit/concurrency contracts, actual gateway and SDK doubles, JDBC-backed domain mapper adapter. Dedicated UUID scratch only; no real payment/provider or full MyBatis four-domain acceptance."
-    },
-    "com.chengyinhub.business.it.ThemeRuntimeMySqlIT": {
-      "tests": 36,
-      "storage": [
-        "mysql"
-      ],
-      "gates": {},
-      "note": "Original34 ThemeRuntime methods plus2 negative arrival instance cases; real MyBatis/owned migrations, no provider. No Controller/JWT or concurrent replay proof."
     }
   }
 }
