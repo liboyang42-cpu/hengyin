@@ -68,7 +68,7 @@ public class RegistrationQueryApplication {
     private ISysCategoryService sysCategoryService;
 
     /** 「我参与中」(myJoined)列表:活动/主题结束满 N 天后从列表隐藏该单的窗口(天)。仅影响该列表展示,不删除数据。 */
-    static final int HIDE_AFTER_END_DAYS = 7;
+    public static final int HIDE_AFTER_END_DAYS = 7;
 
     public AjaxResult getRegistrationDetail(Long memberId, String id) {
         try {

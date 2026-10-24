@@ -1554,14 +1554,14 @@ public class ApiMerchantController extends BaseController {
     }
 
     /**
-     * 与玩家侧「我参与的」同口径:项目结束满 {@link ApiRegistrationController#HIDE_AFTER_END_DAYS}
+     * 与玩家侧「我参与的」同口径:项目结束满 {@link com.chengyinhub.web.service.registration.RegistrationQueryApplication#HIDE_AFTER_END_DAYS}
      * 天即从商家待办里隐去(只隐藏,不删数据)。
      *
      * <p>★ 窗口期直接借玩家侧那个常量,不在这里自留一份 —— 两边各写一个 7,改口径时必然只改一半。
      */
     static boolean endedOverWeek(Date endDate, Date now) {
         if (endDate == null || now == null) return false;
-        long cutoff = now.getTime() - ApiRegistrationController.HIDE_AFTER_END_DAYS * 24L * 60L * 60L * 1000L;
+        long cutoff = now.getTime() - com.chengyinhub.web.service.registration.RegistrationQueryApplication.HIDE_AFTER_END_DAYS * 24L * 60L * 60L * 1000L;
         return endDate.getTime() < cutoff;
     }
 
