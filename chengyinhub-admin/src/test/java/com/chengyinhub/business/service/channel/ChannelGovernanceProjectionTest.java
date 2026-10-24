@@ -16,9 +16,14 @@ import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.mapper.ClubMapper;
 import com.chengyinhub.business.mapper.ImConversationMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
+import com.chengyinhub.business.mapper.ImMessageMapper;
 import com.chengyinhub.business.service.impl.ImServiceImpl;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAccount4Identity;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAuthorizationGrant;
@@ -237,6 +242,83 @@ class ChannelGovernanceProjectionTest {
         assertEquals(ChannelAuthorizationException.Code.NOT_MEMBER,
                 assertThrows(ChannelAuthorizationException.class, () -> denied.authorizeFromMembership(71L)).code);
         assertNull(denied.grant());
+    }
+
+    @Test
+    void readMessagesUsesOriginalImListMessagesAndDoesNotMarkRead() {
+        ImConversationMapper conversations = mock(ImConversationMapper.class);
+        ImConversationMemberMapper members = mock(ImConversationMemberMapper.class);
+        ClubMapper clubs = mock(ClubMapper.class);
+        ImMessageMapper messageMapper = mock(ImMessageMapper.class);
+        ImServiceImpl im = new ImServiceImpl();
+        ReflectionTestUtils.setField(im, "conversationMapper", conversations);
+        ReflectionTestUtils.setField(im, "memberMapper", members);
+        ReflectionTestUtils.setField(im, "clubMapper", clubs);
+        ReflectionTestUtils.setField(im, "messageMapper", messageMapper);
+        ImConversation group = new ImConversation();
+        group.setId(12L);
+        group.setType(ImConversation.TYPE_GROUP);
+        group.setStatus(0);
+        group.setBizKey("club_42");
+        when(conversations.selectImConversationById(12L)).thenReturn(group);
+        ImConversationMember row = new ImConversationMember();
+        row.setMemberId(70L);
+        row.setDeleted(0);
+        when(members.selectByConvAndMember(12L, 70L)).thenReturn(row);
+        Club club = new Club();
+        club.setId(42L);
+        club.setMemberId(70L);
+        club.setStatus(1L);
+        club.setDelFlag(0);
+        when(clubs.selectClubById(42L)).thenReturn(club);
+        ImMessage visible = new ImMessage();
+        visible.setId(5L);
+        visible.setConversationId(12L);
+        visible.setSenderId(0L);
+        visible.setMsgType(1);
+        visible.setContent("hello");
+        when(messageMapper.selectVisiblePage(eq(12L), eq(70L), isNull(), eq(21))).thenReturn(java.util.List.of(visible));
+
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelCatalogEntry catalog = new ChannelCatalogEntry(21, 12, ConversationKind.GROUP,
+                new ChannelRulesCas(3, Integer.valueOf(4), 3));
+        ChannelGovernanceProjection waiting = new ChannelGovernanceProjection(catalog, identity,
+                new ChannelGovernanceProjection.ImServiceChannelMembership(im),
+                new ChannelGovernanceProjection.ImServiceChannelMessages(null));
+        IllegalStateException missing = assertThrows(IllegalStateException.class,
+                () -> waiting.readMessages(70L, null, 20, null));
+        assertTrue(missing.getMessage().contains(ChannelGovernanceProjection.IM_LIST_MESSAGES));
+        verify(messageMapper, never()).selectVisiblePage(eq(12L), eq(70L), isNull(), eq(21));
+
+        ChannelGovernanceProjection live = new ChannelGovernanceProjection(catalog, identity,
+                new ChannelGovernanceProjection.ImServiceChannelMembership(im),
+                new ChannelGovernanceProjection.ImServiceChannelMessages(im));
+        live.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        live.submitInviteOrApply();
+        live.assignMemberRole(ChannelRole.MEMBER);
+        long generation = live.generation();
+        java.util.Map<String, Object> page = live.readMessages(70L, null, 20, null);
+        assertNotNull(page);
+        java.util.List<?> rows = (java.util.List<?>) page.get("list");
+        assertEquals(1, rows.size());
+        assertEquals("hello", ((ImMessage) rows.get(0)).getContent());
+        assertEquals(12L, ((ImMessage) rows.get(0)).getConversationId());
+        assertEquals(5L, page.get("nextCursor"));
+        assertEquals(Boolean.FALSE, page.get("hasMore"));
+        assertEquals(ChannelGovernancePhase.MEMBER_ROLE_ASSIGNED, live.phase());
+        assertEquals(ChannelRole.MEMBER, live.role());
+        assertEquals(generation, live.generation());
+        verify(messageMapper).selectVisiblePage(eq(12L), eq(70L), isNull(), eq(21));
+
+        ChannelGovernanceProjection denied = new ChannelGovernanceProjection(catalog, identity,
+                new ChannelGovernanceProjection.ImServiceChannelMembership(im),
+                new ChannelGovernanceProjection.ImServiceChannelMessages(im));
+        denied.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        denied.submitInviteOrApply();
+        denied.assignMemberRole(ChannelRole.MEMBER);
+        assertEquals(ChannelAuthorizationException.Code.NOT_MEMBER,
+                assertThrows(ChannelAuthorizationException.class, () -> denied.readMessages(71L, null, 20, null)).code);
+        verify(messageMapper, never()).selectVisiblePage(eq(12L), eq(71L), isNull(), eq(21));
     }
 
     @Test
