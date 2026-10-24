@@ -69,11 +69,13 @@ class CoopDepositSettlementAttemptMySqlIT {
         assertEquals(createdDatabase, db.queryForObject("SELECT DATABASE()", String.class));
         Path root = Files.exists(Path.of("sql/base_schema_20260818.sql")) ? Path.of("") : Path.of("..");
         String base = Files.readString(root.resolve("sql/base_schema_20260818.sql"));
-        int start = base.indexOf("CREATE TABLE `coop_invite` (");
-        int close = base.indexOf("\n) ENGINE", start);
-        int end = base.indexOf(";\n", close);
-        assertTrue(start >= 0 && close > start && end > close);
-        db.execute(base.substring(start, end + 1));
+        for (String table : List.of("cms_topic", "coop_invite")) {
+            int start = base.indexOf("CREATE TABLE `" + table + "` (");
+            int close = base.indexOf("\n) ENGINE", start);
+            int end = base.indexOf(";\n", close);
+            assertTrue(start >= 0 && close > start && end > close);
+            db.execute(base.substring(start, end + 1));
+        }
         new ResourceDatabasePopulator(
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_coop_deposit_refund_state_20260913.sql")),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql")))
@@ -101,8 +103,10 @@ class CoopDepositSettlementAttemptMySqlIT {
     void originalIntentAndRealServices() {
         db.update("DELETE FROM wx_pay_order_intent"); // Only this invocation's owned scratch schema.
         db.update("DELETE FROM coop_invite");
-        db.update("INSERT INTO coop_invite(id,invite_type,from_type,from_id,to_type,to_id,status,deposit_status,deposit_amount,deposit_out_trade_no,del_flag) "
-                + "VALUES(89,0,'talent',7,'merchant',8,1,1,50.00,?,0)", BUSINESS);
+        db.update("DELETE FROM cms_topic");
+        db.update("INSERT INTO cms_topic(id,name,product_type,is_settlement) VALUES(11,'deposit proof window',1,0)");
+        db.update("INSERT INTO coop_invite(id,topic_id,invite_type,from_type,from_id,to_type,to_id,status,deposit_status,deposit_amount,deposit_out_trade_no,del_flag) "
+                + "VALUES(89,11,0,'talent',7,'merchant',8,1,1,50.00,?,0)", BUSINESS);
         WechatPayServiceImpl facade = WechatPayTestWiring.facade();
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
@@ -120,17 +124,31 @@ class CoopDepositSettlementAttemptMySqlIT {
         provider.setTradeType(Transaction.TradeTypeEnum.JSAPI); provider.setTradeState(Transaction.TradeStateEnum.PAYERROR);
         TransactionAmount amount = new TransactionAmount(); amount.setTotal(5000); amount.setCurrency("CNY");
         provider.setAmount(amount);
-        when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(call -> provider);
+        when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(call -> {
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(), "SDK query must hold no caller business transaction");
+            return provider;
+        });
         closesAsPaid = false;
         doAnswer(call -> {
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(), "SDK close must hold no caller business transaction");
             assertEquals(provider.getOutTradeNo(), ((com.wechat.pay.java.service.payments.jsapi.model.CloseOrderRequest) call.getArgument(0)).getOutTradeNo());
             provider.setTradeState(closesAsPaid ? Transaction.TradeStateEnum.SUCCESS : Transaction.TradeStateEnum.CLOSED);
-            if (closesAsPaid) provider.setTransactionId("WXTX89");
+            if (closesAsPaid) {
+                provider.setTransactionId("WXTX89");
+                provider.setSuccessTime("2026-10-24T00:00:00+08:00"); // Required original provider fact, never a production default.
+            }
             return null;
         }).when(sdk).closeOrder(any());
         CoopInviteServiceImpl invites = new CoopInviteServiceImpl();
         ReflectionTestUtils.setField(invites, "coopInviteMapper", mapper);
         topic = new CmsTopicServiceImpl();
+        ReflectionTestUtils.setField(topic, "transactionManager", transactions);
+        var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call -> db.queryForObject(
+                "SELECT id FROM cms_topic WHERE id=11 FOR UPDATE", (rs,n) -> {
+                    var row = new com.chengyinhub.business.domain.CmsTopic(); row.setId(rs.getLong(1)); return row;
+                }));
+        ReflectionTestUtils.setField(topic, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(topic, "wechatPayService", gateway);
         ReflectionTestUtils.setField(topic, "coopInviteService", invites);
         ReflectionTestUtils.setField(topic, "coopInviteMapper", mapper);
@@ -227,21 +245,27 @@ class CoopDepositSettlementAttemptMySqlIT {
     }
 
     @Test
-    void unpaidCasAndClosedReceiptRollBackTogetherWhileProviderRemainsClosed() {
+    void unpaidCasRollsBackButConfirmedExternalCloseSurvivesAndRetryUsesOriginalIdentity() {
         Map<String, Object> before = row();
+        CoopInvite observed = mapper.selectCoopInviteById(89L);
+        assertTrue(gateway.closePaymentAttempt(BUSINESS, BUSINESS));
+        Map<String, String> closed = gateway.queryOrderStatus(BUSINESS);
         assertThrows(IllegalStateException.class, () -> tx.execute(status -> {
-            assertTrue(invoke(mapper.selectCoopInviteByIdForUpdate(89L)));
-            throw new IllegalStateException("abort settlement");
+            assertTrue(Boolean.TRUE.equals(ReflectionTestUtils.invokeMethod(topic,
+                    "applyObservedDepositPaymentForSettlement", observed, closed)));
+            throw new IllegalStateException("abort local deposit mutation");
         }));
         assertEquals(before, row());
-        assertNull(db.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent", java.sql.Timestamp.class));
+        assertNotNull(db.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent", java.sql.Timestamp.class),
+                "External CLOSED is durable evidence, not rolled back with the local CAS");
         assertEquals(Transaction.TradeStateEnum.CLOSED, provider.getTradeState());
         assertTrue(resolve());
         assertEquals(5, mapper.selectCoopInviteById(89L).getDepositStatus());
+        assertEquals(BUSINESS, mapper.selectCoopInviteById(89L).getDepositOutTradeNo());
     }
 
     private boolean resolve() {
-        return Boolean.TRUE.equals(tx.execute(status -> invoke(mapper.selectCoopInviteByIdForUpdate(89L))));
+        return invoke(mapper.selectCoopInviteById(89L)); // Observation only; provider I/O precedes the mutation transaction.
     }
 
     private boolean invoke(CoopInvite invite) {

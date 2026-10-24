@@ -88,6 +88,7 @@ class CoopDepositRefundMybatisIntegrationTest {
         WechatPayTestWiring.setField(invites, "commercialReviewService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));WechatPayTestWiring.setField(invites,"coopInviteMapper",mapper);
         WechatPayTestWiring.setField(invites,"depositRefundService",refunds);WechatPayTestWiring.setField(invites,"wechatPayService",wx);
+        WechatPayTestWiring.setField(invites,"depositPaymentTransactions",manager);
         when(wx.queryRefundFacts("RDEP1T100")).thenReturn(Collections.singletonMap("status","NOT_FOUND"));
         when(wx.submitRefund(anyString(),anyString(),any(),any(),anyString())).thenReturn(RefundRequestResult.ACCEPTED);
     }
@@ -205,7 +206,8 @@ class CoopDepositRefundMybatisIntegrationTest {
     @Test void paymentQueryMustMatchOriginalTradeCurrencyAmountAndTransaction() {
         db.execute("UPDATE coop_invite SET deposit_status=1 WHERE id=1");
         Map<String,String> fact=new HashMap<>(); fact.put("trade_state","SUCCESS");
-        fact.put("out_trade_no","DEP1T100"); fact.put("currency","CNY"); fact.put("total","5000"); fact.put("transaction_id","wx1");
+        fact.put("out_trade_no","DEP1T100"); fact.put("currency","CNY"); fact.put("total","5000"); fact.put("transaction_id","wx1"); fact.put("wx_out_trade_no","DEP1T100");
+        when(wx.lockPaymentAttemptForUpdate("DEP1T100","DEP1T100")).thenReturn(true);
         for (String field:Arrays.asList("out_trade_no","currency","total","transaction_id")) {
             Map<String,String> invalid=new HashMap<>(fact); invalid.put(field,field.equals("total")?"1":field.equals("transaction_id")?"":"OTHER");
             when(wx.queryOrderStatus("DEP1T100")).thenReturn(invalid);

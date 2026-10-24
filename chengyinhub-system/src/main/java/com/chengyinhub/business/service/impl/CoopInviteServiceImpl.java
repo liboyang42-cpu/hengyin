@@ -75,6 +75,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
 
     @Autowired private CoopDepositRefundService depositRefundService;
     @Autowired private WechatPaymentIntentStore paymentIntentStore;
+    @Autowired private org.springframework.transaction.PlatformTransactionManager depositPaymentTransactions;
     @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
     private com.chengyinhub.business.service.WechatPaymentOperations wechatPayService;
 
@@ -1546,13 +1547,37 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public boolean markDepositPaid(String outTradeNo) {
-        Map<String,String> facts = wechatPayService.queryOrderStatus(outTradeNo);
-        if (facts == null || outTradeNo == null || !outTradeNo.equals(facts.get("out_trade_no"))
+        // Reject rather than suspend an outer transaction that could still own the original business lock.
+        if (TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("保证金渠道查询必须在业务事务与行锁之外执行");
+        if (outTradeNo == null || outTradeNo.isBlank()) return false;
+        CoopInvite observed = coopInviteMapper.selectByDepositOutTradeNo(outTradeNo);
+        if (observed == null) return false;
+        Map<String,String> queried = wechatPayService.queryOrderStatus(outTradeNo);
+        Map<String,String> facts = queried == null ? null : new HashMap<>(queried);
+        if (facts == null || !outTradeNo.equals(facts.get("out_trade_no"))
                 || !"CNY".equals(facts.get("currency")) || !"SUCCESS".equals(facts.get("trade_state"))) return false;
-        try { return markDepositPaid(outTradeNo, Long.valueOf(facts.get("total")), facts.get("transaction_id")); }
-        catch (NumberFormatException e) { return false; }
+        Long paidCents;
+        try { paidCents = Long.valueOf(facts.get("total")); }
+        catch (RuntimeException invalid) { return false; }
+        String attempt = facts.get("wx_out_trade_no");
+        if (attempt == null || attempt.isBlank()) return false;
+        var mutation = new org.springframework.transaction.support.TransactionTemplate(depositPaymentTransactions);
+        mutation.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return Boolean.TRUE.equals(mutation.execute(status -> {
+            if (observed.getTopicId() != null) {
+                CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(observed.getTopicId());
+                if (topic == null || !observed.getTopicId().equals(topic.getId())) return false;
+            }
+            CoopInvite current = coopInviteMapper.selectCoopInviteByIdForUpdate(observed.getId());
+            if (current == null || !java.util.Objects.equals(observed.getTopicId(), current.getTopicId())
+                    || !outTradeNo.equals(current.getDepositOutTradeNo()) || current.getDepositAmount() == null
+                    || observed.getDepositAmount() == null || observed.getDepositAmount().compareTo(current.getDepositAmount()) != 0
+                    || !wechatPayService.lockPaymentAttemptForUpdate(outTradeNo, attempt)) return false;
+            return markDepositPaid(outTradeNo, paidCents, facts.get("transaction_id"));
+        }));
     }
 
     @Override

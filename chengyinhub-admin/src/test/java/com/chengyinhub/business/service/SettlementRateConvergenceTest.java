@@ -529,6 +529,7 @@ class SettlementRateConvergenceTest {
         ReflectionTestUtils.setField(topicSvc, "settlementRuleService", topicRuleService);
         ReflectionTestUtils.setField(topicSvc, "pointsAwardService", pointsAwardService);
         // 无销售收口也要登记该主题的保证金退款意图(d7593ff37),本类不测保证金
+        ReflectionTestUtils.setField(topicSvc, "coopInviteMapper", mock(com.chengyinhub.business.mapper.CoopInviteMapper.class));
         ReflectionTestUtils.setField(topicSvc, "coopInviteService", mock(ICoopInviteService.class));
         // A3-7:主题结算改「每主题独立事务 + CAS 原子领取」——注入 txm,并让领取默认成功(1),
         // 否则 settleTopic 入口即因抢不到而跳过、settledCount 恒 0。

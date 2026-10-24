@@ -1,0 +1,6 @@
+git diff --check: PASS
+Production changes restricted to approved deposit symbols plus one required local transaction manager: PASS
+Current topic -> invite -> attempt -> CAS order, no query/close in local mutation body: source PASS
+No SDK / B / A / ledger / CI / schema file changes: PASS
+Limited added-patch secret pattern check: PASS (not gitleaks)
+Java/MySQL/provider/CI: NOT_RUN
