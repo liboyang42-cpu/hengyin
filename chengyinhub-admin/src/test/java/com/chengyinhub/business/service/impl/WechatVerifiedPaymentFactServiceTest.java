@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 class WechatVerifiedPaymentFactServiceTest {
     private final WechatVerifiedFactTestSupport.MemoryMapper rows = new WechatVerifiedFactTestSupport.MemoryMapper();
     private final WechatVerifiedPaymentFactService service = new WechatVerifiedPaymentFactService();
-    WechatVerifiedPaymentFactServiceTest() { ReflectionTestUtils.setField(service,"mapper",rows); }
+    WechatVerifiedPaymentFactServiceTest() { ReflectionTestUtils.setField(service,"mapper",rows); WechatVerifiedFactTestSupport.wireUnitReads(service); }
 
     @Test void duplicateSuccessRetainsOriginalIdentityAndAllEconomicFacts() {
         var fact=payment("TX1","REG1",1000); var first=service.recordVerified(fact);
@@ -69,12 +69,14 @@ class WechatVerifiedPaymentFactServiceTest {
     @Test void factBindingIsPermanentAndLegacyUnboundReceiptCannotBeUpgraded() {
         var first=service.recordVerified(payment("TX1","REG1",1000));
         var other=service.recordVerified(payment("TX2","REG2",1000));
-        service.bindNewInbox(7,"hash",first,true);
-        service.bindNewInbox(7,"hash",first,false);
-        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.bindNewInbox(7,"hash",other,false));
-        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.bindNewInbox(9,"legacy",first,false));
-        assertTrue(service.hasInboxLink(7,"hash",first)); assertFalse(service.hasInboxLink(7,"hash",other));
-        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.bindNewInbox(8,"different-notify",first,true));
+        service.bindNewInbox(7,"a".repeat(64),first,true);
+        service.bindNewInbox(7,"a".repeat(64),first,false);
+        service.bindNewInbox(7,"A".repeat(64),first,false);
+        assertTrue(service.hasInboxLink(7,"A".repeat(64),first));
+        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.bindNewInbox(7,"a".repeat(64),other,false));
+        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.bindNewInbox(9,"b".repeat(64),first,false));
+        assertTrue(service.hasInboxLink(7,"a".repeat(64),first)); assertFalse(service.hasInboxLink(7,"a".repeat(64),other));
+        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.bindNewInbox(8,"c".repeat(64),first,true));
         assertEquals(1,rows.links.size());
     }
     @Test void inboxChecksTheImmutableReferenceBeforeARepeatedDoneAckOrMutation() {

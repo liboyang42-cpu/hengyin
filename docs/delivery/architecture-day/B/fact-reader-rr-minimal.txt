@@ -1,0 +1,18 @@
+最小解阻片：parent de7f432ec6f0c1c6225168ecf2e4808210de42e0。
+分支 codex/architecture-day-b-fact-reader-rr；工作树 /workspace/b-fact-reader-rr。
+只含reader/sidecar及必要测试接线；支付通知恢复/新预下单与关单guard留在原0415工作树，不混入本片。
+SDK孤块删除和完整matchesRefundNotification已在parent，本片SDK/facade文件逐字节保留parent，不覆盖root修复。
+
+requireVerified签名/immutable hash/provenance校验保留；内部TransactionTemplate统一readOnly REQUIRES_NEW，
+覆盖bind/hasInboxLink/audit self-invocation，避免仅注解被自调绕过；不新增业务锁，不改变调用者RR view。
+sidecar当前读用FOR SHARE，仍在调用者事务内以看见自己的未提交插入；查询IN(LOWER,UPPER)保留索引，
+写入canonical lower64hex，同字节编码幂等。原inbox BINARY32仍由其mapper UNHEX入参查找，不做binary=text join。
+processVerified不从旧RR普通读取新inbox，也不在独立claim前锁inbox；preflight校验link，
+原claim/owned锁定位实际行，原mutation+DONE事务内继续复核inbox ID和事实链接。
+
+原3项真实报名MySQL场景不删；只新增1项：registration旧RR普通读→事务外受控SDK查询及独立事实提交→
+旧view仍COUNT=0但reader首次核验成功→独立verified inbox/link登记→原领域锁内真实业务+DONE提交。
+同时模拟sidecar大写hex并验证UNHEX join及同fact/inbox身份。真实原mapper/schema/原业务/proxy，非H2/直通inbox。
+单元fake仅补只读新事务管理器接线，不冒充MySQL。所有原成功/失败断言保留。
+Java/JUnit/MySQL/Redis/CI/DDL/真实微信全部NOT_RUN；root统一同SHA编译及受控实库验证。
+无新增依赖/迁移/CI/registry，无A/G领域正文修改。剩余是root实际验证及独立恢复片收口。

@@ -16,9 +16,24 @@ public final class WechatVerifiedFactTestSupport {
     static void installUnitFacts(WechatPaymentSdkGateway gateway) {
         WechatVerifiedPaymentFactService facts=new WechatVerifiedPaymentFactService();
         ReflectionTestUtils.setField(facts,"mapper",new MemoryMapper());
+        wireUnitReads(facts);
         ReflectionTestUtils.setField(gateway,"verifiedFacts",facts);
     }
-    public static void setField(Object target,String name,Object value) { WechatPayTestWiring.setField(target,name,value); }
+    public static void setField(Object target,String name,Object value) {
+        WechatPayTestWiring.setField(target,name,value);
+        if (target instanceof WechatVerifiedPaymentFactService service && "mapper".equals(name)) wireUnitReads(service);
+    }
+    public static void wireUnitReads(WechatVerifiedPaymentFactService service) {
+        ReflectionTestUtils.setField(service,"factReadTransactions",new org.springframework.transaction.PlatformTransactionManager() {
+            public org.springframework.transaction.TransactionStatus getTransaction(org.springframework.transaction.TransactionDefinition definition) {
+                org.junit.jupiter.api.Assertions.assertEquals(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW,definition.getPropagationBehavior());
+                org.junit.jupiter.api.Assertions.assertTrue(definition.isReadOnly());
+                return new org.springframework.transaction.support.SimpleTransactionStatus();
+            }
+            public void commit(org.springframework.transaction.TransactionStatus status) { }
+            public void rollback(org.springframework.transaction.TransactionStatus status) { }
+        });
+    }
     public static Object getField(Object target,String name) { return WechatPayTestWiring.getField(target,name); }
     public static <T> T invokeMethod(Object target,String name,Object... args) { return WechatPayTestWiring.invokeMethod(target,name,args); }
     static void refreshSdkBinding(WechatPaymentSdkGateway gateway) {
@@ -45,9 +60,11 @@ public final class WechatVerifiedFactTestSupport {
             var sql = new org.mybatis.spring.SqlSessionTemplate(factory.getObject());
             WechatVerifiedPaymentFactService target = new WechatVerifiedPaymentFactService();
             ReflectionTestUtils.setField(target,"mapper",sql.getMapper(WechatVerifiedPaymentFactMapper.class));
+            var manager=new org.springframework.jdbc.datasource.DataSourceTransactionManager(source);
+            ReflectionTestUtils.setField(target,"factReadTransactions",manager);
             var proxy = new org.springframework.aop.framework.ProxyFactory(target); proxy.setProxyTargetClass(true);
             proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
-                    new org.springframework.jdbc.datasource.DataSourceTransactionManager(source),
+                    manager,
                     new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
             return (WechatVerifiedPaymentFactService)proxy.getProxy();
         } catch (Exception failure) { throw new AssertionError(failure); }
@@ -77,6 +94,10 @@ public final class WechatVerifiedFactTestSupport {
                     || old.get("fact_id").equals(r.get("fact_id")))) return 0;
             return links.putIfAbsent((String)r.get("notify_hash"),new HashMap<>(r))==null?1:0;
         }
-        public synchronized Map<String,Object> selectInboxLink(String hash) { var r=links.get(hash);return r==null?null:new HashMap<>(r); }
+        public synchronized Map<String,Object> selectInboxLink(String hash) {
+            var lower=links.get(hash.toLowerCase(java.util.Locale.ROOT));var upper=links.get(hash.toUpperCase(java.util.Locale.ROOT));
+            if(lower!=null && upper!=null && lower!=upper) throw new IllegalStateException("Ambiguous hash encoding");
+            var row=lower!=null?lower:upper;return row==null?null:new HashMap<>(row);
+        }
     }
 }

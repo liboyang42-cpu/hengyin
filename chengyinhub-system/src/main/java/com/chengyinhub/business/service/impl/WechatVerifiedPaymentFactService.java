@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class WechatVerifiedPaymentFactService {
     @Autowired private WechatVerifiedPaymentFactMapper mapper;
+    @Autowired private org.springframework.transaction.PlatformTransactionManager factReadTransactions;
     public record Stored(Reference reference, WechatVerifiedPaymentFact facts) { }
     public static class ConflictException extends IllegalStateException {
         public ConflictException() { super("Verified payment fact identity conflict; evidence retained"); }
@@ -38,17 +39,28 @@ public class WechatVerifiedPaymentFactService {
     }
 
     public Stored requireVerified(Reference reference) {
-        if (reference == null) throw new IllegalArgumentException("Verified fact reference required");
-        Map<String,Object> row = mapper.selectById(reference.id());
-        if (row == null) throw new IllegalStateException("Verified payment fact missing");
-        Stored stored = checked(row);
-        if (!stored.reference().equals(reference)) throw new ConflictException();
-        return stored;
+        if (reference==null) throw new IllegalArgumentException("Verified fact reference required");
+        return readFresh(() -> {
+            Map<String,Object> row=mapper.selectById(reference.id());
+            if (row==null) throw new IllegalStateException("Verified payment fact missing");
+            Stored stored=checked(row);
+            if (!stored.reference().equals(reference)) throw new ConflictException();
+            return stored;
+        });
+    }
+
+    /** Programmatic boundary also covers self-invocation from binding/audit paths; no business lock is acquired. */
+    private <T> T readFresh(java.util.function.Supplier<T> read) {
+        var transaction=new org.springframework.transaction.support.TransactionTemplate(factReadTransactions);
+        transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        transaction.setReadOnly(true);
+        return transaction.execute(status -> read.get());
     }
 
     /** Caller has already locked its inbox row. Linking never upgrades an old unbound receipt. */
     public void bindNewInbox(long inboxId, String notifyHash, Reference reference, boolean newInbox) {
-        Stored candidate = requireVerified(reference);
+        notifyHash=canonicalNotifyHash(notifyHash);
+        requireVerified(reference);
         Map<String,Object> old = mapper.selectInboxLink(notifyHash);
         if (old == null && !newInbox) throw new ConflictException();
         if (old == null) {
@@ -62,13 +74,22 @@ public class WechatVerifiedPaymentFactService {
     }
 
     public boolean hasInboxLink(long inboxId, String notifyHash, Reference reference) {
+        notifyHash=canonicalNotifyHash(notifyHash);
         requireVerified(reference);
         return matchesLink(mapper.selectInboxLink(notifyHash),inboxId,reference);
+    }
+
+    public boolean hasInboxLinkForNotify(String notifyHash,Reference reference) {
+        notifyHash=canonicalNotifyHash(notifyHash);
+        requireVerified(reference);
+        var row=mapper.selectInboxLink(notifyHash);
+        return row!=null && number(row,"inbox_id")>0 && matchesLink(row,number(row,"inbox_id"),reference);
     }
 
     /** Separate transaction preserves rejected binding evidence even when caller's business transaction rolls back. */
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     public void recordRejectedBinding(String notifyHash, Reference candidate, Long originalFactId) {
+        notifyHash=canonicalNotifyHash(notifyHash);
         reject(requireVerified(candidate).facts(), originalFactId, notifyHash, "INBOX_BINDING");
     }
 
@@ -111,6 +132,11 @@ public class WechatVerifiedPaymentFactService {
         catch (java.time.format.DateTimeParseException notTimestamp) {
             return "sha256:"+WechatVerifiedPaymentFact.sha256(raw);
         }
+    }
+
+    private static String canonicalNotifyHash(String value) {
+        if (value==null || !value.matches("[A-Fa-f0-9]{64}")) throw new IllegalArgumentException("Invalid inbox SHA-256 encoding");
+        return value.toLowerCase(java.util.Locale.ROOT);
     }
 
     private boolean matchesLink(Map<String,Object> row, long inboxId, Reference reference) {
