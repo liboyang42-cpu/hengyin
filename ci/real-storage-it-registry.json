@@ -367,7 +367,7 @@
     },
     "architecture-day-topic-copy": {
       "lineage": "ad7 real legacy owner baseline evidence only, no production delta",
-      "registered_source": "ad7e59fbf6a20e85e741318afe654c5411bf1101",
+      "registered_source": "b4a5509cc396f1fc2c4e8b0613c3fee787c6393a",
       "classes": [
         "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT"
       ],
