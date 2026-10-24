@@ -136,6 +136,33 @@ class TeamClubEligibilityAuthorityTest {
                 List.of(OWNER_A, MEMBER_A), List.of(CLUB_A), "c04-reg-never"));
     }
 
+    @Test
+    void unusedIneligibleRegisterDoesNotOccupyThenUniqueRegisterApplies() {
+        CmsTopic course = PublishedRuleSelectorTest.publishedCity(7L, 9L);
+        when(clubMemberService.selectByClubAndMember(CLUB_A, 777L)).thenReturn(null);
+        assertEquals(OrienteeringEventException.TEAM_INELIGIBLE,
+                assertThrows(OrienteeringEventException.class, () -> authority.register(course,
+                        TeamClubEligibilityAuthority.EntryMode.TEAM, List.of(OWNER_A, 777L),
+                        List.of(CLUB_A), "c04-reg-inelig")).getErrorCode());
+        TeamClubEligibilityAuthority.OriginalReceipt unused = authority.recoverOriginal("c04-reg-inelig");
+        assertEquals("c04-reg-inelig", unused.originalRequestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_NOT_FOUND, unused.outcome);
+        assertEquals(false, unused.mintedNewRequest);
+        assertNull(unused.registration);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> authority.readback("c04-reg-inelig"))
+                        .getErrorCode());
+        TeamClubEligibilityAuthority.Registration first = authority.register(course,
+                TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(OWNER_A, MEMBER_A), List.of(CLUB_A), "c04-reg-inelig");
+        assertEquals("c04-reg-inelig", first.requestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_REGISTERED,
+                authority.recoverOriginal("c04-reg-inelig").outcome);
+        assertSame(first, authority.readback("c04-reg-inelig"));
+        assertSame(first, authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(OWNER_A, MEMBER_A), List.of(CLUB_A), "c04-reg-inelig"));
+    }
+
     static Club club(long id, long ownerId) {
         Club club = new Club();
         club.setId(id);

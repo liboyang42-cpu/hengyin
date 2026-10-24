@@ -89,4 +89,24 @@ class EventResultDisputeTest {
         assertSame(first, disputes.recoverOriginal("c04-dsp-never").dispute);
         assertSame(first, disputes.open("fin-disp-01", "原争议键首次写入", "c04-dsp-never"));
     }
+
+    @Test
+    void unusedRestoreOfMissingDisputeDoesNotOccupyThenUniqueRestoreApplies() {
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class,
+                        () -> disputes.restoreOriginalReward("c04-dsp-missing", "c04-rst-never"))
+                        .getErrorCode());
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> disputes.readRestore("c04-rst-never"))
+                        .getErrorCode());
+        EventResultDispute.Dispute opened = disputes.open("fin-disp-01", "原恢复键首次写入", "c04-dsp-rstx");
+        assertEquals(EventResultDispute.STATUS_PENDING, opened.status());
+        EventResultDispute.RestoreReceipt first = disputes.restoreOriginalReward("c04-dsp-rstx", "c04-rst-never");
+        assertEquals("c04-rst-never", first.requestId);
+        assertEquals("fin-disp-01", first.originalResultRequestId);
+        assertEquals(original.originalRewardCenti, first.restoredRewardCenti);
+        assertSame(first, disputes.readRestore("c04-rst-never"));
+        assertSame(first, disputes.restoreOriginalReward("c04-dsp-rstx", "c04-rst-never"));
+        assertEquals(EventResultDispute.STATUS_RESTORED, disputes.readback("c04-dsp-rstx").status());
+    }
 }

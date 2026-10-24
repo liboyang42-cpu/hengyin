@@ -170,4 +170,42 @@ class EventScoreVersioningTest {
         assertEquals(OrienteeringEventException.NOT_FOUND,
                 assertThrows(OrienteeringEventException.class, () -> scores.readback("c04-sta-never")).getErrorCode());
     }
+
+    @Test
+    void unusedPendingFinishDoesNotOccupyThenUniqueFinishApplies() {
+        EventScoreVersioning.EventRun pending = scores.start(registration, frozen, safety, 7L, "c04-sta-pend");
+        scores.markOutcome(pending.id, EventScoreVersioning.OUTCOME_PENDING, "c04-mark-pend");
+        assertEquals(OrienteeringEventException.PENDING_REVIEW,
+                assertThrows(OrienteeringEventException.class, () -> scores.finish(pending.id, "c04-fin-pend"))
+                        .getErrorCode());
+        EventScoreVersioning.OriginalReceipt unused = scores.recoverOriginal("c04-fin-pend");
+        assertEquals("c04-fin-pend", unused.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, unused.outcome);
+        assertEquals(false, unused.mintedNewRequest);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback("c04-fin-pend")).getErrorCode());
+        scores.markOutcome(pending.id, EventScoreVersioning.OUTCOME_RUNNING, "c04-mark-runx");
+        scores.appendScore(pending.id, 4000, "TASK", "TASK_DONE", "c04-scr-pend");
+        ResultVersion first = scores.finish(pending.id, "c04-fin-pend");
+        assertEquals("c04-fin-pend", first.requestId);
+        assertEquals(EventScoreVersioning.OUTCOME_FINISHED, first.outcome);
+        assertSame(first, scores.readback("c04-fin-pend"));
+        assertSame(first, scores.finish(pending.id, "c04-fin-pend"));
+    }
+
+    @Test
+    void unusedGpsEvidenceDoesNotOccupyThenUniqueScanApplies() {
+        EventScoreVersioning.EventRun run = scores.start(registration, frozen, safety, 7L, "c04-sta-gpsx");
+        assertEquals(OrienteeringEventException.GPS_FORBIDDEN,
+                assertThrows(OrienteeringEventException.class,
+                        () -> scores.recordEvidence(run.id, 31L, "GPS", "lat=31.2,lng=121.4", "c04-evd-gpsx"))
+                        .getErrorCode());
+        assertEquals(0, scores.requireRun(run.id).evidence().size(), "GPS 观察不得占证据账");
+        EventScoreVersioning.EventRun first = scores.recordEvidence(run.id, 31L, "SCAN",
+                "task:31:scan:alpha", "c04-evd-gpsx");
+        assertEquals(1, first.evidence().size());
+        assertEquals("c04-evd-gpsx", first.evidence().get(0).requestId);
+        assertEquals("SCAN", first.evidence().get(0).kind);
+        assertSame(first, scores.recordEvidence(run.id, 31L, "SCAN", "task:31:scan:alpha", "c04-evd-gpsx"));
+    }
 }
