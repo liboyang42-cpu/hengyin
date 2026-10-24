@@ -51,7 +51,7 @@ class RefundVerifiedFactsTest {
         parser = mock(NotificationParser.class);
         sdk = mock(RefundService.class);
         refund = new RefundApplication();
-        refund.setId(7L);
+        refund.setId(7L); refund.setStatus(1);
         refund.setRefundNo("RF11");
         refund.setSourceType("registration");
         refund.setSourceId(11L);
@@ -61,11 +61,15 @@ class RefundVerifiedFactsTest {
         refund.setPayoutStatus(RefundApplication.PAYOUT_PROCESSING);
         registration = new CmsRegistration();
         registration.setId(11L);
-        registration.setRegistrationNo("REG11");
+        registration.setRegistrationNo("REG11"); registration.setTransactionId("TX-original");
+        registration.setOwnerType(1L); registration.setOwnerId(7L); registration.setMemberId(91L);
+        registration.setPaymentStatus(4); registration.setRegistrationStatus(3);
         registration.setWechatPaymentAmount(new BigDecimal("30.00"));
         when(refunds.selectByRefundNo("RF11")).thenReturn(refund);
         when(refunds.updatePayoutResult(eq(7L), any(), any())).thenReturn(1);
         when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
+        when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(registration);
+        when(refunds.selectRegistrationHistoryForUpdate(11L)).thenAnswer(call -> java.util.List.of(refund));
         business = new RefundServiceImpl();
         WechatVerifiedFactTestSupport.setField(business, "refundApplicationMapper", refunds);
         WechatVerifiedFactTestSupport.setField(business, "cmsRegistrationMapper", registrations);
@@ -91,6 +95,17 @@ class RefundVerifiedFactsTest {
         when(paymentSdk.queryOrderByOutTradeNo(any())).thenReturn(original);
         WechatVerifiedFactTestSupport.setField(wechat,"jsapiService",paymentSdk);
         WechatVerifiedFactTestSupport.setField(wechat, "alarmService", mock(AlarmService.class));
+        var reader = (WechatVerifiedPaymentFactService) WechatVerifiedFactTestSupport.getField(wechat, "verifiedFacts");
+        WechatVerifiedFactTestSupport.setField(business, "verifiedPaymentFacts", reader);
+        inbox = com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough(null, reader);
+        WechatVerifiedFactTestSupport.setField(business, "wxPaymentCallbackInboxService", inbox);
+        var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        var topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(7L); topic.setMemberId(3L);
+        when(topics.selectCmsTopicByIdForUpdate(7L)).thenReturn(topic);
+        WechatVerifiedFactTestSupport.setField(business, "cmsTopicMapper", topics);
+        var originalOwner = mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class);
+        when(originalOwner.hasFrozenOriginalRefundComponents(anyLong())).thenReturn(false);
+        WechatVerifiedFactTestSupport.setField(business, "coopSettlementClaimService", originalOwner);
     }
 
     @Test void verifiedCallbackWrongRefundAmountIsRejectedBeforeAnyBusinessWrite() {
@@ -179,6 +194,7 @@ class RefundVerifiedFactsTest {
         assertTrue(callback(facts("SUCCESS")).contains("SUCCESS"));
         assertEquals("SUCCESS", query(facts("SUCCESS")));
         verify(inbox, times(2)).register("REFUND:RF11:SUCCESS", 2, 7L, "SUCCESS");
+        verify(inbox, times(2)).registerVerified(eq("REFUND:RF11:SUCCESS"), eq(2), eq(7L), eq("SUCCESS"), any());
         verify(refunds, times(2)).updatePayoutResult(eq(7L), eq(RefundApplication.PAYOUT_SUCCESS), anyString());
         verify(notifications, times(2)).notifyRefund(eq(91L), eq("报名退款"), eq("12.50"));
     }
@@ -257,7 +273,8 @@ class RefundVerifiedFactsTest {
         when(result.getOutRefundNo()).thenReturn(facts.get("outRefundNo"));
         when(result.getOutTradeNo()).thenReturn(facts.get("outTradeNo"));
         when(result.getStatus()).thenReturn(Status.valueOf(facts.get("status")));
-        when(result.getAmount()).thenReturn(amount(facts));
+        Amount refundAmount = amount(facts);
+        when(result.getAmount()).thenReturn(refundAmount);
         when(result.getRefundId()).thenReturn("WX-"+facts.get("outRefundNo"));
         when(result.getTransactionId()).thenReturn("TX-original");
         when(result.getSuccessTime()).thenReturn(WechatVerifiedFactTestSupport.SUCCESS_TIME);

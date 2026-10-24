@@ -1,0 +1,26 @@
+[
+  {
+    "file": "citynode-redemption-application-source.test.js",
+    "exit": 0,
+    "tests": 5,
+    "pass": 5,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "registration-ticket-application-source.test.js",
+    "exit": 0,
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "citynode-redeem-original-request.test.js",
+    "exit": 0,
+    "tests": 4,
+    "pass": 4,
+    "fail": 0,
+    "skipped": 0
+  }
+]

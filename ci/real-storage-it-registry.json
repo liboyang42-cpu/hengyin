@@ -418,12 +418,12 @@
       "note": "G961 precise original payment-attempt closure and transaction fence; eight ordinary Test cases, exact hosted scratch admission and zero-skip XML/CLEAN required."
     },
     "architecture-day-payment-inbox": {
-      "registered_source": "f6f382500ff1a1dfd6fad120b3895f70ae563278",
+      "registered_source": "420df2a7a8b385a308923fe5f332324dd4f5f973",
       "lineage": "B original registration/inbox/mutation transaction and signed SDK parser fixture",
       "classes": [
         "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT"
       ],
-      "note": "4 ordinary @Test; original schema/XML and business/inbox transactions, controlled SDK query, fresh verified reader and outer RR success path. Failure release self-lock is a known pending B follow-up, not accepted. Exact zero-skip XML and independent CLEAN required; no real WeChat/HTTP acceptance."
+      "note": "Eight ordinary @Test: original mutation/DONE, RR fresh-reader success and four actual business outer false/exception/rollback/commit release paths. Original owner/fence, no independent release before completion. Source only; exact zero-skip XML and independent CLEAN required; no real WeChat/HTTP acceptance."
     },
     "architecture-day-verified-payment-facts": {
       "registered_source": "041534c7681e480f80eb8afc911f65bf1ed13eda",
@@ -456,6 +456,13 @@
         "com.chengyinhub.business.service.impl.CoopComplaintCommittedNoticeMySqlIT"
       ],
       "note": "Eleven fixed real MySQL actual complaint advance/close producer, original financial/IM mappers and transaction tests. External WX, cooldown/debt policy and controller security are controlled boundaries. Reporter close notice still legacy in-memory; full HTTP/provider/process-kill acceptance separate. Task paused; exact source XML, zero skips and independent CLEAN required."
+    },
+    "architecture-day-complaint-notice-rejection": {
+      "registered_source": "bc5b6d9115f2c8a24b1d0efaf29cc2f9463355c7",
+      "classes": [
+        "com.chengyinhub.business.service.impl.ComplaintCloseReporterNoticeMySqlIT"
+      ],
+      "note": "Six fixed actual complaint close/rejection MySQL cases, original caller/financial/audit Mapper and transactions. Alarm, WX, debt and cooldown controlled. Audit Mapper write/read failure injection not yet covered; full schema/provider/HTTP acceptance separate. Exact source XML zero skips and independent CLEAN required."
     },
     "architecture-day-registration-topic-fence": {
       "registered_source": "e6dc689acd16f8354096fa6017cec85b36171c4e",
@@ -1339,11 +1346,19 @@
       "gates": {},
       "note": "Actual complaint producer same-transaction durable advance and respondent-close intents. Original fixture scratch setup, financial mappers and separate committed notice owner. Live provider and reporter-close durability excluded."
     },
+    "com.chengyinhub.business.service.impl.ComplaintCloseReporterNoticeMySqlIT": {
+      "tests": 6,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Actual close-caller durable invalid-recipient audit, original transaction and frozen immutable submission identity. No new table; external alarms best-effort, not exactly-once. Runtime NOT_RUN."
+    },
     "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT": {
-      "tests": 4,
+      "tests": 8,
       "storage": ["mysql"],
       "gates": {},
-      "note": "Reviewed class-only GitHub-hosted scratch DDL admission; actual business and DONE SQL rollback/commit, sequential duplicate, old-W1 fence and outer RR success read. Failure release path pending repair. Original after-commit notice is an explicit scheduler double."
+      "note": "Eight source cases: original business/DONE atomicity, replay/fence, fresh RR read and outer false/exception/rollback/commit release. New afterCompletion release source repair awaits real MySQL acceptance. Original after-commit notice is an explicit scheduler double."
     },
     "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT": {
       "tests": 4,

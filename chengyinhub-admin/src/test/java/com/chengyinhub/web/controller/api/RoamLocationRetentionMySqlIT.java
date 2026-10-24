@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
+
 import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.business.mapper.RoamShareSnapshotMapper;
 import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
@@ -350,7 +352,6 @@ class RoamLocationRetentionMySqlIT {
         ApiVerifyController target=new ApiVerifyController(){@Override public Long getAppUserId(){return 1001L;}};
         org.springframework.test.util.ReflectionTestUtils.setField(target,"roamMapper",mapper);
         org.springframework.test.util.ReflectionTestUtils.setField(target,"dynSecret","retention-transaction-test-only");
-        org.springframework.test.util.ReflectionTestUtils.setField(target,"couponHistoryService",couponProxy.getProxy());
         com.chengyinhub.business.access.merchant.IMerchantAccessService access=org.mockito.Mockito.mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
         org.mockito.Mockito.when(access.require(1001L,com.chengyinhub.business.access.merchant.MerchantPermission.VERIFY)).thenReturn(new com.chengyinhub.business.access.merchant.MerchantAccessContext(1001L,11L,1001L,com.chengyinhub.business.access.merchant.MerchantRoleCode.MERCHANT_CHECKIN));
         org.springframework.test.util.ReflectionTestUtils.setField(target,"merchantAccessService",access);
@@ -361,10 +362,12 @@ class RoamLocationRetentionMySqlIT {
             if(failAudit)db.update("insert into ums_member(id) values(9)"); // after actual audit insertion, rollback every earlier SQL effect
             return result;
         });
-        org.springframework.test.util.ReflectionTestUtils.setField(target,"businessAuditEventMapper",audit);
-        ProxyFactory proxy=new ProxyFactory(target);proxy.setProxyTargetClass(true);
+        CityNodeRedemptionApplication application=new CityNodeRedemptionApplication(access,mapper,
+                (com.chengyinhub.business.service.ISmsCouponHistoryService)couponProxy.getProxy(),audit,"retention-transaction-test-only");
+        ProxyFactory proxy=new ProxyFactory(application);proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source),new AnnotationTransactionAttributeSource()));
-        return (ApiVerifyController)proxy.getProxy();
+        org.springframework.test.util.ReflectionTestUtils.setField(target,"cityNodeRedemptionApplication",(CityNodeRedemptionApplication)proxy.getProxy());
+        return target;
     }
     @Test void actualCityRedeemAuditFailureRollsBackStatusStockHistoryAndAuditThenRetry() {
         db.update("insert into sms_coupon(id,name,publish_count,receive_count,status,del_flag) values(22,'actual transaction coupon',1,0,1,0)");

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.RegistrationTicketApplication;
+
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.RegistrationSeat;
 import com.chengyinhub.business.service.*;
@@ -28,6 +30,8 @@ class RegistrationSeatEndpointTest {
     private CmsRegistration order;
     private com.chengyinhub.business.domain.CmsActivity activity;
     private ICmsActivityService activities;
+    private IPerkLedgerService perkLedger;
+    private QrcodeServiceImpl qrcode;
     private IPointsAwardService points;
     private IGrowthService growth;
     private com.chengyinhub.business.access.merchant.IMerchantAccessService merchants;
@@ -35,15 +39,12 @@ class RegistrationSeatEndpointTest {
         issuer = spy(new ApiVerifyController()); doReturn(51L).when(issuer).getAppUserId();
         scanner = spy(new ApiRegistrationController()); doReturn(81L).when(scanner).getAppUserId();
         seats = mock(RegistrationSeatService.class); orders = mock(ICmsRegistrationService.class);
-        ReflectionTestUtils.setField(issuer, "registrationService", orders);
-        ReflectionTestUtils.setField(issuer, "registrationSeatService", seats);
-        ReflectionTestUtils.setField(issuer, "perkLedgerService", mock(IPerkLedgerService.class));
-        ReflectionTestUtils.setField(issuer, "qrcodeService", mock(QrcodeServiceImpl.class));
-        ReflectionTestUtils.setField(issuer, "dynSecret", SECRET);
+        perkLedger = mock(IPerkLedgerService.class); qrcode = mock(QrcodeServiceImpl.class);
         ReflectionTestUtils.setField(scanner, "registrationSeatService", seats);
         ReflectionTestUtils.setField(scanner, "registrationService", orders);
         ReflectionTestUtils.setField(scanner, "dynSecret", SECRET);
         activities = mock(ICmsActivityService.class);
+        wireIssuer(activities);
         activity = new com.chengyinhub.business.domain.CmsActivity(); activity.setId(61L); activity.setTopicId(41L); activity.setMemberId(81L);
         when(activities.selectCmsActivityById(61L)).thenReturn(activity);
         ReflectionTestUtils.setField(scanner, "cmsActivityService", activities);
@@ -58,6 +59,10 @@ class RegistrationSeatEndpointTest {
         when(orders.selectCmsRegistrationById(31L)).thenReturn(order);
         RegistrationSeat seat = new RegistrationSeat(); seat.setId(102L); seat.setRegistrationId(31L); seat.setSeatNo(2); seat.setStatus(0);
         when(seats.prepareOwnedSeat(31L, 51L, 2)).thenReturn(seat);
+    }
+    private void wireIssuer(ICmsActivityService activityOwner) {
+        ReflectionTestUtils.setField(issuer, "registrationTicketApplication", new RegistrationTicketApplication(
+                orders, seats, activityOwner, perkLedger, qrcode, SECRET));
     }
     @Test void originalDynamicCodeFormatBindsTheExplicitSeatToTheOriginalRegistration() {
         AjaxResult response = issuer.issueDynCode(31L, 2);
@@ -101,7 +106,7 @@ class RegistrationSeatEndpointTest {
         var activity = new com.chengyinhub.business.domain.CmsActivity(); activity.setId(61L);
         ICmsActivityService activities = mock(ICmsActivityService.class);
         when(activities.selectCmsActivityById(61L)).thenReturn(activity);
-        ReflectionTestUtils.setField(issuer, "activityService", activities);
+        wireIssuer(activities);
         Map<?, ?> data = (Map<?, ?>) issuer.issueDynCode(31L, 2).get("data");
         var parsed = VerifyDynCodeUtil.verify((String) data.get("code"), System.currentTimeMillis(), SECRET);
         assertTrue(parsed.valid); assertEquals("activity_seat_2", parsed.type); assertEquals(31L, parsed.regId);

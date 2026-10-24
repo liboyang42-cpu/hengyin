@@ -151,6 +151,7 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setOwnerType(2L);
         registration.setOwnerId(20L);
         registration.setMemberId(8L);
@@ -223,6 +224,7 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setPaymentStatus(1); // 未支付
         when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(registration);
 
@@ -240,6 +242,7 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setVerificationStatus(1);
         when(refundMapper.selectRefundApplicationById(10L)).thenReturn(refund);
         when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(registration);
@@ -258,6 +261,7 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setVerificationStatus(0);
         registration.setPaymentStatus(2);
         SettlementDetail settled = new SettlementDetail();
@@ -294,6 +298,7 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setVerificationStatus(0);
         registration.setPaymentStatus(2);
         registration.setRegistrationStatus(2); // 报名成功
@@ -368,9 +373,11 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setVerificationStatus(0);
         CmsRegistration refunded = new CmsRegistration();
         refunded.setId(99L);
+        originalScope99(refunded);
         refunded.setPaymentStatus(4);
         refunded.setRegistrationStatus(3);
         when(refundMapper.selectRefundApplicationById(10L)).thenReturn(refund(10L, 99L, 2L));
@@ -397,6 +404,7 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setVerificationStatus(0);
         java.util.concurrent.atomic.AtomicInteger paymentStatus = new java.util.concurrent.atomic.AtomicInteger(2);
         when(refundMapper.selectRefundApplicationById(10L)).thenReturn(refund(10L, 99L, 2L));
@@ -409,6 +417,7 @@ class RefundServiceImplTest {
             CmsRegistration current = new CmsRegistration();
             current.setPayableAmount(new BigDecimal("100.00"));
             current.setId(99L);
+            originalScope99(current);
             current.setPaymentStatus(paymentStatus.get());
             current.setRegistrationStatus(paymentStatus.get() == 4 ? 3 : 2);
             return current;
@@ -626,6 +635,7 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setPaymentStatus(2);
         registration.setVerificationStatus(0);
         SettlementDetail settled = new SettlementDetail();
@@ -688,6 +698,7 @@ class RefundServiceImplTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         when(refundMapper.selectRefundApplicationById(10L)).thenReturn(refund);
         when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(registration);
         when(refundMapper.updateRefundStatusIfPending(eq(10L), eq(2), eq(7L), any(), any())).thenReturn(1);
@@ -851,6 +862,23 @@ class RefundServiceImplTest {
                                       CmsActivityMapper activityMapper,
                                       CmsTopicMapper topicMapper) {
         RefundServiceImpl service = new RefundServiceImpl();
+        var originalOwner = mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class);
+        when(originalOwner.hasFrozenOriginalRefundComponents(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
+        ReflectionTestUtils.setField(service, "coopSettlementClaimService", originalOwner);
+        CmsActivity originalActivity = new CmsActivity(); originalActivity.setId(20L); originalActivity.setMemberId(3L);
+        when(activityMapper.selectCmsActivityById(20L)).thenReturn(originalActivity);
+        when(activityMapper.selectCmsActivityByIdForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(call -> activityMapper.selectCmsActivityById(call.getArgument(0)));
+        when(topicMapper.selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(call -> topicMapper.selectCmsTopicById(call.getArgument(0)));
+        when(refundMapper.selectRegistrationHistoryForUpdate(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(call -> {
+            java.util.List<RefundApplication> rows = new java.util.ArrayList<>();
+            for (Long id : java.util.List.of(10L, 11L)) {
+                RefundApplication row = refundMapper.selectRefundApplicationById(id);
+                if (row != null && java.util.Objects.equals(row.getSourceId(), call.getArgument(0))) rows.add(row);
+            }
+            return rows;
+        });
         org.springframework.test.util.ReflectionTestUtils.setField(service, "firstReviewPointsClawback",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(service, "refundApplicationMapper", refundMapper);
@@ -942,10 +970,17 @@ class RefundServiceImplTest {
         verify(refundMapper, never()).insertRefundApplication(any());
     }
 
+    /** All registration 99 fixtures in this suite belong to the existing standalone activity 20/member 8. */
+    private static void originalScope99(CmsRegistration registration) {
+        registration.setOwnerType(2L); registration.setOwnerId(20L); registration.setMemberId(8L);
+        registration.setRegistrationNo("REG99"); registration.setTransactionId("TX99");
+    }
+
     private CmsRegistration paidRegistration99() {
         CmsRegistration registration = new CmsRegistration();
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setId(99L);
+        originalScope99(registration);
         registration.setPaymentStatus(2);
         registration.setPayableAmount(new BigDecimal("68.00"));
         return registration;

@@ -73,6 +73,7 @@ on:
           - architecture-day-topic-content-budget
           - architecture-day-committed-official-notice
           - architecture-day-complaint-committed-notice
+          - architecture-day-complaint-notice-rejection
           - architecture-day-registration-topic-fence
           - architecture-day-topic-cash-fence
           - architecture-day-scheduler-two-process

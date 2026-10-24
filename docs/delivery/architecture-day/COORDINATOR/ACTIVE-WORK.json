@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T10:18:52.879234+00:00",
+  "updated_utc": "2026-10-24T10:33:13.145148+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -11,82 +11,82 @@
     "A": {
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
-      "task": "\u539f\u4ed8\u6b3e\u4e8b\u5b9e\u7cbe\u786e\u5173\u8054\u3001\u539f\u9000\u6b3e\u5939\u5177\u63a5\u7ebf",
+      "task": "\u539finline\u4ed8\u6b3e\u6d88\u8d39\u4e8b\u5b9e\u7cbe\u786e\u5173\u8054",
       "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService\u7684\u6805\u680f\u4e0e\u63a5\u7ebf\uff1bG\u8d26\u672c\u6b63\u6587\u4e0d\u6539\uff1b\u5916\u5c42\u4e24\u4e2a\u670d\u52a1\u7cbe\u786e\u62a5\u540d/\u652f\u4ed8/\u9000\u6b3e\u5305\u88c5",
-      "dispatch": "Probe now read back actual source delivery; continues original inline task",
+      "dispatch": "Existing inline ownership renewed with exact production receipt bottleneck and workspace probe; source slice pending",
       "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:18",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d46-60a9-7156-a826-42d62116087c",
-      "last_progress_evidence": "Actual57e99075 fixture delivery; original cases/assertions statically retained, Java NOT_RUN; returns to inline source branch",
+      "last_progress_evidence": "57e99075 fixture source delivered; continuing separate inline source, not yet frozen",
       "last_tool_status": "completed"
     },
     "B": {
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
-      "task": "\u4f18\u5148\u4fee\u5916\u5c42\u5931\u8d25 release \u81ea\u9501\uff0c\u518d\u5b8c\u6210\u539f\u5df2\u9a8c\u8bc1\u6210\u529f\u901a\u77e5\u6062\u590d",
+      "task": "\u4f18\u5148\u8865\u540c\u5916\u5c42\u4e8b\u52a1\u91cd\u590dnotify\u907f\u514d\u518d\u6b21\u72ec\u7acbclaim\uff0c\u518d\u7eed\u56db\u57dfSUCCESS\u6062\u590d",
       "ownership": "SDK/router/intent/inbox\u4e8b\u5b9e\u5c42\u53ca\u6700\u5c0fadditive SQL\u6e90\u7801\uff1b\u4e0d\u6539A/G\u9886\u57df\u6b63\u6587",
       "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:13",
+      "last_cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:14",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d52-7171-7674-8506-33e02262ab39",
-      "last_progress_evidence": "\u5df2\u8865\u5145\u6062\u590d\u8fb9\u754c\u7684\u6d4b\u8bd5\u6e90\u7801\uff1a\u771f\u5b9e\u62a5\u540d\u6d4b\u8bd5\u5728\u4e1a\u52a1\u548c DONE SQL \u6267\u884c\u540e\u6ce8\u5165\u5f02\u5e38\uff0c\u9a8c\u8bc1\u4e24\u8005\u56de\u6eda\uff1b\u968f\u540e\u505c\u7528\u5b98\u65b9\u67e5\u8be2\uff0c\u7528\u91cd\u65b0\u9a8c\u7b7e\u4e14\u7ecf\u6d4e\u4e8b\u5b9e\u76f8\u540c\u7684\u901a\u77e5\u6062\u590d\u539f\u56de\u6267\u3002\u6d4b\u8bd5\u8fd8\u8986\u76d6\u540c\u5355\u53f7\u4e0b\u91d1\u989d\u3001\u6e20\u9053\u3001\u4ea4\u6613\u53f7\u53d8\u5316\uff0c\u4ee5\u53ca\u7b7e\u540d\u6216\u8bc1\u4e66\u5e8f\u5217\u53f7\u65e0\u6548\u7684\u62d2\u7edd\u8def\u5f84\u3002\u5df2\u77e5\u6210\u529f\u4e8b\u5b9e\u4e5f\u4f1a\u963b\u6b62\u518d\u6b21\u9884\u4e0b\u5355\u548c\u91ca\u653e\u539f\u53f7\uff1b\u9886\u57df\u5173\u95ed CAS \u7684\u63a5\u7ebf\u4ec5\u4ea4 review.patch\uff0c\u4e0d\u4fee\u6539 A/G \u6b63\u6587\u3002\u4e0a\u8ff0\u6d4b\u8bd5\u5c1a\u672a\u8fd0\u884c\u3002",
+      "last_progress_evidence": "420df source composed; original failure release source repaired, H found repeated-notify P2 and assigned exact next fix",
       "last_tool_status": "completed"
     },
     "C": {
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable",
-      "task": "\u7968\u7801\u5e94\u7528\u5c42\u5df2\u4ea4\uff0c\u7ee7\u7eed\u636e\u70b9\u6838\u9500\u4e8b\u52a1\u95ed\u5305\u63d0\u53d6",
+      "task": "\u540c\u636e\u70b9\u7b7e\u53d1\u4e0e\u6838\u9500\u7684\u5e94\u7528\u6240\u6709\u6743\u95ed\u73af\u3001\u539f\u8eab\u4efd\u8bfb\u56de",
       "ownership": "\u5e2d\u4f4d/\u7968\u7801/\u6838\u9500\u4e8b\u5b9e\uff1b\u5171\u4eab\u4e0b\u5355/\u9000\u6b3e\u6587\u4ef6\u53ea\u7ed9review.patch",
       "dispatch": "Workspace probe read back actual source work; continues current task",
-      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:18",
+      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:19",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d5a-8f05-7165-9329-80777539349c",
-      "last_progress_evidence": "Actual command completed; station transaction migration and old fixture wiring implemented, explicit proxy/transaction-manager checks being authored; Java NOT_RUN",
+      "last_progress_evidence": "d2+322 source composed; next precise signing/receipt task sent",
       "last_tool_status": null
     },
     "D": {
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable",
-      "task": "\u6295\u8bc9\u65e0\u6548\u6536\u4ef6\u4eba\u6301\u4e45\u7ed3\u679c\u3001\u7533\u8bf7\u4e8b\u4ef6\u8eab\u4efd",
+      "task": "\u9996\u4e2a\u771f\u5b9e\u7533\u8bf7\u57df\u6301\u4e45\u8f6e\u6b21\u4e0eCAS\u540c\u4e8b\u52a1\u901a\u77e5\u8eab\u4efd",
       "ownership": "\u4e09\u670d\u52a1\u4e0a\u8ff0\u7cbe\u786e\u7b26\u53f7\u5df2\u8865\u6388\uff1bCmsTopic\u5171\u4eab\u53ea\u7ed9patch",
       "dispatch": "Probe read back: actual bc5 source delivery, continues application identity task",
-      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:13",
+      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:14",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d52-7f2f-74ad-b0cd-6329728cad00",
-      "last_progress_evidence": "\u6700\u5c0f\u7247\u5df2\u63a8\u9001\uff0c\u53ef\u76f4\u63a5 fetch\uff1abc5b6d9115f2c8a24b1d0efaf29cc2f9463355c7\uff0c\u5206\u652f codex/architecture-day-d-complaint-notice-rejection\uff0cparent 9a193f9\uff0ctree 9b6683da\u300210 \u4e2a\u6587\u4ef6\u8fdc\u7aef\u56de\u8bfb\u4e00\u81f4\uff0c\u9010\u6587\u4ef6 SHA256 \u5df2\u968f\u5019\u9009\u4fdd\u5b58\uff1b\u4e0d\u662f\u5f85\u63a5\u7ebf patch\u3002\u65b0\u589e 6 \u9879\u771f\u5e93\u6d4b\u8bd5\u6e90\u7801\uff0c\u5c1a\u672a\u8fd0\u884c\u3002\u4e0b\u9762\u53ea\u8bfb\u6838\u5b9e\u7533\u8bf7\u7c7b\u7248\u672c\u5b57\u6bb5\uff0c\u907f\u514d\u7528\u65e7\u6e90\u7801\u4f5c\u5224\u65ad\u3002",
+      "last_progress_evidence": "bc5 rejection source composed; root clarified preserve old transitions and monotonic round only on existing legal reapply CAS",
       "last_tool_status": "completed"
     },
     "E": {
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
-      "task": "\u975e\u652f\u4ed8 AI/\u97f3\u89c6\u9891\u5916\u547c\u8d44\u6e90\u8fb9\u754c",
+      "task": "STT\u540c\u6b65\u6574\u5305\u8d44\u6e90\u8fb9\u754c",
       "ownership": "\u65b0TopicQuery owner\u53ca\u6d4b\u8bd5\uff1bCmsTopic\u53ea\u4ea4\u7cbe\u786e\u53ea\u8bfbdelegate patch\uff0croot\u4e32\u884c\u5408\u6210",
       "dispatch": "Probe read back: github.fetch_blob completed, actual source work resumed",
-      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:13",
+      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:14",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d46-88a2-7403-bf44-90f5c10ace26",
-      "last_progress_evidence": "Actual tool record present",
+      "last_progress_evidence": "10426 voice transport+wiring composed; STT next task dispatched",
       "last_tool_status": "completed"
     },
     "F": {
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
-      "task": "\u771f\u5b9e Bean \u4f9d\u8d56\u95ed\u5305\u548c\u6545\u610f\u5faa\u73af\u8d1f\u63a7",
+      "task": "\u5148\u51bb\u7ed3C\u4e24\u4e2a\u5b9e\u9645\u5e94\u7528owner\u6700\u5c0f\u7ea6\u675f\uff0c\u518d\u7eedD/E\u7c7b\u578b",
       "ownership": "\u65e2\u6709policy/\u63a7\u5236\u4f8b\uff1b\u4e0d\u6539root CI refs\u6216\u65b0\u9020scanner",
       "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
       "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:17",
@@ -95,28 +95,28 @@
         "activeFlags": []
       },
       "last_turn_id": "01a16d52-8cfb-71d5-92a3-042953793a19",
-      "last_progress_evidence": "Actual4bb fixture source frozen; continues independent real C type policy",
+      "last_progress_evidence": "4bb source composed; latest turn lacked tools, exact probe/first-policy-slice instruction sent",
       "last_tool_status": "completed"
     },
     "G": {
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
-      "task": "\u5173\u8d26\u524d\u5f53\u524d\u8bfb\u5df2\u6279\u9000\u6b3e\u9632\u53cc\u51b2\u3001\u8fdf\u5230\u4ed8\u6b3e\u6062\u590d\u8eab\u4efd",
+      "task": "\u5148\u51bb\u7ed3\u5df2\u6279\u65e7\u9000\u6b3e\u5f53\u524d\u8bfb\u9632\u53cc\u51b2\uff0c\u518d\u8865\u5b8c\u6574\u7236\u4ece\u6062\u590d\u548cA\u63a5\u7f1d",
       "ownership": "\u7ed3\u7b97/claim/adjustment/debt\u548cadditive SQL\u6e90\u7801\uff1b\u65e7claim\u7ea6\u675f\u4fdd\u7559",
       "dispatch": "Prior delivery collected, next precise task sent; active readback, code results independently checked.",
-      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:15",
+      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:16",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d5b-078e-73e0-85dc-602d3ab736f5",
-      "last_progress_evidence": "\u6211\u4f1a\u5728\u5df2\u51bb\u7ed3\u5019\u9009\u4e4b\u4e0a\u53e6\u5efa\u72ec\u7acb\u5206\u652f\uff0c\u5148\u8bfb A/e6 \u7684\u6062\u590d\u63a5\u7f1d\u548c\u5f53\u524d\u9000\u6b3e\u8c03\u7528\u94fe\uff0c\u518d\u8865\u5173\u8d26\u524d\u7684\u5df2\u6279\u9000\u6b3e\u5f53\u524d\u8bfb\u4fdd\u62a4\u3002\u8303\u56f4\u53ea\u9650 G \u7684 claim\u3001\u539f ledger \u548c\u5173\u8d26\u65b9\u6cd5\uff1bA \u6587\u4ef6\u4ecd\u53ea\u4ea4\u7cbe\u786e patch\uff0c\u4e0d\u731c\u4ed8\u6b3e\u4e8b\u5b9e\u3001\u4e0d\u9020 DONE\uff0c\u4e5f\u4e0d\u6267\u884c Java/DB\u3002",
+      "last_progress_evidence": "H source gaps forwarded; latest current-read task stalled evidence, precise workspace/freeze-small-slice probe sent",
       "last_tool_status": "completed"
     },
     "H": {
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable",
-      "task": "D/bc5 actual complaint rejection path independent review",
+      "task": "E\u771f\u5b9e\u8bed\u97f3caller UNKNOWN\u4e0e\u8d39\u7528/\u91cd\u8bd5\u72ec\u7acb\u5ba1\u67e5",
       "ownership": "\u53ea\u8bfb\u72ec\u7acb\u5ba1\u67e5\uff0c\u672a\u8fd0\u884c\u5355\u5217",
       "dispatch": "Renewed D/bc5 audit; active readback; independent new tool result pending",
       "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:21",
@@ -125,7 +125,7 @@
         "activeFlags": []
       },
       "last_turn_id": "01a16d5b-85ee-723a-b93e-a5df2b749b4b",
-      "last_progress_evidence": "No fresh tool in compact snapshot",
+      "last_progress_evidence": "Dbc5 reviewed no new source P1/P2; B420 repeated-notify P2 forwarded B; C d2+322 review no new source blocker,11Node checks worker reported",
       "last_tool_status": null
     }
   },
@@ -241,11 +241,11 @@
   },
   "confirmed_unresolved": [
     {
-      "id": "B-OUTER-FAILURE-RELEASE",
-      "evidence": "H f6 code: joined outer mutation holds inbox X lock, independent release waits before outer completion",
-      "classification": "P2 code-evidenced risk, MySQL not run",
+      "id": "B-SAME-OUTER-REPEATED-CLAIM",
+      "classification": "Code-evidenced P2, runtime not run",
+      "mechanism": "First successful process in outer transaction retains inbox X lock; second same-notify independent claim waits on its own uncommitted DONE row",
       "owner": "B",
-      "status": "Priority repair dispatched; success-only RR case cannot close acceptance"
+      "status": "Priority minimal same-actual-transaction duplicate guard assigned;420 only repairs failure release, not this case"
     }
   ],
   "available_next_candidates": {
@@ -268,9 +268,14 @@
     "frozen_branch": "codex/architecture-day-facts-rr-notice-ci3-20261024",
     "batch": "architecture-day-verified-payment-facts",
     "expected": 4,
-    "executed": "NOT_YET_READ_BACK",
-    "verdict": "DISPATCHED",
-    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40085356128"
+    "executed": 4,
+    "verdict": "PASS",
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40085356128",
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cleanup": "CLEAN",
+    "evidence": "Source SHA matches251dbdd in checkout/job/summary; real Maven XML summary4/4 and independent CLEAN read back; no result borrowed for newer source"
   },
   "map_input_P2": {
     "source": "H reviewed E8372, inherited input-node filtering changes cache route identity",
@@ -343,20 +348,19 @@
     }
   ],
   "latest_inspection": {
-    "time": "2026-10-24T10:06:53.166019+00:00",
+    "time": "2026-10-24T10:33:13.145148+00:00",
     "existing_chats": 8,
     "new_chats": 0,
-    "actions": "C/G/H renewed precise tasks, B priority failure self-lock, F actual C type; D/E explicit environment probes",
-    "readback": "A57e,Dbc5,F4bb actual frozen deliveries; C new transaction source work, E source fetch tool; B/G ongoing code and H renewed independent review. Not acceptance.",
-    "automation": "hengyin-agent ACTIVE every10min persisted policy verified"
+    "actions": "B/C/D/E delivered and renewed precise code; F/G evidence probes; H two reviews routed and next review dispatched. Root composed six increments and actual wiring.",
+    "readback": "Latest renewed turn execution must be separately read back, sent messages do not prove code completion",
+    "automation": "Existing10min heartbeat retained"
   },
   "latest_combined_source_current": {
-    "receipt": "batch-ACDEF-source-20261024.json",
-    "parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
-    "status": "251dbdd four minimal test compile repairs pushed; newest4-case workflow dispatched, no result yet",
-    "Java_DB": "NOT_RUN",
-    "registry_classes": 104,
-    "integrated_at": "56d0e68e6bd2cdb2066af5940c497587df131d8c"
+    "receipt": "batch-ABCDEF-source-followup-20261024.json",
+    "parent": "ffb992bc34a53de6b0afbbc767db142fc4b9be94",
+    "status": "Six increments source-composed; strict source/Node/Python checks, secret scan and isolated commit pending",
+    "registry_classes": 105,
+    "Java_DB": "NOT_RUN for new source; older2514-case PASS remains independent"
   },
   "targeted_run_history": [
     {

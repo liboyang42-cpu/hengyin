@@ -1,0 +1,17 @@
+B 独立修复：参与外层事务的 inbox 失败释放自锁。
+Parent f6f382500ff1a1dfd6fad120b3895f70ae563278；只改 B inbox/事实XML缓存属性/专属测试。
+问题：mutation REQUIRED 参与外层事务并持 inbox X 锁，立即调用 REQUIRES_NEW release 会等待自身未完成事务。
+修复：领取后在原外层注册 afterCompletion；失败或外层非 COMMITTED 时，完成后按原 notify_hash/owner/fence 独立 release。
+原 mutation+DONE 仍同原 REQUIRED 事务；成功外层提交不 release，成功后外层回滚也恢复原 claim 为 RETRYABLE。
+无外层时 mutation 代理已提交/回滚，保留立即 release。无事务同步的活动事务在 claim 前拒绝。
+release 异常保留原 lease/身份并记固定失败事件，不伪造 DONE 或已释放。崩溃时仍由原租约/fence 恢复，租约不释放业务资金身份。
+保留 root 的 selectInboxLink useCache=false/flushCache=true 及两条 MappedStatement 属性断言。
+新增4项真实 MySQL 测试源码：原业务写后 false、业务写后异常、业务+DONE后 outer rollback、原业务+DONE outer commit。
+原4项（含旧RR成功）保留，现8项；所有真实CmsRegistration/XML/原schema/inbox/事务代理，无passThrough或仿制domain表。
+false/异常仍受原 mutation 异常回滚合同约束；false外层尝试提交须抛 UnexpectedRollbackException。
+断言外层未完成 release SQL=0；完成后失败释放恰1；同原inboxId/fence/attempt/fact；余额/积分/权益/库存/owner保持原检查。
+本 fixture 只测试原 owner_type=1 的真实 topic路径，补接父f6已经依赖的 CmsTopicMapper/XML 和mutation/registration字段，不修改A领域源码。
+真实topic锁还需快照后的11份既有迁移；复用原 FreeExploreNodeSupplyMySqlIT.alterStatements，仅执行其中cms_topic原ALTER，不手造字段或修改其他夹具。
+静态 diff/XML/秘密标记及用例/断言保留检查可执行；Java/MySQL/CI/DDL/真实支付 NOT_RUN，由root统一同头验证。
+无需迁移/API/default；回退不能删除原事实/回执/意图，也不能恢复在持锁事务内提前release。
+成功通知恢复代码仍独立保留 /workspace/b-durable-success-recovery，未混入此片。

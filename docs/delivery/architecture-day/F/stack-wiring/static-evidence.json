@@ -1,0 +1,182 @@
+{
+  "check_kind": "READ_ONLY_SOURCE_AND_DIFF_NOT_JAVA_EXECUTION",
+  "parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
+  "preserved_sections": [
+    "static Stream<Cycle> cycles()",
+    "@ParameterizedTest(name = \"{0} starts",
+    "@ParameterizedTest(name = \"{0} keeps",
+    "@Test\n    void allProvenCycleServices"
+  ],
+  "inert_handler_body_unchanged": true,
+  "old_cycle_rows": 13,
+  "old_expected_invocations": 27,
+  "new_expected_invocations": 31,
+  "java_compile": "NOT_RUN",
+  "spring_context": "NOT_RUN",
+  "evidence": [
+    {
+      "source": "e6dc689acd16f8354096fa6017cec85b36171c4e",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "6d70a420649ea81863fae0678f7507de9bcb54103cd2ab4c79a5b99109a0e4c0",
+      "selected_lines": [
+        {
+          "line": 84,
+          "source": "    private com.chengyinhub.business.service.ISystemNotificationIntentService systemNotificationIntents;"
+        },
+        {
+          "line": 91,
+          "source": "    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;"
+        },
+        {
+          "line": 2633,
+          "source": "        Long intentId = systemNotificationIntents.findIntentId(eventKey);"
+        },
+        {
+          "line": 2641,
+          "source": "            intentId = systemNotificationIntents.enqueue(memberId, ImMessage.MSG_CARD, \"报名成功\","
+        },
+        {
+          "line": 3468,
+          "source": "        WechatVerifiedPaymentFactService.Stored stored = verifiedPaymentFacts.requireVerified(reference);"
+        }
+      ]
+    },
+    {
+      "source": "e6dc689acd16f8354096fa6017cec85b36171c4e",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "sha256": "d2c85a82e45c5d5d3595ada047d95b04b8305d68ab7d0152ac8d60d159f6c32f",
+      "selected_lines": [
+        {
+          "line": 139,
+          "source": "    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;"
+        },
+        {
+          "line": 146,
+          "source": "    private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaimService;"
+        },
+        {
+          "line": 383,
+          "source": "            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());"
+        },
+        {
+          "line": 388,
+          "source": "            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());"
+        },
+        {
+          "line": 515,
+          "source": "                coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());"
+        },
+        {
+          "line": 524,
+          "source": "            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());"
+        },
+        {
+          "line": 712,
+          "source": "                && coopSettlementClaimService.hasFrozenOriginalRefundComponents(refund.getId());"
+        },
+        {
+          "line": 1276,
+          "source": "        WechatVerifiedPaymentFactService.Stored stored = verifiedPaymentFacts.requireVerified(reference);"
+        }
+      ]
+    },
+    {
+      "source": "f6f382500ff1a1dfd6fad120b3895f70ae563278",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java",
+      "sha256": "d0c8cc20974ff421edb0792a894245090ce42065c0bb5667e189ea894f92912f",
+      "selected_lines": [
+        {
+          "line": 5,
+          "source": "import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;"
+        },
+        {
+          "line": 18,
+          "source": "    @Autowired private WechatVerifiedPaymentFactMapper mapper;"
+        },
+        {
+          "line": 19,
+          "source": "    @Autowired private org.springframework.transaction.PlatformTransactionManager factReadTransactions;"
+        },
+        {
+          "line": 29,
+          "source": "        mapper.insertIgnore(insert);"
+        },
+        {
+          "line": 30,
+          "source": "        List<Map<String,Object>> matches = mapper.selectMatching(candidate.kind().name(), candidate.mchid(),"
+        },
+        {
+          "line": 44,
+          "source": "            Map<String,Object> row=mapper.selectById(reference.id());"
+        },
+        {
+          "line": 54,
+          "source": "        var transaction=new org.springframework.transaction.support.TransactionTemplate(factReadTransactions);"
+        },
+        {
+          "line": 64,
+          "source": "        Map<String,Object> old = mapper.selectInboxLink(notifyHash);"
+        },
+        {
+          "line": 70,
+          "source": "            mapper.insertInboxLink(row);"
+        },
+        {
+          "line": 71,
+          "source": "            old = mapper.selectInboxLink(notifyHash);"
+        },
+        {
+          "line": 79,
+          "source": "        return matchesLink(mapper.selectInboxLink(notifyHash),inboxId,reference);"
+        },
+        {
+          "line": 85,
+          "source": "        var row=mapper.selectInboxLink(notifyHash);"
+        },
+        {
+          "line": 110,
+          "source": "        row.put(\"notify_hash\",null); row.put(\"candidate_facts\",value); mapper.insertRejection(row);"
+        },
+        {
+          "line": 124,
+          "source": "        row.put(\"notify_hash\",null);row.put(\"candidate_facts\",value);mapper.insertRejection(row);"
+        },
+        {
+          "line": 152,
+          "source": "        row.put(\"candidate_facts\",candidate.canonicalFacts()); mapper.insertRejection(row);"
+        }
+      ]
+    },
+    {
+      "source": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java",
+      "sha256": "f1d97648913cb8c5026da8606d16977e5aca3f00ce46d0cf0fa16240d71d5e7e",
+      "selected_lines": [
+        {
+          "line": 3,
+          "source": "import com.chengyinhub.business.service.INotifyService;"
+        },
+        {
+          "line": 11,
+          "source": "import org.springframework.transaction.PlatformTransactionManager;"
+        },
+        {
+          "line": 23,
+          "source": "    private final INotifyService notifyService;"
+        },
+        {
+          "line": 28,
+          "source": "    public CommittedBusinessNotice(INotifyService notifyService, AlarmService alarmService,"
+        },
+        {
+          "line": 29,
+          "source": "                                   PlatformTransactionManager transactionManager,"
+        },
+        {
+          "line": 30,
+          "source": "                                   @Qualifier(\"scheduledExecutorService\") ScheduledExecutorService existingExecutor) {"
+        }
+      ]
+    }
+  ]
+}

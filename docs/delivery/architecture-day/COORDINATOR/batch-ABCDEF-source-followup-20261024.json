@@ -1,0 +1,424 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T10:33:13.145148+00:00",
+  "parent": "ffb992bc34a53de6b0afbbc767db142fc4b9be94",
+  "source_candidates": {
+    "A_fixture": "57e99075c0f98b2ce7592b3521aebc42b78eafec",
+    "B_release": "420df2a7a8b385a308923fe5f332324dd4f5f973",
+    "C_application": "322875cf84cce61161876e12fd37bfb68b568a1e",
+    "D_rejection": "bc5b6d9115f2c8a24b1d0efaf29cc2f9463355c7",
+    "E_voice": "10426a532822ee8053cd75e3d77da5b6393d30c2",
+    "F_fixture": "4bb00dffdd62d519f7575a949f0630a4fa576e77"
+  },
+  "files": {
+    ".github/workflows/real-storage-it.yml": {
+      "sha256": "0c605f1a42bbd4fe8026ceb60caf08543853d6c278e467138a398fe0b78ced40",
+      "exact_candidates": [],
+      "composed": true
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java": {
+      "sha256": "0a7d289d1c35e4c63b681d82c40e353a5db85a74a644547e1eaa8b1a67d9cc0b",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java": {
+      "sha256": "80fe9c8a7e9ee056510605376e066dcd654f24d0d4278f7c895f8aa61fbfa8cd",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java": {
+      "sha256": "95403c9ed59b9333b347d2b04e7b5ceed21d51b82c11afb1b7436df7a3962ce0",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationCallbackIntentMySqlIT.java": {
+      "sha256": "aa13c488dfda6a20a86b7e8788a3d8175a2dd98811563e463adc9a321c1605e6",
+      "exact_candidates": [
+        "B_release"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ARefundFactFixture.java": {
+      "sha256": "ecd526e6d7a1d010284df8a112eb72be76e40785834d641a27dbd023488d49be",
+      "exact_candidates": [
+        "A_fixture"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java": {
+      "sha256": "152215f90edd55f65111d00b60b2e50f9025d59bab2146959a3e40aeabfbcd62",
+      "exact_candidates": [
+        "A_fixture"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityMybatisIntegrationTest.java": {
+      "sha256": "c31b54e4176d1233562f6d0408a040903f7faef440c5477bad78162a41efa7e4",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java": {
+      "sha256": "624dde33e755e56b2a486adae9106a993428053ffa5117fbcdda872b250c0398",
+      "exact_candidates": [],
+      "composed": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/DashScopeVoiceTransportBudgetTest.java": {
+      "sha256": "7cdec87f1d96b0adb4c87d1519ef942d25a3b45f8ba6ca58ab8d623d305fd72e",
+      "exact_candidates": [
+        "E_voice"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ComplaintCloseReporterNoticeMySqlIT.java": {
+      "sha256": "5df491c576e189eb09d9b82ec47ed76afb596e1a5fddc02da3daab6b72e7ef1c",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCloseMybatisIntegrationTest.java": {
+      "sha256": "acf6e78c6b9f8f5ef233542d66ab0c8e24617c68cd6b2d57ec75e33ee3b05564",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCommittedNoticeMySqlIT.java": {
+      "sha256": "3c2772262d8d7a0658cd302ee1cdaebfe5e8d2da837f10830c32c30e1c5b52c1",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImplTest.java": {
+      "sha256": "470b81dd9497a9a77c326a2704fd781629cb3ca6df1cbc2e1aec739c8dd55dc5",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": {
+      "sha256": "8e1090a477c8e31a2297509e3774ef2aaf1115181e799a0fc9c5ae7ccefb3d22",
+      "exact_candidates": [
+        "A_fixture"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java": {
+      "sha256": "08dc9fae8d4372577f4c983ef71d412bfe4465207cb7c0fa2a85d6e0d9f76c3b",
+      "exact_candidates": [
+        "A_fixture"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundServiceImplTest.java": {
+      "sha256": "01a89f2bedb89618a2f4201b5a49fecfac39dc57ccb98e7b3e94b2df48757b24",
+      "exact_candidates": [
+        "A_fixture"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java": {
+      "sha256": "8a071df1e1100e8bf931d319f0ffe9d825ff8125f3d3fb9b1d388a8c8cc70439",
+      "exact_candidates": [
+        "A_fixture"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/upgrade/SupportedStackServiceCyclesTest.java": {
+      "sha256": "6dd19de6fc60c420f958fb34fa42553419c6a0242abae70f0238a6a69457e007",
+      "exact_candidates": [
+        "F_fixture"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyControllerTest.java": {
+      "sha256": "3bd259991b3ddad7c77da13fed70c6658de90213c18020601e8c15fc3a5168a8",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreIssueCodeGateTest.java": {
+      "sha256": "cef1768784917473d18e2c62aaff370242d43b03adc2810ca8f19f035d9e99db",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java": {
+      "sha256": "ad570ad8810879f8945376e3ca7780ec2702aa82c0f0a800fc0bde51ce449aa9",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/MerchantStaffRevocationAcceptanceTest.java": {
+      "sha256": "2dc87ec238a1b0586119279078ee918b225baeba9684b6b5756ed9670a10f2a4",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationSeatEndpointTest.java": {
+      "sha256": "629b959581dd56e7542f79604bea40e0bd56164d7b2dcb5382d6a23f927bdfef",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationSeatReplayBoundaryTest.java": {
+      "sha256": "ecf582b0589b0c053ea0b7a22a1d2b8d972d66a8ce9f043e378bc4d769e96488",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamLocationRetentionMySqlIT.java": {
+      "sha256": "d4e3ace5e31da4200f3c586f061f26a3f7013bf977c7b3414e9b5dee55698d70",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplicationTest.java": {
+      "sha256": "03ba731e7929830f61d42d2e2bdff97876c410041c7e88a5eb628a1f05c71cec",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/verify/RegistrationTicketApplicationTest.java": {
+      "sha256": "1afd1b2081edbcfd72aa0dff1d5b02da7e1fc39075a64f4ada3f31bdd1d172f7",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommittedNoticeRejectionMapper.java": {
+      "sha256": "13124fd3fb8188ee508f2ea0323944b4649448bc699ca4e09ef97ca96cd7fdc7",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java": {
+      "sha256": "79a1403f9730e3bc2464180deba394fb927633e36c53631d2615d9fd2f0371bf",
+      "exact_candidates": [
+        "E_voice"
+      ],
+      "composed": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java": {
+      "sha256": "157e8ae2c08eed72f6eca926740f2342b8db1c02857e5c4fcda84f8bfcae3cb3",
+      "exact_candidates": [],
+      "composed": true
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java": {
+      "sha256": "f7b36dcf4c72b9c94e441a2e6e83d77ce4599744a0f4180964f81030aa1cf01e",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java": {
+      "sha256": "7f79ed73a900815dd353600bcfc6a63ead8d3ceb7a3f38f8ba098f7bf0cfb61d",
+      "exact_candidates": [
+        "B_release"
+      ],
+      "composed": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ComplaintCloseReporterNotice.java": {
+      "sha256": "8c0412b0c7dcaa1ee4cac579e1868885d10fb77ac4eaf3e45ea06409eeda9e3d",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/CommittedNoticeRejectionMapper.xml": {
+      "sha256": "65dfd83ed76d928779c764fafe28512a4fa53c5ad84d721e35c1081e93d03717",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "chengyinhub-xcx/tests/unit/citynode-redemption-application-source.test.js": {
+      "sha256": "b5a86589188fc42e97b78863b8e75bd6c12bc5f99b247f2d2483c11bd7f5e88a",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "chengyinhub-xcx/tests/unit/registration-ticket-application-source.test.js": {
+      "sha256": "77b08299fd46fd94b2a0b5831f5fc0476f9e17d85d4649b7bfd7b6986e2ede49",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "ci/real-storage-it-registry.json": {
+      "sha256": "f86d3c09963b6e16b1b8e915c2174040c33bae8d1ea23cedf528fc37da22020f",
+      "exact_candidates": [],
+      "composed": true
+    },
+    "ci/test_real_storage_it.py": {
+      "sha256": "a841c3f5d44d12939ad8e0ff6521bb389f6cf21f4eb85d0a74ff01a86d4cd93e",
+      "exact_candidates": [],
+      "composed": true
+    },
+    "docs/delivery/architecture-day/A/REFUND-VERIFIED-FIXTURES/README.md": {
+      "sha256": "fe7cc0e38666ba26547be313b3eb323fb2bbe9522875f1f734eafb060b093c6b",
+      "exact_candidates": [
+        "A_fixture"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/A/REFUND-VERIFIED-FIXTURES/static-result.json": {
+      "sha256": "2632ec10a4fb90faa5ddd1322639ea379c1c68c870fa3c8b4fd0fb665b4a654d",
+      "exact_candidates": [
+        "A_fixture"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/B/inbox-release-after-completion.txt": {
+      "sha256": "b48c2d79b0b1683c97ec063398eb86c7f9ae79843eef07e00ddd2cb211fd5e7b",
+      "exact_candidates": [
+        "B_release"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/C/seats/citynode-application-move-equivalence.json": {
+      "sha256": "ab3bc66f1856131063d378a1795f21ce74eda2ffc9c1d2291bedbe8aa74c7d05",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/C/seats/citynode-application-node-results.json": {
+      "sha256": "86024112e6094a313f29eb812362d19c32f63391cf6ffdcbdd4ddf1de6f6147c",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/C/seats/citynode-application.md": {
+      "sha256": "9045745bfb7220b5832320768d6741eab567014109aadf71c9d0d21dfed4b520",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/C/seats/ticket-application-move-equivalence.json": {
+      "sha256": "72a19a94138fd66f7d489d2f59d71d2feef81f696678945dc70e800600d94a05",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/C/seats/ticket-application-node-results.json": {
+      "sha256": "e447bcc47a3a096c3018d933f2656b7e694163d939194a15b842179b6aaaefe6",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/C/seats/ticket-application.md": {
+      "sha256": "67aa3755ead04d8696c338c2720e65ce41afada9139c898c38a7bfad276305ef",
+      "exact_candidates": [
+        "C_application"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/D/complaint-rejection/CANDIDATE.sha256": {
+      "sha256": "323d0dd7de1d94c6b3ad9a23dcf817a10c7a05fa1436a356cdf1518ade606640",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/D/complaint-rejection/README.md": {
+      "sha256": "931132869ee4f3c7a39ab222adb24a80490908fb9a22a92c2e55ac44a968e66f",
+      "exact_candidates": [
+        "D_rejection"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/E/VOICE-TRANSPORT/README.md": {
+      "sha256": "c5201487d469ea3a8cb181d3820d3b48b4fbac537f7318f9635451ef52eabc15",
+      "exact_candidates": [
+        "E_voice"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/E/VOICE-TRANSPORT/verify-static.py": {
+      "sha256": "aaf08352c524ace7cbdbbf5050103cbee6dbc541e5f95c482ca41847753ed379",
+      "exact_candidates": [
+        "E_voice"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/E/VOICE-TRANSPORT/wiring.review.patch": {
+      "sha256": "74dea48bd8412c51f1421db0bff7ef5fee0f80600be05708ce83dc5f0e80cf06",
+      "exact_candidates": [
+        "E_voice"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/F/stack-wiring/HANDOFF.md": {
+      "sha256": "73d1f1238528de4bdf80e0e15d3a6d245271d030fede786eea308ab49ef42353",
+      "exact_candidates": [
+        "F_fixture"
+      ],
+      "composed": false
+    },
+    "docs/delivery/architecture-day/F/stack-wiring/static-evidence.json": {
+      "sha256": "06ce6d762c97f0c51b92caef2ae902979d4033f259ea86280d63a0493d08509a",
+      "exact_candidates": [
+        "F_fixture"
+      ],
+      "composed": false
+    }
+  },
+  "checks": {
+    "registered_classes_source_precheck": 105,
+    "Python_registry_workflow_controls": 19,
+    "Node_C_application_source_flow": {
+      "tests": 17,
+      "pass": 17,
+      "skip": 0
+    },
+    "E_assembly": "Original six methods and parse tail exact; shared configuration/old8-test fixture byte-exact to supplied wiring patch; shipping pre-wiring sentinels intentionally not used as post-wiring proof"
+  },
+  "new_Java_DB": "NOT_RUN",
+  "known_open": [
+    "B same-outer duplicate claim self-lock P2",
+    "E existing voice clone cross-request UNKNOWN retry not proven safe",
+    "D audit Mapper failure injection coverage missing, not a confirmed functional bug",
+    "Original allocation producers/recovery and three money policies still incomplete"
+  ],
+  "old_independent_ci": {
+    "run_id": 40085356128,
+    "source": "251dbdd8c28ac2e05c815e044afb02c584fd7908",
+    "frozen_branch": "codex/architecture-day-facts-rr-notice-ci3-20261024",
+    "batch": "architecture-day-verified-payment-facts",
+    "expected": 4,
+    "executed": 4,
+    "verdict": "PASS",
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40085356128",
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cleanup": "CLEAN",
+    "evidence": "Source SHA matches251dbdd in checkout/job/summary; real Maven XML summary4/4 and independent CLEAN read back; no result borrowed for newer source"
+  },
+  "production_ddl_executed": false,
+  "deployed": false
+}

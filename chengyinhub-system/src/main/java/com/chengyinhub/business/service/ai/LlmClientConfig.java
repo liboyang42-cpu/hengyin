@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.chengyinhub.common.config.AiModelConfig;
+import com.chengyinhub.common.config.AiVoiceConfig;
 import com.chengyinhub.common.config.AiProviderProperties;
 
 /**
@@ -20,11 +21,13 @@ public class LlmClientConfig
     private static final Logger log = LoggerFactory.getLogger(LlmClientConfig.class);
 
     @Bean
-    public AiHttpAdmission aiHttpAdmission(AiModelConfig text, VisionModelConfig vision, AiProviderProperties props)
+    public AiHttpAdmission aiHttpAdmission(AiModelConfig text, VisionModelConfig vision, AiProviderProperties props,
+            AiVoiceConfig voice)
     {
         java.util.List<String> endpoints = new java.util.ArrayList<>();
         addEndpoint(endpoints, text.getBaseUrl());
         addEndpoint(endpoints, vision.getBaseUrl());
+        endpoints.add(voice.baseUrl()); // Fixed startup voice origin; the same registry/permits as text and vision.
         AiProviderProperties.ProviderConfig minimax = props.getProviders() == null
                 ? null : props.getProviders().get("minimax");
         if (minimax != null) addEndpoint(endpoints, minimax.getBaseUrl());

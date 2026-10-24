@@ -4,7 +4,7 @@ import com.chengyinhub.business.domain.CoopComplaint;
 import com.chengyinhub.business.mapper.CoopComplaintMapper;
 import com.chengyinhub.business.service.ICoopComplaintService;
 import com.chengyinhub.business.service.IPlayerWithdrawalCooldownService;
-import com.chengyinhub.business.service.support.CommittedBusinessNotice;
+import com.chengyinhub.business.service.support.ComplaintCloseReporterNotice;
 import com.chengyinhub.web.controller.business.CoopComplaintController;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -145,8 +145,8 @@ class CoopComplaintCommittedNoticeMySqlIT {
             assertEquals(1, h.notice.count("im_notification_intent")); assertEquals(0, h.notice.count("im_message"));
             assertEquals("complaint-close-respondent:1", h.db.queryForObject("select event_key from committed_official_notice_wx", String.class));
             verifyNoInteractions(h.notice.wx);
-            verify(h.oldNotices).sendAfterCommit(eq(100L), eq("投诉工单已处理"),
-                    eq("工单#1已关闭，请在投诉记录查看处理说明。"), eq("complaint-close-reporter"), eq(1L));
+            verify(h.oldNotices).submitReporter(eq(1L), eq(100L), eq(999L), eq("投诉工单已处理"),
+                    eq("工单#1已关闭，请在投诉记录查看处理说明。"));
             verifyNoMoreInteractions(h.oldNotices);
             h.db.update("update coop_complaint set respondent_member_id=999,deduct_amount=1,handle_note='edited after commit' where id=1");
             h.notice.wakes.clear(); h.notice.recover(); h.assertRespondentNotice();
@@ -205,14 +205,14 @@ class CoopComplaintCommittedNoticeMySqlIT {
         }
     }
 
-    private static final class Harness implements AutoCloseable {
+    static final class Harness implements AutoCloseable {
         final CoopComplaintCloseMybatisIntegrationTest legacy = new CoopComplaintCloseMybatisIntegrationTest();
         final CommittedOfficialNoticeMySqlFixture notice = new CommittedOfficialNoticeMySqlFixture();
         JdbcTemplate db;
         ICoopComplaintService service;
         CoopComplaintServiceImpl target;
         IPlayerWithdrawalCooldownService cooldown;
-        CommittedBusinessNotice oldNotices;
+        ComplaintCloseReporterNotice oldNotices;
         CoopComplaintController controller;
 
         Harness() throws Exception {
@@ -226,7 +226,7 @@ class CoopComplaintCommittedNoticeMySqlIT {
                 target = AopTestUtils.getUltimateTargetObject(service);
                 ReflectionTestUtils.setField(target, "committedOfficialNoticeService", notice.notice);
                 cooldown = (IPlayerWithdrawalCooldownService) ReflectionTestUtils.getField(target, "playerWithdrawalCooldownService");
-                oldNotices = (CommittedBusinessNotice) ReflectionTestUtils.getField(target, "businessNotice");
+                oldNotices = (ComplaintCloseReporterNotice) ReflectionTestUtils.getField(target, "complaintCloseReporterNotice");
                 controller = new CoopComplaintController() { @Override public Long getUserId() { return 999L; } };
                 ReflectionTestUtils.setField(controller, "coopComplaintService", service);
             } catch (Exception | Error failure) { close(); throw failure; }

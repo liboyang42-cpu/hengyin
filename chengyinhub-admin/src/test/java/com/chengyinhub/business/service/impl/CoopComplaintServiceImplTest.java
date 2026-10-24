@@ -34,7 +34,7 @@ class CoopComplaintServiceImplTest {
     private IUmsMemberBalanceDetailService balanceDetailService;
     private IPlayerWithdrawalCooldownService cooldownService;
     private CoopComplaintServiceImpl svc;
-    private com.chengyinhub.business.service.support.CommittedBusinessNotice notices;
+    private com.chengyinhub.business.service.support.ComplaintCloseReporterNotice notices;
     private com.chengyinhub.business.service.support.CommittedOfficialNoticeService durableNotices;
 
     private final com.chengyinhub.business.service.support.SettlementDebtLedger debtLedger = org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class);
@@ -45,8 +45,8 @@ class CoopComplaintServiceImplTest {
         umsMemberService = mock(IUmsMemberService.class);
         balanceDetailService = mock(IUmsMemberBalanceDetailService.class);
         svc = new CoopComplaintServiceImpl();
-        notices = mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class);
-        ReflectionTestUtils.setField(svc, "businessNotice", notices);
+        notices = mock(com.chengyinhub.business.service.support.ComplaintCloseReporterNotice.class);
+        ReflectionTestUtils.setField(svc, "complaintCloseReporterNotice", notices);
         durableNotices = mock(com.chengyinhub.business.service.support.CommittedOfficialNoticeService.class);
         ReflectionTestUtils.setField(svc, "committedOfficialNoticeService", durableNotices);
         ReflectionTestUtils.setField(svc, "settlementDebtLedger", debtLedger);
@@ -184,7 +184,7 @@ class CoopComplaintServiceImplTest {
         assertEquals(Integer.valueOf(CoopComplaint.STATUS_CLOSED), cap.getValue().getStatus(), "关闭=解冻");
         assertEquals(Integer.valueOf(70), cap.getValue().getFaultRatio());
         assertEquals(0, new BigDecimal("50").compareTo(cap.getValue().getDeductAmount()));
-        verify(notices).sendAfterCommit(eq(100L), any(), any(), eq("complaint-close-reporter"), eq(1L));
+        verify(notices).submitReporter(eq(1L), eq(100L), eq(999L), any(), any());
         verify(durableNotices).enqueueOfficial(eq("complaint-close-respondent:1"), eq(200L),
                 eq("投诉工单处理结果"), eq("工单#1已处理，实际扣划 ¥50。请核对账务及处理说明。"));
     }

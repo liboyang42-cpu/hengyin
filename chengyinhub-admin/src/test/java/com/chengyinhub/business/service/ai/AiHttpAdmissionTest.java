@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.ai;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.common.config.AiModelConfig;
+import com.chengyinhub.common.config.AiVoiceConfig;
 import com.chengyinhub.common.config.AiProviderProperties;
 import com.chengyinhub.common.utils.http.HttpUtils;
 import com.sun.net.httpserver.HttpServer;
@@ -149,7 +150,9 @@ class AiHttpAdmissionTest
         when(text.getBaseUrl()).thenReturn("https://same.invalid/v1");
         when(vision.getBaseUrl()).thenReturn("https://SAME.invalid:443/v2");
         LlmClientConfig config = new LlmClientConfig();
-        AiHttpAdmission gate = config.aiHttpAdmission(text, vision, props);
+        AiVoiceConfig voice = mock(AiVoiceConfig.class);
+        when(voice.baseUrl()).thenReturn("https://same.invalid/voice");
+        AiHttpAdmission gate = config.aiHttpAdmission(text, vision, props, voice);
         OpenAiCompatibleLlmClient qwen = (OpenAiCompatibleLlmClient) config.qwenLlmClient(text, gate);
         OpenAiCompatibleLlmClient deepseek = (OpenAiCompatibleLlmClient) config.deepseekLlmClient(text, gate);
         OpenAiCompatibleLlmClient vl = (OpenAiCompatibleLlmClient) config.visionLlmClient(vision, gate);
