@@ -1,0 +1,10 @@
+git diff --check: PASS
+B9 actual API/types read: PASS
+Shared review patch applies to actual public B9 source: PASS
+Java delimiter balance (source-only, NOT compilation): PASS
+Resource detach guarded by STATUS_COMMITTED only: source PASS
+Limited added-patch secret pattern check: PASS (not gitleaks)
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java: ordinary declarations 14 -> 16
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java: ordinary declarations 8 -> 9
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java: ordinary declarations 27 -> 29
+Java/MySQL/provider/CI: NOT_RUN

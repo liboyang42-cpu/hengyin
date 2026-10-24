@@ -114,6 +114,12 @@ class CoopDepositSettlementAttemptMySqlIT {
         WechatPayTestWiring.setField(facade, "wxPayConfig", config);
         WechatPayTestWiring.setField(facade, "paymentIntentJdbc", db);
         WechatPayTestWiring.setField(facade, "paymentIntentTransactions", transactions);
+        var verified = (WechatVerifiedPaymentFactService) WechatPayTestWiring.getField(facade,"verifiedFacts");
+        var originalBusiness = new JdbcWechatPaymentOrderOwner();
+        ReflectionTestUtils.setField(originalBusiness,"paymentIntentJdbc",db);
+        ReflectionTestUtils.setField(verified,"factBusinessOwner",originalBusiness);
+        ReflectionTestUtils.setField(verified,"factIntentJdbc",db);
+        ReflectionTestUtils.setField(verified,"factWriteTransactions",transactions);
         WechatPayTestWiring.setField(facade, "jsapiService", sdk);
         gateway = spy((WechatPaymentSdkGateway) WechatPayTestWiring.getField(facade, "gateway"));
         assertEquals(BUSINESS, gateway.freezePaymentIntent(BUSINESS, "merchant", "wx-original", "JSAPI", "CNY", 5000,
@@ -143,6 +149,7 @@ class CoopDepositSettlementAttemptMySqlIT {
         ReflectionTestUtils.setField(invites, "coopInviteMapper", mapper);
         topic = new CmsTopicServiceImpl();
         ReflectionTestUtils.setField(topic, "transactionManager", transactions);
+        ReflectionTestUtils.setField(topic, "depositVerifiedFacts", verified);
         var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
         when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call -> db.queryForObject(
                 "SELECT id FROM cms_topic WHERE id=11 FOR UPDATE", (rs,n) -> {
@@ -262,6 +269,50 @@ class CoopDepositSettlementAttemptMySqlIT {
         assertTrue(resolve());
         assertEquals(5, mapper.selectCoopInviteById(89L).getDepositStatus());
         assertEquals(BUSINESS, mapper.selectCoopInviteById(89L).getDepositOutTradeNo());
+    }
+
+    @Test
+    void realFactAndRecoveryTicketSurviveBusinessFailureThenCompleteWithExactPaidReceipt() throws Exception {
+        // This case alone uses B's real fact/recovery SQL, not the other cases' unit fact mapper.
+        Path root = Files.exists(Path.of("sql/base_schema_20260818.sql")) ? Path.of("") : Path.of("..");
+        String base = Files.readString(root.resolve("sql/base_schema_20260818.sql"));
+        for (String table : List.of("wx_payment_callback_inbox", "wx_payment_callback_outbox")) {
+            int start = base.indexOf("CREATE TABLE `" + table + "` (");
+            int close = base.indexOf("\n) ENGINE", start);int end = base.indexOf(";\n", close);
+            assertTrue(start >= 0 && close > start && end > close);db.execute(base.substring(start,end+1));
+        }
+        new ResourceDatabasePopulator(new FileSystemResource(root.resolve(
+                "chengyinhub-admin/sql/migration_20261024_wx_verified_payment_fact.sql"))).execute(db.getDataSource());
+        var real = WechatVerifiedFactTestSupport.realFacts(db.getDataSource());
+        ReflectionTestUtils.setField(gateway,"verifiedFacts",real);
+        ReflectionTestUtils.setField(ReflectionTestUtils.getField(gateway,"intents"),"verifiedFacts",real);
+        provider.setTradeState(Transaction.TradeStateEnum.CLOSED);
+        gateway.queryOrderStatus(BUSINESS); // Original CLOSED receipt precedes this late, immutable SUCCESS.
+        provider.setTradeState(Transaction.TradeStateEnum.SUCCESS);provider.setTransactionId("WXTX89");
+        provider.setSuccessTime("2026-10-24T00:00:00+08:00");
+        var failing = spy(real);
+        doThrow(new IllegalStateException("INJECTED_BEFORE_RECOVERY_RECEIPT_COMPLETION"))
+                .when(failing).completePaymentRecovery(any(),eq(89L));
+        ReflectionTestUtils.setField(topic,"depositVerifiedFacts",failing);
+        Map<String,Object> before = row();
+        assertThrows(IllegalStateException.class,this::resolve);
+        assertEquals(before,row(),"Paid CAS must roll back if its recovery receipt cannot commit");
+        var reference=real.findPaymentSuccess("merchant",BUSINESS,"WXTX89").reference();
+        var pending=real.findPaymentRecovery(reference).orElseThrow();
+        assertEquals(89L,pending.businessId());assertEquals(4,pending.state());
+        assertEquals(reference,pending.original().reference());
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
+        ReflectionTestUtils.setField(topic,"depositVerifiedFacts",real);
+        assertFalse(resolve()); // Same original fact/attempt, no automatic refund or reopening.
+        assertEquals(2,mapper.selectCoopInviteById(89L).getDepositStatus());
+        assertEquals(BUSINESS,mapper.selectCoopInviteById(89L).getDepositOutTradeNo());
+        assertEquals("WXTX89",mapper.selectCoopInviteById(89L).getDepositPaidTransactionId());
+        var completed=real.findPaymentRecovery(reference).orElseThrow();
+        assertEquals(2,completed.state());assertEquals(reference,completed.original().reference());
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
+        assertEquals(0,db.queryForObject("SELECT money_affecting FROM wx_payment_callback_outbox",Integer.class));
     }
 
     private boolean resolve() {

@@ -143,6 +143,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     // A3-7(P0):每主题独立事务用(照抄活动线),替代原整批单 @Transactional。
     @Autowired
     private PlatformTransactionManager transactionManager;
+    @Autowired private WechatVerifiedPaymentFactService depositVerifiedFacts;
 
     @Autowired
     private CoopInviteMapper coopInviteMapper;
@@ -1151,6 +1152,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             throw new IllegalStateException("保证金原身份或金额已变化 inviteId=" + observed.getId());
         String business = observed.getDepositOutTradeNo(); String attempt = payment.get("wx_out_trade_no");
         if ("SUCCESS".equalsIgnoreCase(payment.get("trade_state"))) {
+            CoopInviteServiceImpl.checkedDepositPaymentReference(payment);
             if (!"CNY".equals(payment.get("currency"))) throw new IllegalStateException("保证金币种不匹配");
             Long paidCents;
             try { paidCents = Long.valueOf(payment.get("total")); }
@@ -1163,6 +1165,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                     || !business.equals(confirmed.getDepositOutTradeNo())
                     || !java.util.Objects.equals(payment.get("transaction_id"), confirmed.getDepositPaidTransactionId()))
                 throw new IllegalStateException("保证金支付状态读回失败 inviteId=" + observed.getId());
+            CoopInviteServiceImpl.completeConsumedDepositRecovery(depositVerifiedFacts, coopInviteMapper, observed.getId(), payment);
             return false;
         }
         if (!Integer.valueOf(1).equals(current.getDepositStatus())

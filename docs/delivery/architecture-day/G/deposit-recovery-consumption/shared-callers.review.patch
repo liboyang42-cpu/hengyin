@@ -1,0 +1,26 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentCallbackRouter.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentCallbackRouter.java
+@@ -44,7 +44,9 @@
+                 new Owner("coop-deposit", no -> no != null && no.startsWith("DEP"), facts ->
+                         ack(coop != null && paid(facts) && "CNY".equals(facts.get("currency"))
+                                 && coop.markDepositPaid(facts.get("out_trade_no"),
+-                                        cents(facts) == null ? null : cents(facts).longValue(), facts.get("transaction_id")))),
++                                        cents(facts) == null ? null : cents(facts).longValue(), facts.get("transaction_id"),
++                                        new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
++                                                Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash"))))),
+                 new Owner("registration", no -> no != null && registration != null && registration.getByRegistrationNo(no) != null, facts ->
+                         registration == null ? "FAIL" : registration.handleWechatPayCallback(facts)));
+         depositRefund = facts -> coop != null && coop.handleDepositRefundResult(facts);
+--- a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java
++++ b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java
+@@ -170,7 +170,9 @@
+                         && "SUCCESS".equals(facts.get("trade_state")) && "CNY".equals(facts.get("currency"))
+                         && facts.get("total") != null && facts.get("total").matches("[0-9]{1,10}")) {
+                     // Gateway verifies original merchant/app/channel; domain keeps amount, transaction binding and CAS.
+-                    if (!coopInviteService.markDepositPaid(originalNo, Long.valueOf(facts.get("total")), facts.get("transaction_id"))) {
++                    if (!coopInviteService.markDepositPaid(originalNo, Long.valueOf(facts.get("total")), facts.get("transaction_id"),
++                            new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
++                                    Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash")))) {
+                         return new AjaxResult(409, "支付已成功，本地确认尚未完成，请稍后重试");
+                     }
+                     invite = coopInviteService.selectCoopInviteById(inviteId);

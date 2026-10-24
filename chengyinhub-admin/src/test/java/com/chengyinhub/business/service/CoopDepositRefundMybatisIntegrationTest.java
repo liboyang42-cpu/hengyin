@@ -208,6 +208,16 @@ class CoopDepositRefundMybatisIntegrationTest {
         Map<String,String> fact=new HashMap<>(); fact.put("trade_state","SUCCESS");
         fact.put("out_trade_no","DEP1T100"); fact.put("currency","CNY"); fact.put("total","5000"); fact.put("transaction_id","wx1"); fact.put("wx_out_trade_no","DEP1T100");
         when(wx.lockPaymentAttemptForUpdate("DEP1T100","DEP1T100")).thenReturn(true);
+        var verified = mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class);
+        var proof = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original",
+                "DEP1T100","DEP1T100","DEP1T100","wx1","wx1","JSAPI","CNY",5000,5000,
+                java.time.Instant.ofEpochSecond(1700000000),"a".repeat(64),"SUCCESS");
+        var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,proof.factHash());
+        when(verified.requireVerified(reference)).thenReturn(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,proof));
+        when(verified.findPaymentRecovery(reference)).thenReturn(java.util.Optional.empty());
+        WechatPayTestWiring.setField(invites,"depositVerifiedFacts",verified);
+        fact.put("verified_fact_id","7"); fact.put("verified_fact_hash",reference.hash());
         for (String field:Arrays.asList("out_trade_no","currency","total","transaction_id")) {
             Map<String,String> invalid=new HashMap<>(fact); invalid.put(field,field.equals("total")?"1":field.equals("transaction_id")?"":"OTHER");
             when(wx.queryOrderStatus("DEP1T100")).thenReturn(invalid);
@@ -215,6 +225,27 @@ class CoopDepositRefundMybatisIntegrationTest {
         }
         when(wx.queryOrderStatus("DEP1T100")).thenReturn(fact);
         assertTrue(transactionalInvites().markDepositPaid("DEP1T100")); assertEquals(2,row().getDepositStatus());
+    }
+
+    @Test void committedRefundIntentDetachesResourcesBeforeChannelQuery() {
+        var observed = new java.util.concurrent.atomic.AtomicBoolean();
+        when(wx.queryRefundFacts("RDEP1T100")).thenAnswer(call -> {
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals("RDEP1T100",row().getDepositRefundNo());
+            assertNotNull(row().getDepositRefundState(),"The intent must already be committed/visible before SDK I/O");
+            observed.set(true);return Collections.singletonMap("status","NOT_FOUND");
+        });
+        request();
+        assertTrue(observed.get());assertEquals(2,row().getDepositStatus());
+        assertEquals("PROCESSING",row().getDepositRefundState());
+    }
+
+    @Test void uncommittedRefundCallerCannotDetachItsLocksToQuery() {
+        tx.executeWithoutResult(status -> {
+            assertThrows(IllegalStateException.class,()->refunds.refresh(1L,true));
+            verifyNoInteractions(wx);status.setRollbackOnly();
+        });
+        assertNull(row().getDepositRefundState());
     }
 
     @Test void markingDueCannotOverwritePaymentCommittedAfterOldSnapshot() throws Exception {

@@ -52,8 +52,13 @@ public class CoopDepositRefundService {
 
     private void afterCommit(final Long inviteId) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override public void afterCommit() {
-                try { refresh(inviteId, true); }
+            @Override public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) return;
+                // Only this post-physical-commit callback may detach the completed transaction's resources.
+                // Never use this boundary to suspend an uncommitted business owner/lock.
+                TransactionTemplate detached = new TransactionTemplate(transactionManager);
+                detached.setPropagationBehavior(TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
+                try { detached.executeWithoutResult(ignored -> refresh(inviteId, true)); }
                 catch (Exception e) { alarm(inviteId, "退款派发失败，持久意图待对账恢复"); }
             }
         });
@@ -61,6 +66,8 @@ public class CoopDepositRefundService {
 
     /** 只在独立短事务领取派发权，微信调用发生在领取提交之后。 */
     public void refresh(Long inviteId, boolean force) {
+        if (TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("保证金退款查证不能悬挂未提交的业务事务");
         String token = UUID.randomUUID().toString();
         CoopInvite owned = newTransaction().execute(status -> {
             if (mapper.claimDepositRefundDispatch(inviteId, token, force) != 1) return null;
