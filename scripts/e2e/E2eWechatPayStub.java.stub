@@ -169,6 +169,17 @@ public class E2eWechatPayStub implements IWechatPayService {
     }
 
     @Override
+    public boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo) {
+        return false;
+    }
+
+    @Override
+    public boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo) {
+        // This fixture has no verified payment attempt or business-row lock.
+        return false;
+    }
+
+    @Override
     public RefundRequestResult submitRefund(String outTradeNo, String outRefundNo, BigDecimal refundAmount,
                                             BigDecimal totalAmount, String reason) {
         return RefundRequestResult.DEFINITIVE_FAILED;

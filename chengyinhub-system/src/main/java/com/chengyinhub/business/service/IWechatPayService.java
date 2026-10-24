@@ -76,6 +76,13 @@ public interface IWechatPayService {
      */
     boolean closeOrder(String outTradeNo);
 
+    /** Close exactly the observed provider attempt; never resolve a newer alias for an old observation. */
+    boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo);
+
+    /** Must run inside the domain mutation transaction. Locks business then latest attempt; false means stale. */
+    boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo);
+
+
     /**
      * 微信原路退款(退回付款人原支付账户)。
      * @param outTradeNo   原支付商户订单号(= registrationNo)
@@ -123,4 +130,19 @@ public interface IWechatPayService {
      *         ★UNKNOWN 表示查询本身异常(网络/服务未就绪),调用方不得据此判失败,应保持处理中并稍后重试。
      */
     Map<String, String> queryTransferResult(String outBatchNo, String outDetailNo);
+
+    default Map<String, String> transferToBalance(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        intent.requireValid();
+        return transferToBalance(intent.outBatchNo(), intent.outDetailNo(), intent.amountYuan(),
+                intent.openid(), intent.remark(), intent.appid());
+    }
+
+    default Map<String, String> queryTransferResult(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        intent.requireValid();
+        Map<String, String> facts = queryTransferResult(intent.outBatchNo(), intent.outDetailNo());
+        if (facts != null && ("SUCCESS".equals(facts.get("result")) || "FAIL".equals(facts.get("result")))
+                && !intent.matchesObservation(facts))
+            return Map.of("result", "UNKNOWN", "error", "转账事实与原始提交证据不一致");
+        return facts;
+    }
 }

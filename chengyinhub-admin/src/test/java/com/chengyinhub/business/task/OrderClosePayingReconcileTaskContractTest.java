@@ -69,6 +69,10 @@ class OrderClosePayingReconcileTaskContractTest {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
         IWechatPayService wechat = mock(IWechatPayService.class);
         OrderCloseTask task = new OrderCloseTask();
+        var tm = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(tm.getTransaction(any())).thenReturn(new org.springframework.transaction.support.SimpleTransactionStatus());
+        ReflectionTestUtils.setField(task, "paymentTransactions", tm);
+        when(wechat.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         ReflectionTestUtils.setField(task, "cmsRegistrationService", service);
         ReflectionTestUtils.setField(task, "wechatPayService", wechat);
         ReflectionTestUtils.setField(task, "alarmService", mock(AlarmService.class));
@@ -94,6 +98,7 @@ class OrderClosePayingReconcileTaskContractTest {
             if (!"PAYING-201".equals(orderNo)) throw new IllegalStateException("provider unavailable");
             Map<String, String> result = new HashMap<>();
             result.put("out_trade_no", orderNo);
+            result.put("wx_out_trade_no", orderNo);
             result.put("trade_state", "CLOSED");
             return result;
         });

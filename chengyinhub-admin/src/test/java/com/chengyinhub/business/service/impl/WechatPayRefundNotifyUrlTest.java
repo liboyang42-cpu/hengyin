@@ -32,6 +32,7 @@ class WechatPayRefundNotifyUrlTest {
 
     private CreateRequest submitWith(String refundNotifyUrl) {
         WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getRefundNotifyUrl()).thenReturn(refundNotifyUrl);
         ReflectionTestUtils.setField(service, "wxPayConfig", config);
@@ -58,6 +59,34 @@ class WechatPayRefundNotifyUrlTest {
     void configuredRefundNotifyUrl_isSent() {
         String url = "https://api.example.com/prod-api/api/registration/refund-callback";
         assertEquals(url, submitWith(url).getNotifyUrl());
+    }
+
+    @Test
+    void refundUsesRetainedActualAttemptAndNormalizesCallbackBusinessIdentity() {
+        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        var db = WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
+        String alias = "WXP0123456789abcdef0123456789abc";
+        db.intents.put("merchant:" + alias, new java.util.HashMap<>(java.util.Map.of(
+                "mchid", "merchant", "out_trade_no", alias, "business_out_trade_no", "DEP1", "attempt_no", 2)));
+        WxPayConfig config = mock(WxPayConfig.class);
+        when(config.getMerchantId()).thenReturn("merchant");
+        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        RefundService sdk = mock(RefundService.class);
+        Refund refund = new Refund();
+        refund.setStatus(Status.PROCESSING);
+        when(sdk.create(any())).thenReturn(refund);
+        ReflectionTestUtils.setField(service, "refundService", sdk);
+        assertEquals(com.chengyinhub.business.service.RefundRequestResult.ACCEPTED,
+                service.submitRefund("DEP1", "RF1", BigDecimal.ONE, BigDecimal.ONE, "退款"));
+        ArgumentCaptor<CreateRequest> request = ArgumentCaptor.forClass(CreateRequest.class);
+        verify(sdk).create(request.capture());
+        assertEquals(alias, request.getValue().getOutTradeNo());
+        refund.setOutTradeNo(alias);
+        refund.setOutRefundNo("RF1");
+        when(sdk.queryByOutRefundNo(any())).thenReturn(refund);
+        java.util.Map<String, String> facts = service.queryRefundFacts("RF1");
+        assertEquals("DEP1", facts.get("outTradeNo"));
+        assertEquals(alias, facts.get("wxOutTradeNo"));
     }
 
     @Test

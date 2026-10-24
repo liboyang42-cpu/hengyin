@@ -3,6 +3,7 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
@@ -138,6 +139,7 @@ class FundIdempotencyConcurrencyTest {
         MemberCashWithdraw pending = new MemberCashWithdraw();
         pending.setId(withdrawalId);
         pending.setMemberId(memberId);
+        pending.setOpenid("openid-9101");
         pending.setAmount(amount);
         pending.setOutBatchNo("CW" + withdrawalId);
         pending.setOutDetailNo("CD" + withdrawalId);
@@ -152,10 +154,15 @@ class FundIdempotencyConcurrencyTest {
             return 1;
         });
         when(mapper.selectById(withdrawalId)).thenReturn(pending);
+        when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
+        CashWithdrawIntentTestSupport evidence = new CashWithdrawIntentTestSupport();
         when(mapper.selectPendingForQuery(1)).thenReturn(Collections.singletonList(pending));
         AtomicBoolean statusClaimed = new AtomicBoolean();
-        when(mapper.updateStatusIfProcessing(any())).thenAnswer(invocation ->
-                statusClaimed.compareAndSet(false, true) ? 1 : 0);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(invocation -> {
+            if (!statusClaimed.compareAndSet(false, true)) return 0;
+            pending.setStatus(invocation.getArgument(0, MemberCashWithdraw.class).getStatus());
+            return 1;
+        });
 
         IUmsMemberService memberService = mock(IUmsMemberService.class);
         UmsMember member = new UmsMember();
@@ -169,34 +176,42 @@ class FundIdempotencyConcurrencyTest {
         CountDownLatch transferEntered = new CountDownLatch(1);
         CountDownLatch allowDeterministicFailure = new CountDownLatch(1);
         IWechatPayService wechatPayService = mock(IWechatPayService.class);
-        when(wechatPayService.transferToBalance(
-                eq("CW" + withdrawalId), eq("CD" + withdrawalId), eq(amount),
-                eq("openid-9101"), any(), any())).thenAnswer(invocation -> {
+        when(wechatPayService.transferToBalance(any(CashWithdrawTransferIntent.class))).thenAnswer(invocation -> {
+            CashWithdrawTransferIntent intent = invocation.getArgument(0);
+            assertEquals("CW" + withdrawalId, intent.outBatchNo());
+            assertEquals("CD" + withdrawalId, intent.outDetailNo());
+            assertEquals(3000L, intent.amountFen());
+            assertEquals("openid-9101", intent.openid());
+            assertTrue(intent.submitted(), "SDK must use the persisted SUBMIT claim");
             transferEntered.countDown();
             assertTrue(allowDeterministicFailure.await(5, TimeUnit.SECONDS),
                     "发起线程应等待对账线程先领取同一提现单");
             Map<String, String> result = new HashMap<>();
             result.put("ok", "false");
             result.put("error", "微信明确拒绝");
+            result.put("notSent", "true");
+            result.put("requestHash", intent.requestHash());
             return result;
         });
-        Map<String, String> queryFailure = new HashMap<>();
-        queryFailure.put("result", "FAIL");
-        queryFailure.put("batchStatus", "CLOSED");
-        when(wechatPayService.queryTransferResult("CW" + withdrawalId, "CD" + withdrawalId))
-                .thenReturn(queryFailure);
+        when(wechatPayService.queryTransferResult(any(CashWithdrawTransferIntent.class)))
+                .thenAnswer(invocation -> CashWithdrawIntentTestSupport.facts(invocation.getArgument(0), "FAIL"));
 
         CashWithdrawServiceImpl service = new CashWithdrawServiceImpl();
         org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
         ReflectionTestUtils.setField(service, "transactionManager", transactions);
-        when(mapper.updateStatusIfManual(any())).thenReturn(1);
+        when(mapper.updateStatusIfManual(any())).thenAnswer(invocation -> {
+            pending.setStatus(invocation.getArgument(0, MemberCashWithdraw.class).getStatus());
+            return 1;
+        });
+        ReflectionTestUtils.setField(service, "transferIntents", evidence.mapper);
         ReflectionTestUtils.setField(service, "mapper", mapper);
         ReflectionTestUtils.setField(service, "umsMemberService", memberService);
         ReflectionTestUtils.setField(service, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(service, "alarmService", mock(AlarmService.class));
         WxPayConfig payConfig = mock(WxPayConfig.class);
         when(payConfig.getAppid()).thenReturn("wx-appid");
+        when(payConfig.getMerchantId()).thenReturn("merchant");
         ReflectionTestUtils.setField(service, "wxPayConfig", payConfig);
         MerchantReferralBountyService bountyService = mock(MerchantReferralBountyService.class);
         IPlayerWithdrawalCooldownService cooldownService = mock(IPlayerWithdrawalCooldownService.class);
@@ -205,7 +220,7 @@ class FundIdempotencyConcurrencyTest {
         ReflectionTestUtils.setField(service, "frozenAmountResolver",
                 new WithdrawalFrozenAmountResolver(bountyService, cooldownService));
         ReflectionTestUtils.setField(service, "balanceAdmissionService",
-                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(memberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver")));
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(memberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver"), evidence.mapper));
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
@@ -227,6 +242,7 @@ class FundIdempotencyConcurrencyTest {
         }
 
         verify(memberService, times(1)).addBalance(memberId, amount);
+        verify(evidence.mapper).markSubmitted(eq(withdrawalId), eq(evidence.get(withdrawalId).requestHash()));
         ArgumentCaptor<MemberCashWithdraw> claims = ArgumentCaptor.forClass(MemberCashWithdraw.class);
         verify(mapper, times(2)).updateStatusIfProcessing(claims.capture());
         List<MemberCashWithdraw> actualClaims = claims.getAllValues();

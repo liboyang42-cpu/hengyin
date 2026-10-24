@@ -60,6 +60,11 @@ class PaymentCallbackFenceEntryTest
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(service, "wxPaymentCallbackInboxService", inbox);
         ReflectionTestUtils.setField(service, "alarmService", alarm);
+        var gateway = mock(com.chengyinhub.business.service.IWechatPayService.class);
+        when(gateway.lockPaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(true);
+        var attempts = mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(attempts.getObject()).thenReturn(gateway);
+        ReflectionTestUtils.setField(service, "paymentAttemptGateway", attempts);
         registration = new CmsRegistration();
         registration.setId(11L);
         registration.setRegistrationNo("A-ORIGINAL");
@@ -67,6 +72,7 @@ class PaymentCallbackFenceEntryTest
         when(registrations.selectByRegistrationNo("A-ORIGINAL")).thenReturn(registration);
         payload = new HashMap<>();
         payload.put("out_trade_no", "A-ORIGINAL");
+        payload.put("wx_out_trade_no", "A-ORIGINAL");
         payload.put("transaction_id", "TX-ORIGINAL");
         payload.put("trade_state", "CLOSED");
         when(inbox.register(anyString(), anyInt(), anyLong(), any())).thenReturn(true);
@@ -127,6 +133,17 @@ class PaymentCallbackFenceEntryTest
 
         verify(registrations, never()).claimPaymentFailure(anyLong(), any());
         verify(registrations, never()).selectCmsRegistrationByIdForUpdate(anyLong());
+    }
+
+    @Test
+    void closedCallbackMissingObservedAttemptCannotMutateOrder()
+    {
+        payload.remove("wx_out_trade_no");
+        when(inbox.process(anyString(), any())).thenAnswer(call -> runMutation(call.getArgument(1), row(11L, "CLOSED")));
+        assertEquals("FAIL", service.handleWechatPayCallback(payload));
+        verify(registrations, never()).claimPaymentFailure(anyLong(), any());
+        verify(alarm).alarmThrottled(eq("payment.callback.registration"), anyString(),
+                contains("reason=payment_attempt_conflict"));
     }
 
     @Test

@@ -322,12 +322,17 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         if (ClubMembershipInvoice.STATUS_PAID.equals(invoice.getStatus())
                 || ClubMembershipInvoice.STATUS_CLOSED.equals(invoice.getStatus())) return renewal(invoice);
 
-        ClubMembershipRenewalVO observed = reconcileWechatInvoice(
-                invoice, intent.access, intent.requestId, true);
+        Map<String, String> closingObservation;
+        try { closingObservation = wechatPayService.queryOrderStatus(invoice.getOutTradeNo()); }
+        catch (Exception unavailable) {
+            throw new ServiceException("微信支付状态暂不可确认，原账单继续保留", HttpStatus.CONFLICT);
+        }
+        ClubMembershipRenewalVO observed = applyWechatInvoiceObservation(
+                invoice, intent.access, intent.requestId, true, closingObservation);
         if (observed != null) return observed;
         boolean closeAccepted;
         try {
-            closeAccepted = wechatPayService.closeOrder(invoice.getOutTradeNo());
+            closeAccepted = wechatPayService.closePaymentAttempt(invoice.getOutTradeNo(), closingObservation.get("wx_out_trade_no"));
         } catch (Exception closeUnknown) {
             throw new ServiceException("微信关单结果未确认，原账单继续保留", HttpStatus.CONFLICT);
         }
@@ -1047,7 +1052,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     /**
-     * 以微信查单为真源：SUCCESS 复用回调状态机补齐权益；CLOSED/REVOKED/PAYERROR
+     * 以微信查单为真源：SUCCESS 复用回调状态机补齐权益；仅 CLOSED
      * 只有在订单号与金额读回一致后才把本地 PAYING 前向关闭。查询未知时不改本地资金状态。
      */
     private ClubMembershipRenewalVO reconcileWechatInvoice(ClubMembershipInvoice invoice,
@@ -1063,6 +1068,11 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
             }
             return null;
         }
+        return applyWechatInvoiceObservation(invoice, access, requestId, strictQuery, wxOrder);
+    }
+
+    private ClubMembershipRenewalVO applyWechatInvoiceObservation(ClubMembershipInvoice invoice,
+            ClubAccessContext access, String requestId, boolean strictQuery, Map<String, String> wxOrder) {
         String tradeState = wxOrder == null ? null : wxOrder.get("trade_state");
         if (blank(tradeState)) {
             if (strictQuery) {
@@ -1076,10 +1086,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                 || !Long.valueOf(amountFen.longValue()).equals(invoice.getAmountFen())) {
             throw new ServiceException("微信支付账单对账不一致，未变更本地账单", HttpStatus.CONFLICT);
         }
-        if ("CLOSED".equalsIgnoreCase(tradeState) || "REVOKED".equalsIgnoreCase(tradeState)
-                || "PAYERROR".equalsIgnoreCase(tradeState)) {
+        if ("CLOSED".equalsIgnoreCase(tradeState)) {
             return transaction().execute(status -> closeObservedInvoice(
-                    invoice, access, requestId, tradeState.toUpperCase()));
+                    invoice, access, requestId, tradeState.toUpperCase(), wxOrder.get("wx_out_trade_no")));
         }
         if ("REFUND".equalsIgnoreCase(tradeState)) {
             throw new ServiceException("微信订单存在已支付退款事实，不能按未支付账单关闭", HttpStatus.CONFLICT);
@@ -1115,7 +1124,10 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     private ClubMembershipRenewalVO closeObservedInvoice(ClubMembershipInvoice invoice,
                                                            ClubAccessContext access,
                                                            String requestId,
-                                                           String wechatState) {
+                                                           String wechatState, String observedWxNo) {
+        if (!wechatPayService.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
+            throw new ServiceException("支付尝试已变化，未关闭当前账单", HttpStatus.CONFLICT);
+        }
         if (invoice.getVersion() == null || clubMembershipMapper.markInvoiceClosedCas(
                 invoice.getId(), invoice.getVersion(), now()) != 1) {
             ClubMembershipInvoice current = clubMembershipMapper.selectInvoiceById(invoice.getId());

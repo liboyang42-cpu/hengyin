@@ -1592,14 +1592,32 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * 已支付转冻结(随后统一退款);未支付先关闭微信订单再转待缴,才可安全从应收抵扣。
      */
     private boolean resolvePendingDepositPaymentForSettlement(CoopInvite invite) {
-        if (invite.getDepositOutTradeNo() == null) {
+        String businessNo = invite.getDepositOutTradeNo();
+        if (businessNo == null) {
             throw new IllegalStateException("保证金支付单缺失 inviteId=" + invite.getId());
         }
-        Map<String, String> payment = wechatPayService.queryOrderStatus(invite.getDepositOutTradeNo());
-        if (payment == null || !invite.getDepositOutTradeNo().equals(payment.get("out_trade_no"))) {
+        Map<String, String> payment = wechatPayService.queryOrderStatus(businessNo);
+        if (payment == null || !businessNo.equals(payment.get("out_trade_no"))
+                || payment.get("wx_out_trade_no") == null || payment.get("wx_out_trade_no").trim().isEmpty()) {
             throw new IllegalStateException("保证金支付查单归属不匹配 inviteId=" + invite.getId());
         }
+        String observedWxNo = payment.get("wx_out_trade_no");
         String tradeState = payment.get("trade_state");
+        if ("NOTPAY".equalsIgnoreCase(tradeState) || "USERPAYING".equalsIgnoreCase(tradeState)
+                || "PAYERROR".equalsIgnoreCase(tradeState) || "REVOKED".equalsIgnoreCase(tradeState)) {
+            try {
+                wechatPayService.closePaymentAttempt(businessNo, observedWxNo);
+            } catch (RuntimeException closeUnknown) {
+                logger.warn("保证金原支付尝试关单未确认，按原号回读 inviteId={}", invite.getId(), closeUnknown);
+            }
+            // 关单受理/异常都不能当终态；按观察到的微信原号回读，不能重新解析到后继尝试。
+            payment = wechatPayService.queryOrderStatus(observedWxNo);
+            if (payment == null || !businessNo.equals(payment.get("out_trade_no"))
+                    || !observedWxNo.equals(payment.get("wx_out_trade_no"))) {
+                throw new IllegalStateException("保证金关单回读归属不匹配 inviteId=" + invite.getId());
+            }
+            tradeState = payment.get("trade_state");
+        }
         if ("SUCCESS".equalsIgnoreCase(tradeState)) {
             if (!"CNY".equals(payment.get("currency"))) {
                 throw new IllegalStateException("保证金支付单号或币种不匹配 inviteId=" + invite.getId());
@@ -1607,7 +1625,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             Long paidCents;
             try { paidCents = payment.get("total") == null ? null : Long.valueOf(payment.get("total")); }
             catch (NumberFormatException failure) { throw new IllegalStateException("保证金支付金额无法确认 inviteId=" + invite.getId(), failure); }
-            if (!coopInviteService.markDepositPaid(invite.getDepositOutTradeNo(), paidCents, payment.get("transaction_id"))) {
+            if (!coopInviteService.markDepositPaid(businessNo, paidCents, payment.get("transaction_id"))) {
                 throw new IllegalStateException("保证金支付事实不匹配 inviteId=" + invite.getId());
             }
             CoopInvite confirmed = coopInviteMapper.selectCoopInviteByIdForUpdate(invite.getId());
@@ -1616,14 +1634,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             }
             return false;
         }
-        if ("NOTPAY".equalsIgnoreCase(tradeState) || "USERPAYING".equalsIgnoreCase(tradeState)) {
-            if (!wechatPayService.closeOrder(invite.getDepositOutTradeNo())) {
-                throw new IllegalStateException("保证金支付单关闭失败 inviteId=" + invite.getId());
-            }
-        } else if (!"CLOSED".equalsIgnoreCase(tradeState)
-                && !"REVOKED".equalsIgnoreCase(tradeState)
-                && !"PAYERROR".equalsIgnoreCase(tradeState)) {
+        if (!"CLOSED".equalsIgnoreCase(tradeState)) {
             throw new IllegalStateException("保证金支付状态无法确认 inviteId=" + invite.getId());
+        }
+        if (!wechatPayService.lockPaymentAttemptForUpdate(businessNo, observedWxNo)) {
+            throw new IllegalStateException("保证金支付尝试已变化，未抵扣 inviteId=" + invite.getId());
         }
         if (coopInviteMapper.updateDepositIfCurrent(invite.getId(), 1, invite.getDepositAmount(), 5, invite.getDepositAmount()) != 1) {
             throw new IllegalStateException("保证金关闭支付后状态冲突 inviteId=" + invite.getId());

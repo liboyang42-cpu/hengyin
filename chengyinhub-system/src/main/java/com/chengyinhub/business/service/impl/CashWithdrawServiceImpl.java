@@ -68,6 +68,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     @Autowired
     private com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService balanceAdmissionService;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper transferIntents;
+
     @Override
     public boolean hasPendingWithdraw(Long memberId) {
         if (memberId == null) return false;
@@ -76,6 +79,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
     @Override
     public MemberCashWithdraw withdraw(Long memberId, BigDecimal amountYuan) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("提现须在独立请求中发起，不能在已有资金事务中调用");
         if (memberId == null) throw new IllegalStateException("请先登录");
         if (amountYuan == null) throw new IllegalStateException("请输入提现金额");
         BigDecimal amount = amountYuan.setScale(2, RoundingMode.DOWN);
@@ -97,6 +102,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         }
         final String openid = channel[0];
         final String transferAppid = channel[1];
+        if (transferAppid == null || transferAppid.isBlank()
+                || wxPayConfig.getMerchantId() == null || wxPayConfig.getMerchantId().isBlank())
+            throw new IllegalStateException("提现渠道未配置，请联系客服核查");
 
         // [冻结] 可用余额 = 余额 - 总冻结额,口径与 UmsMemberWithdrawalServiceImpl **同一个解析点**。
         // 银行卡提现早已刨掉赏金,微信零钱这条口子原来只走 deductBalance(护栏只认裸余额)⇒ 冻结款可从这里提走。
@@ -142,14 +150,18 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         idc.setId(id);
         idc.setOutBatchNo(outBatchNo);
         idc.setOutDetailNo(outDetailNo);
-        mapper.updateMemberCashWithdraw(idc);
+        if (mapper.updateMemberCashWithdraw(idc) != 1)
+            throw new IllegalStateException("提现原批次号写入失败，未扣款、未转账");
+        w.setOutBatchNo(outBatchNo);
+        w.setOutDetailNo(outDetailNo);
 
         // 3. 原子扣余额,并给冻结赏金留底(护栏与扣款同一条 UPDATE ⇒ 并发也提不走冻结额)。
         boolean deducted;
         boolean currentRequestEligible;
         try {
             com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService.Admission admission =
-                    balanceAdmissionService.debitCash(id, memberId, amount);
+                    balanceAdmissionService.debitCash(id, memberId, amount, wxPayConfig.getMerchantId(),
+                            transferAppid, "城瘾分润提现");
             deducted = admission.deducted;
             currentRequestEligible = admission.currentRequestEligible;
         } catch (Exception e) {
@@ -172,9 +184,12 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
         // 4. 发起转账(外部调用)——只「受理」,不代表到账
         // appid 与 openid 同源,由上面的渠道判定给出(R1 已加 app_open_id 独立列)。
-        Map<String, String> res = wechatPayService.transferToBalance(
-                outBatchNo, outDetailNo, amount, openid, "城瘾分润提现",
-                transferAppid);
+        var intent = requireTransferIntent(w);
+        if (transferIntents.markSubmitted(id, intent.requestHash()) != 1)
+            throw new IllegalStateException("提现原提交已被领取或状态已变化，请按原号查询");
+        intent = requireTransferIntent(w);
+        if (!intent.submitted()) throw new IllegalStateException("提现原提交证据尚未提交，未发起转账");
+        Map<String, String> res = wechatPayService.transferToBalance(intent);
         boolean accepted = res != null && "true".equals(res.get("ok"));
         if (accepted) {
             // ★不直接置成功:置「处理中」,记录批次号/受理状态/提交时间,定时任务查询确认到账后才置成功
@@ -192,7 +207,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         // 5a. ★结果不确定(超时/网络/验签异常,res==null 或 ambiguous):微信可能已受理并已打款。
         //     绝不退款+置终态,否则「已打款 + 余额回补」= 双花丢钱。保持 status=0 处理中(记 submitTime 供超时计时),
         //     由查询任务用 out_batch_no=CW+id 向微信核实最终态后再推进状态机。
-        boolean ambiguous = res == null || "true".equals(res.get("ambiguous"));
+        boolean provenNotSent = res != null && "true".equals(res.get("notSent"))
+                && intent.requestHash().equals(res.get("requestHash"));
+        boolean ambiguous = !provenNotSent;
         if (ambiguous) {
             MemberCashWithdraw upd = new MemberCashWithdraw();
             upd.setId(id);
@@ -206,13 +223,15 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         }
 
         // 5b. 确定性未受理(微信拒绝/参数非法/服务未就绪),钱未出 → 原路退回余额一次(退款也失败则待人工,不丢钱)
+        if (transferIntents.markLocallyRejected(id, intent.requestHash()) != 1)
+            throw new IllegalStateException("提现未提交证据写入失败，须按原号核查");
         String err = res.get("error");
         Date failedAt = DateUtils.getNowDate();
         if (!claimFailedRefund(id, failedAt, err, null, null)) {
             throw new IllegalStateException("提现失败:" + (err == null ? "请稍后重试" : err));
         }
         try {
-            refundFailedClaim(w, failedAt);
+            refundFailedClaim(w, failedAt, null);
         } catch (Exception e) {
             // 回补事务结果可能未知(提交成功但回包丢失):绝不无条件改回 3,否则人工会再补一次。
             // 只在仍为待人工(3)时补备注;已是 2 则保持终态。
@@ -247,9 +266,13 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         Long id = w.getId();
         Date now = DateUtils.getNowDate();
         // 崩溃后 out_batch_no 可能为空:按确定性规则 CW+id 重算,保证能查到真实批次
-        String outBatchNo = w.getOutBatchNo() != null ? w.getOutBatchNo() : ("CW" + id);
-        String outDetailNo = w.getOutDetailNo() != null ? w.getOutDetailNo() : ("CD" + id);
-        Map<String, String> q = wechatPayService.queryTransferResult(outBatchNo, outDetailNo);
+        Map<String, String> q;
+        try {
+            var original = requireTransferIntent(w);
+            q = original.submitted() ? originalTransferFacts(w, original) : Map.of("result", "UNKNOWN");
+        } catch (RuntimeException missingEvidence) {
+            q = Map.of("result", "UNKNOWN");
+        }
         String result = q == null ? "UNKNOWN" : q.get("result");
 
         if ("SUCCESS".equals(result)) {
@@ -257,10 +280,11 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             upd.setId(id);
             upd.setStatus(MemberCashWithdraw.STATUS_SUCCESS);
             upd.setWechatBatchStatus(q.get("batchStatus"));
+            upd.setTransferBatchId(q.get("batchId"));
             upd.setWechatDetailId(emptyToNull(q.get("detailId")));
             upd.setFinishTime(now);
             upd.setLastQueryTime(now);
-            int n = mapper.updateStatusIfProcessing(upd); // CAS 0->1
+            int n = mapper.updateSuccessIfPending(upd); // Confirm original success, including escalated manual states.
             if (n > 0) logger.info("提现到账确认 id={} member={} amount={}", id, w.getMemberId(), w.getAmount());
             return;
         }
@@ -273,7 +297,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
             }
             // 赢家:退款恰一次
             try {
-                if (refundFailedClaim(w, now)) {
+                if (refundFailedClaim(w, now, q)) {
                     logger.warn("提现失败已退款 id={} member={} amount={}", id, w.getMemberId(), w.getAmount());
                 }
             } catch (Exception e) {
@@ -293,7 +317,6 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (bs != null && !bs.isEmpty()) {
             upd.setWechatBatchStatus(bs);
         }
-        upd.setWechatDetailId(emptyToNull(q == null ? null : q.get("detailId")));
         if (mapper.updateReceiptIfProcessing(upd) == 0) return;
 
         if (isStuck(w, now)) {
@@ -334,18 +357,57 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         }
     }
 
-    /** 状态领取与余额回补同事务，失败回滚后才可转人工。 */
-    private boolean refundFailedClaim(MemberCashWithdraw withdrawal, Date now) {
+    private boolean refundFailedClaim(MemberCashWithdraw withdrawal, Date now, Map<String, String> facts) {
         return Boolean.TRUE.equals(new org.springframework.transaction.support.TransactionTemplate(transactionManager)
                 .execute(status -> {
+                    MemberCashWithdraw original = mapper.selectByIdForUpdate(withdrawal.getId());
+                    if (original == null || !Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(original.getStatus())
+                            || Integer.valueOf(1).equals(original.getFrozen())) return false;
+                    var intent = requireTransferIntent(original);
+                    requireRefundEvidence(original, intent, facts);
                     MemberCashWithdraw refunded = new MemberCashWithdraw();
-                    refunded.setId(withdrawal.getId());
+                    refunded.setId(original.getId());
                     refunded.setStatus(MemberCashWithdraw.STATUS_FAILED_REFUNDED);
                     refunded.setFinishTime(now);
                     if (mapper.updateStatusIfManual(refunded) != 1) return false;
-                    umsMemberService.addBalance(withdrawal.getMemberId(), withdrawal.getAmount());
+                    umsMemberService.addBalance(original.getMemberId(), intent.amountYuan());
                     return true;
                 }));
+    }
+
+    private com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent requireTransferIntent(MemberCashWithdraw original) {
+        var intent = original == null ? null : transferIntents.selectByWithdrawId(original.getId());
+        if (intent == null) throw new IllegalStateException("缺少原提现扣款/提交证据，请按原号核查，不能回补");
+        intent.requireMatches(original);
+        return intent;
+    }
+
+    private Map<String, String> originalTransferFacts(MemberCashWithdraw original,
+            com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        Map<String, String> facts = wechatPayService.queryTransferResult(intent);
+        if (facts == null) return Map.of("result", "UNKNOWN");
+        if (("SUCCESS".equals(facts.get("result")) || "FAIL".equals(facts.get("result")))
+                && !matchesTransferFacts(original, intent, facts))
+            return Map.of("result", "UNKNOWN");
+        return facts;
+    }
+
+    private boolean matchesTransferFacts(MemberCashWithdraw original,
+            com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent, Map<String, String> facts) {
+        return intent.matchesObservation(facts)
+                && (emptyToNull(original.getTransferBatchId()) == null
+                    || original.getTransferBatchId().equals(facts.get("batchId")))
+                && (emptyToNull(original.getWechatDetailId()) == null
+                    || original.getWechatDetailId().equals(facts.get("detailId")));
+    }
+
+    private void requireRefundEvidence(MemberCashWithdraw original,
+                                       com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent,
+                                       Map<String, String> facts) {
+        intent.requireValid();
+        if (!intent.submitted() || intent.locallyRejected()) return;
+        if (facts == null || !"FAIL".equals(facts.get("result")) || !matchesTransferFacts(original, intent, facts))
+            throw new IllegalStateException("渠道尚未确认原提现失败，不能回补；请按原号继续核查");
     }
 
     private boolean isStuck(MemberCashWithdraw w, Date now) {
@@ -417,7 +479,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (Integer.valueOf(1).equals(w == null ? null : w.getFrozen())) {
             throw new IllegalStateException("该提现单已被冻结,请先解冻:" + safe(w.getFrozenReason()));
         }
-        if (w != null && Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(w.getStatus())) {
+        if (w != null && (Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(w.getStatus())
+                || Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(w.getStatus())
+                || Integer.valueOf(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW).equals(w.getStatus()))) {
             syncOne(w);
         }
         return mapper.selectByIdForUpdate(id);
@@ -433,61 +497,52 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     @Transactional(rollbackFor = Exception.class)
     public boolean manualRefund(Long id, String operator, String note, Integer expectedStatus) {
         MakerCheckerGuard.requireActor(operator, "operator");
-        MemberCashWithdraw w = mapper.selectById(id);
-        if (w == null) {
-            throw new IllegalStateException("提现单不存在");
-        }
-        // P块冻结:冻结中的单暂停一切处理(含人工),直到运营解冻,避免"冻结了但人工通道还能动钱"。
-        if (Integer.valueOf(1).equals(w.getFrozen())) {
+        MemberCashWithdraw w = mapper.selectByIdForUpdate(id);
+        if (w == null) throw new IllegalStateException("提现单不存在");
+        if (Integer.valueOf(1).equals(w.getFrozen()))
             throw new IllegalStateException("该提现单已被冻结,请先解冻:" + safe(w.getFrozenReason()));
-        }
-        // 未实际扣款(终态 5):原子 UPDATE 影响 0 行,余额从未离开用户账户,无需也不应回补。
-        if (Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT).equals(w.getStatus())) {
+        if (Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_NO_DEBIT).equals(w.getStatus()))
             throw new IllegalStateException("该提现单未实际扣款,无需人工回补");
-        }
-        if (expectedStatus != null && !expectedStatus.equals(w.getStatus())) {
+        if (expectedStatus != null && !expectedStatus.equals(w.getStatus())) return false;
+        boolean preparing = Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(w.getStatus());
+        if (!preparing && !Integer.valueOf(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW).equals(w.getStatus()))
+            throw new IllegalStateException("仅『失败待人工/待复核』的提现单可人工补单");
+        if (!preparing) MakerCheckerGuard.requireDistinct(w.getManualOperator(), operator);
+        var intent = requireTransferIntent(w);
+        Map<String, String> facts = intent.submitted() && !intent.locallyRejected()
+                ? originalTransferFacts(w, intent) : null;
+        if (facts != null && "SUCCESS".equals(facts.get("result"))) {
+            MemberCashWithdraw paid = new MemberCashWithdraw();
+            paid.setId(id); paid.setWechatBatchStatus(facts.get("batchStatus"));
+            paid.setTransferBatchId(facts.get("batchId"));
+            paid.setWechatDetailId(facts.get("detailId"));
+            paid.setFinishTime(DateUtils.getNowDate()); paid.setLastQueryTime(DateUtils.getNowDate());
+            mapper.updateSuccessIfPending(paid);
             return false;
         }
-        if (Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(w.getStatus())) {
-            // 第一人只登记并送复核，绝不移动余额。
+        requireRefundEvidence(w, intent, facts);
+        if (preparing) {
             MemberCashWithdraw prepare = new MemberCashWithdraw();
-            prepare.setId(id);
-            prepare.setStatus(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW);
+            prepare.setId(id); prepare.setStatus(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW);
             prepare.setManualOperator(operator);
             prepare.setManualNote(note == null ? "人工回补待复核" : note);
             return mapper.updateStatusIfManual(prepare) > 0;
         }
-        if (!Integer.valueOf(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW).equals(w.getStatus())) {
-            throw new IllegalStateException("仅『失败待人工/待复核』的提现单可人工补单");
-        }
-        MakerCheckerGuard.requireDistinct(w.getManualOperator(), operator);
-        // 第二人 CAS 抢占 4->2，赢家独占退款，避免并发/重复点击重复回补。
         MemberCashWithdraw claim = new MemberCashWithdraw();
-        claim.setId(id);
-        claim.setStatus(MemberCashWithdraw.STATUS_FAILED_REFUNDED);
+        claim.setId(id); claim.setStatus(MemberCashWithdraw.STATUS_FAILED_REFUNDED);
         claim.setManualVerifier(operator);
         claim.setManualNote(note == null ? "人工补单双人复核通过" : note);
-        claim.setFinishTime(DateUtils.getNowDate());
-        claim.setAuditBy(0L);      // 系统自动操作(manualRefund 由后台触发)
+        claim.setFinishTime(DateUtils.getNowDate()); claim.setAuditBy(0L);
         claim.setAuditTime(DateUtils.getNowDate());
-        int n = mapper.updateStatusIfRefundReview(claim);
-        if (n == 0) {
-            return false; // 已被处理/并发,不重复退款
-        }
+        if (mapper.updateStatusIfRefundReview(claim) != 1) return false;
         try {
-            umsMemberService.addBalance(w.getMemberId(), w.getAmount());
-            return true;
-        } catch (Exception e) {
-            // 退款失败 → 回退待复核(保留第一处理人，允许第二人重试)
-            MemberCashWithdraw back = new MemberCashWithdraw();
-            back.setId(id);
-            back.setStatus(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW);
-            back.setManualNote("人工补单退款失败:" + safe(e.getMessage()));
-            mapper.updateMemberCashWithdraw(back);
-            logger.error("人工补单退款异常 id={}", id, e);
-            alarmService.alarm("提现待人工", "人工补单退款失败 id=" + id + " member=" + w.getMemberId() + " amount=" + w.getAmount());
-            return false;
+            umsMemberService.addBalance(w.getMemberId(), intent.amountYuan());
+        } catch (RuntimeException failure) {
+            logger.error("人工回补事务失败并回滚 id={}", id, failure);
+            alarmService.alarm("提现待人工", "人工回补失败，保留待复核 id=" + id);
+            throw failure;
         }
+        return true;
     }
 
     @Override

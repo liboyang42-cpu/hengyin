@@ -48,11 +48,13 @@ class WechatPayNotifyUrlTest {
         when(config.getMerchantId()).thenReturn("1900000109");
         when(config.getNotifyUrl()).thenReturn(notifyUrl);
         WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPaymentIntentTestSupport.install(service, Map.of("CUSTOM_1", new BigDecimal("9.90"),
+                "DEP19T1000", new BigDecimal("50.00"), "R-NOTIFY-0001", new BigDecimal("69.00")));
         ReflectionTestUtils.setField(service, "wxPayConfig", config);
         jsapi = mock(JsapiServiceExtension.class);
         app = mock(com.wechat.pay.java.service.payments.app.AppServiceExtension.class);
         ReflectionTestUtils.setField(service, "jsapiService",
-                mock(com.wechat.pay.java.service.payments.jsapi.JsapiService.class));
+                WechatPaymentIntentTestSupport.absentOrderSdk());
         ReflectionTestUtils.setField(service, "jsapiServiceExtension", jsapi);
         ReflectionTestUtils.setField(service, "refundService",
                 mock(com.wechat.pay.java.service.refund.RefundService.class));

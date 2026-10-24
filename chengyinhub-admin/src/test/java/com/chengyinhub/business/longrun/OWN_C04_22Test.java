@@ -1,6 +1,7 @@
 package com.chengyinhub.business.longrun;
 
 import com.chengyinhub.business.domain.*;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.impl.*;
@@ -26,7 +27,7 @@ class OWN_C04_22Test {
                 newer.setFrozen(state == MemberCashWithdraw.STATUS_PROCESSING ? 1 : 0);
                 newer.setWechatBatchStatus("AUTHORITATIVE");
                 newer.setWechatDetailId("final-detail");
-                when(f.provider.transferToBalance(any(), any(), any(), any(), any(), any())).thenAnswer(i -> {
+                when(f.provider.transferToBalance(any(CashWithdrawTransferIntent.class))).thenAnswer(i -> {
                     f.stored.set(newer); // Another observer committed while the original channel call was in flight.
                     return accepted ? accepted() : ambiguous();
                 });
@@ -42,8 +43,8 @@ class OWN_C04_22Test {
                 verify(f.mapper, never()).updateMemberCashWithdraw(org.mockito.ArgumentMatchers.argThat(w -> w.getStatus() != null));
                 verify(f.mapper, never()).updateStatusIfProcessing(any());
                 verify(f.members, never()).addBalance(anyLong(), any());
-                verify(f.admission).debitCash(1L, 7L, new BigDecimal("20.00"));
-                verify(f.provider).transferToBalance(any(), any(), any(), any(), any(), any());
+                verify(f.admission).debitCash(1L, 7L, new BigDecimal("20.00"), "merchant", "appid", "城瘾分润提现");
+                verify(f.provider).transferToBalance(any(CashWithdrawTransferIntent.class));
             }
         }
     }
@@ -52,7 +53,7 @@ class OWN_C04_22Test {
         Fixture f = new Fixture();
         MemberCashWithdraw original = row(MemberCashWithdraw.STATUS_PROCESSING);
         original.setWechatBatchStatus("ACCEPTED"); f.stored.set(original);
-        when(f.provider.transferToBalance(any(), any(), any(), any(), any(), any())).thenReturn(accepted());
+        when(f.provider.transferToBalance(any(CashWithdrawTransferIntent.class))).thenReturn(accepted());
         when(f.mapper.updateReceiptIfProcessing(any())).thenReturn(0);
         assertSame(original, f.service.withdraw(7L, new BigDecimal("20")));
         // master 在插入后以 updateMemberCashWithdraw 写入 CW/CD 原业务号；只断言不改写生命周期状态。
@@ -64,11 +65,12 @@ class OWN_C04_22Test {
         for (boolean frozen : new boolean[]{false, true}) {
             Fixture f = new Fixture();
             MemberCashWithdraw old = row(MemberCashWithdraw.STATUS_PROCESSING);
-            old.setCreateTime(new Date(0)); // A stale snapshot would otherwise trigger the existing timeout path.
+            old.setCreateTime(new Date(0));
+            f.evidence.seed(old, true); // A stale snapshot would otherwise trigger the existing timeout path.
             when(f.mapper.selectPendingForQuery(1)).thenReturn(Collections.singletonList(old));
             MemberCashWithdraw current = row(frozen ? MemberCashWithdraw.STATUS_PROCESSING : MemberCashWithdraw.STATUS_SUCCESS);
             current.setFrozen(frozen ? 1 : 0); current.setWechatBatchStatus("AUTHORITATIVE");
-            when(f.provider.queryTransferResult("CW1", "CD1")).thenAnswer(i -> {
+            when(f.provider.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenAnswer(i -> {
                 f.stored.set(current);
                 Map<String,String> result = new HashMap<>(); result.put("result", "UNKNOWN");
                 result.put("batchStatus", "OLD-OBSERVATION"); return result;
@@ -85,7 +87,7 @@ class OWN_C04_22Test {
 
     private static MemberCashWithdraw row(int status) {
         MemberCashWithdraw row = new MemberCashWithdraw(); row.setId(1L); row.setMemberId(7L);
-        row.setAmount(new BigDecimal("20.00")); row.setStatus(status); row.setOutBatchNo("CW1"); row.setOutDetailNo("CD1");
+        row.setAmount(new BigDecimal("20.00")); row.setStatus(status); row.setOpenid("openid"); row.setOutBatchNo("CW1"); row.setOutDetailNo("CD1");
         return row;
     }
     private static Map<String,String> accepted() {
@@ -101,6 +103,7 @@ class OWN_C04_22Test {
         final IUmsMemberService members = mock(IUmsMemberService.class);
         final IWechatPayService provider = mock(IWechatPayService.class);
         final WithdrawalBalanceAdmissionService admission = mock(WithdrawalBalanceAdmissionService.class);
+        final CashWithdrawIntentTestSupport evidence = new CashWithdrawIntentTestSupport();
         final AtomicReference<MemberCashWithdraw> stored = new AtomicReference<>(row(MemberCashWithdraw.STATUS_PROCESSING));
         Fixture() {
             UmsMember member = new UmsMember(); member.setId(7L); member.setWxOpenId("openid"); member.setBalance(new BigDecimal("100"));
@@ -113,12 +116,16 @@ class OWN_C04_22Test {
             WithdrawalFrozenAmountResolver.Frozen frozen = resolver.resolve(7L);
             WithdrawalBalanceAdmissionService.Admission admitted = new WithdrawalBalanceAdmissionService.Admission(
                     new BigDecimal("100"), new BigDecimal("80"), frozen, true);
-            when(admission.debitCash(eq(1L), eq(7L), any())).thenReturn(admitted);
+            when(admission.debitCash(eq(1L), eq(7L), any(), any(), any(), any())).thenReturn(admitted);
             // master 设计：原提现单由 CashWithdrawServiceImpl 直接插入（无独立 FailureRecoveryService）。
             when(mapper.insertMemberCashWithdraw(any())).thenAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return 1; });
             when(mapper.selectByIdForUpdate(1L)).thenAnswer(i -> stored.get());
             com.chengyinhub.common.config.WxPayConfig config = mock(com.chengyinhub.common.config.WxPayConfig.class);
             when(config.getAppid()).thenReturn("appid");
+            when(config.getMerchantId()).thenReturn("merchant");
+            evidence.seed(stored.get(), false);
+            ReflectionTestUtils.setField(service, "transferIntents", evidence.mapper);
+            when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
             ReflectionTestUtils.setField(service, "mapper", mapper);
             ReflectionTestUtils.setField(service, "umsMemberService", members);
             ReflectionTestUtils.setField(service, "wechatPayService", provider);

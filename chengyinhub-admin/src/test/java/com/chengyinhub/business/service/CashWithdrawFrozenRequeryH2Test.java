@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.MemberCashWithdraw;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.mapper.MemberCashWithdrawMapper;
 import com.chengyinhub.business.service.impl.AlarmService;
 import com.chengyinhub.business.service.impl.CashWithdrawServiceImpl;
@@ -89,6 +90,7 @@ class CashWithdrawFrozenRequeryH2Test {
     private ICashWithdrawService service;
     private IUmsMemberService umsMemberService;
     private IWechatPayService wechatPayService;
+    private CashWithdrawIntentTestSupport evidence;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -112,6 +114,8 @@ class CashWithdrawFrozenRequeryH2Test {
         wechatPayService = mock(IWechatPayService.class);
 
         CashWithdrawServiceImpl target = new CashWithdrawServiceImpl();
+        evidence = new CashWithdrawIntentTestSupport();
+        ReflectionTestUtils.setField(target, "transferIntents", evidence.mapper);
         ReflectionTestUtils.setField(target, "transactionManager",
                 new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource));
         ReflectionTestUtils.setField(target, "mapper", mapper);
@@ -159,9 +163,9 @@ class CashWithdrawFrozenRequeryH2Test {
     @Test
     void withdrawFrozenDuringChannelQueryIsStillStoppedByTheCasGuard() {
         long id = insertProcessing(0);
-        Map<String, String> q = failResponse();
+        Map<String, String> q = failResponse(id);
         // 模拟并发:requery 已通过入口守卫、正在查微信时,另一个会话把这单冻结了
-        when(wechatPayService.queryTransferResult("CW" + id, "CD" + id)).thenAnswer(inv -> {
+        when(wechatPayService.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenAnswer(inv -> {
             jdbc.update("update member_cash_withdraw set frozen = 1, frozen_reason = ? where id = ?",
                     "风控核查中", id);
             return q;
@@ -169,7 +173,7 @@ class CashWithdrawFrozenRequeryH2Test {
 
         service.requery(id);   // 入口守卫读到的是未冻结的快照,不抛异常
 
-        verify(wechatPayService, times(1)).queryTransferResult("CW" + id, "CD" + id);
+        verify(wechatPayService, times(1)).queryTransferResult(any(CashWithdrawTransferIntent.class));
         //  ↑ 确实走进了 syncOne 的 FAIL 分支,是在 CAS 才被拦 —— 排除「没进 syncOne 所以没加钱」的假通过
         verify(umsMemberService, never()).addBalance(any(), any());
 
@@ -209,7 +213,7 @@ class CashWithdrawFrozenRequeryH2Test {
         assertNull(row.get("wechat_detail_id"), "wechat_detail_id 同上");
 
         // 入口就拦下了 ⇒ 连微信都不该查(比 CAS 那层更早,省一次外部调用)
-        verify(wechatPayService, never()).queryTransferResult(anyString(), anyString());
+        verify(wechatPayService, never()).queryTransferResult(any(CashWithdrawTransferIntent.class));
     }
 
     /** (b) 未冻结的同型单:正常路径不许被改坏,微信 FAIL 仍要自动回补。 */
@@ -325,27 +329,24 @@ class CashWithdrawFrozenRequeryH2Test {
         mapper.updateMemberCashWithdraw(idc);
         jdbc.update("update member_cash_withdraw set frozen = ?, frozen_reason = ?, frozen_by = ? where id = ?",
                 frozen, frozen == 1 ? "风控核查中" : null, frozen == 1 ? "finance01" : null, id);
+        evidence.seed(mapper.selectById(id), true);
         return id;
     }
 
-    private Map<String, String> failResponse() {
-        Map<String, String> q = new HashMap<>();
-        q.put("result", "FAIL");
-        q.put("batchStatus", "CLOSED");
+    private Map<String, String> failResponse(long id) {
+        Map<String, String> q = CashWithdrawIntentTestSupport.facts(evidence.get(id), "FAIL");
         q.put("failReasonCode", "ACCOUNT_FROZEN");
         return q;
     }
 
     private void wechatReturnsFail(long id) {
-        when(wechatPayService.queryTransferResult("CW" + id, "CD" + id)).thenReturn(failResponse());
+        when(wechatPayService.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenReturn(failResponse(id));
     }
 
     private void wechatReturnsSuccess(long id) {
-        Map<String, String> q = new HashMap<>();
-        q.put("result", "SUCCESS");
-        q.put("batchStatus", "FINISHED");
+        Map<String, String> q = CashWithdrawIntentTestSupport.facts(evidence.get(id), "SUCCESS");
         q.put("detailId", "D123456");
-        when(wechatPayService.queryTransferResult("CW" + id, "CD" + id)).thenReturn(q);
+        when(wechatPayService.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenReturn(q);
     }
 
     private Map<String, Object> row(long id) {

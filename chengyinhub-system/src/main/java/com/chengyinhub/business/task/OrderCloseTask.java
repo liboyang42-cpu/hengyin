@@ -56,6 +56,9 @@ public class OrderCloseTask {
     @Autowired
     private AlarmService alarmService;
 
+    @Autowired
+    private org.springframework.transaction.PlatformTransactionManager paymentTransactions;
+
     /** 扫描 pay_expire_time 已过仍待支付的报名单:关单 + 回补库存 + 退还预扣积分 */
     public synchronized void closeExpired() {
         Date now = new Date();
@@ -93,8 +96,8 @@ public class OrderCloseTask {
      *   <li><b>SUCCESS</b> → 按支付回调同一条链路补记(handleWechatPayCallback),绝不关单回补;</li>
      *   <li><b>NOTPAY / USERPAYING / PAYERROR</b> → 先关闭微信订单把状态钉成终态(否则查单后用户仍可能支付成功),
      *       微信确认关单后再本地关单 + 回补库存/积分/权益;</li>
-     *   <li><b>CLOSED / REVOKED</b> → 微信已是终态,直接本地关单 + 回补;</li>
-     *   <li><b>ORDER_NOT_EXIST</b>(微信侧从未建单)→ 过期超宽限(2 小时,见 WechatOrderNotExistException.GRACE_MILLIS)后按未支付本地关单 + 回补;</li>
+     *   <li><b>CLOSED（原尝试仍是当前尝试）</b> → 微信已是终态,直接本地关单 + 回补;</li>
+     *   <li><b>ORDER_NOT_EXIST</b> → 保留原号继续查证，不凭时间回补;</li>
      *   <li><b>查单失败 / 单号对不上 / 未知态</b> → 保持不动并告警,不猜结果,下轮再查。</li>
      * </ul>
      *
@@ -147,17 +150,9 @@ public class OrderCloseTask {
                     try {
                         wxOrder = wechatPayService.queryOrderStatus(registration.getRegistrationNo());
                     } catch (WechatOrderNotExistException notExist) {
-                        // 微信侧从未建单(预下单网络异常结果未知)= 不可能付过款。过期超宽限才关:
-                        // 宽限内预下单请求可能仍在途,查不到不代表之后不会建出来。
-                        if (registration.getPayExpireTime() != null && registration.getPayExpireTime().getTime()
-                                + WechatOrderNotExistException.GRACE_MILLIS <= System.currentTimeMillis()) {
-                            if (cmsRegistrationService.settlePayingOne(id,
-                                    EntitlementInvalidReason.ORGANIZER_CANCEL, RECONCILE_UPDATE_BY, 4)) {
-                                closed++;
-                            }
-                        } else {
-                            log.info("支付中过期订单微信侧无单,宽限期内暂不关单 registrationId={}", id);
-                        }
+                        // NOT_FOUND and elapsed time do not prove an earlier submission was never accepted.
+                        uncertain++;
+                        if (firstFailure == null) firstFailure = "registrationId=" + id + " 原支付号待查证";
                         continue;
                     } catch (Exception queryFailure) {
                         uncertain++;
@@ -196,7 +191,7 @@ public class OrderCloseTask {
                         // 未支付不是终态(PAYERROR 能否再付未核实,按裁决保守同处理):先把微信订单关掉,关单被微信接受才可能安全本地关单。
                         boolean closeAccepted;
                         try {
-                            closeAccepted = wechatPayService.closeOrder(registration.getRegistrationNo());
+                            closeAccepted = wechatPayService.closePaymentAttempt(registration.getRegistrationNo(), wxOrder.get("wx_out_trade_no"));
                         } catch (Exception closeFailure) {
                             closeAccepted = false;
                             log.error("支付中过期订单关微信单失败 registrationId={}", id, closeFailure);
@@ -208,8 +203,7 @@ public class OrderCloseTask {
                             }
                             continue;
                         }
-                    } else if (!"CLOSED".equalsIgnoreCase(tradeState)
-                            && !"REVOKED".equalsIgnoreCase(tradeState)) {
+                    } else if (!"CLOSED".equalsIgnoreCase(tradeState)) {
                         uncertain++;
                         if (firstFailure == null) {
                             firstFailure = "registrationId=" + id + " 未知支付状态:" + tradeState;
@@ -217,8 +211,7 @@ public class OrderCloseTask {
                         log.error("支付中过期订单支付状态无法确认 registrationId={} tradeState={}", id, tradeState);
                         continue;
                     }
-                    if (cmsRegistrationService.settlePayingOne(id,
-                            EntitlementInvalidReason.ORGANIZER_CANCEL, RECONCILE_UPDATE_BY, 4)) {
+                    if (closeObservedRegistration(registration, wxOrder.get("wx_out_trade_no"))) {
                         closed++;
                     }
                 } catch (Exception e) {
@@ -250,4 +243,13 @@ public class OrderCloseTask {
             }
         }
     }
+    private boolean closeObservedRegistration(CmsRegistration registration, String observedWxNo) {
+        return Boolean.TRUE.equals(new org.springframework.transaction.support.TransactionTemplate(paymentTransactions)
+                .execute(status -> {
+                    if (!wechatPayService.lockPaymentAttemptForUpdate(registration.getRegistrationNo(), observedWxNo)) return false;
+                    return cmsRegistrationService.settlePayingOne(registration.getId(),
+                            EntitlementInvalidReason.ORGANIZER_CANCEL, RECONCILE_UPDATE_BY, 4);
+                }));
+    }
+
 }
