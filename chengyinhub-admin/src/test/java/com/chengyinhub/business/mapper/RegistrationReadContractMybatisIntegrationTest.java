@@ -1,6 +1,9 @@
 package com.chengyinhub.business.mapper;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.domain.dto.MerchantInsightCrowdFact;
 import com.chengyinhub.business.domain.dto.MerchantInsightVisitFact;
 import com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent;
@@ -9,6 +12,17 @@ import com.chengyinhub.business.domain.dto.TopicChapterLoadFact;
 import com.chengyinhub.business.domain.dto.TopicOnsiteTicketFact;
 import com.chengyinhub.business.domain.dto.TopicRepeatPaymentFact;
 import com.chengyinhub.business.domain.dto.TopicWaitFact;
+import com.chengyinhub.business.domain.vo.ai.AiMerchantInsightResp;
+import com.chengyinhub.business.domain.vo.ai.MerchantInsightResp;
+import com.chengyinhub.business.service.IAiCreatorService;
+import com.chengyinhub.business.service.ICmsTopicService;
+import com.chengyinhub.business.service.IMerchantLeadService;
+import com.chengyinhub.business.service.ITopicContentPublisherProjectionService;
+import com.chengyinhub.business.service.ai.AiServiceException;
+import com.chengyinhub.business.service.impl.MerchantInsightServiceImpl;
+import com.chengyinhub.common.core.domain.AjaxResult;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
 import org.apache.ibatis.mapping.Environment;
@@ -22,6 +36,9 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -34,22 +51,38 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * 报名事实读取与真实 cms_registration schema 的合同测试。
@@ -89,6 +122,7 @@ class RegistrationReadContractMybatisIntegrationTest {
     private GameSessionRuntimeMapper gameMapper;
     private TopicOnsiteMetricsMapper onsiteMapper;
     private ShopDayMerchantRosterMapper rosterMapper;
+    private MmsMerchantMapper merchantMapper;
 
     @BeforeAll
     void createScratchSchema() throws Exception {
@@ -278,6 +312,189 @@ class RegistrationReadContractMybatisIntegrationTest {
         exec("UPDATE mms_merchant SET status = 1 WHERE member_id = 888");
     }
 
+    // ------------------------------------------------------------------ ②b 店铺参谋主卡走势(2026-10-22 改版)
+
+    /**
+     * 店铺参谋改版后端:真 mapper XML + 生产 DDL 的 mms_merchant + 真 MerchantInsightServiceImpl,
+     * 只把 AI 与 Redis 换成可控替身。半年 40+ 条到店事件(回头客、只核销、零点边界、退款/失效/他商负控)
+     * 灌进真库,逐个窗口逐日核对 trends,再核对页头店名/头像、prompt 不含新字段、v3 缓存往返和 JSON 外形。
+     */
+    @Test
+    void merchantInsightTrendsAndProfileFromRealRows() throws Exception {
+        exec("DELETE FROM player_node_progress");
+        exec("DELETE FROM redemption");
+        exec("UPDATE mms_merchant SET name='城南小馆', logo='merchant/logo/888.png' WHERE member_id=888");
+        exec("INSERT INTO cms_activity(id,member_id,name,topic_id,del_flag,status) VALUES (102,999,'act102',1,0,1)");
+
+        LocalDate today = LocalDate.now();
+        DateTimeFormatter sqlTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        // 有效事件:{memberId, checkinAt|null, redeemedAt|null};oracle 只从这张表算
+        List<Object[]> valid = new ArrayList<>();
+        List<String> members = new ArrayList<>();
+        int reg = 5000;
+        for (int k = 0; k < 40; k++) {
+            long member = 5000 + k % 30;                   // 5000..5009 各来两次(第二次走 act102)
+            long activity = k < 30 ? 100 : 102;
+            LocalDateTime at = today.minusDays((k * 37L) % 175).atTime(8 + k % 14, (k * 7) % 60);
+            boolean redeemOnly = k % 11 == 0;
+            LocalDateTime checkin = redeemOnly ? null : at;
+            LocalDateTime redeemed = k % 3 == 0 ? null : at.plusMinutes(40);
+            if (redeemOnly) redeemed = at;
+            seedVisit(++reg, member, activity, 1, 11, 2, 2, 0, checkin, redeemed, sqlTime);
+            valid.add(new Object[]{member, checkin, redeemed});
+        }
+        // 自然日边界:今天 00:00:05 算今天;7 天窗首日 00:00:01 在窗内;前一日 23:59:59 落上期
+        LocalDateTime[] edges = {today.atTime(0, 0, 5), today.minusDays(6).atTime(0, 0, 1),
+                today.minusDays(7).atTime(23, 59, 59)};
+        for (int i = 0; i < edges.length; i++) {
+            seedVisit(++reg, 6001 + i, 100, 1, 11, 2, 2, 0, edges[i], null, sqlTime);
+            valid.add(new Object[]{6001L + i, edges[i], null});
+        }
+        // 负控:退款票 / 失效权益 / 没有本商家 offer 的主题 —— 都打过卡,一条都不许进
+        seedVisit(++reg, 6004, 100, 1, 11, 4, 3, 0, today.atTime(12, 0), today.atTime(12, 30), sqlTime);
+        seedVisit(++reg, 6005, 100, 1, 11, 2, 2, 2, today.atTime(13, 0), null, sqlTime);
+        seedVisit(++reg, 6006, 101, 2, 22, 2, 2, 0, today.atTime(14, 0), null, sqlTime);
+        for (long m = 5000; m <= 6006; m = m == 5029 ? 6001 : m + 1) members.add("(" + m + ",'p" + m + "','player',0,1)");
+        exec("INSERT INTO ums_member(id,nickname,role,del_flag,sex) VALUES " + String.join(",", members));
+
+        Map<String, Object> redis = new ConcurrentHashMap<>();
+        IAiCreatorService ai = mock(IAiCreatorService.class);
+        when(ai.merchantInsight(anyString(), anyLong())).thenThrow(new AiServiceException("AI 未就绪"));
+        MerchantInsightServiceImpl service = insightService(ai, redis);
+
+        MerchantInsightResp first = service.insight(888L);
+        assertEquals(today, LocalDate.now(), "夹具跨过零点，必须重跑，不能跳过断言");
+        assertEquals("AI 未就绪", first.getAiError(), "AI 挂了数据区照出");
+        assertTrue(redis.isEmpty(), "AI 失败不写缓存");
+        assertEquals("城南小馆", first.getProfile().getString("storeName"));
+        assertEquals("merchant/logo/888.png", first.getProfile().getString("logo"));
+        String facts = first.getFacts().toJSONString();
+        assertFalse(facts.contains("城南小馆") || facts.contains("logo") || facts.contains("trends")
+                || facts.contains("storeName"), "店名/头像/走势只在展示层,不进 AI prompt");
+
+        JSONArray windows = first.getTrends().getJSONArray("windows");
+        assertEquals(3, windows.size());
+        int[] spans = {7, 30, 90};
+        DateTimeFormatter label = DateTimeFormatter.ofPattern("MM-dd");
+        for (int w = 0; w < 3; w++) {
+            JSONObject win = windows.getJSONObject(w);
+            int days = spans[w];
+            LocalDate start = today.minusDays(days - 1L), prevStart = start.minusDays(days);
+            assertEquals(days, win.getIntValue("days"));
+            Set<Long> cur = new HashSet<>(), prev = new HashSet<>();
+            int curC = 0, prevC = 0, curR = 0, prevR = 0;
+            List<Set<Long>> dayMembers = new ArrayList<>();
+            int[] dayC = new int[days], dayR = new int[days];
+            for (int i = 0; i < days; i++) dayMembers.add(new HashSet<>());
+            for (Object[] e : valid) {
+                long member = (Long) e[0];
+                LocalDateTime checkin = (LocalDateTime) e[1], redeemed = (LocalDateTime) e[2];
+                LocalDate at = (checkin != null ? checkin : redeemed).toLocalDate();
+                if (!at.isBefore(start)) { cur.add(member); dayMembers.get((int) (at.toEpochDay() - start.toEpochDay())).add(member); }
+                else if (!at.isBefore(prevStart)) prev.add(member);
+                if (checkin != null) {
+                    LocalDate d = checkin.toLocalDate();
+                    if (!d.isBefore(start)) { curC++; dayC[(int) (d.toEpochDay() - start.toEpochDay())]++; }
+                    else if (!d.isBefore(prevStart)) prevC++;
+                }
+                if (redeemed != null) {
+                    LocalDate d = redeemed.toLocalDate();
+                    if (!d.isBefore(start)) { curR++; dayR[(int) (d.toEpochDay() - start.toEpochDay())]++; }
+                    else if (!d.isBefore(prevStart)) prevR++;
+                }
+            }
+            String at = days + " 天窗";
+            assertEquals(cur.size(), win.getIntValue("visitors"), at + " 到店玩家");
+            assertEquals(curC, win.getIntValue("checkins"), at + " 打卡");
+            assertEquals(curR, win.getIntValue("redeems"), at + " 核销");
+            assertEquals(prev.size(), win.getIntValue("prevVisitors"), at + " 上期到店玩家");
+            assertEquals(prevC, win.getIntValue("prevCheckins"), at + " 上期打卡");
+            assertEquals(prevR, win.getIntValue("prevRedeems"), at + " 上期核销");
+            JSONArray daily = win.getJSONArray("daily");
+            assertEquals(days, daily.size(), at + " 逐日格数");
+            for (int i = 0; i < days; i++) {
+                JSONObject d = daily.getJSONObject(i);
+                assertEquals(start.plusDays(i).format(label), d.getString("date"), at + " 第" + i + "格日期");
+                assertEquals(dayMembers.get(i).size(), d.getIntValue("visitors"), at + " " + d.getString("date") + " 到店");
+                assertEquals(dayC[i], d.getIntValue("checkins"), at + " " + d.getString("date") + " 打卡");
+                assertEquals(dayR[i], d.getIntValue("redeems"), at + " " + d.getString("date") + " 核销");
+            }
+        }
+        JSONObject week = windows.getJSONObject(0);
+        assertTrue(week.getJSONArray("daily").getJSONObject(6).getIntValue("visitors") >= 1, "今天 00:00:05 落在今天");
+        assertTrue(week.getJSONArray("daily").getJSONObject(0).getIntValue("visitors") >= 1, "窗首日 00:00:01 落在窗内");
+        assertTrue(week.getIntValue("prevVisitors") >= 1, "前一日 23:59:59 落在上期");
+        assertTrue(windows.getJSONObject(2).getIntValue("prevVisitors") > 0, "90 天窗的上期(91–180 天)有真实回读");
+
+        // 接口外形:控制器原样 success(resp),按 Jackson 序列化后小程序读得到这些路径
+        JsonNode body = new ObjectMapper().readTree(new ObjectMapper().writeValueAsString(AjaxResult.success(first)));
+        assertEquals("城南小馆", body.path("data").path("profile").path("storeName").asText());
+        assertEquals(30, body.path("data").path("trends").path("windows").path(1).path("daily").size());
+        assertEquals(today.format(label),
+                body.path("data").path("trends").path("windows").path(0).path("daily").path(6).path("date").asText());
+
+        // AI 恢复:写 v3 缓存;同日再取走缓存,trends 原样回来,店名仍实时读
+        AiMerchantInsightResp ok = new AiMerchantInsightResp();
+        IAiCreatorService ai2 = mock(IAiCreatorService.class);
+        when(ai2.merchantInsight(anyString(), anyLong())).thenReturn(ok);
+        service = insightService(ai2, redis);
+        MerchantInsightResp fresh = service.insight(888L);
+        String key = "ai:merchant:insight:v3:888:" + today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        assertEquals(Collections.singleton(key), redis.keySet(), "缓存键是 v3");
+        exec("UPDATE mms_merchant SET name='城南小馆·新' WHERE member_id=888");
+        MerchantInsightResp cached = service.insight(888L);
+        verify(ai2, times(1)).merchantInsight(anyString(), anyLong());
+        assertEquals(fresh.getTrends().toJSONString(), cached.getTrends().toJSONString(), "trends 经缓存往返不变");
+        assertEquals(first.getTrends().toJSONString(), cached.getTrends().toJSONString());
+        assertEquals("城南小馆·新", cached.getProfile().getString("storeName"), "店名不吃缓存");
+    }
+
+    private void seedVisit(int reg, long member, long activity, long topic, long chapter, int payment, int status,
+                           int entitlementStatus, LocalDateTime checkin, LocalDateTime redeemed,
+                           DateTimeFormatter fmt) throws Exception {
+        LocalDateTime first = checkin != null ? checkin : redeemed;
+        String created = "'" + first.minusHours(1).format(fmt) + "'";
+        exec("INSERT INTO cms_registration (id,registration_no,owner_type,owner_id,ticket_id,member_id,purchase_kind,"
+                + "payment_status,registration_status,payment_time,pay_expire_time,ticket_price,original_amount,"
+                + "total_amount,payable_amount,create_time,update_time) VALUES (" + reg + ",'REG" + reg + "',2,"
+                + activity + "," + (topic == 1 ? 1000 : 2000) + "," + member + ",3," + payment + "," + status + ","
+                + created + "," + created + ",10,10,10,10," + created + "," + created + ")");
+        exec("INSERT INTO registration_entitlement(id,registration_id,chapter_id,topic_id,status,create_time) VALUES ("
+                + reg + "," + reg + "," + chapter + "," + topic + "," + entitlementStatus + "," + created + ")");
+        if (checkin != null) {
+            exec("INSERT INTO player_node_progress(id,member_id,activity_id,topic_id,node_id,status,checkin_time,del_flag)"
+                    + " VALUES (" + reg + "," + member + "," + activity + "," + topic + "," + topic + ",1,'"
+                    + checkin.format(fmt) + "',0)");
+        }
+        if (redeemed != null) {
+            exec("INSERT INTO redemption(id,registration_id,chapter_id,topic_id,merchant_id,offer_id,operator_id,status,"
+                    + "idempotency_key,create_time) VALUES (" + reg + "," + reg + "," + chapter + "," + topic
+                    + ",888,1,1,'ACTIVE','k" + reg + "','" + redeemed.format(fmt) + "')");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private MerchantInsightServiceImpl insightService(IAiCreatorService ai, Map<String, Object> redis) {
+        RedisTemplate<Object, Object> template = mock(RedisTemplate.class);
+        ValueOperations<Object, Object> values = mock(ValueOperations.class);
+        when(template.opsForValue()).thenReturn(values);
+        when(values.get(any())).thenAnswer(i -> redis.get(String.valueOf((Object) i.getArgument(0))));
+        doAnswer(i -> { redis.put(String.valueOf((Object) i.getArgument(0)), i.getArgument(1)); return null; })
+                .when(values).set(any(), any(), anyLong(), any(TimeUnit.class));
+        ICmsTopicService topics = mock(ICmsTopicService.class);
+        when(topics.selectCmsTopicList(any())).thenReturn(new ArrayList<>());
+        MerchantInsightServiceImpl service = new MerchantInsightServiceImpl();
+        ReflectionTestUtils.setField(service, "merchantInsightMapper", insightMapper);
+        ReflectionTestUtils.setField(service, "mmsMerchantMapper", merchantMapper);
+        ReflectionTestUtils.setField(service, "aiCreatorService", ai);
+        ReflectionTestUtils.setField(service, "redisTemplate", template);
+        ReflectionTestUtils.setField(service, "cmsTopicService", topics);
+        ReflectionTestUtils.setField(service, "merchantLeadService", mock(IMerchantLeadService.class));
+        ReflectionTestUtils.setField(service, "topicContentPublisherProjectionService",
+                mock(ITopicContentPublisherProjectionService.class));
+        return service;
+    }
+
     // ------------------------------------------------------------------ ③ GameSessionRuntime
 
     @Test
@@ -401,10 +618,18 @@ class RegistrationReadContractMybatisIntegrationTest {
         DATABASE_HOLDER[0] = database;
         for (String table : new String[]{
                 "cms_registration", "cms_activity", "cms_topic", "cms_topic_node", "cms_topic_chapter",
-                "club", "club_member", "merchant_chapter_offer", "mms_merchant", "registration_entitlement",
+                "club", "club_member", "merchant_chapter_offer", "registration_entitlement",
                 "redemption", "player_node_progress", "player_growth", "member_interest_profile",
                 "ums_member", "ums_member_follow", "oms_ticket", "refund_application", "coop_complaint"}) {
             exec(baseDdl(table));
+        }
+        // mms_merchant 取生产 SHOW CREATE TABLE:base 少 derivative_benefits/disable_reason/service_*,
+        // 真 MmsMerchantMapper 的 select 在 base 上跑不起来(店铺参谋页头读店名/头像走的就是它)。
+        exec(prodDdl("mms_merchant"));
+        try (Connection connection = connectDatabase()) {
+            com.chengyinhub.business.it.ItSchema.applyMigrations(connection,
+                    Paths.get(ROOT, "chengyinhub-admin/sql/migration_merchant_category_ids_20261022.sql").toString(),
+                    Paths.get(ROOT, "chengyinhub-admin/sql/migration_merchant_wechat_qrcode_20261022.sql").toString());
         }
         // base_schema 之后主题侧新增列(类型抄各自迁移文件);只补读侧列,让真实 select 能执行。
         exec("ALTER TABLE cms_topic ADD COLUMN circle_theme_code VARCHAR(24) NULL");              // circle_theme_batch2_20260821
@@ -451,6 +676,15 @@ class RegistrationReadContractMybatisIntegrationTest {
         return matcher.group().replaceAll(";$", "");
     }
 
+    private static String prodDdl(String table) throws Exception {
+        String source = Files.readString(Paths.get(ROOT,
+                "chengyinhub-admin/src/test/resources/it-schema/run41-prod-ddl.sql"), StandardCharsets.UTF_8);
+        Matcher matcher = Pattern.compile("CREATE TABLE `" + table + "` \\(.*?\\n\\) [^\\n]*;",
+                Pattern.DOTALL).matcher(source);
+        assertTrue(matcher.find(), "run41 生产 DDL 缺少 " + table);
+        return matcher.group().replaceAll(";$", "");
+    }
+
     private static String migrationDdl(String relativeFile, String table) throws Exception {
         String source = Files.readString(Paths.get(ROOT, relativeFile), StandardCharsets.UTF_8);
         Matcher matcher = Pattern.compile(
@@ -465,10 +699,12 @@ class RegistrationReadContractMybatisIntegrationTest {
                 "jdbc:mysql://" + HOST + ":" + PORT + "/" + database + PARAMS, USER, PASSWORD);
         Configuration configuration = new Configuration();
         configuration.getTypeAliasRegistry().registerAlias("CmsTopic", CmsTopic.class);
+        configuration.getTypeAliasRegistry().registerAlias("MmsMerchant", MmsMerchant.class);
         configuration.setEnvironment(new Environment("regread",
                 new SpringManagedTransactionFactory(), source));
         for (String mapper : new String[]{"CmsTopicMapper", "MerchantInsightMapper",
-                "GameSessionRuntimeMapper", "TopicOnsiteMetricsMapper", "ShopDayMerchantRosterMapper"}) {
+                "GameSessionRuntimeMapper", "TopicOnsiteMetricsMapper", "ShopDayMerchantRosterMapper",
+                "MmsMerchantMapper"}) {
             String path = ROOT + "/chengyinhub-system/src/main/resources/mapper/business/" + mapper + ".xml";
             try (InputStream in = new FileInputStream(path)) {
                 new XMLMapperBuilder(in, configuration, path, configuration.getSqlFragments()).parse();
@@ -480,6 +716,7 @@ class RegistrationReadContractMybatisIntegrationTest {
         gameMapper = sql.getMapper(GameSessionRuntimeMapper.class);
         onsiteMapper = sql.getMapper(TopicOnsiteMetricsMapper.class);
         rosterMapper = sql.getMapper(ShopDayMerchantRosterMapper.class);
+        merchantMapper = sql.getMapper(MmsMerchantMapper.class);
     }
 
     private static List<Long> ids(List<CmsTopic> topics) {
