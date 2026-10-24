@@ -41,7 +41,6 @@ public class NpcAsrIntentService {
         return transaction.execute(status -> {
             if (userId==null || userId<=0 || requests.lockChatUser(userId)==null)
                 throw new IllegalStateException("NPC user persistence unavailable");
-            intents.redactExpiredForUser(userId);
             return work.get();
         });
     }
@@ -70,6 +69,7 @@ public class NpcAsrIntentService {
         try { digest=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(audio)); }
         catch(NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
         Admission admitted=locked(user,() -> {
+            intents.redactExpiredForUser(user);
             NpcAsrIntent old=intents.selectForUpdate(user,rid);
             if (old!=null) {
                 if (!node.equals(old.getNodeId()) || !merchant.equals(old.getMerchantMemberId())
@@ -112,6 +112,7 @@ public class NpcAsrIntentService {
         String rid=rawRid==null?null:rawRid.trim();
         key(user,rid,node);
         return Boolean.TRUE.equals(locked(user,() -> {
+            intents.redactExpiredForUser(user);
             NpcAsrIntent row=intents.selectForUpdate(user,rid);
             if (row==null || !node.equals(row.getNodeId()) || !Objects.equals(merchant,row.getMerchantMemberId()))
                 throw new IllegalArgumentException("NPC ASR handoff scope conflict");
@@ -132,13 +133,27 @@ public class NpcAsrIntentService {
                     :row.getTranscript().isEmpty()?"ASR_EMPTY_TEXT":"ASR_RECEIVED")
                 :"NOT_SENT".equals(row.getState())?"ASR_NOT_SENT"
                 :"IN_FLIGHT".equals(row.getState())?"ASR_IN_FLIGHT":"ASR_OUTCOME_UNKNOWN";
-        return unavailable(row.getRequestId(),code);
+        NpcChatResp response=unavailable(row.getRequestId(),code);
+        response.setAsrState(row.getState());
+        return response;
     }
-    public static NpcChatResp unavailable(String rid,String code) {
+    public static NpcChatResp unavailable(String rid,String reason) {
+        boolean unknown="ASR_OUTCOME_UNKNOWN".equals(reason) || "ASR_STATE_UNAVAILABLE".equals(reason)
+                || "ASR_TEXT_HANDOFF_STARTED".equals(reason);
+        boolean waiting=unknown || "ASR_IN_FLIGHT".equals(reason) || "ASR_RECEIVED".equals(reason);
         NpcChatResp response=new NpcChatResp();response.setRequestId(rid);
-        response.setOutcomeStatus("ASR_IN_FLIGHT".equals(code)?"PROCESSING":"FAILED");
-        response.setSafetyDecision("NOT_RUN");response.setErrorCode(code);response.setRetryable(false);response.setAi(false);
-        response.setSafeText("原语音请求已保留；请回读原请求状态，勿重复发送。正文不可恢复或结果未知时须人工核实。");
+        // Keep the original client recovery contract; ASR detail must not masquerade as a new terminal error.
+        response.setOutcomeStatus(waiting?"PROCESSING":"FAILED");
+        response.setSafetyDecision(unknown?"UNKNOWN":"NOT_RUN");
+        response.setErrorCode(unknown?"REQUEST_OUTCOME_UNKNOWN":waiting?"REQUEST_IN_PROGRESS":reason);
+        response.setAsrReason(reason);response.setAsrResumable("ASR_RECEIVED".equals(reason));
+        response.setRetryable(false);response.setAi(false);
+        response.setSafeText(unknown?"原请求结果待确认，请稍后查看原请求。"
+                :"ASR_RECEIVED".equals(reason)?"原语音已转写，可继续原请求；不会重新识别。"
+                :"ASR_IN_FLIGHT".equals(reason)?"原语音仍在处理中，请查看原请求；不会重复识别。"
+                :"ASR_TEXT_UNAVAILABLE".equals(reason)?"原语音正文不可恢复；原请求身份仍保留，不会重新识别。"
+                :"ASR_EMPTY_TEXT".equals(reason)?"原语音未识别出文字；原请求已保留，不会重新识别。"
+                :"原语音请求已保留，不会自动重发。");
         return response;
     }
     private static boolean notSent(Throwable failure) {

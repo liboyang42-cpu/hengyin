@@ -41,7 +41,11 @@ public class NpcAsrTestFixture {
             when(users.lockChatUser(anyLong())).thenAnswer(c->c.getArgument(0));
             when(rows.selectForUpdate(anyLong(),anyString())).thenAnswer(c->{
                 NpcAsrIntent old=stored.get(key(c.getArgument(0),c.getArgument(1)));
-                if(old==null)return null;NpcAsrIntent copy=new NpcAsrIntent();BeanUtils.copyProperties(old,copy);return copy;
+                if(old==null)return null;NpcAsrIntent copy=new NpcAsrIntent();BeanUtils.copyProperties(old,copy);
+                if(copy.isBodyErased() || copy.getBodyExpiresAt()!=null && copy.getBodyExpiresAt().before(new Date())) {
+                    copy.setTranscript(null);copy.setBodyErased(true);
+                }
+                return copy;
             });
             when(rows.insert(any())).thenAnswer(c->{NpcAsrIntent row=c.getArgument(0);row.setId((long)stored.size()+1);
                 assertNull(stored.putIfAbsent(key(row.getUserId(),row.getRequestId()),row));return 1;});

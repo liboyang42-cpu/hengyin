@@ -49,7 +49,7 @@ class NpcAsrIntentServiceTest {
     @Test void genericFailureTimeoutAndColdOwnerNeverResendUnknown() {
         var f=new Fixture();when(f.speech.transcribe(any(),anyString())).thenThrow(new AiServiceException("synthetic timeout"));
         assertEquals("UNKNOWN",f.recognize().getState());assertEquals("UNKNOWN",f.service().recognize(7L,RID,21L,41L,AUDIO,"wav").getState());
-        assertEquals("ASR_OUTCOME_UNKNOWN",f.service().readOutcome("shop",21L,RID,7L).getErrorCode());
+        assertEquals("ASR_OUTCOME_UNKNOWN",f.service().readOutcome("shop",21L,RID,7L).getAsrReason());
         verify(f.speech,times(1)).transcribe(any(),anyString());
     }
     @Test void positivelyNotSentIsTerminalForTheOriginalIdentityToo() {
@@ -80,18 +80,30 @@ class NpcAsrIntentServiceTest {
     }
     @Test void coldReceivedReadNeverCallsProviderAndHandoffIsOneWayAcrossDeletion() {
         var f=new Fixture();f.recognize();var cold=f.service();
-        assertEquals("ASR_RECEIVED",cold.readOutcome("shop",21L,RID,7L).getErrorCode());
+        assertEquals("ASR_RECEIVED",cold.readOutcome("shop",21L,RID,7L).getAsrReason());
         assertTrue(cold.beginHandoff(7L,RID,21L,41L));assertFalse(cold.beginHandoff(7L,RID,21L,41L));
-        assertEquals("ASR_TEXT_HANDOFF_STARTED",cold.readOutcome("shop",21L,RID,7L).getErrorCode());
+        assertEquals("ASR_TEXT_HANDOFF_STARTED",cold.readOutcome("shop",21L,RID,7L).getAsrReason());
         f.rows.redactForUser(7L);assertEquals("ASR_TEXT_UNAVAILABLE",cold.readOutcome("shop",21L,RID,7L).getErrorCode());
         assertTrue(f.recognize().isBodyErased());verify(f.speech,times(1)).transcribe(any(),anyString());
     }
     @Test void expiredBodyAndCrossScopeAreNotNotFoundOrPermissionToRecognizeAgain() {
         var f=new Fixture();f.recognize();f.original().setBodyExpiresAt(new Date(0));
         assertEquals("ASR_TEXT_UNAVAILABLE",f.service().readOutcome("shop",21L,RID,7L).getErrorCode());
-        assertNull(f.original().getTranscript());assertEquals("INVALID_REQUEST",f.service().readOutcome("shop",22L,RID,7L).getErrorCode());
+        assertNull(f.service().read(7L,RID,21L).getTranscript());assertEquals("原转写",f.original().getTranscript(),"GET must not mutate expired bodies");assertEquals("INVALID_REQUEST",f.service().readOutcome("shop",22L,RID,7L).getErrorCode());
         assertEquals("INVALID_REQUEST",f.service().readOutcome("roam",21L,RID,7L).getErrorCode());
         assertNull(f.service().readOutcome("shop",21L,RID,8L));f.recognize();verify(f.speech,times(1)).transcribe(any(),anyString());
+    }
+    @Test void getStageKeepsOriginalRecoveryCodesAndPerformsNoCleanupOrHandoff() {
+        var f=new Fixture();f.recognize();clearInvocations(f.rows,f.speech);
+        var received=f.service().readOutcome("shop",21L,RID,7L);
+        assertEquals("PROCESSING",received.getOutcomeStatus());assertEquals("REQUEST_IN_PROGRESS",received.getErrorCode());
+        assertEquals("RECEIVED",received.getAsrState());assertEquals("ASR_RECEIVED",received.getAsrReason());assertTrue(received.isAsrResumable());
+        verify(f.rows,never()).redactExpiredForUser(anyLong());verify(f.rows,never()).beginHandoff(anyLong(),anyString());
+        verifyNoInteractions(f.speech);assertFalse(f.original().isHandoffStarted());
+        f.original().setState("UNKNOWN");
+        var unknown=f.service().readOutcome("shop",21L,RID,7L);
+        assertEquals("PROCESSING",unknown.getOutcomeStatus());assertEquals("REQUEST_OUTCOME_UNKNOWN",unknown.getErrorCode());
+        assertEquals("UNKNOWN",unknown.getAsrState());assertEquals("ASR_OUTCOME_UNKNOWN",unknown.getAsrReason());assertFalse(unknown.isAsrResumable());
     }
     @Test void existingOuterTransactionIsRejectedBeforeAcquiringAnotherMemberLockOrDispatching() {
         var f=new Fixture();new TransactionTemplate(f.manager).executeWithoutResult(status->assertThrows(IllegalStateException.class,f::recognize));

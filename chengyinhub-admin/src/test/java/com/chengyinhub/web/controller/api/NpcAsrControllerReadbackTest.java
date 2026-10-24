@@ -37,7 +37,7 @@ class NpcAsrControllerReadbackTest {
         clearInvocations(speech);NpcChatResp missing=new NpcChatResp();missing.setOutcomeStatus("NOT_FOUND");
         when(text.readOriginalRequest("shop",21L,RID,7L)).thenReturn(missing);
         var result=controller().chatRequest(RID,"shop",21L);var data=(NpcChatResp)result.get("data");
-        assertEquals("ASR_RECEIVED",data.getErrorCode());assertFalse(data.isRetryable());assertFalse(data.getSafeText().contains("original transcript"));
+        assertEquals("ASR_RECEIVED",data.getAsrReason());assertFalse(data.isRetryable());assertFalse(data.getSafeText().contains("original transcript"));
         verifyNoInteractions(speech);verify(text,never()).chatWithShop(anyString(),anyLong(),anyLong(),anyLong(),anyString(),anyString());
         assertFalse(asr.read(7L,RID,21L).isHandoffStarted());
     }
@@ -55,7 +55,7 @@ class NpcAsrControllerReadbackTest {
         var result=controller().voiceChat(null,21L,RID);assertSame(reply,result.get("data"));assertEquals("saved original",result.get("asr"));
         // Simulate the text receipt no longer existing: the permanent ASR handoff still prevents another model entry.
         var second=controller().voiceChat(null,21L,RID);
-        assertEquals("ASR_TEXT_HANDOFF_STARTED",((NpcChatResp)second.get("data")).getErrorCode());
+        assertEquals("ASR_TEXT_HANDOFF_STARTED",((NpcChatResp)second.get("data")).getAsrReason());
         verifyNoInteractions(speech);verify(text,times(1)).chatWithShop(eq(RID),eq(7L),eq(21L),eq(41L),anyString(),eq("saved original"));
     }
     @Test void deletionDuringTextHandoffCannotEchoTheOldAsrBody(){
@@ -71,5 +71,27 @@ class NpcAsrControllerReadbackTest {
         assertSame(deletedReply,result.get("data"));assertFalse(result.containsKey("asr"));
         assertEquals("ASR_TEXT_UNAVAILABLE",asr.readOutcome("shop",21L,RID,7L).getErrorCode());
         verifyNoInteractions(speech);
+    }
+    @Test void knownUnknownVoiceStageKeepsTheLegacyPendingContractUnderASuccessEnvelope(){
+        when(speech.transcribe(any(),anyString())).thenThrow(new IllegalStateException("controlled provider outcome loss"));
+        asr.recognize(7L,RID,21L,41L,new byte[]{1},"wav");clearInvocations(speech);
+        var result=controller().voiceChat(null,21L,RID);var data=(NpcChatResp)result.get("data");
+        assertEquals(200,result.get("code"));assertEquals("PROCESSING",data.getOutcomeStatus());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",data.getErrorCode());assertEquals("UNKNOWN",data.getAsrState());
+        assertEquals("ASR_OUTCOME_UNKNOWN",data.getAsrReason());assertFalse(data.isAsrResumable());
+        verifyNoInteractions(speech);verify(text,never()).chatWithShop(anyString(),anyLong(),anyLong(),anyLong(),anyString(),anyString());
+    }
+    @Test void lookupFailureStaysPendingForBothPostAndGetInsteadOfClaimingNotFound(){
+        var c=controller();NpcAsrIntentService failed=mock(NpcAsrIntentService.class);
+        when(failed.read(7L,RID,21L)).thenThrow(new IllegalStateException("controlled persistence unavailable"));
+        when(failed.readOutcome("shop",21L,RID,7L)).thenReturn(NpcAsrIntentService.unavailable(RID,"ASR_STATE_UNAVAILABLE"));
+        ReflectionTestUtils.setField(c,"npcAsrIntentService",failed);
+        var post=c.voiceChat(null,21L,RID);var postData=(NpcChatResp)post.get("data");
+        assertEquals(200,post.get("code"));assertEquals("PROCESSING",postData.getOutcomeStatus());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",postData.getErrorCode());assertEquals("ASR_STATE_UNAVAILABLE",postData.getAsrReason());assertNull(postData.getAsrState());
+        NpcChatResp missing=new NpcChatResp();missing.setOutcomeStatus("NOT_FOUND");when(text.readOriginalRequest("shop",21L,RID,7L)).thenReturn(missing);
+        var get=c.chatRequest(RID,"shop",21L);assertEquals(200,get.get("code"));
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",((NpcChatResp)get.get("data")).getErrorCode());
+        verifyNoInteractions(speech);verify(text,never()).chatWithShop(anyString(),anyLong(),anyLong(),anyLong(),anyString(),anyString());
     }
 }

@@ -82,7 +82,7 @@ class NpcAsrIntentMySqlIT {
     }
     @Test void unknownAndEmptyResultsSurviveColdOwnersWithoutAnotherSend() {
         when(speech.transcribe(any(),anyString())).thenThrow(new IllegalStateException("controlled response loss"));
-        assertEquals("UNKNOWN",recognize().getState());assertEquals("ASR_OUTCOME_UNKNOWN",service().readOutcome("shop",21L,RID,7L).getErrorCode());
+        assertEquals("UNKNOWN",recognize().getState());assertEquals("ASR_OUTCOME_UNKNOWN",service().readOutcome("shop",21L,RID,7L).getAsrReason());
         assertEquals("UNKNOWN",recognize().getState());verify(speech,times(1)).transcribe(any(),anyString());
         when(speech.transcribe(any(),anyString())).thenReturn(null);
         var empty=service().recognize(8L,RID,21L,41L,AUDIO,"wav");assertEquals("",empty.getTranscript());
@@ -118,6 +118,9 @@ class NpcAsrIntentMySqlIT {
     @Test void bodyExpiryAndDifferentInputKeepThePermanentIdentity() {
         recognize();db.update("UPDATE npc_asr_intent SET body_expires_at=DATE_SUB(NOW(6),INTERVAL 1 SECOND) WHERE user_id=7 AND request_id=?",RID);
         assertEquals("ASR_TEXT_UNAVAILABLE",service().readOutcome("shop",21L,RID,7L).getErrorCode());
+        assertNull(service().read(7L,RID,21L).getTranscript());
+        assertEquals("原转写",db.queryForObject("SELECT transcript FROM npc_asr_intent WHERE user_id=7",String.class),"GET projects expiry without writing");
+        assertEquals(1,rows.redactExpired(10),"existing retention writer clears only expired bodies");
         assertNull(db.queryForObject("SELECT transcript FROM npc_asr_intent WHERE user_id=7",String.class));
         assertThrows(IllegalArgumentException.class,()->service().recognize(7L,RID,22L,41L,AUDIO,"wav"));
         assertThrows(IllegalArgumentException.class,()->service().recognize(7L,RID,21L,41L,new byte[]{9},"wav"));
@@ -134,7 +137,7 @@ class NpcAsrIntentMySqlIT {
         assertEquals(1,requests.deleteNpcChatRequestsBefore(new java.util.Date(System.currentTimeMillis()+86400000),1));
         assertThrows(IllegalStateException.class,()->writes.admit(textRequest(),"timeout"));
         assertEquals(1,count());assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM npc_chat_request",Integer.class));
-        assertEquals("ASR_TEXT_HANDOFF_STARTED",service().readOutcome("shop",21L,RID,7L).getErrorCode());
+        assertEquals("ASR_TEXT_HANDOFF_STARTED",service().readOutcome("shop",21L,RID,7L).getAsrReason());
         assertEquals(0,writes.deleteForUser(7L));assertEquals(1,count());verify(speech,times(1)).transcribe(any(),anyString());
     }
     static NpcChatRequest textRequest(){
