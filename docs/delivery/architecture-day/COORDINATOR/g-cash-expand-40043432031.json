@@ -1,0 +1,58 @@
+{
+  "run_id": 40043432031,
+  "source_sha": "4b85984c7a86af59240ab5698337041b590813bd",
+  "raw_xml_sha256": "194d957b23d50dec6b156663d1c1c02a1b16e35cf8161f3465934f94884a09e7",
+  "raw_receipt_sha256": "1c3aaa9f40372406187f8e91074b0f4025f55456562fabe945563091033173db",
+  "tests": 30,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "testcases": [
+    "emptyOnlyRollbackRestoresOriginalColumnsAndIndexShape",
+    "globalHeadIdentityAndInitiatorMustMatchFrozenClose",
+    "eventCannotPointToRegistrationContributionInAnotherClose",
+    "existingPartialSchemaIsNotOverwrittenOrTreatedAsApplied",
+    "zeroSalesCloseNeedsNeitherPositiveAmountNorInventedMemberRateOrHead",
+    "originalContributionReceiptSurvivesSourceRefundAndRejectsChangedAmount",
+    "sqlNullCannotBypassAccountingKindRoleLineOrStatus",
+    "paidOriginalSnapshotCannotInventZeroBasisOrClaimDifferentCurrentState",
+    "zeroCloseCannotReplaceActualUnknownOwnerAndRatesWithInventedDefaults",
+    "parentOrderUsesOriginalPayerNotMinimumRegistrationId",
+    "sameCloseIdentityReadsOriginalAndDifferentPayloadCannotOverwrite",
+    "sourceTopicInitiatorAndJsonObjectMustActuallyMatch",
+    "zeroPositiveAndNullCloseKindsCannotMislabelFrozenBasis",
+    "dirtyLegacyPreflightFailsBeforeAnyDdlAndDoesNotDeleteTheEvidence",
+    "repeatedEventWithSameHashStillConflictsOnDifferentActualPayload",
+    "changedOriginalOrderUniqueKeyFailsPreflightBeforeAnyDdl",
+    "positiveCloseRequiresActualNonNullInitiatorAndEveryFrozenRate",
+    "rollbackAlsoRefusesAccountingRowsEvenWithoutCashClose",
+    "rollbackRefusesAnyCommittedEvidenceInsteadOfDroppingMoneyHistory",
+    "zeroCloseCanRetainWaitingOriginalOrderWithoutAddingItsPayableAmountToOriginalSales",
+    "originalAllStateSnapshotPreservesClosedAndNullStatesInsteadOfCallingThemPaid",
+    "expandPreservesLegacyOriginalRowsAndBothOldUniqueKeys",
+    "failureAfterEvidenceHeadAndAdjustmentRollsBackAllNewRows",
+    "refundAndContributionExistingIndependentlyDoNotProveTheSameSourceRegistration",
+    "headAndAdjustmentCompositeForeignKeysRejectCrossCloseAndHalfLinks",
+    "onlyExplicitAccountingPlatformAndDepositRowsMayHaveNoMember",
+    "eventStorageRejectsSelfDeclaredVerifiedPaymentEvenWithExistingRefundAndContribution",
+    "contributionCannotBorrowAnotherCloseTopicOrPayer",
+    "changedOriginalAdjustmentIdentityFailsPreflightEvenWithThreeUniqueColumns",
+    "defaultRecordRequiresRealTransactionAndOriginalSourceScope"
+  ],
+  "scope": "Only expand structure, production migration/mapper constraints, source association and local transaction/empty-only schema rollback",
+  "not_proven": [
+    "No production DDL or activation",
+    "No settlement amount/payment late-success/refund-allocation/payout/debt engine",
+    "No multi-JVM fence/payout race or production preflight"
+  ]
+}

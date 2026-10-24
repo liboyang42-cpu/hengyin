@@ -1,0 +1,84 @@
+{
+  "actual_checks": "Python byte hashes, current full production view, protected method body equality and declaration inventory; git apply --check for unapplied H review test",
+  "protected_methods": [
+    {
+      "method": "private static HttpRequestBase createRequest(",
+      "body_equal_to_parent": true,
+      "sha256": "f128be0728af4b943ac8298948c319ff4d60f528495b1203d3d97d402cac942a"
+    },
+    {
+      "method": "private static String readLimited(",
+      "body_equal_to_parent": true,
+      "sha256": "87b1f8de23a2d0a7dffeb0f8b5888eb8ee423fca563834d6f0dcfed7b422ae47"
+    },
+    {
+      "method": "private static CloseableHttpClient buildHttpClient(",
+      "body_equal_to_parent": true,
+      "sha256": "90919214fcf66556fddaad651ae0fb4f4f583709e239a67f5d8c8187270947e8"
+    },
+    {
+      "method": "private static void abortAsync(",
+      "body_equal_to_parent": true,
+      "sha256": "9825615f376e7e095396eab7440b700137e5c4532e144202406cdd581ae97ba8"
+    },
+    {
+      "method": "static void disconnectAsync(",
+      "body_equal_to_parent": true,
+      "sha256": "e33982fb894ab2dbc5dd14b264ebf10153c4073ef08468df8f370e6a1351e11a"
+    },
+    {
+      "method": "private static boolean isRetryableStatus(",
+      "body_equal_to_parent": true,
+      "sha256": "79ca792e3f71ee83149072b69632a87d58b2ed65ef4326b530f601a6521e8da5"
+    },
+    {
+      "method": "static boolean isRetryableNetworkFailure(",
+      "body_equal_to_parent": true,
+      "sha256": "7471385b815fe799e56c14ae00d0963f3fb2834a078f2a39b3677d9959320c54"
+    },
+    {
+      "method": "private static void waitBeforeRetry(",
+      "body_equal_to_parent": true,
+      "sha256": "6edd2eb348cc7a415077d4c4559125177be225ce326eebb49d0c5de3b7e92ebe"
+    },
+    {
+      "method": "private static String execute(",
+      "body_equal_to_parent": true,
+      "sha256": "97a16826a18a36852abdfe01cb82c3886322030131aa94589c5b9f695c81bc71"
+    }
+  ],
+  "test_source_inventory": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java",
+      "ordinary_test_declarations": 7,
+      "execution": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/http/HttpUtilsJsonPostTest.java",
+      "ordinary_test_declarations": 15,
+      "execution": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java",
+      "ordinary_test_declarations": 2,
+      "execution": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientLogRedactionTest.java",
+      "ordinary_test_declarations": 2,
+      "execution": "NOT_RUN"
+    }
+  ],
+  "H_review_patch": {
+    "file": "admission-physical-worker.review.patch",
+    "additional_cases": 1,
+    "apply_check": "PASS",
+    "compiled": false,
+    "executed": false,
+    "failure_claim": false
+  },
+  "Java_JUnit_HTTP_TLS_MySQL_Redis_Spring_jdeps": "NOT_RUN",
+  "new_production_dependencies": 0,
+  "new_production_executors": 0,
+  "real_provider_calls": 0
+}

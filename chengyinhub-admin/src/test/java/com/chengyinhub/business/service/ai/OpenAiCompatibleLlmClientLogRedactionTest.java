@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,13 +52,16 @@ class OpenAiCompatibleLlmClientLogRedactionTest {
             exchange.close();
         });
         server.start();
-        return new OpenAiCompatibleLlmClient("text", "http://127.0.0.1:" + server.getAddress().getPort(),
-                "sk-test-key", "qwen-plus", true, 3000);
+        String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
+        return new OpenAiCompatibleLlmClient("text", baseUrl,
+                "sk-test-key", "qwen-plus", true, 3000, new AiHttpAdmission(java.util.List.of(baseUrl)));
     }
 
     private void assertNoLeak(RuntimeException thrown) {
         assertFalse(thrown.getMessage().contains(SECRET), "对外异常信息不得回显响应体");
         assertTrue(thrown.getCause() == null, "对外异常不得挂原始 cause");
+        assertEquals(0, thrown.getSuppressed().length);
+        assertFalse(thrown instanceof AiProviderNotSentException, "received/provider errors must never refund as NOT_SENT");
         assertFalse(logs.list.isEmpty(), "失败仍需留运维日志");
         for (ILoggingEvent event : logs.list) {
             assertFalse(event.getFormattedMessage().contains(SECRET), "日志正文不得包含响应体");

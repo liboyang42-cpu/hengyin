@@ -372,6 +372,14 @@
       "classes": [
         "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT"
       ]
+    },
+    "architecture-day-ai-not-sent": {
+      "lineage": "F663 + E359 trusted NOT_SENT + H transport/admission combination on root assembled source",
+      "registered_source": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+      "note": "4 exact ordinary@Test MySQL/Redis methods; no provider call. Runtime source, zero skipped and independent schema/key cleanup required. HTTP/unit tests remain full backend CI. Not entire WP13 acceptance.",
+      "classes": [
+        "com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT"
+      ]
     }
   },
   "classes": {
@@ -1138,6 +1146,15 @@
       ],
       "gates": {},
       "note": "Expand preflight, source identity, composite foreign keys, exact replay, local transaction rollback and empty-only schema rollback; no production callers or economic engine activated."
+    },
+    "com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT": {
+      "tests": 4,
+      "storage": [
+        "mysql",
+        "redis"
+      ],
+      "gates": {},
+      "note": "Original quota receipt/day compensation and UNKNOWN retention, compensation CAS loss, durable Photo NOT_SENT replay. Real Lua/MySQL; trusted no-network model double."
     }
   }
 }

@@ -1,0 +1,161 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "public_baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate": "663c2c634e4cff53c876630fe4e166d3fcd29d20",
+  "parent": "05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5",
+  "tree": "73a343a3385cd0df3652dd4f7bb983f6f9bf2a7b",
+  "complete_production_view": {
+    "java_xml_blobs": 2723,
+    "all_hashes_verified": true,
+    "tree_truncated": false
+  },
+  "changed_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java",
+      "sha": "7e779f929bbe1302144a632d979c3e345f0d87b8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientLogRedactionTest.java",
+      "sha": "7a8ed885b2177418848417919fc5bba0e6a988d0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java",
+      "sha": "6d01fc5dbf42ebf1b399928024c21216ae77cefa"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/http/HttpUtilsJsonPostTest.java",
+      "sha": "80cb019e81557e48a890b48380ae968107f7e98d"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpRequestException.java",
+      "sha": "c0bd512ee63994b22f1af36c24882e4144fe8669"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java",
+      "sha": "65776364bfa89dbb27e3567710e06d8214d9ce0a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiHttpAdmission.java",
+      "sha": "cd54f35107b0462f11e1a05d2d54df4e16c4fcc4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderNotSentException.java",
+      "sha": "9d36567ac74ca13c6f8ed4e733b7b8e0c846ba08"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java",
+      "sha": "08ce08d358b0faacdbdd4825b90e121ef21347ed"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "sha": "22436f32cd0da298ce06eb22a67e2eb0b5b4e94f"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/CONTRACT.md",
+      "sha": "a5eba9f33cc6349ba1950d223591685975448129"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/REPORT.md",
+      "sha": "50bbb5477c9cc0909ab640cef67618af435977a9"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/callers.txt",
+      "sha": "98c114ea1e81ddeffefc0b2b46db2cc4a237acad"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/static-checks.txt",
+      "sha": "f96b6ea0bbc3315c042b5b32727512703e93b742"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/verification.json",
+      "sha": "b745356d4faad120886d4d131d934d11b0d4dadd"
+    }
+  ],
+  "source_content_read": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientLogRedactionTest.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/http/HttpUtilsJsonPostTest.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpRequestException.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiHttpAdmission.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderNotSentException.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/CONTRACT.md",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/REPORT.md",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/callers.txt",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/static-checks.txt",
+      "exact_text_blob_verified": true,
+      "structured_json_read": false
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/wp13-http/verification.json",
+      "exact_text_blob_verified": false,
+      "structured_json_read": true
+    }
+  ],
+  "review_start": {
+    "HEAD": "12543aefa28d36402d9ab27ef58e53086c7a0c62",
+    "branch": "codex/architecture-day-h-review",
+    "worktree": "/workspace/hengyin-h-review",
+    "clean": true
+  },
+  "previous_frozen_reviews": {
+    "quota": "60fc464b01fcb4cca25a5f0b0fd932444bc113df",
+    "post95_w19": "c89f5944985a538cb0af9c5854a841de8c81eb54"
+  }
+}

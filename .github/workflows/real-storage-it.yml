@@ -55,6 +55,7 @@ on:
           - architecture-day-w19-owner-notice
           - architecture-day-play-scheduler
           - architecture-day-cash-expand
+          - architecture-day-ai-not-sent
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
         required: false
