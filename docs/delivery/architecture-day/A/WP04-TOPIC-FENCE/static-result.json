@@ -1,0 +1,65 @@
+{
+  "baseline": "06a571b1247620a9bdcea068be0ded973671d17c",
+  "status": "STATIC_ONLY",
+  "executed_java_mysql_tests": 0,
+  "counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": {
+      "declared_tests": 96,
+      "dynamic": [],
+      "nested": [],
+      "gates": [
+        [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "1"
+        ]
+      ],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationTopicFenceTest.java": {
+      "declared_tests": 13,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": {
+      "declared_tests": 9,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "unchanged": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+    "ci/real_storage_it.py",
+    "ci/real-storage-it-registry.json",
+    "pom.xml"
+  ],
+  "sha256": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "66d2bdb7f7bc3415075a8c725619d9c0bae217c4edf966623f39460e6b9fe553",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": "5eb83d4c9beee111adbbeaaac40302c145ade9d4f11399c1a783091f2f9a130c",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java": "a4cf50d3769887a3c62a43a0122b867d0cc0fd5b6e87cb3502546289b5da382b",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationTopicFence.java": "56d38fa019b7943a2ff7e91dad25524e276ec482a6ef4625edeec3019898e75a",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": "0084685b23a51fab283105b7b7dba24dff8120039473ee0545e976643b344de1",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationTopicFenceTest.java": "c6129ae592fda5ffce92afdc6d1615966663640cfd33890fe5f6ec0255e35179",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": "e9b8268a1df88b8dd4e97989a56e4d3b73b680ded6a65fb57a1a1ff51a736eb6"
+  },
+  "not_run": [
+    "Java compilation",
+    "JUnit",
+    "MySQL",
+    "CI",
+    "cleanup",
+    "G frozen allocation/reversal/payout",
+    "outer-owner lock graph"
+  ]
+}

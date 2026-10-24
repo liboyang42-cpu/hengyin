@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -34,19 +34,18 @@ import static org.mockito.Mockito.when;
 class TopicRouteServiceImplTest {
 
     @Test
-    void networkFailureFallsBackToThatSegmentDirectly() {
+    void networkFailureIsExplicitlyUnavailable() {
         TencentMapClient mapClient = readyClient();
         when(mapClient.get(anyString()))
                 .thenThrow(new HttpRequestException("HTTP request failed", -1, true));
         String result = service(mapClient).buildGeometryJson(
                 Arrays.asList(node("30.1", "120.1"), node("30.2", "120.2")));
 
-        JSONArray line = JSONArray.parseArray(result);
-        assertEquals(2, line.size());
+        assertNull(result);
     }
 
     @Test
-    void oneFailedSegmentDoesNotDiscardSuccessfulSegments() {
+    void oneFailedSegmentCannotPublishAPartiallySyntheticRoute() {
         TencentMapClient mapClient = readyClient();
         when(mapClient.get(anyString()))
                 .thenReturn("{\"status\":0,\"result\":{\"routes\":[{\"polyline\":[30.1,120.1,100000,100000]}]}}")
@@ -55,9 +54,8 @@ class TopicRouteServiceImplTest {
         String result = service(mapClient).buildGeometryJson(Arrays.asList(
                 node("30.1", "120.1"), node("30.2", "120.2"), node("30.3", "120.3")));
 
-        JSONArray line = JSONArray.parseArray(result);
-        assertEquals(3, line.size());
-        assertEquals("30.3", line.getJSONObject(2).getBigDecimal("latitude").stripTrailingZeros().toPlainString());
+        assertNull(result);
+        verify(mapClient, times(2)).get(anyString());
     }
 
     @Test
@@ -72,7 +70,7 @@ class TopicRouteServiceImplTest {
 
         String degraded = service.buildGeometryJson(nodes);
         String recovered = service.buildGeometryJson(nodes);
-        assertEquals(2, JSONArray.parseArray(degraded).size());
+        assertNull(degraded);
         assertEquals(3, JSONArray.parseArray(recovered).size());
         assertNotEquals(degraded, recovered);
         assertEquals(recovered, service.buildGeometryJson(nodes));
@@ -114,8 +112,8 @@ class TopicRouteServiceImplTest {
         when(client.get(anyString())).thenReturn("{\"status\":120}", "broken-json", successfulResponse());
         TopicRouteServiceImpl service = service(client);
         List<CmsTopicNode> nodes = Arrays.asList(node("30.1", "120.1"), node("30.2", "120.2"));
-        assertEquals(2, JSONArray.parseArray(service.buildGeometryJson(nodes)).size());
-        assertEquals(2, JSONArray.parseArray(service.buildGeometryJson(nodes)).size());
+        assertNull(service.buildGeometryJson(nodes));
+        assertNull(service.buildGeometryJson(nodes));
         String recovered = service.buildGeometryJson(nodes);
         assertEquals(3, JSONArray.parseArray(recovered).size());
         assertEquals(recovered, service.buildGeometryJson(nodes));
@@ -170,7 +168,7 @@ class TopicRouteServiceImplTest {
         logs.start();
         logger.addAppender(logs);
         try {
-            assertNotNull(service(mapClient).buildGeometryJson(
+            assertNull(service(mapClient).buildGeometryJson(
                     Arrays.asList(node("30.1", "120.1"), node("30.2", "120.2"))));
 
             String joined = logs.list.stream().map(ILoggingEvent::getFormattedMessage)

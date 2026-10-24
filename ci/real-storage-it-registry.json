@@ -423,6 +423,11 @@
       "classes": ["com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT"],
       "note": "3 ordinary@Test; actual original schema/XML and business/inbox transaction proxies, controlled SDK query. Exact zero-skip XML and independent CLEAN required; no real WeChat/HTTP acceptance."
     },
+    "architecture-day-registration-topic-fence": {
+      "registered_source": "ae1606843cca6ed847d84059640b1bab6e1decdc",
+      "classes": ["com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT"],
+      "note": "Nine fixed tests: actual payment/refund inbox transactions, topic-first business locking and current terminal replay. External owner locks and G original-allocation reversal remain separate dependencies; no actual channel acceptance. Original XML and independent CLEAN required."
+    },
     "architecture-day-topic-cash-fence": {
       "registered_source": "2457bf1851c0573df7a69270a4532b00b9e8404c",
       "classes": ["com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT"],
@@ -443,6 +448,11 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT": {
+      "tests": 9,
+      "storage": ["mysql"],
+      "gates": {}
+    },
     "com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT": {
       "tests": 5,
       "storage": ["mysql"],

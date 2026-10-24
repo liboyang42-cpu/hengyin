@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T07:51:42.565654+00:00",
-  "source_parent": "d586c143eb0a4499aeb15cbb3d173496f18b83e2",
+  "updated_utc": "2026-10-24T08:05:43.546646+00:00",
+  "source_parent": "65e881857d4eda9cc0abd27cb9ba677f355d8658",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -24,9 +24,9 @@
     "B": {
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
-      "task": "持久化已验证的原支付/退款事实，复用现有inbox/attempt",
+      "task": "6d641原成功事实片已交，继续与root0ff已拆SDK/intent/router层组合，不整文件回退",
       "ownership": "SDK/router/intent/inbox事实层及最小additive SQL源码；不改A/G领域正文",
-      "dispatch": "accepted; authoritative active readback",
+      "dispatch": "renewal accepted; check actual live state",
       "last_cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:4",
       "last_observed_status": {
         "type": "active",
@@ -144,7 +144,9 @@
     "A_strict_precheck": "53 declared_tests; dynamic/nested/gates/conditions empty; real precheck errors=[]; Java/DB NOT_RUN",
     "registry_after_A": "2 targeted registry validation/batch totals selftests PASS; secret-file-gate and diff check PASS",
     "batch_registry": "15 targeted tests PASS; all96 registered source prechecks PASS",
-    "F_full_python_controls": "164 test_collect_jdeps/test_gate tests PASS in39.693s; protocol/synthetic controls, actual Java/jdeps remain UNKNOWN"
+    "F_full_python_controls": "164 test_collect_jdeps/test_gate tests PASS in39.693s; protocol/synthetic controls, actual Java/jdeps remain UNKNOWN",
+    "AE_Node": "28 map +63 existing scope/action tests PASS0skip; not runtime/backend evidence",
+    "AE_registry": "15 control tests PASS;97 registered source prechecks PASS"
   },
   "unified_regression_pending": [
     "A53 boundary and original-fact Java/DB acceptance; strict source parser/registry metadata PASS",
@@ -228,5 +230,12 @@
     "E_budget": "d811d86b6f85dcec9ed4c8ab036719d837eefce5",
     "E_city_quality": "8372a9d0a37f62cd7e7d6375b5a537e4e921590a",
     "C_activity_unreviewed": "735b9f4c90819ac38ccaa5ac3c6407de28d9e69d"
+  },
+  "new_AE_batch": {
+    "receipt": "batch-AE-source-20261024.json",
+    "status": "reviewed staged source; actual runtime unverified",
+    "A": "ae1606843cca6ed847d84059640b1bab6e1decdc",
+    "E": "8372a9d0a37f62cd7e7d6375b5a537e4e921590a",
+    "unchanged_business_fields": "B outbound qualifier retained; no G terminal placeholder interface applied"
   }
 }

@@ -226,6 +226,11 @@ class RegistrationFundsMybatisIntegrationTest {
                     new BeanPropertyRowMapper<>(CmsTopic.class), call.getArgument(0, Long.class));
             return rows.isEmpty() ? null : rows.get(0);
         });
+        when(topics.selectCmsTopicByIdForUpdate(any(Long.class))).thenAnswer(call -> {
+            List<CmsTopic> rows = new JdbcTemplate(dataSource).query("SELECT * FROM cms_topic WHERE id = ? FOR UPDATE",
+                    new BeanPropertyRowMapper<>(CmsTopic.class), call.getArgument(0, Long.class));
+            return rows.isEmpty() ? null : rows.get(0);
+        });
         ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
     }
 
@@ -334,6 +339,7 @@ class RegistrationFundsMybatisIntegrationTest {
                         + " CHECK (JSON_TYPE(unverified_registration_ids_json)='ARRAY' AND JSON_LENGTH(unverified_registration_ids_json)>0)) ENGINE=InnoDB"
         );
         execute("INSERT INTO ums_member(id,status,point,del_flag) VALUES (7,1,100,0)",
+                "INSERT INTO cms_topic(id,member_id,product_type) VALUES (99,1,1)",
                 "INSERT INTO cms_points_setting(id,value,type,status,del_flag) VALUES (2,10,1,1,0),(3,5,1,1,0)",
                 "INSERT INTO cms_activity(id,member_id,name,status,publish_status,del_flag,start_date,end_date) VALUES (55,1,'本地活动',1,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY),DATE_ADD(NOW(),INTERVAL 1 DAY))",
                 "INSERT INTO oms_ticket(id,owner_type,owner_id,name,price,start_time,end_time,total_inventory,remaining_inventory,del_flag) VALUES (9,2,55,'本地票',100,DATE_ADD(NOW(),INTERVAL 1 HOUR),DATE_ADD(NOW(),INTERVAL 1 DAY),10,0,0)",

@@ -135,6 +135,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-payment-intent": 4,
                     "architecture-day-payment-inbox": 3,
                     "architecture-day-deposit-attempt": 8,
+                    "architecture-day-registration-topic-fence": 9,
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3}
         reg = registry()
