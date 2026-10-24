@@ -91,7 +91,7 @@ public class CmsTopicNode extends BaseEntity
     @Excel(name = "该地点营业时间")
     private String businessTime;
 
-    /** 状态0不显示 1不显示 */
+    /** 状态 0不显示 1显示(@Excel 表头保留原文以免改动后台导出,见 C:U-078) */
     @Excel(name = "状态0不显示 1不显示")
     private Long status;
 
