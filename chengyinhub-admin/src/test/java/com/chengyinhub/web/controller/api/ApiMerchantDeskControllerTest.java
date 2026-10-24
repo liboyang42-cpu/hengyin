@@ -94,6 +94,41 @@ class ApiMerchantDeskControllerTest {
     }
 
     @Test
+    void receiptKeepsNotFoundAndDropsAppliedRowWithoutAction() {
+        when(config.selectConfigByKey(MerchantDeskSwitch.CONFIG_KEY)).thenReturn("true");
+        MerchantAccessContext access = new MerchantAccessContext(501L, 11L, 501L, MerchantRoleCode.MERCHANT_OWNER);
+        when(accessService.require(501L, MerchantPermission.BASIC_READ)).thenReturn(access);
+        Map<String, Object> missing = new HashMap<>();
+        missing.put("requestId", "desk-req-01");
+        missing.put("state", "NOT_FOUND");
+        when(deskService.receipt(access, "desk-req-01")).thenReturn(missing);
+        Map<String, Object> body = new HashMap<>();
+        body.put("requestId", "desk-req-01");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> notFound = (Map<String, Object>) controller.receipt(body).get(AjaxResult.DATA_TAG);
+        assertEquals("NOT_FOUND", notFound.get("state"));
+
+        Map<String, Object> bare = new HashMap<>();
+        bare.put("requestId", "desk-req-02");
+        bare.put("state", "APPLIED");
+        when(deskService.receipt(access, "desk-req-02")).thenReturn(bare);
+        body.put("requestId", "desk-req-02");
+        assertEquals(null, controller.receipt(body).get(AjaxResult.DATA_TAG));
+
+        Map<String, Object> applied = new HashMap<>();
+        applied.put("requestId", "desk-req-03");
+        applied.put("state", "APPLIED");
+        applied.put("action", "SAVE_SKU");
+        applied.put("targetId", 44L);
+        when(deskService.receipt(access, "desk-req-03")).thenReturn(applied);
+        body.put("requestId", "desk-req-03");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> kept = (Map<String, Object>) controller.receipt(body).get(AjaxResult.DATA_TAG);
+        assertEquals("SAVE_SKU", kept.get("action"));
+        assertEquals(44L, kept.get("targetId"));
+    }
+
+    @Test
     void notLoggedIn_isRejectedFirst() {
         doReturn(null).when(controller).getAppUserId();
         assertEquals(500, controller.stores().get(AjaxResult.CODE_TAG));
