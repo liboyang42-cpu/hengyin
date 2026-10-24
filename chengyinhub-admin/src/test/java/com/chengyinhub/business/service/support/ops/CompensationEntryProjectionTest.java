@@ -7,7 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -124,6 +126,44 @@ class CompensationEntryProjectionTest {
         assertNull(projection.project(null, 10L, viewer, null));
         assertNull(projection.project("  ", 10L, viewer, null));
         assertNull(projection.requery("", 10L, viewer, null));
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueAuditApplies() {
+        Map<String, List<BusinessAuditEvent>> byRequest = new LinkedHashMap<String, List<BusinessAuditEvent>>();
+        CompensationEntryProjection projection = new CompensationEntryProjection(
+                topicId -> frozenTerms(),
+                new CompensationAuditSource() {
+                    @Override
+                    public List<BusinessAuditEvent> eventsForRequest(String requestId) {
+                        List<BusinessAuditEvent> found = byRequest.get(requestId);
+                        return found == null ? List.of() : found;
+                    }
+
+                    @Override
+                    public List<AuditTrailEntryVO> trailForTopic(Long topicId) {
+                        return List.of();
+                    }
+                });
+        CompensationEntryProjection.ViewerGrant viewer = new CompensationEntryProjection.ViewerGrant(
+                88L, Set.of(ExtraApproverReachability.APPROVE_PERMISSION));
+        assertNull(projection.recoverOriginal(null, 10L, viewer, null));
+        assertNull(projection.recoverOriginal("  ", 10L, viewer, null));
+        CompensationEntryProjection.View recovered = projection.recoverOriginal("c11-comp-never", 10L, viewer, null);
+        assertEquals("c11-comp-never", recovered.getRequestId());
+        assertTrue(recovered.getOriginalAudit().isEmpty());
+        assertTrue(byRequest.isEmpty());
+        BusinessAuditEvent row = new BusinessAuditEvent();
+        row.setRequestId("c11-comp-never");
+        row.setAction("COMPENSATION_FREEZE");
+        row.setAfterJson("FROZEN");
+        byRequest.put("c11-comp-never", List.of(row));
+        CompensationEntryProjection.View first = projection.recoverOriginal("c11-comp-never", 10L, viewer, null);
+        assertEquals("c11-comp-never", first.getRequestId());
+        assertEquals(1, first.getOriginalAudit().size());
+        assertEquals("FROZEN", first.getOriginalAudit().get(0).getAfterJson());
+        assertEquals(1, byRequest.get("c11-comp-never").size());
+        assertEquals(1, byRequest.size());
     }
 
     private static ClubEditionCompensationTerms frozenTerms() {
