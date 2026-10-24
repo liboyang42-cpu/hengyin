@@ -157,3 +157,26 @@ BUILD SUCCESS
 ```
 
 Runtime still unwired. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 18:13 America/Los_Angeles
+
+HEAD `2027d1c8f` tests. Remaining adapter class-level occupancy without inventing `recoverOriginal`:
+
+- `PartyFactAdapterTest.missingActorDoesNotOccupyRoleThenUniqueNavigatorApplies` — empty party + requireRole leaves `actorRoleCode` null; unique NAVIGATOR is the first write
+- `TeamOppositionAdapterTest.unusedOppositionDoesNotOccupyThenUniqueHunterApplies` — NAVIGATOR-only party leaves `opposed` false; unique HUNTER is the first opposed write
+- `EnvironmentExpiryAdapterTest.inactiveExpiryDoesNotOccupyWeatherThenUniqueApplyWritesServerFact` — inactive spec leaves environment empty; unique expiry apply writes server weather `rain`
+- `EquipmentStateDurationAdapterTest.unusedDurationDoesNotUnequipThenUniqueExpiryClears` — BEFORE clock apply leaves lantern/soaked; unique AFTER clock apply unequips and clears soaked
+
+Isolation occupancy remains. Parent surefire `com.chengyinhub.business.service.support.rpg.adapter.*Test` **27/0** 2026-10-24T01:13:33Z：
+
+```
+Tests run: 3 -- PartyFactAdapterTest
+Tests run: 4 -- TeamOppositionAdapterTest
+Tests run: 6 -- EnvironmentExpiryAdapterTest
+Tests run: 3 -- EquipmentStateDurationAdapterTest
+Tests run: 5 -- C02AccountSwitchRestartIsolationTest
+Tests run: 27, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+Runtime still unwired. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
