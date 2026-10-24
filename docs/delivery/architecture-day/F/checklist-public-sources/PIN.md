@@ -1,0 +1,1 @@
+可信verifier固定 `4255beb508b64bce639e25d4fc7f16742cd4946a`，parent `07ff55fe0ec1e460dc93f4bc1d07caf54738f329`。root应用dual-ref.review.patch将原b944双ref同时改为4255；工具VERIFIER亦固定4255。原六文件SHA见trusted-files.json；不改现行workflow/job/registry/预算/旧baseline。只执行RegisteredReferencesTest 3/3 PASS0skip；工具测试与其它回归/Java/DB/CI均NOT_RUN。
