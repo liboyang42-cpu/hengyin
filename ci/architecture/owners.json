@@ -768,6 +768,17 @@
           "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
           "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
         ]
+      },
+      {
+        "id": "C_REGISTRATION_TICKET_APPLICATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.verify.RegistrationTicketApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiVerifyController",
+          "com.chengyinhub.common.core.controller.BaseController"
+        ]
       }
     ],
     "allowed_directions": [

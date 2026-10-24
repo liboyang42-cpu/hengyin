@@ -995,6 +995,59 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
+    def test_registration_ticket_actual_public_domain_ports_and_http_inbound_remain_legal(self):
+        ports = ["com.chengyinhub.business.service." + name for name in
+                 ("ICmsRegistrationService", "RegistrationSeatService", "ICmsActivityService", "IPerkLedgerService")]
+        ports.append("com.chengyinhub.business.service.impl.QrcodeServiceImpl")
+        for target in ports:
+            self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_PUBLIC_TICKET_PORT_" + target).encode()
+        self.write_system()
+        self.output = self.output.with_name("registration-ticket-public-ports")
+        self.collect()
+        application = self.owner_member("C_REGISTRATION_TICKET_APPLICATION")
+        self.assertEqual("com.chengyinhub.web.service.verify.RegistrationTicketApplication", application)
+        for target in ports: self.reference(application, target)
+        self.reference("com.chengyinhub.web.controller.api.ApiVerifyController", application)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual([], report["technical_dependencies"]["owner_edges"])
+        self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertEqual(3, len(report["references"]))
+
+    def test_registration_ticket_cannot_depend_back_on_http_controller_or_base(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "C_REGISTRATION_TICKET_APPLICATION"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                self.assertEqual((owner, target), (bad["source_technical_owner"], bad["target_class"]))
+                self.assertTrue(bad["source_sha256"] and bad["target_sha256"])
+
+    def test_registration_ticket_cannot_self_grant_registered_payment_storage_dependency(self):
+        self.reference(self.owner_member("C_REGISTRATION_TICKET_APPLICATION"),
+                       self.owner_member("B_VERIFIED_PAYMENT_FACT_STORE"))
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertTrue(any(f["rule"] == "NEW_OWNER_DEPENDENCY_DIRECTION"
+                            and f["source_technical_owner"] == "C_REGISTRATION_TICKET_APPLICATION"
+                            and f["target_technical_owner"] == "B_VERIFIED_PAYMENT_FACT_STORE"
+                            for f in report["findings"]))
+
+    def test_registration_ticket_missing_raw_rows_is_unknown_despite_other_admin_output(self):
+        owner = "C_REGISTRATION_TICKET_APPLICATION"
+        member = self.owner_member(owner)
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in text.splitlines()
+                              if not l.strip().startswith(member + " -> ")).encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
+
     def test_verified_payment_fact_and_original_ledger_actual_source_directions(self):
         # de7f432 exact production types; NOT_COMPILED protocol controls only.
         directions = (

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T10:33:13.145148+00:00",
+  "updated_utc": "2026-10-24T10:38:58.497648+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -358,9 +358,10 @@
   "latest_combined_source_current": {
     "receipt": "batch-ABCDEF-source-followup-20261024.json",
     "parent": "ffb992bc34a53de6b0afbbc767db142fc4b9be94",
-    "status": "Six increments source-composed; strict source/Node/Python checks, secret scan and isolated commit pending",
+    "status": "Six-increment source committed/pushed5d56;105 source prechecks and19Python/17Node passed; new Java/DB NOT_RUN. F86fb/8a5/2c8 follow-up assembled, pending isolated source commit.",
     "registry_classes": 105,
-    "Java_DB": "NOT_RUN for new source; older2514-case PASS remains independent"
+    "Java_DB": "NOT_RUN for new source; older2514-case PASS remains independent",
+    "integrated_at": "5d56dc996c6373ed035652cc1def10bcecbf96f3"
   },
   "targeted_run_history": [
     {
@@ -395,6 +396,18 @@
     "F_fixture": "4bb00dffdd62d519f7575a949f0630a4fa576e77",
     "G_paid_half": "6df875d59f986cff6d90c7c9ad9c7903244c2078",
     "G_producer": "4d6f4a565d8d42c7cca1f960c1000c7fa09205bd",
-    "A_fixture": "57e99075c0f98b2ce7592b3521aebc42b78eafec"
+    "A_fixture": "57e99075c0f98b2ce7592b3521aebc42b78eafec",
+    "B_success_recovery": "13becff8bb4099ee1ee2a53e3eef280d7f2f18b3",
+    "F_fixture_latest": "86fb0cfe46eac351a63a92ba7ebea8196e5d6906"
+  },
+  "new_F_pair": {
+    "fixture": "86fb0cfe46eac351a63a92ba7ebea8196e5d6906",
+    "verifier": "8a5a781edeaec0dc7e24a460a0fdba1394252ded",
+    "tool": "2c8ccec5edfc99f2f3fe55dce07af8526a487c09",
+    "trusted_files_exact": 6,
+    "dual_CI_pins": "8a5a781edeaec0dc7e24a460a0fdba1394252ded",
+    "Bean_JUnit_expected": 32,
+    "Java": "NOT_RUN",
+    "CityNode_owner": "F next independent increment pending"
   }
 }

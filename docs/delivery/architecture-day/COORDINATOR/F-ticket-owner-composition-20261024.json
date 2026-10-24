@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "parent": "5d56dc996c6373ed035652cc1def10bcecbf96f3",
+  "fixture_head": "86fb0cfe46eac351a63a92ba7ebea8196e5d6906",
+  "verifier": "8a5a781edeaec0dc7e24a460a0fdba1394252ded",
+  "tool": "2c8ccec5edfc99f2f3fe55dce07af8526a487c09",
+  "trusted_files": {
+    "ci/architecture/gate.py": "743fc9933f3f5f89898016a8d7947a1e4f331d8976b191b4233d6e2f3c414f84",
+    "ci/architecture/collect_jdeps.py": "2cf7bc5a8dd89faa8cb85288f06e9cc78aad1641ef8badd2ec92102bff46a78c",
+    "ci/architecture/owners.json": "19cb6fcf4b686772471f620383e35de86368e78db5b26006628054012ca6a912",
+    "ci/architecture/commands.json": "55f5773dd613d6728985d3daea7e4fca6c3788171c5338d97d5919cf1ab7b0de",
+    "ci/architecture/baseline.json": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+    "ci/architecture/locking-select-baseline.proposal.json": "c71bbc7fdbf4996b68f5977ebd344dac150f56128dea4837c69ec3f91b83e52b"
+  },
+  "trusted_original_bytes_exact": true,
+  "both_ci_refs_pinned": true,
+  "Python_controls": {
+    "tests": 12,
+    "pass": 12,
+    "skip": 0
+  },
+  "JUnit_expected_fixture": 32,
+  "new_Java_jdeps_JAR_context": "NOT_RUN",
+  "scope": "Exact registration-ticket owner only. City-node owner next F increment pending; full-system architecture not accepted."
+}

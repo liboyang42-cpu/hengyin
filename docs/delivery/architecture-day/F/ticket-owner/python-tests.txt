@@ -1,0 +1,36 @@
+...............................................................................................architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/commands.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/baseline.json
+.architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+.architecture gate FAIL-CLOSED: BUSINESS_POLICY_INVALID: expected explicit whole-table facts/commands/pure writers
+.....architecture gate FAIL-CLOSED: COMPARISON_BASE_MISMATCH: supplied base differs from trusted CI event/merge-base
+......architecture gate FAIL-CLOSED: BUSINESS_POLICY_INVALID: 'business_policy'
+.................................................................architecture gate FAIL-CLOSED: BUSINESS_POLICY_INVALID: expected explicit whole-table facts/commands/pure writers
+.architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+.architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+.architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+.architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/collect_jdeps.py
+.architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+.architecture gate FAIL-CLOSED: OWNER_DEPENDENCY_POLICY_INVALID
+architecture gate FAIL-CLOSED: OWNER_DEPENDENCY_POLICY_INVALID: 'technical_dependency_policy'
+.architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+.architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+.architecture gate FAIL-CLOSED: BUSINESS_POLICY_INVALID: expected explicit whole-table facts/commands/pure writers
+architecture gate FAIL-CLOSED: BUSINESS_POLICY_INVALID: expected explicit whole-table facts/commands/pure writers
+.architecture gate FAIL-CLOSED: BUSINESS_POLICY_INVALID: expected explicit whole-table facts/commands/pure writers
+..architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+........................
+----------------------------------------------------------------------
+Ran 209 tests in 19.046s
+
+OK
+jdeps observation: UNKNOWN; no baseline/SCC acceptance
