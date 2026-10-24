@@ -229,15 +229,24 @@ final class TopicRouteNarrativeProgress {
         opening.put("blocks", ChapterBlockReadSupport.projectForPlayer(blocks, state.getCompletedNodeIds(), state.getTags()));
         view.setOpening(opening);
         if (complete) return;
+        // A completed route may still await opening confirmation while its session is RUNNING.
+        // Only persisted session terminal states suppress the opening's playable projection.
+        boolean terminal = Integer.valueOf(TopicRouteSession.STATUS_COMPLETED).equals(session.getStatus())
+                || Integer.valueOf(TopicRouteSession.STATUS_ENDED).equals(session.getStatus());
         Long next = nextOpeningNode(frozen, state);
-        view.setStatus("ACTIVE");
-        view.setCurrentNodeId(next); view.setRecommendedNodeId(next);
+        if (terminal) {
+            view.setStatus(state.getStatus());
+            view.setCurrentNodeId(state.getCurrentNodeId()); view.setRecommendedNodeId(state.getRecommendedNodeId());
+        } else {
+            view.setStatus("ACTIVE");
+            view.setCurrentNodeId(next); view.setRecommendedNodeId(next);
+        }
         for (Map.Entry<Long, String> node : view.getNodeStates().entrySet()) {
             if (!TopicRouteState.COMPLETED.equals(node.getValue())) {
-                node.setValue(node.getKey().equals(next) ? TopicRouteState.PLAYABLE : TopicRouteState.HIDDEN);
+                node.setValue(!terminal && node.getKey().equals(next) ? TopicRouteState.PLAYABLE : TopicRouteState.HIDDEN);
             }
         }
-        if (next != null) view.getNodeStates().put(next, TopicRouteState.PLAYABLE);
+        if (!terminal && next != null) view.getNodeStates().put(next, TopicRouteState.PLAYABLE);
     }
 
     /** 本局适用的数值规则:冻结快照优先;老局快照没有该键时才查实时主题列。 */

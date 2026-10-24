@@ -42338,6 +42338,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -42505,32 +42531,6 @@
             {
               "selector": "cy-btn",
               "index": 9
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
             }
           ]
         },
@@ -253039,7 +253039,7 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
-              "selector": "cy-option-sheet",
+              "selector": "#ai-history-sheet",
               "index": 0
             }
           ]
@@ -253353,7 +253353,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/option-sheet/index.js:72"
+        "staticSource": "components/cy/option-sheet/index.js:93"
       }
     },
     {
@@ -253483,7 +253483,7 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
-              "selector": "cy-option-sheet",
+              "selector": "#ai-history-sheet",
               "index": 0
             }
           ]
@@ -253797,7 +253797,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/option-sheet/index.js:80"
+        "staticSource": "components/cy/option-sheet/index.js:101"
       }
     },
     {
@@ -253927,7 +253927,7 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
-              "selector": "cy-option-sheet",
+              "selector": "#ai-history-sheet",
               "index": 0
             }
           ]
@@ -254241,7 +254241,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/option-sheet/index.js:80"
+        "staticSource": "components/cy/option-sheet/index.js:101"
       }
     },
     {
@@ -254371,7 +254371,7 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
-              "selector": "cy-option-sheet",
+              "selector": "#ai-history-sheet",
               "index": 0
             }
           ]
@@ -254684,7 +254684,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/option-sheet/index.js:62"
+        "staticSource": "components/cy/option-sheet/index.js:82"
       }
     },
     {
@@ -400183,6 +400183,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -400218,32 +400244,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -437524,6 +437524,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -437559,32 +437585,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -474864,6 +474864,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -474899,32 +474925,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -512204,6 +512204,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -512239,32 +512265,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -549544,6 +549544,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -549579,32 +549605,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -586884,6 +586884,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -586919,32 +586945,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -624225,6 +624225,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -624260,32 +624286,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -661566,6 +661566,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -661601,32 +661627,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -698907,6 +698907,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -698942,32 +698968,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -736248,6 +736248,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -736283,32 +736309,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -773589,6 +773589,32 @@
           "route": "pages/publish/simple/index",
           "segments": [
             {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
+              "selector": "#ai-history-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/simple/index",
+          "segments": [
+            {
               "selector": "#cy-modal-host",
               "index": 0
             },
@@ -773624,32 +773650,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/simple/index",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -1069564,7 +1069564,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:116:bind:cancel:onAiHistoryCancel:16",
+      "id": "pages/publish/simple/index.wxml:115:bind:cancel:onAiHistoryCancel:16",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1069587,9 +1069587,9 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onAiHistoryCancel",
-        "line": 116,
-        "selectorHint": "cy-option-sheet[bind:cancel]",
-        "visibleCondition": null,
+        "line": 115,
+        "selectorHint": "#ai-history-sheet",
+        "visibleCondition": "{{aiHistoryShow}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1069627,11 +1069627,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:473"
+        "staticSource": "pages/publish/simple/index.js:492"
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:116:bind:select:onAiHistorySelect:15",
+      "id": "pages/publish/simple/index.wxml:115:bind:select:onAiHistorySelect:15",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1069654,9 +1069654,9 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onAiHistorySelect",
-        "line": 116,
-        "selectorHint": "cy-option-sheet[bind:select]",
-        "visibleCondition": null,
+        "line": 115,
+        "selectorHint": "#ai-history-sheet",
+        "visibleCondition": "{{aiHistoryShow}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1069762,7 +1069762,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:474"
+        "staticSource": "pages/publish/simple/index.js:493"
       }
     },
     {
@@ -1070438,7 +1070438,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:517"
+        "staticSource": "pages/publish/simple/index.js:536"
       }
     },
     {
@@ -1070505,7 +1070505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:590"
+        "staticSource": "pages/publish/simple/index.js:609"
       }
     },
     {
@@ -1070572,7 +1070572,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:593"
+        "staticSource": "pages/publish/simple/index.js:612"
       }
     },
     {
@@ -1070639,7 +1070639,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:594"
+        "staticSource": "pages/publish/simple/index.js:613"
       }
     },
     {
@@ -1070706,7 +1070706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:595"
+        "staticSource": "pages/publish/simple/index.js:614"
       }
     },
     {
@@ -1070854,7 +1070854,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:596"
+        "staticSource": "pages/publish/simple/index.js:615"
       }
     },
     {
@@ -1070990,7 +1070990,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:618"
+        "staticSource": "pages/publish/simple/index.js:637"
       }
     },
     {
@@ -1071126,7 +1071126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/simple/index.js:618"
+        "staticSource": "pages/publish/simple/index.js:637"
       }
     },
     {

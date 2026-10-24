@@ -44,6 +44,7 @@ class CmsTopicDraftBindingsTest {
             field.setAccessible(true);
             if (field.get(target) == null) ReflectionTestUtils.setField(target, field.getName(), mock(field.getType()));
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(target, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         DriverManagerDataSource source = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "");
         jdbc = new JdbcTemplate(source);
         jdbc.execute("create table saved_topic (id bigint primary key, config clob)");

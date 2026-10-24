@@ -108,7 +108,15 @@ final class TopicContentCopyMySqlFixture implements AutoCloseable {
         fields.put("cmsMemberTemplateService", templates);
         fields.put("sysCategoryService", mock(ISysCategoryService.class)); // recruitment disabled in these content fixtures
         fields.put("platformMemberId", 100000L);
-        fields.forEach((name, value) -> ReflectionTestUtils.setField(facade, name, value));
+        fields.forEach((name, value) -> {
+            if (ownerMode.equals("legacy")) ReflectionTestUtils.setField(facade, name, value);
+            else {
+                try {
+                    Class.forName("com.chengyinhub.business.service.support.TopicPublicationTestWiring")
+                            .getMethod("set", Object.class, String.class, Object.class).invoke(null, facade, name, value);
+                } catch (ReflectiveOperationException failure) { throw new IllegalStateException("copy publication collaborator assembly failed", failure); }
+            }
+        });
         square = mock(IUmsCreativeSquareService.class);
         ReflectionTestUtils.setField(facade, "umsCreativeSquareService", square);
         ReflectionTestUtils.setField(facade, "canonicalMutationService", mock(ITopicSaleCanonicalMutationService.class));

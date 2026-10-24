@@ -68,3 +68,16 @@ root 新消息提供的旧两目标实际证据：86e/source run40057561361，bu
 ## 未验证、迁移与回退
 
 本轮没有 Java/DB/Redis/真实 provider/微信操作，没有 CI 派发或新 agent，也没有生产访问。未取得第三目标真实编译证据，不宣称全域 owner、无环或完整 WP01 完成。没有 schema / DDL / 新依赖；回退此守卫仍只能按 root 独立批准的 trusted ref 执行，回退到 fe95 会失去第三目标约束，不能把该盲区说成已覆盖；不改/删除业务事实。
+
+
+## 986 已落新职责：355之后的最小可执行策略增量
+
+- 独立分支 `codex/architecture-day-f-owner-v11`，工作树 `/workspace/hengyin-f-owner-v11`，parent `355fb5a9773fce34db8764649a977ffb93164de2`。82dab/355/46c均冻结。观察公开 `986b88d9640bf45900bd807675bed1d6a06c5938` 实际源码和完整iOS采用v1.1合同，不复制该提交的生产文件/历史到本候选。集成只取355之后guard delta，生产主线由root保留。
+- 执行变化仅owners.json；原gate/collect_jdeps/commands/lockingproposal/2ec baseline逐字未改，复用已执行的raw重读/证据身份/模块位置/类hash/方向与SCC判据。原13类型/8职责、4方向与完整business_policy逐项等同355；新增C的13个Admin具体应用类型（各为一职责）、A共享RUN控制、E发布编译和投影叶子3个System类型，同批追加A配置/G判定/E叙事三个冻结类型，共32类型/27职责/33方向。无新增表/字段/业务command授权、例外或baseline。
+- C实际依赖为Entry→Query/Facts/Context、Query→Facts/Context、Facts→Context、BasicCommand→Intent/Facts/Completion/Context/Presentation、Photo→Facts/Completion/Context/Presentation、Preference/Puzzle→Completion/Context、History/Player→Facts；另Basic/Entry/NodeQuery/Puzzle→原Hint服务、Context→原Access服务。只登记这些实际明确方向，不从目录授予新class自动owner。E叙事→编译器是唯一追加叶子方向；A配置/G判定无指向已登记owner的直接引用，不预先许可未出现的边。
+- 禁反调原God：C→旧Controller或三个runtime实现硬红；C现有公共runtime接口不一概禁用。A共享控制/配置、E编译/叙事/投影叶子及G判定→三个runtime接口/实现硬红。binary companion仍只继承限制，3个Mapper精确Service许可不放宽。其余间接/未登记/XML/反射/方法语义UNKNOWN。
+- 真实来源可复核：986的 `C/play-boundary/owners.json` 与README、`A/RUNTIME-RUN-CONTROL/README.md`、`A/QUERY-MISSING-RUN/README.md`、`E/ROUTE-PUBLICATION/README.md`、`COORDINATOR/ios-audit-adoption-20261024.md`，均在 `docs/delivery/architecture-day/`；以及owners列出的32个真实 `src/main/java` blob：原29类型观察986；另A配置取 `1e74766d3832953af2b8bc621e984f2e43601dc6`、G判定取 `ca9d608e5c7a193d402ca51d52a1f6a456ef0f91`、E叙事取 `1b743737f374e6b4c251e2819062c510b11488f5` 的冻结源码与完整各自交付说明；不声称3新类存在于986。观察锚点不代替真正集成source身份。本轮用原strip_java_comments去注释/字符串后作只读词法出现核对，32类存在，观察31对已登记类型出现，无未允许方向/原God词法引用。它不是编译图，不将33条允许边都宣称实际jdeps边，也不引入另一套scanner。
+- ce49 `ce49f49b6a4ccd92c67f53f72d4fe387aa734f1f` 与986合同优先于C旧说明：已知共享而缺RUN必须GAME_CONFIG_INVALID；null只表示不适用。静态class依赖不能证明此点、不能证明纯读/零写或防个人ACTIVE回退；原业务测试由root统一验收，不用一个PASS替代。
+- 控制改动仅test_collect_jdeps.py/test_gate.py：Admin原jar、Boot/classes、target/classes同模块字节同步，不再把Controller与C新类型放入System夹具。所有原test id/业务断言保留；reference位置按真实绑定模块生成，旧System场景继续保留。新增9项test，覆盖七组新职责原God、接口伪装、叙事→编译正向及反向环、同Admin反向环及byte hash、跨模块直接绕端口、缺新class/错模块/raw位置UNKNOWN、真实CLI 0/1/2、候选删owner/清God/加反向白名单不可自批准。
+- **实际仅13项轻量定点Python unittest，1.063s，OK、0skip**：新增9+原4（全允许方向正控、原第三Mapper CLI、原D回God、3ports/2facts范围）。完整命令由[原始日志](evidence/owner-v11-targeted.txt)中的完整test id对应 `python3 -m unittest <ids> -v`；工作目录 `ci/architecture`。协议ZIP字节明确NOT_COMPILED，runner为原double。未重跑完整153/163/172，无Java/javac/jdeps/DB/CI/微信/真实模型；真正同源编译正反控与统一回归仍归root。
+- Python3.9语法/原test id保留/保护文件逐blob/实际32源类型存在/git diff检查及原配置秘密扫描在提交前执行。无依赖、schema、生产实现或workflow变化；回退须root审定可信ref，回退将失去新增19类型约束，不能将盲区称覆盖。

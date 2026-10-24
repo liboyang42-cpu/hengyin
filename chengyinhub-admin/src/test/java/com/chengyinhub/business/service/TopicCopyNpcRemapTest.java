@@ -105,7 +105,7 @@ class TopicCopyNpcRemapTest {
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
-        ReflectionTestUtils.setField(service, "npcProfileMapper", npcMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "npcProfileMapper", npcMapper);
         ReflectionTestUtils.setField(service, "productRoleService", mock(IProductRoleService.class));
         ReflectionTestUtils.setField(service, "platformMemberId", MEMBER);
 

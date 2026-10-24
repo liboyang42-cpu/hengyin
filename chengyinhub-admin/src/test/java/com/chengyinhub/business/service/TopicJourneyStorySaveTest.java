@@ -99,7 +99,7 @@ class TopicJourneyStorySaveTest {
         ReflectionTestUtils.setField(svc, "clubService", mock(IClubService.class));
         ReflectionTestUtils.setField(svc, "xpBudgetService", mock(IXpBudgetService.class));
         ReflectionTestUtils.setField(svc, "auditTaskService", mock(IAuditTaskService.class));
-        ReflectionTestUtils.setField(svc, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "omsTicketService", mock(IOmsTicketService.class));
 
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(Collections.<CmsRegistration>emptyList());
         when(activityMapper.selectCmsActivityList(any())).thenReturn(Collections.<CmsActivity>emptyList());

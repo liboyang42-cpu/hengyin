@@ -80,9 +80,9 @@ public class PlayBasicIntentApplication {
         return scope;
     }
 
-    /** Compatibility GET entry, not a pure query: sharedRouteSnapshot may refresh zero-HP state.
-     * Keep its original authorization, application read-only annotation and call position in this command owner. */
-    @Transactional(readOnly = true)
+    /** Compatibility GET entry, not a pure query: sharedRouteSnapshot can persist zero-HP transitions.
+     * Its REQUIRED refresh participates here; match its writable/default-isolation rollback contract. */
+    @Transactional(rollbackFor = Exception.class)
     public AjaxResult basicActionContext(Long actorMemberId, String activityId, String topicId, String nodeId) {
         Long memberId = actorMemberId;
         BasicIntentScope scope = basicIntentScope(memberId, activityId, topicId, nodeId);
@@ -92,9 +92,13 @@ public class PlayBasicIntentApplication {
 
     public Map<String, Object> basicActionContext(Long memberId, BasicIntentScope scope) {
         Map<String, Object> context = new java.util.LinkedHashMap<>();
-        com.chengyinhub.business.domain.GameSession sharedSession = playCommandReceiptMapper.selectSessionByActivity(scope.activityId);
         com.fasterxml.jackson.databind.JsonNode shared = gameSessionRuntimeService == null ? null
                 : gameSessionRuntimeService.sharedRouteSnapshot(memberId, scope.topicId, scope.activityId, scope.nodeId);
+        // Refresh can bump a different locking-read object. Read its current version afterwards;
+        // a pre-refresh Java reference is not updated when MyBatis flushes its local cache.
+        com.chengyinhub.business.domain.GameSession sharedSession = shared == null
+                ? playCommandReceiptMapper.selectSessionByActivity(scope.activityId)
+                : playCommandReceiptMapper.selectSessionByActivityForUpdate(scope.activityId);
         if (shared != null) {
             if (sharedSession == null || shared.path("runtimeInstance").asText().isEmpty()
                     || !shared.path("authorityEpoch").canConvertToInt()) throw new IllegalStateException("本场缺少动作权威身份");

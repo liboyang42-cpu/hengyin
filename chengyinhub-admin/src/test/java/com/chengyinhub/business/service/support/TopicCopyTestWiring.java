@@ -26,7 +26,7 @@ public final class TopicCopyTestWiring {
         for (String field : new String[]{"cmsTopicMapper", "cmsTopicChapterMapper", "cmsTopicNodeMapper",
                 "cmsMemberTemplateMapper", "cmsCollaboratorsMapper", "npcProfileMapper", "sysCategoryService",
                 "productRoleService", "platformMemberId"}) {
-            ReflectionTestUtils.setField(copy, field, ReflectionTestUtils.getField(facade, field));
+            ReflectionTestUtils.setField(copy, field, com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(facade, field));
         }
         ReflectionTestUtils.setField(copy, "cmsMemberTemplateService", templates);
         ReflectionTestUtils.setField(copy, "platformContentSlotGuard", slots);

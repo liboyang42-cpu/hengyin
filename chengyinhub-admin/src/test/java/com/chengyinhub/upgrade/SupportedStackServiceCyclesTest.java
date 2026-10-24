@@ -74,6 +74,16 @@ class SupportedStackServiceCyclesTest
     private record Cycle(String name, Class<?> source, String field, Class<?> target,
                          Class<?>... services)
     {
+        Cycle {
+            if (Arrays.asList(services).contains(CmsTopicServiceImpl.class)) {
+                List<Class<?>> expanded = new ArrayList<>(Arrays.asList(services));
+                expanded.add(com.chengyinhub.business.service.impl.TopicPublicationService.class);
+                expanded.add(com.chengyinhub.business.service.support.TopicPublicationContentGuard.class);
+                expanded.add(com.chengyinhub.business.service.support.TopicSelfHostActivityService.class);
+                services = expanded.toArray(Class<?>[]::new);
+            }
+        }
+
         @Override
         public String toString()
         {

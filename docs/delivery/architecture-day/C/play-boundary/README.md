@@ -33,3 +33,17 @@ Controller 9→0个@Transactional，六个DeadlockRetry保持原HTTP位置。Rat
 实际仅执行Python源码静态核对：HTTP事务移除/六重试、命令body和原事务参数无改、两兼容owner、B1四正文、旧合同case保留+2、词法/独占范围，及diff检查。Java/DB/CI均未运行；本批无新增CI/回归批次，由root同源联合执行既有suite和启动验证。
 
 第17节采用记录：本唯一应用事务owner片对应IR01/IR06/IR-T07；代理测试另捕获每次应用入参，逐次断言原actor/activity/node/media/actionId/expected不漂移，短兼容入口亦按原参数断言。该增量仅增强既有2测试，不新增suite/CI；尚未运行Java。IR-T01/05旧代次小程序cleanup不在本事务增量改动范围，不以本片源码/测试冒充其验收；后端原回执先于新版本检查的正文未动。
+
+## action-context 可写入场事务（5fa8 后独立修复）
+
+已沿本工作树和root986的实际A源码确认：sharedRouteSnapshot 的 REQUIRED/DEFAULT/rollbackFor=Exception 参与调用方事务；refreshZeroHpRead在RUNNING且零HP规则适用时锁session，syncChallenge改变状态后saveRouteOwner→updateStoryStateCas、bumpSession→updateSessionCas实际UPDATE。旧外层readOnly=true不会被内层可写声明覆盖，是存量入场错误。本修复仅把basicActionContext声明改为@Transactional(rollbackFor=Exception.class)，沿A默认隔离与REQUIRED，不新增重试/REQUIRES_NEW、不移除refresh、不动scope/读取先后/回执规则。basicActionReceipt原readOnly=true逐字保留，A/E和root IT未改。
+
+既有PlayCommandIntentTest加1场景：真实Controller→应用Spring事务代理→共享边界替身（使用实际A方法的事务属性），断言共享刷新边界可写且加入原事务、原actor/scope投影、无个人局fallback/claim；随后原receipt入口仍readOnly并保持UNKNOWN。mock JDBC仅作为事务属性单测，不冒充零HP/MySQL CAS验证；Java未运行。该类旧private-helper夹具同步补显式actor（迁移后应用参数），原6case/业务断言未删改。实际执行仅源码检查及diff检查，待root同批统一编译/单元/真库。
+
+## 刷新后动作版本一致性（008bf后独立修复）
+
+成立的失败机制：普通selectSessionByActivity和锁读selectSessionByActivityForUpdate的statement/SQL cache key不同；A普通读可复用S0，refresh锁读得到S1，bumpSession只给S1.setRevision。updateStoryStateCas/updateSessionCas默认UPDATE清cache，但不会修改C已持有的S0，故原expected可为3而snapshot已来自刷新后的4。A snapshot当前有gameSessionId/authorityEpoch/runtimeInstance，没有可直接复用的revision字段。
+
+本修复不依赖普通读后移后的L1/RR行为：先沿原scope/节点授权执行sharedRouteSnapshot；共享分支在同一可写事务内复用现有FOR UPDATE当前读取得session/version（原共享刷新已持锁时复用该锁；其他共享规则在此锁住当前事实）。个人分支保留普通读取和原个人投影，无独立初始化/新Mapper/全局cache修改/奖励变更。原回执优先于当前版本检查和action-receipt纯读正文不动，A源码未改。
+
+既有PlayCommandIntentTest再加1case（累计8）：两个独立普通/锁读对象，刷新只改锁对象4、旧引用仍3；断言先refresh后锁读，返回原runtime/epoch配合新expected4；旧expected3被409/intentNotExecuted拒绝且零claim/效果，新意图4正常一次。008bf事务场景仅把session桩观察口改为实际锁读；全caller搜索还定位ApiPlayCheckinLiveCodeTest的一条共享场合法夹具，补同一原GameSession的锁读桩，原扫码/零奖励断言保留。对象/调用模型不冒充真实MyBatis/MySQL；实际仅静态/差异核对，Java/DB/CI未运行，随root同批统一回归。

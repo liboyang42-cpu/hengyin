@@ -78,12 +78,12 @@ class CmsTopicPublishStateKeyGuardTest {
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "themeStateKeyService", new ThemeStateKeyService(keyMapper));
         // R8 起引用收集在 TopicStateKeyRefService:节点块 + 数值规则 + 章节故事流(与发布前试检查共用同一份)。
-        ReflectionTestUtils.setField(service, "topicStateKeyRefService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService",
                 new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper));
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         // R19-DRAFT2:发布闸读票种(完整度),不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "omsTicketMapper",
@@ -489,7 +489,7 @@ class CmsTopicPublishStateKeyGuardTest {
     void genericHpAndLuckChapterCostsAndItemsPublishWithoutSkillChecks() {
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicRouteRuntimeService", runtime);
         when(runtime.freezePublication(any(CmsTopic.class), nullable(String.class))).thenReturn("{}");
         CmsTopic topic = approvedTopic();
         topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"checkEnabled\":false,"
@@ -529,7 +529,7 @@ class CmsTopicPublishStateKeyGuardTest {
                 java.time.Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(runtime, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(runtime, "themeStateKeyMapper", keyMapper);
-        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicRouteRuntimeService", runtime);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         String authored = templateMapper.selectCmsMemberTemplateById(101L).getAdvancedConfigJson();
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);

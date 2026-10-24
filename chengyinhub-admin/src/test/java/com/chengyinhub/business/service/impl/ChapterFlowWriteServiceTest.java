@@ -365,7 +365,7 @@ class ChapterFlowWriteServiceTest
         assertTrue(updatedTopics.stream().anyMatch(topic -> Integer.valueOf(1).equals(topic.getStatus())
                 && Integer.valueOf(1).equals(topic.getUserStatus())));
         verify((com.chengyinhub.business.service.IQuotaService)
-                ReflectionTestUtils.getField(service, "quotaService"))
+                com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(service, "quotaService"))
                 .lockAndCheckThemeOnline(MEMBER_ID, TOPIC_ID);
         verify(topicMapper).publishRouteSnapshot(any(), any(), any());
         verify(auditTaskService, never()).submitOrRefreshTopicBundle(any(), any(), any());
@@ -1034,7 +1034,7 @@ class ChapterFlowWriteServiceTest
 
     private void set(String field, Object value)
     {
-        ReflectionTestUtils.setField(service, field, value);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, field, value);
     }
 
     @Test

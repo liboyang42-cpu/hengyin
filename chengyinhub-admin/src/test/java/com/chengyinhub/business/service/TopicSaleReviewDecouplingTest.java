@@ -95,7 +95,7 @@ class TopicSaleReviewDecouplingTest {
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? topicMapper.selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-        ReflectionTestUtils.setField(svc, "quotaService", mock(IQuotaService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "quotaService", mock(IQuotaService.class));
         when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
         ReflectionTestUtils.setField(svc, "settlementDebtLedger",
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
@@ -113,7 +113,7 @@ class TopicSaleReviewDecouplingTest {
         ReflectionTestUtils.setField(svc, "clubService", mock(IClubService.class));
         ReflectionTestUtils.setField(svc, "xpBudgetService", mock(IXpBudgetService.class));
         ReflectionTestUtils.setField(svc, "auditTaskService", auditTaskService);
-        ReflectionTestUtils.setField(svc, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "omsTicketService", mock(IOmsTicketService.class));
         ReflectionTestUtils.setField(svc, "canonicalMutationService", canonicalMutationService);
         ReflectionTestUtils.setField(svc, "topicCommercialReviewService", commercialReviewService);
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(Collections.<CmsRegistration>emptyList());

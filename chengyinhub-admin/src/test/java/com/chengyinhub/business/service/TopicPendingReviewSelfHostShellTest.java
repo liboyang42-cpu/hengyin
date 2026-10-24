@@ -65,6 +65,7 @@ class TopicPendingReviewSelfHostShellTest {
             } catch (Exception ignore) {
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(svc, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
         activityMapper = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
         // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
@@ -76,7 +77,7 @@ class TopicPendingReviewSelfHostShellTest {
                 .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
         // R19-DRAFT2/状态键闸随旅程分支合入后,publishDraft 会走引用收集 —— 自动 mock 的
         // TopicStateKeyRefService 返回 null 会直接 NPE,这里换成真实实现(三个 mapper 空集合即可)。
-        ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "topicStateKeyRefService",
                 new TopicStateKeyRefService(
                         (CmsTopicNodeMapper) ReflectionTestUtils.getField(svc, "cmsTopicNodeMapper"),
                         (CmsMemberTemplateMapper) ReflectionTestUtils.getField(svc, "cmsMemberTemplateMapper"),
@@ -168,8 +169,8 @@ class TopicPendingReviewSelfHostShellTest {
                 .thenReturn(Collections.<CmsActivity>emptyList())
                 .thenReturn(Arrays.asList(existing));
 
-        svc.ensureSelfHostActivityShell(TOPIC);
-        svc.ensureSelfHostActivityShell(TOPIC);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
 
         verify(activityMapper, times(1)).insertCmsActivity(any(CmsActivity.class));
     }
@@ -178,7 +179,7 @@ class TopicPendingReviewSelfHostShellTest {
     void explicitMemberOnlySelfHostShellCarriesItsActualClubScope() {
         CmsTopic memberOnly = topic(1, "pro"); memberOnly.setClubMemberOnly(1); memberOnly.setClubId(81L);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(memberOnly);
-        svc.ensureSelfHostActivityShell(TOPIC);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
         assertEquals(Long.valueOf(81L), capturedShell().getClubId());
     }
 
@@ -188,7 +189,7 @@ class TopicPendingReviewSelfHostShellTest {
             org.mockito.Mockito.clearInvocations(activityMapper);
             CmsTopic publicTopic = topic(1, "pro"); publicTopic.setClubMemberOnly(flag); publicTopic.setClubId(81L);
             when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(publicTopic);
-            svc.ensureSelfHostActivityShell(TOPIC);
+            com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
             org.junit.jupiter.api.Assertions.assertNull(capturedShell().getClubId());
         }
     }
@@ -198,11 +199,11 @@ class TopicPendingReviewSelfHostShellTest {
         for (Long clubId : new Long[] {null, 0L, -1L}) {
             CmsTopic invalid = topic(1, "pro"); invalid.setClubMemberOnly(1); invalid.setClubId(clubId);
             when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(invalid);
-            ServiceException error = assertThrows(ServiceException.class, () -> svc.ensureSelfHostActivityShell(TOPIC));
+            ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC));
             assertEquals("成员限定主题的俱乐部资料不完整，无法生成场次", error.getMessage());
         }
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
-        IOmsTicketService tickets = (IOmsTicketService) ReflectionTestUtils.getField(svc, "omsTicketService");
+        IOmsTicketService tickets = (IOmsTicketService) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "omsTicketService");
         verify(tickets, never()).copyTopicTicketsToActivity(anyLong(), anyLong(), anyLong());
     }
 
@@ -211,7 +212,7 @@ class TopicPendingReviewSelfHostShellTest {
     void pendingTopic_ensureShell_neverBuilds() {
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(0, "pro"));
 
-        svc.ensureSelfHostActivityShell(TOPIC);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
 
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
     }
@@ -221,7 +222,7 @@ class TopicPendingReviewSelfHostShellTest {
     void rejectedTopic_ensureShell_neverBuilds() {
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(2, "pro"));
 
-        svc.ensureSelfHostActivityShell(TOPIC);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
 
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
     }
@@ -233,7 +234,7 @@ class TopicPendingReviewSelfHostShellTest {
         pool.setMerchantStatus(1);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(pool);
 
-        svc.ensureSelfHostActivityShell(TOPIC);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
 
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
     }
@@ -247,7 +248,7 @@ class TopicPendingReviewSelfHostShellTest {
         when(activityMapper.selectCmsActivityList(any(CmsActivity.class)))
                 .thenReturn(Arrays.asList(existing));
 
-        svc.ensureSelfHostActivityShell(TOPIC);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
 
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
     }
@@ -286,7 +287,7 @@ class TopicPendingReviewSelfHostShellTest {
         doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE:你有逾期未补足的欠款,暂不能发布新活动,请联系平台客服处理"))
                 .when(ledger()).requireNoOverdueDebt(OWNER);
 
-        assertDoesNotThrow(() -> svc.ensureSelfHostActivityShell(TOPIC),
+        assertDoesNotThrow(() -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC),
                 "审核通过回调在 review() 事务里,抛出会把审核结论一起回滚");
 
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
@@ -298,10 +299,10 @@ class TopicPendingReviewSelfHostShellTest {
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(1, "pro"));
         when(ledger().hasOverdueDebt(OWNER)).thenReturn(true, false);
 
-        svc.ensureSelfHostActivityShell(TOPIC);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC);
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
 
-        ReflectionTestUtils.invokeMethod(svc, "refreshSelfHostActivity", TOPIC, OWNER, "publisher");
+        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(svc, "refreshSelfHostActivity"), "refreshSelfHostActivity", TOPIC, OWNER, "publisher");
 
         CmsActivity shell = capturedShell();
         assertEquals(TOPIC, shell.getTopicId());

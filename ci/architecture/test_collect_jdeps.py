@@ -326,15 +326,43 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.system_jar = self.root / "chengyinhub-system/target/chengyinhub-system-1.jar"
         with zipfile.ZipFile(self.system_jar) as z:
             self.system_entries = {name: z.read(name) for name in z.namelist()}
+        self.admin_original = self.boot.with_name(self.boot.name + ".original")
+        with zipfile.ZipFile(self.admin_original) as z:
+            self.admin_entries = {name: z.read(name) for name in z.namelist()}
         dependency_types = {n for o in self.dependencies["owners"].values() for n in o["members"] + o["forbidden_backrefs"]}
-        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested, self.theme_foreign, self.theme_consumer + "$Nested", *sorted(dependency_types)]:
+        admin_types = {n for o in self.dependencies["owners"].values() if o["module"] == "chengyinhub-admin" for n in o["members"]}
+        # The former Controller is Admin too. Do not fake same-module ownership
+        # for the new Admin application closure or its forbidden backreference.
+        admin_types.add("com.chengyinhub.web.controller.api.ApiPlayProgressController")
+        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested, self.theme_foreign, self.theme_consumer + "$Nested", *sorted(dependency_types - admin_types)]:
             self.system_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_FIXTURE_" + name).encode()
+        for name in sorted(admin_types):
+            self.admin_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_FIXTURE_" + name).encode()
+        self.write_admin()
         self.write_system()
         for target, binding in self.ports.items():
             self.stdout += "   " + binding["consumer"] + " -> " + target + " chengyinhub-system.jar\n"
         self.stdout += "".join("   " + n + " -> java.lang.Object java.base\n" for n in sorted(dependency_types))
         report = self.collect()
         self.assertTrue(report["static_graph_complete"], report)
+
+    def write_admin(self):
+        """Keep actual fixture original/Boot/classes and target inventory equal."""
+        classes = self.root / "chengyinhub-admin/target/classes"
+        for path in classes.rglob("*.class"):
+            path.unlink()  # Only this test's TemporaryDirectory fixtures.
+        for name, value in self.admin_entries.items():
+            path = classes / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(value)
+        self.admin_original.write_bytes(jar(self.admin_entries))
+        with zipfile.ZipFile(self.boot) as z:
+            entries = {name: z.read(name) for name in z.namelist() if not name.startswith("BOOT-INF/classes/")}
+        entries.update({"BOOT-INF/classes/" + name: value for name, value in self.admin_entries.items()})
+        self.boot.write_bytes(jar(entries))
+        value = json.loads(self.identity.read_text())
+        value["jarSha256"] = producer.shared.digest(self.boot.read_bytes())
+        self.identity.write_text(json.dumps(value))
 
     def write_system(self):
         classes = self.root / "chengyinhub-system/target/classes"
@@ -652,7 +680,11 @@ class PrivatePortsReadbackTest(unittest.TestCase):
 
     def reference(self, source, target):
         text = (self.output / "jdeps.stdout.txt").read_text()
-        self.replace_evidence("jdeps.stdout.txt", (text + "   " + source + " -> " + target + " chengyinhub-system.jar\n").encode())
+        module = next((o["module"] for o in self.dependencies["owners"].values()
+                       if any(target == n or target.startswith(n + "$") for n in o["members"])), None)
+        if module is None:
+            module = "chengyinhub-admin" if target.startswith("com.chengyinhub.web.") else "chengyinhub-system"
+        self.replace_evidence("jdeps.stdout.txt", (text + "   " + source + " -> " + target + " " + module + ".jar\n").encode())
 
     def owner_member(self, id_):
         members = self.dependencies["owners"][id_]["members"]
@@ -669,6 +701,132 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertEqual(calls, len(self.calls))
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertEqual(3, len(report["references"]))
+
+    def test_v11_admin_closure_keeps_real_module_and_byte_hashes(self):
+        self.reference(self.owner_member("C_PLAY_ENTRY"), self.owner_member("C_PLAY_NODE_QUERY"))
+        self.reference(self.owner_member("C_PLAY_NODE_CONTEXT"), self.owner_member("C_NODE_ACCESS"))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertIn(["C_PLAY_ENTRY", "C_PLAY_NODE_QUERY"], report["technical_dependencies"]["owner_edges"])
+        index = json.loads((self.output / "class-index.json").read_text())
+        member = self.owner_member("C_PLAY_NODE_QUERY")
+        self.assertEqual("chengyinhub-admin", index[member]["owner"])
+        self.assertEqual(producer.shared.digest(self.admin_entries[member.replace(".", "/") + ".class"]), index[member]["sha256"])
+        self.assertEqual(2, len(self.calls), "new owners do not invoke jdeps again")
+
+    def test_v11_each_new_responsibility_blocks_its_original_god(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        targets = {"C_PLAY_NODE_QUERY": "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+                   "A_SHARED_RUN_CONTROL": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+                   "E_ROUTE_PUBLICATION": "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+                   "E_GAMEPLAY_PROJECTION": "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl",
+                   "A_SESSION_CONFIGURATION": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+                   "G_ACTION_JUDGEMENT": "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl",
+                   "E_ROUTE_NARRATIVE": "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl"}
+        for id_, target in targets.items():
+            with self.subTest(owner=id_):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                source = self.owner_member(id_)
+                self.reference(source, target)
+                self.change_report("technical_dependencies", {"verdict": "PASS", "owner_edges": []})
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                self.assertEqual((source, target), (bad["source_class"], bad["target_class"]))
+                self.assertEqual(self.dependencies["owners"][id_]["module"], bad["source_owner"])
+                self.assertEqual(64, len(bad["source_sha256"]))
+                self.assertEqual(64, len(bad["target_sha256"]))
+
+    def test_v11_reverse_query_entry_cycle_has_admin_witnesses(self):
+        entry, query = self.owner_member("C_PLAY_ENTRY"), self.owner_member("C_PLAY_NODE_QUERY")
+        self.reference(entry, query)
+        self.reference(query, entry)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["C_PLAY_ENTRY", "C_PLAY_NODE_QUERY"], cycle["owners"])
+        self.assertTrue(all(w["source_owner"] == w["target_owner"] == "chengyinhub-admin" for w in cycle["witnesses"]))
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", {f["rule"] for f in report["findings"]})
+
+    def test_v11_non_application_helpers_cannot_hide_god_backref_behind_runtime_port(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for id_, port in [("A_SHARED_RUN_CONTROL", "IGameSessionRuntimeService"),
+                          ("E_ROUTE_PUBLICATION", "ITopicRouteRuntimeService"),
+                          ("E_GAMEPLAY_PROJECTION", "IAdvancedGameRuntimeService"),
+                          ("A_SESSION_CONFIGURATION", "IGameSessionRuntimeService"),
+                          ("G_ACTION_JUDGEMENT", "IAdvancedGameRuntimeService"),
+                          ("E_ROUTE_NARRATIVE", "ITopicRouteRuntimeService")]:
+            with self.subTest(owner=id_):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(id_), "com.chengyinhub.business.service." + port)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertEqual("OWNER_GOD_BACKREFERENCE", report["findings"][0]["rule"])
+
+    def test_v11_narrative_compiler_leaf_direction_does_not_allow_reverse_cycle(self):
+        narrative, compiler = self.owner_member("E_ROUTE_NARRATIVE"), self.owner_member("E_ROUTE_PUBLICATION")
+        self.reference(narrative, compiler)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertIn(["E_ROUTE_NARRATIVE", "E_ROUTE_PUBLICATION"], report["technical_dependencies"]["owner_edges"])
+        self.reference(compiler, narrative)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["E_ROUTE_NARRATIVE", "E_ROUTE_PUBLICATION"], cycle["owners"])
+        self.assertEqual(2, len(cycle["witnesses"]))
+
+    def test_v11_public_runtime_port_does_not_prove_read_only_or_null_semantics(self):
+        self.reference(self.owner_member("C_PLAY_NODE_QUERY"), "com.chengyinhub.business.service.ITopicRouteRuntimeService")
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
+        # A permitted public port is not permission to bypass it via the new
+        # package-private implementation owner in another module.
+        self.reference(self.owner_member("C_PLAY_NODE_QUERY"), self.owner_member("A_SHARED_RUN_CONTROL"))
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        bad = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_DEPENDENCY_DIRECTION")
+        self.assertEqual(("chengyinhub-admin", "chengyinhub-system"), (bad["source_owner"], bad["target_owner"]))
+
+    def test_v11_missing_new_input_or_incorrect_admin_location_is_unknown(self):
+        policy = copy.deepcopy(self.dependencies)
+        policy["owners"]["C_PLAY_ENTRY"]["module"] = "chengyinhub-system"
+        self.assert_unknown(self.check_directions(policy))
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        self.reference(self.owner_member("C_PLAY_ENTRY"), self.owner_member("C_PLAY_NODE_QUERY"))
+        raw = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", raw.replace("-> " + self.owner_member("C_PLAY_NODE_QUERY") + " chengyinhub-admin.jar",
+                              "-> " + self.owner_member("C_PLAY_NODE_QUERY") + " chengyinhub-system.jar").encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn("TARGET_OWNER_LOCATION_MISMATCH", {r["reason"] for r in report["review_items"]})
+        self.assertEqual("UNKNOWN", report["technical_dependencies"]["verdict"])
+        self.replace_evidence("jdeps.stdout.txt", original)
+        member = self.owner_member("E_ROUTE_PUBLICATION")
+        del self.system_entries[member.replace(".", "/") + ".class"]
+        self.write_system()
+        self.output = self.output.with_name("v11-new-owner-missing")
+        self.collect()
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_TYPE_INPUT_UNKNOWN", "owner": "E_ROUTE_PUBLICATION", "type": member},
+                      report["technical_dependencies"]["review_items"])
+
+    def test_v11_cli_cannot_turn_missing_graph_or_same_admin_god_edge_green(self):
+        output = self.boot.parent / "v11-owner-directions.json"
+        args = ["gate.py", "compiled-ports", "--source", str(self.root), "--artifact", str(self.boot),
+                "--identity", str(self.identity), "--observation", str(self.output), "--output", str(output)]
+        self.reference(self.owner_member("C_PLAY_ENTRY"), self.owner_member("C_PLAY_NODE_QUERY"))
+        for expected in (0, 1, 2):
+            if expected == 1:
+                self.reference(self.owner_member("C_PLAY_NODE_QUERY"), "com.chengyinhub.web.controller.api.ApiPlayProgressController")
+            if expected == 2: (self.output / "jdeps.stdout.txt").unlink()
+            with patch.dict(os.environ, self.env, clear=True), patch.object(sys, "argv", args), redirect_stdout(io.StringIO()):
+                self.assertEqual(expected, producer.shared.main())
+            report = json.loads(output.read_text())
+            self.assertEqual(["PASS_SCOPED_COMPILED_REFERENCES", "BLOCKED", "UNKNOWN"][expected], report["verdict"])
 
     def test_god_backreference_is_blocked_despite_forged_safe_owner_JSON(self):
         source = self.owner_member("D_CONTENT_GRAPH")

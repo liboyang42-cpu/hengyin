@@ -51,6 +51,7 @@ class TopicDraftLegacyFieldPreservationTest {
                 ReflectionTestUtils.setField(service, field.getName(), mock(field.getType()));
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         CmsTopicChapterMapper chapterMapper =
                 (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");

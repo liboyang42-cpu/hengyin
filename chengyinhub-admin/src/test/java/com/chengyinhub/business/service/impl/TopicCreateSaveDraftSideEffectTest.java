@@ -57,6 +57,7 @@ class TopicCreateSaveDraftSideEffectTest {
             } catch (Exception ignore) {
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(svc, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
         activityMapper = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
         // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
@@ -78,7 +79,7 @@ class TopicCreateSaveDraftSideEffectTest {
             return 1;
         }).when(topicMapper).insertCmsTopic(any());
         when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
-        ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "topicStateKeyRefService",
                 new com.chengyinhub.business.service.support.TopicStateKeyRefService(
                     Mockito.mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
                     Mockito.mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),

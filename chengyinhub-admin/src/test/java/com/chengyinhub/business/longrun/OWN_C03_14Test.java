@@ -51,6 +51,7 @@ class OWN_C03_14Test {
                 if (field.getType().getPackage().getName().endsWith(".mapper")) mapperMocks.add(dependency);
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topics = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         collaborators = (CmsCollaboratorsMapper) ReflectionTestUtils.getField(service, "cmsCollaboratorsMapper");
         chapters = (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");

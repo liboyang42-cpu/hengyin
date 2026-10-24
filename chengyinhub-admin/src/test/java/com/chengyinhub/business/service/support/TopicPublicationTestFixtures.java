@@ -40,5 +40,6 @@ public final class TopicPublicationTestFixtures {
             ReflectionTestUtils.setField(publication,"templates",templates);
             ReflectionTestUtils.setField(service,"mediaPublicationGuard",publication);
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service);
     }
 }

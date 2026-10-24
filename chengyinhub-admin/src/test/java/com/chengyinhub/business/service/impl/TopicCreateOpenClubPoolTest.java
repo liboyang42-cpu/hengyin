@@ -59,6 +59,7 @@ class TopicCreateOpenClubPoolTest {
             } catch (Exception ignore) {
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(svc, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         cmsTopicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
         // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
         com.chengyinhub.business.mapper.CmsActivityMapper activities = (com.chengyinhub.business.mapper.CmsActivityMapper)

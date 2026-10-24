@@ -127,7 +127,7 @@ class ChapterFlowCopyTest
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "npcProfileMapper", npcMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "npcProfileMapper", npcMapper);
         ReflectionTestUtils.setField(service, "sysCategoryService", mock(ISysCategoryService.class));
 
         CmsTopic sourceTopic = new CmsTopic();

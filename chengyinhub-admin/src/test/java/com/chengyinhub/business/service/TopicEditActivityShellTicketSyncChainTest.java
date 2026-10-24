@@ -98,7 +98,7 @@ class TopicEditActivityShellTicketSyncChainTest {
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicService, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-        ReflectionTestUtils.setField(topicService, "quotaService", mock(IQuotaService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(topicService, "quotaService", mock(IQuotaService.class));
         ReflectionTestUtils.setField(topicService, "settlementDebtLedger", mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         when(topicMapper.updateCmsTopic(any())).thenReturn(1);
         when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
@@ -121,7 +121,7 @@ class TopicEditActivityShellTicketSyncChainTest {
                         mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class),topicMapper);
         ReflectionTestUtils.setField(topicService, "commercialTopicPolicy", actualPolicy);
         ReflectionTestUtils.setField(ticketService, "commercialTopicPolicy", actualPolicy);
-        ReflectionTestUtils.setField(topicService, "omsTicketService", ticketService);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(topicService, "omsTicketService", ticketService);
 
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         // 主题层零报名 ⇒ assertTopicDeletable 放行(自办主题的销售在活动层,这道闸本来就看不见)

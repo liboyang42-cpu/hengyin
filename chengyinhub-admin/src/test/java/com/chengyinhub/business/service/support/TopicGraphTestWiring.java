@@ -18,12 +18,12 @@ public final class TopicGraphTestWiring {
         TopicContentGraphAuthoringServiceImpl graph = new TopicContentGraphAuthoringServiceImpl();
         for (String name : new String[]{"cmsTopicMapper", "cmsTopicChapterMapper", "cmsTopicNodeMapper",
                 "cmsMemberTemplateMapper", "cmsMemberTemplateService", "topicRouteRuntimeService"}) {
-            ReflectionTestUtils.setField(graph, name, ReflectionTestUtils.getField(facade, name));
+            ReflectionTestUtils.setField(graph, name, com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(facade, name));
         }
         ReflectionTestUtils.setField(graph, "contentWriteGuard", field(facade, "contentWriteGuard"));
         ReflectionTestUtils.setField(graph, "routeOutcomeReader", field(facade, "routeOutcomeReader"));
         ReflectionTestUtils.setField(facade, "contentGraphAuthoringService", graph);
-        return service;
+        return com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service);
     }
 
     /** Publication keeps its old orchestration and needs only the moved shared content checks/read owner. */
@@ -36,8 +36,8 @@ public final class TopicGraphTestWiring {
         TopicRouteOutcomeReader reader = new TopicRouteOutcomeReader(
                 field(facade, "cmsTopicNodeMapper"), field(facade, "cmsMemberTemplateMapper"));
         ReflectionTestUtils.setField(facade, "contentWriteGuard", guard);
-        ReflectionTestUtils.setField(facade, "routeOutcomeReader", reader);
-        return service;
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(facade, "routeOutcomeReader", reader);
+        return com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service);
     }
 
     public static TopicContentGraphAuthoringServiceImpl graph(ICmsTopicService service) {
@@ -52,6 +52,6 @@ public final class TopicGraphTestWiring {
 
     @SuppressWarnings("unchecked")
     private static <T> T field(Object owner, String name) {
-        return (T) ReflectionTestUtils.getField(owner, name);
+        return (T) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(owner, name);
     }
 }

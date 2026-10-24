@@ -76,7 +76,7 @@ class CmsTopicPublishDraftTest {
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-        ReflectionTestUtils.setField(svc, "quotaService", mock(IQuotaService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "quotaService", mock(IQuotaService.class));
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(anyLong()))
                 .thenAnswer(call -> { CmsTopic locked = cmsTopicMapper.selectCmsTopicByIdForUpdate(call.getArgument(0));
@@ -116,12 +116,12 @@ class CmsTopicPublishDraftTest {
                 "id", 901L, "ownerType", "APP", "memberId", 7L, "reviewState", "APPROVED"));
         ReflectionTestUtils.setField(svc, "themeStateKeyService", new ThemeStateKeyService(themeStateKeyMapper));
         // R8 起引用收集在 TopicStateKeyRefService(节点块 + 数值规则),发布闸与试检查共用。
-        ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "topicStateKeyRefService",
                 new TopicStateKeyRefService(cmsTopicNodeMapper, cmsMemberTemplateMapper,
                 mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
         // R18-DRAFT:草稿期不预建自办活动壳,发布时要补建 —— 这条链路的两个协作者。
         ReflectionTestUtils.setField(svc, "cmsActivityMapper", cmsActivityMapper);
-        ReflectionTestUtils.setField(svc, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "omsTicketService", mock(IOmsTicketService.class));
         // R19-DRAFT2:发布闸读票种(完整度),不在场就是 NPE 假红。
         ReflectionTestUtils.setField(svc, "omsTicketMapper", mock(OmsTicketMapper.class));
         // release-0917 同步 master:rule-funds 的欠款逾期闸在 publishDraft 提交口与 generateSelfHostActivity 里,手工装配须补上;mock 默认无逾期。
@@ -315,7 +315,7 @@ class CmsTopicPublishDraftTest {
         CmsTopic topic = new CmsTopic();
         topic.setId(2L); topic.setMemberId(100L); topic.setName("夜跑"); topic.setPublishMode("pro");
         when(cmsTopicMapper.selectCmsTopicById(2L)).thenReturn(topic);
-        IQuotaService quota = (IQuotaService) ReflectionTestUtils.getField(svc, "quotaService");
+        IQuotaService quota = (IQuotaService) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "quotaService");
         when(quota.lockAndCheckThemeOnline(100L, 2L)).thenReturn("在架额度已满");
         org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L));
@@ -428,7 +428,7 @@ class CmsTopicPublishDraftTest {
         com.chengyinhub.business.service.support.TopicSupplyReviewService gate =
                 (com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService");
         when(gate.canResubmit(before)).thenReturn(true);
-        org.junit.jupiter.api.Assertions.assertTrue(svc.canResubmitSupplyReview(91L, 7L));
+        org.junit.jupiter.api.Assertions.assertTrue(com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).canResubmitSupplyReview(91L, 7L));
         CmsTopic locked = new CmsTopic(); locked.setId(91L); locked.setMemberId(8L); locked.setImgUrl("media-asset:901");
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(91L)).thenReturn(locked);
         when(cmsTopicMapper.clearDraftIfDraft(91L)).thenReturn(1);

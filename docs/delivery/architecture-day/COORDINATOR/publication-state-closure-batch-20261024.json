@@ -1,0 +1,30 @@
+{
+  "root_base": "42107abb9aee934da2def2097cce00c3008922d8",
+  "D_candidate": "7f7752a16b010a5f6a0f3790919f722b80a1384f",
+  "D_exact_files": 55,
+  "D_composed_fixture": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java"
+  ],
+  "C_context_candidate": "e99b0871590b111c08c67d00712d037fbf3736a7",
+  "E_terminal_candidate": "c58819be7a64be51a0bc75c52015bdc0e569cf58",
+  "F_verifier": "25d91038d40bc45778bc83c304d296eefc4bf4b1",
+  "F_guard_refs": 2,
+  "source_lines": {
+    "CmsTopicServiceImpl.java": 4129,
+    "GameSessionRuntimeServiceImpl.java": 4832,
+    "AdvancedGameRuntimeServiceImpl.java": 3435,
+    "TopicRouteRuntimeServiceImpl.java": 3683
+  },
+  "actual_control_count": 5109,
+  "known_scope": "full construction remains WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
+  "user_quality_directive": "Explicitly rejected approximate completion; no reduction of correctness or acceptance scope",
+  "verification": {
+    "source_and_composition": "PASS",
+    "diff_check": "PASS",
+    "java": "NOT_RUN",
+    "mysql": "NOT_RUN",
+    "joint_ci": "NOT_RUN"
+  },
+  "pending": "Independent D/C/E review and final owner-policy supplement; joint master integration and same-candidate acceptance; money closure remains incomplete",
+  "all_complete": false
+}

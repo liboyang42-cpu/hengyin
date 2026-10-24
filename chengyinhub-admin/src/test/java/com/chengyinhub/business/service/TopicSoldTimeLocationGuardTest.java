@@ -84,7 +84,7 @@ class TopicSoldTimeLocationGuardTest {
     }
 
     private void invoke(CmsTopic fresh, CmsActivity activity) {
-        ReflectionTestUtils.invokeMethod(svc, "assertSoldActivityTimeLocationUntouched", fresh, activity);
+        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(svc, "assertSoldActivityTimeLocationUntouched"), "assertSoldActivityTimeLocationUntouched", fresh, activity);
     }
 
     @Test

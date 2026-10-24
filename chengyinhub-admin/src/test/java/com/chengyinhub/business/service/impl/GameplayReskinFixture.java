@@ -69,7 +69,8 @@ public class GameplayReskinFixture {
     }
     public GameplayReskinFixture() throws Exception {
         for(Field field:CmsTopicServiceImpl.class.getDeclaredFields()) if(field.isAnnotationPresent(Autowired.class))
-            ReflectionTestUtils.setField(publisher,field.getName(),mock(field.getType()));
+            com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, field.getName(),mock(field.getType()));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(publisher, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         ReflectionTestUtils.setField(publisher,"cmsTopicMapper",topicMapper);
         ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",chapterMapper);
         ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",nodeMapper);
@@ -86,7 +87,7 @@ public class GameplayReskinFixture {
         when(keyMapper.selectByTopicId(anyLong())).thenReturn(keys);
         keyService=new ThemeStateKeyService(keyMapper);
         ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
-        ReflectionTestUtils.setField(publisher,"topicStateKeyRefService",new TopicStateKeyRefService(nodeMapper,templateMapper,chapterMapper));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicStateKeyRefService",new TopicStateKeyRefService(nodeMapper,templateMapper,chapterMapper));
         for(String name:Arrays.asList("rescue","load_ok","end01","end02","end03","end04","ev01","ev02","ev03","ev04","ev05")) {
             ThemeStateKey key=new ThemeStateKey();key.setStateKey("clue."+name);key.setKeyType("flag");key.setScope("run");key.setInitialValue(0);keys.add(key);
         }
@@ -110,7 +111,7 @@ public class GameplayReskinFixture {
         }
         route=new TopicRouteRuntimeServiceImpl(mock(TopicRouteSessionMapper.class),topicMapper,nodeMapper,templateMapper,mock(PlayerNodeProgressMapper.class),null,mock(CmsRegistrationMapper.class),null,mock(IShopDayProofService.class),()->1L,()->10,Clock.systemUTC(),RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(route,"cmsTopicChapterMapper",chapterMapper);ReflectionTestUtils.setField(route,"themeStateKeyMapper",keyMapper);
-        ReflectionTestUtils.setField(publisher,"topicRouteRuntimeService",route);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicRouteRuntimeService",route);
         activeTopics=topicMapper;activeGames=gameMapper;configureRuntime();
     }
     private void wireAuthoringGuards(CmsTopicMapper topics, CmsTopicChapterMapper chapters,
@@ -247,7 +248,7 @@ public class GameplayReskinFixture {
         ReflectionTestUtils.setField(publisher,"cmsTopicMapper",activeTopics);ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",realNodes);ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",realChapters);ReflectionTestUtils.setField(publisher,"cmsMemberTemplateMapper",realTemplates);
         wireAuthoringGuards(activeTopics, realChapters, realNodes, realTemplates,
                 sql.getMapper(OmsTicketMapper.class), sql.getMapper(MerchantChapterOfferMapper.class));
-        ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);ReflectionTestUtils.setField(publisher,"topicStateKeyRefService",new TopicStateKeyRefService(realNodes,realTemplates,realChapters));
+        ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicStateKeyRefService",new TopicStateKeyRefService(realNodes,realTemplates,realChapters));
         ReflectionTestUtils.setField(route,"topicMapper",activeTopics);ReflectionTestUtils.setField(route,"nodeMapper",realNodes);ReflectionTestUtils.setField(route,"cmsTopicChapterMapper",realChapters);ReflectionTestUtils.setField(route,"templateMapper",realTemplates);ReflectionTestUtils.setField(route,"themeStateKeyMapper",realKeys);
         ReflectionTestUtils.setField(runtime,"runtimeMapper",activeGames);ReflectionTestUtils.setField(runtime,"playTeamMapper",sql.getMapper(PlayTeamMapper.class));
         org.springframework.jdbc.datasource.DataSourceTransactionManager tx=new org.springframework.jdbc.datasource.DataSourceTransactionManager(sql.getSqlSessionFactory().getConfiguration().getEnvironment().getDataSource());
