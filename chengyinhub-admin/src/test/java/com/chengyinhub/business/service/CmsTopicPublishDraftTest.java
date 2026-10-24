@@ -98,7 +98,7 @@ class CmsTopicPublishDraftTest {
         when(auditTaskService.selectAuditTaskById(901L)).thenReturn(pendingTask);
         // F4 起专业版提交审核也验状态键,故三板斧齐备(无引用的老主题走不到注册表查询)。
         ReflectionTestUtils.setField(svc, "cmsTopicNodeMapper", cmsTopicNodeMapper);
-        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper", cmsMemberTemplateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "cmsMemberTemplateMapper", cmsMemberTemplateMapper);
         // Real publication/reference guards, with only the reviewed asset persistence mocked.
         com.chengyinhub.business.service.support.AppMediaReferenceGuard references =
                 new com.chengyinhub.business.service.support.AppMediaReferenceGuard();

@@ -75,7 +75,7 @@ class CmsTopicPublishStateKeyGuardTest {
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "themeStateKeyService", new ThemeStateKeyService(keyMapper));
         // R8 起引用收集在 TopicStateKeyRefService:节点块 + 数值规则 + 章节故事流(与发布前试检查共用同一份)。
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService",

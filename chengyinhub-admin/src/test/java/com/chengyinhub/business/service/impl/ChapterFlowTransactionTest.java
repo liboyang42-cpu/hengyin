@@ -245,7 +245,7 @@ class ChapterFlowTransactionTest
         ReflectionTestUtils.setField(media, "topics", topicMapper);
         ReflectionTestUtils.setField(media, "chapters", chapterMapper);
         ReflectionTestUtils.setField(media, "nodes", nodeMapper);
-        ReflectionTestUtils.setField(media, "templates", (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) ReflectionTestUtils.getField(service, "cmsMemberTemplateMapper"));
+        ReflectionTestUtils.setField(media, "templates", (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(service, "cmsMemberTemplateMapper"));
         ReflectionTestUtils.setField(service, "mediaPublicationGuard", media);
         return service;
     }

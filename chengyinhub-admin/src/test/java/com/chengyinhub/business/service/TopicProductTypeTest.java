@@ -86,7 +86,7 @@ class TopicProductTypeTest {
         ticketMapper = mock(OmsTicketMapper.class);
         categoryService = mock(ISysCategoryService.class);
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
-        ReflectionTestUtils.setField(service, "sysCategoryService", categoryService);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "sysCategoryService", categoryService);
     }
 
     private ActivityTicketRequest ticket(String name, Integer mode) {

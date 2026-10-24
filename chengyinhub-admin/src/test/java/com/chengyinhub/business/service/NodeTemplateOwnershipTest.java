@@ -57,7 +57,7 @@ class NodeTemplateOwnershipTest {
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         // CORE OWN-C03-13：节点插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填自增 id。
         java.util.concurrent.atomic.AtomicLong ids = new java.util.concurrent.atomic.AtomicLong(9000L);

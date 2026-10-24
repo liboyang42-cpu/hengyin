@@ -73,7 +73,7 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         when(topicMapper.clearDraftIfDraft(10L)).thenReturn(1);
         CmsTopic topic = new CmsTopic();
@@ -113,7 +113,7 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
@@ -208,7 +208,7 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         CmsTopic topic = new CmsTopic();
         topic.setId(10L); topic.setStatus(1); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH");
@@ -282,7 +282,7 @@ class CmsTopicRoutePublishPolicyTest {
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
 
         CmsTopicNode preferenceNode = node(1L, 101L);
         CmsTopicNode advancedNode = node(2L, 102L);

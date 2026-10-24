@@ -69,7 +69,7 @@ class CopyTopicCopyTypeNpeTest {
         ReflectionTestUtils.setField(svc, "productRoleService", mock(IProductRoleService.class));
         // [W4闭环] copyNodes 会查节点模板决定是否深拷贝;本测试聚焦 copyType 语义,
         // 模板查不到 = 原样保留 templateId(与断言「模板 id 带过去」一致)。
-        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "cmsMemberTemplateMapper",
                 mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
     }
 

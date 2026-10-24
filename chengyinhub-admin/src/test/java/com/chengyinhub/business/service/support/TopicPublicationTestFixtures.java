@@ -10,10 +10,10 @@ import static org.mockito.Mockito.*;
 public final class TopicPublicationTestFixtures {
     private TopicPublicationTestFixtures() {}
     private static <T> T mapper(CmsTopicServiceImpl service, String name, Class<T> type) {
-        Object existing = ReflectionTestUtils.getField(service, name);
+        Object existing = TopicPublicationTestWiring.get(service, name);
         if (existing != null) return type.cast(existing);
         T empty = mock(type);
-        ReflectionTestUtils.setField(service, name, empty);
+        TopicPublicationTestWiring.set(service, name, empty);
         return empty;
     }
     public static void wire(CmsTopicServiceImpl service) {

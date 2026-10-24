@@ -80,7 +80,7 @@ class TopicPendingReviewSelfHostShellTest {
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "topicStateKeyRefService",
                 new TopicStateKeyRefService(
                         (CmsTopicNodeMapper) ReflectionTestUtils.getField(svc, "cmsTopicNodeMapper"),
-                        (CmsMemberTemplateMapper) ReflectionTestUtils.getField(svc, "cmsMemberTemplateMapper"),
+                        (CmsMemberTemplateMapper) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "cmsMemberTemplateMapper"),
                         (CmsTopicChapterMapper) ReflectionTestUtils.getField(svc, "cmsTopicChapterMapper")));
         when(topicMapper.clearDraftIfDraft(TOPIC)).thenReturn(1);
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
