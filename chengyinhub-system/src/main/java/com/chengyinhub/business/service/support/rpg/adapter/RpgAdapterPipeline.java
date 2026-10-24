@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service.support.rpg.adapter;
 
 import com.chengyinhub.business.domain.route.PlayCheckReceipt;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.service.IGameSessionRuntimeService;
 import com.chengyinhub.business.service.support.GameplayCheckEngine;
 import com.chengyinhub.business.service.support.rpg.TopicEnvironmentService;
 
@@ -18,15 +20,33 @@ public class RpgAdapterPipeline {
     private final TeamOppositionAdapter team;
     private final ResourceSourceAdapter resources;
     private final CharacterGrowthSourceAdapter growth;
+    private final ResourceSourceAdapter.GameReceiptSource gameReceipts;
 
     public RpgAdapterPipeline(TopicEnvironmentService environmentService, Clock clock) {
+        this(environmentService, clock, new ResourceSourceAdapter(), null);
+    }
+
+    /**
+     * 注入已有路线动作表和游戏回执。持久原请求仍没有公开 writer，缺时保持 WAITING_SOURCE。
+     */
+    public RpgAdapterPipeline(TopicEnvironmentService environmentService, Clock clock,
+            TopicRouteSessionMapper routeActions, IGameSessionRuntimeService games) {
+        this(environmentService, clock,
+                new ResourceSourceAdapter(null, routeActions == null ? null
+                        : new ResourceSourceAdapter.MapperOriginalRouteActionSource(routeActions)),
+                games == null ? null : ResourceSourceAdapter.fromGameRuntime(games));
+    }
+
+    private RpgAdapterPipeline(TopicEnvironmentService environmentService, Clock clock,
+            ResourceSourceAdapter resources, ResourceSourceAdapter.GameReceiptSource gameReceipts) {
         Clock server = clock == null ? Clock.systemUTC() : clock;
         this.environment = new EnvironmentExpiryAdapter(environmentService, server);
         this.equipment = new EquipmentStateDurationAdapter(server);
         this.party = new PartyFactAdapter();
         this.team = new TeamOppositionAdapter();
-        this.resources = new ResourceSourceAdapter();
+        this.resources = resources;
         this.growth = new CharacterGrowthSourceAdapter();
+        this.gameReceipts = gameReceipts;
     }
 
     public EnvironmentExpiryAdapter environment() { return environment; }
@@ -35,6 +55,14 @@ public class RpgAdapterPipeline {
     public TeamOppositionAdapter team() { return team; }
     public ResourceSourceAdapter resources() { return resources; }
     public CharacterGrowthSourceAdapter growth() { return growth; }
+
+    public ResourceSourceAdapter.GameReceiptRead recoverOriginalGame(com.chengyinhub.business.domain.dto.GameActorContext actor,
+            Long activityId, String requestId) {
+        if (gameReceipts == null) {
+            throw new ResourceSourceAdapter.WaitingSourceException(ResourceSourceAdapter.GAME_RECEIPT);
+        }
+        return resources.recoverFromGameReceipt(actor, activityId, requestId, gameReceipts);
+    }
 
     public PlayCheckReceipt roll(RpgAdapterContext context) {
         prepare(context);

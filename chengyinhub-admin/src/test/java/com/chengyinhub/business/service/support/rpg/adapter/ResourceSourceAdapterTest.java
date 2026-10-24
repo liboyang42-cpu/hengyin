@@ -5,9 +5,13 @@ import com.chengyinhub.business.domain.TopicRouteAction;
 import com.chengyinhub.business.domain.dto.GameActorContext;
 import com.chengyinhub.business.domain.dto.GameCommandReceiptView;
 import com.chengyinhub.business.domain.route.PlayCheckReceipt;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.service.IGameSessionRuntimeService;
 import com.chengyinhub.business.service.support.TopicRouteEngine;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
+
+import java.time.Clock;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ResourceSourceAdapterTest {
 
@@ -292,5 +300,36 @@ class ResourceSourceAdapterTest {
         assertTrue(applied.applied);
         assertTrue(applied.replayed);
         assertEquals(4, reads.get());
+    }
+
+    @Test
+    void pipelineReadsInjectedRouteActionAndGameReceiptWithoutASecondWriter() {
+        RpgAdapterPipeline bare = new RpgAdapterPipeline(null, Clock.systemUTC());
+        ResourceSourceAdapter.WaitingSourceException waiting = assertThrows(
+                ResourceSourceAdapter.WaitingSourceException.class,
+                () -> bare.recoverOriginalGame(new GameActorContext(7L, "PLAYER"), 11L, "game-req-01"));
+        assertEquals(ResourceSourceAdapter.GAME_RECEIPT, waiting.getWaitingCapability());
+
+        TopicRouteSessionMapper mapper = mock(TopicRouteSessionMapper.class);
+        TopicRouteAction row = new TopicRouteAction();
+        row.setSessionId(30L);
+        row.setMemberId(7L);
+        row.setActionId("ask:40:why");
+        when(mapper.selectActionByAction(30L, 7L, "ask:40:why")).thenReturn(row);
+        IGameSessionRuntimeService games = mock(IGameSessionRuntimeService.class);
+        GameCommandReceiptView view = new GameCommandReceiptView();
+        view.setActivityId(11L);
+        view.setRequestId("game-req-01");
+        view.setOutcome("APPLIED");
+        view.setReplayed(true);
+        when(games.receipt(any(GameActorContext.class), eq(11L), eq("game-req-01"))).thenReturn(view);
+        RpgAdapterPipeline wired = new RpgAdapterPipeline(null, Clock.systemUTC(), mapper, games);
+        ResourceSourceAdapter.OriginalReceipt action = wired.resources().recoverFromRouteAction(30L, 7L, "ask:40:why");
+        assertEquals("ask:40:why", action.requestId);
+        assertTrue(action.replay);
+        ResourceSourceAdapter.GameReceiptRead game = wired.recoverOriginalGame(
+                new GameActorContext(7L, "PLAYER"), 11L, "game-req-01");
+        assertTrue(game.applied);
+        assertEquals("game-req-01", game.requestId);
     }
 }
