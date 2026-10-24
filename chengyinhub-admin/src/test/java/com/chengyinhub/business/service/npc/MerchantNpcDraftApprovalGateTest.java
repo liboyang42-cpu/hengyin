@@ -13,7 +13,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftRequestState;
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftResp;
+import com.chengyinhub.business.domain.vo.ai.AiThemePlan;
 import com.chengyinhub.business.service.npc.MerchantNpcDraftApprovalGate.Audience;
+import com.chengyinhub.business.service.npc.MerchantNpcDraftApprovalGate.DraftQuery;
 import com.chengyinhub.business.service.npc.MerchantNpcDraftApprovalGate.Failure;
 import com.chengyinhub.business.service.npc.MerchantNpcDraftApprovalGate.GateException;
 import com.chengyinhub.business.service.npc.MerchantNpcDraftApprovalGate.Phase;
@@ -327,5 +331,81 @@ class MerchantNpcDraftApprovalGateTest {
         assertEquals(fx.requestId(), gate.draft().requestId());
         assertFalse(gate.draft().isEmpty());
         assertNull(fx.qualification().cachedPublic(fx.scope()), "合法 ingest 不得占 published 账");
+    }
+
+    @Test
+    void projectFromDraftQueryMissingPortAndNeverSeenDraftDoNotOccupy() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        InMemoryNpcFixtures.RecordingPublisher publisher = new InMemoryNpcFixtures.RecordingPublisher();
+        MerchantNpcDraftApprovalGate missing = new MerchantNpcDraftApprovalGate(
+                fx.scope(), publisher, fx.isolation(), fx.qualification(), fx::scope);
+        GateException waiting = assertThrows(GateException.class,
+                () -> missing.projectFromDraftQuery("c06-draft-never-seen"));
+        assertEquals(Failure.WAITING_SOURCE, waiting.failure());
+        assertEquals(MerchantNpcDraftApprovalGate.AI_THEME_DRAFT_READ, waiting.capability());
+        assertEquals("c06-draft-never-seen", waiting.requestId());
+        assertEquals(Phase.IDLE, missing.phase());
+        assertNull(missing.published());
+        assertNull(missing.requeryPublished("c06-draft-never-seen"));
+        assertNull(missing.authorizer());
+        assertTrue(missing.draft().isEmpty());
+        assertEquals(0, publisher.submitted());
+        assertEquals(0, publisher.publishedCount());
+
+        MerchantNpcKnowledgeDraft value = fx.draft();
+        PublishedRevision seeded = new PublishedRevision("rev-read-seed", "c06-seed-pub", fx.scope(),
+                value.validatedPublicFactsJson(), value.factsHash());
+        fx.qualification().rememberPublished(seeded, fx.scope());
+        int[] calls = new int[1];
+        DraftQuery query = (memberId, requestId) -> {
+            calls[0]++;
+            assertEquals(Long.valueOf(fx.scope().accountId()), memberId);
+            if ("c06-draft-never-seen".equals(requestId)) {
+                AiThemeDraftRequestState absent = new AiThemeDraftRequestState();
+                absent.setRequestId(requestId);
+                absent.setState(AiThemeDraftRequestState.NOT_FOUND);
+                return absent;
+            }
+            if ("c06-draft-seen".equals(requestId)) {
+                AiThemePlan plan = new AiThemePlan();
+                plan.setTitle("Seen draft");
+                AiThemeDraftResp resp = new AiThemeDraftResp();
+                resp.setDraft(plan);
+                AiThemeDraftRequestState seen = new AiThemeDraftRequestState();
+                seen.setRequestId(requestId);
+                seen.setState(AiThemeDraftRequestState.SUCCEEDED);
+                seen.setResult(resp);
+                return seen;
+            }
+            return null;
+        };
+        MerchantNpcDraftApprovalGate wired = new MerchantNpcDraftApprovalGate(
+                fx.scope(), publisher, fx.isolation(), fx.qualification(), fx::scope, query);
+        assertNull(wired.projectFromDraftQuery(null));
+        assertNull(wired.projectFromDraftQuery("  "));
+        assertEquals(0, calls[0], "空白草稿 id 不得调用读端口");
+        assertNull(wired.projectFromDraftQuery("c06-draft-never-seen"));
+        assertEquals(1, calls[0]);
+        assertArrayEquals(seeded.facts(), fx.isolation().playerProjection(fx.scope(), fx.qualification()),
+                "未见草稿 id 不得占 privateScopes");
+        assertNull(wired.requeryPublished("c06-draft-never-seen"), "未见草稿 id 不得占 publish 账");
+        assertNull(wired.published());
+        assertEquals(Phase.IDLE, wired.phase());
+        assertNull(wired.origin());
+        assertNull(fx.isolation().reviewStatusForRequest("c06-draft-never-seen", true));
+        assertEquals(0, publisher.submitted());
+        assertEquals(0, publisher.publishedCount());
+
+        AiThemeDraftRequestState seen = wired.projectFromDraftQuery("c06-draft-seen");
+        assertEquals(AiThemeDraftRequestState.SUCCEEDED, seen.getState());
+        assertEquals("Seen draft", seen.getResult().getDraft().getTitle());
+        assertEquals(2, calls[0]);
+        assertArrayEquals(seeded.facts(), fx.isolation().playerProjection(fx.scope(), fx.qualification()),
+                "已读草稿不得占 privateScopes");
+        assertNull(wired.requeryPublished("c06-draft-seen"));
+        assertNull(wired.published());
+        assertEquals(Phase.IDLE, wired.phase());
+        assertEquals(0, publisher.publishedCount());
+        assertFalse(wired.draft().encodesLiveCommerceMutation());
     }
 }

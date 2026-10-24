@@ -8,6 +8,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftRequestState;
+import com.chengyinhub.business.service.impl.AiThemeDraftRequestService;
 import com.chengyinhub.business.service.npc.MerchantNpcKnowledgeDraft.ForbiddenAiCommerce;
 import com.chengyinhub.business.service.npc.MerchantNpcKnowledgeDraft.Origin;
 
@@ -26,6 +28,8 @@ public final class MerchantNpcDraftApprovalGate {
     public static final String KNOWLEDGE_DRAFT_HTTP = "MerchantNpcKnowledgeDraftService.http";
     public static final String KNOWLEDGE_REVIEW_AUTHORITY = "MerchantNpcKnowledgeReviewAuthority.route";
     public static final String AI_GATEWAY_PUBLIC_AUTH = "AiGateway.publicAuth";
+    /** Existing public draft read. Not a publish, price, stock, or reward writer. */
+    public static final String AI_THEME_DRAFT_READ = "AiThemeDraftRequestService.read";
     public static final String UNSIGNED_V12 = "v12";
     public static final String UNSIGNED_FILE_PACK_232 = "232";
     public static final String UNSIGNED_DOT_SHA = "e16c2c5";
@@ -149,6 +153,30 @@ public final class MerchantNpcDraftApprovalGate {
         PublishedRevision publishApproved(OriginalReviewTicket ticket, Scope scope);
     }
 
+    /**
+     * Existing draft query. The only production delegate is
+     * {@link AiThemeDraftRequestService#read}. Missing port is WAITING_SOURCE.
+     */
+    public interface DraftQuery {
+        AiThemeDraftRequestState read(Long memberId, String requestId);
+    }
+
+    public static final class AiThemeDraftRequestQuery implements DraftQuery {
+        private final AiThemeDraftRequestService drafts;
+
+        public AiThemeDraftRequestQuery(AiThemeDraftRequestService drafts) {
+            this.drafts = drafts;
+        }
+
+        @Override
+        public AiThemeDraftRequestState read(Long memberId, String requestId) {
+            if (drafts == null) {
+                throw GateException.waitingSource(AI_THEME_DRAFT_READ, requestId);
+            }
+            return drafts.read(memberId, requestId);
+        }
+    }
+
     public static final class WaitingSourcePublisher implements OriginalReviewPublishing {
         @Override
         public OriginalReviewTicket submitForOriginalReview(MerchantNpcKnowledgeDraft draft, String requestId, Scope scope) {
@@ -204,6 +232,7 @@ public final class MerchantNpcDraftApprovalGate {
     private final OriginalReviewPublishing publisher;
     private final MerchantNpcPublicPrivateIsolation isolation;
     private final MerchantNpcQualificationRevoke qualification;
+    private final DraftQuery draftQuery;
     private final Map<String, PublishedRevision> publishedByRequestId = new LinkedHashMap<String, PublishedRevision>();
 
     private Phase phase = Phase.IDLE;
@@ -219,11 +248,21 @@ public final class MerchantNpcDraftApprovalGate {
                                         MerchantNpcPublicPrivateIsolation isolation,
                                         MerchantNpcQualificationRevoke qualification,
                                         Supplier<Scope> currentScope) {
+        this(scope, publisher, isolation, qualification, currentScope, null);
+    }
+
+    public MerchantNpcDraftApprovalGate(Scope scope,
+                                        OriginalReviewPublishing publisher,
+                                        MerchantNpcPublicPrivateIsolation isolation,
+                                        MerchantNpcQualificationRevoke qualification,
+                                        Supplier<Scope> currentScope,
+                                        DraftQuery draftQuery) {
         this.scope = Objects.requireNonNull(scope, "scope");
         this.publisher = publisher == null ? new WaitingSourcePublisher() : publisher;
         this.isolation = isolation == null ? new MerchantNpcPublicPrivateIsolation() : isolation;
         this.qualification = qualification == null ? new MerchantNpcQualificationRevoke() : qualification;
         this.currentScope = currentScope == null ? () -> this.scope : currentScope;
+        this.draftQuery = draftQuery;
         this.draft = MerchantNpcKnowledgeDraft.aiDraft(null, List.of());
     }
 
@@ -399,6 +438,29 @@ public final class MerchantNpcDraftApprovalGate {
             return null;
         }
         return publishedByRequestId.get(id);
+    }
+
+    /**
+     * Read one existing draft through {@link AiThemeDraftRequestService#read}.
+     * A missing port throws {@link Failure#WAITING_SOURCE} for {@link #AI_THEME_DRAFT_READ}.
+     * A never-seen draft id returns null and does not occupy {@code privateScopes} or publish state.
+     * This path does not publish, price, deduct stock, or issue rewards.
+     */
+    public AiThemeDraftRequestState projectFromDraftQuery(String draftId) {
+        String id = MerchantNpcKnowledgeDraft.blankToNull(draftId);
+        if (draftQuery == null) {
+            throw GateException.waitingSource(AI_THEME_DRAFT_READ, id);
+        }
+        if (id == null) {
+            return null;
+        }
+        AiThemeDraftRequestState state = draftQuery.read(Long.valueOf(scope.accountId()), id);
+        if (state == null || !id.equals(state.getRequestId())
+                || AiThemeDraftRequestState.NOT_FOUND.equals(state.getState())
+                || state.getResult() == null || state.getResult().getDraft() == null) {
+            return null;
+        }
+        return state;
     }
 
     /**
