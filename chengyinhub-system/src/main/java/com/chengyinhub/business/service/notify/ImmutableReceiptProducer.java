@@ -5,8 +5,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.service.IImService;
@@ -33,6 +36,8 @@ public final class ImmutableReceiptProducer {
     public static final String IM_SEND = "im.send";
     /** 真实发消息命令：content、msgType、extraJson、身份。指纹 body 不是正文。 */
     public static final String IM_SEND_COMMAND = "im.send.originalCommand";
+    /** 原 send 的 extraJson 必须带 reply_to_id 或 mention_* 正式字段。任意 mention 夹具不是合同。 */
+    public static final String IM_SEND_WIRE = "im.send.originalWire";
     public static final String NOT_A_SEND = "IM_OPERATION_NOT_SEND";
 
     public enum Kind {
@@ -167,6 +172,7 @@ public final class ImmutableReceiptProducer {
         if (send == null) {
             throw new WaitingSourceException(IM_SEND_COMMAND);
         }
+        requireOriginalWire(required.kind, extraJson);
         ImMessage sent = send.send(memberId, conversationId, targetMemberId, msgType, content, extraJson,
                 required.requestId);
         if (sent == null) {
@@ -186,6 +192,29 @@ public final class ImmutableReceiptProducer {
 
         public Kind getKind() {
             return kind;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void requireOriginalWire(Kind kind, String extraJson) {
+        Map<String, Object> wire;
+        try {
+            wire = new ObjectMapper().readValue(extraJson, Map.class);
+        } catch (Exception ex) {
+            throw new WaitingSourceException(IM_SEND_WIRE);
+        }
+        if (kind == Kind.REPLY) {
+            if (!(wire.get("reply_to_id") instanceof Number)) {
+                throw new WaitingSourceException(IM_SEND_WIRE);
+            }
+            return;
+        }
+        Object everyone = wire.get("mention_everyone");
+        boolean mentioned = wire.get("mention_member_ids") instanceof List
+                || wire.get("mention_role_ids") instanceof List
+                || everyone instanceof Boolean || everyone instanceof Number;
+        if (!mentioned) {
+            throw new WaitingSourceException(IM_SEND_WIRE);
         }
     }
 

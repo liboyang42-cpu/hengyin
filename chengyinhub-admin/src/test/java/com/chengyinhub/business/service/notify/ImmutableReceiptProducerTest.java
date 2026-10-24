@@ -164,6 +164,11 @@ class ImmutableReceiptProducerTest {
                 ImmutableReceiptProducer.WaitingSourceException.class,
                 () -> producer.sendOriginal(reply, 7L, 12L, 8L, Integer.valueOf(1), "hello", null, send));
         assertEquals(ImmutableReceiptProducer.IM_SEND_COMMAND, missingExtra.getWaitingCapability());
+        ImmutableReceiptProducer.WaitingSourceException fixture = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> producer.sendOriginal(reply, 7L, 12L, 8L, Integer.valueOf(1), "hello",
+                        "{\"mention\":8}", send));
+        assertEquals(ImmutableReceiptProducer.IM_SEND_WIRE, fixture.getWaitingCapability());
         assertEquals(0, calls.get());
         assertEquals(0, store.size());
 
@@ -171,12 +176,13 @@ class ImmutableReceiptProducerTest {
         sent.setClientMessageId("c09-send-01");
         sent.setContent("hello");
         sent.setRequestHash("hash-send-01");
+        String wire = "{\"reply_to_id\":88120}";
         ImmutableReceiptProducer.OriginalReceipt receipt = producer.sendOriginal(reply, 7L, 12L, 8L,
-                Integer.valueOf(1), "hello", "{\"mention\":8}", (memberId, conversationId, targetMemberId, msgType,
+                Integer.valueOf(1), "hello", wire, (memberId, conversationId, targetMemberId, msgType,
                         content, extraJson, clientMessageId) -> {
                     calls.incrementAndGet();
                     assertEquals("hello", content);
-                    assertEquals("{\"mention\":8}", extraJson);
+                    assertEquals(wire, extraJson);
                     assertEquals("c09-send-01", clientMessageId);
                     return sent;
                 });
