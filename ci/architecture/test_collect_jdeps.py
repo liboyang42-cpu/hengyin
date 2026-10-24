@@ -1166,6 +1166,114 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                 self.assert_unknown(report)
                 self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
 
+    def test_npc_actual_enrollment_asr_provider_and_factory_directions_are_green(self):
+        edges = [("E_NPC_VOICE_ENROLLMENT", "E_NPC_VOICE_INTENT_STORAGE"),
+                 ("E_NPC_VOICE_ENROLLMENT", "E_VOICE_PROVIDER_CLIENT"),
+                 ("D_NPC_ASR_INTENT", "D_NPC_ASR_INTENT_STORAGE"),
+                 ("D_NPC_ASR_INTENT", "E_STT_PROVIDER"),
+                 ("E_STT_PROVIDER", "F_AI_HTTP_ADMISSION"),
+                 ("E_STT_PROVIDER", "E_VOICE_CONFIGURATION"),
+                 ("E_STT_FACTORY", "E_STT_PROVIDER")]
+        for a, b in edges:
+            target = ("com.chengyinhub.business.service.ai.SpeechToTextService"
+                      if b == "E_STT_PROVIDER" else self.owner_member(b))
+            self.reference(self.owner_member(a), target)
+        self.reference(self.owner_member("E_STT_FACTORY"),
+                       "com.chengyinhub.business.service.ai.impl.NoopSpeechToTextService")
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual(set(edges), set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_npc_shared_asr_storage_keeps_exact_cleanup_callers_without_granting_god_ownership(self):
+        owner = "D_NPC_ASR_INTENT_STORAGE"
+        callers = self.dependencies["owners"][owner]["allowed_consumers"]
+        for source in callers:
+            self.system_entries[source.replace(".", "/") + ".class"] = ("NOT_COMPILED_NPC_STORAGE_CALLER_" + source).encode()
+        self.write_system(); self.output = self.output.with_name("npc-asr-cleanup-callers"); self.collect()
+        for source in callers: self.reference(source, self.owner_member(owner))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_npc_new_storage_ports_reject_unowned_provider_and_nested_consumer_bypass(self):
+        nested = self.owner_member("E_NPC_VOICE_ENROLLMENT") + "$Nested"
+        self.system_entries[nested.replace(".", "/") + ".class"] = b"NOT_COMPILED_NPC_NESTED_CONSUMER"
+        self.write_system(); self.output = self.output.with_name("npc-storage-negative-consumers"); self.collect()
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for source in (self.foreign, nested, self.owner_member("E_VOICE_PROVIDER_CLIENT"), self.owner_member("E_STT_PROVIDER")):
+            for target in ("E_NPC_VOICE_INTENT_STORAGE", "D_NPC_ASR_INTENT_STORAGE"):
+                with self.subTest(source=source, target=target):
+                    self.replace_evidence("jdeps.stdout.txt", original)
+                    self.reference(source, self.owner_member(target))
+                    report = self.check_directions()
+                    self.assertEqual("BLOCKED", report["verdict"], report)
+                    self.assertTrue(any(f["rule"] == "EXACT_STORAGE_PORT_CONSUMER" and f["source_class"] == source
+                                        for f in report["findings"]), report)
+
+    def test_npc_provider_domain_or_controller_backrefs_and_storage_callbacks_are_red(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("E_VOICE_PROVIDER_CLIENT", "E_STT_PROVIDER", "E_NPC_VOICE_INTENT_STORAGE", "D_NPC_ASR_INTENT_STORAGE"):
+            for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+                with self.subTest(owner=owner, target=target):
+                    self.replace_evidence("jdeps.stdout.txt", original)
+                    self.reference(self.owner_member(owner), target)
+                    report = self.check_directions()
+                    self.assertEqual("BLOCKED", report["verdict"], report)
+                    self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
+
+    def test_existing_payment_proof_ports_remain_shared_partial_references_not_table_write_grants(self):
+        pairs = [("com.chengyinhub.business.service.impl.ClubMembershipServiceImpl", "E_CLM_SHARED_PROOF_PORT"),
+                 ("com.chengyinhub.business.service.impl.MerchantCommerceService", "E_COMMERCE_SHARED_PROOF_PORT"),
+                 ("com.chengyinhub.business.service.impl.OmsOrderServiceImpl", "E_COMMERCE_SHARED_PROOF_PORT")]
+        for source, _ in pairs:
+            self.system_entries[source.replace(".", "/") + ".class"] = ("NOT_COMPILED_SHARED_PROOF_CALLER_" + source).encode()
+        self.write_system(); self.output = self.output.with_name("shared-domain-proof-ports"); self.collect()
+        for source, target in pairs: self.reference(source, self.owner_member(target))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertFalse({"club_membership_invoice", "oms_order", "club_post_media_review_outbox"} & set(producer.shared.business_policy()["facts"]))
+
+    def test_media_original_owner_directions_and_lower_layer_backrefs_remain_restricted(self):
+        edges = [("H_CLUB_POST_MEDIA_REVIEW", "H_CLUB_POST_MEDIA_TRANSACTION"),
+                 ("H_CLUB_POST_MEDIA_REVIEW", "H_CLUB_POST_MEDIA_STORAGE"),
+                 ("H_CLUB_POST_MEDIA_TRANSACTION", "H_CLUB_POST_MEDIA_STORAGE")]
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for a, b in edges: self.reference(self.owner_member(a), self.owner_member(b))
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", self.check_directions()["verdict"])
+        for owner in ("E_CLM_SHARED_PROOF_PORT", "E_COMMERCE_SHARED_PROOF_PORT", "H_CLUB_POST_MEDIA_REVIEW", "H_CLUB_POST_MEDIA_TRANSACTION", "H_CLUB_POST_MEDIA_STORAGE"):
+            for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+                with self.subTest(owner=owner, target=target):
+                    self.replace_evidence("jdeps.stdout.txt", original)
+                    self.reference(self.owner_member(owner), target)
+                    report = self.check_directions()
+                    self.assertEqual("BLOCKED", report["verdict"], report)
+                    self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
+        self.replace_evidence("jdeps.stdout.txt", original)
+        self.reference(self.foreign, self.owner_member("H_CLUB_POST_MEDIA_STORAGE"))
+        self.assertIn("EXACT_STORAGE_PORT_CONSUMER", {f["rule"] for f in self.check_directions()["findings"]})
+
+    def test_added_shared_proof_or_media_type_missing_raw_is_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("E_CLM_SHARED_PROOF_PORT", "E_COMMERCE_SHARED_PROOF_PORT", "H_CLUB_POST_MEDIA_REVIEW", "H_CLUB_POST_MEDIA_TRANSACTION", "H_CLUB_POST_MEDIA_STORAGE"):
+            member = self.owner_member(owner)
+            with self.subTest(owner=owner):
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.decode().splitlines()
+                                      if not line.strip().startswith(member + " -> ")).encode())
+                self.assert_unknown(self.check_directions())
+
+    def test_npc_new_declared_type_missing_raw_remains_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("E_NPC_VOICE_ENROLLMENT", "E_NPC_VOICE_INTENT_STORAGE", "D_NPC_ASR_INTENT", "D_NPC_ASR_INTENT_STORAGE", "E_STT_PROVIDER", "E_STT_FACTORY"):
+            for member in self.dependencies["owners"][owner]["members"]:
+                with self.subTest(owner=owner, member=member):
+                    self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.decode().splitlines()
+                                          if not line.strip().startswith(member + " -> ")).encode())
+                    self.assert_unknown(self.check_directions())
+
     def test_registration_query_original_read_ports_and_controller_inbound_remain_scoped(self):
         # Exact bdb6 field types, not approval of every method exposed by these mixed service interfaces.
         ports = ["com.chengyinhub.business.service.ICmsRegistrationService",

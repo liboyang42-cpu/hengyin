@@ -1,0 +1,25 @@
+{
+  "source": "def951bef36a94417d90259906f6bda6abe6efb3",
+  "implementation_parent": "e5b5818f2230eb9e81d2a825960c0470ac1640ec",
+  "python": {
+    "command": "python -m unittest discover -s ci/architecture -p 'test_*.py'",
+    "tests": 264,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "seconds": 29.124
+  },
+  "static_storage_declarations": {
+    "NpcVoiceEnrollmentMySqlIT": 3,
+    "NpcAsrIntentMySqlIT": 7,
+    "ClmCommercePaymentProofMySqlIT": 6,
+    "ClubPostMediaReviewBudgetMySqlIT": 8
+  },
+  "existing_registered_case_deltas": [],
+  "read_only_boundary_probe": {
+    "kind": "NOT_TRUSTED_CI_VERDICT",
+    "new_blockers": [],
+    "legacy_or_unknown_review_count": 30
+  },
+  "java_jdeps_db_ci": "NOT_RUN"
+}

@@ -671,7 +671,8 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         status, report = self.source_cli(trusted, self.commit())
         self.assertEqual(0, status, report)
         self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
-        self.assertEqual(["AI_QUOTA_RESERVATION", "PHOTO_CHECK_INTENT"], report["business_policy"]["fact_ids"])
+        self.assertEqual(["AI_QUOTA_RESERVATION", "NPC_ASR_INTENT", "NPC_VOICE_ENROLLMENT_INTENT", "PHOTO_CHECK_INTENT"],
+                         report["business_policy"]["fact_ids"])
         self.assertTrue(any("service call paths" in x for x in report["not_proven"]))
 
     def test_literal_modifiers_comments_and_tag_mismatch_keep_owner_enforcement(self):
@@ -949,6 +950,73 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
 
 
+class NpcIntentWriterPolicyTest(unittest.TestCase):
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    source_cli = BusinessOwnerPolicyTest.source_cli
+    assert_rule = BusinessOwnerPolicyTest.assert_rule
+    put_write = BusinessOwnerPolicyTest.put_write
+    facts = BusinessOwnerPolicyTest.facts + (("npc_voice_enrollment_intent", "NpcVoiceEnrollmentMapper"),
+                                           ("npc_asr_intent", "NpcAsrIntentMapper"))
+
+    def test_npc_intent_namespaces_do_not_expand_original_three_private_ports(self):
+        policy = gate.business_policy()
+        self.assertEqual(3, len(policy["private_ports"]))
+        self.assertEqual(4, len(policy["facts"]))
+        for table, namespace in self.facts[2:]:
+            key = "chengyinhub-system:com.chengyinhub.business.mapper." + namespace
+            self.assertIn(key, policy["writers"])
+            self.assertEqual("whole_table", policy["facts"][table]["coverage"])
+            self.assertNotIn("com.chengyinhub.business.mapper." + namespace, policy["private_ports"])
+
+    def test_npc_expected_literal_writers_are_green_and_foreign_namespaces_are_red(self):
+        trusted, _ = self.prepare_policy()
+        for table, namespace in self.facts[2:]: self.put_write(table, namespace)
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
+        for table, _ in self.facts[2:]:
+            with self.subTest(table=table):
+                self.put_write(table, "ForeignNpcMapper")
+                self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
+    def test_npc_consumer_metadata_cannot_be_candidate_self_approval_or_trusted_disable(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        data = copy.deepcopy(original)
+        storage = next(o for o in data["technical_dependency_policy"]["owners"] if o["id"] == "D_NPC_ASR_INTENT_STORAGE")
+        storage["allowed_consumers"].append("example.UnapprovedConsumer")
+        self.write("ci/architecture/owners.json", gate.encode(data))
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status, report)
+        self.assertIn("POLICY_CHANGE", report["error"])
+        data = copy.deepcopy(original)
+        del next(o for o in data["technical_dependency_policy"]["owners"] if o["id"] == "D_NPC_ASR_INTENT_STORAGE")["allowed_consumers"]
+        payload = gate.encode(data)
+        self.write("ci/architecture/owners.json", payload); (trusted / "owners.json").write_bytes(payload)
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(1, status, report)
+        self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
+
+    def test_asr_writer_cannot_write_voice_fact_or_old_ai_quota(self):
+        trusted, _ = self.prepare_policy()
+        for table in ("npc_voice_enrollment_intent", "ai_quota_reservation"):
+            with self.subTest(table=table):
+                self.put_write(table, "NpcAsrIntentMapper")
+                self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_BUSINESS_OWNER_WRITE")
+
+    def test_voice_intent_registration_does_not_grant_profile_table_write_namespace(self):
+        path = "chengyinhub-system/src/main/resources/mapper/business/NpcProfileMapper.xml"
+        self.write(path, mapper('<update id="update">update npc_profile set voice_status=1 where id=#{id}</update>',
+                                "com.chengyinhub.business.mapper.NpcProfileMapper"))
+        self.base = self.commit(); self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.put_write("npc_profile", "NpcVoiceEnrollmentMapper")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_TABLE_WRITER")
+
+
 class BoundaryRegistrationTest(unittest.TestCase):
     setUp = InventoryAndDeltaTest.setUp
     write = InventoryAndDeltaTest.write
@@ -1020,6 +1088,14 @@ class BoundaryRegistrationTest(unittest.TestCase):
         status, report = self.source_cli(trusted, self.commit())
         self.assertEqual(0, status, report)
         self.assertEqual([], report["findings"])
+
+    def test_payment_proof_test_fixture_is_not_a_production_owner(self):
+        trusted, _ = self.prepare_policy()
+        self.write("chengyinhub-admin/src/test/java/com/chengyinhub/business/service/VerifiedDomainPaymentProofTest.java",
+                   b"package com.chengyinhub.business.service; @org.springframework.stereotype.Service public class VerifiedDomainPaymentProofTest {}")
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertFalse(any(f["rule"] == "NEW_UNOWNED_BOUNDARY" for f in report["findings"]))
 
     def test_registered_primary_type_is_not_blocked_and_compilation_is_still_unproven(self):
         trusted, _ = self.prepare_policy()
@@ -1113,9 +1189,11 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
 
     def test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command(self):
         policy = gate.business_policy()
-        self.assertEqual({"ai_quota_reservation", "photo_check_intent"}, set(policy["facts"]))
-        self.assertEqual(2, len(policy["writers"]))
-        self.assertEqual(2, len(policy["commands"]))
+        self.assertEqual({"ai_quota_reservation", "photo_check_intent", "npc_voice_enrollment_intent", "npc_asr_intent"},
+                         set(policy["facts"]))
+        self.assertEqual(4, len(policy["writers"]))
+        self.assertEqual(4, len(policy["commands"]))
+        self.assertNotIn("ai_theme_draft_intent", policy["facts"], "the old third private port still grants no whole-table fact")
         self.assertEqual(3, len(policy["private_ports"]))
         self.assertEqual({"owner": "chengyinhub-system", "consumer":
                          "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"},

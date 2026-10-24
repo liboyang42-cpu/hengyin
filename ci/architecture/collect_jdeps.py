@@ -310,6 +310,12 @@ def technical_dependency_findings(index, selected, policy, input_complete=True):
         for ref in references.values():
             a = assigned.get(ref["source_class"])
             b = assigned.get(ref["target_class"])
+            # Restrict exact storage consumers even when the source is an existing unowned class.
+            if b is not None and "allowed_consumers" in owners[b]:
+                allowed_consumers = owners[b]["allowed_consumers"]
+                if ref["source_class"] not in allowed_consumers:
+                    result["findings"].append({"rule": "EXACT_STORAGE_PORT_CONSUMER",
+                                               "target_technical_owner": b, "allowed_consumers": allowed_consumers, **ref})
             if a is None:
                 result["unscoped_reference_count"] += 1
                 continue

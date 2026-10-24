@@ -394,7 +394,19 @@ def business_policy():
                 require(port["consumer"] in {m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]})
             require(port["target"] not in ports)
             ports[port["target"]] = {"owner": port["owner"], "consumer": port["consumer"]}
-        require(all(w["namespace"] in ports and ports[w["namespace"]]["owner"] == w["module"] for w in writers.values()))
+        # A namespace writer and a one-consumer private port are distinct contracts.
+        # Keep all three private ports; shared intent storage needs explicit exact consumers instead.
+        for writer in writers.values():
+            if writer["namespace"] in ports:
+                require(ports[writer["namespace"]]["owner"] == writer["module"])
+                continue
+            if "technical_dependency_policy" not in owners:
+                raise GateError("OWNER_DEPENDENCY_POLICY_INVALID: missing shared storage binding")
+            storage = [o for o in owners["technical_dependency_policy"]["owners"]
+                       if o["module"] == writer["module"] and o["members"] == [writer["namespace"]]]
+            require(len(storage) == 1 and bool(storage[0].get("allowed_consumers")))
+            require({m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]}
+                    <= set(storage[0]["allowed_consumers"]))
         return {"facts": facts, "writers": writers, "commands": entries, "private_ports": ports}
     except GateError:
         raise
@@ -419,7 +431,12 @@ def technical_dependency_policy():
         fqcn = r"(?:" + IDENT + r"\.)+" + IDENT
         for owner in policy["owners"]:
             fields = {"id", "module", "members", "forbidden_backrefs"}
-            require(set(owner) in (fields, fields | {"restricted_packages"}))
+            require(fields <= set(owner) and set(owner) <= fields | {"restricted_packages", "allowed_consumers"})
+            if "allowed_consumers" in owner:
+                consumers = owner["allowed_consumers"]
+                require(len(owner["members"]) == 1 and isinstance(consumers, list) and consumers
+                        and len(set(consumers)) == len(consumers))
+                require(all(isinstance(n, str) and re.fullmatch(fqcn, n) for n in consumers))
             restricted = owner.get("restricted_packages", {})
             require(isinstance(restricted, dict))
             for package, exceptions in restricted.items():

@@ -12,13 +12,15 @@
   },
   "legacy": "存量仅按 statement 的 path#id、内容哈希及传递 include 哈希精确识别。多 owner 表保持显式多值，不归并为一个万能 owner。没有目录通配豁免或自增 baseline。",
   "unknown": "动态表/字段、foreach/if/choose、include properties、未解析或循环引用及复杂 SQL 均保持 UNKNOWN；table_hints/column_hints 不完整时不猜 owner。DELETE 的字段集合为空不表示无写效果。",
-  "business_domain_assignment": "仅business_policy中两项whole-table事实获root技术写权批准；private_ports另有三项精确编译依赖技术合同，不推定其它表/字段business owner，不改变产品/授权/金额政策。",
+  "business_domain_assignment": "原两AI事实与root明确指定的NPC voice/ASR两意图表仅登记各自唯一writer namespace；原三private_ports保持。注册不批准ASR额度、用户余额/个人表写权、运行授权或方法级语义。",
   "business_policy": {
     "schema": 1,
     "coverage": "PARTIAL",
     "scope": [
       "AI_QUOTA_RESERVATION",
-      "PHOTO_CHECK_INTENT"
+      "PHOTO_CHECK_INTENT",
+      "NPC_VOICE_ENROLLMENT_INTENT",
+      "NPC_ASR_INTENT"
     ],
     "facts": [
       {
@@ -32,6 +34,18 @@
         "table": "photo_check_intent",
         "coverage": "whole_table",
         "business_owner": "AI_PHOTO_INTENT"
+      },
+      {
+        "id": "NPC_VOICE_ENROLLMENT_INTENT",
+        "table": "npc_voice_enrollment_intent",
+        "coverage": "whole_table",
+        "business_owner": "E_NPC_VOICE_ENROLLMENT"
+      },
+      {
+        "id": "NPC_ASR_INTENT",
+        "table": "npc_asr_intent",
+        "coverage": "whole_table",
+        "business_owner": "D_NPC_ASR_INTENT"
       }
     ],
     "pure_writers": [
@@ -46,6 +60,18 @@
         "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
         "business_owner": "AI_PHOTO_INTENT",
         "command_id": "photo-check-intent"
+      },
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+        "business_owner": "E_NPC_VOICE_ENROLLMENT",
+        "command_id": "npc-voice-enrollment-intent"
+      },
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+        "business_owner": "D_NPC_ASR_INTENT",
+        "command_id": "npc-asr-intent"
       }
     ],
     "private_ports": [
@@ -836,7 +862,10 @@
           "com.chengyinhub.business.service.ai.LlmClientConfig",
           "com.chengyinhub.web.controller.api.ApiMerchantController",
           "com.chengyinhub.business.service.impl.NodeNpcService",
-          "com.chengyinhub.business.service.impl.NpcChatService"
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController"
         ]
       },
       {
@@ -936,6 +965,164 @@
             "com.chengyinhub.business.access.merchant.MerchantPermission"
           ]
         }
+      },
+      {
+        "id": "E_NPC_VOICE_ENROLLMENT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController"
+        ]
+      },
+      {
+        "id": "E_NPC_VOICE_INTENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService"
+        ]
+      },
+      {
+        "id": "D_NPC_ASR_INTENT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiAiNpcController",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "D_NPC_ASR_INTENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.NpcAsrIntentMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.impl.NpcChatWriteService",
+          "com.chengyinhub.business.service.impl.DataRetentionServiceImpl"
+        ]
+      },
+      {
+        "id": "E_STT_PROVIDER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.SpeechToTextService",
+          "com.chengyinhub.business.service.ai.impl.DashScopeSpeechToTextService",
+          "com.chengyinhub.business.service.ai.impl.NoopSpeechToTextService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "E_STT_FACTORY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.impl.SpeechToTextConfig"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "E_CLM_SHARED_PROOF_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.ClubMembershipMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ]
+      },
+      {
+        "id": "E_COMMERCE_SHARED_PROOF_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.OmsOrderMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ]
+      },
+      {
+        "id": "H_CLUB_POST_MEDIA_REVIEW",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "H_CLUB_POST_MEDIA_TRANSACTION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
+          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "H_CLUB_POST_MEDIA_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.ClubPostMediaReviewOutboxMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService",
+          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService"
+        ]
       }
     ],
     "allowed_directions": [
@@ -1214,6 +1401,46 @@
       [
         "C_REGISTRATION_REDEMPTION_APPLICATION",
         "C_REGISTRATION_QUERY_APPLICATION"
+      ],
+      [
+        "E_NPC_VOICE_ENROLLMENT",
+        "E_NPC_VOICE_INTENT_STORAGE"
+      ],
+      [
+        "E_NPC_VOICE_ENROLLMENT",
+        "E_VOICE_PROVIDER_CLIENT"
+      ],
+      [
+        "D_NPC_ASR_INTENT",
+        "D_NPC_ASR_INTENT_STORAGE"
+      ],
+      [
+        "D_NPC_ASR_INTENT",
+        "E_STT_PROVIDER"
+      ],
+      [
+        "E_STT_PROVIDER",
+        "F_AI_HTTP_ADMISSION"
+      ],
+      [
+        "E_STT_PROVIDER",
+        "E_VOICE_CONFIGURATION"
+      ],
+      [
+        "E_STT_FACTORY",
+        "E_STT_PROVIDER"
+      ],
+      [
+        "H_CLUB_POST_MEDIA_REVIEW",
+        "H_CLUB_POST_MEDIA_TRANSACTION"
+      ],
+      [
+        "H_CLUB_POST_MEDIA_REVIEW",
+        "H_CLUB_POST_MEDIA_STORAGE"
+      ],
+      [
+        "H_CLUB_POST_MEDIA_TRANSACTION",
+        "H_CLUB_POST_MEDIA_STORAGE"
       ]
     ]
   },
