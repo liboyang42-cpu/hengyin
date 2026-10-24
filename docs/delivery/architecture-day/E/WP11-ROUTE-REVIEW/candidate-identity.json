@@ -1,0 +1,36 @@
+{
+  "base": "41c7e1caef9fdd3548585f1646e267565ca252d7",
+  "base_tree": "982e685f3f175cf590fee6939b862358b43968a0",
+  "review_only_proposed_tree": "d2c160f2015e4864d08ef03e1859629d38b9d764",
+  "patch_sha256": "1f653dd22c6a90ed4101619df73a732d52c10a075786013aefa42cf6f4c097b8",
+  "changes": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicMapper.java",
+      "before_blob": "834e600f868a68ba5718fbfe9282ba173622a483",
+      "after_blob": "77f9c1e581b92686f40dfff16bbdb9a439af8b15",
+      "after_sha256": "9b41b3a4a6963d3a747bea1a3594de9086ec7ac20beec0c7746fb6e1fe7aef4f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml",
+      "before_blob": "d5e6c24888ed7f28a1412c99d7d96cb6518e6c77",
+      "after_blob": "4a41f842c84f4ca2c1ed43ec0719ac365e91afd6",
+      "after_sha256": "7cd81f08852edb4f516c11b3cc6ee86250a42e830bc040f913ca6f13fe761f02"
+    }
+  ],
+  "checks": [
+    "existing XML entry bodies retained",
+    "exact post-id detail predicate reused",
+    "same two existing gate fragments",
+    "nine mapped projection columns",
+    "empty IDs false",
+    "git apply check and roundtrip against public base in disposable indexes"
+  ],
+  "runtime_not_executed": [
+    "Java",
+    "MySQL",
+    "JUnit",
+    "EXPLAIN",
+    "CI"
+  ],
+  "consumer_changed": false
+}

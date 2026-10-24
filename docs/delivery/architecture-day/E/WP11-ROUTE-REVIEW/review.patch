@@ -1,0 +1,47 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicMapper.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicMapper.java
+index 834e600f..77f9c1e5 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicMapper.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicMapper.java
+@@ -57,6 +57,10 @@ public interface CmsTopicMapper
+     /** 公开详情 + 既有 creator 预览 seam；非 owner 仍只能命中公开状态。 */
+     CmsTopic selectCmsTopicDetailById(@Param("id") Long id, @Param("viewerMemberId") Long viewerMemberId);
+
++    /** IM 路线卡候选窄读；复用详情可见性，无列表消费者接线，先做真库影子比对。 */
++    List<CmsTopic> selectImRouteCardTopicsByIds(@Param("topicIds") List<Long> topicIds,
++                                              @Param("viewerMemberId") Long viewerMemberId);
++
+     /** 商家公开详情：固定未删、审核通过、商家端已上架。 */
+     CmsTopic selectMerchantVisibleCmsTopicById(Long id);
+
+diff --git a/chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml b/chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml
+index d5e6c248..4a41f842 100644
+--- a/chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml
++++ b/chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml
+@@ -826,6 +826,27 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+           and <include refid="clubMemberOnlyGate"/>
+     </select>
+
++    <!-- Review-only additive candidate. Existing detail query and consumers stay unchanged.
++         Same detail gates at one statement's NOW()/snapshot; not proof of per-item timing equivalence. -->
++    <select id="selectImRouteCardTopicsByIds" resultMap="CmsTopicResult" useCache="false" flushCache="true">
++        select id,name,img_url,total_mileage,location_count,status,user_status,del_flag,club_member_only
++        from cms_topic
++        where
++        <choose>
++            <when test="topicIds != null and topicIds.size() > 0">
++                id in <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
++            </when>
++            <otherwise>1=0</otherwise>
++        </choose> and del_flag = 0
++          and (club_id is null or club_id = 0 or exists (
++              select 1 from club active_club
++              where active_club.id = cms_topic.club_id and active_club.del_flag = 0
++          ))
++          and ((status = 1 and user_status = 1 and <include refid="primaryCirclePublicGate"/>)
++            or (#{viewerMemberId} is not null and #{viewerMemberId} &gt; 0 and member_id = #{viewerMemberId}))
++          and <include refid="clubMemberOnlyGate"/>
++    </select>
++
+     <select id="selectMerchantVisibleCmsTopicById" parameterType="Long" resultMap="CmsTopicResult">
+         <include refid="selectCmsTopicVo"/>
+         where id = #{id} and del_flag = 0 and status = 1 and merchant_status = 1
