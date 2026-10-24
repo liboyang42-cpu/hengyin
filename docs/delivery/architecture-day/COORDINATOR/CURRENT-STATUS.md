@@ -52,3 +52,15 @@ C已完成定点生成器调用者对照：saveDraft普通分支仍POST、拒绝
 G018c6253完整应用；新增严格v2只改原四处CHECK metadata规范化，原C/D字节不变，root逐字核对。六类共同fixture改用v2；原13用例不变，新增6用例声明。只用于未成功旧C且完整D形状，已typed首条拒绝重复ALTER；无生产DDL。root依赖声明v2仅依赖D，registry最终65唯一类/811声明，非通过数。
 
 原8会话全部必要修补与调用者已收齐；准备冻结完整候选后一次标准CI+真实存储，及最终定向源码审查。完整WP/Q/A/T/G仍未完成验收，all_complete=false；失败证据不继承新SHA，不将计划、SOURCE声明、构建或CLEAN写成业务通过。
+
+最终冻结候选：`ee815c108b791f7f2dbf801d50e4d302419e754f`，分支`codex/architecture-day-final-ee815-20261024`。标准CI [40128663849](https://github.com/liboyang42-cpu/hengyin/actions/runs/40128663849)；65类/811声明真实存储 [40128669303](https://github.com/liboyang42-cpu/hengyin/actions/runs/40128669303)。均已实际启动，尚无验收结论。原A/B/H仅在此SHA做最终资金/ASR/客户端合同源码核验，不开额外CI；root负责同SHA原XML/receipt/CLEAN及失败定点修补。
+
+统一验收当前实际失败：存储40128669303在Plan因Graph登记33/严格解析32停止，0个真库job启动；root纠正统计（新增负控为原case内assert，原@Test均保留），实际65唯一类/810声明。迁移门只因历史只读诊断文档误用.sql后缀触发UNMANAGED_SQL_LOCATION，已改带代码块的.md文档，无SQL门禁放宽；静态inventory问题回读为空。Fast gate40128663849/job120975470782在可信manual-base“ambiguous manual merge-base requires review”停止，已交原F做精确安全解阻，未造base/清旧snapshot；其他标准job继续原run，不重开整批。原B已提交ee815同候选ASR源码核验，未发现指定增量的确定阻断；事务double/真实存储分层覆盖限制继续保留，不能宣称端到端全通过。
+
+A/B/H三个最终指定增量源码核验均已收口：未发现新的确定阻断，报告与覆盖限制保存于`final-source-review-ee815.json`。root纠正计数后执行原严格precheck：65类errors=[]；批次计数合同测试1项PASS；SQL inventory无问题。这些仅证明修补后的静态接线，不是Java/MySQL/业务通过，原CI与原失败记录保留。
+
+后端同ee815原XML回读：1933份、15453唯一testcase、无重复；14819PASS/1failure/0error/633门控skip。唯一失败为P0Deregistration真实hasActiveOrder→OmsOrderMapper查询缺verified_payment_fact_id；H接手canonical fixture装配，不能放宽注销/财务留存。C接实际3个U1有限路径证明及2个旧锚点，F接真实多公共LCA基线拒绝。原标准run40128663849已FAIL；不要把改善计数当全量通过。真实存储0个job启动，先将C/F/H收齐再启动新完整候选。摘要见`ee815-final-validation.json`。
+
+本轮统一失败必要修补已收齐：Cbd776b6e精确U1三调用点/二迁行及4负控，root审定9key digest（cap13不扩大）；F4a149 verifier/81a597工具及root双pin，严格两LCA唯一共同祖先，原五策略/旧snapshot字节不变；H9484bfc3按canonical迁移补P0注销夹具，原case正文不变。尚未重新运行Java/DB组合，待冻结下一候选。上轮原38个failure/error按完整(classname,name)逐个匹配：本轮38/38实际PASS、无missing/skip；仍有新显露P0夹具失败，不能当整体完成。原Zod High在ee815实际Grype报告中消失（0High/Critical），余一Medium一Low，不将依赖门当实际renderer浏览器验收。
+
+C新增测试首次3PASS/1FAIL源于测试错把profile的var声明当const；Ccd6f41d5按两页真实AST修正，原guard/URL来源/覆盖负控不删，root同一4例复验4PASS/0skip（约0.3s），非整批回归。原生产JS未改；台账生成物无需改变。F6可信文件实际bytes及donor4a149逐个比对一致，只有gate变化，五个旧策略快照不变，双ref和工具VERIFIER一致。H9484只改建库装配，原测试正文不变。上述实际失败源码已收齐，将冻结后再统一CI/真实存储，旧ee815仍FAIL。

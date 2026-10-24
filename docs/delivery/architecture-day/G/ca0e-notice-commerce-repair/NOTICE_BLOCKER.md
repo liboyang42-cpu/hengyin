@@ -21,7 +21,7 @@
 
 ## root 的一次隔离诊断输入
 
-`notice-preflight-readonly-diagnosis.sql`：只读、零 DDL/写入，只能在已选的独占 scratch schema 中按原 D 建表后、C 前检前运行。首查询记录版本/schema/sql_mode；第二查询逐字复制原 C #1 的九个条件，各列单独返回 0/1/NULL；再读 SHOW CREATE、12 列实际属性、原始与原 guard 规范化的 CHECK_CLAUSE、原索引。
+`notice-preflight-readonly-diagnosis.md` 中的 SQL 代码块：只读、零 DDL/写入，只能在已选的独占 scratch schema 中按原 D 建表后、C 前检前运行。首查询记录版本/schema/sql_mode；第二查询逐字复制原 C #1 的九个条件，各列单独返回 0/1/NULL；再读 SHOW CREATE、12 列实际属性、原始与原 guard 规范化的 CHECK_CLAUSE、原索引。
 
 它不是迁移或替代 assertion，不能登记为 guard 通过。请回传第二查询九列及 CHECK/列元数据，便能指向确切不符项并写必要受控修正；fff8 的失败附加诊断也保留这些元数据。无需用户数据、秘密、付款事实或新的全套回归。
 

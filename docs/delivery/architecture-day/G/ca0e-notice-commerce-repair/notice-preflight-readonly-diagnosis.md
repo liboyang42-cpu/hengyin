@@ -1,3 +1,8 @@
+# 原通知前检只读诊断语句（历史文档）
+
+本附件记录已完成aab91b9诊断的SELECT元数据语句，不是迁移入口，不由runner执行；实际fixture保留同一诊断及原异常。
+
+```sql
 -- READ ONLY. Coordinator's one approved isolated D-only scratch diagnosis.
 -- Run AFTER original D migration and BEFORE original C migration in the SAME selected scratch schema.
 -- This is not a replacement migration, not a bypass, and must never be registered as assertion success.
@@ -61,3 +66,4 @@ SELECT index_name,non_unique,seq_in_index,column_name
 FROM information_schema.statistics
 WHERE table_schema=DATABASE() AND table_name='committed_official_notice_wx'
 ORDER BY index_name,seq_in_index;
+```

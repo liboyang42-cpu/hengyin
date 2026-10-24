@@ -97,7 +97,7 @@
   },
   "new_declarations": {
     "storage_unique_classes": 65,
-    "storage_declared_cases": 811,
+    "storage_declared_cases": 810,
     "status": "SOURCE_ONLY_NOT_PASS"
   },
   "open_root_cause": "Source repair collected and integrated; no known implementation work uncollected; final unified validation pending. Do not treat source delivery as acceptance."

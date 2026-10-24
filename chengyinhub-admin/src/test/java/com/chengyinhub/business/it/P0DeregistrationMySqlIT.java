@@ -86,11 +86,18 @@ class P0DeregistrationMySqlIT {
         db = new JdbcTemplate(dataSource);
         P0AcceptanceSchema.baseTables(db, "account_deregistration", "ums_member", "cms_registration", "oms_order",
                 "refund_application", "ums_member_withdrawal", "member_cash_withdraw", "merchant_lead",
-                "ums_member_address", "ums_member_points_detail");
+                "ums_member_address", "ums_member_points_detail", "sys_config", "club");
         P0AcceptanceSchema.migrations(dataSource, "migration_app_open_id.sql",
                 "migration_wechat_identity_unique_20261013.sql", "migration_ums_member_identity_20260919.sql",
                 "migration_20260930_registration_first_successful_scan.sql",
-                "migration_20260821_commerce_order_idempotency.sql");
+                "migration_20260821_commerce_order_idempotency.sql",
+                // The canonical shared proof migration also evolves club_membership_invoice.
+                // Load its real schema/FK dependencies; do not synthesize proof columns or facts.
+                "migration_business_audit_event_20260823.sql",
+                "migration_club_role_membership_20260823.sql",
+                "migration_wx_payment_callback_inbox_outbox_20260725.sql",
+                "migration_20261024_wx_verified_payment_fact.sql",
+                "migration_20261024_clm_commerce_payment_proof.sql");
 
         SqlSessionTemplate sql = P0AcceptanceSchema.sql(dataSource, "AccountDeregistrationMapper", "UmsMemberMapper",
                 "UmsMemberPointsDetailMapper", "CmsRegistrationMapper", "OmsOrderMapper");
