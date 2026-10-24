@@ -200,6 +200,43 @@ class ClmCommercePaymentProofMySqlIT {
             constraint(1062,()->db.update("UPDATE "+table+" SET verified_payment_fact_id=?,verified_payment_fact_hash=CAST(? AS BINARY) WHERE id=?",ref.id(),ref.hash(),otherId));
         }
     }
+    @Test void latestClosedOriginalSuccessRetainsItsFactAndManualTicketWithoutLocalConsumption() {
+        for(boolean isClub:new boolean[]{true,false}) {
+            String no=isClub?clmNo:commerceNo,tx=isClub?"TX-C":"TX-M";
+            db.update("UPDATE wx_pay_order_intent SET closed_confirmed_at=NOW(6) WHERE business_out_trade_no=?",no);
+            Reference ref=observe(no,tx);var before=localEffects(isClub);
+            assertEquals("VERIFIED_SUCCESS_AFTER_CLOSED",facts.findPaymentRecovery(ref).orElseThrow().reason());
+            // Before the shared consumable fence the typed domain entry grants against this latest CLOSED row.
+            assertFalse(consume(isClub,ref,tx));assertEquals(before,localEffects(isClub));
+            assertEquals(ref,facts.requireVerified(ref).reference());assertEquals(4,facts.findPaymentRecovery(ref).orElseThrow().state());
+            // A later explicitly frozen attempt also cannot consume the original old Reference.
+            db.update("INSERT INTO wx_pay_order_intent(mchid,out_trade_no,business_out_trade_no,biz_type,biz_id,attempt_no,appid,trade_type,currency,total_fen,request_hash,payer_openid,request_description,notify_url) "
+                +"SELECT mchid,?,business_out_trade_no,biz_type,biz_id,2,appid,trade_type,currency,total_fen,?,'','','https://example.test/notify' "
+                +"FROM wx_pay_order_intent WHERE business_out_trade_no=? AND attempt_no=1",
+                "WXP_"+(isClub?"CLM":"COMMERCE")+"_"+id(isClub),"d".repeat(64),no);
+            assertFalse(consume(isClub,ref,tx));assertEquals(before,localEffects(isClub));
+            assertEquals(4,facts.findPaymentRecovery(ref).orElseThrow().state());
+        }
+    }
+    @Test void boundPaidReplayCannotEraseALaterClosedAttemptManualHandoff() {
+        for(boolean isClub:new boolean[]{true,false}) {
+            String no=isClub?clmNo:commerceNo,tx=isClub?"TX-C":"TX-M";
+            Reference ref=observe(no,tx);assertTrue(consume(isClub,ref,tx));
+            // Adversarial scratch marker, not a newly authorized production close/second-charge policy.
+            db.update("UPDATE wx_pay_order_intent SET closed_confirmed_at=NOW(6) WHERE business_out_trade_no=?",no);
+            assertEquals(ref,observe(no,tx));var before=localEffects(isClub);
+            assertEquals("VERIFIED_SUCCESS_AFTER_CLOSED",facts.findPaymentRecovery(ref).orElseThrow().reason());
+            assertFalse(consume(isClub,ref,tx));assertEquals(before,localEffects(isClub));
+            assertEquals(4,facts.findPaymentRecovery(ref).orElseThrow().state());assertEquals(ref,facts.requireVerified(ref).reference());
+            assertEquals(ref.hash(),db.queryForObject("SELECT CONVERT(verified_payment_fact_hash USING ascii) FROM "+table(isClub)+" WHERE id=?",String.class,id(isClub)));
+        }
+    }
+    private List<Object> localEffects(boolean isClub) {
+        String selected=isClub?"status,version,transaction_id,paid_at":"status,payment_transaction_id,payment_time";
+        return List.of(db.queryForMap("SELECT "+selected+",verified_payment_fact_id,CONVERT(verified_payment_fact_hash USING ascii) AS proof_hash FROM "+table(isClub)+" WHERE id=?",id(isClub)),
+            db.queryForList("SELECT * FROM "+(isClub?"club_membership_term":"merchant_subscription")+" ORDER BY id"),count("business_audit_event"));
+    }
+
     private void constraint(int mysqlCode,Runnable mutation) {
         var failure=assertThrows(org.springframework.dao.DataAccessException.class,mutation::run);
         var cause=assertInstanceOf(java.sql.SQLException.class,failure.getMostSpecificCause());assertEquals(mysqlCode,cause.getErrorCode());

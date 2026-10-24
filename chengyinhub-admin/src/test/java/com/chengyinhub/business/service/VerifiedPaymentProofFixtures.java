@@ -19,6 +19,8 @@ public final class VerifiedPaymentProofFixtures {
             Reference reference=call.getArgument(0);var stored=issued.get(reference);
             if(stored==null)throw new IllegalStateException("unissued fixture Reference");return stored;
         });
+        // Explicit issued/open unit fixture only. Actual current SQL/fencing is exercised by the MySQL suite.
+        when(reader.requireConsumablePayment(any())).thenAnswer(call -> reader.requireVerified(call.getArgument(0)));
     }
     public Reference issue(String businessNo,long fen,String transactionId) {
         String wxNo=businessNo.length()<=32?businessNo:"WXP"+WechatVerifiedPaymentFact.sha256(businessNo).substring(0,29);
