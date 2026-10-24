@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T10:06:53.166019+00:00",
+  "updated_utc": "2026-10-24T10:11:00.535859+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -50,7 +50,7 @@
         "activeFlags": []
       },
       "last_turn_id": "01a16d5a-8f05-7165-9329-80777539349c",
-      "last_progress_evidence": "Compact snapshot has no fresh tool/file evidence",
+      "last_progress_evidence": "No fresh tool in compact snapshot",
       "last_tool_status": null
     },
     "D": {
@@ -58,30 +58,30 @@
       "host_id": "durable",
       "task": "\u6295\u8bc9\u65e0\u6548\u6536\u4ef6\u4eba\u6301\u4e45\u7ed3\u679c\u3001\u7533\u8bf7\u4e8b\u4ef6\u8eab\u4efd",
       "ownership": "\u4e09\u670d\u52a1\u4e0a\u8ff0\u7cbe\u786e\u7b26\u53f7\u5df2\u8865\u6388\uff1bCmsTopic\u5171\u4eab\u53ea\u7ed9patch",
-      "dispatch": "Detailed readback only contains delegation, no tool/file evidence; targeted workspace probe sent.",
-      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:12",
+      "dispatch": "Probe read back: actual bc5 source delivery, continues application identity task",
+      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:13",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d52-7f2f-74ad-b0cd-6329728cad00",
-      "last_progress_evidence": "Compact snapshot has no fresh tool/file evidence",
-      "last_tool_status": null
+      "last_progress_evidence": "\u6700\u5c0f\u7247\u5df2\u63a8\u9001\uff0c\u53ef\u76f4\u63a5 fetch\uff1abc5b6d9115f2c8a24b1d0efaf29cc2f9463355c7\uff0c\u5206\u652f codex/architecture-day-d-complaint-notice-rejection\uff0cparent 9a193f9\uff0ctree 9b6683da\u300210 \u4e2a\u6587\u4ef6\u8fdc\u7aef\u56de\u8bfb\u4e00\u81f4\uff0c\u9010\u6587\u4ef6 SHA256 \u5df2\u968f\u5019\u9009\u4fdd\u5b58\uff1b\u4e0d\u662f\u5f85\u63a5\u7ebf patch\u3002\u65b0\u589e 6 \u9879\u771f\u5e93\u6d4b\u8bd5\u6e90\u7801\uff0c\u5c1a\u672a\u8fd0\u884c\u3002\u4e0b\u9762\u53ea\u8bfb\u6838\u5b9e\u7533\u8bf7\u7c7b\u7248\u672c\u5b57\u6bb5\uff0c\u907f\u514d\u7528\u65e7\u6e90\u7801\u4f5c\u5224\u65ad\u3002",
+      "last_tool_status": "completed"
     },
     "E": {
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
       "task": "\u975e\u652f\u4ed8 AI/\u97f3\u89c6\u9891\u5916\u547c\u8d44\u6e90\u8fb9\u754c",
       "ownership": "\u65b0TopicQuery owner\u53ca\u6d4b\u8bd5\uff1bCmsTopic\u53ea\u4ea4\u7cbe\u786e\u53ea\u8bfbdelegate patch\uff0croot\u4e32\u884c\u5408\u6210",
-      "dispatch": "Detailed readback only contains delegation, no tool/file evidence; targeted workspace probe sent.",
-      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:12",
+      "dispatch": "Probe read back: github.fetch_blob completed, actual source work resumed",
+      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:13",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d46-88a2-7403-bf44-90f5c10ace26",
-      "last_progress_evidence": "Compact snapshot has no fresh tool/file evidence",
-      "last_tool_status": null
+      "last_progress_evidence": "Actual tool record present",
+      "last_tool_status": "completed"
     },
     "F": {
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
@@ -125,7 +125,7 @@
         "activeFlags": []
       },
       "last_turn_id": "01a16d5b-85ee-723a-b93e-a5df2b749b4b",
-      "last_progress_evidence": "Compact snapshot has no fresh tool/file evidence",
+      "last_progress_evidence": "No fresh tool in compact snapshot",
       "last_tool_status": null
     }
   },
@@ -263,16 +263,14 @@
     "integrated_at": "7da3e4ea385596aa850dc760f2cf6adc6c554602"
   },
   "latest_targeted_run": {
-    "run_id": 40077180059,
-    "source": "7da3e4ea385596aa850dc760f2cf6adc6c554602",
-    "class": "RegistrationTopicFenceMySqlIT",
-    "expected": 9,
+    "run_id": 40084734777,
+    "source": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+    "batch": "architecture-day-verified-payment-facts",
+    "expected": 4,
     "executed": 0,
     "verdict": "FAIL",
-    "cleanup": "CLEAN",
-    "failure": "Admin PlayBasicCommandApplication:241 inherited success(Map) helper unresolved after extraction",
-    "source_repair": "root qualifies AjaxResult.success(data); remaining moved helpers searched; current repair not rerun",
-    "system_compile": "that frozen System module compiled; not proof for later source or JUnit"
+    "failure": "Two strict workflow/registry option-order assertions; Java not reached",
+    "repair": "Only workflow options reordered to registry order; original strict assertions kept; all69 Python controls PASS"
   },
   "map_input_P2": {
     "source": "H reviewed E8372, inherited input-node filtering changes cache route identity",
@@ -349,14 +347,15 @@
     "existing_chats": 8,
     "new_chats": 0,
     "actions": "C/G/H renewed precise tasks, B priority failure self-lock, F actual C type; D/E explicit environment probes",
-    "readback": "Eight active statuses; D/E real execution unproven",
+    "readback": "Eight active; D bc5 actual delivery and E tool record now read back. New tools for C/H checked separately.",
     "automation": "hengyin-agent ACTIVE every10min persisted policy verified"
   },
   "latest_combined_source_current": {
     "receipt": "batch-ACDEF-source-20261024.json",
     "parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
-    "status": "composed, source/protocol controls pass; scan/freeze/hosted CI pending",
+    "status": "56d committed/pushed; first precheck failed, narrow config repair ready; no Java/MySQL execution",
     "Java_DB": "NOT_RUN",
-    "registry_classes": 104
+    "registry_classes": 104,
+    "integrated_at": "56d0e68e6bd2cdb2066af5940c497587df131d8c"
   }
 }

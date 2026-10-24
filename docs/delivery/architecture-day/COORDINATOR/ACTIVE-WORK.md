@@ -1,30 +1,34 @@
-# Current eight-agent implementation checkpoint
+# 当前八 Agent 施工与验收状态
 
-2026-10-24T10:06:53.166019+00:00
+八个既有云会话继续施工，未新增会话。每次巡查执行：检查实际证据 → 必要续派或解阻 → 回读 → 记账。root 负责共享合同、正式集成、CI 和验收。
 
-Full scope WP00-WP17 / Q1-Q10 / A01-A15 / T01-T22 / G0-G5 remains incomplete. No deployment.
+| Agent | 当前任务 |
+|---|---|
+| A | 原付款事实精确关联、原退款调用与夹具接线 |
+| B | 优先修复外层事务失败时 release 自锁，再完成原已验证成功通知恢复 |
+| C | 票码应用层已交，继续据点核销事务闭包提取 |
+| D | 已交无效通知收件人持久记录；继续申请事件身份 |
+| E | 非支付 AI、图像及语音传输资源边界 |
+| F | 真实 Bean 依赖闭包、反向循环负控及实际应用类型约束 |
+| G | 关账前已批退款当前读防双冲、迟到付款恢复身份 |
+| H | 独立审查 G 新事务恢复及 B 失败修复 |
 
-| Agent | Current task | Evidence |
-|---|---|---|
-| A | 原付款事实精确关联、原退款夹具接线 | Active status; source results independently reviewed |
-| B | 优先修外层失败 release 自锁，再完成原已验证成功通知恢复 | Active status; source results independently reviewed |
-| C | 票码应用层已交，继续据点核销事务闭包提取 | Active status; source results independently reviewed |
-| D | 投诉无效收件人持久结果、申请事件身份 | Workspace probe pending; no tool progress proven |
-| E | 非支付 AI/音视频外呼资源边界 | Workspace probe pending; no tool progress proven |
-| F | 真实 Bean 依赖闭包和故意循环负控 | Active status; source results independently reviewed |
-| G | 关账前当前读已批退款防双冲、迟到付款恢复身份 | Active status; source results independently reviewed |
-| H | 独立审查 G 新事务恢复及 B 失败修复 | Active status; source results independently reviewed |
+本轮 C/G/H 完成上一项后立即续派；B 收到 H 的确切自锁证据并优先处理；F 获得已合成真实依赖。D/E 先前无工具记录，已派精确探测；后续 D 交付 bc5b6d9，E 出现 github.fetch_blob 记录。active 仍不等于已改好。
 
-Each inspection checks evidence, dispatches or unblocks only when needed, reads back and checkpoints. Existing eight chats only. Root integrates shared contracts and accepts results. Active is not evidence of implementation.
+## 当前已合成源码
 
-## Current source batch
+本批冻结 `56d0e68e6bd2cdb2066af5940c497587df131d8c`，父提交 de7f432。包含 A/e6 原事实消费和退款终态接线、B/f6 新鲜读取、C/b7+6d 会话隔离与终态票码读回、D/83 审核当前状态及9a实际投诉通知生产者、E/7ac 主题查询批量预算、F/e9+615 固定可信约束。逐文件哈希见 batch-ACDEF-source-20261024.json。
 
-A/e6 verified domain consumption and original refund terminal hooks, B/f6 fresh-reader and fixtures, C/b7+6d session isolation and terminal receipt replay, D/83 current audit state and9a actual complaint notice producer, E/7ac bounded query batches, F/e9+615 trusted policy are composed. See batch-ACDEF-source-20261024.json for exact hashes. C/d2 subsequent application extraction and new G producers remain next-batch work.
+主题查询已实际迁出21个方法，并补模板/章节/元数据批量读取；不能以行数减少代替业务等价验收。C/d2 后续应用层提取、G 新 producer/paid-half 和 D/bc5 新交付保留为下一批，当前冻结分支不移动。
 
-104 registered classes pass source precheck. Registry14 and new F policy/tools14 Python controls pass. Node308+6+63 pass, zero skips. Action ledger5113 controls, zero runtime receipts. No Java, MySQL, HTTP, device or provider acceptance is claimed.
+## 已执行与未执行
 
-B outer failure release self-lock is explicitly assigned. Original allocation producers, recovery and old refund fixtures remain unfinished. Three money-policy decisions remain pending and their algorithms are not enabled.
+104个登记类的源码预检无错。Registry14项、F新增约束与工具14项Python控制通过；本批Node308+6及原scope/action63项通过、0skip。5113控件清单检查通过，真实运行证据仍为0。秘密扫描无发现，14个新增迁移的声明及拓扑顺序检查通过，未执行DDL。
 
-## Next acceptance step
+CI40084734777绑定56d候选，在前置负控阶段失败：新增workflow选项顺序与登记表不一致，2个严格断言失败。Java、MySQL均未执行（0/4），不能算业务BUG或后端验证通过。现已仅对齐批次选项顺序，不放宽断言，完整69项入口负控重新通过；下一独立冻结候选再次验证。
 
-Secret scan and isolated candidate commit, then one hosted compilation plus4 actual verified-payment-fact storage tests. Do not expand this frozen batch with future work or repeat full CI per patch. Historical failures40074201165/e4 and40077180059/7da remain failures bound to their source. No master merge, production DDL, deployment or WeChat/live paid calls.
+## 未闭合风险
+
+B外层失败release自锁已有源码证据并已派修，尚无真实MySQL验证。原分项生产、恢复及部分旧退款夹具仍未闭合。部分退款分币、头尾差分摊、负毛利责任三个政策等待人类明确，相关算法未启用。
+
+完整范围 WP00–WP17 / Q1–Q10 / A01–A15 / T01–T22 / G0–G5 仍未完成；不把部分完成当全完成。历史失败保留各自源SHA；不借其他候选的绿色结果。未合并主干、未部署、未执行生产DDL、未触发微信或真实付费外呼。
