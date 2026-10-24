@@ -133,6 +133,12 @@ class MechanismRequestIdBinderTest {
         assertEquals(MechanismRequestIdBinder.PENDING, first.getStatus());
         assertEquals(first, binder.existing("c03-route-missing"));
 
+        TopicRouteAction other = new TopicRouteAction();
+        other.setSessionId(99L);
+        other.setMemberId(8L);
+        other.setActionId("game:done");
+        when(mapper.selectActionByAction(30L, 7L, "c03-other-action")).thenReturn(other);
+        assertNull(wired.recoverFromRouteAction(30L, 7L, "c03-other-action"));
         TopicRouteAction recovered = wired.recoverFromRouteAction(30L, 7L, "check:1:alarm:tick");
         assertEquals("check:1:alarm:tick", recovered.getActionId());
         assertEquals(stored.getResponseJson(), recovered.getResponseJson());

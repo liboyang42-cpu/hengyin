@@ -43,7 +43,9 @@ public final class MechanismOriginalActionAdapter {
             throw new WaitingSourceException(SELECT_ACTION_BY_ACTION);
         }
         TopicRouteAction row = actions.selectActionByAction(sessionId, memberId, id);
-        if (row == null) {
+        if (row == null || row.getActionId() == null || !id.equals(row.getActionId())
+                || row.getSessionId() == null || !sessionId.equals(row.getSessionId())
+                || row.getMemberId() == null || !memberId.equals(row.getMemberId())) {
             return null;
         }
         return row;
