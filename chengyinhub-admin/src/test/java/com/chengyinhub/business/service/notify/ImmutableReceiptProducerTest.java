@@ -208,25 +208,44 @@ class ImmutableReceiptProducerTest {
     @Test
     void projectOriginalSendReadsStoredIdentityAndRejectsRebuiltBody() {
         String key = "c09-send-key-0001";
+        String digest = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<String, Object>();
+        result.put("message_id", 42L);
+        result.put("client_message_id", key);
+        result.put("content", "edited body");
         java.util.Map<String, Object> applied = new java.util.LinkedHashMap<String, Object>();
-        applied.put("actorMemberId", 7L);
         applied.put("channelId", 12L);
         applied.put("operation", "SEND");
-        applied.put("digest", "abc123digest");
+        applied.put("digest", digest);
         applied.put("state", "APPLIED");
         applied.put("content", "edited body");
-        applied.put("ignored_mentions", java.util.List.of(9L));
-        applied.put("result", "{\"message_id\":42,\"client_message_id\":\"" + key
-                + "\",\"content\":\"edited body\",\"ignored_mentions\":[9]}");
+        applied.put("result", result);
         ImmutableReceiptProducer.OriginalSendProof proof = ImmutableReceiptProducer.projectOriginalSend(
                 7L, 12L, key, applied, false);
         assertEquals("APPLIED", proof.state);
         assertTrue(proof.outcomeConfirmed);
-        assertEquals("abc123digest", proof.digest);
-        assertEquals(Long.valueOf(42L), proof.messageId);
-        assertEquals("SEND", proof.operation);
+        assertEquals(digest, proof.digest);
+        assertEquals("42", proof.asView().get("message_id"));
+        assertEquals("12", proof.asView().get("conversation_id"));
+        assertEquals("7", proof.asView().get("actor_member_id"));
         assertFalse(proof.asView().containsKey("content"));
-        assertFalse(proof.asView().containsKey("ignored_mentions"));
+
+        java.util.Map<String, Object> missingDigest = new java.util.LinkedHashMap<String, Object>(applied);
+        missingDigest.remove("digest");
+        assertFalse(ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, missingDigest, false).outcomeConfirmed);
+        java.util.Map<String, Object> shortDigest = new java.util.LinkedHashMap<String, Object>(applied);
+        shortDigest.put("digest", "abc123digest");
+        assertFalse(ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, shortDigest, false).outcomeConfirmed);
+        java.util.Map<String, Object> decimal = new java.util.LinkedHashMap<String, Object>(result);
+        decimal.put("message_id", Double.valueOf(42.5d));
+        java.util.Map<String, Object> decimalRow = new java.util.LinkedHashMap<String, Object>(applied);
+        decimalRow.put("result", decimal);
+        assertFalse(ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, decimalRow, false).outcomeConfirmed);
+        java.util.Map<String, Object> nested = new java.util.LinkedHashMap<String, Object>();
+        nested.put("message_id", 42L);
+        java.util.Map<String, Object> nestedRow = new java.util.LinkedHashMap<String, Object>(applied);
+        nestedRow.put("result", java.util.Map.of("message_id", nested, "client_message_id", key));
+        assertFalse(ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, nestedRow, false).outcomeConfirmed);
 
         java.util.Map<String, Object> pending = new java.util.LinkedHashMap<String, Object>(applied);
         pending.put("state", "PENDING");
@@ -241,7 +260,9 @@ class ImmutableReceiptProducerTest {
         assertEquals("LEGACY", ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, null, true).state);
         assertFalse(ImmutableReceiptProducer.projectOriginalSend(7L, 12L, key, null, true).outcomeConfirmed);
         assertEquals("NOT_FOUND", ImmutableReceiptProducer.projectOriginalSend(7L, 12L, "short", applied, false).state);
-        assertEquals("ACTOR_MISMATCH", ImmutableReceiptProducer.projectOriginalSend(8L, 12L, key, applied, false).state);
+        java.util.Map<String, Object> otherActor = new java.util.LinkedHashMap<String, Object>(applied);
+        otherActor.put("actorMemberId", 7L);
+        assertEquals("ACTOR_MISMATCH", ImmutableReceiptProducer.projectOriginalSend(8L, 12L, key, otherActor, false).state);
         assertEquals("CHANNEL_MISMATCH", ImmutableReceiptProducer.projectOriginalSend(7L, 13L, key, applied, false).state);
 
         java.util.Map<String, Object> edited = new java.util.LinkedHashMap<String, Object>(applied);
