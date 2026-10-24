@@ -196,3 +196,20 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 11. Parent addendum 2026-10-23 19:32 America/Los_Angeles
+
+HEAD `a894acd27` tests. Did not invent recoverOriginal.
+
+`MerchantNpcDraftApprovalGateTest.unusedInvalidIngestDoesNotOccupyThenUniqueValidIngestApplies`：无效草稿 ingest 抛 INVALID_DRAFT 且 phase 仍 IDLE、draft 仍空；后续唯一合法 ingest 才是 AI_DRAFT。
+
+父进程独立 surefire（`/tmp/hy-c06`，2026-10-24T02:32:04Z）：
+
+```
+Tests run: 15 -- MerchantNpcDraftApprovalGateTest
+Tests run: 5 -- C06AccountSwitchRestartIsolationTest
+Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
