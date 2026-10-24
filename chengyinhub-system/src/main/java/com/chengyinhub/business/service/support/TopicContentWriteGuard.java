@@ -5,6 +5,7 @@ import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
+import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.service.IProductRoleService;
 import com.chengyinhub.business.support.ChapterRecruitmentRules;
@@ -24,6 +25,8 @@ public final class TopicContentWriteGuard {
     private final CmsMemberTemplateMapper cmsMemberTemplateMapper;
     private final IProductRoleService productRoleService;
     private final ISysCategoryService sysCategoryService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private CmsTopicNodeMapper cmsTopicNodeMapper;
 
     public TopicContentWriteGuard(CmsTopicMapper topics, CmsTopicChapterMapper chapters,
             CmsMemberTemplateMapper templates, IProductRoleService roles, ISysCategoryService categories) {
@@ -36,6 +39,26 @@ public final class TopicContentWriteGuard {
 
     private static <T> List<T> nullToEmpty(List<T> rows) {
         return rows == null ? Collections.<T>emptyList() : rows;
+    }
+
+    /** The parent row is the shared fence; always acquire it before any chapter/node write or budget read. */
+    public void lockTopicContent(Long topicId) {
+        if (topicId == null || topicId <= 0L
+                || !topicId.equals(cmsTopicMapper.lockTopicContentBudget(topicId))) {
+            throw new IllegalStateException("主题不存在或已变化，拒绝修改内容");
+        }
+    }
+
+    /** Current reads deliberately do not use player-visible lists or a transaction's old RR read view. */
+    public void assertTopicSizeWithinLimits(Long topicId) {
+        lockTopicContent(topicId);
+        Long chapterCount = cmsTopicChapterMapper.countContentByTopicForUpdate(topicId);
+        Long nodeCount = cmsTopicNodeMapper.countContentByTopicForUpdate(topicId);
+        if (chapterCount == null || nodeCount == null || chapterCount < 0L || nodeCount < 0L) {
+            throw new IllegalStateException("主题内容计数无法核实，拒绝发布或保存");
+        }
+        String violation = TopicSizeLimits.violation(Math.toIntExact(chapterCount), Math.toIntExact(nodeCount));
+        if (violation != null) throw new IllegalStateException("发布前请先调整:" + violation);
     }
 
     /** blocks 已物化后，旧客户端不得再用 description + nodes 覆盖它。 */

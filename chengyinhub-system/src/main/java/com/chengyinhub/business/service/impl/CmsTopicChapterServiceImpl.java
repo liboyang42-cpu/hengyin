@@ -54,6 +54,9 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
     private CmsTopicMapper cmsTopicMapper;
 
     @Autowired
+    private com.chengyinhub.business.service.support.TopicContentWriteGuard contentWriteGuard;
+
+    @Autowired
     private CmsTopicTemplateMetaMapper cmsTopicTemplateMetaMapper;
 
     @Autowired
@@ -160,6 +163,7 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
         cmsTopicChapter.setCreateTime(DateUtils.getNowDate());
         int rows = cmsTopicChapterMapper.insertCmsTopicChapter(cmsTopicChapter);
         if (rows > 0) {
+            contentWriteGuard.assertTopicSizeWithinLimits(topicId);
             invalidateApprovedCanonical(topicId, "chapter-insert");
         }
         commercialTopicPolicy.assertNotConvertedToCommercial(topicId, conversionProtected);
@@ -635,6 +639,7 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
     private CmsTopic assertTopicMutable(Long topicId)
     {
         assertTopicScope(topicId);
+        contentWriteGuard.lockTopicContent(topicId);
         CmsTopic topic = topicId == null ? null : cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag()) || topic.getLifecycle() == null) {
             throw new IllegalStateException("主题不存在、已删除或生命周期未知，拒绝修改章节");
@@ -651,32 +656,33 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
         return topic;
     }
 
-    /**
-     * 全局锁序与 MerchantOffer/MerchantChapterApplication 保持一致：已有章节写一律 chapter→topic。
-     * 新增章节只有父主题行可锁，且拿到 topic 后不会再申请任何已有 chapter 锁，不构成反向边。
-     */
     private Long directPayer(Long topicId) {
         return com.chengyinhub.business.support.ClubDirectMerchantPolicy.payerClubId(
                 cmsTopicMapper.selectCmsTopicById(topicId), productRoleService.activeContentSlot(topicId));
     }
 
+    /** Same topic → chapter order as publication; the locator is never accepted as current ownership proof. */
     private CmsTopicChapter lockAndAssertChapterMutable(Long chapterId)
     {
-        List<Long> lockedChapterIds = chapterId == null || chapterId <= 0 ? null
-                : cmsTopicChapterMapper.lockChaptersForCapacity(
-                java.util.Collections.singletonList(chapterId));
-        if (lockedChapterIds == null || lockedChapterIds.isEmpty()) {
-            throw new IllegalStateException("章节不存在");
+        CmsTopicChapter locator = chapterId == null || chapterId <= 0 ? null
+                : cmsTopicChapterMapper.selectCmsTopicChapterById(chapterId);
+        if (locator == null) throw new IllegalStateException("章节不存在");
+        if (locator.getTopicId() == null) {
+            throw new IllegalStateException("章节不存在或缺少父主题，拒绝修改");
         }
-        CmsTopicChapter chapter = chapterId == null ? null : cmsTopicChapterMapper.selectCmsTopicChapterById(chapterId);
+        Long expectedTopicId = locator.getTopicId();
+        assertTopicMutable(expectedTopicId);
+        CmsTopicChapter chapter = cmsTopicChapterMapper.selectContentByIdForUpdate(chapterId);
         if (chapter == null || chapter.getTopicId() == null) {
             throw new IllegalStateException("章节不存在或缺少父主题，拒绝修改");
         }
-        assertTopicMutable(chapter.getTopicId());
+        if (!java.util.Objects.equals(expectedTopicId, chapter.getTopicId())) {
+            throw new IllegalStateException("章节归属已变化，请刷新后重试");
+        }
         return chapter;
     }
 
-    /** 批量删除先按 chapter id，再按 topic id 升序加锁，跨主题也保持同一全局锁序。 */
+    /** Lock every parent in id order before any child; recheck each locator under the locks. */
     private List<Long> lockAndAssertChaptersMutable(Long[] ids)
     {
         if (ids == null || ids.length == 0) {
@@ -693,19 +699,23 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
             throw new IllegalStateException("章节ID不能为空");
         }
         List<Long> orderedChapterIds = new ArrayList<>(chapterIds);
-        List<Long> lockedChapterIds = cmsTopicChapterMapper.lockChaptersForCapacity(orderedChapterIds);
-        if (lockedChapterIds == null || lockedChapterIds.size() != orderedChapterIds.size()) {
-            throw new IllegalStateException("章节不存在，拒绝删除");
-        }
+        java.util.Map<Long, Long> expectedTopics = new java.util.TreeMap<>();
         for (Long chapterId : orderedChapterIds) {
             CmsTopicChapter chapter = cmsTopicChapterMapper.selectCmsTopicChapterById(chapterId);
             if (chapter == null || chapter.getTopicId() == null) {
                 throw new IllegalStateException("章节不存在或缺少父主题，拒绝删除");
             }
             topicIds.add(chapter.getTopicId());
+            expectedTopics.put(chapterId, chapter.getTopicId());
         }
         for (Long topicId : topicIds) {
             assertTopicMutable(topicId);
+        }
+        for (Long chapterId : orderedChapterIds) {
+            CmsTopicChapter locked = cmsTopicChapterMapper.selectContentByIdForUpdate(chapterId);
+            if (locked == null || !java.util.Objects.equals(expectedTopics.get(chapterId), locked.getTopicId())) {
+                throw new IllegalStateException("章节归属已变化，请刷新后重试");
+            }
         }
         return orderedChapterIds;
     }

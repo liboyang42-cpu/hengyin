@@ -67,6 +67,7 @@ on:
           - architecture-day-theme-intent
           - architecture-day-deposit-attempt
           - architecture-day-payment-inbox
+          - architecture-day-topic-content-budget
           - architecture-day-registration-topic-fence
           - architecture-day-topic-cash-fence
           - architecture-day-scheduler-two-process

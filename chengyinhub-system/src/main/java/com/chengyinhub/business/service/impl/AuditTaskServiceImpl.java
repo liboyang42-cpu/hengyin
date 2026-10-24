@@ -1793,8 +1793,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     String quotaErr = (ownerId != null && ownerId > 0)
                             ? quotaService.lockAndCheckThemeOnline(ownerId, bizId)
                             : null;
-                    String supplyErr = quotaErr == null
-                            ? cmsTopicServiceProvider.getObject().topicSupplyAutoOnlineBlockReason(bizId) : null;
+                    // This is a new decision, not the exact receipt replay handled in review().
+                    // Even quota-denied/already-published branches can build a shell below, so the
+                    // existing locked publication preflight must always enforce the physical budget.
+                    String supplyErr = cmsTopicServiceProvider.getObject().topicSupplyAutoOnlineBlockReason(bizId);
                     String onlineErr = quotaErr != null ? quotaErr : supplyErr;
                     boolean alreadyPublished = exist != null && Integer.valueOf(1).equals(exist.getStatus())
                             && exist.getPublishedConfigVersion() != null && exist.getPublishedConfigVersion() > 0L;

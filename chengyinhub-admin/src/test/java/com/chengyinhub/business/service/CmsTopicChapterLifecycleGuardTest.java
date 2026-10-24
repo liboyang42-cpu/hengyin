@@ -27,7 +27,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** 章节写入口必须统一服从父主题生命周期，不能在 SELLING 后绕过售卖冻结。 */
+/** 章节写入口服从父主题生命周期；四个历史锁序 case 名保留，断言改为批准的 topic→chapter 顺序。 */
 class CmsTopicChapterLifecycleGuardTest
 {
     private static final Long TOPIC_ID = 81L;
@@ -53,6 +53,7 @@ class CmsTopicChapterLifecycleGuardTest
         service = new CmsTopicChapterServiceImpl();
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.chapter(service);
         ReflectionTestUtils.setField(service, "merchantChapterApplicationMapper", applicationMapper);
         ReflectionTestUtils.setField(service, "merchantChapterOfferMapper", offerMapper);
         ReflectionTestUtils.setField(service, "cmsTopicTemplateMetaMapper", metaMapper);
@@ -165,8 +166,9 @@ class CmsTopicChapterLifecycleGuardTest
         service.updateCmsTopicChapter(chapter());
 
         org.mockito.InOrder locks = org.mockito.Mockito.inOrder(chapterMapper, topicMapper);
-        locks.verify(chapterMapper).lockChaptersForCapacity(Collections.singletonList(CHAPTER_ID));
+        locks.verify(topicMapper).lockTopicContentBudget(TOPIC_ID);
         locks.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
+        locks.verify(chapterMapper).selectContentByIdForUpdate(CHAPTER_ID);
     }
 
     @Test
@@ -177,8 +179,9 @@ class CmsTopicChapterLifecycleGuardTest
         service.deleteCmsTopicChapterById(CHAPTER_ID);
 
         org.mockito.InOrder locks = org.mockito.Mockito.inOrder(chapterMapper, topicMapper);
-        locks.verify(chapterMapper).lockChaptersForCapacity(Collections.singletonList(CHAPTER_ID));
+        locks.verify(topicMapper).lockTopicContentBudget(TOPIC_ID);
         locks.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
+        locks.verify(chapterMapper).selectContentByIdForUpdate(CHAPTER_ID);
     }
 
     @Test
@@ -192,8 +195,9 @@ class CmsTopicChapterLifecycleGuardTest
         service.configureSupplyTerms(CHAPTER_ID, terms);
 
         org.mockito.InOrder locks = org.mockito.Mockito.inOrder(chapterMapper, topicMapper);
-        locks.verify(chapterMapper).lockChaptersForCapacity(Collections.singletonList(CHAPTER_ID));
+        locks.verify(topicMapper).lockTopicContentBudget(TOPIC_ID);
         locks.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
+        locks.verify(chapterMapper).selectContentByIdForUpdate(CHAPTER_ID);
     }
 
     @Test
@@ -204,8 +208,9 @@ class CmsTopicChapterLifecycleGuardTest
         service.configureServiceCapacity(CHAPTER_ID, capacity());
 
         org.mockito.InOrder locks = org.mockito.Mockito.inOrder(chapterMapper, topicMapper);
-        locks.verify(chapterMapper).lockChaptersForCapacity(Collections.singletonList(CHAPTER_ID));
+        locks.verify(topicMapper).lockTopicContentBudget(TOPIC_ID);
         locks.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
+        locks.verify(chapterMapper).selectContentByIdForUpdate(CHAPTER_ID);
     }
 
     private ChapterServiceCapacityDTO capacity()

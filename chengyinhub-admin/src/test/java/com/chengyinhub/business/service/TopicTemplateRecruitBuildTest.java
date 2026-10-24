@@ -9,7 +9,7 @@ import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.domain.vo.TopicTemplateDetailVO;
-import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.impl.TopicQueryService;
 import com.chengyinhub.system.domain.SysCategory;
 import com.chengyinhub.system.service.ISysCategoryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  */
 class TopicTemplateRecruitBuildTest {
 
-    private CmsTopicServiceImpl service;
+    private TopicQueryService service;
     private CmsTopicMapper cmsTopicMapper;
     private CmsTopicChapterMapper cmsTopicChapterMapper;
     private CmsTopicNodeMapper cmsTopicNodeMapper;
@@ -48,11 +48,7 @@ class TopicTemplateRecruitBuildTest {
 
     @BeforeEach
     void setUp() {
-        service = new CmsTopicServiceImpl();
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
-                invocation -> "lockTopic".equals(invocation.getMethod().getName())
-                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
-                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
+        service = new TopicQueryService();
         cmsTopicMapper = mock(CmsTopicMapper.class);
         cmsTopicChapterMapper = mock(CmsTopicChapterMapper.class);
         cmsTopicNodeMapper = mock(CmsTopicNodeMapper.class);

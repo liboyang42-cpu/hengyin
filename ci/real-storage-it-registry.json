@@ -423,6 +423,11 @@
       "classes": ["com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT"],
       "note": "3 ordinary@Test; actual original schema/XML and business/inbox transaction proxies, controlled SDK query. Exact zero-skip XML and independent CLEAN required; no real WeChat/HTTP acceptance."
     },
+    "architecture-day-topic-content-budget": {
+      "registered_source": "563264faf08ebc7318850e84ebbfd62a613c24ba",
+      "classes": ["com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT"],
+      "note": "Fourteen fixed tests on the existing isolated TopicContentGraph MySQL fixture: physical hidden/pending row budgets, current reads, graph/CRUD race and parent-first locking. Actual XML and CLEAN required; full moderation task/IM/audit/shell rollback remains separate."
+    },
     "architecture-day-registration-topic-fence": {
       "registered_source": "ae1606843cca6ed847d84059640b1bab6e1decdc",
       "classes": ["com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT"],
@@ -448,6 +453,11 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT": {
+      "tests": 14,
+      "storage": ["mysql"],
+      "gates": {}
+    },
     "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT": {
       "tests": 9,
       "storage": ["mysql"],

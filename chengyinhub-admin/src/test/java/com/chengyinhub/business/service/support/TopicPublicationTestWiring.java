@@ -38,6 +38,26 @@ public final class TopicPublicationTestWiring {
     public static <T> T wire(T value) {
         CmsTopicServiceImpl facade = facade(value);
         if (facade == null) return value;
+        var topicMapper = (com.chengyinhub.business.mapper.CmsTopicMapper) ReflectionTestUtils.getField(facade, "cmsTopicMapper");
+        // Existing unit fixtures predate the narrow parent-lock query. Keep their original topic doubles;
+        // only supply the newly introduced lock acknowledgement, never override an explicit new stub.
+        if (topicMapper != null && Mockito.mockingDetails(topicMapper).isMock()
+                && !Mockito.mockingDetails(topicMapper).isSpy()
+                && Mockito.mockingDetails(topicMapper).getStubbings().stream().noneMatch(stub ->
+                "lockTopicContentBudget".equals(stub.getInvocation().getMethod().getName()))) {
+            Mockito.when(topicMapper.lockTopicContentBudget(org.mockito.ArgumentMatchers.anyLong()))
+                    .thenAnswer(call -> call.getArgument(0));
+        }
+        TopicContentWriteGuard guard = (TopicContentWriteGuard) ReflectionTestUtils.getField(facade, "contentWriteGuard");
+        if (guard == null) {
+            guard = new TopicContentWriteGuard(topicMapper,
+                    (com.chengyinhub.business.mapper.CmsTopicChapterMapper) ReflectionTestUtils.getField(facade, "cmsTopicChapterMapper"),
+                    (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) ReflectionTestUtils.getField(facade, "cmsMemberTemplateMapper"),
+                    (com.chengyinhub.business.service.IProductRoleService) ReflectionTestUtils.getField(facade, "productRoleService"),
+                    (com.chengyinhub.system.service.ISysCategoryService) ReflectionTestUtils.getField(facade, "sysCategoryService"));
+            ReflectionTestUtils.setField(facade, "contentWriteGuard", guard);
+        }
+        ReflectionTestUtils.setField(guard, "cmsTopicNodeMapper", ReflectionTestUtils.getField(facade, "cmsTopicNodeMapper"));
         for (Object owner : owners(facade)) {
             for (Field field : owner.getClass().getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers())) continue;

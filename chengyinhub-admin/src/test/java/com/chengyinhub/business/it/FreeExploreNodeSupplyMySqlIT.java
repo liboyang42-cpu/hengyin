@@ -525,6 +525,8 @@ class FreeExploreNodeSupplyMySqlIT {
 
         CmsTopicNodeServiceImpl nodes = new CmsTopicNodeServiceImpl();
         ReflectionTestUtils.setField(nodes, "cmsTopicNodeMapper", sql.getMapper(CmsTopicNodeMapper.class));
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.wire(nodes,
+                topicMapper, chapterMapper, sql.getMapper(CmsTopicNodeMapper.class));
         CmsTopicChapterServiceImpl chapters = new CmsTopicChapterServiceImpl();
         ReflectionTestUtils.setField(chapters, "cmsTopicChapterMapper", chapterMapper);
         CmsMemberTemplateServiceImpl templates = new CmsMemberTemplateServiceImpl();

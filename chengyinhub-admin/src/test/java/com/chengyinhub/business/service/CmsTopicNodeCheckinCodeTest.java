@@ -36,6 +36,7 @@ class CmsTopicNodeCheckinCodeTest {
     private CmsTopicNodeServiceImpl service(CmsTopicNodeMapper mapper) {
         CmsTopicNodeServiceImpl impl = new CmsTopicNodeServiceImpl();
         ReflectionTestUtils.setField(impl, "cmsTopicNodeMapper", mapper);
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.node(impl);
         return impl;
     }
 

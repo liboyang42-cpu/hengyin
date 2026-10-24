@@ -12,6 +12,7 @@ import com.chengyinhub.business.service.IQuotaService;
 import com.chengyinhub.business.service.IUmsCreativeSquareService;
 import com.chengyinhub.business.service.support.AppMediaPublicationGuard;
 import com.chengyinhub.business.service.support.TopicBundleReviewService;
+import com.chengyinhub.business.service.support.TopicContentWriteGuard;
 import com.chengyinhub.business.service.support.TopicPublicationContentGuard;
 import com.chengyinhub.business.service.support.TopicSelfHostActivityService;
 import org.junit.jupiter.api.Test;
@@ -123,12 +124,15 @@ class TopicPublicationSizeEntryTest {
             topic.setStatus(1);
             topic.setUserStatus(1);
             when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+            when(topics.lockTopicContentBudget(TOPIC)).thenReturn(TOPIC);
             when(topics.publishRouteSnapshot(eq(TOPIC), any(), any())).thenReturn(1);
             when(topics.updateCmsTopic(any())).thenReturn(1);
             when(chapters.selectCmsTopicChapterList(any())).thenReturn(
                     Collections.nCopies(chapterCount, new CmsTopicChapter()));
             when(nodes.selectCmsTopicNodeList(any())).thenReturn(
                     Collections.nCopies(nodeCount, new CmsTopicNode()));
+            when(chapters.countContentByTopicForUpdate(TOPIC)).thenReturn((long) chapterCount);
+            when(nodes.countContentByTopicForUpdate(TOPIC)).thenReturn((long) nodeCount);
             when(bundle.freezeForSubmission(TOPIC, OWNER)).thenReturn(
                     new TopicBundleReviewService.Submission("bundle-snapshot", Collections.emptyList()));
             when(audit.submitOrRefreshTopicBundle(TOPIC, OWNER, "bundle-snapshot")).thenReturn(12L);
@@ -138,6 +142,9 @@ class TopicPublicationSizeEntryTest {
 
             // Exercise the real size algorithm; unrelated content validators have their existing suites.
             TopicPublicationContentGuard guard = spy(new TopicPublicationContentGuard());
+            TopicContentWriteGuard writeGuard = new TopicContentWriteGuard(topics, chapters, null, null, null);
+            ReflectionTestUtils.setField(writeGuard, "cmsTopicNodeMapper", nodes);
+            ReflectionTestUtils.setField(guard, "contentWriteGuard", writeGuard);
             ReflectionTestUtils.setField(guard, "cmsTopicChapterMapper", chapters);
             ReflectionTestUtils.setField(guard, "cmsTopicNodeMapper", nodes);
             doNothing().when(guard).assertStateKeysRegistered(any());

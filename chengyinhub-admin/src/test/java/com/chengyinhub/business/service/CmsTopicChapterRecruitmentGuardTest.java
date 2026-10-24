@@ -35,6 +35,7 @@ class CmsTopicChapterRecruitmentGuardTest
         CmsTopicChapterServiceImpl service = new CmsTopicChapterServiceImpl();
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.chapter(service);
         ReflectionTestUtils.setField(service, "merchantChapterApplicationMapper", applicationMapper);
         ReflectionTestUtils.setField(service, "merchantChapterOfferMapper", offerMapper);
         ReflectionTestUtils.setField(service, "topicOperationsScopeAuthorizer", scopeAuthorizer);

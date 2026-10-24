@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T08:21:30.582962+00:00",
-  "source_parent": "7da3e4ea385596aa850dc760f2cf6adc6c554602",
+  "updated_utc": "2026-10-24T08:44:38.440082+00:00",
+  "source_parent": "579345c48d11f96fee182e714d85b958137680b2",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -11,10 +11,10 @@
     "A": {
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
-      "task": "ae160首锁候选已交；继续TeamGroup/ClubEventOps外层同锁序",
+      "task": "TeamGroup/ClubEventOps外层首锁；消费B真实付款退款事实并完成原事务接线",
       "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService的栅栏与接线；G账本正文不改；外层两个服务精确报名/支付/退款包装",
-      "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:11",
+      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
+      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:12",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
@@ -24,75 +24,75 @@
     "B": {
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
-      "task": "6d641原成功事实片已交，继续与root0ff已拆SDK/intent/router层组合，不整文件回退",
+      "task": "3893/0415已交；继续外部SUCCESS到本地领域失败的持久恢复与渠道锁缺口",
       "ownership": "SDK/router/intent/inbox事实层及最小additive SQL源码；不改A/G领域正文",
-      "dispatch": "renewal accepted; check actual live state",
-      "last_cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:4",
+      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
+      "last_cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:8",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cbc-db09-7068-84ff-3432b1b53f63"
+      "last_turn_id": "01a16d13-0d23-7245-9926-3eae66db276d"
     },
     "C": {
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable",
-      "task": "735b活动席位候选已交，优先修H发现的RR完整当前读P1，再接选席UI/UNKNOWN原身份恢复；skill原文已补发",
+      "task": "f1cfe74已交；继续实际选席、核销、UNKNOWN与账号/页面代次隔离",
       "ownership": "席位/票码/核销事实；共享下单/退款文件只给review.patch",
-      "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:7",
+      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
+      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:11",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cce-8bc5-71da-b2e7-beb943297961"
+      "last_turn_id": "01a16d13-1bdc-77f1-ae32-31fbb5c77f0a"
     },
     "D": {
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable",
-      "task": "补齐章节、节点CRUD和审核alreadyPublished写入的topic栅栏",
+      "task": "5632已暂存组合；优先修H确认审核RR旧快照覆盖作者下架P2，再做持久通知",
       "ownership": "三服务上述精确符号已补授；CmsTopic共享只给patch",
-      "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:5",
+      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
+      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:7",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cbd-0ad2-71c0-a0ab-06dcefe9ed94"
+      "last_turn_id": "01a16cf8-8298-70fc-961e-815bd717a619"
     },
     "E": {
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
-      "task": "d811/8372地图两片已交；提取CmsTopic成组真实纯读查询职责，保留接口/权限/SQL语义",
+      "task": "9e14已暂存组合、b9b894待纳；继续真实查询热点与职责减负",
       "ownership": "新TopicQuery owner及测试；CmsTopic只交精确只读delegate patch，root串行合成",
-      "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:5",
+      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
+      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:8",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16ce1-702a-76d8-9ed2-766a14f37d92"
+      "last_turn_id": "01a16d13-2aac-7464-952a-c7c34dc646f8"
     },
     "F": {
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
-      "task": "5caf已纳，两CI refs已更新；继续同源真实编译负控后置入口及缺raw行窄缺口",
+      "task": "0e00独立verifier已交；完成固定可信引用的编译后控制与缺raw行约束",
       "ownership": "既有policy/控制例；不改root CI refs或新造scanner",
-      "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:7",
+      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
+      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:9",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cce-6fa7-777b-90ad-ae59fbb8febf"
+      "last_turn_id": "01a16cf8-6599-747a-9ab8-d89ecef295d8"
     },
     "G": {
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
-      "task": "原冻结逐订单分项、实际核销席位固定费、成功退款冲回和debt",
+      "task": "冻结原分项/退款终态同事务安全子集；修BINARY(32)/hex事实hash接线",
       "ownership": "结算/claim/adjustment/debt和additive SQL源码；旧claim约束保留",
-      "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:6",
+      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
+      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:10",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
@@ -102,15 +102,15 @@
     "H": {
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable",
-      "task": "审A ae160和E d811/8372；复核C当前读P1修复；只读，不把NOT_RUN当BUG",
+      "task": "只读审B3893/0415成功事实闭环，再审C f1cfe74账号页面UNKNOWN",
       "ownership": "只读独立审查，未运行单列",
-      "dispatch": "accepted; authoritative active readback",
-      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:9",
+      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
+      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:12",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16ce1-4c74-7319-ae21-b6b60affaba9"
+      "last_turn_id": "01a16d13-3af8-712f-9816-6aee29272d01"
     }
   },
   "root_ownership": [
@@ -146,7 +146,8 @@
     "batch_registry": "15 targeted tests PASS; all96 registered source prechecks PASS",
     "F_full_python_controls": "164 test_collect_jdeps/test_gate tests PASS in39.693s; protocol/synthetic controls, actual Java/jdeps remain UNKNOWN",
     "AE_Node": "28 map +63 existing scope/action tests PASS0skip; not runtime/backend evidence",
-    "AE_registry": "15 control tests PASS;97 registered source prechecks PASS"
+    "AE_registry": "15 control tests PASS;97 registered source prechecks PASS",
+    "D_E_staged": "diff check PASS; secret-file gate PASS; gitleaks310665bytes0leaks; 98 registered classes source precheck previously PASS; Java/DB NOT_RUN"
   },
   "unified_regression_pending": [
     "A53 boundary and original-fact Java/DB acceptance; strict source parser/registry metadata PASS",
@@ -222,7 +223,12 @@
       "id": "H-C-SEAT-RR-P1",
       "source": "1fbd8d83340a7b2fab82b6b971f8d0a89ed6dd49",
       "mechanism": "ID row lock followed by ordinary full-row SELECT can reuse pre-refund RR snapshot and permit later seat write",
-      "status": "C published4619caa39bdf491667f0a0263c657117ac4b12f4, H reviewing; not yet integrated or runtime accepted"
+      "status": "H confirms C4619 source fix; not integrated/runtime accepted"
+    },
+    {
+      "id": "H-D-AUDIT-RR-P2",
+      "mechanism": "audit ordinary read reuses pre-withdraw RR userStatus; later budget lock does not replace state object, can republish after author withdraw",
+      "status": "sent D for current locked state decision and interleaving regression; source not fixed here"
     }
   ],
   "available_next_candidates": {
@@ -257,10 +263,20 @@
     "status": "source fixed, Java test NOT_RUN"
   },
   "pending_integrations": {
-    "D": "563264faf08ebc7318850e84ebbfd62a613c24ba",
-    "E_query": "9e14a73e50c9afd5c8f38027c3ecd059967a51d3",
+    "D": "563264faf08ebc7318850e84ebbfd62a613c24ba staged; H audit snapshot P2 followup required",
+    "E_query": "9e14a73e50c9afd5c8f38027c3ecd059967a51d3 staged",
     "F_controls": "1709210d17b83d8e3fb17cb8e50f4144bd67f25d",
     "C_RR_fix": "4619caa39bdf491667f0a0263c657117ac4b12f4",
-    "B_facts_original": "6d641fa802cdf1277a158ce0b7633dcf126b5e10, B composing with0ff"
+    "B_facts_original": "6d641fa802cdf1277a158ce0b7633dcf126b5e10, B composing with0ff",
+    "E_query_batch": "b9b894b170d75b4e6315f2bde41ede8f551522c6",
+    "B_facts_composed": "041534c7681e480f80eb8afc911f65bf1ed13eda",
+    "C_full": "f1cfe74d58b766e385e639d40385e208790644a8",
+    "F_trusted_verifier": "0e00ce639dea8e7f266dd326878532f45c59a032 not yet adopted"
+  },
+  "latest_dispatch": {
+    "reason": "human observed workers stopped; B/C/E/H idle after delivery, renewed all eight with non-overlapping code tasks",
+    "readback": "all8 active; D detailed turn now confirms completed fileChange and mcpToolCall on durable notice; active alone is not acceptance",
+    "no_new_threads": true,
+    "regression": "batch first, no duplicate full regression dispatched"
   }
 }

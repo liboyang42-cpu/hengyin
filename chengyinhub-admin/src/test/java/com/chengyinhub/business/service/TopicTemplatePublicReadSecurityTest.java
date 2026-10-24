@@ -6,7 +6,7 @@ import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.CmsTopicTemplateMetaMapper;
-import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.impl.TopicQueryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 /** 匿名主题模板详情的单查询 eligibility 与同快照组装合同。 */
 class TopicTemplatePublicReadSecurityTest
 {
-    private CmsTopicServiceImpl service;
+    private TopicQueryService service;
     private CmsTopicMapper topicMapper;
     private CmsTopicChapterMapper chapterMapper;
     private CmsTopicTemplateMetaMapper metaMapper;
@@ -37,11 +37,7 @@ class TopicTemplatePublicReadSecurityTest
     @BeforeEach
     void setUp()
     {
-        service = new CmsTopicServiceImpl();
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
-                invocation -> "lockTopic".equals(invocation.getMethod().getName())
-                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
-                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
+        service = new TopicQueryService();
         topicMapper = mock(CmsTopicMapper.class);
         chapterMapper = mock(CmsTopicChapterMapper.class);
         nodeMapper = mock(CmsTopicNodeMapper.class);
@@ -113,7 +109,7 @@ class TopicTemplatePublicReadSecurityTest
     @Test
     void publicDetailPinsRepeatableReadSnapshot() throws Exception
     {
-        Transactional tx = CmsTopicServiceImpl.class.getDeclaredMethod(
+        Transactional tx = TopicQueryService.class.getDeclaredMethod(
                         "buildPublicTopicTemplateDetail", Long.class, Long.class,
                         boolean.class, Integer.class)
                 .getAnnotation(Transactional.class);

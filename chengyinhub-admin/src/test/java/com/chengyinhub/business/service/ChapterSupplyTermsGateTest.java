@@ -77,6 +77,7 @@ class ChapterSupplyTermsGateTest {
         service = new CmsTopicChapterServiceImpl();
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.chapter(service);
         ReflectionTestUtils.setField(service, "merchantChapterOfferMapper", offerMapper);
         ReflectionTestUtils.setField(service, "productRoleService", productRoleService);
         ReflectionTestUtils.setField(service, "merchantChapterApplicationService", merchantChapterApplicationService);

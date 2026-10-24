@@ -14,6 +14,9 @@ import com.chengyinhub.business.domain.CmsTopic;
  */
 public interface CmsTopicMapper
 {
+    /** Shared content/publication fence. The returned id must match the requested existing parent. */
+    Long lockTopicContentBudget(@Param("id") Long id);
+
     /**
      * 查询主题
      *
