@@ -1,0 +1,61 @@
+{
+  "base": "def951bef36a94417d90259906f6bda6abe6efb3",
+  "base_tree": "f73e683f52a695b06486436b9c49aad72e3ffa2d",
+  "delivery": "review.patch only; production delta is inside the patch, not directly applied by this docs commit",
+  "checks": {
+    "exact_base_blobs": 4,
+    "exact_patch_application": "PASS",
+    "whitespace": "PASS",
+    "xml_parse_and_original_statements_unchanged": "PASS",
+    "current_read_cache_flags": "PASS",
+    "java_lexical_delimiters_only_not_compilation": "PASS",
+    "secret_file_gate": "PASS"
+  },
+  "new_test_source_counts_NOT_RUN": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/OmsOrderCommerceGuardMySqlIT.java": 6,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OmsOrderCommerceGuardTest.java": 8
+  },
+  "NOT_RUN": [
+    "Java compilation",
+    "JUnit",
+    "MySQL",
+    "Spring full startup",
+    "HTTP/RBAC",
+    "SDK/provider",
+    "CI",
+    "gitleaks"
+  ],
+  "patch_sha256": "4ac502c4e395f59c11851fb57f40a7555c6df1689d25f0668fee26e0aef15239",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/OmsOrderCommerceGuardMySqlIT.java",
+      "base_git_blob": null,
+      "candidate_git_blob": "0303b5653de055730d2efc970399945096a564d0",
+      "sha256": "70f9c3750f117ca0d89e06516afd618063db1a7a33088b35b07bf27aefa5827b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OmsOrderCommerceGuardTest.java",
+      "base_git_blob": null,
+      "candidate_git_blob": "3302d3a3ebf07e5e0165d639e6fb54606ed43e37",
+      "sha256": "71077dc2db9b52c2d23deca805202d92fc351657b6c1046c4d19d423c6c4af50"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OmsOrderMapper.java",
+      "base_git_blob": "085ec39fdad419fa42f564912e314eb3d9d61211",
+      "candidate_git_blob": "a0ea559163eb16932457d343250259bc77f7cc88",
+      "sha256": "bbf60c6ff193b35d5086ccdf2517fdd1127d38df291510cda15a55469f9f62bb"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsOrderServiceImpl.java",
+      "base_git_blob": "d3d0b2dbb2dbbeed5baabf8082add80e1455c420",
+      "candidate_git_blob": "37ec7b7e0637c8b3acb5dcaeb800999318f979ce",
+      "sha256": "6c46f746c6e4a64fc77e0db7a58bb22ecf4c42edee872e79b6d5372d4ab1599d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/OmsOrderMapper.xml",
+      "base_git_blob": "d669acb5d77122a7a9a43c477c9bc6ebad369bff",
+      "candidate_git_blob": "80a1ec8d5e434e4098c0ffa2e5083f157fecb368",
+      "sha256": "d20b7cd66e1d7cf31e987f30510c543cf47bfc10a168a830e60258b04d190352"
+    }
+  ]
+}
