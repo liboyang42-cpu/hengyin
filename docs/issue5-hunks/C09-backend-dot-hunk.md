@@ -181,3 +181,20 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 11. Parent addendum 2026-10-23 19:15 America/Los_Angeles
+
+HEAD `5cb517e16` tests. Did not invent recoverOriginal.
+
+`ImmutableReceiptProducerTest.unusedOfflineReopenOfNeverSeenDoesNotOccupyThenUniqueAcceptApplies`：未见 `c09-reopen-never` 的 `offlineReopen` 抛原回执不存在且 store 仍空；`recoverOriginal` 保持 UNKNOWN；后续唯一 `accept` 才是 ACCEPTED。
+
+父进程独立 surefire（`/tmp/hy-c09`，2026-10-24T02:15:53Z）：
+
+```
+Tests run: 3 -- ImmutableReceiptProducerTest
+Tests run: 4 -- C09AccountSwitchRestartIsolationTest
+Tests run: 24, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
