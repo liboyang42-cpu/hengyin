@@ -1,0 +1,128 @@
+{
+  "source": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+  "tree": "f6ddef8a8aeffb03064c9fccc4b8da6ac2f9961d",
+  "parent": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "review_start_head": "2ab933cbb98e93e78c2a8766b3a41b43dd520d6b",
+  "read_files": [
+    {
+      "path": "ci/architecture/README.md",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "e62a67e5b0f07ac7f56cfd8614cfd4a306e5261d",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/architecture/collect_jdeps.py",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "0c14d95026c62da04b4e8bb65e821a64c9029f31",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/architecture/gate.py",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "6ae6e7d0f20c432146e0f81ea92fdcbb3a3d54ef",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/architecture/owners.json",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "edda24023ff0ab758fac61e957affcd13034930e",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/architecture/test_collect_jdeps.py",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "2ea4abfe52b15de067b8408d60df6f29929781c4",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/architecture/test_gate.py",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "c84559ab56553f66f721feed9b7aa9945717b8d6",
+      "folder": "tree"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/theme-private-port/ArchitectureThemeDraftIntentForeignReference.java.txt",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "18dca505b5ccbdec45b9e37a48caee167ae0b109",
+      "folder": "tree"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/theme-private-port/REPORT.md",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "53cb2de94d4df248db5b869d768abef9b984b13f",
+      "folder": "tree"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "c567798d49ca749bf35c68403a09353a8a2f389a",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/architecture/collect_jdeps.py",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "441e1e25b2d91eca58befb09ebaf21f3665523cd",
+      "folder": "base"
+    },
+    {
+      "path": "ci/architecture/gate.py",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "0f1446277c86a340be065624e028210d28a8ce39",
+      "folder": "base"
+    },
+    {
+      "path": "ci/architecture/owners.json",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "5dd840b10eb2b148879f6d4a92dae3e037fa9217",
+      "folder": "base"
+    },
+    {
+      "path": "ci/architecture/test_gate.py",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "83a40cd326811e00a48edc808cc53bf1d63df917",
+      "folder": "base"
+    },
+    {
+      "path": "ci/architecture/test_collect_jdeps.py",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "f07d442439e845ee5551a8e4c8e224604ff7ddb3",
+      "folder": "base"
+    },
+    {
+      "path": "ci/architecture/test_locking_select.py",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "460f0332352628f8b5d8148b82ebc04438ea847f",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/architecture/commands.json",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "42c91c582821dabfeae1d3de2b8cdca13e9d292a",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/architecture/locking-select-baseline.proposal.json",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "7892137354f74b4774b0158935fd9768d1ebeb38",
+      "folder": "tree"
+    },
+    {
+      "path": "ci/assert_it_ran.py",
+      "ref": "5451672c72fa1fe10aef0315ec5b1e81cc8f1866",
+      "sha": "27f92671b4149a03040f9dd7467123bd054c2de5",
+      "folder": "tree"
+    }
+  ],
+  "not_read": [
+    "ci/architecture/baseline.json: content API returned no body; not used for H suite or claimed byte readback; unchanged in candidate delta"
+  ],
+  "actual_python_test": {
+    "command": "python -m unittest test_collect_jdeps.PrivatePortsReadbackTest -v",
+    "count": 29,
+    "seconds": 1.361,
+    "result": "OK",
+    "fixture_kind": "NOT_COMPILED ZIP/class bytes and mocked producer runner; no Java/javac/jdeps"
+  },
+  "java_db_ci": "NOT_RUN"
+}
