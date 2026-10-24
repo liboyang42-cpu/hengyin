@@ -11,10 +11,6 @@ import com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionServic
 import com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver;
 import com.chengyinhub.common.config.WxPayConfig;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.aop.framework.ProxyFactory;
@@ -551,13 +547,24 @@ class CashWithdrawFundEvidenceMySqlIT {
         verify(members, times(1)).selectUmsMemberById(memberId);
     }
 
-    static java.util.stream.Stream<Arguments> mismatchedTerminalFields() {
-        return java.util.stream.Stream.of("SUCCESS", "FAIL").flatMap(result ->
-                java.util.stream.Stream.of("mchid", "appid", "outBatchNo", "outDetailNo", "transferAmount", "openid", "batchId", "detailId")
-                        .map(field -> Arguments.of(result, field)));
-    }
-    @ParameterizedTest @MethodSource("mismatchedTerminalFields")
-    void foreignOrIncompleteTerminalFactsCannotMoveMoney(String result, String field) {
+    @Test void successMchidMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("SUCCESS", "mchid"); }
+    @Test void successAppidMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("SUCCESS", "appid"); }
+    @Test void successOriginalBatchMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("SUCCESS", "outBatchNo"); }
+    @Test void successOriginalDetailMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("SUCCESS", "outDetailNo"); }
+    @Test void successAmountMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("SUCCESS", "transferAmount"); }
+    @Test void successReceiverMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("SUCCESS", "openid"); }
+    @Test void successAcceptedBatchMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("SUCCESS", "batchId"); }
+    @Test void successMissingDetailIdKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("SUCCESS", "detailId"); }
+    @Test void failureMchidMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("FAIL", "mchid"); }
+    @Test void failureAppidMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("FAIL", "appid"); }
+    @Test void failureOriginalBatchMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("FAIL", "outBatchNo"); }
+    @Test void failureOriginalDetailMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("FAIL", "outDetailNo"); }
+    @Test void failureAmountMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("FAIL", "transferAmount"); }
+    @Test void failureReceiverMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("FAIL", "openid"); }
+    @Test void failureAcceptedBatchMismatchKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("FAIL", "batchId"); }
+    @Test void failureMissingDetailIdKeepsOriginalFunds() { foreignOrIncompleteTerminalFactsCannotMoveMoney("FAIL", "detailId"); }
+
+    private void foreignOrIncompleteTerminalFactsCannotMoveMoney(String result, String field) {
         MemberCashWithdraw w = accepted();
         Map<String, String> wrong = observation(w, Map.of("result", result, "detailStatus", result));
         if ("detailId".equals(field)) wrong.remove(field);
@@ -574,8 +581,10 @@ class CashWithdrawFundEvidenceMySqlIT {
         verify(members, never()).addBalance(anyLong(), any()); money("70");
     }
 
-    @ParameterizedTest @ValueSource(strings = {"MISSING", "HASH"})
-    void historicalIncompleteIntentIsNotRecreatedFromCurrentConfiguration(String mode) {
+    @Test void missingHistoricalContextKeepsOriginalFunds() { historicalIncompleteIntentIsNotRecreatedFromCurrentConfiguration("MISSING"); }
+    @Test void corruptHistoricalHashKeepsOriginalFunds() { historicalIncompleteIntentIsNotRecreatedFromCurrentConfiguration("HASH"); }
+
+    private void historicalIncompleteIntentIsNotRecreatedFromCurrentConfiguration(String mode) {
         MemberCashWithdraw w = original(); admission.debitCash(w.getId(), memberId, w.getAmount());
         new TransactionTemplate(manager).executeWithoutResult(tx -> {
             cash.selectByIdForUpdate(w.getId());
@@ -617,8 +626,10 @@ class CashWithdrawFundEvidenceMySqlIT {
         assertEquals(0, count(w.getId(), "REFUND")); money("70");
     }
 
-    @ParameterizedTest @ValueSource(strings = {"SUCCESS", "FAIL"})
-    void acceptedBatchEvidenceArrivingDuringQueryIsRecheckedInsideOriginalRowLock(String result) {
+    @Test void lateAcceptedBatchRejectsStaleSuccessQuery() { acceptedBatchEvidenceArrivingDuringQueryIsRecheckedInsideOriginalRowLock("SUCCESS"); }
+    @Test void lateAcceptedBatchRejectsStaleFailureQuery() { acceptedBatchEvidenceArrivingDuringQueryIsRecheckedInsideOriginalRowLock("FAIL"); }
+
+    private void acceptedBatchEvidenceArrivingDuringQueryIsRecheckedInsideOriginalRowLock(String result) {
         when(channel.transferToBalance(any(CashWithdrawTransferIntent.class)))
                 .thenReturn(Map.of("ok", "false", "ambiguous", "true"));
         MemberCashWithdraw w = service.withdraw(memberId, new BigDecimal("30.00"));
@@ -686,8 +697,10 @@ class CashWithdrawFundEvidenceMySqlIT {
     }
 
     /** Real A caller/record and B gateway; only the SDK/client credential binding is a deterministic fixture. */
-    @ParameterizedTest @ValueSource(strings = {"SUCCESS", "FAIL"})
-    void actualImmutableDtoFlowsThroughActualGatewayAndOriginalFinancialReceipt(String outcome) throws Exception {
+    @Test void actualDtoAndGatewayCommitOneSuccess() throws Exception { actualImmutableDtoFlowsThroughActualGatewayAndOriginalFinancialReceipt("SUCCESS"); }
+    @Test void actualDtoAndGatewayCommitOneFinalFailureRefund() throws Exception { actualImmutableDtoFlowsThroughActualGatewayAndOriginalFinancialReceipt("FAIL"); }
+
+    private void actualImmutableDtoFlowsThroughActualGatewayAndOriginalFinancialReceipt(String outcome) throws Exception {
         com.wechat.pay.java.service.transferbatch.TransferBatchService sdk =
                 mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
         WechatPayServiceImpl gateway = new WechatPayServiceImpl();
