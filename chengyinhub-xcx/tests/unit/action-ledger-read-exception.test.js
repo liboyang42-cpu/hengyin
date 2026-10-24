@@ -13,3 +13,14 @@ test('GET /api/publish/home 是读;真实发布写端点仍是写', () => {
     assert.equal(isWriteApi(api), true, `${api} 必须仍判写`)
   }
 })
+
+test('核销回执 POST 只读，核销写入及未登记端点仍判写', () => {
+  for (const api of ['/api/verify/seat/receipt', '/api/verify/citynode/receipt']) {
+    assert.equal(isWriteApi(api), false, `${api} 只回读原事实`)
+  }
+  for (const api of ['/api/verify/citynode/redeem', '/api/verify/groupcode/issue',
+    '/api/verify/groupcode/redeem', '/api/verify/seat/receipt/save',
+    '/api/verify/citynode/receipt/update', '/api/verify/future/receipt']) {
+    assert.equal(isWriteApi(api), true, `${api} 不得被精确读登记放行`)
+  }
+})
