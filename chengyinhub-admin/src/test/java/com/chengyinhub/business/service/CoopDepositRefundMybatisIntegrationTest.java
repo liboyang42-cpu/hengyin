@@ -436,9 +436,19 @@ class CoopDepositRefundMybatisIntegrationTest {
     }
     @Test void paymentRequiresExactAmountTransactionAndAffectedRow() {
         db.execute("UPDATE coop_invite SET deposit_status=1 WHERE id=1");
-        assertFalse(invites.markDepositPaid("DEP1T100",1L,"wx1"));assertEquals(1,row().getDepositStatus());
-        assertTrue(invites.markDepositPaid("DEP1T100",5000L,"wx1"));assertTrue(invites.markDepositPaid("DEP1T100",5000L,"wx1"));
-        assertFalse(invites.markDepositPaid("DEP1T100",5000L,"wx2"));assertEquals(2,row().getDepositStatus());
+        var verified=mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class);
+        var payment=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original",
+                "DEP1T100","DEP1T100","DEP1T100","wx1","wx1","JSAPI","CNY",5000,5000,
+                java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
+        var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,payment.factHash());
+        when(verified.requireVerified(reference)).thenReturn(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
+        when(verified.findPaymentRecovery(reference)).thenReturn(java.util.Optional.empty());
+        WechatPayTestWiring.setField(invites,"depositVerifiedFacts",verified);
+        var consumer=transactionalInvites();
+        assertFalse(consumer.markDepositPaid("DEP1T100",1L,"wx1",reference));assertEquals(1,row().getDepositStatus());
+        assertTrue(consumer.markDepositPaid("DEP1T100",5000L,"wx1",reference));assertTrue(consumer.markDepositPaid("DEP1T100",5000L,"wx1",reference));
+        assertFalse(consumer.markDepositPaid("DEP1T100",5000L,"wx2",reference));assertEquals(2,row().getDepositStatus());
     }
     @Test void unpaidSetoffCasRequiresExactOldStateAndBalanceAndNoRefundIntent() {
         assertEquals(0,mapper.updateDepositIfCurrent(1L,5,new BigDecimal("50"),3,new BigDecimal("50")));

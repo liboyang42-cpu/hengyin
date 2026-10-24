@@ -86,9 +86,19 @@ class E2eWechatPayStubContractTest {
         assertTrue(stub.handlePayCallback(body("DEP1", "USD", "fixture-merchant"), Collections.emptyMap()).contains("FAIL"));
         assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "other-merchant"), Collections.emptyMap()).contains("FAIL"));
         verifyNoInteractions(invite);
-        when(invite.markDepositPaid("DEP1", 100L, "tx")).thenReturn(true);
+        assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("FAIL"));
+        verifyNoInteractions(invite); // A fake SDK body alone is not a verified reference.
+        var reader=mock(WechatVerifiedPaymentFactService.class);
+        ReflectionTestUtils.setField(stub,"depositPaymentFacts",reader);
+        var original=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"fixture-merchant","wx-original",
+                "DEP1","DEP1","DEP1","tx","tx","APP","CNY",100,100,java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
+        var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,original.factHash());
+        when(reader.findPaymentSuccess("fixture-merchant","DEP1","tx"))
+                .thenReturn(new WechatVerifiedPaymentFactService.Stored(reference,original));
+        when(invite.markDepositPaid("DEP1", 100L, "tx",reference)).thenReturn(true);
         assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
-        verify(invite).markDepositPaid("DEP1", 100L, "tx");
+        verify(invite).markDepositPaid("DEP1", 100L, "tx",reference);
 
         when(registration.handleWechatPayCallback(anyMap())).thenReturn("SUCCESS");
         assertTrue(stub.handlePayCallback(body("REG1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));

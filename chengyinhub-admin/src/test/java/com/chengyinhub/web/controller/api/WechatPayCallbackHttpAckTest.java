@@ -101,7 +101,12 @@ class WechatPayCallbackHttpAckTest {
             when(commerce.handlePaidOrder(anyString(), anyBoolean(), any(), anyString())).thenAnswer(outcome);
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "merchantCommerceService", commerce);
             var coop = mock(com.chengyinhub.business.service.ICoopInviteService.class);
-            when(coop.markDepositPaid(anyString(), any(), anyString())).thenAnswer(outcome);
+            when(coop.markDepositPaid(anyString(), any(), anyString(), any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
+                    .thenAnswer(invocation -> {
+                        com.chengyinhub.business.service.impl.DepositVerifiedReferenceTestSupport.assertOriginal(pay,
+                                invocation.getArgument(3),invocation.getArgument(0),invocation.getArgument(1),invocation.getArgument(2));
+                        return outcome.answer(invocation);
+                    });
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "coopInviteService", coop);
             var registration = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
             if ("REG1".equals(no)) {

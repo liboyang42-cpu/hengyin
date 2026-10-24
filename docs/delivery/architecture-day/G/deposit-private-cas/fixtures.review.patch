@@ -1,0 +1,561 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java
+index 215baa82..4689d1fa 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java
+@@ -436,9 +436,19 @@ class CoopDepositRefundMybatisIntegrationTest {
+     }
+     @Test void paymentRequiresExactAmountTransactionAndAffectedRow() {
+         db.execute("UPDATE coop_invite SET deposit_status=1 WHERE id=1");
+-        assertFalse(invites.markDepositPaid("DEP1T100",1L,"wx1"));assertEquals(1,row().getDepositStatus());
+-        assertTrue(invites.markDepositPaid("DEP1T100",5000L,"wx1"));assertTrue(invites.markDepositPaid("DEP1T100",5000L,"wx1"));
+-        assertFalse(invites.markDepositPaid("DEP1T100",5000L,"wx2"));assertEquals(2,row().getDepositStatus());
++        var verified=mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class);
++        var payment=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
++                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original",
++                "DEP1T100","DEP1T100","DEP1T100","wx1","wx1","JSAPI","CNY",5000,5000,
++                java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
++        var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,payment.factHash());
++        when(verified.requireVerified(reference)).thenReturn(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
++        when(verified.findPaymentRecovery(reference)).thenReturn(java.util.Optional.empty());
++        WechatPayTestWiring.setField(invites,"depositVerifiedFacts",verified);
++        var consumer=transactionalInvites();
++        assertFalse(consumer.markDepositPaid("DEP1T100",1L,"wx1",reference));assertEquals(1,row().getDepositStatus());
++        assertTrue(consumer.markDepositPaid("DEP1T100",5000L,"wx1",reference));assertTrue(consumer.markDepositPaid("DEP1T100",5000L,"wx1",reference));
++        assertFalse(consumer.markDepositPaid("DEP1T100",5000L,"wx2",reference));assertEquals(2,row().getDepositStatus());
+     }
+     @Test void unpaidSetoffCasRequiresExactOldStateAndBalanceAndNoRefundIntent() {
+         assertEquals(0,mapper.updateDepositIfCurrent(1L,5,new BigDecimal("50"),3,new BigDecimal("50")));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopInviteServiceImplTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopInviteServiceImplTest.java
+index e3670caa..ec4c8dd4 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopInviteServiceImplTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopInviteServiceImplTest.java
+@@ -2158,15 +2158,20 @@ class CoopInviteServiceImplTest {
+         CoopInvite c = clubInvite(1L, 0, 8001L, 100L, 1);
+         c.setDepositAmount(new BigDecimal("50.00"));
+         when(coopInviteMapper.selectByDepositOutTradeNoForUpdate("DEP1")).thenReturn(c);
+-        when(coopInviteMapper.markDepositPaidConfirmed(eq(1L), eq("DEP1"), any(), eq("wx1"))).thenReturn(1);
+-        assertTrue(svc.markDepositPaid("DEP1", 5000L, "wx1"));
++        c.setDepositOutTradeNo("DEP1");
++        when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(c);
++        when(coopInviteMapper.markDepositPaidConfirmed(eq(1L), eq("DEP1"), any(), eq("wx1"))).thenAnswer(call -> {
++            c.setDepositStatus(2);c.setDepositPaidTransactionId("wx1");return 1;
++        });
++        var reference = originalDepositProof("DEP1",5000L,"wx1");
++        assertTrue(consumeDeposit("DEP1",5000L,"wx1",reference));
+         verify(coopInviteMapper).markDepositPaidConfirmed(eq(1L), eq("DEP1"), any(), eq("wx1")); // 2已缴冻结
+     }
+ 
+     @Test
+     void markDepositPaid_unknownOrder_false() {
+         when(coopInviteMapper.selectByDepositOutTradeNoForUpdate("DEPX")).thenReturn(null);
+-        assertEquals(false, svc.markDepositPaid("DEPX", 5000L, "wx1"));
++        assertEquals(false, consumeDeposit("DEPX",5000L,"wx1",originalDepositProof("DEPX",5000L,"wx1")));
+     }
+ 
+     @Test
+@@ -2177,13 +2182,53 @@ class CoopInviteServiceImplTest {
+         when(coopInviteMapper.selectByDepositOutTradeNoForUpdate("DEP2")).thenReturn(legacy);
+         when(coopInviteMapper.selectCoopInviteById(1L)).thenReturn(legacy);
+ 
+-        assertEquals(false, svc.markDepositPaid("DEP2", 5000L, "wx1"));
++        assertEquals(false, consumeDeposit("DEP2",5000L,"wx1",originalDepositProof("DEP2",5000L,"wx1")));
+         assertEquals(0, svc.deductDeposit(1L));
+         assertEquals(0, svc.settleDepositRefunded(1L, "REF2"));
+ 
+         verify(coopInviteMapper, never()).updateDeposit(any(), any(), any(), any(), any());
+     }
+ 
++    @Test
++    void unverifiedThreeArgumentWriteIsNotAPublicInterfaceOrServiceEntry() throws Exception {
++        assertThrows(NoSuchMethodException.class,()->ICoopInviteService.class.getMethod("markDepositPaid",String.class,Long.class,String.class));
++        assertThrows(NoSuchMethodException.class,()->CoopInviteServiceImpl.class.getMethod("markDepositPaid",String.class,Long.class,String.class));
++        var apply=CoopInviteServiceImpl.class.getDeclaredMethod("applyConfirmedDepositPaid",String.class,Long.class,String.class);
++        assertTrue(java.lang.reflect.Modifier.isPrivate(apply.getModifiers()));
++    }
++
++    @Test
++    void missingOrMismatchedOriginalReferenceCannotReachThePrivatePaidCas() {
++        originalDepositProof("DEP1",5000L,"wx1");
++        var wrong=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(999L,"b".repeat(64));
++        when(verifiedPaymentFacts.requireVerified(null)).thenThrow(new IllegalArgumentException("Original reference required"));
++        when(verifiedPaymentFacts.requireVerified(wrong)).thenThrow(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.ConflictException());
++        assertThrows(IllegalArgumentException.class,()->consumeDeposit("DEP1",5000L,"wx1",null));
++        assertThrows(IllegalStateException.class,()->consumeDeposit("DEP1",5000L,"wx1",wrong));
++        verify(coopInviteMapper,never()).selectByDepositOutTradeNoForUpdate(any());
++        verify(coopInviteMapper,never()).markDepositPaidConfirmed(any(),any(),any(),any());
++    }
++
++    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalDepositProof(String no,long amountFen,String tx) {
++        var payment = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
++                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original",
++                no,no,no,tx,tx,"JSAPI","CNY",amountFen,amountFen,java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
++        var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,payment.factHash());
++        when(verifiedPaymentFacts.requireVerified(reference)).thenReturn(
++                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
++        when(verifiedPaymentFacts.findPaymentRecovery(reference)).thenReturn(java.util.Optional.empty());
++        ReflectionTestUtils.setField(svc,"depositVerifiedFacts",verifiedPaymentFacts);return reference;
++    }
++
++    /** Unit lifecycle flag only, not a database transaction or rollback proof. */
++    private boolean consumeDeposit(String no,long amountFen,String tx,
++            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {
++        boolean old=TransactionSynchronizationManager.isActualTransactionActive();
++        TransactionSynchronizationManager.setActualTransactionActive(true);
++        try { return svc.markDepositPaid(no,amountFen,tx,reference); }
++        finally { TransactionSynchronizationManager.setActualTransactionActive(old); }
++    }
++
+     @Test
+     void accept_dueDepositStillAllowsCooperation() {
+         CoopInvite c = clubInvite(1L, 0, 8001L, 100L, 5); // 锁价后的应缴未缴不挡合作
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java
+index 39f9c66b..0bf352b9 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java
+@@ -42,6 +42,7 @@ class CoopDepositSettlementAttemptMySqlIT {
+     private TransactionTemplate tx;
+     private CoopInviteMapper mapper;
+     private CmsTopicServiceImpl topic;
++    private CoopInviteServiceImpl depositOwner;
+     private WechatPaymentSdkGateway gateway;
+     private JsapiService sdk;
+     private Transaction provider;
+@@ -145,11 +146,11 @@ class CoopDepositSettlementAttemptMySqlIT {
+             }
+             return null;
+         }).when(sdk).closeOrder(any());
+-        CoopInviteServiceImpl invites = new CoopInviteServiceImpl();
+-        ReflectionTestUtils.setField(invites, "coopInviteMapper", mapper);
++        depositOwner = new CoopInviteServiceImpl();
++        ReflectionTestUtils.setField(depositOwner, "coopInviteMapper", mapper);
++        ReflectionTestUtils.setField(depositOwner, "depositVerifiedFacts", verified);
+         topic = new CmsTopicServiceImpl();
+         ReflectionTestUtils.setField(topic, "transactionManager", transactions);
+-        ReflectionTestUtils.setField(topic, "depositVerifiedFacts", verified);
+         var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+         when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call -> db.queryForObject(
+                 "SELECT id FROM cms_topic WHERE id=11 FOR UPDATE", (rs,n) -> {
+@@ -157,7 +158,7 @@ class CoopDepositSettlementAttemptMySqlIT {
+                 }));
+         ReflectionTestUtils.setField(topic, "cmsTopicMapper", topics);
+         ReflectionTestUtils.setField(topic, "wechatPayService", gateway);
+-        ReflectionTestUtils.setField(topic, "coopInviteService", invites);
++        ReflectionTestUtils.setField(topic, "coopInviteService", depositOwner);
+         ReflectionTestUtils.setField(topic, "coopInviteMapper", mapper);
+     }
+ 
+@@ -293,7 +294,7 @@ class CoopDepositSettlementAttemptMySqlIT {
+         var failing = spy(real);
+         doThrow(new IllegalStateException("INJECTED_BEFORE_RECOVERY_RECEIPT_COMPLETION"))
+                 .when(failing).completePaymentRecovery(any(),eq(89L));
+-        ReflectionTestUtils.setField(topic,"depositVerifiedFacts",failing);
++        ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",failing);
+         Map<String,Object> before = row();
+         assertThrows(IllegalStateException.class,this::resolve);
+         assertEquals(before,row(),"Paid CAS must roll back if its recovery receipt cannot commit");
+@@ -303,7 +304,7 @@ class CoopDepositSettlementAttemptMySqlIT {
+         assertEquals(reference,pending.original().reference());
+         assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
+         assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
+-        ReflectionTestUtils.setField(topic,"depositVerifiedFacts",real);
++        ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",real);
+         assertFalse(resolve()); // Same original fact/attempt, no automatic refund or reopening.
+         assertEquals(2,mapper.selectCoopInviteById(89L).getDepositStatus());
+         assertEquals(BUSINESS,mapper.selectCoopInviteById(89L).getDepositOutTradeNo());
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java
+index 3ab86237..ded18cb0 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java
+@@ -47,7 +47,6 @@ class CoopDepositSettlementAttemptTest {
+         paymentReference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L, paymentProof.factHash());
+         when(verified.requireVerified(paymentReference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(paymentReference, paymentProof));
+         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.empty());
+-        ReflectionTestUtils.setField(topic, "depositVerifiedFacts", verified);
+         row = new CoopInvite();
+         row.setId(89L); row.setDepositStatus(1); row.setDepositOutTradeNo(BUSINESS); row.setDepositAmount(AMOUNT);
+         row.setTopicId(11L); row.setStatus(1);
+@@ -150,11 +149,11 @@ class CoopDepositSettlementAttemptTest {
+         CoopInvite paid = new CoopInvite(); paid.setId(89L); paid.setDepositStatus(2); paid.setTopicId(11L);
+         paid.setStatus(1); paid.setDepositOutTradeNo(BUSINESS); paid.setDepositAmount(AMOUNT); paid.setDepositPaidTransactionId("WXTX89");
+         when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+-        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89")).thenReturn(true);
+-        when(mapper.selectCoopInviteByIdForUpdate(89L)).thenReturn(row, paid, paid);
++        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89", paymentReference)).thenReturn(true);
++        when(mapper.selectCoopInviteByIdForUpdate(89L)).thenReturn(row, paid);
+         assertFalse(resolve());
+-        verify(invites).markDepositPaid(BUSINESS, 5000L, "WXTX89");
+-        verify(mapper, times(3)).selectCoopInviteByIdForUpdate(89L);
++        verify(invites).markDepositPaid(BUSINESS, 5000L, "WXTX89", paymentReference);
++        verify(mapper, times(2)).selectCoopInviteByIdForUpdate(89L);
+         verify(mapper, never()).updateDepositIfCurrent(anyLong(), anyInt(), any(), anyInt(), any());
+     }
+ 
+@@ -162,7 +161,7 @@ class CoopDepositSettlementAttemptTest {
+     void successStillRequiresFrozenPaidReadbackAndCannotEnterUnpaidCas() {
+         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("SUCCESS"));
+         when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+-        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89")).thenReturn(true);
++        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89", paymentReference)).thenReturn(true);
+         when(mapper.selectCoopInviteByIdForUpdate(89L)).thenReturn(row);
+         assertThrows(IllegalStateException.class, this::resolve);
+         unchanged();
+@@ -246,9 +245,7 @@ class CoopDepositSettlementAttemptTest {
+     void originalSuccessReceiptCompletesOnlyItsRecoveryTicketInTheSameTransaction() {
+         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("SUCCESS"));
+         when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+-        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89")).thenAnswer(call -> {
+-            row.setDepositStatus(2); row.setDepositPaidTransactionId("WXTX89"); return true;
+-        });
++        useRealTypedDepositOwner();
+         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.of(
+                 new WechatVerifiedPaymentFactService.RecoveryTicket(17L,89L,
+                         new WechatVerifiedPaymentFactService.Stored(paymentReference,paymentProof),4,"VERIFIED_SUCCESS_AFTER_CLOSED")));
+@@ -265,9 +262,7 @@ class CoopDepositSettlementAttemptTest {
+     void anotherBusinessRecoveryTicketCannotBeAcknowledgedByThisDeposit() {
+         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("SUCCESS"));
+         when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+-        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89")).thenAnswer(call -> {
+-            row.setDepositStatus(2); row.setDepositPaidTransactionId("WXTX89"); return true;
+-        });
++        useRealTypedDepositOwner();
+         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.of(
+                 new WechatVerifiedPaymentFactService.RecoveryTicket(17L,90L,
+                         new WechatVerifiedPaymentFactService.Stored(paymentReference,paymentProof),4,"VERIFIED_SUCCESS_AFTER_CLOSED")));
+@@ -276,6 +271,17 @@ class CoopDepositSettlementAttemptTest {
+         // Unit doubles do not roll back mutable row objects; the MySQL case verifies actual rollback.
+     }
+ 
++    private void useRealTypedDepositOwner() {
++        CoopInviteServiceImpl owner = new CoopInviteServiceImpl();
++        ReflectionTestUtils.setField(owner,"coopInviteMapper",mapper);
++        ReflectionTestUtils.setField(owner,"depositVerifiedFacts",verified);
++        ReflectionTestUtils.setField(topic,"coopInviteService",owner);
++        when(mapper.selectByDepositOutTradeNoForUpdate(BUSINESS)).thenReturn(row);
++        when(mapper.markDepositPaidConfirmed(89L,BUSINESS,AMOUNT,"WXTX89")).thenAnswer(call -> {
++            row.setDepositStatus(2);row.setDepositPaidTransactionId("WXTX89");return 1;
++        });
++    }
++
+     private boolean resolve() {
+         return Boolean.TRUE.equals(ReflectionTestUtils.invokeMethod(topic, "resolvePendingDepositPaymentForSettlement", row));
+     }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/DepositVerifiedReferenceTestSupport.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/DepositVerifiedReferenceTestSupport.java
+new file mode 100644
+index 00000000..e50d6321
+--- /dev/null
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/DepositVerifiedReferenceTestSupport.java
+@@ -0,0 +1,20 @@
++package com.chengyinhub.business.service.impl;
++
++import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
++import static org.junit.jupiter.api.Assertions.*;
++
++/** Assertions only. Uses the real gateway's persisted fact reader; never creates a success or a fallback reference. */
++public final class DepositVerifiedReferenceTestSupport {
++    private DepositVerifiedReferenceTestSupport() { }
++    public static void assertOriginal(Object gateway, WechatVerifiedPaymentFact.Reference reference,
++            String businessNo, long amountFen, String transactionId) {
++        assertNotNull(reference,"The typed deposit owner must receive the original verified reference");
++        assertTrue(reference.id()>0);assertNotNull(reference.hash());assertTrue(reference.hash().matches("[0-9a-f]{64}"));
++        var reader=(WechatVerifiedPaymentFactService)WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts");
++        var stored=reader.requireVerified(reference);var facts=stored.facts();
++        assertEquals(reference,stored.reference());assertEquals(reference.hash(),facts.factHash());
++        assertEquals(WechatVerifiedPaymentFact.Kind.PAYMENT,facts.kind());
++        assertEquals(businessNo,facts.businessOutTradeNo());assertEquals(transactionId,facts.transactionId());
++        assertEquals("CNY",facts.currency());assertEquals(amountFen,facts.amountFen());assertEquals(amountFen,facts.totalFen());
++    }
++}
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/E2eWechatPayStubContractTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/E2eWechatPayStubContractTest.java
+index b822d940..3f676101 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/E2eWechatPayStubContractTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/E2eWechatPayStubContractTest.java
+@@ -86,9 +86,19 @@ class E2eWechatPayStubContractTest {
+         assertTrue(stub.handlePayCallback(body("DEP1", "USD", "fixture-merchant"), Collections.emptyMap()).contains("FAIL"));
+         assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "other-merchant"), Collections.emptyMap()).contains("FAIL"));
+         verifyNoInteractions(invite);
+-        when(invite.markDepositPaid("DEP1", 100L, "tx")).thenReturn(true);
++        assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("FAIL"));
++        verifyNoInteractions(invite); // A fake SDK body alone is not a verified reference.
++        var reader=mock(WechatVerifiedPaymentFactService.class);
++        ReflectionTestUtils.setField(stub,"depositPaymentFacts",reader);
++        var original=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
++                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"fixture-merchant","wx-original",
++                "DEP1","DEP1","DEP1","tx","tx","APP","CNY",100,100,java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
++        var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,original.factHash());
++        when(reader.findPaymentSuccess("fixture-merchant","DEP1","tx"))
++                .thenReturn(new WechatVerifiedPaymentFactService.Stored(reference,original));
++        when(invite.markDepositPaid("DEP1", 100L, "tx",reference)).thenReturn(true);
+         assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
+-        verify(invite).markDepositPaid("DEP1", 100L, "tx");
++        verify(invite).markDepositPaid("DEP1", 100L, "tx",reference);
+ 
+         when(registration.handleWechatPayCallback(anyMap())).thenReturn("SUCCESS");
+         assertTrue(stub.handlePayCallback(body("REG1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java
+index 8fcd23c4..0dc5477d 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java
+@@ -268,7 +268,10 @@ class WechatPayCallbackFactsTest {
+             lenient().when(commerce.supportsOutTradeNo(anyString())).thenAnswer(c -> ((String) c.getArgument(0)).startsWith("TPLTM_"));
+             lenient().when(membership.handlePaidInvoice(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);
+             lenient().when(commerce.handlePaidOrder(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);
+-            lenient().when(coop.markDepositPaid(eq(no), eq(5000L), anyString())).thenAnswer(c -> !rejectDomain);
++            lenient().when(coop.markDepositPaid(eq(no), eq(5000L), anyString(), any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class))).thenAnswer(c -> {
++                DepositVerifiedReferenceTestSupport.assertOriginal(gateway,c.getArgument(3),no,5000L,c.getArgument(2));
++                return !rejectDomain;
++            });
+             // The registration route must positively identify its existing business order.
+             com.chengyinhub.business.domain.CmsRegistration existingRegistration =
+                     new com.chengyinhub.business.domain.CmsRegistration();
+@@ -287,7 +290,9 @@ class WechatPayCallbackFactsTest {
+         void verifyRouted() {
+             if (order.startsWith("CLM")) verify(membership).handlePaidInvoice(order, true, 5000, "TX1");
+             else if (order.startsWith("TPLTM_")) verify(commerce).handlePaidOrder(order, true, 5000, "TX1");
+-            else if (order.startsWith("DEP")) verify(coop).markDepositPaid(order, 5000L, "TX1");
++            else if (order.startsWith("DEP")) verify(coop).markDepositPaid(eq(order), eq(5000L), eq("TX1"),
++                    eq(((WechatVerifiedPaymentFactService)WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts"))
++                            .findPaymentSuccess("merchant",order,"TX1").reference()));
+             else verify(registration).handleWechatPayCallback(anyMap());
+         }
+     }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java
+index b23cc3ed..4ce8185e 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java
+@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
+ import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyMap;
++import static org.mockito.ArgumentMatchers.eq;
+ import static org.mockito.Mockito.mock;
+ import static org.mockito.Mockito.verify;
+ import static org.mockito.Mockito.verifyNoInteractions;
+@@ -212,7 +213,11 @@ class WechatPayCallbackForgedSignatureTest {
+             when(membership.handlePaidInvoice("CLM_UNKNOWN", true, 100, "TX1")).thenReturn(true);
+             when(commerce.supportsOutTradeNo("TPLTM_20260805")).thenReturn(true);
+             when(commerce.handlePaidOrder("TPLTM_20260805", true, 1990, "TX1")).thenReturn(true);
+-            when(coop.markDepositPaid("DEP1T100", 5000L, "TX1")).thenReturn(true);
++            when(coop.markDepositPaid(eq("DEP1T100"),eq(5000L),eq("TX1"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
++                .thenAnswer(call -> {
++                    DepositVerifiedReferenceTestSupport.assertOriginal(service,call.getArgument(3),"DEP1T100",5000L,"TX1");
++                    return true;
++                });
+             when(registration.handleWechatPayCallback(anyMap())).thenReturn("SUCCESS");
+             com.wechat.pay.java.service.payments.jsapi.JsapiService querySdk =
+                     (com.wechat.pay.java.service.payments.jsapi.JsapiService) WechatVerifiedFactTestSupport.getField(service, "jsapiService");
+@@ -328,7 +333,11 @@ class WechatPayCallbackForgedSignatureTest {
+         wireParser(service, buildParser(kp.getPublic()), registration, coop, mock(IRefundService.class));
+         Forged n = buildValidPayNotification(kp.getPrivate(), "DEP1T100", "WXDEP1", "SUCCESS", 5000);
+         assertTrue(service.handlePayCallback(n.body, headersOf(n)).contains("FAIL"));
+-        when(coop.markDepositPaid("DEP1T100", 5000L, "WXDEP1")).thenReturn(true);
++        when(coop.markDepositPaid(eq("DEP1T100"),eq(5000L),eq("WXDEP1"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
++                .thenAnswer(call -> {
++                    DepositVerifiedReferenceTestSupport.assertOriginal(service,call.getArgument(3),"DEP1T100",5000L,"WXDEP1");
++                    return true;
++                });
+         assertTrue(service.handlePayCallback(n.body, headersOf(n)).contains("SUCCESS"));
+         verify(registration, org.mockito.Mockito.times(2)).getByRegistrationNo("DEP1T100");
+         verifyNoMoreInteractions(registration);
+@@ -339,7 +348,11 @@ class WechatPayCallbackForgedSignatureTest {
+         KeyPair kp = generateKeyPair();
+         WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+         ICoopInviteService coop = mock(ICoopInviteService.class);
+-        when(coop.markDepositPaid("DEP1T100",5000L,"WXDEP1")).thenReturn(true);
++        when(coop.markDepositPaid(eq("DEP1T100"),eq(5000L),eq("WXDEP1"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
++                .thenAnswer(call -> {
++                    DepositVerifiedReferenceTestSupport.assertOriginal(service,call.getArgument(3),"DEP1T100",5000L,"WXDEP1");
++                    return true;
++                });
+         wireParser(service,buildParser(kp.getPublic()),mock(ICmsRegistrationService.class),coop,mock(IRefundService.class));
+         for (String[] pair : new String[][]{{"USD","merchant-test"},{"CNY","other-merchant"},{"","merchant-test"}}) {
+             String payload=String.format("{\"out_trade_no\":\"DEP1T100\",\"transaction_id\":\"WXDEP1\",\"trade_state\":\"SUCCESS\",\"appid\":\"wx-test-mini\",\"trade_type\":\"JSAPI\",\"mchid\":\"%s\",\"amount\":{\"total\":5000,\"currency\":\"%s\"}}",pair[1],pair[0]);
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentCallbackRouterTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentCallbackRouterTest.java
+index 7b59bd2a..2fe7f3e4 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentCallbackRouterTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentCallbackRouterTest.java
+@@ -26,7 +26,7 @@ class WechatPaymentCallbackRouterTest {
+         when(club.handlePaidInvoice("CLM1", true, 123, "TX-original")).thenReturn(true);
+         when(commerce.supportsOutTradeNo("TPLTM_1")).thenReturn(true);
+         when(commerce.handlePaidOrder("TPLTM_1", true, 123, "TX-original")).thenReturn(true);
+-        when(deposit.markDepositPaid("DEP1", 123L, "TX-original")).thenReturn(true);
++        when(deposit.markDepositPaid("DEP1", 123L, "TX-original", reference("DEP1"))).thenReturn(true);
+         CmsRegistration order = new CmsRegistration(); order.setRegistrationNo("A20261024ABCDEF01");
+         when(registration.getByRegistrationNo(order.getRegistrationNo())).thenReturn(order);
+         when(registration.handleWechatPayCallback(anyMap())).thenReturn("SUCCESS");
+@@ -40,7 +40,7 @@ class WechatPaymentCallbackRouterTest {
+         }
+         verify(club).handlePaidInvoice("CLM1", true, 123, "TX-original");
+         verify(commerce).handlePaidOrder("TPLTM_1", true, 123, "TX-original");
+-        verify(deposit).markDepositPaid("DEP1", 123L, "TX-original");
++        verify(deposit).markDepositPaid("DEP1", 123L, "TX-original", reference("DEP1"));
+         verify(registration).handleWechatPayCallback(argThat(f -> f.equals(facts(order.getRegistrationNo()))));
+         verifyNoInteractions(refunds);
+     }
+@@ -158,10 +158,40 @@ class WechatPaymentCallbackRouterTest {
+         }
+     }
+ 
++    @Test
++    void missingDepositReferenceIdCannotReachTheTypedOrLegacyOwner() {
++        Map<String,String> unproven = new HashMap<>(facts("DEP1")); unproven.remove("verified_fact_id");
++        assertThrows(IllegalArgumentException.class,()->router.payment(unproven));
++        verifyNoInteractions(deposit);
++    }
++
++    @Test
++    void missingDepositReferenceHashIsExplicitlyRejectedByTheStrictTypedOwner() {
++        when(deposit.markDepositPaid(eq("DEP1"),eq(123L),eq("TX-original"),any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
++                .thenAnswer(call -> {
++                    // Boundary double accepts only the exact original proof; it never defaults a missing hash to success.
++                    if (!reference("DEP1").equals(call.getArgument(3))) throw new WechatVerifiedPaymentFactService.ConflictException();
++                    return true;
++                });
++        Map<String,String> unproven = new HashMap<>(facts("DEP1"));unproven.remove("verified_fact_hash");
++        assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->router.payment(unproven));
++        verify(deposit).markDepositPaid(eq("DEP1"),eq(123L),eq("TX-original"),
++                argThat(reference -> reference != null && reference.hash() == null));
++    }
++
++    /** Pure router boundary fixture, not a claim that this unit class performs provider verification/storage. */
++    private static com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference(String no) {
++        var original = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
++                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
++                "merchant-original","wx-original",no,"WX-original","WX-original","TX-original","TX-original",
++                "APP","CNY",123,123,java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
++        return new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,original.factHash());
++    }
++
+     private void verifyNoMutations() {
+         verify(club, never()).handlePaidInvoice(anyString(), anyBoolean(), any(), anyString());
+         verify(commerce, never()).handlePaidOrder(anyString(), anyBoolean(), any(), anyString());
+-        verify(deposit, never()).markDepositPaid(anyString(), any(), anyString());
++        verify(deposit, never()).markDepositPaid(anyString(), any(), anyString(), any());
+         verify(registration, never()).handleWechatPayCallback(anyMap());
+         verifyNoInteractions(refunds);
+     }
+@@ -173,8 +203,12 @@ class WechatPaymentCallbackRouterTest {
+         };
+     }
+     private static Map<String, String> facts(String no) {
+-        return Map.of("out_trade_no", no, "wx_out_trade_no", "WX-original", "transaction_id", "TX-original",
++        Map<String,String> facts = new HashMap<>();
++        facts.putAll(Map.of("out_trade_no", no, "wx_out_trade_no", "WX-original", "transaction_id", "TX-original",
+                 "trade_state", "SUCCESS", "total", "123", "currency", "CNY", "appid", "wx-original",
+-                "mchid", "merchant-original", "trade_type", "APP");
++                "mchid", "merchant-original", "trade_type", "APP"));
++        facts.put("verified_fact_id",Long.toString(reference(no).id()));
++        facts.put("verified_fact_hash",reference(no).hash());
++        return facts;
+     }
+ }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentSuccessRecoveryTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentSuccessRecoveryTest.java
+index 6826fa96..4eae6a29 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentSuccessRecoveryTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentSuccessRecoveryTest.java
+@@ -44,7 +44,14 @@ class WechatPaymentSuccessRecoveryTest {
+             when(commerce.supportsOutTradeNo("TPLTM_1")).thenReturn(true);
+             when(membership.handlePaidInvoice("CLM1",true,1000,"TX1")).thenReturn(false,true);
+             when(commerce.handlePaidOrder("TPLTM_1",true,1000,"TX1")).thenReturn(false,true);
+-            when(f.depositOwner.markDepositPaid("DEP1",1000L,"TX1")).thenReturn(false,true);
++            when(f.depositOwner.markDepositPaid(eq("DEP1"),eq(1000L),eq("TX1"),any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
++                    .thenAnswer(call -> {
++                        DepositVerifiedReferenceTestSupport.assertOriginal(f.gateway,call.getArgument(3),"DEP1",1000L,"TX1");
++                        return false;
++                    }).thenAnswer(call -> {
++                        DepositVerifiedReferenceTestSupport.assertOriginal(f.gateway,call.getArgument(3),"DEP1",1000L,"TX1");
++                        return true;
++                    });
+             when(f.registration.getByRegistrationNo("REG1")).thenReturn(new com.chengyinhub.business.domain.CmsRegistration());
+             when(f.registration.handleWechatPayCallback(anyMap())).thenReturn("FAIL","SUCCESS");
+             assertTrue(f.gateway.handlePayCallback("signed-first",Map.of()).contains("FAIL"),no);
+@@ -57,7 +64,8 @@ class WechatPaymentSuccessRecoveryTest {
+             switch(no) {
+                 case "CLM1" -> verify(membership,times(2)).handlePaidInvoice(no,true,1000,"TX1");
+                 case "TPLTM_1" -> verify(commerce,times(2)).handlePaidOrder(no,true,1000,"TX1");
+-                case "DEP1" -> verify(f.depositOwner,times(2)).markDepositPaid(no,1000L,"TX1");
++                case "DEP1" -> verify(f.depositOwner,times(2)).markDepositPaid(eq(no),eq(1000L),eq("TX1"),
++                        eq(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(id,hash)));
+                 default -> verify(f.registration,times(2)).handleWechatPayCallback(argThat(map->Long.toString(id).equals(map.get("verified_fact_id"))
+                         && hash.equals(map.get("verified_fact_hash"))));
+             }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopDepositStatusTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopDepositStatusTest.java
+index 17b1cc3f..e8886f29 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopDepositStatusTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopDepositStatusTest.java
+@@ -76,12 +76,13 @@ class ApiCoopDepositStatusTest {
+         when(service.selectCoopInviteById(7L)).thenReturn(pending, paid);
+         when(service.depositOwedParty(pending)).thenReturn(1001L);
+         when(pay.queryOrderStatus("DEP7")).thenReturn(java.util.Map.of("out_trade_no", "DEP7", "wx_out_trade_no", "WXP_ALIAS",
+-                "trade_state", "SUCCESS", "currency", "CNY", "total", "5000", "transaction_id", "TX7"));
+-        when(service.markDepositPaid("DEP7", 5000L, "TX7")).thenReturn(true);
++                "trade_state", "SUCCESS", "currency", "CNY", "total", "5000", "transaction_id", "TX7",
++                "verified_fact_id",Long.toString(reference().id()),"verified_fact_hash",reference().hash()));
++        when(service.markDepositPaid("DEP7", 5000L, "TX7", reference())).thenReturn(true);
+         AjaxResult result = controller.depositStatus(Collections.<String, Object>singletonMap("inviteId", 7L));
+         assertEquals(200, result.get(AjaxResult.CODE_TAG));
+         assertEquals("success", ((java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("paymentStatus"));
+-        org.mockito.Mockito.verify(service).markDepositPaid("DEP7", 5000L, "TX7");
++        org.mockito.Mockito.verify(service).markDepositPaid("DEP7", 5000L, "TX7", reference());
+     }
+ 
+     @Test
+@@ -98,7 +99,40 @@ class ApiCoopDepositStatusTest {
+         when(pay.queryOrderStatus("DEP7")).thenThrow(new RuntimeException("timeout"));
+         assertEquals(409, controller.depositStatus(Collections.<String, Object>singletonMap("inviteId", 7L)).get(AjaxResult.CODE_TAG));
+         org.mockito.Mockito.verify(service, org.mockito.Mockito.never()).markDepositPaid(org.mockito.ArgumentMatchers.any(),
+-                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
++                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
++    }
++
++    @Test
++    void pendingSuccessWithoutAnExactOriginalReferenceCannotBecomePaid() {
++        CoopInvite pending = invite(1);pending.setDepositOutTradeNo("DEP7");
++        when(service.selectCoopInviteById(7L)).thenReturn(pending);
++        when(service.depositOwedParty(pending)).thenReturn(1001L);
++        when(service.markDepositPaid(org.mockito.ArgumentMatchers.eq("DEP7"),org.mockito.ArgumentMatchers.eq(5000L),
++                org.mockito.ArgumentMatchers.eq("TX7"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
++                .thenAnswer(call -> {
++                    if (!reference().equals(call.getArgument(3))) throw new IllegalStateException("Original verified reference required");
++                    return true;
++                });
++        for (String missing : new String[]{"verified_fact_id","verified_fact_hash"}) {
++            java.util.Map<String,String> unproven = new java.util.HashMap<>(java.util.Map.of("out_trade_no","DEP7",
++                    "wx_out_trade_no","WXP_ALIAS","trade_state","SUCCESS","currency","CNY","total","5000",
++                    "transaction_id","TX7","verified_fact_id",Long.toString(reference().id()),"verified_fact_hash",reference().hash()));
++            unproven.remove(missing);when(pay.queryOrderStatus("DEP7")).thenReturn(unproven);
++            assertEquals(409,controller.depositStatus(Collections.singletonMap("inviteId",7L)).get(AjaxResult.CODE_TAG));
++            assertEquals(1,pending.getDepositStatus());
++        }
++        org.mockito.Mockito.verify(service,org.mockito.Mockito.times(1)).markDepositPaid(
++                org.mockito.ArgumentMatchers.eq("DEP7"),org.mockito.ArgumentMatchers.eq(5000L),org.mockito.ArgumentMatchers.eq("TX7"),
++                org.mockito.ArgumentMatchers.argThat(reference -> reference != null && reference.hash() == null));
++    }
++
++    /** Explicit mock-gateway proof reference; this controller unit does not claim provider/storage verification. */
++    private static com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference() {
++        var original = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
++                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
++                "merchant","wx-original","DEP7","WXP_ALIAS","WXP_ALIAS","TX7","TX7","JSAPI","CNY",5000,5000,
++                java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
++        return new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,original.factHash());
+     }
+ 
+     private static CoopInvite invite(int depositStatus) {
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java
+index 265583ba..a80251f2 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java
+@@ -101,7 +101,12 @@ class WechatPayCallbackHttpAckTest {
+             when(commerce.handlePaidOrder(anyString(), anyBoolean(), any(), anyString())).thenAnswer(outcome);
+             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "merchantCommerceService", commerce);
+             var coop = mock(com.chengyinhub.business.service.ICoopInviteService.class);
+-            when(coop.markDepositPaid(anyString(), any(), anyString())).thenAnswer(outcome);
++            when(coop.markDepositPaid(anyString(), any(), anyString(), any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
++                    .thenAnswer(invocation -> {
++                        com.chengyinhub.business.service.impl.DepositVerifiedReferenceTestSupport.assertOriginal(pay,
++                                invocation.getArgument(3),invocation.getArgument(0),invocation.getArgument(1),invocation.getArgument(2));
++                        return outcome.answer(invocation);
++                    });
+             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "coopInviteService", coop);
+             var registration = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
+             if ("REG1".equals(no)) {

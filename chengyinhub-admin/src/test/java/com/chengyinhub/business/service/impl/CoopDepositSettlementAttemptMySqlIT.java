@@ -42,6 +42,7 @@ class CoopDepositSettlementAttemptMySqlIT {
     private TransactionTemplate tx;
     private CoopInviteMapper mapper;
     private CmsTopicServiceImpl topic;
+    private CoopInviteServiceImpl depositOwner;
     private WechatPaymentSdkGateway gateway;
     private JsapiService sdk;
     private Transaction provider;
@@ -145,11 +146,11 @@ class CoopDepositSettlementAttemptMySqlIT {
             }
             return null;
         }).when(sdk).closeOrder(any());
-        CoopInviteServiceImpl invites = new CoopInviteServiceImpl();
-        ReflectionTestUtils.setField(invites, "coopInviteMapper", mapper);
+        depositOwner = new CoopInviteServiceImpl();
+        ReflectionTestUtils.setField(depositOwner, "coopInviteMapper", mapper);
+        ReflectionTestUtils.setField(depositOwner, "depositVerifiedFacts", verified);
         topic = new CmsTopicServiceImpl();
         ReflectionTestUtils.setField(topic, "transactionManager", transactions);
-        ReflectionTestUtils.setField(topic, "depositVerifiedFacts", verified);
         var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
         when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call -> db.queryForObject(
                 "SELECT id FROM cms_topic WHERE id=11 FOR UPDATE", (rs,n) -> {
@@ -157,7 +158,7 @@ class CoopDepositSettlementAttemptMySqlIT {
                 }));
         ReflectionTestUtils.setField(topic, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(topic, "wechatPayService", gateway);
-        ReflectionTestUtils.setField(topic, "coopInviteService", invites);
+        ReflectionTestUtils.setField(topic, "coopInviteService", depositOwner);
         ReflectionTestUtils.setField(topic, "coopInviteMapper", mapper);
     }
 
@@ -293,7 +294,7 @@ class CoopDepositSettlementAttemptMySqlIT {
         var failing = spy(real);
         doThrow(new IllegalStateException("INJECTED_BEFORE_RECOVERY_RECEIPT_COMPLETION"))
                 .when(failing).completePaymentRecovery(any(),eq(89L));
-        ReflectionTestUtils.setField(topic,"depositVerifiedFacts",failing);
+        ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",failing);
         Map<String,Object> before = row();
         assertThrows(IllegalStateException.class,this::resolve);
         assertEquals(before,row(),"Paid CAS must roll back if its recovery receipt cannot commit");
@@ -303,7 +304,7 @@ class CoopDepositSettlementAttemptMySqlIT {
         assertEquals(reference,pending.original().reference());
         assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
         assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
-        ReflectionTestUtils.setField(topic,"depositVerifiedFacts",real);
+        ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",real);
         assertFalse(resolve()); // Same original fact/attempt, no automatic refund or reopening.
         assertEquals(2,mapper.selectCoopInviteById(89L).getDepositStatus());
         assertEquals(BUSINESS,mapper.selectCoopInviteById(89L).getDepositOutTradeNo());

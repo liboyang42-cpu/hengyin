@@ -1,0 +1,10 @@
+Source/stub diff --check: PASS
+Original CAS body byte-identical: PASS
+Private CAS declaration + exactly one typed4 call: PASS
+All executable source/stub markDepositPaid arities in {1,4}: PASS
+AfterCompletion production source byte-identical to e4bd: PASS
+Java delimiter check: PASS (not compilation)
+Limited patch secret-pattern check: PASS (not gitleaks)
+Java/MySQL/provider/CI: NOT_RUN
+e4bd production+fixtures patches reproduce final source: PASS
+e4bd+07 post-07-only patch reproduces final source: PASS

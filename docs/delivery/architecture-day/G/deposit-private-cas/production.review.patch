@@ -1,0 +1,120 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopInviteService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopInviteService.java
+index d67d8f13..481994cf 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopInviteService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopInviteService.java
+@@ -137,9 +137,6 @@ public interface ICoopInviteService {
+     /** 兼容旧调用：只查既有退款号的可信渠道 SUCCESS；不得凭受理直接置4。 */
+     public int settleDepositRefunded(Long inviteId, String refundNo);
+ 
+-    /** 仅供已验证渠道归属/币种的回调或查单结果调用，实际金额/交易号与CAS仍在此校验。 */
+-    boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId);
+-
+     /** Exact verified SUCCESS reference; original paid CAS and any recovery ticket complete in one transaction. */
+     boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId,
+             com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference);
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+index 0d9c4d8a..4e178883 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+@@ -143,7 +143,6 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
+     // A3-7(P0):每主题独立事务用(照抄活动线),替代原整批单 @Transactional。
+     @Autowired
+     private PlatformTransactionManager transactionManager;
+-    @Autowired private WechatVerifiedPaymentFactService depositVerifiedFacts;
+ 
+     @Autowired
+     private CoopInviteMapper coopInviteMapper;
+@@ -1152,20 +1151,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
+             throw new IllegalStateException("保证金原身份或金额已变化 inviteId=" + observed.getId());
+         String business = observed.getDepositOutTradeNo(); String attempt = payment.get("wx_out_trade_no");
+         if ("SUCCESS".equalsIgnoreCase(payment.get("trade_state"))) {
+-            CoopInviteServiceImpl.checkedDepositPaymentReference(payment);
++            var reference = CoopInviteServiceImpl.checkedDepositPaymentReference(payment);
+             if (!"CNY".equals(payment.get("currency"))) throw new IllegalStateException("保证金币种不匹配");
+             Long paidCents;
+             try { paidCents = Long.valueOf(payment.get("total")); }
+             catch (RuntimeException invalid) { throw new IllegalStateException("保证金支付金额无法确认", invalid); }
+             if (!wechatPayService.lockPaymentAttemptForUpdate(business, attempt)
+-                    || !coopInviteService.markDepositPaid(business, paidCents, payment.get("transaction_id")))
++                    || !coopInviteService.markDepositPaid(business, paidCents, payment.get("transaction_id"), reference))
+                 throw new IllegalStateException("保证金支付事实不匹配 inviteId=" + observed.getId());
+             CoopInvite confirmed = coopInviteMapper.selectCoopInviteByIdForUpdate(observed.getId());
+             if (confirmed == null || !Integer.valueOf(2).equals(confirmed.getDepositStatus())
+                     || !business.equals(confirmed.getDepositOutTradeNo())
+                     || !java.util.Objects.equals(payment.get("transaction_id"), confirmed.getDepositPaidTransactionId()))
+                 throw new IllegalStateException("保证金支付状态读回失败 inviteId=" + observed.getId());
+-            CoopInviteServiceImpl.completeConsumedDepositRecovery(depositVerifiedFacts, coopInviteMapper, observed.getId(), payment);
+             return false;
+         }
+         if (!Integer.valueOf(1).equals(current.getDepositStatus())
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java
+index 494d3adb..85ac8911 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java
+@@ -1593,7 +1593,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
+     }
+ 
+     /** Caller holds the original topic/invite transaction; the existing paid-TX CAS is the local consumption receipt. */
+-    static void completeConsumedDepositRecovery(WechatVerifiedPaymentFactService verified, CoopInviteMapper mapper,
++    private static void completeConsumedDepositRecovery(WechatVerifiedPaymentFactService verified, CoopInviteMapper mapper,
+             Long inviteId, Map<String,String> observed) {
+         if (!TransactionSynchronizationManager.isActualTransactionActive())
+             throw new IllegalStateException("保证金恢复票必须与原成功消费同事务");
+@@ -1623,9 +1623,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
+         }
+     }
+ 
+-    @Override
+-    @Transactional(rollbackFor = Exception.class)
+-    public boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId) {
++    private boolean applyConfirmedDepositPaid(String outTradeNo, Long paidCents, String transactionId) {
+         CoopInvite inv = coopInviteMapper.selectByDepositOutTradeNoForUpdate(outTradeNo);
+         if (inv == null || isLegacyMerchantNodeInvite(inv) || inv.getDepositAmount() == null
+                 || paidCents == null || transactionId == null || transactionId.trim().isEmpty()) return false;
+@@ -1649,7 +1647,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
+                 || !payment.businessOutTradeNo().equals(outTradeNo) || !payment.transactionId().equals(transactionId)
+                 || paidCents == null || payment.amountFen() != paidCents || payment.totalFen() != paidCents
+                 || !"CNY".equals(payment.currency())) return false;
+-        if (!markDepositPaid(outTradeNo, paidCents, transactionId)) return false;
++        if (!applyConfirmedDepositPaid(outTradeNo, paidCents, transactionId)) return false;
+         CoopInvite consumed = coopInviteMapper.selectByDepositOutTradeNoForUpdate(outTradeNo);
+         if (consumed == null) throw new IllegalStateException("保证金成功消费读回缺失");
+         Map<String,String> original = new HashMap<>(); original.put("out_trade_no",outTradeNo);
+diff --git a/scripts/e2e/E2eWechatPayStub.java.stub b/scripts/e2e/E2eWechatPayStub.java.stub
+index 9e4735f9..6b6feb5e 100644
+--- a/scripts/e2e/E2eWechatPayStub.java.stub
++++ b/scripts/e2e/E2eWechatPayStub.java.stub
+@@ -50,6 +50,9 @@ public class E2eWechatPayStub implements IWechatPayService {
+     @org.springframework.context.annotation.Lazy
+     private ICoopInviteService coopInviteService;
+ 
++    @org.springframework.beans.factory.annotation.Autowired
++    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService depositPaymentFacts;
++
+     @org.springframework.beans.factory.annotation.Autowired
+     private WxPayConfig wxPayConfig;
+ 
+@@ -121,11 +124,20 @@ public class E2eWechatPayStub implements IWechatPayService {
+                         ? "SUCCESS" : "FAIL";
+             } else if (outTradeNo != null && outTradeNo.startsWith("DEP")) {
+                 boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
+-                result = paid && total != null && "CNY".equals(root.path("currency").asText(null))
++                result = "FAIL";
++                if (paid && total != null && "CNY".equals(root.path("currency").asText(null))
+                         && wxPayConfig.getMerchantId() != null
+                         && wxPayConfig.getMerchantId().equals(root.path("mchid").asText(null))
+-                        && coopInviteService.markDepositPaid(outTradeNo, total.longValue(), transactionId)
+-                        ? "SUCCESS" : "FAIL";
++                        && depositPaymentFacts != null) {
++                    // The fake channel never creates VERIFIED facts; only an already trusted original may be consumed.
++                    var original = depositPaymentFacts.findPaymentSuccess(wxPayConfig.getMerchantId(), outTradeNo, transactionId);
++                    if (original != null && outTradeNo.equals(original.facts().businessOutTradeNo())
++                            && "CNY".equals(original.facts().currency())
++                            && original.facts().totalFen() == total.longValue()
++                            && original.facts().amountFen() == total.longValue()
++                            && coopInviteService.markDepositPaid(outTradeNo, total.longValue(), transactionId, original.reference()))
++                        result = "SUCCESS";
++                }
+             } else {
+                 result = registrationService.handleWechatPayCallback(resultMap);
+             }

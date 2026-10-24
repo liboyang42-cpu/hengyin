@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -212,7 +213,11 @@ class WechatPayCallbackForgedSignatureTest {
             when(membership.handlePaidInvoice("CLM_UNKNOWN", true, 100, "TX1")).thenReturn(true);
             when(commerce.supportsOutTradeNo("TPLTM_20260805")).thenReturn(true);
             when(commerce.handlePaidOrder("TPLTM_20260805", true, 1990, "TX1")).thenReturn(true);
-            when(coop.markDepositPaid("DEP1T100", 5000L, "TX1")).thenReturn(true);
+            when(coop.markDepositPaid(eq("DEP1T100"),eq(5000L),eq("TX1"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
+                .thenAnswer(call -> {
+                    DepositVerifiedReferenceTestSupport.assertOriginal(service,call.getArgument(3),"DEP1T100",5000L,"TX1");
+                    return true;
+                });
             when(registration.handleWechatPayCallback(anyMap())).thenReturn("SUCCESS");
             com.wechat.pay.java.service.payments.jsapi.JsapiService querySdk =
                     (com.wechat.pay.java.service.payments.jsapi.JsapiService) WechatVerifiedFactTestSupport.getField(service, "jsapiService");
@@ -328,7 +333,11 @@ class WechatPayCallbackForgedSignatureTest {
         wireParser(service, buildParser(kp.getPublic()), registration, coop, mock(IRefundService.class));
         Forged n = buildValidPayNotification(kp.getPrivate(), "DEP1T100", "WXDEP1", "SUCCESS", 5000);
         assertTrue(service.handlePayCallback(n.body, headersOf(n)).contains("FAIL"));
-        when(coop.markDepositPaid("DEP1T100", 5000L, "WXDEP1")).thenReturn(true);
+        when(coop.markDepositPaid(eq("DEP1T100"),eq(5000L),eq("WXDEP1"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
+                .thenAnswer(call -> {
+                    DepositVerifiedReferenceTestSupport.assertOriginal(service,call.getArgument(3),"DEP1T100",5000L,"WXDEP1");
+                    return true;
+                });
         assertTrue(service.handlePayCallback(n.body, headersOf(n)).contains("SUCCESS"));
         verify(registration, org.mockito.Mockito.times(2)).getByRegistrationNo("DEP1T100");
         verifyNoMoreInteractions(registration);
@@ -339,7 +348,11 @@ class WechatPayCallbackForgedSignatureTest {
         KeyPair kp = generateKeyPair();
         WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
         ICoopInviteService coop = mock(ICoopInviteService.class);
-        when(coop.markDepositPaid("DEP1T100",5000L,"WXDEP1")).thenReturn(true);
+        when(coop.markDepositPaid(eq("DEP1T100"),eq(5000L),eq("WXDEP1"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
+                .thenAnswer(call -> {
+                    DepositVerifiedReferenceTestSupport.assertOriginal(service,call.getArgument(3),"DEP1T100",5000L,"WXDEP1");
+                    return true;
+                });
         wireParser(service,buildParser(kp.getPublic()),mock(ICmsRegistrationService.class),coop,mock(IRefundService.class));
         for (String[] pair : new String[][]{{"USD","merchant-test"},{"CNY","other-merchant"},{"","merchant-test"}}) {
             String payload=String.format("{\"out_trade_no\":\"DEP1T100\",\"transaction_id\":\"WXDEP1\",\"trade_state\":\"SUCCESS\",\"appid\":\"wx-test-mini\",\"trade_type\":\"JSAPI\",\"mchid\":\"%s\",\"amount\":{\"total\":5000,\"currency\":\"%s\"}}",pair[1],pair[0]);

@@ -1593,7 +1593,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     }
 
     /** Caller holds the original topic/invite transaction; the existing paid-TX CAS is the local consumption receipt. */
-    static void completeConsumedDepositRecovery(WechatVerifiedPaymentFactService verified, CoopInviteMapper mapper,
+    private static void completeConsumedDepositRecovery(WechatVerifiedPaymentFactService verified, CoopInviteMapper mapper,
             Long inviteId, Map<String,String> observed) {
         if (!TransactionSynchronizationManager.isActualTransactionActive())
             throw new IllegalStateException("保证金恢复票必须与原成功消费同事务");
@@ -1623,9 +1623,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         }
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId) {
+    private boolean applyConfirmedDepositPaid(String outTradeNo, Long paidCents, String transactionId) {
         CoopInvite inv = coopInviteMapper.selectByDepositOutTradeNoForUpdate(outTradeNo);
         if (inv == null || isLegacyMerchantNodeInvite(inv) || inv.getDepositAmount() == null
                 || paidCents == null || transactionId == null || transactionId.trim().isEmpty()) return false;
@@ -1649,7 +1647,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
                 || !payment.businessOutTradeNo().equals(outTradeNo) || !payment.transactionId().equals(transactionId)
                 || paidCents == null || payment.amountFen() != paidCents || payment.totalFen() != paidCents
                 || !"CNY".equals(payment.currency())) return false;
-        if (!markDepositPaid(outTradeNo, paidCents, transactionId)) return false;
+        if (!applyConfirmedDepositPaid(outTradeNo, paidCents, transactionId)) return false;
         CoopInvite consumed = coopInviteMapper.selectByDepositOutTradeNoForUpdate(outTradeNo);
         if (consumed == null) throw new IllegalStateException("保证金成功消费读回缺失");
         Map<String,String> original = new HashMap<>(); original.put("out_trade_no",outTradeNo);

@@ -44,7 +44,14 @@ class WechatPaymentSuccessRecoveryTest {
             when(commerce.supportsOutTradeNo("TPLTM_1")).thenReturn(true);
             when(membership.handlePaidInvoice("CLM1",true,1000,"TX1")).thenReturn(false,true);
             when(commerce.handlePaidOrder("TPLTM_1",true,1000,"TX1")).thenReturn(false,true);
-            when(f.depositOwner.markDepositPaid("DEP1",1000L,"TX1")).thenReturn(false,true);
+            when(f.depositOwner.markDepositPaid(eq("DEP1"),eq(1000L),eq("TX1"),any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
+                    .thenAnswer(call -> {
+                        DepositVerifiedReferenceTestSupport.assertOriginal(f.gateway,call.getArgument(3),"DEP1",1000L,"TX1");
+                        return false;
+                    }).thenAnswer(call -> {
+                        DepositVerifiedReferenceTestSupport.assertOriginal(f.gateway,call.getArgument(3),"DEP1",1000L,"TX1");
+                        return true;
+                    });
             when(f.registration.getByRegistrationNo("REG1")).thenReturn(new com.chengyinhub.business.domain.CmsRegistration());
             when(f.registration.handleWechatPayCallback(anyMap())).thenReturn("FAIL","SUCCESS");
             assertTrue(f.gateway.handlePayCallback("signed-first",Map.of()).contains("FAIL"),no);
@@ -57,7 +64,8 @@ class WechatPaymentSuccessRecoveryTest {
             switch(no) {
                 case "CLM1" -> verify(membership,times(2)).handlePaidInvoice(no,true,1000,"TX1");
                 case "TPLTM_1" -> verify(commerce,times(2)).handlePaidOrder(no,true,1000,"TX1");
-                case "DEP1" -> verify(f.depositOwner,times(2)).markDepositPaid(no,1000L,"TX1");
+                case "DEP1" -> verify(f.depositOwner,times(2)).markDepositPaid(eq(no),eq(1000L),eq("TX1"),
+                        eq(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(id,hash)));
                 default -> verify(f.registration,times(2)).handleWechatPayCallback(argThat(map->Long.toString(id).equals(map.get("verified_fact_id"))
                         && hash.equals(map.get("verified_fact_hash"))));
             }
