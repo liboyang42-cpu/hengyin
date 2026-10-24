@@ -388,5 +388,11 @@ class EventScoreVersioningTest {
         Map<String, Object> recovered = wired.recoverFromSessionReceipt(7L, 30L, "orient-ses-01", source);
         assertEquals(Boolean.TRUE, recovered.get("replayed"));
         assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("orient-ses-01").outcome);
+        Map<String, Object> other = new LinkedHashMap<String, Object>();
+        other.put("replayed", Boolean.TRUE);
+        other.put("sessionId", Long.valueOf(99L));
+        assertNull(wired.recoverFromSessionReceipt(7L, 30L, "orient-ses-other",
+                (memberId, sessionId, key) -> other));
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("orient-ses-other").outcome);
     }
 }

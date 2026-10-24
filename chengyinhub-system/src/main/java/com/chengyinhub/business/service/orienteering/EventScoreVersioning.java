@@ -378,7 +378,12 @@ public final class EventScoreVersioning {
                     "定向会话回执需要 IOrientSessionService.receipt", SESSION_RECEIPT);
         }
         try {
-            return source.receipt(memberId, sessionId, key);
+            Map<String, Object> found = source.receipt(memberId, sessionId, key);
+            Object echoed = found == null ? null : found.get("sessionId");
+            if (echoed instanceof Number && ((Number) echoed).longValue() != sessionId.longValue()) {
+                return null;
+            }
+            return found;
         } catch (OrientSessionException missing) {
             if (SESSION_RECEIPT_NOT_FOUND.equals(missing.getErr())) {
                 return null;
