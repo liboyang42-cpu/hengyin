@@ -1241846,7 +1241846,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "切换第{{index + 1}}张照片",
+        "ariaLabelExpression": "切换第{{(index || 0) + 1}}张照片",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1266022,7 +1266022,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "查看第{{index + 1}}张高清照片",
+        "ariaLabelExpression": "查看第{{(index || 0) + 1}}张高清照片",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1266138,7 +1266138,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:207:bindtap:onPoiSecondary:41",
+      "id": "subpackageRoam/nearby/index.wxml:208:bindtap:onPoiSecondary:41",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266161,7 +1266161,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiSecondary",
-        "line": 207,
+        "line": 208,
         "selectorHint": ".pb__btn",
         "visibleCondition": "{{poiCard.secondary}}",
         "disabledCondition": null,
@@ -1266215,7 +1266215,7 @@
       }
     },
     {
-      "id": "subpackageRoam/nearby/index.wxml:208:bindtap:onPoiPrimary:42",
+      "id": "subpackageRoam/nearby/index.wxml:209:bindtap:onPoiPrimary:42",
       "route": "subpackageRoam/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266238,7 +1266238,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPoiPrimary",
-        "line": 208,
+        "line": 209,
         "selectorHint": ".pb__btn",
         "visibleCondition": null,
         "disabledCondition": null,

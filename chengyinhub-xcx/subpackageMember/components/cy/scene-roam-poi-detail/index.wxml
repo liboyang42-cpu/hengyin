@@ -14,7 +14,7 @@
     <image class="poi-full-photo" src="{{gallery[photoIndex]}}" mode="widthFix" bindtap="previewGallery" data-src="{{gallery[photoIndex]}}" aria-role="button" aria-label="查看完整照片" hover-class="cy-pressed" hover-stay-time="80" />
     <text class="poi-status">{{photoIndex + 1}} / {{gallery.length}} · 点击查看原图</text>
     <scroll-view scroll-x class="poi-gallery">
-      <image wx:for="{{gallery}}" wx:key="index" class="poi-gallery__image" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="onPhotoPick" aria-role="button" aria-label="切换第{{index + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" />
+      <image wx:for="{{gallery}}" wx:key="index" class="poi-gallery__image" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="onPhotoPick" aria-role="button" aria-label="切换第{{(index || 0) + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" />
     </scroll-view>
   </view>
   <view wx:if="{{merchant}}" class="poi-hero">
