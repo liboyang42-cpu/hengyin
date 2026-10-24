@@ -294,6 +294,7 @@ public final class EventScoreVersioning {
     /**
      * 新实例从既有 orient_score_ledger 按幂等键回读。进程 ConcurrentHashMap 不是持久恢复。
      * 缺 mapper/session 为 WAITING_SOURCE；从未见过的键 NOT_FOUND，不占进程完赛账。
+     * 行上的 session、idempotencyKey 必须与本次请求一致，否则 NOT_FOUND。
      * 缺/空 requestId 保持 Java {@code null}。
      */
     public OrientScoreEntry recoverFromLedger(String requestId) {
@@ -306,7 +307,8 @@ public final class EventScoreVersioning {
                     "原计分回读需要 TopicRouteSession", SCORE_LEDGER_SESSION);
         }
         OrientScoreEntry found = scoringMapper.selectEntryByIdem(topicRouteSessionId, key);
-        if (found == null) {
+        if (found == null || found.getSessionId() == null || !topicRouteSessionId.equals(found.getSessionId())
+                || found.getIdempotencyKey() == null || !key.equals(found.getIdempotencyKey())) {
             throw new OrienteeringEventException(OrienteeringEventException.NOT_FOUND, "没有这条成绩流水");
         }
         return found;

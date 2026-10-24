@@ -165,6 +165,7 @@ class OrdinaryCityTeamEventJourneyTest {
 
     private static OrientScoreEntry row(String key, int deltaCenti) {
         OrientScoreEntry entry = new OrientScoreEntry();
+        entry.setSessionId(88L);
         entry.setIdempotencyKey(key);
         entry.setDeltaCenti(deltaCenti);
         return entry;

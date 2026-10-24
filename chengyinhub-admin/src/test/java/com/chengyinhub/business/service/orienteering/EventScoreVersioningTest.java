@@ -238,6 +238,7 @@ class EventScoreVersioningTest {
         IOrientScoringService writer = mock(IOrientScoringService.class);
         OrientScoringMapper mapper = mock(OrientScoringMapper.class);
         OrientScoreEntry taskRow = new OrientScoreEntry();
+        taskRow.setSessionId(88L);
         taskRow.setIdempotencyKey("scr-led-01");
         taskRow.setDeltaCenti(10000);
         OrientScoreEntry penaltyRow = new OrientScoreEntry();
@@ -274,6 +275,22 @@ class EventScoreVersioningTest {
         OrientScoreEntry recovered = restarted.recoverFromLedger("scr-led-01");
         assertEquals("scr-led-01", recovered.getIdempotencyKey());
         assertEquals(10000, recovered.getDeltaCenti());
+        OrientScoreEntry otherSession = new OrientScoreEntry();
+        otherSession.setSessionId(99L);
+        otherSession.setIdempotencyKey("scr-led-other-session");
+        otherSession.setDeltaCenti(1);
+        when(mapper.selectEntryByIdem(88L, "scr-led-other-session")).thenReturn(otherSession);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class,
+                        () -> restarted.recoverFromLedger("scr-led-other-session")).getErrorCode());
+        OrientScoreEntry otherKey = new OrientScoreEntry();
+        otherKey.setSessionId(88L);
+        otherKey.setIdempotencyKey("other-key");
+        otherKey.setDeltaCenti(1);
+        when(mapper.selectEntryByIdem(88L, "scr-led-other-key")).thenReturn(otherKey);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class,
+                        () -> restarted.recoverFromLedger("scr-led-other-key")).getErrorCode());
         assertNull(wiredFinish.originalRewardCenti);
         assertEquals(OrienteeringEventException.NOT_FOUND,
                 assertThrows(OrienteeringEventException.class, () -> restarted.recoverFromLedger("scr-led-missing"))
