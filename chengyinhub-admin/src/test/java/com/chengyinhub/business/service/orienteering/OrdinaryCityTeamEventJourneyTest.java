@@ -1,9 +1,13 @@
 package com.chengyinhub.business.service.orienteering;
 
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.OrientScoreEntry;
+import com.chengyinhub.business.mapper.OrientScoringMapper;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubParticipationGuard;
 import com.chengyinhub.business.service.IClubService;
+import com.chengyinhub.business.service.IOrientScoringService;
+import com.chengyinhub.business.service.support.OrientSessionException;
 import com.chengyinhub.business.service.orienteering.EventScoreVersioning.ResultVersion;
 import com.chengyinhub.business.service.orienteering.OrdinaryCityTimezoneQualifier.SafetyConfirmation;
 import com.chengyinhub.business.service.orienteering.PublishedRuleSelector.FrozenPublishedRule;
@@ -12,14 +16,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -36,6 +48,8 @@ class OrdinaryCityTeamEventJourneyTest {
     private TeamClubEligibilityAuthority authority;
     private EventScoreVersioning scores;
     private EventResultDispute disputes;
+    private IOrientScoringService writer;
+    private OrientScoringMapper mapper;
 
     @BeforeEach
     void setUp() {
@@ -50,7 +64,16 @@ class OrdinaryCityTeamEventJourneyTest {
         when(members.selectByClubAndMember(CLUB_A, 502L)).thenReturn(TeamClubEligibilityAuthorityTest.member(CLUB_A, 502L));
         when(members.selectByClubAndMember(CLUB_B, 602L)).thenReturn(TeamClubEligibilityAuthorityTest.member(CLUB_B, 602L));
         authority = new TeamClubEligibilityAuthority(clubs, members, guard);
-        scores = new EventScoreVersioning();
+        writer = mock(IOrientScoringService.class);
+        mapper = mock(OrientScoringMapper.class);
+        when(writer.appendEntry(eq(88L), eq("TASK"), eq(10000), eq("TASK_DONE"), eq("PROGRESS"),
+                eq("event-score:scr-jour-01"), isNull(), eq("scr-jour-01"))).thenReturn(row("scr-jour-01", 10000));
+        when(writer.appendEntry(eq(88L), eq("TASK"), eq(7000), eq("TASK_DONE"), eq("PROGRESS"),
+                eq("event-score:scr-jour-02"), isNull(), eq("scr-jour-02"))).thenReturn(row("scr-jour-02", 7000));
+        when(writer.appendEntry(eq(88L), eq("PENALTY"), eq(-2000), eq("LATE_PENALTY"), eq("PROGRESS"),
+                eq("event-score:scr-jour-03"), isNull(), eq("scr-jour-03"))).thenReturn(row("scr-jour-03", -2000));
+        when(mapper.selectEntryByIdem(88L, "scr-jour-01")).thenReturn(row("scr-jour-01", 10000));
+        scores = new EventScoreVersioning(writer, mapper, null);
         disputes = new EventResultDispute(scores);
     }
 
@@ -102,5 +125,48 @@ class OrdinaryCityTeamEventJourneyTest {
         assertEquals(EventResultDispute.ORIGINAL_REWARD_READ, unconfirmed.getWaitingCapability());
         assertEquals(EventResultDispute.STATUS_PENDING, disputes.readback("dsp-journey").status());
         assertSame(finished, scores.readback("fin-journey1"));
+        assertEquals("orientation.policyBinding", EventScoreVersioning.POLICY_BINDING);
+
+        assertEquals(EventScoreVersioning.AUTHORIZED_SESSION,
+                assertThrows(OrienteeringEventException.class,
+                        () -> scores.persistOriginal("fin-journey1", (memberId, originalSessionId) -> Long.valueOf(99L),
+                                7L, 88L)).getWaitingCapability());
+        verify(writer, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
+        List<OrientScoreEntry> persisted = scores.persistOriginal("fin-journey1",
+                (memberId, originalSessionId) -> originalSessionId, 7L, 88L);
+        assertEquals(3, persisted.size());
+        assertEquals("scr-jour-01", persisted.get(0).getIdempotencyKey());
+        verify(writer).appendEntry(eq(88L), eq("TASK"), eq(10000), eq("TASK_DONE"), eq("PROGRESS"),
+                eq("event-score:scr-jour-01"), isNull(), eq("scr-jour-01"));
+
+        EventScoreVersioning restarted = new EventScoreVersioning(writer, mapper, 88L);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, restarted.recoverOriginal("fin-journey1").outcome);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> restarted.readback("fin-journey1")).getErrorCode());
+        assertEquals(10000, restarted.recoverFromLedger("scr-jour-01").getDeltaCenti());
+
+        Map<String, Object> original = new LinkedHashMap<String, Object>();
+        original.put("replayed", Boolean.TRUE);
+        original.put("sessionId", Long.valueOf(88L));
+        original.put("scoreCenti", Integer.valueOf(15000));
+        Map<String, Object> sameSession = scores.recoverFromSessionReceipt(7L, 88L, "fin-journey1",
+                (memberId, sessionId, key) -> sessionId.longValue() == 88L ? original
+                        : failNotFound());
+        assertEquals(Boolean.TRUE, sameSession.get("replayed"));
+        assertEquals(Long.valueOf(88L), sameSession.get("sessionId"));
+        assertEquals(Integer.valueOf(15000), sameSession.get("scoreCenti"));
+        assertNull(scores.recoverFromSessionReceipt(7L, 99L, "fin-journey1",
+                (memberId, sessionId, key) -> failNotFound()));
+    }
+
+    private static OrientScoreEntry row(String key, int deltaCenti) {
+        OrientScoreEntry entry = new OrientScoreEntry();
+        entry.setIdempotencyKey(key);
+        entry.setDeltaCenti(deltaCenti);
+        return entry;
+    }
+
+    private static Map<String, Object> failNotFound() {
+        throw new OrientSessionException("ORIENT_RECEIPT_NOT_FOUND", 404, "没有这次请求的回执");
     }
 }
