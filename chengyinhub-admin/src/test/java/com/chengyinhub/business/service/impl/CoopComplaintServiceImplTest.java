@@ -168,6 +168,7 @@ class CoopComplaintServiceImplTest {
         verify(umsMemberService, never()).deductBalance(any(), any());
         verify(balanceDetailService, never()).insertUmsMemberBalanceDetail(any());
         verify(mapper, never()).updateCoopComplaint(any());
+        org.mockito.Mockito.verifyNoInteractions(notices, durableNotices);
     }
 
     @Test
@@ -184,7 +185,8 @@ class CoopComplaintServiceImplTest {
         assertEquals(Integer.valueOf(70), cap.getValue().getFaultRatio());
         assertEquals(0, new BigDecimal("50").compareTo(cap.getValue().getDeductAmount()));
         verify(notices).sendAfterCommit(eq(100L), any(), any(), eq("complaint-close-reporter"), eq(1L));
-        verify(notices).sendAfterCommit(eq(200L), any(), any(), eq("complaint-close-respondent"), eq(1L));
+        verify(durableNotices).enqueueOfficial(eq("complaint-close-respondent:1"), eq(200L),
+                eq("投诉工单处理结果"), eq("工单#1已处理，实际扣划 ¥50。请核对账务及处理说明。"));
     }
 
     @Test
@@ -200,6 +202,8 @@ class CoopComplaintServiceImplTest {
         assertEquals(0, new BigDecimal("30").compareTo(cap.getValue().getDeductAmount()), "记实扣30");
         // 9-16 拍板第 2 条:差额 20 记欠款,从过错方后续结算抵扣
         verify(debtLedger).record(200L, com.chengyinhub.business.service.support.SettlementDebtLedger.SOURCE_COMPLAINT, 1L, new BigDecimal("20"));
+        verify(durableNotices).enqueueOfficial(eq("complaint-close-respondent:1"), eq(200L),
+                eq("投诉工单处理结果"), eq("工单#1已处理，实际扣划 ¥30。请核对账务及处理说明。"));
     }
 
     @Test

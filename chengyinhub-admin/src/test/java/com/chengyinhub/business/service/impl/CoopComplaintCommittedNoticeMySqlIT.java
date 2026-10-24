@@ -136,6 +136,75 @@ class CoopComplaintCommittedNoticeMySqlIT {
         }
     }
 
+    @Test void actualControllerCloseFreezesTheOriginalRespondentAndActualDeduction() throws Exception {
+        try (var h = new Harness()) {
+            assertEquals(200, h.controller.close(Map.of("id", 1L, "respondentType", "merchant",
+                    "respondentMemberId", 200L, "faultRatio", 100, "deductAmount", "50", "note", "completed")).get("code"));
+            h.assertAdvance(3, "0.00", 1);
+            assertEquals(new BigDecimal("50.00"), h.db.queryForObject("select balance from ums_member where id=200", BigDecimal.class));
+            assertEquals(1, h.notice.count("im_notification_intent")); assertEquals(0, h.notice.count("im_message"));
+            assertEquals("complaint-close-respondent:1", h.db.queryForObject("select event_key from committed_official_notice_wx", String.class));
+            verifyNoInteractions(h.notice.wx);
+            verify(h.oldNotices).sendAfterCommit(eq(100L), eq("投诉工单已处理"),
+                    eq("工单#1已关闭，请在投诉记录查看处理说明。"), eq("complaint-close-reporter"), eq(1L));
+            verifyNoMoreInteractions(h.oldNotices);
+            h.db.update("update coop_complaint set respondent_member_id=999,deduct_amount=1,handle_note='edited after commit' where id=1");
+            h.notice.wakes.clear(); h.notice.recover(); h.assertRespondentNotice();
+            assertEquals("投诉工单处理结果\n工单#1已处理，实际扣划 ¥50。请核对账务及处理说明。",
+                    h.db.queryForObject("select content from im_message", String.class));
+            verify(h.notice.wx).send(argThat(message -> message.memberId().equals(200L)
+                    && message.get("sub").equals("工单#1已处理，实际扣划 ¥50。请核对账务及处理说明。")));
+        }
+    }
+
+    @Test void closeOuterFailureRollsBackTheActualDebitDetailAndRespondentIntent() throws Exception {
+        try (var h = new Harness()) {
+            assertThrows(IllegalStateException.class, () -> h.notice.tx.executeWithoutResult(status -> {
+                assertEquals(1, h.closeComplaint());
+                assertEquals(1, h.notice.count("im_notification_intent"));
+                assertEquals(1, h.notice.count("committed_official_notice_wx")); assertTrue(h.notice.wakes.isEmpty());
+                throw new IllegalStateException("fixture failure after actual close returned");
+            }));
+            h.assertAdvance(0, "0.00", 0);
+            assertEquals(new BigDecimal("100.00"), h.db.queryForObject("select balance from ums_member where id=200", BigDecimal.class));
+            assertEquals(0, h.notice.count("im_notification_intent"));
+            assertEquals(0, h.notice.count("committed_official_notice_wx"));
+            assertEquals(0, h.notice.count("im_message")); assertTrue(h.notice.wakes.isEmpty());
+            verifyNoInteractions(h.notice.wx);
+        }
+    }
+
+    @Test void respondentIntentConflictRollsBackTheActualCloseDebitWithoutReplacingTheOriginalIntent() throws Exception {
+        try (var h = new Harness()) {
+            Long original = h.notice.enqueue("complaint-close-respondent:1", 200L, "original", "original body");
+            h.notice.wakes.clear(); assertThrows(RuntimeException.class, h::closeComplaint);
+            h.assertAdvance(0, "0.00", 0);
+            assertEquals(new BigDecimal("100.00"), h.db.queryForObject("select balance from ums_member where id=200", BigDecimal.class));
+            assertEquals(1, h.notice.count("im_notification_intent"));
+            assertEquals(1, h.notice.count("committed_official_notice_wx"));
+            assertEquals("original", h.db.queryForObject("select title from committed_official_notice_wx where id=?", String.class, original));
+            assertEquals("PENDING", h.notice.state(original)); assertTrue(h.notice.wakes.isEmpty());
+            assertEquals(0, h.notice.count("im_message")); verifyNoInteractions(h.notice.wx);
+        }
+    }
+
+    @Test void closedBusinessAndUnknownRespondentWxCannotRepeatDebitOrExternalAttempt() throws Exception {
+        try (var h = new Harness()) {
+            assertEquals(1, h.closeComplaint());
+            assertThrows(IllegalStateException.class, h::closeComplaint);
+            h.assertAdvance(3, "0.00", 1);
+            assertEquals(new BigDecimal("50.00"), h.db.queryForObject("select balance from ums_member where id=200", BigDecimal.class));
+            when(h.notice.wx.send(any())).thenReturn(false);
+            h.notice.wakes.clear(); h.notice.recover();
+            Long id = h.db.queryForObject("select id from committed_official_notice_wx", Long.class);
+            h.notice.recover(); h.notice.freshOwner(h.notice.mapper).deliver(id);
+            h.assertRespondentNotice(); assertEquals("UNKNOWN", h.notice.state(id));
+            verify(h.notice.wx).send(any());
+            assertEquals(1, h.db.queryForObject("select count(*) from ums_member_balance_detail", Integer.class));
+            assertEquals(new BigDecimal("50.00"), h.db.queryForObject("select balance from ums_member where id=200", BigDecimal.class));
+        }
+    }
+
     private static final class Harness implements AutoCloseable {
         final CoopComplaintCloseMybatisIntegrationTest legacy = new CoopComplaintCloseMybatisIntegrationTest();
         final CommittedOfficialNoticeMySqlFixture notice = new CommittedOfficialNoticeMySqlFixture();
@@ -167,6 +236,19 @@ class CoopComplaintCommittedNoticeMySqlIT {
             assertEquals(status, db.queryForObject("select status from coop_complaint where id=1", Integer.class));
             assertEquals(new BigDecimal(balance), db.queryForObject("select balance from ums_member where id=100", BigDecimal.class));
             assertEquals(details, db.queryForObject("select count(*) from ums_member_balance_detail", Integer.class));
+        }
+
+        int closeComplaint() {
+            return service.close(1L, "merchant", 200L, 100, new BigDecimal("50"), "completed", 999L);
+        }
+
+        void assertRespondentNotice() {
+            assertEquals(1, notice.count("im_message"));
+            assertEquals(200L, db.queryForObject("select receiver_id from im_message", Long.class));
+            assertEquals(1, db.queryForObject("select unread_count from im_conversation_member where member_id=200", Integer.class));
+            assertEquals("DELIVERED", db.queryForObject("select status from im_notification_intent", String.class));
+            assertEquals(db.queryForObject("select id from im_message", Long.class),
+                    db.queryForObject("select message_id from im_notification_intent", Long.class));
         }
 
         @Override public void close() {
