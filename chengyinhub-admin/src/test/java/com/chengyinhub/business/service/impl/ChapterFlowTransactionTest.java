@@ -68,7 +68,7 @@ class ChapterFlowTransactionTest
         ICmsTopicService proxy = transactionalProxy(target, dataSource);
 
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(proxy).updateTopicByOwnerV2(validUpdate(), 19L, "tester"));
+                () -> proxy.updateTopicByOwnerV2(validUpdate(), 19L, "tester"));
 
         assertTrue(failure.getMessage().contains("注入 blocks 写失败"), failure.getMessage());
         assertEquals(1, jdbc.queryForObject("select count(*) from cms_topic_chapter where id = 10", Integer.class),
@@ -254,7 +254,7 @@ class ChapterFlowTransactionTest
     {
         TransactionInterceptor interceptor = new TransactionInterceptor(
                 new DataSourceTransactionManager(dataSource), new AnnotationTransactionAttributeSource());
-        ProxyFactory factory = new ProxyFactory(target);
+        ProxyFactory factory = new ProxyFactory(com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(target));
         factory.setInterfaces(ICmsTopicService.class);
         factory.addAdvice(interceptor);
         return (ICmsTopicService) factory.getProxy();

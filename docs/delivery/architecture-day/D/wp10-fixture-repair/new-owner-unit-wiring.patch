@@ -1,0 +1,72 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java
+@@ -68,7 +68,7 @@
+         ICmsTopicService proxy = transactionalProxy(target, dataSource);
+ 
+         IllegalStateException failure = assertThrows(IllegalStateException.class,
+-                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(proxy).updateTopicByOwnerV2(validUpdate(), 19L, "tester"));
++                () -> proxy.updateTopicByOwnerV2(validUpdate(), 19L, "tester"));
+ 
+         assertTrue(failure.getMessage().contains("注入 blocks 写失败"), failure.getMessage());
+         assertEquals(1, jdbc.queryForObject("select count(*) from cms_topic_chapter where id = 10", Integer.class),
+@@ -254,7 +254,7 @@
+     {
+         TransactionInterceptor interceptor = new TransactionInterceptor(
+                 new DataSourceTransactionManager(dataSource), new AnnotationTransactionAttributeSource());
+-        ProxyFactory factory = new ProxyFactory(target);
++        ProxyFactory factory = new ProxyFactory(com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(target));
+         factory.setInterfaces(ICmsTopicService.class);
+         factory.addAdvice(interceptor);
+         return (ICmsTopicService) factory.getProxy();
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/ChapterAtmospherePersistenceContractTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/ChapterAtmospherePersistenceContractTest.java
+@@ -44,11 +44,18 @@
+     @Test
+     void bothWritePathsNormalizeInsteadOfPassingThrough() throws Exception
+     {
+-        String impl = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
++        String impl = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentGraphAuthoringServiceImpl.java");
+         int hits = impl.split("setAtmospherePreset\\(ChapterAtmospherePreset\\.requireValid\\(", -1).length - 1;
+         assertEquals(2, hits,
+                 "两条写路径(v1 saveChapters / v2 flow)都必须显式收敛枚举 —— "
+                         + "靠 copyProperties 隐式透传等于让前端任意字符串直接落库,同一个方法里已经栽过两次");
++        assertTrue(impl.contains("chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(chapterDTO.getAtmospherePreset()))"),
++                "V1章节写口必须保留显式规范化");
++        assertTrue(impl.contains("chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(source.getAtmospherePreset()))"),
++                "V2块编译写口必须保留显式规范化");
++        String facade = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
++        assertTrue(facade.contains("contentGraphAuthoringService.saveTopicChapters("),
++                "原公共门面必须调用真实内容图写口");
+     }
+ 
+     @Test
+@@ -77,7 +84,7 @@
+     @Test
+     void negativeControlRemovingNormalizationTurnsRed() throws Exception
+     {
+-        String impl = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
++        String impl = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentGraphAuthoringServiceImpl.java");
+         String tampered = impl.replace("setAtmospherePreset(ChapterAtmospherePreset.requireValid(", "setAtmospherePreset((");
+         assertNotNull(tampered);
+         assertFalse(tampered.contains("setAtmospherePreset(ChapterAtmospherePreset.requireValid("),
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java
+@@ -67,7 +67,17 @@
+     /** 创建主题会逐字段落章节；权益门槛不能只由小程序校验。 */
+     @Test
+     void topicCreateValidatesNonPositivePerkThresholdAtTheSharedRule() throws Exception {
+-        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
++        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicContentWriteGuard.java");
++        String writer = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentGraphAuthoringServiceImpl.java");
++        String facade = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
++        assertEquals(2, countOccurrences(facade, "contentGraphAuthoringService.saveTopicChapters("),
++                "创建与编辑两条主链均须委托真实内容图owner");
++        assertEquals(1, countOccurrences(writer, "contentWriteGuard.assertChapterShapeForTopic(chapterDTO, topicId)"),
++                "V1章节写口必须进入共享内容规则");
++        assertEquals(1, countOccurrences(writer, "contentWriteGuard.assertChapterShapeForTopic(chapter, topicId)"),
++                "V2块编译写口必须进入共享内容规则");
++        assertEquals(1, countOccurrences(src, "assertChapterShape(chapter, direct)"),
++                "形状入口必须转给原共享形状算法");
+         assertEquals(1, countOccurrences(src,
+                         "ChapterRecruitmentRules.assertPerkMinValueForTerms(termsMode, c.getPerkMinValue())"),
+                 "主题发布必须在落库前校验权益门槛正数及其与条款档位的匹配，不能只靠小程序输入框");

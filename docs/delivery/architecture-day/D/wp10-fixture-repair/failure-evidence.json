@@ -1,0 +1,484 @@
+{
+  "new": {
+    "run": 40062177785,
+    "job": 120777918298,
+    "source": "d49c12b820419308236010e0710f96d7bf48c4c9",
+    "artifact_id": 12547957132,
+    "artifact_digest": "cdc17262c24f2dd8547ed28eddfdf55685bc18f20284d4b09191a3d59063a5da",
+    "cases": [
+      {
+        "name": "templatePatchFailureRestoresCloneAndNodeBinding",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "repeatedTemplateUseClonesOnlyOncePerRebuild",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2CompiledReplacementRebindsEveryIdentity",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2FreeExploreWithoutBlocksKeepsLegacyWriter",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "hiddenAndUnlockRelationshipsSurviveReordering",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2CreateCommitsOpeningEndingAndAllReferences",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "blocksUpdateFailureRestoresDeletedAndInsertedRows",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2FreeExploreWithBlocksUsesCompiledWriter",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "chapterGuardKeepsFeeAndPerkShape",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "secondChapterFailureRestoresOriginalGraphAndCollaborators",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "invalidGeneratedIdentityRejectsAndRollsBack",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "chapterGuardKeepsAudioRecruitmentAndMethodOrder",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "privateDraftTemplateKeepsOriginalBundledEligibility",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "draftSaveKeepsVisibilityAndExternalActionsUnchanged",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v1RebuildDeletesFlowBeforeCollaborators",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "interactionCompilerKeepsWriteAndNoopBehavior",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "storyPatchFailureRollsBackWholeReplacement",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "omittedStoryKeepsOriginalContentAndRemapsChapterIds",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "runtimeBindingsUseCorrectOldAndCreatedClientMaps",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: 节点 20000：节点 20000 资源槽 material：资源声明未被使用",
+        "timeError": false,
+        "emptyOutcomeSuppressed": true
+      },
+      {
+        "name": "ticketParticipantFailureRollsBackCompletedGraph",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "duplicateIdentityRejectsAtOriginalPoint",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "runtimePatchFailureKeepsCreateAndRebuildMessages",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "chapterGuardPreservesRevshareShortCircuitReads",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "callerRollbackAfterFullGraphRestoresAllContent",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2NonCompiledReplacementKeepsLegacyDeleteOrder",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "routeVersionConflictRollsBackAllEarlierWrites",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "outcomesReaderKeepsAdvancedPreferenceAndDefaultBranches",
+        "kind": "failure",
+        "root": "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v1CreatePersistsLegacyGraphInSubmittedOrder",
+        "kind": "failure",
+        "root": "org.opentest4j.AssertionFailedError: expected: <[first, second, third]> but was: <[first, third, second]>",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "xpFailureStillContinuesAtOriginalPosition",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "foreignTemplateRejectsAndRollsBackExistingWrites",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2InvalidCompiledReplacementKeepsOldGraphAfterRollback",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "reviewParticipantFailureRollsBackCompletedV2Graph",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      }
+    ]
+  },
+  "old": {
+    "run": 40062347927,
+    "job": 120778437091,
+    "source": "ed5e5626a7278371c886fe3b14a0aa85d9cfa935",
+    "artifact_id": 12547902522,
+    "artifact_digest": "2e0c6f807d480928744ae8bf608efe96cd4edffd5eb8273c9662ad5bee184a4f",
+    "cases": [
+      {
+        "name": "templatePatchFailureRestoresCloneAndNodeBinding",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "repeatedTemplateUseClonesOnlyOncePerRebuild",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2CompiledReplacementRebindsEveryIdentity",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2FreeExploreWithoutBlocksKeepsLegacyWriter",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "hiddenAndUnlockRelationshipsSurviveReordering",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2CreateCommitsOpeningEndingAndAllReferences",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "blocksUpdateFailureRestoresDeletedAndInsertedRows",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2FreeExploreWithBlocksUsesCompiledWriter",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "chapterGuardKeepsFeeAndPerkShape",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "secondChapterFailureRestoresOriginalGraphAndCollaborators",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "invalidGeneratedIdentityRejectsAndRollsBack",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "chapterGuardKeepsAudioRecruitmentAndMethodOrder",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "privateDraftTemplateKeepsOriginalBundledEligibility",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "draftSaveKeepsVisibilityAndExternalActionsUnchanged",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v1RebuildDeletesFlowBeforeCollaborators",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "interactionCompilerKeepsWriteAndNoopBehavior",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "storyPatchFailureRollsBackWholeReplacement",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "omittedStoryKeepsOriginalContentAndRemapsChapterIds",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "runtimeBindingsUseCorrectOldAndCreatedClientMaps",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: 节点 20000：节点 20000 资源槽 material：资源声明未被使用",
+        "timeError": false,
+        "emptyOutcomeSuppressed": true
+      },
+      {
+        "name": "ticketParticipantFailureRollsBackCompletedGraph",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "duplicateIdentityRejectsAtOriginalPoint",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "runtimePatchFailureKeepsCreateAndRebuildMessages",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "chapterGuardPreservesRevshareShortCircuitReads",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "callerRollbackAfterFullGraphRestoresAllContent",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2NonCompiledReplacementKeepsLegacyDeleteOrder",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "routeVersionConflictRollsBackAllEarlierWrites",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "outcomesReaderKeepsAdvancedPreferenceAndDefaultBranches",
+        "kind": "failure",
+        "root": "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v1CreatePersistsLegacyGraphInSubmittedOrder",
+        "kind": "failure",
+        "root": "org.opentest4j.AssertionFailedError: expected: <[first, second, third]> but was: <[first, third, second]>",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "xpFailureStillContinuesAtOriginalPosition",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "foreignTemplateRejectsAndRollsBackExistingWrites",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "v2InvalidCompiledReplacementKeepsOldGraphAfterRollback",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      },
+      {
+        "name": "reviewParticipantFailureRollsBackCompletedV2Graph",
+        "kind": "error",
+        "root": "java.lang.IllegalArgumentException: Java 8 date/time type `java.time.LocalDateTime` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling (or disable `MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES`) (through reference chain: java.util.LinkedHashMap[\"cms_topic\"]->java.util.ArrayList[0]->org.springframework.util.LinkedCaseInsensitiveMap[\"create_time\"])",
+        "timeError": true,
+        "emptyOutcomeSuppressed": false
+      }
+    ]
+  },
+  "root_xml_confirmation": "Coordinator independently read both XMLs: 32 tests, 2 failures, 30 errors, 0 skipped per side; NPE contentGraphAuthoringService=null at rebuildTopicContent:4078",
+  "xml_download_by_D": {
+    "github_artifact_file_reference_received": true,
+    "local_zip_bytes_obtained": false,
+    "reason": "Proxy tunnel 403 Forbidden when reading connector artifact file URI; no bypass attempted"
+  },
+  "full": {
+    "run": 40062169180,
+    "job": 120777912885,
+    "backend_log_fetch": "Transport closed twice; stopped",
+    "root_xml_failures": [
+      "ChapterFlowTransactionTest.auditTaskFailureRollsBackTheCompletedV2Rebuild:116 -> contentGraphAuthoringService null, existingNodeUnlocks at rebuildTopicContent:4078",
+      "ChapterAtmospherePersistenceContractTest.bothWritePathsNormalizeInsteadOfPassingThrough:49 -> expected 2 normalization sites, found 0 in old owner",
+      "ProductSourceWiringTest.topicCreateValidatesNonPositivePerkThresholdAtTheSharedRule -> old owner source scan misses moved guard"
+    ]
+  }
+}

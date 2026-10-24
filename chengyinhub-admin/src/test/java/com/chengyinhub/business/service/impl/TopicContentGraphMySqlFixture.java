@@ -10,6 +10,7 @@ import com.chengyinhub.system.domain.SysCategory;
 import com.chengyinhub.system.service.ISysCategoryService;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.plugin.*;
@@ -41,7 +42,8 @@ import static org.mockito.Mockito.*;
 
 /** Same fixture on the original facade and extracted graph. No compile-time new-owner references. */
 final class TopicContentGraphMySqlFixture implements AutoCloseable {
-    static final ObjectMapper JSON = new ObjectMapper();
+    static final ObjectMapper JSON = new ObjectMapper().registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     static final long TOPIC = 100L, OWNER = 42L;
     static final List<String> TABLES = List.of("cms_topic", "cms_topic_chapter", "cms_topic_node",
             "cms_member_template", "npc_profile", "cms_collaborators", "product_role", "merchant_chapter_offer");
@@ -56,6 +58,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
     final Capture capture = new Capture(this);
     JdbcTemplate admin, db;
     DataSourceTransactionManager manager;
+    SqlSessionTemplate sql;
     TransactionTemplate tx;
     CmsTopicMapper topics;
     CmsTopicChapterMapper chapters;
@@ -101,7 +104,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
                 new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"),
                 new ClassPathResource("mapper/business/CmsCollaboratorsMapper.xml"),
                 new ClassPathResource("mapper/business/ProductRoleMapper.xml"));
-        SqlSessionTemplate sql = new SqlSessionTemplate(factory.getObject());
+        sql = new SqlSessionTemplate(factory.getObject());
         topics = sql.getMapper(CmsTopicMapper.class);
         chapters = sql.getMapper(CmsTopicChapterMapper.class);
         nodes = sql.getMapper(CmsTopicNodeMapper.class);
@@ -270,7 +273,13 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
 
     Object graphCall(String name,Object... args) { return tx.execute(status -> ReflectionTestUtils.invokeMethod(graph,name,args)); }
     Object guardCall(String name,Object... args) { return tx.execute(status -> ReflectionTestUtils.invokeMethod(guard,name,args)); }
-    Object outcomes() { return tx.execute(status -> ReflectionTestUtils.invokeMethod(facade,"declaredRouteOutcomes",TOPIC)); }
+    Object outcomes() {
+        return tx.execute(status -> {
+            // Controlled JDBC fixture updates bypass MyBatis write invalidation in the reader scenarios.
+            sql.clearCache();
+            return ReflectionTestUtils.invokeMethod(facade,"declaredRouteOutcomes",TOPIC);
+        });
+    }
 
     Map<String,List<Map<String,Object>>> snapshot() {
         Map<String,List<Map<String,Object>>> rows=new LinkedHashMap<>();
@@ -298,7 +307,12 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
         }
     }
     long number(Object value) { return ((Number)value).longValue(); }
-    List<Map<String,Object>> topicNodes(long topic) { return db.queryForList("select * from cms_topic_node where topic_id=? order by sort_id,id",topic); }
+    List<Map<String,Object>> topicNodes(long topic) {
+        // sort_id is chapter-local in the legacy writer; preserve the submitted chapter/node hierarchy.
+        return db.queryForList("select n.* from cms_topic_node n left join cms_topic_chapter c "
+                + "on c.id=n.chapter_id and c.topic_id=n.topic_id where n.topic_id=? "
+                + "order by c.sort_id,c.id,n.sort_id,n.id",topic);
+    }
     List<Map<String,Object>> topicChapters(long topic) { return db.queryForList("select * from cms_topic_chapter where topic_id=? order by sort_id,id",topic); }
     JsonNode json(String raw) throws Exception { return JSON.readTree(raw); }
     void earlier(String first,String second) {
