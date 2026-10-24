@@ -11,6 +11,8 @@ import java.util.Map;
 
 /** 活动级三身份游戏深模块公开 seam。 */
 public interface IGameSessionRuntimeService {
+    /** Persisted shared run/TEAM projection only; never initializes or refreshes gameplay state. */
+    com.chengyinhub.business.domain.route.TopicRouteState querySharedRouteState(Long memberId, Long topicId, Long activityId);
     default com.chengyinhub.business.domain.route.TopicRouteState sharedRouteState(Long memberId, Long topicId, Long activityId) { return null; }
     default com.fasterxml.jackson.databind.JsonNode sharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) { return null; }
     default com.fasterxml.jackson.databind.JsonNode recordSharedZeroChallengeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String submissionId,boolean passed,Long hits,boolean retry,Integer authorityEpoch) { throw new UnsupportedOperationException(); }
