@@ -62,6 +62,14 @@ public class CommunityPostLifecyclePolicy {
         return new Decision(target, actual + 1, CommunityPost.LIFECYCLE_PUBLISHED.equals(target));
     }
 
+    /**
+     * 纯「访问资格」判定：只看作者本人、lifecycle、audience（公开/关注者/社群成员）以及拉黑/屏蔽作者。
+     *
+     * <p><b>不含</b>个人负反馈（不感兴趣 / 少看该作者 / 少看该话题）：那是信息流个性化过滤，不是访问控制。
+     * SQL 片段 {@code CommunityPostMapper.xml#visibilityPolicy} = 本方法的访问规则 + 上述负反馈过滤，
+     * 因此两者<b>刻意不等价</b>；凡经 Mapper 查询的读取（信息流、收藏、详情等）以 SQL 为准。
+     * 当前生产代码未调用本方法（仅单测）；新调用方若需要与列表一致的结果，应走 Mapper 查询而不是本方法。</p>
+     */
     public boolean canView(CommunityPost post, Long viewerId, boolean followsAuthor,
                            boolean communityMember, boolean blocked, boolean muted) {
         if (post == null || post.getAuthorId() == null) return false;
