@@ -40,7 +40,7 @@
         <view class="orderbox_li_con_info">
           <view class="order-mode-line">
             <text class="order-mode-tag">城市定向</text>
-            <text class="order-mode-copy">按路线完成现场节点互动</text>
+
           </view>
           <view class="orderbox_li_con_info_name ep1">{{item.cmsActivity.name}}</view>
           <view class="orderbox_li_con_info_time" wx:if="{{item.cmsActivity.timeRangeFormatted}}"><image lazy-load="true" class="moh-ico" src="/images/d_orderIcon.png" mode="widthFix" />{{item.cmsActivity.timeRangeFormatted}}</view>
@@ -55,11 +55,11 @@
                (1 城市定向 / 2 自由探索,与游玩页标题同源);存量未回填(null)不猜,不出标签。 -->
           <view class="order-mode-line" wx:if="{{item.cmsTopic.productType == 2}}">
             <text class="order-mode-tag green">自由探索</text>
-            <text class="order-mode-copy">打开票夹后开始探索</text>
+
           </view>
           <view class="order-mode-line" wx:elif="{{item.cmsTopic.productType == 1}}">
             <text class="order-mode-tag">城市定向</text>
-            <text class="order-mode-copy">按路线完成现场节点互动</text>
+
           </view>
           <view class="orderbox_li_con_info_name ep1">{{item.cmsTopic.name}}</view>
           <view class="orderbox_li_con_info_time" wx:if="{{item.cmsTopic.timeRangeFormatted}}"><image lazy-load="true" class="moh-ico" src="/images/d_orderIcon.png" mode="widthFix" />{{item.cmsTopic.timeRangeFormatted}}</view>

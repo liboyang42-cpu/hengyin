@@ -74,7 +74,7 @@
       <view class="cover-brief" wx:if="{{ !info.imgUrl }}">
         <text class="cover-brief-type">{{ info.productType == 2 ? '自由探索' : '城市定向' }}</text>
         <view class="cover-brief-title">{{ info.name || '主题详情' }}</view>
-        <text class="cover-brief-value">{{ info.subtitle || info.description || '往下滑动看玩法、场次和报名' }}</text>
+        <text class="cover-brief-value" wx:if="{{ info.subtitle || info.description }}">{{ info.subtitle || info.description }}</text>
       </view>
       <block wx:else>
         <text class="cv-type">{{ info.productType == 2 ? '自由探索' : '城市定向' }}</text>
@@ -82,7 +82,7 @@
         <view class="cover-subtitle" wx:if="{{info.subtitle}}">{{info.subtitle}}</view>
       </block>
       <view id="topic-cover-details" class="cv-btn" bindtap="scrollToSecond" aria-role="button" aria-label="查看详情与报名" hover-class="cy-pressed" hover-stay-time="80">查看详情与报名</view>
-      <text class="cv-hint">点按查看详情</text>
+
     </view>
   </view>
   <view class="slide2 screen {{detailEnter ? 'slide2--enter' : ''}}" id="screen2">

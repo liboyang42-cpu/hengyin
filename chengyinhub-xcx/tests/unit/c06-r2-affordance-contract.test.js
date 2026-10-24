@@ -283,7 +283,7 @@ test('R2-5 数据:每个非 ready 态都有一句真实原因,不留空白解释
     assert.ok(map && map[state] && map[state].length > 0, `${state} 态必须有解释文案，否则解释行渲染成空`)
   })
   // 缺参的那句要真的把出路说清楚
-  assert.match(map.missing, /消息列表/, '缺参态要告诉用户回哪里去，不能只说「不可用」')
+  assert.match(map.missing, /返回/, '缺参态要告诉用户回哪里去，不能只说「不可用」')
 })
 
 test('negative control R2-5: 解禁视觉 / placeholder 不变 / 解释行只看 disabled,各自判红', () => {

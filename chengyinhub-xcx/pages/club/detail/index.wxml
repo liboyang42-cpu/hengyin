@@ -339,7 +339,7 @@
       <!-- Locked(25:2):未加入时成员名单不铺开 -->
       <view wx:else class="ov-locked">
         <text class="ov-locked-tit">{{club.joinPolicy == 1 ? '通过审核后可看成员名单' : '加入后可看成员名单'}}</text>
-        <text class="ov-locked-sub">{{club.joinPolicy == 1 ? (club.myJoinStatus === 0 ? '申请已提交，主理人通过后即可查看。' : '写一句申请留言，主理人通过后即可查看。') : '加入俱乐部后即可查看。'}}</text>
+
       </view>
 
       <!-- 成员管理列表:Figma 没画,但逐人举报 / 角色 / 团码入口都挂在这里,保留。 -->
@@ -407,7 +407,7 @@
       <!-- 治理与安全:Figma 没画,但封禁申诉/举报俱乐部只有这一个入口,保留。 -->
       <view class="overview-section governance-help-entry">
         <view class="overview-section-tit">治理与安全</view>
-        <view class="overview-text">如果你被本俱乐部限期封禁，可向平台提交事实与申诉理由；俱乐部管理者不能裁决。</view>
+
         <view class="governance-actions">
           <view class="governance-action" bindtap="goClubAppeal" aria-role="button" aria-label="进入俱乐部封禁申诉" hover-class="cy-pressed" hover-stay-time="80">封禁申诉</view>
           <view wx:if="{{canSeeMembers}}" class="governance-action governance-action--warning" catchtap="reportClub"

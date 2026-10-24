@@ -20,6 +20,6 @@
     <view class="ae-section">
       <cy-cell title="邀请记录" bind:tap="openInvite" />
     </view>
-    <cy-empty class="ae-fill" wx:if="{{balance === '0.00'}}" fill="{{true}}" size="lg" kind="empty" title="还没有收益" sub="创作收益与主办分润到账后都会显示在这里" cta="去发布路线" bind:cta="goPublish" />
+    <cy-empty class="ae-fill" wx:if="{{balance === '0.00'}}" fill="{{true}}" size="lg" kind="empty" title="还没有收益" cta="去发布路线" bind:cta="goPublish" />
   </block>
 </view>

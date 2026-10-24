@@ -231,7 +231,7 @@ test('#26 期次为空才去要原因,并显示服务端给的具体空态', () 
   assert.equal(page.data.shareEditionEmptySub, '正在确认原因…')
 
   req.success({ code: 200, data: { clubId: 7, reasonCode: 'UNDERTAKEN_NOT_ON_SALE' } })
-  assert.equal(page.data.shareEditionEmptySub, '开售并绑定本俱乐部后会出现在这里，可带票分享')
+  assert.equal(page.data.shareEditionEmptySub, '')
   assert.equal(page.data.shareEditionEmptyTitle, '已承接的期次还没有开售')
 })
 

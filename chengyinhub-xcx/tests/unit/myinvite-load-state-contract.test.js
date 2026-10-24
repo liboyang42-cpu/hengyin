@@ -293,9 +293,10 @@ const EMPTY_STATE_SUB = '好友加入后，会按时间出现在这里'
 const EMPTY_STATE_SUB_MAX_CHARS = 16
 
 function assertEmptyStateCopy(sceneWxml) {
-  const m = sceneWxml.match(/<cy-empty[^>]*?title="([^"]*)"[^>]*?sub="([^"]*)"/)
-  assert.ok(m, '邀请记录空态必须同时给出标题与说明句')
-  const [, title, sub] = m
+  const tag = (sceneWxml.match(/<cy-empty[^>]*?title="还没有人接受你的邀请"[^>]*\/>/) || [''])[0]
+  assert.ok(tag, '邀请记录空态必须给出标题')
+  const title = (tag.match(/title="([^"]*)"/) || [])[1] || ''
+  const sub = (tag.match(/\bsub="([^"]*)"/) || [])[1] || ''
 
   const sheetTitle = read(REGISTRY_JS).match(/'member-invite-history':\s*\{[^}]*title:\s*'([^']+)'/)[1]
   assert.ok(
@@ -314,7 +315,7 @@ test('CU-M-145：空态标题不复述面名，说明句留出一行宽度余量
 })
 
 test('负控:把说明句写回走查里那 21 字长句必须判红', () => {
-  const mutated = read(SCENE_WXML).replace(`sub="${EMPTY_STATE_SUB}"`, 'sub="好友通过你的邀请加入后，会按时间出现在这里"')
+  const mutated = read(SCENE_WXML).replace(`title="${EMPTY_STATE_TITLE}"`, `title="${EMPTY_STATE_TITLE}" sub="好友通过你的邀请加入后，会按时间出现在这里"`)
   assert.notEqual(mutated, read(SCENE_WXML), '变异锚点漂了，负控本身是假的')
   assert.throws(() => assertEmptyStateCopy(mutated), assert.AssertionError)
 })

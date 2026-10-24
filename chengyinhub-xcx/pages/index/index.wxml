@@ -62,7 +62,7 @@
       <view id="sec-reco" class="v3-sec v3-sec-reco" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">编辑精选</text>
-          <cy-btn variant="ghost" size="sm" bindtap="showRecommendationSource">为什么看到</cy-btn>
+          <cy-btn wx:if="{{recoHero}}" variant="ghost" size="sm" bindtap="showRecommendationSource">为什么看到</cy-btn>
         </view>
         <view class="v3-sec-state" wx:if="{{listLoading.recommendedTopicList && !recoHero}}">
           <cy-skeleton type="feed-card" count="1" />

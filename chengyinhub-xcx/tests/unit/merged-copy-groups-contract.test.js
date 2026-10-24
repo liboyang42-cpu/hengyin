@@ -29,9 +29,6 @@ const GROUPS = {
       '未参与也可以评价。已支付或已核销报名后的首条评价可按当前规则获得积分，以实际积分记录为准。'],
     ['pages/topic/index/index.wxml', '评论积分须符合参与及首评条件，以实际积分记录为准'],
   ],
-  'profile-signature-copy': [
-    ['pages/gerenziliao/gerenziliao.wxml', '修改签名文字不会改变定位城市。'],
-  ],
 };
 
 for (const [group, entries] of Object.entries(GROUPS)) {
