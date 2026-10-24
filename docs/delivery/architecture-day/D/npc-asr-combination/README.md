@@ -1,0 +1,7 @@
+只读组合核对基线：def951bef36a94417d90259906f6bda6abe6efb3。未改ASR/voice/STT/额度/迁移正文，Java/DB/CI NOT_RUN。
+确定缺口：play-free-explore-detail-contract 的2条旧源码断言在真实组合必失败：voice gate的新排版不匹配固定空格正则；空转写已由持久receipt处理，却仍查Controller旧text局部变量。
+仅交 source-guard.review.patch，由root按小程序skill审接。原case名/原资格SQL/功能闸/拒绝返回/空文本不得进模型/不落原音频断言保留；放宽的只有空白字符，并补付费ASR前的before.deny退出及实际ASR owner空结果/不落原音频检查。
+实际轻量验证：取def951的真实Controller、ASR owner、NpcChatService、PlayTeamMapper、NpcFeatureFlags、NoopSTT，执行原6条后端源码契约；旧检查器4pass/2fail，review版6pass；git apply --check通过。非完整Node suite/Java/真库验收。
+手工装配核对：原四处NpcChatWriteService构造点及其ASR Mapper注入、三类voice Controller真实ASR fixture、retention Mapper注入均已有必要接线；E STT发送测试通过admittedService helper注入共享admission，available/拒绝测试不需要伪造外呼。
+两类MySQL setup源码未发现确定缺字段：ASR原ums_member/npc_chat_log+原request/media列+新ASR表及3真实Mapper，textRequest已设置原必填retryable/ai；enrollment最小profile覆盖实际锁/CAS的scope/voice/version/del_flag/update_time，原migration独立建intent，CHECK=4。两套独立schema不应强行并表；前者需MYBATIS_IT五项显式连接配置，后者需AI_MYSQL_IT三项。未运行不能证明连接/DDL/并发通过。
+正文清理和原音色任务身份分属不同owner；没有因聊天删除而清enrollment身份，也没有把profile锁带进ASR member锁链。未确认自有fixture必现字段缺失，故未制造Java修补。
