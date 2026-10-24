@@ -63,20 +63,21 @@ Base: `2ec68899099a1e250df0949a8383bf85b5d3ffe0` (`origin/master`)
 mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteering.*Test -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
-结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **15 run, 0 fail, 0 error, 0 skip**。
+结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **29 run, 0 fail, 0 error, 0 skip**（2026-10-24T03:23:04Z）。
 
 | 测试类 | run |
 |---|---|
 | OrdinaryCityTeamEventJourneyTest | 1 |
-| EventScoreVersioningTest | 3 |
+| EventScoreVersioningTest | 8 |
 | PublishedRuleSelectorTest | 3 |
-| TeamClubEligibilityAuthorityTest | 4 |
-| EventResultDisputeTest | 1 |
+| TeamClubEligibilityAuthorityTest | 6 |
+| EventResultDisputeTest | 3 |
 | OrdinaryCityTimezoneQualifierTest | 3 |
+| C04AccountSwitchRestartIsolationTest | 5 |
 
 静态检查/编译：通过（test-compile + 上述 surefire）。DB/HTTP/App/CI：NOT_RUN。
 
-Head（本车道）：`58113ef7c3818671ac31aa2c394562715b3c1087`（报告本次提交会再前进一格）。
+Head（本车道）：`a6dd47b7923699f5190786186cd509c727ac66bc`（报告本次提交会再前进一格）。
 
 ## 6. 文件 SHA256（提交前快照）
 
