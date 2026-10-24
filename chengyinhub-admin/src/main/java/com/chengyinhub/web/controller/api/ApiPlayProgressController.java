@@ -26,7 +26,7 @@ public class ApiPlayProgressController extends BaseController {
     @Autowired
     private PlayHistoryQueryApplication playHistoryQueryApplication;
     @Autowired
-    private PlayNodeQueryApplication playNodeQueryApplication;
+    private PlayEntryApplication playEntryApplication;
     @Autowired
     private PlayPhotoCommandApplication playPhotoCommandApplication;
     @Autowired
@@ -41,7 +41,7 @@ public class ApiPlayProgressController extends BaseController {
     @GetMapping("/nodes")
     public AjaxResult nodes(Long activityId, Long topicId)
     {
-        return playNodeQueryApplication.nodes(currentMemberId(), activityId, topicId);
+        return playEntryApplication.nodes(currentMemberId(), activityId, topicId);
     }
 
     @Operation(summary = "读取主题地点路线状态")
@@ -51,11 +51,11 @@ public class ApiPlayProgressController extends BaseController {
             @RequestParam(name = "activityId", required = false) Long activityId,
             @RequestParam(name = "actId", required = false) Long actId)
     {
-        return playNodeQueryApplication.routeState(currentMemberId(), topicId, activityId, actId);
+        return playEntryApplication.routeState(currentMemberId(), topicId, activityId, actId);
     }
 
     public AjaxResult routeState(Long topicId, Long actId) {
-        return playNodeQueryApplication.routeState(currentMemberId(), topicId, actId);
+        return playEntryApplication.routeState(currentMemberId(), topicId, actId);
     }
 
     @Operation(summary = "自由定向:终章结局信(按完成顺序拼合碎片)")

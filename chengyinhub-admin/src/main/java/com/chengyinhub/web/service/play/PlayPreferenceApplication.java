@@ -49,6 +49,8 @@ public class PlayPreferenceApplication {
         private AjaxResult error;
     }
 
+    /** Compatibility entry: original lead/unlock/canPlay ordering can initialize a route.
+     * Submission and this GET share the command admission rules; this is not a pure query port. */
     public AjaxResult preference(Long actorMemberId, Long nodeId, String activityId, String topicId)
     {
         Long memberId = actorMemberId;

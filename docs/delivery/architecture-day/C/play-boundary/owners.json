@@ -39,14 +39,18 @@
       "isExploreChapterRedeemed"
     ],
     "PlayNodeQueryApplication": [
-      "nodes",
       "resolveCoupon",
       "visibleBranchNodes",
       "shopDayCrowdedThreshold",
       "shopDayServiceCapacityPerHour",
       "shopDayExpectedWaitMinutes",
       "vitalsOn",
-      "routeState"
+      "prepareNodes",
+      "projectNodeBeforeRuntime",
+      "projectFrozenTemplate",
+      "finishNode",
+      "finishNodes",
+      "appendAssignedRole"
     ],
     "PlayHistoryQueryApplication": [
       "ending",
@@ -111,6 +115,10 @@
     ],
     "PlayTaskPresentation": [
       "shopDayProofData"
+    ],
+    "PlayEntryApplication": [
+      "nodes",
+      "routeState"
     ]
   }
 }

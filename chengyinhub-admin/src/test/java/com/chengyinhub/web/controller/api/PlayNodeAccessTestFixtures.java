@@ -24,6 +24,7 @@ public final class PlayNodeAccessTestFixtures {
         PlayNodeContext.class,
         PlayCompletionFacts.class,
         PlayNodeQueryApplication.class,
+        PlayEntryApplication.class,
         PlayHistoryQueryApplication.class,
         PlayPlayerQueryApplication.class,
         PlayBasicIntentApplication.class,
@@ -61,7 +62,8 @@ public final class PlayNodeAccessTestFixtures {
         Class<?> type=switch(name) {
             case "nodeScope", "playContext", "isDelistedNode", "hasCompletedNodeFact", "findNodeProgressRow", "isPureOnlineNode", "isAppSensorNode", "isPhotoFilterNode", "isPrevDone", "routeAccessError", "unlockGateError", "parseGeoCoordinate", "activityTimeError", "resolveMode", "resolveCtx", "leadGateError", "normalizeAnswer", "frozenAnswer", "frozenTemplateView", "effectiveTemplate" -> PlayNodeContext.class;
             case "isTopicCompleted", "isTopicCompletedFor", "isCompletedCompletionFact", "completedExplorePassOwnedBy", "exploreRegistration", "isRegistered", "activityRegistration", "validSelfPlayPass", "topicHistoryBlocked", "historyReadableNode", "hasSelfPlayRegistration", "isExploreChapterRedeemed" -> PlayCompletionFacts.class;
-            case "nodes", "resolveCoupon", "visibleBranchNodes", "shopDayCrowdedThreshold", "shopDayServiceCapacityPerHour", "shopDayExpectedWaitMinutes", "vitalsOn", "routeState" -> PlayNodeQueryApplication.class;
+            case "nodes", "routeState" -> PlayEntryApplication.class;
+            case "resolveCoupon", "visibleBranchNodes", "shopDayCrowdedThreshold", "shopDayServiceCapacityPerHour", "shopDayExpectedWaitMinutes", "vitalsOn" -> PlayNodeQueryApplication.class;
             case "ending", "myCompleted" -> PlayHistoryQueryApplication.class;
             case "companionLine", "defaultCompanionLine", "leaderboard", "growth", "achievements" -> PlayPlayerQueryApplication.class;
             case "basicIntentScope", "basicActionContext", "basicActionReceipt", "executeBasicIntent", "basicReplay", "basicJson", "basicHash", "basicRequestId" -> PlayBasicIntentApplication.class;
