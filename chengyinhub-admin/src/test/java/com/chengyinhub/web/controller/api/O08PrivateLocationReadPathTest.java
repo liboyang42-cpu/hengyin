@@ -313,20 +313,19 @@ class O08PrivateLocationReadPathTest {
             ICmsActivityService activityService = mock(ICmsActivityService.class);
             ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
             doReturn(VIEWER).when(controller).getAppUserId();
-            ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
             ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-            ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-            ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-            ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
-            ReflectionTestUtils.setField(controller, "playerNodeProgressService",
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService",
                     mock(com.chengyinhub.business.service.IPlayerNodeProgressService.class));
-            ReflectionTestUtils.setField(controller, "cmsPointsSettingService",
-                    mock(com.chengyinhub.business.service.ICmsPointsSettingService.class));
+            var fixtureHintSettings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
             ReflectionTestUtils.setField(controller, "cmsMemberTemplateService",
                     mock(com.chengyinhub.business.service.ICmsMemberTemplateService.class));
-            ReflectionTestUtils.setField(controller, "omsTicketService",
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                     mock(com.chengyinhub.business.service.IOmsTicketService.class));
-            ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
             ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
 
             CmsActivity activity = new CmsActivity();
@@ -351,6 +350,7 @@ class O08PrivateLocationReadPathTest {
             node.setLatitude("31.2304");
             node.setAddress("某小区 3 号楼");
             when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
+            com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
         }
     }
 

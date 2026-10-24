@@ -41,8 +41,8 @@ class ApiPlayUnlockGateTest {
         controller = new ApiPlayProgressController();
         progressService = mock(IPlayerNodeProgressService.class);
         nodeService = mock(ICmsTopicNodeService.class);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
 
         CmsTopicNode prev = new CmsTopicNode();
         prev.setId(PREV_NODE);

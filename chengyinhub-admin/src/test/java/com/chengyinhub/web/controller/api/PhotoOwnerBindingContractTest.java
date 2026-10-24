@@ -91,12 +91,12 @@ class PhotoOwnerBindingContractTest
         IPlayerProgressionService progressionService = mock(IPlayerProgressionService.class);
         ITopicCompletionAwardService completionAwardService = mock(ITopicCompletionAwardService.class);
 
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
         ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
@@ -105,7 +105,7 @@ class PhotoOwnerBindingContractTest
         ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
         ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
         ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));

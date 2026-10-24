@@ -95,18 +95,18 @@ class ApiPlayProgressIdempotencyTest {
 
         controller = new ApiPlayProgressController();
         ReflectionTestUtils.setField(controller, "businessAuditEventMapper", auditMapper);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         // 承接方现场层:没有中标商家时返回空对象,取值全部回落主办方模板 ——
         // 用真实现而不是 mock,免得「回落」这条路径在测试里被 mock 假装成功。
         ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
-        ReflectionTestUtils.setField(controller, "cmsTopicService", cmsTopicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", cmsTopicService);
         ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", cmsRegistrationService);
         ReflectionTestUtils.setField(controller, "shopDayProofService", shopDayProofService);
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(controller, "playerProgressionService", playerProgressionService);
         ReflectionTestUtils.setField(controller, "growthService", growthService);

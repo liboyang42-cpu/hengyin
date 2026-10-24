@@ -41,7 +41,12 @@ class PuzzleRevealArrivalFactTest
         attemptLogMapper = mock(PlayAttemptLogMapper.class);
         progressMapper = mock(PlayerNodeProgressMapper.class);
         UmsMemberMapper memberMapper = mock(UmsMemberMapper.class);
-        service = new PuzzlePlayServiceImpl(templateService, attemptLogMapper, progressMapper, memberMapper);
+        service = new PuzzlePlayServiceImpl(templateService, attemptLogMapper, progressMapper, memberMapper,
+                mock(com.chengyinhub.business.service.ICmsTopicNodeService.class),
+                mock(com.chengyinhub.business.service.support.PlayNodeAccessService.class),
+                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class));
         when(memberMapper.lockMemberById(MEMBER)).thenReturn(MEMBER);
         when(attemptLogMapper.insertPlayAttemptLog(any())).thenReturn(1);
     }

@@ -118,16 +118,16 @@ class ApiPlayDelistedCompletedRetryContractTest
         IPlayerProgressionService progressionService = mock(IPlayerProgressionService.class);
         ITopicCompletionAwardService completionAwardService = mock(ITopicCompletionAwardService.class);
 
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         when(registrationMapper.markFirstSuccessfulScan(eq(REGISTRATION), eq(PLAYER),
                 eq(2L), eq(ACTIVITY), any(Date.class))).thenReturn(1);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationMapper", registrationMapper);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper", registrationMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
         ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
@@ -136,7 +136,7 @@ class ApiPlayDelistedCompletedRetryContractTest
         ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
         ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
         ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
@@ -145,8 +145,8 @@ class ApiPlayDelistedCompletedRetryContractTest
         ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         ReflectionTestUtils.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
         ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
         ReflectionTestUtils.setField(controller, "preferencePlayService", preferencePlayService);
@@ -219,7 +219,7 @@ class ApiPlayDelistedCompletedRetryContractTest
             return Long.valueOf(1L).equals(probe.getStatus())
                     ? Collections.emptyList() : Collections.singletonList(node);
         });
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService",
                 new TopicRouteRuntimeServiceImpl(routeMapper, routeTopicMapper, routeNodeMapper,
                         routeProgressMapper, routeActivityMapper, routeRegistrationMapper));
 

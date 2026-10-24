@@ -1,0 +1,402 @@
+{
+  "reference_source": "fac5fba822187569c0e20c64bf4c87e660f6b28a",
+  "source_inventory_reference": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+  "original_source_files": 59,
+  "xml_suites_found": 55,
+  "selected_suites": [
+    {
+      "name": "com.chengyinhub.business.it.ComplaintPickerOwnerType3RealDbIT",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.ShopDayGameThenPhotoH2Test",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.SpoilerIsNotAnswerGateTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
+      "tests": "44",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.PlayKitBingoRuntimeTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.util.AdvancedGamePublicProjectionTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.util.ChapterAtmospherePresetTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.common.utils.GeoDistanceUtilsTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.framework.aspectj.DeadlockRetryEntryPointContractTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayBranchNodeVisibilityTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayCheckinDuplicateCodeTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayCheckinLiveCodeTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayCompletedRouteSourcesTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayCurrentUseBoundaryTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayDelistedCompletedRetryContractTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayEndingCompanionFactTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayGpsGeofenceValidationTest",
+      "tests": "21",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayHintUnlockTest",
+      "tests": "15",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayHistoryFulfillmentAccessTest",
+      "tests": "17",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesContractTest",
+      "tests": "15",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesOldEntryContractTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayLeadSpectatorGateTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayLeaderboardTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayMyCompletedSelfPlayContractTest",
+      "tests": "15",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayNodeNpcPreferenceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayPhotoRetryAndFailureContractTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayProgressCompletionTruthTest",
+      "tests": "31",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayProgressCouponGrantFailureTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayProgressIdempotencyTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayPuzzleHintTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayRouteConflictHttpContractTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayRouteContractTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlaySelfPlayPassGateTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlaySensorResultTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayUnlockGateTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayVitalsOnTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.CityStationOrderAcceptanceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ClubLeadGateTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.CollectIdempotencyTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.FreeOrderCancelEntryGateAcceptanceTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.GameplayControllerProtectionTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.LogAttemptFailureTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.NodeMedalClaimTest",
+      "tests": "17",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.O08PrivateLocationReadPathTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.PhotoOwnerBindingContractTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.PhotoReviewRewardContractTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.PlayCommandIntentTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.PlayProgressVarsTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.PlayResolveModeTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.PlaySelfPlayCompletionTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ShopDayExperienceLayerContractTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.TopicRouteFrozenSessionReadSideTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ArchitectureDayGCompletionFallbackTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.PlayLeadAdmissionFailureTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "missing_in_previous_artifact": [
+    "BasicPlayCommandFixtures",
+    "CurrentPlayControllerFixtures",
+    "PlayHintUnlockMySqlIT",
+    "PlayLeadAdmissionFailureMySqlIT"
+  ],
+  "scope": "Actual raw counts only, do not use ambiguous original94 prose to define WP09 regression set",
+  "new_application_authored": 16,
+  "new_runtime_execution": "PENDING_NEW_SOURCE"
+}

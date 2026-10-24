@@ -97,26 +97,26 @@ class ShopDayExperienceLayerContractTest
 
         controller = spy(new ApiPlayProgressController());
         doReturn(PLAYER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         when(registrationMapper.markFirstSuccessfulScan(eq(REGISTRATION), eq(PLAYER),
                 eq(2L), eq(ACTIVITY), any(Date.class))).thenReturn(1);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationMapper", registrationMapper);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper", registrationMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
         ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
         ReflectionTestUtils.setField(controller, "playerTopicTagService", tagService);
         PreferencePlayService preferencePlayService = new PreferencePlayService();
         ReflectionTestUtils.setField(preferencePlayService, "tagService", tagService);
         ReflectionTestUtils.setField(controller, "preferencePlayService", preferencePlayService);
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        var fixtureHintSettings = mock(ICmsPointsSettingService.class);
         ReflectionTestUtils.setField(controller, "umsMemberPointsDetailService",
                 mock(IUmsMemberPointsDetailService.class));
         ReflectionTestUtils.setField(controller, "topicOnsiteMetricsMapper", mock(TopicOnsiteMetricsMapper.class));
@@ -202,6 +202,7 @@ class ShopDayExperienceLayerContractTest
                 .thenReturn(Collections.singletonList(arrived));
         CurrentPlayControllerFixtures.install(controller);
         BasicPlayCommandFixtures.scope(controller, TOPIC);
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     @SuppressWarnings("unchecked")

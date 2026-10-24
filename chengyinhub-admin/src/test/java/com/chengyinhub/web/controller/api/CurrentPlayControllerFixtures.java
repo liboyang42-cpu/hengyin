@@ -28,23 +28,23 @@ final class CurrentPlayControllerFixtures {
     static void install(Object controller) {
         if (controller instanceof ApiPlayProgressController) BasicPlayCommandFixtures.install((ApiPlayProgressController) controller);
         // 旧合法业务夹具显式声明“查询成功且非带领场”；生产入口绝不以缺 mapper 放行。
-        if (ReflectionTestUtils.getField(controller, "clubLeadMapper") == null) {
+        if (com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "clubLeadMapper") == null) {
             com.chengyinhub.business.mapper.ClubLeadMapper noLead = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
             when(noLead.selectByActivity(anyLong())).thenReturn(null);
-            ReflectionTestUtils.setField(controller, "clubLeadMapper", noLead);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", noLead);
         }
-        if (ReflectionTestUtils.getField(controller, "currentPlayActivityMapper") == null) {
+        if (com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "currentPlayActivityMapper") == null) {
             CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
             when(activityMapper.selectCmsActivityByIdForUpdate(anyLong())).thenAnswer(call -> {
                 // 调用时取控制器当前 service：用例方法可能在 setUp 之后换掉 service 夹具。
-                ICmsActivityService activities = (ICmsActivityService) ReflectionTestUtils.getField(controller, "cmsActivityService");
+                ICmsActivityService activities = (ICmsActivityService) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsActivityService");
                 return activities == null ? null : activities.selectCmsActivityById(call.<Long>getArgument(0));
             });
-            ReflectionTestUtils.setField(controller, "currentPlayActivityMapper", activityMapper);
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "currentPlayActivityMapper", activityMapper);
         }
-        CmsRegistrationMapper existing = (CmsRegistrationMapper) ReflectionTestUtils.getField(controller, "cmsRegistrationMapper");
+        CmsRegistrationMapper existing = (CmsRegistrationMapper) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsRegistrationMapper");
         if (existing == null) {
-            ReflectionTestUtils.setField(controller, "cmsRegistrationMapper",
+            com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper",
                     delegate(mock(CmsRegistrationMapper.class), controller));
         } else {
             // 测试自带的 mapper mock：只补两条锁读委托；用例方法里后写的同名 stub 仍优先。

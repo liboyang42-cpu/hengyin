@@ -45,8 +45,8 @@ class PlayResolveModeTest {
         topicSvc = mock(ICmsTopicService.class);
         ticketSvc = mock(IOmsTicketService.class);
         controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicSvc);
-        ReflectionTestUtils.setField(controller, "omsTicketService", ticketSvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicSvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", ticketSvc);
         when(ticketSvc.selectOmsTicketList(any())).thenReturn(Collections.<OmsTicket>emptyList());
     }
 

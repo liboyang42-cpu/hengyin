@@ -1,0 +1,53 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java
+@@ -134,17 +134,20 @@
+     private ApiPlayProgressController controller(long actor, IUmsMemberService memberService, IUmsMemberPointsDetailService details) {
+         ApiPlayProgressController target = new ApiPlayProgressController() {
+             @Override public Long getAppUserId() {
++                assertFalse(TransactionSynchronizationManager.isActualTransactionActive(), "identity extraction is outside the application transaction");
++                return actor;
++            }
++        };
++        ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
++        CmsTopicNode node = new CmsTopicNode(); node.setId(NODE); node.setTopicId(TOPIC); node.setTemplateId(39L); node.setSortId(1L); node.setStatus(1L);
++        doAnswer(call -> {
+                 assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+                 assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+                 // Test-only connection evidence, never part of production query budgets.
+                 connectionIds.add(jdbc.queryForObject("SELECT CONNECTION_ID()", Long.class));
+                 if (callerEntered != null) callerEntered.countDown();
+-                return actor;
+-            }
+-        };
+-        ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
+-        CmsTopicNode node = new CmsTopicNode(); node.setId(NODE); node.setTopicId(TOPIC); node.setTemplateId(39L); node.setSortId(1L); node.setStatus(1L);
+-        when(nodes.selectCmsTopicNodeById(NODE)).thenReturn(node);
++                return node;
++        }).when(nodes).selectCmsTopicNodeById(NODE);
+         ICmsMemberTemplateService templates = mock(ICmsMemberTemplateService.class);
+         CmsMemberTemplate template = new CmsMemberTemplate(); template.setId(39L); template.setHint1("hint-one"); template.setHint2("hint-two");
+         when(templates.selectCmsMemberTemplateById(39L)).thenReturn(template);
+@@ -153,16 +156,15 @@
+         when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+         CmsPointsSettingServiceImpl settings = new CmsPointsSettingServiceImpl(); ReflectionTestUtils.setField(settings, "cmsPointsSettingMapper", sql.getMapper(CmsPointsSettingMapper.class));
+         CmsActivityServiceImpl activities = new CmsActivityServiceImpl(); ReflectionTestUtils.setField(activities, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
+-        ReflectionTestUtils.setField(target, "cmsTopicNodeService", nodes);
++        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsTopicNodeService", nodes);
+         ReflectionTestUtils.setField(target, "cmsMemberTemplateService", templates);
+-        ReflectionTestUtils.setField(target, "cmsTopicService", topics);
+-        ReflectionTestUtils.setField(target, "cmsPointsSettingService", settings);
+-        ReflectionTestUtils.setField(target, "cmsActivityService", activities);
+-        ReflectionTestUtils.setField(target, "currentPlayActivityMapper", sql.getMapper(CmsActivityMapper.class));
+-        ReflectionTestUtils.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+-        ReflectionTestUtils.setField(target, "clubLeadMapper", sql.getMapper(ClubLeadMapper.class));
+-        ReflectionTestUtils.setField(target, "umsMemberService", memberService);
++        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsTopicService", topics);
++        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsActivityService", activities);
++        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "currentPlayActivityMapper", sql.getMapper(CmsActivityMapper.class));
++        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
++        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "clubLeadMapper", sql.getMapper(ClubLeadMapper.class));
+         ReflectionTestUtils.setField(target, "umsMemberPointsDetailService", details);
++        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.wire(target, settings, memberService, details, transactions);
+         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
+         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
+         return (ApiPlayProgressController) proxy.getProxy();

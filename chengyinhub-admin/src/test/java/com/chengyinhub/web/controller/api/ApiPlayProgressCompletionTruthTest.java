@@ -112,14 +112,14 @@ class ApiPlayProgressCompletionTruthTest
 
         controller = spy(new ApiPlayProgressController());
         doReturn(PLAYER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationMapper", registrationMapper);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper", registrationMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
         ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
         ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
@@ -130,11 +130,11 @@ class ApiPlayProgressCompletionTruthTest
         // 上传事实证明由 FileOssUploadUtils 专属测试覆盖;本类只验到店凭证/通关口径合同。
         ReflectionTestUtils.setField(controller, "photoUploadFactVerifier",
                 (ApiPlayProgressController.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> { });
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         templateService = mock(ICmsMemberTemplateService.class);
         ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
         ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
@@ -343,7 +343,7 @@ class ApiPlayProgressCompletionTruthTest
     @Test
     void genericGpsUsesFrozenCoordinatesAndOnlyItsValidatedOriginCreatesProof() throws Exception {
         topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(101L);node.setLongitude("120.0");node.setLatitude("30.0");
-        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":5}"));when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));when(runtime.recordPlayerArrival(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString(),eq(0),eq("GPS"))).thenReturn(Collections.singletonMap("version",1));
@@ -357,7 +357,7 @@ class ApiPlayProgressCompletionTruthTest
     void genericPlayerScanRecordsCurrentRunArrivalWithoutLegacyAwards() {
         topic.setProductType(ProductType.ORIENTEERING);
         com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
         when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
         when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         when(runtime.recordPlayerArrival(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString(),eq(0))).thenReturn(Collections.singletonMap("version",1));
@@ -376,7 +376,7 @@ class ApiPlayProgressCompletionTruthTest
         topic.setProductType(ProductType.ORIENTEERING);
         com.chengyinhub.business.service.ITopicRouteRuntimeService runtime =
                 mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtime);
         when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
         com.chengyinhub.business.domain.route.TopicRouteState state =
                 new com.chengyinhub.business.domain.route.TopicRouteState();
@@ -676,7 +676,7 @@ class ApiPlayProgressCompletionTruthTest
     @Test void genericFrozenTextAndChoiceAnswersProduceOnlyControlledCurrentProof() throws Exception {
         topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(9L);
         com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         CmsMemberTemplate live=new CmsMemberTemplate();live.setValidationMethod(1);live.setQuestionAnswer("changed");when(templateService.selectCmsMemberTemplateById(9L)).thenReturn(live);
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":1,\"questionAnswer\":\"Ａ B\"}"));
