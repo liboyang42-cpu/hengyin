@@ -41,7 +41,7 @@ for r in orig:
         current=next(m for m in puz if m['name']=='unlockNodeHint');owner=PUZZLE;kind='complete command moved; typed carrier/owner rewiring reviewed'
     else:
         current=bysig(now,r['signature']);assert tokens(r['body'])==tokens(current['body']),r['signature'];kind='unchanged body'
-    rows.append(dict(symbol=name,old_signature=r['signature'],old_body_fingerprint=digest(r['body']),old_line=r['line'],target_path=owner,target_signature=current['signature'],new_body_fingerprint=digest(current['body']),new_line=current['line'],classification=kind,old_dependency_calls=re.findall(r'\b(\w+)\.(\w+)\s*\(',mask(r['body'])),new_dependency_calls=re.findall(r'\b(\w+)\.(\w+)\s*\(',mask(current['body']))))
+    rows.append(dict(symbol=name,old_signature=r['signature'],old_body_fingerprint=digest(r['body']),old_line=r['line'],target_path=owner,target_signature=current['signature'],new_body_fingerprint=digest(current['body']),new_line=current['line'],classification=kind,old_dependency_fingerprint=hashlib.sha256(json.dumps(re.findall(r'\b(\w+)\.(\w+)\s*\(',mask(r['body']))).encode()).hexdigest(),new_dependency_fingerprint=hashlib.sha256(json.dumps(re.findall(r'\b(\w+)\.(\w+)\s*\(',mask(current['body']))).encode()).hexdigest()))
 old_private=[r for r in orig if r['signature'].startswith('private ')]
 assert len(old_private)==68 and len({r['name'] for r in old_private})==58
 old_puzzle=methods(old(PUZZLE))
@@ -102,4 +102,15 @@ output=dict(base=BASE,status='SOURCE_CHECK_ONLY_NOT_JAVA_MYSQL_VALIDATION',origi
     constructors=constructors,original_test_files=test_rows,java_lexical_checks=lexical,
     direct_application_source_tests=len(re.findall(r'@Test\s+void',Path('chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NodeHintUnlockApplicationTest.java').read_text())),
     java_compile='NOT RUN',junit='NOT RUN',mysql='NOT RUN',http='NOT RUN',ci_dispatch='NOT PERFORMED')
-print(json.dumps(output,ensure_ascii=False,indent=2))
+# One entry per source symbol/file keeps the review diff small; all fingerprints remain reproducible.
+print('{')
+entries=list(output.items())
+for index,(key,value) in enumerate(entries):
+    suffix=',' if index<len(entries)-1 else ''
+    if isinstance(value,list):
+        print('  '+json.dumps(key)+': [')
+        for i,row in enumerate(value):
+            print('    '+json.dumps(row,ensure_ascii=False,separators=(',',':'))+(',' if i<len(value)-1 else ''))
+        print('  ]'+suffix)
+    else: print('  '+json.dumps(key)+': '+json.dumps(value,ensure_ascii=False)+suffix)
+print('}')

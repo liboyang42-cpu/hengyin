@@ -6,9 +6,9 @@
 
 公共仓库hengyin，批准合同675a92aaa32260f57aa6ebdb2cb4b1f5c666714c；业务基线9a2dcf21aef4d7aec7a14065a2601bd86aaad805（合同涉及的63个源码/测试blob已与root6ec核同）。工作树 `/workspace/hengyin-c-w09-m1-contract`，分支 `codex/architecture-day-c-w09-m1-contract`。
 
-- M1-A `8df8490d`：共享准入14算法、纯投影桥、必要fixture owner接线；不单独算WP09完成。
-- `c5d64212`：只交root hint10 review.patch与说明。此patch依赖完整B的test fixture；中间A树不用于验收。
-- M1-B：本报告所在提交，完整unlock/定价/事务、四原Puzzle构造接线、新direct应用测试及指纹/验证计划；与A合为完整候选。原675合同/B1冻结候选不重写。
+- M1-A `8df8490d1f265012b5f39279d4c3fa2e5bb57c6c`：共享准入14算法、纯投影桥、必要fixture owner接线；不单独算WP09完成。
+- `c5d6421286d13565e958149ab9302981a63ef5b9`：只交root hint10 review.patch与说明。此patch依赖完整B的test fixture；中间A树不用于验收。
+- M1-B `c4606371361cce0ee09752de3f9b0723a6a93f65`：完整unlock/定价/事务、四原Puzzle构造接线、新direct应用测试及指纹/验证计划；与A合为完整候选。原675合同/B1冻结候选不重写。后续仅将指纹证据按symbol/file一行整理，并保留body/依赖hash，未改B的Java源；可用脚本重现或jq展开，不混入大段重复getter调用清单。
 
 生产仅合同列六文件：ApiPlayProgressController、IPuzzlePlayService、PuzzlePlayServiceImpl、新PlayNodeAccessService、新NodeHintUnlockCommand/NodeHintUnlockResult。测试只改清单内必要owner装配及四个直接Puzzle构造，新增两个有限装配fixture和direct应用测试；源清单在source-proof中逐路径列明。D生产/复制业务、G资金、Theme/APPLIED、Photo共享Fixture、root ledger/UI/CI/架构baseline均未写。ChapterFlowWriteServiceTest只改原玩家isPrevDone表征片段的两条owner装配调用，保留其出版/拷贝正文，root集成须保留D同文件其他差异。
 
