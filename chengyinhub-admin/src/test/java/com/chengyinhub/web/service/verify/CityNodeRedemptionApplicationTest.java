@@ -88,7 +88,7 @@ class CityNodeRedemptionApplicationTest {
         doReturn(poi).when(roam).selectPlayerMerchantNodeDetail(51L, 0L);
         com.chengyinhub.business.service.impl.QrcodeServiceImpl qr =
                 (com.chengyinhub.business.service.impl.QrcodeServiceImpl) ReflectionTestUtils.getField(
-                        org.springframework.test.util.AopTestUtils.getTargetObject(application), "qrcodeService");
+                        org.springframework.test.util.AopTestUtils.<Object>getTargetObject(application), "qrcodeService");
         doAnswer(call -> {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
             assertEquals(300, (int) call.getArgument(1)); assertEquals(300, (int) call.getArgument(2));

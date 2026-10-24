@@ -35,7 +35,7 @@ import com.chengyinhub.common.core.domain.entity.SysUser;
 import com.chengyinhub.common.core.domain.model.LoginAppUser;
 import com.chengyinhub.common.core.domain.model.LoginUser;
 import com.chengyinhub.common.enums.OperatorType;
-import com.chengyinhub.common.utils.Threads;
+import com.chengyinhub.common.utils.LogCorrelation;
 import com.chengyinhub.framework.config.ThreadPoolConfig;
 import com.chengyinhub.framework.manager.AsyncManager;
 import com.chengyinhub.system.domain.SysOperLog;
@@ -221,13 +221,15 @@ class LogAspectAuditTest
         doThrow(new IllegalStateException("audit-db-down")).when(operLogService).insertOperlog(any(SysOperLog.class));
 
         CountDownLatch errorLogged = new CountDownLatch(1);
-        Logger threadsLogger = (Logger) LoggerFactory.getLogger(Threads.class);
+        Logger threadsLogger = (Logger) LoggerFactory.getLogger(LogCorrelation.class);
         AppenderBase<ILoggingEvent> appender = new AppenderBase<ILoggingEvent>()
         {
             @Override
             protected void append(ILoggingEvent event)
             {
-                if (event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("audit-db-down"))
+                if (event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("event=async.failure")
+                        && event.getFormattedMessage().contains("errorType=IllegalStateException")
+                        && !event.getFormattedMessage().contains("audit-db-down"))
                 {
                     errorLogged.countDown();
                 }

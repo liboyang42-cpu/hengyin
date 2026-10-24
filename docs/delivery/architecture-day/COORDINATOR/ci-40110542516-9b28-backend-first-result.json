@@ -1,0 +1,1699 @@
+{
+  "run_id": 40110542516,
+  "job_id": 120921240106,
+  "source_sha": "9b284f0111b4337e388fc18d797b11c62112cd82",
+  "compilation": "PASS",
+  "backend_step": "FAIL_TESTS_BEFORE_LATER_IT_STARTUP_JDEPS_STEPS",
+  "xml_unique_testcases": 15000,
+  "passed": 13652,
+  "failures": 149,
+  "errors": 552,
+  "skipped": 647,
+  "skip_interpretation": "Default unit pass contains environment-gated database classes; no claim those required real-storage classes executed. Dedicated source-bound real-storage workflow must execute each registered class with zero skip.",
+  "bad_suites": 121,
+  "testcase_failure_elements": 701,
+  "dominant_roots": [
+    "Topic publication shared test fixtures target moved fields",
+    "Play shared test fixture reflects removed controller fields",
+    "Registration/refund original-owner and transaction fixture gaps",
+    "Payment fact/ledger required fixtures and expected classification",
+    "Real null ServiceException code unboxing at redemption boundary"
+  ],
+  "test_details": [
+    {
+      "class": "com.chengyinhub.business.service.impl.PartialChapterAftercareTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "playerAndOrganizerCreateSameScopeWithoutPayoutOrProgressChanges"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicCreativePostVisibilitySyncTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "casLosingRace_changesNothing",
+        "casOffline_hidesSyncedPost_casOnline_restoresIt"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicProductTypeTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "16",
+      "bad_cases": [
+        "derivesFromTicketsWhenNotSupplied",
+        "publisherRevshareRequiresOrdinaryClubContentAndExplicitFeeCap",
+        "mixedTicketsNormalizedToEntryMode",
+        "topicCreateGateReadsProductTypeResolver",
+        "recruitmentChapterRequiresControlledProfile",
+        "invalidExplicitProductTypeRejected",
+        "invalidLegacyTicketModeRejected",
+        "noTicketsDefaultsToOrienteering",
+        "explicitProductTypeWins",
+        "overridingModeKeepsOtherTicketFields",
+        "ticketsWithNullModesDefaultToOrienteering",
+        "ticketModeOverriddenToOrienteering",
+        "mixedTicketsNormalizedToEntryMode_orienteering",
+        "ticketModeOverriddenByProductType",
+        "mixedTicketsAcceptedWhenProductTypeExplicit",
+        "mixedTicketsFirstModeNull_takesFirstNonNull"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicPublisherSlotTest",
+      "tests": "14",
+      "failures": "6",
+      "errors": "5",
+      "bad_cases": [
+        "platformPublisherGetsPlatformSlotWithNullEntityId",
+        "clubWithoutPayeeMemberIdIsRejected",
+        "platformPublisherCannotOverrideConfiguredPayee",
+        "payeeAndClubIdLandOnTheTopicRow",
+        "missingPublisherTypeIsRejected",
+        "memberPublisherGetsMemberSlot",
+        "clubPublisherGetsClubSlotAndOwnerIsTheClubNotPlatform",
+        "platformPayeeFallsBackToConfiguredPlatformAccountNotAMagicLiteral",
+        "dissolvedClubPublisherIsRejectedBeforeTopicInsert",
+        "platformPublisherFailsClosedWhenContentSlotDoesNotPersist",
+        "platformWithEntityIdIsRejected"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopSettlementPerMerchantTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "5",
+      "bad_cases": [
+        "eachMerchantPaidOnlyForOwnVerifiedHeads_fixedFee",
+        "eachMerchantPaidOnlyForOwnVerifiedSales_shareRate",
+        "merchantLineSnapshotsOwnVerifiedNumbers",
+        "clubLeadFeeStillUsesTopicWideVerified",
+        "cityDirectedDropout_onlyVisitedMerchantPaid"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicCopyTemplateOwnershipTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "11",
+      "bad_cases": [
+        "copy_failsClosed_whenUnlockPatchUpdatesNoRow",
+        "copiedResourceBindingsFollowNewTemplateIdentityAndKeepDigest",
+        "copyFailsClosedWhenRouteUsesSourceTopicTicketIds",
+        "copyCannotRepairAForgedBindingTemplateIdentity",
+        "sameOwnerForcedTemplateCopyAlsoUpdatesResourceBindings",
+        "copy_remapsUnlockAfterNodeId_toCopiedNodes",
+        "copy_writesZeroLineage_whenSourceHasNoLibraryLineage",
+        "copy_withoutMemberId_keepsLegacyBehavior",
+        "copy_keepsTemplateId_whenOwnerUnchanged",
+        "sameOwnerSharedTemplateKeepsBindingIdentity",
+        "copy_deepCopiesForeignTemplateToNewOwner_onceForSharedTemplate"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.HostWeatherCancelTest",
+      "tests": "21",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "merchantScopeCannotCancelClubSessionEvenIfOwnerIsTheClubHost"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.NpcAsrIntentServiceTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "resultSaveFailureNeverReleasesTheClaimOrReturnsUnpersistedText"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceTest",
+      "tests": "24",
+      "failures": "5",
+      "errors": "6",
+      "bad_cases": [
+        "oldUnknownWithoutIntentIsNotReclassifiedAsNeverSubmitted",
+        "acceptedThenFinalFailureAllowsFirstRefund",
+        "closedWithoutFinalDetailRemainsUnknown",
+        "bareFailureWithoutFinalChannelStateCreatesNoRefundProof",
+        "lateSuccessDuringReviewResolvesOriginalWithoutCredit",
+        "debitOnlyCrashRecoveryNeverQueriesOrPoisonsTwoPersonRefundEvidence",
+        "laterLocalRejectionCannotEraseEarlierUnknown",
+        "existingIntentIsNeverReusedForANewGatewayAttempt",
+        "definiteNonAcceptanceAllowsFirstRefund",
+        "firstLocalRejectionBindsTheExactOriginalIntent",
+        "oneNotFoundDuringInvestigationDoesNotCreateRefundPermission"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicSysVarPublishGateTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "8",
+      "bad_cases": [
+        "blockSysVarNodeOutsideThemeBlocksPublish",
+        "blockNodeCompletedOutsideThemeBlocksPublish",
+        "blockPassedSysVarNodeOutsideThemeBlocksPublish",
+        "blockPassedSysVarNodeInsideThemePublishes",
+        "journeyStoryDispositionNodeMustBeBranch",
+        "journeyStoryDispositionNodeBranchPublishes",
+        "blockNodeCompletedInsideThemePublishes",
+        "blockSysVarNodeInsideThemePublishesWithoutKeyRegistration"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.RegistrationCancellationSdkPhasesTest",
+      "tests": "9",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "newlyAppearedPayingOrderRequiresFreshObservationBeforeAnyClose"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouterTest",
+      "tests": "11",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "missingDepositReferenceHashIsExplicitlyRejectedByTheStrictTypedOwner"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_18Test",
+      "tests": "4",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "editDraftWithMissingNodeDurationStoresZeroTotal",
+        "createDraftWithMissingNodeDurationStoresZeroTotal"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.StandaloneCheckoutSignupNoticeAcceptanceTest",
+      "tests": "4",
+      "failures": "1",
+      "errors": "1",
+      "bad_cases": [
+        "signupNoticeIsSentOnlyOnceAfterZeroAmountConfirmation",
+        "userPublishedStandalonePaidOrderIsRefusedBeforeAnyWechatPrepayOnRetry"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicSizeLimitsTest",
+      "tests": "4",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "publishCountsRowsAlreadyInTheDatabase"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatPaymentSuccessRecoveryTest",
+      "tests": "9",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "alreadyConfirmedPaymentBlocksBothPrepayChannelsAndCloseBeforeAnySdkActionEvenWithAnOldClosedMarker"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "7",
+      "bad_cases": [
+        "templateFeesAndRationsUseTheBoundResourceAndBusinessReplayIsFree",
+        "configuredActionCeilingRejectsTheNextPaidTaskWithoutChangingResources",
+        "zeroHpUsesTheSameTeamChallengeOrQuestionAlternativeAfterReskin",
+        "aFrozenWorldEndingDisablesAnOutstandingChallengeAndRejectsEveryNewProof",
+        "allThreeConfigurationsSavePublishAndFreezeThroughTheSameServices",
+        "allThreeThemesFollowTheSameScriptToAnExecutedWorldEnding",
+        "allThreePublishedThemesCanExplicitlyCloseToTheirConfiguredFallbackWithoutSpending"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.Wp04TopicSettlementEntryGuardsTest",
+      "tests": "12",
+      "failures": "7",
+      "errors": "4",
+      "bad_cases": [
+        "noCoopOrderDoesNotMakePaidActivityFundsDisappearFromZeroCloseGuard",
+        "paidActivityOnlyCannotCloseTopicAsZeroOrRefundDeposit",
+        "trulyEmptyTopicWithoutContractCanStillCloseOnce",
+        "provenNoneZeroContractPreservesIdentityBeforeDepositRefund",
+        "zeroCashCannotConsumePositivePreparedObligation",
+        "nonzeroPlanComposesConservedPayablesWithoutChangingPercentages",
+        "nullPlanCannotUseLiveShareRateOrTopicWideEvidence",
+        "zeroCashWithCoopCannotCloseOrRefundDepositsWithoutFrozenContractValidation",
+        "staleSalesArgumentCannotRewriteCurrentLockedCashBasis",
+        "zeroCashStillRejectsPendingOrApprovedRefundBasis",
+        "mismatchedInitiatorSnapshotIsRejectedBeforePayableWrites"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatVerifiedFactFactoryTest",
+      "tests": "4",
+      "failures": "2",
+      "errors": "0",
+      "bad_cases": [
+        "fixtureEvidenceIsSeededBeforeTheBusinessTransactionAndOnlyItsReferenceIsReadInside",
+        "historicalFactoryCannotConsumeAnAliasedProviderAsAnOriginalLegacyNumber"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_19Test",
+      "tests": "5",
+      "failures": "2",
+      "errors": "3",
+      "bad_cases": [
+        "failedCompletionRuleWriteIsNotSuccessfulCopy",
+        "incompleteNodeCopyCannotReportPreservedRule",
+        "basicCopyDoesNotCopyOldNodeThresholds",
+        "crossOwnerFullCopyKeepsExistingRewardBoundary",
+        "sameOwnerFullCopyPreservesCountRuleAndUnknownMetadata"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ActivityPublishRoleGateTest",
+      "tests": "24",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "clubCancelReachesRefundCoreWithActivityIdAndMemberInRealOrder"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayCheckinLiveCodeTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "sharedRouteScanOnlyRecordsArrivalAndNeverRunsPersonalAwardChain",
+        "activityEndTimeRejectsScanBeforeCodeConsumptionOrWrites"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "5",
+      "bad_cases": [
+        "preferenceLoadUsesPreferenceJsonFrozenAtRunStart",
+        "arriveGateUsesValidationMethodFrozenAtRunStart",
+        "oldRunSnapshotWithoutNodeAnswersFallsBackToLiveTemplate",
+        "answerSubmitUsesTemplateAnswerFrozenAtRunStart",
+        "puzzleRevealUsesAnswerFrozenAtRunStart"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.PhotoOwnerBindingContractTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "6",
+      "bad_cases": [
+        "missingObjectIsRejectedAsInvalid",
+        "storageOutageIsRecoverableAndRetryKeepsRights",
+        "anotherMemberCannotCompleteWithSomeoneElsesPhoto",
+        "legacyObjectWithoutOwnerMetadataNeedsExplicitReupload",
+        "ownerCanCompleteWithOwnUploadedPhoto",
+        "completedNodeRetryWithLegacyUnboundPhotoStaysIdempotent"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.DoublePaymentReproductionTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "topicWithCoopOrder_paysMerchantOnlyThroughCoopLedger"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.OWN_C02_27Test",
+      "tests": "3",
+      "failures": "1",
+      "errors": "1",
+      "bad_cases": [
+        "existingPositiveAndPaidAmountLimitsStillRejectBeforeInsert",
+        "exactCentsIncludingTrailingZeroesKeepAmountAndExistingStateContract"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.OldClientUpgradeRequiredContractTest",
+      "tests": "3",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "materializedBlocksRejectLegacyWriteWithUpgradeRequiredException"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopSettlementGroupBasisTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "6",
+      "bad_cases": [
+        "merchantWhoNeverScannedGroupCode_getsZero",
+        "clubLeadFee_unchangedByD22",
+        "groupBasis_shareRateMode",
+        "conservationStillHolds",
+        "groupBasis_snapshotMatchesAmount",
+        "merchantWhoServedGroup_paidByGroupHeads"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicCopyRecruitmentGuardTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "4",
+      "bad_cases": [
+        "copy_rejectsSecondLegacyInvalidCapacityInsideTransactionalCopy",
+        "copy_rejectsIncompleteRevshareSupplyTerms",
+        "copy_rejectsNonPositivePerkThreshold",
+        "copy_downgradesRevshareToPerkWithoutFee"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicCreateOpenClubPoolTest",
+      "tests": "15",
+      "failures": "1",
+      "errors": "14",
+      "bad_cases": [
+        "createTopic_rejectsClubLeadForFreeExploreBeforePersisting",
+        "createTopic_clubBound_neverOpensPublicClubPool",
+        "createTopic_persists_open_club_pool_flag_for_city_orientation",
+        "createTopic_rejectsRecruitmentMaxMerchantOutsideZeroTo127",
+        "createTopic_autoAttachedClub_neverOpensPublicClubPool",
+        "createAiSimpleTopic_rejectsGameConfigurationEvenWhenLocationIsConfirmed",
+        "createTopic_persists_owned_completion_reward_coupon",
+        "createTopic_neverOpensClubPoolForFreeExplore",
+        "createAiSimpleTopic_rejectsNodeWithoutCoordinatesAsValidationError",
+        "createTopic_carriesRecruitDeadlineButMustNotJumpStraightIntoRecruiting",
+        "createTopic_keeps_explicit_closed_switch_for_city_orientation",
+        "createTopic_clubBound_ignoresExplicitOpen",
+        "createAiSimpleTopic_rejectsUnconfirmedNodeLocations",
+        "createTopic_rejectsChapterRecruitmentForNonFreeExploreBeforePersisting",
+        "createTopic_defaults_open_club_pool_to_open_for_city_orientation"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.util.AdvancedGamePublicProjectionTest",
+      "tests": "30",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "playerNodesEndpointCannotPutRawAdvancedConfigIntoResponse"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicPublishJourneyStoryGateTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "12",
+      "bad_cases": [
+        "storyNpcMustBeAvailableInTopicAtPublishTime",
+        "epilogueRelationKeyWithWrongTypeBlocksPublish",
+        "storyChapterMustExistInTopicAtPublishTime",
+        "thoughtBlockWithRegisteredKeyPublishesFine",
+        "legacyTopicWithoutStoryPublishesUntouched",
+        "registeredStoryKeysPublish",
+        "unregisteredOptionalClueBlocksPublish",
+        "registeredRelationTypeEpilogueKeyPublishes",
+        "storyWithoutAnyConditionDoesNotTouchRegistry",
+        "unregisteredEpilogueRelationKeyBlocksPublish",
+        "unregisteredStoryKeyBlocksPublishWithSourceLabel",
+        "thoughtBlockReferencingUnknownThoughtBlocksPublish"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_10Test",
+      "tests": "3",
+      "failures": "2",
+      "errors": "1",
+      "bad_cases": [
+        "oneMainRowPreservesExistingExplicitReplacementBehavior",
+        "zeroMainRowUpdateStopsBeforeDeletingChildren",
+        "unexpectedAffectedCountDoesNotContinueReplacement"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlaySensorResultTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "30",
+      "bad_cases": [
+        "vm7CannotBypassSensorValidationThroughLegacyCompletionEndpoints",
+        "storeVoucherMustProveUploadedObjectFactBeforeRecording",
+        "filterShotPhotoGrantsXpAndBadgesOnly",
+        "ordinaryPhotoKeepsFullRewardPolicy",
+        "completedDuplicateBypassesFrequencyLockAndReturnsIdempotently",
+        "stepsDurationCannotExceedConfiguredWindow",
+        "contextsAndConfiguredThresholdFailClosed",
+        "mode2RequiresExistingArrivalFact",
+        "differentPayloadInsideRateWindowIsRejected",
+        "freeCollectFilterShotRequiresArrivalAndCompletesWithXpOnly",
+        "contextVmRegistrationOwnershipTimeAndPredecessorGatesFailClosed",
+        "freeCollectFilterShotCannotBypassLeadGate",
+        "validSelfReportedStepsStillRequireTrustedProof",
+        "vm7WithoutTrustedProofCannotCompleteOrGrantRewards",
+        "filterShotCannotBypassPhotoThroughCheckin",
+        "freeCollectFilterShotCannotBypassNodeUnlock",
+        "stepsRequiresPositiveDurationSec",
+        "photoCannotCompleteANodeWithAnotherValidationMethod",
+        "verifiedUploadStoresPictureAndReviewSlotOnOrdinaryPhoto",
+        "storageUnavailablePhotoVerificationIsRecoverableAndRetryKeepsRights",
+        "uncompletedReplayCannotBypassTrustedProofWithRateWindowState",
+        "missingOrWrongRuntimeSensorConfigFailsClosed",
+        "sensorResultCannotBypassNodeUnlock",
+        "filterShotWithInvalidPersistedConfigFailsClosedAtRuntime",
+        "freeCollectDoneCountIgnoresArrivedOnlyRowsSoNoPrematureTopicCompletion",
+        "photoMustProveUploadedObjectFactBeforeCompleting",
+        "photoCannotCompleteANodeWithoutATemplate",
+        "verifiedStoreVoucherStillRecordsProof",
+        "filterShotCannotUseSensorResult",
+        "freeCollectFilterShotCannotRunBeforeArrival"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ClubOccurrenceCancellationServiceTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "standaloneOpenSessionWithoutSeriesCancelsWithRefundAndNotifications"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactServiceTest",
+      "tests": "12",
+      "failures": "2",
+      "errors": "0",
+      "bad_cases": [
+        "conflictAuditHasAnExplicitIndependentCommitContract",
+        "lateSuccessRetainsOneOriginalManualTicketAndCompletionRequiresTheOwnersTransaction"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.framework.aspectj.LogAspectAuditTest",
+      "tests": "8",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "asyncPersistenceFailureIsLoggedByTheProductionExecutor"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicEditActivityShellTicketSyncChainTest",
+      "tests": "18",
+      "failures": "0",
+      "errors": "18",
+      "bad_cases": [
+        "addingATicketOnAMerchantRunClassicActivityStaysAllowed",
+        "addingATicketOnASelfHostClassicShellIsRefused",
+        "concurrentlyChangedTopicTicketFailsClosedInsteadOfSilentlyInsertingASecondOne",
+        "twoIdenticalSessionsStayEditableInsteadOfBrickingTheTopic",
+        "anotherActivitysShellTicketIsNotTouchedByThisTopicSync",
+        "droppingASoldTicketFromTheEditFailsClosedWithoutDestroyingIt",
+        "repricingASoldSessionIsRefusedRatherThanQuietlyRebuiltUnderTheSoldSeats",
+        "adminAddingATicketOnAFreeExploreShellIsRefusedInsteadOfMintingAnUnkeyedOne",
+        "failedConditionalOrphanDeleteFailsClosed",
+        "topicTicketIdentityIsNeverBorrowedFromAnotherTopic",
+        "editingTopicWithoutTouchingTicketsKeepsBothRowsInPlace",
+        "addingATicketOnAShellOfATopicWithoutAnOwnerStaysAllowed",
+        "droppingAnUnsoldTicketDeletesItsShellRowAtomically",
+        "shellTicketPointingAtAnotherTopicsTicketIsTreatedAsAnOrphanNotAsAMatch",
+        "editingTopicKeepsSoldShellTicketAndRecomputesRemainingFromSoldSeats",
+        "selfHostClassicShellTicketMustNotBrickTheNextTopicEdit",
+        "aGenuinelyUnkeyedShellRowStillForcesUnknownInventoryAndBlocksSync",
+        "addingATicketOnAnActivityWithoutATopicStaysAllowed"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayGpsGeofenceValidationTest",
+      "tests": "21",
+      "failures": "0",
+      "errors": "21",
+      "bad_cases": [
+        "validAccuracyBehaviourIsUnchangedWithGuardInstalled",
+        "gpsValidationNodeMissingSiteCoordinateIsRejectedWithoutProgressOrReward",
+        "accuracyWithinLimitStillAdvances",
+        "invalidAccuracyIsRejectedAsInvalidLocation",
+        "guardIsNotConsultedWhenGeofenceAlreadyRejects",
+        "blankAccuracyIsRejectedWithMachineCodeWithoutProgressOrReward",
+        "invalidNodeCoordinatesAreRejectedWithoutProgressOrReward",
+        "outOfRangeCoordinatesAreRejectedWithoutProgressOrReward",
+        "guardRejectionReturnsAppealReferenceWithoutProgressOrReward",
+        "plainOnlineNodeWithoutCoordinatesStillArrives",
+        "badTextAndMissingCoordinatesAreRejectedWithoutProgressOrReward",
+        "legalNearCoordinatesStillAdvanceAndAward",
+        "infiniteCoordinatesAreRejectedWithoutProgressOrReward",
+        "accuracyAboveLimitIsRejectedBeforeDistanceCheckWithoutProgressOrReward",
+        "danglingTemplateIdNeverFallsThroughToArriveCompletion",
+        "farCoordinatesAreStillRejectedWithoutProgressOrReward",
+        "accuracyIsIgnoredWhenNodeHasNoCoordinate",
+        "gpsValidationNodeWithSiteCoordinateAndNearPlayerStillAdvances",
+        "nanCoordinatesAreRejectedWithoutProgressOrReward",
+        "blankAccuracyIsRejectedBeforeGuardEvenWhenGuardInstalled",
+        "gpsValidationNodeWithFarPlayerIsStillRejected"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ChapterFlowCopyTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "beatBlockNpcIdIsRemappedToCopiedNpc",
+        "materializedBlocksAreCopiedWithNewNodeIds"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishDraftTest",
+      "tests": "18",
+      "failures": "0",
+      "errors": "18",
+      "bad_cases": [
+        "draftSimple_publishesOnline",
+        "draftPro_blocksUnregisteredStateKeyBeforeReview",
+        "draftPublish_buildsSelfHostActivityShellWhenMissing",
+        "heldMediaCannotReachDraftCasEvenForCorrectOwner",
+        "draftSimpleWithReviewFlag_doesNotDuplicateOpenSpotCheck",
+        "refreshedEscalatedReviewReturnsItsPersistedState",
+        "heldDraftSimple_staysOfflineAndRequestsHumanReview",
+        "directPublicationStillEnforcesOnlineQuota",
+        "heldDraftPro_keepsBundleReviewButDoesNotGoOnline",
+        "notDraft_returnsFalse_noStatusMutation",
+        "draftSimpleWithReviewFlag_publishesAsPostReview_andQueuesSpotCheck",
+        "noActorOverloadCannotExecuteSupplyReplacementAndExplicitActorMustBePositive",
+        "draftPublish_doesNotBuildShellForMerchantPoolTopic",
+        "draftFreeExploreWithRecruitDeadline_submitsProjectReview",
+        "draftPro_publishesWhileAuditRemainsPending",
+        "changedOwnerAfterControllerReadRejectsEvenRealDraftFallbackBeforeMutation",
+        "draftAiSimple_publishesOnline",
+        "draftPublish_doesNotDuplicateExistingShell"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+      "tests": "4",
+      "failures": "3",
+      "errors": "1",
+      "bad_cases": [
+        "nonpositiveGeneratedIdCannotCreateChildren",
+        "validGeneratedIdentityKeepsExistingDraftFlow",
+        "missingGeneratedIdCannotCreateChildren",
+        "zeroRowsEvenWithAnIdCannotCreateChildren"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayProgressCompletionTruthTest",
+      "tests": "31",
+      "failures": "1",
+      "errors": "29",
+      "bad_cases": [
+        "genericFrozenTextAndChoiceAnswersProduceOnlyControlledCurrentProof",
+        "firstShopDayScanCompletesOnlyTheTicketActuallyChosenWithoutCompletingPlay",
+        "shopDayCheckinAndPhotoOnlyRecordProofAndNeverCompleteTheTopic",
+        "businessRefusalResponseDoesNotCarryTheAnswerWrongMarker",
+        "repeatedScanKeepsTheFirstTimestampAndReadsCasFailureCurrently",
+        "genericGpsUsesFrozenCoordinatesAndOnlyItsValidatedOriginCreatesProof",
+        "classicCheckinResponseCarriesMedalRankWhenClaimSucceeds",
+        "wrongAnswerResponseCarriesTheAnswerWrongMarker",
+        "leaderboardProofScanCompletionWritesCompletedProgressRow",
+        "leaderboardProofAnswerCompletionWritesCompletedProgressRow",
+        "shopDayArriveIsRefusedSoGpsCanNeverManufactureAnInStoreFact",
+        "shopDayArriveOnPureOnlineNodeRecordsProofOnlyAndNeverAwards",
+        "qualificationCancelledDuringScanRejectsTheWholeTransactionalWrite",
+        "leaderboardProofPhotoCompletionWritesCompletedProgressRow",
+        "failedCodeAndGpsArrivalNeverMarkFirstSuccessfulScan",
+        "ticketOutsideTheCurrentQualificationCannotMarkAnOrderOrArrival",
+        "genericPlayerScanRecordsCurrentRunArrivalWithoutLegacyAwards",
+        "selfPlayUsesOnlyTheChosenUnexpiredPass",
+        "freeStoryAnswerAdvancesThoughtStateUsingTheServerProgressReceipt",
+        "selectedRedeemedTicketCannotBorrowAnotherTicketsUnredeemedChapter",
+        "shopDayArriveIsStillRefusedForMerchantNodeWithoutCoordinates",
+        "merchantCompletionFeedbackCannotReplaceWrongAnswerMessage",
+        "leaderboardProofAdvancedGameplayCompletionWritesCompletedProgressRow",
+        "classicCheckinResponseMedalRankIsNullWhenPodiumFull",
+        "oldEntryWithoutTicketUsesOneCurrentQualificationOnly",
+        "lastOpeningGameDoesNotAwardTheThemeBeforeDeparture",
+        "classicArriveStillCompletesThroughTheOriginalProgressPath",
+        "classicCheckinStillCompletesThroughTheOriginalProgressPath",
+        "rejectedAdvancedCompletionDoesNotWriteFirstScan",
+        "zeroTemplateIsAPlainStopAndStillRequiresValidLocation"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicDraftLegacyFieldPreservationTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "4",
+      "bad_cases": [
+        "explicitConfigurationChangesStillApply",
+        "freeExploreWithoutModeInLegacyPayloadKeepsItsProductType",
+        "oldTicketModeStillSelectsProductTypeWhenExplicitTypeIsAbsent",
+        "omittedFieldsKeepExistingAuthorConfiguration"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ChapterFlowTransactionTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "auditTaskFailureRollsBackTheCompletedV2Rebuild",
+        "blocksWriteFailureRollsBackDeletedAndInsertedFlowRows"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ExploreReleaseWiringTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "releaseReason_usesConstant_notLiteral",
+        "closeExpired_releasesEntitlements"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+      "tests": "38",
+      "failures": "0",
+      "errors": "38",
+      "bad_cases": [
+        "paidRegistration_blocksStructuralRebuild",
+        "fullRebuild_keepsBackOfficeHiddenNodeHidden_andLeavesVisibleAndNewNodesVisible",
+        "deletedTopic_rejected",
+        "clubBoundTopic_editCannotOpenPublicClubPool",
+        "approvedTopic_rejectsChangedRecruitDeadlineAndChangesNothing",
+        "draftSave_neverSubmitsCommercialReview",
+        "approvedTopic_nullRecruitDeadline_rejectsNewDeadlineAndChangesNothing",
+        "foreignWhitelistOwnerIsRejectedBeforeMediaLookupOrWrite",
+        "rejectedSave_republishesSelfHostActivityShell",
+        "approvedTopic_listsEveryLockedFieldItRejects",
+        "rejectedTopic_republishesAndResubmitsAudit",
+        "approvedTopic_rejectsDateChange_andChangesNothing",
+        "draftEdit_withoutJourneyRules_leavesColumnUntouched",
+        "approvedTopic_rejectsChapterStructureChange_andChangesNothing",
+        "publishedFreeTopic_editThatMakesItCommercial_isRejected",
+        "approvedTopic_sameRecruitDeadline_allowsWhitelistTextUpdate",
+        "legacyEditWithoutRouteFieldsRemapsExistingBranchGraphToRebuiltNodeIds",
+        "startedTopic_isReadOnly",
+        "draftWithPastStartDate_isStillFullyEditable",
+        "draftEdit_persistsNormalizedJourneyRules",
+        "approvedTopic_appliesWhitelistTextAndImagesOnly",
+        "approvedTopic_rejectsTicketPriceChange_andLeavesTicketsUntouched",
+        "publishedFreeTopic_addingRecruitDeadlineOnly_isRejected",
+        "explicitEmptyArray_isHonoredAsDeliberateClear",
+        "independentTopic_editHonorsExplicitOpenClubPool",
+        "fullRebuild_clearsOldChildrenFirst",
+        "draftSave_neverBuildsSelfHostActivityShell",
+        "pendingSave_publishesSelfHostActivityShell",
+        "draftEdit_doesNotFlipAuditOrOnlineState",
+        "approvedWhitelistRejectsUnknownOrOwnHeldMediaBeforeAnyWrite",
+        "approvedTopic_omittedRecruitDeadline_keepsPatchSemantics",
+        "pendingReviewSave_stillSubmitsCommercialReview",
+        "otherMember_cannotEdit",
+        "draftOwner_updatesInPlace_neverInsertsANewTopic",
+        "missingId_rejected",
+        "partialBody_doesNotSilentlyWipeChapters",
+        "draftEdit_illegalJourneyRules_rejectedBeforeAnyWrite",
+        "partialBody_alsoProtectsTicketsCollaboratorsAndEggs"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.NodeTemplateOwnershipTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "6",
+      "bad_cases": [
+        "noTemplate_passes",
+        "missingTemplate_rejected",
+        "ownTemplate_passes",
+        "ownDraftTemplate_rejected",
+        "othersTemplate_rejected",
+        "ownUnapprovedTemplate_rejected"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ClubWaitlistClaimMembershipRaceTransactionTest",
+      "tests": "4",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "memberExitBetweenClaimAndClubLockRejectsOrderAndRollsBackClaimedCas"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "tests": "5",
+      "failures": "4",
+      "errors": "1",
+      "bad_cases": [
+        "missingChapterIdentityStopsBeforeNodes",
+        "nodeZeroRowsCannotReachMaterializedBlocks",
+        "missingNodeIdentityCannotBeSilentlySkipped",
+        "chapterZeroRowsCannotBeUsedEvenIfIdIsPresent",
+        "positiveGeneratedIdentitiesKeepBothPathsWorking"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_03Test",
+      "tests": "5",
+      "failures": "2",
+      "errors": "3",
+      "bad_cases": [
+        "failedPredecessorWriteCannotReportSuccessfulUpdate",
+        "retainedDependentCannotSilentlyLoseDeletedPredecessor",
+        "removedDependentDoesNotKeepAnOrphanRelation",
+        "legacyCrossChapterReorderKeepsPredecessorByIdentity",
+        "compiledBlocksAlsoKeepPredecessorAfterReorder"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "5",
+      "bad_cases": [
+        "availableBlockNarrativeNpcPublishes",
+        "legacyBlockWithoutNarrativeNpcDoesNotTouchNpcProfiles",
+        "availableStoryFlowNarrativeNpcPublishes",
+        "foreignBlockNarrativeNpcBlocksPublish",
+        "foreignStoryFlowNarrativeNpcBlocksPublish"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_25Test",
+      "tests": "6",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "replacedOldEndingsDoNotRequireDeletedNodeMapping"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.PhotoReviewRewardContractTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "5",
+      "bad_cases": [
+        "completedRowResubmitIsIdempotentAndDoesNotDoubleReward",
+        "legacyRejectedRowIsAlsoMachineApprovedOnResubmit",
+        "concurrentResubmitLosingTheCasDoesNotReward",
+        "legacyPendingRowIsMachineApprovedOnResubmitAndRewardsOnce",
+        "legacyPhotoReviewFlagIsIgnoredAndSubmissionCompletesWithReward"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.CityStationOrderAcceptanceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "controllerFallbackCountsOnlyApprovedCompletionNotPendingPhotoReview"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "tests": "11",
+      "failures": "5",
+      "errors": "6",
+      "bad_cases": [
+        "optionalExitAndEmptyRecruitmentStillAllowPublishing",
+        "expiredInactiveAndAlteredTermsReplacementCannotRestoreSales",
+        "auditCannotAutomaticallyResumeEvenAfterReplacementWasConfirmed",
+        "perkReplacementMustCarryOriginalUnusedCapacityAndValidity",
+        "actualConfirmedLiveReplacementAllowsExplicitHostResumeWithCurrentReads",
+        "busyRedemptionNeverSkipsSupplyOrWaitsWithTheOrganizerAccountLock",
+        "anInvitationOrAnotherUnlinkedLiveMerchantDoesNotPermitResume",
+        "mandatoryExitSnapshotCannotBeErasedByMakingTheChapterOptional",
+        "repeatExitPreservesAtoBtoCAndNeedsTheLastLiveReplacement",
+        "genericUpdateCannotBypassTheResumeGate",
+        "pauseDoesNotIntroduceTopicOfferOrChapterLocks"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.MerchantCommerceServiceTest",
+      "tests": "19",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "paidCommerceCallback_isIdempotentAndNeverPaysOut"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "tests": "8",
+      "failures": "1",
+      "errors": "7",
+      "bad_cases": [
+        "approvedBranchGraphPublishesLatestNormalizedSnapshot",
+        "publishDraftRejectsBranchGraphForNonOrienteeringTopic",
+        "publishDraftRejectsAnEdgeWithoutADeterministicReachabilityFixture",
+        "successfulPublishCopiesTheNormalizedDraftIntoThePublishedSnapshot",
+        "professionalSubmissionRejectsInvalidRouteBeforeGoingOnline",
+        "pendingTopicCannotAdvancePublishedSnapshot",
+        "declaredOutcomesComeOnlyFromTheNodeActualGameplayTrigger",
+        "approvedLinearTopicPublishesNullGraphAndAdvancesPublishedVersion"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.RefundServiceImplTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "9",
+      "bad_cases": [
+        "repeatedRefundApprovalDoesNotCreateAdjustment",
+        "backOfficePayerRefundBlockedWhileSiblingRefundPending",
+        "systemFullRefundSupersedesOnlyPendingApplications",
+        "backOfficePayerRefundBlockedWhenSiblingVerified",
+        "rejectedRefundCanBeRetriedAndApprovedAmountsCapSubsequentRefunds",
+        "backOfficePayerRefundApprovalRechecksOrderCash",
+        "systemWholeOrderApprovalIsNotRecheckedAgainstClaimedSiblings",
+        "backOfficePayerRefundCannotExceedOrderCashNotYetRefunded",
+        "repeatedAndConcurrentBackOfficePayerRefundCreatesOneApplication"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_20Test",
+      "tests": "1",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "fullCopyUsesGeneratedIdentityDespiteTiedSortOrder"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicOfficialCopyBoundaryTest",
+      "tests": "4",
+      "failures": "1",
+      "errors": "1",
+      "bad_cases": [
+        "officialCopyFailsClosedWhenPlatformContentSlotDoesNotPersist",
+        "officialCopyForcesConfiguredPlatformPayeeAndContentSlot"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicJourneyStoryCarryTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "templateCopyCarriesStoryAndRemapsChapterIds",
+        "copyWithoutStoryLeavesTargetNullAndSkipsRemap"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.RefundOverpayGuardTest",
+      "tests": "6",
+      "failures": "4",
+      "errors": "1",
+      "bad_cases": [
+        "normalPaidRegistrationAllowsExactRefund",
+        "clientPaidAmountAboveServerPaidIsOverwritten",
+        "normalPaidRegistrationRejectsOverRefund",
+        "clientPaidAmountOnSubOrderIsIgnored",
+        "zeroPaidRegistrationRejectsPositiveRefund"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicSaleReviewDecouplingTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "priceEdit_resetsSaleReview",
+        "storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicCopyNpcRemapTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "5",
+      "bad_cases": [
+        "copyCarriesReadyVoiceAndDropsPendingVoice",
+        "copyDropsFailedVoice",
+        "copyRemapsNpcRefsToCopiedNpcsAndNullsMerchantAvatar",
+        "copyGeneratedVoteToolRemapsItsActualPlanAndProvenanceIdentity",
+        "copySameOwnerTemplateWithOnlySysNodeConditionsGetsIndependentRemappedRow"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "tests": "3",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicJourneyStorySaveTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "4",
+      "bad_cases": [
+        "draftEdit_storyReferencingForeignChapter_isRejected",
+        "draftEdit_illegalStory_rejectedBeforeAnyWrite",
+        "draftEdit_withoutStory_leavesColumnUntouched",
+        "draftEdit_persistsStoryAndRemapsChapterIdAfterRebuild"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
+      "tests": "44",
+      "failures": "0",
+      "errors": "44",
+      "bad_cases": [
+        "blockIdentifiersSurviveV2SaveReadAndReordering",
+        "auditTaskReadbackThatIsNotAnOpenTaskFailsTheSubmission",
+        "audioStaysAValidBlockType",
+        "openingIsSavedSeparatelyAndExistingStorySurvivesAnEditorThatOmitsIt",
+        "narrativeBlocksBindToStationAndStayOutOfDescription",
+        "legacyPathPersistsNoBlocks",
+        "escalatedAuditTaskReadbackIsReportedAsEscalated",
+        "simpleV2PublishCannotBypassReviewWithAPrivateDraftTemplate",
+        "optionalChapterCannotEnterStoryFlow",
+        "submittedV2EditFreezesAfterRebuildAndRefreshesOneTopicTask",
+        "textLengthLimitRejectsInsteadOfTruncating",
+        "descriptionProjectionOverColumnLimitIsRejectedBeforeWrite",
+        "storyGameStoresExplicitLocationIntentAndRejectsMissingTemplateOrCoordinates",
+        "blockCountLimitRejectsInsteadOfTruncating",
+        "mediaBlocksAreMaterializedWithUrl",
+        "storyGameRejectsArrivalTemplateBeforeReplacingChapters",
+        "submittedSimpleDraftPublishesWhileSavingItKeepsItPrivate",
+        "mediaAltTextJsonRoundTripSurvivesWriteAndPlayerProgressProjection",
+        "orphanNodeHitsTheCoverageGate",
+        "freeExploreV2MaterializesBlocks",
+        "nodeIndexAtNodesLengthHitsTheBoundsGate",
+        "descriptionIsOnlyTextBeforeFirstNodeAndNewlinesStayInsideTextBlocks",
+        "mediaBlockFieldShapeIsGated",
+        "descriptionProjectionAtColumnLimitRemainsAccepted",
+        "duplicateBlockIdentifiersCannotAmbiguouslyResume",
+        "legacyEndpointRejectsV2PayloadInsteadOfSilentlyDroppingIt",
+        "serializedSizeLimitUsesUtf8Bytes",
+        "nonBlockSimpleV2PublishCannotBypassReviewWithAPrivateDraftTemplate",
+        "topicAddressComesFromFirstRealStationAfterTheOpening",
+        "openBundleReviewCannotBeBypassedBySwitchingToSimpleMode",
+        "freeExploreV2RequestWithoutBlocksKeepsLegacyShape",
+        "legacyPathRefusesToOverwriteMaterializedTopic",
+        "blockOrderDrivesGlobalSortAndSameChapterNodeIds",
+        "narrativeQuestionWithoutAnswerIsRejectedAtSave",
+        "mediaAltTextMissingNullAndEmptyKeepExistingMediaCompatible",
+        "exactPerItemLimitsRemainAccepted",
+        "existingOpeningSurvivesOmittedFlagAndCanBeExplicitlyRemoved",
+        "schemaAndBlockGrammarAreExplicitlyValidated",
+        "duplicateNodeIndexHitsTheUniquenessGate",
+        "mediaAltTextAcceptsLimitAndRejectsOversizeBeforeWrites",
+        "openingCannotBeARegularStationOrAppearAfterTheFirstChapter",
+        "chapterAudioUrlIsCarriedOntoTheChapterEntity",
+        "mediaBlocksNeitherProjectIntoDescriptionNorCloseTheProjectionWindow",
+        "omittedRequiredIsMaterializedAsRequired"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ActivityCancelTest",
+      "tests": "44",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "clubOccurrenceKeepsItsExistingCampaignNotificationPath"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiCoopDepositStatusTest",
+      "tests": "6",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "pendingSuccessWithoutAnExactOriginalReferenceCannotBecomePaid"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayHintUnlockTest",
+      "tests": "15",
+      "failures": "1",
+      "errors": "10",
+      "bad_cases": [
+        "unlock_allowed_when_activity_registration_exists",
+        "unlock_rejected_when_atomic_deduct_throws",
+        "unlock_rejected_without_entitlement_and_no_hint_text_no_charge",
+        "unlock_rejected_when_template_has_no_hints_no_charge",
+        "unlock_is_idempotent_when_unique_ledger_insert_conflicts",
+        "unlock_rejected_by_precheck_when_balance_short_deduct_never_called",
+        "unlock_free_when_no_rule_row_no_charge_no_ledger",
+        "unlock_concurrent_calls_write_one_ledger_charge_once_and_return_already_unlocked",
+        "unlock_charges_points_writes_ledger_and_returns_hints",
+        "unlock_rejected_when_activity_context_but_not_registered",
+        "unlock_free_when_rule_row_disabled_no_charge"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.FundIdempotencyConcurrencyTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "concurrentPointsOnlyRefundClaimsRegistrationBeforeRestoringFundsAndInventory"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatPaymentKnownSuccessGuardTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "bad_cases": [
+        ""
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CmsTopicDraftBindingsTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "9",
+      "bad_cases": [
+        "existingNodeCannotBeReboundUsingAClientAlias",
+        "duplicateClientKeysRollBackAndCopyStillUsesRealIds",
+        "updateCanBindANewNodeAlongsideRealNodeBindings",
+        "danglingClientKeyRollsBackTopicAndNodes",
+        "persistedParserStillRejectsClientKeysAndOwnershipIsUnchanged",
+        "updateWithoutConfigKeepsRealBindingsAcrossReorder",
+        "createPersistsTwoBindingsUsingGeneratedIdsOnly",
+        "deletingBoundNodeRejectsUnlessBindingIsExplicitlyRemoved",
+        "v2BlockFlowUsesTheSameClientMapping"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.RegistrationSeatEndpointTest",
+      "tests": "16",
+      "failures": "6",
+      "errors": "0",
+      "bad_cases": [
+        "activitySeatDatabaseFailureKeepsUnknownAndNeverLeaksSqlOrCreatesAnotherIntent",
+        "originalClubTimeWindowRejectsBeforeAnySeatEffect",
+        "onlyFirstRegistrationVerificationKeepsOriginalPointsButEveryReplayCanDeliverQueuedGrowth",
+        "actualActivityEntryAppliesOriginalOwnerGuardBeforeTheSeatService",
+        "originalWholeActivityCodeCannotDefaultToAllPurchasedSeats",
+        "foreignMerchantCannotBypassOriginalActivityOwnerScopeWithAValidSeatCode"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicSoldTimeLocationGuardTest",
+      "tests": "6",
+      "failures": "6",
+      "errors": "0",
+      "bad_cases": [
+        "unsoldActivityAllowsTimeChange",
+        "pendingOrPayingRegistrationsAlsoBlockTimeChange",
+        "closedOrRefundedRegistrationsDoNotBlock",
+        "soldActivityBlocksPlaceChange",
+        "soldActivityAllowsTextOnlyEditAndDoesNotQueryRegistrations",
+        "soldActivityBlocksTimeChange"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayUnlockGateTest",
+      "tests": "5",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "preferenceFlow_reusesTheSameUnlockGate"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.OuterCancellationTopicFenceTest",
+      "tests": "8",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "legitimateActivityOwnerCancellationStartsAtTopicAndKeepsOriginalEmptySalesResult"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ShopDayExperienceLayerContractTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "5",
+      "bad_cases": [
+        "preferenceTemplateIsDiscoverableWithoutLeakingItsScoringContract",
+        "preferenceGetConsumesConfirmedTagsAtTheRealPlayerEntry",
+        "classicArrivalCannotBypassPreferenceTask",
+        "shopDayCheckinShipsFilterShotContractAfterArrival",
+        "shopDayCheckinShipsNormalizedTaskCardFieldNames"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayMyCompletedSelfPlayContractTest",
+      "tests": "15",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "publicReferencePurposePreservesDefaultHistoryAndErrors"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatPayCallbackForgedSignatureTest",
+      "tests": "33",
+      "failures": "4",
+      "errors": "0",
+      "bad_cases": [
+        "verifiedRegistrationCloseConflictAndDisappearedOrderEachAlertOnceAndKeepFail",
+        "verifiedRegistrationPaymentConflictAlertsOnceAndKeepsFail",
+        "verifiedRegistrationAlreadyClosedAcknowledgesSuccessWithoutFailureAlarm",
+        "verifiedPaymentConflictReachesOriginalCasAndRetainsItsFactWithoutLocalPaymentEffects"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatPayReadinessTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "depositRefundQueryDistinguishesConfirmedMissingFromTransportOrOther404"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "tests": "4",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "missingKeyPreservesBothLiveFallbacks"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WxPaymentCallbackInboxServiceImplTest",
+      "tests": "10",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "failedMutationReleasesOnlyTheClaimedOwnerAndFence"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CopyTopicCopyTypeNpeTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "5",
+      "bad_cases": [
+        "copyWithNullParams_stillDefaultsToOne",
+        "copyWithNonIntegerCopyType_fallsBackToDefault_neverThrows",
+        "copyWithParamsLackingCopyType_doesNotThrow_andDefaultsToBasicInfoOnly",
+        "copyTypeTwo_copiesChaptersAndNodes_carryingGameTemplateAndXp",
+        "copyWithExplicitCopyTypeOne_isHonoured"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ClubFulfillmentChainGateTest",
+      "tests": "6",
+      "failures": "3",
+      "errors": "1",
+      "bad_cases": [
+        "ownerRefundStillRejectsVerifiedRegistration",
+        "ownerRefundStillRejectsAnUnrelatedCaller",
+        "ownerRefundIgnoresPlayerRefundWindowForPastSession",
+        "ownerRefundAcceptsSessionRegistrationFromClubOwner"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayDelistedCompletedRetryContractTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "8",
+      "bad_cases": [
+        "onlineCompletedNodeStillRespectsRouteGate",
+        "delistedCompletedPhotoRetryKeepsIdempotentReceipt",
+        "delistedCompletedArriveRetryKeepsIdempotentReceipt",
+        "delistedNodeWithoutCompletionStillRejectedOnPreference",
+        "delistedCompletedPreferenceRetryReachesSubmitAndKeepsReceipt",
+        "delistedCompletedCheckinRetryKeepsIdempotentReceipt",
+        "delistedCompletedAnswerRetryKeepsIdempotentReceipt",
+        "delistedCompletedSensorRetryKeepsIdempotentReceipt"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicDraftPartialSaveGateTest",
+      "tests": "19",
+      "failures": "9",
+      "errors": "10",
+      "bad_cases": [
+        "directPublishStillRequiresRecruitDeadlineForFreeExplore",
+        "nameOnlyDraftWithNullChaptersSaves",
+        "draftDisappearingBeforeLockedPublishDoesNotBecomePublic",
+        "draftAllowsTicketWithoutTimeWindow",
+        "draftRejectsFilledButIllegalCoordinate",
+        "directPublishStillRejectsTicketWithoutTimeWindow",
+        "draftUpdateRejectsBlankedName",
+        "publishDoesNotRewriteDraftFlag",
+        "nameOnlyAiSimpleDraftSaves",
+        "draftUpdateSkipsPublishOnlyCompleteness",
+        "directPublishStillBuildsSelfHostShell",
+        "directPublishRequiresName",
+        "incompleteDraftPublishIsRejected",
+        "persistedReversedSaleWindowBlocksPublication",
+        "pendingReviewUpdateStillRequiresRecruitDeadline",
+        "draftRejectsNegativeTicketPrice",
+        "directPublishStillRequiresAiSimpleLocation",
+        "completeDraftPublishesWithTheSameId",
+        "draftStillRequiresTopicName"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.util.ChapterAtmospherePresetTest",
+      "tests": "5",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "playerProjectionHardGatesAtmosphereToLinearOrienting"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.service.registration.RegistrationQueryApplicationTest",
+      "tests": "6",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "rawListRemainsOnTheHttpThreadAndOnlyTheControllerCreatesTheOriginalPageEnvelope"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactGatewayTest",
+      "tests": "9",
+      "failures": "1",
+      "errors": "1",
+      "bad_cases": [
+        "refundCallbackReturnsSuccessOnlyAfterDurableProviderEvidenceAndOwnerCommit",
+        "activeBusinessTransactionCannotReachTheOfficialQueryOrCloseSdk"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicCopyJourneyRulesTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "3",
+      "bad_cases": [
+        "copyOfficial_carriesJourneyRulesJson",
+        "copyTemplate_withoutJourneyRules_leavesTargetNull",
+        "copyTemplate_carriesJourneyRulesJson_andKeepsOtherFieldCopyBehavior"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "tests": "25",
+      "failures": "0",
+      "errors": "25",
+      "bad_cases": [
+        "approvedTopicSnapshotPassesWhenRegistered",
+        "declaredThoughtDoesNotAuthorizeUnregisteredOrdinaryKey",
+        "legacyChapterCannotTreatDeclaredThoughtTagAsANumericVariable",
+        "allReferencedKeysRegisteredPublishes",
+        "unparsableJourneyRulesFailClosed",
+        "unregisteredKeyBlocksSimplePublishWithKeyAndNode",
+        "malformedThoughtRulesCannotAuthorizeRuntimeTag",
+        "undeclaredThoughtDoneInChapterConditionStillBlocksPublish",
+        "legacyTopicWithoutAnyReferenceDoesNotTouchRegistry",
+        "declaredThoughtDonePublishesWithoutRegisteringRuntimeTag",
+        "journeyRulesExhaustTagMustBeRegistered",
+        "chapterStoryFlowBeatWhenRegisteredPublishes",
+        "declaredThoughtCannotBeWrittenByAdvancedNodeEffects",
+        "journeyRulesExhaustTagRegisteredPublishes",
+        "thoughtDeclaredByAnotherTopicDoesNotAuthorizeThisTopic",
+        "r5OutcomeRejectsDisabledHpAndLuckDomains",
+        "declaredThoughtDoneCanBeReadByChapterConditions",
+        "approvedTopicSnapshotBlocksUnregisteredKey",
+        "disabledJourneyRulesStillRequireExhaustTagRegistration",
+        "chapterStoryFlowBeatWhenUnregisteredKeyBlocksPublish",
+        "optionTagIsAutoRegisteredOnPublish_butCounterStillBlocks",
+        "r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter",
+        "genericHpAndLuckChapterCostsAndItemsPublishWithoutSkillChecks",
+        "undeclaredThoughtDoneStillBlocksPublish",
+        "r5HpOutcomePublishesWithoutRegisteringSystemKeyAndFrozenFailClampsBeforeZeroPolicy"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicPendingReviewSelfHostShellTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "13",
+      "bad_cases": [
+        "proDraftPublish_whilePendingReview_createsPublicShell",
+        "simpleDraftPublish_stillCreatesPublicShell",
+        "pendingTopic_ensureShell_neverBuilds",
+        "merchantPoolTopic_ensureShell_neverBuilds",
+        "debtClearedAfterApproval_refreshBuildsTheMissingShell",
+        "rejectedTopic_ensureShell_neverBuilds",
+        "proDraftPublish_withOverdueDebt_isRejectedAtSubmission",
+        "approvedTopic_ensureShell_isIdempotent",
+        "explicitMemberOnlySelfHostShellCarriesItsActualClubScope",
+        "existingShell_ensureShell_neverBuilds",
+        "approvedTopic_becameOverdueDuringReview_doesNotThrowAndBuildsNoShell",
+        "memberOnlyWithoutActualClubCannotSilentlyCreateAPublicShellOrCopyTickets",
+        "publicClubSelfHostTopicsRemainPublicForBothExplicitAndLegacyFlags"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.SettlementRateConvergenceTest",
+      "tests": "22",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "h8AwardsOnlyPositiveSalesAndDoesNotUseActivityIdAsIdempotencyObject"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_05Test",
+      "tests": "3",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "existingPlainStoryReferencesAndUnknownMetadataSurviveRebuild",
+        "generatedEndingConditionsAreMappedOnceAfterStoredStory"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_15Test",
+      "tests": "5",
+      "failures": "4",
+      "errors": "1",
+      "bad_cases": [
+        "nonpositiveActivityIdCannotCopyTickets",
+        "missingActivityIdCannotCopyTickets",
+        "successfulShellCopiesTicketsToGeneratedIdentity",
+        "zeroRowsCannotCopyTicketsEvenIfIdIsPresent",
+        "databaseExceptionStillPropagatesWithoutTicketCopy"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayPuzzleHintTest",
+      "tests": "5",
+      "failures": "1",
+      "errors": "4",
+      "bad_cases": [
+        "revealCannotBypassScanOrGpsValidation",
+        "orientingPuzzleSecretsAreNotDownlinkedBeforeServerFactIsRecorded",
+        "firstHintIsFreeAndCapsPuzzleScoreAtSeventy",
+        "secondHintCapsPuzzleScoreAtForty",
+        "revealCompletesThePuzzleWithZeroScoreWithoutChangingXpSemantics"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_23Test",
+      "tests": "3",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "fullCopyRewritesPlainStoryToActualCopiedNodes",
+        "basicCopyDoesNotStartFullContentRemapping"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.service.verify.CityNodeRedemptionApplicationTest",
+      "tests": "17",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "issuanceUsesTheSameApplicationWithoutOpeningATransaction"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.TopicTransferToClubTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "transfer_persistsClubAndOfflinesOriginal"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.PersonalGameplayRuntimeServiceTest",
+      "tests": "49",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "cmsPersistenceReadsBackActualNodesAndPersistsCompiledRules"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesContractTest",
+      "tests": "15",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "activeNodeStillPassesDelistedGuard"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicCreateSaveDraftSideEffectTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "5",
+      "bad_cases": [
+        "publishedProCreateSubmitsPostReviewAndBuildsPublicShell",
+        "draftCreateSkipsSelfHostShellAndAudit",
+        "proAndDraftCreateDoNotClaimMachinePassed",
+        "publishedProCreate_withOverdueDebt_isRejectedAtSubmission",
+        "publishedSimpleCreateStillBuildsSelfHostShell"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicSettlementIdempotencyTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "nullProductTypeWithoutSales_isClaimedAndClosedExactlyOnce",
+        "claimedButNoSales_settledOnce"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "tests": "4",
+      "failures": "3",
+      "errors": "1",
+      "bad_cases": [
+        "nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite",
+        "chapterInsertMustSucceedAndGenerateIdentityBeforeNodes",
+        "topicInsertMustSucceedAndGeneratePositiveIdentityBeforeChildren",
+        "successfulCopyStillReturnsGeneratedIdentity"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.RefundDeadlineGateTest",
+      "tests": "10",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "explorePassMissingLockedSnapshotCannotReturnManualAcceptance"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.RefundPayoutServiceTest",
+      "tests": "16",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "missingOrConflictingConsumptionNeverChoosesAnotherPayment"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicDraftSubmittedOrderTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "2",
+      "bad_cases": [
+        "createDraftAssignsChapterAndPerChapterNodeOrderFromSubmittedArrays",
+        "rebuildDraftUsesNewSubmittedOrderAndRestartsNodeOrderForEachChapter"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayRouteConflictHttpContractTest",
+      "tests": "4",
+      "failures": "4",
+      "errors": "0",
+      "bad_cases": [
+        "pausedRouteRejectionReachesGlobalHandlerBeforeProgressWrites",
+        "routeVersionConflictIsHttp200WithBodyCode409",
+        "nonConflictCompletionErrorStaysHttp200Without409",
+        "routeVersionConflictCarriesCurrentWorldInBodyData"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TicketSourceAttributionTrustBoundaryTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "3",
+      "bad_cases": [
+        "clientClaimedSourceClubIdIsNeverPersistedAsFundsAttribution",
+        "clientChannelCodeStaysAsAuditOnlyEvidence",
+        "multiTicketOrderAlsoRefusesTheClientClaimedSourceClub"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.AuditTopicBudgetDecisionTest",
+      "tests": "13",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "currentLockedRowKeepsAnAuthorsCommittedOfflineChoiceDespiteStaleRrOnlineRow"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "8",
+      "bad_cases": [
+        "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[1]",
+        "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[2]",
+        "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[3]",
+        "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[4]",
+        "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[5]",
+        "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[6]",
+        "legacyChallengeAnswerWithoutAdvancedProofCannotPublishAndFixedReferenceCanBeJudged",
+        "publishRejectsUnsupportedOrdinarySensorWithNodeTypeAndTool"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayPhotoRetryAndFailureContractTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "6",
+      "bad_cases": [
+        "recordedVoucherRetryWithInvalidUrlKeepsRecordedProof",
+        "storageFailureIsRecoverable503",
+        "completedNodeRetryWithExpiredOrRotatedUrlKeepsAuthoritativeReceipt",
+        "delistedCompletedPhotoNodeRetryKeepsIdempotentReceipt",
+        "firstSubmissionStillRequiresSourceVerification",
+        "programmingExceptionIsNotDisguisedAs503"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_14Test",
+      "tests": "10",
+      "failures": "5",
+      "errors": "5",
+      "bad_cases": [
+        "explicitEmptyListStillClearsExistingCollaborators",
+        "whitelistStillIgnoresInvalidCollaboratorList",
+        "ownerGateStillPrecedesCollaboratorValidation",
+        "absentListWithExistingRowsStillFailsCompletenessGate",
+        "completenessGateStillPrecedesInvalidElementValidation",
+        "absentListWithoutExistingRowsStillAllowsCreateAndFullUpdate",
+        "fullUpdateRejectsNullZeroNegativeBeforeAnyAggregateWrite",
+        "createRejectsNullZeroNegativeBeforeAnyAggregateWrite",
+        "fullUpdatePreservesPositiveDuplicatesAndTheirOrder",
+        "createPreservesPositiveDuplicatesAndTheirOrder"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.RefundPartialClawbackTest",
+      "tests": "2",
+      "failures": "1",
+      "errors": "0",
+      "bad_cases": [
+        "refundOverPaid_rejectedAtSave"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WholeOrderRefundTest",
+      "tests": "19",
+      "failures": "8",
+      "errors": "11",
+      "bad_cases": [
+        "partiallyVerifiedTopicOrderIsRoutedToManualRefundCase",
+        "pendingRefundOnSubBlocksWholeOrderRefund",
+        "subTicketClaimLostToConcurrentRefundRollsBackThisAttempt",
+        "wholeOrderRefundMarksEveryMemberOfTheOrder",
+        "pointsOnlyRefundClawsBackFirstReviewPoints",
+        "refundedSubWithoutApprovedRefundRecordFailsClosed",
+        "orderCashAlreadyFullyRefundedByOtherPathsPaysNothingMore",
+        "partiallyVerifiedOrderEvictedByOwnerIsAlsoRoutedToManual",
+        "pointsOnlyRefundLosingRaceToVerificationFailsLoudly",
+        "existingTopicCaseIsReusedNotRecordedAgain",
+        "refundingSubOrderRefundsFirstOrderTransactionExactlyOnce",
+        "inventoryRestoreConflictStopsGatewayRefundBeforeExternalPayout",
+        "partiallyVerifiedActivityOrderIsRoutedToManualRefundCase",
+        "singleTicketOrderIsUnaffected",
+        "alreadyRefundedMemberIsSkippedSoInventoryIsNotRestoredTwice",
+        "concurrentWholeOrderRefundPaysOnce",
+        "repeatedWholeOrderRefundPaysOnce",
+        "subTicketVerifiedConcurrentlyAfterPrereadRefundsNothing",
+        "fullyVerifiedOrderIsNotRefundedNorRoutedToManual"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.SpoilerIsNotAnswerGateTest",
+      "tests": "5",
+      "failures": "2",
+      "errors": "0",
+      "bad_cases": [
+        "negativeControl",
+        "legitimateRevealPathStillExists"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.PlayLeadAdmissionFailureTest",
+      "tests": "18",
+      "failures": "12",
+      "errors": "5",
+      "bad_cases": [
+        "scanFaultDoesNotCompleteReceiptOrProgress",
+        "preferenceSubmitRecoveryPassesTheOriginalCommandAfterOriginalRouteAdmission",
+        "sensorLeadRecoveryStillUsesOriginalActorScopeActionAndInput",
+        "preferenceBothHttpMethodsKeepOriginal403WithoutEnteringRouteOrPreference",
+        "answerFaultDoesNotCompleteReceiptOrAward",
+        "preferenceSubmitFaultNeverCallsPreferenceMutation",
+        "freeCollectFilterPhotoFaultEscapesTheInnerIllegalStateCatch",
+        "photoFaultEscapesLocalCatchAndDoesNotSubmitProof",
+        "preferenceLeadRefusalTakesPriorityOverUnlockAndRouteRefusalForBothHttpMethods",
+        "revealFaultReturnsNoAnswerOrCompletion",
+        "preferenceReadFaultReturnsNoPreferencePayload",
+        "hintUnlockFaultReturnsNoHintAndNeverReachesPricingOrDebit",
+        "sensorGatheringRefusalDoesNotEnterWritableRouteOrAcquireProof",
+        "preferenceReadRecoveryStillCallsOriginalRouteAndLoadsPreference",
+        "gpsFaultDoesNotCompleteReceiptOrProgress",
+        "puzzleHintFaultReturnsNoHintOrAttempt",
+        "sensorFaultNeverAcquiresSensorOrAwards"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.upgrade.SupportedStackServiceCyclesTest",
+      "tests": "33",
+      "failures": "6",
+      "errors": "1",
+      "bad_cases": [
+        "realCycleStartsAndLazyEdgeResolvesToManagedTransactionalTarget(Cycle)[3]",
+        "realCycleStartsAndLazyEdgeResolvesToManagedTransactionalTarget(Cycle)[7]",
+        "realCycleStartsAndLazyEdgeResolvesToManagedTransactionalTarget(Cycle)[10]",
+        "paymentFactsOriginalLedgerAndTypedNoticesUseRealManagedDependencies",
+        "eagerEdgesPreserveExpectedCycleOrOutboundBoundary(Cycle)[1]",
+        "eagerEdgesPreserveExpectedCycleOrOutboundBoundary(Cycle)[7]",
+        "eagerEdgesPreserveExpectedCycleOrOutboundBoundary(Cycle)[10]"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.RegistrationSeatReplayBoundaryTest",
+      "tests": "19",
+      "failures": "0",
+      "errors": "1",
+      "bad_cases": [
+        "wrongGroupAndClaimedOwnerTypeCannotAckAnotherIdentity"
+      ]
+    }
+  ],
+  "not_proven": [
+    "later named MySQL IT list",
+    "packaged tested application startup",
+    "compiled jdeps/private port controls",
+    "provider/HTTP/device/restart/load acceptance"
+  ]
+}

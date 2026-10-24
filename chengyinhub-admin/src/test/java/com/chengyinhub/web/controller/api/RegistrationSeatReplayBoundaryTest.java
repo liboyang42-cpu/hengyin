@@ -196,7 +196,9 @@ class RegistrationSeatReplayBoundaryTest {
     @Test void wrongGroupAndClaimedOwnerTypeCannotAckAnotherIdentity() {
         assertNotEquals(200, scanner.scanGroupMemberTicket(code(true, 1), 62L).get("code"));
         assertNotEquals(200, scanner.scanGroupMemberTicket(code(true, 1), null).get("code"));
-        assertNotEquals(200, scanner.scanQrCode("topic", code(true, 1), 61L).get("code")); assertNoNewEffects();
+        var refusal = scanner.scanQrCode("topic", code(true, 1), 61L);
+        assertInstanceOf(Integer.class, refusal.get("code"));
+        assertNotEquals(200, refusal.get("code")); assertNoNewEffects();
     }
     @Test void tamperedExpiredCodeAndOtherQrFamiliesNeverReadASeatFact() {
         String expired = code(true, 1);

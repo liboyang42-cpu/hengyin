@@ -317,7 +317,7 @@ public class RegistrationRedemptionApplication {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.VERIFY);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? com.chengyinhub.common.constant.HttpStatus.ERROR : e.getCode(), e.getMessage());
         }
 
         ScanContext ctx = resolveExploreScanContext(code);
@@ -364,7 +364,7 @@ public class RegistrationRedemptionApplication {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.VERIFY);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? com.chengyinhub.common.constant.HttpStatus.ERROR : e.getCode(), e.getMessage());
         }
 
         CmsRegistration registration = resolveRegistrationByScanCode(code);
@@ -935,7 +935,7 @@ public class RegistrationRedemptionApplication {
         } catch (ServiceException e) {
             AjaxResult original = replayOriginalSeat(actorContext, type, code, activityId, false);
             if (original != null) return original;
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? com.chengyinhub.common.constant.HttpStatus.ERROR : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }

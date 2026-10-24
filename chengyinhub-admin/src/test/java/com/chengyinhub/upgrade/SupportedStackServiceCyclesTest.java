@@ -115,7 +115,8 @@ class SupportedStackServiceCyclesTest
             }
         }
 
-        boolean paymentBoundary() { return "invite/payment".equals(name) || "merchant/payment".equals(name); }
+        boolean paymentBoundary() { return "registration/completion/topic/payment".equals(name)
+                || "invite/payment".equals(name) || "merchant/payment".equals(name); }
         @Override
         public String toString()
         {
@@ -323,12 +324,12 @@ class SupportedStackServiceCyclesTest
             Object outbox = AopTestUtils.getUltimateTargetObject(context.getBean(WxPaymentCallbackOutboxServiceImpl.class));
             assertThat(ReflectionTestUtils.getField(outbox, "mapper"))
                     .isSameAs(context.getBean(WxPaymentCallbackOutboxMapper.class));
-            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(ledger), "verifiedFacts"))
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.<Object>getUltimateTargetObject(ledger), "verifiedFacts"))
                     .isSameAs(facts);
             Object consumptions = context.getBean(RegistrationPaymentConsumptionReadService.class);
-            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(ledger), "paymentConsumptions"))
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.<Object>getUltimateTargetObject(ledger), "paymentConsumptions"))
                     .isSameAs(consumptions);
-            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(consumptions), "mapper"))
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.<Object>getUltimateTargetObject(consumptions), "mapper"))
                     .isSameAs(context.getBean(CmsRegistrationPaymentFactMapper.class));
             Object registration = AopTestUtils.getUltimateTargetObject(context.getBean(CmsRegistrationServiceImpl.class));
             Object refund = AopTestUtils.getUltimateTargetObject(context.getBean(RefundServiceImpl.class));
@@ -488,6 +489,7 @@ class SupportedStackServiceCyclesTest
     private Class<?>[] realDependencyClosure(Class<?>... realServices)
     {
         Set<Class<?>> assembly = new LinkedHashSet<>(Arrays.asList(realServices));
+        if (assembly.contains(CmsTopicServiceImpl.class)) assembly.add(WechatPayServiceImpl.class);
         if (assembly.contains(WechatPayServiceImpl.class))
         {
             assembly.addAll(List.of(WechatPaymentSdkGateway.class, WechatPaymentIntentStore.class,

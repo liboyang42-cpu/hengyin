@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T15:45:00Z",
+  "updated_utc": "2026-10-24T16:20:00Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -9,50 +9,50 @@
   "mode": "Fixed payment/refund/settlement integration batch; finish current other slices then queue; grouped regression after callers and fixtures close",
   "current_worker_assignments": {
     "A": {
-      "state": "delivered_waiting_validation",
-      "task": "4 cancellation SQL fixtures delivered and applied; original economic/rollback assertions retained",
+      "state": "ready_for_ci_failure",
+      "task": "Acceptance gaps delivered; original funds/cancellation failures only",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable"
     },
     "B": {
-      "state": "active",
-      "task": "Finish original-reference refund gateway, close old current-alias overload, wire registration refund caller",
+      "state": "ready_for_ci_failure",
+      "task": "Six-argument interface closure reviewed; backend gateway failure repair only",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable"
     },
     "C": {
-      "state": "delivered_waiting_validation",
-      "task": "Before-start typed notice, executable migration assertions and 3 cancellation fixtures applied; integrated comparator limitation recorded",
+      "state": "active",
+      "task": "Migration safety controller hash/permission contract exact adaptation",
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable"
     },
     "D": {
-      "state": "delivered_waiting_validation",
-      "task": "Typed payment callers and free cancellation SQL fixture applied; preserve REQUIRED boundary in other two original cases",
+      "state": "active",
+      "task": "Two actual citynode Node CI failures, scanner async and chrome lifecycle",
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable"
     },
     "E": {
       "state": "active",
-      "task": "ActivityCancelTest and HostWeatherCancelTest complete phase migration; original rules/assertions retained",
+      "task": "Action ledger four exact CI failures, actual route/variant causality",
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable"
     },
     "F": {
       "state": "active",
-      "task": "Actual Spring beforeStartWx dependency closure and exact binding assertion; trusted six files remain exact 3d3a63d",
+      "task": "Refund storage entry failure then precise trusted recovery writer registration",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable"
     },
     "G": {
       "state": "active",
-      "task": "Deposit original-payment reference bound to refund submission; consumption fence already integrated",
+      "task": "Actual FOR UPDATE cache-attribute violation in settlement debt mapper",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable"
     },
     "H": {
       "state": "active",
-      "task": "OuterCancellationTopicFenceTest phase/lock-order adaptation; Commerce generic guard integrated",
+      "task": "Actual club VM loader missing registration-seat dependency, all related fixtures",
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable"
     }
@@ -407,15 +407,22 @@
     "not_acceptance": "No production migration,merge,deployment or full-system acceptance"
   },
   "current_ci_pending": {
-    "core": {
-      "run": 40106969030,
-      "source": "ad2228771f532c21ac5328e577e308578d6fd231",
-      "tests": 14,
-      "pass": 14,
-      "cleanup": "CLEAN",
-      "xml_independently_verified": true
-    },
-    "parallel_first_results": "G11:10PASS+1fixtureERROR;E8/H6:beforeAll sys_config prerequisite error; source-only fixes pending new frozen validation"
+    "run": 40110342853,
+    "source": "9b284f0111b4337e388fc18d797b11c62112cd82",
+    "state": "FAIL_PLAN_CONTROLS_JAVA_NOT_STARTED",
+    "passed_controls": 69,
+    "failed_controls": 1,
+    "failure": "RefundRetryAndRemainderMySqlIT missing precise A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED consumer",
+    "owner": "F",
+    "standard": {
+      "run": 40110542516,
+      "source": "9b284f0111b4337e388fc18d797b11c62112cd82",
+      "state": "RUNNING_WITH_KNOWN_FAILURES",
+      "source_gate_findings": 3,
+      "backend": "in_progress",
+      "mini_failures": "registration-seat loader common root; citynode 2; action ledger 4",
+      "migration_safety": "controller source snapshot drift under review"
+    }
   },
   "current_cloud_assignment": {
     "A": "Environment-offline. Complete TeamGroup/ClubEventOps diff in chat, no unscanned GitHub publishing",
@@ -437,7 +444,7 @@
     "A": "f079 checkout/claim locked-current fence and NEVER+OrderClose outerTx refusal;84d7 exact local consumption completeRecovery and closed-order original ticket guard nowAPPLIED. TeamGroup/ClubEventOps still separate active work. New2dedicated test files present; recovery scenarios queued, not Java verified.",
     "root_guard_factory": "WechatVerifiedFactTestSupport.realPaymentGuards: real same-source JdbcOrderOwner+IntentStore+SdkGateway local guard, outbound doubles kept separate. No SDK init/network. B factory callers pending."
   },
-  "current_source_head": "ad2228771f532c21ac5328e577e308578d6fd231",
+  "current_source_head": "9b284f0111b4337e388fc18d797b11c62112cd82",
   "current_source_manifest_counts": {
     "registered_sql_classes": 110,
     "funds_declared_tests": 191,
@@ -468,12 +475,8 @@
   "pending_business_questions": [
     "ASR: same NPC quota reserved before first ASR then handed to text once, or separate ASR budget. User reply pending; do not select budget/charges automatically."
   ],
-  "current_working_tree": "C61f9+10c44+A4SQL+D1545/2fc + three first-storage fixture fixes pending freeze",
+  "current_working_tree": "Production source frozen and secret-scanned in 9b284f0; documentation updates only; F gate delta pending",
   "new_source_blockers_current": [
-    "G shared current/not-CLOSED originalReference consumption guard with A/E four-domain callers",
-    "H generic Commerce writes can mutate frozen entitlements; implementation assigned",
-    "C BEFORE_START durable original WX payload",
-    "F new production-boundary owner ratchet",
-    "ASR quota policy pending human answer"
+    "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
   ]
 }

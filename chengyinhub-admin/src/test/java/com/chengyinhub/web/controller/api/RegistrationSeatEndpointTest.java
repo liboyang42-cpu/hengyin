@@ -52,6 +52,7 @@ class RegistrationSeatEndpointTest {
         when(activities.selectCmsActivityById(61L)).thenReturn(activity);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "cmsActivityService", activities);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "activityService", activities);
+        ReflectionTestUtils.setField(scannerApplication, "topicService", mock(com.chengyinhub.business.service.ICmsTopicService.class));
         points = mock(IPointsAwardService.class); growth = mock(IGrowthService.class);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "pointsAwardService", points);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "growthService", growth);

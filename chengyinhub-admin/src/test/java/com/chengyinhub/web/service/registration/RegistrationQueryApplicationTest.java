@@ -95,14 +95,23 @@ class RegistrationQueryApplicationTest {
     }
 
     @Test void rawListRemainsOnTheHttpThreadAndOnlyTheControllerCreatesTheOriginalPageEnvelope() {
+        PageHelper.clearPage();
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
         IRefundService refunds = mock(IRefundService.class);
         Page<CmsRegistration> rows = new Page<>(1, 20); rows.setTotal(37);
         CmsRegistration row = new CmsRegistration(); row.setId(1L); row.setMemberId(7L); row.setOwnerType(2L);
         row.setOwnerId(20L); row.setRegistrationStatus(1); rows.add(row);
         Thread httpThread = Thread.currentThread();
+        int[] calls = {0};
         when(registrations.selectCmsRegistrationList(any())).thenAnswer(call -> {
-            assertSame(httpThread, Thread.currentThread()); assertNull(PageHelper.getLocalPage());
+            assertSame(httpThread, Thread.currentThread());
+            if (calls[0]++ == 0) assertNull(PageHelper.getLocalPage());
+            else {
+                Page<?> requested = PageHelper.getLocalPage();
+                assertNotNull(requested); assertEquals(1, requested.getPageNum()); assertEquals(10, requested.getPageSize());
+                // The real PageHelper interceptor clears this after the Mapper read; this mock must do the same.
+                PageHelper.clearPage();
+            }
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive()); return rows;
         });
         when(refunds.selectRefundList(any())).thenReturn(Collections.emptyList());
