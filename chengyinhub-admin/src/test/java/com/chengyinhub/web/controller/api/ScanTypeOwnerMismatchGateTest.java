@@ -72,14 +72,14 @@ class ScanTypeOwnerMismatchGateTest {
 
         controller = spy(new ApiRegistrationController());
         doReturn(ATTACKER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", regSvc);
-        ReflectionTestUtils.setField(controller, "registrationMerchantService", merchantSvc);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", mock(ICmsActivityService.class));
-        ReflectionTestUtils.setField(controller, "topicService", mock(ICmsTopicService.class));
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkSvc);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", mock(IPointsAwardService.class));
-        ReflectionTestUtils.setField(controller, "growthService", mock(IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "dynSecret", "test-secret");
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationService", regSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationMerchantService", merchantSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "cmsActivityService", mock(ICmsActivityService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "topicService", mock(ICmsTopicService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "perkLedgerService", perkSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "pointsAwardService", mock(IPointsAwardService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "growthService", mock(IGrowthService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "dynSecret", "test-secret");
 
         // 这个商家在 topic#800 上中标 —— 而 800 恰好是那张 ③ 票的 activityId(两表 id 区间重叠)
         CmsRegistrationMerchant winner = new CmsRegistrationMerchant();

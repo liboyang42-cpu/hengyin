@@ -107,14 +107,14 @@ class ApiRegistrationVerifyGateTest {
 
         controller = spy(new ApiRegistrationController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", regSvc);
-        ReflectionTestUtils.setField(controller, "registrationMerchantService", merchantSvc);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activitySvc);
-        ReflectionTestUtils.setField(controller, "activityService", activitySvc);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsSvc);
-        ReflectionTestUtils.setField(controller, "growthService", growthSvc);
-        ReflectionTestUtils.setField(controller, "coopOrderMapper", coopOrderMapper);
-        ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationService", regSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationMerchantService", merchantSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "cmsActivityService", activitySvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "activityService", activitySvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "pointsAwardService", pointsSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "growthService", growthSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "coopOrderMapper", coopOrderMapper);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "merchantAccessService", merchantAccessService);
         when(merchantAccessService.require(MEMBER, MerchantPermission.VERIFY))
                 .thenReturn(new MerchantAccessContext(MEMBER, 11L, MEMBER,
                         MerchantRoleCode.MERCHANT_OWNER));
@@ -148,14 +148,14 @@ class ApiRegistrationVerifyGateTest {
                     Collections.singleton(role));
         });
         ReflectionTestUtils.setField(realClubMemberSvc, "clubAccessService", clubAccessService);
-        ReflectionTestUtils.setField(controller, "clubMemberService", realClubMemberSvc);
-        ReflectionTestUtils.setField(controller, "dynSecret", "test-secret");
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "clubMemberService", realClubMemberSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "dynSecret", "test-secret");
         // [P0-14] ③ 分流用:purchase_kind 为空时回落查主题 product_type(双读)。
         // 本类造的是 ①/② 的单(purchase_kind 未设 ⇒ null),会走到这次回落查询;
         // 返 null ⇒ 判不出 ③ ⇒ 走 ①② 原路,正是本类要测的路径。
-        ReflectionTestUtils.setField(controller, "topicService",
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "topicService",
                 mock(com.chengyinhub.business.service.ICmsTopicService.class));
-        ReflectionTestUtils.setField(controller, "perkLedgerService",
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "perkLedgerService",
                 mock(com.chengyinhub.business.service.IPerkLedgerService.class));
 
         // 默认:该主题没有任何合作单 ⇒ 既有 T1 用例的行为完全不变(D22 的三条资格是「或」)
@@ -885,14 +885,14 @@ class ApiRegistrationVerifyGateTest {
         CmsActivity club = new CmsActivity();
         club.setClubId(CLUB);
         club.setStartDate(new java.util.Date(now.getTime() + 60L * 60 * 1000));
-        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(club, now));
+        assertNull(com.chengyinhub.web.service.registration.RegistrationRedemptionApplication.clubSessionVerificationTooEarly(club, now));
         club.setStartDate(new java.util.Date(now.getTime() + 60L * 60 * 1000 + 1));
         assertEquals("俱乐部场次开始前60分钟内才可核销",
-                ApiRegistrationController.clubSessionVerificationTooEarly(club, now).get("msg"));
+                com.chengyinhub.web.service.registration.RegistrationRedemptionApplication.clubSessionVerificationTooEarly(club, now).get("msg"));
         club.setStartDate(new java.util.Date(now.getTime() - 1));
-        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(club, now));
+        assertNull(com.chengyinhub.web.service.registration.RegistrationRedemptionApplication.clubSessionVerificationTooEarly(club, now));
         CmsActivity ordinary = new CmsActivity();
         ordinary.setStartDate(new java.util.Date(now.getTime() + 7L * 24 * 3600 * 1000));
-        assertNull(ApiRegistrationController.clubSessionVerificationTooEarly(ordinary, now));
+        assertNull(com.chengyinhub.web.service.registration.RegistrationRedemptionApplication.clubSessionVerificationTooEarly(ordinary, now));
     }
 }

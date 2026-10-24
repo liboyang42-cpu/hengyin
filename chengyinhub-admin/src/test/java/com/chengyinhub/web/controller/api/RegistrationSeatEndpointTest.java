@@ -25,6 +25,7 @@ class RegistrationSeatEndpointTest {
     private static final String SECRET = "seat-fixture-signing-value";
     private ApiVerifyController issuer;
     private ApiRegistrationController scanner;
+    private com.chengyinhub.web.service.registration.RegistrationRedemptionApplication scannerApplication;
     private RegistrationSeatService seats;
     private ICmsRegistrationService orders;
     private CmsRegistration order;
@@ -38,22 +39,24 @@ class RegistrationSeatEndpointTest {
     @BeforeEach void setup() {
         issuer = spy(new ApiVerifyController()); doReturn(51L).when(issuer).getAppUserId();
         scanner = spy(new ApiRegistrationController()); doReturn(81L).when(scanner).getAppUserId();
+        scannerApplication = spy(new com.chengyinhub.web.service.registration.RegistrationRedemptionApplication());
+        ReflectionTestUtils.setField(scanner, "registrationRedemptionApplication", scannerApplication);
         seats = mock(RegistrationSeatService.class); orders = mock(ICmsRegistrationService.class);
         perkLedger = mock(IPerkLedgerService.class); qrcode = mock(QrcodeServiceImpl.class);
-        ReflectionTestUtils.setField(scanner, "registrationSeatService", seats);
-        ReflectionTestUtils.setField(scanner, "registrationService", orders);
-        ReflectionTestUtils.setField(scanner, "dynSecret", SECRET);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "registrationSeatService", seats);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "registrationService", orders);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "dynSecret", SECRET);
         activities = mock(ICmsActivityService.class);
         wireIssuer(activities);
         activity = new com.chengyinhub.business.domain.CmsActivity(); activity.setId(61L); activity.setTopicId(41L); activity.setMemberId(81L);
         when(activities.selectCmsActivityById(61L)).thenReturn(activity);
-        ReflectionTestUtils.setField(scanner, "cmsActivityService", activities);
-        ReflectionTestUtils.setField(scanner, "activityService", activities);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "cmsActivityService", activities);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "activityService", activities);
         points = mock(IPointsAwardService.class); growth = mock(IGrowthService.class);
-        ReflectionTestUtils.setField(scanner, "pointsAwardService", points);
-        ReflectionTestUtils.setField(scanner, "growthService", growth);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "pointsAwardService", points);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "growthService", growth);
         merchants = mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
-        ReflectionTestUtils.setField(scanner, "merchantAccessService", merchants);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), "merchantAccessService", merchants);
         order = new CmsRegistration(); order.setId(31L); order.setOwnerType(1L); order.setOwnerId(41L);
         order.setMemberId(51L); order.setOrderNum(3L); order.setRegistrationStatus(2); order.setPaymentStatus(2);
         when(orders.selectCmsRegistrationById(31L)).thenReturn(order);
@@ -86,7 +89,7 @@ class RegistrationSeatEndpointTest {
         when(seats.redeemGroupSeat(31L, 2, 61L, 81L)).thenReturn(receipt);
         assertSame(receipt, scanner.scanGroupMemberTicket(code, 61L).get("data"));
         verify(seats).redeemGroupSeat(31L, 2, 61L, 81L);
-        verify(scanner, never()).scanQrCode(anyString(), anyString(), anyLong());
+        verify(scannerApplication, never()).scanQrCode(any(), anyString(), anyString(), anyLong());
     }
     @Test void missingExplicitSeatCannotFallBackToAnOrderWideCode() {
         AjaxResult response = issuer.issueDynCode(31L);
@@ -114,15 +117,15 @@ class RegistrationSeatEndpointTest {
     @Test void dynamicActivitySeatRetainsTheOriginalActivityScanPath() {
         String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
         AjaxResult originalPath = AjaxResult.error("original activity guard");
-        doReturn(originalPath).when(scanner).scanQrCode("activity", code);
+        doReturn(originalPath).when(scannerApplication).scanQrCode(new com.chengyinhub.web.service.registration.RegistrationRedemptionApplication.Actor(81L, false), "activity", code);
         assertSame(originalPath, scanner.scanDynamicCode(code));
-        verify(scanner).scanQrCode("activity", code); verifyNoInteractions(seats);
+        verify(scannerApplication).scanQrCode(new com.chengyinhub.web.service.registration.RegistrationRedemptionApplication.Actor(81L, false), "activity", code); verifyNoInteractions(seats);
     }
     @Test void groupScannerCannotRedirectAnActivitySeatIntoAnotherGroup() {
         order.setOwnerType(2L); order.setOwnerId(61L);
         String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
         assertEquals("活动席位不属于当前带队场次", scanner.scanGroupMemberTicket(code, 62L).get("msg"));
-        verify(scanner, never()).scanQrCode(anyString(), anyString(), anyLong()); verifyNoInteractions(seats);
+        verify(scannerApplication, never()).scanQrCode(any(), anyString(), anyString(), anyLong()); verifyNoInteractions(seats);
     }
     @Test void receiptLookupUnknownNeverCallsAnExecutionEntry() {
         assertEquals(520, issuer.seatReceipt(31L, 2, 61L).get("code"));

@@ -84,7 +84,7 @@ class RegistrationEquityAtomicityContractTest {
 
     @Test
     void legacyRegistrationCouponScanUsesTransactionalRedemptionBoundary() throws Exception {
-        String controller = source("chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java");
+        String controller = source("chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/RegistrationRedemptionApplication.java");
         int start = controller.indexOf("if (\"coupon\".equals(type))");
         int end = controller.indexOf("} else if (type.equals(\"activity\"))", start);
         String couponBranch = controller.substring(start, end);

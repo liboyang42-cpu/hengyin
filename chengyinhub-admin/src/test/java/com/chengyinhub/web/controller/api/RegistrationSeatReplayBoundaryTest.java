@@ -77,7 +77,7 @@ class RegistrationSeatReplayBoundaryTest {
             ReflectionTestUtils.setField(service, (String) field[0], field[1]);
         for (Object[] field : new Object[][]{{"registrationSeatService", service}, {"registrationService", orders}, {"cmsActivityService", activityService},
                 {"activityService", activityService}, {"merchantAccessService", merchants}, {"pointsAwardService", points}, {"growthService", growth}, {"dynSecret", SECRET}})
-            ReflectionTestUtils.setField(scanner, (String) field[0], field[1]);
+            ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), (String) field[0], field[1]);
         ReflectionTestUtils.setField(reader, "registrationTicketApplication", new RegistrationTicketApplication(
                 orders, service, activityService, mock(IPerkLedgerService.class),
                 mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), SECRET));
