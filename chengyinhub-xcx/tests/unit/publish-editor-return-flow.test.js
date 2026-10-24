@@ -145,6 +145,11 @@ function runEditorSuccessBack(transform = source => source) {
 
 test('预览层内保存成功的“返回上一页”必须离开编辑器，不能只关预览', () => {
   const result = runEditorSuccessBack()
+  assert.equal(result.events.length, 0, '原生预览拦截退场前不能导航')
+  assert.equal(result.page._exitAfterPreview, true)
+  assert.equal(result.page.data.previewVisible, false)
+  result.page.onNativeBackGuard()
+  assert.equal(result.events.length, 1)
   assert.equal(result.events[0].type, 'navigateBack')
   assert.equal(result.events[0].options.delta, 1)
   const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
