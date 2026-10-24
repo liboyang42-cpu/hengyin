@@ -1,0 +1,1 @@
+Verifier `d58288edc65e4c57bc98ef61253fb084f38642f1`，parent `b626f425625ccae793aa84a44147fe557c8df6ef`。root消费完整core增量及本工具delta，双ref16ce→d582、compiled_controls.VERIFIER=d582，六文件SHA见trusted-files.json。本片不改实际workflow/生产/原baseline，不授C→Ticket。必须同时合C e1f22fda55b0a26a4261eba49dcd048932cbbec6。8定点Python控制PASS0skip；工具测试/Java/JAR negative-restored/DB/新CI均NOT_RUN，最后真实负控留root统一执行。

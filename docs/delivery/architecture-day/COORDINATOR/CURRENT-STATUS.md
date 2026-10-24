@@ -94,3 +94,13 @@ G4e5ee6e1窄读owner已集成：唯一构造RegistrationSeatMapper，原MANDATOR
 状态更正：root之前按阶段名误将完整startup列为atomic之后，实际workflow535startup、544atomic。API明确Build/test=SUCCESS、full application startup=SUCCESS、atomic Python=FAIL。55b9/job120988405767原日志21:19:23确认packaged app ready、MySQL/RedisUP、缓存roundtrip、protectedHTTP401、jobs disabled；读边界启动P1在此源实际验证。后续compiled/privateMapper/JAR身份步骤确实SKIPPED，不能混成已通过；两旧Python夹具仍需D补齐。
 
 D804d70bf已集成（仅一Python夹具文件）：旧历史行后先通过原runner执行canonical Round迁移，原字段snapshot不变、application_round两历史行均NULL；被测旧withdraw迁移/全部6原case/缺列/历史/replay断言不删，新缺列断言明确replacement_of_offer_id。生产XML/旧SQL字节不改，AST语法已解析，真MySQL待新完整候选验证。55b9完整后端原XML已回读：15459唯一case、14826PASS/633skip/0failure/error/重复，Reader4、Spring真实场景35、ASR屏障3、注销1均实过；实际全JARstartup亦过，后置compiled/JAR metadata被Python失败阻断尚未跑。摘要`55b9-backend-readback.json`，绝不套新SHA。
+
+## 当前候选 b626（最后旧迁移夹具依赖已补）
+
+完整冻结`b626f425625ccae793aa84a44147fe557c8df6ef`，分支`codex/architecture-day-final-b626-20261024`。标准 [40135082606](https://github.com/liboyang42-cpu/hengyin/actions/runs/40135082606)、65类/810声明真实存储 [40135087066](https://github.com/liboyang42-cpu/hengyin/actions/runs/40135087066)已启动。相对55仅改旧Python夹具依赖和证据文档，生产Java未再改；仍按同完整候选验证，不继承旧SHA绿色。旧55的810/810、35Spring/4Reader/3ASR屏障、实际JARstartupPASS和两Pythonerrors均保留原绑定。原8所有当前必要源码已交，不派无收益任务，只收本轮真实失败及后置compiled/JAR身份结果。all_complete=false，未合并/部署/生产DDL。
+
+b626真实存储40135087066已最终SUCCESS；root逐类原XML/receipt回读：65唯一类810/810PASS，0failure/error/skip/重复、65CLEAN、候选/precheck/workflow SHA和类集合/计数均一致，全部a1不需重试，摘要`b626-real-storage-readback.json`。后端原XML身份哈希逐份一致：14826PASS/633环境门控skip、0failure/error/重复，ASR屏障3、reader4、Spring35、注销1均实过。完整JAR启动步骤亦SUCCESS；当前原子迁移Python步骤运行中，compiled/JAR身份待后续，不把存储绿色写成全部架构完成。
+
+b626标准40135082606最终FAIL于privateMapper编译依赖门：原始证据/source/index已验证，三个原privateMapper消费者唯一正确；11条NEW_OWNER_DEPENDENCY_DIRECTION折叠5个owner方向（C city→ticket、G claim→B factDTO、B router→factDTO、B factstore→orderlock、B intents→factstore）。已交原F精确根因与合同，不直接扩grant。此前完整startup、88原子迁移Python、所有Java及30个其他标准job已PASS；negative/restored因该门SKIPPED。root实际JAR SHA/source/buildmetadata与compiled报告一致，摘要`b626-final-backend-artifact-readback.json`。当前唯一源码待办F；原65/810存储绿色仍严格绑定b626，不称本轮完成。
+
+C e1f22单行常量解耦与F verifierd58288ed/tool4b3239完整增量已集成。F exact_directions仅10class pair/4方向，其他内部类/JDBC实现/反向/新环/缺raw继续拒绝；C peer方向未授。root六可信文件按原SHA256与donor逐个一致、两workflow ref及tool VERIFIER一致、旧baseline/commands/locking字节不变；F8定点Python控制PASS为协议fixture，不能代替新JAR/Java/DB。全部必要源码再次收齐，扫描后冻结同一新候选统一验收，旧b626FAIL及其通过证据不套新SHA。
