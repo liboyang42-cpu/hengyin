@@ -53,6 +53,8 @@ import com.chengyinhub.business.service.support.ChapterApplicationInviteNotice;
 import com.chengyinhub.business.mapper.CommittedOfficialNoticeWxMapper;
 import com.chengyinhub.business.task.CommittedOfficialNoticeTask;
 import com.chengyinhub.business.service.support.SettlementDebtLedger;
+import com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService;
+import com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper;
 import com.chengyinhub.business.service.ISystemNotificationIntentService;
 import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;
 
@@ -267,6 +269,7 @@ class SupportedStackServiceCyclesTest
             for (Class<?> service : List.of(WechatVerifiedPaymentFactService.class,
                     WechatPaymentSdkGateway.class, CoopSettlementClaimServiceImpl.class,
                     CoopSettlementOriginalLedger.class, SettlementDebtLedger.class,
+                    RegistrationPaymentConsumptionReadService.class,
                     CommittedBusinessNotice.class, CommittedOfficialNoticeService.class,
                     CommittedOfficialNoticeTask.class, ChapterApplicationInviteNotice.class,
                     ImServiceImpl.class, NotifyServiceImpl.class,
@@ -291,6 +294,11 @@ class SupportedStackServiceCyclesTest
             assertThat(ReflectionTestUtils.getField(claim, "originalLedger")).isSameAs(ledger);
             assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(ledger), "verifiedFacts"))
                     .isSameAs(facts);
+            Object consumptions = context.getBean(RegistrationPaymentConsumptionReadService.class);
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(ledger), "paymentConsumptions"))
+                    .isSameAs(consumptions);
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(consumptions), "mapper"))
+                    .isSameAs(context.getBean(CmsRegistrationPaymentFactMapper.class));
             Object registration = AopTestUtils.getUltimateTargetObject(context.getBean(CmsRegistrationServiceImpl.class));
             Object refund = AopTestUtils.getUltimateTargetObject(context.getBean(RefundServiceImpl.class));
             // Ae6's actual new edges must resolve eagerly to the same managed evidence bean.
@@ -452,7 +460,7 @@ class SupportedStackServiceCyclesTest
         {
             assembly.addAll(List.of(CoopSettlementClaimServiceImpl.class, CoopSettlementOriginalLedger.class,
                     TopicSettlementEvidenceService.class, SettlementDebtLedger.class,
-                    WechatVerifiedPaymentFactService.class));
+                    WechatVerifiedPaymentFactService.class, RegistrationPaymentConsumptionReadService.class));
         }
         if (assembly.contains(MerchantChapterApplicationServiceImpl.class) || assembly.contains(ChapterApplicationInviteNotice.class))
         {
