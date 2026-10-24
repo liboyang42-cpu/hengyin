@@ -106,7 +106,7 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/PmsGiftController.java": "8f5a64a0651a58388f924eecd6b7717e9f53a2d47b2731d821af001d854f4863",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberController.java": "5e7e9ca23fd8b1150bd49bfb5eeff03672e8492536895d462b1ecd30af43e25b",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsPointsSettingController.java": "4ff9de9e8075f80669d7b8cc72027627f8d4c355ccbfd4d053c1f22832cda2b1",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java": "16767b31b2d6d5ba48e0a6aa2795ab0fa5860f10f88efb4ded20b3d76c18b002",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java": "6fb40fd21f8b49ff4e32c3a755397dff771198368dd1f328ad9dce958a97bb56",
     "chengyinhub-admin/sql/migration_merchant_npc_menu_20260824.sql": "033c429fafa0b957a05d091974a0625edd04180ab8e4be04045014d9e9f5c4e3",
     "chengyinhub-admin/sql/migration_menu_2050_coupon_to_supply_20260726.sql": "2a70d867d4405ac075125609d76f860270e628acab952416123543c20b6b0316",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java": "3afd3f0c70c4dc7fe639906caa32c0eaa0cb608a580853829cee1c2b20b64217",
