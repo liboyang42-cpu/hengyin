@@ -51,4 +51,31 @@ class WorkshopRunServerVerificationTest {
         assertFalse(marked.mintedNewRequestId());
         assertFalse(marked.projectionTakenAsSuccess());
     }
+
+    @Test
+    void recoverOfNeverSeenIdDoesNotOccupyThenUniqueVerifyApplies() {
+        WorkshopOriginalRequestBinder binder = new WorkshopOriginalRequestBinder();
+        WorkshopRunServerVerification verify = new WorkshopRunServerVerification(binder);
+        WorkshopRunServerVerification.Decision blank = verify.recover("  ");
+        assertNull(blank.originalRequestId());
+        assertEquals(WorkshopRunServerVerification.Outcome.UNKNOWN, blank.outcome());
+        assertNull(binder.existing("  "));
+        WorkshopRunServerVerification.Decision recovered = verify.recover("c10-run-never-c10");
+        assertEquals("c10-run-never-c10", recovered.originalRequestId());
+        assertEquals(WorkshopRunServerVerification.Outcome.UNKNOWN, recovered.outcome());
+        assertFalse(recovered.mintedNewRequestId());
+        assertNull(binder.existing("c10-run-never-c10"));
+        WorkshopRunServerVerification.Decision first = verify.verifyServer(
+                new WorkshopRunServerVerification.ServerReceipt(
+                        "c10-run-never-c10", Boolean.TRUE, "deadbeefdeadbeefdeadbeefdeadbeef"));
+        assertEquals(WorkshopRunServerVerification.Outcome.WAITING_SOURCE, first.outcome());
+        assertEquals("c10-run-never-c10", first.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, binder.existing("c10-run-never-c10").status());
+        WorkshopRunServerVerification.Decision replay = verify.verifyServer(
+                new WorkshopRunServerVerification.ServerReceipt(
+                        "c10-run-never-c10", Boolean.TRUE, "deadbeefdeadbeefdeadbeefdeadbeef"));
+        assertEquals(WorkshopRunServerVerification.Outcome.WAITING_SOURCE, replay.outcome());
+        assertEquals("c10-run-never-c10", replay.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, binder.existing("c10-run-never-c10").status());
+    }
 }
