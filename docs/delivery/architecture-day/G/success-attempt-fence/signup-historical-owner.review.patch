@@ -1,0 +1,21 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java
+@@ -87,6 +87,17 @@
+                 + "payment_fact_id bigint unique,payment_fact_hash char(64),transaction_id varchar(64),"
+                 + "foreign key(registration_id) references registration_fact(id)) engine=InnoDB");
+         fixturePaymentFacts = WechatVerifiedFactTestSupport.memoryHistoricalFacts();
++        // This suite proves IM persistence, not payment-owner locking. The explicit owner port reads
++        // its existing registration fixture; never derive a current intent/owner from provider facts.
++        com.chengyinhub.business.service.WechatPaymentOrderOwner fixtureOwner = no -> {
++            assertEquals("REG99", no);
++            CmsRegistration current = readRegistration();
++            return new com.chengyinhub.business.service.WechatPaymentOrderOwner.Snapshot(
++                    "REGISTRATION", current.getId(), current.getWechatPaymentAmount(), false,
++                    Integer.valueOf(1).equals(current.getPaymentStatus())
++                            && Integer.valueOf(1).equals(current.getRegistrationStatus()));
++        };
++        ReflectionTestUtils.setField(fixturePaymentFacts, "factBusinessOwner", fixtureOwner);
+         // Provider evidence exists before any local payment transaction; callbacks only reuse this exact reference.
+         fixturePaymentReference = fixturePaymentFacts.recordVerified(originalPaymentFact());
+         Path sqlRoot = Paths.get("chengyinhub-admin/sql");
