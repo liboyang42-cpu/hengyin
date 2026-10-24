@@ -32,12 +32,17 @@ class H5SessionPrimitiveLandingTest {
     private static final long APP_USER_ID = 7L;
     private static final String MAIN_TOKEN = "main-session-token-value";
     private static final String VERSION = "frozen-release-1";
+    private static final String CONTENT_HASH = "b".repeat(64);
+    private static final String TERMS_HASH = "c".repeat(64);
+    private static final String INSTALL_REQUEST_ID = "c10-ins-1";
 
     private HttpServletRequest request;
     private HttpServletResponse response;
     private AppTokenService tokens;
     private IAppSessionRegistryService epochs;
     private RedisCache redis;
+    private WorkshopPackageVersionPublish releases;
+    private WorkshopInstallUpgradeRollback installs;
     private H5SessionPrimitiveLanding landing;
     private LoginAppUser user;
 
@@ -53,7 +58,10 @@ class H5SessionPrimitiveLandingTest {
         redis = mock(RedisCache.class);
         JwtAuthenticationTokenFilter filter = new JwtAuthenticationTokenFilter();
         ReflectionTestUtils.setField(filter, "appTokenService", tokens);
-        landing = new H5SessionPrimitiveLanding(filter, tokens, new BaseController(), epochs, redis);
+        releases = new WorkshopPackageVersionPublish();
+        installs = new WorkshopInstallUpgradeRollback();
+        landing = new H5SessionPrimitiveLanding(
+                filter, tokens, new BaseController(), epochs, redis, releases, installs);
         AppUser appUser = new AppUser();
         appUser.setUserId(APP_USER_ID);
         user = new LoginAppUser(APP_USER_ID, appUser);
@@ -84,6 +92,8 @@ class H5SessionPrimitiveLandingTest {
     @Test
     void missingLicenseDoesNotReturnTicket() {
         admitActor();
+        seedFrozenRelease();
+        seedInstallReceipt();
         when(redis.getExpire(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION))).thenReturn(30L);
         when(redis.getCacheObject(anyString())).thenReturn("https://shell.example/h5?ticket=secret");
 
@@ -96,6 +106,58 @@ class H5SessionPrimitiveLandingTest {
         assertFalse(String.valueOf(decision.parentOrigin()).contains("http"));
         verify(epochs).isCurrentEpoch(APP_USER_ID, 4L);
         verify(redis).getExpire(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION));
+        verify(redis).getCacheObject(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION));
+        verifyNoIssuance();
+    }
+
+    @Test
+    void missingFrozenHashDoesNotReturnTicket() {
+        admitActor();
+        seedInstallReceipt();
+        when(redis.getExpire(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION))).thenReturn(30L);
+        when(redis.getCacheObject(anyString())).thenReturn("https://shell.example/h5?ticket=secret");
+
+        H5SessionPrimitiveLanding.Decision decision = landing.createSession(
+                request, response, "run-1", "objective-1", VERSION);
+
+        assertClosedWithoutTicket(decision);
+        assertEquals("frozen content hash missing", decision.reason());
+        assertNull(releases.frozen());
+        verify(redis).getCacheObject(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION));
+        verifyNoIssuance();
+    }
+
+    @Test
+    void missingInstallIdDoesNotReturnTicket() {
+        admitActor();
+        seedFrozenRelease();
+        when(redis.getExpire(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION))).thenReturn(30L);
+        when(redis.getCacheObject(anyString())).thenReturn("https://shell.example/h5?ticket=secret");
+
+        H5SessionPrimitiveLanding.Decision decision = landing.createSession(
+                request, response, "run-1", "objective-1", VERSION);
+
+        assertClosedWithoutTicket(decision);
+        assertEquals("install request id missing", decision.reason());
+        assertEquals(CONTENT_HASH, releases.frozen().contentHash());
+        assertNull(installs.snapshot().originalRequestId());
+        verify(redis).getCacheObject(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION));
+        verifyNoIssuance();
+    }
+
+    @Test
+    void missingFrozenHashAndInstallIdDoesNotReturnTicket() {
+        admitActor();
+        when(redis.getExpire(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION))).thenReturn(30L);
+        when(redis.getCacheObject(anyString())).thenReturn("https://shell.example/h5?ticket=secret");
+
+        H5SessionPrimitiveLanding.Decision decision = landing.createSession(
+                request, response, "run-1", "objective-1", VERSION);
+
+        assertClosedWithoutTicket(decision);
+        assertEquals("frozen content hash missing", decision.reason());
+        assertNull(releases.frozen());
+        assertNull(installs.snapshot().originalRequestId());
         verify(redis).getCacheObject(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION));
         verifyNoIssuance();
     }
@@ -130,6 +192,15 @@ class H5SessionPrimitiveLandingTest {
         assertFalse(H5SessionPrimitiveLanding.redisReadKey(APP_USER_ID, VERSION).contains("://"));
         verify(redis, never()).getExpire(anyString());
         verifyNoIssuance();
+    }
+
+    private void seedFrozenRelease() {
+        releases.freeze(new WorkshopPackageVersionPublish.FreezeFact(
+                "c10-frozen-1", "mod-1", VERSION, CONTENT_HASH, TERMS_HASH));
+    }
+
+    private void seedInstallReceipt() {
+        installs.install(INSTALL_REQUEST_ID, VERSION);
     }
 
     private void admitActor() {
