@@ -215,3 +215,20 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 13. Parent addendum 2026-10-23 19:20 America/Los_Angeles
+
+HEAD `0f5e7cf3b` tests. Did not invent recoverOriginal.
+
+`WebhookSameEventRetryTest.unusedRetrySameEventOfNeverSeenDoesNotOccupyThenUniqueDeliverApplies`：未见 `evt-retry-unused-c09` 的 `retrySameEvent` 抛原投递日志不存在且 store 仍空；`recoverOriginal` 保持 UNKNOWN_NOT_RECOVERED；后续唯一 `deliver` 才是 DELIVERED。
+
+父进程独立 surefire（`/tmp/hy-c09`，2026-10-24T02:20:46Z）：
+
+```
+Tests run: 3 -- WebhookSameEventRetryTest
+Tests run: 4 -- C09AccountSwitchRestartIsolationTest
+Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
