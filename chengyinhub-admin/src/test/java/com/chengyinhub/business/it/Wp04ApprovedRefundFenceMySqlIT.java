@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
  * Old-owner money rows are historical fixtures, not a claim to execute an old RefundService or provider SDK. */
 class Wp04ApprovedRefundFenceMySqlIT {
     Wp04PaidHalfStateMySqlIT f=new Wp04PaidHalfStateMySqlIT();
-    @BeforeEach void schema() throws Exception {f.originalSchemaAndTenYuanPaidHalfState();f.tx.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);}
+    @BeforeEach void schema() throws Exception {f.originalSchemaAndTenYuanPaidHalfState(false);f.tx.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);}
     @AfterEach void cleanup(){f.dropOnlyOwnCreatedSchema();}
 
     @Test void legacyApprovedClawbackCannotBeFrozenIntoNewOriginalsAndChargedAgain() throws Exception {
@@ -95,6 +95,21 @@ class Wp04ApprovedRefundFenceMySqlIT {
                 assertEquals(List.of(902L,903L),f.originals.selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(11L),"同事务写后不得命中旧L1结果");
             });
         } finally {writer.shutdownNow();assertTrue(writer.awaitTermination(5,TimeUnit.SECONDS));}
+    }
+
+    @Test void inlineParentChildRollbackRetainsOriginalFactWithoutCreatingStandardInboxOrDone() {
+        f.parentCompleteChildHalfState();
+        assertEquals(0,f.count("wx_payment_callback_inbox"));assertEquals(0,f.count("wx_payment_callback_fact_link"));
+        assertThrows(IllegalStateException.class,()->f.tx.executeWithoutResult(status->f.recovery.requireCashAdmission(1L,f.reference)));
+        assertEquals(1,f.count("wx_payment_callback_outbox"));
+        assertEquals(1L,f.db.queryForObject("SELECT biz_id FROM wx_payment_callback_outbox",Long.class));
+        assertEquals("COOP_PAID_HALF_LATE_SUCCESS:"+f.reference.id()+":"+f.reference.hash(),f.db.queryForObject("SELECT idempotency_key FROM wx_payment_callback_outbox",String.class));
+        assertEquals(4,f.db.queryForObject("SELECT state FROM wx_payment_callback_outbox",Integer.class));
+        assertEquals(1,f.db.queryForObject("SELECT money_affecting FROM wx_payment_callback_outbox",Integer.class));
+        assertEquals(0,f.count("wx_payment_callback_inbox"));assertEquals(0,f.count("wx_payment_callback_fact_link"));
+        assertEquals(f.reference,f.facts.requireVerified(f.reference).reference());
+        assertEquals(1,f.db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=2",Integer.class));
+        assertEquals(0,f.count("coop_settlement_original_adjustment"));assertEquals(0,f.count("ums_member_balance_detail"));
     }
 
     void completeOriginalPaidHalfThroughVerifiedInbox() throws Exception {

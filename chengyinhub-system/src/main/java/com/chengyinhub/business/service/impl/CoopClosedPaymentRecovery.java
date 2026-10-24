@@ -17,6 +17,10 @@ public class CoopClosedPaymentRecovery {
     private static final org.slf4j.Logger log=org.slf4j.LoggerFactory.getLogger(CoopClosedPaymentRecovery.class);
     @org.springframework.beans.factory.annotation.Autowired
     private org.springframework.beans.factory.ObjectProvider<CoopClosedPaymentRecovery> self;
+    @org.springframework.beans.factory.annotation.Autowired
+    private CmsRegistrationMapper recoveryRegistrations;
+    @org.springframework.beans.factory.annotation.Autowired
+    private CmsActivityMapper recoveryActivities;
 
     private final CmsTopicMapper topics;
     private final CoopSettlementOriginalMapper originals;
@@ -67,23 +71,31 @@ public class CoopClosedPaymentRecovery {
     private CoopPaymentRecoveryTarget blockedTarget(Long id,WechatVerifiedPaymentFact.Reference reference) {
         WechatVerifiedPaymentFact proof=facts.requireVerified(reference).facts();proof.requireValid();
         if (proof.kind()!=WechatVerifiedPaymentFact.Kind.PAYMENT) throw new IllegalArgumentException("Original payment SUCCESS required");
-        CoopPaymentRecoveryTarget observed=originals.selectPaymentRecoveryTarget(id);
-        if (observed==null || !Objects.equals(id,observed.getRegistrationId()) || !Boolean.TRUE.equals(observed.getRelationPresent())) throw new IllegalStateException("PAYMENT_RECOVERY_RELATION_MISSING");
-        if (!Objects.equals(observed.getRegistrationNo(),proof.businessOutTradeNo())) throw new IllegalStateException("PAYMENT_RECOVERY_ORIGINAL_IDENTITY_CONFLICT");
-        if (observed.getTopicId()==null) return null; // Existing, actual standalone activity; A keeps its own admission rules.
-        CmsTopic topic=topics.selectCmsTopicByIdForUpdate(observed.getTopicId());
-        if (topic==null || !observed.getTopicId().equals(topic.getId())) throw new IllegalStateException("PAYMENT_RECOVERY_TOPIC_MISSING");
-        CoopPaymentRecoveryTarget current=originals.selectPaymentRecoveryTargetForUpdate(id);
-        if (current==null || !Objects.equals(id,current.getRegistrationId()) || !Boolean.TRUE.equals(current.getRelationPresent()) || !Objects.equals(current.getTopicId(),topic.getId())
-                || !Objects.equals(current.getRegistrationNo(),proof.businessOutTradeNo())) throw new IllegalStateException("PAYMENT_RECOVERY_SCOPE_CHANGED");
-        if (current.getWechatPaymentAmount()==null || current.getWechatPaymentAmount().movePointRight(2).longValueExact()!=proof.amountFen()
-                || current.getTransactionId()!=null && !current.getTransactionId().isBlank() && !current.getTransactionId().equals(proof.transactionId())) {
+        // Existing G locator explicitly clears L1 before reusing A's full current-lock protocol; it is not an admission proof.
+        CoopPaymentRecoveryTarget located=originals.selectPaymentRecoveryTarget(id);
+        if (located==null || !Objects.equals(id,located.getRegistrationId())) throw new IllegalStateException("PAYMENT_RECOVERY_RELATION_MISSING");
+        CmsRegistration observed=recoveryRegistrations.selectCmsRegistrationById(id);
+        if (observed==null || !Objects.equals(id,observed.getId())) throw new IllegalStateException("PAYMENT_RECOVERY_RELATION_MISSING");
+        // Reuse A's topic -> actual activity -> complete original parent-order lock/scope protocol.
+        RegistrationTopicFence.LockedOrder locked=RegistrationTopicFence.lock(observed,recoveryRegistrations,recoveryActivities,topics);
+        CmsRegistration registration=locked.registration();
+        if (!Objects.equals(registration.getRegistrationNo(),proof.businessOutTradeNo())
+                || registration.getWechatPaymentAmount()==null || registration.getWechatPaymentAmount().movePointRight(2).longValueExact()!=proof.amountFen()
+                || registration.getTransactionId()!=null && !registration.getTransactionId().isBlank() && !registration.getTransactionId().equals(proof.transactionId())) {
             throw new IllegalStateException("PAYMENT_RECOVERY_ORIGINAL_IDENTITY_CONFLICT");
         }
+        CmsTopic topic=locked.topic();
+        if (topic==null) return null; // Existing, actual standalone activity; A retains its own policy.
+        CoopPaymentRecoveryTarget current=new CoopPaymentRecoveryTarget();
+        current.setRegistrationId(registration.getId());current.setRegistrationNo(registration.getRegistrationNo());
+        current.setTopicId(topic.getId());current.setRelationPresent(true);current.setPaymentStatus(registration.getPaymentStatus());
+        current.setRegistrationStatus(registration.getRegistrationStatus());current.setTransactionId(registration.getTransactionId());
+        current.setWechatPaymentAmount(registration.getWechatPaymentAmount());
         CoopSettlementCashClose close=cash.selectCloseForUpdate(topic.getId());
         if (!Integer.valueOf(1).equals(topic.getIsSettlement()) && close==null) return null;
-        // This slice addresses PAID 2/1, not the separate PAYING 1/1 confirmation guard.
-        if (Integer.valueOf(2).equals(current.getPaymentStatus()) && Integer.valueOf(1).equals(current.getRegistrationStatus())) return current;
+        // Match Ae6 admission for the entire original order, while retaining the original payer/fact identity.
+        if (locked.rows().stream().anyMatch(row -> !Integer.valueOf(2).equals(row.getPaymentStatus())
+                || !Integer.valueOf(2).equals(row.getRegistrationStatus()) || !proof.transactionId().equals(row.getTransactionId()))) return current;
         if (Integer.valueOf(2).equals(current.getPaymentStatus()) && Integer.valueOf(2).equals(current.getRegistrationStatus())) {
             if (close!=null) {
                 CoopSettlementCashContribution source=cash.selectContributionForUpdate(id);

@@ -43,6 +43,9 @@ class Wp04PaidHalfStateMySqlIT {
     ICoopInviteService deposits;
 
     @BeforeEach void originalSchemaAndTenYuanPaidHalfState() throws Exception {
+        originalSchemaAndTenYuanPaidHalfState(true);
+    }
+    void originalSchemaAndTenYuanPaidHalfState(boolean withStandardInbox) throws Exception {
         assertEquals("github-hosted",System.getenv("RUNNER_ENVIRONMENT"));
         assertEquals("1",System.getenv("WP04_PAID_HALF_STATE_DDL_APPROVED"));
         for(String key:List.of("HOST","PORT","USER","PASSWORD","DB_SUFFIX")) assertNotNull(System.getenv("CHENGYIN_MYBATIS_IT_"+key));
@@ -70,7 +73,10 @@ class Wp04PaidHalfStateMySqlIT {
         db.update("INSERT INTO cms_topic(id,name,product_type,member_id,is_settlement) VALUES(11,'G paid half-state',1,7,0)");
         db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,purchase_kind,pay_expire_time) VALUES(1,'REG1',1,11,21,10,77,1,10,10,10,10,2,1,0,1,'2026-10-01 08:00:00')");
         String hash=WxPaymentCallbackInboxServiceImpl.sha256Hex("PAY:WXTX1:SUCCESS");
-        db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(1,UNHEX(?),1,1,'SUCCESS',0)",hash);facts.bindNewInbox(1,hash,reference,true);
+        if (withStandardInbox) {
+            db.update("INSERT INTO wx_payment_callback_inbox(id,notify_hash,biz_type,biz_id,event_type,state) VALUES(1,UNHEX(?),1,1,'SUCCESS',0)",hash);
+            facts.bindNewInbox(1,hash,reference,true);
+        }
         CmsTopicMapper topics=mock(CmsTopicMapper.class);
         when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call->db.queryForObject("SELECT id,is_settlement,product_type FROM cms_topic WHERE id=11 FOR UPDATE",(rs,n)->{
             CmsTopic row=new CmsTopic();row.setId(rs.getLong(1));row.setIsSettlement(rs.getInt(2));row.setProductType(rs.getInt(3));return row;
@@ -82,6 +88,8 @@ class Wp04PaidHalfStateMySqlIT {
         payment=new CmsRegistrationServiceImpl();ReflectionTestUtils.setField(payment,"cmsRegistrationMapper",registrations);
         outbox=new WxPaymentCallbackOutboxServiceImpl();ReflectionTestUtils.setField(outbox,"mapper",sql.getMapper(WxPaymentCallbackOutboxMapper.class));
         CoopClosedPaymentRecovery target=new CoopClosedPaymentRecovery(topics,originals,sql.getMapper(CoopSettlementCashEvidenceMapper.class),facts,outbox);
+        ReflectionTestUtils.setField(target,"recoveryRegistrations",registrations);
+        ReflectionTestUtils.setField(target,"recoveryActivities",mock(CmsActivityMapper.class));
         ProxyFactory proxy=new ProxyFactory(target);proxy.setProxyTargetClass(true);proxy.addAdvice(new TransactionInterceptor(manager,new AnnotationTransactionAttributeSource()));
         recovery=(CoopClosedPaymentRecovery)proxy.getProxy();
         @SuppressWarnings("unchecked") ObjectProvider<CoopClosedPaymentRecovery> self=mock(ObjectProvider.class);
@@ -133,6 +141,20 @@ class Wp04PaidHalfStateMySqlIT {
         assertEquals(1,topicClosed());assertEquals(2,inboxState(),"不删原DONE或伪造原head回填");
         assertEquals(0,count("coop_settlement_original_component"));assertEquals(0,count("coop_settlement_cash_close"));
         assertEquals(0,new BigDecimal("10.00").compareTo(registrations.selectCmsRegistrationByIdForUpdate(1L).getWechatPaymentAmount()));
+    }
+    @Test void closedParentCompleteButChildHalfStateRetainsPayerFactDespiteExistingCashHead() {
+        parentCompleteChildHalfState();
+        assertFalse(recovery.retainClosedSuccess(1L,reference));
+        assertRecoveryIdentity();assertEquals(2,registrationStatus());
+        assertEquals(1,db.queryForObject("SELECT registration_status FROM cms_registration WHERE id=2",Integer.class));
+        assertEquals(1,count("coop_settlement"));assertEquals(0,inboxState());
+        assertEquals(1L,db.queryForObject("SELECT biz_id FROM wx_payment_callback_outbox",Long.class),"原付款父单身份，不改传从单");
+    }
+    void parentCompleteChildHalfState(){
+        db.update("UPDATE cms_topic SET is_settlement=1 WHERE id=11");
+        db.update("UPDATE cms_registration SET parent_order_no='GROUP1',registration_status=2,transaction_id='WXTX1' WHERE id=1");
+        db.update("INSERT INTO cms_registration(id,registration_no,parent_order_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,purchase_kind,pay_expire_time,transaction_id) VALUES(2,'REG2','GROUP1',1,11,21,0,77,1,0,0,0,0,2,1,0,1,'2026-10-01 08:00:00','WXTX1')");
+        db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,amount,status) VALUES(12,11,7,'MEMBER','INITIATOR_MARGIN','initiator',10,0)");
     }
     void repairAndMarkDone(){
         CmsRegistration current=registrations.selectCmsRegistrationByIdForUpdate(1L);

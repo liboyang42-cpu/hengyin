@@ -11,3 +11,5 @@ Parent `6df875d59f986cff6d90c7c9ad9c7903244c2078`。同一独占工作区的新�
 新增2条unit（原14保留，现16声明）；新 `Wp04ApprovedRefundFenceMySqlIT` 4普通声明、0实跑：旧追收+已有原来源拒绝新组件/余额与旧流水不变；真实活动父关系/错冗余owner/软删资金仍阻断零关账；数字碰撞的外国scope不误阻正常零关账；RR旧视图/新提交APPROVED与同事务L1当前读。复用原UUID fixture/gate `WP04_PAID_HALF_STATE_DDL_APPROVED=1`；root须只在这条精确suite设置批准。原14unit/10original-refund IT/4paid-half IT断言不删；只补必要mapper装配，将历史退款fixture批准时点放到原件冻结后。第一条IT使用实际registerVerified/processVerified/claim/mutation fence提交原2/2+DONE，不造inline绑定；旧owner追收行是明确历史夹具，不声称执行旧RefundService或providerSDK。
 
 后续独立片已保留在未提交树：按H/Ae6完整父从范围恢复遗漏、原付款fact/hash MANUAL_REQUIRED、修正A patch真实checkedVerifiedPayment(...).reference()与早返回顺序；不混入本次guard。三项金额政策未答，不实现部分退款舍入/跨订单分币/亏损承担，不扣保证金、不自动调资金。完整late现金补入/最终恢复仍未完成，不把手工待办冒充闭环。
+
+后续父从单/H接缝现作为单独增量交付，见 [RECOVERY.md](RECOVERY.md)；guard原始清单固定于24b，后续测试装配以recovery清单核验。

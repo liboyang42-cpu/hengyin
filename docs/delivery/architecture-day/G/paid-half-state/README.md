@@ -1,3 +1,5 @@
+> 后续 H/Ae6 修正：本目录 A patch 现在以 `e6dc689a` 为精确基底，使用真实 `checkedVerifiedPayment(...).reference()`，G准入位于Ae6早返回之前；只在失败回滚后补保留。完整父从范围与防双冲见 [后续片](../approved-refund-fence/RECOVERY.md)。原6df覆盖仍按Git历史/当时证据解释。
+
 # G 已付半状态错关账 P1：源码候选，未真验
 
 Parent `de7f432ec6f0c1c6225168ecf2e4808210de42e0`，独占工作树 `/workspace/hengyin-g-paid-half-state`。root 请求中 `7da3e4ea385596aa850dc760f2cf6adc6c554602` 到本 parent 的现金 DTO/证据 SQL 字节未变；采用已纳 881/E/父锁的最新公共源，未回退他人代码。Java/MySQL/CI 均 NOT_RUN，无 DDL 执行。
@@ -10,11 +12,11 @@ Parent `de7f432ec6f0c1c6225168ecf2e4808210de42e0`，独占工作树 `/workspace/
 
 ## A 共享接线（本批未修改 A 文件）
 
-`a-callback-admission.review.patch` 以真实 parent A 源应用 B `041534c7` 的已交付 registration hooks 后为精确基底；已在临时公共源码副本完成 B→G patch dry-run（fuzz=0）。必须与 B `041534c7` 的 `checkedVerifiedPaymentReference`、registerVerified/processVerified 接线合成；不可孤立编译或恢复旧非 verified inbox 路径。A 已有 verifiedReference 可直接复用，避免额外查询，无新 verifier。
+`a-callback-admission.review.patch` 当前以实际 A/e6 `e6dc689a` 为精确基底；其 checkedVerifiedPayment(...).reference()、registerVerified/processVerified 已存在，不重复加旧B helper。已在临时公共源码副本 dry-run（fuzz=0），不修改A工作文件。
 
-- 在 B 已登记原事实/inbox 后、processVerified 前调用外部保留阶段；false=真实支付已成功但本地现金恢复待办，不是未付款，不回补/换号。
-- 在当前锁定 SUCCESS 分支、completePaymentSuccess/历史2/1修复/CAS 前调用内部准入；原权限/金额/attempt 校验保留。
-- processVerified 失败释放后补外部保留，覆盖竞态；事务内 confirmed-payment 入口同走内部准入，G afterRollback 负责锁释放后保留，不在持锁时强开新事务。
+- G内部准入位于锁下SUCCESS分支、Ae6已关账早返回及completePaymentSuccess/CAS之前；范围包含完整原父从单。
+- 原processVerified失败、业务事务回滚释放后，再保留原fact/hash身份；G的afterRollback也覆盖inline失败。
+- 不改原注册/消费/DONE/ACK合同，不造缺失inline绑定，不自动调资金。
 
 A/B 这些 hunk 尚未由本片实际接入，因此不声称完整 callback/ACK 关闭。root 转发给 A 合成；G 只交实现与精确 patch，不覆盖其文件。
 

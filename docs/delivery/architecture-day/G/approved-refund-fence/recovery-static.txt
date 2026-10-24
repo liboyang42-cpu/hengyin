@@ -1,0 +1,1 @@
+SOURCE ONLY PASS: original4 P1 +4 approved-refund IT case bodies byte-identical; +1 H parent-child and +1 no-inbox inline declarations, both suites now5, runtime0. Ae6 RegistrationTopicFence exact bytes equal; actual checkedVerifiedPayment(...).reference() patch before Ae6 early return; no recordVerified/DONE/funds action in G recovery. Java/MySQL/CI NOT_RUN.
