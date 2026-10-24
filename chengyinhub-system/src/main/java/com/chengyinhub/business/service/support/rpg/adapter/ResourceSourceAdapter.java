@@ -16,8 +16,8 @@ import java.util.Objects;
 /**
  * 原资源写入:局内效果只走 {@link TopicRouteEngine#applyEffects} 已有 ADD_ITEM / GRANT_XP / GRANT_BADGE /
  * SET / INC,幂等键仍是 themeRuntime.sources 与 storyGrants。不另造钱包。
- * 持久原请求走 {@link OriginalResourcePersist}（Runtime/dot）；缺端口 WAITING_SOURCE，
- * 进程内 applyEffects 不是重启恢复证明。
+ * 原检定成长 writer 是 {@code ITopicRouteRuntimeService.rpgV2Check}，由 {@link OriginalRpgCheckCaller} 调用。
+ * 这里的 applyEffects 只改当前局投影，不是那条原账，也不能代替它。
  * 原动作回读走既有 {@link TopicRouteSessionMapper#selectActionByAction}；
  * 不复制 rpgv2.RpgRequestReceipts，不发明 rpg2:sha256。
  */
