@@ -274,6 +274,52 @@ class ImmutableReceiptProducerTest {
     }
 
     @Test
+    void recoverChannelReceiptReadsTheSameKeyAndDoesNotInsert() {
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        String key = "c09-send-key-0001";
+        int[] receipts = new int[] { 0 };
+        ImmutableReceiptProducer.ChannelMessageOriginalSend writer =
+                new ImmutableReceiptProducer.ChannelMessageOriginalSend() {
+                    @Override
+                    public java.util.Map<String, Object> send(Long actor, Long conversation, String client, Integer type,
+                            String content, String extra, Long replyTo, java.util.List<Long> members,
+                            java.util.List<Long> roles, boolean everyone) {
+                        java.util.Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
+                        sent.put("id", Long.valueOf(42L));
+                        sent.put("request_id", client);
+                        return sent;
+                    }
+
+                    @Override
+                    public java.util.Map<String, Object> receipt(Long actor, String requestId) {
+                        receipts[0]++;
+                        java.util.Map<String, Object> receipt = new java.util.LinkedHashMap<String, Object>();
+                        receipt.put("request_id", requestId);
+                        receipt.put("state", "PENDING");
+                        receipt.put("outcome_confirmed", Boolean.FALSE);
+                        return receipt;
+                    }
+                };
+        ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store, null, null, writer);
+        producer.sendOriginal(new ImmutableReceiptProducer.OriginalRequest(key, ImmutableReceiptProducer.Kind.REPLY,
+                "{\"fp\":1}", ImmutableReceiptProducer.OUTCOME_ACCEPTED), 7L, 12L, Integer.valueOf(1), "hello", null,
+                88120L, java.util.List.of(), java.util.List.of(), false);
+        java.util.Map<String, Object> recovered = producer.recoverChannelReceipt(7L, key);
+        assertEquals(1, receipts[0]);
+        assertEquals(key, recovered.get("request_id"));
+        assertEquals("PENDING", recovered.get("state"));
+        assertEquals(Boolean.FALSE, recovered.get("outcome_confirmed"));
+        assertNull(recovered.get("content"));
+        assertEquals(0, store.size());
+        assertThrows(IllegalArgumentException.class, () -> producer.recoverChannelReceipt(7L, "c09-send-01"));
+        assertEquals(1, receipts[0]);
+        ImmutableReceiptProducer.WaitingSourceException missing = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> new ImmutableReceiptProducer(store).recoverChannelReceipt(7L, key));
+        assertEquals(ImmutableReceiptProducer.CHANNEL_MESSAGE_RECEIPT, missing.getWaitingCapability());
+    }
+
+    @Test
     void projectOriginalSendReadsStoredIdentityAndRejectsRebuiltBody() {
         String key = "c09-send-key-0001";
         String digest = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";

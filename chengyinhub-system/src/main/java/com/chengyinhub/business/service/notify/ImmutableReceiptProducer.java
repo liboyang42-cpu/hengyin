@@ -39,6 +39,7 @@ public final class ImmutableReceiptProducer {
     public static final String IM_SEND_WIRE = "im.send.originalWire";
     /** 频道回复/提及的原 writer 是 ChannelMessageService.send，不是 IImService.send。公开树还没有这个类。 */
     public static final String CHANNEL_MESSAGE_SEND = "channelMessage.send";
+    public static final String CHANNEL_MESSAGE_RECEIPT = "channelMessage.receipt";
     public static final String NOT_A_SEND = "IM_OPERATION_NOT_SEND";
 
     public enum Kind {
@@ -199,6 +200,24 @@ public final class ImmutableReceiptProducer {
             throw new IllegalStateException("channel send receipt is not this request");
         }
         return new OriginalReceipt(required.requestId, required.kind, null, OUTCOME_UNKNOWN, null);
+    }
+
+    /**
+     * Reads the original channel receipt for a key already sent. It does not insert a second store,
+     * mint a request, or treat the command text as the server body.
+     */
+    public Map<String, Object> recoverChannelReceipt(Long actorId, String requestId) {
+        if (requestId == null || !requestId.matches("[A-Za-z0-9_-]{16,64}")) {
+            throw new IllegalArgumentException("INVALID_REQUEST_ID");
+        }
+        if (actorId == null || actorId.longValue() <= 0L || channelSend == null) {
+            throw new WaitingSourceException(CHANNEL_MESSAGE_RECEIPT);
+        }
+        Map<String, Object> receipt = channelSend.receipt(actorId, requestId);
+        if (receipt == null || !requestId.equals(receipt.get("request_id"))) {
+            throw new IllegalStateException("channel receipt is not this request");
+        }
+        return receipt;
     }
 
     private static boolean hasMention(List<Long> members, List<Long> roles, boolean everyone) {
@@ -603,6 +622,10 @@ public final class ImmutableReceiptProducer {
         Map<String, Object> send(Long actor, Long conversationId, String clientMessageId, Integer msgType,
                 String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
                 List<Long> mentionRoleIds, boolean mentionEveryone);
+
+        default Map<String, Object> receipt(Long actor, String requestId) {
+            throw new WaitingSourceException(CHANNEL_MESSAGE_RECEIPT);
+        }
     }
 
     /** 既有 {@link IImService#send}；本生产者不另写一套发送。 */
