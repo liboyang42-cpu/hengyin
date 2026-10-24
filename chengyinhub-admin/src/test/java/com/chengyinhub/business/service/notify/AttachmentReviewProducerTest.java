@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.notify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,28 @@ class AttachmentReviewProducerTest {
         assertEquals(1, store.size());
         assertEquals(AttachmentReviewProducer.STATUS_PENDING,
                 producer.recoverOriginal("att-recover-never-c09", "VISIBLE").status);
+        assertEquals(1, store.size());
+    }
+
+    @Test
+    void unusedDecideOfNeverSeenDoesNotOccupyThenUniqueSubmitApplies() {
+        InMemoryNotifyFixtures.MemoryReviewStore store = new InMemoryNotifyFixtures.MemoryReviewStore();
+        AttachmentReviewProducer producer = new AttachmentReviewProducer(store);
+        assertThrows(IllegalStateException.class, () -> producer.decide(
+                "att-decide-never-c09", AttachmentReviewProducer.STATUS_APPROVED));
+        assertEquals(0, store.size(), "未见附件 decide 观察不得占账");
+        assertNull(store.find("att-decide-never-c09"));
+        AttachmentReviewProducer.ReviewReceipt unused = producer.recoverOriginal(
+                "att-decide-never-c09", "VISIBLE");
+        assertEquals("att-decide-never-c09", unused.requestId);
+        assertEquals(AttachmentReviewProducer.STATUS_UNKNOWN, unused.status);
+        AttachmentReviewProducer.ReviewReceipt first = producer.submit(
+                "att-decide-never-c09", AttachmentReviewProducer.AttachmentType.IMAGE, "digest-IMAGE");
+        assertEquals("att-decide-never-c09", first.requestId);
+        assertEquals(AttachmentReviewProducer.STATUS_PENDING, first.status);
+        assertEquals(1, store.size());
+        assertEquals(AttachmentReviewProducer.STATUS_PENDING,
+                producer.recoverOriginal("att-decide-never-c09", "VISIBLE").status);
         assertEquals(1, store.size());
     }
 }
