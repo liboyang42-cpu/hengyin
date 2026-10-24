@@ -48,7 +48,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
     private MerchantChapterApplicationMapper applicationMapper;
 
     @Autowired
-    private com.chengyinhub.business.service.support.CommittedBusinessNotice committedNotice;
+    private com.chengyinhub.business.mapper.AuditTaskMapper auditTaskMapper;
 
     @Autowired
     private com.chengyinhub.business.service.support.ChapterApplicationInviteNotice inviteNotice;
@@ -160,7 +160,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         if (merchantId == null || merchantId <= 0) {
             throw new IllegalStateException("请先登录");
         }
-        MerchantChapterApplication application = applicationMapper.selectByIdIncludingDeletedForUpdate(applicationId);
+        MerchantChapterApplication application = lockForWithdrawal(applicationId);
         assertWithdrawableBy(application, merchantId);
         if (Integer.valueOf(2).equals(application.getDelFlag())) {
             return application;
@@ -176,10 +176,9 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
                     false, "商家已撤回承接申请");
             // 只有本次真正撤回成功才通知主办；幂等重放与并发落败分支都不进这里，不会重复发。
             CmsTopic topic = topicMapper.selectCmsTopicById(application.getTopicId());
-            if (topic != null && topic.getMemberId() != null) {
-                committedNotice.sendAfterCommit(topic.getMemberId(), "章节申请已撤回", "商家已撤回章节承接申请",
-                        "chapter-application-withdraw", application.getId());
-            }
+            inviteNotice.submitOutcome(application.getTopicId(), application.getId(), application.getApplicationRound(),
+                    com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.WITHDRAW,
+                    topic == null ? null : topic.getMemberId(), "章节申请已撤回", "商家已撤回章节承接申请");
             return application;
         }
 
@@ -228,6 +227,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag()) || topic.getMemberId() == null) {
             throw new IllegalStateException("主题归属不明，暂不能处理申请");
         }
+        application = currentApplication(applicationId, chapter.getId());
         // 归属只从 chapter -> topic 反查；application.topicId 仅为查询索引。
         if (application.getTopicId() != null && !topic.getId().equals(application.getTopicId())) {
             throw new IllegalStateException("申请与章节归属不一致，暂不能处理");
@@ -288,11 +288,13 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         // 在不知道玩法的情况下先决定要不要人,商家还多等一轮。
         chapterMerchantNodeService.auditAlongApplication(
                 chapter.getId(), application.getMerchantId(), topic.getMemberId(), approved, normalizedRemark);
-        committedNotice.sendAfterCommit(invitedResponse ? topic.getMemberId() : application.getMerchantId(),
+        inviteNotice.submitOutcome(topic.getId(), application.getId(), application.getApplicationRound(),
+                invitedResponse ? com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.INVITE_DECISION
+                        : com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.REVIEW,
+                invitedResponse ? topic.getMemberId() : application.getMerchantId(),
                 invitedResponse ? "章节邀请处理结果" : "章节申请审核结果",
                 invitedResponse ? (approved ? "商家已接受章节邀请" : "商家已拒绝章节邀请")
-                        : (approved ? "章节申请已通过" : "章节申请未通过：" + normalizedRemark),
-                invitedResponse ? "chapter-invite-decide" : "chapter-application-reviewed", application.getId());
+                        : (approved ? "章节申请已通过" : "章节申请未通过：" + normalizedRemark));
         return application;
     }
 
@@ -513,8 +515,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
     @Transactional(rollbackFor = Exception.class)
     public MerchantChapterApplication revokeInvite(Long applicationId, Long publisherMemberId) {
         MerchantChapterApplication application = applicationMapper.selectByIdIncludingDeleted(applicationId);
-        if (application == null || application.getChapterId() == null
-                || !Integer.valueOf(MerchantChapterApplication.SOURCE_INVITE).equals(application.getSource())) {
+        if (application == null || application.getChapterId() == null) {
             throw new IllegalStateException("邀请不存在");
         }
         supplyReviewService.lockBeforeChapter(application.getChapterId());
@@ -523,6 +524,10 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         }
         CmsTopicChapter chapter = requireChapter(application.getChapterId());
         CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(chapter.getTopicId());
+        application = currentApplication(applicationId, chapter.getId());
+        if (!Integer.valueOf(MerchantChapterApplication.SOURCE_INVITE).equals(application.getSource())) {
+            throw new IllegalStateException("邀请不存在");
+        }
         if (topic == null || publisherMemberId == null || !publisherMemberId.equals(topic.getMemberId())) {
             throw new IllegalStateException("仅主题发布者可撤回邀请");
         }
@@ -534,9 +539,45 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
             throw new IllegalStateException("邀请状态已变化，请刷新后重试");
         }
         application.setDelFlag(2);
-        committedNotice.sendAfterCommit(application.getMerchantId(), "章节邀请已撤回", "主办方已撤回待接受的章节邀请",
-                "chapter-invite-revoke", application.getId());
+        inviteNotice.submitOutcome(topic.getId(), application.getId(), application.getApplicationRound(),
+                com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.INVITE_REVOKE,
+                application.getMerchantId(), "章节邀请已撤回", "主办方已撤回待接受的章节邀请");
         return application;
+    }
+
+    /** The plain row only locates parents. Outcome/recipient/round decisions use this complete current row. */
+    private MerchantChapterApplication currentApplication(Long id, Long lockedChapterId) {
+        MerchantChapterApplication current = applicationMapper.selectByIdIncludingDeletedForUpdate(id);
+        if (current == null || !java.util.Objects.equals(lockedChapterId, current.getChapterId()))
+            throw new IllegalStateException("申请与章节状态已变化，请刷新后重试");
+        return current;
+    }
+
+    /** Do not hold an application while waiting for the same parents used by audit/reinvite/node writes. */
+    private MerchantChapterApplication lockForWithdrawal(Long id) {
+        MerchantChapterApplication locator = applicationMapper.selectByIdIncludingDeleted(id);
+        if (locator != null && locator.getChapterId() != null) {
+            CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterById(locator.getChapterId());
+            // A missing historical chapter may still have a pure withdrawn replay. The stored topic
+            // index is used only to acquire a fence, never as an ownership/permission decision.
+            Long topicId = chapter != null ? chapter.getTopicId() : locator.getTopicId();
+            if (topicId != null) {
+                auditTaskMapper.selectTopicPublicationTasksForUpdate(topicId);
+                topicMapper.selectCmsTopicByIdForUpdate(topicId);
+            }
+            chapterMapper.lockChaptersForCapacity(Collections.singletonList(locator.getChapterId()));
+            CmsTopicChapter currentChapter = chapterMapper.selectContentByIdForUpdate(locator.getChapterId());
+            if (currentChapter != null && !java.util.Objects.equals(topicId, currentChapter.getTopicId()))
+                throw withdrawError(MerchantChapterApplicationWithdrawException.ERROR_CODE_STATE_CHANGED,
+                        "章节归属已变化，请刷新后重试");
+            MerchantChapterApplication current = applicationMapper.selectByIdIncludingDeletedForUpdate(id);
+            if (current != null && !java.util.Objects.equals(locator.getChapterId(), current.getChapterId()))
+                throw withdrawError(MerchantChapterApplicationWithdrawException.ERROR_CODE_STATE_CHANGED,
+                        "申请与章节状态已变化，请刷新后重试");
+            return current; // The original assertWithdrawableBy retains its NOT_FOUND/ownership/finalized errors.
+        }
+        // Missing-parent legacy rows and pure withdrawn replay retain the original no-new-effects handling.
+        return applicationMapper.selectByIdIncludingDeletedForUpdate(id);
     }
 
     private Long requireStartedRound(Long applicationId) {

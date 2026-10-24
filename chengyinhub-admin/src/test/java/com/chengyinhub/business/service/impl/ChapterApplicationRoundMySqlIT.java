@@ -173,7 +173,7 @@ class ChapterApplicationRoundMySqlIT {
         }
     }
 
-    private static final class Fixture implements AutoCloseable {
+    static final class Fixture implements AutoCloseable {
         final CommittedOfficialNoticeMySqlFixture storage=new CommittedOfficialNoticeMySqlFixture();
         final MerchantChapterApplicationServiceImpl target=new MerchantChapterApplicationServiceImpl();
         final CommittedBusinessNotice otherNotices=mock(CommittedBusinessNotice.class);
@@ -205,6 +205,8 @@ class ChapterApplicationRoundMySqlIT {
                 CmsTopicChapter chapter=new CmsTopicChapter(); chapter.setId(73L); chapter.setTopicId(41L);
                 chapter.setRecruitEnabled(1); chapter.setMaxMerchant(0); chapter.setCategoryId(18);
                 when(chapters.selectCmsTopicChapterById(73L)).thenReturn(chapter);
+                when(chapters.selectContentByIdForUpdate(73L)).thenAnswer(call ->
+                        storage.db.queryForList("select id from cms_topic_chapter where id=73 for update").isEmpty() ? null : chapter);
                 CmsTopic topic=new CmsTopic(); topic.setId(41L); topic.setMemberId(1001L); topic.setProductType(ProductType.FREE_EXPLORE);
                 topic.setStatus(1); topic.setUserStatus(1); topic.setLifecycle(1); topic.setRecruitDeadline(new Date(Long.MAX_VALUE));
                 when(topics.selectCmsTopicByIdForUpdate(41L)).thenAnswer(call -> {
@@ -222,8 +224,21 @@ class ChapterApplicationRoundMySqlIT {
                 ReflectionTestUtils.setField(target,"offerMapper",mock(MerchantChapterOfferMapper.class));
                 ReflectionTestUtils.setField(target,"sysCategoryService",categories);
                 ReflectionTestUtils.setField(target,"chapterMerchantNodeService",mock(IChapterMerchantNodeService.class));
-                ReflectionTestUtils.setField(target,"committedNotice",otherNotices);
-                ChapterApplicationInviteNotice invite=new ChapterApplicationInviteNotice(storage.notice);
+                ReflectionTestUtils.setField(target,"auditTaskMapper",mock(AuditTaskMapper.class));
+                // Preserve the original outcome-notification double for these invitation/round cases only.
+                // The outcome suite replaces this spy with the real audit/delivery owner.
+                ChapterApplicationInviteNotice invite=spy(new ChapterApplicationInviteNotice(storage.notice));
+                doAnswer(call -> {
+                    ChapterApplicationInviteNotice.Outcome event=call.getArgument(3);
+                    String eventKey=switch (event) {
+                        case WITHDRAW -> "chapter-application-withdraw";
+                        case REVIEW -> "chapter-application-reviewed";
+                        case INVITE_DECISION -> "chapter-invite-decide";
+                        case INVITE_REVOKE -> "chapter-invite-revoke";
+                    };
+                    otherNotices.sendAfterCommit(call.getArgument(4),call.getArgument(5),call.getArgument(6),eventKey,call.getArgument(1));
+                    return null;
+                }).when(invite).submitOutcome(any(),any(),any(),any(),any(),any(),any());
                 ReflectionTestUtils.setField(target,"inviteNotice",invite);
                 ProxyFactory proxy=new ProxyFactory(target); proxy.setInterfaces(IMerchantChapterApplicationService.class);
                 proxy.addAdvice(new TransactionInterceptor(storage.manager,new AnnotationTransactionAttributeSource()));
