@@ -63,6 +63,42 @@ class RegistrationAutoVerifyTaskTest {
         verify(service, never()).autoVerifyExpiredOne(org.mockito.ArgumentMatchers.anyLong());
     }
 
+
+    @Test
+    void run_firstTwoHundredFailuresStillReachOrder201() {
+        java.util.List<Long> candidates = java.util.stream.LongStream.rangeClosed(1, 201)
+                .boxed().collect(java.util.stream.Collectors.toList());
+        java.util.List<Long> attempted = new java.util.ArrayList<>();
+        java.util.List<Long> cursors = new java.util.ArrayList<>();
+        RuntimeException permanentFailure = new IllegalStateException("persistent first-page failure");
+        permanentFailure.setStackTrace(new StackTraceElement[0]);
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class, invocation -> {
+            String method = invocation.getMethod().getName();
+            // Both the legacy scan and its cursor successor model the same eligible rows and 200-row cap.
+            if ("listExpiredUnverifiedIds".equals(method) || "listExpiredUnverifiedIdsAfter".equals(method)) {
+                long after = invocation.getArguments().length == 0 ? 0L
+                        : ((Number) invocation.getArgument(0)).longValue();
+                cursors.add(after);
+                assertTrue(cursors.size() <= 4, "scan must advance instead of retrying the same page");
+                return candidates.stream().filter(id -> id > after).limit(200)
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            if ("autoVerifyExpiredOne".equals(method)) {
+                long id = ((Number) invocation.getArgument(0)).longValue();
+                attempted.add(id);
+                if (id <= 200) throw permanentFailure;
+                return true;
+            }
+            return org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation);
+        });
+
+        task(service).run();
+
+        assertTrue(attempted.contains(201L), "first-page failures must not starve order 201");
+        assertEquals(candidates, attempted, "each candidate must be attempted once in ascending order");
+        assertEquals(Arrays.asList(0L, 200L, 201L), cursors, "advance past failed IDs and terminate on empty page");
+    }
+
     @Test
     void mapperStatements_keepScopeAndGuards() throws Exception {
         String xml = new String(Files.readAllBytes(Paths.get("..", "chengyinhub-system",
