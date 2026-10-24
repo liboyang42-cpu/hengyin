@@ -101,16 +101,26 @@ class ImmutableReceiptProducerTest {
         assertEquals(0, store.size());
         assertNull(missing.recoverFromJournal(7L, 12L, null).requestId);
 
+        ImMessage bare = new ImMessage();
+        bare.setClientMessageId("c09-im-bare");
+        bare.setContent("visible-without-digest");
         ImMessage original = new ImMessage();
         original.setClientMessageId("c09-im-1");
         original.setRequestHash("hash-im-1");
         original.setContent("{\"op\":\"pin\"}");
         ImmutableReceiptProducer wired = new ImmutableReceiptProducer(store, (memberId, conversationId, clientMessageId) -> {
+            if ("c09-im-bare".equals(clientMessageId)) {
+                return bare;
+            }
             if (!"c09-im-1".equals(clientMessageId)) {
                 return null;
             }
             return original;
         }, null);
+        ImmutableReceiptProducer.OriginalReceipt noDigest = wired.recoverFromJournal(7L, 12L, "c09-im-bare");
+        assertEquals("c09-im-bare", noDigest.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, noDigest.outcome);
+        assertNull(noDigest.originalBody);
         ImmutableReceiptProducer.OriginalReceipt neverSeen = wired.recoverFromJournal(7L, 12L, "c09-im-missing");
         assertEquals("c09-im-missing", neverSeen.requestId);
         assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, neverSeen.outcome);

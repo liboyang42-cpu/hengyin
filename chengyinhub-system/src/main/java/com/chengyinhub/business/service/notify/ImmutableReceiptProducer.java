@@ -245,7 +245,8 @@ public final class ImmutableReceiptProducer {
             throw new WaitingSourceException(IM_READ_SENT);
         }
         ImMessage original = journal.readSent(memberId, conversationId, id);
-        if (original == null) {
+        if (original == null || isBlank(original.getRequestHash())
+                || !id.equals(parseRequestId(original.getClientMessageId()))) {
             return unknownReceipt(id, null);
         }
         return fromMessage(original);
@@ -256,8 +257,8 @@ public final class ImmutableReceiptProducer {
             return unknownReceipt(null, null);
         }
         String id = parseRequestId(message.getClientMessageId());
-        if (id == null) {
-            return unknownReceipt(null, null);
+        if (id == null || isBlank(message.getRequestHash())) {
+            return unknownReceipt(id, null);
         }
         return new OriginalReceipt(id, null, message.getRequestHash(), OUTCOME_UNKNOWN, message.getContent());
     }
