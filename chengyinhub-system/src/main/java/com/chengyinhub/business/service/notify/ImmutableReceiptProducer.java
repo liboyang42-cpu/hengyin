@@ -190,12 +190,15 @@ public final class ImmutableReceiptProducer {
         if (channelSend == null) {
             throw new WaitingSourceException(CHANNEL_MESSAGE_SEND);
         }
+        if (!required.requestId.matches("[A-Za-z0-9_-]{16,64}")) {
+            throw new IllegalArgumentException("INVALID_REQUEST_ID");
+        }
         Map<String, Object> sent = channelSend.send(actorId, conversationId, required.requestId, msgType, content,
                 extraJson, replyToId, mentionMemberIds, mentionRoleIds, mentionEveryone);
         if (!sameChannelReceipt(sent, required.requestId)) {
             throw new IllegalStateException("channel send receipt is not this request");
         }
-        return new OriginalReceipt(required.requestId, required.kind, null, OUTCOME_UNKNOWN, content);
+        return new OriginalReceipt(required.requestId, required.kind, null, OUTCOME_UNKNOWN, null);
     }
 
     private static boolean hasMention(List<Long> members, List<Long> roles, boolean everyone) {
@@ -221,14 +224,20 @@ public final class ImmutableReceiptProducer {
         if (!requestId.equals(id)) {
             return false;
         }
-        if (exactPositiveLong(sent.get("message_id")) != null) {
-            return true;
-        }
+        Long messageId = exactPositiveLong(sent.get("message_id"));
+        Long topId = exactPositiveLong(sent.get("id"));
         Object nested = sent.get("message");
-        if (nested instanceof Map && exactPositiveLong(((Map<?, ?>) nested).get("id")) != null) {
-            return true;
+        Long nestedId = nested instanceof Map ? exactPositiveLong(((Map<?, ?>) nested).get("id")) : null;
+        if (messageId != null && topId != null && !messageId.equals(topId)) {
+            return false;
         }
-        return exactPositiveLong(sent.get("id")) != null;
+        if (messageId != null && nestedId != null && !messageId.equals(nestedId)) {
+            return false;
+        }
+        if (topId != null && nestedId != null && !topId.equals(nestedId)) {
+            return false;
+        }
+        return messageId != null || topId != null || nestedId != null;
     }
 
     public static final class NotASendException extends IllegalStateException {
