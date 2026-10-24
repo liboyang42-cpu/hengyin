@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -67,20 +67,30 @@ class RefundVerifiedFactsTest {
         when(refunds.updatePayoutResult(eq(7L), any(), any())).thenReturn(1);
         when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
         business = new RefundServiceImpl();
-        ReflectionTestUtils.setField(business, "refundApplicationMapper", refunds);
-        ReflectionTestUtils.setField(business, "cmsRegistrationMapper", registrations);
-        ReflectionTestUtils.setField(business, "wxPaymentCallbackInboxService", inbox);
-        ReflectionTestUtils.setField(business, "notifyService", notifications);
-        ReflectionTestUtils.setField(business, "alarmService", mock(AlarmService.class));
-        wechat = new WechatPayServiceImpl();
+        WechatVerifiedFactTestSupport.setField(business, "refundApplicationMapper", refunds);
+        WechatVerifiedFactTestSupport.setField(business, "cmsRegistrationMapper", registrations);
+        WechatVerifiedFactTestSupport.setField(business, "wxPaymentCallbackInboxService", inbox);
+        WechatVerifiedFactTestSupport.setField(business, "notifyService", notifications);
+        WechatVerifiedFactTestSupport.setField(business, "alarmService", mock(AlarmService.class));
+        wechat = WechatVerifiedFactTestSupport.gateway();
         WechatPaymentIntentTestSupport.install(wechat, Map.of());
         var config = mock(com.chengyinhub.common.config.WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
-        ReflectionTestUtils.setField(wechat, "wxPayConfig", config);
-        ReflectionTestUtils.setField(wechat, "refundBizService", business);
-        ReflectionTestUtils.setField(wechat, "notificationParser", parser);
-        ReflectionTestUtils.setField(wechat, "refundService", sdk);
-        ReflectionTestUtils.setField(wechat, "alarmService", mock(AlarmService.class));
+        WechatVerifiedFactTestSupport.setField(wechat, "wxPayConfig", config);
+        WechatVerifiedFactTestSupport.setField(wechat, "refundBizService", business);
+        WechatVerifiedFactTestSupport.setField(wechat, "notificationParser", parser);
+        WechatVerifiedFactTestSupport.setField(wechat, "refundService", sdk);
+        var paymentSdk = mock(com.wechat.pay.java.service.payments.jsapi.JsapiService.class);
+        var original = new com.wechat.pay.java.service.payments.model.Transaction();
+        original.setOutTradeNo("REG11"); original.setMchid("merchant"); original.setAppid("wx-original");
+        original.setTransactionId("TX-original"); original.setSuccessTime(WechatVerifiedFactTestSupport.SUCCESS_TIME);
+        original.setTradeType(com.wechat.pay.java.service.payments.model.Transaction.TradeTypeEnum.JSAPI);
+        original.setTradeState(com.wechat.pay.java.service.payments.model.Transaction.TradeStateEnum.SUCCESS);
+        var paid = new com.wechat.pay.java.service.payments.model.TransactionAmount(); paid.setTotal(3000); paid.setCurrency("CNY");
+        original.setAmount(paid);
+        when(paymentSdk.queryOrderByOutTradeNo(any())).thenReturn(original);
+        WechatVerifiedFactTestSupport.setField(wechat,"jsapiService",paymentSdk);
+        WechatVerifiedFactTestSupport.setField(wechat, "alarmService", mock(AlarmService.class));
     }
 
     @Test void verifiedCallbackWrongRefundAmountIsRejectedBeforeAnyBusinessWrite() {
@@ -227,6 +237,10 @@ class RefundVerifiedFactsTest {
         when(notification.getRefundStatus()).thenReturn(Status.valueOf(facts.get("status")));
         Amount amount = amount(facts);
         when(notification.getAmount()).thenReturn(amount);
+        when(notification.getRefundId()).thenReturn("WX-"+facts.get("outRefundNo"));
+        when(notification.getTransactionId()).thenReturn("TX-original");
+        when(notification.getSuccessTime()).thenReturn(WechatVerifiedFactTestSupport.SUCCESS_TIME);
+        providerRefund(facts);
         when(parser.parse(any(RequestParam.class), eq(RefundNotification.class))).thenReturn(notification);
         return wechat.handleRefundCallback("verified-sdk-fixture", Map.of("wechatpay-serial", "SERIAL",
                 "wechatpay-nonce", "NONCE", "wechatpay-signature", "SIGNATURE", "wechatpay-timestamp", "1"));
@@ -235,14 +249,19 @@ class RefundVerifiedFactsTest {
     private String query(Map<String, String> facts) { return queryFor("RF11", facts); }
 
     private String queryFor(String requestedRefund, Map<String, String> facts) {
+        providerRefund(facts);
+        return wechat.refreshPayoutFromWx(requestedRefund);
+    }
+    private void providerRefund(Map<String,String> facts) {
         Refund result = mock(Refund.class);
         when(result.getOutRefundNo()).thenReturn(facts.get("outRefundNo"));
         when(result.getOutTradeNo()).thenReturn(facts.get("outTradeNo"));
         when(result.getStatus()).thenReturn(Status.valueOf(facts.get("status")));
-        Amount amount = amount(facts);
-        when(result.getAmount()).thenReturn(amount);
+        when(result.getAmount()).thenReturn(amount(facts));
+        when(result.getRefundId()).thenReturn("WX-"+facts.get("outRefundNo"));
+        when(result.getTransactionId()).thenReturn("TX-original");
+        when(result.getSuccessTime()).thenReturn(WechatVerifiedFactTestSupport.SUCCESS_TIME);
         when(sdk.queryByOutRefundNo(any(QueryByOutRefundNoRequest.class))).thenReturn(result);
-        return wechat.refreshPayoutFromWx(requestedRefund);
     }
 
     private static Amount amount(Map<String, String> facts) {

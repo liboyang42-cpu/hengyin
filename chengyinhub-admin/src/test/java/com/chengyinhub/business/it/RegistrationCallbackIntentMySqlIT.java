@@ -114,7 +114,8 @@ class RegistrationCallbackIntentMySqlIT {
                 "migration_app_open_id.sql",
                 "migration_20260930_registration_first_successful_scan.sql",
                 "migration_wx_payment_callback_inbox_outbox_20260725.sql",
-                "migration_20261023_wx_pay_order_intent.sql");
+                "migration_20261023_wx_pay_order_intent.sql",
+                "migration_20261024_wx_verified_payment_fact.sql");
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
@@ -130,7 +131,7 @@ class RegistrationCallbackIntentMySqlIT {
     @BeforeEach
     void seedAndWireRealCallbackServices() throws Exception {
         for (String table : TABLES) db.update("DELETE FROM " + table); // Only this random owned scratch schema.
-        for (String table : List.of("wx_payment_callback_inbox", "wx_payment_callback_outbox", "wx_pay_order_intent"))
+        for (String table : List.of("wx_payment_callback_fact_link", "wx_verified_payment_fact_rejection", "wx_verified_payment_fact", "wx_payment_callback_inbox", "wx_payment_callback_outbox", "wx_pay_order_intent"))
             db.update("DELETE FROM " + table);
         providerOrders.clear(); activeHash.set(null); scheduledNotices.set(0); probe.reset();
         db.update("INSERT INTO ums_member(id,point,balance,status,del_flag) VALUES(7,80,12.34,1,0)");
@@ -165,6 +166,9 @@ class RegistrationCallbackIntentMySqlIT {
         ReflectionTestUtils.setField(gateway, "paymentIntentJdbc", db);
         ReflectionTestUtils.setField(gateway, "paymentIntentTransactions", transactions);
         ReflectionTestUtils.setField(gateway, "jsapiService", sdk);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.bind(gateway,sdk,null,MERCHANT);
+        ReflectionTestUtils.setField(gateway,"verifiedFacts",
+                com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.realFacts(source));
         ReflectionTestUtils.setField(gateway, "alarmService", mock(AlarmService.class));
         IMerchantCommerceService commerce = mock(IMerchantCommerceService.class);
         when(commerce.supportsOutTradeNo(anyString())).thenReturn(false); // This fixture is a registration, not commerce.
@@ -426,7 +430,7 @@ class RegistrationCallbackIntentMySqlIT {
     private Transaction original(String no, String appid, String channel, String state, String transactionId) {
         Transaction tx = new Transaction(); tx.setOutTradeNo(no); tx.setMchid(MERCHANT); tx.setAppid(appid);
         tx.setTradeType(Transaction.TradeTypeEnum.valueOf(channel)); tx.setTradeState(Transaction.TradeStateEnum.valueOf(state));
-        tx.setTransactionId(transactionId);
+        tx.setTransactionId(transactionId); tx.setSuccessTime("2026-10-24T00:00:00Z");
         TransactionAmount amount = new TransactionAmount(); amount.setTotal(1000); amount.setCurrency("CNY"); tx.setAmount(amount);
         return tx;
     }

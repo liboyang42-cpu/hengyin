@@ -18,7 +18,7 @@ class WechatPayCallbackHttpAckTest {
     @BeforeEach void setup() {
         ApiRegistrationController controller = new ApiRegistrationController();
         gateway = mock(IWechatPayService.class);
-        ReflectionTestUtils.setField(controller, "wechatPayService", gateway);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(controller, "wechatPayService", gateway);
         mvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
     @Test void committedSuccessReturns204WithoutBody() throws Exception {
@@ -69,22 +69,22 @@ class WechatPayCallbackHttpAckTest {
         final java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
         @SuppressWarnings("unchecked")
         RouteFixture(String no, boolean success, boolean throwsException) {
-            var pay = new com.chengyinhub.business.service.impl.WechatPayServiceImpl();
+            var pay = com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.gateway();
             var parser = mock(com.wechat.pay.java.core.notification.NotificationParser.class);
             var sdk = mock(com.wechat.pay.java.service.payments.jsapi.JsapiService.class);
             var config = mock(com.chengyinhub.common.config.WxPayConfig.class);
             when(config.getMerchantId()).thenReturn("merchant");
-            ReflectionTestUtils.setField(pay, "wxPayConfig", config);
-            ReflectionTestUtils.setField(pay, "paymentIntentJdbc", new org.springframework.jdbc.core.JdbcTemplate() {
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "wxPayConfig", config);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "paymentIntentJdbc", new org.springframework.jdbc.core.JdbcTemplate() {
                 @Override public java.util.List<java.util.Map<String, Object>> queryForList(String sql, Object... args) {
                     return java.util.List.of();
                 }
             });
             when(parser.parse(any(), eq(com.wechat.pay.java.service.payments.model.Transaction.class))).thenReturn(facts(no));
             when(sdk.queryOrderByOutTradeNo(any())).thenReturn(facts(no)); // independent original-order object
-            ReflectionTestUtils.setField(pay, "notificationParser", parser);
-            ReflectionTestUtils.setField(pay, "jsapiService", sdk);
-            ReflectionTestUtils.setField(pay, "alarmService", mock(com.chengyinhub.business.service.impl.AlarmService.class));
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "notificationParser", parser);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "jsapiService", sdk);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "alarmService", mock(com.chengyinhub.business.service.impl.AlarmService.class));
             var club = mock(com.chengyinhub.business.service.IClubMembershipService.class);
             when(club.supportsOutTradeNo(anyString())).thenReturn(true);
             org.mockito.stubbing.Answer<Boolean> outcome = invocation -> {
@@ -95,28 +95,28 @@ class WechatPayCallbackHttpAckTest {
             when(club.handlePaidInvoice(anyString(), anyBoolean(), any(), anyString())).thenAnswer(outcome);
             var provider = mock(org.springframework.beans.factory.ObjectProvider.class);
             when(provider.getIfAvailable()).thenReturn(club);
-            ReflectionTestUtils.setField(pay, "clubMembershipServiceProvider", provider);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "clubMembershipServiceProvider", provider);
             var commerce = mock(com.chengyinhub.business.service.IMerchantCommerceService.class);
             when(commerce.supportsOutTradeNo(anyString())).thenAnswer(c -> ((String)c.getArgument(0)).startsWith("TPLTM_"));
             when(commerce.handlePaidOrder(anyString(), anyBoolean(), any(), anyString())).thenAnswer(outcome);
-            ReflectionTestUtils.setField(pay, "merchantCommerceService", commerce);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "merchantCommerceService", commerce);
             var coop = mock(com.chengyinhub.business.service.ICoopInviteService.class);
             when(coop.markDepositPaid(anyString(), any(), anyString())).thenAnswer(outcome);
-            ReflectionTestUtils.setField(pay, "coopInviteService", coop);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "coopInviteService", coop);
             var registration = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
             when(registration.handleWechatPayCallback(anyMap())).thenAnswer(invocation -> {
                 calls.incrementAndGet();
                 if (throwsException) throw new IllegalStateException("domain transaction failed");
                 return success ? "SUCCESS" : "FAIL";
             });
-            ReflectionTestUtils.setField(pay, "registrationService", registration);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(pay, "registrationService", registration);
             ApiRegistrationController controller = new ApiRegistrationController();
-            ReflectionTestUtils.setField(controller, "wechatPayService", pay);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(controller, "wechatPayService", pay);
             mvc = MockMvcBuilders.standaloneSetup(controller).build();
         }
         private static com.wechat.pay.java.service.payments.model.Transaction facts(String no) {
             var tx = new com.wechat.pay.java.service.payments.model.Transaction();
-            tx.setOutTradeNo(no); tx.setAppid("wx-original"); tx.setMchid("merchant"); tx.setTransactionId("WX-TX");
+            tx.setOutTradeNo(no); tx.setAppid("wx-original"); tx.setMchid("merchant"); tx.setTransactionId("WX-TX"); tx.setSuccessTime("2026-10-24T00:00:00Z");
             tx.setTradeState(com.wechat.pay.java.service.payments.model.Transaction.TradeStateEnum.SUCCESS);
             tx.setTradeType(com.wechat.pay.java.service.payments.model.Transaction.TradeTypeEnum.JSAPI);
             var amount = new com.wechat.pay.java.service.payments.model.TransactionAmount();

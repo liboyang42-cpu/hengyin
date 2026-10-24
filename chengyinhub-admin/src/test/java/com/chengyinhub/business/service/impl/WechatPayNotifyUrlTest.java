@@ -8,7 +8,7 @@ import com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest;
 import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -47,20 +47,20 @@ class WechatPayNotifyUrlTest {
         when(config.getAppAppid()).thenReturn("wx_native_app");
         when(config.getMerchantId()).thenReturn("1900000109");
         when(config.getNotifyUrl()).thenReturn(notifyUrl);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
         WechatPaymentIntentTestSupport.install(service, Map.of("CUSTOM_1", new BigDecimal("9.90"),
                 "DEP19T1000", new BigDecimal("50.00"), "R-NOTIFY-0001", new BigDecimal("69.00")));
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
         jsapi = mock(JsapiServiceExtension.class);
         app = mock(com.wechat.pay.java.service.payments.app.AppServiceExtension.class);
-        ReflectionTestUtils.setField(service, "jsapiService",
+        WechatVerifiedFactTestSupport.setField(service, "jsapiService",
                 WechatPaymentIntentTestSupport.absentOrderSdk());
-        ReflectionTestUtils.setField(service, "jsapiServiceExtension", jsapi);
-        ReflectionTestUtils.setField(service, "refundService",
+        WechatVerifiedFactTestSupport.setField(service, "jsapiServiceExtension", jsapi);
+        WechatVerifiedFactTestSupport.setField(service, "refundService",
                 mock(com.wechat.pay.java.service.refund.RefundService.class));
-        ReflectionTestUtils.setField(service, "notificationParser",
+        WechatVerifiedFactTestSupport.setField(service, "notificationParser",
                 mock(com.wechat.pay.java.core.notification.NotificationParser.class));
-        ReflectionTestUtils.setField(service, "appServiceExtension", app);
+        WechatVerifiedFactTestSupport.setField(service, "appServiceExtension", app);
         return service;
     }
 

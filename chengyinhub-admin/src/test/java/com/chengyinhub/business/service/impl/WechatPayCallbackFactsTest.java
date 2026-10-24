@@ -10,7 +10,7 @@ import com.wechat.pay.java.service.payments.model.Transaction;
 import com.wechat.pay.java.service.payments.model.TransactionAmount;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +68,7 @@ class WechatPayCallbackFactsTest {
                 f.verifyNoBusinessCalls();
             }
             Fixture unavailable = new Fixture(order, "JSAPI");
-            ReflectionTestUtils.setField(unavailable.gateway, "jsapiService", null);
+            WechatVerifiedFactTestSupport.setField(unavailable.gateway, "jsapiService", null);
             assertTrue(unavailable.deliver().contains("FAIL"));
             unavailable.verifyNoBusinessCalls();
             for (String code : new String[]{"ORDER_NOT_EXIST", "SYSTEM_ERROR", "NEW_CODE"}) {
@@ -144,13 +144,13 @@ class WechatPayCallbackFactsTest {
     void verifiedClosedOrderReleasesActiveConstraintWithoutChangingOriginalFacts() {
         Fixture f = new Fixture("REG1", "JSAPI");
         f.intentDb.intents.put("merchant:REG1", new HashMap<>(Map.of("business_out_trade_no", "REG1", "appid", "wx-mini",
-                "trade_type", "JSAPI", "currency", "CNY", "total_fen", 5000L, "request_hash", "original-hash")));
+                "trade_type", "JSAPI", "currency", "CNY", "total_fen", 5000L, "request_hash", "a".repeat(64))));
         f.createdOrders.get("REG1").setTradeState(Transaction.TradeStateEnum.CLOSED);
         f.createdOrders.get("REG1").setTradeType(null);
         f.createdOrders.get("REG1").setTransactionId(null);
         assertEquals("CLOSED", f.gateway.queryOrderStatus("REG1").get("trade_state"));
         assertNotNull(f.intentDb.intents.get("merchant:REG1").get("closed_confirmed_at"));
-        assertEquals("original-hash", f.intentDb.intents.get("merchant:REG1").get("request_hash"));
+        assertEquals("a".repeat(64), f.intentDb.intents.get("merchant:REG1").get("request_hash"));
         f.verifyNoBusinessCalls();
     }
 
@@ -215,6 +215,7 @@ class WechatPayCallbackFactsTest {
         Transaction t = new Transaction();
         t.setOutTradeNo(no);
         t.setTransactionId("TX1");
+        t.setSuccessTime("2026-10-24T00:00:00Z");
         t.setTradeState(Transaction.TradeStateEnum.SUCCESS);
         t.setTradeType(Transaction.TradeTypeEnum.valueOf(channel));
         t.setMchid("merchant");
@@ -227,7 +228,7 @@ class WechatPayCallbackFactsTest {
     }
 
     private static class Fixture {
-        final WechatPayServiceImpl gateway = new WechatPayServiceImpl();
+        final WechatPayServiceImpl gateway = WechatVerifiedFactTestSupport.gateway();
         final JsapiService sdk = mock(JsapiService.class);
         final ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
         final IClubMembershipService membership = mock(IClubMembershipService.class);
@@ -247,22 +248,22 @@ class WechatPayCallbackFactsTest {
             createdOrders.put(no, order(no, channel));
             when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(c ->
                     createdOrders.get(((QueryOrderByOutTradeNoRequest) c.getArgument(0)).getOutTradeNo()));
-            ReflectionTestUtils.setField(gateway, "jsapiService", sdk);
+            WechatVerifiedFactTestSupport.setField(gateway, "jsapiService", sdk);
             NotificationParser parser = mock(NotificationParser.class);
             when(parser.parse(any(), eq(Transaction.class))).thenReturn(transaction);
-            ReflectionTestUtils.setField(gateway, "notificationParser", parser);
-            ReflectionTestUtils.setField(gateway, "alarmService", mock(AlarmService.class));
+            WechatVerifiedFactTestSupport.setField(gateway, "notificationParser", parser);
+            WechatVerifiedFactTestSupport.setField(gateway, "alarmService", mock(AlarmService.class));
             WxPayConfig config = mock(WxPayConfig.class);
             when(config.getMerchantId()).thenReturn("merchant");
             lenient().when(config.getAppid()).thenReturn("wx-mini");
             lenient().when(config.getAppAppid()).thenReturn("wx-app");
-            ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
+            WechatVerifiedFactTestSupport.setField(gateway, "wxPayConfig", config);
             ObjectProvider<IClubMembershipService> clubs = mock(ObjectProvider.class);
             when(clubs.getIfAvailable()).thenReturn(membership);
-            ReflectionTestUtils.setField(gateway, "clubMembershipServiceProvider", clubs);
-            ReflectionTestUtils.setField(gateway, "registrationService", registration);
-            ReflectionTestUtils.setField(gateway, "merchantCommerceService", commerce);
-            ReflectionTestUtils.setField(gateway, "coopInviteService", coop);
+            WechatVerifiedFactTestSupport.setField(gateway, "clubMembershipServiceProvider", clubs);
+            WechatVerifiedFactTestSupport.setField(gateway, "registrationService", registration);
+            WechatVerifiedFactTestSupport.setField(gateway, "merchantCommerceService", commerce);
+            WechatVerifiedFactTestSupport.setField(gateway, "coopInviteService", coop);
             lenient().when(membership.supportsOutTradeNo(anyString())).thenAnswer(c -> no.equals(c.getArgument(0)));
             lenient().when(commerce.supportsOutTradeNo(anyString())).thenAnswer(c -> ((String) c.getArgument(0)).startsWith("TPLTM_"));
             lenient().when(membership.handlePaidInvoice(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);

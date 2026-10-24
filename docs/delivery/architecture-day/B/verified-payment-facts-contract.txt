@@ -1,0 +1,50 @@
+B：支付/退款成功事实源码候选（未运行 Java/DB/CI/DDL）
+公共 parent：06a571b1247620a9bdcea068be0ded973671d17c，tree a63f2f6099040431be0a97d5431cdcf5e72f1211。
+工作树 /workspace/b-payment-facts；分支 codex/architecture-day-b-verified-payment-facts。
+
+真实缺口：intent 有原请求/渠道/金额但无 provider 成功身份；inbox 仅业务身份/租约/处理状态；
+旧退款 Map 丢 provider refundId/transactionId，通知未与官方退款查单及原支付交叉核验。
+新增 source-only migration_20261024_wx_verified_payment_fact.sql：不可变事实、拒绝证据、inbox sidecar 三表。
+复用原 intent 和原 inbox，不改旧DDL/旧表，不执行DDL，不导入历史/猜测回填。
+
+代码合同：
+1. 网关付款/退款查询客户端与 dc87 转账客户端共享同一实际 credential/validator 的 HTTP client，
+   captured merchant/client 同时发布；支付/退款查单、alias 映射均不以可变配置替换原商户。
+2. 支付 callback 先官方验签，再原单/冻结事实核验，再持久化 SDK 查到的 SUCCESS，最后调用原业务。
+   主动 SUCCESS 查单也落同一事实；退款 SUCCESS 必须官方查单与原支付 transaction/mchid/appid/渠道/金额匹配。
+   退款通知还核对 refundId、transactionId、原号、金额、币种、状态及真实成功时间。
+3. 成功事实字段：kind、mchid/appid、业务号、实际微信号、商户事件号、providerId、原交易号、
+   APP/JSAPI、CNY、totalFen/amountFen、provider successAt、原 intent hash（真实历史原单可为空）、可信版本/方式。
+   不保存 raw body、密文、openid、接收账号或凭据。成功时间缺失不以当前时间补造。
+4. 双唯一身份：(kind,mchid,providerId) 与 (kind,mchid,merchantEventNo)。同事实回读同 id/hash；
+   冲突只存候选 canonical facts/hash 的拒绝证据，不覆盖原行。独立事务保留拒绝证据后才抛冲突。
+   fact哈希不含可变的投递来源；退款查询时原支付由 SUCCESS 变 REFUND 不改变该退款的经济身份。
+5. UNKNOWN/缺字段/查单异常不写成功事实；有效签名但事实不符只记 UNVERIFIED 拒绝审计，不是业务失败终态。
+   NOT_FOUND/CLOSED/PROCESSING 不产生成功引用；不推导退款/权益/资金回补。
+6. 网关原 Map 新增 verified_fact_id / verified_fact_hash（两路线同名）；退款另完整返回真实
+   mchid/appid/tradeType、refundId、transactionId、wxOutTradeNo、successTime。旧 ok/ambiguous/result 未改。
+
+A/G 最小调用契约（review.patch 已基于本 parent 真实源码生成，未改他们的 Java）：
+Reference ref = new WechatVerifiedPaymentFact.Reference(Long.parseLong(map.get("verified_fact_id")), map.get("verified_fact_hash"));
+WechatVerifiedPaymentFact fact = verifiedPaymentFacts.requireVerified(ref).facts();
+A/G 必须在原领域锁/CAS边界核对 fact 的业务号、原 wx attempt、交易/退款号、原 owner/金额/分项；
+不可只读 Map、只看 SUCCESS 或用当前配置猜 appid。facts 层不能替领域决定 bizId 或分项冲回规则。
+A：registerVerified(notifyId,bizType,bizId,"SUCCESS",ref)，随后 processVerified(notifyId,ref,原Mutation)。
+两方法为显式接口实现，没有 default 成功；原 mutation+DONE 事务/proxy/owner/fence 未改。
+sidecar 对 inbox 和 fact_id 各唯一。旧未绑定 DONE 不自动升级；错引用不能借 DONE 获得成功ACK。
+A review.patch 包含报名完整方法接线和退款证据 guard/register 接线；退款实际 mutation+DONE/topic锁仍须 A 合成，
+不能把此 guard patch 单独说成退款全事务闭环。G review.patch 仅原退款入口的可信证据 guard，
+原冻结分项/成功冲回/ledger 去重仍由 G 按原金额规则实现；fact_id 可作为其不可释放的成功关联身份。
+
+新测试源码：FactService 8、Gateway 8、Mapper XML 1、真实 FactMySqlIT 4，共21个@Test；全部 NOT_RUN。
+原4项intent与3项真实报名inbox保留场景/断言，改接真实事实 mapper/事务及新迁移；没有用内存事实替代真实链路。
+其它旧gateway/HTTP/CLM fixture只补客户端绑定、真实provider ID/成功时间/原hash及存储单元夹具，断言未删除。
+新4项实库测试：同事实复用；双身份冲突且拒绝证据提交；并发同事实单一身份；DONE错引用/旧未绑定拒绝。
+它们只证明事实/引用层，不冒充原业务 mutation+DONE 证明。新独立实库测试入口需 root 设置 B_PAYMENT_FACT_DDL_APPROVED=1。
+未运行：编译/JUnit/MySQL/Redis/真实微信/CI；root统一登记migration、受控DDL与同头回归，B未改CI/registry。
+
+组合余项：0ffb9c8 路由候选需 root 将本片的 SDK 方法增量放到其 WechatPaymentSdkGateway（本 parent 仍是单体）。
+不得整文件覆盖0ff路由/new owner端口；本片 transfer 实现段逐字节保留 parent dc87 合同。
+A/G所有领域正文、WxPaymentCallbackMutationService、#586 Controller/WechatCallbackHttpAckTest 均未修改。
+上线前须由 owner 收齐上述真实调用接线、原金额/分项校验、迁移审批/预检及同头实际测试。
+回退：停止新消费者，永久保留事实、拒绝与链接身份；禁止删除/TTL释放、旧DONE补成功或由UNKNOWN回补。

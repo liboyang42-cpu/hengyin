@@ -5,7 +5,7 @@ import com.wechat.pay.java.core.exception.ServiceException;
 import com.wechat.pay.java.service.transferbatch.TransferBatchService;
 import com.wechat.pay.java.service.transferbatch.model.*;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -17,13 +17,13 @@ import static org.mockito.Mockito.*;
 /** SDK doubles test gateway classification only; no real transfer or MySQL is exercised. */
 class WechatPayTransferClassificationTest {
     private final TransferBatchService sdk = mock(TransferBatchService.class);
-    private final WechatPayServiceImpl gateway = new WechatPayServiceImpl();
+    private final WechatPayServiceImpl gateway = WechatVerifiedFactTestSupport.gateway();
 
     WechatPayTransferClassificationTest() {
-        ReflectionTestUtils.setField(gateway, "transferBatchService", sdk);
+        WechatVerifiedFactTestSupport.setField(gateway, "transferBatchService", sdk);
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
-        ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
+        WechatVerifiedFactTestSupport.setField(gateway, "wxPayConfig", config);
     }
 
     @Test
@@ -92,7 +92,7 @@ class WechatPayTransferClassificationTest {
         assertDefinite(gateway.transferToBalance(null, "CD500", BigDecimal.ONE, "open", "提现", "wx"));
         assertDefinite(gateway.transferToBalance("CW500", " ", BigDecimal.ONE, "open", "提现", "wx"));
         verifyNoInteractions(sdk);
-        ReflectionTestUtils.setField(gateway, "transferBatchService", null);
+        WechatVerifiedFactTestSupport.setField(gateway, "transferBatchService", null);
         assertDefinite(submit());
     }
 
