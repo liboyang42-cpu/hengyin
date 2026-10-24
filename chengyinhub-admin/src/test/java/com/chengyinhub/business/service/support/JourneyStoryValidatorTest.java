@@ -2,6 +2,8 @@ package com.chengyinhub.business.service.support;
 
 import com.chengyinhub.business.domain.JourneyStory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,6 +24,30 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class JourneyStoryValidatorTest {
 
     private final JourneyStoryValidator validator = new JourneyStoryValidator();
+
+    @ParameterizedTest
+    @ValueSource(strings = {"18446744073709551617", "-18446744073709551615"})
+    void itemConditionsRejectLongOverflowBeforeSaving(String quantity) {
+        for (String op : new String[]{"ITEM_HELD", "ITEM_ACQUIRED"}) {
+            String raw = itemConditionStory(op, quantity);
+            assertThrows(IllegalArgumentException.class, () -> validator.validate(raw, null), op + ": " + quantity);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 999})
+    void itemConditionsPreserveValidQuantityBoundaries(int quantity) {
+        for (String op : new String[]{"ITEM_HELD", "ITEM_ACQUIRED"}) {
+            String raw = itemConditionStory(op, String.valueOf(quantity));
+            assertEquals(raw, validator.validate(raw, null), "剧情条件原值保留，不截断或重排");
+        }
+    }
+
+    private static String itemConditionStory(String op, String quantity) {
+        return story(",\"ending\":{\"endings\":[{\"code\":\"match\",\"title\":\"命中\",\"when\":[{\"op\":\""
+                + op + "\",\"itemId\":\"supply\",\"quantity\":" + quantity + "}]},"
+                + "{\"code\":\"default\",\"title\":\"兜底\",\"fallback\":true}]}");
+    }
 
     private static final String STORY = "{\"schemaVersion\":1,"
             + "\"call\":{\"npcId\":7,\"opener\":\"开场\",\"options\":[{\"id\":\"a\",\"line\":\"走\"},"
