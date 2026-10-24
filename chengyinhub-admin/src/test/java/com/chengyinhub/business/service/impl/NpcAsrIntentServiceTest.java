@@ -63,7 +63,7 @@ class NpcAsrIntentServiceTest {
         assertFalse(f.service().beginHandoff(7L,RID,21L,41L));f.recognize();verify(f.speech,times(1)).transcribe(any(),anyString());
     }
     @Test void resultSaveFailureNeverReleasesTheClaimOrReturnsUnpersistedText() {
-        var f=new Fixture();when(f.rows.finish(any())).thenThrow(new IllegalStateException("controlled SQL failure"));
+        var f=new Fixture();doThrow(new IllegalStateException("controlled SQL failure")).when(f.rows).finish(any());
         assertThrows(IllegalStateException.class,f::recognize);
         assertEquals("IN_FLIGHT",f.recognize().getState());assertNull(f.service().read(7L,RID,21L).getTranscript());
         verify(f.speech,times(1)).transcribe(any(),anyString());
