@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T07:20:19.808850+00:00",
-  "source_parent": "95c5f1c719c75beaaa5c42d2e9285036ee440695",
+  "updated_utc": "2026-10-24T07:24:14.374473+00:00",
+  "source_parent": "678a23367ff4c8abd2806f2b6ccd983aec8342b3",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -176,5 +176,11 @@
       "G": "2457bf1851c0573df7a69270a4532b00b9e8404c"
     },
     "status": "reviewed staged source; Java/DB NOT_RUN"
+  },
+  "bingo_followup": {
+    "source": "PlayBingoServiceImpl.topicRule/grantCellRewards",
+    "change": "propagate original TransientDataAccessException through PlayNodeCompletionApplication to existing transaction/retry; keep ordinary best-effort and disabled coupon rules",
+    "tests": "4 new ordinary tests, total CouponNotIssuableSkipContractTest=10; Java NOT_RUN",
+    "remaining": "preference fixed receipt/fingerprint semantics still open"
   }
 }

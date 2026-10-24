@@ -18,6 +18,9 @@ import java.util.Date;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -26,6 +29,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -79,6 +83,52 @@ class CouponNotIssuableSkipContractTest {
         grantCell(bingoWith(couponService), COUPON);
 
         verify(couponService).grantCouponById(MEMBER, COUPON);
+    }
+
+    @Test
+    void bingoConfigurationDeadlockStopsBeforeCardOrCouponEffects() {
+        var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        var cards = mock(com.chengyinhub.business.mapper.PlayBingoCardMapper.class);
+        var coupons = mock(ISmsCouponHistoryService.class);
+        PlayBingoServiceImpl service = bingoWith(coupons);
+        ReflectionTestUtils.setField(service, "topicMapper", topics);
+        ReflectionTestUtils.setField(service, "cardMapper", cards);
+        var failure = new org.springframework.dao.CannotAcquireLockException("original-transaction-aborted");
+        when(topics.selectCmsTopicById(901L)).thenThrow(failure);
+
+        assertSame(failure, assertThrows(org.springframework.dao.CannotAcquireLockException.class,
+                () -> service.onNodeDone(MEMBER, 901L)));
+        verifyNoInteractions(cards, coupons);
+    }
+
+    @Test
+    void bingoCouponEligibilityLockFailureReachesTheOuterTransaction() {
+        var coupons = mock(ISmsCouponHistoryService.class);
+        var failure = new org.springframework.dao.CannotAcquireLockException("original-coupon-lock");
+        when(coupons.isCouponNotIssuable(COUPON)).thenThrow(failure);
+
+        assertSame(failure, assertThrows(org.springframework.dao.CannotAcquireLockException.class,
+                () -> grantCell(bingoWith(coupons), COUPON)));
+        verify(coupons, never()).grantCouponById(anyLong(), anyLong());
+    }
+
+    @Test
+    void bingoCouponGrantTimeoutReachesTheOuterTransaction() {
+        var coupons = mock(ISmsCouponHistoryService.class);
+        var failure = new org.springframework.dao.QueryTimeoutException("original-coupon-timeout");
+        when(coupons.grantCouponById(MEMBER, COUPON)).thenThrow(failure);
+
+        assertSame(failure, assertThrows(org.springframework.dao.QueryTimeoutException.class,
+                () -> grantCell(bingoWith(coupons), COUPON)));
+        verify(coupons).grantCouponById(MEMBER, COUPON);
+    }
+
+    @Test
+    void bingoOrdinaryCouponFailureKeepsTheExistingBestEffortBehaviour() {
+        var coupons = mock(ISmsCouponHistoryService.class);
+        when(coupons.isCouponNotIssuable(COUPON)).thenThrow(new IllegalStateException("not-a-database-abort"));
+        assertDoesNotThrow(() -> grantCell(bingoWith(coupons), COUPON));
+        verify(coupons, never()).grantCouponById(anyLong(), anyLong());
     }
 
     // ── 竞猜结算 ──

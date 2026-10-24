@@ -34,3 +34,5 @@ A afcabd的两个文件逐字节纳入：建单/扣款前拒绝超过渠道整�
 ## 最新组合批次
 
 已组合A5c269调度准入复验、B0ff支付SDK/意图/唯一owner路由、Cf8玩法瞬态故障传播、F1fb请求/异步/Quartz关联及G2457主题资金锁序。两处A/B测试binding、原主题装配、共享CmsTopic字段及资金方法、F/A执行器已串行合成。96个已登记类严格源码预检无错；15个测试入口/登记合同自测通过。Java/数据库/双JVM/业务读回仍NOT_RUN。详见batch-ABCFG-composition-20261024.json。
+
+宾果内层补丁：topicRule和grantCellRewards先透传原TransientDataAccessException，与Cf8外层回滚闭合；普通旁路失败仍best-effort。新增4个普通测试源码，原6例不改，Java/真库未运行。偏好固定回执fingerprint问题仍待治理，不归入本修复。
