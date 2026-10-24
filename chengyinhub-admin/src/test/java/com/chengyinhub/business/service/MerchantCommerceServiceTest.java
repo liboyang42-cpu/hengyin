@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -34,6 +35,7 @@ class MerchantCommerceServiceTest {
     private IWechatPayService wechatPayService;
     private IUserPermissionService permissionService;
     private MerchantCommerceService service;
+    private final TestPaymentTransactions transactions = new TestPaymentTransactions();
 
     @BeforeEach
     void setUp() {
@@ -41,6 +43,7 @@ class MerchantCommerceServiceTest {
         orderMapper = mock(OmsOrderMapper.class);
         settlementRuleService = mock(ISettlementRuleService.class);
         wechatPayService = mock(IWechatPayService.class);
+        when(wechatPayService.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         permissionService = mock(IUserPermissionService.class);
         service = new MerchantCommerceService(false);
         ReflectionTestUtils.setField(service, "subscriptionMapper", subscriptionMapper);
@@ -48,6 +51,7 @@ class MerchantCommerceServiceTest {
         ReflectionTestUtils.setField(service, "settlementRuleService", settlementRuleService);
         ReflectionTestUtils.setField(service, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(service, "permissionService", permissionService);
+        ReflectionTestUtils.setField(service, "paymentTransactions", transactions);
     }
 
     @Test
@@ -162,6 +166,7 @@ class MerchantCommerceServiceTest {
         ReflectionTestUtils.setField(service, "settlementRuleService", settlementRuleService);
         ReflectionTestUtils.setField(service, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(service, "permissionService", permissionService);
+        ReflectionTestUtils.setField(service, "paymentTransactions", transactions);
         SettlementRule rule = new SettlementRule();
         rule.setUnitPrice(null);
         when(settlementRuleService.getActiveRule(0L, MerchantCommerceService.BIZ_PREMIUM_TEMPLATE)).thenReturn(rule);
@@ -256,7 +261,7 @@ class MerchantCommerceServiceTest {
         observed.put("trade_state", "UNKNOWN");
         assertThrows(IllegalStateException.class, () -> service.reconcileOrder("TPLTM_8"));
         verify(orderMapper, never()).markCommerceOrderClosed(any());
-        verify(wechatPayService, never()).closeOrder(any());
+        verify(wechatPayService, never()).closePaymentAttempt(any(), any());
     }
 
     @Test
@@ -276,6 +281,21 @@ class MerchantCommerceServiceTest {
     }
 
     @Test
+    void oldClosedObservationCannotCloseNewCurrentAttempt() {
+        OmsOrder order = new OmsOrder();
+        order.setId(18L); order.setOrderSn("PROMOT_18"); order.setStatus(0L);
+        order.setBizType(MerchantCommerceService.BIZ_PROMOTION_SLOT);
+        when(orderMapper.selectOmsOrderByOrderSn("PROMOT_18")).thenReturn(order);
+        when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(java.util.Map.of(
+                "out_trade_no", "PROMOT_18", "wx_out_trade_no", "old-wx-attempt", "trade_state", "CLOSED"));
+        when(wechatPayService.lockPaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt")).thenReturn(false);
+        service.reconcileOrder("PROMOT_18");
+        verify(wechatPayService).lockPaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt");
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+    }
+
+    @Test
     void abandonedUnpaidOrderIsClosedAtWechatBeforeLocalCloseButFreshOneStaysPending() {
         OmsOrder order = new OmsOrder();
         order.setId(18L); order.setOrderSn("PROMOT_18"); order.setStatus(0L);
@@ -284,27 +304,29 @@ class MerchantCommerceServiceTest {
         when(orderMapper.selectOmsOrderByOrderSn("PROMOT_18")).thenReturn(order);
         java.util.Map<String, String> observed = new java.util.HashMap<>();
         observed.put("trade_state", "NOTPAY"); observed.put("out_trade_no", "PROMOT_18");
+        observed.put("wx_out_trade_no", "PROMOT_18");
         when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(observed);
         service.reconcileOrder("PROMOT_18");
-        verify(wechatPayService, never()).closeOrder(any());
+        verify(wechatPayService, never()).closePaymentAttempt(any(), any());
         verify(orderMapper, never()).markCommerceOrderClosed(any());
 
         order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L));
-        org.mockito.Mockito.doThrow(new RuntimeException("ORDERPAID")).when(wechatPayService).closeOrder("PROMOT_18");
+        org.mockito.Mockito.doThrow(new RuntimeException("ORDERPAID")).when(wechatPayService).closePaymentAttempt("PROMOT_18", "PROMOT_18");
         assertThrows(RuntimeException.class, () -> service.reconcileOrder("PROMOT_18"));
         verify(orderMapper, never()).markCommerceOrderClosed(any());
 
         org.mockito.Mockito.reset(wechatPayService);
+        when(wechatPayService.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(observed);
-        when(wechatPayService.closeOrder("PROMOT_18")).thenReturn(true);
+        when(wechatPayService.closePaymentAttempt("PROMOT_18", "PROMOT_18")).thenReturn(true);
         service.reconcileOrder("PROMOT_18");
-        verify(wechatPayService).closeOrder("PROMOT_18");
+        verify(wechatPayService).closePaymentAttempt("PROMOT_18", "PROMOT_18");
         verify(orderMapper).markCommerceOrderClosed(18L);
         verify(subscriptionMapper, never()).grantMerchantSubscription(any());
     }
 
     @Test
-    void wechatMissingOrderIsClosedOnlyAfterAbandonWindowAndRenewalGrantCountsAsSuccess() {
+    void wechatMissingOrderStaysPendingPastAbandonWindowAndRenewalGrantCountsAsSuccess() {
         OmsOrder order = new OmsOrder();
         order.setId(19L); order.setOrderSn("CUSTOM_19"); order.setStatus(0L);
         order.setBizType(MerchantCommerceService.BIZ_CUSTOM_EVENT);
@@ -312,12 +334,12 @@ class MerchantCommerceServiceTest {
         when(orderMapper.selectOmsOrderByOrderSn("CUSTOM_19")).thenReturn(order);
         when(wechatPayService.queryOrderStatus("CUSTOM_19"))
                 .thenThrow(new com.chengyinhub.business.service.WechatOrderNotExistException("missing", null));
-        service.reconcileOrder("CUSTOM_19");   // 未建单=未付款的已知状态:窗口内保持待支付,不报失败
+        service.reconcileOrder("CUSTOM_19");   // NOT_FOUND 无法证明原号未受理，保持待支付供查证。
         verify(orderMapper, never()).markCommerceOrderClosed(any());
         verify(subscriptionMapper, never()).grantMerchantSubscription(any());
         order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L));
         service.reconcileOrder("CUSTOM_19");
-        verify(orderMapper).markCommerceOrderClosed(19L);
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
 
         OmsOrder renewal = new OmsOrder();
         renewal.setId(20L); renewal.setOrderSn("TPLTM_20"); renewal.setStatus(0L); renewal.setMemberId(12L);
@@ -329,6 +351,51 @@ class MerchantCommerceServiceTest {
         org.junit.jupiter.api.Assertions.assertTrue(service.handlePaidOrder("TPLTM_20", true, 1990, "wx-tx-20"));
     }
 
+    @Test
+    void notFoundCannotCloseAbandonedOriginalOrder() {
+        OmsOrder order = new OmsOrder();
+        order.setId(18L); order.setOrderSn("PROMOT_18"); order.setStatus(0L);
+        order.setBizType(MerchantCommerceService.BIZ_PROMOTION_SLOT);
+        order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L));
+        when(orderMapper.selectOmsOrderByOrderSn("PROMOT_18")).thenReturn(order);
+        when(wechatPayService.queryOrderStatus("PROMOT_18"))
+                .thenThrow(new WechatOrderNotExistException("not found", null));
+        service.reconcileOrder("PROMOT_18");
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+    }
+
+    @Test
+    void orderCommitsBeforeSdkAndSdkTimeoutCannotRollBackOriginalOrder() {
+        service = enabledService();
+        when(settlementRuleService.getActiveRule(0L, MerchantCommerceService.BIZ_PREMIUM_TEMPLATE))
+                .thenReturn(pricedRule());
+        when(orderMapper.insertOmsOrder(any())).thenAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            return 1;
+        });
+        when(wechatPayService.createGenericOrder(any(), any(), any(), any())).thenAnswer(call -> {
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(1, transactions.commits);
+            throw PaymentPreorderException.resultUncertain("timeout", null);
+        });
+        assertThrows(PaymentPreorderException.class, () -> service.createOrder(12L, 34L, "openid",
+                MerchantCommerceService.BIZ_PREMIUM_TEMPLATE, "req-1234567890123456"));
+        verify(orderMapper).insertOmsOrder(any());
+        assertEquals(1, transactions.commits);
+        assertEquals(0, transactions.rollbacks);
+    }
+
+    /** Exercises Spring's thread transaction boundary; does not simulate MySQL persistence. */
+    private static final class TestPaymentTransactions extends org.springframework.transaction.support.AbstractPlatformTransactionManager {
+        int commits;
+        int rollbacks;
+        @Override protected Object doGetTransaction() { return new Object(); }
+        @Override protected void doBegin(Object tx, org.springframework.transaction.TransactionDefinition definition) { }
+        @Override protected void doCommit(org.springframework.transaction.support.DefaultTransactionStatus status) { commits++; }
+        @Override protected void doRollback(org.springframework.transaction.support.DefaultTransactionStatus status) { rollbacks++; }
+    }
+
     private MerchantCommerceService enabledService() {
         MerchantCommerceService enabled = new MerchantCommerceService(true);
         ReflectionTestUtils.setField(enabled, "subscriptionMapper", subscriptionMapper);
@@ -336,6 +403,7 @@ class MerchantCommerceServiceTest {
         ReflectionTestUtils.setField(enabled, "settlementRuleService", settlementRuleService);
         ReflectionTestUtils.setField(enabled, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(enabled, "permissionService", permissionService);
+        ReflectionTestUtils.setField(enabled, "paymentTransactions", transactions);
         return enabled;
     }
 

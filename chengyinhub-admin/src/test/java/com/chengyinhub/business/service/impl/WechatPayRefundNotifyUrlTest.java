@@ -7,7 +7,7 @@ import com.wechat.pay.java.service.refund.model.Refund;
 import com.wechat.pay.java.service.refund.model.Status;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatPayTestWiring;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -31,15 +31,16 @@ import static org.mockito.Mockito.when;
 class WechatPayRefundNotifyUrlTest {
 
     private CreateRequest submitWith(String refundNotifyUrl) {
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatPayTestWiring.facade();
+        WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getRefundNotifyUrl()).thenReturn(refundNotifyUrl);
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayTestWiring.setField(service, "wxPayConfig", config);
         RefundService sdk = mock(RefundService.class);
         Refund refund = new Refund();
         refund.setStatus(Status.PROCESSING);
         when(sdk.create(any())).thenReturn(refund);
-        ReflectionTestUtils.setField(service, "refundService", sdk);
+        WechatPayTestWiring.setField(service, "refundService", sdk);
 
         service.submitRefund("T1", "R1", new BigDecimal("1.00"), new BigDecimal("1.00"), "退款");
         ArgumentCaptor<CreateRequest> cap = ArgumentCaptor.forClass(CreateRequest.class);
@@ -58,6 +59,34 @@ class WechatPayRefundNotifyUrlTest {
     void configuredRefundNotifyUrl_isSent() {
         String url = "https://api.example.com/prod-api/api/registration/refund-callback";
         assertEquals(url, submitWith(url).getNotifyUrl());
+    }
+
+    @Test
+    void refundUsesRetainedActualAttemptAndNormalizesCallbackBusinessIdentity() {
+        WechatPayServiceImpl service = WechatPayTestWiring.facade();
+        var db = WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
+        String alias = "WXP0123456789abcdef0123456789abc";
+        db.intents.put("merchant:" + alias, new java.util.HashMap<>(java.util.Map.of(
+                "mchid", "merchant", "out_trade_no", alias, "business_out_trade_no", "DEP1", "attempt_no", 2)));
+        WxPayConfig config = mock(WxPayConfig.class);
+        when(config.getMerchantId()).thenReturn("merchant");
+        WechatPayTestWiring.setField(service, "wxPayConfig", config);
+        RefundService sdk = mock(RefundService.class);
+        Refund refund = new Refund();
+        refund.setStatus(Status.PROCESSING);
+        when(sdk.create(any())).thenReturn(refund);
+        WechatPayTestWiring.setField(service, "refundService", sdk);
+        assertEquals(com.chengyinhub.business.service.RefundRequestResult.ACCEPTED,
+                service.submitRefund("DEP1", "RF1", BigDecimal.ONE, BigDecimal.ONE, "退款"));
+        ArgumentCaptor<CreateRequest> request = ArgumentCaptor.forClass(CreateRequest.class);
+        verify(sdk).create(request.capture());
+        assertEquals(alias, request.getValue().getOutTradeNo());
+        refund.setOutTradeNo(alias);
+        refund.setOutRefundNo("RF1");
+        when(sdk.queryByOutRefundNo(any())).thenReturn(refund);
+        java.util.Map<String, String> facts = service.queryRefundFacts("RF1");
+        assertEquals("DEP1", facts.get("outTradeNo"));
+        assertEquals(alias, facts.get("wxOutTradeNo"));
     }
 
     @Test

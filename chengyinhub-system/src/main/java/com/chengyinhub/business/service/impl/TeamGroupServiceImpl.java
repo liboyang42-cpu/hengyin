@@ -41,7 +41,7 @@ import java.util.Set;
 /**
  * 报名退款服务实现。
  *
- * 退款口径:现金走微信【原路退回】(IWechatPayService.refund,SUCCESS/PROCESSING 视为受理成功),
+ * 退款口径:现金走微信【原路退回】(WechatPaymentOperations.refund,SUCCESS/PROCESSING 视为受理成功),
  * 受理失败进 §6.1 人工兜底队列(不再自动转平台余额——那会造成二清);积分一并返还。
  * 现金部分复用 {@link IRefundService}(结算冲销 + 标记 registration.payment_status=4),
  * 再镜像积分返还 / 库存恢复 把钱与积分还给玩家。
@@ -120,7 +120,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     /** P1-PT-8:取消活动前对 PAYING 单查微信真实态。 */
     @Autowired
-    private com.chengyinhub.business.service.IWechatPayService wechatPayService;
+    @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private com.chengyinhub.business.service.WechatPaymentOperations wechatPayService;
 
     /** P1-PT-8:查到已付时走支付回调同一条补记链路(与 PAYING 超时对账同口径)。 */
     @Autowired
@@ -803,9 +804,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      * <ul>
      *   <li>SUCCESS → 按支付回调补记(同事务),随后被已付集合整单退;</li>
      *   <li>NOTPAY / USERPAYING / PAYERROR → 先关微信单,再本地关单回补;</li>
-     *   <li>CLOSED / REVOKED → 直接本地关单回补;</li>
-     *   <li>ORDER_NOT_EXIST → 复用对账任务口径(清单 1):过了 pay_expire_time + 宽限就按未支付本地关单;
-     *       宽限内不猜,拒绝本次取消并告诉主办方大约多久之后可以重试;</li>
+     *   <li>CLOSED → 同事务核对当前尝试后本地关单回补;</li>
+     *   <li>ORDER_NOT_EXIST → 保留原号查证，拒绝本次取消，不凭时间推断未执行;</li>
      *   <li>查单失败 / 单号不符 / 未知态 / 关单失败 / 补记未 SUCCESS / 条件关单 0 行 → 拒绝,整次取消回滚。</li>
      * </ul>
      *
@@ -836,19 +836,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             try {
                 wxOrder = wechatPayService.queryOrderStatus(outTradeNo);
             } catch (WechatOrderNotExistException notExist) {
-                // 微信侧从未建单 = 不可能付过款,但宽限内预下单请求可能仍在途(与对账任务同一判据)。
-                long waitMillis = graceRemainingMillis(r.getPayExpireTime());
-                if (waitMillis > 0) {
-                    logger.warn("取消活动前 PAYING 单微信侧无单且仍在宽限内 activityId={} registrationId={} 剩余毫秒={}",
-                            activityId, r.getId(), waitMillis);
-                    if (r.getPayExpireTime() == null) {
-                        throw retryLater();
-                    }
-                    throw new ServiceException("有订单支付结果确认中，约 "
-                            + ((waitMillis + 59999L) / 60000L) + " 分钟后可重试", HttpStatus.CONFLICT);
-                }
-                plans.add(new PayingPlan(r, PayingAction.LOCAL_CLOSE, null));
-                continue;
+                // A previous submit may still exist; elapsed grace is not non-execution evidence.
+                throw retryLater();
             } catch (Exception queryFailure) {
                 logger.warn("取消活动前 PAYING 单查单失败 activityId={} registrationId={}",
                         activityId, r.getId(), queryFailure);
@@ -865,9 +854,9 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 plans.add(new PayingPlan(r, PayingAction.APPLY_PAYMENT, wxOrder));
             } else if ("NOTPAY".equalsIgnoreCase(tradeState) || "USERPAYING".equalsIgnoreCase(tradeState)
                     || "PAYERROR".equalsIgnoreCase(tradeState)) {
-                plans.add(new PayingPlan(r, PayingAction.CLOSE_ON_WECHAT_THEN_LOCAL, null));
-            } else if ("CLOSED".equalsIgnoreCase(tradeState) || "REVOKED".equalsIgnoreCase(tradeState)) {
-                plans.add(new PayingPlan(r, PayingAction.LOCAL_CLOSE, null));
+                plans.add(new PayingPlan(r, PayingAction.CLOSE_ON_WECHAT_THEN_LOCAL, wxOrder));
+            } else if ("CLOSED".equalsIgnoreCase(tradeState)) {
+                plans.add(new PayingPlan(r, PayingAction.LOCAL_CLOSE, wxOrder));
             } else {
                 logger.warn("取消活动前 PAYING 单支付状态无法确认 activityId={} registrationId={} tradeState={}",
                         activityId, r.getId(), tradeState);
@@ -888,7 +877,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         for (PayingPlan plan : plans) {
             if (plan.action == PayingAction.LOCAL_CLOSE) {
-                closeLocally(plan.row, actorMemberId);
+                closeLocally(plan.row, actorMemberId, plan.wxOrder.get("wx_out_trade_no"));
             }
         }
         for (PayingPlan plan : plans) {
@@ -897,7 +886,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             }
             boolean closeAccepted;
             try {
-                closeAccepted = wechatPayService.closeOrder(plan.row.getRegistrationNo());
+                closeAccepted = wechatPayService.closePaymentAttempt(plan.row.getRegistrationNo(), plan.wxOrder.get("wx_out_trade_no"));
             } catch (Exception closeFailure) {
                 logger.warn("取消活动前 PAYING 单关微信单失败 activityId={} registrationId={}",
                         activityId, plan.row.getId(), closeFailure);
@@ -912,7 +901,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         for (PayingPlan plan : plans) {
             if (plan.action == PayingAction.CLOSE_ON_WECHAT_THEN_LOCAL) {
-                closeLocally(plan.row, actorMemberId);
+                closeLocally(plan.row, actorMemberId, plan.wxOrder.get("wx_out_trade_no"));
             }
         }
     }
@@ -921,7 +910,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      * 关单 + 回补库存/积分/权益走与对账任务同一份实现(settlePayingOne),别在这再写一份:
      * 两份分叉过一次 —— 积分回补一边 CAS 一边读改写、权益失效原因一边 REFUND 一边 ORGANIZER_CANCEL。
      */
-    private void closeLocally(CmsRegistration r, Long actorMemberId) {
+    private void closeLocally(CmsRegistration r, Long actorMemberId, String observedWxNo) {
+        if (!wechatPayService.lockPaymentAttemptForUpdate(r.getRegistrationNo(), observedWxNo)) throw retryLater();
         // 权益失效原因:枚举 javadoc 把「主办方取消活动」明确列在 ORGANIZER_CANCEL 定义里,与
         // 对账任务真超时同值;registration_status 用 finalStatus=3(已取消)与对账任务的 4(已过期)区分,
         // 这才是玩家看到「已取消」还是「已过期」的真实依据。

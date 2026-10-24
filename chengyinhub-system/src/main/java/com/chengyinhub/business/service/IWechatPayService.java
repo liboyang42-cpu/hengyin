@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * 微信支付服务接口
  */
-public interface IWechatPayService {
+public interface IWechatPayService extends WechatPaymentOperations {
     /** 支付下单、回调验签和退款服务是否都已就绪。 */
     boolean isReady();
 
@@ -75,6 +75,13 @@ public interface IWechatPayService {
      * @return 是否成功
      */
     boolean closeOrder(String outTradeNo);
+
+    /** Close exactly the observed provider attempt; never resolve a newer alias for an old observation. */
+    boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo);
+
+    /** Must run inside the domain mutation transaction. Locks business then latest attempt; false means stale. */
+    boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo);
+
 
     /**
      * 微信原路退款(退回付款人原支付账户)。

@@ -9,7 +9,7 @@ import com.chengyinhub.business.mapper.OmsOrderMapper;
 import com.chengyinhub.business.service.IMerchantCommerceService;
 import com.chengyinhub.business.service.ISettlementRuleService;
 import com.chengyinhub.business.service.IUserPermissionService;
-import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,8 +36,10 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     @Autowired private MerchantSubscriptionMapper subscriptionMapper;
     @Autowired private OmsOrderMapper orderMapper;
     @Autowired private ISettlementRuleService settlementRuleService;
-    @Autowired private IWechatPayService wechatPayService;
+    @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private WechatPaymentOperations wechatPayService;
     @Autowired private IUserPermissionService permissionService;
+    @Autowired private org.springframework.transaction.PlatformTransactionManager paymentTransactions;
 
     private final boolean selfCheckoutEnabled;
 
@@ -51,49 +53,53 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public Map<String, String> createOrder(Long memberId, Long merchantId, String openid, String bizType,
                                            String requestId) {
         if (!selfCheckoutEnabled) {
             throw new IllegalStateException("自助开通暂未开放，请联系官方人工开通");
         }
-        requireBizType(bizType);
-        requireRequestId(requestId);
-        OmsOrder replay = orderMapper.selectCommerceOrderByRequest(memberId, merchantId, bizType, requestId);
-        if (replay != null) return paymentResponse(replay, openid);
-        SettlementRule rule = settlementRuleService.getActiveRule(0L, bizType);
-        if (rule == null || rule.getUnitPrice() == null || rule.getUnitPrice().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalStateException("该权益尚未配置价格，请联系官方");
-        }
-        if (rule.getEntitlementMaxUsage() == null || rule.getEntitlementMaxUsage() <= 0
-                || rule.getEntitlementDays() == null || rule.getEntitlementDays() <= 0) {
-            throw new IllegalStateException("该权益尚未配置用量或有效期，请联系官方");
-        }
-        String orderSn = prefixOf(bizType) + UUID.randomUUID().toString().replace("-", "");
-        OmsOrder order = new OmsOrder();
-        order.setOrderSn(orderSn);
-        order.setMemberId(memberId);
-        order.setMmsMerchantId(merchantId);
-        order.setBizType(bizType);
-        order.setPayAmount(rule.getUnitPrice());
-        order.setOrderTotalAmount(rule.getUnitPrice());
-        order.setStatus(0L);
-        order.setPayType(0L);
-        order.setProductQuantity(1L);
-        order.setEntitlementMaxUsage(rule.getEntitlementMaxUsage());
-        order.setEntitlementDays(rule.getEntitlementDays());
-        order.setCommerceRequestId(requestId);
-        order.setCreateTime(DateUtils.getNowDate());
-        try {
-            if (orderMapper.insertOmsOrder(order) != 1) {
-                throw new IllegalStateException("商业化订单创建失败");
+        OmsOrder committed = paymentTransaction().execute(status -> {
+            requireBizType(bizType);
+            requireRequestId(requestId);
+            OmsOrder replay = orderMapper.selectCommerceOrderByRequest(memberId, merchantId, bizType, requestId);
+            if (replay != null) return replay;
+            SettlementRule rule = settlementRuleService.getActiveRule(0L, bizType);
+            if (rule == null || rule.getUnitPrice() == null || rule.getUnitPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalStateException("该权益尚未配置价格，请联系官方");
             }
-        } catch (DuplicateKeyException duplicate) {
-            OmsOrder existing = orderMapper.selectCommerceOrderByRequest(memberId, merchantId, bizType, requestId);
-            if (existing == null) throw duplicate;
-            return paymentResponse(existing, openid);
-        }
-        return paymentResponse(order, openid);
+            if (rule.getEntitlementMaxUsage() == null || rule.getEntitlementMaxUsage() <= 0
+                    || rule.getEntitlementDays() == null || rule.getEntitlementDays() <= 0) {
+                throw new IllegalStateException("该权益尚未配置用量或有效期，请联系官方");
+            }
+            String orderSn = prefixOf(bizType) + UUID.randomUUID().toString().replace("-", "");
+            OmsOrder order = new OmsOrder();
+            order.setOrderSn(orderSn);
+            order.setMemberId(memberId);
+            order.setMmsMerchantId(merchantId);
+            order.setBizType(bizType);
+            order.setPayAmount(rule.getUnitPrice());
+            order.setOrderTotalAmount(rule.getUnitPrice());
+            order.setStatus(0L);
+            order.setPayType(0L);
+            order.setProductQuantity(1L);
+            order.setEntitlementMaxUsage(rule.getEntitlementMaxUsage());
+            order.setEntitlementDays(rule.getEntitlementDays());
+            order.setCommerceRequestId(requestId);
+            order.setCreateTime(DateUtils.getNowDate());
+            try {
+                if (orderMapper.insertOmsOrder(order) != 1) {
+                    throw new IllegalStateException("商业化订单创建失败");
+                }
+            } catch (DuplicateKeyException duplicate) {
+                OmsOrder existing = orderMapper.selectCommerceOrderByRequest(memberId, merchantId, bizType, requestId);
+                if (existing == null) throw duplicate;
+                return existing;
+            }
+            return order;
+        });
+        if (committed == null) throw new IllegalStateException("商业化订单意图未提交");
+        return paymentResponse(committed, openid);
     }
 
     @Override
@@ -153,7 +159,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void reconcileOrder(String outTradeNo) {
         OmsOrder order = orderMapper.selectOmsOrderByOrderSn(outTradeNo);
         if (order == null || !Long.valueOf(0L).equals(order.getStatus())) return;
@@ -166,11 +172,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         try {
             observed = wechatPayService.queryOrderStatus(outTradeNo);
         } catch (com.chengyinhub.business.service.WechatOrderNotExistException missing) {
-            // 微信侧从未建单 = 不可能已付款(已知状态，不按失败告警)。过了放弃窗口才本地关单；
-            // 窗口内保持待支付，用户仍可能回来拉起预支付。
-            if (abandoned) {
-                orderMapper.markCommerceOrderClosed(order.getId());
-            }
+            // 短暂 NOT_FOUND 不能证明原请求未受理；保留原单与权益，不据此本地关闭。
             return;
         }
         if (observed == null || !outTradeNo.equals(observed.get("out_trade_no"))) {
@@ -182,22 +184,35 @@ public class MerchantCommerceService implements IMerchantCommerceService {
                     || !observed.get("total").matches("[0-9]{1,10}")) {
                 throw new IllegalStateException("商业化支付金额或币种无法确认");
             }
-            if (!handlePaidOrder(outTradeNo, true, Integer.valueOf(observed.get("total")),
-                    observed.get("transaction_id"))) {
+            if (!Boolean.TRUE.equals(paymentTransaction().execute(status -> handlePaidOrder(outTradeNo, true,
+                    Integer.valueOf(observed.get("total")), observed.get("transaction_id"))))) {
                 throw new IllegalStateException("商业化已支付订单补记失败");
             }
-        } else if ("CLOSED".equals(state) || "REVOKED".equals(state)) {
-            orderMapper.markCommerceOrderClosed(order.getId());
+        } else if ("CLOSED".equals(state)) {
+            closeObservedOrder(order, observed.get("wx_out_trade_no"));
         } else if (("NOTPAY".equals(state) || "PAYERROR".equals(state)) && abandoned) {
             // 放弃的待支付单不能每 5 分钟查一辈子：先在微信侧关单(已付会被微信拒绝并抛出，
             // 下一轮查到 SUCCESS 照常补记)，关单成功后才本地终结。
-            if (!wechatPayService.closeOrder(outTradeNo)) {
+            if (!wechatPayService.closePaymentAttempt(outTradeNo, observed.get("wx_out_trade_no"))) {
                 throw new IllegalStateException("商业化超时订单关单未确认");
             }
-            orderMapper.markCommerceOrderClosed(order.getId());
+            closeObservedOrder(order, observed.get("wx_out_trade_no"));
         } else if (!"NOTPAY".equals(state) && !"USERPAYING".equals(state) && !"PAYERROR".equals(state)) {
             throw new IllegalStateException("商业化支付状态无法确认");
         }
+    }
+
+    private boolean closeObservedOrder(OmsOrder order, String observedWxOutTradeNo) {
+        return Boolean.TRUE.equals(paymentTransaction().execute(status -> {
+            if (!wechatPayService.lockPaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
+            return orderMapper.markCommerceOrderClosed(order.getId()) == 1;
+        }));
+    }
+
+    private org.springframework.transaction.support.TransactionTemplate paymentTransaction() {
+        var transaction = new org.springframework.transaction.support.TransactionTemplate(paymentTransactions);
+        transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return transaction;
     }
 
     /** 待支付超过放弃窗口(24h)的商业化订单不再等待用户回来支付。 */

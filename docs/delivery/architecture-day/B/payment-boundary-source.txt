@@ -1,0 +1,27 @@
+源码候选：已移植B最终支付/原意图/错误分类/四域验单及H-B01栅栏，并拆分出站SDK与入站owner路由；尚未编译/运行测试。
+公共基线：4ed2bc12600f3d48255611dc276b5f4774c5cf08，tree 830770270b347807cc4009f6d8c8f7f0dff91023（发布前实际master；开工44699155，新增3个他人测试/CI文件逐blob保留，含#567/#585/#586）。
+工作树：/workspace/b-payment-boundary，分支codex/architecture-day-b-payment-boundary；与旧B两个工作树隔离，未重写旧候选。
+d49c12b820419308236010e0710f96d7bf48c4c9是协调者施工线，不是本候选parent；没有将旧A/C/D/E/F/CI历史或私有仓库数据带回master。
+
+依赖方向：
+IWechatPayService既有API门面 -> WechatPaymentSdkGateway（唯一出站实例）以及WechatPaymentCallbackRouter。
+Router -> 明确Payment/Refund owner端口 -> 现有CLM/Commerce/DEP/Registration/Refund事务入口。
+领域出站字段 -> @Qualifier(wechatPaymentSdkGateway) WechatPaymentOperations -> SDK/IntentStore。
+IntentStore -> WechatPaymentOrderOwner -> 原四域行锁查询；SDK payer查询直用原UmsMemberMapper（原MemberService该方法本就只有同一mapper委托），不再注入有业务依赖的MemberService。
+SDK无callback router、领域Service、@Lazy或ObjectProvider依赖；Facade不再装SQL、SDK客户端和四域分支。原网关1299行拆为门面177、SDK约983、IntentStore158、row-lock owner36及router70行。
+四域业务写入仍为原事务代理；报名handleWechatPayCallback的mutation+inbox DONE没有挪出或另包事务。
+
+合同：14条原SQL逐字保持；20个SDK/金额转换/错误分类/原单核验/关单方法完整body与B最终源码逐字相同；原merchant/app/channel/CNY/分金额/交易号校验和原UNKNOWN号保留。
+首次渠道锁定，确认原CLOSED后才可新alias；业务行锁先于当前attempt锁，旧观察号贯穿关闭CAS。未通过本次本地拒绝推断旧提交未执行。
+保留#567 PointsValuePolicy（0.02/50）与TopicSizeLimits（30/300）、#585隐私/资质图，以及#586支付/退款两路SUCCESS204/其他500。未修改ApiRegistrationController或WechatCallbackHttpAckTest。
+CoopInviteServiceImpl/CoopDepositRefundService仅出站字段类型+Qualifier接线，不改其方法体、G结算或退款规则。
+
+旧测试：仅增加组合夹具WechatPayTestWiring并迁移私有字段/方法的目标，保留原SDK和真实业务double；原real4仍4@Test，报名inbox仍3@Test，CLM原场景/金额/owner/库存/权益断言保留。
+SupportedStackServiceCyclesTest保留所有原参数行；两条已消除的支付环改为强制eager出站实例相同且不再依赖router，其他环继续保留原失败负控。Source契约断言只随代码归属迁到SDK/router。E2E只复用root97已有显式false接口实现，未加default成功。
+
+root需协调的共享接线：payment-topic-outbound-owner.patch仅将CmsTopicServiceImpl一个出站字段改到SDK端口，以切断topic保证金查单经完整入站门面的反向边；本候选不直接修改D/G拥有的CmsTopicServiceImpl。集成d49时保留D/G方法体、锁与结算规则，仅由owner审核此字段级补丁。
+root共享迁移清单：ci/migration-dependencies.json仅需加"20261023_wx_pay_order_intent": []，保留"20261023_points_value_config_seed"及所有现有登记；本候选不改CI/统一门禁。
+新增DDL仍仅原migration_20261023_wx_pay_order_intent.sql提案；不生产执行、不假backfill、不清资金/回执/审计；产生alias后不能直接回退到不识别原号映射的旧网关。
+
+本轮执行：git diff --check、45个Java源码词法括号扫描（不是编译器）、原SQL/20方法body逐字比对、fixture用例计数、秘密标记与范围扫描。
+未执行：Java/JUnit/MySQL/Redis/CI/微信/生产操作；没有新依赖、独立部署服务、agent或专项CI。最终源码与共享接线组合后由root统一回归，不引用旧SHA结果作为本候选通过证据。
