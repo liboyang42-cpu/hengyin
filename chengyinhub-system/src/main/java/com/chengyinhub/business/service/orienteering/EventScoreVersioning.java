@@ -35,6 +35,8 @@ public final class EventScoreVersioning {
     public static final String OUTCOME_UNKNOWN = "UNKNOWN";
     /** 原计分写入/回读依赖 TopicRouteSession；缺会话时 WAITING_SOURCE，不占进程账。 */
     public static final String SCORE_LEDGER_SESSION = "orientScoring.topicRouteSession";
+    /** 原回执回读走 {@link IOrientScoringService#receipt}。缺服务 WAITING_SOURCE。 */
+    public static final String SCORING_RECEIPT = "orientScoring.receipt";
     /** 原奖励来源不是成绩；finish 不得把 scoreCenti 抄进 originalRewardCenti。 */
     public static final String ORIGINAL_REWARD_SOURCE = "eventScore.originalRewardSource";
 
@@ -264,6 +266,34 @@ public final class EventScoreVersioning {
             throw new OrienteeringEventException(OrienteeringEventException.NOT_FOUND, "没有这条成绩流水");
         }
         return found;
+    }
+
+    /**
+     * 从既有 {@link IOrientScoringService#receipt} 回读。kind 只接受 SETTLE/APPEAL/DISPUTE。
+     * 缺服务 WAITING_SOURCE。state=NOT_FOUND 返回 {@code null}，不占进程完赛账，不 appendEntry。
+     */
+    public Map<String, Object> recoverFromScoringReceipt(Long memberId, String kind, Long sessionId,
+            String idempotencyKey) {
+        String key = parseKey(idempotencyKey);
+        if (memberId == null || memberId.longValue() <= 0L || sessionId == null || sessionId.longValue() <= 0L
+                || key == null || !knownReceiptKind(kind)) {
+            return null;
+        }
+        if (originalScoring == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                    "原计分回执需要 IOrientScoringService.receipt", SCORING_RECEIPT);
+        }
+        Map<String, Object> found = originalScoring.receipt(memberId, kind, sessionId, key);
+        if (found == null || "NOT_FOUND".equals(found.get("state"))) {
+            return null;
+        }
+        return found;
+    }
+
+    private static boolean knownReceiptKind(String kind) {
+        return IOrientScoringService.KIND_SETTLE.equals(kind)
+                || IOrientScoringService.KIND_APPEAL.equals(kind)
+                || IOrientScoringService.KIND_DISPUTE.equals(kind);
     }
 
     public ResultVersion rejectGrowthSubstitution() {

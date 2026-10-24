@@ -15,16 +15,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class EventScoreVersioningTest {
@@ -264,5 +270,35 @@ class EventScoreVersioningTest {
                 assertThrows(OrienteeringEventException.class, () -> restarted.recoverFromLedger("scr-led-missing"))
                         .getErrorCode());
         assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, restarted.recoverOriginal("fin-sc-w001").outcome);
+    }
+
+    @Test
+    void recoverFromScoringReceiptReadsOriginalWithoutOccupyingFinishLedger() {
+        EventScoreVersioning missing = new EventScoreVersioning();
+        OrienteeringEventException waiting = assertThrows(OrienteeringEventException.class,
+                () -> missing.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-01"));
+        assertEquals(OrienteeringEventException.WAITING_SOURCE, waiting.getErrorCode());
+        assertEquals(EventScoreVersioning.SCORING_RECEIPT, waiting.getWaitingCapability());
+        assertNull(missing.recoverFromScoringReceipt(7L, "SCORE", 30L, "scr-rcpt-01"));
+        assertNull(missing.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, null));
+
+        IOrientScoringService scoring = mock(IOrientScoringService.class);
+        Map<String, Object> absent = new LinkedHashMap<String, Object>();
+        absent.put("state", "NOT_FOUND");
+        when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-none")).thenReturn(absent);
+        Map<String, Object> accepted = new LinkedHashMap<String, Object>();
+        accepted.put("state", "ACCEPTED");
+        accepted.put("kind", IOrientScoringService.KIND_APPEAL);
+        accepted.put("idempotencyKey", "scr-rcpt-01");
+        when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-01")).thenReturn(accepted);
+
+        EventScoreVersioning wired = new EventScoreVersioning(scoring, null, null);
+        assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-none"));
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("scr-rcpt-none").outcome);
+        Map<String, Object> recovered = wired.recoverFromScoringReceipt(
+                7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-01");
+        assertEquals("ACCEPTED", recovered.get("state"));
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("scr-rcpt-01").outcome);
+        verify(scoring, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
     }
 }
