@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T10:11:00.535859+00:00",
+  "updated_utc": "2026-10-24T10:14:54.491949+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -13,14 +13,14 @@
       "host_id": "durable",
       "task": "\u539f\u4ed8\u6b3e\u4e8b\u5b9e\u7cbe\u786e\u5173\u8054\u3001\u539f\u9000\u6b3e\u5939\u5177\u63a5\u7ebf",
       "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService\u7684\u6805\u680f\u4e0e\u63a5\u7ebf\uff1bG\u8d26\u672c\u6b63\u6587\u4e0d\u6539\uff1b\u5916\u5c42\u4e24\u4e2a\u670d\u52a1\u7cbe\u786e\u62a5\u540d/\u652f\u4ed8/\u9000\u6b3e\u5305\u88c5",
-      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:17",
+      "dispatch": "Probe now read back actual source delivery; continues original inline task",
+      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:18",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d46-60a9-7156-a826-42d62116087c",
-      "last_progress_evidence": "\u5df2\u786e\u8ba4\u751f\u4ea7 inline \u53ea\u6709\u4e00\u4e2a\u8c03\u7528\u8005\uff1aTeamGroup \u53d6\u6d88\u573a\u6b21\u524d\u7684 PAYING \u67e5\u5355\u8865\u8bb0\u3002wx_pay_order_intent \u53ea\u8bc1\u660e\u539f\u8bf7\u6c42\u51bb\u7ed3/\u6e20\u9053\u5173\u95ed\uff0c\u4e0d\u80fd\u8bc1\u660e\u672c\u5730\u5df2\u6210\u529f\u6d88\u8d39\u4e8b\u5b9e\uff1b\u73b0\u6709 inbox \u7684\u72ec\u7acb claim \u4e5f\u4e0d\u80fd\u5728\u8fd9\u91cc\u590d\u7528\u3002 \u6211\u4f1a\u589e\u52a0\u4e00\u5f20\u7a84\u7684\u62a5\u540d\u4ed8\u6b3e\u4e8b\u5b9e\u5173\u8054\u5019\u9009\u8868\uff1a\u4ee5\u539f\u62a5\u540d ID \u552f\u4e00\u7ed1\u5b9a\u786e\u5207 B fact id/hash\uff0c\u53ea\u5728\u6574\u7b14\u4ed8\u6b3e\u4e1a\u52a1\u6210\u529f\u540e\u3001\u539f\u4e8b\u52a1\u63d0\u4ea4\u524d\u5199\u5165\u3002\u5b83\u4e0d\u6807 inbox DONE\u3001\u4e0d\u6539\u539f\u53f7\u3002G consumer \u7684\u7cbe\u786e\u8bfb\u5408\u540c\u4f1a\u5355\u72ec\u4ea4 review.patch\u3002",
+      "last_progress_evidence": "Actual57e99075 fixture delivery; original cases/assertions statically retained, Java NOT_RUN; returns to inline source branch",
       "last_tool_status": "completed"
     },
     "B": {
@@ -43,7 +43,7 @@
       "host_id": "durable",
       "task": "\u7968\u7801\u5e94\u7528\u5c42\u5df2\u4ea4\uff0c\u7ee7\u7eed\u636e\u70b9\u6838\u9500\u4e8b\u52a1\u95ed\u5305\u63d0\u53d6",
       "ownership": "\u5e2d\u4f4d/\u7968\u7801/\u6838\u9500\u4e8b\u5b9e\uff1b\u5171\u4eab\u4e0b\u5355/\u9000\u6b3e\u6587\u4ef6\u53ea\u7ed9review.patch",
-      "dispatch": "Prior delivery collected, next precise task sent; active readback, code results independently checked.",
+      "dispatch": "Exact workspace/first-source probe sent; still no fresh tool evidence, not counted as resumed implementation",
       "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:17",
       "last_observed_status": {
         "type": "active",
@@ -89,13 +89,13 @@
       "task": "\u771f\u5b9e Bean \u4f9d\u8d56\u95ed\u5305\u548c\u6545\u610f\u5faa\u73af\u8d1f\u63a7",
       "ownership": "\u65e2\u6709policy/\u63a7\u5236\u4f8b\uff1b\u4e0d\u6539root CI refs\u6216\u65b0\u9020scanner",
       "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:16",
+      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:17",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d52-8cfb-71d5-92a3-042953793a19",
-      "last_progress_evidence": "\u5df2\u5b9a\u4f4d\u5230 fixture \u6f0f\u63a5\uff1a\u73b0\u6709 helper \u4f1a\u628a\u672a\u5217\u5165\u771f\u5b9e\u670d\u52a1\u96c6\u5408\u7684\u65b0\u4e8b\u5b9e\u670d\u52a1\u3001CommittedBusinessNotice \u7b49\u4f9d\u8d56\u6ce8\u518c\u6210 inert/mock\uff1b\u6709\u4e9b\u573a\u666f\u4e5f\u56e0\u6b64\u6ca1\u6709\u63a5\u4e0a\u771f\u5b9e IM \u8def\u5f84\u3002\u5df2\u8bfb\u53d6 Ae6 \u548c B f6f382 \u7684\u5b9e\u9645\u65b0\u589e\u4f9d\u8d56\u3002\u672c\u6b21\u4f1a\u8865\u771f\u5b9e\u5bf9\u8c61\u95ed\u5305\u3001\u5177\u540d\u8c03\u5ea6\u5668\u5916\u90e8\u66ff\u8eab\uff0c\u4ee5\u53ca\u201c\u4e8b\u5b9e reader \u53cd\u5411\u6ce8\u5165 SDK\u201d\u7684\u6545\u610f\u5faa\u73af\u8d1f\u63a7\uff1b\u4e0d\u636e\u6b64\u9884\u79f0\u5168\u542f\u52a8\u901a\u8fc7\u3002",
+      "last_progress_evidence": "Actual4bb fixture source frozen; continues independent real C type policy",
       "last_tool_status": "completed"
     },
     "G": {
@@ -116,10 +116,10 @@
     "H": {
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable",
-      "task": "\u72ec\u7acb\u5ba1\u67e5 G \u65b0\u4e8b\u52a1\u6062\u590d\u53ca B \u5931\u8d25\u4fee\u590d",
+      "task": "D/bc5 actual complaint rejection path independent review",
       "ownership": "\u53ea\u8bfb\u72ec\u7acb\u5ba1\u67e5\uff0c\u672a\u8fd0\u884c\u5355\u5217",
-      "dispatch": "Prior delivery collected, next precise task sent; active readback, code results independently checked.",
-      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:19",
+      "dispatch": "G findings forwarded, next precise D task sent; active readback pending",
+      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:20",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
@@ -263,14 +263,16 @@
     "integrated_at": "7da3e4ea385596aa850dc760f2cf6adc6c554602"
   },
   "latest_targeted_run": {
-    "run_id": 40084734777,
-    "source": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+    "run_id": 40084928209,
+    "source": "07359d3dac777b67090f7febfbaed68b3ec5d336",
+    "frozen_branch": "codex/architecture-day-facts-rr-notice-ci2-20261024",
     "batch": "architecture-day-verified-payment-facts",
     "expected": 4,
-    "executed": 0,
-    "verdict": "FAIL",
-    "failure": "Two strict workflow/registry option-order assertions; Java not reached",
-    "repair": "Only workflow options reordered to registry order; original strict assertions kept; all69 Python controls PASS"
+    "executed": "NOT_YET_READ_BACK",
+    "verdict": "IN_PROGRESS",
+    "plan_precheck": "PASS",
+    "current_step": "WechatVerifiedPaymentFactMySqlIT / Run class on real storage and read back",
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40084928209"
   },
   "map_input_P2": {
     "source": "H reviewed E8372, inherited input-node filtering changes cache route identity",
@@ -312,7 +314,7 @@
     "coordinator_rule": "advance reviewed composition or resolve actual blocker each inspection",
     "deadline_preserved": "2026-10-24T19:03:41Z"
   },
-  "latest_cross_owner_action": "Root sent A old-RR/new durable fact reader gap and G BINARY(32)/hex identity warning to B owner for verification and correction; not acceptance",
+  "latest_cross_owner_action": "H source proof: G parent2/2-child2/1 closed-topic recovery omission and stale A checkedVerifiedPaymentReference symbol sent G; H renewed D/bc5 rejection audit. A/C tool-less turns sent exact workspace/first-code probes; no blind restart.",
   "latest_combined_source": {
     "receipt": "batch-ABCFG-source-20261024.json",
     "A": "fd3501f7dca5492670c26065c7165597eae9974d",
@@ -353,9 +355,29 @@
   "latest_combined_source_current": {
     "receipt": "batch-ACDEF-source-20261024.json",
     "parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
-    "status": "56d committed/pushed; first precheck failed, narrow config repair ready; no Java/MySQL execution",
+    "status": "07359 isolated candidate pushed; hosted plan/precheck PASS, class job running; Java/test reports not yet read back",
     "Java_DB": "NOT_RUN",
     "registry_classes": 104,
     "integrated_at": "56d0e68e6bd2cdb2066af5940c497587df131d8c"
+  },
+  "targeted_run_history": [
+    {
+      "run_id": 40084734777,
+      "source": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+      "batch": "architecture-day-verified-payment-facts",
+      "expected": 4,
+      "executed": 0,
+      "verdict": "FAIL",
+      "failure": "Two strict workflow/registry option-order assertions; Java not reached",
+      "repair": "Strict options order aligned. Local full69 first attempt:68 passed/1 loopback bind PermissionError; not code failure. Hosted follow-up precheck passed on exact07359 source."
+    }
+  ],
+  "next_batch_frozen_deliveries": {
+    "C": "d2d09a0deec78e298d0a814eca65bf80b8e121cb",
+    "D": "bc5b6d9115f2c8a24b1d0efaf29cc2f9463355c7",
+    "F_fixture": "4bb00dffdd62d519f7575a949f0630a4fa576e77",
+    "G_paid_half": "6df875d59f986cff6d90c7c9ad9c7903244c2078",
+    "G_producer": "4d6f4a565d8d42c7cca1f960c1000c7fa09205bd",
+    "A_fixture": "57e99075c0f98b2ce7592b3521aebc42b78eafec"
   }
 }
