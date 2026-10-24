@@ -88,7 +88,8 @@ class WechatRefundOriginalFactQueryTest {
                 @Override public List<Map<String,Object>> queryForList(String sql,Object... params) {
                     if(sql.startsWith("SELECT appid")) return List.of(Map.of("appid",original.getAppid(),"trade_type",original.getTradeType().name(),"currency","CNY","total_fen",original.getAmount().getTotal().longValue()));
                     if(sql.startsWith("SELECT request_hash")) return List.of(Map.of("request_hash",frozenHash));
-                    if(sql.startsWith("SELECT business_out_trade_no")) return List.of(Map.of("business_out_trade_no",business));
+                    if(sql.startsWith("SELECT business_out_trade_no")) return List.of(Map.of(
+                            "business_out_trade_no",business,"biz_type","REGISTRATION","biz_id",1L));
                     return List.of();
                 }
             });

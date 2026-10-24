@@ -12,9 +12,7 @@ public final class ARefundFactFixture {
     private ARefundFactFixture() { }
 
     public static WechatVerifiedPaymentFactService memoryFacts() {
-        WechatVerifiedPaymentFactService facts = new WechatVerifiedPaymentFactService();
-        WechatVerifiedFactTestSupport.setField(facts, "mapper", new WechatVerifiedFactTestSupport.MemoryMapper());
-        return facts;
+        return WechatVerifiedFactTestSupport.memoryHistoricalFacts();
     }
 
     /** Caller explicitly supplies a SUCCESS fixture; never upgrades UNKNOWN or repairs malformed inputs. */

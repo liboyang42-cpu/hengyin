@@ -58,6 +58,20 @@ public final class WechatVerifiedFactTestSupport {
             public void rollback(org.springframework.transaction.TransactionStatus status) { }
         });
     }
+    /** Explicit historical, unfrozen originals for memory-only fixtures. Never a SQL/SDK/transaction proof. */
+    public static WechatVerifiedPaymentFactService memoryHistoricalFacts() {
+        var facts=new WechatVerifiedPaymentFactService();
+        ReflectionTestUtils.setField(facts,"mapper",new MemoryMapper());
+        wireUnitReads(facts); // Includes the real canonical reader plus explicit unit write/owner/intent boundaries.
+        ReflectionTestUtils.setField(facts,"factIntentJdbc",new org.springframework.jdbc.core.JdbcTemplate(){
+            @Override public List<Map<String,Object>> queryForList(String sql,Object... args) {
+                if(sql.startsWith("SELECT appid,trade_type,currency,total_fen FROM wx_pay_order_intent")
+                        || sql.startsWith("SELECT closed_confirmed_at FROM wx_pay_order_intent")) return List.of();
+                throw new AssertionError("Unexpected SQL in explicit historical memory fixture: "+sql);
+            }
+        });
+        return facts;
+    }
     static org.springframework.transaction.PlatformTransactionManager unitWriteTransactions() {
         return new org.springframework.transaction.support.AbstractPlatformTransactionManager(){
             @Override protected Object doGetTransaction(){return new Object();}
