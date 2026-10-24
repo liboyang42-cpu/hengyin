@@ -246,7 +246,7 @@ public class NpcChatService
         {
             return persistTerminal(newTerminal(userId, sessionKey, rid,
                     NpcChatRequest.STATUS_REJECTED, "NOT_RUN", "INVALID_MESSAGE", null,
-                    false, SAFE_INVALID_REQUEST));
+                    false, SAFE_INVALID_REQUEST), merchantId);
         }
 
         NpcProfile profile = findMerchantProfile(merchantId);
@@ -255,7 +255,7 @@ public class NpcChatService
             // 商家没配人设就别硬答:比让全局 NPC 冒充店主可信
             return persistTerminal(newTerminal(userId, sessionKey, rid,
                     NpcChatRequest.STATUS_FAILED, "NOT_RUN", "NPC_PROFILE_UNAVAILABLE", null,
-                    false, SAFE_SHOP_NO_PROFILE));
+                    false, SAFE_SHOP_NO_PROFILE), merchantId);
         }
 
         NpcChatRequest processing = newProcessing(userId, sessionKey, rid);
@@ -549,12 +549,27 @@ public class NpcChatService
 
     private NpcChatResp persistTerminal(NpcChatRequest terminal)
     {
+        return persistTerminal(terminal,null);
+    }
+
+    private NpcChatResp persistTerminal(NpcChatRequest terminal,Long merchantId)
+    {
         try
         {
             NpcChatRequest stored = npcChatWriteService.insertTerminal(terminal);
             if (stored != null && !terminal.getSessionId().equals(stored.getSessionId()))
                 return requestScopeMismatch(terminal.getRequestId());
             return stored != null ? fromStored(stored) : requestStateUnavailable(terminal.getRequestId());
+        }
+        catch (NpcChatWriteService.AsrIdentityPresent asr)
+        {
+            var original=asr.receipt();
+            if (merchantId==null || original.getNodeId()==null
+                    || !terminal.getUserId().equals(original.getUserId())
+                    || original.getRequestId()==null || !terminal.getRequestId().equalsIgnoreCase(original.getRequestId())
+                    || !Long.valueOf(-original.getNodeId()).equals(terminal.getSessionId())
+                    || !merchantId.equals(original.getMerchantMemberId())) return requestScopeMismatch(terminal.getRequestId());
+            return NpcAsrIntentService.outcome(original);
         }
         catch (DuplicateKeyException e)
         {

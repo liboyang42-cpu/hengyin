@@ -14,6 +14,14 @@ import java.util.function.Supplier;
 @Service
 public class NpcChatWriteService
 {
+    /** Original ASR won the member fence; the caller must project that receipt instead of inserting another terminal. */
+    public static final class AsrIdentityPresent extends RuntimeException {
+        private final com.chengyinhub.business.domain.NpcAsrIntent receipt;
+        private AsrIdentityPresent(com.chengyinhub.business.domain.NpcAsrIntent receipt) {
+            super("Original NPC ASR identity already exists");this.receipt=receipt;
+        }
+        public com.chengyinhub.business.domain.NpcAsrIntent receipt() { return receipt; }
+    }
     public record ShopAdmission(NpcChatRequest request,
             com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff quota) { }
     /** Existing NPC lease duration, shared with the heartbeat; only its admission start moves. */
@@ -90,6 +98,8 @@ public class NpcChatWriteService
         return locked(request.getUserId(), () -> {
             NpcChatRequest existing = requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
             if (existing != null) return existing;
+            var original=asrIntents.selectForUpdate(request.getUserId(),request.getRequestId());
+            if (original!=null) throw new AsrIdentityPresent(original);
             if (requests.insertNpcChatRequest(request) != 1) throw new IllegalStateException("NPC request persistence failed");
             return requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
         });
