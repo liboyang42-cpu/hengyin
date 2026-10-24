@@ -215,7 +215,7 @@ test('native share keeps existing analytics and route without a silent canonical
     assert.ok(source.includes('buildSquareShare('));
     assert.throws(()=>validate('community.share(56);'+source));
   }
-  const shareSource=fs.readFileSync(path.join(__dirname,'../../utils/square-share.js'),'utf8');
+  const shareSource=fs.readFileSync(path.join(__dirname,'../../pages/square/utils/square-share.js'),'utf8');
   assert.ok(shareSource.includes('/pages/square/detail/index?id='));
   assert.ok(!shareSource.includes('community.share('));
 });

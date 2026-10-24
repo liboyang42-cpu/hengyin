@@ -110,7 +110,7 @@ test('审核记录展示后端原因标签，即使没有自由文本原因', ()
 });
 
 test('审核原因标签与补充说明同时保留，异常标签不展示为内部对象', () => {
-  const at = require(path.join(ROOT, 'utils/audit-timeline.js'));
+  const at = require(path.join(ROOT, 'subpackageA/utils/audit-timeline.js'));
   const rows = at.timelineRows({ rounds: [{ timeline: [{ action: 'REJECT',
     reasonLabels: ['内容不完整', null, {}, 12, ''], reasonText: '请补集合地址', createTime: '2026-10-20'
   }, { action: 'REJECT', reasonLabels: '错误类型', reasonText: '旧记录说明' }] }] });
@@ -119,7 +119,7 @@ test('审核原因标签与补充说明同时保留，异常标签不展示为�
 });
 
 test('申诉成立不承诺已经公开，撤回决定保留在审核记录中', () => {
-  const at = require(path.join(ROOT, 'utils/audit-timeline.js'));
+  const at = require(path.join(ROOT, 'subpackageA/utils/audit-timeline.js'));
   assert.equal(at.appealText({ appeal: { state: 'ACCEPTED' } }), '申诉已成立，请查看最新审核状态');
   const rows = at.timelineRows({ rounds: [{ kind: 'APPEAL', timeline: [{
     action: 'CANCEL', reasonText: '修改内容后已撤回申诉', createTime: '2026-10-20'
@@ -182,7 +182,7 @@ test('清理旧账号状态时收起审核面板，迟到的时间线与申诉�
 });
 
 test('FOLLOWUP-A-2 玩法卡:个人审核未通过 → TEMPLATE;广场驳回 / 下架 → TEMPLATE_LIBRARY;正常玩法不出入口', () => {
-  const at = require(path.join(ROOT, 'utils/audit-timeline.js'));
+  const at = require(path.join(ROOT, 'subpackageA/utils/audit-timeline.js'));
   assert.deepEqual(at.templateTarget({ id: 4, draftStatus: 1, status: 2 }), { bizType: 'TEMPLATE', bizId: '4' });
   assert.deepEqual(at.templateTarget({ id: 4, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 70, marketStatus: 2 }), { bizType: 'TEMPLATE_LIBRARY', bizId: '70' });
   assert.deepEqual(at.templateTarget({ id: 4, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 70, marketStatus: 1, marketPublishStatus: 0 }), { bizType: 'TEMPLATE_LIBRARY', bizId: '70' });

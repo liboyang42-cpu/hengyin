@@ -128,7 +128,7 @@ const PLAY_STORY_CARD = Object.freeze({
 // S9 暗色底图配置已抽到 utils/map-style.js(roam 页共用同一份,避免只改一页导致半暗半亮)。
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { MAP_STYLE: MAP_DARK } = require('../../utils/map-style.js');
-const storyAudio = require('../../utils/story-audio.js');
+const storyAudio = require('./utils/story-audio.js');
 const storyScene = require('./utils/story-scene.js');
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');

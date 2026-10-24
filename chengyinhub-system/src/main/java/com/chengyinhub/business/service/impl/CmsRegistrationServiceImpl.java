@@ -233,6 +233,25 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return cmsRegistrationMapper.selectCmsRegistrationList(cmsRegistration);
     }
 
+    @Override
+    public Map<Long, long[]> countPaidVerificationByOwners(Long ownerType, java.util.Collection<Long> ownerIds) {
+        Map<Long, long[]> out = new java.util.HashMap<>();
+        if (ownerType == null || ownerIds == null || ownerIds.isEmpty()) return out;
+        List<Map<String, Object>> rows = cmsRegistrationMapper.countPaidVerificationByOwners(ownerType, ownerIds);
+        if (rows == null) return out;
+        for (Map<String, Object> row : rows) {
+            Object owner = row.get("owner_id");
+            Object status = row.get("verification_status");
+            if (status instanceof Boolean) status = ((Boolean) status) ? 1 : 0;  // 驱动把 tinyint(1) 映射成 Boolean 时兜底
+            Object cnt = row.get("cnt");
+            if (!(owner instanceof Number) || !(status instanceof Number) || !(cnt instanceof Number)) continue;
+            int idx = ((Number) status).intValue();
+            if (idx != 0 && idx != 1) continue;
+            out.computeIfAbsent(((Number) owner).longValue(), k -> new long[2])[idx] += ((Number) cnt).longValue();
+        }
+        return out;
+    }
+
     /**
      * 新增活动/主题报名
      *
@@ -2738,6 +2757,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     public List<Long> listExpiredUnverifiedIds() {
         return cmsRegistrationMapper.selectExpiredUnverifiedIds(new Date(), AUTO_VERIFY_END_BUFFER_DAYS);
+    }
+
+    @Override
+    public List<Long> listExpiredUnverifiedIdsAfter(long afterId) {
+        return cmsRegistrationMapper.selectExpiredUnverifiedIdsAfter(new Date(), AUTO_VERIFY_END_BUFFER_DAYS, afterId);
     }
 
     /**

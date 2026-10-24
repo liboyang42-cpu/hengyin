@@ -1,4 +1,4 @@
-@import '../../style/tool-ui.wxss';
+@import '../style/tool-ui.wxss';
 .mr-nav { display: flex; align-items: center; justify-content: space-between; padding: 27rpx 31rpx 0; }
 .mr-arrow { width: 88rpx; height: 88rpx; border-radius: 50%; background: var(--cy-comp-sheet-player-bg); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-sheet-title); }
 .mr-arrow.is-off { opacity: .3; }

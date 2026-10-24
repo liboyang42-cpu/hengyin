@@ -39,6 +39,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
+import java.util.function.Supplier;
+import com.alibaba.fastjson2.JSON;
+import org.springframework.http.ResponseEntity;
 
 import com.chengyinhub.common.utils.OwnershipUtils;
 /**
@@ -1981,9 +1984,9 @@ public class ApiRegistrationController extends BaseController {
     @Operation(summary = "微信支付回调")
     @PostMapping("/callback")
     @Anonymous
-    public String payCallback(@RequestBody String requestBody,
-                              @RequestHeader Map<String, String> headers) {
-        return wechatPayService.handlePayCallback(requestBody, headers);
+    public ResponseEntity<?> payCallback(@RequestBody String requestBody,
+                                         @RequestHeader Map<String, String> headers) {
+        return callbackResponse(() -> wechatPayService.handlePayCallback(requestBody, headers));
     }
 
     /**
@@ -1993,8 +1996,22 @@ public class ApiRegistrationController extends BaseController {
     @Operation(summary = "微信退款结果回调")
     @PostMapping("/refund-callback")
     @Anonymous
-    public String refundCallback(@RequestBody String requestBody,
-                                 @RequestHeader Map<String, String> headers) {
-        return wechatPayService.handleRefundCallback(requestBody, headers);
+    public ResponseEntity<?> refundCallback(@RequestBody String requestBody,
+                                            @RequestHeader Map<String, String> headers) {
+        return callbackResponse(() -> wechatPayService.handleRefundCallback(requestBody, headers));
+    }
+
+    private ResponseEntity<?> callbackResponse(Supplier<String> callback) {
+        try {
+            Map<String, Object> ack = JSON.parseObject(callback.get());
+            if (ack != null && "SUCCESS".equals(ack.get("code"))) {
+                return ResponseEntity.noContent().build();
+            }
+        } catch (Exception e) {
+            logger.warn("支付或退款通知尚未确认，返回失败应答: {}", e.getClass().getSimpleName());
+        }
+        // 微信按 HTTP 状态决定是否重试，FAIL 正文不能配成功状态。
+        return ResponseEntity.status(500)
+                .body(Map.of("code", "FAIL", "message", "通知处理尚未确认"));
     }
 }

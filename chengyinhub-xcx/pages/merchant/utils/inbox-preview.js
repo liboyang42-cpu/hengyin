@@ -10,8 +10,8 @@
  * buildInboxPreview 把会话、收到的邀请、经营动态(/api/merchant/events)合成一列,
  * 新的在前,只取前 limit 条。纯函数,不碰 setData / 计时器,便于单测。
  */
-const { toTimestamp, chinaDateKey, chinaParts } = require('./datetime');
-const { decodeDisplayText } = require('./display-text.js');
+const { toTimestamp, chinaDateKey, chinaParts } = require('../../../utils/datetime');
+const { decodeDisplayText } = require('../../../utils/display-text.js');
 
 const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 

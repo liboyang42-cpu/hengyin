@@ -9,7 +9,7 @@ const path = require('node:path')
 const ROOT = path.resolve(__dirname, '../..')
 const PAGE_PATH = path.join(ROOT, 'pages/merchant/index/index.js')
 const motion = require('../../utils/motion.js')
-const { buildInboxPreview, eventTimestamp } = require('../../utils/inbox-preview.js')
+const { buildInboxPreview, eventTimestamp } = require('../../pages/merchant/utils/inbox-preview.js')
 
 let pageConfig
 let requests

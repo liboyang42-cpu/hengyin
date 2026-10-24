@@ -1125,7 +1125,7 @@ Page({
         bizType: 'square',
         bizId: id
       });
-      return Object.assign(require('../../../utils/square-share.js').buildSquareShare(post), {
+      return Object.assign(require('../utils/square-share.js').buildSquareShare(post), {
         // U-171 分享回执:只有老基础库会回调 success/fail,新基础库不回调 —— 能拿到时如实记一笔。
         success: function (res) {
           analytics.track('square_share_complete', { bizType: 'square', bizId: id });

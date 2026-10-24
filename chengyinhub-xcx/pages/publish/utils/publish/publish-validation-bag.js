@@ -11,7 +11,7 @@
 
 const { createErrorBag, nonEmpty } = require('./publish-validator.js');
 const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeExplorationValidityScheduleIssues } = require('./publish-ticket-schedule.js');
-const proEditorPolicy = require('../../../../utils/publish/pro-editor-policy.js');
+const proEditorPolicy = require('./pro-editor-policy.js');
 const topicRouteGraph = require('./topic-route-graph.js');
 
 /**

@@ -8,7 +8,7 @@
   };
 </wxs>
 <wxs src="../../../utils/time-format.wxs" module="tf" />
-<wxs src="../../../utils/wxs/chapter-title.wxs" module="chapterTitle" />
+<wxs src="../utils/wxs/chapter-title.wxs" module="chapterTitle" />
 <view class="fabu slopes theme-topic-editor">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />

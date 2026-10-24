@@ -1511,7 +1511,7 @@
                   aria-role="button" aria-selected="{{ sheetPick === g.key }}" aria-label="{{ g.label }}" hover-class="cy-pressed" hover-stay-time="60">
               <cy-icon class="cg-tag-pill__ic" name="{{ g.icon }}" size="36" />
               <text class="cg-tag-pill__t">{{ g.label }}</text>
-              <image class="cg-tag-pill__ck" wx:if="{{ sheetPick === g.key }}" src="/images/icon_tag_check.svg" mode="aspectFit" />
+              <image class="cg-tag-pill__ck" wx:if="{{ sheetPick === g.key }}" src="/pages/publish/images/icon_tag_check.svg" mode="aspectFit" />
             </view>
           </view>
         </view>
@@ -1534,7 +1534,7 @@
             aria-role="checkbox" aria-checked="{{ item.on }}" aria-label="{{ item.label }}" hover-class="cy-pressed" hover-stay-time="60">
         <cy-icon class="cg-tag-pill__ic" name="{{ item.icon }}" size="36" />
         <text class="cg-tag-pill__t">{{ item.label }}</text>
-        <image class="cg-tag-pill__ck" wx:if="{{ item.on }}" src="/images/icon_tag_check.svg" mode="aspectFit" />
+        <image class="cg-tag-pill__ck" wx:if="{{ item.on }}" src="/pages/publish/images/icon_tag_check.svg" mode="aspectFit" />
       </view>
     </view>
     <view class="cg-tsheet__foot"><view class="cg-tsheet__sub">{{ toolPickerHint }}</view></view>

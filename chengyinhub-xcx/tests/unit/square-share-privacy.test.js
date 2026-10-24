@@ -2,7 +2,7 @@
 // U-050:广场帖转发卡只给公开且已发布的帖子带正文摘要/封面/详情链接,其余退回广场通用卡。
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildSquareShare } = require('../../utils/square-share.js');
+const { buildSquareShare } = require('../../pages/square/utils/square-share.js');
 
 const GENERIC = { title: '城瘾Hub', path: '/pages/square/list/index' };
 

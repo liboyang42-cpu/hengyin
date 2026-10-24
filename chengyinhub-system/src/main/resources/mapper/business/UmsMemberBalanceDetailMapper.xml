@@ -197,4 +197,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           AND del_flag = 0
     </select>
 
+    <!-- 商家看板累计收入:SQL 聚合,口径同原 Java 求和(change_type=1 全量,不限窗口、不按 del_flag 过滤) -->
+    <select id="selectDashboardIncomeTotal" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(change_balance), 0)
+        FROM ums_member_balance_detail
+        WHERE member_id = #{memberId}
+          AND change_type = 1
+    </select>
+
+    <!-- 商家看板近 N 日收入按自然日分桶(仅返回有流水的天,缺天由调用方补 0) -->
+    <select id="selectDashboardIncomeDaily" resultType="java.util.Map">
+        SELECT DATE_FORMAT(create_time, '%Y-%m-%d') AS day, COALESCE(SUM(change_balance), 0) AS amount
+        FROM ums_member_balance_detail
+        WHERE member_id = #{memberId}
+          AND change_type = 1
+          AND create_time &gt;= #{since}
+          AND change_balance IS NOT NULL
+        GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d')
+    </select>
+
 </mapper>

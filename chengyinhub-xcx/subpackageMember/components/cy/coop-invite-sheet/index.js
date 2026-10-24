@@ -1,6 +1,6 @@
 const app = getApp();
-const subscribe = require('../../../utils/subscribe.js');
-const toast = require('../../../utils/toast.js');
+const subscribe = require('../../../../utils/subscribe.js');
+const toast = require('../../../../utils/toast.js');
 
 function cards(rows, imageField) {
   return rows.filter(t => t && t.id && typeof t.name === 'string').map((t, index) => ({

@@ -15,7 +15,7 @@ const {
   evaluateProfessionalDraft,
   formalNodeCreationIssue,
   hasUsableCoords,
-} = require('../../utils/publish/pro-editor-policy.js')
+} = require('../../pages/publish/utils/publish/pro-editor-policy.js')
 
 const node = (over) => Object.assign({
   name: '邻里苑', longitude: '121.38', latitude: '31.11', templateId: 7,

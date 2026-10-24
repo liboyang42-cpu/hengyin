@@ -19,7 +19,7 @@ const {
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const mediaPreview = require('../../../utils/media-preview.js');
-const { buildSquareShare } = require('../../../utils/square-share.js');
+const { buildSquareShare } = require('../utils/square-share.js');
 Page({
   /**
    * 页面的初始数据
