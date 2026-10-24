@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.community.CommunityPost;
 import com.chengyinhub.business.domain.community.CommunityPostFeedQuery;
+import com.chengyinhub.business.domain.community.CommunityCommandType;
 import com.chengyinhub.business.domain.community.CommunityReferenceType;
 import com.chengyinhub.business.domain.dto.CommunityPostRequests;
 import com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest;
@@ -2110,6 +2111,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
 
     private boolean trySaveCommandReceipt(Long memberId, String requestId, String commandType,
                                           Long aggregateId, Date now) {
+        // C:U-037:command_type 只收登记过的形状,写错字面量在这里就炸,不会悄悄落库
+        if (!CommunityCommandType.isKnown(commandType)) throw error("未登记的命令类型", 500);
         if (mapper.insertCommandReceipt(memberId, requestId, commandType, aggregateId,
                 payload("aggregateId", aggregateId), now) == 1) return true;
         if (isCommandReplay(memberId, requestId, commandType, aggregateId)) return false;
