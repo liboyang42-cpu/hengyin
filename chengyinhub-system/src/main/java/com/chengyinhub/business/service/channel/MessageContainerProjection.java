@@ -53,11 +53,120 @@ public final class MessageContainerProjection {
         view.put("name", detail.get("name"));
         view.put("topic", detail.get("topic"));
         view.put("my_permissions", detail.get("my_permissions"));
-        Object readState = detail.get("read_state");
-        view.put("read_state", readState == null ? READ_STATE_UNKNOWN : readState);
+        view.put("read_state", READ_STATE_UNKNOWN);
         view.put("grants_send", Boolean.FALSE);
         view.put("grants_receipt_write", Boolean.FALSE);
         return view;
+    }
+
+    /**
+     * Original directory read state lives on {@code my_state}. A top-level
+     * {@code read_state} is not that fact. Missing availability stays null, not unread 0.
+     * {@code perm_version} is not an authority revision. Last-read cursors are not unread counts.
+     */
+    public static Map<String, Object> readMyState(Map<String, Object> myState) {
+        if (myState == null) {
+            return unavailableRead();
+        }
+        Integer pinned = bit(myState.get("pinned"));
+        Integer hidden = bit(myState.get("hidden"));
+        Integer muted = bit(myState.get("muted"));
+        Integer level = level(myState.get("effective_level"));
+        if (pinned == null || hidden == null || muted == null || level == null
+                || !(myState.get("permanent_muted") instanceof Boolean)) {
+            return null;
+        }
+        Map<String, Object> view = new LinkedHashMap<String, Object>();
+        view.put("pinned", pinned);
+        view.put("hidden", hidden);
+        view.put("muted", muted);
+        view.put("permanent_muted", myState.get("permanent_muted"));
+        view.put("muted_until", myState.get("muted_until"));
+        view.put("effective_level", level);
+        boolean category = "NOT_APPLICABLE".equals(myState.get("read_state"));
+        if (!category && integerOne(myState.get("read_state_available"))) {
+            view.put("read_state_available", Integer.valueOf(1));
+            view.put("indexed", Boolean.TRUE.equals(myState.get("indexed")));
+            view.put("last_read_msg_id", nullableLong(myState.get("last_read_msg_id")));
+            view.put("last_read_visible_at", myState.get("last_read_visible_at"));
+            view.put("unread_count", nullableLong(myState.get("unread_count")));
+            view.put("unread_mention_count", nullableLong(myState.get("unread_mention_count")));
+        } else {
+            view.put("read_state_available", Integer.valueOf(0));
+            view.put("indexed", Boolean.FALSE);
+            view.put("last_read_msg_id", null);
+            view.put("last_read_visible_at", null);
+            view.put("unread_count", null);
+            view.put("unread_mention_count", null);
+            if (category) {
+                view.put("read_state", "NOT_APPLICABLE");
+            }
+        }
+        view.put("grants_send", Boolean.FALSE);
+        view.put("grants_receipt_write", Boolean.FALSE);
+        return view;
+    }
+
+    private static Map<String, Object> unavailableRead() {
+        Map<String, Object> view = new LinkedHashMap<String, Object>();
+        view.put("read_state_available", Integer.valueOf(0));
+        view.put("indexed", Boolean.FALSE);
+        view.put("last_read_msg_id", null);
+        view.put("last_read_visible_at", null);
+        view.put("unread_count", null);
+        view.put("unread_mention_count", null);
+        view.put("grants_send", Boolean.FALSE);
+        view.put("grants_receipt_write", Boolean.FALSE);
+        return view;
+    }
+
+    private static boolean integerOne(Object value) {
+        return value instanceof Integer && ((Integer) value).intValue() == 1
+                || value instanceof Long && ((Long) value).longValue() == 1L;
+    }
+
+    private static Integer bit(Object value) {
+        if (value instanceof Integer && (((Integer) value).intValue() == 0 || ((Integer) value).intValue() == 1)) {
+            return (Integer) value;
+        }
+        if (value instanceof Long && (((Long) value).longValue() == 0L || ((Long) value).longValue() == 1L)) {
+            return Integer.valueOf(((Long) value).intValue());
+        }
+        return null;
+    }
+
+    private static Integer level(Object value) {
+        Integer exact = bit(value);
+        if (exact != null) {
+            return exact;
+        }
+        if (value instanceof Integer && ((Integer) value).intValue() == 2) {
+            return (Integer) value;
+        }
+        if (value instanceof Long && ((Long) value).longValue() == 2L) {
+            return Integer.valueOf(2);
+        }
+        return null;
+    }
+
+    private static Long nullableLong(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Integer) {
+            return Long.valueOf(((Integer) value).longValue());
+        }
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+        if (value instanceof String && ((String) value).matches("[0-9]{1,19}")) {
+            try {
+                return Long.valueOf((String) value);
+            } catch (NumberFormatException overflow) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private static String decimal(Object value) {
