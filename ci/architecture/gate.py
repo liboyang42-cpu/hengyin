@@ -36,6 +36,27 @@ class GateError(ValueError):
     pass
 
 
+# Reviewed public checklist sources. Unlisted IDs and candidate-selected revisions never resolve.
+COMMAND_SOURCES = {
+    "registration-create-or-replay": BASE,
+    "payment-callback-mutation": BASE,
+    "registration-refund-dispatch": BASE,
+    "coop-deposit-refund": BASE,
+    "coop-original-produce": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+    "npc-asr-original-quota-handoff": "379d5615608663c47302598ba238447b264c2bba",
+    "coop-original-manual-read": "e57f0a32037bf88b2abf1626cca4760714d88592",
+}
+
+
+def reviewed_command_source(command):
+    """Bind checklist references to independent public source, never current candidate files."""
+    expected = COMMAND_SOURCES.get(command.get("id"))
+    declared = command.get("source_sha", BASE)
+    if expected is None or declared != expected or not isinstance(declared, str) or not SHA.fullmatch(declared):
+        raise GateError("COMMAND_SOURCE_MISMATCH: unreviewed checklist source")
+    return expected
+
+
 def git(root, *args):
     result = subprocess.run(["git", "-C", str(root), *args], capture_output=True)
     if result.returncode:
