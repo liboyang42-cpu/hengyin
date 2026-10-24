@@ -37,7 +37,7 @@ const {
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { createIdleDetector } = require('../../utils/roam-idle.js');
 const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
-const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
+const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js'); const { monthDay } = require('../../utils/month-day.js'); // 同行:本页 ui-integrity 基线按行号键
 const { isRecordList } = require('../../utils/response-shape.js');
 const readSession = require('../../utils/session/login-reload.js');
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
@@ -4706,7 +4706,7 @@ Page({
     const mm = String(now.getMinutes()).padStart(2, '0');
     const fin = {
       zone: '这片街区',
-      date: (now.getMonth() + 1) + '月' + now.getDate() + '日',
+      date: monthDay(now),
       dateLine: '今天 · ' + (now.getHours() < 12 ? '上午' : '下午') + ' ' + hh + ':' + mm,
       shops,
       distance: ((this._dist || 0) / 1000).toFixed(1),
@@ -4881,7 +4881,7 @@ Page({
       sessionId: exactSessionId(session.sessionId),
       finish: {
         zone: (typeof session.zone === 'string' && session.zone.trim()) || '这片街区',
-        date: validDate ? (date.getMonth() + 1) + '月' + date.getDate() + '日' : '',
+        date: validDate ? monthDay(date) : '',
         shops: shops === null ? null : shops,
         distance: distance === null ? null : distance,
         explorePct: explorePct === null ? null : explorePct,
