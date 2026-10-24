@@ -99,4 +99,20 @@ class SideQuestAcceptHoldTest {
         assertEquals("sq-proof-unk", quest.hold().originalRequestId);
         assertNull(quest.original());
     }
+
+    @Test
+    void unusedExitBeforeHoldDoesNotOccupyThenUniqueExitApplies() {
+        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
+        assertEquals(SideQuestAcceptHold.Failure.HOLD_REQUIRED,
+                assertThrows(SideQuestAcceptHold.SideQuestException.class, quest::exit).code);
+        assertNull(quest.original(), "未见预占 exit 观察不得占原文");
+        assertNull(quest.hold());
+        assertEquals(SideQuestAcceptHold.Phase.DISCOVERED, quest.phase());
+        quest.acceptHold("hold-exit", "sq-exit-unk", 1);
+        quest.exit();
+        assertEquals(SideQuestAcceptHold.Phase.EXITED, quest.phase());
+        assertEquals("sq-exit-unk", quest.original().originalRequestId);
+        assertEquals(SideQuestAcceptHold.Terminal.EXITED, quest.original().terminal);
+    }
 }
