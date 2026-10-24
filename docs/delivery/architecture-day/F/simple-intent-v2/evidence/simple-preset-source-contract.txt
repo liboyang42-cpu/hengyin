@@ -1,0 +1,10 @@
+✔ 简易发布页不再内置路线预设,预设唯一真源在后端 /api/preset (1.66791ms)
+✔ 简易发布页仍保留「一句话 → AI 草稿 → 专业编辑器」可达链路 (1.040501ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7.296592

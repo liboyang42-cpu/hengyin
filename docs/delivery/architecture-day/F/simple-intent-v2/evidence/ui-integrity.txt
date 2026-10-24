@@ -1,0 +1,89 @@
+UI-GATE-0 扫描:713 JS / 374 WXML / 830 backend Mapping
+U1 FAIL:静态路径 947,动态路径 60,变量路径 11,逐项理由 8
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-inbox/index.js:103 -> /api/official/v2/organizer-invites/:dynamic/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-inbox/index.js:104 -> /api/official/v2/parties/:dynamic/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-mine/index.js:147 -> /api/official/broadcast/:dynamic/stats
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-organizer/index.js:101 -> /api/official/v2/events/:dynamic/publish-check
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-organizer/index.js:144 -> /api/official/events/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-organizer/index.js:276 -> /api/official/v2/events/:dynamic/schedule
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-organizer/index.js:277 -> /api/official/v2/events/:dynamic/pause
+  [U1 DYNAMIC] chengyinhub-xcx/pages/activity/official-organizer/index.js:278 -> /api/official/v2/events/:dynamic/resume
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/detail/index.js:98 -> /api/merchant/aftercare/detail
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/detail/index.js:274 -> /api/merchant/aftercare/respond
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/aftercare/index.js:109 -> /api/merchant/aftercare/list
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/crm-campaigns/index.js:142 -> /api/merchant/crm/campaigns/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:95 -> /api/merchant/crm/customers/:dynamic/detail
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:164 -> /api/merchant/crm/customers/:dynamic/notes
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:216 -> /api/merchant/crm/customers/:dynamic/notes/hide
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:248 -> /api/merchant/crm/customers/:dynamic/tags
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/detail/index.js:286 -> /api/merchant/crm/customers/:dynamic/tags/remove
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/index.js:620 -> /api/merchant/crm/customers/:dynamic/contact
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/customer/index.js:823 -> /api/merchant/crm/exports/:dynamic/status
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/ledger/index.js:314 -> /api/merchant/aftercare/list
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/reviews/index.js:267 -> /api/merchant/reviews/manage
+  [U1 DYNAMIC] chengyinhub-xcx/pages/merchant/reviews/index.js:276 -> /api/merchant/reviews/public
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:153 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:160 -> /api/circle-theme/instance/:dynamic/offers
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:187 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:208 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/circle/index.js:485 -> /api/circle-theme/session/:dynamic/card
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:5607 -> /api/play/preference/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:5655 -> /api/play/preference/:dynamic/submit
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:5710 -> /api/play/tag/:dynamic/confirm
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:5741 -> /api/play/tag/:dynamic/correct
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:7526 -> /api/play/os/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/play/index.js:7565 -> /api/play/tag/:dynamic/revoke
+  [U1 DYNAMIC] chengyinhub-xcx/pages/privacy/index.js:151 -> /api/media/asset/list:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/privacy/index.js:176 -> /api/media/asset/:dynamic/retry
+  [U1 DYNAMIC] chengyinhub-xcx/pages/privacy/index.js:187 -> /api/media/asset/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/privacy/index.js:200 -> /api/media/asset/:dynamic/preview
+  [U1 DYNAMIC] chengyinhub-xcx/pages/privacy/index.js:223 -> /api/media/asset/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/publish/components/topic-state-keys/index.js:102 -> /api/topic/state-keys
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:1793 -> /api/official/events/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:1882 -> /api/official/events/:dynamic/arrivals
+  [U1 DYNAMIC] chengyinhub-xcx/pages/roam/index.js:4734 -> /api/official/events/:dynamic/complete
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/pages/myproject/index.js:752 -> /api/template/:dynamic/market-submit
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/utils/withdrawal-preflight.js:70 -> /api/fund/preflight/:dynamic/reject
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageA/utils/withdrawal-preflight.js:84 -> /api/fund/preflight/:dynamic/confirm
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageB/pages/im/chat/audit-detail.js:16 -> /api/audit/:dynamic/detail
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageB/pages/im/chat/index.js:213 -> /api/v1/community/notifications/:dynamic/read
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageB/pages/im/chat/index.js:1085 -> /api/official/broadcast/:dynamic/click
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageB/pages/im/chat/index.js:1110 -> /api/audit/:dynamic/detail
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:893 -> /api/community-trust/safety/merchants/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:913 -> /api/city/nodes/merchant/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:945 -> /api/city/nodes/:dynamic/favorite
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:155 -> /api/city/nodes/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:263 -> /api/city/nodes/:dynamic/favorite
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:455 -> /api/city/nodes/:dynamic/complete
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js:123 -> /api/template/:dynamic/market-submit
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/report-detail/index.js:44 -> /api/community-trust/reports/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/subpackageMember/report-detail/index.js:135 -> /api/community-trust/reports/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/utils/transport/upload-client.js:173 -> /api/media/asset/:dynamic
+  [U1 DYNAMIC] chengyinhub-xcx/utils/transport/upload-client.js:177 -> /api/media/asset/:dynamic/retry
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/app.js:388 options — consent adapter 的 options 只由 utils/compliance/consent-client.js 构造，该模块把唯一 endpoint 固定为 /api/compliance/consents；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/components/cy/scene-route-content/index.js:238 config.url — config 只由本文件 sceneRequest(sceneId) 的有限映射生成，所有请求 URL 均为映射内 /api 字面量，未知 sceneId 返回 null、缺必需 id 也在请求前终止；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/components/cy/scene-route-content/index.js:551 request.url — request 只取自本方法内 requests[sceneId] 的七个非提现固定写接口对象，未知 sceneId 显示提交错误并返回；提现分支在此前已转交 withdrawal-preflight，不会走到本调用；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/pages/index/index.js:1049 this.getListData(listName, req.url, req.params, req.processor) — retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE] chengyinhub-xcx/pages/publish/simple/index.js:280 '/api/ai/theme/draft/prepare'
+  [U1 VARIABLE] chengyinhub-xcx/pages/publish/simple/index.js:284 '/api/ai/theme/draft/execute'
+  [U1 VARIABLE] chengyinhub-xcx/pages/publish/simple/index.js:438 '/api/ai/theme/draft/recovery'
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/pages/search2/result/index.js:169 request.url — request 数组只由 utils/discover-search.buildRequests 构造，其按搜索类型枚举后端字面量且当前 U1 全仓扫描覆盖；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:663 Object.assign({}, options, {
+          autoErrorToast: false,
+          success: function (res — _submitVerification 的 options 只来自本文件三处调用：verification-scan 的有限核销路由，以及 chapter/station 两个显式 /api 字面量；非法扫码在调用前返回，不存在外部 URL 直传；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:190 this._submitVerification(scan.url + ':' + scan.code, scan.loadingTitle, {
+            url: scan.url, — 会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15
+  [U1 VARIABLE ALLOW] chengyinhub-xcx/utils/community-post-api.js:75 request — canonical 社区受控请求对象：BASE+path 只接固定发布/编辑阶段 helper 与举报闭包的枚举路由，举报回读仅显式切至本人 /api/community-trust/reports/mine；完整目标匹配 Controller，owner/current 检查及 pipeline success/fail 可见反馈保留，取消不报成功；owner=小程序，复核=213
+U2 PASS:绑定 5285,显式 skip 3,白名单 0(复用 wxml-handler-lint)
+U3 PASS:零绑定债务 62/62 已登记,生命周期规则 14
+U4 PASS:零消费债务 126/126 已登记,动态 setData 63/63 已登记
+U5 PASS:需逐项理由 39,同请求内静态证明显式处理 310,逐项理由 39
+A11Y PASS:共享组件语义、触达与静态替代契约
+Legacy PASS:error 0,warn 0
+UI-GATE-0:FAIL (6 violations)
+  [U1] chengyinhub-xcx/pages/publish/simple/index.js:281 静态路径 /api/ai/theme/draft/prepare 无后端 Mapping
+  [U1] chengyinhub-xcx/pages/publish/simple/index.js:285 静态路径 /api/ai/theme/draft/execute 无后端 Mapping
+  [U1] chengyinhub-xcx/pages/publish/simple/index.js:438 静态路径 /api/ai/theme/draft/recovery 无后端 Mapping
+  [U1] chengyinhub-xcx/pages/publish/simple/index.js:280 运行时变量请求路径无法核对，必须改成可枚举 /api 字面量或受控 wrapper
+  [U1] chengyinhub-xcx/pages/publish/simple/index.js:284 运行时变量请求路径无法核对，必须改成可枚举 /api 字面量或受控 wrapper
+  [U1] chengyinhub-xcx/pages/publish/simple/index.js:438 运行时变量请求路径无法核对，必须改成可枚举 /api 字面量或受控 wrapper

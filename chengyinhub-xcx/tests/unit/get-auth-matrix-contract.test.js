@@ -182,6 +182,7 @@ const MATRIX = [
   ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/request'", 'required', 'member', 'self-account'],
   // W10b #22:简易 AI 起草按 requestId 只读回读,ApiAiController.themeDraftRequest 键按登录会员隔离。
   ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/request'", 'required', 'author', 'self-account'],
+  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/recovery'", 'required', 'author', 'self-account'],
   // W10b #25:本人资料审核回执(只取登录态)与门店 AI 形象审核回执(商家 PROFILE_WRITE,按登录商家派生)。
   ['pages/gerenziliao/gerenziliao.js', "url: '/api/user/profile/review'", 'required', 'member', 'self-account'],
   ['pages/merchant/decor/ai-npc/index.js', "url: '/api/merchant/npc/review'", 'required', 'merchant', 'self-merchant'],
@@ -326,7 +327,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-22 W9 帖子处置(F0521):设置页本人处置列表 GET /api/v1/community/me/enforcements(后端 withAuthenticatedPrincipal,按本人过滤),69 → 70(batch2 集成在 W10b 的 69 上叠加)。
   // 2026-10-22 L21 BL-185:fabu 云端草稿发布前 GET /api/topic/publish-check(本人主题/商家 Owner),70 → 71(batch3 集成在 batch2 的 70 上叠加;L21 原写 65 → 66)。
   // 2026-10-23 v13 动效落地(PR #528):主题页 NPC 资料 / 附近队伍 / 站点 + 地图页据点四处直接 GET,71 → 75(权限档见 MATRIX 同日注释)。
-  assert.equal(directCount, 75, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(directCount, 76, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

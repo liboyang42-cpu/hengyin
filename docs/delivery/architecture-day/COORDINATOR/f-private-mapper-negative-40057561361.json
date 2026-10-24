@@ -1,0 +1,37 @@
+{
+  "source_sha": "86e79f3f9ef8b0eba55b44b11d81625f6aa62b8d",
+  "run_id": "40057561361",
+  "job_id": "120763892535",
+  "verdict": "NEGATIVE_CONTROL_BLOCKED_AS_EXPECTED",
+  "build_and_startup_passed": true,
+  "jar_sha256": "42a5dd272b248699f014f461e03cfd24a9524ae213b4bbd71a81dee7a942096c",
+  "xml_hashes_verified": 1842,
+  "report_totals": {
+    "tests": 14495,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 619
+  },
+  "report_totals_limit": "multi-phase reports, not unique business scenarios; skipped cases not accepted",
+  "http_admission_actual": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jdeps_hashes_verified": 11,
+  "actual_system_classes_verified": 5,
+  "finding": {
+    "allowed_consumer": "com.chengyinhub.business.service.ai.AiQuotaRecoveryService",
+    "rule": "PRIVATE_MAPPER_CONSUMER",
+    "source_class": "com.chengyinhub.business.service.ai.PrivateMapperBoundaryNegativeControl",
+    "source_owner": "chengyinhub-system",
+    "source_sha256": "66215dd33f633679230cdd41ca1d07684cb9a949a75cffedd4aaf757d4e4c08e",
+    "target_class": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+    "target_owner": "chengyinhub-system",
+    "target_sha256": "6f8ce586fbb7cc0b33862fbd82b1a86f09c4ca2c0fa3a90f40126a802c0b7639"
+  },
+  "scope": "Exactly two declared private Mapper types; no runtime/reflection/XML/full-domain proof",
+  "first_two_attempts": "40054582158 and40055275716 failed before target gate; preserved, never counted as passing negative",
+  "next": "Final combined clean candidate must compile/pass without the deliberate probe."
+}

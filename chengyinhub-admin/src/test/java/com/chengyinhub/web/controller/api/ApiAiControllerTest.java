@@ -118,7 +118,7 @@ class ApiAiControllerTest {
     @Test
     void themeDraftReturnsSuccessForClub() {
         AiThemeDraftIntentView prepared = new AiThemeDraftIntentView("td2_0123456789abcdef0123456789abcdef",
-                AiThemeDraftIntentState.PREPARED, false, true, false, null, null, null, null);
+                AiThemeDraftIntentState.PREPARED, false, true, false, null, null, null, null, 1);
         AiThemeDraftPrepareReq input = new AiThemeDraftPrepareReq("7c9e6679-7425-40de-944b-e07fc1f90ae7", "club", 1, null);
         when(themeDraftRequests.prepare(CLUB_MEMBER_ID, input)).thenReturn(prepared);
         AjaxResult result = clubController().themeDraftPrepare(input);
@@ -129,7 +129,7 @@ class ApiAiControllerTest {
     @Test
     void themeDraftAllowsPlayerForSimpleCreation() {
         AiThemeDraftIntentView prepared = new AiThemeDraftIntentView("td2_0123456789abcdef0123456789abcdef",
-                AiThemeDraftIntentState.PREPARED, false, true, false, null, null, null, null);
+                AiThemeDraftIntentState.PREPARED, false, true, false, null, null, null, null, 1);
         AiThemeDraftPrepareReq input = new AiThemeDraftPrepareReq("7c9e6679-7425-40de-944b-e07fc1f90ae7", "player", 1, null);
         when(themeDraftRequests.prepare(PLAYER_MEMBER_ID, input)).thenReturn(prepared);
         AjaxResult result = playerController().themeDraftPrepare(input);
