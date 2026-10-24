@@ -412,6 +412,12 @@
       ],
       "lineage": "E785 v2 durable intent plus Aef080 prepared generation; root Controller/maintenance wiring"
     },
+    "architecture-day-payment-inbox": {
+      "registered_source": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
+      "lineage": "B original registration/inbox/mutation transaction and signed SDK parser fixture",
+      "classes": ["com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT"],
+      "note": "3 ordinary@Test; actual original schema/XML and business/inbox transaction proxies, controlled SDK query. Exact zero-skip XML and independent CLEAN required; no real WeChat/HTTP acceptance."
+    },
     "architecture-day-payment-intent": {
       "registered_source": "254744aa21139b44374a151b7922f7575086cdd8",
       "lineage": "B failed create_tree exact30-file root preservation on published218 parent",
@@ -1225,6 +1231,12 @@
       ],
       "gates": {},
       "note": "Durable original prepare/claim commit certainty, fixed 24h body retention/purge, owner recovery all states and EXPLAIN. Actual E/A services and production mappers/Lua; model/review/member doubles. No HTTP, live model or production proof."
+    },
+    "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT": {
+      "tests": 3,
+      "storage": ["mysql"],
+      "gates": {},
+      "note": "Reviewed class-only GitHub-hosted scratch DDL admission; actual business and DONE SQL rollback/commit, sequential duplicate and old-W1 fence. Original after-commit notice is an explicit scheduler double."
     },
     "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT": {
       "tests": 4,

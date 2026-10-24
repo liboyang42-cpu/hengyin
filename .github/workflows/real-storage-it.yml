@@ -65,6 +65,7 @@ on:
           - architecture-day-topic-copy
           - architecture-day-topic-authoring
           - architecture-day-theme-intent
+          - architecture-day-payment-inbox
           - architecture-day-payment-intent
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
@@ -160,7 +161,7 @@ jobs:
       VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}
       BATCH: ${{ inputs.batch }}
       TIMEZONE: ${{ inputs.timezone }}
-      B_PAYMENT_INTENT_DDL_APPROVED: ${{ matrix.simple == 'WechatPaymentIntentMySqlIT' && '1' || '' }}
+      B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT') && '1' || '' }}
     steps:
       - name: Checkout gate scripts
         uses: actions/checkout@v4

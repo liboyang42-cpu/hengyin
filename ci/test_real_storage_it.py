@@ -80,6 +80,17 @@ def c01_cases(nested=True, status="passed"):
 
 
 class RegistryContractTest(unittest.TestCase):
+    def test_callback_inbox_registration_and_scratch_admission_are_exact(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT'
+        self.assertEqual([fqcn], reg['batches']['architecture-day-payment-inbox']['classes'])
+        self.assertEqual(3, reg['classes'][fqcn]['tests'])
+        self.assertEqual(['mysql'], reg['classes'][fqcn]['storage'])
+        self.assertEqual({}, reg['classes'][fqcn]['gates'])
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
+        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT') && '1' || '' }}", line)
+
     def test_registry_is_valid(self):
         self.assertEqual([], rs.validate_registry(registry()))
 
@@ -112,7 +123,8 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-copy": 25,
                     "architecture-day-topic-authoring": 32,
                     "architecture-day-theme-intent": 23,
-                    "architecture-day-payment-intent": 4}
+                    "architecture-day-payment-intent": 4,
+                    "architecture-day-payment-inbox": 3}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
