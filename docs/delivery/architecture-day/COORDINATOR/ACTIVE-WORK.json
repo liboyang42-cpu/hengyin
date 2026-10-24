@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T16:53:00Z",
+  "updated_utc": "2026-10-24T16:58:00Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -9,10 +9,15 @@
   "mode": "Fixed payment/refund/settlement integration batch; finish current other slices then queue; grouped regression after callers and fixtures close",
   "current_worker_assignments": {
     "A": {
-      "state": "delivered_waiting_ci",
-      "task": "Delivery collected; no further review or invented standby work; implementation blockers only",
+      "state": "active",
+      "task": "Implement three existing cancellation/publish fixture adaptations reassigned from E; no interim review or tests",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
-      "host_id": "durable"
+      "host_id": "durable",
+      "exclusive_files": [
+        "ActivityCancelTest.java",
+        "HostWeatherCancelTest.java",
+        "ActivityPublishRoleGateTest.java"
+      ]
     },
     "B": {
       "state": "delivered_waiting_ci",
@@ -34,9 +39,15 @@
     },
     "E": {
       "state": "active",
-      "task": "Complete already assigned ledger and four known fixture changes; deliver without interim review/tests",
+      "task": "Implement action ledger generator/registry only; four Java fixtures reassigned to A/G",
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
-      "host_id": "durable"
+      "host_id": "durable",
+      "excluded_files": [
+        "ActivityCancelTest.java",
+        "HostWeatherCancelTest.java",
+        "ActivityPublishRoleGateTest.java",
+        "MerchantCommerceServiceTest.java"
+      ]
     },
     "F": {
       "state": "delivered_waiting_ci",
@@ -45,16 +56,20 @@
       "host_id": "durable"
     },
     "G": {
-      "state": "delivered_waiting_ci",
-      "task": "Delivery collected; no further review or invented standby work; implementation blockers only",
+      "state": "active",
+      "task": "Implement existing MerchantCommerce callback fixture task reassigned from E; no interim review or tests",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
-      "host_id": "durable"
+      "host_id": "durable",
+      "exclusive_files": [
+        "MerchantCommerceServiceTest.java"
+      ]
     },
     "H": {
-      "state": "active",
-      "task": "Complete already assigned exact error-handling registration; deliver without interim review/tests",
+      "state": "delivered_integrated_pending_final_validation",
+      "task": "d8eabe exact U5 registration and fixture integrated; no repeat tests",
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
-      "host_id": "durable"
+      "host_id": "durable",
+      "delivery_sha": "d8eabe0c1787113836a0d91ab6639eb1699ae2d4"
     }
   },
   "root_ownership": [
@@ -462,7 +477,7 @@
   "pending_business_questions": [
     "ASR: same NPC quota reserved before first ASR then handed to text once, or separate ASR budget. User reply pending; do not select budget/charges automatically."
   ],
-  "current_working_tree": "Operational policy documents updated; candidate8490 retained; no new audit or test execution",
+  "current_working_tree": "H exact U5 patch applied; only implementation integration and delivery-policy changes; no new audit/regression",
   "new_source_blockers_current": [
     "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
   ],
@@ -475,5 +490,6 @@
     "continue_implementation_and_integration": true,
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
-  }
+  },
+  "previous_goal_turn_classification": "PROGRESS: synchronized latest human policy to all eight existing threads, updated existing coordinator heartbeat and cancelled queued intermediate CI; development goal remains active"
 }
