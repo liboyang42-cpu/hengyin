@@ -383,7 +383,7 @@
     },
     "architecture-day-lead-admission": {
       "lineage": "C dfe083 +76b107 lead fail-closed/preference order on root reviewed assembly",
-      "registered_source": "a716d92abaa97f07c6af84ae6476b7062ddf4ef4",
+      "registered_source": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
       "note": "4 new ordinary@Test admission/failure/actual route creation cases plus original hint10 regression; direct production handler/transactions/MyBatis, not real HTTP or JWT. Source-bound XML0skip and independent CLEAN required.",
       "classes": [
         "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
