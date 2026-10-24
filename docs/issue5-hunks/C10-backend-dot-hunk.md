@@ -140,3 +140,18 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 10. Parent addendum 2026-10-23 17:27 America/Los_Angeles
+
+`WorkshopModuleImportGateTest.recoverOfNeverSeenIdDoesNotOccupyThenUniqueImportApplies`：未见 `c10-import-never-c10` 的 `recover` 保持 UNKNOWN 且 binder 空；后续唯一 importPreview 的 WAITING_SOURCE 才是该 id 的唯一原文。`H5SessionCapabilityGateTest.recoverOfNeverSeenIdDoesNotOccupyThenUniqueEvaluateApplies`：未见 `c10-h5-never-c10` 不占账；后续唯一 evaluate WAITING_SOURCE 才是第一笔。未发明 recoverOriginal。
+
+父进程独立 surefire（`/tmp/hy-c10-rev`，HEAD `1a17fd8f9`，2026-10-24T00:27:25Z）：
+
+```
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0 -- WorkshopModuleImportGateTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- H5SessionCapabilityGateTest
+Tests run: 33, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
