@@ -382,9 +382,9 @@
       ]
     },
     "architecture-day-lead-admission": {
-      "lineage": "C dfe083 +76b107 lead fail-closed/preference order on root reviewed assembly",
-      "registered_source": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
-      "note": "4 new ordinary@Test admission/failure/actual route creation cases plus original hint10 regression; direct production handler/transactions/MyBatis, not real HTTP or JWT. Source-bound XML0skip and independent CLEAN required.",
+      "lineage": "C ca5 complete M1 application/shared-admission extraction plus root-owned hint10 transaction factory adaptation",
+      "registered_source": "f79eac572f7e36b1c437ca7994ca0c9c663311e4",
+      "note": "Original hint10 bodies/wrappers/cleanup unchanged; writable application transaction/CONNECTION_ID/latch observed at first node read before qualifier locks. B1 original4 still covers lead failure claim rollback and zero route construction. New source runtime/zero-skip XML/CLEAN required; not entireWP09.",
       "classes": [
         "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
         "com.chengyinhub.business.it.PlayHintUnlockMySqlIT"
