@@ -2,14 +2,18 @@ package com.chengyinhub.business.service.fulfillment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.service.fulfillment.MerchantSupplyDryRun.Decision;
 import com.chengyinhub.business.service.fulfillment.MerchantSupplyDryRun.Outcome;
 import com.chengyinhub.business.service.fulfillment.MerchantSupplyDryRun.SkuSupplyFact;
@@ -85,6 +89,41 @@ class MerchantSupplyDryRunTest {
         assertEquals(Outcome.ACCEPT, accepted.outcome());
         assertEquals(1, supply.holdCount("c07-supply-never-seen"));
         assertEquals(Outcome.ACCEPT, supply.recoverOriginal("c07-supply-never-seen").outcome());
+    }
+
+    @Test
+    void recoverFromDeskReceiptReadsAppliedWithoutHolding() {
+        MerchantSupplyDryRun supply = new MerchantSupplyDryRun();
+        MerchantAccessContext access = new MerchantAccessContext(7L, 3L, 7L, "OWNER");
+        MerchantSupplyDryRun.WaitingSourceException waiting = assertThrows(
+                MerchantSupplyDryRun.WaitingSourceException.class,
+                () -> supply.recoverFromDeskReceipt(access, "desk-req-01", null));
+        assertEquals(MerchantSupplyDryRun.DESK_RECEIPT, waiting.getWaitingCapability());
+        assertEquals(0, supply.holdCount("desk-req-01"));
+        assertNull(supply.recoverFromDeskReceipt(null, "desk-req-01", (ctx, requestId) -> {
+            throw new AssertionError("missing access must not read");
+        }));
+        MerchantSupplyDryRun.WaitingSourceException missingDesk = assertThrows(
+                MerchantSupplyDryRun.WaitingSourceException.class,
+                () -> MerchantSupplyDryRun.fromDesk(null).receipt(access, "desk-req-01"));
+        assertEquals(MerchantSupplyDryRun.DESK_RECEIPT, missingDesk.getWaitingCapability());
+
+        Map<String, Object> absent = new LinkedHashMap<String, Object>();
+        absent.put("state", "NOT_FOUND");
+        absent.put("requestId", "desk-missing");
+        Map<String, Object> applied = new LinkedHashMap<String, Object>();
+        applied.put("state", "APPLIED");
+        applied.put("requestId", "desk-req-01");
+        applied.put("action", "SAVE_SKU");
+        MerchantSupplyDryRun.DeskReceiptSource source = (ctx, requestId) ->
+                "desk-missing".equals(requestId) ? absent : applied;
+        assertNull(supply.recoverFromDeskReceipt(access, "desk-missing", source));
+        assertEquals(0, supply.holdCount("desk-missing"));
+        Map<String, Object> recovered = supply.recoverFromDeskReceipt(access, "desk-req-01", source);
+        assertEquals("APPLIED", recovered.get("state"));
+        assertEquals("SAVE_SKU", recovered.get("action"));
+        assertEquals(0, supply.holdCount("desk-req-01"));
+        assertFalse(supply.recoverOriginal("desk-req-01").grantsIssue());
     }
 
     private static SkuSupplyFact bookable(long stock, int reserved, int total) {

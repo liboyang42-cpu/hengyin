@@ -3,8 +3,12 @@ package com.chengyinhub.business.service.fulfillment;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.chengyinhub.business.access.merchant.MerchantAccessContext;
+import com.chengyinhub.business.service.IMerchantDeskService;
 
 /**
  * C07 exclusive adapter: SKU / validity / hours-capacity dry-run.
@@ -18,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class MerchantSupplyDryRun {
 
     static final ZoneId SHANGHAI = ZoneId.of("Asia/Shanghai");
+    public static final String DESK_RECEIPT = "merchantDesk.receipt";
 
     public enum Outcome {
         ACCEPT,
@@ -209,5 +214,54 @@ public final class MerchantSupplyDryRun {
 
     private static Decision unknown(String requestId, String reason) {
         return new Decision(Outcome.UNKNOWN, requestId, 0, false, false, reason);
+    }
+
+    /**
+     * 从既有 {@link IMerchantDeskService#receipt} 回读。不调用 saveSku。
+     * 缺端口 WAITING_SOURCE。state=NOT_FOUND 返回 {@code null}，不占 holdCount。
+     */
+    public Map<String, Object> recoverFromDeskReceipt(MerchantAccessContext access, String requestId,
+            DeskReceiptSource source) {
+        String id = FulfillmentEvidence.blankToNull(requestId);
+        if (access == null || access.getOwnerMemberId() == null || access.getOwnerMemberId().longValue() <= 0L
+                || id == null) {
+            return null;
+        }
+        if (source == null) {
+            throw new WaitingSourceException(DESK_RECEIPT);
+        }
+        Map<String, Object> found = source.receipt(access, id);
+        if (found == null || "NOT_FOUND".equals(found.get("state"))) {
+            return null;
+        }
+        return found;
+    }
+
+    public static DeskReceiptSource fromDesk(IMerchantDeskService desk) {
+        if (desk == null) {
+            return (access, requestId) -> {
+                throw new WaitingSourceException(DESK_RECEIPT);
+            };
+        }
+        return desk::receipt;
+    }
+
+    /** 只读商家工作台回执；不 saveSku。 */
+    public interface DeskReceiptSource {
+        Map<String, Object> receipt(MerchantAccessContext access, String requestId);
+    }
+
+    public static final class WaitingSourceException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+        private final String waitingCapability;
+
+        public WaitingSourceException(String waitingCapability) {
+            super("WAITING_SOURCE " + waitingCapability);
+            this.waitingCapability = waitingCapability;
+        }
+
+        public String getWaitingCapability() {
+            return waitingCapability;
+        }
     }
 }
