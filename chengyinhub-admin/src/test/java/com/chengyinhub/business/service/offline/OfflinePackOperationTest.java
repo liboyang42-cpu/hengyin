@@ -62,4 +62,21 @@ class OfflinePackOperationTest {
         assertEquals(OfflinePackOperation.Phase.DELETED, pack.phase());
         assertEquals("op-del", pack.operationId());
     }
+
+    @Test
+    void unusedExpireOfIdleDoesNotOccupyThenUniqueStartThenExpireApplies() {
+        OfflinePackOperation pack = new OfflinePackOperation();
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase());
+        assertNull(pack.operationId());
+        assertEquals(OfflinePackOperation.Failure.INVALID_MANIFEST,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, () -> pack.expire(NOW)).code);
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase(), "未见下载 expire 观察不得占 EXPIRED");
+        assertNull(pack.operationId());
+        pack.startDownload(manifest("op-exp"), NOW);
+        assertEquals("op-exp", pack.operationId());
+        assertEquals(OfflinePackOperation.Phase.DOWNLOADING, pack.phase());
+        pack.expire(NOW);
+        assertEquals(OfflinePackOperation.Phase.EXPIRED, pack.phase());
+        assertEquals("op-exp", pack.operationId());
+    }
 }
