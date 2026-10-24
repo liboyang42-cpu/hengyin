@@ -53,6 +53,7 @@ public final class ImmutableReceiptProducer {
     private final OriginalReceiptStore store;
     private final OriginalReceiptJournal journal;
     private final OriginalReceiptPersist persist;
+    private final ChannelMessageOriginalSend channelSend;
 
     public ImmutableReceiptProducer(OriginalReceiptStore store) {
         this(store, null, null);
@@ -60,9 +61,15 @@ public final class ImmutableReceiptProducer {
 
     public ImmutableReceiptProducer(OriginalReceiptStore store, OriginalReceiptJournal journal,
             OriginalReceiptPersist persist) {
+        this(store, journal, persist, null);
+    }
+
+    public ImmutableReceiptProducer(OriginalReceiptStore store, OriginalReceiptJournal journal,
+            OriginalReceiptPersist persist, ChannelMessageOriginalSend channelSend) {
         this.store = Objects.requireNonNull(store, "store");
         this.journal = journal;
         this.persist = persist;
+        this.channelSend = channelSend;
     }
 
     /**
@@ -180,11 +187,48 @@ public final class ImmutableReceiptProducer {
         if (extraJson != null) {
             // 字段已按原 Send 分开。extraJson 只是原命令里的附加串，不能在这里变成第二条发送。
         }
-        throw new WaitingSourceException(CHANNEL_MESSAGE_SEND);
+        if (channelSend == null) {
+            throw new WaitingSourceException(CHANNEL_MESSAGE_SEND);
+        }
+        Map<String, Object> sent = channelSend.send(actorId, conversationId, required.requestId, msgType, content,
+                extraJson, replyToId, mentionMemberIds, mentionRoleIds, mentionEveryone);
+        if (!sameChannelReceipt(sent, required.requestId)) {
+            throw new IllegalStateException("channel send receipt is not this request");
+        }
+        return new OriginalReceipt(required.requestId, required.kind, null, OUTCOME_UNKNOWN, content);
     }
 
     private static boolean hasMention(List<Long> members, List<Long> roles, boolean everyone) {
         return everyone || members != null && !members.isEmpty() || roles != null && !roles.isEmpty();
+    }
+
+    /** Accepts the original send wire: request_id plus message id, or the pre-wire pair. */
+    private static boolean sameChannelReceipt(Map<String, Object> sent, String requestId) {
+        if (sent == null) {
+            return false;
+        }
+        Object client = sent.get("client_message_id");
+        Object request = sent.get("request_id");
+        String id = client instanceof String ? (String) client : null;
+        if (request instanceof String) {
+            if (id != null && !id.equals(request)) {
+                return false;
+            }
+            if (id == null) {
+                id = (String) request;
+            }
+        }
+        if (!requestId.equals(id)) {
+            return false;
+        }
+        if (exactPositiveLong(sent.get("message_id")) != null) {
+            return true;
+        }
+        Object nested = sent.get("message");
+        if (nested instanceof Map && exactPositiveLong(((Map<?, ?>) nested).get("id")) != null) {
+            return true;
+        }
+        return exactPositiveLong(sent.get("id")) != null;
     }
 
     public static final class NotASendException extends IllegalStateException {
@@ -540,6 +584,16 @@ public final class ImmutableReceiptProducer {
     /** 只读既有 IM 原发送收据；不发、不改 journal。 */
     public interface OriginalReceiptJournal {
         ImMessage readSent(Long memberId, Long conversationId, String clientMessageId);
+    }
+
+    /**
+     * 频道回复/提及的原发送。生产实现只调用既有 {@code ChannelMessageService.send}，
+     * 不在本类里复制那个类，也不改走 {@link IImService#send}。
+     */
+    public interface ChannelMessageOriginalSend {
+        Map<String, Object> send(Long actor, Long conversationId, String clientMessageId, Integer msgType,
+                String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
+                List<Long> mentionRoleIds, boolean mentionEveryone);
     }
 
     /** 既有 {@link IImService#send}；本生产者不另写一套发送。 */

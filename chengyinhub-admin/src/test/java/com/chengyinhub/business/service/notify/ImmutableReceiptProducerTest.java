@@ -221,6 +221,50 @@ class ImmutableReceiptProducerTest {
     }
 
     @Test
+    void sendOriginalForwardsTheReplyToTheChannelWriterAndDoesNotInsert() {
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        java.util.List<Object[]> calls = new java.util.ArrayList<Object[]>();
+        ImmutableReceiptProducer.ChannelMessageOriginalSend writer = (actor, conversation, client, type, content, extra,
+                reply, members, roles, everyone) -> {
+            calls.add(new Object[] { actor, conversation, client, type, content, extra, reply, members, roles,
+                    Boolean.valueOf(everyone) });
+            java.util.Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
+            sent.put("id", Long.valueOf(42L));
+            sent.put("request_id", client);
+            sent.put("replayed", Boolean.FALSE);
+            return sent;
+        };
+        ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store, null, null, writer);
+        ImmutableReceiptProducer.OriginalRequest reply = new ImmutableReceiptProducer.OriginalRequest(
+                "c09-send-01", ImmutableReceiptProducer.Kind.REPLY, "{\"fp\":1}",
+                ImmutableReceiptProducer.OUTCOME_ACCEPTED);
+        ImmutableReceiptProducer.OriginalReceipt receipt = producer.sendOriginal(reply, 7L, 12L, Integer.valueOf(1),
+                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false);
+        assertEquals(1, calls.size());
+        assertEquals(Long.valueOf(7L), calls.get(0)[0]);
+        assertEquals(Long.valueOf(12L), calls.get(0)[1]);
+        assertEquals("c09-send-01", calls.get(0)[2]);
+        assertEquals("hello", calls.get(0)[4]);
+        assertEquals(Long.valueOf(88120L), calls.get(0)[6]);
+        assertEquals("c09-send-01", receipt.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, receipt.outcome);
+        assertEquals("hello", receipt.originalBody);
+        assertFalse(receipt.currentProjectionClaimsApplied);
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.ChannelMessageOriginalSend other = (actor, conversation, client, type, content, extra,
+                replyTo, members, roles, everyone) -> {
+            java.util.Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
+            sent.put("id", Long.valueOf(43L));
+            sent.put("request_id", "c09-other-send");
+            return sent;
+        };
+        ImmutableReceiptProducer mismatched = new ImmutableReceiptProducer(store, null, null, other);
+        assertThrows(IllegalStateException.class, () -> mismatched.sendOriginal(reply, 7L, 12L, Integer.valueOf(1),
+                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
+        assertEquals(0, store.size());
+    }
+
+    @Test
     void projectOriginalSendReadsStoredIdentityAndRejectsRebuiltBody() {
         String key = "c09-send-key-0001";
         String digest = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
