@@ -206,6 +206,31 @@ class TopicRouteBudgetTest {
         verify(client, times(3)).get(anyString());
     }
 
+    @Test void invalidIntermediateNodeCannotReuseAValidSubsetCacheOrClaimProviderAvailability() {
+        TencentMapClient client = readyClient();
+        when(client.get(anyString())).thenAnswer(call -> response(call.getArgument(0)));
+        TopicRouteServiceImpl service = configure(new TopicRouteServiceImpl(), client);
+        CmsTopicNode a = node(30.1, 120.1), c = node(30.3, 120.3);
+        String cached = service.buildGeometryJson(List.of(a, c));
+        assertNotNull(cached);
+        List<CmsTopicNode> invalids = new ArrayList<>();
+        invalids.add(null);
+        for (String latitude : List.of("NaN", "Infinity", "91", "-91", "", "1".repeat(65))) {
+            CmsTopicNode bad = node(30.2, 120.2); bad.setLatitude(latitude); invalids.add(bad);
+        }
+        CmsTopicNode missing = node(30.2, 120.2); missing.setLatitude(null); invalids.add(missing);
+        CmsTopicNode badLongitude = node(30.2, 120.2); badLongitude.setLongitude("NaN"); invalids.add(badLongitude);
+        for (CmsTopicNode bad : invalids) {
+            var chapter = new com.chengyinhub.business.domain.vo.TopicChapterVO();
+            chapter.setRouteGeometry(service.buildGeometryJson(java.util.Arrays.asList(a, bad, c)));
+            assertNull(chapter.getRouteGeometry());
+            assertEquals(Boolean.FALSE, chapter.getRouteGeometryAvailable());
+            assertEquals("MAP_ROUTE_UNAVAILABLE", chapter.getRouteGeometryErrorCode());
+            assertEquals(cached, service.buildGeometryJson(List.of(a, c)), "rejecting a malformed route cannot poison a valid cache entry");
+        }
+        verify(client, times(1)).get(anyString());
+    }
+
     private void assertCacheEmpty(TopicRouteServiceImpl service) {
         Object cache = ReflectionTestUtils.getField(service, "cache");
         synchronized (cache) {

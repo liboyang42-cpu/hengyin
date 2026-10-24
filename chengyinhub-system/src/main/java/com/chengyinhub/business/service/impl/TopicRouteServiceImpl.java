@@ -94,19 +94,21 @@ public class TopicRouteServiceImpl implements ITopicRouteService
             return null;
         }
 
-        // 1) 取出有合法经纬度的点
+        // Every requested node must be valid before cache lookup; skipping a node changes the route identity.
         List<double[]> pts = new ArrayList<>();
         if (orderedNodes != null)
         {
             for (CmsTopicNode n : orderedNodes)
             {
-                if (n == null) continue;
+                if (n == null) return null;
                 Double lat = parse(n.getLatitude());
                 Double lng = parse(n.getLongitude());
-                if (lat != null && lng != null && lat >= -90D && lat <= 90D && lng >= -180D && lng <= 180D)
+                if (lat == null || lng == null || !Double.isFinite(lat) || !Double.isFinite(lng)
+                        || lat < -90D || lat > 90D || lng < -180D || lng > 180D)
                 {
-                    pts.add(new double[] { lat, lng });
+                    return null;
                 }
+                pts.add(new double[] { lat, lng });
             }
         }
         if (pts.size() < 2)

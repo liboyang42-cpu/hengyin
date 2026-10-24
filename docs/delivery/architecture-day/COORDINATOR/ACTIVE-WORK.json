@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T08:05:43.546646+00:00",
-  "source_parent": "65e881857d4eda9cc0abd27cb9ba677f355d8658",
+  "updated_utc": "2026-10-24T08:21:30.582962+00:00",
+  "source_parent": "7da3e4ea385596aa850dc760f2cf6adc6c554602",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -222,7 +222,7 @@
       "id": "H-C-SEAT-RR-P1",
       "source": "1fbd8d83340a7b2fab82b6b971f8d0a89ed6dd49",
       "mechanism": "ID row lock followed by ordinary full-row SELECT can reuse pre-refund RR snapshot and permit later seat write",
-      "status": "sent C priority full ForUpdate+real Service interleaving; original seat candidate NOT_INTEGRATED"
+      "status": "C published4619caa39bdf491667f0a0263c657117ac4b12f4, H reviewing; not yet integrated or runtime accepted"
     }
   ],
   "available_next_candidates": {
@@ -233,9 +233,34 @@
   },
   "new_AE_batch": {
     "receipt": "batch-AE-source-20261024.json",
-    "status": "reviewed staged source; actual runtime unverified",
+    "status": "source committed/pushed at7da; targeted9 run failed Admin compilation,0executed,CLEAN",
     "A": "ae1606843cca6ed847d84059640b1bab6e1decdc",
     "E": "8372a9d0a37f62cd7e7d6375b5a537e4e921590a",
-    "unchanged_business_fields": "B outbound qualifier retained; no G terminal placeholder interface applied"
+    "unchanged_business_fields": "B outbound qualifier retained; no G terminal placeholder interface applied",
+    "integrated_at": "7da3e4ea385596aa850dc760f2cf6adc6c554602"
+  },
+  "latest_targeted_run": {
+    "run_id": 40077180059,
+    "source": "7da3e4ea385596aa850dc760f2cf6adc6c554602",
+    "class": "RegistrationTopicFenceMySqlIT",
+    "expected": 9,
+    "executed": 0,
+    "verdict": "FAIL",
+    "cleanup": "CLEAN",
+    "failure": "Admin PlayBasicCommandApplication:241 inherited success(Map) helper unresolved after extraction",
+    "source_repair": "root qualifies AjaxResult.success(data); remaining moved helpers searched; current repair not rerun",
+    "system_compile": "that frozen System module compiled; not proof for later source or JUnit"
+  },
+  "map_input_P2": {
+    "source": "H reviewed E8372, inherited input-node filtering changes cache route identity",
+    "repair": "any null/missing/nonfinite/out-of-range coordinate rejects before cache/provider; new warm-subset-cache-to-full-invalid-chapter regression with actual DTO flags",
+    "status": "source fixed, Java test NOT_RUN"
+  },
+  "pending_integrations": {
+    "D": "563264faf08ebc7318850e84ebbfd62a613c24ba",
+    "E_query": "9e14a73e50c9afd5c8f38027c3ecd059967a51d3",
+    "F_controls": "1709210d17b83d8e3fb17cb8e50f4144bd67f25d",
+    "C_RR_fix": "4619caa39bdf491667f0a0263c657117ac4b12f4",
+    "B_facts_original": "6d641fa802cdf1277a158ce0b7633dcf126b5e10, B composing with0ff"
   }
 }

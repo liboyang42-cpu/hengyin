@@ -238,7 +238,7 @@ public class PlayBasicCommandApplication {
             data.put("topicId", entry.topicId);
             data.put("nodeId", entry.nodeId);
             if (entry.activityId != null) data.put("activityId", entry.activityId);
-            return success(data);
+            return AjaxResult.success(data);
         } catch (ServiceException e) {
             return error(e.getMessage());
         }
