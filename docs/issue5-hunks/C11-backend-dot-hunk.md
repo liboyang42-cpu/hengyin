@@ -4,7 +4,7 @@ Issue：https://github.com/liboyang42-cpu/chengyin-remote-ops/issues/5 领取组
 仓库：`github.com/liboyang42-cpu/hengyin` 仅写本仓  
 Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`  
 分支：`cursor/c11-ops-support-adapters-d6bd`  
-Head：`628996ae99e921c81285b2e144956f25042e3aa7`（本文件若再提交会前进）。本文件不替代商店 / 备案门禁。
+Head：`3056968323b66526c26742da3ba705fdd35947ae`（本文件若再提交会前进）。本文件不替代商店 / 备案门禁。
 
 ## 1. 白名单（实际写入）
 
@@ -121,6 +121,20 @@ SHA256（生产 5 类）：
 ```
 Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- C11AccountSwitchRestartIsolationTest
 Tests run: 22, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 8. Parent addendum 2026-10-23 17:13 America/Los_Angeles
+
+`CompensationEntryProjectionTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueAuditApplies`：未见 `c11-comp-never` 的 `recoverOriginal` 保持 `originalAudit` 空且不写入 audit map；后续唯一 `COMPENSATION_FREEZE` 才是第一笔审计。`recoverOriginal` 只读 FrozenTerms + CompensationAuditSource，不 insert。
+
+父进程独立 surefire（`/tmp/hengyin-c11`，HEAD `305696832`，2026-10-24T00:13:40Z）：
+
+```
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- CompensationEntryProjectionTest
+Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
