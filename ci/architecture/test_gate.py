@@ -965,6 +965,22 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
                 self.assertEqual(1, status, report)
                 self.assertIn("POLICY_CHANGE", report["error"])
 
+    def test_followup_sdk_owner_or_reverse_direction_cannot_self_approve(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("remove", "reverse"):
+            with self.subTest(change=change):
+                data = copy.deepcopy(original)
+                policy = data["technical_dependency_policy"]
+                if change == "remove":
+                    policy["owners"] = [o for o in policy["owners"] if o["id"] != "B_PAYMENT_SDK"]
+                else:
+                    policy["allowed_directions"].append(["F_LOG_CONTEXT", "F_REQUEST_CONTEXT"])
+                self.write("ci/architecture/owners.json", gate.encode(data))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
 
 
 class RegisteredReferencesTest(unittest.TestCase):

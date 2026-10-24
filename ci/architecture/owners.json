@@ -69,8 +69,8 @@
   "technical_dependency_policy": {
     "schema": 1,
     "coverage": "PARTIAL",
-    "observed_source": "986b88d9640bf45900bd807675bed1d6a06c5938",
-    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f.",
+    "observed_source": "06a571b1247620a9bdcea068be0ded973671d17c",
+    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f. Follow-up exact sources: public 06a571b1247620a9bdcea068be0ded973671d17c/A immutable DTO; B 0ffb9c8fee278c11fe47aa6bcfd95745c9e73850; D 4061bac25dbe113574632dde61d4ae416185db77; G 2457bf1851c0573df7a69270a4532b00b9e8404c; F MDC 1fb99670c066496c3b19da6b3ac4b132e14ab785. Structural directions only; no lock/immutability/log-safety proof.",
     "owners": [
       {
         "id": "A_WITHDRAW_ADMISSION",
@@ -455,6 +455,195 @@
           "com.chengyinhub.business.service.ICmsTopicService",
           "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
         ]
+      },
+      {
+        "id": "B_PAYMENT_FACADE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_OUTBOUND_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.WechatPaymentOperations"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_SDK",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IClubMembershipService",
+          "com.chengyinhub.business.service.IMerchantCommerceService",
+          "com.chengyinhub.business.service.ICoopInviteService",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.IRefundService"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_ROUTER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.WechatPaymentCallbackOwner",
+          "com.chengyinhub.business.service.WechatRefundCallbackOwner"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_INTENTS",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IClubMembershipService",
+          "com.chengyinhub.business.service.IMerchantCommerceService",
+          "com.chengyinhub.business.service.ICoopInviteService",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.IRefundService"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_ORDER_LOCK",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.WechatPaymentOrderOwner",
+          "com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore"
+        ]
+      },
+      {
+        "id": "A_TRANSFER_INTENT_DTO",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ]
+      },
+      {
+        "id": "D_CONTENT_SIZE_POLICY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.TopicSizeLimits"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.support.TopicContentWriteGuard",
+          "com.chengyinhub.business.service.impl.TopicPublicationService"
+        ]
+      },
+      {
+        "id": "G_CASH_CLAIM",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "G_EDITION_FINALIZATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ITopicEditionFinalizationService",
+          "com.chengyinhub.business.service.impl.TopicEditionFinalizationServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "F_LOG_CONTEXT",
+        "module": "chengyinhub-common",
+        "members": [
+          "com.chengyinhub.common.utils.LogCorrelation"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.framework.web.trace.RequestIdFilter",
+          "com.chengyinhub.framework.manager.AsyncManager",
+          "com.chengyinhub.quartz.util.QuartzJobCorrelation",
+          "com.chengyinhub.business.service.impl.AlarmService"
+        ]
+      },
+      {
+        "id": "F_REQUEST_CONTEXT",
+        "module": "chengyinhub-framework",
+        "members": [
+          "com.chengyinhub.framework.web.trace.RequestIdFilter"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.framework.manager.AsyncManager",
+          "com.chengyinhub.quartz.util.QuartzJobCorrelation",
+          "com.chengyinhub.business.service.impl.AlarmService"
+        ]
+      },
+      {
+        "id": "F_ASYNC_CONTEXT",
+        "module": "chengyinhub-framework",
+        "members": [
+          "com.chengyinhub.framework.manager.AsyncManager"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.framework.web.trace.RequestIdFilter",
+          "com.chengyinhub.quartz.util.QuartzJobCorrelation",
+          "com.chengyinhub.business.service.impl.AlarmService"
+        ]
+      },
+      {
+        "id": "F_QUARTZ_CONTEXT",
+        "module": "chengyinhub-quartz",
+        "members": [
+          "com.chengyinhub.quartz.util.QuartzJobCorrelation"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.framework.web.trace.RequestIdFilter",
+          "com.chengyinhub.framework.manager.AsyncManager",
+          "com.chengyinhub.quartz.util.AbstractQuartzJob",
+          "com.chengyinhub.quartz.service.MySqlSchedulerCoordinator"
+        ]
       }
     ],
     "allowed_directions": [
@@ -601,6 +790,66 @@
       [
         "D_PUBLICATION_CONTENT_GUARD",
         "D_CONTENT_RULES"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "B_PAYMENT_OUTBOUND_PORT"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "B_PAYMENT_SDK"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "B_PAYMENT_ROUTER"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "B_PAYMENT_OUTBOUND_PORT",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "B_PAYMENT_OUTBOUND_PORT"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "B_PAYMENT_INTENTS"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "B_PAYMENT_INTENTS",
+        "B_PAYMENT_ORDER_LOCK"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_SETTLEMENT_EVIDENCE"
+      ],
+      [
+        "F_REQUEST_CONTEXT",
+        "F_LOG_CONTEXT"
+      ],
+      [
+        "F_ASYNC_CONTEXT",
+        "F_LOG_CONTEXT"
+      ],
+      [
+        "F_QUARTZ_CONTEXT",
+        "F_LOG_CONTEXT"
+      ],
+      [
+        "D_CONTENT_GRAPH",
+        "D_CONTENT_SIZE_POLICY"
+      ],
+      [
+        "D_CONTENT_RULES",
+        "D_CONTENT_SIZE_POLICY"
       ]
     ]
   }
