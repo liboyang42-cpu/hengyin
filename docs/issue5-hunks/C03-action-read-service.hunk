@@ -1,0 +1,43 @@
+# C03 action read service — controller paste
+# Not applied. Do not apply.
+# Adds one read-only GET /api/play/route-action beside GET /api/play/route-state.
+# Passes currentMemberId() into RouteActionReadService.read.
+# does not change routeState(). Does not call the POST action writer.
+# Does not insert a route action. No permission string. No reward.
+# Surefire RouteActionReadServiceTest: Tests run: 4, Failures: 0, Errors: 0, Skipped: 0. BUILD SUCCESS 2026-10-24T22:00:28Z.
+# Mockito in memory. Not HTTP. Not MySQL.
+
+diff --git a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java
+--- a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java
++++ b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java
+@@ -256,6 +256,10 @@
+     /** 主题级地点路线权威状态；与节点级高级玩法 session 分离。 */
+     @Autowired(required = false)
+     private ITopicRouteRuntimeService topicRouteRuntimeService;
++
++    /** 原动作只读。routeAction 把当前成员号传入 read。 */
++    @Autowired(required = false)
++    private com.chengyinhub.business.service.support.rpg.mechanism.RouteActionReadService routeActionReadService;
+ 
+     @Autowired(required = false)
+     private TopicRouteCompletionCoordinator topicRouteCompletionCoordinator;
+@@ -1067,6 +1071,19 @@
+         return routeState(topicId, null, actId);
+     }
+ 
++    /** 只读一条路线动作。成员号只取当前登录身份。不改 routeState，不调用完成写入口。 */
++    @Operation(summary = "读取一条路线动作")
++    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
++    @GetMapping("/route-action")
++    public AjaxResult routeAction(@RequestParam(name = "sessionId", required = false) Long sessionId,
++            @RequestParam(name = "actionId", required = false) String actionId)
++    {
++        Long memberId = currentMemberId();
++        if (memberId <= 0) return error("请先登录");
++        if (routeActionReadService == null) return error("参数有误");
++        return AjaxResult.success(routeActionReadService.read(sessionId, memberId, actionId));
++    }
++
+     @Operation(summary = "自由定向:终章结局信(按完成顺序拼合碎片)")
+     @GetMapping("/ending")
+     public AjaxResult ending(Long activityId, Long topicId)
