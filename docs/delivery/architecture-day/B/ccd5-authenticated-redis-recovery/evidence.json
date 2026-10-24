@@ -1,0 +1,63 @@
+{
+  "source": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+  "ref": "codex/architecture-day-final-ccd5-20261024",
+  "run_id": 40142606869,
+  "attempt": 1,
+  "job_id": 121017302795,
+  "artifact_id": 12579491081,
+  "artifact_sha256": "7c591206ab6ec6d4c99749f7c210b7ba969139815341404632c8daed886bda40",
+  "conclusion": "BLOCKED_BEFORE_HTTP",
+  "primary_failure": {
+    "phase": "prepare",
+    "builder_exit": 1,
+    "migration": "20261023_g_wp08_delivery_jobs_paused",
+    "statement": 3,
+    "error": "ValueError: scalar-true readback=0",
+    "evidence": "schema-summary.json.builderLogTail + entry.log"
+  },
+  "secondary_failure": {
+    "phase": "cleanup",
+    "reason": "application logs unavailable after exact resource cleanup",
+    "application_log_preserved": false
+  },
+  "cleanup": {
+    "harness_report": "CONFIRMED_EXACT_OWNED_REMOVAL",
+    "mysql_independent_no_such": true,
+    "redis_independent_no_such": true,
+    "separate_B_host_inspection": false
+  },
+  "artifact_member_sha256": {
+    "entry.log": "dd2f05d66afc95e19a22d8e7ed99fd32859e6427d7fd7d1a967bef8e48e4f752",
+    "schema-summary.json": "59c3d23f10c268b1b2fa56fa6b402da3f1a88f8f58b63ad560d18f7eefd7c6bb",
+    "authenticated-redis-recovery.json": "6f3e129ba5d2ee40e460c1a656adfb236afc085c3f066b39534153713d9360fa"
+  },
+  "http_business_assertions_executed": 0,
+  "sql_business_before_after_evidence": false,
+  "missing_report_fields": [
+    "events",
+    "protectedBefore",
+    "protectedAtSettlement",
+    "finalRefundRowSha256"
+  ],
+  "missing_artifact_files": [
+    "application.log",
+    "network.trace",
+    "isolation.log"
+  ],
+  "current_jar": {
+    "reported_sha256": "ce95029a38951e2cbe897ff73ddbfe8368925d21c0ed35b2312bbd028e1cb2b4",
+    "reported_embedded_checkout_matched": true,
+    "independently_rehashed_by_B": false,
+    "equivalence_to_historical_4ef3": "NOT_ESTABLISHED"
+  },
+  "not_validated": [
+    "ordinary_user_UI",
+    "human_CAPTCHA",
+    "human_unexpected_action_matrix",
+    "real_cash_payment",
+    "real_refund",
+    "payment_provider",
+    "full_business_flow",
+    "Q2_Q3_complete"
+  ]
+}

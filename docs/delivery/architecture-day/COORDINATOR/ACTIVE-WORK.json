@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T23:25:33Z",
+  "updated_utc": "2026-10-24T23:47:18.795315+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
   "all_complete": false,
-  "mode": "Scoped pool runtime identity/cleanup accepted4cda; next first existing authenticated HTTP/Redis refund-lease fault validation40142606869 on accepted coreccd5 with originalB; no new audit or core tests repeated",
+  "mode": "Both actual authprepare failure repairs collected: G37 exactWP08 prerequisites and B8f545 full diagnostics guard applied; scan/freeze one operational candidate then targetauth workflow only",
   "current_worker_assignments": {
     "A": {
       "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
@@ -23,8 +23,8 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "B": {
-      "state": "RUNTIME_VALIDATION_IN_PROGRESS_AUTHENTICATED_REDIS",
-      "task": "Only original40142606869 receipt/actual HTTP+independent SQL/lease/cleanup readback; no source edits/new CI, UI/cash/provider acceptance remains unverified",
+      "state": "DELIVERED_DIAGNOSTIC_PATCH_PENDING_TARGETED_AUTH_RUNTIME",
+      "task": "Preserve first failure and cleanup despite malformed/unreadable report; never infer pre-app from bad metadata; two report readers plus one direct control, full fourfile patch including earlier docs",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
       "owned_symbols": [
@@ -83,8 +83,8 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "G": {
-      "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
-      "task": "Break CmsRegistration→CoopSettlementClaim→TopicSettlementEvidence→RegistrationSeat→CmsRegistration via minimal original seat-read boundary; preserve locks/fee/filters and money rules",
+      "state": "DELIVERED_APPLIED_PENDING_AUTH_SCHEMA_TARGETED_RUNTIME",
+      "task": "Only20261023_g_wp08_delivery_jobs_paused assertion3 canonical prerequisites/topology and minimal direct controls; old SQL/guard bytes immutable; if notDAG give root exact cause",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
       "delivery_sha": "af0ed9086625f87e6ccdc1282d870358dc322ee0",
@@ -1014,8 +1014,8 @@
     "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
     "branch": "codex/architecture-day-final-ccd5-20261024",
     "run": 40142606869,
-    "status": "in_progress",
-    "conclusion": "",
+    "status": "FAIL_PRE_APP_SCHEMA_PREPARE_NOT_BUSINESS_EXERCISED",
+    "conclusion": "failure",
     "owner": "B",
     "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
     "host_id": "durable",
@@ -1026,11 +1026,13 @@
       {
         "databaseId": 121017302795,
         "name": "isolated-authenticated-redis-recovery",
-        "status": "in_progress",
-        "conclusion": ""
+        "status": "completed",
+        "conclusion": "failure"
       }
     ],
-    "prior_core_ci_repeated": false
+    "prior_core_ci_repeated": false,
+    "failure_readback": "ccd5-authenticated-redis-prepare-failure.json",
+    "pending_owners": []
   },
   "runtime_evidence_implementation": {
     "owner": "F",
@@ -1046,7 +1048,9 @@
     "delivery_sha": "78984087323fe460f543d0f9f496137e7a7f172b",
     "parent_sha": "7d742dc7442ead070cd23fcf9048b054e431a69a",
     "source_control_evidence": "F12/12 Python protocol controls0skip, bash syntax/diff/secret scans PASS; not real Java/DB/resource evidence",
-    "integrated_source_sha": "4cda5e4a329c41450bdd2b3cdfc18b28f041b073"
+    "integrated_source_sha": "4cda5e4a329c41450bdd2b3cdfc18b28f041b073",
+    "pool_state": "TARGETED_HOSTED_RUNTIME_SCOPED_PASS",
+    "auth_prepare_state": "B_G_COLLECTED_APPLIED_NOT_RUNTIME_VERIFIED"
   },
   "previous_runtime_validations": [
     {
@@ -1105,5 +1109,56 @@
       "core_standard_storage_repeated": false,
       "readback": "4cda-pool-provenance-cleanup-readback.json"
     }
-  ]
+  ],
+  "worker_progress_cursors": {
+    "B": "b03dff2c-10cc-4156-add7-1e422e41c5d1:6",
+    "G": "4b361718-0fcf-48df-970f-92288ff9076c:8"
+  },
+  "auth_schema_assertion_precision": {
+    "required_conditions": [
+      "14 declared tables InnoDB",
+      "im_message columns client_message_id/request_hash/visible_at",
+      "uk_im_message_client exact conversation_id,sender_id,client_message_id order"
+    ],
+    "observed_subcondition_values": "NOT_RECORDED_IN_ORIGINAL_RUN",
+    "source": "OriginalB read-only CCD5 migration contract, forwarded toG",
+    "no_business_bug_conclusion": true
+  },
+  "auth_diagnostics_delivery": {
+    "owner": "B",
+    "base": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+    "received_patch_sha256": "8f54558a39874fc82a3e0a7fc32f489c4e4454c8a3c3738489f6034463209a8c",
+    "historical_received_patch_sha256": "636988286699f264f2f518ef20f31749e4a1ce5b91a0dd098afa10a08579e586",
+    "files": 4,
+    "integrity": "FOUR_COMPLETE_FENCES_RECONSTRUCTED_HASH_MATCH_APPLY_CHECK_PASS_APPLIED",
+    "source_check": "B17/17 Python controlsPASS, source-only; old controls retained, unreadable/corrupt/type-invalid report cannot infer NOT_STARTED or prevent resource cleanup",
+    "state": "DELIVERED_APPLIED_PENDING_TARGETED_AUTH_RUNTIME",
+    "business_or_schema_changes": false
+  },
+  "auth_schema_dependency_delivery": {
+    "sha": "37e964b6d292fd08bb4d12e7ff0ca26387d578ae",
+    "parent": "cfda5cde6e6c85ad45718de56d3815903099c0aa",
+    "base": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+    "scope": "Only one WP08 dependency entry adds member_exp_earned_20261011 and20261012_im_media_visibility; transitive IM idempotency preserved",
+    "old_sql_or_other_manifest_items_changed": false,
+    "checks": "Full-manifest sort positivePASS; first negative wrongassumption failed retained; corrected direct guard1method3subtestsPASS; JavaDB/actualfullschemaNOT_RUN",
+    "integrity": "Full CCD5 diff applied; manifest/test bytes exact donor",
+    "runtime_verdict": "NOT_RUN",
+    "document_normalization": {
+      "file": "G/wp08-schema-dependency/wp08-manifest-and-tests.review.patch",
+      "original_donor_sha256": "5053f6670bc08fe32c9c7c61a11dbc26a38d53cdf638fdb5e5c8918fc4ef65a7",
+      "action": "Trailing whitespace and EOF normalized in published review excerpt only; original donor commit retained; SOURCE_SHA256 records current files."
+    }
+  },
+  "auth_repairs_integration": {
+    "status": "B_AND_G_APPLIED_SOURCE_FREEZE_PENDING",
+    "execution_files": [
+      "ci/authenticated_redis_recovery_probe.py",
+      "ci/test_authenticated_redis_recovery_probe.py",
+      "ci/migration-dependencies.json",
+      "ci/test_migration_ledger.py"
+    ],
+    "next": "One targeted existing authenticated Redis hosted workflow; no repeated core suites",
+    "runtime": "NOT_RUN"
+  }
 }

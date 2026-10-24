@@ -399,13 +399,29 @@ def cleanup(name, schema, out, private, port):
         require(not private.is_symlink() and private.stat().st_mode & 0o777 == 0o600,
                 'private cleanup input changed')
         SECRET_VALUES.extend(json.loads(private.read_text()).get('redactions', []))
+    path = out / 'authenticated-redis-recovery.json'
+    try:
+        report = json.loads(path.read_text())
+        if not isinstance(report, dict):
+            raise ValueError('report root must be an object')
+    except FileNotFoundError:
+        report = {'result': 'FAIL_BEFORE_BUSINESS_PROBE'}
+    except (OSError, UnicodeError, ValueError) as exc:
+        report = {'result': 'FAIL_UNKNOWN', 'reportReadFailure': {'type': type(exc).__name__}}
+    # The shell exits on either failed pre-app phase, before docker run ...-app.
+    pre_app_failure = (report.get('fixturePhase') in ('mysql-ready', 'prepare')
+                       and report.get('result') == 'FAIL_OR_UNKNOWN_NO_RETRY'
+                       and bool(report.get('failureType')) and not report.get('events'))
     summary = {'cleanup': 'NOT_CONFIRMED', 'ownedRemoved': []}
     logs_available = False
+    app_absent = False
     for suffix in ('app', 'mysql', 'redis'):
         target = name + '-' + suffix
         inspected = subprocess.run(DOCKER + ['container', 'inspect', target], capture_output=True, timeout=20)
         if inspected.returncode:
             require_absent('container', target, inspected.returncode, inspected.stderr)
+            if suffix == 'app':
+                app_absent = True
             continue
         obj = json.loads(inspected.stdout)[0]
         require(obj['Name'] == '/' + target and obj['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name,
@@ -418,13 +434,13 @@ def cleanup(name, schema, out, private, port):
                 command(DOCKER + ['stop', '--time', '10', cid], timeout=25)
                 stopped = json.loads(command(DOCKER + ['inspect', cid]))[0]
                 require(stopped['Id'] == cid and not stopped['State']['Running'], 'application stop unknown')
-            raw = subprocess.run(DOCKER + ['logs', cid], capture_output=True, timeout=20)
-            logs_available = raw.returncode == 0
             try:
+                raw = subprocess.run(DOCKER + ['logs', cid], capture_output=True, timeout=20)
+                logs_available = raw.returncode == 0
                 path = out / 'application.log'
                 path.write_text(redact_log((raw.stdout + raw.stderr).decode(errors='replace'), SECRET_VALUES))
                 path.chmod(0o600)
-            except OSError:
+            except (OSError, subprocess.TimeoutExpired):
                 logs_available = False
         if suffix == 'redis' and obj['State']['Paused']:
             command(DOCKER + ['unpause', cid])
@@ -450,13 +466,39 @@ def cleanup(name, schema, out, private, port):
     require_absent('network', name, check.returncode, check.stderr)
     summary['cleanup'] = 'CONFIRMED_EXACT_OWNED_REMOVAL'
     path = out / 'authenticated-redis-recovery.json'
-    report = json.loads(path.read_text()) if path.exists() else {'result': 'FAIL_BEFORE_BUSINESS_PROBE'}
     report['resourceCleanup'] = summary
     report['applicationLogPreserved'] = logs_available
-    if not logs_available:
-        report['result'] = 'FAIL_APPLICATION_LOG_UNAVAILABLE'
+    not_started = pre_app_failure and app_absent
+    report['applicationLogStatus'] = ('PRESERVED' if logs_available else
+                                      'NOT_STARTED' if not_started else 'UNAVAILABLE')
     write_report(out, path.name, report)
-    require(logs_available, 'application logs unavailable after exact resource cleanup')
+    require(not report.get('reportReadFailure'),
+            'original report unreadable; original phase unknown after exact resource cleanup')
+    require(logs_available or not_started, 'application logs unavailable after exact resource cleanup')
+
+
+def record_phase_failure(out, mode, exc):
+    failure = {'fixturePhase': mode, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+               'failureType': type(exc).__name__, 'reason': redact(str(exc), SECRET_VALUES)}
+    path = out / 'authenticated-redis-recovery.json'
+    try:
+        report = json.loads(path.read_text())
+        if not isinstance(report, dict):
+            raise ValueError('report root must be an object')
+    except FileNotFoundError:
+        report = {}
+    except (OSError, UnicodeError, ValueError) as read_exc:
+        report = {'reportReadFailure': {'type': type(read_exc).__name__}}
+    if report.get('reportReadFailure'):
+        failure['result'] = 'FAIL_UNKNOWN'
+    first_failure = bool(report.get('fixturePhase') and report.get('failureType'))
+    if mode == 'cleanup':
+        report['cleanupFailure'] = failure
+        report.setdefault('resourceCleanup', {'cleanup': 'NOT_CONFIRMED'})
+    if not first_failure:
+        report.update(failure)
+    write_report(out, path.name, report)
+    return failure
 
 
 def exercise(name, schema, out, private, port):
@@ -694,11 +736,7 @@ def main():
         else:
             {'mysql-ready': mysql_ready, 'cleanup': cleanup}[mode](name, schema, out, private, port)
     except BaseException as exc:
-        failure = {'fixturePhase': mode, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
-                   'failureType': type(exc).__name__, 'reason': redact(str(exc), SECRET_VALUES)}
-        report_path = out / 'authenticated-redis-recovery.json'
-        report = json.loads(report_path.read_text()) if report_path.exists() else {}
-        write_report(out, report_path.name, {**report, **failure})
+        failure = record_phase_failure(out, mode, exc)
         print(json.dumps(failure))
         raise SystemExit(1)
 

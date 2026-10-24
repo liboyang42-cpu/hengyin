@@ -1,0 +1,57 @@
+{
+  "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+  "run": 40142606869,
+  "job": 121017302795,
+  "artifact_id": 12579491081,
+  "stage": "PRE_APP_SCHEMA_PREPARE_FAILED",
+  "business_http_or_redis_fault_exercised": false,
+  "original_schema_failure": {
+    "builder_exit": 1,
+    "embedded_checkout_matched": true,
+    "baseline_errors": 0,
+    "seed_errors": 0,
+    "seed_negative_controls_passed": 6,
+    "migration_errors": 1,
+    "migration": "20261023_g_wp08_delivery_jobs_paused",
+    "assertion_number": 3,
+    "failure": "scalar-true readback=0",
+    "final_tables": 254
+  },
+  "prepared_jar_digest_not_executed": "ce95029a38951e2cbe897ff73ddbfe8368925d21c0ed35b2312bbd028e1cb2b4",
+  "builder_log_digest": "9776ec35121cd6d89fc4994fcd30372fb90eccded99314d957516b1297b8556b",
+  "cleanup_reported": {
+    "fixturePhase": "cleanup",
+    "result": "FAIL_OR_UNKNOWN_NO_RETRY",
+    "failureType": "RuntimeError",
+    "reason": "application logs unavailable after exact resource cleanup",
+    "resourceCleanup": {
+      "cleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+      "ownedRemoved": [
+        {
+          "name": "cy-auth-ad776f524cb54b1d88a10b805f61aec4-mysql",
+          "id": "b0320fde671145827c536c28970ab5dda75b7e99d193ab96c0b49ccbad30b749",
+          "independentNoSuch": true
+        },
+        {
+          "name": "cy-auth-ad776f524cb54b1d88a10b805f61aec4-redis",
+          "id": "b92a0a8781d787b9acf174484552f307e129a6a838dbb676a153b92e11f0ded5",
+          "independentNoSuch": true
+        }
+      ]
+    },
+    "applicationLogPreserved": false
+  },
+  "raw_files_sha256": {
+    "entry.log": "dd2f05d66afc95e19a22d8e7ed99fd32859e6427d7fd7d1a967bef8e48e4f752",
+    "cy-auth.n58B0kbV/authenticated-redis-recovery.json": "6f3e129ba5d2ee40e460c1a656adfb236afc085c3f066b39534153713d9360fa",
+    "cy-auth.n58B0kbV/schema-summary.json": "59c3d23f10c268b1b2fa56fa6b402da3f1a88f8f58b63ad560d18f7eefd7c6bb"
+  },
+  "classification": "TEST_PREPARATION_BLOCKER_NOT_CONFIRMED_BUSINESS_BUG",
+  "owners": {
+    "G": "Exact delivery-job migration prerequisites/canonical topology, old SQL/assertions unchanged",
+    "B": "Preserve first pre-app failure and separate absent-app-log from exact resource cleanup evidence"
+  },
+  "new_source_or_targeted_rerun": "NOT_YET_DELIVERED_OR_RUN",
+  "core_ccd5_accepted_stage_reopened": false,
+  "all_complete": false
+}

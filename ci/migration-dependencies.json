@@ -10,7 +10,7 @@
     "20261024_g_before_start_notice_metadata_v2": ["20261024_d_committed_official_notice_wx"],
     "20261024_clm_commerce_payment_proof": ["club_role_membership_20260823", "commerce_order_fields_and_verification_review_20260805", "20261024_wx_verified_payment_fact"],
     "club_post_media_review_budget_20261024": ["club_role_media_review_outbox_20260824"],
-    "20261023_g_wp08_delivery_jobs_paused": ["20261013_b_im_notification_intent", "20261013_roam_reward_delivery", "20261013_roam_badge_delivery"],
+    "20261023_g_wp08_delivery_jobs_paused": ["20261013_b_im_notification_intent", "20261013_roam_reward_delivery", "20261013_roam_badge_delivery", "member_exp_earned_20261011", "20261012_im_media_visibility"],
     "20261023_advanced_command_fingerprint": ["20260820_new_city_preference_chain"],
     "photo_check_intent_20261023": ["20261023_advanced_command_fingerprint"],
     "20261023_cash_withdraw_fund_fact": ["member_cash_withdraw"],

@@ -3,6 +3,8 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
+import tempfile
 import unittest
 from unittest import mock
 
@@ -219,6 +221,200 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
         for kind, target, code, error in cases:
             with self.subTest(kind=kind, error=error), self.assertRaises(RuntimeError):
                 probe.require_absent(kind, target, code, error)
+
+    def cleanup_fixture(self, out, report, *, app=False, logs='ok', daemon_error=False):
+        """Protocol double only: exact owned resources; never invokes Docker."""
+        name = 'cy-auth-' + 'a' * 32
+        path = out / 'authenticated-redis-recovery.json'
+        if isinstance(report, str):
+            path.write_text(report)
+        elif report is not None:
+            probe.write_report(out, path.name, report)
+        objects = {
+            name + '-' + suffix: {
+                'Id': str(i) * 64, 'Name': '/' + name + '-' + suffix,
+                'Config': {'Labels': {'chengyin.auth-recovery': name}},
+                'State': {'Running': False, 'Paused': False},
+            }
+            for i, suffix in enumerate(('app', 'mysql', 'redis'), 1)
+            if app or suffix != 'app'
+        }
+        network = {'Name': name, 'Id': 'd' * 64, 'Internal': True,
+                   'Labels': {'chengyin.auth-recovery': name}}
+        network_present = True
+        removed = []
+
+        def run(args, **kwargs):
+            operation = args[len(probe.DOCKER):]
+            if operation[:2] == ['container', 'inspect']:
+                target = operation[2]
+                if daemon_error and target == name + '-app':
+                    return subprocess.CompletedProcess(args, 1, b'', b'Cannot connect to the Docker daemon')
+                obj = objects.get(target) or next((o for o in objects.values() if o['Id'] == target), None)
+                if obj:
+                    return subprocess.CompletedProcess(args, 0, json.dumps([obj]).encode(), b'')
+                return subprocess.CompletedProcess(args, 1, b'', ('Error: No such container: ' + target).encode())
+            if operation[:2] == ['network', 'inspect']:
+                if network_present:
+                    return subprocess.CompletedProcess(args, 0, json.dumps([network]).encode(), b'')
+                return subprocess.CompletedProcess(args, 1, b'', ('Error: No such network: ' + name).encode())
+            if operation[:1] == ['logs']:
+                if logs == 'timeout':
+                    raise subprocess.TimeoutExpired(args, 20)
+                return subprocess.CompletedProcess(args, 0 if logs == 'ok' else 1, b'diagnostic', b'')
+            raise AssertionError('unexpected subprocess: ' + repr(operation))
+
+        def command(args, **kwargs):
+            nonlocal network_present
+            operation = args[len(probe.DOCKER):]
+            if operation[:2] == ['rm', '-f']:
+                target = next(k for k, v in objects.items() if v['Id'] == operation[2])
+                removed.append(target)
+                del objects[target]
+                return b''
+            if operation[:2] == ['network', 'rm']:
+                self.assertEqual(operation[2], network['Id'])
+                network_present = False
+                return b''
+            raise AssertionError('unexpected command: ' + repr(operation))
+
+        with mock.patch.object(probe.subprocess, 'run', side_effect=run), \
+                mock.patch.object(probe, 'command', side_effect=command):
+            try:
+                probe.cleanup(name, 'cy_e2e_auth_' + 'a' * 32, out, out / 'private.json', 0)
+            except RuntimeError as exc:
+                probe.record_phase_failure(out, 'cleanup', exc)
+        return json.loads(path.read_text()), removed, network_present
+
+    def test_pre_app_failure_retains_first_cause_with_confirmed_cleanup_and_no_log_required(self):
+        for phase in ('prepare', 'mysql-ready'):
+            with self.subTest(phase=phase), tempfile.TemporaryDirectory() as directory:
+                failure = {'fixturePhase': phase, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                           'failureType': 'RuntimeError', 'reason': 'full schema builder failed; no continuation'}
+                report, removed, network = self.cleanup_fixture(Path(directory), failure)
+                for key, value in failure.items():
+                    self.assertEqual(report[key], value)
+                self.assertEqual(report['applicationLogStatus'], 'NOT_STARTED')
+                self.assertFalse(report['applicationLogPreserved'])
+                self.assertNotIn('cleanupFailure', report)
+                self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+                self.assertEqual(len(removed), 2)
+                self.assertTrue(all(o['independentNoSuch'] for o in report['resourceCleanup']['ownedRemoved']))
+                self.assertFalse(network)
+
+    def test_missing_app_without_confirmed_pre_app_failure_is_still_unknown(self):
+        for original in (None, {'result': 'PASS_AUTHENTICATED_REFUND_LEASE_REDIS_RECOVERY'},
+                         {'fixturePhase': 'exercise', 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                          'failureType': 'RuntimeError', 'reason': 'request unknown'},
+                         {'fixturePhase': 'prepare', 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                          'failureType': 'RuntimeError', 'events': [{'stage': 'claim_request_intent'}]}):
+            with self.subTest(original=original), tempfile.TemporaryDirectory() as directory:
+                report, removed, network = self.cleanup_fixture(Path(directory), original)
+                self.assertEqual(report['applicationLogStatus'], 'UNAVAILABLE')
+                self.assertEqual(report['cleanupFailure']['fixturePhase'], 'cleanup')
+                self.assertEqual(report['result'], 'FAIL_OR_UNKNOWN_NO_RETRY')
+                self.assertEqual(len(removed), 2)
+                self.assertFalse(network)
+
+    def test_existing_app_log_failure_never_becomes_not_started_or_skips_removal(self):
+        for logs in ('error', 'timeout'):
+            with self.subTest(logs=logs), tempfile.TemporaryDirectory() as directory:
+                first = {'fixturePhase': 'prepare', 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                         'failureType': 'ValueError', 'reason': 'original prepare failure'}
+                report, removed, network = self.cleanup_fixture(Path(directory), first, app=True, logs=logs)
+                for key, value in first.items():
+                    self.assertEqual(report[key], value)
+                self.assertEqual(report['applicationLogStatus'], 'UNAVAILABLE')
+                self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+                self.assertIn('application logs unavailable', report['cleanupFailure']['reason'])
+                self.assertEqual(len(removed), 3)
+                self.assertFalse(network)
+
+    def test_daemon_failure_is_not_app_absence_or_confirmed_resource_cleanup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            first = {'fixturePhase': 'prepare', 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+                     'failureType': 'RuntimeError', 'reason': 'original prepare failure'}
+            report, removed, network = self.cleanup_fixture(Path(directory), first, daemon_error=True)
+            for key, value in first.items():
+                self.assertEqual(report[key], value)
+            self.assertEqual(report['resourceCleanup']['cleanup'], 'NOT_CONFIRMED')
+            self.assertNotIn('applicationLogStatus', report)
+            self.assertIn('absence not independently confirmed', report['cleanupFailure']['reason'])
+            self.assertEqual(removed, [])
+            self.assertTrue(network)
+
+    def test_successful_app_logs_preserve_original_business_result_and_cleanup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            original = {'result': 'PASS_AUTHENTICATED_REFUND_LEASE_REDIS_RECOVERY'}
+            report, removed, network = self.cleanup_fixture(Path(directory), original, app=True)
+            self.assertEqual(report['result'], original['result'])
+            self.assertEqual(report['applicationLogStatus'], 'PRESERVED')
+            self.assertTrue(report['applicationLogPreserved'])
+            self.assertNotIn('cleanupFailure', report)
+            self.assertEqual(len(removed), 3)
+            self.assertFalse(network)
+
+    def test_corrupt_report_does_not_skip_exact_cleanup_or_claim_not_started(self):
+        for original, error_type in (('{"private":"not-public-canary"', 'JSONDecodeError'),
+                                     ('[]', 'ValueError')):
+            for app in (False, True):
+                with self.subTest(original=error_type, app=app), tempfile.TemporaryDirectory() as directory:
+                    report, removed, network = self.cleanup_fixture(Path(directory), original, app=app)
+                    self.assertEqual(report['result'], 'FAIL_UNKNOWN')
+                    self.assertEqual(report['reportReadFailure'], {'type': error_type})
+                    self.assertEqual(report['fixturePhase'], 'cleanup')
+                    self.assertIn('original phase unknown', report['reason'])
+                    self.assertNotEqual(report['applicationLogStatus'], 'NOT_STARTED')
+                    self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+                    self.assertEqual(len(removed), 3 if app else 2)
+                    self.assertTrue(all(o['independentNoSuch'] for o in report['resourceCleanup']['ownedRemoved']))
+                    self.assertFalse(network)
+                    self.assertNotIn('not-public-canary', json.dumps(report))
+
+        # An earlier daemon failure leaves the corrupt file in place for the
+        # second reader; it must still record UNKNOWN without leaking its bytes.
+        with tempfile.TemporaryDirectory() as directory:
+            report, removed, network = self.cleanup_fixture(
+                Path(directory), '{"private":"not-public-canary"', daemon_error=True)
+            self.assertEqual(report['result'], 'FAIL_UNKNOWN')
+            self.assertEqual(report['reportReadFailure'], {'type': 'JSONDecodeError'})
+            self.assertEqual(report['resourceCleanup']['cleanup'], 'NOT_CONFIRMED')
+            self.assertIn('absence not independently confirmed', report['cleanupFailure']['reason'])
+            self.assertEqual(removed, [])
+            self.assertTrue(network)
+            self.assertNotIn('not-public-canary', json.dumps(report))
+
+    def test_unreadable_report_does_not_skip_cleanup_or_expose_read_error_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            original_read = Path.read_text
+            failed = False
+
+            def read(path, *args, **kwargs):
+                nonlocal failed
+                if path == out / 'authenticated-redis-recovery.json' and not failed:
+                    failed = True
+                    raise PermissionError('not-public-canary')
+                return original_read(path, *args, **kwargs)
+
+            with mock.patch.object(Path, 'read_text', read):
+                report, removed, network = self.cleanup_fixture(out, {'result': 'NOT_COMPLETED'}, app=True)
+            self.assertEqual(report['result'], 'FAIL_UNKNOWN')
+            self.assertEqual(report['reportReadFailure'], {'type': 'PermissionError'})
+            self.assertEqual(report['resourceCleanup']['cleanup'], 'CONFIRMED_EXACT_OWNED_REMOVAL')
+            self.assertEqual(len(removed), 3)
+            self.assertFalse(network)
+            self.assertNotIn('not-public-canary', json.dumps(report))
+
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            with mock.patch.object(Path, 'read_text', side_effect=PermissionError('not-public-canary')):
+                failure = probe.record_phase_failure(out, 'cleanup', RuntimeError('cleanup removal unknown'))
+            report = json.loads((out / 'authenticated-redis-recovery.json').read_text())
+            self.assertEqual(failure['result'], 'FAIL_UNKNOWN')
+            self.assertEqual(report['reportReadFailure'], {'type': 'PermissionError'})
+            self.assertEqual(report['resourceCleanup']['cleanup'], 'NOT_CONFIRMED')
+            self.assertNotIn('not-public-canary', json.dumps(report))
 
 
 if __name__ == '__main__':
