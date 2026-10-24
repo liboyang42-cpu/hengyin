@@ -15,6 +15,22 @@ public final class MessageContainerProjection {
     private MessageContainerProjection() {
     }
 
+    /** Reads the additive message_container. A club/group row is not accepted here. */
+    public static Map<String, Object> consumeAuthorizedDetail(Map<String, Object> detail) {
+        if (detail == null) {
+            return null;
+        }
+        Object nested = detail.get("message_container");
+        if (!(nested instanceof Map)) {
+            return null;
+        }
+        Map<String, Object> raw = new LinkedHashMap<String, Object>();
+        for (Map.Entry<?, ?> entry : ((Map<?, ?>) nested).entrySet()) {
+            raw.put(String.valueOf(entry.getKey()), entry.getValue());
+        }
+        return project(raw, raw.get("conversation_type"));
+    }
+
     public static Map<String, Object> project(Map<String, Object> detail, Object conversationType) {
         Long type = exactPositiveLong(conversationType);
         if (detail == null || type == null || type.longValue() != 5L) {

@@ -34,5 +34,15 @@ class MessageContainerProjectionTest {
         assertNull(MessageContainerProjection.project(detail, 4));
         detail.put("kind", 4);
         assertNull(MessageContainerProjection.project(detail, 5));
+
+        Map<String, Object> wrapped = new LinkedHashMap<String, Object>();
+        wrapped.put("message_container", view);
+        Map<String, Object> consumed = MessageContainerProjection.consumeAuthorizedDetail(wrapped);
+        assertEquals("5", consumed.get("conversation_type"));
+        assertFalse((Boolean) consumed.get("grants_send"));
+        Map<String, Object> group = new LinkedHashMap<String, Object>();
+        group.put("message_container", Map.of("conversation_type", "4", "id", "200", "kind", "1", "guild_kind", "1"));
+        assertNull(MessageContainerProjection.consumeAuthorizedDetail(group));
+        assertNull(MessageContainerProjection.consumeAuthorizedDetail(Map.of("type", 4, "bizKey", "club_42")));
     }
 }
