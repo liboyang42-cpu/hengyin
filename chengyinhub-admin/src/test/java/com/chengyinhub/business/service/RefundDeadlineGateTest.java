@@ -98,6 +98,11 @@ class RefundDeadlineGateTest {
         topic.setId(TOPIC);
         topic.setMemberId(MEMBER);
         when(topicMapper.selectCmsTopicById(anyLong())).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(anyLong())).thenReturn(topic);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(anyLong()))
+                .thenAnswer(call -> regMapper.selectCmsRegistrationById(call.getArgument(0)));
+        when(activityMapper.selectCmsActivityByIdForUpdate(anyLong()))
+                .thenAnswer(call -> activityMapper.selectCmsActivityById(call.getArgument(0)));
     }
 
     private CmsRegistration paidTopicRegistration() {

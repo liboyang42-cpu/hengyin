@@ -24,6 +24,7 @@ public final class WechatPayTestWiring {
             WechatPaymentIntentStore intents = new WechatPaymentIntentStore();
             ReflectionTestUtils.setField(intents, "businessOwner", new JdbcWechatPaymentOrderOwner());
             ReflectionTestUtils.setField(gateway, "intents", intents);
+            WechatVerifiedFactTestSupport.installUnitFacts(gateway);
             ReflectionTestUtils.setField(facade, "gateway", gateway);
         }
         return gateway;
@@ -52,6 +53,10 @@ public final class WechatPayTestWiring {
         if ("alarmService".equals(name)) { ReflectionTestUtils.setField(facade, name, value); return; }
         Object actual = fieldTarget(facade, name);
         ReflectionTestUtils.setField(actual, name, value);
+        if (actual instanceof WechatPaymentSdkGateway gateway
+                && java.util.Set.of("wxPayConfig","jsapiService","refundService").contains(name)) {
+            WechatVerifiedFactTestSupport.refreshSdkBinding(gateway);
+        }
         if ("paymentIntentJdbc".equals(name)) {
             ReflectionTestUtils.setField(ReflectionTestUtils.getField(actual, "businessOwner"), name, value);
         }

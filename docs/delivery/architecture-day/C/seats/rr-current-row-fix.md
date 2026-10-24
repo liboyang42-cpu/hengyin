@@ -1,0 +1,15 @@
+# P1：等待退款锁后必须读取完整当前报名
+
+`1fbd8d83`与`735b9f4c`都仍是锁ID后普通SELECT，**不包含此修复**。锁查询flush MyBatis L1不会重建已经存在的MySQL RR一致性快照；即使本服务新事务声明READ_COMMITTED，REQUIRED加入已有RR事务时仍可能复现。
+
+本独立增量只将`RegistrationSeatService.lockCurrent`的完整实体回读改为既有`CmsRegistrationMapper.selectCmsRegistrationByIdForUpdate`。原ID锁及其flush fence保留，确保该完整锁读不会命中此前同statement的L1旧对象；保留原topic→activity→club→registration顺序，未修改A所有的Mapper XML/下单/退款实现。不以隔离级别降低或mock支付字段掩盖旧快照。
+
+`RegistrationSeatServiceTest`新增当前完整退款行/普通seed仍已付的窄负控，原18case保留。
+
+`RegistrationSeatMySqlIT.realServiceRejectsSecondSeatAfterRefundCommitsAheadOfItsRegistrationLock`新增真实Service交错：canonical生产DDL/migration，真实C Service+Spring事务代理、原CmsRegistrationServiceImpl的实际查询、真实CmsRegistration/Seat/Audit Mapper及两真实连接。首席事实/原团归属和审计已提交；退款状态事务持报名锁未提交；第二席在外层RR读出原paid seed并等待同锁；释放退款提交后完整ForUpdate须读payment4并403拒绝。断言原普通seed只查一次、锁读pay4、第二席仍status0、已核销席位仍1、审计数量不增加。
+
+MyBatis观察插件只记录实际statement和读取值，不替换返回或跳过SQL；topic/activity目录和角色资格是明确替身，真正club owner锁/报名/席位/审计均是真Mapper/表。退款侧为受控数据库状态事务，未调用真实退款服务/供应商，不冒充完整支付退款链路验收。若回退普通SELECT，RR旧快照会让第二席越过已付款判断、跳过首席整单业务并成功写事实/审计，测试应在期待Service拒绝处判红。
+
+目前服务19+入口16+MySQL7=42case已编写；本增量未执行Java/DB/CI。仅静态XML/调用顺序/词法及diff检查，限定秘密扫描。现有6个Mapper IT正文/锁与connectionId/latch断言/精确schema清理不删改；新增canonical报名字段、人工退款空表、审计actor字段仅为该真实Service路径的完整SQL前提。
+
+小程序skill全文已由协调方提供并已读，先修P1后继续同独占UI/UNKNOWN接线；不启动DevTools/上传发布，不重复确认已有授权。

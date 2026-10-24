@@ -10,7 +10,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import com.chengyinhub.business.service.impl.WechatPayTestWiring;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.nio.file.Files;
@@ -47,6 +47,13 @@ class WechatPaymentIntentMySqlIT {
         String ddl = Files.readString(proposal);
         int start = ddl.indexOf("CREATE TABLE wx_pay_order_intent");
         jdbc.execute(ddl.substring(start, ddl.indexOf(';', start)));
+        Path inboxDdl = proposal.getParent().resolve("migration_wx_payment_callback_inbox_outbox_20260725.sql");
+        Path factDdl = proposal.getParent().resolve("migration_20261024_wx_verified_payment_fact.sql");
+        for (Path migration : java.util.List.of(inboxDdl,factDdl)) {
+            var populator = new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(
+                    new org.springframework.core.io.FileSystemResource(migration));
+            populator.execute(source);
+        }
         // Narrow fixtures exercise gateway SQL. Full domain DDL/CAS/ledger coverage remains in domain IT suites.
         jdbc.execute("CREATE TABLE club_membership_invoice(id BIGINT PRIMARY KEY,out_trade_no VARCHAR(64),amount_fen BIGINT,status VARCHAR(16) DEFAULT 'PAYING') ENGINE=InnoDB");
         jdbc.execute("CREATE TABLE coop_invite(id BIGINT PRIMARY KEY,deposit_out_trade_no VARCHAR(64),deposit_amount DECIMAL(10,2),deposit_status INT DEFAULT 1,status INT DEFAULT 1,del_flag INT DEFAULT 0) ENGINE=InnoDB");
@@ -61,16 +68,20 @@ class WechatPaymentIntentMySqlIT {
 
     @BeforeEach
     void gateway() {
+        jdbc.update("DELETE FROM wx_payment_callback_fact_link");
+        jdbc.update("DELETE FROM wx_verified_payment_fact_rejection");
+        jdbc.update("DELETE FROM wx_verified_payment_fact");
         jdbc.update("DELETE FROM wx_pay_order_intent"); // This class's unique scratch schema only.
         jdbc.update("UPDATE oms_order SET status=0,payment_transaction_id=NULL");
         jdbc.update("DELETE FROM b_payment_grant");
-        service = spy(WechatPayTestWiring.facade());
-        WechatPayTestWiring.setField(service, "paymentIntentJdbc", jdbc);
-        WechatPayTestWiring.setField(service, "paymentIntentTransactions", new DataSourceTransactionManager(source));
-        WechatPayTestWiring.setField(service, "jsapiService", WechatPaymentIntentTestSupport.absentOrderSdk());
+        service = spy(WechatVerifiedFactTestSupport.gateway());
+        WechatVerifiedFactTestSupport.setField(service,"verifiedFacts",WechatVerifiedFactTestSupport.realFacts(source));
+        WechatVerifiedFactTestSupport.setField(service, "paymentIntentJdbc", jdbc);
+        WechatVerifiedFactTestSupport.setField(service, "paymentIntentTransactions", new DataSourceTransactionManager(source));
+        WechatVerifiedFactTestSupport.setField(service, "jsapiService", WechatPaymentIntentTestSupport.absentOrderSdk());
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
-        WechatPayTestWiring.setField(service, "wxPayConfig", config);
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
     }
 
     @AfterAll
@@ -131,7 +142,7 @@ class WechatPaymentIntentMySqlIT {
             var request = (com.wechat.pay.java.service.payments.jsapi.model.QueryOrderByOutTradeNoRequest)call.getArgument(0);
             return providerFacts(request.getOutTradeNo(), "TPLTM_1".equals(request.getOutTradeNo()));
         });
-        WechatPayTestWiring.setField(service, "jsapiService", sdk);
+        WechatVerifiedFactTestSupport.setField(service, "jsapiService", sdk);
         var orders = mock(com.chengyinhub.business.mapper.OmsOrderMapper.class);
         when(orders.selectOmsOrderByOrderSn("TPLTM_1")).thenAnswer(call -> {
             var row = jdbc.queryForMap("SELECT * FROM oms_order WHERE id=1");
@@ -152,16 +163,16 @@ class WechatPaymentIntentMySqlIT {
                 jdbc.update("INSERT INTO b_payment_grant VALUES('TPLTM_1','WX-NEW')"));
         var domain = new MerchantCommerceService(false);
         var tm = new DataSourceTransactionManager(source);
-        WechatPayTestWiring.setField(domain, "orderMapper", orders);
-        WechatPayTestWiring.setField(domain, "subscriptionMapper", grants);
-        WechatPayTestWiring.setField(domain, "wechatPayService", service);
-        WechatPayTestWiring.setField(domain, "paymentTransactions", tm);
+        WechatVerifiedFactTestSupport.setField(domain, "orderMapper", orders);
+        WechatVerifiedFactTestSupport.setField(domain, "subscriptionMapper", grants);
+        WechatVerifiedFactTestSupport.setField(domain, "wechatPayService", service);
+        WechatVerifiedFactTestSupport.setField(domain, "paymentTransactions", tm);
         var proxy = new org.springframework.aop.framework.ProxyFactory(domain);
         proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(tm,
                 new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
         var commerce = (com.chengyinhub.business.service.IMerchantCommerceService)proxy.getProxy();
-        WechatPayTestWiring.setField(service, "merchantCommerceService", commerce);
-        WechatPayTestWiring.setField(service, "alarmService", mock(AlarmService.class));
+        WechatVerifiedFactTestSupport.setField(service, "merchantCommerceService", commerce);
+        WechatVerifiedFactTestSupport.setField(service, "alarmService", mock(AlarmService.class));
         CountDownLatch oldObserved = new CountDownLatch(1);
         CountDownLatch allowOldClose = new CountDownLatch(1);
         doAnswer(call -> {
@@ -192,7 +203,7 @@ class WechatPaymentIntentMySqlIT {
         verify(orders, never()).markCommerceOrderClosed(anyLong());
         var parser = mock(com.wechat.pay.java.core.notification.NotificationParser.class);
         when(parser.parse(any(), eq(Transaction.class))).thenReturn(providerFacts(alias, false));
-        WechatPayTestWiring.setField(service, "notificationParser", parser);
+        WechatVerifiedFactTestSupport.setField(service, "notificationParser", parser);
         var headers = java.util.Map.of("wechatpay-serial", "serial", "wechatpay-nonce", "nonce",
                 "wechatpay-signature", "signature", "wechatpay-timestamp", "1");
         assertTrue(service.handlePayCallback("{}", headers).contains("SUCCESS"));
@@ -213,7 +224,7 @@ class WechatPaymentIntentMySqlIT {
         tx.setOutTradeNo(no); tx.setMchid("merchant"); tx.setAppid(oldClosed ? "wx-mini" : "wx-app");
         tx.setTradeState(oldClosed ? Transaction.TradeStateEnum.CLOSED : Transaction.TradeStateEnum.SUCCESS);
         tx.setTradeType(oldClosed ? Transaction.TradeTypeEnum.JSAPI : Transaction.TradeTypeEnum.APP);
-        if (!oldClosed) tx.setTransactionId("WX-NEW");
+        if (!oldClosed) tx.setTransactionId("WX-NEW"); tx.setSuccessTime("2026-10-24T00:00:00Z");
         TransactionAmount amount = new TransactionAmount(); amount.setTotal(1000); amount.setCurrency("CNY"); tx.setAmount(amount);
         return tx;
     }
@@ -221,7 +232,7 @@ class WechatPaymentIntentMySqlIT {
     @Test
     void sdkObservesCommittedIntentOnIndependentConnectionAndAmbientTransactionCannotSubmit() {
         var sdk = mock(com.wechat.pay.java.service.payments.app.AppServiceExtension.class);
-        WechatPayTestWiring.setField(service, "appServiceExtension", sdk);
+        WechatVerifiedFactTestSupport.setField(service, "appServiceExtension", sdk);
         when(sdk.prepayWithRequestPayment(any())).thenAnswer(call -> {
             try (var observer = source.getConnection(); var statement = observer.createStatement();
                  var rows = statement.executeQuery("SELECT COUNT(*) FROM wx_pay_order_intent WHERE out_trade_no='DEP1'")) {
@@ -234,7 +245,7 @@ class WechatPaymentIntentMySqlIT {
         request.setOutTradeNo("DEP1"); request.setMchid("merchant"); request.setAppid("wx-app");
         request.setDescription("description"); request.setNotifyUrl("https://example.test/notify");
         var amount = new com.wechat.pay.java.service.payments.app.model.Amount(); amount.setTotal(1000); amount.setCurrency("CNY"); request.setAmount(amount);
-        assertThrows(PaymentPreorderException.class, () -> WechatPayTestWiring.invokeMethod(service, "prepayApp", request));
+        assertThrows(PaymentPreorderException.class, () -> WechatVerifiedFactTestSupport.invokeMethod(service, "prepayApp", request));
         verify(sdk).prepayWithRequestPayment(any());
         new TransactionTemplate(new DataSourceTransactionManager(source)).execute(status -> {
             assertThrows(PaymentPreorderException.class, () -> freeze("REG1", "wx-mini", "JSAPI"));

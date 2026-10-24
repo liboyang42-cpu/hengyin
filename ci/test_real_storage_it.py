@@ -103,6 +103,34 @@ class RegistryContractTest(unittest.TestCase):
     def test_registry_is_valid(self):
         self.assertEqual([], rs.validate_registry(registry()))
 
+    def test_verified_payment_facts_have_exact_isolated_storage_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT'
+        self.assertEqual([fqcn], reg['batches']['architecture-day-verified-payment-facts']['classes'])
+        self.assertEqual({'tests': 4, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        flag = 'B_PAYMENT_FACT_DDL_APPROVED'
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith(flag + ':'))
+        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' && '1' || '' }}", line)
+        self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(4, facts['declared_tests'])
+
+    def test_original_refund_has_exact_isolated_storage_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT'
+        self.assertEqual([fqcn], reg['batches']['architecture-day-original-refund']['classes'])
+        self.assertEqual({'tests': 10, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        flag = 'WP04_ORIGINAL_REFUND_DDL_APPROVED'
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith(flag + ':'))
+        self.assertEqual("WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalRefundMySqlIT' && '1' || '' }}", line)
+        self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(10, facts['declared_tests'])
+
     def test_batch_totals_match_the_remaining_receipt(self):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+5（原回执41/43新增回归）；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
         # 类条数全局唯一，按 master 侧登记：冲回 3→4、券生命周期 12→16、分享快照并发 2→3（extra-storage 71→76）。
@@ -134,9 +162,12 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4,
                     "architecture-day-payment-inbox": 3,
+                    "architecture-day-verified-payment-facts": 4,
+                    "architecture-day-registration-seats": 7,
+                    "architecture-day-original-refund": 10,
                     "architecture-day-deposit-attempt": 8,
                     "architecture-day-topic-content-budget": 14,
-                    "architecture-day-registration-topic-fence": 9,
+                    "architecture-day-registration-topic-fence": 14,
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3}
         reg = registry()

@@ -85,6 +85,8 @@ class ClubOwnerCancelOwnershipGateTest {
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.<CmsRegistration>emptyList());
         when(clubMapper.selectClubById(CLUB_ID)).thenReturn(club);
+        when(clubMapper.selectClubByIdForUpdate(CLUB_ID))
+                .thenAnswer(call -> clubMapper.selectClubById(CLUB_ID));
         return service;
     }
 
@@ -229,6 +231,7 @@ class ClubOwnerCancelOwnershipGateTest {
         registrationMapper = mock(CmsRegistrationMapper.class);
         clubMapper = mock(ClubMapper.class);
         when(activityMapper.selectCmsActivityByIdForUpdate(ACTIVITY_ID)).thenReturn(session);
+        when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(session);
         when(activityMapper.updateCmsActivity(any(CmsActivity.class))).thenReturn(1);
 
         CmsRegistration paid = paidRegistration();
@@ -239,6 +242,8 @@ class ClubOwnerCancelOwnershipGateTest {
         });
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(paid.getId())).thenReturn(paid);
         when(clubMapper.selectClubById(CLUB_ID)).thenReturn(club(CURRENT_OWNER));
+        when(clubMapper.selectClubByIdForUpdate(CLUB_ID))
+                .thenAnswer(call -> clubMapper.selectClubById(CLUB_ID));
 
         IRefundService refundService = mock(IRefundService.class);
         when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(invocation -> {

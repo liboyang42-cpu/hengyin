@@ -117,6 +117,8 @@ class Wp04TopicCashFenceMySqlIT {
         ReflectionTestUtils.setField(topic, "transactionManager", manager);
         ReflectionTestUtils.setField(topic, "coopSettlementMapper", heads);
         ReflectionTestUtils.setField(topic, "coopSettlementAdjustmentMapper", adjustments);
+        // Original five-case fixture has no original-component producer; new protocol is tested separately.
+        ReflectionTestUtils.setField(topic, "coopSettlementOriginalMapper", mock(CoopSettlementOriginalMapper.class));
         CoopComplaintMapper complaints = mock(CoopComplaintMapper.class);
         when(complaints.countOpenByTopicId(11L)).thenReturn(0);
         ReflectionTestUtils.setField(topic, "coopComplaintMapper", complaints);

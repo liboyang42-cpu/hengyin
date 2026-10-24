@@ -70,6 +70,7 @@ class CoopSettlementTopicFenceTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(service, "coopSettlementMapper", heads);
         ReflectionTestUtils.setField(service, "umsMemberMapper", members);
+        ReflectionTestUtils.setField(service, "coopSettlementOriginalMapper", mock(com.chengyinhub.business.mapper.CoopSettlementOriginalMapper.class));
         assertThrows(IllegalStateException.class,
                 () -> ReflectionTestUtils.invokeMethod(service, "payoutOneDueCoopSettlement", 5L, 11L, now));
         var order = inOrder(topics, heads);

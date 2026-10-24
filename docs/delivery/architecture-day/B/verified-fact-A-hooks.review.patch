@@ -1,0 +1,127 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -87,6 +87,7 @@
+
+     @Autowired
+     private AlarmService alarmService;
++    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
+
+     @Autowired
+     @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+@@ -2137,6 +2138,12 @@
+         }
+
+         // 查询报名记录
++        final com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference verifiedReference;
++        try {
++            verifiedReference="SUCCESS".equals(tradeState) ? checkedVerifiedPaymentReference(resultMap) : null;
++        } catch (RuntimeException invalidFacts) {
++            return registrationPaymentCallbackFailure(outTradeNo,"verified_fact_missing_or_conflicting");
++        }
+         final CmsRegistration registration = getByRegistrationNo(outTradeNo);
+         if (registration == null) {
+             String reference = outTradeNo.matches("[A-Za-z0-9_-]{1,64}") ? outTradeNo : "INVALID_FORMAT";
+@@ -2154,14 +2161,15 @@
+         final String notifyId = "PAY:" + (StringUtils.isNotEmpty(transactionId) ? transactionId : outTradeNo)
+                 + ":" + tradeState;
+         try {
+-            wxPaymentCallbackInboxService.register(notifyId,
+-                    WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState);
++            if (verifiedReference!=null) wxPaymentCallbackInboxService.registerVerified(notifyId,
++                    WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT,registration.getId(),tradeState,verifiedReference);
++            else wxPaymentCallbackInboxService.register(notifyId,
++                    WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT,registration.getId(),tradeState);
+         } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
+             return registrationPaymentCallbackFailure(outTradeNo, "inbox_identity_conflict");
+         }
+         final String[] outcome = new String[1];
+-        boolean completed = wxPaymentCallbackInboxService.process(notifyId,
+-                new IWxPaymentCallbackInboxService.Mutation() {
++        IWxPaymentCallbackInboxService.Mutation mutation = new IWxPaymentCallbackInboxService.Mutation() {
+                     @Override
+                     public boolean isCurrent(WxPaymentCallbackInbox inbox) {
+                         if (!registration.getId().equals(inbox.getBizId())
+@@ -2179,7 +2187,10 @@
+                         outcome[0] = applyWechatPayCallback(registration, resultMap);
+                         return "SUCCESS".equalsIgnoreCase(outcome[0]);
+                     }
+-                });
++                };
++        boolean completed=verifiedReference!=null
++                ? wxPaymentCallbackInboxService.processVerified(notifyId,verifiedReference,mutation)
++                : wxPaymentCallbackInboxService.process(notifyId,mutation);
+         if (completed) {
+             return "SUCCESS";
+         }
+@@ -3452,4 +3463,18 @@
+             throw new IllegalStateException("核销审计写入失败");
+         }
+     }
++    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference checkedVerifiedPaymentReference(Map<String,String> map) {
++        var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
++                Long.parseLong(map.get("verified_fact_id")),map.get("verified_fact_hash"));
++        var fact=verifiedPaymentFacts.requireVerified(reference).facts();
++        if (fact.kind()!=com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
++                || !fact.businessOutTradeNo().equals(map.get("out_trade_no"))
++                || !fact.wxOutTradeNo().equals(map.get("wx_out_trade_no"))
++                || !fact.transactionId().equals(map.get("transaction_id"))
++                || !fact.mchid().equals(map.get("mchid")) || !fact.appid().equals(map.get("appid"))
++                || !fact.tradeType().equals(map.get("trade_type")) || !fact.currency().equals(map.get("currency"))
++                || fact.totalFen()!=Long.parseLong(map.get("total"))) throw new IllegalArgumentException("Verified fact mismatch");
++        return reference;
++    }
++
+ }
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java
+@@ -135,6 +135,7 @@
+
+     @Autowired
+     private AlarmService alarmService;
++    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
+
+     /** P1:退款回调先按 notify_hash 落 inbox 去重;状态推进仍由下方既有 CAS 负责。 */
+     @Autowired
+@@ -393,13 +394,19 @@
+         if (!matchesRefundFacts(refund, facts)) {
+             return false;
+         }
++        final com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference verifiedReference;
++        try { verifiedReference="SUCCESS".equals(refundStatus) ? checkedVerifiedRefundReference(facts) : null; }
++        catch (RuntimeException invalidFacts) { return false; }
+         // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键);
+         // 重投只多一次 insert ignore,不影响下方 ACK 与状态推进语义。
+         // 同一 notify 已登记为另一笔业务 = 身份冲突(register 内已告警):回 FAIL,不推进状态。
+         try {
+-            wxPaymentCallbackInboxService.register(
+-                    "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
+-                    WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
++            if (verifiedReference!=null) wxPaymentCallbackInboxService.registerVerified(
++                    "REFUND:"+outRefundNo+":"+refundStatus,WxPaymentCallbackInbox.BIZ_TYPE_REFUND,
++                    refund.getId(),refundStatus,verifiedReference);
++            else wxPaymentCallbackInboxService.register(
++                    "REFUND:"+outRefundNo+":"+(refundStatus==null?"":refundStatus),
++                    WxPaymentCallbackInbox.BIZ_TYPE_REFUND,refund.getId(),refundStatus);
+         } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
+             return false;
+         }
+@@ -1186,4 +1193,19 @@
+     private BigDecimal defaultZero(BigDecimal value) {
+         return value == null ? BigDecimal.ZERO : value;
+     }
++    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference checkedVerifiedRefundReference(Map<String,String> map) {
++        var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
++                Long.parseLong(map.get("verified_fact_id")),map.get("verified_fact_hash"));
++        var fact=verifiedPaymentFacts.requireVerified(reference).facts();
++        if (fact.kind()!=com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.REFUND
++                || !fact.merchantEventNo().equals(map.get("outRefundNo"))
++                || !fact.providerId().equals(map.get("refundId")) || !fact.transactionId().equals(map.get("transactionId"))
++                || !fact.businessOutTradeNo().equals(map.get("outTradeNo")) || !fact.wxOutTradeNo().equals(map.get("wxOutTradeNo"))
++                || !fact.mchid().equals(map.get("mchid")) || !fact.appid().equals(map.get("appid"))
++                || !fact.tradeType().equals(map.get("tradeType")) || !fact.currency().equals(map.get("currency"))
++                || fact.amountFen()!=Long.parseLong(map.get("refund")) || fact.totalFen()!=Long.parseLong(map.get("total")))
++            throw new IllegalArgumentException("Verified refund fact mismatch");
++        return reference;
++    }
++
+ }

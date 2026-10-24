@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T08:49:50.466917+00:00",
-  "source_parent": "a0b8d5d01facc4bd8dd97bc1bec72647797fdfe3",
+  "updated_utc": "2026-10-24T09:13:36.840869+00:00",
+  "source_parent": "21964453bdeb2be23e86cef253968b26a80fa4d0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -163,7 +163,12 @@
     "F_full_python_controls": "164 test_collect_jdeps/test_gate tests PASS in39.693s; protocol/synthetic controls, actual Java/jdeps remain UNKNOWN",
     "AE_Node": "28 map +63 existing scope/action tests PASS0skip; not runtime/backend evidence",
     "AE_registry": "15 control tests PASS;97 registered source prechecks PASS",
-    "D_E_staged": "diff check PASS; secret-file gate PASS; gitleaks310665bytes0leaks; 98 registered classes source precheck previously PASS; Java/DB NOT_RUN"
+    "D_E_staged": "diff check PASS; secret-file gate PASS; gitleaks310665bytes0leaks; 98 registered classes source precheck previously PASS; Java/DB NOT_RUN",
+    "ABCFG_registry": "101 exact registered source prechecks PASS;14 RegistryContractTest PASS",
+    "F_bd33_root": "80 producer Python plus21 tools/policy Python PASS; actual Java/jdeps NOT_RUN",
+    "ABCFG_migration": "explicit staged13 migration dependency batch PASS; declarations only added; no DDL executed",
+    "ABCFG_secret_scan": "770884bytes0leaks before new receipt; final staged scan pending",
+    "ABCFG_Mapper_XML": "6 actual XML parsed; actual MySQL NOT_RUN"
   },
   "unified_regression_pending": [
     "A53 boundary and original-fact Java/DB acceptance; strict source parser/registry metadata PASS",
@@ -285,9 +290,11 @@
     "C_RR_fix": "4619caa39bdf491667f0a0263c657117ac4b12f4",
     "B_facts_original": "6d641fa802cdf1277a158ce0b7633dcf126b5e10, B composing with0ff",
     "E_query_batch": "b9b894b170d75b4e6315f2bde41ede8f551522c6 reviewed/applied; static owner/XML equivalence PASS, Java NOT_RUN",
-    "B_facts_composed": "041534c7681e480f80eb8afc911f65bf1ed13eda",
-    "C_full": "f1cfe74d58b766e385e639d40385e208790644a8",
-    "F_trusted_verifier": "0e00ce639dea8e7f266dd326878532f45c59a032 not yet adopted"
+    "B_facts_composed": "041534c7681e480f80eb8afc911f65bf1ed13eda assembled plus root split fixes; B fresh-reader delta pending",
+    "C_full": "backend f1cfe74 assembled; frontend deliberately pending C revision/form/page generation repair",
+    "F_trusted_verifier": "bd33ed0be7fafaf89daaec2eb772c15b034d3ec0 assembled, six trusted files exact, dual pins; actual E batch size-rule dependency under F review",
+    "A_outer": "fd3501f7dca5492670c26065c7165597eae9974d assembled; verified-fact domain delta and seat-reverse guard pending",
+    "G_original": "8818837b3717e3340384545d04b81abef4697fc7 assembled; actual producer/terminal caller/financial decisions pending"
   },
   "latest_dispatch": {
     "reason": "human observed workers stopped; B/C/E/H idle after delivery, renewed all eight with non-overlapping code tasks",
@@ -311,5 +318,34 @@
     "coordinator_rule": "advance reviewed composition or resolve actual blocker each inspection",
     "deadline_preserved": "2026-10-24T19:03:41Z"
   },
-  "latest_cross_owner_action": "Root sent A old-RR/new durable fact reader gap and G BINARY(32)/hex identity warning to B owner for verification and correction; not acceptance"
+  "latest_cross_owner_action": "Root sent A old-RR/new durable fact reader gap and G BINARY(32)/hex identity warning to B owner for verification and correction; not acceptance",
+  "latest_combined_source": {
+    "receipt": "batch-ABCFG-source-20261024.json",
+    "A": "fd3501f7dca5492670c26065c7165597eae9974d",
+    "B": "041534c7681e480f80eb8afc911f65bf1ed13eda",
+    "C_backend": "f1cfe74d58b766e385e639d40385e208790644a8",
+    "F_verifier": "bd33ed0be7fafaf89daaec2eb772c15b034d3ec0",
+    "F_controls": "c135c71fc9067d2d0fc1783dc60a2a7b9b26064c",
+    "G": "8818837b3717e3340384545d04b81abef4697fc7",
+    "status": "source assembled; scan/review before isolated candidate commit; no Java/DB acceptance"
+  },
+  "new_source_blockers": [
+    {
+      "id": "ROOT-B-SPLIT-COMPILE",
+      "source": "041534c7681e480f80eb8afc911f65bf1ed13eda",
+      "finding": "SDK orphan class-body callback block plus missing matchesRefundNotification method after split",
+      "status": "root removed duplicate orphan, restored exact6d method body package-visible; callback validation and evidence kept; Java NOT_RUN"
+    },
+    {
+      "id": "H-C-SEAT-SESSION-REVISION-P2",
+      "source": "f1cfe74d58b766e385e639d40385e208790644a8",
+      "finding": "role switch increments existing session revision while token/epoch unchanged; stale receipt clears pending",
+      "status": "sent C, client slice not integrated until repair"
+    },
+    {
+      "id": "A-B-FACT-RR",
+      "finding": "ordinary fact read and service self-invocation can reuse old RR after independent fact commit",
+      "status": "B implementing internal read-only REQUIRES_NEW and sidecar current read; not yet integrated"
+    }
+  ]
 }

@@ -423,15 +423,30 @@
       "classes": ["com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT"],
       "note": "3 ordinary@Test; actual original schema/XML and business/inbox transaction proxies, controlled SDK query. Exact zero-skip XML and independent CLEAN required; no real WeChat/HTTP acceptance."
     },
+    "architecture-day-verified-payment-facts": {
+      "registered_source": "041534c7681e480f80eb8afc911f65bf1ed13eda",
+      "classes": ["com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT"],
+      "note": "Four fixed real-MySQL tests on original inbox and new fact/rejection/sidecar tables; exact hosted class-only scratch DDL admission, source-bound XML and CLEAN required. Mutation service is mocked here; original domain mutation plus DONE remains separately verified. No production DDL or real provider call."
+    },
+    "architecture-day-registration-seats": {
+      "registered_source": "f1cfe74d58b766e385e639d40385e208790644a8",
+      "classes": ["com.chengyinhub.business.it.RegistrationSeatMySqlIT"],
+      "note": "Seven fixed actual Mapper/transaction/seat cases, including the current full-registration read across refund under RR. Real Service interleaving uses controlled topic/activity/club collaborators; not full HTTP authorization or financial settlement acceptance. Source-bound XML, zero skips and independent CLEAN required."
+    },
+    "architecture-day-original-refund": {
+      "registered_source": "8818837b3717e3340384545d04b81abef4697fc7",
+      "classes": ["com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT"],
+      "note": "Ten fixed isolated real-MySQL cases for original components, binary inbox/hex links, conservation, FK identity, rollback and exact empty-prefix recovery. Terminal CAS/DONE are SQL fixtures, not A Service/SDK acceptance. No production allocation producer, partial-rounding or negative-margin policy approval. Exact source XML and independent CLEAN required."
+    },
     "architecture-day-topic-content-budget": {
       "registered_source": "563264faf08ebc7318850e84ebbfd62a613c24ba",
       "classes": ["com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT"],
       "note": "Fourteen fixed tests on the existing isolated TopicContentGraph MySQL fixture: physical hidden/pending row budgets, current reads, graph/CRUD race and parent-first locking. Actual XML and CLEAN required; full moderation task/IM/audit/shell rollback remains separate."
     },
     "architecture-day-registration-topic-fence": {
-      "registered_source": "ae1606843cca6ed847d84059640b1bab6e1decdc",
+      "registered_source": "fd3501f7dca5492670c26065c7165597eae9974d",
       "classes": ["com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT"],
-      "note": "Nine fixed tests: actual payment/refund inbox transactions, topic-first business locking and current terminal replay. External owner locks and G original-allocation reversal remain separate dependencies; no actual channel acceptance. Original XML and independent CLEAN required."
+      "note": "Fourteen fixed tests: original9 payment/refund inbox cases plus outer cancellation/current-owner and create-before-waitlist-claim parent fences. Original mutation/DONE and current terminal readback; G original-allocation reversal and actual provider acceptance remain separate. Exact XML and CLEAN required."
     },
     "architecture-day-topic-cash-fence": {
       "registered_source": "2457bf1851c0573df7a69270a4532b00b9e8404c",
@@ -453,13 +468,28 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT": {
+      "tests": 10,
+      "storage": ["mysql"],
+      "gates": {}
+    },
+    "com.chengyinhub.business.it.RegistrationSeatMySqlIT": {
+      "tests": 7,
+      "storage": ["mysql"],
+      "gates": {}
+    },
+    "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT": {
+      "tests": 4,
+      "storage": ["mysql"],
+      "gates": {}
+    },
     "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT": {
       "tests": 14,
       "storage": ["mysql"],
       "gates": {}
     },
     "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT": {
-      "tests": 9,
+      "tests": 14,
       "storage": ["mysql"],
       "gates": {}
     },

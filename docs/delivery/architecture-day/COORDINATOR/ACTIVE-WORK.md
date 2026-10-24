@@ -73,3 +73,9 @@ D详细会话后续已读到持久通知的fileChange及工具调用完成；原
 Existing hengyin-agent updated and read back ACTIVE, every10minutes, original deadline retained. Each check requires evidence, necessary dispatch/unblock, readback and checkpoint; root also advances composition. Two consecutive checks without real progress trigger targeted unblocking, never blind restarts or active-as-acceptance. A RR reader gap and G binary/hex identity mismatch forwarded to B.
 
 Root reviewed/applied E b9b894 five-file batch-read patch using existing mapper and maximum300 IDs per IN. Static comparison passes:21 old bodies unchanged, only template acquisition changed; existing SQL projection/result map retained. Five new Java scenarios are source only. Java/DB/production NOT_RUN; no measured performance claim. Previous D/EQuery source committed a0b8d5d01.
+
+## Combined A/B/C-backend/F/G source 2026-10-24T09:13:36.840869+00:00
+
+A outer/create parent fence, B verified facts, C backend seat identity/current row, G original refund ledger and F bd33/c135 controls assembled. B split compile residues removed/restored from6d; A/G shared outbound qualifiers and E Query composition retained. New B4/C7/G10 routes and A14 source count registered;101 exact source prechecks,14 registry Python and80+21 F Python controls PASS. Staged13 migration dependency order PASS, no DDL.
+
+C frontend session revision P2, A/B durable fact transaction hooks, G actual allocation producer/financial decisions, D audit RR and durable notices remain incomplete. Same-source Java/MySQL/JDK and business readback NOT_RUN. No deployment/master merge. Receipt:batch-ABCFG-source-20261024.json.

@@ -180,6 +180,10 @@ class RegistrationTopicFenceMySqlIT {
 
     /** Actual topic lock remains held while a third connection proves registration/refund locks are still free. */
     private <T> T afterTopicRelease(Callable<T> action, boolean checkRefund) throws Exception {
+        return afterTopicRelease(action, checkRefund, () -> { });
+    }
+
+    private <T> T afterTopicRelease(Callable<T> action, boolean checkRefund, Runnable beforeRelease) throws Exception {
         ExecutorService worker = Executors.newSingleThreadExecutor();
         Future<T> result = null;
         try {
@@ -191,6 +195,8 @@ class RegistrationTopicFenceMySqlIT {
                 try (Connection observer = source.getConnection()) {
                     observer.setAutoCommit(false);
                     try {
+                        try (PreparedStatement query = observer.prepareStatement("SELECT id FROM cms_activity WHERE id=5 FOR UPDATE NOWAIT");
+                             var rows = query.executeQuery()) { assertTrue(rows.next()); }
                         try (PreparedStatement query = observer.prepareStatement("SELECT id FROM cms_registration WHERE id=1 FOR UPDATE NOWAIT");
                              var rows = query.executeQuery()) { assertTrue(rows.next()); }
                         if (checkRefund) try (PreparedStatement query = observer.prepareStatement("SELECT id FROM refund_application WHERE id=9 FOR UPDATE NOWAIT");
@@ -198,12 +204,38 @@ class RegistrationTopicFenceMySqlIT {
                     } finally { observer.rollback(); }
                 }
                 assertFalse(result.isDone(), "topic fence must still block the actual caller");
+                beforeRelease.run();
                 holder.commit();
             }
             return result.get(10, TimeUnit.SECONDS);
         } finally {
             worker.shutdownNow(); assertTrue(worker.awaitTermination(10, TimeUnit.SECONDS), "owned worker exited before cleanup");
         }
+    }
+
+    @Test void creationTakesTopicBeforeTheClaimCanLockItsActivityAndNeverChangesEconomicsOnClaimFailure() throws Exception {
+        IClubWaitlistOrderBridge claim = mock(IClubWaitlistOrderBridge.class);
+        IllegalStateException stopped = new IllegalStateException("fixture stops after real claim activity lock");
+        when(claim.claimForOrder(anyLong(), any(), any())).thenAnswer(call -> {
+            assertNotNull(activities.selectCmsActivityByIdForUpdate(5L));
+            throw stopped;
+        });
+        CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
+        ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
+        ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
+        ReflectionTestUtils.setField(target, "clubWaitlistOrderBridge", claim);
+        CmsRegistrationServiceImpl creation = transactional(target);
+        com.chengyinhub.business.domain.dto.RegistrationRequest request = new com.chengyinhub.business.domain.dto.RegistrationRequest();
+        request.setOwnerType(2); request.setOwnerId(5L);
+        assertTrue(afterTopicRelease(() -> {
+            assertSame(stopped, assertThrows(IllegalStateException.class,
+                    () -> creation.create(11L, request, "claim-original", "a".repeat(64))));
+            return true;
+        }, true, () -> verify(claim, never()).claimForOrder(anyLong(), any(), any())));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM cms_registration", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM refund_application", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_inbox", Integer.class));
     }
 
     @Test void paymentInboxWaitsForTopicWithoutHoldingRegistration() throws Exception {
@@ -311,6 +343,74 @@ class RegistrationTopicFenceMySqlIT {
         assertEquals(2, db.queryForObject("SELECT status FROM refund_application WHERE id=9", Integer.class));
         assertEquals(0, db.queryForObject("SELECT payout_status FROM refund_application WHERE id=9", Integer.class));
         verifyNoInteractions(notices);
+    }
+
+    private TeamGroupServiceImpl cancellation() {
+        TeamGroupServiceImpl target = new TeamGroupServiceImpl();
+        ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
+        ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
+        ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
+        ReflectionTestUtils.setField(target, "refundService", mock(IRefundService.class));
+        return transactional(target);
+    }
+
+    private ClubEventOpsServiceImpl clubCancellation(ClubEventOpsMapper series, ITeamGroupService delegate) {
+        ClubEventOpsServiceImpl target = new ClubEventOpsServiceImpl(
+                mock(com.chengyinhub.business.access.club.IClubAccessService.class),
+                new ClubEventScheduleMaterializer(), mock(IClubSessionService.class), series,
+                mock(ClubMemberMapper.class), mock(ClubLeadMapper.class), mock(IClubRoleAssignmentService.class), delegate);
+        ReflectionTestUtils.setField(target, "cancellationActivityMapper", activities);
+        ReflectionTestUtils.setField(target, "cancellationTopicMapper", topics);
+        return transactional(target);
+    }
+
+    @Test void outerActivityCancellationWaitsForTopicBeforeHoldingActivityOrOrderRows() throws Exception {
+        TeamGroupServiceImpl cancellation = cancellation();
+        assertEquals(0, afterTopicRelease(() -> cancellation.cancelActivityByOwner(5L, 70L, "reason"), false).getRefundedOrders());
+        assertNotNull(db.queryForObject("SELECT cancel_time FROM cms_activity WHERE id=5", java.util.Date.class));
+        assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+    }
+
+    @Test void outerClubWrapperCannotEnterSeriesBeforeItsTopicFence() throws Exception {
+        ClubEventOpsMapper series = mock(ClubEventOpsMapper.class);
+        ClubEventOpsServiceImpl wrapper = clubCancellation(series, cancellation());
+        assertEquals(0, afterTopicRelease(() -> wrapper.cancelActivityByOwnerWithClubWrapUp(70L, 5L, "reason"), false,
+                () -> verify(series, never()).selectSeriesByActivityAnyStatusForUpdate(anyLong())).getRefundedOrders());
+        verify(series, times(1)).selectSeriesByActivityAnyStatusForUpdate(5L);
+        assertNotNull(db.queryForObject("SELECT cancel_time FROM cms_activity WHERE id=5", java.util.Date.class));
+    }
+
+    @Test void clubWrapperChangedParentFailsBeforeRoleCampaignOrRefundEffects() {
+        ClubEventOpsMapper series = mock(ClubEventOpsMapper.class);
+        ITeamGroupService delegate = mock(ITeamGroupService.class);
+        ClubEventOpsServiceImpl wrapper = clubCancellation(series, delegate);
+        AtomicBoolean changed = new AtomicBoolean();
+        doAnswer(call -> {
+            if (changed.compareAndSet(false, true))
+                new JdbcTemplate(new DriverManagerDataSource(source.getUrl(), source.getUsername(), source.getPassword()))
+                        .update("UPDATE cms_activity SET topic_id=8 WHERE id=5");
+            return realTopics.selectCmsTopicByIdForUpdate(call.getArgument(0));
+        }).when(topics).selectCmsTopicByIdForUpdate(7L);
+        assertThrows(RuntimeException.class, () -> wrapper.cancelActivityByOwnerWithClubWrapUp(70L, 5L, "reason"));
+        assertNull(db.queryForObject("SELECT cancel_time FROM cms_activity WHERE id=5", java.util.Date.class));
+        assertEquals(8L, db.queryForObject("SELECT topic_id FROM cms_activity WHERE id=5", Long.class));
+        verifyNoInteractions(delegate); verify(series, never()).insertCampaign(any());
+    }
+
+    @Test void selfRefundCannotUseMemberSnapshotFromBeforeTheParentFence() {
+        db.update("UPDATE cms_registration SET payment_status=2,registration_status=2 WHERE id=1");
+        TeamGroupServiceImpl cancellation = cancellation();
+        AtomicBoolean changed = new AtomicBoolean();
+        doAnswer(call -> {
+            if (changed.compareAndSet(false, true))
+                new JdbcTemplate(new DriverManagerDataSource(source.getUrl(), source.getUsername(), source.getPassword()))
+                        .update("UPDATE cms_registration SET member_id=22 WHERE id=1");
+            return realTopics.selectCmsTopicByIdForUpdate(call.getArgument(0));
+        }).when(topics).selectCmsTopicByIdForUpdate(7L);
+        assertThrows(RuntimeException.class, () -> cancellation.cancelPaidRegistration(1L, 11L));
+        assertEquals(2, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
+        assertEquals(22L, db.queryForObject("SELECT member_id FROM cms_registration WHERE id=1", Long.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM refund_application WHERE source_id=1 AND id<>9", Integer.class));
     }
 
     @AfterAll void cleanup() {

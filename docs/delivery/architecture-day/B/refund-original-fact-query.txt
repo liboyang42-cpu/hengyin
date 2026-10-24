@@ -1,0 +1,14 @@
+下一真实接口缺口：旧 queryRefundFacts(String) 无法接收调用者原支付事实身份。
+本片 parent 3893bc66d097ff4980ea0b76f3285197f0a3fbe3；独立分支 codex/architecture-day-b-refund-original-fact-query。
+新增显式重载：IWechatPayService/WechatPaymentOperations.queryRefundFacts(WechatVerifiedPaymentFact.Reference originalPayment,String outRefundNo)。
+生产SDK与facade均显式实现；原签名保留，不用default回退；E2E fake没有真实原事实，显式返回null/UNKNOWN。
+先从持久事实reader加载PAYMENT SUCCESS，核对实际SDK captured merchant，失配时不向其他商户发查询。
+随后核对官方退款及原支付与该事实的原微信号、业务号、transactionId、appid、渠道、币种、total与原intent hash，
+全部同步通过才允许调用recordVerified写退款SUCCESS。原签名经同一个private helper，不降低其原校验。
+NOT_FOUND/异常仍沿旧形状返回NOT_FOUND/null，不代表原请求未执行，不解除原号/租约/身份。
+A/G采用时：originalPayment必须来自原支付确认时持久关联的id/hash，outRefundNo必须来自原退款提交意图；
+不能从请求body/current配置/最新alias重新生成。原退款金额/分项/owner/CAS继续由A/G原领域锁内核验。
+本片不替A/G补业务表关联字段、不改其正文、不猜历史原成功引用；缺少可信原引用时UNKNOWN等待查证。
+新增4个@Test源码：精确原单成功/重放、错商户或引用发送前拒绝、7类内部自洽但串原单的provider事实拒绝、404/超时保留原身份。
+旧E2E断言保留，新增新重载不授权断言。Java/JUnit/DB/CI/DDL/真实SDK全部NOT_RUN。
+没有新增依赖/迁移/业务规则；Root统一组合与验收。下一接线由A/G持久化原支付关联后采用此重载。

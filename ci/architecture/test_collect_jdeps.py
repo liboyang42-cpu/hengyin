@@ -976,6 +976,44 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertEqual(["B_PAYMENT_INTENTS", "B_PAYMENT_SDK"], cycle["owners"])
         self.assertEqual(2, len(cycle["witnesses"]))
 
+    def test_topic_query_preserves_seven_existing_read_ports_and_incoming_facade(self):
+        dependencies = ["com.chengyinhub.business.mapper." + n for n in
+                        ("CmsTopicMapper", "CmsTopicChapterMapper", "CmsTopicNodeMapper",
+                         "CmsTopicTemplateMetaMapper", "CmsMemberTemplateMapper")]
+        dependencies += ["com.chengyinhub.system.service.ISysCategoryService",
+                         "com.chengyinhub.business.service.IMerchantChapterApplicationService"]
+        for name in dependencies:
+            self.system_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_READ_PORT_" + name).encode()
+        self.write_system()
+        self.output = self.output.with_name("topic-query-read-ports")
+        self.collect()
+        query = self.owner_member("E_TOPIC_QUERY")
+        for target in dependencies: self.reference(query, target)
+        self.reference("com.chengyinhub.business.service.impl.CmsTopicServiceImpl", query)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
+
+    def test_topic_query_cannot_reverse_call_facade_publication_claim_or_runtime_writers(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for target in self.dependencies["owners"]["E_TOPIC_QUERY"]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member("E_TOPIC_QUERY"), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                self.assertEqual(("E_TOPIC_QUERY", target), (bad["source_technical_owner"], bad["target_class"]))
+
+    def test_topic_query_missing_its_raw_rows_is_unknown_despite_same_system_output(self):
+        query = self.owner_member("E_TOPIC_QUERY")
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in text.splitlines() if not l.strip().startswith(query + " -> ")).encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": "E_TOPIC_QUERY", "type": query}, report["review_items"])
+
     def test_followup_missing_common_input_or_wrong_module_remains_unknown(self):
         policy = copy.deepcopy(self.dependencies)
         policy["owners"]["F_REQUEST_CONTEXT"]["module"] = "chengyinhub-system"
@@ -1022,6 +1060,47 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertEqual("BLOCKED", report["verdict"], report)
         self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
         self.assertIn("PRIVATE_MAPPER_CONSUMER", {f["rule"] for f in report["findings"]})
+
+    def test_missing_declared_source_rows_is_unknown_even_with_all_modules_and_class_bytes(self):
+        member = self.owner_member("D_CONTENT_RULES")
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        filtered = "\n".join(line for line in text.splitlines() if not line.strip().startswith(member + " -> "))
+        self.assertNotEqual(text, filtered)
+        self.replace_evidence("jdeps.stdout.txt", filtered.encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": "D_CONTENT_RULES", "type": member}, report["review_items"])
+        self.assertEqual("UNKNOWN", report["technical_dependencies"]["verdict"])
+
+    def test_jdk_only_class_and_interface_rows_cover_legal_leaf_without_project_edges(self):
+        # Protocol shapes checked against OpenJDK21 implementation, not claimed
+        # actual JDK output. The real empty-class/interface runner is separate.
+        original = (self.output / "jdeps.stdout.txt").read_text()
+        for owner in ("F_LOG_CONTEXT", "B_PAYMENT_OUTBOUND_PORT"):
+            with self.subTest(kind=owner):
+                member = self.owner_member(owner)
+                rows = [line for line in original.splitlines() if not line.strip().startswith(member + " -> ")]
+                rows.append("   " + member + " -> java.lang.Object java.base")
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(rows).encode())
+                report = self.check_directions()
+                self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+                self.assertEqual([], report["technical_dependencies"]["owner_edges"])
+                index = json.loads((self.output / "class-index.json").read_text())
+                sources = set()
+                parsed = producer.parse_output(rows[-1], index, [Path(o + ".jar") for o in MODULES], source_rows=sources)
+                self.assertEqual({member}, sources)
+                self.assertEqual({}, parsed[0], "a JDK-only leaf has no project dependency edge")
+                self.assertEqual(5, len(parsed), "old parser protocol unchanged")
+
+    def test_module_summary_never_substitutes_for_declared_leaf_source_rows(self):
+        member = self.owner_member("F_LOG_CONTEXT")
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        rows = [line for line in text.splitlines() if not line.strip().startswith(member + " -> ")]
+        rows.append("chengyinhub-common.jar -> java.base")
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(rows).encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": "F_LOG_CONTEXT", "type": member}, report["review_items"])
 
     def test_incomplete_raw_is_unknown_even_when_no_forbidden_owner_edge_was_seen(self):
         text = (self.output / "jdeps.stdout.txt").read_text()

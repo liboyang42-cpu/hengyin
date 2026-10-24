@@ -1,0 +1,37 @@
+B 源码组合：parent 65e881857d4eda9cc0abd27cb9ba677f355d8658；未运行 Java/DB/CI/DDL/真实SDK。
+工作树 /workspace/b-payment-facts-composed；分支 codex/architecture-day-b-verified-facts-composed。
+复用6d641fa802cdf1277a158ce0b7633dcf126b5e10的事实结构；0ff路由/出站端口与A DTO原样保留。
+
+实际类型/reader/事务接缝（root转发A/G）：
+com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact，嵌套 Reference(long id,String hash)。
+WechatVerifiedPaymentFactService.requireVerified(Reference) -> Stored(reference,facts)，再 .facts() 取得不可变记录。
+Map引用字段统一 verified_fact_id / verified_fact_hash；付款及退款的字段与6d完全相同。
+recordVerified(WechatVerifiedPaymentFact) 在已完成 SDK/原意图核验后独立持久化，不接受待异步核验的成功占位。
+重复同事实复用原id/hash；provider/event双唯一约束冲突只写拒绝证据，不改原事实；UNKNOWN不写SUCCESS。
+
+分层：SDK持有credential/mchid与所有 provider 验单、事实创建；intent store仅持有原SQL与指纹读取；
+facade先SDK事实后原router分发，router未修改；fact service只依赖mapper，无领域Service回边。
+SDK金额/商户/appid/币种/交易号/实际微信号/成功时间及原请求hash核验完整迁入，不恢复06a单体。
+新 query 客户端与dc87 transfer client使用同一个实际credential/validator；transfer函数段完全未改。
+intent的原业务锁/attempt锁/CLOSED CAS/原号规则与0ff一致，新增的只有读取原 request_hash。
+
+A接缝：registerVerified(notifyId,bizType,bizId,"SUCCESS",ref)，随后 processVerified(notifyId,ref,原Mutation)。
+registerVerified 在原inbox登记事务内插入唯一fact链接；链接对 inbox/fact_id 各唯一，不给旧无绑定DONE自动补证。
+processVerified 先核对重复DONE资格，再包装原Mutation；原mutation服务持有inbox和业务目标锁后，
+在 isCurrent 内再次核对事实链接，随后调用原Mutation；业务写与DONE仍由原事务原proxy原owner/fence提交。
+未修改WxPaymentCallbackMutationService正文。失配/存储异常不会先ACK，也不会让业务成功而DONE单独提交。
+A仍须在其原topic/业务锁内核对事实业务号、原attempt、金额、owner和状态CAS；本层不替领域决定bizId。
+
+G接缝：在原领域事务/行锁下 requireVerified(ref)，核对REFUND kind、原业务/微信号、refundId/原交易号、
+原商户/appid/渠道、total/refund及原冻结分项后，才用fact_id关联既有成功冲回/ledger去重。
+G原冻结分项金额与冲回规则不由B推断。review.patch仅证据guard，不冒充G分项冲回实现。
+A/G精确review.patch已按65e8818真实源码重生成；均未应用到其Java文件。
+
+新事实迁移三表与6d逐字节相同：成功事实、拒绝证据、inbox sidecar。无旧DDL/旧表修改，无TTL身份释放。
+root负责registry/迁移排序/受控schema执行；源码提交不代表DDL批准。保留#586 HTTP语义，Controller/其原测试未改。
+
+测试源码：service9（含原mutation边界内重验）、gateway8、XML1、真实facts MySQL4，共22个@Test，全部NOT_RUN。
+原4项intent与3项真实报名inbox保留全部场景/断言，继续使用真实mapper/原业务/原事务及新fact真实mapper。
+测试helper只调整对象接线；单元内存mapper不会进入这7项真实链路；没有新增default成功或宽松fake。
+静态门禁：diff/check、秘密标记扫描、XML/Java词法检查、原断言数量、dc87 transfer全文、原锁/CAS方法逐体核对。
+剩余：A/G真实接线与统一同头回归/迁移验收。B不运行Java/CI/DDL、不改共享领域正文或正式集成分支。

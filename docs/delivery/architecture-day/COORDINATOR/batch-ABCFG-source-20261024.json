@@ -1,0 +1,851 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T09:09:41.435350+00:00",
+  "parent": "21964453bdeb2be23e86cef253968b26a80fa4d0",
+  "all_complete": false,
+  "candidates": {
+    "A_outer_create": {
+      "base": "ae1606843cca6ed847d84059640b1bab6e1decdc",
+      "head": "fd3501f7dca5492670c26065c7165597eae9974d",
+      "exact": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubActivityCancelWrapUpTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventTransferCancellationMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOwnerCancelOwnershipGateTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundDeadlineGateTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OuterCancellationTopicFenceTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationCreationTopicFenceTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationTopicFence.java",
+        "docs/delivery/architecture-day/A/WP04-CREATE-PARENT-FENCE/README.md",
+        "docs/delivery/architecture-day/A/WP04-CREATE-PARENT-FENCE/static-result.json",
+        "docs/delivery/architecture-day/A/WP04-OUTER-FENCE/README.md",
+        "docs/delivery/architecture-day/A/WP04-OUTER-FENCE/static-result.json"
+      ],
+      "composed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java"
+      ]
+    },
+    "B_facts": {
+      "base": "65e881857d4eda9cc0abd27cb9ba677f355d8658",
+      "head": "041534c7681e480f80eb8afc911f65bf1ed13eda",
+      "exact": [
+        "chengyinhub-admin/sql/migration_20261024_wx_verified_payment_fact.sql",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationCallbackIntentMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/WechatVerifiedPaymentFactMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WechatVerifiedPaymentFactMapperXmlTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/E2eWechatPayStubContractTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayAppChannelTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayNotifyUrlTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayOrderQueryTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayReadinessTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayRefundNotifyUrlTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTestWiring.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTransferClassificationTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentLockTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentTestSupport.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatRefundOriginalFactQueryTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactGatewayTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactServiceTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/WechatVerifiedPaymentFact.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WechatVerifiedPaymentFactMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWechatPayService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxPaymentCallbackInboxService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/WechatPaymentOperations.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentIntentStore.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+        "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml",
+        "docs/delivery/architecture-day/B/refund-original-fact-query.txt",
+        "docs/delivery/architecture-day/B/verified-facts-composed-contract.txt",
+        "scripts/e2e/E2eWechatPayStub.java.stub"
+      ],
+      "composed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java",
+        "docs/delivery/architecture-day/B/verified-fact-A-hooks.review.patch",
+        "docs/delivery/architecture-day/B/verified-fact-G-hooks.review.patch"
+      ]
+    },
+    "C_backend": {
+      "base": "06a571b1247620a9bdcea068be0ded973671d17c",
+      "head": "f1cfe74d58b766e385e639d40385e208790644a8",
+      "exact": [
+        "chengyinhub-admin/sql/migration_20261024_registration_seat_activity_scope.sql",
+        "chengyinhub-admin/sql/migration_20261024_registration_verified_seats.sql",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationSeatMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationSeatServiceTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationSeatEndpointTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/RegistrationSeat.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RegistrationSeatMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/RegistrationSeatService.java",
+        "chengyinhub-system/src/main/resources/mapper/business/RegistrationSeatMapper.xml",
+        "docs/delivery/architecture-day/C/seats/G-handoff.md",
+        "docs/delivery/architecture-day/C/seats/activity-backend.md",
+        "docs/delivery/architecture-day/C/seats/activity-reverse-owner.review.patch",
+        "docs/delivery/architecture-day/C/seats/frontend-node-results.json",
+        "docs/delivery/architecture-day/C/seats/frontend.md",
+        "docs/delivery/architecture-day/C/seats/implementation.md",
+        "docs/delivery/architecture-day/C/seats/rr-current-row-fix.md"
+      ],
+      "composed": []
+    },
+    "F_verifier": {
+      "base": "5caf6b288c8df612d8420e4007032e4d9568e18e",
+      "head": "bd33ed0be7fafaf89daaec2eb772c15b034d3ec0",
+      "exact": [
+        "ci/architecture/README.md",
+        "ci/architecture/collect_jdeps.py",
+        "ci/architecture/owners.json",
+        "ci/architecture/test_collect_jdeps.py",
+        "ci/architecture/test_gate.py",
+        "docs/delivery/architecture-day/F/source-row-verifier/HANDOFF.md",
+        "docs/delivery/architecture-day/F/source-row-verifier/jdk-source-check.json",
+        "docs/delivery/architecture-day/F/source-row-verifier/python-tests.txt",
+        "docs/delivery/architecture-day/F/topic-query-verifier/HANDOFF.md",
+        "docs/delivery/architecture-day/F/topic-query-verifier/python-tests.txt"
+      ],
+      "composed": []
+    },
+    "F_controls": {
+      "base": "e4e9f6042ba34fb571c3bcfbfe59e248000ef637",
+      "head": "c135c71fc9067d2d0fc1783dc60a2a7b9b26064c",
+      "exact": [
+        "ci/architecture/compiled_controls.py",
+        "ci/architecture/test_compiled_controls.py",
+        "docs/delivery/architecture-day/F/compiled-controls-pinned/HANDOFF.md",
+        "docs/delivery/architecture-day/F/compiled-controls-pinned/python-tests.txt",
+        "docs/delivery/architecture-day/F/compiled-controls-pinned/trusted-ref.review.patch",
+        "docs/delivery/architecture-day/F/compiled-controls/HANDOFF.md",
+        "docs/delivery/architecture-day/F/compiled-controls/prerequisite-tests.txt",
+        "docs/delivery/architecture-day/F/compiled-controls/source-row-coverage.review.patch",
+        "docs/delivery/architecture-day/F/compiled-controls/source-row-targeted.txt"
+      ],
+      "composed": []
+    },
+    "G_original_refund": {
+      "base": "e4e9f6042ba34fb571c3bcfbfe59e248000ef637",
+      "head": "8818837b3717e3340384545d04b81abef4697fc7",
+      "exact": [
+        "chengyinhub-admin/sql/migration_20261024_coop_original_refund_components.sql",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedgerTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPayoutTransactionTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTopicFenceTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlement.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementOriginalAdjustment.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementOriginalComponent.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementRefundReceipt.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopOriginalRefundScope.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementAdjustmentMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementOriginalMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/UmsMemberSettlementDebtMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopSettlementClaimService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementAdjustmentMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/UmsMemberSettlementDebtMapper.xml",
+        "docs/delivery/architecture-day/G/original-refund/README.md",
+        "docs/delivery/architecture-day/G/original-refund/a-review-route.review.patch",
+        "docs/delivery/architecture-day/G/original-refund/frozen-topic-fence-fixture.review.patch",
+        "docs/delivery/architecture-day/G/original-refund/mysql-cases.txt",
+        "docs/delivery/architecture-day/G/original-refund/source-sha256.txt",
+        "docs/delivery/architecture-day/G/original-refund/static-checks.txt",
+        "docs/delivery/architecture-day/G/original-refund/static-delta.txt"
+      ],
+      "composed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ]
+    }
+  },
+  "checks": {
+    "registry": "101 registered classes strict source precheck PASS;14 RegistryContractTest PASS",
+    "mapper_XML": "6 actual XML parse PASS; no SQL execution",
+    "F_python": "80 producer controls plus21 tool/policy controls PASS; no actual JDK",
+    "API_existence": "0 missing static/dynamic path;1 existing unresolved expression; backend-only C client delta still pending",
+    "secret_scan": "770884bytes0leaks before this receipt; final combined scan pending",
+    "Java_MySQL_JDK_business": "NOT_RUN",
+    "migration_before_commit": "explicit staged13 migration batch PASS; shared manifest dependencies in topological execution order, relative origin/master declarations only added; no DDL executed"
+  },
+  "compositions": [
+    "B gateway: removed orphan class-level callback block; restored exact6d matchesRefundNotification body with package access for facade",
+    "B review patches: six blank context lines normalized, git apply numstat parses both; proposal only",
+    "A domain and TeamGroup retain B WechatPaymentOperations outbound qualifiers; outer/create topic fences composed",
+    "C backend only; client f1cfe74 NOT applied pending session revision P2 and current fixes",
+    "G shared CmsTopic payout hunks composed with E query extraction, original5 topic-fence fixture gets required new empty original mapper; old5 not original-refund acceptance",
+    "F6 trusted files byte-exact bd33, both CI refs pinned, post-build controls in same job; no new job",
+    "Registry isolated B4/C7/G10 and A14 exact source; workflow scratch flags are class-only; no production DDL"
+  ],
+  "remaining": [
+    "A verified facts domain wiring and real G terminal hooks",
+    "B fresh reader and sidecar current-read repair",
+    "C role/session and page generation P2 repair/client composition",
+    "D audit RR withdraw fix and durable notice",
+    "G actual original allocation producer, partial rounding and negative liability decisions",
+    "same-source Java/DB/runtime/compiled graph/business readback",
+    "entire WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5 completion audit",
+    "F assess actual E batch read TopicQuery->TopicSizeLimits dependency before final new trusted freeze"
+  ],
+  "file_digests": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "algorithm": "SHA-256",
+      "hex": "63ef5368baffdb17dc3eb6e384f26a0ca72c6a01dfb92e2bd939a98bf255dcc6"
+    },
+    {
+      "path": ".github/workflows/real-storage-it.yml",
+      "algorithm": "SHA-256",
+      "hex": "9957b34dd52e433767ac33b18e147485202b33a82a59bac1039c64c29b6650e9"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261024_coop_original_refund_components.sql",
+      "algorithm": "SHA-256",
+      "hex": "ccde7e23229557657541c972bc55820bb8ed6e078165ed94a9c2c4df778fd6fe"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261024_registration_seat_activity_scope.sql",
+      "algorithm": "SHA-256",
+      "hex": "b2c1aabc496c7cd28ced1864e6db78d3736325890035c8b90d1d4e5c16603ae8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261024_registration_verified_seats.sql",
+      "algorithm": "SHA-256",
+      "hex": "8d1912dd674a657db43ab6a44431066723741113e263faa554811194c81e5495"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261024_wx_verified_payment_fact.sql",
+      "algorithm": "SHA-256",
+      "hex": "1bc8ed6c9fdfefbb63890802f663961a27adb5636770394a0671123504d060e9"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "algorithm": "SHA-256",
+      "hex": "ae2bf1278148b9e22d638d3c78c491aca08c125e067e24b8592b705d617b4bf0"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+      "algorithm": "SHA-256",
+      "hex": "37e25ebffcf93bfdecde3390879a33475ec07ae5fc44d6592a3f01ff5b43a925"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationCallbackIntentMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "20808201b6f7b6dad1577214fe3cf24d24f643f859ee64885b5e906729068181"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationSeatMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "2ff438f2243b9177c80661015f0b9d31757c5001a6cb29bdfc30d4f5911841f9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "170fbb481c7c9f9b912975fc1435445423666bacb33bbde538f1969978d516a4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/WechatVerifiedPaymentFactMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "0fa2e229b017891eab0f9646fa410839505419e84996028b347b832fa98d9e08"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "3664eff89d18ca5cbdabb9110b29fde18f26540ce6d29dd95cccfa895d301c94"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04TopicCashFenceMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "7a49dae48d649ea0c20af1723ac44f83d124b3d905cf48e17e3d50be57807fb5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WechatVerifiedPaymentFactMapperXmlTest.java",
+      "algorithm": "SHA-256",
+      "hex": "79d6ab70fc148bba346b759d5c3b7e61bd86aa4a9d476604bea9767386cbf078"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubActivityCancelWrapUpTest.java",
+      "algorithm": "SHA-256",
+      "hex": "6b7b53fd51149f5d40405830d4e3cc218b1e0c2aea6ecadf0184e29d39dc7a57"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventTransferCancellationMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "9ba457b119d36c48662c346e2f8b93160a6b0860825efe81f79638eff3721606"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java",
+      "algorithm": "SHA-256",
+      "hex": "e9814e326f53953074d7b6d8caba64008c42285871eedf38257bc1a48f4a3a2b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOwnerCancelOwnershipGateTest.java",
+      "algorithm": "SHA-256",
+      "hex": "63fab94eb3565ff55bf4343ac66e911fe0b08b72e97c4ddc34318ed64c9eefb4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundDeadlineGateTest.java",
+      "algorithm": "SHA-256",
+      "hex": "48268c3dabce5905efe2361be5b0c7fa573531b21eea0e87908e0ae66a621f14"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationSeatServiceTest.java",
+      "algorithm": "SHA-256",
+      "hex": "85f84db68c83d0387dea6b57648ed0a6879e613f5c9a1059c174b7d8aa987f2c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java",
+      "algorithm": "SHA-256",
+      "hex": "9b140dd58183ff405796522f38b41fdb290c2a3830642af285a79e0f6c22e874"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedgerTest.java",
+      "algorithm": "SHA-256",
+      "hex": "d81e18e5de211cfc2a38ee20887c23f47f085d4c32c6e99694caeb14b2b8b508"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPayoutTransactionTest.java",
+      "algorithm": "SHA-256",
+      "hex": "7ca83fc9f7b328d8cd5a122655e5ade0b02a0ec71ad5f511d6eb9c6e1434d9cd"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java",
+      "algorithm": "SHA-256",
+      "hex": "647b1ede699508b8e6ce869ba19e68a75dc80f68e9eb9578b5323b934de006f5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTopicFenceTest.java",
+      "algorithm": "SHA-256",
+      "hex": "a8ea2ebcea75e3b1dae03bf9fd8f49989b673904a7e4cb9825e2e3fe58511238"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/E2eWechatPayStubContractTest.java",
+      "algorithm": "SHA-256",
+      "hex": "fe6835866bdd0d0e3c4849d743b5a2bb1a103804ef5ce4de7f868e5dd5a83c27"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OuterCancellationTopicFenceTest.java",
+      "algorithm": "SHA-256",
+      "hex": "248ed5b2d8263e50a75cb2ae93bb12ed3e9bc6f4433fe6ec295e7100e327b73d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java",
+      "algorithm": "SHA-256",
+      "hex": "773793404bdec69092dafc4a8bc6e2d5d954e5002f09c05fe140e2dc6e2a6188"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationCreationTopicFenceTest.java",
+      "algorithm": "SHA-256",
+      "hex": "712aea62e609cfe546e2ab36a35a8ec360ccb6dbe60e6c0a0d9d9be897eaddc3"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayAppChannelTest.java",
+      "algorithm": "SHA-256",
+      "hex": "8edb0f284c4436be65628245994e6f856faff70b23b82b64f7941acfda0bf1cd"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java",
+      "algorithm": "SHA-256",
+      "hex": "5868abfef9da441f1582f9c61600b9ec20ce4663a2b105f4378b618d19531ca8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java",
+      "algorithm": "SHA-256",
+      "hex": "99e09ce58b99b54183934b20d08734c11ecead6d0cc8550696ad0d935a51ed05"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayNotifyUrlTest.java",
+      "algorithm": "SHA-256",
+      "hex": "c505d356a130b10280a1bec313aa38f2ade32727076ae0a4f6433b5ee408adf0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayOrderQueryTest.java",
+      "algorithm": "SHA-256",
+      "hex": "b53a82f6b56d0f878e9fa3cee0d9163581aeead9c733781a5b2d8f9fd7ad3f84"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayReadinessTest.java",
+      "algorithm": "SHA-256",
+      "hex": "e7f347c507e9493dd7e7e07710dcafd5153d8973b32836f900d24c38f3e7da1b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayRefundNotifyUrlTest.java",
+      "algorithm": "SHA-256",
+      "hex": "61687fa7c8bad4a9746ba3815548c821545989bc26fd3f768c1d91e6b051fb24"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTestWiring.java",
+      "algorithm": "SHA-256",
+      "hex": "46878f4fcc403836b4f4903f087b8991d3defd5d6d74c90ea4bb6c0c0314a88f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTransferClassificationTest.java",
+      "algorithm": "SHA-256",
+      "hex": "04cee82b0bd49986329e859d9f4e2ce2698e2c39ca95a09b0af2788460ce2279"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentLockTest.java",
+      "algorithm": "SHA-256",
+      "hex": "67197ebaf063d70b7427fa77310846032b6f5caf2f735c0b0df0fb0d74b570a2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "90e8e4406fdfe186b39dc8e4ed2f227efc455b6be2c2a1d4e82c7966ea9c761f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentTestSupport.java",
+      "algorithm": "SHA-256",
+      "hex": "ecc9ee4ee600e922fe24343d8bee08b006e99c7c5872761cebcee2bbf1b9591b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatRefundOriginalFactQueryTest.java",
+      "algorithm": "SHA-256",
+      "hex": "2cf6cbdd088ce9808b3169d8e7cd23a2e8064c36eb9be5c687e072bd6cd89254"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java",
+      "algorithm": "SHA-256",
+      "hex": "d7107c35ac13080bcb5112bb4589b725811cd621192ef786daa5d94e8ea9d657"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactGatewayTest.java",
+      "algorithm": "SHA-256",
+      "hex": "3fb6b91c1f8ccbba9a5589e5b23bc2098aa5dab7437d7ec5422a91ecbc56a93b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactServiceTest.java",
+      "algorithm": "SHA-256",
+      "hex": "852a097d3e6d367dd1fd2e2fa3fd2543d76eac242aac46db2fa27abad2d8630b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationSeatEndpointTest.java",
+      "algorithm": "SHA-256",
+      "hex": "2f248d08698e15cbc2066aa197419269cc9468bab31e7dab0624351ab1e24fa9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/WechatPayCallbackHttpAckTest.java",
+      "algorithm": "SHA-256",
+      "hex": "aa71a3210de183afc456abe1e4ff98daeab9c41edf71d37b33e804ba0ae3cf1d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlement.java",
+      "algorithm": "SHA-256",
+      "hex": "570597b9e74aa75b6133da706656bc90563b05d5087dfe1ec33746d601a74fdc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementOriginalAdjustment.java",
+      "algorithm": "SHA-256",
+      "hex": "aff4069d3f05245f053417d0f88a5ccba9191a072b6f3f02574b0349586fcc89"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementOriginalComponent.java",
+      "algorithm": "SHA-256",
+      "hex": "6d4c36338232a5d67ba9bbdd1a37a99866d8344fc4423331fc879f59651459b5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementRefundReceipt.java",
+      "algorithm": "SHA-256",
+      "hex": "dd76a4f3e28f0c1bc332e4fc489307e42c31026b43f9194c68af46ad673955c7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/RegistrationSeat.java",
+      "algorithm": "SHA-256",
+      "hex": "1d323cf80a4c610f5e97cc82badca59a0e56c63fb48723e760e301ad7a59a37f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopOriginalRefundScope.java",
+      "algorithm": "SHA-256",
+      "hex": "4188eb7687359d99dfd441a2b13a2c3f453803b44970993f20950456dbbeff44"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/WechatVerifiedPaymentFact.java",
+      "algorithm": "SHA-256",
+      "hex": "d04d8007475c369a7d70e20d52c6a2f30dd1cc7ca02ec01630b6cbb3433d9fdf"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementAdjustmentMapper.java",
+      "algorithm": "SHA-256",
+      "hex": "ab3a88787c1f8a7e896f46b54acefb05e82c9f7f53b79f46c799c476e4124271"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementOriginalMapper.java",
+      "algorithm": "SHA-256",
+      "hex": "58c8ab7a7477309c0f958388dd6da9faef22dc32f11c20a148f42ab279e7954e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RegistrationSeatMapper.java",
+      "algorithm": "SHA-256",
+      "hex": "e4c7b8c122608c56e59a93c1a7e55d6b555462f649716b42b77d0703ba1a1c2d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/UmsMemberSettlementDebtMapper.java",
+      "algorithm": "SHA-256",
+      "hex": "752dac579cc735ca504eacd8a856ad4ec3153a56ad2e9233deca992b97aa02ba"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WechatVerifiedPaymentFactMapper.java",
+      "algorithm": "SHA-256",
+      "hex": "8b1f8a1772a87c22684e8825ca53923341a5ab26f867bb9146778663f78cf7da"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopSettlementClaimService.java",
+      "algorithm": "SHA-256",
+      "hex": "103ff33f7354ea6e1cc98051a4e92473ee3f3ec85d8ffcb47f1941a42c87dcc4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWechatPayService.java",
+      "algorithm": "SHA-256",
+      "hex": "4750c82f22833d45c950ee1b9f49596166472b12db603ec5cddea3cb360e2bff"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxPaymentCallbackInboxService.java",
+      "algorithm": "SHA-256",
+      "hex": "e6aef3e8e425f9d26455a900d36032423603a34e7173b02daf7f5966b2c7ab78"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/RegistrationSeatService.java",
+      "algorithm": "SHA-256",
+      "hex": "e99e3a2aa07da08108397f5655e00215d39ce9fe187b6776760e4e8e2d09f719"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/WechatPaymentOperations.java",
+      "algorithm": "SHA-256",
+      "hex": "1514c1da3d76d48aad1e979640e96afff3ca01fac712f77ae5b791bd15cbfe14"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "5da9602b120aaec0916e21541417343943d1887e9df161c69a2e03d1748c336e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "37c3249b31dba05b725d805b316c7af556856d40330c74a737b62f5c0bd1ccc5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "c53f6793f07b85ceb4f3f789a67a150d9c56529b140ffc3f586d0fa83e6cbd4c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "e75edf0cd722bd3ad3e7d2b0eccb6e2bc097e8cb9e6f5926fe52da59c43f07d3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java",
+      "algorithm": "SHA-256",
+      "hex": "2bb7e297c582347ec6e7bfd880b3ae43d00ed462e69908eed3f6c70e589a64d7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationTopicFence.java",
+      "algorithm": "SHA-256",
+      "hex": "5b02dc740adbfa8167481ede9a4824a0a580f3e1fbd474a59e60e1dde659ea40"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "1b2eb8b7d456f0c7c566172012055ea51df63253a84690baa1b449825798a97d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "62bab90dec4f0b5d71e6f4f0f6b6b0caeb6a10da6c68d670dd814be79b6d0053"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentIntentStore.java",
+      "algorithm": "SHA-256",
+      "hex": "e13b8ef55fa471a8e51ca158ff5d326dad0152e4a63ad28d896522ac9409d3aa"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java",
+      "algorithm": "SHA-256",
+      "hex": "a27f54a9b1de088316a686e84da78e802ba18b4fb26408fd7b6ca0728f8da87b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java",
+      "algorithm": "SHA-256",
+      "hex": "8b1b56c7e3ffc028c47e294bf7766130e5082e2fbad70885a329f0e6abdb5d5d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "50b7e0c9682426399ca2c3ecb96559d054da42b9de72a7e19dd1238366b2a017"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java",
+      "algorithm": "SHA-256",
+      "hex": "69a5a0ec083e6047d0de735e376aa37089e49d8a5581d8c3071ac422fb791a9f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementAdjustmentMapper.xml",
+      "algorithm": "SHA-256",
+      "hex": "61199b127f8ce8fc7bc2108ea65f4b1b07a58e910ddf4f8c2c49270e61f8ae7c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml",
+      "algorithm": "SHA-256",
+      "hex": "708aefb7715c8a37d367fd307371709eb7302c637bd098641f2e6f8f7024ae88"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml",
+      "algorithm": "SHA-256",
+      "hex": "9b7a9c0794e047e33c262c4256de159e30d8e14589ce1e4a8eddabfd15efe5f6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RegistrationSeatMapper.xml",
+      "algorithm": "SHA-256",
+      "hex": "731e46b866661616146f5484f4ca96ba877c46ba8a3e5d276be1ecff70f298a3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberSettlementDebtMapper.xml",
+      "algorithm": "SHA-256",
+      "hex": "bd5287823b7c7c64d8d5547090b9063d88d896e6ab988f69ea5927db5bbefdea"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml",
+      "algorithm": "SHA-256",
+      "hex": "0600a06a991edd0178b0c3beb817cb20a4f03f083be8c334546479822da2e45f"
+    },
+    {
+      "path": "ci/architecture/README.md",
+      "algorithm": "SHA-256",
+      "hex": "ac4c8a233e3f6e099dbec9d8b93b91fd655b93953d30f81bdbeb5fd581fb0459"
+    },
+    {
+      "path": "ci/architecture/collect_jdeps.py",
+      "algorithm": "SHA-256",
+      "hex": "2cf7bc5a8dd89faa8cb85288f06e9cc78aad1641ef8badd2ec92102bff46a78c"
+    },
+    {
+      "path": "ci/architecture/compiled_controls.py",
+      "algorithm": "SHA-256",
+      "hex": "3a9466f44af69ed35af740c5fb0a86b42f5c090daaa02d5cb9e36e3915097b6b"
+    },
+    {
+      "path": "ci/architecture/owners.json",
+      "algorithm": "SHA-256",
+      "hex": "72d930822aba740b4960373b6ba1ed49255dc7e032974314fd42fd666f790d54"
+    },
+    {
+      "path": "ci/architecture/test_collect_jdeps.py",
+      "algorithm": "SHA-256",
+      "hex": "0a411dbcd7a5129f41753825061245bbbe3a790ebfaa0a589f9494db54d6dcb7"
+    },
+    {
+      "path": "ci/architecture/test_compiled_controls.py",
+      "algorithm": "SHA-256",
+      "hex": "857ccc5808c02a5cb0f4dd49eb2a83e155e4f78f14744f854a61ee31a834b4d4"
+    },
+    {
+      "path": "ci/architecture/test_gate.py",
+      "algorithm": "SHA-256",
+      "hex": "c587aa2e9fc87cdcc01c6a1d070996b8c5aae2b101750b78a6259ccc2ebff824"
+    },
+    {
+      "path": "ci/migration-dependencies.json",
+      "algorithm": "SHA-256",
+      "hex": "7b5b2b922624908b52522b67e013e5b0fa075d9ca4fbe20852424cb6b4e3db11"
+    },
+    {
+      "path": "ci/real-storage-it-registry.json",
+      "algorithm": "SHA-256",
+      "hex": "d53e081dec2891566d30ebb37565766eac763f7e4fb77127526af84afb784b19"
+    },
+    {
+      "path": "ci/test_real_storage_it.py",
+      "algorithm": "SHA-256",
+      "hex": "9f201b026f4a987369ac3a6ab8baa8e5a5428602c3bf3ccab401f76f55b4b33b"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-CREATE-PARENT-FENCE/README.md",
+      "algorithm": "SHA-256",
+      "hex": "15db2eebc91c6ee7407bb829e73ef0f88a92050e17dcd9e910799532153e541c"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-CREATE-PARENT-FENCE/static-result.json",
+      "algorithm": "SHA-256",
+      "hex": "177192668be1e0808040e57a1fc7fab21916190af7bed62a6abc6c7e5ca3ca38"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-OUTER-FENCE/README.md",
+      "algorithm": "SHA-256",
+      "hex": "bdfcdaa705978b073aa2842897d047451159649e531781a2d8d81ca5fcc756c0"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-OUTER-FENCE/static-result.json",
+      "algorithm": "SHA-256",
+      "hex": "a0a1228dbd55ca3e9c5f5df2ab6f18a0f99ba59aaf9b6cd6f373a0688c94dd7b"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/refund-original-fact-query.txt",
+      "algorithm": "SHA-256",
+      "hex": "2d8d2ccccfcb3d751d521fd522c190e1d28f556f9ab9a5d1df4d564a524b6aee"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/verified-fact-A-hooks.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "278121ebb847686537a76cbfcbd1d112a080bdd6d1f4c8291b0abd446f4a4143"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/verified-fact-G-hooks.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "69dd05db6f74e6b54294c3f3388231730b8aadefec50389f23799506c42fc9a4"
+    },
+    {
+      "path": "docs/delivery/architecture-day/B/verified-facts-composed-contract.txt",
+      "algorithm": "SHA-256",
+      "hex": "e7d9ec3c83e78801c8b2b0152fec0d1564987d9724c46bb3f1075c0c4eb549dd"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/G-handoff.md",
+      "algorithm": "SHA-256",
+      "hex": "ff72aa32d0c83421552a214c53d4029c522158868aa1df98a1bbc65571549c24"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/activity-backend.md",
+      "algorithm": "SHA-256",
+      "hex": "6caf0bef0135460aa97c5e7206da9b401d3ec1779cd2d65e35b12a306870bc52"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/activity-reverse-owner.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "1cd789be5be16c012c8a57b730aa74db4537624329771504b39cbe93afd5393d"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/frontend-node-results.json",
+      "algorithm": "SHA-256",
+      "hex": "59ae3b682ebe7aa4f4d9c37f39ebe53f75628c50ebad9f2ee805762c22a6a553"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/frontend.md",
+      "algorithm": "SHA-256",
+      "hex": "1704bf273af46ce17e8a1a39b628d37ae7f0f0ecdc6df566d9ec24635093880f"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/implementation.md",
+      "algorithm": "SHA-256",
+      "hex": "608c504045cfe83b1498c73e389a85d789abf532a3441a84d399a82cdda99ddd"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/rr-current-row-fix.md",
+      "algorithm": "SHA-256",
+      "hex": "ee55367b68ecb9278a7049aef1cf02f51877eb2b92a17e84832e5e7f6e72c469"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/compiled-controls-pinned/HANDOFF.md",
+      "algorithm": "SHA-256",
+      "hex": "811b3897cb9fee9a75560fcc36951209889094de4d337601b6f4db32416314fe"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/compiled-controls-pinned/python-tests.txt",
+      "algorithm": "SHA-256",
+      "hex": "22881468e2296233d9cd9b5d474649bf08107cf203672375701fdf0192d26cfb"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/compiled-controls-pinned/trusted-ref.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "b4bdbaf52048805cffffc226ae72e65857e0650adb70418e1fce36c37e65132d"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/compiled-controls/HANDOFF.md",
+      "algorithm": "SHA-256",
+      "hex": "208b6406cce93ef7ca2406aa9ed3c07c0339cbcda92b833d2812f5b345f52117"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/compiled-controls/prerequisite-tests.txt",
+      "algorithm": "SHA-256",
+      "hex": "2a4779d515b7e711ea7adc17d001c02e1bf19e9787369cc2cbdf1ad4d1a9ea56"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/compiled-controls/source-row-coverage.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "1fd740c82b386c25ebcb4dd1f14e684c5844d345704e8751db5d6cb1899de2b1"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/compiled-controls/source-row-targeted.txt",
+      "algorithm": "SHA-256",
+      "hex": "e6fd7217e854d8a9d3606939d8e8fe09740369d403fdde64cc4f85e9d37b8dcf"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/source-row-verifier/HANDOFF.md",
+      "algorithm": "SHA-256",
+      "hex": "c3887fb3999c427fedacec358b00a3395723ad62150149690c7f0cbf4687d3bb"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/source-row-verifier/jdk-source-check.json",
+      "algorithm": "SHA-256",
+      "hex": "9905d1ddb95f51e15b87e0c3658c3346055cbe9ed89ad01cfb2b632807d512bc"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/source-row-verifier/python-tests.txt",
+      "algorithm": "SHA-256",
+      "hex": "faf60d8dba5b4fbf35871435dc1701f5210a1fbd0c5c0bda687c7cd8736f29f7"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/topic-query-verifier/HANDOFF.md",
+      "algorithm": "SHA-256",
+      "hex": "966cd463750ca3365049dd31e4e28ebc25691070d23e8f4e87bb3c20f6521e3f"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/topic-query-verifier/python-tests.txt",
+      "algorithm": "SHA-256",
+      "hex": "5a89f337609f3f055e0c0df9edbb2861d5c0cc76d6b745d42e4e98edf59526b7"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/original-refund/README.md",
+      "algorithm": "SHA-256",
+      "hex": "0d7bd921322f990caf9ac38f6758a2e4006a03742bbba3a93fba1c53573995a2"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/original-refund/a-review-route.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "2d73e266a7f51673eb6aca2e5544001de85ad9176a85d94e52c33e2b28a6dbb1"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/original-refund/frozen-topic-fence-fixture.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "8c4f3667c7b2a99d3c4b7624e581e0e490b99a8cde9c633b175494fa705612a9"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/original-refund/mysql-cases.txt",
+      "algorithm": "SHA-256",
+      "hex": "10013854c2d6cb04a3a3a0f8b6d77ba44b1aa4e13813b67e46452b230d27cdf0"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/original-refund/source-sha256.txt",
+      "algorithm": "SHA-256",
+      "hex": "d173f527c81ba0d1f961b0ab116380ced322b7278a3082a051f442daeec5abe5"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/original-refund/static-checks.txt",
+      "algorithm": "SHA-256",
+      "hex": "964059b1f134a59c6c362d3c9c4eac1cca004d979e36071441e0150291e79a23"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/original-refund/static-delta.txt",
+      "algorithm": "SHA-256",
+      "hex": "8c22499c602a82ba7eb25e1c82ff076f57f589cb7d45de23e836911ee0a4ccab"
+    },
+    {
+      "path": "scripts/e2e/E2eWechatPayStub.java.stub",
+      "algorithm": "SHA-256",
+      "hex": "2a43c42577147c7ceb37c81d9b1f74f3b6ff686a4051c75acf311ea178b59f07"
+    }
+  ]
+}

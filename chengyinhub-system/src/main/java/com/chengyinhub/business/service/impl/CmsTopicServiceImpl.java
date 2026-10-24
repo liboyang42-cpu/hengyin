@@ -294,6 +294,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private ITopicSaleFinalizationService topicSaleFinalizationService;
 
+    @Autowired
+    private CoopSettlementOriginalMapper coopSettlementOriginalMapper;
+
     @Autowired(required = false)
     private ITopicSaleCanonicalMutationService canonicalMutationService;
 
@@ -1136,6 +1139,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     private CoopSettlement newSettlementLine(CmsTopic topic, Long payee, BigDecimal amount, String lineType, String payeeType,
                                              int status, Date payable, Date now, int verifiedHeads, BigDecimal verifiedSales, String verifiedRegIds) {
         CoopSettlement s = new CoopSettlement();
+        s.setCashHeadKind("platform".equals(payeeType) ? "ACCOUNTING" : "MEMBER");
         s.setTopicId(topic.getId());
         s.setMerchantId(payee);
         s.setLineType(lineType);
@@ -1246,6 +1250,17 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     /** 单张结算独立事务内完成领取、余额、流水和终态；返回 null 表示本轮未发生正额打款。 */
     private CoopSettlement payoutOneDueCoopSettlement(Long settlementId, Long observedTopicId, Date now) {
         CmsTopic topic = lockSettlementTopic(observedTopicId);
+        // 同topic先按头ID锁定并读取全部当前净额。未决定承担方的负头不能靠先付别的头耗尽资金。
+        List<CoopSettlement> topicHeads = coopSettlementOriginalMapper.selectTopicHeadsForUpdate(topic.getId());
+        if (topicHeads == null) throw new IllegalStateException("CURRENT_TOPIC_HEADS_REQUIRED");
+        for (CoopSettlement head : topicHeads) {
+            if (head == null || !topic.getId().equals(head.getTopicId())) {
+                throw new IllegalStateException("CURRENT_TOPIC_HEAD_IDENTITY_CONFLICT");
+            }
+            if (!Integer.valueOf(2).equals(head.getStatus()) && currentCoopHeadNet(head).signum() < 0) {
+                throw new IllegalStateException("NEGATIVE_SETTLEMENT_HEAD_POLICY_REQUIRED:settlementId=" + head.getId());
+            }
+        }
         CoopSettlement s = coopSettlementMapper.selectDuePayoutForUpdate(settlementId, now);
         if (s == null) {
             return null;
@@ -1257,11 +1272,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (s.getTopicId() != null && coopComplaintMapper.countOpenByTopicId(s.getTopicId()) > 0) {
             return null;
         }
-        BigDecimal executedAdjustments = coopSettlementAdjustmentMapper == null
-                ? BigDecimal.ZERO : coopSettlementAdjustmentMapper.sumExecutedBySettlement(s.getId());
-        if (executedAdjustments == null) executedAdjustments = BigDecimal.ZERO;
-        BigDecimal payoutAmount = (s.getAmount() == null ? BigDecimal.ZERO : s.getAmount()).add(executedAdjustments);
-        if (payoutAmount.compareTo(BigDecimal.ZERO) <= 0) {
+        BigDecimal payoutAmount = currentCoopHeadNet(s);
+        if (payoutAmount.signum() < 0) {
+            throw new IllegalStateException("NEGATIVE_SETTLEMENT_HEAD_POLICY_REQUIRED:settlementId=" + s.getId());
+        }
+        if (payoutAmount.signum() == 0) {
             requireExactlyOne(coopSettlementMapper.markPaidIfPending(s.getId(), now), "置零元结算为已打款", s.getId());
             return null;
         }
@@ -1301,6 +1316,28 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 只改返回对象供通知显示净打款；数据库原始头 amount 永不被调整覆盖。
         s.setAmount(payoutAmount);
         return s;
+    }
+
+    /** 已持有topic和head锁；不使用RR快照SUM或MyBatis一级缓存作为当前出款基数。 */
+    private BigDecimal currentCoopHeadNet(CoopSettlement head) {
+        if (head.getId() == null || head.getAmount() == null) throw new IllegalStateException("CURRENT_HEAD_AMOUNT_REQUIRED");
+        BigDecimal net = head.getAmount();
+        List<CoopSettlementAdjustment> legacy = coopSettlementAdjustmentMapper.selectExecutedBySettlementForUpdate(head.getId());
+        if (legacy == null) throw new IllegalStateException("CURRENT_LEGACY_ADJUSTMENTS_REQUIRED");
+        for (CoopSettlementAdjustment row : legacy) {
+            if (row == null || !head.getId().equals(row.getSettlementId()) || row.getAmount() == null
+                    || !"EXECUTED".equals(row.getStatus())) throw new IllegalStateException("CURRENT_LEGACY_ADJUSTMENT_CONFLICT");
+            net = net.add(row.getAmount());
+        }
+        List<CoopSettlementOriginalAdjustment> originals = coopSettlementOriginalMapper.selectAdjustmentsForSettlementForUpdate(head.getId());
+        if (originals == null) throw new IllegalStateException("ORIGINAL_REFUND_ADJUSTMENTS_UNAVAILABLE");
+        for (CoopSettlementOriginalAdjustment row : originals) {
+            if (row == null || !head.getId().equals(row.getSettlementId()) || row.getAmount() == null) {
+                throw new IllegalStateException("ORIGINAL_REFUND_ADJUSTMENT_IDENTITY_CONFLICT");
+            }
+            net = net.add(row.getAmount());
+        }
+        return net;
     }
 
     private CmsTopic lockSettlementTopic(Long topicId) {

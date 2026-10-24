@@ -132,7 +132,7 @@ def stage_inputs(root, artifact, output, library_dir, report):
     return modules, index, paths
 
 
-def parse_output(text, index, inputs, selected_references=None):
+def parse_output(text, index, inputs, selected_references=None, source_rows=None):
     references, missing, unknown, seen = {}, [], [], set()
     names = {p.name for p in inputs}
     for line in text.splitlines():
@@ -145,6 +145,8 @@ def parse_output(text, index, inputs, selected_references=None):
                 unknown.append({"reason": "SOURCE_OWNER_UNRESOLVED", "line": line})
                 continue
             seen.add(index[source]["owner"])
+            if source_rows is not None:
+                source_rows.add(source)
             if location == "not found":
                 missing.append({"source_class": source, "target_class": target})
                 continue
@@ -261,6 +263,17 @@ def owner_components(nodes, edges):
         reach[node] = seen
     groups = {tuple(sorted(other for other in nodes if other in reach[node] and node in reach[other])) for node in nodes}
     return sorted(group for group in groups if len(group) > 1)
+
+
+def owner_source_reviews(policy, source_rows):
+    """Any recognized source row counts, including a leaf's java.lang.Object.
+
+    A module summary or another type's row cannot cover this exact member.
+    No requirement for a project-outgoing edge, no leaf/baseline exemption.
+    """
+    return [{"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}
+            for owner, binding in policy["owners"].items()
+            for member in binding["members"] if member not in source_rows]
 
 
 def technical_dependency_findings(index, selected, policy, input_complete=True):
@@ -397,7 +410,8 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports, 
             if dependency_policy is not None:
                 roots = {n for owner in dependency_policy["owners"].values() for n in owner["members"] + owner["forbidden_backrefs"]}
                 selected.update({name: {} for name in index if any(name == n or name.startswith(n + "$") for n in roots)})
-            _, _, missing, unknown, seen = parse_output(files["jdeps.stdout.txt"].decode(), index, inputs, selected)
+            source_rows = set()
+            _, _, missing, unknown, seen = parse_output(files["jdeps.stdout.txt"].decode(), index, inputs, selected, source_rows)
             result["evidence_verified"] = True
             result["evidence_sha256"] = hashes
             result["build_identity_sha256"] = shared.digest(identity_bytes)
@@ -421,6 +435,7 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports, 
                     if ref["source_class"] != consumer:
                         result["findings"].append({"rule": "PRIVATE_MAPPER_CONSUMER", "allowed_consumer": consumer, **ref})
             if dependency_policy is not None:
+                result["review_items"].extend(owner_source_reviews(dependency_policy, source_rows))
                 directions = technical_dependency_findings(index, selected, dependency_policy, not result["review_items"])
                 result["technical_dependencies"] = directions
                 result["findings"].extend(directions["findings"])

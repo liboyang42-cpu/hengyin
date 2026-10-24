@@ -80,6 +80,7 @@ class ActivityCancelTest {
         when(imService.sendSystem(anyLong(), any(), anyString(), anyString())).thenReturn(910L);
 
         when(activityMapper.selectCmsActivityByIdForUpdate(ACTIVITY_ID)).thenReturn(activity);
+        when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
         when(activityMapper.updateCmsActivity(any(CmsActivity.class))).thenReturn(1);
         when(regMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(invocation -> {
             CmsRegistration query = invocation.getArgument(0, CmsRegistration.class);

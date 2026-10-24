@@ -86,3 +86,7 @@ C应用禁反调旧ApiPlayProgressController及三个runtime实现，保留其�
 D最终7f7752a增量只追加TopicPublicationService、TopicPublicationContentGuard、TopicSelfHostActivityService三个System职责（35类型/30职责/36方向），原32类型/27职责/33方向不变。明确允许publication→content guard/self-host、content guard→既有D_CONTENT_RULES；三者禁回依赖ICmsTopicService/CmsTopicServiceImpl。保留旧门面→新应用、guard→公开路线服务、self-host→既有票务服务等实际调用，不把这些接口一概禁用，不因此授整表写权。仍复用同一可信JAR/raw/class-index回读，缺任一新类型或实际产物UNKNOWN；没有新scanner、baseline例外或CIjob。root统一实际编译及集中验收。
 
 06a后续窄增量登记B支付facade/SDK/router/intent/order-lock端口、A转账DTO、D规模规则叶子、G claim/finalization及F日志上下文边界（55类型/44职责/51方向）；原7b3的35/30/36及嵌套32/27/33逐项保留。仍为技术类型依赖，不授业务表字段写权。新精确ID/类型及不可证明边界见 `docs/delivery/architecture-day/F/owner-followup/HANDOFF.md`。生产checker/producer/parser不变；仅测试夹具扩至真实Common/Framework/Quartz打包位置，禁止把这些类伪装成System以取得绿项。缺候选类/实际图仍UNKNOWN，只有原可信规则的确定越界/SCC硬红；不证明immutable语义、锁序、回调/代理循环、MDC脱敏或全图无环。
+
+声明类型覆盖回读：原parse_output增加可选source_rows收集，五返回值及模块图口径不变；compiled-ports要求每个exact member有至少一条原解析器认可的source行。JDK-only依赖（如java.lang.Object）同样计入，不要求业务/项目外向边、不设leaf豁免；仅模块汇总/同模块其它类不足以覆盖该类型。缺行UNKNOWN，原确定违规仍BLOCKED；身份/原JAR/哈希/index/工具校验全部保留。合法空class/interface的OpenJDK21源码核对与协议对照已交F/source-row-verifier；真实JDK leaf形态仍待获准CI，不把协议fixture当实测。
+
+E_TOPIC_QUERY增量（9e14a73e50c9afd5c8f38027c3ecd059967a51d3）只追加精确System TopicQueryService，原55类型/44职责/51方向保留，现56/45/51。保留它的五个Mapper及ISysCategoryService/IMerchantChapterApplicationService七依赖和原门面入向；禁反调ICmsTopicService/CmsTopicServiceImpl及列明publication/claim/finalization/runtime具体写owner，且未批准其它已登记owner出向边。不是整表写权、逐方法权限或传递纯读证明；raw缺行规则同样适用新Query。

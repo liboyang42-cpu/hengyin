@@ -1,0 +1,12 @@
+STATIC PASS (not Java/SQL execution)
+Parent e4e9f6042ba34fb571c3bcfbfe59e248000ef637
+XML parse: 4 files; new Mapper statement/interface IDs: 16 exact
+FOR UPDATE cache flags: exact on all new locked selects
+Original deposit helper, root topic-lock helper: byte-identical
+Original payout member/balance/flow/paid/debt suffix: byte-identical
+Three existing test files: only mapper assembly additions; all old test bodies/assertions retained
+New unit declarations: 14 ordinary @Test; new IT declarations: 10 ordinary @Test; 0 executed, no parameterized/skip
+SECRET-FILE-GATE PASS; git diff --cached --check PASS
+No A/B/C/CI/schema history/workflow modifications
+Gitleaks binary unavailable: NOT_RUN (secret-file gate is not a substitute for full secret scanning)
+Java/MySQL/Redis/CI: NOT_RUN

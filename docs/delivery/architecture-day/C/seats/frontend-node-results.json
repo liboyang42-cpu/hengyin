@@ -1,0 +1,122 @@
+[
+  {
+    "file": "registration-seat-contract.test.js",
+    "exit": 0,
+    "tests": 23,
+    "pass": 23,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "registration-seat-callers.test.js",
+    "exit": 0,
+    "tests": 7,
+    "pass": 7,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "verification-unknown-adapters.test.js",
+    "exit": 0,
+    "tests": 248,
+    "pass": 248,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "merchant-verification.test.js",
+    "exit": 0,
+    "tests": 5,
+    "pass": 5,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "verification-readback.test.js",
+    "exit": 0,
+    "tests": 2,
+    "pass": 2,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "verification-scan.test.js",
+    "exit": 0,
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "merchant-verification-scope-epoch.test.js",
+    "exit": 0,
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "merchant-station-verification.test.js",
+    "exit": 0,
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "remaining-scene-state-contract.test.js",
+    "exit": 0,
+    "tests": 25,
+    "pass": 25,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "scene-content-contract.test.js",
+    "exit": 0,
+    "tests": 17,
+    "pass": 17,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "primary-button-height-contract.test.js",
+    "exit": 0,
+    "tests": 3,
+    "pass": 3,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "play-c-fixes-0916-contract.test.js",
+    "exit": 0,
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "play-lead-tools-entry-contract.test.js",
+    "exit": 0,
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "longrun-own-c01-21.test.js",
+    "exit": 0,
+    "tests": 4,
+    "pass": 4,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "longrun-own-c01-40.test.js",
+    "exit": 0,
+    "tests": 3,
+    "pass": 3,
+    "fail": 0,
+    "skipped": 0
+  }
+]
