@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const realDraft = require('../../utils/publish/pro-editor-draft.js');
+const realDraft = require('../../pages/square/utils/publish/pro-editor-draft.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
