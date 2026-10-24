@@ -1288,7 +1288,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     public JsonNode trustedGuidedRouteEffects(JsonNode frozen,Long nodeId,JsonNode verifiedAnswers) {
         JsonNode config=frozen.path("nodeConfigs").path(String.valueOf(nodeId));ArrayNode effects=TrustedNodeEffects.rootEffects(frozen,nodeId);
         if("ANSWER".equals(basicCompletionKind(frozen,nodeId))) {if(!verifyGuidedRouteAnswer(frozen,nodeId,verifiedAnswers))throw new IllegalArgumentException("答案未通过服务端判定");return effects;}
-        for(String[] choice:AdvancedGameRuntimeServiceImpl.verifiedObjectiveChoices(config,verifiedAnswers))for(JsonNode effect:trustedChoiceEffects(frozen,nodeId,choice[0],choice[1]))effects.add(effect.deepCopy());
+        for(String[] choice:AdvancedActionJudgement.verifiedObjectiveChoices(config,verifiedAnswers))for(JsonNode effect:trustedChoiceEffects(frozen,nodeId,choice[0],choice[1]))effects.add(effect.deepCopy());
         return effects;
     }
 
@@ -1330,7 +1330,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             if(answer.path("validationMethod").asInt()==3)return !answer.path("correctAnswer").asText().trim().isEmpty() && answer.path("correctAnswer").asText().trim().equalsIgnoreCase(submitted);
             String expected=answer.path("questionAnswer").asText();return !expected.trim().isEmpty() && normalizeBasicAnswer(expected).equalsIgnoreCase(normalizeBasicAnswer(submitted));
         }
-        return AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(frozen.path("nodeConfigs").path(String.valueOf(nodeId)),answers);
+        return AdvancedActionJudgement.verifyObjectiveAnswers(frozen.path("nodeConfigs").path(String.valueOf(nodeId)),answers);
     }
 
     private String normalizeBasicAnswer(String value) {
