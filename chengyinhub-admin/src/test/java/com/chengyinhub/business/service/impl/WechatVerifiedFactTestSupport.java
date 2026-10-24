@@ -124,6 +124,27 @@ public final class WechatVerifiedFactTestSupport {
         } catch (Exception failure) { throw new AssertionError(failure); }
     }
 
+    /** Real local attempt locks only; callers keep outbound provider doubles separate. */
+    public static com.chengyinhub.business.service.WechatPaymentOperations realPaymentGuards(
+            javax.sql.DataSource source, String merchant, WechatVerifiedPaymentFactService facts) {
+        var jdbc = new org.springframework.jdbc.core.JdbcTemplate(source);
+        var manager = new org.springframework.jdbc.datasource.DataSourceTransactionManager(source);
+        var owner = new JdbcWechatPaymentOrderOwner();
+        ReflectionTestUtils.setField(owner, "paymentIntentJdbc", jdbc);
+        var intents = new WechatPaymentIntentStore();
+        ReflectionTestUtils.setField(intents, "paymentIntentJdbc", jdbc);
+        ReflectionTestUtils.setField(intents, "paymentIntentTransactions", manager);
+        ReflectionTestUtils.setField(intents, "businessOwner", owner);
+        ReflectionTestUtils.setField(intents, "verifiedFacts", facts);
+        var config = org.mockito.Mockito.mock(com.chengyinhub.common.config.WxPayConfig.class);
+        org.mockito.Mockito.when(config.getMerchantId()).thenReturn(merchant);
+        var gateway = new WechatPaymentSdkGateway();
+        ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
+        ReflectionTestUtils.setField(gateway, "intents", intents);
+        ReflectionTestUtils.setField(gateway, "verifiedFacts", facts);
+        return gateway;
+    }
+
     public static final class MemoryMapper implements WechatVerifiedPaymentFactMapper {
         final Map<Long,Map<String,Object>> rows = new LinkedHashMap<>();
         final Map<String,Map<String,Object>> links = new HashMap<>();

@@ -47,7 +47,6 @@ class CoopDepositSettlementAttemptTest {
         paymentReference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L, paymentProof.factHash());
         when(verified.requireVerified(paymentReference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(paymentReference, paymentProof));
         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.empty());
-        ReflectionTestUtils.setField(topic, "depositVerifiedFacts", verified);
         row = new CoopInvite();
         row.setId(89L); row.setDepositStatus(1); row.setDepositOutTradeNo(BUSINESS); row.setDepositAmount(AMOUNT);
         row.setTopicId(11L); row.setStatus(1);
@@ -150,11 +149,11 @@ class CoopDepositSettlementAttemptTest {
         CoopInvite paid = new CoopInvite(); paid.setId(89L); paid.setDepositStatus(2); paid.setTopicId(11L);
         paid.setStatus(1); paid.setDepositOutTradeNo(BUSINESS); paid.setDepositAmount(AMOUNT); paid.setDepositPaidTransactionId("WXTX89");
         when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
-        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89")).thenReturn(true);
-        when(mapper.selectCoopInviteByIdForUpdate(89L)).thenReturn(row, paid, paid);
+        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89", paymentReference)).thenReturn(true);
+        when(mapper.selectCoopInviteByIdForUpdate(89L)).thenReturn(row, paid);
         assertFalse(resolve());
-        verify(invites).markDepositPaid(BUSINESS, 5000L, "WXTX89");
-        verify(mapper, times(3)).selectCoopInviteByIdForUpdate(89L);
+        verify(invites).markDepositPaid(BUSINESS, 5000L, "WXTX89", paymentReference);
+        verify(mapper, times(2)).selectCoopInviteByIdForUpdate(89L);
         verify(mapper, never()).updateDepositIfCurrent(anyLong(), anyInt(), any(), anyInt(), any());
     }
 
@@ -162,7 +161,7 @@ class CoopDepositSettlementAttemptTest {
     void successStillRequiresFrozenPaidReadbackAndCannotEnterUnpaidCas() {
         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("SUCCESS"));
         when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
-        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89")).thenReturn(true);
+        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89", paymentReference)).thenReturn(true);
         when(mapper.selectCoopInviteByIdForUpdate(89L)).thenReturn(row);
         assertThrows(IllegalStateException.class, this::resolve);
         unchanged();
@@ -246,9 +245,7 @@ class CoopDepositSettlementAttemptTest {
     void originalSuccessReceiptCompletesOnlyItsRecoveryTicketInTheSameTransaction() {
         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("SUCCESS"));
         when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
-        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89")).thenAnswer(call -> {
-            row.setDepositStatus(2); row.setDepositPaidTransactionId("WXTX89"); return true;
-        });
+        useRealTypedDepositOwner();
         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.of(
                 new WechatVerifiedPaymentFactService.RecoveryTicket(17L,89L,
                         new WechatVerifiedPaymentFactService.Stored(paymentReference,paymentProof),4,"VERIFIED_SUCCESS_AFTER_CLOSED")));
@@ -265,15 +262,24 @@ class CoopDepositSettlementAttemptTest {
     void anotherBusinessRecoveryTicketCannotBeAcknowledgedByThisDeposit() {
         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("SUCCESS"));
         when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
-        when(invites.markDepositPaid(BUSINESS, 5000L, "WXTX89")).thenAnswer(call -> {
-            row.setDepositStatus(2); row.setDepositPaidTransactionId("WXTX89"); return true;
-        });
+        useRealTypedDepositOwner();
         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.of(
                 new WechatVerifiedPaymentFactService.RecoveryTicket(17L,90L,
                         new WechatVerifiedPaymentFactService.Stored(paymentReference,paymentProof),4,"VERIFIED_SUCCESS_AFTER_CLOSED")));
         assertThrows(IllegalStateException.class,this::resolve);
         verify(verified,never()).completePaymentRecovery(any(),anyLong());
         // Unit doubles do not roll back mutable row objects; the MySQL case verifies actual rollback.
+    }
+
+    private void useRealTypedDepositOwner() {
+        CoopInviteServiceImpl owner = new CoopInviteServiceImpl();
+        ReflectionTestUtils.setField(owner,"coopInviteMapper",mapper);
+        ReflectionTestUtils.setField(owner,"depositVerifiedFacts",verified);
+        ReflectionTestUtils.setField(topic,"coopInviteService",owner);
+        when(mapper.selectByDepositOutTradeNoForUpdate(BUSINESS)).thenReturn(row);
+        when(mapper.markDepositPaidConfirmed(89L,BUSINESS,AMOUNT,"WXTX89")).thenAnswer(call -> {
+            row.setDepositStatus(2);row.setDepositPaidTransactionId("WXTX89");return 1;
+        });
     }
 
     private boolean resolve() {

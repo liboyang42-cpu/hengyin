@@ -137,9 +137,6 @@ public interface ICoopInviteService {
     /** 兼容旧调用：只查既有退款号的可信渠道 SUCCESS；不得凭受理直接置4。 */
     public int settleDepositRefunded(Long inviteId, String refundNo);
 
-    /** 仅供已验证渠道归属/币种的回调或查单结果调用，实际金额/交易号与CAS仍在此校验。 */
-    boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId);
-
     /** Exact verified SUCCESS reference; original paid CAS and any recovery ticket complete in one transaction. */
     boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId,
             com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference);

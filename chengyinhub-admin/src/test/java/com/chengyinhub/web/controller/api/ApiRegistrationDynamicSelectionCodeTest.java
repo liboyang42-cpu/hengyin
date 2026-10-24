@@ -20,8 +20,8 @@ class ApiRegistrationDynamicSelectionCodeTest {
     void setUp() {
         controller = new ApiRegistrationController();
         registrations = mock(ICmsRegistrationService.class);
-        ReflectionTestUtils.setField(controller, "registrationService", registrations);
-        ReflectionTestUtils.setField(controller, "dynSecret", SECRET);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationService", registrations);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "dynSecret", SECRET);
     }
 
     @Test
@@ -30,7 +30,7 @@ class ApiRegistrationDynamicSelectionCodeTest {
         registration.setId(88L);
         when(registrations.selectCmsRegistrationById(88L)).thenReturn(registration);
         String code = VerifyDynCodeUtil.issue(88L, "topic", System.currentTimeMillis(), 60_000L, 9L, SECRET);
-        assertSame(registration, ReflectionTestUtils.invokeMethod(controller, "resolveRegistrationByScanCode", code));
+        assertSame(registration, ReflectionTestUtils.invokeMethod(RegistrationRedemptionTestFixtures.application(controller), "resolveRegistrationByScanCode", code));
         verify(registrations).selectCmsRegistrationById(88L);
         verifyNoMoreInteractions(registrations);
     }
@@ -39,10 +39,10 @@ class ApiRegistrationDynamicSelectionCodeTest {
     void expiredOrMalformedDynamicSelectionNeverFallsBackToLegacyAndKeepsActualReason() {
         String expired = VerifyDynCodeUtil.issue(88L, "topic", System.currentTimeMillis() - 60_000L, 1_000L, 9L, SECRET);
         ServiceException timeout = assertThrows(ServiceException.class,
-                () -> ReflectionTestUtils.invokeMethod(controller, "resolveRegistrationByScanCode", expired));
+                () -> ReflectionTestUtils.invokeMethod(RegistrationRedemptionTestFixtures.application(controller), "resolveRegistrationByScanCode", expired));
         assertEquals("已过期", timeout.getMessage());
         ServiceException malformed = assertThrows(ServiceException.class,
-                () -> ReflectionTestUtils.invokeMethod(controller, "resolveRegistrationByScanCode", "v1.malformed"));
+                () -> ReflectionTestUtils.invokeMethod(RegistrationRedemptionTestFixtures.application(controller), "resolveRegistrationByScanCode", "v1.malformed"));
         assertEquals("格式错误", malformed.getMessage());
         verifyNoInteractions(registrations);
     }
@@ -52,7 +52,7 @@ class ApiRegistrationDynamicSelectionCodeTest {
         CmsRegistration registration = new CmsRegistration();
         registration.setId(99L);
         when(registrations.selectByverificationCode("legacy-static-code")).thenReturn(registration);
-        assertSame(registration, ReflectionTestUtils.invokeMethod(controller, "resolveRegistrationByScanCode", "legacy-static-code"));
+        assertSame(registration, ReflectionTestUtils.invokeMethod(RegistrationRedemptionTestFixtures.application(controller), "resolveRegistrationByScanCode", "legacy-static-code"));
         verify(registrations).selectByverificationCode("legacy-static-code");
         verifyNoMoreInteractions(registrations);
     }

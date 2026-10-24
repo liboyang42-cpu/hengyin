@@ -51,6 +51,9 @@ public class E2eWechatPayStub implements IWechatPayService {
     private ICoopInviteService coopInviteService;
 
     @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService depositPaymentFacts;
+
+    @org.springframework.beans.factory.annotation.Autowired
     private WxPayConfig wxPayConfig;
 
     @Override
@@ -121,11 +124,20 @@ public class E2eWechatPayStub implements IWechatPayService {
                         ? "SUCCESS" : "FAIL";
             } else if (outTradeNo != null && outTradeNo.startsWith("DEP")) {
                 boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
-                result = paid && total != null && "CNY".equals(root.path("currency").asText(null))
+                result = "FAIL";
+                if (paid && total != null && "CNY".equals(root.path("currency").asText(null))
                         && wxPayConfig.getMerchantId() != null
                         && wxPayConfig.getMerchantId().equals(root.path("mchid").asText(null))
-                        && coopInviteService.markDepositPaid(outTradeNo, total.longValue(), transactionId)
-                        ? "SUCCESS" : "FAIL";
+                        && depositPaymentFacts != null) {
+                    // The fake channel never creates VERIFIED facts; only an already trusted original may be consumed.
+                    var original = depositPaymentFacts.findPaymentSuccess(wxPayConfig.getMerchantId(), outTradeNo, transactionId);
+                    if (original != null && outTradeNo.equals(original.facts().businessOutTradeNo())
+                            && "CNY".equals(original.facts().currency())
+                            && original.facts().totalFen() == total.longValue()
+                            && original.facts().amountFen() == total.longValue()
+                            && coopInviteService.markDepositPaid(outTradeNo, total.longValue(), transactionId, original.reference()))
+                        result = "SUCCESS";
+                }
             } else {
                 result = registrationService.handleWechatPayCallback(resultMap);
             }
