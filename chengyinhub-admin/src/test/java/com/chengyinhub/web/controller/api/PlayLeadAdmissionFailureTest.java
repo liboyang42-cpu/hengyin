@@ -137,6 +137,7 @@ class PlayLeadAdmissionFailureTest {
         SensorResultRequest request = new SensorResultRequest(); request.setActivityId(500L); request.setNodeId(401L);
         request.setRouteActionId("lead-sensor"); request.setExpectedRouteVersion(0);
         reject(() -> controller.sensorResult(request));
+        verifyNoInteractions(routes);
     }
     @Test void preferenceReadFaultReturnsNoPreferencePayload() {
         reject(() -> controller.preference(401L, "500", null));
@@ -199,6 +200,41 @@ class PlayLeadAdmissionFailureTest {
         assertEquals("该节点不属于本次活动", controller.preference(401L, "500", null).get("msg"));
         assertEquals("该节点不属于本次活动", controller.submitPreference(401L, preferenceRequest()).get("msg"));
         verifyNoInteractions(leads, routes, preferences);
+    }
+
+    @Test void sensorGatheringRefusalDoesNotEnterWritableRouteOrAcquireProof() {
+        ClubLeadState gathering = new ClubLeadState(); gathering.setStatus(1);
+        doReturn(gathering).when(leads).selectByActivity(500L);
+        SensorResultRequest request = new SensorResultRequest(); request.setActivityId(500L); request.setNodeId(401L);
+        request.setRouteActionId("sensor-original"); request.setExpectedRouteVersion(4);
+        var response = controller.sensorResult(request);
+        assertEquals(500, response.get("code"));
+        assertEquals("队伍集合中,等队长开始行程", response.get("msg"));
+        assertFalse(response.containsKey("intentTerminal"));
+        verify(leads).selectByActivity(500L);
+        verifyNoInteractions(routes, sensors, proof, progress, points, ledger, growth, drops, progression,
+                coupons, completionAwards, attempts);
+    }
+
+    @Test void sensorLeadRecoveryStillUsesOriginalActorScopeActionAndInput() {
+        doReturn(null).when(leads).selectByActivity(500L);
+        template.setValidationMethod(ValidationMethod.APP_SENSOR);
+        SensorResultRequest request = new SensorResultRequest(); request.setActivityId(500L); request.setNodeId(401L);
+        request.setRouteActionId("sensor-original"); request.setExpectedRouteVersion(4);
+        request.setSensorType("still"); request.setPayload(Map.of("heldSec", 12));
+        when(sensors.validateAndAcquire(eq(7L), eq(500L), same(node), same(template), eq("still"), same(request.getPayload())))
+                .thenReturn("传感器可信证明缺失，暂不能完成挑战");
+        var response = controller.sensorResult(request);
+        assertEquals(500, response.get("code"));
+        assertEquals("传感器可信证明缺失，暂不能完成挑战", response.get("msg"));
+        var order = inOrder(leads, routes, sensors);
+        order.verify(leads).selectByActivity(500L);
+        order.verify(routes).canPlay(7L, 300L, 500L, 401L, "sensor-original");
+        order.verify(sensors).validateAndAcquire(7L, 500L, node, template, "still", request.getPayload());
+        assertEquals("sensor-original", request.getRouteActionId());
+        assertEquals(Integer.valueOf(4), request.getExpectedRouteVersion());
+        assertEquals(Map.of("heldSec", 12), request.getPayload());
+        verifyNoInteractions(progress, points, ledger, proof, growth, drops, progression, coupons, completionAwards, attempts);
     }
 
     private PreferenceSubmitRequest preferenceRequest() {
