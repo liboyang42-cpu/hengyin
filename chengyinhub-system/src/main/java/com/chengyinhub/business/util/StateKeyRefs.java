@@ -237,6 +237,33 @@ public final class StateKeyRefs {
         return keys;
     }
 
+    /**
+     * C:U-166:正文 / 内心声音等普通块上 when = HAS_TAG thought.&lt;key&gt;.done 引用到的念头完成标签。
+     * 这类块没有 beat,不进 {@link #collectChapterBlocks};编译期只校验格式,念头是否在
+     * journeyRules.thoughts 里声明过由发布试检查对照(写错时那段正文永远不出现,且零报错)。
+     */
+    public static Set<String> collectChapterThoughtDoneConditions(String blocksJson) {
+        Set<String> tags = new LinkedHashSet<String>();
+        if (StringUtils.isBlank(blocksJson)) return tags;
+        JsonNode blocks;
+        try {
+            blocks = MAPPER.readTree(blocksJson);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("章节故事流不是合法 JSON");
+        }
+        if (blocks == null || !blocks.isArray()) return tags;
+        for (JsonNode block : blocks) {
+            if (block == null || !block.isObject()) continue;
+            // beat 块的 when 已由 collectChapterBlocks 收进状态键闸(未声明即 error),这里不重复
+            if (!block.path("beat").asText("").trim().isEmpty()) continue;
+            JsonNode when = block.get("when");
+            if (when == null || !when.isObject() || !"HAS_TAG".equals(when.path("op").asText())) continue;
+            String value = when.path("value").asText("").trim();
+            if (value.startsWith("thought.") && value.endsWith(".done")) tags.add(value);
+        }
+        return tags;
+    }
+
     public static Set<String> collectChapterBlocks(String blocksJson) {
         Set<String> keys = new LinkedHashSet<String>();
         if (StringUtils.isBlank(blocksJson)) {

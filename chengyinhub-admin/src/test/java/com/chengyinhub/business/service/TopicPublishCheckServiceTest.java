@@ -373,6 +373,30 @@ class TopicPublishCheckServiceTest {
                 .upsertThemeStateKey(any(ThemeStateKey.class));
     }
 
+    /**
+     * C:U-166:正文块 when = HAS_TAG thought.&lt;key&gt;.done 引用未定义的念头时,试检查给提醒(不拦发布);
+     * 已定义的念头不出提醒。负控:摘掉 collectChapters 里 chapterThoughtDoneConditions 的收集,本用例红。
+     */
+    @Test
+    void chapterTextConditionOnUndefinedThoughtWarns() {
+        CmsTopic topic = branchTopic();
+        topic.setJourneyRulesJson(thoughtRules("window"));
+        CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setBlocksJson("[{\"type\":\"text\",\"content\":\"窗开着\","
+                + "\"when\":{\"op\":\"HAS_TAG\",\"value\":\"thought.windw.done\"}},"
+                + "{\"type\":\"text\",\"content\":\"风进来\","
+                + "\"when\":{\"op\":\"HAS_TAG\",\"value\":\"thought.window.done\"}}]");
+        when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
+                .thenReturn(Collections.singletonList(chapter));
+
+        List<PublishCheckIssue> issues = service.check(topic);
+
+        assertEquals(1, issues.size(), issues.toString());
+        assertEquals(TopicPublishCheckService.CODE_THOUGHT_CONDITION_UNDEFINED, issues.get(0).getCode());
+        assertEquals("warn", issues.get(0).getLevel());
+        assertTrue(issues.get(0).getMessage().contains("thought.windw.done"), issues.get(0).getMessage());
+    }
+
     @Test
     void undeclaredThoughtDoneReportedByPrecheck() {
         assertThoughtPrecheckBlocked(thoughtRules("window"), "thought.other.done");
