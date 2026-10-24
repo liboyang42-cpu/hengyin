@@ -179,3 +179,20 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 10. Parent addendum 2026-10-23 19:26 America/Los_Angeles
+
+HEAD `df7fe0de7` tests. Did not invent recoverOriginal.
+
+`MerchantNpcDraftApprovalGateTest.unusedSubmitBeforeAuthorizerDoesNotOccupyThenUniqueSubmitApplies`：未见授权的 `submitOriginalReview` 抛 AUTHORIZER_REQUIRED 且审核票仍空、phase 仍 IDLE；后续唯一 ingest+verify+submit 才是 ORIGINAL_REVIEW_PENDING。
+
+父进程独立 surefire（`/tmp/hy-c06`，2026-10-24T02:26:07Z）：
+
+```
+Tests run: 14 -- MerchantNpcDraftApprovalGateTest
+Tests run: 5 -- C06AccountSwitchRestartIsolationTest
+Tests run: 24, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
