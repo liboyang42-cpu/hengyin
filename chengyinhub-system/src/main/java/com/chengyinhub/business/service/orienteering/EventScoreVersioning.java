@@ -317,6 +317,7 @@ public final class EventScoreVersioning {
     /**
      * 从既有 {@link IOrientScoringService#receipt} 回读。kind 只接受 SETTLE/APPEAL/DISPUTE。
      * 缺服务 WAITING_SOURCE。state=NOT_FOUND 返回 {@code null}，不占进程完赛账，不 appendEntry。
+     * 结算按局一份，幂等键可以不同；sessionId 必须是这次的局。
      */
     public Map<String, Object> recoverFromScoringReceipt(Long memberId, String kind, Long sessionId,
             String idempotencyKey) {
@@ -332,6 +333,12 @@ public final class EventScoreVersioning {
         Map<String, Object> found = originalScoring.receipt(memberId, kind, sessionId, key);
         if (found == null || "NOT_FOUND".equals(found.get("state"))) {
             return null;
+        }
+        if (IOrientScoringService.KIND_SETTLE.equals(kind)) {
+            Object value = found.get("sessionId");
+            if (!(value instanceof Number) || ((Number) value).longValue() != sessionId.longValue()) {
+                return null;
+            }
         }
         if (IOrientScoringService.KIND_APPEAL.equals(kind) || IOrientScoringService.KIND_DISPUTE.equals(kind)) {
             Long recordSession = sessionOf(found.get("record"));

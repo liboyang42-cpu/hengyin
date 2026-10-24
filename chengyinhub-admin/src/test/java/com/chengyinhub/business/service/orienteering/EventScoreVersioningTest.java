@@ -326,6 +326,16 @@ class EventScoreVersioningTest {
         foreign.put("state", "ACCEPTED");
         foreign.put("record", other);
         when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-oth")).thenReturn(foreign);
+        Map<String, Object> settled = new LinkedHashMap<String, Object>();
+        settled.put("state", "SETTLED");
+        settled.put("sessionId", Long.valueOf(30L));
+        settled.put("idempotencyKey", "other-settle-key");
+        when(scoring.receipt(7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-settle-01")).thenReturn(settled);
+        Map<String, Object> otherSettlement = new LinkedHashMap<String, Object>();
+        otherSettlement.put("state", "SETTLED");
+        otherSettlement.put("sessionId", Long.valueOf(99L));
+        otherSettlement.put("idempotencyKey", "scr-settle-oth");
+        when(scoring.receipt(7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-settle-oth")).thenReturn(otherSettlement);
 
         EventScoreVersioning wired = new EventScoreVersioning(scoring, null, null);
         assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-none"));
@@ -334,6 +344,11 @@ class EventScoreVersioningTest {
                 7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-01");
         assertEquals("ACCEPTED", recovered.get("state"));
         assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-oth"));
+        Map<String, Object> sameSettlement = wired.recoverFromScoringReceipt(
+                7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-settle-01");
+        assertEquals(Long.valueOf(30L), sameSettlement.get("sessionId"));
+        assertEquals("other-settle-key", sameSettlement.get("idempotencyKey"));
+        assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-settle-oth"));
         assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("scr-rcpt-01").outcome);
         verify(scoring, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
         EventScoreVersioning.EventRun bad = scores.start(registration, frozen, safety, 7L, "start-bad-dom");
