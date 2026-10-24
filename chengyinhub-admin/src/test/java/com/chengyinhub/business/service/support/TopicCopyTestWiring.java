@@ -19,7 +19,7 @@ public final class TopicCopyTestWiring {
     public static CmsTopicServiceImpl wire(CmsTopicServiceImpl facade) {
         CmsMemberTemplateServiceImpl templates = new CmsMemberTemplateServiceImpl();
         ReflectionTestUtils.setField(templates, "cmsMemberTemplateMapper",
-                (CmsMemberTemplateMapper) ReflectionTestUtils.getField(facade, "cmsMemberTemplateMapper"));
+                (CmsMemberTemplateMapper) TopicPublicationTestWiring.get(facade, "cmsMemberTemplateMapper"));
         TopicPlatformContentSlotGuard slots = new TopicPlatformContentSlotGuard(
                 (IProductRoleService) ReflectionTestUtils.getField(facade, "productRoleService"));
         TopicContentCopyServiceImpl copy = new TopicContentCopyServiceImpl();

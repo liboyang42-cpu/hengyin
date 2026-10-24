@@ -2,6 +2,7 @@
 import ast
 import hashlib
 import json
+import re
 from pathlib import Path
 import sys
 import unittest
@@ -14,15 +15,37 @@ from sql_splitter import split_statements
 
 JOB_DICT_FORWARD = ROOT / "chengyinhub-admin/sql/migration_20261017_job_dictionary_missing_seed.sql"
 JOB_DICT_DEPENDENCIES = ROOT / "ci/migration-dependencies.json"
+REGISTRATION_CONTROLLER = ROOT / "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java"
 
 
 class MissingBusinessSeedsContract(unittest.TestCase):
     def setUp(self):
         self.provenance = json.loads((ROOT / "ci/prelaunch-seed-provenance.json").read_text())
 
+    def assert_generic_registration_create_closed(self, source):
+        # 06a571b1 deliberately closed this CRUD shortcut; the existing add permission is not
+        # authority to manufacture payment/inventory facts outside the formal order flow.
+        code = re.sub(r"/\*[\s\S]*?\*/|//[^\n]*", "", source)
+        endpoint = re.search(
+            r"(?P<annotations>(?:    @[^\n]+\n)+)"
+            r"    public AjaxResult add\(@RequestBody CmsRegistration cmsRegistration\)\s*"
+            r"\{(?P<body>[\s\S]*?)\n    \}", code)
+        self.assertIsNotNone(endpoint, "the original generic-add HTTP entry must remain explicit")
+        annotations = endpoint.group("annotations").splitlines()
+        self.assertIn("    @PreAuthorize(\"@ss.hasPermi('business:registration:add')\")", annotations)
+        self.assertIn("    @PostMapping", annotations)
+        self.assertIsNotNone(re.fullmatch(
+            r'\s*return\s+AjaxResult\.error\(\s*403\s*,\s*'
+            r'"通用新增报名已关闭，请通过正式下单流程创建报名"\s*\)\s*'
+            r'\.put\(\s*"errorCode"\s*,\s*"REGISTRATION_GENERIC_CREATE_DISABLED"\s*\)\s*;\s*',
+            endpoint.group("body")), "generic add must reject without any preceding or delegated write")
+        self.assertNotRegex(code, r"\binsertCmsRegistration\s*\(",
+                            "the admin CRUD controller must not create registrations through another method")
+
     def test_source_hashes_and_real_controller_permissions(self):
         for path, sha in self.provenance["sourceFiles"].items():
             self.assertEqual(sha, hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), path)
+        self.assert_generic_registration_create_closed(REGISTRATION_CONTROLLER.read_text())
         for row in self.provenance["menuRows"]:
             self.assertTrue((ROOT / "chengyinhub-ui/src/views" / (row["component"] + ".vue")).is_file())
             if row.get("controller"):
@@ -32,6 +55,27 @@ class MissingBusinessSeedsContract(unittest.TestCase):
             else:
                 # Pure UI/monitor pages retain their existing bootstrap permission string.
                 self.assertIn(row["permission"], (ROOT / row["source"]).read_text())
+
+    def test_generic_registration_create_controls_reject_write_and_permission_regressions(self):
+        source = REGISTRATION_CONTROLLER.read_text()
+        refusal = ('return AjaxResult.error(403, "通用新增报名已关闭，请通过正式下单流程创建报名")'
+                   '\n                .put("errorCode", "REGISTRATION_GENERIC_CREATE_DISABLED");')
+        permission = '    @PreAuthorize("@ss.hasPermi(\'business:registration:add\')")\n'
+        self.assertEqual(1, source.count(refusal))
+        self.assertEqual(1, source.count(permission))
+        mutations = {
+            "restore-old-insert": source.replace(refusal,
+                "return toAjax(cmsRegistrationService.insertCmsRegistration(cmsRegistration));", 1),
+            "write-before-denial": source.replace(refusal,
+                "cmsRegistrationService.insertCmsRegistration(cmsRegistration);\n        " + refusal, 1),
+            "remove-add-permission": source.replace(permission, "", 1),
+            "false-success": source.replace(refusal, refusal.replace("error(403,", "error(200,"), 1),
+        }
+        for name, changed in mutations.items():
+            with self.subTest(mutation=name):
+                self.assertNotEqual(source, changed)
+                with self.assertRaises(AssertionError):
+                    self.assert_generic_registration_create_closed(changed)
 
     def test_every_current_index_view_has_an_existing_entry_or_explicit_canonical_target(self):
         coverage = self.provenance["viewCoverage"]

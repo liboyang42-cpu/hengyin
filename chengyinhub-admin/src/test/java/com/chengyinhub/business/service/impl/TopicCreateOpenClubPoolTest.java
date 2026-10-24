@@ -265,7 +265,7 @@ class TopicCreateOpenClubPoolTest {
      */
     @Test
     void createTopic_rejectsChapterRecruitmentForNonFreeExploreBeforePersisting() {
-        ISysCategoryService categoryService = (ISysCategoryService) ReflectionTestUtils.getField(svc, "sysCategoryService");
+        ISysCategoryService categoryService = (ISysCategoryService) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "sysCategoryService");
         SysCategory activeMerchantCategory = new SysCategory();
         activeMerchantCategory.setId(18L);
         activeMerchantCategory.setType(1L);
@@ -297,7 +297,7 @@ class TopicCreateOpenClubPoolTest {
      */
     @Test
     void createTopic_rejectsRecruitmentMaxMerchantOutsideZeroTo127() {
-        ISysCategoryService categoryService = (ISysCategoryService) ReflectionTestUtils.getField(svc, "sysCategoryService");
+        ISysCategoryService categoryService = (ISysCategoryService) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "sysCategoryService");
         SysCategory activeMerchantCategory = new SysCategory();
         activeMerchantCategory.setId(18L);
         activeMerchantCategory.setType(1L);

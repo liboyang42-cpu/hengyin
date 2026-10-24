@@ -75,7 +75,7 @@ class CmsTopicSysVarPublishGateTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "themeStateKeyService", new ThemeStateKeyService(keyMapper));
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService",
                 new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper));

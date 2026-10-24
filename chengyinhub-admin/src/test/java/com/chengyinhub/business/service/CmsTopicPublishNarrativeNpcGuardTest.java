@@ -65,7 +65,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService",
                 new TopicStateKeyRefService(nodeMapper, templateMapper, mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "npcProfileMapper", npcProfileMapper);

@@ -83,7 +83,7 @@ class CmsTopicDraftBindingsTest {
             CmsTopicNode node = new CmsTopicNode(); node.setId(row.getLong("id")); node.setName(row.getString("name")); node.setTemplateId(row.getLong("template_id")); node.setTopicId(700L); return node;
         }));
         when(nodes.deleteCmsTopicNodeById(anyLong())).thenAnswer(call -> jdbc.update("delete from saved_node where id=?", (Long) call.getArgument(0)));
-        CmsMemberTemplateMapper templates = (CmsMemberTemplateMapper) ReflectionTestUtils.getField(target, "cmsMemberTemplateMapper");
+        CmsMemberTemplateMapper templates = (CmsMemberTemplateMapper) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(target, "cmsMemberTemplateMapper");
         CmsMemberTemplate template = new CmsMemberTemplate(); template.setId(501L); template.setMemberId(42L); template.setStatus(1L); template.setDraftStatus(1);
         when(templates.selectCmsMemberTemplateById(501L)).thenReturn(template);
         ReflectionTestUtils.setField(target, "commercialTopicPolicy",

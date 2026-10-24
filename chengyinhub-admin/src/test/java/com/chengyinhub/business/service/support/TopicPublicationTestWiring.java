@@ -2,16 +2,19 @@ package com.chengyinhub.business.service.support;
 
 import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
 import com.chengyinhub.business.service.impl.TopicPublicationService;
+import com.chengyinhub.business.service.impl.TopicQueryService;
+import com.chengyinhub.business.service.impl.TopicContentCopyServiceImpl;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
-import java.util.Set;
+import java.util.HashSet;
+import java.util.ArrayList;
 import org.mockito.Mockito;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.ReflectionUtils;
 
-/** Assemble the real publication owners with the fixture's original collaborator doubles. */
+/** Assemble the real topic owners with the fixture's original collaborator doubles. */
 public final class TopicPublicationTestWiring {
     private TopicPublicationTestWiring() { }
 
@@ -32,7 +35,20 @@ public final class TopicPublicationTestWiring {
         ReflectionTestUtils.setField(facade, "selfHostActivityService", activity);
         ReflectionTestUtils.setField(publication, "publicationContentGuard", content);
         ReflectionTestUtils.setField(publication, "selfHostActivityService", activity);
-        return List.of(publication, content, activity);
+        TopicQueryService query = (TopicQueryService) ReflectionTestUtils.getField(facade, "topicQueryService");
+        Object existingCopy = ReflectionTestUtils.getField(facade, "topicContentCopyService");
+        if (query == null || Mockito.mockingDetails(query).isMock()) query = new TopicQueryService();
+        if (existingCopy == null || Mockito.mockingDetails(existingCopy).isMock()) existingCopy = new TopicContentCopyServiceImpl();
+        ReflectionTestUtils.setField(facade, "topicQueryService", query);
+        ReflectionTestUtils.setField(facade, "topicContentCopyService", existingCopy);
+        List<Object> result = new ArrayList<>(List.of(publication, content, activity, query,
+                AopTestUtils.getUltimateTargetObject(existingCopy)));
+        Object graph = ReflectionTestUtils.getField(facade, "contentGraphAuthoringService");
+        if (graph != null && !Mockito.mockingDetails(graph).isMock())
+            result.add(AopTestUtils.getUltimateTargetObject(graph));
+        Object guard = ReflectionTestUtils.getField(facade, "contentWriteGuard");
+        if (guard != null && !Mockito.mockingDetails(guard).isMock()) result.add(guard);
+        return result;
     }
 
     public static <T> T wire(T value) {
@@ -52,9 +68,9 @@ public final class TopicPublicationTestWiring {
         if (guard == null) {
             guard = new TopicContentWriteGuard(topicMapper,
                     (com.chengyinhub.business.mapper.CmsTopicChapterMapper) ReflectionTestUtils.getField(facade, "cmsTopicChapterMapper"),
-                    (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) ReflectionTestUtils.getField(facade, "cmsMemberTemplateMapper"),
+                    (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) get(facade, "cmsMemberTemplateMapper"),
                     (com.chengyinhub.business.service.IProductRoleService) ReflectionTestUtils.getField(facade, "productRoleService"),
-                    (com.chengyinhub.system.service.ISysCategoryService) ReflectionTestUtils.getField(facade, "sysCategoryService"));
+                    (com.chengyinhub.system.service.ISysCategoryService) get(facade, "sysCategoryService"));
             ReflectionTestUtils.setField(facade, "contentWriteGuard", guard);
         }
         ReflectionTestUtils.setField(guard, "cmsTopicNodeMapper", ReflectionTestUtils.getField(facade, "cmsTopicNodeMapper"));
@@ -63,6 +79,10 @@ public final class TopicPublicationTestWiring {
                 if (Modifier.isStatic(field.getModifiers())) continue;
                 Field original = ReflectionUtils.findField(CmsTopicServiceImpl.class, field.getName());
                 if (original != null) ReflectionTestUtils.setField(owner, field.getName(), ReflectionTestUtils.getField(facade, field.getName()));
+                else if (field.isAnnotationPresent(org.springframework.beans.factory.annotation.Autowired.class)) {
+                    Object collaborator = get(facade, field.getName());
+                    if (collaborator != null) ReflectionTestUtils.setField(owner, field.getName(), collaborator);
+                }
             }
         }
         return value;
@@ -72,23 +92,24 @@ public final class TopicPublicationTestWiring {
     public static void wireRelocatedCollaborators(Object value, java.util.function.Function<Field, Object> originalFactory) {
         CmsTopicServiceImpl facade = facade(value);
         if (facade == null) throw new IllegalArgumentException("Expected the real topic fixture target");
-        Set<String> relocated = Set.of("quotaService", "omsTicketService", "npcProfileMapper",
-                "topicStateKeyRefService", "topicRouteRuntimeService", "routeOutcomeReader");
+        var initialized = new HashSet<String>();
         for (Object owner : owners(facade)) for (Field field : owner.getClass().getDeclaredFields()) {
-            if (relocated.contains(field.getName())
-                    && field.isAnnotationPresent(org.springframework.beans.factory.annotation.Autowired.class))
-                ReflectionTestUtils.setField(owner, field.getName(), originalFactory.apply(field));
+            if (ReflectionUtils.findField(CmsTopicServiceImpl.class, field.getName()) == null
+                    && field.isAnnotationPresent(org.springframework.beans.factory.annotation.Autowired.class)
+                    && initialized.add(field.getName()) && get(facade, field.getName()) == null)
+                set(facade, field.getName(), originalFactory.apply(field));
         }
         wire(value);
     }
 
     public static void set(Object value, String name, Object collaborator) {
         CmsTopicServiceImpl facade = facade(value);
-        if (facade == null || ReflectionUtils.findField(CmsTopicServiceImpl.class, name) != null) {
-            ReflectionTestUtils.setField(facade == null ? value : facade, name, collaborator);
+        if (facade == null) {
+            ReflectionTestUtils.setField(value, name, collaborator);
             return;
         }
-        boolean found = false;
+        boolean found = ReflectionUtils.findField(CmsTopicServiceImpl.class, name) != null;
+        if (found) ReflectionTestUtils.setField(facade, name, collaborator);
         for (Object owner : owners(facade)) if (ReflectionUtils.findField(owner.getClass(), name) != null) {
             ReflectionTestUtils.setField(owner, name, collaborator);
             found = true;
@@ -100,8 +121,13 @@ public final class TopicPublicationTestWiring {
         CmsTopicServiceImpl facade = facade(value);
         if (facade == null || ReflectionUtils.findField(CmsTopicServiceImpl.class, name) != null)
             return ReflectionTestUtils.getField(facade == null ? value : facade, name);
-        for (Object owner : owners(facade)) if (ReflectionUtils.findField(owner.getClass(), name) != null)
-            return ReflectionTestUtils.getField(owner, name);
+        boolean found = false;
+        for (Object owner : owners(facade)) if (ReflectionUtils.findField(owner.getClass(), name) != null) {
+            found = true;
+            Object collaborator = ReflectionTestUtils.getField(owner, name);
+            if (collaborator != null) return collaborator;
+        }
+        if (found) return null;
         throw new IllegalArgumentException("No original publication collaborator: " + name);
     }
 

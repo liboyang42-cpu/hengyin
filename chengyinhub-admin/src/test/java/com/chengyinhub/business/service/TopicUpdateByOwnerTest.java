@@ -850,7 +850,7 @@ class TopicUpdateByOwnerTest {
                     .setId(insertedId[0]++);
             return 1;
         });
-        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "cmsMemberTemplateMapper",
                 mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
         ReflectionTestUtils.setField(svc, "distanceCalculatorUtils",
                 mock(com.chengyinhub.common.utils.DistanceCalculatorUtils.class));
@@ -899,7 +899,7 @@ class TopicUpdateByOwnerTest {
             if (patch.getStatus() != null) row.setStatus(patch.getStatus());
             return 1;
         });
-        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "cmsMemberTemplateMapper",
                 mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
         ReflectionTestUtils.setField(svc, "distanceCalculatorUtils",
                 mock(com.chengyinhub.common.utils.DistanceCalculatorUtils.class));

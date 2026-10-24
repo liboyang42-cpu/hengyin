@@ -238,7 +238,7 @@
     "port-prelaunch-69": {
       "lineage": "W8 port/prelaunch-20261019 (PR #69 ported onto master)",
       "registered_source": "23c3a6d72fe851ed5ec7b8337e70441e2d53ac88",
-      "note": "PR #69 real-MySQL classes on the master-side port: ordinary refund notify/query fact verification (9), refund retry and remainder (5), roam location retention cleanup (21). WxBillIngestionPersistenceTest is left out: it switches H2/MySQL via System.getenv, which the static gate precheck cannot see.",
+      "note": "PR #69 real-MySQL classes on the master-side port: ordinary refund notify/query fact verification (9), refund retry and remainder (6), roam location retention cleanup (21). WxBillIngestionPersistenceTest is left out: it switches H2/MySQL via System.getenv, which the static gate precheck cannot see.",
       "classes": [
         "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
         "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
@@ -569,6 +569,16 @@
         "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT"
       ],
       "note": "One source-bound joint A/B/G batch, no duplicate class jobs: original funds, callback/refund, immutable consumption, components, late-success and approved-refund guard. Exact source SHA, declared zero-skip XML and independent CLEAN required. No production/provider/HTTP or unresolved allocation-policy acceptance."
+    },
+    "architecture-day-refund-lifecycle": {
+      "lineage": "architecture-day original refund lifecycle; isolated GitHub-hosted real storage",
+      "registered_source": "9b284f0111b4337e388fc18d797b11c62112cd82",
+      "note": "Exact original suites: payout30/retry6/coop36=72. Registration is not Java execution. Existing raw XML/hash/count/no-skip and independent schema CLEAN checks apply; Retry keeps its historical batch reference.",
+      "classes": [
+        "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest",
+        "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
+        "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest"
+      ]
     }
   },
   "classes": {
@@ -1178,7 +1188,7 @@
       }
     },
     "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT": {
-      "tests": 5,
+      "tests": 6,
       "storage": [
         "mysql"
       ],
@@ -1544,6 +1554,27 @@
       ],
       "gates": {},
       "note": "Ten original-round outcome MySQL cases: actual production service/CAS/IM transaction and current application locking; controlled qualification/node/task boundaries. Covers winning original event, replay, rollback, legacy unknown, RR/current read and approval-withdrawal contention. Java/DB not yet executed on this integration."
+    },
+    "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest": {
+      "tests": 30,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "note": "9b28: task-owned schema create/drop; exact B fact+B intent+A registration DDL admissions. Runner independently requires CLEAN after AfterAll DROP."
+    },
+    "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest": {
+      "tests": 36,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "database_base": "cy_deposit_it",
+      "note": "9b28: source-owned cy_deposit_it base and class UUID suffix; AfterAll DROP plus schema-absence assertion. Runner independently checks all leftover schemas."
     }
   }
 }

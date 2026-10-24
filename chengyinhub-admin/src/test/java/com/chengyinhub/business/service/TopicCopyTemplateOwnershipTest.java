@@ -78,9 +78,9 @@ class TopicCopyTemplateOwnershipTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", memberTemplateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", memberTemplateMapper);
         ReflectionTestUtils.setField(service, "productRoleService", productRoleService);
-        ReflectionTestUtils.setField(service, "sysCategoryService", mock(ISysCategoryService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "sysCategoryService", mock(ISysCategoryService.class));
 
         CmsTopic original = new CmsTopic();
         original.setId(SOURCE_TOPIC);

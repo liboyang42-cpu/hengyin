@@ -74,7 +74,7 @@ public class GameplayReskinFixture {
         ReflectionTestUtils.setField(publisher,"cmsTopicMapper",topicMapper);
         ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",chapterMapper);
         ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",nodeMapper);
-        ReflectionTestUtils.setField(publisher,"cmsMemberTemplateMapper",templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "cmsMemberTemplateMapper",templateMapper);
         // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
         CmsActivityMapper shellActivities=(CmsActivityMapper)ReflectionTestUtils.getField(publisher,"cmsActivityMapper");
         when(shellActivities.insertCmsActivity(any())).thenAnswer(i->{((com.chengyinhub.business.domain.CmsActivity)i.getArgument(0)).setId(880001L);return 1;});
@@ -245,7 +245,7 @@ public class GameplayReskinFixture {
         sql=database;activeTopics=sql.getMapper(CmsTopicMapper.class);activeGames=sql.getMapper(GameSessionRuntimeMapper.class);
         CmsTopicNodeMapper realNodes=sql.getMapper(CmsTopicNodeMapper.class);CmsTopicChapterMapper realChapters=sql.getMapper(CmsTopicChapterMapper.class);CmsMemberTemplateMapper realTemplates=sql.getMapper(CmsMemberTemplateMapper.class);
         ThemeStateKeyMapper realKeys=sql.getMapper(ThemeStateKeyMapper.class);keyService=new ThemeStateKeyService(realKeys);
-        ReflectionTestUtils.setField(publisher,"cmsTopicMapper",activeTopics);ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",realNodes);ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",realChapters);ReflectionTestUtils.setField(publisher,"cmsMemberTemplateMapper",realTemplates);
+        ReflectionTestUtils.setField(publisher,"cmsTopicMapper",activeTopics);ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",realNodes);ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",realChapters);com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "cmsMemberTemplateMapper",realTemplates);
         wireAuthoringGuards(activeTopics, realChapters, realNodes, realTemplates,
                 sql.getMapper(OmsTicketMapper.class), sql.getMapper(MerchantChapterOfferMapper.class));
         ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicStateKeyRefService",new TopicStateKeyRefService(realNodes,realTemplates,realChapters));
