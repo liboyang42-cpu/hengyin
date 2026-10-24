@@ -1,0 +1,51 @@
+{
+  "source_sha": "9d79e696ebdb15ed91e647055c9b2f9d24c8bcba",
+  "workflow_sha": "864e708e2f38130e21780485e462f8dc147bb76f",
+  "run_id": 40048895279,
+  "conclusion": "FAILURE",
+  "counts": {
+    "classes": [
+      "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT"
+    ],
+    "errors": 2,
+    "failures": 0,
+    "passed": 43,
+    "skipped": 0,
+    "tests": 45
+  },
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "failures": [
+    {
+      "name": "parentWithTwoPositiveOrMissingSiblingAmountsCannotGuessItsPayer",
+      "errors": [
+        {
+          "message": "StatementCallback; SQL [UPDATE cms_registration SET payable_amount=NULL WHERE id=301]; Column 'payable_amount' cannot be null",
+          "type": "org.springframework.dao.DataIntegrityViolationException"
+        }
+      ]
+    },
+    {
+      "name": "plannedCheckAndForeignKeySymbolsAreBeforeDdlBlockers",
+      "errors": [
+        {
+          "message": "StatementCallback; uncategorized SQLException for SQL [ALTER TABLE cms_topic ADD CONSTRAINT ck_g_cash_close CHECK(id>0)]; SQL state [HY000]; error code [3818]; Check constraint 'ck_g_cash_close' cannot refer to an auto-increment column.",
+          "type": "org.springframework.jdbc.UncategorizedSQLException"
+        }
+      ]
+    }
+  ],
+  "raw_xml_sha256": "13d1d3a7def07c56dfeace8a51aacfcb098a56cfcef5819b41df939e3dc73cbf",
+  "scope": "Original30 + H4 + new11; original30/H4 all passed; two new fixture setup errors",
+  "root_fix": "Assert true NOT NULL rejection and persisted prior amount; CHECK collision uses existing non-auto-increment member_id, preserving exact constraint name and all preflight/zero-DDL assertions",
+  "source_changes": "Only this new test method body fixture setup; production SQL/Mapper, original30 and H4 unchanged",
+  "rerun": "PENDING_NEW_SHA"
+}

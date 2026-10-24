@@ -500,7 +500,9 @@ class Wp04CashEvidenceExpandMySqlIT {
         CoopSettlementCashContribution payer=contribution(c.getId(),302,33,"100.00"); payer.setParentOrderNo("PARENT-302");
         db.update("UPDATE cms_registration SET payable_amount=1 WHERE id=301");
         assertThrows(IllegalStateException.class,()->fenced(33,()->mapper.recordContribution(payer)));
-        db.update("UPDATE cms_registration SET payable_amount=NULL WHERE id=301");
+        assertThrows(org.springframework.dao.DataIntegrityViolationException.class,
+                ()->db.update("UPDATE cms_registration SET payable_amount=NULL WHERE id=301"));
+        assertEquals(0,db.queryForObject("SELECT payable_amount FROM cms_registration WHERE id=301",BigDecimal.class).compareTo(BigDecimal.ONE));
         assertThrows(IllegalStateException.class,()->fenced(33,()->mapper.recordContribution(payer)));
         assertEquals(0,count(CONTRIBUTION)); assertLegacy();
     }
@@ -526,7 +528,7 @@ class Wp04CashEvidenceExpandMySqlIT {
         assertEquals(0,preflight());
     }
     @Test void plannedCheckAndForeignKeySymbolsAreBeforeDdlBlockers() {
-        db.execute("ALTER TABLE cms_topic ADD CONSTRAINT ck_g_cash_close CHECK(id>0)");
+        db.execute("ALTER TABLE cms_topic ADD CONSTRAINT ck_g_cash_close CHECK(member_id>0)");
         assertEquals(1,preflight());
         assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
         assertEquals(0,newTables()); assertEquals(0,newHeadColumns()); assertLegacy();
