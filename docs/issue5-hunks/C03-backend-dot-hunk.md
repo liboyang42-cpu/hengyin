@@ -167,3 +167,13 @@ Class-level `recoverOriginal` of never-seen ids stays UNKNOWN and does not occup
 HEAD `1a141870b`. Parent surefire `com.chengyinhub.business.service.support.rpg.mechanism.*Test` **34/0** 2026-10-24T00:45:38Z. Isolation 5/0. FirstJourney 2/0. Binder 3/0.
 
 DB / HTTP / App / CI = NOT_RUN. Did not write D1–D6 shared files. Runtime still unwired. Not 100%.
+
+## 8. Parent addendum 2026-10-23 18:28 America/Los_Angeles
+
+Goal continuation after 01:20Z tick. WAITING_SOURCE cat-file still ABSENT.
+
+Class-level `MechanismRequestIdBinderTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueBindApplies`: recoverOriginal of `c03-bind-never` stays UNKNOWN / `existing==null` without occupying; unique bind is the first PENDING write of that id.
+
+HEAD `d3e1e1c8d`. Parent surefire `com.chengyinhub.business.service.support.rpg.mechanism.*Test` **35/0** 2026-10-24T01:28:11Z. Isolation 5/0. FirstJourney 2/0. Binder 4/0.
+
+DB / HTTP / App / CI = NOT_RUN. Did not write D1–D6 shared files. Runtime still unwired. Not 100%.
