@@ -1,7 +1,7 @@
 <!-- 主题值域 · HP 归零后（R5，2026-10-10 主人批准原型）：一个面板配完归零策略、恢复条件、次数用完后与归零时回复。
      页头统一「左 退出（放弃本次改动）/ 右 完成（校验后保存回主题草稿）」；选择策略用两列下拉，不可选项写明原因。
      旧版（BLOCK_PAID / LEGACY_END / 旧 CHALLENGE）只读显示并原样保留。 -->
-<cy-sheet show="{{runtimeZeroEditor.show}}" bind:close="closeZeroHpEditor" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
+<cy-sheet show="{{runtimeZeroEditor.show}}" fixed="full" bind:close="closeZeroHpEditor" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
  <view class="rt-editor" wx:if="{{runtimeZeroEditor.draft}}">
   <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeZeroHpEditor" aria-role="button" aria-label="退出归零设置" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="node-sheet__done" bindtap="saveZeroHpEditor" aria-role="button" aria-label="完成归零设置" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
   <view class="rt-title"><text>{{runtimeHpLabel}}归零后</text></view>

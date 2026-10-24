@@ -554,7 +554,7 @@ test('玩家名单按场次分组，空态分三种说法', () => {
 
   // 一单都没卖 vs 卖了但筛空,说法必须不同
   page.setData(page.buildPlayerSheet({ rows: [] }, 'all'));
-  assert.match(page.data.playerSheet.emptyText, /还没有人下单/);
+  assert.match(page.data.playerSheet.emptyText, /暂无报名/);
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, arrived: true }] }, 'pending'));
   assert.equal(page.data.playerSheet.emptyText, '没有待核销的客户');
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, arrived: false }] }, 'arrived'));
@@ -568,7 +568,7 @@ test('玩家名单按场次分组，空态分三种说法', () => {
     });
   assert.equal(new Set(zeroOrderTexts).size, 2,
     `零单时四档至少分「总单为零」与「这一档也没记录」两种说法，实际:${zeroOrderTexts.join(' | ')}`);
-  assert.match(zeroOrderTexts[0], /还没有人下单。路线上架后/);
+  assert.match(zeroOrderTexts[0], /暂无报名/);
   assert.doesNotMatch(zeroOrderTexts.join('\n'), /,/u, '中文文案不用半角逗号');
   // 有人扫码待确认时,「待核销」为空不等于「全部客户都已核销」—— 那句是假的。
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, state: 'contacted' }] }, 'pending'));

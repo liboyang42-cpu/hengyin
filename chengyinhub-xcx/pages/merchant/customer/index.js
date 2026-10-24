@@ -67,7 +67,7 @@ Page({
     keyword: '',
     segment: 'all',
     segments: SEGMENTS.map(s => Object.assign({ count: null }, s)),
-    customerSummaryText: '客户数量加载中',
+    customerSummaryText: '',
     rows: [],
     // CU-M-100:名单滚到底要收口。只有一两个人时下面是一整块无说明空白,
     // 看起来像没加载完 —— hasMore 给 wxml 判「这批已经全在了」。
@@ -315,7 +315,7 @@ Page({
         rows: [],
         castCount: 0,
         segments: SEGMENTS.map(s => Object.assign({ count: null }, s)),
-        customerSummaryText: '客户数量加载中',
+        customerSummaryText: '',
         pageNum: 1,
         loading: false,
         error: error || '',
@@ -331,7 +331,7 @@ Page({
         castCount: 0,
         everLoaded: false,   // 换了身份,这一版身份确实没读到过东西 —— 自动退页要恢复
         segments: SEGMENTS.map(s => Object.assign({ count: null }, s)),
-        customerSummaryText: '客户数量加载中',
+        customerSummaryText: '',
         pageNum: 1,
         loading: false,
         error: error || '',
@@ -927,7 +927,7 @@ function buildSegments(counts) {
 
 function customerSummaryText(segmentData) {
   const total = segmentData.segments[0].count;
-  if (total === null) return '客户数量加载中';
+  if (total === null) return '';
   return segmentData.monthlyNewCount === null
     ? `${total} 位`
     : `${total} 位 · 本月新增 ${segmentData.monthlyNewCount}`;

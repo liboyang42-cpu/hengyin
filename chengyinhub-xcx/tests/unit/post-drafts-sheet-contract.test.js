@@ -158,27 +158,16 @@ test('两个小于 88rpx 的可点元素都把热区撑到了 88rpx', () => {
   assert.match(WXML, /<cy-icon name="trash" size="40" \/>/, '稿:垃圾桶 20pt=40rpx')
 })
 
-test('删除必须过组件内部的危险确认闸,且不能顺带点中整行', () => {
-  assert.match(JSON_SRC, /"cy-danger-confirm"/, '确认闸长在组件内部，接入页挂上就自动带闸')
-  assert.match(WXML, /<cy-danger-confirm id="pd-danger" bind:confirm="onDeleteConfirmed"/, '确认通过才回调')
+// 2026-10-23 业主定:删草稿改成「先删、提示条里可撤销」(草稿只在本机,撤销 = 什么都没发生)。
+// 组件不再自带确认闸,点垃圾桶直接上报 delete;页面先从列表拿掉,toast.undo 到期才删 storage。
+test('删除:点垃圾桶直接上报 delete、不再弹确认,且不能顺带点中整行', () => {
+  assert.doesNotMatch(JSON_SRC, /"cy-danger-confirm"/, '改成撤销条后组件不再挂确认闸')
+  assert.doesNotMatch(WXML, /<cy-danger-confirm/)
   assert.match(WXML, /class="pd-del"[^>]*catchtap="onDelete"/,
     '删除必须 catchtap:bindtap 会冒泡到整行，点「删除」顺带把「继续编辑」也点了')
-
-  const { DANGER_ACTIONS } = require(path.join(ROOT, 'utils/danger-actions.js'))
-  const key = (JS.match(/DELETE_CONFIRM_KEY\s*=\s*'([^']+)'/) || [])[1]
-  assert.ok(key, '删除的 confirmKey 必须是一个常量，门禁才扫得到')
-  assert.ok(DANGER_ACTIONS[key], `confirmKey「${key}」必须在 utils/danger-actions.js 登记过`)
-  assert.equal(DANGER_ACTIONS[key].irreversible, true, '本地草稿删了就没了，不可逆')
-  assert.ok(
-    DANGER_ACTIONS[key].consequences.some((c) => c.text.includes('此操作不可撤销')),
-    '不可逆动作必须明写「此操作不可撤销」(danger-confirm-gate 也拦)',
-  )
-
-  // onDelete 只开闸,不发 delete;delete 只能出现在 onDeleteConfirmed 里。
-  const onDelete = JS.slice(JS.indexOf('onDelete(e)'), JS.indexOf('onDeleteConfirmed()'))
-  assert.doesNotMatch(onDelete, /triggerEvent\('delete'/, '点垃圾桶当场就上报 = 绕过确认闸')
-  assert.match(onDelete, /dc\.open\(DELETE_CONFIRM_KEY/, '点垃圾桶只负责开闸')
-  assert.match(JS, /onDeleteConfirmed\(\)[\s\S]*?triggerEvent\('delete'/, '确认后才上报 delete')
+  const onDelete = JS.slice(JS.indexOf('onDelete(e)'), JS.indexOf('_row(e) {'))
+  assert.match(onDelete, /triggerEvent\('delete', row\)/, '点垃圾桶直接上报')
+  assert.doesNotMatch(onDelete, /\.open\(/, '不再开确认闸')
 })
 
 test('组件只渲染:不自己读 storage,草稿真源在 pro-editor-draft', () => {

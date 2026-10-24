@@ -2447,7 +2447,7 @@ Page({
     let emptyText = '';
     if (!kept.length) {
       emptyText = !rows.length && !shopDay
-        ? (filter === 'all' ? '还没有人下单。路线上架后，报名记录会出现在这里' : '还没有人下单，这一档也是空的')
+        ? (filter === 'all' ? '暂无报名' : '还没有人下单，这一档也是空的')
         : (filter === 'pending' ? '没有待核销的客户'
           : (filter === 'contacted' ? '还没有客户接洽'
             : (filter === 'arrived' ? '没有已核销的客户'

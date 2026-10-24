@@ -291,12 +291,11 @@ Page({
     });
   },
 
-  // 2026-09-19 用户裁决(与营销页同口径):商家侧数字位一律是数,没有值就写 0,不放横杠。
-  // 「算不出」这句实话由样本不足提示(facts.lowSample →「数据还少，以下解读仅供参考」)
-  // 与「上期无基数」的环比位来说,数字位自己不再兼职表达状态。
+  // owner 2026-10-23 D4(P1-094,取代 2026-09-19「没有值就写 0」):比率分母为 0 时服务端回 null,
+  // 数字位显示「—」,不拿 0% 冒充「没有样本」。计数位(_countText)仍写 0。
   _pct(v) {
     const value = numberOrNull(v);
-    return Math.round(value === null ? 0 : value * 100) + '%';
+    return value === null ? '—' : Math.round(value * 100) + '%';
   },
 
   _countText(v) {

@@ -3,7 +3,7 @@
      · 列表层「完成」= 整体保存回主题草稿；✕ = 放弃本次全部改动。
      · 单项层「完成」= 提交本项并回列表；返回箭头 = 放弃本项改动回列表；删除放在底部红卡。
      卡片、字段、下拉与彩蛋/物品编辑同一套 rt-* 与 node-card 样式。 -->
-<cy-sheet show="{{survivalEditor.show}}" bind:close="closeSurvivalEditor" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
+<cy-sheet show="{{survivalEditor.show}}" fixed="full" bind:close="closeSurvivalEditor" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
  <view class="rt-editor">
   <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeSurvivalEditor" aria-role="button" aria-label="关闭且不保存" hover-class="cy-pressed" hover-stay-time="80">退出</view>
    <view wx:if="{{survivalEditor.kind && survivalEditor.section !== 'card'}}" class="node-sheet__done" bindtap="commitSurvivalRow" aria-role="button" aria-label="完成此项" hover-class="cy-pressed" hover-stay-time="80">完成</view>
@@ -50,7 +50,7 @@
       <cy-icon name="chevron-right" size="24" />
      </view>
     </view>
-    <text wx:if="{{!survivalFacilities.length}}" class="node-card__value">还没有。节点玩法工具生成的设施也会列在这里。</text>
+    <text wx:if="{{!survivalFacilities.length}}" class="node-card__value">暂无设施</text>
    </view>
   </block>
 

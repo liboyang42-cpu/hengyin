@@ -66,7 +66,7 @@
 
       <view class="cp-field {{contact ? 'cp-field--filled' : ''}}">
         <text class="cp-label">联系方式</text>
-        <input class="cp-input" aria-label="联系方式" placeholder="手机号/微信（可选，便于客服联系）"
+        <input class="cp-input" aria-label="联系方式" placeholder="手机号/微信（可选）"
                placeholder-class="cp-ph" value="{{contact}}" bindinput="onContactInput" maxlength="50" />
       </view>
 

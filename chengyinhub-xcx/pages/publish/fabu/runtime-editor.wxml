@@ -1,5 +1,5 @@
-<cy-sheet show="{{runtimeEditor.show}}" stacked="{{runtimeRewardOpen}}" bind:close="closeRuntimeEditor" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
- <view class="rt-editor" style="min-height:calc(100vh - {{chrome.sheetTop + 18}}px - env(safe-area-inset-bottom) - 24rpx)">
+<cy-sheet show="{{runtimeEditor.show}}" fixed="full" stacked="{{runtimeRewardOpen}}" bind:close="closeRuntimeEditor" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
+ <view class="rt-editor">
   <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeRuntimeEditor" aria-label="关闭配置" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="node-sheet__done" bindtap="closeRuntimeEditor" aria-label="关闭配置" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
   <view class="rt-title"><view wx:if="{{runtimeEditor.kind === 'bingo-cell'}}" bindtap="backRuntimeBingo" aria-label="返回九宫格" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="32" /></view><text>{{runtimeEditor.title}}</text></view>
   <block wx:if="{{runtimeEditor.kind === 'bag'}}">

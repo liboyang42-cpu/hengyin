@@ -21,11 +21,43 @@
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, 16rpx);
-  transition: opacity var(--cy-motion-standard) var(--cy-ease-out), transform var(--cy-motion-standard) var(--cy-ease-out);
+  /* 2026-10-23 弹层动效:收起比出现快一档 —— 出现 standard(220)减速收尾,收起 toast-out(150)加速离场。
+     起点态(没有 .ct--in)上挂的是收起那条,.ct--in 上挂出现那条:transition 取的是目标态的声明。 */
+  transition: opacity var(--cy-motion-toast-out) var(--cy-ease-accelerate), transform var(--cy-motion-toast-out) var(--cy-ease-accelerate);
 }
-.ct.ct--in { opacity: 1; transform: translate(-50%, 0); }
+.ct.ct--in { opacity: 1; transform: translate(-50%, 0); transition: opacity var(--cy-motion-standard) var(--cy-ease-out), transform var(--cy-motion-standard) var(--cy-ease-out); }
 .ct.ct--reduced-motion { transition: none; }
 .ct__icon { flex: none; }
 .ct--success .ct__icon { color: var(--cy-color-status-success); }
 .ct--error .ct__icon { color: var(--cy-color-status-danger); }
 .ct__text { word-break: break-all; }
+
+/* 可撤销提示条(snackbar,2026-10-23):和 toast 同一个位置、同一张面板色,
+ * 但横向撑满(左右留页边距)、文案左对齐、右侧一个文字按钮,所以它要接点击。 */
+.ct.ct--snack {
+  left: var(--cy-page-x);
+  right: var(--cy-page-x);
+  max-width: none;
+  display: flex;
+  justify-content: space-between;
+  min-height: var(--cy-btn-h);
+  padding: 0 var(--cy-space-1) 0 var(--cy-space-4);
+  border-radius: var(--cy-radius-lg);
+  pointer-events: auto;
+  transform: translate(0, 16rpx);
+}
+.ct.ct--snack.ct--in { transform: translate(0, 0); }
+.ct--snack .ct__text { flex: 1; min-width: 0; word-break: break-word; }
+.ct__action {
+  flex: none;
+  min-width: var(--cy-btn-h);
+  height: var(--cy-btn-h);
+  padding: 0 var(--cy-space-3);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--cy-text-title);
+}
+.ct__action--pressed { opacity: .6; }

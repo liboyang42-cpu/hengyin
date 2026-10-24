@@ -24,10 +24,12 @@ test('scene-sheet exposes full/half shells and semantic close events', () => {
   assert.match(js, /dirty/)
   assert.match(js, /closeLabel/)
   assert.match(js, /closable:\s*\{ type: Boolean, value: true \}/)
-  assert.match(wxss, /--cy-motion-standard/)
+  // 2026-10-23 弹层动效:按档位定速,读 --cy-motion-sheet-in / -out(full 档在根节点重定义),不再是 standard 220
+  assert.match(wxss, /\.ss__panel\s*\{[^}]*transition:\s*transform var\(--cy-motion-sheet-out\) var\(--cy-ease-standard\)/)
+  assert.match(wxss, /\.ss--in \.ss__panel \{ transform: translateY\(0\); transition-duration: var\(--cy-motion-sheet-in\); \}/)
   assert.match(wxss, /box-shadow:\s*var\(--cy-sheet-inset-shadow\)/)
   assert.doesNotMatch(wxss, /--cy-motion-slow/)
-  assert.match(wxss, /\.ss--full \.ss__panel\s*\{[\s\S]*height:\s*var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-full-height\)\);/)
+  assert.match(wxss, /\.ss--full \.ss__panel\s*\{[\s\S]*height:\s*min\(var\(--cy-comp-sheet-full\), var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-full-height\)\)\);/)
   // 2026-09-02 二次修正:一度改成 92vh(手册值),实测**三种机型全部压住微信右上角胶囊**。
   // 写死 vh 与安全区无关,注定复发 —— 改为从安全区反算,细节见 sheet-top-safe-area-contract。
   assert.match(read('style/tokens.wxss'),
@@ -36,7 +38,7 @@ test('scene-sheet exposes full/half shells and semantic close events', () => {
   // 2026-09-02:peek 并入 half(下限相同、只差 12vh 上限,渲染常一模一样);
   // min-height 一并删掉 —— 它把一句话的说明也撑到近半屏。
   assert.doesNotMatch(wxss, /^\s*\.ss--peek\b/m, 'peek 档已合并，不该再有 .ss--peek 规则')
-  assert.match(wxss, /\.ss--half \.ss__panel\s*\{[^}]*max-height:\s*min\(70vh, var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-max-height\)\)\);/)
+  assert.match(wxss, /\.ss--half \.ss__panel\s*\{[^}]*max-height:\s*min\(var\(--cy-comp-sheet-full\), var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-max-height\)\)\);/)
   assert.doesNotMatch(wxss, /^\s*min-height:\s*42vh/m, 'T1 不设下限:短内容不该被强行撑高')
   assert.doesNotMatch(wxss, /--cy-comp-sheet-full-max-height/, 'height 已是上限，孪生 max-height 应删掉')
   assert.match(wxss, /\.ss--merchant\s*\{[\s\S]*--cy-comp-sheet-bg:\s*var\(--cy-comp-sheet-merchant-bg\);/)

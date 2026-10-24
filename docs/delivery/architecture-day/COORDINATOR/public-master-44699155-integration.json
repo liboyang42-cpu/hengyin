@@ -1,0 +1,30 @@
+{
+  "upstream": "44699155cf4baa7ed0470d013112d1f650b58888",
+  "architecture_parent": "3a1da35382b0f796c54df662701d368c5943e216",
+  "common_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "actual_overlap_paths": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+    "chengyinhub-xcx/pages/play/index.js",
+    "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+    "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+    "ci/migration-dependencies.json",
+    "ci/prelaunch-seed-provenance.json"
+  ],
+  "resolved_conflicts": [
+    "CmsTopicServiceImpl.java",
+    "action-ledger.json",
+    "action-ledger.test.js"
+  ],
+  "preserved": "D8 size guard moved with actual graph writer, both paths reject before writes; exact original test now follows writer. Public publish size guard and PointsValuePolicy/HTTP ACK retained.",
+  "ledger": {
+    "controls": 5109,
+    "local_tap": 2177,
+    "local_event_contract": 2539,
+    "source_rebuilt": true,
+    "no_dynamic_passes_added": true
+  },
+  "regression": "Deferred until large-service source batch assembled per latest user instruction",
+  "upstream_known_whitespace": "post-drafts/index.wxml has blank EOF carried byte-for-byte, not changed as unrelated cleanup",
+  "acceptance": false
+}

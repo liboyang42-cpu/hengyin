@@ -223,7 +223,8 @@ test('选择玩法：半屏标签条按分类左右滑，只列玩法（不含�
   const sheet = temp.slice(temp.indexOf('选择玩法 sheet(2026-10-22'), temp.indexOf('添加互动工具(底部弹出'))
   assert.match(sheet, /wx:for="\{\{ r5Editor\.gameGroups \}\}"/, '分组来自玩法分类')
   assert.match(sheet, /<scroll-view scroll-x class="cg-tstrip"/, '标签条只左右滑')
-  assert.match(sheet, /cg-edit-head__exit[^>]*bindtap="closeR5GameSheet"[^>]*>退出<\/view>/)
+  // 2026-10-23 弹层动效:退出先播落下(cgDismiss),播完再调 closeR5GameSheet
+  assert.match(sheet, /cg-edit-head__exit[^>]*bindtap="cgDismiss" data-close="closeR5GameSheet"[^>]*>退出<\/view>/)
   assert.match(sheet, /cg-edit-head__done[^>]*bindtap="confirmR5GameSheet"[^>]*>完成<\/view>/)
   assert.match(sheet, /bindtap="previewGameFromSheet"/, '选中后可以预览')
   assert.doesNotMatch(sheet, /toolSelected|addR5Tool|toolOptions/, '玩法列表里没有互动工具')

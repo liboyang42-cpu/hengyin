@@ -23,7 +23,7 @@
     <cy-inline-error load-failure title="精选示例暂未加载" sub="{{cardsError}}" action="重试" bind:action="loadCards" />
   </view>
   <view class="ti-stage ti-stage--state ti-stage--empty" wx:elif="{{!cards.length}}">
-    暂时没有精选示例，你仍可直接创建自己的节点玩法。
+    暂无精选示例
   </view>
 
   <view class="ti-copy" id="tiCopy">

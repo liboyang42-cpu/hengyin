@@ -27,6 +27,8 @@
 }
 
 .os__row--off .os__label { color: var(--cy-color-text-disabled); }
+/* 破坏性动作标红:与 cy-post-actions 的 .pa-row--danger 同一个 token(2026-10-23 业主定) */
+.os__row--danger .os__label { color: var(--cy-color-status-danger-on-interactive); }
 
 /* 未选空圈，选中实心圆与中心点；反色随所在弹窗主题走。 */
 .os__dot {

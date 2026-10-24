@@ -3,7 +3,7 @@
      · endings：运行结局列表，沿用彩蛋编辑的「卡头 + 删除 / 字段 / 底部添加」。
      · quests：当前站点的到达地点、工作人员引导与备用站点。
      头部同其它编辑层：右上「完成」+ ✕；完成写回草稿，✕ 放弃本次改动。 -->
-<cy-sheet show="{{structureEditor.show}}" bind:close="closeStructure" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
+<cy-sheet show="{{structureEditor.show}}" fixed="full" bind:close="closeStructure" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
  <view class="rt-editor">
   <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeStructure" aria-role="button" aria-label="关闭{{structureEditor.title}}" hover-class="cy-pressed" hover-stay-time="80">退出</view>
    <view class="node-sheet__done" bindtap="saveStructure" aria-role="button" aria-label="完成{{structureEditor.title}}" hover-class="cy-pressed" hover-stay-time="80">完成</view>

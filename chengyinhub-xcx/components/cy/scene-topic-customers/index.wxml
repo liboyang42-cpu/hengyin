@@ -20,7 +20,7 @@
               title="当前岗位没有客户查看权限" sub="{{errorText}}" />
     <cy-error load-failure wx:elif="{{state === 'error'}}" title="客户名单加载失败" sub="{{errorText}}"
               retry="重试加载" bind:retry="retry" />
-    <cy-empty wx:elif="{{state === 'empty'}}" title="这个主题还没有人报名" sub="有人买票之后，这里会按场次列出来。" />
+    <cy-empty wx:elif="{{state === 'empty'}}" title="这个主题还没有人报名" />
 
     <block wx:else>
       <view class="tc-session" wx:for="{{summary.sessions}}" wx:for-item="session" wx:key="key">

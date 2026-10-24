@@ -100,7 +100,7 @@
   <!-- ② 草稿。必须是上面那层 sheet 的【兄弟】,不能塞进它的 slot ——
        塞进去会被面板的 overflow 裁掉,也盖不住面板顶上那条留白。
        DOM 在后 ⇒ 叠在上面,这就是「弹窗叠弹窗」。
-       id="drafts" 是必须的:删除确认闸长在组件里,这边删完要回调 deleteDone() 关闸。 -->
+       id="drafts":删草稿走提示条撤销(2026-10-23),组件点垃圾桶直接上报 delete。 -->
   <cy-post-drafts id="drafts" show="{{draftsShow}}" drafts="{{drafts}}" sheet-style="{{draftsSheetStyle}}"
                   bind:select="onPickDraft" bind:delete="onDeleteDraft" bind:close="onCloseDrafts" />
 

@@ -19,7 +19,7 @@
   <cy-error load-failure="{{!authRequired && !accessDenied}}" wx:elif="{{loadErr && !groups.length}}" fill size="lg"
     title="{{authRequired ? '登录后查看邀请记录' : accessDenied ? '当前账号无法查看邀请记录' : '邀请记录加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="retry" />
   <cy-empty wx:elif="{{empty}}" fill size="lg" kind="empty"
-    title="还没有人接受你的邀请" sub="好友加入后，会按时间出现在这里" />
+    title="还没有人接受你的邀请" />
 
   <block wx:else>
     <view class="ir-group" wx:for="{{groups}}" wx:for-item="group" wx:key="label">

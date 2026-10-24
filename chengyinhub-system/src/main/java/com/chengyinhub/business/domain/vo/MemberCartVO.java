@@ -29,6 +29,12 @@ public class MemberCartVO {
     private UmsMemberAddress address;
     @Schema(description="用户余额")
     private Double pointBalance;
+    @Schema(description="本单需花费的积分(服务端计算)")
+    private Integer pointsCost;
+    @Schema(description="本单积分折合金额(元,服务端按统一汇率计算)")
+    private BigDecimal pointsValueYuan;
+    @Schema(description="单笔订单积分最多折合金额(元)")
+    private BigDecimal maxDeductYuan;
 
     public int getCartType() {
         return cartType;
@@ -108,5 +114,29 @@ public class MemberCartVO {
 
     public void setPointBalance(Double pointBalance) {
         this.pointBalance = pointBalance;
+    }
+
+    public Integer getPointsCost() {
+        return pointsCost;
+    }
+
+    public void setPointsCost(Integer pointsCost) {
+        this.pointsCost = pointsCost;
+    }
+
+    public BigDecimal getPointsValueYuan() {
+        return pointsValueYuan;
+    }
+
+    public void setPointsValueYuan(BigDecimal pointsValueYuan) {
+        this.pointsValueYuan = pointsValueYuan;
+    }
+
+    public BigDecimal getMaxDeductYuan() {
+        return maxDeductYuan;
+    }
+
+    public void setMaxDeductYuan(BigDecimal maxDeductYuan) {
+        this.maxDeductYuan = maxDeductYuan;
     }
 }

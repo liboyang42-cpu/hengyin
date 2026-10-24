@@ -91,8 +91,9 @@ test('cy-sheet 面板必须是半透明玻璃底 + backdrop-filter 模糊 + 高�
   // 任一被改掉都判红 —— 只钉 70vh 的话,把 fallback 悄悄改成 90vh 抓不到。
   // 2026-10-23 业主(实机):70vh 把长内容截掉、短内容底下又留空 —— 改为「高度跟内容走,上限到胶囊底下」。
   // 上限仍是带兜底的变量:实测胶囊(attached 下发)优先,拿不到退回从安全区反算的 token,不写死 vh。
-  assert.match(panel[0], /max-height:\s*var\(--cy-comp-sheet-max-h,\s*var\(--cy-comp-sheet-max-height\)\)/,
-    '面板上限必须是 var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)):胶囊实测优先、token 兜底')
+  // 2026-10-23 同日再定三档 peek/half/full = 30/60/80%:贴内容高,默认上限 = full(80%),仍受胶囊封顶。
+  assert.match(panel[0], /max-height:\s*min\(var\(--cy-comp-sheet-full\),\s*var\(--cy-comp-sheet-max-h,\s*var\(--cy-comp-sheet-max-height\)\)\)/,
+    '面板上限必须是 min(full 80%, 胶囊实测优先、token 兜底)')
   // 面板自己不滚:纵向 flex + overflow hidden,只让 .sh__body 一个滚动区(否则整层 catchtouchmove 下实机滑不动)
   assert.match(panel[0], /display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*overflow:\s*hidden;/)
   assert.doesNotMatch(panel[0], /overflow-y:\s*auto/, '面板不许自己滚动')

@@ -590,8 +590,8 @@ Page({
                     { v: free ? '不限顺序' : '按顺序', l: '走法' },
                     { v: poi.distM ? poi.distM + 'm' : '—', l: '距你' }],
           },
-          nearbyBanner: { show: false },
-        });
+          nearbyBanner: { show: false }, topicIn: false,
+        }, () => that._topicEnter());
       },
       fail() { that._fallbackToShopCard(poi); },
     });
@@ -607,7 +607,7 @@ Page({
       paceCard: { show: false, title: '', body: '', demo: false },
     });
   },
-  closeTopicView() { this.setData({ topicView: null }); },
+  closeTopicView() { this._topicLeave(); },
   openTopicPageFromView() {
     const t = this.data.topicView;
     if (!t || !t.topicId) return;
@@ -5832,6 +5832,32 @@ Page({
       }, 560);
     });
     return true;
+  },
+
+  /* 2026-10-23 弹层动效:主题半屏原来类名是静态 is-in,开合都没有过渡(一帧出现、一帧消失)。
+     现在挂载时是起点态,渲染完再置 topicIn 升起;关闭先落下(half 档 250ms = --cy-motion-sheet-out)再卸载。
+     照片条贴在半屏上沿:共用样式按 70vh 定位,半屏现在贴内容高,量真实高度再放(同 subpackageRoam/nearby)。 */
+  _topicEnter() {
+    if (this._topicOutTimer) { clearTimeout(this._topicOutTimer); this._topicOutTimer = null; }
+    const show = () => { if (!this._unloaded && this.data.topicView) this.setData({ topicIn: true }); };
+    if (typeof wx.createSelectorQuery === 'function') {
+      try {
+        wx.createSelectorQuery().in(this).select('#roam-topic-sheet').boundingClientRect((r) => {
+          if (r && r.height && !this._unloaded) this.setData({ tstripStyle: 'bottom:' + Math.round(r.height + 10) + 'px;' });
+        }).exec();
+      } catch (e) { /* 量不到就用共用样式的位置 */ }
+    }
+    if (this.data.reducedMotion) show(); else setTimeout(show, 20);
+  },
+  _topicLeave() {
+    if (!this.data.topicView) return;
+    if (this.data.reducedMotion) { this.setData({ topicView: null, topicIn: false }); return; }
+    this.setData({ topicIn: false });
+    if (this._topicOutTimer) clearTimeout(this._topicOutTimer);
+    this._topicOutTimer = setTimeout(() => {
+      this._topicOutTimer = null;
+      if (!this._unloaded && !this.data.topicIn) this.setData({ topicView: null });
+    }, 250);
   },
 
 });

@@ -18,7 +18,11 @@
   position: absolute;
   inset: 0;
   background: var(--cy-sheet-overlay);
+  /* 遮罩与面板同档同曲线(原来没有淡入,面板还在升遮罩已经全暗) */
+  opacity: 0;
+  transition: opacity var(--cy-motion-sheet-out) var(--cy-ease-standard);
 }
+.ss--in .ss__mask { opacity: 1; transition-duration: var(--cy-motion-sheet-in); }
 /* 不参与视觉的结构容器。
    ⚠️ 不许在这条链路上加 max-width 或横向 margin。这里曾挂过 max-width: 392.975px
    (iPhone 14 画板宽,当时是个 token),面板自己 width:100% 于是跟着被夹住,而 .ss 是
@@ -40,7 +44,7 @@
   /* 稿上是 392.975px(iPhone 14 画板绝对宽),但那是画板宽不是面板约束:面板本就该满宽。 */
   width: 100%;
   /* 任何档位的面板都不许越过胶囊 —— 见 --cy-comp-sheet-max-height 的算式 */
-  max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -54,17 +58,21 @@
   -webkit-backdrop-filter: blur(var(--cy-comp-sheet-blur, 24rpx));
   border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0;
   box-shadow: var(--cy-sheet-inset-shadow);
-  animation: ss-up var(--cy-motion-standard) var(--cy-ease-out);
+  /* 2026-10-23:进出场改 transition(见 index.js 头注释)。起点态在屏外,挂上 .ss--in 才升起;
+     退场摘掉 .ss--in 落回屏外。时长读按档位重定义过的 --cy-motion-sheet-in / -out,曲线慢快慢(业主 09-06 定)。 */
+  transform: translateY(100%);
+  transition: transform var(--cy-motion-sheet-out) var(--cy-ease-standard);
 }
+.ss--in .ss__panel { transform: translateY(0); transition-duration: var(--cy-motion-sheet-in); }
 .ss--full .ss__panel {
-  height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-full-height));
+  height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-full-height)));
 }
 /* T1 底部弹窗(Brand Handbook 弹层四型):一次选择、短表单、一段说明,≤70vh。
    2026-09-02 合并掉 .ss--peek —— 它与 half 的 min-height 完全相同、只有上限差 12vh,
    内容不够长时两档渲染结果像素级相同;而 min-height:42vh 会把短内容强行撑高,
    一句话的说明也占掉近半屏。两个毛病一起治:删下限、并成一档。 */
 .ss--half .ss__panel {
-  max-height: min(70vh, var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
 }
 .ss--player {
   /* 玩家记录/明细卡以 scene-roam-history 的 .hs-card 为单一真源。 */
@@ -147,7 +155,14 @@
   --cy-text-secondary: var(--cy-comp-sheet-merchant-text-tertiary);
   --cy-comp-sheet-bg: var(--cy-comp-sheet-merchant-bg);
 }
-.ss--reduced-motion .ss__panel { animation: none; }
+.ss--reduced-motion .ss__panel,
+.ss--reduced-motion .ss__mask { transition: none; }
+/* 档位定速:full 档在根节点把两条时长换成 full 档,面板与遮罩同档;half 档就是 token 默认 300 / 250 */
+.ss--full { --cy-motion-sheet-in: var(--cy-motion-sheet-full-in); --cy-motion-sheet-out: var(--cy-motion-sheet-full-out); }
+.ss--closing { pointer-events: none; }
+/* 交接(见 behaviors/exit-motion.js):被接替的遮罩保持全暗,接替的遮罩直接是暗的、不淡入 */
+.ss--keep-mask .ss__mask { opacity: 1 !important; }
+.ss.ss--handoff-in .ss__mask { transition: none; }
 .ss__head {
   width: 100%;
   flex: none;
@@ -209,7 +224,6 @@
   padding: var(--cy-space-2) var(--cy-comp-sheet-body-pad-x) calc(var(--cy-space-2) + env(safe-area-inset-bottom));
   background: var(--cy-sheet-bg);
 }
-@keyframes ss-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,

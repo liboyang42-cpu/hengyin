@@ -64,8 +64,8 @@
     </view>
     <view wx:elif="{{showBadgeEmpty}}" class="gc-badge-empty">
       <view class="gc-empty-heading"><cy-icon class="gc-star-icon" name="star" size="40" /><text>还没有点亮任何徽章</text></view>
-      <text class="gc-empty-copy">继续探索城市，第一枚徽章
-会在这里出现</text>
+      <text class="gc-empty-copy">
+</text>
       <view class="gc-explore-button" bindtap="goExplore" aria-role="button" aria-label="去探索" hover-class="gc-row--press" hover-stay-time="80">去探索</view>
     </view>
     <view wx:else class="gc-badge-loading">

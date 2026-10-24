@@ -7,11 +7,11 @@ const GENERIC = { title: '还没有可分享的自由探索期次', sub: '' };
 const BY_REASON = {
   NOT_UNDERTAKEN: {
     title: '本俱乐部还没有承接自由探索期次',
-    sub: '作为执行俱乐部承接合作、期次开售后，会出现在这里',
+    sub: '',
   },
   UNDERTAKEN_NOT_ON_SALE: {
     title: '已承接的期次还没有开售',
-    sub: '开售并绑定本俱乐部后会出现在这里，可带票分享',
+    sub: '',
   },
   NO_PERMISSION: {
     title: '仅主理人或管理员可查看期次',

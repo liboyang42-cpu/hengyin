@@ -292,6 +292,33 @@ test('零游玩人次不展示完成百分比，有游玩但无人完成仍显�
   assert.equal(zero.page.data.clubStats.topics[1].completionRateText, '0.0%')
 })
 
+// 2026-10-23 owner D4(P1-094):后端 /api/stats/club 零分母改回 null(SafeRatio),看板照常 ready 并显示「—」,
+// 不能因为 null 把整张看板判成坏回包。
+test('零分母完成率为 null 时看板仍可用并显示「—」(D4 新合同)', () => {
+  const nullRates = createDetailHarness()
+  nullRates.page.data.club = { id: 9, isOwner: true }
+  nullRates.page.loadClubStats()
+  nullRates.requests[0].success({ code: 200, data: {
+    clubId: 9, topicCount: 2, participants: 3, completed: 1, overallRate: 33.3,
+    topics: [
+      { topicId: 101, participants: 0, completed: 0, completionRate: null },
+      { topicId: 102, participants: 3, completed: 1, completionRate: 33.3 },
+    ],
+  } })
+  assert.equal(nullRates.page.data.clubStatsState, 'ready')
+  assert.equal(nullRates.page.data.clubStats.topics[0].completionRateText, '—')
+  assert.equal(nullRates.page.data.clubStats.topics[1].completionRateText, '33.3%')
+
+  const empty = createDetailHarness()
+  empty.page.data.club = { id: 9, isOwner: true }
+  empty.page.loadClubStats()
+  empty.requests[0].success({ code: 200, data: {
+    clubId: 9, topicCount: 0, participants: 0, completed: 0, overallRate: null, topics: [],
+  } })
+  assert.equal(empty.page.data.clubStatsState, 'ready')
+  assert.equal(empty.page.data.clubStats.overallRateText, '—')
+})
+
 function declarations(source, selector) {
   source = source.replace(/\/\*[\s\S]*?\*\//g, '')
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

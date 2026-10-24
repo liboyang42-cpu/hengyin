@@ -227,6 +227,7 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
             return routeNodeMaps;
         }
 
+        TopicSizeLimits.requireWithinLimits(chapters);
         long chapterSortId = 0L;
         for (ChapterDTO chapterDTO : chapters) {
             CmsTopicChapter chapter = new CmsTopicChapter();
@@ -294,6 +295,7 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
     @Transactional(rollbackFor = Exception.class)
     public TopicAuthoredGraphIds compileChapterFlow(List<ChapterDTO> chapters, Long topicId, String username, Long memberId,
                                     boolean replaceExisting, boolean allowBundledDraft) {
+        TopicSizeLimits.requireWithinLimits(chapters);
         ChapterFlowCompiler.CompiledFlow flow = ChapterFlowCompiler.compileChapterFlow(chapters);
         Builder routeNodeMaps = new Builder();
 

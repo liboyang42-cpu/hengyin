@@ -96,8 +96,8 @@ function assertSecondaryStateMarkup(aiWxml, customerWxml, ledgerWxml) {
     '客户页只有首载失败才显示整页错误')
   assert.doesNotMatch(customerWxml, /<cy-inline-error\b[^>]*wx:if="\{\{error && rows\.length\}\}"/,
     '已有客户时刷新失败静默降级，旧列表留在屏上')
-  assert.match(customerWxml, /\{\{error \? '客户数量暂不可用' : customerSummaryText\}\}/,
-    '客户总量必须由标题摘要承接，失败时不能继续显示加载中')
+  assert.match(customerWxml, /<text class=\"cu-hero-sub\" wx:if=\"\{\{!error && customerSummaryText\}\}\">\{\{customerSummaryText\}\}<\/text>/,
+    '客户总量必须由标题摘要承接，失败或未知时整行隐藏')
   assert.doesNotMatch(customerWxml, /class="cu-seg-num"/,
     'Figma 25:124 的分段 chip 只显示业务词，不再渲染分段计数')
   assert.match(customerWxml, /<cy-empty\b[^>]*cta="\{\{emptyCta\}\}"[^>]*bind:cta="onEmptyAction"/,
@@ -643,13 +643,14 @@ test('账本快速重试两个结算区块时，两路结果都能独立完成',
   assert.equal(ledger.data.loading, false)
 })
 
-test('AI 事实未知不冒充有数,数字位写 0、状态位说实话(2026-09-19 用户裁决)', () => {
+test('AI 事实未知不冒充有数,计数位写 0、比率位写「—」、状态位说实话(2026-09-19 用户裁决;2026-10-23 D4 比率位改「—」)', () => {
   const insight = loadPage('pages/merchant/marketing/ai-insight/index.js')
   const unknown = insight._buildValueCard({ attribution: {} })
   // ★数字位不再是状态位:未知写 0,「这不是零」由下面的 factState 与 lowSample 提示表达。
   assert.equal(unknown.visitors, '0')
   assert.equal(unknown.checkins, '0')
-  assert.equal(insight._buildMetricCards({ checkin: {}, crowd: {}, supply: {} })[0].num, '0%')
+  // 2026-10-23 owner D4(P1-094):比率位例外 —— 分母为 0 / 未知时服务端回 null,显示「—」,不再写 0%
+  assert.equal(insight._buildMetricCards({ checkin: {}, crowd: {}, supply: {} })[0].num, '—')
 
   insight.load()
   requests[0].success({ code: 200, data: { facts: { attribution: {} } } })
@@ -670,7 +671,7 @@ test('AI 事实未知不冒充有数,数字位写 0、状态位说实话(2026-09
 test('客户分段缺失保持未知，三类空态都有正确恢复动作', () => {
   const customer = loadPage('pages/merchant/customer/index.js')
   assert.ok(customer.data.segments.every((item) => item.count === null))
-  assert.equal(customer.data.customerSummaryText, '客户数量加载中')
+  assert.equal(customer.data.customerSummaryText, '')
 
   customer.data.keyword = '不存在'
   assert.equal(customer._emptyCopy(customer.data.segments).emptyAction, 'clear-search')
@@ -741,10 +742,10 @@ test('负控：恢复整页互斥错误或把未知金额写成零时必须判�
   const fabricatedAi = ai.replace(/factState\s*===\s*'unknown'/g, "factState === 'empty'")
   assert.throws(() => assertSecondaryStateMarkup(fabricatedAi, customer, ledger), /区分事实未知/)
 
-  const missingCustomerSummary = customer.replace(/\{\{error \? '客户数量暂不可用' : customerSummaryText\}\}/, '0 位')
+  const missingCustomerSummary = customer.replace(/<text class=\"cu-hero-sub\" wx:if=\"\{\{!error && customerSummaryText\}\}\">\{\{customerSummaryText\}\}<\/text>/, '0 位')
   assert.throws(() => assertSecondaryStateMarkup(ai, missingCustomerSummary, ledger), /标题摘要/)
 
-  const staleCustomerSummary = customer.replace(/\{\{error \? '客户数量暂不可用' : customerSummaryText\}\}/, '{{customerSummaryText}}')
+  const staleCustomerSummary = customer.replace(/<text class=\"cu-hero-sub\" wx:if=\"\{\{!error && customerSummaryText\}\}\">\{\{customerSummaryText\}\}<\/text>/, '<text class="cu-hero-sub">{{customerSummaryText}}</text>')
   assert.throws(() => assertSecondaryStateMarkup(ai, staleCustomerSummary, ledger), /标题摘要/)
 
   const missingSettlementStale = ledger.replace(

@@ -483,6 +483,8 @@
   border-radius: var(--cy-radius-2xl) var(--cy-radius-2xl) 0 0;
   background: var(--cy-bg-card);
   box-sizing: border-box;
+  /* 2026-10-23 弹层三档:贴内容高,上限 full(80%)且不越过胶囊 */
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-height)); overflow-y: auto;
 }
 /* measure:先按最终尺寸排版但不可见,量完位置交给 ghost 形变;open 后内容由模糊转清晰 */
 .ts-sheet--measure { visibility: hidden; }

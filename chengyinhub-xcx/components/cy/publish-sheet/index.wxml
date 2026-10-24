@@ -1,4 +1,4 @@
-<view class="ps ps--quick {{merchant ? 'theme-merchant ps--merchant' : 'theme-dark'}} {{quickOpen ? 'ps--quick-open' : ''}} {{reducedMotion ? 'ps--reduced' : ''}} {{_closing ? 'ps--closing' : ''}}" wx:if="{{_render}}">
+<view class="ps ps--quick {{merchant ? 'theme-merchant ps--merchant' : 'theme-dark'}} {{quickOpen ? 'ps--quick-open' : ''}} {{reducedMotion ? 'ps--reduced' : ''}} {{_closing ? 'ps--closing' : ''}} {{_keepMask ? 'ps--keep-mask' : ''}} {{_handoffIn ? 'ps--handoff-in' : ''}}" wx:if="{{_render}}">
   <!-- top 由 JS 按微信胶囊实测下发:整层玻璃菜单原来铺到状态栏,把原页的导航标题
        和消息入口一起压暗了(CU-M-157)。面板从微信导航下方开始,不再盖住导航行。 -->
   <view class="ps__mask" style="top:{{chrome.contentTop}}px" catchtouchmove="noop" bindtap="onMask" aria-role="button" aria-label="关闭发布菜单" hover-class="cy-pressed" hover-stay-time="80"></view>

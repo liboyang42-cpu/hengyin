@@ -257,6 +257,10 @@ public class ApiRoamController extends BaseController {
 
     /** 探店入账的到点校验半径(米);比 POI_DISCOVER_RADIUS_M 略紧,探店是"进店"不是"路过" */
     private static final int SHOP_VISIT_RADIUS_M = 100;
+    /** owner 2026-10-23 D7(U-112):探店隐含速度超过它只留痕(warn 日志),照常入账,不拒绝。 */
+    static final double SHOP_VISIT_TELEPORT_WARN_MPS = 50.0;
+    private static final org.slf4j.Logger TELEPORT_AUDIT_LOG =
+            org.slf4j.LoggerFactory.getLogger(ApiRoamController.class.getName() + ".teleportAudit");
 
     @Operation(summary = "探店入账(任意真商家:roam 据点 / 报名商家),服务端校验到点")
     @PostMapping("/shop/visit")
@@ -312,12 +316,55 @@ public class ApiRoamController extends BaseController {
             return error("还没到该店附近");
         }
 
+        auditShopVisitSpeed(memberId, sid, sourceType, sourceId, shopLat, shopLng);
         roamMapper.recordAnonymousShopVisitor(memberId,sourceType,sourceId);
         int inserted = roamMapper.insertShopVisitIgnore(memberId, sid, sourceType, sourceId, name.trim(), new Date());
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("recorded", inserted > 0);
         data.put("shops", roamMapper.countDistinctShopsBySession(sid));
         return AjaxResult.success(inserted > 0 ? "已记入本次漫游" : "本次已记过", data);
+    }
+
+    /**
+     * D7:只记不拦。以该 member 上一个已入账点(最近一次 POI 发现 / 探店,取较新者;坐标均为服务端来源坐标)
+     * 到本店的直线距离 ÷ 时间差算隐含速度,超过 {@link #SHOP_VISIT_TELEPORT_WARN_MPS} 写一条结构化 warn。
+     * 任何读取/解析异常都只跳过留痕,绝不影响入账。
+     */
+    private void auditShopVisitSpeed(Long memberId, Long sid, Integer sourceType, Long sourceId,
+                                     double shopLat, double shopLng) {
+        try {
+            Object[] prev = latestAcceptedPoint(roamMapper.selectLastPoiFoundLoc(memberId), "foundAt", "POI_DISCOVER", null);
+            prev = latestAcceptedPoint(roamMapper.selectLastShopVisitLoc(memberId), "visitedAt", "SHOP_VISIT", prev);
+            if (prev == null) return;
+            long elapsedSec = Math.max(1L, (System.currentTimeMillis() - (Long) prev[0]) / 1000L);
+            double distanceM = GeoDistanceUtils.haversineMeters((Double) prev[1], (Double) prev[2], shopLat, shopLng);
+            double speedMps = distanceM / elapsedSec;
+            if (speedMps > SHOP_VISIT_TELEPORT_WARN_MPS) {
+                TELEPORT_AUDIT_LOG.warn("event=ROAM_SHOP_VISIT_TELEPORT_SUSPECT action=ACCEPTED member={} session={}"
+                                + " sourceType={} sourceId={} prevKind={} distanceM={} elapsedSec={} speedMps={} thresholdMps={}",
+                        memberId, sid, sourceType, sourceId, prev[3], Math.round(distanceM), elapsedSec,
+                        String.format(java.util.Locale.ROOT, "%.1f", speedMps), SHOP_VISIT_TELEPORT_WARN_MPS);
+            }
+        } catch (RuntimeException e) {
+            TELEPORT_AUDIT_LOG.warn("event=ROAM_SHOP_VISIT_TELEPORT_AUDIT_SKIPPED member={} reason={}",
+                    memberId, e.getClass().getSimpleName());
+        }
+    }
+
+    /** 从候选行取 {时间毫秒, lat, lng, 来源};行无效则返回 current;两者都有效时取时间较新的那个。 */
+    private static Object[] latestAcceptedPoint(Map<String, Object> row, String timeKey, String kind, Object[] current) {
+        if (row == null) return current;
+        Object rawTime = row.get(timeKey);
+        Long at = rawTime instanceof java.util.Date ? Long.valueOf(((java.util.Date) rawTime).getTime())
+                : rawTime instanceof java.time.LocalDateTime   // 新版 MySQL 驱动按 Map 取 DATETIME 回 LocalDateTime
+                ? Long.valueOf(((java.time.LocalDateTime) rawTime).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
+                : null;
+        if (at == null) return current;
+        Double lat = row.get("lat") == null ? null : parseCoord(String.valueOf(row.get("lat")), -90d, 90d);
+        Double lng = row.get("lng") == null ? null : parseCoord(String.valueOf(row.get("lng")), -180d, 180d);
+        if (lat == null || lng == null) return current;
+        if (current != null && at <= (Long) current[0]) return current;
+        return new Object[] {at, lat, lng, kind};
     }
 
     /** 商家卡头像堆:一次最多问多少个来源,和横滑卡一次渲染的张数同量级。 */

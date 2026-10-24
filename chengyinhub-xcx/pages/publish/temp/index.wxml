@@ -1475,10 +1475,10 @@
   </view>
 
   <!-- ============ 添加模块 sheet ============ -->
-  <view class="cg-mask" wx:if="{{ showAddSheet }}" bindtap="closeAddSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ showAddSheet }}">
+  <view class="cg-mask {{cgOut === 'add' ? 'is-out' : ''}}" wx:if="{{ showAddSheet }}" bindtap="cgDismiss" data-close="closeAddSheet" data-out="add" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet {{cgOut === 'add' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ showAddSheet }}">
     <view class="cg-sheet-bar"></view>
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAddSheet" aria-role="button" aria-label="退出添加模块" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">添加模块</view><view class="cg-edit-head__done" bindtap="closeAddSheet" aria-role="button" aria-label="完成添加模块" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeAddSheet" data-out="add" aria-role="button" aria-label="退出添加模块" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">添加模块</view><view class="cg-edit-head__done" bindtap="closeAddSheet" aria-role="button" aria-label="完成添加模块" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-sheet-list">
       <view class="cg-sheet-card" wx:for="{{ availableModules }}" wx:key="key" hover-class="cg-sheet-card--pressed" hover-stay-time="80" bindtap="addModule" data-key="{{ item.key }}">
         <view class="cg-sheet-meta">
@@ -1493,10 +1493,10 @@
 
   <!-- ============ 选择玩法 sheet(2026-10-22 主人定稿,Figma 标签样式):半屏弹层;所有分类排成一条只左右滑,
        每类最多四行胶囊标签(宽度随字数、带图标),点分类跳过去;点标签先选中,底部看说明 / 预览,「完成」才换玩法。 ============ -->
-  <view class="cg-mask" wx:if="{{ gameSheetOpen }}" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-tsheet cg-tsheet--auto" wx:if="{{ gameSheetOpen }}">
+  <view class="cg-mask {{cgOut === 'game' ? 'is-out' : ''}}" wx:if="{{ gameSheetOpen }}" bindtap="cgDismiss" data-close="closeR5GameSheet" data-out="game" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-tsheet cg-tsheet--auto {{cgOut === 'game' ? 'is-out' : ''}}" wx:if="{{ gameSheetOpen }}">
     <view class="cg-sheet-bar"></view>
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">选择玩法</view><view class="cg-edit-head__done" bindtap="confirmR5GameSheet" aria-role="button" aria-label="完成选择玩法" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeR5GameSheet" data-out="game" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">选择玩法</view><view class="cg-edit-head__done" bindtap="confirmR5GameSheet" aria-role="button" aria-label="完成选择玩法" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <scroll-view scroll-x class="cg-gsheet-nav" enhanced show-scrollbar="{{false}}" scroll-into-view="{{ sheetNavAnchor }}" scroll-with-animation>
       <view class="cg-gsheet-navi {{ sheetGroup === idx ? 'is-on' : '' }}" id="gnav-{{ idx }}" wx:for="{{ r5Editor.gameGroups }}" wx:key="title" wx:for-index="idx"
             data-index="{{ idx }}" bindtap="jumpR5GameGroup" aria-role="button" aria-label="跳到{{ item.title }}" hover-class="cy-pressed" hover-stay-time="80">{{ item.title }}</view>
@@ -1524,10 +1524,10 @@
   </view>
 
   <!-- ============ 添加互动工具(底部弹出,同一种标签;已添加的打勾,点它直接去配置) ============ -->
-  <view class="cg-mask" wx:if="{{ toolPickerOpen }}" bindtap="closeToolPicker" aria-role="button" aria-label="退出添加互动工具" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-tsheet cg-tsheet--auto" wx:if="{{ toolPickerOpen }}">
+  <view class="cg-mask {{cgOut === 'toolpicker' ? 'is-out' : ''}}" wx:if="{{ toolPickerOpen }}" bindtap="cgDismiss" data-close="closeToolPicker" data-out="toolpicker" aria-role="button" aria-label="退出添加互动工具" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-tsheet cg-tsheet--auto {{cgOut === 'toolpicker' ? 'is-out' : ''}}" wx:if="{{ toolPickerOpen }}">
     <view class="cg-sheet-bar"></view>
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeToolPicker" aria-role="button" aria-label="退出添加互动工具" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">互动工具</view><view class="cg-edit-head__done" bindtap="closeToolPicker" aria-role="button" aria-label="完成添加互动工具" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeToolPicker" data-out="toolpicker" aria-role="button" aria-label="退出添加互动工具" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">互动工具</view><view class="cg-edit-head__done" bindtap="closeToolPicker" aria-role="button" aria-label="完成添加互动工具" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-tpad">
       <view class="cg-tag-pill {{ item.on ? 'is-on' : '' }} {{ item.reason ? 'is-off' : '' }}" wx:for="{{ toolPickerItems }}" wx:key="key"
             data-key="{{ item.key }}" data-reason="{{ item.reason }}" bindtap="pickToolTag"
@@ -1541,9 +1541,9 @@
   </view>
 
   <!-- ============ 语音讲解(互动工具) ============ -->
-  <view class="cg-mask" wx:if="{{ voiceSheetOpen }}" bindtap="closeVoiceSheet" aria-role="button" aria-label="退出语音讲解" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-edit-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ voiceSheetOpen }}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeVoiceSheet" aria-role="button" aria-label="退出语音讲解" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">语音讲解</view><view class="cg-edit-head__done" bindtap="closeVoiceSheet" aria-role="button" aria-label="完成语音讲解" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+  <view class="cg-mask {{cgOut === 'voice' ? 'is-out' : ''}}" wx:if="{{ voiceSheetOpen }}" bindtap="cgDismiss" data-close="closeVoiceSheet" data-out="voice" aria-role="button" aria-label="退出语音讲解" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-edit-sheet {{cgOut === 'voice' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ voiceSheetOpen }}">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeVoiceSheet" data-out="voice" aria-role="button" aria-label="退出语音讲解" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">语音讲解</view><view class="cg-edit-head__done" bindtap="closeVoiceSheet" aria-role="button" aria-label="完成语音讲解" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-gcfg">
           <cy-inline-error class="cg-inline-error" wx:if="{{errors.voice}}" title="{{errors.voice}}" />
           <cy-card class="cg-audio" wx:if="{{ formData.audioUrl }}">
@@ -1566,9 +1566,9 @@
   </view>
 
   <!-- ============ 背景音乐(互动工具):advanced.backgroundMusic,有这一段就算开着 ============ -->
-  <view class="cg-mask" wx:if="{{ musicSheetOpen }}" bindtap="closeMusicSheet" aria-role="button" aria-label="退出背景音乐" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-edit-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ musicSheetOpen }}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeMusicSheet" aria-role="button" aria-label="退出背景音乐" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">背景音乐</view><view class="cg-edit-head__done" bindtap="saveMusicSheet" aria-role="button" aria-label="完成背景音乐" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+  <view class="cg-mask {{cgOut === 'music' ? 'is-out' : ''}}" wx:if="{{ musicSheetOpen }}" bindtap="cgDismiss" data-close="closeMusicSheet" data-out="music" aria-role="button" aria-label="退出背景音乐" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-edit-sheet {{cgOut === 'music' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ musicSheetOpen }}">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeMusicSheet" data-out="music" aria-role="button" aria-label="退出背景音乐" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">背景音乐</view><view class="cg-edit-head__done" bindtap="saveMusicSheet" aria-role="button" aria-label="完成背景音乐" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-gcfg">
       <view class="cg-cfg-label">音乐名称</view>
       <input class="cg-cfg-input" value="{{musicDraft.title}}" maxlength="40" placeholder="例如 老城茶馆" placeholder-class="cg-ph" bindinput="inputMusicTitle" />
@@ -1587,9 +1587,9 @@
   </view>
 
   <!-- ============ R5 扫码参与：扫完回复 ============ -->
-  <view class="cg-mask" wx:if="{{scanSheetOpen}}" bindtap="closeScanSheet" aria-role="button" aria-label="退出扫完回复" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-edit-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{scanSheetOpen}}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeScanSheet" aria-role="button" aria-label="退出扫完回复" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">扫完回复</view><view class="cg-edit-head__done" bindtap="saveScanSheet" aria-role="button" aria-label="完成扫完回复" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+  <view class="cg-mask {{cgOut === 'scan' ? 'is-out' : ''}}" wx:if="{{scanSheetOpen}}" bindtap="cgDismiss" data-close="closeScanSheet" data-out="scan" aria-role="button" aria-label="退出扫完回复" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-edit-sheet {{cgOut === 'scan' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{scanSheetOpen}}">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeScanSheet" data-out="scan" aria-role="button" aria-label="退出扫完回复" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">扫完回复</view><view class="cg-edit-head__done" bindtap="saveScanSheet" aria-role="button" aria-label="完成扫完回复" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <cy-inline-error class="cg-inline-error" wx:if="{{r5Editor.error}}" title="{{r5Editor.error}}" />
 
           <view class="cg-gcfg" >
@@ -1641,9 +1641,9 @@
   </view>
 
   <!-- ============ R5 附加规则面板（限时挑战 / 时段限定 / 排行榜） ============ -->
-  <view class="cg-mask" wx:if="{{toolSheetKey && !toolSheetOpen}}" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出附加规则" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-edit-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{toolSheetKey && !toolSheetOpen}}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出附加规则" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{toolSheetKey === 'timer' ? '限时挑战' : toolSheetKey === 'timeWindow' ? '时段限定' : '排行榜'}}</view><view class="cg-edit-head__done" bindtap="saveR5ToolSheet" aria-role="button" aria-label="完成附加规则" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+  <view class="cg-mask {{cgOut === 'rule' ? 'is-out' : ''}}" wx:if="{{toolSheetKey && !toolSheetOpen}}" bindtap="cgDismiss" data-close="closeR5ToolSheet" data-out="rule" aria-role="button" aria-label="退出附加规则" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-edit-sheet {{cgOut === 'rule' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{toolSheetKey && !toolSheetOpen}}">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeR5ToolSheet" data-out="rule" aria-role="button" aria-label="退出附加规则" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{toolSheetKey === 'timer' ? '限时挑战' : toolSheetKey === 'timeWindow' ? '时段限定' : '排行榜'}}</view><view class="cg-edit-head__done" bindtap="saveR5ToolSheet" aria-role="button" aria-label="完成附加规则" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <block wx:if="{{toolSheetKey === 'timer'}}">
       <view class="cg-gcfg cg-adv-section" wx:if="{{advanced.timer.enabled}}">
         <!-- 限时只给真的会执行它的玩法(施工文档 §1.4)。计步、竞猜、抽卡、硬币、骰子、扫码
@@ -1691,9 +1691,9 @@
   </view>
 
   <!-- ============ R5 结果之后（回复 / 消耗 / 效果 / 反馈下一段） ============ -->
-  <view class="cg-mask cg-mask--top" wx:if="{{afterEditor.show}}" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-edit-sheet cg-edit-sheet--top" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{afterEditor.show}}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.optionAfterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+  <view class="cg-mask cg-mask--top {{cgOut === 'after' ? 'is-out' : ''}}" wx:if="{{afterEditor.show}}" bindtap="cgDismiss" data-close="closeAfterSheet" data-out="after" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-edit-sheet cg-edit-sheet--top {{cgOut === 'after' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{afterEditor.show}}">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeAfterSheet" data-out="after" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.optionAfterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-gcfg" wx:if="{{!afterEditor.inline}}">
       <view class="cg-cfg-label">回复一句</view>
       <input class="cg-cfg-input" value="{{afterEditor.draft.reply}}" maxlength="2000" placeholder="例如 你稳住了呼吸" placeholder-class="cg-ph" bindinput="inputAfterReply" />
@@ -1733,10 +1733,10 @@
   </view>
 
   <!-- 工具子浮层编辑的是临时副本；关闭或点击遮罩不会改动玩法。 -->
-  <view class="cg-mask" wx:if="{{toolSheetOpen}}" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出工具" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-tool-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{toolSheetOpen}}">
+  <view class="cg-mask {{cgOut === 'tool' ? 'is-out' : ''}}" wx:if="{{toolSheetOpen}}" bindtap="cgDismiss" data-close="closeR5ToolSheet" data-out="tool" aria-role="button" aria-label="退出工具" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-tool-sheet {{cgOut === 'tool' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{toolSheetOpen}}">
     <view class="cg-sheet-bar"></view>
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出工具" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{toolKey === 'cost' ? '费用' : toolKey === 'reward' ? '奖励' : toolKey === 'clue' ? '线索' : toolKey === 'uses' ? '成功使用次数' : toolKey === 'trade' ? '物资交换' : '投票与投入'}}</view><view class="cg-edit-head__done" bindtap="saveR5ToolSheet" aria-role="button" aria-label="完成工具" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeR5ToolSheet" data-out="tool" aria-role="button" aria-label="退出工具" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{toolKey === 'cost' ? '费用' : toolKey === 'reward' ? '奖励' : toolKey === 'clue' ? '线索' : toolKey === 'uses' ? '成功使用次数' : toolKey === 'trade' ? '物资交换' : '投票与投入'}}</view><view class="cg-edit-head__done" bindtap="saveR5ToolSheet" aria-role="button" aria-label="完成工具" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <scroll-view scroll-y class="cg-tool-scroll">
       <view wx:if="{{toolKey === 'cost'}}">
         <view class="cg-rw-line compact"><view class="cg-rw-name">任选一组费用</view><cy-switch checked="{{toolDraft.mode === 'OPTIONS'}}" data-field="mode" bindchange="updateToolField" /></view>
@@ -1839,12 +1839,12 @@
   </view>
 
   <!-- ============ 通用 picker sheet(玩家人数/玩法时长/适用场所) ============ -->
-  <view class="cg-mask" wx:if="{{ pickerSheet.open }}" bindtap="closePickerSheet" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet picker" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ pickerSheet.open }}">
+  <view class="cg-mask {{cgOut === 'picker' ? 'is-out' : ''}}" wx:if="{{ pickerSheet.open }}" bindtap="cgDismiss" data-close="closePickerSheet" data-out="picker" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet picker {{cgOut === 'picker' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ pickerSheet.open }}">
     <view class="cg-sheet-bar"></view>
     <view class="cg-sheet-head">
       <view class="cg-sheet-tit">{{ pickerSheet.title }}</view>
-      <view class="cg-sheet-close" bindtap="closePickerSheet" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
+      <view class="cg-sheet-close" bindtap="cgDismiss" data-close="closePickerSheet" data-out="picker" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
     </view>
     <view class="cg-picker-list">
       <view class="cg-picker-li {{ item.active ? 'on' : '' }}" wx:for="{{ pickerSheet.options }}" wx:key="value"

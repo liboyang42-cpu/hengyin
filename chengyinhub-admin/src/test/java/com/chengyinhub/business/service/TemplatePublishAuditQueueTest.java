@@ -131,6 +131,68 @@ class TemplatePublishAuditQueueTest {
                 .submitOrRefreshTemplateLibrary(any(), any(), any());
     }
 
+    private TemplatePublishServiceImpl approvedMarketCandidate(String title, ICmsTemplateLibraryService libraryService,
+                                                              IAuditTaskService auditService) {
+        ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
+        CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
+        TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
+        wireLocks(service);
+        ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
+        ReflectionTestUtils.setField(service, "templateLibraryService", libraryService);
+        ReflectionTestUtils.setField(service, "auditTaskService", auditService);
+        ReflectionTestUtils.setField(service, "memberTemplateMapper", templateMapper);
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setId(91L);
+        template.setMemberId(7L);
+        template.setTitle(title);
+        template.setDraftStatus(1);
+        template.setStatus(1L);
+        template.setCheckStatus(1);
+        template.setPublishStatus(0L);
+        template.setDelFlag(0);
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(java.util.Collections.singletonList(91L)))
+                .thenReturn(java.util.Collections.singletonList(template));
+        return service;
+    }
+
+    /** owner 2026-10-23 D5(U-036):同作者广场里已有 trim 后同名的未删除模板 ⇒ 友好拒绝,零写入。 */
+    @Test
+    void sameAuthorSameTrimmedTitleIsRejectedBeforeAnyWrite() {
+        ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
+        IAuditTaskService auditService = mock(IAuditTaskService.class);
+        TemplatePublishServiceImpl service = approvedMarketCandidate("  夜游老街 ", libraryService, auditService);
+        when(libraryMapper.selectAuthorLiveTitles(7L, 91L)).thenReturn(java.util.Arrays.asList("别的玩法", "夜游老街 "));
+
+        ServiceException rejected = assertThrows(ServiceException.class,
+                () -> service.submitTemplateToMarket(91L, 7L, "member7"));
+
+        assertEquals("你已经有同名模板了", rejected.getMessage());
+        assertEquals(Integer.valueOf(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST), rejected.getCode());
+        verify(libraryService, org.mockito.Mockito.never()).insertCmsTemplateLibrary(any());
+        verify(libraryService, org.mockito.Mockito.never()).updateCmsTemplateLibrary(any());
+        verify(auditService, org.mockito.Mockito.never()).submitOrRefreshTemplateLibrary(any(), any(), any());
+    }
+
+    @Test
+    void differentTitleOrOnlyCaseDifferenceStillSubmits() {
+        ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
+        IAuditTaskService auditService = mock(IAuditTaskService.class);
+        TemplatePublishServiceImpl service = approvedMarketCandidate("Night Walk", libraryService, auditService);
+        // 逐字相等才算同名:大小写不同、子串都不拦(库排序规则 general_ci 不参与判等)
+        when(libraryMapper.selectAuthorLiveTitles(7L, 91L)).thenReturn(java.util.Arrays.asList("night walk", "Night Walk 2"));
+        when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.emptyList());
+        when(libraryService.insertCmsTemplateLibrary(any())).thenAnswer(invocation -> {
+            CmsTemplateLibrary row = invocation.getArgument(0);
+            row.setId(191L);
+            when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(row));
+            return 1;
+        });
+        when(auditService.submitOrRefreshTemplateLibrary(eq(191L), eq(7L), any())).thenReturn(301L);
+
+        assertEquals(301L, service.submitTemplateToMarket(91L, 7L, "member7"));
+    }
+
     /** 归属不符时不得暴露他人玩法是否存在,但仍要把原因透传给前端。 */
     @Test
     void othersGameCannotBeSubmittedToMarket() {

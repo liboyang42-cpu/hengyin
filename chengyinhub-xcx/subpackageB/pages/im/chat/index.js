@@ -83,7 +83,7 @@ Page({
     // 站点各写一次)是为了不漏:loadState 的落点很多,漏一处就又变成"没有原因的死输入栏"。
     sendBlockedMap: {
       loading: '消息加载中…',
-      missing: '链接已失效，回消息列表重新进入',
+      missing: '链接已失效，请返回重新进入',
       closed: '组局已结束，不能继续聊天',
       error: '消息加载失败，点上方「重试」再试',
     },
@@ -172,7 +172,7 @@ Page({
        注:后端 ImServiceImpl.send 只有成员闸与群闸,没有按会话类型的只读闸;
        服务端要不要一并挡写入是后端的事,这里修的是用户看得见的那一半。
        type=3 官方客服按现状仍可写,不在这个闸里。 */
-    if (type == 2) this.setData({ disabled: true, disabledText: '系统通知不支持回复，有新动态会出现在这里' });
+    if (type == 2) this.setData({ disabled: true, disabledText: '系统通知，不能回复' });
     this.loadMessages(true);
     if (type == 2) this.loadReportEntry();
   },
