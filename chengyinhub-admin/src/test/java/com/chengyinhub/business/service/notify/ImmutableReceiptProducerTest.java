@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import com.chengyinhub.business.domain.ImMessage;
+
 class ImmutableReceiptProducerTest {
 
     @Test
@@ -80,5 +82,51 @@ class ImmutableReceiptProducerTest {
         assertEquals(ImmutableReceiptProducer.OUTCOME_ACCEPTED,
                 producer.recoverOriginal("c09-reopen-never", null).outcome);
         assertEquals(1, store.size());
+    }
+
+    @Test
+    void persistOriginalRequiresImSendAndRecoverFromJournalReadsExistingClientMessageId() {
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        ImmutableReceiptProducer missing = new ImmutableReceiptProducer(store);
+        ImmutableReceiptProducer.WaitingSourceException sendMissing = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> missing.persistOriginal(new ImmutableReceiptProducer.OriginalRequest(
+                        "c09-im-1", ImmutableReceiptProducer.Kind.PIN, "{\"op\":\"pin\"}",
+                        ImmutableReceiptProducer.OUTCOME_ACCEPTED)));
+        assertEquals(ImmutableReceiptProducer.IM_SEND, sendMissing.getWaitingCapability());
+        ImmutableReceiptProducer.WaitingSourceException readMissing = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> missing.recoverFromJournal(7L, 12L, "c09-im-1"));
+        assertEquals(ImmutableReceiptProducer.IM_READ_SENT, readMissing.getWaitingCapability());
+        assertEquals(0, store.size());
+        assertNull(missing.recoverFromJournal(7L, 12L, null).requestId);
+
+        ImMessage original = new ImMessage();
+        original.setClientMessageId("c09-im-1");
+        original.setRequestHash("hash-im-1");
+        original.setContent("{\"op\":\"pin\"}");
+        ImmutableReceiptProducer wired = new ImmutableReceiptProducer(store, (memberId, conversationId, clientMessageId) -> {
+            if (!"c09-im-1".equals(clientMessageId)) {
+                return null;
+            }
+            return original;
+        }, null);
+        ImmutableReceiptProducer.OriginalReceipt neverSeen = wired.recoverFromJournal(7L, 12L, "c09-im-missing");
+        assertEquals("c09-im-missing", neverSeen.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, neverSeen.outcome);
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.OriginalReceipt recovered = wired.recoverFromJournal(7L, 12L, "c09-im-1");
+        assertEquals("c09-im-1", recovered.requestId);
+        assertEquals("hash-im-1", recovered.payloadHash);
+        assertEquals("{\"op\":\"pin\"}", recovered.originalBody);
+        assertNull(recovered.kind, "不把 IM msgType 翻译成本组 Kind");
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, recovered.outcome);
+        assertEquals(0, store.size(), "journal 回读不得占内存 store");
+        ImmutableReceiptProducer.WaitingSourceException stillNoSend = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> wired.persistOriginal(new ImmutableReceiptProducer.OriginalRequest(
+                        "c09-im-1", ImmutableReceiptProducer.Kind.PIN, "{\"op\":\"pin\"}",
+                        ImmutableReceiptProducer.OUTCOME_ACCEPTED)));
+        assertEquals(ImmutableReceiptProducer.IM_SEND, stillNoSend.getWaitingCapability());
     }
 }

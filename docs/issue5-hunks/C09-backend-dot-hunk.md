@@ -232,3 +232,9 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 14. Parent addendum 2026-10-23 20:40 America/Los_Angeles
+
+生产接线：`ImmutableReceiptProducer` 只读既有 `IImService.readSentMessage`（`ImServiceOriginalReceiptJournal`）。`persistOriginal` 缺 `im.send` 为 WAITING_SOURCE，不从本组发 IM。`recoverFromJournal` 未见 clientMessageId 保持 UNKNOWN，不占内存 store；不把 IM msgType 翻译成本组 Kind。公共 send/receipt/journal 仍归 D5。
+
+Did not invent occupancy tests. App / HTTP / MySQL / CI = NOT_RUN。不是 100%。

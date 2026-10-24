@@ -8,12 +8,18 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.chengyinhub.business.domain.ImMessage;
+import com.chengyinhub.business.service.IImService;
+
 /**
  * C09 独占：消息原请求的不可变回执生产者。概念上复用既有 IM writer/journal
  * （clientMessageId + requestHash 幂等），但不改公共 send/receipt 协议、不写 Mapper。
  *
  * <p>回复 / mention / 编辑 / 撤回 / 置顶 / 搜索 → 原回执。断网重开与 UNKNOWN 恢复只读原回执，
  * 不造新 request。{@code APPLIED+} 当前投影不是原请求证明。
+ *
+ * <p>原发送仍走 {@link IImService#send}（D5/dot）；本类只读 {@link IImService#readSentMessage}。
+ * 缺 journal / send 端口为 WAITING_SOURCE，不另造第二套 IM 账。
  */
 public final class ImmutableReceiptProducer {
 
@@ -22,6 +28,8 @@ public final class ImmutableReceiptProducer {
     public static final String OUTCOME_ACCEPTED = "ACCEPTED";
     public static final String OUTCOME_UNKNOWN = "UNKNOWN";
     public static final String UNKNOWN_NOT_RECOVERED = "UNKNOWN_NOT_RECOVERED";
+    public static final String IM_READ_SENT = "im.readSentMessage";
+    public static final String IM_SEND = "im.send";
 
     public enum Kind {
         REPLY,
@@ -33,9 +41,18 @@ public final class ImmutableReceiptProducer {
     }
 
     private final OriginalReceiptStore store;
+    private final OriginalReceiptJournal journal;
+    private final OriginalReceiptPersist persist;
 
     public ImmutableReceiptProducer(OriginalReceiptStore store) {
+        this(store, null, null);
+    }
+
+    public ImmutableReceiptProducer(OriginalReceiptStore store, OriginalReceiptJournal journal,
+            OriginalReceiptPersist persist) {
         this.store = Objects.requireNonNull(store, "store");
+        this.journal = journal;
+        this.persist = persist;
     }
 
     /**
@@ -112,6 +129,48 @@ public final class ImmutableReceiptProducer {
     /** APPLIED 当前投影永远不是原请求证明。 */
     public boolean treatsAppliedProjectionAsOriginalProof(AppliedProjection projection) {
         return false;
+    }
+
+    /**
+     * 把原请求交给既有 {@link IImService#send}。本独占生产者不发 IM；缺端口 WAITING_SOURCE。
+     */
+    public OriginalReceipt persistOriginal(OriginalRequest request) {
+        requireRequest(request);
+        if (persist == null) {
+            throw new WaitingSourceException(IM_SEND);
+        }
+        return persist.persist(request);
+    }
+
+    /**
+     * 新实例从既有 {@link IImService#readSentMessage} 回读。缺端口 WAITING_SOURCE。
+     * 未见过的 clientMessageId 返回 UNKNOWN，不写入内存 store。缺/空 requestId 保持 Java {@code null}。
+     * 不把 IM {@code msgType} 翻译成本组 Kind。
+     */
+    public OriginalReceipt recoverFromJournal(Long memberId, Long conversationId, String clientMessageId) {
+        String id = parseRequestId(clientMessageId);
+        if (id == null) {
+            return unknownReceipt(null, null);
+        }
+        if (journal == null) {
+            throw new WaitingSourceException(IM_READ_SENT);
+        }
+        ImMessage original = journal.readSent(memberId, conversationId, id);
+        if (original == null) {
+            return unknownReceipt(id, null);
+        }
+        return fromMessage(original);
+    }
+
+    static OriginalReceipt fromMessage(ImMessage message) {
+        if (message == null) {
+            return unknownReceipt(null, null);
+        }
+        String id = parseRequestId(message.getClientMessageId());
+        if (id == null) {
+            return unknownReceipt(null, null);
+        }
+        return new OriginalReceipt(id, null, message.getRequestHash(), OUTCOME_UNKNOWN, message.getContent());
     }
 
     static OriginalRequest requireRequest(OriginalRequest request) {
@@ -265,5 +324,45 @@ public final class ImmutableReceiptProducer {
         OriginalReceipt find(String requestId);
 
         void insert(OriginalReceipt receipt);
+    }
+
+    /** 只读既有 IM 原发送收据；不发、不改 journal。 */
+    public interface OriginalReceiptJournal {
+        ImMessage readSent(Long memberId, Long conversationId, String clientMessageId);
+    }
+
+    /** D5/dot 持有的原发送；本生产者不实现第二套 send。 */
+    public interface OriginalReceiptPersist {
+        OriginalReceipt persist(OriginalRequest request);
+    }
+
+    public static final class ImServiceOriginalReceiptJournal implements OriginalReceiptJournal {
+        private final IImService im;
+
+        public ImServiceOriginalReceiptJournal(IImService im) {
+            this.im = im;
+        }
+
+        @Override
+        public ImMessage readSent(Long memberId, Long conversationId, String clientMessageId) {
+            if (im == null) {
+                throw new WaitingSourceException(IM_READ_SENT);
+            }
+            return im.readSentMessage(memberId, conversationId, clientMessageId);
+        }
+    }
+
+    public static final class WaitingSourceException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+        private final String waitingCapability;
+
+        public WaitingSourceException(String waitingCapability) {
+            super("WAITING_SOURCE " + waitingCapability);
+            this.waitingCapability = waitingCapability;
+        }
+
+        public String getWaitingCapability() {
+            return waitingCapability;
+        }
     }
 }
