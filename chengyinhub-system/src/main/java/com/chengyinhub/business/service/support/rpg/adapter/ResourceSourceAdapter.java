@@ -1,8 +1,11 @@
 package com.chengyinhub.business.service.support.rpg.adapter;
 
 import com.chengyinhub.business.domain.TopicRouteAction;
+import com.chengyinhub.business.domain.dto.GameActorContext;
+import com.chengyinhub.business.domain.dto.GameCommandReceiptView;
 import com.chengyinhub.business.domain.route.PlayCheckReceipt;
 import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.service.IGameSessionRuntimeService;
 import com.chengyinhub.business.service.support.TopicRouteEngine;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -21,6 +24,7 @@ import java.util.Objects;
 public class ResourceSourceAdapter {
     public static final String RUNTIME_PERSIST = "topicRouteRuntime.persistOriginal";
     public static final String RPG_REQUEST_RECEIPTS = "rpgv2.RpgRequestReceipts";
+    public static final String GAME_RECEIPT = "gameSession.receipt";
 
     private final TopicRouteEngine engine = new TopicRouteEngine();
     private final OriginalResourcePersist persist;
@@ -133,11 +137,60 @@ public class ResourceSourceAdapter {
         return new OriginalReceipt(row.getActionId() == null ? id : row.getActionId(), true);
     }
 
+    /**
+     * 从既有 {@link IGameSessionRuntimeService#receipt} 回读。不调用 command。
+     * 缺端口 WAITING_SOURCE。PENDING 不是已应用。不写入 resources 事实。
+     */
+    public GameReceiptRead recoverFromGameReceipt(GameActorContext actor, Long activityId, String requestId,
+            GameReceiptSource source) {
+        String id = RpgAdapterSupport.blankToNull(requestId);
+        if (actor == null || actor.getMemberId() == null || actor.getMemberId().longValue() <= 0L
+                || activityId == null || activityId.longValue() <= 0L || id == null) {
+            return null;
+        }
+        if (source == null) {
+            throw new WaitingSourceException(GAME_RECEIPT);
+        }
+        GameCommandReceiptView view = source.receipt(actor, activityId, id);
+        if (view == null) {
+            return null;
+        }
+        return new GameReceiptRead(id, view.getOutcome(), view.isReplayed(), "APPLIED".equals(view.getOutcome()));
+    }
+
+    public static GameReceiptSource fromGameRuntime(IGameSessionRuntimeService runtime) {
+        if (runtime == null) {
+            return (actor, activityId, requestId) -> {
+                throw new WaitingSourceException(GAME_RECEIPT);
+            };
+        }
+        return runtime::receipt;
+    }
+
     /** Runtime/dot 持有的原请求持久化；本适配器不实现第二套账。 */
     public interface OriginalResourcePersist {
         OriginalReceipt persist(String requestId, TopicRouteEngine.State snapshot);
 
         OriginalReceipt recover(String requestId);
+    }
+
+    /** 只读既有游戏命令回执；不 command。 */
+    public interface GameReceiptSource {
+        GameCommandReceiptView receipt(GameActorContext actor, Long activityId, String requestId);
+    }
+
+    public static final class GameReceiptRead {
+        public final String requestId;
+        public final String outcome;
+        public final boolean replayed;
+        public final boolean applied;
+
+        public GameReceiptRead(String requestId, String outcome, boolean replayed, boolean applied) {
+            this.requestId = requestId;
+            this.outcome = outcome;
+            this.replayed = replayed;
+            this.applied = applied;
+        }
     }
 
     /** 只读既有动作表；不 insertAction。 */

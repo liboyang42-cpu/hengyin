@@ -2,6 +2,8 @@ package com.chengyinhub.business.service.support.rpg.adapter;
 
 import com.chengyinhub.business.domain.JourneyRules;
 import com.chengyinhub.business.domain.TopicRouteAction;
+import com.chengyinhub.business.domain.dto.GameActorContext;
+import com.chengyinhub.business.domain.dto.GameCommandReceiptView;
 import com.chengyinhub.business.domain.route.PlayCheckReceipt;
 import com.chengyinhub.business.service.support.TopicRouteEngine;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.chengyinhub.business.service.support.rpg.adapter.RpgAdapterFixtures.BEFORE;
 import static com.chengyinhub.business.service.support.rpg.adapter.RpgAdapterFixtures.JSON;
@@ -208,5 +211,41 @@ class ResourceSourceAdapterTest {
         assertEquals("ask:40:why", recovered.requestId);
         assertTrue(recovered.replay);
         assertEquals(sourcesBefore, run.getThemeRuntime().path("sources").size());
+    }
+
+    @Test
+    void recoverFromGameReceiptReadsPendingWithoutApplyingOrCommand() {
+        ResourceSourceAdapter adapter = new ResourceSourceAdapter();
+        GameActorContext actor = new GameActorContext(7L, "PLAYER");
+        ResourceSourceAdapter.WaitingSourceException waiting = assertThrows(
+                ResourceSourceAdapter.WaitingSourceException.class,
+                () -> adapter.recoverFromGameReceipt(actor, 11L, "game-req-01", null));
+        assertEquals(ResourceSourceAdapter.GAME_RECEIPT, waiting.getWaitingCapability());
+        assertNull(adapter.recoverFromGameReceipt(null, 11L, "game-req-01", (a, activityId, requestId) -> {
+            throw new AssertionError("invalid actor must not read");
+        }));
+        ResourceSourceAdapter.WaitingSourceException missingRuntime = assertThrows(
+                ResourceSourceAdapter.WaitingSourceException.class,
+                () -> ResourceSourceAdapter.fromGameRuntime(null).receipt(actor, 11L, "game-req-01"));
+        assertEquals(ResourceSourceAdapter.GAME_RECEIPT, missingRuntime.getWaitingCapability());
+
+        AtomicInteger reads = new AtomicInteger();
+        ResourceSourceAdapter.GameReceiptSource source = (a, activityId, requestId) -> {
+            reads.incrementAndGet();
+            GameCommandReceiptView view = new GameCommandReceiptView();
+            view.setOutcome("c02-game-missing".equals(requestId) ? "PENDING" : "APPLIED");
+            view.setReplayed(!"c02-game-missing".equals(requestId));
+            return view;
+        };
+        ResourceSourceAdapter.GameReceiptRead pending = adapter.recoverFromGameReceipt(
+                actor, 11L, "c02-game-missing", source);
+        assertEquals("PENDING", pending.outcome);
+        assertFalse(pending.applied);
+        assertFalse(pending.replayed);
+        ResourceSourceAdapter.GameReceiptRead applied = adapter.recoverFromGameReceipt(
+                actor, 11L, "game-req-01", source);
+        assertTrue(applied.applied);
+        assertTrue(applied.replayed);
+        assertEquals(2, reads.get());
     }
 }
