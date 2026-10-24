@@ -73,3 +73,5 @@ root先组合E Plan/DTO/intent与本7个源码文件，核对pool逐字一致，
 本片无schema/依赖/配置迁移，不执行DDL；只撤未启用代码可回退本切片。只要E已有durable受理行，不能回到会释放身份的Redis-only执行、删原计划/回执或绕原号补偿。A95后台裸POST仍P1未修，资金政策/退款算法/多人固定费等原待决事项均不因本AI切片关闭。
 
 静态脚本仅用于本固定A隔离候选；联合E/root源的合法变动需按其真实父提交独立核对，不能修改冻结脚本豁免，也不能把其基线不匹配当作Java业务断言失败。
+
+完整7源码/测试delta以`production-and-tests.patch.gz`原字节gzip交付（标准库、mtime=0），解压后可对生产基线`git apply --check`；也是本分支相对e683的同一源码delta。打包初版raw patch的空白上下文被diff检查视为尾随空白，最终改用gzip保留原字节并重新检查，不放宽gate或改生产源码。

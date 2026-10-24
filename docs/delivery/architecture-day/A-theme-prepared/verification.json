@@ -14,5 +14,9 @@
   "mysql_redis_http_model": "NOT_RUN",
   "ci_dispatches": 0,
   "business_policy_changes": "NONE; existing player/gen disposition policies preserved",
-  "legacy_entry_cutover_and_durable_claim": "ROOT_E_PENDING_COMBINATION_NOT_CLOSED_BY_THIS_COMPONENT"
+  "legacy_entry_cutover_and_durable_claim": "ROOT_E_PENDING_COMBINATION_NOT_CLOSED_BY_THIS_COMPONENT",
+  "initial_raw_patch_artifact_diff_check": "FAIL_CONTEXT_BLANK_LINES_TREATED_AS_TRAILING_WHITESPACE",
+  "final_delta_artifact": "production-and-tests.patch.gz; gzip mtime=0; exact decompressed source/test diff",
+  "decompressed_patch_sha256": "3d4532714f55c85a76af56e01cd1c9d06f15253c4878de1ce455544a825007a1",
+  "gzip_roundtrip_and_apply_check": "PASS_TEMPORARY_INDEX_NO_WORKTREE_CHANGE"
 }
