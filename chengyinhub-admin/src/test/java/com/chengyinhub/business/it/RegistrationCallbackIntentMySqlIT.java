@@ -676,7 +676,9 @@ class RegistrationCallbackIntentMySqlIT {
     private long number(String query) { return db.queryForObject(query, Long.class); }
     private long inboxNumber(String column) {
         assertTrue(List.of("id", "state", "fence_token", "attempt_count", "biz_type", "biz_id").contains(column));
-        return db.queryForObject("SELECT " + column + " FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)", Long.class, activeHash.get());
+        // The independent claim may be newer than this transaction's intentional old RR snapshot.
+        String currentRead = TransactionSynchronizationManager.isActualTransactionActive() ? " FOR UPDATE" : "";
+        return db.queryForObject("SELECT " + column + " FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)" + currentRead, Long.class, activeHash.get());
     }
 
     private void assertPendingResources() {
