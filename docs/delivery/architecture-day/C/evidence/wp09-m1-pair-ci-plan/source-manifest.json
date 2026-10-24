@@ -1,0 +1,15 @@
+{
+  "review_base": "c6668b81cc4da875294e860fcdf4c94db830c347",
+  "parent": "1c138a000387583e224c9acb5369140fdf2dba18",
+  "base_file_hashes": {
+    "ci/real_storage_it.py": "269813582a0ae72efc2d397cca9376658cadf9bdcd5c635fb1dd95dce1084678",
+    "ci/real-storage-it-registry.json": "344a4825cb1030b26887104babd58a46f04d86b7b42a92aa13e98a206b4a7500",
+    ".github/workflows/real-storage-it.yml": "6eae137193587012ea5550b85db2e10ff575d22ffeabcbdd288040b2ea499f84"
+  },
+  "proposed_workflow": ".github/workflows/real-storage-it.yml",
+  "proposed_workflow_sha256": "69c947ba3db7fcabfdaa732362405257cee1b87cf4ceacc1e14d4b88269dd352",
+  "frozen_comparator_source": "1c138a000387583e224c9acb5369140fdf2dba18",
+  "changes_to_actual_ci_files": false,
+  "executed_java_mysql_ci": false,
+  "choice": "optional old_source_sha on the existing manual workflow, empty preserves single-source mode"
+}

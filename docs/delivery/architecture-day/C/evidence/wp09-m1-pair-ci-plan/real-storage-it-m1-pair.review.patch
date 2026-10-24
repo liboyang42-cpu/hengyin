@@ -1,0 +1,264 @@
+--- a/.github/workflows/real-storage-it.yml
++++ b/.github/workflows/real-storage-it.yml
+@@ -19,6 +19,11 @@
+       source_sha:
+         description: 待验候选的完整 40 位 commit SHA（须已推到本仓库）
+         required: true
++        type: string
++      old_source_sha:
++        description: 可选，仅M1完整14项旧新对照；填已接观察层的旧候选完整40SHA，source_sha为新侧
++        required: false
++        default: ''
+         type: string
+       batch:
+         description: 登记批次（ci/real-storage-it-registry.json）
+@@ -78,7 +83,7 @@
+   contents: read
+
+ concurrency:
+-  group: real-storage-it-${{ inputs.batch }}-${{ inputs.source_sha }}
++  group: ${{ inputs.old_source_sha != '' && format('rs-m1-pair-{0}-{1}-{2}', inputs.old_source_sha, inputs.source_sha, inputs.timezone) || format('real-storage-it-{0}-{1}', inputs.batch, inputs.source_sha) }}
+   cancel-in-progress: false
+
+ jobs:
+@@ -88,7 +93,9 @@
+     runs-on: ubuntu-latest
+     timeout-minutes: 10
+     outputs:
+-      matrix: ${{ steps.plan.outputs.matrix }}
++      matrix: ${{ steps.pair.outputs.matrix }}
++      planned: ${{ steps.plan.outputs.matrix }}
++      sides: ${{ steps.pair.outputs.sides }}
+       sha12: ${{ steps.plan.outputs.sha12 }}
+     steps:
+       - uses: actions/checkout@v4
+@@ -96,6 +103,29 @@
+           persist-credentials: false
+       - name: Real storage gate negative controls
+         run: python3 -m unittest -v ci/test_real_storage_it.py
++      - name: Validate optional M1 pair identities and whole original batch
++        if: inputs.old_source_sha != ''
++        env:
++          OLD_SOURCE_SHA: ${{ inputs.old_source_sha }}
++          NEW_SOURCE_SHA: ${{ inputs.source_sha }}
++          BATCH: ${{ inputs.batch }}
++          CLASSES: ${{ inputs.classes }}
++        run: |
++          python3 - <<'PY'
++          import os,re
++          old,new=(os.environ[key] for key in ('OLD_SOURCE_SHA','NEW_SOURCE_SHA'))
++          if not all(re.fullmatch('[0-9a-f]{40}',sha) for sha in (old,new)) or old==new:
++              raise SystemExit('Pair requires two distinct published full 40-hex source SHAs')
++          if os.environ['BATCH']!='architecture-day-lead-admission' or os.environ['CLASSES'].strip():
++              raise SystemExit('Pair accepts only the whole original M1 hint10 + lead4 batch')
++          PY
++      - name: Checkout optional old observed candidate
++        if: inputs.old_source_sha != ''
++        uses: actions/checkout@v4
++        with:
++          ref: ${{ inputs.old_source_sha }}
++          path: old-candidate
++          persist-credentials: false
+       - name: Checkout candidate source
+         uses: actions/checkout@v4
+         with:
+@@ -110,9 +140,61 @@
+           CLASSES: ${{ inputs.classes }}
+           TIMEZONE: ${{ inputs.timezone }}
+         run: python3 ci/real_storage_it.py plan --source candidate
++      - name: Existing old-source plan and complete static precheck
++        if: inputs.old_source_sha != ''
++        id: old_plan
++        env:
++          SOURCE_SHA: ${{ inputs.old_source_sha }}
++          BATCH: ${{ inputs.batch }}
++          CLASSES: ${{ inputs.classes }}
++          TIMEZONE: ${{ inputs.timezone }}
++        run: python3 ci/real_storage_it.py plan --source old-candidate
++      - name: Bind optional four side/source/class jobs
++        id: pair
++        env:
++          OLD_PLAN: ${{ steps.old_plan.outputs.matrix }}
++          NEW_PLAN: ${{ steps.plan.outputs.matrix }}
++          OLD_SOURCE_SHA: ${{ inputs.old_source_sha }}
++          NEW_SOURCE_SHA: ${{ inputs.source_sha }}
++          TIMEZONE: ${{ inputs.timezone }}
++        run: |
++          python3 - <<'PY'
++          import hashlib,json,os
++          from pathlib import Path
++          new=json.loads(os.environ['NEW_PLAN']);old=os.environ['OLD_SOURCE_SHA']
++          plans={'new':new,'old':json.loads(os.environ['OLD_PLAN'])} if old else {'single':new}
++          if old:
++              expected={'com.chengyinhub.business.it.PlayHintUnlockMySqlIT':10,
++                        'com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT':4}
++              registry=json.loads(Path('ci/real-storage-it-registry.json').read_text())
++              for side,items in plans.items():
++                  if len(items)!=2 or {item['class'] for item in items}!=set(expected):
++                      raise SystemExit('Pair accepts only both original M1 suites')
++                  for item in items:
++                      if item['simple']!=item['class'].rsplit('.',1)[1] or registry['classes'][item['class']]['tests']!=expected[item['class']]:
++                          raise SystemExit('Original class/count identity drift')
++          sides=[dict(side=side,source_sha=old if side=='old' else os.environ['NEW_SOURCE_SHA']) for side in plans]
++          matrix=[dict(item,**side) for side in sides for item in plans[side['side']]]
++          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
++              out.write('matrix='+json.dumps(matrix,separators=(',',':'))+'\n')
++              out.write('sides='+json.dumps(sides,separators=(',',':'))+'\n')
++          if old:
++              Path('out').mkdir(exist_ok=True)
++              Path('out/pair-plan.json').write_text(json.dumps(dict(matrix=matrix,tests_per_side=14,
++                  run_id=os.environ['GITHUB_RUN_ID'],run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
++                  workflow_sha=os.environ['GITHUB_SHA'],timezone=os.environ['TIMEZONE'],
++                  harness_sha256=hashlib.sha256(Path('ci/real_storage_it.py').read_bytes()).hexdigest(),
++                  registry_sha256=hashlib.sha256(Path('ci/real-storage-it-registry.json').read_bytes()).hexdigest()),indent=2)+'\n')
++          PY
++      - uses: actions/upload-artifact@v4
++        if: inputs.old_source_sha != ''
++        with:
++          name: rs-m1-plan-a${{ github.run_attempt }}
++          path: out/pair-plan.json
++          if-no-files-found: error
+
+   storage_it:
+-    name: ${{ matrix.simple }}
++    name: ${{ inputs.old_source_sha != '' && format('{0} / {1}', matrix.side, matrix.simple) || matrix.simple }}
+     needs: plan
+     runs-on: ubuntu-latest
+     timeout-minutes: 45
+@@ -123,8 +205,8 @@
+         include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+     env:
+       TEST_CLASS: ${{ matrix.class }}
+-      SOURCE_SHA: ${{ inputs.source_sha }}
+-      VALIDATED_SOURCE_SHA: ${{ inputs.source_sha }}
++      SOURCE_SHA: ${{ matrix.source_sha }}
++      VALIDATED_SOURCE_SHA: ${{ matrix.source_sha }}
+       BATCH: ${{ inputs.batch }}
+       TIMEZONE: ${{ inputs.timezone }}
+       B_PAYMENT_INTENT_DDL_APPROVED: ${{ matrix.simple == 'WechatPaymentIntentMySqlIT' && '1' || '' }}
+@@ -137,7 +219,7 @@
+       - name: Checkout candidate source
+         uses: actions/checkout@v4
+         with:
+-          ref: ${{ inputs.source_sha }}
++          ref: ${{ matrix.source_sha }}
+           path: candidate
+           persist-credentials: false
+       - name: Static precheck
+@@ -171,28 +253,32 @@
+         if: always()
+         uses: actions/upload-artifact@v4
+         with:
+-          name: rs-class-${{ matrix.simple }}-a${{ github.run_attempt }}
++          name: ${{ inputs.old_source_sha != '' && format('rs-m1-{0}-{1}-{2}-a{3}', matrix.side, matrix.source_sha, matrix.simple, github.run_attempt) || format('rs-class-{0}-a{1}', matrix.simple, github.run_attempt) }}
+           path: out/
+           if-no-files-found: error
+
+   summary:
+-    name: Batch summary
++    name: ${{ inputs.old_source_sha != '' && format('{0} source summary', matrix.side) || 'Batch summary' }}
+     needs: [plan, storage_it]
+     if: always() && needs.plan.result == 'success'
+     runs-on: ubuntu-latest
+     timeout-minutes: 10
++    strategy:
++      fail-fast: false
++      matrix:
++        include: ${{ fromJSON(needs.plan.outputs.sides) }}
+     steps:
+       - uses: actions/checkout@v4
+         with:
+           persist-credentials: false
+       - uses: actions/download-artifact@v4
+         with:
+-          pattern: rs-class-*
++          pattern: ${{ inputs.old_source_sha != '' && format('rs-m1-{0}-{1}-*-a{2}', matrix.side, matrix.source_sha, github.run_attempt) || 'rs-class-*' }}
+           path: receipts
+       - name: Summarize batch (fail-closed)
+         env:
+-          PLANNED: ${{ needs.plan.outputs.matrix }}
+-          SOURCE_SHA: ${{ inputs.source_sha }}
++          PLANNED: ${{ needs.plan.outputs.planned }}
++          SOURCE_SHA: ${{ matrix.source_sha }}
+           BATCH: ${{ inputs.batch }}
+           TIMEZONE: ${{ inputs.timezone }}
+         run: python3 ci/real_storage_it.py summarize --receipts receipts --out summary
+@@ -200,6 +286,77 @@
+         if: always()
+         uses: actions/upload-artifact@v4
+         with:
+-          name: rs-summary-${{ inputs.batch }}-${{ needs.plan.outputs.sha12 }}-a${{ github.run_attempt }}
++          name: ${{ inputs.old_source_sha != '' && format('rs-m1-summary-{0}-{1}-a{2}', matrix.side, matrix.source_sha, github.run_attempt) || format('rs-summary-{0}-{1}-a{2}', inputs.batch, needs.plan.outputs.sha12, github.run_attempt) }}
+           path: summary/
+           if-no-files-found: warn
++
++  compare:
++    needs: [plan, storage_it, summary]
++    if: always() && needs.plan.result == 'success' && inputs.old_source_sha != ''
++    runs-on: ubuntu-latest
++    timeout-minutes: 10
++    steps:
++      - uses: actions/checkout@v4
++        with:
++          path: gate
++          persist-credentials: false
++      - name: Checkout frozen observer comparison tools (no Java execution)
++        uses: actions/checkout@v4
++        with:
++          ref: 1c138a000387583e224c9acb5369140fdf2dba18
++          path: evidence
++          persist-credentials: false
++      - uses: actions/download-artifact@v4
++        with:
++          pattern: rs-m1-old-${{ inputs.old_source_sha }}-*-a${{ github.run_attempt }}
++          path: old-receipts
++      - uses: actions/download-artifact@v4
++        with:
++          pattern: rs-m1-new-${{ inputs.source_sha }}-*-a${{ github.run_attempt }}
++          path: new-receipts
++      - name: Require four receipts from this exact run/attempt and original suffix
++        env:
++          OLD_SOURCE_SHA: ${{ inputs.old_source_sha }}
++          NEW_SOURCE_SHA: ${{ inputs.source_sha }}
++          STORAGE_RESULT: ${{ needs.storage_it.result }}
++          SUMMARY_RESULT: ${{ needs.summary.result }}
++        run: |
++          python3 - <<'PY'
++          import importlib.util,json,os
++          from pathlib import Path
++          if os.environ['STORAGE_RESULT']!='success' or os.environ['SUMMARY_RESULT']!='success':
++              raise SystemExit('Both complete source-specific storage batches must succeed')
++          spec=importlib.util.spec_from_file_location('gate','gate/ci/real_storage_it.py')
++          gate=importlib.util.module_from_spec(spec);spec.loader.exec_module(gate)
++          suffix=gate.database_suffix(os.environ['GITHUB_RUN_ID'],os.environ['GITHUB_RUN_ATTEMPT'])
++          expected={'com.chengyinhub.business.it.PlayHintUnlockMySqlIT',
++                    'com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT'}
++          for side in ('old','new'):
++              paths=list(Path(side+'-receipts').glob('*/receipt.json'))
++              receipts=[json.loads(path.read_text()) for path in paths]
++              if len(receipts)!=2 or {r['class'] for r in receipts}!=expected:
++                  raise SystemExit('Missing/duplicate/extra original side receipts')
++              for receipt in receipts:
++                  if receipt['source_sha']!=os.environ[side.upper()+'_SOURCE_SHA'] or receipt['batch']!='architecture-day-lead-admission':
++                      raise SystemExit('Cross-source/batch receipt')
++                  facts=receipt['workflow']
++                  if str(facts['run_id'])!=os.environ['GITHUB_RUN_ID'] or str(facts['run_attempt'])!=os.environ['GITHUB_RUN_ATTEMPT']:
++                      raise SystemExit('Cross-run/attempt receipt')
++                  if receipt['env_profile']['CHENGYIN_MYBATIS_IT_DB_SUFFIX']!=suffix:
++                      raise SystemExit('Original shared run-derived suffix mismatch')
++          PY
++      - name: Frozen strict canonical comparison, both original 14 XML/CLEAN sets required
++        env:
++          OLD_SOURCE_SHA: ${{ inputs.old_source_sha }}
++          NEW_SOURCE_SHA: ${{ inputs.source_sha }}
++        run: |
++          python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/compare_receipts.py \
++            --old-dir old-receipts --old-source "$OLD_SOURCE_SHA" \
++            --new-dir new-receipts --new-source "$NEW_SOURCE_SHA" \
++            --out canonical-comparison.json
++      - uses: actions/upload-artifact@v4
++        if: always()
++        with:
++          name: rs-m1-comparison-${{ inputs.old_source_sha }}-${{ inputs.source_sha }}-a${{ github.run_attempt }}
++          path: canonical-comparison.json
++          if-no-files-found: error

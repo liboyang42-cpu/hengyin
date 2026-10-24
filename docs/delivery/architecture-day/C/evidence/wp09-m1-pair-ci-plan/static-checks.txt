@@ -1,0 +1,15 @@
+test_artifacts_and_summaries_are_source_side_and_attempt_separate (__main__.PatchChecks.test_artifacts_and_summaries_are_source_side_and_attempt_separate) ... ok
+test_cross_source_run_attempt_suffix_or_missing_class_is_rejected (__main__.PatchChecks.test_cross_source_run_attempt_suffix_or_missing_class_is_rejected) ... ok
+test_exact_four_jobs_bind_each_source_and_full_original_pair (__main__.PatchChecks.test_exact_four_jobs_bind_each_source_and_full_original_pair) ... ok
+test_exact_public_base_hashes_and_python_bash_syntax (__main__.PatchChecks.test_exact_public_base_hashes_and_python_bash_syntax) ... ok
+test_exact_same_run_attempt_suffix_provenance (__main__.PatchChecks.test_exact_same_run_attempt_suffix_provenance) ... ok
+test_missing_duplicate_wrong_class_or_count_plan_cannot_be_a_pair (__main__.PatchChecks.test_missing_duplicate_wrong_class_or_count_plan_cannot_be_a_pair) ... ok
+test_only_optional_input_on_existing_manual_workflow_and_doc_delta (__main__.PatchChecks.test_only_optional_input_on_existing_manual_workflow_and_doc_delta) ... ok
+test_pair_rejects_other_batch_or_subsets (__main__.PatchChecks.test_pair_rejects_other_batch_or_subsets) ... ok
+test_single_source_matrix_and_jobs_keep_original_projection (__main__.PatchChecks.test_single_source_matrix_and_jobs_keep_original_projection) ... ok
+test_sources_require_distinct_complete_sha (__main__.PatchChecks.test_sources_require_distinct_complete_sha) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.191s
+
+OK
