@@ -57,17 +57,29 @@ class EventResultDisputeTest {
     void restorePointsAtOriginalFinishRequestAndDoesNotInventANewAward() {
         EventResultDispute.Dispute dispute = disputes.open("fin-disp-01", "计分条目被误记", "dsp-01xxxx");
         assertEquals("fin-disp-01", dispute.originalResultRequestId);
-        assertEquals(0, dispute.originalRewardCenti);
+        assertNull(dispute.originalRewardCenti);
         assertEquals(EventScoreVersioning.REWARD_KIND, dispute.rewardKind);
-        EventResultDispute.RestoreReceipt restore = disputes.restoreOriginalReward("dsp-01xxxx", "rst-01xxxx");
+        OrienteeringEventException unconfirmed = assertThrows(OrienteeringEventException.class,
+                () -> disputes.restoreOriginalReward("dsp-01xxxx", "rst-01xxxx"));
+        assertEquals(EventResultDispute.ORIGINAL_REWARD_READ, unconfirmed.getWaitingCapability());
+        assertEquals(EventResultDispute.STATUS_PENDING, disputes.readback("dsp-01xxxx").status());
+        EventResultDispute confirmed = new EventResultDispute(scores, (memberId, sessionId) -> {
+            java.util.Map<String, Object> fact = new java.util.LinkedHashMap<String, Object>();
+            fact.put("state", "AVAILABLE");
+            fact.put("originalRewardCenti", Integer.valueOf(2400));
+            return fact;
+        });
+        confirmed.open("fin-disp-01", "计分条目被误记", "dsp-01xxxx");
+        EventResultDispute.RestoreReceipt restore = confirmed.restoreOriginalReward("dsp-01xxxx", "rst-01xxxx", 7L, 30L);
         assertEquals("fin-disp-01", restore.originalResultRequestId);
         assertEquals(original.version, restore.originalResultVersion);
-        assertEquals(original.originalRewardCenti, restore.restoredRewardCenti);
+        assertEquals(Integer.valueOf(2400), restore.restoredRewardCenti);
         assertEquals(EventScoreVersioning.REWARD_KIND, restore.rewardKind);
         assertEquals(7L, restore.frozenRuleVersion);
-        assertSame(restore, disputes.readRestore("rst-01xxxx"));
+        assertSame(restore, confirmed.readRestore("rst-01xxxx"));
         assertSame(original, scores.readback("fin-disp-01"));
-        assertEquals(EventResultDispute.STATUS_RESTORED, disputes.readback("dsp-01xxxx").status());
+        assertEquals(EventResultDispute.STATUS_RESTORED, confirmed.readback("dsp-01xxxx").status());
+        assertEquals(EventResultDispute.STATUS_PENDING, disputes.readback("dsp-01xxxx").status());
         assertEquals(OrienteeringEventException.NOT_FOUND,
                 assertThrows(OrienteeringEventException.class, () -> disputes.readRestore("rst-missing")).getErrorCode());
     }
@@ -94,22 +106,31 @@ class EventResultDisputeTest {
 
     @Test
     void unusedRestoreOfMissingDisputeDoesNotOccupyThenUniqueRestoreApplies() {
-        assertEquals(OrienteeringEventException.NOT_FOUND,
+        assertEquals(EventResultDispute.ORIGINAL_REWARD_READ,
                 assertThrows(OrienteeringEventException.class,
                         () -> disputes.restoreOriginalReward("c04-dsp-missing", "c04-rst-never"))
-                        .getErrorCode());
+                        .getWaitingCapability());
         assertEquals(OrienteeringEventException.NOT_FOUND,
                 assertThrows(OrienteeringEventException.class, () -> disputes.readRestore("c04-rst-never"))
                         .getErrorCode());
         EventResultDispute.Dispute opened = disputes.open("fin-disp-01", "原恢复键首次写入", "c04-dsp-rstx");
         assertEquals(EventResultDispute.STATUS_PENDING, opened.status());
-        EventResultDispute.RestoreReceipt first = disputes.restoreOriginalReward("c04-dsp-rstx", "c04-rst-never");
+        EventResultDispute confirmed = new EventResultDispute(scores, (memberId, sessionId) -> {
+            java.util.Map<String, Object> fact = new java.util.LinkedHashMap<String, Object>();
+            fact.put("state", "AVAILABLE");
+            fact.put("originalRewardCenti", Integer.valueOf(2400));
+            return fact;
+        });
+        confirmed.open("fin-disp-01", "原恢复键首次写入", "c04-dsp-rstx");
+        EventResultDispute.RestoreReceipt first = confirmed.restoreOriginalReward(
+                "c04-dsp-rstx", "c04-rst-never", 7L, 30L);
         assertEquals("c04-rst-never", first.requestId);
         assertEquals("fin-disp-01", first.originalResultRequestId);
-        assertEquals(original.originalRewardCenti, first.restoredRewardCenti);
-        assertSame(first, disputes.readRestore("c04-rst-never"));
-        assertSame(first, disputes.restoreOriginalReward("c04-dsp-rstx", "c04-rst-never"));
-        assertEquals(EventResultDispute.STATUS_RESTORED, disputes.readback("c04-dsp-rstx").status());
+        assertEquals(Integer.valueOf(2400), first.restoredRewardCenti);
+        assertSame(first, confirmed.readRestore("c04-rst-never"));
+        assertSame(first, confirmed.restoreOriginalReward("c04-dsp-rstx", "c04-rst-never", 7L, 30L));
+        assertEquals(EventResultDispute.STATUS_RESTORED, confirmed.readback("c04-dsp-rstx").status());
+        assertEquals(EventResultDispute.STATUS_PENDING, disputes.readback("c04-dsp-rstx").status());
     }
 
     @Test

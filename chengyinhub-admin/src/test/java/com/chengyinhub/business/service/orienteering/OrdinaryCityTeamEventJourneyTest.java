@@ -16,6 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -86,7 +87,7 @@ class OrdinaryCityTeamEventJourneyTest {
         ResultVersion finished = scores.finish(run.id, "fin-journey1");
         assertEquals(1, finished.version);
         assertEquals(15000, finished.scoreCenti);
-        assertEquals(0, finished.originalRewardCenti);
+        assertNull(finished.originalRewardCenti);
         assertEquals(EventScoreVersioning.REWARD_KIND, finished.rewardKind);
         assertEquals(7L, finished.frozenRuleVersion);
         assertEquals(frozen.digest, finished.frozenRuleDigest);
@@ -95,10 +96,11 @@ class OrdinaryCityTeamEventJourneyTest {
         assertEquals(OrienteeringEventException.NOT_FOUND,
                 assertThrows(OrienteeringEventException.class, () -> scores.readback("fin-invented")).getErrorCode());
 
-        EventResultDispute.RestoreReceipt restore = disputes.restoreOriginalReward(
-                disputes.open("fin-journey1", "完赛计分待复核", "dsp-journey").requestId, "rst-journey");
-        assertEquals("fin-journey1", restore.originalResultRequestId);
-        assertEquals(finished.originalRewardCenti, restore.restoredRewardCenti);
+        OrienteeringEventException unconfirmed = assertThrows(OrienteeringEventException.class,
+                () -> disputes.restoreOriginalReward(
+                        disputes.open("fin-journey1", "完赛计分待复核", "dsp-journey").requestId, "rst-journey"));
+        assertEquals(EventResultDispute.ORIGINAL_REWARD_READ, unconfirmed.getWaitingCapability());
+        assertEquals(EventResultDispute.STATUS_PENDING, disputes.readback("dsp-journey").status());
         assertSame(finished, scores.readback("fin-journey1"));
     }
 }

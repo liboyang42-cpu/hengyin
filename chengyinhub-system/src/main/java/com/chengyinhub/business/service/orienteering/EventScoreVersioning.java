@@ -44,6 +44,11 @@ public final class EventScoreVersioning {
     public static final String SESSION_RECEIPT_NOT_FOUND = "ORIENT_RECEIPT_NOT_FOUND";
     /** 原奖励来源不是成绩；finish 不得把 scoreCenti 抄进 originalRewardCenti。 */
     public static final String ORIGINAL_REWARD_SOURCE = "eventScore.originalRewardSource";
+    /** 客户端 sessionId 不能当成已授权原局。 */
+    public static final String AUTHORIZED_SESSION = "orientScoring.authorizedSession";
+    /** 与 {@code OrientScoringServiceImpl} 同一合法域。不把 PROGRESS 映射成 TASK。 */
+    private static final Set<String> SCORE_DIMENSIONS = Set.of("TASK", "PUZZLE", "PENALTY", "BONUS", "ADJUSTMENT");
+    private static final Pattern SCORE_REASON = Pattern.compile("[A-Z0-9_]{1,64}");
 
     private static final Set<String> EVIDENCE_KINDS = Set.of("SCAN", "PHOTO", "QUIZ", "TASK_RECEIPT");
     private static final Set<String> GPS_KINDS = Set.of("GPS", "LAT", "LNG", "LATLNG", "COORDINATE", "LOCATION");
@@ -126,10 +131,11 @@ public final class EventScoreVersioning {
         String key = requireKey(requestId);
         EventRun run = requireRun(runId);
         requireWritable(run);
-        if (dimension == null || dimension.trim().isEmpty() || reasonCode == null || reasonCode.trim().isEmpty()) {
-            throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT, "计分维度无效");
+        if (!legalScore(dimension, reasonCode)) {
+            throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT,
+                    "计分维度/原因码不在原 writer 合法域");
         }
-        ScoreEntry entry = new ScoreEntry(signedCenti, dimension.trim(), reasonCode.trim(), key);
+        ScoreEntry entry = new ScoreEntry(signedCenti, dimension, reasonCode, key);
         synchronized (run) {
             requireWritable(run);
             for (ScoreEntry existing : run.entries) {
@@ -197,7 +203,7 @@ public final class EventScoreVersioning {
             if (OUTCOME_RUNNING.equals(run.outcome)) run.outcome = OUTCOME_FINISHED;
             ResultVersion written = new ResultVersion(key, run.id, run.registration.topicId,
                     run.frozen.publishedConfigVersion, run.frozen.digest, 1, run.outcome,
-                    run.scoreCenti, 0, REWARD_KIND, snapshotEntries(run), snapshotEvidence(run),
+                    run.scoreCenti, null, REWARD_KIND, snapshotEntries(run), snapshotEvidence(run),
                     new Date());
             resultsByRequest.put(key, written);
             resultsByRun.put(run.id, written);
@@ -238,18 +244,45 @@ public final class EventScoreVersioning {
      * 把完赛局的计分条目交给既有 {@link IOrientScoringService#appendEntry}。
      * 缺 TopicRouteSession / 原 writer 时 WAITING_SOURCE，不另造 ledger，也不把成绩当奖励。
      */
+    /**
+     * 不接受构造时传入的客户端 sessionId。必须由服务端归属口给出原局。
+     */
     public List<OrientScoreEntry> persistOriginal(String finishRequestId) {
+        throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                "原计分写入需要已授权原局", AUTHORIZED_SESSION);
+    }
+
+    public List<OrientScoreEntry> persistOriginal(String finishRequestId, OwnedSessionSource owned, Long memberId) {
         ResultVersion result = readback(finishRequestId);
-        if (originalScoring == null || topicRouteSessionId == null) {
+        if (originalScoring == null || owned == null) {
             throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
-                    "原计分写入需要 TopicRouteSession", SCORE_LEDGER_SESSION);
+                    "原计分写入需要已授权原局", AUTHORIZED_SESSION);
+        }
+        Long authorized = owned.ownedSessionId(memberId);
+        if (authorized == null || authorized.longValue() <= 0L) {
+            throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                    "原计分写入需要已授权原局", AUTHORIZED_SESSION);
         }
         List<OrientScoreEntry> written = new ArrayList<OrientScoreEntry>();
         for (ScoreEntry entry : result.entries) {
-            written.add(originalScoring.appendEntry(topicRouteSessionId, entry.dimension, entry.signedCenti,
+            if (!legalScore(entry.dimension, entry.reasonCode)) {
+                throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT,
+                        "计分维度/原因码不在原 writer 合法域");
+            }
+            written.add(originalScoring.appendEntry(authorized, entry.dimension, entry.signedCenti,
                     entry.reasonCode, "PROGRESS", "event-score:" + entry.requestId, null, entry.requestId));
         }
         return Collections.unmodifiableList(written);
+    }
+
+    /** 服务端已核对归属的原局。客户端 sessionId 不能自己造这个结果。 */
+    public interface OwnedSessionSource {
+        Long ownedSessionId(Long memberId);
+    }
+
+    private static boolean legalScore(String dimension, String reasonCode) {
+        return dimension != null && SCORE_DIMENSIONS.contains(dimension)
+                && reasonCode != null && SCORE_REASON.matcher(reasonCode).matches();
     }
 
     /**
@@ -292,7 +325,26 @@ public final class EventScoreVersioning {
         if (found == null || "NOT_FOUND".equals(found.get("state"))) {
             return null;
         }
+        if (IOrientScoringService.KIND_APPEAL.equals(kind) || IOrientScoringService.KIND_DISPUTE.equals(kind)) {
+            Long recordSession = sessionOf(found.get("record"));
+            if (recordSession == null || recordSession.longValue() != sessionId.longValue()) {
+                return null;
+            }
+        }
         return found;
+    }
+
+    private static Long sessionOf(Object record) {
+        if (record instanceof com.chengyinhub.business.domain.OrientScoreAppeal appeal) {
+            return appeal.getSessionId();
+        }
+        if (record instanceof Map<?, ?> map) {
+            Object value = map.get("sessionId");
+            if (value instanceof Number number) {
+                return Long.valueOf(number.longValue());
+            }
+        }
+        return null;
     }
 
     /**
@@ -524,14 +576,14 @@ public final class EventScoreVersioning {
         public final int version;
         public final String outcome;
         public final int scoreCenti;
-        public final int originalRewardCenti;
+        public final Integer originalRewardCenti;
         public final String rewardKind;
         public final List<ScoreEntry> entries;
         public final List<Evidence> evidence;
         public final Date finishedAt;
 
         ResultVersion(String requestId, long runId, long topicId, long frozenRuleVersion, String frozenRuleDigest,
-                      int version, String outcome, int scoreCenti, int originalRewardCenti, String rewardKind,
+                      int version, String outcome, int scoreCenti, Integer originalRewardCenti, String rewardKind,
                       List<ScoreEntry> entries, List<Evidence> evidence, Date finishedAt) {
             this.requestId = requestId;
             this.runId = runId;

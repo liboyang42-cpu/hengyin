@@ -78,8 +78,7 @@ class EventScoreVersioningTest {
         ResultVersion finished = scores.finish(run.id, "fin-sc-01");
         assertEquals(1, finished.version);
         assertEquals(8500, finished.scoreCenti);
-        assertEquals(0, finished.originalRewardCenti);
-        assertNotEquals(finished.scoreCenti, finished.originalRewardCenti);
+        assertNull(finished.originalRewardCenti);
         assertEquals(EventScoreVersioning.REWARD_KIND, finished.rewardKind);
         assertEquals("fin-sc-01", finished.requestId);
         assertSame(finished, scores.readback("fin-sc-01"));
@@ -229,11 +228,11 @@ class EventScoreVersioningTest {
         scores.appendScore(run.id, -1500, "PENALTY", "HINT_USED", "scr-led-02");
         ResultVersion finished = scores.finish(run.id, "fin-sc-led1");
         assertEquals(8500, finished.scoreCenti);
-        assertEquals(0, finished.originalRewardCenti);
+        assertNull(finished.originalRewardCenti);
         OrienteeringEventException waiting = assertThrows(OrienteeringEventException.class,
                 () -> scores.persistOriginal("fin-sc-led1"));
         assertEquals(OrienteeringEventException.WAITING_SOURCE, waiting.getErrorCode());
-        assertEquals(EventScoreVersioning.SCORE_LEDGER_SESSION, waiting.getWaitingCapability());
+        assertEquals(EventScoreVersioning.AUTHORIZED_SESSION, waiting.getWaitingCapability());
         assertNull(scores.recoverFromLedger(null));
 
         IOrientScoringService writer = mock(IOrientScoringService.class);
@@ -256,8 +255,12 @@ class EventScoreVersioningTest {
         wired.appendScore(wiredRun.id, 10000, "TASK", "TASK_DONE", "scr-led-01");
         wired.appendScore(wiredRun.id, -1500, "PENALTY", "HINT_USED", "scr-led-02");
         ResultVersion wiredFinish = wired.finish(wiredRun.id, "fin-sc-w001");
-        assertEquals(0, wiredFinish.originalRewardCenti);
-        List<OrientScoreEntry> persisted = wired.persistOriginal("fin-sc-w001");
+        assertNull(wiredFinish.originalRewardCenti);
+        OrienteeringEventException clientSession = assertThrows(OrienteeringEventException.class,
+                () -> wired.persistOriginal("fin-sc-w001"));
+        assertEquals(EventScoreVersioning.AUTHORIZED_SESSION, clientSession.getWaitingCapability());
+        verify(writer, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
+        List<OrientScoreEntry> persisted = wired.persistOriginal("fin-sc-w001", memberId -> Long.valueOf(88L), 7L);
         assertEquals(2, persisted.size());
         assertEquals("scr-led-01", persisted.get(0).getIdempotencyKey());
 
@@ -265,7 +268,7 @@ class EventScoreVersioningTest {
         OrientScoreEntry recovered = restarted.recoverFromLedger("scr-led-01");
         assertEquals("scr-led-01", recovered.getIdempotencyKey());
         assertEquals(10000, recovered.getDeltaCenti());
-        assertEquals(0, wiredFinish.originalRewardCenti);
+        assertNull(wiredFinish.originalRewardCenti);
         assertEquals(OrienteeringEventException.NOT_FOUND,
                 assertThrows(OrienteeringEventException.class, () -> restarted.recoverFromLedger("scr-led-missing"))
                         .getErrorCode());
@@ -286,11 +289,20 @@ class EventScoreVersioningTest {
         Map<String, Object> absent = new LinkedHashMap<String, Object>();
         absent.put("state", "NOT_FOUND");
         when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-none")).thenReturn(absent);
+        com.chengyinhub.business.domain.OrientScoreAppeal same = new com.chengyinhub.business.domain.OrientScoreAppeal();
+        same.setSessionId(30L);
         Map<String, Object> accepted = new LinkedHashMap<String, Object>();
         accepted.put("state", "ACCEPTED");
         accepted.put("kind", IOrientScoringService.KIND_APPEAL);
         accepted.put("idempotencyKey", "scr-rcpt-01");
+        accepted.put("record", same);
         when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-01")).thenReturn(accepted);
+        com.chengyinhub.business.domain.OrientScoreAppeal other = new com.chengyinhub.business.domain.OrientScoreAppeal();
+        other.setSessionId(99L);
+        Map<String, Object> foreign = new LinkedHashMap<String, Object>();
+        foreign.put("state", "ACCEPTED");
+        foreign.put("record", other);
+        when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-oth")).thenReturn(foreign);
 
         EventScoreVersioning wired = new EventScoreVersioning(scoring, null, null);
         assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-none"));
@@ -298,8 +310,14 @@ class EventScoreVersioningTest {
         Map<String, Object> recovered = wired.recoverFromScoringReceipt(
                 7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-01");
         assertEquals("ACCEPTED", recovered.get("state"));
+        assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-rcpt-oth"));
         assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("scr-rcpt-01").outcome);
         verify(scoring, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
+        EventScoreVersioning.EventRun bad = scores.start(registration, frozen, safety, 7L, "start-bad-dom");
+        OrienteeringEventException illegal = assertThrows(OrienteeringEventException.class,
+                () -> scores.appendScore(bad.id, 100, "PROGRESS", "task-done", "scr-bad-dom"));
+        assertEquals(OrienteeringEventException.INVALID_ARGUMENT, illegal.getErrorCode());
+        assertEquals(0, scores.requireRun(bad.id).scoreCenti());
     }
 
     @Test

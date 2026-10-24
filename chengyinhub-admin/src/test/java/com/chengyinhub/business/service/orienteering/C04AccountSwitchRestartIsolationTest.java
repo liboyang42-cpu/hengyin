@@ -112,7 +112,7 @@ class C04AccountSwitchRestartIsolationTest {
 
         assertSame(finished, scores.readback(FINISH_ORIGINAL));
         assertEquals(FINISH_ORIGINAL, scores.readback(FINISH_ORIGINAL).requestId);
-        assertEquals(0, scores.readback(FINISH_ORIGINAL).originalRewardCenti);
+        assertNull(scores.readback(FINISH_ORIGINAL).originalRewardCenti);
 
         EventResultDispute.Dispute dispute = disputes.open(FINISH_ORIGINAL, "账号切换后复核原完赛", DISPUTE_ORIGINAL);
         assertEquals(FINISH_ORIGINAL, dispute.originalResultRequestId);

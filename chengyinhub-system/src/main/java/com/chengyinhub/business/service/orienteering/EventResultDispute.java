@@ -97,6 +97,15 @@ public final class EventResultDispute {
      * 不生成新的发奖 request。
      */
     public RestoreReceipt restoreOriginalReward(String disputeRequestId, String restoreRequestId) {
+        throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                "原奖励恢复需要原奖励事实", ORIGINAL_REWARD_READ);
+    }
+
+    /**
+     * 恢复消费原奖励事实。事实缺失或不可用时不标 RESTORED，也不把占位 0 当成已恢复。
+     */
+    public RestoreReceipt restoreOriginalReward(String disputeRequestId, String restoreRequestId,
+            long memberId, long sessionId) {
         String key = requireKey(restoreRequestId);
         Dispute dispute = readback(disputeRequestId);
         RestoreReceipt existing = restores.get(key);
@@ -110,13 +119,30 @@ public final class EventResultDispute {
         if (dispute.status != STATUS_PENDING) {
             throw new OrienteeringEventException(OrienteeringEventException.ALREADY_RESOLVED, "争议已处理");
         }
+        if (rewardRead == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                    "原奖励恢复需要原奖励事实", ORIGINAL_REWARD_READ);
+        }
+        Map<String, Object> fact = rewardRead.readPersonalNaturalFinish(memberId, sessionId);
+        Integer reward = confirmedRewardCenti(fact);
+        if (reward == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                    "原奖励事实未确认", ORIGINAL_REWARD_READ);
+        }
         ResultVersion original = scores.readback(dispute.originalResultRequestId);
         RestoreReceipt receipt = new RestoreReceipt(key, dispute.requestId, original.requestId, original.version,
-                original.originalRewardCenti, original.rewardKind, original.frozenRuleVersion);
+                reward, original.rewardKind, original.frozenRuleVersion);
         restores.put(key, receipt);
         dispute.status = STATUS_RESTORED;
         dispute.restoreRequestId = key;
         return receipt;
+    }
+
+    private static Integer confirmedRewardCenti(Map<String, Object> fact) {
+        if (fact == null || !"AVAILABLE".equals(fact.get("state")) || !(fact.get("originalRewardCenti") instanceof Number)) {
+            return null;
+        }
+        return Integer.valueOf(((Number) fact.get("originalRewardCenti")).intValue());
     }
 
     public RestoreReceipt readRestore(String restoreRequestId) {
@@ -196,7 +222,7 @@ public final class EventResultDispute {
         public final String requestId;
         public final String originalResultRequestId;
         public final int originalResultVersion;
-        public final int originalRewardCenti;
+        public final Integer originalRewardCenti;
         public final String rewardKind;
         public final String reason;
         volatile int status;
@@ -204,7 +230,7 @@ public final class EventResultDispute {
         public final Date openedAt;
 
         Dispute(long id, String requestId, String originalResultRequestId, int originalResultVersion,
-                int originalRewardCenti, String rewardKind, String reason, int status, Date openedAt) {
+                Integer originalRewardCenti, String rewardKind, String reason, int status, Date openedAt) {
             this.id = id;
             this.requestId = requestId;
             this.originalResultRequestId = originalResultRequestId;
@@ -230,12 +256,12 @@ public final class EventResultDispute {
         public final String disputeRequestId;
         public final String originalResultRequestId;
         public final int originalResultVersion;
-        public final int restoredRewardCenti;
+        public final Integer restoredRewardCenti;
         public final String rewardKind;
         public final long frozenRuleVersion;
 
         RestoreReceipt(String requestId, String disputeRequestId, String originalResultRequestId,
-                       int originalResultVersion, int restoredRewardCenti, String rewardKind, long frozenRuleVersion) {
+                       int originalResultVersion, Integer restoredRewardCenti, String rewardKind, long frozenRuleVersion) {
             this.requestId = requestId;
             this.disputeRequestId = disputeRequestId;
             this.originalResultRequestId = originalResultRequestId;
