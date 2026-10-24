@@ -82,6 +82,14 @@ class TopicRouteSpringWiringTest
         assertInvalidConfiguration("tencent.map.route-cache.ttl-seconds", Long.toString(Long.MAX_VALUE));
     }
 
+    @Test
+    void configuredBudgetsCannotExceedTheProductionCeilings()
+    {
+        assertInvalidConfiguration("tencent.map.route-cache.max-bytes", Long.toString(8388608L + 1));
+        assertInvalidConfiguration("tencent.map.route-cache.max-entry-bytes", Long.toString(262144L + 1));
+        assertInvalidConfiguration("tencent.map.route-cache.ttl-seconds", "301");
+    }
+
     private void assertNotRetained(Map<String, String> properties, String expectedMode)
     {
         try (AnnotationConfigApplicationContext context = context(properties))

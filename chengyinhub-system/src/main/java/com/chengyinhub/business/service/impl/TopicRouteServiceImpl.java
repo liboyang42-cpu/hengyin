@@ -2,11 +2,13 @@ package com.chengyinhub.business.service.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongSupplier;
 
@@ -21,6 +23,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.service.ITopicRouteService;
 import com.chengyinhub.business.service.TencentMapClient;
+import com.chengyinhub.business.service.support.TopicSizeLimits;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.http.HttpRequestException;
 
@@ -48,6 +51,12 @@ public class TopicRouteServiceImpl implements ITopicRouteService
     /** 腾讯返回的 polyline 压缩系数 */
     private static final double COMPRESS = 1000000.0D;
 
+    static final long MAX_CACHE_BYTES = 8L * 1024 * 1024;
+    static final long MAX_ENTRY_BYTES = 256L * 1024;
+    static final long MAX_TTL_SECONDS = 300;
+    static final int MAX_GEOMETRY_POINTS = 4096;
+    private static final long BUILD_NANOS = TimeUnit.SECONDS.toNanos(10);
+
     /** 出行方式：walking(步行,默认) / driving / bicycling / transit */
     @Value("${tencent.map.mode:walking}")
     private String mode;
@@ -57,6 +66,8 @@ public class TopicRouteServiceImpl implements ITopicRouteService
 
     /** 只保留成功路线；容量、LRU 和 TTL 的元数据操作共用短锁，provider 调用不持锁。 */
     private final GeometryCache cache;
+    /** No waiting callers or unbounded key-lock map. A cold duplicate declines until the winner completes. */
+    private final Set<String> inFlight = new HashSet<>();
 
     public TopicRouteServiceImpl()
     {
@@ -70,7 +81,8 @@ public class TopicRouteServiceImpl implements ITopicRouteService
             @Value("${tencent.map.route-cache.max-entry-bytes:262144}") long maxEntryBytes,
             @Value("${tencent.map.route-cache.ttl-seconds:300}") long ttlSeconds)
     {
-        if (maxBytes < 0 || ttlSeconds <= 0 || ttlSeconds > Long.MAX_VALUE / 1_000_000_000L)
+        if (maxBytes < 0 || maxBytes > MAX_CACHE_BYTES || maxEntryBytes > MAX_ENTRY_BYTES
+                || ttlSeconds <= 0 || ttlSeconds > MAX_TTL_SECONDS)
         {
             throw new IllegalArgumentException("Invalid route cache budget or TTL");
         }
@@ -81,7 +93,7 @@ public class TopicRouteServiceImpl implements ITopicRouteService
     @Override
     public String buildGeometryJson(List<? extends CmsTopicNode> orderedNodes)
     {
-        if (!tencentMapClient.isReady())
+        if (!tencentMapClient.isReady() || orderedNodes == null || orderedNodes.size() > TopicSizeLimits.MAX_NODES)
         {
             return null;
         }
@@ -92,9 +104,10 @@ public class TopicRouteServiceImpl implements ITopicRouteService
         {
             for (CmsTopicNode n : orderedNodes)
             {
+                if (n == null) continue;
                 Double lat = parse(n.getLatitude());
                 Double lng = parse(n.getLongitude());
-                if (lat != null && lng != null)
+                if (lat != null && lng != null && lat >= -90D && lat <= 90D && lng >= -180D && lng <= 180D)
                 {
                     pts.add(new double[] { lat, lng });
                 }
@@ -106,22 +119,44 @@ public class TopicRouteServiceImpl implements ITopicRouteService
         }
 
         // 2) 缓存命中直接返回
-        String cacheKey = buildCacheKey(pts);
+        String routeMode = safeMode();
+        if (routeMode == null) return null;
+        String cacheKey = buildCacheKey(pts, routeMode);
         String cached = cache.get(cacheKey);
         if (cached != null)
         {
             return cached;
         }
 
+        synchronized (inFlight)
+        {
+            if (inFlight.size() >= TencentMapClient.MAX_IN_FLIGHT || !inFlight.add(cacheKey)) return null;
+        }
+        try
+        {
+            cached = cache.get(cacheKey);
+            if (cached != null) return cached;
+            return computeGeometry(pts, cacheKey, routeMode);
+        }
+        finally
+        {
+            synchronized (inFlight) { inFlight.remove(cacheKey); }
+        }
+    }
+
+    private String computeGeometry(List<double[]> pts, String cacheKey, String routeMode)
+    {
+        long started = nanoTime();
         // 3) 相邻两点逐段算路并拼接
         List<double[]> line = new ArrayList<>();
         boolean degraded = false;
         for (int i = 0; i + 1 < pts.size(); i++)
         {
+            if (nanoTime() - started >= BUILD_NANOS) return null;
             List<double[]> seg = null;
             try
             {
-                seg = requestSegment(pts.get(i), pts.get(i + 1));
+                seg = requestSegment(pts.get(i), pts.get(i + 1), routeMode);
             }
             catch (HttpRequestException error)
             {
@@ -137,17 +172,16 @@ public class TopicRouteServiceImpl implements ITopicRouteService
             {
                 // 某段算路失败：退化为这两点直连，保证线不断
                 degraded = true;
-                appendDedup(line, pts.get(i));
-                appendDedup(line, pts.get(i + 1));
+                if (!appendDedup(line, pts.get(i)) || !appendDedup(line, pts.get(i + 1))) return null;
                 continue;
             }
             for (double[] p : seg)
             {
-                appendDedup(line, p);
+                if (!appendDedup(line, p)) return null;
             }
         }
 
-        if (line.size() < 2)
+        if (line.size() < 2 || nanoTime() - started >= BUILD_NANOS)
         {
             return null;
         }
@@ -187,7 +221,8 @@ public class TopicRouteServiceImpl implements ITopicRouteService
 
         GeometryCache(long maxBytes, long maxEntryBytes, long ttlNanos, LongSupplier ticker)
         {
-            if (maxBytes < 0 || maxEntryBytes <= 0 || ttlNanos <= 0)
+            if (maxBytes < 0 || maxBytes > MAX_CACHE_BYTES || maxEntryBytes <= 0 || maxEntryBytes > MAX_ENTRY_BYTES
+                    || ttlNanos <= 0 || ttlNanos > TimeUnit.SECONDS.toNanos(MAX_TTL_SECONDS))
             {
                 throw new IllegalArgumentException("Invalid route cache limits");
             }
@@ -255,14 +290,14 @@ public class TopicRouteServiceImpl implements ITopicRouteService
     }
 
     /** 调一段腾讯路线规划，返回解压后的坐标 [lat,lng] 列表 */
-    private List<double[]> requestSegment(double[] from, double[] to)
+    private List<double[]> requestSegment(double[] from, double[] to, String routeMode)
     {
-        String url = DIRECTION_BASE + safeMode() + "/?from="
+        String url = DIRECTION_BASE + routeMode + "/?from="
                 + fmt(from[0]) + "," + fmt(from[1])
                 + "&to=" + fmt(to[0]) + "," + fmt(to[1]);
 
         String result = tencentMapClient.get(url);
-        if (StringUtils.isEmpty(result))
+        if (StringUtils.isEmpty(result) || result.length() > TencentMapClient.MAX_RESPONSE_BYTES)
         {
             return null;
         }
@@ -300,10 +335,13 @@ public class TopicRouteServiceImpl implements ITopicRouteService
     private List<double[]> decompress(JSONArray poly)
     {
         int n = poly.size();
+        if ((n & 1) != 0 || n > 2 * MAX_GEOMETRY_POINTS) throw new IllegalArgumentException("Route point budget exceeded");
         double[] c = new double[n];
         for (int i = 0; i < n; i++)
         {
+            if (!(poly.get(i) instanceof Number)) throw new IllegalArgumentException("Invalid route coordinate");
             c[i] = poly.getDoubleValue(i);
+            if (!Double.isFinite(c[i])) throw new IllegalArgumentException("Invalid route coordinate");
         }
         for (int i = 2; i < n; i++)
         {
@@ -312,28 +350,33 @@ public class TopicRouteServiceImpl implements ITopicRouteService
         List<double[]> out = new ArrayList<>(n / 2);
         for (int i = 0; i + 1 < n; i += 2)
         {
+            if (!Double.isFinite(c[i]) || !Double.isFinite(c[i + 1])
+                    || c[i] < -90D || c[i] > 90D || c[i + 1] < -180D || c[i + 1] > 180D)
+                throw new IllegalArgumentException("Invalid route coordinate");
             out.add(new double[] { c[i], c[i + 1] });
         }
         return out;
     }
 
     /** 追加点，去掉与上一个点重复的（段与段衔接处） */
-    private void appendDedup(List<double[]> line, double[] p)
+    private boolean appendDedup(List<double[]> line, double[] p)
     {
         if (!line.isEmpty())
         {
             double[] last = line.get(line.size() - 1);
             if (Math.abs(last[0] - p[0]) < 1e-7 && Math.abs(last[1] - p[1]) < 1e-7)
             {
-                return;
+                return true;
             }
         }
+        if (line.size() >= MAX_GEOMETRY_POINTS) return false;
         line.add(p);
+        return true;
     }
 
-    private String buildCacheKey(List<double[]> pts)
+    private String buildCacheKey(List<double[]> pts, String routeMode)
     {
-        StringBuilder sb = new StringBuilder(safeMode()).append('|');
+        StringBuilder sb = new StringBuilder(routeMode).append('|');
         for (double[] p : pts)
         {
             sb.append(fmt(p[0])).append(',').append(fmt(p[1])).append(';');
@@ -347,7 +390,8 @@ public class TopicRouteServiceImpl implements ITopicRouteService
         {
             return "walking";
         }
-        return mode;
+        return "walking".equals(mode) || "driving".equals(mode) || "bicycling".equals(mode) || "transit".equals(mode)
+                ? mode : null;
     }
 
     /** 用 US locale 保证小数点是 ".", 不是 "," */
@@ -358,17 +402,23 @@ public class TopicRouteServiceImpl implements ITopicRouteService
 
     private Double parse(String s)
     {
-        if (StringUtils.isEmpty(s))
+        if (StringUtils.isEmpty(s) || s.length() > 64)
         {
             return null;
         }
         try
         {
-            return Double.parseDouble(s.trim());
+            double value = Double.parseDouble(s.trim());
+            return Double.isFinite(value) ? value : null;
         }
         catch (NumberFormatException e)
         {
             return null;
         }
+    }
+
+    protected long nanoTime()
+    {
+        return System.nanoTime();
     }
 }
