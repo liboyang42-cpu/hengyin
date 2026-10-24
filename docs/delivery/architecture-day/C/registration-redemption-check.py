@@ -59,6 +59,12 @@ for p in files:
  was=before(p);now=(ROOT/p).read_text();normalized=now
  normalized=re.sub(r'RegistrationRedemptionTestFixtures\.application\((controller|scanner)\)',r'\1',normalized)
  normalized=normalized.replace('com.chengyinhub.web.service.registration.RegistrationRedemptionApplication.clubSessionVerificationTooEarly(', 'ApiRegistrationController.clubSessionVerificationTooEarly(')
+ if p.endswith('/ApiRegistrationCompletionCouponTest.java'):
+  # The migrated fixture's real leaf owner is already wired. These two legacy setters had no reader.
+  for field,value in [('redemptionMapper','redemptionMapper'),('topicCompletionAwardService','completionAwardService')]:
+   stale='        ReflectionTestUtils.setField(controller, "'+field+'", '+value+');\n'
+   assert was.count(stale)==1
+   was=was.replace(stale,'',1)
  if p.endswith('/RegistrationSeatEndpointTest.java'):
   normalized=normalized.replace('    private com.chengyinhub.web.service.registration.RegistrationRedemptionApplication scannerApplication;\n','')
   normalized=normalized.replace('        scannerApplication = spy(new com.chengyinhub.web.service.registration.RegistrationRedemptionApplication());\n        ReflectionTestUtils.setField(scanner, "registrationRedemptionApplication", scannerApplication);\n','')

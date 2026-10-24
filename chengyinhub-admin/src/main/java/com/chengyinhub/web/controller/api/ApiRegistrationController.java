@@ -3,7 +3,6 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
 import com.chengyinhub.business.service.*;
-import com.chengyinhub.business.service.impl.QrcodeServiceImpl;
 import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
@@ -78,22 +77,6 @@ public class ApiRegistrationController extends BaseController {
 
     @Autowired
     private com.chengyinhub.business.service.support.RegistrationCancellationReadService cancellationReadService;
-
-    /** 用不可变 redemption 的真实落库时间归因主题 evidence，不能拿 controller 处理时间冒充事实时间。 */
-    @Autowired
-    private com.chengyinhub.business.mapper.RedemptionMapper redemptionMapper;
-
-    @Autowired
-    private ITopicCompletionAwardService topicCompletionAwardService;
-
-    @Autowired
-    private QrcodeServiceImpl qrcodeService;
-
-    @Autowired
-    private IUmsMemberService umsMemberService;
-
-    @Autowired
-    private IUmsMemberBalanceDetailService umsMemberBalanceDetailService;
 
     @Operation(summary = "报名报价(M0-1 实扣一致):不落库,返回应付/抵扣明细+quoteSign")
     @PostMapping("/quote")

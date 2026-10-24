@@ -124,8 +124,6 @@ class ApiRegistrationCompletionCouponTest
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "perkLedgerService", perkLedgerService);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "pointsAwardService", pointsAwardService);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "growthService", growthService);
-        ReflectionTestUtils.setField(controller, "redemptionMapper", redemptionMapper);
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "exploreCollectibleService", collectibleService);
         ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "merchantAccessService", merchantAccessService);
         when(merchantAccessService.require(MERCHANT, MerchantPermission.VERIFY))
