@@ -308,6 +308,36 @@ class MerchantDeskServiceImplTest {
         verify(mapper).selectStore(MERCHANT_ID);
     }
 
+    @Test
+    void saveSku_recordsSkuSaveOnPmsSkuAndKeepsStaffOffTheOwner() {
+        Map<String, Object> product = new HashMap<>();
+        product.put("publishStatus", 2);
+        when(mapper.selectProductForUpdate(MERCHANT_ID, 900L)).thenReturn(product);
+        when(mapper.insertSku(anyMap())).thenAnswer(i -> {
+            ((Map<String, Object>) i.getArgument(0)).put("id", 44L);
+            return 1;
+        });
+        Map<String, Object> body = new HashMap<>();
+        body.put("requestId", "req-sku-00003");
+        body.put("productId", 900L);
+        body.put("skuName", "周末场");
+        body.put("price", "88.00");
+        body.put("stock", 5);
+        Map<String, Object> result = service.saveSku(access, body);
+        assertEquals("APPLIED", result.get("state"));
+        assertEquals("SKU_SAVE", result.get("action"));
+        assertEquals("pms_sku", result.get("targetType"));
+        assertEquals(44L, result.get("targetId"));
+        assertEquals(false, result.get("replayed"));
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> receipt = ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertReceipt(receipt.capture());
+        assertEquals(OWNER, receipt.getValue().get("ownerMemberId"));
+        assertEquals(STAFF, receipt.getValue().get("actorMemberId"));
+        assertEquals("SKU_SAVE", receipt.getValue().get("action"));
+        assertEquals("pms_sku", receipt.getValue().get("targetType"));
+    }
+
     private static Map<String, Object> canonicalProduct(Map<String, Object> body) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("productId", null);
