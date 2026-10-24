@@ -656,7 +656,7 @@ def static_findings(base, current, changed, sql_details, base_details, policy=No
     return sorted(blockers, key=order), sorted(review, key=order)
 
 
-def manual_base(root, candidate, context):
+def manual_base(root, candidate, context, details=None):
     """Fetch the real event's default branch; never trust a candidate input/ref.
 
     A fresh single-ref fetch binds origin's tracking ref to FETCH_HEAD. No cached
@@ -686,12 +686,35 @@ def manual_base(root, candidate, context):
     if not SHA.fullmatch(target) or target != fetched:
         raise GateError("default branch tracking ref does not match freshly fetched origin")
     bases = git(root, "merge-base", "--all", candidate, target).decode().splitlines()
-    if len(bases) != 1:
-        raise GateError("ambiguous manual merge-base requires review")
-    return bases[0]
+    if (not bases or len(set(bases)) != len(bases)
+            or any(not SHA.fullmatch(base) for base in bases)
+            or (len(bases) > 1 and (candidate in bases or target in bases))):
+        raise GateError("ambiguous manual merge-base evidence is invalid")
+    for base in bases:
+        git(root, "merge-base", "--is-ancestor", base, candidate)
+        git(root, "merge-base", "--is-ancestor", base, target)
+    if len(bases) == 1:
+        selected, mode = bases[0], "UNIQUE_MERGE_BASE"
+    elif len(bases) == 2:
+        # A bounded conservative comparison, not an arbitrary choice of one LCA.
+        # No recursive fallback, virtual merge, history mutation or snapshot change.
+        common = git(root, "merge-base", "--all", *bases).decode().splitlines()
+        if len(common) != 1 or not SHA.fullmatch(common[0]) or common[0] in bases:
+            raise GateError("ambiguous manual merge-bases have no unique strict common ancestor")
+        selected = common[0]
+        for base in bases:
+            git(root, "merge-base", "--is-ancestor", selected, base)
+        git(root, "merge-base", "--is-ancestor", BASE, selected)
+        mode = "UNIQUE_STRICT_COMMON_ANCESTOR_OF_TWO_MERGE_BASES"
+    else:
+        raise GateError("ambiguous manual merge-base count exceeds the bounded two-base policy")
+    if details is not None:
+        details.update(mode=mode, default_branch=branch, default_tip_sha=target,
+                       merge_bases=sorted(bases), comparison_base_sha=selected)
+    return selected
 
 
-def comparison_base(root, candidate, supplied, context):
+def comparison_base(root, candidate, supplied, context, details=None):
     """Validate the CI event's comparison point, never an arbitrary caller SHA.
 
     GitHub supplies the trusted event; local fixtures call this function directly.
@@ -724,7 +747,7 @@ def comparison_base(root, candidate, supplied, context):
             raise GateError("push candidate does not match trusted event")
         expected = payload["before"]
     elif event == "workflow_dispatch":
-        expected = manual_base(root, candidate, context)
+        expected = manual_base(root, candidate, context, details)
     else:
         raise GateError("unsupported CI event")
     if expected != supplied:
@@ -748,7 +771,8 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
     if git(root, "status", "--porcelain", "--untracked-files=all").strip():
         raise GateError("candidate checkout is dirty; commit/isolate changes before verification")
     git(root, "merge-base", "--is-ancestor", BASE, candidate)
-    comparison_base(root, candidate, compare_base, context)
+    comparison_details = {}
+    comparison_base(root, candidate, compare_base, context, comparison_details)
     frozen_details = {}
     frozen = inventory(root, BASE, frozen_details)
     if baseline_path.read_bytes() != encode_inventory(frozen):
@@ -777,6 +801,7 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
     blockers.extend(boundary_blockers)
     review.extend(boundary_review)
     return {"schema": 2, "candidate_sha": candidate, "comparison_base_sha": compare_base,
+            "manual_comparison": comparison_details if context["event"] == "workflow_dispatch" else None,
             "legacy_baseline_sha": BASE, "ci_checkout_sha": context["checkout_sha"],
             "verdict": "BLOCKED" if blockers else "PASS_WITH_REVIEW_ITEMS" if review else "PASS",
             "findings": blockers, "review_items": review, "changed_files": sorted(changed),

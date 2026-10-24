@@ -392,6 +392,73 @@ class InventoryAndDeltaTest(unittest.TestCase):
                 self.assertRaises(gate.GateError, gate.comparison_base, self.root, candidate, wrong, context)
         shell(self.root, "checkout", branch, "-q")
 
+    def criss_cross_history(self, accepted_write=False):
+        # Two actual inverse merges of the same public fixture branches, no mocked merge-base output.
+        trusted, trunk = self.prepare_policy()
+        branch = shell(self.root, "branch", "--show-current")
+        shell(self.root, "branch", "fixture-right", trunk)
+        self.write("docs/left.md", b"reviewed mainline change")
+        if accepted_write: self.write(MAPPER, mapper(ORDER.replace("update orders", "update wallet")))
+        left = self.commit()
+        shell(self.root, "branch", "left-base", left)
+        shell(self.root, "checkout", "fixture-right", "-q")
+        self.write("docs/right.md", b"other reviewed history")
+        right = self.commit()
+        shell(self.root, "branch", "right-base", right)
+        shell(self.root, "checkout", branch, "-q")
+        shell(self.root, "merge", "--no-ff", "right-base", "-m", "default merge fixture")
+        target = shell(self.root, "rev-parse", "HEAD")
+        shell(self.root, "checkout", "fixture-right", "-q")
+        shell(self.root, "merge", "--no-ff", "left-base", "-m", "inverse feature merge fixture")
+        candidate = shell(self.root, "rev-parse", "HEAD")
+        self.assertEqual({left, right}, set(shell(self.root, "merge-base", "--all", candidate, target).splitlines()))
+        return trusted, target, left, right, trunk
+
+    def test_manual_criss_cross_uses_strict_common_ancestor_and_keeps_first_feature_violation(self):
+        trusted, target, left, right, common = self.criss_cross_history()
+        self.write(MAPPER, mapper(ORDER.replace("update orders", "update wallet")))
+        first = self.commit()
+        self.write("docs/second.md", b"docs-only later feature commit")
+        candidate = self.commit()
+        context = self.manual_context(candidate)
+        baseline = (trusted / "baseline.json").read_bytes()
+        with self.manual_origin(target):
+            result = self.source_check(trusted, candidate, common, context)
+            self.assertIn("NEW_TABLE_WRITER", [f["rule"] for f in result["findings"]])
+            self.assertEqual("UNIQUE_STRICT_COMMON_ANCESTOR_OF_TWO_MERGE_BASES", result["manual_comparison"]["mode"])
+            self.assertEqual(target, result["manual_comparison"]["default_tip_sha"])
+            self.assertEqual({left, right}, set(result["manual_comparison"]["merge_bases"]))
+            for arbitrary in (left, right, first, candidate, target):
+                with self.subTest(arbitrary=arbitrary), self.assertRaisesRegex(gate.GateError, "COMPARISON_BASE_MISMATCH"):
+                    self.source_check(trusted, candidate, arbitrary, context)
+        self.assertEqual(baseline, (trusted / "baseline.json").read_bytes())
+
+    def test_manual_criss_cross_conservative_history_stays_visible_without_growing_baseline(self):
+        trusted, target, _, _, common = self.criss_cross_history(accepted_write=True)
+        baseline = (trusted / "baseline.json").read_bytes()
+        self.write("docs/later.md", b"normal change after crossing histories")
+        candidate = self.commit()
+        with self.manual_origin(target):
+            result = self.source_check(trusted, candidate, common, self.manual_context(candidate))
+        # Conservative common-ancestor scope includes both LCA histories; it never washes prior SQL into debt.
+        self.assertIn("NEW_TABLE_WRITER", [f["rule"] for f in result["findings"]])
+        self.assertIn(MAPPER, result["changed_files"])
+        self.assertEqual(baseline, (trusted / "baseline.json").read_bytes())
+
+    def test_manual_nested_criss_cross_without_unique_common_ancestor_is_still_red(self):
+        trusted, target, _, _, common = self.criss_cross_history()
+        feature = shell(self.root, "rev-parse", "HEAD")
+        shell(self.root, "checkout", "--detach", target, "-q")
+        shell(self.root, "merge", "--no-ff", feature, "-m", "second-level default fixture")
+        upper_target = shell(self.root, "rev-parse", "HEAD")
+        shell(self.root, "branch", "nested-default", upper_target)
+        shell(self.root, "checkout", "--detach", feature, "-q")
+        shell(self.root, "merge", "--no-ff", target, "-m", "second-level inverse feature fixture")
+        candidate = shell(self.root, "rev-parse", "HEAD")
+        self.assertEqual({target, feature}, set(shell(self.root, "merge-base", "--all", candidate, upper_target).splitlines()))
+        with self.manual_origin(upper_target), self.assertRaisesRegex(gate.GateError, "no unique strict common ancestor"):
+            self.source_check(trusted, candidate, common, self.manual_context(candidate))
+
     def test_manual_missing_or_forged_default_branch_and_origin_are_red(self):
         context = self.manual_context(self.base)
         for invalid in (None, "", "../forged", "master:refs/heads/forged", "-master"):
