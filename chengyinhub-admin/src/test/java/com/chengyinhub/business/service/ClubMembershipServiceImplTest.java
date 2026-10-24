@@ -44,7 +44,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.dao.DuplicateKeyException;
-import com.chengyinhub.business.service.impl.WechatPayTestWiring;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -117,16 +117,16 @@ class ClubMembershipServiceImplTest {
         transactions = mock(PlatformTransactionManager.class);
         transactionStatus = mock(TransactionStatus.class);
         service = new ClubMembershipServiceImpl();
-        WechatPayTestWiring.setField(service, "featureGate", feature);
-        WechatPayTestWiring.setField(service, "clubAccessService", access);
-        WechatPayTestWiring.setField(service, "clubMembershipMapper", mapper);
-        WechatPayTestWiring.setField(service, "clubMapper", clubs);
-        WechatPayTestWiring.setField(service, "clubMemberMapper", clubMembers);
-        WechatPayTestWiring.setField(service, "memberService", members);
-        WechatPayTestWiring.setField(service, "wechatPayService", pay);
-        WechatPayTestWiring.setField(service, "businessAuditEventMapper", audits);
-        WechatPayTestWiring.setField(service, "transactionManager", transactions);
-        WechatPayTestWiring.setField(service, "clock", Clock.fixed(
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "featureGate", feature);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubAccessService", access);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubMembershipMapper", mapper);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubMapper", clubs);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubMemberMapper", clubMembers);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "memberService", members);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "wechatPayService", pay);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "businessAuditEventMapper", audits);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "transactionManager", transactions);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clock", Clock.fixed(
                 Instant.parse("2026-08-23T16:00:00Z"), ZoneId.of("Asia/Shanghai")));
         when(access.resolve(MEMBER, CLUB, null)).thenReturn(memberAccess());
         when(access.require(OWNER, CLUB, null, ClubPermission.CLUB_WRITE)).thenReturn(ownerAccess());
@@ -1920,7 +1920,7 @@ class ClubMembershipServiceImplTest {
         final Set<String> closedAttempts = new HashSet<>();
         final AtomicBoolean w1Closed = new AtomicBoolean();
         final JsapiService sdk = mock(JsapiService.class);
-        final WechatPayServiceImpl gateway = org.mockito.Mockito.spy(WechatPayTestWiring.facade());
+        final WechatPayServiceImpl gateway = org.mockito.Mockito.spy(com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.gateway());
 
         CloseAttemptReadbackFixture(Transaction.TradeStateEnum w2State) {
             // Spring's resource-free transaction boundary exercises the gateway's actual-transaction guard;
@@ -1931,14 +1931,14 @@ class ClubMembershipServiceImplTest {
                 @Override protected void doCommit(DefaultTransactionStatus status) { }
                 @Override protected void doRollback(DefaultTransactionStatus status) { }
             };
-            WechatPayTestWiring.setField(service, "transactionManager", manager);
-            WechatPayTestWiring.setField(service, "wechatPayService", gateway);
-            WechatPayTestWiring.setField(gateway, "paymentIntentTransactions", manager);
-            WechatPayTestWiring.setField(gateway, "jsapiService", sdk);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "transactionManager", manager);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "wechatPayService", gateway);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "paymentIntentTransactions", manager);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "jsapiService", sdk);
             WxPayConfig config = mock(WxPayConfig.class);
             when(config.getMerchantId()).thenReturn("merchant-clm");
-            WechatPayTestWiring.setField(gateway, "wxPayConfig", config);
-            WechatPayTestWiring.setField(gateway, "paymentIntentJdbc", new JdbcTemplate() {
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "wxPayConfig", config);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "paymentIntentJdbc", new JdbcTemplate() {
                 @Override public List<Map<String, Object>> queryForList(String sql, Object... args) {
                     if (sql.contains("FROM club_membership_invoice")) {
                         assertEquals(w1, args[0]);
@@ -2000,7 +2000,7 @@ class ClubMembershipServiceImplTest {
             return Map.of("out_trade_no", no, "business_out_trade_no", w1, "mchid", "merchant-clm",
                     "appid", w1.equals(no) ? "wx-clm-mini" : "wx-clm-app",
                     "trade_type", w1.equals(no) ? "JSAPI" : "APP", "currency", "CNY",
-                    "total_fen", invoice.getAmountFen());
+                    "total_fen", invoice.getAmountFen(), "request_hash", (w1.equals(no) ? "a" : "b").repeat(64));
         }
 
         Transaction facts(String no, Transaction.TradeStateEnum state) {
@@ -2009,7 +2009,7 @@ class ClubMembershipServiceImplTest {
             tx.setAppid(w1.equals(no) ? "wx-clm-mini" : "wx-clm-app");
             tx.setTradeType(w1.equals(no) ? Transaction.TradeTypeEnum.JSAPI : Transaction.TradeTypeEnum.APP);
             tx.setTradeState(state);
-            if (state == Transaction.TradeStateEnum.SUCCESS) tx.setTransactionId("wx-w2-success");
+            if (state == Transaction.TradeStateEnum.SUCCESS) tx.setTransactionId("wx-w2-success"); tx.setSuccessTime("2026-10-24T00:00:00Z");
             TransactionAmount amount = new TransactionAmount();
             amount.setTotal(invoice.getAmountFen().intValue()); amount.setCurrency("CNY"); tx.setAmount(amount);
             return tx;
@@ -2120,7 +2120,7 @@ class ClubMembershipServiceImplTest {
 
     private TrackingTransactionManager useTrackingTransactions() {
         TrackingTransactionManager tracker = new TrackingTransactionManager();
-        WechatPayTestWiring.setField(service, "transactionManager", tracker);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "transactionManager", tracker);
         return tracker;
     }
 

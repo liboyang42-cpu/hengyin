@@ -72,6 +72,9 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     /** One immutable publication couples the client with its SDK credential merchant, never a mutable property. */
     private record TransferClientBinding(TransferBatchService client, String mchid) { }
     private volatile TransferClientBinding transferClientBinding;
+    private record VerifiedProviderClients(JsapiService payments, RefundService refunds, String mchid) { }
+    private volatile VerifiedProviderClients verifiedProviderClients;
+    @Autowired private WechatVerifiedPaymentFactService verifiedFacts;
     private Config config;
 
     private NotificationParser notificationParser;
@@ -85,6 +88,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     @PostConstruct
     public void init() {
         transferClientBinding = null;
+        verifiedProviderClients = null;
         if (!wxPayConfig.isWechatPayEnabled()) {
             logger.info("微信支付功能已禁用");
             return;
@@ -120,6 +124,10 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 notificationParser = new NotificationParser(notificationConfig);
                 transferBatchService = builtTransferClient;
                 transferClientBinding = new TransferClientBinding(builtTransferClient, boundMerchantId);
+                // Publish query clients bound to the very same SDK credential; mutable properties are not provider evidence.
+                jsapiService = new JsapiService.Builder().httpClient(transferHttpClient).build();
+                refundService = new RefundService.Builder().httpClient(transferHttpClient).build();
+                verifiedProviderClients = new VerifiedProviderClients(jsapiService,refundService,boundMerchantId);
 
                 logger.info("微信支付服务初始化成功");
             } else {
@@ -137,6 +145,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             refundService = null;
             transferBatchService = null;
             transferClientBinding = null;
+        verifiedProviderClients = null;
         }
     }
 
@@ -823,72 +832,53 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
      */
 
     private boolean matchesExpectedPayment(Transaction transaction) {
-        if (transaction == null || (transaction.getTradeState() != Transaction.TradeStateEnum.SUCCESS
-                && transaction.getTradeState() != Transaction.TradeStateEnum.CLOSED
-                && transaction.getTradeState() != Transaction.TradeStateEnum.REFUND)
-                || transaction.getOutTradeNo() == null
-                || !transaction.getOutTradeNo().matches("[A-Za-z0-9_-]{1,64}")
-                || transaction.getTransactionId() == null
-                || !transaction.getTransactionId().matches("[A-Za-z0-9_-]{1,64}")
-                || transaction.getAppid() == null || transaction.getAppid().trim().isEmpty()
-                || transaction.getMchid() == null || transaction.getMchid().trim().isEmpty()
-                || wxPayConfig == null || !transaction.getMchid().equals(wxPayConfig.getMerchantId())
-                || transaction.getTradeType() == null
-                || transaction.getAmount() == null || transaction.getAmount().getTotal() == null
-                || transaction.getAmount().getTotal() <= 0
-                || !"CNY".equals(transaction.getAmount().getCurrency())) {
-            return false;
-        }
-        // APP/JSAPI 共用 /v3/pay/transactions/out-trade-no/{out_trade_no}。
-        // 官方应答中的 appid/mchid 是创建原单时传入的值；SDK 验签后才能作为渠道证据。
-        // 不从当前配置的 appid 集合、通知正文或可过期 payParams 反推“预期应用”。
-        Transaction original = queryVerifiedOrder(transaction.getOutTradeNo());
-        return original != null
-                && transaction.getOutTradeNo().equals(original.getOutTradeNo())
-                && transaction.getAppid().equals(original.getAppid())
-                && transaction.getMchid().equals(original.getMchid())
-                && transaction.getTransactionId().equals(original.getTransactionId())
-                && transaction.getTradeState() == original.getTradeState()
-                && (transaction.getTradeType() == Transaction.TradeTypeEnum.JSAPI
-                    || transaction.getTradeType() == Transaction.TradeTypeEnum.APP)
-                && transaction.getTradeType() == original.getTradeType()
-                && original.getAmount() != null
-                && "CNY".equals(original.getAmount().getCurrency())
-                && transaction.getAmount().getTotal().equals(original.getAmount().getTotal());
+        return verifiedPaymentOriginal(transaction) != null;
     }
 
     @Override
     public String queryRefundStatus(String outRefundNo) {
-        if (refundService == null || outRefundNo == null || outRefundNo.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            QueryByOutRefundNoRequest req = new QueryByOutRefundNoRequest();
-            req.setOutRefundNo(outRefundNo);
-            Refund refund = refundService.queryByOutRefundNo(req);
-            Status st = (refund == null) ? null : refund.getStatus();
-            return st == null ? null : st.name();
-        } catch (Exception e) {
-            logger.error("查询微信退款状态失败 outRefundNo={}: {}", outRefundNo, e.getMessage());
-            return null;
-        }
+        Map<String,String> facts = queryRefundFacts(outRefundNo);
+        return facts == null || "NOT_FOUND".equals(facts.get("status")) ? null : facts.get("status");
     }
 
     @Override
     public Map<String,String> queryRefundFacts(String outRefundNo) {
-        if (refundService == null || outRefundNo == null || outRefundNo.trim().isEmpty()) return null;
+        VerifiedProviderClients clients = verifiedProviderClients;
+        if (clients == null || outRefundNo == null || !outRefundNo.matches("[A-Za-z0-9_-]{1,64}")) return null;
         try {
             QueryByOutRefundNoRequest request = new QueryByOutRefundNoRequest(); request.setOutRefundNo(outRefundNo);
-            Refund refund = refundService.queryByOutRefundNo(request);
-            if (refund == null) return null;
-            return refundFacts(refund.getOutRefundNo(), refund.getOutTradeNo(),
-                    refund.getStatus() == null ? null : refund.getStatus().name(), refund.getAmount());
+            Refund refund = clients.refunds().queryByOutRefundNo(request);
+            if (refund == null || !outRefundNo.equals(refund.getOutRefundNo()) || refund.getStatus() == null
+                    || refund.getRefundId() == null || !refund.getRefundId().matches("[A-Za-z0-9_-]{1,64}")
+                    || refund.getTransactionId() == null || refund.getAmount() == null
+                    || refund.getAmount().getTotal() == null || refund.getAmount().getRefund() == null) return null;
+            Transaction original = queryVerifiedOrder(refund.getOutTradeNo());
+            if (!clients.mchid().equals(original.getMchid()) || !refund.getTransactionId().equals(original.getTransactionId())
+                    || !"CNY".equals(refund.getAmount().getCurrency())
+                    || refund.getAmount().getTotal().longValue()!=original.getAmount().getTotal().longValue()
+                    || refund.getAmount().getRefund()<=0 || refund.getAmount().getRefund()>refund.getAmount().getTotal()) return null;
+            Map<String,String> facts = refundFacts(refund.getOutRefundNo(),refund.getOutTradeNo(),
+                    refund.getStatus().name(),refund.getAmount());
+            facts.put("mchid",original.getMchid()); facts.put("appid",original.getAppid());
+            facts.put("tradeType",original.getTradeType().name());
+            facts.put("transactionId",refund.getTransactionId()); facts.put("refundId",refund.getRefundId());
+            facts.put("successTime",refund.getSuccessTime());
+            if (refund.getStatus()==Status.SUCCESS) {
+                var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                        com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.REFUND,
+                        original.getMchid(),original.getAppid(),facts.get("outTradeNo"),original.getOutTradeNo(),
+                        refund.getOutRefundNo(),refund.getRefundId(),refund.getTransactionId(),original.getTradeType().name(),
+                        "CNY",refund.getAmount().getTotal(),refund.getAmount().getRefund(),
+                        providerSuccessTime(refund.getSuccessTime()),frozenRequestHash(original),original.getTradeState().name());
+                addVerifiedReference(facts,verifiedFacts.recordVerified(fact));
+            }
+            return facts;
         } catch (com.wechat.pay.java.core.exception.ServiceException e) {
             if (e.getHttpStatusCode() == 404 && "RESOURCE_NOT_EXISTS".equals(e.getErrorCode())) {
                 Map<String,String> missing = new HashMap<>(); missing.put("status", "NOT_FOUND"); return missing;
             }
-            logger.warn("保证金退款查单失败 outRefundNo={}", outRefundNo, e); return null;
-        } catch (Exception e) { logger.warn("保证金退款查单未知 outRefundNo={}", outRefundNo, e); return null; }
+            logger.warn("退款查单无法核验 type={}",e.getClass().getSimpleName()); return null;
+        } catch (Exception e) { logger.warn("退款查单事实未知 type={}",e.getClass().getSimpleName()); return null; }
     }
 
     Map<String,String> refundFacts(String refundNo, String tradeNo, String state,
@@ -917,6 +907,9 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
             Map<String, String> result = new HashMap<>();
             result.put("trade_state", transaction.getTradeState().toString());
+            if (transaction.getTradeState()==Transaction.TradeStateEnum.SUCCESS) {
+                addVerifiedReference(result,recordPaymentSuccess(transaction));
+            }
             result.put("transaction_id", transaction.getTransactionId());
             result.put("out_trade_no", businessPaymentOrderNo(transaction.getOutTradeNo()));
             result.put("wx_out_trade_no", transaction.getOutTradeNo());
@@ -942,13 +935,15 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
 
     /** 回调与主动确认共用官方查单事实；不能将串单/缺字段应答交领域写入支付终态。 */
     private Transaction queryVerifiedOrder(String outTradeNo) {
+        VerifiedProviderClients clients = verifiedProviderClients;
+        if (clients == null) throw new IllegalStateException("原商户SDK查询client缺失");
         QueryOrderByOutTradeNoRequest request = new QueryOrderByOutTradeNoRequest();
-        request.setMchid(wxPayConfig.getMerchantId());
+        request.setMchid(clients.mchid());
         request.setOutTradeNo(outTradeNo);
-        Transaction original = jsapiService.queryOrderByOutTradeNo(request);
+        Transaction original = clients.payments().queryOrderByOutTradeNo(request);
         if (original == null || outTradeNo == null || !outTradeNo.equals(original.getOutTradeNo())
                 || original.getMchid() == null || original.getMchid().trim().isEmpty()
-                || !original.getMchid().equals(wxPayConfig.getMerchantId())
+                || !original.getMchid().equals(clients.mchid())
                 || original.getAppid() == null || original.getAppid().trim().isEmpty()
                 || original.getTradeState() == null || original.getAmount() == null
                 || original.getAmount().getTotal() == null || original.getAmount().getTotal() <= 0
@@ -1041,10 +1036,10 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 });
     }
     private String currentWechatPaymentNo(String businessNo) {
-        return intents.currentWechatPaymentNo(businessNo, wxPayConfig.getMerchantId());
+        return intents.currentWechatPaymentNo(businessNo, verifiedProviderMerchant());
     }
     private String businessPaymentOrderNo(String wxNo) {
-        return intents.businessPaymentOrderNo(wxNo, wxPayConfig.getMerchantId());
+        return intents.businessPaymentOrderNo(wxNo, verifiedProviderMerchant());
     }
     private void recordConfirmedClosedAttempt(Transaction observed) {
         intents.recordConfirmedClosedAttempt(observed.getMchid(), observed.getOutTradeNo());
@@ -1069,7 +1064,16 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 .timestamp(headers.get("wechatpay-timestamp")).body(body).build();
     }
     Map<String, String> verifiedPaymentFacts(Transaction transaction) {
-        if (!matchesExpectedPayment(transaction)) return null;
+        Transaction original=verifiedPaymentOriginal(transaction);
+        if (original==null) {
+            verifiedFacts.recordRejectedPaymentNotification(transaction==null?new String[]{null}:new String[]{
+                    transaction.getMchid(),transaction.getAppid(),transaction.getOutTradeNo(),transaction.getTransactionId(),
+                    transaction.getTradeState()==null?null:transaction.getTradeState().name(),
+                    transaction.getTradeType()==null?null:transaction.getTradeType().name(),
+                    transaction.getAmount()==null?null:String.valueOf(transaction.getAmount().getTotal()),
+                    transaction.getAmount()==null?null:transaction.getAmount().getCurrency(),transaction.getSuccessTime()});
+            return null;
+        }
         Map<String, String> facts = new HashMap<>();
         facts.put("out_trade_no", businessPaymentOrderNo(transaction.getOutTradeNo()));
         facts.put("wx_out_trade_no", transaction.getOutTradeNo());
@@ -1081,6 +1085,98 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             facts.put("total", String.valueOf(transaction.getAmount().getTotal()));
             facts.put("currency", transaction.getAmount().getCurrency());
         }
+        if (original.getTradeState()==Transaction.TradeStateEnum.SUCCESS) addVerifiedReference(facts,recordPaymentSuccess(original));
         return facts;
+    }
+    private Transaction verifiedPaymentOriginal(Transaction transaction) {
+        if (transaction == null || (transaction.getTradeState() != Transaction.TradeStateEnum.SUCCESS
+                && transaction.getTradeState() != Transaction.TradeStateEnum.CLOSED
+                && transaction.getTradeState() != Transaction.TradeStateEnum.REFUND)
+                || transaction.getOutTradeNo() == null
+                || !transaction.getOutTradeNo().matches("[A-Za-z0-9_-]{1,64}")
+                || transaction.getTransactionId() == null
+                || !transaction.getTransactionId().matches("[A-Za-z0-9_-]{1,64}")
+                || transaction.getAppid() == null || transaction.getAppid().trim().isEmpty()
+                || transaction.getMchid() == null || transaction.getMchid().trim().isEmpty()
+                || verifiedProviderClients == null || !transaction.getMchid().equals(verifiedProviderClients.mchid())
+                || transaction.getTradeType() == null
+                || transaction.getAmount() == null || transaction.getAmount().getTotal() == null
+                || transaction.getAmount().getTotal() <= 0
+                || !"CNY".equals(transaction.getAmount().getCurrency())) {
+            return null;
+        }
+        // APP/JSAPI 共用 /v3/pay/transactions/out-trade-no/{out_trade_no}。
+        // 官方应答中的 appid/mchid 是创建原单时传入的值；SDK 验签后才能作为渠道证据。
+        // 不从当前配置的 appid 集合、通知正文或可过期 payParams 反推“预期应用”。
+        Transaction original = queryVerifiedOrder(transaction.getOutTradeNo());
+        boolean matches = original != null
+                && transaction.getOutTradeNo().equals(original.getOutTradeNo())
+                && transaction.getAppid().equals(original.getAppid())
+                && transaction.getMchid().equals(original.getMchid())
+                && transaction.getTransactionId().equals(original.getTransactionId())
+                && transaction.getTradeState() == original.getTradeState()
+                && (transaction.getTradeType() == Transaction.TradeTypeEnum.JSAPI
+                    || transaction.getTradeType() == Transaction.TradeTypeEnum.APP)
+                && transaction.getTradeType() == original.getTradeType()
+                && original.getAmount() != null
+                && "CNY".equals(original.getAmount().getCurrency())
+                && transaction.getAmount().getTotal().equals(original.getAmount().getTotal());
+        return matches ? original : null;
+    }
+
+    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference recordPaymentSuccess(Transaction original) {
+        if (original.getTradeState()!=Transaction.TradeStateEnum.SUCCESS) throw new IllegalArgumentException("不是支付成功事实");
+        return verifiedFacts.recordVerified(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                original.getMchid(),original.getAppid(),businessPaymentOrderNo(original.getOutTradeNo()),original.getOutTradeNo(),
+                original.getOutTradeNo(),original.getTransactionId(),original.getTransactionId(),original.getTradeType().name(),
+                original.getAmount().getCurrency(),original.getAmount().getTotal(),original.getAmount().getTotal(),
+                providerSuccessTime(original.getSuccessTime()),frozenRequestHash(original),original.getTradeState().name()));
+    }
+
+    private String verifiedProviderMerchant() {
+        VerifiedProviderClients clients=verifiedProviderClients;
+        if (clients==null || clients.mchid()==null || clients.mchid().isBlank()) throw new IllegalStateException("原SDK商户绑定缺失");
+        return clients.mchid();
+    }
+
+    private static java.time.Instant providerSuccessTime(String raw) {
+        if (raw == null || raw.isBlank()) throw new IllegalStateException("微信成功时间缺失");
+        return java.time.OffsetDateTime.parse(raw).toInstant();
+    }
+
+    private static void addVerifiedReference(Map<String,String> facts,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {
+        facts.put("verified_fact_id",Long.toString(reference.id())); facts.put("verified_fact_hash",reference.hash());
+    }
+
+            if (!matchesRefundNotification(notif,facts)) {
+                verifiedFacts.recordRejectedRefundNotification(
+                            facts!=null && facts.get("verified_fact_id")!=null && facts.get("verified_fact_hash")!=null
+                            ? new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                                    Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash")) : null,
+                            new String[]{notif.getOutRefundNo(),notif.getOutTradeNo(),notif.getRefundId(),notif.getTransactionId(),
+                                    notif.getRefundStatus()==null?null:notif.getRefundStatus().name(),
+                                    notif.getAmount()==null?null:String.valueOf(notif.getAmount().getTotal()),
+                                    notif.getAmount()==null?null:String.valueOf(notif.getAmount().getRefund()),
+                                    notif.getAmount()==null?null:notif.getAmount().getCurrency(),notif.getSuccessTime()});
+                alarmService.alarmThrottled("refund.callback.facts", "退款回调原单事实缺失或不符",
+                        "refund=" + safeRefundReference + " result=FAIL");
+                return "{\"code\": \"FAIL\",\"message\": \"退款事实暂无法核验\"}";
+            }
+
+    private String frozenRequestHash(Transaction original) {
+        return intents.frozenRequestHash(original.getMchid(),original.getOutTradeNo());
+    }
+    void recordRejectedRefundNotification(RefundNotification notif, Map<String,String> facts) {
+        verifiedFacts.recordRejectedRefundNotification(
+                facts!=null && facts.get("verified_fact_id")!=null && facts.get("verified_fact_hash")!=null
+                ? new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                        Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash")) : null,
+                new String[]{notif.getOutRefundNo(),notif.getOutTradeNo(),notif.getRefundId(),notif.getTransactionId(),
+                        notif.getRefundStatus()==null?null:notif.getRefundStatus().name(),
+                        notif.getAmount()==null?null:String.valueOf(notif.getAmount().getTotal()),
+                        notif.getAmount()==null?null:String.valueOf(notif.getAmount().getRefund()),
+                        notif.getAmount()==null?null:notif.getAmount().getCurrency(),notif.getSuccessTime()});
     }
 }

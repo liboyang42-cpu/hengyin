@@ -155,4 +155,13 @@ public class WechatPaymentIntentStore {
         return paymentIntentJdbc.queryForList(
                 "SELECT appid,trade_type,currency,total_fen FROM wx_pay_order_intent WHERE mchid=? AND out_trade_no=?", mchid, outTradeNo);
     }
+    String frozenRequestHash(String mchid, String wxNo) {
+        var rows = paymentIntentJdbc.queryForList("SELECT request_hash FROM wx_pay_order_intent WHERE mchid=? AND out_trade_no=?",
+                mchid,wxNo);
+        if (rows.isEmpty()) return null; // Historical provider original order, never a guessed configuration backfill.
+        if (rows.size()!=1 || !(rows.get(0).get("request_hash") instanceof String hash) || !hash.matches("[0-9a-f]{64}")) {
+            throw new IllegalStateException("原意图请求指纹缺失或冲突");
+        }
+        return hash;
+    }
 }

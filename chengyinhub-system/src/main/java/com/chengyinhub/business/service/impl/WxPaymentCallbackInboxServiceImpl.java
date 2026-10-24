@@ -45,6 +45,7 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
     private WxPaymentCallbackMutationService mutationService;
     @Autowired
     private AlarmService alarmService;
+    @Autowired private WechatVerifiedPaymentFactService verifiedFacts;
 
     @Override
     @Transactional(noRollbackFor = IdentityConflictException.class)
@@ -82,6 +83,50 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
             throw new IdentityConflictException("支付回调幂等键对应的原业务身份冲突");
         }
         return false;
+    }
+
+    @Override
+    @Transactional(noRollbackFor = IdentityConflictException.class)
+    public boolean registerVerified(String notifyId, int bizType, Long bizId, String eventType,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {
+        var fact = verifiedFacts.requireVerified(reference).facts();
+        int expectedType = fact.kind() == com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                ? WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT : WxPaymentCallbackInbox.BIZ_TYPE_REFUND;
+        if (StringUtils.isEmpty(notifyId) || bizId == null || bizId <= 0 || bizType != expectedType
+                || !"SUCCESS".equals(eventType)) throw new IdentityConflictException("Verified success inbox identity invalid");
+        boolean created = register(notifyId,bizType,bizId,eventType);
+        WxPaymentCallbackInbox inbox = mapper.selectForUpdate(sha256Hex(notifyId));
+        if (inbox == null || inbox.getId() == null || !Objects.equals(inbox.getBizType(),bizType)
+                || !Objects.equals(inbox.getBizId(),bizId) || !Objects.equals(inbox.getEventType(),eventType)) {
+            throw new IdentityConflictException("Verified inbox durable readback conflict");
+        }
+        try {
+            verifiedFacts.bindNewInbox(inbox.getId(),sha256Hex(notifyId),reference,created);
+        } catch (WechatVerifiedPaymentFactService.ConflictException rejected) {
+            verifiedFacts.recordRejectedBinding(sha256Hex(notifyId),reference,null);
+            throw new IdentityConflictException("Verified inbox fact binding conflict");
+        }
+        return created;
+    }
+
+    @Override
+    public boolean processVerified(String notifyId,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference, Mutation mutation) {
+        if (StringUtils.isEmpty(notifyId) || mutation == null) return false;
+        WxPaymentCallbackInbox inbox = mapper.selectByNotifyHash(sha256Hex(notifyId));
+        if (inbox == null || inbox.getId() == null
+                || !verifiedFacts.hasInboxLink(inbox.getId(),sha256Hex(notifyId),reference)) return false;
+        return process(notifyId,new Mutation() {
+            @Override public boolean isCurrent(WxPaymentCallbackInbox lockedInbox) {
+                // Executed by the original mutation service after inbox and business target locks,
+                // in the same transaction that owns the business mutation and DONE.
+                if (lockedInbox.getId()==null || !verifiedFacts.hasInboxLink(lockedInbox.getId(),sha256Hex(notifyId),reference)) {
+                    throw new IdentityConflictException("Verified inbox reference changed inside mutation transaction");
+                }
+                return mutation.isCurrent(lockedInbox);
+            }
+            @Override public boolean apply(WxPaymentCallbackInbox lockedInbox) { return mutation.apply(lockedInbox); }
+        });
     }
 
     @Override

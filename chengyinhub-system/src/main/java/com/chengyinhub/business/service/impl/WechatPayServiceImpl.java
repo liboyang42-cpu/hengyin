@@ -150,8 +150,14 @@ public class WechatPayServiceImpl implements IWechatPayService {
             safeRefundReference = notif.getOutRefundNo() != null
                     && notif.getOutRefundNo().matches("[A-Za-z0-9_-]{1,64}") ? notif.getOutRefundNo() : "UNKNOWN";
             Status st = notif.getRefundStatus();
-            boolean ok = callbacks.refund(gateway.refundFacts(notif.getOutRefundNo(),
-                    notif.getOutTradeNo(), st == null ? null : st.name(), notif.getAmount()));
+            Map<String,String> facts=gateway.queryRefundFacts(notif.getOutRefundNo());
+            if (!gateway.matchesRefundNotification(notif,facts)) {
+                gateway.recordRejectedRefundNotification(notif,facts);
+                alarmService.alarmThrottled("refund.callback.facts", "退款回调原单事实缺失或不符",
+                        "refund="+safeRefundReference+" result=FAIL");
+                return "{\"code\": \"FAIL\",\"message\": \"退款事实暂无法核验\"}";
+            }
+            boolean ok=callbacks.refund(facts);
             if (!ok) {
                 logger.error("微信退款回调业务处理失败,回 FAIL 触发重试: out_refund_no={}", notif.getOutRefundNo());
                 alarmService.alarmThrottled("refund.callback.failed", "退款回调业务处理失败",
