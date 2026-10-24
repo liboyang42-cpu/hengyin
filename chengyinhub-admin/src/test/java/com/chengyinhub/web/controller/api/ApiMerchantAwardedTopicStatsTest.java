@@ -48,6 +48,8 @@ class ApiMerchantAwardedTopicStatsTest {
 
     /** 竞猜待答名单桩:默认空,用例可先赋值再建 MockMvc。 */
     private List<java.util.Map<String, Object>> predictInbox = Collections.emptyList();
+    private java.util.Map<Long, long[]> topicCounts = Collections.emptyMap();
+    private ICmsRegistrationService lastRegistrationService;
 
     private MockMvc mvc(List<CmsRegistration> registrations) {
         return mvc(registrations, null, Collections.<CmsRegistrationScan>emptyList());
@@ -74,6 +76,9 @@ class ApiMerchantAwardedTopicStatsTest {
 
         ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
         when(registrationService.selectCmsRegistrationList(any())).thenReturn(registrations);
+        when(registrationService.countPaidVerificationByOwners(org.mockito.ArgumentMatchers.eq(1L), any()))
+                .thenAnswer(invocation -> topicCounts);
+        lastRegistrationService = registrationService;
         // scan 的项目归属靠它解析:一律指回本商家中标的那个主题
         CmsRegistration scanOwner = new CmsRegistration();
         scanOwner.setOwnerType(1L);
@@ -147,6 +152,24 @@ class ApiMerchantAwardedTopicStatsTest {
         mvc(Collections.<CmsRegistration>emptyList(), new Date(System.currentTimeMillis() - 8 * DAY))
                 .perform(post("/api/merchant/todo-summary"))
                 .andExpect(jsonPath("$.data.byProject.length()").value(0));
+    }
+
+    /** P1-020:待核销/已核销按项目一次分组计数,不再逐项目拉全行 .size()。 */
+    @Test
+    void todoSummaryCountsVerificationWithOneGroupedQueryPerOwnerType() throws Exception {
+        topicCounts = Collections.singletonMap(TOPIC_ID, new long[] {3L, 5L});
+        mvc(Collections.<CmsRegistration>emptyList(), new Date(System.currentTimeMillis() + DAY))
+                .perform(post("/api/merchant/todo-summary"))
+                .andExpect(jsonPath("$.data.pendingVerify").value(3))
+                .andExpect(jsonPath("$.data.verifiedCount").value(5))
+                .andExpect(jsonPath("$.data.byProject[0].pendingVerify").value(3));
+        org.mockito.Mockito.verify(lastRegistrationService, org.mockito.Mockito.never()).selectCmsRegistrationList(any());
+        org.mockito.Mockito.verify(lastRegistrationService, org.mockito.Mockito.times(1))
+                .countPaidVerificationByOwners(org.mockito.ArgumentMatchers.eq(1L),
+                        org.mockito.ArgumentMatchers.eq(new java.util.LinkedHashSet<>(Collections.singletonList(TOPIC_ID))));
+        // 没有自建活动 ⇒ 活动侧不发查询
+        org.mockito.Mockito.verify(lastRegistrationService, org.mockito.Mockito.never())
+                .countPaidVerificationByOwners(org.mockito.ArgumentMatchers.eq(2L), any());
     }
 
     /**

@@ -118,6 +118,10 @@ public interface CmsRegistrationMapper
      */
     public List<CmsRegistration> selectCmsRegistrationList(CmsRegistration cmsRegistration);
 
+    /** 已支付报名按 (owner_id, verification_status∈{0,1}) 分组计数;ownerIds 不可为空。 */
+    List<Map<String, Object>> countPaidVerificationByOwners(@Param("ownerType") Long ownerType,
+                                                            @Param("ownerIds") java.util.Collection<Long> ownerIds);
+
     List<java.util.Map<String, Object>> selectPureContentExploreCompletion(@Param("topicId") Long topicId);
 
     /**
