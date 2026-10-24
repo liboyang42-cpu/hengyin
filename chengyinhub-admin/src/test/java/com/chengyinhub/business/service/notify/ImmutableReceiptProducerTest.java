@@ -144,12 +144,6 @@ class ImmutableReceiptProducerTest {
     void sendOriginalDoesNotSendNonMessageKindsOrFingerprintBody() {
         InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
         ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store);
-        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
-        ImmutableReceiptProducer.ChannelOriginalSend refuse = (actorId, conversationId, clientMessageId, msgType,
-                content, extraJson, replyToId, mentionMemberIds, mentionRoleIds, mentionEveryone) -> {
-            calls.incrementAndGet();
-            throw new AssertionError("non-send kind must not call channel send");
-        };
         for (ImmutableReceiptProducer.Kind kind : new ImmutableReceiptProducer.Kind[] {
                 ImmutableReceiptProducer.Kind.SEARCH, ImmutableReceiptProducer.Kind.EDIT,
                 ImmutableReceiptProducer.Kind.WITHDRAW, ImmutableReceiptProducer.Kind.PIN }) {
@@ -158,63 +152,27 @@ class ImmutableReceiptProducerTest {
             ImmutableReceiptProducer.NotASendException refused = assertThrows(
                     ImmutableReceiptProducer.NotASendException.class,
                     () -> producer.sendOriginal(request, 7L, 12L, Integer.valueOf(1), "hello", null, 88120L,
-                            java.util.List.of(), java.util.List.of(), false, refuse));
+                            java.util.List.of(), java.util.List.of(), false));
             assertEquals(kind, refused.getKind());
         }
-        assertEquals(0, calls.get());
         ImmutableReceiptProducer.OriginalRequest reply = new ImmutableReceiptProducer.OriginalRequest(
                 "c09-send-01", ImmutableReceiptProducer.Kind.REPLY, "{\"fp\":1}",
                 ImmutableReceiptProducer.OUTCOME_ACCEPTED);
         ImmutableReceiptProducer.WaitingSourceException fingerprint = assertThrows(
                 ImmutableReceiptProducer.WaitingSourceException.class,
                 () -> producer.sendOriginal(reply, 7L, 12L, Integer.valueOf(1), "{\"fp\":1}", null, 88120L,
-                        java.util.List.of(), java.util.List.of(), false, refuse));
+                        java.util.List.of(), java.util.List.of(), false));
         assertEquals(ImmutableReceiptProducer.IM_SEND_COMMAND, fingerprint.getWaitingCapability());
         ImmutableReceiptProducer.WaitingSourceException missingReply = assertThrows(
                 ImmutableReceiptProducer.WaitingSourceException.class,
                 () -> producer.sendOriginal(reply, 7L, 12L, Integer.valueOf(1), "hello", null, null,
-                        java.util.List.of(8L), java.util.List.of(), false, refuse));
+                        java.util.List.of(8L), java.util.List.of(), false));
         assertEquals(ImmutableReceiptProducer.IM_SEND_WIRE, missingReply.getWaitingCapability());
         ImmutableReceiptProducer.WaitingSourceException missingWriter = assertThrows(
                 ImmutableReceiptProducer.WaitingSourceException.class,
                 () -> producer.sendOriginal(reply, 7L, 12L, Integer.valueOf(1), "hello", null, 88120L,
-                        java.util.List.of(), java.util.List.of(), false, null));
+                        java.util.List.of(), java.util.List.of(), false));
         assertEquals(ImmutableReceiptProducer.CHANNEL_MESSAGE_SEND, missingWriter.getWaitingCapability());
-        assertEquals(0, calls.get());
-        assertEquals(0, store.size());
-
-        java.util.Map<String, Object> withoutDigest = new java.util.LinkedHashMap<String, Object>();
-        withoutDigest.put("client_message_id", "c09-send-01");
-        withoutDigest.put("operation", "SEND");
-        withoutDigest.put("content", "hello");
-        ImmutableReceiptProducer.OriginalReceipt ungarded = producer.sendOriginal(reply, 7L, 12L, Integer.valueOf(1),
-                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false,
-                (actorId, conversationId, clientMessageId, msgType, content, extraJson, replyToId, mentionMemberIds,
-                        mentionRoleIds, mentionEveryone) -> withoutDigest);
-        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, ungarded.outcome);
-        assertNull(ungarded.originalBody);
-        java.util.Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
-        sent.put("client_message_id", "c09-send-01");
-        sent.put("operation", "SEND");
-        sent.put("digest", "send-digest-01");
-        sent.put("content", "hello");
-        ImmutableReceiptProducer.OriginalReceipt receipt = producer.sendOriginal(reply, 7L, 12L, Integer.valueOf(1),
-                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false,
-                (actorId, conversationId, clientMessageId, msgType, content, extraJson, replyToId, mentionMemberIds,
-                        mentionRoleIds, mentionEveryone) -> {
-                    calls.incrementAndGet();
-                    assertEquals(Long.valueOf(7L), actorId);
-                    assertEquals(Long.valueOf(12L), conversationId);
-                    assertEquals("hello", content);
-                    assertEquals("c09-send-01", clientMessageId);
-                    assertEquals(Long.valueOf(88120L), replyToId);
-                    return sent;
-                });
-        assertEquals("hello", receipt.originalBody);
-        assertEquals(1, calls.get());
-        assertThrows(ImmutableReceiptProducer.WaitingSourceException.class,
-                () -> producer.recoverFromJournal(7L, 12L, "c09-send-01"));
-        assertEquals(1, calls.get());
         assertEquals(0, store.size());
     }
 }

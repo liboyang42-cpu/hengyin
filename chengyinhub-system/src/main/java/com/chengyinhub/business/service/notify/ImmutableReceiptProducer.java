@@ -161,7 +161,7 @@ public final class ImmutableReceiptProducer {
      */
     public OriginalReceipt sendOriginal(OriginalRequest request, Long actorId, Long conversationId,
             Integer msgType, String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
-            List<Long> mentionRoleIds, boolean mentionEveryone, ChannelOriginalSend channelSend) {
+            List<Long> mentionRoleIds, boolean mentionEveryone) {
         OriginalRequest required = requireRequest(request);
         if (required.kind != Kind.REPLY && required.kind != Kind.MENTION) {
             throw new NotASendException(required.kind);
@@ -177,31 +177,10 @@ public final class ImmutableReceiptProducer {
         if (required.kind == Kind.MENTION && !hasMention(mentionMemberIds, mentionRoleIds, mentionEveryone)) {
             throw new WaitingSourceException(IM_SEND_WIRE);
         }
-        if (channelSend == null) {
-            throw new WaitingSourceException(CHANNEL_MESSAGE_SEND);
+        if (extraJson != null) {
+            // 字段已按原 Send 分开。extraJson 只是原命令里的附加串，不能在这里变成第二条发送。
         }
-        Map<String, Object> sent = channelSend.send(actorId, conversationId, required.requestId, msgType, content,
-                extraJson, replyToId, mentionMemberIds, mentionRoleIds, mentionEveryone);
-        if (sent == null) {
-            return unknownReceipt(required.requestId, null);
-        }
-        Object client = sent.get("client_message_id");
-        Object digest = sent.get("digest");
-        if (!(client instanceof String) || !required.requestId.equals(client)
-                || !"SEND".equals(sent.get("operation"))
-                || !(digest instanceof String) || ((String) digest).isBlank()) {
-            return unknownReceipt(required.requestId, null);
-        }
-        Object body = sent.get("content");
-        return new OriginalReceipt(required.requestId, null, (String) digest, OUTCOME_UNKNOWN,
-                body instanceof String ? (String) body : content);
-    }
-
-    /** 与原 ChannelMessageRequests.Send 同一组字段。不复制私有类，也不调用 IImService.send。 */
-    public interface ChannelOriginalSend {
-        Map<String, Object> send(Long actorId, Long conversationId, String clientMessageId, Integer msgType,
-                String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
-                List<Long> mentionRoleIds, boolean mentionEveryone);
+        throw new WaitingSourceException(CHANNEL_MESSAGE_SEND);
     }
 
     private static boolean hasMention(List<Long> members, List<Long> roles, boolean everyone) {
