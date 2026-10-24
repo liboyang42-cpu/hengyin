@@ -367,7 +367,7 @@
     },
     "architecture-day-cash-expand": {
       "lineage": "G618 expand-only storage constraints on root50f reviewed assembly",
-      "registered_source": "61834b1ba96fcfb025d8442955b69f1d6b35d5f3",
+      "registered_source": "97b823e5c8bb86675825476a07c9cdf671063f2a",
       "note": "NEGATIVE EVIDENCE ONLY: original30 +H4 intended safety assertions; source predicts failures. No production change, never merge/deploy this evidence branch. Source-bound XML/cleanup required.",
       "classes": [
         "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT"
