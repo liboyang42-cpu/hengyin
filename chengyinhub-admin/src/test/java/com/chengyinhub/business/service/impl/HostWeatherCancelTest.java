@@ -93,7 +93,7 @@ class HostWeatherCancelTest {
 
         when(regMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(inv -> {
             CmsRegistration q = inv.getArgument(0, CmsRegistration.class);
-            if (!Integer.valueOf(2).equals(q.getPaymentStatus())) return Collections.emptyList();
+            if (q.getPaymentStatus() != null && !Integer.valueOf(2).equals(q.getPaymentStatus())) return Collections.emptyList();
             List<CmsRegistration> rows = paidByOwner.get(q.getOwnerType() + ":" + q.getOwnerId());
             return rows == null ? Collections.emptyList() : rows;
         });
@@ -138,10 +138,14 @@ class HostWeatherCancelTest {
         ReflectionTestUtils.setField(service, "refundService", refundService);
         ReflectionTestUtils.setField(service, "umsMemberMapper", mock(UmsMemberMapper.class));
         ReflectionTestUtils.setField(service, "notifyService", mock(INotifyService.class));
+        var notices = mock(com.chengyinhub.business.service.IImService.class);
+        when(notices.sendSystem(any(), any(), any(), any())).thenReturn(910L);
+        ReflectionTestUtils.setField(service, "imService", notices);
         ReflectionTestUtils.setField(service, "refundPayoutService", payout);
         ReflectionTestUtils.setField(service, "manualRefundCaseService", manualCases);
         settlementDetails = mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class);
         ReflectionTestUtils.setField(service, "settlementDetailMapper", settlementDetails);
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamUnit(service, regMapper);
     }
 
     private com.chengyinhub.business.mapper.SettlementDetailMapper settlementDetails;
@@ -378,6 +382,10 @@ class HostWeatherCancelTest {
         verify(activityMapper, never()).selectCmsActivityByIdForUpdate(202L);
         verify(clubOps, never()).cancelActivityForAuthorizedTopicCancellation(
                 anyLong(), anyLong(), anyLong(), anyLong(), any());
+        verify(clubOps, never()).captureAuthorizedTopicCancellationPayments(
+                anyLong(), anyLong(), anyLong(), anyLong(), any());
+        verify(clubOps, never()).cancelAuthorizedTopicWithObservedPayments(
+                anyLong(), anyLong(), anyLong(), anyLong(), any(), any());
     }
 
     /**
@@ -570,13 +578,35 @@ class HostWeatherCancelTest {
         paid(4L, 2L, 202L, 0);
         com.chengyinhub.business.service.IClubEventOpsService clubOps =
                 mock(com.chengyinhub.business.service.IClubEventOpsService.class);
-        when(clubOps.cancelActivityForAuthorizedTopicCancellation(STAFF, TOPIC, 5L, 202L, "台风停运"))
-                .thenReturn(new ActivityCancelResult(1, 0, 0));
+        var captured = new com.chengyinhub.business.domain.dto.RegistrationCancellationPayments(Collections.singletonList(
+                new com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Scope(
+                        2L,202L,TOPIC,STRANGER,5L,Collections.emptyList())));
+        when(clubOps.captureAuthorizedTopicCancellationPayments(STAFF, TOPIC, 5L, 202L, "台风停运"))
+                .thenAnswer(call -> {
+                    org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                    return captured;
+                });
+        when(clubOps.cancelAuthorizedTopicWithObservedPayments(org.mockito.ArgumentMatchers.eq(STAFF),
+                org.mockito.ArgumentMatchers.eq(TOPIC), org.mockito.ArgumentMatchers.eq(5L),
+                org.mockito.ArgumentMatchers.eq(202L), org.mockito.ArgumentMatchers.eq("台风停运"),
+                org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.class)))
+                .thenAnswer(call -> {
+                    org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                    com.chengyinhub.business.domain.dto.RegistrationCancellationPayments original = call.getArgument(5);
+                    assertEquals(captured.scopes().getFirst(), original.requireScope(2L,202L));
+                    return new ActivityCancelResult(1, 0, 0);
+                });
         ReflectionTestUtils.setField(service, "clubEventOpsService", clubOps);
 
         ActivityCancelResult res = service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运");
 
-        verify(clubOps).cancelActivityForAuthorizedTopicCancellation(STAFF, TOPIC, 5L, 202L, "台风停运");
+        verify(clubOps).captureAuthorizedTopicCancellationPayments(STAFF, TOPIC, 5L, 202L, "台风停运");
+        ArgumentCaptor<com.chengyinhub.business.domain.dto.RegistrationCancellationPayments> observed =
+                ArgumentCaptor.forClass(com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.class);
+        verify(clubOps).cancelAuthorizedTopicWithObservedPayments(org.mockito.ArgumentMatchers.eq(STAFF),
+                org.mockito.ArgumentMatchers.eq(TOPIC), org.mockito.ArgumentMatchers.eq(5L),
+                org.mockito.ArgumentMatchers.eq(202L), org.mockito.ArgumentMatchers.eq("台风停运"), observed.capture());
+        assertEquals(captured.scopes().getFirst(), observed.getValue().requireScope(2L,202L));
         verify(refundService, never()).saveRefund(any(RefundApplication.class));
         assertEquals(1, res.getRefundedOrders());
     }
