@@ -34,6 +34,9 @@ import org.springframework.util.CollectionUtils;
 /** Topic visibility reads and whitelist shelf/detail projections; no publication or runtime mutation. */
 @Service
 public class TopicQueryService {
+    /** Physical read-parameter budget, not a limit on topics/nodes or returned cards. */
+    static final int MAX_IDS_PER_QUERY = 300;
+
     @Autowired
     private CmsTopicMapper cmsTopicMapper;
     @Autowired
@@ -111,7 +114,12 @@ public class TopicQueryService {
         if (topics == null || topics.isEmpty()) return;
         List<Long> ids = topics.stream().map(CmsTopic::getId).distinct().collect(java.util.stream.Collectors.toList());
         Map<Long, CmsTopic> counts = new HashMap<>();
-        for (CmsTopic row : nullToEmpty(cmsTopicMapper.selectPublicNodeCountsByTopicIds(ids))) counts.put(row.getId(), row);
+        for (int offset = 0; offset < ids.size();) {
+            int end = offset + Math.min(MAX_IDS_PER_QUERY, ids.size() - offset);
+            for (CmsTopic row : nullToEmpty(cmsTopicMapper.selectPublicNodeCountsByTopicIds(ids.subList(offset, end))))
+                counts.put(row.getId(), row);
+            offset = end;
+        }
         for (CmsTopic topic : topics) {
             CmsTopic count = counts.get(topic.getId());
             topic.setLocationCount(count == null ? 0L : count.getLocationCount());
@@ -188,7 +196,7 @@ public class TopicQueryService {
         }
         if (!metaTopicIds.isEmpty()) {
             java.util.List<com.chengyinhub.business.domain.CmsTopicTemplateMeta> metas =
-                    cmsTopicTemplateMetaMapper.selectByTopicIds(metaTopicIds);
+                    selectTemplateMetadataInBatches(metaTopicIds);
             if (!CollectionUtils.isEmpty(metas)) {
                 java.util.Map<Long, com.chengyinhub.business.domain.CmsTopicTemplateMeta> byTopicId =
                         new java.util.HashMap<>();
@@ -220,6 +228,17 @@ public class TopicQueryService {
             int ob = Integer.valueOf(1).equals(b.getIsOfficial()) ? 1 : 0;
             return ob - oa;
         });
+        return result;
+    }
+
+    private java.util.List<com.chengyinhub.business.domain.CmsTopicTemplateMeta> selectTemplateMetadataInBatches(
+            java.util.List<Long> topicIds) {
+        java.util.List<com.chengyinhub.business.domain.CmsTopicTemplateMeta> result = new java.util.ArrayList<>();
+        for (int offset = 0; offset < topicIds.size();) {
+            int end = offset + Math.min(MAX_IDS_PER_QUERY, topicIds.size() - offset);
+            result.addAll(nullToEmpty(cmsTopicTemplateMetaMapper.selectByTopicIds(topicIds.subList(offset, end))));
+            offset = end;
+        }
         return result;
     }
 
