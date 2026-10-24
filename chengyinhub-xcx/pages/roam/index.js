@@ -116,7 +116,7 @@ const NEAR_M = 80;       // 略放宽,GPS 不准时仍能提示
    打卡按钮的可用半径必须与后端 /api/roam/shop/visit 的判定同一口径 ——
    SHOP_VISIT_RADIUS_M(100) + ROAM_GPS_TOLERANCE_M(30)。客户端算出来的「还差 X 米」
    和后端拒收的分界点必须一致,不然会出现「提示说能打,服务端说没到」的失败态。 */
-const CHECKIN_NEAR_M = 130;
+const { CHECKIN_NEAR_M } = require('../../utils/roam-geo-thresholds.js'); // = 100 + 30,后端对照见该文件
 // #23 三店连亮弹层的兜底阈值:配置拉不到时用它(fail-open,不比改动前差)。
 // 真源是后端 growth_badge.unlock_rule_json —— 改阈值改那里,这里只是网络挂了时的降级。
 const SHOP_BADGE_FALLBACK_THRESHOLD = 3;
