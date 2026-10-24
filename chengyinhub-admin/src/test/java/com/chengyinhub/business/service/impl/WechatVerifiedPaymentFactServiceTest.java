@@ -173,7 +173,10 @@ class WechatVerifiedPaymentFactServiceTest {
         assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,()->service.recordVerified(payment("TX2","REG2",1000)));
         assertNotNull(service.findPaymentSuccess("merchant","REG2","TX2"));
         assertEquals(1,rows.recoveries.size(),"no fabricated business id for a missing original row");
-        assertTrue(rows.rejections.values().stream().anyMatch(r->"VERIFIED_SUCCESS_BUSINESS_MISSING".equals(r.get("rejection_reason"))));
+        String reason=WechatVerifiedPaymentFactService.REJECTION_VERIFIED_BUSINESS_MISSING;
+        assertEquals("VERIFIED_BUSINESS_MISSING",reason);
+        assertTrue(reason.matches("[A-Z_]{1,32}"),"canonical rejection_reason is VARCHAR(32) ASCII");
+        assertTrue(rows.rejections.values().stream().anyMatch(r->reason.equals(r.get("rejection_reason"))));
     }
 
     @Test void wrongOriginalAttemptOwnerOrRequestHashIsRejectedBeforeAReferenceCanBeConsumed() {

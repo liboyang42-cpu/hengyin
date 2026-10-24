@@ -133,6 +133,53 @@ class RegistrationCancellationSdkPhasesTest {
         assertEquals("REG-1",captured.scopes().getFirst().orders().getFirst().original().registrationNo());
     }
 
+    @Test void knownSuccessOnLocallyUnpaidOrderRejectsBeforeClosingAnotherOriginalAttempt() {
+        second.setPaymentStatus(0);
+        RegistrationCancellationPayments captured = capture();
+        assertEquals(1,captured.scopes().getFirst().orders().size());
+        when(provider.queryOrderStatus("REG-1")).thenAnswer(call -> query("REG-1","NOTPAY"));
+        when(verified.hasConfirmedExternalSuccess("REG-2")).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive()); return true;
+        });
+        when(provider.closePaymentAttempt(anyString(),anyString())).thenReturn(true);
+
+        assertThrows(ServiceException.class,() -> service.observeCancellationPayments(captured));
+
+        verify(verified).hasConfirmedExternalSuccess("REG-2");
+        verify(provider,never()).queryOrderStatus("REG-2");
+        verify(provider,never()).closePaymentAttempt(anyString(),anyString());
+        verifyNoInteractions(registration);
+        verify(rows,never()).cancelUnpaidIfActive(anyLong(),anyLong(),anyString());
+        verify(rows,never()).updateCmsRegistration(any());
+        assertEquals(1,first.getPaymentStatus());
+        assertEquals(0,second.getPaymentStatus());
+        assertEquals("REG-1",first.getRegistrationNo());
+        assertEquals("REG-2",second.getRegistrationNo());
+    }
+
+    @Test void knownSuccessBehindNonSuccessObservationRejectsWholeBatchBeforeFirstProviderClose() {
+        RegistrationCancellationPayments captured = capture();
+        when(provider.queryOrderStatus(anyString())).thenAnswer(call -> query(call.getArgument(0),"NOTPAY"));
+        when(verified.hasConfirmedExternalSuccess("REG-2")).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive()); return true;
+        });
+        when(provider.closePaymentAttempt(anyString(),anyString())).thenReturn(true);
+
+        assertThrows(ServiceException.class,() -> service.observeCancellationPayments(captured));
+
+        verify(provider).queryOrderStatus("REG-1");
+        verify(provider).queryOrderStatus("REG-2");
+        verify(verified).hasConfirmedExternalSuccess("REG-2");
+        verify(provider,never()).closePaymentAttempt(anyString(),anyString());
+        verifyNoInteractions(registration);
+        verify(rows,never()).cancelUnpaidIfActive(anyLong(),anyLong(),anyString());
+        verify(rows,never()).updateCmsRegistration(any());
+        assertEquals(1,first.getPaymentStatus());
+        assertEquals(1,second.getPaymentStatus());
+        assertEquals(List.of("REG-1","REG-2"),captured.scopes().getFirst().orders().stream()
+                .map(order -> order.original().registrationNo()).toList());
+    }
+
     @Test void changedOriginalIdentityAfterQueryCannotReachProviderClose() {
         RegistrationCancellationPayments captured = capture();
         when(provider.queryOrderStatus("REG-1")).thenAnswer(call -> {

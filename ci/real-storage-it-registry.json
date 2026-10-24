@@ -546,6 +546,11 @@
       "classes": ["com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT"],
       "note": "Eight source cases from the full reviewed delivery patch; source-only candidate, not runtime acceptance."
     },
+    "architecture-day-before-start-notice": {
+      "registered_source": "4eddcc93b5a9281e1d397069003c9aca12dd9119",
+      "classes": ["com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT"],
+      "note": "Twelve original BEFORE_START frozen WX payload/storage/unknown/owner cases. Existing ledger, no IM for this type. Provider boundary double; no live delivery or full paid-recipient admission proof."
+    },
     "architecture-day-funds-closure": {
       "registered_source": "99d84ce23afe8852d642ba21d791662ad06a9ebd",
       "classes": [
@@ -562,6 +567,10 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT": {
+      "tests": 12, "storage": ["mysql"], "gates": {},
+      "note": "C4edd source-only candidate: canonical incremental typed migration and actual Mapper/transaction owner, old broadcast checks retained; NOT_RUN on this integration."
+    },
     "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT": {
       "tests": 3, "storage": ["mysql"], "gates": {},
       "note": "E c7a60fa original asset intent, paid create crash/unknown and stale version. Minimal profile schema component scope; no provider/device proof."

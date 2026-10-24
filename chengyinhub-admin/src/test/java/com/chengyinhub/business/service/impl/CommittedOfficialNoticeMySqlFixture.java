@@ -35,6 +35,8 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
     final MysqlIntegrationTestConfig mysql = MysqlIntegrationTestConfig.fromEnvironment(
             "committed_notice_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8));
     final WxSubscribeChannel wx = mock(WxSubscribeChannel.class);
+    final IWxSubscribeMsgService beforeStartWx = mock(IWxSubscribeMsgService.class);
+    java.time.Clock beforeStartClock=java.time.Clock.systemUTC();
     final ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
     final List<Runnable> wakes = new CopyOnWriteArrayList<>();
     JdbcTemplate admin, db;
@@ -83,7 +85,8 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
                 + "cron_expression varchar(255),misfire_policy varchar(20),concurrent varchar(20),status varchar(20),"
                 + "create_by varchar(64),create_time datetime,remark text) engine=InnoDB");
         new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve("migration_20261013_b_im_notification_intent.sql")),
-                new FileSystemResource(sqlRoot.resolve("migration_20261024_d_committed_official_notice_wx.sql"))).execute(source);
+                new FileSystemResource(sqlRoot.resolve("migration_20261024_d_committed_official_notice_wx.sql")),
+                new FileSystemResource(sqlRoot.resolve("migration_20261024_c_before_start_notice_typed.sql"))).execute(source);
         manager = original; tx = new TransactionTemplate(manager);
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
@@ -116,6 +119,8 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
 
     CommittedOfficialNoticeService freshOwner(CommittedOfficialNoticeWxMapper source) {
         CommittedOfficialNoticeService target = new CommittedOfficialNoticeService(source, intents, im, wx, manager, executor);
+        ReflectionTestUtils.setField(target, "beforeStartWx", beforeStartWx);
+        ReflectionTestUtils.setField(target, "beforeStartClock", beforeStartClock);
         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(manager, new AnnotationTransactionAttributeSource()));
         return (CommittedOfficialNoticeService) proxy.getProxy();

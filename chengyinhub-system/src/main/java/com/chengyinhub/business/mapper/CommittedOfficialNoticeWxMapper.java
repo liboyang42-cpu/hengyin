@@ -4,7 +4,7 @@ import com.chengyinhub.business.domain.CommittedOfficialNoticeWx;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
-/** Only fixed OFFICIAL_BROADCAST notices; the local IM receipt remains with its existing owner. */
+/** Typed official/BEFORE_START single-attempt facts; local IM receipts retain their existing owner. */
 public interface CommittedOfficialNoticeWxMapper {
     int insert(CommittedOfficialNoticeWx intent);
     CommittedOfficialNoticeWx selectByKeyForUpdate(@Param("eventKey") String eventKey);

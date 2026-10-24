@@ -2,9 +2,13 @@ package com.chengyinhub.business.domain;
 
 /** Frozen official-result notice plus the irreversible boundary of its single WeChat attempt. */
 public class CommittedOfficialNoticeWx {
+    public static final String OFFICIAL_BROADCAST = "OFFICIAL_BROADCAST";
+    public static final String BEFORE_START = "BEFORE_START";
     public static final String PENDING = "PENDING";
     public static final String UNKNOWN = "UNKNOWN";
     public static final String ACCEPTED = "ACCEPTED";
+    private String noticeType = OFFICIAL_BROADCAST;
+    private String wxPayloadJson;
     private Long id;
     private String eventKey;
     private Long recipient;
@@ -14,6 +18,11 @@ public class CommittedOfficialNoticeWx {
     private String requestHash;
     private String wxState;
     private String ownerToken;
+
+    public String getNoticeType() { return noticeType; }
+    public void setNoticeType(String value) { noticeType=value; }
+    public String getWxPayloadJson() { return wxPayloadJson; }
+    public void setWxPayloadJson(String value) { wxPayloadJson=value; }
 
     public Long getId() { return id; }
     public void setId(Long value) { id=value; }

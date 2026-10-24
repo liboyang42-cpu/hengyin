@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "run_id": 40104126014,
+  "source_sha": "4de1f6dca974817840c321c427b71d27c9d80cb5",
+  "conclusion": "FAILURE",
+  "plan": "PASS",
+  "production_compile": "PASS",
+  "test_compile": "FAIL",
+  "tests_executed": 0,
+  "failure_root": "Ten old four-argument calls after CLM/Commerce typed Reference contract, in three fixtures; D owns complete adaptation",
+  "affected_files": [
+    "WechatPayCallbackFactsTest.java",
+    "WechatPaymentSuccessRecoveryTest.java",
+    "WechatPayCallbackHttpAckTest.java"
+  ],
+  "cleanup": "No claimed business execution proof; preserve raw job log in task temp",
+  "job_id": 120902245910,
+  "no_production_operation": true
+}

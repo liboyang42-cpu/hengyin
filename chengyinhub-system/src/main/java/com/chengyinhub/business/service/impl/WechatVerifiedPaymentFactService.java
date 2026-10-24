@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 /** Durable provider evidence only; never changes balances, business state, callback DONE or external requests. */
 @Service
 public class WechatVerifiedPaymentFactService {
+    public static final String REJECTION_VERIFIED_BUSINESS_MISSING = "VERIFIED_BUSINESS_MISSING";
     @Autowired private WechatVerifiedPaymentFactMapper mapper;
     @Autowired private org.springframework.transaction.PlatformTransactionManager factReadTransactions;
     @Autowired private org.springframework.transaction.PlatformTransactionManager factWriteTransactions;
@@ -64,7 +65,7 @@ public class WechatVerifiedPaymentFactService {
         }
         Stored stored=checked(matches.get(0));
         if (business==null) {
-            reject(candidate,stored.reference().id(),null,"VERIFIED_SUCCESS_BUSINESS_MISSING");
+            reject(candidate,stored.reference().id(),null,REJECTION_VERIFIED_BUSINESS_MISSING);
             return new WriteResult(stored.reference(),new ConflictException());
         }
         if (candidate.kind()==WechatVerifiedPaymentFact.Kind.PAYMENT) {
