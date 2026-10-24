@@ -1,5 +1,7 @@
-# 固定接线
+# 最终固定接线
 
-可信verifier：`c2db98326366c52e640c2b1c421b0fb6bde611fa`，parent公开 `8490765f0572dae8ec3468f4e75d0ff6f4760b12`。六文件SHA见同目录trusted-files.json；本片追加固定compiled_controls.VERIFIER及旧0297拒绝控制源码。
+可信verifier：`b94428f0242be4a33332d05e29bb7d0a7e02c734`，parent `2b59e393cd78b9d16b82f8a9c67b83377b30b53a`，完整范围基于公开8490。六文件SHA见同目录trusted-files.json；本片同步compiled_controls.VERIFIER及旧c2db拒绝控制源码。
 
-root串行应用dual-ref.review.patch；本片没有直接改workflow、job、预算或registry。所有原控制保留，新增控制源码NOT_RUN；Python/Node回归、Java/jdeps/数据库/CI均NOT_RUN。B三文件路径/最终公开源仍待root提供，未猜测修改原B两个SQL绑定。
+root仅选一份双ref补丁：尚在8490/0297用dual-ref.review.patch；已接c2db用dual-ref-after-c2db.review.patch。两份均固定同一完整b944。实际workflow/job/预算/registry未改；旧baseline、3私有Mapper、唯一manual writer和B恢复指纹保留。
+
+B三文件经root明确无新type/XML/DDL，无需新增许可。G e57f新read Service/SELECT Mapper仅登记精确技术类型/原权限入口，read namespace未加入pure_writers，VERSION方向不证明方法级只读。累计新增11项控制源码（本片4项），本轮所有测试、审查、编译、Java/jdeps、数据库/CI均NOT_RUN；root集中验收。

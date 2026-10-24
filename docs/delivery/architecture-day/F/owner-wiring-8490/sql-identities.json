@@ -307,6 +307,28 @@
         "npc_voice_enrollment_intent"
       ],
       "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "e57f0a32037bf88b2abf1626cca4760714d88592",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseReadMapper.xml#selectList",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper",
+      "operation": "select",
+      "file_git_blob": "a4d73d51671cf666337f56de90f04a8cfed01023",
+      "file_sha256": "542d963307a956901c972118c924e0607c5181d70e2501acfd2c6f925a6fe8dc",
+      "statement_sha256": "1c79c43eccf820afd2d63d0b67273da5184d4ec7910a0360b1a54ecccd128ffb",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "e57f0a32037bf88b2abf1626cca4760714d88592",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseReadMapper.xml#selectById",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper",
+      "operation": "select",
+      "file_git_blob": "a4d73d51671cf666337f56de90f04a8cfed01023",
+      "file_sha256": "542d963307a956901c972118c924e0607c5181d70e2501acfd2c6f925a6fe8dc",
+      "statement_sha256": "001617f46dbe58d80b17a208657a9e8ac938605f6106d5c7ab295caf13066eda",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
     }
   ]
 }

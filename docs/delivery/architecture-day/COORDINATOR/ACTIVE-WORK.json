@@ -452,9 +452,9 @@
     "A": "Delivered, no new tasks",
     "B": "Cumulative original refund complete3files applied; frozen",
     "C": "Voice new-intent complete29files committed4029559; frozen",
-    "D": "Shared ASR quota complete29files applied; precise new voice request-wrapper action-ledger wiring only",
+    "D": "All source d796/d517 collected and applied; frozen",
     "E": "Original work preserved; read failure observed; equivalent ledger delivered separately, not candidate blocker",
-    "F": "c2db verifier+2b59 tool applied; only e57f new readonly type policy delta pending",
+    "F": "Final b944 verifier and07ff tool applied, dual refs and compiled_controls exact; frozen",
     "G": "Complete producer54c and readonly caller e57f applied; frozen",
     "H": "Delivered, no new tasks"
   },
@@ -497,9 +497,9 @@
     "continuation": "Read public code through GitHub; deliver full source diff in chat. Root applies and scans before public writes; no executor rebuild or unscanned publishing."
   },
   "pending_business_questions": [],
-  "current_working_tree": "Root committed75921855c; now applied F c2db9832+2b59e393 and G e57f0a32 manual-case readonly12files. Registry120 classes/65 combined/804 declared, funds200. Exact scratch gates/control source wired. F last readonly type policy delta and D voice _request ledger closure still pending. New source NOT_RUN.",
+  "current_working_tree": "All current assigned source delivered and applied: main C/G/B/D plus G readonly e57f, final F b944 verifier/07ff tool, D d796+d517 ledger. Exact root read exceptions preserved. Final ledger generation running; freeze then unified regression/review, no verification inherited.",
   "new_source_blockers_current": [],
-  "execution_mode": "IMPLEMENTATION_AND_INTEGRATION_FIRST_FINAL_REVIEW_AND_REGRESSION_ONLY",
+  "execution_mode": "FINAL_CANDIDATE_ASSEMBLY_ALL_ASSIGNED_SOURCE_COLLECTED",
   "latest_human_instruction": "不要再审查了 最后一起审查",
   "review_policy": {
     "intermediate_audit": false,
@@ -509,7 +509,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: collected complete F policy/tool and G readonly delivery, applied and wired precise registry/runner controls; no interim audit/regression/CI.",
+  "previous_goal_turn_classification": "PROGRESS: all assigned source collected including last exact generation blocker; preparing final freeze. No interim audits/regression/CI.",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
@@ -536,17 +536,7 @@
       "acceptance": false
     }
   },
-  "known_remaining_implementation": [
-    {
-      "area": "F last G readonly type/entry exact owner policy and immutable tool pins",
-      "state": "FOLLOWUP_DISPATCHED_NO_REVIEW"
-    },
-    {
-      "area": "D new C voice _request wrapper reachability and request contracts in generated action ledger",
-      "state": "DISPATCHED_IMPLEMENTATION_ONLY",
-      "restriction": "No refresh/history resend or unknown-multiwrite waiver"
-    }
-  ],
+  "known_remaining_implementation": [],
   "remaining_acceptance_groups": [
     "Same-candidate standard CI, compiled architecture and real-storage class batch",
     "Real HTTP identities and provider unknown-result scenarios",
@@ -597,7 +587,7 @@
     "registry": "Voice MySQL3->4, voice+ASR10->11, combined782->783; declaration metadata only",
     "generated_ledger": "Regenerate once final client source is composed; 5113 belongs to preceding source"
   },
-  "updated_at": "2026-10-24T18:34:00Z",
+  "updated_at": "2026-10-24T18:48:00Z",
   "manual_case_read_source": {
     "source": "e57f0a32037bf88b2abf1626cca4760714d88592",
     "parent": "54c524ca99204804b6b84af517359eabc8c6ee8d",
@@ -606,5 +596,31 @@
     "new_mysql_declarations": 3,
     "validation": "NOT_RUN",
     "permissions": "Existing business:settlement:list; GET only; no raw payment identity, resolve or debit API"
+  },
+  "current_final_candidate": {
+    "status": "PREPARING_FREEZE",
+    "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+    "last_published": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
+    "source_only": {
+      "C": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "G_producer": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "G_read": "e57f0a32037bf88b2abf1626cca4760714d88592",
+      "B": "complete three-file chat diff plus TimeUnit correction, root75921855c",
+      "D_quota": "379d5615608663c47302598ba238447b264c2bba",
+      "F_verifier": "b94428f0242be4a33332d05e29bb7d0a7e02c734",
+      "F_tool": "07ff55fe0ec1e460dc93f4bc1d07caf54738f329",
+      "D_ledger": "d7961d1bd54de6d90135d4bed26908d960cd3e19",
+      "D_bootstrap_fix": "d517b908619774f909165a4e93ec549b204dfac9"
+    },
+    "registry_unique_classes": 65,
+    "registry_declared_cases": 804,
+    "verification": "NOT_RUN",
+    "full_scope_complete": false,
+    "missing_acceptance": [
+      "Same-candidate standard CI and compiled architecture",
+      "Same-candidate storage batch original XML zero skip and CLEAN",
+      "Final integrated source review",
+      "Real HTTP identities, provider unknown results, process restart and capacity coverage"
+    ]
   }
 }

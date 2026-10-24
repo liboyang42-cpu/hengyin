@@ -1166,6 +1166,42 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                 self.assert_unknown(report)
                 self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
 
+    def test_manual_case_read_uses_exact_select_port_and_source_version_reference(self):
+        source = self.owner_member("G_ORIGINAL_MANUAL_READ")
+        self.reference(source, self.owner_member("G_ORIGINAL_MANUAL_READ_PORT"))
+        self.reference(source, self.owner_member("G_ORIGINAL_PRODUCER"))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual({("G_ORIGINAL_MANUAL_READ", "G_ORIGINAL_MANUAL_READ_PORT"),
+                          ("G_ORIGINAL_MANUAL_READ", "G_ORIGINAL_PRODUCER")},
+                         set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
+
+    def test_manual_read_has_no_writer_port_or_reverse_mapper_service_permission(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        source = self.owner_member("G_ORIGINAL_MANUAL_READ")
+        self.reference(source, self.owner_member("G_ORIGINAL_MANUAL_STORAGE"))
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertIn("RESTRICTED_OWNER_PACKAGE_REFERENCE", {f["rule"] for f in report["findings"]})
+        self.replace_evidence("jdeps.stdout.txt", original)
+        port = self.owner_member("G_ORIGINAL_MANUAL_READ_PORT")
+        self.reference(source, port); self.reference(port, source)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
+        self.assertIn("NEW_OWNER_CYCLE", {f["rule"] for f in report["findings"]})
+
+    def test_manual_read_missing_exact_source_rows_does_not_claim_readonly_graph(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("G_ORIGINAL_MANUAL_READ", "G_ORIGINAL_MANUAL_READ_PORT"):
+            member = self.owner_member(owner)
+            with self.subTest(owner=owner):
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.decode().splitlines()
+                                      if not line.strip().startswith(member + " -> ")).encode())
+                self.assert_unknown(self.check_directions())
+
     def test_original_producer_manual_callback_and_quota_handoff_exact_directions(self):
         edges = [("G_ORIGINAL_PRODUCER", target) for target in
                  ("G_ORIGINAL_SETTLEMENT_LEDGER", "G_ORIGINAL_MANUAL_CASES", "G_ORIGINAL_ALLOCATION",
