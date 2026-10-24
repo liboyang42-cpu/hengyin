@@ -53,3 +53,21 @@ BUILD SUCCESS
 ```
 
 App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 18:07 America/Los_Angeles
+
+HEAD `edf3882ff` tests. Class-level `OfflinePackOperationTest`: unused `resume` of never-seen `op-class-never` throws `NOT_PAUSED` without occupying `operationId`; later unique `startDownload("op-class")` is the first write. Wrong resume does not rewrite the original id. Did not invent `recoverOriginal` on OfflinePack.
+
+Parent surefire `com.chengyinhub.business.service.offline.*Test` **10/0** 2026-10-24T01:07:49Z：
+
+```
+Tests run: 1 -- OfflinePackOperationTest
+Tests run: 1 -- SideQuestAcceptHoldTest
+Tests run: 4 -- C05AccountSwitchRestartIsolationTest
+Tests run: 2 -- C05FirstJourneyIsolationTest
+Tests run: 2 -- NavigationDestinationConsentTest
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
