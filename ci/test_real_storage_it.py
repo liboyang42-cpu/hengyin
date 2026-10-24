@@ -741,8 +741,11 @@ def workflow_problems(text, reg):
         problems.append("every job must run on GitHub-hosted ubuntu-latest")
     if len(re.findall(r"^    timeout-minutes: \d+$", text, re.MULTILINE)) != len(runs_on):
         problems.append("every job needs timeout-minutes")
-    if "      max-parallel: 20\n" not in text or "      fail-fast: false\n" not in text:
-        problems.append("matrix must keep max-parallel: 20 and fail-fast: false")
+    matrix_jobs = [block for block in re.findall(r"^  [A-Za-z0-9_]+:\n([\s\S]*?)(?=^  [A-Za-z0-9_]+:|\Z)", text, re.MULTILINE)
+                   if re.search(r"^      matrix:\s*$", block, re.MULTILINE)]
+    if not matrix_jobs or any("      max-parallel: 20\n" not in block or "      fail-fast: false\n" not in block
+                              for block in matrix_jobs):
+        problems.append("every matrix must keep max-parallel: 20 and fail-fast: false")
     steps = re.split(r"\n(?=      - )", text)
     for step in steps:
         if "uses: actions/checkout@" in step and "persist-credentials: false" not in step:
@@ -790,6 +793,220 @@ class WorkflowContractTest(unittest.TestCase):
             with self.subTest(label):
                 self.assertNotEqual(self.text, mutated, "negative control could not mutate: " + label)
                 self.assertTrue(workflow_problems(mutated, registry()), label)
+
+
+
+class M1PairTest(unittest.TestCase):
+    """Gate-only synthetic receipts/HEAD stubs. These are not Java/MySQL/canonical evidence."""
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.env = {"SOURCE_SHA": SHA, "OLD_SOURCE_SHA": "a" * 40, "BATCH": rs.M1_PAIR_BATCH,
+                    "CLASSES": "", "TIMEZONE": "UTC", "GITHUB_RUN_ID": "40050022063", "GITHUB_RUN_ATTEMPT": "2",
+                    "GITHUB_SHA": "b" * 40, "GITHUB_REPOSITORY": "liboyang42-cpu/hengyin",
+                    "PAIR_STORAGE_RESULT": "success", "PAIR_SUMMARY_RESULT": "success"}
+        self.old, self.new = self.root / "old", self.root / "new"
+
+    def receipts(self):
+        records = []
+        suffix = rs.database_suffix(self.env["GITHUB_RUN_ID"], self.env["GITHUB_RUN_ATTEMPT"])
+        for side, directory, sha in (("old", self.old, self.env["OLD_SOURCE_SHA"]), ("new", self.new, SHA)):
+            for fqcn, count in rs.M1_PAIR_CLASSES.items():
+                record = {"schema": rs.RECEIPT_SCHEMA, "class": fqcn, "source_sha": sha, "batch": rs.M1_PAIR_BATCH,
+                          "workflow": rs.workflow_facts(self.env), "verdict": "PASS", "maven": {"exit_code": 0},
+                          "precheck": {"candidate": {"sha": sha}}, "cleanup": {"status": "CLEAN", "mysql_leftover_schemas": []},
+                          "env_profile": {"CHENGYIN_MYBATIS_IT_DB_SUFFIX": suffix, "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX": suffix},
+                          "executed": {"tests": count, "passed": count, "failures": 0, "errors": 0, "skipped": 0,
+                                       "testcases": [{"classname": fqcn, "name": "synthetic%d" % i, "status": "passed"} for i in range(count)]}}
+                path = directory / rs.simple_name(fqcn) / "receipt.json"
+                records.append((path, record))
+        return records
+
+    def verify(self, mutate=None, env=None):
+        records = self.receipts()
+        if mutate:
+            mutate(records)
+        for path, record in records:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(record))
+        return rs.verify_m1_pair_receipts(registry(), self.old, self.new, env or self.env)
+
+    def test_pair_request_requires_two_distinct_complete_sources(self):
+        self.assertEqual({"old": "a" * 40, "new": SHA}, rs.m1_pair_request(registry(), self.env))
+        for change in ({"OLD_SOURCE_SHA": ""}, {"OLD_SOURCE_SHA": SHA}, {"SOURCE_SHA": "branch"},
+                       {"OLD_SOURCE_SHA": "a" * 39}, {"OLD_SOURCE_SHA": "a" * 40 + "\n"}):
+            with self.subTest(change=change), self.assertRaises(rs.GateError):
+                rs.m1_pair_request(registry(), dict(self.env, **change))
+
+    def test_pair_rejects_other_batches_subsets_and_timezones(self):
+        for change in ({"BATCH": "architecture-day-topic-copy"}, {"CLASSES": "PlayHintUnlockMySqlIT"},
+                       {"CLASSES": "PlayHintUnlockMySqlIT,PlayLeadAdmissionFailureMySqlIT"}, {"TIMEZONE": "invalid"}):
+            with self.subTest(change=change), self.assertRaises(rs.GateError):
+                rs.m1_pair_request(registry(), dict(self.env, **change))
+
+    def test_pair_rejects_registry_class_count_storage_or_gate_drift(self):
+        cls = next(iter(rs.M1_PAIR_CLASSES))
+        for field, value in (("tests", 11), ("nested", ["Hidden"]), ("storage", ["mysql", "redis"]), ("gates", {"CHENGYIN_BAD": "1"})):
+            reg = copy.deepcopy(registry()); reg["classes"][cls][field] = value
+            with self.subTest(field=field), self.assertRaises(rs.GateError):rs.m1_pair_request(reg, self.env)
+        for members in ([cls], [cls, cls], [cls, C01]):
+            reg = copy.deepcopy(registry()); reg["batches"][rs.M1_PAIR_BATCH]["classes"] = members
+            with self.assertRaises(rs.GateError):rs.m1_pair_request(reg, self.env)
+
+    def plan_args(self, source=None):
+        return ["m1-pair-plan", "--source", str(source or _HERE.parent), "--old-source", str(source or _HERE.parent),
+                "--out", str(self.root / "out"), "--github-output", str(self.root / "outputs")]
+
+    def test_pair_plan_reuses_real_source_precheck_and_binds_four_jobs(self):
+        # Only Git HEAD metadata is stubbed; actual current source/static gates are read.
+        from unittest.mock import patch
+        import types
+        with patch.object(rs.subprocess, "run", side_effect=[types.SimpleNamespace(stdout="a" * 40 + "\n"), types.SimpleNamespace(stdout=SHA + "\n")]):
+            self.assertEqual(0, rs.main(self.plan_args(), self.env))
+        outputs = dict(line.split("=", 1) for line in (self.root / "outputs").read_text().splitlines())
+        matrix, sides, planned = (json.loads(outputs[key]) for key in ("matrix", "sides", "planned"))
+        self.assertEqual(4, len(matrix)); self.assertEqual(2, len(planned)); self.assertEqual(2, len(sides))
+        self.assertEqual({(side, sha, cls) for side, sha in (("old", "a" * 40), ("new", SHA)) for cls in rs.M1_PAIR_CLASSES},
+                         {(item["side"], item["source_sha"], item["class"]) for item in matrix})
+        proof = json.loads((self.root / "out/pair-plan.json").read_text())
+        self.assertEqual(14, proof["tests_per_side"]); self.assertEqual(matrix, proof["matrix"])
+
+    def test_pair_plan_wrong_head_publishes_no_matrix(self):
+        from unittest.mock import patch
+        import types
+        for heads in ([SHA], ["a" * 40, "a" * 40]):
+            with self.subTest(heads=heads), patch.object(rs.subprocess, "run", side_effect=[types.SimpleNamespace(stdout=head + "\n") for head in heads]):
+                self.assertEqual(1, rs.main(self.plan_args(), self.env))
+            self.assertFalse((self.root / "outputs").exists()); self.assertFalse((self.root / "out/pair-plan.json").exists())
+
+    def test_pair_plan_missing_old_and_real_dynamic_tests_fail_before_matrix(self):
+        self.assertEqual(1, rs.main(self.plan_args(), dict(self.env, OLD_SOURCE_SHA="")))
+        from unittest.mock import patch
+        import types
+        source = self.root / "dynamic-source"
+        (source / "pom.xml").parent.mkdir(parents=True)
+        (source / "pom.xml").write_text("<project><java.version>21</java.version></project>")
+        for cls, count in rs.M1_PAIR_CLASSES.items():
+            path = source / "chengyinhub-admin/src/test/java" / (cls.replace(".", "/") + ".java")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("class Sample {" + "".join("@Test void t%d(){}" % i for i in range(count)) + "@ParameterizedTest void hidden(){} }")
+        with patch.object(rs.subprocess, "run", return_value=types.SimpleNamespace(stdout="a" * 40 + "\n")):
+            self.assertEqual(1, rs.main(self.plan_args(source), self.env))
+        self.assertFalse((self.root / "outputs").exists())
+
+    def test_ordinary_plan_outputs_remain_exact_original_matrix_and_sha12(self):
+        from unittest.mock import patch
+        import types
+        args = ["plan", "--source", str(_HERE.parent), "--github-output", str(self.root / "outputs")]
+        with patch.object(rs.subprocess, "run", return_value=types.SimpleNamespace(stdout=SHA + "\n")):
+            self.assertEqual(0, rs.main(args, dict(self.env, OLD_SOURCE_SHA="")))
+        outputs = dict(line.split("=", 1) for line in (self.root / "outputs").read_text().splitlines())
+        self.assertEqual({"matrix", "sha12"}, set(outputs)); self.assertEqual(SHA[:12], outputs["sha12"])
+        self.assertEqual(rs.plan(registry(), SHA, rs.M1_PAIR_BATCH, "", "UTC"), json.loads(outputs["matrix"]))
+        self.assertTrue(all(set(item) == {"class", "simple"} for item in json.loads(outputs["matrix"])))
+
+    def test_pair_provenance_success_is_explicitly_not_canonical_verdict(self):
+        result = self.verify()
+        self.assertEqual("PASS", result["verdict"]); self.assertEqual(4, len(result["receipts"]))
+        self.assertTrue(result["not_canonical_verdict"]); self.assertEqual("_gh022063a2", result["suffix"])
+
+    def test_pair_rejects_cross_source_precheck_batch_or_missing_old(self):
+        for field, value in (("source_sha", SHA), ("batch", "core-funds"), ("schema", "other")):
+            with self.subTest(field=field), self.assertRaises(rs.GateError):
+                self.verify(lambda rows: rows[0][1].update({field: value}))
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[0][1]["precheck"]["candidate"].update(sha=SHA))
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[-1][1].update(source_sha=self.env["OLD_SOURCE_SHA"]))
+        with self.assertRaises(rs.GateError):self.verify(env=dict(self.env, OLD_SOURCE_SHA=""))
+
+    def test_pair_rejects_cross_run_attempt_workflow_or_repository(self):
+        for field, value in (("run_id", "40050022064"), ("run_attempt", "1"), ("workflow_sha", "c" * 40), ("repository", "other/repo")):
+            with self.subTest(field=field), self.assertRaises(rs.GateError):
+                self.verify(lambda rows: rows[0][1]["workflow"].update({field: value}))
+        for change in ({"GITHUB_RUN_ID": ""}, {"GITHUB_RUN_ATTEMPT": "0"}, {"GITHUB_SHA": "branch"}, {"GITHUB_REPOSITORY": "private/other"}):
+            with self.assertRaises(rs.GateError):self.verify(env=dict(self.env, **change))
+
+    def test_pair_rejects_any_suffix_override(self):
+        for key in ("CHENGYIN_MYBATIS_IT_DB_SUFFIX", "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"):
+            with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[0][1]["env_profile"].update({key: "_gh022064a2"}))
+
+    def test_pair_rejects_nonclean_maven_failure_skip_count_or_duplicate_cases(self):
+        changes = [lambda r: r.update(verdict="FAIL"), lambda r: r["cleanup"].update(status="UNKNOWN"),
+                   lambda r: r["cleanup"].update(mysql_leftover_schemas=["leftover"]), lambda r: r["cleanup"].pop("mysql_leftover_schemas"),
+                   lambda r: r["maven"].update(exit_code=1), lambda r: r["executed"].update(skipped=1),
+                   lambda r: r["executed"].update(tests=9), lambda r: r["executed"]["testcases"][0].update(status="skipped"),
+                   lambda r: r["executed"]["testcases"].__setitem__(0, r["executed"]["testcases"][1])]
+        for change in changes:
+            with self.subTest(change=change), self.assertRaises(rs.GateError):self.verify(lambda rows: change(rows[0][1]))
+
+    def test_pair_rejects_missing_duplicate_or_foreign_class_artifact(self):
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows.pop())
+        # Fresh paths from the previous partial attempt are overwritten by verify().
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[0][1].update({"class": rows[1][1]["class"]}))
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[0][1].update({"class": C01}))
+        extra = self.old / "unexpected/receipt.json"; extra.parent.mkdir(parents=True); extra.write_text("{}")
+        with self.assertRaises(rs.GateError):self.verify()
+
+    def test_failed_source_summary_or_storage_prevents_provenance_pass(self):
+        for key in ("PAIR_STORAGE_RESULT", "PAIR_SUMMARY_RESULT"):
+            with self.assertRaises(rs.GateError):self.verify(env=dict(self.env, **{key: "failure"}))
+
+    def test_pair_verify_cli_fails_closed_and_preserves_failure_artifact(self):
+        out = self.root / "pair-provenance.json"
+        self.assertEqual(1, rs.main(["m1-pair-verify", "--old-receipts", str(self.old), "--new-receipts", str(self.new), "--out", str(out)], self.env))
+        self.assertEqual("FAIL", json.loads(out.read_text())["verdict"])
+
+
+def m1_workflow_problems(text):
+    required = ["      old_source_sha:\n", "if: inputs.old_source_sha == ''", "id: pair_plan",
+                "run: python3 ci/real_storage_it.py m1-pair-plan --source candidate --old-source old-candidate",
+                "SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}", "VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}",
+                "ref: ${{ matrix.source_sha || inputs.source_sha }}", "pair_summary:\n",
+                "include: ${{ fromJSON(needs.plan.outputs.pair_sides) }}", "PLANNED: ${{ needs.plan.outputs.pair_planned }}",
+                "pattern: rs-m1-${{ matrix.side }}-${{ matrix.source_sha }}-*-a${{ github.run_attempt }}",
+                "name: rs-m1-summary-${{ matrix.side }}-${{ matrix.source_sha }}-a${{ github.run_attempt }}",
+                "format('rs-m1-{0}-{1}-{2}-a{3}', matrix.side, matrix.source_sha, matrix.simple, github.run_attempt)",
+                "needs: [plan, storage_it, pair_summary]", "PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}",
+                "run: python3 gate/ci/real_storage_it.py m1-pair-verify --old-receipts old-receipts --new-receipts new-receipts",
+                "ref: 1c138a000387583e224c9acb5369140fdf2dba18", "evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/compare_receipts.py",
+                "format('rs-class-{0}-a{1}', matrix.simple, github.run_attempt)",
+                "pattern: rs-class-*", "PLANNED: ${{ needs.plan.outputs.matrix }}"]
+    problems = ["missing M1 workflow contract: " + item for item in required if item not in text]
+    for job, mode in (("summary", "=="), ("pair_summary", "!="), ("compare", "!=")):
+        block = re.search(r"^  " + job + r":\n([\s\S]*?)(?=^  \w+:|\Z)", text, re.MULTILINE)
+        if not block or "inputs.old_source_sha " + mode + " ''" not in block.group(1):problems.append("wrong mode guard: " + job)
+    if re.search(r"^\s+(?:GITHUB_RUN_ID|GITHUB_RUN_ATTEMPT|CHENGYIN_MYBATIS_IT_DB_SUFFIX):", text, re.MULTILINE):problems.append("original run/suffix overridden")
+    return problems
+
+
+class M1PairWorkflowTest(unittest.TestCase):
+    def test_each_matrix_keeps_its_own_parallel_limit(self):
+        text = WORKFLOW.read_text()
+        prefix, pair = text.split("  pair_summary:\n", 1)
+        for old, new in [("      max-parallel: 20\n", "      max-parallel: 50\n"),
+                         ("      max-parallel: 20\n", ""),
+                         ("      fail-fast: false\n", "      fail-fast: true\n")]:
+            with self.subTest(old=old, new=new):
+                mutated = prefix + "  pair_summary:\n" + pair.replace(old, new, 1)
+                self.assertNotEqual(text, mutated)
+                self.assertTrue(workflow_problems(mutated, registry()))
+
+    def test_pair_workflow_and_original_manual_gates(self):
+        text = WORKFLOW.read_text()
+        self.assertEqual([], workflow_problems(text, registry()))
+        self.assertEqual([], m1_workflow_problems(text))
+
+    def test_pair_artifact_source_attempt_freeze_and_mode_negative_controls(self):
+        text = WORKFLOW.read_text()
+        for old, new in [("matrix.source_sha }}-*-a${{ github.run_attempt }}", "matrix.source_sha }}-*"),
+                         ("ref: 1c138a000387583e224c9acb5369140fdf2dba18", "ref: master"),
+                         ("VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}", "VALIDATED_SOURCE_SHA: ${{ inputs.source_sha }}"),
+                         ("inputs.old_source_sha == ''", "inputs.old_source_sha != ''"),
+                         ("PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}", "PAIR_SUMMARY_RESULT: success"),
+                         ("pattern: rs-class-*", "pattern: rs-m1-*")]:
+            with self.subTest(old=old):
+                mutated = text.replace(old, new)
+                self.assertNotEqual(text, mutated); self.assertTrue(m1_workflow_problems(mutated))
 
 
 if __name__ == "__main__":

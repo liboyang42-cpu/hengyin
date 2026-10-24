@@ -9,6 +9,8 @@
   run           只把该类自己的门控与连接变量交给 mvn，跑完回读报告、记录清理证据、给出结论
   storage-stop  删除本 job 的容器并记录删除结果
   summarize     汇总整批回执，任一类缺回执或未通过即失败
+  m1-pair-plan  仅原 hint10+lead4，两个完整候选分别沿用原预检，输出同 run 四 job 计划
+  m1-pair-verify 核对两侧当前 run/attempt/source/原10+4/CLEAN，随后仍须冻结 canonical 比较
 
 ★ 回执≠观测：mvn 退出 0 不算通过。必须读回该类（含 @Nested）实跑条数 == 登记数，
   skipped / failures / errors 全为 0，没有重复条目，也没混进别的类。缺任何一项都 fail-closed。
@@ -19,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import hashlib
 import json
 import os
 import re
@@ -1020,6 +1023,138 @@ def cmd_summarize(args, environ):
     return 0 if summary["verdict"] == "PASS" else 1
 
 
+# ---------------------------------------------------------------- M1 original hint10 + lead4 same-run pair (manual only)
+
+M1_PAIR_BATCH = "architecture-day-lead-admission"
+M1_PAIR_CLASSES = {
+    "com.chengyinhub.business.it.PlayHintUnlockMySqlIT": 10,
+    "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT": 4,
+}
+
+
+def m1_pair_request(registry, environ):
+    """Narrow pair contract; ordinary plan/run/summary are deliberately unchanged."""
+    new, old = required_env(environ, "SOURCE_SHA"), required_env(environ, "OLD_SOURCE_SHA")
+    if not all(SHA_RE.fullmatch(sha) for sha in (new, old)) or new == old:
+        raise GateError("M1 pair requires two distinct full 40-hex source SHAs")
+    if environ.get("BATCH") != M1_PAIR_BATCH or environ.get("CLASSES", "").strip():
+        raise GateError("M1 pair requires the whole architecture-day-lead-admission batch; no classes subset")
+    if environ.get("TIMEZONE") not in TIMEZONES:
+        raise GateError("M1 pair requires an original registered timezone")
+    members = registry["batches"].get(M1_PAIR_BATCH, {}).get("classes", [])
+    if len(members) != 2 or set(members) != set(M1_PAIR_CLASSES):
+        raise GateError("M1 pair original class set drift")
+    for fqcn, count in M1_PAIR_CLASSES.items():
+        entry = registry["classes"].get(fqcn, {})
+        if entry.get("tests") != count or entry.get("nested", []) or entry.get("storage") != ["mysql"] or entry.get("gates") != {}:
+            raise GateError("M1 pair original 10/4 storage/count/gate contract drift")
+    return {"old": old, "new": new}
+
+
+def cmd_m1_pair_plan(args, environ):
+    registry = load_registry()
+    require_valid_registry(registry)
+    sources = m1_pair_request(registry, environ)
+    paths = {"new": args.source, "old": args.old_source}
+    planned = None
+    matrix = []
+    for side, sha in sources.items():
+        # Reuse the actual original HEAD/static/dynamic-test/JDK precheck, not a second parser.
+        side_env = dict(environ, SOURCE_SHA=sha)
+        side_args = argparse.Namespace(source=paths[side], github_output=None)
+        cmd_plan(side_args, side_env)
+        items = plan(registry, sha, M1_PAIR_BATCH, "", environ["TIMEZONE"])
+        planned = items
+        matrix.extend(dict(item, side=side, source_sha=sha) for item in items)
+    sides = [dict(side=side, source_sha=sha) for side, sha in sources.items()]
+    write_github_output(args.github_output, {"matrix": json.dumps(matrix, separators=(",", ":")),
+                        "planned": json.dumps(planned, separators=(",", ":")),
+                        "sides": json.dumps(sides, separators=(",", ":"))})
+    proof = {"schema": "CY-M1-PAIR-PLAN-1", "sources": sources, "matrix": matrix, "tests_per_side": 14,
+             "workflow": workflow_facts(environ), "timezone": environ["TIMEZONE"],
+             "harness_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+             "registry_sha256": hashlib.sha256(REGISTRY_PATH.read_bytes()).hexdigest()}
+    Path(args.out).mkdir(parents=True, exist_ok=True)
+    (Path(args.out) / "pair-plan.json").write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return 0
+
+
+def verify_m1_pair_receipts(registry, old_dir, new_dir, environ):
+    sources = m1_pair_request(registry, environ)
+    if environ.get("PAIR_STORAGE_RESULT") != "success" or environ.get("PAIR_SUMMARY_RESULT") != "success":
+        raise GateError("M1 pair requires all four storage jobs and both source-specific summaries to succeed")
+    run_id, attempt = required_env(environ, "GITHUB_RUN_ID"), required_env(environ, "GITHUB_RUN_ATTEMPT")
+    workflow_sha = required_env(environ, "GITHUB_SHA")
+    if not re.fullmatch(r"[1-9][0-9]*", run_id) or not re.fullmatch(r"[1-9][0-9]*", attempt) or not SHA_RE.fullmatch(workflow_sha):
+        raise GateError("M1 pair needs exact current workflow/run/attempt identity")
+    if environ.get("GITHUB_REPOSITORY") != "liboyang42-cpu/hengyin":
+        raise GateError("M1 pair is limited to the public hengyin repository")
+    suffix = database_suffix(run_id, attempt)
+    evidence = []
+    for side, directory in (("old", old_dir), ("new", new_dir)):
+        paths = sorted(Path(directory).glob("*/receipt.json"))
+        seen = set()
+        if len(paths) != 2:
+            raise GateError("M1 pair missing/duplicate/extra %s receipt files" % side)
+        for path in paths:
+            try:
+                raw = path.read_bytes()
+                receipt = json.loads(raw)
+            except (OSError, ValueError, UnicodeError) as error:
+                raise GateError("M1 pair unreadable %s receipt" % side) from error
+            if not isinstance(receipt, dict):
+                raise GateError("M1 pair invalid receipt shape")
+            fqcn = receipt.get("class")
+            if fqcn not in M1_PAIR_CLASSES or fqcn in seen:
+                raise GateError("M1 pair wrong/duplicate original class")
+            seen.add(fqcn)
+            if receipt.get("schema") != RECEIPT_SCHEMA or receipt.get("source_sha") != sources[side] or receipt.get("batch") != M1_PAIR_BATCH:
+                raise GateError("M1 pair cross-source/batch/receipt identity")
+            workflow = receipt.get("workflow", {})
+            if not isinstance(workflow, dict) or any(workflow.get(key) != value for key, value in
+                    (("run_id", run_id), ("run_attempt", attempt), ("workflow_sha", workflow_sha),
+                     ("repository", "liboyang42-cpu/hengyin"))):
+                raise GateError("M1 pair cross-workflow/run/attempt receipt")
+            profile = receipt.get("env_profile", {})
+            if not isinstance(profile, dict) or any(profile.get(key) != suffix for key in
+                    ("CHENGYIN_MYBATIS_IT_DB_SUFFIX", "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX")):
+                raise GateError("M1 pair original same-run suffix mismatch")
+            cleanup, maven, executed, precheck = (receipt.get(key, {}) for key in ("cleanup", "maven", "executed", "precheck"))
+            if not all(isinstance(value, dict) for value in (cleanup, maven, executed, precheck)):
+                raise GateError("M1 pair incomplete original receipt evidence")
+            if receipt.get("verdict") != "PASS" or cleanup.get("status") != "CLEAN" or cleanup.get("mysql_leftover_schemas") != [] or maven.get("exit_code") != 0:
+                raise GateError("M1 pair requires original PASS/Maven0/independently CLEAN receipts")
+            if not isinstance(precheck.get("candidate"), dict) or precheck["candidate"].get("sha") != sources[side]:
+                raise GateError("M1 pair original precheck source mismatch")
+            count = M1_PAIR_CLASSES[fqcn]
+            expected = {"tests": count, "passed": count, "failures": 0, "errors": 0, "skipped": 0}
+            if any(type(executed.get(key)) is not int or executed[key] != value for key, value in expected.items()):
+                raise GateError("M1 pair original 10/4 zero-skip result mismatch")
+            cases = executed.get("testcases", [])
+            if not isinstance(cases, list) or len(cases) != count or any(not isinstance(case, dict) or
+                    case.get("classname") != fqcn or case.get("status") != "passed" or not isinstance(case.get("name"), str) or not case["name"] for case in cases):
+                raise GateError("M1 pair original testcase identities/status missing")
+            if len({case["name"] for case in cases}) != count:
+                raise GateError("M1 pair duplicate testcase identity")
+            evidence.append({"side": side, "source_sha": sources[side], "class": fqcn,
+                             "receipt_sha256": hashlib.sha256(raw).hexdigest()})
+    return {"schema": "CY-M1-PAIR-PROVENANCE-1", "verdict": "PASS", "sources": sources,
+            "run_id": run_id, "run_attempt": attempt, "workflow_sha": workflow_sha, "suffix": suffix,
+            "receipts": evidence, "not_canonical_verdict": True}
+
+
+def cmd_m1_pair_verify(args, environ):
+    try:
+        registry = load_registry()
+        require_valid_registry(registry)
+        proof = verify_m1_pair_receipts(registry, args.old_receipts, args.new_receipts, environ)
+    except GateError as error:
+        Path(args.out).write_text(json.dumps({"verdict": "FAIL", "reason": str(error)}, indent=2) + "\n", encoding="utf-8")
+        raise
+    Path(args.out).write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return 0
+
+
 def main(argv=None, environ=None):
     environ = dict(os.environ if environ is None else environ)
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -1029,6 +1164,15 @@ def main(argv=None, environ=None):
         command.add_argument("--source", default="candidate")
         command.add_argument("--out", default="out")
         command.add_argument("--github-output", default=environ.get("GITHUB_OUTPUT"))
+    pair_plan = sub.add_parser("m1-pair-plan")
+    pair_plan.add_argument("--source", default="candidate")
+    pair_plan.add_argument("--old-source", default="old-candidate")
+    pair_plan.add_argument("--out", default="out")
+    pair_plan.add_argument("--github-output", default=environ.get("GITHUB_OUTPUT"))
+    pair_verify = sub.add_parser("m1-pair-verify")
+    pair_verify.add_argument("--old-receipts", default="old-receipts")
+    pair_verify.add_argument("--new-receipts", default="new-receipts")
+    pair_verify.add_argument("--out", default="pair-provenance.json")
     for name in ("storage-start", "storage-stop"):
         sub.add_parser(name).add_argument("--out", default="out")
     run = sub.add_parser("run")
@@ -1039,7 +1183,8 @@ def main(argv=None, environ=None):
     summary.add_argument("--out", default="summary")
     args = parser.parse_args(argv)
     handlers = {"plan": cmd_plan, "precheck": cmd_precheck, "storage-start": cmd_storage_start, "run": cmd_run,
-                "storage-stop": cmd_storage_stop, "summarize": cmd_summarize}
+                "storage-stop": cmd_storage_stop, "summarize": cmd_summarize,
+                "m1-pair-plan": cmd_m1_pair_plan, "m1-pair-verify": cmd_m1_pair_verify}
     try:
         return handlers[args.command](args, environ)
     except GateError as error:
