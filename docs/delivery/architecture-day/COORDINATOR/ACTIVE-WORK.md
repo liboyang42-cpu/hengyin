@@ -67,3 +67,9 @@ B/C/E/H交付后空闲，root已续派；A/D/F/G同步更新具体接缝和阻�
 D32文件和E Query21方法迁移已暂存组合；真实CmsTopic4150→3606行，13公开委托、128未迁移方法保持原体；新增Query666行。暂存secret-file/gitleaks与diff检查通过，Java/DB未运行。H确认C4619源码修复，D审核覆盖下架P2已转修；B/C/E新候选待独立合成，未部署。
 
 D详细会话后续已读到持久通知的fileChange及工具调用完成；原“尚无执行输出”是较早快照，现已补齐施工证据，仍不代表业务验收。
+
+## Inspection dispatch loop 2026-10-24T08:49:50.466917+00:00
+
+Existing hengyin-agent updated and read back ACTIVE, every10minutes, original deadline retained. Each check requires evidence, necessary dispatch/unblock, readback and checkpoint; root also advances composition. Two consecutive checks without real progress trigger targeted unblocking, never blind restarts or active-as-acceptance. A RR reader gap and G binary/hex identity mismatch forwarded to B.
+
+Root reviewed/applied E b9b894 five-file batch-read patch using existing mapper and maximum300 IDs per IN. Static comparison passes:21 old bodies unchanged, only template acquisition changed; existing SQL projection/result map retained. Five new Java scenarios are source only. Java/DB/production NOT_RUN; no measured performance claim. Previous D/EQuery source committed a0b8d5d01.

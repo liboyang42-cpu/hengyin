@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T08:44:38.440082+00:00",
-  "source_parent": "579345c48d11f96fee182e714d85b958137680b2",
+  "updated_utc": "2026-10-24T08:49:50.466917+00:00",
+  "source_parent": "a0b8d5d01facc4bd8dd97bc1bec72647797fdfe3",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -14,12 +14,14 @@
       "task": "TeamGroup/ClubEventOps外层首锁；消费B真实付款退款事实并完成原事务接线",
       "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService的栅栏与接线；G账本正文不改；外层两个服务精确报名/支付/退款包装",
       "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:12",
+      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:13",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16ce1-6375-7017-a202-ffd128522121"
+      "last_turn_id": "01a16ce1-6375-7017-a202-ffd128522121",
+      "last_progress_evidence": "可信事实接线现直接依赖 B 的真实 Reference、Stored、reader 和 registerVerified/processVerified。真库类已补实际事实表、sidecar 和回滚夹具；RR 接缝给出的是 B 现有 reader 独立只读事务的一行提议，不复制 B 文件。 原 96 项中，一项把裸 REFUND 文本当作返积分凭证的旧预期需修正：并发两次调用和六处断言均保留，改为积分维持 80、返还位 0、订单保持已支付。其余 95 项正文未改；合法退款到账仍由真实引用路径覆盖。当前全部未实跑。",
+      "last_tool_status": "completed"
     },
     "B": {
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
@@ -32,7 +34,9 @@
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16d13-0d23-7245-9926-3eae66db276d"
+      "last_turn_id": "01a16d13-0d23-7245-9926-3eae66db276d",
+      "last_progress_evidence": "Active renewal; tool evidence not yet present in compact snapshot",
+      "last_tool_status": null
     },
     "C": {
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
@@ -45,7 +49,9 @@
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16d13-1bdc-77f1-ae32-31fbb5c77f0a"
+      "last_turn_id": "01a16d13-1bdc-77f1-ae32-31fbb5c77f0a",
+      "last_progress_evidence": "Active renewal; tool evidence not yet present in compact snapshot",
+      "last_tool_status": null
     },
     "D": {
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
@@ -53,12 +59,14 @@
       "task": "5632已暂存组合；优先修H确认审核RR旧快照覆盖作者下架P2，再做持久通知",
       "ownership": "三服务上述精确符号已补授；CmsTopic共享只给patch",
       "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:7",
+      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:8",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cf8-8298-70fc-961e-815bd717a619"
+      "last_turn_id": "01a16cf8-8298-70fc-961e-815bd717a619",
+      "last_progress_evidence": "发现现有 IM 恢复任务明确声明“仅站内消息、不投外部渠道”，我会保留这个边界：IM 继续走原任务；微信恢复使用同一 Quartz 基础设施下的独立、默认暂停目标。新增调度白名单只交 G 的精确补丁，避免改变原任务的运行含义。",
+      "last_tool_status": "completed"
     },
     "E": {
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
@@ -66,12 +74,14 @@
       "task": "9e14已暂存组合、b9b894待纳；继续真实查询热点与职责减负",
       "ownership": "新TopicQuery owner及测试；CmsTopic只交精确只读delegate patch，root串行合成",
       "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:8",
+      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:9",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16d13-2aac-7464-952a-c7c34dc646f8"
+      "last_turn_id": "01a16d13-2aac-7464-952a-c7c34dc646f8",
+      "last_progress_evidence": "我会继续检查当前 TopicQuery 委托链，优先找能复用现有批读、且不改变过滤与展示语义的放大点。上一候选保持冻结，本轮另建后续增量，不等待或重复回归。",
+      "last_tool_status": "completed"
     },
     "F": {
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
@@ -79,12 +89,14 @@
       "task": "0e00独立verifier已交；完成固定可信引用的编译后控制与缺raw行约束",
       "ownership": "既有policy/控制例；不改root CI refs或新造scanner",
       "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:9",
+      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:10",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cf8-6599-747a-9ab8-d89ecef295d8"
+      "last_turn_id": "01a16cf8-6599-747a-9ab8-d89ecef295d8",
+      "last_progress_evidence": "最终verifier已冻结并推送：bd33ed0be7fafaf89daaec2eb772c15b034d3ec0，依次承接5caf→0e00→E_TOPIC_QUERY。后置工具已改为只接受bd33，并拒绝旧ref或脏工具树。 工具现在既可单独运行真实空class/interface形态核对，也可在原JAR/identity/raw通过后运行三项编译负控；8项不执行Java的工具控制通过。实际Java部分仍待root CI。",
+      "last_tool_status": "completed"
     },
     "G": {
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
@@ -97,7 +109,9 @@
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16cbd-1835-7769-9896-ba9b9a9a3e97"
+      "last_turn_id": "01a16cbd-1835-7769-9896-ba9b9a9a3e97",
+      "last_progress_evidence": "继续核对真实 DDL 时发现了本批的一处接线错误：原 inbox 的 notify_hash 是 BINARY(32)，B sidecar 存的是 64 位十六进制字符。1f781f41 的直接比较会让合法退款找不到证据。 我会用后续独立增量修正两处 SQL 为显式 HEX/UNHEX 转换，并补真实存储边界用例；首批提交保留供追溯，不能按它单独验收。",
+      "last_tool_status": "completed"
     },
     "H": {
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
@@ -110,7 +124,9 @@
         "type": "active",
         "activeFlags": []
       },
-      "last_turn_id": "01a16d13-3af8-712f-9816-6aee29272d01"
+      "last_turn_id": "01a16d13-3af8-712f-9816-6aee29272d01",
+      "last_progress_evidence": "Active renewal; tool evidence not yet present in compact snapshot",
+      "last_tool_status": null
     }
   },
   "root_ownership": [
@@ -263,12 +279,12 @@
     "status": "source fixed, Java test NOT_RUN"
   },
   "pending_integrations": {
-    "D": "563264faf08ebc7318850e84ebbfd62a613c24ba staged; H audit snapshot P2 followup required",
-    "E_query": "9e14a73e50c9afd5c8f38027c3ecd059967a51d3 staged",
+    "D": "563264f integrated at a0b8d5d01; audit RR followup still pending",
+    "E_query": "9e14a73 integrated at a0b8d5d01",
     "F_controls": "1709210d17b83d8e3fb17cb8e50f4144bd67f25d",
     "C_RR_fix": "4619caa39bdf491667f0a0263c657117ac4b12f4",
     "B_facts_original": "6d641fa802cdf1277a158ce0b7633dcf126b5e10, B composing with0ff",
-    "E_query_batch": "b9b894b170d75b4e6315f2bde41ede8f551522c6",
+    "E_query_batch": "b9b894b170d75b4e6315f2bde41ede8f551522c6 reviewed/applied; static owner/XML equivalence PASS, Java NOT_RUN",
     "B_facts_composed": "041534c7681e480f80eb8afc911f65bf1ed13eda",
     "C_full": "f1cfe74d58b766e385e639d40385e208790644a8",
     "F_trusted_verifier": "0e00ce639dea8e7f266dd326878532f45c59a032 not yet adopted"
@@ -278,5 +294,22 @@
     "readback": "all8 active; D detailed turn now confirms completed fileChange and mcpToolCall on durable notice; active alone is not acceptance",
     "no_new_threads": true,
     "regression": "batch first, no duplicate full regression dispatched"
-  }
+  },
+  "inspection_policy": {
+    "automation_id": "hengyin-agent",
+    "interval_minutes": 10,
+    "status": "ACTIVE; persisted readback verified",
+    "loop": [
+      "evidence",
+      "classify",
+      "dispatch or unblock when needed",
+      "readback",
+      "checkpoint"
+    ],
+    "stalled_rule": "two consecutive checks without actual tool/file/delivery evidence: concrete unblock instruction, not blind restart",
+    "active_rule": "continue real current work; no redundant messages or duplicate tests",
+    "coordinator_rule": "advance reviewed composition or resolve actual blocker each inspection",
+    "deadline_preserved": "2026-10-24T19:03:41Z"
+  },
+  "latest_cross_owner_action": "Root sent A old-RR/new durable fact reader gap and G BINARY(32)/hex identity warning to B owner for verification and correction; not acceptance"
 }

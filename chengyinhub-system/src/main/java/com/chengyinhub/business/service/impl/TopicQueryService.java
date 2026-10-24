@@ -17,6 +17,7 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.CmsTopicTemplateMetaMapper;
 import com.chengyinhub.business.service.IMerchantChapterApplicationService;
+import com.chengyinhub.business.service.support.TopicSizeLimits;
 import com.chengyinhub.business.support.ChapterRecruitmentRules;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.constant.TermsMode;
@@ -320,6 +321,8 @@ public class TopicQueryService {
                 CmsTopicNode probeN = new CmsTopicNode();
                 probeN.setChapterId(ch.getId());
                 java.util.List<CmsTopicNode> nodes = cmsTopicNodeMapper.selectCmsTopicNodeList(probeN);
+                // Same mapper projection/predicate as the original id reads; bounded batches per chapter.
+                java.util.Map<Long, CmsMemberTemplate> chapterTemplates = selectChapterTemplates(nodes);
                 java.util.List<com.chengyinhub.business.domain.vo.TopicTemplateNodeVO> nodeVOs = new java.util.ArrayList<>();
                 java.util.List<CmsTopicNode> validNodes = new java.util.ArrayList<>();
 
@@ -340,7 +343,7 @@ public class TopicQueryService {
                         nVO.setHookTeaser(teaser);
                         // interactionType 从模板取
                         if (n.getTemplateId() != null && n.getTemplateId() > 0) {
-                            CmsMemberTemplate tpl = cmsMemberTemplateMapper.selectCmsMemberTemplateById(n.getTemplateId());
+                            CmsMemberTemplate tpl = chapterTemplates.get(n.getTemplateId());
                             if (tpl != null) {
                                 nVO.setInteractionType(tpl.getInteractionType());
                                 // 玩法去重
@@ -429,6 +432,29 @@ public class TopicQueryService {
                 ? "FREE_EXPLORE" : "ORIENTEERING");
         applyTemplateMeta(vo, id, viewerCanViewRecruitment);
         return vo;
+    }
+
+    /** Request-local rows for this admitted chapter only; no cache or SQL for an empty id set. */
+    private java.util.Map<Long, CmsMemberTemplate> selectChapterTemplates(java.util.List<CmsTopicNode> nodes) {
+        java.util.Set<Long> ids = new java.util.LinkedHashSet<>();
+        if (nodes != null) {
+            for (CmsTopicNode node : nodes) {
+                if (node.getTemplateId() != null && node.getTemplateId() > 0) ids.add(node.getTemplateId());
+            }
+        }
+        if (ids.isEmpty()) return java.util.Collections.emptyMap();
+        java.util.Map<Long, CmsMemberTemplate> result = new java.util.HashMap<>();
+        java.util.List<Long> orderedIds = new java.util.ArrayList<>(ids);
+        // Keep each IN bounded by the existing publication node limit; do not truncate legacy oversized chapters.
+        for (int offset = 0; offset < orderedIds.size();) {
+            int end = offset + Math.min(TopicSizeLimits.MAX_NODES, orderedIds.size() - offset);
+            java.util.List<Long> batch = orderedIds.subList(offset, end);
+            for (CmsMemberTemplate template : nullToEmpty(cmsMemberTemplateMapper.selectCmsMemberTemplateByIds(batch))) {
+                result.put(template.getId(), template);
+            }
+            offset = end;
+        }
+        return result;
     }
 
     /**
