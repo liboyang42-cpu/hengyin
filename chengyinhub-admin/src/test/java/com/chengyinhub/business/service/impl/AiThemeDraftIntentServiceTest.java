@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 @Timeout(20)
 class AiThemeDraftIntentServiceTest {
     private static final long MEMBER=501L;
-    private static final String KEY="7c9e6679-7425-40de-944b-e07fc1f90ae7";
+    private static final String PREPARE_ID="7c9e6679-7425-40de-944b-e07fc1f90ae7";
     private final Map<String,AiThemeDraftIntentRow> rows=new ConcurrentHashMap<>();
     private final MutableClock clock=new MutableClock();
     private final MemoryBodies bodies=new MemoryBodies();
@@ -124,7 +124,7 @@ class AiThemeDraftIntentServiceTest {
         bodies.failWrites=true;
         assertThrows(AiThemeDraftRequestService.StateUnavailableException.class,this::prepare);
         String id=rows.values().iterator().next().getRequestId(); bodies.failWrites=false;
-        assertEquals(id,prepare().requestId()); assertEquals(AiThemeDraftIntentState.FAILED,service.readPrepared(MEMBER,KEY).state());
+        assertEquals(id,prepare().requestId()); assertEquals(AiThemeDraftIntentState.FAILED,service.readPrepared(MEMBER,PREPARE_ID).state());
         verify(creator,never()).themeDraftPrepared(any(),anyLong(),any());
     }
     @Test void resultBodyLossKeepsKnownSuccessWithoutRegeneration() {
@@ -144,7 +144,7 @@ class AiThemeDraftIntentServiceTest {
         assertEquals(nonce,rows.get(v.requestId()).getNonce());verify(creator,times(1)).themeDraftPrepared(any(),anyLong(),any());
     }
     @Test void legacyMissingAndForgedIdsCannotExecute() {
-        for(String id:new String[]{null,KEY,"td2_bad","td2_"+"f".repeat(32)})
+        for(String id:new String[]{null,PREPARE_ID,"td2_bad","td2_"+"f".repeat(32)})
             assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,()->service.execute(MEMBER,new AiThemeDraftExecuteReq(id)));
         verifyNoInteractions(creator); assertTrue(rows.isEmpty()); assertEquals(0,bodies.writes);
     }
@@ -174,20 +174,20 @@ class AiThemeDraftIntentServiceTest {
     @Test void invalidDraftKeepsFailedIdentity() {
         doThrow(new AiServiceException("invalid draft")).when(creator).themeDraftPrepared(any(),anyLong(),any());
         var v=prepare(); assertEquals(AiThemeDraftIntentState.FAILED,execute(v).state());
-        assertEquals(AiThemeDraftIntentState.FAILED,service.readPrepared(MEMBER,KEY).state());
+        assertEquals(AiThemeDraftIntentState.FAILED,service.readPrepared(MEMBER,PREPARE_ID).state());
         assertEquals(AiThemeDraftIntentState.FAILED,execute(v).state()); verify(creator,times(1)).themeDraftPrepared(any(),anyLong(),any());
     }
     @Test void disabledAdmissionDoesNotDisableOriginalReadback() {
         var v=prepare(); ReflectionTestUtils.setField(service,"intentEnabled",false);
-        assertEquals(v.requestId(),service.readPrepared(MEMBER,KEY).requestId());
+        assertEquals(v.requestId(),service.readPrepared(MEMBER,PREPARE_ID).requestId());
         assertEquals(AiThemeDraftIntentState.PREPARED,service.readIntent(MEMBER,v.requestId()).state());
         assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,this::prepare);
         refusal(v,"AI_DRAFT_DISABLED"); verify(creator,never()).themeDraftPrepared(any(),anyLong(),any());
     }
     @Test void payloadFingerprintPreservesNullOrderAndWhitespace() {
         var v=prepare(); String nonce=rows.get(v.requestId()).getNonce();
-        for(AiThemeDraftPrepareReq changed:List.of(req(KEY," idea",null),req(KEY,"idea",List.of()),req(KEY,"idea",List.of("a","b")),
-                new AiThemeDraftPrepareReq(KEY,"idea",1,null))) {
+        for(AiThemeDraftPrepareReq changed:List.of(req(PREPARE_ID," idea",null),req(PREPARE_ID,"idea",List.of()),req(PREPARE_ID,"idea",List.of("a","b")),
+                new AiThemeDraftPrepareReq(PREPARE_ID,"idea",1,null))) {
             var e=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,()->service.prepare(MEMBER,changed));
             assertEquals("AI_DRAFT_REQUEST_CONFLICT",e.getErrorCode());
         }
@@ -234,10 +234,10 @@ class AiThemeDraftIntentServiceTest {
         assertThrows(AiThemeDraftRequestService.StateUnavailableException.class,()->service.readIntent(MEMBER,v.requestId()));
     }
     @Test void missingPrepareResponseReadRecoversOriginalPlanAcrossDisable() {
-        assertEquals("AI_DRAFT_PREPARE_UNCONFIRMED",service.readPrepared(MEMBER,KEY).reasonCode()); verifyNoInteractions(creator);
+        assertEquals("AI_DRAFT_PREPARE_UNCONFIRMED",service.readPrepared(MEMBER,PREPARE_ID).reasonCode()); verifyNoInteractions(creator);
         var lost=prepare(); String nonce=rows.get(lost.requestId()).getNonce();
         ReflectionTestUtils.setField(service,"intentEnabled",false);
-        assertEquals(lost.requestId(),service.readPrepared(MEMBER,KEY).requestId()); assertEquals(nonce,rows.get(lost.requestId()).getNonce());
+        assertEquals(lost.requestId(),service.readPrepared(MEMBER,PREPARE_ID).requestId()); assertEquals(nonce,rows.get(lost.requestId()).getNonce());
         verify(creator,times(1)).planThemeDraft(anyLong(),anyString()); verify(creator,never()).themeDraftPrepared(any(),anyLong(),any());
     }
     @Test void contextTamperIsRefusedBeforeClaim() {
@@ -259,7 +259,7 @@ class AiThemeDraftIntentServiceTest {
         int reads=bodies.reads,writes=bodies.writes;clearInvocations(creator);
         ReflectionTestUtils.setField(service,"intentEnabled",false);
         var list=service.readRecovery(MEMBER,null);assertEquals(1,list.size());var item=list.get(0);
-        assertEquals(original.requestId(),item.requestId());assertEquals(KEY,item.prepareKey());assertEquals(snapshot.getId(),item.cursor());
+        assertEquals(original.requestId(),item.requestId());assertEquals(PREPARE_ID,item.prepareKey());assertEquals(snapshot.getId(),item.cursor());
         assertEquals(reads,bodies.reads);assertEquals(writes,bodies.writes);verifyNoInteractions(creator);
         assertEquals(snapshot.getState(),rows.get(original.requestId()).getState());
         assertEquals(snapshot.getExecuteBefore(),rows.get(original.requestId()).getExecuteBefore());
@@ -295,7 +295,7 @@ class AiThemeDraftIntentServiceTest {
         assertEquals(0,bodies.reads);assertEquals(0,bodies.writes);verifyNoInteractions(creator);
     }
 
-    private AiThemeDraftIntentView prepare(){return service.prepare(MEMBER,req(KEY,"idea",null));}
+    private AiThemeDraftIntentView prepare(){return service.prepare(MEMBER,req(PREPARE_ID,"idea",null));}
     private AiThemeDraftIntentView execute(AiThemeDraftIntentView v){return service.execute(MEMBER,new AiThemeDraftExecuteReq(v.requestId()));}
     private void refusal(AiThemeDraftIntentView v,String code){
         var e=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,()->execute(v));
@@ -337,7 +337,7 @@ class AiThemeDraftIntentServiceTest {
         for (boolean enabled : new boolean[]{true,false}) {
             ReflectionTestUtils.setField(service,"intentEnabled",enabled);
             var refusal=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
-                    ()->service.prepare(MEMBER,req(KEY,null,null)));
+                    ()->service.prepare(MEMBER,req(PREPARE_ID,null,null)));
             assertEquals(Integer.valueOf(400),refusal.getCode());
             assertEquals("AI_DRAFT_INVALID_REQUEST",refusal.getErrorCode());
         }
@@ -347,7 +347,7 @@ class AiThemeDraftIntentServiceTest {
     @Test void prepareRejectsEmptyOrWhitespaceIdeaBeforeAnyDependencyAccess() {
         for (String idea : List.of("", " ", " \t\r\n ")) {
             var refusal=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
-                    ()->service.prepare(MEMBER,req(KEY,idea,null)));
+                    ()->service.prepare(MEMBER,req(PREPARE_ID,idea,null)));
             assertEquals(Integer.valueOf(400),refusal.getCode());
             assertEquals("AI_DRAFT_INVALID_REQUEST",refusal.getErrorCode());
         }
@@ -358,7 +358,7 @@ class AiThemeDraftIntentServiceTest {
         for (String idea : List.of("a".repeat(301), " "+"a".repeat(299)+" ")) {
             assertEquals(301,idea.length());
             var refusal=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
-                    ()->service.prepare(MEMBER,req(KEY,idea,null)));
+                    ()->service.prepare(MEMBER,req(PREPARE_ID,idea,null)));
             assertEquals(Integer.valueOf(400),refusal.getCode());
             assertEquals("AI_DRAFT_INVALID_REQUEST",refusal.getErrorCode());
         }
@@ -367,14 +367,14 @@ class AiThemeDraftIntentServiceTest {
     }
     @Test void prepareAcceptsExactly300AndPreservesOriginalWhitespacePayloadAndHash() {
         String original=" "+"a".repeat(298)+" ";assertEquals(300,original.length());
-        var prepared=service.prepare(MEMBER,req(KEY,original,null));
+        var prepared=service.prepare(MEMBER,req(PREPARE_ID,original,null));
         assertEquals(AiThemeDraftIntentState.PREPARED,prepared.state());assertTrue(prepared.contextAvailable());
         String envelope=bodies.values.get(bodyKey("context",prepared.requestId()));
         var payload=com.alibaba.fastjson2.JSON.parseArray(com.alibaba.fastjson2.JSON.parseObject(envelope).getString("payload"));
         assertEquals(original,payload.getString(1));assertNull(payload.get(2));assertNull(payload.get(3));
-        assertEquals(prepared.requestId(),service.prepare(MEMBER,req(KEY,original,null)).requestId());
+        assertEquals(prepared.requestId(),service.prepare(MEMBER,req(PREPARE_ID,original,null)).requestId());
         var changed=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
-                ()->service.prepare(MEMBER,req(KEY,original.trim(),null)));
+                ()->service.prepare(MEMBER,req(PREPARE_ID,original.trim(),null)));
         assertEquals("AI_DRAFT_REQUEST_CONFLICT",changed.getErrorCode());
         verify(creator,times(1)).planThemeDraft(eq(MEMBER),anyString());
         verify(creator,never()).themeDraftPrepared(any(),anyLong(),any());
