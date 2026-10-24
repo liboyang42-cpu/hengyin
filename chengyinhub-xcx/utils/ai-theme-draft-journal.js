@@ -82,8 +82,13 @@ function archive(storage, member, value) {
   const storageKey = historyPrefix(member) + (value.prepareKey || value.requestId);
   try {
     const previous = storage.getStorageSync(storageKey);
-    if (previous !== '' && previous !== null && previous !== undefined)
-      return valid(previous, member) && sameIdentity(previous, value);
+    if (previous !== '' && previous !== null && previous !== undefined) {
+      if (!valid(previous, member)) return false;
+      if (sameIdentity(previous, value)) return true;
+      // A failed active write may leave the original prepare archived before its server id is known.
+      if (previous.requestId !== null || !SERVER_ID.test(value.requestId || '')
+          || previous.prepareKey !== value.prepareKey || previous.createdAt !== value.createdAt) return false;
+    }
     storage.setStorageSync(storageKey, copy(value));
     const readback = storage.getStorageSync(storageKey);
     return valid(readback, member) && JSON.stringify(copy(readback)) === JSON.stringify(copy(value));

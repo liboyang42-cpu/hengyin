@@ -203,3 +203,43 @@ test('historical metadata enumeration is owner-scoped and storage failures never
   assert.equal(journal.history(wx, '7').kind, 'UNAVAILABLE');
   assert.equal(journal.history(wx, '0').kind, 'CORRUPT');
 });
+
+test('an archived prepare can bind its later confirmed server identity after the active replacement failed', () => {
+  const wx = storage(); const old = prepared(); const set = wx.setStorageSync;
+  const next = { ...old, prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+  wx.values[journal.key('7')] = old;
+  wx.setStorageSync = (key, value) => { if (key === journal.key('7')) throw new Error('disk'); set(key, value); };
+  assert.equal(journal.beginConfirmedNewAction(wx, '7', next, old).ok, false);
+  assert.deepEqual(journal.history(wx, '7').values, [old]);
+  wx.setStorageSync = set;
+  const confirmed = { ...old, requestId: RID, stage: 'PREPARED', state: 'PREPARED' };
+  assert.equal(journal.save(wx, '7', confirmed, old).ok, true);
+  const unknown = { ...confirmed, stage: 'KNOWN', state: 'UNKNOWN' };
+  assert.equal(journal.save(wx, '7', unknown, confirmed).ok, true);
+  assert.equal(journal.beginConfirmedNewAction(wx, '7', next, unknown).ok, true);
+  assert.deepEqual(journal.history(wx, '7').values, [unknown]);
+  assert.deepEqual(journal.load(wx, '7').value, next);
+});
+
+test('archive identity binding never accepts conflicting known ids or hides a failed write or readback', () => {
+  const old = prepared(); const unknown = { ...old, requestId: RID, stage: 'KNOWN', state: 'UNKNOWN' };
+  const next = { ...old, prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+  const archiveKey = 'ai_theme_draft_v2:m7:history:' + PREPARE_ID;
+  for (const fault of ['throw', 'noop', 'readback', 'different-id', 'different-created']) {
+    const wx = storage(); wx.values[journal.key('7')] = unknown; wx.values[archiveKey] = old;
+    if (fault === 'different-id') wx.values[archiveKey] = { ...unknown, requestId: 'td2_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' };
+    if (fault === 'different-created') wx.values[archiveKey] = { ...old, createdAt: 99 };
+    const get = wx.getStorageSync; const set = wx.setStorageSync; let written = false;
+    wx.setStorageSync = (key, value) => {
+      if (key === archiveKey) {
+        if (fault === 'throw') throw new Error('disk');
+        if (fault === 'noop') return;
+        written = true;
+      }
+      set(key, value);
+    };
+    wx.getStorageSync = key => { if (key === archiveKey && written && fault === 'readback') throw new Error('read'); return get(key); };
+    assert.equal(journal.beginConfirmedNewAction(wx, '7', next, unknown).ok, false, fault);
+    assert.deepEqual(journal.load(wx, '7').value, unknown, fault);
+  }
+});
