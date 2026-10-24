@@ -82,6 +82,7 @@ class ClubFulfillmentChainGateTest {
         club.setMemberId(7L);          // 调用者是承接俱乐部的主理人
         club.setDelFlag(0);
         when(clubMapper.selectClubById(9L)).thenReturn(club);
+        when(clubMapper.selectClubByIdForUpdate(9L)).thenReturn(club);
 
         RuntimeException e = assertThrows(RuntimeException.class,
                 () -> service.cancelPaidRegistrationByOwner(1L, 7L));
@@ -128,6 +129,7 @@ class ClubFulfillmentChainGateTest {
         club.setMemberId(7L);
         club.setDelFlag(0);
         when(clubMapper.selectClubById(9L)).thenReturn(club);
+        when(clubMapper.selectClubByIdForUpdate(9L)).thenReturn(club);
 
         RuntimeException e = assertThrows(RuntimeException.class,
                 () -> service.cancelPaidRegistrationByOwner(2L, 12345L));

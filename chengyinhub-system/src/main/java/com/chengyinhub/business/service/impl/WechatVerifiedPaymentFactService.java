@@ -157,7 +157,9 @@ public class WechatVerifiedPaymentFactService {
     }
 
     /** The domain row and the latest attempt stay locked until the caller commits its own effects. */
-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    @org.springframework.transaction.annotation.Transactional(
+            propagation = org.springframework.transaction.annotation.Propagation.MANDATORY,
+            noRollbackFor = ConflictException.class)
     public Stored requireConsumablePayment(Reference reference) {
         if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
             throw new IllegalStateException("Payment consumption requires the original business transaction");

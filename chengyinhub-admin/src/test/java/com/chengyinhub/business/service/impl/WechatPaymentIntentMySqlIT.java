@@ -30,6 +30,7 @@ class WechatPaymentIntentMySqlIT {
     private DriverManagerDataSource source;
     private String database;
     private WechatPayServiceImpl service;
+    private WechatVerifiedPaymentFactService facts;
 
     @BeforeAll
     void schema() throws Exception {
@@ -57,11 +58,11 @@ class WechatPaymentIntentMySqlIT {
         // Narrow fixtures exercise gateway SQL. Full domain DDL/CAS/ledger coverage remains in domain IT suites.
         jdbc.execute("CREATE TABLE club_membership_invoice(id BIGINT PRIMARY KEY,out_trade_no VARCHAR(64),amount_fen BIGINT,status VARCHAR(16) DEFAULT 'PAYING') ENGINE=InnoDB");
         jdbc.execute("CREATE TABLE coop_invite(id BIGINT PRIMARY KEY,deposit_out_trade_no VARCHAR(64),deposit_amount DECIMAL(10,2),deposit_status INT DEFAULT 1,status INT DEFAULT 1,del_flag INT DEFAULT 0) ENGINE=InnoDB");
-        jdbc.execute("CREATE TABLE oms_order(id BIGINT PRIMARY KEY,order_sn VARCHAR(64),pay_amount DECIMAL(10,2),status BIGINT DEFAULT 0,payment_transaction_id VARCHAR(64)) ENGINE=InnoDB");
+        jdbc.execute("CREATE TABLE oms_order(id BIGINT PRIMARY KEY,order_sn VARCHAR(64),pay_amount DECIMAL(10,2),status BIGINT DEFAULT 0,payment_transaction_id VARCHAR(64),member_id BIGINT,mms_merchant_id BIGINT,biz_type VARCHAR(32),verified_payment_fact_id BIGINT UNSIGNED,verified_payment_fact_hash BINARY(64)) ENGINE=InnoDB");
         jdbc.execute("CREATE TABLE cms_registration(id BIGINT PRIMARY KEY,registration_no VARCHAR(64),wechat_payment_amount DECIMAL(10,2),payment_status INT DEFAULT 1,registration_status INT DEFAULT 1) ENGINE=InnoDB");
         jdbc.update("INSERT INTO club_membership_invoice(id,out_trade_no,amount_fen) VALUES(1,'CLM1',1000)");
         jdbc.update("INSERT INTO coop_invite(id,deposit_out_trade_no,deposit_amount) VALUES(1,'DEP1',10.00)");
-        jdbc.update("INSERT INTO oms_order(id,order_sn,pay_amount) VALUES(1,'TPLTM_1',10.00)");
+        jdbc.update("INSERT INTO oms_order(id,order_sn,pay_amount,member_id,mms_merchant_id,biz_type) VALUES(1,'TPLTM_1',10.00,12,34,?)",MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
         jdbc.execute("CREATE TABLE b_payment_grant(order_no VARCHAR(64) PRIMARY KEY,transaction_id VARCHAR(64)) ENGINE=InnoDB");
         jdbc.update("INSERT INTO cms_registration(id,registration_no,wechat_payment_amount) VALUES(1,'REG1',10.00)");
     }
@@ -72,10 +73,11 @@ class WechatPaymentIntentMySqlIT {
         jdbc.update("DELETE FROM wx_verified_payment_fact_rejection");
         jdbc.update("DELETE FROM wx_verified_payment_fact");
         jdbc.update("DELETE FROM wx_pay_order_intent"); // This class's unique scratch schema only.
-        jdbc.update("UPDATE oms_order SET status=0,payment_transaction_id=NULL");
+        jdbc.update("UPDATE oms_order SET status=0,payment_transaction_id=NULL,verified_payment_fact_id=NULL,verified_payment_fact_hash=NULL");
         jdbc.update("DELETE FROM b_payment_grant");
         service = spy(WechatVerifiedFactTestSupport.gateway());
-        WechatVerifiedFactTestSupport.setField(service,"verifiedFacts",WechatVerifiedFactTestSupport.realFacts(source));
+        facts=WechatVerifiedFactTestSupport.realFacts(source);
+        WechatVerifiedFactTestSupport.setField(service,"verifiedFacts",facts);
         WechatVerifiedFactTestSupport.setField(service, "paymentIntentJdbc", jdbc);
         WechatVerifiedFactTestSupport.setField(service, "paymentIntentTransactions", new DataSourceTransactionManager(source));
         WechatVerifiedFactTestSupport.setField(service, "jsapiService", WechatPaymentIntentTestSupport.absentOrderSdk());
@@ -144,20 +146,35 @@ class WechatPaymentIntentMySqlIT {
         });
         WechatVerifiedFactTestSupport.setField(service, "jsapiService", sdk);
         var orders = mock(com.chengyinhub.business.mapper.OmsOrderMapper.class);
-        when(orders.selectOmsOrderByOrderSn("TPLTM_1")).thenAnswer(call -> {
-            var row = jdbc.queryForMap("SELECT * FROM oms_order WHERE id=1");
+        org.mockito.stubbing.Answer<com.chengyinhub.business.domain.OmsOrder> originalOrder = call -> {
+            boolean locked="selectCommerceOrderForUpdate".equals(call.getMethod().getName());
+            var row = jdbc.queryForMap("SELECT *,CONVERT(verified_payment_fact_hash USING ascii) AS proof_hash FROM oms_order WHERE id=1"+(locked?" FOR UPDATE":""));
             var order = new com.chengyinhub.business.domain.OmsOrder();
-            order.setId(1L); order.setOrderSn("TPLTM_1"); order.setMemberId(12L);
-            order.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
-            order.setPayAmount(new java.math.BigDecimal("10.00"));
+            order.setId(((Number)row.get("id")).longValue()); order.setOrderSn((String)row.get("order_sn"));
+            order.setMemberId(((Number)row.get("member_id")).longValue());
+            order.setMmsMerchantId(((Number)row.get("mms_merchant_id")).longValue());
+            order.setBizType((String)row.get("biz_type"));
+            order.setPayAmount((java.math.BigDecimal)row.get("pay_amount"));
             order.setStatus(((Number)row.get("status")).longValue());
             order.setPaymentTransactionId((String)row.get("payment_transaction_id"));
+            Number proofId=(Number)row.get("verified_payment_fact_id");
+            order.setVerifiedPaymentFactId(proofId==null?null:proofId.longValue());
+            order.setVerifiedPaymentFactHash((String)row.get("proof_hash"));
             return order;
-        });
+        };
+        when(orders.selectOmsOrderByOrderSn("TPLTM_1")).thenAnswer(originalOrder);
+        when(orders.selectCommerceOrderForUpdate("TPLTM_1")).thenAnswer(originalOrder);
         when(orders.markCommerceOrderClosed(1L)).thenAnswer(call ->
                 jdbc.update("UPDATE oms_order SET status=5 WHERE id=1 AND status=0"));
         when(orders.markCommerceOrderPaid(eq(1L), anyString())).thenAnswer(call ->
                 jdbc.update("UPDATE oms_order SET status=1,payment_transaction_id=? WHERE id=1 AND status=0", (String)call.getArgument(1)));
+        when(orders.bindCommercePaymentProof(any(),anyString(),anyLong(),anyString())).thenAnswer(call -> {
+            var order=(com.chengyinhub.business.domain.OmsOrder)call.getArgument(0);
+            // Same original identity/CAS predicates as OmsOrderMapper.bindCommercePaymentProof.
+            return jdbc.update("UPDATE oms_order SET verified_payment_fact_id=?,verified_payment_fact_hash=CAST(? AS BINARY) WHERE id=? AND order_sn=? AND member_id=? AND mms_merchant_id=? AND biz_type=? AND pay_amount=? AND status=1 AND payment_transaction_id=? AND verified_payment_fact_id IS NULL AND verified_payment_fact_hash IS NULL",
+                    call.getArgument(2),call.getArgument(3),order.getId(),order.getOrderSn(),order.getMemberId(),
+                    order.getMmsMerchantId(),order.getBizType(),order.getPayAmount(),call.getArgument(1));
+        });
         var grants = mock(com.chengyinhub.business.mapper.MerchantSubscriptionMapper.class);
         when(grants.grantMerchantSubscription(any())).thenAnswer(call ->
                 jdbc.update("INSERT INTO b_payment_grant VALUES('TPLTM_1','WX-NEW')"));
@@ -167,6 +184,7 @@ class WechatPaymentIntentMySqlIT {
         WechatVerifiedFactTestSupport.setField(domain, "subscriptionMapper", grants);
         WechatVerifiedFactTestSupport.setField(domain, "wechatPayService", service);
         WechatVerifiedFactTestSupport.setField(domain, "paymentTransactions", tm);
+        WechatVerifiedFactTestSupport.setField(domain, "verifiedPaymentFacts", facts);
         var proxy = new org.springframework.aop.framework.ProxyFactory(domain);
         proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(tm,
                 new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
@@ -211,6 +229,10 @@ class WechatPaymentIntentMySqlIT {
         assertEquals(1, jdbc.queryForObject("SELECT status FROM oms_order WHERE id=1", Integer.class));
         assertEquals("WX-NEW", jdbc.queryForObject("SELECT payment_transaction_id FROM oms_order WHERE id=1", String.class));
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM b_payment_grant", Integer.class));
+        var payment=facts.findPaymentSuccess("TPLTM_1");
+        assertEquals(payment.reference().id(),jdbc.queryForObject("SELECT verified_payment_fact_id FROM oms_order WHERE id=1",Long.class));
+        assertEquals(payment.reference().hash(),jdbc.queryForObject("SELECT CONVERT(verified_payment_fact_hash USING ascii) FROM oms_order WHERE id=1",String.class));
+        assertEquals(alias,payment.facts().wxOutTradeNo());
         assertFalse(Boolean.TRUE.equals(new TransactionTemplate(tm).execute(status ->
                 service.lockPaymentAttemptForUpdate("TPLTM_1", "TPLTM_1"))));
         assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent", Integer.class));

@@ -150,7 +150,12 @@ class RegistrationSeatEndpointTest {
         activity.setStartDate(new Date(System.currentTimeMillis() + 2L * 60 * 60 * 1000));
         String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
         assertEquals("俱乐部场次开始前60分钟内才可核销", scanner.scanDynamicCode(code).get("msg"));
-        verifyNoInteractions(seats);
+        // Authorized original-terminal lookup is read-only; a missing receipt still meets the old window guard.
+        verify(seats).verifierSeatReceipt(31L, 2, null, 81L, true);
+        verifyNoMoreInteractions(seats); // No prepare/redeem/other seat mutation may follow the rejection.
+        verifyNoInteractions(points, growth);
+        verify(orders, never()).verifyAndSettle(any(), any(), any(), any());
+        verify(orders, never()).verifyAndSettle(any(), any(), any(), any(), any(), any());
     }
     @Test void foreignMerchantCannotBypassOriginalActivityOwnerScopeWithAValidSeatCode() {
         order.setOwnerType(2L); order.setOwnerId(61L); activity.setMemberId(999L);

@@ -83,6 +83,9 @@ class RefundNotificationMybatisIntegrationTest {
             assertTrue(from >= 0 && close > from && to > close, table);
             jdbc.execute(base.substring(from, to + 1));
         }
+        // Current activity reads project these parent-topic fields even for standalone activity rows.
+        jdbc.execute("ALTER TABLE cms_topic ADD COLUMN team_mode TINYINT NOT NULL DEFAULT 0,"
+                + " ADD COLUMN team_max_members INT NOT NULL DEFAULT 4");
         new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(
                 new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql").toFile()),
                 new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql").toFile()),

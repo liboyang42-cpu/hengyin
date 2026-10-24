@@ -87,6 +87,8 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
+        ReflectionTestUtils.setField(service, "verifiedPaymentFacts",
+                com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.memoryHistoricalFacts());
         ReflectionTestUtils.setField(service, "productRoleService", mock(IProductRoleService.class));
         ReflectionTestUtils.setField(service, "settlementEntryService", mock(ISettlementEntryService.class));
         ReflectionTestUtils.setField(service, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));

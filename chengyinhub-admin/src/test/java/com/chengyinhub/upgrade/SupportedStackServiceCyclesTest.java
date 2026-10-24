@@ -115,8 +115,10 @@ class SupportedStackServiceCyclesTest
             }
         }
 
-        boolean paymentBoundary() { return "registration/completion/topic/payment".equals(name)
-                || "invite/payment".equals(name) || "merchant/payment".equals(name); }
+        boolean outboundSdkEdge() { return target == WechatPaymentSdkGateway.class; }
+        boolean eagerAssemblyStarts() { return outboundSdkEdge()
+                || "registration/completion/topic/payment".equals(name)
+                || "topic/application/node".equals(name); }
         @Override
         public String toString()
         {
@@ -207,15 +209,19 @@ class SupportedStackServiceCyclesTest
             Object source = AopTestUtils.getUltimateTargetObject(context.getBean(cycle.source()));
             Object lazyEdge = ReflectionTestUtils.getField(source, cycle.field());
             Object managedTarget = context.getBean(cycle.target());
-            if (cycle.paymentBoundary()) {
-                // These former cycles now have an eager outbound SDK edge and no callback dependency.
-                assertThat(lazyEdge).isSameAs(managedTarget);
+            if (cycle.eagerAssemblyStarts()) {
+                // The SDK closure stays real even when this scenario's selected field is a lazy domain edge.
                 assertThat(context).hasSingleBean(WechatPaymentSdkGateway.class);
+                Object sdk = context.getBean(WechatPaymentSdkGateway.class);
                 Object facade = AopTestUtils.getUltimateTargetObject(context.getBean(WechatPayServiceImpl.class));
-                assertThat(ReflectionTestUtils.getField(facade, "gateway")).isSameAs(managedTarget);
+                assertThat(ReflectionTestUtils.getField(facade, "gateway")).isSameAs(sdk);
                 assertThat(Arrays.stream(WechatPaymentSdkGateway.class.getDeclaredFields())
                         .anyMatch(field -> field.getType() == com.chengyinhub.business.service.IWechatPayService.class
                                 || field.getType() == WechatPaymentCallbackRouter.class)).isFalse();
+            }
+            if (cycle.outboundSdkEdge()) {
+                // These selected fields are eager outbound SDK references, not lazy domain references.
+                assertThat(lazyEdge).isSameAs(managedTarget);
                 assertThat(unexpectedCalls).isEmpty();
                 return;
             }
@@ -236,10 +242,30 @@ class SupportedStackServiceCyclesTest
     {
         List<Method> unexpectedCalls = new ArrayList<>();
         runner(unexpectedCalls, cycle, cycle.services()).run(context -> {
-            if (cycle.paymentBoundary()) {
+            if (cycle.eagerAssemblyStarts()) {
                 assertThat(context).hasNotFailed();
+                assertThat(((DefaultListableBeanFactory) context.getBeanFactory())
+                        .isAllowCircularReferences()).isFalse();
+                for (Class<?> service : cycle.services()) {
+                    assertThat(context).hasSingleBean(service);
+                    Object target = AopTestUtils.getUltimateTargetObject(context.getBean(service));
+                    assertThat(Mockito.mockingDetails(target).isMock()).as(service.getName()).isFalse();
+                }
                 Object source = AopTestUtils.getUltimateTargetObject(context.getBean(cycle.source()));
-                assertThat(ReflectionTestUtils.getField(source, cycle.field())).isSameAs(context.getBean(cycle.target()));
+                Object managedTarget = context.getBean(cycle.target());
+                assertThat(ReflectionTestUtils.getField(source, cycle.field())).isSameAs(managedTarget);
+                if (!cycle.outboundSdkEdge()) {
+                    // A formerly cyclic assembly can start eagerly while its domain target still needs transaction AOP.
+                    assertThat(managedTarget).isInstanceOf(Advised.class);
+                    assertThat(Arrays.stream(((Advised) managedTarget).getAdvisors())
+                            .anyMatch(advisor -> advisor.getAdvice() instanceof TransactionInterceptor)).isTrue();
+                    Object target = AopTestUtils.getUltimateTargetObject(managedTarget);
+                    assertThat(ReflectionTestUtils.getField(target, "topicService"))
+                            .isSameAs(context.getBean(CmsTopicServiceImpl.class));
+                    Object topic = AopTestUtils.getUltimateTargetObject(context.getBean(CmsTopicServiceImpl.class));
+                    assertThat(ReflectionTestUtils.getField(topic, "wechatPayService"))
+                            .isSameAs(context.getBean(WechatPaymentSdkGateway.class));
+                }
             } else {
                 assertThat(context).hasFailed();
                 assertThat(context.getStartupFailure()).hasRootCauseInstanceOf(BeanCurrentlyInCreationException.class);

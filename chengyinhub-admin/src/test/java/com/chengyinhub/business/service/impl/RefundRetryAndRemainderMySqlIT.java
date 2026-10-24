@@ -78,6 +78,7 @@ class RefundRetryAndRemainderMySqlIT {
         assertEquals("1", System.getenv("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"));
         schemaRoot = root;
         new ResourceDatabasePopulator(
+                new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260821_topic_team_config.sql").toFile()),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql").toFile()),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql").toFile()),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260930_registration_first_successful_scan.sql").toFile()),
@@ -337,6 +338,19 @@ class RefundRetryAndRemainderMySqlIT {
         db.update("insert into cms_registration(id,registration_no,parent_order_no,owner_type,owner_id,ticket_id,ticket_price,member_id,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,pay_expire_time) values(?,?,?,2,20,1,?,9,?,?,?, ?,1,1,0,date_add(now(),interval 1 day))", id, "REG" + id, parent, cash, cash, cash, cash, cash);
         String transactionId = "TX" + id;
         long total = new BigDecimal(cash).movePointRight(2).longValueExact();
+        if (total == 0) {
+            // A zero-cash sibling has no separate WeChat payment; retain the actual parent's transaction.
+            assertNotNull(parent);
+            var payers = db.queryForList("select id from cms_registration where parent_order_no=? and owner_type=2 and owner_id=20 and wechat_payment_amount>0", parent);
+            assertEquals(1, payers.size());
+            long payerId = ((Number)payers.get(0).get("id")).longValue();
+            var consumed = consumptionMapper.selectByRegistration(payerId);
+            assertNotNull(consumed);
+            new TransactionTemplate(transactions).executeWithoutResult(status ->
+                    db.update("update cms_registration set payment_status=2,registration_status=2,transaction_id=? where id=?", consumed.transactionId(), id));
+            assertNull(consumptionMapper.selectByRegistration(id), "Only the actual cash payer consumes the provider fact");
+            return;
+        }
         var original = factsReader.recordVerified(new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
                 "merchant","wx-original","REG"+id,"REG"+id,"REG"+id,transactionId,transactionId,"JSAPI","CNY",total,total,
                 java.time.Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME),null,"SUCCESS"));

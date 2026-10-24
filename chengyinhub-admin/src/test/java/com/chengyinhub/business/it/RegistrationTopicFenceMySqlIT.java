@@ -226,9 +226,11 @@ class RegistrationTopicFenceMySqlIT {
     }
 
     private Map<String, String> paymentFacts() {
+        WechatVerifiedFactTestSupport.freezeRegistrationAttempt(source, 1L, "REG1", "WXREG1",
+                "mch-origin", "wx-origin", "JSAPI", 3000L, HASH);
         WechatVerifiedPaymentFact fact = new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
                 "mch-origin", "wx-origin", "REG1", "WXREG1", "WXREG1", "TX1", "TX1", "JSAPI", "CNY",
-                3000, 3000, java.time.Instant.parse("2026-10-24T00:00:00Z"), null, "SUCCESS");
+                3000, 3000, java.time.Instant.parse("2026-10-24T00:00:00Z"), HASH, "SUCCESS");
         var reference = verifiedFacts.recordVerified(fact);
         Map<String, String> facts = new java.util.HashMap<>(Map.of("out_trade_no", "REG1", "transaction_id", "TX1",
                 "trade_state", "SUCCESS", "total", "3000", "wx_out_trade_no", "WXREG1"));
@@ -421,6 +423,9 @@ class RegistrationTopicFenceMySqlIT {
         ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(target, "refundService", mock(IRefundService.class));
+        ReflectionTestUtils.setField(target, "cancellationTransactions", manager);
+        ReflectionTestUtils.setField(target, "verifiedPaymentFacts", verifiedFacts);
+        ReflectionTestUtils.setField(target, "imService", mock(IImService.class));
         return transactional(target);
     }
 
@@ -431,6 +436,7 @@ class RegistrationTopicFenceMySqlIT {
                 mock(ClubMemberMapper.class), mock(ClubLeadMapper.class), mock(IClubRoleAssignmentService.class), delegate);
         ReflectionTestUtils.setField(target, "cancellationActivityMapper", activities);
         ReflectionTestUtils.setField(target, "cancellationTopicMapper", topics);
+        ReflectionTestUtils.setField(target, "cancellationTransactions", manager);
         return transactional(target);
     }
 
@@ -446,7 +452,7 @@ class RegistrationTopicFenceMySqlIT {
         ClubEventOpsServiceImpl wrapper = clubCancellation(series, cancellation());
         assertEquals(0, afterTopicRelease(() -> wrapper.cancelActivityByOwnerWithClubWrapUp(70L, 5L, "reason"), false,
                 () -> verify(series, never()).selectSeriesByActivityAnyStatusForUpdate(anyLong())).getRefundedOrders());
-        verify(series, times(1)).selectSeriesByActivityAnyStatusForUpdate(5L);
+        verify(series, times(2)).selectSeriesByActivityAnyStatusForUpdate(5L);
         assertNotNull(db.queryForObject("SELECT cancel_time FROM cms_activity WHERE id=5", java.util.Date.class));
     }
 
@@ -528,7 +534,8 @@ class RegistrationTopicFenceMySqlIT {
         assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
         assertEquals(2, db.queryForObject("SELECT state FROM wx_payment_callback_inbox", Integer.class));
         assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_fact_link", Integer.class));
-        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact_rejection", Integer.class));
+        assertEquals(1, db.queryForObject(
+                "SELECT COUNT(*) FROM wx_verified_payment_fact_rejection WHERE rejection_reason='INBOX_BINDING'", Integer.class));
         verifyNoInteractions(entries);
     }
 

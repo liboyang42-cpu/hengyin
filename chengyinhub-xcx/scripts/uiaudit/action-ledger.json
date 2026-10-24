@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5119,
+  "controlCount": 5121,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -176093,6 +176093,19 @@
             },
             {
               "selector": "cy-inline-error.mh__error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
               "index": 0
             }
           ]
@@ -356291,85 +356304,26 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "state",
       "effectClasses": [
-        "write",
-        "navigation"
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
-        ],
-        "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/precheck",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/status",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "apiContracts": [],
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -356529,84 +356483,26 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "write",
+      "baseActionClass": "state",
       "effectClasses": [
-        "write"
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
-        ],
-        "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/precheck",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/status",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "apiContracts": [],
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -356766,84 +356662,26 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "write",
+      "baseActionClass": "state",
       "effectClasses": [
-        "write"
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
-        ],
-        "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/precheck",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/status",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "apiContracts": [],
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -357003,31 +356841,24 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write"
+        "read",
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
         "apis": [
           "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
           "/api/user/info"
         ],
         "primaryApis": [
           "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
           "/api/user/info"
         ],
         "auxiliaryApis": [],
@@ -357039,43 +356870,15 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/precheck",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/status",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/user/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -357240,31 +357043,24 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "event-contract",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write"
+        "read",
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
         "apis": [
           "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
           "/api/user/info"
         ],
         "primaryApis": [
           "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
           "/api/user/info"
         ],
         "auxiliaryApis": [],
@@ -357276,43 +357072,15 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/precheck",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/status",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/user/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -357449,9 +357217,168 @@
         "js": "components/cy/scene-settings-deregister/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/compliance/consents",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/user/deregister/apply",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "success": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "duplicate-trigger": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "blocked": [],
+        "consent-error": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "verification-error": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "stale-after-consent": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "apply-blocked": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "error": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/status",
+            "method": "GET",
+            "kind": "read"
+          }
+        ],
+        "timeout": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/status",
+            "method": "GET",
+            "kind": "read"
+          }
+        ],
+        "status-error": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/status",
+            "method": "GET",
+            "kind": "read"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "duplicate-trigger": [
+          "success",
+          "success"
+        ],
+        "blocked": [],
+        "consent-error": [
+          "error"
+        ],
+        "verification-error": [
+          "success"
+        ],
+        "stale-after-consent": [
+          "success"
+        ],
+        "apply-blocked": [
+          "success",
+          "success"
+        ],
+        "error": [
+          "success",
+          "error",
+          "success"
+        ],
+        "timeout": [
+          "success",
+          "timeout",
+          "success"
+        ],
+        "status-error": [
+          "success",
+          "error",
+          "error"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -357477,37 +357404,55 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "write",
       "effectClasses": [
-        "write"
+        "write",
+        "state"
       ],
       "accessBoundary": "self",
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "login"
+      ],
+      "successCapabilities": [
+        "login"
+      ],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
         "apis": [
-          "/api/sms/send",
+          "/api/compliance/consents",
+          "/api/config/features",
+          "/api/login/code",
           "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "primaryApis": [
-          "/api/sms/send",
+          "/api/compliance/consents",
           "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
         "apiContracts": [
           {
-            "url": "/api/sms/send",
+            "url": "/api/compliance/consents",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -357519,45 +357464,35 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/precheck",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/user/deregister/status",
             "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
         "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
+          "/api/compliance/consents",
+          "/api/user/deregister/apply"
         ]
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
+        "duplicate-trigger",
+        "blocked",
+        "consent-error",
+        "verification-error",
+        "stale-after-consent",
+        "apply-blocked",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "status-error"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "components/cy/scene-settings-deregister/index.js:30"
@@ -357686,9 +357621,168 @@
         "js": "components/cy/scene-settings-deregister/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/compliance/consents",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/user/deregister/apply",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "success": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "duplicate-trigger": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "blocked": [],
+        "consent-error": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "verification-error": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "stale-after-consent": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "apply-blocked": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "error": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/status",
+            "method": "GET",
+            "kind": "read"
+          }
+        ],
+        "timeout": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/status",
+            "method": "GET",
+            "kind": "read"
+          }
+        ],
+        "status-error": [
+          {
+            "urlTemplate": "/api/compliance/consents",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/apply",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/user/deregister/status",
+            "method": "GET",
+            "kind": "read"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "duplicate-trigger": [
+          "success",
+          "success"
+        ],
+        "blocked": [],
+        "consent-error": [
+          "error"
+        ],
+        "verification-error": [
+          "success"
+        ],
+        "stale-after-consent": [
+          "success"
+        ],
+        "apply-blocked": [
+          "success",
+          "success"
+        ],
+        "error": [
+          "success",
+          "error",
+          "success"
+        ],
+        "timeout": [
+          "success",
+          "timeout",
+          "success"
+        ],
+        "status-error": [
+          "success",
+          "error",
+          "error"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -357714,37 +357808,55 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "write",
       "effectClasses": [
-        "write"
+        "write",
+        "state"
       ],
       "accessBoundary": "self",
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "login"
+      ],
+      "successCapabilities": [
+        "login"
+      ],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
         "apis": [
-          "/api/sms/send",
+          "/api/compliance/consents",
+          "/api/config/features",
+          "/api/login/code",
           "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "primaryApis": [
-          "/api/sms/send",
+          "/api/compliance/consents",
           "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
         "apiContracts": [
           {
-            "url": "/api/sms/send",
+            "url": "/api/compliance/consents",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -357756,45 +357868,35 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/precheck",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/user/deregister/status",
             "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
         "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
+          "/api/compliance/consents",
+          "/api/user/deregister/apply"
         ]
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
+        "duplicate-trigger",
+        "blocked",
+        "consent-error",
+        "verification-error",
+        "stale-after-consent",
+        "apply-blocked",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "status-error"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "components/cy/scene-settings-deregister/index.js:30"
@@ -357951,53 +358053,28 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write"
+        "read",
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
         "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "auxiliaryApis": [],
         "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
           {
             "url": "/api/user/deregister/precheck",
             "method": "POST",
@@ -358009,21 +358086,11 @@
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -358188,49 +358255,43 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "event-contract",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write"
+        "read",
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
         "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
+          "/api/config/features",
+          "/api/login/code",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
         "apiContracts": [
           {
-            "url": "/api/sms/send",
+            "url": "/api/config/features",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
           {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
+            "url": "/api/login/code",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -358246,21 +358307,11 @@
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -358425,53 +358476,28 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "event-contract",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write"
+        "read",
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
         "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "auxiliaryApis": [],
         "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
           {
             "url": "/api/user/deregister/precheck",
             "method": "POST",
@@ -358483,21 +358509,11 @@
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -358662,53 +358678,28 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "event-contract",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write"
+        "read",
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
         "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "auxiliaryApis": [],
         "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
           {
             "url": "/api/user/deregister/precheck",
             "method": "POST",
@@ -358720,21 +358711,11 @@
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -358899,84 +358880,26 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "write",
+      "baseActionClass": "state",
       "effectClasses": [
-        "write"
+        "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
-        ],
-        "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel",
-          "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
-        ],
+        "apis": [],
+        "primaryApis": [],
         "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/precheck",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/status",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
-          "/api/user/deregister/cancel"
-        ]
+        "apiContracts": [],
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -359140,7 +359063,8 @@
       "interactionMode": "event-contract",
       "baseActionClass": "write",
       "effectClasses": [
-        "write"
+        "write",
+        "state"
       ],
       "accessBoundary": "self",
       "externalCapabilities": [],
@@ -359148,35 +359072,17 @@
       "targets": {
         "routes": [],
         "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
           "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
           "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "auxiliaryApis": [],
         "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
           {
             "url": "/api/user/deregister/cancel",
             "method": "POST",
@@ -359194,21 +359100,13 @@
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
         "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
           "/api/user/deregister/cancel"
         ]
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
@@ -359353,7 +359251,7 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
-      "confirmationMode": null,
+      "confirmationMode": "wx.showModal",
       "control": {
         "tag": "cy-btn",
         "event": "bindtap",
@@ -359377,7 +359275,8 @@
       "interactionMode": "tap",
       "baseActionClass": "write",
       "effectClasses": [
-        "write"
+        "write",
+        "state"
       ],
       "accessBoundary": "self",
       "externalCapabilities": [],
@@ -359385,35 +359284,17 @@
       "targets": {
         "routes": [],
         "apis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
           "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "primaryApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
           "/api/user/deregister/cancel",
           "/api/user/deregister/precheck",
-          "/api/user/deregister/status",
-          "/api/user/info"
+          "/api/user/deregister/status"
         ],
         "auxiliaryApis": [],
         "apiContracts": [
-          {
-            "url": "/api/sms/send",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/deregister/apply",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
           {
             "url": "/api/user/deregister/cancel",
             "method": "POST",
@@ -359431,26 +359312,19 @@
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
         "writeApis": [
-          "/api/sms/send",
-          "/api/user/deregister/apply",
           "/api/user/deregister/cancel"
         ]
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "modal-cancelled"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -884172,7 +884046,109 @@
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:251:bindtap:refreshVoice:38",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:251:bind:action:refreshVoice:38",
+      "route": "pages/merchant/decor/ai-npc/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
+        "js": "pages/merchant/decor/ai-npc/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-inline-error",
+        "event": "bind:action",
+        "handler": "refreshVoice",
+        "line": 251,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{voiceError}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/npc/voice/status"
+        ],
+        "primaryApis": [
+          "/api/merchant/npc/voice/status"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/npc/voice/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller",
+            "wrapper": "_request"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:681"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/ai-npc/index.wxml:252:bindtap:refreshVoice:39",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -884195,7 +884171,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "refreshVoice",
-        "line": 251,
+        "line": 252,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{voiceUnknown}}",
         "disabledCondition": null,
@@ -884274,7 +884250,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:257:bind:settled:onPrivacyGateSettled:39",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:258:bind:settled:onPrivacyGateSettled:40",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -884297,7 +884273,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 257,
+        "line": 258,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895845,36 +895821,27 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write",
+        "read",
         "state"
       ],
-      "accessBoundary": "owned-resource",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/merchant/citynode/index",
           "pages/privacy/index"
         ],
         "apis": [
           "/api/config/features",
-          "/api/coupon/verification",
           "/api/login/code",
-          "/api/merchant/chapter-node/live-checkin-code",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/verify/groupcode/redeem"
+          "/api/merchant/chapter-node/live-checkin-code"
         ],
         "primaryApis": [
-          "/api/coupon/verification",
-          "/api/merchant/chapter-node/live-checkin-code",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/verify/groupcode/redeem"
+          "/api/merchant/chapter-node/live-checkin-code"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -895883,12 +895850,6 @@
         "apiContracts": [
           {
             "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/coupon/verification",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -895904,37 +895865,16 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_dynamic_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_qr_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/verify/groupcode/redeem",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/verify/groupcode/redeem"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -897672,36 +897612,27 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "event-contract",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write",
+        "read",
         "state"
       ],
-      "accessBoundary": "owned-resource",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/merchant/citynode/index",
           "pages/privacy/index"
         ],
         "apis": [
           "/api/config/features",
-          "/api/coupon/verification",
           "/api/login/code",
-          "/api/merchant/chapter-node/live-checkin-code",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/verify/groupcode/redeem"
+          "/api/merchant/chapter-node/live-checkin-code"
         ],
         "primaryApis": [
-          "/api/coupon/verification",
-          "/api/merchant/chapter-node/live-checkin-code",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/verify/groupcode/redeem"
+          "/api/merchant/chapter-node/live-checkin-code"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -897710,12 +897641,6 @@
         "apiContracts": [
           {
             "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/coupon/verification",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -897731,37 +897656,16 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_dynamic_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_qr_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/verify/groupcode/redeem",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/verify/groupcode/redeem"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -1171962,7 +1171866,121 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:47:bindtap:chooseVoice:5",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:44:bind:action:refreshVoice:5",
+      "route": "component:pages/topic/components/cy/node-npc-form/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "#node-npc-form",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/cy/node-npc-form/index.wxml",
+        "js": "pages/topic/components/cy/node-npc-form/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-inline-error",
+        "event": "bind:action",
+        "handler": "refreshVoice",
+        "line": 44,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{voiceError}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/chapter-node/npc/voice/status"
+        ],
+        "primaryApis": [
+          "/api/merchant/chapter-node/npc/voice/status"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/chapter-node/npc/voice/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller",
+            "wrapper": "_request"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/cy/node-npc-form/index.js:418"
+      }
+    },
+    {
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:48:bindtap:chooseVoice:6",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1172000,7 +1172018,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "chooseVoice",
-        "line": 47,
+        "line": 48,
         "selectorHint": ".nnf-action-button",
         "visibleCondition": null,
         "disabledCondition": "{{saving || voiceBusy || voiceUnknown || voiceStatus === 1}}",
@@ -1172085,7 +1172103,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:49:bindtap:uploadVoice:6",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:50:bindtap:uploadVoice:7",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1172120,7 +1172138,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "uploadVoice",
-        "line": 49,
+        "line": 50,
         "selectorHint": ".nnf-action-button",
         "visibleCondition": null,
         "disabledCondition": "{{!voiceFile || saving || voiceBusy || voiceUnknown || voiceStatus === 1}}",
@@ -1172241,7 +1172259,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:54:bindtap:refreshVoice:7",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:55:bindtap:refreshVoice:8",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1172276,7 +1172294,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "refreshVoice",
-        "line": 54,
+        "line": 55,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{voiceBusy}}",
@@ -1172355,7 +1172373,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:55:bindtap:confirmNewVoiceRequest:8",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:56:bindtap:confirmNewVoiceRequest:9",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1172797,7 +1172815,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirmNewVoiceRequest",
-        "line": 55,
+        "line": 56,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{voiceBusy}}",
@@ -1172912,7 +1172930,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:59:bindtap:readVoiceHistory:9",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:60:bindtap:readVoiceHistory:10",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1172947,7 +1172965,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "readVoiceHistory",
-        "line": 59,
+        "line": 60,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1173026,7 +1173044,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:63:bindtap:playVoice:10",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:64:bindtap:playVoice:11",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1173061,7 +1173079,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "playVoice",
-        "line": 63,
+        "line": 64,
         "selectorHint": ".nnf-action-button",
         "visibleCondition": "{{voiceSample}}",
         "disabledCondition": null,
@@ -1173115,7 +1173133,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:64:bindtap:resetVoice:11",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:65:bindtap:resetVoice:12",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1173150,7 +1173168,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "resetVoice",
-        "line": 64,
+        "line": 65,
         "selectorHint": ".nnf-action-button",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1173229,7 +1173247,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:71:bindtap:onSheetClose:12",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:72:bindtap:onSheetClose:13",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1173264,7 +1173282,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onSheetClose",
-        "line": 71,
+        "line": 72,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{saving}}",
@@ -1173309,7 +1173327,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:72:bindtap:save:13",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:73:bindtap:save:14",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1173344,7 +1173362,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "save",
-        "line": 72,
+        "line": 73,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!form.name}}",
@@ -1173449,7 +1173467,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/node-npc-form/index.wxml:81:bind:close:onResultClose:14",
+      "id": "pages/topic/components/cy/node-npc-form/index.wxml:82:bind:close:onResultClose:15",
       "route": "component:pages/topic/components/cy/node-npc-form/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1173484,7 +1173502,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultClose",
-        "line": 81,
+        "line": 82,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1251477,24 +1251495,15 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/merchant/citynode/index",
           "pages/privacy/index"
         ],
         "apis": [
           "/api/config/features",
-          "/api/coupon/verification",
           "/api/login/code",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/verify/citynode/issue",
-          "/api/verify/groupcode/redeem"
+          "/api/verify/citynode/issue"
         ],
         "primaryApis": [
-          "/api/coupon/verification",
-          "/api/registration/scan_dynamic_code",
-          "/api/registration/scan_qr_code",
-          "/api/verify/citynode/issue",
-          "/api/verify/groupcode/redeem"
+          "/api/verify/citynode/issue"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1251508,25 +1251517,7 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/coupon/verification",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_dynamic_code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/scan_qr_code",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1251536,17 +1251527,10 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/verify/groupcode/redeem",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
         "writeApis": [
-          "/api/verify/citynode/issue",
-          "/api/verify/groupcode/redeem"
+          "/api/verify/citynode/issue"
         ]
       },
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",

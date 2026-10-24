@@ -103,9 +103,11 @@ class RegistrationQueryApplicationTest {
         row.setOwnerId(20L); row.setRegistrationStatus(1); rows.add(row);
         Thread httpThread = Thread.currentThread();
         int[] calls = {0};
+        boolean[] outerPagination = {false};
         when(registrations.selectCmsRegistrationList(any())).thenAnswer(call -> {
             assertSame(httpThread, Thread.currentThread());
-            if (calls[0]++ == 0) assertNull(PageHelper.getLocalPage());
+            calls[0]++;
+            if (!outerPagination[0]) assertNull(PageHelper.getLocalPage());
             else {
                 Page<?> requested = PageHelper.getLocalPage();
                 assertNotNull(requested); assertEquals(1, requested.getPageNum()); assertEquals(10, requested.getPageSize());
@@ -120,11 +122,25 @@ class RegistrationQueryApplicationTest {
         ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", mock(ICmsActivityService.class));
         ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refunds);
         RegistrationQueryApplication app = RegistrationQueryTestFixtures.application(controller);
-        assertSame(rows, app.myRegistrationList(7L, "3", "0", null).get("data"));
-        AjaxResult response = controller.myRegistrationList("3", "0", null);
-        assertEquals(200, response.get("code")); TableDataInfo page = (TableDataInfo) response.get("data");
-        assertSame(rows, page.getRows()); assertEquals(37L, page.getTotal()); assertEquals(200, page.getCode());
-        assertEquals("查询成功", page.getMsg()); assertNull(PageHelper.getLocalPage());
+        try {
+            assertSame(rows, app.myRegistrationList(7L, "3", "0", null).get("data"));
+            // The original controller intentionally does not enable startPage; wrapping is its only added effect.
+            AjaxResult response = controller.myRegistrationList("3", "0", null);
+            assertEquals(200, response.get("code")); TableDataInfo page = (TableDataInfo) response.get("data");
+            assertSame(rows, page.getRows()); assertEquals(37L, page.getTotal()); assertEquals(200, page.getCode());
+            assertEquals("查询成功", page.getMsg()); assertNull(PageHelper.getLocalPage());
+            // Preserve the positive PageHelper assertions for a real pre-existing HTTP-thread page context.
+            outerPagination[0] = true;
+            PageHelper.startPage(1, 10);
+            AjaxResult pagedResponse = controller.myRegistrationList("3", "0", null);
+            assertEquals(200, pagedResponse.get("code"));
+            TableDataInfo paged = (TableDataInfo) pagedResponse.get("data");
+            assertSame(rows, paged.getRows()); assertEquals(37L, paged.getTotal()); assertEquals(200, paged.getCode());
+            assertEquals("查询成功", paged.getMsg()); assertNull(PageHelper.getLocalPage());
+            assertEquals(3, calls[0]);
+        } finally {
+            PageHelper.clearPage();
+        }
         assertNull(RegistrationQueryApplication.class.getAnnotation(Transactional.class));
         for (java.lang.reflect.Method method : RegistrationQueryApplication.class.getDeclaredMethods())
             assertNull(method.getAnnotation(Transactional.class), method.getName());

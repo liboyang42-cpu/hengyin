@@ -13,6 +13,7 @@ import com.chengyinhub.business.service.IPerkLedgerService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.web.service.play.PlayHistoryQueryApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -380,12 +381,16 @@ class ApiPlayMyCompletedSelfPlayContractTest
         com.chengyinhub.business.service.ICommunityPostService references =
                 mock(com.chengyinhub.business.service.ICommunityPostService.class);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "communityPostService", references);
+        // The boolean HTTP adapter now delegates to the application; stub its original-history seam.
+        PlayHistoryQueryApplication historyReader = spy((PlayHistoryQueryApplication)
+                PlayNodeAccessTestFixtures.owner(controller, PlayHistoryQueryApplication.class));
+        ReflectionTestUtils.setField(controller, "playHistoryQueryApplication", historyReader);
         List<Map<String, Object>> history = new ArrayList<>();
         Map<String, Object> cancelled = new LinkedHashMap<>();
         cancelled.put("dataType", 1); cancelled.put("dataId", 63L); cancelled.put("completed", true);
         history.add(cancelled);
         AjaxResult original = AjaxResult.success(history);
-        doReturn(original).when(controller).myCompleted();
+        doReturn(original).when(historyReader).myCompleted(PLAYER);
         org.junit.jupiter.api.Assertions.assertSame(original, controller.myCompleted(false));
         org.mockito.Mockito.verify(references, org.mockito.Mockito.never()).filterPublicCompletedReferences(anyLong(), any());
         when(references.filterPublicCompletedReferences(PLAYER, history)).thenReturn(Collections.emptyList());
@@ -394,7 +399,7 @@ class ApiPlayMyCompletedSelfPlayContractTest
         assertEquals(Collections.emptyList(), publicResult.get("data"));
         assertEquals(1, history.size(), "filtering must not erase historical rows");
         AjaxResult failure = AjaxResult.error("please login");
-        doReturn(failure).when(controller).myCompleted();
+        doReturn(failure).when(historyReader).myCompleted(PLAYER);
         org.junit.jupiter.api.Assertions.assertSame(failure, controller.myCompleted(true));
         org.mockito.Mockito.verify(references, org.mockito.Mockito.times(1)).filterPublicCompletedReferences(anyLong(), any());
     }

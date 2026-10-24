@@ -560,7 +560,7 @@ class WholeOrderRefundTest {
         order.get(1).setVerificationStatus(1);
 
         RuntimeException e = assertThrows(RuntimeException.class, () -> service.cancelPaidRegistration(2L, MEMBER_ID));
-        assertEquals("同单的票都已核销,不能退款", e.getMessage(), "全核销是终局「不退」,不是「请刷新重试」");
+        assertEquals("已核销报名不可退款", e.getMessage(), "当前锁读已证明本票核销，须沿原核销闸拒绝；全核销仍是终局不退");
         verify(cases, never()).recordCase(any());
         verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(ticketMapper, never()).restoreInventory(anyLong(), any(Long.class));

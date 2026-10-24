@@ -164,6 +164,53 @@ public final class WechatVerifiedFactTestSupport {
             ReflectionTestUtils.setField(gateway,"verifiedProviderClients",constructor.newInstance(payment,refund,mchid));
         } catch (ReflectiveOperationException failed) { throw new AssertionError(failed); }
     }
+    /** Explicit original request fixture, committed before the independently stored provider observation.
+     * Does not infer request fields from a response, change business state, close or replace an attempt.
+     * Only approved isolated SQL suites may call this; it makes no SDK/provider-verification claim. */
+    public static void freezeRegistrationAttempt(javax.sql.DataSource source, long registrationId,
+            String businessNo, String wxNo, String mchid, String appid, String tradeType,
+            long totalFen, String requestHash) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("Original request fixture must commit before the business transaction");
+        if (registrationId <= 0 || totalFen <= 0 || businessNo == null || wxNo == null
+                || mchid == null || appid == null || !Set.of("APP", "JSAPI").contains(tradeType)
+                || requestHash == null || !requestHash.matches("[a-f0-9]{64}"))
+            throw new IllegalArgumentException("Explicit original request fixture required");
+        var jdbc = new org.springframework.jdbc.core.JdbcTemplate(source);
+        var manager = new org.springframework.jdbc.datasource.DataSourceTransactionManager(source);
+        new org.springframework.transaction.support.TransactionTemplate(manager).executeWithoutResult(tx -> {
+            var original = jdbc.queryForMap(
+                    "SELECT registration_no,wechat_payment_amount FROM cms_registration WHERE id=? FOR UPDATE",
+                    registrationId);
+            org.junit.jupiter.api.Assertions.assertEquals(businessNo, original.get("registration_no"));
+            org.junit.jupiter.api.Assertions.assertEquals(totalFen,
+                    new java.math.BigDecimal(original.get("wechat_payment_amount").toString())
+                            .movePointRight(2).longValueExact());
+            var attempts = jdbc.queryForList("SELECT * FROM wx_pay_order_intent WHERE biz_type='REGISTRATION'"
+                    + " AND biz_id=? ORDER BY attempt_no DESC LIMIT 1 FOR UPDATE", registrationId);
+            if (attempts.isEmpty()) {
+                org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.update(
+                        "INSERT INTO wx_pay_order_intent(mchid,out_trade_no,business_out_trade_no,biz_type,biz_id,"
+                        + "attempt_no,appid,trade_type,currency,total_fen,payer_openid,request_description,notify_url,request_hash)"
+                        + " VALUES(?,?,?,'REGISTRATION',?,1,?,?,'CNY',?,'fixture-openid','registration fixture',"
+                        + "'https://notify.invalid/fixture',?)",
+                        mchid, wxNo, businessNo, registrationId, appid, tradeType, totalFen, requestHash));
+            } else {
+                var retained = attempts.getFirst();
+                org.junit.jupiter.api.Assertions.assertEquals(mchid, retained.get("mchid"));
+                org.junit.jupiter.api.Assertions.assertEquals(wxNo, retained.get("out_trade_no"));
+                org.junit.jupiter.api.Assertions.assertEquals(businessNo, retained.get("business_out_trade_no"));
+                org.junit.jupiter.api.Assertions.assertEquals(appid, retained.get("appid"));
+                org.junit.jupiter.api.Assertions.assertEquals(tradeType, retained.get("trade_type"));
+                org.junit.jupiter.api.Assertions.assertEquals("CNY", retained.get("currency"));
+                org.junit.jupiter.api.Assertions.assertEquals(totalFen, ((Number) retained.get("total_fen")).longValue());
+                org.junit.jupiter.api.Assertions.assertEquals(requestHash, retained.get("request_hash"));
+                org.junit.jupiter.api.Assertions.assertNull(retained.get("closed_confirmed_at"),
+                        "a fixture must never reopen or replace the original closed attempt");
+            }
+        });
+    }
+
     /** Real MySQL mapper/transaction wiring. Caller must apply the exact proposed migration in its approved scratch DB. */
     public static WechatVerifiedPaymentFactService realFacts(javax.sql.DataSource source) {
         try {

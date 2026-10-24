@@ -262,6 +262,10 @@ class RegistrationFundsMybatisIntegrationTest {
     @BeforeEach
     void resetSchema() throws Exception {
         clearInvocations(localPaymentGuards);
+        // SQL originals/facts are recreated per case. Their unit inbox must have the same
+        // lifetime; retain reference conflict checks and repeated mutation within each case.
+        ReflectionTestUtils.setField(registrationTarget, "wxPaymentCallbackInboxService",
+                PaymentCallbackInboxStubs.passThrough(transactionManager, verifiedFacts));
         // Existing suite recreates its own scratch schema per case; never disable immutable triggers during execution.
         execute("DROP TABLE IF EXISTS cms_registration_payment_fact");
         execute("DELETE FROM wx_verified_payment_fact_rejection", "DELETE FROM wx_verified_payment_fact",
@@ -1753,7 +1757,7 @@ class RegistrationFundsMybatisIntegrationTest {
         assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> cancelActivity(activityCancellation(wechat, mock(IRefundService.class), alarm)));
 
-        verify(alarm).alarm(org.mockito.ArgumentMatchers.contains("查单失败"),
+        verify(alarm).alarm(org.mockito.ArgumentMatchers.contains("支付查证未确认"),
                 org.mockito.ArgumentMatchers.contains("registrationId=11"));
     }
 
@@ -1770,7 +1774,7 @@ class RegistrationFundsMybatisIntegrationTest {
         assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> cancelActivity(activityCancellation(wechat, mock(IRefundService.class), alarm)));
 
-        verify(alarm).alarm(org.mockito.ArgumentMatchers.contains("关微信单失败"),
+        verify(alarm).alarm(org.mockito.ArgumentMatchers.contains("原支付关闭未确认"),
                 org.mockito.ArgumentMatchers.contains("registrationId=11"));
         assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(0, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));

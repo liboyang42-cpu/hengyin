@@ -70,7 +70,8 @@ class OWN_C04_22Test {
             MemberCashWithdraw current = row(frozen ? MemberCashWithdraw.STATUS_PROCESSING : MemberCashWithdraw.STATUS_SUCCESS);
             current.setFrozen(frozen ? 1 : 0); current.setWechatBatchStatus("AUTHORITATIVE");
             when(f.provider.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && "CW1".equals(i.outBatchNo()) && "CD1".equals(i.outDetailNo())))).thenAnswer(i -> {
-                f.stored.set(current);
+                current.setBalanceDeductId(f.stored.get().getBalanceDeductId());
+                f.stored.set(current); // Concurrent lifecycle change preserves the original immutable debit linkage.
                 Map<String,String> result = new HashMap<>(); result.put("result", "UNKNOWN");
                 result.put("batchStatus", "OLD-OBSERVATION"); return result;
             });

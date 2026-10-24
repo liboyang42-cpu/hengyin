@@ -56,6 +56,17 @@ class ClmCommercePaymentProofMySqlIT {
             "migration_business_audit_event_20260823.sql","migration_20261023_wx_pay_order_intent.sql",
             "migration_wx_payment_callback_inbox_outbox_20260725.sql","migration_20261024_wx_verified_payment_fact.sql",
             "migration_20261024_clm_commerce_payment_proof.sql");
+        // As in ClubJoinGovernanceMySqlIT, apply the canonical audit-table evolution after
+        // the original audit migration has completed its strict baseline checks. This suite
+        // does not install unrelated approval/menu tables or rewrite the canonical ALTER.
+        String governance = java.nio.file.Files.readString(P0AcceptanceSchema.repoRoot()
+            .resolve("chengyinhub-admin/sql/migration_approval_governance_20260828.sql"),
+            java.nio.charset.StandardCharsets.UTF_8);
+        var auditAlter = java.util.regex.Pattern.compile("(?s)ALTER TABLE business_audit_event\\s+.*?;")
+            .matcher(governance);
+        assertTrue(auditAlter.find(), "canonical audit actor/request identity migration must exist");
+        db.execute(auditAlter.group());
+        assertFalse(auditAlter.find(), "the canonical audit-table evolution must be unambiguous");
         SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"ClubMapper","ClubMemberMapper","ClubMembershipMapper",
             "OmsOrderMapper","MerchantSubscriptionMapper","BusinessAuditEventMapper");
         invoices=sql.getMapper(ClubMembershipMapper.class);

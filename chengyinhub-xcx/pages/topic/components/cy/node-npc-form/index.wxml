@@ -40,7 +40,8 @@
     <view class="nnf-field">
       <view class="nnf-label">声音 <text class="nnf-optional">选填</text></view>
       <view class="nnf-voice-status">{{voiceStatusText}}</view>
-      <text wx:if="{{voiceError}}">{{voiceError}}</text>
+      <cy-inline-error wx:if="{{voiceError}}" kind="error" title="声音暂未完成" sub="{{voiceError}}"
+        action="{{voiceUnknown ? '查询原请求' : ''}}" bind:action="refreshVoice" />
       <view class="nnf-voice-file" wx:if="{{voiceFileText}}">{{voiceFileText}}</view>
       <view class="nnf-actions">
         <cy-btn variant="secondary" class="nnf-action-button" disabled="{{saving || voiceBusy || voiceUnknown || voiceStatus === 1}}"

@@ -134,7 +134,9 @@ class AiQuotaReservationRedisIT {
         AiGatewayServiceImpl service=gateway(recording(false,true,true));
         PhotoCheckVisionService photo=new PhotoCheckVisionService();
         ReflectionTestUtils.setField(photo,"aiGatewayService",service);
-        assertThrows(IllegalStateException.class,()->ReflectionTestUtils.invokeMethod(photo,"chargeQuota",member));
+        IllegalStateException failure=assertThrows(IllegalStateException.class,
+                ()->ReflectionTestUtils.invokeMethod(photo,"chargeQuota",member,(String)null));
+        assertEquals("AI quota reservation unavailable",failure.getMessage());
         String counter=owned.stream().filter(k->k.startsWith("ai:gen:limit:photo:")&&!k.endsWith(":generation")).findFirst().get();
         assertEquals("0",raw.opsForValue().get(counter));
     }

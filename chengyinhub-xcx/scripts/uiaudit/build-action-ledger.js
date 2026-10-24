@@ -1680,6 +1680,64 @@ function requireBindings(src, dir) {
   return { named, ns }
 }
 
+// This shared controller exposes an object of methods, not flat module functions. Follow only
+// the component's explicit methods.X.call(this, ...) delegates; never add the entire 16KB flow.
+function deregisterDelegates(jsFile, slices) {
+  if (rel(jsFile) !== 'components/cy/scene-settings-deregister/index.js') return
+  const component = fs.readFileSync(jsFile, 'utf8')
+  if (!/const\s*\{\s*initialData,\s*methods\s*\}\s*=\s*require\(['"]\.\.\/\.\.\/\.\.\/utils\/deregister-flow\.js['"]\)/.test(component))
+    throw new Error('注销组件共享 owner 导入不再符合已证明合同')
+  const file = path.join(ROOT, 'utils/deregister-flow.js'), source = fs.readFileSync(file, 'utf8')
+  const ast = parseJavaScript(source)
+  const declaration = ast.body.flatMap(node => node.type === 'VariableDeclaration' ? node.declarations : [])
+    .find(node => node.id.name === 'methods' && node.init && node.init.type === 'ObjectExpression')
+  const exported = ast.body.some(node => node.type === 'ExpressionStatement'
+    && node.expression.type === 'AssignmentExpression' && source.slice(node.expression.left.start, node.expression.left.end) === 'module.exports'
+    && node.expression.right.type === 'ObjectExpression' && node.expression.right.properties.some(property =>
+      property.key.name === 'methods' && property.value.name === 'methods'))
+  if (!declaration || !exported) throw new Error('注销共享 methods 对象缺少可证明的真实导出')
+  for (const statement of ast.body) {
+    if (statement.type === 'FunctionDeclaration') continue
+    if (statement.type === 'VariableDeclaration' && statement.kind === 'const' && statement.declarations.every(node => {
+      if (node === declaration) return true
+      const value = node.init
+      return value && (value.type === 'CallExpression' && (value.callee.name === 'getApp' && value.arguments.length === 0
+          || value.callee.name === 'require' && value.arguments.length === 1 && value.arguments[0].type === 'Literal'
+            && typeof value.arguments[0].value === 'string')
+        || value.type === 'ArrayExpression' && value.elements.every(item => item.type === 'Literal'))
+    })) continue
+    if (statement.type === 'ExpressionStatement' && statement.expression.type === 'AssignmentExpression'
+        && source.slice(statement.expression.left.start, statement.expression.left.end) === 'module.exports'
+        && statement.expression.right.type === 'ObjectExpression'
+        && statement.expression.right.properties.every(property => !property.computed && property.value.type === 'Identifier')) continue
+    throw new Error('注销共享 owner 存在未登记的顶层副作用')
+  }
+  const methods = new Map()
+  const helpers = new Map(ast.body.filter(node => node.type === 'FunctionDeclaration').map(node =>
+    [node.id.name, source.slice(node.body.start, node.body.end)]))
+  for (const property of declaration.init.properties) {
+    if (property.type !== 'Property' || property.computed || property.value.type !== 'FunctionExpression')
+      throw new Error('注销共享 methods 存在未解析分支')
+    const body = source.slice(property.start, property.end)
+    const local = [...helpers.keys()].filter(name => new RegExp('\\b' + name + '\\s*\\(').test(maskNonCodeSafely(body)))
+    methods.set(property.key.name, [body].concat(local.map(name => expandModuleFunction(file, name, null, helpers))).join('\n'))
+  }
+  for (const [name, body] of slices) {
+    const delegate = body.match(/\breturn\s+methods\.([A-Za-z_$][\w$]*)\.call\(this(?:\s*,[^;]*)?\);/)
+    if (!delegate) continue
+    const wrapper = parseJavaScript('({' + body + '})').body[0].expression.properties[0].value
+    const parsed = wrapper.body.body, call = parsed[0] && parsed[0].argument
+    if (parsed.length !== 1 || parsed[0].type !== 'ReturnStatement' || !call || call.type !== 'CallExpression'
+        || call.callee.type !== 'MemberExpression' || call.callee.computed || call.callee.property.name !== 'call'
+        || call.arguments.length !== wrapper.params.length + 1 || call.arguments[0].type !== 'ThisExpression'
+        || wrapper.params.some((parameter, index) => parameter.type !== 'Identifier'
+          || call.arguments[index + 1].type !== 'Identifier' || call.arguments[index + 1].name !== parameter.name))
+      throw new Error('注销委托入口存在未登记的附加动作: ' + name)
+    if (delegate[1] !== name || !methods.has(name)) throw new Error('注销共享方法委托身份无法证明: ' + name)
+    slices.set(name, methods.get(name))
+  }
+}
+
 function handlerSlices(jsFile) {
   const sources = new Map()
   const entries = extractOwnHandlerEntries(jsFile)
@@ -1688,6 +1746,7 @@ function handlerSlices(jsFile) {
     if (!sources.has(entry.file)) sources.set(entry.file, fs.readFileSync(entry.file, 'utf8'))
     slices.set(entry.name, sources.get(entry.file).slice(entry.start, entry.end))
   })
+  deregisterDelegates(jsFile, slices)
   // [B] 把 require 进来的 helper 按「本地名」和「命名空间.成员」塞进同一张表,
   //   展开时就能跟进去;页面自己的同名方法优先(JS 里本来就是它遮蔽 import)。
   try {
@@ -2210,6 +2269,28 @@ function voiceConfirmedRequestPlan(relative, handler, contracts) {
     requiredRequestOutcomes: outcomes, requiredBranches: Object.keys(byBranch) }
 }
 
+function deregisterRequestPlan(relative, handler, contracts) {
+  if (relative !== 'components/cy/scene-settings-deregister/index.js' || handler !== 'apply') return null
+  const consent = { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }
+  const apply = { urlTemplate: '/api/user/deregister/apply', method: 'POST', kind: 'write' }
+  const status = { urlTemplate: '/api/user/deregister/status', method: 'GET', kind: 'read' }
+  const expected = [consent, apply, status]
+  for (const command of expected) if (!contracts.some(c => c.url === command.urlTemplate && c.method === command.method))
+    throw new Error('注销原请求链缺少真实接口: ' + command.urlTemplate)
+  if (contracts.some(c => !expected.some(e => e.urlTemplate === c.url) && !AUXILIARY_APIS.has(c.url)))
+    throw new Error('注销申请出现未登记请求，不能隐藏额外写入')
+  const success = [consent, apply]
+  return { writeApis: [consent.urlTemplate, apply.urlTemplate], requiredRequests: success,
+    requiredRequestsByBranch: { success, 'duplicate-trigger': success, blocked: [], 'consent-error': [consent],
+      'verification-error': [consent], 'stale-after-consent': [consent], 'apply-blocked': success,
+      error: [consent, apply, status], timeout: [consent, apply, status], 'status-error': [consent, apply, status] },
+    requiredRequestOutcomes: { success: ['success','success'], 'duplicate-trigger': ['success','success'], blocked: [],
+      'consent-error': ['error'], 'verification-error': ['success'], 'stale-after-consent': ['success'],
+      'apply-blocked': ['success','success'], error: ['success','error','success'],
+      timeout: ['success','timeout','success'], 'status-error': ['success','error','error'] },
+    requiredBranches: ['success','duplicate-trigger','blocked','consent-error','verification-error','stale-after-consent','apply-blocked','error','timeout','status-error'] }
+}
+
 function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodies) {
   const expandedSource = [source].concat(appHelperCalls(source, appHelperBodies).map(([, body]) => body)).join('\n')
   const targets = extractTargets(expandedSource)
@@ -2250,6 +2331,16 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     }
   }
   const fileSource = fs.readFileSync(jsFile, 'utf8')
+  if (rel(jsFile) === 'components/cy/scene-settings-deregister/index.js') {
+    const code = maskNonCodeSafely(source)
+    for (const call of source.matchAll(/\bsendUiStateRequest\(app,\s*['"](\/api\/[^'"]+)['"],\s*\{/g)) {
+      if (!code.slice(call.index).startsWith('sendUiStateRequest')) continue
+      const open = call.index + call[0].lastIndexOf('{'), close = matchBrace(code, open)
+      const method = source.slice(open, close + 1).match(/^\{\s*method:\s*['"](GET|POST)['"]/)
+      if (close < 0 || !method) throw new Error('注销请求没有明确 HTTP 合同: ' + call[1])
+      targets.apiContracts.push({ url: call[1], method: method[1], auth: 'authenticated', source: 'deregister-ui-state-call' })
+    }
+  }
   const pageRequests = pageRequestContracts(source, jsFile)
   targets.apis.push(...pageRequests.map(contract => contract.url))
   targets.apiContracts.push(...pageRequests)
@@ -2321,6 +2412,30 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
       if (!dependency) return
       if (dependency === 'utils/community-post-api.js') return
+      if (dependency === 'utils/deregister-flow.js'
+          && rel(scanFile) === 'components/cy/scene-settings-deregister/index.js'
+          && !/\bmethods\b/.test(maskNonCodeSafely(expandedSource))) {
+        // handlerSlices already proved and expanded the exact method plus its local helper closure.
+        // Re-adding the module here would turn initialData() into all three unrelated write commands.
+        return
+      }
+      if (dependency === 'utils/verification-scan.js' && namedImports && namedImports.length === 1
+          && namedImports[0][0] === 'DYN_TTL_MS') {
+        const dependencySource = fs.readFileSync(path.join(ROOT, dependency), 'utf8')
+        const ast = parseJavaScript(dependencySource)
+        const ttl = ast.body.find(node => node.type === 'VariableDeclaration' && node.kind === 'const'
+          && node.declarations.length === 1 && node.declarations[0].id.name === 'DYN_TTL_MS'
+          && node.declarations[0].init.type === 'Literal' && Number.isFinite(node.declarations[0].init.value))
+        const local = namedImports[0].at(-1).replace(/[$]/g, '\\$&')
+        const callable = new RegExp('\\b' + local + '\\s*\\(').test(maskNonCodeSafely(expandedSource))
+        const pureModule = ast.body.every(node => node.type === 'FunctionDeclaration'
+          || node === ttl
+          || node.type === 'ExpressionStatement' && node.expression.type === 'AssignmentExpression'
+            && dependencySource.slice(node.expression.left.start, node.expression.left.end) === 'module.exports'
+            && node.expression.right.type === 'ObjectExpression'
+            && node.expression.right.properties.every(property => !property.computed && property.value.type === 'Identifier'))
+        if (ttl && pureModule && !callable && /module\.exports\s*=\s*\{\s*resolveVerificationScan,\s*DYN_TTL_MS\s*\}/.test(dependencySource)) return
+      }
       if (dependency === 'utils/game-session-client.js') {
         const methods = {
           loadProjection: ['/api/game/session/view', 'GET'],
@@ -2529,6 +2644,8 @@ function buildLedger() {
           : modalContractForHandler(variant.handler, slices, interactionModeFor(binding.attrName))
         const voicePlan = voiceConfirmedRequestPlan(rel(jsFile), variant.handler, targets.apiContracts)
         if (voicePlan) variant = { ...variant, ...voicePlan }
+        const deregisterPlan = deregisterRequestPlan(rel(jsFile), variant.handler, targets.apiContracts)
+        if (deregisterPlan) variant = { ...variant, ...deregisterPlan }
         const inferredWriteApis = effectClasses.includes('write') ? targets.primaryApis.filter((api) => {
           return targets.apiContracts.some((contract) => contract.url === api && contract.method && contract.method !== 'GET'
             && (contract.adapterBranch || isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api)))
@@ -3510,6 +3627,7 @@ module.exports = {
   communityAliasesForSource,
   communityRequestPlan,
   voiceConfirmedRequestPlan,
+  deregisterRequestPlan,
   isSelfOnlyWriteApi,
   isWriteApi,
   extractTargets,

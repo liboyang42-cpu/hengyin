@@ -41,7 +41,8 @@ const NON_INCREASING_CEILING = Object.freeze({
   u1Variable: 13,
   u3Debt: 103,
   u4Debt: 196,
-  u4Dynamic: 65,
+  // Root-reviewed exact fixed route projections; key digest and evidence remain mandatory.
+  u4Dynamic: 67,
   // 2026-08-26 12 → 13:merchant/customer 触达历史改为「有旧记录时刷新失败静默降级」,
   //   fail 不再写可见错误态,故该 silentError 调用点需要逐项登记理由(已登记,见 baseline)。
   // 2026-09-03 13 → 15:activity/list 删掉「发起官方活动」面板后,那两个列表读取的
@@ -70,7 +71,8 @@ const NON_INCREASING_CEILING = Object.freeze({
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新) 30 → 37:本线 9 处静默调用逐项写明理由(举报/纠错半屏失败落结果半屏、
   //   安全感受换取商家 ID 失败落半屏错误位、通知复盘写触达行、漫游头像堆/可参与官方活动与券统计为附属只读信息)。
   // 2026-10-24 上线合并 37 → 39:业主 UI(#508)合作 tab 帖文流与竞猜待答入口两处静默读取,逐项理由见 baseline。
-  u5Silent: 39,
+  // Exact original-identity verification recovery handlers; no general silentError exemption.
+  u5Silent: 42,
 });
 const EXCLUDED_DIRS = new Set([
   '.git', 'node_modules', 'miniprogram_npm', 'tests', 'scripts', 'coverage', 'dist',

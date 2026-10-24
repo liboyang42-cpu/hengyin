@@ -19,7 +19,14 @@ class NpcAsrProjectionContractTest {
             NpcChatResp response;
             if(expected.get("state").isNull()) response=NpcAsrIntentService.unavailable(rid,expected.get("asrReason").asText());
             else {
-                NpcAsrIntent row=new NpcAsrIntent();row.setRequestId(rid);row.setState(expected.get("state").asText());
+                // Project each stored phase from an intent admitted through the real quota/ASR owner.
+                // A legacy row without the original reservation deliberately has a different contract.
+                NpcAsrTestFixture fixture=new NpcAsrTestFixture();
+                NpcAsrIntent row=fixture.recognize();
+                assertEquals(rid,row.getRequestId());assertNotNull(row.getQuotaReservation());
+                org.mockito.Mockito.verify(fixture.quota).consumePlannedQuota(
+                        row.getUserId(),"npc_shop_chat",row.getQuotaReservation());
+                row.setState(expected.get("state").asText());
                 row.setTranscript(expected.get("transcript").isNull()?null:expected.get("transcript").asText());
                 row.setHandoffStarted(expected.get("handoffStarted").asBoolean());row.setBodyErased(expected.get("bodyErased").asBoolean());
                 response=NpcAsrIntentService.outcome(row);

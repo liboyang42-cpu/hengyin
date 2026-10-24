@@ -71,7 +71,7 @@ class Wp04PaidHalfStateMySqlIT {
         db.update("INSERT INTO ums_member(id,balance) VALUES(7,0),(77,0)");
         db.update("INSERT INTO cms_topic(id,name,product_type,member_id,is_settlement) VALUES(11,'G paid half-state',1,7,0)");
         db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,verification_status,purchase_kind,pay_expire_time) VALUES(1,'REG1',1,11,21,10,77,1,10,10,10,10,1,1,0,1,'2026-10-01 08:00:00')");
-        reference=facts.recordVerified(new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original","REG1","WXP1","WXP1","WXTX1","WXTX1","JSAPI","CNY",1000,1000,Instant.ofEpochSecond(1),null,"SUCCESS"));
+        reference=facts.recordVerified(new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original","REG1","REG1","REG1","WXTX1","WXTX1","JSAPI","CNY",1000,1000,Instant.ofEpochSecond(1),null,"SUCCESS"));
         db.update("UPDATE cms_registration SET payment_status=2 WHERE id=1");
         String hash=WxPaymentCallbackInboxServiceImpl.sha256Hex("PAY:WXTX1:SUCCESS");
         if (withStandardInbox) {

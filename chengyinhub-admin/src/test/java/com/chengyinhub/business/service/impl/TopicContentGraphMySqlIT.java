@@ -148,6 +148,8 @@ class TopicContentGraphMySqlIT {
         JsonNode slots=f.json("[{\"key\":\"material\",\"kind\":\"ITEM\",\"label\":\"material\",\"required\":true}]");
         ObjectNode rules=advanced.putObject("interactionRules");rules.set("resourceSlots",slots);
         rules.putArray("resourceCosts").addObject().put("itemId","material").put("quantity",1);
+        // Resource costs need a real supported completion kind, not only a resource-slot declaration.
+        // The unchanged publication gate still rejects the original template without a proof bridge.
         f.db.update("update cms_member_template set advanced_config_json=? where id=701",advanced.toString());f.mark();
         TopicUpdateDTO dto=f.update(true,1);dto.getChapters().get(1).getNodes().get(0).setId(null);
         dto.setRouteMode("LINEAR");dto.setConfigVersion(7L);
@@ -158,7 +160,14 @@ class TopicContentGraphMySqlIT {
             ObjectNode binding=bindings.putObject(key).put("templateId",701).put("slotDigest",GameplayTemplateRules.slotDigest(slots));
             binding.putObject("values");binding.putObject("items").put("material","supply");
         }
-        dto.setThemeRuntimeConfig(runtime.toString());f.success("runtime-bindings",()->f.update(dto,true));
+        dto.setThemeRuntimeConfig(runtime.toString());
+        TopicUpdateDTO unsupported=f.update(true,1);unsupported.getChapters().get(1).getNodes().get(0).setId(null);
+        unsupported.setRouteMode("LINEAR");unsupported.setConfigVersion(7L);unsupported.setThemeRuntimeConfig(runtime.toString());
+        assertTrue(f.failure("resource-costs-without-proof",()->f.update(unsupported,true))
+                .getMessage().contains("尚无通用结算完成证明"));f.unchanged();
+        // This fixture's nodes have GPS coordinates. Method 5 is the existing GPS completion bridge.
+        assertEquals(1,f.db.update("update cms_member_template set validation_method=5 where id=701"));f.mark();
+        f.success("runtime-bindings",()->f.update(dto,true));
         JsonNode stored=f.json(f.topics.selectCmsTopicById(100L).getThemeRuntimeConfigJson());
         assertEquals(3,stored.path("templateBindings").size());assertFalse(stored.toString().contains("client:"));
         for(Map<String,Object> row:f.topicNodes(100))assertTrue(stored.path("templateBindings").has(row.get("id").toString()));
