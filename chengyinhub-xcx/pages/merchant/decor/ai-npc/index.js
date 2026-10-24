@@ -119,6 +119,10 @@ Page({
   },
   onHide() {
     this._voicePageEpoch = (this._voicePageEpoch || 0) + 1;
+    // Retire only this page generation's in-memory confirmation; durable UNKNOWN identities stay intact.
+    this._voiceConfirming = false;
+    this._voiceRiskModalOpen = false;
+    this._voiceRiskModalOwner = null;
     this._hidden = true;
     this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
     this._voiceHoldReleased = true;
@@ -132,6 +136,10 @@ Page({
   },
   onUnload() {
     this._voicePageEpoch = (this._voicePageEpoch || 0) + 1;
+    // Retire only this page generation's in-memory confirmation; durable UNKNOWN identities stay intact.
+    this._voiceConfirming = false;
+    this._voiceRiskModalOpen = false;
+    this._voiceRiskModalOwner = null;
     this._destroyed = true;
     this._voiceHoldReleased = true;
     clearTimeout(this._voiceTimer);

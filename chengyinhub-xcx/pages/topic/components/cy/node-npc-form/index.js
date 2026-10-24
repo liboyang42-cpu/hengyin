@@ -75,6 +75,10 @@ Component({
     _onOpen() {
       this._destroyed = false;
       this._formVersion = (this._formVersion || 0) + 1;
+      // New form generation owns its own modal/query flags; keep all original journal records.
+      this._voiceConfirming = false;
+      this._voiceRiskModalOpen = false;
+      this._voiceRiskModalOwner = null;
       const memberId = String(app.getUserID() || '');
       const current = this._currentForm();
       this._photoMember = this._voiceMember = memberId;
@@ -126,6 +130,10 @@ Component({
 
     _onHide() {
       this._formVersion = (this._formVersion || 0) + 1;
+      // New form generation owns its own modal/query flags; keep all original journal records.
+      this._voiceConfirming = false;
+      this._voiceRiskModalOpen = false;
+      this._voiceRiskModalOwner = null;
       this._teardown();
     },
 
