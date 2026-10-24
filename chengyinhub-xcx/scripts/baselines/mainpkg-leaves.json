@@ -27,11 +27,6 @@
       "sourceBlob": "31d56fbd72ed5f307640a2aaac7e4cda22808144"
     },
     {
-      "from": "utils/features/capsule-client.js",
-      "to": "subpackageTools/utils/features/capsule-client.js",
-      "sourceBlob": "6f53e0792fa635ea5cffb28a97df0fe259023529"
-    },
-    {
       "from": "utils/features/exploration-anniversary.js",
       "to": "subpackageTools/utils/features/exploration-anniversary.js",
       "sourceBlob": "11c3b9af60b5bdda9d87b78344bb5f1b828aee6b"
@@ -42,11 +37,6 @@
       "sourceBlob": "57beaac18ae289d6023566c7b32c8da79100853f"
     },
     {
-      "from": "utils/features/exploration-goals.js",
-      "to": "subpackageTools/utils/features/exploration-goals.js",
-      "sourceBlob": "6bd17e65c8796b0099369a2f58443432594b07e1"
-    },
-    {
       "from": "utils/features/monthly-recap-client.js",
       "to": "subpackageTools/utils/features/monthly-recap-client.js",
       "sourceBlob": "f4e2362e6a69319b2bc12617e8f97b4b480d8cc2"
@@ -55,11 +45,6 @@
       "from": "utils/inbox-preview.js",
       "to": "pages/merchant/utils/inbox-preview.js",
       "sourceBlob": "58dae0ecde308dac2f4e45c6de04b26f0ed74fc4"
-    },
-    {
-      "from": "utils/predict-entry.js",
-      "to": "subpackageB/utils/predict-entry.js",
-      "sourceBlob": "c68c63755d52403d3f58fabdb08c8f697d2b0783"
     },
     {
       "from": "utils/publish/pro-editor-draft.js",

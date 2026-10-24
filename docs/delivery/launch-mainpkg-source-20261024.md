@@ -9,25 +9,26 @@ The existing 3 MiB BLOCK threshold is unchanged.
 
 | Source bytes | Baseline | Candidate |
 | --- | ---: | ---: |
-| Main package | 3,257,791 | 3,114,862 |
+| Main package | 3,257,791 | 3,131,243 |
 | Existing ceiling | 3,145,728 | 3,145,728 |
-| Margin | -112,063 | 30,866 |
+| Margin | -112,063 | 14,485 |
 
 These counts were calculated from the complete Git tree's blob sizes using the
 existing preflight's inclusion rules. No edited consumer remains in the main
 package: every runtime consumer edit is within its existing subpackage.
-The non-runtime `utils/publish/guide-progress.js` remains excluded under its
-existing exact-file rule.
+The already excluded guide-progress helper follows its policy dependency into
+pages/publish/utils/publish. Its original blob is unchanged and its existing
+exact-file exclusion is repointed to that new location; it remains outside the package.
 
 ## Change and reference evidence
 
-37 files (142,929 baseline bytes) move from main-package directories into their
+34 files (126,548 baseline bytes) move from main-package directories into their
 existing exclusive consumer's subpackage. The audit manifest is
 `chengyinhub-xcx/scripts/baselines/mainpkg-leaves.json`; it records each original
 blob SHA and destination. No page registrations, routes, preload rules, package
 roots, dependencies, release thresholds or dynamic action evidence change.
 
-- Five exploration-tool clients and their common stylesheet belong to subpackageTools.
+- Three exploration-tool clients and their common stylesheet belong to subpackageTools.
 - Editor policy and chapter-title WXS belong to pages/publish.
 - Other leaf utilities belong to their single existing consumer package.
 - The cooperation invite sheet belongs to subpackageMember; its shared dependencies
@@ -41,27 +42,43 @@ were checked before moving files. The only dynamic image filename constructor is
 the existing interaction-template path; its seven covers and license remain
 packaged. The relocated images have explicit references. Existing business
 tests are repointed to the relocated implementations, with their assertions
-retained. The UI lint exception for predict-entry is rekeyed to its new path,
-with the same line and reason; its sorted-key digest is recomputed without
-changing counts or thresholds.
+retained. The existing path-sensitive controls stay unchanged: predict-entry, capsule-client
+and exploration-goals stay in main so their existing silent-error and danger-action
+checks retain their original scope and registrations.
 
 The new package ownership contract checks that reviewed leaves remain included,
 old paths stay absent, consumers use the same package, and moved-file dependencies
 resolve. Negative controls cover stale require/WXS/component paths, dynamic image
 prefixes, a missing stylesheet and a cross-package require/image.
 
-## Validation status at candidate creation
+## Validation
 
-Connector-side checks completed: complete Git-tree byte calculation, JavaScript
-syntax parsing of edited JS, JSON parsing, static dependency resolution for edited
-runtime modules, and a scan of newly introduced lines for private paths and
-credential patterns. These are not shell or Node test results.
+After the cloud workspace became available, Node 24.19.0 actually ran:
 
-Node unit tests, UI/scope lint, the release preflight and the source-only WeChat
-release contract were not executed in the cloud workspace before this candidate:
-the execution environment remained unavailable. Existing PR CI and coordinator
-checks must provide that evidence before integration. No additional workflow was
-dispatched manually.
+- Changed unit contracts: 434 passed, zero failures/skips, including the reference
+  and package ownership contract and its negative controls.
+- UI lint: PASS. Scope lint: PASS (711 production JS files; zero unresolved
+  identifiers or missing exports). RequestBody lint: zero errors, two existing warnings.
+- Danger-action gate and its negative-control selftest: PASS. The existing
+  silent-error gate: PASS, with its allowlist and ratchets unchanged.
+- Source-only WeChat release contract: privacy PASS; compiled size WAIT-EXTERNAL.
+- Release preflight: main source size passes at 2.99 MiB; exit 1 remains because
+  dynamic action evidence is pending=5103, nonPassed=0.
+
+The generated static Action Ledger inventory is refreshed for the moved invite
+sheet. All 5103 complete control contracts are identical after inverse path
+normalization, every embedded status remains pending, and action-evidence.json's
+SHA-256 is unchanged. This fixes static inventory drift without claiming dynamic
+acceptance. The action-ledger regression suite passes all 46 tests, including
+the original inventory freshness failure and its negative control.
+
+Full Git-tree/worktree byte calculation, unchanged image/app/preflight
+blob checks, edited-JS/JSON parsing, and an introduced-line credential/private-path
+scan also completed. PR #590's first CI run is
+https://github.com/liboyang42-cpu/hengyin/actions/runs/40062603587 ; it exposed the
+path-sensitive gate and test-harness issues corrected in this candidate. The final
+head must pass the existing PR CI before integration. No workflow was manually
+dispatched.
 
 The release preflight's separate dynamic action evidence BLOCK is owned by the
 coordinator and is deliberately preserved. There is no WeChat compiler receipt;

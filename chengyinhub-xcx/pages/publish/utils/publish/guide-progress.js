@@ -9,7 +9,7 @@
 //                     blocks 文本块 / description,占位文案「暂无描述」不算)
 //
 // 这是引导不是闸:四步全 done 只用来让卡自动消失,任何一步都不阻断其它操作。
-var proEditorPolicy = require('../../pages/publish/utils/publish/pro-editor-policy.js');
+var proEditorPolicy = require('./pro-editor-policy.js');
 
 function text(value) {
   return String(value == null ? '' : value).trim();

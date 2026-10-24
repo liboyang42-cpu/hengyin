@@ -109,7 +109,7 @@ function violations(file, source) {
 }
 
 test('reviewed leaves remain inside existing subpackages and keep their original source files out of main', () => {
-  assert.equal(moves.length, 37);
+  assert.equal(moves.length, 34);
   for (const moved of moves) {
     assert.equal(owner(moved.from), 'MAIN', moved.from);
     assert.notEqual(owner(moved.to), 'MAIN', moved.to);
@@ -126,8 +126,8 @@ test('runtime references resolve after relocation without new cross-subpackage l
 
 test('negative controls reject stale modules, stale WXS, dynamic image paths and cross-package imports', () => {
   const cases = [
-    ['subpackageTools/capsule/index.js', "require('../../utils/features/capsule-client')"],
-    ['pages/roam/index.js', "require('../../subpackageTools/utils/features/capsule-client')"],
+    ['subpackageTools/monthly-recap/index.js', "require('../../utils/features/monthly-recap-client')"],
+    ['pages/roam/index.js', "require('../../subpackageTools/utils/features/monthly-recap-client')"],
     ['pages/publish/fabu/index.wxml', '<wxs src="/utils/wxs/chapter-title.wxs" module="title"/>'],
     ['pages/test.js', "const src = '/images/' + name + '.png'"],
     ['pages/test.js', "const src = '/subpackageMember/images/icon_set.png'"],
@@ -136,6 +136,6 @@ test('negative controls reject stale modules, stale WXS, dynamic image paths and
     ['subpackageMember/components/cy/profile/index.json', '{"usingComponents":{"invite":"/components/cy/coop-invite-sheet/index"}}'],
   ];
   for (const [file, source] of cases) assert.ok(violations(file, source).length, source);
-  assert.deepEqual(violations('subpackageTools/capsule/index.js', "require('../utils/features/capsule-client')"), []);
+  assert.deepEqual(violations('subpackageTools/monthly-recap/index.js', "require('../utils/features/monthly-recap-client')"), []);
   assert.deepEqual(violations('pages/test.js', "const src = 'https://example.invalid/images/icon_set.png'"), []);
 });
