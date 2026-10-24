@@ -71,4 +71,26 @@ class DevicePushRegistrationLifecycleTest {
                 lifecycle.recoverOriginal("dev-recover-never-c09", null).status);
         assertEquals(1, store.size());
     }
+
+    @Test
+    void unusedRevokeOfNeverSeenDoesNotOccupyThenUniqueRegisterApplies() {
+        InMemoryNotifyFixtures.MemoryDeviceStore store = new InMemoryNotifyFixtures.MemoryDeviceStore();
+        DevicePushRegistrationLifecycle lifecycle = new DevicePushRegistrationLifecycle(store);
+        assertThrows(IllegalStateException.class, () -> lifecycle.revoke("dev-revoke-never-c09"));
+        assertEquals(0, store.size(), "未见设备 revoke 观察不得占账");
+        assertNull(store.find("dev-revoke-never-c09"));
+        DevicePushRegistrationLifecycle.Registration unused = lifecycle.recoverOriginal(
+                "dev-revoke-never-c09", null);
+        assertEquals("dev-revoke-never-c09", unused.deviceId);
+        assertEquals("UNKNOWN", unused.status);
+        DevicePushRegistrationLifecycle.Registration first = lifecycle.register(
+                "dev-revoke-never-c09", DevicePushRegistrationLifecycle.ENV_SANDBOX, true,
+                "fixture-token-c09");
+        assertEquals("dev-revoke-never-c09", first.deviceId);
+        assertEquals(DevicePushRegistrationLifecycle.STATUS_ACTIVE, first.status);
+        assertEquals(1, store.size());
+        assertEquals(DevicePushRegistrationLifecycle.STATUS_ACTIVE,
+                lifecycle.recoverOriginal("dev-revoke-never-c09", null).status);
+        assertEquals(1, store.size());
+    }
 }
