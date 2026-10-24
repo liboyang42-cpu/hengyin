@@ -147,3 +147,20 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 9. Parent addendum 2026-10-23 19:08 America/Los_Angeles
+
+HEAD `ed76d7eeb` tests. Did not invent recoverOriginal.
+
+`DevicePushRegistrationLifecycleTest.unusedRevokeOfNeverSeenDoesNotOccupyThenUniqueRegisterApplies`：未见 `dev-revoke-never-c09` 的 `revoke` 抛原注册不存在且 store 仍空；`recoverOriginal` 保持 UNKNOWN；后续唯一 `register` 才是 ACTIVE。
+
+父进程独立 surefire（`/tmp/hy-c09`，2026-10-24T02:07:55Z）：
+
+```
+Tests run: 3 -- DevicePushRegistrationLifecycleTest
+Tests run: 4 -- C09AccountSwitchRestartIsolationTest
+Tests run: 22, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
