@@ -83,7 +83,7 @@ class RevshareGateWiringTest {
     /** [P0-35] 副本也要落内容槽 —— copyCmsTopic 绕开了 service 层 insertCmsTopic。 */
     @Test
     void copyDeclaresContentSlot() throws Exception {
-        String s = flat(TOPIC);
+        String s = flat("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java");
         int at = s.indexOf("LongnewTopicId=newTopic.getId();");   // 已 flatten,串里不能有空格
         assertTrue(at > 0, "找不到 copyCmsTopic 的落库点");
         int decl = s.indexOf("productRoleService.declareContentSlot(newTopicId,", at);

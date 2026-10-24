@@ -125,7 +125,7 @@ class TopicJourneyStoryCarryTest {
         params.put("copyType", 2);
         params.put("memberId", MEMBER);
 
-        service.copyCmsTopic(SOURCE_TOPIC, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
 
         ArgumentCaptor<CmsTopic> insert = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).insertCmsTopic(insert.capture());
@@ -144,7 +144,7 @@ class TopicJourneyStoryCarryTest {
         params.put("copyType", 2);
         params.put("memberId", MEMBER);
 
-        service.copyCmsTopic(SOURCE_TOPIC, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
 
         ArgumentCaptor<CmsTopic> insert = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).insertCmsTopic(insert.capture());

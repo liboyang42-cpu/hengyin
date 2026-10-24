@@ -90,7 +90,7 @@ class ChapterFlowCopyTest
             return 1;
         }).when(nodeMapper).insertCmsTopicNode(any());
 
-        service.copyCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 2));
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 2));
 
         ArgumentCaptor<CmsTopicChapter> copied = ArgumentCaptor.forClass(CmsTopicChapter.class);
         verify(chapterMapper).updateCmsTopicChapter(copied.capture());
@@ -187,7 +187,7 @@ class ChapterFlowCopyTest
             return 1;
         }).when(npcMapper).insertNodeNpc(any());
 
-        service.copyCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 2));
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 2));
 
         ArgumentCaptor<CmsTopicChapter> copied = ArgumentCaptor.forClass(CmsTopicChapter.class);
         verify(chapterMapper).updateCmsTopicChapter(copied.capture());

@@ -82,7 +82,7 @@ class TopicPublisherSlotTest {
 
     @Test
     void platformPublisherGetsPlatformSlotWithNullEntityId() {
-        svc.createTopicByPublisher(req(RoleEntityType.PLATFORM, null, null), "operator");
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.PLATFORM, null, null), "operator");
         // PLATFORM 的 entity_id 必须为 NULL —— 平台不是某个 member,库里有 ck_role_entity_id 兜底
         verify(roleService).declareContentSlot(eq(700L), eq(RoleEntityType.PLATFORM), eq(null));
     }
@@ -93,14 +93,14 @@ class TopicPublisherSlotTest {
         org.mockito.Mockito.when(roleService.activeContentSlot(700L)).thenReturn(null);
 
         assertThrows(IllegalStateException.class,
-                () -> svc.createTopicByPublisher(req(RoleEntityType.PLATFORM, null, null), "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.PLATFORM, null, null), "operator"));
 
         verify(topicMapper).insertCmsTopic(any());
     }
 
     @Test
     void clubPublisherGetsClubSlotAndOwnerIsTheClubNotPlatform() {
-        svc.createTopicByPublisher(req(RoleEntityType.CLUB, 55L, 88L), "operator");
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.CLUB, 55L, 88L), "operator");
         // ★ 本轨的核心:俱乐部发的就是俱乐部发的,不该落成 PLATFORM
         verify(roleService).declareContentSlot(eq(700L), eq(RoleEntityType.CLUB), eq(55L));
         verify(roleService, never()).declareContentSlot(anyLong(), eq(RoleEntityType.PLATFORM), any());
@@ -112,7 +112,7 @@ class TopicPublisherSlotTest {
         org.mockito.Mockito.when(clubService.selectClubByIdForUpdate(55L)).thenReturn(null);
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopicByPublisher(req(RoleEntityType.CLUB, 55L, 88L), "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.CLUB, 55L, 88L), "operator"));
 
         assertTrue(error.getMessage().contains("已解散"));
         verify(topicMapper, never()).insertCmsTopic(any());
@@ -120,7 +120,7 @@ class TopicPublisherSlotTest {
 
     @Test
     void memberPublisherGetsMemberSlot() {
-        svc.createTopicByPublisher(req(RoleEntityType.MEMBER, 88L, null), "operator");
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.MEMBER, 88L, null), "operator");
         verify(roleService).declareContentSlot(eq(700L), eq(RoleEntityType.MEMBER), eq(88L));
     }
 
@@ -129,7 +129,7 @@ class TopicPublisherSlotTest {
     @Test
     void missingPublisherTypeIsRejected() {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopicByPublisher(req(null, null, 88L), "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(null, null, 88L), "operator"));
         assertTrue(e.getMessage().contains("publisherType"), "应点明缺的是发布者声明,实际:" + e.getMessage());
         verify(topicMapper, never()).insertCmsTopic(any());
         verify(roleService, never()).declareContentSlot(anyLong(), anyString(), any());
@@ -139,14 +139,14 @@ class TopicPublisherSlotTest {
     @Test
     void merchantPublisherIsRejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopicByPublisher(req(RoleEntityType.MERCHANT, 99L, 99L), "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.MERCHANT, 99L, 99L), "operator"));
         verify(topicMapper, never()).insertCmsTopic(any());
     }
 
     @Test
     void unknownPublisherTypeIsRejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopicByPublisher(req("GOVERNMENT", 1L, 1L), "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req("GOVERNMENT", 1L, 1L), "operator"));
     }
 
     // ── 负控 2:发布者声明自相矛盾 → 必须拒(与库里 ck_role_entity_id 同口径)────
@@ -154,7 +154,7 @@ class TopicPublisherSlotTest {
     @Test
     void platformWithEntityIdIsRejected() {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopicByPublisher(req(RoleEntityType.PLATFORM, 55L, null), "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.PLATFORM, 55L, null), "operator"));
         assertTrue(e.getMessage().contains("publisherId"));
         verify(topicMapper, never()).insertCmsTopic(any());
     }
@@ -162,7 +162,7 @@ class TopicPublisherSlotTest {
     @Test
     void clubWithoutPublisherIdIsRejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopicByPublisher(req(RoleEntityType.CLUB, null, 88L), "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.CLUB, null, 88L), "operator"));
         verify(topicMapper, never()).insertCmsTopic(any());
     }
 
@@ -175,7 +175,7 @@ class TopicPublisherSlotTest {
     @Test
     void clubWithoutPayeeMemberIdIsRejected() {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopicByPublisher(req(RoleEntityType.CLUB, 55L, null), "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.CLUB, 55L, null), "operator"));
         assertTrue(e.getMessage().contains("payeeMemberId") || e.getMessage().contains("主理人"),
                 "应点明俱乐部必须给主理人,实际:" + e.getMessage());
         verify(topicMapper, never()).insertCmsTopic(any());
@@ -186,7 +186,7 @@ class TopicPublisherSlotTest {
     @Test
     void payeeAndClubIdLandOnTheTopicRow() {
         org.mockito.ArgumentCaptor<CmsTopic> c = org.mockito.ArgumentCaptor.forClass(CmsTopic.class);
-        svc.createTopicByPublisher(req(RoleEntityType.CLUB, 55L, 88L), "operator");
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.CLUB, 55L, 88L), "operator");
         verify(topicMapper).insertCmsTopic(c.capture());
 
         assertEquals(Long.valueOf(88L), c.getValue().getMemberId(), "票款收款人 = 俱乐部主理人");
@@ -202,7 +202,7 @@ class TopicPublisherSlotTest {
     void platformPayeeFallsBackToConfiguredPlatformAccountNotAMagicLiteral() {
         org.mockito.ArgumentCaptor<CmsTopic> c = org.mockito.ArgumentCaptor.forClass(CmsTopic.class);
         ReflectionTestUtils.setField(svc, "platformMemberId", 12345L);   // 换个值证明它真读配置
-        svc.createTopicByPublisher(req(RoleEntityType.PLATFORM, null, null), "operator");
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(req(RoleEntityType.PLATFORM, null, null), "operator");
         verify(topicMapper).insertCmsTopic(c.capture());
 
         assertEquals(Long.valueOf(12345L), c.getValue().getMemberId(),
@@ -216,7 +216,7 @@ class TopicPublisherSlotTest {
         CmsTopicCreateDTO request = req(RoleEntityType.PLATFORM, null, 7788L);
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopicByPublisher(request, "operator"));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.wire(svc).createTopicByPublisher(request, "operator"));
 
         assertTrue(error.getMessage().contains("payeeMemberId"));
         verify(topicMapper, never()).insertCmsTopic(any());

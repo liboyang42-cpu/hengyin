@@ -1,0 +1,16 @@
+{
+  "D_source": "0aa3c8a11989230bc7167c3afd5972981c3eeea5",
+  "D_base": "ad7e59fbf6a20e85e741318afe654c5411bf1101",
+  "root_parent": "0cef7270d48db8f690584ec021b55ccd32f44609",
+  "actual_static_scope": {
+    "unowned_facade_methods_byte_identical": 192,
+    "moved_method_bodies_matched": 12,
+    "shared_bodies_matched": 2,
+    "existing_classes": 15,
+    "existing_cases": 92
+  },
+  "root_fixture_change": "evidenceDir default target/surefire-reports/wp10-copy-equivalence for existing recursive artifact preservation; no runner extension",
+  "legacy_pair_strategy": "test-only branch on ad7 copies same3 fixture/schema files; exactly owner default extracted→legacy, both modes assert actual source class identity",
+  "java_mysql_equivalence": "NOT_RUN",
+  "production_schema_change": false
+}

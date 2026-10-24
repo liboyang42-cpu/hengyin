@@ -108,7 +108,7 @@ class OWN_C03_19Test {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("memberId", member);
         params.put("copyType", type);
-        return service.copyCmsTopic(SOURCE, params);
+        return com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE, params);
     }
     private CmsTopicNode stored(Long id) {
         CmsTopicNode node = new CmsTopicNode();

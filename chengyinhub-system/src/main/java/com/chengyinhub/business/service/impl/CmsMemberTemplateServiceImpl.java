@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service.impl;
 
 import java.util.List;
+import java.util.Date;
+import com.chengyinhub.common.utils.bean.BeanUtils;
 
 import com.chengyinhub.business.domain.vo.MemberTemplateVO;
 import com.chengyinhub.common.utils.DateUtils;
@@ -119,5 +121,31 @@ public class CmsMemberTemplateServiceImpl implements ICmsMemberTemplateService
     public int deleteCmsMemberTemplateById(Long id)
     {
         return cmsMemberTemplateMapper.deleteCmsMemberTemplateById(id);
+    }
+
+    @Override
+    public Long copyForContentOwner(Long templateId, Long newOwnerMemberId, boolean forceCopy) {
+        if (templateId == null || templateId <= 0L || newOwnerMemberId == null) {
+            return templateId;
+        }
+        CmsMemberTemplate source = cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
+        if (source == null || (!forceCopy && newOwnerMemberId.equals(source.getMemberId()))) {
+            return templateId;
+        }
+        CmsMemberTemplate copy = new CmsMemberTemplate();
+        BeanUtils.copyProperties(source, copy);
+        copy.setId(null);
+        copy.setMemberId(newOwnerMemberId);
+        copy.setOriginalTemplateId(source.getOriginalTemplateId() == null ? 0L : source.getOriginalTemplateId());
+        copy.setIsSync(0);
+        copy.setCreateBy("system_copy");
+        copy.setCreateTime(new Date());
+        copy.setUpdateBy("system_copy");
+        copy.setUpdateTime(new Date());
+        cmsMemberTemplateMapper.insertCmsMemberTemplate(copy);
+        if (copy.getId() == null) {
+            throw new IllegalStateException("复制主题失败: 节点模板深拷贝未回填主键, templateId=" + templateId);
+        }
+        return copy.getId();
     }
 }
