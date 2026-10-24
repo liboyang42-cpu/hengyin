@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service.support;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -13,6 +15,36 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TopicRouteConfigValidatorTest {
+    @ParameterizedTest
+    @ValueSource(strings = {"-4294967295", "4294967297", "9223372036854775808", "-9223372036854775809",
+            "18446744073709551617", "-18446744073709551615",
+            "0", "1000", "1.0", "1.5", "999.9", "1e0", "\"1\"", "null"})
+    void itemConditionsRejectOutOfRangeAndNonIntegralQuantitiesBeforeSaving(String quantity) {
+        TopicRouteConfigValidator validator = new TopicRouteConfigValidator();
+        for (String op : new String[]{"ITEM_HELD", "ITEM_ACQUIRED"}) {
+            String raw = itemConditionGraph(op, quantity);
+            assertThrows(IllegalArgumentException.class,
+                    () -> validator.validateAndNormalize(raw, new LinkedHashSet<Long>(Arrays.asList(1L, 2L))), op + ": " + quantity);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 999})
+    void itemConditionsPreserveValidQuantityBoundaries(int quantity) {
+        TopicRouteConfigValidator validator = new TopicRouteConfigValidator();
+        for (String op : new String[]{"ITEM_HELD", "ITEM_ACQUIRED"}) {
+            String normalized = validator.validateAndNormalize(itemConditionGraph(op, String.valueOf(quantity)),
+                    new LinkedHashSet<Long>(Arrays.asList(1L, 2L)));
+            assertEquals(quantity, validator.readTree(normalized).path("edges").get(0).path("conditions").get(0).path("quantity").asInt());
+        }
+    }
+
+    private static String itemConditionGraph(String op, String quantity) {
+        return "{\"schemaVersion\":1,\"startNodeId\":1,\"terminalNodeIds\":[2],\"edges\":["
+                + "{\"id\":\"go\",\"fromNodeId\":1,\"toNodeId\":2,\"trigger\":{\"type\":\"CHOICE\",\"outcomeCode\":\"COMPLETED\"},"
+                + "\"conditions\":[{\"op\":\"" + op + "\",\"itemId\":\"supply\",\"quantity\":" + quantity + "}]}]}";
+    }
+
 
     @Test
     void firstCreateRemapsStableClientKeysAndRejectsUnknownKeys() throws Exception {
