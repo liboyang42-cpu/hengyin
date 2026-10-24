@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper">
+    <sql id="safeColumns">
+        c.id,c.topic_id as topicId,t.name as topicName,c.reason,c.state,c.negative_amount as negativeAmount,c.created_at as createdAt
+    </sql>
+    <select id="selectList" resultType="com.chengyinhub.business.domain.vo.CoopSettlementManualCaseView" useCache="false">
+        select <include refid="safeColumns"/>
+        from coop_settlement_manual_case c left join cms_topic t on t.id=c.topic_id
+        <where>
+            <if test="topicId != null">c.topic_id=#{topicId}</if>
+            <if test="state != null">and c.state=#{state}</if>
+        </where>
+        order by c.created_at desc,c.id desc
+    </select>
+    <select id="selectById" resultType="com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper$Record" useCache="false">
+        select <include refid="safeColumns"/>,c.source_snapshot as sourceSnapshot
+        from coop_settlement_manual_case c left join cms_topic t on t.id=c.topic_id where c.id=#{id}
+    </select>
+</mapper>

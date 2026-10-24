@@ -177,7 +177,7 @@ class RegistryContractTest(unittest.TestCase):
         flag = 'WP04_ORIGINAL_REFUND_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
-        self.assertEqual("WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ (matrix.simple == 'Wp04OriginalRefundMySqlIT' || matrix.simple == 'Wp04OriginalProducerMySqlIT') && '1' || '' }}", line)
+        self.assertEqual("WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ (matrix.simple == 'Wp04OriginalRefundMySqlIT' || matrix.simple == 'Wp04OriginalProducerMySqlIT' || matrix.simple == 'CoopSettlementManualCaseReadMySqlIT') && '1' || '' }}", line)
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
@@ -193,6 +193,20 @@ class RegistryContractTest(unittest.TestCase):
         self.assertIn('System.getenv("WP04_ORIGINAL_PRODUCER_DDL_APPROVED")', source)
         self.assertIn('db.isolatedOriginalSchema()', source)
         flags = {'WP04_ORIGINAL_REFUND_DDL_APPROVED': '1', 'WP04_ORIGINAL_PRODUCER_DDL_APPROVED': '1'}
+        self.assertEqual(flags, rs.child_env(flags, {}))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(3, facts['declared_tests'])
+
+    def test_manual_case_read_keeps_exact_scratch_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT'
+        self.assertEqual({'tests': 3, 'storage': ['mysql'], 'gates': {}, 'note': reg['classes'][fqcn]['note']}, reg['classes'][fqcn])
+        self.assertIn("WP04_MANUAL_CASE_READ_DDL_APPROVED: ${{ matrix.simple == 'CoopSettlementManualCaseReadMySqlIT' && '1' || '' }}", WORKFLOW.read_text())
+        source = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CoopSettlementManualCaseReadMySqlIT.java').read_text()
+        self.assertIn('schema.isolatedOriginalSchema()', source)
+        self.assertIn('System.getenv("WP04_MANUAL_CASE_READ_DDL_APPROVED")', source)
+        flags = {'WP04_ORIGINAL_REFUND_DDL_APPROVED': '1', 'WP04_MANUAL_CASE_READ_DDL_APPROVED': '1'}
         self.assertEqual(flags, rs.child_env(flags, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
@@ -243,14 +257,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 197,
+                    "architecture-day-funds-closure": 200,
                     "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 801}
+                    "architecture-day-integrated-changes": 804}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

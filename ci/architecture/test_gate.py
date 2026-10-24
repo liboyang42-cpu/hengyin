@@ -671,7 +671,7 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         status, report = self.source_cli(trusted, self.commit())
         self.assertEqual(0, status, report)
         self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
-        self.assertEqual(["AI_QUOTA_RESERVATION", "NPC_ASR_INTENT", "NPC_VOICE_ENROLLMENT_INTENT", "PHOTO_CHECK_INTENT"],
+        self.assertEqual(["AI_QUOTA_RESERVATION", "COOP_SETTLEMENT_MANUAL_CASE", "NPC_ASR_INTENT", "NPC_VOICE_ENROLLMENT_INTENT", "PHOTO_CHECK_INTENT"],
                          report["business_policy"]["fact_ids"])
         self.assertTrue(any("service call paths" in x for x in report["not_proven"]))
 
@@ -1058,6 +1058,57 @@ class RecoveryStatementOwnerTest(unittest.TestCase):
                     gate.statement_write_owners()
 
 
+class OriginalProducerWiringPolicyTest(unittest.TestCase):
+    """Source/event fixtures for the explicit G/D wiring slice; not Java or real CI evidence."""
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    source_cli = BusinessOwnerPolicyTest.source_cli
+    assert_rule = BusinessOwnerPolicyTest.assert_rule
+    put_write = BusinessOwnerPolicyTest.put_write
+
+    def test_manual_case_has_one_writer_and_keeps_original_ai_private_ports(self):
+        policy = gate.business_policy()
+        self.assertEqual("G_ORIGINAL_MANUAL_CASES", policy["facts"]["coop_settlement_manual_case"]["business_owner"])
+        self.assertEqual(3, len(policy["private_ports"]))
+        trusted, _ = self.prepare_policy()
+        self.put_write("coop_settlement_manual_case", "CoopSettlementManualCaseMapper",
+                       "insert ignore into coop_settlement_manual_case(case_key,topic_id,state) values(#{key},#{topicId},'MANUAL_REQUIRED')")
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.put_write("coop_settlement_manual_case", "ForeignManualMapper")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+        self.put_write("ai_quota_reservation", "CoopSettlementManualCaseMapper")
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_BUSINESS_OWNER_WRITE")
+
+    def test_candidate_cannot_clear_manual_fact_or_add_an_unapproved_consumer(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("delete_fact", "add_consumer"):
+            with self.subTest(change=change):
+                value = copy.deepcopy(original)
+                if change == "delete_fact":
+                    value["business_policy"]["facts"] = [f for f in value["business_policy"]["facts"] if f["id"] != "COOP_SETTLEMENT_MANUAL_CASE"]
+                else:
+                    next(o for o in value["technical_dependency_policy"]["owners"] if o["id"] == "G_ORIGINAL_MANUAL_STORAGE")["allowed_consumers"].append("example.Foreign")
+                self.write("ci/architecture/owners.json", gate.encode(value))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_exact_binary_callback_is_explicit_and_wildcard_metadata_is_rejected(self):
+        policy = gate.technical_dependency_policy()
+        outer = "com.chengyinhub.business.service.impl.CoopSettlementManualCases"
+        self.assertEqual([outer, outer + "$1"], policy["owners"]["G_ORIGINAL_MANUAL_STORAGE"]["allowed_consumers"])
+        trusted, _ = self.prepare_policy()
+        value = json.loads((trusted / "owners.json").read_text())
+        next(o for o in value["technical_dependency_policy"]["owners"] if o["id"] == "G_ORIGINAL_MANUAL_STORAGE")["allowed_consumers"].append(outer + "$*")
+        (trusted / "owners.json").write_bytes(gate.encode(value))
+        with patch.object(gate, "HERE", trusted), self.assertRaisesRegex(gate.GateError, "OWNER_DEPENDENCY_POLICY_INVALID"):
+            gate.technical_dependency_policy()
+
+
 class NpcIntentWriterPolicyTest(unittest.TestCase):
     setUp = InventoryAndDeltaTest.setUp
     write = InventoryAndDeltaTest.write
@@ -1072,7 +1123,7 @@ class NpcIntentWriterPolicyTest(unittest.TestCase):
     def test_npc_intent_namespaces_do_not_expand_original_three_private_ports(self):
         policy = gate.business_policy()
         self.assertEqual(3, len(policy["private_ports"]))
-        self.assertEqual(4, len(policy["facts"]))
+        self.assertEqual(5, len(policy["facts"]))
         for table, namespace in self.facts[2:]:
             key = "chengyinhub-system:com.chengyinhub.business.mapper." + namespace
             self.assertIn(key, policy["writers"])
@@ -1297,10 +1348,10 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
 
     def test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command(self):
         policy = gate.business_policy()
-        self.assertEqual({"ai_quota_reservation", "photo_check_intent", "npc_voice_enrollment_intent", "npc_asr_intent"},
+        self.assertEqual({"ai_quota_reservation", "photo_check_intent", "npc_voice_enrollment_intent", "npc_asr_intent", "coop_settlement_manual_case"},
                          set(policy["facts"]))
-        self.assertEqual(4, len(policy["writers"]))
-        self.assertEqual(4, len(policy["commands"]))
+        self.assertEqual(5, len(policy["writers"]))
+        self.assertEqual(5, len(policy["commands"]))
         self.assertNotIn("ai_theme_draft_intent", policy["facts"], "the old third private port still grants no whole-table fact")
         self.assertEqual(3, len(policy["private_ports"]))
         self.assertEqual({"owner": "chengyinhub-system", "consumer":

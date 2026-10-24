@@ -65,6 +65,60 @@
 
     <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList" />
 
+    <section v-hasPermi="['business:settlement:list']">
+      <el-divider content-position="left">合作结算人工核对</el-divider>
+      <el-form :inline="true" size="small" @submit.native.prevent>
+        <el-form-item label="主题ID"><el-input v-model="manualQuery.topicId" clearable @keyup.enter.native="searchManualCases" /></el-form-item>
+        <el-form-item><el-button type="primary" icon="el-icon-search" @click="searchManualCases">查询人工记录</el-button></el-form-item>
+      </el-form>
+      <el-table v-loading="manualLoading" :data="manualList">
+        <el-table-column label="记录ID" prop="id" width="90" />
+        <el-table-column label="主题ID" prop="topicId" width="90" />
+        <el-table-column label="主题" prop="topicName" min-width="140" />
+        <el-table-column label="原因" min-width="160"><template slot-scope="scope">{{ manualReason(scope.row.reason) }}</template></el-table-column>
+        <el-table-column label="状态" width="130"><template slot-scope="scope">{{ manualState(scope.row.state) }}</template></el-table-column>
+        <el-table-column label="原负利润" prop="negativeAmount" width="120" />
+        <el-table-column label="记录时间" width="170"><template slot-scope="scope">{{ parseTime(scope.row.createdAt) }}</template></el-table-column>
+        <el-table-column label="来源" width="100"><template slot-scope="scope"><el-button type="text" @click="showManualCase(scope.row)">查看来源</el-button></template></el-table-column>
+      </el-table>
+      <pagination v-show="manualTotal>0" :total="manualTotal" :page.sync="manualQuery.pageNum" :limit.sync="manualQuery.pageSize" @pagination="getManualCases" />
+    </section>
+    <el-dialog title="合作结算人工核对来源" :visible.sync="manualVisible" width="780px" append-to-body>
+      <div v-loading="manualDetailLoading">
+        <template v-if="manualDetail">
+          <p>以下为触发人工核对的计算计划。</p>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="记录 / 主题">{{ manualDetail.id }} / {{ manualDetail.topicId }}</el-descriptions-item>
+            <el-descriptions-item label="状态">{{ manualState(manualDetail.state) }}</el-descriptions-item>
+            <el-descriptions-item label="原因">{{ manualReason(manualDetail.reason) }}</el-descriptions-item>
+            <el-descriptions-item label="原负利润">{{ manualDetail.negativeAmount }}</el-descriptions-item>
+          </el-descriptions>
+          <template v-if="manualDetail.source && manualDetail.source.available">
+            <el-descriptions :column="2" border class="mt20">
+              <el-descriptions-item label="冻结版本">{{ manualDetail.source.calculationVersion || '—' }}</el-descriptions-item>
+              <el-descriptions-item label="原付款报名ID">{{ manualDetail.source.payerRegistrationId || '—' }}</el-descriptions-item>
+              <el-descriptions-item label="原销售额">{{ manualValue(manualDetail.source.originalSales) }}</el-descriptions-item>
+              <el-descriptions-item label="原订单现金">{{ manualValue(manualDetail.source.originalCash) }}</el-descriptions-item>
+              <el-descriptions-item label="已分配成本">{{ manualValue(manualDetail.source.allocatedCost) }}</el-descriptions-item>
+              <el-descriptions-item label="原平台分项">{{ manualValue(manualDetail.source.platformAmount) }}</el-descriptions-item>
+              <el-descriptions-item label="原发起人保底">{{ manualValue(manualDetail.source.guaranteeAmount) }}</el-descriptions-item>
+              <el-descriptions-item label="原合作方分项">{{ manualValue(manualDetail.source.merchantAmount) }}</el-descriptions-item>
+            </el-descriptions>
+            <el-table :data="manualDetail.source.lines || []" max-height="320" class="mt20">
+              <el-table-column label="计划结算头ID" prop="settlementId" width="100" />
+              <el-table-column label="合作单ID" prop="coopOrderId" width="100" />
+              <el-table-column label="来源报名ID" prop="sourceRegistrationId" width="110" />
+              <el-table-column label="计划Claim ID" prop="sourceClaimId" width="110" />
+              <el-table-column label="原分项类型" prop="lineType" min-width="170" />
+              <el-table-column label="计划分项金额" prop="originalAmount" width="110" />
+              <el-table-column label="原固定单价" prop="fixedFee" width="110" />
+            </el-table>
+          </template>
+          <el-empty v-else description="来源快照暂不可展示，请保留原记录核对" />
+        </template>
+      </div>
+    </el-dialog>
+
     <el-divider content-position="left">结算明细</el-divider>
     <el-table v-loading="detailLoading" :data="detailList">
       <el-table-column label="ID" align="center" prop="id" width="80" />
@@ -82,7 +136,7 @@
 </template>
 
 <script>
-import { listSettlementBatch, listSettlementDetail, getSettlementSummary, confirmSettlement, getSettlementReconciliation } from '@/api/business/settlement'
+import { listSettlementBatch, listSettlementDetail, getSettlementSummary, confirmSettlement, getSettlementReconciliation, listSettlementManualCases, getSettlementManualCase } from '@/api/business/settlement'
 
 export default {
   name: 'Settlement',
@@ -95,11 +149,38 @@ export default {
       total: 0,
       summary: null,
       reconciliation: null,
+      manualLoading: false, manualDetailLoading: false, manualVisible: false,
+      manualList: [], manualTotal: 0, manualDetail: null, manualSelectedId: null, manualRequestId: 0,
+      manualQuery: { pageNum: 1, pageSize: 10, topicId: null, state: 'MANUAL_REQUIRED' },
       queryParams: { pageNum: 1, pageSize: 10, merchantId: null, status: null }
     }
   },
-  created() { this.getList() },
+  created() { this.getList(); this.getManualCases() },
   methods: {
+    getManualCases() {
+      const requestId = ++this.manualRequestId
+      this.manualLoading = true
+      this.manualList = []
+      this.manualTotal = 0
+      listSettlementManualCases(this.manualQuery).then(res => {
+        if (requestId !== this.manualRequestId) return
+        this.manualList = res.rows || []
+        this.manualTotal = res.total || 0
+      }).finally(() => { if (requestId === this.manualRequestId) this.manualLoading = false })
+    },
+    searchManualCases() { this.manualQuery.pageNum = 1; this.getManualCases() },
+    showManualCase(row) {
+      this.manualSelectedId = row.id
+      this.manualDetail = null
+      this.manualVisible = true
+      this.manualDetailLoading = true
+      getSettlementManualCase(row.id).then(res => {
+        if (this.manualSelectedId === row.id) this.manualDetail = res.data || null
+      }).finally(() => { if (this.manualSelectedId === row.id) this.manualDetailLoading = false })
+    },
+    manualReason(reason) { return reason === 'NEGATIVE_ORGANIZER_MARGIN' ? '组织者利润为负' : '需核对原记录' },
+    manualState(state) { return state === 'MANUAL_REQUIRED' ? '待人工核对' : '需核对原状态' },
+    manualValue(value) { return value == null ? '—' : value },
     getList() {
       this.loading = true
       listSettlementBatch(this.queryParams).then(res => {

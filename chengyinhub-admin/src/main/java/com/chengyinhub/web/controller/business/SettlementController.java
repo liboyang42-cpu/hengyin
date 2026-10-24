@@ -25,6 +25,28 @@ public class SettlementController extends BaseController {
     @Autowired
     private ISettlementService settlementService;
 
+    @Autowired
+    private com.chengyinhub.business.service.impl.CoopSettlementManualCaseReadService manualCases;
+
+    @PreAuthorize("@ss.hasPermi('business:settlement:list')")
+    @GetMapping("/manual-case/list")
+    public TableDataInfo manualCaseList(@RequestParam(required=false) Long topicId,
+            @RequestParam(required=false) String state) {
+        startPage();
+        try {
+            return getDataTable(manualCases.list(topicId,state));
+        } finally {
+            clearPage();
+        }
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:settlement:list')")
+    @GetMapping("/manual-case/{id}")
+    public AjaxResult manualCase(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        var record=manualCases.detail(id);
+        return record==null?AjaxResult.error(HttpStatus.NOT_FOUND,"人工记录不存在"):success(record);
+    }
+
     @PreAuthorize("@ss.hasPermi('business:settlement:list')")
     @GetMapping("/list")
     public TableDataInfo list(SettlementBatch query) {

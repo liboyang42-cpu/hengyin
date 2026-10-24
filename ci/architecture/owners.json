@@ -12,7 +12,7 @@
   },
   "legacy": "存量仅按 statement 的 path#id、内容哈希及传递 include 哈希精确识别。多 owner 表保持显式多值，不归并为一个万能 owner。没有目录通配豁免或自增 baseline。",
   "unknown": "动态表/字段、foreach/if/choose、include properties、未解析或循环引用及复杂 SQL 均保持 UNKNOWN；table_hints/column_hints 不完整时不猜 owner。DELETE 的字段集合为空不表示无写效果。",
-  "business_domain_assignment": "原两AI事实与root明确指定的NPC voice/ASR两意图表仅登记各自唯一writer namespace；原三private_ports保持。注册不批准ASR额度、用户余额/个人表写权、运行授权或方法级语义。",
+  "business_domain_assignment": "原两AI事实与root明确指定的NPC voice/ASR两意图表仅登记各自唯一writer namespace；原三private_ports保持。注册不批准ASR额度、用户余额/个人表写权、运行授权或方法级语义。 本次仅新增G coop_settlement_manual_case控制事实的唯一writer，保留原三private_ports；D quota recovery只经原NpcAsrIntentMapper确认原NOT_SENT proof并完成pending，不新增namespace或ASR/其它资金表通配写权。",
   "business_policy": {
     "schema": 1,
     "coverage": "PARTIAL",
@@ -20,7 +20,8 @@
       "AI_QUOTA_RESERVATION",
       "PHOTO_CHECK_INTENT",
       "NPC_VOICE_ENROLLMENT_INTENT",
-      "NPC_ASR_INTENT"
+      "NPC_ASR_INTENT",
+      "COOP_SETTLEMENT_MANUAL_CASE"
     ],
     "facts": [
       {
@@ -46,6 +47,12 @@
         "table": "npc_asr_intent",
         "coverage": "whole_table",
         "business_owner": "D_NPC_ASR_INTENT"
+      },
+      {
+        "id": "COOP_SETTLEMENT_MANUAL_CASE",
+        "table": "coop_settlement_manual_case",
+        "coverage": "whole_table",
+        "business_owner": "G_ORIGINAL_MANUAL_CASES"
       }
     ],
     "pure_writers": [
@@ -72,6 +79,12 @@
         "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
         "business_owner": "D_NPC_ASR_INTENT",
         "command_id": "npc-asr-intent"
+      },
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper",
+        "business_owner": "G_ORIGINAL_MANUAL_CASES",
+        "command_id": "coop-original-manual-case"
       }
     ],
     "private_ports": [
@@ -96,7 +109,7 @@
     "schema": 1,
     "coverage": "PARTIAL",
     "observed_source": "06a571b1247620a9bdcea068be0ded973671d17c",
-    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f. Follow-up exact sources: public 06a571b1247620a9bdcea068be0ded973671d17c/A immutable DTO; B 0ffb9c8fee278c11fe47aa6bcfd95745c9e73850; D 4061bac25dbe113574632dde61d4ae416185db77; G 2457bf1851c0573df7a69270a4532b00b9e8404c; F MDC 1fb99670c066496c3b19da6b3ac4b132e14ab785. Structural directions only; no lock/immutability/log-safety proof. E_TOPIC_QUERY exact System class from 9e14a73e50c9afd5c8f38027c3ecd059967a51d3; existing seven read-side dependencies retained, no transitive read-only or table authority inference.",
+    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f. Follow-up exact sources: public 06a571b1247620a9bdcea068be0ded973671d17c/A immutable DTO; B 0ffb9c8fee278c11fe47aa6bcfd95745c9e73850; D 4061bac25dbe113574632dde61d4ae416185db77; G 2457bf1851c0573df7a69270a4532b00b9e8404c; F MDC 1fb99670c066496c3b19da6b3ac4b132e14ab785. Structural directions only; no lock/immutability/log-safety proof. E_TOPIC_QUERY exact System class from 9e14a73e50c9afd5c8f38027c3ecd059967a51d3; existing seven read-side dependencies retained, no transitive read-only or table authority inference. Wiring sources: G 54c524ca99204804b6b84af517359eabc8c6ee8d, D 379d5615608663c47302598ba238447b264c2bba, C f61b8ea8c829d0b4e050a8b61ac592ae819a8a09; exact G rollback callback binary $1 is explicit, never a prefix consumer grant. No compiled evidence or transaction/amount proof.",
     "owners": [
       {
         "id": "A_WITHDRAW_ADMISSION",
@@ -792,7 +805,9 @@
           "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
           "com.chengyinhub.business.service.ICmsRegistrationService",
           "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
-          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases"
         ]
       },
       {
@@ -1018,12 +1033,14 @@
           "com.chengyinhub.business.service.impl.NpcChatService",
           "com.chengyinhub.business.service.impl.NodeNpcService",
           "com.chengyinhub.web.controller.api.ApiAiNpcController",
-          "com.chengyinhub.web.controller.api.ApiMerchantController"
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.ai.AiQuotaRecoveryService"
         ],
         "allowed_consumers": [
           "com.chengyinhub.business.service.impl.NpcAsrIntentService",
           "com.chengyinhub.business.service.impl.NpcChatWriteService",
-          "com.chengyinhub.business.service.impl.DataRetentionServiceImpl"
+          "com.chengyinhub.business.service.impl.DataRetentionServiceImpl",
+          "com.chengyinhub.business.service.ai.AiQuotaRecoveryService"
         ]
       },
       {
@@ -1122,6 +1139,127 @@
         "allowed_consumers": [
           "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
           "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService"
+        ]
+      },
+      {
+        "id": "G_ORIGINAL_PRODUCER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CmsTopicMapper",
+            "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper",
+            "com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper",
+            "com.chengyinhub.business.mapper.RegistrationSeatMapper"
+          ]
+        }
+      },
+      {
+        "id": "G_ORIGINAL_MANUAL_CASES",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases$1"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper"
+          ]
+        }
+      },
+      {
+        "id": "G_ORIGINAL_MANUAL_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases$1"
+        ]
+      },
+      {
+        "id": "G_ORIGINAL_ALLOCATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.CoopOriginalAllocation"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases"
+        ]
+      },
+      {
+        "id": "D_NPC_ASR_QUOTA_HANDOFF",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.AiQuotaRecoveryService",
+          "com.chengyinhub.business.service.ai.AiGatewayService",
+          "com.chengyinhub.business.service.ai.impl.AiGatewayServiceImpl",
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.impl.NpcChatWriteService",
+          "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+          "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+          "com.chengyinhub.business.service.ai.impl.DashScopeSpeechToTextService"
         ]
       }
     ],
@@ -1441,6 +1579,42 @@
       [
         "H_CLUB_POST_MEDIA_TRANSACTION",
         "H_CLUB_POST_MEDIA_STORAGE"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "G_ORIGINAL_SETTLEMENT_LEDGER"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "G_ORIGINAL_MANUAL_CASES"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "G_ORIGINAL_ALLOCATION"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "G_ORIGINAL_MANUAL_CASES",
+        "G_ORIGINAL_MANUAL_STORAGE"
+      ],
+      [
+        "G_ORIGINAL_MANUAL_CASES",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "E_QUOTA_RECOVERY",
+        "D_NPC_ASR_INTENT_STORAGE"
+      ],
+      [
+        "E_QUOTA_RECOVERY",
+        "D_NPC_ASR_QUOTA_HANDOFF"
       ]
     ]
   },

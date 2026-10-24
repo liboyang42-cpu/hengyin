@@ -454,8 +454,8 @@
     "C": "Voice new-intent complete29files committed4029559; frozen",
     "D": "Shared ASR quota complete29files applied; precise new voice request-wrapper action-ledger wiring only",
     "E": "Original work preserved; read failure observed; equivalent ledger delivered separately, not candidate blocker",
-    "F": "Precise G/D new type/SQL ownership and immutable policy/tool/pin caller wiring only",
-    "G": "Original producer20files applied; minimal existing-permission read visibility of durable manual cases only",
+    "F": "c2db verifier+2b59 tool applied; only e57f new readonly type policy delta pending",
+    "G": "Complete producer54c and readonly caller e57f applied; frozen",
     "H": "Delivered, no new tasks"
   },
   "next_wave_dirty": {
@@ -470,10 +470,10 @@
   },
   "current_source_head": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
   "current_source_manifest_counts": {
-    "registered_sql_classes": 119,
-    "combined_unique_classes": 64,
-    "combined_declared_tests": 801,
-    "funds_declared_tests": 197,
+    "registered_sql_classes": 120,
+    "combined_unique_classes": 65,
+    "combined_declared_tests": 804,
+    "funds_declared_tests": 200,
     "voice_asr_declared_tests": 14,
     "not_execution": "Static declarations only; no current source execution."
   },
@@ -497,7 +497,7 @@
     "continuation": "Read public code through GitHub; deliver full source diff in chat. Root applies and scans before public writes; no executor rebuild or unscanned publishing."
   },
   "pending_business_questions": [],
-  "current_working_tree": "C f61 committed4029559; complete G54c524ca20files, B cumulative refund3files+TimeUnit correction and D379d561529files successfully applied. Root wired migration dependencies, 119 registry classes/64 combined classes/801 declared tests and regenerated5119-control ledger. All new implementation NOT_RUN.",
+  "current_working_tree": "Root committed75921855c; now applied F c2db9832+2b59e393 and G e57f0a32 manual-case readonly12files. Registry120 classes/65 combined/804 declared, funds200. Exact scratch gates/control source wired. F last readonly type policy delta and D voice _request ledger closure still pending. New source NOT_RUN.",
   "new_source_blockers_current": [],
   "execution_mode": "IMPLEMENTATION_AND_INTEGRATION_FIRST_FINAL_REVIEW_AND_REGRESSION_ONLY",
   "latest_human_instruction": "不要再审查了 最后一起审查",
@@ -509,7 +509,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: complete B/G/D source collected and composed, migration/test-runner declarations wired; no audit, regression, Java, DB or CI executed.",
+  "previous_goal_turn_classification": "PROGRESS: collected complete F policy/tool and G readonly delivery, applied and wired precise registry/runner controls; no interim audit/regression/CI.",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
@@ -538,18 +538,13 @@
   },
   "known_remaining_implementation": [
     {
-      "area": "F precise new G/D ownership and writer policy plus immutable tool/pin wiring",
-      "state": "DISPATCHED_IMPLEMENTATION_ONLY"
-    },
-    {
-      "area": "G existing-authorized admin read caller for durable negative-margin manual case",
-      "state": "DISPATCHED_IMPLEMENTATION_ONLY",
-      "restriction": "No arbitrary resolution, automatic debit, liability decision or policy changes"
+      "area": "F last G readonly type/entry exact owner policy and immutable tool pins",
+      "state": "FOLLOWUP_DISPATCHED_NO_REVIEW"
     },
     {
       "area": "D new C voice _request wrapper reachability and request contracts in generated action ledger",
       "state": "DISPATCHED_IMPLEMENTATION_ONLY",
-      "restriction": "Do not mark refresh/history as resend; preserve unknown multiwrite assertions"
+      "restriction": "No refresh/history resend or unknown-multiwrite waiver"
     }
   ],
   "remaining_acceptance_groups": [
@@ -560,8 +555,8 @@
   "last_worker_progress_not_acceptance": {
     "G": {
       "cursor": "d897c36c-6d82-439e-acb9-b400a0c80bd8:5",
-      "state": "complete_original_delivery_applied; precise required caller/policy wiring separately assigned where needed",
-      "source": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "state": "complete source applied, no new tasks",
+      "source": "54c524ca99204804b6b84af517359eabc8c6ee8d + e57f0a32037bf88b2abf1626cca4760714d88592",
       "validation": "NOT_RUN"
     },
     "B": {
@@ -582,6 +577,12 @@
       "state": "completed_delivered_integrated",
       "source": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
       "reported": "Complete source delivered and applied; root migration/count wiring added; not runtime acceptance"
+    },
+    "F": {
+      "cursor": "65230fb5-d1c0-4cae-8bda-71f83e84f096:2",
+      "source": "c2db98326366c52e640c2b1c421b0fb6bde611fa + 2b59e393cd78b9d16b82f8a9c67b83377b30b53a",
+      "validation": "NOT_RUN",
+      "state": "complete delivery applied; exact readonly caller policy delta requested"
     }
   },
   "voice_confirmed_source_integration": {
@@ -596,5 +597,14 @@
     "registry": "Voice MySQL3->4, voice+ASR10->11, combined782->783; declaration metadata only",
     "generated_ledger": "Regenerate once final client source is composed; 5113 belongs to preceding source"
   },
-  "updated_at": "2026-10-24T18:21:00Z"
+  "updated_at": "2026-10-24T18:34:00Z",
+  "manual_case_read_source": {
+    "source": "e57f0a32037bf88b2abf1626cca4760714d88592",
+    "parent": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+    "files": 12,
+    "new_source_tests": 12,
+    "new_mysql_declarations": 3,
+    "validation": "NOT_RUN",
+    "permissions": "Existing business:settlement:list; GET only; no raw payment identity, resolve or debit API"
+  }
 }

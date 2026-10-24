@@ -1,0 +1,8 @@
+{
+  "ci/architecture/gate.py": "8786f4bb786ddbd77746c4201fcfd72abedfa8e57a0a3b9698917bfd022f3340",
+  "ci/architecture/collect_jdeps.py": "b9b7ad6dbf66849edd124d30f1f522ea314253f1cefe79ef7f1e6b34fec2c0d4",
+  "ci/architecture/owners.json": "8e1eec2ef740cb8f10d7d251ca94d8b24b483eca2c32bbdea0916895d10910a4",
+  "ci/architecture/commands.json": "cf4c28946e05ad1d502b57f0f46e0653ce15f247b05310482523d0ff8f3e7036",
+  "ci/architecture/baseline.json": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+  "ci/architecture/locking-select-baseline.proposal.json": "c71bbc7fdbf4996b68f5977ebd344dac150f56128dea4837c69ec3f91b83e52b"
+}

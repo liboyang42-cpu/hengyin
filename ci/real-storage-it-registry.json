@@ -578,7 +578,8 @@
         "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
         "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
         "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
-        "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT"
+        "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
+        "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT"
       ],
       "note": "One source-bound joint A/B/G batch, no duplicate class jobs: original funds, callback/refund, immutable consumption, components, late-success and approved-refund guard. Exact source SHA, declared zero-skip XML and independent CLEAN required. No production/provider/HTTP or unresolved allocation-policy acceptance."
     },
@@ -658,9 +659,10 @@
         "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest",
         "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest",
         "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
-        "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT"
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
+        "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT"
       ],
-      "note": "64 unique registered storage classes, 801 declared cases, including original producer/refund and ASR shared quota. One matrix max-parallel20, no duplicate classes. Source SHA, original XML counts, zero skip and independent CLEAN required. Static inventory is not execution, HTTP, provider, restart, load or deployment acceptance."
+      "note": "65 unique registered storage classes, 804 declared cases, including original producer/refund, manual-case read projection and ASR shared quota. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required. Static inventory is not execution, HTTP/provider/restart/load/deployment acceptance."
     }
   },
   "classes": {
@@ -1691,6 +1693,14 @@
       ],
       "gates": {},
       "note": "G 54c524ca source: actual producer/ledger/mapper and post-rollback manual evidence, inherited exact original-refund scratch admission plus own producer flag. NOT_RUN; no provider or production DDL."
+    },
+    "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "G e57f0a32 source only: actual read Mapper and redacted projection; original-refund UUID scratch admission plus exact read flag. No write/resolve/debit API. NOT_RUN."
     }
   }
 }
