@@ -2,7 +2,7 @@
                limit-seconds="{{limitSeconds}}" tries="{{maxTries}}"
                bind:back="onClose" bind:verdict="onVerdict">
   <view class="g-col pp {{reducedMotion ? 'pp--reduced' : ''}}">
-    <view class="pp__q">{{title}}</view>
+    <view class="pp__q pe pe--blur" style="--pe-d:.05s">{{title}}</view>
 
     <view class="pp__grid">
       <!-- 名字在图**外面**:压在色块里看起来就是「标题在图片里」。

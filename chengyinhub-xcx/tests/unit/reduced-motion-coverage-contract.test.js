@@ -33,7 +33,7 @@ const REDUCED_RULE = new RegExp(String.raw`([^{}]*${REDUCED}[^{}]*)\{([^}]*)\}`,
 const WXML_GUARDED = {
   'components/cy/celebrate/index.wxss': {
     wxml: 'components/cy/celebrate/index.wxml',
-    why: 'reducedMotion 观察者直接把 pieces 清空,碎片不渲染',
+    why: 'reducedMotion 观察者直接把 pieces 清空，碎片不渲染',
   },
   'components/cy/node/index.wxss': {
     wxml: 'components/cy/node/index.wxml',
@@ -126,7 +126,7 @@ test('登记为 WXML 兜底的，必须真的按 reducedMotion 条件渲染', ()
   for (const [wxss, spec] of Object.entries(WXML_GUARDED)) {
     const wxml = read(spec.wxml)
     assert.match(wxml, /reducedMotion/,
-      `${spec.wxml} 没有消费 reducedMotion，不能靠「WXML 兜底」免掉 WXSS 兜底(${spec.why})`)
+      `${spec.wxml} 没有消费 reducedMotion，不能靠「WXML 保底」免掉 WXSS 保底(${spec.why})`)
   }
 })
 
@@ -136,19 +136,19 @@ test('登记为「同挂类兜底」的，必须在 WXML 里真的与兜底类�
     for (const animated of spec.animatedClasses) {
       const together = new RegExp(`class="[^"]*\\b${spec.guardClass}\\b[^"]*\\b${animated}\\b|class="[^"]*\\b${animated}\\b[^"]*\\b${spec.guardClass}\\b`)
       assert.match(wxml, together,
-        `${spec.wxml} 里 ${animated} 没有与兜底类 ${spec.guardClass} 同挂，豁免不成立(${spec.why})`)
+        `${spec.wxml} 里 ${animated} 没有与保底类 ${spec.guardClass} 同挂，豁免不成立(${spec.why})`)
     }
     assert.match(read(wxss), new RegExp(`--static[^{]*\\.${spec.guardClass}[^{]*\\{[^}]*animation:\\s*none`),
-      `${wxss} 的兜底规则不见了`)
+      `${wxss} 的保底规则不见了`)
   }
 })
 
 test('负控：把某处 WXSS 兜底摘掉必须判红', () => {
   const victim = 'components/cy/sheet/index.wxss'
   const mutated = read(victim).replace('.sh--reduced-motion .sh__panel { animation: none; }', '')
-  assert.notEqual(mutated, read(victim), '负控必须真实移除兜底')
+  assert.notEqual(mutated, read(victim), '负控必须真实移除保底')
   const { gaps } = survey({ [victim]: mutated })
-  assert.ok(gaps.some((g) => g.startsWith(victim)), '摘掉兜底后必须被抓出来')
+  assert.ok(gaps.some((g) => g.startsWith(victim)), '摘掉保底后必须被抓出来')
 })
 
 test('负控：新增一条无兜底的位移动画必须判红', () => {

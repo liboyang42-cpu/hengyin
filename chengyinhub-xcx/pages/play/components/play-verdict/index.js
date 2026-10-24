@@ -37,6 +37,10 @@ Component({
     timedOut: { type: Boolean, value: false },
     // win 专用:一句话。空着就只有对勾 —— 没内容就不要显示提示语
     text: { type: String, value: '' },
+    // 结果反馈配图(最多 3 张):玩法模板里作者给成功 / 失败配的图
+    images: { type: Array, value: [] },
+    // 独立弹出(编辑页预览、玩家端结果反馈)时给一个「继续」收起;挂在玩法台面里时由台面自己管
+    closable: { type: Boolean, value: false },
   },
   data: {
     rising: false,
@@ -57,5 +61,6 @@ Component({
     _failWord: failWord,        // 纯算法出口,供单测
     _makeBubbles: makeBubbles,
     _clear() { if (this._raf) { clearTimeout(this._raf); this._raf = null; } },
+    onClose() { this.triggerEvent('close'); },
   },
 });

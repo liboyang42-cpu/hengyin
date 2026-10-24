@@ -112,7 +112,7 @@ test('模板只在场次列表外显示一次期级容量并保留 unknown 文�
   const wxml = require('node:fs').readFileSync(path.resolve(__dirname, '../../pages/topic/index/index.wxml'), 'utf8');
   assert.equal((wxml.match(/class="sess__capacity"/g) || []).length, 1,
     '期级容量不能复制到每张场次卡');
-  assert.match(wxml, /余席待确认/, '活动壳真值缺失时必须照实显示 unknown');
+  assert.match(wxml, /余席 —/, '活动壳真值缺失时必须照实显示 unknown');
 });
 
 test('展示评分星不得缩短投票五星', () => {

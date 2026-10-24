@@ -33,14 +33,15 @@
      · 草稿少 → .pd 正好撑到上限,面板满屏、不出滚动条
      · 草稿多 → .pd 继续长高,溢出后由面板的 overflow-y:auto 接管滚动
    写死 height 会把第 4 条之后的草稿裁掉且滚不到(实测过的形状,别改回去)。
-   上限表达式与 .sh__panel 的 max-height 逐字相同(var(--cy-comp-sheet-max-h, 70vh)),
+   上限表达式与 .sh__panel 的 max-height 逐字相同(var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
+   2026-10-23 业主:弹窗上限统一到胶囊底下,不再是 70vh),
    这样调用方若哪天真要改档,两边同步、不会一个变一个不变。
    减去的两截 = 面板自己的 padding-bottom + .sh__body 的上下 padding;
    少减任何一截都会恒定溢出、单条草稿也能滚一小段(2026-09-03 审查抓到过漏 .sh__body 那截)。
    ⚠️ 这是跨组件复制的公式,由 post-drafts-fullscreen-contract 钉住 cy-sheet 那侧,漂了即红。 */
 .pd {
   margin: 0 calc(var(--cy-page-x) * -1);
-  min-height: calc(var(--cy-comp-sheet-max-h, 70vh)
+  min-height: calc(min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)))
                    - env(safe-area-inset-bottom) - 24rpx   /* .sh__panel 的 padding-bottom */
                    - 16rpx);                               /* .sh__body 的 padding: 8rpx 0,上下各一份 */
 }

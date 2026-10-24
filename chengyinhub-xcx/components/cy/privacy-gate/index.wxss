@@ -1,7 +1,11 @@
 :host { display: block; }
 .pg { padding: var(--cy-space-2) 0 calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
-.pg__body { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-body); line-height: var(--cy-leading-loose); }
-.pg__link { margin-top: var(--cy-space-3); color: var(--cy-color-text-primary); font-size: var(--cy-type-label); text-decoration: underline; }
+.pg__lead { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-body); line-height: var(--cy-leading-loose); }
+.pg-check { display: block; margin-top: var(--cy-space-3); }
+/* 勾选行只占一行:字号收到 caption,两个书名号入口不折行 */
+.pg-check-row { display: flex; align-items: center; white-space: nowrap; font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
+.pg-checkbox { transform: scale(.8); margin-right: var(--cy-space-1); }
+.pg-doc { color: var(--cy-text-title); text-decoration: underline; }
 /* 两颗并排:不同意在左、同意在右(与 pages/privacy 同一裁决,同意是主动作给 flex:1.4)。
    原生 button 必须保留:open-type 只在原生 button 上生效 */
 .pg__actions { display: flex; align-items: center; gap: var(--cy-space-2-5); margin-top: var(--cy-space-4); }

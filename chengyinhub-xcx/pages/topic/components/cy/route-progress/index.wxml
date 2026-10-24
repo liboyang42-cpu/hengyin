@@ -1,0 +1,24 @@
+<view class="rp rp--{{tone}} {{reducedMotion ? 'rp--reduced' : ''}} {{win ? 'is-win' : ''}} {{running ? 'is-run' : ''}}" wx:if="{{total > 0}}">
+  <view class="rp__hd">
+    <text class="rp__t">{{tone === 'free' ? '护照进度' : '通关进度'}}</text>
+    <text class="rp__n">{{lit + (win ? 1 : 0)}}/{{total}}</text>
+  </view>
+  <text class="rp__msg">{{msg}}</text>
+  <view class="rp__track">
+    <view class="rp__rail"></view>
+    <view class="rp__fill {{reducedMotion ? 'rp__fill--still' : ''}}" style="transform: scaleX({{fill / 100}});"></view>
+    <block wx:for="{{marks}}" wx:key="left">
+      <view class="rp__m {{index < lit ? 'is-lit' : ''}}" style="left: {{item.left || 0}}%;"><view class="rp__ck"></view></view>
+      <text class="rp__lb" style="left: {{item.left || 0}}%;">{{item.label}}</text>
+    </block>
+    <text wx:if="{{plus}}" class="rp__plus" style="left: {{plusLeft || 0}}%;">{{plus}}</text>
+    <view class="rp__chest">
+      <view class="rp__glow"></view>
+      <view class="rp__box"></view>
+      <view class="rp__lid"></view>
+    </view>
+    <view class="rp__conf" wx:if="{{win && !reducedMotion}}">
+      <view wx:for="{{[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]}}" wx:key="*this" class="rp__c rp__c--{{item}}"></view>
+    </view>
+  </view>
+</view>

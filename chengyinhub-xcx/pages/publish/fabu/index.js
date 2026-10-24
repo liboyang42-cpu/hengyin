@@ -4,6 +4,7 @@ const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime.js');
 let app = getApp();
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const AI_DRAFT_LEGACY_KEY = 'ai_topic_draft';
 function aiDraftStorageKey() {
   const memberId = app.getUserID && app.getUserID();
@@ -20,13 +21,16 @@ function writeAiDraft(draft) {
   const key = aiDraftStorageKey();
   if (key) wx.setStorageSync(key, draft);
 }
+const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const analytics = require('../../../utils/analytics.js');
 const roleGuard = require('../../../utils/roleGuard.js');
 const { createErrorBag, nonEmpty } = require('../utils/publish/publish-validator.js');
 const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeExplorationValidityScheduleIssues } = require('../utils/publish/publish-ticket-schedule.js');
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js');
+const { createServerDraftSaver, topicIdOf, confirmedPublication } = require('../utils/publish/server-draft.js');
+const publishIntent = require('../../../utils/publish/publish-intent.js');
 const proEditorPolicy = require('../../../utils/publish/pro-editor-policy.js');
-const proEditorDraft = require('../../../utils/publish/pro-editor-draft.js');
+const proEditorDraft = require('../utils/publish/pro-editor-draft.js');
 
 function emptyChapterForm(name = '', opening = false) {
   return {
@@ -102,6 +106,12 @@ const advancedGameConfig = require('../utils/publish/advanced-game-config.js');
 const topicRouteGraph = require('../utils/publish/topic-route-graph.js');
 const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const storyInitialState = require('../utils/publish/story-initial-state.js');
+const customInitialValues = attributes => (attributes || []).map((row, index) => Object.assign({ index }, row))
+  .filter(row => /^counter\./.test(row.key || ''))
+  .map(row => Object.assign(row, { invalidInitial: row.initial === '' || row.initial == null || !Number.isInteger(Number(row.initial)) || Number(row.initial) < Number(row.min) || Number(row.initial) > Number(row.max) }));
+const templateBinding = require('../utils/publish/template-binding.js');
+const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
+const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const storyEnding = require('../utils/publish/story-ending');
 const routeMapView = require('../utils/publish/route-map-view.js');
 const publishValidationBag = require('../utils/publish/publish-validation-bag.js');
@@ -128,6 +138,12 @@ function chapterCardTitle(index, name) {
   const seq = '第' + (index + 1) + '章';
   if (CHAPTER_ORDINAL.test(raw)) return raw;
   return raw ? seq + ' ' + raw : seq;
+}
+function ticketCoordinate(ticket, formField, storedField) {
+  const current = ticket[formField];
+  if (current !== null && current !== undefined && current !== '') return current;
+  const stored = ticket[storedField];
+  return stored === null || stored === undefined ? '' : stored;
 }
 function isEditingTopicPayload(detail) {
   if (!isRecord(detail) || !isRecord(detail.topic)) return false;
@@ -169,7 +185,8 @@ const START_COLOR = '#12B886'; // 起点
 const END_COLOR = '#FA5252';   // 终点
 const DRAFT_COLOR = '#ADB5BD'; // 草稿(未配游戏)
 const SELECTED_COLOR = '#1A1A1A'; // 列表↔地图联动选中态(去紫,与 route-map/topic 同值)
-const MAP_DEFAULT_CENTER = { longitude: 121.4737, latitude: 31.2304 }; // 上海人民广场兜底
+// BL-23:首屏占位与 route-map-view 同一份兜底坐标(last-location 固定坐标);有节点/上次定位后由 buildRouteMapView 覆盖
+const MAP_DEFAULT_CENTER = routeMapView.MAP_DEFAULT_CENTER;
 const UNDO_CAP = 20; // 撤销栈上限
 const IMG_ARR_MAX = 9; // 横版封面张数上限(与门店相册一致)
 // AI 频控超限文案前缀:后端运行时拼上限数字(`今日AI次数已用完(20/天),明天再来吧`),只能前缀匹配
@@ -180,16 +197,34 @@ const AI_BLIND_ISSUE_TYPES = ['missing_cover'];
    保存成功后要跳走,面板时长与跳转延时必须是同一个数 —— 分开写会漂成
    「面板还在播就被顶掉」或者「收完了还空等一截」。 */
 const RESULT_SHEET_MS = 2000;
+// 云端草稿自动保存:每次编辑先落本机,停手 2 秒后合并成一次云端保存(连续输入不逐键发请求)。
+const CLOUD_AUTOSAVE_MS = 2000;
+// 标题旁状态胶囊:本机、上云中、云端已确认、失败、结果待确认必须分开说,不能把本机写入说成已保存。
+const SAVE_STATE_LABELS = { local: '已存本机', localFailed: '本机未存', saving: '保存中', saved: '已存云端', failed: '云端未存', unknown: '待确认' };
 
 const runtimeEditor = require('./theme-runtime.js');
+const structure = require('./theme-runtime-structure.js'); // structure
+const survivalEditor = require('./theme-runtime-survival.js'); // survival
+const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
+const ownership = require('./theme-ownership.js');
 Page({
   ...runtimeEditor.methods,
+  ...structure.methods, // structure
+  ...survivalEditor.methods, // survival
+  ...zeroHpEditor.methods, // R5 HP 归零
+  ...ownership.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
 
+  _nodeBindingSlots: [],
+  _nodeBindingDraft: null,
   data: {
+    creatorLoginRequired: false,
     ...runtimeEditor.data,
+    ...structure.data, // structure
+    ...survivalEditor.data, // survival
+    ...ownership.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -208,6 +243,12 @@ Page({
     operationScope: '',
     // 后端下发的编辑窗口档位:FULL=全字段可改 / WHITELIST=已过审开卖,只能改文案与图
     editScope: 'FULL',
+    // 正在编辑的是服务端草稿(is_draft=1):底栏给「保存草稿」,发布走「先存后发」publish-draft
+    editIsDraft: false,
+    draftSaving: false,
+    themeSaveState: '',  // SAVE_STATE_LABELS 的键;空 = 不显示(已发布主题、空白新稿)
+    themeSaveLabel: '',
+    publicTempState: 'loading',
     // 能不能开商家池(只有俱乐部主理人可以)。初值 true = 「还没判出来」,与
     // _syncMerchantPoolEligibility 的「快照不可靠时不压值」同一口径:宁可多显示一个开关,
     // 也不要在判不出资格时把主理人的招商静默关掉。
@@ -258,6 +299,8 @@ Page({
     identityRegistered: false,
     identityRequired: true,
     identityReady: false,
+    // 旧草稿没记录商家/个人入口、用户还没确认归属:页内横幅 + 发布确认里的「需要先处理」都看它
+    legacyScopePending: false,
     identityRealName: '',
     identityIdCard: '',
     identityConsented: false,
@@ -310,6 +353,7 @@ Page({
     publicTempList: [], //公共玩法库(平台精选/热门/最新)
     searchKeyword: '', // 搜索关键词
     selectedTempId: null, // 当前选中的模板ID
+    selectedTempSource: '', // 'public' = 公共库 id(须先采用成我的草稿);'mine' = 会员模板 id。两库 id 会重号,不能只凭 id 区分
     selectedTempInfo: null, // 选中的模板完整信息
 
     //章节数据
@@ -345,15 +389,20 @@ Page({
       fragmentText: ''
     },
     nodesFormLocationReady: false,
+    nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+    nodeSharedSites: [], nodeCopyBusy: false, nodeCopyUncertain: false, nodeCopyError: '',
     initialStateEditor: { show: false, rules: null, error: '' },
     initialStateOptions: storyInitialState.OPTIONS,
+    supportNodeChallenge: false, supportNodeSettled: false,
+    supportMatrix: null, supportMatrixLoading: false, supportMatrixLoadError: '', nodeSupportReason: '', storySupportReasons: {},
+    publicSupportReasons: {}, draftSupportReasons: {}, mineSupportReasons: {},
     storyGameOptions: ['profile', 'typeIn', 'photoCheck', 'note', 'd20'].map(key => nodeGameCatalog.findGame(key)),
     // 表单数据
     // 结局编辑器(2026-09-22 接线)。list 是 story-ending.parse 出来的界面形状,
     // 保存时由同一个 serialize 转回服务端形状 —— 校验口径与 JourneyStoryValidator 一致,不另写一套。
     // 结局章(2026-09-24):章节设置里的「设为结局」—— 什么时候播 + 选哪个伏笔 / 选项 / 站点
-    chapterEndingKinds: [{ key: 'fallback', label: '兜底（其它结局都不中时）' }, { key: 'thought', label: '某个伏笔应验了' },
-      { key: 'tag', label: '选过某个选项' }, { key: 'node', label: '到过某个站点' }],
+    chapterEndingKinds: [{ key: 'fallback', label: '默认（其它结局都不满足时）' }, { key: 'thought', label: '某个伏笔应验了' },
+      { key: 'tag', label: '选过某个选项' }, { key: 'node', label: '到过某个节点' }],
     chapterEndingKindIndex: 0, chapterEndingPickIndex: -1,
     storyDraftList: [],
     endingTagOptions: [],
@@ -432,6 +481,7 @@ Page({
     errors: {},
     editLoading: false,
     editLoadError: '',
+    editLoadIsAccess: false,
     submitting: false,
     submitError: '',
     /* 动作结果面板(cy-result-sheet)。loading 不自愈,终态 2s 自收。
@@ -595,15 +645,38 @@ Page({
     return null;
   },
 
+  _draftContentRevision() {
+    return JSON.stringify([this.data.formData, this.data.pendingMaterials,
+      this.data.selectedCategoryIds, this.data.selectedCategoryNames,
+      this.data.startDateTime, this.data.endDateTime]);
+  },
+
+  _showUnstoredPublishedChanges(rejected) {
+    this._draftAutosaveReady = true;
+    this._resultSheetNext = '';
+    const reason = '本次提交的结果已确认，但当前修改未能保存到本机。请勿退出，腾出存储空间后继续编辑以重试保存。';
+    this.setData({ submitting: false, draftSaving: false, editIsDraft: false, submitError: reason,
+      themeSaveState: 'localFailed', themeSaveLabel: SAVE_STATE_LABELS.localFailed,
+      resultSheet: { show: true, kind: 'fail', title: rejected ? '审核未通过，修改尚未保存' : '后续修改尚未保存',
+        sub: '请勿离开本页', meta: '当前修改尚未保存',
+        why: reason, duration: RESULT_SHEET_MS } });
+  },
+
   _installDraftAutosave() {
     if (this._draftSetDataInstalled) return;
     this._draftSetDataInstalled = true;
     const nativeSetData = this.setData;
     this.setData = (patch, callback) => {
+      // 是否算一次草稿编辑按「发起 setData 的那一刻」判定:真机回调是异步的,回填/换上回读版本时
+      // (_draftAutosaveReady=false)发起的 patch,回调可能在 ready 复位后才执行,不能再回写恢复稿、把草稿标脏。
+      const draftEdit = this._draftAutosaveReady && this._isDraftPatch(patch);
       nativeSetData.call(this, patch, () => {
         const finish = () => {
-          if (this._draftAutosaveReady && this._isDraftPatch(patch)) {
-            this._persistDraftEnvelope();
+          if (draftEdit && this._draftAutosaveReady) {
+            this._onDraftEdited(this._persistDraftEnvelope());
+          } else if (this._cloudAutosaveQueued && !this._cloudAutosaveTimer && !this._cloudDraftEditorOpen()) {
+            // 弹窗关闭、在途保存结束后接力排队;排队条件不满足时 _queueCloudDraftAutosave 自己会放弃
+            this._queueCloudDraftAutosave();
           }
           if (callback) callback();
         };
@@ -630,6 +703,84 @@ Page({
     };
   },
 
+  _setSaveState(state) {
+    if (this._unloaded) return;
+    this.setData({ themeSaveState: state, themeSaveLabel: SAVE_STATE_LABELS[state] || '' });
+  },
+
+  // 每次草稿内容变化:本机已写入后才排云端保存;本机没写进去要如实标出来
+  _onDraftEdited(stored) {
+    if (this._unloaded) return;
+    // 回读换版本、模板详情补全等不改变云端内容的回写,不把「已存云端」打回去
+    if (this.data.themeSaveState === 'saved' && this._cloudSavedKey && this._cloudDraftKey() === this._cloudSavedKey) return;
+    this._cloudAutosaveQueued = true;
+    this._setSaveState(stored ? 'local' : 'localFailed');
+    this._queueCloudDraftAutosave();
+  },
+
+  // 换上本机恢复稿后:与云端已确认的内容相同就标已存云端;不同才按一次编辑排队
+  // (与其它编辑一样,定时器由 setData 包装在回调里接力,加载/重试读取本身不直接调用保存)
+  _markRestoredDraft(stored) {
+    if (this._unloaded) return;
+    if (this._cloudSavedKey && this._cloudDraftKey() === this._cloudSavedKey) { this._setSaveState('saved'); return; }
+    this._cloudAutosaveQueued = true;
+    this._setSaveState(stored ? 'local' : 'localFailed');
+  },
+
+  // 云端要保存的那份内容(与「保存草稿」同一个 payload builder);组装不出来返回 ''
+  _cloudDraftKey() {
+    try {
+      const payload = this._buildSubmitPayload({ draft: true, quiet: true });
+      return payload ? JSON.stringify(payload) : '';
+    } catch (error) { return ''; }
+  },
+
+  _cancelCloudDraftAutosave() {
+    if (this._cloudAutosaveTimer) clearTimeout(this._cloudAutosaveTimer);
+    this._cloudAutosaveTimer = null;
+  },
+
+  // 编辑弹窗里的内容还没提交;此时保存并换上回读版本会打断弹窗,等关掉再存
+  _cloudDraftEditorOpen() {
+    const d = this.data;
+    const open = key => !!(d[key] && d[key].show);
+    return !!(d.popChapter || d.popChapterNodes || d.topicDetailShow || d.showTicketEditor
+      || d.routeMappingShow || d.modePickerShow || d.categorySheetVisible
+      || ['storyEditor', 'storyVarSheet', 'runtimeEditor', 'runtimeZeroEditor', 'survivalEditor', 'structureEditor',
+        'valueEditor', 'initialStateEditor', 'thoughtsEditor', 'publishCheck', 'chapterPreview',
+        'startTimePicker', 'endTimePicker', 'ticketTimePicker'].some(open));
+  },
+
+  // 自动保存只替当前账号、当前入口、仍是草稿(或尚未建题)且已命名的稿子工作;
+  // 发布结果待确认、本机存储不可用、旧稿归属未确认、确定失败后都停下,等用户明确操作。
+  _cloudAutosaveBlocked() {
+    const owner = String(app.getUserID() || '');
+    return !this._cloudAutosaveEnabled || this._hidden || this._unloaded || !this._draftAutosaveReady
+      || this._draftStorageUnavailable || this._draftScopeUnconfirmed || this._cloudAutosavePaused
+      || !!this._publishAttempt || this.data.creatorLoginRequired || !owner
+      || String(this.data.draftMemberId || owner) !== owner
+      || !!(this.data.editingTopicId && (!this.data.editLoaded || !this.data.editIsDraft))
+      || !String((this.data.formData || {}).name || '').trim();
+  },
+
+  _queueCloudDraftAutosave() {
+    this._cancelCloudDraftAutosave();
+    if (!this._cloudAutosaveQueued || this._cloudAutosaveBlocked()) return;
+    const owner = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    // 连续输入合并为一次保存，避免每次按键重建章节、换号或触发接口限流。
+    this._cloudAutosaveTimer = setTimeout(() => {
+      this._cloudAutosaveTimer = null;
+      if (owner !== String(app.getUserID() || '') || scope !== this.data.operationScope) {
+        this._cloudAutosaveQueued = false;
+        return;
+      }
+      // 在途保存/发布或弹窗未关:保留排队,结束或关闭时由 setData 接力
+      if (this._serverDraftBusy() || this.data.submitting || this._cloudDraftEditorOpen()) return;
+      this.saveServerDraft({ automatic: true });
+    }, CLOUD_AUTOSAVE_MS);
+  },
+
   _isDraftPatch(patch) {
     return Object.keys(patch || {}).some((key) => {
       return key === 'formData' || key.indexOf('formData.') === 0
@@ -644,13 +795,16 @@ Page({
   _persistDraftEnvelope() {
     const identity = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
-    if (!identity || !memberId) return false;
+    if (this._draftStorageUnavailable || this._draftScopeUnconfirmed || !identity || !memberId || this._unloaded
+        || String(memberId) !== String(app.getUserID() || '')) return false;
     try {
       proEditorDraft.saveDraft(wx, {
         memberId,
+        operationScope: this.data.operationScope,
         topicId: identity.topicId,
         draftUuid: identity.draftUuid,
         baseRevision: this.data.baseRevision,
+        publishAttempt: this._publishAttempt,
         formData: this.data.formData,
         pendingMaterials: this.data.pendingMaterials,
         editorMeta: {
@@ -673,6 +827,7 @@ Page({
 
   _applyDraftEnvelope(envelope) {
     if (!envelope) return;
+    this._publishAttempt = envelope.publishAttempt || null;
     this._localDraftRestored = true;
     const formData = this._withEndingChapters(envelope.formData || Object.assign({}, this.data.formData, {
       chapters: envelope.chapters || [],
@@ -706,7 +861,7 @@ Page({
     const forceNew = options && String(options.newDraft) === '1';
     const hasIncomingAiDraft = !!readAiDraft();
     if (!forceNew && !hasIncomingAiDraft && memberId) {
-      const active = proEditorDraft.readActiveNewDraft(wx, memberId);
+      const active = proEditorDraft.readActiveNewDraft(wx, memberId, this.data.operationScope);
       if (active) return active;
     }
     return proEditorDraft.createDraftUuid();
@@ -714,17 +869,28 @@ Page({
 
   _bootstrapNewLocalDraft(options) {
     const memberId = app.getUserID() || '';
-    let draftUuid = this._newDraftUuid(options || {}, memberId);
+    let draftUuid;
+    try {
+      draftUuid = this._newDraftUuid(options || {}, memberId);
+    } catch (error) {
+      this._markDraftStorageUnavailable();
+      return false;
+    }
     this.setData({ draftUuid, draftMemberId: memberId });
     if (!memberId) return false;
-    const restored = proEditorDraft.loadDraft(wx, { draftUuid }, { memberId });
-    if (restored.status === 'member_mismatch') {
+    const restored = proEditorDraft.loadDraft(wx, { draftUuid }, { memberId, operationScope: this.data.operationScope });
+    if (restored.status === 'storage_unavailable') {
+      this._markDraftStorageUnavailable();
+      return false;
+    }
+    if (restored.status === 'member_mismatch' || restored.status === 'scope_mismatch') {
       draftUuid = proEditorDraft.createDraftUuid();
       this.setData({ draftUuid });
       cyToast('草稿属于其他账号，已新建草稿');
       return false;
     }
     if (restored.status !== 'ready') return false;
+    if (restored.scopeUnknown) { this._confirmLegacyDraftScope(restored.envelope); return false; }
     const restoredForm = restored.envelope.formData || {};
     const modeMismatch = !options.draftUuid && options.mode != null
       && Number(restoredForm.productType) !== (Number(options.mode) === 2 ? 2 : 1);
@@ -743,31 +909,74 @@ Page({
     const topic = (detail && detail.topic) || {};
     const memberId = app.getUserID() || topic.memberId || '';
     const baseRevision = topic.updateTime || topic.createTime || '';
+    const requestToken = this._editLoadToken;
+    const isCurrent = () => !this._unloaded
+      && String(memberId) === String(app.getUserID() || '')
+      && requestToken === this._editLoadToken;
     this.setData({ baseRevision, draftMemberId: memberId });
+    // 「保存草稿」回读:本机内容刚被服务端接收并回读确认(server-draft.readbackIssue),
+    // 这时才清本机恢复稿(新建时的 draftUuid 那份 + 主题号那份),不再拿它跟服务端版本比冲突。
+    const adopted = this._adoptServerDraft;
+    if (adopted) {
+      this._adoptServerDraft = null;
+      [adopted.previous, { topicId: this.data.editingTopicId }].forEach((identity) => {
+        if (!identity) return;
+        try { proEditorDraft.removeDraft(wx, identity, { memberId: adopted.memberId || memberId, operationScope: this.data.operationScope }); } catch (error) {}
+      });
+      this._draftAutosaveReady = true;
+      return;
+    }
     if (!memberId) {
       this._draftAutosaveReady = true;
       return;
     }
     const result = proEditorDraft.loadDraft(wx, { topicId: this.data.editingTopicId }, {
       memberId,
+      operationScope: this.data.operationScope,
       currentBaseRevision: baseRevision,
     });
-    const finish = () => { this._draftAutosaveReady = true; };
-    if (result.status === 'ready') {
+    if (result.status === 'storage_unavailable') {
+      this._markDraftStorageUnavailable();
+      return;
+    }
+    if (result.scopeUnknown) { this._confirmLegacyDraftScope(result.envelope); return; }
+    if (result.envelope && result.envelope.publishAttempt) {
+      this._publishAttempt = result.envelope.publishAttempt;
+    }
+    const finish = () => { if (isCurrent()) this._draftAutosaveReady = true; };
+    // Equal (including second-resolution) revisions do not settle a lost write response.
+    // Only an explicit adoption of this known topic's saved version can clear UNKNOWN.
+    const unknownExistingWrite = result.envelope && result.envelope.publishAttempt
+      && result.envelope.publishAttempt.status === 'UNKNOWN'
+      && !!this.data.editingTopicId
+      && String(result.envelope.publishAttempt.topicId || '') === String(this.data.editingTopicId);
+    // 换上本机恢复稿之前记下云端版本的内容,用来判断恢复稿是否真的需要再上云
+    this._cloudLoadedKey = this._cloudDraftKey();
+    if (result.status === 'ready' && !unknownExistingWrite) {
       this._applyDraftEnvelope(result.envelope);
       finish();
       return;
     }
-    if (result.status === 'revision_conflict') {
+    if (result.status === 'revision_conflict' || unknownExistingWrite) {
       modal.show({
-        title: '另一端草稿已更新',
-        content: '其他设备上的草稿已更新，是否用本机草稿覆盖？',
+        title: unknownExistingWrite ? '上次发布结果待确认' : '另一端草稿已更新',
+        content: unknownExistingWrite
+          ? '是否保留本机草稿，或使用当前已保存版本？'
+          : '其他设备上的草稿已更新，是否用本机草稿覆盖？',
         confirmText: '使用本地草稿',
         cancelText: '使用已保存版本',
         success: (res) => {
+          if (!isCurrent()) return;
           if (res.confirm) this._applyDraftEnvelope(result.envelope);
-          else proEditorDraft.removeDraft(wx, { topicId: this.data.editingTopicId }, { memberId });
+          else {
+            proEditorDraft.removeDraft(wx, { topicId: this.data.editingTopicId }, { memberId, operationScope: this.data.operationScope });
+            this._publishAttempt = null;
+            if (this._publishWorkflow) this._publishWorkflow.destroy();
+            this._publishWorkflow = null;
+            this._persistDraftEnvelope();
+          }
           finish();
+          if (res.confirm && isCurrent()) this._markRestoredDraft(true); // 用本机稿覆盖:按一次编辑排自动保存
         },
       });
       return;
@@ -775,24 +984,113 @@ Page({
     finish();
   },
 
-  _clearDraftEnvelope() {
+  // 2026-10-22 业主裁决(L09):原来每次进页都弹「确认旧草稿的发布入口」,并把提示塞进底部固定的
+  // 「这次还没有保存」错误卡 —— 盖住章节卡与地图、还和 toast 叠在一起。现在:
+  // ① 提示改成内容流里的横幅(legacyScopePending),不再借用 submitError;
+  // ② 选过「暂不恢复」就按草稿记下来,下次进来不再自动弹窗,横幅上的「确认归属」随时可再打开。
+  _confirmLegacyDraftScope(envelope) {
+    this._draftScopeUnconfirmed = true;
+    this._legacyScopeEnvelope = envelope;
+    this.setData({ legacyScopePending: true });
+    if (this._legacyScopeDeferred()) return;
+    this._promptLegacyDraftScope();
+  },
+
+  _legacyScopeChoiceKey() {
     const identity = this._draftIdentity();
-    const memberId = this.data.draftMemberId || app.getUserID();
-    if (!identity) return;
+    const memberId = String(app.getUserID() || '');
+    if (!identity || !memberId) return '';
+    const draft = identity.topicId ? ('t' + identity.topicId) : ('d' + identity.draftUuid);
+    return 'cy_legacy_scope_later:' + memberId + ':' + (this.data.operationScope || '') + ':' + draft;
+  },
+
+  _legacyScopeDeferred() {
+    const key = this._legacyScopeChoiceKey();
+    try { return !!(key && wx.getStorageSync(key)); } catch (error) { return false; }
+  },
+
+  _rememberLegacyScopeChoice(deferred) {
+    const key = this._legacyScopeChoiceKey();
+    if (!key) return;
     try {
-      proEditorDraft.removeDraft(wx, identity, { memberId });
+      if (deferred) wx.setStorageSync(key, 1);
+      else wx.removeStorageSync(key);
     } catch (error) {}
   },
 
+  // 横幅「确认归属」/ 发布确认「需要先处理」那一条:重新打开同一个确认弹窗
+  reopenLegacyDraftScope() {
+    if (!this._draftScopeUnconfirmed || !this._legacyScopeEnvelope) return;
+    if (this.data.publishCheck && this.data.publishCheck.show) this.closePublishCheck();
+    this._promptLegacyDraftScope();
+  },
+
+  _promptLegacyDraftScope() {
+    const envelope = this._legacyScopeEnvelope;
+    const owner = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    modal.show({
+      title: '确认旧草稿的发布入口',
+      content: '这份旧草稿没有记录商家或个人入口。确认属于当前入口后才恢复；上次结果未知的发布仍会保留并先确认。',
+      confirmText: '属于此入口', cancelText: '暂不恢复',
+      success: (res) => {
+        if (this._unloaded || owner !== String(app.getUserID() || '')
+            || scope !== this.data.operationScope || !this._draftScopeUnconfirmed) return;
+        if (!res.confirm) { this._rememberLegacyScopeChoice(true); return; }
+        this._draftScopeUnconfirmed = false;
+        this._legacyScopeEnvelope = null;
+        this._rememberLegacyScopeChoice(false);
+        this.setData({ legacyScopePending: false });
+        this._applyDraftEnvelope(envelope);
+        const stored = this._persistDraftEnvelope();
+        this._draftAutosaveReady = true;
+        this._markRestoredDraft(stored);
+      }
+    });
+  },
+
+  _markDraftStorageUnavailable() {
+    this._draftStorageUnavailable = true;
+    this._draftAutosaveReady = true; // Keep the existing unsaved-exit warning active.
+    this.setData({ submitting: false, submitError: '本机草稿读取失败，请重新进入' });
+  },
+
+  _clearDraftEnvelope() {
+    if (this._draftStorageUnavailable) return false;
+    const identity = this._draftIdentity();
+    const memberId = this.data.draftMemberId || app.getUserID();
+    if (!identity) return true;
+    try {
+      proEditorDraft.removeDraft(wx, identity, { memberId, operationScope: this.data.operationScope });
+      return true;
+    } catch (error) { return false; }
+  },
+
   clearLocalDraft() {
+    if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }
+    const memberId = String(app.getUserID() || '');
+    if (this._unloaded) return;
+    if (!memberId || String(this.data.draftMemberId || '') !== memberId) {
+      cyToast('请重新进入当前账号的草稿');
+      return;
+    }
+    const topicId = this.data.editingTopicId;
+    const draftUuid = this.data.draftUuid;
     modal.show({
       title: '清空本地草稿？',
       content: '当前未发布的章节和待编排素材都会从本机删除。',
       confirmText: '清空',
       success: (res) => {
-        if (!res.confirm) return;
+        if (!res.confirm || this._unloaded || this._draftStorageUnavailable
+            || memberId !== String(app.getUserID() || '')
+            || memberId !== String(this.data.draftMemberId || '')
+            || topicId !== this.data.editingTopicId || draftUuid !== this.data.draftUuid) return;
         this._draftAutosaveReady = false;
-        this._clearDraftEnvelope();
+        if (!this._clearDraftEnvelope()) {
+          this._draftAutosaveReady = true;
+          cyToast('本地草稿清空失败，请稍后重试');
+          return;
+        }
         const mode = Number(this.data.formData.productType) === 2 ? 2 : 1;
         const club = this.data.formData.clubId ? ('&clubId=' + encodeURIComponent(this.data.formData.clubId)) : '';
         wx.redirectTo({ url: '/pages/publish/fabu/index?newDraft=1&mode=' + mode + club });
@@ -873,11 +1171,14 @@ Page({
     }
     this._storyTextCursor = null;
     const when = this._storyWhenPatch();
+    const rolePatch = this._storyRolePatch();
     this.setData({
       'formData.chapters': chapters,
       storyWhenOptions: when.storyWhenOptions,
       storyWhenLabelOf: when.storyWhenLabelOf,
       storyEditor: { show: true, chapterIndex, insertMenuAt: -1, focusBlockKey: '', selectedBlockKey: '' },
+      storyNodeRoles: rolePatch.storyNodeRoles,
+      storyRoleOptions: rolePatch.storyRoleOptions,
       storyVarSheet: { show: false, blockKey: '', keys: [] },
       pendingInsertAt: null,
       // ⚠️ 这里**不**探时长。探时长要 wx.createInnerAudioContext,而动作台账是按调用图
@@ -935,8 +1236,13 @@ Page({
 
   // 物理返回守卫(见 wxml 尾部 page-container):按层级关最上层浮层,而不是退出编辑器
   onNativeBackGuard() {
-    if (this.data.chapterPreview && this.data.chapterPreview.show) {
+    if (this.data.structureEditor && this.data.structureEditor.show) { this.closeStructure(); } // structure
+    else if (this.data.runtimeZeroEditor && this.data.runtimeZeroEditor.show) this.closeZeroHpEditor();
+    else if (this.data.survivalEditor && this.data.survivalEditor.show) this.closeSurvivalEditor(); // survival
+    else if (this.data.chapterPreview && this.data.chapterPreview.show) {
       this.closeChapterPreview();
+    } else if (this.data.valueEditor && this.data.valueEditor.show) {
+      this.closeValueEditor();
     } else if (this.data.initialStateEditor && this.data.initialStateEditor.show) {
       this.closeInitialState();
     } else if (this.data.routeMappingShow) {
@@ -960,7 +1266,7 @@ Page({
       this.closeStoryEditor();
     }
     // 关掉一层后若还有受护浮层(浮层叠浮层),翻转一次让 page-container 重新挂上
-    const stillGuarded = (this.data.chapterPreview && this.data.chapterPreview.show) || (this.data.initialStateEditor && this.data.initialStateEditor.show) || this.data.routeMappingShow || this.data.popChapterNodes || this.data.popChapter
+    const stillGuarded = (this.data.runtimeZeroEditor && this.data.runtimeZeroEditor.show) || (this.data.chapterPreview && this.data.chapterPreview.show) || (this.data.initialStateEditor && this.data.initialStateEditor.show) || (this.data.valueEditor && this.data.valueEditor.show) || this.data.routeMappingShow || this.data.popChapterNodes || this.data.popChapter
       || (this.data.publishCheck && this.data.publishCheck.show)
       || (this.data.storyEditor && this.data.storyEditor.show)
       || this.data.modePickerShow || this.data.topicDetailShow;
@@ -1015,6 +1321,8 @@ Page({
     if (e.currentTarget.dataset.kind !== 'game' && !this._canAddFormalNodes(1)) return;
     const pendingLocalId = this.data.storyPendingMaterialLocalId;
     const material = (this.data.pendingMaterials || []).find(item => item._localId === pendingLocalId);
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       pendingInsertAt: index,
       'storyEditor.insertMenuAt': -1,
@@ -1029,6 +1337,8 @@ Page({
       nodesForm: e.currentTarget.dataset.kind === 'game'
         ? Object.assign(this._emptyNodesForm(), { _storyGame: true, showTemplate: true })
         : (material ? proEditorMaterials.nodeFromMaterial(material, 1) : this._emptyNodesForm()),
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodePlanEndingRows: [], nodePlanEndingError: '',
     });
   },
 
@@ -1036,9 +1346,24 @@ Page({
   // ⚠️ 先上传、拿到 url 再落块 —— 反过来先插一个空壳块再回填,上传失败时会留下一个
   // 既点不开也说不清的空块,而这块已经算进「每章 200 块」的额度里了。
   insertStoryImageAt(e) {
+    if (this._storyMediaUploadOperation && !this._storyMediaUploadOperation.isFinished() && !this._storyMediaUploadOperation.isAborted()) return;
     const index = Number(e.currentTarget.dataset.index);
+    const editor = this.data.storyEditor;
+    const chapter = (this.data.formData.chapters || [])[editor.chapterIndex];
+    if (!chapter) return;
+    const chapterId = chapter._localId;
+    const memberId = String(app.getUserID() || '');
+    const blocks = chapter.blocks || [];
+    const beforeKey = blocks[index - 1] && blocks[index - 1].key;
+    const afterKey = blocks[index] && blocks[index].key;
     this.setData({ 'storyEditor.insertMenuAt': -1 });
-    app.chooseImage((res) => {
+    this._storyMediaUploadOperation = app.chooseImage((res) => {
+      const current = (this.data.formData.chapters || [])[editor.chapterIndex];
+      if (this._unloaded || this.data.storyEditor !== editor || !editor.show
+          || memberId !== String(app.getUserID() || '') || !current || current._localId !== chapterId) return;
+      const currentBlocks = current.blocks || [];
+      if ((currentBlocks[index - 1] && currentBlocks[index - 1].key) !== beforeKey
+          || (currentBlocks[index] && currentBlocks[index].key) !== afterKey) return;
       const url = res && res[0];
       if (!url) return;
       this._insertStoryMedia('image', index, { url });
@@ -1093,19 +1418,42 @@ Page({
    * ⚠️ _duration 是本地字段(下划线开头):stripLocalFields 会剥掉,
    *    toPayloadChapter 也只重建 {type,url},所以它进不了 payload,不影响后端块形状。
    */
+  _destroyStoryDurationProbes() {
+    const cleanups = this._storyDurationProbeCleanups || [];
+    this._storyDurationProbeCleanups = [];
+    cleanups.forEach(done => done());
+  },
+
   _fillStoryAudioMeta() {
-    const chapterIndex = this.data.storyEditor.chapterIndex;
-    const chapter = (this.data.formData.chapters || [])[chapterIndex];
-    if (!chapter) return;
-    (chapter.blocks || []).forEach((block, blockIndex) => {
-      if (!block || block.type !== 'audio' || !block.url || block._duration) return;
+    const chapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+    if (!chapter || !chapter._localId) return;
+    const chapterId = chapter._localId;
+    const memberId = String(app.getUserID() || '');
+    (chapter.blocks || []).forEach((block) => {
+      if (!block || !block.key || block.type !== 'audio' || !block.url || block._duration) return;
+      const blockKey = block.key;
+      const url = block.url;
       const probe = wx.createInnerAudioContext();
-      probe.src = block.url;
+      probe.src = url;
       probe.obeyMuteSwitch = false;
-      const done = () => { try { probe.destroy(); } catch (err) {} };
+      let settled = false;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        this._storyDurationProbeCleanups = (this._storyDurationProbeCleanups || []).filter(item => item !== done);
+        try { probe.destroy(); } catch (err) {}
+      };
+      this._storyDurationProbeCleanups = (this._storyDurationProbeCleanups || []).concat(done);
       probe.onCanplay(() => {
+        if (settled) return;
+        const chapters = this.data.formData.chapters || [];
+        const chapterIndex = chapters.findIndex(item => item && item._localId === chapterId);
+        const currentChapter = chapters[chapterIndex];
+        const blockIndex = currentChapter ? (currentChapter.blocks || []).findIndex(item => item && item.key === blockKey) : -1;
+        const currentBlock = currentChapter && (currentChapter.blocks || [])[blockIndex];
         const seconds = Math.round(probe.duration || 0);
-        if (seconds > 0) {
+        if (!this._unloaded && memberId === String(app.getUserID() || '')
+            && currentBlock && currentBlock.type === 'audio' && currentBlock.url === url && seconds > 0) {
           this.setData({
             [`formData.chapters[${chapterIndex}].blocks[${blockIndex}]._duration`]: seconds,
           });
@@ -1487,6 +1835,8 @@ Page({
         blockIndex: removed.blockIndex,
         block: removed.block,
         node: removed.node,
+        binding: this._removeNodeTemplateBinding(removed.node),
+        ruleRefs: this._removeNodeRuleRefs(removed.node),
       };
       this._appendPendingRemoval(Object.assign({ kind: 'story' }, removalSnapshot));
       this._realignStoryRouteGraph(previousRouteNodes);
@@ -1502,7 +1852,7 @@ Page({
       if (this._pendingUndoTimer && typeof this._pendingUndoTimer.unref === 'function') {
         this._pendingUndoTimer.unref();
       }
-      cyToast('节点已删除');
+      cyToast(removalSnapshot.ruleRefs && removalSnapshot.ruleRefs.note ? '节点已删除，' + removalSnapshot.ruleRefs.note : '节点已删除');
     } catch (error) {
       cyToast(app.getRequestErrorMessage(error, '删除失败'));
     }
@@ -1577,6 +1927,8 @@ Page({
   },
 
   openPendingNodeDraft() {
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       popChapterNodes: true,
       popChapterNodesAction: 0,
@@ -1587,6 +1939,8 @@ Page({
       editTargetNodeLid: '',
       inlineEdit: null,
       nodesForm: this._emptyNodesForm(),
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodePlanEndingRows: [], nodePlanEndingError: '',
     });
   },
 
@@ -1602,6 +1956,7 @@ Page({
       cyToast('未找到待编排素材');
       return;
     }
+    const pendingNode = proEditorMaterials.nodeFromMaterial(material, 1);
     this.setData({
       popChapterNodes: true,
       popChapterNodesAction: 0,
@@ -1611,8 +1966,9 @@ Page({
       editTargetChapterLid: '',
       editTargetNodeLid: '',
       inlineEdit: null,
-      nodesForm: proEditorMaterials.nodeFromMaterial(material, 1),
+      nodesForm: pendingNode,
     });
+    this._openNodeBinding(pendingNode);
   },
 
   _savePendingMaterial(material, message) {
@@ -1831,12 +2187,27 @@ Page({
     const that = this;
     const ch = (this.data.formData.chapters || [])[chapterindex];
     const node = ch && ch.nodes && ch.nodes[nodeindex];
+    if (!ch || !node || !ch._localId || !node._localId) return;
+    const chapterId = ch._localId;
+    const nodeId = node._localId;
+    const memberId = String(app.getUserID() || '');
+    const drawerForm = this.data.nodesForm;
+    const inlineEdit = this.data.inlineEdit;
     const cur = (node && node.imgUrl) ? node.imgUrl.split(',').filter(Boolean) : [];
     const remain = 9 - cur.length;
     if (remain <= 0) { cyToast('每个节点最多9张'); return; }
     app.chooseImage(function (res) {
-      const next = cur.concat(res).slice(0, 9);
-      that._commitInlineNodeAt(chapterindex, nodeindex, { imgUrl: next.join(',') });
+      if (that._unloaded || memberId !== String(app.getUserID() || '')
+          || drawerForm !== that.data.nodesForm || inlineEdit !== that.data.inlineEdit) return;
+      const chapters = that.data.formData.chapters || [];
+      const ci = chapters.findIndex(item => item && item._localId === chapterId);
+      const chapter = chapters[ci];
+      const ni = chapter ? (chapter.nodes || []).findIndex(item => item && item._localId === nodeId) : -1;
+      const currentNode = chapter && (chapter.nodes || [])[ni];
+      if (!currentNode) return;
+      const current = String(currentNode.imgUrl || '').split(',').filter(Boolean);
+      const next = current.concat(Array.isArray(res) ? res : []).slice(0, 9);
+      that._commitInlineNodeAt(ci, ni, { imgUrl: next.join(',') });
     }, remain, { crop: true, cropScale: NODE_PHOTO_RATIO });
   },
 
@@ -2006,6 +2377,7 @@ Page({
     node.templateName = '';
     chapters[chapterindex].nodes[nodeindex] = node;
     this.setData({ 'formData.chapters': chapters });
+    this._removeNodeTemplateBinding(node);
     this.updateAllStatistics();
     this.buildRouteMap();
   },
@@ -2020,6 +2392,7 @@ Page({
     this.setData({
       nodeSheetView: 'games',
       selectedTempId: node && node.templateId ? node.templateId : null,
+      selectedTempSource: node && node.templateId ? 'mine' : '',
       selectedTempInfo: node && node.templateInfo && node.templateInfo.title ? node.templateInfo : null
     });
   },
@@ -2150,8 +2523,29 @@ Page({
     this.setData({ privacyGateShow: false });
   },
 
+  onCreatorLogin() {
+    return retryLogin(this, app, this._resumeCreatorLoad);
+  },
+  _resumeCreatorLoad() { if (this._creatorOwnerChanged()) return; this.onLoad(this._creatorEntryOptions || {}); },
+  _creatorOwnerChanged() {
+    if (!this._creatorOwner || this._creatorOwner === memberId(app)) return false;
+    this.setData({ creatorLoginRequired: true });
+    wx.switchTab({ url: '/pages/template/index' });
+    return true;
+  },
+
   onLoad(options) {
+    this._creatorEntryOptions = options || {};
+    if (!memberId(app)) {
+      this.setData({ creatorLoginRequired: true });
+      waitForInitialSession(this, app, this._resumeCreatorLoad);
+      return;
+    }
+    this._creatorOwner = memberId(app);
+    this._cloudAutosaveEnabled = true;
+    this.setData({ creatorLoginRequired: false });
     options = options || {};
+    this._loadSupportMatrix();
     this._routeGraph = topicRouteGraph.emptyGraph();
     this._routeMappingSourceNodeId = '';
     this._routeMappingReturnToNodeEditor = false;
@@ -2225,7 +2619,10 @@ Page({
       this._draftAutosaveReady = true;
       // AI 草稿在 onLoad 内会被消费；这里立刻把当前完整页面快照接力到专业草稿信封，
       // 避免用户尚未触发下一次输入就杀进程时丢失已消费内容。
-      this._persistDraftEnvelope();
+      const storedLocally = this._persistDraftEnvelope();
+      // 恢复出的本机稿可能还没上过云:按一次编辑处理(标本机状态并排自动保存);
+      // 仅带入口参数打开、用户还没动过的新稿不自动建云端主题
+      if (restoredLocalDraft) this._onDraftEdited(storedLocally);
       if (options.clubId && !restoredLocalDraft && this.isBlankCreationCanvas()) {
         setTimeout(() => this.startClubPlaceCapture(), 0);
       }
@@ -2254,9 +2651,15 @@ Page({
   /** [B3b] 带 ?id= 进来 → 拉本人主题全量详情回填表单。 */
   loadEditingTopic(id) {
     const that = this;
+    const owner = memberId(app);
+    if (!owner) { this.setData({ creatorLoginRequired: true }); return; }
     const requestToken = (this._editLoadToken || 0) + 1;
     this._editLoadToken = requestToken;
-    this.setData({ editLoading: true, editLoadError: '' });
+    const isCurrent = () => !that._unloaded && owner === memberId(app) && requestToken === that._editLoadToken;
+    this.setData({ editLoading: true, editLoadError: '', editLoadIsAccess: false });
+    const recover = (res, status) => !that._unloaded && requestToken === that._editLoadToken && recoverReadSession(that, app, res,
+      function (anonymous) { this._editLoadToken++; this.setData({ 'formData.chapters': [], 'formData.tickets': [], 'formData.name': '', 'formData.description': '', editLoading: false, editLoadError: anonymous ? '请登录后读取主题' : '请重新读取主题', creatorLoginRequired: anonymous, editLoadIsAccess: false }); },
+      () => that.loadEditingTopic(id), status);
     app.sendRequest({
       url: '/api/topic/edit-detail',
       method: 'POST',
@@ -2264,34 +2667,48 @@ Page({
       silentError: true,
       data: { id, scope: this.data.operationScope },
       success(res) {
-        if (requestToken !== that._editLoadToken) return;
+        if (requestToken !== that._editLoadToken || owner !== memberId(app) || that._unloaded) return;
         if (res.code != '200' || !isEditingTopicPayload(res.data)) {
-          that.setData({
-            editLoading: false,
-            editLoadError: app.getRequestErrorMessage
-              ? app.getRequestErrorMessage(res, '主题内容不完整，请重试')
-              : '主题内容不完整，请重试'
-          });
+          that._showEditingTopicLoadError(res, '主题内容不完整，请重试');
           return;
         }
+        // Keep the local envelope intact until the existing conflict decision is resolved.
+        that._draftAutosaveReady = false;
         that.applyEditingTopic(res.data);
         that.setData({ editLoading: false, editLoadError: '' });
+        // 刚读回的云端草稿且没有换上本机恢复稿:当前内容就是云端版本
+        if (res.data.isDraft === true && !that._localDraftRestored) {
+          that._cloudSavedKey = that._cloudDraftKey();
+          that._setSaveState('saved');
+        } else if (res.data.isDraft === true && that._cloudLoadedKey) {
+          // 换上了本机恢复稿:与云端相同则自动保存时直接标已存云端,不同才上传
+          that._cloudSavedKey = that._cloudLoadedKey;
+          that._markRestoredDraft(true);
+        }
       },
-      fail(res) {
-        if (requestToken !== that._editLoadToken) return;
-        that.setData({
-          editLoading: false,
-          editLoadError: app.getRequestErrorMessage
-            ? app.getRequestErrorMessage(res, '网络暂时不可用，主题未加载')
-            : '网络暂时不可用，主题未加载'
-        });
+      fail(res, status) {
+        if (recover(res, status)) return;
+        if (requestToken !== that._editLoadToken || owner !== memberId(app) || that._unloaded) return;
+        that._showEditingTopicLoadError(res, '网络暂时不可用，主题未加载');
+      },
+      successStatusAbnormal(res, status) {
+        if (recover(res, status)) return;
+        if (requestToken !== that._editLoadToken || owner !== memberId(app) || that._unloaded) return;
+        that._showEditingTopicLoadError(res, '主题未加载', status);
       },
       complete() {
-        if (requestToken === that._editLoadToken && that.data.editLoading) {
+        if (isCurrent() && that.data.editLoading) {
           that.setData({ editLoading: false });
         }
       }
     });
+  },
+
+  _showEditingTopicLoadError(res, fallback, statusCode) {
+    const status = failureStatus(res, statusCode);
+    this.setData({ editLoading: false, creatorLoginRequired: status === 401,
+      editLoadIsAccess: [400, 403, 422].includes(status),
+      editLoadError: app.getRequestErrorMessage ? app.getRequestErrorMessage(res, fallback) : res && res.msg || fallback });
   },
 
   retryLoadEditingTopic() {
@@ -2321,7 +2738,9 @@ Page({
     const chapters = attached.chapters.concat(attached.legacy.map((item) => this._endingChapterFrom(item)));
     const tickets = (detail.tickets || []).map((ticket) => Object.assign({}, ticket, {
       mode: productType,
-      totalStock: ticket.totalInventory
+      totalStock: ticket.totalInventory,
+      meetingPointLongitude: ticketCoordinate(ticket, 'meetingPointLongitude', 'gatherLng'),
+      meetingPointLatitude: ticketCoordinate(ticket, 'meetingPointLatitude', 'gatherLat')
     }));
     const categoryIds = topic.categoryIds ? String(topic.categoryIds).split(',').filter(Boolean) : [];
     const completionRule = advancedGameConfig.parseTopicCompletion(topic.completeRuleJson || '');
@@ -2332,6 +2751,7 @@ Page({
 
     this.setData({
       editScope: detail.editScope || 'FULL',
+      editIsDraft: detail.isDraft === true,
       editLoaded: true,
 
       bingoRows: advancedGameConfig.BINGO_S_ORDER.map((pos, i) => Object.assign(
@@ -2384,6 +2804,7 @@ Page({
     });
     // imgArr(CSV)与 imgArrList(数组)必须走同一个写入口,单独 setData 其一会让 step3 画廊与提交值分家
     this._setImgArr(this._parseImgArr(topic.imgArr || ''));
+    this._syncRuntimeStats();
     this._ensureLocalIds();
     this._materializeCityStoryChapters();
     this.captureEntryTicketSnapshot();
@@ -2392,6 +2813,12 @@ Page({
     this.refreshRouteGraph();
     this._syncMerchantPoolEligibility();   // 回填之后复核:存量主题可能是无资格者开的池
     this._finishEditingDraftBootstrap(detail);
+    const boundIds = new Set();
+    (this.data.formData.chapters || []).forEach(chapter => (chapter.nodes || []).forEach(node => {
+      if (Number(node.templateId) && !(node.templateInfo && Object.prototype.hasOwnProperty.call(node.templateInfo, 'advancedConfigJson')))
+        boundIds.add(Number(node.templateId));
+    }));
+    boundIds.forEach(id => this._loadNodeTemplateDetail({ templateId: id }));
     return true;
   },
 
@@ -2448,7 +2875,7 @@ Page({
     if (this._lockedSnapshot === this._lockedFingerprint()) return true;
     modal.show({
       title: '这些改动存不下来',
-      content: '主题已过审开卖，开始/结束日期、章节站点结构、票种与价格都不能再改了。'
+      content: '主题已过审开卖，开始/结束日期、章节节点结构、票种与价格都不能再改了。'
         + '要改这些只能先下架 → 退款 → 重发。其余文案与图片的修改可以正常保存。',
       showCancel: false,
       confirmText: '知道了'
@@ -2492,13 +2919,78 @@ Page({
   _buildCopiedDraft(mode, aiSimple) {
     const nextMode = Number(mode) === 2 ? 2 : 1;
     const formData = JSON.parse(JSON.stringify(this.data.formData || {}));
+    const pendingMaterials = JSON.parse(JSON.stringify(this.data.pendingMaterials || []));
+    const nodeKeys = new Map();
+    (formData.chapters || []).flatMap(ch => ch.nodes || []).concat(pendingMaterials).forEach(node => {
+      node._localId = node._localId || this._genLocalId();
+      node.clientNodeKey = node.clientNodeKey || node._localId;
+      if (node.id) nodeKeys.set(String(node.id), 'client:' + node.clientNodeKey);
+      delete node.id;
+    });
+    const reselect = [];
+    if (formData.themeRuntimeConfig) {
+      const runtime = templateBinding.parse(formData.themeRuntimeConfig);
+      // 互斥组与额外站点(含共用额度关系)跟着站点走:编号换成新草稿的 client:<key>,首次保存由服务端换回真实编号。
+      // 只有找不到对应站点的引用才要求重选,不整段丢掉。
+      (runtime.chapters || []).forEach(ch => {
+        const lost = [];
+        if (ch.exclusiveGroups) {
+          ch.exclusiveGroups = ch.exclusiveGroups.map(group => group.map(id => nodeKeys.get(String(id)))).filter(group => {
+            const ok = group.length >= 2 && group.every(Boolean);
+            if (!ok) lost.push('互斥选项');
+            return ok;
+          });
+          if (!ch.exclusiveGroups.length) delete ch.exclusiveGroups;
+        }
+        if (ch.extraNodes) {
+          ch.extraNodes = ch.extraNodes.map(item => Object.assign({}, item, { nodeId: nodeKeys.get(String(item.nodeId)) })).filter(item => {
+            if (!item.nodeId) lost.push('额外节点');
+            return !!item.nodeId;
+          });
+          if (!ch.extraNodes.length) delete ch.extraNodes;
+        }
+        if (lost.length) reselect.push('第' + (ch.index + 1) + '章' + Array.from(new Set(lost)).join('/'));
+      });
+      (runtime.scenes || []).forEach(scene => {
+        if (!scene.nodeConfigs) return;
+        const configs = {};
+        Object.entries(scene.nodeConfigs).forEach(([key, value]) => {
+          const target = /^\d+$/.test(key) ? nodeKeys.get(key) : key;
+          if (target) configs[target] = value;
+          else if (!reselect.includes('场景节点玩法')) reselect.push('场景节点玩法');
+        });
+        scene.nodeConfigs = configs;
+      });
+      structure.copyReferences(runtime, reselect); // structure
+      const survival = runtime.gameplayRuntime && runtime.gameplayRuntime.survival;
+      if (survival && (survival.zeroChallenge || survival.zeroHpPolicy === 'CHALLENGE')) {
+        reselect.push('归零挑战需重新选择挑战节点');
+        delete survival.zeroChallenge;
+        if (survival.zeroHpPolicy === 'CHALLENGE') delete survival.zeroHpPolicy;
+        if (!Object.keys(survival).length) delete runtime.gameplayRuntime.survival;
+        if (!Object.keys(runtime.gameplayRuntime).length) delete runtime.gameplayRuntime;
+      }
+      if (runtime.templateBindings) {
+        const bindings = {};
+        Object.entries(runtime.templateBindings).forEach(([key, value]) => {
+          const target = /^\d+$/.test(key) ? nodeKeys.get(key) : key;
+          if (target) bindings[target] = value;
+          else if (!reselect.includes('节点玩法资源绑定')) reselect.push('节点玩法资源绑定');
+        });
+        runtime.templateBindings = bindings;
+      }
+      survivalEditor.copyReferences(runtime, reselect); // survival
+      ownership.copyReferences(runtime, reselect);
+      formData.themeRuntimeConfig = JSON.stringify(runtime);
+    }
     formData.productType = nextMode;
     formData.tickets = (formData.tickets || []).map(ticket => Object.assign({}, ticket, { mode: nextMode }));
     return {
       formData,
       selectedCategoryIds: (this.data.selectedCategoryIds || []).slice(),
       selectedCategoryNames: (this.data.selectedCategoryNames || []).slice(),
-      pendingMaterials: JSON.parse(JSON.stringify(this.data.pendingMaterials || [])),
+      pendingMaterials,
+      copyReferenceNotice: reselect.length ? '复制后需要重新选择：' + reselect.join('、') : '',
       aiSimple: !!aiSimple,
       productType: nextMode
     };
@@ -2588,7 +3080,18 @@ Page({
   },
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
+  onHide() {
+    this._hidden = true;
+    // 每次编辑已先落本机;离开前不承诺一定存上云,只取消过时调度,回来(onShow)再接力
+    this._cancelCloudDraftAutosave();
+  },
+
   onUnload() {
+    this._unloaded = true;
+    this._cloudAutosaveEnabled = false;
+    this._cancelCloudDraftAutosave();
+    this._destroyChapterDurationAudio();
+    this._destroyStoryDurationProbes();
     this.destroyPreviewAudio();
     if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
     this._pendingUndoTimer = null;
@@ -2602,6 +3105,10 @@ Page({
     this._editLoadToken = (this._editLoadToken || 0) + 1;
     if (this._publishWorkflow) {
       this._publishWorkflow.destroy();
+    }
+    if (this._serverDraftSaver) {
+      if (this._serverDraftSaver.isBusy()) cyLoading.hide();
+      this._serverDraftSaver.destroy();
     }
   },
 
@@ -2934,7 +3441,7 @@ Page({
         endTime: endDate,
         saleStartTime: fmt(now),
         saleEndTime: fmt(start),
-        description: '适合内测和线下试玩',
+        description: '适合线下试玩',
         refundSupported: true,
         syncWithTheme: true
       }],
@@ -2981,8 +3488,12 @@ Page({
       required: ch.required,
       imgArr: ch.imgArr || '',
       calculatedDistance: ch.calculatedDistance || 0,
+      // 序章/结局章标记随复制保留,否则结局章被当普通章、与回填的 journeyStory 对不上
+      opening: ch.opening,
+      ending: ch.ending,
       nodes: (ch.nodes || []).map((n, i) => ({
         _localId: n._localId || '',
+        clientNodeKey: n.clientNodeKey || n._localId || '',
         id: n.id,
         name: n.name || ('节点' + (i + 1)),
         subtitle: n.subtitle || '',
@@ -3058,6 +3569,11 @@ Page({
       'formData.finishMedalName': sourceData.finishMedalName || '',
       'formData.finishMedalImg': sourceData.finishMedalImg || '',
       'formData.completeRewardCouponId': sourceData.completeRewardCouponId || 0,
+      // 模式切换复制(_buildCopiedDraft)整份带着这些主题规则;漏回填 = 初始状态、背包、结局、完成规则静默清空(复核 A09)
+      'formData.journeyRules': sourceData.journeyRules || '',
+      'formData.themeRuntimeConfig': sourceData.themeRuntimeConfig || '',
+      'formData.journeyStory': sourceData.journeyStory || '',
+      'formData.completeRuleJson': sourceData.completeRuleJson || '',
 
       'formData.tickets': sourceData.tickets || [{
         name: '体验票', price: 0, totalStock: 100, mode: 2,
@@ -3071,6 +3587,7 @@ Page({
     const aiDraftKey = aiDraftStorageKey();
     if (aiDraftKey) wx.removeStorageSync(aiDraftKey);
     this.updateAllStatistics();
+    if (draft.copyReferenceNotice) modal.show({ title: '复制提醒', content: draft.copyReferenceNotice, showCancel: false, confirmText: '知道了' });
   },
 
   isBlankTopicDraft() {
@@ -3167,13 +3684,14 @@ Page({
     const currentChapterCount = this.data.formData.chapters.length;
     const nextChapterNumber = currentChapterCount + 1;
     const defaultChapterName = `第${nextChapterNumber}章`;
+    this._openChapterRules(currentChapterCount);
 
     this.setData({
       popChapterAction: 0,
       popChapter: true,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: '',
-      chapterForm: emptyChapterForm(defaultChapterName), runtimeChapterCosts: this._runtimeCosts(currentChapterCount)
+      chapterForm: emptyChapterForm(defaultChapterName)
     });
     if (Number(this.data.formData.productType) === 2) this.loadMerchantCategories();
   },
@@ -3230,6 +3748,7 @@ Page({
     this._syncRuntimeStats();
     var that = this
     let chapterIndex = e.currentTarget.dataset.index;
+    this._openChapterRules(Number(chapterIndex));
     let newChapters = that.data.formData.chapters[chapterIndex];
     let chapterForm = Object.assign({}, newChapters, {
       categoryId: newChapters.categoryId || null,
@@ -3243,12 +3762,12 @@ Page({
     });
     this.setData({
       chapterForm: chapterForm,
-      runtimeChapterCosts: this._runtimeCosts(Number(chapterIndex)),
       popChapter: true,
       popChapterAction: 1,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: ''
     }, () => this._syncChapterEndingOptions(chapterForm.ending));
+    this._refreshStructureSummary(); // structure
     if (Number(that.data.formData.productType) === 2) that.loadMerchantCategories();
   },
   
@@ -3627,6 +4146,7 @@ Page({
         newChapter.blocks = [];
         newChapter.description = '';
       }
+      if (!this._saveChapterRules()) return false;
       this._pushUndo();
       if (newChapter.opening) this._prependRuntimeChapter();
       let updatedChapters = newChapter.opening
@@ -3650,6 +4170,7 @@ Page({
       let chapterIndex = that.data.popChapterIndex;
       // 同上:不再用占位文案凑完成态
       let chapters = that.data.formData.chapters;
+      if (!this._saveChapterRules()) return false;
       this._pushUndo();
       chapters[chapterIndex] = newChapter
       this.destroyPreviewAudio(); // R9-36:完成编辑=弹层关闭,正在播的本章旁白一起收
@@ -3702,6 +4223,8 @@ Page({
     let chapter = that.data.formData.chapters[chapterIndex]
     let node = chapter['nodes'][nodeIndex]
     let nodesForm = Object.assign({}, node)
+    if (this._templateDetailsById && this._templateDetailsById[node.templateId])
+      nodesForm.templateInfo = this._templateDetailsById[node.templateId];
     // 玩法开关不入库,由 templateId 派生:绑过模板就是"开"。
     // 不派生的话,已配玩法的节点重开抽屉会显示成"关",看着像配置丢了。
     nodesForm.showTemplate = !!Number(node.templateId)
@@ -3716,6 +4239,10 @@ Page({
       // 抽屉里的「文字说明」要跳二级页,而二级页按 index 定位,所以开抽屉时一并记下
       inlineEdit: { chapterIndex: Number(chapterIndex), nodeIndex: Number(nodeIndex) },
     })
+    this._openNodeBinding(nodesForm);
+    this._refreshStructureSummary(); // structure
+    if (node.templateId && !(nodesForm.templateInfo && Object.prototype.hasOwnProperty.call(nodesForm.templateInfo, 'advancedConfigJson')))
+      this._loadNodeTemplateDetail(node);
   },
   // 点地图 pin → 用 _markerMap 反查打开该节点编辑(复用 showEditNodes 效果)
   onMarkerTap(e) {
@@ -3737,14 +4264,21 @@ Page({
       return;
     }
     this.setEditorState('editNode');
+    const nodesForm = Object.assign({}, node, { showTemplate: !!Number(node.templateId) });
+    if (this._templateDetailsById && this._templateDetailsById[node.templateId])
+      nodesForm.templateInfo = this._templateDetailsById[node.templateId];
     this.setData({
-      nodesForm: Object.assign({}, node),
+      nodesForm,
       popChapterNodes: true,
       popChapterNodesAction: 1,
       editTargetChapterLid: m.chapterLid,
       editTargetNodeLid: m.nodeLid,
       selectedNodeLid: m.nodeLid, // 点 marker → 列表同步高亮
     });
+    this._openNodeBinding(nodesForm);
+    this._refreshStructureSummary(); // structure
+    if (node.templateId && !(nodesForm.templateInfo && Object.prototype.hasOwnProperty.call(nodesForm.templateInfo, 'advancedConfigJson')))
+      this._loadNodeTemplateDetail(node);
     this.buildRouteMap();
   },
   // 点列表序号圈 → 仅定位+高亮(不打开编辑抽屉),并把地图中心移到该节点
@@ -3767,13 +4301,19 @@ Page({
   },
   //关闭节点编辑弹框
   cancelPopChapter(e) {
+    this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
+    this._loadingSelectedTemplate = 0;
     this._rollbackNodeRouteEdit();
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       popChapterNodes: false,
       nodeSheetView: 'detail',
       editingPendingLocalId: '',
       nodeDraftDestination: 'formal',
       pendingInsertAt: null,
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodePlanEndingRows: [], nodePlanEndingError: '',
       'storyEditor.insertMenuAt': -1,
     })
   },
@@ -3787,6 +4327,8 @@ Page({
       cyToast(issue.message);
       return;
     }
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       popChapterNodes: true,
       popChapterNodesAction: 0,
@@ -3797,6 +4339,8 @@ Page({
       editTargetNodeLid: '',
       inlineEdit: null,
       nodesForm: this._emptyNodesForm(),
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodePlanEndingRows: [], nodePlanEndingError: '',
     })
   },
   // 节点描述输入框变化处理
@@ -3838,6 +4382,8 @@ Page({
         const previousRouteNodes = this._routeNodes();
         const removed = nodes.splice(ni, 1)[0];
         const material = proEditorMaterials.materialFromNode(removed, 'node');
+        const binding = this._removeNodeTemplateBinding(removed);
+        const ruleRefs = this._removeNodeRuleRefs(removed);
         chapters[ci].nodes = nodes;
         const pending = (this.data.pendingMaterials || [])
           .filter(item => item._localId !== material._localId)
@@ -3848,6 +4394,8 @@ Page({
           nodeIndex: ni,
           material,
           node: removed,
+          binding,
+          ruleRefs,
         });
         if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
         this.setData({
@@ -3861,7 +4409,7 @@ Page({
         this._pruneRouteGraphToCurrentNodes();
         this._commitNodeRouteEdit();
         this.updateAllStatistics();
-        cyToast('已移到待编排区');
+        cyToast(ruleRefs && ruleRefs.note ? '已移到待编排区，' + ruleRefs.note : '已移到待编排区');
         this._pendingUndoTimer = setTimeout(() => {
           this._pendingUndoTimer = null;
           this._pendingUndoSnapshot = null;
@@ -3895,8 +4443,28 @@ Page({
       try {
         const restoredChapters = JSON.parse(JSON.stringify(this.data.formData.chapters || []));
         let restoredPending = JSON.parse(JSON.stringify(this.data.pendingMaterials || []));
+        const restoredRuntime = templateBinding.parse(this.data.formData.themeRuntimeConfig);
+        let restoredBindings = false;
         for (let index = removals.length - 1; index >= 0; index -= 1) {
           const removal = removals[index];
+          if (removal.binding) {
+            restoredRuntime.templateBindings = restoredRuntime.templateBindings || {};
+            restoredRuntime.templateBindings[templateBinding.nodeKey(removal.node)] = removal.binding;
+            restoredBindings = true;
+          }
+          if (removal.ruleRefs) {
+            // 撤销删除:把删站点时移出的互斥组 / 额外站点原样放回
+            removal.ruleRefs.before.forEach((row) => {
+              restoredRuntime.chapters = restoredRuntime.chapters || [];
+              const target = restoredRuntime.chapters.find((item) => item.index === row.index);
+              if (!target) return;
+              ['exclusiveGroups', 'extraNodes'].forEach((field) => {
+                if (row[field]) target[field] = row[field]; else delete target[field];
+              });
+            });
+            if (removal.ruleRefs.gameBefore) restoredRuntime.gameplayRuntime = removal.ruleRefs.gameBefore;
+            restoredBindings = true;
+          }
           if (removal.kind === 'material') {
             const chapter = restoredChapters.find((item) => item._localId === removal.chapterLid);
             const pendingIndex = restoredPending
@@ -3937,6 +4505,7 @@ Page({
           pendingUndo: { show: false, materialLocalId: '' },
           'formData.routeMode': restoredRoute.mode,
           'formData.routeGraphJson': restoredRoute.json,
+          'formData.themeRuntimeConfig': restoredBindings ? JSON.stringify(restoredRuntime) : this.data.formData.themeRuntimeConfig,
         }, () => this.refreshRouteGraph());
       } catch (error) {
         if (this._pendingUndoTimer) clearTimeout(this._pendingUndoTimer);
@@ -4042,6 +4611,11 @@ Page({
     }
     const gameplayIssue = proEditorPolicy.storyGameIssue(node);
     if (gameplayIssue) { cyToast(gameplayIssue); return; }
+    if (Number(node.templateId) && !(node.templateInfo
+      && Object.prototype.hasOwnProperty.call(node.templateInfo, 'advancedConfigJson'))) {
+      cyToast('玩法详情未加载，请稍后再完成节点');
+      return;
+    }
     node.nodeTime = Number(node.nodeTime || 30);
 
     const editingPending = this.data.editingPendingLocalId;
@@ -4113,6 +4687,7 @@ Page({
             storyPendingMaterialLocalId: '',
             nodesForm: this._emptyNodesForm(),
           });
+          this._removeNodeTemplateBinding(node);
           cyToast('地点待补，已移到待编排区');
         } catch (error) {
           cyToast(app.getRequestErrorMessage(error, '移动节点失败'));
@@ -4135,6 +4710,7 @@ Page({
         storyPendingMaterialLocalId: '',
         nodesForm: this._emptyNodesForm(),
       });
+      if (nodeIndex >= 0) this._removeNodeTemplateBinding(node);
       this.updateAllStatistics();
       cyToast('地点待补，已移到待编排区');
       return;
@@ -4164,6 +4740,7 @@ Page({
           nodesForm: this._emptyNodesForm(),
           selectedNodeLid: node._localId,
         });
+        this._commitNodeTemplateBinding(node);
         cyToast.success('已插入故事流');
       } catch (error) {
         cyToast(app.getRequestErrorMessage(error, '插入节点失败'));
@@ -4183,6 +4760,7 @@ Page({
           nodesForm: this._emptyNodesForm(),
           selectedNodeLid: node._localId,
         });
+        this._commitNodeTemplateBinding(node);
         this._commitNodeRouteEdit();
         cyToast.success('节点已更新');
       } catch (error) {
@@ -4208,6 +4786,7 @@ Page({
       nodesForm: this._emptyNodesForm(),
       selectedNodeLid: node._localId,
     });
+    this._commitNodeTemplateBinding(node);
     this._commitNodeRouteEdit();
     this.updateAllStatistics();
     cyToast.success(nodesAction === 0 ? '已添加到路线' : '节点已更新');
@@ -4499,11 +5078,20 @@ Page({
   // 上传节点照片(抽屉内,多张,存逗号分隔 CSV)
   uploadAddressPic() {
     let that = this;
+    const memberId = String(app.getUserID() || '');
+    const nodeForm = that.data.nodesForm;
+    const chapterLid = that.data.editTargetChapterLid;
+    const nodeLid = that.data.editTargetNodeLid;
     const cur = that.data.nodesForm.imgUrl ? that.data.nodesForm.imgUrl.split(',').filter(Boolean) : [];
     const remain = 9 - cur.length;
     if (remain <= 0) { cyToast('每个节点最多9张'); return; }
     app.chooseImage(function (res) {
-      const next = cur.concat(res).slice(0, 9);
+      if (that._unloaded || !that.data.popChapterNodes
+          || memberId !== String(app.getUserID() || '')
+          || nodeForm !== that.data.nodesForm
+          || chapterLid !== that.data.editTargetChapterLid || nodeLid !== that.data.editTargetNodeLid) return;
+      const current = String(that.data.nodesForm.imgUrl || '').split(',').filter(Boolean);
+      const next = current.concat(Array.isArray(res) ? res : []).slice(0, 9);
       that.setData({ 'nodesForm.imgUrl': next.join(',') });
     }, remain, { crop: true, cropScale: NODE_PHOTO_RATIO });
   },
@@ -4534,34 +5122,65 @@ Page({
   //    (ui-integrity 把 onPreviewAudio 记成零绑定债务)。这次改挂 chapterForm ——
   //    主题级 audioUrl 已按 2026-09-15 拍板清理(小程序不再读写;后端字段保留,存量数据不受影响)。
   uploadChapterAudio() {
-    var that = this;
+    const that = this;
+    const chapterForm = this.data.chapterForm;
+    const chapterIndex = this.data.popChapterIndex;
+    const memberId = String(app.getUserID() || '');
+    const token = (this._chapterAudioToken || 0) + 1;
+    this._chapterAudioToken = token;
+    this._destroyChapterDurationAudio();
     app.chooseDocument(function (res) {
+      if (that._unloaded || !that.data.popChapter
+          || token !== that._chapterAudioToken || chapterForm !== that.data.chapterForm
+          || chapterIndex !== that.data.popChapterIndex
+          || memberId !== String(app.getUserID() || '')) return;
       if (res && res[0] && res[0].url) {
-        var file = res[0];
+        const file = res[0];
         that.setData({
           'chapterForm.audioUrl': file.url,
-          'chapterForm.audioFileName': file.filename || ''
+          'chapterForm.audioFileName': file.filename || '',
+          'chapterForm.audioDuration': 0
         });
-        // 自动识别时长
         that.autoDetectAudioDuration(file.url);
       }
     }, 1, ['mp3', 'm4a', 'aac']);
   },
 
+  _destroyChapterDurationAudio() {
+    const audio = this._chapterDurationAudio;
+    this._chapterDurationAudio = null;
+    if (audio) audio.destroy();
+  },
+
   autoDetectAudioDuration(url) {
-    var that = this;
-    var audio = wx.createInnerAudioContext();
+    const that = this;
+    const chapterForm = this.data.chapterForm;
+    const chapterIndex = this.data.popChapterIndex;
+    const memberId = String(app.getUserID() || '');
+    const token = this._chapterAudioToken;
+    this._destroyChapterDurationAudio();
+    const audio = wx.createInnerAudioContext();
+    this._chapterDurationAudio = audio;
     audio.src = url;
     audio.obeyMuteSwitch = false;
     audio.onCanplay(function () {
-      var d = Math.round(audio.duration || 0);
-      if (d > 0) that.setData({ 'chapterForm.audioDuration': d });
-      audio.destroy();
+      if (that._chapterDurationAudio !== audio) return;
+      const current = !that._unloaded && that.data.popChapter
+        && token === that._chapterAudioToken && chapterForm === that.data.chapterForm
+        && chapterIndex === that.data.popChapterIndex && that.data.chapterForm.audioUrl === url
+        && memberId === String(app.getUserID() || '');
+      const duration = Math.round(audio.duration || 0);
+      if (current && duration > 0) that.setData({ 'chapterForm.audioDuration': duration });
+      that._destroyChapterDurationAudio();
     });
-    audio.onError(function () { audio.destroy(); });
+    audio.onError(function () {
+      if (that._chapterDurationAudio === audio) that._destroyChapterDurationAudio();
+    });
   },
 
   clearChapterAudio() {
+    this._chapterAudioToken = (this._chapterAudioToken || 0) + 1;
+    this._destroyChapterDurationAudio();
     this.destroyPreviewAudio();
     this.setData({
       'chapterForm.audioUrl': '', 'chapterForm.audioDuration': 0,
@@ -4694,6 +5313,7 @@ Page({
 
   getUserData: function () {
     let that = this;
+    const memberId = String(app.getUserID() || '');
     if (app.getUserID() && !that._localDraftRestored) {
       that.setData({
         'formData.collaboratorList': [{
@@ -4714,6 +5334,7 @@ Page({
       },
       method: "POST",
       success: function (res) {
+        if (that._unloaded || memberId !== String(app.getUserID() || '')) return;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
           let userData = {
             name: res.data.nickname,
@@ -4734,7 +5355,7 @@ Page({
           };
           // 完整本地信封里可能有多位合作者；恢复后这里只刷新当前用户展示信息，
           // 不能把已恢复列表重置成 owner 一人并立刻覆盖保存。
-          if (!that._localDraftRestored) {
+          if (!that._localDraftRestored && !that.data.editingTopicId) {
             patch['formData.collaboratorList'] = collaboratorList;
             patch['formData.collaboratorIds'] = collaboratorIds;
           }
@@ -4822,12 +5443,12 @@ Page({
           id: ticket.id,
           name: ticket.name || '',
           price: ticket.price || 0,
-          totalStock: ticket.totalStock || 100,
+          totalStock: ticket.totalStock == null || ticket.totalStock === '' ? 100 : ticket.totalStock,
           mode: this.data.formData.productType || 1,
           meetingPoint: ticket.meetingPoint || '',
           meetingPointAddress: ticket.meetingPointAddress || '',
-          meetingPointLongitude: ticket.meetingPointLongitude || '',
-          meetingPointLatitude: ticket.meetingPointLatitude || '',
+          meetingPointLongitude: ticketCoordinate(ticket, 'meetingPointLongitude', 'gatherLng'),
+          meetingPointLatitude: ticketCoordinate(ticket, 'meetingPointLatitude', 'gatherLat'),
           teamSize: ticket.teamSize || 0,
           startTime: ticket.startTime || '',
           endTime: ticket.endTime || '',
@@ -4908,10 +5529,11 @@ Page({
       cyToast(blocked);
       return;
     }
+    const stock = et.totalStock == null || et.totalStock === '' ? NaN : Number(et.totalStock);
     const ticketData = {
       name: et.name,
       price: Number(et.price) || 0,
-      totalStock: Number(et.totalStock) || 100,
+      totalStock: Number.isFinite(stock) ? stock : 100,
       mode: this.data.formData.productType || 1,
       meetingPoint: et.meetingPoint,
       meetingPointAddress: et.meetingPointAddress,
@@ -4919,8 +5541,8 @@ Page({
       meetingPointLatitude: et.meetingPointLatitude,
       // 集合点经纬度落库:后端 OmsTicket 只有 gather_lng/gather_lat(无 meeting_point_longitude 列),
       // 故 meetingPointLongitude/Latitude 发出去会丢;这里以数字形式补 gatherLng/gatherLat(空则 null)。
-      gatherLng: et.meetingPointLongitude ? Number(et.meetingPointLongitude) : null,
-      gatherLat: et.meetingPointLatitude ? Number(et.meetingPointLatitude) : null,
+      gatherLng: et.meetingPointLongitude !== '' && et.meetingPointLongitude != null ? Number(et.meetingPointLongitude) : null,
+      gatherLat: et.meetingPointLatitude !== '' && et.meetingPointLatitude != null ? Number(et.meetingPointLatitude) : null,
       // 成团已下线(2026-07-15):不再派生 minPeople / signupDeadline / refundRule。
       // teamSize 保留(恒 0)以免连锁改动 editingTicket 的多处初始化;列保留不物理删。
       teamSize: Number(et.teamSize) || 0,
@@ -5526,7 +6148,7 @@ Page({
       const existing = previous.find((edge) => edge.fromNodeId === sourceId
         && edge.trigger.type === row.triggerType
         && edge.trigger.outcomeCode === row.code);
-      graph.edges.push(Object.assign({
+      const mappedEdge = Object.assign({
         id: 'mapping_' + sourceId + '_' + row.code,
         conditions: [], effects: [], priority: index, weight: 1,
         once: true, maxVisits: 1, allowLoop: false,
@@ -5534,7 +6156,12 @@ Page({
         fromNodeId: sourceId,
         trigger: { type: row.triggerType, outcomeCode: row.code },
         toNodeId: targetId,
-      }));
+      });
+      if (existing && String(existing.id || '').indexOf('route_') === 0
+          && row.toNodeId && targetId !== nextNodeId) {
+        mappedEdge.id = 'mapping_' + sourceId + '_' + row.code;
+      }
+      graph.edges.push(mappedEdge);
     });
     graph.fallbacks = (graph.fallbacks || []).filter((item) => item.fromNodeId !== sourceId);
     if (nextNodeId) graph.fallbacks.push({ fromNodeId: sourceId, toNodeId: nextNodeId });
@@ -5652,6 +6279,8 @@ Page({
     const bag = this._buildValidationBag();
     const needsClub = Number(d.formData.productType) === 1 && d.myClubs.length > 0;
     const canPublish = bag.isValid() && (!needsClub || !!d.formData.clubId)
+      && !templateBinding.issues(d.formData.chapters, d.formData.themeRuntimeConfig,
+        this._templateDetailsById, d.formData.journeyRules, this._templateDetailRequested).length
       && (!d.editingTopicId || d.editLoaded);
     const patch = {};
     if (canPublish !== d.canPublish) patch.canPublish = canPublish;
@@ -5729,11 +6358,42 @@ Page({
       field: key,
       tab: tabOf(key)
     }));
+    templateBinding.issues(this.data.formData.chapters, this.data.formData.themeRuntimeConfig,
+      this._templateDetailsById, this.data.formData.journeyRules, this._templateDetailRequested)
+      .forEach(issue => blocking.push({ label: issue.label,
+      field: 'templateBinding:' + issue.key, tab: '0' }));
+    const runtime = publishIssueTarget.parse(this.data.formData.themeRuntimeConfig);
+    (Array.isArray(runtime.chapters) ? runtime.chapters : []).forEach(row => {
+      if (!Number.isInteger(row.index) || row.index < 0 || row.index >= (this.data.formData.chapters || []).length) return;
+      const issue = this._chapterRuleIssue(row.index, row);
+      if (issue) blocking.push({ label: '章节 index=' + row.index + '：' + issue,
+        field: 'chapterRuntime:' + row.index, tab: '0' });
+    });
+    const structureIssue = this._structureIssue(); // structure
+    if (structureIssue) blocking.push({ label: structureIssue.error, field: 'runtimeStructure:' + structureIssue.field, tab: '2' });
+    blocking.push(...this._supportPublishIssues());
+    const runtimeIssue = (this._structureIssue() || {}).error || this._validateRuntimeConfig(); // structure
+    if (/挑战站点|备选挑战|zeroChallenge|归零挑战|客观题备选/.test(runtimeIssue))
+      blocking.push({ label: runtimeIssue, field: 'themeState', tab: '2' });
+    blocking.push(...this._nodePlanEndingIssues());
+    // 已编译的章节终局由结构校验处理；这里只沿用旧结局目录的兼容检查。
+    const legacyPlans = (runtime.gameplayRuntime?.plans || []).filter(plan => !plan.storyEndingId);
+    const planIssue = publishIssueTarget.planIssue({ ...runtime, gameplayRuntime: { ...runtime.gameplayRuntime, plans: legacyPlans } });
+    if (planIssue) {
+      const target = publishIssueTarget.fromMessage(planIssue, this.data.formData.chapters, this._templateDetailsById);
+      blocking.push(target || { label: planIssue, field: 'chapters', tab: '0' });
+    }
+    (this.data.formData.chapters || []).forEach(chapter => (chapter.nodes || []).forEach(node => {
+      const detail = (this._templateDetailsById || {})[node.templateId] || node.templateInfo;
+      const config = publishIssueTarget.parse(detail && detail.advancedConfigJson);
+      const issue = publishIssueTarget.costIssue(config);
+      if (issue) blocking.push({ label: issue, field: 'templateTool:' + templateBinding.nodeKey(node) + ':cost', tab: '0' });
+    }));
 
     // advisory = computeCompleteness().missing 里的软项(站点级缺地点/描述/时长)+ 未配游戏站点;均落 Tab'0'
     // 软项都是站点级事实,没有单一字段:按章节区定位('chapters' → routeSection)。
     const advisory = [];
-    const softSet = ['部分站点缺地点', '部分站点缺描述', '部分站点缺时长'];
+    const softSet = ['部分节点缺地点', '部分节点缺描述', '部分节点缺时长'];
     const missing = (this.computeCompleteness().missing) || [];
     missing.forEach((m) => {
       if (softSet.indexOf(m) !== -1) advisory.push({ label: m, field: 'chapters', tab: '0' });
@@ -5745,7 +6405,7 @@ Page({
         if (node && !node.templateId) noGame++;
       });
     });
-    if (noGame > 0) advisory.push({ label: `${noGame} 个站点未配置玩法`, field: 'chapters', tab: '0' });
+    if (noGame > 0) advisory.push({ label: `${noGame} 个节点未配置玩法`, field: 'chapters', tab: '0' });
 
     return { blocking, advisory };
   },
@@ -5756,7 +6416,7 @@ Page({
   _buildPublishPassed(precheckOk) {
     const fd = this.data.formData || {};
     const chapters = fd.chapters || [];
-    const nodeCount = chapters.reduce((sum, c) => sum + ((c && c.nodes) || []).length, 0);
+    const nodeCount = publishStats.listedNodeCount(chapters);
     // CU-C-168:只数**填全了**的票 —— 数组里躺一张空票不等于配好了一种票。
     const readyTickets = (fd.tickets || []).filter((t) => !this._ticketBlockReason(t));
     const items = [
@@ -5764,7 +6424,7 @@ Page({
       { label: '主题封面已上传', ok: !!fd.imgUrl },
       { label: '主题简介已填写', ok: !!(fd.description && fd.description.trim()) },
       { label: `已编排 ${chapters.length} 个章节`, ok: chapters.length > 0 },
-      { label: `已放置 ${nodeCount} 个站点`, ok: nodeCount > 0 },
+      { label: `已放置 ${nodeCount} 个节点`, ok: nodeCount > 0 },
       { label: `已配置 ${readyTickets.length} 种票单`, ok: readyTickets.length > 0 },
       { label: '通关规则已确定', ok: !!this.data.completionRuleMode },
       { label: '内容安全预检通过', ok: !!precheckOk },
@@ -5789,7 +6449,7 @@ Page({
       description: fd.description || '',
       stats: [
         { k: '章节', v: String((fd.chapters || []).length) },
-        { k: '站点', v: String(stats.totalNodes == null ? 0 : stats.totalNodes) },
+        { k: '节点', v: String(stats.totalNodes == null ? 0 : stats.totalNodes) },
         { k: '时长', v: stats.totalDurationDisplay || '—' },
         { k: '里程', v: stats.totalDistance || 0 },
       ],
@@ -5798,7 +6458,7 @@ Page({
         // 否则确认页会出现「第1章 第1章 隔离书店站」。
         name: chapterCardTitle(index, chapter && chapter.name),
         nodes: (((chapter && chapter.nodes) || []).map((node) => ({
-          name: (node && node.name) || '未命名站点',
+          name: (node && node.name) || '未命名节点',
           address: node && node._storyGame ? '无需到达地点' : ((node && node.address) || '未选地点'),
         }))),
       })),
@@ -5808,7 +6468,7 @@ Page({
   _buildPublishSummary() {
     const formData = this.data.formData || {};
     const chapters = formData.chapters || [];
-    const nodeCount = chapters.reduce((sum, chapter) => sum + ((chapter && chapter.nodes) || []).length, 0);
+    const nodeCount = publishStats.listedNodeCount(chapters);
     // CU-C-168:同一张「发布前检查」里不能既说票没填完、又说配了 N 种 —— 没填全的不计数,
     // 但也不能不吭声,差额如实报出来。
     const allTickets = formData.tickets || [];
@@ -5816,10 +6476,10 @@ Page({
     const unfinished = allTickets.length - ticketCount;
     const modeLabel = Number(formData.productType) === 2 ? '自由探索' : '城市定向';
     const completionLabel = this.data.completionRuleMode === 'AT_LEAST'
-      ? `完成任意 ${Number(this.data.completionRequiredCount) || 0} 个站点即通关`
-      : '完成全部站点后通关';
+      ? `完成任意 ${Number(this.data.completionRequiredCount) || 0} 个节点即通关`
+      : '完成全部节点后通关';
     return [
-      `「${formData.name || '未命名主题'}」将按${modeLabel}发布，共 ${chapters.length} 个章节、${nodeCount} 个站点。`,
+      `「${formData.name || '未命名主题'}」将按${modeLabel}发布，共 ${chapters.length} 个章节、${nodeCount} 个节点。`,
       `${completionLabel}；当前配置 ${ticketCount} 种票单${unfinished > 0 ? `，另有 ${unfinished} 种没填完` : ''}。`
     ];
   },
@@ -5858,9 +6518,9 @@ Page({
   // 预检不可用时的兜底文案(AI 不是发布的硬依赖,只降级成一条建议项)
   _precheckSkipLabel(msg) {
     if (String(msg || '').indexOf(AI_QUOTA_HINT) >= 0) {
-      return 'AI 次数已用完,本次跳过安全预检(不影响发布)';
+      return 'AI 次数已用完，本次跳过安全预检(不影响发布)';
     }
-    return '安全预检暂不可用,本次跳过(不影响发布)';
+    return '安全预检暂不可用，本次跳过(不影响发布)';
   },
 
   // 预检结果 → 并进 buildPublishCheck() 的本地判定,复用同一个弹层
@@ -5892,6 +6552,14 @@ Page({
         show: true, blocking, advisory, summary, passed, preview: this._buildPublishPreview(),
       },
     });
+    this.setEditorState('publishCheck');
+  },
+
+  _showBackendPublishIssue(issue) {
+    const check = this.buildPublishCheck();
+    this.setData({ publishCheck: { show: true, blocking: [issue].concat(check.blocking),
+      advisory: check.advisory, summary: this._buildPublishSummary(),
+      passed: this._buildPublishPassed(false), preview: this._buildPublishPreview() } });
     this.setEditorState('publishCheck');
   },
 
@@ -5939,6 +6607,7 @@ Page({
   confirmPublishCheck() {
     if (this._identityRegistering) return;
     this.syncIdentityReady();
+    if (this.data.legacyScopePending) return; // 旧草稿归属没确认:发出去也会被 sendData 静默拦下
     if (this.data.publishCheck.blocking.length || !this.data.identityReady) return;
     if (!this.data.identityRequired || this.data.identityRegistered) { this._publishAfterIdentity(); return; }
     // 先落实名、再落主题:后端两道闸就是这个顺序(/api/publisher/identity 先于 /api/topic/create
@@ -5978,6 +6647,10 @@ Page({
 
   // 发布弹层的「确认发布」被置灰时点它 —— 报第一条真缺项,不打空炮。
   onPublishCheckDisabledTap() {
+    if (this.data.legacyScopePending) {
+      cyToast('请先确认这份草稿的发布入口');
+      return;
+    }
     if (!this.data.identityReady) {
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       cyToast(check.ok ? '发布者实名还没登记' : check.message);
@@ -6047,6 +6720,43 @@ Page({
     const field = ds.field || '';
     this.setData({ 'publishCheck.show': false });
     this.setEditorState('idle');
+    if (field.indexOf('runtimeStructure:') === 0) { // structure
+      this._locateStructureIssue(field.split(':')[1]);
+      return;
+    }
+    if (field.indexOf('chapterRuntime:') === 0) {
+      const index = Number(field.slice('chapterRuntime:'.length));
+      if ((this.data.formData.chapters || [])[index]) {
+        this.setData({ editorPage: 1 });
+        this.showEditChapter({ currentTarget: { dataset: { index } } });
+      }
+      return;
+    }
+    if (field === 'themeState') {
+      this._syncRuntimeStats();
+      this.setData({ editorPage: 1, topicDetailShow: true, runtimeEditingStat: 'hp' },
+        () => this._scrollSheetTo('fieldRuntimeState'));
+      return;
+    }
+    if (field.indexOf('templateTool:') === 0 || field.indexOf('templateBinding:') === 0) {
+      const tool = field.indexOf('templateTool:') === 0;
+      const parts = field.slice((tool ? 'templateTool:' : 'templateBinding:').length).split(':');
+      const key = parts[0] === 'client' ? parts.splice(0, 2).join(':') : parts.shift();
+      const target = parts.shift() || '';
+      (this.data.formData.chapters || []).some((chapter, chapterindex) =>
+        (chapter.nodes || []).some((node, nodeindex) => {
+          if (templateBinding.nodeKey(node) !== key) return false;
+          this.setData({ editorPage: 1 });
+          this.showEditNodes({ currentTarget: { dataset: { chapterindex, nodeindex } } });
+          if (tool && target === 'vote' && (this.data.nodePlanEndingRows || []).length)
+            this.setData({ nodePlanEndingError: ds.label || '请选择表决结果的结局章' });
+          else if (tool) this.onEditBoundTemplate({ tool: target, planKey: parts.join(':'), message: ds.label });
+          else if (target) this.setData({ nodeBindingErrorKey: (this.data.nodeBindingRows || []).some(row => row.key === target) ? target : '',
+            nodeBindingError: ds.label || '资源未绑定' });
+          return true;
+        }));
+      return;
+    }
     if (!field) {
       setTimeout(() => {
         wx.pageScrollTo({ scrollTop: 0, duration: 250 });
@@ -6149,6 +6859,34 @@ Page({
     list[index] = Object.assign({}, list[index], { [field]: e.detail.value });
     this.setData({ 'thoughtsEditor.list': list, 'thoughtsEditor.error': '' });
   },
+  removeThought(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const list = (this.data.thoughtsEditor.list || []).slice();
+    const target = list[index];
+    if (!target) return;
+    try {
+      const rules = storyInitialState.parse(this.data.formData.journeyRules);
+      const references = Object.assign({}, this.data.formData, {
+        journeyRules: Object.assign({}, rules, { thoughts: list.filter((row, i) => i !== index) })
+      });
+      const referenced = (value) => {
+        if (typeof value === 'string') {
+          if (value === target.key) return true;
+          try { const parsed = JSON.parse(value); if (parsed && typeof parsed === 'object') return referenced(parsed); } catch (ignore) {}
+          return false;
+        }
+        if (Array.isArray(value)) return value.some(referenced);
+        return !!value && typeof value === 'object' && Object.values(value).some(referenced);
+      };
+      if (target.key && referenced(references)) {
+        this.setData({ 'thoughtsEditor.error': '正文或结局仍引用这条伏笔，请先移除对应引用再删除' });
+        return;
+      }
+      list.splice(index, 1);
+      this.setData({ 'thoughtsEditor.list': list, 'thoughtsEditor.count': list.length, 'thoughtsEditor.error': '' });
+    } catch (error) { this.setData({ 'thoughtsEditor.error': error.message }); }
+  },
+
   saveThoughts() {
     try {
       const rules = storyInitialState.parse(this.data.formData.journeyRules);
@@ -6161,7 +6899,7 @@ Page({
         return row;
       });
       // 走同一个 serialize:校验口径与服务端 JourneyRulesValidator 一致,不另写一套
-      const raw = storyInitialState.serialize(Object.assign({}, rules, { thoughts: list }));
+      const raw = storyInitialState.serializeChanges(this.data.formData.journeyRules, Object.assign({}, rules, { thoughts: list }));
       // ⚠️ thoughtOptions 必须跟着走:它只在页面回填时取过一次,不在这里同步的话,
       //    作者在同一次编辑里配完念头、再去配结局或插念头块,下拉是空的 —— 得退出重进才有。
       const patch = thoughtPatchOf(raw);
@@ -6176,7 +6914,7 @@ Page({
     const out = [];
     (this.data.formData.chapters || []).forEach((chapter) => {
       (chapter.nodes || []).forEach((node) => {
-        if (node && node.id) out.push({ id: node.id, name: node.name || ('站点 ' + node.id) });
+        if (node && node.id) out.push({ id: node.id, name: node.name || ('节点 ' + node.id) });
       });
     });
     return out;
@@ -6220,20 +6958,79 @@ Page({
     }
     this.setData({
       thoughtOptions: patch.thoughtOptions, thoughtNameOf: patch.thoughtNameOf,
-      'chapterForm.ending': named,
+      endingTagOptions: tags, endingNodeOptions: nodes, 'chapterForm.ending': named,
+      chapterEndingKindIndex: Math.max(0, kinds.findIndex((k) => k.key === kind)), chapterEndingPickIndex: pick,
     });
+  },
+
+  onChapterEndingToggle(e) {
+    const on = !!e.detail.value;
+    const form = this.data.chapterForm || {};
+    if (on && (form.nodes || []).length) {
+      cyToast('结局章里不能放节点或玩法');
+      this.setData({ 'chapterForm.ending': null });
+      return;
+    }
+    // 还没有兜底结局章时,第一章结局默认就是兜底;已有兜底就默认按伏笔
+    const hasFallback = (this.data.formData.chapters || []).some((c, i) =>
+      c && c.ending && c.ending.fallback && !(this.data.popChapterAction == 1 && i === this.data.popChapterIndex));
+    const ending = !on ? null : (hasFallback
+      ? { fallback: false, kind: 'thought', thoughtKey: '', thoughtName: '', tag: '', tagLabel: '', nodeId: null, nodeName: '' }
+      : { fallback: true, kind: 'fallback' });
+    this.setData({ 'chapterForm.ending': ending }, () => this._syncChapterEndingOptions(ending));
+  },
+  onChapterEndingKind(e) {
+    const picked = (this.data.chapterEndingKinds || [])[Number(e.detail.value)];
+    if (!picked) return;
+    // 换触发方式就把另一种的选择清掉 —— 留着会让提交拿到一个对不上 kind 的值
+    const ending = picked.key === 'fallback' ? { fallback: true, kind: 'fallback' }
+      : { fallback: false, kind: picked.key, thoughtKey: '', thoughtName: '', tag: '', tagLabel: '', nodeId: null, nodeName: '' };
+    this.setData({ 'chapterForm.ending': ending, chapterEndingKindIndex: Number(e.detail.value), chapterEndingPickIndex: -1 });
+  },
+  onChapterEndingPick(e) {
+    const index = Number(e.detail.value);
+    const ending = Object.assign({}, (this.data.chapterForm || {}).ending);
+    if (ending.kind === 'thought') {
+      const t = (this.data.thoughtOptions || [])[index];
+      if (!t) return;
+      Object.assign(ending, { thoughtKey: t.key, thoughtName: t.name });
+    } else if (ending.kind === 'tag') {
+      const t = (this.data.endingTagOptions || [])[index];
+      if (!t) return;
+      Object.assign(ending, { tag: t.tag, tagLabel: t.label });
+    } else if (ending.kind === 'node') {
+      const n = (this.data.endingNodeOptions || [])[index];
+      if (!n) return;
+      Object.assign(ending, { nodeId: n.id, nodeName: n.name });
+    } else return;
+    this.setData({ 'chapterForm.ending': ending, chapterEndingPickIndex: index });
   },
 
   openInitialState() {
     try {
-      this.setData({ initialStateEditor: { show: true, rules: storyInitialState.parse(this.data.formData.journeyRules), error: '' } });
+      this._syncRuntimeStats();
+      const rules = storyInitialState.parse(this.data.formData.journeyRules);
+      const values = customInitialValues(rules.attributes);
+      this.setData({ initialStateEditor: { show: true, rules, values, error: '' } });
     } catch (error) { cyToast(error.message); }
   },
   closeInitialState() { this.setData({ 'initialStateEditor.show': false }); },
   onInitialStateField(e) {
     if (this.data.editScope === 'WHITELIST') return;
     const field = e.currentTarget.dataset.field;
-    if (!['hp.enabled', 'hp.init', 'hp.max', 'luck.enabled', 'luck.init', 'luck.max'].includes(field)) return;
+    if (field === 'attribute.initial') {
+      const index = Number(e.currentTarget.dataset.index);
+      const rules = this.data.initialStateEditor.rules;
+      if (!rules.attributes || !rules.attributes[index] || !/^counter\./.test(rules.attributes[index].key || '')) return;
+      const attributes = rules.attributes.slice();
+      attributes[index] = Object.assign({}, attributes[index], { initial: e.detail.value });
+      this.setData({ 'initialStateEditor.rules.attributes': attributes,
+        'initialStateEditor.values': customInitialValues(attributes),
+        'initialStateEditor.error': '' });
+      return;
+    }
+    // 上限归主题数值域设置；首章初始状态只改开局值
+    if (!['hp.enabled', 'hp.init', 'luck.enabled', 'luck.init'].includes(field)) return;
     const type = field.split('.')[0];
     if (field.endsWith('.enabled') && !e.detail.value) {
       const saved = storyInitialState.parse(this.data.formData.journeyRules);
@@ -6253,7 +7050,7 @@ Page({
     if (this.data.editScope === 'WHITELIST') { this.closeInitialState(); return; }
     try {
       const rules = this.data.initialStateEditor.rules;
-      const raw = storyInitialState.serialize(Object.assign({}, rules, { stateEnabled: rules.hp.enabled || rules.luck.enabled || (rules.stateEnabled && Array.isArray(rules.attributes) && rules.attributes.length > 0) }));
+      const raw = storyInitialState.serializeChanges(this.data.formData.journeyRules, Object.assign({}, rules, { stateEnabled: rules.hp.enabled || rules.luck.enabled || (Array.isArray(rules.attributes) && rules.attributes.length > 0) }), this._runtimeConfig());
       this.setData({ 'formData.journeyRules': raw, 'initialStateEditor.show': false });
     } catch (error) { this.setData({ 'initialStateEditor.error': error.message }); }
   },
@@ -6266,6 +7063,7 @@ Page({
     this._precheckAcked = false;
 
     if (this.data.submitting) return;
+    if (this._serverDraftBusy()) { cyToast('正在保存草稿，保存完成后再发布'); return; }
     // 编辑态回填没到位就保存 = 拿空表单去重建,原主题的章节与票会被删光
     if (this.data.editingTopicId && !this.data.editLoaded) {
       cyToast('主题还在加载，稍等一下');
@@ -6323,10 +7121,10 @@ Page({
   _buildSubmitChapters(productType) {
     const endingIssue = storyEnding.endingChaptersIssue(this.data.formData.chapters);
     if (endingIssue) throw new Error(endingIssue);
-    const hasStoryFlow = this.data.formData.chapters.some(chapter => chapter.opening === true
+    const needsStoryPayload = productType === 2 || this.data.formData.chapters.some(chapter => chapter.opening === true
       || chapter.ending || (!this.data.aiSimple && Array.isArray(chapter.blocks) && chapter.blocks.length > 0));
     return this.data.formData.chapters.map((chapter, chapterIndex) => {
-      const sourceChapter = productType === 1 || hasStoryFlow
+      const sourceChapter = productType === 1 || needsStoryPayload
         ? this._storyPayloadChapter(chapter, chapterIndex) : this._nonStoryPayloadChapter(chapter);
       const nodes = (sourceChapter.nodes || []).map(node => this._stripLocalFields({
         ...node,
@@ -6341,15 +7139,20 @@ Page({
     });
   },
 
-  _doSubmit() {
+  // 组装主题 payload:发布与「保存草稿」共用这一份(两条路存进去的必须是同一个东西);组装不出来返回 null
+  // options.draft:存草稿不过「章节与到达关系」闸 —— 删改站点后那道闸本身就要求先存草稿拿到新编号再重设,
+  // 拦住存草稿会成死结;发布仍过这道闸,后端校验照旧。
+  _buildSubmitPayload(options) {
+    const draft = !!(options && options.draft);
     const productType = Number(this.data.formData.productType) === 2 ? 2 : 1;
     let chapters;
     try {
       chapters = this._buildSubmitChapters(productType);
     } catch (error) {
       // 组装章节 payload 抛错(节点引用失效等)时点「确认发布」原来是静默无反应 —— 兜住给提示。
-      cyToast(app.getRequestErrorMessage(error, '故事流内容不完整，请检查后重试'));
-      return;
+      // quiet:自动保存不弹提示(未完成的输入每 2 秒弹一次是骚扰),等用户明确保存/发布时再说
+      if (!(options && options.quiet)) cyToast(app.getRequestErrorMessage(error, '故事流内容不完整，请检查后重试'));
+      return null;
     }
 
     const formattedTickets = this.data.formData.tickets.map(ticket => ({
@@ -6365,8 +7168,8 @@ Page({
     }));
 
     // 准备API数据
-    const runtimeIssue = this._validateRuntimeConfig();
-    if (runtimeIssue) { cyToast(runtimeIssue); return false; }
+    const runtimeIssue = draft ? '' : (this._structureIssue() || {}).error || this._validateRuntimeConfig(); // structure
+    if (runtimeIssue) { cyToast(runtimeIssue); return null; }
     let apiData = {
       name: this.data.formData.name,
       subtitle: this.data.formData.subtitle,
@@ -6433,7 +7236,7 @@ Page({
     // 已过审开卖的主题只许改文案与图:日期 / 章节站点结构 / 票价后端一律拒收(方案 §6 口径)。
     // 这里主动剔掉,而不是指望后端忽略 —— 整包上送会当场被拒,用户看到的是「保存失败」而不是「保存成功但没变」。
     if (this.data.editingTopicId && this.data.editScope === 'WHITELIST') {
-      if (!this._assertLockedFieldsUntouched()) return;
+      if (!this._assertLockedFieldsUntouched()) return null;
       apiData = {
         name: apiData.name,
         subtitle: apiData.subtitle,
@@ -6445,23 +7248,60 @@ Page({
       };
     }
 
-    // 调用API
+    return apiData;
+  },
+
+  _doSubmit() {
+    // 预检弹层期间可能刚起了一次自动保存:三者串行,不并发写同一份草稿
+    if (this.data.submitting) return;
+    if (this._serverDraftBusy()) { cyToast('正在保存草稿，保存完成后再发布'); return; }
+    this._cancelCloudDraftAutosave();
+    const apiData = this._buildSubmitPayload();
+    if (!apiData) return;
+    // 服务端草稿:先把最新内容存回这份草稿并回读确认,再发布它;存失败就不发(不会发出旧版本)
+    if (this.data.editingTopicId && this.data.editIsDraft) {
+      this._publishServerDraft(apiData);
+      return;
+    }
     this.sendData(apiData);
   },
+  // 主题写接口:专业版故事流走 v2,其余走旧接口;有主题号就 update,否则 create
+  _topicEndpoint(payload, editingId) {
+    const hasChapterBlocks = (payload.chapters || []).some(chapter =>
+      Array.isArray(chapter.blocks) && chapter.blocks.length > 0);
+    const professionalStory = (payload.publishMode === 'pro'
+      && (Number(payload.productType) === 1 || (payload.chapters || []).some(chapter => chapter.opening
+        || chapter.ending || (Array.isArray(chapter.blocks) && chapter.blocks.length > 0))))
+      || (Number(payload.productType) === 2 && hasChapterBlocks);
+    return professionalStory
+      ? (editingId ? '/api/topic/v2/update' : '/api/topic/v2/create')
+      : (editingId ? '/api/topic/update' : '/api/topic/create');
+  },
+
   // 发布提交状态机(防重/失败回退/销毁守卫走共享 publish-workflow;url/analytics/toast/跳转保持本页)
   getPublishWorkflow() {
     if (!this._publishWorkflow) {
       this._publishWorkflow = createPublishWorkflow({
+        networkFailureState: 'unknown',
         request: (payload, cb) => {
           // 编辑既有主题走 update(带 id),新建才走 create。
           // 在 request 里读而不是建 workflow 时读:workflow 是懒建且只建一次,建它那一刻回填可能还没到。
           const editingId = this.data.editingTopicId;
-          const professionalStory = payload.publishMode === 'pro'
-            && (Number(payload.productType) === 1 || (payload.chapters || []).some(chapter => chapter.opening
-              || chapter.ending || (Array.isArray(chapter.blocks) && chapter.blocks.length > 0)));
-          const endpoint = professionalStory
-            ? (editingId ? '/api/topic/v2/update' : '/api/topic/v2/create')
-            : (editingId ? '/api/topic/update' : '/api/topic/create');
+          const endpoint = this._topicEndpoint(payload, editingId);
+          const owner = memberId(app);
+          const draftMemberId = this.data.draftMemberId;
+          const draftUuid = this.data.draftUuid;
+          const editLoadToken = this._editLoadToken;
+          const baseRevision = this.data.baseRevision;
+          const scope = this.data.operationScope;
+          const isCurrent = () => !this._unloaded
+            && owner === memberId(app)
+            && draftMemberId === this.data.draftMemberId
+            && editingId === this.data.editingTopicId
+            && draftUuid === this.data.draftUuid
+            && editLoadToken === this._editLoadToken
+            && baseRevision === this.data.baseRevision
+            && scope === this.data.operationScope;
           sendUiStateRequest(app, endpoint, {
             data: JSON.stringify(editingId ? Object.assign({}, payload, { id: editingId }) : payload),
             method: "POST",
@@ -6469,10 +7309,18 @@ Page({
               'Content-Type': 'application/json'
             },
             success: (res) => {
-              if (res.code == "200") cb({ ok: true, data: res.data });
-              else cb({ ok: false, msg: res.msg });
+              if (!isCurrent()) return;
+              if (res && res.code == "200") {
+                const id = topicIdOf(res.data);
+                const sameTopic = id > 0 && (!editingId || id === Number(editingId));
+                const confirmed = sameTopic && (typeof res.data !== 'object'
+                  || confirmedPublication(res.data, id));
+                cb(confirmed ? { ok: true, data: res.data } : { ok: false, networkError: true });
+              }
+              else if (res && /^4\d\d$/.test(String(res.code))) cb({ ok: false, msg: res.msg });
+              else cb({ ok: false, networkError: true });
             },
-            fail: () => cb({ ok: false, networkError: true })
+            fail: () => { if (isCurrent()) cb({ ok: false, networkError: true }); }
           });
         }
       });
@@ -6483,12 +7331,39 @@ Page({
   // 发送数据到API
   sendData(data) {
     let that = this;
-    const started = that.getPublishWorkflow().submit(data, {
+    if (this._unloaded) return;
+    if (this._draftScopeUnconfirmed) return;
+    if (this._draftStorageUnavailable) {
+      this._markDraftStorageUnavailable();
+      return;
+    }
+    const memberId = String(app.getUserID() || '');
+    if (!memberId || (this.data.draftMemberId && String(this.data.draftMemberId) !== memberId)) return;
+    const workflow = that.getPublishWorkflow();
+    if (workflow.getState() === 'submitting' || workflow.getState() === 'done') return;
+    if (this._publishAttempt || workflow.getState() === 'unknown') {
+      this._showPublishUnknown();
+      return;
+    }
+    this._publishAttempt = { status: 'UNKNOWN', topicId: String(this.data.editingTopicId || '') };
+    if (!this._persistDraftEnvelope()) {
+      this._publishAttempt = null;
+      return;
+    }
+    const draftRevision = this._draftContentRevision();
+    const started = workflow.submit(data, {
       onSuccess: (resData) => {
         const tid = resData && typeof resData === 'object' ? resData.topicId : resData;
-        const pendingReview = !!(resData && !resData.published && ['PENDING', 'ESCALATED'].includes(resData.reviewState));
-        that._draftAutosaveReady = false;
-        that._clearDraftEnvelope();
+        const pendingReview = !!(resData && (resData.commercialAwaitingReview || !resData.published && ['PENDING', 'ESCALATED'].includes(resData.reviewState)));
+        const reviewNextStep = resData && resData.commercialNextStep || '主题与引用的玩法将一起审核。';
+        const localChanges = draftRevision !== that._draftContentRevision();
+        that._publishAttempt = null;
+        that._draftAutosaveReady = localChanges;
+        if (localChanges && !that._persistDraftEnvelope()) {
+          that._showUnstoredPublishedChanges(false);
+          return;
+        }
+        if (!localChanges) that._clearDraftEnvelope();
         // 改已有主题走这条:不进发布成功那套全屏弹层(它的「去招商家 / 预览玩家视角」
         // 对已存在的主题没意义)。这里只报结果、然后回项目主页,没有导航分叉,
         // 正是 result-sheet 的形状。
@@ -6504,7 +7379,9 @@ Page({
           that.setData({
             submitting: false, submitError: '',
             resultSheet: { show: true, kind: 'success', title: pendingReview ? '已提交审核' : '已发布',
-              sub: pendingReview ? '主题与引用的玩法将一起审核。' : '这份主题的改动已经发布。', why: '', duration: RESULT_SHEET_MS }
+              sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
+                : pendingReview ? reviewNextStep : '这份主题的改动已经发布。',
+              meta: localChanges ? '草稿仍在本机' : '', why: '', duration: RESULT_SHEET_MS }
           });
           return;
         }
@@ -6537,16 +7414,29 @@ Page({
         that.setData({
           resultSheet: {
             show: true, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
-            sub: pendingReview ? '主题与引用的玩法将一起审核。' : tid ? '接下来去招商家承接站点、找俱乐部带团。' : '路线已进入你的项目列表。',
-            meta: chapterCount ? (chapterCount + ' 个章节') : '',
+            sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
+              : pendingReview ? reviewNextStep : tid ? '接下来去招商家承接节点、找俱乐部带团。' : '路线已进入你的项目列表。',
+            meta: localChanges ? '草稿仍在本机' : chapterCount ? (chapterCount + ' 个章节') : '',
             why: '', duration: RESULT_SHEET_MS,
           }
         });
       },
       onFail: (res) => {
-        const reason = res && res.networkError
-          ? '网络暂时不可用，当前草稿仍在本机，请重试'
-          : ((res && res.msg) || '保存失败，当前内容已保留，请重试');
+        if (res && res.networkError) {
+          that._showPublishUnknown();
+          return;
+        }
+        that._publishAttempt = null;
+        const persisted = that._persistDraftEnvelope();
+        const message = (res && res.msg) || '发布失败，当前内容已保留，请重试';
+        const reason = message + (persisted ? '' : '；本机存储暂时不可用，请检查后重试');
+        const issue = publishIssueTarget.fromMessage(message,
+          that.data.formData.chapters, that._templateDetailsById);
+        if (issue) {
+          that.setData({ submitting: false, submitError: reason });
+          that._showBackendPublishIssue(issue);
+          return;
+        }
         that.setData({
           submitting: false,
           submitError: reason,
@@ -6556,15 +7446,325 @@ Page({
           // 这句直接回答它,而且是真的 —— 本地草稿信封没被清(见 _clearDraftEnvelope
           // 只在成功路径调用)。
           resultSheet: { show: true, kind: 'fail', title: '这次还没有发布出去',
-            sub: '内容都还在,修好后可以直接重试', meta: '草稿仍在本机',
+            sub: '修改后重试', meta: '草稿仍在本机',
             why: reason, duration: RESULT_SHEET_MS }
         });
       }
     });
     // submit 在途会返回 false(防重),仅真正发起时点亮 loading
-    if (started) {
+    if (started && workflow.isBusy()) {
       that.setData({ submitting: true, submitError: '' });
     }
+  },
+
+  _serverDraftBusy() {
+    return !!(this.data.draftSaving || (this._serverDraftSaver && this._serverDraftSaver.isBusy()));
+  },
+
+  // 云端草稿:保存(create/update 带 saveDraft=1)→ edit-detail 回读确认 →(发布时)publish-draft
+  getServerDraftSaver() {
+    const owner = String(this.data.draftMemberId || app.getUserID() || '');
+    const scope = this.data.operationScope;
+    const current = () => !this._unloaded && owner === String(app.getUserID() || '')
+      && scope === this.data.operationScope;
+    const context = JSON.stringify([owner, scope, this._draftIdentity(), this.data.draftUuid,
+      this.data.baseRevision, this._editLoadToken]);
+    if (this._serverDraftSaver && this._serverDraftContext !== context) {
+      this._serverDraftSaver.destroy();
+      this._serverDraftSaver = null;
+    }
+    if (!this._serverDraftSaver) {
+      this._serverDraftContext = context;
+      const reply = (cb, check) => ({
+        success: (res) => {
+          if (res.code == '200' && (!check || check(res.data))) cb({ ok: true, data: res.data });
+          else cb({ ok: false, msg: res.code == '200' ? '云端保存的主题内容不完整' : res.msg });
+        },
+        fail: () => cb({ ok: false, networkError: true })
+      });
+      this._serverDraftSaver = createServerDraftSaver({ publishCheck: (topicId, cb) => this._topicPublishCheck(topicId, cb), // BL-185
+        isCurrent: current,
+        pendingPublish: () => this._publishAttempt && this._publishAttempt.kind === 'SERVER_DRAFT'
+          ? this._publishAttempt.topicId : 0,
+        beforePublish: (topicId) => {
+          if (!current()) return false;
+          this._publishAttempt = { status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: String(topicId) };
+          return this._persistDraftEnvelope();
+        },
+        save: (payload, cb) => {
+          const editingId = this.data.editingTopicId;
+          const handlers = reply(cb);
+          // 首次建草稿带稳定意图键(按本机草稿,不随内容变):丢回包后的重试由服务端认出已建的那份,不再新建
+          const body = editingId ? Object.assign({}, payload, { id: editingId })
+            : Object.assign({}, payload, { requestId: this._draftCreateIntentKey() });
+          sendUiStateRequest(app, this._topicEndpoint(payload, editingId), {
+            data: JSON.stringify(body),
+            method: 'POST',
+            header: { 'Content-Type': 'application/json' },
+            success: handlers.success,
+            fail: handlers.fail
+          });
+        },
+        readback: (topicId, cb) => {
+          const handlers = reply(cb, isEditingTopicPayload);
+          sendUiStateRequest(app, '/api/topic/edit-detail', {
+            method: 'POST',
+            data: { id: topicId, scope: this.data.operationScope },
+            success: handlers.success,
+            fail: handlers.fail
+          });
+        },
+        publish: (topicId, cb) => {
+          const handlers = reply(cb);
+          sendUiStateRequest(app, '/api/topic/publish-draft', {
+            method: 'POST',
+            data: { id: topicId, scope: this.data.operationScope },
+            success: handlers.success,
+            fail: handlers.fail
+          });
+        }
+      });
+    }
+    return this._serverDraftSaver;
+  },
+
+  // 复用广场发布的意图键(utils/publish/publish-intent):按「账号 + 本机草稿」隔离,payload 固定为草稿号,
+  // 所以内容改了也沿用同一个键 —— 同一份本机草稿只对应一份服务端草稿;拿到主题号即结算。
+  _draftCreateIntentScope() { return 'topic_draft_create:' + (this.data.draftUuid || 'none'); },
+  _draftCreateIntentKey() {
+    const memberId = this.data.draftMemberId || app.getUserID();
+    return publishIntent.begin(wx, { scope: this._draftCreateIntentScope(), memberId, payload: [this.data.draftUuid || ''] }).key;
+  },
+
+  // 「保存草稿」:存进服务端但不发布、不送审、不占在架额度;存好并回读确认后留在编辑页
+  // options.automatic:两秒防抖触发的自动保存 —— 不弹提示、不盖加载层、不弹结果面板,只更新标题旁状态
+  saveServerDraft(options) {
+    const automatic = !!(options && options.automatic === true); // bindtap 传进来的是事件对象
+    if (this.data.submitting || this._serverDraftBusy()) return;
+    // 已发布的主题不走草稿(编辑窗口与下架规则不变);回填没到位也不存,免得拿空表单覆盖
+    if (this.data.editingTopicId && (!this.data.editLoaded || !this.data.editIsDraft)) return;
+    if (!String(this.data.formData.name || '').trim()) {
+      if (!automatic) cyToast('先给主题起个名字，再保存草稿');
+      return;
+    }
+    if (automatic && this._cloudAutosaveBlocked()) return;
+    this._cancelCloudDraftAutosave();
+    if (!automatic) this._cloudAutosavePaused = false; // 用户明确保存 = 重新放行自动保存
+    const apiData = this._buildSubmitPayload(automatic ? { draft: true, quiet: true } : { draft: true });
+    if (!apiData) return;
+    if (automatic && this._cloudSavedKey && JSON.stringify(apiData) === this._cloudSavedKey) {
+      this._cloudAutosaveQueued = false;
+      this._setSaveState('saved');
+      return;
+    }
+    this._runServerDraft(apiData, false, automatic);
+  },
+
+  _publishServerDraft(apiData) {
+    this._runServerDraft(apiData, true);
+  },
+
+  _runServerDraft(apiData, publish, automatic) {
+    if (this._draftStorageUnavailable || this._draftScopeUnconfirmed) return;
+    if (this._unloaded || !app.getUserID() || (this.data.draftMemberId
+        && String(this.data.draftMemberId) !== String(app.getUserID()))) return;
+    const previous = this._draftIdentity();
+    const memberId = this.data.draftMemberId || app.getUserID();
+    const scope = this.data.operationScope;
+    const draftUuid = this.data.draftUuid;
+    const baseRevision = this.data.baseRevision;
+    const editLoadToken = this._editLoadToken;
+    const draftRevision = this._draftContentRevision();
+    let activeTopicId = String(this.data.editingTopicId || '');
+    const current = () => !this._unloaded && String(memberId) === String(app.getUserID() || '')
+      && String(memberId) === String(this.data.draftMemberId || app.getUserID() || '')
+      && scope === this.data.operationScope && draftUuid === this.data.draftUuid
+      && baseRevision === this.data.baseRevision && editLoadToken === this._editLoadToken
+      && activeTopicId === String(this.data.editingTopicId || '');
+    const submittedKey = JSON.stringify(apiData);
+    const saver = this.getServerDraftSaver();
+    this._cancelCloudDraftAutosave();
+    this._cloudAutosaveQueued = false; // 这次请求已带上排队中的修改;之后的编辑会重新排队
+    this.setData({ draftSaving: !publish, submitting: publish, submitError: '',
+      themeSaveState: 'saving', themeSaveLabel: SAVE_STATE_LABELS.saving });
+    if (!automatic) cyLoading.show(publish ? '正在保存并发布' : '正在保存草稿');
+    const handlers = {
+      isCurrent: current,
+      // 只用于保存草稿:回读确认时本机内容已和提交的不一样,就不换上回读版本
+      hasChanges: publish ? undefined : () => this._cloudDraftKey() !== submittedKey,
+      onSaved: (topicId) => {
+        activeTopicId = String(topicId);
+        if (String(this.data.editingTopicId) === activeTopicId) return;
+        const intent = publishIntent.pending(wx, this._draftCreateIntentScope(), memberId);
+        if (intent) publishIntent.settle(wx, this._draftCreateIntentScope(), memberId, intent.key, 'success');
+        // 服务端已经建好这份草稿:之后的保存都 update 同一个主题 —— 回读失败后重试也不会再建一份
+        this.setData({ editingTopicId: String(topicId), editIsDraft: true, editLoaded: true });
+        this._persistDraftEnvelope();
+      },
+      onSuccess: (result) => {
+        if (!automatic) cyLoading.hide();
+        // 发布,或上次发布结果不确定、这次查到其实已发布:都按已发布收口
+        if (publish || result.published) {
+          this._onServerDraftPublished(Object.assign({}, result, {
+            localChanges: result.localChanges || draftRevision !== this._draftContentRevision()
+          }), previous, memberId);
+          return;
+        }
+        // 用回读到的版本替换编辑器:章节、站点拿到真实编号,章节规则才能引用它们
+        this._adoptServerDraft = { previous, memberId };
+        this._draftAutosaveReady = false;
+        this.applyEditingTopic(result.detail);
+        // 「已存云端」只在语义回读通过、且换上回读版本后才标;记下此刻内容,之后没改就不再重复上传
+        this._cloudSavedKey = this._cloudDraftKey();
+        this.setData({ draftSaving: false, submitError: '',
+          themeSaveState: 'saved', themeSaveLabel: SAVE_STATE_LABELS.saved });
+        if (automatic) return;
+        this._resultSheetNext = '';
+        this.setData({
+          resultSheet: { show: true, kind: 'success', title: '草稿已保存到云端',
+            sub: '已存草稿，可在「我的项目」继续编辑', meta: '',
+            why: '', duration: RESULT_SHEET_MS }
+        });
+      },
+      onFail: (res) => {
+        if (!automatic) cyLoading.hide();
+        if (res && res.localChanges) {
+          this._onServerDraftSuperseded(res, previous, automatic);
+          return;
+        }
+        this._onServerDraftFailed(res || {}, publish, memberId, automatic);
+      }
+    };
+    const started = publish ? saver.saveAndPublish(apiData, handlers) : saver.save(apiData, handlers);
+    if (!started) {
+      if (!automatic) cyLoading.hide();
+      this.setData({ draftSaving: false, submitting: false });
+      this._setSaveState('local');
+    }
+  },
+
+  // 保存在途时又改了内容:云端已确认的是上一版。不换回读版本(保住新编辑、弹窗内容与模板绑定),
+  // 只接上服务端为这次写入推进的版本号,下一次自动保存才不会被自己的上一版当成 CAS 冲突。
+  _onServerDraftSuperseded(res, previous, automatic) {
+    const topic = (res.detail && res.detail.topic) || {};
+    this.setData({ draftSaving: false, submitting: false, submitError: '',
+      'formData.configVersion': topicRouteGraph.normalizeTopicRoute(topic).configVersion || this.data.formData.configVersion,
+      baseRevision: topic.updateTime || topic.createTime || this.data.baseRevision });
+    // 新内容已按主题号落本机后,首建时那份按 draftUuid 存的旧恢复稿才可以清
+    if (this._persistDraftEnvelope() && previous && previous.draftUuid && this.data.editingTopicId) {
+      try { proEditorDraft.removeDraft(wx, previous, { memberId: this.data.draftMemberId || app.getUserID(), operationScope: this.data.operationScope }); } catch (error) {}
+    }
+    if (!automatic) cyToast('已存上一版，后续修改会自动保存');
+    this._cloudAutosaveQueued = true;
+    this._setSaveState('local');
+    this._queueCloudDraftAutosave();
+  },
+
+  _onServerDraftFailed(res, publish, memberId, automatic) {
+    const creating = !this.data.editingTopicId;
+    const reason = res.unknown
+      ? (res.stage === 'publish'
+        ? '网络中断，暂时确认不了是否已发布；稍后重试会先查询真实状态'
+        : creating ? '网络中断，暂时确认不了是否已保存；再点「保存草稿」会找回同一份草稿，不会重复创建'
+          : '网络中断，暂时确认不了是否已保存；重试会更新同一份草稿')
+      : res.networkError ? '网络暂时不可用，当前内容仍在本机，请重试'
+        : (res.msg || '保存失败，当前内容已保留，请重试');
+    // 存进去了、只是发布这一步没成:先换上回读到的版本(拿到真实编号),本机恢复稿此时才可以清
+    if (res.stage === 'publish' && res.detail && res.unknown === false) {
+      this._publishAttempt = null;
+      this._adoptServerDraft = { previous: null, memberId };
+      this._draftAutosaveReady = false;
+      this.applyEditingTopic(res.detail);
+    }
+    // 发布阶段失败但草稿已确认存入(上面换上了回读版本)才算已存云端;结果不明确时标待确认
+    const savedToCloud = res.stage === 'publish' && res.detail && res.unknown === false;
+    const saveState = savedToCloud ? 'saved'
+      : (res.unknown || res.stage === 'readback' && res.networkError) ? 'unknown' : 'failed';
+    if (savedToCloud) this._cloudSavedKey = this._cloudDraftKey();
+    if (automatic) {
+      // 自动保存失败不弹面板、不占用「重试=发布」的页内错误条。确定失败(校验 / CAS / 回读不一致)
+      // 暂停自动保存并只提示一次,等用户明确保存;网络失败或结果不明在下次编辑后用同一身份再存。
+      this.setData({ draftSaving: false, submitting: false });
+      this._setSaveState(saveState);
+      if (!res.unknown && !res.networkError) {
+        this._cloudAutosavePaused = true;
+        cyToast('自动保存未成功：' + reason);
+      }
+      return;
+    }
+    const issue = res.stage === 'save' && !res.networkError && publishIssueTarget.fromMessage(reason,
+      this.data.formData.chapters, this._templateDetailsById);
+    this.setData({ draftSaving: false, submitting: false, submitError: reason,
+      themeSaveState: saveState, themeSaveLabel: SAVE_STATE_LABELS[saveState] });
+    if (issue) {
+      this._showBackendPublishIssue(issue);
+      return;
+    }
+    const sheet = res.stage === 'publish'
+      ? (res.unknown
+        ? { title: '发布结果待确认', sub: '草稿已保存，可重试', meta: '' }
+        : { title: '草稿已保存，但还没有发布', sub: '草稿已保存，可重试', meta: '' })
+      : res.stage === 'readback'
+        ? { title: '草稿已存到云端，但确认时发现与本机不一致', sub: '请再点一次「保存草稿」', meta: '草稿仍在本机' }
+        : res.unknown
+          ? { title: '保存结果待确认', sub: '草稿已存本机，可重试', meta: '草稿仍在本机' }
+          : publish
+            ? { title: '这次还没有发布出去', sub: '草稿已存本机，可重试', meta: '草稿仍在本机' }
+            : { title: '草稿还没有保存到云端', sub: '修改后重试', meta: '草稿仍在本机' };
+    this.setData({
+      resultSheet: Object.assign({ show: true, kind: 'fail', why: reason, duration: RESULT_SHEET_MS }, sheet)
+    });
+  },
+
+  _onServerDraftPublished(result, previous, memberId) {
+    this._publishAttempt = null;
+    const pub = (result && result.published) || {};
+    // 回读的拒审终态不能冒充待审，也不能自动重发发布。
+    const rejected = pub.recovered && Number(pub.status) === 2;
+    const pendingReview = pub.recovered ? Number(pub.status) === 0
+      : !!(pub.commercialAwaitingReview || !pub.published && ['PENDING', 'ESCALATED'].includes(pub.reviewState));
+    const reviewNextStep = pub.commercialNextStep || '主题与引用的玩法将一起审核。';
+    const rejectionReason = rejected && result.detail && result.detail.topic.reason || '';
+    const topicId = result.topicId;
+    // 只清已确认的那版；在途新编辑或拒审后待修改的内容继续留在本机。
+    const keepDraft = !!(result.localChanges || rejected);
+    this._draftAutosaveReady = keepDraft;
+    if (keepDraft && !this._persistDraftEnvelope()) {
+      this._showUnstoredPublishedChanges(rejected);
+      return;
+    }
+    if (!keepDraft) [previous, { topicId }].forEach((identity) => {
+      if (!identity) return;
+      try { proEditorDraft.removeDraft(wx, identity, { memberId, operationScope: this.data.operationScope }); } catch (error) {}
+    });
+    if (!rejected) analytics.track('topic_publish_success', {
+      bizType: 'topic',
+      bizId: topicId || null,
+      properties: { name: this.data.formData.name }
+    });
+    this._resultSheetNext = rejected ? '' : '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId
+      + (this.data.operationScope ? '&scope=MERCHANT' : '');
+    if (!keepDraft) this._cloudSavedKey = '';
+    this.setData({
+      submitting: false, submitError: '', editIsDraft: false,
+      themeSaveState: keepDraft ? 'local' : '', themeSaveLabel: keepDraft ? SAVE_STATE_LABELS.local : '',
+      resultSheet: { show: true, kind: rejected ? 'fail' : 'success',
+        title: rejected ? '审核未通过' : pendingReview ? '已提交审核' : '城市路线已发布',
+        sub: rejected ? '内容仍保留，可以修改后重新提交。'
+          : result.localChanges ? '上次保存的版本已发布；后续修改仍在本机，请继续编辑后另行保存。'
+            : pendingReview ? reviewNextStep : '草稿已发布，接下来去招商家承接节点、找俱乐部带团。',
+        meta: keepDraft ? '草稿仍在本机' : '',
+        why: rejectionReason, duration: RESULT_SHEET_MS }
+    });
+  },
+
+  _showPublishUnknown() {
+    const reason = this.data.editingTopicId
+      ? '发布结果暂时无法确认，请到项目列表确认原主题。采用已保存版本前不会再次发布，本地草稿已保留。'
+      : '发布结果暂时无法确认，请到项目列表确认。为避免重复创建，当前草稿不会再次发布，内容仍在本机。';
+    this.setData({ submitting: false, submitError: reason,
+      resultSheet: { show: true, kind: 'fail', title: '发布结果待确认',
+        sub: '请先确认项目列表', meta: '草稿仍在本机', why: reason, duration: RESULT_SHEET_MS } });
   },
 
   /* 面板收掉才跳走 —— 落点由各成功路径事先写进 _resultSheetNext。
@@ -6584,8 +7784,17 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    this._hidden = false;
+    this._cancelCloudDraftAutosave();
+    if (this._readSessionChanged && this.data.editingTopicId) { this._readSessionChanged = false; this.loadEditingTopic(this.data.editingTopicId); return; }
+    if (this._creatorOwnerChanged() || this.data.creatorLoginRequired) return;
     //this.updateStatistics();
     this.syncNodeGameSwitchWithTemplate();
+    if (this._editingBoundTemplateId && this.data.popChapterNodes) {
+      this._loadNodeTemplateDetail(this.data.nodesForm);
+      this._editingBoundTemplateId = 0;
+    }
+    this._queueCloudDraftAutosave();
   },
 
   /**
@@ -6724,20 +7933,74 @@ Page({
     this.getTempList(keyword);
   },
 
+  retrySupportMatrix() { return this._loadSupportMatrix(true); },
+  _loadSupportMatrix(retry = false) {
+    if (this.data.supportMatrixLoading || (this._supportMatrixRequested && !retry)) return;
+    this._supportMatrixRequested = true;
+    this.setData({ supportMatrixLoading: true, supportMatrixLoadError: '' });
+    return supportMatrix.load(app, retry).then(matrix => { this.setData({ supportMatrix: matrix, supportMatrixLoading: false,
+      supportMatrixLoadError: matrix ? '' : '玩法支持信息未加载，请重试' });
+      this._refreshSupportMatrix(); this._syncRuntimeStats(); });
+  },
+  _nodeSupportContext() { return supportMatrix.context(this.data.formData.themeRuntimeConfig, this.data.nodesForm); },
+  _templateSupportReason(template) {
+    if (!template || !Object.prototype.hasOwnProperty.call(template, 'advancedConfigJson')) return '';
+    return supportMatrix.validate(this.data.supportMatrix, template, this._nodeSupportContext());
+  },
+  _refreshSupportMatrix() {
+    const matrix = this.data.supportMatrix, ctx = this._nodeSupportContext();
+    const options = matrix ? nodeGameCatalog.ALL.filter(item =>
+      !ctx.settled && !ctx.challenge || ['profile', 'typeIn', 'photoCheck', 'note', 'd20'].includes(item.key)
+      || matrix.types.some(row => row.key === item.key && (ctx.challenge
+        ? ['SUPPORTED', 'CHALLENGE_ONLY'].includes(row.tools.zeroChallenge) : row.completionProof))) : this.data.storyGameOptions;
+    const reasons = list => {
+      const out = {};
+      (list || []).forEach(item => {
+        if (!Object.prototype.hasOwnProperty.call(item, 'advancedConfigJson')) return;
+        out[item.id] = supportMatrix.validate(matrix, item, ctx);
+      });
+      return out;
+    };
+    const story = {};
+    (options || []).forEach(item => {
+      story[item.key] = supportMatrix.choice(matrix, item.key, {}, ctx);
+    });
+    this.setData({ supportNodeChallenge: ctx.challenge, supportNodeSettled: ctx.settled, storyGameOptions: options, storySupportReasons: story,
+      publicSupportReasons: reasons(this.data.publicTempList), draftSupportReasons: reasons(this.data.storyDraftList),
+      mineSupportReasons: reasons(this.data.tempList), nodeSupportReason: this._templateSupportReason(this.data.nodesForm.templateInfo) });
+  },
+  _supportPublishIssues() {
+    const out = [];
+    (this.data.formData.chapters || []).forEach(ch => (ch.nodes || []).forEach(node => {
+      const template = (this._templateDetailsById || {})[node.templateId] || node.templateInfo;
+      if (!template || !Object.prototype.hasOwnProperty.call(template, 'advancedConfigJson')) return;
+      const reason = supportMatrix.validate(this.data.supportMatrix, template,
+        supportMatrix.context(this.data.formData.themeRuntimeConfig, node));
+      if (reason) out.push({ label: '节点 ' + (node.id || node._localId) + '（' + (node.name || '') + '）：' + reason,
+        field: 'templateTool:' + templateBinding.nodeKey(node) + ':', tab: '0' });
+    }));
+    return out;
+  },
   // 选择模板事件
   selectTemp: function (e) {
     const item = e.currentTarget.dataset.item;
     if (!isRecord(item) || !item.id) return;
+    this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
+    const reason = this._templateSupportReason(item);
+    if (reason) { cyToast(reason); return; }
     const tempId = item.id;
+    const source = e.currentTarget.dataset.source === 'public' ? 'public' : 'mine';
 
-    if (this.data.selectedTempId === tempId) {
+    if (this.data.selectedTempId === tempId && this.data.selectedTempSource === source) {
       this.setData({
         selectedTempId: null,
+        selectedTempSource: '',
         selectedTempInfo: null
       });
     } else {
       this.setData({
         selectedTempId: tempId,
+        selectedTempSource: source,
         selectedTempInfo: item
       });
     }
@@ -6750,13 +8013,324 @@ Page({
       return;
     }
     const selectedTemplate = this.data.selectedTempInfo;
+    const reason = this._templateSupportReason(selectedTemplate);
+    if (reason) { cyToast(reason); return; }
     if (this._insertAlbumTemplate(selectedTemplate)) return;
+    if (this.data.selectedTempSource === 'public') {
+      this._adoptPublicTemplate(selectedTemplate);
+      return;
+    }
+    this._bindNodeTemplate(selectedTemplate);
+  },
+  /**
+   * 公共库 id ≠ 会员模板 id(复核 A11):直接写进节点,后端归属校验会拒,或两库 id 碰巧重号时绑到别人的模板。
+   * 先走既有 /api/template/adopt-draft 采用成「我的草稿」,拿到会员模板 id 再绑。
+   * 结果不确定(超时/断网)时不自动重发,避免重复建草稿;请作者去「我的玩法」查回。
+   */
+  _adoptPublicTemplate(libraryTemplate) {
+    if (this._adoptingPublicTemplate) return;
+    this._adoptingPublicTemplate = true;
+    const that = this;
+    app.sendRequest({
+      url: '/api/template/adopt-draft', method: 'POST', silentError: true,
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ originalTemplateId: libraryTemplate.id, title: libraryTemplate.title,
+        adoptSourceOnly: true, scope: this.data.operationScope ? 'MERCHANT' : '' }),
+      success(res) {
+        that._adoptingPublicTemplate = false;
+        const draftId = res && res.code == '200' ? Number(res.data) : 0;
+        if (draftId > 0) {
+          that.getStoryDraftList();
+          app.sendRequest({ url: '/api/template/myinfo', method: 'POST', hideLoading: true, silentError: true,
+            data: { id: draftId, scope: that.data.operationScope },
+            success(detail) {
+              if (detail && detail.code == '200' && isRecord(detail.data) && Number(detail.data.id) === draftId) {
+                if (that.data.selectedTempSource !== 'public'
+                  || Number(that.data.selectedTempId) !== Number(libraryTemplate.id)) return;
+                const reason = that._templateSupportReason(detail.data);
+                if (reason) { cyToast('已存为草稿；' + reason); return; }
+                if (that._bindNodeTemplate(detail.data)) cyToast('已存为我的玩法草稿并绑定');
+              } else cyToast('玩法已采用，请到我的玩法选择草稿');
+            },
+            fail() { cyToast('玩法已采用，请到我的玩法选择草稿'); },
+          });
+          return;
+        }
+        cyToast(res && res.code == '200' ? '采用结果未确认，请到我的玩法确认' : app.getRequestErrorMessage(res, '采用公共玩法失败'));
+      },
+      fail(_res, status) {
+        that._adoptingPublicTemplate = false;
+        cyToast(status == 404 || status == 405 ? '当前服务尚未支持采用公共玩法，请更新服务后再试'
+          : '采用结果未确认，请先到我的玩法确认，避免重复创建');
+      }
+    });
+  },
+  _bindNodeTemplate(selectedTemplate) {
+    if (!Object.prototype.hasOwnProperty.call(selectedTemplate, 'advancedConfigJson')) {
+      if (this._loadingSelectedTemplate === Number(selectedTemplate.id)) return;
+      this._loadingSelectedTemplate = Number(selectedTemplate.id);
+      const token = (this._nodeTemplateLoadToken || 0) + 1;
+      this._nodeTemplateLoadToken = token;
+      const that = this;
+      app.sendRequest({ url: '/api/template/myinfo', method: 'POST', hideLoading: true, silentError: true,
+        data: { id: selectedTemplate.id, scope: this.data.operationScope },
+        success(res) {
+          if (token !== that._nodeTemplateLoadToken) return;
+          that._loadingSelectedTemplate = 0;
+          if (res && res.code == '200' && isRecord(res.data) && Number(res.data.id) === Number(selectedTemplate.id))
+            that._bindNodeTemplate(res.data);
+          else cyToast('玩法详情未加载，请重新选择');
+        },
+        fail() { if (token !== that._nodeTemplateLoadToken) return;
+          that._loadingSelectedTemplate = 0; cyToast('玩法详情未加载，请重新选择'); },
+      });
+      return;
+    }
+    const reason = this._templateSupportReason(selectedTemplate);
+    if (reason) { cyToast(reason); return false; }
+    let slots;
+    try { slots = templateBinding.slotsOf(selectedTemplate); }
+    catch (error) { cyToast('玩法资源声明无法读取'); return; }
+    const saved = (templateBinding.parse(this.data.formData.themeRuntimeConfig).templateBindings || {})[
+      templateBinding.nodeKey(this.data.nodesForm)];
+    const previous = this._nodeBindingDraft || saved;
+    const previousSlots = (this._nodeBindingSlots || []).length ? this._nodeBindingSlots
+      : previous ? Object.keys(previous.values || {}).map(key => ({ key, kind: 'VALUE' }))
+        .concat(Object.keys(previous.items || {}).map(key => ({ key, kind: 'ITEM' }))) : [];
+    const binding = slots.length ? templateBinding.reconcile(slots, selectedTemplate.id, previous, previousSlots,
+      this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig, selectedTemplate) : null;
+    const currentNode = Object.assign({}, this.data.nodesForm, { templateId: selectedTemplate.id });
+    this._nodeBindingSlots = slots;
+    this._nodeBindingDraft = binding;
     this.setData({
-      nodeSheetView: 'detail',
+      nodeSheetView: 'detail', nodeSupportReason: '',
       'nodesForm.templateId': selectedTemplate.id,
       'nodesForm.templateInfo': selectedTemplate,
+      'nodesForm.showTemplate': true,
+      nodeBindingRows: slots.length ? templateBinding.rows(slots, binding,
+        this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig, selectedTemplate) : [],
+      nodeBindingError: '', nodeBindingErrorKey: '',
+      nodeSharedSites: templateBinding.sharedSites(this.data.formData.chapters, selectedTemplate.id, currentNode),
+      nodeCopyUncertain: false, nodeCopyError: '',
       // 还没起名就用玩法名(2026-09-23 走查:选回草稿后名字为空,点「确定」被拦);作者起过的不覆盖
       'nodesForm.name': String(this.data.nodesForm.name || '').trim() || selectedTemplate.title || '',
+    });
+    this._openNodePlanEndings(selectedTemplate, previous);
+    return true;
+  },
+  _openNodeBinding(node) {
+    this.setData({ nodeSupportReason: supportMatrix.validate(this.data.supportMatrix, node.templateInfo || {},
+      supportMatrix.context(this.data.formData.themeRuntimeConfig, node)) });
+    let slots = [];
+    try { slots = templateBinding.slotsOf(node.templateInfo); } catch (_) { /* 服务端详情稍后回读 */ }
+    const runtime = templateBinding.parse(this.data.formData.themeRuntimeConfig);
+    const old = (runtime.templateBindings || {})[templateBinding.nodeKey(node)];
+    const binding = slots.length ? templateBinding.reconcile(slots, node.templateId, old, slots,
+      this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig, node.templateInfo) : null;
+    this._nodeBindingSlots = slots;
+    this._nodeBindingDraft = binding;
+    this.setData({ nodeSharedSites: templateBinding.sharedSites(this.data.formData.chapters, node.templateId, node),
+      nodeBindingRows: slots.length ? templateBinding.rows(slots, binding,
+        this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig, node.templateInfo) : [],
+      nodeBindingError: '', nodeBindingErrorKey: '' });
+    this._openNodePlanEndings(node.templateInfo || {}, old);
+  },
+  onEditBoundTemplate(focus) {
+    const id = Number(this.data.nodesForm.templateId);
+    if (!id) return;
+    this._editingBoundTemplateId = id;
+    const focusQuery = focus && focus.tool ? '&focusTool=' + encodeURIComponent(focus.tool)
+      + '&focusPlan=' + encodeURIComponent(focus.planKey || '')
+      + '&focusMessage=' + encodeURIComponent(focus.message || '') : '';
+    wx.navigateTo({ url: '/pages/publish/temp/index?from=fabu&id=' + id
+      + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT&templateScope=my' : '&scope=my')
+      + '&runtimeEndings=' + encodeURIComponent(JSON.stringify((this._runtimeConfig().endings || []).map(row => ({ id: row.id, title: row.title }))))
+      + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(this._nodeSupportContext())) : '') + focusQuery });
+  },
+  onCopyBoundTemplate() {
+    const node = this.data.nodesForm;
+    const sourceId = Number(node && node.templateId);
+    if (this._copyingBoundTemplate || this.data.nodeCopyUncertain || !sourceId
+      || (this.data.nodeSharedSites || []).length < 2) return;
+    this._copyingBoundTemplate = true;
+    this.setData({ nodeCopyBusy: true, nodeCopyError: '' });
+    const nodeKey = templateBinding.nodeKey(node);
+    const that = this;
+    app.sendRequest({ url: '/api/template/myinfo', method: 'POST', hideLoading: true, silentError: true,
+      data: { id: sourceId, scope: this.data.operationScope },
+      success(detail) {
+        const source = detail && detail.code == '200' && isRecord(detail.data)
+          && Number(detail.data.id) === sourceId && typeof detail.data.title === 'string'
+          && Object.prototype.hasOwnProperty.call(detail.data, 'advancedConfigJson') ? detail.data : null;
+        if (!source) {
+          that._copyingBoundTemplate = false;
+          that.setData({ nodeCopyBusy: false, nodeCopyError: '玩法详情未加载，请重试' });
+          return;
+        }
+        if (that.data.nodesForm !== node || Number(that.data.nodesForm.templateId) !== sourceId) {
+          that._copyingBoundTemplate = false;
+          that.setData({ nodeCopyBusy: false });
+          return;
+        }
+        const reason = that._templateSupportReason(source);
+        if (reason) {
+          that._copyingBoundTemplate = false;
+          that.setData({ nodeCopyBusy: false, nodeCopyError: reason });
+          return;
+        }
+        const payload = templateAuthorFields.copyPayload(source, that.data.operationScope);
+        app.sendRequest({ url: '/api/template/draft', method: 'POST', hideLoading: true, silentError: true,
+          header: { 'Content-Type': 'application/json' }, data: JSON.stringify(payload),
+          success(saved) {
+            that._copyingBoundTemplate = false;
+            const newId = saved && saved.code == '200' ? Number(saved.data) : 0;
+            if (!Number.isSafeInteger(newId) || newId <= 0) {
+              that.setData({ nodeCopyBusy: false,
+                nodeCopyError: saved && saved.code == '200' ? '保存结果未确认，请到我的玩法确认' : app.getRequestErrorMessage(saved, '另存副本失败'),
+                nodeCopyUncertain: !!(saved && saved.code == '200') });
+              return;
+            }
+            if (that.data.nodesForm !== node || Number(that.data.nodesForm.templateId) !== sourceId
+              || templateBinding.nodeKey(that.data.nodesForm) !== nodeKey) {
+              that.setData({ nodeCopyBusy: false, nodeCopyUncertain: true,
+                nodeCopyError: '副本已保存，请到我的玩法确认后重新绑定' });
+              return;
+            }
+            const copy = Object.assign({}, source, { id: newId, status: 0 });
+            that._templateDetailsById = Object.assign({}, that._templateDetailsById, { [newId]: copy });
+            if (!that._bindNodeTemplate(copy)) {
+              that.setData({ nodeCopyBusy: false, nodeCopyUncertain: true, nodeCopyError: '副本已保存，请到我的玩法确认；' + that._templateSupportReason(copy) });
+            } else that.setData({ nodeCopyBusy: false });
+            that.getStoryDraftList();
+          },
+          fail() {
+            that._copyingBoundTemplate = false;
+            that.setData({ nodeCopyBusy: false, nodeCopyUncertain: true,
+              nodeCopyError: '保存结果未确认，请先到我的玩法确认，避免重复创建' });
+          }
+        });
+      },
+      fail() {
+        that._copyingBoundTemplate = false;
+        that.setData({ nodeCopyBusy: false, nodeCopyError: '玩法详情未加载，请重试' });
+      }
+    });
+  },
+  onNodeBindingPick(e) {
+    const slot = (this._nodeBindingSlots || [])[Number(e.currentTarget.dataset.index)];
+    const option = slot && templateBinding.optionsFor(slot.kind, this.data.formData.journeyRules,
+      this.data.formData.themeRuntimeConfig, this.data.nodesForm.templateInfo, slot.key)[Number(e.detail.value)];
+    if (!option) return;
+    try {
+      const binding = templateBinding.bind(this._nodeBindingDraft, this._nodeBindingSlots, slot.key,
+        option.value, this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig,
+        this.data.nodesForm.templateInfo);
+      this._nodeBindingDraft = binding;
+      this.setData({ nodeBindingRows: templateBinding.rows(this._nodeBindingSlots,
+        binding, this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig,
+        this.data.nodesForm.templateInfo), nodeBindingError: '', nodeBindingErrorKey: '' });
+    } catch (error) { this.setData({ nodeBindingError: error.message, nodeBindingErrorKey: slot.key }); }
+  },
+  _commitNodeTemplateBinding(node) {
+    const runtime = this._runtimeConfig();
+    const key = templateBinding.nodeKey(node);
+    if (!key) return;
+    const hasPlanEndings = Object.keys(this._nodeBindingDraft?.planEndings || {}).length > 0;
+    if (!this._nodeBindingSlots.length && !hasPlanEndings && !(runtime.templateBindings && runtime.templateBindings[key])) return;
+    const bindings = Object.assign({}, runtime.templateBindings || {});
+    if ((this._nodeBindingSlots.length || hasPlanEndings) && this._nodeBindingDraft && Number(node.templateId))
+      bindings[key] = this._nodeBindingDraft;
+    else delete bindings[key];
+    if (Object.keys(bindings).length) runtime.templateBindings = bindings;
+    else delete runtime.templateBindings;
+    this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(runtime) });
+  },
+  /* 删除站点时把它从章节规则(互斥组 / 额外站点)里明确移出:不留悬空编号让保存被拒,也不改指别的站点。
+     返回被改动章节的原值供撤销恢复;同时给出一句「从哪些规则里移除了」的说明。 */
+  _removeNodeRuleRefs(node) {
+    const key = templateBinding.nodeKey(node);
+    if (!key || !this.data.formData.themeRuntimeConfig) return null;
+    const runtime = templateBinding.parse(this.data.formData.themeRuntimeConfig);
+    const same = ref => String(ref) === key || (Number(ref) > 0 && String(Number(ref)) === key);
+    const before = [], notes = [];
+    (runtime.chapters || []).forEach(ch => {
+      const groups = ch.exclusiveGroups || [], extras = ch.extraNodes || [];
+      const inGroup = groups.some(group => group.some(same)), inExtra = extras.some(item => same(item.nodeId));
+      if (!inGroup && !inExtra) return;
+      before.push({ index: ch.index, exclusiveGroups: ch.exclusiveGroups, extraNodes: ch.extraNodes });
+      if (inGroup) {
+        ch.exclusiveGroups = groups.map(group => group.filter(ref => !same(ref))).filter(group => group.length >= 2);
+        if (!ch.exclusiveGroups.length) delete ch.exclusiveGroups;
+        notes.push('第' + (ch.index + 1) + '章互斥选项');
+      }
+      if (inExtra) {
+        ch.extraNodes = extras.filter(item => !same(item.nodeId));
+        if (!ch.extraNodes.length) delete ch.extraNodes;
+        notes.push('第' + (ch.index + 1) + '章额外节点');
+      }
+    });
+    // 运行结构里属于这一站的东西一并移出:任务(含幕的任务列表与前置引用)、玩法工具为它生成的设施与方案、
+    // 以这一站为操作点的设施。否则保存时服务端会因引用已删站点拒收;撤销时整段运行结构原样放回。
+    const game = runtime.gameplayRuntime;
+    let gameBefore = null;
+    if (game) {
+      const nodeId = Number(node && node.id);
+      const facilityHit = f => f.facilityKey === 'tpl_node_' + nodeId || same(f.operationNodeId);
+      const toolRow = ((game.templateTools || {}).nodes || []).find(row => same(row.nodeId));
+      if ((game.quests || []).some(q => same(q.nodeId)) || (game.facilities || []).some(facilityHit) || toolRow) {
+        gameBefore = JSON.parse(JSON.stringify(game));
+        const gone = new Set((game.quests || []).filter(q => same(q.nodeId)).map(q => q.questKey));
+        const goneFacilities = new Set((game.facilities || []).filter(facilityHit).map(f => f.facilityKey));
+        game.quests = (game.quests || []).filter(q => !gone.has(q.questKey)).map(q => {
+          const next = q.prerequisites ? Object.assign({}, q, { prerequisites: q.prerequisites.filter(k => !gone.has(k)) }) : Object.assign({}, q);
+          if (goneFacilities.has(next.facilityKey)) delete next.facilityKey;
+          return next;
+        });
+        game.acts = (game.acts || []).map(act => Object.assign({}, act, { questKeys: (act.questKeys || []).filter(k => !gone.has(k)) }));
+        if (game.facilities) game.facilities = game.facilities.filter(f => !goneFacilities.has(f.facilityKey));
+        if (toolRow) {
+          const plans = new Set(toolRow.planKeys || []);
+          if (game.plans) game.plans = game.plans.filter(row => !plans.has(row.endingKey));
+          game.templateTools.nodes = game.templateTools.nodes.filter(row => row !== toolRow);
+          if (plans.size) notes.push('该节点玩法生成的表决方案');
+        }
+        if (goneFacilities.size) notes.push('该节点的设施');
+      }
+    }
+    if (!before.length && !gameBefore) return null;
+    this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(runtime) });
+    return { before, gameBefore, note: notes.length ? '已从' + notes.join('、') + '中移除这个节点' : '' };
+  },
+  _removeNodeTemplateBinding(node) {
+    const runtime = templateBinding.parse(this.data.formData.themeRuntimeConfig);
+    const key = templateBinding.nodeKey(node);
+    if (!key || !runtime.templateBindings || !runtime.templateBindings[key]) return null;
+    const binding = runtime.templateBindings[key];
+    delete runtime.templateBindings[key];
+    if (!Object.keys(runtime.templateBindings).length) delete runtime.templateBindings;
+    this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(runtime) });
+    return binding;
+  },
+  _loadNodeTemplateDetail(node) {
+    const id = Number(node.templateId);
+    if (!id) return;
+    this._templateDetailRequested = Object.assign({}, this._templateDetailRequested, { [id]: true });
+    const that = this;
+    app.sendRequest({ url: '/api/template/myinfo', method: 'POST', hideLoading: true, silentError: true,
+      data: { id, scope: this.data.operationScope },
+      success(res) {
+        if (!(res && res.code == '200' && isRecord(res.data) && Number(res.data.id) === id)) return;
+        that._templateDetailsById = Object.assign({}, that._templateDetailsById, { [id]: res.data });
+        const open = that.data.nodesForm;
+        if (open && Number(open.templateId) === id && (!node.id && !node._localId
+          || templateBinding.nodeKey(open) === templateBinding.nodeKey(node))) {
+          that.setData({ 'nodesForm.templateInfo': res.data });
+          that._openNodeBinding(Object.assign({}, open, { templateInfo: res.data }));
+        }
+        if (that.data.supportMatrix) that._syncRuntimeStats();
+        that.refreshPrimaryActionState();
+      },
+      fail() { if (Number(that.data.nodesForm.templateId) === id) that.setData({ nodeBindingError: '玩法详情未加载，请重新打开节点' }); },
     });
   },
   /**
@@ -6770,33 +8344,45 @@ Page({
     const on = !!(e && e.detail && e.detail.value);
     if (on) {
       this.setData({ 'nodesForm.showTemplate': true });
-      // 2026-08-20 用户拍板:开「配置模板」不再停在 sheet 内的玩法选择视图,
-      // 没绑过模板就直接进模板编辑器(标题在编辑器里填);已绑过的走药丸改配置。
-      if (!Number(this.data.nodesForm.templateId)) this.onCreateGame();
+      // 2026-10-12 用户定(推翻 2026-08-20 那条「直接进模板编辑器」):开「配置模板」打开本弹层里的
+      // 玩法库视图 —— 底部横滑卡片选已保存的模板(公共库 / 我的草稿 / 我的模板),要新建再从那里进编辑器。
+      if (!Number(this.data.nodesForm.templateId)) this.showTemp();
       return;
     }
+    this._nodeBindingSlots = [];
+    this._nodeBindingDraft = null;
     this.setData({
       'nodesForm.showTemplate': false,
       'nodesForm.templateId': 0,
       'nodesForm.templateInfo': {},
-      'nodesForm.templateName': ''
+      'nodesForm.templateName': '',
+      nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
+      nodePlanEndingRows: [], nodePlanEndingError: '',
+      nodeSharedSites: [], nodeCopyBusy: false, nodeCopyUncertain: false, nodeCopyError: ''
     });
   },
   // 半屏 sheet 打开时吃掉背景滚动(catchtouchmove 需要一个真实存在的 handler)
   noop() {},
   // 切换到游戏选择视图
   showTemp: function () {
+    this._refreshSupportMatrix();
+    if (this.data.publicTempState === 'error') this.getPublicTempList();
     const info = this.data.nodesForm && this.data.nodesForm.templateInfo;
     this.getStoryDraftList();
     this.setData({
       nodeSheetView: 'games',
       selectedTempId: this.data.nodesForm && this.data.nodesForm.templateId ? this.data.nodesForm.templateId : null,
+      selectedTempSource: this.data.nodesForm && this.data.nodesForm.templateId ? 'mine' : '',
       selectedTempInfo: info && info.title ? info : null
     });
   },
   // 从游戏选择视图返回详情视图（取消）
   cancelTemp: function () {
+    this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
+    this._loadingSelectedTemplate = 0;
+    // 开关开了却没选模板就退回来:开关跟着关(开关态按 templateId 派生),别留「开着但没挂玩法」的假已配置
     this.setData({
+      'nodesForm.showTemplate': !!Number((this.data.nodesForm || {}).templateId),
       nodeSheetView: 'detail',
       selectedTempId: null,
       selectedTempInfo: null
@@ -6804,7 +8390,11 @@ Page({
   },
   // 返回按钮：回到节点详情视图
   backToNodeDetail: function () {
+    this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
+    this._loadingSelectedTemplate = 0;
+    // 开关开了却没选模板就退回来:开关跟着关(开关态按 templateId 派生),别留「开着但没挂玩法」的假已配置
     this.setData({
+      'nodesForm.showTemplate': !!Number((this.data.nodesForm || {}).templateId),
       nodeSheetView: 'detail',
       selectedTempId: null,
       selectedTempInfo: null
@@ -6814,12 +8404,16 @@ Page({
   onCreateGame: function (e) {
     const dataset = e && e.currentTarget && e.currentTarget.dataset || {};
     const game = nodeGameCatalog.findGame(dataset.key);
+    const ctx = this._nodeSupportContext();
+    const reason = game && supportMatrix.choice(this.data.supportMatrix, game.key, {}, ctx);
+    if (reason && !dataset.preview) { cyToast(reason); return; }
     const that = this;
     const themeName = this.data.formData.name;
-    const nodeName = this.data.nodesForm.name || ('站点' + (this.data.editTargetNodeLid || ''));
-    wx.navigateTo({
+    const nodeName = this.data.nodesForm.name || ('节点' + (this.data.editTargetNodeLid || ''));
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
       url: '/pages/publish/temp/index?from=fabu&themeName=' + encodeURIComponent(themeName || '')
         + '&nodeName=' + encodeURIComponent(nodeName || '')
+        + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(ctx)) : '')
         + (game ? '&game=' + encodeURIComponent(game.key) + (dataset.preview ? '&sample=1' : '') : '')
         + (this.data.operationScope ? '&scope=MERCHANT' : ''),
       events: {
@@ -6832,14 +8426,9 @@ Page({
             players: tpl.players,
             duration: tpl.duration
           });
-          that.setData({
-            nodeSheetView: 'detail',
-            'nodesForm.templateId': tpl.id,
-            'nodesForm.templateInfo': templateInfo
-          });
-          cyToast.success('已绑定新玩法');
+          if (that._bindNodeTemplate(templateInfo)) cyToast.success('已绑定新玩法');
         }
-      }
+      }, complete: () => { this._navigating = false; }
     });
   },
 
@@ -6847,8 +8436,10 @@ Page({
   // 是同一个数据源(三处已在用),而 /api/template/list 必须带分类,拿"全部"没有稳妥参数。
   // ⚠️ 拉不到就留空并在界面上直说,不塞占位假模板:选中一个不存在的 templateId
   // 会让玩家端到了点位打不开玩法,而创作者这边显示"已配置"。
+  // 公共玩法库三态分开:加载中 / 已加载(可能为空) / 请求失败(给重试),别把「库里没有」说成「拉不到」
   getPublicTempList: function () {
     var that = this;
+    this.setData({ publicTempState: 'loading' });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -6856,7 +8447,7 @@ Page({
       method: 'POST',
       data: {},
       success: function (res) {
-        if (!(res && res.code == '200' && res.data)) { that.setData({ publicTempList: [] }); return; }
+        if (!(res && res.code == '200' && res.data)) { that.setData({ publicTempList: [], publicTempState: 'error' }); return; }
         var d = res.data;
         var merged = [].concat(d.recommendList || [], d.hotList || [], d.latestList || []);
         var seen = {};
@@ -6865,32 +8456,66 @@ Page({
           seen[item.id] = true;
           return true;
         });
-        that.setData({ publicTempList: rows });
+        that.setData({ publicTempList: rows, publicTempState: 'ready' });
+        that._refreshSupportMatrix();
       },
-      fail: function () { that.setData({ publicTempList: [] }); },
+      fail: function () { that.setData({ publicTempList: [], publicTempState: 'error' }); },
     });
   },
 
   /* 我的故事玩法草稿(W-10):从发布页存下的故事玩法是 status=0 草稿,「我的模板」按 is_quote
      只列已发布,绑定一旦丢了(关了弹层、页面被重置)就再也选不回来,作者只能重配、库里留孤儿。
      每次打开面板都重拉 —— 刚存的那条要马上看得到。拉不到就不出这一段,不塞占位。 */
+  // 草稿列表分页读取全部（接口默认每页 10 条；只取首页时第 11 个起的草稿在站点里选不到）
   getStoryDraftList: function () {
-    const that = this;
-    app.sendRequest({
-      hideLoading: true,
-      url: '/api/template/my-list',
-      method: 'POST',
-      data: { draft_status: 0, scope: that.data.operationScope },
-      success: function (res) {
-        const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows) ? res.data.rows : [];
-        that.setData({ storyDraftList: rows });
-      },
-      fail: function () { that.setData({ storyDraftList: [] }); },
-    });
+    const that = this, collected = [], pageSize = 100;
+    const owner = memberId(app);
+    const scope = this.data.operationScope;
+    const token = this._storyDraftListToken = (this._storyDraftListToken || 0) + 1;
+    // 换号 / 换经营身份 / 页面卸载 / 被更新一次读取取代后,旧响应一律作废;
+    // 列表不属于当前账号+身份(或来历不明)时先清空,同一账号重读则保留旧列表直到新结果到
+    const listKey = owner + '|' + (scope || '');
+    const isCurrent = () => !that._unloaded && token === that._storyDraftListToken
+      && owner === memberId(app) && scope === that.data.operationScope;
+    if (this._storyDraftListKey !== listKey) {
+      this._storyDraftListKey = '';
+      this.setData({ storyDraftList: [] });
+    }
+    const settle = function () {
+      that._storyDraftListKey = listKey;
+      that.setData({ storyDraftList: collected });
+    };
+    const load = function (pageNum) {
+      app.sendRequest({
+        hideLoading: true,
+        url: '/api/template/my-list',
+        method: 'POST',
+        data: { draft_status: 0, scope: scope, pageNum: pageNum, pageSize: pageSize },
+        success: function (res) {
+          if (!isCurrent()) return;
+          const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows) ? res.data.rows : [];
+          rows.forEach(row => collected.push(row));
+          const total = Number(res && res.data && res.data.total) || 0;
+          if (rows.length === pageSize && collected.length < total && pageNum < 10) { load(pageNum + 1); return; }
+          settle();
+          that._refreshSupportMatrix();
+        },
+        fail: function () { if (isCurrent()) settle(); },
+      });
+    };
+    load(1);
   },
 
   getTempList: function () {
     var that = this;
+    const memberId = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    const epoch = (this._tempListReadEpoch || 0) + 1;
+    this._tempListReadEpoch = epoch;
+    const isCurrent = () => !that._unloaded
+      && epoch === that._tempListReadEpoch
+      && memberId === String(app.getUserID() || '') && scope === that.data.operationScope;
+    this.setData({ tempList: [] });
     app.sendRequest({
       hideLoading: true,
       url: '/api/template/my-list',
@@ -6901,16 +8526,19 @@ Page({
         scope: that.data.operationScope,
       },
       success: function (res) {
+        if (!isCurrent()) return;
         if (res.code == "200" && res.data && isRecordList(res.data.rows)) {
           that.setData({
             tempList: res.data.rows,
-          })
+          });
+          that._refreshSupportMatrix();
         } else {
           // 无真实模板时显示空,避免把 mock 假模板插入节点
           that.setData({ tempList: [] })
         }
       },
       fail: function (res) {
+        if (isCurrent()) that.setData({ tempList: [] });
       },
       complete: function () {
 
@@ -7039,4 +8667,43 @@ Page({
     });
   },
 
+  // BL-185:存好并回读确认后、publish-draft 之前,对已存的这一版跑一次只读试检查。
+  // error 不发布;只有 warn 时提示,用户点「继续发布」才发。试检查本身拿不到结果不拦 ——
+  // publish-draft 服务端照样会拦,这里只是把问题提前一次说全。
+  _topicPublishCheck(topicId, cb) {
+    let settled = false;
+    const done = (result) => { if (!settled) { settled = true; cb(result); } };
+    app.sendRequest({
+      url: '/api/topic/publish-check',
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      data: { topicId, scope: this.data.operationScope },
+      success: (res) => {
+        const issues = (res && res.code == '200' && Array.isArray(res.data) ? res.data : [])
+          .filter((issue) => issue && issue.message);
+        const errors = issues.filter((issue) => issue.level === 'error');
+        const warns = issues.filter((issue) => issue.level !== 'error');
+        if (errors.length) {
+          done({ ok: false, msg: '发布前检查未通过：' + errors.map((issue) => issue.message).join('；') });
+          return;
+        }
+        if (!warns.length) { done({ ok: true }); return; }
+        cyLoading.hide();
+        modal.show({
+          title: '发布前提示',
+          content: warns.map((issue) => issue.message).join('\n'),
+          confirmText: '继续发布',
+          cancelText: '再改改',
+          success: (r) => {
+            if (r && r.confirm) cyLoading.show('正在保存并发布');
+            done(r && r.confirm ? { ok: true } : { ok: false, msg: '已暂停发布，草稿已保存' });
+          },
+          fail: () => done({ ok: false, msg: '已暂停发布，草稿已保存' })
+        });
+      },
+      fail: () => done({ ok: true }),
+      complete: () => done({ ok: true })
+    });
+  },
 });

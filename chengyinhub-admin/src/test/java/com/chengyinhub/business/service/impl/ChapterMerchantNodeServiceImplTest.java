@@ -82,6 +82,7 @@ class ChapterMerchantNodeServiceImplTest {
         chapterMapper = mock(CmsTopicChapterMapper.class);
         topicMapper = mock(CmsTopicMapper.class);
         service = new ChapterMerchantNodeServiceImpl(nodeSvc, chapterSvc, topicSvc, tplSvc, offerMapper, applicationMapper);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class));
         ReflectionTestUtils.setField(service, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
         when(chapterMapper.lockChaptersForCapacity(Collections.singletonList(CHAPTER)))
@@ -353,6 +354,38 @@ class ChapterMerchantNodeServiceImplTest {
         assertEquals(PUBLISHER, out.getNodeAuditMemberId());
         assertTrue(out.getNodeAuditTime() != null);
         assertEquals(ME, out.getMerchantMemberId(), "作者不能被审核改写");
+    }
+
+    @Test
+    void activeOrAlreadyReviewedNodeCannotBeRejectedAfterSales() {
+        CmsTopicNode node = merchantNode();
+        node.setNodeAuditStatus(ChapterMerchantNodeServiceImpl.AUDIT_APPROVED);
+        assertThrows(IllegalStateException.class, () -> service.audit(PUBLISHER, 1L, false, "退出"));
+        verify(nodeSvc, never()).updateCmsTopicNode(any());
+    }
+
+    @Test
+    void auditReadsPendingVersionAgainAfterTakingSharedLocks() {
+        CmsTopicNode initial = merchantNode();
+        CmsTopicNode reviewed = merchantNode();
+        reviewed.setNodeAuditStatus(ChapterMerchantNodeServiceImpl.AUDIT_APPROVED);
+        when(nodeSvc.selectCmsTopicNodeById(1L)).thenReturn(initial, reviewed);
+        assertThrows(IllegalStateException.class, () -> service.audit(PUBLISHER, 1L, true, null));
+        verify(nodeSvc, never()).updateCmsTopicNode(any());
+    }
+
+    @Test
+    void ordinaryPendingNodeCannotChangeAuditAtPricingOrAfterStart() {
+        merchantNode();
+        for (Integer lifecycle : new Integer[] {TopicLifecycleState.PRICING.getCode(), TopicLifecycleState.RUNNING.getCode()}) {
+            CmsTopic topic = new CmsTopic();
+            topic.setId(TOPIC);
+            topic.setMemberId(PUBLISHER);
+            topic.setLifecycle(lifecycle);
+            when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+            assertThrows(IllegalStateException.class, () -> service.audit(PUBLISHER, 1L, false, "退出"));
+        }
+        verify(nodeSvc, never()).updateCmsTopicNode(any());
     }
 
     /** ★只有主题发布者能审 —— 与章节申请同口径。 */
@@ -678,6 +711,16 @@ class ChapterMerchantNodeServiceImplTest {
             context.registerBean(MerchantChapterApplicationMapper.class, () -> applicationMapper);
             context.registerBean(CmsTopicChapterMapper.class, () -> chapterMapper);
             context.registerBean(CmsTopicMapper.class, () -> topicMapper);
+            context.registerBean(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                    () -> (com.chengyinhub.business.service.support.TopicSupplyReviewService)
+                            ReflectionTestUtils.getField(service, "supplyReviewService"));
+            // SC-EXIT-REPLACE-LOCKED:补位获准通知玩家所需的既有通知依赖
+            context.registerBean(com.chengyinhub.business.mapper.RegistrationEntitlementMapper.class,
+                    () -> mock(com.chengyinhub.business.mapper.RegistrationEntitlementMapper.class));
+            context.registerBean(com.chengyinhub.business.service.support.CommittedBusinessNotice.class,
+                    () -> mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
+            context.registerBean(com.chengyinhub.business.service.INotifyService.class,
+                    () -> mock(com.chengyinhub.business.service.INotifyService.class));
             context.register(ChapterMerchantNodeServiceImpl.class);
             context.refresh();
             context.getBean(ChapterMerchantNodeServiceImpl.class).submit(ME, CHAPTER, draft());
@@ -723,6 +766,7 @@ class ChapterMerchantNodeServiceImplTest {
         when(offerMapper.selectReplacementForUpdate(800L)).thenReturn(replacement);
         CmsTopicNode node = draft(); node.setId(501L); node.setTopicId(TOPIC); node.setChapterId(CHAPTER);
         node.setMerchantMemberId(ME);
+        node.setNodeAuditStatus(0); // Replacement candidate is pending; an already effective version must never be re-audited.
         node.setAddress("");
         when(nodeSvc.selectCmsTopicNodeById(501L)).thenReturn(node);
         assertThrows(IllegalStateException.class, () -> service.audit(PUBLISHER, 501L, true, ""));

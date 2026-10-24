@@ -3,6 +3,8 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<cy-profile id="profile" viewer="self" />
+<cy-empty wx:if="{{!profileMounts.length}}" kind="no-permission" fill size="lg" title="登录后查看我的主页" cta="登录" bind:cta="loginToRead" />
+<cy-profile wx:for="{{profileMounts}}" wx:key="id" id="profile" viewer="self" />
+<tabBar wx:if="{{!profileMounts.length}}" mode="consumer" activeKey="" dark="{{true}}" />
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 </view>

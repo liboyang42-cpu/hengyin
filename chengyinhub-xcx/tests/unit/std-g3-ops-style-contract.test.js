@@ -191,11 +191,11 @@ test('negative control:卡内行重新长出灰底或横线必须判红', () => 
   const file = 'style/pr-settings.wxss';
   const withFill = readFile(file).replace(/(\.pr-row\s*\{)/, '$1 background: var(--cy-bg-card-2);');
   assert.throws(() => assertNoNestedFill({ [file]: withFill }), assert.AssertionError,
-    '把灰底加回 .pr-row 后,卡内不嵌灰的契约没有判红');
+    '把灰底加回 .pr-row 后，卡内不嵌灰的契约没有判红');
 
   const withLine = readFile(file).replace(/(\.pr-row\s*\{)/, '$1 border-bottom: 1rpx solid #eee;');
   assert.throws(() => assertNoNestedFill({ [file]: withLine }), assert.AssertionError,
-    '给 .pr-row 加回横线后,卡内不用线的契约没有判红');
+    '给 .pr-row 加回横线后，卡内不用线的契约没有判红');
 
   // 漏 token 就等于漏门:--cy-bg-subtle 是 coop-terms-summary 用过的那种灰
   const withSubtle = readFile(file).replace(/(\.pr-row\s*\{)/, '$1 background: var(--cy-bg-subtle);');
@@ -249,7 +249,7 @@ test('G3 纯黑动作与文字：清除近黑字面量，装修错误重载不�
   // 2026-09-02:开关轨道底改用 --cy-comp-switch-on(三域同值),decor 不再需要显式传色。
   // 这里断言的意图没变 —— 「成功态绿只出现在开关上,不得外溢到错误重试按钮」——
   // 只是绿现在由组件统一给,页面不该再自己写死一个 hex。
-  assert.doesNotMatch(decorWxml, /<cy-switch\s+color=/, '开关颜色应由 cy-switch 统一给,页面不再传色');
+  assert.doesNotMatch(decorWxml, /<cy-switch\s+color=/, '开关颜色应由 cy-switch 统一给，页面不再传色');
   assert.match(decorWxml, /<cy-switch\s+checked="\{\{m\.businessStatus\s*!=\s*0\}\}"/, '营业状态开关仍应使用共享 cy-switch');
   assert.doesNotMatch(decorWxss, /#12B886|--cy-decor-accent/);
   assert.match(decorWxml, /<cy-btn/);
@@ -261,7 +261,7 @@ test('G3 控件分型：筛选 chip 为胶囊，主题编辑器整屏只留一�
   // 「胶囊 + 选中反色」两条语义改到组件源码上锁,页面只须真的用 chip 档。
   const ledgerWxml = read('pages/merchant/ledger/index.wxml');
   assert.match(ledgerWxml, /<cy-tabs[^>]*variant="chip"[^>]*bind:change="onRedemptionFilter"/,
-    '核销筛选必须走 cy-tabs chip 档,不许回退自绘药丸');
+    '核销筛选必须走 cy-tabs chip 档，不许回退自绘药丸');
   const tabsWxss = read('components/cy/tabs/index.wxss');
   assert.match(rule(tabsWxss, '.cy-tabs--chip .cy-tabs__item'), /border-radius:\s*var\(--cy-radius-pill\)/);
   assert.match(rule(tabsWxss, '.cy-tabs--chip .cy-tabs__item--on'), /background:\s*var\(--cy-color-action-primary-bg\)/);
@@ -314,7 +314,7 @@ function loadCouponPage() {
   const pagePath = path.join(ROOT, 'subpackageMember/coupon/coupon.js');
   const previous = { Page: global.Page, getApp: global.getApp, wx: global.wx };
   const requests = [];
-  global.getApp = () => ({ sendRequest(options) { requests.push(options); } });
+  global.getApp = () => ({ getUserID: () => 42, sendRequest(options) { requests.push(options); } });
   global.wx = {};
   let definition;
   global.Page = (config) => { definition = config; };
@@ -370,7 +370,7 @@ test('G3 优惠券失败态负控：非数组成功体不能伪装成真实空�
   }
 });
 
-test('G3 据点二维码缺失时进入可重试错误态，不用占位块伪装成功', () => {
+test('G3 节点二维码缺失时进入可重试错误态，不用占位块伪装成功', () => {
   const wxml = read('pages/merchant/citynode/index.wxml');
   const wxss = read('pages/merchant/citynode/index.wxss');
   assert.match(wxml, /posterSheet\.state === 'error'[\s\S]*retry="重新取码"[\s\S]*bind:retry="retryPosterCode"/);

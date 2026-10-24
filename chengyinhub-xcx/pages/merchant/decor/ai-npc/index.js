@@ -8,8 +8,10 @@
 // 能不上传就不上传 —— 端上处理完只传处理后的结果,原图不出手机。
 const app = getApp();
 const toast = require('../../../../utils/toast.js');
+const modal = require('../../../../utils/modal.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const pixelAvatar = require('../../../../utils/pixel-avatar.js');
+const profileReview = require('../../../../utils/profile-review.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
 // 单文件限额与共享上传入口同一真源(生产 application.yml 10MB),避免页面自定 20MB 与服务端脱节。
 const { MAX_UPLOAD_FILE_SIZE } = require('../../../../utils/transport/upload-client.js');
@@ -62,6 +64,8 @@ Page({
     knowledge: '',
     auditStatus: null,
     auditReason: '',
+    // W10b #25:服务端审核回执翻成的一句话(人设审核 / 玩家能否看到 / 形象图复核);读不到为空,不编造。
+    reviewText: '',
     savedAvatar: '',
     hasProfile: false,
     presetVisible: false,
@@ -112,6 +116,7 @@ Page({
   },
   onHide() {
     this._hidden = true;
+    this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
     this._voiceHoldReleased = true;
     clearTimeout(this._voiceTimer);
     if (this.data.voiceSessionActive && this._voiceRecorder) {
@@ -149,26 +154,48 @@ Page({
           if (res && String(res.code) === '200') resolve(res);
           else reject(Error((res && res.msg) || '请求失败，请重试'));
         },
-        successStatusAbnormal: (res) => reject(Error((res && res.msg) || '请求失败，请重试')),
-        fail: () => reject(Error('网络异常，请稍后重试')),
+        // transport=true:没拿到业务回执,写请求可能已在服务端生效(H 原音色:只有这类才进入 UNKNOWN)
+        successStatusAbnormal: (res) => reject(Object.assign(Error((res && res.msg) || '请求失败，请重试'), { transport: true })),
+        fail: () => reject(Object.assign(Error('网络异常，请稍后重试'), { transport: true })),
       })
     );
   },
   _loadProfile() {
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     this.setData({ loading: true, loadError: '' });
     this._request('/api/merchant/npc/profile')
       .then((res) => {
-        if (this._destroyed) return;
+        if (!current()) return;
+        this._photoMember = this._voiceMember = memberId;
         const d = res.data || {},
           avatar = String(d.avatar || '');
         this._saved = { avatar, name: d.name || '', greeting: d.greeting || '', persona: d.persona || '', knowledge: d.knowledge || '' };
         (Object.assign(this.data, {hasProfile: !!avatar, savedAvatar: avatar}), this.setData({loading: false, name: this._saved.name, greeting: this._saved.greeting, persona: this._saved.persona, knowledge: this._saved.knowledge, auditStatus: d.auditStatus == null ? null : Number(d.auditStatus), auditReason: d.auditReason || '', voiceStatus: Number(d.voiceStatus) || 0}, () => this.restoreAvatar()));
         this.refreshVoice();
+        this._loadReview();
       })
       .catch((e) => {
-        if (!this._destroyed) this.setData({ loading: false, loadError: e.message });
+        if (current()) this.setData({ loading: false, loadError: e.message });
       });
     this._loadStorePoint();
+  },
+  _loadReview() {
+    const memberId = String(app.getUserID() || '');
+    const seq = (this._reviewSeq || 0) + 1;
+    this._reviewSeq = seq;
+    const current = () => !this._destroyed && seq === this._reviewSeq && String(app.getUserID() || '') === memberId;
+    app.sendRequest({
+      url: '/api/merchant/npc/review',
+      method: 'GET',
+      hideLoading: true,
+      autoErrorToast: false,
+      success: (res) => {
+        if (!current()) return;
+        this.setData({ reviewText: res && String(res.code) === '200' ? profileReview.merchantNpcText(res.data) : '' });
+      },
+      fail: () => { if (current()) this.setData({ reviewText: '' }); },
+    });
   },
 
   /**
@@ -417,6 +444,8 @@ Page({
   // ===== 照片 =====
 
   choosePhoto(e) {
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     if (this.data.saving || this.data.processing) return;
     const sourceType = ['album'];
     wx.chooseMedia({
@@ -425,6 +454,7 @@ Page({
       sourceType: sourceType,
       sizeType: ['compressed'],
       success: (res) => {
+        if (!current()) return;
         const file = res.tempFiles && res.tempFiles[0];
         if (!file || !file.tempFilePath) return;
         this._cropThenProcess(file.tempFilePath);
@@ -435,12 +465,15 @@ Page({
   /** 先让商家自己裁一刀。没有人脸检测的情况下,人自己框比任何启发式都准。 */
   _cropThenProcess(src) {
     const that = this;
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     if (typeof wx.cropImage === 'function') {
       wx.cropImage({
         src: src,
         cropScale: '1:1',
-        success: (r) => that._processPhoto(r.tempFilePath || src),
+        success: (r) => { if (current()) that._processPhoto(r.tempFilePath || src); },
         fail: (e) => {
+          if (!current()) return;
           if (!/cancel/i.test(e.errMsg || '')) that.setData({ photoError: '裁剪失败，请重新选择照片' });
         },
       });
@@ -456,14 +489,18 @@ Page({
    * 商家没裁的话按 squareCrop 猜一个框,那个默认值是拿真实半身照试出来的。
    */
   _processPhoto(tempPath) {
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     this.setData({ processing: true, photoError: '' });
     const that = this;
     this._canvas('#npc-work')
       .then((cv) => {
+        if (!current()) return;
         const g = cv.getContext('2d');
         return new Promise((resolve, reject) => {
           const img = cv.createImage();
           img.onload = () => {
+            if (!current()) { resolve(null); return; }
             const box = pixelPortrait.squareCrop(img.width, img.height);
             const SIDE = 256;
             cv.width = SIDE;
@@ -478,7 +515,8 @@ Page({
         });
       })
       .then((portrait) => {
-        if (that._destroyed) return;
+        if (!current()) return;
+        that._photoMember = memberId;
         that._portrait = portrait;
         that.setData({ source: 'photo', photoReady: true, uploadedUrl: '' }, () => {
           that.setData({ processing: false });
@@ -487,14 +525,18 @@ Page({
         });
       })
       .catch(() => {
+        if (!current()) return;
         that.setData({ processing: false, photoError: '照片处理失败，换一张清晰正面照片试试' });
       });
   },
 
   /** 把处理好的像素画导出成图片文件,准备上传。导出用更大的倍数,marker 和主页都够用。 */
   _exportPortrait() {
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     const that = this;
     return this._canvas('#npc-work').then((cv) => {
+      if (!current()) return;
       const side = 32 * EXPORT_SCALE;
       cv.width = side;
       cv.height = side;
@@ -527,19 +569,26 @@ Page({
   },
 
   persistProfile(payload, onSuccess) {
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     if (this.data.saving) return;
     this.setData({ saving: true, saveError: '' });
     return this._request('/api/merchant/npc/save', payload)
-      .then(() => {
-        if (this._destroyed) return;
+      .then((res) => {
+        if (!current()) return;
+        const receipt = res && res.receipt;
         this._saved = Object.assign({}, payload);
         this._portrait = null;
         (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
+        this._reviewSeq = (this._reviewSeq || 0) + 1;
+        this.setData({ reviewText: profileReview.merchantNpcText(receipt) });
+        if (!receipt) this._loadReview();
         if (onSuccess) onSuccess();
-        toast.success('角色已更新');
+        // 保存 ≠ 上线:改动会回到待审,审核通过前玩家看不到。
+        toast.success(receipt && receipt.review === 'APPROVED' ? '角色已更新' : '已提交审核');
       })
       .catch((e) => {
-        if (!this._destroyed) this.setData({ saving: false, saveError: e.message });
+        if (current()) this.setData({ saving: false, saveError: e.message });
       });
   },
   /**
@@ -548,8 +597,12 @@ Page({
    * 当第一个参数传进来,所以只认函数。
    */
   save(onSaved) {
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     if (this.data.saving || this.data.processing) return;
     if (!this.data.name.trim()) return this.editField({ currentTarget: { dataset: { key: 'name' } } });
+    if (this.data.source === 'photo' && this._photoMember !== memberId)
+      return toast('登录状态已变更，请重新选择照片');
     if (this.data.source === 'photo' && !this.data.photoReady)
       return toast('先选择一张照片');
     this.setData({ saving: true, saveError: '' });
@@ -557,11 +610,11 @@ Page({
       this.data.source === 'preset'
         ? Promise.resolve(pixelAvatar.stringifyCode(this.data.presetId))
         : this._portrait
-        ? this._exportPortrait().then((path) => this._upload(path))
+        ? this._exportPortrait().then((path) => current() ? this._upload(path) : Promise.reject(Error('登录状态已变更')))
         : Promise.resolve(this.data.uploadedUrl);
     ready
       .then((avatar) => {
-        if (this._destroyed) return;
+        if (!current()) return;
         if (!avatar) throw Error('形象未就绪');
         // 上传成功后复用 URL，保存失败重试不重复上传。
         if (this.data.source === 'photo') {
@@ -578,7 +631,7 @@ Page({
         );
       })
       .catch((e) => {
-        if (!this._destroyed) this.setData({ saving: false, saveError: e.message });
+        if (current()) this.setData({ saving: false, saveError: e.message });
       });
   },
   openVoice() {
@@ -596,28 +649,35 @@ Page({
     if (this._audio) this._audio.stop();
   },
   refreshVoice() {
+    const memberId = String(app.getUserID() || '');
+    const version = this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
+    const current = () => !this._destroyed && !this._hidden && this._voiceStatusVersion === version
+      && String(app.getUserID() || '') === memberId;
     clearTimeout(this._voiceTimer);
     if (this._destroyed || this._hidden) return;
     return this._request('/api/merchant/npc/voice/status')
       .then((res) => {
-        if (this._destroyed) return;
+        if (!current()) return;
         const value = res.data || res,
           status = Number(value.voiceStatus);
         if (![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
-        const confirmed =
-          (status === 1 || status === 2) &&
-          this.data.voiceFile &&
-          value.voiceSample === this.data.voiceFile.url;
+        // PRIVATE-GROUP-H-voice-original-result:UNKNOWN 只能由「服务端样本 = 原录音」解除;
+        // 状态有效但样本还是旧的,说明原提交没确认,继续锁住重录/上传,等再次查询。
+        const original = !!(this.data.voiceFile && this.data.voiceFile.url) && value.voiceSample === this.data.voiceFile.url;
+        const confirmed = (status === 1 || status === 2) && original;
         this.setData({
           voiceStatus: status,
-          voiceSample: value.voiceSample || this.data.voiceSample,
-          voiceUnknown: false,
+          voiceSample: value.voiceSample || '',
+          voiceUnknown: this.data.voiceUnknown && !original,
           voiceFile: confirmed ? null : this.data.voiceFile,
         });
-        if (status === 1 && !this._hidden) this._voiceTimer = setTimeout(() => this.refreshVoice(), 5000);
+        if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
       })
       .catch((e) => {
-        if (!this._destroyed) this.setData({ voiceError: e.message });
+        if (!current()) return;
+        this.setData({ voiceError: e.message });
+        if (this.data.voiceStatus === 1)
+          this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
       });
   },
   onVoiceConsentChange(e) {
@@ -625,9 +685,11 @@ Page({
   },
   voiceRecorder() {
     if (this._voiceRecorder) return this._voiceRecorder;
+    const memberId = String(app.getUserID() || '');
+    this._voiceRecorderMember = memberId;
     const recorder = wx.getRecorderManager();
     this._voiceRecorderOnStop = (res) => {
-      if (this._destroyed) return;
+      if (this._destroyed || memberId !== String(app.getUserID() || '')) return;
       const durationMs = Number(res && res.duration) || 0;
       const size = Number(res && res.fileSize) || 0;
       if (this._discardVoiceStop) {
@@ -675,7 +737,7 @@ Page({
       });
     };
     this._voiceRecorderOnError = () => {
-      if (!this._destroyed) this.setData({
+      if (!this._destroyed && memberId === String(app.getUserID() || '')) this.setData({
         voiceFile: null,
         voiceHolding: false,
         voiceSessionActive: false,
@@ -693,6 +755,13 @@ Page({
     return recorder;
   },
   onVoiceHoldStart() {
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
+    // shortcut: 跨账号的原生录音句柄需重进页面释放；要支持同页换号录制时再重建会话。
+    if (this._voiceRecorder && this._voiceRecorderMember !== memberId) {
+      this.setData({ voiceError: '登录状态已变更，请退出页面后重新录音' });
+      return;
+    }
     if (this.data.voiceBusy || this.data.voiceStatus === 1 || this.data.voiceUnknown || this.data.voiceSentenceReady || this.data.voiceFinalizing || this.data.voiceHolding) return;
     if (!this.data.voiceConsent) {
       this.setData({ voiceError: '请确认这是本人声音或已获得声音使用授权' });
@@ -701,7 +770,8 @@ Page({
     this._voiceHoldReleased = false;
     const recorder = this.voiceRecorder();
     const begin = () => {
-      if (this._destroyed || this._hidden || this._voiceHoldReleased) return;
+      if (!current() || this._hidden || this._voiceHoldReleased) return;
+      this._voiceMember = memberId;
       this.audio().stop();
       if (this.data.voiceSessionActive) recorder.resume();
       else recorder.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
@@ -725,7 +795,7 @@ Page({
       })
       .catch(() => {
         this._voiceStarting = false;
-        if (!this._destroyed) this.setData({ voiceHolding: false, voiceError: '没有录音权限，请在设置里允许后重试' });
+        if (current()) this.setData({ voiceHolding: false, voiceError: '没有录音权限，请在设置里允许后重试' });
       });
   },
   onVoiceHoldEnd() {
@@ -756,6 +826,40 @@ Page({
       voiceFinalizing: true,
     });
     this._voiceRecorder.stop();
+  },
+  // BL-43:清除已生成的角色声音(POST /api/merchant/npc/voice/reset),二次确认后回读 voice/status。
+  // 「重新录音」只清本地录音,服务端旧音色在新音色生成前仍会被用来合成;这里才是真正停用旧音色。
+  clearVoice() {
+    if (this.data.voiceBusy || this.data.voiceUnknown || this._voiceClearing) return;
+    modal.show({
+      title: '清除角色声音？',
+      content: '清除后店铺角色不再用这段声音说话，需要重新录音生成才能恢复。',
+      confirmText: '清除',
+      danger: true,
+      success: (res) => { if (res && res.confirm) this._doClearVoice(); },
+    });
+  },
+  _doClearVoice() {
+    if (this._voiceClearing) return;
+    this._voiceClearing = true;
+    if (this._audio) this._audio.stop();
+    this.setData({ voiceBusy: true, voiceError: '', voicePlaying: false });
+    this._request('/api/merchant/npc/voice/reset')
+      .then(() => this.refreshVoice())
+      .then(() => {
+        this._voiceClearing = false;
+        if (this._destroyed) return;
+        if (this.data.voiceStatus === 0 && !this.data.voiceError) {
+          this.setData({ voiceBusy: false, voiceSample: '' });
+          toast('角色声音已清除');
+        } else {
+          this.setData({ voiceBusy: false, voiceError: this.data.voiceError || '声音状态还没更新，请稍后刷新再看' });
+        }
+      })
+      .catch((e) => {
+        this._voiceClearing = false;
+        if (!this._destroyed) this.setData({ voiceBusy: false, voiceError: e.message });
+      });
   },
   resetVoiceRecording() {
     if (this.data.voiceBusy || this.data.voiceUnknown) return;
@@ -808,15 +912,21 @@ Page({
     this.setData({ voicePlaying: true });
   },
   uploadVoice() {
+    const memberId = String(app.getUserID() || '');
+    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     if (this.data.voiceBusy || this.data.voiceStatus === 1 || this.data.voiceUnknown || !this.data.voiceFile)
       return;
+    if (this._voiceMember !== memberId) {
+      this.setData({ voiceError: '登录状态已变更，请重新录音' });
+      return;
+    }
     if (!this.data.voiceConsent) {
       this.setData({ voiceError: '请确认这是本人声音或已获得声音使用授权' });
       return;
     }
     this.audio().stop();
     this.setData({ voiceBusy: true, voiceError: '' });
-    const upload = this.data.voiceFile.url
+    const upload = () => this.data.voiceFile.url
       ? Promise.resolve(this.data.voiceFile.url)
       : new Promise((resolve, reject) => {
           app.getUploadClient().uploadAll([this.data.voiceFile.path], {
@@ -835,8 +945,9 @@ Page({
             },
           });
         });
-    upload
+    app.requestSeparateConsent('voice', current).then(() => current() ? upload() : null)
       .then((url) => {
+        if (!current()) return;
         this.setData({ 'voiceFile.url': url });
         this._voiceSubmitted = true;
         return this._request('/api/merchant/npc/voice/enroll', {
@@ -845,24 +956,33 @@ Page({
         });
       })
       .then((res) => {
-        if (this._destroyed) return;
+        if (!current()) return;
         const d = res.data || res;
+        // enroll 成功只会回 1(生成中)/2(已就绪);类型不对就当结果未知,保留原录音去回读
+        if (!(d.voiceStatus === 1 || d.voiceStatus === 2)) {
+          this.setData({ voiceBusy: false, voiceError: '声音结果待确认，请查询生成状态', voiceUnknown: true });
+          this.refreshVoice();
+          return;
+        }
         this.setData({
           voiceBusy: false,
-          voiceStatus: Number(d.voiceStatus),
+          voiceStatus: d.voiceStatus,
           voiceFile: null,
           voiceUnknown: false,
         });
         this.refreshVoice();
       })
       .catch((e) => {
-        if (this._destroyed) return;
-        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: !!this._voiceSubmitted });
+        if (!current()) return;
+        // 只有已发出 enroll 且没拿到明确业务回执(断网/HTTP 异常/后端「结果待确认」)才是 UNKNOWN;
+        // 明确的业务拒绝(未开通、上游拒绝等)是确定失败,保留录音可直接重试。
+        const unknown = !!this._voiceSubmitted && (e.transport === true || e.message === '声音结果待确认，请稍后查询状态');
+        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: unknown });
         // 可能已经提交成功，先查状态再允许重试，避免重复生成。
-        if (this._voiceSubmitted) this.refreshVoice();
+        if (unknown) this.refreshVoice();
       })
       .finally(() => {
-        this._voiceSubmitted = false;
+        if (current()) this._voiceSubmitted = false;
       });
   },
 });

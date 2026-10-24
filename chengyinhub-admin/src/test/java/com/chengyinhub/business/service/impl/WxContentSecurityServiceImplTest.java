@@ -157,6 +157,16 @@ class WxContentSecurityServiceImplTest {
         assertEquals("stable-test-token", service.refreshAccessToken());
     }
 
+    @Test
+    void disabledTextDetectionRefusesNonemptyContentInsteadOfPublishingUnchecked() {
+        WxContentSecurityServiceImpl service = new WxContentSecurityServiceImpl();
+        WxPayConfig config = new WxPayConfig();
+        ReflectionTestUtils.setField(config, "secCheckEnabled", false);
+        ReflectionTestUtils.setField(service, "wxConfig", config);
+        assertSame(IWxContentSecurityService.MSG_UNAVAILABLE, service.checkText("待检测内容", "openid"));
+        assertNull(service.checkText("", "openid"));
+    }
+
     private WxContentSecurityServiceImpl enabledTextService(WxContentSecurityServiceImpl service) {
         RedisCache redisCache = mock(RedisCache.class);
         when(redisCache.getCacheObject("wx:mini:access_token")).thenReturn("cached-token");
@@ -424,12 +434,122 @@ class WxContentSecurityServiceImplTest {
 
     @Test
     void missingOpenidFailsClosedWithoutPretendingBusy() {
-        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl());
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override
+            String sendPost(String url, String body, String contentType) {
+                throw new AssertionError("缺少有效 openid 不得调用微信");
+            }
+        });
+        for (String openid : new String[] {null, "", " \t\r\n", "\u3000"}) {
+            assertSame(IWxContentSecurityService.MSG_UNAVAILABLE, service.checkText("hello", openid));
+        }
+        RedisCache cache = (RedisCache) ReflectionTestUtils.getField(service, "redisCache");
+        verify(cache, never()).getCacheObject(anyString());
+    }
 
-        String result = service.checkText("hello", "");
+    @Test
+    void blankMediaOrOpenidDoesNotFetchTokenOrSubmitUncheckedMedia() {
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override
+            String sendPost(String url, String body, String contentType) {
+                throw new AssertionError("图片或 openid 为空白时不得调用微信");
+            }
+        });
+        for (String blank : new String[] {null, "", " \t\r\n", "\u3000"}) {
+            assertNull(service.checkMediaAsync("https://example.test/media.jpg", blank));
+            assertNull(service.checkMediaAsync(blank, "openid-valid"));
+        }
+        RedisCache cache = (RedisCache) ReflectionTestUtils.getField(service, "redisCache");
+        verify(cache, never()).getCacheObject(anyString());
+    }
 
-        assertSame(IWxContentSecurityService.MSG_UNAVAILABLE, result);
-        assertNotSame(IWxContentSecurityService.MSG_BUSY, result);
+    @Test
+    void validMediaAndOpenidStillSubmitAndReturnTrace() {
+        int[] calls = {0};
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override
+            String sendPost(String url, String body, String contentType) {
+                calls[0]++;
+                assertEquals("https://api.weixin.qq.com/wxa/media_check_async?access_token=cached-token", url);
+                assertEquals("application/json", contentType);
+                assertTrue(body.contains("\"openid\":\"openid-valid\""));
+                assertTrue(body.contains("\"media_url\":\"https://example.test/media.jpg\""));
+                return "{\"errcode\":0,\"trace_id\":\"trace-valid\"}";
+            }
+        });
+        assertEquals("trace-valid", service.checkMediaAsync("https://example.test/media.jpg", "openid-valid"));
+        assertEquals(1, calls[0]);
+    }
+
+    @Test
+    void blankOpenidsNeverReadTokenOrSendTextOrMediaReviews() {
+        java.util.concurrent.atomic.AtomicInteger requests = new java.util.concurrent.atomic.AtomicInteger();
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override String sendPost(String url, String body, String contentType) {
+                requests.incrementAndGet();
+                return "{\"errcode\":0,\"trace_id\":\"unexpected-trace\",\"result\":{\"suggest\":\"pass\"}}";
+            }
+        });
+        RedisCache redis = (RedisCache) ReflectionTestUtils.getField(service,"redisCache");
+        IWxContentCallbackInboxService inbox = mock(IWxContentCallbackInboxService.class);
+        ReflectionTestUtils.setField(service,"callbackInboxService",inbox);
+        for (String openid : new String[]{null,""," ","\t\r\n"}) {
+            assertSame(IWxContentSecurityService.MSG_UNAVAILABLE,service.checkText("待审核文本",openid));
+            assertNull(service.checkMediaAsync("https://fixture.invalid/photo.jpg",openid));
+            assertNull(service.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_SQUARE,
+                    42L,"https://fixture.invalid/photo.jpg",openid));
+            service.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_SQUARE,
+                    42L,"https://fixture.invalid/photo.jpg",openid);
+        }
+        assertEquals(0,requests.get());
+        org.mockito.Mockito.verifyNoInteractions(redis,inbox);
+    }
+
+    @Test
+    void blankMediaNeverReadsTokenOrSendsAnAsyncReview() {
+        java.util.concurrent.atomic.AtomicInteger requests = new java.util.concurrent.atomic.AtomicInteger();
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override String sendPost(String url, String body, String contentType) {
+                requests.incrementAndGet();
+                return "{\"errcode\":0,\"trace_id\":\"unexpected-trace\"}";
+            }
+        });
+        RedisCache redis = (RedisCache) ReflectionTestUtils.getField(service,"redisCache");
+        for (String media : new String[]{null,""," ","\t\r\n"}) {
+            assertNull(service.checkMediaAsync(media,"fixture-openid"));
+        }
+        assertEquals(0,requests.get());
+        org.mockito.Mockito.verifyNoInteractions(redis);
+    }
+
+    @Test
+    void validMediaKeepsItsActualOpenidAndRegistersOnlyTheReturnedReviewTrace() {
+        java.util.List<String> bodies = new java.util.ArrayList<>();
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override String sendPost(String url, String body, String contentType) {
+                assertTrue(url.contains("/wxa/media_check_async?access_token="));
+                assertEquals("application/json",contentType);
+                bodies.add(body);
+                return "{\"errcode\":0,\"trace_id\":\"fixture-review-trace\"}";
+            }
+        });
+        IWxContentCallbackInboxService inbox = mock(IWxContentCallbackInboxService.class);
+        when(inbox.register("fixture-review-trace",IWxContentSecurityService.BIZ_TYPE_SQUARE,
+                42L,"https://fixture.invalid/photo.jpg")).thenReturn(true);
+        ReflectionTestUtils.setField(service,"callbackInboxService",inbox);
+        assertEquals("fixture-review-trace",service.checkMediaAsync(
+                "https://fixture.invalid/photo.jpg","fixture-openid"));
+        assertEquals("fixture-review-trace",service.submitMediaCheckOne(
+                IWxContentSecurityService.BIZ_TYPE_SQUARE,42L,"https://fixture.invalid/photo.jpg","fixture-openid"));
+        assertEquals(2,bodies.size());
+        for (String body : bodies) {
+            com.alibaba.fastjson2.JSONObject payload = com.alibaba.fastjson2.JSON.parseObject(body);
+            assertEquals("fixture-openid",payload.getString("openid"));
+            assertEquals("https://fixture.invalid/photo.jpg",payload.getString("media_url"));
+            assertEquals(2,payload.getIntValue("version"));
+        }
+        verify(inbox).register("fixture-review-trace",IWxContentSecurityService.BIZ_TYPE_SQUARE,
+                42L,"https://fixture.invalid/photo.jpg");
     }
 
     @Test
@@ -891,5 +1011,140 @@ class WxContentSecurityServiceImplTest {
         current.setBizId(456L);
         current.setMediaHash(WxContentCallbackInboxServiceImpl.sha256Hex("https://o/right.png"));
         assertTrue(cap.getValue().isCurrent(current), "当前这版送检必须认得出");
+    }
+
+    // ===== 用户资料(BIZ_TYPE_MEMBER_PROFILE=4):作品图与联系二维码按字段处置 =====
+
+    private static com.chengyinhub.business.domain.UmsMember profileMember() {
+        com.chengyinhub.business.domain.UmsMember m = new com.chengyinhub.business.domain.UmsMember();
+        m.setId(42L);
+        m.setAvatar("https://o/upload/avatar.png");
+        m.setCasePics("https://o/upload/w1.png;https://o/upload/w2.png");
+        m.setWechat("https://o/upload/qr-new.png");
+        return m;
+    }
+
+    private IWxContentCallbackInboxService.Mutation captureProfileMutation(
+            WxContentSecurityServiceImpl service, String traceId, boolean risky) {
+        IWxContentCallbackInboxService inbox = mock(IWxContentCallbackInboxService.class);
+        when(inbox.isRegistered(traceId)).thenReturn(true);
+        when(inbox.process(eq(traceId), eq(risky), any(IWxContentCallbackInboxService.Mutation.class)))
+                .thenReturn(true);
+        ReflectionTestUtils.setField(service, "callbackInboxService", inbox);
+        service.handleMediaCheckResult(traceId, risky);
+        ArgumentCaptor<IWxContentCallbackInboxService.Mutation> cap =
+                ArgumentCaptor.forClass(IWxContentCallbackInboxService.Mutation.class);
+        verify(inbox).process(eq(traceId), eq(risky), cap.capture());
+        return cap.getValue();
+    }
+
+    private static WxContentCallbackInbox profileRow(String mediaUrl) {
+        WxContentCallbackInbox row = new WxContentCallbackInbox();
+        row.setBizType(IWxContentSecurityService.BIZ_TYPE_MEMBER_PROFILE);
+        row.setBizId(42L);
+        row.setMediaHash(WxContentCallbackInboxServiceImpl.sha256Hex(mediaUrl));
+        return row;
+    }
+
+    @Test
+    void riskyContactQrClearsOnlyTheQrAndKeepsApprovedWorks() {
+        com.chengyinhub.business.mapper.UmsMemberMapper memberMapper =
+                mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
+        when(memberMapper.selectUmsMemberById(42L)).thenReturn(profileMember());
+        when(memberMapper.clearRiskyProfileMedia(eq(42L), eq(false), eq(true), eq(false), any())).thenReturn(1);
+        WxContentSecurityServiceImpl service = service(mock(RedisCache.class), mock(ImMessageMapper.class));
+        ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
+
+        IWxContentCallbackInboxService.Mutation mutation = captureProfileMutation(service, "trace-qr", true);
+
+        assertTrue(mutation.apply(profileRow("https://o/upload/qr-new.png"), true));
+        verify(memberMapper).clearRiskyProfileMedia(42L, false, true, false, null);
+        verify(memberMapper, never()).clearProfileMedia(anyLong());
+    }
+
+    @Test
+    void riskyWorkImageRemovesOnlyThatImage() {
+        com.chengyinhub.business.mapper.UmsMemberMapper memberMapper =
+                mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
+        when(memberMapper.selectUmsMemberById(42L)).thenReturn(profileMember());
+        when(memberMapper.clearRiskyProfileMedia(eq(42L), eq(false), eq(false), eq(true), any())).thenReturn(1);
+        WxContentSecurityServiceImpl service = service(mock(RedisCache.class), mock(ImMessageMapper.class));
+        ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
+
+        IWxContentCallbackInboxService.Mutation mutation = captureProfileMutation(service, "trace-w1", true);
+
+        assertTrue(mutation.apply(profileRow("https://o/upload/w1.png"), true));
+        verify(memberMapper).clearRiskyProfileMedia(42L, false, false, true, "https://o/upload/w2.png");
+    }
+
+    @Test
+    void lateCallbackForReplacedQrIsStaleAndCannotTouchTheNewQr() {
+        com.chengyinhub.business.mapper.UmsMemberMapper memberMapper =
+                mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
+        when(memberMapper.selectUmsMemberById(42L)).thenReturn(profileMember());
+        WxContentSecurityServiceImpl service = service(mock(RedisCache.class), mock(ImMessageMapper.class));
+        ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
+
+        IWxContentCallbackInboxService.Mutation mutation = captureProfileMutation(service, "trace-qr-old", true);
+
+        assertFalse(mutation.isCurrent(profileRow("https://o/upload/qr-old.png")), "旧二维码回调不得盖新图");
+        assertTrue(mutation.isCurrent(profileRow("https://o/upload/qr-new.png")), "当前二维码必须认得出");
+    }
+
+    // ===== 门店分身头像(BIZ_TYPE_MERCHANT_NPC=18,bizId=npc_profile.id)=====
+
+    @Test
+    void merchantNpcAvatarViolationRejectsTheNpcAndNeverTouchesMerchantMedia() {
+        RedisCache redisCache = mock(RedisCache.class);
+        NpcProfileMapper npcMapper = mock(NpcProfileMapper.class);
+        MmsMerchantMapper merchantMapper = mock(MmsMerchantMapper.class);
+        when(redisCache.getCacheObject(anyString())).thenReturn("18:77");
+        WxContentSecurityServiceImpl service = service(redisCache, mock(ImMessageMapper.class));
+        ReflectionTestUtils.setField(service, "npcProfileMapper", npcMapper);
+        ReflectionTestUtils.setField(service, "mmsMerchantMapper", merchantMapper);
+        when(npcMapper.rejectMerchantNpcByContentSecurity(77L)).thenReturn(1);
+
+        assertTrue(service.handleMediaCheckResult("trace-mnpc-1", true));
+
+        verify(npcMapper).rejectMerchantNpcByContentSecurity(77L);
+        verify(merchantMapper, never()).clearProfileMedia(anyLong());
+    }
+
+    @Test
+    void passingMerchantNpcCallbackDoesNotSelfApprove() {
+        RedisCache redisCache = mock(RedisCache.class);
+        NpcProfileMapper npcMapper = mock(NpcProfileMapper.class);
+        when(redisCache.getCacheObject(anyString())).thenReturn("18:77");
+        WxContentSecurityServiceImpl service = service(redisCache, mock(ImMessageMapper.class));
+        ReflectionTestUtils.setField(service, "npcProfileMapper", npcMapper);
+
+        assertTrue(service.handleMediaCheckResult("trace-mnpc-2", false));
+
+        verify(npcMapper, never()).auditMerchantNpc(any());
+        verify(npcMapper, never()).rejectMerchantNpcByContentSecurity(anyLong());
+    }
+
+    @Test
+    void merchantNpcCurrentAvatarIsRecognisedAndOldAvatarIsStale() {
+        NpcProfileMapper npcMapper = mock(NpcProfileMapper.class);
+        NpcProfile row = new NpcProfile();
+        row.setId(77L);
+        row.setAvatar("https://o/upload/npc-new.png");
+        when(npcMapper.selectMerchantNpcById(77L)).thenReturn(row);
+        WxContentSecurityServiceImpl service = service(mock(RedisCache.class), mock(ImMessageMapper.class));
+        ReflectionTestUtils.setField(service, "npcProfileMapper", npcMapper);
+
+        IWxContentCallbackInboxService.Mutation mutation = captureProfileMutation(service, "trace-mnpc-3", false);
+
+        WxContentCallbackInbox stale = new WxContentCallbackInbox();
+        stale.setBizType(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC);
+        stale.setBizId(77L);
+        stale.setMediaHash(WxContentCallbackInboxServiceImpl.sha256Hex("https://o/upload/npc-old.png"));
+        assertFalse(mutation.isCurrent(stale), "连换两张头像,旧图的回调不得作用于新图");
+        WxContentCallbackInbox current = new WxContentCallbackInbox();
+        current.setBizType(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC);
+        current.setBizId(77L);
+        current.setMediaHash(WxContentCallbackInboxServiceImpl.sha256Hex("https://o/upload/npc-new.png"));
+        assertTrue(mutation.isCurrent(current));
     }
 }

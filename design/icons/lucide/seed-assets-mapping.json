@@ -1,0 +1,463 @@
+{
+  "schema_version": 1,
+  "asset_purpose": "Licensed image candidates for exact existing seeded records; route icons are identifiers, not maps.",
+  "field_contract": "ordinary image URL; no descriptor; local candidate path is not a deployed public URL",
+  "deployment_requirement": "Existing authenticated normal upload, real image review, independent approved media-registry and image-byte readback before any forward plan.",
+  "fixture_requirement": "Seven TEST_FIXTURE presets remain excluded from fresh production; no record insertion or enabling.",
+  "license": {
+    "path": "design/icons/lucide/LICENSE",
+    "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+    "primary_url": "https://lucide.dev/license",
+    "upstream_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/LICENSE",
+    "upstream_commit": "dab294f313897bacaa968b725b3259fa37c17bd1",
+    "terms": "ISC plus retained Feather-derived MIT notices"
+  },
+  "figma": {
+    "file_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook",
+    "page_id": "70:2",
+    "library": "Lucide",
+    "source_statement": "Based on Lucide open-source icons"
+  },
+  "records": [
+    {
+      "mapping_key": "preset-style-1",
+      "table": "preset_theme_style",
+      "field": "cover_img",
+      "natural_key": {
+        "name": "深夜城市探险",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "admin",
+        "sort": 1
+      },
+      "url_fingerprint": "1130839c8f45b866a5cf9501f93b9bb0683dbfb5f26d5bdd2443e7186212dbd8",
+      "source_file": "chengyinhub-admin/sql/seed_preset_demo.sql",
+      "source_sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
+      "execution_scope": "TEST_FIXTURE",
+      "icon_name": "moon-star",
+      "semantic_reason": "夜间城市探索的月星符号",
+      "figma_node_id": "591:3709",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-3709",
+      "svg": {
+        "path": "design/icons/lucide/moon-star.svg",
+        "sha256": "c39f4c61e2977f67623e7ab9b7281989cd78f262d9b9a5ef99dc363b2d864ff7",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/moon-star.png",
+        "sha256": "b0b6d8b229f8fa2c0e499adea740b095895dd7779e897d56dcda0386a490924a",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "e257f3c6ced4e4cf3ad946b6a9674831eacf37d7262daeb3ed7d987dddd12d83"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/moon-star.svg",
+      "upstream_svg_sha256": "276b71e005c4dbb7fffdfe05d0e66628675b48f4f56bfb88aed59261f3b61e56"
+    },
+    {
+      "mapping_key": "preset-style-2",
+      "table": "preset_theme_style",
+      "field": "cover_img",
+      "natural_key": {
+        "name": "咖啡漫游",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "admin",
+        "sort": 2
+      },
+      "url_fingerprint": "1130839c8f45b866a5cf9501f93b9bb0683dbfb5f26d5bdd2443e7186212dbd8",
+      "source_file": "chengyinhub-admin/sql/seed_preset_demo.sql",
+      "source_sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
+      "execution_scope": "TEST_FIXTURE",
+      "icon_name": "coffee",
+      "semantic_reason": "咖啡与漫游停靠点",
+      "figma_node_id": "591:4841",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-4841",
+      "svg": {
+        "path": "design/icons/lucide/coffee.svg",
+        "sha256": "a119192104aa29715f434cc891ac65399a89af351b0571471234c4895d141e35",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/coffee.png",
+        "sha256": "9dfe4268fbb3ee9632d30d17f63502ecf5804793f8a616377db1160003c5a2db",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "a2464da9232b4f997a5f15dce52d9a61081082ef85b47abf9f3fe00466efc0b4"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/coffee.svg",
+      "upstream_svg_sha256": "970595bdafac0df42c00b847d53fd00c2283ecc3b83881274de2aa7dbce2bbc8"
+    },
+    {
+      "mapping_key": "preset-style-3",
+      "table": "preset_theme_style",
+      "field": "cover_img",
+      "natural_key": {
+        "name": "复古胶片 Citywalk",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "admin",
+        "sort": 3
+      },
+      "url_fingerprint": "1130839c8f45b866a5cf9501f93b9bb0683dbfb5f26d5bdd2443e7186212dbd8",
+      "source_file": "chengyinhub-admin/sql/seed_preset_demo.sql",
+      "source_sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
+      "execution_scope": "TEST_FIXTURE",
+      "icon_name": "camera",
+      "semantic_reason": "胶片摄影主题",
+      "figma_node_id": "591:5205",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-5205",
+      "svg": {
+        "path": "design/icons/lucide/camera.svg",
+        "sha256": "0278acb602d19225b51cdd94f12d02367e6a62dfc1ef7567689ca0ad6d477c1f",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/camera.png",
+        "sha256": "c2eb6ac3e8b5e9ee3d3a02db62b2e14d8e529f2b6cf72c3a2650068653eea37d",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "64d7f3b9a2b212db541c86a9e56348f6ca07d6469dfce0a8b7bfdae3c36c956d"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/camera.svg",
+      "upstream_svg_sha256": "ebbb3178dd80dfd942770a2237fe7bfc3515c55c7daa9d3666933a656d2790e3"
+    },
+    {
+      "mapping_key": "preset-style-4",
+      "table": "preset_theme_style",
+      "field": "cover_img",
+      "natural_key": {
+        "name": "解谜街区",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "admin",
+        "sort": 4
+      },
+      "url_fingerprint": "1130839c8f45b866a5cf9501f93b9bb0683dbfb5f26d5bdd2443e7186212dbd8",
+      "source_file": "chengyinhub-admin/sql/seed_preset_demo.sql",
+      "source_sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
+      "execution_scope": "TEST_FIXTURE",
+      "icon_name": "puzzle",
+      "semantic_reason": "解谜主题",
+      "figma_node_id": "591:3399",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-3399",
+      "svg": {
+        "path": "design/icons/lucide/puzzle.svg",
+        "sha256": "0b7e631e7d146a6678d51cb54801d4b02fccf34ff31d19ce3496957909fe4178",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/puzzle.png",
+        "sha256": "4fd2c8f9f95f5956b9e67775c09b353d1ab375446b732c95e6819a6a13d68ae6",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "1d2caae397e0e71e6850d1225e70564387777a87cabef59e9f3c8c9bcf4d8a0e"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/puzzle.svg",
+      "upstream_svg_sha256": "6d80d0c3b214c96945ed0f1c6ee0e4c4ea3911c6cc91c75751fdba08c31eab02"
+    },
+    {
+      "mapping_key": "preset-route-1",
+      "table": "preset_route",
+      "field": "preview_img",
+      "natural_key": {
+        "city": "上海",
+        "name": "外滩夜线",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "admin",
+        "sort": 1
+      },
+      "url_fingerprint": "1130839c8f45b866a5cf9501f93b9bb0683dbfb5f26d5bdd2443e7186212dbd8",
+      "source_file": "chengyinhub-admin/sql/seed_preset_demo.sql",
+      "source_sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
+      "execution_scope": "TEST_FIXTURE",
+      "icon_name": "route",
+      "semantic_reason": "外滩线路标识，不表达实际街道几何",
+      "figma_node_id": "591:3275",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-3275",
+      "svg": {
+        "path": "design/icons/lucide/route.svg",
+        "sha256": "92108700de17f19bfded92af3eb11252dea3010c5c1a4bd77077c3ed4e236a34",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/route.png",
+        "sha256": "ceb87f7e5f8797f414c9dc0bd47e57d8f66f27f2fc6d941e9db2fe3bfba5d1bb",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "55ddcbba551cd74f968db36f2e238e9797386cc625acb67d4f5cb5c547fee250"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/route.svg",
+      "upstream_svg_sha256": "fc169fd38a9963b016ad6d60fd72baa2b0ea8e0cec085bbc53287297c3d8121a"
+    },
+    {
+      "mapping_key": "preset-route-2",
+      "table": "preset_route",
+      "field": "preview_img",
+      "natural_key": {
+        "city": "上海",
+        "name": "武康路文艺线",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "admin",
+        "sort": 2
+      },
+      "url_fingerprint": "1130839c8f45b866a5cf9501f93b9bb0683dbfb5f26d5bdd2443e7186212dbd8",
+      "source_file": "chengyinhub-admin/sql/seed_preset_demo.sql",
+      "source_sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
+      "execution_scope": "TEST_FIXTURE",
+      "icon_name": "waypoints",
+      "semantic_reason": "文艺漫步的多个停靠点，不表达实际点位",
+      "figma_node_id": "591:2449",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-2449",
+      "svg": {
+        "path": "design/icons/lucide/waypoints.svg",
+        "sha256": "24cef3fdd970764d9a330986df8f565d5db65db78d70d9ea1bf415c9ecfc14f4",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/waypoints.png",
+        "sha256": "3b53d6eaf85cba5b4c19fc2eb4235a3d1857fd8cdbb4ff766110111c7afe25c8",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "bd212050632dd5fbdd10544ba114d074e00f4df6e16947b2e55ceaf3781e0fcd"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/waypoints.svg",
+      "upstream_svg_sha256": "97f4eefc2548f3886749778befcdfb0620c8d9619799cbe3f1d2bb566b67dea9"
+    },
+    {
+      "mapping_key": "preset-route-3",
+      "table": "preset_route",
+      "field": "preview_img",
+      "natural_key": {
+        "city": "上海",
+        "name": "豫园老城线",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "admin",
+        "sort": 3
+      },
+      "url_fingerprint": "1130839c8f45b866a5cf9501f93b9bb0683dbfb5f26d5bdd2443e7186212dbd8",
+      "source_file": "chengyinhub-admin/sql/seed_preset_demo.sql",
+      "source_sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
+      "execution_scope": "TEST_FIXTURE",
+      "icon_name": "landmark",
+      "semantic_reason": "老城历史地标标识，不表达真实建筑或地图",
+      "figma_node_id": "591:4051",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-4051",
+      "svg": {
+        "path": "design/icons/lucide/landmark.svg",
+        "sha256": "9ad80c793e2f119859a8c50d1bfdd73227e25a24471671f71e17711361d0cdb7",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/landmark.png",
+        "sha256": "4957a5fb9a1ccfa3b2ff2010c9f95eaaa31ca7c8b5ba662b3a1ee076ee2ad32e",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "081dd5139f9f8ce7f16067b404db9eca7df53e8acb4757b6bc203240352579fb"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/landmark.svg",
+      "upstream_svg_sha256": "28408ef995796bffc390e8f217cdaa61e383627789d66300d4ff839248a3f144"
+    },
+    {
+      "mapping_key": "category-1",
+      "table": "sys_category",
+      "field": "icon",
+      "natural_key": {
+        "type": 1,
+        "category_name": "衣物洗护",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "seed_life_backup_categories_20260820",
+        "sort_id": 5
+      },
+      "url_fingerprint": "2c57ad1703fcda2a12a9aa9780e484056ad1b5023935e9d6d13f8d2b0b0b0ed9",
+      "source_file": "chengyinhub-admin/sql/migration_seed_life_backup_categories_20260820.sql",
+      "source_sha256": "c9fd5cd197b3e891631c8126554af391a021e7767f407edd44cad05a6303c9aa",
+      "execution_scope": "MANAGED_PRODUCTION_SEED",
+      "icon_name": "washing-machine",
+      "semantic_reason": "洗护服务",
+      "figma_node_id": "591:2461",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-2461",
+      "svg": {
+        "path": "design/icons/lucide/washing-machine.svg",
+        "sha256": "f88b3bea2b4d995e001d158aa14286e9e36fc45f301f24a1c9496ebed15df790",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/washing-machine.png",
+        "sha256": "3c7977b7fd726e902d13f8da88acc4c12950bd3c7a4e0d9334c934ce97bce2b2",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "aa4fd08a54ed51b9f178490a21a42a16291bf8e62788b37b1e9b5b52d3970f15"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/washing-machine.svg",
+      "upstream_svg_sha256": "47de24566c8f95282ffd4a80a10100295ef35a0c4163254a3d477e7a80945ed4"
+    },
+    {
+      "mapping_key": "category-2",
+      "table": "sys_category",
+      "field": "icon",
+      "natural_key": {
+        "type": 1,
+        "category_name": "家政维修",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "seed_life_backup_categories_20260820",
+        "sort_id": 6
+      },
+      "url_fingerprint": "2c57ad1703fcda2a12a9aa9780e484056ad1b5023935e9d6d13f8d2b0b0b0ed9",
+      "source_file": "chengyinhub-admin/sql/migration_seed_life_backup_categories_20260820.sql",
+      "source_sha256": "c9fd5cd197b3e891631c8126554af391a021e7767f407edd44cad05a6303c9aa",
+      "execution_scope": "MANAGED_PRODUCTION_SEED",
+      "icon_name": "wrench",
+      "semantic_reason": "家政维修服务",
+      "figma_node_id": "591:2403",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-2403",
+      "svg": {
+        "path": "design/icons/lucide/wrench.svg",
+        "sha256": "11fd1ab86fb02dfbe4ec384bc8af8e38bc0af6a664043ba174584f5b41ec07f8",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/wrench.png",
+        "sha256": "54324b6a77a17c5dea7f25d336fdd16ecde73594c15afb16daa0a07e28f42581",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "52aab70ddcf5e7ccefb2204e4e4ec40105bea0bbdfeccd89bd7752b624e7ea61"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/wrench.svg",
+      "upstream_svg_sha256": "b5f3bf792743edb9e81b543dd1b13ccc26d3afe1d33500a1cd8dee2e052d6197"
+    },
+    {
+      "mapping_key": "category-3",
+      "table": "sys_category",
+      "field": "icon",
+      "natural_key": {
+        "type": 1,
+        "category_name": "出行服务",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "seed_life_backup_categories_20260820",
+        "sort_id": 7
+      },
+      "url_fingerprint": "2c57ad1703fcda2a12a9aa9780e484056ad1b5023935e9d6d13f8d2b0b0b0ed9",
+      "source_file": "chengyinhub-admin/sql/migration_seed_life_backup_categories_20260820.sql",
+      "source_sha256": "c9fd5cd197b3e891631c8126554af391a021e7767f407edd44cad05a6303c9aa",
+      "execution_scope": "MANAGED_PRODUCTION_SEED",
+      "icon_name": "car-front",
+      "semantic_reason": "出行服务",
+      "figma_node_id": "591:5185",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-5185",
+      "svg": {
+        "path": "design/icons/lucide/car-front.svg",
+        "sha256": "7add22647b06441f6a3d0a1c85dbe3b5389ac430193e3ae01455f99584936297",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/car-front.png",
+        "sha256": "bff2add9059e5296ce39f65fc355d24515a6aeb5a125285e09496af097e1e9dc",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "823b9136e6666462c50da54194b994903ef0b958a2c47e6a399ef894023518bf"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/car-front.svg",
+      "upstream_svg_sha256": "9a0f210d67464e67dcf0bb17efced326ebe9df662905336428d720c071f9f739"
+    },
+    {
+      "mapping_key": "category-4",
+      "table": "sys_category",
+      "field": "icon",
+      "natural_key": {
+        "type": 1,
+        "category_name": "礼品纪念",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "seed_celebrate_topic_20260821",
+        "sort_id": 8
+      },
+      "url_fingerprint": "2c57ad1703fcda2a12a9aa9780e484056ad1b5023935e9d6d13f8d2b0b0b0ed9",
+      "source_file": "chengyinhub-admin/sql/migration_seed_celebrate_topic_20260821.sql",
+      "source_sha256": "62337f05837402aab16ab7603429c12081962d0b586e1282cc9b26f0012bc53a",
+      "execution_scope": "MANAGED_PRODUCTION_SEED",
+      "icon_name": "gift",
+      "semantic_reason": "礼品和纪念",
+      "figma_node_id": "591:4315",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-4315",
+      "svg": {
+        "path": "design/icons/lucide/gift.svg",
+        "sha256": "6ac17c1d07655dfa63286a86c4f7b8fb26d4864493633affa39e8296eb121da3",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/gift.png",
+        "sha256": "1334355b469bf9f6bc014e6a8dbfd247f226af3aa3a55a61eefec4dfbd9c4da2",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "1827bd346e8385bff3c584b292500761f621d01aeb40581941fe04eceedd7cb1"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/gift.svg",
+      "upstream_svg_sha256": "bc0651476bc7fdefa8d033f7b7572f9c8712aaca3b9196488442e6b4e76ed2a4"
+    },
+    {
+      "mapping_key": "category-5",
+      "table": "sys_category",
+      "field": "icon",
+      "natural_key": {
+        "type": 1,
+        "category_name": "生活美学",
+        "del_flag": 0
+      },
+      "source_marker": {
+        "create_by": "seed_new_city_lifestyle_category_20260821",
+        "sort_id": 9
+      },
+      "url_fingerprint": "2c57ad1703fcda2a12a9aa9780e484056ad1b5023935e9d6d13f8d2b0b0b0ed9",
+      "source_file": "chengyinhub-admin/sql/migration_seed_new_city_lifestyle_category_20260821.sql",
+      "source_sha256": "886618271d93b25ed5ed1f3cc93873609b86a864a3e60fa2a9ba1aaec2095504",
+      "execution_scope": "MANAGED_PRODUCTION_SEED",
+      "icon_name": "palette",
+      "semantic_reason": "生活美学及艺术服务",
+      "figma_node_id": "591:3573",
+      "figma_node_url": "https://www.figma.com/design/0kqS1aPs7etjkxjMZy6Bwc/城瘾-Brand-Handbook?node-id=591-3573",
+      "svg": {
+        "path": "design/icons/lucide/palette.svg",
+        "sha256": "04b62d9a5c001a15772784e2efffc080b3de02993108b583e305111cdb867a55",
+        "view_box": "0 0 24 24"
+      },
+      "png": {
+        "path": "design/icons/lucide/png/palette.png",
+        "sha256": "283778df4ed2b11c81a322c0cf0efbc7d809814b59f0bd4afa2bb9c1716a20e2",
+        "width": 192,
+        "height": 192,
+        "original_export_sha256": "66c1af21860eb7111944ca4484a7c1f7ffefe7cd14268df4f5ae434e40ff74fd"
+      },
+      "upstream_svg_url": "https://github.com/lucide-icons/lucide/blob/dab294f313897bacaa968b725b3259fa37c17bd1/icons/palette.svg",
+      "upstream_svg_sha256": "8e7d3fde990cffd10469ba351f27c50202b057a9bb9af5626322e53fd3abc78c"
+    }
+  ],
+  "png_normalization": {
+    "method": "UploadImagePolicy.sanitizeMetadata(existing actual compiled class)",
+    "java_version": "21.0.9",
+    "normalization_receipt_sha256": "718adff18ee26897b392b7d4acdc6a7d7c26e56f02be74f2ada04487b44e443e",
+    "original_vs_canonical_bytes_equal": false,
+    "all_12_RGBA_pixels_identical": true,
+    "pixels_checked_per_file": 36864,
+    "all_12_second_sanitize_bytes_idempotent": true,
+    "provider_calls": 0,
+    "uploads": 0,
+    "meaning": "Metadata sanitization only; no real upload or content-security approval."
+  }
+}

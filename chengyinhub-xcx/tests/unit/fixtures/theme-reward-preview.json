@@ -1,0 +1,40 @@
+{
+  "personal": {
+    "sessionId": 7,
+    "version": 8,
+    "grants": {"food": 5},
+    "actualGrants": [{"itemId":"food","quantity":5}],
+    "rewardSources": [
+      {"source":"quest:slot1:rewards:food","itemId":"food","quantity":2,"discarded":0},
+      {"source":"chapter:0:END:food","itemId":"food","quantity":1,"discarded":0},
+      {"source":"event:restock:food","itemId":"food","quantity":2,"discarded":0}
+    ],
+    "discardRewards": [], "finalUsed": 8, "capacity": 6, "overflow": true,
+    "previewVersion": "w2-preview-before",
+    "rewardOwners": [{
+      "ownerId": 7, "grants":{"food":5}, "actualGrants":{"food":5},
+      "rewardSources":[
+        {"source":"quest:slot1:rewards:food","itemId":"food","quantity":2,"discarded":0},
+        {"source":"chapter:0:END:food","itemId":"food","quantity":1,"discarded":0},
+        {"source":"event:restock:food","itemId":"food","quantity":2,"discarded":0}
+      ],
+      "discardRewards":[], "finalUsed":8, "capacity":6, "overflow":true
+    }]
+  },
+  "teamFacility": {
+    "result": {
+      "facilityKey":"f", "paidByTeamId":17, "targets":[17,18],
+      "rewardOwners":[
+        {"ownerId":17,"grants":{"food":3},"actualGrants":{"food":1},
+          "rewardSources":[{"source":"facility:restock:food","itemId":"food","quantity":3,"discarded":2}],
+          "discardRewards":[{"itemId":"food","quantity":2}],"finalUsed":6,"capacity":6,"overflow":false},
+        {"ownerId":18,"grants":{"food":3},"actualGrants":{"food":3},
+          "rewardSources":[{"source":"facility:restock:food","itemId":"food","quantity":3,"discarded":0}],
+          "discardRewards":[],"finalUsed":4,"capacity":6,"overflow":false}
+      ],
+      "capacity":6,"overflow":false,"previewVersion":"w2-facility-preview"
+    },
+    "player":{"teamId":17,"scope":"TEAM","status":"RUNNING","used":3,"capacity":6},
+    "expectedRevision":12,"authorityEpoch":4,"previewOnly":true
+  }
+}

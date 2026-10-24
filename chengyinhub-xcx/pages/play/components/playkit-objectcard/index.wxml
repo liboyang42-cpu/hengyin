@@ -17,7 +17,7 @@
 
     <view class="oc__vf" wx:if="{{phase === 'cam' || phase === 'proc' || phase === 'retry' || phase === 'note' || (phase === 'reveal' && !shotHidden)}}">
       <camera wx:if="{{phase === 'cam' && camOn}}" class="oc__live" device-position="back" flash="off" binderror="onCamError"></camera>
-      <view wx:elif="{{phase === 'cam'}}" class="oc__live oc__live--off">相机没打开，可以从相册选一张</view>
+      <view wx:elif="{{phase === 'cam'}}" class="oc__live oc__live--off">相机无法打开，可以从相册选一张</view>
       <image wx:else class="oc__live {{phase === 'retry' || phase === 'note' ? 'is-dim' : ''}}" src="{{shot}}" mode="aspectFill"
              aria-role="img" aria-label="刚拍的照片" />
     </view>

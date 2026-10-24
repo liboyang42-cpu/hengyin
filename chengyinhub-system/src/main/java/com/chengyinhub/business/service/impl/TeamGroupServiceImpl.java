@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
@@ -296,7 +296,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             CmsRegistration r, com.chengyinhub.business.domain.CmsActivity activity) {
         return RefundPolicy.evaluate(2L, r.getPaymentStatus(), r.getVerificationStatus(),
                 null, null, null, activity.getStartDate(), r.getPurchaseKind(),
-                r.getRefundDeadline(), new Date());
+                r.getRefundDeadline(), r.getPayableAmount(), r.getPointUsed(), new Date());
     }
 
     @Override
@@ -716,6 +716,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                     throw new ServiceException("有订单的钱已结算给主办或承办方，需平台人工处理后再取消主题",
                             HttpStatus.CONFLICT);
                 }
+                // F-L4-02:整单全额退款取代同单各票尚待审核的退款申请(CAS 置驳回、未打款)。必须在
+                // refundResolvingOrder 之前:整单退计算剩余现金时遇到待审单会 409,连带整场取消回滚。
+                for (CmsRegistration row : orderSnapshot.paidRows) {
+                    refundService.supersedePendingRegistrationRefunds(row.getId(), "主办方取消活动,全额退款");
+                }
                 // 上面已在锁内判过「无已核销」,不该走到转人工分支;真走到了说明快照与锁内事实不一致
                 if (!refundResolvingOrder(orderSnapshot.payer, orderSnapshot.payer.getTicketName(),
                         "主办方取消活动,全额退款", actorMemberId)) {
@@ -876,7 +881,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         // 这样「事务回滚了但微信单已关」的夹层就只剩「closeOrder 自身失败」这一种。
         for (PayingPlan plan : plans) {
             if (plan.action == PayingAction.APPLY_PAYMENT
-                    && !"SUCCESS".equalsIgnoreCase(cmsRegistrationService.handleWechatPayCallback(plan.wxOrder))) {
+                    && !"SUCCESS".equalsIgnoreCase(
+                            cmsRegistrationService.applyConfirmedWechatPaymentWithinTransaction(plan.wxOrder))) {
                 throw retryLater();
             }
         }
@@ -1221,7 +1227,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      */
     private boolean refundWholeOrder(CmsRegistration anyMember, String ticketName, String reason, Long actorMemberId) {
         // 查询按 parent_order_no 过滤,anyMember 自己必在结果里 ⇒ 不会为空,无需兜底分支。
-        List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNo(anyMember.getParentOrderNo());
+        List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(anyMember.getParentOrderNo(), Long.valueOf(2L).equals(anyMember.getOwnerType()) ? anyMember.getOwnerId() : null);
+        OrderRefundCash.assertOrderScope(order, anyMember);
         // FX-02(9-18 拍板 A,与场次取消同口径):仍已支付的票全核销 → 不退;部分核销 → 转人工工单
         // (整单退会把已用掉那张的钱一起退出去,拆票价又拆不出);都没核销 → 全额退。
         boolean hasVerified = false;
@@ -1448,6 +1455,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     private void refundOneAfterInventoryRestored(CmsRegistration r, BigDecimal cash, String ticketName, String reason) {
         boolean hasCash = cash != null && cash.compareTo(BigDecimal.ZERO) > 0;
         if (hasCash) {
+            // F-L4-02：待审核申请会让新退款单被拒并回滚整场取消；全额退款取代它（未打款，CAS 置驳回）。
+            refundService.supersedePendingRegistrationRefunds(r.getId(), reason);
             RefundApplication app = new RefundApplication();
             app.setSourceType("registration");
             app.setSourceId(r.getId());
@@ -1499,7 +1508,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             dispatch.run();
             return;
         }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 dispatch.run();

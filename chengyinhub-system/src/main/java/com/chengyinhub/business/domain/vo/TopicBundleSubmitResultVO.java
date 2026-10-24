@@ -7,6 +7,8 @@ import java.util.List;
 /** 专业主题 V2 保存后的审核合同。 */
 public class TopicBundleSubmitResultVO {
     private boolean published;
+    private boolean commercialAwaitingReview;
+    private String commercialNextStep;
     private final Long topicId;
     private final Long auditTaskId;
     private final String reviewState;
@@ -20,6 +22,10 @@ public class TopicBundleSubmitResultVO {
         this.bundledTemplateIds = Collections.unmodifiableList(new ArrayList<Long>(bundledTemplateIds));
     }
 
+    public boolean isCommercialAwaitingReview() { return commercialAwaitingReview; }
+    public void setCommercialAwaitingReview(boolean value) { this.commercialAwaitingReview = value; }
+    public String getCommercialNextStep() { return commercialNextStep; }
+    public void setCommercialNextStep(String value) { this.commercialNextStep = value; }
     public boolean isPublished() { return published; }
     public void setPublished(boolean published) { this.published = published; }
     public Long getTopicId() { return topicId; }

@@ -424,14 +424,68 @@ class TopicSaleFinalizationServiceImplTest {
         assertEquals("SALE_TICKET_PROJECTION_MISMATCH_NAME", error.getMessage());
     }
 
+    /** 俱乐部开团的活动票按复制口径带本场时间(OmsTicketServiceImpl.projectedStart/EndTime)，开售核对同一口径。 */
+    @Test
+    void clubSessionProjectionUsesTheSessionWindowButStillRejectsTamperedTimesAndFields() {
+        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
+        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+        CmsActivity session = new CmsActivity();
+        session.setId(802L); session.setTopicId(TOPIC_ID); session.setDelFlag(0); session.setClubId(7002L);
+        session.setStartDate(Date.from(Instant.parse("2026-08-20T02:00:00Z")));
+        session.setEndDate(Date.from(Instant.parse("2026-08-20T15:59:59Z")));
+        when(activityMapper.selectCmsActivityList(any(CmsActivity.class))).thenReturn(Collections.singletonList(session));
+        OmsTicket source = validTicket();
+        OmsTicket projected = validTicket();
+        projected.setStartTime(session.getStartDate());
+        projected.setEndTime(session.getEndDate());
+        when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenAnswer(invocation -> {
+            OmsTicket query = invocation.getArgument(0);
+            return Long.valueOf(2L).equals(query.getOwnerType())
+                    ? Collections.singletonList(projected) : Collections.singletonList(source);
+        });
+        ReflectionTestUtils.invokeMethod(service, "assertActivityTicketProjection", TOPIC_ID,
+                Collections.singletonList(source));
+
+        // 负控:场次票被改回主题旧日期 / 改了别的字段，仍拒绝。
+        projected.setEndTime(source.getEndTime());
+        IllegalStateException stale = assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(service, "assertActivityTicketProjection", TOPIC_ID,
+                        Collections.singletonList(source)));
+        assertEquals("SALE_TICKET_PROJECTION_MISMATCH_END_TIME", stale.getMessage());
+        projected.setEndTime(session.getEndDate());
+        projected.setPrice(new BigDecimal("1"));
+        IllegalStateException price = assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(service, "assertActivityTicketProjection", TOPIC_ID,
+                        Collections.singletonList(source)));
+        assertEquals("SALE_TICKET_PROJECTION_MISMATCH_PRICE", price.getMessage());
+    }
+
+    /** 非俱乐部活动(无 clubId)仍要求与主题票时间一致。 */
+    @Test
+    void nonClubActivityProjectionStillRequiresTopicTicketTimes() {
+        OmsTicket source = validTicket();
+        OmsTicket projected = validTicket();
+        projected.setEndTime(Date.from(Instant.parse("2026-08-20T15:59:59Z")));
+        when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenAnswer(invocation -> {
+            OmsTicket query = invocation.getArgument(0);
+            return Long.valueOf(2L).equals(query.getOwnerType())
+                    ? Collections.singletonList(projected) : Collections.singletonList(source);
+        });
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(service, "assertActivityTicketProjection", TOPIC_ID,
+                        Collections.singletonList(source)));
+        assertEquals("SALE_TICKET_PROJECTION_MISMATCH_END_TIME", error.getMessage());
+    }
+
     @Test
     void projectionAcceptsUnsetAndDefaultNoTeamSizeInBothDirections() {
         OmsTicket source = validTicket();
         OmsTicket projected = validTicket();
         source.setTeamSize(null);
         projected.setTeamSize(0);
-        ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", source, projected);
-        ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", projected, source);
+        ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", source, projected, new CmsActivity());
+        ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", projected, source, new CmsActivity());
     }
 
     @Test
@@ -441,8 +495,125 @@ class TopicSaleFinalizationServiceImplTest {
         source.setTeamSize(3);
         projected.setTeamSize(0);
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", source, projected));
+                () -> ReflectionTestUtils.invokeMethod(service, "assertTicketProjection", source, projected, new CmsActivity()));
         assertEquals("SALE_TICKET_PROJECTION_MISMATCH_TEAM_SIZE", error.getMessage());
+    }
+
+    @Test
+    void clubSessionsOnDifferentDatesUseTheirOwnActivityWindowsWhenFinalizing() {
+        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
+        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+        OmsTicket source = validTicket();
+        CmsActivity first = new CmsActivity();
+        first.setId(801L);
+        first.setTopicId(TOPIC_ID);
+        first.setClubId(7002L);
+        first.setStartDate(Date.from(Instant.parse("2026-08-12T02:00:00Z")));
+        first.setEndDate(Date.from(Instant.parse("2026-08-12T15:59:59Z")));
+        CmsActivity second = new CmsActivity();
+        second.setId(802L);
+        second.setTopicId(TOPIC_ID);
+        second.setClubId(7002L);
+        second.setStartDate(Date.from(Instant.parse("2026-08-13T02:00:00Z")));
+        second.setEndDate(Date.from(Instant.parse("2026-08-13T15:59:59Z")));
+        OmsTicket firstProjected = validTicket();
+        firstProjected.setStartTime(first.getStartDate());
+        firstProjected.setEndTime(first.getEndDate());
+        OmsTicket secondProjected = validTicket();
+        secondProjected.setStartTime(second.getStartDate());
+        secondProjected.setEndTime(second.getEndDate());
+        when(activityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Arrays.asList(first, second));
+        when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenAnswer(invocation -> {
+            OmsTicket query = invocation.getArgument(0);
+            if (!Long.valueOf(2L).equals(query.getOwnerType())) return Collections.singletonList(source);
+            return Collections.singletonList(first.getId().equals(query.getOwnerId())
+                    ? firstProjected : secondProjected);
+        });
+
+        assertEquals(Date.from(NOW), service.finalizeForSale(TOPIC_ID));
+
+        verify(topicMapper).finalizeForSale(TOPIC_ID, Date.from(NOW), Date.from(NOW));
+    }
+
+    @Test
+    void clubSessionMatchesTicketsByTheirProjectedWindowsBeforeComparingOtherTerms() {
+        CmsActivity activity = new CmsActivity();
+        activity.setId(801L);
+        activity.setClubId(7002L);
+        activity.setStartDate(Date.from(Instant.parse("2026-08-13T02:00:00Z")));
+        activity.setEndDate(Date.from(Instant.parse("2026-08-13T15:59:59Z")));
+        OmsTicket earlySource = validTicket();
+        earlySource.setSignupDeadline(Date.from(Instant.parse("2026-08-11T00:00:00Z")));
+        OmsTicket lateSource = validTicket();
+        lateSource.setStartTime(Date.from(Instant.parse("2026-08-19T02:00:00Z")));
+        lateSource.setEndTime(Date.from(Instant.parse("2026-08-20T02:00:00Z")));
+        lateSource.setSignupDeadline(Date.from(Instant.parse("2026-08-04T00:00:00Z")));
+        OmsTicket earlyProjected = validTicket();
+        earlyProjected.setStartTime(activity.getStartDate());
+        earlyProjected.setEndTime(activity.getEndDate());
+        earlyProjected.setSignupDeadline(earlySource.getSignupDeadline());
+        OmsTicket lateProjected = validTicket();
+        lateProjected.setStartTime(activity.getStartDate());
+        lateProjected.setEndTime(activity.getEndDate());
+        lateProjected.setSignupDeadline(lateSource.getSignupDeadline());
+        when(activityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Collections.singletonList(activity));
+        when(ticketMapper.selectOmsTicketList(any(OmsTicket.class)))
+                .thenReturn(Arrays.asList(lateProjected, earlyProjected));
+
+        ReflectionTestUtils.invokeMethod(service, "assertActivityTicketProjection",
+                TOPIC_ID, Arrays.asList(earlySource, lateSource));
+    }
+
+    @Test
+    void clubSessionStillRejectsStartAndEndThatDifferFromItsOwnActivity() {
+        assertProjectionTimeMismatch(true, "START_TIME");
+        assertProjectionTimeMismatch(true, "END_TIME");
+    }
+
+    @Test
+    void ordinaryActivityStillRejectsStartAndEndThatDifferFromItsSourceTicket() {
+        assertProjectionTimeMismatch(false, "START_TIME");
+        assertProjectionTimeMismatch(false, "END_TIME");
+    }
+
+    private void assertProjectionTimeMismatch(boolean clubSession, String field) {
+        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
+        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+        OmsTicket source = validTicket();
+        CmsActivity activity = new CmsActivity();
+        activity.setId(801L);
+        activity.setTopicId(TOPIC_ID);
+        activity.setStartDate(Date.from(Instant.parse("2026-08-13T02:00:00Z")));
+        activity.setEndDate(Date.from(Instant.parse("2026-08-13T15:59:59Z")));
+        if (clubSession) activity.setClubId(7002L);
+        OmsTicket projected = validTicket();
+        if (clubSession) {
+            projected.setStartTime(activity.getStartDate());
+            projected.setEndTime(activity.getEndDate());
+        }
+        if ("START_TIME".equals(field)) {
+            projected.setStartTime(new Date(projected.getStartTime().getTime() + 60000));
+        } else {
+            projected.setEndTime(new Date(projected.getEndTime().getTime() + 60000));
+        }
+        when(activityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Collections.singletonList(activity));
+        when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenAnswer(invocation -> {
+            OmsTicket query = invocation.getArgument(0);
+            return Collections.singletonList(Long.valueOf(2L).equals(query.getOwnerType())
+                    ? projected : source);
+        });
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.finalizeForSale(TOPIC_ID));
+
+        assertEquals("SALE_TICKET_PROJECTION_MISMATCH_" + field, error.getMessage());
+        verify(topicMapper, never()).finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class));
+        verify(saleSnapshotMapper, never()).insertSnapshot(any(TopicSaleSnapshot.class));
     }
 
     private void givenNonPerkRequiredSupply(String termsMode, BigDecimal fee, int quota) {

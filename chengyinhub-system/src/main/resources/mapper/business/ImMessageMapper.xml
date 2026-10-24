@@ -15,6 +15,7 @@
         <result property="extraJson"      column="extra_json"      />
         <result property="status"         column="status"          />
         <result property="checkStatus"    column="check_status"    />
+        <result property="visibleOrderAt" column="visible_order_at" />
         <result property="traceId"        column="trace_id"        />
         <result property="clientMessageId" column="client_message_id" />
         <result property="requestHash" column="request_hash" />
@@ -22,12 +23,14 @@
     </resultMap>
 
     <sql id="selectImMessageVo">
-        select id, conversation_id, sender_id, receiver_id, msg_type, content, extra_json, status, check_status, trace_id, client_message_id, request_hash, create_time from im_message
+        select id, conversation_id, sender_id, receiver_id, msg_type, content, extra_json, status, check_status, trace_id, client_message_id, request_hash, create_time,
+            date_format(coalesce(visible_at, create_time), '%Y-%m-%d %H:%i:%s.%f') as visible_order_at from im_message
     </sql>
 
     <insert id="insertImMessage" parameterType="ImMessage" useGeneratedKeys="true" keyProperty="id">
-        insert into im_message (conversation_id, sender_id, receiver_id, msg_type, content, extra_json, status, check_status, trace_id, client_message_id, request_hash, create_time)
-        values (#{conversationId}, #{senderId}, #{receiverId}, #{msgType}, #{content}, #{extraJson}, #{status}, #{checkStatus}, #{traceId}, #{clientMessageId}, #{requestHash}, sysdate())
+        insert into im_message (conversation_id, sender_id, receiver_id, msg_type, content, extra_json, status, check_status, trace_id, client_message_id, request_hash, create_time, visible_at)
+        values (#{conversationId}, #{senderId}, #{receiverId}, #{msgType}, #{content}, #{extraJson}, #{status}, #{checkStatus}, #{traceId}, #{clientMessageId}, #{requestHash}, now(6),
+            case when #{msgType} = 2 and (#{checkStatus} is null or #{checkStatus} != 1) then null else now(6) end)
     </insert>
 
     <select id="selectByClientMessageIdForUpdate" resultMap="ImMessageResult" useCache="false" flushCache="true">
@@ -48,6 +51,7 @@
         order by id desc limit 1
     </select>
 
+
     <select id="selectPage" resultMap="ImMessageResult">
         <include refid="selectImMessageVo"/>
         where conversation_id = #{conversationId} and status != 2
@@ -58,15 +62,73 @@
         limit #{size}
     </select>
 
+    <sql id="viewerVisible">
+        status != 2 and (msg_type != 2 or check_status = 1 or sender_id = #{viewerMemberId})
+    </sql>
+    <sql id="cursorVisibleAt">
+        select coalesce(visible_at, create_time) from im_message
+        where id = #{cursorId} and conversation_id = #{conversationId}
+          and <include refid="viewerVisible"/>
+    </sql>
+    <select id="selectVisiblePage" resultMap="ImMessageResult">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and <include refid="viewerVisible"/>
+        <if test="cursorId != null and cursorId > 0">
+            and (coalesce(visible_at, create_time) &lt; (<include refid="cursorVisibleAt"/>)
+                 or (coalesce(visible_at, create_time) = (<include refid="cursorVisibleAt"/>)
+                     and id &lt; #{cursorId}))
+        </if>
+        order by coalesce(visible_at, create_time) desc, id desc limit #{size}
+    </select>
+
+    <select id="selectLatestViewerVisibleForShare" resultMap="ImMessageResult" useCache="false" flushCache="true">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and <include refid="viewerVisible"/>
+        order by coalesce(visible_at, create_time) desc, id desc limit 1 lock in share mode
+    </select>
+
+    <select id="selectViewerVisibleByIdForShare" resultMap="ImMessageResult" useCache="false" flushCache="true">
+        <include refid="selectImMessageVo"/>
+        where id = #{id} and conversation_id = #{conversationId} and <include refid="viewerVisible"/>
+        lock in share mode
+    </select>
+
+    <!-- 增量游标不加可见过滤：游标消息事后被屏蔽时仍按其原位置续拉；游标行不存在时退回 id 水位，避免补拉卡死。 -->
+    <sql id="afterVisibleAt">
+        select coalesce(visible_at, create_time) from im_message
+        where id = #{afterId} and conversation_id = #{conversationId}
+    </sql>
+    <select id="selectVisibleAfter" resultMap="ImMessageResult" useCache="false">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and <include refid="viewerVisible"/>
+        <if test="afterId != null and afterId > 0">
+            and (coalesce(visible_at, create_time) &gt; (<include refid="afterVisibleAt"/>)
+                 or (coalesce(visible_at, create_time) = (<include refid="afterVisibleAt"/>)
+                     and id &gt; #{afterId})
+                 or ((<include refid="afterVisibleAt"/>) is null and id &gt; #{afterId}))
+        </if>
+        order by coalesce(visible_at, create_time) asc, id asc limit #{size}
+    </select>
+
     <update id="updateStatus">
         update im_message set status = #{status} where id = #{id}
     </update>
 
+    <!-- N-04 举报审核软封/恢复:只在 from→to 真实迁移时命中 1 行,调用方据此只调一次未读,
+         重复/并发的同向结论恒 0 行,不会把未读减两次。 -->
+    <update id="transitionStatus">
+        update im_message set status = #{toStatus} where id = #{id} and status = #{fromStatus}
+    </update>
+
     <update id="applyMediaCheckResult">
-        update im_message
-        set check_status = <choose><when test="risky">2</when><otherwise>1</otherwise></choose>
-            <if test="risky">, status = 2</if>
-        where id = #{id} and trace_id = #{traceId} and check_status = 0
+        update im_message msg
+        left join im_conversation c on c.id = msg.conversation_id and c.status = 0
+        left join im_conversation_member recipient on recipient.conversation_id = c.id
+            and recipient.member_id != msg.sender_id and (c.type != 4 or recipient.deleted = 0)
+        set msg.check_status = <choose><when test="risky">2</when><otherwise>1</otherwise></choose>
+            <if test="risky">, msg.status = 2</if>
+            <if test="!risky">, msg.visible_at = now(6), recipient.unread_count = recipient.unread_count + 1, recipient.deleted = 0</if>
+        where msg.id = #{id} and msg.trace_id = #{traceId} and msg.check_status = 0
     </update>
 
 </mapper>

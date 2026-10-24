@@ -58,7 +58,7 @@ function clubRow(overrides = {}) {
   }, overrides)
 }
 
-function loadPage(mutate) {
+function loadPage(mutate, realTransport) {
   let source = fs.readFileSync(path.join(ROOT, JS_PATH), 'utf8')
   if (mutate) {
     const changed = mutate(source)
@@ -69,8 +69,16 @@ function loadPage(mutate) {
   let stops = 0
   let definition
   const app = {
+    _memberId:1, getUserID() { return this._memberId },
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     sendRequest: (options) => requests.push(options),
+  }
+  if (realTransport) {
+    const { createRequestClient } = require(path.join(ROOT,'utils/transport/request-client.js'))
+    const client = createRequestClient({ wxRequest: options => { requests.push(options); return {abort(){}} },
+      getBaseUrl: () => 'http://127.0.0.1', getUserID: () => app._memberId,
+      reLogin: typeof realTransport === 'object' ? cb => { app._memberId = realTransport.loginMember || 2; cb(true,{isCurrentSession:() => true}) } : undefined })
+    app.sendRequest = options => client.send(options)
   }
   const sandbox = {
     getApp: () => app,
@@ -98,7 +106,7 @@ function loadPage(mutate) {
     data: JSON.parse(JSON.stringify(definition.data)),
     setData(patch) { Object.assign(this.data, patch) },
   })
-  return { page, requests, stops: () => stops }
+  return { page, app, requests, stops: () => stops }
 }
 
 test('缺少记录标识时停在缺参终态，不发送无法成立的请求', () => {
@@ -260,7 +268,7 @@ test('CU-C-41:source=club 按 topicId 从俱乐部结算汇总命中,走专用�
   requests[0].success({ code: 200, data: { topics: [clubRow()] } })
   assert.equal(page.data.loadState, 'ready')
   assert.equal(page.data.detail.built, 'club')
-  assert.equal(page.data.detail.id, 990028, '按 topicId 命中,不是结算行 id')
+  assert.equal(page.data.detail.id, 990028, '按 topicId 命中，不是结算行 id')
 })
 
 // 集成复审:俱乐部汇总是「一条结算记录一行」,同一主题可能多行 —— 带了行 id 就必须按 id 取,
@@ -284,7 +292,7 @@ test('CU-C-41:source=club 缺 clubId 停在缺参终态,不发注定失败的请
 
   const bad = loadPage()
   bad.page.onLoad({ source: 'club', topicId: '990028', clubId: '0' })
-  assert.equal(bad.requests.length, 0, 'clubId=0 也取不到数,不得发请求')
+  assert.equal(bad.requests.length, 0, 'clubId=0 也取不到数，不得发请求')
   assert.equal(bad.page.data.loadState, 'missing-param')
 })
 
@@ -305,7 +313,7 @@ test('CU-C-41:俱乐部行的金额/状态不齐时判数据错误,不把缺字�
 })
 
 test('CU-C-41:俱乐部视角不挂商家守卫(后端按 clubId + finance:read 准入)', () => {
-  assert.match(WXML, /<cy-access-gate[^>]*wx:if="\{\{source === 'ledger'\}\}"/, '商家守卫只能盖商家台账线')
+  assert.match(WXML, /<cy-access-gate[^>]*wx:if="\{\{source === 'ledger'\}\}"/, '商家守卫只能盖商家记录线')
   assert.doesNotMatch(WXML, /source !== 'finance'/, '新来源一律不得再落到商家守卫里')
 })
 
@@ -329,7 +337,7 @@ test('CU-C-41:俱乐部视角视图模型透传已格式化金额,未知不伪�
   assert.deepStrictEqual(ready.lines.map((item) => item.value), ['¥ 130.00', '¥ -2.00', '¥ 128.00'])
 
   const unverified = buildClubSettlementDetail(clubRow({ status: 'settled', amountStatus: 'unverified', amountText: null }))
-  assert.equal(unverified.amount, '—', '未核验不伪造成 0,也不算半个数')
+  assert.equal(unverified.amount, '—', '未核验不伪造成 0，也不算半个数')
   assert.equal(unverified.status, '待核验')
 
   const voided = buildClubSettlementDetail(clubRow({ status: 'void' }))
@@ -398,4 +406,159 @@ test('epoch 判据负控：移除迟到回调保护后旧失败会覆盖新刷�
   page.retryLoad()
   requests[0].fail({ errMsg: 'late' })
   assert.notEqual(page.data.loadState, 'loading', '负控应复现旧回调写入')
+})
+
+for (const sample of [
+    {options:{source:'ledger',id:'9'},data:{settlements:[merchantRow({revision:'old'})]}},
+    {options:{source:'finance',topicId:'7'},data:{topics:[financeRow({revision:'old'})]}},
+    {options:{source:'club',id:'31',topicId:'990028',clubId:'9'},data:{topics:[clubRow({revision:'old'})]}},
+  ]) {
+  test(sample.options.source + '结算换号后旧详情清除，旧在途请求不挡新账号读取', () => {
+    const e = loadPage(); e.page.onLoad(sample.options)
+    e.requests[0].success({code:200,data:sample.data})
+    e.page.load(); const old = e.requests[1]
+    e.app._memberId = 2; e.page.onShow()
+    assert.equal(e.requests.length,3,'换号不得被旧single-flight挡住')
+    assert.equal(e.page.data.detail,null,'新账号读取中不得展示旧金额')
+    assert.equal(e.page.data.loadState,'loading')
+    const stops = e.stops()
+    old.success({code:200,data:sample.data}); old.fail({errMsg:'request:fail timeout'})
+    assert.equal(e.page.data.detail,null); assert.equal(e.page.data.loadState,'loading')
+    assert.equal(e.stops(),stops,'旧回包不得结束新账号下拉刷新')
+    const empty = sample.options.source === 'ledger' ? {settlements:[]} : {topics:[]}
+    e.requests[2].success({code:200,data:empty})
+    assert.equal(e.page.data.loadState,'missing-record')
+  })
+}
+
+test('结算详情换号后不经onShow直接刷新也不保留旧金额', () => {
+  const e = loadPage(); e.page.onLoad({source:'finance',topicId:'7'})
+  e.requests[0].success({code:200,data:{topics:[financeRow({revision:'old'})]}})
+  e.app._memberId = 2; e.page.retryLoad()
+  assert.equal(e.page.data.detail,null)
+  e.requests[1].fail({errMsg:'request:fail timeout'})
+  assert.equal(e.page.data.loadState,'error','旧账号金额不得成为新账号stale-error')
+})
+
+test('结算详情同会员切角色后拒绝旧读取，返回按新角色刷新', () => {
+  const e = loadPage(); e.page.onLoad({source:'finance',topicId:'7'})
+  const old = e.requests[0]; e.app.globalData.role = 'club'
+  old.success({code:200,data:{topics:[financeRow()]}})
+  assert.equal(e.page.data.detail,null)
+  e.page.onShow(); assert.equal(e.requests.length,2)
+})
+
+test('结算来源、记录、俱乐部或记录键变化后旧回包不落到新上下文', () => {
+  for (const change of [
+    e => { e.page.data.recordId = '8' },
+    e => { e.page.data.source = 'ledger' },
+    e => { e.page._clubId = 10 },
+    e => { e.page._recordKey = 'id' },
+  ]) {
+    const e = loadPage(); e.page.onLoad({source:'finance',topicId:'7'})
+    const old = e.requests[0]; change(e)
+    old.success({code:200,data:{topics:[financeRow({topicId:Number(e.page.data.recordId)})]}})
+    old.fail({errMsg:'request:fail timeout'})
+    assert.equal(e.page.data.detail,null); assert.equal(e.page.data.loadState,'error')
+    e.page.load(); assert.equal(e.requests.length,2,'上下文变化必须允许新的读取')
+  }
+})
+
+test('结算详情隐藏时旧回包不落地，返回可重读；卸载后不再发送请求', () => {
+  const e = loadPage(); e.page.onLoad({source:'finance',topicId:'7'})
+  const old = e.requests[0]; e.page.onHide()
+  const before = JSON.stringify(e.page.data)
+  old.success({code:200,data:{topics:[financeRow()]}}); old.fail({errMsg:'request:fail timeout'})
+  assert.equal(JSON.stringify(e.page.data),before)
+  e.page.onShow(); assert.equal(e.requests.length,2)
+  e.requests[1].success({code:200,data:{topics:[financeRow()]}})
+  assert.equal(e.page.data.loadState,'ready')
+  e.page.onUnload(); e.page.retryLoad()
+  assert.equal(e.requests.length,2)
+})
+
+test('结算详情卸载后失败及成功无副作用，初次onShow不重复取数', () => {
+  const e = loadPage(); e.page.onLoad({source:'finance',topicId:'7'})
+  e.page.onShow(); assert.equal(e.requests.length,1)
+  e.page.onUnload(); const before = JSON.stringify(e.page.data); const stops = e.stops()
+  e.requests[0].success({code:200,data:{topics:[financeRow()]}})
+  e.requests[0].fail({errMsg:'request:fail timeout'})
+  assert.equal(JSON.stringify(e.page.data),before); assert.equal(e.stops(),stops)
+})
+
+test('未触发页面返回时，旧回包发现账号变化也会清除旧金额', () => {
+  const e = loadPage(); e.page.onLoad({source:'finance',topicId:'7'})
+  e.requests[0].success({code:200,data:{topics:[financeRow({revision:'old'})]}})
+  e.page.load(); e.app._memberId = 2
+  const stops = e.stops()
+  e.requests[1].fail({errMsg:'request:fail timeout'})
+  assert.equal(e.page.data.detail,null)
+  assert.equal(e.page.data.loadState,'error')
+  assert.equal(e.stops(),stops+1,'没有新请求时要结束本次旧身份刷新')
+  e.page.retryLoad(); assert.equal(e.requests.length,3)
+})
+
+test('当前服务器明确拒绝权限时不保留旧金额，网络失败仍保留', () => {
+  for (const fail of [false,true]) {
+    const e = loadPage(); e.page.onLoad({source:'finance',topicId:'7'})
+    e.requests[0].success({code:200,data:{topics:[financeRow({revision:'old'})]}})
+    e.page.load()
+    if (fail) e.requests[1].fail({statusCode:403,msg:'无权读取结算'})
+    else e.requests[1].success({code:403,msg:'无权读取结算'})
+    assert.equal(e.page.data.detail,null)
+    assert.equal(e.page.data.loadState,'error')
+    assert.match(e.page.data.errorText,/无权/)
+  }
+})
+
+test('俱乐部真实业务500拒绝口径与请先登录也清除旧金额', () => {
+  const java = fs.readFileSync(path.join(ROOT,'../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java'),'utf8')
+  for (const msg of ['仅主理人与联席主理人可查看分润','请先登录']) {
+    assert.ok(java.includes('return error("'+msg+'")'),'负控使用实际后端拒绝文案')
+    const e = loadPage(); e.page.onLoad({source:'club',id:'31',clubId:'9'})
+    e.requests[0].success({code:200,data:{topics:[clubRow()]}})
+    e.page.load(); e.requests[1].success({code:500,msg})
+    assert.equal(e.page.data.detail,null)
+    assert.equal(e.page.data.loadState,'error')
+  }
+})
+
+test('真实请求封装把HTTP403放在fail第二参数时也清除旧金额', () => {
+  const e = loadPage(null,true); e.page.onLoad({source:'finance',topicId:'7'})
+  e.requests[0].success({statusCode:200,data:{code:200,data:{topics:[financeRow()]}}})
+  assert.equal(e.page.data.loadState,'ready')
+  e.page.load()
+  e.requests[1].success({statusCode:403,data:{msg:'被禁止访问'}})
+  assert.equal(e.page.data.detail,null)
+  assert.equal(e.page.data.loadState,'error')
+})
+
+test('真实匿名首登完成后无需手动重试即可读取当前身份结算', () => {
+  const e = loadPage(null,{}); e.app._memberId = ''
+  e.page.onLoad({source:'finance',topicId:'7'})
+  e.requests[0].success({statusCode:401,data:{code:401}})
+  const result = {statusCode:200,data:{code:200,data:{topics:[financeRow({revision:'own-first-login'})]}}}
+  e.requests[1].success(result)
+  if (e.requests[2]) e.requests[2].success(result)
+  assert.ok(e.requests.length <= 3,'初次身份落地只需至多一次新的当前身份读取')
+  assert.equal(e.page.data.loadState,'ready')
+  assert.equal(e.page.data.detail.revision,'own-first-login')
+})
+
+test('成功码但金额字段畸形时不用“操作成功”充当错误说明', () => {
+  const e = loadPage(); e.page.onLoad({source:'finance',topicId:'7'})
+  e.requests[0].success({code:200,msg:'操作成功',data:{topics:[financeRow({settled:null})]}})
+  assert.equal(e.page.data.loadState,'error')
+  assert.equal(e.page.data.detail,null)
+  assert.match(e.page.data.errorText,/结算详情/)
+})
+
+test('真实请求封装同账号重登后旧code2仍拒绝时清除旧金额', () => {
+  const e = loadPage(null,{loginMember:1}); e.page.onLoad({source:'finance',topicId:'7'})
+  e.requests[0].success({statusCode:200,data:{code:200,data:{topics:[financeRow()]}}})
+  e.page.load(); e.requests[1].success({statusCode:200,data:{code:2,msg:'登录失效'}})
+  e.requests[2].success({statusCode:200,data:{code:2,msg:'登录失效'}})
+  assert.equal(e.page.data.detail,null)
+  assert.equal(e.page.data.loadState,'error')
+  assert.equal(e.requests.length,3,'旧鉴权失败不能无限重登')
 })

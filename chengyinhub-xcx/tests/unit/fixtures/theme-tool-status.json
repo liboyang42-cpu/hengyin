@@ -1,0 +1,466 @@
+{
+  "sources": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java:66-119",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GenericRouteRuntimeMySqlIT.java:184-227"
+  ],
+  "team": {
+    "scope": "TEAM",
+    "activityId": 5,
+    "sessionId": 7,
+    "teamId": 1,
+    "status": "RUNNING",
+    "revision": 12,
+    "authorityEpoch": 4,
+    "hpName": "体力",
+    "quests": [
+      {
+        "questKey": "north",
+        "nodeId": 11,
+        "title": "路线观察",
+        "operation": "QUEST_RESOLVE",
+        "enabled": true,
+        "disabledReason": null,
+        "limit": 1,
+        "count": 0,
+        "remainingCount": 1,
+        "countScope": "OWNER",
+        "trustedPass": true,
+        "costs": {},
+        "scope": "OWNER",
+        "targetScope": "OWNER",
+        "actionSummary": {
+          "questKey": "north",
+          "nodeId": 11,
+          "title": "路线观察",
+          "operation": "QUEST_RESOLVE",
+          "enabled": true,
+          "disabledReason": null,
+          "limit": 1,
+          "count": 0,
+          "remainingCount": 1,
+          "countScope": "OWNER",
+          "trustedPass": true,
+          "costs": {},
+          "scope": "OWNER",
+          "targetScope": "OWNER"
+        }
+      }
+    ],
+    "gameplay": {
+      "activeQuest": "north"
+    },
+    "interactionTools": [
+      {
+        "operation": "FACILITY_USE",
+        "kind": "FACILITY",
+        "operationKey": "rest",
+        "title": "补给点",
+        "enabled": true,
+        "disabledReason": null,
+        "limit": 3,
+        "count": 2,
+        "remainingCount": 1,
+        "countScope": "WORLD",
+        "trustedPass": false,
+        "costs": {},
+        "scope": "WORLD",
+        "targetScope": "PARTICIPANTS"
+      },
+      {
+        "operation": "FACILITY_USE",
+        "kind": "FACILITY",
+        "operationKey": "owner",
+        "title": "补给点",
+        "enabled": true,
+        "disabledReason": null,
+        "limit": 3,
+        "count": 1,
+        "remainingCount": 2,
+        "countScope": "OWNER",
+        "trustedPass": false,
+        "costs": {},
+        "scope": "OWNER",
+        "targetScope": "OWNER"
+      }
+    ],
+    "availableActions": [
+      "QUEST_START",
+      "QUEST_RESOLVE",
+      "FACILITY_USE",
+      "OPERATION_START",
+      "OPERATION_CANCEL"
+    ],
+    "world": {
+      "itemCatalog": [
+        {
+          "id": "food",
+          "name": "口粮",
+          "slotCost": 1
+        },
+        {
+          "id": "spare",
+          "name": "备用物资",
+          "slotCost": 2
+        }
+      ]
+    },
+    "contents": [],
+    "pending": {
+      "event:supply": {
+        "itemId": "spare",
+        "quantity": 1,
+        "slotCost": 2,
+        "slots": 2
+      }
+    }
+  },
+  "personal": {
+    "sessionId": 7,
+    "version": 8,
+    "status": "ACTIVE",
+    "hpName": "体力",
+    "itemCatalog": [
+      {
+        "id": "food",
+        "name": "口粮",
+        "slotCost": 1
+      },
+      {
+        "id": "spare",
+        "name": "备用物资",
+        "slotCost": 2
+      }
+    ],
+    "tools": [
+      {
+        "operation": "FACILITY_USE",
+        "kind": "FACILITY",
+        "operationKey": "rest",
+        "title": "补给点",
+        "enabled": true,
+        "disabledReason": null,
+        "limit": 3,
+        "count": 2,
+        "remainingCount": 1,
+        "countScope": "OWNER",
+        "trustedPass": false,
+        "costs": {},
+        "scope": "OWNER",
+        "targetScope": "OWNER"
+      }
+    ],
+    "contents": [],
+    "pending": {
+      "event:supply": {
+        "itemId": "spare",
+        "quantity": 1,
+        "slotCost": 2,
+        "slots": 2
+      }
+    },
+    "allowedActions": [
+      {
+        "operation": "FACILITY_USE",
+        "contentId": "rest"
+      }
+    ]
+  },
+  "reasons": [
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "limit_reached",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "LIMIT_REACHED",
+      "limit": 3,
+      "count": 3,
+      "remainingCount": 0,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "insufficient_resources",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "INSUFFICIENT_RESOURCES",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS",
+      "costOptions": [
+        {
+          "label": "物资",
+          "resourceCosts": [
+            {
+              "itemId": "food",
+              "quantity": 3
+            }
+          ],
+          "affordable": false,
+          "shortfall": [
+            {
+              "type": "ITEM",
+              "key": "food",
+              "missing": 2
+            },
+            {
+              "type": "STAT",
+              "key": "sys.hp",
+              "missing": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "not_arrived",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "NOT_ARRIVED",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "proof_pending",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "PROOF_PENDING",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "not_captain",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "NOT_CAPTAIN",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "session_ended",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "SESSION_ENDED",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "challenge_limit",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "CHALLENGE_LIMIT",
+      "limit": 3,
+      "count": 3,
+      "remainingCount": 0,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "team_completed",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "TEAM_COMPLETED",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "counterpart_completed",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "COUNTERPART_COMPLETED",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "rule_blocked",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "RULE_BLOCKED",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "task_active",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "TASK_ACTIVE",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "session_paused",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "SESSION_PAUSED",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    },
+    {
+      "operation": "FACILITY_USE",
+      "kind": "FACILITY",
+      "operationKey": "world_locked",
+      "title": "补给点",
+      "enabled": false,
+      "disabledReason": "WORLD_LOCKED",
+      "limit": 3,
+      "count": 2,
+      "remainingCount": 1,
+      "countScope": "WORLD",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "WORLD",
+      "targetScope": "PARTICIPANTS"
+    }
+  ],
+  "questPending": {
+    "questKey": "north",
+    "nodeId": 11,
+    "title": "路线观察",
+    "operation": "QUEST_RESOLVE",
+    "enabled": false,
+    "disabledReason": "PROOF_PENDING",
+    "limit": 1,
+    "count": 0,
+    "remainingCount": 1,
+    "countScope": "OWNER",
+    "trustedPass": false,
+    "costs": {},
+    "scope": "OWNER",
+    "targetScope": "OWNER",
+    "actionSummary": {
+      "questKey": "north",
+      "nodeId": 11,
+      "title": "路线观察",
+      "operation": "QUEST_RESOLVE",
+      "enabled": false,
+      "disabledReason": "PROOF_PENDING",
+      "limit": 1,
+      "count": 0,
+      "remainingCount": 1,
+      "countScope": "OWNER",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "OWNER",
+      "targetScope": "OWNER"
+    }
+  },
+  "questRestarted": {
+    "questKey": "north",
+    "nodeId": 11,
+    "title": "路线观察",
+    "operation": "QUEST_START",
+    "enabled": true,
+    "disabledReason": null,
+    "limit": 1,
+    "count": 0,
+    "remainingCount": 1,
+    "countScope": "OWNER",
+    "trustedPass": false,
+    "costs": {},
+    "scope": "OWNER",
+    "targetScope": "OWNER",
+    "actionSummary": {
+      "questKey": "north",
+      "nodeId": 11,
+      "title": "路线观察",
+      "operation": "QUEST_START",
+      "enabled": true,
+      "disabledReason": null,
+      "limit": 1,
+      "count": 0,
+      "remainingCount": 1,
+      "countScope": "OWNER",
+      "trustedPass": false,
+      "costs": {},
+      "scope": "OWNER",
+      "targetScope": "OWNER"
+    }
+  }
+}

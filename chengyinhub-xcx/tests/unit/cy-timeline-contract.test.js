@@ -76,7 +76,7 @@ function checkStatusColorContract(wxss) {
     const head = block.slice(0, block.indexOf('{'));
     if (/--cy-color-status-(success|info|danger)\b/.test(block)
         && !/\.cyt__(dot|line)--/.test(head)) {
-      throw new Error('状态色只能落在圆点/连线上,越界选择器:' + head.trim());
+      throw new Error('状态色只能落在圆点/连线上，越界选择器:' + head.trim());
     }
   });
 }
@@ -92,7 +92,7 @@ test('负控:把「已完成」的绿改成红,检查器必须判红', () => {
     '.cyt__dot--done     { background: var(--cy-color-status-danger); }'
   );
   // 第一行先证明变异真的发生了 —— 否则下面的 throws 可能是别的原因红的
-  assert.notEqual(mutated, original, '变异没生效,负控无效');
+  assert.notEqual(mutated, original, '变异没生效，负控无效');
   assert.match(mutated, /\.cyt__dot--done\s+\{ background: var\(--cy-color-status-danger\); \}/);
   assert.doesNotThrow(() => checkStatusColorContract(original), '干净源码必须判绿');
   assert.throws(() => checkStatusColorContract(mutated), /已完成|映射缺失或错位/);
@@ -101,7 +101,7 @@ test('负控:把「已完成」的绿改成红,检查器必须判红', () => {
 test('负控:把状态色搬到节点底色上,检查器必须判红', () => {
   const original = read(WXSS);
   const mutated = original + '\n.cyt__node--rejected { background: var(--cy-color-status-danger); }\n';
-  assert.notEqual(mutated, original, '变异没生效,负控无效');
+  assert.notEqual(mutated, original, '变异没生效，负控无效');
   assert.doesNotThrow(() => checkStatusColorContract(original));
   assert.throws(() => checkStatusColorContract(mutated), /只能落在圆点\/连线上/);
 });
@@ -163,7 +163,7 @@ test('折叠:收起时节点整块不渲染(wx:if,不是 hidden),尾注带引号
   const wxml = read(WXML);
   assert.match(wxml, /class="cyt__body"/);
   assert.match(wxml, /wx:if="\{\{!collapsible \|\| _open\}\}"/,
-    '折叠必须用 wx:if 摘掉整块;只靠 display:none 的话读屏仍会念出没展开的内容');
+    '折叠必须用 wx:if 摘掉整块；只靠 display:none 的话读屏仍会念出没展开的内容');
   assert.match(wxml, /aria-expanded="\{\{_open\}\}"/, '折叠头必须播报展开态');
   assert.match(wxml, /“\{\{item\.note\}\}”/, '尾部备注(拒绝理由)要带引号显示');
   assert.match(wxml, /\{\{item\.time\}\}/, '每个节点都要能渲染时间戳');
@@ -297,7 +297,7 @@ test('据点申请进度:先确认店址后配玩法,已完成的那站不能被
   self.refreshNodeTimeline.call(self);
   assert.deepEqual(plain(self.data.nodeTimeline.map((n) => n.status)),
     ['doing', 'done', 'todo', 'todo'],
-    '店址已确认还挂着完成时刻,却被画成未开始 —— 时间线自己打自己的脸');
+    '店址已确认还挂着完成时刻，却被画成未开始 —— 时间线自己打自己的脸');
 });
 
 test('据点申请进度:每一站带各自的完成时刻,没做的那站为空', () => {

@@ -10,6 +10,7 @@ public class GameSessionView {
     private String perspective;
     private String status;
     private Integer revision;
+    private Integer authorityEpoch;
     private Long currentChapterId;
     private String snapshotAt;
     private List<String> availableActions;
@@ -27,6 +28,8 @@ public class GameSessionView {
     public void setStatus(String status) { this.status = status; }
     public Integer getRevision() { return revision; }
     public void setRevision(Integer revision) { this.revision = revision; }
+    public Integer getAuthorityEpoch() { return authorityEpoch; }
+    public void setAuthorityEpoch(Integer authorityEpoch) { this.authorityEpoch = authorityEpoch; }
     public Long getCurrentChapterId() { return currentChapterId; }
     public void setCurrentChapterId(Long currentChapterId) { this.currentChapterId = currentChapterId; }
     public String getSnapshotAt() { return snapshotAt; }

@@ -1,0 +1,30 @@
+@import '../../../style/merchant-light.wxss';
+@import '../style/merchant-finance.wxss';
+
+/* BL-76:样式照 pages/merchant/aftercare,只换前缀。 */
+page { background: var(--cy-bg-page); }
+.vrl-page { min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); display: flex; flex-direction: column; }
+.vrl-scroll { flex: 1; min-height: 0; }
+.vrl-shell { box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); }
+.vrl-filter { display: block; margin-bottom: var(--cy-space-5); }
+.vrl-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cy-space-2); margin: 0 0 var(--cy-space-2); } /* 日期标题与卡片左右对齐 */
+.vrl-group-label { color: var(--cy-text-title); font-size: var(--cy-font-subtitle); font-weight: 700; }
+.vrl-group-total { color: var(--cy-text-secondary); font-size: var(--cy-font-label); font-variant-numeric: tabular-nums; }
+.vrl-row { min-height: var(--cy-btn-h); }
+.vrl-avatar { width: var(--cy-btn-h); height: var(--cy-btn-h); flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--cy-bg-subtle); color: var(--cy-text-title); }
+.vrl-status--success { color: var(--cy-color-status-success); }
+.vrl-status--neutral { color: var(--cy-text-secondary); }
+.vrl-sub { margin-top: var(--cy-space-1); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.vrl-more { display: block; padding: var(--cy-space-4) 0; text-align: center; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+
+/* pm20 */
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.vrl-group { filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * 31rpx); transition: filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-l-s, 0) * 0ms), calc(var(--pm-l-s, 0) * 0ms), 0s, 0s; }
+.vrl-group:nth-child(2) { transition-delay: calc(var(--pm-l-s, 0) * 30ms), calc(var(--pm-l-s, 0) * 30ms), 0s, 0s; }
+.vrl-group:nth-child(3) { transition-delay: calc(var(--pm-l-s, 0) * 60ms), calc(var(--pm-l-s, 0) * 60ms), 0s, 0s; }
+.vrl-group:nth-child(4) { transition-delay: calc(var(--pm-l-s, 0) * 90ms), calc(var(--pm-l-s, 0) * 90ms), 0s, 0s; }
+.vrl-group:nth-child(5) { transition-delay: calc(var(--pm-l-s, 0) * 120ms), calc(var(--pm-l-s, 0) * 120ms), 0s, 0s; }
+.vrl-group:nth-child(6) { transition-delay: calc(var(--pm-l-s, 0) * 150ms), calc(var(--pm-l-s, 0) * 150ms), 0s, 0s; }
+.vrl-group:nth-child(7) { transition-delay: calc(var(--pm-l-s, 0) * 180ms), calc(var(--pm-l-s, 0) * 180ms), 0s, 0s; }
+.vrl-group:nth-child(8) { transition-delay: calc(var(--pm-l-s, 0) * 210ms), calc(var(--pm-l-s, 0) * 210ms), 0s, 0s; }
+.vrl-group:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }

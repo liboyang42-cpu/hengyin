@@ -55,7 +55,7 @@ class TemplateMarketLifecycleMySqlIT {
                 MemberTemplateVO.class, TemplateLibraryVO.class, AuditTask.class, AuditRecord.class,
                 BusinessAuditEvent.class}) config.getTypeAliasRegistry().registerAlias(type.getSimpleName(), type);
         config.setEnvironment(new Environment("it", new SpringManagedTransactionFactory(), source));
-        for (String name : new String[]{"CmsMemberTemplate", "CmsTemplateLibrary", "AuditTask", "AuditRecord", "BusinessAuditEvent"}) {
+        for (String name : new String[]{"CmsMemberTemplate", "CmsTemplateLibrary", "AuditTask", "AuditRecord", "BusinessAuditEvent", "AppMediaAsset"}) {
             String resource = "mapper/business/" + name + "Mapper.xml";
             try (InputStream input = Resources.getResourceAsStream(resource)) {
                 new XMLMapperBuilder(input, config, resource, config.getSqlFragments()).parse();
@@ -73,12 +73,18 @@ class TemplateMarketLifecycleMySqlIT {
             assertTrue(menu.find(), "基础 SQL 必须包含 sys_menu 的真实 DDL");
             connection.createStatement().execute(menu.group());
             ItSchema.applyMigrations(connection, "sql/migration_p3_platform_foundation.sql",
-                    "sql/migration_audit_open_task_guard_20260721.sql", "sql/migration_business_audit_event_20260823.sql");
+                    "sql/migration_audit_open_task_guard_20260721.sql", "sql/migration_business_audit_event_20260823.sql",
+                    "sql/migration_20261012_app_media_asset.sql", "sql/migration_20261012_app_media_asset_namespaces.sql");
             String governance = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_approval_governance_20260828.sql")), java.nio.charset.StandardCharsets.UTF_8);
             java.util.regex.Matcher alter = java.util.regex.Pattern.compile("(?is)ALTER TABLE (?:audit_record|business_audit_event)\\s+.*?;").matcher(governance);
             int applied = 0;
             while (alter.find()) { connection.createStatement().execute(alter.group()); applied++; }
             assertEquals(2, applied, "审核治理的两条真实 ALTER 必须加载");
+            // FOLLOWUP-C-3:migration_audit_followup_20261020.sql 给 audit_record 加的列(该文件还要求社区申诉表,这里只取 audit_record 这一条)。
+            String followup = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_audit_followup_20261020.sql")), java.nio.charset.StandardCharsets.UTF_8);
+            java.util.regex.Matcher reasonCodes = java.util.regex.Pattern.compile("ALTER TABLE audit_record ADD COLUMN reason_codes_json JSON NULL COMMENT ''([^']*)''").matcher(followup);
+            assertTrue(reasonCodes.find(), "必须加载真实迁移里的 reason_codes_json 列定义");
+            connection.createStatement().execute("ALTER TABLE audit_record ADD COLUMN reason_codes_json JSON NULL COMMENT '" + reasonCodes.group(1) + "'");
         }
     }
 
@@ -100,6 +106,7 @@ class TemplateMarketLifecycleMySqlIT {
         field(auditTarget, "businessAuditEventMapper", sql.getMapper(BusinessAuditEventMapper.class));
         ObjectProvider<IImService> im = mock(ObjectProvider.class);
         when(im.getObject()).thenReturn(mock(IImService.class)); field(auditTarget, "imServiceProvider", im);
+        field(auditTarget, "mediaPublicationGuard", MediaPublicationMySqlFixture.guard(sql, members));
         audit = proxy(auditTarget);
         CmsMemberTemplateServiceImpl memberService = new CmsMemberTemplateServiceImpl();
         field(memberService, "cmsMemberTemplateMapper", members);
@@ -109,7 +116,104 @@ class TemplateMarketLifecycleMySqlIT {
         field(target, "memberTemplateService", memberService); field(target, "memberTemplateMapper", members);
         field(target, "templateLibraryService", libraryService); field(target, "libraryMapper", libraries);
         field(target, "auditTaskMapper", tasks); field(target, "auditTaskService", audit);
+        field(target, "capabilityGuard", mock(ICapabilityGuard.class));
+        field(target, "mediaPublicationGuard", MediaPublicationMySqlFixture.guard(sql, members));
         publish = proxy(target);
+    }
+
+    @Test
+    void legacy42ConfigsAdoptSaveAndIndependentReadbackWithoutLosingMechanics() throws Exception {
+        jdbc.execute("ALTER TABLE cms_template_library CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+        String[] seedFiles = {"migration_seed_merchant_game_a8_20260823.sql",
+                "migration_seed_merchant_game_b27_20260823.sql", "migration_seed_merchant_game_v51_20260827.sql"};
+        jdbc.execute("CREATE TABLE sys_category (id BIGINT AUTO_INCREMENT PRIMARY KEY, category_name VARCHAR(64), type INT, status INT, del_flag INT) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+        java.util.Set<String> categories = new java.util.LinkedHashSet<>();
+        for (String file : seedFiles) {
+            String text = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql", file)), java.nio.charset.StandardCharsets.UTF_8);
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(?m)^\\s*\\('[a-z0-9_]+', '[^'{}]+', '([^'{}]{1,64})'\\)[,;]?$" ).matcher(text);
+            while (matcher.find()) categories.add(matcher.group(1));
+        }
+        assertFalse(categories.isEmpty());
+        for (String category : categories) jdbc.update("INSERT INTO sys_category(category_name,type,status,del_flag) VALUES (?,1,1,0)", category);
+        // 采用链路的夹具读取真实种子配置，不宣称重放历史迁移。
+        // A8 历史脚本末尾仍检查旧封面路径；不改历史脚本、不绕过它的断言。
+        for (String file : seedFiles) {
+            String text = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql", file)), java.nio.charset.StandardCharsets.UTF_8);
+            java.util.Map<String, String[]> metadata = new java.util.LinkedHashMap<>();
+            java.util.regex.Matcher markers = java.util.regex.Pattern.compile("(?m)^-- TEMPLATE ([a-z0-9_]+)\\|([^|]+)\\|([^|]+)\\|").matcher(text);
+            while (markers.find()) metadata.put(markers.group(1), new String[]{markers.group(2), file.contains("_b27_") ? "0" : markers.group(3)});
+            java.util.regex.Matcher configs = java.util.regex.Pattern.compile("VALUES \\('([a-z0-9_]+)', '(\\{[\\s\\S]*?\\})'(?:, (?:NULL|'([\\s\\S]*?)'))?\\);").matcher(text);
+            while (configs.find()) {
+                String[] meta = metadata.get(configs.group(1)); assertNotNull(meta, file + ":" + configs.group(1));
+                CmsTemplateLibrary row = new CmsTemplateLibrary();
+                row.setTitle(meta[0]); row.setValidationMethod(Integer.parseInt(meta[1]));
+                String seedConfig = configs.group(2).replace("''", "'");
+                if ("rhythm_blind_guess".equals(configs.group(1))) {
+                    com.fasterxml.jackson.databind.JsonNode items = new com.fasterxml.jackson.databind.ObjectMapper()
+                            .readTree(seedConfig).path("random").path("items");
+                    assertEquals(3, items.size());
+                    String[] clips = {"one", "two", "three"};
+                    for (int index = 0; index < clips.length; index++)
+                        assertEquals("/audio/merchant-games/rhythm-" + clips[index] + ".mp3",
+                                items.get(index).path("audioUrl").asText());
+                }
+                row.setAdvancedConfigJson(seedConfig);
+                row.setPreferenceJson(configs.group(3) == null ? null : configs.group(3).replace("''", "'"));
+                row.setDescription("旧版较长的玩法介绍需要完整保留，采用与再次保存都不能静默截断或丢掉内容。");
+                row.setDuration(7L); row.setMemberId(100000L); row.setStatus(1L); row.setPublishStatus(1L); row.setDelFlag(0);
+                row.setCreateBy(file.replace("migration_", "").replace(".sql", ""));
+                assertEquals(1, libraries.insertCmsTemplateLibrary(row));
+            }
+        }
+        try (Connection connection = source.getConnection()) {
+            ItSchema.applyMigrations(connection, "sql/migration_20261012_legacy_game_v51_category_collation.sql");
+        }
+        assertEquals(42, count("cms_template_library"));
+        assertEquals(7, jdbc.queryForObject("SELECT COUNT(*) FROM cms_template_library WHERE create_by='seed_merchant_game_v51_20260827' AND activity_categoryids IS NOT NULL", Integer.class));
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.chengyinhub.business.service.support.AdvancedGameConfigValidator validator = new com.chengyinhub.business.service.support.AdvancedGameConfigValidator();
+        for (Long libraryId : jdbc.queryForList("SELECT id FROM cms_template_library ORDER BY id", Long.class)) {
+            CmsTemplateLibrary original = libraries.selectCmsTemplateLibraryById(libraryId);
+            com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest request = new com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest();
+            request.setOriginalTemplateId(libraryId); request.setAdoptSourceOnly(true); request.setTitle("客户端占位，不应保存");
+            Long draftId;
+            try { draftId = publish.saveOrUpdateDraft(request, 7L, "local-test-author"); }
+            catch (RuntimeException failure) {
+                throw new AssertionError("采用失败:library=" + libraryId + " title=" + original.getTitle()
+                        + "，种子配置保持原值，不跳过媒体准入", failure);
+            }
+            // 用独立物理连接回读，不依赖写事务或 Mapper 缓存。
+            try (Connection readback = java.sql.DriverManager.getConnection(MybatisItDatabase.url("template_market"), MybatisItDatabase.user(), MybatisItDatabase.password());
+                 java.sql.PreparedStatement query = readback.prepareStatement("SELECT member_id,original_template_id,title,description,duration,activity_categoryids,advanced_config_json,publish_status FROM cms_member_template WHERE id=?")) {
+                query.setLong(1, draftId);
+                try (java.sql.ResultSet row = query.executeQuery()) {
+                    assertTrue(row.next()); assertEquals(7L, row.getLong("member_id"));
+                    assertEquals(libraryId.longValue(), row.getLong("original_template_id"));
+                    assertEquals(original.getTitle(), row.getString("title"));
+                    assertEquals(original.getDescription(), row.getString("description"));
+                    assertEquals(original.getDuration().longValue(), row.getLong("duration"));
+                    assertEquals(original.getActivityCategoryids(), row.getString("activity_categoryids"));
+                    assertEquals(json.readTree(validator.validateAndNormalize(original.getAdvancedConfigJson())), json.readTree(row.getString("advanced_config_json")));
+                    assertEquals(0L, row.getLong("publish_status"));
+                }
+            }
+            CmsMemberTemplate own = members.selectCmsMemberTemplateById(draftId);
+            org.springframework.beans.BeanUtils.copyProperties(own, request, "duration", "adoptSourceOnly");
+            request.setDuration(Math.toIntExact(own.getDuration())); request.setAdoptSourceOnly(false);
+            assertEquals(draftId, publish.saveOrUpdateDraft(request, 7L, "local-test-author"));
+            assertEquals(json.readTree(own.getAdvancedConfigJson()), json.readTree(members.selectCmsMemberTemplateById(draftId).getAdvancedConfigJson()));
+        }
+        assertEquals(42, count("cms_member_template"), "续存不能重复创建");
+        jdbc.update("UPDATE cms_template_library SET activity_categoryids='999' WHERE title='今日城市签'");
+        try (Connection connection = source.getConnection()) { ItSchema.applyMigrations(connection, "sql/migration_20261012_legacy_game_v51_category_collation.sql"); }
+        assertEquals("999", jdbc.queryForObject("SELECT activity_categoryids FROM cms_template_library WHERE title='今日城市签'", String.class), "修复脚本不能覆盖作者分类");
+        jdbc.update("UPDATE cms_template_library SET activity_categoryids=NULL WHERE title='闭眼味觉师'");
+        jdbc.update("INSERT INTO sys_category(category_name,type,status,del_flag) VALUES ('美食烹饪',1,1,0)");
+        try (Connection connection = source.getConnection()) {
+            assertThrows(java.sql.SQLException.class,
+                    () -> ItSchema.applyMigrations(connection, "sql/migration_20261012_legacy_game_v51_category_collation.sql"), "同名品类不唯一必须拒绝，不能猜 ID");
+        }
+        assertNull(jdbc.queryForObject("SELECT activity_categoryids FROM cms_template_library WHERE title='闭眼味觉师'", String.class));
     }
 
     @Test

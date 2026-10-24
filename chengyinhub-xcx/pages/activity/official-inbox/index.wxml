@@ -4,15 +4,17 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar />
   <cy-page-title title="官方活动邀约" flush="{{true}}" />
-  <view class="oi-hero"><text class="oi-k">官方活动 · 承接关系</text><text class="oi-title">只处理属于你的本场职责</text><text class="oi-sub">平台点名邀请你履约的活动都在这里，这是官方活动唯一的承接入口。接受、拒绝和退出都会保留审计；被活动展示不等于已经承接。</text></view>
+
   <cy-skeleton wx:if="{{loading}}" type="list" count="3" />
-  <cy-error class="cy-fade-in" wx:elif="{{error}}" fill size="lg" title="邀约没有加载出来" sub="{{error}}" bind:retry="fetch" auto-back />
-  <cy-empty wx:elif="{{!invites.length}}" fill size="lg" kind="empty" title="暂无待处理的活动职责" sub="收到官方活动邀约后，会在这里确认或拒绝本场职责。" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{error}}" fill size="lg" title="邀约加载失败" sub="{{error}}" bind:retry="fetch" auto-back />
+  <cy-empty wx:elif="{{!invites.length}}" fill size="lg" kind="empty" title="暂无待处理的活动职责" />
   <view wx:else class="oi-list">
     <view wx:if="{{refreshing}}" class="oi-refreshing" aria-role="status" aria-live="polite">正在同步最新邀约…</view>
     <view wx:for="{{invites}}" wx:key="partyId" class="oi-card">
       <view class="oi-head"><view><text class="oi-event">{{item._display.eventTitle}}</text><text class="oi-meta">{{item._display.cityRole}}</text></view><text class="oi-status {{item.status}}">{{item._status}}</text></view>
-      <view class="oi-scope"><text>{{item._display.scope}}</text><text>{{item._window}}</text></view>
+      <text wx:if="{{item._roleNote}}" class="oi-role-note">{{item._role}}：{{item._roleNote}}</text>
+      <view class="oi-scope"><text>{{item._display.scope}}</text><text>{{item._window}}</text><text wx:if="{{item._capacity}}">{{item._capacity}}</text></view>
+      <text wx:if="{{item._paused}}" class="oi-paused" aria-role="status">{{item._paused}}</text>
       <text wx:if="{{item.responsibilitySummary}}" class="oi-summary">{{item.responsibilitySummary}}</text>
       <block wx:if="{{actionError && actionErrorPartyKey === item._partyKey}}">
         <cy-inline-error class="oi-action-error" kind="{{actionErrorKind}}" title="这次操作没有完成" sub="{{actionError}}" action="重试" bind:action="retryAction" />

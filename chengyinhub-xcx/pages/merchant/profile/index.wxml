@@ -10,13 +10,13 @@
 <cy-skeleton wx:if="{{state === 'loading' || state === 'redirecting'}}" type="card" count="{{skeletonItems.length}}" />
 
   <block wx:else>
-    <cy-error wx:if="{{state === 'network-error'}}" title="资料加载失败" sub="{{message}}"
+    <cy-error load-failure wx:if="{{state === 'network-error'}}" title="资料加载失败" sub="{{message}}"
               bind:retry="retryLoad" fill="{{true}}" size="lg" auto-back />
-    <cy-empty wx:elif="{{state === 'invalid'}}" title="链接参数无效"
-              sub="这个链接缺少商家或据点信息，无法确定要打开哪一页。"
+    <cy-empty wx:elif="{{state === 'invalid'}}" title="链接已失效"
+              sub="请返回重新进入"
               cta="回首页" bind:cta="goHome" fill="{{true}}" size="lg" kind="missing-param" />
     <cy-empty wx:else title="商家不存在或未开放"
-              sub="这家店暂时无法查看，去首页看看其他城市内容。"
+              sub=""
               cta="回首页" bind:cta="goHome" fill="{{true}}" size="lg" kind="empty" />
 
     <!-- 冷启动进来的没有上一页,只给「返回」等于把人困死;所以回首页恒在,返回按栈深出。 -->

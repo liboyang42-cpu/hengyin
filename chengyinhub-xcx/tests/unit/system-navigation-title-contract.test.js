@@ -36,7 +36,7 @@ const CUSTOM_NAV_PAGES = {
   'subpackageA/pages/infomation/infomation': '城瘾玩法',
   'subpackageA/pages/infomationdetail/infomationdetail': '玩法详情',
   'pages/publish/activity/index': '发布活动',
-  'pages/publish/templateadd/templateadd': '创建节点玩法',
+  // 2026-10-23 起名页 templateadd 退役删除,不再列入
 }
 
 const TOPICADD_REDIRECT_SHELL = 'pages/publish/topicadd/topicadd'
@@ -96,20 +96,20 @@ function assertCustomNavPage({ json, wxml }, expected, file) {
   assert.match(titleTag[0], titlePattern, `${file} 大标题文案必须与原生标题一致`)
   const navTag = wxml.match(/<cy-nav-bar[\s\S]*?(?:\/>|>)/)
   assert.doesNotMatch(navTag[0], /\stitle="[^"]+"/,
-    `${file} 已有返回钮下大标题,导航条上不能再挂 title(双标题)`)
+    `${file} 已有返回钮下大标题，导航条上不能再挂 title(双标题)`)
 }
 
 function assertSystemNavPage({ json }, expected, file) {
   const config = JSON.parse(json)
   assert.equal(config.navigationBarTitleText, expected, `${file} must provide its stable native title`)
   assert.notEqual(config.navigationStyle, 'custom',
-    `${file} 还没纳入导航统一改造,转 custom 就会失去系统返回钮而页面没有 cy-nav-bar 顶上`)
+    `${file} 还没纳入导航统一改造，转 custom 就会失去系统返回钮而页面没有 cy-nav-bar 顶上`)
 }
 
 function assertTitlelessCustomNavPage({ json, wxml, js }, expected, file) {
   const config = JSON.parse(json)
   assert.equal(config.navigationStyle, 'custom', `${file} 必须保留 custom 导航`)
-  assert.equal(config.navigationBarTitleText, expected, `${file} 仍须保留原生标题作为外部唤起兜底`)
+  assert.equal(config.navigationBarTitleText, expected, `${file} 仍须保留原生标题作为外部唤起保底`)
   assert.equal(config.usingComponents['cy-nav-bar'], '/components/cy/nav-bar/index', `${file} 必须注册 cy-nav-bar`)
   const navTag = wxml.match(/<cy-nav-bar[\s\S]*?(?:\/>|>)/)
   assert.ok(navTag, `${file} 必须保留返回出口`)
@@ -140,21 +140,21 @@ function assertFullscreenMapNavPage({ json, wxml, js }, expected, file) {
   assert.match(wxml, /class="smapso"[^>]*style="padding-top:\{\{navTop\}\}px; padding-right:\{\{navRight\}\}px;"/,
     `${file} 顶部整行必须消费 JS 按胶囊实测值下发的几何(navTop/navRight)`)
   assert.match(js, /getMenuButtonBoundingClientRect/,
-    `${file} 必须实测微信胶囊 rect 来算安全区,不能写死让位宽度`)
+    `${file} 必须实测微信胶囊 rect 来算安全区，不能写死让位宽度`)
   assert.match(js, /resolveMenuChrome/,
     `${file} 胶囊几何必须走共享 resolver(utils/nav-safe-area.js)`)
   assert.match(js, /capsuleHeight \/ 2 - rowHeight \/ 2/,
-    `${file} 行中心线必须与胶囊中心线共线,返回/搜索/筛选才在同一行垂直居中`)
+    `${file} 行中心线必须与胶囊中心线共线，返回/搜索/筛选才在同一行垂直居中`)
   assert.match(js, /statusBarHeight: app\.globalData\.statusBarHeight \|\| 20/,
-    `${file} 必须真的把 statusBarHeight 读进 data(否则离线横幅的兜底定位锁的是恒为兜底值的常量)`)
+    `${file} 必须真的把 statusBarHeight 读进 data(否则离线横幅的保底定位锁的是恒为保底值的常量)`)
 
   // ② 返回可恢复:栈空(分享/扫码直达)时不能死在页面里
   assert.match(js, /goBack\(\)\s*\{[\s\S]*?wx\.navigateBack\([\s\S]*?wx\.switchTab\(/,
     `${file} 的返回必须在 navigateBack 失败时回落到根 tab,不能留死路`)
 
   // ⑤ 不许再有大标题/nav title —— 那就是要拆掉的色带
-  assert.doesNotMatch(wxml, /<cy-page-title/, `${file} 是全屏地图页,不挂返回钮下大标题(会盖出一条色带)`)
-  assert.doesNotMatch(wxml, /<cy-nav-bar/, `${file} 是全屏地图页,不走 cy-nav-bar`)
+  assert.doesNotMatch(wxml, /<cy-page-title/, `${file} 是全屏地图页，不挂返回钮下大标题(会盖出一条色带)`)
+  assert.doesNotMatch(wxml, /<cy-nav-bar/, `${file} 是全屏地图页，不走 cy-nav-bar`)
 }
 
 const sourcesOf = (page) => ({ json: read(page + '.json'), wxml: read(page + '.wxml'), js: read(page + '.js') })
@@ -233,7 +233,7 @@ test('negative control: 全屏地图页丢掉浮动返回钮(退不出去)必须
   assert.throws(
     () => assertFullscreenMapNavPage(mutated, FULLSCREEN_MAP_NAV_PAGES[MAP_SAMPLE], MAP_SAMPLE),
     (e) => e instanceof assert.AssertionError && /必须自带浮动返回钮/.test(e.message),
-    '丢掉返回钮必须由「没有返回出口」这道闸判红,不能被别的断言顺手接住',
+    '丢掉返回钮必须由「没有返回出口」这道闸判红，不能被别的断言顺手接住',
   )
 })
 
@@ -244,7 +244,7 @@ test('negative control: 返回只调 navigateBack 不做栈空兜底必须判红
   assert.throws(
     () => assertFullscreenMapNavPage(mutated, FULLSCREEN_MAP_NAV_PAGES[MAP_SAMPLE], MAP_SAMPLE),
     (e) => e instanceof assert.AssertionError && /回落到根 tab/.test(e.message),
-    '拆掉兜底必须由「返回可恢复」这道闸判红',
+    '拆掉保底必须由「返回可恢复」这道闸判红',
   )
 })
 

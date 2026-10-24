@@ -20,9 +20,12 @@ function loadPage(relativePath, wx, transform = source => source) {
     },
     wx,
     require(request) {
+      if (request.endsWith('/theme.js')) return { applyTheme: theme => { if (wx.onTheme) wx.onTheme(theme) } }
       if (request.includes('motion-preference')) return { readReducedMotion: () => false }
       if (request.includes('play-visual-tokens')) return { TOPIC_EDITOR_SWITCH_COLOR: '#000000' }
       if (request.includes('advanced-game-config')) return { defaultConfig: () => ({}) }
+      if (request.includes('node-game-catalog')) return require('../../pages/publish/utils/publish/node-game-catalog.js')
+      if (request.includes('template-tools')) return require('../../pages/publish/utils/publish/template-tools.js')
       if (request.includes('response-shape')) return { isRecordList: Array.isArray }
       if (request.includes('safe-user-message')) return { safeUserMessage: () => '' }
       if (request.includes('merchant-access-policy')) return require('../../utils/merchant-access-policy.js')
@@ -53,37 +56,31 @@ function runCreateFlow(transform = source => source) {
     showToast() {},
   }
 
+  // 2026-10-22 owner:去掉「起名字」一步,引导页直接进编辑器新建
   const intro = loadPage('pages/publish/template-intro/index.js', wx, transform)
   intro.goCreate()
-
-  const naming = loadPage('pages/publish/templateadd/templateadd.js', wx, transform)
-  naming.data.templateName = '梧桐夜行'
-  naming.onCreateTemplate()
 
   return stack
 }
 
-test('创建玩法保留引导与命名层级，编辑器连续两次返回不会直接掉回发布首页', () => {
+test('创建玩法保留引导层级，编辑器返回回到引导而不是掉回发布首页', () => {
   const stack = runCreateFlow()
   assert.deepEqual(stack.map(url => url.split('?')[0]), [
     '/pages/template/index',
     '/pages/publish/template-intro/index',
-    '/pages/publish/templateadd/templateadd',
     '/pages/publish/temp/index',
   ])
+  assert.equal(stack.at(-1), '/pages/publish/temp/index', '新建直接进编辑器,不带 id(不经过起名页)')
 
   stack.pop()
-  assert.equal(stack.at(-1), '/pages/publish/templateadd/templateadd', '第一次返回必须回到命名')
-  stack.pop()
-  assert.equal(stack.at(-1), '/pages/publish/template-intro/index', '第二次返回必须回到引导')
+  assert.equal(stack.at(-1), '/pages/publish/template-intro/index', '返回必须回到引导')
 })
 
-test('负控：把两次 navigateTo 变回 redirectTo 时，契约必须识别出返回层级丢失', () => {
+test('负控：把 navigateTo 变回 redirectTo 时，契约必须识别出返回层级丢失', () => {
   const stack = runCreateFlow(source => source.replace(/wx\.navigateTo/g, 'wx.redirectTo'))
   assert.notDeepEqual(stack.map(url => url.split('?')[0]), [
     '/pages/template/index',
     '/pages/publish/template-intro/index',
-    '/pages/publish/templateadd/templateadd',
     '/pages/publish/temp/index',
   ])
   stack.pop()
@@ -151,13 +148,13 @@ test('预览层内保存成功的“返回上一页”必须离开编辑器，�
   assert.equal(result.events[0].type, 'navigateBack')
   assert.equal(result.events[0].options.delta, 1)
   const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
-  assert.match(source, /setTimeout\(function \(\) \{ that\.exitPage\(\); \}, 600\)/)
+  assert.match(source, /setTimeout\(function \(\) \{ if \(current\(\)\) that\.exitPage\(\); \}, 600\)/)
 })
 
 test('负控：成功离场误复用 goBack 时，previewVisible 会把用户留在编辑器', () => {
   const result = runEditorSuccessBack(source => source
     .replace("if (flow[key] === 'back') this.exitPage();", "if (flow[key] === 'back') this.goBack();")
-    .replace('setTimeout(function () { that.exitPage(); }, 600);', 'setTimeout(function () { that.goBack(); }, 600);'))
+    .replace('setTimeout(function () { if (current()) that.exitPage(); }, 600);', 'setTimeout(function () { if (current()) that.goBack(); }, 600);'))
   assert.equal(result.events.length, 0)
   assert.equal(result.page.data.previewVisible, false)
 })
@@ -183,8 +180,8 @@ test('负控：成功离场退回 redirectTo 时契约必须判红', () => {
   const source = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
   // ⚠️ 必须 replaceAll:本页有两条去模板库的离场路径,只换第一处会留下另一处仍是
   // reLaunch —— 那样这条负控就永远红不了(2026-09-06 实际踩到)。
-  const mutated = source.replaceAll("wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' })",
-    "wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' })")
+  const mutated = source.replaceAll("wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate'",
+    "wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate'")
   assert.notEqual(mutated, source, '负控必须真实改动成功离场 API')
   assert.equal(hasCleanTemplateLibraryExit(mutated), false)
 })
@@ -198,3 +195,25 @@ test('负控：清栈页丢失主页兜底时必须判红', () => {
   page.onBack()
   assert.notDeepEqual(events, [{ type: 'switchTab', options: { url: '/pages/template/index' } }])
 })
+
+// 2026-10-23 起名页 templateadd 退役删除,它的两条用例(返回再确认 / dirty 保留)随页删除。
+test('创建流程原生状态栏跟随浅色编辑与深色玩法预览，关闭后恢复', () => {
+  const themes = []
+  const wx = { onTheme(theme) { themes.push(theme) } }
+  // 2026-10-22 owner 定稿:引导页改深底(漂浮圆圈);2026-10-23 起名页 templateadd 退役删除,引导页直接进编辑器
+  loadPage('pages/publish/template-intro/index.js', wx).onShow()
+  assert.equal(themes.at(-1), 'dark')
+  const page = loadPage('pages/publish/temp/index.js', wx)
+  page.onShow()
+  assert.equal(themes.at(-1), 'light')
+  page.data.previewVisible = true
+  page.data.pvKit = { mode: 'CARD' }
+  page.data.pvStepKey = 'challenge'
+  page.onShow()
+  assert.equal(themes.at(-1), 'dark')
+  page.destroyPreviewAudio = () => {}
+  page.goBack()
+  assert.equal(page.data.previewVisible, false)
+  assert.equal(themes.at(-1), 'light')
+})
+

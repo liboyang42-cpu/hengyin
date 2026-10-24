@@ -86,11 +86,11 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 test('成功 toast 只减不增', () => {
   const rows = scan(read, FILES)
   const total = rows.reduce((sum, row) => sum + row.count, 0)
-  assert.ok(total > 0, '一个都没扫到,扫描器坏了 —— 全绿在这里等于没测')
+  assert.ok(total > 0, '一个都没扫到，扫描器坏了 —— 全绿在这里等于没测')
   assert.ok(total <= SUCCESS_TOAST_CEILING,
     '成功 toast ' + total + ' > 上限 ' + SUCCESS_TOAST_CEILING + '。\n' +
     '  新增一次「成功提示」= 又一处「做成了但界面不记得」。\n' +
-    '  要么改成界面状态,要么把上限连同 CHANGELOG 一起显式调大并说明为什么。\n' +
+    '  要么改成界面状态，要么把上限连同 CHANGELOG 一起显式调大并说明为什么。\n' +
     '  当前分布(前十):\n' +
     rows.sort((a, b) => b.count - a.count).slice(0, 10)
       .map((row) => '    ' + row.count + '  ' + row.file).join('\n'))
@@ -100,7 +100,7 @@ test('上限贴着实测值,不许留虚高余量 —— 留了余量就等于�
   const total = scan(read, FILES).reduce((sum, row) => sum + row.count, 0)
   assert.ok(SUCCESS_TOAST_CEILING - total <= 3,
     '上限 ' + SUCCESS_TOAST_CEILING + ' 比实测 ' + total + ' 高出 ' +
-    (SUCCESS_TOAST_CEILING - total) + ' —— 修好了就把上限调到实测值,别留空档给下一次悄悄涨')
+    (SUCCESS_TOAST_CEILING - total) + ' —— 修好了就把上限调到实测值，别留空档给下一次悄悄涨')
 })
 
 test('★负控:凭空多一处成功 toast,棘轮必须判红', () => {
@@ -116,7 +116,7 @@ test('★icon:none 不算进来 —— 校验失败/网络异常本来就该是�
   const probe = 'pages/__probe2__/index.js'
   const fakeRead = () => "wx.showToast({ title: '网络异常', icon: 'none' })\n".repeat(50)
   assert.deepEqual(scan(fakeRead, [probe]), [],
-    '把 icon:none 一起卷进来,棘轮会变成一个降不下去的噪音源,然后被关掉')
+    '把 icon:none 一起卷进来，棘轮会变成一个降不下去的噪音源，然后被关掉')
 })
 
 test('★嵌套回调不许被算成本次的 icon —— 贪婪匹配会把回调体一起吃进来', () => {

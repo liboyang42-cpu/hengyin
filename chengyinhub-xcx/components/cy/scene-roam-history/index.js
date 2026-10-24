@@ -1,6 +1,6 @@
 'use strict'
 
-const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js')
+const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js'); const pageMotion = require('../../../utils/page-motion.js')
 const { validRecovery } = require('../../../utils/roam-recovery.js')
 const { readNonNegative } = require('../../../utils/roam-history-metrics.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
@@ -10,6 +10,9 @@ function nonNegativeNumber(value) {
 }
 
 Component({
+  properties: {
+    tools: { type: Boolean, value: false }, // 宿主页接了 bind:tool 才显示那年今日/月度回顾/导出
+  },
   data: {
     list: [],
     state: 'loading',
@@ -58,7 +61,7 @@ Component({
         if (session.shopsValue === null) shopsKnown = false
         else shops += session.shopsValue
       })
-      this.setData({
+      pageMotion.enter(this, 'pmList'); this.setData({
         list,
         state: 'ready',
         inProgress: this._inProgress === true,
@@ -122,5 +125,6 @@ Component({
       this.triggerEvent('close')
     },
     retry() { this._load() },
+    openTool(event) { const key = event.currentTarget.dataset.key; if (key) this.triggerEvent('tool', { key }) },
   },
 })

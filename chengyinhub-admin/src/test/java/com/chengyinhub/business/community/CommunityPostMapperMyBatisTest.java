@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class CommunityPostMapperMyBatisTest {
     @Test
@@ -80,6 +81,52 @@ class CommunityPostMapperMyBatisTest {
     }
 
     @Test
+    void personalListsUseOnlyCanonicalOwnedActionsAndKeepReviewStates() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
+        String[] states = {"DRAFT", "CHECKING", "PUBLISHED", "LIMITED", "HIDDEN", "REMOVED", "DELETED"};
+        for (int i = 0; i < states.length; i++) post(jdbc, 10 + i, 8, states[i], "PUBLIC", "SH", 1, 1, "own");
+        post(jdbc, 30, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "public");
+        post(jdbc, 31, 12, "PUBLISHED", "FOLLOWERS", "SH", 1, 1, "private");
+        post(jdbc, 32, 13, "PUBLISHED", "PUBLIC", "SH", 1, 1, "blocked");
+        post(jdbc, 33, 11, "CHECKING", "PUBLIC", "SH", 1, 1, "checking");
+        jdbc.update("insert into im_block(member_id,blocked_member_id) values (13,8)");
+        jdbc.update("insert into community_post_member_action(post_id,member_id,action_type) values (30,8,'BOOKMARK'),(31,8,'BOOKMARK'),(32,8,'BOOKMARK'),(33,8,'BOOKMARK'),(12,9,'BOOKMARK')");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            CommunityPostFeedQuery q = query("BOOKMARKS");
+            List<CommunityPost> favorites = mapper.selectBookmarkedFeed(q);
+            assertEquals(1, favorites.size()); assertEquals(Long.valueOf(30), favorites.get(0).getId());
+            assertEquals(Integer.valueOf(1), favorites.get(0).getViewerBookmarked());
+            assertNull(favorites.get(0).getApproximateGeohash());
+            q.setCursor(30L); assertEquals(0, mapper.selectBookmarkedFeed(q).size()); q.setCursor(null);
+            jdbc.update("delete from community_post_member_action where member_id=8 and post_id=30 and action_type='BOOKMARK'");
+            session.clearCache();
+            assertEquals(0, mapper.selectBookmarkedFeed(q).size());
+            q.setMode("OWN_POSTS"); List<CommunityPost> own = mapper.selectOwnPosts(q);
+            assertEquals(6, own.size()); assertEquals(Long.valueOf(15), own.get(0).getId());
+            for (CommunityPost row : own) assertEquals(Long.valueOf(8), row.getAuthorId());
+            q.setCursor(13L); own = mapper.selectOwnPosts(q);
+            assertEquals(3, own.size()); assertEquals(Long.valueOf(12), own.get(0).getId());
+            q.setViewerId(9L); assertEquals(0, mapper.selectOwnPosts(q).size());
+        }
+    }
+
+    @Test
+    void ownerDetailRetainsOriginalLocationAndTopicsWithoutPublicGridDisclosure() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
+        post(jdbc, 40, 8, "PUBLISHED", "PUBLIC", "SH", 1, 1, "located");
+        jdbc.update("update community_post set location_precision='APPROXIMATE', approximate_geohash='original-grid' where id=40");
+        jdbc.update("insert into community_post_topic(post_id,topic_code) values (40,'WALK'),(40,'CITY')");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals("original-grid",mapper.selectById(40L,8L).getApproximateGeohash());
+            assertNull(mapper.selectById(40L,9L).getApproximateGeohash());
+            assertNull(mapper.selectById(40L,0L).getApproximateGeohash());
+            assertEquals(java.util.Arrays.asList("CITY", "WALK"),mapper.selectTopicCodes(40L));
+        }
+    }
+
+    @Test
     void memberCanReadDirectAndPostScopedEnforcementsForAppeal() throws Exception {
         DriverManagerDataSource dataSource = dataSource();
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
@@ -95,6 +142,70 @@ class CommunityPostMapperMyBatisTest {
             assertEquals(2L, ((Number) rows.get(0).get("id")).longValue());
             assertEquals(1L, ((Number) rows.get(1).get("id")).longValue());
             assertEquals(9L, ((Number) rows.get(1).get("appeal_id")).longValue());
+        }
+    }
+
+    /** FOLLOWUP-C-2:申诉落 due_at;审核员认领把 SUBMITTED 按版本 CAS 成 REVIEWING,只成功一次;REVIEWING 仍可结案。 */
+    @Test
+    void appealStoresDueAtAndClaimMovesSubmittedToReviewingOnce() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into community_post_enforcement(id,post_id,target_member_id,enforcement_type,rule_code,guideline_version_id,reason_code,status,version,create_time) values (1,1,null,'HIDE_POST','R1',1,'reason','ACTIVE',0,now())");
+        java.util.Date now = new java.util.Date(1_800_000_000_000L);
+        java.util.Date due = new java.util.Date(now.getTime() + 15 * 60_000L);
+
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(1, mapper.insertAppeal(1L, 11L, "请复核", "[]", "appeal-due-1", due, now));
+            Long id = jdbc.queryForObject("select id from community_post_appeal where request_id='appeal-due-1'", Long.class);
+            Map<String, Object> row = mapper.selectAppeal(id);
+            assertEquals("SUBMITTED", value(row, "status"));
+            assertEquals(due.getTime(), ((java.util.Date) value(row, "due_at")).getTime());
+
+            assertEquals(1, mapper.claimAppealCas(id, 7L, 0, now));
+            assertEquals(0, mapper.claimAppealCas(id, 8L, 1, now), "已在复核中:他人不能再认领");
+            assertEquals(0, mapper.claimAppealCas(id, 8L, 0, now), "旧版本号不能认领");
+            row = mapper.selectAppeal(id);
+            assertEquals("REVIEWING", value(row, "status"));
+            assertEquals(7L, ((Number) value(row, "reviewer_user_id")).longValue());
+            assertEquals(1, ((Number) value(row, "version")).intValue());
+
+            List<Map<String, Object>> mine = mapper.selectMemberEnforcements(11L, null, 20);
+            assertEquals("REVIEWING", value(mine.get(0), "appeal_status"));
+            assertEquals(due.getTime(), ((java.util.Date) value(mine.get(0), "appeal_due_at")).getTime());
+
+            assertEquals(1, mapper.reviewAppealCas(id, "UPHELD", "维持原处理", 7L, 1, now));
+            assertEquals("UPHELD", value(mapper.selectAppeal(id), "status"));
+        }
+    }
+
+    private static Object value(Map<String, Object> row, String key) {
+        return row.containsKey(key) ? row.get(key) : row.get(key.toUpperCase(java.util.Locale.ROOT));
+    }
+
+    @Test
+    void commentFollowingProjectionUsesCurrentViewerAndActualAuthor() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into ums_member_follow(member_id,follow_member_id) values (8,11),(9,12)");
+        jdbc.update("insert into community_post_comment(id,post_id,author_id,root_id,parent_id,body,lifecycle,author_approval_state,version,like_count,create_time) values "
+                + "(10,1,11,null,null,'followed','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(20,1,12,null,null,'not followed','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(30,1,8,null,null,'self','PUBLISHED','VISIBLE',0,0,now())");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            List<Map<String,Object>> rows = mapper.selectComments(1L,8L,null,20);
+            assertEquals(3,rows.size());
+            assertEquals(0,((Number)rows.get(0).get("viewer_following")).intValue());
+            assertEquals(0,((Number)rows.get(1).get("viewer_following")).intValue());
+            assertEquals(1,((Number)rows.get(2).get("viewer_following")).intValue());
+            for (Map<String,Object> row : mapper.selectComments(1L,0L,null,20))
+                assertEquals(0,((Number)row.get("viewer_following")).intValue());
+            List<Map<String,Object>> other = mapper.selectComments(1L,9L,null,20);
+            assertEquals(1,((Number)other.get(1).get("viewer_following")).intValue());
+            assertEquals(0,((Number)other.get(2).get("viewer_following")).intValue());
         }
     }
 
@@ -118,6 +229,72 @@ class CommunityPostMapperMyBatisTest {
             List<Map<String, Object>> second = mapper.selectComments(1L, 8L, 20L, 1);
             assertEquals(1, second.size());
             assertEquals(10L, ((Number) second.get(0).get("id")).longValue());
+        }
+    }
+
+    @Test
+    void deletedRootsKeepVisibleDescendantsWithRedactedAncestorsAndStableRootPaging() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into community_post_comment(id,post_id,author_id,root_id,parent_id,body,lifecycle,author_approval_state,version,like_count,create_time) values "
+                + "(10,1,11,null,null,'old normal root','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(20,1,12,null,null,'private deleted root','DELETED','VISIBLE',1,0,now()),"
+                + "(21,1,13,20,20,'private deleted middle','DELETED','VISIBLE',1,0,now()),"
+                + "(22,1,14,20,21,'visible grandchild','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(23,1,12,20,20,'private deleted leaf','DELETED','VISIBLE',1,0,now()),"
+                + "(24,2,14,20,20,'foreign post reply','PUBLISHED','VISIBLE',0,0,now())");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            List<Map<String, Object>> first = mapper.selectComments(1L, 8L, null, 1);
+            assertEquals(List.of(20L, 21L, 22L, 23L), first.stream()
+                    .map(row -> ((Number) row.get("id")).longValue()).toList());
+            assertEquals("", first.get(0).get("body"));
+            assertEquals("", first.get(1).get("body"));
+            assertEquals("visible grandchild", first.get(2).get("body"));
+            assertEquals("", first.get(3).get("body"), "even pruned deleted leaves must never load original text");
+            List<Map<String, Object>> second = mapper.selectComments(1L, 8L, 20L, 1);
+            assertEquals(List.of(10L), second.stream().map(row -> ((Number) row.get("id")).longValue()).toList());
+            assertEquals(List.of(), mapper.selectComments(1L, 8L, 10L, 1));
+            assertNull(mapper.selectCommentForReply(20L, 1L, 8L));
+            assertNull(mapper.selectCommentForReply(21L, 1L, 8L));
+            assertEquals(0, mapper.insertCommentAction(20L, 8L, "like-deleted-root", new java.util.Date()));
+            assertEquals(0, mapper.insertCommentAction(21L, 8L, "like-deleted-middle", new java.util.Date()));
+            assertEquals(0, jdbc.queryForObject("select count(*) from community_post_comment_action", Integer.class));
+        }
+    }
+
+    @Test
+    void deletedRootsWithoutLegallyVisibleRepliesDoNotConsumePageSlots() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "owned");
+        jdbc.update("insert into community_post_comment(id,post_id,author_id,root_id,parent_id,body,lifecycle,author_approval_state,version,like_count,create_time) values "
+                + "(10,1,11,null,null,'normal root','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(20,1,11,null,null,'no replies','DELETED','VISIBLE',1,0,now()),"
+                + "(30,1,11,null,null,'pending replies','DELETED','VISIBLE',1,0,now()),"
+                + "(31,1,12,30,30,'pending','PUBLISHED','PENDING',0,0,now()),"
+                + "(40,1,11,null,null,'checking replies','DELETED','VISIBLE',1,0,now()),"
+                + "(41,1,12,40,40,'checking','CHECKING','VISIBLE',0,0,now()),"
+                + "(50,1,11,null,null,'muted replies','DELETED','VISIBLE',1,0,now()),"
+                + "(51,1,13,50,50,'muted','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(60,1,11,null,null,'blocked replies','DELETED','VISIBLE',1,0,now()),"
+                + "(61,1,14,60,60,'blocked','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(70,1,14,null,null,'blocked root','DELETED','VISIBLE',1,0,now()),"
+                + "(71,1,11,70,70,'visible reply','PUBLISHED','VISIBLE',0,0,now()),"
+                + "(80,1,11,null,null,'foreign replies','DELETED','VISIBLE',1,0,now()),"
+                + "(81,2,11,80,80,'foreign','PUBLISHED','VISIBLE',0,0,now())");
+        jdbc.update("insert into community_member_mute(member_id,muted_member_id) values (8,13)");
+        jdbc.update("insert into im_block(member_id,blocked_member_id) values (14,8)");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            List<Map<String, Object>> rows = mapper.selectComments(1L, 8L, null, 1);
+            assertEquals(List.of(10L), rows.stream().map(row -> ((Number) row.get("id")).longValue()).toList());
+            List<Map<String, Object>> ownerRows = mapper.selectComments(1L, 12L, 50L, 1);
+            assertEquals(List.of(40L, 41L), ownerRows.stream()
+                    .map(row -> ((Number) row.get("id")).longValue()).toList(), "existing own CHECKING visibility remains unchanged");
         }
     }
 
@@ -244,6 +421,89 @@ class CommunityPostMapperMyBatisTest {
         }
     }
 
+    /** 审核分级 P2:标记列 null=保持原值,且不 bump version(生命周期 CAS 已在同一事务里 bump 过)。 */
+    @Test
+    void auditMarksKeepUnspecifiedColumnsAndDoNotBumpVersion() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "body");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(1, mapper.updateAuditMarks(1L, 1, null, 1, new java.util.Date()));
+            assertEquals(1, mapper.updateAuditMarks(1L, 2, 1, null, new java.util.Date()));
+            assertEquals(0, mapper.updateAuditMarks(99L, 2, 1, 1, new java.util.Date()));
+        }
+        assertEquals(java.util.Arrays.asList(2, 1, 1, 0), jdbc.queryForObject(
+                "select audit_level,audit_before_publish,review_flag,version from community_post where id=1",
+                (rs, row) -> java.util.Arrays.asList(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getInt(4))));
+    }
+
+    /** AUDIT-G3-5/6:处置行回指举报单/评论只写一次;已关联的行不会被另一个举报改写。 */
+    @Test
+    void linkEnforcementWritesReportAndCommentOnce() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        schema(jdbc);
+        jdbc.update("insert into community_post_enforcement(id,post_id,target_member_id,enforcement_type,rule_code,guideline_version_id,reason_code,evidence_snapshot_json,status,version,create_time,update_time) values (5,null,12,'REMOVE','R5',1,'reason','{}','ACTIVE',0,now(),now())");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(1, mapper.linkEnforcement(5L, 88L, 55L));
+            assertEquals(0, mapper.linkEnforcement(5L, 99L, null));
+            assertEquals(Long.valueOf(55L), mapper.selectEnforcement(5L).get("comment_id"));
+        }
+        assertEquals(java.util.Arrays.asList(88L, 55L), jdbc.queryForObject(
+                "select report_case_id,comment_id from community_post_enforcement where id=5",
+                (rs, row) -> java.util.Arrays.asList(rs.getLong(1), rs.getLong(2))));
+    }
+
+    /** AUDIT-G3-1:待审被驳回的帖子申诉撤销后恢复 PUBLISHED,补上 published_at;已有的发布时间不被改写。 */
+    @Test
+    void reconcileToPublishedFillsMissingPublishedAtOnly() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        schema(jdbc);
+        post(jdbc, 1, 11, "REMOVED", "PUBLIC", "SH", 0, 0, "never published");
+        post(jdbc, 2, 11, "REMOVED", "PUBLIC", "SH", 0, 0, "published before");
+        jdbc.update("update community_post set published_at=null where id=1");
+        jdbc.update("update community_post set published_at=timestamp '2026-01-01 00:00:00' where id=2");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(1, mapper.reconcilePostEnforcementCas(1L, 0, "PUBLISHED", 1, 1, 1, new java.util.Date()));
+            assertEquals(1, mapper.reconcilePostEnforcementCas(2L, 0, "PUBLISHED", 1, 1, 1, new java.util.Date()));
+        }
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from community_post where id=1 and published_at is not null", Integer.class));
+        assertEquals("2026-01-01", jdbc.queryForObject(
+                "select cast(cast(published_at as date) as varchar) from community_post where id=2", String.class));
+    }
+
+    @Test
+    void checkingEditRetainsOwnerVersionAndRemovedDeletedGuards() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        schema(jdbc);
+        post(jdbc, 1, 11, "CHECKING", "PUBLIC", "SH", 1, 1, "before");
+        post(jdbc, 2, 11, "REMOVED", "PUBLIC", "SH", 1, 1, "removed");
+        post(jdbc, 3, 11, "DELETED", "PUBLIC", "SH", 1, 1, "deleted");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            CommunityPost changed = mapper.selectByIdForUpdate(1L);
+            changed.setBody("after");
+            assertEquals(1, mapper.updateContentCas(changed, 0, "CHECKING", new java.util.Date()));
+            assertEquals(0, mapper.updateContentCas(changed, 0, "CHECKING", new java.util.Date()));
+            changed.setAuthorId(12L);
+            assertEquals(0, mapper.updateContentCas(changed, 1, "CHECKING", new java.util.Date()));
+            for (long id : new long[]{2L, 3L}) {
+                assertEquals(0, mapper.updateContentCas(mapper.selectByIdForUpdate(id), 0,
+                        "CHECKING", new java.util.Date()));
+            }
+        }
+        assertEquals("after", jdbc.queryForObject("select body from community_post where id=1", String.class));
+        assertEquals(1, jdbc.queryForObject("select version from community_post where id=1", Integer.class));
+        assertEquals("CHECKING", jdbc.queryForObject("select lifecycle from community_post where id=1", String.class));
+    }
+
     @Test
     void editingPostMovesCommunityAndGuidelineAtomically() throws Exception {
         DriverManagerDataSource dataSource = dataSource();
@@ -332,6 +592,98 @@ class CommunityPostMapperMyBatisTest {
         assertEquals("erased-appeal-42", rows.get(1).get("request_id"));
     }
 
+    @Test
+    void b05LeavingCommunityRevokesTheSameDetailLinkWithoutMakingPostPublic() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "COMMUNITY", "SH", 1, 1, "members only");
+        jdbc.update("update community_post set community_id=55 where id=1");
+        jdbc.update("insert into club_member(member_id,club_id,status,del_flag) values (8,55,1,0)");
+
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(Long.valueOf(1), mapper.selectById(1L, 8L).getId());
+            assertNull(mapper.selectById(1L, 9L), "an outsider cannot use the member's old link");
+        }
+
+        jdbc.update("update club_member set del_flag=1 where member_id=8 and club_id=55");
+        // New sessions prevent a first-level MyBatis cache hit from standing in for a fresh read.
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertNull(mapper.selectById(1L, 8L), "the same link must recheck current membership");
+            assertNull(mapper.selectById(1L, 9L));
+            assertEquals("COMMUNITY", mapper.selectById(1L, 11L).getAudience());
+        }
+
+        jdbc.update("update community_post set community_id=null where id=1");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertNull(mapper.selectById(1L, 8L), "a missing community must not grant public access");
+            assertNull(mapper.selectById(1L, 0L));
+        }
+        assertEquals("COMMUNITY", jdbc.queryForObject(
+                "select audience from community_post where id=1", String.class));
+    }
+
+    @Test
+    void b05DeletedPostOldLinkIsUnavailableToAuthorAndOtherViewer() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "PUBLISHED", "PUBLIC", "SH", 1, 1, "old body");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals("old body", mapper.selectById(1L, 11L).getBody());
+            assertEquals("old body", mapper.selectById(1L, 8L).getBody());
+        }
+        // Reproduce the persisted delete result; separate sessions force a fresh visibility read.
+        jdbc.update("update community_post set lifecycle='DELETED', interaction_enabled=0 where id=1");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertNull(mapper.selectById(1L, 11L), "deleted owner link must follow canView policy");
+            assertNull(mapper.selectById(1L, 8L));
+        }
+        // Non-deleted owner workspace states retain their existing visibility.
+        for (String state : new String[]{"DRAFT", "CHECKING", "LIMITED", "HIDDEN", "REMOVED"}) {
+            jdbc.update("update community_post set lifecycle=? where id=1", state);
+            try (SqlSession session = factory(dataSource).openSession(true)) {
+                CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+                assertEquals(state, mapper.selectById(1L, 11L).getLifecycle());
+                assertNull(mapper.selectById(1L, 8L));
+            }
+        }
+    }
+
+    @Test
+    void limitedPostIsOffFeedsButDirectlyReadableToAudience() throws Exception {
+        // O-05 #1:LIMITED = 降分发。不进任何 feed/搜索;直达读取只给受众内、未拉黑/屏蔽的非作者。
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 21, 11, "LIMITED", "PUBLIC", "SH", 0, 0, "limited-public");
+        post(jdbc, 22, 12, "LIMITED", "FOLLOWERS", "SH", 0, 0, "limited-followers");
+        post(jdbc, 23, 13, "LIMITED", "PUBLIC", "SH", 0, 0, "limited-blocked");
+        post(jdbc, 24, 11, "HIDDEN", "PUBLIC", "SH", 0, 0, "hidden");
+        jdbc.update("insert into im_block(member_id,blocked_member_id) values (13,8)");
+
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(0, mapper.selectFeed(query("LATEST")).size(), "LIMITED 不进公开 feed");
+            assertNull(mapper.selectById(21L, 8L), "既有 selectById 口径不变:非作者读不到 LIMITED");
+            assertNotNull(mapper.selectById(21L, 11L), "作者本人可见");
+
+            CommunityPost direct = mapper.selectLimitedById(21L, 8L);
+            assertNotNull(direct);
+            assertEquals("LIMITED", direct.getLifecycle());
+            assertNull(direct.getApproximateGeohash(), "直达读取不投影作者私有位置");
+            assertNull(mapper.selectLimitedById(22L, 8L), "仅粉丝可见且未关注 → 不可直达");
+            assertNull(mapper.selectLimitedById(23L, 8L), "拉黑关系 → 不可直达");
+            assertNull(mapper.selectLimitedById(24L, 8L), "只认 LIMITED,其它非公开态不放出");
+            assertNull(mapper.selectLimitedById(21L, 11L), "作者本人走 selectById,不走直达口");
+        }
+    }
+
     private CommunityPostFeedQuery query(String mode) {
         CommunityPostFeedQuery query = new CommunityPostFeedQuery();
         query.setViewerId(8L);
@@ -340,8 +692,90 @@ class CommunityPostMapperMyBatisTest {
         return query;
     }
 
+    @Test
+    void activityReferenceProjectsOnlyItsCurrentPublicTopicAndPreservesLegacySnapshot() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds); schema(jdbc);
+        jdbc.execute("create table community_post_reference(id bigint primary key,post_id bigint,reference_type varchar(24),reference_id bigint,snapshot_json varchar(255),privacy_snapshot varchar(32),invalidated_at timestamp)");
+        // EXTRA E02-03 的下架/取消活动隐藏读 publish_status/cancel_time；本用例活动均为上架未取消。
+        jdbc.execute("create table cms_activity(id bigint primary key,topic_id bigint,del_flag int,"
+                + "publish_status int default 1,cancel_time timestamp)");
+        jdbc.execute("create table cms_topic(id bigint primary key,status int,user_status int,del_flag int,is_template int)");
+        jdbc.update("insert into cms_topic values (900,1,1,0,0),(901,0,1,0,0),(902,1,0,0,0),(903,1,1,1,0),(904,1,1,0,1)");
+        jdbc.update("insert into cms_activity(id,topic_id,del_flag) values (70,900,0),(71,null,0),(72,901,0),(73,902,0),(74,903,0),(75,904,0),(76,900,1)");
+        jdbc.update("insert into community_post_reference(id,post_id,reference_type,reference_id,snapshot_json) values (1,56,'ACTIVITY',70,'{\"legacy\":true}'),(2,56,'ACTIVITY',71,'{}'),(3,56,'ACTIVITY',72,'{}'),(4,56,'ACTIVITY',73,'{}'),(5,56,'ACTIVITY',74,'{}'),(6,56,'ACTIVITY',75,'{}'),(7,56,'ACTIVITY',76,'{}')");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            List<Map<String, Object>> refs = session.getMapper(CommunityPostMapper.class).selectReferences(56L);
+            assertEquals(7, refs.size());
+            assertNotNull(refs.get(0).get("topic_id"), "activity reference must project its real public topic ID");
+            assertEquals(900L, ((Number) refs.get(0).get("topic_id")).longValue());
+            assertEquals(70L, ((Number) refs.get(0).get("reference_id")).longValue());
+            assertEquals("{\"legacy\":true}", refs.get(0).get("snapshot_json"));
+            for (int j = 1; j < refs.size(); j++) assertNull(refs.get(j).get("topic_id"));
+        }
+    }
+
+    @Test
+    void authorDeleteEvidenceRequiresMatchingReceiptAndJobAndRejectsRestrictedErasure() throws Exception {
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 1, 11, "DELETED", "PUBLIC", "SH", 1, 1, "deleted");
+        post(jdbc, 2, 12, "DELETED", "PUBLIC", "SH", 1, 1, "other");
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L));
+            jdbc.update("insert into community_erasure_job values (1,1,'POST_DELETE','delete-1',0)");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "job alone is insufficient");
+            jdbc.update("insert into community_post_command_receipt values (11,'different','POST_DELETE',1)");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "request must match both records");
+            jdbc.update("update community_post_command_receipt set request_id='delete-1',member_id=12");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "other actor cannot prove author deletion");
+            jdbc.update("update community_post_command_receipt set member_id=11,aggregate_id=2");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "aggregate must match");
+            jdbc.update("update community_post_command_receipt set aggregate_id=1");
+            session.clearCache();
+            assertEquals(1, mapper.countAuthorDeleteEvidence(11L, 1L));
+            assertEquals(0, mapper.countAuthorDeleteEvidence(12L, 1L));
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 2L));
+            jdbc.update("delete from community_erasure_job");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "receipt alone is insufficient");
+            jdbc.update("insert into community_erasure_job values (1,1,'POST_DELETE','delete-1',0)");
+            for (String restriction : List.of("COPYRIGHT_REMOVE", "ACCOUNT_DEREGISTER")) {
+                jdbc.update("insert into community_erasure_job values (2,1,?,'restriction',0)", restriction);
+                session.clearCache();
+                assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), restriction + " wins over old author deletion");
+                jdbc.update("delete from community_erasure_job where id=2");
+            }
+            jdbc.update("update community_erasure_job set legal_hold=1");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L));
+            jdbc.update("update community_erasure_job set legal_hold=0");
+            jdbc.update("insert into community_erasure_job values (2,1,'LOCATION_WITHDRAW','held',1)");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "any legal hold takes precedence");
+            jdbc.update("delete from community_erasure_job where id=2");
+            jdbc.update("insert into community_post_command_receipt values (11,'copyright','COPYRIGHT_REMOVE',1)");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L), "copyright operator ID may equal author ID");
+            jdbc.update("delete from community_post_command_receipt where command_type='COPYRIGHT_REMOVE'");
+            jdbc.update("insert into community_erasure_job values (2,2,'COPYRIGHT_REMOVE','other-post',0)");
+            session.clearCache();
+            assertEquals(1, mapper.countAuthorDeleteEvidence(11L, 1L), "another post does not affect this one");
+            jdbc.update("update community_post set lifecycle='REMOVED' where id=1");
+            session.clearCache();
+            assertEquals(0, mapper.countAuthorDeleteEvidence(11L, 1L));
+        }
+    }
+
     private void schema(JdbcTemplate jdbc) {
-        jdbc.execute("create table community_post(id bigint primary key,author_id bigint,community_id bigint,client_request_id varchar(96),body varchar(100),title varchar(100),post_type varchar(32),audience varchar(16),comment_policy varchar(16),reply_approval_enabled int,slow_mode_seconds int,lifecycle varchar(16),location_precision varchar(16),city_code varchar(32),poi_name varchar(100),approximate_geohash varchar(16),recommendation_eligible int,search_eligible int,interaction_enabled int,disclosure_type varchar(24),safety_labels_json varchar(100),guideline_version_id bigint,like_count int,comment_count int,bookmark_count int,share_count int,published_at timestamp,edited_at timestamp,deleted_at timestamp,version int,create_time timestamp,update_time timestamp)");
+        jdbc.execute("create table community_post(id bigint primary key,author_id bigint,community_id bigint,client_request_id varchar(96),body varchar(100),title varchar(100),post_type varchar(32),audience varchar(16),comment_policy varchar(16),reply_approval_enabled int,slow_mode_seconds int,lifecycle varchar(16),location_precision varchar(16),city_code varchar(32),poi_name varchar(100),approximate_geohash varchar(16),recommendation_eligible int,search_eligible int,interaction_enabled int,disclosure_type varchar(24),safety_labels_json varchar(100),guideline_version_id bigint,like_count int,comment_count int,bookmark_count int,share_count int,published_at timestamp,edited_at timestamp,deleted_at timestamp,version int,create_time timestamp,update_time timestamp,audit_level tinyint not null default 0,audit_before_publish tinyint not null default 0,review_flag tinyint not null default 0)");
+        jdbc.execute("create table community_post_command_receipt(member_id bigint,request_id varchar(96),command_type varchar(32),aggregate_id bigint)");
+        jdbc.execute("create table community_erasure_job(id bigint primary key,post_id bigint,trigger_type varchar(32),request_id varchar(96),legal_hold int)");
         jdbc.execute("create table ums_member(id bigint primary key,nickname varchar(100),avatar varchar(100))");
         jdbc.execute("create table ums_member_follow(member_id bigint,follow_member_id bigint)");
         jdbc.execute("create table im_block(member_id bigint,blocked_member_id bigint)");
@@ -351,8 +785,8 @@ class CommunityPostMapperMyBatisTest {
         jdbc.execute("create table community_post_topic(post_id bigint,topic_code varchar(64))");
         jdbc.execute("create table community_featured_entry(post_id bigint,collection_code varchar(64),starts_at timestamp,ends_at timestamp)");
         jdbc.execute("create table community_search_document(document_type varchar(16),document_id bigint,visibility_state varchar(16),search_text varchar(255))");
-        jdbc.execute("create table community_post_enforcement(id bigint primary key,post_id bigint,target_member_id bigint,enforcement_type varchar(32),rule_code varchar(64),guideline_version_id bigint,reason_code varchar(64),previous_lifecycle varchar(16),evidence_snapshot_json varchar(255),operator_user_id bigint,starts_at timestamp,ends_at timestamp,status varchar(16),version int,create_time timestamp,update_time timestamp,constraint chk_community_enforcement_target check (post_id is not null or target_member_id is not null))");
-        jdbc.execute("create table community_post_appeal(id bigint primary key,enforcement_id bigint,appellant_member_id bigint,request_id varchar(96) not null,reason varchar(255),evidence_asset_ids_json varchar(255),status varchar(16),decision_reason varchar(255),reviewed_at timestamp,create_time timestamp,update_time timestamp,unique(appellant_member_id,request_id))");
+        jdbc.execute("create table community_post_enforcement(id bigint primary key,post_id bigint,target_member_id bigint,enforcement_type varchar(32),rule_code varchar(64),guideline_version_id bigint,reason_code varchar(64),previous_lifecycle varchar(16),evidence_snapshot_json varchar(255),operator_user_id bigint,starts_at timestamp,ends_at timestamp,status varchar(16),version int,create_time timestamp,update_time timestamp,report_case_id bigint,comment_id bigint,constraint chk_community_enforcement_target check (post_id is not null or target_member_id is not null))");
+        jdbc.execute("create table community_post_appeal(id bigint auto_increment primary key,enforcement_id bigint,appellant_member_id bigint,request_id varchar(96) not null,reason varchar(255),evidence_asset_ids_json varchar(255),status varchar(16),reviewer_user_id bigint,version int default 0,due_at timestamp,decision_reason varchar(255),reviewed_at timestamp,create_time timestamp,update_time timestamp,unique(appellant_member_id,request_id))");
         jdbc.execute("create table community_post_comment(id bigint primary key,post_id bigint,author_id bigint,root_id bigint,parent_id bigint,replied_to_member_id bigint,body varchar(100),lifecycle varchar(16),author_approval_state varchar(16),version int,like_count int,create_time timestamp)");
         jdbc.execute("create table community_post_comment_action(comment_id bigint,member_id bigint,action_type varchar(32),request_id varchar(96),create_time timestamp)");
         jdbc.execute("create table community_notification(id bigint auto_increment primary key,recipient_member_id bigint,event_id varchar(36),post_id bigint,comment_id bigint,actor_member_id bigint,notification_type varchar(32),aggregate_key varchar(128),actor_count int,payload_json varchar(255),read_at timestamp,create_time timestamp,update_time timestamp,unique(recipient_member_id,event_id),unique(recipient_member_id,notification_type,aggregate_key))");

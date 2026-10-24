@@ -247,13 +247,13 @@ page {
   --cy-play-role-event-soft:    rgba(244,91,117,.16);
   --cy-play-role-cream:         #FFF0CF;
   --cy-play-role-dim:           #5A6A6C;
-  /* 2026-09-09 主题按**玩法**分色(不再按发布者身份):城市定向绿 · 自由探索蓝。
+  /* 2026-09-09 主题按**玩法**分色(不再按发布者身份):城市定向绿 · 自由探索蓝;2026-10-22 业主改为 城市定向蓝 · 自由探索绿。
      地图描边、主题标签底色、搜索结果的针共用这两个值;
      canvas 侧同值在 MAP_AVATAR_COLORS.cityRoute / .freeExplore,两处必须一致 */
-  --cy-play-role-city:          #4ADE80;
-  --cy-play-role-city-soft:     rgba(74,222,128,.16);
-  --cy-play-role-free:          #5A90D6;
-  --cy-play-role-free-soft:     rgba(90,144,214,.16);
+  --cy-play-role-city:          #5A90D6;
+  --cy-play-role-city-soft:     rgba(90,144,214,.16);
+  --cy-play-role-free:          #4ADE80;
+  --cy-play-role-free-soft:     rgba(74,222,128,.16);
   /* 星星 = 这家有玩法,仅此一义(同值 MAP_AVATAR_COLORS.gameStar) */
   --cy-play-role-gamestar:      #F5B301;
 
@@ -424,6 +424,14 @@ page {
    * ⚠️ 进/出成对且**出必须短于进**(M3 exit 规则)—— sheet-modal-exit-motion-contract 判红。 */
   --cy-motion-sheet-in:   300ms;   /* 半屏 sheet 升起(Peloton Class Filter Sheet) */
   --cy-motion-sheet-out:  250ms;   /* 半屏 sheet 落下(Clubhouse「leave quietly」) */
+  /* 2026-10-23 业主定:弹窗按档位定速 —— 越高的面板走得越远,时长略长,三档看上去同一个速度。
+     half 档 = 上面的 sheet-in / sheet-out(300 / 250)。cy-sheet / cy-scene-sheet 在根节点按档位
+     把 --cy-motion-sheet-in / -out 重定义成下面这几条,面板与遮罩同档。JS 退场计时器镜像见 exit-motion.js。 */
+  --cy-motion-sheet-peek-in:  260ms;
+  --cy-motion-sheet-peek-out: 200ms;
+  --cy-motion-sheet-full-in:  340ms;
+  --cy-motion-sheet-full-out: 280ms;
+  --cy-motion-toast-out:      150ms;   /* 轻提示 / 可撤销提示条收起:比进场(standard 220)快一档 */
   --cy-motion-expand:     300ms;   /* 行内展开:折叠组 / 更多工具(M3 emphasized-decelerate) */
   --cy-motion-collapse:   200ms;   /* 行内收起(M3:exit/collapse 用更短时长) */
   --cy-motion-crossfade:  150ms;   /* chip 选中的白底 cross-fade;也是减动效兜底的统一时长
@@ -639,6 +647,13 @@ page {
   --cy-comp-sheet-top-gap:    16rpx;   /* 8px:面板顶与胶囊底之间的视觉余量(2026-09-02 用户定) */
   --cy-comp-sheet-max-height: calc(100vh - var(--cy-safe-top) - var(--cy-comp-sheet-top-gap));
   --cy-comp-sheet-full-height: var(--cy-comp-sheet-max-height);
+  /* 2026-10-23 业主定:底部弹窗三档 peek / half / full = 屏高 30% / 60% / 80%。
+     弹窗贴内容高,取放得下的最小一档;放不下就停在该档、只让正文滚动(所以默认上限就是 full)。
+     打开后内容会变的(搜索、加载、分页签、多步)固定在所属档的高度,不随内容跳。
+     任何一档同时受胶囊底 +5px 封顶(上面的 --cy-comp-sheet-max-height / 组件下发的 --cy-comp-sheet-max-h)。 */
+  --cy-comp-sheet-peek: 30vh;
+  --cy-comp-sheet-half: 60vh;
+  --cy-comp-sheet-full: 80vh;
   --cy-comp-sheet-border-width: 0.714px;
   /* 375px 设备上 44px = 88rpx:热区与 Figma 31.996px 视觉圆分离。 */
   --cy-comp-sheet-close-hit-size: 88rpx;
@@ -1199,6 +1214,12 @@ page.theme-light,
  * 根节点挂 .theme-topic-editor；新页面/组件只读语义 token。 */
 page.theme-topic-editor,
 .theme-topic-editor {
+  --cy-topic-name-size: calc(48rpx * var(--cy-type-scale));
+  --cy-topic-name-tracking: -1.5rpx;
+  --cy-topic-save-saved-bg: #E8EAEA;
+  --cy-topic-save-saved-text: #666666;
+  --cy-topic-save-unsaved-bg: rgba(255,196,0,.16);
+  --cy-topic-save-unsaved-text: #8A6100;
   /* 导航钩子(同 theme-light,2026-07-29 导航统一)。读语义真值层
      --cy-color-bg-page(本块下方就近定义为 #FFFFFF),不写字面值——否则本块
      一旦调深浅两色就会跟顶栏脱钩,静默出现顶栏/正文不同底的色带。 */
@@ -1557,7 +1578,7 @@ page.theme-dark,
   --cy-comp-sheet-role-card-shadow: 0 0 0 0 transparent;
   /* comp 别名重声明:见基础 page 规则内「导航」段注释。 */
   --cy-comp-nav-bg:     var(--cy-color-bg-page);
-  --cy-comp-nav-border: var(--cy-color-border-subtle);
+  --cy-comp-nav-border: transparent; /* 2026-10-23 业主:页面上的横线去掉 —— 暗色也与全站默认一致,顶栏不画分隔线 */
 }
 
 /* ============================================================

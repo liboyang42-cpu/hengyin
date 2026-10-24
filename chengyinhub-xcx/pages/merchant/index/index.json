@@ -9,7 +9,7 @@
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-modal": "/components/cy/modal/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
-    "cy-scene-game-coupon-wallet": "/components/cy/scene-game-coupon-wallet/index",
+    "cy-scene-game-coupon-wallet": "/subpackageMember/components/cy/scene-game-coupon-wallet/index",
     "cy-scene-play-activity-detail": "/subpackageMember/components/cy/scene-play-activity-detail/index",
     "cy-scene-roam-poi-detail": "/subpackageMember/components/cy/scene-roam-poi-detail/index",
     "cy-scene-route-content": "/components/cy/scene-route-content/index",
@@ -29,6 +29,7 @@
   "backgroundColorBottom": "#F3F4F4",
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",
-    "cy-scene-roam-poi-detail": "view"
+    "cy-scene-roam-poi-detail": "view",
+    "cy-scene-game-coupon-wallet": "view"
   }
 }

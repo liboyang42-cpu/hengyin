@@ -35,7 +35,7 @@ test('地图工具保留 44pt 点击区与读屏语义(可见中文标签已按�
   // 缩放两枚合成一条轨,但内部按钮不得因此丢掉尺寸(--flush 只去边框/圆角/底色)
   assert.match(wxss, /\.fmap-btn--flush\s*\{[^}]*border:\s*0;/s)
   assert.doesNotMatch(wxss, /\.fmap-btn--flush\s*\{[^}]*(?:width|height):/s,
-    '--flush 不得覆盖尺寸,否则缩放键会掉到 44pt 以下')
+    '--flush 不得覆盖尺寸，否则缩放键会掉到 44pt 以下')
   // 可见文字标签确已撤除(留着 = 减法没做干净)
   assert.doesNotMatch(wxml, /fmap-btn__label/)
   assert.doesNotMatch(wxss, /fmap-btn__label/)

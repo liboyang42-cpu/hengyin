@@ -73,9 +73,24 @@ public class ClubPostServiceImpl implements IClubPostService
     }
 
     @Override
+    public ClubPost selectClubPostByIdForUpdate(Long id)
+    {
+        return clubPostMapper.selectClubPostByIdForUpdate(id);
+    }
+
+    @Override
     public List<ClubPost> selectClubPostList(ClubPost clubPost)
     {
         return clubPostMapper.selectClubPostList(clubPost);
+    }
+
+    @Override
+    public List<ClubPost> selectClubPostPage(Long clubId, Long beforeId, int limit)
+    {
+        List<ClubPost> page = new java.util.ArrayList<>();
+        if (beforeId == null) page.addAll(clubPostMapper.selectClubPostPage(clubId, true, null, limit));
+        page.addAll(clubPostMapper.selectClubPostPage(clubId, false, beforeId, limit));
+        return page;
     }
 
     @Override

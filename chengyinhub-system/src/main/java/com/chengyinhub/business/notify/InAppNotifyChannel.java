@@ -16,9 +16,25 @@ public class InAppNotifyChannel implements NotifyChannel {
 
     @Autowired
     private IImService imService;
+    @Autowired
+    private com.chengyinhub.business.service.impl.AlarmService alarmService;
 
     @Override
     public boolean send(NotifyMessage message) {
+        if (message.event() == NotifyEvent.OFFICIAL_BROADCAST) {
+            try {
+                Long id = imService.sendSystem(message.memberId(), ImMessage.MSG_TEXT,
+                        message.get("title") + "\n" + message.get("sub"), null);
+                if (id != null && id > 0) return true;
+                officialFailure(message.memberId(), "NO_MESSAGE_ID");
+                return false;
+            } catch (Throwable failure) {
+                log.error("[通知] 业务结果站内信异常 memberId={} type={}",
+                        message.memberId(), failure.getClass().getSimpleName());
+                officialFailure(message.memberId(), failure.getClass().getSimpleName());
+                return false;
+            }
+        }
         if (message.event() == NotifyEvent.AFTERCARE_PLATFORM_TAKEOVER) {
             return sendAftercareTakeover(message);
         }
@@ -38,6 +54,15 @@ public class InAppNotifyChannel implements NotifyChannel {
             log.error("[通知] 队伍站内信异常 memberId={} reason={}",
                     message.memberId(), t.getClass().getSimpleName(), t);
             return false;
+        }
+    }
+
+    private void officialFailure(Long memberId, String failureType) {
+        try {
+            alarmService.alarm("业务结果站内信未送达", "event=OFFICIAL_BROADCAST memberId="
+                    + memberId + " type=" + failureType);
+        } catch (Throwable failure) {
+            log.error("Business IM alarm failed memberId={} type={}", memberId, failure.getClass().getSimpleName());
         }
     }
 

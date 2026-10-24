@@ -49,7 +49,8 @@ public class AdvancedGameConfigValidator {
     /** 问答三种模式。三种差的只是中间那一块,所以是一段带 mode,不是三段 */
     private static final Set<String> QA_MODES = new HashSet<>(Arrays.asList("TYPE", "PICK", "SHOT"));
     /** 扫码回什么。OVERLAY 是第四档:页内取景扫中后把图叠在镜头里(AR 契约 §2.2) */
-    private static final Set<String> SCAN_KINDS = new HashSet<>(Arrays.asList("TEXT", "VOICE", "IMAGE", "OVERLAY"));
+    // NONE = 只扫码进场、不回任何内容(2026-10-22 主人:扫码参与可以不回复)。
+    private static final Set<String> SCAN_KINDS = new HashSet<>(Arrays.asList("TEXT", "VOICE", "IMAGE", "OVERLAY", "NONE"));
     /** 显形档的真 AR(2026-09-22 用户定):不开 / 平面放置 / 图像识别。xr-frame 不支持运行中切换模式,所以是配置期二选一。 */
     private static final Set<String> SCAN_AR_MODES = new HashSet<>(Arrays.asList("NONE", "PLANE", "MARKER"));
     /** 找东西:3 个起(少于 3 个没有"还差几样"的张力),5 个封顶(商家标不动,玩家也找烦了) */
@@ -269,6 +270,16 @@ public class AdvancedGameConfigValidator {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** 空配置代表未启用；非空配置经校验后返回紧凑、稳定的 JSON。 */
+    /** 「线索」工具的名称表：clue.h_ 标识 → 线索名称（同名同键，保存时自动登记为有/无标记）。 */
+    private void validateClues(JsonNode clues) {
+        if (clues == null) return;
+        if (!clues.isObject() || clues.size() > 60) throw new IllegalArgumentException("线索名称表格式不正确");
+        clues.fields().forEachRemaining(row -> {
+            if (!row.getKey().matches("clue\\.h_[0-9a-f]{12}")) throw new IllegalArgumentException("线索标识不合法");
+            if (!row.getValue().isTextual() || row.getValue().asText().trim().isEmpty() || row.getValue().asText().length() > 20) throw new IllegalArgumentException("线索名称须为 1 至 20 字");
+        });
+    }
+
     public String validateAndNormalize(String rawJson) {
         if (StringUtils.isBlank(rawJson)) {
             return null;
@@ -286,6 +297,12 @@ public class AdvancedGameConfigValidator {
             throw new IllegalArgumentException("高级玩法配置必须是对象");
         }
         ObjectNode root = (ObjectNode) parsed;
+        GameplayOutcomeRules.validateBlock(root);
+        if (root.path("interactionRules").has("resourceSlots")) {
+            ObjectNode validation = TemplateResourceSlots.validationBlock(root, "模板");
+            String checked = new AdvancedGameConfigValidator().validateAndNormalize(validation.toString());
+            return TemplateResourceSlots.restoreBlock(root, (ObjectNode) readNormalized(checked)).toString();
+        }
         if (root.path("schemaVersion").asInt(-1) != SCHEMA_VERSION) {
             throw new IllegalArgumentException("高级玩法配置版本不支持");
         }
@@ -293,9 +310,13 @@ public class AdvancedGameConfigValidator {
         validatePresent(root);
         // 阶段 2:判错扣血吃主题难度表的哪一档,同样住根层。
         validateMistakeTier(root);
+        if (root.has("interactionRules")) root.set("interactionRules", GameplayTemplateRules.normalize(root.get("interactionRules"), root.get("interactionTools")));
+        if (root.has("interactionTools")) root.set("interactionTools", GameplayTemplateRules.normalizeTools(root.get("interactionTools"), root.path("interactionRules").get("resourceSlots")));
+        GameplayTemplateRules.assertCompatible(root);
+        validateClues(root.get("clues"));
         // 阶段 4:自适应难度,住根层,与 present / check 同级。
         validateVariants(root);
-        validateTimer(root.get("timer"));
+        validateTimer(root.get("timer"), root.path("outcomeRules").path("version").asInt() == 1);
         validateRandom(root.get("random"));
         validateBranch(root.get("branch"));
         validateLeaderboard(root.get("leaderboard"));
@@ -307,6 +328,7 @@ public class AdvancedGameConfigValidator {
         validateSilentOrder(root.get("silentOrder"));
         validateDiyName(root.get("diyName"));
         validateMusicCorner(root.get("musicCorner"));
+        validateBackgroundMusic(root.get("backgroundMusic"));
         validateSteps(root.get("steps"));
         validateDailySign(root.get("dailySign"));
         validateSlowTask(root.get("slowTask"));
@@ -336,7 +358,7 @@ public class AdvancedGameConfigValidator {
         // 它是 R14 旅程检定的现成段(checkId/tier/mods),下面 validateCheck 照旧。
         validateProfile(root.get("profile"));
         validatePhotoCheck(root.get("photoCheck"));
-        validateAlbum(root.get("album"));
+        validateAlbum(root.get("album"),root.path("outcomeRules").path("version").asInt()==1);
         validateNote(root.get("note"));
         validateTypeIn(root.get("typeIn"));
         // 旅程体验模组化:三个阶段共用的三个**可选**顶层字段。缺省 = 老配置,照旧通过,
@@ -372,7 +394,7 @@ public class AdvancedGameConfigValidator {
         }
         if (!PRESENT_INLINE.equals(configured.asText())) return;
         for (String section : PRESENT_FULLSCREEN_ONLY) {
-            if (!enabled(root.get(section))) continue;
+            if (!enabled(root.get(section)) || scanParticipation(root, section)) continue;
             throw new IllegalArgumentException(section + " 只能全屏:该玩法的判定依赖整屏几何或设备能力,"
                     + "内嵌进故事流后判定不成立。present=inline 不适用于它,"
                     + "请删掉 present 或改配 present=fullscreen");
@@ -402,6 +424,12 @@ public class AdvancedGameConfigValidator {
      * 「默认全屏 / 只能全屏」段启用即 fullscreen,否则有「默认内嵌」段即 inline;两者都没有
      * (存量只配 timer 这类无呈现段 / 没配玩法)回退 fullscreen,与改动前的全屏行为一致。
      */
+    private static boolean scanParticipation(JsonNode root, String section) {
+        if (!"scan".equals(section)) return false;
+        for (String main : GameplayOutcomeRules.MAIN_GAMEPLAYS) if (enabled(root.get(main))) return true;
+        return enabled(root.get("branch"));
+    }
+
     public static String resolvePresent(JsonNode configRoot) {
         if (configRoot != null && configRoot.isObject()) {
             JsonNode configured = configRoot.get("present");
@@ -413,7 +441,7 @@ public class AdvancedGameConfigValidator {
                 if (enabled(configRoot.get(section))) return PRESENT_FULLSCREEN;
             }
             for (String section : PRESENT_FULLSCREEN_ONLY) {
-                if (enabled(configRoot.get(section))) return PRESENT_FULLSCREEN;
+                if (enabled(configRoot.get(section)) && !scanParticipation(configRoot, section)) return PRESENT_FULLSCREEN;
             }
             for (String section : PRESENT_INLINE_BY_DEFAULT) {
                 if (enabled(configRoot.get(section))) return PRESENT_INLINE;
@@ -478,7 +506,7 @@ public class AdvancedGameConfigValidator {
         if (normalized == null) return false;
         try {
             JsonNode root = objectMapper.readTree(normalized);
-            return enabled(root.get("timer")) || enabled(root.get("random"))
+            return root.has("outcomeRules") && enabled(root.get("check")) || enabled(root.get("timer")) || enabled(root.get("random"))
                     || enabled(root.get("branch")) || enabled(root.get("leaderboard"))
                     || enabled(root.get("multiplayer"))
                     // 漏了这一行 = 配了新玩法但 hasAdvanced 仍为 false,玩家走到点直接打卡,
@@ -516,20 +544,22 @@ public class AdvancedGameConfigValidator {
                        hasAdvanced 仍是 false,玩家到点直接打卡,玩法静默不存在
                        (现码注释里已有两次前科,别成为第三次)。 */
                     || enabled(root.get("profile")) || enabled(root.get("photoCheck"))
-                    || enabled(root.get("note")) || enabled(root.get("typeIn"));
+                    || enabled(root.get("note")) || enabled(root.get("typeIn"))
+                    || root.path("outcomeRules").path("version").asInt()==1 && enabled(root.get("album"));
         } catch (Exception e) {
             throw new IllegalArgumentException("高级玩法配置不是合法 JSON");
         }
     }
 
-    private void validateTimer(JsonNode timer) {
+    private void validateTimer(JsonNode timer, boolean r5) {
         if (!enabled(timer)) return;
         requireObject(timer, "计时配置格式不正确");
         int seconds = timer.path("durationSeconds").asInt(0);
         if (seconds < 10 || seconds > 24 * 60 * 60) {
             throw new IllegalArgumentException("计时时长须为 10 秒至 24 小时");
         }
-        if (!TIMEOUT_RESULTS.contains(timer.path("timeoutResult").asText(""))) {
+        if (!TIMEOUT_RESULTS.contains(timer.path("timeoutResult").asText(""))
+                && !(r5 && "COMPLETED".equals(timer.path("timeoutResult").asText()))) {
             throw new IllegalArgumentException("计时结束结果不支持");
         }
     }
@@ -561,6 +591,17 @@ public class AdvancedGameConfigValidator {
         }
     }
 
+    /** 旧配置与冻结会话共用补码规则；只补缺失/null，不覆盖作者显式编号。 */
+    public static String resolveBranchOutcomeCode(JsonNode branch, JsonNode step) {
+        if (step.hasNonNull("outcomeCode")) return step.path("outcomeCode").asText("").trim();
+        // ponytail: 配置上限50步，仅缺码时扫描；放开上限再预计算终点数。
+        int terminals = 0;
+        for (JsonNode candidate : branch.path("steps")) {
+            if (candidate.path("terminal").asBoolean(false)) terminals++;
+        }
+        return terminals == 1 ? "COMPLETED" : step.path("id").asText("").trim();
+    }
+
     private void validateBranch(JsonNode branch) {
         if (!enabled(branch)) return;
         requireObject(branch, "分支剧情配置格式不正确");
@@ -580,14 +621,20 @@ public class AdvancedGameConfigValidator {
         if (!byId.containsKey(start)) throw new IllegalArgumentException("分支起点不存在");
 
         Map<String, Set<String>> edges = new HashMap<>();
+        Set<String> outcomeCodes = new HashSet<>();
         for (Map.Entry<String, JsonNode> entry : byId.entrySet()) {
             JsonNode step = entry.getValue();
             boolean terminal = step.path("terminal").asBoolean(false);
             if (terminal) {
+                // 早期故事模板未配置结果码：单结局沿用 COMPLETED，多结局按稳定步骤 ID 补齐。
+                if (!step.hasNonNull("outcomeCode")) {
+                    ((ObjectNode) step).put("outcomeCode", resolveBranchOutcomeCode(branch, step));
+                }
                 String outcomeCode = requiredId(step, "outcomeCode", "终点步骤必须配置 outcomeCode");
                 if (!outcomeCode.matches("[A-Za-z0-9_-]{1,64}")) {
                     throw new IllegalArgumentException("终点 outcomeCode 仅支持字母、数字、下划线和短横线");
                 }
+                if (!outcomeCodes.add(outcomeCode)) throw new IllegalArgumentException("分支终点 outcomeCode 不能重复");
                 optionalText(step, "outcomeLabel", 80, "终点结果名称最多 80 个字");
             }
             JsonNode options = step.get("options");
@@ -826,6 +873,25 @@ public class AdvancedGameConfigValidator {
         int duration = musicCorner.path("durationSeconds").asInt(0);
         if (duration != 0 && (duration < 10 || duration > 3600)) {
             throw new IllegalArgumentException("曲目时长须为 10 秒至 1 小时");
+        }
+    }
+
+    /**
+     * 背景音乐(互动工具):玩这一站时播放的一段音乐。只是氛围件,不参与判定。
+     * 有这一段就算开着,**不带 enabled**:带了的话支持矩阵会把它当成第二个玩法。
+     */
+    private void validateBackgroundMusic(JsonNode music) {
+        if (music == null || music.isNull()) return;
+        requireObject(music, "背景音乐配置格式不正确");
+        if (music.has("enabled")) throw new IllegalArgumentException("背景音乐不使用 enabled 字段");
+        optionalText(music, "title", 40, "背景音乐名称不能超过 40 字");
+        if (!music.path("audioUrl").isTextual() || music.path("audioUrl").asText("").trim().isEmpty()) {
+            throw new IllegalArgumentException("请上传背景音乐");
+        }
+        optionalMediaUrl(music, "audioUrl", 512,
+                "背景音乐地址不能超过 512 字", "背景音乐地址必须是 https 链接或站内路径");
+        if (music.has("loop") && !music.get("loop").isBoolean()) {
+            throw new IllegalArgumentException("背景音乐循环设置格式不正确");
         }
     }
 
@@ -1168,6 +1234,11 @@ public class AdvancedGameConfigValidator {
             // 答案可以填多个,用、分隔;比对忽略大小写与首尾空格(与客户端同一条规则)
             requiredText(qa, "answerText", 200, "打字问答必须填正确答案", "问答答案不能超过 200 字");
         } else if ("PICK".equals(mode)) {
+            // 判断答案对错:缺省 = 开启(旧配置原样);关闭时每个选项都有效,不要求正确答案
+            if (qa.has("judge") && !qa.get("judge").isNull() && !qa.get("judge").isBoolean()) {
+                throw new IllegalArgumentException("判断答案对错格式不正确");
+            }
+            boolean judge = qa.path("judge").asBoolean(true);
             JsonNode options = qa.get("options");
             if (options == null || !options.isArray() || options.size() < 2 || options.size() > 4) {
                 throw new IllegalArgumentException("选项问答须为 2 至 4 个选项");
@@ -1180,6 +1251,7 @@ public class AdvancedGameConfigValidator {
                 if (!ids.add(id)) throw new IllegalArgumentException("问答选项 id 不能重复");
                 requiredText(option, "label", 32, "问答选项文案不能为空", "问答选项文案不能超过 32 字");
                 optionalText(option, "fb", 120, "问答选项反馈不能超过 120 字");
+                validateFeedbackImages(option.get("fbImgs"));
                 // R14:玩家提交这个选项时当场写本局状态(无论对错 —— 代价也可以挂在错项上)。
                 validateEffects(option.get("effects"), "问答选项 " + id + " 的 effects");
                 if (option.path("correct").asBoolean(false)) correct++;
@@ -1187,7 +1259,9 @@ public class AdvancedGameConfigValidator {
             // 单选(默认)正好一个:零个无解,多个等于随便点都对。
             // 多选(multi=true)要求至少两个正确答案 —— 一个正确答案不是多选;
             // 也不能全部正确 —— 全选就过等于随便点。老配置不带 multi,行为不变。
-            if (qa.path("multi").asBoolean(false)) {
+            if (!judge) {
+                // 不判断对错:正确答案、多选、可答次数等判断设置原样保留,不参与校验
+            } else if (qa.path("multi").asBoolean(false)) {
                 if (correct < 2) throw new IllegalArgumentException("多选问答至少要指定两个正确答案");
                 if (correct >= options.size()) {
                     throw new IllegalArgumentException("多选问答不能把全部选项都设为正确答案");
@@ -1211,11 +1285,27 @@ public class AdvancedGameConfigValidator {
      * <p>★ 二维码内容**不在这儿配** —— 它绑在路线层(节点的 checkin_code)。
      * 在玩法配置里再存一份,两处迟早对不上,而对不上的表现是「扫了说码不对」。
      */
+    /** 选项“选中后的反馈”图片:0 至 3 张,每张与其他作者图片同一条地址规则(https 或站内路径)。 */
+    private void validateFeedbackImages(JsonNode images) {
+        if (images == null || images.isNull()) return;
+        if (!images.isArray()) throw new IllegalArgumentException("问答选项反馈图片格式不正确");
+        if (images.size() > 3) throw new IllegalArgumentException("每个选项最多 3 张反馈图片");
+        for (JsonNode image : images) {
+            if (!image.isTextual()) throw new IllegalArgumentException("问答选项反馈图片格式不正确");
+            String value = image.asText().trim();
+            boolean localPath = value.startsWith("/") && !value.startsWith("//") && value.indexOf('\\') < 0;
+            if (value.length() > 512) throw new IllegalArgumentException("问答选项反馈图片地址不能超过 512 字");
+            if (value.isEmpty() || (!localPath && !value.startsWith("https://") && !value.matches("media-asset:[1-9][0-9]{0,18}"))) {
+                throw new IllegalArgumentException("问答选项反馈图片地址必须是 https 链接或站内路径");
+            }
+        }
+    }
+
     private void validateScan(JsonNode scan) {
         if (!enabled(scan)) return;
         requireObject(scan, "扫码配置格式不正确");
         String kind = scan.path("kind").asText("");
-        if (!SCAN_KINDS.contains(kind)) throw new IllegalArgumentException("扫码回复只能是文字、语音、图片或显形");
+        if (!SCAN_KINDS.contains(kind)) throw new IllegalArgumentException("扫码回复只能是文字、语音、图片、显形或不回复");
         optionalText(scan, "reply", 200, "扫码回复不能超过 200 字");
         // 同上(C-01);显形图 / 识别图 / 3D 模型同理 —— 不配 AR 的扫码段也会带着空串来
         dropBlankText((ObjectNode) scan, "audioUrl", "imageUrl", "overlayUrl", "markerUrl", "modelUrl");
@@ -1683,9 +1773,10 @@ public class AdvancedGameConfigValidator {
         ((ObjectNode) photoCheck).put("frameOpacity", value);
     }
 
-    private void validateAlbum(JsonNode album) {
+    private void validateAlbum(JsonNode album,boolean r5) {
         if (!enabled(album)) return;
         requireObject(album, "相册配置格式不正确");
+        if(r5 && !album.has("images"))return;
         JsonNode images = album.path("images");
         if (!images.isArray() || images.size() < 1 || images.size() > 6) {
             throw new IllegalArgumentException("相册须配 1 至 6 张照片");
@@ -1802,6 +1893,10 @@ public class AdvancedGameConfigValidator {
             requireStateTag(item, label);
             return;
         }
+        if (StoryVocabulary.isCondition(op)) {
+            StoryVocabulary.validateCondition(item, label, null, (path, child) -> validateCondition(child, path));
+            return;
+        }
         if (!COMPARISON_OPS.contains(op)) {
             throw new IllegalArgumentException(label + " 的 op 只能是 "
                     + "EQ、NE、GT、GTE、LT、LTE、HAS_TAG 或 NODE_COMPLETED");
@@ -1832,7 +1927,9 @@ public class AdvancedGameConfigValidator {
     private boolean isReadableSysVar(String var) {
         // 阶段 3:sys.exhausted 开放为只读 —— 创作者可以写「力竭时这一站更难 / 直接锁住」。
         // 它只由服务端在 HP 归零时写,效果侧一个都不放行(与 sys.hp 同口径)。
+        // F6 T10:sys.momentum 只读(只由服务端结算 / 花动量写)。
         return "sys.hp".equals(var) || "sys.luck".equals(var) || "sys.exhausted".equals(var)
+                || JourneyRpg.SYS_MOMENTUM.equals(var)
                 || SYS_ASKED_VAR.matcher(var).matches() || SYS_NODE_VAR.matcher(var).matches();
     }
 
@@ -1851,8 +1948,18 @@ public class AdvancedGameConfigValidator {
         for (JsonNode item : effects) {
             requireObject(item, label + " 效果格式不正确");
             String op = item.path("op").asText("");
+            if ("FLOOR".equals(op)) {
+                requireStateVar(item, label); requireStateValue(item, label);
+                if (!item.path("var").asText().startsWith("counter.") || item.path("value").asInt() < 1)
+                    throw new IllegalArgumentException(label + " 的 FLOOR 仅支持正整数数值域");
+                continue;
+            }
             if ("ADD_TAG".equals(op)) {
                 requireStateTag(item, label);
+                continue;
+            }
+            if (StoryVocabulary.isEffect(op)) {
+                StoryVocabulary.validateEffect(item, label);
                 continue;
             }
             if (!EFFECT_OPS.contains(op)) {
@@ -1865,6 +1972,11 @@ public class AdvancedGameConfigValidator {
             requireStateVar(item, label);
             requireStateValue(item, label);
         }
+    }
+
+    private JsonNode readNormalized(String raw) {
+        try { return objectMapper.readTree(raw); }
+        catch (Exception invalid) { throw new IllegalArgumentException("高级玩法配置不可读取", invalid); }
     }
 
     /**
@@ -2030,9 +2142,54 @@ public class AdvancedGameConfigValidator {
         validateEffects(check.get("fumbleEffects"), "check 的 fumbleEffects");
         validateMods(check.get("mods"));
         checkFailCostTag(check);
+        validateBargain(check.get("bargain"));
     }
 
-    /** mods:条件修正,when 条件 + 必带整数 value,label 是给玩家看的一句人话。 */
+    /** F6 T09 魔鬼交易单次加值上限:与 modCap 分开计,不让一笔交易压过三档难度的间距。 */
+    private static final int MAX_BARGAIN_BONUS = 3;
+    private static final int MAX_BARGAIN_EFFECTS = 4;
+    /** 交易的代价只能是「给自己添麻烦」:写状态、贴标签、挂状态、推进钟;任何发放类效果一律拒。 */
+    private static final Set<String> BARGAIN_EFFECT_OPS = new HashSet<String>(Arrays.asList(
+            "SET", "INC", "ADD_TAG", StoryVocabulary.ADD_CONDITION, StoryVocabulary.TICK_CLOCK));
+
+    /**
+     * F6 T09 check.bargain:{label, bonus 1..3, effects[1..4]}。只有主题 journeyRules.rpg.bargain 开启时
+     * 运行期才会提供这笔交易;这里只管形状。代价不得触碰 sys.*,也不得是物品 / 徽章 / XP 等发放。
+     */
+    private void validateBargain(JsonNode bargain) {
+        if (bargain == null || bargain.isNull()) return;
+        requireObject(bargain, "check 的 bargain 格式不正确");
+        bargain.fieldNames().forEachRemaining(name -> {
+            if (!"label".equals(name) && !"bonus".equals(name) && !"effects".equals(name)) {
+                throw new IllegalArgumentException("check 的 bargain 不支持的字段:" + name);
+            }
+        });
+        String label = bargain.path("label").asText("").trim();
+        if (label.isEmpty() || label.length() > MAX_CHECK_TEXT) {
+            throw new IllegalArgumentException("check 的 bargain 要写明代价(label),且不超过 " + MAX_CHECK_TEXT + " 字");
+        }
+        JsonNode bonus = bargain.get("bonus");
+        if (bonus == null || !bonus.isIntegralNumber() || !bonus.canConvertToInt()
+                || bonus.asInt() < 1 || bonus.asInt() > MAX_BARGAIN_BONUS) {
+            throw new IllegalArgumentException("check 的 bargain 的 bonus 须为 1 至 " + MAX_BARGAIN_BONUS + " 的整数");
+        }
+        JsonNode effects = bargain.get("effects");
+        if (!(effects instanceof ArrayNode) || effects.size() < 1 || effects.size() > MAX_BARGAIN_EFFECTS) {
+            throw new IllegalArgumentException("check 的 bargain 的 effects 须为 1 至 " + MAX_BARGAIN_EFFECTS + " 条代价");
+        }
+        for (JsonNode effect : effects) {
+            String op = effect.path("op").asText("");
+            if (!BARGAIN_EFFECT_OPS.contains(op)) {
+                throw new IllegalArgumentException("check 的 bargain 的代价只能是 SET、INC、ADD_TAG、ADD_CONDITION 或 TICK_CLOCK");
+            }
+            if (effect.path("var").asText("").trim().startsWith("sys.")) {
+                throw new IllegalArgumentException("check 的 bargain 的代价不能写系统变量");
+            }
+        }
+        validateEffects(effects, "check 的 bargain 的 effects");
+    }
+
+    /** mods:条件修正,when 条件 + 整数 value(或 F2 的 counter.* var),label 是给玩家看的一句人话。 */
     private void validateMods(JsonNode mods) {
         if (mods == null || mods.isNull()) return;
         if (!mods.isArray()) throw new IllegalArgumentException("check 的 mods 必须是数组");
@@ -2046,7 +2203,18 @@ public class AdvancedGameConfigValidator {
                 throw new IllegalArgumentException("check 的 mods 必须带 when 条件");
             }
             validateCondition(when, "check 的 mods 的 when");
-            requireStateValue(mod, "check 的 mods");
+            // F2 T03:var = 从局状态读修正值(counter.* 属性),与静态 value 二选一。
+            JsonNode var = mod.get("var");
+            if (var != null && !var.isNull()) {
+                if (!var.isTextual() || !STATE_VAR.matcher(var.asText()).matches() || !var.asText().startsWith("counter.")) {
+                    throw new IllegalArgumentException("check 的 mods 的 var 必须是 counter. 开头的状态键");
+                }
+                if (mod.has("value") && !mod.get("value").isNull()) {
+                    throw new IllegalArgumentException("check 的 mods 不能同时配置 var 与 value");
+                }
+            } else {
+                requireStateValue(mod, "check 的 mods");
+            }
             optionalText(mod, "label", MAX_CHECK_TEXT, "check 的 mods 的 label 不能超过 "
                     + MAX_CHECK_TEXT + " 字");
         }
@@ -2252,6 +2420,7 @@ public class AdvancedGameConfigValidator {
         }
         for (int i = 0; i < faces.size(); i++) {
             JsonNode face = faces.get(i);
+            if(face!=null && face.isObject())face=face.get("action");
             if (face == null || !face.isTextual() || StringUtils.isBlank(face.asText())) {
                 throw new IllegalArgumentException("掷骰子第 " + (i + 1) + " 面不能为空");
             }
@@ -2426,7 +2595,7 @@ public class AdvancedGameConfigValidator {
         String value = valueNode.asText().trim();
         if (value.length() > maxLength) throw new IllegalArgumentException(longMessage);
         boolean localPath = value.startsWith("/") && !value.startsWith("//") && value.indexOf('\\') < 0;
-        if (value.isEmpty() || (!localPath && !value.startsWith("https://"))) {
+        if (value.isEmpty() || (!localPath && !value.startsWith("https://") && !value.matches("media-asset:[1-9][0-9]{0,18}"))) {
             throw new IllegalArgumentException(invalidMessage);
         }
     }

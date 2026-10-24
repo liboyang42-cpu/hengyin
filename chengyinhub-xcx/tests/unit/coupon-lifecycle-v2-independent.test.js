@@ -14,7 +14,7 @@ const { createRequestClient } = require('../../utils/transport/request-client.js
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
-const WALLET = 'components/cy/scene-game-coupon-wallet/index.js'
+const WALLET = 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js'
 const QR_SCENE = 'subpackageMember/components/cy/scene-qr-coupon/index.js'
 const QR_PAGE = 'subpackageMember/coupon-qr/index.js'
 
@@ -39,7 +39,7 @@ function mount(relativePath, kind, options = {}) {
   const clock = options.clock || { now: Date.parse('2026-09-14T08:59:58+08:00') }
   let client = null
   const app = {
-    getUserID: () => 'member-A', // 合法读取夹具明确当前账号；缺账号另有负控。
+    getAuthorization: () => 'Bearer test', getUserID: () => 'member-A', // 合法读取夹具明确当前账号；缺账号另有负控。
     sendRequest(options) {
       if (mode === 'plain') {
         requests.push(options)
@@ -121,7 +121,7 @@ function futureCouponRow(extra = {}) {
 
 function loadWallet(rows) {
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'Bearer test', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   delete require.cache[require.resolve(path.join(ROOT, WALLET))]
@@ -154,7 +154,7 @@ test('钱包 NoGo-1:未来券仍可打开等待详情(可查看),但不得被当
   instance.openCode({ currentTarget: { dataset: { item: instance.data.all[2] } } })
   assert.equal(sandbox.events.length, 1, '已用/过期券不承担开码入口')
 
-  const wxml = read('components/cy/scene-game-coupon-wallet/index.wxml')
+  const wxml = read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml')
   assert.match(wxml, /item\._canView/, '卡片入口由可查看驱动')
   assert.match(wxml, /item\._isUsable \? '出示核销码'/, '只有可核销才显示出示核销码')
   assert.match(wxml, /查看可用时间/, '未来券入口文案需说明是查看而非亮码')
@@ -165,7 +165,7 @@ test('钱包负控:把可查看退回可核销判定时,未来券入口必须判
   const mutated = source.replace('_canView: status === 0,', '_canView: status === 0 && started,')
   assert.notEqual(mutated, source, '负控锚点失效:未找到 _canView')
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'Bearer test', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   vm.runInNewContext(mutated, {
@@ -255,7 +255,7 @@ test('独立页 NoGo-3:onHide/onUnload 废在途,onShow 能发当前请求,旧�
   h.instance.onHide()
   assert.equal(oldRequest.aborted, true, 'onHide 必须中止在途 token 请求')
   h.instance.onShow()
-  assert.equal(h.requests.length, 2, 'onShow 必须能立即发当前请求,不被旧 _refreshing 挡住')
+  assert.equal(h.requests.length, 2, 'onShow 必须能立即发当前请求，不被旧 _refreshing 挡住')
 
   succeed(oldRequest, { useStatus: 0, qrcodeUrl: 'account-a-qr', expiresIn: 60, startTime: FUTURE_START })
   assert.equal(h.instance.data.qrcodeUrl, '', '被中止/旧代际的响应不得落屏')

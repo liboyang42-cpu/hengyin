@@ -2,7 +2,7 @@
   display: block;
 }
 .hours-panel {
-  padding: 16px;
+  padding: 0 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -56,6 +56,9 @@
   justify-content: center;
   font-size: 16px; /* ds-ok: Figma 定稿尺寸与中性配色；已由原生截图复核 */
   font-variant-numeric: tabular-nums;
+}
+.hours-value--active {
+  background: var(--cy-color-bg-surface-strong);
 }
 .hours-columns {
   display: flex;

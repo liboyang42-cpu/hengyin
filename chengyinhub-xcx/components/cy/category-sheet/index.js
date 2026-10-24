@@ -49,7 +49,7 @@ Component({
             that.setData({
               categoryList: [],
               loaded: false,
-              loadError: app.getRequestErrorMessage(res, '分类没能加载出来'),
+              loadError: app.getRequestErrorMessage(res, '分类加载失败'),
             });
           }
         },
@@ -57,7 +57,7 @@ Component({
           that.setData({
             categoryList: [],
             loaded: false,
-            loadError: app.getRequestErrorMessage(res, '分类没能加载出来'),
+            loadError: app.getRequestErrorMessage(res, '分类加载失败'),
           });
         },
       });

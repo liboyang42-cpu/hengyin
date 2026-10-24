@@ -39,6 +39,11 @@ function loadPage(pageRelDir, source, stack) {
     sendRequest: r => sandbox.requests.push(r),
     tips: m => sandbox.toasts.push(m),
   }
+  if (pageRelDir === 'subpackageMember/complaint') {
+    app.getUserID = () => 7
+    app.getAuthorization = () => 'Bearer unit-fixture'
+    app.reLogin = () => Promise.resolve({ ok: true })
+  }
   const nav = api => options => sandbox.nav.push({ api, options: options ? Object.assign({}, options) : options })
   const ctx = {
     getApp: () => app,
@@ -138,14 +143,14 @@ test('R3-1 缺参数失败正文在 375px 下放得下单行(无孤字),只说�
   // 真实性不许因为缩短而丢:原因要在。
   // 2026-09-15 T3f 总控裁决:面板 2s 自动回订单列表,「请返回订单列表重新进入」这句指令多余,只说原因。
   assert.match(text, /订单参数缺失/, '必须说清原因')
-  assert.doesNotMatch(text, /重新进入|请返回/, '面板会自动返回,不再叫用户自己返回')
+  assert.doesNotMatch(text, /重新进入|请返回/, '面板会自动返回，不再叫用户自己返回')
 })
 
 test('R3-1 失败正文不得复述卡标题(重复才是字数超标的根因)', () => {
   const { page } = loadOrderInfo()
   page.onLoad({})
   const wxml = read(`${ORDERINFO}.wxml`)
-  assert.match(wxml, /title="加载失败"/, '面板标题锚点失效')
+  assert.match(wxml, /title="订单暂不可查看"/, '面板标题锚点失效')
   assert.doesNotMatch(
     page.data.loadErrorText, /加载失败|无法加载订单详情/,
     '原因行复述面板标题「加载失败」,重复占掉了整行预算',
@@ -163,7 +168,7 @@ test('负控 R3-1:把失败正文改回 27 字的旧文案,单行预算必须判
   assert.throws(
     () => assert.ok(countChars(page.data.loadErrorText) <= ORDERINFO_LINE_BUDGET),
     assert.AssertionError,
-    '旧文案超一行预算,必须判红',
+    '旧文案超一行预算，必须判红',
   )
 })
 
@@ -202,7 +207,7 @@ function assertDotAffordance(wxml, wxss) {
   const bare = stripComments(wxml)
   assert.doesNotMatch(
     bare, /class="dot flex-cc"[\s\S]{0,200}?icon_dot\.png/,
-    '近黑色 icon_dot.png 压在深色卡上等于隐形,本页不得再用它当更多钮字形',
+    '近黑色 icon_dot.png 压在深色卡上等于隐形，本页不得再用它当更多钮字形',
   )
   assert.match(bare, /<cy-icon\s+name="more"\s+size="40"\s*\/>/, '更多钮字形必须是已注册的 cy-icon name="more"')
   assert.doesNotMatch(wxss, /\.dot-glyph/, '禁止用 CSS/伪元素伪造可见图标(产品设计约束)')
@@ -276,7 +281,7 @@ test('负控 R3-3a:去掉栈长兜底分支后,直达路由必须判红', () => 
   assert.throws(
     () => assert.deepEqual(sandbox.nav, [{ api: 'switchTab', options: { url: MEMBER_HOME } }]),
     assert.AssertionError,
-    '没有兜底时直达路由退不出去,必须判红',
+    '没有保底时直达路由退不出去，必须判红',
   )
 })
 
@@ -319,7 +324,7 @@ test('R3-3b 页头副标题留有余量,不贴右边缘', () => {
   const sub = complaintSubtitle()
   assert.ok(
     countChars(sub) < SUB_LINE_BUDGET,
-    `副标题 ${countChars(sub)} 字,一行预算 ${SUB_LINE_BUDGET} 字 —— 吃满或超出就是视觉上的「顶到右边缘」:「${sub}」`,
+    `副标题 ${countChars(sub)} 字，一行预算 ${SUB_LINE_BUDGET} 字 —— 吃满或超出就是视觉上的「顶到右边缘」:「${sub}」`,
   )
   assert.match(sub, /已报名并支付/, '「仅限已报名并支付的活动」这条限制不许丢')
   assert.match(sub, /介入处理/, '「平台会介入处理」这条承诺不许丢')
@@ -343,9 +348,9 @@ test('负控 R3-3b:把副标题改回 25 字旧文案,余量断言必须判红',
 // 用户被留在已提交的表单上。必须复用 onBack() 的栈长兜底,与导航条返回同一条路径。
 function assertSubmitSuccessExit(js) {
   assert.match(js, /setTimeout\(function \(\) \{ that\.onBack\(\); \}, 1200\)/,
-    '提交成功后必须走 onBack()(带栈长兜底),不能裸 navigateBack')
+    '提交成功后必须走 onBack()(带栈长保底),不能裸 navigateBack')
   assert.doesNotMatch(js, /setTimeout\(function \(\) \{ wx\.navigateBack\(\); \}/,
-    '裸 navigateBack 在直达栈首是空操作,不得回潮')
+    '裸 navigateBack 在直达栈首是空操作，不得回潮')
 }
 
 test('R4 投诉提交成功后的退出复用 onBack,直达栈首也有出口', () => {
@@ -370,7 +375,7 @@ function runSubmitSuccessAtStackHead(src) {
   assert.equal(page.data.topics[0].id, 9)
   assert.equal(page.data.topics[0].name, '城市路线 A')
   page.data.topicIndex = 0
-  page.data.reason = '商家未按约定时间接待,现场等待超过一小时'
+  page.data.reason = '商家未按约定时间接待，现场等待超过一小时'
   page.submit()
 
   const report = sandbox.requests[sandbox.requests.length - 1]
@@ -379,7 +384,7 @@ function runSubmitSuccessAtStackHead(src) {
   assert.ok(sandbox.toasts.includes('投诉已提交'), '成功提示必须先出现')
 
   // 此刻退出还没发生,全靠那个 1200ms 回调
-  assert.deepEqual(sandbox.nav, [], '退出必须等到定时器回调,不能立即跳')
+  assert.deepEqual(sandbox.nav, [], '退出必须等到定时器回调，不能立即跳')
   assert.equal(sandbox.timers.length, 1, '成功后应排入一个退出定时器')
   assert.equal(sandbox.timers[0].ms, 1200)
   sandbox.timers[0].fn()   // 推进 fake timer
@@ -389,7 +394,7 @@ function runSubmitSuccessAtStackHead(src) {
 test('R4 行为级:提交成功 1200ms 后在栈首真的退出到会员中心', () => {
   const sandbox = runSubmitSuccessAtStackHead(read(`${COMPLAINT}.js`))
   assert.deepEqual(sandbox.nav, [{ api: 'switchTab', options: { url: MEMBER_HOME } }],
-    '栈首提交成功后必须经 onBack 兜底落到会员中心')
+    '栈首提交成功后必须经 onBack 保底落到会员中心')
 })
 
 test('负控 R4 行为级:成功回调退回裸 navigateBack 时,栈首退出必须行为失败', () => {
@@ -420,17 +425,18 @@ test('负控 R4:提交成功后退回裸 navigateBack 必须判红', () => {
   assert.throws(() => assertSubmitSuccessExit(mutated), assert.AssertionError)
 })
 
-test('R3-3b 过期登录错误态与重试未被本轮改动波及', () => {
+test('R3-3b 过期登录保留明确入口，正常重登后可重新读取', async () => {
   const wxml = stripComments(read(`${COMPLAINT}.wxml`))
   // aaa 三件套(整屏空态补 fill+size=lg)后属性顺序变了，正则放宽到"包含"而非"紧邻"，断言意图不变
-  assert.match(wxml, /<cy-error\b[^>]*\btitle="可投诉活动没能加载出来"[^>]*\bsub="\{\{errorMsg\}\}"[^>]*\bbind:retry="onRetry"[^>]*\/>/)
+  assert.match(wxml, /<cy-error\b[^>]*\btitle="可投诉活动加载失败"[^>]*\bsub="\{\{errorMsg\}\}"[^>]*\bbind:retry="onRetry"[^>]*\/>/)
   const { page, sandbox } = loadComplaint([COMPLAINT])
   page.onLoad()
-  assert.equal(sandbox.requests.length, 1)
+  assert.equal(sandbox.requests.length, 2)
   sandbox.requests[0].successStatusAbnormal({ code: 401, msg: '登录已过期，请重新进入' })
   assert.equal(page.data.loading, false)
-  assert.equal(page.data.errorMsg, '登录已过期，请重新进入', '后端错误文案必须原样透传')
-  page.onRetry()
+  assert.equal(page.data.readAccess, 'login')
+  assert.equal(page.data.readAccessMessage, '登录已过期，请重新进入', '后端错误文案必须原样透传')
+  await page.onRetry()
   assert.equal(page.data.loading, true)
-  assert.equal(sandbox.requests.length, 2, '重试必须真的重新发请求')
+  assert.equal(sandbox.requests.length, 4, '明确重登成功后必须真的重新发出两条读取请求')
 })

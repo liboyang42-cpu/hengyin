@@ -21,6 +21,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +37,7 @@ class ClubWaitlistMaintenanceIsolationTransactionTest {
 
     private JdbcTemplate jdbc;
     private ClubWaitlistServiceImpl service;
+    private boolean failOutbox;
 
     @BeforeEach
     void setUp() {
@@ -52,10 +55,22 @@ class ClubWaitlistMaintenanceIsolationTransactionTest {
                 + "activity_id bigint not null, ticket_id bigint not null, member_id bigint not null, "
                 + "state varchar(16) not null, joined_at timestamp not null, offered_at timestamp null, "
                 + "offer_expires_at timestamp null, offer_token_hash varchar(64) null, version int not null)");
+        jdbc.execute("create table club_event_campaign(id bigint primary key, club_id bigint not null, "
+                + "activity_id bigint not null, audience_type varchar(16) not null, channel varchar(16) not null, "
+                + "title varchar(64) not null, content varchar(255) not null, status varchar(16) not null, "
+                + "actor_member_id bigint not null, request_id varchar(64) not null, total_count int not null, "
+                + "success_count int not null, failed_count int not null, create_time timestamp not null, "
+                + "update_time timestamp not null)");
+        jdbc.execute("create table club_event_delivery(id bigint primary key, campaign_id bigint not null, "
+                + "recipient_member_id bigint not null, channel varchar(16) not null, status varchar(16) not null, "
+                + "attempt_count int not null, version int not null)");
+        jdbc.execute("create table club_event_delivery_outbox(delivery_id bigint primary key, "
+                + "next_attempt_at timestamp not null)");
         jdbc.update("insert into oms_ticket(id,owner_id,owner_type,remaining_inventory,total_inventory,del_flag) "
                 + "values (?,?,2,0,10,0)", GOOD_TICKET, GOOD_ACTIVITY);
         insertOffered(61L, BAD_ACTIVITY, BAD_TICKET);
         insertOffered(62L, GOOD_ACTIVITY, GOOD_TICKET);
+        failOutbox = false;
 
         DataSourceTransactionManager transactions = new DataSourceTransactionManager(dataSource);
         service = new ClubWaitlistServiceImpl(dataBackedMapper(), dataBackedTickets(),
@@ -71,21 +86,58 @@ class ClubWaitlistMaintenanceIsolationTransactionTest {
         assertEquals("EXPIRED", state(62L));
         assertEquals(1L, jdbc.queryForObject(
                 "select remaining_inventory from oms_ticket where id=?", Long.class, GOOD_TICKET));
+        assertEquals("ALL_MEMBERS", jdbc.queryForObject(
+                "select audience_type from club_event_campaign", String.class));
+        assertEquals("候补名额已过期", jdbc.queryForObject(
+                "select title from club_event_campaign", String.class));
+        assertEquals("你的活动候补名额已过期，如仍需参加，请重新加入候补。", jdbc.queryForObject(
+                "select content from club_event_campaign", String.class));
+        assertEquals(162L, jdbc.queryForObject(
+                "select recipient_member_id from club_event_delivery", Long.class));
+        assertEquals(1L, jdbc.queryForObject(
+                "select count(*) from club_event_delivery_outbox", Long.class));
 
         assertEquals(0, service.maintain(NOW));
         assertEquals("OFFERED", state(61L));
         assertEquals(1L, jdbc.queryForObject(
                 "select remaining_inventory from oms_ticket where id=?", Long.class, GOOD_TICKET));
+        assertEquals(1L, jdbc.queryForObject(
+                "select count(*) from club_event_campaign", Long.class));
+        assertEquals(1L, jdbc.queryForObject(
+                "select count(*) from club_event_delivery", Long.class));
+        assertEquals(1L, jdbc.queryForObject(
+                "select count(*) from club_event_delivery_outbox", Long.class));
+    }
+
+    @Test
+    void outboxFailureRollsBackExpiryInventoryAndNotificationRows() {
+        failOutbox = true;
+
+        assertEquals(0, service.maintain(NOW));
+
+        assertEquals("OFFERED", state(62L));
+        assertEquals(0L, jdbc.queryForObject(
+                "select remaining_inventory from oms_ticket where id=?", Long.class, GOOD_TICKET));
+        assertEquals(0L, jdbc.queryForObject(
+                "select count(*) from club_event_campaign", Long.class));
+        assertEquals(0L, jdbc.queryForObject(
+                "select count(*) from club_event_delivery", Long.class));
+        assertEquals(0L, jdbc.queryForObject(
+                "select count(*) from club_event_delivery_outbox", Long.class));
     }
 
     private ClubEventOpsMapper dataBackedMapper() {
         ClubEventOpsMapper mapper = mock(ClubEventOpsMapper.class);
-        when(mapper.selectExpiredOfferedIds(any(Date.class), anyInt())).thenAnswer(call -> jdbc.queryForList(
-                "select id from club_event_waitlist where state='OFFERED' and offer_expires_at<=? order by id",
-                Long.class, (Object) call.getArgument(0, Date.class)));
-        when(mapper.selectClaimedPaidRegistrationIds(anyInt())).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedTerminalRegistrationIds(anyInt())).thenReturn(Collections.emptyList());
-        when(mapper.selectPromotableWaitlistScopes(any(Date.class), anyInt())).thenReturn(Collections.emptyList());
+        when(mapper.selectWaitlistMaintenanceMaxId()).thenAnswer(call ->
+                jdbc.queryForObject("select max(id) from club_event_waitlist", Long.class));
+        when(mapper.selectWaitlistMaintenancePage(eq(0), any(Date.class), anyLong(), anyLong(), anyInt()))
+                .thenAnswer(call -> jdbc.queryForList("select id as scanId, id as targetId from club_event_waitlist "
+                        + "where state='OFFERED' and offer_expires_at<=? and id>? and id<=? order by id limit ?",
+                        new Object[] {call.getArgument(1), call.getArgument(2), call.getArgument(3), call.getArgument(4)}).stream().map(row -> {
+                            java.util.Map<String, Object> normalized = new java.util.HashMap<>();
+                            normalized.put("scanId", row.get("SCANID")); normalized.put("targetId", row.get("TARGETID"));
+                            return normalized;
+                        }).collect(java.util.stream.Collectors.toList()));
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(any(Long.class))).thenAnswer(call -> policy());
         when(mapper.selectSeriesPolicyByActivity(any(Long.class))).thenReturn(null);
         when(mapper.selectWaitlistById(any(Long.class))).thenAnswer(call -> selectWaitlist(call.getArgument(0), false));
@@ -95,6 +147,38 @@ class ClubWaitlistMaintenanceIsolationTransactionTest {
                 "update club_event_waitlist set state='EXPIRED',version=version+1 "
                         + "where id=? and state='OFFERED' and version=? and offer_expires_at<=?",
                 call.getArgument(0), call.getArgument(1), call.getArgument(2)));
+        when(mapper.insertCampaign(any(com.chengyinhub.business.domain.ClubEventCampaign.class)))
+                .thenAnswer(call -> {
+                    com.chengyinhub.business.domain.ClubEventCampaign campaign = call.getArgument(0);
+                    Long id = jdbc.queryForObject(
+                            "select coalesce(max(id),0)+1 from club_event_campaign", Long.class);
+                    int inserted = jdbc.update("insert into club_event_campaign(id,club_id,activity_id,"
+                                    + "audience_type,channel,title,content,status,actor_member_id,request_id,"
+                                    + "total_count,success_count,failed_count,create_time,update_time) "
+                                    + "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                            id, campaign.getClubId(), campaign.getActivityId(), campaign.getAudienceType(),
+                            campaign.getChannel(), campaign.getTitle(), campaign.getContent(), campaign.getStatus(),
+                            campaign.getActorMemberId(), campaign.getRequestId(), campaign.getTotalCount(),
+                            campaign.getSuccessCount(), campaign.getFailedCount(), campaign.getCreateTime(),
+                            campaign.getUpdateTime());
+                    campaign.setId(id);
+                    return inserted;
+                });
+        when(mapper.insertDelivery(any(com.chengyinhub.business.domain.ClubEventDelivery.class)))
+                .thenAnswer(call -> {
+                    com.chengyinhub.business.domain.ClubEventDelivery delivery = call.getArgument(0);
+                    Long id = jdbc.queryForObject(
+                            "select coalesce(max(id),0)+1 from club_event_delivery", Long.class);
+                    int inserted = jdbc.update("insert into club_event_delivery(id,campaign_id,recipient_member_id,"
+                                    + "channel,status,attempt_count,version) values (?,?,?,?,?,?,?)",
+                            id, delivery.getCampaignId(), delivery.getRecipientMemberId(), delivery.getChannel(),
+                            delivery.getStatus(), delivery.getAttemptCount(), delivery.getVersion());
+                    delivery.setId(id);
+                    return inserted;
+                });
+        when(mapper.insertOutbox(any(Long.class), any(Date.class))).thenAnswer(call -> failOutbox ? 0 : jdbc.update(
+                "insert into club_event_delivery_outbox(delivery_id,next_attempt_at) values (?,?)",
+                call.getArgument(0, Long.class), call.getArgument(1, Date.class)));
         return mapper;
     }
 

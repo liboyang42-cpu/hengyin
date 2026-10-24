@@ -8,7 +8,7 @@ import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +27,8 @@ class ApiComplianceControllerTest {
         ComplianceProperties props = new ComplianceProperties();
         Map<String, String> versions = new HashMap<>();
         versions.put("privacy_policy", "v2.1");
+        versions.put("photo_model_processing", "v1.0");
+        versions.put("voice_clone_processing", "v1.0");
         versions.put("activity_host_data_sharing", "v2.1");
         versions.put("merchant_onsite_data_sharing", "v1.0");
         versions.put("bank_account_collection", "v1.0");
@@ -56,6 +58,7 @@ class ApiComplianceControllerTest {
         body.put("eventType", "AGREE");
         body.put("requestId", "consent-request-withdraw-001");
 
+        stubReadback(service, body);
         AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG),
@@ -77,6 +80,7 @@ class ApiComplianceControllerTest {
         body.put("eventType", "AGREE");
         body.put("requestId", "consent-request-withdraw-002");
 
+        stubReadback(service, body);
         AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
@@ -96,6 +100,7 @@ class ApiComplianceControllerTest {
         body.put("eventType", "AGREE");
         body.put("requestId", "consent-request-api-001");
 
+        stubReadback(service, body);
         AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
@@ -115,6 +120,7 @@ class ApiComplianceControllerTest {
         body.put("eventType", "AGREE");
         body.put("requestId", "consent-request-api-002");
 
+        stubReadback(service, body);
         AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
@@ -133,6 +139,7 @@ class ApiComplianceControllerTest {
         body.put("eventType", "AGREE");
         body.put("requestId", "consent-request-api-003");
 
+        stubReadback(service, body);
         AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
@@ -163,6 +170,7 @@ class ApiComplianceControllerTest {
         body.put("eventType", "AGREE");
         body.put("requestId", "merchant-consent-api-001");
 
+        stubReadback(service, body);
         AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
@@ -187,6 +195,7 @@ class ApiComplianceControllerTest {
         body.put("eventType", "AGREE");
         body.put("requestId", "merchant-consent-api-002");
 
+        stubReadback(service, body);
         AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
@@ -194,10 +203,128 @@ class ApiComplianceControllerTest {
                 anyString(), eq(null), anyString(), anyString(), anyString());
     }
 
+    private static void stubReadback(IConsentRecordService service, Map<String, Object> body) {
+        ConsentRecord row = new ConsentRecord();
+        row.setMemberId(1001L); row.setDocType((String)body.get("docType"));
+        row.setDocVersion(complianceProps().versionOf(row.getDocType()));
+        row.setScene((String)body.get("scene")); row.setEventType((String)body.get("eventType"));
+        row.setRequestId((String)body.get("requestId")); row.setScopeType((String)body.get("scopeType"));
+        row.setScopeId((Long)body.get("scopeId"));
+        when(service.byRequestId(1001L, row.getRequestId())).thenReturn(row);
+    }
+
+    @Test void zeroRowsWithoutExactUuidReadbackNeverReportsAgreementRecorded() {
+        IConsentRecordService service = mock(IConsentRecordService.class);
+        TestApiComplianceController controller = new TestApiComplianceController();
+        ReflectionTestUtils.setField(controller, "consentRecordService", service);
+        ReflectionTestUtils.setField(controller, "complianceProperties", complianceProps());
+        Map<String,Object> body = new HashMap<>();
+        body.put("docType", "photo_model_processing"); body.put("scene", "object_photo");
+        body.put("eventType", "AGREE"); body.put("requestId", "same-uuid");
+        assertEquals(HttpStatus.ERROR, controller.record(body, mock(HttpServletRequest.class)).get(AjaxResult.CODE_TAG));
+        stubReadback(service, body);
+        assertEquals(HttpStatus.SUCCESS, controller.record(body, mock(HttpServletRequest.class)).get(AjaxResult.CODE_TAG));
+        ConsentRecord collision = service.byRequestId(1001L, "same-uuid");
+        collision.setEventType("REVOKE");
+        assertEquals(HttpStatus.ERROR, controller.record(body, mock(HttpServletRequest.class)).get(AjaxResult.CODE_TAG));
+        collision.setEventType("AGREE"); collision.setDocVersion("old");
+        assertEquals(HttpStatus.ERROR, controller.record(body, mock(HttpServletRequest.class)).get(AjaxResult.CODE_TAG));
+    }
+
+    @Test
+    void homeCityConsentWritesAndReadsBackItsOwnScene() {
+        IConsentRecordService service = mock(IConsentRecordService.class);
+        TestApiComplianceController controller = new TestApiComplianceController();
+        ReflectionTestUtils.setField(controller, "consentRecordService", service);
+        ReflectionTestUtils.setField(controller, "complianceProperties", complianceProps());
+        var location = mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class);
+        ReflectionTestUtils.setField(controller, "roamLocationConsentService", location);
+        Map<String, Object> body = new HashMap<>(Map.of("docType", "privacy_policy",
+                "scene", "home_city_location", "eventType", "AGREE", "requestId", "home-city-consent-001",
+                "expectedRequestId", ""));
+        stubReadback(service, body);
+        ConsentRecord recorded = service.byRequestId(1001L, "home-city-consent-001");
+        when(location.record(eq(1001L), eq("home_city_location"), eq("AGREE"),
+                eq("home-city-consent-001"), eq(""), anyString())).thenReturn(recorded);
+        AjaxResult result = controller.record(body, mock(HttpServletRequest.class));
+        assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
+        Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
+        assertEquals("home_city_location", data.get("scene"));
+        assertEquals("v2.1", data.get("docVersion"));
+        assertEquals("home-city-consent-001", data.get("requestId"));
+        verify(location).record(eq(1001L), eq("home_city_location"), eq("AGREE"),
+                eq("home-city-consent-001"), eq(""), anyString());
+        verify(service, never()).record(anyLong(), anyString(), anyString(), anyString(),
+                anyString(), anyString(), anyString());
+        when(service.latest(1001L, "privacy_policy", "home_city_location")).thenReturn(recorded);
+        AjaxResult latest = controller.latest(body);
+        assertEquals(HttpStatus.SUCCESS, latest.get(AjaxResult.CODE_TAG));
+        assertEquals("home_city_location", ((Map<?, ?>) latest.get(AjaxResult.DATA_TAG)).get("scene"));
+    }
+
+    @Test
+    void homeCityConsentWithoutMatchingReadbackFailsClosed() {
+        IConsentRecordService service = mock(IConsentRecordService.class);
+        TestApiComplianceController controller = new TestApiComplianceController();
+        ReflectionTestUtils.setField(controller, "consentRecordService", service);
+        ReflectionTestUtils.setField(controller, "complianceProperties", complianceProps());
+        var location = mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class);
+        ReflectionTestUtils.setField(controller, "roamLocationConsentService", location);
+        Map<String, Object> body = new HashMap<>(Map.of("docType", "privacy_policy",
+                "scene", "home_city_location", "eventType", "AGREE", "requestId", "home-city-consent-002",
+                "expectedRequestId", ""));
+        assertEquals(HttpStatus.ERROR, controller.record(body, mock(HttpServletRequest.class)).get(AjaxResult.CODE_TAG));
+        stubReadback(service, body);
+        ConsentRecord collision = service.byRequestId(1001L, "home-city-consent-002");
+        collision.setScene("roam_location");
+        when(location.record(eq(1001L), eq("home_city_location"), eq("AGREE"),
+                eq("home-city-consent-002"), eq(""), anyString())).thenReturn(collision);
+        assertEquals(HttpStatus.ERROR, controller.record(body, mock(HttpServletRequest.class)).get(AjaxResult.CODE_TAG));
+        body.put("docType", "bank_account_collection");
+        assertEquals(HttpStatus.ERROR, controller.latest(body).get(AjaxResult.CODE_TAG));
+    }
+
+    @Test
+    void anonymousHomeCityConsentCannotReadOrWrite() {
+        IConsentRecordService service = mock(IConsentRecordService.class);
+        ApiComplianceController controller = new ApiComplianceController() {
+            @Override public Long getAppUserId() { throw new IllegalStateException("not logged in"); }
+        };
+        ReflectionTestUtils.setField(controller, "consentRecordService", service);
+        ReflectionTestUtils.setField(controller, "complianceProperties", complianceProps());
+        Map<String, Object> body = new HashMap<>(Map.of("docType", "privacy_policy",
+                "scene", "home_city_location", "eventType", "AGREE", "requestId", "home-city-consent-003"));
+        assertEquals(HttpStatus.ERROR, controller.record(body, mock(HttpServletRequest.class)).get(AjaxResult.CODE_TAG));
+        assertEquals(HttpStatus.ERROR, controller.latest(body).get(AjaxResult.CODE_TAG));
+        org.mockito.Mockito.verifyNoInteractions(service);
+    }
+
     private static class TestApiComplianceController extends ApiComplianceController {
         @Override
         public Long getAppUserId() {
             return 1001L;
         }
+    }
+
+    @Test void roamConsentUsesCasServiceAndClientPlaySceneCannotSelectAnotherPermissionPath() {
+        var generic=mock(IConsentRecordService.class);
+        var location=mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class);
+        var controller=new TestApiComplianceController();
+        ReflectionTestUtils.setField(controller,"consentRecordService",generic);
+        ReflectionTestUtils.setField(controller,"roamLocationConsentService",location);
+        ReflectionTestUtils.setField(controller,"complianceProperties",complianceProps());
+        Map<String,Object> body=new HashMap<>(Map.of("docType","privacy_policy","scene","roam_location","eventType","AGREE","requestId","new-agree","expectedRequestId","revoked"));
+        ConsentRecord receipt=new ConsentRecord();receipt.setRequestId("new-agree");receipt.setMemberId(1001L);
+        receipt.setDocType("privacy_policy");receipt.setDocVersion("v2.1");receipt.setScene("roam_location");receipt.setEventType("AGREE");
+        when(location.record(eq(1001L),eq("AGREE"),eq("new-agree"),eq("revoked"),anyString())).thenReturn(receipt);
+        assertEquals(200,controller.record(body,mock(HttpServletRequest.class)).get("code"));
+        verify(location).record(eq(1001L),eq("AGREE"),eq("new-agree"),eq("revoked"),anyString());
+        org.mockito.Mockito.verifyNoInteractions(generic);
+        when(location.record(eq(1001L),eq("AGREE"),eq("new-agree"),eq("revoked"),anyString()))
+                .thenThrow(new com.chengyinhub.business.service.impl.RoamLocationConsentService.ConsentChangedException());
+        assertEquals(409,controller.record(body,mock(HttpServletRequest.class)).get("code"));
+        body.put("scene","play");
+        assertEquals(500,controller.record(body,mock(HttpServletRequest.class)).get("code"));
+        org.mockito.Mockito.verifyNoInteractions(generic);
     }
 }

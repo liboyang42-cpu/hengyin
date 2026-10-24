@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-sheet · 底部弹起面板(action-sheet / 选择器 / 菜单容器)
  * 遮罩 + 底部圆角卡 + 上滑动画 + 安全区;内容走 slot。色随主题。 */
 :host { display: block; --cy-btn-font-size: var(--cy-type-button); }
@@ -60,8 +61,16 @@
   /* 用户 2026-08-10 定:弹窗顶统一贴到「胶囊底下 5px」。调用方拿不到胶囊坐标的场合
      仍退回 70vh(2026-08-05 拍板值),所以这里是带兜底的变量而不是改死值 ——
      全站 63 处调用一个都不受影响,只有显式传 --cy-comp-sheet-max-h 的才变。 */
-  max-height: var(--cy-comp-sheet-max-h, 70vh);
-  overflow-y: auto;
+  /* 2026-10-23 业主(实机反馈):弹窗高度跟内容走 —— 内容短就短(底下不留空),内容长就一直长到胶囊底下(近全屏),
+     不再卡在 70vh 把下半截截掉。上限一律按胶囊实测(index.js attached 下发到根节点),拿不到才退 token。
+     ⚠️ 面板自己不再滚动(overflow 在 view 上 + 整层 catchtouchmove = 实机上「弹窗滑不动、底下的页面反而在动」):
+     面板是纵向 flex,只有 .sh__body(scroll-view)一个滚动区,头部 / 抓手 / 底部按钮固定不动。 */
+  /* 2026-10-23 同日再定三档:peek 30% / half 60% / full 80%。贴内容高 = 自动落在放得下的最小一档,
+     所以默认上限就是 full(80%),并且仍不越过胶囊底 +5px。固定档见文件末尾 .sh--fixed-*。 */
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   /* 2026-09-06 用户裁决:升起与落下都要「慢快慢」,改读 --cy-ease-standard。
      此前是稿 40:3 裁的 decelerate(0,0,.2,1)= 一上来最快再减速;用户看过实机后改了口径。
      时长仍是稿裁的 sheet-in(300)/sheet-out(250),只换曲线不换档。
@@ -164,7 +173,20 @@
 .sh__body {
   margin: 0 var(--cy-sheet-body-margin-x, 0px);
   padding: 8rpx var(--cy-sheet-body-pad-x, 0px);
+  /* 面板里唯一的滚动区:内容短就按内容高,内容长就被面板上限收住、在这里面滚;
+     滚到头不把手势传给底下的页面(overscroll-behavior),页面在弹窗打开时纹丝不动。 */
+  flex: 0 1 auto;
+  min-height: 0;
+  box-sizing: border-box;
+  overscroll-behavior: contain;
+  /* scroll-view 自带 width:100%:配上负的 body-margin-x 时整块只是左移、宽度不跟着加,
+     右侧被裁掉一截(发送邀约实测 body 334 而面板 374,主题横滑和输入框右缘都缺 20px)。
+     auto + stretch 才是「负边距向两侧撑满」。 */
+  width: auto;
+  align-self: stretch;
 }
+/* 抓手 / 头部 / 底部按钮:固定,不随正文滚,也不被压缩 */
+.sh__grip, .sh__head, .sh__footer { flex: none; }
 @keyframes sh-up {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
@@ -196,8 +218,8 @@
      真机上解析为 0 ⇒ 顶边照样落进胶囊行。组件现在按胶囊实测下发 --cy-comp-sheet-max-h
      (见 index.js 的 attached)。两条并存是取更保守的那个:实测值更高时由 max-height 收住,
      拿不到实测值时 token 独扛 —— 哪种都不会越进胶囊行。 */
-  height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
-  max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
+  height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));
   display: flex;
   flex-direction: column;
   padding-bottom: 0;              /* footer 自己处理安全区 */
@@ -399,3 +421,35 @@
 }
 
 .sh--stacked .sh__panel{transform:translateY(-22rpx) scale(.96);transform-origin:bottom center;filter:brightness(.76);pointer-events:none}
+
+/* 底部变体:面板固定头/脚,只让 .sh__body(scroll-view)滚动;长内容不再带着整块面板滚,
+ * 也不会在滚到头时把手势交给底下的页面。has-footer 的同款规则在上面,这里补无 footer 的情形。 */
+.sh--bottom .sh__panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sh--bottom .sh__body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* 固定档(fixed="peek|half|full"):打开后内容会变的弹窗定在所属档高度,搜索 / 加载 / 切页签时面板不跳。
+ * 档位值来自 tokens(30 / 60 / 80vh),并且仍受胶囊底 +5px 封顶;正文 scroll-view 撑满剩余高度。 */
+.sh--fixed-peek .sh__panel { height: min(var(--cy-comp-sheet-peek), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); }
+.sh--fixed-half .sh__panel { height: min(var(--cy-comp-sheet-half), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); }
+.sh--fixed-full .sh__panel { height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); }
+.sh--fixed .sh__body { flex: 1 1 auto; min-height: 0; }
+
+/* ═══ 2026-10-23 业主定:弹窗按档位定速 + 同一时刻只有一个弹层在动 ═══
+ * 档位类在根节点把 --cy-motion-sheet-in / -out 重定义成该档时长,面板与遮罩的进出场规则原样读这两条,
+ * 所以三档自动同档、退场仍短于进场。half 档不用写:就是 token 默认值 300 / 250。 */
+.sh--lv-peek { --cy-motion-sheet-in: var(--cy-motion-sheet-peek-in); --cy-motion-sheet-out: var(--cy-motion-sheet-peek-out); }
+.sh--lv-full { --cy-motion-sheet-in: var(--cy-motion-sheet-full-in); --cy-motion-sheet-out: var(--cy-motion-sheet-full-out); }
+/* 量高那一帧:面板和遮罩都不起跑、不可见,量完挂上档位类再一起升起(keyframes 从 none 换回才会从头播)。 */
+.sh.sh--measure .sh__panel,
+.sh.sh--measure .sh__mask { animation: none; visibility: hidden; }
+/* 交接(见 behaviors/exit-motion.js):被接替的那层遮罩保持全暗直到卸载 ——
+ * important 才压得过关键帧;接替的这层遮罩直接是暗的,不再淡入。页面不会暗 → 亮 → 暗闪一下。 */
+.sh--keep-mask .sh__mask { opacity: 1 !important; }
+.sh.sh--handoff-in .sh__mask { animation: none; }

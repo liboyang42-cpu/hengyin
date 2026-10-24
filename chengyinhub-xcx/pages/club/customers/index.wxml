@@ -28,20 +28,20 @@
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="5" loading-label="正在加载客户名单" />
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg"
-            title="当前岗位没有客户查看权限" sub="{{errorText || '当前账号没有查看权限'}}" retry="" bind:back="goBack" auto-back custom-back />
+            title="当前岗位没有客户查看权限" sub="{{errorText}}" retry="" bind:back="goBack" auto-back custom-back />
   <!-- auto-back 只认首屏:名单读出来之后的每一次搜索 / 换筛选都会再发一次请求,
        那一次失败若也自动退页,用户刚打的关键词会跟着页面一起没(审查C A1)。 -->
-  <cy-error wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户名单加载失败"
+  <cy-error load-failure wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户名单加载失败"
             sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back="{{!everLoaded}}" />
-  <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="客户名单加载失败"
+  <cy-error load-failure wx:elif="{{state === 'error'}}" fill size="lg" title="客户名单加载失败"
             sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back="{{!everLoaded}}" />
   <!-- CU-C-05:筛选/搜索下没结果 ≠ 从来没有客户,别让人以为名单丢了;清掉筛选即回全部 -->
   <cy-empty wx:elif="{{state === 'empty' && (filterKey !== 'all' || keyword)}}" fill size="lg" title="没有符合条件的客户"
-            sub="换个筛选或关键词试试" cta="查看全部客户" bind:cta="clearFilters" />
+            sub="换个筛选试试" cta="查看全部客户" bind:cta="clearFilters" />
   <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="还没有客户"
-            sub="有人买过本俱乐部的票之后，这里会按人汇总他的到店与退款。" />
+            />
 
-  <view wx:else class="cus-list">
+  <view wx:else class="cus-list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <view class="cus-row" wx:for="{{items}}" wx:key="memberId" data-member-id="{{item.memberId}}"
           bindtap="openCustomer" aria-role="button" aria-label="查看客户 {{item.displayName}}"
           hover-class="cy-pressed" hover-stay-time="80">

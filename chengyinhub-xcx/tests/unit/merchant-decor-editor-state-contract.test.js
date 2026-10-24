@@ -33,6 +33,10 @@ function loadPage(relativePath, options = {}) {
     getRequestErrorMessage(error, fallback) { return error && error.msg || fallback },
     chooseImage() {},
   }
+  if (relativePath === 'pages/merchant/decor/gallery/index.js') {
+    app.getUserID = () => '3';
+    app.globalData.authorization = 'gallery-test-token';
+  }
   const wx = {
     getSystemInfoSync: () => ({ statusBarHeight: 20 }),
     navigateBack() { navigations.push('back') },
@@ -142,7 +146,7 @@ test('承接设置保存保持原 payload，锁重复并留下失败或成功回
   const h = loadPage('pages/merchant/decor/coop-setting/index.js')
   h.page.data.loadState = 'ok'
   h.page.data.form = { capacity: '18', availableTime: '周末', chargeType: 1, demand: '提前预约' }
-  h.page.data.keep = { suitActivityTypes: '亲子,城市探索', coopOpen: 1 }
+  h.page.data.keep = { suitActivityTypes: '亲子，城市探索', coopOpen: 1 }
   h.page.onNavBack = () => {}
 
   h.page.data.refreshing = true
@@ -156,7 +160,7 @@ test('承接设置保存保持原 payload，锁重复并留下失败或成功回
   assert.deepEqual(JSON.parse(h.requests[0].data), {
     capacity: 18,
     availableTime: '周末',
-    suitActivityTypes: '亲子,城市探索',
+    suitActivityTypes: '亲子，城市探索',
     chargeType: 1,
     demand: '提前预约',
     coopOpen: 1,
@@ -257,7 +261,9 @@ test('门店相册刷新保留旧图片，区分权限和网络，并阻止并�
 
 test('门店相册保存锁重复，失败保留编辑结果，成功留下回执且 payload 不变', () => {
   const h = loadPage('pages/merchant/decor/gallery/index.js')
-  Object.assign(h.page.data, { loadState: 'ready', gallery: ['a.jpg', 'b.jpg'], dirty: true })
+  h.page.load()
+  h.requests.shift().success({ code: 200, data: { memberId: 3, gallery: '["a.jpg","b.jpg"]' } })
+  Object.assign(h.page.data, { dirty: true })
   h.page.onNavBack = () => {}
 
   h.page.data.refreshing = true
@@ -306,7 +312,7 @@ test('门店相册空态、原位错误和图片动作满足恢复及 88rpx aria
   assert.match(json, /"cy-icon"/)
 })
 
-test('负控：移除门店相册读取 epoch guard 后，卸载迟到回调契约必须变红', () => {
+test('负控：移除门店相册读取 epoch guard 后，前台旧请求覆盖契约必须变红', () => {
   const relativePath = 'pages/merchant/decor/gallery/index.js'
   const source = fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
   const mutated = source.replace(/\s*if \(epoch !== that\._loadEpoch\) return false;/g, '')
@@ -314,10 +320,12 @@ test('负控：移除门店相册读取 epoch guard 后，卸载迟到回调契�
   assert.throws(() => {
     const h = loadPage(relativePath, { source: mutated })
     h.page.load()
-    h.page.onUnload()
+    h.page.onHide()
+    h.page.onShow()
+    assert.equal(h.requests.length, 2, '回到前台确实已启动新请求')
     h.requests[0].success({ code: 200, data: { memberId: 3, gallery: '["late.jpg"]' } })
-    assert.deepEqual(h.page.data.gallery, [], '卸载后的旧相册响应不得写回')
-  }, /卸载后的旧相册响应不得写回/)
+    assert.deepEqual(h.page.data.gallery, [], '前台旧相册响应不得覆盖新请求')
+  }, /前台旧相册响应不得覆盖新请求/)
 })
 
 test('常备权益刷新保留旧清单，拒绝并发，并区分权限与网络', () => {
@@ -468,7 +476,7 @@ test('常备权益创建锁重复，保持 payload，写回执后必须用列表
   h.requests[1].success({ code: 200, data: { id: 77 } })
   assert.equal(h.page.data.formVisible, true, '写接口回执不能提前关闭表单')
   assert.equal(h.page.data.saveReceipt, '', '写接口回执不能提前宣称已保存')
-  assert.equal(h.page.data.saving, true, '权威回读完成前保持提交锁')
+  assert.equal(h.page.data.saving, true, '权威刷新完成前保持提交锁')
   assert.equal(h.requests[2].url, '/api/coop/perk-template/list')
 
   h.requests[2].success({ code: 200, data: [] })
@@ -590,6 +598,40 @@ test('店铺装修即时保存锁重复，保持 payload，并留下失败或成
   assert.equal(h.page.data.coopSummary, '', '未知收费类型不得显示成免费承接')
 })
 
+test('BL-141 营业状态写后回读：一致才出回执，不一致或回读失败回滚并提示状态未同步', () => {
+  const h = loadPage('pages/merchant/decor/index.js')
+  h.page.data.loadState = 'ok'
+  h.page.data.m = { name: '店', businessStatus: 1 }
+  h.page.toggleBusiness({ detail: { value: false } })
+  assert.equal(h.requests[0].url, '/api/merchant/business-status/update')
+  h.requests[0].success({ code: 200, msg: '已打烊' })
+  assert.equal(h.requests[1].url, '/api/merchant/business-status')
+  assert.equal(h.requests[1].method, 'POST')
+  assert.equal(h.page.data.saveReceipt, '', '刷新前不得宣称成功')
+  assert.equal(h.page.data.saving, true)
+  h.requests[1].success({ code: 200, data: { businessStatus: 0, businessStatusText: '已打烊' } })
+  assert.equal(h.page.data.m.businessStatus, 0)
+  assert.equal(h.page.data.saveReceipt, '营业状态已保存')
+
+  h.page.toggleBusiness({ detail: { value: true } })
+  h.requests[2].success({ code: 200 })
+  h.requests[3].success({ code: 200, data: { businessStatus: 0, businessStatusText: '已打烊' } })
+  assert.equal(h.page.data.m.businessStatus, 0, '刷新不一致必须回滚开关')
+  assert.equal(h.page.data.saveReceipt, '')
+  assert.match(h.page.data.saveError, /状态更新中：当前仍为已打烊/)
+
+  h.page.toggleBusiness({ detail: { value: true } })
+  h.requests[4].success({ code: 200 })
+  h.requests[5].fail({ errMsg: 'request:fail timeout' })
+  assert.equal(h.page.data.m.businessStatus, 0)
+  assert.match(h.page.data.saveError, /状态更新中，请刷新/)
+
+  h.page.toggleBusiness({ detail: { value: true } })
+  h.requests[6].success({ code: 500, msg: '营业状态参数错误' })
+  assert.equal(h.requests.length, 7, '写失败不发刷新')
+  assert.equal(h.page.data.saveError, '营业状态参数错误')
+})
+
 test('店铺装修入口状态、即时回执及交互满足 88rpx 与 aria 契约', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/merchant/decor/index.wxml'), 'utf8')
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/decor/index.wxss'), 'utf8')
@@ -597,8 +639,9 @@ test('店铺装修入口状态、即时回执及交互满足 88rpx 与 aria 契�
   assert.match(wxml, /loadState === 'permission'[\s\S]*kind="no-permission"/)
   assert.doesNotMatch(wxml, /<cy-inline-error[^>]*loadError/)
   assert.match(wxml, /saveError[\s\S]*bind:action="retrySave"/)
-  assert.match(wxml, /class="dc-save-receipt"[^>]*aria-role="status"[^>]*aria-live="polite"/)
-  assert.match(wxml, /class="dc-refreshing"[^>]*aria-role="status"[^>]*aria-live="polite"/)
+  // owner 2026-10-22:返回页面不闪 —— 「正在刷新」与「已保存」横幅不再插进标题上方的文档流,保存回执改走 toast
+  assert.doesNotMatch(wxml, /class="dc-save-receipt"/)
+  assert.doesNotMatch(wxml, /class="dc-refreshing"/)
   assert.match(wxml, /<cy-cell[^>]*bind:tap="goSection"/)
   assert.match(wxml, /class="dc-tag[^>]*aria-role="checkbox"[^>]*aria-checked=/)
   assert.match(wxml, /class="dc-input"[^>]*aria-label="\{\{fieldSheet\.label\}\}"/)

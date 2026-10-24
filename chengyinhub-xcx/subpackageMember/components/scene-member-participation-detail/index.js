@@ -3,12 +3,14 @@ const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
 const { toTimestamp, chinaDayStart } = require('../../../utils/datetime');
 const { resolveVerificationScan } = require('../../../utils/verification-scan');
+const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
-const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { summarizeOrderState, canRequestOrderRefund } = require('../../../utils/order-status.js');
+const { isFreeOrder } = require('../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
+const { isUnknownHttpStatus } = require('../../../utils/transport/failure-envelope.js');
 
 function nonNegativeNumberOrNull(value) {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
@@ -45,7 +47,10 @@ Component({
     },
   lifetimes: {
     attached() {
-      this._skipInitialShow = true;
+      this._cancelDisposed = false;
+      this._cancelGeneration = (this._cancelGeneration || 0) + 1;
+      this._syncCancellationAccount();
+      this._skipInitialShow = true; this._detailDisposed = false; this._detailGeneration = (this._detailGeneration || 0) + 1;
       const id = trimmedString(String(this.data.recordId == null ? '' : this.data.recordId))
       if (!id) {
         // 没有 id 就永远拿不到详情:既不能停在「一直加载中」,也不能把缺参伪装成加载失败
@@ -59,7 +64,9 @@ Component({
       this._applyRecordId(id)
     },
     detached() {
-      if (this._verificationWorkflow) this._verificationWorkflow.destroy();
+      this._invalidateParticipationCancellation();
+      this._cancelDisposed = true;
+      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; cyLoading.hide(); }
     },
   },
   // ⚠️ 深链壳(subpackageMember/mycanyuinfo)的 id 是页面 onLoad 里 setData 进去的:组件 attached
@@ -73,6 +80,7 @@ Component({
   },
   pageLifetimes: {
     show() {
+      this._syncCancellationAccount();
       if (this._skipInitialShow) { this._skipInitialShow = false; return; }
       if (this.data.id) this.getData(this.data.id);
     },
@@ -84,13 +92,19 @@ Component({
       const id = trimmedString(String(value == null ? '' : value))
       if (!id) return
       if (String(this.data.id) === id) return
+      this._invalidateParticipationCancellation();
+      this._cancelRecordPending = true;
       // 后到的 id 要把「缺参」态翻回加载中,否则界面还停在死文字上而请求已经在路上。
-      this.setData({ id, loadState: 'loading', loadErrorText: '', errorActionText: '重试' })
+      this.setData({ id, info: {}, loadState: 'loading', loadErrorText: '', errorActionText: '重试' })
       this.getData()
     },
     _submitVerification(key, loadingTitle, options, callback) {
       const that = this;
-      if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+      const owner = String(app.getUserID && app.getUserID() || '');
+      const generation = this._detailGeneration || 0;
+      if (this._detailDisposed) return false;
+      key = owner + ':' + key;
+      if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
       if (this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
         return false;
@@ -99,14 +113,16 @@ Component({
       const submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success(r) { done({ status: 'success', response: r }); },
-          fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-          successStatusAbnormal(res) {
-            done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+          success(r) { done(classifyVerificationOutcome(r, 'success', undefined, options)); },
+          fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
+          successStatusAbnormal(res, status) {
+            done(classifyVerificationOutcome(res, 'abnormal', status, options));
           }
         }));
       }, function (result) {
         cyLoading.hide();
+        if (that._detailDisposed || generation !== (that._detailGeneration || 0)
+            || owner !== String(app.getUserID && app.getUserID() || '')) return;
         if (result.status === 'unknown') {
           callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' });
           offerVerificationReadback(key, that._verificationWorkflow);
@@ -183,6 +199,8 @@ Component({
                 cyToast('该码含多个章节，请到商家后台核销');
                 return;
               }
+              const verdict = resolveVerificationResult(r, scan.successTitle || '核销');
+              if (verdict.state === 'duplicate') { cyToast(verdict.title + '：' + verdict.message, { icon: 'none' }); return; }
               if (r.code == '200') {
                 cyToast.success(r.msg || scan.successTitle);
               } else {
@@ -196,18 +214,26 @@ Component({
     // 获取数据
     getData: function () {
       const that = this;
+      if (that._detailDisposed) return;
+      const generation = that._detailGeneration;
+      const member = app.getUserID && app.getUserID();
+      const id = that.data.id;
       const requestEpoch = (this._detailRequestEpoch || 0) + 1;
       this._detailRequestEpoch = requestEpoch;
+      const isCurrent = () => !that._detailDisposed && generation === that._detailGeneration
+        && requestEpoch === that._detailRequestEpoch
+        && member === (app.getUserID && app.getUserID()) && String(id) === String(that.data.id);
       app.sendRequest({
         hideLoading: true,
         silentError: true,
         url: '/api/registration/info',
-        data: { id: that.data.id },
+        data: { id },
         method: "POST",
         success: function (res) {
-          if (requestEpoch !== that._detailRequestEpoch) return;
+          if (!isCurrent()) return;
           if (res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
             const info = res.data;
+            that._cancelRecordPending = false;
 
             // 准备显示数据
             const displayInfo = that.prepareDisplayData(info);
@@ -227,7 +253,7 @@ Component({
           }
         },
         fail: function (res) {
-          if (requestEpoch !== that._detailRequestEpoch) return;
+          if (!isCurrent()) return;
           const fallback = '网络异常，请重试';
           const msg = app.getRequestErrorMessage
             ? app.getRequestErrorMessage(res, fallback)
@@ -282,7 +308,7 @@ Component({
 
       // 6. 活动说明
       displayInfo.activityDesc = trimmedString(info.activityDesc) || trimmedString(source.description);
-      displayInfo.cooperateDateText = trimmedString(info.cooperateDate) || '接待时间待确认';
+      displayInfo.cooperateDateText = trimmedString(info.cooperateDate) || '—';
       displayInfo.hasCooperateDate = !!trimmedString(info.cooperateDate);
       displayInfo.hasNodeName = !!trimmedString(info.nodeName);
 
@@ -416,33 +442,78 @@ Component({
 
     // 取消参与：已支付单必须走 cancel-refund(/api/registration/cancel 对已支付单必拒),
     // 文案与订单详情同源(utils/danger-actions.js),退款进度以接口回执为准。
+    _invalidateParticipationCancellation() {
+      if (this._finishCancelPrompt) this._finishCancelPrompt();
+      if (this._finishCancellation) this._finishCancellation();
+      this._cancelGeneration = (this._cancelGeneration || 0) + 1;
+    },
+    _syncCancellationAccount() {
+      const member = app.getUserID && app.getUserID();
+      if (this._cancelMemberId !== undefined && this._cancelMemberId !== member) {
+        this._invalidateParticipationCancellation();
+      }
+      this._cancelMemberId = member;
+    },
     cancelParticipation() {
+      this._syncCancellationAccount();
+      if (this._cancelDisposed || this._cancelRecordPending || !this.data.id
+          || this._cancelPromptOpen || this._finishCancellation) return;
+      const id = this.data.id;
       const paid = Number((this.data.info || {}).paymentStatus) === 2;
+      const member = this._cancelMemberId;
+      const generation = this._cancelGeneration;
+      const isCurrent = () => !this._cancelDisposed && generation === this._cancelGeneration
+        && member === (app.getUserID && app.getUserID()) && String(id) === String(this.data.id);
+      this._cancelPromptOpen = true;
+      const finishCancelPrompt = () => {
+        if (this._finishCancelPrompt !== finishCancelPrompt) return false;
+        this._finishCancelPrompt = null;
+        this._cancelPromptOpen = false;
+        return true;
+      };
+      this._finishCancelPrompt = finishCancelPrompt;
       modal.show({
-        dangerKey: paid ? 'order.cancel-refund' : 'order.cancel',
+        // F-W5-07:零元单没有钱可退,确认框与订单详情/列表同用「取消报名」文案。
+        dangerKey: paid ? (isFreeOrder(this.data.info) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',
         dangerParams: {
           deadline: (this.data.info || {}).refundDeadlineDisplay || '已核销或已过开始时间不可退',
         },
         success: (res) => {
-          if (res.confirm) {
-            this.cancelRequest(paid);
-          }
-        }
+          if (!finishCancelPrompt() || !isCurrent() || !res.confirm) return;
+          // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
+          if (paid && !isFreeOrder(this.data.info)) require('../../../utils/subscribe.js').request(['refund', 'refundRejected']);
+          this.cancelRequest(paid, id);
+        },
+        fail: finishCancelPrompt,
+        complete: finishCancelPrompt
       });
     },
 
     // 发送取消请求（添加列表刷新）
-    cancelRequest(paid) {
+    cancelRequest(paid, recordId) {
       const that = this;
+      that._syncCancellationAccount();
+      const id = recordId == null ? that.data.id : recordId;
+      if (that._cancelDisposed || that._cancelRecordPending || !id || that._finishCancellation
+          || String(id) !== String(that.data.id)) return;
+      const member = that._cancelMemberId;
+      const generation = that._cancelGeneration;
+      const isCurrent = () => !that._cancelDisposed && generation === that._cancelGeneration
+        && member === (app.getUserID && app.getUserID()) && String(id) === String(that.data.id)
+        && that._finishCancellation === finishCancellation;
       cyLoading.show('取消中...');
-
+      const finishCancellation = () => {
+        if (that._finishCancellation !== finishCancellation) return;
+        that._finishCancellation = null;
+        cyLoading.hide();
+      };
+      that._finishCancellation = finishCancellation;
       app.sendRequest({
         url: paid ? '/api/registration/cancel-refund' : '/api/registration/cancel',
         method: "POST",
-        data: { id: that.data.id },
+        data: { id },
         success: function (res) {
-          cyLoading.hide();
-
+          if (!isCurrent()) return;
           if (res.code == "200") {
             cyToast.success(paid ? cancellationFeedback(res) : '取消成功', { duration: 2000 });
             // 取消成功 ⇒ 关掉详情回到列表,并通知宿主重拉(原来是 navigateBack 猜页面栈)
@@ -452,10 +523,17 @@ Component({
             cyToast(res.msg || '取消失败', { duration: 2000 });
           }
         },
-        fail: function (res) {
-          cyLoading.hide();
+        fail: function (res, statusCode) {
+          if (!isCurrent()) return;
+          if (isUnknownHttpStatus(statusCode)) {
+            cyToast('取消结果暂未确认，正在刷新订单');
+            that.triggerEvent('refresh');
+            that.getData();
+            return;
+          }
           cyToast('网络错误，请重试', { duration: 2000 });
-        }
+        },
+        complete: finishCancellation
       });
     },
 

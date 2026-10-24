@@ -104,13 +104,24 @@ class JourneyChoiceEffectsTest {
                         && inv.getArgument(2).equals(a.getActionId()))
                 .findFirst().orElse(null));
         when(routeMapper.updateStateCas(any(TopicRouteSession.class))).thenReturn(1);
+        // CORE OWN-C06-1x/25：检定按当前局定位；动作回执总以最终结算值回写原动作。
+        when(routeMapper.selectCurrentByOwner(anyLong(), org.mockito.ArgumentMatchers.eq(TOPIC), org.mockito.ArgumentMatchers.eq(MEMBER)))
+                .thenAnswer(inv -> stored[0] != null && java.util.Objects.equals(inv.getArgument(0), stored[0].getActivityId()) ? stored[0] : null);
+        when(routeMapper.updateActionResponse(anyLong(), anyString())).thenAnswer(inv -> {
+            for (TopicRouteAction action : actions) {
+                if (inv.getArgument(0).equals(action.getId())) { action.setResponseJson(inv.getArgument(1)); return 1; }
+            }
+            return 0;
+        });
         when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
                 .thenReturn(Collections.emptyList());
         when(shopDayProofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         CmsRegistration pass = new CmsRegistration();
+        pass.setId(9_000_001L); // 真实报名行必有主键；C包当前资格按原ID锁读
         pass.setExpiresAt(null);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.singletonList(pass));
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.delegateLocks(activityMapper, registrationMapper);
     }
 
     // ==================== 1. 选择结果当场写状态 ====================

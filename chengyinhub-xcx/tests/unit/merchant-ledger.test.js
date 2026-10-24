@@ -6,7 +6,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '../..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('商家台账只读资金域接口，详情用 recordType 和 recordId 路由', () => {
+test('商家记录只读资金域接口，详情用 recordType 和 recordId 路由', () => {
   const js = read('pages/merchant/ledger/index.js');
   assert.match(js, /\/api\/merchant\/finance\/redemptions/);
   assert.match(js, /\/api\/merchant\/finance\/overview/);
@@ -129,4 +129,246 @@ test('项目铃铛按真实主题/活动归属打开近期收入与核销，失�
   const legacy = mount('pages/merchant/ledger/index.js'); legacy.page.onLoad({ view: 'messages' });
   allow(legacy.requests[0]); assert.equal(legacy.requests.length, 1, '原全局消息只保留IM入口');
   legacy.page.goInbox(); assert.deepEqual(legacy.urls, ['/subpackageB/pages/im/list/index']);
+});
+
+
+test('actual merchant denial shows permission state while failed permission reads stay blank and issue no finance request', () => {
+  const nodeVm = require('node:vm');
+  const { createRequire } = require('node:module');
+  const file = path.join(root, 'pages/merchant/ledger/index.js');
+  const requests = []; let config;
+  nodeVm.runInNewContext(read('pages/merchant/ledger/index.js'), {
+    Page: value => { config = value; }, require: createRequire(file),
+    getApp: () => ({ globalData: {}, getUserID: () => 23, sendRequest: req => requests.push(req) }),
+    wx: { getStorageSync: () => '', getWindowInfo: () => ({ statusBarHeight: 20 }) },
+  });
+  const page = Object.assign({}, config, { data: JSON.parse(JSON.stringify(config.data)),
+    setData: patch => Object.assign(page.data, patch) });
+  page.onLoad({ view: 'redemptions' });
+  requests[0].success({ code: 200, data: { active: false, permissions: [] } });
+  assert.equal(page.data.accessDenied, true);
+  assert.equal(page.data.error, true);
+  assert.equal(requests.length, 1);
+  page.retry(); requests[1].success({ code: 500 });
+  assert.equal(page.data.accessDenied, false, 'failed read cannot claim absence of permission');
+  assert.equal(page.data.error, true);
+  assert.equal(requests.length, 2);
+  const wxml = read('pages/merchant/ledger/index.wxml');
+  assert.match(wxml, /cy-empty wx:if="\{\{accessDenied\}\}" kind="no-permission"/);
+  assert.match(wxml, /cy-error load-failure wx:elif="\{\{error && !hasLoaded\}\}"/);
+});
+
+function loadLedgerSubscription(options = {}) {
+  const vm = require('node:vm');
+  const { createRequire } = require('node:module');
+  const requirePage = createRequire(path.join(root, 'pages/merchant/ledger/index.js'));
+  let uid = 'merchant-a', definition;
+  const settings = [], subscriptions = [], openings = [], messages = [], writes = [];
+  const wx = {
+    getWindowInfo: () => ({ statusBarHeight: 20 }),
+    getSetting(request) { settings.push(request); if (options.settingThrows) throw new Error('setting failed'); },
+    requestSubscribeMessage(request) {
+      subscriptions.push(request);
+      if (options.requestThrows) throw new Error('request failed');
+    },
+    openSetting(request) { openings.push(request); if (options.openThrows) throw new Error('open failed'); },
+  };
+  if (options.noSetting) delete wx.getSetting;
+  if (options.noRequest) delete wx.requestSubscribeMessage;
+  if (options.noOpen) delete wx.openSetting;
+  const module = { exports: {} };
+  vm.runInNewContext(read('utils/subscribe.js'), { module, wx, console: { warn() {} } });
+  const subscribe = module.exports;
+  if (options.noTemplate) subscribe.TEMPLATES.coopSettle = '';
+  const app = { globalData: { navBarHeight: 44 }, getUserID: () => uid, sendRequest() {} };
+  vm.runInNewContext(read('pages/merchant/ledger/index.js'), {
+    Page(value) { definition = value; }, getApp: () => app, wx, console,
+    require(id) {
+      if (id.endsWith('/subscribe.js')) return subscribe;
+      if (id.endsWith('/toast.js')) return text => messages.push(text);
+      if (id.endsWith('/merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} };
+      return requirePage(id);
+    },
+  }, { filename: 'pages/merchant/ledger/index.js' });
+  const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) });
+  page.setData = patch => { writes.push(patch); Object.assign(page.data, patch); };
+  page.onLoad({ view: 'settlement' });
+  return {
+    page, wx, subscribe, settings, subscriptions, openings, messages, writes,
+    switchOwner(value, show = true) { uid = value; if (show) page.onShow(); },
+    setting(allowed = 'accept', mainSwitch = true) {
+      return { subscriptionsSetting: { mainSwitch, itemSettings: { [subscribe.TEMPLATES.coopSettle]: allowed } } };
+    },
+    tap(value = true) { return page.enableCoopSettleAlerts({ detail: { value } }); },
+  };
+}
+
+test('settlement notice: actual helper stays in tap stack and accepted means notification permission only', async () => {
+  const h = loadLedgerSubscription();
+  const pending = h.tap();
+  assert.equal(h.subscriptions.length, 1, 'native subscription must start before tap returns');
+  h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'accept' });
+  await pending;
+  assert.equal(h.page.data.settleAlertsState, 'allowed');
+  assert.equal(h.page.data.settleAlertsEnabled, true);
+  assert.equal(h.page.data.settleAlertsLoading, false);
+  assert.deepEqual(h.messages, ['已允许微信通知']);
+  const wxml = read('pages/merchant/ledger/index.wxml');
+
+  assert.match(wxml, /settleAlertsHint/);
+  assert.doesNotMatch(wxml, /入账后通过服务通知告诉你/);
+});
+
+for (const scenario of ['reject', 'failed', 'unsupported', 'not-configured', 'throws']) {
+  test('settlement notice: actual helper distinguishes ' + scenario, async () => {
+    const h = loadLedgerSubscription({ noRequest: scenario === 'unsupported', noTemplate: scenario === 'not-configured', requestThrows: scenario === 'throws' });
+    const pending = h.tap();
+    if (scenario === 'reject') h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'reject' });
+    if (scenario === 'failed') h.subscriptions[0].fail({ errMsg: 'offline' });
+    await pending;
+    assert.equal(h.page.data.settleAlertsState, scenario === 'reject' ? 'not_allowed' : 'unknown');
+    assert.equal(h.page.data.settleAlertsEnabled, false);
+    assert.equal(h.page.data.settleAlertsLoading, false);
+    assert.ok(!h.messages.some(text => /已开启|已允许|到账成功/.test(text)));
+  });
+}
+
+for (const scenario of ['missing-api', 'failure', 'throws', 'missing-settings', 'missing-main', 'missing-item']) {
+  test('settlement notice: getSetting ' + scenario + ' remains unknown, never refusal', () => {
+    const h = loadLedgerSubscription({ noSetting: scenario === 'missing-api', settingThrows: scenario === 'throws' });
+    Object.assign(h.page.data, { settleAlertsState: 'allowed', settleAlertsEnabled: true });
+    h.page.syncCoopSettleAlertSetting();
+    if (scenario === 'failure') h.settings[0].fail({ errMsg: 'offline' });
+    if (scenario === 'missing-settings') h.settings[0].success({});
+    if (scenario === 'missing-main') h.settings[0].success({ subscriptionsSetting: { itemSettings: { [h.subscribe.TEMPLATES.coopSettle]: 'accept' } } });
+    if (scenario === 'missing-item') h.settings[0].success({ subscriptionsSetting: { mainSwitch: true } });
+    assert.equal(h.page.data.settleAlertsState, 'unknown');
+    assert.equal(h.page.data.settleAlertsEnabled, false);
+    assert.equal(h.page.data.settleAlertsLoading, false);
+  });
+}
+
+for (const [value, main, expected] of [['accept', true, 'allowed'], ['reject', true, 'not_allowed'], ['ban', true, 'not_allowed'], ['accept', false, 'not_allowed']]) {
+  test('settlement notice: current settings ' + value + '/' + main + ' report only permission', () => {
+    const h = loadLedgerSubscription(); h.page.syncCoopSettleAlertSetting();
+    h.settings[0].success(h.setting(value, main));
+    assert.equal(h.page.data.settleAlertsState, expected);
+    assert.equal(h.page.data.settleAlertsEnabled, expected === 'allowed');
+    assert.equal(h.messages.length, 0);
+  });
+}
+
+test('settlement notice: duplicate tap and stale setting cannot replace active subscription', async () => {
+  const h = loadLedgerSubscription(); h.page.syncCoopSettleAlertSetting();
+  const pending = h.tap(); h.tap(); h.page.onShow();
+  assert.equal(h.subscriptions.length, 1);
+  assert.equal(h.settings.length, 1);
+  h.settings[0].success(h.setting('reject'));
+  assert.equal(h.page.data.settleAlertsLoading, true);
+  h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'accept' });
+  await pending;
+  h.settings[0].fail({});
+  assert.equal(h.page.data.settleAlertsState, 'allowed');
+});
+
+test('settlement notice: only newest setting read may update, duplicate terminal callbacks are inert', () => {
+  const h = loadLedgerSubscription(); h.page.syncCoopSettleAlertSetting(); h.page.syncCoopSettleAlertSetting();
+  h.settings[1].success(h.setting()); h.settings[0].success(h.setting('reject')); h.settings[1].fail({});
+  assert.equal(h.page.data.settleAlertsState, 'allowed');
+});
+
+for (const operation of ['subscription', 'setting', 'opening']) {
+  test('settlement notice: old ' + operation + ' owner callback cannot change new owner or release its lock', async () => {
+    const h = loadLedgerSubscription();
+    let old;
+    if (operation === 'subscription') old = h.tap();
+    if (operation === 'setting') h.page.syncCoopSettleAlertSetting();
+    if (operation === 'opening') h.tap(false);
+    h.switchOwner('merchant-b');
+    const fresh = h.tap();
+    const before = h.writes.length;
+    if (operation === 'subscription') { h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'accept' }); await old; }
+    if (operation === 'setting') h.settings[0].success(h.setting());
+    if (operation === 'opening') { h.openings[0].success({}); h.openings[0].complete(); }
+    assert.equal(h.writes.length, before);
+    assert.equal(h.messages.length, 0);
+    assert.equal(h.page.data.settleAlertsLoading, true);
+    h.subscriptions[h.subscriptions.length - 1].success({ [h.subscribe.TEMPLATES.coopSettle]: 'reject' });
+    await fresh;
+    assert.equal(h.page.data.settleAlertsState, 'not_allowed');
+  });
+}
+
+for (const operation of ['subscription', 'setting', 'opening']) {
+  test('settlement notice: unloaded ' + operation + ' callback cannot write or toast', async () => {
+    const h = loadLedgerSubscription(); let pending;
+    if (operation === 'subscription') pending = h.tap();
+    if (operation === 'setting') h.page.syncCoopSettleAlertSetting();
+    if (operation === 'opening') h.tap(false);
+    h.page.onUnload(); const before = h.writes.length;
+    if (operation === 'subscription') h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'accept' });
+    if (operation === 'setting') h.settings[0].success(h.setting());
+    if (operation === 'opening') { h.openings[0].success({}); h.openings[0].complete(); }
+    await pending;
+    assert.equal(h.writes.length, before);
+    assert.equal(h.messages.length, 0);
+  });
+}
+
+test('settlement notice: toggle off opens real settings and only readback may decide state', async () => {
+  const h = loadLedgerSubscription(); const pending = h.tap();
+  h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'accept' }); await pending;
+  h.tap(false); h.tap(false);
+  assert.equal(h.openings.length, 1);
+  assert.equal(h.page.data.settleAlertsState, 'unknown');
+  h.openings[0].success({}); h.openings[0].complete();
+  assert.equal(h.page.data.settleAlertsState, 'unknown');
+  h.settings[0].success(h.setting());
+  assert.equal(h.page.data.settleAlertsState, 'allowed', 'opening settings did not revoke permission');
+  assert.ok(!h.messages.some(text => /关闭/.test(text)));
+});
+
+for (const scenario of ['missing', 'fail', 'throws', 'complete-only']) {
+  test('settlement notice: openSetting ' + scenario + ' is unknown and allows retry', () => {
+    const h = loadLedgerSubscription({ noOpen: scenario === 'missing', openThrows: scenario === 'throws' });
+    h.tap(false);
+    if (scenario === 'fail') h.openings[0].fail({});
+    if (scenario === 'complete-only') h.openings[0].complete();
+    assert.equal(h.page.data.settleAlertsState, 'unknown');
+    assert.equal(h.page.data.settleAlertsLoading, false);
+    assert.ok(!h.messages.some(text => /已关闭/.test(text)));
+  });
+}
+
+test('settlement notice: unknown rejected promise releases lock and a later real helper attempt can succeed', async () => {
+  const h = loadLedgerSubscription();
+  const original = h.subscribe.request;
+  h.subscribe.request = () => Promise.reject(new Error('unexpected failure'));
+  await h.tap();
+  assert.equal(h.page.data.settleAlertsState, 'unknown');
+  assert.equal(h.page.data.settleAlertsLoading, false);
+  h.subscribe.request = original;
+  const pending = h.tap(); h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'accept' }); await pending;
+  assert.equal(h.page.data.settleAlertsState, 'allowed');
+});
+
+test('settlement notice: A-B-A navigation cannot revive the first A request or clear latest A lock', async () => {
+  const h = loadLedgerSubscription(); const old = h.tap();
+  h.switchOwner('merchant-b'); h.switchOwner('merchant-a');
+  const fresh = h.tap(); const before = h.writes.length;
+  h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'accept' }); await old;
+  assert.equal(h.writes.length, before);
+  assert.equal(h.page.data.settleAlertsLoading, true);
+  h.subscriptions[1].fail({}); await fresh;
+  assert.equal(h.page.data.settleAlertsState, 'unknown');
+});
+
+test('settlement notice: immediate owner change without onShow and missing identity cannot apply or request', async () => {
+  const h = loadLedgerSubscription(); const pending = h.tap(); h.switchOwner('merchant-b', false);
+  const before = h.writes.length;
+  h.subscriptions[0].success({ [h.subscribe.TEMPLATES.coopSettle]: 'accept' }); await pending;
+  assert.equal(h.writes.length, before); assert.equal(h.messages.length, 0);
+  h.switchOwner(''); const requests = h.subscriptions.length; h.tap();
+  assert.equal(h.subscriptions.length, requests);
+  assert.equal(h.page.data.settleAlertsState, 'unknown');
 });

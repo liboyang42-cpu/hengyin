@@ -1,0 +1,62 @@
+<!-- 我的队伍(2026-10-14 漫游原型):带队 / 已通过 / 审核中 / 未通过 分组,另有「附近招募」。
+     数据:/api/team/my + /api/team/my-applications + /api/team/nearby;没有队伍的人也能直接看到附近在招募的队伍。 -->
+<view class="mt theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+  <cy-modal-host id="cy-modal-host" />
+  <cy-toast id="cy-toast" />
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+  <!-- 地图按钮放进 cy-nav-bar 的 actions 槽:组件按微信胶囊左缘定位,不会被胶囊盖住 -->
+  <cy-nav-bar plain>
+    <view slot="actions" class="mt-map" bindtap="openMap" aria-role="button" aria-label="打开地图找队伍" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="31" /><text>地图</text></view>
+  </cy-nav-bar>
+  <cy-page-title title="我的队伍" />
+  <view class="mt-stats cy-rise-in">
+    <view class="mt-stat" wx:for="{{stats}}" wx:key="k"><text class="mt-stat__v">{{item.v}}</text><text class="mt-stat__k">{{item.k}}</text></view>
+  </view>
+  <view class="mt-seg">
+    <view class="mt-seg__i {{tab === 'mine' ? 'is-on' : ''}}" data-tab="mine" bindtap="switchTab" aria-role="tab" aria-selected="{{tab === 'mine'}}" aria-label="我的" hover-class="cy-pressed" hover-stay-time="80">我的</view>
+    <view class="mt-seg__i {{tab === 'open' ? 'is-on' : ''}}" data-tab="open" bindtap="switchTab" aria-role="tab" aria-selected="{{tab === 'open'}}" aria-label="附近招募" hover-class="cy-pressed" hover-stay-time="80">附近招募{{openRows.length ? ' · ' + openRows.length : ''}}</view>
+  </view>
+
+  <block wx:if="{{tab === 'mine'}}">
+    <view class="mt-state" wx:if="{{loading && !groups.length}}">正在读取你的队伍…</view>
+    <view class="mt-err" wx:elif="{{mineError}}" bindtap="reload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
+    <block wx:elif="{{groups.length}}">
+      <block wx:for="{{groups}}" wx:for-item="g" wx:key="key">
+        <view class="mt-sec">{{g.title}}</view>
+        <view class="mt-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{g.rows}}" wx:key="key" data-index="{{index}}" data-group="{{g.key}}" bindtap="openRow"
+              aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="mt-card__top">
+            <view class="mt-av mt-av--{{item.avatars.length}}"><image wx:for="{{item.avatars}}" wx:for-item="face" wx:key="k" class="mt-av__i" src="{{face.src}}" mode="aspectFill" /></view>
+            <view class="mt-card__body"><text class="mt-card__n">{{item.name}}</text><text class="mt-card__m">{{item.sub}}</text></view>
+            <text class="mt-badge mt-badge--{{item.tone}}">{{item.badge}}</text>
+          </view>
+          <view class="mt-card__foot">
+            <text>{{item.members}}</text>
+            <view wx:if="{{item.action}}" class="mt-act mt-act--{{item.action.kind}}" data-index="{{index}}" data-group="{{g.key}}" catchtap="onRowAction"
+                  aria-role="button" aria-label="{{item.action.text}}" hover-class="cy-pressed" hover-stay-time="80">{{item.action.text}}</view>
+          </view>
+        </view>
+      </block>
+    </block>
+    <view class="mt-empty cy-rise-in" wx:else>
+      <view class="mt-empty__faces"><image class="mt-empty__face" src="/images/d_profile.png" mode="aspectFill" /><image class="mt-empty__face" src="/images/d_profile.png" mode="aspectFill" /><view class="mt-empty__plus"><cy-icon name="plus" size="38" /></view></view>
+      <text class="mt-empty__t">还没有队伍</text>
+      <view class="mt-btn" bindtap="openMap" aria-role="button" aria-label="去地图找队伍" hover-class="cy-pressed" hover-stay-time="80">去地图找队伍</view>
+    </view>
+  </block>
+
+  <block wx:if="{{tab === 'open' || (!loading && !groups.length && !mineError)}}">
+    <view class="mt-sec" wx:if="{{tab === 'mine'}}">附近在招募</view>
+    <view class="mt-state" wx:if="{{openLoading}}">正在找附近的队伍…</view>
+    <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="{{openError}}，点按重试" hover-class="cy-pressed" hover-stay-time="80">{{openError}} · 点按重试</view>
+    <view class="mt-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{openRows}}" wx:key="key" data-index="{{index}}" bindtap="openNearbyTeam" aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="mt-card__top">
+        <view class="mt-av mt-av--{{item.avatars.length}}"><image wx:for="{{item.avatars}}" wx:for-item="face" wx:key="k" class="mt-av__i" src="{{face.src}}" mode="aspectFill" /></view>
+        <view class="mt-card__body"><text class="mt-card__n">{{item.name}}</text><text class="mt-card__m">{{item.sub}}</text></view>
+        <text class="mt-badge mt-badge--plain">{{item.badge}}</text>
+      </view>
+      <view class="mt-card__foot"><text>{{item.members}}</text><text class="mt-card__go">在地图上看</text></view>
+    </view>
+    <view class="mt-state" wx:if="{{!openLoading && !openError && openLoaded && !openRows.length}}">附近暂时没有在招募的队伍</view>
+  </block>
+</view>

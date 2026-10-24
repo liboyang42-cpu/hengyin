@@ -14,6 +14,7 @@ function loadInvitePage() {
   const requests = []
   global.getApp = () => ({
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    getUserID: () => 7,
     sendRequest(options) { requests.push(options) }
   })
   global.wx = { showToast() {}, navigateTo() {}, setStorageSync() {}, getStorageSync() { return '' } }
@@ -159,7 +160,7 @@ test('CU-M-98 负控:确认条款退回省略单位 / 各写一份时,上面两�
     "? (terms.feeName + ' · ¥' + Number(this.data.fixedFee || 0).toFixed(2) + ' ' + terms.feeUnit)",
     "? ((this.data.activeType === 1 ? '固定带队费' : '按核销付费') + ' · ¥' + Number(this.data.fixedFee || 0).toFixed(2))"
   )
-  assert.notEqual(regressed, JS(), '负控锚点失效:sendInvite 的 termsText 已改名,扫描口径需同步')
+  assert.notEqual(regressed, JS(), '负控锚点失效:sendInvite 的 termsText 已改名，扫描口径需同步')
   const page = loadInviteFromSource(regressed)
   page.onLoad({ type: '1' })
   page.data.topicsState = 'ready'
@@ -242,7 +243,7 @@ test('部分失败后只保留失败对象，重试不会重复发送成功项',
     env.requests[1].success({ code: '500', msg: '容量不足' })
     env.requests[1].complete()
     assert.deepEqual(env.page.data.selected, [{ toId: 22, name: '乙店' }])
-    assert.match(env.page.data.sendResult, /已发起 1 条;失败:乙店:容量不足/)
+    assert.match(env.page.data.sendResult, /已发起 1 条；失败：乙店:容量不足/)
   } finally {
     env.restore()
   }
@@ -257,11 +258,13 @@ test('type2 的 tab、节点 UI、请求与 payload 分支全部撤销，预置�
   assert.doesNotMatch(wxml, /<cy-tabs\b/)
 })
 
-test('发送确认半屏同时回显已锁定邀请对象与合作条款', () => {
+test('发送确认半屏回显已锁定邀请对象与拟议条款(条款在对方接受并成单后才冻结)', () => {
   const wxml = WXML()
   const js = JS()
   assert.match(wxml, /邀请对象 · 已锁定/)
-  assert.match(wxml, /合作条款 · 已锁定/)
+  // CoopInviteServiceImpl 在对方接受、生成合作单时才冻结条款快照,发送时只是拟议条款
+  assert.match(wxml, /拟议条款 · 对方接受并成单后锁定/)
+  assert.doesNotMatch(wxml, /合作条款 · 已锁定|发送确认时锁定/)
   assert.match(wxml, /inviteModal\.targetLogo/)
   assert.match(wxml, /inviteModal\.termsText/)
   assert.match(js, /termsText\s*=\s*this\.data\.shareMode === 2/)
@@ -276,7 +279,7 @@ test('历史 type2 仍可读且 merchantMemberId 节点模型保留', () => {
   // 断言跟着真源走 —— 留在 coop/list 上只会证明「那一行没被改过」,证明不了标签表还在。
   const inviteView = read('utils/coop-invite-view.js')
   assert.match(inviteView, /TYPE_LABEL\s*=\s*\[[^\]]*'商家 → 商家承接节点'/)
-  assert.match(listJs, /require\([^)]*coop-invite-view/, 'coop/list 必须仍消费这份共用整形,而不是自己再抄一份')
+  assert.match(listJs, /require\([^)]*coop-invite-view/, 'coop/list 必须仍消费这份共用整形，而不是自己再抄一份')
   assert.match(inviteView, /const legacyReadonly\s*=\s*Number\(it\.inviteType\)\s*===\s*2/)
   // 俱乐部带队申请卡(inv-acts--apply)不是邀约,没有 inviteType,不参与 type2 只读闸
   const actionConditions = [...listWxml.matchAll(/class="inv-acts(?! inv-acts--apply)[^"]*"\s+wx:if="\{\{([^"]+)\}\}"/g)].map((m) => m[1])

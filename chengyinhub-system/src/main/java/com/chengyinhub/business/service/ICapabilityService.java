@@ -4,12 +4,8 @@ import com.chengyinhub.business.domain.MemberCapability;
 
 import java.util.List;
 
-/**
- * 会员能力服务(P1 能力模型)。
- *
- * 能力真源 = member_capability 表(多能力),替代单值 ums_member.role 作能力判定。
- * player 能力隐式默认(不落表),hasCapability(memberId,"player") 永远 true。
- * role 列保留作"默认视角指针"(双写过渡),不在此判定能力。
+/** 兼容能力视图：权限只由持久 ums_member.role 决定；member_capability 只保留历史/展示投影。
+ * grant/revoke 委托 RoleService 的唯一角色写入口，不独立授予能力。
  */
 public interface ICapabilityService {
 
@@ -19,7 +15,7 @@ public interface ICapabilityService {
     /** 撤销能力(幂等:置 status=0;无记录则 no-op)。 */
     void revoke(Long memberId, String capability);
 
-    /** 是否拥有某有效能力(player 隐式 true)。 */
+    /** 是否拥有某有效能力(有效会员含 player 基础行为)。 */
     boolean hasCapability(Long memberId, String capability);
 
     /** 该会员所有有效能力(含隐式 player)。 */

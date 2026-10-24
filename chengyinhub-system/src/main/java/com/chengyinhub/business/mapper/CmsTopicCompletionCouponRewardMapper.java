@@ -8,6 +8,10 @@ public interface CmsTopicCompletionCouponRewardMapper
     int insertIgnore(@Param("topicId") Long topicId, @Param("memberId") Long memberId,
                      @Param("couponId") Long couponId);
 
+    /** 绑定本事务发出的原领取回执；必须恰好写一行，否则发券与占位一并回滚。 */
+    int bindHistoryId(@Param("topicId") Long topicId, @Param("memberId") Long memberId,
+                      @Param("couponId") Long couponId, @Param("historyId") Long historyId);
+
     /** 批5 凭证面只读:该玩家该主题的通关券发放时刻;未发过返 null(不返 0,「没发」不是「发了 0 张」)。 */
     java.util.Date selectGrantedAt(@Param("topicId") Long topicId, @Param("memberId") Long memberId);
 

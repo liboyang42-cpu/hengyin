@@ -1,6 +1,9 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import java.util.List;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.uuid.IdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,10 +39,16 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     @Autowired
     private BusinessAuditEventMapper businessAuditEventMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.CouponSourceGrantMapper couponSourceGrantMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.RewardDropLogMapper rewardDropLogMapper;
+
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SmsCouponHistoryServiceImpl.class);
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_REDEMPTION_FAILED, op = "coupon")
     public RedemptionResult redeemCoupon(Long historyId, Long ownerMemberId, Long merchantId,
                                          Long actorMemberId, String actorRoleCode) {
         if (historyId == null || ownerMemberId == null || ownerMemberId <= 0) {
@@ -55,7 +64,8 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         if (merchantId == null ? !clubActor : merchantId <= 0 || !merchantActor) {
             throw new IllegalArgumentException("优惠券核销作用域与操作者角色不匹配");
         }
-        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryById(historyId);
+        // 固定本事务核销的当前历史身份，防后台编辑关联后沿旧模板校验权限/记账。
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
         if (history == null || (history.getDelFlag() != null && history.getDelFlag() != 0)) {
             return RedemptionResult.NOT_FOUND;
         }
@@ -125,6 +135,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         }
 
         settlementEntryService.recordCouponVerification(history, coupon);
+        // 延续 history→coupon 锁序；当前模板已失效时零行抛错，连同历史CAS和事务内结算全部回滚。
         if (smsCouponMapper.incrementUseCount(coupon.getId()) != 1) {
             throw new IllegalStateException("优惠券核销计数更新失败");
         }
@@ -179,7 +190,8 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         if (reason == null || reason.trim().isEmpty()) {
             throw new IllegalArgumentException("撤销原因不能为空");
         }
-        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryById(historyId);
+        // 先锁当前历史关联，避免后台并发编辑coupon_id后仍回退旧模板；沿用history→coupon锁序。
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
         if (history == null) {
             throw new IllegalStateException("核销记录不存在");
         }
@@ -257,26 +269,16 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     @Transactional(rollbackFor = Exception.class)
     public Long grantCouponWithReceipt(Long memberId, com.chengyinhub.business.domain.SmsCoupon coupon) {
         if (coupon == null || coupon.getId() == null) return null;
-        // C-30:手动失效的券拒发;商家停发(4)同样不再新增发放。
-        // 两者与库存耗尽同口径返回 null,调用方已按「发放失败」处理。
+        // 日期预检用于尽早跳过；真正占库存时仍以数据库当前状态和时间为准。
         if (isNotIssuable(coupon)) {
-            logger.warn("券已失效或停发,拒发 couponId={} status={} member={}",
+            logger.warn("券已失效、停发或不在可发放期,拒发 couponId={} status={} member={}",
                     coupon.getId(), coupon.getStatus(), memberId);
             return null;
         }
-        Long publishCount = coupon.getPublishCount();
-        if (publishCount != null && publishCount > 0) {
-            // 限量券:原子占坑(receive_count < publish_count 才 +1),返回 0 = 已抢光
-            if (smsCouponMapper.tryIncrementReceiveCount(coupon.getId()) == 0) {
-                logger.warn("券库存耗尽,拒发 couponId={} member={} publishCount={}",
-                        coupon.getId(), memberId, publishCount);
-                return null;
-            }
-        } else {
-            // 不限量券:仅维护领取计数(统计用),不设上限
-            if (smsCouponMapper.incrementReceiveCount(coupon.getId()) != 1) {
-                throw new IllegalStateException("优惠券领取计数更新失败");
-            }
+        if (smsCouponMapper.tryIncrementIssuableReceiveCount(coupon.getId()) == 0) {
+            logger.warn("券当前不可发放或库存耗尽,拒发 couponId={} member={}",
+                    coupon.getId(), memberId);
+            return null;
         }
         SmsCouponHistory h = new SmsCouponHistory();
         h.setMemberId(memberId);
@@ -294,7 +296,39 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
         if (smsCouponHistoryMapper.insertSmsCouponHistory(h) != 1) {
             throw new IllegalStateException("优惠券领取记录写入失败");
         }
+        if (h.getId() == null) throw new IllegalStateException("优惠券领取记录缺少原ID");
         return h.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long grantCouponBySource(Long memberId, Long couponId, String sourceType, Long sourceId) {
+        if (memberId == null || memberId <= 0 || couponId == null || couponId <= 0
+                || !"reward_drop".equals(sourceType) || sourceId == null || sourceId <= 0) {
+            throw new IllegalArgumentException("奖励券原来源不合法");
+        }
+        com.chengyinhub.business.domain.RewardDropLog source = rewardDropLogMapper.selectById(sourceId);
+        if (source == null || !memberId.equals(source.getMemberId()) || !Integer.valueOf(3).equals(source.getDropType())) {
+            throw new IllegalArgumentException("奖励券来源归属或类型不匹配");
+        }
+        Long originalCoupon = com.alibaba.fastjson2.JSON.parseObject(source.getParamJson()).getLong("couponTemplateId");
+        if (!couponId.equals(originalCoupon)) throw new IllegalArgumentException("奖励券原模板不匹配");
+        // 原历史log没有交付关联，不能猜它没发过；只有与新log同事务固化的意图可自动交付。
+        com.chengyinhub.business.domain.CouponSourceGrant receipt = couponSourceGrantMapper.selectForUpdate(sourceType, sourceId);
+        if (receipt == null) {
+            logger.warn("奖励券原来源缺交付意图,需核查历史回执 sourceId={}", sourceId);
+            return null;
+        }
+        if (!memberId.equals(receipt.getMemberId()) || !couponId.equals(receipt.getCouponId())) {
+            throw new IllegalStateException("奖励券同来源内容冲突");
+        }
+        if (receipt.getHistoryId() != null) return receipt.getHistoryId();
+        Long historyId = grantCouponWithReceipt(memberId, couponSourceGrantMapper.selectCouponForUpdate(couponId));
+        if (historyId == null) return null;
+        if (couponSourceGrantMapper.markDelivered(sourceType, sourceId, historyId) != 1) {
+            throw new IllegalStateException("奖励券原来源回执写入失败");
+        }
+        return historyId;
     }
 
     @Override
@@ -305,12 +339,20 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     }
 
     /**
-     * 不可再发放(发券闸门):3 平台手动失效 / 4 商家停发。
+     * 不可再发放(发券闸门):3 平台手动失效 / 4 商家停发 / 不在可发放期。
      * ⚠️ 与核销闸门 {@link #isDisabled} 不同:商家停发只阻新增发放,已领的照常可核销。
      */
     private static boolean isNotIssuable(com.chengyinhub.business.domain.SmsCoupon coupon) {
         return Integer.valueOf(3).equals(coupon.getStatus())
-                || Integer.valueOf(4).equals(coupon.getStatus());
+                || Integer.valueOf(4).equals(coupon.getStatus())
+                || outsideIssuanceWindow(coupon, new java.util.Date());
+    }
+
+    private static boolean outsideIssuanceWindow(com.chengyinhub.business.domain.SmsCoupon coupon,
+                                                  java.util.Date now) {
+        return (coupon.getEnableTime() != null && coupon.getEnableTime().after(now))
+                || (coupon.getStartTime() != null && coupon.getStartTime().after(now))
+                || (coupon.getEndTime() != null && !coupon.getEndTime().after(now));
     }
 
     /** 核销闸门:sms_coupon.status 0 未开始 / 1 进行中 / 2 已结束 / 3 手动失效 / 4 已停发(可核销)。 */
@@ -321,7 +363,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     /**
      * C1 发行上限判定(纯函数,单测友好,亦供只读"是否可领"/对账复用)。
      * publish_count 为 null 或 <=0 视为不限量;>0 时 receive_count 必须 < publish_count 才可再发。
-     * 运行时并发原子性由 SmsCouponMapper.tryIncrementReceiveCount 的条件 UPDATE 保证(与此语义一致)。
+     * 运行时并发原子性由 SmsCouponMapper.tryIncrementIssuableReceiveCount 的条件 UPDATE 保证(与此语义一致)。
      */
     public static boolean hasStock(Long receiveCount, Long publishCount) {
         if (publishCount == null || publishCount <= 0) return true;
@@ -366,13 +408,19 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int insertSmsCouponHistory(SmsCouponHistory smsCouponHistory)
     {
         smsCouponHistory.setCreateTime(DateUtils.getNowDate());
+        // O-06 库存守恒:先条件占库存再写领取记录(同事务)。原先「先插记录、再无条件 +1」
+        // 并发补录可让 receive_count 越过 publish_count,限量券被超发。
+        if (smsCouponHistory.getCouponId() != null
+                && smsCouponMapper.tryIncrementReceiveCountWithinStock(smsCouponHistory.getCouponId()) == 0) {
+            throw new ServiceException("优惠券不存在或库存不足");
+        }
         int rows = smsCouponHistoryMapper.insertSmsCouponHistory(smsCouponHistory);
-        // 领取计数维护:每新增一条领取记录,父券 receive_count +1(原子)
-        if (rows > 0 && smsCouponHistory.getCouponId() != null) {
-            smsCouponMapper.incrementReceiveCount(smsCouponHistory.getCouponId());
+        if (smsCouponHistory.getCouponId() != null && rows != 1) {
+            throw new IllegalStateException("优惠券领取记录写入失败");
         }
         return rows;
     }

@@ -1,3 +1,5 @@
+const { decodeDisplayText } = require('../../../utils/display-text.js');
+
 function positiveId(value) {
   if (value === null || value === undefined || value === '') return null;
   const text = String(value).trim();
@@ -33,10 +35,39 @@ function createReviewRequestId(kind, now, random, sequence) {
   return `mr-${prefix}-${timePart}-${randomPart}-${sequencePart}`.slice(0, 64);
 }
 
-function shapePage(raw, expectedMode, expectedPageNum, expectedPageSize) {
+// W10a #20:管理态四个筛选 + 全部都由服务端做(/api/merchant/reviews/manage?filter=),
+// 计数来自服务端 filterCounts(本店全量),不再只数已加载的那一页。
+const MANAGE_REVIEW_FILTERS = ['all', 'pending', 'low', 'photo', 'platform'];
+
+function normalizeManageFilter(value) {
+  const filter = String(value || 'all');
+  return MANAGE_REVIEW_FILTERS.indexOf(filter) >= 0 ? filter : 'all';
+}
+
+// 缺字段(老后端)⇒ null:页面不显示数字,绝不退回去数已加载页。字段在但不合法 ⇒ undefined:整页按数据不完整处理。
+function shapeFilterCounts(raw) {
+  if (!Object.prototype.hasOwnProperty.call(raw, 'filterCounts') || raw.filterCounts == null) return null;
+  const source = raw.filterCounts;
+  if (typeof source !== 'object' || Array.isArray(source)) return undefined;
+  const counts = {};
+  for (let index = 0; index < MANAGE_REVIEW_FILTERS.length; index += 1) {
+    const key = MANAGE_REVIEW_FILTERS[index];
+    const value = strictNonNegative(source[key]);
+    if (value === null) return undefined;
+    counts[key] = value;
+  }
+  return counts;
+}
+
+function shapePage(raw, expectedMode, expectedPageNum, expectedPageSize, expectedFilter) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const mode = raw.mode;
   if ((mode !== 'manage' && mode !== 'public') || mode !== expectedMode || !Array.isArray(raw.items)) return null;
+  // 服务端回显的筛选必须就是这次请求的筛选:切得快时旧响应不能把别的筛选结果写进当前 tab。
+  if (mode === 'manage' && expectedFilter !== undefined && raw.filter != null
+      && raw.filter !== normalizeManageFilter(expectedFilter)) return null;
+  const filterCounts = mode === 'manage' ? shapeFilterCounts(raw) : null;
+  if (filterCounts === undefined) return null;
   const total = strictNonNegative(raw.total);
   const pageNum = strictPositiveInt(raw.pageNum);
   const pageSize = strictPositiveInt(raw.pageSize);
@@ -64,6 +95,7 @@ function shapePage(raw, expectedMode, expectedPageNum, expectedPageSize) {
     pendingReplyCount,
     monthNewCount,
     replyRatePct,
+    filterCounts,
     eligibility,
     items,
   };
@@ -86,7 +118,8 @@ function shapeReview(raw) {
     version,
     rating,
     stars: [1, 2, 3, 4, 5].map((value) => ({ value, filled: value <= rating })),
-    content: String(raw.content || ''),
+    // 评价与回复按纯文本展示(回复编辑框也从这里回填):服务端过滤会把 x<y 存成 x&lt;y,解码一次。
+    content: decodeDisplayText(String(raw.content || '')),
     imageUrls,
     authorNickname: String(raw.authorNickname || '城瘾玩家'),
     authorAvatar: String(raw.authorAvatar || ''),
@@ -94,13 +127,15 @@ function shapeReview(raw) {
     status,
     statusClass: status === 'VISIBLE' ? 'visible' : (status === 'PENDING_REVIEW' ? 'pending' : 'hidden'),
     statusText: status === 'VISIBLE' ? '公开展示中' : (status === 'PENDING_REVIEW' ? '待平台复核' : '平台已下架'),
-    merchantReply: String(raw.merchantReply || ''),
+    merchantReply: decodeDisplayText(String(raw.merchantReply || '')),
     repliedAtText: formatTime(raw.repliedAt),
     createTimeText: formatTime(raw.createTime),
     canReply: raw.canReply === true,
     // 缺字段按「不能改」降级:老后端不会返回它,宁可少一个按钮,不能给一个必然 409 的按钮。
     canEditReply: raw.canEditReply === true,
     canReport: raw.canReport === true,
+    // 仅管理态由服务端给出:新评价待复核,或有举报仍在平台审核中。缺字段按 false。
+    underPlatformReview: raw.underPlatformReview === true,
   };
 }
 
@@ -166,11 +201,13 @@ function optionalNonNegative(raw, key, max) {
 }
 
 module.exports = {
+  MANAGE_REVIEW_FILTERS,
   buildCreateDraft,
   classifyLoadFailure,
   createReviewRequestId,
   fallbackRoute,
   fingerprint,
+  normalizeManageFilter,
   parseReviewRouteOptions,
   positiveId,
   shapePage,

@@ -204,6 +204,13 @@ page {
 /* 删除 = 图标,与类别 ✕、封面 ✕ 同一个 close-sm;负外边距把 44px 命中区收进行高,行不被撑高 */
 .cg-adv-del { width: var(--cy-btn-h); height: var(--cy-btn-h); margin: calc(var(--cy-space-2) * -1) calc(var(--cy-space-2) * -1) calc(var(--cy-space-2) * -1) 0; display: flex; align-items: center; justify-content: center; color: var(--cy-text-secondary); }
 .cg-adv-add { margin-top: var(--cy-space-2); min-height: var(--cy-btn-h); border: 2rpx dashed var(--cy-border-line); border-radius: var(--cy-radius-md); display: flex; align-items: center; justify-content: center; color: var(--cy-color-brand-strong); font-size: var(--cy-font-label); font-weight: 700; }
+.cg-tool-list { margin-top: var(--cy-space-3); display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.cg-tool-actions { display: flex; gap: var(--cy-space-3); color: var(--cy-color-brand-strong); font-size: var(--cy-font-label); }
+.cg-tool-actions > view { min-height: var(--cy-btn-h); display: flex; align-items: center; }
+.cg-tool-sheet { display: flex; flex-direction: column; }
+.cg-tool-scroll { flex: 1; min-height: 0; }
+.cg-tool-footer { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
+.cg-tool-footer cy-btn { flex: 1; }
 .cg-adv-options { margin-top: var(--cy-space-2); }
 /* 显形档 3D 模型上传:整行,上下多留一档间距(用户 9-23:间距大一点、左右对齐) */
 .cg-model { margin: var(--cy-space-3) 0; }
@@ -534,6 +541,7 @@ page {
 
 /* ============ 编辑态底部栏 ============ */
 .cg-bottombar {
+  display: flex; gap: var(--cy-space-2);
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
   padding: var(--cy-space-3) var(--cy-space-4) calc(24rpx + env(safe-area-inset-bottom));
   background: var(--cy-bg-card);
@@ -541,6 +549,8 @@ page {
   border-top: 1rpx solid var(--cy-border-card);
   box-shadow: 0 -16rpx 60rpx rgba(31,70,140,.08);
 }
+
+.cg-bottombar > cy-btn { flex: 1; min-width: 0; }
 
 .cg-load-state {
   box-sizing: border-box;
@@ -779,16 +789,23 @@ page {
 }
 /* ============ 通用遮罩 / sheet ============ */
 .cg-mask { position: fixed; inset: 0; z-index: 95; background: rgba(15,25,45,.26); }
+/* 2026-10-23 弹层动效:原来一帧出现。进场用全局 cy-fade-in / cy-rise(app.wxss 已有,不新增关键帧),
+   时长 / 曲线同弹层规范 half 档;退场见下方 .is-out(r5-editor.js 的 cgDismiss) */
+.cg-mask { animation: cy-fade-in var(--cy-motion-sheet-in) var(--cy-ease-standard); }
 .cg-sheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 96;
+  animation: cy-rise var(--cy-motion-sheet-in) var(--cy-ease-standard);
   background: var(--cy-bg-card);
   backdrop-filter: blur(80rpx) saturate(200%);
   border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; border-top: 1rpx solid var(--cy-border-card);
   padding: var(--cy-space-4) var(--cy-space-4) calc(var(--cy-space-4) + env(safe-area-inset-bottom));
   box-sizing: border-box;
-  max-height: min(70vh, var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y: auto;
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y: auto;
 }
 .cg-sheet.picker { padding-left: 0; padding-right: 0; }
+.cg-mask.is-out { animation: none; opacity: 0; transition: opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); pointer-events: none; }
+.cg-sheet.is-out { animation: none; transform: translateY(100%); transition: transform var(--cy-motion-sheet-out) var(--cy-ease-standard); pointer-events: none; }
+.cg--reduced-motion .cg-mask, .cg--reduced-motion .cg-sheet { animation: none; }
 .cg-sheet-bar { width: 76rpx; height: 8rpx; border-radius: 4rpx; background: var(--cy-border-line); margin: 0 auto var(--cy-space-3-5); } /* ds-ok */
 .cg-sheet-tit { font-size: var(--cy-comp-sheet-title-size); font-weight: 700; line-height: var(--cy-comp-sheet-title-leading); color: var(--cy-text-title); margin-bottom: var(--cy-legacy-6); }
 .cg-sheet-tit.center { text-align: left; font-size: var(--cy-comp-sheet-title-size); font-weight: 700; margin-bottom: 16rpx; }
@@ -1188,7 +1205,7 @@ page {
 .cg-adv-correct { min-height: var(--cy-btn-h); font-size: var(--cy-font-label); }
 
 /* ===== 选择玩法 sheet ===== */
-.cg-gsheet { display: flex; flex-direction: column; height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); overflow: hidden; }
+.cg-gsheet { display: flex; flex-direction: column; height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow: hidden; }
 .cg-gsheet-head { border-bottom: 1rpx solid var(--cy-color-border-subtle); padding-bottom: var(--cy-space-2); }
 .cg-gsheet-titrow { display: flex; align-items: flex-start; gap: var(--cy-space-2-5); }
 .cg-gsheet-titbox { flex: 1; min-width: 0; }
@@ -1273,16 +1290,6 @@ page {
 .cg-preview--kit .cg-pv-dot.on { background: var(--cy-color-text-inverse); }
 /* 玩法屏自己有安全区,外面那 188rpx 的留白会把它整块往下推 */
 .cg-preview--kit .cg-pv-scroll { padding-top: env(safe-area-inset-top); }
-
-/* 玩法在场时的翻页条:浮在玩法屏上方靠底,别占玩法自己的版面。
-   玩法屏的主按钮在离底 26px 的位置(原型实测),所以这条再往上让一截。 */
-.cg-pv-float {
-  position: absolute; left: 0; right: 0; z-index: 5;
-  bottom: calc(env(safe-area-inset-bottom) + 200rpx);
-  display: flex; align-items: center; justify-content: center; gap: var(--cy-space-3);
-  pointer-events: none;
-}
-.cg-pv-float .cg-pv-arrow, .cg-pv-float .cg-pv-dots { pointer-events: auto; }
 
 /* ===== 找东西:在图上点出目标 ===== */
 .cg-ho-scene {
@@ -1466,10 +1473,202 @@ page {
 .cg-pv-inline-scroll { position:absolute; inset:0; height:100%; padding-top:calc(env(safe-area-inset-top) + 160rpx); box-sizing:border-box;
   background:#000000; color:var(--cy-color-text-inverse); } /* ds-ok 160rpx 让开胶囊与翻页条;#000 = 玩家暗色 --cy-color-bg-page(故事流 .chfull 的底)。本分包是浅色主题,令牌在这里解析成浅灰,只能写死 */
 /* 与玩家故事流 pages/play/index.wxss 的 .chfull__kit 逐条一致(契约测试钉着)。 */
-.cg-pv-inline-kit { margin:0 var(--cy-page-x); --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; } /* ds-ok 同 .chfull__kit */
+.cg-pv-inline-kit { margin:0 var(--cy-page-x); --pe-unfold:1; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; } /* ds-ok 同 .chfull__kit */
 /* 2026-09-23 用户:题目和作答放到页面中间(与玩家故事流内嵌玩法同一口径) */
-.cg-pv-inline-kit { min-height:calc(100vh - env(safe-area-inset-top) - 160rpx - 300rpx); display:flex; flex-direction:column; justify-content:center; }
+.cg-pv-inline-kit { min-height:calc(100vh - env(safe-area-inset-top) - 160rpx - 300rpx); display:flex; flex-direction:column; }
+/* 2026-10-23 复查:用上下 auto 外边距居中,不用 justify-content:center —— 内容比容器高时(D20 掷出后多一条难度线)
+   后者会往上溢出,把标题顶到退出键底下;auto 外边距只在有余量时才居中 */
+.cg-pv-inline-kit > cy-playkit, .cg-pv-inline-kit > cy-playkit-journey-check { margin-top: auto; margin-bottom: auto; }
 .cg-pv-inline-end { padding:var(--cy-space-6) var(--cy-page-x) 300rpx; } /* ds-ok 300rpx 让开底部翻页条 */
 /* 同玩家故事流 .chfull__continue(白底深字全圆角)。预览里只是示意,不可点。 */
 .cg-pv-inline-continue { height:88rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center;
   background:#FFFFFF; color:#111111; font-size:29rpx; font-weight:700; opacity:.5; } /* ds-ok 29rpx 同 .chfull__continue */
+
+/* ===== R5 模板编辑器（2026-10-10 主人批准原型 template-editor-v2-proto.html）=====
+   首页每项同一种行：图标 + 名称 + 一行摘要 + 右侧「配置 ›」药丸；配置都在底部面板，
+   面板页头统一「左 退出（放弃本次改动）/ 右 完成（校验后保存）」；单选一律下拉，
+   选择玩法 / 参与方式 / 形式 / 互动工具用 cy-dropdown 两列卡片档。 */
+.cg-r5-row { display: flex; align-items: center; gap: var(--cy-space-2-5); min-height: var(--cy-btn-h); padding: var(--cy-space-2) 0; }
+.cg-r5-row--hr { border-top: 1rpx solid var(--cy-color-border-subtle); }
+.cg-r5-row.is-off { opacity: .55; }
+.cg-r5-ico { flex: none; width: var(--cy-btn-h); height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }
+.cg-r5-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cg-r5-row__title { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.cg-r5-row__title--plain { font-weight: 500; }
+.cg-r5-row__title .cg-tag { margin-left: var(--cy-space-1-5); vertical-align: 2rpx; }
+.cg-r5-row__sub { margin-top: 4rpx; font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cg-r5-row__sub.is-err { color: var(--cy-color-status-danger); }
+.cg-r5-pill { flex: none; display: flex; align-items: center; gap: 4rpx; min-height: 64rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-color-text-primary); }
+.cg-r5-sec { margin: var(--cy-space-1) 0 var(--cy-space-2); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-color-text-secondary); }
+.cg-r5-gap { margin-top: var(--cy-space-3); }
+.cg-chips { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); }
+.cg-chip { min-height: 56rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); display: flex; align-items: center; font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-color-text-primary); }
+.cg-chip.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
+
+/* 编辑面板：不用毛玻璃 —— backdrop-filter 会把面板变成 fixed 子层的包含块，面板内的下拉会错位。 */
+.cg-sheet.cg-edit-sheet { backdrop-filter: none; background: var(--cy-color-bg-surface); padding-top: var(--cy-space-2); }
+.cg-edit-sheet .cg-gcfg { margin-top: var(--cy-space-3); }
+.cg-mask.cg-mask--top { z-index: 97; }
+.cg-sheet.cg-edit-sheet--top { z-index: 98; }
+.cg-edit-head { position: sticky; top: calc(-1 * var(--cy-space-2)); z-index: 1; display: flex; align-items: center; gap: var(--cy-space-2); min-height: var(--cy-btn-h); padding: var(--cy-space-2) 0; background: var(--cy-color-bg-surface); }
+.cg-edit-head__exit { flex: none; min-width: var(--cy-btn-h); min-height: var(--cy-btn-h); display: flex; align-items: center; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.cg-edit-head__title { flex: 1; min-width: 0; text-align: center; font-size: var(--cy-comp-sheet-title-size); font-weight: 700; color: var(--cy-color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cg-edit-head__done { flex: none; min-width: 128rpx; height: var(--cy-btn-h); padding: 0 var(--cy-space-4); box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-size: var(--cy-font-body); font-weight: 700; }
+
+/* 结果之后：消耗一行两格（数值下拉 + 数量），效果为「数值 / 怎么改」一行两格 + 数量 */
+.cg-r5-line, .cg-r5-effect { margin-bottom: var(--cy-space-2); }
+.cg-r5-line > cy-dropdown, .cg-r5-effect cy-dropdown { flex: 1; min-width: 0; }
+.cg-r5-effect .cg-two { margin-bottom: var(--cy-space-1-5); }
+.cg-r5-amount { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--cy-space-1-5); }
+.cg-r5-amount .cg-cfg-input { flex: 1; min-width: 0; margin-bottom: 0; }
+.cg-r5-del { flex: none; width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); }
+.cg-adv-add.cg-adv-add--danger { border-style: solid; border-color: transparent; color: var(--cy-color-status-danger); }
+
+/* 选项问答（2026-10-11 主人批准 HTML 原型）：分区标题、两项一行、选项内“选中后的反馈”（文字 + 最多 3 张图） */
+.cg-qa-sec { display: flex; align-items: center; gap: var(--cy-space-1-5); margin: var(--cy-space-4) 0 var(--cy-space-2); padding-top: var(--cy-space-3-5); border-top: 1rpx solid var(--cy-border-line); font-size: var(--cy-font-body); font-weight: 800; color: var(--cy-text-title); }
+.cg-qa-sec::before { content: ""; width: 6rpx; height: 28rpx; border-radius: 3rpx; background: var(--cy-brand); flex: none; } /* ds-ok: 6rpx 宽标题装饰竖条用半宽 3rpx 圆角，保留现有胶囊端部几何；无等值圆角 token */
+.cg-qa-sec--first { margin-top: 0; padding-top: 0; border-top: 0; }
+.cg-qa-pair { margin-bottom: var(--cy-space-1); }
+.cg-qa-pair .cg-cfg-input { margin-bottom: 0; }
+.cg-qa-fb { padding: var(--cy-space-2-5); border-radius: var(--cy-radius-md); background: var(--cy-bg-card); display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.cg-qa-fb .cg-cfg-label { margin-bottom: 0; }
+.cg-qa-fb .cg-cfg-textarea { background: var(--cy-bg-card-2); }
+.cg-qa-imgs { flex-wrap: wrap; }
+.cg-qa-imgs .cg-qmedia-slot, .cg-qa-imgs .cg-qmedia-add { flex: 0 0 160rpx; height: 160rpx; }
+
+/* 多段题目：附加段标题右侧的移除 */
+.cg-seg-del { margin-left: auto; font-size: var(--cy-legacy-26); font-weight: 400; color: var(--cy-color-text-secondary); }
+
+/* ============ 2026-10-22 主人定稿(HTML 原型 gameplay-create-proto-20261022) ============
+   分区标题放在卡片外、标题前不画竖线;卡片只有一层(白卡 + 浅灰输入框),玩法设置不再灰套白、灰套灰;
+   浮层头左「退出」右「完成」同字号同字重;选择玩法 / 添加互动工具是 Figma 胶囊标签。 */
+.cg-sec {
+  display: flex; align-items: center; gap: var(--cy-space-2);
+  margin: var(--cy-space-5) var(--cy-space-4) 0; padding: 0 var(--cy-space-1);
+}
+.cg-sec__t { font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-text-title); }
+.cg-sec__act { margin-left: auto; min-height: var(--cy-btn-h); display: flex; align-items: center; font-size: var(--cy-font-body); color: var(--cy-color-text-secondary); }
+.cg-sec + .cg-card, .cg-sec + .cg-gcfg, .cg-sec + .cg-inline-error + .cg-gcfg { margin-top: var(--cy-space-2); }
+.cg-line { padding-top: var(--cy-space-3); margin-top: var(--cy-space-3); border-top: 1rpx solid var(--cy-color-border-subtle); justify-content: space-between; }
+.cg-line .cg-rw-name { flex: 1; }
+.cg-scan-reply { padding-top: var(--cy-space-1); }
+.cg-scan-reply cy-dropdown { display: block; margin-bottom: var(--cy-space-1); }
+.cg-game-ico { flex: none; width: 76rpx; height: 76rpx; border-radius: var(--cy-radius-md); display: flex; align-items: center; justify-content: center; background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary); }
+.cg-game-opts { margin-top: var(--cy-space-2); }
+
+/* 玩法设置:每块都是与 .cg-card 同一层的白卡,里面只有浅灰输入框 */
+.cg-inline-cfg { margin: 0; }
+.cg-inline-cfg > .cg-gcfg, .cg-inline-cfg > .cg-cfg {
+  margin: var(--cy-space-3) var(--cy-space-4) 0; padding: var(--cy-space-4);
+  border: 0; border-radius: var(--cy-radius-sm);
+  background: var(--cy-color-bg-surface);
+}
+.cg-inline-cfg > .cg-sec + .cg-gcfg, .cg-inline-cfg > .cg-sec + .cg-inline-error + .cg-gcfg { margin-top: var(--cy-space-2); }
+.cg-inline-cfg .cg-gcfg .cg-input, .cg-inline-cfg .cg-gcfg .cg-textarea,
+.cg-inline-cfg .cg-gcfg .cg-cfg-input, .cg-inline-cfg .cg-gcfg .cg-cfg-textarea,
+.cg-inline-cfg .cg-gcfg .cg-pick { background: var(--cy-bg-card-2); border-color: transparent; }
+/* 重复项(选项、步骤)不再是灰底小卡:同一张白卡里用细线分开 */
+.cg-inline-cfg .cg-adv-repeat { background: transparent; padding: var(--cy-space-3) 0; border-radius: 0; border-top: 1rpx solid var(--cy-color-border-subtle); }
+.cg-inline-cfg .cg-adv-repeat .cg-cfg-input, .cg-inline-cfg .cg-adv-repeat .cg-input,
+.cg-inline-cfg .cg-adv-repeat .cg-textarea, .cg-inline-cfg .cg-adv-repeat .cg-pick { background: var(--cy-bg-card-2); }
+.cg-adv-add.cg-adv-add--first { margin-top: 0; }
+
+/* 结果反馈:三步说明 + 成功/失败开关 */
+.cg-fb-steps { display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.cg-fb-step { display: flex; gap: var(--cy-space-2); font-size: var(--cy-font-body); line-height: var(--cy-leading-normal); color: var(--cy-text-title); }
+.cg-fb-step__no { flex: none; width: 32rpx; font-weight: 600; color: var(--cy-color-text-secondary); }
+.cg-fb-body { padding-top: var(--cy-space-2); }
+.cg-fb-body .pgrid { margin: var(--cy-space-1) 0 var(--cy-space-2); }
+
+/* 浮层头:左退出、右完成,同字号同字重,标题居中 */
+.cg-edit-head__exit, .cg-edit-head__done {
+  flex: none; min-width: 128rpx; height: var(--cy-btn-h); padding: 0; background: transparent; border-radius: 0;
+  display: flex; align-items: center; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary);
+}
+.cg-edit-head__done { justify-content: flex-end; }
+
+/* 选择玩法:半屏弹层;所有分类排成一条,只能左右滑 */
+.cg-tsheet { display: flex; flex-direction: column; height: 70vh; padding-bottom: 0; }
+.cg-tsheet.cg-tsheet--auto { height: auto; }
+.cg-tstrip { flex: 1; min-height: 0; width: 100%; white-space: nowrap; }
+.cg-tstrip__in { display: inline-flex; align-items: flex-start; gap: 56rpx; padding: var(--cy-space-3) var(--cy-space-1) var(--cy-space-2); }
+.cg-tblock { display: inline-flex; flex-direction: column; gap: 20rpx; flex: none; }
+.cg-tblock__t { font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); height: 36rpx; }
+.cg-trow { display: flex; gap: 24rpx; }
+.cg-tpad { display: flex; flex-wrap: wrap; gap: 20rpx 24rpx; padding: var(--cy-space-3) var(--cy-space-1) var(--cy-space-2); }
+/* Figma「Edit Interests」胶囊(节点 1:18929):高 47、全圆角、1px #EBEBEB 描边;
+   未选白底灰字 #777,选中 #D9D9D9 底深字 #131313 + 右侧对勾。宽度随字数。 */
+.cg-tag-pill {
+  position: relative; flex: none; box-sizing: border-box;
+  display: inline-flex; align-items: center; gap: 16rpx;
+  height: 94rpx; padding: 0 52rpx 0 40rpx;
+  border: 2rpx solid #EBEBEB; border-radius: 60rpx; /* ds-ok: Figma 1:18929 实测 */
+  background: #FFFFFF; color: #777777; /* ds-ok: Figma 1:18929 实测 */
+  font-size: var(--cy-font-body); white-space: nowrap;
+}
+.cg-tag-pill.is-on { background: #D9D9D9; color: #131313; padding-right: 84rpx; } /* ds-ok: Figma 1:18929 实测 */
+.cg-tag-pill.is-off { opacity: .45; }
+.cg-tag-pill__ic { flex: none; display: flex; }
+.cg-tag-pill__t { white-space: nowrap; }
+.cg-tag-pill__ck { position: absolute; right: 32rpx; top: 50%; width: 20rpx; height: 16rpx; margin-top: -8rpx; }
+.cg-tsheet__foot { flex: none; display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) var(--cy-space-1) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
+.cg-tsheet__sub { flex: 1; min-width: 0; font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-color-text-secondary); white-space: normal; }
+.cg-tsheet__name { margin-right: var(--cy-space-2); font-weight: 600; color: var(--cy-color-text-primary); }
+/* 标签条左右两端按透明度渐隐,提示还能往旁边滑 */
+.cg-tstrip { -webkit-mask-image: linear-gradient(to right, transparent 0, black 24rpx, black calc(100% - 48rpx), transparent 100%); mask-image: linear-gradient(to right, transparent 0, black 24rpx, black calc(100% - 48rpx), transparent 100%); }
+
+/* 2026-10-22 开发者工具实拍后补:玩法设置里的分区小标题去掉竖条;扫完回复、三步说明下留出间距;
+   编辑浮层里不再灰框套白输入框(和页面一样:白底 + 浅灰输入框);标签条首列让开渐隐区 */
+.cg-inline-cfg .cg-qa-sec::before { display: none; }
+.cg-scan-reply { padding-top: var(--cy-space-3); }
+.cg-fb-steps + .cg-line { margin-top: var(--cy-space-4); }
+.cg-edit-sheet .cg-gcfg { background: transparent; border: 0; padding: 0; }
+.cg-edit-sheet .cg-gcfg .cg-input, .cg-edit-sheet .cg-gcfg .cg-cfg-input, .cg-edit-sheet .cg-gcfg .cg-textarea,
+.cg-edit-sheet .cg-gcfg .cg-cfg-textarea, .cg-edit-sheet .cg-gcfg .cg-pick { background: var(--cy-bg-card-2); border-color: transparent; }
+.cg-tstrip__in { padding-left: var(--cy-space-4); padding-right: var(--cy-space-6); }
+
+/* 玩法图标按分类上一层浅色:浅底 + 同色图标,不用渐变 */
+.cg-game-ico--qa { background: rgba(252,63,63,.10); color: #E5484D; } /* ds-ok: 原型定稿的玩法分类色 */
+.cg-game-ico--logic { background: rgba(91,140,255,.12); color: #3E6FE0; } /* ds-ok: 原型定稿的玩法分类色 */
+.cg-game-ico--play { background: rgba(18,184,134,.12); color: #0E9E73; } /* ds-ok: 原型定稿的玩法分类色 */
+.cg-game-ico--challenge { background: rgba(124,92,255,.12); color: #6A4CE8; } /* ds-ok: 原型定稿的玩法分类色 */
+
+/* 浮层上下两端按透明度渐隐(2026-10-22 主人定稿):固定头下方、底部各一段,内容滚过去时淡出,不是换颜色 */
+.cg-edit-head::after { content: ""; position: absolute; left: 0; right: 0; bottom: -32rpx; height: 32rpx; pointer-events: none;
+  background: linear-gradient(var(--cy-color-bg-surface), transparent); }
+.cg-sheet::after { content: ""; display: block; position: sticky; bottom: calc(-1 * (var(--cy-space-4) + env(safe-area-inset-bottom))); height: 64rpx; margin-top: -64rpx; pointer-events: none;
+  background: linear-gradient(transparent, var(--cy-bg-card)); }
+
+/* 试玩的退出键(2026-10-23):照玩法台面 .st__back 的位置与大小;全屏玩法自己那颗在预览里藏掉,只留这一颗 */
+.cg-preview--kit { --pk-back-display: none; }
+.cg-pv-exit {
+  position: fixed; left: var(--cy-page-x); z-index: var(--cy-z-popover);
+  width: 88rpx; height: 88rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(127, 127, 127, .24); color: var(--cy-color-text-inverse);  /* ds-ok 叠在深浅两种玩法皮肤上都看得清的中性半透明 */
+}
+
+/* ============ 2026-10-23 主人走查:间距照原型 gameplay-create-proto-20261022(1px = 2rpx) ============
+   分区标题 22/4/10、卡片内边距 16、圆角 14、页边 13;开关行上分隔线 + 16 间距;字段之间 16。 */
+.cg-sec { margin: 44rpx 26rpx 0; padding: 0 8rpx; }                                 /* ds-ok 原型 .sh 22px 4px 10px */
+.cg-sec + .cg-card, .cg-sec + .cg-gcfg, .cg-sec + .cg-inline-error + .cg-gcfg,
+.cg-inline-cfg > .cg-sec + .cg-gcfg, .cg-inline-cfg > .cg-sec + .cg-inline-error + .cg-gcfg { margin-top: var(--cy-space-2-5); }
+.cg-card { margin-left: 26rpx; margin-right: 26rpx; --cy-comp-card-pad: var(--cy-space-4); --cy-comp-card-radius: 28rpx; } /* ds-ok 原型 .card 16px / 14px,页边 13px */
+.cg-inline-cfg > .cg-gcfg, .cg-inline-cfg > .cg-cfg { margin-left: 26rpx; margin-right: 26rpx; padding: var(--cy-space-4); border-radius: 28rpx; } /* ds-ok 同上 */
+.cg-line { display: flex; align-items: center; min-height: 88rpx; margin-top: var(--cy-space-4); padding-top: var(--cy-space-1-5); } /* ds-ok 原型 .frow.line 44px */
+.cg-scan-reply { padding-top: var(--cy-space-1); }
+.cg-game-opts { margin-top: var(--cy-space-4); }
+.cg-addmod { margin: 44rpx 26rpx 0; }                                                 /* ds-ok 原型 .addmod margin-top 22px */
+
+/* 底部两颗按钮直接浮在页面上(2026-10-23 主人:不要白底栏)。
+   栏本身只留一层页面底色的透明度渐隐,滚到下面的字不会和按钮叠在一起;
+   查看预览是黑色主键,不能点时是半透明黑而不是一行灰字;保存草稿是白色胶囊带投影。 */
+.cg-bottombar {
+  background: linear-gradient(to bottom, rgba(243, 244, 244, 0), var(--cy-color-bg-page) 58%); /* ds-ok 页面底色的透明度渐隐 */
+  backdrop-filter: none; border-top: 0; box-shadow: none;
+  padding-top: var(--cy-space-6);
+  --cy-bg-subtle: rgba(17, 18, 20, .28);              /* ds-ok 不能点的主键:半透明黑 */
+  --cy-text-placeholder: #FFFFFF;                     /* ds-ok 同上,字仍是白 */
+  --cy-comp-btn-secondary-bg: #FFFFFF;                /* ds-ok 保存草稿:白胶囊浮在灰页面上 */
+}
+.cg-bottombar > cy-btn { border-radius: var(--cy-comp-btn-radius); box-shadow: 0 12rpx 32rpx rgba(17, 18, 20, .12); } /* ds-ok 浮起来的投影 */

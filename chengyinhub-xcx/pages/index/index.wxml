@@ -46,6 +46,9 @@
               </view>
               <text class="v3-hero-mem-txt">玩家</text>
               <text wx:if="{{city}}" class="v3-hero-mem-loc">· {{city}}</text>
+              <cy-dropdown wx:if="{{cityManual && !city}}" mode="selector" range="{{manualCityOptions}}" value="{{-1}}" bind:change="onManualCityChange" aria-label="选择城市">
+                <text class="v3-hero-mem-loc">· 选择城市</text>
+              </cy-dropdown>
             </view>
           </view>
         </view>
@@ -55,26 +58,24 @@
         </view>
       </view>
 
-      <!-- 推荐主题：紧跟 Banner，作为首页首个内容区块 -->
-      <view id="sec-reco" class="v3-sec v3-sec-reco">
+      <!-- 编辑精选：紧跟 Banner，作为首页首个内容区块 -->
+      <view id="sec-reco" class="v3-sec v3-sec-reco" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
         <view class="v3-sec-head">
-          <text class="v3-sec-title">推荐主题</text>
+          <text class="v3-sec-title">编辑精选</text>
+          <cy-btn wx:if="{{recoHero}}" variant="ghost" size="sm" bindtap="showRecommendationSource">为什么看到</cy-btn>
         </view>
         <view class="v3-sec-state" wx:if="{{listLoading.recommendedTopicList && !recoHero}}">
           <cy-skeleton type="feed-card" count="1" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.recommendedTopicList && !recoHero}}">
-          <cy-error title="推荐主题没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="编辑精选加载失败"
                     retry="重试" data-list="recommendedTopicList" bind:retry="retryList" />
         </view>
         <view class="v3-sec-state" wx:elif="{{!listLoading.recommendedTopicList && !recoHero}}">
-          <cy-empty title="还没有能推给你的主题" sub="下面的主题列表里先逛逛" />
+          <cy-empty title="暂时没有精选主题" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
-              aria-role="status" aria-live="polite">正在更新推荐主题…</text>
-        <text class="v3-sec-sync" wx:if="{{listErr.recommendedTopicList && recoHero}}"
-              data-list="recommendedTopicList" bindtap="retryList" aria-role="button"
-              aria-label="推荐主题刷新失败，点此重试" hover-class="cy-pressed" hover-stay-time="80">已显示上次内容，本次刷新失败 · 重试</text>
+              aria-role="status" aria-live="polite">正在更新编辑精选…</text>
         <swiper class="v3-reco-swiper" wx:if="{{recoCards.length}}" current="{{recoCurrent}}"
                 circular="{{recoCards.length > 1}}" previous-margin="40rpx" next-margin="60rpx"
                 duration="{{reducedMotion ? 0 : 280}}" easing-function="easeOutCubic"
@@ -101,6 +102,7 @@
                   </view>
                   <view class="v3-reco-title">{{item.name}}</view>
                   <text class="v3-reco-meta ep1">{{item.metaLine}}</text>
+                  <text class="v3-reco-meta">编辑精选 · 参加条件以详情为准</text>
                 </view>
                 <view class="v3-reco-focus-mask"></view>
               </view>
@@ -108,6 +110,8 @@
           </swiper-item>
         </swiper>
       </view>
+
+      <cy-roam-resume-bar />
 
       <!-- 继续探索：由服务端进行中的游戏会话(优先)或 /registration/my-joined 的真实报名记录驱动，空时不占首屏。 -->
       <view class="v3-continue" wx:if="{{continueExplore}}" bindtap="goContinueExplore" hover-class="cy-pressed" hover-stay-time="80">
@@ -124,7 +128,7 @@
       </view>
 
       <!-- 附近活动：Figma 双列竖卡 -->
-      <view id="sec-nearby" class="v3-sec">
+      <view id="sec-nearby" class="v3-sec" style="{{pm_nearbyActivityList === 1 ? '--pm-n:1;' : (pm_nearbyActivityList === 2 ? '--pm-n-d:.32s;--pm-n-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">附近活动</text>
         </view>
@@ -133,11 +137,11 @@
           <cy-skeleton type="feed-card" count="2" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.nearbyActivityList && !nearbyActivityList.length}}">
-          <cy-error title="附近活动没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="附近活动加载失败"
                     retry="重试" data-list="nearbyActivityList" bind:retry="retryList" />
         </view>
         <view class="v3-sec-state" wx:elif="{{!listLoading.nearbyActivityList && !nearbyActivityList.length}}">
-          <cy-empty title="你附近暂时没有可点亮的节点" sub="换个时间再来，或看看下面的推荐主题" />
+          <cy-empty title="你附近暂时没有可点亮的节点" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
               aria-role="status" aria-live="polite">正在更新附近活动…</text>
@@ -164,7 +168,7 @@
       </view>
 
       <!-- 即将上线：Figma 紧凑评论卡横滑 -->
-      <view id="sec-upcoming" class="v3-sec" wx:if="{{listLoading.upcomingActivityList || listErr.upcomingActivityList || upcomingActivityList.length}}">
+      <view id="sec-upcoming" class="v3-sec" wx:if="{{listLoading.upcomingActivityList || listErr.upcomingActivityList || upcomingActivityList.length}}" style="{{pm_upcomingActivityList === 1 ? '--pm-u:1;' : (pm_upcomingActivityList === 2 ? '--pm-u-d:.32s;--pm-u-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">即将上线</text>
         </view>
@@ -173,7 +177,7 @@
           <cy-skeleton type="feed-card" count="2" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.upcomingActivityList && !upcomingActivityList.length}}">
-          <cy-error title="即将上线没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="即将上线加载失败"
                     retry="重试" data-list="upcomingActivityList" bind:retry="retryList" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.upcomingActivityList && upcomingActivityList.length}}"
@@ -207,18 +211,18 @@
                    active="{{activeTab}}" style="--cy-tabs-accent: var(--cy-text-title)" bind:change="switchTab" />
         </view>
 
-        <view class="v2-feed" wx:if="{{activeTab === '0'}}">
+        <view class="v2-feed" wx:if="{{activeTab === '0'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomTopicList}}" wx:key="id">
             <view class="v2-fcard" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
                 <view class="v2-ftitle ep2">{{item.name}}</view>
                 <view class="v2-ftags flex-ac">
-                  <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="*this">{{item}}</text>
+                  <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="index">{{item}}</text>
                 </view>
               </view>
               <view class="v2-fgrid v2-fgrid--{{item.feedGridMode || '1'}}">
-                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="*this">
+                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="gi">
                   <view class="v2-fcell">
                     <image src="{{im}}" mode="aspectFill" lazy-load="true" />
                     <view class="v2-fmore" wx:if="{{gi === 1 && item.moreCount}}">+{{item.moreCount}}</view>
@@ -242,26 +246,26 @@
               </view>
             </view>
           </view>
-          <cy-inline-error wx:if="{{bottomTopicFailedPage}}" class="feed-load-more-error" kind="network"
-            title="{{bottomTopicFailedPage > 1 ? '更多主题没有加载出来' : '主题列表没有加载出来'}}"
-            sub="{{bottomTopicFailedPage > 1 ? '已加载的主题仍可查看' : '下拉刷新或点重试再拉一次'}}"
+          <cy-inline-error load-failure wx:if="{{bottomTopicFailedPage}}" class="feed-load-more-error" kind="network"
+            title="{{bottomTopicFailedPage > 1 ? '更多主题加载失败' : '主题列表加载失败'}}"
+            
             action="重试" bind:action="retryBottomTopic" />
           <view class="loading-more" wx:if="{{isBottomLoading}}"><text>正在加载更多</text></view>
           <view class="no-more" wx:if="{{!hasMoreBottomTopic && bottomTopicList.length > 0}}"><text>· 没有更多了 ·</text></view>
         </view>
 
-        <view class="v2-feed" wx:if="{{activeTab === '1'}}">
+        <view class="v2-feed" wx:if="{{activeTab === '1'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomActivityList}}" wx:key="id">
             <view class="v2-fcard" bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
                 <view class="v2-ftitle ep2">{{item.name}}</view>
                 <view class="v2-ftags flex-ac">
-                  <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="*this">{{item}}</text>
+                  <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="index">{{item}}</text>
                 </view>
               </view>
               <view class="v2-fgrid v2-fgrid--{{item.feedGridMode || '1'}}">
-                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="*this">
+                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="gi">
                   <view class="v2-fcell">
                     <image src="{{im}}" mode="aspectFill" lazy-load="true" />
                     <view class="v2-fmore" wx:if="{{gi === 1 && item.moreCount}}">+{{item.moreCount}}</view>
@@ -285,9 +289,9 @@
               </view>
             </view>
           </view>
-          <cy-inline-error wx:if="{{bottomActivityFailedPage}}" class="feed-load-more-error" kind="network"
-            title="{{bottomActivityFailedPage > 1 ? '更多活动没有加载出来' : '活动列表没有加载出来'}}"
-            sub="{{bottomActivityFailedPage > 1 ? '已加载的活动仍可查看' : '下拉刷新或点重试再拉一次'}}"
+          <cy-inline-error load-failure wx:if="{{bottomActivityFailedPage}}" class="feed-load-more-error" kind="network"
+            title="{{bottomActivityFailedPage > 1 ? '更多活动加载失败' : '活动列表加载失败'}}"
+            
             action="重试" bind:action="retryBottomActivity" />
           <view class="loading-more" wx:if="{{isBottomLoading}}"><text>正在加载更多</text></view>
           <view class="no-more" wx:if="{{!hasMoreBottomActivity && bottomActivityList.length > 0}}"><text>· 没有更多了 ·</text></view>

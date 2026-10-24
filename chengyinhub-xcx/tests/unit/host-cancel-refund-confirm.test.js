@@ -15,7 +15,7 @@ global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
   sendRequest: (p) => { sent.push(p); },
   getUserID: () => 1,
-  getToken: () => '',
+  getToken: () => 'current-session',
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
 });
 global.wx = {
@@ -137,7 +137,7 @@ test('主题取消:预览人数 → 确认框写明 N → 确认后调 /api/topi
   assert.equal(req.url, '/api/topic/cancel');
   assert.equal(req.data.id, 42);
   assert.equal(req.data.scope, 'MERCHANT');
-  assert.ok(req.data.reason && req.data.reason.trim(), '后端要求原因非空,会展示给已付款玩家');
-  req.success({ code: '200', msg: '主题已取消,已为 5 笔订单全额退款' });
+  assert.ok(req.data.reason && req.data.reason.trim(), '后端要求原因非空，会展示给已付款玩家');
+  req.success({ code: '200', msg: '主题已取消，已为 5 笔订单全额退款' });
   assert.deepEqual(dc.states, ['busy', 'done']);
 });

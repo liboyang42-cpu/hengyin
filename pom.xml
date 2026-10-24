@@ -16,53 +16,101 @@
         <chengyinhub.version>3.9.0</chengyinhub.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.8</java.version>
-        <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
-        <spring-boot.version>2.5.15</spring-boot.version>
-        <druid.version>1.2.23</druid.version>
+        <java.version>21</java.version>
+        <argLine>-Xmx512m -Dspring.test.context.cache.maxSize=4</argLine>
+        <spring-boot.version>4.1.1</spring-boot.version>
+        <druid.version>1.2.28</druid.version>
         <bitwalker.version>1.21</bitwalker.version>
         <swagger.version>3.0.0</swagger.version>
         <kaptcha.version>2.3.3</kaptcha.version>
-        <pagehelper.boot.version>1.4.7</pagehelper.boot.version>
+        <pagehelper.boot.version>4.1.1</pagehelper.boot.version>
         <fastjson.version>2.0.57</fastjson.version>
         <oshi.version>6.8.2</oshi.version>
-        <commons.io.version>2.19.0</commons.io.version>
-        <poi.version>4.1.2</poi.version>
-        <velocity.version>2.3</velocity.version>
+        <commons.io.version>2.21.0</commons.io.version>
+        <poi.version>5.5.1</poi.version>
+        <velocity.version>2.4</velocity.version>
+        <!-- Bounded retained-library hardening; SDK versions and wire contracts stay unchanged. -->
+        <commons.compress.version>1.28.0</commons.compress.version>
+        <jettison.version>1.5.7</jettison.version>
+        <aliyun.credentials.version>0.3.11</aliyun.credentials.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
+        <okhttp.version>4.12.0</okhttp.version>
+        <okio.version>3.6.0</okio.version>
         <jwt.version>0.9.1</jwt.version>
         <!-- override dependency version -->
-        <tomcat.version>9.0.120</tomcat.version>
-        <logback.version>1.2.13</logback.version>
-        <spring-security.version>5.7.12</spring-security.version>
-        <spring-framework.version>5.3.39</spring-framework.version>
 <!--        <lombok.version>1.18.26</lombok.version>-->
-        <springdoc.version>1.6.9</springdoc.version>
-        <baomidou.version>3.5.9</baomidou.version>
+        <springdoc.version>3.1.1</springdoc.version>
+        <baomidou.version>3.5.17</baomidou.version>
         <hutool.version>5.8.47</hutool.version>
         <wechatpay.version>0.2.15</wechatpay.version>
         <zxing.version>3.5.2</zxing.version>
+        <!-- Same-minor security floors: see docs/upgrade/java21-boot41-candidate.md. -->
+        <jackson2.version>2.21.7</jackson2.version>
+        <jackson3.version>3.1.7</jackson3.version>
+        <tomcat.version>11.0.26</tomcat.version>
     </properties>
 
     <!-- 依赖声明 -->
     <dependencyManagement>
         <dependencies>
-
-            <!-- 覆盖SpringFramework的依赖配置-->
+            <!-- Direct BOM overrides precede Boot; properties alone cannot override an imported BOM. -->
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-framework-bom</artifactId>
-                <version>${spring-framework.version}</version>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson2.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>tools.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson3.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
 
-            <!-- 覆盖SpringSecurity的依赖配置-->
+            <!-- Apache September security fixes; keep every managed Tomcat module aligned. -->
             <dependency>
-                <groupId>org.springframework.security</groupId>
-                <artifactId>spring-security-bom</artifactId>
-                <version>${spring-security.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-annotations-api</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-jdbc</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-jsp-api</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-el</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-jasper</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-websocket</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+
+            <!-- 拒绝不可信 Java 标签，保持 Boot/Jackson 的 LoaderOptions 兼容 -->
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>2.0</version>
             </dependency>
 
             <!-- SpringBoot的依赖配置-->
@@ -74,42 +122,57 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- 覆盖logback的依赖配置-->
+            <!-- Security fixes for retained POI/OSS/SMS/payment transitives; see retained-dependencies.md. -->
             <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>${logback.version}</version>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons.compress.version}</version>
             </dependency>
-
             <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
+                <groupId>org.codehaus.jettison</groupId>
+                <artifactId>jettison</artifactId>
+                <version>${jettison.version}</version>
             </dependency>
-
-            <!-- 覆盖tomcat的依赖配置-->
             <dependency>
-                <groupId>org.apache.tomcat.embed</groupId>
-                <artifactId>tomcat-embed-core</artifactId>
-                <version>${tomcat.version}</version>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
             </dependency>
-
             <dependency>
-                <groupId>org.apache.tomcat.embed</groupId>
-                <artifactId>tomcat-embed-el</artifactId>
-                <version>${tomcat.version}</version>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
             </dependency>
-
             <dependency>
-                <groupId>org.apache.tomcat.embed</groupId>
-                <artifactId>tomcat-embed-websocket</artifactId>
-                <version>${tomcat.version}</version>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>credentials-java</artifactId>
+                <version>${aliyun.credentials.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio</artifactId>
+                <version>${okio.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio-jvm</artifactId>
+                <version>${okio.version}</version>
             </dependency>
 
             <!-- 阿里数据库连接池 -->
             <dependency>
                 <groupId>com.alibaba</groupId>
-                <artifactId>druid-spring-boot-starter</artifactId>
+                <artifactId>druid-spring-boot-4-starter</artifactId>
                 <version>${druid.version}</version>
             </dependency>
 
@@ -149,7 +212,7 @@
 
             <dependency>
                 <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-ui</artifactId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
             </dependency>
 
@@ -158,6 +221,12 @@
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons.io.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.18.0</version>
             </dependency>
 
             <!-- excel工具 -->
@@ -238,7 +307,7 @@
 
             <dependency>
                 <groupId>com.baomidou</groupId>
-                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <artifactId>mybatis-plus-annotation</artifactId>
                 <version>${baomidou.version}</version>
             </dependency>
             <dependency>
@@ -275,12 +344,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.15.0</version>
                 <configuration>
-                    <!-- 保持 source/target(不用 release 参数):CI 构建环境是 JDK8,
-                         JDK8 的 javac 不认识 release 参数。Java9+ API 由 CI(JDK8)编译时拦截。 -->
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
+                    <parameters>true</parameters>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <!-- 添加注解处理器路径配置 -->
 <!--                    <annotationProcessorPaths>-->
@@ -293,14 +360,19 @@
 <!--                    </annotationProcessorPaths>-->
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.6</version>
+            </plugin>
         </plugins>
     </build>
 
     <repositories>
         <repository>
-            <id>public</id>
-            <name>aliyun nexus</name>
-            <url>https://maven.aliyun.com/repository/public</url>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -309,9 +381,9 @@
 
     <pluginRepositories>
         <pluginRepository>
-            <id>public</id>
-            <name>aliyun nexus</name>
-            <url>https://maven.aliyun.com/repository/public</url>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
             <releases>
                 <enabled>true</enabled>
             </releases>

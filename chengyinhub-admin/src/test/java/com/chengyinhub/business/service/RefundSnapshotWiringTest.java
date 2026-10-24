@@ -1,9 +1,12 @@
 package com.chengyinhub.business.service;
 
 import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * P0-06 退款快照的**接线**测试 —— 补「算得对但没人调用 / 算得对但没人读」这两个空档。
@@ -130,24 +133,53 @@ class RefundSnapshotWiringTest {
             int at = 0;
             while ((at = flat.indexOf("RefundPolicy.evaluate(", at)) >= 0) {
                 at += "RefundPolicy.evaluate(".length();
-                assertEquals(10, countArgSeparators(flat, at) + 1,
-                        f + " 里有一处 RefundPolicy.evaluate 不是 10 参 —— 8 参签名绕过快照,"
-                                + "退款截止点又变回现取,已售单的窗口会被后台改票追溯改写");
+                assertSnapshotAndFreeCancellationArguments(arguments(flat, at), f);
             }
         }
     }
 
-    /** 数一个调用的顶层实参分隔符个数(跳过嵌套括号内的逗号)。 */
-    private static int countArgSeparators(String flat, int argStart) {
-        int depth = 0, commas = 0;
+    @Test
+    void legacyOverloadsAndNullSnapshotOrFreeCancellationFactsFailTheContract() {
+        List<String> valid = arguments("2L,r.getPaymentStatus(),r.getVerificationStatus(),null,null,null,"
+                + "activity.getStartDate(),r.getPurchaseKind(),r.getRefundDeadline(),"
+                + "r.getPayableAmount(),r.getPointUsed(),new Date())", 0);
+        assertSnapshotAndFreeCancellationArguments(valid, "fixture");
+        for (int count : new int[]{8, 10}) {
+            assertThrows(AssertionError.class, () -> assertSnapshotAndFreeCancellationArguments(
+                    valid.subList(0, count), "legacy"));
+        }
+        for (int position : new int[]{8, 9, 10}) {
+            List<String> missing = new ArrayList<>(valid);
+            missing.set(position, "null");
+            assertThrows(AssertionError.class, () -> assertSnapshotAndFreeCancellationArguments(missing, "null"));
+        }
+    }
+
+    private static void assertSnapshotAndFreeCancellationArguments(List<String> args, String file) {
+        assertEquals(12, args.size(), file + " 必须同时传已售快照和免费取消的现金/积分事实");
+        assertTrue(args.get(8).matches("(?:r|registration)\\.getRefundDeadline\\(\\)"), file + " 未读已售快照");
+        assertTrue(args.get(9).matches("(?:r|registration)\\.getPayableAmount\\(\\)"), file + " 未读实际应付额");
+        assertTrue(args.get(10).matches("(?:r|registration)\\.getPointUsed\\(\\)"), file + " 未读实际积分使用额");
+    }
+
+    /** 读取调用的顶层实参，嵌套getter/构造调用内的逗号不算分隔符。 */
+    private static List<String> arguments(String flat, int argStart) {
+        List<String> args = new ArrayList<>();
+        int depth = 0, start = argStart;
         for (int i = argStart; i < flat.length(); i++) {
             char c = flat.charAt(i);
             if (c == '(') depth++;
             else if (c == ')') {
-                if (depth == 0) return commas;
+                if (depth == 0) {
+                    args.add(flat.substring(start, i).replaceAll("\\s+", ""));
+                    return args;
+                }
                 depth--;
-            } else if (c == ',' && depth == 0) commas++;
+            } else if (c == ',' && depth == 0) {
+                args.add(flat.substring(start, i).replaceAll("\\s+", ""));
+                start = i + 1;
+            }
         }
-        return commas;
+        throw new AssertionError("退款策略调用缺少闭括号");
     }
 }

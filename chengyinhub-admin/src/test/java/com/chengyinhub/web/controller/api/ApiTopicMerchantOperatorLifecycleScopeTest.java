@@ -62,9 +62,12 @@ class ApiTopicMerchantOperatorLifecycleScopeTest {
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "omsTicketService", mock(com.chengyinhub.business.service.IOmsTicketService.class));
+        ReflectionTestUtils.setField(controller, "memberIdentityService", mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
         IWxContentSecurityService security = mock(IWxContentSecurityService.class);
         when(security.checkText(anyString(), any())).thenReturn(null);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
+        TopicContentSafetyTestFixtures.wire(controller, security);
     }
 
     private CmsTopic ownerTopic() {
@@ -139,14 +142,15 @@ class ApiTopicMerchantOperatorLifecycleScopeTest {
     void managerCanPublishOwnerDraft() {
         when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(ownerTopic());
         when(topicService.selectTopicIsDraft(TOPIC_ID)).thenReturn(1);
-        when(topicService.publishDraftWithReview(TOPIC_ID)).thenReturn(
+        when(topicService.publishDraftWithReview(TOPIC_ID, OWNER)).thenReturn(
                 new com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO(
                         TOPIC_ID, 901L, "PENDING", java.util.Collections.singletonList(71L)));
 
         AjaxResult result = controller.publishDraft(String.valueOf(TOPIC_ID), "MERCHANT");
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(topicService).publishDraftWithReview(TOPIC_ID);
+        verify(topicService).publishDraftWithReview(TOPIC_ID, OWNER);
+        verify((com.chengyinhub.business.service.impl.MemberIdentityService) ReflectionTestUtils.getField(controller, "memberIdentityService")).checkRegistered(OWNER);
     }
 
     @Test

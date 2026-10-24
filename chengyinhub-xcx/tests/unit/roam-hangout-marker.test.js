@@ -47,7 +47,7 @@ test('主题 = 照片瓦片 + 描边色(定向绿 / 探索蓝),不带铭牌 —�
   assert.equal(m2.badge, '');
   const { g, log } = fakeCtx();
   M.drawMarker(g, 108, m1, null);
-  assert.ok(log.some((l) => l[0] === 'fill' && l[1] === C.cityRoute), '瓦片描边取绿');
+  assert.ok(log.some((l) => l[0] === 'fill' && l[1] === C.cityRoute), '瓦片描边取蓝');
   assert.ok(!log.some((l) => l[0] === 'fillText' && (l[1] === '定向' || l[1] === '探索')), '不许再画铭牌');
 });
 
@@ -81,13 +81,13 @@ test('三种点位形态照原型:个人=圆头像、商家=红白条纹棚、�
   let { g, log } = fakeCtx();
   M.drawMarker(g, 108, M.markerSpec({ kind: 'hangout', ownerNickname: '小明', isMember: true, memberCount: 4 }), null);
   assert.ok(log.some((l) => l[0] === 'fill' && l[1] === C.player), '青环');
-  assert.ok(log.some((l) => l[0] === 'fillText' && l[1] === '小'), '首字兜底');
+  assert.ok(log.some((l) => l[0] === 'fillText' && l[1] === '小'), '首字保底');
   assert.ok(log.some((l) => l[0] === 'fillText' && l[1] === '4'), '人数角标');
   // 个人的**本体**是圆:第一处形状是 arc,不是圆角方框。
   // (角标是药丸,它也用 arcTo —— 所以不能笼统地说「整张图里没有 arcTo」)
   const firstArc = log.findIndex((l) => l[0] === 'arc');
   const firstArcTo = log.findIndex((l) => l[0] === 'arcTo');
-  assert.ok(firstArc >= 0 && (firstArcTo === -1 || firstArc < firstArcTo), '个人本体是圆,不是圆角方框');
+  assert.ok(firstArc >= 0 && (firstArcTo === -1 || firstArc < firstArcTo), '个人本体是圆，不是圆角方框');
 
   ({ g, log } = fakeCtx());
   M.drawMarker(g, 108, M.markerSpec({ kind: 'hangout', ownerRole: 'merchant', ownerNickname: '老王', memberCount: 6 }), null);

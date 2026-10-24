@@ -14,6 +14,11 @@ public interface MemberCashWithdrawMapper {
 
     public int updateMemberCashWithdraw(MemberCashWithdraw w);
 
+    /** Channel observations only; terminal/frozen original receipts are authoritative. */
+    public int updateReceiptIfProcessing(MemberCashWithdraw w);
+
+    public MemberCashWithdraw selectByIdForUpdate(@Param("id") Long id);
+
     public MemberCashWithdraw selectById(@Param("id") Long id);
 
     /** 某会员提现记录(倒序) */
@@ -48,6 +53,10 @@ public interface MemberCashWithdrawMapper {
 
     /** 对账:标记成功(status=1)却无微信批次号的数据异常数 */
     public int countSuccessWithoutBatch();
+
+    public List<Long> sampleStuckProcessingIds(@Param("before") Date before);
+    public List<Long> sampleManualPendingIds();
+    public List<Long> sampleSuccessWithoutBatchIds();
 
     /** P块冻结:仅未冻结的单可冻结(CAS);返回受影响行数 */
     public int freezeWithdraw(MemberCashWithdraw w);

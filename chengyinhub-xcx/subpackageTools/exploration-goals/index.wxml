@@ -1,0 +1,66 @@
+<!-- 探索目标:漫游护照方卡进入。进度来自服务端已完成记录;创建/取消/原操作重试沿用归档 exploration-goals(index.js)。 -->
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar plain />
+  <cy-page-title title="探索目标" />
+
+  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error && !creating}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" bindtap="loadList" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
+  <view class="tu-btns" wx:if="{{pending}}">
+    <view class="tu-btn tu-btn--w" bindtap="retryOriginal" aria-role="button" aria-label="以原操作重试" hover-class="cy-pressed" hover-stay-time="80">以原操作重试</view>
+  </view>
+
+  <!-- 选中的目标 -->
+  <view class="tu-card gl-detail" wx:if="{{detail && detail.target}}">
+    <text class="gl-k">{{detail.metricText}} · {{detail.stateText}}</text>
+    <text class="gl-big">{{detail.progress || 0}}<text class="gl-of"> / {{detail.target}}</text></text>
+    <view class="tu-bar"><view class="tu-bar__f" style="width:{{detail.pct || 0}}%"></view></view>
+    <text class="gl-m">{{detail.startDate}} 至 {{detail.endDateExclusive}}（不含）</text>
+    <view class="gl-acts">
+      <view class="tu-sbtn" bindtap="closeDetail" aria-role="button" aria-label="收起" hover-class="cy-pressed" hover-stay-time="80">收起</view>
+      <view wx:if="{{detail.state === 'ACTIVE' || detail.state === 'SCHEDULED'}}" class="tu-sbtn gl-cancel" bindtap="cancelGoal" aria-role="button" aria-label="取消此目标" hover-class="cy-pressed" hover-stay-time="80">取消此目标</view>
+    </view>
+  </view>
+
+  <!-- 新目标 -->
+  <block wx:if="{{creating}}">
+    <view class="gl-seg">
+      <view wx:for="{{metrics}}" wx:key="*this" class="gl-seg__i {{metricIndex === index ? 'is-on' : ''}}" data-value="{{index}}" bindtap="pickMetric" aria-role="button" aria-label="目标口径 {{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
+    </view>
+    <view class="gl-step">
+      <view class="gl-step__b" data-delta="-1" bindtap="stepTarget" aria-role="button" aria-label="减少目标" hover-class="cy-pressed" hover-stay-time="80">−</view>
+      <text class="gl-step__v">{{target || 1}}</text>
+      <view class="gl-step__b" data-delta="1" bindtap="stepTarget" aria-role="button" aria-label="增加目标" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="46" /></view>
+    </view>
+    <text class="gl-step__l">{{metricIndex === 0 ? '条不同路线' : '个探索日'}}</text>
+    <view class="rd-label">时间段</view>
+    <view class="tu-chips" style="padding-top:0">
+      <view wx:for="{{periods}}" wx:key="label" class="tu-chip {{periodIndex === index ? 'is-on' : ''}}" data-index="{{index}}" bindtap="pickPeriod" aria-role="button" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+    </view>
+    <view class="tu-group" style="margin-top:23rpx">
+      <cy-date-field mode="date" value="{{startDate}}" start="{{today}}" data-field="startDate" bind:change="onField"><view class="tu-row" aria-role="button" aria-label="开始日期 {{startDate}}" hover-class="cy-pressed" hover-stay-time="80"><view class="tu-row__body"><text class="tu-row__s">开始</text></view><text class="tu-row__v">{{startDate}}</text></view></cy-date-field>
+      <cy-date-field mode="date" value="{{endDate}}" start="{{startDate}}" data-field="endDate" bind:change="onField"><view class="tu-row" aria-role="button" aria-label="结束日期 {{endDate}}，不含当天" hover-class="cy-pressed" hover-stay-time="80"><view class="tu-row__body"><text class="tu-row__s">结束（不含）</text></view><text class="tu-row__v">{{endDate}}</text></view></cy-date-field>
+    </view>
+    <!-- 创建失败(多为日期/数值校验)留在表单里:改完再点创建即可,不给「重试」以免原样重发 -->
+    <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" bindtap="dismissError" aria-role="button" aria-label="知道了" hover-class="cy-pressed" hover-stay-time="80">知道了</view></view>
+    <view class="tu-btns">
+      <view class="tu-btn tu-btn--w {{busy ? 'is-off' : ''}}" bindtap="create" aria-role="button" aria-label="创建目标" hover-class="cy-pressed" hover-stay-time="80">创建目标</view>
+      <view class="tu-btn tu-btn--s" bindtap="toggleCreate" aria-role="button" aria-label="先不定" hover-class="cy-pressed" hover-stay-time="80">先不定</view>
+    </view>
+  </block>
+
+  <view class="tu-sec">我的目标<text class="tu-sec__aside" wx:if="{{rows.length || 0}}">{{rows.length || 0}} 个</text></view>
+  <view class="tu-loading" wx:if="{{busy && !rows.length}}">正在读取…</view>
+  <view class="tu-card gl-row cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="openRecord" aria-role="button" aria-label="查看目标 {{item.target}} {{item.metricText}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="gl-row__top">
+      <text class="gl-row__t">{{item.progressText}}{{item.target}} {{item.unit}}</text>
+      <text class="tu-badge {{item.badge}}">{{item.stateText}}</text>
+    </view>
+    <view class="tu-bar" wx:if="{{item.pct >= 0}}"><view class="tu-bar__f" style="width:{{item.pct || 0}}%"></view></view>
+    <text class="gl-m">{{item.startDate}} – {{item.endDateExclusive}} · {{item.metricText}}</text>
+  </view>
+  <view class="tu-empty" wx:if="{{!busy && !rows.length && !error}}"><text class="tu-empty__t">还没有探索目标</text></view>
+  <view class="tu-more" wx:if="{{hasMore && !busy}}" bindtap="nextPage" aria-role="button" aria-label="读取更多目标" hover-class="cy-pressed" hover-stay-time="80">读取更多</view>
+
+  <view class="tu-fab" wx:if="{{!creating}}" bindtap="toggleCreate" aria-role="button" aria-label="定一个新目标" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="46" /></view>
+</view>
+<cy-modal-host id="cy-modal-host" />

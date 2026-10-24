@@ -123,13 +123,14 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         return post(body);
     }
 
-    private void requireReady()
+    /** Local configuration check only; never sends a provider request. */
+    public void requireReady()
     {
         if (!enabled)
         {
             throw new IllegalStateException("AI 模型未启用(" + name + ".enabled=false),请改用 mock 或配置后开启");
         }
-        if (StringUtils.isEmpty(apiKey))
+        if (apiKey == null || apiKey.trim().isEmpty())
         {
             throw new IllegalStateException("AI 模型 " + name + " 未配置 apiKey");
         }
@@ -142,6 +143,8 @@ public class OpenAiCompatibleLlmClient implements LlmClient
                 ? "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
                 : baseUrl.replaceAll("/+$", "") + "/chat/completions";
 
+        int status = -1;
+        String phase = "transport";
         try (HttpResponse resp = HttpRequest.post(url)
                 .header("Authorization", "Bearer " + apiKey)
                 .header("Content-Type", "application/json")
@@ -149,29 +152,45 @@ public class OpenAiCompatibleLlmClient implements LlmClient
                 .timeout(timeoutMs)
                 .execute())
         {
+            status = resp.getStatus();
+            phase = "response";
             String result = resp.body();
             if (!resp.isOk())
             {
-                log.error("[LlmClient:{}] HTTP {} resp={}", name, resp.getStatus(), truncate(result, 500));
+                // Provider bodies can echo prompts, retrieved facts or credentials. Never log them.
                 throw new RuntimeException("AI 模型调用失败(" + resp.getStatus() + ")");
             }
-            JSONObject json = JSON.parseObject(result);
-            JSONArray choices = json.getJSONArray("choices");
-            if (choices == null || choices.isEmpty())
-            {
-                throw new RuntimeException("AI 模型返回为空");
-            }
-            return choices.getJSONObject(0).getJSONObject("message").getString("content");
-        }
-        catch (RuntimeException e)
-        {
-            throw e;
+            phase = "parse";
+            return responseText(result);
         }
         catch (Exception e)
         {
-            log.error("[LlmClient:{}] 调用异常", name, e);
-            throw new RuntimeException("AI 模型调用异常:" + e.getMessage());
+            // Parser/transport exception messages and causes can contain response bytes or URLs.
+            // Keep bounded operational diagnostics only, including no raw throwable in the log.
+            String diagnosticName = name != null && name.matches("[A-Za-z0-9_-]{1,32}") ? name : "provider";
+            log.error("[LlmClient:{}] request-failed phase={} httpStatus={} errorType={}",
+                    diagnosticName, phase, status, e.getClass().getSimpleName());
+            throw new RuntimeException("AI 模型调用失败 (phase=" + phase + ", HTTP=" + status + ")");
         }
+    }
+
+    /** The existing reply contract is plain text, never a coerced JSON value. */
+    private String responseText(String result)
+    {
+        JSONObject json = JSON.parseObject(result);
+        Object choicesValue = json == null ? null : json.get("choices");
+        if (!(choicesValue instanceof JSONArray) || ((JSONArray) choicesValue).isEmpty())
+        {
+            throw new IllegalStateException("AI 模型返回为空");
+        }
+        Object choice = ((JSONArray) choicesValue).get(0);
+        Object message = choice instanceof JSONObject ? ((JSONObject) choice).get("message") : null;
+        Object content = message instanceof JSONObject ? ((JSONObject) message).get("content") : null;
+        if (!(content instanceof String) || ((String) content).trim().isEmpty())
+        {
+            throw new IllegalStateException("AI 模型返回文本无效");
+        }
+        return (String) content;
     }
 
     private String truncate(String s, int max)
@@ -180,6 +199,10 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         {
             return "";
         }
-        return s.length() <= max ? s : s.substring(0, max);
+        if (s.length() <= max) return s;
+        int end = max;
+        if (end > 0 && Character.isHighSurrogate(s.charAt(end - 1))
+                && Character.isLowSurrogate(s.charAt(end))) end--;
+        return s.substring(0, end);
     }
 }

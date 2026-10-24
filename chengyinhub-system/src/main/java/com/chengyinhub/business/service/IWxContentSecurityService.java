@@ -7,11 +7,11 @@ package com.chengyinhub.business.service;
  * 命中违规内容直接拦截，避免被微信封禁小程序。
  *
  * 设计约定（重要）：
- *  - checkText 返回 null 表示「放行」（合规 / 检测被关闭）；检测接口异常时 fail-closed，
+ *  - checkText 返回 null 表示「放行」（合规或空文本）；检测关闭、缺 openid/token、接口异常时一律 fail-closed，
  *    返回非 null 字符串表示「拦截」，字符串即给用户的提示文案。
  *    控制器用法：String msg = wxSec.checkText(text, openid); if (msg != null) return error(msg);
- *  - 是否真正调用微信接口由系统配置 wx.sec.check.enabled 控制（"true" 开启），
- *    默认关闭，便于在未配置 appid/secret 时不阻断现有流程；上线前置为 true。
+ *  - 是否真正调用微信接口由配置 wx.sec-check.enabled 控制（WxPayConfig，默认 true）。
+ *    关闭不是「降级放行」：非空文本会返回 MSG_UNAVAILABLE 被拒写（F-L5C-07），并记 ERROR 日志。
  */
 public interface IWxContentSecurityService
 {
@@ -72,7 +72,7 @@ public interface IWxContentSecurityService
     int BIZ_TYPE_ACTIVITY = 2;
     /** 业务类型：俱乐部动态 */
     int BIZ_TYPE_CLUB_POST = 3;
-    /** 业务类型：用户资料(头像/案例图) */
+    /** 业务类型：用户资料(头像/作品图/联系二维码) */
     int BIZ_TYPE_MEMBER_PROFILE = 4;
     /** 业务类型：俱乐部资料(logo/封面/案例图) */
     int BIZ_TYPE_CLUB_PROFILE = 5;
@@ -109,6 +109,21 @@ public interface IWxContentSecurityService
      */
     int BIZ_TYPE_NODE_NPC = 16;
 
+    /** 社区帖文图片(bizId = community_post.id;命中 → 生命周期 HIDE 隐藏待复核 + 建人工复核单) */
+    int BIZ_TYPE_COMMUNITY_POST = 17;
+
+    /**
+     * 门店分身 NPC 头像(npc_profile scope_type=2)。bizId = npc_profile.id。
+     *
+     * <p>此前门店头像借 {@link #BIZ_TYPE_MERCHANT_PROFILE}(bizId=merchantId)送检,回调核对的是商家
+     * logo/封面/相册,头像哈希永远对不上 ⇒ 违规头像被当「旧媒体」忽略。命中只把这一行打回驳回态
+     * (audit_status=2),玩家读闸 audit_status=1 立即失效。
+     *
+     * <p>⚠️ 取 18 而不是 17:旧携带分支(#334/#336)把门店分身记作 17,与上面的社区帖文撞号。
+     * 已有类型号一律不重排;新增类型取下一个未用号。
+     */
+    int BIZ_TYPE_MERCHANT_NPC = 18;
+
     /**
      * 批量送检某条内容的图片（异步）。会拆分 imgArr（逗号/分号分隔），逐张调用 checkMediaAsync，
      * 并把 trace_id 与业务目标登记进 MySQL inbox；Redis 映射仅保留作迁移兼容与辅助清理。
@@ -129,6 +144,16 @@ public interface IWxContentSecurityService
      * @return trace_id；未启用 / 送检失败 / inbox 登记失败 / 异常均返回 null，由调用方按发布语义决定是否阻断
      */
     String submitMediaCheckOne(int bizType, Long bizId, String imgUrl, String openid);
+
+    /**
+     * 同 {@link #submitMediaCheckOne(int, Long, String, String)},但送检地址与 inbox 媒体身份分开:
+     * 私有桶媒体送的是短时预签名 URL(每次签名都不同),inbox 必须按稳定的对象 key 登记,
+     * 回调时才能核对「仍是当初送检的那张」。
+     *
+     * @param fetchUrl 微信拉取用的地址
+     * @param identity 登记进 inbox 的稳定媒体身份(如 OSS 对象 key)
+     */
+    String submitMediaCheckOne(int bizType, Long bizId, String fetchUrl, String identity, String openid);
 
     /**
      * 处理微信「消息推送」回调的图片检测结果：按 trace_id 找回内容，命中违规则自动下架。
@@ -170,6 +195,17 @@ public interface IWxContentSecurityService
 
     /** 微信明确返回 token 失效时强制刷新；调用方每次业务请求最多调用一次。 */
     String refreshAccessToken();
+
+    /**
+     * 以会员身份送检:按 memberId 取 openid 再调 {@link #checkText}。会员查不到时 openid 为 null,
+     * 由 checkText 按既有口径 fail-closed 拦截。PR10 复审:收拢各写口里重复的「查 openid → checkText」。
+     */
+    static String checkTextAsMember(IWxContentSecurityService security, IUmsMemberService members,
+                                    Long memberId, String text)
+    {
+        com.chengyinhub.business.domain.UmsMember actor = members.selectUmsMemberById(memberId);
+        return security.checkText(text, actor == null ? null : actor.getWxOpenId());
+    }
 
     /**
      * 拼接多个文本字段为一段送检文本（自动忽略空字段，用换行分隔）。

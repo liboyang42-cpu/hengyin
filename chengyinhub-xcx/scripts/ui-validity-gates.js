@@ -11,6 +11,7 @@ const handlerLint = require('./lib/xcx-scan')
 const inventory = require('./mini-program-source-inventory')
 const silentErrorAllowlist = require('./ui-silent-error-allowlist')
 const stateVisibilityGate = require('./state-visibility-gate')
+const { collectApiLiterals } = require('../tests/lint/ui-integrity')
 
 const REPO_ROOT = path.resolve(inventory.XCX_ROOT, '..')
 const JAVA_CONTROLLER_ROOT = path.join(REPO_ROOT, 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller')
@@ -78,12 +79,10 @@ function miniProgramLiteralUrls(jsSources) {
   for (const item of jsSources) {
     const source = handlerLint.maskNonCode(item.source)
     const original = item.source
-    const pattern = /\burl\s*:\s*(['"])(\/api\/[^'"?#]*)\1/g
-    // maskNonCode 会抹掉字符串，故先用原文取 URL，再用同位置的 masked 判断该命中是否在代码中。
-    for (const match of original.matchAll(pattern)) {
-      const prefix = source.slice(Math.max(0, match.index - 16), match.index + 4)
+    for (const literal of collectApiLiterals(original)) {
+      const prefix = source.slice(Math.max(0, literal.offset - 16), literal.offset)
       if (!/\burl\s*:\s*$/.test(prefix)) continue
-      calls.push({ route: normalizeRoute(match[2]), file: item.file, line: lineNumber(original, match.index) })
+      calls.push({ route: normalizeRoute(literal.route), file: item.file, line: lineNumber(original, literal.offset) })
     }
   }
   return calls

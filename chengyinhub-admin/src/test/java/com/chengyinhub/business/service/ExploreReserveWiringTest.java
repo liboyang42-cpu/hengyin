@@ -97,6 +97,7 @@ class ExploreReserveWiringTest {
         service = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
+        ReflectionTestUtils.setField(service, "platformMemberId", MEMBER);
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(service, "umsMemberMapper", memberMapper);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
@@ -145,6 +146,7 @@ class ExploreReserveWiringTest {
     private void givenActivity(Long topicId) {
         CmsActivity a = new CmsActivity();
         a.setId(ACTIVITY);
+        a.setMemberId(MEMBER);
         a.setName("测试活动");
         a.setTopicId(topicId);
         a.setStatus(1L);

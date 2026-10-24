@@ -94,13 +94,13 @@ test('玩家与商家一级导航未选统一黑白、选中统一品牌紫(UI-0
   assert.match(
     tabWxml,
     /\{\{\(monochrome \|\| mode === 'merchant'\) \|\| index !== active \? item\.iconPath : item\.selectedIconPath\}\}/,
-    '选中图标也必须走同一条判定,否则商家/玩家会各走各的资源',
+    '选中图标也必须走同一条判定，否则商家/玩家会各走各的资源',
   )
   // 批3 那条反向守卫保留:防止有人把方向搞反的 mode !== 'merchant' 例外闸再加回来
   assert.doesNotMatch(
     tabWxml,
     /mode !== 'merchant'/,
-    '不得再出现 mode !== \'merchant\' 例外闸:那是把商家保护成紫色,方向反了',
+    '不得再出现 mode !== \'merchant\' 例外闸:那是把商家保护成紫色，方向反了',
   )
   assert.match(tabWxml, /aria-label="\{\{index === active \? '当前' \+ item\.text : '前往' \+ item\.text\}\}"/)
   assert.match(tabWxss, /\.tabbar\.monochrome/)

@@ -3,19 +3,16 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.MemberCapability;
 import com.chengyinhub.business.mapper.MemberCapabilityMapper;
 import com.chengyinhub.business.service.ICapabilityService;
-import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
- * 能力服务实现(P1)。
- * grant/revoke 幂等(靠 uk_member_capability 复用同一行,激活/撤销切换 status)。
+ * 兼容能力视图。权限读取持久角色，历史能力表只保留展示投影。
  */
 @Service
 public class CapabilityServiceImpl implements ICapabilityService {
@@ -25,71 +22,51 @@ public class CapabilityServiceImpl implements ICapabilityService {
     @Autowired
     private MemberCapabilityMapper memberCapabilityMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.UmsMemberMapper umsMemberMapper;
+    @Autowired
+    private com.chengyinhub.business.service.IRoleService roleService;
+
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void grant(Long memberId, String capability, Long grantedBy) {
-        if (memberId == null || StringUtils.isEmpty(capability)) {
-            return;
-        }
-        MemberCapability exist = memberCapabilityMapper.selectByMemberAndCapability(memberId, capability);
-        if (exist == null) {
-            MemberCapability cap = new MemberCapability();
-            cap.setMemberId(memberId);
-            cap.setCapability(capability);
-            cap.setStatus(1);
-            cap.setGrantedAt(new Date());
-            cap.setGrantedBy(grantedBy == null ? 0L : grantedBy);
-            if (memberCapabilityMapper.insertMemberCapability(cap) != 1) {
-                throw new ServiceException("会员能力授予失败");
-            }
-        } else if (exist.getStatus() == null || exist.getStatus() != 1) {
-            if (memberCapabilityMapper.updateStatus(memberId, capability, 1, grantedBy == null ? 0L : grantedBy) != 1) {
-                throw new ServiceException("会员能力启用失败");
-            }
-        }
+        roleService.changeRole(memberId, roleForCapability(capability), grantedBy == null ? 0L : grantedBy);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void revoke(Long memberId, String capability) {
-        if (memberId == null || StringUtils.isEmpty(capability)) {
-            return;
+        String role = roleForCapability(capability);
+        if (memberId == null || !memberId.equals(umsMemberMapper.lockActiveMemberById(memberId))) {
+            throw new ServiceException("会员不可用", 403);
         }
-        MemberCapability exist = memberCapabilityMapper.selectByMemberAndCapability(memberId, capability);
-        if (exist != null && (exist.getStatus() == null || exist.getStatus() != 0)) {
-            if (memberCapabilityMapper.updateStatus(memberId, capability, 0, 0L) != 1) {
-                throw new ServiceException("会员能力撤销失败");
-            }
+        if (role.equals(roleService.resolveRole(umsMemberMapper.selectRolePermissionSubject(memberId)))) {
+            roleService.changeRole(memberId, com.chengyinhub.business.service.IRoleService.ROLE_PLAYER, 0L);
         }
+    }
+
+    private String roleForCapability(String capability) {
+        if (CAP_PLAYER.equals(capability)) return com.chengyinhub.business.service.IRoleService.ROLE_PLAYER;
+        if (MemberCapability.CAP_CLUB_LEADER.equals(capability)) return com.chengyinhub.business.service.IRoleService.ROLE_CLUB;
+        if (MemberCapability.CAP_MERCHANT.equals(capability)) return com.chengyinhub.business.service.IRoleService.ROLE_MERCHANT;
+        throw new ServiceException("会员角色无效", 400);
     }
 
     @Override
     public boolean hasCapability(Long memberId, String capability) {
-        if (memberId == null || StringUtils.isEmpty(capability)) {
-            return false;
-        }
-        if (CAP_PLAYER.equals(capability)) {
-            return true; // 玩家能力隐式默认
-        }
-        List<MemberCapability> caps = memberCapabilityMapper.selectByMember(memberId);
-        if (caps == null) return false;
-        for (MemberCapability c : caps) {
-            if (capability.equals(c.getCapability())) return true;
-        }
-        return false;
+        return getCapabilities(memberId).contains(capability);
     }
 
     @Override
     public List<String> getCapabilities(Long memberId) {
         List<String> result = new ArrayList<>();
-        result.add(CAP_PLAYER); // 玩家能力始终在
-        if (memberId == null) return result;
-        List<MemberCapability> caps = memberCapabilityMapper.selectByMember(memberId);
-        if (caps != null) {
-            for (MemberCapability c : caps) {
-                result.add(c.getCapability());
-            }
-        }
+        if (memberId == null || memberId <= 0) return result;
+        com.chengyinhub.business.domain.UmsMember member = umsMemberMapper.selectRolePermissionSubject(memberId);
+        if (member == null || !Long.valueOf(1L).equals(member.getStatus())
+                || !Integer.valueOf(0).equals(member.getDelFlag())) return result;
+        String role = roleService.resolveRole(member);
+        result.add(CAP_PLAYER);
+        if (com.chengyinhub.business.service.IRoleService.ROLE_CLUB.equals(role)) result.add(MemberCapability.CAP_CLUB_LEADER);
+        if (com.chengyinhub.business.service.IRoleService.ROLE_MERCHANT.equals(role)) result.add(MemberCapability.CAP_MERCHANT);
         return result;
     }
 

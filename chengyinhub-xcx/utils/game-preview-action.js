@@ -4,7 +4,8 @@ function previewD20Result(kit) {
   const kept = kit.rollMode === 'disadvantage' ? Math.min(...values) : Math.max(...values);
   const total = kept + kit.modifier;
   const success = total >= kit.dc;
-  return { values, kept, total, success, text: success ? kit.successText : kit.failText };
+  // 沙盒：作者本地预览，不是正式判定；加值来自作者在模板中设定的固定值。
+  return { values, kept, total, success, text: success ? kit.successText : kit.failText, sandbox: true, modifierSource: 'TEMPLATE_FIXED' };
 }
 
 function applyPreviewAction(source, event, startedAt, now = Date.now()) {
@@ -45,6 +46,20 @@ function applyPreviewAction(source, event, startedAt, now = Date.now()) {
   } else if (kit.type === 'photocheck' && action === 'shoot') {
     kit.lastUrl = detail.tempFilePath || '';
     result.message = '照片仅供预览，未上传或识别';
+  } else if (kit.type === 'dailysign' && action === 'accept') {
+    // 试玩:按作者写的第一条签文揭开,留言与照片只在本机
+    kit.myText = String(detail.text || ''); kit.myPhotoUrl = detail.photoUrl || '';
+    kit.claimed = true; kit.revealed = true;
+  } else if (kit.type === 'journeycheck' && action === 'roll' && !kit.receipt) {
+    // D20 三档试玩:本机掷一个 d20,按默认难度线判(简单 10 / 标准 13 / 困难 16,与服务端 JourneyRulesValidator 默认值同;
+    // 主题里改过难度线的,以正式游玩为准)
+    const dc = { easy: 10, medium: 13, hard: 16 }[kit.tier] || 13, roll = 1 + Math.floor(Math.random() * 20);
+    kit.receipt = { rolled: true, tier: kit.tier, dc, dice: [roll], kept: roll, total: roll, success: roll >= dc,
+      nat: roll === 20 ? 'CRIT' : (roll === 1 ? 'FUMBLE' : ''), rerolled: false, settled: false, text: '', failCostLabel: '',
+      hp: null, luck: null, exhausted: false, mods: [] };
+  } else if (kit.type === 'journeycheck' && action === 'settle' && kit.receipt && !kit.receipt.settled) {
+    kit.receipt = Object.assign({}, kit.receipt, { settled: true, text: kit.receipt.success ? kit.successText : kit.failText });
+    result.ready = true;
   } else if (kit.type === 'typein' && action === 'start') {
     if (kit.passed || (kit.tries > 0 && kit.attempts >= kit.tries)) return null;
     result.startedAt = now;

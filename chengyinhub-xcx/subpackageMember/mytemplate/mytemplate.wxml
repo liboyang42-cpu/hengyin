@@ -10,6 +10,8 @@
     <view class="tablist">
       <!-- 用户原话"这个删除搜索"/"还没有节点玩法向下 正中 删除搜索":两态都不要搜索入口 -->
       <view class="tabcont box-shadow">
+        <cy-empty wx:if="{{readAccess}}" kind="no-permission" fill size="lg" class="fill-slot" title="{{readAccess === 'login' ? '登录后查看我的节点玩法' : '当前账号无法查看节点玩法'}}" cta="{{readAccess === 'login' ? '登录' : '重试'}}" bind:cta="retryRead" />
+        <block wx:else>
         <view class="activity-list">
           <view class="li" wx:for="{{list}}" wx:key="id">
             <view class="item">
@@ -69,6 +71,10 @@
                     <view class="label">模板广场</view>
                     <view class="cont flex-ac"><text>{{item._marketText}}</text></view>
                   </view>
+                  <view class="dd" wx:if="{{item.reason}}">
+                    <view class="label">审核反馈</view>
+                    <view class="cont flex-ac"><text>{{item.reason}}</text></view>
+                  </view>
                   <view class="dd" wx:if="{{item.marketReason}}">
                     <view class="label">广场反馈</view>
                     <view class="cont flex-ac"><text>{{item.marketReason}}</text></view>
@@ -112,22 +118,23 @@
              底部"的剩余空间里居中,不再是贴顶渲染;size="lg" 补 aaa 标准另外两条(文字放大+配图放大) -->
         <cy-empty wx:if="{{loading && list.length === 0}}" kind="loading" fill size="lg" class="fill-slot" title="正在加载你的节点玩法" />
 
-        <cy-error wx:if="{{!loading && errorMsg && list.length === 0}}" fill size="lg" class="fill-slot" title="{{errorMsg}}" sub="" retry="重试" bind:retry="refreshList" auto-back />
+        <cy-error load-failure wx:if="{{!loading && errorMsg && list.length === 0}}" fill size="lg" class="fill-slot" title="{{errorMsg}}" sub="" retry="重试" bind:retry="refreshList" auto-back />
 
 
         <!-- aaa 标准(标准速查表):fill 撑满居中+放大;补 kind="empty" 拿默认插画 -->
-        <cy-empty wx:if="{{!loading && !errorMsg && list.length === 0}}" kind="empty" fill size="lg" class="fill-slot" title="还没有节点玩法" sub="发布路线时可以沉淀自己的节点互动，之后在这里复用和管理。" />
+        <cy-empty wx:if="{{!loading && !errorMsg && list.length === 0}}" kind="empty" fill size="lg" class="fill-slot" title="还没有节点玩法" />
 
         <!-- 加载更多:list 为空时不该出现(截图审计发现空态残留"加载更多"文案的根因——
              hasMore 初值是 true,首屏还没等到 getList 回包把它拨正,就先跟空态一起露出来了) -->
-        <cy-inline-error class="list-inline-error" wx:if="{{loadMoreError}}"
-          kind="network" title="更多玩法没有加载出来" sub="{{loadMoreError}}"
+        <cy-inline-error load-failure class="list-inline-error" wx:if="{{loadMoreError}}"
+          kind="network" title="更多玩法加载失败" sub="{{loadMoreError}}"
           action="重试" bind:action="retryLoadMore" />
         <view wx:elif="{{loadingMore}}" class="load-more load-more--loading"
           aria-live="polite">正在加载更多…</view>
         <view wx:elif="{{hasMore && list.length > 0}}" class="load-more"
           aria-role="button" aria-label="加载更多节点玩法" bindtap="loadMore" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
 
+        </block>
       </view>
     </view>
   </view>

@@ -12,4 +12,7 @@ public interface IMerchantCommerceService {
     boolean supportsOutTradeNo(String outTradeNo);
 
     boolean handlePaidOrder(String outTradeNo, boolean paid, Integer paidAmountFen, String transactionId);
+
+    /** 用微信真实查单补记漏掉的回调；不改变未确认状态。 */
+    void reconcileOrder(String outTradeNo);
 }

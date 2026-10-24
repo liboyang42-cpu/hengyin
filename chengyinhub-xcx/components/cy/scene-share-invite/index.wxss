@@ -124,3 +124,6 @@
 
 .siv__share::after { border: 0; }
 .siv__share.button-hover { opacity: .68; }
+
+/* BL-71:个人码可点开预览。isolated 组件内全局 .cy-pressed 进不来,照 scene-qr-ticket 本地定义,只减淡不位移。 */
+.cy-pressed { opacity: .88; }

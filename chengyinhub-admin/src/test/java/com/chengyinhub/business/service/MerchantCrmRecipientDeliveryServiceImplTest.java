@@ -248,6 +248,119 @@ class MerchantCrmRecipientDeliveryServiceImplTest {
     }
 
     @Test
+    void couponNotIssuedReleasesGuardAndPersistsRetryableCode() {
+        when(campaignMapper.selectRecipientForUpdate(MERCHANT, CAMPAIGN, RECIPIENT))
+                .thenReturn(recipient("COUPON", MerchantCrmCampaignRecipient.PENDING));
+        when(campaignMapper.selectOwnedCampaign(MERCHANT, CAMPAIGN)).thenReturn(campaign("COUPON"));
+        when(consentMapper.selectLatestOptIn(MEMBER, OWNER, MERCHANT, "COUPON")).thenReturn(optIn("COUPON"));
+        MerchantCrmDeliveryGuardService.Claim reserved = reservedClaim();
+        MerchantCrmDeliveryGuardService.Claim dispatching = dispatchingClaim();
+        when(guardService.claim(MERCHANT, CAMPAIGN, RECIPIENT, MEMBER, "COUPON")).thenReturn(reserved);
+        when(guardService.beginDispatch(reserved)).thenReturn(dispatching);
+        MerchantCrmCouponGrantAdapter.GrantRejectedException exhausted =
+                new MerchantCrmCouponGrantAdapter.GrantRejectedException(
+                        "COUPON_NOT_ISSUED", "优惠券未发出，可能已停发、失效或库存不足", null);
+        when(coupon.grant(OWNER, MERCHANT, MEMBER, 5L)).thenThrow(exhausted);
+        when(campaignMapper.markRecipientFailed(MERCHANT, CAMPAIGN, RECIPIENT,
+                "COUPON_NOT_ISSUED", "优惠券未发出，恢复可发条件后可重试")).thenReturn(1);
+
+        MerchantCrmCouponGrantAdapter.GrantRejectedException failure =
+                org.junit.jupiter.api.Assertions.assertThrows(
+                        MerchantCrmCouponGrantAdapter.GrantRejectedException.class,
+                        () -> service.deliver(MERCHANT, CAMPAIGN, RECIPIENT));
+        service.recordFailure(MERCHANT, CAMPAIGN, RECIPIENT, failure);
+
+        verify(guardService).releaseForRetry(dispatching);
+        verify(guardService, never()).markOutcomeUnknown(any(), anyString());
+        verify(campaignMapper).markRecipientFailed(MERCHANT, CAMPAIGN, RECIPIENT,
+                "COUPON_NOT_ISSUED", "优惠券未发出，恢复可发条件后可重试");
+    }
+
+    @Test
+    void manualRetryAfterNotIssuedCanAcquireAgainAndDeliverOnce() {
+        when(campaignMapper.selectRecipientForUpdate(MERCHANT, CAMPAIGN, RECIPIENT))
+                .thenReturn(recipient("COUPON", MerchantCrmCampaignRecipient.PENDING),
+                        recipient("COUPON", MerchantCrmCampaignRecipient.PENDING),
+                        recipient("COUPON", MerchantCrmCampaignRecipient.PENDING));
+        when(campaignMapper.selectOwnedCampaign(MERCHANT, CAMPAIGN)).thenReturn(campaign("COUPON"));
+        when(consentMapper.selectLatestOptIn(MEMBER, OWNER, MERCHANT, "COUPON")).thenReturn(optIn("COUPON"));
+        MerchantCrmDeliveryGuardService.Claim firstReserved = reservedClaim();
+        MerchantCrmDeliveryGuardService.Claim firstDispatching = dispatchingClaim();
+        MerchantCrmDeliveryGuardService.Claim retryReserved =
+                MerchantCrmDeliveryGuardService.Claim.acquired(101L, "retry-lease", 2L);
+        MerchantCrmDeliveryGuardService.Claim retryDispatching =
+                MerchantCrmDeliveryGuardService.Claim.acquired(101L, "retry-lease", 3L);
+        when(guardService.claim(MERCHANT, CAMPAIGN, RECIPIENT, MEMBER, "COUPON"))
+                .thenReturn(firstReserved, retryReserved);
+        when(guardService.beginDispatch(firstReserved)).thenReturn(firstDispatching);
+        when(guardService.beginDispatch(retryReserved)).thenReturn(retryDispatching);
+        when(coupon.grant(OWNER, MERCHANT, MEMBER, 5L))
+                .thenThrow(new MerchantCrmCouponGrantAdapter.GrantRejectedException(
+                        "COUPON_NOT_ISSUED", "优惠券未发出，可能已停发、失效或库存不足", null))
+                .thenReturn(77L);
+        when(campaignMapper.markRecipientFailed(MERCHANT, CAMPAIGN, RECIPIENT,
+                "COUPON_NOT_ISSUED", "优惠券未发出，恢复可发条件后可重试")).thenReturn(1);
+        when(campaignMapper.markRecipientDelivered(MERCHANT, CAMPAIGN, RECIPIENT, null, 77L)).thenReturn(1);
+
+        MerchantCrmCouponGrantAdapter.GrantRejectedException failure =
+                org.junit.jupiter.api.Assertions.assertThrows(
+                        MerchantCrmCouponGrantAdapter.GrantRejectedException.class,
+                        () -> service.deliver(MERCHANT, CAMPAIGN, RECIPIENT));
+        service.recordFailure(MERCHANT, CAMPAIGN, RECIPIENT, failure);
+        service.deliver(MERCHANT, CAMPAIGN, RECIPIENT);
+
+        verify(coupon, org.mockito.Mockito.times(2)).grant(OWNER, MERCHANT, MEMBER, 5L);
+        verify(guardService).releaseForRetry(firstDispatching);
+        verify(guardService).markDelivered(retryDispatching, null, 77L);
+        verify(guardService, never()).markOutcomeUnknown(any(), anyString());
+    }
+
+    @Test
+    void releaseCasFailureKeepsUnknownProtection() {
+        when(campaignMapper.selectRecipientForUpdate(MERCHANT, CAMPAIGN, RECIPIENT))
+                .thenReturn(recipient("COUPON", MerchantCrmCampaignRecipient.PENDING));
+        when(campaignMapper.selectOwnedCampaign(MERCHANT, CAMPAIGN)).thenReturn(campaign("COUPON"));
+        when(consentMapper.selectLatestOptIn(MEMBER, OWNER, MERCHANT, "COUPON")).thenReturn(optIn("COUPON"));
+        MerchantCrmDeliveryGuardService.Claim reserved = reservedClaim();
+        MerchantCrmDeliveryGuardService.Claim dispatching = dispatchingClaim();
+        when(guardService.claim(MERCHANT, CAMPAIGN, RECIPIENT, MEMBER, "COUPON")).thenReturn(reserved);
+        when(guardService.beginDispatch(reserved)).thenReturn(dispatching);
+        when(coupon.grant(OWNER, MERCHANT, MEMBER, 5L)).thenThrow(
+                new MerchantCrmCouponGrantAdapter.GrantRejectedException(
+                        "COUPON_NOT_ISSUED", "优惠券未发出，可能已停发、失效或库存不足", null));
+        org.mockito.Mockito.doThrow(new ServiceException("CAS lost", 409))
+                .when(guardService).releaseForRetry(dispatching);
+
+        org.junit.jupiter.api.Assertions.assertThrows(MerchantCrmDeliveryOutcomeUnknownException.class,
+                () -> service.deliver(MERCHANT, CAMPAIGN, RECIPIENT));
+
+        verify(guardService).releaseForRetry(dispatching);
+        verify(guardService).markOutcomeUnknown(dispatching, "DELIVERY_OUTCOME_UNKNOWN");
+    }
+
+    @Test
+    void markDeliveredFailureAfterCouponReceiptStaysUnknownAndNeverReleasesGuard() {
+        when(campaignMapper.selectRecipientForUpdate(MERCHANT, CAMPAIGN, RECIPIENT))
+                .thenReturn(recipient("COUPON", MerchantCrmCampaignRecipient.PENDING));
+        when(campaignMapper.selectOwnedCampaign(MERCHANT, CAMPAIGN)).thenReturn(campaign("COUPON"));
+        when(consentMapper.selectLatestOptIn(MEMBER, OWNER, MERCHANT, "COUPON")).thenReturn(optIn("COUPON"));
+        MerchantCrmDeliveryGuardService.Claim reserved = reservedClaim();
+        MerchantCrmDeliveryGuardService.Claim dispatching = dispatchingClaim();
+        when(guardService.claim(MERCHANT, CAMPAIGN, RECIPIENT, MEMBER, "COUPON")).thenReturn(reserved);
+        when(guardService.beginDispatch(reserved)).thenReturn(dispatching);
+        when(coupon.grant(OWNER, MERCHANT, MEMBER, 5L)).thenReturn(77L);
+        org.mockito.Mockito.doThrow(new ServiceException("回执 CAS lost", 409))
+                .when(guardService).markDelivered(dispatching, null, 77L);
+
+        org.junit.jupiter.api.Assertions.assertThrows(MerchantCrmDeliveryOutcomeUnknownException.class,
+                () -> service.deliver(MERCHANT, CAMPAIGN, RECIPIENT));
+
+        verify(guardService, never()).releaseForRetry(any());
+        verify(guardService).markOutcomeUnknown(dispatching, "DELIVERY_OUTCOME_UNKNOWN");
+        verify(campaignMapper, never()).markRecipientDelivered(any(), any(), any(), any(), any());
+    }
+
+    @Test
     void adapterFailureAfterDispatchFenceBecomesUnknownAndIsNeverAutomaticallyResent() {
         when(campaignMapper.selectRecipientForUpdate(MERCHANT, CAMPAIGN, RECIPIENT))
                 .thenReturn(recipient("IN_APP", MerchantCrmCampaignRecipient.PENDING));
@@ -303,6 +416,19 @@ class MerchantCrmRecipientDeliveryServiceImplTest {
         verify(campaignMapper, never()).markRecipientFailed(any(), any(), any(), any(), any());
         verify(campaignMapper).markRecipientRetryableBusy(MERCHANT, CAMPAIGN, RECIPIENT,
                 "投递正在由其他任务处理，请稍后重试");
+    }
+
+    @Test
+    void preDispatchNotFoundRetainsAssetInvalidFallback() {
+        when(campaignMapper.selectRecipientForUpdate(MERCHANT, CAMPAIGN, RECIPIENT))
+                .thenReturn(recipient("COUPON", MerchantCrmCampaignRecipient.PENDING));
+        when(campaignMapper.markRecipientFailed(MERCHANT, CAMPAIGN, RECIPIENT,
+                "ASSET_INVALID", "投递失败，可重试")).thenReturn(1);
+
+        service.recordFailure(MERCHANT, CAMPAIGN, RECIPIENT, new ServiceException("not found", 404));
+
+        verify(campaignMapper).markRecipientFailed(MERCHANT, CAMPAIGN, RECIPIENT,
+                "ASSET_INVALID", "投递失败，可重试");
     }
 
     @Test

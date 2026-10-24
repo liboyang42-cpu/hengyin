@@ -78,7 +78,7 @@ function setupPage(options) {
     if (typeof cb === 'function') cb();
   };
   // onLoad 尾部的同步副作用与 ready 回调里的数据加载,全部换成可观测的桩
-  ['_layoutChrome', 'startCountdownTimer', 'handleInviter', 'loadPageData', 'getFuzzyLocation']
+  ['_layoutChrome', 'startCountdownTimer', 'handleInviter', 'loadPageData', 'getHomeCityLocation']
     .forEach((name) => { page[name] = () => { calls.push(name); }; });
 
   global.getCurrentPages = () => [page];
@@ -95,7 +95,7 @@ test('冷缓存冷启动:登录落地后首页自己复判身份并跳商家首�
 
   ctx.page.onLoad({});
   ctx.page.onShow();
-  assert.deepStrictEqual(ctx.redirects, [], '登录还没落地时不该跳转,应先渲染玩家首页');
+  assert.deepStrictEqual(ctx.redirects, [], '登录还没落地时不该跳转，应先渲染玩家首页');
 
   // 登录回来了:applySession 把角色写进 storage,然后 appReadyPromise resolve
   ctx.storage.role = 'merchant';
@@ -107,7 +107,7 @@ test('冷缓存冷启动:登录落地后首页自己复判身份并跳商家首�
   assert.deepStrictEqual(
     ctx.redirects,
     [MERCHANT_HOME],
-    '登录落地后没有复判身份 ⇒ 商家会一直停在玩家首页,直到手动切走再切回(2026-08-10 真机复现的就是这个)',
+    '登录落地后没有复判身份 ⇒ 商家会一直停在玩家首页，直到手动切走再切回(2026-08-10 真机复现的就是这个)',
   );
 });
 
@@ -120,7 +120,7 @@ test('复判判出商家时不许先去拉数据/弹定位授权,再把人跳走
   await flush();
 
   assert.deepStrictEqual(ctx.redirects, [MERCHANT_HOME]);
-  assert.ok(!ctx.calls.includes('getFuzzyLocation'), '商家不该先被弹一次定位授权框再被跳走');
+  assert.ok(!ctx.calls.includes('getHomeCityLocation'), '商家不该先被弹一次定位授权框再被跳走');
   assert.ok(!ctx.calls.includes('loadPageData'), '要跳走了就别再拉玩家首页的数据');
 });
 
@@ -135,7 +135,7 @@ test('登录落地后仍是玩家:不许乱跳,照常拉数据', async () => {
 
   assert.deepStrictEqual(ctx.redirects, [], '玩家不该被弹去商家首页');
   assert.ok(ctx.calls.includes('loadPageData'), '玩家路径的数据加载不能被复判挡掉');
-  assert.ok(ctx.calls.includes('getFuzzyLocation'), '玩家路径的定位不能被复判挡掉');
+  assert.ok(ctx.calls.includes('getHomeCityLocation'), '玩家路径的定位不能被复判挡掉');
 });
 
 test('热缓存:同步分支直接命中,复判不产生第二次跳转', async () => {
@@ -155,7 +155,7 @@ test('复判时用户已经切走:不许把人从别的页面拽回商家首页'
   global.getCurrentPages = () => [ctx.page, { route: 'pages/other/index' }]; // 用户已经进了别的页
   ctx.landLogin();
   await flush();
-  assert.deepStrictEqual(ctx.redirects, [], '本页已不是栈顶,复判不该抢导航');
+  assert.deepStrictEqual(ctx.redirects, [], '本页已不是栈顶，复判不该抢导航');
 });
 
 test('appReady 拒绝必须给出可见错误，不能因页面时序分支静默吞掉', async () => {
@@ -165,7 +165,7 @@ test('appReady 拒绝必须给出可见错误，不能因页面时序分支静�
   ctx.failLogin(new Error('bootstrap failed'));
   await flush();
 
-  assert.deepStrictEqual(ctx.toasts, ['加载失败，请重试']);
+  assert.deepStrictEqual(ctx.toasts, [], '加载失败按新要求留白');
 });
 
 test('首页卸载后 appReady 迟到回调不得 setData、加载数据或触发定位', async () => {
@@ -187,7 +187,7 @@ test('首页卸载后 appReady 迟到回调不得 setData、加载数据或触�
 
   assert.equal(postUnloadWrites, 0);
   assert.ok(!ctx.calls.includes('loadPageData'));
-  assert.ok(!ctx.calls.includes('getFuzzyLocation'));
+  assert.ok(!ctx.calls.includes('getHomeCityLocation'));
 });
 
 test('跳商家首页必须带 fail 回调(导航被丢时不能零信号)', () => {
@@ -198,6 +198,6 @@ test('跳商家首页必须带 fail 回调(导航被丢时不能零信号)', () 
   assert.strictEqual(
     typeof failHandler,
     'function',
-    'redirectTo 没有 fail 回调 ⇒ 跳转被框架丢掉时完全没有信号,分不清是没判出商家还是判出了没跳成',
+    'redirectTo 没有 fail 回调 ⇒ 跳转被框架丢掉时完全没有信号，分不清是没判出商家还是判出了没跳成',
   );
 });

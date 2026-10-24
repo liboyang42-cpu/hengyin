@@ -96,8 +96,8 @@ test('_loadLocalHistory 给 roam_tiles 格子标 110m 大半径(重开连片,不
   const { geohash7 } = require('../../utils/roam-geo.js');
   const h = geohash7(31.2301, 121.4702);
   const page = loadRoamPage({
-    'roam_memory_v1:9:tiles': { tiles: { [h]: 1 }, serverCursor: 8 },
-    'roam_memory_v1:9:reveals': [{ lat: 31.2308, lng: 121.4708 }],
+    'roam_memory_v1:9:tiles': { tiles: { [h]: 1 }, retentionAt: { [h]: Date.now() }, serverCursor: 8 },
+    'roam_memory_v1:9:reveals': [{ lat: 31.2308, lng: 121.4708, retentionAt: Date.now() }],
   });
   page._loadLocalHistory();
   const tilePt = page._historyReveals.find((p) => p.r);
@@ -133,7 +133,7 @@ test('_drawScreenFog 用径向渐变羽化擦除,且羽化倍率作用在缩放�
   assert.ok(/,0\)$/.test(ops.stops[2][1].replace(/\s/g, '')), '最外圈必须渐隐到透明');
   // 负控本体:圆的填充必须是渐变对象;退回 '#000000' 硬笔刷即红
   const circleFills = ops.fillStyles.filter((f) => f && f._isGradient);
-  assert.strictEqual(circleFills.length, 1, '揭示圆必须用渐变笔刷填充,不许退回纯色硬边');
+  assert.strictEqual(circleFills.length, 1, '揭示圆必须用渐变笔刷填充，不许退回纯色硬边');
   // 缩放带上 FOG_FEATHER:画出的圆 = 投影半径 × 1.6
   const [projected] = projectRevealCircles(REGION, { width: 400, height: 400 }, page._reveals, 55);
   assert.ok(Math.abs(ops.scales[0][0] - projected.radiusX * 1.6) < 1e-6, '羽化倍率必须作用在 scale 上');

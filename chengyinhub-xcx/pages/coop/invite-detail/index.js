@@ -21,12 +21,31 @@ const modal = require('../../../utils/modal.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { decorate, STATUS_LABEL, parseInviteId, INVITE_ID_ERROR } = require('../../../utils/coop-invite-view.js');
+const { partnerMemberId, shapeCredit } = require('./credit-view.js');
 
 // 状态 → 顶部大字的语气。已接受是唯一的正向终态,其余终态一律中性,
 // 不用红色 —— 「已拒绝」是一个事实,不是错误。
 const TONE = { 0: 'pending', 1: 'accepted', 2: 'closed', 3: 'closed', 4: 'closed', 5: 'closed' };
 
+function acceptedProjectScope(inv, box) {
+  if (!inv) return '';
+  const sent = box === 'sent';
+  const partyType = sent ? inv.fromType : inv.toType;
+  if (partyType === 'club') return 'CLUB';
+  if (partyType && partyType !== 'merchant') return '';
+  const merchantSide = (Number(inv.inviteType) === 0 && !sent)
+    || (Number(inv.inviteType) === 1 && sent);
+  return merchantSide ? 'MERCHANT' : '';
+}
+
 const jsonHeader = () => ({ 'Content-Type': 'application/json' });
+function identityKey() {
+  const gd = app.globalData || {};
+  const member = typeof app.getUserID === 'function' ? app.getUserID() : gd.user_id;
+  const role = typeof app.getUserRole === 'function' ? app.getUserRole() : gd.role;
+  const type = typeof app.getUserType === 'function' ? app.getUserType() : gd.user_type;
+  return [member == null ? '' : member, role || '', type == null ? '' : type].join('|');
+}
 
 Page({
   data: {
@@ -47,6 +66,7 @@ Page({
     actionReceipt: '',
     actionError: '',
     depositActionVisible: false,
+    partnerCredit: null,           // BL-103 对方近 90 天履约摘要 {label,text},样本为 0 不展示
     projectActionVisible: false,
     // 供给申报勾选浮层(原在 pages/coop/list)。当前邀约 id 不进 data:wxml 不渲染它,提交时从 invite 取。
     showPerkPick: false,
@@ -57,10 +77,13 @@ Page({
     // 评价:先选星级(cy-option-sheet)再写评语(可输入 modal)
     reviewSheetShow: false,
     myReviewStars: '',
+    reviewVerifying: false,
     reviewSheetItems: ['★★★★★ 非常好', '★★★★ 好', '★★★ 一般', '★★ 较差', '★ 差'],
   },
 
   onLoad(query) {
+    this._unloaded = false;
+    this._detailIdentity = identityKey();
     const id = query && query.inviteId;
     const box = query && query.box === 'sent' ? 'sent' : 'received';
     this._inviteId = parseInviteId(id);
@@ -73,9 +96,20 @@ Page({
     }
     this.load();
   },
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    merchantTheme.merchantPageShow(); this._navigating = false;
+    const refresh = this._hidden || (this._detailIdentity != null && this._detailIdentity !== identityKey());
+    this._hidden = false;
+    if (refresh && this._inviteId) this.load();
+  },
+  onHide() {
+    this._hidden = true;
+    this._detailEpoch = (this._detailEpoch || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
   onUnload() {
+    this._unloaded = true;
+    this._detailEpoch = (this._detailEpoch || 0) + 1;
     this._perkEpoch = (this._perkEpoch || 0) + 1;
     this._contacting = false;
     this._perkLoading = false;
@@ -84,18 +118,48 @@ Page({
   },
   onPullDownRefresh() { this.load(true); },
 
+  _captureContext() {
+    return { identity: this._detailIdentity == null ? identityKey() : this._detailIdentity,
+      epoch: this._detailEpoch || 0, id: this._inviteId || parseInviteId(this.data.invite && this.data.invite.inviteId),
+      box: this.data.box };
+  },
+  _isCurrent(ctx) {
+    return !!ctx && !this._unloaded && !this._hidden && ctx.identity === identityKey()
+      && ctx.epoch === (this._detailEpoch || 0) && ctx.box === this.data.box
+      && ctx.id === (this._inviteId || parseInviteId(this.data.invite && this.data.invite.inviteId));
+  },
+
   load(fromPull) {
-    if (this.data.state !== 'ready') this.setData({ state: 'loading' });
+    if (this._unloaded || !this._inviteId) return;
+    const identity = identityKey();
+    const sameIdentity = this._detailIdentity === identity;
+    const previous = this.data.invite;
+    if (!sameIdentity) this._draftSnapshot = null;
+    else if (previous) this._draftSnapshot = { id: previous.inviteId, box: this.data.box,
+      status: previous.status, draft: this.data.draft };
+    this._detailIdentity = identity;
+    this._detailEpoch = (this._detailEpoch || 0) + 1;
+    this._perkEpoch = (this._perkEpoch || 0) + 1;
+    this._contacting = false;
+    this._perkLoading = false;
+    this._reviewing = false;
+    this._reviewSheet = null;
+    this.setData({ state: 'loading', invite: null, errorText: '', submitting: false,
+      draft: sameIdentity ? this.data.draft : '', draftError: '',
+      showPerkPick: false, perkSaving: false, perkState: 'idle', perkErrorText: '',
+      reviewSheetShow: false, myReviewStars: '', reviewVerifying: false, actionReceipt: '', actionError: '' });
     const that = this;
+    const ctx = this._captureContext();
     const done = () => { if (fromPull && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh(); };
     app.sendRequest({
       hideLoading: true, silentError: true,
       url: '/api/coop/list', method: 'POST', data: JSON.stringify({}), header: jsonHeader(),
       success(res) {
+        if (!that._isCurrent(ctx)) return;
         done();
         const d = res && res.data;
         if (String(res && res.code) !== '200' || !d || !isRecordList(d.received) || !isRecordList(d.sent)) {
-          that.setData({ state: 'error', errorText: (res && res.msg) || '协作邀请没加载出来' });
+          that.setData({ state: 'error', errorText: (res && res.msg) || '协作邀请加载失败' });
           return;
         }
         const rows = decorate(that.data.box === 'sent' ? d.sent : d.received, d.slots);
@@ -110,20 +174,29 @@ Page({
           that.setData({ state: 'notfound' });
           return;
         }
-        that.applyInvite(hit);
+        const draft = that._draftSnapshot;
+        const keepDraft = draft && String(draft.id) === String(hit.inviteId)
+          && draft.box === ctx.box && Number(draft.status) === Number(hit.status);
+        that.applyInvite(hit, keepDraft ? draft.draft : '');
+        that._draftSnapshot = null;
       },
       fail() {
+        if (!that._isCurrent(ctx)) return;
         done();
-        that.setData({ state: 'error', errorText: '网络不稳定，请检查连接后重试' });
+        that.setData({ state: 'error', errorText: '网络异常，请检查连接后重试' });
       },
     });
   },
 
-  applyInvite(inv) {
+  applyInvite(inv, draft) {
+    this._detailEpoch = (this._detailEpoch || 0) + 1;
+    this._perkEpoch = (this._perkEpoch || 0) + 1;
+    this._contacting = false;
+    this._perkLoading = false;
+    this._reviewing = false;
+    this._reviewSheet = null;
     const status = Number(inv.status);
     const sent = this.data.box === 'sent';
-    const merchantSide = (Number(inv.inviteType) === 0 && !sent)
-      || (Number(inv.inviteType) === 1 && sent);
     let kind = '', label = '', ph = '';
     if (status === 0 && !sent && !inv.legacyReadonly) {
       kind = 'reply'; label = '回复对方(接受选填，拒绝必填)'; ph = '写下接受或拒绝的理由…';
@@ -132,35 +205,62 @@ Page({
       kind = 'withdraw'; label = '撤回理由(必填，会发给对方)'; ph = '说明为什么撤回这条邀约…';
     }
     this.setData({
-      state: 'ready', invite: inv,
+      state: 'ready', invite: inv, submitting: false,
       statusText: STATUS_LABEL[status] || '',
       tone: TONE[status] || 'closed',
-      inputKind: kind, inputLabel: label, inputPlaceholder: ph, draft: '', draftError: '',
+      inputKind: kind, inputLabel: label, inputPlaceholder: ph, draft: draft || '', draftError: '',
       actionReceipt: '', actionError: '',
       // 欠保证金时给唯一实心入口(搬走的动作不在这里重复);!legacyReadonly 与搬走的卡片闸一致
       depositActionVisible: status === 1 && !inv.legacyReadonly && !!inv.depositDueText,
       projectActionVisible: status === 1 && !inv.legacyReadonly
-        && merchantSide && !!parseInviteId(inv.topicId),
+        && !!acceptedProjectScope(inv, this.data.box) && !!parseInviteId(inv.topicId),
       showPerkPick: false, perkTemplates: [], perkSaving: false, perkState: 'idle', perkErrorText: '',
       reviewSheetShow: false,
       myReviewStars: '',
+      reviewVerifying: false,
+      partnerCredit: null,
     });
     if (status === 1 && !inv.legacyReadonly) this.loadMyReview(inv);
+    this.loadPartnerCredit(inv);
+  },
+
+  // BL-103:对方近 90 天履约信用摘要(只读)。读不到/样本为 0 就不展示,不影响详情页其余内容。
+  loadPartnerCredit(inv) {
+    const memberId = partnerMemberId(inv, this.data.box);
+    if (!memberId) return;
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/coop/credit', method: 'POST',
+      data: JSON.stringify({ memberId: memberId }), header: jsonHeader(),
+      success(res) {
+        const credit = res && String(res.code) === '200' ? shapeCredit(res.data) : null;
+        if (credit && that.data.invite && String(that.data.invite.inviteId) === String(inv.inviteId)) {
+          that.setData({ partnerCredit: credit });
+        }
+      },
+      fail() {},
+    });
   },
 
   // 被评对象与 reviewCoop 同一口径;回读「我对这次合作打过的分」。读不到就照常给「评价」入口,
   // 真重复提交由后端「已评价过该合作」兜底。
-  loadMyReview(inv) {
+  // done(found):评价结果不明时用来回读核对;found=true 读到已评分,false 读到但没有,null 回读失败。
+  loadMyReview(inv, done) {
+    const finish = typeof done === 'function' ? done : function () {};
     const toId = this.data.box === 'received' ? inv.fromId : inv.toId;
-    if (!toId || !inv.topicId) return;
+    if (!toId || !inv.topicId) { finish(null); return; }
     const me = String(app.getUserID() || '');
     const that = this;
+    const ctx = this._captureContext();
     app.sendRequest({
       hideLoading: true,
       url: '/api/coop/review/summary', method: 'POST',
       data: JSON.stringify({ toId: toId }), header: jsonHeader(),
       success(res) {
-        const rows = res && String(res.code) === '200' && res.data && Array.isArray(res.data.reviews) ? res.data.reviews : [];
+        if (!that._isCurrent(ctx)) return;
+        const readable = !!(res && String(res.code) === '200' && res.data && Array.isArray(res.data.reviews));
+        const rows = readable ? res.data.reviews : [];
         const mine = rows.filter(function (r) {
           return r && String(r.fromId) === me && String(r.topicId) === String(inv.topicId);
         })[0];
@@ -168,17 +268,24 @@ Page({
         // setData 会拷贝对象,不能用引用相等判断「还是同一条邀约」
         if (rating >= 1 && rating <= 5 && that.data.invite && String(that.data.invite.inviteId) === String(inv.inviteId)) {
           that.setData({ myReviewStars: '★★★★★'.slice(0, rating) });
+          finish(true);
+          return;
         }
+        finish(readable ? false : null);
       },
+      fail() { if (that._isCurrent(ctx)) finish(null); },
     });
   },
 
   onDraftInput(e) { this.setData({ draft: e.detail.value, draftError: '' }); },
 
   copyPhone() {
+    const ctx = this._captureContext();
+    if (!this._isCurrent(ctx)) return;
     const phone = this.data.invite && this.data.invite.partnerPhone;
     if (!phone) return;
-    wx.setClipboardData({ data: String(phone), success() { toast('已复制'); }, fail() { toast('没能复制'); } });
+    const that = this;
+    wx.setClipboardData({ data: String(phone), success() { if (that._isCurrent(ctx)) toast('已复制'); }, fail() { if (that._isCurrent(ctx)) toast('没能复制'); } });
   },
 
   /* ——— 三个决策都走 /api/coop/handle ———
@@ -189,7 +296,7 @@ Page({
      status 写成字面量、且落在 _post 的调用点上 —— coop-handle-single-consumer 那条门禁
      是从「直接包含请求 URL 的那个方法」往回找调用点解析角色的,只跟一层。
      所以确认弹层抽成 _confirm 收回调,而不是把 _post 再包一层转发。 */
-  accept() { const that = this; this._confirm('接受合作', '接受后条款即冻结，按这张单结算。', false, function () { that._post(1); }); },
+  accept() { const that = this; this._confirm('接受合作', '接受后条款锁定，按这张单结算', false, function () { that._post(1); }); },
   reject() {
     if (!String(this.data.draft || '').trim()) {
       this.setData({ draftError: '请说明拒绝理由，让对方知道如何调整。' });
@@ -213,16 +320,21 @@ Page({
   },
 
   _confirm(title, content, danger, onOk) {
+    const ctx = this._captureContext();
+    if (!this._isCurrent(ctx)) return;
     if (this.data.submitting) return;
     const inv = this.data.invite;
     if (!inv || inv.legacyReadonly) return;
+    const that = this;
     modal.show({ title: title, content: content, confirmText: title, danger: danger,
       // 点「取消」回的是 {confirm:false, cancel:true} —— 对象恒为真,只看 ok 会把取消也提交(C2)
-      success(ok) { if (ok && ok.confirm) onOk(); } });
+      success(ok) { if (!that._isCurrent(ctx)) return; if (ok && ok.confirm) onOk(); } });
   },
 
   // reasonOverride 给「取消已接受合作」用:理由来自确认框,不走页面上的留言字段
   _post(status, reasonOverride) {
+    const ctx = this._captureContext();
+    if (!this._isCurrent(ctx) || this.data.submitting) return;
     const inv = this.data.invite;
     if (!inv) return;
     if (inv.identityError || !parseInviteId(inv.inviteId)) {
@@ -242,13 +354,14 @@ Page({
       data: JSON.stringify(payload),
       header: jsonHeader(),
       success(res) {
+        if (!that._isCurrent(ctx)) return;
         that.setData({ submitting: false });
         if (String(res && res.code) !== '200') { toast((res && res.msg) || '没能提交，请重试'); return; }
         // 回执不等于状态:重新问服务端要一次,拿它回的状态渲染,不本地假设成功后的样子
         toast('已提交');
         that.load();
       },
-      fail() { that.setData({ submitting: false }); toast('网络开小差了，没能提交'); },
+      fail() { if (!that._isCurrent(ctx)) return; that.setData({ submitting: false }); toast('网络异常，没能提交'); },
     });
   },
 
@@ -258,12 +371,11 @@ Page({
    * 保证金 checkout 仍只在 list 一份。 */
 
   openAcceptedProject() {
+    if (!this._isCurrent(this._captureContext())) return;
     const inv = this.data.invite;
-    const sent = this.data.box === 'sent';
-    const merchantSide = inv && ((Number(inv.inviteType) === 0 && !sent)
-      || (Number(inv.inviteType) === 1 && sent));
+    const scope = acceptedProjectScope(inv, this.data.box);
     const topicId = inv && parseInviteId(inv.topicId);
-    if (!inv || Number(inv.status) !== 1 || inv.legacyReadonly || !merchantSide || !topicId) return;
+    if (!inv || Number(inv.status) !== 1 || inv.legacyReadonly || !scope || !topicId || this._navigating) return; // 跳转中不响应连点
     /* CU-M-92(走查第三轮,回到第一轮的建议):走 ?topicId= —— 身份由后端判,不再落浏览页。
        上一轮这里改的是 ?id=(浏览视图),理由是 /api/project/home 对「既不是发布者、也没有承接记录」
        的调用人直接拒(ProjectHomeReadServiceImpl),刚接受邀约的受邀方正是这种人。
@@ -271,11 +383,13 @@ Page({
        (顶部关系入口 + 他自己真有的点位/章节)。
        ⚠️ 邀约落的是整主题商务条款(coop_order),**不产生点位/章节** —— 那些要靠商家另外报名。
        所以这一跳给的是承接方的工具与条款,不是一屏凭空冒出来的站点。 */
-    wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT' });
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=' + scope, complete: () => { this._navigating = false; } });
   },
 
   // 联系合作方:T19 已签约双方取/建 1:1 会话(后端 /api/coop/contact 复用 resolveToOwner+startSingle)
   contactPartner() {
+    const ctx = this._captureContext();
+    if (!this._isCurrent(ctx)) return;
     const inv = this.data.invite;
     if (!inv || inv.legacyReadonly || this._contacting) return;
     if (inv.identityError || !parseInviteId(inv.inviteId)) {
@@ -290,6 +404,7 @@ Page({
       url: '/api/coop/contact', method: 'POST',
       data: JSON.stringify({ id: inv.inviteId }), header: jsonHeader(),
       success(res) {
+        if (!that._isCurrent(ctx)) return;
         that._contacting = false;
         const conv = res && res.code == '200' && res.data && res.data.conversationId;
         // CU-C-26:带上合作方名,会话页顶栏写对方是谁,不是一个光秃秃的「对话」
@@ -297,13 +412,15 @@ Page({
           + (inv.partnerName ? '&name=' + encodeURIComponent(inv.partnerName) : '') });
         else toast((res && res.msg) || '暂不可联系');
       },
-      fail() { that._contacting = false; toast('网络开小差了，没能联系对方'); },
+      fail() { if (!that._isCurrent(ctx)) return; that._contacting = false; toast('网络异常，没能联系对方'); },
     });
   },
 
   // 取消已接受合作(发起方/收件方都可,后端 status==1 双方放行):锁价前可取消并退款,
   // 锁价后由后端拒绝单方取消、转客服协商
   cancelAccepted() {
+    const ctx = this._captureContext();
+    if (!this._isCurrent(ctx)) return;
     const inv = this.data.invite;
     if (!inv || Number(inv.status) !== 1) return;
     if (inv.termsFrozen) { this.explainCancelLocked(); return; }
@@ -311,15 +428,16 @@ Page({
     const that = this;
     modal.show({
       title: '取消合作', editable: true,
-      content: '锁价开卖前可取消;锁价后需联系客服协商。',
+      content: '锁价开卖前可取消；锁价后需联系客服协商。',
       placeholderText: '请填写取消理由(必填)', confirmText: '提交取消', cancelText: '再想想',
       success(r) {
+        if (!that._isCurrent(ctx)) return;
         if (!r.confirm) return;
         const reason = String(r.content || '').trim();
         if (!reason) { toast('请填写取消理由'); return; }
         that._post(3, reason);
       },
-      fail() { toast('操作确认没有打开，请重试'); },
+      fail() { if (that._isCurrent(ctx)) toast('操作确认没有打开，请重试'); },
     });
   },
 
@@ -330,6 +448,8 @@ Page({
 
   // 供给申报勾选浮层(口径与 pages/coop/list 搬迁前一致:过滤历史无零售价/份数模板、预勾选已申报)
   openPerkPick() {
+    const ctx = this._captureContext();
+    if (!this._isCurrent(ctx)) return;
     const inv = this.data.invite;
     if (!inv || inv.legacyReadonly || this._perkLoading) return;
     if (inv.identityError || !parseInviteId(inv.inviteId)) return;
@@ -341,22 +461,22 @@ Page({
     this._perkLoading = true;
     this.setData({ showPerkPick: true, perkTemplates: [], perkState: 'loading', perkErrorText: '' });
     const fail = function (value) {
-      if (epoch !== that._perkEpoch) return;
+      if (epoch !== that._perkEpoch || !that._isCurrent(ctx)) return;
       that._perkLoading = false;
-      that.setData({ perkState: 'error', perkErrorText: String(value && (value.msg || value.message) || '常备权益没加载出来') });
+      that.setData({ perkState: 'error', perkErrorText: String(value && (value.msg || value.message) || '常备权益加载失败') });
     };
     app.sendRequest({
       hideLoading: true, url: '/api/coop/perk-template/list', method: 'POST',
       data: JSON.stringify({}), header: jsonHeader(),
       success(res) {
-        if (epoch !== that._perkEpoch) return;
+        if (epoch !== that._perkEpoch || !that._isCurrent(ctx)) return;
         if (res.code != '200' || !isRecordList(res.data)) { fail(res); return; }
         // 载入该邀约已申报的供给,预勾选(按名称匹配模板)
         app.sendRequest({
           hideLoading: true, url: '/api/coop/perks/list', method: 'POST',
           data: JSON.stringify({ inviteId: inviteId }), header: jsonHeader(),
           success(res2) {
-            if (epoch !== that._perkEpoch) return;
+            if (epoch !== that._perkEpoch || !that._isCurrent(ctx)) return;
             if (res2.code != '200' || !isRecordList(res2.data)) { fail(res2); return; }
             that._perkLoading = false;
             const chosen = res2.data.map(function (p) { return p.name; });
@@ -390,6 +510,8 @@ Page({
     this.setData({ ['perkTemplates[' + i + '].checked']: !this.data.perkTemplates[i].checked });
   },
   submitPerks() {
+    const ctx = this._captureContext();
+    if (!this._isCurrent(ctx)) return;
     if (this.data.perkSaving || this.data.perkState !== 'ready') return;
     const inv = this.data.invite;
     const inviteId = inv && inv.inviteId;
@@ -403,6 +525,7 @@ Page({
       url: '/api/coop/perks/attach', method: 'POST',
       data: JSON.stringify({ inviteId: inviteId, templateIds: ids }), header: jsonHeader(),
       success(res) {
+        if (!that._isCurrent(ctx)) return;
         if (res.code == '200') {
           const count = res.data && res.data.count;
           const receipt = count != null ? ('已申报 ' + count + ' 项供给') : '供给已申报';
@@ -411,20 +534,22 @@ Page({
           toast((res && res.msg) || '申报失败');
         }
       },
-      fail() { toast('网络开小差了，供给没申报上'); },
-      complete() { that._perkSaving = false; that.setData({ perkSaving: false }); },
+      fail() { if (that._isCurrent(ctx)) toast('网络异常，供给没申报上'); },
+      complete() { if (!that._isCurrent(ctx)) return; that._perkSaving = false; that.setData({ perkSaving: false }); },
     });
   },
 
   // F4-2 双向互评:先选星级(cy-option-sheet,设计体系内),再写评语(可输入 modal)。
   // 被评对象与卡片搬迁前一致:收件箱评发起方(fromId),发件箱只对商家评(toId)。
   reviewCoop() {
+    const context = this._captureContext();
+    if (!this._isCurrent(context)) return;
     const inv = this.data.invite;
     if (!inv || inv.legacyReadonly || this._reviewing) return;
     const toId = this.data.box === 'received' ? inv.fromId : inv.toId;
     if (!toId || !inv.topicId) { toast('该合作暂不可评价'); return; }
     this._reviewing = true;
-    this._reviewSheet = { toId: toId, topicId: inv.topicId };
+    this._reviewSheet = { toId: toId, topicId: inv.topicId, context: context };
     this.setData({ reviewSheetShow: true, actionReceipt: '', actionError: '' });
   },
   onReviewSheetCancel() {
@@ -433,6 +558,7 @@ Page({
   },
   onReviewSheetSelect(e) {
     const ctx = this._reviewSheet || {};
+    if (!this._isCurrent(ctx.context)) return;
     const rating = 5 - e.detail.index;
     this.setData({ reviewSheetShow: false });
     if (!ctx.toId || !ctx.topicId) { this._reviewing = false; return; }
@@ -440,6 +566,7 @@ Page({
     modal.show({
       title: '评语(选填)', editable: true, placeholderText: '说说这次合作…', confirmText: '提交',
       success(rr) {
+        if (!that._isCurrent(ctx.context)) return;
         that._reviewing = false;
         if (!rr.confirm) return;
         app.sendRequest({
@@ -448,21 +575,45 @@ Page({
           data: JSON.stringify({ topicId: ctx.topicId, toId: ctx.toId, rating: rating, comment: String(rr.content || '').trim() }),
           header: jsonHeader(),
           success(res) {
+            if (!that._isCurrent(ctx.context)) return;
             if (res.code == '200') that.setData({ actionReceipt: '评价已提交', myReviewStars: '★★★★★'.slice(0, rating) });
             else toast((res && res.msg) || '评价失败');
           },
-          fail() { toast('网络开小差了，评价没提交'); },
+          // 断网/网关超时可能已落库:不断言「没提交」,先回读本次评分,核对完才放开重试。
+          fail(_data, status) {
+            if (!that._isCurrent(ctx.context)) return;
+            const code = Number(status);
+            if (code >= 400 && code < 500 && code !== 408) { toast((_data && _data.msg) || '评价失败'); return; }
+            that._verifyReviewAfterUnknown(ctx.context);
+          },
         });
       },
-      fail() { that._reviewing = false; toast('评价确认没有打开，请重试'); },
+      fail() { if (!that._isCurrent(ctx.context)) return; that._reviewing = false; toast('评价确认没有打开，请重试'); },
+    });
+  },
+
+  _verifyReviewAfterUnknown(context) {
+    const inv = this.data.invite;
+    if (!inv) return;
+    this._reviewing = true;
+    this.setData({ reviewVerifying: true, actionReceipt: '', actionError: '' });
+    this.loadMyReview(inv, (found) => {
+      if (!this._isCurrent(context)) return;
+      this._reviewing = false;
+      if (found === true) { this.setData({ reviewVerifying: false, actionReceipt: '评价已提交' }); return; }
+      this.setData({ reviewVerifying: false,
+        actionError: found === false ? '没有查到这次评价，可以重新评价' : '评价结果暂未确认，请稍后刷新确认后再评价' });
     });
   },
 
   goDeposit() {
+    const ctx = this._captureContext();
+    if (!this._isCurrent(ctx)) return;
     // 保证金是涉资链路(含 checkout 工作流与支付回读),只在 pages/coop/list 有一份。
     // 这里不复制,带人回去那条链路;发件箱的邀约回列表仍停在「我发出的」,否则会找不到那张卡。
     const fallback = this.data.box === 'sent' ? '/pages/coop/list/index?tab=sent' : '/pages/coop/list/index';
-    wx.navigateBack({ delta: 1, fail() { wx.redirectTo({ url: fallback }); } });
+    const that = this;
+    wx.navigateBack({ delta: 1, fail() { if (that._isCurrent(ctx)) wx.redirectTo({ url: fallback }); } });
   },
   goBack() { wx.navigateBack({ delta: 1, fail() { wx.redirectTo({ url: '/pages/coop/list/index' }); } }); },
   retry() { this.load(); },

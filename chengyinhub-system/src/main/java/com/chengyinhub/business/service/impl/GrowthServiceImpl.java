@@ -97,6 +97,8 @@ public class GrowthServiceImpl implements IGrowthService {
         String period = "week".equalsIgnoreCase(query == null ? null : query.getPeriod()) ? "week" : "total";
         int limit = clampLimit(query == null ? null : query.getLimit());
         Date weekStart = "week".equals(period) ? currentWeekStart() : null;
+        Date weekEnd = weekStart == null ? null
+                : Date.from(weekStart.toInstant().atZone(ZoneId.systemDefault()).plusWeeks(1).toInstant());
 
         boolean exp = "exp".equals(metric);
         boolean week = "week".equals(period);
@@ -104,8 +106,8 @@ public class GrowthServiceImpl implements IGrowthService {
         List<LeaderboardItemVO> list;
         Map<String, Object> myRank;
         if (exp && week) {
-            list = memberLeaderboardMapper.selectExpWeekTop(weekStart, limit);
-            myRank = memberLeaderboardMapper.selectExpWeekMyRank(memberId, weekStart);
+            list = memberLeaderboardMapper.selectExpWeekTop(weekStart, weekEnd, limit);
+            myRank = memberLeaderboardMapper.selectExpWeekMyRank(memberId, weekStart, weekEnd);
         } else if (exp) {
             list = memberLeaderboardMapper.selectExpTotalTop(limit);
             myRank = memberLeaderboardMapper.selectExpTotalMyRank(memberId);
@@ -318,27 +320,54 @@ public class GrowthServiceImpl implements IGrowthService {
         reward.setLastActiveTime(DateUtils.getNowDate());
         reward.setUpdateTime(DateUtils.getNowDate());
         memberGrowthMapper.updateMemberGrowthReward(reward);
+        if (exp > 0 && memberGrowthMapper.insertEarnedExp(memberId, exp, mission.getMissionCode(),
+                reward.getUpdateTime(), progress.getId()) != 1) {
+            throw new IllegalStateException("经验获得明细写入失败");
+        }
         return 1;
     }
 
-    /**
-     * M7 变量额直发探索值。复用任务发奖同一路径(ensureAccount + updateMemberGrowthReward 累加)。
-     * 双轨红线:本方法只动 member_growth.exp_value,任何情况下不写 ums_member_points_detail(可抵现积分)。
-     * 幂等由调用方场景保证(节点=player_node_progress uk 首次,通关=firstTime&&completed 恰一次)。
-     */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int addExp(Long memberId, int exp, String reason) {
-        if (memberId == null || memberId <= 0 || exp <= 0) {
-            return 0;
+        if (memberId == null || memberId <= 0 || exp <= 0) return 0;
+        Date earnedAt = creditExp(memberId, exp);
+        if (memberGrowthMapper.insertEarnedExp(memberId, exp, reason, earnedAt, null) != 1) {
+            throw new IllegalStateException("经验获得明细写入失败");
         }
+        return exp;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long addCompletionExp(Long memberId, int exp, Long topicId) {
+        if (memberId == null || memberId <= 0 || exp <= 0 || topicId == null || topicId <= 0) {
+            throw new IllegalArgumentException("通关经验参数无效");
+        }
+        Map<String, Object> earned = new java.util.HashMap<>();
+        earned.put("memberId", memberId);
+        earned.put("exp", exp);
+        earned.put("reason", "通关奖励 topic=" + topicId);
+        earned.put("earnedAt", creditExp(memberId, exp));
+        if (memberGrowthMapper.insertCompletionEarnedExp(earned) != 1
+                || !(earned.get("id") instanceof Number)) {
+            throw new IllegalStateException("通关经验获得明细写入失败");
+        }
+        return ((Number) earned.get("id")).longValue();
+    }
+
+    private Date creditExp(Long memberId, int exp) {
         ensureAccount(memberId);
+        Date earnedAt = DateUtils.getNowDate();
         MemberGrowth reward = new MemberGrowth();
         reward.setMemberId(memberId);
         reward.setExpValue(exp);
-        reward.setLastActiveTime(DateUtils.getNowDate());
-        reward.setUpdateTime(DateUtils.getNowDate());
-        memberGrowthMapper.updateMemberGrowthReward(reward);
-        return exp;
+        reward.setLastActiveTime(earnedAt);
+        reward.setUpdateTime(earnedAt);
+        if (memberGrowthMapper.updateMemberGrowthReward(reward) != 1) {
+            throw new IllegalStateException("经验入账失败");
+        }
+        return earnedAt;
     }
 
     private void ensureAccount(Long memberId) {

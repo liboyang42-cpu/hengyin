@@ -1,0 +1,15 @@
+<view class="resume-bar" wx:if="{{visible}}">
+  <view class="resume-bar__main" bindtap="onContinue" aria-role="button" aria-label="继续上次漫游"
+        hover-class="cy-pressed" hover-stay-time="80">
+    <cy-icon name="gps" size="40" />
+    <view class="resume-bar__text">
+      <text class="resume-bar__title">继续上次漫游</text>
+      <text class="resume-bar__sub">漫游未结束</text>
+    </view>
+    <text class="resume-bar__cta">继续</text>
+  </view>
+  <view class="resume-bar__close" bindtap="onDismiss" aria-role="button" aria-label="关闭提示"
+        hover-class="cy-pressed" hover-stay-time="80">
+    <cy-icon name="close" size="32" />
+  </view>
+</view>

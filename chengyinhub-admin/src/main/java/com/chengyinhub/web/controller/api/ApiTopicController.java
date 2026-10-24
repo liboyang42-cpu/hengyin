@@ -9,6 +9,7 @@ import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.domain.dto.TopicCreateDTO;
 import com.chengyinhub.business.domain.dto.TopicProductTypeResolver;
+import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.domain.vo.ActivityInfoVO;
 import com.chengyinhub.business.domain.vo.TopicChapterVO;
@@ -32,6 +33,7 @@ import com.chengyinhub.business.mapper.TmsBrowseRecordMapper;
 import com.chengyinhub.business.mapper.UmsCommentMapper;
 import com.chengyinhub.business.mapper.UmsMemberFollowMapper;
 import com.chengyinhub.business.service.*;
+import com.chengyinhub.business.service.support.TopicTextSafety;
 import com.chengyinhub.business.util.ChapterBlockReadSupport;
 import com.chengyinhub.business.util.JourneyReviewTexts;
 import com.chengyinhub.business.service.support.ClubCoopWindowPolicy;
@@ -55,6 +57,8 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -79,6 +83,10 @@ import com.chengyinhub.common.enums.LimitType;
 public class ApiTopicController extends BaseController {
     @Value("${community.post.legacy-writes-enabled:true}")
     private boolean legacyCommunityWritesEnabled;
+
+    /** 首次存草稿的请求意图键 → 已建草稿号(丢回包后的重试据此找回,不重复建题)。 */
+    @Autowired
+    private com.chengyinhub.common.core.redis.RedisCache redisCache;
 
     @Autowired
     private ClubCoopWindowPolicy clubCoopWindowPolicy;
@@ -219,6 +227,12 @@ public class ApiTopicController extends BaseController {
     private IWxContentSecurityService wxContentSecurityService;
 
     @Autowired
+    private IContentSafetyGate contentSafetyGate;
+
+    @Autowired
+    private IAuditTaskService auditTaskService;
+
+    @Autowired
     private ISysCategoryService sysCategoryService;
 
     @Autowired
@@ -307,11 +321,22 @@ public class ApiTopicController extends BaseController {
      *    与前端的取舍一致:锁态只读不清空,不替用户删图。
      */
     private java.util.List<JourneyReviewTexts.Entry> combinedThemeReviewTexts(TopicCreateDTO dto) {
-        java.util.List<JourneyReviewTexts.Entry> entries=JourneyReviewTexts.collectJourneyStory(dto.getJourneyStory());entries.addAll(JourneyReviewTexts.collectThemeRuntime(dto.getThemeRuntimeConfig()));return entries;
+        java.util.List<JourneyReviewTexts.Entry> entries=JourneyReviewTexts.collectJourneyStory(dto.getJourneyStory());entries.addAll(JourneyReviewTexts.collectThemeRuntime(dto.getThemeRuntimeConfig()));entries.addAll(JourneyReviewTexts.collectChapters(dto.getChapters()));
+        // F-L5C-03:简易版免审直发时,完成勋章名、票种文案、念头规则、宾果格子同样直接给玩家看。
+        entries.addAll(JourneyReviewTexts.collectJourneyRules(dto.getJourneyRules()));
+        entries.addAll(JourneyReviewTexts.collectCompletionRule(dto.getCompleteRuleJson()));
+        if (StringUtils.isNotBlank(dto.getFinishMedalName())) entries.add(new JourneyReviewTexts.Entry("finishMedalName", dto.getFinishMedalName().trim()));
+        if (dto.getTickets() != null) for (com.chengyinhub.business.domain.dto.ActivityTicketRequest ticket : dto.getTickets()) {
+            if (ticket == null) continue;
+            String ticketText = IWxContentSecurityService.joinText(ticket.getName(), ticket.getDescription(),
+                    ticket.getMeetingPoint(), ticket.getMeetingPointAddress(), ticket.getRefundRule());
+            if (StringUtils.isNotBlank(ticketText)) entries.add(new JourneyReviewTexts.Entry("tickets[]", ticketText));
+        }
+        return entries;
     }
     private String checkThemeMedalCapability(Long memberId,String raw) { return checkThemeMedalCapability(memberId,raw,null); }
     private String checkThemeMedalCapability(Long memberId, String raw, String previousRaw) {
-        com.fasterxml.jackson.databind.node.ObjectNode config = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(raw);
+        com.fasterxml.jackson.databind.node.ObjectNode config = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(raw);
         if (config == null) return null;
         com.fasterxml.jackson.databind.node.ObjectNode previous=com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(previousRaw);
         for (com.fasterxml.jackson.databind.JsonNode item : config.path("items")) {
@@ -388,6 +413,7 @@ public class ApiTopicController extends BaseController {
         Long principalMemberId = null;
         Long memberId = null;
         Long topicId = null;
+        String draftRequestKey = null;
         try {
             // principal 是实际操作者；memberId 是主题发布主体。商家员工代办时两者不能混为一人。
             principalMemberId = getAppUserId();
@@ -482,26 +508,25 @@ public class ApiTopicController extends BaseController {
                 }
             }
 
-            // UGC 内容安全:校验主题标题/副标题/简介文本,命中违规直接拦截
+            // UGC 内容安全(2026-10-20 分级审核 P1):主题内容先发后审 —— 统一门禁 POST_REVIEW。
+            // 明确违规拒绝保存;机审要人工/审不了只打标、照常发布,落库后建抽检单(见 flagForSpotCheck)。
             // 内容送检使用实际操作者的微信身份；主题、额度与结算归发布主体。
+            // R12/R19:剧情配置、章节故事流 beat 块等叙事文本同一道闸;命中时提示里带字段名。
             String openid = resolveOpenid(principalMemberId);
             String secText = IWxContentSecurityService.joinText(dto.getName(), dto.getSubtitle(), dto.getDescription());
-            String secMsg = wxContentSecurityService.checkText(secText, openid);
-            if (secMsg != null) {
-                return error(secMsg);
+            TopicTextSafety.Verdict textVerdict = TopicTextSafety.check(contentSafetyGate, memberId, openid, null,
+                    secText, topicReviewTexts(dto, chapterFlowV2));
+            if (textVerdict.isBlocked()) {
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
             }
-            // R12:主题级剧情配置的叙事文本与上面三个既有字段同一道闸;命中时提示里带字段名。
-            String storySecMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
-                    combinedThemeReviewTexts(dto));
-            if (storySecMsg != null) {
-                return error(storySecMsg);
-            }
-            // R19:叙事搬进章节故事流后,beat 块正文与剧情配置同一道闸(非 V2 请求没有 blocks,自然跳过)。
-            if (chapterFlowV2) {
-                String flowSecMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
-                        JourneyReviewTexts.collectChapterNarrativeBlocks(dto.getChapters()));
-                if (flowSecMsg != null) {
-                    return error(flowSecMsg);
+
+            // 首次存草稿带请求意图键:同一账号同一键已建过 → 直接回那份草稿(丢回包后的重试);在途 → 请稍后。
+            // 键在全部校验之后、真正建题之前才占,校验失败不留痕。
+            if (saveDraft) {
+                draftRequestKey = draftRequestKey(memberId, dto.getRequestId());
+                if (draftRequestKey != null) {
+                    AjaxResult recovered = claimDraftRequest(draftRequestKey, memberId);
+                    if (recovered != null) return recovered; // 已建过(找回)或同键在途;都不是本次占的,不释放
                 }
             }
 
@@ -522,6 +547,15 @@ public class ApiTopicController extends BaseController {
                         ? quotaService.runWithThemeOnlineGuard(memberId, null,
                             () -> cmsTopicService.createTopic(dto, fMemberId, fUsername))
                         : cmsTopicService.createTopic(dto, memberId, username);
+            }
+            // 建题已提交:立刻把意图键落成主题号 —— 之后的送检/同步即便抛错也不能释放它,否则重试会再建一份
+            if (draftRequestKey != null) {
+                redisCache.setCacheObject(draftRequestKey, topicId, DRAFT_REQUEST_DAYS, java.util.concurrent.TimeUnit.DAYS);
+                draftRequestKey = null;
+            }
+
+            if (textVerdict.isFlagged()) {
+                flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), dto.getName());
             }
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
@@ -565,8 +599,10 @@ public class ApiTopicController extends BaseController {
                                     ? "已提交审核" : "主题发布成功",
                     v2Result == null ? topicId : v2Result);
         } catch (ChapterFlowValidationException e) {
+            releaseDraftRequest(draftRequestKey);
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (ServiceException | IllegalStateException | IllegalArgumentException e) {
+            releaseDraftRequest(draftRequestKey);
             // 业务闸抛的中文短句原样透出(仍过 UserSafeMessage 掩码,业务异常类型也可能裹着 SQL 片段)。
             // 这些失败是用户自己能改的:「只有俱乐部主理人可以开放商家招商」「仅城市定向主题可开启邀请
             // 俱乐部带队」「在架额度已满」压成通用句 = 真人在后台点一次失败一次,只能找人翻服务器日志。
@@ -574,8 +610,54 @@ public class ApiTopicController extends BaseController {
             logger.warn("主题发布被业务闸拒绝: memberId={}, topicId={}, reason={}", memberId, topicId, e.getMessage());
             return AjaxResult.error(UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG));
         } catch (Exception e) {
+            releaseDraftRequest(draftRequestKey);
             logger.warn("主题发布失败: memberId={}, topicId={}, chapterId=未生成或未知", memberId, topicId, e);
             return AjaxResult.error(TOPIC_CREATE_GENERIC_MSG);
+        }
+    }
+
+    private static final String DRAFT_REQUEST_PENDING = "PENDING";
+    private static final int DRAFT_REQUEST_DAYS = 7;
+
+    static String draftRequestKey(Long memberId, String requestId) {
+        if (memberId == null || memberId <= 0 || requestId == null) return null;
+        String rid = requestId.trim();
+        return rid.matches("[A-Za-z0-9_-]{16,64}") ? "topic:draft-request:" + memberId + ":" + rid : null;
+    }
+
+    /**
+     * 占用首次存草稿的意图键。返回 null = 已占到,继续建题;
+     * 返回 success(recovered) = 这个键已建过且仍是本人的未删除主题(丢回包后的重试);返回 error = 同键请求在途。
+     * 已建主题被删除时释放旧键,当作新的一次建题。
+     */
+    private AjaxResult claimDraftRequest(String key, Long memberId) {
+        Object prior = redisCache.getCacheObject(key);
+        if (prior != null && !DRAFT_REQUEST_PENDING.equals(String.valueOf(prior))) {
+            Long priorId = Convert.toLong(prior, 0L);
+            CmsTopic existing = priorId > 0 ? cmsTopicService.selectCmsTopicById(priorId) : null;
+            if (existing != null && OwnershipUtils.isOwner(existing.getMemberId(), memberId)
+                    && (existing.getDelFlag() == null || existing.getDelFlag() != 2)) {
+                java.util.Map<String, Object> data = new java.util.HashMap<>();
+                data.put("topicId", priorId);
+                data.put("recovered", Boolean.TRUE);
+                data.put("isDraft", Integer.valueOf(1).equals(cmsTopicService.selectTopicIsDraft(priorId)));
+                return AjaxResult.success("草稿已保存", data);
+            }
+            redisCache.deleteObject(key);
+        }
+        if (!Boolean.TRUE.equals(redisCache.setIfAbsent(key, DRAFT_REQUEST_PENDING, 10, java.util.concurrent.TimeUnit.MINUTES))) {
+            return error("草稿保存结果确认中，请稍后重试");
+        }
+        return null;
+    }
+
+    private void releaseDraftRequest(String key) {
+        if (key == null) return;
+        try {
+            Object current = redisCache.getCacheObject(key);
+            if (DRAFT_REQUEST_PENDING.equals(String.valueOf(current))) redisCache.deleteObject(key);
+        } catch (Exception ignored) {
+            // 释放失败只会让该键在 10 分钟后自然过期
         }
     }
 
@@ -634,30 +716,30 @@ public class ApiTopicController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         }
-        // UGC 内容安全:与 /create 同一道闸,改文案也要过检
+        // UGC 内容安全:与 /create 同一道闸(先发后审,POST_REVIEW),改文案也要过检。
+        // 2026-10-20 分级审核:只复检本次改动过的文本 —— 名称/副标题/简介任一变了才送主文本,
+        // 叙事文本只送已保存版本里没有的段落;改价/改票这类不碰文本的编辑不再重跑机审。
+        // 已保存版本只认本人主题(归属闸在 service 内),非本人一律按全量送检。
+        CmsTopic previousTopic=cmsTopicService.selectCmsTopicById(dto.getId());
+        boolean ownPrevious = previousTopic != null && java.util.Objects.equals(memberId, previousTopic.getMemberId());
         String openid = resolveOpenid(principalMemberId);
-        String secText = IWxContentSecurityService.joinText(dto.getName(), dto.getSubtitle(), dto.getDescription());
-        String secMsg = wxContentSecurityService.checkText(secText, openid);
-        if (secMsg != null) {
-            return error(secMsg);
+        boolean mainTextChanged = !ownPrevious
+                || TopicTextSafety.changed(dto.getName(), previousTopic.getName())
+                || TopicTextSafety.changed(dto.getSubtitle(), previousTopic.getSubtitle())
+                || TopicTextSafety.changed(dto.getDescription(), previousTopic.getDescription());
+        String secText = mainTextChanged
+                ? IWxContentSecurityService.joinText(dto.getName(), dto.getSubtitle(), dto.getDescription()) : null;
+        java.util.List<JourneyReviewTexts.Entry> storyTexts = topicReviewTexts(dto, chapterFlowV2);
+        if (ownPrevious) {
+            storyTexts = TopicTextSafety.changedOnly(storyTexts, savedReviewTexts(previousTopic));
         }
-        // R12:主题级剧情配置的叙事文本与 /create 同一道闸;命中时提示里带字段名。
-        String storySecMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
-                combinedThemeReviewTexts(dto));
-        if (storySecMsg != null) {
-            return error(storySecMsg);
-        }
-        // R19:叙事搬进章节故事流后,beat 块正文与 /create 同一道闸(非 V2 请求没有 blocks,自然跳过)。
-        if (chapterFlowV2) {
-            String flowSecMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
-                    JourneyReviewTexts.collectChapterNarrativeBlocks(dto.getChapters()));
-            if (flowSecMsg != null) {
-                return error(flowSecMsg);
-            }
+        TopicTextSafety.Verdict textVerdict = TopicTextSafety.check(contentSafetyGate, memberId, openid, dto.getId(),
+                secText, storyTexts);
+        if (textVerdict.isBlocked()) {
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
         }
         // 稿 E2:编辑同样要拦 —— 否则建的时候不填勋章、回头编辑再填就绕过去了。
-        CmsTopic previousTopic=cmsTopicService.selectCmsTopicById(dto.getId());
-        String previousRuntime=previousTopic!=null && java.util.Objects.equals(memberId,previousTopic.getMemberId())?previousTopic.getThemeRuntimeConfigJson():null;
+        String previousRuntime=ownPrevious?previousTopic.getThemeRuntimeConfigJson():null;
         String medalCapErr = checkThemeMedalCapability(memberId, dto.getThemeRuntimeConfig(),previousRuntime);
         if (medalCapErr == null) medalCapErr = checkMedalCapability(memberId, dto.getFinishMedalName(), dto.getFinishMedalImg());
         if (medalCapErr != null) {
@@ -679,11 +761,16 @@ public class ApiTopicController extends BaseController {
             } else {
                 topicId = cmsTopicService.updateTopicByOwner(dto, memberId, getAppUserName());
             }
+        } catch (ChapterFlowClientUpgradeRequiredException e) {
+            return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, e.getMessage());
         } catch (ChapterFlowValidationException e) {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (RuntimeException e) {
             logger.warn("主题保存失败: topicId={}, chapterId=未生成或未知", dto.getId(), e);
             return error(e.getMessage());
+        }
+        if (textVerdict.isFlagged()) {
+            flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), dto.getName());
         }
         wxContentSecurityService.submitMediaCheck(
                 IWxContentSecurityService.BIZ_TYPE_TOPIC,
@@ -738,6 +825,7 @@ public class ApiTopicController extends BaseController {
     @Operation(summary = "编辑器回填:主题全量详情(仅创作者本人)")
     @PostMapping("/edit-detail")
     @Parameters({@Parameter(name = "id", description = "主题id")})
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AjaxResult topicEditDetail(String id, String scope) {
         Long topicId = Convert.toLong(id, 0L);
         if (topicId < 1) {
@@ -766,9 +854,10 @@ public class ApiTopicController extends BaseController {
             return error("无权编辑该主题");
         }
         com.chengyinhub.business.util.TopicEditWindow.Scope editWindowScope;
+        Integer isDraft = cmsTopicService.selectTopicIsDraft(topicId);
         try {
             editWindowScope = com.chengyinhub.business.util.TopicEditWindow.resolve(
-                    topic, cmsTopicService.selectTopicIsDraft(topicId), new Date());
+                    topic, isDraft, new Date());
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }
@@ -816,6 +905,8 @@ public class ApiTopicController extends BaseController {
         data.put("collaboratorIds", collaboratorIds);
         // 前端据此决定「结构/票价能不能编」:WHITELIST 档只许改文案与图
         data.put("editScope", editWindowScope.name());
+        // 服务端草稿（is_draft=1）：编辑器据此继续「保存草稿 / 发布草稿」，而不是按已发布主题处理
+        data.put("isDraft", Integer.valueOf(1).equals(isDraft));
         return success(data);
     }
 
@@ -824,6 +915,97 @@ public class ApiTopicController extends BaseController {
     }
 
     /** 内容安全送检需要发表者 openid:按 memberId 查会员;查不到返回空串(降级 scene 检测)。 */
+    /** 送检的叙事文本:主题级剧情配置/章节/票种等(R12),V2 再加章节故事流 beat 块(R19)。 */
+    private java.util.List<JourneyReviewTexts.Entry> topicReviewTexts(TopicCreateDTO dto, boolean chapterFlowV2) {
+        java.util.List<JourneyReviewTexts.Entry> entries = combinedThemeReviewTexts(dto);
+        if (chapterFlowV2) {
+            entries.addAll(JourneyReviewTexts.collectChapterNarrativeBlocks(dto.getChapters()));
+        }
+        return entries;
+    }
+
+    /**
+     * 已保存版本里的全部可读文本(主题字段 + 剧情/规则 JSON + 章节/节点 + 票种),
+     * 用来判定编辑时哪些叙事段落是新写的。读不全只会让更多文本被送检(fail-safe),不会漏检。
+     */
+    private java.util.Set<String> savedReviewTexts(CmsTopic topic) {
+        java.util.Set<String> known = new java.util.HashSet<String>();
+        TopicTextSafety.addText(known, topic.getFinishMedalName());
+        TopicTextSafety.addJsonTexts(known, topic.getJourneyStoryJson());
+        TopicTextSafety.addJsonTexts(known, topic.getThemeRuntimeConfigJson());
+        TopicTextSafety.addJsonTexts(known, topic.getJourneyRulesJson());
+        TopicTextSafety.addJsonTexts(known, topic.getCompleteRuleJson());
+        try {
+            CmsTopicChapter chapterQ = new CmsTopicChapter();
+            chapterQ.setTopicId(topic.getId());
+            java.util.List<CmsTopicChapter> chapters = cmsTopicChapterService.selectCmsTopicChapterList(chapterQ);
+            if (chapters != null) for (CmsTopicChapter chapter : chapters) {
+                TopicTextSafety.addText(known, chapter.getName());
+                TopicTextSafety.addText(known, chapter.getDescription());
+                TopicTextSafety.addText(known, chapter.getCategory());
+                TopicTextSafety.addJsonTexts(known, chapter.getBlocksJson());
+            }
+            CmsTopicNode nodeQ = new CmsTopicNode();
+            nodeQ.setTopicId(topic.getId());
+            java.util.List<CmsTopicNode> nodes = cmsTopicNodeService.selectCmsTopicNodeList(nodeQ);
+            if (nodes != null) for (CmsTopicNode node : nodes) {
+                TopicTextSafety.addText(known, node.getName());
+                TopicTextSafety.addText(known, node.getDescription());
+                TopicTextSafety.addText(known, node.getAddress());
+                TopicTextSafety.addText(known, node.getBusinessTime());
+                TopicTextSafety.addText(known, node.getHookText());
+                TopicTextSafety.addText(known, node.getCardHookLong());
+                TopicTextSafety.addText(known, node.getFragmentText());
+            }
+            // 票种送检文本是「名称+说明+集合点+地址+退改」的拼接;票实体不落说明,带说明的票会被重新送检(fail-safe)
+            for (OmsTicket ticket : selectTopicTickets(topic.getId())) {
+                TopicTextSafety.addText(known, IWxContentSecurityService.joinText(ticket.getName(),
+                        ticket.getMeetingPoint(), ticket.getMeetingPointAddress(), ticket.getRefundRule()));
+            }
+        } catch (Exception e) {
+            logger.warn("读取主题已保存文本失败,叙事文本按全量送检 topicId={}", topic.getId(), e);
+        }
+        return known;
+    }
+
+    /**
+     * 先发后审打标(2026-10-20 分级审核 P1):机审没给出结论的主题照常发布,在审核台留一张
+     * BIZ_TOPIC 非阻断抽检单(source=post_review_flag,与活动 P0 同口径,不改主题状态),驳回即走既有下架。
+     * 跳过建单:草稿(未公开,且过审会把草稿直接上架;只打 review_flag,发布草稿时补挂);
+     * 已有未结 BIZ_TOPIC 单(专业版组合审核已在人工队列)。
+     * best-effort:失败只记日志,不影响已保存的主题。
+     */
+    private void flagForSpotCheck(Long topicId, Long ownerMemberId, String reason, String name) {
+        if (topicId == null) return;
+        logger.warn("主题先发后审打标待抽检 topicId={} reason={}", topicId, reason);
+        try {
+            // AUDIT-INT-8:放行但进入抽检池(#377 cms_topic.review_flag);抽检通过由审核台清 0。
+            // #380:草稿也要打标(只跳过建单),publish-draft 据此不记 check_status=1 并补挂抽检单。
+            cmsTopicService.markReviewFlag(topicId, true);
+            Integer isDraft = cmsTopicService.selectTopicIsDraft(topicId);
+            if (isDraft != null && isDraft == 1) return;
+            com.chengyinhub.business.domain.AuditTask q = new com.chengyinhub.business.domain.AuditTask();
+            q.setBizType(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC);
+            q.setBizId(topicId);
+            java.util.List<com.chengyinhub.business.domain.AuditTask> tasks = auditTaskService.selectAuditTaskList(q);
+            if (tasks != null) for (com.chengyinhub.business.domain.AuditTask t : tasks) {
+                // AUDIT-INT-5:开着的举报单不顶替抽检单(两者各占一个开放槽)
+                if ((com.chengyinhub.business.domain.AuditTask.STATUS_PENDING.equals(t.getStatus())
+                        || com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED.equals(t.getStatus()))
+                        && !t.isOpenReport()) {
+                    return;
+                }
+            }
+            String snap = "{\"bizType\":\"TOPIC\",\"bizId\":" + topicId
+                    + ",\"flagReason\":\"" + reason + "\""
+                    + ",\"name\":\"" + (name == null ? "" : name.replace("\"", "'")) + "\"}";
+            auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC, topicId,
+                    ownerMemberId, "post_review_flag", snap);
+        } catch (Exception e) {
+            logger.error("主题抽检单提交失败 topicId={}", topicId, e);
+        }
+    }
+
     private String resolveOpenid(Long memberId) {
         try {
             UmsMember m = umsMemberService.selectUmsMemberById(memberId);
@@ -895,6 +1077,11 @@ public class ApiTopicController extends BaseController {
         }
         if (actorMemberId == null || actorMemberId <= 0) {
             return error("请先登录");
+        }
+        // F-L5C-02:取消原因会展示给全部已付款玩家,写入前送检。
+        String reasonSecMsg = wxContentSecurityService.checkText(reason, resolveOpenid(actorMemberId));
+        if (reasonSecMsg != null) {
+            return error(reasonSecMsg);
         }
         try {
             Long hostMemberId = resolveProjectOwnerMemberId(actorMemberId, scope);
@@ -1005,6 +1192,17 @@ public class ApiTopicController extends BaseController {
         }
         Integer casExpected = expected != null ? expected : current;
         int target = casExpected == 1 ? 0 : 1;
+        // AUDIT-G2-1:内容安全图片回调下架的主题(留置中)不能由作者直接翻回上架 ——
+        // 改为提交人工复核,复核通过由审核台恢复在架。下架方向不受影响。
+        if (target == 1 && com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(cmsTopic)) {
+            try {
+                cmsTopicService.requestContentSafetyRelistReview(cid, cmsTopic.getMemberId());
+            } catch (Exception e) {
+                logger.error("内容安全下架主题复核单提交失败 topicId={}", cid, e);
+                return error("主题因图片未通过内容安全检测已被下架，复核申请提交失败，请稍后重试");
+            }
+            return error(com.chengyinhub.business.util.TopicContentSafetyHold.RELIST_REFUSED);
+        }
 
         // 上架额度:目标为上架(0→1)时,锁会员 → 复查在架数 → 置上架,三步同事务原子完成,防并发绕过上限
         //(排除自身保证重复上架幂等);超限时 guard 抛 ServiceException,由全局异常处理转 error 文案。
@@ -1027,6 +1225,47 @@ public class ApiTopicController extends BaseController {
         }
         int rows = cmsTopicService.casUserStatus(fCid, fExpected, 0);
         return rows > 0 ? success("下架成功") : error("下架失败，主题状态已变化，请刷新后重试");
+    }
+
+    @Operation(summary = "举报主题(进统一审核队列,不立即下架;同一人同一轮只记一次)")
+    @PostMapping("/report")
+    @Parameters({
+            @Parameter(name = "id", description = "主题id"),
+            @Parameter(name = "reason", description = "举报原因")
+    })
+    public AjaxResult topicReport(String id, String reason) {
+        Long cid = Convert.toLong(id, 0L);
+        if (cid < 1) {
+            return error("参数不合规");
+        }
+        Long memberId = 0L;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+            logger.warn("topicReport 获取用户ID异常", e);
+        }
+        if (memberId == null || memberId <= 0) {
+            return error("请先登录");
+        }
+        // 只开放公开可见的主题:草稿/下架/驳回的主题不对外,也不能借举报给它们建审核单。
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(cid);
+        if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())
+                || !Integer.valueOf(1).equals(topic.getStatus()) || !Integer.valueOf(1).equals(topic.getUserStatus())
+                || Integer.valueOf(1).equals(cmsTopicService.selectTopicIsDraft(cid))) {
+            return error("主题不存在");
+        }
+        try {
+            boolean recorded = auditTaskService.reportContentOnce(
+                    com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC, cid, memberId, reason);
+            return success(recorded ? "举报已提交，内容将进入审核" : "你已举报过该主题，我们会尽快处理");
+        } catch (IllegalArgumentException e) {
+            return error(e.getMessage());
+        } catch (ServiceException e) {
+            return error(e.getMessage());
+        } catch (Exception e) {
+            logger.error("主题举报失败 topicId={}", cid, e);
+            return error("举报失败");
+        }
     }
 
     @Operation(summary = "移交主题给俱乐部承接(复制一份新草稿挂该俱乐部,原主题下架;发起人保留所有权)")
@@ -1104,8 +1343,26 @@ public class ApiTopicController extends BaseController {
         }
         // 门禁:必须当前确为草稿,防 rejected(审核未通过)/已上架 主题借道发布绕过审核
         Integer isDraft = cmsTopicService.selectTopicIsDraft(cid);
-        if (isDraft == null || isDraft != 1) {
+        if ((isDraft == null || isDraft != 1) && !cmsTopicService.canResubmitSupplyReview(cid, memberId)) {
             return error("该主题不是草稿，无法发布");
+        }
+        TopicCreateDTO publication = new TopicCreateDTO();
+        publication.setSelfPlay(topic.getSelfPlay());
+        publication.setSelfPlayPrice(topic.getSelfPlayPrice());
+        java.util.List<com.chengyinhub.business.domain.dto.ActivityTicketRequest> persistedTickets =
+                new java.util.ArrayList<>();
+        for (OmsTicket ticket : selectTopicTickets(cid)) {
+            com.chengyinhub.business.domain.dto.ActivityTicketRequest persistedTicket =
+                    new com.chengyinhub.business.domain.dto.ActivityTicketRequest();
+            persistedTicket.setPrice(ticket.getPrice());
+            persistedTickets.add(persistedTicket);
+        }
+        publication.setTickets(persistedTickets);
+        if (requiresPublisherIdentity(publication)) {
+            String identityErr = memberIdentityService.checkRegistered(memberId);
+            if (identityErr != null) {
+                return error(identityErr);
+            }
         }
         // 简易版免审直发会立即占在架额度:锁会员 → 复查在架数 → publishDraft,同事务原子,防并发绕过上限
         //(publishDraft 内部再以 WHERE is_draft=1 竞态安全兜底防重复发布);超限时 guard 抛 ServiceException。
@@ -1114,11 +1371,11 @@ public class ApiTopicController extends BaseController {
             final Long fMemberId = memberId;
             final Long fCid = cid;
             Boolean ok = quotaService.runWithThemeOnlineGuard(fMemberId, fCid,
-                    () -> cmsTopicService.publishDraft(fCid));
+                    () -> cmsTopicService.publishDraft(fCid, fMemberId));
             return (ok != null && ok) ? success("已发布") : error("该主题不是草稿，无法发布");
         }
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
-                cmsTopicService.publishDraftWithReview(cid);
+                cmsTopicService.publishDraftWithReview(cid, memberId);
         if (result == null) {
             return error("该主题不是草稿，无法发布");
         }
@@ -1172,43 +1429,19 @@ public class ApiTopicController extends BaseController {
             @Parameter(name = "type", description = "类型 1点赞")
     })
     public AjaxResult topicLike(String id, String type) {
-        CmsTopicLike cmsTopicLike = new CmsTopicLike();
         Long memberId = getAppUserId();
-        Long dataId = Convert.toLong(id, 0L);
-        Integer likeType = Convert.toInt(type, 1);
-        if (dataId < 1) {
-            return error("参数不合规");
-        }
-
-        cmsTopicLike.setDataId(dataId);
-        cmsTopicLike.setMemberId(memberId);
-
-
-        List<CmsTopicLike> list = cmsTopicLikeService.selectCmsTopicLikeList(cmsTopicLike);
-        if (list.size() > 0) {
-            //取消点赞
-            // 提取ID集合
-            Long[] ids = list.stream()
-                    .map(CmsTopicLike::getId)
-                    .toArray(Long[]::new);
-
-            // 调用批量删除方法
-            int rows = cmsTopicLikeService.deleteCmsTopicLikeByIds(ids);
-            if (rows > 0) {
-                return success("取消点赞成功");
-            } else {
-                return error("取消点赞失败");
-            }
-        } else {
-            //新增
-            cmsTopicLike.setLikeType(likeType);
-            int rows = cmsTopicLikeService.insertCmsTopicLike(cmsTopicLike);
-            if (rows > 0) {
-                return success("点赞成功");
-            } else {
-                return error("点赞失败");
+        Long topicId = Convert.toLong(id, 0L);
+        Integer desired = type == null || type.trim().isEmpty() ? 1 : Convert.toInt(type, -1);
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (topicId < 1 || (desired != 0 && desired != 1)) return error("参数不合规");
+        if (desired == 1) {
+            CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+            if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)) {
+                return error("主题不存在");
             }
         }
+        cmsTopicLikeService.setLiked(memberId, topicId, desired == 1);
+        return success(desired == 1 ? "点赞成功" : "取消点赞成功");
     }
 
 
@@ -1446,6 +1679,7 @@ public class ApiTopicController extends BaseController {
         if (cmsTopic != null) {
             TopicInfoVO topicInfoVO = new TopicInfoVO();
             BeanUtils.copyBeanProp(topicInfoVO, cmsTopic);
+            topicInfoVO.setCanResubmitSupplyReview(cmsTopicService.canResubmitSupplyReview(topicId, memberId));
             // R2-B10 玩家侧只读下发:归一化后的主题数值规则(保存时已归一化,这里原样透传)。
             // 未配置 = null(不下发);作者关了检定 = 下发 checkEnabled=false。新增字段,不改已有字段。
             topicInfoVO.setJourneyRules(com.chengyinhub.business.service.support.JourneyInitialState.publicRules(cmsTopic.getJourneyRulesJson()));
@@ -1507,6 +1741,8 @@ public class ApiTopicController extends BaseController {
 
                 CmsTopicNode cmsTopicNode = new CmsTopicNode();
                 cmsTopicNode.setChapterId(chapter.getId());
+                // 后台「隐藏」(status=0)的节点玩家侧不下发;站数口径(locationCount / nodeCount / play 节点)同为 status=1
+                cmsTopicNode.setStatus(1L);
                 List<CmsTopicNode> listCmsTopicNode = cmsTopicNodeService.selectCmsTopicNodeList(cmsTopicNode);
 
                 List<TopicNodeVO> nodeVOList = new ArrayList<>();
@@ -1682,7 +1918,7 @@ public class ApiTopicController extends BaseController {
             List<PublicActivitySummaryVO> activitySummaries = new ArrayList<>();
             if (visibleActivities != null) {
                 for (CmsActivity activity : visibleActivities) {
-                    activitySummaries.add(PublicActivitySummaryVO.from(activity));
+                    activitySummaries.add(PublicActivitySummaryVO.from(activity, cmsTopic));
                 }
             }
             topicInfoVO.setActivityList(activitySummaries);
@@ -1941,6 +2177,14 @@ public class ApiTopicController extends BaseController {
                 topic.setInviteWindowOpen(open);
             }
         }
+        // F-W5-03:「我的」页项目预览读这条列表,草稿(is_draft=1)要与 /api/project/my 同一判据标出来,
+        // 否则草稿按档期被写成「进行中」。只富化本人列表,公开列表不出这个字段。
+        if (!publicList && cmsTopic.getMemberId() != null && !list.isEmpty()) {
+            Set<Long> draftIds = new java.util.HashSet<>(cmsTopicService.selectDraftTopicIds(cmsTopic.getMemberId()));
+            for (CmsTopic topic : list) {
+                topic.setIsDraft(topic.getId() != null && draftIds.contains(topic.getId()));
+            }
+        }
         TableDataInfo data = getDataTable(list);
         if (publicList) {
             List<PublicTopicListVO> publicRows = new ArrayList<>();
@@ -2093,10 +2337,10 @@ public class ApiTopicController extends BaseController {
         if (umsMember == null) {
             return error("用户不存在");
         }
-        if (umsMember.getStatus() != 1) {
+        if (!Long.valueOf(1L).equals(umsMember.getStatus())) {
             return error("会员已禁用，请联系管理员");
         }
-        if (umsMember.getUserType() != 2) {
+        if (!IRoleService.ROLE_MERCHANT.equals(umsMember.getRole())) {
             return error("商家才能报名");
         }
 
@@ -2341,6 +2585,7 @@ public class ApiTopicController extends BaseController {
         if (cmsTopic != null) {
             TopicInfoVO topicInfoVO = new TopicInfoVO();
             BeanUtils.copyBeanProp(topicInfoVO, cmsTopic);
+            topicInfoVO.setCanResubmitSupplyReview(canManage && cmsTopicService.canResubmitSupplyReview(topicId, merchantOwnerMemberId));
             boolean resolveBlocks = cmsTopic.getProductType() == null
                     ? ChapterBlockReadSupport.shouldResolveBlocks(null, selectTopicTickets(topicId))
                     : ChapterBlockReadSupport.shouldResolveBlocks(cmsTopic.getProductType(), null);

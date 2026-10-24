@@ -71,6 +71,8 @@ class ActivitySoldTicketEditLockTest {
         CmsActivityServiceImpl service = new CmsActivityServiceImpl();
         ReflectionTestUtils.setField(service, "memberIdentityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
+        // 收费独立活动只允许平台账号发布(F-W2-01)；本用例验证的是收费票的改单锁，发布者按平台账号构造。
+        ReflectionTestUtils.setField(service, "platformMemberId", ME);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
 
@@ -78,6 +80,17 @@ class ActivitySoldTicketEditLockTest {
         org.mockito.Mockito.doReturn(ME).when(controller).getAppUserId();
         org.mockito.Mockito.doReturn("me").when(controller).getAppUserName();
         ReflectionTestUtils.setField(controller, "cmsActivityService", service);
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
+        // /update 走统一门禁 + 分级(AUDIT-G1-2):本类只测改单锁,门禁放行、配置为空 ⇒ 先发后审。
+        com.chengyinhub.business.service.IContentSafetyGate gate =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IContentSafetyGate.class);
+        when(gate.decide(ArgumentMatchers.any())).thenReturn(com.chengyinhub.business.domain.dto.SafetyDecision.pass());
+        ReflectionTestUtils.setField(controller, "contentSafetyGate", gate);
+        com.chengyinhub.business.service.support.ActivityReviewPolicy policy =
+                new com.chengyinhub.business.service.support.ActivityReviewPolicy();
+        ReflectionTestUtils.setField(policy, "configService",
+                org.mockito.Mockito.mock(com.chengyinhub.system.service.ISysConfigService.class));
+        ReflectionTestUtils.setField(controller, "activityReviewPolicy", policy);
 
         IUmsMemberService umsMemberService = org.mockito.Mockito.mock(IUmsMemberService.class);
         IRoleService roleService = org.mockito.Mockito.mock(IRoleService.class);

@@ -91,6 +91,10 @@ ensure_service_writable_dir() {
 # ── 主流程(被 source 用于测试时跳过) ────────────────────────────────────────
 if [ "${DEPLOY_RESTART_SOURCED:-}" != "1" ]; then
 NEW_JAR="${1:-$JAR.new}"
+HEALTH_CHECKER="${2:?缺少部署健康检查器}"
+HEALTH_TOKEN_FILE="${3:?缺少受保护健康接口授权文件路径}"
+# 必须在换 jar 前拒绝缺失/不安全授权文件；不自动登录或输出令牌。
+python3 "$HEALTH_CHECKER" --validate-token-file "$HEALTH_TOKEN_FILE"
 
 [ -f "$NEW_JAR" ] || { echo "找不到新 jar:$NEW_JAR"; exit 1; }
 systemctl cat "$SERVICE" >/dev/null 2>&1 || {
@@ -125,18 +129,15 @@ ensure_service_writable_dir "$SERVICE" "$CRM_EXPORT_DIR"
 echo "== 6/7 重启服务 =="
 systemctl restart "$SERVICE"
 
-echo "== 7/7 健康检查(等 8080 有 HTTP 响应,最多 60s)=="
-# 注:这里不能加 curl -f —— 线上 `/` 经 Spring Security 返回 401,-f 会把它当失败。
-# 所以本检查只回答「8080 上有没有进程在答话」,**不证明跑的是新 jar**。
-# 那个问题由 ci/verify-deployed.sh 回答(指纹 + 进程唯一 + 启动时间)。
-for _ in $(seq 1 30); do
-  if curl -s -o /dev/null -m 3 "http://127.0.0.1:$PORT/"; then
-    echo "✅ 8080 已响应(仅此而已,是不是新 jar 交给 verify-deployed.sh 判)"
+echo "== 7/7 业务健康检查(应用、数据库和 Redis 全部 UP，最多 60s)=="
+for _ in $(seq 1 8); do
+  if python3 "$HEALTH_CHECKER" "$HEALTH_TOKEN_FILE"; then
+    echo "✅ 受保护健康检查通过；新 jar 指纹仍由 verify-deployed.sh 核验"
     exit 0
   fi
   sleep 2
 done
-echo "❌ 60s 内 8080 无响应。查 journalctl -u $SERVICE -n 50 与 $LOG(旧 jar 备份在 $JAR.bak.*)"
+echo "❌ 60s 内应用/数据库/Redis 未全部就绪。查 journalctl -u $SERVICE -n 50 与 $LOG(旧 jar 备份在 $JAR.bak.*)"
 echo "--- 死前诊断:现在有几个进程在跑这个 jar ---"
 # systemctl restart 只管 systemd 自己的 MainPID。若这里 >1,说明有野进程(非 systemd 托管)
 # 占着 8080,systemd 新实例会 BindException 起不来 —— 而野进程照样答 curl,足以让上面的

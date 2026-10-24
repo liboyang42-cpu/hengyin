@@ -21,6 +21,16 @@ public class AdminFileUploadService
 {
     private final AdminFileUploadPolicy policy;
     private final OssUploader ossUploader;
+    @org.springframework.beans.factory.annotation.Autowired
+    private AppUploadService imageSecurity;
+    private void reviewImage(MultipartFile file) {
+        String name=file.getOriginalFilename();
+        if(name==null || !name.toLowerCase(java.util.Locale.ROOT).matches(".*\\.(jpg|jpeg|png|gif)"))return;
+        if(imageSecurity==null)throw new SecurityUnavailableException("图片安全检查暂不可用");
+        try { imageSecurity.verifyImageForPublication(file); }
+        catch(UploadSecurityUnavailableException e) {throw new SecurityUnavailableException(e.getMessage());}
+        catch(UploadRejectedException e) {throw new RejectedException(e.getMessage(),e);}
+    }
 
     public AdminFileUploadService()
     {
@@ -41,6 +51,7 @@ public class AdminFileUploadService
     public JSONObject uploadOss(MultipartFile file)
     {
         MultipartFile prepared = policy.prepareOss(file);
+        reviewImage(prepared);
         try
         {
             JSONObject result = ossUploader.upload(prepared);
@@ -58,12 +69,14 @@ public class AdminFileUploadService
 
     public String uploadLocal(String filePath, MultipartFile file)
     {
-        return storeLocal(filePath, policy.prepareLocal(file), null);
+        MultipartFile prepared=policy.prepareLocal(file);reviewImage(prepared);
+        return storeLocal(filePath,prepared,null);
     }
 
     public List<String> uploadLocals(String filePath, List<MultipartFile> files)
     {
         List<MultipartFile> preparedFiles = policy.prepareLocalBatch(files);
+        for(MultipartFile prepared:preparedFiles)reviewImage(prepared);
         List<String> fileNames = new ArrayList<String>();
         FileUploadUtils.UploadDirectoryContext directoryContext = FileUploadUtils.newUploadDirectoryContext(filePath);
         try
@@ -80,6 +93,10 @@ public class AdminFileUploadService
             directoryContext.deleteOwnedEmptyDirectories();
             throw e;
         }
+    }
+
+    public static class SecurityUnavailableException extends RuntimeException {
+        public SecurityUnavailableException(String message) {super(message);}
     }
 
     private String storeLocal(String filePath, MultipartFile file, FileUploadUtils.UploadDirectoryContext directoryContext)

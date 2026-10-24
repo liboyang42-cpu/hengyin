@@ -220,7 +220,7 @@ test('重登后仍 401:不得把后端原始报文/接口路径 toast 给用户'
   calls[0].success(PROD_401);
   calls[1].success(PROD_401);
   const leaked = toasts.filter((t) => /请求访问|无法访问系统资源|\/api\//.test(t));
-  assert.deepEqual(leaked, [], '不应泄露后端原文,实际 toast:' + JSON.stringify(toasts));
+  assert.deepEqual(leaked, [], '不应泄露后端原文，实际 toast:' + JSON.stringify(toasts));
 });
 
 test('重登后仍 401 的背景请求(silentError):不弹任何 toast', () => {
@@ -255,7 +255,7 @@ test('statusCode 非 200 且未挂 successStatusAbnormal:回落到 fail(不再�
   assert.deepEqual(failed, { msg: '服务器错误' }, 'fail 必须收到 5xx,否则调用方的提交锁永不复位');
   assert.equal(failedStatus, 500, 'HTTP fallback 不得丢失 statusCode');
   assert.equal(succeeded, undefined, '5xx 不能当成功');
-  assert.deepEqual(toasts, [], '已交给 fail 处理,不该再重复弹 toast');
+  assert.deepEqual(toasts, [], '已交给 fail 处理，不该再重复弹 toast');
 });
 
 test('挂了 successStatusAbnormal 时仍走它,不回落 fail(既有契约不变)', () => {
@@ -319,7 +319,7 @@ test('A2-1 401 重登成功:param.complete 只触发一次(最终响应),不带 
   calls[1].success({ statusCode: 200, data: { code: 200, ok: 1 } });
   calls[1].complete({ statusCode: 200, data: { code: 200, ok: 1 } });
   assert.equal(completes.length, 1, 'complete 只应触发一次');
-  assert.equal(completes[0].code, 200, 'complete 应带最终 200 响应,而非 401 body');
+  assert.equal(completes[0].code, 200, 'complete 应带最终 200 响应，而非 401 body');
 });
 
 test('A2-3 401 重登失败(异步):complete 不早于 fail,且各一次', () => {
@@ -414,7 +414,7 @@ test('retry 只对传输层失败生效,重试期间不重复触发 complete', (
   timers.shift()();
   timers.shift()();
   assert.equal(calls.length, 3, '一共三跳:首发 + 两次重试');
-  assert.equal(failed, 1, '重试用尽才报失败,且只报一次');
+  assert.equal(failed, 1, '重试用尽才报失败，且只报一次');
   assert.equal(completed, 1, 'complete 只在最后一跳触发一次');
 });
 
@@ -504,4 +504,192 @@ test('失败体里的 11 位号仍消毒,不能当业务文案透出', () => {
     data: { code: 500, msg: '13800000000' },
   });
   assert.equal(got.msg, '操作失败');
+});
+
+function ownerRequestFixture() {
+  let owner = '7', auth = 'A', finishLogin;
+  let loginCalls = 0;
+  const calls = [], scheduled = [], events = [], toasts = [];
+  const client = createRequestClient({
+    wxRequest: options => { calls.push(options); return { abort() {} }; },
+    getBaseUrl: () => 'https://fixture',
+    getUserID: () => owner, getAuthorization: () => auth,
+    reLogin: cb => { loginCalls++; finishLogin = cb; },
+    scheduleRetry: fn => scheduled.push(fn),
+    showToast: msg => toasts.push(msg)
+  });
+  const param = { url: '/api/fixture', method: 'POST', data: { draft: 'A-content' },
+    success: () => events.push('success'),
+    fail: body => { events.push('fail'); assert.equal(body.reason, 'sessionChanged'); },
+    complete: () => events.push('complete') };
+  return { client, calls, scheduled, events, toasts, param,
+    setSession(id, token) { owner = id; auth = token; },
+    finishLogin(ok, result) { finishLogin(ok, result); },
+    loginCalls: () => loginCalls };
+}
+const ownerAuthResponses = [
+  { statusCode: 401, data: {} },
+  { statusCode: 200, data: { code: 401 } },
+  { statusCode: 200, data: { code: 2 } }
+];
+for (const response of ownerAuthResponses) {
+  for (const phase of ['before-auth-response', 'during-login']) {
+    test('换账号停止旧写请求登录/重发并恰好收尾一次: ' + phase + '/' + response.statusCode + '/' + response.data.code, () => {
+      const f = ownerRequestFixture();
+      f.client.send(f.param);
+      if (phase === 'before-auth-response') f.setSession('9', 'B');
+      f.calls[0].success(response); f.calls[0].complete(response);
+      if (phase === 'during-login') {
+        f.setSession('9', 'B'); f.finishLogin(true);
+      }
+      assert.equal(f.loginCalls(), phase === 'during-login' ? 1 : 0);
+      assert.equal(f.calls.length, 1);
+      assert.deepEqual(f.events, ['fail', 'complete']);
+      assert.deepEqual(f.toasts, []);
+    });
+  }
+}
+test('换号后旧 GET 延迟网络重试停止并释放回调', () => {
+  const f = ownerRequestFixture();
+  f.client.send(Object.assign({}, f.param, { method: 'GET', retry: 1 }));
+  f.calls[0].fail({ errMsg: 'timeout' }); f.calls[0].complete({});
+  f.setSession('9', 'B'); f.scheduled[0]();
+  assert.equal(f.calls.length, 1);
+  assert.deepEqual(f.events, ['fail', 'complete']);
+});
+test('退出后旧请求不触发自动登录', () => {
+  const f = ownerRequestFixture(); f.client.send(f.param);
+  f.setSession('', ''); f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  assert.equal(f.loginCalls(), 0);
+  assert.deepEqual(f.events, ['fail', 'complete']);
+});
+test('同账号正常续期仍用新 token 重发并只完成最终响应', () => {
+  const f = ownerRequestFixture(); f.client.send(f.param);
+  f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  f.setSession(7, 'A-new'); f.finishLogin(true);
+  assert.equal(f.calls.length, 2); assert.equal(f.calls[1].header.Authorization, 'A-new');
+  f.calls[1].success({ statusCode: 200, data: { code: 200 } }); f.calls[1].complete({ data: { code: 200 } });
+  assert.deepEqual(f.events, ['success', 'complete']);
+});
+test('取消发生在换号后的登录窗口，旧请求没有回调或重发', () => {
+  const f = ownerRequestFixture(); const control = f.client.send(f.param);
+  f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  f.setSession('9', 'B'); control.abort(); f.finishLogin(true);
+  assert.equal(f.calls.length, 1); assert.deepEqual(f.events, []);
+});
+test('尚未登录的请求不能把外部换号误当成自己首登', () => {
+  const f = ownerRequestFixture(); f.setSession('', ''); f.client.send(f.param);
+  f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  f.setSession('9', 'B'); f.finishLogin(true);
+  assert.equal(f.calls.length, 1); assert.deepEqual(f.events, ['fail', 'complete']);
+});
+
+for (const mode of ['success', 'fail', 'complete']) for (const identity of ['same-user-new-token', 'other-user']) {
+  test('late ' + mode + ' from ' + identity + ' cannot restore private response and settles once', () => {
+    const f = ownerRequestFixture(); f.client.send(f.param);
+    f.setSession(identity === 'other-user' ? '8' : '7', 'new-session');
+    if (mode === 'success') f.calls[0].success({ statusCode: 200, data: { code: 200, data: { private: 'old' } } });
+    else if (mode === 'fail') f.calls[0].fail({ errMsg: 'fixture failure' });
+    else f.calls[0].complete({ data: { code: 200 } });
+    f.calls[0].complete({});
+    assert.deepEqual(f.events, ['fail', 'complete']); assert.equal(f.loginCalls(), 0);
+  });
+}
+test('another same-owner request surviving automatic refresh cannot adopt its prior-token response', () => {
+  const f = ownerRequestFixture(); f.client.send(f.param); f.client.send(f.param);
+  f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  f.setSession('7', 'new-token'); f.finishLogin(true, { isCurrentSession: () => true });
+  f.calls[1].success({ statusCode: 200, data: { code: 200 } }); f.calls[1].complete({});
+  assert.deepEqual(f.events, ['fail', 'complete']);
+  f.calls[2].success({ statusCode: 200, data: { code: 200 } }); f.calls[2].complete({});
+  assert.deepEqual(f.events, ['fail', 'complete', 'success', 'complete']);
+});
+test('obsolete successful login result cannot rebind to an externally replaced same-user session', () => {
+  const f = ownerRequestFixture(); f.client.send(f.param);
+  f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
+  f.setSession('7', 'external-session'); f.finishLogin(true, { isCurrentSession: () => false });
+  assert.equal(f.calls.length, 1); assert.deepEqual(f.events, ['fail', 'complete']);
+});
+test('a successful caller clearing its own session does not turn success into a second failure', () => {
+  const f = ownerRequestFixture(); f.client.send(Object.assign({}, f.param, { success: () => { f.events.push('success'); f.setSession('', ''); } }));
+  f.calls[0].success({ statusCode: 200, data: { code: 200 } }); f.calls[0].complete({});
+  assert.deepEqual(f.events, ['success', 'complete']);
+});
+
+// ---- #472-2(owner 2026-10-23 批准):同意接口 requestId 冲突 → 换新号重发恰好一次,绝不循环 ----
+const CONFLICT = { code: 409, msg: '同意请求信息冲突', errorCode: 'CONSENT_REQUEST_CONFLICT' };
+function respond(call, statusCode, data) {
+  call.success({ statusCode, data: JSON.parse(JSON.stringify(data)) });
+  call.complete({ statusCode, data });
+}
+
+test('#472-2 同意接口回 CONSENT_REQUEST_CONFLICT:换新 requestId 重发一次,成功只回调一次', () => {
+  let n = 0;
+  const { client, calls } = makeClient({ newRequestId: () => 'consent-fresh-' + (++n) });
+  const seen = { success: [], complete: 0, fail: 0 };
+  client.send({ url: '/api/agreement/consent', method: 'POST', header: { 'content-type': 'application/json' },
+    data: { type: 'privacy', requestId: 'consent-old' },
+    success: (b) => seen.success.push(b), complete: () => { seen.complete += 1; }, fail: () => { seen.fail += 1; } });
+  respond(calls[0], 200, CONFLICT);
+  assert.equal(calls.length, 2, '冲突后重发一次');
+  assert.deepEqual(calls[1].data, { type: 'privacy', requestId: 'consent-fresh-1' }, '只换 requestId,其余字段原样');
+  assert.equal(calls[1].url, 'https://base/api/agreement/consent');
+  assert.equal(seen.success.length, 0, '第一跳的冲突不交给调用方');
+  respond(calls[1], 200, { code: 200, msg: '操作成功' });
+  assert.equal(seen.success.length, 1);
+  assert.equal(seen.success[0].code, 200);
+  assert.equal(seen.complete, 1, 'complete 只在最后一跳触发一次');
+  assert.equal(seen.fail, 0);
+});
+
+test('#472-2 重发后仍冲突:如实交给调用方,不再重发(不循环)', () => {
+  let n = 0;
+  const { client, calls } = makeClient({ newRequestId: () => 'consent-fresh-' + (++n) });
+  const seen = { success: [], complete: 0 };
+  client.send({ url: '/api/agreement/consent', method: 'POST', data: { type: 'privacy', requestId: 'consent-old' },
+    success: (b) => seen.success.push(b), complete: () => { seen.complete += 1; } });
+  respond(calls[0], 200, CONFLICT);
+  respond(calls[1], 200, CONFLICT);
+  assert.equal(calls.length, 2, '最多重发一次');
+  assert.equal(n, 1, '只生成一个新号');
+  assert.equal(seen.success.length, 1);
+  assert.equal(seen.success[0].errorCode, 'CONSENT_REQUEST_CONFLICT');
+  assert.equal(seen.complete, 1);
+});
+
+test('#472-2 HTTP 409 + JSON 字符串 body 同样换号重发一次;第二次 409 走 successStatusAbnormal', () => {
+  const { client, calls } = makeClient({ newRequestId: () => 'consent-fresh' });
+  const abnormal = [];
+  client.send({ url: '/api/agreement/consent?from=launch', method: 'POST', header: { 'Content-Type': 'application/json' },
+    data: JSON.stringify({ type: 'user_agreement', requestId: 'consent-old' }),
+    successStatusAbnormal: (b, status) => abnormal.push(status) });
+  respond(calls[0], 409, CONFLICT);
+  assert.equal(calls.length, 2);
+  assert.equal(typeof calls[1].data, 'string', '调用方发字符串就还发字符串');
+  assert.deepEqual(JSON.parse(calls[1].data), { type: 'user_agreement', requestId: 'consent-fresh' });
+  respond(calls[1], 409, CONFLICT);
+  assert.equal(calls.length, 2);
+  assert.deepEqual(abnormal, [409]);
+});
+
+test('#472-2 负控:别的 409、别的接口、没带 requestId 都不换号重发', () => {
+  const cases = [
+    // 定位同意「状态已变」也是 409,但没有 CONSENT_REQUEST_CONFLICT:换号解决不了,原样返回
+    { url: '/api/compliance/consents', data: { requestId: 'r1' }, body: { code: 409, msg: '授权状态已变化' } },
+    { url: '/api/compliance/consents', data: { requestId: 'r1' }, body: CONFLICT },
+    { url: '/api/agreement/consent', data: { requestId: 'r1' }, body: { code: 409, msg: '冲突' } },
+    { url: '/api/agreement/consent', data: { type: 'privacy' }, body: CONFLICT },
+    { url: '/api/agreement/consent', data: 'type=privacy&requestId=r1', body: CONFLICT },
+    { url: '/api/agreement/consent', data: { requestId: 'r1' }, body: Object.assign({}, CONFLICT, { code: 500 }) },
+  ];
+  for (const c of cases) {
+    let generated = 0;
+    const { client, calls } = makeClient({ newRequestId: () => { generated += 1; return 'consent-fresh'; } });
+    let delivered = 0;
+    client.send({ url: c.url, method: 'POST', data: c.data, success: () => { delivered += 1; } });
+    respond(calls[0], 200, c.body);
+    assert.equal(calls.length, 1, JSON.stringify(c));
+    assert.equal(delivered, 1, JSON.stringify(c));
+    assert.equal(generated, 0, '不重发就不生成新号:' + JSON.stringify(c));
+  }
 });

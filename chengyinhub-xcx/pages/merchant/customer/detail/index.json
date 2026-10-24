@@ -14,5 +14,7 @@
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-inline-error": "/components/cy/inline-error/index"
-  }
+  },
+  "backgroundColorTop": "#F3F4F4",
+  "backgroundColorBottom": "#F3F4F4"
 }

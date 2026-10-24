@@ -1,5 +1,6 @@
 /* 骨架屏→内容淡切:isolated 组件收不到全局 components.wxss,@import 同一份定义 */
 @import '../../../../style/fade-in.wxss';
+@import '../../../../style/motion-entry.wxss'; /* 订单卡飞入 .cy-fly-in / .cy-fly-wait */
 :host { display: block; min-height: 100vh; }
 .pc-page { min-height: 100vh; position: relative; color: var(--cy-color-text-primary); }
 .pc-player {
@@ -255,7 +256,7 @@
 
 /* 探索值 */
 .pc-exp-row {
-  display: flex; align-items: center; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-2-5); padding: 0 var(--cy-space-1); /* ds-ok: 12rpx/20rpx 无同值 spacing token */
+  display: flex; align-items: center; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-2-5); padding: 0; /* ds-ok: 12rpx/20rpx 无同值 spacing token */
 }
 .pc-exp-badge {
   width: 44rpx; height: 44rpx; border-radius: 50%; background: var(--cy-color-bg-surface);
@@ -382,10 +383,11 @@
 .pc-tap-text { opacity: 0.6; }
 
 /* 区块标题 */
-.pc-sec-head { display: flex; align-items: center; justify-content: space-between; margin: var(--cy-space-1) var(--cy-space-1) var(--cy-legacy-14); /* ds-ok: 14rpx 无同值 spacing token */ }
+/* 2026-10-20 各区块与票夹按钮、Tab 统一贴页边距(原来标题 16rpx、卡片 8rpx 三种左边缘) */
+.pc-sec-head { display: flex; align-items: center; justify-content: space-between; margin: var(--cy-space-1) 0 var(--cy-legacy-14); /* ds-ok: 14rpx 无同值 spacing token */ }
 /* 区块标题原为 label(24rpx)+ tertiary,与右侧文字动作同字号同色 ⇒ 整页少一档层级、看不出分组。
    收到区块标题档(36rpx / 主文字色),动作保持小字并降一档到 secondary —— 分组感来自这两档的差值。 */
-.pc-sec-tit { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); margin: var(--cy-space-3-5) var(--cy-space-1) var(--cy-space-2); /* ds-ok: 28rpx 无同值 spacing token */ }
+.pc-sec-tit { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); margin: var(--cy-space-3-5) 0 var(--cy-space-2); /* ds-ok: 28rpx 无同值 spacing token */ }
 .pc-sec-tit--flush { margin-top: 0; }
 /* --sm:比常规区块标题小一档，但仍高于 .pc-sec-link(24rpx)以保留分组层级("我的订单"/"我的项目") */
 .pc-sec-tit--sm { font-size: var(--cy-type-card-title); }
@@ -443,7 +445,7 @@
 
 /* 项目 Tab · 区块标题 + 横向滑动卡片(对标关于 pc-sec-head 排版) */
 .pc-hscroll { width: 100%; white-space: nowrap; margin-bottom: var(--cy-space-3); }
-.pc-hscroll-inner { display: inline-flex; gap: var(--cy-space-2-5); padding: 0 var(--cy-space-1) var(--cy-space-1); /* ds-ok: 20rpx 无同值 spacing token */ }
+.pc-hscroll-inner { display: inline-flex; gap: var(--cy-space-2-5); padding: 0 0 var(--cy-space-1); /* ds-ok: 20rpx 无同值 spacing token */ }
 /* 描边原为写死的「白 20%」:同一条规则 background 走 var、border 走字面 ⇒ 商家视角
    白卡配 20% 白描边 = 描边消失(实测 1.00:1)。改跟对照组 .pc-card 同一个 border-subtle */
 .pc-proj-card {
@@ -452,7 +454,7 @@
   border-radius: var(--cy-radius-md); vertical-align: top; white-space: normal;
   background: var(--cy-color-bg-surface); border: 2rpx solid var(--cy-color-border-subtle);
 }
-.pc-proj-card--solo { display: flex; width: auto; margin: 0 var(--cy-space-1) var(--cy-space-3); min-height: 140rpx; /* ds-ok: 140rpx 无同值 spacing token */ }
+.pc-proj-card--solo { display: flex; width: auto; margin: 0 0 var(--cy-space-3); min-height: 140rpx; /* ds-ok: 140rpx 无同值 spacing token */ }
 .pc-proj-body { flex: 1; min-width: 0; }
 .pc-proj-title {
   font-size: var(--cy-type-body); font-weight: 700; color: var(--cy-color-text-primary);
@@ -468,6 +470,45 @@
   flex-shrink: 0; width: 128rpx; height: 128rpx; border-radius: var(--cy-radius-sm);
   background: var(--cy-color-bg-surface-subtle);
 }
+
+/* 我的订单卡 v2(2026-10-22 owner):封面 + 状态章 + 标题/档期/票数 + 下一步按钮。全走语义 token,
+   玩家深色 / 商家浅色(theme-merchant)自动跟随,不写字面色。 */
+/* v3(2026-10-22 owner 参考图「tayo.」卡):整卡封面铺满 + 浅色外框,下半段黑色渐变,白字与黑色胶囊按钮叠在渐变上。
+   卡面内是照片语境,字色固定白、按钮固定黑,不随主题翻转;外框与无封面底色仍走 token。 */
+.pc-ord-card {
+  position: relative; display: inline-block; flex-shrink: 0; width: 500rpx; height: 400rpx; box-sizing: border-box; /* ds-ok: owner 第四轮:高度压窄 600→400,仍露出下一张提示可滑 */
+  vertical-align: top; white-space: normal; overflow: hidden;
+  border-radius: 40rpx; /* ds-ok: 参考图大圆角;owner 第二轮:不要白色外框 */
+  background: linear-gradient(160deg, #5B6670 0%, #2A2F35 100%); /* ds-ok: 无封面时的照片感底色 */
+}
+.pc-ord-cover__img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.pc-ord-shade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 88%;
+  background: linear-gradient(180deg, rgba(48,48,48,0) 0%, rgba(48,48,48,.5) 45%, rgba(58,58,58,.85) 100%); /* ds-ok: 参考图下半段压成深灰,黑色按钮立得住 */
+}
+.pc-ord-tag {
+  position: absolute; left: var(--cy-space-3); top: var(--cy-space-3);
+  padding: 6rpx var(--cy-space-2); border-radius: var(--cy-radius-pill);
+  font-size: var(--cy-type-caption); font-weight: 700; line-height: 1.5;
+  background: rgba(255,255,255,.92); color: #141414; /* ds-ok: 照片上的浅色状态章 */
+}
+.pc-ord-body {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 0 var(--cy-space-4) var(--cy-space-4);
+  display: flex; flex-direction: column; gap: 6rpx;
+}
+.pc-ord-title {
+  font-size: 40rpx; font-weight: 800; color: #FFFFFF; line-height: 1.25; letter-spacing: -0.5rpx; /* ds-ok: 照片上的白色标题 */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pc-ord-meta { font-size: var(--cy-type-caption); color: rgba(255,255,255,.72); line-height: 1.45; } /* ds-ok: 照片上的次级白 */
+.pc-ord-foot { margin-top: var(--cy-space-3); display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
+.pc-ord-stat { display: flex; align-items: center; gap: 8rpx; font-size: var(--cy-type-body); font-weight: 700; color: #FFFFFF; } /* ds-ok: 照片上的白色统计 */
+.pc-ord-btn {
+  flex: none; height: 76rpx; line-height: 76rpx; padding: 0 var(--cy-space-4); /* ds-ok: 参考图胶囊按钮 */
+  border-radius: var(--cy-radius-pill); font-size: var(--cy-type-body); font-weight: 700; text-align: center;
+  background: #141414; color: #FFFFFF; /* ds-ok: 参考图黑色胶囊按钮 */
+}
+.pc-ord-btn--wait { background: rgba(255,255,255,.18); } /* ds-ok: 待开始用半透明,待核销用实黑 */
 
 /* 我的项目复用订单横滑轨道，下一张卡露出一部分以提示可滑动。 */
 /* 2026-08-20 项目卡 v2(用户定):G 积分/浏览量/时间百分比对商家无决策价值,整排删掉;
@@ -618,7 +659,7 @@
   font-size: var(--cy-type-label);
 }
 .pc-about { padding: var(--cy-space-3) var(--cy-space-3-5); font-size: var(--cy-type-body); line-height: 1.55; color: var(--cy-color-text-secondary); margin-bottom: var(--cy-space-1); /* ds-ok: 28rpx 无同值 spacing token */ }
-.pc-tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-2); padding: 0 var(--cy-space-1); /* ds-ok: 12rpx 无同值 spacing token */ }
+.pc-tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-2); padding: 0; /* ds-ok: 12rpx 无同值 spacing token */ }
 .pc-tag {
   font-size: var(--cy-type-label); padding: var(--cy-space-1) var(--cy-legacy-18); border-radius: var(--cy-radius-pill); /* ds-ok: 18rpx 无同值 spacing token */
   background: var(--cy-color-bg-surface); border: 2rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-secondary);
@@ -722,7 +763,7 @@
 }
 
 /* 探索作品 */
-.pc-works { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-bottom: var(--cy-space-2); padding: 0 var(--cy-space-1); }
+.pc-works { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-bottom: var(--cy-space-2); padding: 0; }
 .pc-work-pic { width: 150rpx; height: 150rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); }
 
 .pc-info-row--solo {
@@ -852,7 +893,7 @@
 .pc-asset {
   display: flex; align-items: center; justify-content: space-between;
   padding: var(--cy-space-3-5) var(--cy-space-3);
-  margin: 0 var(--cy-space-1) var(--cy-space-3);
+  margin: 0 0 var(--cy-space-3);
   border-radius: var(--cy-radius-md);
   background: var(--cy-color-bg-surface-subtle);
   border: 1rpx solid var(--cy-color-border-subtle);
@@ -914,3 +955,27 @@
 .cy-pressed { opacity: .88; }
 
 .scene-host { --cy-comp-sheet-border-width: 0px; }
+
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.pc-sec-head { filter: opacity(calc(1 - var(--pm-m, 0))); translate: 0 calc(var(--pm-m, 0) * 31rpx); transition: filter var(--pm-m-d, 0s) ease, translate var(--pm-m-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-m-s, 0) * (0ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-m-s, 0) * (0ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+.pc-proj-card { filter: opacity(calc(1 - var(--pm-m, 0))); translate: 0 calc(var(--pm-m, 0) * 31rpx); transition: filter var(--pm-m-d, 0s) ease, translate var(--pm-m-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-m-s, 0) * (40ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-m-s, 0) * (40ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+.pc-asset { filter: opacity(calc(1 - var(--pm-m, 0))); translate: 0 calc(var(--pm-m, 0) * 31rpx); transition: filter var(--pm-m-d, 0s) ease, translate var(--pm-m-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-m-s, 0) * (80ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-m-s, 0) * (80ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+.pc-feed { filter: opacity(calc(1 - var(--pm-m, 0))); translate: 0 calc(var(--pm-m, 0) * 31rpx); transition: filter var(--pm-m-d, 0s) ease, translate var(--pm-m-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-m-s, 0) * (0ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-m-s, 0) * (0ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+.pc-achievement-metrics { filter: opacity(calc(1 - var(--pm-m, 0))); translate: 0 calc(var(--pm-m, 0) * 31rpx); transition: filter var(--pm-m-d, 0s) ease, translate var(--pm-m-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-m-s, 0) * (0ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-m-s, 0) * (0ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+.pc-card { filter: opacity(calc(1 - var(--pm-m, 0))); translate: 0 calc(var(--pm-m, 0) * 31rpx); transition: filter var(--pm-m-d, 0s) ease, translate var(--pm-m-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-m-s, 0) * (60ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-m-s, 0) * (60ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+/* 2026-10-22 owner:商家态主页整页恒浅(L01-d)。
+ * 宿主页根挂 theme-dark、page{} 底为黑,商家态只靠 .pc-page 自己的底色撑满不够:
+ * 内容不足一屏或下拉回弹时会露出黑底(半浅半黑)。用负 z-index 的固定浅底垫在整屏之下;
+ * 文字色全部显式指回商家 token(--cy-color-*),不吃宿主页的深色继承。 */
+.pc-merchant::before {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1;
+  background: var(--cy-color-bg-page);
+}
+.pc-merchant .pc-sec-tit,
+.pc-merchant .pc-gamer-name { color: var(--cy-color-text-primary); }
+.pc-merchant .pc-gamer-lv { color: var(--cy-color-text-secondary); }
+/* 末张卡(经营团队)被自定义 tabBar 盖住:在原底距上再加一段并计安全区,保证滚到底能完整露出 */
+.pc-merchant .pc-body { padding-bottom: calc(var(--cy-space-8) + var(--cy-tabbar-h)); }
+.pc-merchant .pc-team-entry { margin-bottom: var(--cy-space-4); }

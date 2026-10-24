@@ -1,13 +1,14 @@
+<block wx:for="{{stageKeys}}" wx:key="*this" wx:for-item="stageKey">
 <!-- 墙就是手机的四条边，不画内框 —— 多一个框，人会以为框外还有别的东西,
      而这一屏外面什么都没有。 -->
-<cy-play-stage id="cy-play-stage" show="{{show}}" back-label="退出"
+<cy-play-stage id="cy-play-stage" data-stage-key="{{stageKey}}" show="{{show}}" back-label="退出"
                limit-seconds="{{timed ? seconds : 0}}"
                calibrate-label="拿成你打算玩的姿势" calibrate-ms="1200"
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict">
   <view class="bl {{reducedMotion ? 'bl--reduced' : ''}}">
     <!-- 撞边不是画一条白线。线是「那儿有个东西」,而撞击要说的是「那儿亮了一下」——
          所以是一片从边缘往里散开、越往里越淡的光，没有硬边。 -->
-    <view class="bl__edge bl__edge--{{item}} {{flash === item ? 'bl__edge--on' : ''}}"
+    <view class="bl__edge bl__edge--{{item}} {{flash === item ? 'bl__edge--on' : ''}} pe pe--fade" style="--pe-d:.1s;--pe-i:{{index}}"
           wx:for="{{edges}}" wx:key="*this"></view>
 
     <!-- 球是平的、不发光:这一屏在看的是轨迹，不是球本身 -->
@@ -15,18 +16,27 @@
           style="transform:translate3d({{item.x}}px,{{item.y}}px,0);opacity:{{item.o}}"></view>
     <view class="bl__ball" style="transform:translate3d({{ball.x}}px,{{ball.y}}px,0)"></view>
 
-    <view class="bl__hud">
+    <view class="bl__hud pe pe--drop" style="--pe-d:.2s">
       <view class="g-kicker">{{kicker}}</view>
-      <view class="bl__n g-figure">{{hits}}<text class="bl__unit">/ {{goal}} 次</text></view>
+      <view class="bl__n g-figure" wx:if="{{sharedChallenge && challenge}}">{{challenge.progress}}<text class="bl__unit">/ {{challenge.goal}} 次（本队）</text></view>
+      <view class="bl__n g-figure" wx:else>{{hits}}<text class="bl__unit">/ {{goal}} 次</text></view>
+      <view class="g-sub bl__sub" wx:if="{{sharedChallenge}}">本次撞击 {{hits}} · 提交后计入全队进度</view>
+      <view class="g-sub bl__sub" wx:if="{{challenge.disabledReason}}">{{challenge.disabledReason === 'CHALLENGE_LIMIT' ? '挑战次数已用完' : challenge.disabledReason}}</view>
       <view class="g-sub bl__sub">{{timed ? (seconds + ' 秒内撞满') : '不限时，撞满为止'}}</view>
+      <view class="g-sub bl__sub">撞击根据本机动作测量，每次开始前先校准。</view>
+      <view class="g-sub bl__sub bl__notice" wx:if="{{localNotice && !awaitingResult && !(challenge && (challenge.success || challenge.disabledReason))}}">{{localNotice}}</view>
     </view>
   </view>
 
   <!-- 这一屏的按钮是玩法自己的,不走共享的 .g-btn:
        原型 .blb 是 52px 高、16px 字、左右各 20px —— 比通用那颗小一档,
        因为它压在球场上,大了会挡住球的轨迹。 -->
-  <view class="bl__b {{running ? 'bl__b--busy' : ''}}" bindtap="onStart"
+  <view wx:if="{{sharedChallenge && running}}" class="bl__b pe pe--up" style="--pe-d:1s" bindtap="onSubmitHits"
+        aria-role="button" aria-label="提交本次撞击" hover-class="bl__b--press" hover-stay-time="80">提交本次撞击</view>
+  <view wx:else class="bl__b {{running || awaitingResult || challenge.disabledReason || challenge.success ? 'bl__b--busy' : ''}} pe pe--up" style="--pe-d:1s" bindtap="onStart"
         aria-role="button" aria-label="开始弹球" hover-class="bl__b--press" hover-stay-time="80">
-    {{running ? '撞!' : '开始'}}
+    {{awaitingResult ? '正在确认…' : (running ? '撞!' : (challenge ? '免费重试' : '开始'))}}
   </view>
 </cy-play-stage>
+
+</block>

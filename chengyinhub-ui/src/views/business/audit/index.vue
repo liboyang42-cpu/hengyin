@@ -98,7 +98,7 @@
           type="text"
           :disabled="!canReview(scope.row)"
           @click="openReview(scope.row, 1)"
-          v-hasPermi="['business:audit:review']"
+          v-hasPermi="scope.row.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:approve'] : ['business:audit:review']"
         >通过</el-button>
         <el-button
           size="mini"
@@ -106,7 +106,7 @@
           class="danger-action"
           :disabled="!canReview(scope.row)"
           @click="openReview(scope.row, 2)"
-          v-hasPermi="['business:audit:review']"
+          v-hasPermi="scope.row.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:reject'] : ['business:audit:review']"
         >拒绝</el-button>
       </template>
     </cy-data-table>
@@ -123,8 +123,8 @@
             :facts="auditHeaderFacts"
           >
             <template slot="actions">
-              <el-button size="mini" type="primary" :disabled="!canReview(detailTask)" @click="openReview(detailTask, 1)" v-hasPermi="['business:audit:review']">通过</el-button>
-              <el-button size="mini" type="text" class="danger-action" :disabled="!canReview(detailTask)" @click="openReview(detailTask, 2)" v-hasPermi="['business:audit:review']">拒绝</el-button>
+              <el-button size="mini" type="primary" :disabled="!canReview(detailTask)" @click="openReview(detailTask, 1)" v-hasPermi="detailTask.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:approve'] : ['business:audit:review']">通过</el-button>
+              <el-button size="mini" type="text" class="danger-action" :disabled="!canReview(detailTask)" @click="openReview(detailTask, 2)" v-hasPermi="detailTask.bizType === 'MEDIA_ASSET' ? ['business:mediaReview:reject'] : ['business:audit:review']">拒绝</el-button>
             </template>
           </cy-entity-header>
           <template v-if="detailTask.bizType === 'HANGOUT'">
@@ -137,6 +137,25 @@
             <el-button size="mini" @click="investigateSameTarget">查看同队伍审核历史</el-button>
             <el-button size="mini" :disabled="Number(detailTask.status) !== 0" @click="openReview(detailTask, 3)" v-hasPermi="['business:audit:review']">缺证，升级审核</el-button>
           </template>
+          <template v-if="detailTask.bizType === 'MEDIA_ASSET'">
+            <el-alert title="文件在审核通过前仅作者可见。请实际检查图片、音频或模型；无法检查时请拒绝并填写原因，作者可重新提审。" type="info" :closable="false" />
+            <el-image v-if="mediaType === 'IMAGE' && mediaPreviewUrl" :src="mediaPreviewUrl" fit="contain" style="max-width: 100%; max-height: 480px" :preview-src-list="[mediaPreviewUrl]" />
+            <audio v-else-if="mediaType === 'AUDIO' && mediaPreviewUrl" :src="mediaPreviewUrl" controls preload="none" />
+            <el-link v-else-if="mediaPreviewUrl" :href="mediaPreviewUrl" target="_blank" rel="noopener noreferrer">下载并检查模型文件</el-link>
+          </template>
+          <div v-if="appealAttachments.length" class="appeal-attachments">
+            <div class="appeal-attachments__title">申诉附件（{{ appealAttachments.length }}）</div>
+            <el-alert v-if="appealAttachmentsPreviewDenied" title="无媒体审核读取权限，仅显示附件编号。" type="info" :closable="false" />
+            <div class="appeal-attachments__list">
+              <div v-for="item in appealAttachments" :key="item.assetId" class="appeal-attachments__item">
+                <el-image v-if="item.mediaType === 'IMAGE' && item.previewUrl" :src="item.previewUrl" fit="cover" class="appeal-attachments__thumb" :preview-src-list="appealAttachmentImageUrls" />
+                <el-link v-else-if="item.previewUrl" :href="item.previewUrl" target="_blank" rel="noopener noreferrer">查看附件 #{{ item.assetId }}</el-link>
+                <span v-else class="appeal-attachments__missing">附件 #{{ item.assetId }}（预览不可用）</span>
+              </div>
+            </div>
+          </div>
+          <el-alert v-if="detailTask.bizType === 'COMMUNITY_POST' && communityMediaPreviewError" :title="communityMediaPreviewError" type="warning" :closable="false" show-icon />
+          <el-button v-if="detailTask.bizType === 'MEDIA_ASSET' || detailTask.bizType === 'COMMUNITY_POST' || appealAttachments.length" size="mini" @click="openDetail(detailRow)">刷新五分钟预览</el-button>
           <cy-evidence-panel title="内容快照" :items="auditEvidenceItems" empty-text="当前任务没有附带内容快照" />
           <cy-timeline title="处置轨迹" :items="auditTimelineItems" empty-text="尚无处置记录" />
         </template>
@@ -186,7 +205,7 @@
 </template>
 
 <script>
-import { getAuditTaskDetail, listAuditTasks, reviewAuditTask, submitTopicProjectReview, submitTopicSaleReview } from '@/api/business/auditWorkbench'
+import { getAuditTaskDetail, listAuditTasks, reviewAuditTask, reviewMediaAsset, submitTopicProjectReview, submitTopicSaleReview } from '@/api/business/auditWorkbench'
 import CyDataTable from '@/components/CyDataTable'
 import CyEntityHeader from '@/components/CyEntityHeader'
 import CyEntityLink from '@/components/CyEntityLink'
@@ -242,6 +261,12 @@ export default {
       reportCount: 0,
       auditList: [],
       detailTask: null,
+      mediaPreviewUrl: '',
+      communityMediaPreview: null,
+      communityMediaPreviewError: '',
+      appealAttachments: [],
+      appealAttachmentsPreviewDenied: false,
+      mediaType: '',
       detailRecords: [],
       tableColumns: [
         { key: 'subject', label: '审核对象', minWidth: 210 },
@@ -252,13 +277,17 @@ export default {
         { key: 'actions', label: '处理', width: 210, fixed: 'right', align: 'right', locked: true }
       ],
       bizTypeOptions: [
+        { label: '媒体文件审核', value: 'MEDIA_ASSET' },
         { label: '主题立项审核', value: 'TOPIC_PROJECT_REVIEW' },
         { label: '主题开售审核', value: 'TOPIC_SALE_REVIEW' },
         { label: '主题', value: 'TOPIC' },
         { label: '活动', value: 'ACTIVITY' },
+        { label: '官方活动', value: 'OFFICIAL_EVENT' },
+        { label: '优惠券抽检', value: 'COUPON' },
         { label: '玩法模板', value: 'TEMPLATE' },
         { label: '商家城市节点', value: 'merchant_node' },
         { label: '商家节点模板', value: 'merchant_node_template' },
+        { label: '社区帖文', value: 'COMMUNITY_POST' },
         { label: '创意广场', value: 'SQUARE' },
         { label: '评论', value: 'COMMENT' },
         { label: '俱乐部动态', value: 'CLUB_POST' },
@@ -268,10 +297,14 @@ export default {
       ],
       queryParams: { pageNum: 1, pageSize: 10, bizType: null, bizId: null, status: null },
       reviewForm: { taskId: null, status: null, reasonText: null },
+      reviewBizType: '',
       commercialSubmitForm: { topicId: null, phase: 'PROJECT', requestedTarget: 'RECRUITING' }
     }
   },
   computed: {
+    appealAttachmentImageUrls() {
+      return this.appealAttachments.filter(item => item.mediaType === 'IMAGE' && item.previewUrl).map(item => item.previewUrl)
+    },
     auditHeaderFacts() {
       if (!this.detailTask) return []
       return [
@@ -285,8 +318,14 @@ export default {
       const bizType = this.detailTask.bizType
       const render = bizType === 'HANGOUT' ? (value, label) => this.hangoutEvidence(value, label)
         : bizType === 'TEAM' ? (value, label) => this.teamEvidence(value, label) : null
-      if (!render) return this.detailTask.snapshotJson
-        ? [{ kind: 'text', content: this.snapshotText(this.detailTask.snapshotJson) }] : []
+      if (!render) {
+        const items = this.detailTask.snapshotJson
+          ? [{ kind: 'text', content: this.snapshotText(this.detailTask.snapshotJson) }] : []
+        if (bizType === 'COMMUNITY_POST' && this.communityMediaPreview) {
+          items.push(...this.communityMediaPreview.items.map(item => ({ kind: 'image', src: item.url })))
+        }
+        return items
+      }
       const items = render(this.detailTask.snapshotJson || '{}', '首次举报快照')
       this.detailRecords.filter(record => record.action === 'REPORT' && record.snapshotJson).forEach(record => {
         items.push(...render(record.snapshotJson, `举报记录 #${record.id}`))
@@ -334,6 +373,15 @@ export default {
     this.getList()
   },
   methods: {
+    // S531-3:申诉附件只认正整数编号;预览地址必须是 https 短签名,否则按「预览不可用」展示编号。
+    normalizeAppealAttachments(raw) {
+      if (!Array.isArray(raw)) return []
+      return raw.filter(item => item && Number.isSafeInteger(item.assetId) && item.assetId > 0).map(item => ({
+        assetId: item.assetId,
+        mediaType: typeof item.mediaType === 'string' ? item.mediaType : '',
+        previewUrl: typeof item.previewUrl === 'string' && /^https:\/\//.test(item.previewUrl) ? item.previewUrl : ''
+      }))
+    },
     bizTypeLabel(type) {
       const item = this.bizTypeOptions.find(option => option.value === type)
       return item ? item.label : (type || '未知类型')
@@ -388,6 +436,11 @@ export default {
       this.detailError = ''
       this.detailRow = row
       this.detailTask = null
+      this.mediaPreviewUrl = ''; this.mediaType = ''
+      this.communityMediaPreview = null
+      this.communityMediaPreviewError = ''
+      this.appealAttachments = []
+      this.appealAttachmentsPreviewDenied = false
       this.detailRecords = []
       this.reportCount = 0
       return getAuditTaskDetail(row.id).then(response => {
@@ -396,6 +449,20 @@ export default {
           || !Number.isSafeInteger(response.reportCount) || response.reportCount < 0) {
           throw new Error('Invalid audit detail response')
         }
+        this.mediaPreviewUrl = response.mediaPreviewUrl || ''; this.mediaType = response.mediaType || ''
+        if (response.task.bizType === 'COMMUNITY_POST') {
+          const preview = response.communityMediaPreview
+          if (preview && preview.taskId === response.task.id && preview.taskVersion === response.task.version
+            && preview.status === 'READY' && preview.expiresInSeconds === 300 && Array.isArray(preview.items)
+            && preview.items.every(item => item && Number.isSafeInteger(item.id) && item.id > 0
+              && typeof item.url === 'string' && /^https:\/\//.test(item.url))) {
+            this.communityMediaPreview = preview
+          } else {
+            this.communityMediaPreviewError = '当前图片预览不可用，请刷新；原内容快照与处置轨迹仍保留。'
+          }
+        }
+        this.appealAttachments = this.normalizeAppealAttachments(response.appealAttachments)
+        this.appealAttachmentsPreviewDenied = response.appealAttachmentsPreviewDenied === true
         this.detailTask = response.task
         this.detailRecords = response.records
         this.reportCount = response.reportCount
@@ -462,11 +529,13 @@ export default {
       try { return JSON.stringify(JSON.parse(value), null, 2) } catch (error) { return value }
     },
     openReview(row, status) {
+      this.reviewBizType = row.bizType
       this.reviewForm = { taskId: row.id, expectedVersion: row.version, status: status, reasonText: null }
       this.reviewOpen = true
     },
     submitReview() {
-      reviewAuditTask(this.reviewForm).then(() => {
+      const review = this.reviewBizType === 'MEDIA_ASSET' ? reviewMediaAsset : reviewAuditTask
+      return review(this.reviewForm).then(() => {
         this.$modal.msgSuccess('审核处理成功')
         this.reviewOpen = false
         this.detailOpen = false
@@ -523,6 +592,11 @@ export default {
 .table-stack small { margin-top: 4px; color: var(--cy-color-text-tertiary); }
 .danger-action { color: var(--cy-color-status-danger); }
 .audit-detail { min-height: 260px; padding: 0 24px var(--cy-space-7); }
+.appeal-attachments { margin: var(--cy-space-3-5) 0; }
+.appeal-attachments__title { margin-bottom: 8px; font-weight: 600; }
+.appeal-attachments__list { display: flex; flex-wrap: wrap; gap: var(--cy-space-2-5); margin-top: 8px; }
+.appeal-attachments__thumb { width: 120px; height: 120px; border-radius: var(--cy-radius-card); }
+.appeal-attachments__missing { color: var(--cy-color-text-tertiary); font-size: 12px; }
 .commercial-submit__hint { margin: 0 0 0 96px; color: var(--cy-color-text-secondary); font-size: 12px; line-height: 1.6; }
 @media (max-width: 900px) { .audit-overview { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .audit-overview { grid-template-columns: 1fr; } }

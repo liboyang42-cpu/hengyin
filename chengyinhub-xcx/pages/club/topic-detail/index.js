@@ -12,10 +12,12 @@ const { toTimestamp, chinaParts } = require('../../../utils/datetime');
 // (executeAction 的「回执未知」落盘 / 对账 / 重试)原样搬进 ./director.js,
 // 由本页承载,渲染改用 cy-club-director-* 八个组件。见 director.js 顶部说明。
 const { DIRECTOR_DATA, DIRECTOR_METHODS } = require('./director.js');
+const planFallback = require('./plan-fallback.js');
 const { listGroupCodeActivities } = require('../../../utils/group-code-session.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
 const { resolveTopicCover } = require('../../../utils/topic-share.js');
+const { presentTrendRows } = require('./registration-trend.js');
 
 function jsonBody(data) { return JSON.stringify(data || {}); }
 function jsonHeader() { return { 'Content-Type': 'application/json' }; }
@@ -115,13 +117,13 @@ const RULES_SECTIONS = [
     { title: '进了履约窗不退', text: '已进入履约窗的报名不可退款。' },
     { title: '算不出来 ≠ 不该退', text: '退款截止时间缺失时转人工核实，不由系统自行决定。', tone: 'warning' },
   ] },
-  { key: 'pause', label: '暂停一个站点', rows: [
+  { key: 'pause', label: '暂停一个节点', rows: [
     { title: '原因和预计恢复时间都必填', text: '两个都要填，否则提交不了。' },
-    { title: '必须绑一个已批准的备用方案', text: '不能直接指定备用站点。' },
+    { title: '必须绑一个已批准的备用方案', text: '不能直接指定备用节点。' },
     { title: '暂停期间这一站停摆', text: '玩家提交不了，商家也核验不了。' },
     { title: '暂停只影响本站', text: '不改变已发放的权益，也不动已经完成的提交。' },
-    { title: '「兜底完成」是自动的', text: '站点暂停并绑好方案后，玩家走到备用站点时会自动记为兜底完成，不需要手动操作。', tone: 'warning' },
-    { title: '恢复要过两个服务窗', text: '活动服务窗和站点服务窗都得在窗内才恢复得了。' },
+    { title: '「保底完成」是自动的', text: '节点暂停并绑好备用方案后，玩家到达备用节点会自动记为保底完成', tone: 'warning' },
+    { title: '恢复要过两个服务窗', text: '活动服务窗和节点服务窗都得在窗内才恢复得了。' },
   ] },
   { key: 'cancel', label: '取消一整场', rows: [
     { title: '会下架本场、处理退款并终止候补', text: '取消原因 2–255 字必填，会随通知一起发给已报名的人。', tone: 'danger' },
@@ -138,6 +140,9 @@ const CUSTOMER_CHIPS = [
   { value: 'verified', label: '已核销' },
 ];
 
+// 封面高 240px(--ctd-cover-h 480rpx)减去状态栏 + 导航约 88px:封面滚出导航下沿后转实底
+const NAV_SOLID_SCROLL_TOP = 150;
+
 const QUICK_ACTIONS = [
   { key: 'merchant', label: '商家', icon: 'discover-shop' },
   // CU-C-88(用户裁决 A):这个圆钮后面统计的是主题报名/购票参与者(cms_registration),
@@ -152,6 +157,8 @@ Page({
     loaded: false,
     loadError: false,
     chromeClearTop: 0,
+    // PR10 F-W5-08(c):滚过封面后导航转实底(cy-nav-bar scrolled),内容不再从状态栏/返回键底下透出来
+    navScrolled: false,
     topic: {},
     statusKey: 'reviewing',
     statusText: '',
@@ -171,6 +178,7 @@ Page({
     // 导演台自己的 44 个状态字段(见 director.js 的 DIRECTOR_DATA),
     // 用 Object.assign 并进来而不是逐个抄 —— 抄一遍就多一处会漂的真源。
     ...DIRECTOR_DATA,
+    ...planFallback.data,
     // 「结束活动」按稿是 T2 居中确认,旧页没有这个态,本页新增
     directorEndConfirmShow: false,
     // D5 队伍弹层 / D8 现场事件:旧 game-director 页没有这两个入口
@@ -201,6 +209,10 @@ Page({
     customerChips: CUSTOMER_CHIPS,
     customerFilter: '',
     customerRows: [],
+    // BL-98 报名按日趋势:idle/loading/ready/error,与名单各自独立加载。
+    trendState: 'idle',
+    trendRows: [],
+    trendError: '',
     rulesSheetVisible: false,
     // CU-C-79(用户裁决 B):主键「去选一场」先弹这张选场半屏,选中后带 activityId 进活动运营。
     sessionPickVisible: false,
@@ -225,6 +237,12 @@ Page({
     opsTimeSubmitting: false,
     opsTimeDraft: { date: '', time: '' },
     resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: OPS_RESULT_SHEET_MS },
+  },
+
+  // 与 activity/official-detail 同一做法:只在跨过阈值时 setData 一次,不逐帧传
+  onPageScroll(event) {
+    const next = Number(event && event.scrollTop) > NAV_SOLID_SCROLL_TOP;
+    if (next !== this.data.navScrolled) this.setData({ navScrolled: next });
   },
 
   onLoad(query) {
@@ -252,7 +270,7 @@ Page({
   // 「接下来」卡会停在改期前的 activityList(实测返回后仍写旧日期,退出重进才对)。
   // 首展闸照 pages/club/customers/index.js:首屏由 onLoad 负责,返回即重拉。
   onShow() {
-    if (!this._hasShown) { this._hasShown = true; return; }
+    this._navigating = false; if (!this._hasShown) { this._hasShown = true; return; }
     if (!this.data.loaded || this.data.loadError || this.data.missingParam) return;
     this.fetchDetail();
     this.loadManageStats(true);
@@ -288,6 +306,8 @@ Page({
 
   // 记下失败再出错误态:详情可能晚到,applyDetail 不能把这次失败盖成「加载成功的普通成员视图」。
   failManageStats() {
+    // 已展示过内容(onShow 后台刷新)时失败:保留旧统计与已加载内容,只给非阻塞提示;首屏失败照旧整页错误。
+    if (this._manageStats && this._lastRaw && this.data.loaded && !this.data.loadError) { toast('刷新失败，请重试'); return; }
     this._manageStatsFailed = true;
     this.setData({ loaded: true, loadError: true });
   },
@@ -301,6 +321,10 @@ Page({
   },
 
   fetchDetail() {
+    const seq = (this._detailSeq || 0) + 1;
+    this._detailSeq = seq;
+    const memberId = app.getUserID && app.getUserID();
+    const current = () => seq === this._detailSeq && memberId === (app.getUserID && app.getUserID());
     const that = this;
     app.sendRequest({
       hideLoading: true,
@@ -310,10 +334,11 @@ Page({
       data: { id: this._topicId },
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
       success(res) {
-        if (!isSuccess(res) || !res.data) { that.setData({ loaded: true, loadError: true }); return; }
+        if (!current()) return;
+        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); return; }
         that.applyDetail(res.data);
       },
-      fail() { that.setData({ loaded: true, loadError: true }); },
+      fail() { if (!current()) return; if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); },
     });
   },
 
@@ -443,7 +468,7 @@ Page({
           opsTimeSheetVisible: false,
           resultSheet: {
             show: true, kind: 'success', title: '集合时间已更新',
-            sub: '已报备发起人；退款截止按新的集合时间前 24 小时计算。', why: '', duration: OPS_RESULT_SHEET_MS,
+            sub: '退款截止为集合前 24 小时', why: '', duration: OPS_RESULT_SHEET_MS,
           },
         });
         that.fetchDetail(); // 回读真源:新时间从 activityList 重新取,不在本地先改
@@ -456,7 +481,7 @@ Page({
       successStatusAbnormal(res, statusCode) {
         const status = Number(statusCode);
         const definite = status >= 400 && status < 500 && status !== 408; // 4xx = 明确拒绝;5xx/408 = 结果未知
-        failSheet(definite ? ((res && res.msg) || '服务拒绝了这次修改') : '服务暂时不可用，结果待确认；已重新读取当前时间');
+        failSheet(definite ? ((res && res.msg) || '服务拒绝了这次修改') : '服务暂不可用，结果待确认；已重新读取当前时间');
         if (!definite) that.fetchDetail();
       },
     });
@@ -563,7 +588,7 @@ Page({
     if (sessions.length >= 1) return { primary: { text: '去选一场', disabled: false }, sessionHint: '' };
     return {
       primary: { text: '去开场', disabled: false },
-      sessionHint: '这个主题还没有场次：核销与团码都要先开一场。',
+      sessionHint: '暂无场次',
     };
   },
 
@@ -593,7 +618,9 @@ Page({
   buildChips(raw, stats) {
     const chips = [];
     if (raw.playModeText) chips.push(raw.playModeText);
-    if (stats.sessionHeadcount > 0) chips.push('本场 ' + stats.sessionHeadcount + ' 人');
+    // PR10 F-W5-08(b):没选定场次时 topic-manage-stats 的 sessionHeadcount 是全部场次之和,
+    // 叫「本场」就是错的 —— 只在已选定一场(导演台对象)时出这枚。
+    if (this._directorActivityId && stats.sessionHeadcount > 0) chips.push('本场 ' + stats.sessionHeadcount + ' 人');
     return chips;
   },
 
@@ -616,10 +643,20 @@ Page({
 
   buildSessions(raw) {
     // E-06(2026-09-16):真源是 VO 里的 activityList(PublicActivitySummaryVO:id/name/startDate/endDate/addressName)。
-    const rows = Array.isArray(raw.activityList) ? raw.activityList : [];
+    const now = Date.now();
+    const rows = (Array.isArray(raw.activityList) ? raw.activityList : [])
+      .filter((s) => !s.cancelTime && s.selfHostShell !== true && toTimestamp(s.endDate || s.startDate) > now)
+      // 缺集合时刻的场次排在最后:NaN 参与比较会让 sort 结果不确定。
+      .sort((a, b) => {
+        const ta = toTimestamp(a.startDate), tb = toTimestamp(b.startDate);
+        return (Number.isNaN(ta) ? Infinity : ta) - (Number.isNaN(tb) ? Infinity : tb) || 0;
+      });
     return rows.map((s, i) => ({
       id: s.id || ('s' + i),
-      whenText: this.formatRange(s.startDate, s.endDate),
+      whenText: (() => {
+        const parts = chinaParts(s.startDate);
+        return parts ? parts.month + '月' + parts.day + '日 ' + String(parts.hours).padStart(2, '0') + ':' + String(parts.minutes).padStart(2, '0') : '';
+      })(),
       whoText: s.name || '',
       etaText: s.addressName || '',
       // 场次类型后端没下发,留空;wxml 会整格不出,不冒充足球/到店。
@@ -649,14 +686,14 @@ Page({
      clubId 可选:topic-story 只把它当治理身份的线索,缺了也能按主题公开投影渲染。 */
   goStory() {
     if (!this._topicId) return;
-    wx.navigateTo({ url: '/pages/club/topic-story/index?topicId=' + this._topicId
-      + (this._clubId ? '&clubId=' + this._clubId : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/topic-story/index?topicId=' + this._topicId
+      + (this._clubId ? '&clubId=' + this._clubId : ''), complete: () => { this._navigating = false; } });
   },
 
   goEventOps() {
     if (!this._clubId) return;
-    wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this._clubId
-      + '&topicId=' + this._topicId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this._clubId
+      + '&topicId=' + this._topicId, complete: () => { this._navigating = false; } });
   },
 
   // CU-C-79(用户裁决 B):主键文案是「去选一场」,而原来它只跳场次管理页且不带 activityId ——
@@ -668,14 +705,17 @@ Page({
     this.openSessionPick();
   },
 
+  // CL-06:行与「接下来」同源(buildSessions 已按 F-W5-08 去掉取消/已过/自办壳并按集合时刻升序),
+  // 不再按 activityList 原序(后端 create_time desc)出行,也不再把被滤掉的场次显示成「时间待定」。
   openSessionPick() {
-    const sessions = this.data.sessions || [];
-    const rows = (this._topicActivities || []).map(function (item) {
-      const row = sessions.filter(function (s) { return String(s.id) === String(item.id); })[0] || {};
+    const ids = (this._topicActivities || []).map(function (item) { return String(item.id); });
+    const rows = (this.data.sessions || []).filter(function (s) {
+      return ids.indexOf(String(s.id)) >= 0;
+    }).map(function (s) {
       return {
-        id: item.id,
-        whenText: row.whenText || '时间待定',
-        whoText: row.whoText || '',
+        id: s.id,
+        whenText: s.whenText || '时间待定',
+        whoText: s.whoText || '',
       };
     });
     if (!rows.length) { this.goEventOps(); return; }
@@ -698,15 +738,15 @@ Page({
       this.loadManageStats();
       return;
     }
-    wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this._clubId
-      + '&topicId=' + this._topicId + '&activityId=' + activityId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this._clubId
+      + '&topicId=' + this._topicId + '&activityId=' + activityId, complete: () => { this._navigating = false; } });
   },
 
   // 核销台账 = 本团名册里每个人的到场状态。名册页早就有这份数据,
   // 只是原来没把核销态显示出来(它只被用来算「能不能退款」)。
   goLedger() {
-    if (!this._clubId || !this._topicId) { this.notReady('核销台账'); return; }
-    wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + this._clubId + '&topicId=' + this._topicId });
+    if (!this._clubId || !this._topicId) { this.notReady('核销记录'); return; }
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + this._clubId + '&topicId=' + this._topicId, complete: () => { this._navigating = false; } });
   },
 
 
@@ -732,7 +772,7 @@ Page({
   },
 
   goSettlement() {
-    wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + (this._clubId || '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + (this._clubId || ''), complete: () => { this._navigating = false; } });
   },
 
   // roles 每次刷新都要重算候选 —— 服务端把某人的确认状态改回 PENDING 时,
@@ -816,7 +856,7 @@ Page({
           nodeId: n.nodeId,
           merchantName: name,
           initial: name.slice(0, 1),
-          stationName: n.name || '未命名站点',
+          stationName: n.name || '未命名节点',
           phone: phone,
           // 未确认的商家回包里压根没有 phone —— 这里说清是「还没确认」,
           // 不要写成空字符串,空会被读成「这家没留电话」。
@@ -840,8 +880,9 @@ Page({
     if (!this._clubId || !this._topicId) { this.notReady('报名参与者'); return; }
     this.setData({ customerSheetVisible: true });
     this.loadCustomers();
+    this.loadRegistrationTrend();
   },
-  closeCustomers() { this.setData({ customerSheetVisible: false }); },
+  closeCustomers() { this._customerSeq = (this._customerSeq || 0) + 1; this.setData({ customerSheetVisible: false }); },
 
   onCustomerFilter(e) {
     const value = e.currentTarget.dataset.value || '';
@@ -851,6 +892,10 @@ Page({
   },
 
   loadCustomers() {
+    const seq = (this._customerSeq || 0) + 1;
+    this._customerSeq = seq;
+    const memberId = app.getUserID && app.getUserID();
+    const current = () => seq === this._customerSeq && memberId === (app.getUserID && app.getUserID());
     this.setData({ customerState: 'loading', customerErrorReason: '' });
     const that = this;
     app.sendRequest({
@@ -859,6 +904,7 @@ Page({
       data: jsonBody({ clubId: this._clubId, topicId: this._topicId, filter: this.data.customerFilter }),
       header: jsonHeader(),
       success(res) {
+        if (!current()) return;
         if (!isSuccess(res) || !res.data) { that.setData({ customerState: 'error', customerErrorReason: !isSuccess(res) && res && typeof res.msg === 'string' ? res.msg.trim() : '' }); return; }
         const d = res.data;
         that.setData({
@@ -873,7 +919,30 @@ Page({
           customerRows: flattenCustomerRows(d.sessions),
         });
       },
-      fail() { that.setData({ customerState: 'error' }); },
+      fail() { if (current()) that.setData({ customerState: 'error' }); },
+    });
+  },
+
+  // BL-98:按参与日期列报名人数。权限由后端判(主题创建者/俱乐部主理人/承接商家),
+  // 403「无权查看该项目趋势」等原因原样回显,不自己猜。
+  loadRegistrationTrend() {
+    if (!this._topicId) return;
+    this.setData({ trendState: 'loading', trendError: '' });
+    const that = this; const seq = that._trendSeq = (that._trendSeq || 0) + 1;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/registration/count_by_date', method: 'POST',
+      data: { owner_type: 1, owner_id: this._topicId },
+      header: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      success(res) { if (seq !== that._trendSeq) return; // 只认最后一次请求的回包
+        const rows = isSuccess(res) ? presentTrendRows(res.data) : null;
+        if (!rows) {
+          that.setData({ trendState: 'error', trendError: !isSuccess(res) && res && typeof res.msg === 'string' ? res.msg.trim() : '' });
+          return;
+        }
+        that.setData({ trendState: 'ready', trendRows: rows });
+      },
+      fail() { if (seq === that._trendSeq) that.setData({ trendState: 'error', trendError: '' }); },
     });
   },
 
@@ -891,7 +960,7 @@ Page({
       ? ('activityId=' + this._directorActivityId)
       : (this._topicId ? ('topicId=' + this._topicId) : '');
     if (!q) { this.notReady('出示团码'); return; }
-    wx.navigateTo({ url: '/pages/club/group-code/index?' + q });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/group-code/index?' + q, complete: () => { this._navigating = false; } });
   },
 
   /* ——— Figma J8 退出与暂停规则 ———
@@ -940,7 +1009,7 @@ Page({
         that.fetchDetail();
         that.loadTopicSetting();
       },
-      fail() { that.setData({ endSubmitting: false, endErrorText: '网络开小差了，没能结束。' }); },
+      fail() { that.setData({ endSubmitting: false, endErrorText: '网络异常，没能结束。' }); },
     });
   },
 
@@ -962,7 +1031,7 @@ Page({
     function onFailure(res, statusCode) {
       const code = Number(statusCode) || Number(res && res.code);
       const denied = code === 403;
-      const fallback = denied ? '当前账号暂时不能查看主题设置' : '主题设置没能取到，请稍后重试';
+      const fallback = denied ? '当前账号暂时不能查看主题设置' : '主题设置获取失败，请稍后重试';
       that.setData({
         settingState: denied ? 'denied' : 'error',
         settingErrorText: safeUserMessage(bizFailureMessage(res, fallback), fallback),
@@ -1030,20 +1099,20 @@ Page({
         }
         that.setData({ settingSaving: false, setting: that.buildSetting(res.data) });
       },
-      fail() { that.setData({ settingSaving: false, setting: before }); toast('网络开小差了，没能保存'); },
+      fail() { that.setData({ settingSaving: false, setting: before }); toast('网络异常，没能保存'); },
     });
   },
 
   // 5-04:fabu 的编辑入口只读 options.id(pages/publish/fabu/index.js onLoad),
   // 原来拼 ?topicId= 会打开空白新建表单 —— 保存多出一条主题,原主题没改。
-  goEditTopic() { wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + this._topicId }); },
+  goEditTopic() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + this._topicId, complete: () => { this._navigating = false; } }); },
 
   goChapterApplications() {
     if (!this.data.canReviewChapterApplications || !this._topicId) return;
     this.setData({ settingSheetVisible: false });
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._topicId + '&scope=CLUB',
-    });
+      complete: () => { this._navigating = false; } });
   },
 
   /* ——— Figma J3-A(按节点)/ J3-B(按章节)招商台 ——— */
@@ -1065,6 +1134,7 @@ Page({
   notReady(what) { toast(what + '：缺少俱乐部信息'); },
 
   ...DIRECTOR_METHODS,
+  ...planFallback.methods(),
 
   goBack() {
     const pages = getCurrentPages();

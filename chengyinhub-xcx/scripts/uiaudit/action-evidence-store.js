@@ -5,6 +5,7 @@ const zlib = require('zlib')
 const fs = require('fs')
 const path = require('path')
 const os = require('os')
+const roamRevocation = require('./roam-revocation-evidence')
 
 const SENSITIVE_KEY = /(?:authorization|bearer|token|password|passwd|secret|cookie|session|openid|unionid|phone|mobile|email|idcard)/i
 const SENSITIVE_TEXT = /(?:\b(?:authorization|token|access_token|refresh_token|openid|unionid|password|passwd|secret|cookie|session)\s*[:=]\s*["']?[A-Za-z0-9._~+\/=;-]{6,}|Bearer\s+[A-Za-z0-9._~-]+|\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b|\b1[3-9]\d{9}\b|\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b)/gi
@@ -318,7 +319,7 @@ function validateAuthorityEvidence(action, evidence, kind, branch, fixtureAttest
   return evidence
 }
 
-function validateBranchReceipt(action, branch, receipt, fixture) {
+function validateBranchReceipt(action, branch, receipt, fixture, verifiedCapture) {
   if (!receipt || receipt.actionId !== action.id || receipt.branch !== branch) {
     throw new Error('分支 driver 回执未绑定当前 actionId/branch')
   }
@@ -327,7 +328,11 @@ function validateBranchReceipt(action, branch, receipt, fixture) {
   }
   if (!receipt.observed || typeof receipt.observed !== 'object') throw new Error('分支 driver 回执缺少 observed 事实')
   const observed = receipt.observed
-  if (branch === 'success' && action.actionClass === 'external') {
+  if (roamRevocation.isCaller(action) && !roamRevocation.isContract(action)) {
+    throw new Error('UNVERIFIED roam REVOKE: 旧合同不能跳过实际用途回读')
+  }
+  if (roamRevocation.isContract(action)) roamRevocation.validate(action, branch, receipt, verifiedCapture)
+  if (branch === 'success' && action.actionClass === 'external' && !roamRevocation.isContract(action)) {
     const capabilities = observed.capabilities
     if (!capabilities || typeof capabilities !== 'object') throw new Error('external success 必须逐能力回读 capabilities')
     ;(action.successCapabilities || action.externalCapabilities || []).forEach((rawName) => {

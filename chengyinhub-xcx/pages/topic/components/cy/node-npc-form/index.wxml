@@ -1,13 +1,13 @@
 <!-- 节点 NPC 长表单复用全屏面板，正文滚动，保存操作固定在底部。 -->
 <cy-sheet show="{{show}}" variant="full" nav-title="节点NPC" footer="{{true}}" closable="{{!saving}}" maskClosable="{{!saving}}" bind:close="onSheetClose">
-  <view class="nnf-subtitle">{{nodeName || '当前点位'}}</view>
+  <view class="nnf-subtitle">{{nodeName || '当前节点'}}</view>
 
   <view class="nnf-loading" wx:if="{{loading}}">正在读取…</view>
   <block wx:else>
     <view class="nnf-field">
       <view class="nnf-label">角色名字 <text class="nnf-required" aria-hidden="true">*</text></view>
       <input class="nnf-input" maxlength="32" value="{{form.name}}" disabled="{{saving}}"
-        placeholder="玩家在点位里遇到的角色名" placeholder-class="nnf-placeholder"
+        placeholder="玩家在节点里遇到的角色名" placeholder-class="nnf-placeholder"
         data-key="name" bindinput="onInput" />
     </view>
 

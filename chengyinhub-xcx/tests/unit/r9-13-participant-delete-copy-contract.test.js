@@ -37,7 +37,7 @@ test('负控:退回「删除这个地址」文案时断言必须判红', () => {
     title: '删除这个地址?',
     content: '',
     consequences: [
-      { icon: 'warning', text: '此操作不可撤销,删除后需要重新填写完整地址' },
+      { icon: 'warning', text: '此操作不可撤销，删除后需要重新填写完整地址' },
     ],
     confirmText: '删除地址',
     alt: null,

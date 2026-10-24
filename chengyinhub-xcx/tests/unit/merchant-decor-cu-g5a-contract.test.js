@@ -7,6 +7,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js
 const { createRequire } = require('node:module')
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (...p) => fs.readFileSync(path.join(ROOT, ...p), 'utf8')
@@ -50,6 +51,7 @@ function loadPage(relativePath, options = {}) {
     getCurrentPages: () => [{}, {}],
     Page(config) { definition = config },
     require(request) {
+      if (request.endsWith('/media-preview.js')) return loadMediaPreview(wx)
       if (request.endsWith('merchant-theme.js')) {
         return { merchantPageShow() {}, merchantPageRestore() {} }
       }
@@ -116,7 +118,7 @@ test('CU-M-74 特色标签保存失败后重开面板必须保留草稿，重试
   assert.deepEqual(JSON.parse(h.requests[0].data), { tags: '["老街","天台"]' })
   h.requests[0].fail({ errMsg: 'request:fail timeout' })
 
-  assert.equal(h.page._resumeTags, true, '失败后必须钉住草稿,否则重开退回已保存值')
+  assert.equal(h.page._resumeTags, true, '失败后必须钉住草稿，否则重开退回已保存值')
   // 收起再展开:草稿保持眼前这份(没有这条修复时 openTagPanel 会用已保存 tags 重建)
   h.page.openTagPanel()
   assert.deepEqual(Array.from(h.page.data.tagDraft), ['老街', '天台'])
@@ -189,9 +191,9 @@ test('CU-M-71 入驻资料缺图是只读态:不挂箭头、写清去哪补交�
 
   const wxml = read(DECOR_WXML)
   assert.match(wxml, /arrow="\{\{m\.businessLicense \? true : false\}\}"/)
-  assert.match(wxml, /description="\{\{m\.businessLicense \? '' : '入驻时提交，如需更新请联系平台'\}\}"/)
+  assert.match(wxml, /description="\{\{m\.businessLicense \? '' : '修改请联系平台'\}\}"/)
   assert.match(wxml, /arrow="\{\{brandImages\.length \? true : false\}\}"/)
-  assert.match(wxml, /description="\{\{brandImages\.length \? '' : '入驻时提交，如需更新请联系平台'\}\}"/)
+  assert.match(wxml, /description="\{\{brandImages\.length \? '' : '修改请联系平台'\}\}"/)
 })
 
 // ---------------------------------------------------------------- CU-M-77

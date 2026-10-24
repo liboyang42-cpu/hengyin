@@ -2,6 +2,7 @@ package com.chengyinhub.common.core.domain.entity;
 
 
 import com.chengyinhub.common.core.domain.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Date;
 
@@ -50,11 +51,13 @@ public class AppUser extends BaseEntity {
     /**
      * 密码
      */
+    @com.alibaba.fastjson2.annotation.JSONField(serializeFeatures = com.alibaba.fastjson2.JSONWriter.Feature.FieldBased)
     private String password;
 
     /**
      * 盐
      */
+    @com.alibaba.fastjson2.annotation.JSONField(serializeFeatures = com.alibaba.fastjson2.JSONWriter.Feature.FieldBased)
     private String salt;
 
     /**
@@ -143,6 +146,7 @@ public class AppUser extends BaseEntity {
         this.avatar = avatar;
     }
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getPassword() {
         return password;
     }
@@ -151,6 +155,7 @@ public class AppUser extends BaseEntity {
         this.password = password;
     }
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getSalt() {
         return salt;
     }

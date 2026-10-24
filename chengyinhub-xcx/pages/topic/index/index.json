@@ -16,7 +16,15 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-option-sheet": "/components/cy/option-sheet/index",
-    "cy-result-sheet": "/components/cy/result-sheet/index"
+    "cy-result-sheet": "/components/cy/result-sheet/index",
+    "cy-theme-records": "/components/cy/theme-records/index",
+    "cy-theme-badge": "/pages/topic/components/cy/theme-badge/index",
+    "cy-story-fan": "/pages/topic/components/cy/story-fan/index",
+    "cy-route-progress": "/pages/topic/components/cy/route-progress/index",
+    "cy-route-sketch": "/pages/topic/components/cy/route-sketch/index",
+    "cy-merchant-cards": "/pages/topic/components/cy/merchant-cards/index",
+    "cy-self-play-checkout": "/pages/topic/components/cy/self-play-checkout/index",
+    "cy-pass-reveal": "/pages/topic/components/cy/pass-reveal/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "white"

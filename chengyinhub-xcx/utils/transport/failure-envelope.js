@@ -4,8 +4,15 @@ function fromHttpStatusAbnormal(body) {
     code: 'fail',
     httpFail: true,
     upstreamCode: source.code == null ? '' : source.code,
-    msg: source.msg || '服务暂时不可用',
+    msg: source.msg || '服务暂不可用',
   };
 }
 
-module.exports = { fromHttpStatusAbnormal };
+// 写请求没有回执、408 或 5xx 时，只能回读结果，不能推断未提交。
+function isUnknownHttpStatus(statusCode) {
+  if (statusCode == null || statusCode === '') return true;
+  const code = Number(statusCode);
+  return !Number.isFinite(code) || code === 408 || code >= 500;
+}
+
+module.exports = { fromHttpStatusAbnormal, isUnknownHttpStatus };

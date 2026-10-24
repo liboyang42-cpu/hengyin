@@ -48,7 +48,7 @@ public interface NpcProfileMapper
      */
     int updateMerchantNpc(NpcProfile profile);
 
-    /** 只写声音字段,不碰形象 —— 两条独立的用户动作,合成一个 update 会互相清空。 */
+    /** 只写声音字段；voiceVersion 必须为读取时版本，成功后数据库递增一次。 */
     int updateMerchantNpcVoice(NpcProfile profile);
 
     /** 软删除门店分身。 */
@@ -59,6 +59,9 @@ public interface NpcProfileMapper
 
     /** 后台只审核待审记录。 */
     int auditMerchantNpc(NpcProfile profile);
+
+    /** 内容安全回调判门店分身头像违规:打回驳回态(不删图),玩家读闸 audit_status=1 立即失效。 */
+    int rejectMerchantNpcByContentSecurity(@Param("id") Long id);
 
     // ===== 主题节点 NPC(scope_type=4,挂 cms_topic_node.id,一节点一条)=====
     // 五条语句都写死 scope_type = 4,碰不到剧本角色(1)/门店分身(2)/全局(3)。
@@ -89,7 +92,7 @@ public interface NpcProfileMapper
      */
     int updateNodeNpc(NpcProfile profile);
 
-    /** 只写声音字段,不碰形象(理由同门店分身)。 */
+    /** 只写节点声音；voiceVersion 必须为读取时版本，成功后数据库递增一次。 */
     int updateNodeNpcVoice(NpcProfile profile);
 
     /** 内容安全回调判违规:自动下架(清头像 + enabled=0),玩家读立即不可见。 */

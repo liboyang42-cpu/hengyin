@@ -14,6 +14,8 @@
 
 const { stepsA11yLabel } = require('./playkit-steps.js');
 const { toCard } = require('../../../utils/object-card.js');
+const { isR5, feedbackBranch, albumKit } = require('./playkit-r5-segments.js');
+const sensorContract = require('./sensor-contract.js');
 
 const KIT_PRIORITY = [
   /* 节点玩法模板那批排在最前:它们是这个节点的**主玩法**,没做完就不该先弹别的。
@@ -26,7 +28,7 @@ const KIT_PRIORITY = [
      后面的故事变量要靠它;其余三个里 photoCheck/note 要玩家当场动手,typeIn 是限时挑战。
      ⚠️ 契约 §2.3 已作废「新 2d6 check 段」:master 上的 R14 旅程检定走 JOURNEY_SEGMENTS 那条路,
      不在这里登记;等 Worker A 给出 R14 的下发路径再接玩家端。 */
-  'profile', 'photoCheck', 'note', 'typeIn',
+  'profile', 'photoCheck', 'album', 'note', 'typeIn',
   /* 决定类与挑战类九个(含 2026-09-22 现场感契约的罗盘指向与喊一嗓子)。⚠️ 名字不在这张表里 = 服务端下发了这一段,客户端也当它不存在:
      present 里没有它 → 拿不到 kit → 页面按「这个节点没有玩法」处理,不渲染、不报错。
      playkit-view-contract 里有一条按段名全表跑的断言,漏一个就红。 */
@@ -77,6 +79,7 @@ const TYPE_OF = {
   /* 《预制人生》四个新段。⚠️ 少一条 = type undefined,分发器整块不渲染。 */
   profile: 'profile',
   photoCheck: 'photocheck',
+  album: 'album',
   note: 'note',
   typeIn: 'typein',
   /* 九宫格:段不在商家节点配置里(主题级),由服务端在会话视图里现算进度下发。
@@ -198,6 +201,7 @@ function segmentComplete(name, seg) {
        降级(模型没给结论)也走 flagged(契约 §2.2),所以这一屏不会被卡成死路;
      · 打字:打对算完,限次用尽也算(tries=0 表示不限,永远不会用尽)。 */
   if (name === 'profile') return !!seg.done;
+  if (name === 'album') return !!seg.done;
   if (name === 'photoCheck') return !!seg.passed || !!seg.flagged;
   if (name === 'note') return !!seg.done;
   if (name === 'typeIn') {
@@ -271,6 +275,9 @@ function buildPhotoCheck(seg, receipt, placeName) {
     degraded: !!seg.degraded,
     lastReason: seg.lastReason || '',
     lastUrl: seg.lastUrl || '',
+    // C1:服务端 photoVerified / rewardCeiling 原样搬,缺失即 false / 空串(不说已核验、不承诺)
+    photoVerified: seg.photoVerified === true,
+    rewardCeiling: sensorContract.kitFields(seg).rewardCeiling,
     /* 取景轮廓(S1):这两个键**恒产出** —— 分发器绑了 kit.frameUrl，playkit-view-contract
        那条「绑了必须有人产出」的门禁不容忍条件产出；没配时给空串，组件据此走原来的 chooseMedia。
        ⚠️ 「商家没配 = 玩家行为逐字相同」钉在组件的取景分支入口上，不是钉在键的存在与否上。 */
@@ -439,9 +446,12 @@ function pickPlayKit(view, now) {
   const playKit = view && view.playKit;
   if (!playKit) return null;
 
-  const present = KIT_PRIORITY.filter((name) => !!playKit[name]);
+  const feedback = feedbackBranch(view);
+  const present = KIT_PRIORITY.filter((name) => !!playKit[name]
+    && (name !== 'branch' || !isR5(view) || !!feedback)
+    && (name !== 'album' || isR5(view)));
   if (!present.length) return null;
-  const name = present.find((item) => !segmentComplete(item, playKit[item])) || present[0];
+  const name = feedback ? 'branch' : present.find((item) => !segmentComplete(item, playKit[item])) || present[0];
   const seg = playKit[name];
 
   // sessionId / version 必须跟着走:提交动作要用它们做幂等键与 CAS
@@ -452,6 +462,16 @@ function pickPlayKit(view, now) {
     // 呈现方式逐字搬服务端(见 presentOf);故事流那层靠它决定铺不铺
     present: presentOf(view),
   };
+  if ((['FAILED', 'EXPIRED'].includes(view.status) || view.status === 'COMPLETED' && view.challenge && view.canRetry === true)
+      && (!isR5(view) || !!view.challenge)) {
+    base.terminal = true;
+    base.sessionStatus = view.status;
+    base.canRetry = view.canRetry === true;
+    base.retryLabel = view.challenge ? (view.ownerType === 2 ? '队长再次挑战' : '再次挑战')
+      : (view.ownerType === 2 ? '队长重新开始本次玩法' : '重新开始本次玩法');
+    if (Number.isFinite(view.score)) base.sessionScore = view.score;
+    if (Number.isSafeInteger(view.completedUnits) && view.completedUnits >= 0) base.completedUnits = view.completedUnits;
+  }
   /* 限时条:这五屏都把 limitSeconds 透传给 cy-play-stage 画条、跑表、到点判负。
      只给绑了它的那几屏 —— 别的屏拿到也没用,反而会让「谁在用限时」看不清。 */
   const limitSeconds = limitSecondsOf(view, now);
@@ -467,20 +487,27 @@ function pickPlayKit(view, now) {
         // 选项文案要给,**哪个是对的不给** —— 判定回来之后才知道
         options: (seg.options || []).map((o) => ({ id: o.id, t: o.label || '' })),
         // 多选标记:老单选配置服务端不给这个字段,缺省按单选渲染(单选行为一字不变)
-        multi: !!seg.multi,
+        multi: seg.judge !== false && !!seg.multi,
+        judge: seg.judge !== false,
+        failureSeq: 0,
+        lastOptionId: seg.lastOptionId || '',
+        lastOptionIds: seg.lastOptionIds || [],
+        // 每个所选选项最多 3 张已由服务端逐项校验;多选按选择顺序拼接,这里不再合计截断
+        feedbackImages: Array.isArray(seg.lastFeedbackImages) ? seg.lastFeedbackImages.slice() : [],
         shotLead: seg.lead || seg.title || '',
         // 提示词底下那行小字。商家没写就不出 —— 空着比硬凑一句好
         shotNote: seg.shotNote || '',
         /* 答错亮不亮答案:服务端只在「商家开了这个开关 + 次数用完」时才下发 answerId,
            所以「给了 = 可以亮」。别再单独发一个 reveal 布尔 —— 两个来源迟早会打架。 */
-        reveal: !!seg.answerId,
+        reveal: seg.judge !== false && (!!seg.answerId || (Array.isArray(seg.answerIds) && seg.answerIds.length > 0)),
         limitSeconds: limitSeconds,
         maxTries: seg.maxTries || 0,
         // attempts 是多选回执条的开关:>0 才说明这一屏刚判过,不是刚打开
         attempts: seg.attempts || 0,
         finished: !!seg.finished,
         passed: !!seg.passed,
-        answerId: seg.answerId || '',
+        answerId: seg.judge !== false ? (seg.answerId || '') : '',
+        answerIds: seg.judge !== false && Array.isArray(seg.answerIds) ? seg.answerIds.slice() : [],
         feedback: seg.lastFeedback || '',
       });
     }
@@ -514,15 +541,20 @@ function pickPlayKit(view, now) {
         answerId: seg.answerId || '',
       });
     }
+    if (name === 'album') return Object.assign(base, albumKit(seg));
     if (name === 'branch') {
-      const step = seg.currentStep || {};
+      const step = (feedback || seg).currentStep || {};
       return Object.assign(base, {
         title: step.title || '',
         body: step.body || '',
         // 选项带着**服务端给的 id** 走:走向只有服务端知道,客户端不自己判去哪一步
         options: (step.options || []).map((o) => ({ id: o.id, t: o.label || '' })),
-        limitSeconds: limitSeconds,
-        ended: !!step.terminal,
+        limitSeconds: feedback ? 0 : limitSeconds,
+        ended: !!step.terminal || !!(feedback && feedback.ended),
+        failureSeq: 0,
+        writable: feedback ? feedback.writable === true && !feedback.ended && !step.terminal : true,
+        feedback: !!feedback,
+        stepId: step.id || '',
       });
     }
     if (name === 'predict') {
@@ -579,16 +611,16 @@ function pickPlayKit(view, now) {
         duration: seg.durationSeconds || 0,
         // 稿里这句写了「爪印自动落章 +10 XP」,但音乐角明确不判定通关(2026-08-26 拍板),
         // 所以文案不承诺奖励 —— 承诺了拿不到才是最伤的
-        hint: '坐下来,听完这一首',
+        hint: '坐下来，听完这一首',
       });
     }
     if (name === 'slowTask') {
       return Object.assign(base, {
         title: seg.title || '',
-        startHint: seg.startHint || '现在开个头,剩下的交给时间。',
+        startHint: seg.startHint || '现在开个头，剩下的交给时间。',
         startLabel: seg.startLabel || '就这么定了',
         // 等待期文案不含秒级倒计时:这是低压循环,精确到秒会把"慢慢来"变成"快到了"
-        waitHint: seg.waitHint || '明天这个时候,这里会多出一点东西。',
+        waitHint: seg.waitHint || '明天这个时候，这里会多出一点东西。',
         unlockLabel: seg.unlockLabel || '看看留下了什么',
         unlockText: seg.unlockText || '',
         started: !!seg.started,
@@ -600,7 +632,10 @@ function pickPlayKit(view, now) {
   if (name === 'profile') return Object.assign(base, buildProfile(seg));
   if (name === 'photoCheck') return Object.assign(base, buildPhotoCheck(seg, view.objectCard, view.placeName));
   if (name === 'note') return Object.assign(base, buildNote(seg));
-  if (name === 'typeIn') return Object.assign(base, buildTypeIn(seg));
+  if (name === 'typeIn') {
+    const r5 = !!view.config && view.config.outcomeRulesVersion === 1;
+    return Object.assign(base, buildTypeIn(seg), { r5, deadlineAt: r5 ? Number(view.deadlineAt) || 0 : 0 });
+  }
 
   /* ===== 节点玩法模板:决定类与挑战类 =====
      ⚠️ 这九段之前只有优先级表和 action 表,没有这里的分支,于是服务端下发了、
@@ -693,22 +728,24 @@ function pickPlayKit(view, now) {
       kicker: seg.kicker || '',
       rounds: seg.rounds || 0,
       goalMs: seg.goalMs || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   if (name === 'ballShake') {
     return Object.assign(base, {
+      challenge: view.challenge || null,
+      challengeShared: view.ownerType === 2,
       kicker: seg.kicker || '',
       goal: seg.goal || 0,
       timed: !!seg.timed,
       seconds: seg.seconds || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   if (name === 'quietHold') {
     return Object.assign(base, {
       kicker: seg.kicker || '',
       sub: seg.sub || '',
       seconds: seg.seconds || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   /* 罗盘指向:bearing/tolerance/holdSeconds 全是题面(服务端开局就下发),
      对准与保持由组件现场判,提交只报「对准时的方位角」给服务端复核容差。 */
@@ -720,14 +757,14 @@ function pickPlayKit(view, now) {
       holdSeconds: seg.holdSeconds || 3,
       hint: seg.hint || '',
       done: !!seg.done,
-    });
+    }, sensorContract.kitFields(seg));
   }
   /* 喊一嗓子:下发要喊满的秒数与标题。阈值不下发,由组件开局现场校准(与 quietHold 同一把尺)。 */
   if (name === 'shout') {
     return Object.assign(base, {
       kicker: seg.kicker || '',
       seconds: seg.seconds || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   if (name === 'countdown') {
     return Object.assign(base, {
@@ -742,7 +779,7 @@ function pickPlayKit(view, now) {
       targetSeconds: seg.targetSeconds || 0,
       toleranceMs: seg.toleranceMs || 0,
       tries: seg.tries || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   /* 推理类三玩法:答案字段(answerOrder/pairs/answer)服务端不投影,这里也没有。
      排序的 items 与连线的 right 到这一步已被服务端打乱 —— 原样搬运,不重排。 */
@@ -829,11 +866,13 @@ const ACTION_OF = {
   'shout:start': 'START_CHALLENGE',
   'countdown:start': 'START_CHALLENGE',
   'stopwatch:start': 'START_CHALLENGE',
+  /* 罗盘不计时,开表只为领 C1 挑战身份(服务端 challengeKey 认 compass);不开表的存量客户端照旧能交 */
+  'compass:start': 'START_CHALLENGE',
   'reaction:submit': 'SUBMIT_REACTION',
   'ballshake:submit': 'SUBMIT_BALL_SHAKE',
   'quiethold:submit': 'SUBMIT_QUIET_HOLD',
-  /* 罗盘指向不开表:它没有「用时」要按服务器时间复核 —— 服务端只复核报来的
-     方位在不在容差内(防误发),所以做完那一下直接 SUBMIT_COMPASS 一步到位。 */
+  /* 罗盘指向没有「用时」要按服务器时间复核 —— 服务端只复核报来的方位在不在容差内(防误发);
+     上面那条开表只为领挑战身份,做完那一下 SUBMIT_COMPASS 带上它。 */
   'compass:submit': 'SUBMIT_COMPASS',
   'shout:submit': 'SUBMIT_SHOUT',
   'countdown:finish': 'SUBMIT_COUNTDOWN',
@@ -868,7 +907,7 @@ function ratioOf(percent) {
   return Math.min(1, Math.max(0, Number((n / 100).toFixed(4))));
 }
 
-/** 挑战类玩法 → START_CHALLENGE 的 game 值。服务端只认这七个驼峰名。 */
+/** 挑战类玩法 → START_CHALLENGE 的 game 值。服务端只认这八个驼峰名(罗盘开表只为领挑战身份)。 */
 const CHALLENGE_GAME = {
   reaction: 'reaction',
   ballshake: 'ballShake',
@@ -876,6 +915,7 @@ const CHALLENGE_GAME = {
   shout: 'shout',
   countdown: 'countdown',
   stopwatch: 'stopwatch',
+  compass: 'compass',
   typein: 'typeIn',
 };
 
@@ -927,15 +967,17 @@ function serverPayload(type, action, detail) {
     case 'dailysign:accept': return { text: d.text || '', photoUrl: d.photoUrl || '' };
     // 抽卡不带参数:抽哪一件由服务端按权重定,客户端说了不算
     case 'random:draw': return {};
-    case 'reaction:submit': return { roundsMs: d.times || [] };
-    case 'ballshake:submit': return { hits: d.hits };
+    // C1:设备自报玩法带上服务端发的挑战身份(组件没给就不带,服务端照旧复核)
+    case 'reaction:submit': return sensorContract.withAttempt({ roundsMs: d.times || [] }, d);
+    case 'ballshake:submit': return sensorContract.withAttempt({ hits: d.hits }, d);
     // 组件按玩家读的单位报(秒),服务端按判定的单位收(毫秒)
-    case 'quiethold:submit': return { heldMs: Math.round((d.heldSeconds || 0) * 1000) };
+    // C1:四个设备自报玩法带上服务端发的挑战身份(组件没给就不带,服务端照旧复核)
+    case 'quiethold:submit': return sensorContract.withAttempt({ heldMs: Math.round((d.heldSeconds || 0) * 1000) }, d);
     // 罗盘:组件报「对准那一刻读到的方位角」,服务端拿它和配置目标绕 360 取最小差复核
-    case 'compass:submit': return { bearing: Math.round(d.bearing || 0) };
+    case 'compass:submit': return sensorContract.withAttempt({ bearing: Math.round(d.bearing || 0) }, d);
     // 喊一嗓子:组件交的就是毫秒(内部按帧累计),这里只兜一层非数
-    case 'shout:submit': return { heldMs: Math.round(d.heldMs || 0) };
-    case 'stopwatch:submit': return { stoppedMs: d.elapsedMs };
+    case 'shout:submit': return sensorContract.withAttempt({ heldMs: Math.round(d.heldMs || 0) }, d);
+    case 'stopwatch:submit': return sensorContract.withAttempt({ stoppedMs: d.elapsedMs }, d);
     // 抛硬币 / 掷骰子 / 倒计时到点:结果由服务端算,客户端不带参数
     case 'coinflip:flip':
     case 'diceroll:roll':

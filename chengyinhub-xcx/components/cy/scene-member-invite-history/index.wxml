@@ -12,14 +12,14 @@
   </view>
 
   <view class="ir-sync-note" wx:if="{{groups.length && !rewardReady}}" aria-role="status">
-    邀请记录已到达，奖励流水暂未同步
+    奖励同步中
   </view>
 
   <cy-skeleton wx:if="{{loading && !groups.length}}" type="list" count="{{4}}" />
-  <cy-error wx:elif="{{loadErr && !groups.length}}" fill size="lg"
-    title="邀请记录没加载出来" sub="网络可能不稳定，你的邀请关系还在" retry="重试" bind:retry="retry" />
+  <cy-error load-failure="{{!authRequired && !accessDenied}}" wx:elif="{{loadErr && !groups.length}}" fill size="lg"
+    title="{{authRequired ? '登录后查看邀请记录' : accessDenied ? '当前账号无法查看邀请记录' : '邀请记录加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="retry" />
   <cy-empty wx:elif="{{empty}}" fill size="lg" kind="empty"
-    title="还没有人接受你的邀请" sub="好友加入后，会按时间出现在这里" />
+    title="还没有人接受你的邀请" />
 
   <block wx:else>
     <view class="ir-group" wx:for="{{groups}}" wx:for-item="group" wx:key="label">
@@ -40,10 +40,6 @@
       </view>
     </view>
 
-    <view class="ir-more-error" wx:if="{{loadMoreError}}" aria-role="alert">
-      <text>更多记录没加载出来</text>
-      <view class="ir-more-action" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">重试</view>
-    </view>
     <view class="ir-more" wx:if="{{hasMore && !loading && !loadMoreError}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
     <view class="ir-more ir-more--loading" wx:if="{{loading && groups.length}}">正在加载…</view>
   </block>

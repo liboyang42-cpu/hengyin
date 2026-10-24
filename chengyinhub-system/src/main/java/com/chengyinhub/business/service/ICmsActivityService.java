@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import java.util.List;
+import java.util.Map;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
@@ -62,6 +63,12 @@ public interface ICmsActivityService
     int countOpenSaleRegistrations(Long activityId);
 
     /**
+     * 承接方领队改运营字段。改集合时间/地点时走一条「仍未售出才生效」的条件 UPDATE,
+     * 返回 0 即已售出锁定(#334 F7);只改当日备注按裁决不受已售锁限制。
+     */
+    int updateLeadOpsUnlessSold(CmsActivity ops, boolean touchesTimeOrPlace);
+
+    /**
      * 已报名人数：cms_registration.owner_type=2 且 registration_status=2。
      *
      * <p>这是「报名数」这个词在本仓的唯一下发口径(活动详情 registrationCount、
@@ -71,7 +78,19 @@ public interface ICmsActivityService
      */
     int countSignedUpRegistrations(Long activityId);
 
+    /** 批量读取项目卡报名人数，与单场详情使用同一报名口径。 */
+    Map<Long, Integer> countSignedUpRegistrationsByActivityIds(List<Long> activityIds);
+
+    /** 主题及对应俱乐部场次的有效报名，批量读取项目卡统计。 */
+    Map<Long, Integer> countSignedUpRegistrationsByTopicIds(List<Long> topicIds);
+
+    /** 商家承办项目已支付、尚未核销的人数。 */
+    Map<Long, Integer> countPendingVerificationByActivityIds(List<Long> activityIds);
+
     public CmsActivity selectCmsActivityById(Long id);
+
+    /** 图片内容安全违规留置(AUDIT-INT-7):置 cms_activity.content_safety_hold=1。 */
+    public void markContentSafetyHold(Long id);
 
     /** 查询对普通用户公开可见的活动；隐藏状态统一返回 null。 */
     CmsActivity selectPublicCmsActivityById(Long id);
@@ -113,6 +132,19 @@ public interface ICmsActivityService
     public int updateCmsActivity(CmsActivity cmsActivity);
 
     /**
+     * 后台新增活动(Gap 12·03 P0-5):status/publish_status 只由 preReview 决定,请求体里的审核态、
+     * 发布态、删除/取消/结算事实一律丢弃。preReview=true 时同事务建 BIZ_ACTIVITY 审核单(建不出来整单回滚);
+     * 先发后审且门禁打标(flagReason 非空)时留一张非阻断抽检单。
+     */
+    public int insertCmsActivityByAdmin(CmsActivity cmsActivity, String username, boolean preReview, String flagReason);
+
+    /**
+     * 后台编辑活动内容:与 App 编辑同一套审核回路 —— 已驳回改完即重提、待审中改了内容刷新审核单、
+     * 先审(preReview)下改了名称/简介/图片/时间/地点即退回待审;任何情况都不会把活动改成公开。
+     */
+    public int updateCmsActivityByAdmin(CmsActivity editable, String username, boolean preReview, String flagReason);
+
+    /**
      * 批量删除活动
      *
      * @param ids 需要删除的活动主键集合
@@ -130,13 +162,18 @@ public interface ICmsActivityService
 
     /**
      * 发布活动
+     * @param preReview true=先审后发(待审 + BIZ_ACTIVITY 审核单);false=先发后审(直接上架)
      */
-    public Long publishActivity(CmsActivityPublishRequest request, Long memberId,String username);
+    public Long publishActivity(CmsActivityPublishRequest request, Long memberId,String username, boolean preReview);
 
     /**
      * 小程序更新活动内容（未开卖）。票务改动不得把已删票 del_flag 改回 0。
      */
-    int updateActivityByOwner(CmsActivityPublishRequest request, Long memberId, String username);
+    /**
+     * @param preReview 本次编辑按先审处理(ActivityReviewPolicy=PRE_REVIEW 或门禁 HOLD):
+     *                  改了名称/简介/图片/时间/地点即退回待审并刷新审核单。已驳回的活动无论模式改完都重提。
+     */
+    int updateActivityByOwner(CmsActivityPublishRequest request, Long memberId, String username, boolean preReview);
 
 
     /**

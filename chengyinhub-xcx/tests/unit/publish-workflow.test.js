@@ -100,3 +100,29 @@ test('销毁后:失败回调不再触发 handler', () => {
   resolve({ ok: false, msg: 'x' });
   assert.equal(h.log.length, 0);
 });
+
+test('重复或过期回调不能改变终态或触发第二次handler', () => {
+  const { wf, resolve } = makeWf();
+  const h = handlers();
+  wf.submit({}, h);
+  resolve({ ok: true, data: 7 });
+  resolve({ ok: false, networkError: true });
+  assert.equal(wf.getState(), 'done');
+  assert.deepEqual(h.log, [['success', 7]]);
+});
+
+test('destroy 后不得再发新请求', () => {
+  const { wf, calls } = makeWf();
+  wf.destroy();
+  assert.equal(wf.submit({}, handlers()), false);
+  assert.equal(calls.request, 0);
+});
+
+test('作者发布可选择网络失败进入unknown并阻止再提交', () => {
+  const { wf, calls, resolve } = makeWf({ networkFailureState: 'unknown' });
+  wf.submit({}, handlers());
+  resolve({ ok: false, networkError: true });
+  assert.equal(wf.getState(), 'unknown');
+  assert.equal(wf.submit({}, handlers()), false);
+  assert.equal(calls.request, 1);
+});

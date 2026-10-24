@@ -2,8 +2,22 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.NpcChatRequestMapper">
 
+  <select id="lockChatUser" resultType="java.lang.Long">
+    select id from ums_member where id = #{userId} for update
+  </select>
+
+  <update id="redactChatRequestsByUserId">
+    update npc_chat_request
+    set safe_text = null, audio_asset_id = null, retryable = 0, lease_token = null, lease_until = null, active_slot = null,
+        safety_decision = case when status = 'PROCESSING' then 'UNKNOWN' else safety_decision end,
+        error_code = case when status = 'PROCESSING' then 'REQUEST_OUTCOME_UNKNOWN' else error_code end,
+        update_time = now()
+    where user_id = #{userId}
+  </update>
+
   <resultMap type="com.chengyinhub.business.domain.NpcChatRequest" id="NpcChatRequestResult">
     <id property="id" column="id" />
+    <result property="audioAssetId" column="audio_asset_id" />
     <result property="userId" column="user_id" />
     <result property="requestId" column="request_id" />
     <result property="sessionId" column="session_id" />
@@ -26,10 +40,16 @@
   <select id="selectByUserAndRequestId" resultMap="NpcChatRequestResult">
     select id, user_id, request_id, session_id, status, safety_decision, error_code, limit_type,
            retry_after_seconds, retryable, safe_text, ai, lease_token, lease_until, active_slot,
-           completed_at, create_time, update_time
+           completed_at, create_time, update_time, audio_asset_id
     from npc_chat_request
     where user_id = #{userId} and request_id = #{requestId}
   </select>
+
+  <update id="bindApprovedTextAudio">
+    update npc_chat_request set audio_asset_id=#{assetId},update_time=now()
+    where user_id=#{userId} and request_id=#{requestId} and status='SUCCEEDED' and safety_decision='PASS'
+      and safe_text is not null and audio_asset_id is null
+  </update>
 
   <insert id="insertNpcChatRequest" parameterType="com.chengyinhub.business.domain.NpcChatRequest"
           useGeneratedKeys="true" keyProperty="id">
@@ -46,9 +66,8 @@
 
   <update id="expireProcessingByUserAndSession">
     update npc_chat_request
-    set status = 'FAILED', safety_decision = 'NOT_RUN', error_code = 'REQUEST_TIMEOUT',
-        limit_type = null, retry_after_seconds = 0, retryable = 1, safe_text = #{safeText}, ai = 1,
-        lease_token = null, lease_until = null, active_slot = null, completed_at = now(), update_time = now()
+    set safety_decision = 'UNKNOWN', error_code = 'REQUEST_OUTCOME_UNKNOWN',
+        retryable = 0, safe_text = #{safeText}, lease_token = null, update_time = now()
     where user_id = #{userId} and session_id = #{sessionId}
       and status = 'PROCESSING' and lease_until &lt; now()
   </update>
@@ -60,14 +79,14 @@
         safe_text = #{safeText}, ai = #{ai}, lease_token = null, lease_until = null,
         active_slot = null, completed_at = now(), update_time = now()
     where user_id = #{userId} and request_id = #{requestId}
-      and status = 'PROCESSING' and lease_token = #{leaseToken}
+      and status = 'PROCESSING' and lease_token = #{leaseToken} and lease_until &gt; now()
   </update>
 
   <update id="renewLease">
     update npc_chat_request
     set lease_until = #{leaseUntil}, update_time = now()
     where user_id = #{userId} and request_id = #{requestId}
-      and status = 'PROCESSING' and lease_token = #{leaseToken}
+      and status = 'PROCESSING' and lease_token = #{leaseToken} and lease_until &gt; now()
   </update>
 
   <delete id="deleteNpcChatRequestsBefore">

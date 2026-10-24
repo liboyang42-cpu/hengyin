@@ -14,7 +14,7 @@ const { MAP_AVATAR_COLORS: C } = require('./play-visual-tokens.js');
 //      同一份原型文件的地图点位代码写的是 `o.t==='flagG'?'#4ADE80':'#5A90D6'`,
 //      而 #56AE7D 只出现在一个声明了却没人用的 `--flagG` 变量里 —— 它是旧旗子设计的遗留。
 //      照搬会把「同一个玩法在地图上和搜索结果里是两种绿」这个 bug 一起搬过来,
-//      所以取 #4ADE80(它也是说明文档 §1 定死的值,两处一致)。
+//      所以取 #4ADE80(它也是说明文档 §1 定死的值,两处一致)。2026-10-22 业主对调后城市定向取蓝,仍跟 C.cityRoute 同值。
 const NEUTRAL_PIN = '#8A8A8E';
 const PIN_COLORS = Object.freeze({
   hangout: NEUTRAL_PIN,

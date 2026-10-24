@@ -30,6 +30,7 @@ public class ThemeBroadcastService {
                 message=im.sendSystemInNestedTransaction(memberId,ImMessage.MSG_TEXT,String.valueOf(row.get("content")),extra);
                 if(message==null)throw new IllegalStateException("广播未生成消息");
             } catch(RuntimeException failure) {
+                SavepointLockFailures.rethrowIfLockFailure(failure);
                 if(mapper.failed(id,memberId)!=1)throw new IllegalStateException("广播失败状态保存失败");
                 continue;
             }

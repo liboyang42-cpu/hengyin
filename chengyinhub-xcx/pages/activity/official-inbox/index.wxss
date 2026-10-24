@@ -20,7 +20,7 @@
 }
 
 .oi-hero {
-  padding: var(--cy-space-3-5);
+  padding: var(--cy-space-4); /* 横幅与邀约卡同一内边距 */
   border-radius: var(--cy-radius-lg);
   background: var(--cy-color-bg-surface);
 }
@@ -48,8 +48,8 @@
 }
 .oi-list-error { display: block; margin-bottom: var(--cy-space-2-5); }
 .oi-card {
-  margin-bottom: var(--cy-space-2-5);
-  padding: var(--cy-space-3);
+  margin-bottom: var(--cy-space-3);
+  padding: var(--cy-space-4);
   border-radius: var(--cy-radius-lg);
   background: var(--cy-color-bg-surface);
 }
@@ -79,7 +79,7 @@
 }
 .oi-summary { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-secondary); }
 .oi-action-error { display: block; margin-top: var(--cy-space-2); }
-.oi-actions { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-2-5); }
+.oi-actions { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
 .oi-btn { flex: 1; padding: var(--cy-space-2-5) var(--cy-space-1-5); border-radius: var(--cy-radius-pill); text-align: center; font-size: var(--cy-type-label); font-weight: 700; }
 .oi-btn.accept { background: var(--cy-color-status-success); color: var(--cy-color-action-danger-fg); }
 .oi-btn.decline { background: var(--cy-color-action-danger-bg); color: var(--cy-color-action-danger-fg); }
@@ -92,3 +92,7 @@
   font-size: var(--cy-type-caption);
   text-align: center;
 }
+/* BL-06 角色说明 / 暂停提示;第三项(承接名额)出现时允许换行 */
+.oi-scope { flex-wrap: wrap; }
+.oi-role-note { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-secondary); }
+.oi-paused { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-primary); }

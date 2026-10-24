@@ -20,10 +20,10 @@ function assertJournalLockContract(source) {
   // ② 行整体压暗
   assert.match(wxml, /class="jkv \{\{item\.locked \? 'is-locked' : ''\}\}"/,
     '未点亮的站必须整行压暗')
-  assert.match(wxss, /\.jkv\.is-locked\{[^}]*opacity:\.42/, '压暗必须真有样式,不能只挂个类名')
+  assert.match(wxss, /\.jkv\.is-locked\{[^}]*opacity:\.42/, '压暗必须真有样式，不能只挂个类名')
   // ③ 不给展开入口 —— 点它不触发 openStory,右边的 › 也不出
   assert.match(wxml, /bindtap="\{\{item\.locked \? 'noop' : 'openStory'\}\}"/,
-    '未点亮的站点进去就是剧透,不许接 openStory')
+    '未点亮的站点进去就是剧透，不许接 openStory')
   assert.match(wxml, /class="jkv__go" wx:if="\{\{!item\.locked\}\}"/,
     '未点亮的站不该显示可展开的箭头')
 }

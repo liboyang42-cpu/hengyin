@@ -13,8 +13,9 @@
    ⚠️ 用原型的 20/30 会让读数卡从压暗层里透出来(实拍见过:半屏上方露出「当前目标」一角)。 */
 .pdim{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:60;
   background:rgba(0,0,0,.62); /* ds-ok 原型 .dim */
-  opacity:0; transition:opacity .2s linear; }
-.pdim.is-in{ opacity:1; }
+  /* 2026-10-23 业主定:弹层不回弹、慢快慢,按档位定速(tokens 的 --cy-motion-sheet-*);遮罩与面板同档同曲线(原 .2s linear) */
+  opacity:0; transition:opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
+.pdim.is-in{ opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 .psheet{ position:fixed; left:0; right:0; bottom:0; z-index:70; box-sizing:border-box;
   background:#000; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 .sheet #000 / 28px */
   padding:0 var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); /* ds-ok 原型 padding:0 24px 22px */
@@ -26,13 +27,14 @@
   /* ⚠️ token 的 --cy-safe-top 走 env(safe-area-inset-top),在模拟器和无刘海真机上解析为 0,
      顶边会落进胶囊行(2026-09-18 全站顶边复查)。宿主(play/roam 两页都已接
      resolveMenuChrome)在页面根上给 --cy-psheet-max-h 传胶囊实测值时以它为准,拿不到才退回 token。 */
-  max-height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); overflow-y:auto;
+  max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto;
   transform:translateY(46rpx); opacity:0; /* ds-ok 原型 @keyframes up 的 24px */
-  transition:transform .26s cubic-bezier(.2,.82,.2,1), opacity .26s cubic-bezier(.2,.82,.2,1); }
-.psheet.is-in{ transform:none; opacity:1; }
+  /* 位移照原型(24px + 淡入)不改;时长 / 曲线并入弹层规范(原 .26s 自定义曲线) */
+  transition:transform var(--cy-motion-sheet-out) var(--cy-ease-standard), opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
+.psheet.is-in{ transform:none; opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 /* 半屏档:原型给这几屏设的 top 大致就是七成屏高 */
-.psheet--full{ height:var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height)); }
-.psheet--half{ max-height:min(70vh, var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
+.psheet--full{ --cy-motion-sheet-in:var(--cy-motion-sheet-full-in); --cy-motion-sheet-out:var(--cy-motion-sheet-full-out); height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
+.psheet--half{ max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
 /* ⚠️ 满屏档**不要**再给它让胶囊带。上面的 max-height 已经是
      calc(100vh - --cy-safe-top - 顶部留白),半屏是贴底的 ⇒ 它的上沿本来就落在胶囊下面。
    2026-09-11 实拍抓到:这里原来还叠了一层 padding-top:var(--cy-safe-top),
@@ -73,7 +75,7 @@
    原型 f-more:.sheet.drw 从 top:330px 起,里面一行行 .drow。
    现码复用上面那层 .psheet(同一件黑面),只把高度换成「从 330px 起」的等价写法。
    1px = 1.923rpx。 */
-.psheet--drw{ max-height:min(70vh, var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); } /* ds-ok 原型 drawer top:330px */
+.psheet--drw{ max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); } /* ds-ok 原型 drawer top:330px */
 .drow{ display:flex; align-items:center; gap:27rpx; padding:29rpx 0; min-height:112rpx; box-sizing:border-box;
   border-top:1rpx solid rgba(255,255,255,.07); } /* ds-ok 原型 .drow gap 14px / padding 15px 0 / min-height 58px / 上边框 1px 白 7% */
 /* 分隔线是「行与行之间」的:紧跟拖杆的第一行不画(原型 .drw .grab + .drow)。 */
@@ -127,14 +129,14 @@
    2026-09-11 从 subpackageRoam/nearby 抽出来,一行未改 —— 漫游点主题针(原型 f-topic / f-city)
    出的是同一件。⚠️ .tstrip 的 bottom 跟着半屏高走,用它的页要按自己那档半屏高覆盖。 */
 .tstrip{ position:fixed; left:31rpx; right:0; bottom:calc(70vh - 19rpx); z-index:65; height:227rpx; white-space:nowrap;
-  opacity:0; transition:opacity .26s cubic-bezier(.2,.82,.2,1); } /* ds-ok 原型 .tstrip left:16px / 图 118px 高 */
-.tstrip.is-in{ opacity:1; }
+  opacity:0; transition:opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); } /* ds-ok 原型 .tstrip left:16px / 图 118px 高;2026-10-23 与半屏同档同曲线 */
+.tstrip.is-in{ opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 .tstrip__i{ display:inline-block; width:323rpx; height:227rpx; border-radius:31rpx; margin-right:15rpx; } /* ds-ok 原型 .tstrip img 168×118 / radius 16 / gap 8 */
 .trow{ display:flex; align-items:center; gap:19rpx; margin-top:35rpx; } /* ds-ok 原型 .row gap 10px / 上 18px */
 .ph1--tight{ margin-top:15rpx; } /* ds-ok 原型 .h1 在这屏是 margin-top:8px */
 .ptag{ display:inline-block; font-size:var(--cy-type-caption); font-weight:700; padding:8rpx 17rpx; border-radius:15rpx; } /* ds-ok 原型 .tag 11px/700 / padding 4px 9px / radius 8 */
-.ptag--city{ background:#132A1C; color:#4ADE80; } /* ds-ok 城市定向绿,与地图点位同一对 */
-.ptag--free{ background:#3467AE; color:#FFFFFF; } /* ds-ok 原型 h-topic 的 tagBg/tagFg */
+.ptag--city{ background:#3467AE; color:#FFFFFF; } /* ds-ok 城市定向蓝(2026-10-22 业主对调),与地图点位同一对 */
+.ptag--free{ background:#132A1C; color:#4ADE80; } /* ds-ok 自由探索绿(2026-10-22 业主对调) */
 .tstats{ display:flex; gap:19rpx; margin-top:31rpx; background:#101418; border-radius:31rpx; padding:27rpx 31rpx; } /* ds-ok 原型 .tstats gap 10 / 上 16 / #101418 / radius 16 / padding 14 16 */
 .tstats__c{ flex:1; text-align:center; }
 .tstats__v{ display:block; font-size:var(--cy-type-section-title); font-weight:800; color:#FFFFFF; } /* ds-ok 原型 .tstats .v 19px/800 */

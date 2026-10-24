@@ -46,7 +46,7 @@
                     placeholder-class="cmp-ph" />
           <view class="cmp-preview" wx:if="{{picList.length || address || selectedActivity}}">
             <view class="cmp-preview-pics" wx:if="{{picList.length}}">
-            <view class="cmp-pic" wx:for="{{picList}}" wx:key="*this">
+            <view class="cmp-pic" wx:for="{{picList}}" wx:key="index">
               <image class="cmp-pic-img" src="{{item}}" mode="aspectFill" />
               <view class="cmp-chip-x" catchtap="onClearPic" data-inx="{{index}}" aria-role="button" aria-label="删除这张图片" hover-class="cy-pressed" hover-stay-time="80">
                 <cy-icon name="close-sm" size="24" />
@@ -100,20 +100,20 @@
   <!-- ② 草稿。必须是上面那层 sheet 的【兄弟】,不能塞进它的 slot ——
        塞进去会被面板的 overflow 裁掉,也盖不住面板顶上那条留白。
        DOM 在后 ⇒ 叠在上面,这就是「弹窗叠弹窗」。
-       id="drafts" 是必须的:删除确认闸长在组件里,这边删完要回调 deleteDone() 关闸。 -->
+       id="drafts":删草稿走提示条撤销(2026-10-23),组件点垃圾桶直接上报 delete。 -->
   <cy-post-drafts id="drafts" show="{{draftsShow}}" drafts="{{drafts}}" sheet-style="{{draftsSheetStyle}}"
                   bind:select="onPickDraft" bind:delete="onDeleteDraft" bind:close="onCloseDrafts" />
 
   <cy-sheet show="{{activityPickerShow}}" title="选择活动" handle="{{true}}" closable bind:close="onCloseActivityPicker">
     <view class="cmp-act-pick">
       <cy-skeleton wx:if="{{activityLoading}}" type="list" count="3" />
-      <cy-error wx:elif="{{activityError}}" title="活动列表没有加载出来" sub="只显示你参加过或主办的活动" retry="重试" bind:retry="loadActivityOptions" />
+      <cy-error load-failure wx:elif="{{activityError}}" title="活动列表加载失败" sub="只显示你参加过或主办的活动" retry="重试" bind:retry="loadActivityOptions" />
       <block wx:else>
         <cy-cell wx:for="{{activityList}}" wx:key="activityId"
                  title="{{item.name}}" description="{{item.sourceLabel}}"
                  data-index="{{index}}" data-activity-id="{{item.activityId}}"
                  bind:tap="onPickActivity" />
-        <cy-empty wx:if="{{!activityList.length}}" size="sm" title="还没有可关联的活动" sub="参加或主办一场之后，这里会列出来" />
+        <cy-empty wx:if="{{!activityList.length}}" size="sm" title="还没有可关联的活动" />
       </block>
     </view>
   </cy-sheet>

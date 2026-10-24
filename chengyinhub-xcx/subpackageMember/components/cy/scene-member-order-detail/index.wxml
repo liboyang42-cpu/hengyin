@@ -1,5 +1,5 @@
 <wxs src="../../../../utils/wxs/money.wxs" module="money" />
-<wxs src="../../../../utils/wxs/img.wxs" module="img" />
+<wxs src="../../../../utils/wxs/img.wxs" module="img" /><wxs src="../../../../utils/wxs/count.wxs" module="cnt" />
 <view class="detail theme-dark">
 
   <cy-empty class="order-load-loading" wx:if="{{loadState==='loading'}}" kind="loading" title="订单详情加载中" />
@@ -7,25 +7,26 @@
   <!-- 稿 356:5220:加载失败 = 零按钮的结果半屏,原因停 2s 后自动回订单列表。
        原来是三颗竖排大钮(重试/返回/客服)的整卡,底下再压一条同义 toast,一件事说两遍。
        失败不静默:标题 + 后端原因都在面板上,关闭(超时或手动)一律走 backToOrderList。 -->
-  <cy-result-sheet show="{{loadState==='failed_business' || loadState==='failed_network'}}" kind="fail" title="加载失败" why="{{loadErrorText}}" duration="{{2000}}" bind:close="backToOrderList" />
+  <!-- 加载失败保持空白；参数与权限拒绝保留明确恢复出口。 -->
+  <cy-result-sheet show="{{loadFailureVisible}}" kind="fail" title="订单暂不可查看" why="{{loadErrorText}}" duration="{{2000}}" bind:close="backToOrderList" />
 
   <view class="david" wx:if="{{loadState==='ready'}}">
   <!-- 稿 578:2298(D07):大金额与状态先行。头图上依次是实付金额(40px)、
        路线名(18px)、场次时间(12px)、一颗状态药丸 —— 原来这里印的是
        「已报名 / 请完成支付后使用票夹」,一句状态加一句提示,金额反而要翻到下面才看得到。
        ⚠️ 提示语没有删,它跟着退款状态卡一起说(见下)。 -->
-  <view class="hero">
+  <view class="hero" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
     <image class="hero-img" lazy-load="true" src="{{heroImage}}" mode="aspectFill" />
     <view class="hero-mask"></view>
     <view class="hero-text">
-      <view class="hero-amt">{{money.amount(info.payableAmount)}}</view>
+      <view class="hero-amt">{{money.amount(cnt.f(info.actualPaidAmount, odK))}}</view>
       <view class="hero-title ep1">{{productTitle}}</view>
       <view class="hero-when" wx:if="{{whenText}}">{{whenText}}</view>
       <view class="hero-pill hero-pill--{{statusTone}}" wx:if="{{info.statusText}}">{{info.statusText}}</view>
     </view>
   </view>
 
-  <view class="body">
+  <view class="body" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
 
     <!-- 稿 578:2313 那张卡:标题 / 一句话 / 右上角状态词。
          2026-09-11 用户定「是退款、还是已完成、未开始,要有不同状态的」⇒
@@ -98,9 +99,9 @@
     </view>
 
     <!-- 「和队友一起出发」原来插在状态卡和订单明细之间,打断稿的顺序;2026-09-15 挪到支付明细之后 -->
-    <cy-card class="order-card team-order-card" wx:if="{{info.ownerType == 2 && info.registrationStatus == 2 && info.cmsActivity && info.cmsActivity.teamMode == 2}}">
+    <cy-card class="order-card team-order-card" wx:if="{{info.teamOpen}}">
       <view class="section-title">和队友一起出发</view>
-      <view class="card-desc">按主理人设置的人数上限建队。默认公开，队伍会出现在漫游地图「附近的队伍」里等人申请，由你逐个同意；打开「仅邀请」后只有拿到邀请链接的人能进。组队与否不影响活动举行，也不改变订单与退款规则。</view>
+      <view class="card-desc">组队与否不影响活动举行，也不改变订单与退款规则。</view>
       <!-- 2026-09-15 地图组队 P 方案:后端建队默认公开(joinMode=2),这颗开关是队长收窄到
            仅邀请的唯一入口。放在「叫上队友」之前:它决定的是接下来那一支队伍怎么建,
            点完人数就直接发请求了,事后回到这里改已经来不及。
@@ -108,7 +109,8 @@
               但全仓没有任何前端调用点 —— 队伍详情页还没接这个控件。所以建队这一刻选的
               公开/仅邀请,当前就是终局。别在文案或注释里承诺「以后去队伍详情改」,
               那在接上 join-mode 之前都是假保证。 -->
-      <view class="link-row">
+      <view class="card-desc" wx:if="{{info.teamStarted}}">场次已开始，只能建仅邀请队伍。</view>
+      <view class="link-row" wx:if="{{!info.teamStarted}}">
         <text class="link-label">仅邀请可加入</text>
         <cy-switch checked="{{teamInviteOnly}}" bindchange="onTeamInviteOnlyChange" accessibility-label="仅邀请可加入" />
       </view>
@@ -261,7 +263,7 @@
       <view class="section-title">{{info.isFreeOrder ? '报名与客服' : '退款与客服'}}</view>
       <view class="refund-main">{{info.refundDeadlineDisplay || info.refundDisplayText || '支付成功后将按订单退款截止时间判断是否可原路退款。'}}</view>
       <view class="refund-sub" wx:if="{{info.isFreeOrder}}">本单未收取费用。如需咨询报名安排，请联系客服。</view>
-      <view class="refund-sub" wx:else>现金退款和积分返还按本单实际支付记录处理，进度以订单查询结果为准。规则有疑问可联系客服。</view>
+      <view class="refund-sub" wx:else>退款按本单实际支付原路处理，有疑问可联系客服。</view>
       <view class="refund-org" wx:if="{{info.organizerDisplayName}}">{{info.organizerLabel}}：{{info.organizerDisplayName}}</view>
     </cy-card>
 

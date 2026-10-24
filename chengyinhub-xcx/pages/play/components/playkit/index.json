@@ -2,6 +2,8 @@
   "component": true,
   "styleIsolation": "isolated",
   "usingComponents": {
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-btn": "/components/cy/btn/index",
     "cy-playkit-timewindow": "/pages/play/components/playkit-timewindow/index",
     "cy-playkit-blindtaste": "/pages/play/components/playkit-blindtaste/index",
     "cy-playkit-silentorder": "/pages/play/components/playkit-silentorder/index",
@@ -37,6 +39,7 @@
     "cy-playkit-sort": "/pages/play/components/playkit-sort/index",
     "cy-playkit-match": "/pages/play/components/playkit-match/index",
     "cy-playkit-classify": "/pages/play/components/playkit-classify/index",
-    "cy-playkit-album": "/pages/play/components/playkit-album/index"
+    "cy-playkit-album": "/pages/play/components/playkit-album/index",
+    "cy-playkit-journey-check": "/pages/play/components/playkit-journey-check/index"
   }
 }

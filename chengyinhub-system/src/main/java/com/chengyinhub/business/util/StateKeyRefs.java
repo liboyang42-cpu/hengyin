@@ -2,8 +2,10 @@ package com.chengyinhub.business.util;
 
 import com.chengyinhub.business.domain.JourneyRules;
 import com.chengyinhub.common.utils.StringUtils;
+import com.chengyinhub.business.service.support.StoryVocabulary;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -38,6 +40,47 @@ public final class StateKeyRefs {
     private StateKeyRefs() {
     }
 
+    /** 复制节点模板时只翻译实际系统变量和 NODE_COMPLETED 引用，不修改题面文本。 */
+    public static String remapNodeIds(String raw, Map<Long, Long> nodeMap) {
+        if (StringUtils.isBlank(raw)) return raw;
+        final JsonNode root;
+        try { root = MAPPER.readTree(raw); }
+        catch (Exception invalid) { throw new IllegalArgumentException("高级玩法配置不是合法 JSON", invalid); }
+        if (root == null || !root.isObject()) throw new IllegalArgumentException("高级玩法配置必须是对象");
+        remapNodeReferences(root, nodeMap);
+        try { return MAPPER.writeValueAsString(root); }
+        catch (Exception invalid) { throw new IllegalArgumentException("高级玩法配置无法序列化", invalid); }
+    }
+
+    private static void remapNodeReferences(JsonNode node, Map<Long, Long> nodeMap) {
+        if (node.isObject()) {
+            JsonNode variable = node.get("var");
+            if (variable != null && variable.isTextual()) {
+                java.util.regex.Matcher match = java.util.regex.Pattern.compile("^(sys\\.(?:asked|mistakes|outcome|passed|damage)\\.)([1-9][0-9]*)(\\..*)?$").matcher(variable.asText().trim());
+                if (match.matches()) {
+                    final long oldId;
+                    try { oldId = Long.parseLong(match.group(2)); }
+                    catch (NumberFormatException invalid) { throw new IllegalArgumentException("复制模板系统变量节点标识越界", invalid); }
+                    ((ObjectNode) node).put("var", match.group(1) + mappedNode(oldId, nodeMap) + (match.group(3) == null ? "" : match.group(3)));
+                }
+            }
+            String nodeOp = node.path("op").asText();
+            if ("NODE_COMPLETED".equals(nodeOp) || StoryVocabulary.VISIT_COUNT.equals(nodeOp)
+                    || StoryVocabulary.CHECK_RESULT.equals(nodeOp)) {
+                JsonNode id = node.get("nodeId");
+                if (id == null || !id.isIntegralNumber() || !id.canConvertToLong() || id.asLong() <= 0) throw new IllegalArgumentException("复制模板节点完成条件标识不合法");
+                ((ObjectNode) node).put("nodeId", mappedNode(id.asLong(), nodeMap));
+            }
+            node.elements().forEachRemaining(child -> remapNodeReferences(child, nodeMap));
+        } else if (node.isArray()) node.forEach(child -> remapNodeReferences(child, nodeMap));
+    }
+
+    private static long mappedNode(long oldId, Map<Long, Long> nodeMap) {
+        Long target = nodeMap == null ? null : nodeMap.get(oldId);
+        if (target == null || target <= 0) throw new IllegalArgumentException("复制模板引用的节点不属于源主题：" + oldId);
+        return target;
+    }
+
     /** 本主题已声明念头的运行期完成标签，只供故事条件读取，不是可写注册键。 */
     public static Set<String> declaredThoughtDoneTags(String journeyRulesJson) {
         Set<String> tags = new LinkedHashSet<String>();
@@ -63,11 +106,23 @@ public final class StateKeyRefs {
         }
         collectConditions(root.get("requires"), keys);
         collectEffects(root.get("effects"), keys);
+        com.chengyinhub.business.service.support.GameplayOutcomeRules.visit(root, (path, after) -> {
+            collectEffects(after.get("effects"), keys);
+            for (JsonNode cost : after.path("costs")) add(keys, cost.path("statKey").asText());
+        });
         JsonNode check = root.get("check");
         if (check != null && check.isObject()) {
             JsonNode mods = check.get("mods");
             if (mods != null && mods.isArray()) {
-                for (JsonNode mod : mods) collectCondition(mod == null ? null : mod.get("when"), keys);
+                for (JsonNode mod : mods) {
+                    collectCondition(mod == null ? null : mod.get("when"), keys);
+                    // F2 T03:mods[].var 与绑定属性的 check.skill 同样是状态键引用,必须已注册。
+                    if (mod != null && mod.path("var").isTextual()) add(keys, mod.path("var").asText());
+                }
+            }
+            JsonNode skill = check.get("skill");
+            if (skill != null && skill.isTextual() && skill.asText().trim().startsWith("counter.")) {
+                add(keys, skill.asText().trim());
             }
             collectConditions(check.get("advantageIf"), keys);
             collectConditions(check.get("disadvantageIf"), keys);
@@ -76,6 +131,9 @@ public final class StateKeyRefs {
             // R14 大成功 / 大失败的额外效果:与 successEffects / failEffects 同一道闸。
             collectEffects(check.get("critEffects"), keys);
             collectEffects(check.get("fumbleEffects"), keys);
+            // F6 T09:魔鬼交易的代价也是写入,引用的键同样要注册。
+            JsonNode bargain = check.get("bargain");
+            if (bargain != null && bargain.isObject()) collectEffects(bargain.get("effects"), keys);
             JsonNode failCostTag = check.get("failCostTag");
             if (failCostTag != null && failCostTag.isTextual()) {
                 add(keys, failCostTag.asText());
@@ -337,6 +395,18 @@ public final class StateKeyRefs {
         }
         String op = item.path("op").asText("");
         if ("NODE_COMPLETED".equals(op)) {
+            return;
+        }
+        // F5 组合条件:内层叶子照样要进键注册表核对;其余新叶子(到访次数 / 角色 / 状态 / 装备 / 检定)不读具名状态键。
+        if (StoryVocabulary.AND.equals(op) || StoryVocabulary.OR.equals(op)) {
+            collectConditions(item.get("conditions"), keys);
+            return;
+        }
+        if (StoryVocabulary.NOT.equals(op)) {
+            collectCondition(item.get("condition"), keys);
+            return;
+        }
+        if (StoryVocabulary.isCondition(op)) {
             return;
         }
         if ("HAS_TAG".equals(op)) {

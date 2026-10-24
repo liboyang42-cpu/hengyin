@@ -663,6 +663,102 @@ class TransactionCliTest(unittest.TestCase):
             runner.referenced_persistent_tables(statements, "scratch"),
         )
 
+    def payee_key_tables(self):
+        return [
+            "CREATE TEMPORARY TABLE tmp_cy_payee_roles(role_key VARCHAR(100), role_id BIGINT)",
+            "CREATE TEMPORARY TABLE tmp_cy_payee_menus(perms VARCHAR(100), menu_id BIGINT)",
+        ]
+
+    def payee_delete(self, role="cy_operator", permission="business:clubpayee:verify"):
+        return ("DELETE FROM sys_role_menu WHERE role_id = "
+                "(SELECT role_id FROM tmp_cy_payee_roles WHERE role_key = '" + role + "') "
+                "AND menu_id = (SELECT menu_id FROM tmp_cy_payee_menus WHERE perms = '"
+                + permission + "')")
+
+    def test_only_two_payee_separation_deletes_commit_with_declared_temporary_keys(self):
+        for role, permission in (("cy_operator", "business:clubpayee:verify"),
+                                 ("cy_finance", "business:clubpayee:payout")):
+            with self.subTest(role=role):
+                statement = self.payee_delete(role, permission)
+                connection = FakeConnection(engine_rows=(("sys_role_menu", "InnoDB"),))
+                exit_code, output = self.invoke(self.payee_key_tables() + [statement], connection)
+                self.assertIsNone(exit_code)
+                self.assertEqual(1, connection.commit_count)
+                self.assertEqual(0, connection.rollback_count)
+                self.assertIn((statement, None), connection.cursor_instance.executed)
+                self.assertIn("COMMIT OK", output)
+
+    def test_payee_delete_rejects_every_broader_shape_before_connect(self):
+        runner = load_runner()
+        exact = self.payee_delete()
+        rejected = [
+            "DELETE FROM sys_role_menu",
+            "DELETE FROM sys_role_menu WHERE 1=1",
+            "DELETE FROM sys_role_menu WHERE role_id=100 AND menu_id=2543",
+            exact + " OR 1=1",
+            exact.replace(" AND menu_id", " OR menu_id"),
+            exact.replace("role_id =", "role_id >"),
+            exact.replace("sys_role_menu WHERE", "sys_role_menu rm WHERE"),
+            exact.replace("DELETE FROM", "DELETE rm FROM"),
+            exact.replace("DELETE FROM sys_role_menu", "DELETE FROM sys_role_menu USING sys_role_menu"),
+            exact.replace("DELETE FROM sys_role_menu", "DELETE FROM sys_role_menu JOIN sys_role"),
+            exact.replace("DELETE FROM sys_role_menu", "DELETE FROM sys_role_menu, sys_role"),
+            exact.replace("DELETE FROM sys_role_menu", "DELETE FROM other.sys_role_menu"),
+            exact.replace("tmp_cy_payee_roles WHERE", "other.tmp_cy_payee_roles WHERE"),
+            exact.replace("tmp_cy_payee_roles", "unreviewed_roles"),
+            exact.replace("cy_operator", "cy_support"),
+            exact.replace("cy_operator", "CY_OPERATOR"),
+            exact.replace("business:clubpayee:verify", "business:clubpayee:payout"),
+            exact.replace("business:clubpayee:verify", "business:clubpayable:confirm"),
+            exact + " LIMIT 1",
+            exact + "; DELETE FROM sys_role_menu",
+            exact.replace(" WHERE role_id", " /*!80000 LOW_PRIORITY */ WHERE role_id", 1),
+            "SELECT role_id FROM tmp_cy_payee_roles",
+        ]
+        for statement in rejected:
+            with self.subTest(statement=statement):
+                with self.assertRaises(ValueError):
+                    runner.validate_transaction_statements(self.payee_key_tables() + [statement])
+
+    def test_payee_delete_requires_both_temporary_keys_still_live(self):
+        runner = load_runner()
+        for prefix in ([], self.payee_key_tables()[:1],
+                       self.payee_key_tables() + ["DROP TEMPORARY TABLE tmp_cy_payee_menus"],
+                       self.payee_key_tables() + ["DROP TEMPORARY TABLE tmp_cy_payee_roles, tmp_cy_payee_menus"],
+                       self.payee_key_tables() + ["CREATE TEMPORARY TABLE sys_role_menu(role_id BIGINT,menu_id BIGINT)"]):
+            with self.subTest(prefix=prefix):
+                with self.assertRaises(ValueError):
+                    runner.validate_transaction_statements(prefix + [self.payee_delete()])
+
+    def test_payee_delete_target_must_be_innodb_before_begin(self):
+        for rows, message in (((("sys_role_menu", "MyISAM"),), "非 InnoDB"),
+                              ((("some_other_table", "InnoDB"),), "表不存在")):
+            with self.subTest(rows=rows):
+                connection = FakeConnection(engine_rows=rows)
+                statement = self.payee_delete()
+                exit_code, output = self.invoke(self.payee_key_tables() + [statement], connection)
+                self.assertEqual(1, exit_code)
+                self.assertEqual(0, connection.begin_count)
+                self.assertNotIn((statement, None), connection.cursor_instance.executed)
+                self.assertIn(message, output)
+
+    def test_failure_after_payee_delete_rolls_back_without_commit(self):
+        statement = self.payee_delete()
+        later = "INSERT INTO sys_role_menu(role_id,menu_id) VALUES (100,999)"
+        connection = FakeConnection(fail_on=later, engine_rows=(("sys_role_menu", "InnoDB"),))
+        exit_code, output = self.invoke(self.payee_key_tables() + [statement, later], connection)
+        self.assertEqual(1, exit_code)
+        self.assertEqual(1, connection.begin_count)
+        self.assertEqual(1, connection.rollback_count)
+        self.assertEqual(0, connection.commit_count)
+        self.assertIn((statement, None), connection.cursor_instance.executed)
+        self.assertIn("ROLLBACK OK", output)
+
+    def test_payee_delete_engine_references_exclude_only_live_temporary_keys(self):
+        runner = load_runner()
+        self.assertEqual(["sys_role_menu"], runner.referenced_persistent_tables(
+            self.payee_key_tables() + [self.payee_delete()], "scratch"))
+
     def test_unknown_exit_two_survives_cursor_and_connection_close_errors(self):
         failing_statement = "INSERT INTO cms_topic(id) VALUES (99)"
         connection = FakeConnection(
@@ -875,13 +971,11 @@ class SshDestinationTest(unittest.TestCase):
                 mock.patch.dict(sys.modules, {"pymysql": fake_pymysql}), \
                 mock.patch.dict(os.environ, {"CHENGYIN_DB_SSH_HOST": ""}):
 
-            _connection, db = runner.connect("/tmp/unit-scratch.yml")
+            with self.assertRaises(SystemExit):
+                runner.connect("/tmp/unit-scratch.yml")
 
-        self.assertEqual("chengyinhubdb", db)
-        tunnel.assert_called_once_with("47.103.124.64", 3306)
-        pymysql_connect.assert_called_once_with(
-            host="127.0.0.1", port=13306, user="dbuser", password="<unit-placeholder>",
-            database="chengyinhubdb", connect_timeout=8, autocommit=True)
+        tunnel.assert_not_called()
+        pymysql_connect.assert_not_called()
 
 
     def test_only_an_explicit_token_disables_the_tunnel(self):
@@ -889,16 +983,18 @@ class SshDestinationTest(unittest.TestCase):
 
         判据分两半,缺哪半这道闸都会退化:
           · 显式 token(local/localhost/none/127.0.0.1/::1)⇒ 不开隧道,目标就是本机;
-          · **未设置 / 空串 / 纯空白仍然打到生产** —— 它们不是「选择本机」,
+          · **未设置 / 空串 / 纯空白直接退出** —— 它们不是「选择本机」,
             而是「没说」,而没说时连上操作者自己的 MySQL 是本仓明令禁止的形态。
+            (2026-10-19 起不再默认打到生产库主机:本仓公开,源码里不写生产地址。)
         """
         runner = load_runner()
         for token in ("local", "LOCAL", "localhost", "none", "127.0.0.1", "::1"):
             self.assertEqual("", runner.resolve_ssh_host(token),
                              f"显式本机 token {token!r} 没能关掉隧道")
         for silent in (None, "", "   "):
-            self.assertEqual("47.103.124.64", runner.resolve_ssh_host(silent),
-                             f"{silent!r} 被当成了「选择本机」—— 沉默不是选择,必须 fail-closed 到生产")
+            with self.assertRaises(SystemExit,
+                                   msg=f"{silent!r} 没有 fail-closed —— 沉默不是选择,不许回落到本机"):
+                runner.resolve_ssh_host(silent)
         self.assertEqual("10.0.0.9", runner.resolve_ssh_host(" 10.0.0.9 "),
                          "显式给了别的跳板机却没被采用")
 
@@ -1089,6 +1185,92 @@ class ExplicitConfigCliTest(unittest.TestCase):
                     [*config_args, "--exec", "UPDATE cms_topic SET product_type = 1"])
                 self.assertIsNone(exit_code)
                 connect.assert_called_once_with(runner.DEFAULT_CONFIG)
+
+
+class CommunityLegacyOwnerPreflightTest(unittest.TestCase):
+    def test_comment_counter_scope_requires_the_complete_reviewed_transaction(self):
+        runner = load_runner()
+        from ci.sql_splitter import split_statements
+        path = SCRIPT_PATH.parent.parent / 'chengyinhub-admin/sql/migration_community_legacy_comment_like_counts_20261015.sql'
+        statements = split_statements(path.read_text())
+        self.assertTrue(runner.exact_community_comment_counter_scope(statements, True))
+        for candidate, transaction in (
+                (statements, False), (statements[:1], True),
+                (statements + ['SELECT 1'], True),
+                (statements + ['DELETE FROM community_post_reference'], True),
+                ([s.replace("action_type='LIKE'", "action_type='BOOKMARK'") for s in statements], True),
+                ([s.replace('UPDATE community_post_comment', 'UPDATE other.community_post_comment') for s in statements], True)):
+            self.assertFalse(runner.exact_community_comment_counter_scope(candidate, transaction))
+
+    def test_comment_counter_scope_checks_identity_but_not_unrelated_snapshots(self):
+        runner = load_runner()
+        cursor = mock.Mock()
+        cursor.fetchall.return_value = [(name,) for name in (
+            'ums_creative_square', 'ums_creative_square_like', 'ums_comment', 'ums_comment_like',
+            'community_post', 'community_post_comment', 'community_post_comment_action',
+            'community_post_reference', 'community_post_media', 'community_post_member_action')]
+        cursor.fetchone.return_value = (1,)
+        runner.assert_community_legacy_owner_preflight(cursor, 'scratch', comment_counter=True)
+        sql = '\n'.join(str(call.args[0]) for call in cursor.execute.call_args_list)
+        self.assertIn('legacy-square-comment-', sql)
+        self.assertIn('old_comment.member_id=n.author_id', sql)
+        self.assertNotIn('community_post_reference', sql)
+        self.assertNotIn('community_post_media', sql)
+        self.assertNotIn('community_post_member_action', sql)
+        cursor.reset_mock()
+        runner.assert_community_legacy_counter_preflight(cursor, 'scratch', [], comment_counter=True)
+        sql = '\n'.join(str(call.args[0]) for call in cursor.execute.call_args_list)
+        self.assertIn("a.request_id LIKE 'legacy-comment-like-%'", sql)
+        self.assertNotIn('community_post_member_action', sql)
+
+    def test_actual_write_shapes_cover_renamed_sql_and_inline_extracts(self):
+        runner = load_runner()
+        for statement in (
+            "INSERT IGNORE INTO community_post SELECT * FROM ums_creative_square",
+            "INSERT IGNORE INTO community_post_media SELECT * FROM ums_creative_square",
+            "INSERT IGNORE INTO community_post_comment SELECT * FROM ums_comment",
+            "INSERT IGNORE INTO community_post_comment_action SELECT * FROM ums_comment_like",
+            "INSERT IGNORE INTO scratch.community_post_media SELECT * FROM scratch.ums_creative_square",
+            "INSERT IGNORE INTO `scratch`.`community_post_media` SELECT * FROM `scratch`.`ums_creative_square`",
+            "INSERT IGNORE INTO `scratch` . `community_post_media` SELECT * FROM `scratch` . `ums_creative_square`",
+        ):
+            self.assertTrue(runner.requires_community_legacy_owner_guard([statement]))
+        self.assertFalse(runner.requires_community_legacy_owner_guard(["SELECT 1"]))
+        runner.assert_community_legacy_statement_scope([
+            "INSERT INTO scratch.community_post SELECT * FROM scratch.ums_creative_square"], "scratch")
+        with self.assertRaisesRegex(ValueError, "cross-schema"):
+            runner.assert_community_legacy_statement_scope([
+                "INSERT INTO other.community_post SELECT * FROM scratch.ums_creative_square"], "scratch")
+
+    def test_guard_failure_precedes_every_statement_and_transaction_probe(self):
+        runner = load_runner()
+        connection = FakeConnection()
+        args = types.SimpleNamespace(transaction=True, check=False, describe=None)
+        statements = ["CREATE TABLE marker(id INT)",
+                      "INSERT INTO community_post_media SELECT * FROM ums_creative_square"]
+        with mock.patch.object(runner, "assert_community_legacy_owner_preflight",
+                               side_effect=ValueError("conflict")) as guard:
+            with self.assertRaises(SystemExit) as error:
+                runner.run_connected(args, statements, None, connection, "scratch")
+        self.assertEqual(1, error.exception.code)
+        guard.assert_called_once()
+        self.assertFalse(any(sql in statements or sql.startswith("CREATE")
+                             for sql, _ in connection.cursor_instance.executed))
+
+    def test_false_missing_or_ambiguous_observation_never_passes(self):
+        runner = load_runner()
+        for observed in ((0,), None, (1, 1)):
+            cursor = mock.Mock()
+            cursor.fetchall.return_value = [("ums_creative_square",), ("ums_comment",),
+                                           ("ums_creative_square_like",), ("community_post",)]
+            cursor.fetchone.return_value = observed
+            with self.assertRaisesRegex(ValueError, "preflight conflict"):
+                runner.assert_community_legacy_owner_preflight(cursor, "scratch")
+        cursor = mock.Mock()
+        cursor.fetchall.return_value = [("community_post",)]
+        cursor.fetchone.return_value = (1,)
+        with self.assertRaisesRegex(ValueError, "missing source"):
+            runner.assert_community_legacy_owner_preflight(cursor, "scratch")
 
 
 if __name__ == "__main__":

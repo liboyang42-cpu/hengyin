@@ -62,7 +62,7 @@
         <view class="g-type1">类别</view>
         <!-- 结构已知的首屏加载走骨架,不写裸文案/虚线占位框(规范 §3.12,C01 文档 P0-D) -->
         <cy-skeleton wx:if="{{categoryLoading}}" type="card" count="2" />
-        <cy-error class="cy-fade-in" wx:elif="{{categoryError}}" title="类别没能加载出来" sub="{{categoryError}}" bind:retry="getCategoryList" />
+        <cy-error load-failure class="cy-fade-in" wx:elif="{{categoryError}}" title="类别加载失败" sub="{{categoryError}}" bind:retry="getCategoryList" />
         <view class="list flex-w" wx:else>
           <view 
             class="li {{activeCategory === item.id ? 'active' : ''}}" 
@@ -87,14 +87,14 @@
       <view class="search-actions">
         <cy-btn variant="ghost" class="search-actions__map" bindtap="goMap">
           <cy-icon name="gps" size="32" />
-          在地图上找活动与主题点位
+          在地图上找活动与主题节点
         </cy-btn>
       </view>
     </view>
   </view>
 
   <!-- 筛选(§11:Modal 走共享组件,原 .screen/.pop-cont 私有弹层已删,对齐 pages/searchmap 同款筛选表单) -->
-  <cy-sheet show="{{popVisible}}" title="筛选" anchor-selector="#filter-trigger" bind:close="popClose">
+  <cy-sheet show="{{popVisible}}" title="筛选" fixed="full" anchor-selector="#filter-trigger" bind:close="popClose">
     <view class="form-main">
       <!-- 日期筛选 -->
       <view class="dl">

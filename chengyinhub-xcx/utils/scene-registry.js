@@ -13,6 +13,8 @@ const SCENES = {
   //    抽屉的「从 330px 起」由宿主那层壳直接挂 .psheet--drw 表达,不新造档位。
   'roam-more': { route: '/pages/roam/index', title: '更多', theme: 'player', variant: 'half', maskClosable: true },
   'roam-settings': { route: '/pages/roam/index', title: '设置', theme: 'player', variant: 'half', maskClosable: true, canBack: true },
+  // BL-01 点位筛选:从抽屉进,同设置页一样 canBack 回抽屉;正文写在宿主 wxml,数据在 data.poiFilter。
+  'roam-poi-filter': { route: '/pages/roam/index', title: '筛选节点', theme: 'player', variant: 'half', maskClosable: true, canBack: true },
   // 点地图上别人的头像(原型 f-other-a / f-other-b 的 otherSheet)。正文写在宿主 wxml 里,
   // 数据在 data.runnerView —— 和 roam-rules 一样,注册表只承载弹层契约。
   'roam-runner': { route: '/pages/roam/index', title: 'TA 的漫游', theme: 'player', variant: 'half', maskClosable: true },
@@ -25,18 +27,18 @@ const SCENES = {
   'settings-identity-picker': { route: '/pages/shezhi/shezhi', title: '选择要申请的身份', theme: 'player', variant: 'half', maskClosable: false },
   'merchant-more-menu': { route: '/pages/merchant/index/index', title: '更多', theme: 'merchant', variant: 'half', maskClosable: false },
   'merchant-chapter-picker': { route: '/pages/merchant/index/index', title: '选择要核销的章节', theme: 'merchant', variant: 'half', maskClosable: true },
-  'merchant-station-picker': { route: '/pages/merchant/index/index', title: '选择要核销的据点', theme: 'merchant', variant: 'half', maskClosable: true },
+  'merchant-station-picker': { route: '/pages/merchant/index/index', title: '选择要核销的节点', theme: 'merchant', variant: 'half', maskClosable: true },
   'merchant-verification-result': { route: '/pages/merchant/index/index', title: '操作结果', theme: 'merchant', variant: 'half', maskClosable: true },
   'member-more-menu': { route: '/pages/member/index/index', title: '选项', theme: 'player', variant: 'half', maskClosable: true },
   'member-chapter-picker': { route: '/pages/member/index/index', title: '选择要核销的章节', theme: 'player', variant: 'half', maskClosable: true },
-  'member-station-picker': { route: '/pages/member/index/index', title: '选择要核销的据点', theme: 'player', variant: 'half', maskClosable: true },
+  'member-station-picker': { route: '/pages/member/index/index', title: '选择要核销的节点', theme: 'player', variant: 'half', maskClosable: true },
   'points-tasks': { route: '/pages/member/index/index', title: '积分任务', theme: 'player', variant: 'half', maskClosable: true },
   // G01-G12 游戏内二级场景
   'play-activity-detail': { route: '/pages/activity/detail/index', title: '活动详情', theme: 'player', variant: 'full' },
-  'roam-task-list': { route: '/pages/activity/list/index', title: '官方活动', theme: 'player', variant: 'full' },
+  'roam-task-list': { route: '/pages/activity/list/index', title: '官方活动任务', theme: 'player', variant: 'full' },
   // 据点的最终宿主是薄深链壳,不是商家页:poiId 是 cityNodeId,与 merchantId 不是一个东西。
   // 这个 route 就是站外稳定深链,改它会让历史转发卡片/收藏落空(见设计文档 §3.9)。
-  'roam-poi-detail': { route: '/subpackageRoam/poi-detail/index', title: '据点详情', theme: 'player', variant: 'full' },
+  'roam-poi-detail': { route: '/subpackageRoam/poi-detail/index', title: '节点详情', theme: 'player', variant: 'full' },
   // 2026-09-06 路由页 pages/merchant/discover 已删(无人跳转),场景只在 roam/play 宿主内打开,不再有独立 route。
   'roam-discover': { title: '发现附近店铺', theme: 'player', variant: 'full' },
   // ⚠️ 漫游域(subpackageRoam)由用户本人维护,本次半屏收口**不动它**:
@@ -47,7 +49,7 @@ const SCENES = {
   'game-coupon-wallet': { route: '/subpackageMember/coupon-wallet/index', title: '优惠券', theme: 'player', variant: 'half' },
   'qr-coupon': { route: '/subpackageMember/coupon-qr/index', title: '出示核销码', theme: 'player', variant: 'full', canBack: true },
   'qr-group-code': { route: '/pages/club/group-code/index', title: '团核销码', theme: 'player', variant: 'full', canBack: true },
-  'qr-citynode': { route: '/subpackageRoam/citynode-code/index', title: '据点核销码', theme: 'player', variant: 'full', canBack: true },
+  'qr-citynode': { route: '/subpackageRoam/citynode-code/index', title: '节点核销码', theme: 'player', variant: 'full', canBack: true },
   'qr-ticket': { route: '/pages/play/index', title: '入场码', theme: 'player', variant: 'full', canBack: true },
   'roam-stamp-album': { route: '/subpackageP3/pages/stamp-album/index/index', title: '集邮册', theme: 'player', variant: 'full' },
 
@@ -81,7 +83,7 @@ const SCENES = {
   'club-manage': { route: '/pages/club/detail/index', title: '俱乐部管理', theme: 'player', variant: 'full' },
   // 完整编辑组件自带固定保存区,外层不再渲第二个通用 footer。
   'club-edit': { route: '/pages/club/edit/index', title: '编辑俱乐部', theme: 'player', variant: 'full', canBack: true, form: true, maskClosable: false },
-  'merchant-citynode': { route: '/pages/merchant/citynode/index', title: '城市据点', theme: 'merchant', variant: 'full', form: true, maskClosable: false, footer: true },
+  'merchant-citynode': { route: '/pages/merchant/citynode/index', title: '城市节点', theme: 'merchant', variant: 'full', form: true, maskClosable: false, footer: true },
 }
 
 function getScene(id, params) {

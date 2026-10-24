@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -71,6 +72,7 @@ class MerchantChapterApplicationServiceImplTest {
     private ISysCategoryService categoryService;
     private IChapterMerchantNodeService chapterMerchantNodeService;
     private MerchantChapterApplicationServiceImpl service;
+    private com.chengyinhub.business.service.support.CommittedBusinessNotice committedNotice;
 
     @BeforeEach
     void setUp() {
@@ -83,7 +85,11 @@ class MerchantChapterApplicationServiceImplTest {
         chapterMerchantNodeService = mock(IChapterMerchantNodeService.class);
 
         service = new MerchantChapterApplicationServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class));
         ReflectionTestUtils.setField(service, "applicationMapper", applicationMapper);
+        committedNotice = mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class);
+        ReflectionTestUtils.setField(service, "committedNotice", committedNotice);
         ReflectionTestUtils.setField(service, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "merchantMapper", merchantMapper);
@@ -121,9 +127,9 @@ class MerchantChapterApplicationServiceImplTest {
         MerchantChapterApplication invited = service.invite(CHAPTER, PUBLISHER, MERCHANT, "重新邀请");
         assertEquals(APPLICATION, invited.getId());
         assertEquals(Integer.valueOf(0), invited.getDelFlag());
-        assertEquals(Integer.valueOf(MerchantChapterApplication.STATUS_APPROVED), invited.getStatus());
+        assertEquals(Integer.valueOf(MerchantChapterApplication.STATUS_PENDING), invited.getStatus());
         assertEquals(Integer.valueOf(MerchantChapterApplication.SOURCE_INVITE), invited.getSource());
-        assertEquals(PUBLISHER, invited.getAuditMemberId());
+        assertNull(invited.getAuditMemberId());
         verify(applicationMapper, never()).insertMerchantChapterApplication(any());
 
         when(applicationMapper.reinviteWithdrawn(any())).thenReturn(0);
@@ -374,6 +380,40 @@ class MerchantChapterApplicationServiceImplTest {
         verify(applicationMapper, never()).withdrawPending(anyLong(), anyLong());
         verify(chapterMerchantNodeService, never()).auditAlongApplication(
                 anyLong(), anyLong(), anyLong(), eq(false), any());
+    }
+
+    @Test
+    void invitedMerchantMustAcceptBeforeCapacityIsReserved() {
+        arrangeEligibleApplication();
+        MerchantChapterApplication invited = application(MerchantChapterApplication.STATUS_PENDING, MERCHANT, 0);
+        invited.setSource(MerchantChapterApplication.SOURCE_INVITE);
+        when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION)).thenReturn(invited);
+        when(applicationMapper.updateAudit(any(), any(), any(), any(), any())).thenReturn(1);
+        assertThrows(IllegalStateException.class, () -> service.respondInvite(APPLICATION, OTHER_MERCHANT, true));
+        assertThrows(IllegalStateException.class, () -> service.audit(APPLICATION, PUBLISHER, true, ""));
+        MerchantChapterApplication accepted = service.respondInvite(APPLICATION, MERCHANT, true);
+        verify(committedNotice).sendAfterCommit(eq(PUBLISHER), eq("章节邀请处理结果"), eq("商家已接受章节邀请"),
+                eq("chapter-invite-decide"), eq(APPLICATION));
+        assertEquals(Integer.valueOf(MerchantChapterApplication.STATUS_APPROVED), accepted.getStatus());
+        assertEquals(MERCHANT, accepted.getAuditMemberId());
+        assertEquals(accepted, service.respondInvite(APPLICATION, MERCHANT, true));
+        verify(applicationMapper).updateAudit(APPLICATION, MerchantChapterApplication.STATUS_APPROVED,
+                "商家已接受邀请", MERCHANT, accepted.getHandleTime());
+    }
+
+    @Test
+    void publisherCanRevokeOnlyItsOwnPendingInvitation() {
+        arrangeEligibleApplication();
+        MerchantChapterApplication invited = application(MerchantChapterApplication.STATUS_PENDING, MERCHANT, 0);
+        invited.setSource(MerchantChapterApplication.SOURCE_INVITE);
+        when(applicationMapper.selectByIdIncludingDeleted(APPLICATION)).thenReturn(invited);
+        when(applicationMapper.withdrawPending(APPLICATION, MERCHANT)).thenReturn(1);
+        assertThrows(IllegalStateException.class, () -> service.revokeInvite(APPLICATION, OTHER_MERCHANT));
+        assertEquals(Integer.valueOf(2), service.revokeInvite(APPLICATION, PUBLISHER).getDelFlag());
+        verify(committedNotice).sendAfterCommit(eq(MERCHANT), eq("章节邀请已撤回"), eq("主办方已撤回待接受的章节邀请"),
+                eq("chapter-invite-revoke"), eq(APPLICATION));
+        assertEquals(invited, service.revokeInvite(APPLICATION, PUBLISHER));
+        verify(applicationMapper).withdrawPending(APPLICATION, MERCHANT);
     }
 
     private MerchantChapterApplication application(int status, Long merchantId, int delFlag) {
@@ -666,5 +706,63 @@ class MerchantChapterApplicationServiceImplTest {
         assertThrows(IllegalStateException.class, () -> service.invite(CHAPTER, PUBLISHER, MERCHANT, "同价补位", 800L));
         original.setStatus(0); topic.setLifecycle(5);
         assertThrows(IllegalStateException.class, () -> service.invite(CHAPTER, PUBLISHER, MERCHANT, "同价补位", 800L));
+    }
+
+    /** F-L3-02:邀请改为待接受后，待接受的补位邀请同样占住该原供给的补位位。 */
+    @Test
+    void pendingReplacementInvitationBlocksSecondReplacementInvitationForSameOffer() {
+        CmsTopic topic = availableTopic(); topic.setLifecycle(3); topic.setUserStatus(0);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        when(chapterMapper.selectCmsTopicChapterById(CHAPTER)).thenReturn(chapter(1, 2));
+        when(merchantMapper.selectMmsMerchantByMemberId(MERCHANT)).thenReturn(activeMerchant(MERCHANT));
+        MerchantChapterOffer original = new MerchantChapterOffer();
+        original.setId(800L); original.setTopicId(TOPIC); original.setChapterId(CHAPTER);
+        original.setMerchantId(OTHER_MERCHANT); original.setStatus(0); original.setWithdrawReason("停止营业");
+        when(offerMapper.selectByIdForUpdate(800L)).thenReturn(original);
+        MerchantChapterApplication pending = application(MerchantChapterApplication.STATUS_PENDING, 3003L, 0);
+        pending.setId(92L); pending.setSource(MerchantChapterApplication.SOURCE_INVITE); pending.setReplacementOfOfferId(800L);
+        when(applicationMapper.selectByChapterAndStatus(CHAPTER, MerchantChapterApplication.STATUS_PENDING))
+                .thenReturn(Collections.singletonList(pending));
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.invite(CHAPTER, PUBLISHER, MERCHANT, "同价补位", 800L));
+        assertEquals("该供给已有补位邀请，请等待确认或撤回后另邀", error.getMessage());
+        verify(applicationMapper, never()).insertMerchantChapterApplication(any());
+    }
+
+    /** F-L3-02:同一原供给只能有一家接受补位，第二家接受时拒绝且不改状态。 */
+    @Test
+    void acceptingReplacementInvitationRejectsWhenAnotherReplacementAlreadyAccepted() {
+        arrangeEligibleApplication();
+        CmsTopic paused = availableTopic(); paused.setLifecycle(3); paused.setUserStatus(0);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(paused);
+        MerchantChapterApplication invited = application(MerchantChapterApplication.STATUS_PENDING, MERCHANT, 0);
+        invited.setSource(MerchantChapterApplication.SOURCE_INVITE); invited.setReplacementOfOfferId(800L);
+        when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION)).thenReturn(invited);
+        MerchantChapterApplication accepted = application(MerchantChapterApplication.STATUS_APPROVED, 3003L, 0);
+        accepted.setId(92L); accepted.setSource(MerchantChapterApplication.SOURCE_INVITE); accepted.setReplacementOfOfferId(800L);
+        when(applicationMapper.selectByChapterAndStatus(CHAPTER, MerchantChapterApplication.STATUS_APPROVED))
+                .thenReturn(Collections.singletonList(accepted));
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.respondInvite(APPLICATION, MERCHANT, true));
+        assertEquals("原供给已有确认替补，请刷新后查看", error.getMessage());
+        verify(applicationMapper, never()).updateAudit(any(), any(), any(), any(), any());
+    }
+
+    /** F-R2F-05:主办驳回章节申请必须带原因；商家拒绝邀请不受影响。 */
+    @Test
+    void publisherRejectionRequiresReason() {
+        arrangeEligibleApplication();
+        when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION))
+                .thenReturn(application(MerchantChapterApplication.STATUS_PENDING, MERCHANT, 0));
+        when(applicationMapper.updateAudit(any(), any(), any(), any(), any())).thenReturn(1);
+        assertEquals("请填写拒绝原因", assertThrows(IllegalStateException.class,
+                () -> service.audit(APPLICATION, PUBLISHER, false, "  ")).getMessage());
+        assertEquals("请填写拒绝原因", assertThrows(IllegalStateException.class,
+                () -> service.audit(APPLICATION, PUBLISHER, false, null)).getMessage());
+        verify(applicationMapper, never()).updateAudit(any(), any(), any(), any(), any());
+        assertEquals(Integer.valueOf(MerchantChapterApplication.STATUS_REJECTED),
+                service.audit(APPLICATION, PUBLISHER, false, "品类不符").getStatus());
+        verify(committedNotice).sendAfterCommit(eq(MERCHANT), eq("章节申请审核结果"), eq("章节申请未通过：品类不符"),
+                eq("chapter-application-reviewed"), eq(APPLICATION));
     }
 }

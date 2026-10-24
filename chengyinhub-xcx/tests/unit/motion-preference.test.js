@@ -46,5 +46,5 @@ test('存储不可用时回退为正常动效且不抛错', () => {
     setStorageSync() { throw new Error('storage unavailable') },
   }
   assert.equal(readReducedMotion(broken), false)
-  assert.equal(writeReducedMotion(broken, true), true)
+  assert.equal(writeReducedMotion(broken, true), null)
 })

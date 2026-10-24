@@ -71,6 +71,16 @@ class RoamStampControllerTest {
     }
 
     @Test
+    void captionCannotReachStorageWithoutPassingTextDetection() {
+        RoamStampMapper mapper = mock(RoamStampMapper.class);
+        IWxContentSecurityService sec = mock(IWxContentSecurityService.class);
+        when(sec.checkText("不可公开", "openid-9")).thenReturn("内容不可公开");
+        AjaxResult result = controller(mapper, sec).create("https://o/p.jpg", "不可公开", "unsafe-caption");
+        assertEquals(500, result.get("code"));
+        verify(mapper, never()).insertStamp(any());
+    }
+
+    @Test
     void create_submitsMediaCheckAndWritesBackTraceId() {
         RoamStampMapper mapper = mock(RoamStampMapper.class);
         IWxContentSecurityService sec = mock(IWxContentSecurityService.class);

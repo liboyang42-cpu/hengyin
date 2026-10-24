@@ -27,6 +27,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * 拍照视觉审核服务的判定契约:结论解析与降级口径。
@@ -59,7 +60,12 @@ class PhotoCheckVisionServiceTest {
         Files.write(uploadDir.toPath().resolve("window.jpg"), jpeg(2, 2));
 
         service = new PhotoCheckVisionService();
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
+        when(media.processingUrl(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq("IMAGE"))).thenAnswer(call -> call.getArgument(0));
+        ReflectionTestUtils.setField(service, "mediaReferences", media);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
         gateway = mock(AiGatewayService.class);
+        org.mockito.Mockito.when(gateway.consumeQuota(MEMBER_ID, "photo_check")).thenReturn("reservation");
         alarm = mock(AlarmService.class);
         sentImage = new AtomicReference<>();
         ReflectionTestUtils.setField(service, "aiGatewayService", gateway);
@@ -73,6 +79,18 @@ class PhotoCheckVisionServiceTest {
     }
 
     // ==================== 结论解析 ====================
+
+    @Test
+    void separateConsentRefusalPreventsAnyProviderCallOrMediaWrite() {
+        com.chengyinhub.common.config.ComplianceProperties versions = new com.chengyinhub.common.config.ComplianceProperties();
+        versions.setDocVersions(java.util.Map.of("photo_model_processing", "v1.0", "voice_clone_processing", "v1.0"));
+        com.chengyinhub.business.service.ConsentGuard guard = new com.chengyinhub.business.service.ConsentGuard(
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IConsentRecordService.class), versions);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "consentGuard", guard);
+        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT));
+        org.mockito.Mockito.verifyNoInteractions(gateway);
+    }
 
     @Test
     void 模型回标准JSON按结论处理() {
@@ -149,7 +167,7 @@ class PhotoCheckVisionServiceTest {
         org.mockito.Mockito.doAnswer(invocation -> {
             refunded.set(true);
             return null;
-        }).when(gateway).refundQuota(MEMBER_ID, "photo_check");
+        }).when(gateway).refundQuota(MEMBER_ID, "photo_check", "reservation");
 
         PhotoCheckVisionResult result = service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT);
 
@@ -188,7 +206,7 @@ class PhotoCheckVisionServiceTest {
         assertTrue(result.isDegraded(), "额度耗尽也要降级而不是把玩家拦住");
         assertFalse(result.isPass(), "额度耗尽绝不能假装通过");
         assertFalse(called.get(), "超限后不该再发模型调用");
-        verify(gateway, never()).refundQuota(anyLong(), anyString());
+        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -228,7 +246,7 @@ class PhotoCheckVisionServiceTest {
         assertTrue(result.isDegraded(), "不支持的格式要降级而不是硬拦:" + result.getReason());
         assertFalse(result.isPass());
         verify(gateway, never()).consumeQuota(anyLong(), anyString());
-        verify(gateway, never()).refundQuota(anyLong(), anyString());
+        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -256,7 +274,7 @@ class PhotoCheckVisionServiceTest {
         assertTrue(result.isDegraded(), "按魔数判不出格式必须降级:" + result.getReason());
         assertTrue(result.getReason().contains("格式不支持"), "降级理由要说清格式不支持:" + result.getReason());
         verify(gateway, never()).consumeQuota(anyLong(), anyString());
-        verify(gateway, never()).refundQuota(anyLong(), anyString());
+        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -288,7 +306,7 @@ class PhotoCheckVisionServiceTest {
         assertTrue(result.isDegraded(), "超限必须降级:" + result.getReason());
         assertTrue(result.getReason().contains("32MB"), "降级理由要说清超限:" + result.getReason());
         verify(gateway, never()).consumeQuota(anyLong(), anyString());
-        verify(gateway, never()).refundQuota(anyLong(), anyString());
+        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -298,7 +316,7 @@ class PhotoCheckVisionServiceTest {
         service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT);
 
         verify(gateway).consumeQuota(MEMBER_ID, "photo_check");
-        verify(gateway, never()).refundQuota(anyLong(), anyString());
+        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
     }
 
     // ==================== 脚手架 ====================

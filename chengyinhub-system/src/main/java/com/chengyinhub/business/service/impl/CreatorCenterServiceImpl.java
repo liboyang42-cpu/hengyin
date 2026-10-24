@@ -58,8 +58,20 @@ public class CreatorCenterServiceImpl implements ICreatorCenterService {
         if (memberId == null || request == null || StringUtils.isBlank(request.getCreatorName())) {
             return 0;
         }
-        if (creatorProfileMapper.selectByMemberId(memberId) != null) {
-            return 0;
+        CreatorProfile existing = creatorProfileMapper.selectByMemberId(memberId);
+        if (existing != null) {
+            // 待审/已通过不重复受理;被驳回(2)的可以改资料重新提交,回到待审
+            if (!Integer.valueOf(2).equals(existing.getApplyStatus())) {
+                return 0;
+            }
+            CreatorProfile resubmit = new CreatorProfile();
+            resubmit.setId(existing.getId());
+            resubmit.setMemberId(memberId);
+            resubmit.setCreatorName(request.getCreatorName());
+            resubmit.setBio(request.getBio());
+            resubmit.setAvatarUrl(request.getAvatarUrl());
+            resubmit.setUpdateTime(DateUtils.getNowDate());
+            return creatorProfileMapper.resubmitRejectedCreatorProfile(resubmit);
         }
         CreatorProfile profile = new CreatorProfile();
         profile.setMemberId(memberId);

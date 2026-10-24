@@ -14,6 +14,7 @@ function loadOrderPage(storage) {
   const snapshot = storage || {}
   const sandbox = { requests: [], switchTabs: [] }
   global.getApp = () => ({
+    getUserID: () => 7, // Explicit authenticated order reader fixture.
     getPageSize: () => 10,
     getRequestErrorMessage: (response, fallback) => (response && response.msg) || fallback,
     sendRequest: request => sandbox.requests.push(request),
@@ -84,7 +85,7 @@ test('我的订单空态只在真正无订单时提供返回发现页的下一�
   assert.match(stateBlock, /list\.length==0/, '空态整体只在 list 为空时渲染')
   // CU-M-103 起 cta 是三元:商家身份下这个按钮兑现不了(见下面两条),文案本身仍留在 wxml。
   assert.match(stateBlock, /wx:if="\{\{!loading && !errorMsg && list\.length==0 && !hasOrders\}\}" fill[\s\S]*?cta="\{\{canDiscoverRoutes \? '去发现城市路线' : ''\}\}"[\s\S]*?bind:cta="goDiscoverRoutes"/)
-  assert.match(stateBlock, /wx:if="\{\{!loading && !errorMsg && list\.length==0 && hasOrders\}\}" fill[\s\S]*?title="当前筛选暂无订单"[\s\S]*?试试切换其他状态查看订单。/)
+  assert.match(stateBlock, /wx:if="\{\{!loading && !errorMsg && list\.length==0 && hasOrders\}\}" fill[\s\S]*?title="当前筛选暂无订单"[\s\S]*?换个筛选试试/)
   assert.match(
     js,
     /goDiscoverRoutes\(\)\s*\{\s*wx\.switchTab\(\{\s*url:\s*'\/pages\/index\/index'\s*}\);?\s*}/,
@@ -108,7 +109,7 @@ test('★玩家身份的订单空态照旧给「去发现城市路线」，点�
 test('★商家身份不给这个按钮;debug_user_view=user 是玩家展示视角,按钮留着', () => {
   const merchant = loadOrderPage({ role: 'merchant', user_type: 2 })
   merchant.page.attached()
-  assert.equal(merchant.page.data.canDiscoverRoutes, false, '商家点了只会落到商家工作台,不该承诺去发现')
+  assert.equal(merchant.page.data.canDiscoverRoutes, false, '商家点了只会落到商家工作台，不该承诺去发现')
 
   const legacy = loadOrderPage({ role: '', user_type: 2 })
   legacy.page.attached()

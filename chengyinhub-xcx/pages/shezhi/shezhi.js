@@ -1,3 +1,4 @@
+const sendRecovery = require('../../utils/im-send-recovery.js');
 const loading = require('../../utils/loading.js');
 const toast = require('../../utils/toast.js');
 const app = getApp();
@@ -6,11 +7,16 @@ const roleGuard = require('../../utils/roleGuard.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const { getScene } = require('../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
+const { clearStoragePreservingPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 Page({
 
   data: {
     privacyGateShow: false,
     userInfo: {},
+    settingsAuthRequired: false,
+    settingsAccessDenied: false,
+    // PR10 F-L5C-06:社区读闸关(含开关拉取失败)时「我的收藏」只剩主题,副标题不再提帖文
+    communityPostRead: false,
     isMerchantView: false,
     settingsTheme: 'player',
     statusBarHeight: app.globalData.statusBarHeight || 44,
@@ -19,6 +25,7 @@ Page({
     showAgreementSheet: false,
     showPrivacySheet: false,
     showMarketingConsent: false,
+    showPostGovernance: false,
     sceneStack: [],
     sceneCurrent: null,
     sceneConfirm: { show: false, action: null, pending: null }
@@ -34,19 +41,33 @@ Page({
 
   onLoad(options) {
     this._skipInitialShow = true;
+    this.syncCommunityEntry();
     this.syncViewStateAndTheme();
     this.getUserData();
     if (options && options.scene) this.openScene(options.scene, { id: options.id });
   },
 
   onShow() {
+    this._hidden = false;
     this.syncViewStateAndTheme();
     if (this._skipInitialShow) this._skipInitialShow = false;
-    else this.getUserData();
+    else { this.syncCommunityEntry(); this.getUserData(); }
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  // 与 IM 列表 _syncCommunityEntry、收藏页 syncCommunityTab 同一判据:app.canUseCommunity(false),开关稍后到达再补一次
+  syncCommunityEntry() {
+    const memberId = app.getUserID && app.getUserID();
+    const sync = () => {
+      if (this._unloaded || memberId !== (app.getUserID && app.getUserID())) return;
+      this.setData({ communityPostRead: typeof app.canUseCommunity === 'function' && app.canUseCommunity(false) });
+    };
+    const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
+    sync();
+    if (pending && typeof pending.then === 'function') pending.then(sync);
+  },
+
+  onHide() { this._hidden = true; this._userInfoEpoch = (this._userInfoEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
+  onUnload() { this._unloaded = true; this._userInfoEpoch = (this._userInfoEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
 
   syncViewStateAndTheme() {
     const isMerchantView = this.updateViewState();
@@ -132,6 +153,7 @@ Page({
   // 2026-08-20 用户定:商家侧「个人资料」与「店铺装修」合并 —— 商户从这里直接落店铺装修
   // (头像=Logo、昵称=店铺名称、签名=slogan、作品=门店相册,gerenziliao 对商户全是重复字段)。
   goUserInfo() {
+    if (this.data.settingsAuthRequired || this.data.settingsAccessDenied) { this.onLoginSettings(); return; }
     if (this.data.isMerchantView) {
       wx.navigateTo({ url: '/pages/merchant/decor/index' });
       return;
@@ -172,6 +194,14 @@ Page({
     this.setData({ showMarketingConsent: false });
   },
 
+  openPostGovernance() {
+    this.setData({ showPostGovernance: true });
+  },
+
+  closePostGovernance() {
+    this.setData({ showPostGovernance: false });
+  },
+
   goUserAgreement() {
     this.setData({ showAgreementSheet: true });
   },
@@ -188,16 +218,6 @@ Page({
     wx.navigateTo({ url: '/pages/shezhi/about/index' });
   },
 
-  copyAttributionLink(e) {
-    const link = (e.currentTarget.dataset || {}).link;
-    if (!link) return;
-    wx.setClipboardData({
-      data: link,
-      success() { toast('来源地址已复制'); },
-      fail() { toast('复制失败，可长按选中地址'); },
-    });
-  },
-
   openScene(id, params = {}) {
     if (id === 'settings-profile' && this.data.isMerchantView) {
       this.goUserInfo();
@@ -209,7 +229,7 @@ Page({
     } catch (e) {
       // A-10:深链 ?scene=不存在 时 getScene 会 throw,onLoad 里没有 try 会让页面卡在半初始化态。
       // 与 scene-deep-link 同一口径:toast + 留在原页(兜底返回)。
-      toast('场景暂时打不开');
+      toast('场景无法打开');
       return false;
     }
     if (String(id).indexOf('settings-') === 0) next.theme = this.data.settingsTheme;
@@ -279,6 +299,8 @@ Page({
     const dc = this.selectComponent && this.selectComponent('#dc');
     if (dc) dc.busyOn();
     const clearLocalLogin = function () {
+      if (!clearStoragePreservingPlayerRoamMemory(wx)) return false;
+      sendRecovery.invalidate();
       app.globalData.authorization = '';
       app.globalData.open_id = '';
       app.globalData.user_id = '';
@@ -286,9 +308,9 @@ Page({
       app.globalData.avatar = '';
       app.globalData.nickname = '';
       app.globalData.role = ''; // 退出时一并清角色,避免内存残留导致身份错乱
-      roleGuard.clear(); // 清 roleGuard 模块级权限缓存(clearStorageSync 清不掉内存 _cache,reLaunch 不重启模块)
-      wx.clearStorageSync();
+      roleGuard.clear(); // 本地账号态清理成功后再清模块级权限缓存，失败可留在弹窗重试
       wx.reLaunch({ url: '/pages/index/index' });
+      return true;
     };
     const loginExpired = (res, status) => {
       const code = Number(status == null ? res && res.code : status);
@@ -305,7 +327,7 @@ Page({
       method: 'POST',
       success(res) {
         if (res && (res.code == 200 || loginExpired(res))) {
-          clearLocalLogin();
+          if (!clearLocalLogin() && dc) dc.failed('本机登录信息清理失败，请重试');
           return;
         }
         const message = (res && res.msg) || '退出没有完成，请重试';
@@ -313,7 +335,7 @@ Page({
       },
       fail(res, status) {
         if (loginExpired(res, status)) {
-          clearLocalLogin();
+          if (!clearLocalLogin() && dc) dc.failed('本机登录信息清理失败，请重试');
           return;
         }
         if (dc) dc.failed('退出没有完成，请重试');
@@ -321,26 +343,71 @@ Page({
     });
   },
 
+  onLoginSettings() {
+    if (this.data.settingsAccessDenied) { this.getUserData(); return; }
+    if (this._settingsLoginPending) return;
+    const epoch = this._userInfoEpoch || 0;
+    this._settingsLoginPending = true;
+    let login;
+    try {
+      login = Number(app.getUserID()) > 0 && typeof app.reLogin === 'function'
+        ? app.reLogin() : typeof app.firstLogin === 'function' ? app.firstLogin() : null;
+    } catch (error) { this._settingsLoginPending = false; return; }
+    Promise.resolve(login).then(result => {
+      this._settingsLoginPending = false;
+      if (epoch === (this._userInfoEpoch || 0) && !(result && result.ok === false) && Number(app.getUserID()) > 0) this.getUserData();
+    }).catch(() => { this._settingsLoginPending = false; });
+  },
+
   getUserData() {
     const that = this;
+    const epoch = this._userInfoEpoch = (this._userInfoEpoch || 0) + 1;
+    const identity = () => {
+      const gd = app.globalData || {};
+      return [app.getUserID(), gd.role || '', gd.user_type || '', gd.authorization || ''].join('|');
+    };
+    const requestedIdentity = identity();
+    if (!(Number(app.getUserID()) > 0)) {
+      this.setData({ userInfo: {}, settingsAuthRequired: true, settingsAccessDenied: false });
+      this._settingsReadOwner = requestedIdentity;
+      return;
+    }
+    if (this._settingsReadOwner && this._settingsReadOwner !== requestedIdentity) this.setData({ userInfo: {} });
+    this._settingsReadOwner = requestedIdentity;
+    const handleAuth = (res, statusCode) => {
+      if (epoch !== that._userInfoEpoch || that._unloaded) return true;
+      if (requestedIdentity !== identity() || res && res.reason === 'sessionChanged') {
+        that._userInfoEpoch += 1;
+        that.setData({ userInfo: {}, settingsAuthRequired: !(Number(app.getUserID()) > 0), settingsAccessDenied: false });
+        if (!that._hidden && Number(app.getUserID()) > 0) that.getUserData();
+        return true;
+      }
+      const code = Number(statusCode || res && (res.statusCode || res.code));
+      if (code !== 401 && code !== 403) return false;
+      that.setData({ userInfo: {}, settingsAuthRequired: code === 401, settingsAccessDenied: code === 403 });
+      return true;
+    };
     app.sendRequest({
       hideLoading: true,
+      silentError: true,
       url: '/api/user/info',
       data: {
         member_id: app.getUserID()
       },
       method: "POST",
       success(res) {
+        if (handleAuth(res)) return;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
           app.setUserRole(res.data.role); // RBAC:缓存角色
           that.syncViewStateAndTheme();
           const data = res.data || {};
           // 手机号脱敏展示:11 位掐中间四位,非 11 位原样(replace 不匹配即原样)
           data.phoneMasked = String(data.phone || '').replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2');
-          that.setData({ userInfo: data });
+          that.setData({ userInfo: data, settingsAuthRequired: false, settingsAccessDenied: false });
         }
       },
-      fail() {}
+      fail(res, code) { handleAuth(res, code); },
+      successStatusAbnormal(res, code) { handleAuth(res, code); }
     });
   },
 });

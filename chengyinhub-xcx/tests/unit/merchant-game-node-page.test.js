@@ -32,7 +32,7 @@ function activeView(status = 'ACTIVE') {
         revision: 4,
         preparationChecklist: [{ code: 'STAFF', label: '工作人员已到位', checked: status !== 'INVITED' }],
         playerTask: { taskCode: 'DOCK_CODE', prompt: '扫描柜台任务码', inputType: 'SCAN', verificationRequired: true },
-        merchantInstruction: '只核对公开任务与核验编号',
+        merchantInstruction: '只确认公开任务与核验编号',
         hiddenInfoReminder: '不要透露答案或其他角色线索',
         capacity: 12,
         serviceStartAt: '2026-08-23 10:00',
@@ -109,7 +109,7 @@ test('页面只凭 activityId 读取 MERCHANT 投影，不接受 merchantId 自�
   assert.equal(page.data.station.nodeName, '老码头补给站')
   assert.equal(page.data.station.playable, true)
   assert.equal(page.data.station.playerTask.prompt, '扫描柜台任务码')
-  assert.equal(page.data.station.merchantInstruction, '只核对公开任务与核验编号')
+  assert.equal(page.data.station.merchantInstruction, '只确认公开任务与核验编号')
   assert.equal(page.data.station.hiddenInfoReminder, '不要透露答案或其他角色线索')
 })
 
@@ -117,7 +117,7 @@ test('loading/empty/business-error/network-error 四态互斥，加载失败绝�
   const business = createPage()
   business.page.onLoad({ activityId: '71' })
   business.requests[0].success({
-    code: 500, msg: '无权查看该站点', data: { reasonCode: 'GAME_FORBIDDEN_SCOPE' },
+    code: 500, msg: '无权查看该节点', data: { reasonCode: 'GAME_FORBIDDEN_SCOPE' },
   })
   await flush()
   assert.equal(business.page.data.viewState, 'business-error')
@@ -172,7 +172,7 @@ test('unknown 写只持久化回执索引；PENDING/错回执都不能解锁，�
   assert.doesNotMatch(JSON.stringify(saved), /payload|command|submissionId|CAPACITY|现场满员|playerMessage/i,
     '本地明文只能保存回执索引，不得保存命令正文、原因或玩家通知')
 
-  assert.equal(page.submitPause(), false, 'unknown 未权威回读前不得再次 POST')
+  assert.equal(page.submitPause(), false, 'unknown 未权威刷新前不得再次 POST')
   assert.equal(requests.length, 2)
 
   const restored = createPage(storage)
@@ -469,7 +469,7 @@ test('R9-38 没有已审核备用方案也能暂停：先确认，确认后才�
   page.onResumeTimeChange({ detail: { value: '16:00' } })
   assert.equal(page.submitPause(), true)
   assert.equal(requests.length, 1, '确认之前不得发请求')
-  assert.match(wxStub._modal.content, /不会被引导到其他站点/)
+  assert.match(wxStub._modal.content, /不会被引导到其他节点/)
   assert.match(wxStub._modal.content, /如需退款请联系平台客服/)
   wxStub._modal.success({ confirm: false, cancel: true })
   assert.equal(requests.length, 1, '取消不得发请求')
@@ -538,7 +538,7 @@ test('WXML 交付完整状态、准备、暂停、恢复、核验、回执与本
   ].forEach(text => assert.match(wxml, new RegExp(text)))
   assert.ok(
     wxml.indexOf("writeState === 'unknown'") < wxml.indexOf("viewState === 'ready'"),
-    '未知写回读入口必须独立于投影 ready 状态，加载失败时仍能确认回执',
+    '未知写刷新入口必须独立于投影 ready 状态，加载失败时仍能确认回执',
   )
   assert.doesNotMatch(wxml, /[›✓]/, '箭头和勾选必须复用 cy-icon，不得用文本符号伪装')
   assert.doesNotMatch(wxml, /备用节点（选填）/, '暂停时必须显式指定备用节点')
@@ -577,7 +577,7 @@ test('ACTIVE 本站可出示一次性打卡码，倒计时结束前关闭会清�
   page.onUnload()
 })
 
-test('未开放接待的站点不能出示打卡码', async () => {
+test('未开放接待的节点不能出示打卡码', async () => {
   const { page, requests } = createPage()
   page.onLoad({ activityId: '71' })
   requests[0].success({ code: 200, data: activeView('INVITED') })
@@ -585,4 +585,58 @@ test('未开放接待的站点不能出示打卡码', async () => {
   assert.equal(page.showLiveCheckin(), false)
   assert.equal(page.data.checkinVisible, false)
   assert.equal(requests.length, 1)
+})
+
+test('商家本站命令纪元经过构造和内存持久化不丢失；旧纪元拒绝只重读', async () => {
+  const { page, requests, toastCalls } = createPage()
+  page.onLoad({ activityId: '71' })
+  requests[0].success({ code: 200, data: { ...activeView('INVITED'), authorityEpoch: 4, availableActions: ['STATION_ACCEPT'] } })
+  await flush()
+  page.data.readyDraft.capacity = '25'
+  page.data.readyDraft.note = '保留未提交的现场备注'
+  page.acceptStation()
+  assert.equal(requests[1].data.authorityEpoch, 4)
+  assert.equal(requests[1].data.expectedRevision, 4)
+  requests[1].success({ code: 500, msg: '本局权威版本已更新，请刷新', data: { reasonCode: 'GAME_AUTHORITY_CONFLICT' } })
+  await flush()
+  assert.equal(requests[2].url, '/api/game/session/view')
+  assert.equal(requests.filter(call => call.method === 'POST').length, 1)
+  assert.equal(page._pendingWrite, null)
+  assert.equal(page.data.canRetryUnknownWrite, false)
+  assert.equal(page.retryUnknownWrite(), false)
+  assert.match(toastCalls.at(-1).title, /权威版本/)
+  requests[2].success({ code: 200, data: { ...activeView('INVITED'), authorityEpoch: 5, availableActions: ['STATION_ACCEPT'] } })
+  await flush()
+  assert.equal(page.data.readyDraft.capacity, '25')
+  assert.equal(page.data.readyDraft.note, '保留未提交的现场备注')
+  assert.equal(page._projection.authorityEpoch, 5)
+})
+
+test('准备结果待核对后回查确认 FAILED：重读节点仍保留未生效的准备表单', async () => {
+  const { page, requests } = createPage()
+  page.onLoad({ activityId: '71' })
+  requests[0].success({ code: 200, data: activeView('ACCEPTED') })
+  await flush()
+  page.setData({ readyDraft: {
+    checklist: [{ code: 'STAFF', label: '工作人员已到位', checked: true }],
+    capacity: '20', serviceDate: '2026-08-23', serviceStartTime: '11:00', serviceEndTime: '17:00', note: '后门入场',
+  } })
+  assert.equal(page.submitReady(), true)
+  const command = JSON.parse(JSON.stringify(requests[1].data))
+  requests[1].fail({ errMsg: 'request:fail timeout' })
+  await flush()
+  assert.equal(page.data.writeState, 'unknown')
+  assert.equal(page.confirmUnknownWrite(), true)
+  requests[2].success({ code: 200, data: {
+    receiptId: 701, activityId: 71, requestId: command.requestId, action: 'STATION_READY',
+    outcome: 'FAILED', reasonCode: 'GAME_STATE_CONFLICT', revision: 4, result: { reason: '状态已变化' },
+  } })
+  await flush()
+  assert.equal(page.data.writeState, 'idle')
+  assert.equal(requests[3].url, '/api/game/session/view')
+  requests[3].success({ code: 200, data: activeView('ACCEPTED') })
+  await flush()
+  assert.equal(page.data.readyDraft.capacity, '20')
+  assert.equal(page.data.readyDraft.serviceStartTime, '11:00')
+  assert.equal(page.data.readyDraft.note, '后门入场')
 })

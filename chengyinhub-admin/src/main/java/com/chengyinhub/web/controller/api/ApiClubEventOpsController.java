@@ -28,6 +28,15 @@ public class ApiClubEventOpsController extends BaseController {
     @Autowired private IClubEventOpsService eventOpsService;
     @Autowired private IClubWaitlistService waitlistService;
     @Autowired private IClubEventAttendanceService attendanceService;
+    @Autowired private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+    @Autowired private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
+
+    /** F-L5C-02:对他人可见的文字写入前送检;审不了按 fail-close 拦截。 */
+    private String textRisk(Long actorMemberId, String text) {
+        if (text == null || text.trim().isEmpty()) return null;
+        return com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                actorMemberId, text);
+    }
 
     @PostMapping("/topics")
     public AjaxResult topics(@RequestBody(required = false) Map<String, Object> request) {
@@ -110,11 +119,27 @@ public class ApiClubEventOpsController extends BaseController {
         }
     }
 
+    /** O5b-7:关闭系列(CLOSED 终态);开关默认关,关闭时返回 403。已排场次与已付报名不动。 */
+    @PostMapping("/series/close")
+    public AjaxResult closeSeries(@RequestBody(required = false) ClubEventSeriesRequest request) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少系列参数");
+        try {
+            return success(eventOpsService.closeSeries(principal, appUsername(principal), request));
+        } catch (ServiceException e) {
+            return serviceError(e);
+        }
+    }
+
     @PostMapping("/cancel")
     public AjaxResult cancelOccurrence(@RequestBody(required = false) ClubEventCancellationRequest request) {
         Long principal = principal();
         if (principal == null) return error("请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少取消参数");
+        // 取消原因会发给报名者与候补者。
+        String risk = textRisk(principal, request.getReason());
+        if (risk != null) return error(risk);
         try {
             return success(eventOpsService.cancelOccurrence(principal, appUsername(principal), request));
         } catch (ServiceException e) {

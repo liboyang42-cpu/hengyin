@@ -1,5 +1,10 @@
 const toast = require('../../utils/toast.js');
+const { memberId, failureStatus, waitForInitialSession, recoverReadSession } = require('../../utils/session/login-reload.js');
 const app = getApp();
+function readAuthorization() {
+  const value = typeof app.getAuthorization === 'function' ? app.getAuthorization() : app.globalData && app.globalData.authorization;
+  return typeof value === 'string' ? value.trim() : '';
+}
 
 // 后端 /api/coop/complaint/report 仅信任 topicId + reason(过错方/垫付额/状态等一律客服后台设)。
 // 投诉类型 / 联系方式后端无独立列,统一并入 reason 文本,避免信息静默丢失。
@@ -20,15 +25,119 @@ Page({
     submitError: '',
     submitErrorKind: 'data',
     canSubmit: false,
+    history: [],
+    historyLoading: false,
+    historyAccessError: '',
+    readAccess: '',
+    readLoginPending: false,
+    readAccessMessage: '',
   },
 
   onLoad() {
-    this.loadTopics();
+    this._hidden = false;
+    this.reloadReads();
+  },
+
+  onShow() {
+    const resume = this._hidden;
+    this._hidden = false;
+    this._syncReadOwner();
+    if (resume || this._pageReadIdentity !== this._readIdentity()) this.reloadReads();
   },
 
   onRetry() {
-    this.setData({ loading: true, errorMsg: '' });
+    if (this.data.readAccess === 'login') return this.loginToRead();
+    this.reloadReads();
+  },
+
+  _readIdentity() { return memberId(app) + '|' + readAuthorization(); },
+
+  _syncReadOwner() {
+    const owner = memberId(app);
+    const changed = owner && this._formOwner && owner !== this._formOwner;
+    if (changed) {
+      this._invalidateReads();
+      this._loginEpoch = (this._loginEpoch || 0) + 1;
+      this._loginPending = false;
+      this.setData({ reason: '', contact: '', typeIndex: -1, topicIndex: -1, canSubmit: false,
+        topics: [], history: [], pickerSheet: '', submitError: '', readAccess: '', errorMsg: '', readLoginPending: false });
+    }
+    if (owner) this._formOwner = owner;
+    return !!changed;
+  },
+
+  _invalidateReads() {
+    this._topicsEpoch = (this._topicsEpoch || 0) + 1;
+    this._historyEpoch = (this._historyEpoch || 0) + 1;
+    for (const task of [this._topicsTask, this._historyTask]) {
+      if (task && typeof task.abort === 'function') task.abort();
+    }
+  },
+
+  _showReadLogin(message) {
+    this._invalidateReads();
+    this.setData({ readAccess: 'login', readAccessMessage: message || '登录后可选择活动并查看自己的处理进展',
+      loading: false, errorMsg: '', topics: [], topicIndex: -1, canSubmit: false,
+      history: [], historyLoading: false, historyAccessError: message || '请登录后查看处理进展' });
+  },
+
+  _ensureReadSession() {
+    if (this._hidden || this._unloaded) return false;
+    this._syncReadOwner();
+    if (!memberId(app) || !readAuthorization()) {
+      this._showReadLogin();
+      waitForInitialSession(this, app, this.reloadReads);
+      return false;
+    }
+    return true;
+  },
+
+  reloadReads() {
+    if (this._hidden || this._unloaded) return;
+    this._syncReadOwner();
+    this._pageReadIdentity = this._readIdentity();
     this.loadTopics();
+    this.loadHistory();
+  },
+
+  loginToRead() {
+    if (this._loginPending || this._hidden || this._unloaded) return;
+    const epoch = this._loginEpoch = (this._loginEpoch || 0) + 1;
+    const owner = memberId(app);
+    this._loginPending = true;
+    this.setData({ readLoginPending: true, readAccessMessage: '' });
+    let pending;
+    try { pending = owner && typeof app.reLogin === 'function' ? app.reLogin() : app.firstLogin(); }
+    catch (error) {
+      this._loginPending = false;
+      this.setData({ readLoginPending: false, readAccess: 'login', readAccessMessage: '登录没有完成，可以再次尝试' });
+      return;
+    }
+    const finish = result => {
+      if (epoch !== this._loginEpoch) return;
+      this._loginPending = false;
+      if (this._hidden || this._unloaded) return;
+      this.setData({ readLoginPending: false });
+      if (!result || result.ok !== true || !memberId(app) || !readAuthorization()
+          || owner && owner !== memberId(app)
+          || typeof result.isCurrentSession === 'function' && !result.isCurrentSession()) {
+        this.setData({ readAccess: 'login', readAccessMessage: '登录没有完成，可以再次尝试' });
+        return;
+      }
+      this.reloadReads();
+    };
+    return Promise.resolve(pending).then(finish, () => finish(null));
+  },
+
+  _currentRead(kind, epoch, owner, authorization, res, statusCode) {
+    if (this._hidden || this._unloaded || epoch !== this[kind]) return false;
+    if (recoverReadSession(this, app, res, function (anonymous) {
+      this._syncReadOwner();
+      if (anonymous || !readAuthorization()) this._showReadLogin(app.getRequestErrorMessage(res, '请登录后查看处理进展'));
+      else this._invalidateReads();
+    }, this.reloadReads, statusCode)) return false;
+    if (owner !== memberId(app) || authorization !== readAuthorization()) return false;
+    return true;
   },
 
   // R3-C04:导航条返回由页面接管。裸 cy-nav-bar 的内建 onBack 只在栈长 > 1 时 navigateBack,
@@ -53,16 +162,30 @@ Page({
   //    `t.id != null ? t.id : item.topicId` 两个来源全空,整行被丢掉,
   //    ③ 自由探索玩家(买活动票、活动 topic_id 指向主题)因此整条选不到对象。
   loadTopics() {
+    if (!this._ensureReadSession()) return;
+    const owner = memberId(app), authorization = readAuthorization();
+    const epoch = this._topicsEpoch = (this._topicsEpoch || 0) + 1;
+    const current = (res, statusCode) => this._currentRead('_topicsEpoch', epoch, owner, authorization, res, statusCode);
     const that = this;
-    const finishLoadError = (res, fallback) => {
+    this.setData({ loading: true, readAccess: '', errorMsg: '' });
+    const finishLoadError = (res, fallback, statusCode) => {
+      if (!current(res, statusCode)) return;
+      const code = failureStatus(res, statusCode);
+      if (code === 401 || code === 2) { this._showReadLogin(app.getRequestErrorMessage(res, '请重新登录')); return; }
+      if (code === 403) {
+        this.setData({ loading: false, readAccess: 'denied', readAccessMessage: app.getRequestErrorMessage(res, '当前账号无法发起投诉'),
+          topics: [], topicIndex: -1, canSubmit: false });
+        return;
+      }
       that.setData({ loading: false, errorMsg: app.getRequestErrorMessage(res, fallback) });
     };
-    app.sendRequest({
+    this._topicsTask = app.sendRequest({
       hideLoading: true,
       silentError: true,
       url: '/api/coop/complaint/topics',
       method: 'POST',
       success(res) {
+        if (!current(res)) return;
         if (res.code == 200 || res.code == '200') {
           const rows = res.data || [];
           // 服务端已经去过重、已经 fail-closed 过(反查不出主题的单不会下发);
@@ -77,14 +200,62 @@ Page({
           finishLoadError(res, '可投诉活动加载失败，请重试');
         }
       },
-      successStatusAbnormal(res) {
-        finishLoadError(res, '登录状态已失效，请重新进入');
+      successStatusAbnormal(res, statusCode) {
+        finishLoadError(res, '登录状态已失效，请重新进入', statusCode);
       },
-      fail(res) {
-        finishLoadError(res, '网络异常，请重试');
+      fail(res, statusCode) {
+        finishLoadError(res, '网络异常，请重试', statusCode);
       },
     });
   },
+
+  loadHistory() {
+    if (!this._ensureReadSession()) return;
+    const owner = memberId(app), authorization = readAuthorization();
+    if (owner !== this._historyOwner) this.setData({ history: [] });
+    this._historyOwner = owner;
+    const epoch = (this._historyEpoch || 0) + 1;
+    this._historyEpoch = epoch;
+    if (this._historyTask && typeof this._historyTask.abort === 'function') this._historyTask.abort();
+    const current = (res, statusCode) => this._currentRead('_historyEpoch', epoch, owner, authorization, res, statusCode);
+    this.setData({ historyLoading: true, historyAccessError: '' });
+    const denied = (res, statusCode) => {
+      const code = Number(statusCode || res && (res.code || res.statusCode));
+      if (!current(res, statusCode)) return;
+      if (code === 401 || code === 2) { this._showReadLogin(app.getRequestErrorMessage(res, '请重新登录')); return; }
+      if ([400, 403, 422].indexOf(code) >= 0) {
+        this.setData({ history: [], historyAccessError: res.msg || (code === 401 ? '请登录后查看处理进展' : '当前账号无法查看处理进展') });
+      }
+    };
+    this._historyTask = app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/coop/complaint/mine',
+      method: 'POST',
+      success: res => {
+        denied(res);
+        if (!current(res) || !res || Number(res.code) !== 200 || !Array.isArray(res.data)
+            || res.data.some(row => !row || typeof row !== 'object' || !row.id)) return;
+        // 服务端只返回本人进展字段；不推算责任、内部扣款或最终退款。
+        const history = res.data.map(row => ({ id: row.id, topicName: row.topicName || '',
+          statusText: row.statusText || '', reason: row.reason || '', handleNote: row.handleNote || '' }));
+        this.setData({ history });
+      },
+      successStatusAbnormal: (res, statusCode) => { denied(res, statusCode); },
+      fail: denied,
+      complete: () => { if (current()) this.setData({ historyLoading: false }); },
+    });
+  },
+
+  onHide() {
+    this._hidden = true;
+    this._loginEpoch = (this._loginEpoch || 0) + 1;
+    this._loginPending = false;
+    this._invalidateReads();
+    this.setData({ loading: false, historyLoading: false, readLoginPending: false });
+  },
+
+  onUnload() { this.onHide(); this._unloaded = true; },
 
   openPickerSheet(e) {
     this.setData({ pickerSheet: e.currentTarget.dataset.picker || '' });
@@ -116,6 +287,7 @@ Page({
   },
 
   submit() {
+    if (this._syncReadOwner() || !this._ensureReadSession()) return;
     if (this.data.submitting) return;
     const d = this.data;
     if (d.topicIndex < 0 || !d.topics[d.topicIndex]) {

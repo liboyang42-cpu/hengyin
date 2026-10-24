@@ -11,7 +11,8 @@ test('俱乐部详情读取真实入会策略，并仅向主理人或获授权�
   const js = read('pages/club/detail/index.js')
   const wxml = read('pages/club/detail/index.wxml')
 
-  assert.match(js, /joinPolicyText\s*=\s*Number\(club\.joinPolicy\)\s*===\s*1\s*\?\s*'需审批'\s*:\s*'公开'/)
+  // 拍板 2026-10-22:入会方式文案为「公开加入 / 需审核加入」(wxml 拼「加入」)。
+  assert.match(js, /joinPolicyText\s*=\s*Number\(club\.joinPolicy\)\s*===\s*1\s*\?\s*'需审核'\s*:\s*'公开'/)
   assert.match(wxml, /\{\{club\.joinPolicyText\}\}/)
   // 2026-08-26 管理 tab 收敛:入会申请 / 成员管理 / 报名名册 / 项目工具 / 解散
   // 从管理 tab 整体搬进右上角齿轮的「俱乐部设置」弹窗；细粒度审批角色也按 access/me 开门。
@@ -29,11 +30,11 @@ test('俱乐部详情读取真实入会策略，并仅向主理人或获授权�
   assert.match(wxml, /class="cover-nav-act"[^>]*bindtap="onSettings"[^>]*wx:if="\{\{club && \(club\.isOwner \|\| canUseManageTab\)\}\}"/)
   assert.match(js, /canGovern\(club\)[\s\S]*c\.isOwner \|\| c\.viewerIsAdmin/)
   assert.match(js, /canUseManageTab:\s*legacyCanGovern/,
-    'detail 权威确认的 legacy 管理员必须在 access\/me 回读前后保留治理入口')
+    'detail 权威确认的 legacy 管理员必须在 access\/me 刷新前后保留治理入口')
   // 2026-09-09 用户裁决整页删除「探店日质量证据」,这条断言随入口一并撤。
   // ⚠️ 它原来守的是「质量证据是 owner-only」;现在全仓没有任何交证据的入口,
   // Q 结算靠什么算要产品那边给结论 —— 不是这条测试能替谁决定的事。
-  assert.doesNotMatch(wxml, /goEditionReport/, '质量证据页已删,不许留下指向它的死入口')
+  assert.doesNotMatch(wxml, /goEditionReport/, '质量证据页已删，不许留下指向它的死入口')
   assert.match(wxml, /<cy-sheet show="\{\{settingsShow\}\}"[^>]*title="俱乐部设置"/)
 })
 
@@ -48,8 +49,9 @@ test('审批制加入停在待审态，不误导进入群聊', () => {
   assert.match(js, /等待审核/)
   assert.doesNotMatch(js, /等待主理人审核/)
   assert.match(wxml, /club\.myJoinStatus\s*===\s*0/)
-  assert.match(wxml, /等待审核/)
-  assert.doesNotMatch(wxml, /等待主理人审核/)
+  // 拍板 2026-10-22(业主覆盖 CU-C-133 的头部按钮文案):待审按钮写「等待主理人审核」且禁用;
+  // 提交回执(js)仍只说「等待审核」,不钉死谁在审。
+  assert.match(wxml, /aria-disabled="true">等待主理人审核</)
 })
 
 test('旧 role 数字不能绕过后端，但 detail 权威管理员与新权限都保持可治理且 fail-closed', () => {
@@ -67,11 +69,11 @@ test('旧 role 数字不能绕过后端，但 detail 权威管理员与新权限
     '后端 detail 已确认的 viewerIsAdmin=true 必须保留治理 UI')
   assert.match(wxml, /club\.viewerIsAdmin[\s\S]*管理员工具暂不可用/)
   assert.match(wxml, /club\.viewerIdentityUnavailable[\s\S]*成员身份暂时无法确认/)
-  assert.match(js, /revokeClubAccess\(state(?:,\s*keepRequest)?\)[\s\S]*clubAccessState:\s*state \|\| 'error',[\s\S]*canModerateContent:\s*false/)
+  assert.match(js, /revokeClubAccess\(state(?:,\s*keepRequest)?\)[\s\S]*this\._clubAccessState = state \|\| 'error';[\s\S]*canModerateContent:\s*false/)
   assert.match(js, /this\.revokeClubAccess\('loading'(?:,\s*true)?\)/)
   assert.match(js, /that\.revokeClubAccess\('error'(?:,\s*true)?\)/)
   assert.match(js, /const canManageClub = has\('club:write'\)/)
-  assert.match(wxml, /clubAccessState === 'error'[\s\S]*内容治理入口已安全关闭/)
+  assert.doesNotMatch(wxml, /内容治理入口已安全关闭/, '权限读取失败留白，动作仍由canModerateContent=false关闭')
   assert.doesNotMatch(wxml, /myIsAdmin \|\| item\.authorMemberId/)
 })
 
@@ -140,10 +142,10 @@ test('入会申请页已注册，且通过与拒绝调用真实状态机接口',
   assert.match(buildIntro[0], /可直接通过或拒绝/,
     '副标题必须只报动作:能打开本页的人一律按得动(access-gate 拦在 club:member:approve)')
   assert.doesNotMatch(buildIntro[0], /主理人/,
-    'CU-C-133:数「谁能处理」的名单会排掉被委派的成员,别再把它写回文案')
+    'CU-C-133:数「谁能处理」的名单会排掉被委派的成员，别再把它写回文案')
   // ⚠️ 判据先剥注释再扫:解释这次更正的注释里必然出现那句错文案,
   //    按原文扫会把注释判成违规(本轮第五次踩「锚点钉字面量」)。
   const jsCode = js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
   assert.doesNotMatch(jsCode, /仅主理人可处理/,
-    '与后端行为不符:管理员进得来也按得动,这句话会骗人')
+    '与后端行为不符:管理员进得来也按得动，这句话会骗人')
 })

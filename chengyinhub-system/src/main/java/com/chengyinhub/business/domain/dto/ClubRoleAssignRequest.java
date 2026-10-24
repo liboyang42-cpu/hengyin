@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 
 public class ClubRoleAssignRequest {
+    @com.fasterxml.jackson.annotation.JsonAnySetter
+    public void rejectUnknownField(String name, Object value) {
+        throw new IllegalArgumentException("角色请求包含不支持的字段");
+    }
+
     private Long clubId;
     private Long targetMemberId;
     private String roleCode;

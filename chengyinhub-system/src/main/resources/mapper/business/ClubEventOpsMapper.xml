@@ -84,17 +84,22 @@
         limit 1 for update
     </select>
 
+    <!-- S531-2:已关闭(CLOSED)但仍有未取消未来场次的系列继续展示,主理人才能看到并取消这些场次 -->
     <select id="selectActiveSeriesByClub" resultMap="seriesResult">
         select <include refid="seriesColumns"/>
         from club_event_series
-        where club_id = #{clubId} and status = 'ACTIVE'
+        where club_id = #{clubId}
+          and (status = 'ACTIVE'
+            or status = 'CLOSED' and exists (
+              select 1 from club_event_occurrence fo
+              where fo.series_id = club_event_series.id and fo.status = 'ACTIVE' and fo.occurrence_at &gt;= now()))
         order by update_time desc, id desc
     </select>
 
     <select id="selectActiveSeriesByIdAndClub" resultMap="seriesResult">
         select <include refid="seriesColumns"/>
         from club_event_series
-        where id = #{seriesId} and club_id = #{clubId} and status = 'ACTIVE'
+        where id = #{seriesId} and club_id = #{clubId} and status in ('ACTIVE', 'CLOSED')
         limit 1
     </select>
 
@@ -103,9 +108,9 @@
                o.default_lead_member_id, o.status, o.version, o.create_time
         from club_event_occurrence o
         inner join club_event_series s on s.id = o.series_id and s.club_id = #{clubId}
-          and s.status = 'ACTIVE'
+          and s.status in ('ACTIVE', 'CLOSED')
         inner join cms_activity a on a.id = o.activity_id and a.club_id = #{clubId}
-          and a.del_flag = 0 and a.start_date &gt; #{now}
+          and a.del_flag = 0 and a.start_date &gt;= #{now} and o.occurrence_at &gt;= #{now}
         where o.series_id = #{seriesId} and o.status = 'ACTIVE'
         order by o.occurrence_at asc, o.id asc
     </select>
@@ -175,13 +180,13 @@
         from club_event_series where id = #{seriesId} for update
     </select>
 
-    <!-- 半开未来窗：仅 start_date > now；已开始场次永远不进入可编辑集合。 -->
+    <!-- now入参是上海明日00:00；今天的场次永远不进入未来可编辑集合。 -->
     <select id="selectFutureOccurrencesForUpdate" resultMap="occurrenceResult">
         select o.id, o.series_id, o.activity_id, o.occurrence_at,
                o.default_lead_member_id, o.status, o.version, o.create_time
         from club_event_occurrence o
         inner join cms_activity a on a.id = o.activity_id and a.del_flag = 0
-        where o.series_id = #{seriesId} and o.status = 'ACTIVE' and a.start_date &gt; #{now}
+        where o.series_id = #{seriesId} and o.status = 'ACTIVE' and a.start_date &gt;= #{now} and o.occurrence_at &gt;= #{now}
         order by o.occurrence_at asc, o.id asc
         for update
     </select>
@@ -218,6 +223,15 @@
         where id = #{id} and status = 'ACTIVE' and version = #{expectedVersion}
     </update>
 
+    <!-- O5b-7:CLOSED 是终态(schema CHECK 已含 CLOSED);只翻系列状态,已排场次/已付报名原样保留 -->
+    <update id="closeSeriesCas">
+        update club_event_series
+        set status = 'CLOSED', version = version + 1,
+            update_by = #{username}, update_time = #{now}
+        where id = #{seriesId} and club_id = #{clubId}
+          and status = 'ACTIVE' and version = #{expectedVersion}
+    </update>
+
     <update id="updateSeriesScheduleCas">
         update club_event_series
         set recurrence_type = #{recurrenceType}, version = version + 1,
@@ -235,7 +249,7 @@
           and o.activity_id = #{activityId} and o.status = 'ACTIVE'
         inner join cms_activity a on a.id = o.activity_id
           and a.club_id = s.club_id and a.del_flag = 0
-        where s.status = 'ACTIVE'
+        where s.status in ('ACTIVE', 'CLOSED')
     </sql>
 
     <!-- activity_id + active occurrence + cms_activity.club_id 必须与 series.club_id 同时成立。 -->
@@ -302,6 +316,15 @@
                 and cm.status = 1 and cm.del_flag = 0
             ))
         ) then 1 else 0 end
+    </select>
+
+    <!-- 仅供新 OFFERED 准入；不收窄取消/过期释放共用的 policy 查询。 -->
+    <select id="selectPromotableActivityForUpdate" resultType="java.lang.Long">
+        select id from cms_activity
+        where id = #{activityId} and club_id = #{clubId}
+          and status = 1 and publish_status = 1 and del_flag = 0
+          and end_date &gt; #{now}
+        for update
     </select>
 
     <!-- 所有可能触发晋级的路径先锁 club，统一正常报名的 club -> ticket 锁序。 -->
@@ -436,6 +459,45 @@
         where registration_id = #{registrationId} and state = 'CLAIMED'
     </update>
 
+    <select id="selectWaitlistMaintenanceMaxId" resultType="long">
+        select max(id) from club_event_waitlist
+    </select>
+    <select id="selectWaitlistMaintenancePage" resultType="java.util.LinkedHashMap">
+        <choose>
+            <when test="kind == 3">
+                select min(w.id) as scanId, w.activity_id as activityId, w.ticket_id as ticketId
+                from club_event_waitlist w
+                inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
+                inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
+                  and s.status in ('ACTIVE', 'CLOSED') and s.waitlist_enabled = 1
+                inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id
+                  and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
+                inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2
+                  and t.owner_id = w.activity_id and t.del_flag = 0 and t.remaining_inventory &gt; 0
+                where w.state = 'WAITING' and w.id &lt;= #{maxId}
+                  and (coalesce(t.signup_deadline, t.start_time) is null
+                    or coalesce(t.signup_deadline, t.start_time) &gt; #{now})
+                group by w.activity_id, w.ticket_id
+                having min(w.id) &gt; #{afterId}
+                order by scanId asc limit #{limit}
+            </when>
+            <otherwise>
+                select w.id as scanId,
+                <choose><when test="kind == 0">w.id</when><otherwise>w.registration_id</otherwise></choose> as targetId
+                from club_event_waitlist w
+                <if test="kind != 0">inner join cms_registration r on r.id = w.registration_id</if>
+                where w.id &gt; #{afterId} and w.id &lt;= #{maxId}
+                <choose>
+                    <when test="kind == 0">and w.state = 'OFFERED' and w.offer_expires_at &lt;= #{now}</when>
+                    <when test="kind == 1">and w.state = 'CLAIMED' and r.payment_status = 2 and r.registration_status = 2</when>
+                    <when test="kind == 2">and w.state = 'CLAIMED' and (r.registration_status in (3, 4) or r.payment_status in (3, 4))</when>
+                    <otherwise>and 1 = 0</otherwise>
+                </choose>
+                order by w.id asc limit #{limit}
+            </otherwise>
+        </choose>
+    </select>
+
     <select id="selectExpiredOfferedIds" resultType="long">
         select id from club_event_waitlist
         where state = 'OFFERED' and offer_expires_at &lt;= #{now}
@@ -480,7 +542,7 @@
         from club_event_waitlist w
         inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
         inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
-          and s.status = 'ACTIVE' and s.waitlist_enabled = 1
+          and s.status in ('ACTIVE', 'CLOSED') and s.waitlist_enabled = 1
         inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id
           and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
         inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2
@@ -502,18 +564,28 @@
     <select id="selectPaidRoster" resultMap="attendanceRowResult">
         select paid.member_id as memberId,
                coalesce(nullif(m.nickname, ''), nullif(m.name, ''), concat('成员#', paid.member_id)) as nickname,
-               ck.arrived_at as baseArrivedAt,
+               coalesce(ck.arrived_at, paid.verified_at, progress.arrived_at) as baseArrivedAt,
+               case when ck.arrived_at is not null or paid.verified_count &gt; 0
+                      or progress.arrived_count &gt; 0 then 1 else 0 end as baseArrived,
                corr.new_arrived as correctedArrived,
                corr.new_arrived_at as correctedArrivedAt,
                coalesce(corr.version, 0) as correctionVersion
         from (
-          select distinct member_id
+          select member_id, sum(verification_status = 1) as verified_count,
+                 min(case when verification_status = 1 then verification_time else null end) as verified_at
           from cms_registration
           where owner_type = 2 and owner_id = #{activityId}
             and payment_status = 2 and registration_status = 2
+          group by member_id
         ) paid
         left join ums_member m on m.id = paid.member_id and m.del_flag = 0
         left join club_lead_checkin ck on ck.activity_id = #{activityId} and ck.member_id = paid.member_id
+        left join (
+          select member_id, min(checkin_time) as arrived_at, count(*) as arrived_count
+          from player_node_progress
+          where activity_id = #{activityId} and status = 1 and del_flag = 0
+          group by member_id
+        ) progress on progress.member_id = paid.member_id
         left join club_event_attendance_correction corr on corr.id = (
           select max(c2.id) from club_event_attendance_correction c2
           where c2.activity_id = #{activityId} and c2.member_id = paid.member_id
@@ -533,7 +605,21 @@
     </select>
 
     <select id="selectAttendanceTargetForUpdate" resultMap="attendanceRowResult">
-        select r.member_id as memberId, 1 as paidCount, ck.arrived_at as baseArrivedAt
+        select r.member_id as memberId, 1 as paidCount,
+               coalesce(ck.arrived_at,
+                 (select min(v.verification_time) from cms_registration v
+                  where v.owner_type = 2 and v.owner_id = #{activityId} and v.member_id = #{memberId}
+                    and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1),
+                 (select min(p.checkin_time) from player_node_progress p
+                  where p.activity_id = #{activityId} and p.member_id = #{memberId}
+                    and p.status = 1 and p.del_flag = 0)) as baseArrivedAt,
+               case when ck.arrived_at is not null
+                 or exists (select 1 from cms_registration v
+                   where v.owner_type = 2 and v.owner_id = #{activityId} and v.member_id = #{memberId}
+                     and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1)
+                 or exists (select 1 from player_node_progress p
+                   where p.activity_id = #{activityId} and p.member_id = #{memberId}
+                     and p.status = 1 and p.del_flag = 0) then 1 else 0 end as baseArrived
         from cms_registration r
         left join club_lead_checkin ck on ck.activity_id = r.owner_id and ck.member_id = r.member_id
         where r.owner_type = 2 and r.owner_id = #{activityId} and r.member_id = #{memberId}

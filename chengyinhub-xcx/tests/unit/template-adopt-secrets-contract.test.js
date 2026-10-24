@@ -28,7 +28,7 @@ test('parse 不许给被剥掉的 answerKey 填默认值 A —— 那是别人�
   const read = config.parse(STRIPPED);
   assert.equal(read.error, '');
   assert.equal(read.value.blindTaste.answerKey, '',
-    '被剥掉的 answerKey 必须留空等服务端补回,不能静默变成 A');
+    '被剥掉的 answerKey 必须留空等服务端补回，不能静默变成 A');
   assert.deepEqual(read.value.dailySign.poems, [], '被剥掉的签文池读出来必须是空数组');
 });
 

@@ -143,6 +143,7 @@ Component({
         url: '/api/coupon/qr-token', method: 'POST', data: { couponHistoryId }, hideLoading: true, silentError: true,
         success: (res) => {
           if (!currentRequest()) return
+          if (res && res.code == 503) { this.qrServiceDisabled(res.msg); return }
           if (res && res.code == 410) { this.unavailable(res.msg); return }
           if (this._terminalStatus === 1 || this._terminalStatus === 2 || this._terminalStatus === 3) return
           const d = res && res.data
@@ -171,7 +172,8 @@ Component({
         },
         successStatusAbnormal: (res) => {
           if (currentRequest()) {
-            if (res && res.code == 410) this.unavailable(res.msg)
+            if (res && res.code == 503) this.qrServiceDisabled(res.msg)
+            else if (res && res.code == 410) this.unavailable(res.msg)
             else this.fail(res && res.msg)
           }
         },
@@ -206,6 +208,13 @@ Component({
       this._tokenTask = null
       this.clearTimers()
       this.setData({ qr: '', qrState: 'error', useStatus: null, notStarted: false, pollError: '', errorText: message || '优惠券已撤销或不存在' })
+    },
+    qrServiceDisabled(message) {
+      this.clearTimers()
+      this._qrIssuedAt = 0
+      this._qrTtlMs = 0
+      this._retryAt = 0
+      this.setData({ qr: '', countdown: 0, qrState: 'error', errorText: message || '优惠券出示码暂不可用，请联系管理员', pollError: '' })
     },
     fail(message) {
       const text = this.friendly(message, '二维码暂时没能生成，请稍后重试')
@@ -269,7 +278,8 @@ Component({
           url: '/api/coupon/status', method: 'POST', data: { couponHistoryId }, hideLoading: true, silentError: true,
           success: (res) => {
             if (!stillCurrent() || (this._activeCouponId && couponHistoryId !== this._activeCouponId)) return
-            if (res && res.code == 410) { this.unavailable(res.msg); return }
+            if (res && res.code == 503) { this.qrServiceDisabled(res.msg); return }
+          if (res && res.code == 410) { this.unavailable(res.msg); return }
             if (!ok(res) || !res.data || res.data.useStatus == null) return
             const status = couponStatus(res.data.useStatus)
             if (status === null) { this.failPoll('核销状态暂不可用，请稍后重试'); return }
@@ -279,7 +289,8 @@ Component({
             if (status === 1 && wx.vibrateShort) wx.vibrateShort({ type: 'medium' })
             if (status !== 0) this.clearTimers()
           },
-          successStatusAbnormal: (res) => { if (stillCurrent() && (!this._activeCouponId || couponHistoryId === this._activeCouponId)) { if (res && res.code == 410) this.unavailable(res.msg); else if (this.data.qrState !== 'error') this.failPoll(res && res.msg || '核销状态暂不可用，请稍后重试') } },
+          successStatusAbnormal: (res) => { if (stillCurrent() && (!this._activeCouponId || couponHistoryId === this._activeCouponId)) { if (res && res.code == 503) this.qrServiceDisabled(res.msg)
+            else if (res && res.code == 410) this.unavailable(res.msg); else if (this.data.qrState !== 'error') this.failPoll(res && res.msg || '核销状态暂不可用，请稍后重试') } },
           fail: (err) => { if (stillCurrent() && (!this._activeCouponId || couponHistoryId === this._activeCouponId) && this.data.qrState !== 'error') this.failPoll(err && err.msg || '核销状态暂不可用，请稍后重试') },
         })
       }, 5000)

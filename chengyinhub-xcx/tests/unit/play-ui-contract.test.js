@@ -149,7 +149,7 @@ test('自由漫游雾层浓度:overlay 与 poly 两条路径同档,且降级不�
   // 2026-08-04 前这里锁的是 _fogMode='none' + fogPolys:[] —— 那两行正是「漫游看不到迷雾」的成因,
   // 被当成契约锁住后,修 bug 反而会判红。改锁真正的不变量:降级路径必须仍然画雾。
   assert.doesNotMatch(roamJs, /this\._fogMode = 'none';/,
-    '降级不得退成无雾;要保留浓度上限请改 FOG_ALPHA / _fogBandColor')
+    '降级不得退成无雾；要保留浓度上限请改 FOG_ALPHA / _fogBandColor')
   assert.match(roamJs, /_fogFallbackToPoly\(\)/)
   assert.match(roamJs, /this\._fogMode = 'poly';[\s\S]{0,120}this\._initFogGrid\(\);/)
 })
@@ -301,7 +301,8 @@ test('游玩工具抽屉:开关是真开关，用不了的行画成失效态，�
   assert.match(readXcx('style/proto-sheet.wxss'), /\.drow\.is-off/)
   assert.doesNotMatch(wxml, /bindtap="onLocationRowTap"[\s\S]{0,400}?class="darr"/)
   // 抽屉到屏底内部滚动,行数多不会把三键顶出屏外
-  assert.match(wxml, /<scroll-view class="tools tools--corner" wx:if="\{\{sessionToolsOpen\}\}" scroll-y/)
+  // 2026-10-23 弹层动效:收起先淡出(toolsOut → is-out),再卸载
+  assert.match(wxml, /<scroll-view class="tools tools--corner \{\{toolsOut \? 'is-out' : ''\}\}" wx:if="\{\{sessionToolsOpen\}\}" scroll-y/)
   assert.match(wxss, /\.tools\{[^}]*max-height/)
   // 标签和动作对不上的那一行已收口:onGoTap 与 onSheetGoTap 逐行同义,只留后者
   assert.doesNotMatch(wxml, /bindtap="onGoTap"/)
@@ -497,8 +498,8 @@ test('自由漫游只在玩家点击出发后请求定位，玩法说明不自�
   assert.match(roamJs, /openRoamLocationSetting\(\)/)
   // 走查 B04:进页不许自动弹玩法说明。负向断言 —— 谁把自动弹加回 onLoad 就红。
   assert.doesNotMatch(onLoad, /openScene\('roam-rules'\)/)
-  // 不自动弹的前提是「随时看得到」:两个手动入口一个都不能少,少一个这条就红。
-  assert.match(roamWxml, /class="go-side" bindtap="openRoamRules"[^>]*aria-label="查看自由漫游玩法说明"/)
+  // 首页直接出发，原地图内仍可主动打开玩法说明。
+  assert.match(roamWxml, /class="intro-card" bindtap="goStart"/)
   assert.match(roamWxml, /class="pcard__rules" catchtap="openRoamRules"[^>]*aria-label="查看玩法说明"/)
   assert.match(roamWxml, /bindtap="openRoamHistory"|bindtap="onPassportTileTap"[\s\S]*history/)
   assert.match(roamWxml, /<cy-state-shell[^>]*wx:if="\{\{introError\}\}"[^>]*bind:primary="openRoamLocationSetting"/s)
@@ -565,15 +566,17 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   const wxml = readXcx('pages/play/index.wxml')
   const js = readXcx('pages/play/index.js')
 
-  // ① 通关卡统计格:该格的数字必须是 doneCount
-  const cell = wxml.match(/<view class="fst"><text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  // ① 通关卡统计格:该格的数字必须是 doneCount(2026-10-22 起格首可带一枚字形图标)
+  const cell = wxml.match(/<view class="fst">(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
   assert.ok(cell, '找不到「点亮坐标」统计格')
   assert.equal(cell[1], 'doneCount', '「点亮坐标」绑的必须是 doneCount,不能是 total')
 
   // ② 分享卡 canvas:同一标签的同一口径
-  assert.match(js, /\[String\(that\.data\.doneCount \|\| 0\), '点亮坐标'\]/,
+  // 分享卡画的是点开时捕获的 artwork 快照,快照里的 doneCount 取自页面 doneCount。
+  assert.match(js, /\[String\(artwork\.doneCount \|\| 0\), '点亮坐标'\]/,
     '分享卡的「点亮坐标」也必须取 doneCount —— 错数字会被烤进分享图')
-  assert.doesNotMatch(js, /\[String\(that\.data\.total \|\| 0\), '点亮坐标'\]/)
+  assert.match(js, /doneCount: this\.data\.doneCount/, 'artwork 快照的 doneCount 必须来自页面 doneCount')
+  assert.doesNotMatch(js, /\[String\((that\.data|artwork)\.total \|\| 0\), '点亮坐标'\]/)
 
   // ③ 行为口径:doneCount 只数 done 的节点(部分完成时必然 < total)
   assert.match(js, /doneCount: nodes\.filter\(\(n\) => n\.done\)\.length/)
@@ -591,10 +594,10 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
 test('负控:「点亮坐标」退回 total 时上面那条契约必须判红', () => {
   const wxml = readXcx('pages/play/index.wxml')
   const mutated = wxml.replace(
-    '<view class="fst"><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>',
-    '<view class="fst"><text class="fst__v">{{total}}</text><text class="fst__l">点亮坐标</text></view>')
+    '<text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>',
+    '<text class="fst__v">{{total}}</text><text class="fst__l">点亮坐标</text></view>')
   assert.notEqual(mutated, wxml, '负控必须真的把绑定改回 total')
-  const cell = mutated.match(/<view class="fst"><text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  const cell = mutated.match(/<view class="fst">(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
   assert.ok(cell)
   // 断言「上面那条契约会判红」，判据是抛出 AssertionError 本身，不是它的消息文案。
   // 2026-08-27:原来写的是 /doneCount|total/ 去匹配 Node 内部的错误消息 —— 那串文案

@@ -40,14 +40,15 @@ function blockAt(src, start) {
   return null
 }
 
-/** 全仓真源:一个 gameSection 一块。返回 { 段名: 整块 wxml }。 */
+/** 全仓真源:主玩法与旧模板启用段各取一块。返回 { 段名: 整块 wxml }。 */
 function sections(src) {
   const out = new Map()
-  const re = /<view class="cg-gcfg" wx:if="\{\{gameSection === '(\w+)'\}\}">/g
+  const re = /<view class="cg-gcfg" wx:if="\{\{(?:gameSection === '(\w+)'|advanced\.(\w+)\.enabled)(?: \|\| \([^}]+\)| \|\| segmentOn\.\w+)?\}\}">/g
   for (let m = re.exec(src); m; m = re.exec(src)) {
     const body = blockAt(src, m.index)
-    assert.ok(body, `段 ${m[1]} 的 <view> 没配平,先修标签再谈形状`)
-    out.set(m[1], body)
+    const name = m[1] || m[2]
+    assert.ok(body, `段 ${name} 的 <view> 没配平，先修标签再谈形状`)
+    out.set(name, body)
   }
   return out
 }
@@ -59,7 +60,7 @@ const read = () => fs.readFileSync(WXML, 'utf8')
 test('扫描分母正常:段数不能凭空掉下去(否则下面每条都在空转)', () => {
   const secs = sections(read())
   // 2026-09-22 实测 25 段。加段会涨,这里只防「一个都扫不到」和「整片消失」。
-  assert.ok(secs.size >= 20, `只扫到 ${secs.size} 个玩法段,选择器多半失配了`)
+  assert.ok(secs.size >= 20, `只扫到 ${secs.size} 个玩法段，选择器多半失配了`)
 })
 
 /* ===================== R1 段的外壳固定 ===================== */
@@ -95,10 +96,10 @@ test('★R2 两列栅格里只放一个字段 —— 只减不增', () => {
   for (const [name, body] of secs) for (const _ of lonelyGrids(body)) found.push(name)
   assert.ok(found.length <= LONELY_GRID_CEILING,
     `单子项 cg-adv-grid ${found.length} 处 > 冻结上限 ${LONELY_GRID_CEILING}(${found.join(',')})。\n` +
-    '  两列栅格里只放一个字段,右半边是空的 —— 整段竖着看会变成 半幅/两列/半幅 的参差。\n' +
-    '  要么补第二个字段凑成一行,要么把它挪出栅格按整行的 label + 控件写。')
+    '  两列栅格里只放一个字段，右半边是空的 —— 整段竖着看会变成 半幅/两列/半幅 的参差。\n' +
+    '  要么补第二个字段凑成一行，要么把它挪出栅格按整行的 label + 控件写。')
   assert.ok(found.length >= LONELY_GRID_CEILING - 3,
-    `实测只剩 ${found.length} 处,冻结上限 ${LONELY_GRID_CEILING} 已经过期 —— 还完债要把上限调下来,` +
+    `实测只剩 ${found.length} 处，冻结上限 ${LONELY_GRID_CEILING} 已经过期 —— 还完债要把上限调下来,` +
     '否则这条棘轮就是一道松掉的闸(见 memory feedback-gate-without-negative-control-rots)。')
 })
 
@@ -120,7 +121,7 @@ test('★R3 单条 hint 不准超过冻结长度 —— 长说明要拆到它解
   }
   assert.deepEqual(over, [],
     `这些 hint 超过 ${HINT_MAX_CHARS} 字:${over.join(' / ')}\n` +
-    '  一整段贴在最底下的说明,读到时早忘了在说哪个控件(实测 photoCheck 的取景轮廓说明' +
+    '  一整段贴在最底下的说明，读到时早忘了在说哪个控件(实测 photoCheck 的取景轮廓说明' +
     '离它的控件隔了 5 个字段)。拆开:控件自己的那几句放控件正下方。')
 })
 
@@ -149,15 +150,15 @@ function lonelyMedia(src) {
 test('★R4 只放一个位的 cg-qmedia 必须带 --one', () => {
   assert.deepEqual(lonelyMedia(read()), [],
     '有媒体位只放一个槽却没带 cg-qmedia--one。\n' +
-    '  .cg-qmedia 的子项是 flex:1,那是给「配图 + 音频」两个位并排设计的;' +
-    '单个位套上去就是一整行 160rpx 的灰块,视觉重量压过它上下所有单行输入。')
+    '  .cg-qmedia 的子项是 flex:1，那是给「配图 + 音频」两个位并排设计的；' +
+    '单个位套上去就是一整行 160rpx 的灰块，视觉重量压过它上下所有单行输入。')
 })
 
 test('negative control:摘掉 --one 必须真的红 —— 第一版判据就是在这儿哑的', () => {
   const src = read()
   const mutated = src.replace('class="cg-qmedia cg-qmedia--one"', 'class="cg-qmedia"')
-  assert.notEqual(mutated, src, '负控锚点失效:--one 的挂法变了,判据要跟着改')
-  assert.ok(lonelyMedia(mutated).length > 0, '摘掉 --one 还是绿的,这条门禁是哑的')
+  assert.notEqual(mutated, src, '负控锚点失效:--one 的挂法变了，判据要跟着改')
+  assert.ok(lonelyMedia(mutated).length > 0, '摘掉 --one 还是绿的，这条门禁是哑的')
 })
 
 test('negative control:两个位的 cg-qmedia 不许被误伤', () => {
@@ -173,7 +174,7 @@ test('negative control:两个位的 cg-qmedia 不许被误伤', () => {
 test('★R4 配套:--one 这条规则本身必须还在 wxss 里', () => {
   assert.match(fs.readFileSync(WXSS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''),
     /\.cg-qmedia--one[^{]*\{[^}]*flex:/,
-    'wxss 里没有 .cg-qmedia--one 的收窄规则 —— 那 wxml 上挂着的类就是个空类,白挂')
+    'wxss 里没有 .cg-qmedia--one 的收窄规则 —— 那 wxml 上挂着的类就是个空类，白挂')
 })
 
 /* ===================== R5 「选填」只有一种写法 ===================== */
@@ -190,7 +191,7 @@ test('★R5 「选填」写法只减不增,新段一律跟原型用间隔号', (
   }
   assert.ok(paren.length <= PAREN_OPTIONAL_CEILING,
     `全角括号版「（选填）」${paren.length} 处 > 冻结上限 ${PAREN_OPTIONAL_CEILING}:${paren.join(' / ')}\n` +
-    '  原型用的是「· 选填」。同一屏两种写法,商家每读一个标签都要重新认一次。')
+    '  原型用的是「· 选填」。同一屏两种写法，商家每读一个标签都要重新认一次。')
 })
 
 /* ===================== R7 归一化比例量必须用滑块 ===================== */
@@ -232,10 +233,10 @@ test('★R7 归一化比例量(百分比/浓淡/占画面宽)必须用 slider,�
   const bad = ratioAsNumberInput(read())
   assert.ok(bad.length <= RATIO_NUMBER_CEILING,
     `这些是比值却还在用数字键盘:${bad.join(' / ')}(冻结上限 ${RATIO_NUMBER_CEILING})\n` +
-    '  比值的具体数字对商家没意义,只有手感 —— 用 <slider min max step show-value>,\n' +
+    '  比值的具体数字对商家没意义，只有手感 —— 用 <slider min max step show-value>,\n' +
     '  bindchange 直接绑 onAdvancedField(它读 e.detail.value),不用加 js。')
   assert.ok(bad.length >= RATIO_NUMBER_CEILING,
-    `实测只剩 ${bad.length} 处,冻结上限 ${RATIO_NUMBER_CEILING} 过期了 —— 还完债要把上限调下来。`)
+    `实测只剩 ${bad.length} 处，冻结上限 ${RATIO_NUMBER_CEILING} 过期了 —— 还完债要把上限调下来。`)
 })
 
 test('negative control:塞一个「占画面宽度百分比」的数字框必须被抓出来', () => {
@@ -272,8 +273,8 @@ test('★R6 每个段都必须真的有 label + 至少一个可填控件', () =>
   for (const [name, body] of sections(read())) if (isShell(body)) empty.push(name)
   assert.deepEqual(empty, [],
     `这些段在册但界面是空壳:${empty.join(',')}\n` +
-    '  段名进了 gameSection、玩法单子上点得进来,进来却什么都配不了 ——' +
-    '本仓最爱踩的「一端建好、另一端没接」在编辑页的样子,而且不报错。')
+    '  段名进了 gameSection、玩法单子上点得进来，进来却什么都配不了 ——' +
+    '本仓最爱踩的「一端建好、另一端没接」在编辑页的样子，而且不报错。')
 })
 
 /* ===================== 负控:每条都要能真的判红 ===================== */
@@ -281,7 +282,7 @@ test('★R6 每个段都必须真的有 label + 至少一个可填控件', () =>
 test('negative control:外壳被拆掉必须抛', () => {
   const [name, body] = [...sections(read())][0]
   const mutated = body.replace('<view class="cg-adv-body">', '<view class="cg-whatever">')
-  assert.notEqual(mutated, body, '负控锚点失效:外壳写法变了,判据要跟着改')
+  assert.notEqual(mutated, body, '负控锚点失效:外壳写法变了，判据要跟着改')
   assert.throws(() => checkShell(name, mutated))
 })
 
@@ -291,7 +292,7 @@ test('negative control:再加一个单子项栅格必须顶穿上限', () => {
   for (const [, body] of secs) found += lonelyGrids(body).length
   const injected = `<view class="cg-adv-grid">\n<view><view class="cg-cfg-label">只有我一个</view></view>\n</view>`
   assert.equal(lonelyGrids(injected).length, 1, '检查器认不出单子项栅格 —— 那 R2 是空转的')
-  assert.ok(found + 1 > LONELY_GRID_CEILING, '上限比实测高出一格以上,加一处也不会红 = 闸是松的')
+  assert.ok(found + 1 > LONELY_GRID_CEILING, '上限比实测高出一格以上，加一处也不会红 = 闸是松的')
 })
 
 test('negative control:hint 判据按字数算,注释和空白不能把它蒙混过去', () => {
@@ -317,7 +318,8 @@ test('所有目录玩法都有配置段，九宫格明确指向主题级配置',
   const { ALL } = require('../../pages/publish/utils/publish/node-game-catalog.js')
   const src = read(); const secs = sections(src)
   for (const game of ALL) {
-    if (game.section) assert.ok(secs.has(game.section), game.key + ' 缺少编辑配置段')
+    if (['blindTaste', 'dailySign'].includes(game.section)) assert.ok(src.includes('advanced.' + game.section + '.enabled'), game.key + ' 缺少存量配置段')
+    else if (game.section) assert.ok(secs.has(game.section), game.key + ' 缺少编辑配置段')
     else { assert.equal(game.key, 'bingo'); assert.match(src, /gameKey === 'bingo'[\s\S]*?主题编辑页配置/) }
   }
 })

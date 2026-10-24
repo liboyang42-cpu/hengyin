@@ -225,6 +225,7 @@ function normalizeMerchantProjection(raw) {
     activityId,
     status,
     revision,
+    ...(raw.authorityEpoch != null ? { authorityEpoch: raw.authorityEpoch } : {}),
     playMode: raw.merchant.playMode === 'ROUTE' ? 'ROUTE' : 'STORY',
     currentChapterId: nullablePositiveId(raw.currentChapterId),
     availableActions,
@@ -254,7 +255,7 @@ function summarizeMerchantProjection(projection) {
     return { state: 'closed', text: '本站已结束', tone: 'muted', pendingVerificationCount: pending, stationCount: stations.length }
   }
   if (stations.some((item) => item.status === 'INVITED')) {
-    return { state: 'invited', text: '待处理站点邀请', tone: 'pending', pendingVerificationCount: pending, stationCount: stations.length }
+    return { state: 'invited', text: '待处理节点邀请', tone: 'pending', pendingVerificationCount: pending, stationCount: stations.length }
   }
   if (stations.some((item) => item.status === 'PAUSED')) {
     return { state: 'paused', text: '本站已暂停', tone: 'paused', pendingVerificationCount: pending, stationCount: stations.length }
@@ -384,6 +385,7 @@ function baseCommand(projection, station, requestId, action, allowed) {
     nodeId: station.nodeId,
     requestId: String(requestId),
     expectedRevision: projection.revision,
+    ...(projection.authorityEpoch != null ? { authorityEpoch: projection.authorityEpoch } : {}),
     action,
   }
 }
@@ -547,7 +549,8 @@ function sanitizeMerchantCommandForRetry(raw, projection) {
     if (reasonCode) payload.reasonCode = reasonCode
   }
 
-  return { activityId, nodeId, requestId, expectedRevision, action, payload }
+  return { activityId, nodeId, requestId, expectedRevision,
+    ...(raw.authorityEpoch != null ? { authorityEpoch: raw.authorityEpoch } : {}), action, payload }
 }
 
 module.exports = {

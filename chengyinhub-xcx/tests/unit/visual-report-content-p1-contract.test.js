@@ -23,7 +23,7 @@ function assertMyInviteContract(route, scene, wxss, script) {
     '邀请记录独立路由不再套常驻半屏（同收益明细 / 提现记录）')
   assert.match(route, /<cy-scene-member-invite-history id="inviteHistory"/)
   assert.match(scene, /<cy-skeleton wx:if="\{\{loading && !groups\.length\}\}" type="list"/)
-  assert.match(scene, /<cy-error wx:elif="\{\{loadErr && !groups\.length\}\}"[^>]*fill[^>]*bind:retry="retry"/)
+  assert.match(scene, /<cy-error load-failure="\{\{!authRequired && !accessDenied\}\}" wx:elif="\{\{loadErr && !groups\.length\}\}"[^>]*fill[^>]*bind:retry="retry"/)
   // CU-M-145 空态标题改为陈述事实(不再复述「邀请记录」),锚点跟着换,意图不变。
   assert.match(scene, /<cy-empty wx:elif="\{\{empty\}\}"[^>]*fill[^>]*title="还没有人接受你的邀请"/)
   const reward = rule(wxss, '.ir-reward')
@@ -33,7 +33,7 @@ function assertMyInviteContract(route, scene, wxss, script) {
     '奖励未到账不是成功状态，不能占用成功绿')
   assert.match(script, /loading:\s*true/)
   assert.match(script, /loadErr:\s*false/)
-  assert.match(script, /retry\(\)\s*\{\s*this\.load\(true\)\s*\}/)
+  assert.match(script, /retry\(\)\s*\{ if \(this\.data\.authRequired\) retryLogin\(this, app, \(\) => this\.load\(true\)\); else this\.load\(true\) \}/)
 }
 
 test('邀请记录独立路由正文落页、奖励中性化，并提供加载/错误/空态', () => {
@@ -81,7 +81,7 @@ function assertRemainingP1Contract(files) {
 
   // 2026-08-06 用户裁决:起飞过场与地图左上退出钮一并删除(返回=系统手势/结算页),
   // 这里只锁「过场不得回流」——出口语义由 play-special-case 合同盯 show-exit。
-  assert.doesNotMatch(files.playWxml, /startFlight/, '起飞过场已删,不得回流')
+  assert.doesNotMatch(files.playWxml, /startFlight/, '起飞过场已删，不得回流')
 
   assert.match(files.templateWxml, /wx:if="\{\{item\.useNum != null && item\.useNum !== ''\}\}"[^>]*>\{\{\s*item\.useNum \|\| 0\s*\}\} 次引用/)
   assert.match(files.templateWxml, /\{\{item\._statusText\}\}/)

@@ -133,7 +133,7 @@
    拿不到才退回 token(token 的 env(safe-area-inset-top) 在无刘海机解析为 0,仍偏浅)。 */
 .mp-sheet{ position:fixed; left:0; right:0; bottom:0; z-index:21; background:var(--cy-color-play-surface-solid);
   border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; padding:44rpx 40rpx calc(56rpx + env(safe-area-inset-bottom));
-  max-height:var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); overflow-y:auto;
+  max-height:min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto;
   /* 2026-09-19 圆角批:content-box 下 max-height 不吃 padding-bottom(56rpx+安全区),
      长内容触 clamp 时实际顶边会高出整段 padding 压进胶囊行(.pop-topic2 实拍实证)。 */
   box-sizing:border-box;

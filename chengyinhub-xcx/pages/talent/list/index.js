@@ -1,5 +1,5 @@
 const modal = require('../../../utils/modal.js');
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const { readPageStyle } = require('../../../utils/font-scale.js');
 const app = getApp();
 const roleGuard = require('../../../utils/roleGuard.js');
@@ -8,6 +8,7 @@ const policy = require('../../../utils/identity/identity-policy.js');
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 // variant 判定与广场、俱乐部页共用同一份,别在这里写第二套(两套迟早分叉)。
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
+const { decodeDisplayText } = require('../../../utils/display-text.js');
 
 // 主理人 L1-L5 等级对外文案(俱乐部继承展示;level=0 不显示)
 const LEVEL_LABELS = ['', 'L1 新手', 'L2 稳定', 'L3 成熟', 'L4 城市运营者', 'L5 区域策划方'];
@@ -41,6 +42,9 @@ Page({
     nearbyClubs: [],    // 城市俱乐部(展示用)
     clubsLoaded: false,
     clubsError: false,
+    clubsLoginRequired: false,
+    clubsPermissionDenied: false,
+    clubsLoginPending: false,
     clubsState: 'idle', // idle | loading | refreshing | ready | empty | error | stale-error
     clubsErrorText: '',
     isMerchantViewer: false,   // 商户视角:团体页只显示同城(附近)俱乐部,玩家不受影响
@@ -70,7 +74,7 @@ Page({
   onTopTabChange(e) {
     const key = e.detail.key;
     if (!key || key === this.data.activeTopTab) return;
-    this.setData({ activeTopTab: key });
+    pageMotion.enter(this, key === 'feed' ? 'pmFeed' : 'pmClubs'); this.setData({ activeTopTab: key }); // 2026-10-23:切标签卡片依次浮上来
     if (key === 'feed' && this.data.feedState === 'idle') this.loadFeed();
   },
 
@@ -110,7 +114,7 @@ Page({
             || res.data.clubCount < 0) return fail(res, 'data');
         const rows = res.data.rows;
         const noClub = res.data.clubCount === 0;
-        that._feedLoading = false;
+        that._feedLoading = false; pageMotion.enter(that, 'pmFeed');
         that.setData({
           feed: rows.map(function (p) {
             // refType 的编号就是广场的 dataType;后端投影不出 sportName(被引对象已删/下架)时
@@ -119,7 +123,7 @@ Page({
             return Object.assign({}, p, {
               memberNickname: p.nickname,
               memberAvatar: p.avatar,
-              contents: p.content,
+              contents: decodeDisplayText(p.content),
               picList: String(p.images || '').split(/[;,]/).filter(Boolean).slice(0, 3),
               formattedCreateTime: String(p.createTime || '').slice(5, 16),
               isCompletionShare: isCompletedShare(ref),
@@ -289,6 +293,19 @@ Page({
 
   // 俱乐部首页聚合(/api/club/home):我的 / 加入 / 附近 / 主理人态
   loadClubHome() {
+    const owner = typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '';
+    if (owner !== this._clubHomeOwner) {
+      this._clubHomeRequestId = (this._clubHomeRequestId || 0) + 1;
+      this._clubHomeLoading = false;
+      this._clubHomeOwner = owner;
+      this._nearbyAll = [];
+      this.setData({ myClubs: [], joinedClubs: [], nearbyClubs: [], myClubId: null, myClubCount: 0, clubsLoaded: false, clubsState: 'idle' });
+    }
+    if (!owner) {
+      this.setData({ clubsLoginRequired: true, clubsPermissionDenied: false, clubsError: true,
+        clubsState: 'error', clubsErrorText: '' });
+      return;
+    }
     if (this._clubHomeLoading) return;
     var that = this;
     var hasSnapshot = ['ready', 'empty', 'stale-error'].indexOf(this.data.clubsState) >= 0
@@ -298,13 +315,24 @@ Page({
     this._clubHomeLoading = true;
     this.setData({
       clubsState: hasSnapshot ? 'refreshing' : 'loading',
+      clubsLoginRequired: false, clubsPermissionDenied: false,
       clubsError: false,
       clubsErrorText: '',
     });
-    function isCurrent() { return !that._unloaded && requestId === that._clubHomeRequestId; }
-    function fail(res, kind) {
+    function isCurrent() { return !that._unloaded && requestId === that._clubHomeRequestId && owner === String(app.getUserID() || ''); }
+    function fail(res, kind, statusCode) {
       if (!isCurrent()) return;
       that._clubHomeLoading = false;
+      const code = Number(statusCode || res && (res.code || res.statusCode));
+      const loginRequired = code === 401;
+      const denied = code === 403;
+      if (loginRequired || denied) {
+        that._nearbyAll = [];
+        that.setData({ myClubs: [], joinedClubs: [], nearbyClubs: [], myClubId: null, myClubCount: 0,
+          clubsLoginRequired: loginRequired, clubsPermissionDenied: denied, clubsLoaded: false,
+          clubsError: true, clubsState: 'error', clubsErrorText: loginRequired ? '登录后可查看我的俱乐部' : requestError(res, '当前账号无法查看俱乐部') });
+        return;
+      }
       that.setData({
         clubsLoaded: hasSnapshot,
         clubsError: true,
@@ -315,7 +343,6 @@ Page({
     app.sendRequest({
       // 下拉刷新的收圈绑在真实完成上;非下拉场景下 stopPullDownRefresh 是 no-op
       complete() { wx.stopPullDownRefresh(); },
-      hideLoading: true,
       hideLoading: true, silentError: true,
       url: '/api/club/home',
       method: 'POST',
@@ -333,7 +360,7 @@ Page({
         joined.forEach(function (c) { c.isJoined = true; });
         var nearby = d.nearby.map(normalizeClub);
         that._clubHomeLoading = false;
-        that._nearbyAll = nearby;
+        that._nearbyAll = nearby; pageMotion.enter(that, 'pmClubs');
         that.setData({
           myClubs: owned,
           myClubCount: owned.length,
@@ -347,14 +374,36 @@ Page({
         });
         that.applyNearbyFilter();
       },
-      fail: function (res) { fail(res, 'network'); }
+      successStatusAbnormal: function (res, statusCode) { fail(res, 'http', statusCode); },
+      fail: function (res, statusCode) { fail(res, 'network', statusCode); }
     });
   },
 
-  retryClubs() { this.loadClubHome(); },
+  retryClubs() {
+    if (this.data.clubsLoginRequired) this.onLoginClubs();
+    else this.loadClubHome();
+  },
+
+  onLoginClubs() {
+    if (this.data.clubsLoginPending) return;
+    const epoch = (this._clubsLoginEpoch || 0) + 1;
+    this._clubsLoginEpoch = epoch;
+    this.setData({ clubsLoginPending: true });
+    const login = app.getUserID() && typeof app.reLogin === 'function' ? app.reLogin()
+      : typeof app.firstLogin === 'function' ? app.firstLogin() : null;
+    Promise.resolve(login).then(result => {
+      if (this._unloaded || epoch !== this._clubsLoginEpoch) return;
+      this.setData({ clubsLoginPending: false });
+      if (app.getUserID() && !(result && result.ok === false)) this.loadClubHome();
+      else this.setData({ clubsErrorText: '登录没有成功，请检查网络后重试' });
+    }).catch(() => {
+      if (!this._unloaded && epoch === this._clubsLoginEpoch) this.setData({ clubsLoginPending: false, clubsErrorText: '登录没有成功，请检查网络后重试' });
+    });
+  },
 
   // 站内消息未读红点
   loadImUnread() {
+    if (typeof app.getUserID !== 'function' || !app.getUserID()) return;
     var that = this;
     app.sendRequest({
       url: '/api/im/unread-total', method: 'POST', hideLoading: true,
@@ -527,27 +576,25 @@ Page({
     if (club && club.id) this.loadClubMembers(club.id);
   },
 
+  // 2026-10-23 业主定:移出成员 = 先从列表拿掉,提示条留「撤销」4 秒;到期才真的发请求,撤销就什么都没发。
   removeClubMember(e) {
     var that = this;
     var memberId = e.currentTarget.dataset.memberId;
     var club = that.data.managingClub;
     if (!club || !memberId) return;
-    // 三段式第一段:确认。文案(后果 + 「此操作不可撤销」)在 utils/danger-actions.js。
-    var dc = this.selectComponent && this.selectComponent('#dc');
-    if (dc) dc.open('club.member.remove', {
-      name: e.currentTarget.dataset.memberName || '这位成员',
-      memberId: memberId,
+    var name = e.currentTarget.dataset.memberName || '这位成员';
+    var before = that.data.clubMembers || [];
+    that.setData({
+      clubMembers: before.filter(function (m) { return String(m.memberId) !== String(memberId); }),
+    });
+    toast.undo('已将「' + name + '」移出俱乐部', {
+      onUndo: function () { that.setData({ clubMembers: before }); },
+      onCommit: function () { that._doRemoveClubMember(club, memberId); },
     });
   },
 
-  /** 三段式第二段:确认弹窗里点了「移出成员」才真的发请求。 */
-  onConfirmRemoveClubMember: function (e) {
+  _doRemoveClubMember: function (club, memberId) {
     var that = this;
-    var club = this.data.managingClub;
-    var memberId = e.detail.params.memberId;
-    var dc = this.selectComponent && this.selectComponent('#dc');
-    if (!club || !memberId) return;
-    if (dc) dc.busyOn();
     // 后端 /api/club/remove-member 是 @RequestBody 端点,必须发 JSON;缺 header 会被当 urlencoded 导致移除永远失败
     app.sendRequest({
       url: '/api/club/remove-member',
@@ -556,12 +603,14 @@ Page({
       header: { 'Content-Type': 'application/json' },
       success: function (res) {
         if (res.code == '200') {
-          if (dc) dc.done();
           that.loadClubMembers(club.id);
           that.setData({ clubsLoaded: false }, function () { that.loadClubHome(); });
-        } else if (dc) dc.failed(res.msg || '移除失败');
+        } else {
+          toast(res.msg || '移除失败');
+          that.loadClubMembers(club.id);
+        }
       },
-      fail: function () { if (dc) dc.failed('网络错误，请重试'); }
+      fail: function () { toast('网络错误，请重试'); that.loadClubMembers(club.id); }
     });
   },
 

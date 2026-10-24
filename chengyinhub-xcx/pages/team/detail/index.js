@@ -1,4 +1,5 @@
 const cyToast = require('../../../utils/toast.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 const app = getApp();
 
 const STATUS_TEXT = ['招募中', '已满员', '进行中', '已结束', '已解散'];
@@ -21,7 +22,9 @@ Page({
     error: '',
     errorKind: 'network',
     errorSub: '',
-    errorAction: '重新加载'
+    errorAction: '重新加载',
+    reportShow: false,
+    reportTeamId: ''
   },
 
   onLoad(options) {
@@ -32,13 +35,15 @@ Page({
         refreshing: false,
         error: '队伍链接不完整',
         errorKind: 'missing-param',
-        errorSub: '请从活动、订单或队长分享的邀请重新进入',
+        errorSub: '请返回重新进入',
         errorAction: '返回上一页'
       });
     }
   },
   onShow() { if (this.teamId) this.load(); },
   onPullDownRefresh() { this.load(true); },
+  openReport() { this.setData({ reportTeamId: this.teamId, reportShow: true }); },
+  closeReport() { this.setData({ reportShow: false }); },
 
   load(fromPull) {
     const that = this;
@@ -58,7 +63,7 @@ Page({
       errorAction: '重新加载'
     });
     app.sendRequest({
-      url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: hasTeam,
+      url: '/api/team/info', method: 'POST', hideLoading: true, autoErrorToast: false,
       data: JSON.stringify({ teamId: Number(this.teamId) }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
@@ -80,19 +85,35 @@ Page({
             errorSub: ''
           });
         } else {
+          // PR10 F-W1-12:未登录(无会话 / 401)的按钮是「登录」(走 retryLogin),不是只会再撞一次的「重新加载」。
+          const needLogin = isLoginRequired(app, res);
+          const authDenied = needLogin || String(res && res.code) === '403';
+          // F-W1-12:静默重登后仍 401/403 是身份问题,留可见的登录/权限说明,不按加载失败留白。
           that.setData({
             loading: false,
             refreshing: false,
-            error: hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
-            errorKind: 'data',
-            errorSub: app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
-            errorAction: '重新加载'
+            error: authDenied ? '登录后查看队伍' : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
+            errorKind: authDenied ? 'no-permission' : 'data',
+            errorSub: authDenied ? '请重新登录后再打开这支队伍' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
+            errorAction: needLogin ? '登录' : '重新加载'
           });
         }
       },
-      fail() {
+      fail(res, statusCode) {
         that._teamLoading = false;
         if (fromPull) wx.stopPullDownRefresh();
+        // PR10 F-W1-12:静默重登失败回到这里(401),或根本没有会话 ⇒ 登录引导,不按网络失败留白
+        if (isLoginRequired(app, res, statusCode)) {
+          that.setData({
+            loading: false,
+            refreshing: false,
+            error: '登录后查看队伍',
+            errorKind: 'no-permission',
+            errorSub: '',
+            errorAction: '登录'
+          });
+          return;
+        }
         that.setData({
           loading: false,
           refreshing: false,
@@ -110,6 +131,7 @@ Page({
       wx.navigateBack({ delta: 1, fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } });
       return;
     }
+    if (this.data.errorAction === '登录') { retryLogin(this, app, function () { this.load(); }); return; }
     this.load();
   },
 
@@ -158,7 +180,9 @@ Page({
 
   formatTime(value) {
     if (!value) return '';
-    const date = new Date(String(value).replace(/-/g, '/'));
+    // ISO(带 T 与时区)直接解析;只有「yyyy-MM-dd HH:mm」才换成斜杠给 iOS。原先一律换斜杠,ISO 会解析失败、原样露出
+    const raw = String(value);
+    const date = new Date(raw.indexOf('T') > 0 ? raw : raw.replace(/-/g, '/'));
     if (isNaN(date.getTime())) return String(value);
     const pad = n => n < 10 ? '0' + n : String(n);
     return (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + pad(date.getHours()) + ':' + pad(date.getMinutes());

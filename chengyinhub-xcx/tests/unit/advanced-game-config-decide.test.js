@@ -16,7 +16,7 @@ const mk = (patch) => Object.assign(cfg.defaultConfig(), patch)
 
 test('★七段都在 SECTIONS 里,且默认配置带得出来', () => {
   for (const k of DECIDE) {
-    assert.ok(cfg.SECTIONS.indexOf(k) >= 0, k + ' 不在 SECTIONS,读不出来也存不回去')
+    assert.ok(cfg.SECTIONS.indexOf(k) >= 0, k + ' 不在 SECTIONS,加载失败也存不回去')
     assert.ok(cfg.defaultConfig()[k], k + ' 没有默认段')
     assert.equal(cfg.defaultConfig()[k].enabled, false, k + ' 默认必须是关的')
   }
@@ -33,7 +33,7 @@ test('★负控:把任一段从 SECTIONS 摘掉,parse 就丢内容', () => {
 
   // 负控:名单外的段走「未知段透传」,不该被静默丢掉 —— v5.1 七款玩法就是这么没的
   const odd = cfg.parse(JSON.stringify({ schemaVersion: 1, someFutureGame: { enabled: true, x: 1 } }))
-  assert.equal(odd.value.someFutureGame.x, 1, '名单外的段必须原样保留,不能静默清空')
+  assert.equal(odd.value.someFutureGame.x, 1, '名单外的段必须原样保留，不能静默清空')
 })
 
 test('抛硬币:两面的「要做什么」都是必填 —— 只写正反面不是一个玩法', () => {
@@ -82,7 +82,7 @@ test('精准停表:容差与次数各有区间;0 次表示不限,不是不许停
   assert.match(cfg.validate(mk({ stopwatch: { enabled: true, targetSeconds: 10, toleranceMs: 9, tries: 3 } })), /50 至 5000/)
   assert.match(cfg.validate(mk({ stopwatch: { enabled: true, targetSeconds: 1, toleranceMs: 300, tries: 3 } })), /3 至 120/)
   assert.equal(cfg.validate(mk({ stopwatch: { enabled: true, targetSeconds: 10, toleranceMs: 300, tries: 0 } })), '',
-    '0 次 = 不限,必须放行')
+    '0 次 = 不限，必须放行')
 })
 
 test('安静挑战:阈值不入配置 —— 它由客户端开局前现场校准', () => {

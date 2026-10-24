@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +29,7 @@ class AuditSquareReportDismissKeepsTopicHideTest {
     private AuditTaskServiceImpl service;
     private IUmsCreativeSquareService squareService;
     private final UmsCreativeSquare current = new UmsCreativeSquare();
+    private AuditTask task;
 
     @BeforeEach
     void setUp() {
@@ -41,7 +43,7 @@ class AuditSquareReportDismissKeepsTopicHideTest {
         ReflectionTestUtils.setField(service, "auditRecordMapper", recordMapper);
         ReflectionTestUtils.setField(service, "businessAuditEventMapper", auditMapper);
         ReflectionTestUtils.setField(service, "umsCreativeSquareService", squareService);
-        AuditTask task = new AuditTask();
+        task = new AuditTask();
         task.setId(3L);
         task.setBizType(AuditTask.BIZ_SQUARE);
         task.setBizId(91L);
@@ -75,6 +77,37 @@ class AuditSquareReportDismissKeepsTopicHideTest {
     @Test
     void dismissedReportStillRestoresAnOrdinaryPost() {
         current.setStatus(0);
+        assertEquals(Integer.valueOf(1), dismissReport().getStatus());
+    }
+
+    /** AUDIT-G3-4:图片回调 status=2 下架的帖子,一条无关举报判不成立,不能把它放回公开。 */
+    @Test
+    void dismissedReportDoesNotRelistImageCheckTakeDown() {
+        task.setSourceType("report");
+        current.setStatus(2);
+        AuditReviewDTO decision = new AuditReviewDTO();
+        decision.setStatus(AuditTask.STATUS_APPROVED);
+        service.review(3L, 8L, decision);
+        verify(squareService, never()).updateUmsCreativeSquare(any());
+    }
+
+    /** AUDIT-G3-4:审核驳回(check_status=2)的帖子,另一条举报判不成立同样不能翻回。 */
+    @Test
+    void dismissedReportDoesNotRelistRejectedPost() {
+        task.setSourceType("report");
+        current.setStatus(1);
+        current.setCheckStatus(2);
+        AuditReviewDTO decision = new AuditReviewDTO();
+        decision.setStatus(AuditTask.STATUS_APPROVED);
+        service.review(3L, 8L, decision);
+        verify(squareService, never()).updateUmsCreativeSquare(any());
+    }
+
+    /** 门禁/后台送审的安全复核单通过 = 针对内容本身的人工复核,误判可以由它恢复公开。 */
+    @Test
+    void approvedSafetyReviewStillRestoresTakenDownPost() {
+        task.setSourceType("auto_gate");
+        current.setStatus(2);
         assertEquals(Integer.valueOf(1), dismissReport().getStatus());
     }
 }

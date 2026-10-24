@@ -26,10 +26,10 @@ const PRINT_DELAY_MS = 40;   // 先渲染在槽里,下一帧再加 is-printed,�
 const PRINT_MS = 1500;       // 出纸时长(和 wxss 的 .is-printing 同一个数):出纸中途不许抓
 const HINT = {
   print: '出票中',
-  pull: '按住小票,往下拉',
+  pull: '按住小票，往下拉',
   scratch: '刮开 TA 留给你的那句',
   write: '也给下一个来这里的人留一句',
-  done: '留下了,下一个来的人会看到',
+  done: '留下了，下一个来的人会看到',
 };
 
 /* ── 保存到相册:票面在 canvas 上复刻一张 ──
@@ -93,7 +93,7 @@ Component({
     leftAt:      { type: String,  value: '' },
     serialLabel: { type: String,  value: '' },
     textMax:     { type: Number,  value: 40 },
-    ctaLabel:    { type: String,  value: '留下,出发' },
+    ctaLabel:    { type: String,  value: '留下，出发' },
     /* 已经留过的签不该再盖一层刮层 —— 昨天擦过的今天重开还要再擦一遍是折磨 */
     revealed:    { type: Boolean, value: false },
     /* 上一个人拍的那张,印在票上。服务端没给就没有这一段,不放占位图 */

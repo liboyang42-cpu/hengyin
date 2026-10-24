@@ -33,6 +33,11 @@ function createHarness() {
       if (request === '../../../utils/response-shape.js') {
         return require(path.join(ROOT, 'utils/response-shape.js'))
       }
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -74,7 +79,7 @@ function createDetailHarness(storage = {}) {
         '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
         '../../../utils/datetime': require('../../utils/datetime'),
-        '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+        '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
         '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
         '../../../utils/group-code-session.js': require('../../utils/group-code-session.js'),
         '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
@@ -85,14 +90,21 @@ function createDetailHarness(storage = {}) {
         // 因为「可对接的活动」那段就是要保证它按真整形渲染,桩会把问题遮住
         '../../../utils/coop-invite-view.js': require('../../utils/coop-invite-view.js'),
         '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+        '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
         // 帖文卡的 variant 判定与广场共用一份,俱乐部页 require 的就是它
         '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
         // CU-C-60:快捷扫码的写请求也要能在这层沙箱里跑起来
         '../../../utils/verification-scan.js': require('../../utils/verification-scan.js'),
         '../../../utils/write-action-workflow.js': require('../../utils/write-action-workflow.js'),
+        '../../../utils/merchant-verification.js': require('../../utils/merchant-verification.js'),
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (Object.prototype.hasOwnProperty.call(modules, request)) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
@@ -100,7 +112,7 @@ function createDetailHarness(storage = {}) {
     JSON,
     wx: {
       navigateBack() {},
-      navigateTo(options) { navigations.push(options.url) },
+      navigateTo(options) { navigations.push(options.url); if (options.complete) options.complete() },
       showModal() {},
       showToast() {},
       showActionSheet(options) {
@@ -169,7 +181,7 @@ test('详情成员权限入口只把合法 memberId 作为意图，access/me 与
   // CU-C-29:主表单读 selectedMemberName、选择器读 selectedMemberId ——
   // 只回填 id 会让主表单写「未选择」、而选择器里那一行已经是「已选」,同屏打架。
   assert.equal(selected.page.data.selectedMemberName, '小林',
-    '预选必须两边同时回填,主表单与选择器不得各说一套')
+    '预选必须两边同时回填，主表单与选择器不得各说一套')
 
   const stale = createHarness()
   openOwnerPage(stale, [
@@ -197,7 +209,7 @@ test('非 owner 落 no-permission、坏响应落 error、空 roster 落 empty，
   malformed.requests[0].success({ code: '200', data: {} })
   assert.equal(malformed.page.data.state, 'error')
   assert.notEqual(malformed.page.data.state, forbidden.page.data.state,
-    '坏响应与没权限必须是两个态,否则重试按钮会出现在永远重试不好的地方')
+    '坏响应与没权限必须是两个态，否则重试按钮会出现在永远重试不好的地方')
 
   const empty = createHarness()
   openOwnerPage(empty, [{ id: 1, memberId: 900, nickname: '主理人', isOwner: true }])
@@ -251,7 +263,7 @@ test('撤销发送 assignmentId/version/固定审计原因，不能依赖旧 clu
   assert.equal(harness.requests.length, before, '没确认之前不许发撤销请求')
   assert.ok(
     dc.opens[0].action.consequences.some(item => item.text.includes('此操作不可撤销')),
-    '撤销角色是不可逆动作,确认文案必须写明不可撤销',
+    '撤销角色是不可逆动作，确认文案必须写明不可撤销',
   )
   dc.confirm()
   const request = requestByUrl(harness, '/api/club/roles/revoke', before)
@@ -277,7 +289,7 @@ test('详情内容治理只认 access/me 的 club:write，旧 role=1 不能把�
     code: '200',
     data: { active: true, club: { id: 9 }, permissions: ['club:read', 'club:event:checkin'] },
   })
-  assert.equal(revoked.page.data.clubAccessState, 'ready')
+  assert.equal(revoked.page._clubAccessState, 'ready')
   assert.equal(revoked.page.data.canModerateContent, false)
 
   revoked.page.loadMembers()
@@ -299,7 +311,7 @@ test('详情内容治理只认 access/me 的 club:write，旧 role=1 不能把�
   const malformed = createDetailHarness()
   malformed.page.loadClubAccess()
   malformed.requests[0].success({ code: '200', data: { active: true, permissions: ['club:write'] } })
-  assert.equal(malformed.page.data.clubAccessState, 'error')
+  assert.equal(malformed.page._clubAccessState, 'error')
   assert.equal(malformed.page.data.canModerateContent, false)
 })
 
@@ -328,7 +340,7 @@ test('帖子编辑与置顶丢响应后跨页面复用同一意图，成功或�
   assert.equal(JSON.parse(replayEditRequest.data).requestId, editRequestId)
   replayEditRequest.success({ code: 200, data: { id: 81, version: 3 } })
   replayEditRequest.complete()
-  assert.ok(requestByUrl(replayEdit, '/api/club/post/list'), '编辑成功后必须回读帖子真源')
+  assert.ok(requestByUrl(replayEdit, '/api/club/post/list'), '编辑成功后必须刷新帖子真源')
   assert.doesNotMatch(JSON.stringify(storage), new RegExp(editRequestId))
 
   const announcement = {
@@ -494,7 +506,7 @@ test('场次委派摘要必须角色与权限完全一致，畸形或越权组�
         eventAccesses: [eventAccess],
       },
     })
-    assert.equal(harness.page.data.clubAccessState, 'error')
+    assert.equal(harness.page._clubAccessState, 'error')
     assert.equal(harness.page.data.hasEventScope, false)
     assert.deepEqual(Array.from(harness.page.data.clubTabs, item => item.key),
       ['posts', 'events', 'overview'])
@@ -526,7 +538,7 @@ test('场次委派摘要必须角色与权限完全一致，畸形或越权组�
       ],
     },
   })
-  assert.equal(duplicateActivity.page.data.clubAccessState, 'error')
+  assert.equal(duplicateActivity.page._clubAccessState, 'error')
   assert.equal(duplicateActivity.page.data.hasEventScope, false)
 })
 
@@ -553,7 +565,7 @@ test('同一俱乐部 access/me 重叠请求只接纳最新响应，旧响应不
     },
   })
 
-  assert.equal(harness.page.data.clubAccessState, 'error')
+  assert.equal(harness.page._clubAccessState, 'error')
   assert.equal(harness.page.data.hasEventScope, false)
   assert.deepEqual(Object.keys(harness.page._eventAccessByActivity), [])
 })
@@ -612,7 +624,7 @@ test('详情管理页签由 access/me 权限驱动，副主理人与运营可进
   operator.page.loadClubAccess()
   operator.requests[1].success({ code: '200', data: { active: false, club: { id: 9 }, permissions: [] } })
   assert.equal(operator.page.data.canUseManageTab, false)
-  assert.equal(operator.page.data.activeTab, 'posts')
+  assert.equal(operator.page.data.activeTab, 'overview', '权限回收后退回默认 tab —— 2026-10-22 起一律是概览')
   assert.deepEqual(Array.from(operator.page.data.clubTabs, (tab) => tab.key), [
     'posts', 'events', 'overview',
   ])
@@ -685,7 +697,7 @@ test('场次角色页带出作用对象(活动名·日期)，取不到就退到�
     { id: 2, memberId: 901, nickname: '小林', isOwner: false },
   ], { clubId: '9', activityId: '71', activityLabel: encodeURIComponent('夜跑 · 2026-09-24 19:00') })
   assert.equal(labelled.page.data.activitySubtitle, '夜跑 · 2026-09-24 19:00',
-    '入口带了活动名就得显示出来,不能只留「角色与权限」四个字')
+    '入口带了活动名就得显示出来，不能只留「角色与权限」四个字')
 
   const bare = createHarness()
   openOwnerPage(bare, [
@@ -693,7 +705,7 @@ test('场次角色页带出作用对象(活动名·日期)，取不到就退到�
     { id: 2, memberId: 901, nickname: '小林', isOwner: false },
   ], { clubId: '9', activityId: '71' })
   assert.equal(bare.page.data.activitySubtitle, '场次 #71',
-    '深链/旧入口没有活动名时,至少要让用户看出这是场次级页面')
+    '深链/旧入口没有活动名时，至少要让用户看出这是场次级页面')
 
   const clubScope = createHarness()
   openOwnerPage(clubScope, [
@@ -704,7 +716,7 @@ test('场次角色页带出作用对象(活动名·日期)，取不到就退到�
 
   const view = read('pages/club/roles/index.wxml')
   assert.match(view, /cy-page-title[^>]*subtitle="\{\{activitySubtitle\}\}"/,
-    '副标题得真的渲染出来,不然还是死字段')
+    '副标题得真的渲染出来，不然还是死字段')
 })
 
 test('委派行的作用期限来自后端 expiresAt，没有期限就不编一个出来', () => {

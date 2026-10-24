@@ -1,11 +1,12 @@
 'use strict'
 
-const modal = require('../../../../utils/modal.js');
+const modal = require('../../../../utils/modal.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const toast = require('../../../../utils/toast.js');
 const app = getApp()
 const { isRecord, isRecordList, bizFailureMessage } = require('../../../../utils/response-shape.js')
 
 const { validationMethodLabel } = require('../../../../utils/validation-method-labels.js')
+const mediaPreview = require('../../../../utils/media-preview.js')
 const VALIDATION_METHODS = [1, 2, 3, 4, 5]
 
 function nonEmptyString(value) {
@@ -16,6 +17,29 @@ function positiveId(value) {
   if (typeof value !== 'number' && (typeof value !== 'string' || !/^[1-9]\d*$/.test(value))) return null
   const id = Number(value)
   return Number.isSafeInteger(id) && id > 0 ? id : null
+}
+
+let attemptSequence = 0
+const PREWRITE_REJECTIONS = new Set(['请先登录', '参数不合规', '据点未开放或已下线', '节点未上线', '节点未设置坐标', '缺少定位', '离据点太远,请到店后再完成', '答案不正确', '请上传拍照打卡照片', '照片地址不合法,请重新上传', '请扫描本店的到店打卡码', '这张码不属于本店'])
+function ownerId() {
+  try { return positiveId(app.getUserID()) } catch (_) { return null }
+}
+function pendingContext(poi) {
+  const owner = ownerId(); const id = positiveId(poi)
+  return owner && id ? { ownerId: owner, poiId: id, key: 'cy_roam_poi_checkin_pending:v1:' + owner + ':' + id } : null
+}
+function readPending(context) {
+  const value = wx.getStorageSync(context.key)
+  if (value == null || value === '') return null
+  if (!isRecord(value) || value.v !== 1 || value.ownerId !== context.ownerId || value.poiId !== context.poiId || typeof value.attemptId !== 'string' || !value.attemptId) throw new Error('invalid pending')
+  return value
+}
+function clearPending(context, record) {
+  const current = readPending(context)
+  if (!current || current.attemptId !== record.attemptId) return false
+  wx.removeStorageSync(context.key)
+  if (readPending(context)) throw new Error('pending not removed')
+  return true
 }
 
 function coordinate(value, max) {
@@ -31,7 +55,7 @@ Component({
     choiceSheetShow: false,
     choiceSheetItems: [],
     state: 'loading',
-    errorText: '这次没有读到据点信息，稍后可以重新读取。',
+    errorText: '节点信息加载失败',
     merchant: null,
     merchantError: '',
     node: null,
@@ -39,6 +63,7 @@ Component({
     tags: [],
     featured: null,
     hasLocation: false,
+    checkinPending: false,
     completing: false,
     favoriteBusy: false,
     favoriteError: '',
@@ -58,7 +83,14 @@ Component({
       this._favoriteToken = (this._favoriteToken || 0) + 1
     },
   },
+  pageLifetimes: { show() { if (!this._closed && (this._loadedOwner !== ownerId() || this.data.checkinPending)) this._load() } },
   methods: {
+    _pendingNotice(storageError) {
+      this._pendingCompletion = null
+      this.setData({ completing: false, checkinPending: true })
+      this._setInteractionRecovery('unknown', '打卡结果待确认', '上次请求结果尚未确认，请查询当前状态；暂不重复提交。', 'query', '查询当前状态')
+      if (storageError) this.setData({ interactionTitle: '打卡记录暂时无法读取或保存', interactionText: '本地存储异常，暂不提交打卡。请恢复存储后查询当前状态。' })
+    },
     onChoiceSheetSelect(e) {
       if (!this.data.choiceSheetShow || this._choiceSheetToken !== this._interactionToken || this._closed) return
       const value = (this._choiceSheetValues || [])[e.detail.index]
@@ -82,8 +114,14 @@ Component({
       this._favoriteToken = (this._favoriteToken || 0) + 1
       this._pendingCompletion = null
       const poiId = this.data.poiId
+      const context = pendingContext(poiId)
+      this._loadedOwner = ownerId()
+      const loadedOwner = this._loadedOwner
+      let pending = null; let storageError = false
+      try { if (context) pending = readPending(context) } catch (_) { storageError = true }
       const merchantId = this.data.merchantId
       const resetState = (state) => this.setData({
+        checkinPending: false,
         errorText: '',
         merchant: null,
         merchantError: '',
@@ -109,6 +147,8 @@ Component({
         return
       }
       resetState('loading')
+      this.setData({ checkinPending: !!pending || storageError })
+      if (pending || storageError) this._pendingNotice(storageError)
       app.sendRequest({
         hideLoading: true,
         silentError: true,
@@ -116,7 +156,7 @@ Component({
         method: 'GET',
         // SecurityConfig 未匿名放行 city/nodes，使用 request-client 默认认证。
         success: (nodeRes) => {
-          if (token !== this._loadToken) return
+          if (token !== this._loadToken || this._closed || loadedOwner !== ownerId()) return
           const rawNode = nodeRes && (nodeRes.code === '200' || nodeRes.code === 200) && isRecord(nodeRes.data) ? nodeRes.data : null
           const nodeId = rawNode && positiveId(rawNode.poiId == null ? rawNode.id : rawNode.poiId)
           if (!nodeId || nodeId !== positiveId(poiId) || (rawNode.id != null && positiveId(rawNode.id) !== nodeId)) {
@@ -126,19 +166,29 @@ Component({
           const method = typeof rawNode.validationMethod === 'number' ? rawNode.validationMethod : null
           const node = {
             ...rawNode,
-            vmLabel: validationMethodLabel(method, '核验方式待确认'),
+            vmLabel: validationMethodLabel(method, '—'),
             canInteract: rawNode.status === 1 && VALIDATION_METHODS.includes(method),
           }
-          this.setData({ node, state: 'ready', hasLocation: !!this._coordinates(node, null) })
-          if (node.merchantId) this._loadMerchant(node.merchantId, token)
+          if (this.data.state !== 'ready') pageMotion.enter(this, 'pmPage'); this.setData({ node, state: 'ready', hasLocation: !!this._coordinates(node, null) })
+          if (pending && typeof node.completed === 'boolean' && typeof node.needRedeem === 'boolean' && node.completed !== node.needRedeem) {
+            try {
+              if (clearPending(context, pending)) {
+                this.setData({ checkinPending: false })
+                this._clearInteractionRecovery()
+                this.triggerEvent('completed', { poiId, needRedeem: node.needRedeem, recovered: true })
+                toast(node.needRedeem ? '已确认当前待核销' : '已确认当前已完成')
+              }
+            } catch (_) { this._pendingNotice(true) }
+          }
+          if (node.merchantId && !this.data.checkinPending) this._loadMerchant(node.merchantId, token)
         },
-        fail: () => { if (token === this._loadToken) this.setData({ state: 'error', errorText: '网络异常，这次没有读到据点信息。' }) },
-        successStatusAbnormal: (res) => { if (token === this._loadToken) this._nodeLoadFailed(res) },
+        fail: () => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this.setData({ state: 'error', errorText: '网络异常，请重试' }) },
+        successStatusAbnormal: (res) => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this._nodeLoadFailed(res) },
       })
     },
     _nodeLoadFailed(res) {
       // 200 但数据形状不对时 msg 是「操作成功」,不能当失败原因(2026-09-17 拍板)。
-      this.setData({ state: res && (res.code === 410 || res.code === '410') ? 'unavailable' : 'error', errorText: bizFailureMessage(res, '这次没有读到据点信息，请稍后重试。') })
+      this.setData({ state: res && (res.code === 410 || res.code === '410') ? 'unavailable' : 'error', errorText: bizFailureMessage(res, '这次没有读到节点信息，请稍后重试。') })
     },
     _loadMerchant(id, loadToken) {
       const token = loadToken == null ? (this._loadToken || 0) + 1 : loadToken
@@ -167,9 +217,9 @@ Component({
           }
           const merchant = {
             ...rawMerchant,
-            displayName: nonEmptyString(rawMerchant.name) || '商家名称待确认',
-            chargeText: rawMerchant.chargeType === 1 ? '收费承接' : (rawMerchant.chargeType === 0 ? '免费承接' : '收费方式待确认'),
-            businessStatusText: rawMerchant.businessStatus === 1 ? '营业中' : (rawMerchant.businessStatus === 0 ? '已打烊' : '营业状态待确认'),
+            displayName: nonEmptyString(rawMerchant.name) || '—',
+            chargeText: rawMerchant.chargeType === 1 ? '收费承接' : (rawMerchant.chargeType === 0 ? '免费承接' : '—'),
+            businessStatusText: rawMerchant.businessStatus === 1 ? '营业中' : (rawMerchant.businessStatus === 0 ? '已打烊' : '—'),
             catNames: (rawMerchant.sysCategoryList || []).map((item) => nonEmptyString(item.categoryName)).filter(Boolean).join(' · '),
           }
           let gallery = []; let tags = []
@@ -185,7 +235,7 @@ Component({
             imageUrl: nonEmptyString(rawFeatured.imgUrl) || nonEmptyString(rawFeatured.coverImg) || nonEmptyString(rawFeatured.img),
             actionable: (featuredType === 1 && !!rawFeatured.featuredId) || featuredType === 2,
           } : null
-          this.setData({ merchant, merchantError: '', gallery, tags, featured, hasLocation: !!this._coordinates(this.data.node, merchant), state: 'ready' })
+          if (this.data.state !== 'ready') pageMotion.enter(this, 'pmPage'); this.setData({ merchant, merchantError: '', gallery, tags, featured, hasLocation: !!this._coordinates(this.data.node, merchant), state: 'ready' })
         },
         fail: () => { if (isCurrent()) this._merchantLoadFailed('网络异常，这次没有读到商家信息。') },
         successStatusAbnormal: () => { if (isCurrent()) this._merchantLoadFailed('这次没有读到商家信息，请稍后重试。') },
@@ -201,7 +251,7 @@ Component({
     retry() { this._load() },
     previewGallery(event) {
       const current = event.currentTarget.dataset.src
-      if (current && wx.previewImage) wx.previewImage({ current, urls: this.data.gallery || [current] })
+      if (current) mediaPreview.open(this.data.gallery || [current], current)
     },
     toggleFavorite() {
       if (this.data.favoriteBusy || !this.data.poiId) return
@@ -240,7 +290,7 @@ Component({
       const node = this.data.node || {}; const merchant = this.data.merchant || {}
       const location = this._coordinates(node, merchant)
       if (!location) return
-      wx.openLocation({ ...location, name: nonEmptyString(node.name) || nonEmptyString(merchant.name) || '据点', address: nonEmptyString(node.merchantAddress) || nonEmptyString(merchant.address), scale: 18 })
+      wx.openLocation({ ...location, name: nonEmptyString(node.name) || nonEmptyString(merchant.name) || '节点', address: nonEmptyString(node.merchantAddress) || nonEmptyString(merchant.address), scale: 18 })
     },
     _isInteractionCancel(error) {
       return /\bcancel(?:led)?\b/i.test(String(error && error.errMsg || ''))
@@ -290,6 +340,7 @@ Component({
     },
     recoverInteraction() {
       if (this._closed) return
+      if (this.data.checkinPending) { this._load(); return }
       const token = this._interactionToken
       const state = this.data.interactionState
       const retry = this._interactionRetry
@@ -309,21 +360,23 @@ Component({
       this._retryInteraction(retry)
     },
     startInteract() {
+      if (this.data.checkinPending) return
+      if (this._loadedOwner !== ownerId()) { this._load(); return }
       const node = this.data.node
       if (this._closed || !node || node.completed || this.data.completing) return
       const token = (this._interactionToken || 0) + 1
       this._interactionToken = token
       this._clearInteractionRecovery()
       if (node.needRedeem === true) {
-        this.triggerEvent('open', { id: 'qr-citynode', params: { poiId: this.data.poiId, name: node.name || '据点' } })
+        this.triggerEvent('open', { id: 'qr-citynode', params: { poiId: this.data.poiId, name: node.name || '节点' } })
         return
       }
       if (node.status !== 1) {
-        this._setInteractionRecovery('unavailable', '据点已下线', '这里保留你的历史记录，暂不接受新的打卡。', '')
+        this._setInteractionRecovery('unavailable', '节点已下线', '这里保留你的历史记录，暂不接受新的打卡。', '')
         return
       }
       if (node.canInteract === false || !VALIDATION_METHODS.includes(node.validationMethod)) {
-        this._setInteractionRecovery('unavailable', '核验方式待确认', '该据点尚未配置可用的核验方式，暂时不能打卡。', '')
+        this._setInteractionRecovery('unavailable', '—', '该节点尚未配置可用的核验方式，暂时不能打卡。', '')
         return
       }
       if (node.validationMethod === 1) {
@@ -369,66 +422,67 @@ Component({
       this.completeNode('')
     },
     completeNode(answer, photoUrl, code) {
-      if (this._closed || this.data.completing || !this.data.poiId || !this.data.node) return
+      if (this._closed || this.data.completing || !this.data.poiId || !this.data.node || this.data.node.completed === true) return
+      if (this.data.checkinPending) return
+      if (this._loadedOwner !== ownerId()) { this._load(); return }
       if (this.data.node.status !== 1) return this.startInteract()
+      const context = pendingContext(this.data.poiId)
+      if (!context) { this._pendingNotice(true); return }
       const token = (this._completionToken || 0) + 1
       this._completionToken = token
       const poiId = this.data.poiId
+      const isCurrent = () => !this._closed && token === this._completionToken && poiId === this.data.poiId && context.ownerId === ownerId()
       this._pendingCompletion = { answer: answer || '', photoUrl: photoUrl || '', code: code || '', poiId }
       this._clearInteractionRecovery()
       this.setData({ completing: true })
+      let locationSettled = false
       wx.getLocation({
         type: 'gcj02',
         success: (location) => {
-          if (token !== this._completionToken || poiId !== this.data.poiId) return
+          if (!isCurrent() || locationSettled) return
+          locationSettled = true
+          const record = { v: 1, ownerId: context.ownerId, poiId: context.poiId, attemptId: Date.now() + ':' + (++attemptSequence) + ':' + Math.random() }
+          try {
+            if (readPending(context)) { this._pendingNotice(false); return }
+            wx.setStorageSync(context.key, record)
+            const saved = readPending(context)
+            if (!saved || saved.attemptId !== record.attemptId) throw new Error('pending not saved')
+          } catch (_) { this._pendingNotice(true); return }
+          this.setData({ checkinPending: true })
+          this._pendingCompletion = null
+          const unknown = () => { if (isCurrent()) this._pendingNotice(false) }
           app.sendRequest({
-          url: '/api/city/nodes/' + poiId + '/complete',
-          method: 'POST',
-          hideLoading: true,
-          silentError: true,
-          data: { lat: location.latitude, lng: location.longitude, answer: answer || '', photoUrl: photoUrl || '', code: code || '' },
-          success: (res) => {
-            if (token !== this._completionToken || poiId !== this.data.poiId) return
-            this.setData({ completing: false })
-            if (!(res && (res.code === '200' || res.code === 200))) {
-              /* CU-M-52:业务拒绝(口令答错、离据点太远…)与传输失败不是同一种失败。
-                 原来两者共用 retry='complete' ⇒ 「重试」直接重放 _pendingCompletion 里的旧答案,
-                 用户没有重新输入的入口,再点必得同一句「答案不正确」。
-                 业务拒绝给回输入:清掉旧答案,重试接 startInteract(重开输入框/选项面板);
-                 只有 :fail(网络)与定位失败仍按原答案续跑 —— 「原输入已保留」说的是那两个。 */
-              this._pendingCompletion = null
-              this._setInteractionRecovery('retry', '打卡没有完成', (res && res.msg) || '服务暂时无法核验，请重试。', 'start', '重新作答')
-              return
-            }
-            const result = res.data || {}
-            this._pendingCompletion = null
-            this._clearInteractionRecovery()
-            this.setData({ 'node.completed': result.needRedeem !== true, 'node.needRedeem': result.needRedeem === true })
-            // 宿主(roam 页)自己维护 marker/足迹,这里完成了要告诉它,否则地图上这一站还是灰的。
-            // CU-M-54:needRedeem 一并带上 —— 待核销不等于已完成,宿主得能把这两档分开写。
-            this.triggerEvent('completed', { poiId: poiId, alreadyClaimed: !!result.alreadyClaimed, needRedeem: result.needRedeem === true })
-            if (result.needRedeem) this.triggerEvent('open', { id: 'qr-citynode', params: { poiId: this.data.poiId, name: this.data.node.name || '据点' } })
-            else toast(result.alreadyClaimed ? '你已完成过' : '打卡成功', { icon: result.alreadyClaimed ? 'none' : 'success' })
-          },
-          fail: () => {
-            if (token !== this._completionToken || poiId !== this.data.poiId) return
-            this.setData({ completing: false })
-            this._setInteractionRecovery('retry', '打卡没有完成', '网络异常，原输入已保留，请重试。', 'complete')
-          },
-          successStatusAbnormal: () => {
-            if (token !== this._completionToken || poiId !== this.data.poiId) return
-            this.setData({ completing: false })
-            this._setInteractionRecovery('retry', '打卡没有完成', '服务暂时无法核验，请重试。', 'complete')
-          },
-        })
+            url: '/api/city/nodes/' + poiId + '/complete', method: 'POST', hideLoading: true, silentError: true,
+            data: { lat: location.latitude, lng: location.longitude, answer: answer || '', photoUrl: photoUrl || '', code: code || '' },
+            success: (res) => {
+              const receipt = res && res.data
+              const matchingPoi = isRecord(receipt) && ['poiId', 'id'].every((key) => !Object.prototype.hasOwnProperty.call(receipt, key) || positiveId(receipt[key]) === context.poiId)
+              const validCoupon = isRecord(receipt) && (receipt.needRedeem !== true || positiveId(receipt.couponId) !== null)
+              const ok = res && (res.code === 200 || res.code === '200') && matchingPoi && validCoupon && typeof res.data.needRedeem === 'boolean' && (res.data.completed == null || (typeof res.data.completed === 'boolean' && res.data.completed !== res.data.needRedeem)) && (res.data.alreadyClaimed == null || typeof res.data.alreadyClaimed === 'boolean')
+              // Only these controller messages prove rejection before insertRewardLogIgnore.
+              const rejected = res && (res.code === 500 || res.code === '500') && PREWRITE_REJECTIONS.has(res.msg)
+              if (!ok && !rejected) { unknown(); return }
+              let cleared
+              try { cleared = clearPending(context, record) } catch (_) { if (isCurrent()) this._pendingNotice(true); return }
+              if (!isCurrent() || !cleared) return
+              this.setData({ completing: false, checkinPending: false })
+              if (rejected) { this._setInteractionRecovery('retry', '打卡没有完成', res.msg, 'start', '重新作答'); return }
+              const result = res.data
+              this._clearInteractionRecovery()
+              this.setData({ 'node.completed': !result.needRedeem, 'node.needRedeem': result.needRedeem })
+              this.triggerEvent('completed', { poiId, alreadyClaimed: result.alreadyClaimed === true, needRedeem: result.needRedeem })
+              if (result.needRedeem) this.triggerEvent('open', { id: 'qr-citynode', params: { poiId, name: this.data.node.name || '节点' } })
+              else toast(result.alreadyClaimed ? '你已完成过' : '打卡成功', { icon: result.alreadyClaimed ? 'none' : 'success' })
+            },
+            fail: () => { if (isCurrent()) this._pendingNotice(false) },
+            successStatusAbnormal: unknown,
+          })
         },
         fail: (error) => {
-          if (token !== this._completionToken || poiId !== this.data.poiId) return
+          if (!isCurrent() || locationSettled) return
+          locationSettled = true
           this.setData({ completing: false })
-          if (this._isPermissionDenied(error)) {
-            this._setInteractionRecovery('location-permission', '需要定位权限', '在设置里允许定位，返回后会继续本次打卡。', 'complete')
-            return
-          }
+          if (this._isPermissionDenied(error)) { this._setInteractionRecovery('location-permission', '需要定位权限', '在设置里允许定位，返回后会继续本次打卡。', 'complete'); return }
           this._setInteractionRecovery('retry', '定位没有完成', '暂时无法获取位置，请稍后重试。', 'complete')
         },
       })

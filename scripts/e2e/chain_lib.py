@@ -7,11 +7,42 @@
   · 每一步都打印【原始】响应与【原始】回读行,不做美化;
   · 拒连生产主机。
 """
-import json, os, urllib.request, urllib.parse, urllib.error
+import hashlib, json, os, urllib.request, urllib.parse, urllib.error
 import pymysql
 
-BASE = "http://127.0.0.1:8099"
-FORBIDDEN = {"47.103.124.64", "47.100.84.122"}
+# 生产主机不写明文(公开仓):内置 SHA-256 黑名单 + 环境变量 CHENGYIN_FORBIDDEN_DB_HOSTS(逗号分隔)。
+FORBIDDEN_HOSTS_ENV = "CHENGYIN_FORBIDDEN_DB_HOSTS"
+FORBIDDEN_SHA256 = frozenset({
+    "d8c695fe7dd5f6ffc048b72c96621f7e7d13d3ec23b76aab523514183e7474d9",  # 生产库主机
+    "ce1a8527392b68bab1ab6a91238a5e6909cbbb937b9eb077d1025499a59f03fe",  # 生产应用机
+})
+
+
+def _normalize_host(host):
+    return (host or "").strip().lower().strip("[]")
+
+
+def is_forbidden_host(host, environ=None, forbidden_sha256=FORBIDDEN_SHA256):
+    normalized = _normalize_host(host)
+    if not normalized:
+        return False
+    environ = os.environ if environ is None else environ
+    denylist = {_normalize_host(h) for h in environ.get(FORBIDDEN_HOSTS_ENV, "").split(",")}
+    if normalized in denylist:
+        return True
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest() in forbidden_sha256
+
+
+def load_base(environ, forbidden_sha256=FORBIDDEN_SHA256):
+    """后端地址默认本机 8099;CI 可经 CHENGYIN_E2E_BASE 覆盖，但同样拒连生产主机。"""
+    base = environ.get("CHENGYIN_E2E_BASE", "http://127.0.0.1:8099")
+    host = urllib.parse.urlsplit(base).hostname
+    if not host or is_forbidden_host(host, environ, forbidden_sha256):
+        raise SystemExit("拒绝连接生产主机")
+    return base.rstrip("/")
+
+
+BASE = load_base(os.environ)
 
 
 def load_db_config(environ):
@@ -30,8 +61,10 @@ def load_db_config(environ):
     )
 
 
-def validate_db_config(config):
-    if config["host"] in FORBIDDEN:
+
+
+def validate_db_config(config, environ=None, forbidden_sha256=FORBIDDEN_SHA256):
+    if is_forbidden_host(config["host"], environ, forbidden_sha256):
         raise SystemExit("拒绝连接生产主机")
     if not config["database"].startswith("cy_e2e_"):
         raise SystemExit("只允许连接 cy_e2e_* 测试库")
@@ -104,8 +137,13 @@ def http(method, path, token=None, json_body=None, form=None, timeout=20):
     return out
 
 
+# 一次性 E2E 库专用超管夹具口令(与 seed_fixtures.SUPERADMIN_HASH 对应)。后端拒绝 admin/ry
+# 使用 RuoYi 公开默认口令(F-L5S-09),所以这里不能再是 admin123。
+E2E_SUPERADMIN_PASSWORD = "E2e-Fixture-Adm1n!"
+
+
 def admin_token():
-    r = http("POST", "/login", json_body={"username": "admin", "password": "admin123"})
+    r = http("POST", "/login", json_body={"username": "admin", "password": E2E_SUPERADMIN_PASSWORD})
     return r.get("token")
 
 

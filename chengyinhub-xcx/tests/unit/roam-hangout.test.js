@@ -113,7 +113,11 @@ test('附近的队伍加载失败必须可重试,不能伪装成空列表', () =
   const wxml = fs.readFileSync(path.join(root, 'subpackageRoam/nearby/index.wxml'), 'utf8');
   const json = JSON.parse(fs.readFileSync(path.join(root, 'subpackageRoam/nearby/index.json'), 'utf8'));
   const fetch = js.slice(js.indexOf('fetchTeams(center, radius) {'), js.indexOf('fetchTopics(center, radius) {'));
-  assert.match(fetch, /loadError/);
+  assert.match(fetch, /_nearbyLayerResult\('teams', true\)/);
+  assert.match(fetch, /fail:|fail\(/);
+  assert.match(fetch, /successStatusAbnormal/);
+  assert.match(js, /loadError: this\._nearbyFailures\.teams \|\| this\._nearbyFailures\.topics/);
+  assert.match(wxml, /load-failure="\{\{!nearbyReadAccess\}\}"/);
   assert.doesNotMatch(fetch, /setData\(\{\s*loaded:\s*true\s*\}\)/);
   assert.ok(json.usingComponents['cy-error'], 'nearby 必须注册 cy-error');
   assert.match(wxml, /<cy-error\b/);

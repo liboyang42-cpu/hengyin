@@ -187,6 +187,10 @@ class FundIdempotencyConcurrencyTest {
                 .thenReturn(queryFailure);
 
         CashWithdrawServiceImpl service = new CashWithdrawServiceImpl();
+        org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        ReflectionTestUtils.setField(service, "transactionManager", transactions);
+        when(mapper.updateStatusIfManual(any())).thenReturn(1);
         ReflectionTestUtils.setField(service, "mapper", mapper);
         ReflectionTestUtils.setField(service, "umsMemberService", memberService);
         ReflectionTestUtils.setField(service, "wechatPayService", wechatPayService);
@@ -200,6 +204,8 @@ class FundIdempotencyConcurrencyTest {
         when(cooldownService.frozenAmount(memberId)).thenReturn(BigDecimal.ZERO);
         ReflectionTestUtils.setField(service, "frozenAmountResolver",
                 new WithdrawalFrozenAmountResolver(bountyService, cooldownService));
+        ReflectionTestUtils.setField(service, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(memberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver")));
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {

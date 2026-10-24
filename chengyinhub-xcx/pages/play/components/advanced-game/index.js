@@ -3,6 +3,7 @@ const toast = require('../../../../utils/toast.js');
 const app = getApp();
 const { safeUserMessage } = require('../../../../utils/transport/safe-user-message.js');
 const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js');
+const { canContinue, isR5, feedbackWritable } = require('../../utils/playkit-r5-segments.js');
 
 const { bundledMerchantGameAudioPath } = require('../../utils/merchant-game-assets.js');
 
@@ -21,7 +22,7 @@ Component({
     acting: false,
     error: '',
     // unknown：请求已发出但结果未知。不是失败，也不能当成功——保持锁定，
-    // 只能由 /state 权威回读释放（见 resolveUnknown）。
+    // 单人局回读 /state；共享局原键重放核对本人回执（见 resolveUnknown）。
     unknown: false,
     unknownText: '',
     readingBack: false,
@@ -37,27 +38,38 @@ Component({
   observers: {
     'show,node.nodeId': function (show, nodeId) {
       if (show && nodeId) this.start();
-      if (!show) { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.stopDrawAudio(); }
+      if (!show) { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.stopDrawAudio(); this.stopBackgroundMusic(); }
     }
   },
-  lifetimes: { detached() { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.destroyDrawAudio(); } },
-  pageLifetimes: { hide() { this.stopDrawAudio(); } },
+  lifetimes: { detached() { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.destroyDrawAudio(); this.stopBackgroundMusic(); } },
+  pageLifetimes: { hide() { this.stopDrawAudio(); this.stopBackgroundMusic(); } },
   methods: {
     sessionRequestContext() {
-      return { sessionId: String((this.data.state || {}).sessionId || ''),
+      return { memberId: String(app.getUserID() || ''),
+        sessionId: String((this.data.state || {}).sessionId || ''),
         nodeId: String((this.data.node || {}).nodeId || ''),
         topicId: String(this.data.topicId || ''), activityId: String(this.data.activityId || ''),
         epoch: this._requestEpoch || 0 };
     },
     currentRequestContext(context, requireSession = true) {
       const current = this.sessionRequestContext();
-      return current.epoch === context.epoch && current.nodeId === context.nodeId
+      return current.memberId === context.memberId
+        && current.epoch === context.epoch && current.nodeId === context.nodeId
         && current.topicId === context.topicId && current.activityId === context.activityId
         && (!requireSession || current.sessionId === context.sessionId);
     },
-    responseMatchesSession(state, context) {
-      return !!state && String(state.sessionId || '') === context.sessionId
-        && (state.nodeId == null || !context.nodeId || String(state.nodeId) === context.nodeId);
+    responseMatchesSession(state, context, action) {
+      if (!state) return false;
+      const same = String(state.sessionId || '') === context.sessionId;
+      const old = this.data.state || {};
+      const retry = action === 'RETRY' && !!old.challenge
+        && String(state.retrySourceSessionId || '') === context.sessionId
+        && Number.isSafeInteger(state.sessionId) && state.sessionId > 0
+        && state.ownerType === old.ownerType && String(state.ownerId) === String(old.ownerId)
+        && String(state.nodeId) === context.nodeId
+        && (!context.topicId || String(state.topicId) === context.topicId)
+        && (!context.activityId || String(state.activityId) === context.activityId);
+      return (same || retry) && (state.nodeId == null || !context.nodeId || String(state.nodeId) === context.nodeId);
     },
     request(url, method, data) {
       return new Promise((resolve, reject) => app.sendRequest({
@@ -76,6 +88,7 @@ Component({
       if (this.data.loading && previousStart && this.currentRequestContext(previousStart, false)) return;
       this._requestEpoch = (this._requestEpoch || 0) + 1;
       const context = this._startingContext = this.sessionRequestContext();
+      this._unknownCommand = null;
       if (this.data.preview || this.data.mock) {
         const config = node.advancedConfig || {};
         this._previewTypeStartedAt = 0;
@@ -109,8 +122,19 @@ Component({
         sessionId: state && state.sessionId,
         nodeId: state && state.nodeId,
         version: state && state.version,
+        ownerType: state && state.ownerType,
+        status: state && state.status,
+        canRetry: !!(state && state.canRetry === true),
+        score: state && state.score,
+        completedUnits: state && state.completedUnits,
+        challenge: state && state.challenge,
+        config: state && state.config,
+        check: state && state.check,
+        deadlineAt: state && state.deadlineAt,
         present: state && state.present,
         playKit: (state && state.playKit) || null,
+        config: state && state.config,
+        branch: state && state.branch,
         previewKit: this.data.preview && state ? state.previewKit || null : null,
         readyForBase: !!(state && state.readyForBase),
         /* 故事变量 map:{名字} 替换用。服务端不下发时是 undefined,页面按「没值」处理
@@ -126,9 +150,19 @@ Component({
       this.triggerEvent('actionfail', { action: action || '',
         sessionId: sessionId == null ? (this.data.state || {}).sessionId : sessionId });
     },
+    staleSnapshot(state) {
+      const current = this.data.state || {};
+      return String(state.sessionId || '') === String(current.sessionId || '')
+        && Number(state.version) < Number(current.version);
+    },
     hydrate(state) {
       if (state.nodeId != null && this.data.node && this.data.node.nodeId != null
           && String(state.nodeId) !== String(this.data.node.nodeId)) return;
+      if (this.staleSnapshot(state)) {
+        // 成功动作的当次卡片不是旧快照，仍递交给当前同局页面。
+        if (state.objectCard) this.emitSession(Object.assign({}, this.data.state, { objectCard: state.objectCard }));
+        return false;
+      }
       const config = Object.assign({
         timer: { enabled: false }, random: { enabled: false, drawCount: 0, items: [] },
         branch: { enabled: false, steps: [] }, leaderboard: { enabled: false },
@@ -136,23 +170,38 @@ Component({
       }, state.config || {});
       state.config = config;
       state.draws = state.draws || [];
-      state.multiplayer = Object.assign({ roles: {}, members: [], completedUnitIds: [], turnIndex: 0 }, state.multiplayer || {});
+      const roleAssignments = (state.multiplayer || {}).roleAssignments || (state.multiplayer || {}).roles;
+      state.multiplayer = Object.assign({ members: [], completedUnitIds: [], turnIndex: 0 }, state.multiplayer || {});
       const branch = state.branch || {};
       const steps = config.branch && Array.isArray(config.branch.steps) ? config.branch.steps : [];
       const currentStep = steps.find(step => step.id === branch.currentStepId) || null;
       const multi = state.multiplayer || {};
-      const roles = multi.roles || {};
-      const members = (multi.members || []).map(member => Object.assign({}, member, {
-        roleId: roles[String(member.memberId)] || ''
-      }));
+      const roles = roleAssignments || {};
+      const roleDefinitions = config.multiplayer.roles || [];
+      const members = (multi.members || []).map(member => {
+        const roleId = roles[String(member.memberId)] || '';
+        const role = roleDefinitions.find(item => item.id === roleId);
+        return Object.assign({}, member, { roleId,
+          roleText: role && role.label || roleId || (roleAssignments ? '待分配' : '角色仅本人可见') });
+      });
       this.setData({ state, currentStep, members, error: '' }, () => {
         this.syncTimer();
+        this.syncBackgroundMusic(config.backgroundMusic);
         if (config.leaderboard && config.leaderboard.enabled) this.loadLeaderboard();
       });
       this.emitSession(state);
+      return true;
+    },
+    retry() {
+      const state = this.data.state;
+      if (this.data.loading || this.data.acting || this.data.unknown || !state || state.canRetry !== true
+          || !(['FAILED', 'EXPIRED'].includes(state.status) || state.status === 'COMPLETED' && !!state.challenge)) return false;
+      return this.action('RETRY', {});
     },
     action(name, payload) {
       if (this.data.acting || this.data.unknown || !this.data.state) return;
+      if (name === 'CHOOSE' && isR5(this.data.state)
+          && !feedbackWritable(this.data.state, { stepId: (this.data.currentStep || {}).id })) return;
       if (this.data.preview || this.data.mock) return this.previewAction(name, payload || {});
       const context = this.sessionRequestContext();
       const sessionId = this.data.state.sessionId;
@@ -166,16 +215,23 @@ Component({
         return;
       }
       this.setData({ acting: true, error: '' });
-      return this.request('/api/play/advanced/action', 'POST', {
+      const command = {
         sessionId, version, idempotencyKey, action: name, payload: body
-      }).then(res => {
+      };
+      return this.request('/api/play/advanced/action', 'POST', command).then(res => {
         if (!this.currentRequestContext(context)) return;
         if (res.code == 200 || res.code == '200') {
-          if (!this.responseMatchesSession(res.data, context)) throw new Error('session response mismatch');
+          if (!this.responseMatchesSession(res.data, context, name)) throw new Error('session response mismatch');
           this.hydrate(res.data);
-          if (!this.currentRequestContext(context)) return;
+          if (!this.currentRequestContext(context, false)) return;
           this.setData({ acting: false });
           return true;
+        }
+        if (Number(res.code) === 409 && res.data && this.responseMatchesSession(res.data.view, context)) {
+          this.hydrate(res.data.view);
+          this.setData({ acting: false, error: safeUserMessage(res, '玩法状态已更新，请确认后再操作') });
+          this.emitActionFail(name, sessionId);
+          return false;
         }
         // 服务端说状态已更新 = 我方 version 落后，直接回读权威状态，别让用户拿旧 version 反复重发。
         if (/状态已更新/.test(res.msg || '')) {
@@ -191,14 +247,15 @@ Component({
         if (!this.currentRequestContext(context)) return;
         this._unknownAction = name;
         this._unknownChallengeGame = body.game;
+        this._unknownCommand = JSON.parse(JSON.stringify(command));
         this.enterUnknown(version);
       });
     },
-    /** 请求没拿到响应：服务端可能已经写入。禁止直接重发，改问 /state 拿对面自己产生的事实。 */
+    /** 请求没拿到响应：服务端可能已写入，只按原意图核对，不能生成新键重复提交。 */
     enterUnknown(sentVersion) {
       this.setData({
         acting: false, unknown: true, error: '',
-        unknownText: '结果还没确认，正在核对，请勿重复提交'
+        unknownText: '结果还没确认，正在确认，请勿重复提交'
       });
       this._unknownVersion = sentVersion;
       this.resolveUnknown();
@@ -208,12 +265,46 @@ Component({
       this.setData({ readingBack: true });
       const context = this.sessionRequestContext();
       const sessionId = this.data.state.sessionId;
+      // 共享局的版本可由队友推进；原键重放返回本人回执，不能用版本增长猜成功。
+      if (this._unknownCommand && (this.data.state.ownerType === 2 || this._unknownCommand.action === 'RETRY')) {
+        return this.request('/api/play/advanced/action', 'POST', this._unknownCommand).then(res => {
+          if (!this.currentRequestContext(context)) return false;
+          if (res.code == 200) {
+            if (!this.responseMatchesSession(res.data, context, this._unknownCommand.action)) throw new Error('replay session mismatch');
+            const replay = res.data;
+            const currentChallenge = this.data.state.challenge || {};
+            if (this.staleSnapshot(replay) && currentChallenge.instanceId
+                && replay.challenge && replay.challenge.instanceId === currentChallenge.instanceId) {
+              this.setData({ state: Object.assign({}, this.data.state, { challenge: Object.assign({}, replay.challenge, {
+                progress: Math.max(Number(currentChallenge.progress) || 0, Number(replay.challenge.progress) || 0),
+                success: !!currentChallenge.success || !!replay.challenge.success,
+              }) }) });
+            } else this.hydrate(replay);
+            if (!this.currentRequestContext(context, false)) return true;
+            this._unknownCommand = null;
+            this.setData({ readingBack: false, unknown: false, unknownText: '', error: '' });
+            return true;
+          }
+          // 收到明确拒绝才释放；网络未知继续保留原命令和选择。
+          return this.refreshState().then(() => {
+            if (!this.currentRequestContext(context)) return false;
+            this._unknownCommand = null;
+            this.setData({ readingBack: false, unknown: false, unknownText: '', error: safeUserMessage(res, '操作未提交，请重试') });
+            this.emitActionFail(this._unknownAction, sessionId);
+            return false;
+          });
+        }).catch(() => {
+          if (!this.currentRequestContext(context)) return false;
+          this.setData({ readingBack: false, unknownText: '还没确认上，网络恢复后再试 · 原提交会自动去重' });
+          return false;
+        });
+      }
       return this.request('/api/play/advanced/state', 'GET', { sessionId })
         .then(res => {
           if (!this.currentRequestContext(context)) return;
           if (!(res.code == 200 || res.code == '200')) throw new Error('readback failed');
           const authoritative = res.data || {};
-          if (!this.responseMatchesSession(authoritative, context)) throw new Error('readback session mismatch');
+          if (!this.responseMatchesSession(authoritative, context) || this.staleSnapshot(authoritative)) throw new Error('readback stale or mismatched');
           const advanced = Number(authoritative.version) > Number(this._unknownVersion);
           // ★version 只在单人局是「我那一步」的独占证据。多人局里队友写入同样推高 version，
           // 拿它当证据会把真丢掉的动作判成成功、把提示清掉，用户再也不知道该重试。
@@ -223,7 +314,7 @@ Component({
           const typeIn = (authoritative.playKit || {}).typeIn || {};
           // 开表有独立服务端事实，不拿版本增长代替开始计时。
           if (typeInStart && typeof typeIn.started !== 'boolean') {
-            this.setData({ readingBack: false, unknownText: '还没确认是否开始计时，请再核对 · 期间请勿重复提交' });
+            this.setData({ readingBack: false, unknownText: '还没确认是否开始计时，请再确认 · 期间请勿重复提交' });
             return;
           }
           const landed = typeInStart ? typeIn.started : advanced && !multiplayer;
@@ -242,7 +333,7 @@ Component({
           if (!this.currentRequestContext(context)) return;
           this.setData({
             readingBack: false,
-            unknownText: '还是没核对上，网络恢复后点这里再试 · 期间请勿重复提交'
+            unknownText: '还是没确认上，网络恢复后点这里再试 · 期间请勿重复提交'
           });
           this.emitActionFail(this._unknownAction);
         });
@@ -252,9 +343,12 @@ Component({
       const result = applyPreviewAction(this.data.state.previewKit, event, this._previewTypeStartedAt);
       if (!result) return false;
       this._previewTypeStartedAt = result.startedAt;
+      // 多段题目：本段完成后进入下一段，全部完成才算可继续
+      const queue = Array.isArray(result.kit.queue) ? result.kit.queue : [];
+      const next = result.ready && queue.length ? Object.assign({}, queue[0], { queue: queue.slice(1) }) : null;
       const state = Object.assign({}, this.data.state, {
-        previewKit: result.kit, version: this.data.state.version + 1,
-        readyForBase: this.data.state.readyForBase || result.ready,
+        previewKit: next || result.kit, version: this.data.state.version + 1,
+        readyForBase: this.data.state.readyForBase || (result.ready && !next),
       });
       if (result.kit.type === 'profile' && result.kit.done) state.vars = result.kit.answers;
       this.hydrate(state);
@@ -326,6 +420,26 @@ Component({
       this._drawAudio.stop();
       this.setData({ playingDrawId: '' });
     },
+    /* 背景音乐(模板互动工具,2026-10-22):玩这一关时播放,离开 / 收起 / 切后台就停。
+       跟随静音键 —— 它是氛围音,不是玩家主动点开的内容。 */
+    syncBackgroundMusic(music) {
+      const src = music && typeof music.audioUrl === 'string' ? music.audioUrl : '';
+      if (!src || !this.data.show) { this.stopBackgroundMusic(); return; }
+      if (this._bgm && this._bgmSrc === src) return;
+      this.stopBackgroundMusic();
+      const audio = wx.createInnerAudioContext();
+      audio.obeyMuteSwitch = true;
+      audio.loop = music.loop !== false;
+      audio.src = src;
+      audio.onError(() => this.stopBackgroundMusic());
+      audio.play();
+      this._bgm = audio; this._bgmSrc = src;
+    },
+    stopBackgroundMusic() {
+      if (!this._bgm) return;
+      try { this._bgm.stop(); this._bgm.destroy(); } catch (e) { /* 已销毁 */ }
+      this._bgm = null; this._bgmSrc = '';
+    },
     destroyDrawAudio() {
       if (!this._drawAudio) return;
       this._drawAudio.destroy();
@@ -374,13 +488,14 @@ Component({
       this.stopTimer();
       const deadline = this.data.state && Number(this.data.state.deadlineAt);
       if (!deadline) { this.setData({ remainingSeconds: null }); return; }
+      const r5 = (this.data.state.config || {}).outcomeRulesVersion === 1;
       const tick = () => {
         const left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
         this.setData({ remainingSeconds: left });
-        if (!left) { this.stopTimer(); if (!this.data.preview && !this.data.mock) this.refreshState(); }
+        if (!left) { this.stopTimer(); if (!this.data.preview && !this.data.mock && (!r5 || this.data.state.status === 'RUNNING')) this.refreshState(); }
       };
       tick();
-      this._timer = setInterval(tick, 1000);
+      if (!r5 || deadline > Date.now()) this._timer = setInterval(tick, 1000);
     },
     refreshState() {
       const state = this.data.state;
@@ -389,16 +504,18 @@ Component({
       return this.request('/api/play/advanced/state', 'GET', { sessionId: state.sessionId })
         .then(res => {
           if (!this.currentRequestContext(context) || !this.responseMatchesSession(res.data, context)) return false;
-          if (res.code == 200 || res.code == '200') { this.hydrate(res.data); return true; }
+          if (res.code == 200 || res.code == '200') return this.hydrate(res.data) !== false;
           return false;
         })
         .catch(() => false);
     },
     stopTimer() { if (this._timer) { clearInterval(this._timer); this._timer = null; } },
     continueBase() {
-      if (!this.data.state || !this.data.state.readyForBase) return;
+      if (!canContinue(this.data.state)) return;
       this.triggerEvent('ready', { nodeId: (this.data.node || {}).nodeId });
     },
-    close() { this.triggerEvent('close'); }
+    close() { this.triggerEvent('close'); },
+    // 遮罩 catchtouchmove 吃掉滑动,弹层打开时底下页面不跟着滚
+    noop() {}
   }
 });

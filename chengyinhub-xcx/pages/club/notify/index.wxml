@@ -10,9 +10,9 @@
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
-            title="你没有发通知的权限" sub="{{errorText || '发俱乐部通知需要「通知成员」权限,可以请主理人给你委派。'}}" auto-back />
-  <cy-error wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
-  <cy-error wx:elif="{{state === 'error'}}" title="通知工具暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
+            title="你没有发通知的权限" sub="{{errorText || '需「通知成员」权限，请联系主理人'}}" auto-back />
+  <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
+  <cy-error load-failure wx:elif="{{state === 'error'}}" title="通知工具暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
 
   <block wx:elif="{{state === 'ready'}}">
 
@@ -57,7 +57,7 @@
           hover-class="{{previewState === 'loading' || sending ? 'none' : 'cy-pressed'}}" hover-stay-time="80">重试</text>
       </view>
       <view class="preview-card" wx:elif="{{previewState === 'empty'}}">
-        <text class="preview-count">0 人</text><text class="preview-note">这个分群暂时没有可发送的成员，换一个分群看看。</text>
+        <text class="preview-count">0 人</text><text class="preview-note">该分群暂无成员</text>
       </view>
       <view class="preview-card" wx:elif="{{previewState === 'ready'}}">
         <text class="preview-count">{{recipientCount || 0}} 人</text>
@@ -81,25 +81,25 @@
              数字会紧跟标题,和下面用了 row-text 的「失败」行对不齐(2026-09-02 截图实证)。 -->
         <view class="row">
           <view class="row-text"><text class="row-title">总人数</text></view>
-          <text class="row-value row-value--primary">{{campaign.totalCount || 0}}</text>
+          <text class="row-value row-value--primary">{{campaign.totalCount != null ? campaign.totalCount : '—'}}</text>
         </view>
         <view class="row">
           <view class="row-text"><text class="row-title">已送达站内</text></view>
-          <text class="row-value row-value--success">{{campaign.successCount || 0}}</text>
+          <text class="row-value row-value--success">{{campaign.successCount != null ? campaign.successCount : '—'}}</text>
         </view>
         <view class="row">
           <view class="row-text">
             <text class="row-title">待投递</text>
-            <text class="row-desc" wx:if="{{campaign.processing}}">后台还在投递</text>
+            <text class="row-desc" wx:if="{{campaign.processing}}">投递中</text>
           </view>
-          <text class="row-value">{{campaign.pendingCount || 0}}</text>
+          <text class="row-value">{{campaign.pendingCount != null ? campaign.pendingCount : '—'}}</text>
         </view>
         <view class="row">
           <view class="row-text">
             <text class="row-title">失败</text>
             <text class="row-desc" wx:if="{{campaign.failedCount > 0}}">重试</text>
           </view>
-          <text class="row-value row-value--danger">{{campaign.failedCount || 0}}</text>
+          <text class="row-value row-value--danger">{{campaign.failedCount != null ? campaign.failedCount : '—'}}</text>
         </view>
       </view>
       <button class="retry-btn" wx:if="{{campaign.failedCount > 0}}" loading="{{retrying}}" disabled="{{retrying}}" bindtap="retryFailed">

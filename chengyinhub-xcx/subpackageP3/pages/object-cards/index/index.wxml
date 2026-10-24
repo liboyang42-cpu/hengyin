@@ -17,17 +17,18 @@
               aria-role="img" aria-label="藏品堆，共 {{cards.length}} 件，点一件放大看"></canvas>
       <!-- 失败 / 首屏加载 / 真空态互斥:失败时空态不得替它背书。
            整页失败沿用产品裁决(零按钮说清原因 → 自动返回),所以不挂 retry;切分类失败只提示并退回原分类。 -->
-      <cy-error class="oc-state" fill="{{true}}" size="lg" icon="/images/no_data.svg"
-                wx:if="{{error}}" title="藏品册没打开" sub="卡都还在，只是这次没读到" auto-back />
+  <cy-empty class="oc-state" fill="{{true}}" wx:if="{{readAccess}}" title="{{readAccess === 'login' ? '登录后查看自己的册子' : '当前账号无法查看'}}" sub="{{readAccess === 'login' ? '' : '请返回重新进入'}}" cta="{{readAccess === 'login' ? '去登录' : ''}}" bind:cta="loginToRead" />
+      <cy-error load-failure class="oc-state" fill="{{true}}" size="lg" icon="/images/no_data.svg"
+                wx:elif="{{error}}" title="藏品册无法打开" auto-back />
       <cy-skeleton class="oc-state" wx:elif="{{loading && !cards.length}}" type="card" count="{{2}}" />
       <cy-empty class="oc-state" wx:elif="{{loaded && !cards.length}}" fill="{{true}}" size="lg"
                 title="{{filter === '全部' ? '还没有收过东西' : '这一类还没收过东西'}}"
-                sub="在玩过的节点里拍一件东西，判过就收进这里" />
+                />
     </view>
   </view>
 
   <!-- 放大态:有转台就左右拖着转,有贴纸就看贴纸,都没有是照片卡 -->
-  <cy-sheet show="{{!!active}}" title="{{active.title || '藏品'}}" bind:close="onCloseActive">
+  <cy-sheet show="{{!!active && !renaming}}" title="{{active.title || '藏品'}}" bind:close="onCloseActive">
     <view class="oc-big" wx:if="{{active}}">
       <view class="oc-big__stage">
         <cy-spin-card wx:if="{{active.frames.length > 1}}" frames="{{active.frames}}" title="{{active.title}}"
@@ -38,7 +39,9 @@
                       caption="{{active.caption}}" card-style="{{active.cardStyle}}" tilt="{{true}}" />
       </view>
       <view class="oc-group">
-        <view class="oc-row">
+        <!-- BL-79:名称行本来就带编辑图标,点它进改名(POST /api/object-card/rename) -->
+        <view class="oc-row" bindtap="onRenameStart" aria-role="button" aria-label="给{{active.title}}改名"
+              hover-class="cy-pressed" hover-stay-time="80">
           <view class="oc-dot oc-dot--name"><cy-icon name="edit" size="24" /></view>
           <text class="oc-k">名称</text><text class="oc-v">{{active.title}}</text>
         </view>
@@ -56,7 +59,18 @@
           </view>
         </view>
       </block>
-      <text class="oc-big__note" wx:if="{{active.generating}}">3D 生成中，好了以后可以左右拖着转一圈</text>
+      <text class="oc-big__note" wx:if="{{active.generating}}">3D 生成中</text>
+    </view>
+  </cy-sheet>
+
+  <!-- BL-79 改名:空名/超长由后端判,报错原文回显在输入框下 -->
+  <cy-sheet show="{{renaming}}" title="改名" footer="{{true}}" bind:close="onRenameCancel">
+    <view class="oc-rename">
+      <cy-field label="卡名" value="{{renameValue}}" placeholder="给这张卡起个名字" maxlength="{{64}}" show-count
+                error="{{!!renameError}}" error-text="{{renameError}}" bind:input="onRenameInput" />
+    </view>
+    <view slot="footer">
+      <cy-btn variant="primary" loading="{{renameSubmitting}}" disabled="{{renameSubmitting}}" bindtap="onRenameSubmit">保存</cy-btn>
     </view>
   </cy-sheet>
 </view>

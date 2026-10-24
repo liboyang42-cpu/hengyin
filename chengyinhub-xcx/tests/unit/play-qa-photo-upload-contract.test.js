@@ -184,7 +184,7 @@ test('已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交'
   assert.equal(wxUploads.length, 0, '已知超限不得发起 wxUploadFile')
   assert.equal(gameActions.length, 0, '超限失败不得提交答案/假完成')
   assert.ok(toasts.some((t) => /文件过大/.test(t) && /压缩|更换/.test(t) && /10MB/.test(t)),
-    '必须有可操作超限文案,实际:' + JSON.stringify(toasts))
+    '必须有可操作超限文案，实际:' + JSON.stringify(toasts))
 
   // 题目未变化,换一张合法图即可重试成功
   const retry = chooseAndShoot(comp, { tempFilePath: '/tmp/ok.jpg', name: 'ok.jpg', size: 5 * MIB })
@@ -207,7 +207,7 @@ test('上传在途切到 B 会话:旧回包不得提交到新题,可重新拍', 
   wxUploads[0].success(okBody('https://cdn/a.jpg'))
 
   assert.equal(gameActions.length, 0, 'A 的照片绝不提交到 B 会话')
-  assert.ok(toasts.some((t) => /题目已变化/.test(t)), '掉弃必须说明,不静默')
+  assert.ok(toasts.some((t) => /题目已变化/.test(t)), '掉弃必须说明，不静默')
 
   // 锁已释放:新题可以重新拍并正确提交到 B
   const retry = chooseAndShoot(comp, { tempFilePath: '/tmp/b.jpg', name: 'b.jpg', size: 1 * MIB })
@@ -229,7 +229,7 @@ test('同会话版本前进:旧回包同样不得提交', () => {
   page.data.playKit.kit.version = 5
   wxUploads[0].success(okBody('https://cdn/a.jpg'))
 
-  assert.equal(gameActions.length, 0, '题目版本已前进,旧照片不得提交')
+  assert.equal(gameActions.length, 0, '题目版本已前进，旧照片不得提交')
   assert.ok(toasts.some((t) => /题目已变化/.test(t)))
 })
 
@@ -283,7 +283,7 @@ test('未知 size(旧组件):照常上传;失败不提交,换图可重试', () =
   const legacy = chooseAndShoot(comp, { tempFilePath: '/tmp/u.jpg', name: 'u.jpg' })
   assert.equal(legacy.size, undefined, '拿不到 size 不得伪造')
   dispatchShoot(page, legacy)
-  assert.equal(wxUploads.length, 1, '未知 size 由服务端拦截,不在此处假装已修')
+  assert.equal(wxUploads.length, 1, '未知 size 由服务端拦截，不在此处假装已修')
 
   wxUploads[0].fail({ errMsg: 'uploadFile:fail socket closed' })
   assert.equal(gameActions.length, 0, '上传失败不得提交答案')
@@ -307,5 +307,5 @@ test('上传中离页 abort:迟到的成功不得提交', () => {
   lastOperation.abort()
   wxUploads[0].success(okBody('https://cdn/late.jpg'))
 
-  assert.equal(gameActions.length, 0, '页面已离开,迟到回调不得提交')
+  assert.equal(gameActions.length, 0, '页面已离开，迟到回调不得提交')
 })

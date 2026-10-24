@@ -45,7 +45,7 @@ test('平台处理、商家意见、款项结果三轨独立，商家同意不�
   assert.equal(detail.merchantOpinionText, '商家已同意申请');
   assert.equal(detail.refunded, false);
   assert.equal(detail.refundedText, '尚未确认退回');
-  assert.match(detail.merchantOpinionHint, /不代表款项已退/);
+  assert.match(detail.merchantOpinionHint, /退款以平台审核为准/);
   assert.equal(detail.refundPolicyText, '截止前未核销可全额申请');
   assert.equal(detail.refundPolicyVersionText, '政策版本 1');
   assert.equal(detail.refundDeadlineText, '2026-08-24 19:30');
@@ -238,7 +238,7 @@ test('按日期分组:今天/昨天/M月D日/跨年;合计只在整组金额都�
     listItem({ refundId: 6, createTime: null, refundAmount: '1' }),
   ]).items;
   const groups = groupAftercareItems(items, now);
-  assert.deepEqual(groups.map(g => g.label), ['今天', '昨天', '9月2日', '2025年12月31日', '时间待确认']);
+  assert.deepEqual(groups.map(g => g.label), ['今天', '昨天', '9月2日', '2025年12月31日', '—']);
   assert.deepEqual(groups.map(g => g.items.map(i => i.refundId)), [[1, 2], [3], [4], [5], [6]]);
   assert.equal(groups[0].totalText, '¥128.50', '分组合计按分累加,不能出现浮点尾差');
   assert.equal(groups[2].totalText, '', '组内有金额待确认时不给合计');

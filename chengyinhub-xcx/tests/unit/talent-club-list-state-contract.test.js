@@ -27,6 +27,7 @@ function loadPage(initialRole) {
     globalData: { statusBarHeight: 20, navBarHeight: 44, menuButtonInfo: { left: 300 } },
     sendRequest(options) { requests.push(options) },
     getRequestErrorMessage(res, fallback) { return (res && res.msg) || fallback },
+    getUserID() { return 7 },
     getUserRole() { return role },
     getUserType() { return role === 'merchant' ? 2 : 1 },
     getImgUrl(value) { return value || '' },
@@ -47,7 +48,7 @@ function loadPage(initialRole) {
       if (callback) callback.call(this)
     },
   })
-  return { page, requests, setRole(next) { role = next } }
+  return { page, requests, app, setRole(next) { role = next } }
 }
 
 function validHome() {
@@ -216,3 +217,29 @@ test('负控：把 stale-error 刷新失败横幅加回来时，状态闸门必�
     '<cy-inline-error wx:if="{{clubMembersState === \'stale-error\'}}" bind:action="retryClubMembers" /></view>')
   assert.throws(() => assertStateMarkup(wxml, JSON.parse(read(PAGE_JSON))), /stale-error/)
 })
+
+test('游客不请求私有俱乐部聚合和IM未读，登录点击成功才真实回读', async () => {
+  const h=loadPage();let owner='';let loginCalls=0;h.app.getUserID=()=>owner;
+  h.app.firstLogin=()=>{loginCalls++;owner='9';return Promise.resolve();};
+  h.page.loadClubHome();h.page.loadImUnread();assert.equal(h.requests.length,0);
+  assert.equal(h.page.data.clubsLoginRequired,true);assert.equal(h.page.data.clubsErrorText,'');
+  h.page.retryClubs();h.page.retryClubs();await Promise.resolve();
+  assert.equal(loginCalls,1);assert.equal(h.requests.length,1);assert.equal(h.requests[0].url,'/api/club/home');
+});
+test('真实401/403保留不同可见反馈，网络读取失败不伪装登录或权限', () => {
+  for(const code of [401,403,500]){
+    const h=loadPage();h.page.loadClubHome();h.requests[0].success({code,msg:'真实反馈'});
+    assert.equal(h.page.data.clubsLoginRequired,code===401);assert.equal(h.page.data.clubsPermissionDenied,code===403);
+    assert.equal(h.page.data.clubsError,true);
+  }
+  const h=loadPage();h.page.loadClubHome();h.requests[0].fail({errMsg:'offline'});
+  assert.equal(h.page.data.clubsLoginRequired,false);assert.equal(h.page.data.clubsPermissionDenied,false);
+});
+test('俱乐部身份切换立即清理旧列表，旧账号回包不得恢复；登录失败可重试', async () => {
+  const h=loadPage();let owner='7';h.app.getUserID=()=>owner;
+  h.page.loadClubHome();h.requests[0].success(validHome());h.page.loadClubHome();const old=h.requests[1];
+  owner='';h.page.loadClubHome();assert.equal(h.page.data.myClubs.length,0);assert.equal(h.page.data.clubsLoginRequired,true);
+  old.success(validHome());assert.equal(h.page.data.myClubs.length,0);
+  h.app.firstLogin=()=>Promise.reject(new Error('offline'));h.page.retryClubs();await Promise.resolve();await Promise.resolve();
+  assert.equal(h.page.data.clubsLoginPending,false);assert.match(h.page.data.clubsErrorText,/登录没有成功/);
+});

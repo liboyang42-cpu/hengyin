@@ -93,7 +93,7 @@ class FundActionPreflightServiceImplTest {
         BankWithdrawalPreflightRequest request = request("intent-consumed");
         FundActionPreflight consumed = row(request, FundActionPreflight.STATE_CONSUMED, new Date(),
                 null, "微信小程序");
-        when(mapper.selectById(77L)).thenReturn(consumed);
+        when(mapper.selectOwnedByIdForUpdate(77L, 9201L)).thenReturn(consumed);
         when(mapper.consumeIfConfirmed(eq(77L), eq(9201L),
                 eq(FundActionPreflightServiceImpl.BANK_WITHDRAWAL), eq(request.getRequestId()),
                 any(String.class), any(Date.class))).thenReturn(0);

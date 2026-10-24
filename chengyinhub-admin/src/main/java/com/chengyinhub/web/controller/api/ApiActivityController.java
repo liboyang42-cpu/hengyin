@@ -6,6 +6,8 @@ import com.chengyinhub.business.domain.dto.ActivityCancelResult;
 import com.chengyinhub.business.domain.dto.ActivityTicketRequest;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.domain.vo.ActivityInfoVO;
 import com.chengyinhub.business.domain.vo.PublicRegistrationSummaryVO;
 import com.chengyinhub.business.domain.vo.PublicTicketVO;
@@ -71,6 +73,10 @@ public class ApiActivityController extends BaseController {
     @Autowired
     private ICmsActivityService cmsActivityService;
 
+    /** O5b-1 开关(默认关):编辑分级 —— 轻改不重审,实质改动重新进审核。 */
+    @org.springframework.beans.factory.annotation.Value("${chengyin.audit.o5b.light-edit.enabled:false}")
+    private boolean lightEditClassificationEnabled = false;
+
     @Autowired
     private ICmsTopicNodeService cmsTopicNodeService;
 
@@ -95,6 +101,15 @@ public class ApiActivityController extends BaseController {
 
     @Autowired
     private IWxContentSecurityService wxContentSecurityService;
+
+    @Autowired
+    private IContentSafetyGate contentSafetyGate;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.ActivityReviewPolicy activityReviewPolicy;
+
+    @Autowired
+    private IAuditTaskService auditTaskService;
 
     @Autowired
     private IUmsMemberService umsMemberService;
@@ -571,6 +586,11 @@ public class ApiActivityController extends BaseController {
         if (memberId == null || memberId <= 0) {
             return error("请先登录");
         }
+        // F-L5C-02:取消原因会展示给全部已报名用户,写入前送检。
+        String reasonSecMsg = wxContentSecurityService.checkText(reason, resolveOpenid(memberId));
+        if (reasonSecMsg != null) {
+            return error(reasonSecMsg);
+        }
         try {
             ActivityCancelResult res;
             if (MerchantOperationScope.isMerchant(scope)) {
@@ -779,6 +799,10 @@ public class ApiActivityController extends BaseController {
             if (publisher == null) {
                 return error("仅俱乐部主理人或商家可发布活动");
             }
+            // 分级审核资质闸:未通过入驻审核的商家不能发布(先审后发也不行)
+            if (publisher.isMerchant() && !publisher.isMerchantApproved()) {
+                return error("商家未通过入驻审核，暂不能发布活动");
+            }
             String hostViolation = merchantHostViolation(publisher, request);
             if (hostViolation != null) {
                 return error(hostViolation);
@@ -790,13 +814,22 @@ public class ApiActivityController extends BaseController {
                 return error(quotaErr);
             }
 
-            // UGC 内容安全:校验活动名称/简介文本,命中违规直接拦截
+            // UGC 内容安全门禁(2026-10-20 分级审核):活动按内容先发后审;高风险类目 / 未审核商家 / 总闸 → 先审后发。
+            // 明确违规两种模式都拦;先审时门禁 HOLD → 落库待审并建 BIZ_ACTIVITY 审核单(活动尚未落库,门禁不建单)。
             String secOpenid = resolveOpenid(member_id);
-            String secText = IWxContentSecurityService.joinText(request.getName(), request.getDescription());
-            String secMsg = wxContentSecurityService.checkText(secText, secOpenid);
-            if (secMsg != null) {
-                return error(secMsg);
+            PublishSafetyRequest safety = new PublishSafetyRequest();
+            safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
+            safety.setMemberId(publisher.ownerMemberId());
+            safety.setOpenid(secOpenid);
+            safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+            safety.setHasPrice(activityReviewPolicy.hasCharge(request));
+            safety.setHasSignup(true);
+            safety.setReviewMode(activityReviewPolicy.modeOf(request, publisher.reviewSubject()).name());
+            SafetyDecision decision = contentSafetyGate.decide(safety);
+            if (decision == null || decision.isBlock()) {
+                return error("活动内容包含违规信息，请修改后重试");
             }
+            final boolean preReview = decision.isHold();
 
             String username = getAppUserName();
 
@@ -807,7 +840,10 @@ public class ApiActivityController extends BaseController {
             final String fUsername = username;
             Long activityId = quotaService.runWithCreateGuard(fOwnerMemberId,
                     com.chengyinhub.business.service.IQuotaService.TYPE_EVENT,
-                    () -> cmsActivityService.publishActivity(request, fOwnerMemberId, fUsername));
+                    () -> cmsActivityService.publishActivity(request, fOwnerMemberId, fUsername, preReview));
+            if (decision.isFlagged()) {
+                flagForSpotCheck(activityId, fOwnerMemberId, decision.getFlagReason(), request, false);
+            }
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
             wxContentSecurityService.submitMediaCheck(
@@ -816,7 +852,7 @@ public class ApiActivityController extends BaseController {
                     StringUtils.isNotEmpty(request.getImgArr()) ? request.getImgArr() : request.getImgUrl(),
                     secOpenid);
 
-            return AjaxResult.success("活动发布成功，请等待审核", activityId);
+            return AjaxResult.success(preReview ? "活动发布成功，请等待审核" : "活动发布成功", activityId);
 
         } catch (ServiceException se) {
             // 配额上限/欠款/内容安全这类业务拒绝的文案本就是写给发布者看的,兜底 catch 会把它压成
@@ -882,10 +918,66 @@ public class ApiActivityController extends BaseController {
                 return error("活动已售出，" + lockedChange + "不能修改；文字、图片、音频仍可改");
             }
         }
+        // F-L5C-02 / AUDIT-G1-2:改文案与 /publish 同一道统一门禁 + 同一套分级(ActivityReviewPolicy),
+        // 不能先发干净文本再改成违规内容。明确违规两种模式都拒;先审模式下改了内容即退回待审(见 service)。
+        final boolean preReview;
+        final SafetyDecision decision;
+        try {
+            CmsActivityPublishRequest policyView = request;
+            if (request.getCategoryIds() == null) {
+                // 编辑页不一定回带类目:按库里的类目判高风险,不能因为没传就降成先发后审。
+                policyView = new CmsActivityPublishRequest();
+                org.springframework.beans.BeanUtils.copyProperties(request, policyView);
+                policyView.setCategoryIds(exist.getCategoryIds());
+            }
+            PublishSafetyRequest.ReviewMode mode =
+                    activityReviewPolicy.modeOf(policyView, publisher.reviewSubject());
+            PublishSafetyRequest safety = new PublishSafetyRequest();
+            safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
+            safety.setMemberId(publisher.ownerMemberId());
+            safety.setOpenid(resolveOpenid(memberId));
+            safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+            safety.setHasPrice(activityReviewPolicy.hasCharge(request));
+            safety.setHasSignup(true);
+            safety.setReviewMode(mode.name());
+            decision = contentSafetyGate.decide(safety);
+            if (decision == null || decision.isBlock()) {
+                return error("活动内容包含违规信息，请修改后重试");
+            }
+            preReview = mode == PublishSafetyRequest.ReviewMode.PRE_REVIEW
+                    || decision.isHold();
+        } catch (Exception e) {
+            logger.error("活动编辑内容安全裁决失败: activityId={}", cid, e);
+            return error("系统繁忙，请稍后重试");
+        }
+
+        // O5b-1(开关默认关):文本机审已明确通过时才分级 —— 未打标,且没有因内容留置
+        // (先审模式下活动必带报名,门禁一律回 HOLD/STRUCTURED_REVIEW,那是按模式的结构化复核,不是内容存疑)。
+        // 轻改(错别字/措辞)不退回待审;先发后审下的实质改动(内容/媒体/时间/地点)走抽检单重新进审核,内容保持在架。
+        // 已驳回/待审中的活动不受影响(service 里那两条分支不看 preReview)。
+        boolean reReview = preReview;
+        boolean substantiveSpotCheck = false;
+        boolean textCleared = !decision.isFlagged()
+                && (!decision.isHold() || "STRUCTURED_REVIEW".equals(decision.getReasonCode()));
+        if (lightEditClassificationEnabled && textCleared) {
+            com.chengyinhub.business.service.support.ContentEditClassifier.EditClass editClass =
+                    com.chengyinhub.business.service.support.ContentEditClassifier.classifyActivity(exist, request);
+            if (editClass == com.chengyinhub.business.service.support.ContentEditClassifier.EditClass.LIGHT) {
+                reReview = false;
+            } else if (editClass == com.chengyinhub.business.service.support.ContentEditClassifier.EditClass.SUBSTANTIVE
+                    && !preReview) {
+                substantiveSpotCheck = true;
+            }
+        }
 
         try {
             // SQL 的 where 带 member_id,传主体才写得动自家活动(员工只是操作人)。
-            cmsActivityService.updateActivityByOwner(request, publisher.ownerMemberId(), getAppUserName());
+            cmsActivityService.updateActivityByOwner(request, publisher.ownerMemberId(), getAppUserName(), reReview);
+            if (decision.isFlagged() && !preReview) {
+                flagForSpotCheck(cid, publisher.ownerMemberId(), decision.getFlagReason(), request, true);
+            } else if (substantiveSpotCheck) {
+                flagForSpotCheck(cid, publisher.ownerMemberId(), "SUBSTANTIVE_EDIT", request, true);
+            }
             return success("活动已更新");
         } catch (ServiceException se) {
             return error(se.getMessage());
@@ -927,6 +1019,30 @@ public class ApiActivityController extends BaseController {
     }
 
     /** 内容安全送检需要发表者 openid:按 memberId 查会员;查不到返回空串(降级 scene 检测)。 */
+    /**
+     * 先发后审时机审没给出结论(要人工/审不了/缺 openid/检测关闭):活动照常上架,
+     * 在审核台留一张非阻断抽检单(source=post_review_flag,不改活动状态),驳回即走既有下架。
+     * best-effort:失败只记日志,不影响已上架的活动。
+     */
+    private void flagForSpotCheck(Long activityId, Long ownerMemberId, String reason,
+                                  CmsActivityPublishRequest request, boolean edit) {
+        logger.warn("活动先发后审打标待抽检 activityId={} reason={}", activityId, reason);
+        try {
+            // AUDIT-G1-5:快照带简介/图片/票价/俱乐部/主办会员,不只是 name。
+            String snap = com.chengyinhub.business.service.support.ActivityAuditSnapshot.of(
+                    activityId, request, ownerMemberId, reason);
+            if (edit) {
+                // 编辑时可能已有开放单(发布时的抽检单等):刷新而不是再插一张撞唯一约束。
+                auditTaskService.submitOrRefreshActivity(activityId, ownerMemberId, "post_review_flag", snap);
+            } else {
+                auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId,
+                        ownerMemberId, "post_review_flag", snap);
+            }
+        } catch (Exception e) {
+            logger.error("活动抽检单提交失败 activityId={}", activityId, e);
+        }
+    }
+
     private String resolveOpenid(Long memberId) {
         try {
             UmsMember m = umsMemberService.selectUmsMemberById(memberId);
@@ -951,11 +1067,18 @@ public class ApiActivityController extends BaseController {
         private final Long ownerMemberId;
         private final Long actorMemberId;
         private final boolean merchant;
+        /** 商家主体已通过入驻审核(mms_merchant.status=1 等,真源是 MerchantAccessServiceImpl#isActiveMerchant) */
+        private final boolean merchantApproved;
 
         private ActivityPublisher(Long ownerMemberId, Long actorMemberId, boolean merchant) {
+            this(ownerMemberId, actorMemberId, merchant, false);
+        }
+
+        private ActivityPublisher(Long ownerMemberId, Long actorMemberId, boolean merchant, boolean merchantApproved) {
             this.ownerMemberId = ownerMemberId;
             this.actorMemberId = actorMemberId;
             this.merchant = merchant;
+            this.merchantApproved = merchantApproved;
         }
 
         Long ownerMemberId() {
@@ -969,6 +1092,14 @@ public class ApiActivityController extends BaseController {
         boolean isMerchant() {
             return merchant;
         }
+
+        boolean isMerchantApproved() {
+            return merchantApproved;
+        }
+
+        com.chengyinhub.business.service.support.ActivityReviewPolicy.Publisher reviewSubject() {
+            return new com.chengyinhub.business.service.support.ActivityReviewPolicy.Publisher(merchant, merchantApproved);
+        }
     }
 
     /**
@@ -980,9 +1111,11 @@ public class ApiActivityController extends BaseController {
      */
     private ActivityPublisher resolveActivityPublisher(Long principalMemberId, String scope) {
         if (MerchantOperationScope.isMerchant(scope)) {
-            Long ownerMemberId = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE)
-                    .getOwnerMemberId();
-            return new ActivityPublisher(ownerMemberId, principalMemberId, true);
+            com.chengyinhub.business.access.merchant.MerchantAccessContext context =
+                    merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
+            // require 只对通过入驻审核的商家行返回上下文;merchantId 为空即视为未审核
+            return new ActivityPublisher(context.getOwnerMemberId(), principalMemberId, true,
+                    context.getMerchantId() != null);
         }
         if (!isClubActivityPublisher(principalMemberId)) {
             return null;
@@ -1075,8 +1208,7 @@ public class ApiActivityController extends BaseController {
             /* CU-M-106:活动状态的判定与「我的项目」列表共用 ActivityLifecycle —— cms_activity.status
                是审核码(0 待审 / 1 通过 / 2 未过),不是 official_event 那套 0..9 生命周期码。
                详情页过去拿它查生命周期表,审核通过(1)就被念成「即将开始」,而同一行在列表说「进行中」。 */
-            activityInfoVO.setState(ActivityLifecycle.state(cmsActivity.getStatus(), cmsActivity.getPublishStatus(),
-                    cmsActivity.getStartDate(), cmsActivity.getEndDate()));
+            activityInfoVO.setState(ActivityLifecycle.state(cmsActivity));
             activityInfoVO.setStateText(ActivityLifecycle.stateText(activityInfoVO.getState()));
             // 拍板 2026-09-16 #10:场次归属商家已打烊时,报名入口直接提示「商家暂停营业」。
             activityInfoVO.setMerchantClosed(
@@ -1253,6 +1385,24 @@ public class ApiActivityController extends BaseController {
 
             return success(activityInfoVO);
         } else {
+            if (member_id != null && member_id > 0) {
+                CmsActivity cancelled = cmsActivityService.selectCmsActivityById(activityId);
+                if (cancelled != null && cancelled.getCancelTime() != null
+                        && !Integer.valueOf(2).equals(cancelled.getDelFlag())) {
+                    ViewRegistration ownTicket = new ViewRegistration();
+                    ownTicket.setOwnerType(2L);
+                    ownTicket.setOwnerId(activityId);
+                    ownTicket.setMemberId(member_id);
+                    List<ViewRegistration> tickets = viewRegistrationService.selectRegistrationSummaries(ownTicket);
+                    if (OwnershipUtils.isOwner(cancelled.getMemberId(), member_id)
+                            || (tickets != null && !tickets.isEmpty())) {
+                        AjaxResult result = error("活动已取消，请在订单中查看退款或售后进度");
+                        result.put("errorCode", "ACTIVITY_CANCELLED");
+                        result.put("canViewOwnOrders", tickets != null && !tickets.isEmpty());
+                        return result;
+                    }
+                }
+            }
             return error("活动不存在");
         }
 

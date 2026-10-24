@@ -31,7 +31,7 @@ test('P4 申请中:foot 说真实剩余时间,不再写死「24 小时」', () =
 test('拿不到 applyExpireTime:兜底文案不许再断言 24 小时(退回通用规则句)', () => {
   const s = T.teamCardState(Object.assign({}, base, { viewerStatus: 'PENDING' }), NOW);
   assert.doesNotMatch(s.foot, /24\s*小时/);
-  assert.ok(s.foot.length > 0, '兜底文案不能为空');
+  assert.ok(s.foot.length > 0, '保底文案不能为空');
 });
 
 test('P6「申请中」行说真实剩余时间', () => {
@@ -55,7 +55,7 @@ test('队长申请列表行说真实剩余时间', () => {
 const PAGE = '../../subpackageRoam/nearby/index.js';
 let config; let requests;
 global.getApp = () => ({
-  globalData: {}, getImgUrl: (u) => u || '', sendRequest: (opts) => { requests.push(opts) },
+  getUserID: () => 7, globalData: { authorization: 'fixture-token' }, getImgUrl: (u) => u || '', sendRequest: (opts) => { requests.push(opts) },
 });
 global.wx = {
   getWindowInfo: () => ({ screenHeight: 844, safeArea: { bottom: 810 } }),
@@ -96,7 +96,7 @@ test('页面接线:申请成功把手里的 applyExpireTime 回填进卡片,foot
   });
   page.fetchTeams({ lat: 31.2, lng: 121.4 }, 3000);
   requests.filter((r) => r.url === '/api/team/nearby').pop().success({ code: 200, data: [row] });
-  page.onMarkerTap({ detail: { markerId: 74 } });
+  page.onMarkerTap({ detail: { markerId: 74 } }); page.onPoiFront(); // v13:点位卡 → 队伍半屏
   page.onCardPrimary();
   const req = requests.filter((r) => r.url === '/api/team/apply').pop();
   assert.ok(req, '必须请求 POST /api/team/apply');

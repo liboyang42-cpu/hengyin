@@ -49,7 +49,7 @@ function assertContract(overrides = {}) {
   const deadlineAt = wxml.indexOf('招商截止日期')
   assert.ok(deadlineAt > 0, '缺少招商截止日期')
   const recruitSectionAt = wxml.indexOf('>商家招商<')
-  assert.ok(deadlineAt < recruitSectionAt, '招商截止日期必须留在档期块,不能挪到商家招商块之后')
+  assert.ok(deadlineAt < recruitSectionAt, '招商截止日期必须留在档期块，不能挪到商家招商块之后')
   const block = wxml.slice(Math.max(0, deadlineAt - 1200), deadlineAt)
   assert.doesNotMatch(block, /openMerchantPool/, '招商截止日期不许挂在商家开关的条件上：它是无条件必填')
 }

@@ -34,7 +34,7 @@ test('advanced completion refreshes route before the base write and stops on ref
     const calls = [];
     const node = { nodeId: 229, vm: 0 };
     const p = Object.assign({}, page, {
-      data: { advancedPlay: { node } },
+      data: { advancedPlay: { show: true, node } },
       _routeState: { routeMode: 'BRANCH_GRAPH', version: 3 },
       async refreshRouteState() { calls.push('refresh'); if (ok) this._routeState.version = 4; return ok; },
       setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb(); },
@@ -58,7 +58,12 @@ test('六种节点完成入口先同步伏笔，再用同步后的版本提交',
   const cases = [
     ['arrive', p => p.arrive(9, 'arrive')],
     ['checkin', p => p.checkin(9, 'scan-code', 'game')],
-    ['preference', p => p.submitPreference({ choices: { a: 'b' } })],
+    ['preference', p => {
+      // 偏好题已由 loadPreference 读出(真实页面提交前必有这份上下文)
+      p._preferenceEpoch = 1;
+      p._preferenceContext = { epoch: 1, nodeId: 9, viewContext: p._legacyGameContext() };
+      p.submitPreference({ choices: { a: 'b' } });
+    }],
     ['photo', p => p.submitPhoto(9, 'photo.jpg')],
     ['answer', p => p.submitGame()],
     ['puzzleReveal', p => p.revealAnswer()],
@@ -90,7 +95,7 @@ test('六种节点完成入口先同步伏笔，再用同步后的版本提交',
   }
 });
 
-test('同步失败不提交结束动作；等待认领成功后再同步，拒绝运动授权仍能继续', async () => {
+test('同步失败不阻核心动作；等待认领成功后再同步，拒绝运动授权仍能继续', async () => {
   const originalToast = wx.showToast;
   wx.showToast = () => {};
   try {
@@ -98,8 +103,8 @@ test('同步失败不提交结束动作；等待认领成功后再同步，拒�
     const p = Object.assign({}, page, { data: {}, _routeState: { thoughtCount: 1 },
       _syncThoughts: async () => false });
     const failed = await p._withThoughtSync(() => { writes += 1; });
-    assert.equal(failed.netFail, true);
-    assert.equal(writes, 0);
+    assert.equal(failed, undefined);
+    assert.equal(writes, 1);
     let release;
     p._thoughtSyncPending = new Promise(resolve => { release = resolve; });
     let synced = false;
@@ -109,7 +114,7 @@ test('同步失败不提交结束动作；等待认领成功后再同步，拒�
     assert.equal(synced, false);
     release(true);
     assert.equal(await waiting, 'done');
-    assert.equal(writes, 1);
+    assert.equal(writes, 2);
     p._thoughtSyncPending = null;
     p._syncThoughts = page._syncThoughts;
     p._weRunCipher = async () => null;
@@ -139,7 +144,7 @@ function typeInPage(game) {
 
 test('开始拒绝后向当前打字组件发恢复序号，并允许再次开始', async () => {
   let count = 0;
-  const game = { data: { unknown: false, acting: false }, action() { count += 1; return Promise.resolve(); } };
+  const game = { data: { unknown: false, acting: false, state: { sessionId: 42 } }, action() { count += 1; return Promise.resolve(); } };
   const p = typeInPage(game);
   p._submitPlayKitAction('start', {});
   await new Promise(setImmediate);
@@ -183,4 +188,23 @@ test('草稿试玩开始也向打字组件确认，但不写正式请求', () =>
   assert.equal(result.kit.startConfirmed, true);
   assert.equal(result.startedAt, 1000);
   assert.equal(original.startConfirmed, undefined);
+});
+
+test('F-R2S-01:微信运动回调迟迟不回时,步数同步最多等 8 秒,之后照常提交玩家动作', async (t) => {
+  const originalToast = wx.showToast;
+  wx.showToast = () => {};
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    let writes = 0;
+    const p = Object.assign({}, page, { data: {}, _routeState: { thoughtCount: 1 },
+      _syncThoughts: () => new Promise(() => {}) });
+    const waiting = p._withThoughtSync(() => { writes += 1; return 'done'; });
+    await new Promise(setImmediate);
+    t.mock.timers.tick(7999);
+    await new Promise(setImmediate);
+    assert.equal(writes, 0, '等待窗口内仍按原顺序先同步');
+    t.mock.timers.tick(1);
+    assert.equal(await waiting, 'done');
+    assert.equal(writes, 1);
+  } finally { wx.showToast = originalToast; t.mock.timers.reset(); }
 });

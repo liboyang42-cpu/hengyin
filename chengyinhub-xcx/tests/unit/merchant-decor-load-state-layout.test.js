@@ -73,7 +73,7 @@ const CHECKS = {
     // 真正的居中交给 cy-error/cy-empty 自己的 fill 变体(读 .dc-page 给出的确定高度)。
     const body = ruleBody(src.wxss, '.dc-state');
     assert.ok(body, '.dc-state 规则不存在');
-    assert.match(body, /flex:\s*1\b/, '.dc-state 没有 flex:1,吃不到 .dc-page 让出的剩余高度');
+    assert.match(body, /flex:\s*1\b/, '.dc-state 没有 flex:1，吃不到 .dc-page 让出的剩余高度');
     const pageBody = ruleBody(src.wxss, '.dc-page');
     assert.match(pageBody, /display:\s*flex/, '.dc-page 不是 flex 容器,.dc-state 的 flex:1 不会生效');
     for (const state of ['error', 'empty']) {
@@ -90,7 +90,7 @@ const CHECKS = {
   skeletonWrappedInSurface(src) {
     const flat = renderable(src.wxml).replace(/\s+/g, ' ');
     assert.match(flat, new RegExp(`<view class="${CARD_CLASS}"> ?<cy-skeleton`),
-      `cy-skeleton 没有被 .${CARD_CLASS} 包住 —— 骨架落回页面灰底,高光相位会消失`);
+      `cy-skeleton 没有被 .${CARD_CLASS} 包住 —— 骨架落回页面灰底，高光相位会消失`);
   },
 
   skeletonHeroMatchesCover(src) {
@@ -99,10 +99,10 @@ const CHECKS = {
       '装修骨架没有把 detail hero 收到与正文封面相同的 403.8rpx,加载完成会发生几何跳动');
     const cover = ruleBody(src.wxss, '.dc-cover');
     assert.ok(cover, '.dc-cover 规则不存在');
-    assert.match(cover, /height:\s*403.8rpx/, `正文封面高度已变化,需同步骨架 hero:\n${cover}`);
+    assert.match(cover, /height:\s*403.8rpx/, `正文封面高度已变化，需同步骨架 hero:\n${cover}`);
     const hero = ruleBody(src.skeletonWxss, '.sk-hero');
     assert.ok(hero && /height:\s*var\(--cy-map-h\)/.test(hero),
-      'cy-skeleton detail hero 不再由 --cy-map-h 控制,请重新核对页面专用高度覆盖');
+      'cy-skeleton detail hero 不再由 --cy-map-h 控制，请重新确认页面专用高度覆盖');
   },
 
   surfaceUsesTokenAndNoRawColor(src) {
@@ -118,7 +118,7 @@ const CHECKS = {
     // 前提:cy-skeleton 的 .sk-hero 是 border-radius:0 的满宽块,不裁会从卡片圆角戳出方角
     const hero = ruleBody(src.skeletonWxss, '.sk-hero');
     assert.ok(hero && /border-radius:\s*0/.test(hero),
-      '前提变了:cy-skeleton 的 .sk-hero 不再是 border-radius:0,overflow:hidden 可能不再必要,请复核本条');
+      '前提变了:cy-skeleton 的 .sk-hero 不再是 border-radius:0,overflow:hidden 可能不再必要，请复核本条');
     const body = ruleBody(src.wxss, '.' + CARD_CLASS);
     assert.match(body, /overflow:\s*hidden/, `.${CARD_CLASS} 少了 overflow:hidden,骨架 hero 的方角会戳出卡片圆角`);
   },
@@ -140,11 +140,11 @@ const CHECKS = {
     // 顶部让位只有一处,四个 loadState 分支此后共用同一起点。这里锁的仍是同一条语义
     // ——状态切换不许跳版——只是判据从「每块都写对同一个偏移」变成「谁都不许自带偏移」。
     assert.match(ruleBody(src.wxss, '.dc-page'), /flex-direction:\s*column/,
-      '.dc-page 不再是 flex 列,让位块与状态块就不会依次排布,偏移语义失效');
+      '.dc-page 不再是 flex 列，让位块与状态块就不会依次排布，偏移语义失效');
     // 2026-08-20 标题统一:标题移入 cy-nav-bar(title="店铺装修"),tag 允许带属性
     assert.match(wxml,
       /<cy-nav-bar\b[^>]*\/>\s*<view style="height:\s*\{\{statusBarHeight \+ navBarHeight\}\}px;[^"]*"><\/view>/,
-      '导航之后必须紧跟唯一一块 statusBarHeight + navBarHeight 的让位,否则正文会压在固定导航下');
+      '导航之后必须紧跟唯一一块 statusBarHeight + navBarHeight 的让位，否则正文会压在固定导航下');
     const offsets = wxml.match(/\{\{statusBarHeight \+ navBarHeight\}\}/g) || [];
     assert.equal(offsets.length, 1,
       `顶部让位必须只有一处(现 ${offsets.length} 处):多写一处就是重复让位/状态间跳版`);
@@ -152,14 +152,14 @@ const CHECKS = {
       const m = branchTag(src.wxml, state, state === 'loading' ? 'if' : 'elif');
       assert.ok(m, `找不到 ${state} 分支`);
       assert.ok(!/(margin|padding)-top:/.test(m[0]),
-        `${state} 状态块自带了顶部偏移,与共用让位叠加 ⇒ 状态切换重新跳版:${m[0]}`);
+        `${state} 状态块自带了顶部偏移，与共用让位叠加 ⇒ 状态切换重新跳版:${m[0]}`);
     }
     const ok = wxml.match(/<scroll-view[^>]*wx:elif="\{\{loadState === 'ok' && m\}\}"[^>]*>/);
     assert.ok(ok, "找不到 wx:elif=\"{{loadState === 'ok' && m}}\" 正文滚动区");
     assert.ok(!/(margin|padding)-top:|height:\s*calc/.test(ok[0]),
-      `正文滚动区自带顶部偏移或写死高度,会与共用让位叠加 ⇒ 与三种状态块不同起点:${ok[0]}`);
+      `正文滚动区自带顶部偏移或写死高度，会与共用让位叠加 ⇒ 与三种状态块不同起点:${ok[0]}`);
     assert.match(ruleBody(src.wxss, '.dc-scroll'), /flex:\s*1/,
-      '正文滚动区必须靠 flex:1 吃掉让位之后的剩余高度,不能自己算 100vh 减法');
+      '正文滚动区必须靠 flex:1 吃掉让位之后的剩余高度，不能自己算 100vh 减法');
   },
 };
 
@@ -223,7 +223,7 @@ const MUTANTS = [
   },
   {
     targets: 'skeletonWrappedInSurface',
-    why: '拆掉卡面承托,骨架直接落回页面灰底',
+    why: '拆掉卡面承托，骨架直接落回页面灰底',
     apply: (s) => ({
       ...s,
       wxml: replaceOnce(s.wxml, `<view class="${CARD_CLASS}"><cy-skeleton type="detail" style="--cy-map-h: 403.8rpx;" /></view>`,

@@ -210,7 +210,21 @@ class ProjectHomeInvitedPartnerTest {
         assertTrue(String.valueOf(coopInvite.get("handleTime")).matches("\\d{4}-\\d{2}-\\d{2}"),
                 "达成时间必须是 yyyy-MM-dd 字符串,实际: " + coopInvite.get("handleTime"));
         // 日期在服务端定格式:塞进 Map 的 Date 走不到字段上的 @JsonFormat,前端拿到的是串而不是毫秒数
-        assertEquals("2023-11-14", String.valueOf(coopInvite.get("handleTime")));
+        assertEquals("2023-11-15", String.valueOf(coopInvite.get("handleTime")));
+    }
+
+    @Test
+    void inviteHandleDateUsesBeijingTimeRegardlessOfServerTimezone() {
+        java.util.TimeZone original = java.util.TimeZone.getDefault();
+        try {
+            for (String zone : new String[] {"UTC", "Asia/Shanghai", "America/Los_Angeles"}) {
+                java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(zone));
+                Map<String, Object> invite = coopInviteOf(service.getProjectHome(INVITED, TOPIC));
+                assertEquals("2023-11-15", invite.get("handleTime"), zone);
+            }
+        } finally {
+            java.util.TimeZone.setDefault(original);
+        }
     }
 
     @Test

@@ -4,12 +4,18 @@ import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
+import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.SmsCoupon;
 import com.chengyinhub.business.domain.SmsCouponHistory;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.UserPermission;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
 import com.chengyinhub.business.domain.dto.CouponPublisDTO;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
+import com.chengyinhub.business.service.IAuditTaskService;
+import com.chengyinhub.business.service.IContentSafetyGate;
+import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IRoleService;
 import com.chengyinhub.business.service.ISmsCouponHistoryService;
 import com.chengyinhub.business.service.ISmsCouponService;
@@ -80,6 +86,12 @@ public class ApiCouponController extends BaseController {
     @Autowired
     private com.chengyinhub.common.core.redis.RedisCache redisCache;
 
+    @Autowired
+    private IContentSafetyGate contentSafetyGate;
+
+    @Autowired
+    private IAuditTaskService auditTaskService;
+
     @PostMapping("/mypublishlist")
     @Operation(summary = "我发布的优惠券列表")
     @Parameters({
@@ -114,6 +126,7 @@ public class ApiCouponController extends BaseController {
         if (isSelect == 1) {
             //状态：0->未开始；1->进行中；2->已结束；3->手动失效   用户发布优惠券状态就直接显示进行中
             smsCoupon.setStatus(1);
+            smsCoupon.getParams().put("issuableOnly", true);
         }
         smsCoupon.setDelFlag(0);
 
@@ -148,6 +161,23 @@ public class ApiCouponController extends BaseController {
         CouponOperationContext operation = resolveCouponOperation(
                 member_id, MerchantPermission.COUPON_MANAGE, request.getScope());
         Long ownerMemberId = operation.ownerMemberId;
+        // 分级审核资质闸:商家券只允许入驻审核已通过的在营商家(require 已校验 status=1/account_status=1),
+        // 这里兜底拒掉拿不到 merchantId 的非俱乐部身份。
+        if (!operation.legacyClub && operation.merchantId == null) {
+            return error("商家未通过入驻审核，暂不能发布优惠券");
+        }
+        // 2026-10-20 分级审核:优惠券先发后审。名称/描述过统一门禁(POST_REVIEW),明确违规直接拒;
+        // 审不了的照常上架但打标,发布后留非阻断抽检单。
+        PublishSafetyRequest safety = new PublishSafetyRequest();
+        safety.setContentType(AuditTask.BIZ_COUPON);
+        safety.setMemberId(ownerMemberId);
+        safety.setOpenid(resolveOpenid(member_id));
+        safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+        safety.setReviewMode(PublishSafetyRequest.ReviewMode.POST_REVIEW.name());
+        SafetyDecision decision = contentSafetyGate.decide(safety);
+        if (decision == null || decision.isBlock()) {
+            return error("优惠券内容包含违规信息，请修改后重试");
+        }
         // RBAC R3：按角色配额校验优惠券「同时存在」数量
         String quotaErr = quotaService.checkCreate(ownerMemberId, com.chengyinhub.business.service.IQuotaService.TYPE_COUPON);
         if (quotaErr != null) {
@@ -193,6 +223,9 @@ public class ApiCouponController extends BaseController {
         Integer rows = quotaService.runWithCreateGuard(fMemberId,
                 com.chengyinhub.business.service.IQuotaService.TYPE_COUPON,
                 () -> smsCouponService.insertSmsCoupon(smsCoupon));
+        if (rows != null && rows > 0 && decision.isFlagged()) {
+            flagForSpotCheck(smsCoupon.getId(), ownerMemberId, decision.getFlagReason(), request.getName());
+        }
         // C-31:回传新券 id,发布流里「新建即选中」要靠它挂到节点奖励上(缺 id 会静默挂成 0)。
         return (rows != null && rows > 0)
                 ? AjaxResult.success("发布成功", java.util.Collections.singletonMap("id", smsCoupon.getId()))
@@ -490,6 +523,34 @@ public class ApiCouponController extends BaseController {
 
     public AjaxResult couponVerification(String code, String token) {
         return couponVerification(code, token, null);
+    }
+
+    /**
+     * 先发后审时机审没给出结论:券照常上架,在审核台留一张非阻断抽检单(source=post_review_flag),
+     * 驳回即平台手动失效。best-effort:失败只记日志,不影响已发布的券。
+     */
+    private void flagForSpotCheck(Long couponId, Long ownerMemberId, String reason, String name) {
+        logger.warn("优惠券先发后审打标待抽检 couponId={} reason={}", couponId, reason);
+        try {
+            com.alibaba.fastjson2.JSONObject snap = new com.alibaba.fastjson2.JSONObject();
+            snap.put("bizType", AuditTask.BIZ_COUPON);
+            snap.put("bizId", couponId);
+            snap.put("flagReason", reason);
+            snap.put("name", name);
+            auditTaskService.submit(AuditTask.BIZ_COUPON, couponId, ownerMemberId, "post_review_flag", snap.toJSONString());
+        } catch (Exception e) {
+            logger.error("优惠券抽检单提交失败 couponId={}", couponId, e);
+        }
+    }
+
+    /** 文本送检需要发表者 openid;查不到返回 null(门禁按「审不了」打标放行)。 */
+    private String resolveOpenid(Long memberId) {
+        try {
+            UmsMember m = umsMemberService.selectUmsMemberById(memberId);
+            return m == null ? null : m.getWxOpenId();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private CouponOperationContext resolveCouponOperation(Long principalMemberId,

@@ -70,7 +70,7 @@ test('负控:calc 里的乘号不能被误判成通配符', () => {
   const tmp = path.join(require('node:os').tmpdir(), 'wxss-wildcard-false-positive.wxss')
   fs.writeFileSync(tmp, '.a { width: calc(100% - 2 * 16rpx); }\n')
   try {
-    assert.deepEqual(scanWildcard([tmp]), [], 'calc 里的乘号被误判了,门禁会天天报假警')
+    assert.deepEqual(scanWildcard([tmp]), [], 'calc 里的乘号被误判了，门禁会天天报假警')
   } finally {
     fs.unlinkSync(tmp)
   }

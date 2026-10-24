@@ -65,9 +65,9 @@ test('生产 WXSS 的注释必须成对闭合,且不得有孤立的 */', () => {
         i += 1
       }
     }
-    if (depth === 1) offenders.push(`${rel}:${openedAt} 注释开了没关,后面全被吞掉`)
+    if (depth === 1) offenders.push(`${rel}:${openedAt} 注释开了没关，后面全被吞掉`)
   }
-  assert.deepEqual(offenders, [], 'WXSS 注释不配平,整份文件编译不过')
+  assert.deepEqual(offenders, [], 'WXSS 注释不配平，整份文件编译不过')
 })
 
 test('负控:塞一个孤立的 */ 进去,门禁必须判红', () => {

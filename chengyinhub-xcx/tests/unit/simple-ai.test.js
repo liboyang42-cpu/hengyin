@@ -10,6 +10,7 @@ let sent = [];
 let pageConfig = null;
 
 global.getApp = () => ({
+  getUserID: () => 7,
   sendRequest: (request) => { sent.push(request); },
   getAuthorization: () => '',
 });
@@ -97,11 +98,11 @@ test('AI 返回超过三站的草稿时保持 fail-closed，不进入后续编�
   });
 
   assert.equal(page.data.aiPlan, null, '超过已定上限的草稿不能被当作可编辑结果');
-  assert.match(page.data.aiError, /不超过 3 个点位/);
+  assert.match(page.data.aiError, /不超过 3 个节点/);
   assert.equal(page.data.aiRemaining, 3, '结构不合格响应不能被前端显示为已扣额度');
 });
 
-test('AI 重试失败时保留已经生成的草稿与点位', () => {
+test('AI 重试失败时保留已经生成的草稿与节点', () => {
   const page = makePage();
   page.onLoad({ mode: '2' });
   sent[0].success({ code: 200, data: { limited: true, remaining: 3 } });
@@ -131,12 +132,12 @@ test('AI 进度与错误使用同一互斥状态链，不得在 complete 前同�
 test('页面不再暴露已禁用的模式切换 / 就地建玩法能力', () => {
   makePage();
 
-  assert.equal(pageConfig.data.aiMode, undefined, 'aiMode 是恒真开关,不应重新出现');
+  assert.equal(pageConfig.data.aiMode, undefined, 'aiMode 是恒真开关，不应重新出现');
   assert.equal(pageConfig.data.gameEditor, undefined, 'gameEditor 状态属于已删除的暗色子树');
   ['onPickMode', 'onToggleMode', 'openGameEditor', 'closeGameEditor',
     'onGameField', 'selectGameMethod', 'selectGameAnswer', 'saveInlineGame',
   ].forEach((name) => {
-    assert.equal(pageConfig[name], undefined, name + ' 只被已删除的死子树调用,不应重新出现');
+    assert.equal(pageConfig[name], undefined, name + ' 只被已删除的死子树调用，不应重新出现');
   });
 });
 
@@ -146,7 +147,7 @@ test('置灰的主 CTA 必须自己给理由:disabledtap 与 canEnterAiEditor �
   page.data.aiPlanNodes = [{ name: '一站', confirmed: false, longitude: '', latitude: '' }];
   // 前提:这就是按钮置灰的那一态
   page.refreshEnterEditorState();
-  assert.equal(page.data.canEnterAiEditor, false, '点位未确认时按钮应当置灰');
+  assert.equal(page.data.canEnterAiEditor, false, '节点未确认时按钮应当置灰');
 
   page.enterAiEditor();
   assert.match(page.data.aiError, /请逐个在地图中确认地点/,
@@ -174,7 +175,7 @@ test('wxml 只保留可达的简单 AI 链路,不含暗色手动编辑子树', (
   assert.ok(!/wx:if="\{\{aiMode\}\}"/.test(wxml), '根节点不应再有恒真的 wx:if="{{aiMode}}"');
 });
 
-// —— 审查 #14 回归闸:旧「快速发布」链路(站点编辑 → 预览 → 存草稿 → 直接发布)在 wxml
+// —— 审查 #14 回归闸:旧「快速发布」链路(节点编辑 → 预览 → 存草稿 → 直接发布)在 wxml
 //    上一个绑定都没有,而它的反馈通道本身是坏的 —— tip() 只写 data.toast,wxml 从不渲染它。
 //    整块删掉是为了不让下一个人「顺手修一个进不去的页面」。真要重新接线:先换成
 //    cy-toast / cy-inline-error 通道,再谈接线。 —— 2026-09-19
@@ -186,14 +187,14 @@ test('简易版不带发布链路:零绑定的孤儿方法不得复活', () => {
     'onMarkerTap', 'onDeleteStation', 'onAddStation', 'onPickTemplate', 'tip',
     '_offerDraftResume', '_restoreDraft', 'onResultSheetClose',
   ].forEach((name) => {
-    assert.equal(page[name], undefined, name + ' 是零绑定孤儿,不该回到页面上');
+    assert.equal(page[name], undefined, name + ' 是零绑定孤儿，不该回到页面上');
   });
   assert.equal(page.data.toast, undefined, 'tip() 的渲染目标 wxml 从不消费');
-  assert.equal(page.data.stations, undefined, '站点编辑属于已退役的发布链路');
-  assert.equal(page.data.resultSheet, undefined, '成功面板只剩死生产者,一并退役');
+  assert.equal(page.data.stations, undefined, '节点编辑属于已退役的发布链路');
+  assert.equal(page.data.resultSheet, undefined, '成功面板只剩死生产者，一并退役');
 
   assert.doesNotMatch(fs.readFileSync(WXML, 'utf8'), /cy-result-sheet/,
-    '本页不发发布请求,成功面板没有生产者');
+    '本页不发发布请求，成功面板没有生产者');
   const js = fs.readFileSync(path.join(__dirname, '../../pages/publish/simple/index.js'), 'utf8');
   assert.doesNotMatch(js, /\/api\/topic\/create/, '发布只在 fabu,简易页不得重新直提');
 });

@@ -134,6 +134,14 @@ public interface ICmsTopicService
      */
     void syncCreativeSquarePostVisibility(Long topicId, boolean visible);
 
+    /**
+     * AUDIT-G2-1:内容安全下架留置中的主题申请重新上架 —— 不直接上架,只确保有一张 BIZ_TOPIC 人工复核单
+     * (已有未结 BIZ_TOPIC 单则复用,否则新建 source=content_safety_relist)。过审才解除留置并恢复在架。
+     *
+     * @return 复核单 id
+     */
+    Long requestContentSafetyRelistReview(Long topicId, Long submitterId);
+
     public int insertCmsTopic(CmsTopic cmsTopic);
 
     /**
@@ -295,11 +303,20 @@ public interface ICmsTopicService
     /** B3 读某主题是否草稿(1=草稿) */
     public Integer selectTopicIsDraft(Long id);
 
+    /** 先发后审打标/抽检通过:写 cms_topic.review_flag(1=进入抽检池,0=已通过)。 */
+    public void markReviewFlag(Long topicId, boolean flagged);
+
+    /** 图片内容安全违规留置(AUDIT-INT-7):置 cms_topic.content_safety_hold=1,不改人工驳回原因。 */
+    public void markContentSafetyHold(Long topicId);
+
     /** B3 发布草稿:竞态安全(仅当前确为草稿才发)清 is_draft,按 publishMode 直发/提审;非草稿返 false */
     public boolean publishDraft(Long id);
+    boolean publishDraft(Long id, Long expectedOwnerId);
+    boolean canResubmitSupplyReview(Long id, Long ownerId);
 
     /** V2 发布回执；专业版返回组合审核任务与冻结玩法 id。 */
     TopicBundleSubmitResultVO publishDraftWithReview(Long id);
+    TopicBundleSubmitResultVO publishDraftWithReview(Long id, Long expectedOwnerId);
 
     /** 内容审核真正通过后，将当前草稿路线经发布门禁固化为玩家可读快照。 */
     void publishApprovedRouteSnapshot(Long topicId);

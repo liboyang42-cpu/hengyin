@@ -115,7 +115,7 @@ test('信箱与素材放在分包里,不占主包资源棘轮', () => {
   assert.ok(fs.existsSync(path.resolve(__dirname, '../../subpackageRoam/citystamp/mailbox.png')));
   const app = JSON.parse(read('app.json'));
   const roam = (app.subPackages || app.subpackages).find((s) => s.root === 'subpackageRoam');
-  assert.ok(roam.pages.includes('citystamp/index'), '页面必须注册进分包,否则跳过去是白屏');
+  assert.ok(roam.pages.includes('citystamp/index'), '页面必须注册进分包，否则跳过去是白屏');
 });
 
 test('图走全站统一上传通道,不自造 app.uploadFile,也不裸调 wx.uploadFile', () => {
@@ -212,7 +212,7 @@ test('C-07 换票失败重试复用已创建的签 id,不再重复 create(重复
   page._postAndExchange();
   await new Promise((resolve) => setImmediate(resolve));
   assert.deepEqual(requests, ['/api/roam/stamp/exchange'],
-    '已入库的签重试时必须直接续换,再 create 一次就是重复入册');
+    '已入库的签重试时必须直接续换，再 create 一次就是重复入册');
 });
 
 test('C-08 保存到相册:远端票图先下载成本地文件;下载失败不把用户引去开相册权限', () => {
@@ -238,7 +238,7 @@ test('C-08 保存到相册:远端票图先下载成本地文件;下载失败不�
     page.onSave();
   } finally { global.wx = previousWx; }
   assert.deepEqual(calls, ['download', 'save:/tmp/a.png'],
-    'http 图片地址不是本地文件路径,必须先下载');
+    'http 图片地址不是本地文件路径，必须先下载');
 
   // 本地路径直存,不白下载一次
   const page2 = loadCityStampPage();
@@ -271,5 +271,5 @@ test('C-08 保存到相册:远端票图先下载成本地文件;下载失败不�
     page3.onSave();
   } finally { global.wx = previousWx3; }
   assert.deepEqual(calls3, ['download', 'toast'],
-    '下载失败与相册授权是两回事,不能无脑引导去开权限');
+    '下载失败与相册授权是两回事，不能无脑引导去开权限');
 });

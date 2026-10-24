@@ -3,8 +3,8 @@ package com.chengyinhub.web.controller.common;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -40,6 +40,28 @@ public class CommonController
 
     @Autowired
     private AdminFileUploadService adminFileUploadService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.impl.AppMediaAssetService appMediaAssetService;
+    private String recordApprovedImage(MultipartFile file,String key,String url) {
+        String name=file==null?null:file.getOriginalFilename();
+        if(name!=null && name.toLowerCase(java.util.Locale.ROOT).matches(".*\\.(jpg|jpeg|png|gif)")) {
+            if(appMediaAssetService==null)throw new IllegalStateException("图片审核事实服务不可用");
+            return appMediaAssetService.registerApprovedSystemImage(currentSystemUserId(),key,url);
+        }
+        return url;
+    }
+
+    private void requireLocalImageOrigin(MultipartFile file) {
+        String name=file==null?null:file.getOriginalFilename();
+        if(name!=null && name.toLowerCase(java.util.Locale.ROOT).matches(".*\\.(jpg|jpeg|png|gif)")) {
+            if(appMediaAssetService==null)throw new AdminFileUploadService.SecurityUnavailableException("图片发布服务暂不可用");
+            try {appMediaAssetService.requireLocalPublicationOrigin();}
+            catch(com.chengyinhub.common.exception.ServiceException e) {throw new AdminFileUploadService.SecurityUnavailableException(e.getMessage());}
+        }
+    }
+    protected Long currentSystemUserId() {
+        return com.chengyinhub.common.utils.SecurityUtils.getUserId();
+    }
 
     private static final String FILE_DELIMETER = ",";
 
@@ -77,14 +99,19 @@ public class CommonController
             // 上传文件路径
             String filePath = RuoYiConfig.getUploadPath();
             // 上传并返回新文件名称
+            requireLocalImageOrigin(file);
             String fileName = adminFileUploadService.uploadLocal(filePath, file);
             String url = serverConfig.getUrl() + fileName;
+            url=recordApprovedImage(file,fileName,url);
             AjaxResult ajax = AjaxResult.success();
             ajax.put("url", url);
             ajax.put("fileName", fileName);
             ajax.put("newFileName", FileUtils.getName(fileName));
             ajax.put("originalFilename", file.getOriginalFilename());
             return ResponseEntity.ok(ajax);
+        }
+        catch (AdminFileUploadService.SecurityUnavailableException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(AjaxResult.error(503,e.getMessage()));
         }
         catch (AdminFileUploadService.RejectedException e)
         {
@@ -105,10 +132,14 @@ public class CommonController
         try
         {
             JSONObject jsonObject = adminFileUploadService.uploadOss(file);
+            jsonObject.put("url",recordApprovedImage(file,jsonObject.getString("fileName"),jsonObject.getString("url")));
             AjaxResult ajax = AjaxResult.success();
             ajax.put("fileName", jsonObject.get("fileName"));
             ajax.put("url", jsonObject.get("url"));
             return ResponseEntity.ok(ajax);
+        }
+        catch (AdminFileUploadService.SecurityUnavailableException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(AjaxResult.error(503,e.getMessage()));
         }
         catch (AdminFileUploadService.RejectedException e)
         {
@@ -134,6 +165,7 @@ public class CommonController
             // 上传文件路径
             String filePath = RuoYiConfig.getUploadPath();
             List<String> urls = new ArrayList<String>();
+            if(files!=null)for(MultipartFile file:files)requireLocalImageOrigin(file);
             List<String> fileNames = adminFileUploadService.uploadLocals(filePath, files);
             List<String> newFileNames = new ArrayList<String>();
             List<String> originalFilenames = new ArrayList<String>();
@@ -142,6 +174,7 @@ public class CommonController
                 MultipartFile file = files.get(index);
                 String fileName = fileNames.get(index);
                 String url = serverConfig.getUrl() + fileName;
+                url=recordApprovedImage(file,fileName,url);
                 urls.add(url);
                 newFileNames.add(FileUtils.getName(fileName));
                 originalFilenames.add(file.getOriginalFilename());
@@ -152,6 +185,9 @@ public class CommonController
             ajax.put("newFileNames", StringUtils.join(newFileNames, FILE_DELIMETER));
             ajax.put("originalFilenames", StringUtils.join(originalFilenames, FILE_DELIMETER));
             return ResponseEntity.ok(ajax);
+        }
+        catch (AdminFileUploadService.SecurityUnavailableException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(AjaxResult.error(503,e.getMessage()));
         }
         catch (AdminFileUploadService.RejectedException e)
         {

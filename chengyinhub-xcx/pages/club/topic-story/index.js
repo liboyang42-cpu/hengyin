@@ -159,7 +159,7 @@ Page({
     this.clubId = text(opts.clubId);
     if (!this.topicId) {
       // E-12(2026-09-16):缺参是终态。原来只给「重试」,点一次失败一次 —— 出口改成返回。
-      this.setData({ loaded: true, loadError: '缺少主题标识，请从俱乐部页面重新进入', missingParam: true });
+      this.setData({ loaded: true, loadError: '缺少主题信息，请从俱乐部页面重新进入', missingParam: true });
       return;
     }
     this.load();
@@ -188,7 +188,7 @@ Page({
         });
       },
       fail() {
-        that.setData({ loaded: true, loadError: '网络开了点小差，请稍后再试' });
+        that.setData({ loaded: true, loadError: '网络异常，请重试' });
       },
     });
   },
@@ -293,7 +293,7 @@ Page({
         });
       },
       fail() {
-        that.setData({ answerLoading: false, answerError: '网络开了点小差，请稍后再试' });
+        that.setData({ answerLoading: false, answerError: '网络异常，请重试' });
       },
     });
   },

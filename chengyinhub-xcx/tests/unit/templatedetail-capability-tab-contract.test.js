@@ -14,6 +14,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js')
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const SOURCE = fs.readFileSync(path.join(ROOT, 'pages/templatedetail/templatedetail.js'), 'utf8')
@@ -38,6 +39,7 @@ function loadPage() {
       if (request === '../../utils/identity/identity-policy.js') return require(path.join(ROOT, 'utils/identity/identity-policy.js'))
       if (request === '../../utils/merchant-theme.js') return { merchantPageShow() {}, merchantPageRestore() {} }
       if (request === '../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
+      if (request === '../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} })
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {
@@ -77,7 +79,7 @@ test('CU-M-130 有能力字段的模板照常给「能力」tab', () => {
 
 test('CU-M-130 只剩署名的模板不给「能力」tab,深链也要退回详情', () => {
   const target = normalizedTarget(ONLY_SOURCE, 'capabilities')
-  assert.deepEqual(tabsOf(target), ['details'], '没有「方式」就没有能力可看,不该留着这个 tab')
+  assert.deepEqual(tabsOf(target), ['details'], '没有「方式」就没有能力可看，不该留着这个 tab')
   assert.equal(target.activeTab, 'details', '?tab=capabilities 深链进来不能停在一个不存在的 tab 上')
 })
 
@@ -91,7 +93,7 @@ test('CU-M-130 真接口那条路(applyDetailPayload)同样收 tab', () => {
   assert.equal(patch.activeTab, 'details')
   page.applyDetailPayload.call(page, WITH_WAY)
   assert.deepEqual(tabsOf(patch), ['details', 'capabilities'])
-  assert.equal(patch.activeTab, 'capabilities', '有能力可看时,深链停留的位置不该被改掉')
+  assert.equal(patch.activeTab, 'capabilities', '有能力可看时，深链停留的位置不该被改掉')
 })
 
 test('CU-M-130 场景与来源不算能力:两者都出现在别处,不能撑住这个 tab', () => {
@@ -122,6 +124,7 @@ test('CU-M-130 负控:把判据换成「有行就给 tab」,上一条必须判�
       if (request === '../../utils/identity/identity-policy.js') return require(path.join(ROOT, 'utils/identity/identity-policy.js'))
       if (request === '../../utils/merchant-theme.js') return { merchantPageShow() {}, merchantPageRestore() {} }
       if (request === '../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
+      if (request === '../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} })
       throw new Error(`unexpected require: ${request}`)
     },
     wx: { getStorageSync: () => '', setStorageSync() {}, getAccountInfoSync: () => ({ miniProgram: { envVersion: 'develop' } }) },
@@ -131,7 +134,7 @@ test('CU-M-130 负控:把判据换成「有行就给 tab」,上一条必须判�
   assert.throws(
     () => assert.deepEqual(Array.from(target.tplTabs, (tab) => tab.key), ['details']),
     /deepStrictEqual|Expected values|values/,
-    '按「有没有行」判据,只剩来源时也会留着能力 tab = 上一条合同是假的',
+    '按「有没有行」判据，只剩来源时也会留着能力 tab = 上一条合同是假的',
   )
 })
 

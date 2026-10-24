@@ -29,6 +29,10 @@ import java.util.Set;
 @Service
 public class ClubEventNotificationServiceImpl implements IClubEventNotificationService {
     private static final Logger logger = LoggerFactory.getLogger(ClubEventNotificationServiceImpl.class);
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
     private static final long CLAIM_LEASE_MILLIS = 5L * 60L * 1000L;
     private static final Set<String> AUDIENCES;
     static {
@@ -71,6 +75,10 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
             requireEquivalentReplay(replay, validated);
             return replay;
         }
+        com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(actorMemberId);
+        String risk = wxContentSecurityService.checkText(validated.title + "\n" + validated.content,
+                actor == null ? null : actor.getWxOpenId());
+        if (risk != null) throw badRequest(risk);
         List<Long> recipients = recipients(validated.clubId, validated.activityId, validated.audience);
         Date now = new Date();
         ClubEventCampaign campaign = new ClubEventCampaign();
@@ -254,6 +262,8 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
 
         Map<String, Object> counts = new LinkedHashMap<>();
         counts.put("ALL_MEMBERS", recipients(clubId, null, "ALL_MEMBERS").size());
+        counts.put("ADMINS", recipients(clubId, null, "ADMINS").size());
+        counts.put("INACTIVE", recipients(clubId, null, "INACTIVE").size());
         if (scopedActivityId == null) {
             counts.put("REGISTERED", null);
             counts.put("WAITLIST", null);

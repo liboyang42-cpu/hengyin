@@ -87,7 +87,7 @@ Component({
           }
           if (!res.data || !isRecordList(res.data.rows)) {
             this.setData({
-              loadError: '服务返回的数据不完整，重试会重新拉取一次',
+              loadError: '加载失败，请重试',
               loadErrorPage: requestedPage,
             });
             return;

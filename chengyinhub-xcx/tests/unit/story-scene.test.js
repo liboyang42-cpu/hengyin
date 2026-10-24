@@ -2,7 +2,7 @@
 // 场景名与环境音同一张表(氛围 / 氛围块决定),梦块换成「苏醒」那一景;切换是逐帧插值过去,不是硬切。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const scene = require('../../utils/story-scene.js')
+const scene = require('../../pages/play/utils/story-scene.js')
 
 test('场景跟氛围走,梦块换苏醒;不认识的回城市', () => {
   assert.equal(scene.sceneFor('atmosphere--yellow'), 'afternoon')

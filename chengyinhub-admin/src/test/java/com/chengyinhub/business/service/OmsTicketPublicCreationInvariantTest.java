@@ -35,6 +35,10 @@ class OmsTicketPublicCreationInvariantTest {
     void topicCreationRejectsNegativeInventoryBeforeWritingTicket() {
         OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         org.springframework.test.util.ReflectionTestUtils.setField(service, "settlementDebtLedger", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
 
@@ -59,6 +63,8 @@ class OmsTicketPublicCreationInvariantTest {
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "auditTaskService", mock(IAuditTaskService.class));
+        // 收费独立活动只允许平台账号发布(F-W2-01)；本用例只验证票窗口校验，发布者按平台账号构造。
+        ReflectionTestUtils.setField(service, "platformMemberId", 88L);
         when(activityMapper.insertCmsActivity(any(CmsActivity.class))).thenAnswer(invocation -> {
             invocation.getArgument(0, CmsActivity.class).setId(702L);
             return 1;
@@ -73,7 +79,7 @@ class OmsTicketPublicCreationInvariantTest {
         request.setTickets(Collections.singletonList(ticket));
 
         ServiceException ex = assertThrows(ServiceException.class,
-                () -> service.publishActivity(request, 88L, "creator"));
+                () -> service.publishActivity(request, 88L, "creator", true));
 
         assertEquals(400, ex.getCode());
         verify(ticketMapper, never()).insertOmsTicket(any());
@@ -93,7 +99,7 @@ class OmsTicketPublicCreationInvariantTest {
         when(clubMapper.selectClubByIdForUpdate(73L)).thenReturn(null);
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> service.publishActivity(request, 88L, "creator"));
+                () -> service.publishActivity(request, 88L, "creator", true));
 
         assertTrue(error.getMessage().contains("俱乐部已解散"),
                 "该红必须指认到发布活动的解散互斥闸，实际:" + error.getMessage());
@@ -116,7 +122,7 @@ class OmsTicketPublicCreationInvariantTest {
         when(clubMapper.selectClubByIdForUpdate(73L)).thenReturn(club);
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> service.publishActivity(requestForClub(73L), 88L, "forger"));
+                () -> service.publishActivity(requestForClub(73L), 88L, "forger", true));
 
         assertEquals("只能向自己主理的俱乐部发布活动", error.getMessage());
         verify(activityMapper, never()).insertCmsActivity(any());

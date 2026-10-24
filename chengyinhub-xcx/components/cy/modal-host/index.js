@@ -16,6 +16,8 @@ Component({
     showCancel: true,
     danger: false,
     editable: false,
+    // PR10 F-L3-09:editable 时改用多行 textarea(长原因类输入),其余行为(maxlength/validate)不变
+    multiline: false,
     placeholderText: '',
     // editable 输入框上限:0 = 沿用微信默认 140;>0 时由调用方显式指定(如申请留言 200)
     maxlength: 0,
@@ -47,9 +49,11 @@ Component({
         showCancel: opts.showCancel !== false,
         danger: !!opts.danger,
         editable: !!opts.editable,
+        multiline: !!opts.editable && !!opts.multiline,
         placeholderText: opts.placeholderText || '',
         maxlength: Number(opts.maxlength) > 0 ? Number(opts.maxlength) : 0,
-        inputValue: '',
+        // 2026-10-22:可选 value 预填(改已有内容,如俱乐部入会欢迎语);不传仍是空框,既有调用不变
+        inputValue: opts.editable && typeof opts.value === 'string' ? opts.value : '',
         inputError: '',
       });
     },

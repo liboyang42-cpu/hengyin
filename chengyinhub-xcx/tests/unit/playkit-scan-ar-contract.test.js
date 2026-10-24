@@ -63,7 +63,7 @@ test('卡片按商家那张图的宽高比长,不拉伸', () => {
   const { cardScaleOf } = require('../../' + AR + 'ar-math.js')
   assert.deepEqual(cardScaleOf(800, 400, 0.4), { x: 0.4, z: 0.2 }, '横图')
   assert.deepEqual(cardScaleOf(400, 800, 0.4), { x: 0.4, z: 0.8 }, '竖图')
-  assert.deepEqual(cardScaleOf(0, 0, 0.4), { x: 0.4, z: 0.4 }, '图的尺寸还没拿到时按正方形,不给 0 或 NaN')
+  assert.deepEqual(cardScaleOf(0, 0, 0.4), { x: 0.4, z: 0.4 }, '图的尺寸还没拿到时按正方形，不给 0 或 NaN')
 })
 
 test('长出来:从很小长到原大,先快后慢,到点不再动', () => {
@@ -85,7 +85,7 @@ test('AR 组件声明 xr-frame 渲染器,场景里不混写 <view>(官方限制)
   const wxml = read(AR + 'index.wxml').replace(/<!--[\s\S]*?-->/g, '')   // 注释不是标签
   assert.equal((wxml.match(/<xr-scene\b/g) || []).length, 1, '同一个 xr-frame 组件只能有一个 xr-scene')
   assert.doesNotMatch(wxml, /<view\b|<text\b|<image\b/, 'xr-frame 组件里不支持和传统标签混写 —— 界面放在宿主里')
-  assert.match(wxml, /ar-system="\{\{arSystem\}\}"/, '模式由配置决定,挂载时定死(不支持运行中切换)')
+  assert.match(wxml, /ar-system="\{\{arSystem\}\}"/, '模式由配置决定，挂载时定死(不支持运行中切换)')
   assert.match(wxml, /is-ar-camera/, '相机要交给 AR 系统接管')
   assert.match(wxml, /background="ar"/, '背景是手机摄像头的画面')
 })
@@ -103,8 +103,8 @@ test('平面模式:点一下屏幕,把东西放到识别出的平面上', () => 
   inst._bindPlacement()
   assert.ok(listeners.touchstart, '要监听点屏幕')
   listeners.touchstart()
-  assert.deepEqual(placed, [['reveal-root', true]], '放到当前平面交点,并显形')
-  assert.equal(inst.events.filter((e) => e.name === 'placed').length, 1, '放下了要告诉宿主,好换说明文字')
+  assert.deepEqual(placed, [['reveal-root', true]], '放到当前平面交点，并显形')
+  assert.equal(inst.events.filter((e) => e.name === 'placed').length, 1, '放下了要告诉宿主，好换说明文字')
 })
 
 test('平面模式:还没找到平面时点屏幕不放 —— 放了也是飘在半空', () => {
@@ -151,7 +151,7 @@ test('识别图:认到那一刻把识别器的世界位置抄给内容,内容显
   } finally { global.wx = prevWx }
   assert.deepEqual(copied, [M], '只抄一次:锁定后不再跟着识别器走')
   assert.equal(root.visible, true)
-  assert.equal(inst.data.markerLocked, true, '锁定后卸掉识别器,不再白白耗电')
+  assert.equal(inst.data.markerLocked, true, '锁定后卸掉识别器，不再白白耗电')
   assert.ok(inst._growFrom > 0, '锁定那一刻开始长出来')
   assert.deepEqual(inst.events.filter((e) => e.name === 'tracked').map((e) => e.detail.value), [true], '认到只告诉宿主一次')
 })
@@ -162,7 +162,7 @@ test('识别图模式:锁定前认丢要告诉宿主;AR 启动失败要报出来
   inst.handleTrackerSwitch({ detail: { value: false } })
   assert.deepEqual(inst.events.filter((e) => e.name === 'tracked').map((e) => e.detail.value), [false])
   inst.handleArError({ detail: { value: new Error('VK 不支持') } })
-  assert.equal(inst.events.filter((e) => e.name === 'arerror').length, 1, '启动失败不报 = 玩家对着一块黑屏,永远等不到东西')
+  assert.equal(inst.events.filter((e) => e.name === 'arerror').length, 1, '启动失败不报 = 玩家对着一块黑屏，永远等不到东西')
 })
 
 // ==================== 宿主:切换、说明文字、回落 ====================
@@ -181,7 +181,7 @@ test('宿主只在「显形 + 已扫中 + 配了 AR + 手机支持 + 没失败�
 test('宿主:AR 接管时 <camera> 必须先退场(一页只能一个相机,VisionKit 也要用它)', () => {
   const wxml = read(HOST + 'index.wxml')
   const camOpen = (wxml.match(/<view class="sc__cam"[^>]*>/) || [''])[0]
-  assert.match(camOpen, /!arLive/, '<camera> 与 AR 同时在,相机被抢,两边都黑')
+  assert.match(camOpen, /!arLive/, '<camera> 与 AR 同时在，相机被抢，两边都黑')
   assert.match(wxml, /<cy-scan-ar[^>]*wx:if="\{\{arLive\}\}"/, 'AR 组件只在 arLive 时挂')
   const json = JSON.parse(read(HOST + 'index.json'))
   assert.ok(json.usingComponents['cy-scan-ar'], '没注册 = 标签渲染不出来')
@@ -191,8 +191,8 @@ test('宿主:AR 启动失败回落到屏幕叠加,这一站照样走得完', () 
   const component = load(HOST + 'index.js')
   const inst = instanceOf(component, { arLive: true, kindKey: '显形', overlayUrl: '/a.png' })
   inst.onArError()
-  assert.equal(inst._arFail, true, '失败过是内部状态,走实例字段(wxml 不读的 setData 字段是死数据)')
-  assert.equal(inst.data.arLive, false, 'AR 退场,屏幕叠加接手')
+  assert.equal(inst._arFail, true, '失败过是内部状态，走实例字段(wxml 不读的 setData 字段是死数据)')
+  assert.equal(inst.data.arLive, false, 'AR 退场，屏幕叠加接手')
 })
 
 test('宿主:说明文字跟着阶段走,平面与识别图各说各的', () => {
@@ -200,7 +200,7 @@ test('宿主:说明文字跟着阶段走,平面与识别图各说各的', () => 
   assert.equal(pillOf('PLANE', 'finding'), '对着地面慢慢移动手机')
   assert.equal(pillOf('PLANE', 'found'), '点一下屏幕，把它放在这儿')
   assert.equal(pillOf('MARKER', 'finding'), '对准这张图')
-  assert.equal(pillOf('PLANE', 'placed'), '', '放下了就把画面让出来,话交给气泡')
+  assert.equal(pillOf('PLANE', 'placed'), '', '放下了就把画面让出来，话交给气泡')
   assert.equal(pillOf('MARKER', 'tracked'), '')
   for (const t of ['对着地面慢慢移动手机', '点一下屏幕，把它放在这儿', '对准这张图']) {
     assert.doesNotMatch(t, /[(),:]/, '中文文案禁半角标点(ui-copy-states 门禁)')
@@ -216,9 +216,9 @@ test('分发器与 view 层把 AR 方式与识别图喂到组件', () => {
   assert.equal(kit.arMode, 'MARKER')
   assert.equal(kit.markerUrl, '/m.jpg')
   const none = pickPlayKit({ sessionId: 1, version: 1, playKit: { scan: { kind: 'OVERLAY', scanned: true, overlayUrl: '/a.png' } } }, new Date(2026, 8, 22))
-  assert.equal(none.arMode, 'NONE', '缺省就是不开,不是 undefined')
+  assert.equal(none.arMode, 'NONE', '缺省就是不开，不是 undefined')
   const tag = (() => { const w = read('pages/play/components/playkit/index.wxml'); const s = w.slice(w.indexOf('<cy-playkit-scan ')); return s.slice(0, s.indexOf('/>')) })()
-  assert.match(tag, /ar-mode="\{\{kit\.arMode\}\}"/, '分发器不喂 = 组件永远是默认值,零报错')
+  assert.match(tag, /ar-mode="\{\{kit\.arMode\}\}"/, '分发器不喂 = 组件永远是默认值，零报错')
   assert.match(tag, /marker-url="\{\{kit\.markerUrl\}\}"/)
 })
 
@@ -240,7 +240,7 @@ test('编辑页默认形状带上 AR 方式与识别图,缺省是不开', () => 
 
 test('编辑页校验与服务端逐字一致:图像识别没配识别图、AR 方式认不出都拦下', () => {
   let { cfg, model } = scanModel({ arMode: 'MARKER', markerUrl: '' })
-  assert.equal(cfg.validate(model), '图像识别要配一张识别图', '不在本页拦,作者存得下、发布被后端拒、而且看不到理由')
+  assert.equal(cfg.validate(model), '图像识别要配一张识别图', '不在本页拦，作者存得下、发布被后端拒、而且看不到理由')
   ;({ cfg, model } = scanModel({ arMode: 'MARKER', markerUrl: '/m.jpg' }))
   assert.equal(cfg.validate(model), '', '配齐了放行')
   ;({ cfg, model } = scanModel({ arMode: 'PLANE' }))
@@ -261,7 +261,7 @@ test('编辑页:显形档里能选 AR 方式,选了图像识别才出识别图�
   const wxml = read('pages/publish/temp/index.wxml')
   const block = wxml.slice(wxml.indexOf("advanced.scan.kind === 'OVERLAY'"))
   const overlay = block.slice(0, block.indexOf('</block>'))
-  assert.match(overlay, /<cy-dropdown [^>]*range="\{\{scanArModes\}\}" range-key="label"[^>]*bind:change="pickScanArMode"/, 'AR 方式用下拉,不平铺')
+  assert.match(overlay, /<cy-dropdown [^>]*range="\{\{scanArModes\}\}" range-key="label"[^>]*bind:change="pickScanArMode"/, 'AR 方式用下拉，不平铺')
   assert.match(overlay, /wx:if="\{\{advanced\.scan\.arMode === 'MARKER'\}\}"/, '识别图只在图像识别时要')
   assert.match(overlay, /data-field="markerUrl"/)
   const js = read('pages/publish/temp/index.js')
@@ -284,8 +284,8 @@ function loadTempPage() {
 
 test('编辑页:扫码段两组选项都是下拉,不是平铺芯片', () => {
   const wxml = read('pages/publish/temp/index.wxml')
-  const start = wxml.indexOf("gameSection === 'scan'")
-  const section = wxml.slice(start, wxml.indexOf('<view class="cg-gcfg"', start + 1))
+  const start = wxml.indexOf('wx:if="{{scanSheetOpen}}"')
+  const section = wxml.slice(start, wxml.indexOf('<!-- ============ R5 附加规则', start + 1))
   assert.doesNotMatch(section, /cg-chip/, '扫码段里不该再有平铺芯片')
   assert.match(section, /<cy-dropdown [^>]*range="\{\{scanKinds\}\}" range-key="label"[^>]*bind:change="pickScanKind"/)
   assert.match(section, /<cy-dropdown [^>]*range="\{\{scanArModes\}\}" range-key="label"[^>]*bind:change="pickScanArMode"/)
@@ -313,7 +313,7 @@ test('落下:先加速往下掉(重力),在 70% 处着地,再轻弹一下落定;
   assert.equal(DROP_CONTACT, 0.7)
   assert.equal(dropOf(600 * DROP_CONTACT, 600, H).y, 0, '着地那一刻贴地')
   const hop = dropOf(600 * 0.85, 600, H).y
-  assert.ok(hop > 0 && hop < H * 0.15, '弹一下,但幅度小(不是卡通皮球)')
+  assert.ok(hop > 0 && hop < H * 0.15, '弹一下，但幅度小(不是卡通皮球)')
   assert.equal(dropOf(600, 600, H).y, 0)
   assert.equal(dropOf(99999, 600, H).y, 0, '到点之后夹在地面')
 })
@@ -371,8 +371,8 @@ test('模型自动定尺寸:最长边缩到目标大小,底面贴地,居中', ()
 
 test('立牌转向玩家:只取水平方向(永远立着,不前俯后仰);重合时不转', () => {
   const { flatForward } = require('../../' + AR + 'ar-math.js')
-  assert.deepEqual(flatForward({ x: 1, y: 1.6, z: 0 }, { x: 0, y: 0, z: 0 }), { x: 1, z: 0 }, '玩家举着手机在高处,牌子也只转水平')
-  assert.equal(flatForward({ x: 0, y: 2, z: 0 }, { x: 0, y: 0, z: 0 }), null, '正上方俯视:水平方向是 0,别算出 NaN 让牌子消失')
+  assert.deepEqual(flatForward({ x: 1, y: 1.6, z: 0 }, { x: 0, y: 0, z: 0 }), { x: 1, z: 0 }, '玩家举着手机在高处，牌子也只转水平')
+  assert.equal(flatForward({ x: 0, y: 2, z: 0 }, { x: 0, y: 0, z: 0 }), null, '正上方俯视:水平方向是 0，别算出 NaN 让牌子消失')
 })
 
 test('编辑页配置:3D 模型只收 .glb;不开 AR 时模型跟着作废', () => {
@@ -381,7 +381,7 @@ test('编辑页配置:3D 模型只收 .glb;不开 AR 时模型跟着作废', () 
   ;({ cfg, model } = scanModel({ arMode: 'PLANE', modelUrl: 'https://cdn/x/cat.fbx' }))
   assert.equal(cfg.validate(model), '3D 模型只支持 .glb')
   ;({ cfg, model } = scanModel({ arMode: 'NONE', modelUrl: 'https://cdn/x/cat.glb' }))
-  assert.ok(!('modelUrl' in cfg.normalize(model).scan), '关了 AR 就没有三维空间放它,留着会被服务端拒')
+  assert.ok(!('modelUrl' in cfg.normalize(model).scan), '关了 AR 就没有三维空间放它，留着会被服务端拒')
   assert.equal(cfg.defaultConfig().scan.modelUrl, '')
 })
 
@@ -410,7 +410,7 @@ test('AR 组件:有模型放模型(自带动画、投影子),没模型放有厚�
   assert.equal((src.match(/node-id="reveal-body"/g) || []).length, 2, '平面与识别图各一个')
   assert.equal((src.match(/<xr-gltf node-id="reveal-model" model="reveal-model" anim-autoplay cast-shadow/g) || []).length, 2)
   assert.equal((src.match(/<xr-node wx:if="\{\{!modelUrl\}\}" node-id="reveal-face">/g) || []).length, 2)
-  assert.match(src, /node-id="reveal-board" geometry="cube"[^>]*cast-shadow/, '立牌要有厚度:一块薄板打底,图贴在正面')
+  assert.match(src, /node-id="reveal-board" geometry="cube"[^>]*cast-shadow/, '立牌要有厚度:一块薄板打底，图贴在正面')
   assert.match(src, /<xr-camera id="ar-camera"/)
   const js = read(AR + 'index.js')
   assert.match(js, /calcTotalBoundBox\(\)/)
@@ -440,20 +440,20 @@ test('宿主:AR 迟迟放不下 / 认不出,15 秒后自动回落屏幕叠加;�
   assert.match(js, /const AR_GIVE_UP_MS = 15000/)
   assert.match(js, /this\._arTimer = setTimeout\(\(\) => this\.onArGiveUp\(\), AR_GIVE_UP_MS\)/, '进 AR 就开始计时')
   const wxml = read(HOST + 'index.wxml')
-  assert.match(wxml, /bindtap="onArGiveUp"[^>]*aria-role="button"/, '玩家自己也能喊停,不用干等 15 秒')
-  assert.match(read(HOST + 'index.wxss'), /\.sc__ar-giveup\s*\{[^}]*pointer-events:\s*auto/, '文字层整体不吃点击,这一颗要单独放开')
+  assert.match(wxml, /bindtap="onArGiveUp"[^>]*aria-role="button"/, '玩家自己也能喊停，不用干等 15 秒')
+  assert.match(read(HOST + 'index.wxss'), /\.sc__ar-giveup\s*\{[^}]*pointer-events:\s*auto/, '文字层整体不吃点击，这一颗要单独放开')
   const component = load(HOST + 'index.js')
   const inst = instanceOf(component, { arLive: true, kindKey: '显形', overlayUrl: '/a.png', arMode: 'PLANE' })
   inst.onArGiveUp()
   assert.equal(inst._arFail, true)
-  assert.equal(inst.data.arLive, false, '回落到屏幕叠加:图和那句话照样出来,这一站照样过')
+  assert.equal(inst.data.arLive, false, '回落到屏幕叠加:图和那句话照样出来，这一站照样过')
 })
 
 test('宿主:放下 / 锁定之后就不再计时回落', () => {
   const component = load(HOST + 'index.js')
   for (const done of ['onArPlaced', 'onArTracked']) {
     const inst = instanceOf(component, { arLive: true, arMode: done === 'onArPlaced' ? 'PLANE' : 'MARKER' })
-    inst._arTimer = setTimeout(() => { throw new Error('计时器没清,放下之后还会被回落') }, 60000)
+    inst._arTimer = setTimeout(() => { throw new Error('计时器没清，放下之后还会被回落') }, 60000)
     inst[done]({ detail: { value: true } })
     assert.equal(inst._arTimer, null, done + ' 之后计时器要清掉')
   }
@@ -464,7 +464,7 @@ test('宿主:放下之后平面追踪丢了,说明条也不再冒出来', () => 
   const inst = instanceOf(component, { arLive: true, arMode: 'PLANE', arPill: '对着地面慢慢移动手机' })
   inst.onArPlaced()
   inst.onArFound({ detail: { value: false } })
-  assert.equal(inst.data.arPill, '', '放下之后画面让给东西,话交给气泡')
+  assert.equal(inst.data.arPill, '', '放下之后画面让给东西，话交给气泡')
 })
 
 test('识别图:减弱动效时锁定即落定,不走「长出来」', () => {
@@ -482,12 +482,12 @@ test('识别图:认到先不报 tracked,锁定成功才报;锁定失败不清说
   const component = load(AR + 'index.js')
   const inst = instanceOf(component, { mode: 'MARKER' })
   inst.handleTrackerSwitch({ detail: { value: true } })
-  assert.deepEqual(inst.events.filter((e) => e.name === 'tracked'), [], '还没锁上就说「认到了」,说明条先没了,画面却是空的')
+  assert.deepEqual(inst.events.filter((e) => e.name === 'tracked'), [], '还没锁上就说「认到了」,说明条先没了，画面却是空的')
   inst.scene = { getElementById: () => null, getNodeById: () => null }
   const prevWx = global.wx
   global.wx = { getXrFrameSystem: () => ({ Transform: 'Transform' }) }
   try { inst._lockMarker() } finally { global.wx = prevWx }
-  assert.equal(inst._lockPending, false, '锁定失败:放开,下次认到再试')
+  assert.equal(inst._lockPending, false, '锁定失败:放开，下次认到再试')
   assert.deepEqual(inst.events.filter((e) => e.name === 'tracked'), [])
 })
 
@@ -515,7 +515,7 @@ test('没配的显形图 / 识别图 / 3D 模型整键不送:空串会被服务�
   model.scan = Object.assign({}, model.scan, { enabled: true, kind: 'TEXT', reply: '到了' })
   const out = cfg.normalize(model).scan
   for (const key of ['overlayUrl', 'markerUrl', 'modelUrl', 'audioUrl', 'imageUrl']) {
-    assert.ok(!(key in out), key + ' 是空串却还在,文字档的扫码也会被服务端拒')
+    assert.ok(!(key in out), key + ' 是空串却还在，文字档的扫码也会被服务端拒')
   }
   assert.equal(cfg.validate(model), '')
 })

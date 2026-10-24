@@ -71,6 +71,3 @@
   </view>
 </cy-sheet>
 
-<!-- 删除的危险确认闸长在组件内部(2026-09-02 Q1=A 拍板):接入页只监听 bind:delete,
-     拿到事件时用户**已经**过完确认弹窗,页面不必也不应再自建一道闸。 -->
-<cy-danger-confirm id="pd-danger" bind:confirm="onDeleteConfirmed" />

@@ -43,6 +43,12 @@ public interface ClubEventOpsMapper {
     int cancelFutureActivityCas(@Param("activityId") Long activityId, @Param("now") java.util.Date now,
                                 @Param("username") String username);
     int cancelOccurrenceCas(@Param("id") Long id, @Param("expectedVersion") Integer expectedVersion);
+    /** O5b-7:ACTIVE → CLOSED 终态 CAS(同俱乐部、同版本);不动场次、报名、票与资金。 */
+    int closeSeriesCas(@Param("seriesId") Long seriesId,
+                       @Param("clubId") Long clubId,
+                       @Param("expectedVersion") Integer expectedVersion,
+                       @Param("username") String username,
+                       @Param("now") java.util.Date now);
     int updateSeriesScheduleCas(@Param("seriesId") Long seriesId,
                                 @Param("expectedVersion") Integer expectedVersion,
                                 @Param("recurrenceType") String recurrenceType,
@@ -58,6 +64,10 @@ public interface ClubEventOpsMapper {
     ClubEventCancellationStateVO selectOccurrenceCancellationState(
             @Param("activityId") Long activityId, @Param("clubId") Long clubId);
     int isActiveParticipant(@Param("clubId") Long clubId, @Param("memberId") Long memberId);
+    /** 新 OFFERED 准入；当前锁读，与维护晋升的活动条件一致，不用于旧 hold 释放。 */
+    Long selectPromotableActivityForUpdate(@Param("activityId") Long activityId,
+                                          @Param("clubId") Long clubId,
+                                          @Param("now") java.util.Date now);
     Long selectClubOwnerForUpdate(@Param("clubId") Long clubId);
     Long selectActiveClubMemberForUpdate(@Param("clubId") Long clubId,
                                          @Param("memberId") Long memberId);
@@ -96,6 +106,12 @@ public interface ClubEventOpsMapper {
     ClubWaitlistEntry selectWaitlistByRegistration(@Param("registrationId") Long registrationId);
     ClubWaitlistEntry selectWaitlistByRegistrationForUpdate(@Param("registrationId") Long registrationId);
     int convertClaimedByRegistration(@Param("registrationId") Long registrationId);
+    /** 维护页按原waitlist行身份推进，固定MAX排除扫描期新插入。kind 0过期/1已付/2终态/3晋级。 */
+    Long selectWaitlistMaintenanceMaxId();
+    java.util.List<java.util.Map<String, Object>> selectWaitlistMaintenancePage(
+            @Param("kind") int kind, @Param("now") java.util.Date now,
+            @Param("afterId") long afterId, @Param("maxId") long maxId, @Param("limit") int limit);
+
     java.util.List<Long> selectExpiredOfferedIds(@Param("now") java.util.Date now,
                                                   @Param("limit") int limit);
     int expireOfferedCas(@Param("id") Long id, @Param("expectedVersion") Integer expectedVersion,

@@ -115,7 +115,7 @@ test('登记业务拒绝与HTTP502都留在原页，释放submitting并可原位
 for (const [name, change] of [
   ['卸载', (h) => h.page.onUnload()],
   ['换账号', (h) => h.setMember(99)],
-  ['新身份回读', (h) => { h.page._accessRequestToken = 100 }],
+  ['新身份刷新', (h) => { h.page._accessRequestToken = 100 }],
   ['资格失效', (h) => { h.page.data.accessState = 'denied' }],
 ]) {
   test('登记迟到不能落活动：' + name, () => {

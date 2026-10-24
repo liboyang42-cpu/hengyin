@@ -27,7 +27,7 @@ const DOMAIN_RULES = [
   },
   {
     domain: 'merchant',
-    route: /^(?:pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-detail\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageA\/pages\/myproject\/|subpackageMember\/(?:coupon\/|couponInfo\/))/
+    route: /^(?:pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageA\/pages\/myproject\/|subpackageMember\/(?:coupon\/|couponInfo\/))/
   }
 ];
 

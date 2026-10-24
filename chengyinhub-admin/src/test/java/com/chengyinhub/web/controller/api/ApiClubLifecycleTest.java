@@ -72,6 +72,8 @@ class ApiClubLifecycleTest {
         ReflectionTestUtils.setField(controller, "clubMemberService", memberService);
         ReflectionTestUtils.setField(controller, "clubLifecycleCommandService", lifecycleService);
         ReflectionTestUtils.setField(controller, "capabilityService", capabilityService);
+        ReflectionTestUtils.setField(controller, "umsMemberService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IUmsMemberService.class));
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
     }
 
     private Club activeClub() {
@@ -308,6 +310,53 @@ class ApiClubLifecycleTest {
     }
 
     @Test
+    void welcomeNote_trimmedLengthCheckedScannedSavedAndReadBack() {
+        Club body = new Club();
+        body.setId(CLUB_ID);
+        body.setWelcomeNote("  欢迎！周六晚上一起夜行  ");
+        when(clubService.selectWelcomeNote(CLUB_ID)).thenReturn("欢迎！周六晚上一起夜行");
+
+        AjaxResult ok = controller.updateWelcomeNote(body);
+        assertEquals(200, ok.get("code"));
+        verify(clubService).updateWelcomeNote(CLUB_ID, MEMBER_ID, "欢迎！周六晚上一起夜行");
+        assertEquals("欢迎！周六晚上一起夜行", ((Map<?, ?>) ok.get("data")).get("welcomeNote"), "回的是回读到的值");
+
+        Club tooLong = new Club();
+        tooLong.setId(CLUB_ID);
+        tooLong.setWelcomeNote("长".repeat(201));
+        assertEquals("欢迎语最多 200 字", controller.updateWelcomeNote(tooLong).get("msg"));
+
+        Club empty = new Club();
+        empty.setId(CLUB_ID);
+        empty.setWelcomeNote("   ");
+        assertEquals(200, controller.updateWelcomeNote(empty).get("code"), "清空欢迎语是合法操作");
+        verify(clubService).updateWelcomeNote(CLUB_ID, MEMBER_ID, "");
+    }
+
+    @Test
+    void welcomeNote_rejectedByContentSecurityIsNotSaved() {
+        com.chengyinhub.business.service.IWxContentSecurityService security =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        when(security.checkText(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn("内容含违规信息");
+        ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
+        Club body = new Club();
+        body.setId(CLUB_ID);
+        body.setWelcomeNote("违规内容");
+        assertEquals("内容含违规信息", controller.updateWelcomeNote(body).get("msg"));
+        verify(clubService, org.mockito.Mockito.never()).updateWelcomeNote(anyLong(), anyLong(), org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    void welcomeNote_nonOwnerErrorFromServiceIsReturned() {
+        org.mockito.Mockito.doThrow(new IllegalStateException("只有主理人可以修改"))
+                .when(clubService).updateWelcomeNote(CLUB_ID, MEMBER_ID, "你好");
+        Club body = new Club();
+        body.setId(CLUB_ID);
+        body.setWelcomeNote("你好");
+        assertEquals("只有主理人可以修改", controller.updateWelcomeNote(body).get("msg"));
+    }
+
+    @Test
     void openSettings_onlyOwnerAndTheResponseIsReadBackFromTheDatabase() {
         Club body = new Club();
         body.setId(CLUB_ID);
@@ -528,5 +577,20 @@ class ApiClubLifecycleTest {
         result.setAffectedRows(affectedRows);
         result.setMembershipAccessEnd(accessEnd);
         return result;
+    }
+
+    @Test
+    void clubChatOutsiderGetsForbiddenWithoutCreatingConversation() {
+        com.chengyinhub.business.service.IImService im = mock(com.chengyinhub.business.service.IImService.class);
+        ReflectionTestUtils.setField(controller, "imService", im);
+        ReflectionTestUtils.setField(controller, "clubParticipationGuard",
+                mock(com.chengyinhub.business.service.IClubParticipationGuard.class));
+        when(clubService.selectClubById(CLUB_ID)).thenReturn(activeClub());
+        Club body = new Club();
+        body.setId(CLUB_ID);
+        AjaxResult response = controller.chat(body);
+        assertEquals(403, response.get("code"));
+        assertEquals("加入俱乐部后才能进群聊", response.get("msg"));
+        verify(im, org.mockito.Mockito.never()).getOrCreateClubGroup(anyLong(), anyLong());
     }
 }

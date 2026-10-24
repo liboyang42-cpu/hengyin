@@ -14,6 +14,7 @@ function loadTopicPage() {
   const toasts = [];
   const navigations = [];
   const payments = [];
+  const subscriptions = [];
   let pageConfig = null;
 
   // wx 在方法调用时才查全局，所以它必须留到测试跑完；getApp/Page 只在 require 期间需要。
@@ -47,6 +48,7 @@ function loadTopicPage() {
       if (options.success) options.success({ confirm: modalControl.confirm });
     },
     requestPayment: options => { payments.push(options); },
+    requestSubscribeMessage: options => { subscriptions.push(options); },
     navigateTo: options => { navigations.push(options.url); },
     redirectTo: options => { navigations.push(options.url); },
     getSystemInfo: () => {},
@@ -67,7 +69,7 @@ function loadTopicPage() {
     setData(patch) { Object.assign(this.data, patch); }
   });
   vm.data = Object.assign({}, pageConfig.data);
-  return { vm, requests, toasts, navigations, payments, consents, consentControl, modals, modalControl };
+  return { vm, requests, toasts, navigations, payments, consents, consentControl, modals, modalControl, subscriptions };
 }
 
 // 确保每个 page 加载后 workflow 已初始化，否则 _createSelfPlayOrder 里的 workflow.submit 会报错
@@ -147,10 +149,12 @@ test('零元通行证仍直接进入游玩，付费单仍拉起微信支付', ()
   /* 2026-09-05:购买成功的落点从 toast 换成了 cy-result-sheet(_goSelfPlay 是三个
      调用点共用的漏斗,只改这一处)。被保护的事实不变 —— 零元单也要照常走「购买成功」
      这个落点,不能因为不用付款就悄悄跳过反馈。断言随之改钉面板。 */
-  assert.deepEqual(free.toasts, [], '不再额外弹 toast,结果由面板承担');
-  assert.equal(free.vm.data.resultSheet.kind, 'success');
-  assert.equal(free.vm.data.resultSheet.title, '购买成功', '零元单照常走购买成功落点');
-  assert.ok(free.vm.data.resultSheet.show, '面板必须真的弹出来');
+  /* 2026-10-22 业主:购买成功的落点再换成「通行证已到账」动效层(cy-pass-reveal),
+     买完先看到通行证,再由「放进票夹 / 开始游戏」决定去向;可选的商家营销同意行改在动效收尾时
+     走原结果面板。被保护的事实仍不变 —— 零元单同样要走这个成功落点,不能悄悄跳过反馈。 */
+  assert.deepEqual(free.toasts, [], '不再额外弹 toast,结果由到账层承担');
+  assert.ok(free.vm.data.reveal.show, '零元单照常走购买成功落点:到账层必须真的弹出来');
+  assert.equal(free.vm._revealRegId, 1002, '「开始游戏」要能带着这张票直接开局');
   assert.equal(free.payments.length, 0);
   assert.equal(free.requests.length, 1, '零元单不该再去取支付参数');
 });
@@ -260,7 +264,7 @@ test('自玩购买:不勾选单独同意不建单,只给内联提示', () => {
   assert.equal(requests.length, 0);
   assert.equal(consents.length, 0);
   assert.ok(vm.data.selfPlayConsentHint, '未勾选必须给可见提示');
-  assert.equal(vm.data.selfPlayConsentError, '', '未勾选是提示不是错误态,按钮也不得代勾');
+  assert.equal(vm.data.selfPlayConsentError, '', '未勾选是提示不是错误态，按钮也不得代勾');
   assert.equal(vm.data.selfPlayConsentChecked, false);
 });
 
@@ -303,4 +307,28 @@ test('已购态:/info-to-user 回 isSignUp=1 ⇒ is_join=1(不依赖 URL 参数)
   assert.equal(String(vm.data.is_join), '0');
   info.success({ code: '200', data: Object.assign({}, base, { isSignUp: 1 }) });
   assert.equal(String(vm.data.is_join), '1');
+});
+
+
+test('主题确认点击请求三种真实订阅模板，不等待订阅回包才记录同意建单', async () => {
+  const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=true;
+  h.vm.onSelfPlayConfirm();assert.equal(h.subscriptions.length,1);
+  const {TEMPLATES}=require('../../utils/subscribe');
+  assert.deepEqual(h.subscriptions[0].tmplIds,[TEMPLATES.signupSuccess,TEMPLATES.activityStart,TEMPLATES.refund]);
+  assert.equal(h.consents.length,1);await Promise.resolve();assert.equal(h.requests.length,1,'订阅不回包也不阻塞建单');
+});
+test('主题订阅拒绝或API失败不阻塞建单；未勾同意不请求订阅', async () => {
+  for(const failed of [false,true]) {
+    const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=true;
+    h.vm.onSelfPlayConfirm();if(failed)h.subscriptions[0].fail({});else h.subscriptions[0].success({});
+    await Promise.resolve();assert.equal(h.requests.length,1);
+  }
+  const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=false;
+  h.vm.onSelfPlayConfirm();assert.equal(h.subscriptions.length,0);assert.equal(h.requests.length,0);
+});
+
+
+test('已有同意的连续确认也只请求一次订阅与建单', () => {
+  const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=true;h.vm._hostShareConsentReady=true;
+  h.vm.onSelfPlayConfirm();h.vm.onSelfPlayConfirm();assert.equal(h.subscriptions.length,1);assert.equal(h.requests.length,1);
 });

@@ -1,10 +1,12 @@
-const modal = require('../../../../utils/modal.js');
+const modal = require('../../../../utils/modal.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const cyLoading = require('../../../../utils/loading.js');
 const toast = require('../../../../utils/toast.js');
 const app = getApp();
 const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = require('../../../../utils/order-status.js');
-const { isFreeOrder } = require('../../../../utils/order-actual-pay.js');
+const { isFreeOrder, resolveActualPaidAmount } = require('../../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
+const subscribe = require('../../../../utils/subscribe.js');
+const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
 
 /* 稿 578:2312 的状态药丸:退款处理中是琥珀(#FF9E14)。其余档位按语义配到既有状态色,
    不为这一页新起一套色 —— 药丸在本仓是 cy-badge 的语言,这里只是把订单态映射过去。 */
@@ -165,16 +167,10 @@ function toCompletionView(vo) {
   return view
 }
 
-function resolvePrimaryCta(orderStateKey, verificationStatus) {
+function resolvePrimaryCta(orderStateKey, ticketWalletAvailable) {
   if (orderStateKey === 'pending_payment') return 'pay';
+  if (!ticketWalletAvailable) return '';
   if (orderStateKey === 'not_started' || orderStateKey === 'in_progress') return 'ticket';
-  if (orderStateKey === 'completed' || orderStateKey === 'cancelled'
-      || orderStateKey === 'refunding' || orderStateKey === 'refunded'
-      || orderStateKey === 'non_refundable' || orderStateKey === 'manual_refund') {
-    return '';
-  }
-  // 报名成功但状态机未覆盖的兜底：未核销仍可进票夹
-  if (Number(verificationStatus) !== 1) return 'ticket';
   return '';
 }
 
@@ -294,6 +290,7 @@ Component({
       // loading / ready / failed_business / failed_network —— 四态可观察,失败态不渲染订单主体
       loadState: 'loading',
       loadErrorText: '',
+      loadFailureVisible: false,
       // 批5 探店日完局面;非探店日单恒 show:false
       completion: emptyCompletion()
     },
@@ -349,6 +346,7 @@ Component({
         consentError: '',
         loadState: valid ? 'loading' : 'failed_business',
         loadErrorText: valid ? '' : '订单参数缺失或无效',
+        loadFailureVisible: !valid,
       })
       if (valid) this.getData(id)
     },
@@ -461,7 +459,7 @@ Component({
     startOrderTeam() {
       const info = this.data.info || {}
       const activity = info.cmsActivity || {}
-      if (Number(info.ownerType) !== 2 || Number(activity.teamMode) !== 2 || !info.ownerId) return
+      if (!info.teamOpen || !info.ownerId) return
       /* 2026-09-02:原来这里弹 wx.showActionSheet(系统弹层,设计体系外)。 */
       const sheet = teamUp.memberSheet(activity.teamMaxMembers)
       this._teamSheetOptions = sheet.options   // 仅供回调查表,不渲染 ⇒ 不进 data(死数据字段门禁)
@@ -478,7 +476,7 @@ Component({
       const members = (that._teamSheetOptions || [])[e.detail.index]
       if (!members || !info.ownerId) return
       that.setData({ teamSheetShow: false })
-      teamUp.createActivityTeam(app, info.ownerId, members, that.data.teamInviteOnly ? 1 : null, {
+      teamUp.createActivityTeam(app, info.ownerId, members, that.data.teamInviteOnly || info.teamStarted ? 1 : null, {
         success(teamId) { that._leave('/pages/team/detail/index?teamId=' + teamId) },
         fail(message) { toast(message) }
       })
@@ -531,6 +529,8 @@ Component({
           if (!finishCancelPrompt() || !isCurrent()) return;
           if (!res.confirm) return;
           if (that.data.cancelling) return;
+          // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
+          if (paid && !info.isFreeOrder) subscribe.request(['refund', 'refundRejected']);
           that.setData({ cancelling: true });
           cyLoading.show('处理中...');
           // 请求拥有的 loading/锁须释放；账号校验只限制业务回执更新。
@@ -555,8 +555,14 @@ Component({
                 toast(app.getRequestErrorMessage(resp, '处理失败，请联系客服'));
               }
             },
-            fail(resp) {
+            fail(resp, statusCode) {
               if (!isCurrent()) return;
+              if (isUnknownHttpStatus(statusCode)) {
+                toast('取消结果暂未确认，正在刷新订单');
+                that.triggerEvent('orderchanged', { id: info.id });
+                that.getData(that._orderId);
+                return;
+              }
               toast(app.getRequestErrorMessage(resp, '网络错误，请联系客服'));
             },
             complete: finishCancellation
@@ -815,12 +821,13 @@ Component({
       };
       // 已有订单在屏时(onShow 后台刷新)不回退到 loading,避免闪白;失败也不顶掉已渲染内容
       const hasRendered = that.data.loadState === 'ready';
-      if (!hasRendered) that.setData({ loadState: 'loading', loadErrorText: '' });
+      if (!hasRendered) that.setData({ loadState: 'loading', loadErrorText: '', loadFailureVisible: false });
       // 首屏失败由结果面板说原因,不再另弹同义 toast;订单已在屏时(后台刷新失败)没有面板,只剩 toast 这一个信号。
       const markFailed = function (state, text) {
         if (!isCurrentRequest()) return;
-        if (hasRendered || that.data.loadState === 'ready') { toast(text); return; }
-        that.setData({ loadState: state, loadErrorText: text });
+        if (hasRendered || that.data.loadState === 'ready') { return; } // 后台刷新失败不提示,保留已显示内容
+        that.setData({ loadState: state, loadErrorText: text,
+          loadFailureVisible: state === 'failed_business' && /无权|权限|登录|参数/.test(text) });
       };
       app.sendRequest({
         hideLoading: true,
@@ -838,6 +845,7 @@ Component({
             && !Array.isArray(res.data);
           if (res.code == '200' && isOrderObject) {
             const info = res.data;
+            info.actualPaidAmount = resolveActualPaidAmount(info);
             info.isFreeOrder = isFreeOrder(info);
             if (info.isFreeOrder) info.paymentTypeLabel = '无需支付（免费报名）';
             const summary = summarizeOrderState(info);
@@ -845,9 +853,8 @@ Component({
             info.statusText = summary.text;
             info.refundDisplayText = summary.refundText;
             info.refundDeadlineText = formatRefundDeadline(info.refundInfo && info.refundInfo.deadline);
-            // 退款态说的是退款事实;refundInfo.reason 是「可不可退」的政策文案(含「预计1-3个工作日」),
-            // 退款已发生后再把它放在前面就是一句没人兑现的承诺。
-            if (info.orderStateKey === 'refunding' || info.orderStateKey === 'refunded') {
+            // 终态展示退款或关闭事实，不沿用退款资格文案。
+            if (['refunding', 'refunded', 'cancelled', 'expired'].includes(info.orderStateKey)) {
               info.refundDeadlineDisplay = '';
             } else if (!info.refundDeadlineDisplay) {
               if (info.refundInfo && info.refundInfo.refundable && info.refundDeadlineText) {
@@ -931,12 +938,25 @@ Component({
               }
             }
 
+            // 建队入口:A(报名时组队)/B(报名后邀请)都落在订单详情 —— 报名页那份已随「买完直接跳」删掉
+            // (2026-09-06),只认 B 会让 A 模式主题没有任何建队入口。
+            // 场次开始后后端仍允许建队(队员中途重组),但「附近的队伍」只列开始前的队伍 ⇒ 开始后只建仅邀请队伍。
+            const teamModeValue = info.cmsActivity ? Number(info.cmsActivity.teamMode) : 0;
+            const startRaw = info.cmsActivity && info.cmsActivity.startDate ? String(info.cmsActivity.startDate) : '';
+            const startMs = startRaw ? Date.parse(startRaw.indexOf('T') > 0 ? startRaw : startRaw.replace(/-/g, '/')) : NaN;
+            info.teamOpen = Number(info.ownerType) === 2 && Number(info.registrationStatus) === 2
+              && (teamModeValue === 1 || teamModeValue === 2);
+            info.teamStarted = info.teamOpen && !(startMs > Date.now());
+
             const qty = Number(info.orderNum) > 0 ? Number(info.orderNum) : 1;
             const pointAmt = Number(info.pointPaymentAmount);
             const wechatAmt = Number(info.wechatPaymentAmount);
-            const primaryCta = resolvePrimaryCta(info.orderStateKey, info.verificationStatus);
+            // 票夹的 owner_type=1/2 列表由后端固定过滤 registration_status=2。
+            // 详情入口必须与它同口径，否则待支付/取消/退款/过期订单带 focusId 过去也永远找不到。
+            const ticketWalletAvailable = Number(info.registrationStatus) === 2;
+            const primaryCta = resolvePrimaryCta(info.orderStateKey, ticketWalletAvailable);
 
-            that.setData({
+            pageMotion.enter(that, 'pmPage'); pageMotion.countIn(that, 'odK'); that.setData({
               /* 稿 578:2298(D07)「大金额与状态先行」——头图上第一眼是实付金额,
                  然后才是路线名、场次时间、一颗状态药丸。
                  ⚠️ 时间这一行头图与「订单明细」里的「日期与时间」是同一个事实,
@@ -967,9 +987,8 @@ Component({
               orderTimeline: buildOrderTimeline(info),
               expiresAtText: toDisplayTime(info.expiresAt),
               primaryCta: primaryCta,
-              showSecondaryTicket: primaryCta !== 'ticket',
-              loadState: 'ready',
-              loadErrorText: ''
+              showSecondaryTicket: ticketWalletAvailable && primaryCta !== 'ticket',
+              loadState: 'ready', loadErrorText: '', loadFailureVisible: false
             });
             that.loadCompletion(info);
             that.loadMarketingConsent(info);

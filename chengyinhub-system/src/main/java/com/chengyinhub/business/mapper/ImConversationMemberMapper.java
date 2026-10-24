@@ -14,6 +14,12 @@ public interface ImConversationMemberMapper
     public ImConversationMember selectByConvAndMember(@Param("conversationId") Long conversationId,
                                                       @Param("memberId") Long memberId);
 
+    ImConversationMember selectByConvAndMemberForUpdate(@Param("conversationId") Long conversationId,
+                                                       @Param("memberId") Long memberId);
+
+    int addUnreadForActiveMember(@Param("conversationId") Long conversationId,
+                                 @Param("memberId") Long memberId, @Param("delta") int delta);
+
     /** 我的会话(按会话最后消息时间倒序) */
     public List<ImConversationMember> selectMyConversations(@Param("memberId") Long memberId);
 
@@ -30,6 +36,12 @@ public interface ImConversationMemberMapper
     /** 已读:清零未读并更新已读位 */
     public int markRead(@Param("conversationId") Long conversationId,
                         @Param("memberId") Long memberId, @Param("lastReadMsgId") Long lastReadMsgId);
+
+    int markReadVisible(@Param("conversationId") Long conversationId, @Param("memberId") Long memberId,
+                        @Param("lastReadMsgId") Long lastReadMsgId, @Param("visibleOrderAt") String visibleOrderAt);
+
+    /** 消息被屏蔽(delta=-1)/恢复(delta=+1)时修正仍把它计在未读里的读者;返回影响行数。 */
+    int adjustUnreadForModeratedMessage(@Param("messageId") Long messageId, @Param("delta") int delta);
 
     /** 未读总数 */
     public Integer sumUnread(@Param("memberId") Long memberId);

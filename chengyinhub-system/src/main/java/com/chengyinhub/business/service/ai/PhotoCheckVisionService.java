@@ -35,6 +35,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class PhotoCheckVisionService
 {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.ConsentGuard consentGuard;
+    @Autowired private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
     private static final Logger log = LoggerFactory.getLogger(PhotoCheckVisionService.class);
 
     /** 给玩家看的理由要短:落 state、进投影、还要下发小程序 */
@@ -73,11 +77,13 @@ public class PhotoCheckVisionService
 
     public PhotoCheckVisionResult review(Long memberId, String imageUrl, String requirement)
     {
+        consentGuard.requireCurrentAgreement(memberId, "photo_model_processing", "object_photo");
         String url = imageUrl == null ? "" : imageUrl.trim();
         if (url.isEmpty())
         {
             return PhotoCheckVisionResult.degraded("照片地址为空");
         }
+        url = mediaReferences.processingUrl(url, memberId, "IMAGE");
         // 供应商的图片限制在发请求前就拒掉,不要发出去等它报错;超限也算降级。
         // 这类拒绝是玩家输入问题,不占额度、不打告警(告警留给我们自己的链路故障)。
         // photoCheck 固定发 base64 data URL(不能发 URL,原因见 VisionImageEncoder 类注释)。
@@ -87,7 +93,8 @@ public class PhotoCheckVisionService
             log.info("[PhotoCheckVision] image-rejected memberId={} reason={}", memberId, encoded.getRejectReason());
             return PhotoCheckVisionResult.degraded(encoded.getRejectReason());
         }
-        if (!chargeQuota(memberId))
+        String reservation = chargeQuota(memberId);
+        if (reservation == null)
         {
             return PhotoCheckVisionResult.degraded("今天的照片审核次数用完了");
         }
@@ -99,18 +106,20 @@ public class PhotoCheckVisionService
             {
                 throw new IllegalStateException("视觉审核通道未装配");
             }
+            if(aiGatewayService!=null) aiGatewayService.stageQuota(memberId,BIZ_TYPE,reservation,"MODEL_STARTED");
             answer = visionClient.chatVision(SYSTEM_PROMPT, encoded.getDataUrl(), buildUserPrompt(requirement));
         }
         catch (Exception e)
         {
             // 没走到模型(未配置 key / 未启用)或调用失败(超时 / 限流 / HTTP 错):
             // 用户没拿到结论,按网关口径退还这一次,再按降级处理。
-            refundQuota(memberId);
+            refundQuota(memberId, reservation);
             String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
             alarm("拍照视觉审核调用失败", "memberId=" + memberId + " reason=" + truncate(reason, 200));
             return PhotoCheckVisionResult.degraded("照片暂时无法审核(" + truncate(reason, MAX_REASON_LENGTH) + ")");
         }
 
+        if(aiGatewayService!=null) aiGatewayService.retainQuota(memberId,BIZ_TYPE,reservation,"PHOTO_RESULT");
         PhotoCheckVisionResult parsed = parse(answer);
         if (parsed == null)
         {
@@ -130,42 +139,41 @@ public class PhotoCheckVisionService
     /**
      * 抢一次每日额度。超限不是错误,是降级原因之一 —— 玩家侧绝不因为额度耗尽被硬拦。
      *
-     * @return true=可以继续调模型;false=超限(已按降级口径返回)
+     * @return 凭证=已计费；空串=原基础服务故障降级；null=真实超限
      */
-    private boolean chargeQuota(Long memberId)
+    private String chargeQuota(Long memberId)
     {
         if (aiGatewayService == null || memberId == null)
         {
-            return true;
+            return "";
         }
         try
         {
-            aiGatewayService.consumeQuota(memberId, BIZ_TYPE);
-            return true;
+            return aiGatewayService.consumeQuota(memberId, BIZ_TYPE);
         }
         catch (AiServiceException overLimit)
         {
             log.info("[PhotoCheckVision] quota-exhausted memberId={}", memberId);
-            return false;
+            return null;
         }
         catch (RuntimeException quotaBroken)
         {
             // 额度层自身故障(Redis 抖动等)不该把玩家拦死:放行去调模型,
             // 与 remainingQuota 读不到时报满额的 fail-open 口径一致。
             log.warn("[PhotoCheckVision] quota-charge-failed memberId={}", memberId, quotaBroken);
-            return true;
+            return "";
         }
     }
 
-    private void refundQuota(Long memberId)
+    private void refundQuota(Long memberId, String reservation)
     {
-        if (aiGatewayService == null || memberId == null)
+        if (aiGatewayService == null || memberId == null || reservation == null || reservation.isEmpty())
         {
             return;
         }
         try
         {
-            aiGatewayService.refundQuota(memberId, BIZ_TYPE);
+            aiGatewayService.refundQuota(memberId, BIZ_TYPE, reservation);
         }
         catch (Exception e)
         {

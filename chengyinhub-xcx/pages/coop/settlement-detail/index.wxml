@@ -15,7 +15,7 @@
 
   <block wx:if="{{detail}}">
     <cy-progress-status class="refresh-state" wx:if="{{loadState === 'refreshing'}}"
-      title="正在更新结算详情" sub="现有详情仍可查看" />
+      title="正在更新结算详情" />
     <cy-inline-error class="refresh-state" wx:elif="{{loadState === 'stale-error'}}"
       kind="{{errorKind}}" title="结算详情没有更新" sub="{{errorText}}"
       action="重试" bind:action="retryLoad" />
@@ -27,11 +27,11 @@
     <cy-skeleton type="card" count="{{2}}" />
   </block>
   <cy-empty class="state-slot" wx:elif="{{loadState === 'missing-param'}}" kind="missing-param"
-    size="lg" fill title="缺少结算记录标识" sub="请返回结算列表重新进入"
+    size="lg" fill title="缺少结算记录信息" sub="请返回重新进入"
     cta="返回上一页" bind:cta="onNavBack" />
   <cy-empty class="state-slot" wx:elif="{{loadState === 'missing-record'}}" kind="empty"
-    size="lg" fill title="结算记录不可见" sub="这条记录可能已撤回或不属于当前账号"
+    size="lg" fill title="结算记录不可见"
     cta="返回结算列表" bind:cta="onNavBack" />
-  <cy-error class="state-slot cy-fade-in" wx:else size="lg" fill
-    title="结算详情没加载出来" sub="{{errorText}}" auto-back custom-back bind:back="onNavBack" retry="重试" bind:retry="retryLoad" />
+  <cy-error load-failure class="state-slot cy-fade-in" wx:else size="lg" fill
+    title="结算详情加载失败" sub="{{errorText}}" auto-back custom-back bind:back="onNavBack" retry="重试" bind:retry="retryLoad" />
 </view>

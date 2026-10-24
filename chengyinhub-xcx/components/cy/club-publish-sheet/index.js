@@ -8,19 +8,19 @@ const OPTIONS = [
     key: 'city',
     icon: 'flag',
     title: '城市定向',
-    desc: '需设置具体的集合时间与地点,适合强组织的团体活动。',
+    desc: '需设置具体的集合时间与地点，适合强组织的团体活动。',
   },
   {
     key: 'explore',
     icon: 'tab-explore',
     title: '自由探索',
-    desc: '只需设置有效期,用户在规定时间内自由前往体验。',
+    desc: '只需设置有效期，用户在规定时间内自由前往体验。',
   },
   {
     key: 'event',
     icon: 'calendar',
     title: '活动',
-    desc: '一次性的线下聚会:定时间、地点与票种,不含路线与节点。',
+    desc: '一次性的线下聚会:定时间、地点与票种，不含路线与节点。',
   },
 ];
 

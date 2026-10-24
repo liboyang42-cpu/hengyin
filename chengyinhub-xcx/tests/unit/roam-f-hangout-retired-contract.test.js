@@ -61,5 +61,5 @@ test('hud 槽位表里也不再有 hangoutNear(槽名残留 = 永远不出的幽
 
 test('删卡不删入口:漫游首屏「附近的队伍」入口仍在(附近的队伍走它,不靠死卡兜)', () => {
   assert.match(JS, /nav: '\/subpackageRoam\/nearby\/index'/, '附近的队伍入口卡不见了');
-  assert.match(JS, /title: '附近的队伍'/, '入口卡文案不是附近的队伍');
+  assert.match(JS, /title: '打开地图'/, '寻找组队入口必须保留');
 });

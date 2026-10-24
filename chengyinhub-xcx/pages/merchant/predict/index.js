@@ -7,6 +7,7 @@
 //   · **服务端说了算**。结算成功与否只认接口回执,不拿本地状态冒充成功。
 
 const app = getApp();
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const cyToast = require('../../../utils/toast.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
@@ -22,7 +23,7 @@ function shapeRound(row) {
     rid: String((row && row.nodeId) || '') + ':' + String((row && row.playDay) || ''),
     nodeId: (row && row.nodeId) || 0,
     playDay: (row && row.playDay) || '',
-    nodeName: (row && row.nodeName) || '未命名点位',
+    nodeName: (row && row.nodeName) || '未命名节点',
     question: (row && row.question) || '',
     options: options,
     betCount: Number((row && row.betCount) || 0),
@@ -38,6 +39,7 @@ function shapeRound(row) {
 
 Page({
   data: {
+    accessErrorIsDenied: false,
     statusBarHeight: 20,
     navBarHeight: 44,
     pageState: 'loading',
@@ -58,9 +60,16 @@ Page({
     });
     this.loadAccess();
   },
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    this._hidden = false;
+    merchantTheme.merchantPageShow();
+    if (this._readSessionChanged || this._accessOwner !== undefined && this._accessOwner !== memberId(app)) {
+      this._readSessionChanged = false;
+      this._access = inactiveAccess(); this.setData({ items: [], openId: '', pickedKey: '' }); this.loadAccess();
+    }
+  },
+  onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
+  onUnload() { this._unloaded = true; this._accessEpoch = (this._accessEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
 
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
@@ -69,7 +78,37 @@ Page({
 
   _shapeRound: shapeRound,      // 纯算法出口,供单测
 
+  onLogin() { return retryLogin(this, app, this.loadAccess); },
+  _readError(res, fallback, statusCode) {
+    const status = failureStatus(res, statusCode);
+    const state = status === 401 ? 'login' : status === 403 ? 'no-permission' : 'error';
+    if (status === 401 || status === 403) {
+      this._accessEpoch = (this._accessEpoch || 0) + 1;
+      this._access = inactiveAccess(); this.setData({ items: [] });
+    }
+    this.setData({ pageState: state, accessErrorIsDenied: [400, 422].includes(status), errorMessage: res && res.msg || fallback });
+  },
+
+  _recoverAccess(res, status, epoch) {
+    if (this._unloaded || epoch !== this._accessEpoch) return false;
+    return recoverReadSession(this, app, res, function (anonymous) {
+      this._accessEpoch++; this._accessOwner = undefined;
+      this._access = inactiveAccess(); this.setData({ items: [], openId: '', pickedKey: '', pageState: anonymous ? 'login' : 'loading', errorMessage: '' });
+    }, this.loadAccess, status);
+  },
+
   loadAccess() {
+    const owner = memberId(app);
+    const token = (this._accessEpoch || 0) + 1;
+    this._accessEpoch = token;
+    this._accessOwner = owner;
+    this._access = inactiveAccess();
+    if (!owner) {
+      this.setData({ pageState: 'login', errorMessage: '' });
+      waitForInitialSession(this, app, this.loadAccess);
+      return;
+    }
+    const current = () => token === this._accessEpoch && owner === memberId(app) && !this._unloaded;
     this.setData({ pageState: 'loading', errorMessage: '' });
     app.sendRequest({
       hideLoading: true,
@@ -77,11 +116,13 @@ Page({
       url: '/api/merchant/access/me',
       method: 'POST',
       success: (res) => {
+        if (!current()) return;
         if (!successObject(res)) {
-          this.setData({ pageState: 'error', errorMessage: errorText(res, '经营身份加载失败') });
+          this._readError(res, '经营身份加载失败');
           return;
         }
         const access = normalizeMerchantAccess(res.data);
+        if (access.invalid) { this._readError(res, '经营身份资料不完整'); return; }
         this._access = access;
         // 结算会发券,后端要的是项目管理权限 —— 前端这一闸只是别让人白跑一趟
         if (!access.active || !access.canManageProjects) {
@@ -90,7 +131,8 @@ Page({
         }
         this.loadInbox();
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: (res, status) => { if (!this._recoverAccess(res, status, token) && current()) this._readError(res, '网络异常，请重试', status); },
+      successStatusAbnormal: (res, status) => { if (!this._recoverAccess(res, status, token) && current()) this._readError(res, '经营身份加载失败', status); },
     });
   },
 
@@ -100,6 +142,9 @@ Page({
   },
 
   loadInbox() {
+    const owner = memberId(app), epoch = this._accessEpoch;
+    if (!owner) { this._readError({ code: 401 }, '请登录后查看'); return; }
+    const current = () => owner === memberId(app) && epoch === this._accessEpoch && !this._unloaded;
     this.setData({ pageState: 'loading', errorMessage: '' });
     app.sendRequest({
       hideLoading: true,
@@ -107,8 +152,9 @@ Page({
       url: '/api/merchant/predict/inbox',
       method: 'POST',
       success: (res) => {
+        if (!current()) return;
         if (!successObject(res)) {
-          this.setData({ pageState: 'error', errorMessage: errorText(res, '待答列表加载失败') });
+          this._readError(res, '待答列表加载失败');
           return;
         }
         const items = (res.data || []).map(shapeRound);
@@ -118,7 +164,8 @@ Page({
           pageState: items.length ? 'ready' : 'empty',
         });
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: (res, status) => { if (!this._recoverAccess(res, status, epoch) && current()) this._readError(res, '网络异常，请重试', status); },
+      successStatusAbnormal: (res, status) => { if (!this._recoverAccess(res, status, epoch) && current()) this._readError(res, '待答列表加载失败', status); },
     });
   },
 
@@ -142,7 +189,7 @@ Page({
         show: true, rid: rid, key: this.data.pickedKey, label: picked.label || '',
         /* 把后果写全:结算是一次性的,而且会按规则发券 —— 这两件事
            点下去之后都撤不回来,不能等玩家来问才发现。 */
-        content: '押中的人会按你配的规则拿到奖励。这一轮只能公布一次,公布后不能改。',
+        content: '押中的人会按你配的规则拿到奖励。这一轮只能公布一次，公布后不能改。',
       },
     });
   },
@@ -182,7 +229,7 @@ Page({
       },
       fail: () => {
         this.setData({ submitting: false, 'confirm.show': false });
-        cyToast('网络连接失败，请稍后重试');
+        cyToast('网络异常，请重试');
       },
     });
   },

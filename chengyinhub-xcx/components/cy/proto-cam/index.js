@@ -41,7 +41,7 @@ Component({
       });
     },
     onCamError() {
-      this.setData({ camReady: false, camErr: '相机打不开，去设置里检查权限' });
+      this.setData({ camReady: false, camErr: '相机无法打开，去设置里检查权限' });
     },
     onCamFull() { this.setData({ camFull: !this.data.camFull }); },
     onCamFlip() { this.setData({ camFront: !this.data.camFront }); },

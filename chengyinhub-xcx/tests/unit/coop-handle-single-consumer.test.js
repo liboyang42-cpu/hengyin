@@ -120,7 +120,7 @@ test('/api/coop/handle 的消费方 = 协作邀请页 + 协作详情,各自服�
   assert.deepEqual(
     consumers(),
     CLUB_SURFACES.slice().sort(),
-    '消费方集合变了:收发件箱(coop/list)与协作详情(coop/invite-detail)之外再多一个,要先说清它服务的是哪个角色'
+    '消费方集合变了:收发件箱(coop/list)与协作详情(coop/invite-detail)之外再多一个，要先说清它服务的是哪个角色'
   );
 });
 
@@ -138,8 +138,8 @@ test('收发件箱与详情都承载 接受1 / 拒绝2(受邀方)与 取消3(发
   }
 });
 
-test('合作中心不再处理邀约,只以铃铛进协作邀请页', () => {
+test('合作中心不再处理邀约,只以铃铛进消息页(收件箱/发件箱)', () => {
   const center = fs.readFileSync(path.join(ROOT, 'pages/merchant/coop-center/index.js'), 'utf8');
   assert.doesNotMatch(center, /\/api\/coop\/handle/);
-  assert.match(center, /url: '\/pages\/coop\/list\/index'/);
+  assert.match(center, /url: '\/subpackageB\/pages\/im\/list\/index'/); // 2026-10-22 owner:铃铛进收件箱/发件箱
 });

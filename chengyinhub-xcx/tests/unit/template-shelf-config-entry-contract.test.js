@@ -94,6 +94,16 @@ test('游戏模板点「配置」直接进节点配置页，不再绕详情页�
   assert.deepEqual(h.navigations, ['/pages/publish/temp/index?id=307']);
 });
 
+test('商家货架查看与配置游戏都保留显式商家作用域', () => {
+  const h = loadPage({ operationScope: 'MERCHANT', canManageMerchantProjects: true });
+  h.page.jumpDetail(fire({ _kind: 'game', id: 62 }));
+  h.page.goGameConfig(fire({ _kind: 'game', id: 62 }));
+  assert.deepEqual(h.navigations, [
+    '/pages/templatedetail/templatedetail?id=62&operationScope=MERCHANT',
+    '/pages/publish/temp/index?id=62&scope=MERCHANT',
+  ]);
+});
+
 test('实验预览的游戏模板不许进配置页 —— 它还没落库，配了也存不进去', () => {
   const h = loadPage();
   h.page.primaryAction(fire({ _kind: 'game', id: 'dev-1', _title: '预览', previewOnly: true }));
@@ -135,7 +145,7 @@ test('B-05:主题「配置」在途时连点不重复复制草稿,完成后恢�
 test('B-05:主题「配置」失败后也要解锁,不能把入口永久焊死', () => {
   const h = loadPage({}, { deferTemplateUse: true });
   h.page.goTopicConfig(fire({ _kind: 'topic', id: 21, _title: '风味巡游' }));
-  h.requests[0].fail({ msg: '网络错误' });
+  h.requests[0].fail({ msg: '网络异常' });
   h.page.goTopicConfig(fire({ _kind: 'topic', id: 21, _title: '风味巡游' }));
   assert.equal(h.requests.length, 2, '失败必须放行下一次点击');
 });

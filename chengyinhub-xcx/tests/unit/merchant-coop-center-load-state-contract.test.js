@@ -57,12 +57,12 @@ test('路线刷新单飞，失败时保留已有卡片并暴露可重试错误',
   assert.equal(requests.length, 2, '上一轮结束后应允许刷新');
   assert.equal(page.data.routesLoading, true);
   assert.equal(page.data.routes.length, 1, '刷新中不能先清空已有路线');
-  requests[1].fail({ msg: '网络开小差' });
+  requests[1].fail({ msg: '网络异常，请重试' });
 
   assert.equal(page.data.routesLoading, false);
   assert.equal(page.data.routes.length, 1, '刷新失败不能把已有路线伪装成空态');
   assert.equal(page.data.routes[0].title, '夜游苏河');
-  assert.match(page.data.routesError, /网络开小差/);
+  assert.match(page.data.routesError, /网络异常/);
 });
 
 test('官方活动刷新单飞，失败时保留已有活动', () => {
@@ -87,7 +87,7 @@ function assertProgressiveStates(source) {
   assert.match(source, /routesLoading && !routes\.length/, '路线首载应显示骨架');
   assert.match(source, /routesLoading && routes\.length/, '路线刷新中应保留内容并显示进度');
   assert.match(source, /routesError && !routes\.length[^>]*bind:retry="loadRoutes"/, '路线首载失败应显示可重试的整块错误');
-  assert.doesNotMatch(source, /<cy-inline-error[^>]*routesError && routes\.length/, '路线刷新失败静默降级,不挂局部可重试错误');
+  assert.doesNotMatch(source, /<cy-inline-error[^>]*routesError && routes\.length/, '路线刷新失败静默降级，不挂局部可重试错误');
   assert.match(source, /eventsLoading && !events\.length/, '官方活动首载应显示骨架');
   assert.match(source, /eventsLoading && events\.length/, '官方活动刷新中应保留内容并显示进度');
   assert.match(source, /eventsError && !events\.length[^>]*bind:retry="loadEvents"/, '官方活动首载失败应显示可重试的整块错误');

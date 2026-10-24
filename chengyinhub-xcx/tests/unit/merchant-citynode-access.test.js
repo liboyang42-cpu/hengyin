@@ -52,6 +52,10 @@ function mountCityNodePage() {
         if (request.includes('withdraw-cs')) return { showWithdrawCsPopup() {} };
         // 发布者实名:场景表单在 data 里就要读它的两句文案,用真模块而不是桩
         if (request.includes('publisher-identity')) return require('../../utils/publisher-identity.js');
+        if (request.includes('code-text')) return require('../../pages/merchant/utils/code-text.js');
+        // 据点核销与 #424 共用核销写闸(PRIVATE-GROUP-nucleation-original-request),给真实现
+        if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
+        if (request.includes('citynode-redeem-outcome')) return require('../../utils/citynode-redeem-outcome.js');
         throw new Error('unexpected require: ' + request);
       },
       wx,
@@ -78,6 +82,7 @@ function mountCityNodeCreatePage() {
   const toasts = [];
   const app = {
     globalData: { navBarHeight: 44 },
+    getUserID: () => 7,
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
     sendRequest(request) { requests.push(request); },
   };
@@ -95,6 +100,7 @@ function mountCityNodeCreatePage() {
       getApp: () => app,
       getCurrentPages: () => [{}],
       require: request => {
+        if (request.includes('login-reload')) return require('../../utils/session/login-reload.js');
         if (request.includes('merchant-access-policy')) {
           return {
             inactiveAccess: () => ({ active: false, canManageProjects: false }),
@@ -106,6 +112,10 @@ function mountCityNodeCreatePage() {
         if (request.includes('validation-method-labels')) return require('../../utils/validation-method-labels.js');
         // 发布者实名:场景表单在 data 里就要读它的两句文案,用真模块而不是桩
         if (request.includes('publisher-identity')) return require('../../utils/publisher-identity.js');
+        if (request.includes('code-text')) return require('../../pages/merchant/utils/code-text.js');
+        // 据点核销与 #424 共用核销写闸(PRIVATE-GROUP-nucleation-original-request),给真实现
+        if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
+        if (request.includes('citynode-redeem-outcome')) return require('../../utils/citynode-redeem-outcome.js');
         throw new Error('unexpected require: ' + request);
       },
       wx,
@@ -233,6 +243,7 @@ function mountRouteContent() {
         }
         // 发布者实名:场景表单在 data 里就要读它的两句文案,用真模块而不是桩
         if (request.includes('publisher-identity')) return require('../../utils/publisher-identity.js');
+        if (request.includes('code-text')) return require('../../pages/merchant/utils/code-text.js');
         throw new Error('unexpected require: ' + request);
       },
       wx: { showToast() {}, showModal() {}, navigateTo() {} },

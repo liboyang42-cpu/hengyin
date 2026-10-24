@@ -31,7 +31,7 @@ const DECIDE = ['coinFlip', 'diceRoll', 'reaction', 'ballShake', 'quietHold', 'c
 test('★七个玩法:填 → serialize → parse 回来,内容一个字都不能丢', () => {
   const m = cfg.defaultConfig()
   setByPath(m, 'coinFlip.enabled', true)
-  setByPath(m, 'coinFlip.kicker', '抛一次,认结果')
+  setByPath(m, 'coinFlip.kicker', '抛一次，认结果')
   setByPath(m, 'coinFlip.heads.action', '这杯店家请')
   setByPath(m, 'coinFlip.tails.action', '这杯你请')
   setByPath(m, 'diceRoll.enabled', true)
@@ -68,9 +68,9 @@ test('★编辑页里每个段都真有一块表单 —— 段在册但页面没
   const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js')
   for (const key of DECIDE) {
     assert.ok(catalog.GAME_SECTIONS.includes(key),
-      key + ' 不在玩法目录里 —— 选择玩法那张单子上没有它,商家永远选不到')
+      key + ' 不在玩法目录里 —— 选择玩法那张单子上没有它，商家永远选不到')
     assert.ok(wxml.includes("gameSection === '" + key + "'"),
-      key + ' 在配置里有段,但编辑页没有那块面板 —— 商家配不了,而且不报错')
+      key + ' 在配置里有段，但编辑页没有那块面板 —— 商家配不了，而且不报错')
   }
 })
 
@@ -85,13 +85,13 @@ test('★表单里绑的字段必须真存在于默认配置 —— 拼错一个
     if (seg == null) { bad.push('段不存在: ' + m[1]); continue }
     if (!(m[2] in seg)) bad.push(m[1] + '.' + m[2] + ' 不在默认配置里')
   }
-  assert.deepEqual(bad, [], '这些绑定写错了,填进去存不回来:\n  ' + bad.join('\n  '))
+  assert.deepEqual(bad, [], '这些绑定写错了，填进去存不回来:\n  ' + bad.join('\n  '))
 })
 
 test('★负控:把一个字段名写错,上一条必须判红', () => {
   const d = cfg.defaultConfig()
   assert.equal('doneText' in d.countdown, true)
-  assert.equal('doneTxt' in d.countdown, false, '拼错的名字确实不在默认配置里,所以上一条抓得到')
+  assert.equal('doneTxt' in d.countdown, false, '拼错的名字确实不在默认配置里，所以上一条抓得到')
 })
 
 test('校验拦下来的东西,serialize 必须抛而不是静默存半份', () => {
@@ -117,12 +117,12 @@ test('★推理类:目录 section 必须是高级玩法段名,编辑页也必须
   const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js')
   for (const key of INFERENCE) {
     const item = catalog.ALL.find((row) => row.key === key)
-    assert.ok(item, key + ' 不在玩法目录里 —— 选择玩法那张单子上没有它,商家永远选不到')
-    assert.equal(item.section, key, key + ' 的 section 和段名对不上,选了也配不上')
+    assert.ok(item, key + ' 不在玩法目录里 —— 选择玩法那张单子上没有它，商家永远选不到')
+    assert.equal(item.section, key, key + ' 的 section 和段名对不上，选了也配不上')
     assert.ok(catalog.GAME_SECTIONS.includes(key), key + ' 没被当成玩法段 —— 选它关不掉别的玩法')
-    assert.ok(cfg.SECTIONS.includes(key), key + ' 没登记进高级玩法段 —— 填了也存不回来,而且不报错')
+    assert.ok(cfg.SECTIONS.includes(key), key + ' 没登记进高级玩法段 —— 填了也存不回来，而且不报错')
     assert.ok(wxml.includes("gameSection === '" + key + "'"),
-      key + ' 在配置里有段,但编辑页没有那块面板 —— 商家配不了')
+      key + ' 在配置里有段，但编辑页没有那块面板 —— 商家配不了')
     // 会执行限时的玩法才给限时开关:三个都算
     assert.equal(catalog.supportsTimer(key), true, key + ' 不在 TIMED_GAMES 里 —— 会给商家一个不会执行的限时开关')
   }
@@ -162,7 +162,7 @@ test('★推理类:排序答案由录入顺序派生 —— 模型里可能过�
   // 模拟读回来的旧配置带着一份对不上的 answerOrder
   setByPath(m, 'sort.answerOrder', ['stale_1', 'stale_2'])
   assert.deepEqual(JSON.parse(cfg.serialize(m)).sort.answerOrder, ['first', 'second'],
-    '派生没生效 —— 玩家会拿到一份错的答案顺序,而且不报错')
+    '派生没生效 —— 玩家会拿到一份错的答案顺序，而且不报错')
 })
 
 test('★推理类:本地校验与后端同规 —— 空条目 / 超上限 / 没选类别都要拦', () => {
@@ -217,7 +217,7 @@ test('★选一个玩法 = 其余玩法段全关掉(推理类三段同样适用)
   base.estimate.enabled = true   // 先开着别的玩法,选新玩法时必须被关掉
   for (const key of INFERENCE) {
     const next = catalog.applyToConfig(base, key)
-    assert.equal(next[key].enabled, true, key + ' 选中后没打开自己那段')
+    assert.equal(next[key].enabled, true, key + ' 选中后无法打开自己那段')
     for (const section of catalog.GAME_SECTIONS) {
       if (section === key) continue
       assert.equal(next[section].enabled, false,
@@ -238,27 +238,26 @@ test('★推理类面板的 data-path 必须指向默认配置里真有的列表
     if (INFERENCE.indexOf(parts[0]) < 0) continue
     if (!Array.isArray(d[parts[0]] && d[parts[0]][parts[1]])) bad.push(m[1])
   }
-  assert.deepEqual(bad, [], '这些 data-path 不在默认配置里,增删改写进不存在的数组也不报错:\n  ' + bad.join('\n  '))
+  assert.deepEqual(bad, [], '这些 data-path 不在默认配置里，增删改写进不存在的数组也不报错:\n  ' + bad.join('\n  '))
 })
 
-test('★选项问答多选:multi 为真允许多个正确答案,关掉仍只许一个', () => {
-  const base = () => {
+test('★选项问答多选:与服务端同一合同 —— 至少两个正确、至少一个错误;单选只许一个;不判断对错时跳过', () => {
+  const base = (flags) => {
     const m = cfg.defaultConfig()
     m.qa.enabled = true
     m.qa.mode = 'PICK'
     m.qa.title = 't'
-    m.qa.options = [
-      { id: 'a', label: 'A', fb: '', correct: true },
-      { id: 'b', label: 'B', fb: '', correct: true },
-    ]
+    m.qa.options = ['a', 'b', 'c'].map((id, i) => ({ id, label: id.toUpperCase(), fb: '', correct: !!flags[i] }))
     return m
   }
-  assert.match(cfg.validate(base()), /只指定一个正确答案/, '多选没开时两个正确答案必须被拦')
-  const multi = base()
-  multi.qa.multi = true
-  assert.equal(cfg.validate(multi), '', '多选开着时两个正确答案应当放行')
-  const none = base()
-  none.qa.multi = true
-  none.qa.options = none.qa.options.map((o) => Object.assign({}, o, { correct: false }))
-  assert.match(cfg.validate(none), /至少/, '多选也不能一个正确答案都没有')
+  assert.match(cfg.validate(base([1, 1, 0])), /只指定一个正确答案/, '多选没开时两个正确答案必须被拦')
+  const multi = (flags) => { const m = base(flags); m.qa.multi = true; return m }
+  assert.equal(cfg.validate(multi([1, 1, 0])), '', '三个选项两个正确的多选放行')
+  assert.match(cfg.validate(multi([1, 0, 0])), /至少要指定两个正确答案/, '只有一个正确答案不是多选')
+  assert.match(cfg.validate(multi([0, 0, 0])), /至少要指定两个正确答案/)
+  assert.match(cfg.validate(multi([1, 1, 1])), /不能把全部选项都设为正确答案/, '全部正确等于随便点都过')
+  const off = multi([1, 1, 1]); off.qa.judge = false
+  assert.equal(cfg.validate(off), '', '不判断对错时正确答案要求跳过，原设置保留')
+  assert.deepEqual(off.qa.options.map((o) => o.correct), [true, true, true])
+  assert.equal(cfg.qaAnswerError(multi([1, 0, 0]).qa), '多选问答至少要指定两个正确答案')
 })

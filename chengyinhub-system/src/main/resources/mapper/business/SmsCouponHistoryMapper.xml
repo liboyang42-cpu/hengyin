@@ -152,8 +152,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="useTime != null">use_time = #{useTime},</if>
             <if test="orderId != null">order_id = #{orderId},</if>
             <if test="orderSn != null">order_sn = #{orderSn},</if>
-            <if test="startTime != null">start_time = #{startTime},</if>
-            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="startTime != null">start_time = start_time,</if>
+            <if test="endTime != null">end_time = end_time,</if>
             <if test="note != null">note = #{note},</if>
             <if test="delFlag != null">del_flag = #{delFlag},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
@@ -162,6 +162,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
         where id = #{id}
+        <!-- Issued validity is immutable. Supplied dates assert the existing snapshot,
+             including legacy NULL: a new non-NULL value cannot invent missing history.
+             Guard in this same UPDATE so concurrent callers cannot pass a stale pre-read. -->
+        <if test="startTime != null">and start_time = #{startTime}</if>
+        <if test="endTime != null">and end_time = #{endTime}</if>
     </update>
 
     <delete id="deleteSmsCouponHistoryById" parameterType="Long">
@@ -184,18 +189,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             where member_id = #{memberId} and use_status = 0 and del_flag = 0 and end_time &lt; now()
     </update>
     <!-- 第二轮拍板第 4 条:后台撤销核销勾选「同时冲回积分和经验」用。 -->
-    <!-- 通关券发放没回写 history id:取「同一玩家同一张券、领取时间落在幂等日志落位前后 1 分钟内」最新那张。
-         通关券在同一事务里晚于节点券发放,同一模板撞车时取最新那张才是它;get_time 为空的来源不明,不认。
-         时间比较留在库里做(日志与领取记录同一时钟),不经 Java 日期换时区。 -->
+    <!-- 仅认持久化的原回执；旧 NULL 或归属/模板不符时不猜测替代券。 -->
     <select id="selectCompletionRewardHistoryId" resultType="java.lang.Long">
-        select h.id
-        from sms_coupon_history h
-        join cms_topic_completion_coupon_reward_log l
-          on l.topic_id = #{topicId} and l.member_id = h.member_id and l.coupon_id = h.coupon_id
-        where h.member_id = #{memberId}
+        select h.id from cms_topic_completion_coupon_reward_log l
+        join sms_coupon_history h on h.id = l.history_id
+          and h.member_id = l.member_id and h.coupon_id = l.coupon_id
+        where l.member_id = #{memberId} and l.topic_id = #{topicId}
           and ifnull(h.del_flag, 0) = 0
-          and h.get_time between date_sub(l.created_at, interval 1 minute) and date_add(l.created_at, interval 1 minute)
-        order by h.id desc
         limit 1
     </select>
 

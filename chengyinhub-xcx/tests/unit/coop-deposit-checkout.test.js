@@ -44,7 +44,7 @@ function page() {
   return vm;
 }
 
-for (const inviteId of [7, '9007199254740993']) test('保证金支付保留精确邀约ID并回读终态: ' + inviteId, () => {
+for (const inviteId of [7, '9007199254740993']) test('保证金支付保留精确邀约ID并刷新终态: ' + inviteId, () => {
   const vm = page();
   vm._initWorkflow();
   vm.payDeposit({ currentTarget: { dataset: { id: inviteId } } });
@@ -80,7 +80,7 @@ test('缺少可靠支付事实的 unknown 保留待确认且不自动重新缴�
     payments[0].success();
     clock = 21000;
     requests[1].success({ code: 200, data: { paymentStatus: 'unknown' } });
-    assert.match(vm.data.actionError, /待确认.*暂不要重复缴纳/);
+    assert.match(vm.data.actionError, /待确认.*请勿重复缴纳/);
     assert.doesNotMatch(vm.data.actionError, /支付失败|已缴纳/);
     assert.equal(payments.length, 1);
     assert.equal(requests.filter(r => r.url === '/api/coop/deposit/create').length, 1);

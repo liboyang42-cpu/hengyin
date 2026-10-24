@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/count.wxs" module="cnt" />
 <view class="page theme-merchant m-flush-nav" style="padding-top:{{statusBarHeight + navBarHeight}}px">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -7,11 +8,11 @@
          nav-page-title-spacing-contract 锁着它 —— 这一页单独走自绘会成孤例。 -->
   <cy-nav-bar title="营销" back="{{false}}" />
 
-  <view class="body">
+  <view class="body" style="{{pmPage === 1 ? '--pm-k:1;' : (pmPage === 2 ? '--pm-k-d:.32s;--pm-k-s:1;' : '')}}">
     <!-- 未登录不再整屏拦:静默登录(见 index.js 的 enterMarketing),登录/身份确认失败
          只在页内挂一条内联错误 + 重试。岗位没有营销权限也从整屏态改成页内说明。 -->
-    <cy-inline-error class="m-inline-error" wx:if="{{entryError}}" kind="data"
-                     title="商家营销没有加载出来"
+    <cy-inline-error load-failure class="m-inline-error" wx:if="{{entryError}}" kind="data"
+                     title="商家营销加载失败"
                      sub="{{entryError}}"
                      action="重新加载" bind:action="retryAll" />
     <!-- 岗位没有营销数据权限(店主永远有):只留这句说明 —— 不渲染 hero/券卡/我的内容
@@ -25,9 +26,9 @@
     <block wx:if="{{accessState !== 'denied'}}">
 
     <view class="marketing-sync" wx:if="{{(funnelLoading && marketingLoaded) || (merchantLoading && marketingLoaded)}}"
-          aria-role="status" aria-live="polite" aria-label="正在核对商家身份与最新营销数据">
+          aria-role="status" aria-live="polite" aria-label="正在确认商家身份与最新营销数据">
       <view class="marketing-sync-rail" aria-hidden="true"></view>
-      <text class="marketing-sync-text">正在核对商家身份与最新数据…</text>
+      <text class="marketing-sync-text">正在确认商家身份与最新数据…</text>
     </view>
 
     <!-- Hero:全页唯一的主角数字 = 近 N 天报名(4-10:数字来自窗口 stages,写「累计」就是假口径)。
@@ -41,12 +42,12 @@
           aria-role="button" aria-label="{{funnelError}}，重新加载营销数据">
       <text class="hero-label">{{hero.label}}</text>
       <text class="hero-value">0</text>
-      <cy-inline-error class="hero-sub" kind="data"
+      <cy-inline-error load-failure class="hero-sub" kind="data"
         title="营销数据暂未加载" sub="{{funnelError}}" action="点击重试" />
     </view>
     <view class="hero" wx:else aria-role="text" aria-label="{{hero.ariaLabel}}">
       <text class="hero-label">{{hero.label}}</text>
-      <text class="hero-value">{{hero.value}}</text>
+      <text class="hero-value">{{cnt.f(hero.value, mkK)}}</text>
       <text class="hero-sub">{{hero.sub}}</text>
     </view>
 
@@ -77,7 +78,7 @@
          没权限的人看到「发布第一个主题」点进去必被拒,那是个假入口。
          ⚠️ 未确认(unknown)绝不能落到这里:那会把「还没读到」画成「你什么都没有」。 -->
     <cy-empty wx:if="{{marketingLoaded && marketingDataState === 'empty'}}" kind="empty"
-              title="还没有营销数据" sub="有浏览、报名、支付、核销或退款申请后，这里会显示营销数据"
+              title="还没有营销数据"
               cta="{{merchantAccess.canManageProjects ? '发布第一个主题' : ''}}"
               bind:cta="startFirstContent" />
     <cy-skeleton wx:elif="{{funnelLoading && !marketingLoaded}}" type="list" count="{{3}}"
@@ -87,7 +88,7 @@
             bindtap="goMyContent" data-key="{{item.key}}" data-count="{{item.count}}"
             hover-class="mine-tap" hover-stay-time="80"
             aria-role="button" aria-label="{{item.ariaLabel}}">
-        <text class="mine-num">{{item.countText}}</text>
+        <text class="mine-num">{{cnt.f(item.countText, mkK)}}</text>
         <text class="mine-label">{{item.title}}</text>
       </view>
     </view>
@@ -137,7 +138,7 @@
       </view>
       <view class="coop-copy">
         <text class="coop-title">进入合作中心</text>
-        <text class="coop-sub">查看开放商机与发给我的邀约</text>
+        
       </view>
       <view class="coop-btn" aria-hidden="true"><cy-icon name="arrow-right" size="32" /></view>
     </view>

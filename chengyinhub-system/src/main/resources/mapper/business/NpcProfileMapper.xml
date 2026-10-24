@@ -21,6 +21,7 @@
     <result column="voice_id" property="voiceId"/>
     <result column="voice_status" property="voiceStatus"/>
     <result column="voice_sample" property="voiceSample"/>
+    <result column="voice_version" property="voiceVersion"/>
     <result column="merchant_name" property="merchantName"/>
   </resultMap>
 
@@ -105,12 +106,13 @@
     UPDATE npc_profile
     <set>
       voice_id = #{voiceId},
+      voice_version = voice_version + 1,
       <if test="voiceStatus != null">voice_status = #{voiceStatus},</if>
       <if test="voiceSample != null">voice_sample = #{voiceSample},</if>
       audit_status = 0,
       update_time = NOW()
     </set>
-    WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0'
+    WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0' AND voice_version = #{voiceVersion}
   </update>
 
   <update id="deleteMerchantNpcById">
@@ -136,6 +138,14 @@
     UPDATE npc_profile
     SET audit_status = #{auditStatus}, audit_reason = #{auditReason}, update_time = NOW()
     WHERE id = #{id} AND scope_type = 2 AND del_flag = '0' AND audit_status = 0
+  </update>
+
+  <!-- 内容安全回调:门店分身头像违规。不看当前 audit_status(已人工通过的也要打回),
+       已是驳回态时返回 0 行,由调用方回读确认幂等。只认 scope_type=2,碰不到节点/剧本 NPC。 -->
+  <update id="rejectMerchantNpcByContentSecurity">
+    UPDATE npc_profile
+    SET audit_status = 2, audit_reason = '形象图片未通过内容安全审核，请更换后重新保存', update_time = NOW()
+    WHERE id = #{id} AND scope_type = 2 AND del_flag = '0' AND audit_status &lt;&gt; 2
   </update>
 
   <!--
@@ -202,11 +212,12 @@
     UPDATE npc_profile
     <set>
       voice_id = #{voiceId},
+      voice_version = voice_version + 1,
       <if test="voiceStatus != null">voice_status = #{voiceStatus},</if>
       <if test="voiceSample != null">voice_sample = #{voiceSample},</if>
       update_time = NOW()
     </set>
-    WHERE id = #{id} AND scope_type = 4 AND del_flag = '0'
+    WHERE id = #{id} AND scope_type = 4 AND del_flag = '0' AND voice_version = #{voiceVersion}
   </update>
 
   <!--

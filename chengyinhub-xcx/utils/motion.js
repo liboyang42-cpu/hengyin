@@ -37,6 +37,12 @@ function easeOutCubic(t) {
   return 1 - Math.pow(1 - c, 3);
 }
 
+/** 慢-快-慢:两头缓、中段快(商家工作台累计收入的滚动用);只新增,不改默认缓动 */
+function easeInOutCubic(t) {
+  const c = clamp01(t);
+  return c < 0.5 ? 4 * c * c * c : 1 - Math.pow(-2 * c + 2, 3) / 2;
+}
+
 /** 按 decimals 定点取整,消掉浮点尾巴(金额/里程滚动会直接显示出来) */
 function roundTo(value, decimals) {
   const d = decimals > 0 ? Math.floor(decimals) : 0;
@@ -319,6 +325,7 @@ module.exports = {
   EASE_OUT,
   clamp01,
   easeOutCubic,
+  easeInOutCubic,
   countUpFrames,
   countUp,
   stampInPlan,

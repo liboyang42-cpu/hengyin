@@ -39,7 +39,14 @@ public class TopicBundleReviewService {
     private final CmsTopicChapterMapper chapterMapper;
     private final CmsTopicNodeMapper nodeMapper;
     private final CmsMemberTemplateMapper templateMapper;
-    private final ObjectMapper json = new ObjectMapper();
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.MerchantChapterApplicationMapper applicationMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.MmsMerchantMapper merchantMapper;
+    private final ObjectMapper json = new ObjectMapper()
+            .enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private final AdvancedGameConfigValidator advancedConfigValidator = new AdvancedGameConfigValidator();
 
     public TopicBundleReviewService(CmsTopicMapper topicMapper,
@@ -50,6 +57,31 @@ public class TopicBundleReviewService {
         this.chapterMapper = chapterMapper;
         this.nodeMapper = nodeMapper;
         this.templateMapper = templateMapper;
+    }
+
+    /**
+     * 自由定向(探店日)开放商家承接时，站点玩法由入驻商家提供，而商家只能承接已上架过审的主题。
+     * 因此允许「零玩法」提交，但仅当每个未配玩法的站点都落在开放承接(recruitEnabled=1)的章节里；
+     * 商家玩法在入驻时走供给审核，不绕过审核。owner 2026-10-20 决定(#299)。
+     */
+    static boolean awaitsMerchantGameplay(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
+        if (topic == null || !Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+            return false;
+        }
+        Set<Long> recruiting = new LinkedHashSet<Long>();
+        for (CmsTopicChapter chapter : chapters) {
+            if (chapter != null && chapter.getId() != null && Integer.valueOf(1).equals(chapter.getRecruitEnabled())) {
+                recruiting.add(chapter.getId());
+            }
+        }
+        if (recruiting.isEmpty()) return false;
+        for (CmsTopicNode node : nodes) {
+            boolean hasGameplay = node.getTemplateId() != null && node.getTemplateId() > 0L;
+            if (!hasGameplay && (node.getChapterId() == null || !recruiting.contains(node.getChapterId()))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public Submission freezeForSubmission(Long topicId, Long ownerId) {
@@ -70,6 +102,19 @@ public class TopicBundleReviewService {
         nodeQuery.setTopicId(topicId);
         List<CmsTopicNode> nodes = new ArrayList<CmsTopicNode>(safe(nodeMapper.selectCmsTopicNodeList(nodeQuery)));
         sortNodes(nodes);
+        Map<Long, Long> merchantOwners = Collections.emptyMap();
+        if (nodes.stream().anyMatch(node -> node.getMerchantMemberId() != null && !ownerId.equals(node.getMerchantMemberId()))) {
+            CmsTopic locked = topicMapper.selectCmsTopicByIdForUpdate(topicId);
+            if (locked == null || !ownerId.equals(locked.getMemberId()) || Integer.valueOf(2).equals(locked.getDelFlag())) throw stale();
+            topic = locked;
+            chapters = new ArrayList<CmsTopicChapter>(safe(chapterMapper.selectByTopicForUpdate(topicId)));
+            sortChapters(chapters);
+            // Re-read the proof in the locked topic/chapters before locking nodes/templates.
+            merchantOwners = merchantTemplateOwners(topic, chapters, nodes);
+            nodes = new ArrayList<CmsTopicNode>(safe(nodeMapper.selectByTopicForUpdate(topicId)));
+            sortNodes(nodes);
+            validateMerchantReferences(topic, nodes, merchantOwners);
+        }
         if (chapters.isEmpty() || nodes.isEmpty()) {
             throw new IllegalArgumentException("专业主题至少需要一个章节和一个节点");
         }
@@ -81,7 +126,7 @@ public class TopicBundleReviewService {
                 referencedTemplateIds.add(node.getTemplateId());
             }
         }
-        if (referencedTemplateIds.isEmpty()) {
+        if (referencedTemplateIds.isEmpty() && !awaitsMerchantGameplay(topic, chapters, nodes)) {
             throw new IllegalArgumentException("专业主题至少需要一个节点玩法");
         }
 
@@ -90,7 +135,8 @@ public class TopicBundleReviewService {
         List<CmsMemberTemplate> templates = new ArrayList<CmsMemberTemplate>();
         for (Long templateId : templateIds) {
             CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(templateId);
-            validateTemplate(template, templateId, ownerId);
+            validateTemplate(template, templateId, ownerId, merchantOwners.get(templateId));
+            validateTemplateReferences(nodes, template, ownerId);
             templates.add(template);
         }
 
@@ -177,8 +223,12 @@ public class TopicBundleReviewService {
         List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(
                 safe(chapterMapper.selectByTopicForUpdate(topicId)));
         sortChapters(chapters);
+        CmsTopicNode locator = new CmsTopicNode(); locator.setTopicId(topicId);
+        List<CmsTopicNode> locatedNodes = safe(nodeMapper.selectCmsTopicNodeList(locator));
+        Map<Long, Long> merchantOwners = merchantTemplateOwners(topic, chapters, locatedNodes);
         List<CmsTopicNode> nodes = new ArrayList<CmsTopicNode>(safe(nodeMapper.selectByTopicForUpdate(topicId)));
         sortNodes(nodes);
+        validateMerchantReferences(topic, nodes, merchantOwners);
 
         Set<Long> referencedIds = new LinkedHashSet<Long>();
         for (CmsTopicNode node : nodes) {
@@ -200,12 +250,13 @@ public class TopicBundleReviewService {
             CmsMemberTemplate template = templates.get(i);
             Long expectedId = submittedIds.get(i);
             JsonNode submitted = submittedTemplates.get(expectedId);
-            if (template == null || !expectedId.equals(template.getId())
-                    || submitted.path("memberId").asLong() != submitterId.longValue()) {
+            if (template == null || template.getMemberId() == null || !expectedId.equals(template.getId())
+                    || submitted.path("memberId").asLong() != template.getMemberId().longValue()) {
                 throw stale();
             }
             try {
-                validateTemplate(template, expectedId, submitterId);
+                validateTemplate(template, expectedId, submitterId, merchantOwners.get(expectedId));
+                validateTemplateReferences(nodes, template, submitterId);
             } catch (RuntimeException e) {
                 throw stale();
             }
@@ -291,11 +342,64 @@ public class TopicBundleReviewService {
         return value;
     }
 
-    private void validateTemplate(CmsMemberTemplate template, Long templateId, Long ownerId) {
+    private Map<Long, Long> merchantTemplateOwners(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
+        Map<Long, Long> owners = new LinkedHashMap<Long, Long>();
+        List<CmsTopicNode> supplied = new ArrayList<CmsTopicNode>();
+        for (CmsTopicNode node : nodes) if (node.getMerchantMemberId() != null
+                && !topic.getMemberId().equals(node.getMerchantMemberId())) supplied.add(node);
+        if (supplied.isEmpty()) return owners;
+        if (!Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())) throw stale();
+        if (supplied.stream().anyMatch(node -> node.getChapterId() == null || node.getId() == null)) throw stale();
+        supplied.sort(Comparator.comparing(CmsTopicNode::getChapterId).thenComparing(CmsTopicNode::getMerchantMemberId)
+                .thenComparing(CmsTopicNode::getId));
+        for (CmsTopicNode node : supplied) {
+            if (node.getTemplateId() == null || node.getTemplateId() <= 0L
+                    || !Long.valueOf(1L).equals(node.getStatus()) || !Integer.valueOf(1).equals(node.getNodeAuditStatus())
+                    || !topic.getId().equals(node.getTopicId())
+                    || chapters.stream().noneMatch(ch -> node.getChapterId().equals(ch.getId()) && topic.getId().equals(ch.getTopicId()))) throw stale();
+            com.chengyinhub.business.domain.MerchantChapterApplication application =
+                    applicationMapper.selectByChapterAndMerchantForUpdate(node.getChapterId(), node.getMerchantMemberId());
+            if (application == null || !Integer.valueOf(1).equals(application.getStatus()) || !Integer.valueOf(0).equals(application.getDelFlag())
+                    || !topic.getId().equals(application.getTopicId()) || !node.getChapterId().equals(application.getChapterId())
+                    || !node.getMerchantMemberId().equals(application.getMerchantId())) throw stale();
+        }
+        List<com.chengyinhub.business.domain.MerchantChapterOffer> offers = safe(offerMapper.selectByTopicIncludingInactiveForUpdate(topic.getId()));
+        java.util.Date now = new java.util.Date();
+        for (CmsTopicNode node : supplied) {
+            boolean live = offers.stream().anyMatch(offer -> topic.getId().equals(offer.getTopicId())
+                    && node.getChapterId().equals(offer.getChapterId()) && node.getMerchantMemberId().equals(offer.getMerchantId())
+                    && Integer.valueOf(1).equals(offer.getStatus())
+                    && (offer.getValidEnd() == null || offer.getValidEnd().after(now))
+                    && StringUtils.isBlank(offer.getWithdrawReason()));
+            com.chengyinhub.business.domain.MmsMerchant merchant = merchantMapper.selectMmsMerchantByMemberIdForUpdate(node.getMerchantMemberId());
+            if (!live || merchant == null || !node.getMerchantMemberId().equals(merchant.getMemberId())
+                    || !Long.valueOf(1L).equals(merchant.getStatus()) || !Long.valueOf(1L).equals(merchant.getAccountStatus())
+                    || Integer.valueOf(2).equals(merchant.getDelFlag())) throw stale();
+            Long previous = owners.put(node.getTemplateId(), node.getMerchantMemberId());
+            if (previous != null && !previous.equals(node.getMerchantMemberId())) throw stale();
+        }
+        return owners;
+    }
+
+    private void validateMerchantReferences(CmsTopic topic, List<CmsTopicNode> nodes, Map<Long, Long> owners) {
+        for (CmsTopicNode node : nodes) if (node.getMerchantMemberId() != null && !topic.getMemberId().equals(node.getMerchantMemberId())) {
+            if (!java.util.Objects.equals(node.getMerchantMemberId(), owners.get(node.getTemplateId()))
+                    || !Long.valueOf(1L).equals(node.getStatus()) || !Integer.valueOf(1).equals(node.getNodeAuditStatus())) throw stale();
+        }
+    }
+
+    private void validateTemplateReferences(List<CmsTopicNode> nodes, CmsMemberTemplate template, Long publisherId) {
+        for (CmsTopicNode node : nodes) if (template.getId().equals(node.getTemplateId())) {
+            Long nodeOwner = node.getMerchantMemberId() == null ? publisherId : node.getMerchantMemberId();
+            if (!nodeOwner.equals(template.getMemberId())) throw stale();
+        }
+    }
+
+    private void validateTemplate(CmsMemberTemplate template, Long templateId, Long ownerId, Long suppliedOwnerId) {
         if (template == null || Integer.valueOf(2).equals(template.getDelFlag())) {
             throw new IllegalStateException("玩法不存在或已删除:" + templateId);
         }
-        if (!ownerId.equals(template.getMemberId())) {
+        if (!ownerId.equals(template.getMemberId()) && !java.util.Objects.equals(suppliedOwnerId, template.getMemberId())) {
             throw new IllegalStateException("不能引用他人的玩法:" + templateId);
         }
         boolean draft = Integer.valueOf(0).equals(template.getDraftStatus())
@@ -305,7 +409,7 @@ public class TopicBundleReviewService {
         boolean approved = Integer.valueOf(1).equals(template.getDraftStatus())
                 && Long.valueOf(1L).equals(template.getStatus())
                 && Integer.valueOf(1).equals(template.getCheckStatus());
-        if (!draft && !approved) {
+        if ((!ownerId.equals(template.getMemberId()) && !approved) || (!draft && !approved)) {
             throw new IllegalStateException("玩法不是可用版本或私有草稿:" + templateId);
         }
         if (StringUtils.isNotBlank(template.getAdvancedConfigJson())) {

@@ -11,12 +11,16 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Arrays;
+import java.util.HashSet;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -54,6 +58,7 @@ class TemplateEditOwnershipTest {
         capabilityGuard = mock(ICapabilityGuard.class);
 
         service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         memberMapper = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         libraryMapper = mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class);
         taskMapper = mock(com.chengyinhub.business.mapper.AuditTaskMapper.class);
@@ -121,6 +126,31 @@ class TemplateEditOwnershipTest {
         verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE", TEMPLATE_ID);
     }
 
+    /**
+     * AUDIT-INT-9(#384):撤销在途模板审核单之前,先把该条目的未结申诉以 WITHDRAWN 结案并通知作者
+     * (与 AUDIT-INT-6 同口径:作者改内容 = 放弃申诉);cancelOpenTemplateTasks 本身不再碰申诉单。
+     */
+    @Test
+    void editingTemplateWithdrawsOpenAppealsBeforeCancellingTasks() {
+        CmsMemberTemplate existing = existing(OWNER, 0); existing.setMerchantNodeEnabled(1);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing);
+        CmsTemplateLibrary projection = new CmsTemplateLibrary(); projection.setId(171L);
+        projection.setMemberTemplateId(TEMPLATE_ID); projection.setDelFlag(0);
+        projection.setStatus(1L); projection.setPublishStatus(1L);
+        when(libraryMapper.selectByMemberTemplateForUpdate(TEMPLATE_ID)).thenReturn(Collections.singletonList(projection));
+        when(templateLibraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
+        CmsMemberTemplate input = new CmsMemberTemplate(); input.setId(TEMPLATE_ID);
+        input.setTitle("新据点玩法");
+
+        service.saveMerchantNodeTemplate(input, OWNER, "商家");
+
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(auditTaskService, taskMapper);
+        order.verify(auditTaskService).withdrawOpenAppeal(eq("TEMPLATE_LIBRARY"), eq(171L), anyString());
+        order.verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE_LIBRARY", 171L);
+        order.verify(auditTaskService).withdrawOpenAppeal(eq("TEMPLATE"), eq(TEMPLATE_ID), anyString());
+        order.verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE", TEMPLATE_ID);
+    }
+
     /** 最小可发布请求:只填必要字段,其余走默认。 */
     private CmsTemplatePublishRequest request(Long id) {
         CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
@@ -132,6 +162,122 @@ class TemplateEditOwnershipTest {
         request.setQuestionAnswer("1997");
         request.setIsSync(0);
         return request;
+    }
+
+    @Test
+    void clearFieldsAreValidatedAndCopiedForDraftAndPublish() {
+        for (boolean draft : new boolean[]{true, false}) {
+            setUp();
+            when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing(OWNER, 0));
+            CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+            request.setClearFields(new HashSet<>(Arrays.asList("rewardRulesJson", "merchantGuide", "sensorType", "sensorConfig", "storyImg")));
+            request.setRewardRulesJson("invalid but explicitly cleared");
+            request.setMerchantGuide("old guide"); request.setStoryImg("old image");
+            if (draft) service.saveOrUpdateDraft(request, OWNER, "作者");
+            else service.publishTemplateWithTransaction(request, OWNER, "作者");
+            ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+            verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+            assertEquals(request.getClearFields(), saved.getValue().getClearFields());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getRewardRulesJson());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getMerchantGuide());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getStoryImg());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getSensorType());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getSensorConfig());
+        }
+    }
+
+    @Test
+    void missingClearFieldsDoNotSetTheInternalUpdateMarker() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing(OWNER, 0));
+        CmsTemplatePublishRequest request = request(TEMPLATE_ID); request.setRewardRulesJson(" ");
+        service.saveOrUpdateDraft(request, OWNER, "作者");
+        ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+        org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getClearFields());
+        org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getRewardRulesJson());
+    }
+
+    @Test
+    void unknownClearFieldsAreRejectedBeforeWrites() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing(OWNER, 0));
+        for (String field : Arrays.asList("memberId", "title", "status", "story_img", "", null)) {
+            CmsTemplatePublishRequest request = request(TEMPLATE_ID); request.setClearFields(Collections.singleton(field));
+            assertTrue(assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, OWNER, "作者")).getMessage().contains("不支持清空字段"));
+            assertThrows(IllegalArgumentException.class, () -> service.publishTemplateWithTransaction(request, OWNER, "作者"));
+        }
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void clearingRequiredSensorFieldsUsesStoredValidationMethodAndRejectsBeforeWrites() {
+        for (int method : new int[]{2, 7}) for (String field : Arrays.asList("sensorType", "sensorConfig")) {
+            CmsMemberTemplate stored = existing(OWNER, 0); stored.setValidationMethod(method);
+            stored.setSensorType(method == 2 ? "filter_shot" : "still");
+            when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(stored);
+            for (Integer requestedMethod : Arrays.asList(null, method)) {
+                CmsTemplatePublishRequest request = request(TEMPLATE_ID); request.setValidationMethod(requestedMethod);
+                request.setClearFields(Collections.singleton(field));
+                assertTrue(assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, OWNER, "作者")).getMessage().contains("先切换"));
+                assertThrows(IllegalArgumentException.class, () -> service.publishTemplateWithTransaction(request, OWNER, "作者"));
+            }
+        }
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void switchingAwayFromSensorAllowsExplicitClearButNeverBypassesOwnership() {
+        CmsMemberTemplate stored = existing(OWNER, 0); stored.setValidationMethod(7); stored.setSensorType("still");
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(stored);
+        CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+        request.setClearFields(new HashSet<>(Arrays.asList("sensorType", "sensorConfig")));
+        assertThrows(RuntimeException.class, () -> service.saveOrUpdateDraft(request, STRANGER, "其他人"));
+        assertThrows(RuntimeException.class, () -> service.publishTemplateWithTransaction(request, STRANGER, "其他人"));
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+        service.saveOrUpdateDraft(request, OWNER, "作者");
+        verify(memberTemplateService).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void onlyRequestDtoAcceptsClearFieldsAndEntityJsonCannotInjectThem() throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        String raw = "{\"clearFields\":[\"sensorConfig\"]}";
+        assertEquals(Collections.singleton("sensorConfig"), json.readValue(raw, CmsTemplatePublishRequest.class).getClearFields());
+        CmsMemberTemplate entity = json.readValue(raw, CmsMemberTemplate.class);
+        org.junit.jupiter.api.Assertions.assertNull(entity.getClearFields());
+        entity.setClearFields(Collections.singleton("sensorConfig"));
+        org.junit.jupiter.api.Assertions.assertFalse(json.readTree(json.writeValueAsString(entity)).has("clearFields"));
+    }
+
+    /**
+     * 据点模板的 duration 是 Long，发布 DTO 是 Integer；BeanUtils 不转换，修复前新建与改写都落成 0。
+     */
+    @Test
+    void merchantNodeDurationSurvivesDtoCopy() {
+        CmsMemberTemplate created = new CmsMemberTemplate();
+        created.setTitle("新据点玩法"); created.setDuration(45L);
+        service.saveMerchantNodeTemplate(created, OWNER, "商家");
+        ArgumentCaptor<CmsMemberTemplate> inserted = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).insertCmsMemberTemplate(inserted.capture());
+        assertEquals(45L, inserted.getValue().getDuration());
+
+        CmsMemberTemplate existing = existing(OWNER, 0); existing.setMerchantNodeEnabled(1);
+        existing.setDuration(30L);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing);
+        CmsMemberTemplate edited = new CmsMemberTemplate(); edited.setId(TEMPLATE_ID);
+        edited.setTitle("改过的据点玩法"); edited.setDuration(60L);
+        service.saveMerchantNodeTemplate(edited, OWNER, "商家");
+        ArgumentCaptor<CmsMemberTemplate> updated = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).updateCmsMemberTemplate(updated.capture());
+        assertEquals(60L, updated.getValue().getDuration());
+    }
+
+    @Test
+    void merchantNodeDurationOverflowIsRejectedNotTruncated() {
+        CmsMemberTemplate input = new CmsMemberTemplate();
+        input.setTitle("新据点玩法"); input.setDuration(Long.MAX_VALUE);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.saveMerchantNodeTemplate(input, OWNER, "商家"));
+        verify(memberTemplateService, never()).insertCmsMemberTemplate(any());
     }
 
     private CmsMemberTemplate existing(Long memberId, Integer delFlag) {
@@ -260,7 +406,7 @@ class TemplateEditOwnershipTest {
         service.publishTemplateWithTransaction(request, OWNER, "商家甲");
 
         // 改一次加一次热度,榜单就变成「谁改得勤」而不是「谁被采用得多」
-        verify(templateLibraryService, never()).incrementUseNum(anyLong());
+        verify(templateLibraryService, never()).incrementUseNumOnFirstAdoption(anyLong(), anyLong(), anyLong());
     }
 
     @Test
@@ -273,7 +419,7 @@ class TemplateEditOwnershipTest {
 
         verify(memberTemplateService).insertCmsMemberTemplate(any());
         verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
-        verify(templateLibraryService).incrementUseNum(9001L);
+        verify(templateLibraryService).incrementUseNumOnFirstAdoption(org.mockito.ArgumentMatchers.eq(9001L), org.mockito.ArgumentMatchers.eq(OWNER), any());
     }
 
     @Test

@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -75,6 +76,7 @@ class GameSessionRuntimeServiceImplTest {
     private CmsActivityMapper activityMapper;
     private CmsTopicMapper topicMapper;
     private IClubMemberService clubMemberService;
+    private com.chengyinhub.business.service.ICapabilityService capabilityService;
     private PlayTeamMapper playTeamMapper;
     private IPlayerNodeProgressService playerNodeProgressService;
     private IImService imService;
@@ -85,9 +87,19 @@ class GameSessionRuntimeServiceImplTest {
     void setUp() {
         service = new GameSessionRuntimeServiceImpl();
         runtimeMapper = mock(GameSessionRuntimeMapper.class);
+        // Legacy fixtures supply the same current session fact through the production locking read.
+        when(runtimeMapper.selectSessionByActivityForUpdate(anyLong()))
+                .thenAnswer(call -> runtimeMapper.selectSessionByActivity(call.getArgument(0)));
         activityMapper = mock(CmsActivityMapper.class);
+        com.chengyinhub.business.mapper.CmsRegistrationMapper registrations=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.install(activityMapper,registrations);
+        ReflectionTestUtils.setField(service,"currentPlayRegistrationMapper",registrations);
         topicMapper = mock(CmsTopicMapper.class);
         clubMemberService = mock(IClubMemberService.class);
+        capabilityService = mock(com.chengyinhub.business.service.ICapabilityService.class);
+        ReflectionTestUtils.setField(service, "capabilityService", capabilityService);
+        when(capabilityService.hasCapability(PLAYER, com.chengyinhub.business.domain.MemberCapability.CAP_CLUB_LEADER)).thenReturn(true);
+        when(capabilityService.hasCapability(DIRECTOR, com.chengyinhub.business.domain.MemberCapability.CAP_CLUB_LEADER)).thenReturn(true);
         playTeamMapper = mock(PlayTeamMapper.class);
         playerNodeProgressService = mock(IPlayerNodeProgressService.class);
         imService = mock(IImService.class);
@@ -104,7 +116,7 @@ class GameSessionRuntimeServiceImplTest {
         verifiedPhotos.clear();
         usePhotoVerifier((url, memberId) -> verifiedPhotos.add(url + "|" + memberId));
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activeActivity());
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(configuredTopic());
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(configuredTopic());
         when(runtimeMapper.insertPlayerNodeOutcome(any())).thenReturn(1);
         when(runtimeMapper.selectRole(SESSION, PLAYER)).thenReturn(role("DETECTIVE", "侦探"));
     }
@@ -120,6 +132,7 @@ class GameSessionRuntimeServiceImplTest {
 
         assertEquals("2026-08-23 12:34:56",
                 view.getClass().getMethod("getSnapshotAt").invoke(view));
+        assertNull(view.getAuthorityEpoch());
     }
 
     @Test
@@ -263,6 +276,18 @@ class GameSessionRuntimeServiceImplTest {
                 command("checkin-paused-verify", 4, "VERIFY_SUBMISSION", approve)));
         assertEquals("GAME_STATION_PAUSED", paused.getErrorCode(),
                 "权限与站点归属都通过后,才轮到暂停状态拦核验");
+    }
+
+    @Test
+    void historicalClubOwnerWithoutCanonicalRoleCannotReadOrRunDirectorActions() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(readySession(2));
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
+        when(capabilityService.hasCapability(PLAYER, com.chengyinhub.business.domain.MemberCapability.CAP_CLUB_LEADER)).thenReturn(false);
+        assertEquals("GAME_FORBIDDEN_SCOPE", assertThrows(GameSessionException.class,
+                () -> service.view(GameActorContext.club(PLAYER), ACTIVITY)).getErrorCode());
+        assertEquals("GAME_FORBIDDEN_SCOPE", assertThrows(GameSessionException.class,
+                () -> service.command(GameActorContext.club(PLAYER), command("stale-owner", 2, "START", Collections.emptyMap()))).getErrorCode());
+        verify(runtimeMapper, never()).updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any());
     }
 
     @Test
@@ -572,12 +597,40 @@ class GameSessionRuntimeServiceImplTest {
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(9));
         when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, "ACTIVE"));
 
+        // F-L3-01:站点暂停/恢复与核验改为按对象 CAS,旧版本不再被拒;精确版本动作(STATION_READY)
+        // 与「比服务端还新」的版本仍在回执认领前被拒。
         GameSessionException error = assertThrows(GameSessionException.class,
                 () -> service.command(GameActorContext.merchant(MERCHANT),
-                        command("stale-revision", 8, "STATION_PAUSE", mapOf("reasonCode", "WEATHER"))));
-
+                        command("stale-revision", 8, "STATION_READY", Collections.emptyMap())));
         assertEquals("GAME_STATE_CONFLICT", error.getErrorCode());
+        GameSessionException future = assertThrows(GameSessionException.class,
+                () -> service.command(GameActorContext.merchant(MERCHANT),
+                        command("future-revision", 10, "STATION_PAUSE", mapOf("reasonCode", "WEATHER"))));
+        assertEquals("GAME_STATE_CONFLICT", future.getErrorCode());
+
         verify(runtimeMapper, never()).insertReceiptClaim(any(GameCommandReceipt.class));
+        verify(runtimeMapper, never()).updateStationStatusCas(any(GameStationRun.class), anyLong(), anyString(),
+                anyString(), anyInt(), any());
+    }
+
+    @Test
+    void staleRevisionCanCloseAsPersistedFailureWithoutReapplyingAction() {
+        GameSession session = runningSession(9);
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, "ACTIVE"));
+        GameSessionCommand input = command("stale-closed", 8, "STATION_PAUSE", mapOf("reasonCode", "WEATHER"));
+        GameSessionException failure = assertThrows(GameSessionException.class,
+                () -> service.command(GameActorContext.merchant(MERCHANT), input));
+        when(runtimeMapper.insertReceiptClaim(any())).thenAnswer(call -> {
+            GameCommandReceipt row = call.getArgument(0); row.setId(99L); return 1;
+        });
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView receipt =
+                service.recordFailure(GameActorContext.merchant(MERCHANT), input, failure);
+        assertEquals("FAILED", receipt.getOutcome());
+        assertEquals("GAME_STATE_CONFLICT", receipt.getReasonCode());
+        assertEquals(99L, receipt.getReceiptId());
+        assertEquals(8, receipt.getRevision());
+        assertEquals(9, session.getRevision());
         verify(runtimeMapper, never()).updateStationStatusCas(any(GameStationRun.class), anyLong(), anyString(),
                 anyString(), anyInt(), any());
     }
@@ -594,24 +647,129 @@ class GameSessionRuntimeServiceImplTest {
         verify(activityMapper, never()).selectCmsActivityById(anyLong());
     }
 
+    /**
+     * O-03 跨设备续玩:设备 A 发出的命令结果未知(UNKNOWN),同一会员在设备 B(另一个登录 token,
+     * 服务端解析到同一 memberId)上核对回执、原样重发,都只能读到同一份服务端回执,不产生第二次效果。
+     */
+    @Test
+    void crossDeviceSameMemberResolvesUnknownCommandThroughOneServerReceipt() {
+        GameActorContext deviceA = GameActorContext.player(PLAYER);
+        GameActorContext deviceB = GameActorContext.player(PLAYER);
+        GameSessionCommand fromA = command("pg-cross-device", 5, "PLAYER_CHOICE", mapOf("choiceId", "FOLLOW_NOTE"));
+
+        // A 的请求还没落回执:B 核对只得到 PENDING,不会被当成失败或成功。
+        assertEquals("PENDING", service.receipt(deviceB, ACTIVITY, "pg-cross-device").getOutcome());
+
+        GameCommandReceipt persisted = new GameCommandReceipt();
+        persisted.setId(9911L);
+        persisted.setActivityId(ACTIVITY);
+        persisted.setActorMemberId(PLAYER);
+        persisted.setActorPerspective("PLAYER");
+        persisted.setRequestId("pg-cross-device");
+        persisted.setAction("PLAYER_CHOICE");
+        persisted.setRequestHash("hash-from-device-a");
+        persisted.setOutcome("APPLIED");
+        persisted.setRevision(6);
+        persisted.setResultJson("{}");
+        when(runtimeMapper.selectReceipt(ACTIVITY, PLAYER, "pg-cross-device")).thenReturn(persisted);
+
+        // B 拿同一请求编号发不同内容:冲突,不能借 A 的回执落另一份效果。
+        GameSessionException conflict = assertThrows(GameSessionException.class,
+                () -> service.command(deviceB, fromA));
+        assertEquals("GAME_IDEMPOTENCY_CONFLICT", conflict.getErrorCode());
+
+        persisted.setRequestHash(fromA.getRequestHash());
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView readOnB =
+                service.receipt(deviceB, ACTIVITY, "pg-cross-device");
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView resentOnB = service.command(deviceB,
+                command("pg-cross-device", 5, "PLAYER_CHOICE", mapOf("choiceId", "FOLLOW_NOTE")));
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView readOnA =
+                service.receipt(deviceA, ACTIVITY, "pg-cross-device");
+
+        for (com.chengyinhub.business.domain.dto.GameCommandReceiptView seen : Arrays.asList(readOnB, resentOnB, readOnA)) {
+            assertEquals("APPLIED", seen.getOutcome());
+            assertEquals(9911L, seen.getReceiptId());
+            assertEquals(6, seen.getRevision());
+            assertTrue(seen.isReplayed());
+        }
+        // 另一个会员拿到同一请求编号也读不到这份私有回执。
+        assertEquals("PENDING", service.receipt(GameActorContext.player(TARGET_PLAYER), ACTIVITY, "pg-cross-device").getOutcome());
+        verify(runtimeMapper, never()).insertReceiptClaim(any(GameCommandReceipt.class));
+        verify(runtimeMapper, never()).updateStoryStateCas(any());
+        verify(runtimeMapper, never()).completeReceipt(any(GameCommandReceipt.class));
+    }
+
+    /** O-03/O-09:两台设备读同一局,状态与时刻只来自服务端时钟;视图接口不接受任何客户端时间。 */
+    @Test
+    void crossDeviceViewsShareServerClockSnapshotAndState() {
+        GameSession session = runningSession(3);
+        session.setModuleConfigSnapshotJson(configJson());
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        when(playTeamMapper.hasPaidRegistration(PLAYER, 2, ACTIVITY)).thenReturn(1);
+        when(runtimeMapper.selectActiveTeamId(ACTIVITY, PLAYER)).thenReturn(TEAM);
+        when(runtimeMapper.selectStations(SESSION)).thenReturn(Collections.singletonList(station(MERCHANT, "ACTIVE")));
+        stubArrived();
+        ReflectionTestUtils.setField(service, "clock",
+                (com.chengyinhub.business.service.support.AdvancedGameClock)
+                        () -> DateUtils.parseDate("2026-08-23 12:10:00"));
+
+        GameSessionView onA = service.view(GameActorContext.player(PLAYER), ACTIVITY);
+        GameSessionView onB = service.view(GameActorContext.player(PLAYER), ACTIVITY);
+
+        assertEquals("2026-08-23 12:10:00", onA.getSnapshotAt());
+        assertEquals(onA.getSnapshotAt(), onB.getSnapshotAt());
+        assertEquals(onA.getRevision(), onB.getRevision());
+        assertEquals(onA.getStatus(), onB.getStatus());
+        assertEquals(String.valueOf(onA.getPlayer()), String.valueOf(onB.getPlayer()));
+
+        // 服务端时间前进后再续:两台设备看到的是新的服务端时刻,与各自手机时钟无关。
+        ReflectionTestUtils.setField(service, "clock",
+                (com.chengyinhub.business.service.support.AdvancedGameClock)
+                        () -> DateUtils.parseDate("2026-08-23 12:25:00"));
+        GameSessionView resumedOnB = service.view(GameActorContext.player(PLAYER), ACTIVITY);
+        assertEquals("2026-08-23 12:25:00", resumedOnB.getSnapshotAt());
+        assertEquals(onA.getRevision(), resumedOnB.getRevision());
+    }
+
     @Test
     void failedCommandCanBeRecordedWithStructuredReasonAfterRollback() {
         GameSessionCommand failedCommand = command("pause-failed-audit", 4, "STATION_PAUSE",
                 mapOf("reasonCode", "WEATHER"));
         failedCommand.setRequestHash("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, GameStationRun.ACTIVE));
         when(runtimeMapper.insertReceiptClaim(any())).thenAnswer(invocation -> {
             GameCommandReceipt row = invocation.getArgument(0);
             assertEquals("FAILED", row.getOutcome());
             assertEquals("GAME_BAD_REQUEST", row.getReasonCode());
             assertTrue(row.getResultJson().contains("请选择备用服务站点"));
+            row.setId(88L);
             return 1;
         });
 
-        service.recordFailure(GameActorContext.merchant(MERCHANT), failedCommand,
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView receipt = service.recordFailure(GameActorContext.merchant(MERCHANT), failedCommand,
                 new GameSessionException("GAME_BAD_REQUEST", "请选择备用服务站点"));
 
+        assertNotNull(receipt);
+        assertEquals(88L, receipt.getReceiptId());
+        assertEquals("FAILED", receipt.getOutcome());
+        assertEquals("pause-failed-audit", receipt.getRequestId());
         verify(runtimeMapper).insertReceiptClaim(any());
+    }
+
+    @Test
+    void failureRecoveryCannotExposeAnotherCommandSharingRequestId() {
+        GameSessionCommand input = command("same-key", 4, "STATION_PAUSE", Collections.emptyMap());
+        input.setRequestHash("new-hash");
+        GameCommandReceipt existing = new GameCommandReceipt();
+        existing.setActivityId(ACTIVITY); existing.setActorMemberId(MERCHANT);
+        existing.setRequestId("same-key"); existing.setRequestHash("original-hash");
+        when(runtimeMapper.selectReceipt(ACTIVITY, MERCHANT, "same-key")).thenReturn(existing);
+        GameSessionException conflict = assertThrows(GameSessionException.class, () ->
+                service.recordFailure(GameActorContext.merchant(MERCHANT), input,
+                        new GameSessionException("GAME_STATE_CONFLICT", "状态已更新")));
+        assertEquals("GAME_IDEMPOTENCY_CONFLICT", conflict.getErrorCode());
+        verify(runtimeMapper, never()).insertReceiptClaim(any());
     }
 
     @Test
@@ -711,7 +869,7 @@ class GameSessionRuntimeServiceImplTest {
     void prepareRejectsUnmappedOrMerchantlessRuntimeStation() {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(runtimeConfigJson());
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
         when(runtimeMapper.insertSession(any())).thenAnswer(invocation -> {
@@ -735,7 +893,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(choiceConfigJson().replace("\"id\":\"ASK_CLERK\"",
                 "\"id\":\"FOLLOW_NOTE\""));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -1302,6 +1460,8 @@ class GameSessionRuntimeServiceImplTest {
         recorded.setId(206L);
         recorded.setStatus("RECORDED");
         when(runtimeMapper.selectActiveSubmission(SESSION, PLAYER, NODE, "CLOCK_PHOTO")).thenReturn(recorded);
+        // Existing submission has no outcome fixture: recovering that new fact requires one successful CAS.
+        when(runtimeMapper.updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any())).thenReturn(1);
         usePhotoVerifier((url, memberId) -> {
             throw new IllegalStateException("存储故障不应影响已记录的提交");
         });
@@ -1606,7 +1766,7 @@ class GameSessionRuntimeServiceImplTest {
     void prepareRejectsUnsupportedTaskInputType() {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(configWithInputType("BUTTON"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -1625,7 +1785,7 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(configWithInputType("TEXT").replace("\"verificationRequired\":true",
                 "\"verificationRequired\":false"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
 
         GameSessionException missingHash = assertThrows(GameSessionException.class, () -> service.command(
                 GameActorContext.club(PLAYER), command("prepare-missing-hash", 0, "PREPARE",
@@ -1726,7 +1886,8 @@ class GameSessionRuntimeServiceImplTest {
         GameSession current = runningSession(3);
         current.setStatus(GameSession.PREPARING);
         current.setModuleConfigSnapshotJson(runtimeConfigJson());
-        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(initial, current);
+        // master 的 command() 先加锁读会话（rev 2）；角色插入撞键后再按当前读取到并发胜者的 rev 3。
+        when(runtimeMapper.selectSessionByActivityForUpdate(ACTIVITY)).thenReturn(initial, current);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.isActiveTeamMember(ACTIVITY, TEAM, PLAYER)).thenReturn(1);
         GameTeamRoleAssignment winner = role("DETECTIVE", "侦探");
@@ -1853,6 +2014,63 @@ class GameSessionRuntimeServiceImplTest {
         assertEquals("APPROVED", receipt.getResult().get("decision"));
         assertEquals(GamePlayerNodeOutcome.COMPLETED, receipt.getResult().get("completionStatus"));
         assertEquals(402L, ((Number) receipt.getResult().get("completionOrder")).longValue());
+    }
+
+    /** F-L3-01:别队玩家把全局 revision 推进后,商家对某条待核验提交的决定不应被判成「版本已过期」。 */
+    @Test
+    void merchantVerifyWithOlderRevisionAppliesOnSubmissionCasButFutureRevisionStillRejects() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, GameStationRun.ACTIVE));
+        GameTaskSubmission submission = new GameTaskSubmission();
+        submission.setId(79L);
+        submission.setGameSessionId(SESSION);
+        submission.setActivityId(ACTIVITY);
+        submission.setStationRunId(5101L);
+        submission.setNodeId(NODE);
+        submission.setTeamId(TEAM);
+        submission.setMemberId(PLAYER);
+        submission.setStatus("PENDING");
+        submission.setRevision(0);
+        when(runtimeMapper.selectSubmission(79L)).thenReturn(submission);
+        when(runtimeMapper.decideSubmissionCas(submission)).thenReturn(1);
+        when(runtimeMapper.updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any()))
+                .thenReturn(1);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("submissionId", 79L);
+        payload.put("decision", "REJECT");
+        payload.put("reasonCode", "BLURRY");
+
+        stubReceiptPersistence("future-verify");
+        GameSessionException future = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.merchant(MERCHANT), command("future-verify", 5, "VERIFY_SUBMISSION", payload)));
+        assertEquals("GAME_STATE_CONFLICT", future.getErrorCode());
+        verify(runtimeMapper, never()).decideSubmissionCas(any());
+
+        stubReceiptPersistence("stale-verify");
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView receipt = service.command(
+                GameActorContext.merchant(MERCHANT), command("stale-verify", 2, "VERIFY_SUBMISSION", payload));
+        assertEquals("APPLIED", receipt.getOutcome());
+        assertEquals("REJECTED", receipt.getResult().get("decision"));
+        verify(runtimeMapper).decideSubmissionCas(submission);
+    }
+
+    /** F-L3-01:站点已被另一终端恢复时,后到的恢复返回当前站点而不是冲突;且不再要求全局 revision 精确相等。 */
+    @Test
+    void clubResumeOfAlreadyActiveStationIsANoOpWithStaleRevision() {
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(runningSession(4));
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station(MERCHANT, GameStationRun.ACTIVE));
+        stubReceiptPersistence("resume-already-active");
+
+        // SC-CITY-RESUME-RACE:旧 revision 也不报「版本过期」,而是明确的无变化结果,且不落 APPLIED
+        GameSessionException noop = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(DIRECTOR),
+                command("resume-already-active", 3, "CLUB_STATION_RESUME", Collections.emptyMap())));
+
+        assertEquals("GAME_STATION_ALREADY_ACTIVE", noop.getErrorCode());
+        verify(runtimeMapper, never()).completeReceipt(any());
+        verify(runtimeMapper, never()).updateStationStatusCas(any(), any(), anyString(), anyString(), anyInt(), any());
+        verify(runtimeMapper, never()).updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any());
     }
 
     @Test
@@ -2401,11 +2619,45 @@ class GameSessionRuntimeServiceImplTest {
     }
 
     @Test
+    void storyVariablesAndObjectStyleEffectsMustBeIntegersSoRouteConditionsSeeThem() {
+        assertTrue(service.isGameModuleConfigEnabled(choiceConfigJson()));
+        assertFalse(service.isGameModuleConfigEnabled(choiceConfigJson().replace(
+                "\"effects\":{\"trust\":1}},", "\"effects\":{\"trust\":true}},")));
+        assertFalse(service.isGameModuleConfigEnabled(choiceConfigJson().replace(
+                "\"effects\":{\"trust\":1}},", "\"effects\":{\"trust\":\"1\"}},")));
+        assertFalse(service.isGameModuleConfigEnabled(choiceConfigJson().replace(
+                "\"effects\":{\"trust\":1}},", "\"effects\":{\"__tags\":1}},")));
+        assertFalse(service.isGameModuleConfigEnabled(routeStyleStoryConfigJson().replace(
+                "\"variables\":{\"trust\":0}", "\"variables\":{\"trust\":\"0\"}")));
+        assertFalse(service.isGameModuleConfigEnabled(routeStyleStoryConfigJson().replace(
+                "\"variables\":{\"trust\":0}", "\"variables\":{\"trust\":1.5}")));
+        assertTrue(service.isGameModuleConfigEnabled(branchingChoiceConfigJson()));
+    }
+
+    @Test
+    void prepareRejectsNonIntegerStoryVariableBeforeCreatingSession() {
+        CmsTopic topic = configuredTopic();
+        topic.setGameModuleConfigJson(choiceConfigJson().replace(
+                "\"effects\":{\"trust\":1}},", "\"effects\":{\"trust\":true}},"));
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
+        when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
+
+        GameSessionException error = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(PLAYER), command("prepare-non-integer-story-variable", 0, "PREPARE",
+                        Collections.emptyMap())));
+
+        assertEquals("GAME_CONFIG_INVALID", error.getErrorCode());
+        assertTrue(error.getMessage().contains("整数"));
+        verify(runtimeMapper, never()).insertSession(any());
+    }
+
+    @Test
     void prepareRejectsInvalidRouteStyleStoryRuleBeforeCreatingSession() {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(routeStyleStoryConfigJson().replace(
                 "{\"op\":\"INC\",\"var\":\"trust\",\"value\":2}", "{\"op\":\"ADD\",\"var\":\"trust\",\"value\":2}"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -2437,7 +2689,7 @@ class GameSessionRuntimeServiceImplTest {
         topic.setGameModuleConfigJson(routeStyleStoryConfigJson().replace(
                 "\"conditions\":[{\"var\":\"trust\",\"op\":\"GTE\",\"value\":2},"
                         + "{\"op\":\"HAS_TAG\",\"value\":\"tag.hurried\"}]", "\"conditions\":[]"));
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
 
@@ -3233,7 +3485,11 @@ class GameSessionRuntimeServiceImplTest {
         CmsTopic topic = configuredTopic();
         topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
         topic.setGameModuleConfigJson(null);
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        topic.setPublishedConfigVersion(1L);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService routeRuntime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", routeRuntime);
+        when(routeRuntime.freezePublishedJourney(topic)).thenReturn("{\"schemaVersion\":1,\"startNodeId\":5001,\"terminalNodeIds\":[5001],\"journeyRules\":{\"schemaVersion\":1}}");
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         assertTrue(service.isGameSessionEnabled(topic));
         topic.setGameModuleConfigJson("{broken");
         assertFalse(service.isGameSessionEnabled(topic));

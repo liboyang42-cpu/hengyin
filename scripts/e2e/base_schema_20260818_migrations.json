@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "sourceCommit": "737f0c2eab1dab2afaa51944d8654a7f803671c3",
-  "migrationCount": 249,
+  "migrationCount": 248,
   "reconciledCount": 1,
   "baseSchema": {
     "path": "sql/base_schema_20260818.sql",
@@ -42,11 +42,6 @@
       "path": "chengyinhub-admin/sql/migration_20260815_tandianri_h8_rate_convergence.sql",
       "sourceSha256": "ad37eddf8baf2105b15525a41b479426da0d938476457c877cca46a67f2d162f",
       "sha256": "ad37eddf8baf2105b15525a41b479426da0d938476457c877cca46a67f2d162f"
-    },
-    {
-      "path": "chengyinhub-admin/sql/migration_20260815_tandianri_roam_referral.sql",
-      "sourceSha256": "8129555eba6a172c3d29575a1b7602f0c1b2519ce4aad3826ee5c81e79c98c75",
-      "sha256": "8129555eba6a172c3d29575a1b7602f0c1b2519ce4aad3826ee5c81e79c98c75"
     },
     {
       "path": "chengyinhub-admin/sql/migration_20260815_tandianri_roam_revisit_report_indexes.sql",
@@ -1053,7 +1048,10 @@
     {
       "path": "chengyinhub-admin/sql/migration_settlement_decommission_job_20260716.sql",
       "sourceSha256": "c99c0754fd7e5b5c52c32733cdd67f21c2a8ef1c0b7eddaf4ddef0ddcbac11cc",
-      "sha256": "c99c0754fd7e5b5c52c32733cdd67f21c2a8ef1c0b7eddaf4ddef0ddcbac11cc"
+      "sha256": "c99c0754fd7e5b5c52c32733cdd67f21c2a8ef1c0b7eddaf4ddef0ddcbac11cc",
+      "currentSourceSha256": "77860c8e2b80ba1d579f5345111fb61422baa83aa22398e597465cd1da484420",
+      "executableContractSha256": "d057a7929325baf3cb30aebfd324f99bc2f48333944720128cb559fdd5cf0c59",
+      "reason": "2026-10-19仅把注释中的生产库主机地址替换为占位符(公开仓卫生)；SQL及runner断言不变，sourceSha256保留快照来源，currentSourceSha256校验当前文件。原始字节含生产地址、不在公开快照中保留，executableContractSha256钉住原文件的可执行语句+断言。"
     },
     {
       "path": "chengyinhub-admin/sql/migration_settlement_menu_rename_20260717.sql",

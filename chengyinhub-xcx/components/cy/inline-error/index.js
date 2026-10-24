@@ -4,9 +4,9 @@
    2026-09-10 用户实拍指出:结算页支付失败也走了 data 档,一条蓝色 ⓘ「这次报名还没完成」
    看着像一句提示,而它其实是「钱没付成、票没出」。失败不能穿提示的衣服。 */
 const KIND_DEFAULTS = {
-  network: { glyph: 'warning', title: '网络没连上',       sub: '连接恢复后可继续' },
-  data:    { glyph: 'info',    title: '这部分没更新成功', sub: '已有内容仍可查看' },
-  error:   { glyph: 'warning', title: '这一步没有完成',   sub: '重试一次，或稍后再来' },
+  network: { glyph: 'warning', title: '网络没连上',       sub: '' },
+  data:    { glyph: 'info',    title: '这部分没更新成功', sub: '' },
+  error:   { glyph: 'warning', title: '这一步没有完成',   sub: '' },
 };
 
 Component({
@@ -17,11 +17,13 @@ Component({
     // 单一局部恢复动作；空值时不渲染 CTA。
     action: { type: String, value: '' },
     aria: { type: String, value: '' },
+    // loadFailure:加载/刷新类失败不展示;操作失败与表单校验不要传。
+    loadFailure: { type: Boolean, value: false },
   },
   data: {
     _glyph: 'info',
     _title: '这部分没更新成功',
-    _sub: '已有内容仍可查看',
+    _sub: '',
   },
   observers: {
     'kind, title, sub, aria': function (kind, title, sub, aria) {

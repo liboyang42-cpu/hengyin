@@ -16,7 +16,7 @@ let definition
   const previousComponent = global.Component
   const previousGetApp = global.getApp
   global.Component = (options) => { definition = options }
-  global.getApp = () => ({ sendRequest() {} })
+  global.getApp = () => ({ sendRequest() {}, getUserID: () => 7 })
   delete require.cache[COMPONENT_PATH]
   require(COMPONENT_PATH)
   global.Component = previousComponent
@@ -74,7 +74,7 @@ test('★提交被服务端拒(非 200):抛 actionfail,带上动作名', async (
 })
 
 test('状态已更新:回读完也抛 actionfail(这一步没提交)', async () => {
-  const game = createGame([{ res: { code: 500, msg: '状态已更新,请刷新' } }, { res: { code: 200, data: view(5) } }])
+  const game = createGame([{ res: { code: 500, msg: '状态已更新，请刷新' } }, { res: { code: 200, data: view(5) } }])
   await game.action('SUBMIT_PHOTO_CHECK', {})
   await flush()
   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 1)
@@ -84,12 +84,12 @@ test('响应丢失后回读:没写进去 → actionfail;回读也失败 → acti
   const notLanded = createGame([{ err: new Error('timeout') }, { res: { code: 200, data: view(3) } }])
   await notLanded.action('SUBMIT_PHOTO_CHECK', {})
   await flush(); await flush()
-  assert.equal(notLanded.events.filter((e) => e.name === 'actionfail').length, 1, '回读说没写进去,却没通知页面')
+  assert.equal(notLanded.events.filter((e) => e.name === 'actionfail').length, 1, '刷新说没写进去，却没通知页面')
 
   const readbackDown = createGame([{ err: new Error('timeout') }, { err: new Error('timeout') }])
   await readbackDown.action('SUBMIT_PHOTO_CHECK', {})
   await flush(); await flush()
-  assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 1, '回读也失败,那一屏还在转圈')
+  assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 1, '刷新也失败，那一屏还在转圈')
 })
 
 test('负控:响应丢失但回读证明已写进去 → 不抛 actionfail(那是成功)', async () => {
@@ -98,3 +98,36 @@ test('负控:响应丢失但回读证明已写进去 → 不抛 actionfail(那�
   await flush(); await flush()
   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 0)
 })
+
+for (const withCard of [true, false]) {
+  test(`迟到成功动作回执不回退快照，保留有效成功${withCard ? '及当次卡片' : '且不制造卡片'}`, async () => {
+    const game = createGame([]);
+    let finish;
+    game.request = () => new Promise(resolve => { finish = resolve; });
+    const old = game.action('SUBMIT_PHOTO_CHECK', {});
+    game.hydrate(view(5, { vars: { stage: 'latest' }, readyForBase: true,
+      playKit: { photoCheck: { title: '原玩法', passed: true } } }));
+    const current = game.data.state;
+    game.events.length = 0;
+    finish({ code: 200, data: view(4, Object.assign({ vars: { stage: 'old' }, readyForBase: false }, withCard ? { objectCard: CARD } : {})) });
+    assert.equal(await old, true);
+    assert.equal(game.data.state, current);
+    assert.equal(game.data.acting, false);
+    assert.equal(game.data.unknown, false);
+    assert.equal(game.events.filter(e => e.name === 'actionfail').length, 0);
+    const sessions = game.events.filter(e => e.name === 'session');
+    assert.equal(sessions.length, withCard ? 1 : 0);
+    if (withCard) {
+      assert.deepEqual(sessions[0].detail.objectCard, CARD);
+      assert.equal(sessions[0].detail.version, 5);
+      assert.deepEqual(sessions[0].detail.vars, { stage: 'latest' });
+      assert.equal(sessions[0].detail.readyForBase, true);
+      assert.equal(current.objectCard, undefined, 'receipt card must not mutate authoritative latest state');
+      const { pickPlayKit } = require('../../pages/play/utils/playkit-view.js');
+      const kit = pickPlayKit(sessions[0].detail, new Date());
+      assert.equal(kit.type, 'photocheck');
+      assert.equal(kit.card.title, CARD.title);
+      assert.equal(kit.passed, true);
+    }
+  });
+}

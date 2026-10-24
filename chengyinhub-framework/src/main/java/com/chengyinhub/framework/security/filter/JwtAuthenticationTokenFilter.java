@@ -2,11 +2,11 @@ package com.chengyinhub.framework.security.filter;
 
 import java.io.IOException;
 import java.util.Collection;
-import javax.annotation.Resource;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.chengyinhub.common.constant.Constants;
 import com.chengyinhub.common.core.domain.model.LoginAppUser;

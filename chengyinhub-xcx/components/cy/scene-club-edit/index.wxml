@@ -3,11 +3,22 @@
   <cy-skeleton wx:if="{{loadState === 'loading'}}" type="form-section" count="6" loading-label="正在读取俱乐部资料" />
   <cy-error wx:elif="{{loadState === 'missing-param'}}" title="没有指定俱乐部" sub="{{loadErrorText}}" retry="返回俱乐部" bind:retry="onBack" />
   <cy-error wx:elif="{{loadState === 'permission'}}" title="暂无编辑权限" sub="{{loadErrorText}}" retry="返回俱乐部" bind:retry="onBack" />
-  <cy-error wx:elif="{{loadState === 'business-error'}}" title="编辑资料没能打开" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" />
-  <cy-error wx:elif="{{loadState === 'network-error'}}" title="网络连接失败" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" />
+  <cy-error load-failure wx:elif="{{loadState === 'business-error'}}" title="编辑资料没能打开" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" />
+  <cy-error load-failure wx:elif="{{loadState === 'network-error'}}" title="网络连接失败" sub="{{loadErrorText}}" retry="重新加载" bind:retry="loadClub" />
 
   <!-- ===== 表单 ===== -->
   <view class="body" wx:elif="{{loadState === 'ready'}}">
+
+
+    <view class="draft-panel" wx:if="{{draftNotice}}">
+      <text class="draft-notice" aria-role="status" aria-live="polite">{{draftNotice}}</text>
+      <text selectable="{{true}}" class="draft-comparison" wx:if="{{draftComparison}}">{{draftComparison}}</text>
+      <view class="draft-actions">
+        <cy-btn wx:if="{{draftAvailable}}" variant="primary" bindtap="restoreDraft">恢复草稿</cy-btn>
+        <cy-btn wx:if="{{draftCanDiscard}}" variant="secondary" bindtap="discardDraft">放弃本机草稿，读取当前资料</cy-btn>
+        <cy-btn wx:if="{{draftBlocked && !draftCanDiscard}}" variant="secondary" bindtap="loadClub">重新读取</cy-btn>
+      </view>
+    </view>
 
     <!-- 管理员副标题(Figma 29:145):管理员进来先知道自己能改什么,不用点到锁那一步才发现。 -->
     <view class="admin-note" wx:if="{{!isOwner}}">你是管理员 · 只能改展示信息</view>
@@ -34,34 +45,34 @@
         </view>
       </view>
     </view>
-    <view class="foot">头像 1:1 方图 · 封面 16:9 横图,将展示在俱乐部主页与目录中。</view>
+    <view class="foot">头像 1:1 · 封面 16:9</view>
 
     <!-- 基础信息 -->
     <view class="sec-label mt">基础信息</view>
     <view class="card">
       <view class="frow">
         <text class="fl">名称<text class="req">*</text></text>
-        <input class="fi" data-field="name" value="{{name}}" bindinput="onInput" placeholder="俱乐部名称" placeholder-class="ph" aria-label="俱乐部名称，必填" />
+        <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="name" value="{{name}}" bindinput="onInput" placeholder="俱乐部名称" placeholder-class="ph" aria-label="俱乐部名称，必填" />
       </view>
       <view class="frow">
         <text class="fl">城市<text class="req">*</text></text>
-        <input class="fi" data-field="city" value="{{city}}" bindinput="onInput" placeholder="所在城市" placeholder-class="ph" aria-label="所在城市，必填" />
+        <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="city" value="{{city}}" bindinput="onInput" placeholder="所在城市" placeholder-class="ph" aria-label="所在城市，必填" />
       </view>
       <view class="frow">
         <text class="fl">关键词</text>
-        <input class="fi" data-field="keywords" value="{{keywords}}" bindinput="onInput" placeholder="如:城市探索、解谜(选填)" placeholder-class="ph" aria-label="俱乐部关键词，选填" />
+        <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="keywords" value="{{keywords}}" bindinput="onInput" placeholder="如:城市探索、解谜(选填)" placeholder-class="ph" aria-label="俱乐部关键词，选填" />
       </view>
       <view class="frow last">
         <text class="fl">风格</text>
-        <input class="fi" data-field="style" value="{{style}}" bindinput="onInput" placeholder="如:轻松、沉浸、硬核(选填)" placeholder-class="ph" aria-label="俱乐部风格，选填" />
+        <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="style" value="{{style}}" bindinput="onInput" placeholder="如:轻松、沉浸、硬核(选填)" placeholder-class="ph" aria-label="俱乐部风格，选填" />
       </view>
     </view>
-    <view class="foot">主理人姓名与联系方式在「成为主理人」资料里维护,不在此修改。</view>
+    <view class="foot">在主理人资料中修改</view>
 
     <!-- 介绍 -->
     <view class="sec-label mt">俱乐部介绍</view>
     <view class="card">
-      <textarea class="fta" data-field="description" value="{{description}}" bindinput="onInput" maxlength="200"
+      <textarea disabled="{{saving || draftAvailable || draftBlocked}}" class="fta" data-field="description" value="{{description}}" bindinput="onInput" maxlength="200"
                 placeholder="简单介绍你的俱乐部，以及你希望创造怎样的活动体验。" placeholder-class="ph" aria-label="俱乐部介绍，最多 200 字" />
       <view class="ta-count">{{description.length}} / 200</view>
     </view>
@@ -93,7 +104,7 @@
         </view>
       </view>
     </view>
-    <view class="foot">点开在半屏里选,选完点「应用」。</view>
+    
 
     <!-- 经营配置：后台与报名服务端同一份 club 配置，不能只改展示文案。
          2026-08-26：这三项决定开卖时票怎么分、钱怎么收，只给主理人；
@@ -102,7 +113,7 @@
     <view class="card" wx:if="{{!isOwner}}">
       <view class="op-locked">
         <text class="op-locked-title">只有主理人能改经营配置</text>
-        <text class="op-locked-sub">成员优先报名 · 入会需要审批 · 成员保留名额 —— 这三项直接决定开卖时票怎么分、钱怎么收,所以留给主理人。</text>
+        <text class="op-locked-sub">仅主理人可设置</text>
         <!-- 现状回显(Figma 29:149):管理员改不了这三项,但要能看见现值 ——
              这是管理员唯一能知道「保留了几个名额」的地方,没有它锁说明就只是拒绝。 -->
         <text class="op-locked-cur">当前:{{opCurrentText}}</text>
@@ -114,13 +125,13 @@
         <view>
           <text class="fl">成员优先报名</text>
         </view>
-        <cy-switch checked="{{prioritySignupEnabled}}" bindchange="onPrioritySignupChange" />
+        <cy-switch disabled="{{saving || draftAvailable || draftBlocked}}" checked="{{prioritySignupEnabled}}" bindchange="onPrioritySignupChange" />
       </view>
       <view class="frow" wx:if="{{joinPolicySupported}}">
         <view>
           <text class="fl">入会需要审批</text>
         </view>
-        <cy-switch checked="{{joinPolicy === 1}}" bindchange="onJoinPolicyChange" />
+        <cy-switch disabled="{{saving || draftAvailable || draftBlocked}}" checked="{{joinPolicy === 1}}" bindchange="onJoinPolicyChange" />
       </view>
       <!-- [2026-08-12 拍板] 成员优惠价全局停用,输入框一并撤掉。
            留着的话:主理人填了、提示保存成功、库里也真存了,而会员照付原价,全程零提示 ——
@@ -128,10 +139,10 @@
            恢复入口在服务端 CmsRegistrationServiceImpl.clubOperationBenefit,不在这。 -->
       <view class="frow last">
         <text class="fl">成员保留名额</text>
-        <view class="operation-input"><input class="fi" data-field="memberReservedQuota" value="{{memberReservedQuota}}" type="number" bindinput="onInput" placeholder="0" placeholder-class="ph" aria-label="成员保留名额" /><text>个</text></view>
+        <view class="operation-input"><input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="memberReservedQuota" value="{{memberReservedQuota}}" type="number" bindinput="onInput" placeholder="0" placeholder-class="ph" aria-label="成员保留名额" /><text>个</text></view>
       </view>
     </view>
-    <view class="foot">保留名额会在报名报价与建单时再次校验。</view>
+    
     </block>
 
     <!-- 危险操作(Figma 28:68):红标签 + danger-soft 底卡 + 后果说明 + 整宽描边 danger 胶囊。
@@ -141,7 +152,7 @@
       <view class="sec-label mt danger-label">危险操作</view>
       <view class="danger-card">
         <text class="danger-title">解散俱乐部</text>
-        <text class="danger-copy">成员会失去俱乐部与群聊入口。已报名不会自动取消或退款;存在生效合作、未结束场次或未结算款项时会被拒绝。</text>
+        <text class="danger-copy">成员将失去俱乐部与群聊入口，已报名不会自动退款。</text>
         <view class="danger-btn {{dissolving || saving ? 'is-disabled' : ''}}" bindtap="dissolveClub"
               aria-role="button" aria-label="解散俱乐部" aria-disabled="{{dissolving || saving}}"
               hover-class="{{dissolving || saving ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{dissolving ? '正在解散…' : '解散俱乐部'}}</view>
@@ -158,7 +169,7 @@
     <cy-error wx:if="{{saveErrorText}}" title="保存失败" sub="{{saveErrorText}}" retry="重新保存" bind:retry="save"
               secondary="继续编辑" bind:secondary="dismissSaveError" />
     <!-- loading 接的是 js 里早就有的 saving —— 在途状态本来就在,只是没告诉用户 -->
-    <cy-btn wx:else variant="{{canSave ? 'primary' : 'disabled'}}" loading="{{saving}}" bindtap="save">保存修改</cy-btn>
+    <cy-btn wx:else variant="{{canSave && !draftAvailable && !draftBlocked ? 'primary' : 'disabled'}}" loading="{{saving}}" bindtap="save">保存修改</cy-btn>
     <!-- 解散钮已挪进表单末尾的「危险操作」区块 —— 后果说明要和按钮同屏,底栏放不下。 -->
   </view>
 </view>

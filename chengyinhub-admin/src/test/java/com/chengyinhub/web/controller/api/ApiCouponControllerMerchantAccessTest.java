@@ -44,6 +44,17 @@ import static org.mockito.Mockito.when;
 
 class ApiCouponControllerMerchantAccessTest {
 
+    @Test
+    void publishCountMustBePositiveAtRequestBoundary() {
+        try (jakarta.validation.ValidatorFactory factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+            jakarta.validation.Validator validator = factory.getValidator();
+            for (Long count : new Long[] {null, -1L, 0L}) {
+                assertFalse(validator.validateValue(CouponPublisDTO.class, "publishCount", count).isEmpty());
+            }
+            assertEquals(0, validator.validateValue(CouponPublisDTO.class, "publishCount", 1L).size());
+        }
+    }
+
     private static final Long PRINCIPAL_MEMBER_ID = 7002L;
     private static final Long OWNER_MEMBER_ID = 9001L;
     private static final Long MERCHANT_ROW_ID = 11L;
@@ -81,11 +92,25 @@ class ApiCouponControllerMerchantAccessTest {
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
         ReflectionTestUtils.setField(controller, "umsMemberService", memberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
+        // 分级审核门禁默认放行(门禁分支见 CouponPublishReviewModeTest)
+        com.chengyinhub.business.service.IContentSafetyGate gate = mock(com.chengyinhub.business.service.IContentSafetyGate.class);
+        when(gate.decide(any())).thenReturn(com.chengyinhub.business.domain.dto.SafetyDecision.pass());
+        ReflectionTestUtils.setField(controller, "contentSafetyGate", gate);
+        ReflectionTestUtils.setField(controller, "auditTaskService", mock(com.chengyinhub.business.service.IAuditTaskService.class));
 
         when(merchantAccessService.require(PRINCIPAL_MEMBER_ID, MerchantPermission.COUPON_MANAGE))
                 .thenReturn(access(MerchantRoleCode.MERCHANT_MARKETING));
         when(merchantAccessService.require(PRINCIPAL_MEMBER_ID, MerchantPermission.VERIFY))
                 .thenReturn(access(MerchantRoleCode.MERCHANT_CHECKIN));
+    }
+
+    @Test
+    void rewardSelectionRequestsIssuableCouponsOnly() {
+        when(couponService.selectSmsCouponList(any())).thenReturn(Collections.emptyList());
+        controller.myPublishCouponList(null, "1", "MERCHANT");
+        ArgumentCaptor<SmsCoupon> query = ArgumentCaptor.forClass(SmsCoupon.class);
+        verify(couponService).selectSmsCouponList(query.capture());
+        assertEquals(Boolean.TRUE, query.getValue().getParams().get("issuableOnly"));
     }
 
     @Test

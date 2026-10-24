@@ -1,0 +1,32 @@
+<view class="theme-dark ph">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="积分明细" safe-top="{{false}}" />
+    <view class="ph__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
+      <cy-error wx:elif="{{state === 'error'}}" title="积分明细加载失败" retry="重试" bind:retry="load" />
+      <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有积分记录" />
+      <block wx:else>
+        <cy-tabs variant="chip" tabs="{{filters}}" active="{{filter}}" bind:change="onFilter" />
+        <cy-empty wx:if="{{filterEmpty}}" kind="empty" title="{{filter === 'income' ? '还没有获得积分的记录' : '还没有使用积分的记录'}}" sub="换个筛选试试" />
+        <view class="ph-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
+          <text class="ph-group__title">{{group.label}}</text>
+          <view class="ph-row" wx:for="{{group.rows}}" wx:key="id">
+            <view class="ph-row__main">
+              <text class="ph-row__reason">{{item.reason}}</text>
+              <text class="ph-row__sub">{{item.timeText}}{{item.afterText ? ' · ' + item.afterText : ''}}</text>
+            </view>
+            <text class="ph-row__delta {{item.income ? 'is-income' : 'is-expense'}}"
+                  aria-label="{{item.income ? '获得' : '消耗'}} {{item.delta < 0 ? -item.delta : item.delta}} 积分">{{item.deltaText}}</text>
+          </view>
+        </view>
+        <view class="ph__more" wx:if="{{hasMore}}" bindtap="loadMore" aria-role="button" aria-label="加载更多积分记录"
+              hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
+        <view class="ph__more ph__more--end" wx:elif="{{!filterEmpty}}">已经到底了</view>
+      </block>
+    </view>
+  </view>
+</view>

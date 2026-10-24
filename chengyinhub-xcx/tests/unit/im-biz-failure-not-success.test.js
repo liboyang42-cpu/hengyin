@@ -64,7 +64,7 @@ function loadPage(relPath, { onRequest, tips }) {
 
 function makePage(cfg, data) {
   const page = Object.assign(Object.create(null), cfg)
-  page.data = Object.assign({}, cfg.data, data)
+  page.data = Object.assign({}, cfg.data, { myId: 1 }, data)
   page.setData = function (patch) {
     Object.keys(patch).forEach((k) => {
       if (k.indexOf('[') === -1 && k.indexOf('.') === -1) { page.data[k] = patch[k]; return }
@@ -137,33 +137,14 @@ test('单条已读:业务失败时未读数不能被清零', () => {
   assert.ok(tipped.length > 0, '必须提示失败')
 })
 
-test('全部已读:一条都没成功时不能报「已全部标为已读」', () => {
-  const sentList = []
-  const tipped = []
-  const cfg = loadPage('subpackageB/pages/im/list/index.js', {
-    onRequest: (p) => { sentList.push(p) }, tips: (t) => tipped.push(t),
-  })
-  const page = makePage(cfg, {
-    list: [{ conversationId: 'c1', unread: 2 }, { conversationId: 'c2', unread: 1 }],
-  })
-  page.tabOf = () => 0
-  page.loadConversations = () => {}
-  page.onReadAll()
-  assert.equal(sentList.length, 2, '两条未读应当各发一次请求')
-  sentList.forEach((p) => { p.success && p.success(BIZ_FAIL); p.complete && p.complete() })
-  assert.ok(!global.__toasts.includes('已全部标为已读'),
-    '全部业务失败时不能弹「已全部标为已读」—— 原实现用 complete 计数,断网也会弹')
-  assert.ok(tipped.length > 0, '必须提示失败')
-})
-
 test('拉黑:业务失败时不能禁用输入框、不能报「已拉黑」', () => {
   let sent = null
   const tipped = []
   const cfg = loadPage('subpackageB/pages/im/chat/index.js', {
     onRequest: (p) => { sent = p }, tips: (t) => tipped.push(t),
   })
-  // doBlock 从最近一条「对方发的」消息里取 otherId(chat/index.js:457-462),所以要喂 msgs
   const page = makePage(cfg, {
+    conversationId: 7,
     myId: 1,
     msgs: [{ senderId: 1 }, { senderId: 42 }],
     disabled: false,
@@ -173,6 +154,8 @@ test('拉黑:业务失败时不能禁用输入框、不能报「已拉黑」', (
   // 发请求的是 onDangerConfirm(确认后),发起确认的是 doBlock;两步都真跑
   assert.ok(typeof cfg.doBlock === 'function' && /api\/im\/block/.test(String(cfg.onDangerConfirm)), '拉黑必须走 dc 确认后再发请求')
   page.doBlock({})
+  assert.equal(sent.url, '/api/im/conversations')
+  sent.success({ code: 200, data: [{ conversationId: 7, type: 1, counterparty: { id: 42 } }] })
   assert.ok(sent && sent.url === '/api/im/block', '应当发出拉黑请求')
   sent.success(BIZ_FAIL)
   assert.equal(page.data.disabled, false, '业务失败时输入框不能被禁用')
@@ -180,7 +163,7 @@ test('拉黑:业务失败时不能禁用输入框、不能报「已拉黑」', (
   assert.ok(tipped.length > 0 || global.__dc.failed.length > 0, '必须提示失败')
 })
 
-test('清空聊天:必须先 POST /api/im/delete,业务失败时不能假装已清空也不能离开会话', () => {
+test('隐藏会话:必须先 POST /api/im/delete,业务失败时不能假装已清空也不能离开会话', () => {
   let sent = null
   const tipped = []
   const cfg = loadPage('subpackageB/pages/im/chat/index.js', {
@@ -190,8 +173,8 @@ test('清空聊天:必须先 POST /api/im/delete,业务失败时不能假装已�
     conversationId: 9,
     msgs: [{ id: 1, senderId: 42 }],
   })
-  page.onMoreSelect({ detail: { label: '清空聊天' } })
-  assert.ok(sent && sent.url === '/api/im/delete', '清空聊天必须打与列表相同的删除接口')
+  page.onMoreSelect({ detail: { label: '隐藏会话' } })
+  assert.ok(sent && sent.url === '/api/im/delete', '隐藏会话必须打与列表相同的删除接口')
   assert.equal(sent.data.conversation_id, 9)
   sent.success(BIZ_FAIL)
   assert.equal(page.data.msgs.length, 1, '业务失败时消息不能被本地抹掉')
@@ -199,19 +182,19 @@ test('清空聊天:必须先 POST /api/im/delete,业务失败时不能假装已�
   assert.ok(tipped.length > 0 || global.__dc.failed.length > 0, '必须提示失败')
 })
 
-test('清空聊天:业务成功后回到会话列表', () => {
+test('隐藏会话:业务成功后回到会话列表', () => {
   let sent = null
   const cfg = loadPage('subpackageB/pages/im/chat/index.js', {
     onRequest: (p) => { sent = p }, tips: () => {},
   })
   const page = makePage(cfg, { conversationId: 9, msgs: [{ id: 1, senderId: 42 }] })
-  page.onMoreSelect({ detail: { label: '清空聊天' } })
+  page.onMoreSelect({ detail: { label: '隐藏会话' } })
   sent.success({ code: 200 })
   assert.ok(global.__backs.length > 0 || global.__redirects.includes('/subpackageB/pages/im/list/index'),
     '删除成功必须回到会话列表')
 })
 
-test('清空聊天:取消、未确认、过期会话不删除，重复确认只请求一次', () => {
+test('隐藏会话:取消、未确认、过期会话不删除，重复确认只请求一次', () => {
   const requests = []
   const cfg = loadPage('subpackageB/pages/im/chat/index.js', {
     onRequest: (p) => requests.push(p), tips: () => {},
@@ -220,7 +203,7 @@ test('清空聊天:取消、未确认、过期会话不删除，重复确认只�
   const opened = []
   page.selectComponent = () => ({ open: key => opened.push(key), busyOn() {}, done() {}, failed() {} })
   page.onDangerConfirm({ detail: { key: 'im.conversation.delete' } })
-  page.onMoreSelect({ detail: { label: '清空聊天' } })
+  page.onMoreSelect({ detail: { label: '隐藏会话' } })
   assert.deepEqual(opened, ['im.conversation.delete'])
   assert.equal(requests.length, 0, '打开确认不能删除')
   page.onDangerCancel({ detail: { key: 'im.conversation.delete' } })

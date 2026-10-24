@@ -50,7 +50,7 @@ test('一级页不得用 openScene 打开二级大功能', () => {
       if (src.includes(`openScene('${id}'`)) bad.push(`${host} -> ${id}`)
     }
   }
-  assert.deepEqual(bad, [], `二级大功能应各自成页,不该被弹窗化:\n  ${bad.join('\n  ')}`)
+  assert.deepEqual(bad, [], `二级大功能应各自成页，不该被弹窗化:\n  ${bad.join('\n  ')}`)
 })
 
 test('D38 注销是用户指定的弹窗例外，设置页直接托管完整注销 scene', () => {
@@ -65,7 +65,7 @@ test('三级记录/详情由它的父页面托管弹窗,而不是一级 tab 页'
     assert.match(
       src,
       new RegExp(`sceneCurrent\\.id === '${id}'`),
-      `${hostWxml} 应托管三级场景 ${id} —— 关闭后要回到父页面,不是回到 tab 页`
+      `${hostWxml} 应托管三级场景 ${id} —— 关闭后要回到父页面，不是回到 tab 页`
     )
     // 一级 tab 页不该再挂它(否则关闭后会跳回 tab,层级就断了)
     assert.doesNotMatch(
@@ -89,14 +89,14 @@ test('二级页面自己就是宿主:订单页 / 收益页都带场景栈', () =
   for (const p of ['subpackageMember/order/order.js', 'subpackageA/pages/assetcenter/earnings/index.js']) {
     const src = read(p)
     assert.match(src, /sceneCurrent/, `${p} 应持有场景栈以托管自己的三级弹窗`)
-    assert.match(src, /getScene\(/, `${p} 应从注册表取场景定义,不自己拼`)
+    assert.match(src, /getScene\(/, `${p} 应从注册表取场景定义，不自己拼`)
   }
 })
 
 test('地图宿主是技术例外:play / roam 的二级内容仍走弹窗', () => {
   // 这两页压新路由会打断 <map>、定位与计时(方案 §0-1),与层级规则无关,是硬约束。
   for (const host of ['pages/play/index.js', 'pages/roam/index.js']) {
-    assert.match(read(host), /openScene\('/, `${host} 是地图宿主,必须继续用场景弹窗`)
+    assert.match(read(host), /openScene\('/, `${host} 是地图宿主，必须继续用场景弹窗`)
   }
 })
 
@@ -137,7 +137,7 @@ test('club-edit 复用完整编辑组件,不得退化成通用七字段表单', 
 test('scene-sheet 是唯一纵向滚动区,club-edit 深链也保留脏表单确认闸', () => {
   const verticalSceneComponents = [
     'components/cy/scene-club-edit/index.wxml',
-    'components/cy/scene-game-coupon-wallet/index.wxml',
+    'subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml',
     'components/cy/scene-roam-history/index.wxml',
     'components/cy/scene-roam-discover/index.wxml',
     'components/cy/scene-roam-task-list/index.wxml',

@@ -53,7 +53,7 @@ test('有 clubId 默认从地点开始,且不改变 productType', () => {
   const formData = ready({ productType: 1 })
   const r = evalDraft(formData, { clubId: 42 })
   assert.equal(r.defaultAnchor, 'place')
-  assert.equal(formData.productType, 1, '起点不是第三种玩法模式,不许回写 productType')
+  assert.equal(formData.productType, 1, '起点不是第三种玩法模式，不许回写 productType')
 })
 
 test('空草稿给引导动作,一旦有内容就撤掉(不做全局推荐下一步)', () => {
@@ -61,7 +61,7 @@ test('空草稿给引导动作,一旦有内容就撤掉(不做全局推荐下一
   assert.equal(blank.starterAction.key, 'createChapter')
 
   const withContent = evalDraft(ready())
-  assert.equal(withContent.starterAction, null, '有内容后靠章节卡状态标记,不再给全局动作')
+  assert.equal(withContent.starterAction, null, '有内容后靠章节卡状态标记，不再给全局动作')
 })
 
 // ===== 城市定向的剧情闸 =====
@@ -135,7 +135,7 @@ test('阻断项要定位到具体章节与节点,不能只给汇总', () => {
   assert.ok(miss, '必须报出缺地点')
   assert.equal(miss.chapterIndex, 0)
   assert.equal(miss.nodeIndex, 0)
-  assert.match(miss.message, /宠物公园/, '错误文案要带节点名,否则用户不知道是哪个')
+  assert.match(miss.message, /宠物公园/, '错误文案要带节点名，否则用户不知道是哪个')
 })
 
 test('坐标为 "0" 不算有效(POI/后端的常见空值)', () => {
@@ -167,7 +167,7 @@ test('齐了就是 creativeComplete', () => {
  */
 test('主题类别计入缺项数,数组与逗号串两种形态都认', () => {
   assert.ok(evalDraft(ready({ categoryIds: '' })).blockingIssues.some(i => i.key === 'categoryIds'),
-    '没选类别必须进缺项数,否则选完类别总览数字不动')
+    '没选类别必须进缺项数，否则选完类别总览数字不动')
   assert.equal(evalDraft(ready({ categoryIds: '' }), { categoryIds: ['4001'] })
     .blockingIssues.filter(i => i.key === 'categoryIds').length, 0, '页面传数组形态')
   assert.equal(evalDraft(ready({ categoryIds: '' }), { categoryIds: [] })

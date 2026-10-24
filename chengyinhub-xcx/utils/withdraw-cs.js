@@ -6,7 +6,7 @@ const modal = require('./modal.js')
 const toast = require('./toast.js')
 
 const WITHDRAW_CS_WECHAT_ID = '18018571626'
-const WITHDRAW_CS_TIP = '添加客服微信，核对金额后线下处理'
+const WITHDRAW_CS_TIP = '添加客服微信，确认金额后线下处理'
 
 function copyWithdrawCsWechat() {
   wx.setClipboardData({

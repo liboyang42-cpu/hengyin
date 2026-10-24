@@ -62,7 +62,7 @@ function assertSheetCloseAccessibility(wxml, wxss, tokens) {
   /* 2026-09-02(vault §3.21 已定 · 用户当面点名):✕ 去圆底,只留字形。
      本契约保护的是**无障碍与热区** —— 上面 width/height/position 那几条才是它的本体,一条没动。
      这里把旧口径「必须是圆形 chip」换成新口径:底色必须透明。 */
-  assert.match(closeRule, /background:\s*transparent/, '✕ 不许再有圆底,只留字形')
+  assert.match(closeRule, /background:\s*transparent/, '✕ 不许再有圆底，只留字形')
   assert.doesNotMatch(closeRule, /url\(/, '关闭热区不得额外引入资产')
 
   const buttonHeight = tokens.match(/--cy-btn-h:\s*(\d+)rpx/)

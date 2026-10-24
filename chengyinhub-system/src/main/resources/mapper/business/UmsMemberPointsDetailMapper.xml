@@ -127,6 +127,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          #{eventType}, #{eventId}, #{rewardBusinessKey}, #{changeType}, #{delFlag}, #{createTime})
     </insert>
 
+    <!-- F1b 城市定向局终结算专用写入口:只服务 OrientScoringServiceImpl。通用业务键写入口
+         (insertUmsMemberPointsDetailWithBusinessKey)由 ci/test_mapper_h8_column_isolation.py 钉死只留给核销奖励,
+         这里不引用 H8 的四个快照列。reward_business_key = orient-settlement:{sessionId},撞
+         uk_member_reward_business 即 fail closed。 -->
+    <insert id="insertOrientSettlementPointsDetail" parameterType="UmsMemberPointsDetail">
+        insert into ums_member_points_detail
+        (member_id, current_points, after_points, change_points, change_reason,
+         event_type, event_id, reward_business_key, change_type, del_flag, create_time)
+        values
+        (#{memberId}, #{currentPoints}, #{afterPoints}, #{changePoints}, #{changeReason},
+         #{eventType}, #{eventId}, #{rewardBusinessKey}, #{changeType}, #{delFlag}, #{createTime})
+    </insert>
+
     <!-- H8 专用写入口：只服务 PointsAwardServiceImpl.awardPublisherSettlement。
          四个快照列【无条件】写死在这里 —— publisher_settlement_topic_id 必须真被写进去，
          否则 ORDER 1/2 建的全局唯一键 uk_publisher_settlement_topic 就是一条空索引，
@@ -204,8 +217,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         member_id = #{memberId}
         AND change_type = 1
         AND del_flag = 0
-        AND create_time >= DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) - 2) DAY)
-        AND create_time < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) - 2) DAY), INTERVAL 7 DAY)
+        AND create_time >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
+        AND create_time < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)
         ]]>
     </select>
 

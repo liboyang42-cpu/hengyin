@@ -28,7 +28,10 @@ const PREVIEW_PRIORITY = [
   /* 拍照审核 / 拍物成卡:要玩家当场拍,同属「要玩家动手」 */
   'photoCheck',
   'reaction', 'ballShake', 'quietHold', 'compass', 'shout', 'stopwatch', 'countdown', 'steps',
-  'coinFlip', 'diceRoll', 'random', 'bingo', 'scan',
+  'coinFlip', 'diceRoll', 'random', 'bingo',
+  /* 2026-10-23 补:试玩台里有、编辑页一直没法试玩的三屏。排在扫码前面 —— 扫码是参与方式,玩法才是这一屏 */
+  'blindTaste', 'dailySign', 'check',
+  'scan',
   /* 《预制人生》四段(2026-09-24 C-04 补):之前没有构造器,配齐了点「试玩」也只会说「还要再填一点」 */
   'profile', 'photoCheck', 'typeIn', 'note', 'album',
 ];
@@ -48,7 +51,7 @@ const BUILDERS = {
   album: c => c.images && c.images.length ? ({ type: 'album', images: c.images.map(image => ({url: image.url, line: image.line || ''})) }) : null,
   coinFlip: (c) => ({
     type: 'coinflip',
-    kicker: orBlank(c.kicker) || '抛一次,认结果',
+    kicker: orBlank(c.kicker) || '抛一次，认结果',
     headsLabel: orBlank(c.heads && c.heads.label) || '正面',
     headsAction: orBlank(c.heads && c.heads.action),
     tailsLabel: orBlank(c.tails && c.tails.label) || '反面',
@@ -113,7 +116,7 @@ const BUILDERS = {
   }),
   stopwatch: (c) => ({
     type: 'stopwatch',
-    kicker: orBlank(c.kicker) || '把手机拿到面前,随时可以开始',
+    kicker: orBlank(c.kicker) || '把手机拿到面前，随时可以开始',
     targetSeconds: num(c.targetSeconds, 10),
     toleranceMs: num(c.toleranceMs, 300),
     tries: num(c.tries, 0),
@@ -251,7 +254,8 @@ const BUILDERS = {
     lead: orBlank(c.lead),
     imageUrl: orBlank(c.imageUrl),
     audioUrl: orBlank(c.audioUrl),
-    options: (Array.isArray(c.options) ? c.options : []).map((o) => ({ t: orBlank(o.label) })),
+    // id 照带(不是秘密):试玩判定按 id 认选项;correct 与反馈仍不带
+    options: (Array.isArray(c.options) ? c.options : []).map((o) => ({ id: orBlank(o.id), t: orBlank(o.label) })),
     // 多选标记照配置带过去:预览要演的就是「勾多个再提交」那一屏
     multi: !!c.multi,
     shotLead: orBlank(c.lead) || orBlank(c.title),
@@ -297,6 +301,7 @@ const BUILDERS = {
   }),
   typeIn: (c) => ({
     type: 'typein', title: txt(c.title), target: txt(c.target), seconds: num(c.seconds, 0),
+    r5: false, deadlineAt: 0,
     caseSensitive: !!c.caseSensitive, tries: num(c.tries, 0), attempts: 0, passed: false, startConfirmed: false, startFailureSeq: 0,
     terminalSkin: !!c.terminalSkin,   // 终端样式,纯外观
   }),
@@ -304,6 +309,34 @@ const BUILDERS = {
     type: 'note', title: txt(c.title), prompt: txt(c.prompt), maxLength: num(c.maxLength, 40) || 40,
     presets: Array.isArray(c.presets) ? c.presets : [], previous: [], mine: '', done: false,
     draftKey: '',   // 玩家页按本局拼的草稿键;试玩不存草稿
+  }),
+  /* 2026-10-23 补齐试玩台里还没法试玩的三屏(闭眼盲品 / 今日城市签 / D20 三档)。
+     字段与玩家页 playkit-view.buildBlindTaste / buildDailySign、pickJourneyCheck 一一对应;作者没填的地方给一句示例,别让试玩是一屏空白。 */
+  blindTaste: (c) => {
+    const options = (Array.isArray(c.options) ? c.options : []).filter(o => o && o.key)
+      .map(o => ({ key: o.key, label: txt(o.label) || ('样品 ' + o.key) }));
+    return {
+      type: 'blindtaste', eyebrow: '闭眼味觉师 · 盲品', title: txt(c.title) || '闭上眼，尝一口，猜猜是哪一种',
+      // 与 playkit-steps 的 blindtaste 图标行同一句读屏文案(分包之间不能 require,只能各写一份)
+      steps: txt(c.steps) || '玩法步骤:1 领小样,2 闭眼尝,3 作答',
+      hint: txt(c.hint), options: options.length >= 2 ? options : [{ key: 'A', label: '桂花乌龙' }, { key: 'B', label: '茉莉绿茶' }],
+      xpLabel: num(c.xp, 0) > 0 ? '答对 +' + num(c.xp, 0) + ' XP' : '', selectedKey: '', locked: false,
+    };
+  },
+  dailySign: (c) => {
+    // 签文池在玩家侧由服务端当天抽一条;试玩就演作者写的第一条
+    const poem = (Array.isArray(c.poems) ? c.poems : []).map(p => (Array.isArray(p) ? p : [p]).map(txt).filter(Boolean)).find(p => p.length);
+    const now = new Date(), pad2 = n => (n < 10 ? '0' : '') + n;
+    return {
+      type: 'dailysign', dateLabel: pad2(now.getMonth() + 1) + ' / ' + pad2(now.getDate()), address: '',
+      lines: poem || ['今日宜慢行', '巷口有风，茶正好'], signer: txt(c.signer), leftAt: '', photoUrl: '',
+      serialLabel: 'NO. 0001', textMax: 40, myText: '', myPhotoUrl: '', claimed: false, revealed: false,
+    };
+  },
+  check: (c) => ({
+    type: 'journeycheck', skill: txt(c.skill), tier: ['easy', 'medium', 'hard'].indexOf(c.tier) >= 0 ? c.tier : 'medium',
+    mods: [], advantage: false, disadvantage: false, receipt: null,
+    successText: txt(c.successText), failText: txt(c.failText),
   }),
   branch: (c) => {
     const step = (Array.isArray(c.steps) ? c.steps : [])[0] || {};
@@ -323,7 +356,23 @@ const BUILDERS = {
  * 从整份配置里挑出该演的那一段,转成 kit。都没开就返回 null ——
  * 调用方据此回落到基础验证那套预览,而不是画一屏空的。
  */
+/** 一个模板启用了多段客观题（问答/排序/连线/分类）时，预览按段依次走完：后续段挂在 queue 上。 */
+const SEGMENT_SECTIONS = ['qa', 'sort', 'match', 'classify'];
 function buildPreviewKit(config, opts) {
+  const first = buildSinglePreviewKit(config, opts);
+  if (!first || SEGMENT_SECTIONS.indexOf(first.type) < 0) return first;
+  const queue = [];
+  for (const key of PREVIEW_PRIORITY) {
+    if (key === first.type || SEGMENT_SECTIONS.indexOf(key) < 0 || !config[key] || !config[key].enabled || !BUILDERS[key]) continue;
+    const kit = BUILDERS[key](config[key]);
+    if (!kit) continue;
+    kit.present = first.present;
+    queue.push(kit);
+  }
+  if (queue.length) first.queue = queue;
+  return first;
+}
+function buildSinglePreviewKit(config, opts) {
   if (!config || typeof config !== 'object') return null;
   const o = opts || {};
   for (const key of PREVIEW_PRIORITY) {

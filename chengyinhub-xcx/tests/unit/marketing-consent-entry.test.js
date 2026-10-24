@@ -79,7 +79,7 @@ test('pickOffer:只认服务端下发的 owner 匹配行;已同意 / 有歧义 /
   assert.equal(util.pickOffer([Object.assign({}, OFFER_ROW, { inAppOptedIn: true })], 900), null,
     '已同意过的商家不得再出现');
   assert.equal(util.pickOffer([OFFER_ROW, Object.assign({}, OFFER_ROW, { merchantRowId: 78 })], 900), null,
-    '同 owner 多行=归属有歧义,必须 fail-closed');
+    '同 owner 多行=归属有歧义，必须 fail-closed');
   assert.equal(util.pickOffer([OFFER_ROW], 901), null, 'owner 对不上不出');
   assert.equal(util.pickOffer([], 900), null);
   assert.equal(util.pickOffer(null, 900), null);
@@ -107,7 +107,7 @@ test('自玩通行证:买完面板先照常自愈;商家可用时出现勾选行
   vm.onResultConsentChange.call(vm, { detail: { checked: true } });
   const posts = requestsOf(sandbox, '/api/merchant/crm/marketing-consents').filter(r => r.method === 'POST');
   assert.equal(posts.length, 1);
-  assert.notEqual(posts[0].silentError, true, '保存是用户主动动作,失败不许静默(只有附属读取静默)');
+  assert.notEqual(posts[0].silentError, true, '保存是用户主动动作，失败不许静默(只有附属读取静默)');
   const body = JSON.parse(posts[0].data);
   assert.equal(body.merchantRowId, 77);
   assert.equal(body.merchantOwnerMemberId, 900);
@@ -117,7 +117,7 @@ test('自玩通行证:买完面板先照常自愈;商家可用时出现勾选行
   assert.equal(vm.data.resultSheet.consentState, 'saving');
 
   posts[0].success({ code: 200, data: { id: 1 } });
-  assert.equal(vm.data.resultSheet.consentState, 'saved', '成功态落在面板内那行回执上,不靠 toast');
+  assert.equal(vm.data.resultSheet.consentState, 'saved', '成功态落在面板内那行回执上，不靠 toast');
 });
 
 test('保存失败必须留在面板内可见并可重试;重试复用同一个 requestId(不写第二条同意)', () => {
@@ -133,7 +133,7 @@ test('保存失败必须留在面板内可见并可重试;重试复用同一个 
 
   assert.equal(vm.data.resultSheet.consentState, 'failed');
   assert.match(vm.data.resultSheet.consentError, /保存失败|授权/, '失败原因必须落在面板内');
-  assert.equal(vm.data.resultSheet.consentChecked, true, '失败后勾选态保留,不偷偷回退');
+  assert.equal(vm.data.resultSheet.consentChecked, true, '失败后勾选态保留，不偷偷回退');
 
   vm.onResultConsentRetry.call(vm);
   const second = posts()[1];
@@ -169,7 +169,7 @@ test('活动报名:结果面板同样接线;商家已同意 / 拿不到商家时
   assert.equal(failedLoad.silentError, true, '支付成功面板上取商家信息失败不得弹通道默认错误 toast');
   failedLoad.fail({ errMsg: 'timeout' });
   assert.equal(vm.data.resultSheet.consentName, '', '拿不到就 fail-closed,不硬塞一行会失败的勾选');
-  assert.deepEqual(sandbox.toasts, [], '读取失败不出任何提示,主流程(自愈跳转)不受影响');
+  assert.deepEqual(sandbox.toasts, [], '读取失败不出任何提示，主流程(自愈跳转)不受影响');
 });
 
 test('订单详情:已支付成功(含不核销的自玩通行证)即出同意行;未支付不出不查;owner 从订单回执取', () => {
@@ -229,7 +229,7 @@ test('订单详情:已支付成功(含不核销的自玩通行证)即出同意�
   } });
   const load = requestsOf(sandbox, '/api/merchant/crm/marketing-consents').slice(-1)[0];
   assert.ok(load, '已核销的单同样读一次同意列表(旧口径保留)');
-  assert.equal(load.silentError, true, '订单详情的附属读取失败同样静默,只隐藏同意行');
+  assert.equal(load.silentError, true, '订单详情的附属读取失败同样静默，只隐藏同意行');
   load.success({ code: 200, data: [OFFER_ROW] });
   assert.equal(vm2.data.consentOffer.show, true);
   assert.equal(vm2.data.consentOffer.merchantName, '旧城咖啡');
@@ -269,12 +269,12 @@ test('结果面板:不勾照常自愈;勾了才停表;保存成功短暂停留�
 
   vm.data.consentState = 'failed';
   vm._schedule();
-  assert.equal(timers.length, 1, '保存失败留在原位可重试,不自动收');
+  assert.equal(timers.length, 1, '保存失败留在原位可重试，不自动收');
 
   vm.data.consentState = 'saved';
   vm._schedule();
   assert.equal(timers.length, 2);
-  assert.equal(timers[1].ms, 1200, '保存成功后短暂停留让人看到回执,然后照常 close');
+  assert.equal(timers[1].ms, 1200, '保存成功后短暂停留让人看到回执，然后照常 close');
 });
 
 test('两端对齐:三个入口都把同意行接到 cy-consent-check,POST 字段与后端 DTO 同名', () => {

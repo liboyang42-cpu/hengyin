@@ -3,6 +3,7 @@ const modal = require('../../../../utils/modal.js');
 const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
+const mediaPreview = require('../../../../utils/media-preview.js');
 const {
   RESPONSE_FLOW,
   buildResponseDraft,
@@ -83,7 +84,7 @@ Page({
         }
         this.loadDetail();
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' }),
     });
   },
 
@@ -108,7 +109,7 @@ Page({
             canRespond: false,
             allowedDecisionMap: { AGREE: false, REJECT: false, EVIDENCE: false },
             pageState: 'error',
-            errorMessage: '退款售后数据不完整，请稍后重试',
+            errorMessage: '退款售后加载失败，请重试',
           });
           return;
         }
@@ -129,7 +130,7 @@ Page({
         });
         this.refreshSubmitState();
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' }),
     });
   },
 
@@ -202,7 +203,7 @@ Page({
   previewEvidence() {
     const url = this.data.evidencePreviewUrl;
     if (!url) return;
-    wx.previewImage({ current: url, urls: [url] });
+    mediaPreview.open([url], url);
   },
 
   removeEvidence() {
@@ -225,7 +226,7 @@ Page({
     const item = Number.isInteger(index) && index >= 0 ? responses[index] : null;
     const url = item && item.hasEvidence === true ? String(item.evidenceUrl || '') : '';
     if (!url) return;
-    wx.previewImage({ current: url, urls: [url] });
+    mediaPreview.open([url], url);
   },
 
   refreshSubmitState() {

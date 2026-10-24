@@ -21,8 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -84,7 +84,7 @@ public class AppTokenService
             String userKey = getTokenKey(uuid);
             LoginAppUser loginAppUser = redisCache.getCacheObject(userKey);
             if (loginAppUser == null) {
-                log.warn("认证失败-Redis找不到token: uri={}, uuid={}, userKey={}", request.getRequestURI(), uuid, userKey);
+                log.warn("认证失败-Redis找不到token: uri={}", request.getRequestURI());
             }
             return loginAppUser;
         } catch (Exception e) {
@@ -92,11 +92,8 @@ public class AppTokenService
             // 堆栈全都落在 jjwt 内部与 servlet 调用链上,对定位零帮助,却是日志刷屏的主要来源
             // (2026-08-01 实测:20 万行样本里 1757 条 MalformedJwtException 堆栈,
             //  来源是开发版小程序把 'dev-token' 打到了生产)。
-            log.warn("认证失败-JWT解析异常: uri={}, tokenPrefix={}, errorType={}, error={}",
-                    request.getRequestURI(),
-                    token.length() > 20 ? token.substring(0, 20) + "..." : token,
-                    e.getClass().getSimpleName(),
-                    e.getMessage());
+            log.warn("认证失败-JWT解析异常: uri={}, errorType={}",
+                    request.getRequestURI(), e.getClass().getSimpleName());
         }
         return null;
     }

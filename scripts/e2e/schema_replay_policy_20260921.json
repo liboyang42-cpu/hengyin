@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "sourceCommit": "737f0c2eab1dab2afaa51944d8654a7f803671c3",
   "sourceMigrationCount": 262,
-  "baselineManifestMigrationCount": 249,
+  "baselineManifestMigrationCount": 248,
   "baselineSeed": {
     "path": "sql/base_seed_20260818.sql",
     "sha256": "e935558e9afb95ce91c0e5247c51c9c04d87bec813edbee9396e522f31a0e1a9",
@@ -19,6 +19,7 @@
   },
   "baselineMissingReason": "migration 存在于 source commit，但其持久化表不在 2026-08-18 production no-data snapshot，必须重放",
   "baselineMissingMigrations": {
+    "chengyinhub-admin/sql/migration_20260815_tandianri_roam_referral.sql": "8129555eba6a172c3d29575a1b7602f0c1b2519ce4aad3826ee5c81e79c98c75",
     "chengyinhub-admin/sql/migration_20260815_shop_day_organizer_actor.sql": "137a8d706489fafa542ed630ba3fd3aa9d142621a35a1f89e5cb4230ece0d468",
     "chengyinhub-admin/sql/migration_20260815_tandianri_batch3_funds_core.sql": "e8f48efa79dca68a7dc7a1b5c9ce3eefc194a6f67e572ad04ba45aa3f0d085ea",
     "chengyinhub-admin/sql/migration_20260816_tandianri_batch3_funds_club_compensation.sql": "76fe2aee16a28749edc1e8f85951998e9813bf560ff68ba934dbc75768e4800d",
@@ -35,6 +36,17 @@
   },
   "dataOnlyReason": "zero-data schema rebuild 不执行仅修改业务行/菜单/任务/seed 的 migration；这些项仍需独立数据迁移验证",
   "dataOnlyMigrations": {
+    "chengyinhub-admin/sql/migration_seed_new_city_lifestyle_category_20260821.sql": "886618271d93b25ed5ed1f3cc93873609b86a864a3e60fa2a9ba1aaec2095504",
+    "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_20260821.sql": "44c1e8d44b59b7e7f6fb921bfdbd15bbcce59927857325a8112d37f9457342a2",
+    "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_repair_20260821.sql": "68870b97f45e8da01e01dafe261efa73aeeef25f75918ab5d9fdceb9cc29836f",
+    "chengyinhub-admin/sql/migration_seed_circle_theme_primary_20260821.sql": "27f85ce19327e817ce8d83a04daa9842404bae124da8ffaad196990acc497fa8",
+    "chengyinhub-admin/sql/migration_seed_shanghai_solo_topics_20260822.sql": "2bf4bc828d110525b336df9fb4bf8e464ace3fc0bcc894055d1ba4c942148800",
+    "chengyinhub-admin/sql/migration_seed_celebrate_games_20260821.sql": "3239919b794693d2bb5edac31ee0c16a8956ad39705a3f5a964caf2b6974b015",
+    "chengyinhub-admin/sql/migration_seed_celebrate_topic_20260821.sql": "62337f05837402aab16ab7603429c12081962d0b586e1282cc9b26f0012bc53a",
+    "chengyinhub-admin/sql/migration_seed_life_backup_categories_20260820.sql": "c9fd5cd197b3e891631c8126554af391a021e7767f407edd44cad05a6303c9aa",
+    "chengyinhub-admin/sql/migration_seed_life_backup_games_20260820.sql": "404c9c1ac7c7bc045406236eb3978a3fa5048097ca7ef9a56d90abd27b81f6db",
+    "chengyinhub-admin/sql/migration_20260829_circle_theme_merge_free_explore.sql": "a867e4065da01ce739ea32a2d2adf25d4e841191e4eb970e2dede0a6a66efbe8",
+    "chengyinhub-admin/sql/migration_fix_celebrate_copy_20260821.sql": "69de0a9a18bc407536239e667a905534418faf7adda79156fd2d1c08d9a4bbcd",
     "chengyinhub-admin/sql/migration_20260819_purge_prelaunch_dirty_content.sql": "6a69bafed903c24f85117a970e0094e46676a61096e049886270d8cd891b939b",
     "chengyinhub-admin/sql/migration_20260820_close_stale_registration_scan_15.sql": "b9b2993f90eba70723cad7c8d18d6d277371607e3ab2f1298fb32a8d32eef9f9",
     "chengyinhub-admin/sql/migration_20260820_member_100096_to_player.sql": "a1c75de0c87d899cfa1133e19eb4bb5acf90808a49d3929aee72e7bf258f5189",
@@ -54,11 +66,15 @@
     "chengyinhub-admin/sql/migration_seed_playpack_templates_20260820.sql": "f354b51c10dda979e130bf08d737324b30eeb7af2e3be765876eb2382b5ad0d3",
     "chengyinhub-admin/sql/migration_seed_playpack_batch2_figma_20260821.sql": "1f2d5181126db991e12be8a39288c35be49427f42e6fe12736822c6bb6b0ef13",
     "chengyinhub-admin/sql/migration_seed_circle_theme_supply_category_backfill_20260821.sql": "3c083b84eb147420be3b3a3adca23be7cf3b09b08877e5de38027d13ce8479ff",
+    "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_20260821.sql": "44c1e8d44b59b7e7f6fb921bfdbd15bbcce59927857325a8112d37f9457342a2",
+    "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_repair_20260821.sql": "68870b97f45e8da01e01dafe261efa73aeeef25f75918ab5d9fdceb9cc29836f",
     "chengyinhub-admin/sql/migration_seed_new_city_setup_plan_20260820.sql": "5bfdb0fb4c7493008e4d17d9e55287105d493203edea34325898f5e1fcdf9ca4",
     "chengyinhub-admin/sql/migration_20260822_template_cover_images.sql": "d4346db9aba09628647317e8419e59f943627f0b71156ee2889cdff8a39c6b77",
     "chengyinhub-admin/sql/migration_seed_merchant_game_a8_20260823.sql": "fc70b86b22e32d7ac52696954f73293a7b696aca9298c1b88cec5957a8fdb661",
     "chengyinhub-admin/sql/migration_seed_merchant_game_b27_20260823.sql": "46b5d9e61e32bf954f46de68f5e7dd4ef191a5efe1590a1dda569c04cbc7b37b",
     "chengyinhub-admin/sql/migration_20260825_cover_urls_off_package.sql": "a846b4ad973fadc0ebbc7fc95c73b2626f594959b5da5f138440249be6d1cfdc",
-    "chengyinhub-admin/sql/migration_seed_merchant_game_v51_20260827.sql": "41169d4fece1a23de4bc7266dd5cbcf7c4b8469903be6802a2c5a0662f27c17f"
+    "chengyinhub-admin/sql/migration_seed_merchant_game_v51_20260827.sql": "41169d4fece1a23de4bc7266dd5cbcf7c4b8469903be6802a2c5a0662f27c17f",
+    "chengyinhub-admin/sql/migration_20261007_legacy_game_v51_categories.sql": "8a49f3ef24a3e654210e8bc974224292910096d220c401be26135b81c6405643",
+    "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql": "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e"
   }
 }

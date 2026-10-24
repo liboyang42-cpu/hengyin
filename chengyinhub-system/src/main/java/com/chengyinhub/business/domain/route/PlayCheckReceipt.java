@@ -43,6 +43,19 @@ public class PlayCheckReceipt {
      * 客户端提交完直接渲染下一拍,不必再拉一次。解析不可用时缺省为 null,不影响动作本身成立。
      */
     private Map<String, Object> encounter;
+    /**
+     * F2 T03 掷骰明细:{die, skill:{statKey,label,value}|null, situational:{raw,cap,applied}, total, dc, natAuto}。
+     * skill 是角色属性值(不受 modCap 约束),situational 是条件修正之和(只有它封顶 modCap)。
+     * 老回执没有这个字段,重放时为 null。
+     */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private Map<String, Object> breakdown;
+    /** F6 T09 魔鬼交易回执:{label, bonus, accepted}。只出现在接受交易那一步与其后的掷骰明细里;老回执为 null。 */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private Map<String, Object> bargain;
+    /** F6 T10 动量:{spent?, gained?, value, max}。只在开了动量的主题出现;老回执为 null。 */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private Map<String, Object> momentum;
 
     public String getCheckId() { return checkId; }
     public void setCheckId(String checkId) { this.checkId = checkId; }
@@ -82,6 +95,12 @@ public class PlayCheckReceipt {
     public void setExhausted(boolean exhausted) { this.exhausted = exhausted; }
     public Integer getStateVersion() { return stateVersion; }
     public void setStateVersion(Integer stateVersion) { this.stateVersion = stateVersion; }
+    public Map<String, Object> getBreakdown() { return breakdown; }
+    public void setBreakdown(Map<String, Object> breakdown) { this.breakdown = breakdown; }
+    public Map<String, Object> getBargain() { return bargain; }
+    public void setBargain(Map<String, Object> bargain) { this.bargain = bargain; }
+    public Map<String, Object> getMomentum() { return momentum; }
+    public void setMomentum(Map<String, Object> momentum) { this.momentum = momentum; }
     public Map<String, Object> getEncounter() { return encounter; }
     public void setEncounter(Map<String, Object> encounter) { this.encounter = encounter; }
 
@@ -90,7 +109,12 @@ public class PlayCheckReceipt {
         private String label;
         private int value;
         private boolean applied;
+        /** F2 T03:取值来源状态键(counter.*);静态 value 的老修正为 null,不出现在回执里。 */
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+        private String var;
 
+        public String getVar() { return var; }
+        public void setVar(String var) { this.var = var; }
         public String getLabel() { return label; }
         public void setLabel(String label) { this.label = label; }
         public int getValue() { return value; }

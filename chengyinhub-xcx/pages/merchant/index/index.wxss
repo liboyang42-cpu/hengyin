@@ -156,14 +156,6 @@ page {
   justify-content: center;
 }
 
-.rv-revenue-unknown {
-  margin-top: var(--cy-space-2);
-  text-align: center;
-  color: var(--cy-text-secondary);
-  font-size: var(--cy-type-section-title);
-  font-weight: 600;
-}
-
 .rv-revenue-feedback {
   /* 同步/报错提示贴收入区底部(按钮正上方)，不占居中留白，数字才真正居中 */
   position: absolute;
@@ -174,13 +166,6 @@ page {
   display: flex;
   flex-direction: column;
   justify-content: center;
-}
-
-.rv-revenue-sync,
-.rv-project-sync {
-  text-align: center;
-  color: var(--cy-text-secondary);
-  font-size: var(--cy-type-caption);
 }
 
 /* ===== 快捷操作：灰色透明蒙版 ===== */
@@ -435,10 +420,6 @@ page {
   color: var(--cy-text-secondary);
 }
 
-.rv-project-state {
-  margin: var(--cy-space-3) var(--cy-page-x) 0;
-}
-
 .rv-loading,
 
 .rv-error {
@@ -683,6 +664,40 @@ page {
 .rv-msg-sub { font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 .rv-msg-time { flex-shrink: 0; font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 
+/* 2026-10-23 业主:我的消息像券包/票夹一样分层叠放、点开展开;卡片一律白底、不分色(同日业主二次裁决)。
+   业主三次反馈「太浅、没层次」⇒ 按 iOS 通知中心 / Wallet 的叠法重做:后面的卡从首张**下沿**露出,
+   每层露 20rpx、宽度逐层收窄(以底边为原点缩放)、逐层变淡,首张投影加深,一眼看出下面还压着几张。
+   点首张展开成独立卡片列(cy-fly-in 逐张飞入),回到页面重新叠起。 */
+.rv-msg-card.rv-msg-stack { position: relative; background: transparent; box-shadow: none; overflow: visible; }
+.rv-msg-card.rv-msg-stack--n2 { padding-bottom: 24rpx; }
+.rv-msg-card.rv-msg-stack--n3 { padding-bottom: 48rpx; }
+.rv-msg-stack .rv-msg-item {
+  position: relative;
+  background: var(--cy-bg-card);
+  border-radius: var(--cy-radius-lg);
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.06); /* ds-ok: 与同页项目卡同一投影 */
+}
+.rv-msg-stack .rv-msg-item + .rv-msg-item { border-top: 0; }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:first-child {
+  z-index: 3;
+  padding-top: 36rpx; padding-bottom: 36rpx;
+  box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.10), 0 2rpx 6rpx rgba(0, 0, 0, 0.05); /* ds-ok: 叠放首张的浮起投影 */
+}
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) {
+  position: absolute; left: 0; right: 0; top: 0;
+  transform-origin: center bottom;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.10), 0 1rpx 3rpx rgba(0, 0, 0, 0.06); /* ds-ok: 下层卡投影:白卡不透明、靠投影分层(降透明度会跟灰底糊成一片) */
+  transition: transform var(--cy-motion-standard) var(--cy-ease-standard);
+}
+.rv-msg-stack--n2:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) { bottom: 24rpx; }
+.rv-msg-stack--n3:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) { bottom: 48rpx; }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) > view,
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) > text { visibility: hidden; }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(2) { z-index: 2; transform: translateY(24rpx) scale(.94); }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(3) { z-index: 1; transform: translateY(48rpx) scale(.88); }
+.rv-msg-stack--open { padding-top: 0; padding-bottom: 0; }
+.rv-msg-stack--open .rv-msg-item + .rv-msg-item { margin-top: var(--cy-space-2); }
+
 
 /* 稿 134:201 卡底行:左「承接方 · 幸会咖啡」,右一颗动作。稿上 12px 文字、行高 28。 */
 .rv-project-foot {
@@ -717,3 +732,23 @@ page {
 .rv-project-act-arrow { flex-shrink: 0; }
 
 .scene-host { --cy-comp-sheet-border-width: 0px; }
+
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.rv-hero { filter: opacity(calc(1 - var(--pm-w, 0))); translate: 0 calc(var(--pm-w, 0) * 31rpx); transition: filter var(--pm-w-d, 0s) ease, translate var(--pm-w-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-w-s, 0) * 0ms), calc(var(--pm-w-s, 0) * 0ms), 0s, 0s; }
+.rv-hero:nth-child(n+2) { transition-delay: calc(var(--pm-w-s, 0) * 30ms), calc(var(--pm-w-s, 0) * 30ms), 0s, 0s; }
+.rv-actions { filter: opacity(calc(1 - var(--pm-w, 0))); translate: 0 calc(var(--pm-w, 0) * 31rpx); transition: filter var(--pm-w-d, 0s) ease, translate var(--pm-w-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-w-s, 0) * 40ms), calc(var(--pm-w-s, 0) * 40ms), 0s, 0s; }
+.rv-actions:nth-child(n+2) { transition-delay: calc(var(--pm-w-s, 0) * 70ms), calc(var(--pm-w-s, 0) * 70ms), 0s, 0s; }
+.rv-section { filter: opacity(calc(1 - var(--pm-w, 0))); translate: 0 calc(var(--pm-w, 0) * 31rpx); transition: filter var(--pm-w-d, 0s) ease, translate var(--pm-w-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-w-s, 0) * 80ms), calc(var(--pm-w-s, 0) * 80ms), 0s, 0s; }
+.rv-section:nth-child(2) { transition-delay: calc(var(--pm-w-s, 0) * 120ms), calc(var(--pm-w-s, 0) * 120ms), 0s, 0s; }
+.rv-section:nth-child(3) { transition-delay: calc(var(--pm-w-s, 0) * 160ms), calc(var(--pm-w-s, 0) * 160ms), 0s, 0s; }
+.rv-section:nth-child(4) { transition-delay: calc(var(--pm-w-s, 0) * 200ms), calc(var(--pm-w-s, 0) * 200ms), 0s, 0s; }
+.rv-section:nth-child(n+5) { transition-delay: calc(var(--pm-w-s, 0) * 240ms), calc(var(--pm-w-s, 0) * 240ms), 0s, 0s; }
+.rv-project-item { filter: opacity(calc(1 - var(--pm-j, 0))); translate: 0 calc(var(--pm-j, 0) * 31rpx); transition: filter var(--pm-j-d, 0s) ease, translate var(--pm-j-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-j-s, 0) * 0ms), calc(var(--pm-j-s, 0) * 0ms), 0s, 0s; }
+.rv-project-item:nth-child(2) { transition-delay: calc(var(--pm-j-s, 0) * 40ms), calc(var(--pm-j-s, 0) * 40ms), 0s, 0s; }
+.rv-project-item:nth-child(3) { transition-delay: calc(var(--pm-j-s, 0) * 80ms), calc(var(--pm-j-s, 0) * 80ms), 0s, 0s; }
+.rv-project-item:nth-child(4) { transition-delay: calc(var(--pm-j-s, 0) * 120ms), calc(var(--pm-j-s, 0) * 120ms), 0s, 0s; }
+.rv-project-item:nth-child(5) { transition-delay: calc(var(--pm-j-s, 0) * 160ms), calc(var(--pm-j-s, 0) * 160ms), 0s, 0s; }
+.rv-project-item:nth-child(6) { transition-delay: calc(var(--pm-j-s, 0) * 200ms), calc(var(--pm-j-s, 0) * 200ms), 0s, 0s; }
+.rv-project-item:nth-child(n+7) { transition-delay: calc(var(--pm-j-s, 0) * 240ms), calc(var(--pm-j-s, 0) * 240ms), 0s, 0s; }
+/* 「我的消息」首载未落定:占住一行(与 72rpx 图标圈同高),不画加载 UI,落定后不跳 */
+.rv-msg-item--pending { min-height: 72rpx; }

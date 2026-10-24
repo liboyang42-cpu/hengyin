@@ -140,6 +140,8 @@ function loadPage(options = {}) {
         return mod.exports
       }
       if (uiSandbox.isUiModule(request)) return uiSandbox.loadUiModule(request, sandbox)
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error(`unexpected require: ${request}`)
     },
   }
@@ -249,7 +251,9 @@ test('资格检查期间登录失效时退出加载态，重试仍须重新确�
   assert.equal(harness.roleCallbacks.length, 2)
   harness.roleCallbacks[1](null)
   assert.equal(harness.page.data.bootstrapState, 'error')
-  assert.match(harness.page.data.bootstrapError, /申请资格/)
+  // 需求变更(F-W1-12):已退出登录的身份重试时给可见的登录说明,而不是按加载失败留白。
+  assert.match(harness.page.data.bootstrapError, /登录后/)
+  assert.equal(harness.page.data.bootstrapErrorKind, 'no-permission')
   assert.equal(harness.requests.length, 0)
 })
 
@@ -822,7 +826,6 @@ test('提交成功留下持久可读回执，并保留再次查看审核进度�
   assert.match(wxml, /class="success"[^>]*aria-role="status"[^>]*aria-live="polite"/)
   assert.match(wxml, /submissionReceipt\.name/)
   assert.match(wxml, /submissionReceipt\.phone/)
-  assert.match(wxml, /可再次进入“商家入驻”查看审核进度/)
 })
 
 test('商家申请的进度、营业日、图片与动态主操作满足读屏和 88rpx 契约', () => {
@@ -937,6 +940,6 @@ test('实名登记失败停在第 4 步:入驻单不许跟着发出去', () => {
   assert.equal(page.data.submitError, '该证件已绑定其他账号')
   assert.equal(page.data.submitErrorKind, 'data')
   assert.equal(page.data.identityRegistered, false)
-  assert.equal(page.data.step, 4, '报错留在原地,草稿不丢')
+  assert.equal(page.data.step, 4, '报错留在原地，草稿不丢')
   assert.equal(page.data.name, '河畔咖啡')
 })

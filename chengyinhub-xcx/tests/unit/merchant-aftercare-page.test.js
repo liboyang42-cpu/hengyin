@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const vm = require('../helpers/ui-sandbox-vm.js'); // node:vm + 沙箱里装真 utils/toast.js·loading.js
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js');
 
 const root = path.resolve(__dirname, '../..');
 
@@ -51,6 +52,7 @@ function mountPage() {
         if (request.includes('merchant-theme')) {
           return { merchantPageShow() {}, merchantPageRestore() {} };
         }
+        if (request === '../../../../utils/media-preview.js') return loadMediaPreview(wx);
         if (request === './view-model.js') {
           return require('../../pages/merchant/aftercare/detail/view-model');
         }
@@ -459,7 +461,7 @@ test('财务页只显示补凭证能力，选择并上传后才允许提交 evid
   assert.equal(typeof mounted.imageSelections[1].options.mapResult, 'function');
   assert.equal(typeof mounted.imageSelections[1].options.formData, 'function');
   assert.equal(JSON.stringify(mounted.imageSelections[1].options.formData(0)), '{"refundId":"81"}',
-    'W6f:凭证上传必须带当前退款单,服务端据此绑定门店+退款单');
+    'W6f:凭证上传必须带当前退款单，服务端据此绑定门店+退款单');
   mounted.imageSelections[1].callback([
     mounted.imageSelections[1].options.mapResult(uploadResult, 0, '/tmp/evidence.jpg'),
   ]);

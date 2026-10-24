@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +46,10 @@ import com.fasterxml.jackson.databind.node.NullNode;
  */
 @Service
 public class ObjectCardServiceImpl implements ObjectCardService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.ConsentGuard consentGuard;
+    @Autowired private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
 
     private static final Logger log = LoggerFactory.getLogger(ObjectCardServiceImpl.class);
 
@@ -78,6 +82,10 @@ public class ObjectCardServiceImpl implements ObjectCardService {
     /** AI 认物;没装配或开关关着 = 卡名沿用商家模板。 */
     @Autowired(required = false)
     private ObjectNamer objectNamer;
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+    @Autowired
+    private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
 
     /**
      * 这两件专用的有界小池:不复用 {@code ForkJoinPool.commonPool()},也不用 RuoYi 全局的
@@ -103,7 +111,7 @@ public class ObjectCardServiceImpl implements ObjectCardService {
             throw new IllegalArgumentException("照片地址过长");
         }
         // 来源闸:这张图之后要被送去外部服务(抠图、3D 生成),别人递进来的地址不能接。
-        if (!isAllowedOrigin(url)) {
+        if (!url.matches("media-asset:[1-9][0-9]{0,18}") && !isAllowedOrigin(url)) {
             throw new IllegalArgumentException("这张照片不是本站上传的");
         }
         if (!ORIGIN_PLAY.equals(originType)) {
@@ -113,20 +121,36 @@ public class ObjectCardServiceImpl implements ObjectCardService {
             throw new IllegalArgumentException("藏品卡缺少来源");
         }
 
+        consentGuard.requireCurrentAgreement(memberId, "photo_model_processing", "object_photo");
+        String sourceReference = mediaReferences.requireAttachment(memberId, url, true);
+        String processingUrl = mediaReferences.processingUrl(sourceReference, memberId, "IMAGE");
+
         JsonNode cfg = photoCheck == null ? NullNode.getInstance() : photoCheck;
+        com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(memberId);
+        String openid = actor == null ? null : actor.getWxOpenId();
+        // Recheck legacy published templates too: a failed model check must never fall back to unchecked text.
+        String templateRisk = wxContentSecurityService.checkText(
+                com.chengyinhub.business.service.IWxContentSecurityService.joinText(
+                        cardTitle(cfg, null), cfg.path("shotNote").asText("")), openid);
+        if (templateRisk != null) throw new com.chengyinhub.common.exception.ServiceException(templateRisk);
         Date now = clock.now();
 
         // 两件并行开工,再对着**同一个截止点**收:先等的那件耗掉的时间,后那件已经在并行里跑掉了,
         // 所以总等待是一个预算而不是两个(施工文档 §2.5)。
-        Future<CardCutout> cutout = canCutout() ? submit("抠图", () -> cutoutOf(url, memberId)) : null;
-        Future<ObjectNamer.Naming> naming = objectNamer == null ? null : submit("认物", () -> objectNamer.name(url));
+        Future<CardCutout> cutout = canCutout() ? submit("抠图", () -> cutoutOf(processingUrl, memberId)) : null;
+        Future<ObjectNamer.Naming> naming = objectNamer == null ? null : submit("认物", () -> {
+            ObjectNamer.Naming result = objectNamer.name(processingUrl);
+            if (result == null) return null;
+            String risk = wxContentSecurityService.checkText(result.getName(), openid);
+            return risk == null ? result : null;
+        });
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(taskBudgetMs);
         CardCutout cutoutResult = await(cutout, deadline, "抠图");
         ObjectNamer.Naming named = await(naming, deadline, "认物");
 
         PlayerObjectCard card = new PlayerObjectCard();
         card.setMemberId(memberId);
-        card.setSourceUrl(url);
+        card.setSourceUrl(sourceReference);
         card.setTitle(cardTitle(cfg, named));
         card.setCaption(StringUtils.cutKeepingSurrogates(cfg.path("shotNote").asText(""), CAPTION_MAX));
         card.setCardStyle(cardStyle(cfg));
@@ -288,6 +312,9 @@ public class ObjectCardServiceImpl implements ObjectCardService {
         if (memberId == null || memberId <= 0 || cardId == null || cardId <= 0) {
             return null;
         }
+        com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(memberId);
+        String risk = wxContentSecurityService.checkText(title, actor == null ? null : actor.getWxOpenId());
+        if (risk != null) throw new com.chengyinhub.common.exception.ServiceException(risk);
         if (cardMapper.renameOwned(cardId, memberId, title) != 1) {
             return null;
         }

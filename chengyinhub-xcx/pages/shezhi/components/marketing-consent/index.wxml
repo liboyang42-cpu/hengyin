@@ -1,8 +1,8 @@
 <view class="mc">
-  <text class="mc-intro">商家营销同意默认关闭。只有你明确打开后，该商家才能按渠道触达；关闭即立即退订。</text>
+  <text class="mc-intro">默认关闭，随时可退订</text>
   <view class="mc-loading" wx:if="{{state === 'loading'}}">正在加载…</view>
   <view class="mc-error" wx:elif="{{state === 'error'}}">
-    <cy-inline-error kind="network" title="营销同意状态加载失败" sub="{{error}}" action="重试" bind:action="retry" />
+    <cy-inline-error load-failure kind="network" title="营销同意状态加载失败" sub="{{error}}" action="重试" bind:action="retry" />
   </view>
   <view class="mc-empty" wx:elif="{{state === 'empty'}}">完成一次真实报名后，可在这里管理对应商家的消息。</view>
   <view class="mc-list" wx:else>

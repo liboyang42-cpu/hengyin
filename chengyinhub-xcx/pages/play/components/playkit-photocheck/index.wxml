@@ -2,18 +2,20 @@
      这一屏给一句人话判定、不过时的真实理由与剩余次数;降级(没能审)时只说没结论。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="pc g-col {{reducedMotion ? 'pk--reduced' : ''}} {{_motionReset ? 'pk--reset' : ''}}">
-    <view class="g-kicker">{{title || '拍一张'}}</view>
-    <view class="pc__note" wx:if="{{shotNote}}">{{shotNote}}</view>
+    <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{title || '拍一张'}}</view>
+    <view class="pc__note pe pe--blur" style="--pe-d:.15s" wx:if="{{shotNote}}">{{shotNote}}</view>
 
-    <view class="pc__frame {{lastUrl ? 'is-filled' : ''}}" wx:if="{{lastUrl}}">
+    <view class="pc__frame {{lastUrl ? 'is-filled' : ''}} pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:if="{{lastUrl}}">
       <image class="pc__shot" src="{{lastUrl}}" mode="aspectFill" aria-role="img" aria-label="上一张提交的照片" />
     </view>
-    <view class="pc__frame" wx:else>
+    <view class="pc__frame pe pe--zoom" style="--pe-d:.2s;--pe-dur:.9s" wx:else>
       <cy-icon class="pc__ph" name="camera" size="72" />
     </view>
 
     <view class="pc__verdict pk-in pc__verdict--{{verdictKind}}" wx:if="{{verdict}}">{{verdict}}</view>
     <view class="pc__reason pk-in pk-in--2" wx:if="{{reason}}">{{reason}}</view>
+    <view class="pc__tries" wx:if="{{verifiedNote}}">{{verifiedNote}}</view>
+    <view class="pc__tries" wx:if="{{rewardNote}}">{{rewardNote}}</view>
     <view class="pc__tries" wx:if="{{triesLabel && !verdict && !reason}}">{{triesLabel}}</view>
 
     <!-- 拍物成卡:判过当场就看到这张卡(照片卡,3D 转台由后台补,见施工文档 §3.3)。
@@ -24,11 +26,11 @@
         <cy-spin-card frames="{{card.frames}}" title="{{card.title}}"
                       caption="{{card.caption}}" card-style="{{card.cardStyle}}" />
       </view>
-      <text class="pc__card-note">{{card.generating ? '已收进藏品册 · 3D 生成中,稍后在藏品册里转着看' : '已收进藏品册'}}</text>
+      <text class="pc__card-note">{{card.generating ? '已收进藏品册 · 3D 生成中，稍后在藏品册里转着看' : '已收进藏品册'}}</text>
     </view>
   </view>
 
-  <view class="g-btn {{busy || passed || flagged ? 'g-btn--disabled' : ''}}" bindtap="onShoot"
+  <view class="g-btn {{busy || passed || flagged ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onShoot"
         aria-role="button" aria-label="{{busy ? '正在处理照片' : '拍一张'}}" hover-class="g-btn--press" hover-stay-time="80">
     {{busy ? '看一眼…' : (passed || flagged ? '这一张已定' : (lastUrl ? '再拍一张' : '拍一张'))}}
   </view>

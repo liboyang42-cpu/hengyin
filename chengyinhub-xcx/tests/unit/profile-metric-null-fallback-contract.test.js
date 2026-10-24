@@ -12,13 +12,13 @@ const src = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/prof
 test('好友/关注/粉丝三个计数缺字段时兜底成 0,不许把 null 打到屏幕上', () => {
   ;['friendNum', 'followNum', 'fansNum'].forEach((key) => {
     const re = new RegExp(`${key}:\\s*${key}\\s*==\\s*null\\s*\\?\\s*0\\s*:\\s*${key}`)
-    assert.match(src, re, `${key} 缺兜底 —— 接口不返这个字段时屏幕上会出现字面 null`)
+    assert.match(src, re, `${key} 缺保底 —— 接口不返这个字段时屏幕上会出现字面 null`)
   })
 })
 
 test('兜底只在展示层:ready/error 判定仍用数值原值,不能被兜底值污染', () => {
   assert.match(src, /var userSignals = \[followNum, fansNum, topicNum, activityNum, likeNum\]/,
-    '信号数组必须用 metricNumber 的原值;换成打过兜底的字符串会让 error 态永远判不出来')
+    '信号数组必须用 metricNumber 的原值；换成打过保底的字符串会让 error 态永远判不出来')
   assert.match(src, /userSourceReady = userSignals\.every\(function \(value\) \{ return value != null; \}\)/)
 })
 

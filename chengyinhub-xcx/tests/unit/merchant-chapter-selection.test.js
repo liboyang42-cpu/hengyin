@@ -63,6 +63,21 @@ function requestByUrl(url) {
   return requests.find(request => request.url === url);
 }
 
+test('章节邀请撤回必须由危险确认发送，取消确认不提交', () => {
+  const page = makePage();
+  const dc = attachDangerConfirm(page);
+  page.revokeChapterInvitation({ currentTarget: { dataset: { id: 71 } } });
+  assert.equal(requests.length, 0);
+  assert.equal(dc.opens[0].key, 'merchant.chapterInvitation.revoke');
+  dc.cancel();
+  assert.equal(requests.length, 0);
+  dc.confirm();
+  const request = requestByUrl('/api/merchant/chapter-application/invite/revoke');
+  assert.equal(JSON.parse(request.data).applicationId, 71);
+  request.fail();
+  assert.ok(dc.failedCalls.length);
+});
+
 test('承接报名仅有详情和任务向导，章节内容保持顺序且不重复描述', () => {
   const page = makePage();
   assert.deepEqual(page.data.browseTabs.map(tab => tab.label), ['详情', '任务向导']);
@@ -82,7 +97,7 @@ test('承接报名仅有详情和任务向导，章节内容保持顺序且不�
   assert.equal(page.data.activeTab, 'guide');
 });
 
-test('旧章节回退只使用真实正文和图片，不拿别的点位为图片编造标题', () => {
+test('旧章节回退只使用真实正文和图片，不拿别的节点为图片编造标题', () => {
   const page = makePage();
   const blocks = page.buildGuideBlocks({ description: '旧章节', imgArr: 'a;b,c', nodes: [{ id: 3, name: '地点' }] });
   assert.deepEqual(blocks.map(block => block.type), ['text', 'image', 'image', 'image', 'node']);
@@ -153,7 +168,7 @@ function withdrawControlVisible(application) {
   return Boolean(application[field[1]]);
 }
 
-test('自由探索点申请承接先打开点位表单，不提前写入申请', () => {
+test('自由探索点申请承接先打开节点表单，不提前写入申请', () => {
   const page = makePage();
   Object.assign(page.data, {
     isJoin: 1,
@@ -195,7 +210,7 @@ test('申请链路严格按 apply → node/submit 串联，不提前写生效供
   assert.deepEqual(JSON.parse(requests[0].data), { chapterId: 33, message: '适合夜间活动' });
 
   requests[0].success({ code: '200' });
-  assert.equal(requests.length, 2, '申请闸通过后只能进入点位闸');
+  assert.equal(requests.length, 2, '申请闸通过后只能进入节点闸');
   assert.equal(requests[1].url, '/api/merchant/chapter-node/submit');
   assert.equal(requests[1].header['Content-Type'], 'application/json');
   assert.deepEqual(JSON.parse(requests[1].data), {
@@ -211,17 +226,17 @@ test('申请链路严格按 apply → node/submit 串联，不提前写生效供
 
   requests[1].success({ code: '200' });
   requests[1].complete();
-  assert.equal(page.data.chapterNodeFormVisible, false, '申请和点位均成功后关闭表单');
+  assert.equal(page.data.chapterNodeFormVisible, false, '申请和节点均成功后关闭表单');
 });
 
-test('已承接章节不依赖招募开放，配置原点位只走 node/submit 并读回本人进度', () => {
+test('已承接章节不依赖招募开放，配置原节点只走 node/submit 并读回本人进度', () => {
   const page = makePage();
   Object.assign(page.data, {
     topicId: 7,
     info: { lifecycle: 1, chaptersList: [{ id: 33, recruitStatus: { isOpen: false } }] },
     merchantChapters: [],
     myChapterApplications: [{ id: 71, chapterId: 33, chapterName: '咖啡章', status: 1, termsMode: 'PERK' }],
-    myChapterNodes: [{ id: 80, chapterId: 33, name: '旧点位', templateId: 88,
+    myChapterNodes: [{ id: 80, chapterId: 33, name: '旧节点', templateId: 88,
       longitude: '120.7', latitude: '31.3' }],
   });
   page.openChapterNodeForm({ currentTarget: { dataset: { chapterId: 33 } } });
@@ -229,36 +244,36 @@ test('已承接章节不依赖招募开放，配置原点位只走 node/submit �
   assert.equal(page.data.presetChapterNode.id, 80);
   assert.equal(page.data.chapterNodeFormVisible, true);
   assert.equal(requests.length, 0);
-  page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '原点位新名称',
+  page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '原节点新名称',
     address: '真实地址', longitude: 120.7, latitude: 31.3, xpValue: 12, id: 999, merchantId: 999 } });
   assert.deepEqual(requests.map(row => row.url), ['/api/merchant/chapter-node/submit']);
   assert.deepEqual(JSON.parse(requests[0].data), {
-    chapterId: 33, templateId: 88, name: '原点位新名称', address: '真实地址',
+    chapterId: 33, templateId: 88, name: '原节点新名称', address: '真实地址',
     longitude: '120.7', latitude: '31.3', xpValue: 12,
-  }, '只传现有 DTO 白名单，不接受伪造点位或商家归属');
+  }, '只传现有 DTO 白名单，不接受伪造节点或商家归属');
   requests[0].success({ code: 200 });
   requests[0].complete();
   assert.equal(page.data.chapterNodeFormVisible, false);
   assert.ok(requestByUrl('/api/merchant/chapter-node/mine'));
   assert.ok(requestByUrl('/api/merchant/chapter-application/mine'));
   assert.equal(requestByUrl('/api/merchant/chapter-application/apply'), undefined);
-  assert.match(WXML, /bindtap="openChapterNodeForm">配置点位/);
+  assert.match(WXML, /bindtap="openChapterNodeForm">配置节点/);
 });
 
-test('本人待审承接可首次配置点位，冻结拒绝后保留表单供读回和修正', () => {
+test('本人待审承接可首次配置节点，冻结拒绝后保留表单供读回和修正', () => {
   const page = makePage();
   page.data.info = { lifecycle: 1 };
   page.data.myChapterApplications = [{ id: 71, chapterId: 33, status: 0 }];
   page.openChapterNodeForm({ currentTarget: { dataset: { chapterId: 33 } } });
   assert.equal(page.data.presetChapterNode, null);
-  page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '真实点位',
+  page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '真实节点',
     address: '真实地址', longitude: '120.7', latitude: '31.3' } });
-  requests[0].success({ code: 500, msg: '主题已锁价，不可修改点位' });
+  requests[0].success({ code: 500, msg: '主题已锁价，不可修改节点' });
   requests[0].complete();
   assert.equal(requests.length, 1);
   assert.equal(page.data.chapterNodeFormVisible, true);
   assert.equal(page.data.chapterNodeSubmitting, false);
-  assert.equal(tips.at(-1), '主题已锁价，不可修改点位');
+  assert.equal(tips.at(-1), '主题已锁价，不可修改节点');
 });
 
 test('旧章节选择器或结算入口重选本人已承接章节，也不重复调用 apply', () => {
@@ -272,7 +287,7 @@ test('旧章节选择器或结算入口重选本人已承接章节，也不重�
     if (entry === 'picker') page.onChapterTargetConfirm({ detail: { chapterId: 33, templateId: 88 } });
     else page.goSettlement();
     assert.equal(page.data.chapterNodeFormMode, 'node', entry);
-    page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '原点位',
+    page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '原节点',
       address: '真实地址', longitude: '120.7', latitude: '31.3' } });
     assert.equal(requestByUrl('/api/merchant/chapter-application/apply'), undefined, entry);
     assert.ok(requestByUrl('/api/merchant/chapter-node/submit'), entry);
@@ -280,7 +295,7 @@ test('旧章节选择器或结算入口重选本人已承接章节，也不重�
   }
 });
 
-test('已退出历史、拒绝申请和不属于当前承接的章节不能打开或续交点位', () => {
+test('已退出历史、拒绝申请和不属于当前承接的章节不能打开或续交节点', () => {
   for (const row of [{ chapterId: 33, status: 1, offerState: 'WITHDRAWN' },
     { chapterId: 33, status: 2 }, { chapterId: 34, status: 1 }]) {
     const page = makePage();
@@ -290,17 +305,17 @@ test('已退出历史、拒绝申请和不属于当前承接的章节不能打�
     assert.equal(page.data.chapterNodeFormVisible, false);
     page.data.chapterNodeFormMode = 'node';
     page.data.selectedChapterId = 33;
-    page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '点位' } });
+    page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '节点' } });
     assert.equal(requests.length, 0);
   }
 });
 
-test('未来计划开始日期不能解冻点位，草稿、2..6、未知和已退出的所有入口均不写入', () => {
-  const draft = { chapterId: 33, templateId: 88, name: '原点位',
+test('未来计划开始日期不能解冻节点，草稿、2..6、未知和已退出的所有入口均不写入', () => {
+  const draft = { chapterId: 33, templateId: 88, name: '原节点',
     address: '真实地址', longitude: '120.7', latitude: '31.3' };
   const cases = [
     { lifecycle: 0, reason: /草稿/ },
-    ...[2, 3, 4, 5, 6, '2', '3'].map(lifecycle => ({ lifecycle, reason: /商业冻结/ })),
+    ...[2, 3, 4, 5, 6, '2', '3'].map(lifecycle => ({ lifecycle, reason: /主题已锁定/ })),
     ...[undefined, null, '', ' ', 99, 'unknown', true].map(lifecycle => ({ lifecycle, reason: /刷新详情后重试/ })),
     { lifecycle: 1, offerState: 'WITHDRAWN', reason: /历史记录/ },
   ];
@@ -339,7 +354,7 @@ test('未来计划开始日期不能解冻点位，草稿、2..6、未知和已�
   assert.match(WXML, /wx:if="\{\{application\.nodeReadOnlyReason\}\}">\{\{application\.nodeReadOnlyReason\}\}/);
 });
 
-test('招商1和待审7允许本人待审或已承接章节配置，三个入口都直接续交点位', () => {
+test('招商1和待审7允许本人待审或已承接章节配置，三个入口都直接续交节点', () => {
   for (const lifecycle of [1, 7, '1', '7']) {
     for (const status of [0, 1]) {
       for (const entry of ['button', 'picker', 'legacy']) {
@@ -358,21 +373,21 @@ test('招商1和待审7允许本人待审或已承接章节配置，三个入口
         else page.goSettlement();
         assert.equal(page.data.chapterNodeFormVisible, true);
         assert.equal(page.data.chapterNodeFormMode, 'node');
-        page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '点位' } });
+        page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '节点' } });
         assert.deepEqual(requests.map(row => row.url), ['/api/merchant/chapter-node/submit']);
       }
     }
   }
 });
 
-test('招商1和待审7的新申请仍先申请再提交点位', () => {
+test('招商1和待审7的新申请仍先申请再提交节点', () => {
   for (const lifecycle of [1, 7]) {
     requests = [];
     const page = makePage();
     page.data.info = { lifecycle };
     page.onChapterTargetConfirm({ detail: { chapterId: 33, templateId: 88 } });
     assert.equal(page.data.chapterNodeFormMode, 'application');
-    page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '新点位' } });
+    page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '新节点' } });
     assert.deepEqual(requests.map(row => row.url), ['/api/merchant/chapter-application/apply']);
     requests[0].success({ code: 200 });
     assert.deepEqual(requests.map(row => row.url), [
@@ -381,13 +396,13 @@ test('招商1和待审7的新申请仍先申请再提交点位', () => {
   }
 });
 
-test('申请回执期间主题进入锁价、销售或状态未知，实际发送点位前重新守卫并解除提交中', () => {
+test('申请回执期间主题进入锁价、销售或状态未知，实际发送节点前重新守卫并解除提交中', () => {
   for (const lifecycle of [2, 3, null]) {
     requests = [];
     const page = makePage();
     page.data.info = { lifecycle: 1, startDate: '2099-01-01' };
     page.data.chapterNodeFormVisible = true;
-    page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '新点位' } });
+    page.onChapterNodeFormSubmit({ detail: { chapterId: 33, templateId: 88, name: '新节点' } });
     assert.equal(page.data.chapterNodeSubmitting, true);
     page.data.info.lifecycle = lifecycle;
     requests[0].success({ code: 200 });
@@ -398,7 +413,7 @@ test('申请回执期间主题进入锁价、销售或状态未知，实际发�
   }
 });
 
-test('apply 回复已申请时只续交点位，其他失败不越过申请闸', () => {
+test('apply 回复已申请时只续交节点，其他失败不越过申请闸', () => {
   const draft = {
     chapterId: 33, message: '', templateId: 88, name: '咖啡点', address: '', xpValue: 12,
   };
@@ -436,7 +451,7 @@ test('apply 已存在冲突优先认稳定错误码，不依赖中文文案', ()
   });
 
   assert.equal(requests.length, 2,
-    '后端文案改字时，稳定码仍必须让申请链安全续到点位闸');
+    '后端文案改字时，稳定码仍必须让申请链安全续到节点闸');
   assert.equal(requests[1].url, '/api/merchant/chapter-node/submit');
 });
 
@@ -480,7 +495,7 @@ test('撤回待审申请须二次确认，取消确认不发请求', () => {
 
   withdrawRequest.success({ code: '200' });
   assert.ok(requestByUrl('/api/merchant/chapter-application/mine'),
-    '撤回回执后必须从服务端回读可重新申请状态');
+    '撤回回执后必须从服务端刷新可重新申请状态');
   assert.match(dc.doneCalls.length ? '已撤回，可重新提交' : '', /可重新提交/,
     '成功后必须走结果确认卡(第三段),不是一闪而过的 toast');
 });
@@ -503,7 +518,7 @@ test('撤回不存在或状态冲突都认稳定错误码并回读，不依赖�
     });
 
     assert.ok(requestByUrl('/api/merchant/chapter-application/mine'),
-      `${errorCode} 必须触发服务端状态回读`);
+      `${errorCode} 必须触发服务端状态刷新`);
     // 失败留在确认弹窗原地给重试(第二段的失败态),不再靠 app.tips 飘一下
     assert.equal(dc.failedCalls.at(-1), '申请状态已变化，请刷新后重试');
   }
@@ -604,7 +619,7 @@ test('F-45 自由探索报名只按已加载的章节招募状态开窗，并区
   Object.assign(failedPage.data, {
     info: { productType: 2, memberId: 2 },
     chapterRecruitmentState: 'error',
-    chapterRecruitmentError: '网络异常，可承接章节暂时没能加载',
+    chapterRecruitmentError: '网络异常，可承接章节加载失败',
     allChaptersList: [],
     myChapterApplications: [],
   });
@@ -625,7 +640,7 @@ test('服务端 offerActive 回读决定冻结，重进页面不能靠内存状�
   page.loadMyChapterApplications();
 
   const mineRequest = requestByUrl('/api/merchant/chapter-application/mine');
-  assert.ok(mineRequest, '冻结事实必须主动从我的章节申请接口回读');
+  assert.ok(mineRequest, '冻结事实必须主动从我的章节申请接口刷新');
   mineRequest.success({
     code: '200',
     data: [{ topicId: 42, chapterId: 33, chapterName: '夜航咖啡', status: 1, offerActive: true }],
@@ -813,11 +828,11 @@ test('章节承接方没有旧报名记录时进入真实join导览，不回退�
   }
 });
 
-test('章节快捷编辑和出示码复用本人点位，多个章节先选择且过期选择不取码', () => {
+test('章节快捷编辑和出示码复用本人节点，多个章节先选择且过期选择不取码', () => {
   const page = makePage();
   Object.assign(page.data, { chapterProject: true, topicId: 42, info: { lifecycle: 7 },
     myChapterApplications: [{ chapterId: 31, chapterName: '第一章', status: 1, canConfigureNode: true }],
-    myChapterNodes: [{ id: 99, chapterId: 31, name: '本人点位' }] });
+    myChapterNodes: [{ id: 99, chapterId: 31, name: '本人节点' }] });
   page.onQuickAction({ currentTarget: { dataset: { key: 'chapterEdit' } } });
   assert.equal(page.data.chapterNodeFormVisible, true);
   assert.equal(page.data.chapterNodeFormMode, 'node');
@@ -826,23 +841,23 @@ test('章节快捷编辑和出示码复用本人点位，多个章节先选择�
   page.onQuickAction({ currentTarget: { dataset: { key: 'chapterCheckin' } } });
   assert.equal(page.data.checkinVisible, true);
   assert.deepEqual(requestByUrl('/api/merchant/chapter-node/poster-code').data, { nodeId: 99 });
-  requests.at(-1).success({ code: 500, msg: '该点位还没过审，过审后再取码' });
+  requests.at(-1).success({ code: 500, msg: '该节点还没过审，过审后再取码' });
   assert.equal(page.data.checkinQrState, 'error');
   assert.equal(page.data.checkinQrUrl, '');
 
   page.data.myChapterApplications.push({ chapterId: 32, chapterName: '第二章', status: 1, canConfigureNode: true });
-  page.data.myChapterNodes.push({ id: 100, chapterId: 32, name: '第二点位' });
+  page.data.myChapterNodes.push({ id: 100, chapterId: 32, name: '第二节点' });
   page.onQuickAction({ currentTarget: { dataset: { key: 'chapterEdit' } } });
   assert.deepEqual(page.data.stationSheetItems, ['第一章', '第二章']);
   page.onStationSheetSelect({ detail: { index: 1 } });
   assert.equal(page.data.selectedChapterId, 32);
   assert.equal(page.data.presetChapterNode.id, 100);
   page.onQuickAction({ currentTarget: { dataset: { key: 'chapterCheckin' } } });
-  assert.deepEqual(page.data.stationSheetItems, ['本人点位', '第二点位']);
+  assert.deepEqual(page.data.stationSheetItems, ['本人节点', '第二节点']);
   page.data.myChapterNodes.pop();
   requests = [];
   page.onStationSheetSelect({ detail: { index: 1 } });
-  assert.equal(requests.length, 0, '选中点位已不在本人列表时不得请求码');
+  assert.equal(requests.length, 0, '选中节点已不在本人列表时不得请求码');
   page.data.myChapterApplications.forEach(row => { row.canConfigureNode = false; });
   page.data.chapterNodeFormVisible = false;
   page.onQuickAction({ currentTarget: { dataset: { key: 'chapterEdit' } } });
@@ -889,12 +904,12 @@ test('下架章节承接项目使用/home商家授权投影，不回退玩家公
     '/home已提供合法主题投影，不用招商详情拼管理页');
   const mine = requestByUrl('/api/merchant/chapter-node/mine');
   assert.deepEqual(mine.data, { topicId: 42 });
-  mine.fail({ msg: '点位接口暂不可用' });
-  assert.equal(page.data.loadFailed, false, '点位读取失败不能遮住有效项目导览');
-  assert.equal(page.data.myChapterNodesLoaded, false, '读取失败不冒充空点位');
-  assert.equal(page.data.myChapterNodesError, '点位接口暂不可用');
+  mine.fail({ msg: '节点接口暂不可用' });
+  assert.equal(page.data.loadFailed, false, '节点读取失败不能遮住有效项目导览');
+  assert.equal(page.data.myChapterNodesLoaded, false, '读取失败不冒充空节点');
+  assert.equal(page.data.myChapterNodesError, '节点接口暂不可用');
   page.retryMyChapterNodes();
-  requests.at(-1).success({ code: '200', data: [{ id: 9, name: '本人的点位', nodeAuditStatus: 1 }] });
+  requests.at(-1).success({ code: '200', data: [{ id: 9, name: '本人的节点', nodeAuditStatus: 1 }] });
   assert.equal(page.data.myChapterNodes[0].auditLabel, '已通过');
   assert.equal(page.data.myChapterNodesLoaded, true);
   assert.equal(page.data.myChapterNodesError, '');
@@ -952,7 +967,7 @@ test('项目详情的申请、节点、场次、合作方和玩家列表都拒�
   }));
   // CU-2026-09-24 C-67:脏数据的拒绝从「空态文案」挪到了错态字段 —— 名单没拿到
   // 与「一单没卖」必须分开说,不能再共用 emptyText(那一句会被读成真空态)。
-  assert.equal(page.data['playerSheet.errorText'], '名单没加载出来');
+  assert.equal(page.data['playerSheet.errorText'], '名单加载失败');
   assert.equal(page.data['playerSheet.emptyText'], '');
 });
 
@@ -973,7 +988,7 @@ test('权益章节公开最低权益价值，引流档不展示该门槛', () =>
   assert.equal(chapters[1].perkMinValueLabel, '');
 });
 
-test('商家打开自由探索承接页时就读取自己的点位列表', () => {
+test('商家打开自由探索承接页时就读取自己的节点列表', () => {
   const page = makePage();
   page.onLoad({ id: '42' });
   const detailRequest = requestByUrl('/api/topic/info-to-user');
@@ -983,22 +998,22 @@ test('商家打开自由探索承接页时就读取自己的点位列表', () =>
   });
 
   const mineRequest = requestByUrl('/api/merchant/chapter-node/mine');
-  assert.ok(mineRequest, '页面加载链必须主动读取点位，不能等提交回调刷新');
+  assert.ok(mineRequest, '页面加载链必须主动读取节点，不能等提交回调刷新');
   assert.equal(mineRequest.method, 'POST');
   assert.deepEqual(mineRequest.data, { topicId: 42 });
   assert.ok(requestByUrl('/api/merchant/chapter-application/mine'),
-    '页面重进必须同时回读申请审核态和 offerActive 冻结事实');
+    '页面重进必须同时刷新申请审核态和 offerActive 冻结事实');
 });
 
-test('我的点位只渲染 CmsTopicNode 真字段或页面明确派生字段', () => {
+test('我的节点只渲染 CmsTopicNode 真字段或页面明确派生字段', () => {
   const referenced = Array.from(WXML.matchAll(/chapterNode\.([A-Za-z][A-Za-z0-9]*)/g), match => match[1]);
-  assert.ok(referenced.length > 0, '我的点位区必须真实消费点位字段，不能让契约空转');
+  assert.ok(referenced.length > 0, '我的节点区必须真实消费节点字段，不能让契约空转');
   const cmsTopicNodeFields = new Set(
     Array.from(CMS_TOPIC_NODE.matchAll(/private\s+(?:[\w.<>]+)\s+([A-Za-z][A-Za-z0-9]*)\s*;/g), match => match[1]),
   );
   cmsTopicNodeFields.add('auditLabel');
   const phantom = referenced.filter(field => !cmsTopicNodeFields.has(field));
-  assert.deepEqual(phantom, [], `我的点位渲染了 CmsTopicNode 不存在的字段: ${phantom.join(', ')}`);
+  assert.deepEqual(phantom, [], `我的节点渲染了 CmsTopicNode 不存在的字段: ${phantom.join(', ')}`);
 });
 
 test('三档 offer payload 只携带章节供给字段，不接受服务端接管字段', () => {
@@ -1023,7 +1038,70 @@ function pausedReplacementPage(offer) {
   return page;
 }
 
-test('暂停开售的已批准补位可配置点位；待审供给不能重复提交，审核生效后冻结', () => {
+function pendingReplacementPage(info, offer) {
+  const page = pausedReplacementPage(offer);
+  page.data.info = Object.assign({ lifecycle: 7, status: 0, userStatus: 0,
+    productType: 2, publishMode: 'pro', delFlag: 0 }, info);
+  page.refreshMyChapterApplications();
+  return page;
+}
+
+test('待审补位仅在真实专业漫游与当前已接受本人申请中解锁既有节点表单', () => {
+  const page = pendingReplacementPage();
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, true);
+  assert.equal(page.data.myChapterApplications[0].canSubmitOffer, true);
+  page.openChapterNodeForm({ currentTarget: { dataset: { chapterId: 124 } } });
+  assert.equal(page.data.chapterNodeFormVisible, true);
+  page.onChapterNodeFormSubmit({ detail: { chapterId: 124, name: '花店补位点', templateId: 6003,
+    address: '上海市黄浦区样板花店3', longitude: '121.5', latitude: '31.26' } });
+  assert.equal(requestByUrl('/api/merchant/chapter-node/submit').data,
+    JSON.stringify({ chapterId: 124, templateId: 6003, name: '花店补位点',
+      address: '上海市黄浦区样板花店3', longitude: '121.5', latitude: '31.26', xpValue: null }));
+  assert.equal(requestByUrl('/api/merchant/chapter-application/apply'), undefined);
+  const pending = pendingReplacementPage({}, { offerId: 11, offerState: 'INACTIVE' });
+  assert.equal(pending.data.myChapterApplications[0].canConfigureNode, true);
+  assert.equal(pending.data.myChapterApplications[0].canSubmitOffer, false);
+});
+
+test('待审补位缺少任何服务端事实、普通主题、未接受或供给终态均保持只读', () => {
+  for (const patch of [{ status: null }, { status: undefined }, { status: '' }, { status: 1 },
+    { userStatus: undefined }, { userStatus: null }, { userStatus: '' }, { userStatus: false }, { userStatus: 1 },
+    { delFlag: undefined }, { delFlag: null }, { delFlag: '' }, { delFlag: false }, { delFlag: 1 }, { delFlag: 2 },
+    { productType: undefined }, { productType: 1 }, { publishMode: undefined }, { publishMode: 'simple' },
+    { lifecycle: null }, { lifecycle: 0 }, { lifecycle: 3 }, { circleThemeCode: 'CIRCLE' }]) {
+    const page = pendingReplacementPage(patch);
+    assert.equal(page.data.myChapterApplications[0].canConfigureNode, false, JSON.stringify(patch));
+    assert.equal(page.data.myChapterApplications[0].canSubmitOffer, false, JSON.stringify(patch));
+  }
+  for (const patch of [{ status: 0 }, { status: 2 }, { offerState: 'WITHDRAWN' },
+    { offerState: 'EXPIRED', offerId: 11 }, { offerState: 'ACTIVE', offerId: 11, offerActive: true },
+    { offerState: 'INACTIVE', offerId: 11, offerWithdrawReason: '已退出' }]) {
+    assert.equal(pendingReplacementPage({}, patch).data.myChapterApplications[0].canConfigureNode,
+      false, JSON.stringify(patch));
+  }
+});
+
+test('待审补位从既有本人详情补读精确产品、模式与删除标记，未知不猜可编辑', () => {
+  const page = pendingReplacementPage({ productType: undefined, publishMode: undefined, delFlag: undefined });
+  Object.assign(page.data, { topicId: 42, chapterProject: true, operationScope: 'MERCHANT' });
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, false);
+  page.loadChapterProjectLifecycle();
+  const detail = requestByUrl('/api/topic/info-to-merchant');
+  assert.deepEqual(detail.data, { id: 42, scope: 'MERCHANT' });
+  detail.success({ code: 200, data: { id: 42, lifecycle: 7, status: 0, userStatus: 0,
+    productType: 2, publishMode: 'pro', delFlag: 0 } });
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, true);
+  page.loadChapterProjectLifecycle();
+  requests.at(-1).success({ code: 200, data: { id: 42, lifecycle: 7, status: 0, userStatus: 0, delFlag: null } });
+  assert.equal(page.data.info.productType, 2, '部分响应不覆盖已确认的产品事实');
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, false, '显式未知标记必须撤销编辑入口');
+  page.data.info.delFlag = 0;
+  page.loadChapterProjectLifecycle();
+  requests.at(-1).success({ code: 200, data: { id: 42, lifecycle: 7, status: 0, userStatus: 0 } });
+  assert.equal(page.data.myChapterApplications[0].canConfigureNode, false, '最新详情省略删除标记不能沿用旧0解锁');
+});
+
+test('暂停开售的已批准补位可配置节点；待审供给不能重复提交，审核生效后冻结', () => {
   const page = pausedReplacementPage();
   assert.equal(page.data.myChapterApplications[0].canConfigureNode, true);
   assert.equal(page.data.myChapterApplications[0].canSubmitOffer, true);
@@ -1094,7 +1172,7 @@ test('补位供给提交只提示待审核并回读申请，不把提交回执�
   assert.match(WXML, /application\.offerPendingReview/);
 });
 
-test('承接管理组件的配置点位动作通过现有白名单派发，仍留在join管理视图', () => {
+test('承接管理组件的配置节点动作通过现有白名单派发，仍留在join管理视图', () => {
   const page = pausedReplacementPage();
   page.data.fromMerchantJoin = false; page.data.chapterProject = true; page.data.role = 'join';
   page.onJoinAct({ detail: { act: 'openChapterNodeForm', dataset: { chapterId: 124 } } });

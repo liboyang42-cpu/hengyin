@@ -56,7 +56,7 @@ test('CU-C-113 同名不同日期的主题,下拉里读起来必须不一样', (
   assert.equal(new Set(labels).size, 2, '两条主题必须能分辨:' + JSON.stringify(labels))
   labels.forEach((label) => assert.match(label, /（不在招商期）$/, 'CU-M-29 的招商期标记不能因为改名丢掉'))
   assert.ok(labels.some((l) => /9月20日/.test(l)) && labels.some((l) => /9月22日/.test(l)),
-    '区分信息要用主题自己的日期,不是序号:' + JSON.stringify(labels))
+    '区分信息要用主题自己的日期，不是序号:' + JSON.stringify(labels))
 })
 
 test('CU-C-113 日期也相同时继续升级识别信息,编号是最后一级兜底', () => {
@@ -74,7 +74,7 @@ test('CU-C-113 日期也相同时继续升级识别信息,编号是最后一级�
 
 test('CU-C-113 只有一个主题时不啰嗦,不无端加识别信息', () => {
   const labels = labelsOf([{ id: 7, name: '秋日城市定向', inviteWindowOpen: true, startDate: '2026-10-01 09:00:00' }])
-  assert.deepEqual(labels, ['秋日城市定向'], '不撞名就别把日期堆进每一行,更别标招商期')
+  assert.deepEqual(labels, ['秋日城市定向'], '不撞名就别把日期堆进每一行，更别标招商期')
 })
 
 test('negative control CU-C-113: 退回「只有名字 + 招商期标记」⇒ 同名两条又逐字一样,判红', () => {
@@ -112,7 +112,7 @@ function assertMemberRowHonest(wxml) {
   const sub = /<text class="cset-sub">([^<]*)<\/text>/.exec(block)
   assert.ok(sub, '成员行必须有副文案')
   const text = sub[1].trim()
-  assert.match(text, /^\{\{.*\}\}$/, '副文案必须是随权限分档的三元,不能写死')
+  assert.match(text, /^\{\{.*\}\}$/, '副文案必须是随权限分档的三元，不能写死')
   const body = text.slice(2, -2)
   const splitAt = body.indexOf('?')
   assert.ok(splitAt > 0, '副文案三元少了条件:' + text)

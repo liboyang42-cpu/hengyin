@@ -8,6 +8,7 @@
     "cy-empty": "/components/cy/empty/index",
     "cy-avatar": "/components/cy/avatar/index",
     "cy-toast": "/components/cy/toast/index",
+    "cy-modal-host": "/components/cy/modal-host/index",
     "cy-inline-error": "/components/cy/inline-error/index"
   },
   "navigationStyle": "custom",

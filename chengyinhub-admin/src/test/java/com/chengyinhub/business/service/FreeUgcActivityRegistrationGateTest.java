@@ -48,6 +48,8 @@ class FreeUgcActivityRegistrationGateTest {
     private CommercialTopicPolicy commercialTopicPolicy;
     private CmsRegistrationServiceImpl service;
     private OmsTicket ticket;
+    private CmsActivity activity;
+    private com.chengyinhub.business.mapper.ClubMemberMapper clubMemberMapper;
 
     @BeforeEach
     void setUp() {
@@ -74,7 +76,10 @@ class FreeUgcActivityRegistrationGateTest {
             ReflectionTestUtils.setField(service, "commercialTopicPolicy", commercialTopicPolicy);
         }
 
-        CmsActivity activity = new CmsActivity();
+        clubMemberMapper = mock(com.chengyinhub.business.mapper.ClubMemberMapper.class);
+        ReflectionTestUtils.setField(service, "clubMemberMapper", clubMemberMapper);
+        ReflectionTestUtils.setField(service, "clubMapper", mock(com.chengyinhub.business.mapper.ClubMapper.class));
+        activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setName("自办派生活动");
         activity.setTopicId(TOPIC);
@@ -87,6 +92,34 @@ class FreeUgcActivityRegistrationGateTest {
         ticket = ticket(TICKET, BigDecimal.ZERO);
         when(ticketMapper.selectOmsTicketById(TICKET)).thenReturn(ticket);
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenReturn(Arrays.asList(ticket));
+    }
+
+    @Test
+    void clubOutsiderCannotQuoteCreateOrRetryPayment() {
+        activity.setClubId(73L);
+        activity.setMemberId(42L);
+        assertEquals("请先加入俱乐部再报名", register().getMessage());
+        assertEquals("请先加入俱乐部再报名", quoteRejected().getMessage());
+        com.chengyinhub.business.domain.CmsRegistration order = new com.chengyinhub.business.domain.CmsRegistration();
+        order.setOwnerType(2L);
+        order.setOwnerId(ACTIVITY);
+        order.setMemberId(2L);
+        RuntimeException rejected = assertThrows(RuntimeException.class, () ->
+                ReflectionTestUtils.invokeMethod(service, "validateRegistrationSellableNow", order, new Date()));
+        assertEquals("请先加入俱乐部再报名", rejected.getMessage());
+        org.mockito.Mockito.verifyNoInteractions(ticketMapper);
+    }
+
+    @Test
+    void clubCreatorAndActiveMemberKeepNormalQuoteAccess() {
+        givenTopic(0, 1, CommercialTopicPolicy.Evaluation.ugc());
+        activity.setClubId(73L);
+        activity.setMemberId(2L);
+        assertEquals(0, BigDecimal.ZERO.compareTo(service.quoteRegistration(2L, 2, ACTIVITY, TICKET, null, 0).getPayAmount()));
+        verify(clubMemberMapper, never()).selectByClubAndMember(any(), any());
+        activity.setMemberId(42L);
+        when(clubMemberMapper.selectByClubAndMember(73L, 2L)).thenReturn(new com.chengyinhub.business.domain.ClubMember());
+        assertEquals(0, BigDecimal.ZERO.compareTo(service.quoteRegistration(2L, 2, ACTIVITY, TICKET, null, 0).getPayAmount()));
     }
 
     private static OmsTicket ticket(Long id, BigDecimal price) {
@@ -144,8 +177,28 @@ class FreeUgcActivityRegistrationGateTest {
     @Test
     void commercialTopic_notSelling_stillBlocked() {
         givenTopic(0, 1, CommercialTopicPolicy.Evaluation.commercial("paidTicket", 1L));
-        assertTrue(register().getMessage().contains("SELLING"));
-        assertTrue(quoteRejected().getMessage().contains("SELLING"), "报价不能对未开售商业主题报成功");
+        // F-W1-05:未开售对玩家说「尚未开售」，不能落成内部状态码或被前端误报为支付故障。
+        assertTrue(register().getMessage().contains("尚未开售"));
+        assertTrue(quoteRejected().getMessage().contains("尚未开售"), "报价不能对未开售商业主题报成功");
+    }
+
+    /** PR10 复审:进行中/结算中/已关闭仍拦,但文案是「已停止售卖」而不是「尚未开售」。 */
+    @Test
+    void commercialTopic_saleAlreadyStarted_blockedAsSaleEnded() {
+        for (int lifecycle : new int[] {4, 5, 6}) {
+            givenTopic(lifecycle, 1, CommercialTopicPolicy.Evaluation.commercial("paidTicket", 1L));
+            String msg = register().getMessage();
+            assertTrue(msg.contains("停止售卖"), "lifecycle=" + lifecycle + " 应提示已停止售卖: " + msg);
+            assertTrue(!msg.contains("尚未开售"), "lifecycle=" + lifecycle + " 不能误报尚未开售");
+            assertTrue(quoteRejected().getMessage().contains("停止售卖"));
+        }
+    }
+
+    /** 未知生命周期值继续 fail-closed,按未开售拦截。 */
+    @Test
+    void commercialTopic_unknownLifecycle_stillBlockedAsNotOnSale() {
+        givenTopic(99, 1, CommercialTopicPolicy.Evaluation.commercial("paidTicket", 1L));
+        assertTrue(register().getMessage().contains("尚未开售"));
     }
 
     /** 负控:主题票免费但活动票被改成收费 —— 活动票不在 CommercialTopicPolicy 口径内,必须回到合同二闸。 */
@@ -154,7 +207,7 @@ class FreeUgcActivityRegistrationGateTest {
         givenTopic(0, 1, CommercialTopicPolicy.Evaluation.ugc());
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class)))
                 .thenReturn(Arrays.asList(ticket, ticket(11L, new BigDecimal("10"))));
-        assertTrue(register().getMessage().contains("SELLING"));
+        assertTrue(register().getMessage().contains("尚未开售"));
     }
 
     @Test
@@ -174,17 +227,18 @@ class FreeUgcActivityRegistrationGateTest {
     @Test
     void pendingReviewTopic_isNotFreeRegistrationState() {
         givenTopic(7, 1, CommercialTopicPolicy.Evaluation.ugc());
-        assertTrue(register().getMessage().contains("SELLING"));
+        assertTrue(register().getMessage().contains("尚未开售"));
     }
 
     /**
      * R19-PENDINGSHELL 复现陪测:pro 主题内容审核未过(status=0/userStatus=0),但商业审核已先行通过
-     * (lifecycle=SELLING)。合同二售卖闸只读 lifecycle 与售卖时间,【不读主题 status】—— 只要自办活动壳
-     * 公开(status=1/publishStatus=1),下单就能过闸走到用户校验(证据:错误文案是「用户不存在」而非闸拒)。
-     * ⇒ 「壳只在过审后存在」是这条链路的唯一防线,见 {@link TopicPendingReviewSelfHostShellTest}。
+     * (lifecycle=SELLING)。合同二售卖闸只读 lifecycle 与售卖时间,不读主题 status;此前只要自办活动壳
+     * 公开(status=1/publishStatus=1),下单就能过闸走到用户校验(错误文案是「用户不存在」)。
+     * 「壳只在过审后存在」({@link TopicPendingReviewSelfHostShellTest})曾是唯一防线,主题事后被驳回/下架时失效。
+     * AUDIT-G1-1 起 validateAndGetActivity 自己核父主题在架 ⇒ 这里必须被拒。
      */
     @Test
-    void pendingContentReviewSellingTopic_publicShellOrderGateDoesNotReadTopicStatus() {
+    void pendingContentReviewSellingTopic_publicShellOrderIsRefusedByParentTopicGate() {
         givenTopic(3, 0, CommercialTopicPolicy.Evaluation.commercial("paidTicket", 1L));
         // 主题内容审核未过:status=0 待审、user_status=0 未上架(公开主题列表/主题详情都不可见)
         lastTopic.setStatus(0);
@@ -202,8 +256,8 @@ class FreeUgcActivityRegistrationGateTest {
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class)))
                 .thenReturn(Arrays.asList(ticket(TICKET, new BigDecimal("10"))));
 
-        assertEquals("用户不存在", register().getMessage(),
-                "待审主题的公开壳在报名闸眼里与已过审主题无异(闸不读 status)");
+        assertEquals("主题活动已下架", register().getMessage(),
+                "父主题未在架(待审/下架)时,公开壳也不能接新单");
     }
 
     /**
@@ -253,7 +307,8 @@ class FreeUgcActivityRegistrationGateTest {
 
         RuntimeException error = assertThrows(RuntimeException.class,
                 () -> service.createSelfPlayPass(1L, TOPIC, "张三", "13800000000"));
-        assertTrue(error.getMessage().contains("SELLING"), error.getMessage());
+        // CL-37:仍被售卖闸拦下,但玩家文案是「尚未开售」,不露内部生命周期名。
+        assertEquals("该主题尚未开售，开售审核通过后才可报名", error.getMessage());
     }
 
     /** 负控:免费自玩下架 / 过截止都拒。 */
@@ -306,6 +361,7 @@ class FreeUgcActivityRegistrationGateTest {
 
         RuntimeException error = assertThrows(RuntimeException.class,
                 () -> service.quoteRegistration(2L, 1, TOPIC, 21L, null, 0));
-        assertTrue(error.getMessage().contains("SELLING"), error.getMessage());
+        // CL-37:仍被售卖闸拦下,但玩家文案是「尚未开售」,不露内部生命周期名。
+        assertEquals("该主题尚未开售，开售审核通过后才可报名", error.getMessage());
     }
 }

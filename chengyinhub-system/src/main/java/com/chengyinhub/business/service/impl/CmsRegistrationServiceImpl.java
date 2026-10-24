@@ -8,7 +8,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Objects;
 
+import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.mapper.*;
@@ -21,6 +23,7 @@ import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
 import com.chengyinhub.business.service.support.ExploreAccountTicketGate;
+import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
 import com.chengyinhub.business.util.RefundPolicy;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -36,11 +39,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IRegistrationCreationTransaction;
 import com.chengyinhub.business.service.RegistrationOrderExpiredException;
 import com.chengyinhub.business.service.IClubWaitlistOrderBridge;
 import com.chengyinhub.business.service.RegistrationRequestConflictException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -52,8 +57,6 @@ import com.chengyinhub.business.domain.vo.ExploreChapterRedemptionResult;
 import com.chengyinhub.business.domain.vo.TopicCompletionAwardVO;
 import com.chengyinhub.common.utils.sign.Md5Utils;
 
-import static com.chengyinhub.common.constant.CmsConstants.MAX_POINT_DEDUCT_AMOUNT;
-import static com.chengyinhub.common.constant.CmsConstants.POINT_DEDUCT_RATE;
 import static com.chengyinhub.common.constant.CmsConstants.QUOTE_SIGN_SALT;
 
 /**
@@ -65,8 +68,25 @@ import static com.chengyinhub.common.constant.CmsConstants.QUOTE_SIGN_SALT;
 @Service
 public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IRegistrationCreationTransaction {
 
+    /** D1:积分汇率与单笔上限的唯一真源(sys_config,缺省 = 原 CmsConstants 常量);手工 new 的实例走缺省值。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.PointsValuePolicy pointsValuePolicy =
+            com.chengyinhub.business.service.support.PointsValuePolicy.codeDefaults();
+
     @Autowired
     private com.chengyinhub.business.service.INotifyService notifyService;
+
+    @Autowired
+    private com.chengyinhub.business.service.IImService imService;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.CommittedBusinessNotice committedBusinessNotice;
+
+    @Autowired
+    private AlarmService alarmService;
+
+    @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
+    private Long platformMemberId;
     private static final Logger logger = LoggerFactory.getLogger(CmsRegistrationServiceImpl.class);
     @Autowired
     private CmsRegistrationMapper cmsRegistrationMapper;
@@ -112,7 +132,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
 
+    /** DOC2 F3 Phase 1 套票账本(开关默认关)。 */
     @Autowired
+    private com.chengyinhub.business.service.IFreeExploreBundleService freeExploreBundleService;
+
+    @Autowired
+    @Lazy
     private com.chengyinhub.business.service.ITopicCompletionAwardService topicCompletionAwardService;
 
     @Autowired
@@ -142,6 +167,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Autowired
     private CmsRegistrationScanMapper cmsRegistrationScanMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.StoreVerifyGrowthDeliveryMapper storeVerifyGrowthDeliveryMapper;
+
+    @Autowired
+    private RedemptionRewardClawbackService redemptionRewardClawbackService;
 
     /** 核销与资金/权益写入同事务的不可变 actor 审计；写失败必须让核销整体回滚。 */
     @Autowired
@@ -375,7 +406,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         CmsTopic sellerTopic = null;
         CmsActivity registrationActivity = null;
         if (ownerType == 2) {
-            CmsActivity activity = validateAndGetActivity(ownerId);
+            CmsActivity activity = validateAndGetActivity(ownerId, memberId);
             registrationActivity = activity;
             activityTitle = activity.getName();
             // 活动单溯源到主题;独立活动(无 topicId)无主题真源 → 留 null,由 derive 兜底
@@ -456,7 +487,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         // [#22 二清闸] 价格算完才判得了「这笔到底收不收钱」——积分全额抵扣后 payable=0 的单不进资金链,
         // 不构成二清,不能拦。必须在建单前拦:建了单再拦 = 留一堆永远付不掉的孤儿单。
-        assertCollectible(sellerTopic, payableAmount);
+        assertCollectible(sellerTopic, payableAmount, registrationActivity);
         if (payableAmount.compareTo(BigDecimal.ZERO) > 0 && sellerTopic != null) {
             assertFeeRateValid(sellerTopic.getFeePlatformRate());
         }
@@ -512,7 +543,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         registration.setTotalAmount(totalAmount);
         registration.setPointUsed(Convert.toLong(pointUsed));
         registration.setPointDeductAmount(pointDeductAmount);
-        registration.setPointDeductRate(POINT_DEDUCT_RATE);
+        registration.setPointDeductRate(calc.pointDeductRate);
         // 多票主单：覆盖 payableAmount 为汇总金额，其他从单为 0
         BigDecimal finalPayable = overridePayable != null ? overridePayable : payableAmount;
         registration.setPayableAmount(finalPayable);
@@ -588,6 +619,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 容量按行/按票算,不按钱算,整单再调一次 = 重复预占。
         if (PurchaseKind.EXPLORE_PASS == registration.getPurchaseKind() && sellerTopic != null) {
             perkLedgerService.reserveEntitlements(registration.getId(), sellerTopic.getId());
+            // DOC2 F3 Phase 1:③ 套票冻结快照并按持有人发放单位。sale 开关默认关 ⇒ 空转零写入;
+            // 同事务,任一步抛出整单回滚(与上面的权益预占同一条纪律)。
+            if (freeExploreBundleService != null) {
+                freeExploreBundleService.freezeOnOrderCreated(registration, sellerTopic, registrationActivity);
+            }
         }
 
         //11-12. 扣用户积分 + 记流水
@@ -704,7 +740,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // :首单汇总 才被写回去。⇒「第一张票 0 元 + 第二张 100 元」时,每行过闸都是 payable=0(从票
         // 还被显式传 ZERO)⇒ 全部放行 ⇒ 首单事后变成 100 元待支付,第三方照收。
         // 这个洞是 code-review 从本闸初版里挖出来的,ErqingGateTest#multiTicket_freeFirstPaidSecond_rejected 守着。
-        assertCollectible(orderTopic, order.payableAmount);
+        assertCollectible(orderTopic, order.payableAmount, orderActivity);
 
         // 2) 建各行:行内一律不动积分(整单层统一处理);从单 payable=0,由首单汇总承担
         List<CmsRegistration> allCreated = new java.util.ArrayList<>();
@@ -840,7 +876,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setTotalAmount(price);
         r.setPointUsed(0L);
         r.setPointDeductAmount(BigDecimal.ZERO);
-        r.setPointDeductRate(POINT_DEDUCT_RATE);
+        r.setPointDeductRate(pointsValuePolicy.rate());
         r.setPayableAmount(price);
         r.setPointPaymentAmount(BigDecimal.ZERO);
         r.setWechatPaymentAmount(price);
@@ -855,7 +891,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
         r.setCreateBy(memberId.toString());
         r.setCreateTime(new Date());
-        cmsRegistrationMapper.insertCmsRegistration(r);
+        if (cmsRegistrationMapper.insertCmsRegistration(r) != 1 || r.getId() == null) {
+            throw new IllegalStateException("自玩报名原订单写入失败");
+        }
         return r;
     }
 
@@ -905,7 +943,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 主题级报名已下线，仅活动层报价（与 create 一致）
         CmsActivity activity = null;
         if (ownerType != null && ownerType == 2) {
-            activity = validateAndGetActivity(ownerId);
+            activity = validateAndGetActivity(ownerId, memberId);
         } else {
             CmsTopic topic = cmsTopicMapper.selectCmsTopicById(ownerId);
             if (isFreeTopic(topic)) {
@@ -971,6 +1009,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         BigDecimal couponDeductYuan = BigDecimal.ZERO; // 券为商家核销型，不抵扣报名支付
         BigDecimal payAmount = aggregatePayable.setScale(2, BigDecimal.ROUND_HALF_UP);
+        assertCollectible(sellerTopic, payAmount, activity);
         BigDecimal pointsDeductYuan = pointsDeduct.setScale(2, BigDecimal.ROUND_HALF_UP);
         String quoteSign = buildQuoteSign(memberId, ownerType, ownerId, ticketsKey.toString(),
                 usePoint, payAmount, pointsUsed, couponDeductYuan);
@@ -982,9 +1021,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 截止点只许从 RefundPolicy 唯一场次钟取,报价侧不参与 quoteSign(它是展示性字段,
         // 不随时间翻转而使已发出的报价失效)。非场次单(主题路径)不下发 ⇒ 前端 tri-state 保持默认。
         if (activity != null) {
-            Date deadline = RefundPolicy.sessionRefundDeadline(activity.getStartDate());
+            boolean free = payAmount.signum() == 0 && pointsUsed == 0;
+            Date deadline = free ? activity.getStartDate() : RefundPolicy.sessionRefundDeadline(activity.getStartDate());
             result.setRefundDeadline(deadline);
-            result.setRefundableNow(deadline == null ? null : !new Date().after(deadline));
+            result.setRefundableNow(deadline == null ? null
+                    : free ? new Date().before(deadline) : !new Date().after(deadline));
         }
         return result;
     }
@@ -1017,14 +1058,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         c.memberDiscountAmount = c.originalAmount.subtract(c.totalAmount);
         c.pointDeductAmount = BigDecimal.ZERO;
         c.pointUsed = 0;
+        // 报价与下单同一次读:汇率与上限取自 PointsValuePolicy,落库的 point_deduct_rate 也用这一份
+        BigDecimal pointDeductRate = pointsValuePolicy.rate();
+        c.pointDeductRate = pointDeductRate;
         if (use == 1 && userPoint > 0) {
-            BigDecimal maxDeductAmount = MAX_POINT_DEDUCT_AMOUNT;
+            BigDecimal maxDeductAmount = pointsValuePolicy.maxPerOrder();
             if (c.totalAmount.compareTo(maxDeductAmount) < 0) {
                 maxDeductAmount = c.totalAmount;
             }
-            BigDecimal userPointCanDeduct = new BigDecimal(userPoint).multiply(POINT_DEDUCT_RATE);
+            BigDecimal userPointCanDeduct = new BigDecimal(userPoint).multiply(pointDeductRate);
             c.pointDeductAmount = userPointCanDeduct.compareTo(maxDeductAmount) > 0 ? maxDeductAmount : userPointCanDeduct;
-            c.pointUsed = c.pointDeductAmount.divide(POINT_DEDUCT_RATE, 0, BigDecimal.ROUND_UP).intValue();
+            c.pointUsed = c.pointDeductAmount.divide(pointDeductRate, 0, BigDecimal.ROUND_UP).intValue();
         }
         c.payableAmount = c.totalAmount.subtract(c.pointDeductAmount);
         if (use == 1) {
@@ -1108,6 +1152,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         BigDecimal totalAmount = BigDecimal.ZERO;
         BigDecimal memberDiscountAmount = BigDecimal.ZERO;
         BigDecimal pointDeductAmount = BigDecimal.ZERO;
+        BigDecimal pointDeductRate = BigDecimal.ZERO;
         int pointUsed = 0;
         BigDecimal payableAmount = BigDecimal.ZERO;
         int paymentType = 1;
@@ -1176,10 +1221,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
     }
 
+    private static boolean isLiveParentTopic(CmsTopic topic) {
+        return topic != null
+                && Integer.valueOf(1).equals(topic.getStatus())
+                && Integer.valueOf(1).equals(topic.getUserStatus())
+                && Integer.valueOf(0).equals(topic.getDelFlag());
+    }
+
     /**
      * 验证并获取活动信息
      */
-    private CmsActivity validateAndGetActivity(Long activityId) {
+    private CmsActivity validateAndGetActivity(Long activityId, Long memberId) {
         CmsActivity activity = cmsActivityMapper.selectCmsActivityById(activityId);
         if (activity == null) {
             throw new RuntimeException("活动不存在");
@@ -1200,6 +1252,22 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         Date now = new Date();
         if (activity.getEndDate() != null && now.after(activity.getEndDate())) {
             throw new RuntimeException("活动已结束");
+        }
+
+        // 与活动详情使用同一有效成员查询，报价、建单和重试付款均在占库存前检查。
+        if (activity.getClubId() != null && activity.getClubId() > 0
+                && !(memberId != null && memberId > 0 && memberId.equals(activity.getMemberId()))
+                && (memberId == null || memberId <= 0
+                    || clubMemberMapper.selectByClubAndMember(activity.getClubId(), memberId) == null)) {
+            throw new ServiceException("请先加入俱乐部再报名", HttpStatus.FORBIDDEN);
+        }
+
+        // AUDIT-G1-1:父主题被驳回/作者下架/违规下架/仍待审时,其场次不再接新单(已有订单不动)。
+        // 口径与公开列表的 livePublicParentTopic 一致:status=1 · user_status=1 · del_flag=0。
+        // 此前「壳只在过审后存在」是唯一防线;主题事后下架不回写壳,这里补上第二道。
+        if (activity.getTopicId() != null && activity.getTopicId() > 0
+                && !isLiveParentTopic(cmsTopicMapper.selectCmsTopicById(activity.getTopicId()))) {
+            throw new RuntimeException("主题活动已下架");
         }
 
         return activity;
@@ -1266,7 +1334,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (payable == null || payable.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        assertCollectible(resolveSellerTopic(registration), payable);
+        CmsActivity activity = Long.valueOf(2L).equals(registration.getOwnerType())
+                ? cmsActivityMapper.selectCmsActivityById(registration.getOwnerId()) : null;
+        assertCollectible(resolveSellerTopic(registration), payable, activity);
     }
 
     @Override
@@ -1371,40 +1441,16 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
     }
 
-    /**
-     * [#22 二清闸] 票款不归平台的产品,一律不得真实收款。<b>本闸的判据真源,两个入口最终都落到这里。</b>
-     *
-     * <p><b>为什么是硬闸</b>:现行架构是「玩家付款进平台商户号 → 库里记主理人余额 → 提现再打钱」,
-     * 这就是二清(F8,2026-07-16 用户确认)。判例:资金进平台账户后 T+1 结算给商户,
-     * 负责人以非法经营罪获刑 8 年、罚金 127 万。根治 = 收付通(P0-43),行政流程 ≥2 个月,
-     * 在它落地前 <b>①②③-第三方 一律不得开真实支付</b>(D11/D16 写死,
-     * 原话:「别在过渡期用『量小没事』放行」)—— 所以这里是 throw,不是 warn。
-     *
-     * <p><b>三条判据,顺序即语义</b>:
-     * <ol>
-     *   <li>不真实收款 ⇒ 放行。免费报名/纯积分抵扣不进资金链,没有「平台替谁收钱」这回事
-     *       (场景 #29 明确要免费 ② 在过渡期能跑)。</li>
-     *   <li>没有主题真源(独立活动 topic_id=null)⇒ 放行。后台手建活动 = 平台自办 = 卖自己的东西
-     *       (2026-07-16 用户拍板)。⚠️ 这是本闸唯一的**故意豁免**:将来若真用后台替第三方建活动收钱,
-     *       它会漏 —— 那时的正解是给这类活动补 PLATFORM 内容槽,而不是放宽本闸。</li>
-     *   <li>有主题但 CONTENT 槽 ≠ PLATFORM ⇒ 拒。含「压根没有槽」:isPlatformOwned 是 fail-closed,
-     *       而 P0-35 迁移刻意不回填存量 ⇒ 现网主题全部落在这一档。<b>这是目标态不是误伤</b>:
-     *       P0-48 要的就是过渡期 ①② 关支付。生产实测(2026-07-16):近 30 天 0 笔付费,
-     *       最后一笔 2026-02-03 ⇒ 零流量窗口,此刻接闸的实际流血量为零。</li>
-     * </ol>
-     *
-     * <p><b>为什么不放在 WechatPayServiceImpl.createOrder</b>(那看起来是所有真实收款的唯一入口):
-     * 它拿不到 topic —— {@code CmsRegistration.topicId} <b>只有自玩通行证填</b>(全类唯一写入点),
-     * 活动单不填 ⇒ 在支付层判会静默漏掉整个 ① 活动单,而那是今天在用的售票路径。
-     */
     private void assertCollectible(CmsTopic topic, BigDecimal payableAmount) {
-        if (payableAmount == null || payableAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            return;
-        }
-        if (topic == null) {
-            return;
-        }
-        if (!productRoleService.isPlatformOwned(topic.getId())) {
+        assertCollectible(topic, payableAmount, null);
+    }
+
+    private void assertCollectible(CmsTopic topic, BigDecimal payableAmount, CmsActivity activity) {
+        if (payableAmount == null || payableAmount.signum() <= 0) return;
+        boolean platformOwned = topic != null ? productRoleService.isPlatformOwned(topic.getId())
+                : activity != null && activity.getTopicId() == null && platformMemberId != null
+                        && platformMemberId > 0L && platformMemberId.equals(activity.getMemberId());
+        if (!platformOwned) {
             throw new RuntimeException("该产品暂不支持在线支付(平台正在办理支付资质,预计 2 个月内开放);"
                     + "如需报名请联系主办方");
         }
@@ -1449,7 +1495,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
         CmsTopic sellerTopic = validateRegistrationSellableNow(registration, now);
         assertFeeRateValid(registration.getFeePlatformRate());
-        assertCollectible(sellerTopic, registration.getPayableAmount());
+        CmsActivity activity = Long.valueOf(2L).equals(registration.getOwnerType())
+                ? cmsActivityMapper.selectCmsActivityById(registration.getOwnerId()) : null;
+        assertCollectible(sellerTopic, registration.getPayableAmount(), activity);
         return registration;
     }
 
@@ -1585,7 +1633,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (Long.valueOf(1L).equals(registration.getOwnerType())) {
             sellerTopic = validateAndGetTopic(registration.getOwnerId());
         } else if (Long.valueOf(2L).equals(registration.getOwnerType())) {
-            activity = validateAndGetActivity(registration.getOwnerId());
+            activity = validateAndGetActivity(registration.getOwnerId(), registration.getMemberId());
             CmsTopic topic = activity.getTopicId() == null ? null
                     : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
             // 免费 UGC 不走商业生命周期,在架/截止由 assertRegistrationSellable 判;其余仍要求 SELLING。
@@ -1619,9 +1667,33 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * {@link CommercialTopicPolicy} 单一真源判;免费 UGC 的可报名事实 = 主题在架 + 活动在架未结束
      * (validateAndGetActivity)+ 票种报名截止未到。商业主题或已进入售卖阶段的主题一律回合同二闸。
      */
+    /**
+     * F-W1-05:商业主题未到 SELLING 是「尚未开售」，不是支付故障。玩家侧拿到的必须是这句话，
+     * 而不是内部状态码;其余售卖时间拒绝保持原文。
+     */
+    private void assertCommercialSaleOpen(CmsTopic topic, OmsTicket ticket, Date now) {
+        if (topic != null) {
+            com.chengyinhub.business.domain.enums.TopicLifecycleState state;
+            try {
+                state = com.chengyinhub.business.domain.enums.TopicLifecycleState.fromCode(topic.getLifecycle());
+            } catch (IllegalArgumentException unknownLifecycle) {
+                state = null;
+            }
+            if (state == null || !state.isDirectSaleOpen()) {
+                // PR10 复审:进行中/结算中/已关闭是「已过售卖期」,不能对玩家说「尚未开售」;
+                // 未知状态继续 fail-closed,按未开售文案拦截。
+                if (state != null && state.isSaleStarted()) {
+                    throw new RuntimeException("报名已结束，本主题已停止售卖");
+                }
+                throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名");
+            }
+        }
+        SaleAvailabilityPolicy.assertSellable(topic, ticket, now);
+    }
+
     private void assertRegistrationSellable(CmsActivity activity, CmsTopic topic, OmsTicket ticket, Date now) {
         if (activity == null || !isFreeUgcActivityTopic(activity, topic)) {
-            SaleAvailabilityPolicy.assertSellable(topic, ticket, now);
+            assertCommercialSaleOpen(topic, ticket, now);
             return;
         }
         assertFreeTopicOnShelf(topic);
@@ -1764,10 +1836,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         try {
             lifecycle = TopicLifecycleState.fromCode(topic.getLifecycle());
         } catch (IllegalArgumentException ex) {
-            throw new RuntimeException("主题生命周期未知或缺失,暂不可售票", ex);
+            // CL-37:与 assertCommercialSaleOpen 同口径,未知生命周期 fail-closed 按未开售拦截,不露内部状态名。
+            throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名", ex);
         }
         if (!lifecycle.isDirectSaleOpen()) {
-            throw new RuntimeException("该主题当前不在 SELLING,暂不可售票");
+            if (lifecycle.isSaleStarted()) {
+                throw new RuntimeException("报名已结束，本主题已停止售卖");
+            }
+            throw new RuntimeException("该主题尚未开售，开售审核通过后才可报名");
         }
         assertExploreSellable(topic);
 
@@ -1884,7 +1960,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
 
         // 计算可抵扣的最大积分金额
-        BigDecimal maxDeductByPoints = new BigDecimal(availablePoints).multiply(POINT_DEDUCT_RATE);
+        BigDecimal maxDeductByPoints = new BigDecimal(availablePoints).multiply(pointsValuePolicy.rate());
         BigDecimal maxDeduct = maxPointDeduct.min(maxDeductByPoints);
 
         // 纯积分支付，使用最大可抵扣金额，但不超过总金额
@@ -1968,12 +2044,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * @return
      */
     @Override
-    //@Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String generateVerificationQrcode(Long registrationId) {
         CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         if (registration == null) {
             throw new RuntimeException("报名记录不存在");
         }
+
+        registration = requireCurrentUsableRegistration(registration);
 
         // 如果已经生成过二维码，直接返回
         if (registration.getQrcodeUrl() != null && !registration.getQrcodeUrl().isEmpty()) {
@@ -1996,22 +2074,29 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
         String qrcodeUrl = qrcodeService.generateQrcode(qrcodeContent, 300, 300);
 
+        if (StringUtils.isBlank(qrcodeUrl)) throw new IllegalStateException("核销二维码生成结果为空");
         registration.setQrcodeUrl(qrcodeUrl);
         //registration.setUpdateBy(SecurityUtils.getUsername());
         registration.setUpdateTime(new Date());
 
-        cmsRegistrationMapper.updateCmsRegistration(registration);
+        if (cmsRegistrationMapper.updateCmsRegistration(registration) != 1) {
+            throw new IllegalStateException("报名核销码保存失败");
+        }
         return qrcodeUrl;
     }
 
     /**
      * 处理微信支付回调
+     *
+     * <p>与退款/内容回调同一道 inbox fence:先 register(独立提交,同 hash 换业务即冲突拒收),
+     * 再 {@code process} 领取处理权,业务状态推进与 inbox DONE 在同一事务内提交。
+     * 因 claim 是 REQUIRES_NEW,本方法不能在外层未提交事务里调用(会读不到/锁死自己刚登记的行);
+     * 已在事务内确认支付的调用方用 {@link #applyConfirmedWechatPaymentWithinTransaction}。</p>
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public String handleWechatPayCallback(Map<String, String> resultMap) {
         if (resultMap == null) {
-            return "FAIL";
+            return registrationPaymentCallbackFailure(null, "payload_missing");
         }
         String outTradeNo = resultMap.get("out_trade_no");
         String transactionId = resultMap.get("transaction_id");
@@ -2019,29 +2104,101 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         if (outTradeNo == null || outTradeNo.trim().isEmpty()
                 || tradeState == null || tradeState.trim().isEmpty()) {
-            return "FAIL";
+            return registrationPaymentCallbackFailure(outTradeNo, "required_field_missing");
+        }
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            return registrationPaymentCallbackFailure(outTradeNo, "callback_inside_transaction");
         }
 
         // 查询报名记录
-        CmsRegistration registration = getByRegistrationNo(outTradeNo);
+        final CmsRegistration registration = getByRegistrationNo(outTradeNo);
         if (registration == null) {
+            String reference = outTradeNo.matches("[A-Za-z0-9_-]{1,64}") ? outTradeNo : "INVALID_FORMAT";
+            logger.error("Verified payment references missing registration order={}", reference);
+            alarmService.alarmThrottled("payment.callback.registration_missing", "支付回调报名不存在",
+                    "order=" + reference + " registration=missing result=FAIL");
             return "FAIL";
+        }
+        // 金额在登记前核对:同一笔回调换了金额不会进 inbox,更不会被当作重复成功。
+        if ("SUCCESS".equals(tradeState) && !matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
+            return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
         }
 
         // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键)。
-        // 同一个 notify 重投时 insert ignore 返回 false,不改变下方 ACK 与状态推进语义。
-        wxPaymentCallbackInboxService.register(
-                "PAY:" + (StringUtils.isNotEmpty(transactionId) ? transactionId : outTradeNo)
-                        + ":" + tradeState,
-                WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState);
+        final String notifyId = "PAY:" + (StringUtils.isNotEmpty(transactionId) ? transactionId : outTradeNo)
+                + ":" + tradeState;
+        try {
+            wxPaymentCallbackInboxService.register(notifyId,
+                    WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState);
+        } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
+            return registrationPaymentCallbackFailure(outTradeNo, "inbox_identity_conflict");
+        }
+        final String[] outcome = new String[1];
+        boolean completed = wxPaymentCallbackInboxService.process(notifyId,
+                new IWxPaymentCallbackInboxService.Mutation() {
+                    @Override
+                    public boolean isCurrent(WxPaymentCallbackInbox inbox) {
+                        if (!registration.getId().equals(inbox.getBizId())
+                                || !Integer.valueOf(WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT).equals(inbox.getBizType())
+                                || !tradeState.equals(inbox.getEventType())) {
+                            throw new IWxPaymentCallbackInboxService.IdentityConflictException(
+                                    "支付回调 inbox 行与本次业务身份不一致");
+                        }
+                        // 迟到/冲突的资金事件交给下方状态机判定,不标 STALE 假 ACK。
+                        return true;
+                    }
+
+                    @Override
+                    public boolean apply(WxPaymentCallbackInbox inbox) {
+                        outcome[0] = applyWechatPayCallback(registration, resultMap);
+                        return "SUCCESS".equalsIgnoreCase(outcome[0]);
+                    }
+                });
+        if (completed) {
+            return "SUCCESS";
+        }
+        // 业务判定失败时 applyWechatPayCallback 已按原因告警,事务回滚、inbox 释放待微信重投。
+        return outcome[0] != null && !"SUCCESS".equalsIgnoreCase(outcome[0]) ? outcome[0]
+                : registrationPaymentCallbackFailure(outTradeNo, "callback_not_completed");
+    }
+
+    /**
+     * 已在调用方事务内向微信查单确认 SUCCESS 的补记(如取消场次前把已付 PAYING 单补成已支付)。
+     * 不走 inbox:那道 fence 的领取需独立提交;这里由调用方事务的行锁 + 支付 CAS 保证只补一次。
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap) {
+        if (resultMap == null || !"SUCCESS".equals(resultMap.get("trade_state"))
+                || StringUtils.isBlank(resultMap.get("out_trade_no"))) {
+            return registrationPaymentCallbackFailure(resultMap == null ? null : resultMap.get("out_trade_no"),
+                    "required_field_missing");
+        }
+        CmsRegistration registration = getByRegistrationNo(resultMap.get("out_trade_no"));
+        if (registration == null) {
+            return registrationPaymentCallbackFailure(resultMap.get("out_trade_no"), "order_disappeared");
+        }
+        if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
+            return registrationPaymentCallbackFailure(resultMap.get("out_trade_no"), "amount_mismatch");
+        }
+        return applyWechatPayCallback(registration, resultMap);
+    }
+
+    /** 支付回调的业务状态机;只在 inbox fence 的事务或调用方已开启的事务内执行。 */
+    private String applyWechatPayCallback(CmsRegistration registration, Map<String, String> resultMap) {
+        String outTradeNo = resultMap.get("out_trade_no");
+        String transactionId = resultMap.get("transaction_id");
+        String tradeState = resultMap.get("trade_state");
 
         // 根据交易状态处理不同的业务逻辑
         switch (tradeState) {
             case "SUCCESS": // 支付成功
                 if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
-                    return "FAIL";
+                    return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
                 }
-                return completePaymentSuccess(registration, transactionId);
+                String paymentResult = completePaymentSuccess(registration, transactionId);
+                return "SUCCESS".equalsIgnoreCase(paymentResult) ? paymentResult
+                        : registrationPaymentCallbackFailure(outTradeNo, "payment_state_conflict");
 
             case "REFUND": // 转入退款
                 Date refundedAt = new Date();
@@ -2054,7 +2211,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                         returnPointsToUser(current);
                         return "SUCCESS";
                     }
-                    return "FAIL";
+                    return registrationPaymentCallbackFailure(outTradeNo, "refund_state_conflict");
                 }
                 registration = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
                 if (registration == null) {
@@ -2085,11 +2242,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(
                             registration.getId());
                     if (current == null) {
-                        return "FAIL";
+                        return registrationPaymentCallbackFailure(outTradeNo, "order_disappeared");
                     }
                     return Integer.valueOf(3).equals(current.getPaymentStatus())
                             && Integer.valueOf(1).equals(current.getRegistrationStatus())
-                            ? "SUCCESS" : "FAIL";
+                            ? "SUCCESS" : registrationPaymentCallbackFailure(outTradeNo, "failure_state_conflict");
                 }
                 CmsRegistration failed = cmsRegistrationMapper.selectCmsRegistrationById(registration.getId());
                 if (failed == null) {
@@ -2109,6 +2266,16 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
 
         return "SUCCESS";
+    }
+
+    private String registrationPaymentCallbackFailure(String outTradeNo, String reason) {
+        String reference = outTradeNo != null && outTradeNo.matches("[A-Za-z0-9_-]{1,64}")
+                ? outTradeNo : "INVALID_FORMAT";
+        // AlarmService 只记标题与长度;单号/原因必须自己落一行 WARN,告警未配置时事后才查得到。
+        logger.warn("Registration payment callback returned FAIL order={} reason={}", reference, reason);
+        alarmService.alarmThrottled("payment.callback.registration", "支付回调报名处理失败",
+                "order=" + reference + " reason=" + reason + " result=FAIL");
+        return "FAIL";
     }
 
     @Override
@@ -2414,11 +2581,23 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private void registerPaymentAfterCommit(List<Long> registrationIds, Long memberId, String activityTitle) {
         Runnable effects = () -> {
             for (Long registrationId : registrationIds) {
-                try {
-                    generateVerificationQrcode(registrationId);
-                } catch (Exception e) {
-                    logger.error("[支付回调] 生成核销码失败(待补偿) registrationId={}", registrationId, e);
+                committedBusinessNotice.dispatchInNewTransaction("registration-qrcode", registrationId, () -> {
+                    String url = generateVerificationQrcode(registrationId);
+                    return url != null && !url.isEmpty();
+                });
+            }
+            try {
+                if (imService != null && !registrationIds.isEmpty()) {
+                    CmsRegistration paid = cmsRegistrationMapper.selectCmsRegistrationById(registrationIds.get(0));
+                    CmsTopic topic = paid == null ? null : resolveSellerTopic(paid);
+                    committedBusinessNotice.dispatchInNewTransaction("registration-signup", paid == null ? null : paid.getId(), () -> {
+                        Long messageId = imService.sendSystem(memberId, ImMessage.MSG_CARD, "报名成功",
+                                RegistrationCheckoutServiceImpl.signupNoticeExtra(topic == null ? null : topic.getId()));
+                        return messageId != null && messageId > 0L;
+                    });
                 }
+            } catch (Exception e) {
+                logger.warn("[支付回调] 报名成功站内信发送失败 memberId={}", memberId);
             }
             try {
                 if (notifyService != null) {
@@ -2477,9 +2656,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new RuntimeException("无权取消他人报名");
         }
 
-        // 已支付或已核销的不能取消
-        if (registration.getPaymentStatus() == 2 || registration.getVerificationStatus() == 1) {
-            throw new RuntimeException("已支付或已核销的报名不能取消");
+        // 未支付取消入口不办理已支付订单，后者须在订单详情按实际取消规则处理。
+        if (Integer.valueOf(1).equals(registration.getVerificationStatus())) {
+            throw new RuntimeException("已核销的报名不能取消");
+        }
+        if (Integer.valueOf(2).equals(registration.getPaymentStatus())) {
+            throw new RuntimeException("已完成支付，请从订单详情申请取消报名，是否可取消以订单规则为准");
         }
 
         boolean shouldReturnPoints = registration.getPointUsed() != null && registration.getPointUsed() > 0
@@ -2513,6 +2695,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    public Long getExpiredUnpaidScanUpperBound(Date now) {
+        return cmsRegistrationMapper.selectExpiredUnpaidMaxId(now);
+    }
+
+    @Override
+    public List<Long> listExpiredUnpaidIdsAfter(Date now, long afterId, long maxId, int limit) {
+        return cmsRegistrationMapper.selectExpiredUnpaidIdsAfter(now, afterId, maxId,
+                Math.max(1, Math.min(200, limit)));
+    }
+
+    @Override
     public List<Long> listExpiredPayingIds(long afterId) {
         return cmsRegistrationMapper.selectExpiredPayingIds(new Date(), afterId);
     }
@@ -2520,6 +2713,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     public List<Long> listPaidMissingQrcodeIds() {
         return cmsRegistrationMapper.selectPaidMissingQrcodeIds();
+    }
+
+    @Override
+    public Long getPaidMissingQrcodeScanUpperBound() {
+        return cmsRegistrationMapper.selectPaidMissingQrcodeMaxId();
+    }
+
+    @Override
+    public List<Long> listPaidMissingQrcodeIdsAfter(long afterId, long maxId, int limit) {
+        return cmsRegistrationMapper.selectPaidMissingQrcodeIdsAfter(afterId, maxId,
+                Math.max(1, Math.min(100, limit)));
     }
 
     /**
@@ -2780,7 +2984,19 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             if (cmsRegistrationMapper.hasActiveManualRefundCaseForUpdate(registration.getId())) {
                 throw new IllegalStateException("订单正在人工退款处理中，暂不可核销");
             }
-            return false;
+            CmsRegistration current =
+                    cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
+            if (current == null) {
+                throw new IllegalStateException("订单数据异常,无法核销");
+            }
+            if (!Integer.valueOf(2).equals(current.getPaymentStatus())
+                    || !Integer.valueOf(2).equals(current.getRegistrationStatus())) {
+                throw new IllegalStateException("订单未完成支付或已退款,无法核销");
+            }
+            if (Integer.valueOf(1).equals(current.getVerificationStatus())) {
+                return false;
+            }
+            throw new IllegalStateException("订单数据异常,无法核销");
         }
         settlementEntryService.recordPaidRegistration(registration, payeeId);
         writeScanLedger(registration.getId(), verifierId, validationMethod, station);
@@ -2798,14 +3014,152 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         writeVerificationAudit("REGISTRATION", registration.getId(), verifierId,
                 actorMemberId, actorRoleCode, action, "CMS_REGISTRATION", registration.getId(),
                 activityId != null ? activityId : (station == null ? null : station.getId()),
-                "registration-redeem-" + registration.getId(),
+                verificationAuditRequestId(registration.getId()),
                 "{\"verificationStatus\":0}", "{\"verificationStatus\":1}");
         growthService.enqueueStoreVerification(registration.getId());
         return true;
     }
 
-    private void assertActivityRedeemable(CmsRegistration registration) {
-        if (!Long.valueOf(2L).equals(registration.getOwnerType())) return;
+    static final String WHOLE_ORDER_VERIFY_REVERSE = "REGISTRATION_VERIFY_REVERSE";
+
+    /**
+     * 核销审计幂等键:首次核销沿用原键;每被后台撤销一次,下一次核销换一代键,
+     * 否则 uk_business_audit_request 会让撤销后的重新核销永远写不进审计而整单回滚。
+     */
+    private String verificationAuditRequestId(Long registrationId) {
+        int reversals = wholeOrderReversalCount(registrationId);
+        return "registration-redeem-" + registrationId + (reversals == 0 ? "" : "-r" + reversals);
+    }
+
+    private int wholeOrderReversalCount(Long registrationId) {
+        List<BusinessAuditEvent> events = businessAuditEventMapper.selectByTarget("CMS_REGISTRATION", registrationId);
+        int count = 0;
+        if (events != null) for (BusinessAuditEvent event : events) {
+            if (event != null && "REGISTRATION".equals(event.getDomainType())
+                    && WHOLE_ORDER_VERIFY_REVERSE.equals(event.getAction())) count++;
+        }
+        return count;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId) {
+        return reverseWholeOrderVerification(registrationId, reason, operatorUserId, false);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId,
+                                                 boolean clawbackRewards) {
+        String why = reason == null ? "" : reason.trim();
+        if (registrationId == null || registrationId <= 0 || operatorUserId == null || operatorUserId <= 0
+                || why.isEmpty() || why.length() > 255) {
+            throw new IllegalArgumentException("订单、撤销原因(1-255字)或操作人无效");
+        }
+        CmsRegistration located = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+        if (located == null || located.getOwnerId() == null) throw new IllegalStateException("订单不存在");
+        if (located.getPurchaseKind() != null && located.getPurchaseKind() == PurchaseKind.EXPLORE_PASS) {
+            throw new IllegalStateException("探索票请在核销记录中按章撤销");
+        }
+        if (!Long.valueOf(2L).equals(located.getOwnerType())) {
+            throw new IllegalStateException("主题整单核销已计入执行商家结算，请走人工售后处理");
+        }
+        // 锁序与核销/取消一致:activity -> registration。
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(located.getOwnerId());
+        if (activity == null || activity.getMemberId() == null) throw new IllegalStateException("订单关联活动不存在");
+        if (activity.getIsSettlement() != null && activity.getIsSettlement() != 0) {
+            throw new IllegalStateException("活动已结算，不能撤销核销，请走人工售后处理");
+        }
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
+        if (current == null || !Long.valueOf(2L).equals(current.getOwnerType())
+                || !located.getOwnerId().equals(current.getOwnerId())) {
+            throw new IllegalStateException("订单归属已变化，请刷新后重试");
+        }
+        if (!Integer.valueOf(1).equals(current.getVerificationStatus())) {
+            throw new IllegalStateException("该订单未核销或已撤销，无需重复撤销");
+        }
+        for (com.chengyinhub.business.domain.Redemption row : perkLedgerService.listRedemptions(registrationId)) {
+            if (row != null && "ACTIVE".equals(row.getStatus())) {
+                throw new IllegalStateException("该票有按章核销流水，请在核销记录中逐条撤销");
+            }
+        }
+        // 条件置位(NOT EXISTS ACTIVE redemption 在 SQL 内当前读判定),0 行 = 状态刚变化。
+        if (cmsRegistrationMapper.clearVerification(registrationId) != 1) {
+            throw new IllegalStateException("核销状态刚发生变化，请刷新后重试");
+        }
+        BusinessAuditEvent audit = new BusinessAuditEvent();
+        audit.setDomainType("REGISTRATION");
+        audit.setDomainId(registrationId);
+        audit.setOwnerMemberId(activity.getMemberId());
+        audit.setActorType(BusinessAuditEvent.ACTOR_TYPE_SYS_USER);
+        audit.setActorMemberId(operatorUserId);
+        audit.setActorRoleCode("SYS_USER");
+        audit.setAction(WHOLE_ORDER_VERIFY_REVERSE);
+        audit.setTargetType("CMS_REGISTRATION");
+        audit.setTargetId(registrationId);
+        audit.setRelationId(activity.getId());
+        audit.setBeforeJson("{\"verificationStatus\":1,\"verifierId\":"
+                + (current.getVerifierId() == null ? "null" : current.getVerifierId()) + "}");
+        audit.setAfterJson("{\"verificationStatus\":0}");
+        audit.setReason(why);
+        int generation = wholeOrderReversalCount(registrationId) + 1;
+        audit.setRequestId("registration-verify-reverse-" + registrationId + "-" + generation);
+        audit.setCreateTime(new Date());
+        if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {
+            throw new IllegalStateException("撤销核销审计写入失败，撤销已回滚");
+        }
+        // PR10 复审:与按章撤销(redemption→REVERSED)对齐 —— 整单票的核销台账行就是 cms_registration_scan,
+        // 标成已撤销,商家赏金/合作结算证据/核销风控/商家人头都不再把这次扫码算作核销;
+        // 存量无台账行的老单 0 行也不算失败。重新核销时 writeScanLedger 会另落一行新台账。
+        cmsRegistrationScanMapper.markWholeOrderScansReversed(registrationId);
+        if (clawbackRewards) {
+            CmsRegistration owner = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+            if (owner == null || owner.getMemberId() == null) {
+                throw new IllegalStateException("冲回奖励找不到报名单 registrationId=" + registrationId);
+            }
+            redemptionRewardClawbackService.clawbackWholeOrderVerification(owner, activity.getMemberId(), why,
+                    operatorUserId, "registration-verify-clawback-" + registrationId + "-" + generation);
+        } else {
+            // 未勾冲回:已发的奖励按按章撤销同口径保留;但还在队列里没发的到店成长不能为已撤销的核销迟到补发。
+            storeVerifyGrowthDeliveryMapper.deletePendingByRegistration(registrationId);
+        }
+        logger.info("整单核销已撤销 registrationId={} operatorUserId={}", registrationId, operatorUserId);
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CmsRegistration requireCurrentUsableRegistration(CmsRegistration snapshot) {
+        if (snapshot == null || snapshot.getId() == null) {
+            throw new IllegalStateException("报名记录不存在");
+        }
+        CmsActivity activity = null;
+        if (Long.valueOf(2L).equals(snapshot.getOwnerType())) {
+            // 与活动取消相同 activity→registration 锁序；不持旧快照核销。
+            activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(snapshot.getOwnerId());
+            if (activity == null || Integer.valueOf(2).equals(activity.getDelFlag())) {
+                throw new IllegalStateException("活动不存在");
+            }
+            if (activity.getCancelTime() != null) throw new IllegalStateException("活动已取消，无法使用");
+        }
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(snapshot.getId());
+        if (current == null || !Objects.equals(snapshot.getMemberId(), current.getMemberId())
+                || !Objects.equals(snapshot.getOwnerType(), current.getOwnerType())
+                || !Objects.equals(snapshot.getOwnerId(), current.getOwnerId())) {
+            throw new IllegalStateException("订单归属已变化，请重新获取订单");
+        }
+        if (!Integer.valueOf(2).equals(current.getPaymentStatus())
+                || !Integer.valueOf(2).equals(current.getRegistrationStatus())) {
+            throw new IllegalStateException("订单未完成支付或已退款，无法使用");
+        }
+        String rejection = ExploreTicketUsePolicy.rejection(current.getPurchaseKind(),
+                activity == null ? null : activity.getEndDate(), new Date());
+        if (rejection != null) throw new IllegalStateException(rejection);
+        return current;
+    }
+
+    private CmsActivity assertActivityRedeemable(CmsRegistration registration) {
+        if (!Long.valueOf(2L).equals(registration.getOwnerType())) return null;
         // 与取消共用 activity→registration 锁序，避免核销继续使用取消前的快照。
         CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(registration.getOwnerId());
         if (activity == null || Integer.valueOf(2).equals(activity.getDelFlag())) {
@@ -2814,6 +3168,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (activity.getCancelTime() != null) {
             throw new IllegalStateException("活动已取消，无法核销");
         }
+        return activity;
     }
 
     /**
@@ -2868,16 +3223,26 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 放在 if 外面:tryActivate 每次都从库里重新数人头、且有 CAS 兜底,重复触发无害;
         // 而放进 if 里会让「台账已存在但赏金那次没算成」的情况永远补不回来。
         // onVerification 自己吞异常:核销是收钱路径,赏金是实验性冷启动功能,任何情况下都不能连累它。
+        // 只有锁冲突例外:它原样抛出,交给外层 @DeadlockRetry 整笔回滚重试(见 SavepointLockFailures)。
         merchantReferralBountyService.onVerification(verifierId);
         try {
             verificationRiskService.inspectAndQueue(verifierId, registrationId);
         } catch (Exception riskProbeFailure) {
             logger.error("核销异常抽检入队失败,不回滚核销: registrationId={}, verifierId={}",
                     registrationId, verifierId, riskProbeFailure);
+            String failureType = riskProbeFailure.getClass().getSimpleName();
+            try {
+                committedBusinessNotice.executeAfterCommit("verification.risk.queue-failed", registrationId,
+                        () -> alarmService.deliver("核销异常抽检入队失败", "registrationId=" + registrationId + " type=" + failureType)
+                                == AlarmService.AlarmDelivery.SUCCESS);
+            } catch (RuntimeException notificationFailure) {
+                logger.error("Verification risk failure dispatch unavailable type={}", notificationFailure.getClass().getSimpleName());
+            }
         }
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(rollbackFor = Exception.class)
     public ExploreChapterRedemptionResult redeemExploreChapterAndRecord(CmsRegistration registration,
                                               Long chapterId, Long topicId, Long merchantOwnerMemberId,
@@ -2887,6 +3252,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    @DeadlockRetry
     @Transactional(rollbackFor = Exception.class)
     public ExploreChapterRedemptionResult redeemExploreChapterAndRecord(CmsRegistration registration,
                                                Long chapterId, Long topicId, Long merchantOwnerMemberId,
@@ -2896,10 +3262,38 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 || operatorMemberId == null || operatorMemberId <= 0) {
             throw new IllegalStateException("商家主体或核销操作人无效");
         }
-        assertActivityRedeemable(registration);
+        if (registration == null || registration.getId() == null || registration.getOwnerId() == null
+                || !Long.valueOf(2L).equals(registration.getOwnerType())) {
+            throw new IllegalStateException("报名单类型或关联活动无效");
+        }
+        CmsActivity activity = assertActivityRedeemable(registration);
+        CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
+        if (current == null || !Integer.valueOf(2).equals(current.getPaymentStatus())
+                || !Integer.valueOf(2).equals(current.getRegistrationStatus())) {
+            throw new IllegalStateException("订单未完成支付、已退款或已失效，无法核销");
+        }
+        if (!Long.valueOf(2L).equals(current.getOwnerType())
+                || !registration.getOwnerId().equals(current.getOwnerId())
+                || !java.util.Objects.equals(registration.getMemberId(), current.getMemberId())
+                || activity == null || topicId == null || !topicId.equals(activity.getTopicId())) {
+            throw new IllegalStateException("订单与当前活动或路线不一致，无法核销");
+        }
+        registration = current;
+        // A包：按章核销同样拒绝非探索票与已到期场次探索票(master 已先校验 ownerType=2 再锁活动)。
+        if (!Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(registration.getPurchaseKind())) {
+            throw new IllegalStateException("探索票或路线归属已变化，请重新扫码");
+        }
+        String useRejection = ExploreTicketUsePolicy.rejection(registration.getPurchaseKind(), activity.getEndDate(), new Date());
+        if (useRejection != null) throw new IllegalStateException(useRejection);
         if (cmsRegistrationMapper.hasActiveManualRefundCaseForUpdate(registration.getId())) {
             throw new IllegalStateException("订单正在人工退款处理中，暂不可核销");
         }
+        Long replayedRedemptionId = perkLedgerService.findReplayableChapterRedemptionIdForUpdate(
+                registration.getId(), topicId, chapterId, merchantOwnerMemberId);
+        if (replayedRedemptionId != null) {
+            return new ExploreChapterRedemptionResult(replayedRedemptionId, 0, true);
+        }
+
         // ⓪ ★ 事务内复核 chapterId 属于「该商家对该票的可核销候选集」。
         //
         // 为什么不能只信 controller 反推出来的那个:交集是在**事务外**算的,而

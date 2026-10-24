@@ -6,6 +6,14 @@ const app = getApp()
 const withdrawCs = require('../../../utils/withdraw-cs.js')
 const { bizFailureMessage } = require('../../../utils/response-shape.js')
 
+function identityKey() {
+  const gd = app.globalData || {}
+  const member = typeof app.getUserID === 'function' ? app.getUserID() : gd.user_id
+  const role = typeof app.getUserRole === 'function' ? app.getUserRole() : gd.role
+  const type = typeof app.getUserType === 'function' ? app.getUserType() : gd.user_type
+  return [member == null ? '' : member, role || '', type == null ? '' : type].join('|')
+}
+
 function positiveId(value) {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null
@@ -82,15 +90,24 @@ Page({
   },
 
   onLoad(options) {
+    this._unloaded = false
+    this._hidden = false
     const clubId = positiveId(options && (options.clubId || options.id))
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部 ID' })
+      this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
       return
     }
     this._clubId = clubId
     this.setData({ clubId })   // 2026-09-06 起 wxml 的 cy-access-gate 读它做范围核对
     this.loadSummary()
   },
+  onShow() {
+    const refresh = this._hidden || this._loadIdentity !== identityKey() || this._loadClubId !== String(this._clubId)
+    this._hidden = false
+    if (refresh) this.loadSummary()
+  },
+  onHide() { this._hidden = true; this._loadEpoch = (this._loadEpoch || 0) + 1 },
+  onUnload() { this._unloaded = true; this._loadEpoch = (this._loadEpoch || 0) + 1 },
   onPullDownRefresh() { this.loadSummary() },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 })
@@ -98,7 +115,43 @@ Page({
   },
   retryLoad() { this.loadSummary() },
 
+  _clearData() {
+    this._dataIdentity = null
+    this.setData({ summary: null, withdrawState: 'unknown' })
+  },
+  _acceptRead(epoch) {
+    if (!Number.isInteger(epoch) || epoch !== this._loadEpoch || this._unloaded || this._hidden) return false
+    const current = identityKey()
+    if (this._loadIdentity === current && this._loadClubId === String(this._clubId)) return true
+    const previousMember = this._loadIdentity.split('|')[0]
+    const currentMember = current.split('|')[0]
+    this._loadEpoch += 1
+    this._clearData()
+    this.setData({ state: 'error', errorText: '结算数据需要重新加载' })
+    wx.stopPullDownRefresh()
+    if ((!previousMember || previousMember === '0') && currentMember && currentMember !== '0') this.loadSummary()
+    return false
+  },
+  _hasCurrentData() {
+    if (this._unloaded || this._hidden) return false
+    if (this._dataIdentity !== identityKey() || this._dataClubId !== String(this._clubId)) {
+      if (this._dataIdentity != null) {
+        this._clearData(); this.setData({ state: 'error', errorText: '结算数据需要重新加载' })
+      }
+      return false
+    }
+    return Boolean(this.data.summary) && (this.data.state === 'ready' || this.data.state === 'empty')
+  },
+
   loadSummary() {
+    if (this._unloaded || this._hidden) return
+    const epoch = this._loadEpoch = (this._loadEpoch || 0) + 1
+    this._clearData()
+    if (!positiveId(this._clubId)) {
+      this.setData({ state: 'error', errorText: '缺少俱乐部信息' }); wx.stopPullDownRefresh(); return
+    }
+    this._loadIdentity = identityKey()
+    this._loadClubId = String(this._clubId)
     const that = this
     this.setData({ state: 'loading', errorText: '' })
     app.sendRequest({
@@ -109,23 +162,31 @@ Page({
       data: jsonBody({ clubId: this._clubId }),
       header: jsonHeader(),
       success(res) {
+        if (!that._acceptRead(epoch)) return
         const summary = ok(res) ? normalizeSummary(res.data) : null
         if (!summary) {
           // code=200 但校验失败时 res.msg 是「操作成功」,不能当失败原因(2026-09-17 拍板)。
           that.setData({ state: 'error', errorText: bizFailureMessage(res, '结算数据暂不可用') })
           return
         }
+        that._dataIdentity = that._loadIdentity
+        that._dataClubId = that._loadClubId
         that.setData({ state: summary.topics.length ? 'ready' : 'empty', summary })
       },
-      fail() { that.setData({ state: 'network-error', errorText: '网络没有连上' }) },
+      fail() {
+        if (!that._acceptRead(epoch)) return
+        that.setData({ state: 'network-error', errorText: '网络没有连上' })
+      },
       successStatusAbnormal(res) {
+        if (!that._acceptRead(epoch)) return
         that.setData({ state: 'error', errorText: (res && res.msg) || '结算数据暂不可用' })
       },
-      complete() { wx.stopPullDownRefresh() },
+      complete() { if (that._acceptRead(epoch)) wx.stopPullDownRefresh() },
     })
   },
 
   goTopicSettlement(e) {
+    if (!this._hasCurrentData()) return
     const topicId = positiveId(e && e.currentTarget && e.currentTarget.dataset.topicId)
     if (!topicId) return
     // CU-C-41(用户裁决 A):俱乐部结算行走俱乐部视角 —— 明细页 source=club 按 topicId 从
@@ -134,12 +195,14 @@ Page({
     // coop/settlement-detail 只有这两个 source 才把 topicId 当记录标识。
     // 同一主题可能有多条结算记录,带上本行 id 让明细页按行取,不按 topicId 取第一条
     const rowId = positiveId(e.currentTarget.dataset.id)
+    if (!this.data.summary.topics.some(row => row.topicId === topicId && (!rowId || row.id === rowId))) return
     wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=club&topicId=' + topicId + (rowId ? '&id=' + rowId : '') + '&clubId=' + this._clubId })
   },
 
   // CU-C-92:可提现为 0(或余额还没取到)时提现不是可做的动作 —— 禁用主按钮并写明条件;
   // 余额被取到时才放行。与按钮的 disabled 同一口径,兼作连击兜底。
   onStages(e) {
+    if (!this._hasCurrentData()) return
     const detail = (e && e.detail) || {}
     this.setData({ withdrawState: !detail.known ? 'unknown' : (detail.positive ? 'positive' : 'zero') })
   },
@@ -147,6 +210,7 @@ Page({
   // 2026-09-15 收款模型定稿 §3:平台不打款。本页不再跳银行卡表单页,也不自己发提现请求,
   // 一律弹平台客服微信线下处理。后端 /api/club/settlement/withdraw 保留,不再由本页触达。
   goWithdraw() {
+    if (!this._hasCurrentData()) return
     if (this.data.withdrawState !== 'positive') return   // CU-C-92:零余额/余额未知不得发起
     withdrawCs.showWithdrawCsPopup();
   },

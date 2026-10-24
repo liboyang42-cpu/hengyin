@@ -96,7 +96,7 @@ test('冻结基线只能减不能加:LEGACY 里已修好的条目必须及时删
   const stale = [...LEGACY].filter((h) => !over.has(h))
   assert.deepEqual(
     stale, [],
-    `这些越档已经修好了,但还挂在 LEGACY 基线上 —— 基线会因此对新问题失效:\n${stale.join('\n')}`,
+    `这些越档已经修好了，但还挂在 LEGACY 基线上 —— 基线会因此对新问题失效:\n${stale.join('\n')}`,
   )
 })
 
@@ -108,14 +108,14 @@ test('负控:新增一处越档必须判红', () => {
   const mutated = [['components/cy/x/index.wxss', '.a { z-index: 1800; }']]
   const hits = findOverCeiling(ceiling, mutated)
   assert.deepEqual(hits, ['components/cy/x/index.wxss:1800'], '检查器没抓到注入的越档')
-  assert.equal(LEGACY.has(hits[0]), false, '注入值不该恰好落在基线里,否则这条负控是假的')
+  assert.equal(LEGACY.has(hits[0]), false, '注入值不该恰好落在基线里，否则这条负控是假的')
 })
 
 test('负控:天花板本身被调高必须体现在判据里(不是写死 990)', () => {
   assert.equal(ceilingOf('--cy-z-celebrate: 1234;'), 1234)
   assert.deepEqual(
     findOverCeiling(1234, [['x.wxss', '.a { z-index: 1000; }']]), [],
-    '天花板抬高后,原本越档的值应当不再判红 —— 说明判据真的读的是 token 不是常量',
+    '天花板抬高后，原本越档的值应当不再判红 —— 说明判据真的读的是 token 不是常量',
   )
 })
 

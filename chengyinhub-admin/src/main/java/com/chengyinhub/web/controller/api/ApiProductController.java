@@ -2,6 +2,11 @@ package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.service.IPmsProductLikeService;
+import com.chengyinhub.business.service.IMmsMerchantService;
+import com.chengyinhub.common.utils.html.HTMLFilter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import com.chengyinhub.business.service.IPmsProductService;
 import com.chengyinhub.business.service.IPmsSkuService;
 import com.chengyinhub.business.service.IViewProductLikeService;
@@ -42,6 +47,9 @@ public class ApiProductController extends BaseController {
 
     @Autowired
     private IPmsSkuService pmsSkuService;
+
+    @Autowired
+    private IMmsMerchantService merchantService;
 
     @Operation(summary = "积分商品列表")
     @PostMapping("/list")
@@ -91,15 +99,57 @@ public class ApiProductController extends BaseController {
         }
 
         pmsProduct = pmsProductService.selectPmsProductById(productId);
-        if (pmsProduct == null) {
-            return error("商品不存在");
+        if (pmsProduct == null || !Integer.valueOf(1).equals(pmsProduct.getPublishStatus())
+                || !Integer.valueOf(0).equals(pmsProduct.getDelFlag())) {
+            return productUnavailable();
+        }
+        MmsMerchant merchant = pmsProduct.getMerchantId() == null ? null
+                : merchantService.selectMmsMerchantById(pmsProduct.getMerchantId());
+        if (merchant == null || !Long.valueOf(1L).equals(merchant.getStatus())
+                || !Long.valueOf(1L).equals(merchant.getAccountStatus())
+                || !Integer.valueOf(0).equals(merchant.getDelFlag())) {
+            return productUnavailable();
         }
         PmsSku pmsSku = new PmsSku();
         pmsSku.setProductId(productId);
         List<PmsSku> skuList = pmsSkuService.selectPmsSkuList(pmsSku);
-        pmsProduct.setSkuList(skuList);
+        // 公开详情按字段投影，实体新增审计字段不会自动进入客户端。
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("id", pmsProduct.getId());
+        detail.put("merchantId", pmsProduct.getMerchantId());
+        detail.put("productName", pmsProduct.getProductName());
+        detail.put("pic", pmsProduct.getPic());
+        detail.put("albumPics", pmsProduct.getAlbumPics());
+        detail.put("price", pmsProduct.getPrice());
+        detail.put("originalPrice", pmsProduct.getOriginalPrice());
+        detail.put("stock", pmsProduct.getStock());
+        detail.put("unit", pmsProduct.getUnit());
+        detail.put("weight", pmsProduct.getWeight());
+        detail.put("productAttr", pmsProduct.getProductAttr());
+        detail.put("detailHtml", new HTMLFilter().filter(StringUtils.defaultString(pmsProduct.getDetailHtml())));
+        List<Map<String, Object>> skus = new ArrayList<>();
+        if (skuList != null) for (PmsSku sku : skuList) {
+            if (sku == null || !productId.equals(sku.getProductId())) continue;
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", sku.getId());
+            row.put("productId", sku.getProductId());
+            row.put("skuName", sku.getSkuName());
+            row.put("skuNameAr", sku.getSkuNameAr());
+            row.put("price", sku.getPrice());
+            row.put("originalPrice", sku.getOriginalPrice());
+            row.put("stock", sku.getStock());
+            row.put("weight", sku.getWeight());
+            row.put("pic", sku.getPic());
+            row.put("spData", sku.getSpData());
+            skus.add(row);
+        }
+        detail.put("skuList", skus);
+        return AjaxResult.success(detail);
+    }
 
-        return AjaxResult.success(pmsProduct);
+    /** 不公开的商品统一按不存在处理，不区分下架/删除/商家停用，避免探测。 */
+    private AjaxResult productUnavailable() {
+        return error("商品不存在或已下架").put("errorCode", "PRODUCT_UNAVAILABLE");
     }
 
     @Operation(summary = "商品收藏")

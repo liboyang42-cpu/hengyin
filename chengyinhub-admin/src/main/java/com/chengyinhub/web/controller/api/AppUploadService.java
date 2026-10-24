@@ -43,7 +43,7 @@ public class AppUploadService
     static final String[] OSS_EXTENSIONS = { "jpg", "jpeg", "png", "gif", "mp3", "m4a", "aac", "wav", "glb" };
     private static final int MAX_FILES = 9;
     private static final long MAX_TOTAL_SIZE = FileUploadUtils.DEFAULT_MAX_SIZE;
-    private static final String WX_ACCESS_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token";
+    private static final String WX_ACCESS_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/stable_token";
     private static final String WX_ACCESS_TOKEN_KEY = "wx:mini:access_token";
 
     private final OssUploader ossUploader;
@@ -56,11 +56,14 @@ public class AppUploadService
 
     @Autowired
     private RedisCache redisCache;
+    @Autowired
+    private com.chengyinhub.business.service.impl.AppMediaAssetService appMediaAssetService;
 
     public AppUploadService()
     {
         this(FileOssUploadUtils::upload, FileOssUploadUtils::uploadAftercareEvidence, null,
-                FileOssUploadUtils::uploadWithOwner);
+                (file,owner,bizType) -> isImageFile(file) ? FileOssUploadUtils.uploadWithOwner(file,owner,bizType)
+                        : FileOssUploadUtils.uploadPendingWithOwner(file,owner,bizType));
     }
 
     AppUploadService(OssUploader ossUploader, ContentSecurityVerifier contentSecurityVerifier)
@@ -110,16 +113,31 @@ public class AppUploadService
     {
         MultipartFile sanitized = prepareOssUpload(file, bizType);
         verifyContentSecurity(sanitized);
+        boolean pendingMedia=!isImageFile(sanitized);
+        if(pendingMedia && (memberId==null || memberId<=0 || appMediaAssetService==null))
+            throw new UploadRejectedException("音频和模型需登录后提交审核",null);
         try
         {
             boolean aftercareEvidence = UploadImagePolicy.MERCHANT_AFTERCARE_EVIDENCE_BIZ_TYPE.equals(bizType);
             String ownerMemberId = memberId == null || memberId <= 0 ? null : String.valueOf(memberId);
+            JSONObject uploaded;
             if (aftercareEvidence)
             {
-                return requireOssResult(
+                uploaded = requireOssResult(
                         aftercareEvidenceUploader.upload(sanitized, ownerMemberId, merchantId, refundId), false);
             }
-            return requireOssResult(photoOwnerUploader.upload(sanitized, ownerMemberId, bizType), true);
+            else
+            {
+                uploaded = requireOssResult(photoOwnerUploader.upload(sanitized, ownerMemberId, bizType), !pendingMedia);
+                if(pendingMedia) {
+                    uploaded.remove("url");
+                    uploaded.putAll(appMediaAssetService.stage(memberId,uploaded.getString("fileName")));
+                } else if(memberId!=null && memberId>0 && appMediaAssetService!=null) {
+                    uploaded.putAll(appMediaAssetService.stageApprovedImage(memberId,uploaded.getString("fileName")));
+                }
+            }
+            uploaded.put("byteSize", sanitized.getSize());
+            return uploaded;
         }
         catch (IOException | ClientException | ServiceException e)
         {
@@ -198,12 +216,13 @@ public class AppUploadService
 
     String uploadImage(String filePath, MultipartFile file)
     {
-        return uploadImage(filePath, file, null);
+        MultipartFile sanitized = validateImage(file);
+        verifyImageForPublication(sanitized);
+        return storeApprovedImage(filePath, sanitized, null);
     }
 
-    private String uploadImage(String filePath, MultipartFile file, FileUploadUtils.UploadDirectoryContext directoryContext)
+    private String storeApprovedImage(String filePath, MultipartFile sanitized, FileUploadUtils.UploadDirectoryContext directoryContext)
     {
-        MultipartFile sanitized = validateImage(file);
         try
         {
             if (directoryContext == null)
@@ -225,17 +244,20 @@ public class AppUploadService
     List<String> uploadImages(String filePath, List<MultipartFile> files)
     {
         assertBatchAllowed(files);
+        List<MultipartFile> approvedFiles = new ArrayList<MultipartFile>();
         for (MultipartFile file : files)
         {
-            validateImage(file);
+            MultipartFile sanitized = validateImage(file);
+            verifyImageForPublication(sanitized);
+            approvedFiles.add(sanitized);
         }
         List<String> fileNames = new ArrayList<String>();
         FileUploadUtils.UploadDirectoryContext directoryContext = FileUploadUtils.newUploadDirectoryContext(filePath);
         try
         {
-            for (MultipartFile file : files)
+            for (MultipartFile approved : approvedFiles)
             {
-                fileNames.add(uploadImage(filePath, file, directoryContext));
+                fileNames.add(storeApprovedImage(filePath, approved, directoryContext));
             }
             return fileNames;
         }
@@ -291,6 +313,11 @@ public class AppUploadService
         }
     }
 
+    public void verifyImageForPublication(MultipartFile file) {
+        if(!isImageFile(file))throw new UploadRejectedException("仅支持图片审核",null);
+        verifyContentSecurity(file);
+    }
+
     private void verifyContentSecurity(MultipartFile file)
     {
         if (contentSecurityVerifier != null)
@@ -302,9 +329,10 @@ public class AppUploadService
         {
             throw new UploadSecurityUnavailableException("安全检查配置异常，请联系管理员");
         }
-        if (!wxConfig.isSecCheckEnabled() || !isImageFile(file))
+        if (!isImageFile(file)) return;
+        if (!wxConfig.isSecCheckEnabled())
         {
-            return;
+            throw new UploadSecurityUnavailableException("安全检查服务暂不可用，请稍后重试");
         }
         String appId = wxConfig.getMiniAppId();
         String secret = wxConfig.getMiniSecret();
@@ -358,7 +386,7 @@ public class AppUploadService
                 accessToken = (String) resultMap.get("access_token");
                 Integer expiresIn = (Integer) resultMap.get("expires_in");
                 redisCache.setCacheObject(WX_ACCESS_TOKEN_KEY, accessToken,
-                        expiresIn != null && expiresIn > 0 ? expiresIn - 300 : 5400, TimeUnit.SECONDS);
+                        expiresIn != null && expiresIn > 0 ? Math.max(60, expiresIn - 300) : 5400, TimeUnit.SECONDS);
                 return accessToken;
             }
             catch (IllegalArgumentException e)
@@ -375,19 +403,22 @@ public class AppUploadService
     /** HTTP 缝：测试覆写此方法注入网络异常，避免真实调用微信。 */
     String requestWxAccessToken(String appId, String secret)
     {
-        String url = WX_ACCESS_TOKEN_URL + "?grant_type=client_credential&appid="
-                + appId + "&secret=" + secret;
-        return HttpUtils.sendGet(url);
+        Map<String, Object> credentials = new java.util.LinkedHashMap<>();
+        credentials.put("grant_type", "client_credential");
+        credentials.put("appid", appId);
+        credentials.put("secret", secret);
+        credentials.put("force_refresh", false);
+        return HttpUtils.sendPost(WX_ACCESS_TOKEN_URL, JSONObject.toJSONString(credentials), "application/json");
     }
 
     private AjaxResult checkImageSecurity(MultipartFile file, String accessToken)
     {
+        WxImageSecurityCopy reviewCopy = WxImageSecurityCopy.prepare(file);
         HttpURLConnection connection = null;
         try
         {
             String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
-            connection = (HttpURLConnection) new URL("https://api.weixin.qq.com/wxa/img_sec_check?access_token=" + accessToken)
-                    .openConnection();
+            connection = openImageSecurityConnection(accessToken);
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
             connection.setDoOutput(true);
@@ -397,9 +428,9 @@ public class AppUploadService
             try (DataOutputStream output = new DataOutputStream(connection.getOutputStream()))
             {
                 output.writeBytes("--" + boundary + "\r\n");
-                output.writeBytes("Content-Disposition: form-data; name=\"media\"; filename=\"" + file.getOriginalFilename() + "\"\r\n");
-                output.writeBytes("Content-Type: " + file.getContentType() + "\r\n\r\n");
-                output.write(file.getBytes());
+                output.writeBytes("Content-Disposition: form-data; name=\"media\"; filename=\"" + reviewCopy.getFilename() + "\"\r\n");
+                output.writeBytes("Content-Type: " + reviewCopy.getContentType() + "\r\n\r\n");
+                output.write(reviewCopy.getBytes());
                 output.writeBytes("\r\n--" + boundary + "--\r\n");
             }
             InputStream response = connection.getResponseCode() == 200 ? connection.getInputStream() : connection.getErrorStream();
@@ -429,6 +460,11 @@ public class AppUploadService
                 connection.disconnect();
             }
         }
+    }
+
+    HttpURLConnection openImageSecurityConnection(String accessToken) throws IOException
+    {
+        return (HttpURLConnection) new URL("https://api.weixin.qq.com/wxa/img_sec_check?access_token=" + accessToken).openConnection();
     }
 
     private AjaxResult parseSecurityResult(String response)
@@ -500,7 +536,7 @@ public class AppUploadService
         }
     }
 
-    private boolean isImageFile(MultipartFile file)
+    private static boolean isImageFile(MultipartFile file)
     {
         String filename = file.getOriginalFilename();
         if (filename == null)

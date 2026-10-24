@@ -1,0 +1,81 @@
+<!-- 主办控制台:只有 publish-check 放行(服务端认定可读本场受控数据)才渲染任何控件。
+     每个命令(发布/暂停/恢复):前端按状态置灰 + 必填校验 → cy-danger-confirm 确认 → 服务端回包 → 回读核对。 -->
+<view class="oo-page theme-merchant">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar />
+  <cy-page-title title="主办控制台" />
+
+  <cy-state-shell wx:if="{{phase === 'loading'}}" fill kind="loading" title="正在确认主办身份" sub="" />
+  <cy-state-shell wx:elif="{{phase === 'missing'}}" fill kind="missing-param" primary="返回" bind:primary="onBack" />
+  <cy-state-shell wx:elif="{{phase === 'denied'}}" fill kind="no-permission" title="只有本场主办方可以使用控制台" sub="{{deniedReason}}" primary="返回" bind:primary="onBack" />
+  <cy-state-shell wx:elif="{{phase === 'error'}}" fill kind="{{loadErrKind}}" title="控制台加载失败" sub="{{loadError}}" primary="重试" bind:primary="load" />
+
+  <scroll-view wx:else scroll-y class="oo-scroll">
+    <view wx:if="{{refreshing}}" class="oo-sync" aria-role="status" aria-live="polite">正在读取平台最新记录…</view>
+
+    <view class="oo-card oo-head">
+      <view class="oo-row">
+        <text class="oo-title">{{view.title}}</text>
+        <cy-badge type="status" variant="{{view.paused ? 'warning' : 'neutral'}}" label="{{view.controlText}}" />
+      </view>
+      <text class="oo-meta">生命周期：{{view.statusText}}</text>
+      <text wx:if="{{view.paused && view.pausedReason}}" class="oo-meta">暂停原因：{{view.pausedReason}}</text>
+      <text wx:if="{{!view.paused && view.resumeNote}}" class="oo-meta">最近恢复说明：{{view.resumeNote}}</text>
+    </view>
+
+    <view wx:if="{{result}}" class="oo-result">
+      <view wx:if="{{result.tone === 'success'}}" class="oo-result-ok" aria-role="status" aria-live="polite">
+        <text class="oo-result-title">{{result.title}}</text>
+        <text class="oo-result-sub">{{result.sub}}</text>
+      </view>
+      <cy-inline-error wx:else kind="{{result.tone === 'error' ? 'data' : 'error'}}" title="{{result.title}}" sub="{{result.sub}}" action="知道了" bind:action="onDismissResult" />
+    </view>
+
+    <!-- 发布活动(后端 schedule):仅草稿;发布检查阻塞项必须清零 -->
+    <view class="oo-sec">发布活动</view>
+    <view class="oo-card">
+      <text class="oo-meta">通过发布检查后对报名可见。</text>
+      <block wx:if="{{check.known}}">
+        <text wx:if="{{check.pass}}" class="oo-meta">发布检查已通过。</text>
+        <view wx:else>
+          <text class="oo-meta">发布检查未通过，需先处理：</text>
+          <text wx:for="{{check.blockers}}" wx:key="index" class="oo-item oo-item--block">{{item}}</text>
+        </view>
+        <text wx:for="{{check.risks}}" wx:key="index" class="oo-item">风险：{{item}}</text>
+      </block>
+      <text wx:else class="oo-meta">发布检查结果没读到，下拉刷新后再试。</text>
+      <text wx:if="{{!avail.schedule.enabled}}" class="oo-hint">{{avail.schedule.hint}}</text>
+      <cy-btn class="oo-btn" variant="primary" disabled="{{!avail.schedule.enabled || !check.pass || !!busyAction}}" loading="{{busyAction === 'schedule'}}" data-action="schedule" bindtap="onAction">发布活动</cy-btn>
+    </view>
+
+    <!-- 暂停 / 恢复:暂停四项 = 预设选项 + 补充文字,合成后按文本提交 -->
+    <view class="oo-sec">暂停与恢复</view>
+    <view class="oo-card">
+      <block wx:if="{{view.paused}}">
+        <cy-field variant="textarea" label="风险处理说明" required placeholder="说明暂停原因已如何处理" value="{{forms.resume.reason}}" maxlength="200" show-count data-form="resume" data-key="reason" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
+        <cy-inline-error wx:if="{{formError.action === 'resume'}}" kind="data" title="还不能提交" sub="{{formError.text}}" />
+        <text wx:if="{{!avail.resume.enabled}}" class="oo-hint">{{avail.resume.hint}}</text>
+        <cy-btn class="oo-btn" variant="primary" disabled="{{!avail.resume.enabled || !!busyAction}}" loading="{{busyAction === 'resume'}}" data-action="resume" bindtap="onAction">恢复活动</cy-btn>
+      </block>
+      <block wx:else>
+        <view wx:for="{{pauseSections}}" wx:for-item="sec" wx:key="key" class="oo-pause">
+          <text class="oo-pause-label">{{sec.label}}</text>
+          <view class="oo-chips">
+            <view wx:for="{{sec.presets}}" wx:for-item="preset" wx:key="*this" class="oo-chip {{forms.pause[sec.key].preset === preset ? 'is-on' : ''}}" data-key="{{sec.key}}" data-value="{{preset}}" bindtap="onPickPreset" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{sec.label}}：{{preset}}{{forms.pause[sec.key].preset === preset ? '，已选' : ''}}">{{preset}}</view>
+          </view>
+          <cy-field variant="textarea" placeholder="补充说明（没有合适选项时必填）" value="{{forms.pause[sec.key].extra}}" maxlength="200" show-count data-form="pause" data-key="{{sec.key}}" bind:input="onFieldInput" disabled="{{!!busyAction}}" />
+        </view>
+        <cy-inline-error wx:if="{{formError.action === 'pause'}}" kind="data" title="还不能提交" sub="{{formError.text}}" />
+        <text wx:if="{{!avail.pause.enabled}}" class="oo-hint">{{avail.pause.hint}}</text>
+        <cy-btn class="oo-btn" variant="danger" disabled="{{!avail.pause.enabled || !!busyAction}}" loading="{{busyAction === 'pause'}}" data-action="pause" bindtap="onAction">暂停活动</cy-btn>
+      </block>
+    </view>
+    <view class="oo-bottom"></view>
+  </scroll-view>
+
+  <cy-danger-confirm id="dc-schedule" bind:confirm="onConfirmSchedule" />
+  <cy-danger-confirm id="dc-pause" bind:confirm="onConfirmPause" />
+  <cy-danger-confirm id="dc-resume" bind:confirm="onConfirmResume" />
+</view>

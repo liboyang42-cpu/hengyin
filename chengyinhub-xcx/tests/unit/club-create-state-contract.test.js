@@ -98,7 +98,7 @@ test('名额接口 code=200 仍要求 owned 数组，缺失或非法不得冒充
     h.requests[0].success({ code: 200, data })
     assert.equal(h.page.data.bootstrapState, 'error')
     assert.equal(h.page.data.bootstrapErrorKind, 'data')
-    assert.match(h.page.data.bootstrapError, /名额数据不完整/)
+    assert.match(h.page.data.bootstrapError, /名额加载失败/)
   })
 })
 
@@ -236,7 +236,7 @@ test('向导选项、图片动作和主操作具备语义与 88rpx 点击下限'
   // 2026-09-06 用户定:删掉顶栏关闭钮(onClose 方法仍被三处错误态的「返回上一页」复用)。
   // 控件没了,原来那条 .cc-close 88rpx 触控下限断言就成了死锚点 —— 永远红,
   // 而「永远红」和「永远绿」一样没有信息。改成断言它确实不在,防止有人无意间加回来。
-  assert.doesNotMatch(WXML, /class="cc-close"/, '顶栏关闭钮已按裁决删除,别加回来')
+  assert.doesNotMatch(WXML, /class="cc-close"/, '顶栏关闭钮已按裁决删除，别加回来')
 })
 
 test('bootstrap epoch 负控：移除保护后旧检查可覆盖新一轮 ready', () => {
@@ -283,4 +283,29 @@ test('成功回执快照负控：恢复读取活表单后必须判红', () => {
     assert.deepEqual(h.page.data.submissionReceipt, { name: '夜行俱乐部', city: '上海' },
       '回执不得读取请求在途期间被改写的活表单')
   }, /回执不得读取请求在途期间被改写的活表单/)
+})
+
+test('V5a SC-CL-APPROVE：被驳回的俱乐部不占两家名额，重新提交成功回执写明等待审核', () => {
+  const h = loadPage()
+  h.page.onLoad()
+  h.setSnapshot(true)
+  h.setClubLeader(true)
+  h.roleCallbacks[0]({ role: 'club', permission: { canCreateClub: true } })
+  h.requests[0].success({ code: 200, data: { owned: [{ id: 11, status: 1 }, { id: 12, status: 2 }] } })
+  assert.equal(h.page.data.bootstrapState, 'ready', '一家在营 + 一家被驳回 → 仍可重新提交')
+
+  Object.assign(h.page.data, { step: 4, canNext: true, clubType: '兴趣社群', name: '夜行俱乐部', city: '上海' })
+  h.page.submit()
+  h.requests.at(-1).success({ code: 200, msg: '已重新提交,等待审核', data: { clubId: 12, status: 0 } })
+  assert.equal(h.page.data.submitState, 'success')
+  assert.equal(h.page.data.submissionPending, true)
+  assert.match(WXML, /submissionPending \? '已重新提交，等待审核' : '俱乐部已创建'/)
+
+  const fresh = loadPage()
+  fresh.page.onLoad()
+  fresh.setSnapshot(true)
+  fresh.setClubLeader(true)
+  fresh.roleCallbacks[0]({ role: 'club', permission: { canCreateClub: true } })
+  fresh.requests[0].success({ code: 200, data: { owned: [{ id: 11, status: 1 }, { id: 13, status: 1 }, { id: 12, status: 2 }] } })
+  assert.equal(fresh.page.data.bootstrapState, 'limit', '两家在营时被驳回的那家不能让名额变多')
 })

@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.chengyinhub.business.domain.ClubEventCampaign;
+import com.chengyinhub.business.domain.ClubEventDelivery;
 import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.ClubWaitlistClaim;
 import com.chengyinhub.business.domain.ClubWaitlistEntry;
@@ -52,6 +54,7 @@ class ClubWaitlistServiceImplTest {
     @BeforeEach
     void setUp() {
         mapper = mock(ClubEventOpsMapper.class);
+        when(mapper.selectWaitlistMaintenanceMaxId()).thenReturn(100L);
         ticketMapper = mock(OmsTicketMapper.class);
         participationGuard = mock(IClubParticipationGuard.class);
         tokenCodec = new ClubWaitlistTokenCodec("waitlist-test-secret");
@@ -61,8 +64,23 @@ class ClubWaitlistServiceImplTest {
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(policy(true));
         when(mapper.isActiveParticipant(CLUB, MEMBER)).thenReturn(1);
         when(mapper.selectClubOwnerForUpdate(CLUB)).thenReturn(999L);
+        when(mapper.selectPromotableActivityForUpdate(eq(ACTIVITY), eq(CLUB), any(Date.class))).thenReturn(ACTIVITY);
         when(mapper.selectActiveClubMemberForUpdate(CLUB, MEMBER)).thenReturn(MEMBER);
         when(mapper.countActiveRegistration(MEMBER, ACTIVITY, TICKET)).thenReturn(0);
+        when(mapper.insertCampaign(any(ClubEventCampaign.class))).thenAnswer(invocation -> {
+            invocation.getArgument(0, ClubEventCampaign.class).setId(71L);
+            return 1;
+        });
+        when(mapper.insertDelivery(any(ClubEventDelivery.class))).thenAnswer(invocation -> {
+            invocation.getArgument(0, ClubEventDelivery.class).setId(81L);
+            return 1;
+        });
+        when(mapper.insertOutbox(anyLong(), any(Date.class))).thenReturn(1);
+    }
+
+    private java.util.List<Map<String, Object>> maintenanceTarget(long scanId, long targetId) {
+        Map<String, Object> row = new HashMap<>(); row.put("scanId", scanId); row.put("targetId", targetId);
+        return Collections.singletonList(row);
     }
 
     @Test
@@ -103,6 +121,39 @@ class ClubWaitlistServiceImplTest {
         ArgumentCaptor<String> hash = ArgumentCaptor.forClass(String.class);
         verify(mapper).offerWaitingCas(eq(61L), eq(0), hash.capture(), eq(NOW), any());
         assertEquals(64, hash.getValue().length());
+
+        ArgumentCaptor<ClubEventCampaign> campaign = ArgumentCaptor.forClass(ClubEventCampaign.class);
+        verify(mapper).insertCampaign(campaign.capture());
+        assertEquals(CLUB, campaign.getValue().getClubId());
+        assertEquals(ACTIVITY, campaign.getValue().getActivityId());
+        assertEquals("WAITLIST", campaign.getValue().getAudienceType());
+        assertEquals("IN_APP", campaign.getValue().getChannel());
+        assertEquals(Long.valueOf(999L), campaign.getValue().getActorMemberId());
+        assertEquals(1, campaign.getValue().getTotalCount());
+        java.util.UUID.fromString(campaign.getValue().getRequestId());
+        assertEquals("你已获得活动候补名额，请在候补截止时间前完成报名。", campaign.getValue().getContent());
+        org.junit.jupiter.api.Assertions.assertFalse(
+                campaign.getValue().getContent().contains(tokenCodec.token(waiting)));
+
+        ArgumentCaptor<ClubEventDelivery> delivery = ArgumentCaptor.forClass(ClubEventDelivery.class);
+        verify(mapper).insertDelivery(delivery.capture());
+        assertEquals(Long.valueOf(71L), delivery.getValue().getCampaignId());
+        assertEquals(MEMBER, delivery.getValue().getRecipientMemberId());
+        assertEquals("IN_APP", delivery.getValue().getChannel());
+        assertEquals(ClubEventDelivery.PENDING, delivery.getValue().getStatus());
+        verify(mapper).insertOutbox(81L, NOW);
+    }
+
+    @Test
+    void promotionWithoutInventoryDoesNotCreateNotification() {
+        when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(0L));
+
+        org.junit.jupiter.api.Assertions.assertFalse(service.promoteNext(ACTIVITY, TICKET, NOW));
+
+        verify(mapper, never()).selectFirstWaitingForUpdate(anyLong(), anyLong());
+        verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
+        verify(mapper, never()).insertDelivery(any(ClubEventDelivery.class));
+        verify(mapper, never()).insertOutbox(anyLong(), any(Date.class));
     }
 
     @Test
@@ -123,6 +174,9 @@ class ClubWaitlistServiceImplTest {
                 61L, 0, ClubWaitlistEntry.WAITING, MEMBER, ACTIVITY, TICKET);
         verify(ticketMapper, never()).deductInventory(anyLong(), anyLong());
         verify(mapper, never()).offerWaitingCas(anyLong(), anyInt(), any(), any(), any());
+        verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
+        verify(mapper, never()).insertDelivery(any(ClubEventDelivery.class));
+        verify(mapper, never()).insertOutbox(anyLong(), any(Date.class));
     }
 
     @Test
@@ -214,6 +268,16 @@ class ClubWaitlistServiceImplTest {
         locks.verify(ticketMapper).selectOmsTicketByIdForUpdate(TICKET);
         locks.verify(mapper).selectWaitlistByIdForUpdate(61L);
         verify(ticketMapper, times(1)).restoreInventory(TICKET, 1L);
+
+        ArgumentCaptor<ClubEventCampaign> campaign = ArgumentCaptor.forClass(ClubEventCampaign.class);
+        verify(mapper, times(1)).insertCampaign(campaign.capture());
+        assertEquals("ALL_MEMBERS", campaign.getValue().getAudienceType());
+        assertEquals("候补名额已过期", campaign.getValue().getTitle());
+        assertEquals("你的活动候补名额已过期，如仍需参加，请重新加入候补。", campaign.getValue().getContent());
+        ArgumentCaptor<ClubEventDelivery> delivery = ArgumentCaptor.forClass(ClubEventDelivery.class);
+        verify(mapper, times(1)).insertDelivery(delivery.capture());
+        assertEquals(MEMBER, delivery.getValue().getRecipientMemberId());
+        verify(mapper, times(1)).insertOutbox(81L, NOW);
     }
 
     @Test
@@ -238,15 +302,16 @@ class ClubWaitlistServiceImplTest {
 
         verify(ticketMapper).deductInventory(TICKET, 1L);
         verify(mapper).offerWaitingCas(eq(61L), eq(0), any(), eq(NOW), any());
+        verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
+        verify(mapper, never()).insertDelivery(any(ClubEventDelivery.class));
+        verify(mapper, never()).insertOutbox(anyLong(), any(Date.class));
     }
 
     @Test
     void claimedTerminalOrderIsExpiredAndPromotedWithoutSecondInventoryRestore() {
         ClubWaitlistEntry claimed = entry(61L, ClubWaitlistEntry.CLAIMED, 2, NOW);
         claimed.setRegistrationId(71L);
-        when(mapper.selectExpiredOfferedIds(NOW, 100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedPaidRegistrationIds(100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedTerminalRegistrationIds(100)).thenReturn(Collections.singletonList(71L));
+        when(mapper.selectWaitlistMaintenancePage(2, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
         when(mapper.selectWaitlistByRegistration(71L)).thenReturn(claimed);
         when(mapper.selectWaitlistByRegistrationForUpdate(71L)).thenReturn(claimed);
         when(mapper.expireClaimedTerminalCas(71L)).thenReturn(1);
@@ -265,10 +330,7 @@ class ClubWaitlistServiceImplTest {
 
     @Test
     void paidClaimMaintenanceCountsOnlyAnActualClaimedToConvertedCas() {
-        when(mapper.selectExpiredOfferedIds(NOW, 100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedPaidRegistrationIds(100)).thenReturn(Collections.singletonList(71L));
-        when(mapper.selectClaimedTerminalRegistrationIds(100)).thenReturn(Collections.emptyList());
-        when(mapper.selectPromotableWaitlistScopes(NOW, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectWaitlistMaintenancePage(1, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
         when(mapper.convertClaimedByRegistration(71L)).thenReturn(1);
 
         assertEquals(1, service.maintain(NOW));
@@ -278,10 +340,7 @@ class ClubWaitlistServiceImplTest {
 
     @Test
     void paidClaimMaintenanceDoesNotReportSuccessAfterCallbackWonTheCasRace() {
-        when(mapper.selectExpiredOfferedIds(NOW, 100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedPaidRegistrationIds(100)).thenReturn(Collections.singletonList(71L));
-        when(mapper.selectClaimedTerminalRegistrationIds(100)).thenReturn(Collections.emptyList());
-        when(mapper.selectPromotableWaitlistScopes(NOW, 100)).thenReturn(Collections.emptyList());
+        when(mapper.selectWaitlistMaintenancePage(1, NOW, 0L, 100L, 100)).thenReturn(maintenanceTarget(61L, 71L));
         when(mapper.convertClaimedByRegistration(71L)).thenReturn(0);
 
         assertEquals(0, service.maintain(NOW));
@@ -291,13 +350,11 @@ class ClubWaitlistServiceImplTest {
 
     @Test
     void maintenancePromotesWaitingQueueAfterNormalOrderRestoredInventory() {
-        when(mapper.selectExpiredOfferedIds(NOW, 100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedPaidRegistrationIds(100)).thenReturn(Collections.emptyList());
-        when(mapper.selectClaimedTerminalRegistrationIds(100)).thenReturn(Collections.emptyList());
         Map<String, Object> scope = new HashMap<>();
+        scope.put("scanId", 61L);
         scope.put("activityId", ACTIVITY);
         scope.put("ticketId", TICKET);
-        when(mapper.selectPromotableWaitlistScopes(NOW, 100)).thenReturn(Collections.singletonList(scope));
+        when(mapper.selectWaitlistMaintenancePage(3, NOW, 0L, 100L, 100)).thenReturn(Collections.singletonList(scope));
         when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(1L));
         when(mapper.selectFirstWaitingForUpdate(ACTIVITY, TICKET))
                 .thenReturn(entry(61L, ClubWaitlistEntry.WAITING, 0, null));
@@ -530,5 +587,118 @@ class ClubWaitlistServiceImplTest {
         request.setWaitlistOfferId(offerId);
         request.setWaitlistOfferToken(token);
         return request;
+    }
+
+    /** 拍板 2026-10-22:商家可以是俱乐部成员,但不能报名(含候补)俱乐部活动。 */
+    @Test
+    void merchantMemberCannotJoinClubActivityWaitlist() {
+        ICapabilityService capabilityService = mock(ICapabilityService.class);
+        when(capabilityService.hasCapability(MEMBER, com.chengyinhub.business.domain.MemberCapability.CAP_MERCHANT))
+                .thenReturn(true);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "capabilityService", capabilityService);
+        ServiceException refused = assertThrows(ServiceException.class, () -> service.join(MEMBER, ACTIVITY, TICKET));
+        assertEquals("商家不能报名俱乐部活动", refused.getMessage());
+        verify(mapper, never()).selectActiveWaitlist(anyLong(), anyLong(), anyLong());
+    }
+
+    private ClubEventSeries closedPolicy() {
+        ClubEventSeries policy = policy(true);
+        policy.setStatus(ClubEventSeries.STATUS_CLOSED);
+        return policy;
+    }
+
+    /** S531-2:系列关闭后不再接受新候补,票与库存一律不碰。 */
+    @Test
+    void closedSeriesRejectsNewWaitlistJoin() {
+        when(mapper.selectSeriesPolicyByActivityForUpdate(ACTIVITY)).thenReturn(closedPolicy());
+
+        ServiceException denied = assertThrows(ServiceException.class, () -> service.join(MEMBER, ACTIVITY, TICKET));
+
+        assertEquals(Integer.valueOf(409), denied.getCode());
+        verify(ticketMapper, never()).selectOmsTicketByIdForUpdate(anyLong());
+        verify(mapper, never()).insertWaitlist(any());
+    }
+
+    /** S531-2:系列关闭后,已拿到 OFFERED 的成员仍可报价与认领(否则名额被 hold 住、没人能用)。 */
+    @Test
+    void closedSeriesOfferedEntryCanStillBeQuotedAndClaimed() {
+        when(mapper.selectSeriesPolicyByActivityForUpdate(ACTIVITY)).thenReturn(closedPolicy());
+        when(mapper.selectSeriesPolicyByActivity(ACTIVITY)).thenReturn(closedPolicy());
+        Date expires = new Date(NOW.getTime() + 20 * 60_000L);
+        ClubWaitlistEntry offered = entry(61L, ClubWaitlistEntry.OFFERED, 1, expires);
+        String raw = tokenCodec.token(offered);
+        offered.setOfferTokenHash(tokenCodec.hash(raw));
+        when(mapper.selectWaitlistById(61L)).thenReturn(offered);
+        when(mapper.selectWaitlistByIdForUpdate(61L)).thenReturn(offered);
+        when(mapper.claimOfferCas(61L, 1, MEMBER, ACTIVITY, TICKET, NOW)).thenReturn(1);
+
+        assertNotNull(service.validateForQuote(MEMBER, request(61L, raw, ACTIVITY, TICKET), NOW));
+        ClubWaitlistClaim claim = service.claimForOrder(MEMBER, request(61L, raw, ACTIVITY, TICKET), NOW);
+
+        assertEquals(Long.valueOf(61L), claim.getOfferId());
+        verify(mapper).claimOfferCas(61L, 1, MEMBER, ACTIVITY, TICKET, NOW);
+    }
+
+    /** S531-2:系列关闭后,队列里的成员仍可主动退出候补;OFFERED 退出时归还 hold 并递补下一位。 */
+    @Test
+    void closedSeriesWaitlistCancelAndPromotionStillWork() {
+        when(mapper.selectSeriesPolicyByActivityForUpdate(ACTIVITY)).thenReturn(closedPolicy());
+        when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(1L));
+        ClubWaitlistEntry offered = entry(61L, ClubWaitlistEntry.OFFERED, 1, new Date(NOW.getTime() + 60_000L));
+        when(mapper.selectActiveWaitlistForUpdate(MEMBER, ACTIVITY, TICKET)).thenReturn(offered);
+        when(mapper.cancelActiveWaitlistCas(61L, 1, ClubWaitlistEntry.OFFERED, MEMBER, ACTIVITY, TICKET)).thenReturn(1);
+        when(ticketMapper.restoreInventory(TICKET, 1L)).thenReturn(1);
+        ClubWaitlistEntry next = entry(62L, ClubWaitlistEntry.WAITING, 0, null);
+        when(mapper.selectFirstWaitingForUpdate(ACTIVITY, TICKET)).thenReturn(next);
+        when(ticketMapper.deductInventory(TICKET, 1L)).thenReturn(1);
+        when(mapper.offerWaitingCas(eq(62L), eq(0), any(), eq(NOW), any())).thenReturn(1);
+
+        assertTrue(service.cancel(MEMBER, ACTIVITY, TICKET, NOW));
+
+        verify(ticketMapper).restoreInventory(TICKET, 1L);
+        verify(mapper).offerWaitingCas(eq(62L), eq(0), any(), eq(NOW), any());
+    }
+
+    /** S531-2:系列关闭后,状态页不再允许加入,但队列里的 OFFERED 仍下发认领 token。 */
+    @Test
+    void closedSeriesStatusBlocksJoinButKeepsOfferTokenForQueuedMember() {
+        when(mapper.selectSeriesPolicyByActivity(ACTIVITY)).thenReturn(closedPolicy());
+        when(mapper.selectLatestWaitlist(MEMBER, ACTIVITY, TICKET)).thenReturn(null);
+
+        ClubWaitlistEntry empty = service.myStatus(MEMBER, ACTIVITY, TICKET);
+        assertEquals(ClubWaitlistEntry.ELIGIBILITY_CLOSED, empty.getEligibilityState());
+        org.junit.jupiter.api.Assertions.assertFalse(empty.getWaitlistJoinAllowed());
+
+        ClubWaitlistEntry offered = entry(61L, ClubWaitlistEntry.OFFERED, 1,
+                new Date(System.currentTimeMillis() + 3_600_000L));
+        offered.setOfferTokenHash(tokenCodec.hash(tokenCodec.token(offered)));
+        when(mapper.selectLatestWaitlist(MEMBER, ACTIVITY, TICKET)).thenReturn(offered);
+
+        ClubWaitlistEntry status = service.myStatus(MEMBER, ACTIVITY, TICKET);
+        assertEquals(ClubWaitlistEntry.OFFERED, status.getState());
+        assertEquals(ClubWaitlistEntry.ELIGIBILITY_ELIGIBLE, status.getEligibilityState());
+        org.junit.jupiter.api.Assertions.assertFalse(status.getWaitlistJoinAllowed());
+        assertNotNull(status.getOfferToken());
+    }
+
+    /**
+     * S531-2:候补策略读口、维护扫描(递补)与运营列表/详情的 SQL 必须同时认 ACTIVE 与 CLOSED,
+     * 否则关闭后 OFFERED 过期不递补、WAITING 永不结束、主理人看不到要取消的场次。
+     */
+    @Test
+    void waitlistAndOpsReadSqlAcceptClosedSeries() throws Exception {
+        java.nio.file.Path xml = java.nio.file.Paths.get("..", "chengyinhub-system", "src", "main", "resources",
+                "mapper", "business", "ClubEventOpsMapper.xml");
+        String text = new String(java.nio.file.Files.readAllBytes(xml), java.nio.charset.StandardCharsets.UTF_8)
+                .replaceAll("\\s+", " ");
+        assertTrue(text.matches(".*<sql id=\"seriesPolicyByActivity\">[^<]*where s.status in \\('ACTIVE', 'CLOSED'\\) </sql>.*"));
+        assertTrue(text.matches(".*<select id=\"selectPromotableWaitlistScopes\"[^<]*"
+                + "s.status in \\('ACTIVE', 'CLOSED'\\) and s.waitlist_enabled = 1.*"));
+        assertTrue(text.matches(".*<when test=\"kind == 3\">[^<]*s.status in \\('ACTIVE', 'CLOSED'\\) and s.waitlist_enabled = 1.*"));
+        assertTrue(text.matches(".*<select id=\"selectActiveSeriesByIdAndClub\"[^<]*<include refid=\"seriesColumns\"/>[^<]*status in \\('ACTIVE', 'CLOSED'\\).*"));
+        assertTrue(text.matches(".*<select id=\"selectFutureOccurrences\"[^<]*s.status in \\('ACTIVE', 'CLOSED'\\).*"));
+        assertTrue(text.matches(".*<select id=\"selectActiveSeriesByClub\"[^<]*<include refid=\"seriesColumns\"/>[^<]*status = 'CLOSED' and exists.*"));
+        // 排新场次的 CAS 仍只认 ACTIVE
+        assertTrue(text.matches(".*<update id=\"updateSeriesScheduleCas\">[^<]*status = 'ACTIVE'[^<]*</update>.*"));
     }
 }

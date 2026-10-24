@@ -47,7 +47,7 @@ function loadPage(options = {}) {
     setTimer: () => 1,
     clearTimer: () => {},
   })
-  const app = { globalData: {}, getUploadClient: () => client, sendRequest() {} }
+  const app = { globalData: {}, requestSeparateConsent: () => options.consentDenied ? Promise.reject(new Error('已拒绝声音克隆')) : Promise.resolve(), getUserID: () => '7', getUploadClient: () => client, sendRequest() {} }
   const wx = {
     authorize: () => options.authorizePromise || (options.authorizeError ? Promise.reject(options.authorizeError) : Promise.resolve()),
     getRecorderManager: () => recorder,
@@ -56,6 +56,7 @@ function loadPage(options = {}) {
   }
   const localRequire = (id) => {
     if (id.endsWith('toast.js')) return function () {}
+    if (id.endsWith('modal.js')) return { show() {} }
     if (id.endsWith('merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
     if (id.endsWith('pixel-avatar.js')) return {
       AVATAR_IDS: ['one'], isPixelAvatar() { return false }, parseCode() { return 'one' }, stringifyCode() { return 'px1:one' },
@@ -63,6 +64,7 @@ function loadPage(options = {}) {
     if (id.endsWith('pixel-avatar-data.js')) return { AVATARS: { one: { name: 'one' } } }
     if (id.endsWith('pixel-portrait.js')) return {}
     if (id.endsWith('transport/upload-client.js')) return upload
+    if (id.endsWith('profile-review.js')) return require('../../utils/profile-review.js')
     throw new Error('unexpected require ' + id)
   }
   vm.runInNewContext(SOURCE, {
@@ -70,6 +72,7 @@ function loadPage(options = {}) {
     setTimeout, clearTimeout, setInterval, clearInterval, Promise, Object, Error, JSON, Math, Number, String, Array,
   }, { filename: PAGE })
   const page = Object.assign({}, state.page, { data: JSON.parse(JSON.stringify(state.page.data)) })
+  page._photoMember = page._voiceMember = '7';
   page.setData = function (patch, cb) {
     Object.keys(patch || {}).forEach((key) => setAtPath(this.data, key, patch[key]))
     if (cb) cb()
@@ -84,8 +87,11 @@ function loadPage(options = {}) {
 
 const tick = () => new Promise((resolve) => setImmediate(resolve))
 
-test('录音面板是三句逐句录制的 Voice mode', () => {
-  assert.match(WXML, /Voice mode/)
+test('录音面板是三句逐句录制的「录制声音」卡(L09:中文标签、录制与确认同一版式)', () => {
+  assert.doesNotMatch(WXML, /Voice mode/)
+  assert.match(WXML, /<text class="npc-voice-mode__title">录制声音<\/text>/)
+  assert.doesNotMatch(WXML, /确认录音/, '录完确认不再换面板标题')
+  assert.match(WXML, /<view class="npc-voice-mode [^"]*">[\s\S]*?<view wx:else class="npc-voice-complete">[\s\S]*?<\/view>\s*<button wx:if="\{\{voiceFile\}\}" class="npc-voice-hold"/, '确认态留在同一张录音卡里')
   assert.match(SOURCE, /你好，欢迎来到我的小店/)
   assert.match(SOURCE, /你可以告诉我想找什么商品/)
   assert.match(SOURCE, /如果还有价格、服务或者到店方面的问题/)
@@ -276,3 +282,14 @@ test('录音回调拒绝缺失、空、负数与非有限文件大小', () => {
     assert.ok(h.page.data.voiceError)
   }
 })
+
+
+test('拒绝第三方声音克隆单独同意保留合法录音且不上传、不发起复刻', async () => {
+  const h = loadPage({consentDenied:true});
+  h.page.onVoiceConsentChange({detail:{checked:true}}); h.page.onVoiceHoldStart(); await tick();
+  h.page.data.voiceSentenceConfirmed = 3;
+  h.onRecorderStop({tempFilePath:'/tmp/voice.mp3',duration:20000,fileSize:1024});
+  h.page.uploadVoice(); await tick();
+  assert.equal(h.wxUploads,0); assert.equal(h.requests.length,0); assert.ok(h.page.data.voiceFile);
+  assert.equal(h.page.data.voiceBusy,false); assert.match(h.page.data.voiceError,/拒绝/);
+});

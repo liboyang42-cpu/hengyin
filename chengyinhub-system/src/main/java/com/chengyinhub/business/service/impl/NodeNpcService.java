@@ -33,6 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class NodeNpcService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.ConsentGuard consentGuard;
+
 
     /** scope_type=4 = 主题节点 NPC(挂 cms_topic_node.id)。与 migration_node_npc_20260915.sql 注释同源。 */
     public static final int SCOPE_NODE = 4;
@@ -171,13 +174,17 @@ public class NodeNpcService {
      * 而 {@code rollbackFor=Exception.class} 会把刚写的失败状态一起回滚 —— 商家看不到「可重试」,
      * 状态 3 永远不可达。两次单行写各自提交即可(门店分身那条路同样没有事务)。
      */
-    public NpcProfile voiceEnroll(Long ownerMemberId, Long nodeId, String rawSample) {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
+    public NpcProfile voiceEnroll(Long actorMemberId, Long ownerMemberId, Long nodeId, String rawSample) {
         chapterMerchantNodeService.requireOwnLiveNode(ownerMemberId, nodeId);
+        consentGuard.requireCurrentAgreement(actorMemberId, "voice_clone_processing", "merchant_voice");
 
         String sample = trimToNull(rawSample);
         if (sample == null) throw new IllegalStateException("请先录一段话");
-        if (sample.length() > 255) throw new IllegalStateException("录音地址过长");
-        if (!sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) {
+        if (sample.length() > 4096) throw new IllegalStateException("录音地址过长");
+        if (!sample.matches("media-asset:[1-9][0-9]{0,18}") && !sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) {
             throw new IllegalStateException("录音地址不支持");
         }
 
@@ -185,6 +192,8 @@ public class NodeNpcService {
         if (mine == null || mine.getScopeId() == null || !mine.getScopeId().equals(nodeId)) {
             throw new IllegalStateException("请先保存节点 NPC,再给他配声音");
         }
+        sample = mediaReferences.requireAttachment(actorMemberId, sample, true);
+        if (sample.length() > 255) throw new IllegalStateException("录音引用过长");
         // 同一段录音重复提交:已经复刻中/已可用就是幂等命中,别再烧一次上游。
         if (sample.equals(mine.getVoiceSample())
                 && (Integer.valueOf(VOICE_PENDING).equals(mine.getVoiceStatus())
@@ -199,21 +208,29 @@ public class NodeNpcService {
             throw new IllegalStateException("语音服务未开通");
         }
 
+        String processingSample = mediaReferences.processingUrl(sample, actorMemberId, "AUDIO");
+
         NpcProfile pending = new NpcProfile();
         pending.setId(mine.getId());
+        pending.setVoiceVersion(mine.getVoiceVersion());
         pending.setVoiceId(null);
         pending.setVoiceStatus(VOICE_PENDING);
         pending.setVoiceSample(sample);
         if (npcProfileMapper.updateNodeNpcVoice(pending) != 1) {
+            NpcProfile latest = npcProfileMapper.selectNodeNpcByNodeId(nodeId);
+            if (latest != null && sample.equals(latest.getVoiceSample())
+                    && (Integer.valueOf(VOICE_PENDING).equals(latest.getVoiceStatus())
+                        || Integer.valueOf(VOICE_READY).equals(latest.getVoiceStatus()))) return latest;
             throw new IllegalStateException("声音任务未保存，请重试");
         }
 
         String voiceId;
         try {
-            voiceId = voiceCloneClient.enroll(sample);
+            voiceId = voiceCloneClient.enroll(processingSample);
         } catch (AiServiceException e) {
             NpcProfile failed = new NpcProfile();
             failed.setId(mine.getId());
+            failed.setVoiceVersion(mine.getVoiceVersion() + 1);
             failed.setVoiceId(null);
             failed.setVoiceStatus(VOICE_FAILED);
             npcProfileMapper.updateNodeNpcVoice(failed);
@@ -229,11 +246,13 @@ public class NodeNpcService {
 
         NpcProfile done = new NpcProfile();
         done.setId(mine.getId());
+        done.setVoiceVersion(mine.getVoiceVersion() + 1);
         done.setVoiceId(voiceId);
         done.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
         if (npcProfileMapper.updateNodeNpcVoice(done) != 1) {
             throw new IllegalStateException("声音结果待确认，请稍后查询状态");
         }
+        mine.setVoiceVersion(mine.getVoiceVersion() + 2);
         mine.setVoiceId(voiceId);
         mine.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
         mine.setVoiceSample(sample);
@@ -252,6 +271,7 @@ public class NodeNpcService {
                 if (voiceCloneClient.isReady(mine.getVoiceId())) {
                     NpcProfile upd = new NpcProfile();
                     upd.setId(mine.getId());
+                    upd.setVoiceVersion(mine.getVoiceVersion());
                     upd.setVoiceId(mine.getVoiceId());
                     upd.setVoiceStatus(VOICE_READY);
                     if (npcProfileMapper.updateNodeNpcVoice(upd) == 1) {
@@ -261,6 +281,7 @@ public class NodeNpcService {
             } catch (AiServiceException ignore) {
                 // 上游查不到不代表失败:保持「复刻中」,等下一次轮询
             }
+            return npcProfileMapper.selectNodeNpcByNodeId(nodeId);
         }
         return mine;
     }
@@ -273,6 +294,7 @@ public class NodeNpcService {
         if (mine == null) return null;
         NpcProfile upd = new NpcProfile();
         upd.setId(mine.getId());
+        upd.setVoiceVersion(mine.getVoiceVersion());
         upd.setVoiceId(null);
         upd.setVoiceStatus(VOICE_NONE);
         if (npcProfileMapper.updateNodeNpcVoice(upd) != 1) {

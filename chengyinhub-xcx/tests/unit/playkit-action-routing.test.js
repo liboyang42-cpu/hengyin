@@ -47,7 +47,7 @@ function loadPlayPage() {
 function stubAudio(page) {
   const rec = { src: '', plays: 0, pauses: 0 };
   global.wx.createInnerAudioContext = () => ({
-    onTimeUpdate() {}, onEnded() {}, onError() {},
+    onTimeUpdate() {}, onEnded() {}, onError() {}, onPlay() {}, onPause() {}, onStop() {},
     play() { rec.src = this.src; rec.plays += 1; },
     pause() { rec.pauses += 1; },
     stop() {}, destroy() {},
@@ -112,7 +112,7 @@ test('#5 timewindow 到点:open 必须回服务端问一次,本地时钟不是�
 
   page.onPlayKitAction({ detail: { type: 'timewindow', action: 'open', detail: {} } });
 
-  assert.equal(refreshed, 1, '到点要拉一次权威视图,门才可能真的开');
+  assert.equal(refreshed, 1, '到点要拉一次权威视图，门才可能真的开');
 });
 
 test('#2 猜数字/猜图/找东西(vm 8/9/10)做完玩法后走到达通路,不再落无按钮的死路屏', () => {
@@ -127,7 +127,7 @@ test('#2 猜数字/猜图/找东西(vm 8/9/10)做完玩法后走到达通路,不
     page.onAdvancedReady({ detail: { nodeId: 7 } });
 
     // onAdvancedReady 的分支在 setData 回调里跑,loadPlayPage 的 setData 是同步的
-    assert.deepEqual(routes, ['go:' + vm], 'vm=' + vm + ' 完成后应进节点卡到达链,而不是老任务页');
+    assert.deepEqual(routes, ['go:' + vm], 'vm=' + vm + ' 完成后应进节点卡到达链，而不是老任务页');
   });
 });
 
@@ -149,7 +149,7 @@ test('#3 服务端下发 bingo 段 → 还出 bingo 屏,票面字段原样搬运
     fullReward: '大奖',
   };
   const kit = pickPlayKit(session({ bingo: seg }), new Date());
-  assert.ok(kit, 'bingo 段必须还得出 kit —— 以前没有 TYPE_OF 条目,末尾 return null');
+  assert.ok(kit, 'bingo 段必须还得出 kit —— 以前没有 TYPE_OF 条目，末尾 return null');
   assert.equal(kit.type, 'bingo');
   assert.equal(kit.title, '城市九宫格');
   assert.deepEqual(kit.filledPositions, [0, 4, 8]);
@@ -170,5 +170,5 @@ test('#5 timewindow 订阅:动作必须在册,视图回读的 subscribed 要透�
   const kit = pickPlayKit(session({ timeWindow: {
     openFrom: '19:00', openTo: '21:00', title: 't', subscribeTmplId: 'tpl', subscribed: true,
   } }), new Date());
-  assert.equal(kit.subscribed, true, '服务端说订过,票面就该显示已开启,而不是靠内存');
+  assert.equal(kit.subscribed, true, '服务端说订过，票面就该显示已开启，而不是靠内存');
 });

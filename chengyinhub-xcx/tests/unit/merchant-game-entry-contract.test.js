@@ -64,8 +64,23 @@ test('到店时间按主题取最近一场俱乐部场次;没俱乐部或没人�
     { topicId: 78, clubName: '夜跑团', paidCount: 1, startTime: '2026-09-27T01:00:00.000+00:00' },
   ]
   const out = attachVisitTexts(cards, runs)
-  assert.equal(out[0].visitText, '城瘾跑团 · 9月28日 周一 10:30 到店', '跳过无俱乐部与零付款场次,取最近一场俱乐部场次')
+  assert.equal(out[0].visitText, '城瘾跑团 · 9月28日 周一 10:30 到店', '跳过无俱乐部与零付款场次，取最近一场俱乐部场次')
   assert.equal(out[1].visitText, '夜跑团 · 9月27日 周日 09:00 到店', '带偏移的时间按上海日历显示')
   assert.equal(out[2].visitText, '', '没有俱乐部要来就不写')
   assert.equal(out[3].visitText, undefined, '主办卡不挂到店时间')
+})
+
+test('工作台的公共客户端调用仍仅 GET entries，不从纪元改动产生写请求', async () => {
+  const { createGameSessionClient } = require('../../utils/game-session-client.js')
+  const source = fs.readFileSync(JS_PATH, 'utf8')
+  const body = /\n  loadMerchantGameEntries\(\) \{([\s\S]*?)\n  \},/.exec(source)
+  assert.ok(body)
+  const calls = []
+  const client = createGameSessionClient({ sendRequest(options) { calls.push(options) } })
+  const page = { data: {}, _gameSummaryGeneration: 0, _gameSessionClient: client, setData(patch) { Object.assign(this.data, patch) }, refreshProjectCards() {} }
+  new Function('return function () {' + body[1] + '\n}')().call(page)
+  calls[0].success({ code: 200, data: [{ activityId: 71, topicId: 88, activityName: '测试场次', stationCount: 1 }] })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(page._merchantGameEntries[0].activityId, 71)
+  assert.deepEqual(calls.map(call => [call.method, call.url]), [['GET', '/api/game/session/merchant/entries']])
 })

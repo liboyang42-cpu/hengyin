@@ -8,6 +8,8 @@
   <cy-nav-bar />
   <cy-page-title title="发起协作邀请" safe-top="{{false}}" />
 
+  <cy-empty wx:if="{{topicsState === 'login' || targetsState === 'login'}}" title="登录后发起协作邀请" cta="去登录" bind:cta="onLogin" />
+  <block wx:else>
   <view class="send-receipt" wx:if="{{sendReceipt}}" aria-role="status" aria-live="polite">{{sendReceipt}}</view>
 
   <view class="card">
@@ -23,19 +25,19 @@
     </block>
     <cy-skeleton wx:elif="{{topicsState === 'loading'}}" type="list" count="1" />
     <cy-error class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'permission'}}" title="当前账号不能读取主题" sub="{{topicsErrorText}}" bind:retry="retryTopics" />
-    <cy-error class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'error'}}" title="主题没加载出来" sub="请重试后再选择关联主题" bind:retry="retryTopics" />
+    <cy-error load-failure class="error-kind--{{topicsErrorKind}}" wx:elif="{{topicsState === 'error'}}" title="主题加载失败" bind:retry="retryTopics" />
     <cy-dropdown merchant="{{true}}" wx:elif="{{myTopics.length}}" mode="selector" range="{{myTopics}}" range-key="label" value="{{topicIndex}}" bind:change="onTopicChange" aria-label="选择关联主题">
       <view class="picker-row"><text class="{{topicId ? '' : 'placeholder'}}">{{topicId ? (topicPick || topicName) : '选择我发布的主题'}}</text><cy-icon class="picker-arrow" name="arrow-right" size="28" /></view>
     </cy-dropdown>
     <cy-empty wx:else title="还没有可关联的主题" sub="先发布主题后再发起协作邀请" cta="先发布主题" bind:cta="goCreateTopic" />
     <!-- CU-M-29:不在招商期的主题选了也发不出去(写闸拒),选的时候就说清楚。
          ⚠️ 必须放在上面整条 wx:if/elif/else 链之后,插在中间会把 cy-empty 接到这条上 ⇒ 空态到处冒。 -->
-    <view class="card-hint card-hint--warn" wx:if="{{topicClosed}}">这个主题现在不在招商期，暂不能发起协作邀约；换一个招商中的主题</view>
+    <view class="card-hint card-hint--warn" wx:if="{{topicClosed}}">该主题不在招商期</view>
 
   </view>
 
   <view class="card">
-    <view class="card-tit">② 合作条款<text class="card-tit-n">发送确认时锁定</text></view>
+    <view class="card-tit">② 合作条款<text class="card-tit-n">对方接受并成单后锁定</text></view>
     <view class="terms-options">
       <view class="terms-option {{shareMode === 0 ? 'on' : ''}}" bindtap="switchShareMode" data-mode="0" aria-role="radio" aria-checked="{{shareMode === 0}}" aria-label="引流合作，不产生现金结算" hover-class="cy-pressed" hover-stay-time="80">
         <text>引流合作（不产生现金结算）</text>
@@ -60,8 +62,8 @@
       {{targetsErrorText}}<text class="inline-retry" bindtap="retryTargets" aria-role="button" aria-label="重试刷新合作对象" hover-class="cy-pressed" hover-stay-time="80">重试</text>
     </view>
     <cy-skeleton wx:if="{{targetsState === 'loading'}}" type="list" count="3" />
-    <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'permission'}}" title="当前账号不能读取合作对象" sub="{{targetsErrorText}}" bind:retry="retryTargets" />
-    <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'error'}}" title="合作对象没加载出来" sub="请稍后重试" bind:retry="retryTargets" />
+    <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'permission'}}" title="当前账号无权查看合作对象" bind:retry="retryTargets" />
+    <cy-error load-failure class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'error'}}" title="合作对象加载失败" bind:retry="retryTargets" />
 
     <block wx:elif="{{presetTarget}}">
       <view class="target target--locked">
@@ -72,10 +74,10 @@
     </block>
 
     <block wx:elif="{{activeType === 1}}">
-      <view class="target" wx:for="{{clubs}}" wx:key="id" bindtap="toggleTarget" data-toid="{{item.id}}" data-name="{{item.name}}" data-logo="{{item.logo}}" data-meta="{{item.memberCount != null ? item.memberCount + ' 位成员' : '成员数待确认'}}{{item.city ? ' · ' + item.city : ''}}"
+      <view class="target" wx:for="{{clubs}}" wx:key="id" bindtap="toggleTarget" data-toid="{{item.id}}" data-name="{{item.name}}" data-logo="{{item.logo}}" data-meta="{{item.memberCount != null ? item.memberCount + ' 位成员' : '—'}}{{item.city ? ' · ' + item.city : ''}}"
         aria-role="checkbox" aria-checked="{{!!selectedMap[item.id]}}" aria-label="选择俱乐部：{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <image class="target-logo" src="{{item.logo || '/images/d_logo.png'}}" mode="aspectFill" lazy-load="true" />
-        <view class="target-main"><view class="target-name ep1">{{item.name}}</view><view class="target-meta">{{item.memberCount != null ? item.memberCount + ' 位成员' : '成员数待确认'}}{{item.city ? ' · ' + item.city : ''}}</view></view>
+        <view class="target-main"><view class="target-name ep1">{{item.name}}</view><view class="target-meta">{{item.memberCount != null ? item.memberCount + ' 位成员' : '—'}}{{item.city ? ' · ' + item.city : ''}}</view></view>
         <view class="target-action {{selectedMap[item.id] ? 'target-action--selected' : ''}}">{{selectedMap[item.id] ? '已选' : '邀请'}}</view>
       </view>
       <!-- CU-M-134:标题与说明几乎重复(「暂无可对接的俱乐部／平台还没有开放合作的俱乐部」)。
@@ -101,7 +103,7 @@
   </view>
 
   <view class="cta-bar" wx:if="{{selected.length}}">
-    <view class="cta-hint" wx:if="{{!topicId}}">先在 ① 选一个关联主题，才能发送邀约</view>
+    <view class="cta-hint" wx:if="{{!topicId}}">请先选择主题</view>
     <view class="cta-btn {{submitting || !topicId || topicClosed || topicsState !== 'ready' || targetsState !== 'ready' || (shareMode === 2 && !fixedFee) ? 'disabled' : ''}}" bindtap="sendInvite" aria-role="button" aria-label="发送协作邀约" aria-disabled="{{submitting || !topicId || topicClosed || topicsState !== 'ready' || targetsState !== 'ready' || (shareMode === 2 && !fixedFee)}}" hover-class="{{submitting || !topicId || topicClosed || topicsState !== 'ready' || targetsState !== 'ready' || (shareMode === 2 && !fixedFee) ? 'none' : 'cy-pressed'}}" hover-stay-time="80">发送邀约({{selected.length}})</view>
   </view>
 
@@ -113,7 +115,7 @@
         <view class="iv-locked-main"><text class="iv-target ep1">{{inviteModal.targetText}}</text><text class="iv-locked-meta ep1">{{inviteModal.targetMeta}}</text></view>
         <view class="target-action target-action--locked">已锁定</view>
       </view>
-      <view class="iv-terms"><view><text class="iv-terms-label">合作条款 · 已锁定</text><text class="iv-terms-value">{{inviteModal.termsText}}</text></view><cy-icon name="check" size="28" /></view>
+      <view class="iv-terms"><view><text class="iv-terms-label">拟议条款 · 对方接受并成单后锁定</text><text class="iv-terms-value">{{inviteModal.termsText}}</text></view><cy-icon name="check" size="28" /></view>
       <view class="iv-hero"><text class="iv-type">协作邀请</text><text class="iv-topic">{{topicName ? ('关联主题 · ' + topicName) : '整主题合作邀请'}}</text></view>
       <view class="iv-copy">对方会在「收到的」中确认本次协作。</view>
       <view class="iv-message"><text class="iv-message-title">邀请语</text><textarea class="iv-message-input" value="{{message}}" bindinput="onMessageInput" placeholder="写下想对对方说的话" placeholder-class="iv-message-placeholder" maxlength="100" /></view>
@@ -123,6 +125,7 @@
       <view class="iv-send {{submitting ? 'disabled' : ''}}" bindtap="confirmInvite" aria-role="button" aria-label="确认发送协作邀约" aria-disabled="{{submitting}}" hover-class="{{submitting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{submitting ? '发送中…' : '发送邀约(' + selected.length + ')'}}</view>
     </view>
   </cy-sheet>
+  </block>
 </view>
 
 <!-- 协作邀请结果面板。失败时不关邀约弹层:那里已经是「待重试 N 个对象」,

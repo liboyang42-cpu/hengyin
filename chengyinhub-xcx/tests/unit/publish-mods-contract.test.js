@@ -54,7 +54,7 @@ test('预设只有两条,且都不引用带 nodeId 的变量', () => {
     assert.equal(cfg.modsError([{ when: p.when, value: p.value, label: p.label }]), '',
       p.label + ' 这条预设自己必须是合法配置')
     assert.doesNotMatch(JSON.stringify(p.when), /sys\.(passed|outcome|asked|mistakes)\./,
-      p.label + ' 引用了带 nodeId 的变量 —— 模板可被多站复用,编辑期拿不到 nodeId')
+      p.label + ' 引用了带 nodeId 的变量 —— 模板可被多站复用，编辑期拿不到 nodeId')
   }
 })
 

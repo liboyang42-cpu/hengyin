@@ -32,7 +32,7 @@ test('4-07/RV(2) 装修主页门禁回到 COOP_MANAGE，资料三视图按 PROFI
   // 所以整页门禁用 canManageCoop,资料类视图(基础资料/资质/品牌)与装修保存按钮
   // 单独按 canWriteProfile 收口。
   assert.equal(gateNeed('pages/merchant/decor/index.wxml'), 'canManageCoop',
-    '装修主页是承接管理的入口,整页门禁用 canWriteProfile 会把运营挡在外面');
+    '装修主页是承接管理的入口，整页门禁用 canWriteProfile 会把运营挡在外面');
   assert.equal(gateNeed('pages/merchant/decor/gallery/index.wxml'), 'canWriteProfile',
     '相册保存走 decor/save(PROFILE_WRITE),页门禁必须 canWriteProfile');
   assert.equal(gateNeed('pages/merchant/decor/ai-npc/index.wxml'), 'canWriteProfile',
@@ -51,12 +51,12 @@ test('RV(2) 装修主页资料三视图与保存按钮按 canWriteProfile 收口
       view + ' 视图读 /merchant/info 或走 decor/save,没有 PROFILE_WRITE 的岗位不能看到入口');
   });
   assert.match(wxml, /<cy-btn[^>]*wx:if="\{\{merchantAccess\.canWriteProfile\}\}"[^>]*bindtap="toggleBasicEditing"/,
-    '基础资料的「编辑/完成编辑」是装修保存按钮,没有 PROFILE_WRITE 不渲染');
+    '基础资料的「编辑/完成编辑」是装修保存按钮，没有 PROFILE_WRITE 不渲染');
   const js = read('pages/merchant/decor/index.js');
   assert.match(js, /url:\s*'\/api\/merchant\/access\/me'/,
-    '页面必须自己读一次 access/me 才能在资料视图上收口(门禁组件只盖屏,不给页面数据)');
+    '页面必须自己读一次 access/me 才能在资料视图上收口(门禁组件只盖屏，不给页面数据)');
   assert.match(js, /needsProfileWrite[\s\S]*canWriteProfile[\s\S]*loadState: 'permission'/,
-    '深链直接进 basic/brand/qualification 时必须停在权限态,不能先打一发注定 403 的请求');
+    '深链直接进 basic/brand/qualification 时必须停在权限态，不能先打一发注定 403 的请求');
 });
 
 // ---------------------------------------------------------------- 营销页图标
@@ -149,7 +149,7 @@ test('RV(2) 营销页「店铺装修」对有 COOP_MANAGE 的岗位显示(运营
   assert.equal(financeActions.includes('decor'), false, '财务没有 COOP_MANAGE,装修入口隐藏')
 
   assert.match(read('pages/merchant/marketing/index.wxml'), /wx:for="\{\{entries\}\}"/,
-    '入口仍由 entries 渲染(过滤在真源侧做,不另起一套写死岗位名的条件)')
+    '入口仍由 entries 渲染(过滤在真源侧做，不另起一套写死岗位名的条件)')
 })
 
 test('RV(2) 负控:入口表不再按权限过滤时,核销员看到装修入口必须判红', () => {

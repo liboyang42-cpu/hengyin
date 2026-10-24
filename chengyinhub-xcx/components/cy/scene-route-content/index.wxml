@@ -13,10 +13,10 @@
 />
 <view wx:else class="src {{theme === 'merchant' ? 'src--merchant' : 'src--player'}}">
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="{{3}}" />
-  <cy-error class="cy-fade-in" wx:elif="{{state === 'error'}}" fill size="lg" title="这一页没能打开" sub="{{errorText}}" retry="重试" bind:retry="reload" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill size="lg" title="这一页没能打开" sub="{{errorText}}" retry="重试" bind:retry="reload" />
   <cy-empty wx:elif="{{state === 'no-permission'}}" fill size="lg" kind="no-permission"
-    title="当前岗位不能管理据点" sub="请联系店主或店长调整经营团队岗位" />
-  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="{{emptyText}}" sub="有数据后会显示在这里" />
+    title="当前岗位不能管理节点" sub="请联系店主开通" />
+  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="{{emptyText}}" />
 
   <block wx:elif="{{state === 'ready'}}">
     <view class="src-summary" wx:if="{{metrics.length}}">
@@ -70,7 +70,7 @@
 
     <view class="src-form" wx:if="{{formType}}">
       <view class="src-form__success" wx:if="{{submitted}}">本次提交已收到，结果会在真实状态返回后更新。</view>
-      <view class="src-form__submitting" wx:if="{{submitting}}" aria-role="status">正在提交，请稍候</view>
+      <view class="src-form__submitting" wx:if="{{submitting}}" aria-role="status">提交中</view>
       <cy-error wx:elif="{{submitError}}" title="提交没有完成" sub="{{submitError}}" retry="重试" bind:retry="submitForm" />
       <view class="src-form__group" wx:if="{{formType === 'withdraw'}}">
         <text class="src-form__label">银行卡提现</text>
@@ -142,7 +142,7 @@
         <text class="src-form__field-label">联合创始人（选填）</text><textarea class="src-form__textarea" value="{{form.coFounders}}" data-field="coFounders" bindinput="onFieldInput" aria-label="联合创始人，可选" placeholder="请输入联合创始人" />
       </view>
       <view class="src-form__group" wx:elif="{{formType === 'citynode'}}">
-        <text class="src-form__label">新建互动据点模板</text>
+        <text class="src-form__label">新建互动节点模板</text>
         <text class="src-form__field-label">互动标题</text><input class="src-form__input" value="{{form.title}}" data-field="title" bindinput="onFieldInput" aria-label="互动标题" placeholder="请输入互动标题" />
         <text class="src-form__field-label">互动类型</text><input class="src-form__input" value="{{form.interactionType}}" data-field="interactionType" bindinput="onFieldInput" aria-label="互动类型" placeholder="请输入互动类型" />
         <text class="src-form__field-label">核验方式</text><input class="src-form__input" value="{{form.validationMethod}}" data-field="validationMethod" bindinput="onFieldInput" aria-label="核验方式" placeholder="请输入核验方式" />

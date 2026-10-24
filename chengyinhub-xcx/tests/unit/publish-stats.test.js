@@ -8,17 +8,29 @@ const {
   totalDistanceKm,
   totalDurationText,
   totalStats,
+  listedNodeCount,
   computeCompleteness,
 } = require('../../pages/publish/utils/publish/publish-stats.js');
+
+test('SC-UI-DATE-COUNT 站数只数上架节点:status=0/"0"(后台隐藏)不计,新节点(无 status / null)与 1 计入', () => {
+  const chapters = [
+    { nodes: [{ status: 1 }, { status: 0 }, {}] },
+    { nodes: [{ status: '0' }, { status: null }, { status: '1' }] },
+    { },
+  ];
+  assert.equal(listedNodeCount(chapters), 4);
+  assert.equal(totalStats(chapters, 0).totalNodes, 4);
+  assert.equal(listedNodeCount(null), 0);
+});
 
 test('无需地点的故事玩法不报缺地址或坐标，到店节点仍必须补齐', () => {
   const fd = { chapters: [{ nodes: [{ _storyGame: true, templateId: 71 }] }] };
   const story = computeCompleteness(fd, {});
   assert.ok(!story.missing.some(x => /选地点|缺地点/.test(x)));
-  fd.chapters[0].nodes.push({ name: '到店站点' });
+  fd.chapters[0].nodes.push({ name: '到店节点' });
   const mixed = computeCompleteness(fd, {});
-  assert.ok(mixed.missing.includes('1 个站点还没选地点'));
-  assert.ok(mixed.missing.includes('部分站点缺地点'));
+  assert.ok(mixed.missing.includes('1 个节点还没选地点'));
+  assert.ok(mixed.missing.includes('部分节点缺地点'));
 });
 
 test('haversineKm:同点为 0;1°纬差 ≈ 111.19km', () => {
@@ -32,7 +44,7 @@ test('chapterStats:空/无 nodes 走保底(无 durationDisplay)', () => {
   assert.deepEqual(chapterStats({}), { duration: 0, locationCount: 0, templateCount: 0 });
 });
 
-test('chapterStats:累加时长/站点/模板数 + 时长显示格式', () => {
+test('chapterStats:累加时长/节点/模板数 + 时长显示格式', () => {
   const s = chapterStats({ nodes: [
     { nodeTime: '30', templateId: 5 },
     { nodeTime: '90', templateId: 0 },
@@ -84,7 +96,7 @@ test('computeCompleteness:空表单 → 低完成度 + missing 列全项', () =>
   const r = computeCompleteness({}, {});
   assert.equal(r.percent < 20, true);
   assert.ok(r.missing.includes('主题名称'));
-  assert.ok(r.missing.includes('尚未添加站点'));
+  assert.ok(r.missing.includes('尚未添加节点'));
 });
 
 // CU-C-159:发布前缺项在「发布确认」层里显示,同页编辑器与「自动检查已通过」清单

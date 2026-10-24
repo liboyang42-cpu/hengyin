@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.ActivitySettlementDTO;
 import com.chengyinhub.business.domain.dto.ActivityTicketRequest;
+import com.chengyinhub.business.service.support.ActivityAuditSnapshot;
 import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
 import com.chengyinhub.business.mapper.CmsCollaboratorsMapper;
@@ -34,6 +36,7 @@ import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.service.ICmsActivityService;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -99,6 +102,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
     @Autowired
     private PlatformTransactionManager transactionManager;
+
+    /** 与报名二清闸同一判据：独立活动只有平台自办（发布者=平台会员）才可收费。 */
+    @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
+    private Long platformMemberId;
 
     /** 客诉期提现闸:涉诉报名单结算暂扣,客诉关闭后补结。 */
     @Autowired
@@ -534,6 +541,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     }
 
     @Override
+    public void markContentSafetyHold(Long id)
+    {
+        if (id == null || id <= 0L) return;
+        cmsActivityMapper.markContentSafetyHold(id);
+    }
+
+    @Override
     public CmsActivity selectPublicCmsActivityById(Long id)
     {
         return cmsActivityMapper.selectPublicCmsActivityById(id);
@@ -542,7 +556,18 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Override
     public CmsActivity selectCmsActivityDetailById(Long id, Long viewerMemberId)
     {
-        return cmsActivityMapper.selectCmsActivityDetailById(id, viewerMemberId);
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityDetailById(id, viewerMemberId);
+        // O-08:挂在「仅俱乐部成员可见」主题下、但场次本身没有 club_id 的场次(控制器的社群门卡只看场次 club_id,
+        // 管不到它),非成员读详情按不存在处理,坐标/地址不外泄;场次作者本人照常。有 club_id 的仍走既有门卡。
+        if (activity != null && (activity.getClubId() == null || activity.getClubId() <= 0)
+                && activity.getTopicId() != null && activity.getTopicId() > 0
+                && !(viewerMemberId != null && viewerMemberId.equals(activity.getMemberId()))
+                && !cmsTopicMapper.selectClubMemberOnlyHiddenTopicIds(
+                        java.util.Collections.singletonList(activity.getTopicId()), viewerMemberId).isEmpty())
+        {
+            return null;
+        }
+        return activity;
     }
 
     @Override
@@ -617,6 +642,39 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         return cmsRegistrationMapper.countCmsRegistrationList(q);
     }
 
+    @Override
+    public Map<Long, Integer> countSignedUpRegistrationsByActivityIds(List<Long> activityIds) {
+        if (activityIds == null || activityIds.isEmpty()) return java.util.Collections.emptyMap();
+        Map<Long, Integer> counts = new java.util.HashMap<>();
+        for (Map<String, Object> row : cmsActivityMapper.selectSignedUpRegistrationCounts(activityIds)) {
+            counts.put(((Number) row.get("activityId")).longValue(),
+                    ((Number) row.get("signupCount")).intValue());
+        }
+        return counts;
+    }
+
+    @Override
+    public Map<Long, Integer> countSignedUpRegistrationsByTopicIds(List<Long> topicIds) {
+        if (topicIds == null || topicIds.isEmpty()) return java.util.Collections.emptyMap();
+        Map<Long, Integer> counts = new java.util.HashMap<>();
+        for (Map<String, Object> row : cmsActivityMapper.selectTopicSignedUpRegistrationCounts(topicIds)) {
+            counts.put(((Number) row.get("topicId")).longValue(),
+                    ((Number) row.get("signupCount")).intValue());
+        }
+        return counts;
+    }
+
+    @Override
+    public Map<Long, Integer> countPendingVerificationByActivityIds(List<Long> activityIds) {
+        if (activityIds == null || activityIds.isEmpty()) return java.util.Collections.emptyMap();
+        Map<Long, Integer> counts = new java.util.HashMap<>();
+        for (Map<String, Object> row : cmsActivityMapper.selectPendingVerificationCounts(activityIds)) {
+            counts.put(((Number) row.get("activityId")).longValue(),
+                    ((Number) row.get("pendingVerifyCount")).intValue());
+        }
+        return counts;
+    }
+
     /**
      * 查询活动列表
      *
@@ -669,6 +727,96 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         return cmsActivityMapper.updateCmsActivity(cmsActivity);
     }
 
+    @Override
+    // 条件 UPDATE 的「未售出」子查询在 RR 下是加锁读(锁住在途下单/间隙);显式钉 RR,不随连接默认隔离级漂移。
+    @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
+    public int updateLeadOpsUnlessSold(CmsActivity ops, boolean touchesTimeOrPlace)
+    {
+        if (ops == null || ops.getId() == null) {
+            return 0;
+        }
+        ops.setUpdateTime(DateUtils.getNowDate());
+        return touchesTimeOrPlace ? cmsActivityMapper.updateOpsFieldsIfUnsold(ops)
+                : cmsActivityMapper.updateCmsActivity(ops);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int insertCmsActivityByAdmin(CmsActivity cmsActivity, String username, boolean preReview, String flagReason)
+    {
+        // Gap 12·03 P0-5:审核态/发布态只认 ActivityReviewPolicy + 门禁的裁决,不认请求体;
+        // 删除、取消、结算、驳回原因等事实由各自专用流程写,新建时不能夹带。
+        cmsActivity.setId(null);
+        cmsActivity.setStatus(preReview ? 0L : 1L);
+        cmsActivity.setPublishStatus(preReview ? 0L : 1L);
+        cmsActivity.setCheckStatus(null);
+        cmsActivity.setReason(null);
+        cmsActivity.setDelFlag(0);
+        cmsActivity.setCancelTime(null);
+        cmsActivity.setCancelReason(null);
+        cmsActivity.setIsSettlement(null);
+        cmsActivity.setCreateBy(username);
+        cmsActivity.setCreateTime(DateUtils.getNowDate());
+        int rows = cmsActivityMapper.insertCmsActivity(cmsActivity);
+        if (rows <= 0) {
+            throw new ServiceException("创建活动失败");
+        }
+        Long activityId = cmsActivity.getId();
+        if (preReview) {
+            // 与主表同事务:建不出审核单就整单回滚,不留「待审却无单可审」的活动。
+            String snap = ActivityAuditSnapshot.of(activityId, cmsActivity, java.util.Collections.emptyList(), null);
+            auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId,
+                    cmsActivity.getMemberId(), "user_publish", snap);
+        } else if (flagReason != null) {
+            flagActivityForSpotCheck(activityId, cmsActivity.getMemberId(), cmsActivity, flagReason);
+        }
+        return rows;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int updateCmsActivityByAdmin(CmsActivity editable, String username, boolean preReview, String flagReason)
+    {
+        if (editable == null || editable.getId() == null || editable.getId() < 1) {
+            throw new ServiceException("参数不合规");
+        }
+        CmsActivity before = cmsActivityMapper.selectCmsActivityById(editable.getId());
+        if (before == null) {
+            throw new ServiceException("活动不存在");
+        }
+        // 只写内容字段:审核态/发布态不在这条路上改(公开只能由审核台通过)。
+        editable.setStatus(null);
+        editable.setPublishStatus(null);
+        editable.setCheckStatus(null);
+        editable.setReason(null);
+        editable.setUpdateBy(username);
+        editable.setUpdateTime(DateUtils.getNowDate());
+        int rows = cmsActivityMapper.updateCmsActivity(editable);
+        if (rows <= 0) {
+            throw new ServiceException("更新失败");
+        }
+        CmsActivityPublishRequest view = new CmsActivityPublishRequest();
+        org.springframework.beans.BeanUtils.copyProperties(editable, view);
+        boolean resubmitted = resubmitForReviewIfNeeded(before, view, before.getMemberId(), preReview);
+        if (!resubmitted && flagReason != null) {
+            CmsActivity after = cmsActivityMapper.selectCmsActivityById(before.getId());
+            flagActivityForSpotCheck(before.getId(), before.getMemberId(), after == null ? before : after, flagReason);
+        }
+        return rows;
+    }
+
+    /** 先发后审门禁打标的非阻断抽检单(与 App 发布/编辑同一来源 post_review_flag);best-effort,不影响已上架。 */
+    private void flagActivityForSpotCheck(Long activityId, Long ownerMemberId, CmsActivity activity, String flagReason)
+    {
+        logger.warn("后台活动先发后审打标待抽检 activityId={} reason={}", activityId, flagReason);
+        try {
+            String snap = ActivityAuditSnapshot.of(activityId, activity, java.util.Collections.emptyList(), flagReason);
+            auditTaskService.submitOrRefreshActivity(activityId, ownerMemberId, "post_review_flag", snap);
+        } catch (Exception e) {
+            logger.error("后台活动抽检单提交失败 activityId={}", activityId, e);
+        }
+    }
+
     /**
      * 批量删除活动
      *
@@ -702,11 +850,12 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * @param request CmsActivityPublishRequest
      * @param memberId  发布用户ID
      * @param username 发布用户昵称
+     * @param preReview true=先审后发;false=先发后审
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long publishActivity(CmsActivityPublishRequest request, Long memberId,String username) {
+    public Long publishActivity(CmsActivityPublishRequest request, Long memberId,String username, boolean preReview) {
         // 9-16 拍板第 2 条:欠款逾期未补足 ⇒ 限制交易(不能上架新活动)。
         settlementDebtLedger.requireNoOverdueDebt(memberId);
         if (request.getClubId() != null && request.getClubId() > 0) {
@@ -719,6 +868,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             }
         }
         requirePaidPublisherIdentity(request, memberId);
+        // 发布入口建的都是独立活动(topic_id 为空)。
+        assertStandalonePaidTicketsCollectible(request, memberId);
         // 1. 构建活动实体
         CmsActivity activity = new CmsActivity();
 
@@ -743,10 +894,12 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
         // M1-3 社群活动:俱乐部主理人发社群活动时挂 club_id(公域列表不出,仅成员可见)
         activity.setClubId(request.getClubId());
-        // M0-6 先审后发:活动发布 → 待审(status=0/publishStatus=0),公域列表(status=1)不出;
-        // 审核台通过后 applyModeration 置 1 上架。
-        activity.setStatus(0L);
-        activity.setPublishStatus(0L);
+        // 分级审核(2026-10-20 拍板,推翻 M0-6「活动一律先审后发」):活动按内容处理,默认先发后审,
+        // 直接上架(status=1/publishStatus=1),事后靠举报/抽检/图片回调下架;
+        // 高风险类目、未审核商家、总闸 pre_review_all 由 ActivityReviewPolicy 判成 preReview →
+        // 仍待审(status=0/publishStatus=0),公域列表不出,审核台通过后 applyModeration 置 1 上架。
+        activity.setStatus(preReview ? 0L : 1L);
+        activity.setPublishStatus(preReview ? 0L : 1L);
         activity.setDelFlag(0); // 0->未删除
 
         // 设置创建信息
@@ -763,28 +916,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
         Long activityId = activity.getId();
 
-        // M0-6 先审后发:活动发布后自动建审核任务(best-effort,失败不阻断)
-        try {
-            String snap = "{\"bizType\":\"ACTIVITY\",\"bizId\":" + activityId
-                    + ",\"name\":\"" + (activity.getName() == null ? "" : activity.getName().replace("\"", "'")) + "\"}";
-            auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId, memberId, "user_publish", snap);
-        } catch (Exception ignore) {
-            logger.error("活动发布审核任务提交失败 activityId={}", activityId, ignore);
-        }
-
-        //3. 处理合作者
-        if (request.getCollaborators() != null && !request.getCollaborators().isEmpty()) {
-            for (Long collaboratorId : request.getCollaborators()) {
-                CmsCollaborators collaborator = new CmsCollaborators();
-                collaborator.setDataType(2L);
-                collaborator.setDataId(activityId);
-                collaborator.setMemberId(memberId);
-                collaborator.setCreateTime(new Date());
-                cmsCollaboratorsMapper.insertCmsCollaborators(collaborator);
-            }
-        }
+        //3. 处理合作者(F0258:写入所选成员,而不是发布者本人)
+        saveActivityCollaborators(request.getCollaborators(), activityId);
 
         //4. 处理票务
+        List<OmsTicket> insertedTickets = new java.util.ArrayList<>();
         if (request.getTickets() != null && !request.getTickets().isEmpty()) {
             for (ActivityTicketRequest ticketRequest : request.getTickets()) {
                 OmsTicket ticket = new OmsTicket();
@@ -809,6 +945,18 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 OmsTicketWriteValidator.validateTicketWindowWithinActivity(ticket.getStartTime(),
                         ticket.getEndTime(), activity.getStartDate(), activity.getEndDate());
                 omsTicketMapper.insertOmsTicket(ticket);
+                insertedTickets.add(ticket);
+            }
+        }
+
+        // 先审后发的活动建审核任务(best-effort,失败不阻断);先发后审不建阻断单。
+        // 放在票务之后:快照要带票价(AUDIT-G1-5),审核员才看得到自己批的是什么。
+        if (preReview) {
+            try {
+                String snap = ActivityAuditSnapshot.of(activityId, activity, insertedTickets, null);
+                auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId, memberId, "user_publish", snap);
+            } catch (Exception ignore) {
+                logger.error("活动发布审核任务提交失败 activityId={}", activityId, ignore);
             }
         }
 
@@ -817,7 +965,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int updateActivityByOwner(CmsActivityPublishRequest request, Long memberId, String username) {
+    public int updateActivityByOwner(CmsActivityPublishRequest request, Long memberId, String username,
+                                     boolean preReview) {
         if (request == null || request.getId() == null || request.getId() < 1
                 || memberId == null || memberId <= 0) {
             throw new ServiceException("参数不合规");
@@ -834,12 +983,155 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 两条同时成立只有这一种排法:policy 闸 → 票务同步 → 主表。
         assertNoPaidTicketOnFreeTopic(request);
         requirePaidPublisherIdentity(request, memberId);
+        CmsActivity currentForCollect = cmsActivityMapper.selectCmsActivityById(request.getId());
+        if (currentForCollect != null && currentForCollect.getTopicId() == null) {
+            // PR10 复审:存量收费独立活动不能因收款闸连文字都改不了;编辑只拦「新增收费票/0 元改收费/涨价」。
+            assertStandaloneEditKeepsCollectible(request, memberId);
+        }
         syncLiveActivityTickets(request, request.getId(), memberId, username);
         int rows = cmsActivityMapper.updateCmsActivityByOwner(editable);
         if (rows <= 0) {
             throw new ServiceException("更新失败");
         }
+        // F0258:合作者仅作展示署名。传了列表(含空列表)才整体替换;未传(null)保持原样。
+        // 删除语句自带 cms_activity.member_id = owner 条件,主表更新已按 owner 命中后才执行。
+        if (request.getCollaborators() != null) {
+            cmsCollaboratorsMapper.deleteActivityCollaboratorsByOwner(request.getId(), memberId);
+            saveActivityCollaborators(request.getCollaborators(), request.getId());
+        }
+        resubmitForReviewIfNeeded(currentForCollect, request, memberId, preReview);
         return rows;
+    }
+
+    /** 去重写入活动合作者;成员不存在或写入失败整单回滚,不报假成功。 */
+    private void saveActivityCollaborators(List<Long> memberIds, Long activityId) {
+        if (memberIds == null || memberIds.isEmpty()) return;
+        for (Long collaboratorId : new java.util.LinkedHashSet<>(memberIds)) {
+            if (collaboratorId == null || collaboratorId <= 0
+                    || umsMemberService.selectUmsMemberById(collaboratorId) == null) {
+                throw new ServiceException("合作者不存在，请重新选择");
+            }
+            CmsCollaborators collaborator = new CmsCollaborators();
+            collaborator.setDataType(2L);
+            collaborator.setDataId(activityId);
+            collaborator.setMemberId(collaboratorId);
+            collaborator.setCreateTime(new Date());
+            if (cmsCollaboratorsMapper.insertCmsCollaborators(collaborator) <= 0) {
+                throw new ServiceException("保存合作者失败");
+            }
+        }
+    }
+
+    /**
+     * AUDIT-G1-2:编辑后的审核回路。
+     * <ul>
+     *   <li>已驳回(status=2)⇒ 改完即重提:回待审(status=0/publish_status=0),刷新审核单;</li>
+     *   <li>待审中(status=0)改了内容 ⇒ 仍待审,刷新审核单快照;</li>
+     *   <li>先审(PRE_REVIEW)下改了名称/简介/图片/时间/地点 ⇒ 已上架的也退回待审。</li>
+     * </ul>
+     * 用 submitOrRefresh 而不是 submit:后者撞开放任务唯一约束(先审单/抽检单还开着时)。
+     * 与主表更新同事务 —— 审核单建不出来就整单回滚,不能留一场「待审却无单可审」的活动。
+     * 已售时间/地点锁在控制器入口,早于本方法。
+     */
+    private boolean resubmitForReviewIfNeeded(CmsActivity before, CmsActivityPublishRequest request,
+                                              Long memberId, boolean preReview) {
+        if (before == null) return false;
+        // status 为空(库里不会出现)不当作待审/驳回,只按 preReview 判。
+        Long status = before.getStatus();
+        boolean changed = reviewableContentChanged(before, request);
+        boolean rejected = Long.valueOf(2L).equals(status);
+        boolean pending = Long.valueOf(0L).equals(status);
+        if (!rejected && !(pending && changed) && !(preReview && changed)) return false;
+        if (!pending) {
+            CmsActivity back = new CmsActivity();
+            back.setId(before.getId());
+            back.setStatus(0L);
+            back.setPublishStatus(0L);
+            back.setCheckStatus(0);
+            back.setReason("");
+            if (cmsActivityMapper.updateCmsActivity(back) != 1) {
+                throw new ServiceException("活动审核状态保存失败");
+            }
+        }
+        CmsActivity after = cmsActivityMapper.selectCmsActivityById(before.getId());
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(2L);
+        query.setOwnerId(before.getId());
+        query.setDelFlag(0);
+        String snap = ActivityAuditSnapshot.of(before.getId(), after == null ? before : after,
+                omsTicketMapper.selectOmsTicketList(query), null);
+        auditTaskService.submitOrRefreshActivity(before.getId(), memberId, "user_republish", snap);
+        return true;
+    }
+
+    /** 审核要重看的字段:名称/简介/封面/图集/时间/地点。未传(null)视为未改,与 updateCmsActivityByOwner 的动态 SQL 一致。 */
+    private static boolean reviewableContentChanged(CmsActivity before, CmsActivityPublishRequest request) {
+        return changed(before.getName(), request.getName())
+                || changed(before.getDescription(), request.getDescription())
+                || changed(before.getImgUrl(), request.getImgUrl())
+                || changed(before.getImgArr(), request.getImgArr())
+                || changedSecond(before.getStartDate(), request.getStartDate())
+                || changedSecond(before.getEndDate(), request.getEndDate())
+                || changed(before.getAddressName(), request.getAddressName())
+                || changed(before.getAddress(), request.getAddress())
+                || request.getLongitude() != null
+                        && !com.chengyinhub.common.utils.CoordinateUtils.sameCoordinate(before.getLongitude(), request.getLongitude())
+                || request.getLatitude() != null
+                        && !com.chengyinhub.common.utils.CoordinateUtils.sameCoordinate(before.getLatitude(), request.getLatitude());
+    }
+
+    private static boolean changed(String before, String requested) {
+        return requested != null && !requested.equals(before);
+    }
+
+    private static boolean changedSecond(Date before, Date requested) {
+        if (requested == null) return false;
+        return before == null || before.getTime() / 1000L != requested.getTime() / 1000L;
+    }
+
+    /**
+     * F-L4-01/F-W2-01：独立活动没有主题内容槽，收款主体只能按发布者判。非平台发布的收费独立活动
+     * 下单必被 CmsRegistrationServiceImpl.assertCollectible 拒绝(二清)，发布时就拒，
+     * 与商家主办「票价只能是 0」同口径，避免上架一场玩家付不了款的活动。
+     */
+    private void assertStandalonePaidTicketsCollectible(CmsActivityPublishRequest request, Long memberId) {
+        if (request.getTickets() == null) return;
+        boolean paid = false;
+        for (ActivityTicketRequest ticket : request.getTickets()) {
+            if (ticket != null && ticket.getPrice() != null && ticket.getPrice().signum() > 0) {
+                paid = true;
+                break;
+            }
+        }
+        if (!paid) return;
+        if (platformMemberId != null && platformMemberId > 0L && platformMemberId.equals(memberId)) return;
+        throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
+    }
+
+    /**
+     * 编辑口径的收款闸:存量已收费且价格不升的票原样放行(玩家下单仍由 assertCollectible 兜底),
+     * 只拒绝把收费面扩大的改动 —— 新增收费票、0 元票改收费、在库价基础上涨价。发布仍走全量闸。
+     */
+    private void assertStandaloneEditKeepsCollectible(CmsActivityPublishRequest request, Long memberId) {
+        if (request.getTickets() == null) return;
+        if (platformMemberId != null && platformMemberId > 0L && platformMemberId.equals(memberId)) return;
+        List<OmsTicket> live = null;
+        for (ActivityTicketRequest ticket : request.getTickets()) {
+            if (ticket == null || ticket.getPrice() == null || ticket.getPrice().signum() <= 0) continue;
+            if (live == null) {
+                OmsTicket query = new OmsTicket();
+                query.setOwnerType(2L);
+                query.setOwnerId(request.getId());
+                query.setDelFlag(0);
+                live = omsTicketMapper.selectOmsTicketList(query);
+                if (live == null) live = java.util.Collections.emptyList();
+            }
+            OmsTicket existing = findLiveTicket(live, ticket.getId());
+            if (existing == null || existing.getPrice() == null || existing.getPrice().signum() <= 0
+                    || ticket.getPrice().compareTo(existing.getPrice()) > 0) {
+                throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
+            }
+        }
     }
 
     private void requirePaidPublisherIdentity(CmsActivityPublishRequest request, Long memberId) {

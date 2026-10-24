@@ -3,6 +3,7 @@
 // 自审核握手:发起即 status=0,受邀方在 coop/list 接受。后端 /api/coop/invite
 const toast = require('../../../utils/toast.js');
 const app = getApp();
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 /* 结果面板终态停留时长(cy-result-sheet 的 duration 默认也是 2000)。
    成功后要跳走,跳转挂在面板的 close 上,时长只此一处。 */
 const RESULT_SHEET_MS = 2000;
@@ -10,7 +11,7 @@ const subscribe = require('../../../utils/subscribe.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
-const RECRUIT_CLOSED_TEXT = '主题不在招商期,暂不能发起邀约';
+const RECRUIT_CLOSED_TEXT = '主题不在招商期，暂不能发起邀约';
 
 // 主题日期的短标签:后端下发不带时区的中国时间串,统一锚上海日历再取月日。
 function topicDateText(raw) {
@@ -70,13 +71,14 @@ function identityKey() {
 function failureKind(value) {
   const code = value && (value.code != null ? value.code : value.statusCode);
   const message = String(value && (value.msg || value.message) || '');
-  if (String(code) === '401' || String(code) === '403' || /请先登录|无权|仅.+可|资格|身份/.test(message)) return 'permission';
+  if (String(code) === '401') return 'login';
+  if (String(code) === '403' || /请先登录|无权|仅.+可|资格|身份/.test(message)) return 'permission';
   if (/request:fail|timeout/i.test(String(value && value.errMsg || ''))) return 'network';
   return 'server';
 }
 
 function failureText(value, fallback) {
-  if (failureKind(value) === 'network') return '网络不稳定，请检查连接后重试';
+  if (failureKind(value) === 'network') return '网络异常，请检查连接后重试';
   return String(value && (value.msg || value.message) || fallback);
 }
 
@@ -186,7 +188,9 @@ Page({
   },
 
   onShow() {
+    this._hidden = false;
     merchantTheme.merchantPageShow();
+    if (this._readSessionChanged) { this._readSessionChanged = false; this._reloadAfterLogin(); }
     const currentIdentity = identityKey();
     if (this._dataIdentity !== undefined && this._dataIdentity !== currentIdentity) {
       this._invalidateRequests();
@@ -206,8 +210,9 @@ Page({
       this.loadTargets();
     }
   },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
+    this._unloaded = true;
     this._invalidateRequests();
     this._submitting = false;
     this._navigating = false;
@@ -269,7 +274,31 @@ Page({
     this.setData({ fixedFee: Number.isFinite(value) && value > 0 ? value : null });
   },
 
+  _recoverReadSession(value, epoch, key) {
+    if (this._unloaded || epoch !== this['_' + key + 'Epoch']) return false;
+    return recoverReadSession(this, app, value, function (anonymous) {
+      this._invalidateRequests(); this._topicsLoadedScope = this._targetsLoadedScope = '';
+      this.setData({ myTopics: [], clubs: [], merchants: [], selected: [], selectedMap: {},
+        topicsState: anonymous ? 'login' : 'loading', targetsState: anonymous ? 'login' : 'loading',
+        topicsRefreshing: false, targetsRefreshing: false });
+    }, this._reloadAfterLogin);
+  },
+
+  _requireSession() {
+    if (memberId(app)) return true;
+    this._invalidateRequests();
+    this._topicsLoadedScope = this._targetsLoadedScope = '';
+    this.setData({ topicsState: 'login', targetsState: 'login', myTopics: [], clubs: [], merchants: [],
+      selected: [], selectedMap: {}, topicsRefreshing: false, targetsRefreshing: false });
+    stopPullDownRefresh();
+    waitForInitialSession(this, app, this._reloadAfterLogin);
+    return false;
+  },
+  _reloadAfterLogin() { if (!this.data.topicId) this.loadMyTopics(true); this.loadTargets(true); },
+  onLogin() { return retryLogin(this, app, this._reloadAfterLogin); },
+
   loadMyTopics(force) {
+    if (!this._requireSession()) return;
     const that = this;
     const scope = this._topicsScope();
     if (this._topicsLoading && this._topicsLoadingScope === scope) return;
@@ -291,12 +320,13 @@ Page({
       return true;
     };
     const fail = function (value) {
+      if (that._recoverReadSession(value, epoch, 'topics')) return;
       if (!settle()) return;
       const kind = failureKind(value);
-      const text = failureText(value, '主题没加载出来');
-      if (kind === 'permission') {
+      const text = failureText(value, '主题加载失败');
+      if (kind === 'permission' || kind === 'login') {
         that._topicsLoadedScope = '';
-        that.setData({ myTopics: [], topicsState: 'permission', topicsRefreshing: false, topicsErrorKind: kind, topicsErrorText: text });
+        that.setData({ myTopics: [], topicsState: kind, topicsRefreshing: false, topicsErrorKind: kind, topicsErrorText: text });
       } else if (hadSnapshot) {
         that.setData({ topicsState: 'ready', topicsRefreshing: false, topicsErrorKind: kind, topicsErrorText: text });
       } else {
@@ -324,6 +354,7 @@ Page({
         });
       },
       fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
     });
   },
 
@@ -337,6 +368,7 @@ Page({
   onMessageInput(e) { this.setData({ message: e.detail.value }); },
 
   loadTargets(force) {
+    if (!this._requireSession()) return;
     const that = this;
     if (this.data.presetTarget) { this.setData({ targetsState: 'ready' }); return; }
     const scope = this._targetsScope();
@@ -360,12 +392,13 @@ Page({
       return true;
     };
     const fail = function (value) {
+      if (that._recoverReadSession(value, epoch, 'targets')) return;
       if (!settle()) return;
       const kind = failureKind(value);
-      const text = failureText(value, '合作对象没加载出来');
-      if (kind === 'permission') {
+      const text = failureText(value, '合作对象加载失败');
+      if (kind === 'permission' || kind === 'login') {
         that._targetsLoadedScope = '';
-        that.setData({ clubs: [], merchants: [], targetsState: 'permission', targetsRefreshing: false, targetsErrorKind: kind, targetsErrorText: text });
+        that.setData({ clubs: [], merchants: [], targetsState: kind, targetsRefreshing: false, targetsErrorKind: kind, targetsErrorText: text });
       } else if (hadSnapshot) {
         that.setData({ targetsState: 'ready', targetsRefreshing: false, targetsErrorKind: kind, targetsErrorText: text });
       } else if (that.data.activeType === 1) {
@@ -387,6 +420,7 @@ Page({
           that.setData({ clubs: res.data, targetsState: 'ready', targetsRefreshing: false, targetsErrorKind: '', targetsErrorText: '' });
         },
         fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
       });
     } else {
       // 后端 /api/club/merchants 是 @RequestBody 端点,必须发 JSON;缺 header 会被当 urlencoded 导致列表加载不出
@@ -400,6 +434,7 @@ Page({
           that.setData({ merchants: res.data, targetsState: 'ready', targetsRefreshing: false, targetsErrorKind: '', targetsErrorText: '' });
         },
         fail(value) { fail(value); },
+      successStatusAbnormal(res, status) { fail({ code: failureStatus(res, status), msg: res && res.msg }); },
       });
     }
   },
@@ -535,7 +570,7 @@ Page({
       that._submitting = false;
       that.setData({ submitting: false });
       if (!failed.length) {
-        const receipt = '已发起 ' + okNames.length + ' 条,等待对方确认';
+        const receipt = '已发起 ' + okNames.length + ' 条，等待对方确认';
         const one = okNames.length === 1 ? okNames[0] : (okNames.length + ' 个对象');
         const toClub = that.data.activeType === 1;
         // 结果面板取代原来的 toast + 800ms 硬等:跳转改挂在面板收掉之后,
@@ -545,7 +580,7 @@ Page({
           sendReceipt: receipt,
           resultSheet: {
             show: true, kind: 'success', title: '协作邀请已发送',
-            sub: '已发给「' + one + '」,对方接受后即可' + (toClub ? '带团' : '承接站点') + '。',
+            sub: '已发给「' + one + '」,对方接受后即可' + (toClub ? '带团' : '承接') + '。',
             meta: that.data.topicName ? ('关联主题 · ' + that.data.topicName) : '',
             pill: '等待对方确认', why: '', primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS,
           },
@@ -559,9 +594,9 @@ Page({
       that.setData({
         resultSheet: {
           show: true, kind: 'fail', title: '邀请没发出去',
-          sub: recruitClosed ? '这个主题现在不在招商期,重试也发不出去;换一个招商中的主题再发。' : '协作邀请未能送达,可以直接重试。',
+          sub: recruitClosed ? '这个主题现在不在招商期，重试也发不出去；换一个招商中的主题再发。' : '协作邀请未能送达，可以直接重试。',
           meta: that.data.topicName ? ('关联主题 · ' + that.data.topicName) : '',
-          pill: '', why: failed[0] || '服务暂时不可用,请稍后重试。',
+          pill: '', why: failed[0] || '服务暂不可用，请稍后重试',
           primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS,
         },
       });
@@ -569,7 +604,7 @@ Page({
         'inviteModal.targetText': failedTargets.length === 1 ? failedTargets[0].name : ('待重试 ' + failedTargets.length + ' 个对象'),
         'inviteModal.targetLogo': failedTargets[0] && failedTargets[0].logo || '',
         'inviteModal.targetMeta': failedTargets[0] && failedTargets[0].meta || (that.data.activeType === 1 ? '俱乐部合作对象' : '商家合作对象'),
-        sendResult: (okNames.length ? '已发起 ' + okNames.length + ' 条;' : '') + '失败:' + failed.join('、'),
+        sendResult: (okNames.length ? '已发起 ' + okNames.length + ' 条；' : '') + '失败：' + failed.join('、'),
         sendRecruitClosed: recruitClosed,
       });
     }

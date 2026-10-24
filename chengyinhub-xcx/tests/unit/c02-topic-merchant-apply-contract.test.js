@@ -64,7 +64,7 @@ function assertApply3HasNoTopicCard(wxml) {
 // CU-C-123 删除「数字为 0 是正常的」常驻句；保留数字、业务标签和核销动作。
 function metricDefaultLine(js, key) {
   const line = js.split('\n').find((l) => l.includes(`${key}:`) && /:\s*0,/.test(l))
-  assert.ok(line, `merchantinfo 的 ${key} 必须有默认值兜底`)
+  assert.ok(line, `merchantinfo 的 ${key} 必须有默认值保底`)
   return line
 }
 
@@ -84,8 +84,8 @@ test('C2:merchantinfo 核销数值位都有默认值兜底,不会渲染成 undef
 })
 
 test('C2 负控:去掉 verifiedCount 默认值时,由数值位兜底这道闸判红', () => {
-  const mutated = read(INFO_JS).replace('verifiedCount: 0,', 'verifiedCount: undefined,')
-  assert.throws(() => assertMetricsDefaultToZero(mutated), /verifiedCount 必须有默认值兜底/)
+  const mutated = read(INFO_JS).replaceAll('verifiedCount: 0,', 'verifiedCount: undefined,')
+  assert.throws(() => assertMetricsDefaultToZero(mutated), /verifiedCount 必须有默认值保底/)
 })
 
 test('C2:merchantinfo 保留零值指标，不常驻重复解释', () => {
@@ -312,7 +312,7 @@ function assertTopicErrorStateUsesStandardBack(wxml, json) {
   assert.doesNotMatch(nav[0], /\sp(?:ill|ill-dark)\b/, 'consumer-night 二级错误态不得伪造成圆形 pill 返回钮')
   assert.doesNotMatch(nav[0], /\stitle=/, '错误态正文已提供标题，导航不得制造双标题')
   const normalTopbar = wxml.slice(nav.index + nav[0].length)
-  assert.match(normalTopbar, /^\s*<view wx:else class="topbar \{\{isTabSticky \? 'solid' : ''\}\}">/, '仅 loadError 切换标准导航，正常主题页仍保留原有 hero 顶栏')
+  assert.match(normalTopbar, /^\s*<view wx:else class="topbar \{\{navSolid \|\| isTabSticky \? 'solid' : ''\}\}">/, '仅 loadError 切换标准导航，正常主题页仍保留原有 hero 顶栏')
 }
 
 test('C2:R4 topic/index consumer-night 错误态使用标准 tokenized 返回导航', () => {
@@ -355,7 +355,7 @@ function assertApply2ContextGuard(js, wxml) {
   assert.match(
     js,
     /saveTemplate:\s*function \(\) \{[\s\S]*?if \(!this\.data\.applicationContextReady \|\| !hasApplicationContext\(this\.data\)\) \{[\s\S]*?return;/,
-    '即使意外触发提交函数,缺上下文或空地址/日期也必须拒绝提交'
+    '即使意外触发提交函数，缺上下文或空地址/日期也必须拒绝提交'
   )
 }
 

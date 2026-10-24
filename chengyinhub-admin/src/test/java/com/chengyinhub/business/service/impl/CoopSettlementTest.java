@@ -102,6 +102,10 @@ class CoopSettlementTest {
         when(coopComplaintMapper.countOpenByTopicId(any())).thenReturn(0); // 默认无客诉
         when(coopInviteMapper.selectCoopInviteList(any())).thenReturn(Collections.<CoopInvite>emptyList());
         svc = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);

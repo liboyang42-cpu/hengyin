@@ -153,7 +153,7 @@ test('全仓 cy-modal 属性绑定:基对象初值为 null 的成员访问必须
   // 2026-09-18 UI-21:cy-danger-confirm 第三段结果回执按稿 txQoyVyK 356:4992 改走 cy-result-sheet,
   //   删掉 danger-confirm 里那只 done 用的 <cy-modal>(确认 / 失败两只仍在),19→18,差集只有这一只。
   //   ⚠️ 这是防「扫描范围塌成 0」的活性地板,只准显式改小并写明差在哪一只。
-  assert.ok(scannedTags >= 18, `只扫到 ${scannedTags} 个 cy-modal 标签,扫描范围塌了`)
+  assert.ok(scannedTags >= 18, `只扫到 ${scannedTags} 个 cy-modal 标签，扫描范围塌了`)
   assert.deepEqual(bad, [],
     `这些绑定会把 null 传进 cy-modal 属性(微信 type-uncompatible):\n${bad.join('\n')}`)
 })
@@ -208,7 +208,7 @@ test('cy-modal-host:null / 缺省参数在 host 层就被归一化,不进 cy-mod
   assert.equal(host.data.cancelText, '取消')
   assert.equal(host.data.placeholderText, '')
   for (const key of ['title', 'content', 'confirmText', 'cancelText', 'placeholderText']) {
-    assert.equal(typeof host.data[key], 'string', `${key} 必须归一化成字符串,不许落 null`)
+    assert.equal(typeof host.data[key], 'string', `${key} 必须归一化成字符串，不许落 null`)
   }
   // 缺省(options 为空)走 cy-modal 初始 data 的默认值,同样不许 null。
   const blank = loadHost()
@@ -230,7 +230,7 @@ test('负控:nullRiskBindings 对旧写法报红、对现文件放行', () => {
 
   // ② 现文件必须放行(不是靠"没扫到"绿:先确认它真的含 action 成员访问)
   const now = read('components/cy/danger-confirm/index.wxml')
-  assert.match(now, /action\.title/, '现文件应仍存在 action 成员访问,否则本条是空扫描')
+  assert.match(now, /action\.title/, '现文件应仍存在 action 成员访问，否则本条是空扫描')
   assert.deepEqual(nullRiskBindings(now, new Set(['action'])), [])
 
   // ③ 逐条变异:把四处兜底分别拆掉改回旧写法,判据必须各自报红

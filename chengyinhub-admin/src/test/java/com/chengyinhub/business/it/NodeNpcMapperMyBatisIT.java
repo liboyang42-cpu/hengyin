@@ -62,7 +62,8 @@ class NodeNpcMapperMyBatisIT {
                     "sql/migration_npc_line_cache.sql",
                     "sql/migration_merchant_npc_voice_20260909.sql",
                     "sql/migration_npc_governance_v1.sql",
-                    "sql/migration_node_npc_20260915.sql");
+                    "sql/migration_node_npc_20260915.sql",
+                    "sql/migration_20261011_npc_voice_version.sql");
             return s;
         } catch (Throwable t) {
             throw new IllegalStateException("IT 前置不满足(库不可达 / Mapper XML / schema 配置有误),本套必须真跑不得跳过:"
@@ -281,6 +282,83 @@ class NodeNpcMapperMyBatisIT {
             assertNotNull(comment);
             assertTrue(comment.contains("4=") && comment.contains("节点"),
                     "列注释必须补上节点 NPC 作用域,当前是:" + comment);
+        }
+    }
+    @Test
+    void voiceVersionsRejectOldResultsAfterResetAndSameSampleReplacement() throws Exception {
+        try (SqlSession s = open()) {
+            java.sql.Connection c = s.getConnection();
+            NpcProfileMapper mapper = s.getMapper(NpcProfileMapper.class);
+            for (int scope : new int[]{2, 4}) {
+                long id = 6100L + scope;
+                c.createStatement().execute("INSERT INTO npc_profile "
+                        + "(id,scope_type,scope_id,name,persona,greeting,audit_status,enabled,del_flag) "
+                        + "VALUES (" + id + "," + scope + ",906,'Voice','','',1,1,'0')");
+                NpcProfile pending = new NpcProfile();
+                pending.setId(id); pending.setScopeId(906L);
+                pending.setVoiceStatus(1); pending.setVoiceSample("/profile/same.mp3");
+                assertEquals(1, scope == 2 ? mapper.updateMerchantNpcVoice(pending) : mapper.updateNodeNpcVoice(pending));
+                assertEquals(0, scope == 2 ? mapper.updateMerchantNpcVoice(pending) : mapper.updateNodeNpcVoice(pending),
+                        "两个旧快照只能领取一次任务");
+                NpcProfile reset = new NpcProfile();
+                reset.setId(id); reset.setScopeId(906L); reset.setVoiceVersion(1L); reset.setVoiceStatus(0);
+                assertEquals(1, scope == 2 ? mapper.updateMerchantNpcVoice(reset) : mapper.updateNodeNpcVoice(reset));
+                NpcProfile oldDone = new NpcProfile();
+                oldDone.setId(id); oldDone.setScopeId(906L); oldDone.setVoiceVersion(1L);
+                oldDone.setVoiceStatus(2); oldDone.setVoiceId("old");
+                assertEquals(0, scope == 2 ? mapper.updateMerchantNpcVoice(oldDone) : mapper.updateNodeNpcVoice(oldDone));
+                pending.setVoiceVersion(2L);
+                assertEquals(1, scope == 2 ? mapper.updateMerchantNpcVoice(pending) : mapper.updateNodeNpcVoice(pending));
+                assertEquals(0, scope == 2 ? mapper.updateMerchantNpcVoice(oldDone) : mapper.updateNodeNpcVoice(oldDone),
+                        "清除后用同一录音重建不能产生ABA");
+                NpcProfile done = new NpcProfile();
+                done.setId(id); done.setScopeId(906L); done.setVoiceVersion(3L);
+                done.setVoiceStatus(2); done.setVoiceId("new");
+                assertEquals(1, scope == 2 ? mapper.updateMerchantNpcVoice(done) : mapper.updateNodeNpcVoice(done));
+                done.setVoiceVersion(4L); done.setScopeId(999L);
+                assertEquals(0, mapper.updateMerchantNpcVoice(done), "门店声音保留归属和scope限制");
+                if (scope == 2) assertEquals(0, mapper.updateNodeNpcVoice(done), "节点声音不能碰门店记录");
+                ItSchema.applyMigrations(c, "sql/migration_20261011_npc_voice_version.sql");
+                try (ResultSet rs = c.createStatement().executeQuery(
+                        "SELECT voice_version,voice_id,voice_sample FROM npc_profile WHERE id=" + id)) {
+                    assertTrue(rs.next()); assertEquals(4L, rs.getLong(1));
+                    assertEquals("new", rs.getString(2)); assertEquals("/profile/same.mp3", rs.getString(3));
+                }
+            }
+        }
+    }
+
+    @Test
+    void concurrentVoiceClaimsHaveOnlyOneWinner() throws Exception {
+        try (SqlSession s = open()) {
+            NpcProfile saved = nodeNpc(907L, NAME, "px1:p01", "Hi", 1, 1);
+            s.getMapper(NpcProfileMapper.class).insertNodeNpc(saved);
+            s.commit();
+            java.util.concurrent.CountDownLatch read = new java.util.concurrent.CountDownLatch(2);
+            java.util.concurrent.ExecutorService workers = java.util.concurrent.Executors.newFixedThreadPool(2);
+            try {
+                java.util.concurrent.Callable<Integer> claim = () -> {
+                    try (SqlSession writer = factory().openSession(true)) {
+                        NpcProfileMapper mapper = writer.getMapper(NpcProfileMapper.class);
+                        NpcProfile snapshot = mapper.selectNodeNpcByNodeId(907L);
+                        read.countDown();
+                        assertTrue(read.await(10, java.util.concurrent.TimeUnit.SECONDS));
+                        snapshot.setVoiceStatus(1); snapshot.setVoiceId(null);
+                        snapshot.setVoiceSample("/profile/same.mp3");
+                        return mapper.updateNodeNpcVoice(snapshot);
+                    }
+                };
+                java.util.concurrent.Future<Integer> a = workers.submit(claim);
+                java.util.concurrent.Future<Integer> b = workers.submit(claim);
+                assertEquals(1, a.get(15, java.util.concurrent.TimeUnit.SECONDS)
+                        + b.get(15, java.util.concurrent.TimeUnit.SECONDS));
+                s.clearCache();
+                NpcProfile current = s.getMapper(NpcProfileMapper.class).selectNodeNpcByNodeId(907L);
+                assertEquals(1L, current.getVoiceVersion()); assertEquals(Integer.valueOf(1), current.getVoiceStatus());
+            } finally {
+                workers.shutdownNow();
+                assertTrue(workers.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS));
+            }
         }
     }
 }

@@ -2,7 +2,7 @@ package com.chengyinhub.web.controller.business;
 
 import java.util.List;
 import java.util.Set;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +19,8 @@ import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.enums.BusinessType;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.dto.RedemptionReverseRequest;
+import com.chengyinhub.business.domain.dto.ParentOrderRedemptionReverseRequest;
+import com.chengyinhub.business.domain.dto.RegistrationVerificationReverseRequest;
 import com.chengyinhub.business.security.AdminPiiProtector;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IPerkLedgerService;
@@ -176,6 +178,33 @@ public class CmsRegistrationController extends BaseController
         {
             // 条件置位拿 0 行 = 已被撤销过。幂等不报成功:运维需要知道这次点击没有产生新动作。
             return error("该核销已被撤销,无需重复撤销");
+        }
+        return success("已撤销");
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:registration:reverseRedeem')")
+    @Log(title = "父订单撤销核销", businessType = BusinessType.UPDATE)
+    @PostMapping("/redemption/reverse-parent")
+    public AjaxResult reverseParentOrderRedemptions(@RequestBody ParentOrderRedemptionReverseRequest request) {
+        if (request == null) return error("撤销参数不能为空");
+        List<Long> ids = perkLedgerService.reverseParentOrderRedemptions(request.getParentOrderNo(),
+                request.getReason(), SecurityUtils.getUserId(), Boolean.TRUE.equals(request.getClawbackRewards()));
+        return success(ids);
+    }
+
+    /** 撤销活动票整单核销(无按章流水的票);与撤销按章核销同一权限点。 */
+    @PreAuthorize("@ss.hasPermi('business:registration:reverseRedeem')")
+    @Log(title = "撤销整单核销", businessType = BusinessType.UPDATE)
+    @PostMapping("/verification/reverse")
+    public AjaxResult reverseWholeOrderVerification(@RequestBody RegistrationVerificationReverseRequest request) {
+        if (request == null || request.getRegistrationId() == null || request.getRegistrationId() <= 0) {
+            return error("订单不能为空");
+        }
+        try {
+            cmsRegistrationService.reverseWholeOrderVerification(request.getRegistrationId(),
+                    request.getReason(), SecurityUtils.getUserId(), Boolean.TRUE.equals(request.getClawbackRewards()));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return error(e.getMessage());
         }
         return success("已撤销");
     }

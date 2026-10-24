@@ -21,8 +21,16 @@ public class TopicChapterVO extends CmsTopicChapter {
         return nodes;
     }
 
+    /** 章节地点数/玩法数按随章下发的节点现算；库里的 location_count/template_count 只在整题保存时写，单节点增删后会过期。 */
     public void setNodes(List<TopicNodeVO> nodes) {
         this.nodes = nodes;
+        if (nodes == null) return;
+        long templates = 0L;
+        for (TopicNodeVO node : nodes) {
+            if (node != null && node.getTemplateId() != null && node.getTemplateId() > 0) templates++;
+        }
+        setLocationCount((long) nodes.size());
+        setTemplateCount(templates);
     }
 
     public String getRouteGeometry() {

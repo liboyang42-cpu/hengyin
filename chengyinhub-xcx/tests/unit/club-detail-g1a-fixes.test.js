@@ -19,6 +19,7 @@ let toasts;
 let scans;
 let dcCalls;
 let routes;
+let persisted;
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -41,13 +42,13 @@ global.wx = {
   showLoading() {},
   hideLoading() {},
   stopPullDownRefresh() {},
-  navigateTo: (option) => navigations.push(option.url),
+  navigateTo: (option) => { navigations.push(option.url); if (option.complete) option.complete() },
   redirectTo: (option) => navigations.push(option.url),
   pageScrollTo() {},
   scanCode(option) { scans.push(option); },
-  getStorageSync: () => '',
-  setStorageSync() {},
-  removeStorageSync() {},
+  getStorageSync: key => persisted[key] || '',
+  setStorageSync(key, value) { persisted[key] = JSON.parse(JSON.stringify(value)); },
+  removeStorageSync(key) { delete persisted[key]; },
   setNavigationBarColor() {},
   setBackgroundColor() {},
 };
@@ -62,6 +63,7 @@ beforeEach(() => {
   scans = [];
   dcCalls = [];
   routes = {};
+  persisted = {};
 });
 
 function loadPage() {
@@ -110,6 +112,7 @@ test('CL06 普通成员点击＋N展开已加载的完整名单，访客不能�
     page.data.club = { id: 7, memberCount: 5, isOwner: false };
     page.data.clubId = 7;
     page.data.canSeeMembers = true;
+    page.data.canSeeRoster = true;
     const members = Array.from({ length: 5 }, (_, index) => ({ id: index + 1, memberId: index + 10 }));
     routes['/api/club/members'] = (request) => request.success({ code: 200, data: members });
     page.loadMembers();
@@ -121,8 +124,10 @@ test('CL06 普通成员点击＋N展开已加载的完整名单，访客不能�
     assert.equal(requests.length, requestCount, '展开复用已加载名单，不发起业务写入');
     assert.equal(scrolls[0].selector, '#club-member-list');
 
+    // 拍板 2026-10-22:名单可见位改为 canSeeRoster(公开团访客也可见);需审核团的访客仍不能展开。
     const visitor = loadPage();
     visitor.data.canSeeMembers = false;
+    visitor.data.canSeeRoster = false;
     visitor.expandMembers();
     assert.equal(visitor.data.membersExpanded, false);
     assert.equal(scrolls.length, 1, '访客不能滚动进入成员名单');
@@ -147,10 +152,10 @@ test('CU-C-71 公开团(joinPolicy=0)退团确认与回执说的是「直接回�
   assert.equal(dcCalls.length, 1);
   assert.equal(dcCalls[0].key, 'club.quit');
   const copy = getDangerAction('club.quit', dcCalls[0].params);
-  assert.match(copy.content, /可以直接再点「加入俱乐部」/, '公开团退出后是即时加入,确认框必须说实话');
-  assert.doesNotMatch(copy.content, /主理人通过/, '公开团没有审批可等,不能套用待审核团的警告');
+  assert.match(copy.content, /可以直接再点「加入俱乐部」/, '公开团退出后是即时加入，确认框必须说实话');
+  assert.doesNotMatch(copy.content, /主理人通过/, '公开团没有审批可等，不能套用待审核团的警告');
   assert.match(copy.done.text, /随时可以再点「加入俱乐部」/, '退出成功后的回执同样不能说要审批');
-  assert.doesNotMatch(copy.done.text, /\{/, '回执里的占位符必须被填掉,不能印出 {rejoinHint}');
+  assert.doesNotMatch(copy.done.text, /\{/, '回执里的占位符必须被填掉，不能印出 {rejoinHint}');
 });
 
 test('CU-C-71 审批团(joinPolicy=1)保留「重新申请并等主理人通过」', () => {
@@ -160,15 +165,17 @@ test('CU-C-71 审批团(joinPolicy=1)保留「重新申请并等主理人通过�
   page.onQuit();
 
   const copy = getDangerAction('club.quit', dcCalls[0].params);
-  assert.match(copy.content, /重新申请并等主理人通过/, '审批团的重入代价本来就是申请,不能反过来丢掉');
+  assert.match(copy.content, /重新申请并等主理人通过/, '审批团的重入代价本来就是申请，不能反过来丢掉');
   assert.match(copy.done.text, /重新提交申请，等主理人通过/);
   assert.doesNotMatch(copy.content, /\{/);
 });
 
 test('CU-C-71 加入按钮只在审批团被拒后才说「重新申请加入」', () => {
   const wxml = readDetailWxml();
-  assert.match(wxml, /club\.joinPolicy == 1 && club\.myJoinStatus === 2 \? '重新申请加入' : '加入俱乐部'/,
-    '公开团的按钮不能再叫「重新申请加入」—— 它点了就是立即成为成员');
+  // 2026-10-22 owner:按钮做成右下角小胶囊,文案缩短(加入 / 申请加入 / 重新申请);不变量照旧 ——
+  // 「重新申请」只出现在审批团(joinPolicy 1)被拒(myJoinStatus 2)之后,公开团点了就是成员。
+  assert.match(wxml, /club\.joinPolicy == 1 \? \(club\.myJoinStatus === 2 \? '重新申请' : '申请加入'\) : '加入'/,
+    '公开团的按钮不能再叫「重新申请」—— 它点了就是立即成为成员');
 });
 
 /* ——— CU-C-83(9-25 裁决:加「客户档案」直达):点成员行不许由前端按权限悄悄改道 ——— */
@@ -239,12 +246,12 @@ test('CU-C-106 正文改过之后关面板,只弹确认不动原稿;确认才丢
 
   page.requestClosePostEdit();
   assert.equal(page.data.postEditDiscardConfirm, true, '有未保存正文时必须先问一句');
-  assert.equal(page.data.postEditShow, true, '还没决定,面板要留在原地');
+  assert.equal(page.data.postEditShow, true, '还没决定，面板要留在原地');
   assert.equal(page.data.postEditText, '尚未保存的编辑草稿');
 
   page.cancelDiscardPostEdit();
   assert.equal(page.data.postEditDiscardConfirm, false);
-  assert.equal(page.data.postEditShow, true, '选「继续编辑」要回到输入态,草稿还在');
+  assert.equal(page.data.postEditShow, true, '选「继续编辑」要回到输入态，草稿还在');
   assert.equal(page.data.postEditText, '尚未保存的编辑草稿');
 
   page.requestClosePostEdit();
@@ -256,7 +263,7 @@ test('CU-C-106 正文改过之后关面板,只弹确认不动原稿;确认才丢
 test('CU-C-106 面板接了 dirty 与 requestclose(只挡住遮罩不算闸)', () => {
   const wxml = readDetailWxml();
   assert.match(wxml, /show="\{\{postEditShow\}\}"[^>]*dirty="\{\{postEditDirty\}\}"/,
-    'cy-sheet 不传 dirty 的话,右上 ✕ 走的还是直接 close');
+    'cy-sheet 不传 dirty 的话，右上 ✕ 走的还是直接 close');
   assert.match(wxml, /bind:requestclose="requestClosePostEdit"/);
 });
 
@@ -295,7 +302,7 @@ test('CU-C-108 帖子先回来、详情后回来,主理人徽标必须补上', (
   });
   page.loadPosts();
   assert.equal(page.data.posts.length, 1);
-  assert.equal(page.data.posts[0].authorBadge, '', '详情还没到,这一轮本来就算不出作者身份');
+  assert.equal(page.data.posts[0].authorBadge, '', '详情还没到，这一轮本来就算不出作者身份');
 
   routes['/api/club/detail'] = (req) => req.success({
     code: '200',
@@ -305,7 +312,7 @@ test('CU-C-108 帖子先回来、详情后回来,主理人徽标必须补上', (
 
   assert.equal(page.data.club.memberId, 9);
   assert.equal(page.data.posts[0].authorBadge, '主理人',
-    '详情到达后必须就地补徽标,否则要等到点赞/评论触发下一次 loadPosts 才出现');
+    '详情到达后必须就地补徽标，否则要等到点赞/评论触发下一次 loadPosts 才出现');
 });
 
 test('CU-C-108 不是主理人的帖子不会被误标', () => {
@@ -327,7 +334,7 @@ test('CU-C-60 扫码核销真的调起扫码,并按码类型发到对应端点',
 
   page.onClubScan();
 
-  assert.equal(scans.length, 1, '原来这个钮只跳活动运营页,用户根本看不到扫描器');
+  assert.equal(scans.length, 1, '原来这个钮只跳活动运营页，用户根本看不到扫描器');
   scans[0].success({ result: 'v1.abc.activity.def' });
   assert.equal(requests.length, 1);
   assert.equal(requests[0].url, '/api/registration/scan_dynamic_code');
@@ -339,9 +346,9 @@ test('CU-C-60 扫码核销真的调起扫码,并按码类型发到对应端点',
   global.wx.showModal = (option) => modals.push(option);
   try {
     const toastCount = toasts.length;
-    requests[0].success({ code: '200', msg: '验票成功' });
+    requests[0].success({ code: '200', msg: '核销成功' });
     assert.equal(modals.length, 1);
-    assert.equal(modals[0].content, '验票成功');
+    assert.equal(modals[0].content, '核销成功');
     assert.equal(modals[0].showCancel, false);
     assert.equal(toasts.length, toastCount, '成功不再走 toast');
   } finally {
@@ -372,7 +379,7 @@ test('CU-C-60 扫到无效码时给一句人话;用户取消扫码不报错', ()
 
   page.onClubScan();
   scans[1].fail({ errMsg: 'scanCode:fail cancel' });
-  assert.equal(toasts.length, 1, '用户自己取消不是错误,不该弹提示');
+  assert.equal(toasts.length, 1, '用户自己取消不是错误，不该弹提示');
 });
 
 test('CU-C-60 快捷扫码钮接的是 onClubScan,活动运营另有入口', () => {
@@ -396,7 +403,7 @@ test('CU-C-52 作者本人看不到自己帖子的举报入口', () => {
   const line = wxml.split('\n').find((row) => row.indexOf('catchtap="onReportPost"') >= 0);
   assert.ok(line);
   assert.match(line, /wx:if="\{\{item\.authorMemberId != myMemberId\}\}"/,
-    '编辑/删除都有作者条件,举报那一行也必须有不报自己的闸');
+    '编辑/删除都有作者条件，举报那一行也必须有不报自己的闸');
 });
 
 test('CU-C-53 收到的邀约整行能点进收件箱', () => {
@@ -411,7 +418,7 @@ test('CU-C-61 分享入口一律是原生按钮,页面不再用 toast 兜底冒�
   const script = fs.readFileSync(path.join(__dirname, DETAIL), 'utf8');
   const shareButtons = (wxml.match(/^\s*<button[^>]*open-type="share"/gm) || []).length;
   assert.equal(shareButtons, 5, '导航/概览邀请/快捷分享/设置邀请 + 带票分享 = 5 处原生转发');
-  assert.doesNotMatch(wxml, /bindtap="onShare"|catchtap="onShare"/, 'view + bindtap 打不开转发面板');
+  assert.doesNotMatch(wxml, /bindtap="onShare"|catchtap="onShare"/, 'view + bindtap 无法打开转发面板');
   assert.doesNotMatch(script, /点右上角分享给好友/, '那句 toast 就是「点了没反应」的来源');
   assert.match(script, /onShareAppMessage/, '分享卡片内容仍要留着');
 });
@@ -429,7 +436,7 @@ test('CU-C-91 成员行的加入时间不留裸横杠,主理人说的是创建�
   const ownerRows = wxml.split('\n').filter((row) => row.indexOf('member-meta') >= 0);
   assert.ok(ownerRows.length >= 2, '概览与管理弹窗各有一行成员信息');
   ownerRows.forEach((row) => {
-    assert.match(row, /wx:if="\{\{item\.isOwner\}\}"> · 创建俱乐部</, '主理人的身份要说明,不留空白');
+    assert.match(row, /wx:if="\{\{item\.isOwner\}\}"> · 创建俱乐部</, '主理人的身份要说明，不留空白');
   });
 });
 
@@ -443,17 +450,19 @@ test('CU-C-97 管理 tab 的圆钮叫「设置」,不与页签同名', () => {
 test('CU-C-51 概况卡写明统计范围,「参与人次」改称「游玩人次」', () => {
   const wxml = readDetailWxml();
   const wxss = fs.readFileSync(path.join(__dirname, CLUB_WXSS), 'utf8');
-  assert.doesNotMatch(wxml, /club-stat-label">参与人次</, '「参与人次」数的是节点游玩人数,不是报名人数');
+  assert.doesNotMatch(wxml, /club-stat-label">参与人次</, '「参与人次」数的是节点游玩人数，不是报名人数');
   assert.match(wxml, /club-stat-label">游玩人次</);
-  assert.match(wxml, /club-stats-note">仅统计本俱乐部自办项目/, '口径要写在卡上,否则跟下方项目卡的报名数看起来是两个数');
+  assert.match(wxml, /club-stats-note">仅统计本俱乐部自办项目/, '口径要写在卡上，否则跟下方项目卡的报名数看起来是两个数');
   assert.match(wxss, /\.club-stats-note \{/);
 });
 
 // 集成复审:CU-C-71 改文案时把加入按钮的 wx:else 弄丢了 ⇒ 审核中的人同时看到「等待审核」和可点的「加入俱乐部」,能重复申请。
 test('CU-C-71 回归：审核中只显示等待态，加入按钮必须挂在 wx:else 上', () => {
   const wxml = readDetailWxml();
-  const cta = wxml.slice(wxml.indexOf('<view class="profile-cta"'), wxml.indexOf('</view>', wxml.indexOf('bindtap="onJoin"')));
-  assert.match(cta, /wx:if="\{\{club\.myJoinStatus === 0\}\}"[^>]*>等待审核<\/view>\s*<view wx:else [^>]*bindtap="onJoin"/);
+  // 2026-10-22 owner:加入按钮改为底部悬浮(.join-float),判定口径不变
+  const cta = wxml.slice(wxml.indexOf('<view class="join-float '), wxml.indexOf('</view>', wxml.indexOf('bindtap="onJoin"')));
+  // 拍板 2026-10-22:待审态文案改为「等待主理人审核」(禁用态)。
+  assert.match(cta, /wx:if="\{\{club\.myJoinStatus === 0\}\}"[^>]*aria-disabled="true"[^>]*>等待主理人审核<\/view>\s*<view wx:else [^>]*bindtap="onJoin"/);
 });
 
 

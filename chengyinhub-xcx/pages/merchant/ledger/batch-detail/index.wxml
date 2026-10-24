@@ -2,7 +2,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadFinance" /><cy-nav-bar title="对公结算" custom-back bind:back="onNavBack" /><view class="order-detail__spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view><block wx:if="{{detail}}"><cy-progress-status class="order-detail__refresh" wx:if="{{loadState === 'refreshing'}}" title="正在更新结算详情" sub="现有详情仍可查看" /><cy-inline-error class="order-detail__refresh" wx:elif="{{loadState === 'stale-error'}}" kind="{{errorKind}}" title="结算详情没有更新" sub="{{errorText}}" action="重试" bind:action="retryLoad" />
+  <cy-access-gate id="cy-access-gate" kind="merchant" need="canReadFinance" /><cy-nav-bar title="对公结算" custom-back bind:back="onNavBack" /><view class="order-detail__spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view><block wx:if="{{detail}}"><cy-progress-status class="order-detail__refresh" wx:if="{{loadState === 'refreshing'}}" title="正在更新结算详情" /><cy-inline-error class="order-detail__refresh" wx:elif="{{loadState === 'stale-error'}}" kind="{{errorKind}}" title="结算详情没有更新" sub="{{errorText}}" action="重试" bind:action="retryLoad" />
   <!-- 卡1:hero 唯一大数字 + 状态 chip + 打款事实 -->
   <view class="fin-hero" aria-role="region" aria-label="{{detail.batch.periodYm}} 批次净额 {{detail.batch.amountDisplay || detail.batch.amountFallback}}，{{detail.batch.paymentText}}">
     <text class="fin-hero__lab">{{detail.batch.periodYm}} 批次净额</text>
@@ -48,4 +48,4 @@
       </view>
     </view>
   </view>
-</block><block wx:elif="{{loadState === 'loading'}}"><cy-skeleton type="amount" count="{{1}}" /><cy-skeleton type="card" count="{{2}}" /></block><cy-empty class="order-detail__state" wx:elif="{{loadState === 'missing-param'}}" kind="missing-param" size="lg" fill title="缺少结算批次标识" sub="请返回结算列表重新进入" cta="返回上一页" bind:cta="onNavBack" /><cy-empty class="order-detail__state" wx:elif="{{loadState === 'missing-record'}}" kind="empty" size="lg" fill title="结算批次不可见" sub="这条记录可能已撤回或不属于当前账号" cta="返回结算列表" bind:cta="onNavBack" /><cy-error class="order-detail__state cy-fade-in" wx:else fill size="lg" title="结算详情没加载出来" sub="{{errorText}}" retry="重试" bind:retry="retryLoad" auto-back /></view>
+</block><block wx:elif="{{loadState === 'loading'}}"><cy-skeleton type="amount" count="{{1}}" /><cy-skeleton type="card" count="{{2}}" /></block><cy-empty class="order-detail__state" wx:elif="{{loadState === 'missing-param'}}" kind="missing-param" size="lg" fill title="缺少结算批次信息" sub="请返回重新进入" cta="返回上一页" bind:cta="onNavBack" /><cy-empty class="order-detail__state" wx:elif="{{loadState === 'missing-record'}}" kind="empty" size="lg" fill title="结算批次不可见" cta="返回结算列表" bind:cta="onNavBack" /><cy-error load-failure class="order-detail__state cy-fade-in" wx:else fill size="lg" title="结算详情加载失败" sub="{{errorText}}" retry="重试" bind:retry="retryLoad" auto-back /></view>

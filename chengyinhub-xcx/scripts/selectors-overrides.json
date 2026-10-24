@@ -307,7 +307,7 @@
     "min": 1
   },
   "A58": {
-    "selector": ".privacy-setting-title",
+    "selector": ".privacy-list",
     "min": 1,
     "forbid": [
       ".privacy-actions"
@@ -566,11 +566,7 @@
     ]
   },
   "B45": {
-    "selector": ".ti-card",
-    "min": 1
-  },
-  "B46": {
-    "selector": ".fbox_sr",
+    "selector": ".ti-field",
     "min": 1
   },
   "B48": {
@@ -598,7 +594,7 @@
     "visibleMin": 3
   },
   "B52": {
-    "selector": ".cg-hero-body, .cg-count, .cg-label, .cg-card-head",
+    "selector": ".cg-hero-body, .cg-count, .cg-label, .cg-sec",
     "min": 1
   },
   "B53": {
@@ -676,7 +672,7 @@
     "min": 5
   },
   "B70": {
-    "selector": ".gc-score-rank",
+    "selector": ".gc-row-me",
     "min": 1
   },
   "B71": {
@@ -713,8 +709,8 @@
     "selector": ".gc-empty-board",
     "min": 1
   },
- "B75": {
-  "selector": ".gc-error-board",
+  "B75": {
+    "selector": ".gc-error-board",
     "min": 1
   },
   "C01": {
@@ -784,9 +780,9 @@
     "_why": "店铺参谋正常态必须同时呈现基础经营事实与 AI 解读。"
   },
   "C12c": {
-    "selector": ".value-card, .ai-card--down",
-    "min": 2,
-    "_why": "AI 降级态仍必须保留基础经营事实，并显示可恢复的降级区。"
+    "selector": ".value-card",
+    "min": 1,
+    "_why": "AI 降级态仍必须保留基础经营事实；2026-10-23 业主：没有解读就整段不显示，降级卡已删。"
   },
   "C13": {
     "selector": "cy-empty",

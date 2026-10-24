@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +23,7 @@ public class MerchantLeadImportParser {
 
     public List<MerchantLeadImportRow> parse(MultipartFile file) throws Exception {
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("请选择要导入的 Excel 文件");
-        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+        try (InputStream input = file.getInputStream(); Workbook workbook = WorkbookFactory.create(input)) {
             Sheet sheet = workbook.getNumberOfSheets() == 0 ? null : workbook.getSheetAt(0);
             if (sheet == null || sheet.getRow(0) == null) throw new IllegalArgumentException("Excel 缺少表头");
             Map<String, Integer> columns = headerColumns(sheet.getRow(0));

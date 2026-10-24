@@ -7,6 +7,8 @@
 //    故 pages/privacy 路由页保留不删。
 const toast = require('../../../../utils/toast.js');
 const app = getApp();
+const presencePrivacy = require('../../../../utils/roam-presence-privacy.js');
+const bgTracker = require('../../../../utils/location/bg-tracker.js');
 
 Component({
   options: { multipleSlots: true },
@@ -27,6 +29,12 @@ Component({
       this.triggerEvent('close');
     },
 
+    openOwnMedia() {
+      if (this.data.submitting) return;
+      wx.navigateTo({ url: '/pages/privacy/index', success: () => this.triggerEvent('close'),
+        fail: () => toast('隐私设置无法打开，请重试') });
+    },
+
     openPrivacyContract() {
       wx.openPrivacyContract({
         fail() {
@@ -35,20 +43,37 @@ Component({
       });
     },
 
+    disablePresenceSharing() {
+      if (this.data.submitting) return;
+      this.setData({ submitting: true });
+      presencePrivacy.setSharing(app, null, false)
+        .then(() => toast('已关闭附近的人位置分享'))
+        .catch(error => toast(error.message))
+        .finally(() => this.setData({ submitting: false }));
+    },
+
     withdrawRoamLocationConsent() {
       if (this.data.submitting) return;
       this.setData({ submitting: true });
-      app.recordConsent({
-        docType: 'privacy_policy',
-        scene: 'roam_location',
-        eventType: 'REVOKE',
-      }).then(() => {
-        try { wx.stopLocationUpdate(); } catch (e) {}
+      const owner = String(app.getUserID ? app.getUserID() || '' : '');
+      const epoch = this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
+      const current = () => epoch === this._roamRevokeEpoch
+        && owner === String(app.getUserID ? app.getUserID() || '' : '');
+      // 撤回先作用于本机用途；审计失败仍由 consent-client 保留原账号/requestId 补传。
+      bgTracker.revoke('roam');
+      let audit;
+      try {
+        audit = current() ? app.recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'REVOKE' })
+          : Promise.reject(new Error('账号已变化'));
+      } catch (error) { audit = Promise.reject(error); }
+      Promise.resolve(audit).then(() => {
+        if (!current()) return;
         toast('已撤回漫游定位同意');
-        this.setData({ submitting: false });
       }).catch(() => {
-        toast('撤回记录失败，请检查网络后重试');
-        this.setData({ submitting: false });
+        if (!current()) return;
+        toast('本机漫游已停，记录待确认');
+      }).finally(() => {
+        if (epoch === this._roamRevokeEpoch) this.setData({ submitting: false });
       });
     },
   },

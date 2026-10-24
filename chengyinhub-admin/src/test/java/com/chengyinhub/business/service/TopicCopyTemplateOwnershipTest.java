@@ -9,6 +9,10 @@ import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.support.GameplayTemplateRules;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.system.service.ISysCategoryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,6 +71,10 @@ class TopicCopyTemplateOwnershipTest {
         memberTemplateMapper = mock(CmsMemberTemplateMapper.class);
         productRoleService = mock(IProductRoleService.class);
         service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
@@ -140,6 +148,77 @@ class TopicCopyTemplateOwnershipTest {
         params.put("copyType", 2);
         params.put("memberId", NEW_OWNER);
         return service.copyCmsTopic(SOURCE_TOPIC, params);
+    }
+
+    private String installSlotBindings() {
+        ObjectMapper json = new ObjectMapper();
+        ObjectNode advanced = json.createObjectNode().put("schemaVersion", 1);
+        ObjectNode rules = advanced.putObject("interactionRules");
+        ArrayNode slots = rules.putArray("resourceSlots");
+        slots.addObject().put("key", "material").put("kind", "ITEM").put("label", "物资").put("required", true);
+        rules.putArray("resourceCosts").addObject().put("itemId", "material").put("quantity", 1);
+        memberTemplateMapper.selectCmsMemberTemplateById(SOURCE_TEMPLATE).setAdvancedConfigJson(advanced.toString());
+        ObjectNode config = json.createObjectNode().put("schemaVersion", 1).put("capacity", 2);
+        config.putArray("items").addObject().put("id", "supply").put("kind", "ITEM");
+        ObjectNode bindings = config.putObject("templateBindings");
+        for (String node : Arrays.asList("501", "502")) {
+            ObjectNode binding = bindings.putObject(node).put("templateId", SOURCE_TEMPLATE).put("slotDigest", GameplayTemplateRules.slotDigest(slots));
+            binding.putObject("values"); binding.putObject("items").put("material", "supply");
+        }
+        topicMapper.selectCmsTopicById(SOURCE_TOPIC).setThemeRuntimeConfigJson(config.toString());
+        when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
+        when(memberTemplateMapper.updateCmsMemberTemplate(any(CmsMemberTemplate.class))).thenReturn(1);
+        return config.toString();
+    }
+
+    @Test
+    void copiedResourceBindingsFollowNewTemplateIdentityAndKeepDigest() throws Exception {
+        String original = installSlotBindings();
+        copyToNewOwner();
+        ArgumentCaptor<CmsTopic> patches = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topicMapper).updateCmsTopic(patches.capture());
+        com.fasterxml.jackson.databind.JsonNode copied = new ObjectMapper().readTree(patches.getValue().getThemeRuntimeConfigJson());
+        com.fasterxml.jackson.databind.JsonNode source = new ObjectMapper().readTree(original);
+        for (String node : Arrays.asList("901", "902")) {
+            assertEquals(8001L, copied.path("templateBindings").path(node).path("templateId").asLong());
+            assertEquals(source.path("templateBindings").path("501").path("slotDigest"), copied.path("templateBindings").path(node).path("slotDigest"));
+            assertEquals("supply", copied.path("templateBindings").path(node).path("items").path("material").asText());
+        }
+        assertEquals(original, topicMapper.selectCmsTopicById(SOURCE_TOPIC).getThemeRuntimeConfigJson());
+    }
+
+    @Test
+    void sameOwnerForcedTemplateCopyAlsoUpdatesResourceBindings() throws Exception {
+        installSlotBindings();
+        CmsMemberTemplate template = memberTemplateMapper.selectCmsMemberTemplateById(SOURCE_TEMPLATE);
+        ObjectNode advanced = (ObjectNode) new ObjectMapper().readTree(template.getAdvancedConfigJson());
+        advanced.putArray("requires").addObject().put("var", "sys.passed.501").put("op", "EQ").put("value", 1);
+        template.setAdvancedConfigJson(advanced.toString());
+        Map<String, Object> params = new HashMap<>(); params.put("copyType", 2); params.put("memberId", SOURCE_OWNER);
+        service.copyCmsTopic(SOURCE_TOPIC, params);
+        ArgumentCaptor<CmsTopic> patches = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topicMapper).updateCmsTopic(patches.capture());
+        assertEquals(8001L, new ObjectMapper().readTree(patches.getValue().getThemeRuntimeConfigJson()).path("templateBindings").path("901").path("templateId").asLong());
+    }
+
+    @Test
+    void sameOwnerSharedTemplateKeepsBindingIdentity() throws Exception {
+        installSlotBindings();
+        Map<String, Object> params = new HashMap<>(); params.put("copyType", 2); params.put("memberId", SOURCE_OWNER);
+        service.copyCmsTopic(SOURCE_TOPIC, params);
+        ArgumentCaptor<CmsTopic> patches = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topicMapper).updateCmsTopic(patches.capture());
+        assertEquals(SOURCE_TEMPLATE.longValue(), new ObjectMapper().readTree(patches.getValue().getThemeRuntimeConfigJson()).path("templateBindings").path("901").path("templateId").asLong());
+        verify(memberTemplateMapper, never()).insertCmsMemberTemplate(any());
+    }
+
+    @Test
+    void copyCannotRepairAForgedBindingTemplateIdentity() throws Exception {
+        ObjectNode config = (ObjectNode) new ObjectMapper().readTree(installSlotBindings());
+        config.with("templateBindings").with("501").put("templateId", 999L);
+        topicMapper.selectCmsTopicById(SOURCE_TOPIC).setThemeRuntimeConfigJson(config.toString());
+        String error = assertThrows(IllegalArgumentException.class, this::copyToNewOwner).getMessage();
+        assertTrue(error.contains("501") && error.contains("模板身份"), error);
     }
 
     @Test

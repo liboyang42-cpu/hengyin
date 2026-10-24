@@ -172,7 +172,7 @@ class FreeTopicNoCommercialConversionTest {
         // ServiceException 才会被 ApiActivityController 原样回给用户(其余异常变「系统繁忙」)。
         com.chengyinhub.common.exception.ServiceException error = assertThrows(
                 com.chengyinhub.common.exception.ServiceException.class,
-                () -> service.updateActivityByOwner(activityUpdate(new BigDecimal("10"), 3L), OWNER, "me"));
+                () -> service.updateActivityByOwner(activityUpdate(new BigDecimal("10"), 3L), OWNER, "me", false));
         assertEquals(CommercialTopicPolicy.FREE_TO_COMMERCIAL_REJECTED, error.getMessage());
         verify(ticketMapper, never()).updateOmsTicket(any());
         verify(ticketMapper, never()).insertOmsTicket(any());
@@ -196,7 +196,7 @@ class FreeTopicNoCommercialConversionTest {
 
         RuntimeException error = null;
         try {
-            service.updateActivityByOwner(activityUpdate(new BigDecimal("10"), 3L), OWNER, "me");
+            service.updateActivityByOwner(activityUpdate(new BigDecimal("10"), 3L), OWNER, "me", false);
         } catch (RuntimeException e) {
             error = e;
         }

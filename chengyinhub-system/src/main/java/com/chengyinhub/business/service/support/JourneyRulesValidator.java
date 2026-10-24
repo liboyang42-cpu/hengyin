@@ -161,6 +161,22 @@ public class JourneyRulesValidator {
         }
         out.put("fumbleExtraDamage", fumbleExtraDamage);
         out.put("modCap", modCap);
+        // F2 T04:只在作者显式配置时输出 —— 缺省的老主题规范化结果一字不变(冻结快照与摘要稳定)。
+        if (root.has("natAuto") && !root.get("natAuto").isNull()) {
+            out.put("natAuto", boolField(root, "natAuto", true));
+        }
+        // F6 RPG P1:同 natAuto,只在作者显式配置时输出;缺省老主题规范化结果一字不变。
+        com.fasterxml.jackson.databind.node.ObjectNode rpg = JourneyRpg.normalize(root.get("rpg"), checkEnabled,
+                root.has("stateEnabled") && boolField(root, "stateEnabled", false));
+        if (rpg != null) out.set("rpg", rpg);
+        if (root.has("statLinks")) {
+            try {
+                com.chengyinhub.business.domain.JourneyRules rules = objectMapper.treeToValue(out,
+                        com.chengyinhub.business.domain.JourneyRules.class);
+                out.set("statLinks", JourneyStatLinks.normalize(root.get("statLinks"), rules));
+            } catch (IllegalArgumentException invalid) { throw invalid; }
+            catch (Exception invalid) { throw new IllegalArgumentException("状态联动规则无法解析", invalid); }
+        }
         try {
             return objectMapper.writeValueAsString(out);
         } catch (Exception e) {

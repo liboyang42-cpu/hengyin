@@ -111,7 +111,7 @@ Page({
           bootstrapping: false,
           bootstrapError: '网络没连上',
           bootstrapErrorKind: 'network',
-          bootstrapErrorSub: '检查网络连接后重试'
+          bootstrapErrorSub: ''
         });
       }
     });

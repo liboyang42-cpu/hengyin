@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ContentSearchMapper">
+
+    <!-- O-14 「对任何人都公开」的主题闸:与 CmsTopicMapper.publicTopicListWhere 的固定条件同口径,
+         但会员专属(club_member_only=1)直接排除 —— 投影/推荐没有「看的人是谁」,只能 fail-closed。
+         必须在 from cms_topic(不起别名)的上下文里使用:primaryCirclePublicGate 写死了 cms_topic. 前缀。 -->
+    <sql id="topicStaticPublicGate">
+        cms_topic.status = 1 and cms_topic.user_status = 1 and cms_topic.del_flag = 0
+        and cms_topic.is_template = 0
+        and coalesce(cms_topic.club_member_only, 0) = 0
+        and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.primaryCirclePublicGate"/>
+        and (cms_topic.club_id is null or cms_topic.club_id = 0 or exists (
+            select 1 from club active_club
+            where active_club.id = cms_topic.club_id and active_club.del_flag = 0
+        ))
+    </sql>
+
+    <!-- O-14 「对任何人都公开」的活动闸:与 CmsActivityMapper.selectPublicCmsActivityList 固定条件同口径,
+         另外排除挂在会员专属主题下的场次。必须在 from cms_activity(不起别名)的上下文里使用。 -->
+    <sql id="activityStaticPublicGate">
+        cms_activity.status = 1 and cms_activity.publish_status = 1 and cms_activity.del_flag = 0
+        and cms_activity.cancel_time is null
+        and <include refid="com.chengyinhub.business.mapper.CmsActivityMapper.livePublicParentTopic"/>
+        and (cms_activity.club_id is null or cms_activity.club_id = 0 or exists (
+            select 1 from club active_club
+            where active_club.id = cms_activity.club_id and active_club.del_flag = 0
+        ))
+        and not exists (
+            select 1
+            from cms_topic parent_topic
+            left join club parent_club
+              on parent_club.id = parent_topic.club_id and parent_club.del_flag = 0
+            where parent_topic.id = cms_activity.topic_id
+              and parent_topic.club_id is not null and parent_topic.club_id != 0
+              and parent_club.id is null
+        )
+        and not exists (
+            select 1 from cms_topic member_only_parent
+            where member_only_parent.id = cms_activity.topic_id
+              and coalesce(member_only_parent.club_member_only, 0) = 1
+        )
+    </sql>
+
+    <!-- O-14 公开帖文闸:只收 PUBLISHED + PUBLIC + 可搜索,且广场自己的搜索投影仍是 VISIBLE
+         (机审/人审/治理处置都会把它打成 HIDDEN)。FOLLOWERS / COMMUNITY 受众一律不进统一搜索。 -->
+    <sql id="postStaticPublicGate">
+        p.lifecycle = 'PUBLISHED' and p.audience = 'PUBLIC' and p.search_eligible = 1
+        and exists (
+            select 1 from community_search_document post_sd
+            where post_sd.document_type = 'POST' and post_sd.document_id = p.id
+              and post_sd.visibility_state = 'VISIBLE'
+        )
+    </sql>
+
+    <insert id="upsertVisibleTopics">
+        insert into content_search_document
+        (document_type, document_id, title, search_text, img_url, city_code, visibility_state, source_time, indexed_at)
+        select 'TOPIC', cms_topic.id, left(cms_topic.name, 200),
+               concat_ws(' ', cms_topic.name, cms_topic.address_name, left(cms_topic.description, 2000)),
+               left(cms_topic.img_url, 500), cms_topic.city_code, 'VISIBLE', cms_topic.create_time, #{now}
+        from cms_topic
+        where <include refid="topicStaticPublicGate"/>
+        on duplicate key update title = values(title), search_text = values(search_text), img_url = values(img_url),
+            city_code = values(city_code), visibility_state = values(visibility_state),
+            source_time = values(source_time), indexed_at = values(indexed_at)
+    </insert>
+
+    <insert id="upsertVisibleActivities">
+        insert into content_search_document
+        (document_type, document_id, title, search_text, img_url, city_code, visibility_state, source_time, indexed_at)
+        select 'ACTIVITY', cms_activity.id, left(cms_activity.name, 200),
+               concat_ws(' ', cms_activity.name, cms_activity.address_name, left(cms_activity.description, 2000)),
+               left(cms_activity.img_url, 500), cms_activity.city_code, 'VISIBLE', cms_activity.create_time, #{now}
+        from cms_activity
+        where <include refid="activityStaticPublicGate"/>
+        on duplicate key update title = values(title), search_text = values(search_text), img_url = values(img_url),
+            city_code = values(city_code), visibility_state = values(visibility_state),
+            source_time = values(source_time), indexed_at = values(indexed_at)
+    </insert>
+
+    <insert id="upsertVisiblePosts">
+        insert into content_search_document
+        (document_type, document_id, title, search_text, img_url, city_code, visibility_state, source_time, indexed_at)
+        select 'POST', p.id, left(coalesce(nullif(p.title, ''), p.body), 200),
+               concat_ws(' ', p.title, left(p.body, 2000)),
+               null, p.city_code, 'VISIBLE', coalesce(p.published_at, p.create_time), #{now}
+        from community_post p
+        where <include refid="postStaticPublicGate"/>
+        on duplicate key update title = values(title), search_text = values(search_text), img_url = values(img_url),
+            city_code = values(city_code), visibility_state = values(visibility_state),
+            source_time = values(source_time), indexed_at = values(indexed_at)
+    </insert>
+
+    <!-- 不再公开的文档打成 HIDDEN,并清空文本快照:投影表里不留已转私密内容的正文。 -->
+    <update id="hideStaleTopics">
+        update content_search_document d
+        set d.visibility_state = 'HIDDEN', d.title = null, d.search_text = '', d.img_url = null, d.indexed_at = #{now}
+        where d.document_type = 'TOPIC' and d.visibility_state = 'VISIBLE'
+          and not exists (select 1 from cms_topic where cms_topic.id = d.document_id
+                          and <include refid="topicStaticPublicGate"/>)
+    </update>
+
+    <update id="hideStaleActivities">
+        update content_search_document d
+        set d.visibility_state = 'HIDDEN', d.title = null, d.search_text = '', d.img_url = null, d.indexed_at = #{now}
+        where d.document_type = 'ACTIVITY' and d.visibility_state = 'VISIBLE'
+          and not exists (select 1 from cms_activity where cms_activity.id = d.document_id
+                          and <include refid="activityStaticPublicGate"/>)
+    </update>
+
+    <update id="hideStalePosts">
+        update content_search_document d
+        set d.visibility_state = 'HIDDEN', d.title = null, d.search_text = '', d.img_url = null, d.indexed_at = #{now}
+        where d.document_type = 'POST' and d.visibility_state = 'VISIBLE'
+          and not exists (select 1 from community_post p where p.id = d.document_id
+                          and <include refid="postStaticPublicGate"/>)
+    </update>
+
+    <!-- 读侧:投影只是候选,每一行都按源表实时公开闸再过一遍;帖文另按看的人排除互相拉黑/屏蔽的作者。 -->
+    <select id="selectUnifiedSearch" resultType="com.chengyinhub.business.domain.vo.ContentSearchItemVO">
+        select lower(d.document_type) as type, d.document_id as id, d.title as name, d.title as title,
+               d.img_url as imgUrl, d.city_code as cityCode, d.source_time as sourceTime
+        from content_search_document d
+        where d.visibility_state = 'VISIBLE'
+          and d.document_type in
+          <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach>
+          and d.search_text like concat('%', #{keyword}, '%') escape '\\'
+          <if test="cityCode != null and cityCode != ''"> and d.city_code = #{cityCode}</if>
+          and (
+              (d.document_type = 'TOPIC' and exists (
+                  select 1 from cms_topic where cms_topic.id = d.document_id
+                    and <include refid="topicStaticPublicGate"/>))
+              or (d.document_type = 'ACTIVITY' and exists (
+                  select 1 from cms_activity where cms_activity.id = d.document_id
+                    and <include refid="activityStaticPublicGate"/>))
+              or (d.document_type = 'POST' and exists (
+                  select 1 from community_post p where p.id = d.document_id
+                    and <include refid="postStaticPublicGate"/>
+                    and not exists (select 1 from im_block b
+                        where (b.member_id = #{viewerId} and b.blocked_member_id = p.author_id)
+                           or (b.member_id = p.author_id and b.blocked_member_id = #{viewerId}))
+                    and not exists (select 1 from community_member_mute mu
+                        where mu.member_id = #{viewerId} and mu.muted_member_id = p.author_id)))
+          )
+        order by d.source_time desc, d.id desc
+    </select>
+</mapper>

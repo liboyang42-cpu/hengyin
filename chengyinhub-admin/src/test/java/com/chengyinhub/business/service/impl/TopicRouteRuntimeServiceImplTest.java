@@ -30,6 +30,7 @@ import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -96,8 +97,26 @@ class TopicRouteRuntimeServiceImplTest {
         when(nodeMapper.selectCmsTopicNodeById(1L)).thenReturn(one);
         when(nodeMapper.selectCmsTopicNodeById(2L)).thenReturn(two);
         CmsRegistration pass = new CmsRegistration(); pass.setExpiresAt(null);
-        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
-                .thenReturn(Collections.singletonList(pass));
+        pass.setId(9000001L);pass.setMemberId(7L);pass.setOwnerType(1L);pass.setOwnerId(10L);pass.setRegistrationStatus(2);pass.setPaymentStatus(0);pass.setPurchaseKind(2);
+        // 按查询人/归属返回其本人的成功报名(与 member/owner 过滤的真实查询一致)：7 号自玩仍是原 pass，
+        // 其他成员或活动场次各有自己的同口径免费成功报名；锁读按原ID回同一行。用例内显式 stub 仍优先。
+        when(activityMapper.selectCmsActivityByIdForUpdate(anyLong()))
+                .thenAnswer(call -> activityMapper.selectCmsActivityById(call.<Long>getArgument(0)));
+        java.util.Map<Long, CmsRegistration> issued = new java.util.HashMap<>();
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(anyLong())).thenAnswer(call -> issued.get(call.<Long>getArgument(0)));
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(9000001L)).thenReturn(pass);
+        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(call -> {
+            CmsRegistration probe = call.getArgument(0);
+            if (Long.valueOf(7L).equals(probe.getMemberId()) && Long.valueOf(1L).equals(probe.getOwnerType())
+                    && Long.valueOf(10L).equals(probe.getOwnerId())) return Collections.singletonList(pass);
+            CmsRegistration own = new CmsRegistration();
+            own.setId(9_100_000L + probe.getMemberId() * 1_000L + probe.getOwnerType() * 100L + probe.getOwnerId());
+            own.setMemberId(probe.getMemberId()); own.setOwnerType(probe.getOwnerType()); own.setOwnerId(probe.getOwnerId());
+            own.setRegistrationStatus(2); own.setPaymentStatus(0);
+            own.setPurchaseKind(Long.valueOf(2L).equals(probe.getOwnerType()) ? 1 : 2);
+            issued.put(own.getId(), own);
+            return Collections.singletonList(own);
+        });
         stored = new TopicRouteSession[1];
         storedAction = new TopicRouteAction[1];
         when(routeMapper.selectByOwner(0L, 10L, 7L, "default")).thenAnswer(inv -> stored[0]);
@@ -117,6 +136,271 @@ class TopicRouteRuntimeServiceImplTest {
             if (storedAction[0] != null) storedAction[0].setResponseJson(inv.getArgument(1));
             return 1;
         });
+    }
+
+    @Test
+    void fullPublishedSnapshotKeepsRulesAttributesAndNamesWhenDraftChanges() throws Exception {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"hpName\":\"体力\"}");
+        topic.setPublishedRouteGraphJson(runtime.freezePublication(topic, topic.getRouteGraphJson()));
+        topic.setJourneyRulesJson(null); topic.setThemeRuntimeConfigJson(null); topic.setPublishedThemeRuntimeConfigJson(null);
+        JsonNode frozen = json.readTree(runtime.freezePublishedJourney(topic));
+        assertEquals(1, frozen.path("runtimeSnapshotVersion").asInt());
+        assertEquals(1, frozen.path("journeyRules").path("statLinks").size());
+        assertEquals("体力", frozen.path("themeConfig").path("hpName").asText());
+        runtime.state(7L, 10L, null);
+        assertEquals(8, json.readTree(stored[0].getStateJson()).path("variables").path("counter.temperature").asInt());
+        assertEquals(10, json.readTree(stored[0].getStateJson()).path("variables").path("sys.hp").asInt());
+    }
+
+    @Test
+    void linkedTrustedEffectUsesOneReceiptAndRefreshDoesNotApplyItAgain() throws Exception {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
+        topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0}");
+        runtime.state(7L, 10L, null);
+        when(routeMapper.updateStateCas(any())).thenReturn(1);
+        TopicRouteEngine.State state = json.readValue(stored[0].getStateJson(), TopicRouteEngine.State.class);
+        state.getVariables().put("counter.temperature", 6);
+        Map<String, Object> receipt = new LinkedHashMap<>();
+        ReflectionTestUtils.invokeMethod(runtime, "commitJourneyAction", stored[0], 1L, "effect-once", "CHOICE", receipt, state);
+        assertEquals(6, ((Number)receipt.get("hp")).intValue());
+        assertEquals(6, json.readTree(stored[0].getStateJson()).path("variables").path("sys.hp").asInt());
+        runtime.state(7L, 10L, null);
+        assertEquals(6, json.readTree(stored[0].getStateJson()).path("variables").path("sys.hp").asInt());
+        assertEquals(1, json.readTree(stored[0].getStateJson()).path("themeRuntime").path("statLinks").path("events").size());
+    }
+
+    @Test void emptyPlayerAndTeamCannotPublishWithoutActualTasks() {
+        CmsTopic topic=topicMapper.selectCmsTopicById(10L);topic.setRouteMode("LINEAR");
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"gameplayRuntime\":{\"runtimeScope\":\"PLAYER\",\"survival\":{\"zeroHpPolicy\":\"BLOCK_PAID\"}}}");assertThrows(IllegalArgumentException.class,()->runtime.freezePublication(topic,null));
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"gameplayRuntime\":{\"runtimeScope\":\"TEAM\",\"worldMode\":\"TEAM_INDEPENDENT\"}}");assertThrows(IllegalArgumentException.class,()->runtime.freezePublication(topic,null));
+    }
+
+    @Test void publishedLinearFirstRunUsesFrozenAttributesAfterDraftRulesRemoved() throws Exception {
+        useLinearJourneyTopic();CmsTopic topic=topicMapper.selectCmsTopicById(10L);topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
+        topic.setPublishedRouteGraphJson(runtime.freezePublication(topic,null));topic.setJourneyRulesJson(null);topic.setRouteMode("BRANCH_GRAPH");
+        TopicRouteState view=runtime.state(7L,10L,null);assertEquals(TopicRouteState.LINEAR,view.getRouteMode());assertEquals(1L,view.getCurrentNodeId());
+        assertEquals(8,json.readTree(stored[0].getStateJson()).path("variables").path("counter.temperature").asInt());
+    }
+
+    @Test void publishOnlyConnectedQuestSubsetAndFreezeItsWholeConfig() throws Exception {
+        CmsTopic topic=topicMapper.selectCmsTopicById(10L);topic.setRouteMode("LINEAR");topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());topic.setThemeRuntimeConfigJson(GenericRouteRuntimeServiceTest.config());
+        CmsTopicNode one=node(11L,1L),two=node(12L,2L);one.setMerchantMemberId(310L);two.setMerchantMemberId(310L);one.setTemplateId(101L);two.setTemplateId(102L);
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Arrays.asList(one,two));
+        String qa="{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"prompt\":\"回答\",\"answerText\":\"正确\",\"maxTries\":0}}";
+        when(templateMapper.selectCmsMemberTemplateByIds(any())).thenReturn(Arrays.asList(template(101L,qa),template(102L,qa)));
+        JsonNode frozen=json.readTree(runtime.freezePublication(topic,null));
+        assertEquals(2,frozen.path("themeConfig").path("gameplayRuntime").path("quests").size());assertEquals(2,frozen.path("routeStations").size());
+        topic.setThemeRuntimeConfigJson(GenericRouteRuntimeServiceTest.config().replace("TEAM_INDEPENDENT","WORLD_SHARED"));assertNotNull(runtime.freezePublication(topic,null));
+        topic.setThemeRuntimeConfigJson(GenericRouteRuntimeServiceTest.config());one.setMerchantMemberId(null);assertNotNull(runtime.freezePublication(topic,null));
+    }
+
+    @Test
+    void personalR5ScanPublishesButScanAloneIsNotGameplayCompletion() throws Exception {
+        CmsTopic topic = personalR5Topic(4, true);
+        JsonNode frozen = json.readTree(runtime.freezePublication(topic, null));
+        JsonNode config = frozen.path("nodeConfigs").path("1");
+        assertNull(com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(config, 4));
+        assertThrows(IllegalArgumentException.class, () -> runtime.verifyGuidedRouteAnswer(frozen, 1L, json.createObjectNode()));
+        com.fasterxml.jackson.databind.node.ObjectNode answers = json.createObjectNode();
+        answers.putObject("qa").put("input", "1930");
+        assertTrue(runtime.verifyGuidedRouteAnswer(frozen, 1L, answers));
+        assertEquals(1, frozen.path("themeConfig").path("gameplayRuntime").path("quests").size());
+    }
+
+    @Test
+    void personalR5GpsPublishesWhileDirectAndUnverifiedArrivalStillFail() throws Exception {
+        CmsTopic topic = personalR5Topic(5, true);
+        JsonNode frozen = json.readTree(runtime.freezePublication(topic, null));
+        assertNull(com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(frozen.path("nodeConfigs").path("1"), 5));
+        topic = personalR5Topic(0, true); final CmsTopic direct = topic;
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(direct, null)).getMessage().contains("个人任务"));
+        topic = personalR5Topic(4, false); final CmsTopic noCode = topic;
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCode, null)).getMessage().contains("真实节点码"));
+        topic = personalR5Topic(5, false); final CmsTopic noCoordinates = topic;
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCoordinates, null)).getMessage().contains("有效站点坐标"));
+    }
+
+    @Test
+    void legacyBasicParticipationCompletionKindsStayUnchanged() {
+        JsonNode empty = json.createObjectNode();
+        assertEquals("SCAN", com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(empty, 4));
+        assertEquals("GPS", com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(empty, 5));
+        assertEquals("ANSWER", com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(empty, 1));
+        assertEquals("ANSWER", com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(empty, 3));
+        assertNull(com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(empty, 0));
+    }
+
+    private CmsTopic personalR5Topic(int method, boolean verified) {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L); topic.setRouteMode("LINEAR");
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true}");
+        topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"gameplayRuntime\":{\"runtimeScope\":\"PLAYER\",\"survival\":{\"zeroHpPolicy\":\"BLOCK_HP_COST\",\"actionLimitPolicy\":\"BLOCK_OVERFLOW\"}}}");
+        CmsTopicNode node = node(1L, 1L); node.setTemplateId(101L);
+        if (verified) { node.setCheckinCode("r5-personal-node"); node.setLongitude("121.4"); node.setLatitude("31.2"); }
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
+        CmsMemberTemplate template = template(101L, "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"年份？\",\"answerText\":\"1930\",\"maxTries\":0},\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"正确\"},\"fail\":{\"reply\":\"错误\"}}}");
+        template.setValidationMethod(method);
+        when(templateMapper.selectCmsMemberTemplateByIds(any())).thenReturn(Collections.singletonList(template));
+        return topic;
+    }
+
+    @Test
+    void r5QaAndCheckRecoveryNodesAreFrozenWithoutOrdinaryQuests() throws Exception {
+        for (String gameplay : Arrays.asList("qa", "check")) {
+            CmsTopic topic = r5RecoveryTopic(gameplay);
+            ObjectNode author = (ObjectNode) json.readTree(topic.getThemeRuntimeConfigJson());
+            ObjectNode survival = author.with("gameplayRuntime").with("survival");
+            JsonNode challenge = survival.remove("zeroChallenge"); survival.put("zeroHpPolicy", "BLOCK_HP_COST");
+            topic.setThemeRuntimeConfigJson(author.toString());
+            author = (ObjectNode) json.readTree(runtime.compileTemplateRules(topic));
+            assertEquals(3, author.path("gameplayRuntime").path("quests").size());
+            survival = author.with("gameplayRuntime").with("survival");
+            survival.put("zeroHpPolicy", "CHALLENGE").set("zeroChallenge", challenge);
+            Map<Long,Long> rebuilt = new LinkedHashMap<>();
+            for (CmsTopicNode node : nodeMapper.selectCmsTopicNodeList(new CmsTopicNode())) {
+                rebuilt.put(node.getId(), node.getId()+10); node.setId(node.getId()+10);
+            }
+            topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig
+                    .remapForNodeSave(author.toString(), rebuilt, Collections.emptyMap(), Collections.emptyMap()));
+            topic.setThemeRuntimeConfigJson(runtime.compileTemplateRules(topic));
+            assertEquals(topic.getThemeRuntimeConfigJson(), runtime.compileTemplateRules(topic));
+            JsonNode frozen = json.readTree(runtime.freezePublication(topic, null));
+            JsonNode game = frozen.path("themeConfig").path("gameplayRuntime");
+            assertEquals(1, game.path("quests").size());
+            assertEquals(11, game.path("quests").get(0).path("nodeId").asLong());
+            assertEquals(json.readTree("[\"node_1\"]"), game.path("acts").get(0).path("questKeys"));
+            assertEquals(12, game.path("survival").path("zeroChallenge").path("challengeNodeId").asLong());
+            assertEquals(json.readTree("[13]"), game.path("survival").path("zeroChallenge").path("alternativeNodeIds"));
+            for (String id : Arrays.asList("12", "13")) {
+                JsonNode block = frozen.path("nodeConfigs").path(id);
+                assertEquals("恢复成功", block.path("outcomeRules").path("pass").path("reply").asText());
+                assertEquals("再试一次", block.path("outcomeRules").path("fail").path("reply").asText());
+                assertEquals("feedback", block.path("outcomeRules").path("pass").path("nextStepId").asText());
+                assertEquals("feedback", block.path("branch").path("startStepId").asText());
+            }
+        }
+    }
+
+    @Test
+    void r5RecoveryStillRejectsInteractionToolsAndExplicitSettlementQuest() throws Exception {
+        CmsTopic topic = r5RecoveryTopic("qa");
+        CmsMemberTemplate recovery = templateMapper.selectCmsMemberTemplateByIds(Collections.emptyList()).get(1);
+        ObjectNode config = (ObjectNode) json.readTree(recovery.getAdvancedConfigJson());
+        config.putObject("interactionTools").put("allowTrade", true);
+        recovery.setAdvancedConfigJson(config.toString());
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null))
+                .getMessage().contains("归零挑战不能配置普通结算工具"));
+
+        config.remove("interactionTools"); recovery.setAdvancedConfigJson(config.toString());
+        ObjectNode compiled = (ObjectNode) json.readTree(runtime.compileTemplateRules(topic));
+        compiled.with("gameplayRuntime").withArray("quests").addObject().put("questKey", "node_2")
+                .put("nodeId", 2).put("actKey", "route_nodes").put("locationKey", "node_2").put("settlementSlot", "node_2").put("hpCost", 1);
+        ((ObjectNode) compiled.with("gameplayRuntime").withArray("acts").get(0)).withArray("questKeys").add("node_2");
+        topic.setThemeRuntimeConfigJson(compiled.toString());
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null))
+                .getMessage().contains("归零挑战不能配置普通结算工具"));
+    }
+
+    @Test
+    void legacyChallengeDoesNotAcquireV2QuestExclusion() throws Exception {
+        CmsTopic topic = r5RecoveryTopic("qa");
+        ObjectNode author = (ObjectNode) json.readTree(topic.getThemeRuntimeConfigJson());
+        author.with("gameplayRuntime").with("survival").set("zeroChallenge",
+                json.readTree("{\"challengeNodeId\":2,\"alternativeNodeIds\":[3],\"restoreTo\":4,\"limit\":2}"));
+        topic.setThemeRuntimeConfigJson(author.toString());
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic))
+                .getMessage().contains("归零挑战不能配置普通结算工具"));
+        assertFalse(json.readTree(topic.getThemeRuntimeConfigJson()).path("gameplayRuntime")
+                .path("survival").path("zeroChallenge").has("version"));
+        ObjectNode game = author.with("gameplayRuntime");
+        game.putArray("acts").addObject().put("actKey", "route_nodes").putObject("completionRule").put("type", "ALL");
+        ((ObjectNode) game.withArray("acts").get(0)).putArray("questKeys").add("node_1");
+        game.putArray("quests").addObject().put("questKey", "node_1").put("nodeId", 1)
+                .put("actKey", "route_nodes").put("locationKey", "node_1").put("settlementSlot", "node_1");
+        for (CmsMemberTemplate recovery : templateMapper.selectCmsMemberTemplateByIds(Collections.emptyList()).subList(1, 3)) {
+            ObjectNode config = (ObjectNode) json.readTree(recovery.getAdvancedConfigJson());
+            config.remove(Arrays.asList("outcomeRules", "branch"));
+            recovery.setAdvancedConfigJson(config.toString());
+        }
+        topic.setThemeRuntimeConfigJson(author.toString());
+        JsonNode frozen = json.readTree(runtime.freezePublication(topic, null));
+        assertEquals(game.path("survival").path("zeroChallenge"), frozen.path("themeConfig")
+                .path("gameplayRuntime").path("survival").path("zeroChallenge"));
+    }
+
+    @Test
+    void recoveryNodesDoNotReplaceTheRequiredOrdinaryTask() throws Exception {
+        CmsTopic topic = r5RecoveryTopic("qa");
+        List<CmsTopicNode> nodes = nodeMapper.selectCmsTopicNodeList(new CmsTopicNode());
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(nodes.subList(1, 3));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null))
+                .getMessage().contains("须配置实际幕和任务"));
+    }
+
+    private CmsTopic r5RecoveryTopic(String gameplay) throws Exception {
+        CmsTopic topic = personalR5Topic(4, true);
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"checkEnabled\":true}");
+        ObjectNode author = (ObjectNode) json.readTree(topic.getThemeRuntimeConfigJson());
+        ObjectNode survival = author.with("gameplayRuntime").with("survival").put("zeroHpPolicy", "CHALLENGE");
+        survival.putObject("zeroChallenge").put("version", 2).put("challengeNodeId", 2).put("gameplayKey", gameplay)
+                .put("requiredCompletions", 2).put("withinSeconds", 60).put("restoreTo", 4).put("limit", 2)
+                .put("thenPolicy", "THEME_FAIL").putArray("alternativeNodeIds").add(3);
+        topic.setThemeRuntimeConfigJson(author.toString());
+        CmsTopicNode ordinary = node(1L, 1L); ordinary.setTemplateId(101L); ordinary.setCheckinCode("r5-personal-node");
+        CmsTopicNode primary = node(2L, 2L); primary.setTemplateId(102L);
+        CmsTopicNode alternative = node(3L, 3L); alternative.setTemplateId(103L);
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Arrays.asList(ordinary, primary, alternative));
+        ObjectNode block = json.createObjectNode().put("schemaVersion", 1);
+        if ("qa".equals(gameplay)) block.set("qa", json.readTree("{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"口令？\",\"answerText\":\"1930\",\"maxTries\":0}"));
+        else block.putObject("check").put("enabled", true).put("checkId", "recover").put("tier", "easy");
+        ObjectNode outcomes = block.putObject("outcomeRules").put("version", 1);
+        outcomes.putObject("pass").put("reply", "恢复成功").put("nextStepId", "feedback");
+        outcomes.putObject("fail").put("reply", "再试一次");
+        block.putObject("branch").put("enabled", true).put("startStepId", "feedback").putArray("steps").addObject()
+                .put("id", "feedback").put("title", "反馈").put("body", "恢复反馈").put("terminal", true).putArray("options");
+        CmsMemberTemplate ordinaryTemplate = templateMapper.selectCmsMemberTemplateByIds(Collections.emptyList()).get(0);
+        CmsMemberTemplate recovery = template(102L, block.toString()); recovery.setValidationMethod(0);
+        CmsMemberTemplate backup = template(103L, block.toString()); backup.setValidationMethod(0);
+        when(templateMapper.selectCmsMemberTemplateByIds(any())).thenReturn(Arrays.asList(ordinaryTemplate, recovery, backup));
+        return topic;
+    }
+
+    @Test
+    void a01EndingBodyIsFrozenSeparatelyFromPlayableChapters() throws Exception {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyStoryJson("{\"schemaVersion\":1,\"ending\":{\"endings\":["
+                + "{\"code\":\"done\",\"title\":\"结束\",\"fallback\":true,\"chapterId\":90}]}}");
+        CmsTopicChapter ending = new CmsTopicChapter();
+        ending.setId(90L); ending.setTopicId(10L); ending.setName("原结局");
+        ending.setAudioUrl("/fixture-ending.mp3"); ending.setAtmospherePreset("night");
+        ending.setBlocksJson("[{\"type\":\"text\",\"content\":\"原正文\"}]");
+        CmsTopicChapter foreign = new CmsTopicChapter();
+        foreign.setId(90L); foreign.setTopicId(11L); foreign.setName("异主题");
+        when(cmsTopicChapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
+                .thenReturn(Arrays.asList(ending, foreign));
+
+        runtime.state(7L, 10L, 0L);
+        JsonNode frozen = json.readTree(stored[0].getConfigSnapshotJson());
+        assertEquals("原结局", frozen.path("endingChapters").path("90").path("name").asText());
+        assertEquals("/fixture-ending.mp3", frozen.path("endingChapters").path("90").path("audioUrl").asText());
+        assertTrue(frozen.path("endingChapters").path("90").path("blocks").toString().contains("原正文"));
+        assertEquals(0, frozen.path("thoughtChapters").size(), "结局不进入可推进章节");
+        ending.setName("改后结局"); ending.setBlocksJson("[]");
+        when(cmsTopicChapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
+                .thenReturn(Collections.emptyList());
+        runtime.state(7L, 10L, 0L);
+        JsonNode restored = json.readTree(stored[0].getConfigSnapshotJson());
+        assertEquals(frozen.path("endingChapters"), restored.path("endingChapters"), "续局不重冻正文");
+    }
+
+    @Test
+    void a01NewSnapshotMarksEvenEmptyEndingBodiesAsFrozen() throws Exception {
+        runtime.state(7L, 10L, 0L);
+        JsonNode frozen = json.readTree(stored[0].getConfigSnapshotJson());
+        assertTrue(frozen.path("endingChapters").isObject());
+        assertEquals(0, frozen.path("endingChapters").size());
     }
 
     @Test
@@ -176,6 +460,48 @@ class TopicRouteRuntimeServiceImplTest {
         assertTrue(runtime.tags(7L, 10L, 13L).isEmpty());
         assertThrows(IllegalArgumentException.class, () -> runtime.tags(7L, 10L, -1L));
         verify(routeMapper, never()).selectMemberTopicSessions(anyLong(), anyLong());
+    }
+
+    // 2026-10-14 用户已定：自玩通行证在本局内有效。普通线性路线不建局，以本人默认实例下的节点进度判定已开局。
+    private PlayerNodeProgress expiredPassOnLinearRoute() {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setRouteMode("LINEAR"); topic.setPublishedRouteGraphJson(null);
+        registrationMapper.selectCmsRegistrationByIdForUpdate(9000001L)
+                .setExpiresAt(new java.util.Date(System.currentTimeMillis() - 60_000L));
+        PlayerNodeProgress fact = new PlayerNodeProgress(); fact.setNodeId(1L); fact.setStatus(1);
+        return fact;
+    }
+
+    @Test
+    void expiredSelfPlayPassStillFinishesLinearRouteAlreadyStarted() {
+        PlayerNodeProgress fact = expiredPassOnLinearRoute();
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Collections.singletonList(fact));
+        assertTrue(runtime.hasRunningSession(7L, 10L, 0L));
+        assertNotNull(runtime.state(7L, 10L, 0L), "已开局：中途到期仍可读本局状态");
+        assertTrue(runtime.canPlay(7L, 10L, 0L, 2L), "开局时有效、已记过进度：中途到期仍可打完");
+    }
+
+    @Test
+    void expiredSelfPlayPassCannotStartLinearRoute() {
+        expiredPassOnLinearRoute();
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Collections.emptyList());
+        assertFalse(runtime.hasRunningSession(7L, 10L, 0L));
+        assertThrows(IllegalStateException.class, () -> runtime.state(7L, 10L, 0L));
+        assertThrows(IllegalStateException.class, () -> runtime.canPlay(7L, 10L, 0L, 1L));
+    }
+
+    @Test
+    void expiredSelfPlayPassDoesNotReopenAFinishedRoute() {
+        PlayerNodeProgress fact = expiredPassOnLinearRoute();
+        when(progressMapper.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
+                .thenReturn(Collections.singletonList(fact));
+        TopicRouteSession finished = new TopicRouteSession(); finished.setId(98L); finished.setMemberId(7L);
+        finished.setTopicId(10L); finished.setActivityId(0L); finished.setPlayInstanceId("default");
+        finished.setStatus(TopicRouteSession.STATUS_COMPLETED); stored[0] = finished;
+        assertFalse(runtime.hasRunningSession(7L, 10L, 0L), "已结束的局的旧进度不算在玩");
+        assertThrows(IllegalStateException.class, () -> runtime.canPlay(7L, 10L, 0L, 2L));
     }
 
     @Test
@@ -384,6 +710,43 @@ class TopicRouteRuntimeServiceImplTest {
         assertTrue(json.valueToTree(done).path("opening").path("themeComplete").asBoolean(),
                 "序章里的玩法就是主题唯一站点,完成即整部通关");
         verify(awards).grantOnce(7L, 10L, 0L, null);
+    }
+
+    /** #478-3:序章玩法靠设备自报完成 ⇒ 出发时发的整部通关奖同样封顶为探索值与徽章,不发通关积分与券。 */
+    @Test
+    void openingThemeAwardIsCappedWhenACompletedNodeReliedOnSelfReport() throws Exception {
+        ITopicCompletionAwardService awards = mock(ITopicCompletionAwardService.class);
+        ReflectionTestUtils.setField(runtime, "topicCompletionAwardService", awards);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.rewardCappedToXpBadge(7L, 0L, 10L, 1L)).thenReturn(true);
+        when(advanced.anyNodeRewardCappedToXpBadge(anyLong(), anyLong(), anyLong(), any())).thenCallRealMethod();
+        ReflectionTestUtils.setField(runtime, "advancedGameRuntimeService", advanced);
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setRouteMode("LINEAR");
+        topic.setPublishedRouteGraphJson(null);
+        topic.setJourneyStoryJson("{\"schemaVersion\":1,\"openingChapterId\":90}");
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(node(1L, 1L)));
+        CmsTopicChapter opening = new CmsTopicChapter();
+        opening.setId(90L); opening.setTopicId(10L);
+        opening.setBlocksJson("[{\"type\":\"node\",\"id\":\"n1\",\"nodeId\":1}]");
+        when(cmsTopicChapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
+                .thenReturn(Collections.singletonList(opening));
+        when(routeMapper.updateStateCas(any(TopicRouteSession.class))).thenReturn(1);
+
+        runtime.state(7L, 10L, 0L);
+        com.fasterxml.jackson.databind.node.ObjectNode state =
+                (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(stored[0].getStateJson());
+        state.putArray("completedNodeIds").add(1L);
+        state.put("status", TopicRouteState.COMPLETED);
+        stored[0].setStateJson(state.toString());
+
+        TopicRouteState done = runtime.completeOpening(7L, 10L, 0L, 90L, stored[0].getVersion());
+
+        assertTrue(json.valueToTree(done).path("opening").path("themeComplete").asBoolean());
+        verify(awards).grantOnce(7L, 10L, 0L, null, com.chengyinhub.common.constant.RewardPolicy.XP_BADGE_ONLY);
+        verify(awards, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
     }
 
     @Test
@@ -660,8 +1023,8 @@ class TopicRouteRuntimeServiceImplTest {
         stored[0].setStateJson(json.writeValueAsString(root));
         runtime.syncThoughts(7L, 10L, 0L, Collections.<String>emptyList(), 120);
 
-        assertEquals(0, stateJson().path("variables").path("thought.afternoon").asInt(),
-                "微信运动跨天归零,不能倒扣进度");
+        assertEquals(120, stateJson().path("variables").path("thought.afternoon").asInt(),
+                "已有伏笔跨日计入当天完整读数，不倒扣、不虚构前日尾段");
         assertEquals(120, stateJson().path("variables").path("sys.steps.last").asInt(),
                 "基线要跟着新的一天走,否则之后一整天都累积不上");
     }
@@ -1061,8 +1424,11 @@ class TopicRouteRuntimeServiceImplTest {
         when(routeMapper.selectByOwner(44L, 10L, 7L, "default")).thenAnswer(inv -> stored[0]);
         CmsTopicNode one = node(1L, 1L); CmsTopicNode two = node(2L, 2L); CmsTopicNode three = node(3L, 3L);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(Arrays.asList(one, two, three));
+        // registration() 内含锁读 stub，不能嵌在 when(...).thenReturn 里；本例是活动 44 的场次报名。
+        CmsRegistration activityTicket = registration(7L, 1);
+        activityTicket.setOwnerType(2L); activityTicket.setOwnerId(44L);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
-                .thenReturn(Collections.singletonList(registration(7L, 1)));
+                .thenReturn(Collections.singletonList(activityTicket));
         PlayerActivityRole role = new PlayerActivityRole(); role.setRoleCode("OBSERVER");
         when(roleMapper.selectByActivityAndMember(44L, 7L)).thenReturn(role);
         runtime = policyRuntime();
@@ -1788,7 +2154,11 @@ class TopicRouteRuntimeServiceImplTest {
 
     private CmsRegistration registration(Long ticketId, Integer purchaseKind) {
         CmsRegistration registration = new CmsRegistration(); registration.setTicketId(ticketId);
-        registration.setPurchaseKind(purchaseKind); return registration;
+        registration.setPurchaseKind(purchaseKind); registration.setId(ticketId);
+        registration.setMemberId(7L);registration.setOwnerType(1L);registration.setOwnerId(10L);
+        registration.setPaymentStatus(0);registration.setRegistrationStatus(2);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(ticketId)).thenReturn(registration);
+        return registration;
     }
 
     private CmsActivity playableActivity() {

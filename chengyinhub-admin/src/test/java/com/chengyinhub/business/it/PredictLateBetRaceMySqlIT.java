@@ -258,6 +258,8 @@ class PredictLateBetRaceMySqlIT {
         ReflectionTestUtils.setField(service, "activityMapper", activities);
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> new Date(NOW));
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
+        // C包新动作按 activity→registration 当前锁读；本套只验轮次行锁竞态，用C包非资格夹具(均为 mock，不加真库锁)。
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
         return service;
     }
 

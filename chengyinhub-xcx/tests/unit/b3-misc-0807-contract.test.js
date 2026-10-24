@@ -54,10 +54,14 @@ test('A05: 完赛分享使用单张图片成绩卡，模板/路线分享继续�
   // 稿上轨迹图 188pt 高、20pt 圆角;整卡不再有 820rpx 这个全幅封面高度。
   assert.match(completionWxss, /\.completion-share-card__cover\s*\{[^}]*height:\s*376rpx[^}]*border-radius:\s*var\(--cy-radius-xl\)/s)
   assert.doesNotMatch(completionWxss, /height:\s*820rpx/)
-  // MedalPill 的重点:金/银/铜各绑各的 token。三档同色 = 这个 pill 等于没做,所以逐档钉死。
-  assert.match(completionWxss, /\.completion-share-card__medal--gold\s*\{[^}]*color:\s*var\(--cy-color-medal-gold\)/s)
-  assert.match(completionWxss, /\.completion-share-card__medal--silver\s*\{[^}]*color:\s*var\(--cy-color-medal-silver\)/s)
-  assert.match(completionWxss, /\.completion-share-card__medal--bronze\s*\{[^}]*color:\s*var\(--cy-color-medal-bronze\)/s)
+  // MedalPill 的重点:金/银/铜三档各是各的颜色。三档同色 = 这个 pill 等于没做,所以逐档钉死。
+  // 2026-10-22 新稿 211:271:三枚奖牌改用稿上原图(medal-gold/silver/bronze.svg),逐档检查文件在、颜色互不相同。
+  const fills = ['gold', 'silver', 'bronze'].map((tier) => {
+    assert.match(completionWxml, new RegExp('wx:if="\\{\\{medal' + tier[0].toUpperCase() + tier.slice(1) + ' > 0\\}\\}" src="\\./medal-' + tier + '\\.svg"'))
+    const svg = fs.readFileSync(path.join(__dirname, '../../components/cy/completion-share-card/medal-' + tier + '.svg'), 'utf8')
+    return (svg.match(/fill="(#[0-9A-Fa-f]{6})"/) || [])[1]
+  })
+  assert.equal(new Set(fills.filter(Boolean)).size, 3, '金/银/铜三枚奖牌颜色必须互不相同')
   assert.equal(helper.isCompletedShare({ dataType: 1, completed: true, sportName: '夜游' }), true)
   assert.equal(helper.isCompletedShare({ dataType: 3 }), true)
   assert.equal(helper.isCompletedShare({ dataType: 2, completed: true, sportName: '夜游' }), false)
@@ -119,8 +123,8 @@ test('A39: 页面统一叫票夹，路线票与场次票保留真实语义但共
   assert.doesNotMatch(js, /subpackagePrefab/, '票夹不许再按主题名换轨到专用分包')
   assert.match(js, /\/pages\/play\/index\?'/)
   assert.match(js, /'\/pages\/play\/index\?' \+ query \+ '&registrationId=' \+ item\.id/)
-  // 合并后只剩一个 swiper(原来两个 tab 各一个)
-  assert.equal((wxml.match(/class="swiper-item-content \{\{/g) || []).length, 1)
+  // 合并后只剩一个卡组(原来两个 tab 各一个 swiper;v13 起是一叠卡)
+  assert.equal((wxml.match(/<view class="deck /g) || []).length, 1)
   assert.doesNotMatch(wxml, /sic-portrait|slides-topic/)
   assert.doesNotMatch(wxss, /\.swiper-item-content\.sic-portrait|\.slides-topic/)
 })

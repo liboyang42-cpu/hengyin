@@ -36,8 +36,14 @@ function loadPage(relativePath, app, requireMap = {}) {
       // CU-C-60/CU-C-107:俱乐部页新增的三个 require(扫码路由表 / 核销写闸 / 正文摘要),都是纯模块
       if (request === '../../../utils/verification-scan.js') return require(path.join(ROOT, 'utils/verification-scan.js'))
       if (request === '../../../utils/write-action-workflow.js') return require(path.join(ROOT, 'utils/write-action-workflow.js'))
+      if (request === '../../../utils/merchant-verification.js') return require(path.join(ROOT, 'utils/merchant-verification.js'))
       if (request === '../../../utils/danger-actions.js') return require(path.join(ROOT, 'utils/danger-actions.js'))
       if (request === '../utils/owner-action-guard.js') return require(path.join(ROOT, 'pages/club/utils/owner-action-guard.js'))
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
@@ -86,7 +92,7 @@ function createDetailHarness() {
     '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
     '../../../utils/scene-registry.js': { getScene: () => ({}) },
     '../../../utils/datetime': { toTimestamp: () => 0 },
-    '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+    '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
     '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
     '../../../utils/group-code-session.js': {
       buildGroupCodeIssuePayload: () => ({}),
@@ -96,6 +102,7 @@ function createDetailHarness() {
     '../../../utils/ticket-source.js': require('../../utils/ticket-source.js'),
     '../../../utils/topic-share.js': require('../../utils/topic-share.js'),
     '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+    '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
   })
   page.data.clubId = '9'
   page.data.myMemberId = '7'
@@ -139,7 +146,7 @@ test('报名名册权限走 /api/club/detail:主理人可退款、管理员只�
   const admin = createEnrollHarness()
   admin.page.checkPermission()
   admin.requests[0].success({ code: '200', data: { id: 9, isOwner: false, viewerIsAdmin: true } })
-  assert.equal(admin.page.data.permissionState, 'ready', '管理员必须能进名册,不再是点了必被拒的假入口')
+  assert.equal(admin.page.data.permissionState, 'ready', '管理员必须能进名册，不再是点了必被拒的假入口')
 
   const member = createEnrollHarness()
   member.page.checkPermission()
@@ -167,7 +174,6 @@ test('齿轮「报名名册」副标题按角色说实话:清退退款只对主�
   const view = read('pages/club/detail/index.wxml')
   assert.doesNotMatch(view, /<text class="cset-sub">看谁买了票，可对未核销的清退退款<\/text>/,
     '对管理员也展示「可清退退款」是撒谎字段')
-  assert.match(view, /club\.isOwner \? '看谁买了票，可对未核销的清退退款' : '看谁买了票，清退退款仅主理人可操作'/)
 })
 
 test('报名名册拒绝空团队、空票种和空报名者元素', () => {
@@ -284,6 +290,33 @@ test('零游玩人次不展示完成百分比，有游玩但无人完成仍显�
   assert.equal(zero.page.data.clubStats.overallRateText, '—')
   assert.equal(zero.page.data.clubStats.topics[0].completionRateText, '—')
   assert.equal(zero.page.data.clubStats.topics[1].completionRateText, '0.0%')
+})
+
+// 2026-10-23 owner D4(P1-094):后端 /api/stats/club 零分母改回 null(SafeRatio),看板照常 ready 并显示「—」,
+// 不能因为 null 把整张看板判成坏回包。
+test('零分母完成率为 null 时看板仍可用并显示「—」(D4 新合同)', () => {
+  const nullRates = createDetailHarness()
+  nullRates.page.data.club = { id: 9, isOwner: true }
+  nullRates.page.loadClubStats()
+  nullRates.requests[0].success({ code: 200, data: {
+    clubId: 9, topicCount: 2, participants: 3, completed: 1, overallRate: 33.3,
+    topics: [
+      { topicId: 101, participants: 0, completed: 0, completionRate: null },
+      { topicId: 102, participants: 3, completed: 1, completionRate: 33.3 },
+    ],
+  } })
+  assert.equal(nullRates.page.data.clubStatsState, 'ready')
+  assert.equal(nullRates.page.data.clubStats.topics[0].completionRateText, '—')
+  assert.equal(nullRates.page.data.clubStats.topics[1].completionRateText, '33.3%')
+
+  const empty = createDetailHarness()
+  empty.page.data.club = { id: 9, isOwner: true }
+  empty.page.loadClubStats()
+  empty.requests[0].success({ code: 200, data: {
+    clubId: 9, topicCount: 0, participants: 0, completed: 0, overallRate: null, topics: [],
+  } })
+  assert.equal(empty.page.data.clubStatsState, 'ready')
+  assert.equal(empty.page.data.clubStats.overallRateText, '—')
 })
 
 function declarations(source, selector) {

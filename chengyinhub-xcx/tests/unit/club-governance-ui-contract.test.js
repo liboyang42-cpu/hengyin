@@ -24,6 +24,9 @@ function createHarness(source) {
       if (request === '../../../utils/response-shape.js') {
         return require(path.join(ROOT, 'utils/response-shape.js'))
       }
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -125,7 +128,7 @@ test('俱乐部封禁必须带成员、原因、1至90天期限和唯一 request
   assert.equal(body.expiresAt, undefined, '不得再发无时区的本地时间串')
   assert.ok(Number.isInteger(body.expiresAtEpochMs), '期限发 epoch 毫秒')
   const days = (body.expiresAtEpochMs - sentAt) / 86400000
-  assert.ok(days > 6.99 && days < 7.01, '选 7 天就是 7×24 小时,跟在哪个时区点无关')
+  assert.ok(days > 6.99 && days < 7.01, '选 7 天就是 7×24 小时，跟在哪个时区点无关')
   assert.match(body.requestId, /^cgb-11-902-[0-9a-z]+-[0-9a-z]+$/)
   assert.ok(body.requestId.length <= 64)
   assert.deepEqual(Array.from(harness.page.data.durationOptions).map((item) => item.days), [7, 30, 90])
@@ -183,9 +186,9 @@ test('治理页具有四态并明确区分俱乐部限时治理与平台永久�
   assert.match(durations, /DURATION_OPTIONS\s*=\s*\[[^\]]*7[^\]]*30[^\]]*90[^\]]*\]/,
     '俱乐部封禁只有 7/30/90 三档')
   assert.doesNotMatch(durations, /DURATION_OPTIONS[\s\S]{0,300}永久/,
-    '永久封禁不归俱乐部,期限选项里不许出现(记录行仍会把平台的永久封禁读出来)')
+    '永久封禁不归俱乐部，期限选项里不许出现(记录行仍会把平台的永久封禁读出来)')
   assert.match(view, /wx:if="\{\{mode !== 'manage'\}\}"[\s\S]{0,200}我的平台工单/,
-    '举报与申诉是平台工单,不在俱乐部的管理模式里')
+    '举报与申诉是平台工单，不在俱乐部的管理模式里')
   assert.match(view, /bindtap="banSelectedMember"/)
   assert.match(view, /bindtap="unbanMember"/)
 })
@@ -376,15 +379,15 @@ test('举报目标渲染成一行说明,弹窗标题简洁、目标走正文（C
   })
   requestByUrl(activity, '/api/club/governance/cases/mine').success({ code: 200, data: { cases: [], activeBan: null } })
   assert.equal(activity.page.data.reportTargetLabel, '活动「夜跑 · 2026-09-24 19:00」',
-    '名称与日期都得在页面上,不能只有一张空表单')
+    '名称与日期都得在页面上，不能只有一张空表单')
   assert.doesNotMatch(activity.page.data.reportTargetLabel, /#/,
-    'CU-C-139:内部编号不帮主理人认出哪一场,不该占这一行')
+    'CU-C-139:内部编号不帮主理人认出哪一场，不该占这一行')
   activity.page.reportTarget()
   const reportModal = activity.modals[activity.modals.length - 1]
   assert.equal(reportModal.title, '举报这场活动',
     'CU-C-139:标题只要一个简洁动作名 —— 复制整段目标会折成两行')
   assert.equal(reportModal.content, '活动「夜跑 · 2026-09-24 19:00」',
-    'CU-C-82 的核对不丢:目标改摆在输入框上方那一行')
+    'CU-C-82 的确认不丢:目标改摆在输入框上方那一行')
 
   const bare = createHarness()
   bare.page.onLoad({ clubId: '11', mode: 'report', targetType: 'CLUB' })
@@ -394,7 +397,7 @@ test('举报目标渲染成一行说明,弹窗标题简洁、目标走正文（C
   })
   requestByUrl(bare, '/api/club/governance/cases/mine').success({ code: 200, data: { cases: [], activeBan: null } })
   assert.equal(bare.page.data.reportTargetLabel, '俱乐部',
-    '入口没带名称时只剩类型 —— 不拿一个谁也核对不了的编号顶上')
+    '入口没带名称时只剩类型 —— 不拿一个谁也确认不了的编号顶上')
   bare.page.reportTarget()
   assert.equal(bare.modals[bare.modals.length - 1].title, '举报这个俱乐部')
 

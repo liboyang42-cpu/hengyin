@@ -229,7 +229,7 @@ test('★契约 §2 取值范围:越界一律拒,合法的放行', () => {
         { key: 'a', label: 'A', effects: [{ var: 'energy', op: 'INC', value: 1 }] },
         { key: 'b', label: 'B' },
       ])]
-    }, /counter\./],
+    }, /所需数值资源已变更，请重新选择/],
     ['加成变量 sys.luck 用了 SET', (m) => {
       m.profile.enabled = true
       m.profile.questions = [pickQuestion([
@@ -291,7 +291,7 @@ test('★契约 §2 取值范围:越界一律拒,合法的放行', () => {
       m.photoCheck.enabled = true
       m.photoCheck.requirement = '画面里要能看见窗外的街景，窗框入镜'
       m.photoCheck.fallback = 'manual'
-    }, /兜底/],
+    }, /未通过时/],
     ['留言 7 条预设', (m) => {
       m.note.enabled = true
       m.note.title = '留一句'          // 9-24 起标题 / 提示前端也必填(与服务端同序先校),补上才测得到预设上限
@@ -340,10 +340,10 @@ test('★契约 §2 取值范围:越界一律拒,合法的放行', () => {
       m.check.enabled = true
       m.check.checkId = 'x1'
       m.check.successEffects = [{ var: 'thought', op: 'INC', value: 1 }]
-    }, /counter\./],
+    }, /所需数值资源已变更，请重新选择/],
   ]
   for (const [name, mutate, pattern] of cases) {
-    assert.match(rejectMessage(mutate), pattern, name + ' 应该被拒,却过了')
+    assert.match(rejectMessage(mutate), pattern, name + ' 应该被拒，却过了')
   }
   // 同一条链路的正例:合法的整份配置必须无错 —— 否则上面的「拒」可能只是链坏了
   assert.equal(cfg.validate(editorFilledConfig()), '', '合法配置不该被拒')
@@ -414,9 +414,9 @@ test('★每个新段都真有一块编辑器面板,并且在玩法单子上选�
   const wxml = read('pages/publish/temp/index.wxml')
   for (const section of ['profile', 'photoCheck', 'check', 'note', 'typeIn']) {
     assert.ok(catalog.GAME_SECTIONS.includes(section),
-      section + ' 不在玩法目录里 —— 选择玩法那张单子上没有它,商家永远选不到')
+      section + ' 不在玩法目录里 —— 选择玩法那张单子上没有它，商家永远选不到')
     assert.ok(wxml.includes("gameSection === '" + section + "'"),
-      section + ' 在配置里有段,但编辑页没有那块面板 —— 商家配不了,而且不报错')
+      section + ' 在配置里有段，但编辑页没有那块面板 —— 商家配不了，而且不报错')
   }
 })
 
@@ -447,7 +447,7 @@ test('★面板里绑的状态字段都要真存在于默认配置(拼错一个�
     const seg = staticPath.split('.').reduce((o, k) => (o == null ? o : o[k]), d)
     assert.ok(Array.isArray(seg), staticPath + ' 不在默认配置里 —— 检定效果面板会绑到一个不存在的数组')
   }
-  assert.deepEqual(bad, [], '这些绑定写错了,填进去存不回来:\n  ' + bad.join('\n  '))
+  assert.deepEqual(bad, [], '这些绑定写错了，填进去存不回来:\n  ' + bad.join('\n  '))
 })
 
 test('★负控:面板绑定扫描抓得到写错的字段名', () => {

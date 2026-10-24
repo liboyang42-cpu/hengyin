@@ -1,19 +1,19 @@
 <block wx:if="{{show && (!hidePanel || error || unknown)}}">
-<view class="ag-mask" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="ag-mask" catchtouchmove="noop" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="ag">
   <view class="ag__grab"></view>
-  <view class="ag__head"><view><text class="ag__eyebrow">高级玩法</text><text class="ag__title">{{node.gameTitle || node.name}}</text></view><view class="ag__close" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view></view>
+  <view class="ag__head"><view><text class="ag__title">{{node.gameTitle || node.name}}</text></view><view class="ag__close" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view></view>
   <scroll-view scroll-y class="ag__scroll">
     <view class="ag__loading" wx:if="{{loading}}">正在创建权威游戏状态…</view>
     <!-- unknown 不是失败：不给「重试」,只给「再核对一次」,否则用户一点就是重复写入 -->
     <view class="ag__status" wx:if="{{unknown}}" bindtap="resolveUnknown" aria-role="button" aria-label="{{unknownText}}" hover-class="ag__press" hover-stay-time="80">
       <view class="ag__status-dot"></view>
       <view class="ag__status-body">
-        <text class="ag__status-text">{{readingBack ? '正在核对结果…' : unknownText}}</text>
-        <text class="ag__status-act" wx:if="{{!readingBack}}">再核对一次</text>
+        <text class="ag__status-text">{{readingBack ? '正在确认结果…' : unknownText}}</text>
+        <text class="ag__status-act" wx:if="{{!readingBack}}">再确认一次</text>
       </view>
     </view>
-    <view class="ag__error" wx:if="{{error && !unknown}}" bindtap="start" hover-class="ag__press" hover-stay-time="80">{{error}} · 点击重试</view>
+    <view class="ag__error" wx:if="{{error && !unknown}}" bindtap="start" hover-class="ag__press" hover-stay-time="80">{{error}} · 点击重新读取</view>
     <block wx:if="{{state}}">
       <view class="ag__status"><text class="ag__status-text">{{state.status}}</text><text class="ag__status-text" wx:if="{{remainingSeconds !== null}}">剩余 {{remainingSeconds || 0}} 秒</text><text class="ag__status-text">得分 {{state.score || 0}}</text></view>
 
@@ -36,8 +36,9 @@
 
       <view class="ag-card" wx:if="{{state.config.multiplayer.enabled}}">
         <text class="ag-card__title">多人协作</text><text class="ag-card__sub">已完成 {{state.multiplayer.completedUnitIds.length || 0}} / {{state.config.multiplayer.requiredTurns || 1}} 轮</text>
+        <text class="ag-card__sub">我的角色：{{state.multiplayer.myRoleLabel || state.multiplayer.myRole || '待分配'}}</text>
         <view class="ag-member" wx:for="{{members}}" wx:key="memberId" wx:for-item="member">
-          <image class="ag-member__avatar" src="{{member.avatar || '/images/d_profile.png'}}" mode="aspectFill" /><text class="ag-member__name">{{member.name}}</text><text class="ag-member__role">{{member.roleId || '待分配'}}</text>
+          <image class="ag-member__avatar" src="{{member.avatar || '/images/d_profile.png'}}" mode="aspectFill" /><text class="ag-member__name">{{member.name}}</text><text class="ag-member__role">{{member.roleText}}</text>
           <view class="ag-role" wx:if="{{state.config.multiplayer.assignment === 'LEADER'}}">
             <text class="ag-role__option" wx:for="{{state.config.multiplayer.roles}}" wx:key="id" wx:for-item="role" data-memberid="{{member.memberId}}" data-roleid="{{role.id}}" bindtap="assignRole" hover-class="cy-pressed" hover-stay-time="80">{{role.label}}</text>
           </view>
@@ -51,7 +52,8 @@
         <view class="ag__error" wx:if="{{leaderboardError}}">榜单暂时读不到 · 点「刷新」再试</view>
         <cy-empty wx:elif="{{!leaderboard.length}}" size="sm" title="还没有排名数据" />
       </view>
-      <view class="ag__ended" wx:if="{{state.status !== 'RUNNING' && state.status !== 'COMPLETED'}}">本局已结束，请退出节点后重新进入</view>
+      <view class="ag__ended" wx:if="{{state.status !== 'RUNNING' && state.status !== 'COMPLETED'}}">本次玩法已结束，重新进入会保留原结果。</view>
+      <cy-btn wx:if="{{state.canRetry === true && (state.status === 'FAILED' || state.status === 'EXPIRED')}}" variant="secondary" disabled="{{loading || acting || unknown}}" bindtap="retry">{{state.ownerType === 2 ? '队长重新开始本次玩法' : '重新开始本次玩法'}}</cy-btn>
     </block>
     <view class="ag__pad"></view>
   </scroll-view>

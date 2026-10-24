@@ -13,7 +13,7 @@ test('★主题详情:selfrun 的主键文案必须与它真正干的事一致',
   // 原来是 primary: '去核销',而 onPrimary 对 selfrun 开的是结束活动确认层。
   // 读着像查看、点下去是写操作,这种错配比死按钮更危险。
   assert.match(js, /selfrun:\s*\{[^}]*primary:\s*'结束活动'/,
-    'selfrun 的主键干的是结束活动,文案就得是结束活动')
+    'selfrun 的主键干的是结束活动，文案就得是结束活动')
   assert.doesNotMatch(js, /selfrun:\s*\{[^}]*primary:\s*'去核销'/)
   assert.match(js, /if \(key === 'running' \|\| key === 'selfrun'\) \{ this\.setData\(\{ directorEndConfirmShow: true \}\)/)
 })
@@ -25,7 +25,7 @@ test('★主题详情:未通过的主题,「修改并重新提交」要排在导
   const gateAt = body.indexOf('!this._directorActivityId')
   assert.ok(rejectedAt > 0 && gateAt > 0, '两段都要在 onPrimary 里')
   assert.ok(rejectedAt < gateAt,
-    '被拒的主题通常一场都没开,导演台对象不存在 —— 放闸后面等于永远只弹缺场次提示')
+    '被拒的主题通常一场都没开，导演台对象不存在 —— 放闸后面等于永远只弹缺场次提示')
   assert.match(body, /if \(key === 'rejected'\) \{ this\.goEditTopic\(\); return; \}/)
   assert.match(body, /if \(key === 'ended'\) \{ this\.goSettlement\(\); return; \}/)
 })
@@ -36,7 +36,7 @@ test('★引用卡的两个动作在三个宿主页都接上了(渲染了却没�
   for (const page of ['pages/club/detail/index.wxml', 'pages/talent/list/index.wxml']) {
     const wxml = read(page)
     assert.match(wxml, /bind:playdetail="onPostReference[A-Za-z]*"/, `${page} 要接住看详情`)
-    assert.match(wxml, /bind:play="onPostReferencePlay"/, `${page} 要接住试玩,否则按钮点了没反应`)
+    assert.match(wxml, /bind:play="onPostReferencePlay"/, `${page} 要接住试玩，否则按钮点了没反应`)
   }
   assert.match(read('pages/square/list/index.wxml'), /bind:play="goPlay"/)
 })
@@ -51,7 +51,7 @@ test('★达人页要能派生 variant,而且必须复用同一份判据', () =>
   const controller = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java')
   const feed = controller.slice(controller.indexOf('@PostMapping("/post/feed")'))
   assert.match(feed.slice(0, 2000), /projectPostReferences\(posts\);/,
-    '聚合流也要投影引用,否则达人页拿不到 sportName,卡片永远不出现')
+    '聚合流也要投影引用，否则达人页拿不到 sportName,卡片永远不出现')
 })
 
 test('★入会审批保留开关与后端权限判据，移除说明小字', () => {

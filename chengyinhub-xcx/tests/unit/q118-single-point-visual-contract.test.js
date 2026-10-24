@@ -26,7 +26,7 @@ function assertAddressErrorContract({ js, wxml, json }) {
   assert.match(js, /getRequestErrorMessage/, '错误文案必须经统一映射');
   assert.doesNotMatch(js, /res\s*&&\s*res\.msg/, '不能把服务端原始错误直接展示给用户');
   assert.match(json, /"cy-error"\s*:/, '地址页错误态使用统一 cy-error');
-  assert.match(wxml, /<cy-error\s+wx:if="\{\{loadState === 'error'\}\}"/, '错误态必须可见且可重试');
+  assert.match(wxml, /<cy-error load-failure\s+wx:if="\{\{loadState === 'error'\}\}"/, '读取错误态使用留白契约');
   assert.match(wxml, /<cy-footer-bar\s+wx:if="\{\{loadState === 'ready'\}\}"/, '新增地址 CTA 只能在 ready 状态出现');
 }
 

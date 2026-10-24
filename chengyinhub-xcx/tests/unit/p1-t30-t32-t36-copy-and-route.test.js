@@ -12,7 +12,7 @@ test('T30:已报名订单卡的按钮打开订单详情,文案不能写「查看
   const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-member-order-history/index.wxml'), 'utf8')
   const btn = wxml.split('\n').find(line => line.includes('catchtap="openDetail"') && line.includes('manual_refund'))
   assert.ok(btn, '找不到已报名订单卡的 openDetail 按钮')
-  assert.doesNotMatch(btn, /查看票夹/, 'openDetail 打开的是订单详情,不是票夹')
+  assert.doesNotMatch(btn, /查看票夹/, 'openDetail 打开的是订单详情，不是票夹')
 })
 
 function loadPage(relPath, wxOverrides, appOverrides) {

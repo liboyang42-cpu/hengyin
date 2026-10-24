@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ExplorationAnniversaryMapper">
+  <select id="page" resultType="com.chengyinhub.business.domain.ExplorationAnniversary">
+    <bind name="viewerMemberId" value="owner"/>
+    select cast(s.id as char) as id,cast(s.topic_id as char) as topicId,cms_topic.name as title,
+      left(date_format(s.completed_at,'%Y-%m-%d %H:%i:%s.%f'),23) as completedAt
+    from topic_route_session s join cms_topic on cms_topic.id=s.topic_id
+    where s.member_id=#{owner} and s.status=1 and s.completed_at is not null
+      and s.completed_at &lt; #{yearStart} and date_format(s.completed_at,'%m-%d')=#{monthDay}
+      and cms_topic.status=1 and cms_topic.user_status=1 and cms_topic.del_flag=0
+      and cms_topic.is_draft=0 and cms_topic.is_template=0
+      and (cms_topic.club_id is null or cms_topic.club_id=0 or exists (
+        select 1 from club active_club where active_club.id=cms_topic.club_id and active_club.del_flag=0))
+      and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.primaryCirclePublicGate"/>
+      and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.clubMemberOnlyGate"/>
+    <if test="beforeAt != null">
+      and (s.completed_at &lt; #{beforeAt} or (s.completed_at=#{beforeAt} and s.id &lt; #{beforeId}))
+    </if>
+    order by s.completed_at desc,s.id desc limit #{limit}
+  </select>
+</mapper>

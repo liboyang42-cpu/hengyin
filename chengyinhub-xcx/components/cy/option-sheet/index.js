@@ -13,6 +13,12 @@
  * 回调形状与 showActionSheet 对齐(select.detail.index === 原 res.tapIndex),
  * 所以 9 个落点的业务分支一行都不用改;取消走 cancel(原 fail)。
  */
+/* 2026-10-23 业主定:动作菜单里的破坏性动作(删除 / 移出 / 解散 / 拉黑 / 举报…)标红,
+ * 与 cy-post-actions 的 .pa-row--danger 同色。只在 immediate(点了就执行)时生效 ——
+ * 一次选择的选项列表里「取消报名」之类是待选项,不是马上执行的动作,不标红。
+ * 对象项可显式传 { label, danger: true|false } 覆盖自动判断。 */
+const DANGER_LABEL = /^(删除|移出|移除|解散|退出|注销|撤回|拉黑|踢出|举报)/;
+
 Component({
   options: { multipleSlots: true },
   properties: {
@@ -34,20 +40,25 @@ Component({
     picked: -1,
   },
   observers: {
-    items(list) {
-      this.setData({
-        rows: (list || []).map((item, index) => (
-          typeof item === 'string'
-            ? { label: item, disabled: false, index }
-            : { label: (item && item.label) || '', disabled: !!(item && item.disabled), index }
-        )),
-      });
-    },
+    items(list) { this._buildRows(list, this.data.immediate); },
+    immediate(v) { this._buildRows(this.data.items, v); },
     show(v) {
       if (v) this.setData({ picked: this.data.defaultIndex });
     },
   },
   methods: {
+    _buildRows(list, immediate) {
+      this.setData({
+        rows: (list || []).map((item, index) => {
+          const row = typeof item === 'string'
+            ? { label: item, disabled: false, index }
+            : { label: (item && item.label) || '', disabled: !!(item && item.disabled), index };
+          const explicit = item && typeof item === 'object' && typeof item.danger === 'boolean' ? item.danger : null;
+          row.danger = !!immediate && (explicit === null ? DANGER_LABEL.test(row.label) : explicit);
+          return row;
+        }),
+      });
+    },
     onRow(e) {
       const index = Number(e.currentTarget.dataset.index);
       const row = this.data.rows[index];

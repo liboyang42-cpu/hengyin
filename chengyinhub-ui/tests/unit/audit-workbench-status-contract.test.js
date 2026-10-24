@@ -7,7 +7,7 @@ const path = require('node:path');
 // AuditReviewDTO 是 {taskId, status:Integer, reasonCode, reasonText}。
 // 前端一旦拿字符串('PENDING'/'APPROVED')去比/去传,按钮恒灰、提交必反序列化失败、原因静默丢失。
 // 本测试把 index.vue 的 <script> 取出真跑,断言的是行为而非源码长相。
-function loadComponent(listAuditTasks, getAuditTaskDetail) {
+function loadComponent(listAuditTasks, getAuditTaskDetail, reviewAuditTask, reviewMediaAsset) {
   const src = fs.readFileSync(
     path.resolve(__dirname, '../../src/views/business/audit/index.vue'),
     'utf8'
@@ -18,7 +18,8 @@ function loadComponent(listAuditTasks, getAuditTaskDetail) {
     .replace(/^\s*import[^\n]*\n/gm, '')
     .replace(/components:\s*\{[^}]+\},/, 'components: {},')
     .replace(/export\s+default\s*/, 'return ');
-  const component = new Function('listAuditTasks', 'getAuditTaskDetail', body)(listAuditTasks, getAuditTaskDetail);
+  const component = new Function('listAuditTasks', 'getAuditTaskDetail', 'reviewAuditTask', 'reviewMediaAsset', body)(
+    listAuditTasks, getAuditTaskDetail, reviewAuditTask, reviewMediaAsset);
   return component;
 }
 
@@ -27,6 +28,104 @@ function deferred() {
   const promise = new Promise((done, fail) => { resolve = done; reject = fail; });
   return { promise, resolve, reject };
 }
+
+test('审核提交按当前选中任务选择媒体或普通入口，不依赖旧详情，失败保留确认层', async () => {
+  const sent = [];
+  let rejectMedia = false;
+  const component = loadComponent(undefined, undefined,
+    data => { sent.push(['audit', data]); return Promise.resolve(); },
+    data => { sent.push(['media', data]); return rejectMedia ? Promise.reject(Error('拒绝')) : Promise.resolve(); });
+  const vm = { ...component.data(), ...component.methods, $modal: { msgSuccess() {} }, getList() {} };
+  for (const [bizType, expected] of [['MEDIA_ASSET', 'media'], ['TOPIC', 'audit']]) {
+    vm.detailTask = { bizType: bizType === 'MEDIA_ASSET' ? 'TOPIC' : 'MEDIA_ASSET' };
+    vm.openReview({ id: 42, version: 3, bizType }, 2);
+    vm.reviewForm.reasonText = '实际审核原因';
+    await vm.submitReview();
+    assert.deepEqual(sent.at(-1), [expected, { taskId: 42, expectedVersion: 3, status: 2, reasonText: '实际审核原因' }]);
+    assert.equal(vm.reviewOpen, false);
+  }
+  rejectMedia = true;
+  vm.detailTask = null;
+  vm.openReview({ id: 43, version: 4, bizType: 'MEDIA_ASSET' }, 1);
+  await assert.rejects(vm.submitReview());
+  assert.equal(vm.reviewOpen, true);
+});
+
+test('社区图片沿同任务详情刷新，原正文与审核版本保留，不从快照长链接取图', async () => {
+  const snapshotJson = JSON.stringify({ body: '原始待审正文', media: [{ id: 12, derived_object_key: 'upload/owned.png' }] });
+  const ids = [], sent = [];
+  let url = 'https://media.example/short-one';
+  const task = { id: 40, bizId: 5, bizType: 'COMMUNITY_POST', status: 0, version: 3, snapshotJson };
+  const c = loadComponent(undefined, id => { ids.push(id); return Promise.resolve({
+    task: { ...task }, records: [], reportCount: 0,
+    communityMediaPreview: { taskId: 40, taskVersion: 3, postId: 5, postVersion: 7,
+      status: 'READY', expiresInSeconds: 300, items: [{ id: 12, url }] }
+  }); }, data => { sent.push(data); return Promise.resolve(); });
+  const vm = { ...c.data(), ...c.methods, $modal: { msgSuccess() {} }, getList() {} };
+  await vm.openDetail(task);
+  let items = c.computed.auditEvidenceItems.call(vm);
+  assert.deepEqual(items.filter(item => item.kind === 'image'), [{ kind: 'image', src: url }]);
+  assert.match(items[0].content, /原始待审正文/);
+  url = 'https://media.example/short-two';
+  await vm.openDetail(vm.detailRow);
+  items = c.computed.auditEvidenceItems.call(vm);
+  assert.deepEqual(ids, [40, 40]);
+  assert.deepEqual(items.filter(item => item.kind === 'image'), [{ kind: 'image', src: url }]);
+  assert.equal(JSON.parse(vm.detailTask.snapshotJson).body, '原始待审正文');
+  vm.openReview(vm.detailTask, 1);
+  await vm.submitReview();
+  assert.equal(sent[0].expectedVersion, 3);
+  assert.equal(sent[0].taskId, 40);
+  const source = fs.readFileSync(path.resolve(__dirname, '../../src/views/business/audit/index.vue'), 'utf8');
+  assert.match(source, /@click="openDetail\(detailRow\)">刷新五分钟预览/);
+});
+
+test('社区预览失效或身份版本不匹配仍保留冻结文字与轨迹，但无旧图降级', async () => {
+  const task = { id: 40, bizId: 5, version: 3, bizType: 'COMMUNITY_POST', status: 0,
+    snapshotJson: JSON.stringify({ body: '冻结正文', media: [{ derived_object_key: 'https://old.example/long' }] }) };
+  const valid = { taskId: 40, taskVersion: 3, postId: 5, postVersion: 7, status: 'READY',
+    expiresInSeconds: 300, items: [{ id: 12, url: 'https://media.example/short' }] };
+  for (const preview of [undefined, null, { ...valid, taskId: 39 }, { ...valid, taskVersion: 2 },
+    { ...valid, status: 'STALE', items: [] }, { ...valid, status: 'UNAVAILABLE', items: [] },
+    { ...valid, items: [{ id: 12, url: '/relative' }] }]) {
+    const c = loadComponent(undefined, () => Promise.resolve({ task, records: [{ id: 2 }], reportCount: 0,
+      communityMediaPreview: preview }));
+    const vm = { ...c.data(), ...c.methods };
+    await vm.openDetail(task);
+    assert.equal(vm.detailTask, task);
+    assert.equal(vm.detailRecords[0].id, 2);
+    assert.deepEqual(c.computed.auditEvidenceItems.call(vm).filter(item => item.kind === 'image'), []);
+    assert.match(vm.communityMediaPreviewError, /预览|刷新/);
+  }
+});
+
+test('社区预览晚到或抽屉已关闭时不能覆盖新任务图片，加载失败先清旧图', async () => {
+  for (const closed of [false, true]) {
+    const old = deferred(), latest = deferred();
+    const c = loadComponent(undefined, id => id === 39 ? old.promise : latest.promise);
+    const vm = { ...c.data(), ...c.methods };
+    const first = vm.openDetail({ id: 39 });
+    const second = vm.openDetail({ id: 40 });
+    latest.resolve({ task: { id: 40, version: 3, bizType: 'COMMUNITY_POST', snapshotJson: '{}' },
+      records: [], reportCount: 0, communityMediaPreview: { taskId: 40, taskVersion: 3,
+        status: 'READY', expiresInSeconds: 300, items: [{ id: 14, url: 'https://media.example/new' }] } });
+    await second;
+    const current = vm.communityMediaPreview;
+    if (closed) vm.detailOpen = false;
+    old.resolve({ task: { id: 39, version: 3, bizType: 'COMMUNITY_POST', snapshotJson: '{}' },
+      records: [], reportCount: 0, communityMediaPreview: { taskId: 39, taskVersion: 3,
+        status: 'READY', expiresInSeconds: 300, items: [{ id: 13, url: 'https://media.example/old' }] } });
+    await first;
+    assert.equal(vm.communityMediaPreview, current);
+    assert.equal(vm.detailTask.id, 40);
+  }
+  const c = loadComponent(undefined, () => Promise.reject(Error('signing failed')));
+  const vm = { ...c.data(), ...c.methods, communityMediaPreview: { items: [{ id: 1, url: 'https://old.example/short' }] } };
+  await vm.openDetail({ id: 40 });
+  assert.equal(vm.detailTask, null);
+  assert.equal(vm.communityMediaPreview, null);
+  assert.match(vm.detailError, /加载失败/);
+});
 
 test('canReview 认后端的 Integer 状态:待审(0)/升级(3)可审,终态不可审', () => {
   const { canReview } = loadComponent().methods;

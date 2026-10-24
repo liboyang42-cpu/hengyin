@@ -258,7 +258,7 @@ Component({
         && (typeof app.getUserID !== 'function' || app.getUserID() === memberId);
       cyModal.show({
         title: '确认到店位置',
-        content: '地图选点用于保存这个点位的到店位置，供玩家导航和现场位置校验。',
+        content: '地图选点用于保存这个节点的到店位置，供玩家导航和现场位置校验。',
         confirmText: '去地图选点',
         success: (res) => {
           if (!res || !res.confirm || !isCurrent()) return;
@@ -375,7 +375,7 @@ Component({
       if (this.data.formMode !== 'offer') {
         const name = String(form.name || '').trim();
         if (!name) {
-          app.tips('请填写点位名称');
+          app.tips('请填写节点名称');
           return;
         }
         if (!Number(form.templateId)) {

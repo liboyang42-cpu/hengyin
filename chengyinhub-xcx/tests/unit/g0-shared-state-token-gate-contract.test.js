@@ -15,6 +15,7 @@ function loadComponent(relativePath) {
   let definition
   vm.runInNewContext(read(relativePath), {
     Component(value) { definition = value },
+    require(request) { assert.match(request, /behaviors\/reduced-motion\.js$/); return {} },
   }, { filename })
   assert.ok(definition, `${relativePath} 必须注册 Component`)
   return definition
@@ -75,7 +76,7 @@ test('cy-error 冻结整页错误双出口 API，局部错误仍可不传 second
 
   const stateShell = read('components/cy/state-shell/index.wxml')
   assert.match(stateShell, /<cy-error[\s\S]*?secondary="\{\{secondary\}\}"[\s\S]*?bind:secondary="onSecondary"/)
-  assert.match(stateShell, /wx:if="\{\{_renderer !== 'error' && secondary\}\}"/,
+  assert.match(stateShell, /wx:if="\{\{!_loadFailure && _renderer !== 'error' && secondary\}\}"/,
     'state-shell 的 error 分支不能在组件内外重复渲染第二出口')
 
   const docs = read('components/cy/error/README.md')
@@ -120,7 +121,7 @@ test('状态可见性门禁同时拦裸错误文案与空白错误分支', () =>
 
   const repaired = `
     <block wx:if="{{state === 'ready'}}"><view>{{title}}</view></block>
-    <cy-error wx:elif="{{state === 'error'}}" sub="{{submitError}}"
+    <cy-error load-failure wx:elif="{{state === 'error'}}" sub="{{submitError}}"
       retry="重试" bind:retry="reload" />
   `
   assert.deepEqual(analyzeWxml(repaired, 'pages/demo/index.wxml'), [])

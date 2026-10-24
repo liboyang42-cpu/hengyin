@@ -4,9 +4,18 @@ import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.domain.dto.RefundReviewDTO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IRefundService {
     List<RefundApplication> selectRefundList(RefundApplication query);
+
+    List<RefundApplication> selectRegistrationHistoryForUpdate(Long registrationId);
+
+    /**
+     * 系统全额退款（主办方取消/玩家取消）取代该报名尚待审核的退款申请：仅 status=0 的行按 CAS 置为驳回并留痕，
+     * 未打款、不改金额。返回被取代的申请数。
+     */
+    int supersedePendingRegistrationRefunds(Long registrationId, String reason);
 
     int saveRefund(RefundApplication refund);
 
@@ -52,5 +61,5 @@ public interface IRefundService {
      * 退款结果通知回调:按 out_refund_no(=refund_no)反查退款单,回写打款终态。
      * SUCCESS→原路成功(1);ABNORMAL/CLOSED→待人工(2);PROCESSING→保持。返回 true=已受理(可回 ACK)。
      */
-    boolean handleRefundNotify(String outRefundNo, String refundStatus);
+    boolean handleRefundNotify(Map<String, String> facts);
 }

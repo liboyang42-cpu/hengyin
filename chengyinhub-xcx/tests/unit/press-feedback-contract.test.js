@@ -28,7 +28,7 @@ const INTERACTIVE = [
   'subpackageMember/components/cy/scene-play-activity-detail',
   'components/cy/scene-roam-task-list',
   'components/cy/scene-roam-stamp-album',
-  'components/cy/scene-game-coupon-wallet',
+  'subpackageMember/components/cy/scene-game-coupon-wallet',
 ]
 
 function pressAbility(base, wxmlSrc) {
@@ -48,7 +48,7 @@ test('共享交互组件必须有按压反馈,且样式类在本组件 wxss 里�
   INTERACTIVE.forEach((base) => {
     const r = pressAbility(base)
     if (!r.declared) missing.push(base + '(没有 hover-class)')
-    else if (!r.defined) missing.push(base + '(hover-class=' + r.classes.join('/') + ' 但 wxss 里没这条规则 —— isolated 隔离下全局类进不来,等于没反馈)')
+    else if (!r.defined) missing.push(base + '(hover-class=' + r.classes.join('/') + ' 但 wxss 里没这条规则 —— isolated 隔离下全局类进不来，等于没反馈)')
   })
   assert.deepEqual(missing, [], '这些共享组件点下去没有任何即时反馈:\n  ' + missing.join('\n  '))
 })

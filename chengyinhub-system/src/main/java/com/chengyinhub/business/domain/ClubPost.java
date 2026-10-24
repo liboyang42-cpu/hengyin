@@ -40,6 +40,8 @@ public class ClubPost extends BaseEntity
     private String sportCover;
     private Long sportTopicId;
     private Boolean isTopicTemplate;
+    /** 非持久：帖子带引用、但被引对象当前已删/下架/转私密 ⇒ true。只给「引用已不可见」,不投影标题与封面。 */
+    private Boolean refUnavailable;
 
     /** 类型 0图文 1战报 2公告 */
     private Integer type;
@@ -55,6 +57,12 @@ public class ClubPost extends BaseEntity
 
     /** 是否在俱乐部帖子流置顶；仅公告可置顶 */
     private Integer isPinned;
+
+    /** 仅查询入参(P0-82 分页):每页非置顶条数、翻页游标(上一页最后一条非置顶帖 id) */
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    private Integer limit;
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    private Long beforeId;
 
     /** 置顶时间 */
     private Date pinnedAt;
@@ -112,6 +120,8 @@ public class ClubPost extends BaseEntity
     public void setSportTopicId(Long sportTopicId) { this.sportTopicId = sportTopicId; }
     public Boolean getIsTopicTemplate() { return isTopicTemplate; }
     public void setIsTopicTemplate(Boolean isTopicTemplate) { this.isTopicTemplate = isTopicTemplate; }
+    public Boolean getRefUnavailable() { return refUnavailable; }
+    public void setRefUnavailable(Boolean refUnavailable) { this.refUnavailable = refUnavailable; }
     public Integer getType() { return type; }
     public void setType(Integer type) { this.type = type; }
     public Integer getLikeCount() { return likeCount; }
@@ -122,6 +132,10 @@ public class ClubPost extends BaseEntity
     public void setDelFlag(Integer delFlag) { this.delFlag = delFlag; }
     public Integer getIsPinned() { return isPinned; }
     public void setIsPinned(Integer isPinned) { this.isPinned = isPinned; }
+    public Integer getLimit() { return limit; }
+    public void setLimit(Integer limit) { this.limit = limit; }
+    public Long getBeforeId() { return beforeId; }
+    public void setBeforeId(Long beforeId) { this.beforeId = beforeId; }
     public Date getPinnedAt() { return pinnedAt; }
     public void setPinnedAt(Date pinnedAt) { this.pinnedAt = pinnedAt; }
     public Integer getVersion() { return version; }

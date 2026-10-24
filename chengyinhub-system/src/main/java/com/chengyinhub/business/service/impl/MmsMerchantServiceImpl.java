@@ -67,6 +67,7 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
     @Autowired
     private ICapabilityService capabilityService;
 
+    @Autowired private com.chengyinhub.business.service.IRoleService roleService;
     @Autowired private IUmsMemberService umsMemberService;
     @Autowired private IUmsMemberPointsDetailService umsMemberPointsDetailService;
     @Autowired private ICmsPointsSettingService cmsPointsSettingService;
@@ -146,15 +147,7 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
         if (merchantOperatorMapper.selectActiveByMemberIdForUpdate(memberId) != null) {
             throw new ServiceException("请先退出商家经营团队，再切换店主身份", HttpStatus.CONFLICT);
         }
-        capabilityService.revoke(memberId, MemberCapability.CAP_CLUB_LEADER);
-        capabilityService.grant(memberId, MemberCapability.CAP_MERCHANT, null);
-        UmsMember identity = new UmsMember();
-        identity.setId(memberId);
-        identity.setRole("merchant");
-        identity.setUserType(2L);
-        if (umsMemberMapper.updateUmsMember(identity) != 1) {
-            throw new ServiceException("商家会员身份更新失败");
-        }
+        roleService.changeRole(memberId, com.chengyinhub.business.service.IRoleService.ROLE_MERCHANT, 0L);
     }
 
     /**
@@ -301,6 +294,12 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
             throw new ServiceException("商家身份无效或权限不足", HttpStatus.FORBIDDEN);
         }
         MmsMerchant allowed = authorizedProfilePatch(patch);
+        if (!MerchantPermission.PROFILE_WRITE.equals(requiredPermission)) {
+            // 联系方式只随资料编辑权(PROFILE_WRITE)落库;承接设置(COOP_MANAGE)的运营不得借道改店主电话/微信
+            allowed.setPhone(null);
+            allowed.setWechat(null);
+            allowed.setWechatQrcode(null);
+        }
         allowed.setUpdateBy(String.valueOf(principalMemberId));
         boolean clearCapacity = MerchantPermission.COOP_MANAGE.equals(requiredPermission)
                 && patch.getCapacity() == null
@@ -357,6 +356,11 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
         allowed.setLocationLng(source.getLocationLng());
         allowed.setLocationVerified(source.getLocationVerified());
         allowed.setCategoryId(source.getCategoryId());
+        allowed.setCategoryIds(source.getCategoryIds());
+        // owner 2026-10-22:商家可在门店信息里改自己的联系电话 / 门店微信号 / 二维码(格式由接口层校验)
+        allowed.setPhone(source.getPhone());
+        allowed.setWechat(source.getWechat());
+        allowed.setWechatQrcode(source.getWechatQrcode());
         return allowed;
     }
 
@@ -400,7 +404,11 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
                 && matches(patch.getLocationLat(), current.getLocationLat())
                 && matches(patch.getLocationLng(), current.getLocationLng())
                 && matches(patch.getLocationVerified(), current.getLocationVerified())
-                && matches(patch.getCategoryId(), current.getCategoryId());
+                && matches(patch.getCategoryId(), current.getCategoryId())
+                && matches(patch.getCategoryIds(), current.getCategoryIds())
+                && matches(patch.getPhone(), current.getPhone())
+                && matches(patch.getWechat(), current.getWechat())
+                && matches(patch.getWechatQrcode(), current.getWechatQrcode());
     }
 
     private boolean matches(Object requested, Object current)

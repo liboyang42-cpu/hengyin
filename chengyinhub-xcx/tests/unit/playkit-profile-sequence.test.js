@@ -192,5 +192,5 @@ test('刚交上去:答案像墨迹写进档案,写完盖章;重进看到的已�
   const again = profile(questions);
   again.update({ done: true, answers: { name: '小满' } });
   assert.equal(again.c.data.inked, true);
-  assert.equal(again.c.data.sealed, true, '不是刚交的,不重放');
+  assert.equal(again.c.data.sealed, true, '不是刚交的，不重放');
 });

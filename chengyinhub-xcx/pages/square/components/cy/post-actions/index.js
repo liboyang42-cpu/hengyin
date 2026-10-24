@@ -46,22 +46,25 @@ Component({
     /* 三个入口一律先收起菜单再走动作:删除要把屏幕让给确认弹窗,
        编辑/举报要么跳页要么弹二次确认,菜单留在原地都是碍事的。 */
     _pick(action) {
+      const id = this.data.postId;
       this.triggerEvent('close');
-      this.triggerEvent('select', { action, id: this.data.postId });
+      this.triggerEvent('select', { action, id });
     },
 
     onDelete() {
       const dc = this._danger();
       if (!dc) return;
+      this._deleteTarget = { id: this.data.postId, name: postExcerpt(this.data.summary) };
       this.triggerEvent('close');
-      dc.open(DELETE_CONFIRM_KEY, { id: this.data.postId, name: postExcerpt(this.data.summary) });
+      dc.open(DELETE_CONFIRM_KEY, this._deleteTarget);
     },
 
     /* 用户在确认弹窗里点了「删除动态」才走到这 —— 此刻才把 delete 交给页面。 */
     onDeleteConfirmed() {
+      if (!this._deleteTarget || !this._deleteTarget.id) return;
       const dc = this._danger();
       if (dc) dc.busyOn();
-      this.triggerEvent('select', { action: 'delete', id: this.data.postId });
+      this.triggerEvent('select', { action: 'delete', id: this._deleteTarget.id });
     },
 
     /* 页面请求成功 / 失败后的回执,透传给确认组件的第三段。 */

@@ -41,8 +41,11 @@ test('C-18 拍照一律机审:人工审核开关与「审核中」态全部下�
 
 test('C-19 解锁提示必须带会话上下文(与解谜提示同口径),只发 nodeId 会被后端拒', () => {
   const js = PLAY_JS();
-  const slice = js.slice(js.indexOf("url: '/api/play/hint/unlock'"), js.indexOf("url: '/api/play/hint/unlock'") + 600);
-  assert.match(slice, /data: Object\.assign\(\{ nodeId: g\.nodeId \}, that\._sessionParams\(\)\)/);
+  const at = js.indexOf("url: '/api/play/hint/unlock'");
+  const slice = js.slice(at, at + 600);
+  // 请求体在发起时先固定为 payload(含会话上下文),再原样发出。
+  assert.match(js.slice(at - 1200, at), /const payload = Object\.assign\(\{ nodeId: g\.nodeId \}, this\._sessionParams\(\)\);/);
+  assert.match(slice, /data: payload,/);
   assert.doesNotMatch(slice, /data: \{ nodeId: g\.nodeId \}/, '只发 nodeId 的旧形态必须改掉');
 });
 
@@ -82,7 +85,8 @@ test('C-27 节点分展示后端真源 xp,缺省才回落 12', () => {
 test('C-01 有票卡的底注不再承诺「自动进群聊」(小程序根本不露出队伍群)', () => {
   const js = MAP_TEAM_JS();
   assert.doesNotMatch(js, /你会自动进入这支队伍的群聊/);
-  assert.match(js, /队长同意后即可一起出发（沟通请用微信群）/);
+  // 2026-10-15 精简:有票卡底注整体去掉(状态行已足够),自然也不再承诺群聊
+  assert.doesNotMatch(js, /队长同意后即可一起出发/);
 });
 
 test('C-02 队伍详情按 joinMode 显示公开/仅邀请,不再恒称邀请制', () => {

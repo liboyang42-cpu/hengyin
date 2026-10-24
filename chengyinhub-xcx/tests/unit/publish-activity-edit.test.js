@@ -71,7 +71,7 @@ function last(url) {
 
 function allowPublisher(page) {
   const home = last('/api/publish/home');
-  assert.ok(home, '必须先回读身份');
+  assert.ok(home, '必须先刷新身份');
   home.success({ code: '200', data: { role: 'club' } });
 }
 
@@ -193,11 +193,11 @@ test('已售出(服务端 timeLocationLocked=true)：时间/地点点不动并�
   const info = last('/api/activity/info');
   info.success({ code: '200', data: Object.assign(activityInfoFixture(), { timeLocationLocked: true }) });
 
-  assert.equal(page.data.timeLocationLocked, true, '锁定态必须由服务端回包落地,前端不自己数报名');
+  assert.equal(page.data.timeLocationLocked, true, '锁定态必须由服务端回包落地，前端不自己数报名');
 
   page.showStartTimePicker();
   assert.notEqual(page.data.timePicker.show, true, '已售出时不得打开时间面板');
-  assert.ok(toasts.some((t) => String(t).includes('已售出')), '必须说明为什么点不动,实际:' + JSON.stringify(toasts));
+  assert.ok(toasts.some((t) => String(t).includes('已售出')), '必须说明为什么点不动，实际:' + JSON.stringify(toasts));
 
   const before = toasts.length;
   page.choosePoiForNode();
@@ -266,5 +266,5 @@ test('只定位一次:用户自己翻回前面后,迟到的第二次回填不得
   page.goStep(0);
   page.applyExistingActivity(activityInfoFixture());
 
-  assert.equal(page.data.step, 0, '回填是幂等的,落点不是');
+  assert.equal(page.data.step, 0, '回填是幂等的，落点不是');
 });

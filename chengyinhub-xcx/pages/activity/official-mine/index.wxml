@@ -6,22 +6,25 @@
   <cy-page-title title="我发布的" />
   <scroll-view scroll-y class="om-scroll">
     <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="3" />
-    <cy-error class="cy-fade-in" wx:elif="{{error && !hasLoaded}}" fill size="lg" title="发布记录加载失败" sub="{{error}}" bind:retry="fetch" auto-back />
+    <cy-error load-failure class="cy-fade-in" wx:elif="{{error && !hasLoaded}}" fill size="lg" title="发布记录加载失败" sub="{{error}}" bind:retry="fetch" auto-back />
     <block wx:else>
       <view wx:if="{{refreshing}}" class="om-sync" aria-role="status" aria-live="polite">正在更新发布记录…</view>
       <view class="om-sec">我发起的活动 · {{events.length}}</view>
-      <cy-empty wx:if="{{!events.length}}" title="还没发过活动" sub="从官方活动页发起后，会在这里查看进度。" />
+      <cy-empty wx:if="{{!events.length}}" title="还没发过活动" />
       <view wx:for="{{events}}" wx:key="id" class="om-card" data-id="{{item.id}}" bindtap="openEvent" hover-class="om-card--pressed" aria-role="button" aria-label="查看{{item._title}}详情，{{item._st}}">
         <view class="om-row"><text class="om-t">{{item._title}}</text><cy-badge type="status" variant="neutral" label="{{item._st}}" /></view>
         <text class="om-sub">{{item._city}}{{item._category ? ' · ' + item._category : ''}}</text>
+        <view wx:if="{{item._isV2}}" class="om-organizer" data-id="{{item.id}}" catchtap="openOrganizer" hover-class="om-card--pressed" hover-stay-time="80" aria-role="button" aria-label="打开{{item._title}}的主办控制台">主办控制台 · 发布 / 暂停 / 恢复</view>
       </view>
 
       <view class="om-sec">我发的通知 · {{broadcasts.length}}</view>
-      <cy-empty wx:if="{{!broadcasts.length}}" title="还没发过通知" sub="发出官方通知后，会在这里查看对象与触达人数。" />
-      <view wx:for="{{broadcasts}}" wx:key="id" class="om-card">
+      <cy-empty wx:if="{{!broadcasts.length}}" title="还没发过通知" />
+      <!-- BL-80:点通知卡读 GET /api/official/broadcast/{id}/stats(仅发布者本人),复盘就地显示在原触达行 -->
+      <view wx:for="{{broadcasts}}" wx:key="id" class="om-card" data-index="{{index}}" bindtap="openBroadcastStats"
+            hover-class="om-card--pressed" aria-role="button" aria-label="查看{{item._title}}的触达与点击复盘">
         <view class="om-row"><text class="om-t">{{item._title}}</text><cy-badge type="status" variant="neutral" label="{{item._st}}" /></view>
         <text class="om-sub">{{item._mode}} · 发给 {{item._aud}} · {{item._city}}</text>
-        <view class="om-stat"><text class="om-reach">{{item._reach}}</text></view>
+        <view class="om-stat"><text class="om-reach">{{item._statsText || item._reach}}</text></view>
       </view>
       <view class="om-bottom"></view>
     </block>

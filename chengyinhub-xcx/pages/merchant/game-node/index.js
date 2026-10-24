@@ -32,7 +32,7 @@ const DECLINE_REASONS = [
 ]
 
 const REJECT_REASONS = [
-  { code: 'ANSWER_MISMATCH', label: '答案不匹配' },
+  { code: 'ANSWER_MISMATCH', label: '答案不正确' },
   { code: 'EVIDENCE_UNCLEAR', label: '凭证无法辨认' },
   { code: 'DUPLICATE_SUBMISSION', label: '重复提交' },
 ]
@@ -114,6 +114,7 @@ function normalizePersistedCommand(value, activityId) {
     nodeId,
     requestId,
     expectedRevision,
+    ...(value.authorityEpoch != null ? { authorityEpoch: value.authorityEpoch } : {}),
     action,
     payload: JSON.parse(JSON.stringify(value.payload)),
   }
@@ -225,7 +226,7 @@ Page({
       this._errorReasonCode = 'GAME_ACTIVITY_ID_REQUIRED'
       this.setData({
         viewState: 'business-error',
-        errorMessage: '页面参数不完整，请从商家项目卡重新进入',
+        errorMessage: '链接已失效，请返回重新进入',
       })
       return
     }
@@ -277,7 +278,7 @@ Page({
         this._projection = null
         this.setData({
           viewState: 'business-error',
-          errorMessage: '本站运行数据不完整，请稍后重试',
+          errorMessage: '本站运行加载失败，请重试',
           stations: [],
           station: null,
           summary: null,
@@ -315,7 +316,8 @@ Page({
       fallbackOptions,
       summary: summary || summarizeMerchantProjection(projection),
       recap: station.recap,
-      readyDraft: {
+      readyDraft: this._authorityConflictReadyDraft && this._authorityConflictReadyDraft.nodeId === station.nodeId
+        ? this._authorityConflictReadyDraft.draft : {
         checklist,
         capacity: station.capacity == null ? '' : String(station.capacity),
         serviceDate: serviceDraft.serviceDate,
@@ -324,6 +326,11 @@ Page({
         note: '',
       },
     })
+    if (this._preservedReadyDraft && this._preservedReadyDraft.nodeId === station.nodeId) {
+      this.setData({ readyDraft: this._preservedReadyDraft.draft })
+      this._preservedReadyDraft = null
+    }
+    this._authorityConflictReadyDraft = null
     if (this._focusPause) {
       this._focusPause = false
       // canPause 为假就不弹,并说明为什么 —— 静默不弹会让人以为点错了行
@@ -483,7 +490,7 @@ Page({
       // R9-38:没选备用方案也能停,但玩家那边不会被引导去别的站 —— 停之前把这件事说清楚。
       modal.show({
         title: '不设备用方案，直接暂停？',
-        content: '玩家会看到本站暂停、暂停原因和预计恢复时间，不会被引导到其他站点；如需退款请联系平台客服。',
+        content: '玩家会看到本站暂停、暂停原因和预计恢复时间，不会被引导到其他节点；如需退款请联系平台客服。',
         confirmText: '确认暂停',
         cancelText: '再想想',
         success: (r) => { if (r && r.confirm) this._submitCommand(command) },
@@ -676,11 +683,14 @@ Page({
       task.then(done)
       return task
     }, (result) => {
+      if (this._handleAuthorityConflict(result, pendingWrite)) return
       const applied = result && result.status === 'success'
         && matchingTerminalReceipt(result, pendingWrite, 'APPLIED')
       const failed = result && result.status === 'business-error'
         && matchingTerminalReceipt(result, pendingWrite, 'FAILED')
       if (applied || failed) {
+        this._preservedReadyDraft = failed && persistedCommand.action === 'STATION_READY'
+          ? { nodeId: persistedCommand.nodeId, draft: this.data.readyDraft } : null
         this._pendingWrite = null
         this._clearPersistedWrite()
         this._recordReceipt(result.receipt)
@@ -709,6 +719,18 @@ Page({
     return submitted
   },
 
+  _handleAuthorityConflict(result, pending) {
+    if (!result || result.status !== 'business-error' || result.reasonCode !== 'GAME_AUTHORITY_CONFLICT') return false
+    this._pendingWrite = null
+    this._writeWorkflow.reset(pending.key)
+    this._clearPersistedWrite()
+    this._authorityConflictReadyDraft = { nodeId: pending.nodeId, draft: this.data.readyDraft }
+    this.setData({ writeState: 'idle', writeMessage: result.message, canRetryUnknownWrite: false })
+    toast(result.message || '本局权威版本已更新，请刷新')
+    this.load()
+    return true
+  },
+
   confirmUnknownWrite() {
     const pending = this._pendingWrite
     if (this.data.writeState !== 'unknown' || !pending || this._receiptReading) return false
@@ -730,6 +752,9 @@ Page({
         this.setData({ writeState: 'unknown', writeMessage: message })
         return
       }
+      // 核对确认原「准备」操作未生效时，重读站点后保留本页尚未提交成功的准备表单。
+      this._preservedReadyDraft = failed && pending.action === 'STATION_READY'
+        ? { nodeId: pending.nodeId, draft: this.data.readyDraft } : null
       this._pendingWrite = null
       this._writeWorkflow.reset(pending.key)
       this._clearPersistedWrite()
@@ -757,15 +782,18 @@ Page({
       return false
     }
     this._retrying = true
-    this.setData({ writeState: 'submitting', writeMessage: '正在用原请求号重试…' })
+    this.setData({ writeState: 'submitting', writeMessage: '正在重试…' })
     const task = this._client.submitAction('merchant', pending.command)
     this._retryTask = task
     task.then((result) => {
       this._retrying = false
       this._retryTask = null
+      if (this._handleAuthorityConflict(result, pending)) return
       const applied = result.status === 'success' && matchingTerminalReceipt(result, pending, 'APPLIED')
       const failed = result.status === 'business-error' && matchingTerminalReceipt(result, pending, 'FAILED')
       if (applied || failed) {
+        this._preservedReadyDraft = failed && pending.command.action === 'STATION_READY'
+          ? { nodeId: pending.command.nodeId, draft: this.data.readyDraft } : null
         this._pendingWrite = null
         this._writeWorkflow.reset(pending.key)
         this._clearPersistedWrite()

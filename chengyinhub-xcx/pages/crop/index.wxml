@@ -18,10 +18,10 @@
         catchtouchend="onTouchEnd"
         catchtouchcancel="onTouchEnd">
     <view class="crop__missing" wx:if="{{sourceState === 'missing'}}">
-      <cy-empty fill size="lg" kind="missing-param" title="没有可裁剪的图片" sub="请返回上一页重新选择图片后再裁剪。" />
+      <cy-empty fill size="lg" kind="missing-param" title="没有可裁剪的图片" sub="请返回重新进入" />
     </view>
     <view class="crop__missing" wx:elif="{{sourceState === 'error'}}">
-      <cy-error fill size="lg" title="图片没能打开" sub="{{sourceError}}" retry="重试" bind:retry="onRetrySource" auto-back />
+      <cy-error load-failure fill size="lg" title="图片没能打开" sub="{{sourceError}}" retry="重试" bind:retry="onRetrySource" auto-back />
     </view>
     <!-- waiting 明确为加载态，不使用裸文字占位，也不冒充无源空态。 -->
     <view class="crop__waiting"
@@ -29,7 +29,7 @@
           aria-role="status"
           aria-live="polite"
           aria-label="正在准备要裁剪的图片">
-      <cy-empty fill size="lg" kind="loading" title="正在准备图片" sub="读取完成后即可拖动和缩放" />
+      <cy-empty fill size="lg" kind="loading" title="正在准备图片" />
     </view>
     <!-- 框外纯黑:图片超出部分直接裁掉,不做半透明蒙层(跟参考图一致)。
          居中交给 CSS flex,不用 JS 算 top —— 舞台真实高度只有布局知道,JS 再算一遍必然对不齐 -->

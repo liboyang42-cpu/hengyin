@@ -1,0 +1,134 @@
+name: Chain Acceptance (manual)
+
+# 5-1 真 HTTP 业务链路验收的手动入口：只手动触发，不进 required checks，不碰 VPS、生产库或仓库 secrets。
+#
+# 对一个基于 master 的完整 SHA：用该候选 pom 声明的 JDK 构建 jar，把两个 e2e 桩（只桩外部微信支付通道 /
+# 故障注入过滤器）编进 exploded jar，起钉 digest 的一次性 MySQL / Redis，用候选自己的 build_schema.py
+# 与 seed_fixtures.py 建 cy_e2e_51，再以夹具配置在 127.0.0.1:8099 起应用，按序跑 scripts/e2e 的链路。
+#
+# 结论只看观测：每条链路必须打印真 HTTP 响应和 [库回读]，且 ci/chain_acceptance.py 在链路结束后另起
+# 连接直读 SQL 的终态与期望一致；退出码只是证据之一。链路脚本与桩取自本 workflow 所在提交（已评审），
+# 建库与夹具取自候选；两边不一致会记在回执的 harness.drift 里。
+#
+# 五链通过后，正常管理员读取同进程版本/健康/六任务Bean，停机确认后严格回放三项POST并独立回读。
+# 可复用已冻结的同源JAR，要求调用方指纹、SOURCE_SHA与包内git身份均匹配；不重建另一份包冒充原制品。
+# 本入口不证明：外部微信支付通道、内容安全/短信/AI 供应商、真机行为、合并或部署。
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: 待验候选的完整 40 位 commit SHA（须已推到本仓库，且与 master 有共同祖先）
+        required: true
+        type: string
+      through:
+        description: 按前缀跑业务链；post_deploy只验同进程身份和三项迁移，不重复已通过业务链
+        required: true
+        default: finance
+        type: choice
+        options:
+          - platform
+          - merchant_club
+          - sale_close
+          - player
+          - finance
+          - post_deploy
+          - post_restart
+      native_jar_run_id:
+        description: 可选，复用冻结后端制品的同仓库运行ID；须同时提供SHA256
+        required: false
+        default: ''
+        type: string
+      native_jar_sha256:
+        description: 可选，冻结JAR的完整SHA256；须同时提供运行ID
+        required: false
+        default: ''
+        type: string
+      fail_path:
+        description: 可选，故障注入路径（-De2e.fail.path，例如 /api/play/checkin）；留空则过滤器透明
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: chain-acceptance-${{ inputs.source_sha }}
+  cancel-in-progress: false
+
+jobs:
+  chains:
+    name: Real-HTTP chains
+    if: github.repository == 'liboyang42-cpu/hengyin'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      THROUGH: ${{ inputs.through }}
+      FAIL_PATH: ${{ inputs.fail_path }}
+      NATIVE_JAR_RUN_ID: ${{ inputs.native_jar_run_id }}
+      NATIVE_JAR_SHA256: ${{ inputs.native_jar_sha256 }}
+    steps:
+      - name: Checkout gate scripts
+        uses: actions/checkout@v4
+        with:
+          path: gate
+          persist-credentials: false
+      - name: Install pinned Python driver deps
+        run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
+      - name: Chain acceptance negative controls
+        working-directory: gate
+        run: python3 -m unittest -v ci/test_chain_acceptance.py ci/test_chain_admin_readback.py scripts/e2e/test_chain_lib.py
+      - name: Plan
+        run: python3 gate/ci/chain_acceptance.py plan
+      - name: Checkout candidate source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Precheck master basis and JDK
+        id: precheck
+        run: python3 gate/ci/chain_acceptance.py precheck
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.precheck.outputs.jdk }}
+          cache: maven
+          cache-dependency-path: candidate/**/pom.xml
+      - name: Download frozen candidate jar
+        if: ${{ inputs.native_jar_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.native_jar_run_id }}
+          name: backend-jar-${{ inputs.source_sha }}
+          path: candidate/chengyinhub-admin/target
+      - name: Build candidate jar
+        if: ${{ inputs.native_jar_run_id == '' }}
+        working-directory: candidate
+        run: mvn -B -q -DskipTests package
+      - name: Explode jar and compile e2e stubs
+        run: python3 gate/ci/chain_acceptance.py explode
+      - name: Start throwaway MySQL / Redis
+        run: python3 gate/ci/chain_acceptance.py storage-start
+      - name: Build cy_e2e_51 and seed fixtures
+        run: python3 gate/ci/chain_acceptance.py schema
+      - name: Start app and run chains
+        run: python3 gate/ci/chain_acceptance.py run
+      - name: Summarize (fail-closed)
+        if: always()
+        run: python3 gate/ci/chain_acceptance.py summarize
+      - name: Remove throwaway containers
+        if: always()
+        run: python3 gate/ci/chain_acceptance.py storage-stop
+      - name: Upload receipts and raw logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chain-acceptance-${{ github.run_id }}-a${{ github.run_attempt }}
+          path: out/
+          if-no-files-found: error

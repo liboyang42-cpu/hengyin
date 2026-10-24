@@ -8,7 +8,7 @@
        接管后回落到无参可达的参与人列表。 -->
   <cy-nav-bar custom-back bind:back="onBack" />
   <!-- 说明改挂 page-title 的 subtitle:原来卡外还有一个同名「参与人信息」大标题 = 同页双标题(DS §3.1 禁止条) -->
-  <cy-page-title title="参与人信息" subtitle="用于报名联系和到场核验，不会公开展示，也不用于配送。" />
+  <cy-page-title title="参与人信息" subtitle="" />
   <cy-skeleton wx:if="{{bootstrapping}}" type="form-section" count="{{2}}" loading-label="正在读取参与人信息" />
   <cy-state-shell wx:elif="{{bootstrapError}}" kind="{{bootstrapErrorKind}}"
                   title="{{bootstrapError}}" sub="{{bootstrapErrorSub}}" primary="重新加载"
@@ -41,7 +41,7 @@
   <cy-progress-status wx:if="{{saving || saveSucceeded}}" density="compact"
                       steps="{{saveSteps}}" current="{{saveSucceeded ? 1 : 0}}"
                       title="{{saveSucceeded ? '参与人信息已保存' : '正在保存参与人信息'}}"
-                      sub="{{saveSucceeded ? '即将返回上一页' : '请保持当前页面'}}" />
+                      sub="请勿离开本页" />
   <cy-inline-error wx:if="{{saveError}}" title="参与人信息没有保存" sub="{{saveError}}"
                    action="重试保存" bind:action="saveAddress" />
 </view>

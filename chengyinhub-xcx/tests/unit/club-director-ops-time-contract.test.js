@@ -28,7 +28,8 @@ const ROOT = path.resolve(__dirname, '../..');
 const PAGE = path.resolve(__dirname, '../../pages/club/topic-detail/index.js');
 const WXML = path.resolve(__dirname, '../../pages/club/topic-detail/index.wxml');
 const PAGE_SRC = fs.readFileSync(PAGE, 'utf8');
-const SOLD_LOCK = /if \(touchesTimeOrPlace && cmsActivityService\.countOpenSaleRegistrations\(actId\) > 0\) \{\s*\n\s*return error\("该场次已售出，集合时间与地点不能修改；当日备注仍可改"\);/;
+// 2026-10-22 W3(#334 F7):已售锁从「先数后写」改为一条条件 UPDATE(零行 = 已售锁定),原文案不变。
+const SOLD_LOCK = /int rows = cmsActivityService\.updateLeadOpsUnlessSold\(upd, touchesTimeOrPlace\);\s*\n\s*if \(rows == 0 && touchesTimeOrPlace\) \{\s*\n\s*return error\("该场次已售出，集合时间与地点不能修改；当日备注仍可改"\)/;
 const JAVA = path.resolve(ROOT, '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java');
 
 // 集合时间这一格只有在「带 activityId 的导演台态」才成立;测试统一从 topicId/clubId +
@@ -107,7 +108,7 @@ test('查看:集合时间来自服务端 activityList.startDate,取不到合法�
   assert.equal(vm._directorActivityId, 702, '单场主题应自动进导演台');
   assert.equal(vm.data.opsTimeAvailable, true);
   assert.equal(vm.data.opsTimeText, '9月20日 14:30');
-  assert.equal(requests[0].url, '/api/topic/info-to-user', '显示值必须真从服务端回读');
+  assert.equal(requests[0].url, '/api/topic/info-to-user', '显示值必须真从服务端刷新');
 
   const blank = openDirector({ auditStatus: 3, isOwner: 1, activityList: [{ id: 702, startDate: '' }] });
   assert.equal(blank.vm.data.opsTimeAvailable, false, '时间缺失时不许给一个会写错的入口');
@@ -136,7 +137,7 @@ test('保存:POST /api/club/lead/edit-ops,只带 activityId + 秒级 startDate;�
   assert.equal(req.method, 'POST');
   assert.equal(req.header['Content-Type'], 'application/json');
   assert.deepEqual(JSON.parse(req.data), { activityId: 702, startDate: '2026-09-20 16:05:00' },
-    '参数名必须与后端 body.get("startDate") 对得上,且是 DateUtils.parseDate 能吃的秒级格式');
+    '参数名必须与后端 body.get("startDate") 对得上，且是 DateUtils.parseDate 能吃的秒级格式');
 
   req.success({ code: 200, msg: '已更新并报备发起人' });
   assert.equal(vm.data.opsTimeSheetVisible, false, '成功后弹层要收掉');
@@ -145,7 +146,7 @@ test('保存:POST /api/club/lead/edit-ops,只带 activityId + 秒级 startDate;�
   assert.equal(vm.data.resultSheet.title, '集合时间已更新');
 
   // 成功刷新 = 重新 fetchDetail + 用回读值更新显示,不是本地先改成新时间
-  assert.equal(requests.length, before + 2, '成功后必须回读真源');
+  assert.equal(requests.length, before + 2, '成功后必须刷新真源');
   const readback = requests[before + 1];
   assert.equal(readback.url, '/api/topic/info-to-user');
   readback.success({ code: 200, data: { auditStatus: 3, isOwner: 1, activityList: [{ id: 702, startDate: '2026-09-20 16:05:00' }] } });
@@ -164,7 +165,7 @@ test('失败提示:后端拒绝原样进失败半屏,不吞成通用句、不再
   assert.equal(vm.data.resultSheet.show, true);
   assert.equal(vm.data.resultSheet.kind, 'fail');
   assert.equal(vm.data.resultSheet.why, '只有承接方领队可改运营详情', '拒绝理由要原样给到主理人');
-  assert.equal(requests.length, before + 1, '明确拒绝不必再回读');
+  assert.equal(requests.length, before + 1, '明确拒绝不必再刷新');
 });
 
 test('结果未知:5xx / 传输层失败不当成「没改成」,失败半屏 + 回读服务端真相', () => {
@@ -172,10 +173,10 @@ test('结果未知:5xx / 传输层失败不当成「没改成」,失败半屏 + 
   let before = abnormal.requests.length;
   abnormal.vm.openOpsTimeSheet();
   abnormal.vm.confirmOpsTime();
-  abnormal.requests[before].successStatusAbnormal({ msg: '服务暂时不可用' }, 502);
+  abnormal.requests[before].successStatusAbnormal({ msg: '服务暂不可用' }, 502);
   assert.equal(abnormal.vm.data.resultSheet.kind, 'fail');
   assert.match(abnormal.vm.data.resultSheet.why, /结果待确认/);
-  assert.equal(abnormal.requests[before + 1].url, '/api/topic/info-to-user', '5xx 必须回读,不许下「没改成」的结论');
+  assert.equal(abnormal.requests[before + 1].url, '/api/topic/info-to-user', '5xx 必须刷新，不许下「没改成」的结论');
 
   const refused = openDirector();
   before = refused.requests.length;
@@ -183,7 +184,7 @@ test('结果未知:5xx / 传输层失败不当成「没改成」,失败半屏 + 
   refused.vm.confirmOpsTime();
   refused.requests[before].successStatusAbnormal({ msg: '没有权限' }, 403);
   assert.equal(refused.vm.data.resultSheet.why, '没有权限');
-  assert.equal(refused.requests.length, before + 1, '4xx 是明确拒绝,不需要回读');
+  assert.equal(refused.requests.length, before + 1, '4xx 是明确拒绝，不需要刷新');
 
   const offline = openDirector();
   before = offline.requests.length;
@@ -192,7 +193,7 @@ test('结果未知:5xx / 传输层失败不当成「没改成」,失败半屏 + 
   offline.requests[before].fail({ errMsg: 'request:fail timeout' });
   assert.equal(offline.vm.data.resultSheet.kind, 'fail');
   assert.match(offline.vm.data.resultSheet.why, /网络异常/);
-  assert.equal(offline.requests[before + 1].url, '/api/topic/info-to-user', '传输层失败同样回读');
+  assert.equal(offline.requests[before + 1].url, '/api/topic/info-to-user', '传输层失败同样刷新');
 });
 
 test('页面接入:导演台区域有入口、有编辑半屏与结果半屏,不用新页面', () => {
@@ -200,7 +201,7 @@ test('页面接入:导演台区域有入口、有编辑半屏与结果半屏,不
   assert.match(wxml, /bindtap="openOpsTimeSheet"/);
   assert.match(wxml, /bindtap="confirmOpsTime"/);
   assert.match(wxml, /<cy-scene-sheet show="\{\{opsTimeSheetVisible\}\}" variant="half"[\s\S]*?cy-date-field[\s\S]*?<\/cy-scene-sheet>/, '编辑半屏沿用本页 cy-scene-sheet half + cy-date-field');
-  assert.match(wxml, /已有人报名或下单的场次，集合时间和地点不能再改/, '已售不可改必须先说在前面,不能靠隐藏入口');
+  assert.match(wxml, /已有报名，集合时间和地点不可改/, '已售不可改必须先说在前面，不能靠隐藏入口');
   assert.match(wxml, /<cy-result-sheet show="\{\{resultSheet.show\}\}"/, '结果必须走结果半屏');
   const json = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../pages/club/topic-detail/index.json'), 'utf8'));
   ['cy-scene-sheet', 'cy-date-field', 'cy-result-sheet'].forEach((name) => {
@@ -213,9 +214,9 @@ test('后端合同:edit-ops 仍是承接方领队专属,startDate 仍在白名�
   const mapping = /@PostMapping\("\/edit-ops"\)/.exec(java);
   assert.ok(mapping, '后端 /edit-ops 映射不见了 —— 前端这条请求会 404');
   const gate = /if \(!memberId\.equals\(st\.getLeaderMemberId\(\)\)\) return error\("只有承接方领队可改运营详情"\);/;
-  assert.match(java, gate, '领队闸被放宽或改写 = 越权改运营详情,前端合同同时失效');
+  assert.match(java, gate, '领队闸被放宽或改写 = 越权改运营详情，前端合同同时失效');
   assert.match(java, /upd\.setStartDate\(sd\)/, 'startDate 不在可改白名单里');
-  assert.match(java, /DateUtils\.parseDate\(s\)/, '日期解析口径变了,前端的秒级格式要跟着改');
+  assert.match(java, /DateUtils\.parseDate\(s\)/, '日期解析口径变了，前端的秒级格式要跟着改');
   // 9-15 裁决「已售锁时间地点」(CR-63):前端说明「已售不可改」、成功文案「按新集合时间算退款」都以这道闸为前提
   assert.match(java, SOLD_LOCK, '已售锁被删 = 已报名玩家的集合时间与退款窗会被悄悄挪走');
 });
@@ -234,23 +235,23 @@ test('已售场次:后端拒改原文进失败半屏,主理人看得到为什么
 test('负控:旧闸/错误路径/去掉领队闸时,上面的断言必须判红', () => {
   // ① 前端把路径写错(或后端改名),契约断言必须失败
   const wrongPath = PAGE_SRC.replace("url: '/api/club/lead/edit-ops'", "url: '/api/club/lead/edit-ed-ops'");
-  assert.notEqual(wrongPath, PAGE_SRC, '变异没生效:路径形状已漂移,这个负控在空转');
+  assert.notEqual(wrongPath, PAGE_SRC, '变异没生效:路径形状已漂移，这个负控在空转');
   assert.throws(() => assert.match(wrongPath, /url: '\/api\/club\/lead\/edit-ops', method: 'POST'/), assert.AssertionError);
 
   // ② 成功不回读(本地先改)必须判红
   const noReadback = PAGE_SRC.replace('that.fetchDetail(); // 回读真源:新时间从 activityList 重新取,不在本地先改', '');
-  assert.notEqual(noReadback, PAGE_SRC, '变异没生效:回读那一行已漂移,这个负控在空转');
+  assert.notEqual(noReadback, PAGE_SRC, '变异没生效:刷新那一行已漂移，这个负控在空转');
   assert.throws(() => assert.match(noReadback, /that\.fetchDetail\(\); \/\/ 回读真源/), assert.AssertionError);
 
   // ③ 后端领队闸若被删,合同断言必须失败
   const java = fs.readFileSync(JAVA, 'utf8');
   const gate = /if \(!memberId\.equals\(st\.getLeaderMemberId\(\)\)\) return error\("只有承接方领队可改运营详情"\);/;
   const loosened = java.replace(gate, '');
-  assert.notEqual(loosened, java, '变异没生效:领队闸形状已漂移,这个负控在空转');
+  assert.notEqual(loosened, java, '变异没生效:领队闸形状已漂移，这个负控在空转');
   assert.throws(() => assert.match(loosened, gate), assert.AssertionError);
 
   // ④ 已售锁被删,合同断言必须失败
   const unlocked = java.replace(SOLD_LOCK, 'if (false) {');
-  assert.notEqual(unlocked, java, '变异没生效:已售锁形状已漂移,这个负控在空转');
+  assert.notEqual(unlocked, java, '变异没生效:已售锁形状已漂移，这个负控在空转');
   assert.throws(() => assert.match(unlocked, SOLD_LOCK), assert.AssertionError);
 });

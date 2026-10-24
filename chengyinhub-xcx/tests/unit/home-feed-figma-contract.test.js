@@ -48,14 +48,14 @@ test('附近活动与 feed 共用封面归一化，imgUrl 也会成为可展示 
   assert.deepEqual(item.feedImages, ['cdn/activity.jpg']);
 });
 
-test('推荐主题紧跟 banner，标题精确为“推荐主题”', () => {
+test('编辑精选紧跟 banner，标题明确运营来源', () => {
   const wxml = read('pages/index/index.wxml');
   const hero = wxml.indexOf('id="sec-hero"');
   const reco = wxml.indexOf('id="sec-reco"');
   const nearby = wxml.indexOf('id="sec-nearby"');
 
-  assert.ok(hero >= 0 && reco > hero && nearby > reco, '区块顺序必须是 banner → 推荐主题 → 附近活动');
-  assert.match(wxml, /id="sec-reco"[\s\S]*?<text class="v3-sec-title">推荐主题<\/text>/);
+  assert.ok(hero >= 0 && reco > hero && nearby > reco, '区块顺序必须是 banner → 编辑精选 → 附近活动');
+  assert.match(wxml, /id="sec-reco"[\s\S]*?<text class="v3-sec-title">编辑精选<\/text>/);
   assert.doesNotMatch(wxml, />为你专属推荐主题<\/text>/);
 });
 
@@ -88,10 +88,11 @@ test('附近活动和即将上线都以真实图片作为卡片主视觉', () =>
   assert.match(wxml, /class="v3-upreview-mask"/);
 });
 
-test('开发预览的 feed 与即将上线只使用微信能渲染的位图资产', () => {
+test('保留设计fixture的位图资产，运行首页不再注入设计假数据', () => {
   const source = read('pages/index/index.js');
-  const mock = source.match(/function buildIndexUiMock\(\) \{([\s\S]*?)\n\}\n\nPage\(/);
-  assert.ok(mock, '首页开发预览数据入口必须存在');
+  assert.doesNotMatch(source, /buildIndexUiMock|_applyIndexUiMock/);
+  const mock = read('tests/fixtures/home-design-preview-source.txt').match(/function buildIndexUiMock\(\) \{([\s\S]*?)\n\}\n\nPage\(/);
+  assert.ok(mock, '设计fixture必须保留供离线设计验证');
   assert.doesNotMatch(mock[1], /figma_cat\d+\.png/, '这些 .png 实际是 SVG，微信 image 会渲染失败');
   assert.match(mock[1], /index-figma\/nearby-card\.jpg/);
   assert.match(mock[1], /index-figma\/reco-hero\.jpg/);

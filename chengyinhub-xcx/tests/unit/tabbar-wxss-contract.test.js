@@ -48,7 +48,7 @@ test('negative control: restoring the image tag selector is rejected', () => {
   assert.throws(() => assert.doesNotMatch(wxss, /(?:^|[,{\s])image(?:\s|\{|\.)/))
 })
 
-test('漫游地图入口不渲染底栏，其他页面的默认 tabBar 与导航尺寸不变', () => {
+test('漫游和护照首页显示底栏，运行态地图不渲染底栏', () => {
   const js = read('components/tabBar/index.js')
   const wxml = read('components/tabBar/index.wxml')
   const wxss = read('components/tabBar/index.wxss')
@@ -56,7 +56,7 @@ test('漫游地图入口不渲染底栏，其他页面的默认 tabBar 与导航
 
   assert.match(js, /immersive:\s*\{\s*type:\s*Boolean,\s*value:\s*false\s*\}/)
   assert.match(wxml, /\{\{immersive \? 'tabbar--immersive' : ''\}\}/)
-  assert.match(roamWxml, /<tabBar\s+wx:if="\{\{screen=='intro'\}\}"/)
+  assert.match(roamWxml, /<tabBar\s+wx:if="\{\{screen=='entry-map'\|\|screen=='intro'\}\}"/)
   assert.match(wxss, /\.tabbar\.tabbar--immersive\.monochrome\.dark \.list\s*\{[\s\S]*?background:\s*transparent;/)
   assert.match(wxss, /\.tabbar\.tabbar--immersive\.monochrome\.dark \.list\s*\{[\s\S]*?backdrop-filter:\s*none;/)
   assert.match(wxss, /\.tabbar\.tabbar--immersive\.monochrome\.dark \.list\s*\{[\s\S]*?border-top-color:\s*transparent;/)

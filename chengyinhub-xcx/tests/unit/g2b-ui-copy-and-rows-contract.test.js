@@ -20,16 +20,16 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'u
 test('CU-C-33:结算页补上所选票种的集合点,没填就整行不出', () => {
   const wxml = read('pages/activity/baoming/baoming.wxml')
   assert.match(wxml, /<view wx:if="\{\{selectedTicket\.meetingPoint\}\}" class="setbox_lb_li_top_con_dz">/,
-    '集合点行必须由所选票种的 meetingPoint 驱动,且缺值时不渲染空行')
+    '集合点行必须由所选票种的 meetingPoint 驱动，且缺值时不渲染空行')
   assert.match(wxml, /集合点 · \{\{selectedTicket\.meetingPoint\}\}/)
-  assert.match(wxml, /activityInfo\.address \|\| '待确认集合地点'/,
-    '活动地址那一行是另一件事,不能被这行顶掉')
+  assert.match(wxml, /activityInfo\.address \|\| activityInfo\.addressName \|\| '—'/,
+    '活动地址那一行是另一件事，不能被这行顶掉')
 })
 
 test('CU-C-102:合作者徽标说中文', () => {
   const wxml = read('pages/publish/activity/index.wxml')
   assert.match(wxml, /<view class="zw" wx:if="\{\{item\.isOwner==1\}\}">主理人<\/view>/)
-  assert.doesNotMatch(wxml, />Owner</, '同一页其余标题/字段/按钮全中文,不混语言')
+  assert.doesNotMatch(wxml, />Owner</, '同一页其余标题/字段/按钮全中文，不混语言')
 })
 
 test('CU-C-103:编辑态的保存页只说本次保存的效果', () => {

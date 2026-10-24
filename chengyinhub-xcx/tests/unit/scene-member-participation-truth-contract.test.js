@@ -78,7 +78,7 @@ test('B-02:名称/日期/封面/状态读 cmsTopic|cmsActivity 真值,不按退�
   assert.match(ready.formatDateRange, /2026\.09\.20/)
   assert.equal(ready.picUrl, '/uploads/a.png')
   assert.equal(ready.activityDesc, '提供补水')
-  assert.notEqual(ready.statusText, '状态待确认', '状态必须来自报名真值,不是占位')
+  assert.notEqual(ready.statusText, '状态待确认', '状态必须来自报名真值，不是占位')
 
   const topic = component.prepareDisplayData({
     ownerType: 1,
@@ -95,7 +95,7 @@ test('B-02:名称/日期/封面/状态读 cmsTopic|cmsActivity 真值,不按退�
   assert.equal(unknown.picUrl, '')
   assert.equal(unknown.statusText, '订单状态更新中')
   assert.equal(unknown.statusVariant, 'neutral')
-  assert.equal(unknown.cooperateDateText, '接待时间待确认')
+  assert.equal(unknown.cooperateDateText, '—')
   assert.equal(unknown.hasCooperateDate, false, '没有真实接待时间时该行必须整行不渲染')
   assert.equal(unknown.hasNodeName, false)
 })

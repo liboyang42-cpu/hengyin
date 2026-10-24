@@ -188,7 +188,7 @@ test('F06 reveal 只发送空 payload，权威兜底完成状态明确进入玩�
           nextLevel: null,
           nextImpactLabel: '',
           revealAvailable: true,
-          revealImpactLabel: '查看答案将记为兜底完成，不计正常榜单分',
+          revealImpactLabel: '查看答案将记为保底完成，不计正常榜单分',
           answerReveal: '未授权字段不得透传',
         },
       }, {
@@ -203,9 +203,9 @@ test('F06 reveal 只发送空 payload，权威兜底完成状态明确进入玩�
   assert.equal(view.nodes[0].completionStatus, 'FALLBACK_COMPLETED')
   assert.equal(view.nodes[0].completionSource, 'PLAYER_REVEAL')
   assert.equal(view.nodes[0].hint.revealAvailable, true)
-  assert.equal(view.nodes[0].hint.revealImpactLabel, '查看答案将记为兜底完成，不计正常榜单分')
+  assert.equal(view.nodes[0].hint.revealImpactLabel, '查看答案将记为保底完成，不计正常榜单分')
   assert.equal(view.nodes[0].hint.answerReveal, undefined)
-  assert.equal(view.nodes[1].completionStatus, undefined, '非完成节点不得靠 completionStatus 伪造兜底完成')
+  assert.equal(view.nodes[1].completionStatus, undefined, '非完成节点不得靠 completionStatus 伪造保底完成')
   assert.equal(view.nodes[1].completionSource, undefined)
 
   assert.deepEqual(buildPlayerRevealInput(
@@ -686,7 +686,7 @@ test('路线完成顺序优先使用服务端 completionOrder，同秒完成也�
   assert.deepEqual(completedRouteSegment(misleadingTimes, 2), [
     { lng: 121.2, lat: 31.2 },
     { lng: 121.3, lat: 31.3 },
-  ], 'completionOrder 是主顺序，doneAt 只在主顺序不可用或相同时兜底')
+  ], 'completionOrder 是主顺序，doneAt 只在主顺序不可用或相同时保底')
 
   const futureOrderWithEarlierTime = [
     { nodeId: 1, done: true, completionOrder: 804, doneAt: 900, lng: 121.4, lat: 31.4 },
@@ -820,4 +820,32 @@ test('D05/F06 unknown 写同页内存只保留精确 PLAYER_HINT/PLAYER_REVEAL �
       action: 'PLAYER_HINT', payload: { level: 3 },
     },
   }, 7), null)
+})
+
+test('玩家读回优先顶层纪元、兼容 player 纪元；所有命令与内存重试保留原值', () => {
+  const raw = { sessionId: 91, activityId: 7, perspective: 'PLAYER', status: 'RUNNING', revision: 4,
+    player: { authorityEpoch: 2, nodes: [] }, authorityEpoch: 3 }
+  assert.equal(normalizePlayerProjection(raw).authorityEpoch, 3)
+  delete raw.authorityEpoch
+  assert.equal(normalizePlayerProjection(raw).authorityEpoch, 2)
+  delete raw.player.authorityEpoch
+  assert.equal(normalizePlayerProjection(raw).authorityEpoch, undefined)
+  const source = { activityId: 7, nodeId: 8, revision: 4, authorityEpoch: 3 }
+  const commands = [buildPlayerChoiceInput(source, 'A', 'req-player-choice'),
+    buildPlayerRoleConfirmInput(source, 'req-player-role'), buildPlayerHintInput(source, 1, 'req-player-hint'),
+    buildPlayerRevealInput(source, 'req-player-reveal'), buildPlayerSubmissionInput(source, 'SCAN', 'req-player-submit', ['scan:code'])]
+  for (const command of commands) {
+    assert.equal(command.authorityEpoch, 3)
+    const pending = normalizePlayerPendingWrite({ requestId: command.requestId, action: command.action, command }, 7)
+    assert.equal(pending.command.authorityEpoch, 3)
+    assert.equal(pending.command.expectedRevision, 4)
+  }
+})
+
+test('confirmed old receipt never lowers an existing newer projection revision', () => {
+  const current = { revision: 12, nodes: [{ nodeId: 31 }], write: { status: 'unknown', requestId: 'req-old' } }
+  const merged = mergeConfirmedReceipt(current, { requestId: 'req-old', outcome: 'APPLIED', revision: 10 })
+  assert.equal(merged.revision, 12)
+  assert.equal(merged.write.status, 'confirmed')
+  assert.equal(merged.nodes, current.nodes)
 })

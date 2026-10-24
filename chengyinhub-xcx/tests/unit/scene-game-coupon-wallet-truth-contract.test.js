@@ -5,12 +5,12 @@ const path = require('node:path')
 const { flattenComponentToPage } = require('../helpers/component-as-page.js')
 
 const ROOT = path.resolve(__dirname, '../..')
-const MODULE = path.join(ROOT, 'components/cy/scene-game-coupon-wallet/index.js')
+const MODULE = path.join(ROOT, 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js')
 
 function loadComponent() {
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
-  global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
+  global.getApp = () => ({ getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.Component = (config) => { sandbox.def = Object.assign(flattenComponentToPage(config), { _hide: config.pageLifetimes.hide }) }
   global.wx = {}
   delete require.cache[require.resolve(MODULE)]
   require(MODULE)
@@ -75,8 +75,8 @@ test('状态筛选与打开核销码都使用严格投影，未知券没有动�
 })
 
 test('可操作性不靠原始字段，箭头使用项目图标资产', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/scene-game-coupon-wallet/index.wxml'), 'utf8')
-  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'components/cy/scene-game-coupon-wallet/index.json'), 'utf8'))
+  const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml'), 'utf8')
+  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-game-coupon-wallet/index.json'), 'utf8'))
   assert.match(wxml, /item\._isUsable/)
   assert.doesNotMatch(wxml, /item\.useStatus\s*===/)
   assert.match(wxml, /<cy-icon[^>]*name="arrow-right"/)
@@ -88,3 +88,62 @@ test('negative control: Number(useStatus) 强转会被契约判红', () => {
   const source = fs.readFileSync(MODULE, 'utf8')
   assert.doesNotMatch(source, /Number\([^)]*useStatus[^)]*\)/)
 })
+
+
+test('同身份隐藏后重见回读券终态，首展与在途show不重复请求', () => {
+  const { vm, sandbox } = loadComponent()
+  vm.onLoad()
+  vm.onShow()
+  assert.equal(sandbox.requests.length, 1)
+  sandbox.requests[0].success({ code: 200, data: [{ id: 11, useStatus: 0 }] })
+  if (sandbox.requests[0].complete) sandbox.requests[0].complete()
+  sandbox.def._hide.call(vm)
+  vm.onShow()
+  assert.equal(sandbox.requests.length, 2)
+  vm.onShow()
+  assert.equal(sandbox.requests.length, 2)
+  sandbox.requests[1].success({ code: 200, data: [{ id: 11, useStatus: 2 }] })
+  assert.equal(vm.data.items[0]._statusText, '已过期')
+  assert.equal(vm.data.items[0]._canView, false)
+  sandbox.requests[0].success({ code: 200, data: [{ id: 11, useStatus: 0 }] })
+  assert.equal(vm.data.items[0]._statusText, '已过期', '旧代回包不能复活券')
+})
+
+for (const [status, label] of [[1, '已使用'], [2, '已过期'], [3, '已失效']]) {
+  test(`首次读取在途时隐藏后返回重新读取${label}，旧回包不复活券`, () => {
+    const { vm, sandbox } = loadComponent()
+    vm.onLoad()
+    vm.onShow()
+    assert.equal(sandbox.requests.length, 1)
+    sandbox.def._hide.call(vm)
+    vm.onShow()
+    assert.equal(sandbox.requests.length, 2, '返回不能复用隐藏前仍在途的读取')
+    vm.onShow()
+    assert.equal(sandbox.requests.length, 2, '本次返回后的重复 show 不重复读取')
+    const old = sandbox.requests[0]
+    const loading = JSON.stringify(vm.data)
+    old.success({ code: 200, data: [{ id: 11, useStatus: 0 }] })
+    old.fail()
+    old.successStatusAbnormal()
+    old.complete()
+    assert.equal(JSON.stringify(vm.data), loading, '旧回包不能覆盖新请求的加载态')
+    vm.onShow()
+    assert.equal(sandbox.requests.length, 2, '旧 complete 不能结束新请求')
+    sandbox.requests[1].success({ code: 200, data: [{ id: 11, useStatus: status }] })
+    assert.equal(vm.data.items[0]._statusText, label)
+    assert.equal(vm.data.items[0]._canView, false)
+    assert.equal(vm.data.items[0]._isUsable, false)
+    const current = JSON.stringify(vm.data)
+    old.success({ code: 200, data: [{ id: 11, useStatus: 0 }] })
+    old.fail()
+    old.successStatusAbnormal()
+    old.complete()
+    assert.equal(JSON.stringify(vm.data), current, '旧回包不能复活终态券')
+    vm.openCode({ currentTarget: { dataset: { item: vm.data.items[0] } } })
+    assert.equal(sandbox.events.length, 0)
+    sandbox.def._hide.call(vm)
+    vm.onShow()
+    vm.onShow()
+    assert.equal(sandbox.requests.length, 3, '下一次返回仍只重新读取一次')
+  })
+}

@@ -8,11 +8,15 @@ const path = require('node:path');
 // ③ type→路由映射与后端 sanitize 白名单一致(三枚举,无 self_event);
 // ④ AI 降级不连坐数据区;⑤ 数字位一律是数:null 指标写 0(2026-09-19 用户裁决),
 //    「算不出」这句实话改由 lowSample 提示承担,不再由数字位的横杠承担。
+//    2026-10-23 owner D4(P1-094)例外:比率位(_pct)分母为 0 时服务端回 null,显示「—」;计数位仍写 0。
 
 const MARKETING_JS = fs.readFileSync(path.join(__dirname, '../../pages/merchant/marketing/index.js'), 'utf8');
 const PAGE_JS = fs.readFileSync(path.join(__dirname, '../../pages/merchant/marketing/ai-insight/index.js'), 'utf8');
 const PAGE_WXML = fs.readFileSync(path.join(__dirname, '../../pages/merchant/marketing/ai-insight/index.wxml'), 'utf8');
 const APP_JSON = JSON.parse(fs.readFileSync(path.join(__dirname, '../../app.json'), 'utf8'));
+// D4 之后唯一允许出现「—」字面量的地方是比率位 _pct;扫描「计数位不许横杠」时先把它剥掉。
+const RATE_FN = /\n  _pct\(v\) \{[\s\S]*?\n  \},\n/;
+const nonRateJs = (js) => js.replace(RATE_FN, '\n');
 
 test('营销页 entries 有 AI 店铺参谋入口,go() 跳转到 ai-insight 页', () => {
   assert.match(MARKETING_JS, /action:\s*'aiInsight'/);
@@ -21,9 +25,9 @@ test('营销页 entries 有 AI 店铺参谋入口,go() 跳转到 ai-insight 页'
 
 test('店铺参谋入口与页面门禁按 MARKETING_READ(P4 #17-3),无此权限的岗位看不到也进不去', () => {
   assert.match(MARKETING_JS, /action:\s*'aiInsight'[^}]*permission:\s*'canReadMarketing'/,
-    '运营/店长有 MARKETING_READ 才显示店铺参谋图标;核销员/财务没有,不许显示死入口');
+    '运营/店长有 MARKETING_READ 才显示店铺参谋图标；核销员/财务没有，不许显示死入口');
   assert.match(PAGE_WXML, /<cy-access-gate[^>]*need="canReadMarketing"/,
-    '页面门禁必须与后端 require(MARKETING_READ) 对齐,否则无权限岗位点进来吃 403');
+    '页面门禁必须与后端 require(MARKETING_READ) 对齐，否则无权限岗位点进来吃 403');
 });
 
 test('ai-insight 页已注册进 pages/merchant 分包(tabBar 页在主包铁律不受影响:这是 navigateTo 子页)', () => {
@@ -42,34 +46,41 @@ test('跳转只走前端写死的路由,不 navigateTo 接口给的任意 url', 
 test('页面调用 /api/ai/merchant/insight 且不携带任何商家 id 参数', () => {
   assert.match(PAGE_JS, /url:\s*'\/api\/ai\/merchant\/insight'/);
   assert.doesNotMatch(PAGE_JS, /merchantId|merchantMemberId/,
-    '接口按登录态取商家身份,前端传 id = 给越权留口子');
+    '接口按登录态取商家身份，前端传 id = 给越权留口子');
 });
 
-test('AI 降级不连坐:ai 为空时数据区照常、降级卡有说明文案', () => {
-  assert.match(PAGE_WXML, /wx:else class="ai-card ai-card--down"/);
-  assert.match(PAGE_WXML, /数据不受影响/);
+// 2026-10-23 业主:「没有就不显示」—— ai 为空时经营解读整段(含标题)不画,不再出降级卡;数据区照常
+test('AI 降级不连坐:ai 为空时数据区照常、经营解读整段不显示', () => {
+  assert.doesNotMatch(PAGE_WXML, /class="ai-card ai-card--down"/);
+  assert.doesNotMatch(PAGE_WXML, /基础数据可用/);
+  // 合 master 后标题带入场动效类 mi-in 与延时 style;本条只钉「无 AI 不出标题」
+  assert.match(PAGE_WXML, /<view class="sec-head[^"]*" wx:if="\{\{ai\}\}"[^>]*><text class="sec-title">经营解读<\/text><\/view>/);
 });
 
 test('数字位一律是数:null 指标写 0,不放横杠(2026-09-19 用户裁决,与营销页同口径)', () => {
   assert.match(PAGE_JS, /function numberOrNull\(value\)[\s\S]*?value === null \|\| value === undefined \|\| value === ''[\s\S]*?return null/);
   assert.match(PAGE_JS, /_countText\(v\)[\s\S]*?value === null \? '0'/);
-  assert.doesNotMatch(PAGE_JS, /(['"])—+\1/, 'js 字符串字面量里不许再有破折号占位');
+  assert.notEqual(nonRateJs(PAGE_JS), PAGE_JS, '锚点失效:_pct 已改名,比率位例外的剥离口径需同步');
+  assert.doesNotMatch(nonRateJs(PAGE_JS), /(['"])—+\1/, '除比率位外,js 字符串字面量里不许再有破折号占位');
+  assert.match(PAGE_JS, /_pct\(v\) \{[\s\S]*?value === null \? '—'/, 'D4:比率位 null 显示「—」');
   // 数字位不再兼职表达状态 ⇒ 状态必须另有出口,否则「算不出」就被画成「真的是 0」
   assert.match(PAGE_WXML, /wx:if="\{\{\s*facts\.lowSample\s*\}\}"/,
-    '样本不足提示是本页唯一的「这不是零」出口,删掉它 0 就成了谎话');
+    '样本不足提示是本页唯一的「这不是零」出口，删掉它 0 就成了谎话');
 });
 
-test('店铺档案:未配置置顶引导,配置页复用装修域合作设置(不重复造表单)', () => {
-  assert.match(PAGE_JS, /PROFILE_SETUP_ROUTE = '\/pages\/merchant\/decor\/coop-setting\/index'/);
-  assert.match(PAGE_WXML, /profile && !profile\.configured/);
-  assert.match(PAGE_WXML, /先配置店铺档案/); // 2026-09-18 UI-11:引导收进 Hero 档案胶囊(稿 1:9)
+test('页头是问候区(Hi，店名 + 店铺头像),不再放店铺档案入口(2026-10-22 owner)', () => {
+  const visible = PAGE_WXML.replace(/<!--[\s\S]*?-->/g, '');
+  assert.doesNotMatch(visible, /先配置店铺档案|goProfileSetup/, '店铺档案配置留在装修域合作设置，本页不再放入口');
+  assert.doesNotMatch(PAGE_JS, /PROFILE_SETUP_ROUTE/);
+  assert.match(PAGE_JS, /storeName: String\(profile\.storeName \|\| ''\)\.trim\(\)/, '店名取后端实时 profile');
+  assert.match(visible, /<cy-avatar class="greet-avatar"/);
 });
 
 test('实体推荐:推荐主题去合作中心申请,推荐商家走 canonical 商家主页(merchantHomeUrl/memberId)', () => {
   assert.match(PAGE_WXML, /为你推荐的主题/);
   assert.match(PAGE_WXML, /推荐联动的商家/);
   assert.match(PAGE_JS, /merchantHomeUrl\(/, '必须用统一的 merchantHomeUrl,不许手拼商家主页地址');
-  assert.doesNotMatch(PAGE_JS, /merchant\/profile\/index/, '旧「承接商家」页已退役,不许再链过去');
+  assert.doesNotMatch(PAGE_JS, /merchant\/profile\/index/, '旧「承接商家」页已退役，不许再链过去');
 });
 
 // 跑真代码而不是读源码:把「后端全回 null」喂进页面自己的两个 builder,
@@ -109,16 +120,20 @@ test('后端全回 null 时,页面 builder 真的产出 0 而不是横杠(跑真
     sources: [],
   };
   const cards = page._buildMetricCards(facts);
-  assert.deepEqual(cards.map((card) => card.num), ['0%', '0%']);
+  // 2026-10-23 owner D4:比率为 null(分母为 0)显示「—」,不再写 0%
+  assert.deepEqual(cards.map((card) => card.num), ['—', '—']);
+  const sampled = page._buildMetricCards(Object.assign({}, facts, {
+    checkin: { total: 4, redeemRate: 0.5, repeatRate: 0 } }));
+  assert.deepEqual(sampled.map((card) => card.num), ['50%', '0%'], '有分母时真实的 0 仍是 0%');
   assert.deepEqual(cards.map((card) => card.name), ['核销率', '复购率']);
   const valueCard = page._buildValueCard(facts);
   assert.deepEqual([valueCard.visitors, valueCard.checkins, valueCard.redeems], ['0', '0', '0']);
-  // 环比仍然要「没有上期就不说上期」—— 这条不是数字位,不许拿 0 冒充可比
-  assert.equal(valueCard.deltaText, '', '上期无基数时环比留空,不是 +0');
+  // 核销率缺失不是 0%:2026-10-23 业主「没有就不显示」⇒ 说明行整行不出(既不提示「暂无核销」,也不拿 0% 冒充)
+  assert.equal(valueCard.caption, '', '核销率缺失时说明行不显示,不是 0%');
 
   // 负控:把 null 改回横杠,上面这些判据必须转红
   const regressed = PAGE_JS.replace("return value === null ? '0' : String(value);",
     "return value === null ? '—' : String(value);");
-  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:_countText 字面量已改名,扫描口径需同步');
-  assert.match(regressed, /(['"])—+\1/);
+  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:_countText 字面量已改名，扫描口径需同步');
+  assert.match(nonRateJs(regressed), /(['"])—+\1/);
 });

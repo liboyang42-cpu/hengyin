@@ -56,7 +56,7 @@ function dispatcherFields(type) {
   const end = wxml.indexOf('kit.type ===', start + 10)
   const block = wxml.slice(start, end < 0 ? undefined : end)
   const fields = new Set()
-  for (const m of block.matchAll(/kit\.([a-zA-Z]+)/g)) if (m[1] !== 'type') fields.add(m[1])
+  for (const m of block.matchAll(/kit\.([a-zA-Z][a-zA-Z0-9_]*)/g)) if (m[1] !== 'type') fields.add(m[1])
   return [...fields]
 }
 
@@ -76,5 +76,5 @@ test('C-04 角色建档 / 拍照审核 / 限时打字 / 留言能试玩,且喂�
 
 test('C-04 检定在编辑页演不了时说实话,不再说「还要再填一点」', () => {
   const js = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
-  assert.match(js, /section === 'check' \? '技能检定在旅程里掷骰，编辑页演不了'/)
+  assert.match(js, /section === 'check' \? 'D20 在旅程里掷骰，编辑页演不了'/)
 })

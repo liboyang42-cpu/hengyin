@@ -91,4 +91,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+    <insert id="ensureOwnedLike">
+        insert into cms_topic_like(member_id, data_id, like_type, create_time)
+        values (#{memberId}, #{topicId}, 1, now())
+        on duplicate key update like_type = 1
+    </insert>
+    <delete id="deleteOwnedLike">
+        delete from cms_topic_like where member_id = #{memberId} and data_id = #{topicId}
+    </delete>
 </mapper>

@@ -58,11 +58,11 @@ test('_flipStyle:按 触发元素 ÷ 承载元素 的真实比例缩,不是写�
   assert.ok(sc, '起点必须含 scale')
   assert.ok(Math.abs(Number(sc[1]) - 60 / 375) < 1e-3,
     `x 必须缩到 按钮宽/面板宽 = ${(60 / 375).toFixed(4)},实际 ${sc[1]}。` +
-    '写死 .92 就是第一版那个 bug —— 起点变成占满屏宽的扁条,看着不像从按钮长出来')
+    '写死 .92 就是第一版那个 bug —— 起点变成占满屏宽的扁条，看着不像从按钮长出来')
   assert.ok(Math.abs(Number(sc[2]) - 60 / 200) < 1e-3, 'y 必须缩到 按钮高/面板高')
 
   const tr = out.match(/translate3d\((-?\d+)px, (-?\d+)px, 0\)/)
-  assert.ok(tr, '位移必须用 translate3d(2D translate 提合成层不稳,抄自 vaul)')
+  assert.ok(tr, '位移必须用 translate3d(2D translate 提合成层不稳，抄自 vaul)')
   assert.equal(Number(tr[1]), Math.round((300 + 30) - (0 + 187.5)), 'dx 必须是两个中心点之差')
   assert.equal(Number(tr[2]), Math.round((40 + 30) - (600 + 100)), 'dy 必须是两个中心点之差')
 
@@ -79,7 +79,7 @@ test('_flipStyle:小按钮配大面板不能被缩放下限夹住', () => {
                    { left: 0, top: 100, width: 375, height: 700 })
   const sy = Number(out.match(/scale\([\d.]+, ([\d.]+)\)/)[1])
   assert.ok(Math.abs(sy - 28 / 700) < 1e-3,
-    `y 该是 ${(28 / 700).toFixed(4)},实际 ${sy} —— 缩放下限设太大,把常见的小按钮夹住了`)
+    `y 该是 ${(28 / 700).toFixed(4)},实际 ${sy} —— 缩放下限设太大，把常见的小按钮夹住了`)
 })
 
 test('_flipStyle:量不到时仍给出能播的起点,不能返回空(否则面板原地闪现)', () => {
@@ -143,7 +143,7 @@ test('卸载时必须把 _morphOpen 和 _morphStyle 一起清干净', () => {
   const h = host({ shellSelector: '.shell' }, { _morphOpen: true, _morphStyle: 'transform: scale(.1,.1);' })
   h.onRender(false)
   assert.equal(h.data._morphOpen, false)
-  assert.equal(h.data._morphStyle, '', '_morphStyle 必须一并清空,否则会复用旧锚点的起点')
+  assert.equal(h.data._morphStyle, '', '_morphStyle 必须一并清空，否则会复用旧锚点的起点')
 })
 
 test('减动效:直接落末态、不量测,且必须清掉上一次的起点', () => {
@@ -151,8 +151,8 @@ test('减动效:直接落末态、不量测,且必须清掉上一次的起点', 
     { reducedMotion: true, _morphStyle: 'transform: scale(.5,.5);' })
   h.show(true)
   assert.equal(h.data._morphOpen, true, '减动效必须直接到位')
-  assert.equal(h.data._morphStyle, '', '减动效不量测,留着旧值会按上一次的锚点画一帧')
-  assert.equal(h.callbacks.length, 0, '减动效不该走量测回调,那要多等一个异步回合')
+  assert.equal(h.data._morphStyle, '', '减动效不量测，留着旧值会按上一次的锚点画一帧')
+  assert.equal(h.callbacks.length, 0, '减动效不该走量测回调，那要多等一个异步回合')
 })
 
 test('退场没播完就重开:直接长回去,不重走量测', () => {
@@ -160,7 +160,7 @@ test('退场没播完就重开:直接长回去,不重走量测', () => {
   h.show(false)                       // 退场中
   h.show(true)                        // 立刻重开
   assert.equal(h.data._morphOpen, true)
-  assert.equal(h.callbacks.length, 0, '锚点没变,不必重量(重量要等一个异步回合,会先跳回全缩)')
+  assert.equal(h.callbacks.length, 0, '锚点没变，不必重量(重量要等一个异步回合，会先跳回全缩)')
 })
 
 // ════════════════════ 静态:样式作用域 ════════════════════
@@ -217,11 +217,11 @@ test('morph 类由 anchor-selector 直接推导,末态清空行内 style、退�
       assert.ok(m, `${wxml}: 找不到 ${cls} 的条件表达式`)
       assert.equal(m[1], 'anchorSelector',
         `${cls} 必须直接由 anchorSelector 推导(现在读的是 ${m[1]});` +
-        '读量测结果的话,面板会先按默认动画渲染一帧再切成 morph')
+        '读量测结果的话，面板会先按默认动画渲染一帧再切成 morph')
     }
     assert.match(src, /style="\{\{\(_morphOpen && !_closing\) \? '' : _morphStyle\}\}"/,
       `${wxml}: 末态清空行内起点变换(否则它优先级最高、过渡不回原位),` +
-      '但退场时必须挂回去 —— 否则收回时无处可去,面板直接消失')
+      '但退场时必须挂回去 —— 否则收回时无处可去，面板直接消失')
   }
 })
 
@@ -233,9 +233,9 @@ test('起点态必须显式关掉过渡,并常驻 will-change', () => {
     assert.ok(rule, `${wxss}: 找不到 ${sel}`)
     assert.match(rule.body, /transition:\s*none/,
       `${sel} 必须显式关掉过渡:它会从基础规则继承 transition,带着过渡设起点会先播一段反向动画`)
-    assert.match(rule.body, /opacity:\s*0/, `${sel} 未量完时必须先藏住,否则按原尺寸露一帧`)
+    assert.match(rule.body, /opacity:\s*0/, `${sel} 未量完时必须先藏住，否则按原尺寸露一帧`)
     assert.match(rule.body, /will-change:\s*transform/,
-      `${sel} 必须常驻 will-change: transform —— 层若等动画开始那刻才建,第一帧必卡(vaul 同款)`)
+      `${sel} 必须常驻 will-change: transform —— 层若等动画开始那刻才建，第一帧必卡(vaul 同款)`)
   }
 })
 
@@ -261,7 +261,7 @@ test('morph 退场时长与 exitMotion(<ms>) 不许漂移 —— 既有退场契
     const ms = Number(read('style/tokens.wxss').match(new RegExp('--cy-motion-' + token[1] + ':\\s*(\\d+)ms'))[1])
     const wired = Number(read(js).match(/exitMotion\((\d+)\)/)[1])
     assert.equal(ms, wired,
-      `${wxss}: 退场 ${ms}ms 与 exitMotion(${wired}) 漂移了:大了动画没播完就卸载,小了播完还多等一拍`)
+      `${wxss}: 退场 ${ms}ms 与 exitMotion(${wired}) 漂移了:大了动画没播完就卸载，小了播完还多等一拍`)
     assert.ok(ms < 350, '退场必须快于进场 350ms(DS 文档3 §B.1 进场慢、退场快)')
   }
 })
@@ -270,7 +270,7 @@ test('内容错峰用 sheet 自己的 token,不借按压触觉档', () => {
   const wxss = read('components/cy/sheet/index.wxss')
   for (const { selector, body } of rules(wxss).filter((r) => /transition-delay:\s*var\(/.test(r.body))) {
     assert.doesNotMatch(body, /transition-delay:\s*var\(--cy-motion-press\)/,
-      `${selector} 借用了 --cy-motion-press(「按钮按压回弹,触觉级,勿加长」):语义外挪`)
+      `${selector} 借用了 --cy-motion-press(「按钮按压回弹，触觉级，勿加长」):语义外挪`)
   }
   assert.match(read('style/tokens.wxss'), /--cy-comp-sheet-morph-delay:\s*\d+ms/, '必须有自己的 token')
 })

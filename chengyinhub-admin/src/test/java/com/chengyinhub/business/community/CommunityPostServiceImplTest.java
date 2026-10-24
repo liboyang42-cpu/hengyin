@@ -3,9 +3,11 @@ package com.chengyinhub.business.community;
 import com.chengyinhub.business.domain.community.CommunityPost;
 import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.CommunityReportCase;
+import com.chengyinhub.business.domain.vo.CommunityReportVO;
 import com.chengyinhub.business.domain.community.CommunityPostFeedQuery;
 import com.chengyinhub.business.domain.dto.CommunityPostRequests;
 import com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
 import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.mapper.CommunityPostMapper;
 import com.chengyinhub.business.service.CommunityTrustService;
@@ -15,19 +17,26 @@ import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.impl.CommunityPostServiceImpl;
 import com.chengyinhub.business.service.support.CommunityPostLifecyclePolicy;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.utils.JsonUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +46,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -53,6 +63,9 @@ class CommunityPostServiceImplTest {
     @BeforeEach
     void setUp() {
         mapper = mock(CommunityPostMapper.class);
+        // Match MyBatis selectOne's absent-row contract rather than Mockito's empty Map default.
+        when(mapper.selectMediaByOwnerRequest(anyLong(), anyString())).thenReturn(null);
+        when(mapper.selectMediaByReceiptHash(anyString())).thenReturn(null);
         safetyGate = mock(IContentSafetyGate.class);
         mediaReceiptService = mock(ICommunityMediaReceiptService.class);
         communityTrustService = mock(CommunityTrustService.class);
@@ -108,6 +121,44 @@ class CommunityPostServiceImplTest {
 
         assertEquals(Integer.valueOf(428), error.getCode());
         verify(safetyGate, never()).decide(any());
+    }
+
+    @Test
+    void editingCheckingPostRefreshesReviewWithSavedVersionAndLifecycle() {
+        CommunityPost checking = draft(7L, 9L, 3);
+        checking.setLifecycle("CHECKING");
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(checking);
+        when(mapper.selectById(7L, 9L)).thenReturn(checking);
+        when(mapper.selectActiveGuideline()).thenReturn(Collections.<String, Object>singletonMap("id", 5L));
+        when(mapper.countGuidelineAck(9L, 5L)).thenReturn(1);
+        when(mapper.updateContentCas(any(), eq(3), eq("CHECKING"), any())).thenReturn(1);
+        CommunityPostRequests.Upsert request = validUpsert();
+        request.setExpectedVersion(3);
+        request.setMediaIds(Arrays.asList(41L, 42L));
+        when(mapper.attachMedia(eq(7L), eq(9L), anyLong(), anyInt(), any())).thenReturn(1);
+        Map<String, Object> firstMedia = new HashMap<>();
+        firstMedia.put("id", 41L);
+        firstMedia.put("object_key", "upload/0123456789abcdef0123456789abcdef.png");
+        Map<String, Object> secondMedia = new HashMap<>();
+        secondMedia.put("id", 42L);
+        secondMedia.put("object_key", "upload/ffffffffffffffffffffffffffffffff.png");
+        when(mapper.selectMediaForSafety(7L)).thenReturn(Arrays.asList(firstMedia, secondMedia));
+        service.edit(9L, 7L, request);
+        verify(mapper).detachMedia(eq(7L), eq(9L), eq(Arrays.asList(41L, 42L)), any());
+
+        IAuditTaskService audits = (IAuditTaskService) org.springframework.test.util.ReflectionTestUtils
+                .getField(service, "auditTaskService");
+        verify(audits).submitSafetyHold(eq(AuditTask.BIZ_COMMUNITY_POST), eq(7L), eq(9L),
+                eq("EDIT_REVIEW"), argThat(snapshot -> {
+                    com.alibaba.fastjson2.JSONObject evidence = com.alibaba.fastjson2.JSON.parseObject(snapshot);
+                    CommunityPost saved = evidence.getJSONObject("post").toJavaObject(CommunityPost.class);
+                    if (evidence.getJSONArray("media") == null || evidence.getJSONArray("media").size() != 2
+                            || !Long.valueOf(41L).equals(evidence.getJSONArray("media").getJSONObject(0).getLong("id"))
+                            || !Long.valueOf(42L).equals(evidence.getJSONArray("media").getJSONObject(1).getLong("id"))) return false;
+                    return Integer.valueOf(4).equals(saved.getVersion()) && "CHECKING".equals(saved.getLifecycle())
+                            && request.getBody().equals(saved.getBody());
+                }));
+        verify(mapper).upsertSearchDocument(eq(7L), eq("HIDDEN"), any());
     }
 
     @Test
@@ -234,6 +285,93 @@ class CommunityPostServiceImplTest {
     }
 
     @Test
+    void legacyMigrationLabelSurvivesEditingWithOrWithoutClientEcho() {
+        for (boolean echo : Arrays.asList(true, false)) {
+            setUp();
+            CommunityPost current = draft(7L, 9L, 3);
+            current.setSafetyLabelsJson("[\"LEGACY_MIGRATED\"]");
+            when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+            when(mapper.selectById(7L, 9L)).thenReturn(current);
+            when(mapper.updateContentCas(any(), eq(3), eq("DRAFT"), any())).thenReturn(1);
+            CommunityPostRequests.Upsert request = validUpsert();
+            request.setExpectedVersion(3);
+            request.setSafetyLabels(echo ? Arrays.asList("LEGACY_MIGRATED", "WEATHER_RISK")
+                    : Collections.singletonList("WEATHER_RISK"));
+
+            service.edit(9L, 7L, request);
+
+            verify(mapper).updateContentCas(argThat(post -> {
+                List<?> labels = JsonUtils.parseObject(post.getSafetyLabelsJson(), List.class);
+                return labels.size() == 2 && labels.contains("LEGACY_MIGRATED") && labels.contains("WEATHER_RISK");
+            }), eq(3), eq("DRAFT"), any());
+        }
+    }
+
+    @Test
+    void migrationLabelCannotBeForgedOnCreateOrUnmigratedEdit() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        request.setExpectedVersion(3);
+        request.setSafetyLabels(Collections.singletonList("LEGACY_MIGRATED"));
+        assertEquals(Integer.valueOf(400), assertThrows(ServiceException.class,
+                () -> service.createDraft(9L, request)).getCode());
+        CommunityPost current = draft(7L, 9L, 3);
+        current.setSafetyLabelsJson("[]");
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+        assertEquals(Integer.valueOf(400), assertThrows(ServiceException.class,
+                () -> service.edit(9L, 7L, request)).getCode());
+        verify(mapper, never()).insertPost(any());
+        verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
+    }
+
+    @Test
+    void migratedEditKeepsInvalidDuplicateAndMergedLabelLimits() {
+        for (List<String> labels : Arrays.asList(
+                Collections.singletonList("PLATFORM_VERIFIED"),
+                Arrays.asList("LEGACY_MIGRATED", "LEGACY_MIGRATED"),
+                Arrays.asList("DANGEROUS_ACTIVITY", "SENSITIVE_CONTENT", "FLASHING_IMAGES", "SPOILER", "WEATHER_RISK"),
+                Arrays.asList("LEGACY_MIGRATED", "DANGEROUS_ACTIVITY", "SENSITIVE_CONTENT", "FLASHING_IMAGES", "SPOILER", "WEATHER_RISK"))) {
+            setUp();
+            CommunityPost current = draft(7L, 9L, 3);
+            current.setSafetyLabelsJson("[\"LEGACY_MIGRATED\"]");
+            when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+            CommunityPostRequests.Upsert request = validUpsert();
+            request.setExpectedVersion(3);
+            request.setSafetyLabels(labels);
+            assertEquals(Integer.valueOf(400), assertThrows(ServiceException.class,
+                    () -> service.edit(9L, 7L, request)).getCode());
+            verify(mapper, never()).insertRevision(anyLong(), anyLong(), anyInt(), anyString(), anyString(), anyString(), any());
+            verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
+        }
+    }
+
+    @Test
+    void migratedEditDoesNotRelaxOwnerOrVersionChecks() {
+        for (boolean wrongOwner : Arrays.asList(true, false)) {
+            setUp();
+            CommunityPost current = draft(7L, 9L, 3);
+            current.setSafetyLabelsJson("[\"LEGACY_MIGRATED\"]");
+            when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+            CommunityPostRequests.Upsert request = validUpsert();
+            request.setExpectedVersion(wrongOwner ? 3 : 2);
+            request.setSafetyLabels(Collections.singletonList("LEGACY_MIGRATED"));
+            assertThrows(ServiceException.class, () -> service.edit(wrongOwner ? 10L : 9L, 7L, request));
+            verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
+        }
+    }
+
+    @Test
+    void corruptStoredSafetyLabelsCannotBeOverwrittenAsEmpty() {
+        CommunityPost current = draft(7L, 9L, 3);
+        current.setSafetyLabelsJson("{broken");
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(current);
+        CommunityPostRequests.Upsert request = validUpsert();
+        request.setExpectedVersion(3);
+        assertEquals(Integer.valueOf(409), assertThrows(ServiceException.class,
+                () -> service.edit(9L, 7L, request)).getCode());
+        verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
+    }
+
+    @Test
     void mediaRegistrationRejectsExecutableOrUntrustedSchemes() {
         CommunityPostRequests.MediaRegister request = new CommunityPostRequests.MediaRegister();
         request.setUploadRequestId("upload-request-1");
@@ -262,18 +400,68 @@ class CommunityPostServiceImplTest {
         verify(mapper, never()).selectFeed(any());
     }
 
+    /** 分级审核 P0:推文发布必须显式先审后发(PRE_REVIEW),不能吃到门禁入参的 POST_REVIEW 默认值。 */
+    @Test
+    void publishAsksGateForPreReviewSoCommunityPostBehaviourIsUnchanged() {
+        CommunityPost post = draft(7L, 9L, 3);
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(post);
+        when(mapper.selectActiveGuideline()).thenReturn(Collections.<String, Object>singletonMap("ID", 5L));
+        when(mapper.countGuidelineAck(9L, 5L)).thenReturn(1);
+        when(mapper.selectMedia(7L)).thenReturn(Collections.emptyList());
+        when(safetyGate.decide(any())).thenReturn(SafetyDecision.hold("TEXT_REVIEW", 1L));
+        when(mapper.transitionCas(eq(7L), eq("DRAFT"), eq("CHECKING"), eq(3), any(), any(), anyInt(), anyInt(), anyInt(), any()))
+                .thenReturn(1);
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 4));
+        when(mapper.selectReferences(7L)).thenReturn(Collections.emptyList());
+
+        service.publish(9L, null, 7L, state(3));
+
+        ArgumentCaptor<PublishSafetyRequest> captor = ArgumentCaptor.forClass(PublishSafetyRequest.class);
+        verify(safetyGate).decide(captor.capture());
+        assertEquals(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name(), captor.getValue().getReviewMode());
+    }
+
+    /** 分级审核 P0:推文回复同样显式 PRE_REVIEW。 */
+    @Test
+    void commentAsksGateForPreReviewSoCommentBehaviourIsUnchanged() {
+        CommunityPost post = draft(7L, 11L, 3);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityPostRequests.Comment request = new CommunityPostRequests.Comment();
+        request.setClientRequestId("comment-mode-1");
+        request.setBody("普通回复");
+        Map<String, Object> inserted = new HashMap<>();
+        inserted.put("id", 17L);
+        inserted.put("post_id", 7L);
+        inserted.put("author_id", 9L);
+        inserted.put("body", "普通回复");
+        inserted.put("author_approval_state", "VISIBLE");
+        inserted.put("lifecycle", "CHECKING");
+        when(mapper.selectCommentByAuthorRequest(9L, "comment-mode-1")).thenReturn(null, inserted);
+        when(mapper.insertComment(eq(7L), eq(9L), eq(null), eq(null), eq(null), anyString(),
+                eq("普通回复"), eq("CHECKING"), eq("VISIBLE"), any())).thenReturn(1);
+        when(safetyGate.decide(any())).thenReturn(SafetyDecision.block("POLICY"));
+
+        assertThrows(ServiceException.class, () -> service.comment(9L, 7L, request));
+
+        ArgumentCaptor<PublishSafetyRequest> captor = ArgumentCaptor.forClass(PublishSafetyRequest.class);
+        verify(safetyGate).decide(captor.capture());
+        assertEquals(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name(), captor.getValue().getReviewMode());
+    }
+
     @Test
     void publishPassUsesRealMediaUrlAndMakesApprovedMediaPublic() {
         CommunityPost post = draft(7L, 9L, 3);
         when(mapper.selectByIdForUpdate(7L)).thenReturn(post);
         when(mapper.selectActiveGuideline()).thenReturn(Collections.<String, Object>singletonMap("id", 5L));
         when(mapper.countGuidelineAck(9L, 5L)).thenReturn(1);
+        String key = "upload/0123456789abcdef0123456789abcdef.jpg";
+        String preview = "https://private-test.oss-cn-shanghai.aliyuncs.com/" + key + "?Expires=300&Signature=short";
         Map<String, Object> media = new HashMap<>();
-        media.put("derived_object_key", "https://cdn.example/community/image.jpg");
+        media.put("derived_object_key", key);
         when(mapper.selectMediaForSafety(7L)).thenReturn(Collections.singletonList(media));
         when(safetyGate.decide(argThat(request -> request.getMediaUrls().equals(
-                Collections.singletonList("https://cdn.example/community/image.jpg")))))
-                .thenReturn(SafetyDecision.pass());
+                Collections.singletonList(preview))))).thenReturn(SafetyDecision.pass());
         when(mapper.transitionCas(eq(7L), eq("DRAFT"), eq("PUBLISHED"), eq(3), any(), eq(null),
                 eq(1), eq(1), eq(1), any())).thenReturn(1);
         when(mapper.updateMediaReviewState(eq(7L), eq("PASS"), any())).thenReturn(1);
@@ -284,9 +472,15 @@ class CommunityPostServiceImplTest {
         when(mapper.selectById(7L, 9L)).thenReturn(visible);
         when(mapper.selectMedia(7L)).thenReturn(Collections.singletonList(media));
         when(mapper.selectReferences(7L)).thenReturn(Collections.emptyList());
-
-        service.publish(9L, null, 7L, state(3));
-
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> storage =
+                     org.mockito.Mockito.mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+            storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.communityMediaObjectKey(key))
+                    .thenReturn(key);
+            storage.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.generateCommunityMediaPresignedUrl(key))
+                    .thenReturn(preview);
+            service.publish(9L, null, 7L, state(3));
+        }
+        assertEquals(key, media.get("derived_object_key"), "rendering must not rewrite stored media");
         verify(mapper).updateMediaReviewState(eq(7L), eq("PASS"), any());
     }
 
@@ -295,13 +489,14 @@ class CommunityPostServiceImplTest {
         CommunityPostRequests.MediaRegister request = new CommunityPostRequests.MediaRegister();
         request.setUploadRequestId("upload-request-1");
         request.setMediaType("IMAGE");
-        request.setObjectKey("https://cdn.example/community/new.jpg");
+        request.setObjectKey("upload/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.jpg");
         request.setMimeType("image/jpeg");
         request.setByteSize(123L);
         request.setUploadReceipt("receipt");
         Map<String, Object> existing = new HashMap<>();
         existing.put("media_type", "IMAGE");
-        existing.put("derived_object_key", "https://cdn.example/community/old.jpg");
+        existing.put("object_key", "upload/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg");
+        existing.put("derived_object_key", "upload/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg");
         existing.put("mime_type", "image/jpeg");
         existing.put("byte_size", 123L);
         when(mapper.selectMediaByOwnerRequest(9L, "upload-request-1")).thenReturn(existing);
@@ -319,7 +514,7 @@ class CommunityPostServiceImplTest {
         CommunityPostRequests.MediaRegister request = new CommunityPostRequests.MediaRegister();
         request.setUploadRequestId("another-request");
         request.setMediaType("IMAGE");
-        request.setObjectKey("https://cdn.example/community/photo.jpg");
+        request.setObjectKey("upload/cccccccccccccccccccccccccccccccc.jpg");
         request.setMimeType("image/jpeg");
         request.setByteSize(123L);
         request.setUploadReceipt("signed-receipt");
@@ -331,6 +526,8 @@ class CommunityPostServiceImplTest {
                 () -> service.registerMedia(9L, request));
 
         assertEquals(Integer.valueOf(409), error.getCode());
+        verify(mediaReceiptService).verify(9L, request.getObjectKey(), 123L, "signed-receipt");
+        verify(mapper).selectMediaByReceiptHash(anyString());
         verify(mapper, never()).insertMedia(anyLong(), anyString(), anyString(), anyString(), anyString(),
                 anyLong(), any(), any(), any(), any(), anyString(), anyString(), any());
     }
@@ -362,6 +559,61 @@ class CommunityPostServiceImplTest {
         assertEquals(Integer.valueOf(400), error.getCode());
         verify(mapper, never()).updateCommentLifecycle(anyLong(), anyString(), anyString(), anyInt(), any());
         verify(mapper, never()).recomputeCounts(7L);
+    }
+
+    @Test
+    void duplicateCommentRecoversCommittedWinnerWithCurrentRead() {
+        CommunityPost post = draft(7L, 9L, 3);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityPostRequests.Comment request = new CommunityPostRequests.Comment();
+        request.setClientRequestId("comment-concurrent");
+        request.setBody("并发回复");
+        Map<String, Object> winner = new HashMap<>();
+        winner.put("post_id", 7L);
+        winner.put("body", "并发回复");
+        winner.put("author_approval_state", "VISIBLE");
+        winner.put("lifecycle", "PUBLISHED");
+        when(mapper.selectCommentByAuthorRequest(9L, "comment-concurrent")).thenReturn(null);
+        when(mapper.insertComment(eq(7L), eq(9L), isNull(), isNull(), isNull(),
+                eq("comment-concurrent"), eq("并发回复"), eq("CHECKING"), eq("VISIBLE"), any()))
+                .thenThrow(new DuplicateKeyException("committed winner"));
+        when(mapper.selectCommentByAuthorRequestForUpdate(9L, "comment-concurrent")).thenReturn(winner);
+
+        Map<String, Object> result = service.comment(9L, 7L, request);
+
+        assertEquals("PUBLISHED", result.get("lifecycle"));
+        assertEquals("VISIBLE", result.get("approvalState"));
+        verify(mapper, times(1)).selectCommentByAuthorRequest(9L, "comment-concurrent");
+        verify(mapper).selectCommentByAuthorRequestForUpdate(9L, "comment-concurrent");
+        verify(safetyGate, never()).decide(any());
+        verify(mapper, never()).recomputeCounts(anyLong());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void duplicateCommentCurrentReadStillRejectsChangedBodyOrPost() {
+        CommunityPost post = draft(7L, 9L, 3);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityPostRequests.Comment request = new CommunityPostRequests.Comment();
+        request.setClientRequestId("comment-conflict");
+        request.setBody("请求正文");
+        when(mapper.insertComment(eq(7L), eq(9L), isNull(), isNull(), isNull(),
+                eq("comment-conflict"), eq("请求正文"), eq("CHECKING"), eq("VISIBLE"), any()))
+                .thenThrow(new DuplicateKeyException("committed winner"));
+        for (boolean differentPost : Arrays.asList(false, true)) {
+            Map<String, Object> winner = new HashMap<>();
+            winner.put("post_id", differentPost ? 8L : 7L);
+            winner.put("body", differentPost ? "请求正文" : "不同正文");
+            when(mapper.selectCommentByAuthorRequestForUpdate(9L, "comment-conflict")).thenReturn(winner);
+            ServiceException error = assertThrows(ServiceException.class,
+                    () -> service.comment(9L, 7L, request));
+            assertEquals(Integer.valueOf(409), error.getCode());
+        }
+        verify(safetyGate, never()).decide(any());
+        verify(mapper, never()).recomputeCounts(anyLong());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
     }
 
     @Test
@@ -642,7 +894,7 @@ class CommunityPostServiceImplTest {
                 () -> service.appeal(9L, request));
 
         assertEquals(Integer.valueOf(409), error.getCode());
-        verify(mapper, never()).insertAppeal(anyLong(), anyLong(), anyString(), anyString(), anyString(), any());
+        verify(mapper, never()).insertAppeal(anyLong(), anyLong(), anyString(), anyString(), anyString(), any(), any());
     }
 
     @Test
@@ -752,16 +1004,12 @@ class CommunityPostServiceImplTest {
 
     @Test
     void notificationPreferencesPatchMergesAndGovernanceCannotBeDisabled() {
-        Map<String, Object> before = new HashMap<>();
-        before.put("interaction_enabled", 1);
-        before.put("mention_enabled", 1);
-        before.put("social_enabled", 0);
         Map<String, Object> after = new HashMap<>();
         after.put("interaction_enabled", 1);
         after.put("mention_enabled", 0);
         after.put("social_enabled", 0);
-        when(mapper.selectNotificationPreferences(9L)).thenReturn(before, after);
-        when(mapper.upsertNotificationPreferences(eq(9L), eq(true), eq(false), eq(false), any())).thenReturn(1);
+        when(mapper.selectNotificationPreferences(9L)).thenReturn(after);
+        when(mapper.upsertNotificationPreferences(eq(9L), isNull(), eq(false), isNull(), any())).thenReturn(1);
         CommunityPostRequests.NotificationPreferences request = new CommunityPostRequests.NotificationPreferences();
         request.setMentionEnabled(false);
 
@@ -769,7 +1017,7 @@ class CommunityPostServiceImplTest {
 
         assertEquals(Boolean.FALSE, result.get("mentionEnabled"));
         assertEquals(Boolean.TRUE, result.get("governanceEnabled"));
-        verify(mapper).upsertNotificationPreferences(eq(9L), eq(true), eq(false), eq(false), any());
+        verify(mapper).upsertNotificationPreferences(eq(9L), isNull(), eq(false), isNull(), any());
     }
 
     @Test
@@ -777,7 +1025,9 @@ class CommunityPostServiceImplTest {
         Map<String, Object> comment = new HashMap<>();
         comment.put("post_id", 7L);
         when(mapper.selectCommentForAudit(17L)).thenReturn(comment);
-        when(mapper.selectCommentActionByRequest(9L, "like-comment-1")).thenReturn(null);
+        when(mapper.selectCommentLikeActionForUpdate(17L, 9L)).thenReturn(null);
+        when(mapper.selectCommandReceiptForUpdate(9L, "like-comment-1")).thenReturn(null);
+        when(mapper.selectCommandReceiptForUpdate(9L, "unlike-comment-1")).thenReturn(null);
         when(mapper.insertCommentAction(eq(17L), eq(9L), eq("like-comment-1"), any())).thenReturn(1);
         when(mapper.deleteCommentAction(17L, 9L)).thenReturn(1);
 
@@ -792,7 +1042,9 @@ class CommunityPostServiceImplTest {
     void concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox() {
         Map<String, Object> replay = new HashMap<>();
         replay.put("comment_id", 17L);
-        when(mapper.selectCommentActionByRequest(9L, "like-comment-race"))
+        replay.put("request_id", "like-comment-race");
+        when(mapper.selectCommandReceiptForUpdate(9L, "like-comment-race")).thenReturn(null);
+        when(mapper.selectCommentLikeActionForUpdate(17L, 9L))
                 .thenReturn(null, replay);
         when(mapper.insertCommentAction(eq(17L), eq(9L), eq("like-comment-race"), any()))
                 .thenThrow(new DuplicateKeyException("duplicate request"));
@@ -873,7 +1125,7 @@ class CommunityPostServiceImplTest {
         Map<String, Object> reply = new HashMap<>();
         reply.put("id", 200L);
         reply.put("parent_id", 100L);
-        when(mapper.selectComments(7L, 9L, null, 20)).thenReturn(Arrays.asList(root, reply));
+        when(mapper.selectComments(7L, 9L, null, 21)).thenReturn(Arrays.asList(root, reply));
 
         Map<String, Object> page = service.comments(9L, 7L, null, 20);
 
@@ -930,13 +1182,163 @@ class CommunityPostServiceImplTest {
         request.setTargetId(17L);
         request.setReasonCode("HARASSMENT");
         request.setRequestId("report-request-1");
-        when(communityTrustService.submitReport(9L, request)).thenReturn(new CommunityReportCase());
+        when(communityTrustService.submitReport(9L, request)).thenReturn(submittedReport("COMMENT", 17L));
 
-        service.report(9L, request);
+        Object result = service.report(9L, request);
 
         assertEquals("COMMENT", request.getTargetType());
         assertEquals(Long.valueOf(17L), request.getTargetId());
+        assertReporterProjection(result, "COMMENT", 17L);
         verify(communityTrustService).submitReport(9L, request);
+    }
+
+    @Test
+    void contentReportSubmissionUsesTheSamePublicReporterProjection() {
+        CommunityPost post = draft(7L, 11L, 1);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityReportSubmitRequest request = new CommunityReportSubmitRequest();
+        request.setTargetId(7L);
+        request.setRequestId("report-content-request");
+        when(communityTrustService.submitReport(9L, request)).thenReturn(submittedReport("CONTENT", 7L));
+
+        Object result = service.report(9L, request);
+
+        assertEquals("CONTENT", request.getTargetType());
+        assertReporterProjection(result, "CONTENT", 7L);
+        verify(communityTrustService).submitReport(9L, request);
+    }
+
+    private CommunityReportCase submittedReport(String targetType, Long targetId) {
+        CommunityReportCase row = new CommunityReportCase();
+        row.setId(23L);
+        row.setReporterMemberId(9L);
+        row.setTargetType(targetType);
+        row.setTargetId(targetId);
+        row.setStage("SUBMITTED");
+        row.setVersion(0);
+        row.setPolicyVersion("COMMUNITY_REPORT_POLICY_V1");
+        row.setDescription("举报说明");
+        row.setRequestId("internal-request-marker");
+        row.setPayloadHash("internal-payload-digest");
+        row.setPrioritySnapshot("URGENT");
+        row.setFirstResponseMinutesSnapshot(15);
+        return row;
+    }
+
+    private void assertReporterProjection(Object result, String targetType, Long targetId) {
+        assertEquals(CommunityReportVO.class, result.getClass());
+        Map<String, Object> json = com.alibaba.fastjson2.JSON.parseObject(
+                com.alibaba.fastjson2.JSON.toJSONString(result));
+        assertEquals(23L, ((Number) json.get("id")).longValue());
+        assertEquals(targetType, json.get("targetType"));
+        assertEquals(targetId.longValue(), ((Number) json.get("targetId")).longValue());
+        assertEquals("SUBMITTED", json.get("stage"));
+        assertEquals("RECEIVED", json.get("publicStage"));
+        assertEquals(0, json.get("version"));
+        assertEquals("举报说明", json.get("description"));
+        for (String internal : Arrays.asList("reporterMemberId", "requestId", "payloadHash",
+                "prioritySnapshot", "firstResponseMinutesSnapshot", "internalNote", "operatorId")) {
+            assertEquals(false, json.containsKey(internal), internal);
+        }
+    }
+
+    @Test
+    void deletedCommentAncestorsAreRedactedWithoutDroppingNormalRepliesOrChangingRootCursor() {
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 3));
+        Map<String, Object> root30 = deletedThreadRow(30L, null, null);
+        Map<String, Object> middle31 = deletedThreadRow(31L, 30L, 30L);
+        Map<String, Object> reply32 = threadRow(32L, 31L); reply32.put("root_id", 30L);
+        reply32.put("body", "normal reply"); reply32.put("lifecycle", "PUBLISHED");
+        Map<String, Object> deletedLeaf33 = deletedThreadRow(33L, 30L, 30L);
+        Map<String, Object> root20 = threadRow(20L, null);
+        when(mapper.selectComments(7L, 9L, null, 2))
+                .thenReturn(Arrays.asList(root30, middle31, reply32, deletedLeaf33, root20));
+        Map<String, Object> first = service.comments(9L, 7L, null, 1);
+        List<Map<String, Object>> items = (List<Map<String, Object>>) first.get("items");
+        assertEquals(3, items.size());
+        for (int i = 0; i < 2; i++) {
+            assertEquals("", items.get(i).get("body"));
+            assertEquals(true, items.get(i).get("deletedPlaceholder"));
+            assertFalse(items.get(i).containsKey("BODY"));
+        }
+        assertEquals(reply32, items.get(2));
+        assertEquals("private deleted body", root30.get("BODY"), "projection must not mutate mapper rows");
+        assertEquals(true, first.get("hasMore"));
+        assertEquals(30L, first.get("nextCursor"));
+        when(mapper.selectComments(7L, 9L, 30L, 2)).thenReturn(Collections.singletonList(root20));
+        assertEquals(Collections.singletonList(root20), service.comments(9L, 7L, 30L, 1).get("items"));
+    }
+
+    @Test
+    void deletedLeavesAndEmptyDeletedThreadsDoNotBecomeVisiblePlaceholders() {
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 3));
+        Map<String, Object> deletedRoot = deletedThreadRow(30L, null, null);
+        Map<String, Object> deletedChild = deletedThreadRow(31L, 30L, 30L);
+        Map<String, Object> normalRoot = threadRow(20L, null);
+        when(mapper.selectComments(7L, 9L, null, 2))
+                .thenReturn(Arrays.asList(deletedRoot, deletedChild, normalRoot));
+        Map<String, Object> page = service.comments(9L, 7L, null, 1);
+        assertEquals(Collections.singletonList(normalRoot), page.get("items"));
+        assertEquals(false, page.get("hasMore"));
+        assertEquals(20L, page.get("nextCursor"));
+    }
+
+    @Test
+    void commentLookaheadDropsOnlyExtraRootWithItsWholeThread() {
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 3));
+        Map<String, Object> root30 = threadRow(30L, null);
+        Map<String, Object> reply31 = threadRow(31L, 30L); reply31.put("root_id", 30L);
+        Map<String, Object> reply32 = threadRow(32L, 31L); reply32.put("root_id", 30L);
+        Map<String, Object> root20 = threadRow(20L, null);
+        Map<String, Object> reply21 = threadRow(21L, 20L); reply21.put("root_id", 20L);
+        when(mapper.selectComments(7L, 9L, null, 2))
+                .thenReturn(Arrays.asList(root30, reply31, reply32, root20, reply21));
+        Map<String, Object> first = service.comments(9L, 7L, null, 1);
+        assertEquals(Arrays.asList(root30, reply31, reply32), first.get("items"));
+        assertEquals(true, first.get("hasMore"));
+        assertEquals(30L, first.get("nextCursor"));
+        when(mapper.selectComments(7L, 9L, 30L, 2)).thenReturn(Arrays.asList(root20, reply21));
+        Map<String, Object> last = service.comments(9L, 7L, 30L, 1);
+        assertEquals(Arrays.asList(root20, reply21), last.get("items"));
+        assertEquals(false, last.get("hasMore"));
+        assertEquals(20L, last.get("nextCursor"));
+        when(mapper.selectComments(7L, 9L, 20L, 2)).thenReturn(Collections.emptyList());
+        Map<String, Object> empty = service.comments(9L, 7L, 20L, 1);
+        assertEquals(Collections.emptyList(), empty.get("items"));
+        assertEquals(false, empty.get("hasMore"));
+        assertNull(empty.get("nextCursor"));
+    }
+
+    private Map<String, Object> deletedThreadRow(Long id, Long parentId, Long rootId) {
+        Map<String, Object> row = threadRow(id, parentId);
+        row.put("root_id", rootId);
+        row.put("lifecycle", "DELETED");
+        row.put("BODY", "private deleted body");
+        return row;
+    }
+
+    private Map<String, Object> threadRow(Long id, Long parentId) {
+        Map<String, Object> row = new HashMap<>();
+        row.put("id", id);
+        row.put("parent_id", parentId);
+        return row;
+    }
+
+    @Test
+    void deletedPlaceholderCannotBeReportedByGuessingItsId() {
+        Map<String, Object> comment = deletedThreadRow(17L, null, null);
+        comment.put("post_id", 7L);
+        comment.put("author_id", 11L);
+        when(mapper.selectCommentForAudit(17L)).thenReturn(comment);
+        CommunityReportSubmitRequest request = new CommunityReportSubmitRequest();
+        request.setTargetType("COMMENT");
+        request.setTargetId(17L);
+        request.setReasonCode("HARASSMENT");
+        request.setRequestId("report-deleted-placeholder");
+        ServiceException error = assertThrows(ServiceException.class, () -> service.report(9L, request));
+        assertEquals(Integer.valueOf(404), error.getCode());
+        verify(communityTrustService, never()).submitReport(anyLong(), any());
     }
 
     @Test
@@ -1085,6 +1487,94 @@ class CommunityPostServiceImplTest {
         verify(mapper).completeErasureJob(eq(31L), any());
     }
 
+    @Test
+    void completedOwnDeletedCreateReceiptReturnsOnlyTerminalFlag() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        Map<String, Object> receipt = captureCreateReceipt(request);
+        CommunityPost deleted = draft(7L, 9L, 1);
+        deleted.setLifecycle("DELETED");
+        when(mapper.selectCommandReceipt(9L, request.getClientRequestId())).thenReturn(receipt);
+        when(mapper.selectByAuthorRequest(9L, request.getClientRequestId())).thenReturn(deleted);
+        when(mapper.countAuthorDeleteEvidence(9L, 7L)).thenReturn(1);
+        clearInvocations(mapper);
+
+        assertEquals(Map.of("intentDiscarded", true), service.createDraft(9L, request));
+
+        verify(mapper, never()).selectById(anyLong(), anyLong());
+        verify(mapper, never()).insertPost(any());
+        verify(mapper, never()).insertCommandReceipt(anyLong(), anyString(), anyString(), anyLong(), anyString(), any());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void nonDeletedCreateReplaysNeverReturnDeletedTerminalFlag() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        Map<String, Object> receipt = captureCreateReceipt(request);
+        when(mapper.selectCommandReceipt(9L, request.getClientRequestId())).thenReturn(receipt);
+        for (String lifecycle : List.of("DRAFT", "CHECKING", "PUBLISHED", "LIMITED", "HIDDEN", "REMOVED")) {
+            CommunityPost existing = draft(7L, 9L, 1);
+            existing.setLifecycle(lifecycle);
+            when(mapper.selectByAuthorRequest(9L, request.getClientRequestId())).thenReturn(existing);
+            when(mapper.selectById(7L, 9L)).thenReturn(existing);
+            Map<String, Object> result = service.createDraft(9L, request);
+            assertFalse(result.containsKey("intentDiscarded"));
+        }
+        verify(mapper, never()).countAuthorDeleteEvidence(anyLong(), anyLong());
+        verify(mapper, times(1)).insertPost(any());
+    }
+
+    @Test
+    void deletedCreateReplayWithoutVerifiedAuthorDeletionEvidenceNeverDiscards() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        Map<String, Object> receipt = captureCreateReceipt(request);
+        CommunityPost deleted = draft(7L, 9L, 1);
+        deleted.setLifecycle("DELETED");
+        when(mapper.selectCommandReceipt(9L, request.getClientRequestId())).thenReturn(receipt);
+        when(mapper.selectByAuthorRequest(9L, request.getClientRequestId())).thenReturn(deleted);
+        when(mapper.selectById(7L, 9L)).thenReturn(null);
+        // 0 covers absent/partial deletion evidence, copyright removal, deregistration and legal hold.
+        when(mapper.countAuthorDeleteEvidence(9L, 7L)).thenReturn(0);
+        clearInvocations(mapper);
+        assertEquals(Integer.valueOf(404), assertThrows(ServiceException.class,
+                () -> service.createDraft(9L, request)).getCode());
+        verify(mapper).countAuthorDeleteEvidence(9L, 7L);
+        verify(mapper, never()).insertPost(any());
+
+        CommunityPost otherOwner = draft(7L, 10L, 1);
+        otherOwner.setLifecycle("DELETED");
+        CommunityPost otherAggregate = draft(8L, 9L, 1);
+        otherAggregate.setLifecycle("DELETED");
+        for (CommunityPost candidate : Arrays.asList(otherOwner, otherAggregate, null)) {
+            when(mapper.selectByAuthorRequest(9L, request.getClientRequestId())).thenReturn(candidate);
+            assertEquals(Integer.valueOf(404), assertThrows(ServiceException.class,
+                    () -> service.createDraft(9L, request)).getCode());
+        }
+        verify(mapper, times(1)).countAuthorDeleteEvidence(anyLong(), anyLong());
+    }
+
+    private Map<String, Object> captureCreateReceipt(CommunityPostRequests.Upsert request) {
+        AtomicReference<Map<String, Object>> captured = new AtomicReference<>();
+        when(mapper.insertPost(any())).thenAnswer(invocation -> {
+            CommunityPost inserted = invocation.getArgument(0);
+            inserted.setId(7L);
+            return 1;
+        });
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 0));
+        when(mapper.insertCommandReceipt(eq(9L), eq(request.getClientRequestId()), eq("POST_CREATE"),
+                eq(7L), anyString(), any())).thenAnswer(invocation -> {
+            Map<String, Object> receipt = new HashMap<>();
+            receipt.put("member_id", 9L);
+            receipt.put("request_id", request.getClientRequestId());
+            receipt.put("command_type", "POST_CREATE");
+            receipt.put("aggregate_id", 7L);
+            receipt.put("result_json", invocation.getArgument(4));
+            captured.set(receipt);
+            return 1;
+        });
+        service.createDraft(9L, request);
+        return captured.get();
+    }
+
     private CommunityPost draft(Long id, Long authorId, int version) {
         CommunityPost post = new CommunityPost();
         post.setId(id);
@@ -1119,4 +1609,52 @@ class CommunityPostServiceImplTest {
         request.setGuidelineVersionId(5L);
         return request;
     }
+    @Test
+    void completedReferenceFilterUsesBothPublicSnapshotRulesWithoutTruncation() {
+        List<Map<String, Object>> completed = new java.util.ArrayList<>();
+        for (long id = 1; id <= 52; id++) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("dataType", id % 2 == 0 ? 2 : 1);
+            row.put("dataId", id); row.put("completed", true);
+            completed.add(row);
+            when(mapper.selectReferenceSnapshot(id % 2 == 0 ? "TOPIC" : "ACTIVITY", id, 9L))
+                    .thenReturn(Collections.singletonMap("reference_id", id));
+        }
+        assertEquals(completed, service.filterPublicCompletedReferences(9L, completed));
+        when(mapper.selectReferenceSnapshot("ACTIVITY", 1L, 9L)).thenReturn(null);
+        when(mapper.selectReferenceSnapshot("TOPIC", 2L, 9L)).thenReturn(Collections.emptyMap());
+        List<Map<String, Object>> filtered = service.filterPublicCompletedReferences(9L, completed);
+        assertEquals(completed.subList(2, 52), filtered);
+        assertEquals(52, completed.size());
+        assertSame(completed.get(2), filtered.get(0));
+        verify(mapper, never()).selectReferenceOptions(anyString(), anyLong(), anyInt());
+    }
+
+    @Test
+    void completedReferenceFilterRejectsUnknownTypesAndMissingIdentity() {
+        Map<String, Object> unknown = new LinkedHashMap<>();
+        unknown.put("dataType", 3); unknown.put("dataId", 1L);
+        assertTrue(service.filterPublicCompletedReferences(9L, Collections.singletonList(unknown)).isEmpty());
+        unknown.put("dataType", "OTHER");
+        assertTrue(service.filterPublicCompletedReferences(9L, Collections.singletonList(unknown)).isEmpty());
+        unknown.put("dataType", 1);
+        assertTrue(service.filterPublicCompletedReferences(null, Collections.singletonList(unknown)).isEmpty());
+        assertTrue(service.filterPublicCompletedReferences(0L, Collections.singletonList(unknown)).isEmpty());
+        verify(mapper, never()).selectReferenceSnapshot(anyString(), anyLong(), anyLong());
+    }
+
+    @Test
+    void unavailableReferenceStillRejectedByExistingPostWriteGate() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        CommunityPostRequests.Reference reference = new CommunityPostRequests.Reference();
+        reference.setReferenceType("ACTIVITY");
+        reference.setReferenceId(63L);
+        request.setReferences(Collections.singletonList(reference));
+        when(mapper.insertPost(any())).thenReturn(1);
+        ServiceException failure = assertThrows(ServiceException.class, () -> service.createDraft(9L, request));
+        assertEquals(Integer.valueOf(409), failure.getCode());
+        verify(mapper).selectReferenceSnapshot("ACTIVITY", 63L, 9L);
+        verify(mapper, never()).insertReference(any(), any(), any(), any(), any(), any());
+    }
+
 }

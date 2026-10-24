@@ -18,7 +18,8 @@ function loadRoamPage(sessions, options) {
   const config = options || {}
   const storage = config.storage || { 'roam_memory_v1:101:sessions': sessions }
   const wxMock = { getStorageSync: key => storage[key] }
-  const appMock = { globalData: { features: {} }, getUserID: () => config.playerId || '101' }
+  // 切到护照 tab 时页面还会读可参与的漫游官方活动(BL-41,失败静默);夹具只记录不回包
+  const appMock = { globalData: { features: {} }, getUserID: () => config.playerId || '101', sendRequest() {} }
   const previous = { Page: global.Page, getApp: global.getApp, getCurrentPages: global.getCurrentPages, wx: global.wx }
   try {
     global.Page = config => { definition = config }
@@ -73,7 +74,9 @@ test('起始页护照:读数与档案卡都统计全部历史,不跟着任何截
   assert.equal(tile('history').value, '13 次旅程')
   assert.equal(tile('stamp').value, '13 张邮票')
   assert.ok(tile('badge'), '勋章墙常驻')
-  assert.equal(page.data.passport.tiles.length, 3, '上排只放三张档案卡:记录/集邮/勋章')
+  // 2026-10-14 用户确认的漫游原型:探索目标、时光胶囊随漫游上线,接在三张档案卡之后
+  assert.deepEqual(page.data.passport.tiles.map(item => item.key), ['history', 'stamp', 'badge', 'goals', 'capsule'], '上排:记录/集邮/勋章 + 探索目标/时光胶囊')
+  assert.ok(page.data.passport.tiles.filter(item => item.isNew).every(item => !/\d/.test(item.value)), '新方卡不摆未读取的数字')
 
   const plays = page.data.passport.plays.map(item => item.key)
   assert.deepEqual(plays, ['event', 'discover'], '下排大卡只放官方活动与发现店铺')
@@ -93,7 +96,7 @@ test('negative control: 读数改回跟着旅程卡截断走必须判红', () =>
     global.getApp = previousGetApp
   }
   const shops = page.data.passport.stats.find(item => item.k === '探店').v
-  assert.notEqual(shops, 12, '一旦读数被 slice(0,12) 之类截断,这里会变 12 并判红')
+  assert.notEqual(shops, 12, '一旦读数被 slice(0,12) 之类截断，这里会变 12 并判红')
 })
 
 test('护照只统计当前玩家的漫游记录，不认领旧共享缓存或其他玩家记录', () => {
@@ -121,4 +124,37 @@ test('护照只统计当前玩家的漫游记录，不认领旧共享缓存或�
   assert.equal(stat('漫游'), 1)
   assert.equal(stat('探店'), 2)
   assert.equal(stat('公里'), '2.0')
+})
+
+test('三个首页卡分别开始漫游、打开地图和直接打开我的队伍', () => {
+  const { page, wxMock } = loadRoamPage([])
+  const navigations = []
+  wxMock.navigateTo = options => { navigations.push(options.url); if (options.complete) options.complete() } // 入口有跳转中保护,桩回调 complete 才放下一跳
+  let starts = 0
+  page.goStart = () => { starts += 1 }
+  const oldWx = global.wx
+  try {
+    global.wx = wxMock
+    page.goStart()
+    page.openNearbyMap()
+    page.openMyTeams()
+    assert.equal(starts, 1)
+    // 我的队伍改为独立页面(带队/已通过/审核中/未通过 + 附近招募)
+    assert.deepEqual(navigations, ['/subpackageRoam/nearby/index', '/subpackageRoam/my-teams/index'])
+  } finally { global.wx = oldWx }
+})
+
+test('空护照显示真实零值，切换菜单会刷新当前玩家记录', () => {
+  const { page, wxMock, appMock } = loadRoamPage([])
+  const oldWx = global.wx
+  const oldApp = global.getApp
+  try {
+    global.wx = wxMock
+    global.getApp = () => appMock
+    page.switchIntroTab({ detail: { key: 'passport' } })
+    assert.equal(page.data.introTab, 'passport')
+    assert.deepEqual(page.data.passport.stats.map(stat => stat.v), [0, 0, 0, '0.0'])
+    page.switchIntroTab({ detail: { key: 'start' } })
+    assert.equal(page.data.introTab, 'start')
+  } finally { global.wx = oldWx; global.getApp = oldApp }
 })

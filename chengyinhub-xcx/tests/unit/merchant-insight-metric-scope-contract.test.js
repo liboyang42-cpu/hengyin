@@ -51,7 +51,7 @@ test('复购率副行与百分比同一批人:核销顾客数,不再并排别的
   const repeat = page._buildMetricCards(FACTS).filter((card) => card.key === 'repeat')[0];
   assert.equal(repeat.num, '50%');
   assert.equal(repeat.sub, '基于 2 位核销顾客', '副行必须是百分比的分母那批人(facts.sampleMembers)');
-  assert.doesNotMatch(JSON.stringify(repeat), /位顾客\s*·/, '「N 位顾客(到店或核销)」不是这个比率的分母,不许留在副行');
+  assert.doesNotMatch(JSON.stringify(repeat), /位顾客\s*·/, '「N 位顾客(到店或核销)」不是这个比率的分母，不许留在副行');
   assert.doesNotMatch(JSON.stringify(repeat), /位回头/, '跨窗口回头人数不属于这张卡(与百分比不同口径)');
 });
 
@@ -59,7 +59,7 @@ test('两个指标各有一行口径:分子/分母/时间窗都写出来', () =>
   const page = loadPageDefinition();
   const cards = page._buildMetricCards(FACTS);
   const redeem = cards.filter((card) => card.key === 'redeem')[0];
-  assert.match(redeem.scope, /^口径：/, '核销率缺口径行');
+  assert.match(redeem.scope, /^计算方式：/, '核销率缺口径行');
   assert.match(redeem.scope, /已核销报名数/, '口径必须写清分子');
   assert.match(redeem.scope, /近30天.*内报名数/, '口径必须写清分母与时间窗');
   assert.match(cards.filter((card) => card.key === 'repeat')[0].scope, /核销≥2次的会员/, '口径必须写清分子');
@@ -87,7 +87,7 @@ test('负控:副行改回旧的「N 位顾客 · M 位回头」时必须判红',
     "sub: '基于 ' + this._countText(facts && facts.sampleMembers) + ' 位核销顾客',",
     "sub: this._countText((facts && facts.crowd || {}).members) + ' 位顾客' + ' · ' + this._countText((facts && facts.split || {}).returningVisitors) + ' 位回头',"
   );
-  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:副行写法已改名,扫描口径需同步');
+  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:副行写法已改名，扫描口径需同步');
   const file = path.join(ROOT, PAGE_JS_PATH);
   let definition = null;
   vm.runInNewContext(regressed, {

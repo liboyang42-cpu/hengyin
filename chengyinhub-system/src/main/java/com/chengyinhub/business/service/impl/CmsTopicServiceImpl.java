@@ -18,6 +18,7 @@ import com.chengyinhub.business.domain.dto.TopicProductTypeResolver;
 import com.chengyinhub.business.domain.dto.TopicSettlementDTO;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO;
+import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.support.ChapterRecruitmentRules;
@@ -136,6 +137,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     @Autowired
     private com.chengyinhub.business.service.IAuditTaskService auditTaskService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.support.TopicSupplyReviewService supplyReviewService;
 
     @Autowired
     private com.chengyinhub.business.service.support.TopicBundleReviewService topicBundleReviewService;
@@ -299,6 +302,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     // T7 主题模板:路线计算(腾讯地图API) + 模板查询(节点绑定玩法)
     @Autowired
     private ITopicRouteService topicRouteService;
+
+    @Autowired
+    private com.chengyinhub.business.service.ITopicRouteRuntimeService topicRouteRuntimeService;
     @Autowired
     private ICmsMemberTemplateService cmsMemberTemplateService;
 
@@ -365,6 +371,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                     //
                     // 费率仍按既有零现金路径冻结；canonical15 人工事实留给运营后续显式补齐。
                     pricingService.freezeFeeSnapshot(topic.getId());
+                    topicCommercialReviewService.submitSaleReviewIfReady(topic.getId(), locked.getMemberId());
                     // canonical15 含人工录入事实，自动截止任务无权伪造；停在 PRICING 等显式提审。
                 }
                 return acceptedCount;
@@ -523,7 +530,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             newTopic.setMemberId(memberId);
         }
 
-        cmsTopicMapper.insertCmsTopic(newTopic);
+        if (cmsTopicMapper.insertCmsTopic(newTopic) != 1
+                || newTopic.getId() == null || newTopic.getId() <= 0L) {
+            throw new IllegalStateException("复制主题失败: 主题写入未生成有效ID");
+        }
         Long newTopicId = newTopic.getId();
         if (RoleEntityType.PLATFORM.equals(forcedContentEntityType)) {
             declareRequiredPlatformContentSlot(newTopicId);
@@ -537,15 +547,41 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         if (copyType >= 2) {
             Map<Long, Long> npcIdMap = new LinkedHashMap<Long, Long>();
-            copyChaptersAndNodes(id, newTopic, npcIdMap);
+            RouteNodeMaps copiedMaps = copyChaptersAndNodes(id, newTopic, npcIdMap);
             // R8-STORY:副本章节是新 id,剧情 chapterId 必须跟着重映射,否则副本剧情指向来源主题;
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
-            remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), npcIdMap);
+            remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), copiedMaps.chapterOldToNew, copiedMaps.oldToNew, npcIdMap);
+            preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
         }
         if (copyType >= 3) {
             copyCollaborators(id, newTopicId);
         }
         return newTopicId;
+    }
+
+    /** 完整同作者副本保留通关内容；跨作者奖励引用及仅基本资料复制不在此自动迁移。 */
+    private void preserveSameOwnerCopiedCompletionRule(CmsTopic original, CmsTopic copy) {
+        if (original.getMemberId() == null || !original.getMemberId().equals(copy.getMemberId())
+                || StringUtils.isBlank(original.getCompleteRuleJson())) return;
+        if (copy.getId() == null || copy.getId() <= 0L) {
+            throw new IllegalStateException("完整复制失败，副本主题身份缺失");
+        }
+        CmsTopicNode sourceQuery = new CmsTopicNode();
+        sourceQuery.setTopicId(original.getId());
+        CmsTopicNode copiedQuery = new CmsTopicNode();
+        copiedQuery.setTopicId(copy.getId());
+        int sourceCount = nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(sourceQuery)).size();
+        int copiedCount = nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(copiedQuery)).size();
+        if (sourceCount != copiedCount) {
+            throw new IllegalStateException("完整复制节点数量不一致，未保留通关规则");
+        }
+        CmsTopic patch = new CmsTopic();
+        patch.setId(copy.getId());
+        patch.setCompleteRuleJson(topicCompletionRulePolicy.validateAndNormalize(
+                original.getCompleteRuleJson(), copiedCount, copy.getProductType()));
+        if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
+            throw new IllegalStateException("副本通关规则保存失败");
+        }
     }
 
 
@@ -636,7 +672,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      *
      * @param npcIdMap 出参:源节点 NPC id → 副本 NPC id(供剧情 / 块配置按 old→new 重映射)
      */
-    private void copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic, Map<Long, Long> npcIdMap) {
+    private RouteNodeMaps copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic, Map<Long, Long> npcIdMap) {
+        RouteNodeMaps copiedMaps = new RouteNodeMaps();
         Long newTopicId = newTopic.getId();
         // 查询原主题的章节
         CmsTopicChapter chapterQuery = new CmsTopicChapter();
@@ -644,7 +681,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         List<CmsTopicChapter> originalChapters = cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery);
 
         if (CollectionUtils.isEmpty(originalChapters)) {
-            return;
+            return copiedMaps;
         }
 
         // 章节ID映射：旧章节ID -> 新章节ID
@@ -713,7 +750,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             newChapter.setUpdateTime(new Date());
 
             // 插入新章节
-            cmsTopicChapterMapper.insertCmsTopicChapter(newChapter);
+            if (cmsTopicChapterMapper.insertCmsTopicChapter(newChapter) != 1
+                    || newChapter.getId() == null || newChapter.getId() <= 0L) {
+                throw new IllegalStateException("复制主题失败: 章节写入未生成有效ID");
+            }
 
             // 保存ID映射
             chapterIdMap.put(originalChapter.getId(), newChapter.getId());
@@ -721,9 +761,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
 
         // 复制节点
-        Map<Long, Long> nodeIdMap = copyNodes(originalTopicId, newTopicId, chapterIdMap, newTopic.getMemberId(), npcIdMap);
+        com.fasterxml.jackson.databind.node.ObjectNode runtimeConfig = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(newTopic.getThemeRuntimeConfigJson());
+        Map<Long, Long> nodeIdMap = copyNodes(originalTopicId, newTopicId, chapterIdMap, newTopic.getMemberId(), npcIdMap, runtimeConfig);
         CmsTopic runtimePatch = new CmsTopic(); runtimePatch.setId(newTopicId);
-        runtimePatch.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapAll(newTopic.getThemeRuntimeConfigJson(), nodeIdMap, chapterIdMap, npcIdMap));
+        runtimePatch.setThemeRuntimeConfigJson(remapTemplateRuleIdentities(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapAll(runtimeConfig == null ? newTopic.getThemeRuntimeConfigJson() : runtimeConfig.toString(), nodeIdMap, chapterIdMap, npcIdMap), nodeIdMap));
         if (runtimePatch.getThemeRuntimeConfigJson() != null && cmsTopicMapper.updateCmsTopic(runtimePatch) != 1) throw new IllegalStateException("主题运行配置复制失败");
         CmsTopic originalTopic = cmsTopicMapper.selectCmsTopicById(originalTopicId);
         if (originalTopic != null && "BRANCH_GRAPH".equals(originalTopic.getRouteMode())) {
@@ -755,6 +796,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         for (String warning : chapterNpcWarnings) {
             logger.warn("复制主题 {} -> {}:{}", originalTopicId, newTopicId, warning);
         }
+        copiedMaps.chapterOldToNew.putAll(chapterIdMap);
+        copiedMaps.oldToNew.putAll(nodeIdMap);
+        return copiedMaps;
     }
 
     /** 复制同样是新写入，不能把历史脏招商配置扩散成新的章节。 */
@@ -796,7 +840,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * @param npcIdMap 出参:源节点 NPC id → 副本 NPC id(节点 NPC 不复制时不会出现在映射里)
      */
     private Map<Long, Long> copyNodes(Long originalTopicId, Long newTopicId, Map<Long, Long> chapterIdMap,
-                                      Long newOwnerMemberId, Map<Long, Long> npcIdMap) {
+                                      Long newOwnerMemberId, Map<Long, Long> npcIdMap, com.fasterxml.jackson.databind.node.ObjectNode runtimeConfig) {
         Map<Long, Long> nodeIdMap = new HashMap<>();
         // 查询原主题的所有节点
         CmsTopicNode nodeQuery = new CmsTopicNode();
@@ -843,11 +887,18 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                     ? null : cmsMemberTemplateMapper.selectCmsMemberTemplateById(originalNode.getTemplateId());
             boolean templateHasNpcRefs = sourceTemplate != null
                     && com.chengyinhub.business.util.NarrativeNpcRefs.hasNpcRefs(sourceTemplate.getAdvancedConfigJson());
+            boolean templateHasNodeRefs = sourceTemplate != null && !com.chengyinhub.business.util.StateKeyRefs.collectSysNodeIds(sourceTemplate.getAdvancedConfigJson()).isEmpty();
             Long copiedTemplateId = copyTemplateForOwner(originalNode.getTemplateId(), newOwnerMemberId,
-                    templateIdMap, templateHasNpcRefs);
+                    templateIdMap, templateHasNpcRefs || templateHasNodeRefs);
             newNode.setTemplateId(copiedTemplateId);
-            if (templateHasNpcRefs && copiedTemplateId != null && sourceTemplate != null) {
+            if (runtimeConfig != null && runtimeConfig.path("templateBindings").has(String.valueOf(originalNode.getId()))) {
+                com.fasterxml.jackson.databind.node.ObjectNode binding = (com.fasterxml.jackson.databind.node.ObjectNode) runtimeConfig.path("templateBindings").get(String.valueOf(originalNode.getId()));
+                if (!java.util.Objects.equals(originalNode.getTemplateId(), binding.path("templateId").asLong())) throw new IllegalArgumentException("复制时资源绑定模板身份不匹配：节点 " + originalNode.getId());
+                binding.put("templateId", copiedTemplateId);
+            }
+            if ((templateHasNpcRefs || templateHasNodeRefs) && copiedTemplateId != null && sourceTemplate != null) {
                 if (copiedTemplateId.equals(originalNode.getTemplateId())) {
+                    if(templateHasNodeRefs)throw new IllegalStateException("复制主题失败: 节点条件模板未取得独立副本");
                     // P0-35 无法判定归属 / 模板缺失:没有可写的副本行,引用只能留在源模板上
                     logger.warn("复制主题 {} -> {}:节点 {} 的模板 {} 的 NPC 引用无法换期(模板未深拷贝),仍指向来源主题 NPC",
                             originalTopicId, newTopicId, originalNode.getId(), copiedTemplateId);
@@ -871,7 +922,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             newNode.setUpdateTime(new Date());
 
             // 插入新节点
-            cmsTopicNodeMapper.insertCmsTopicNode(newNode);
+            if (cmsTopicNodeMapper.insertCmsTopicNode(newNode) != 1
+                    || newNode.getId() == null || newNode.getId() <= 0L) {
+                throw new IllegalStateException("复制主题失败: 节点写入未生成有效ID");
+            }
             if (originalNode.getId() != null && newNode.getId() != null) {
                 nodeIdMap.put(originalNode.getId(), newNode.getId());
             }
@@ -912,6 +966,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         for (Map.Entry<Long, String> entry : copiedTemplateBlocks.entrySet()) {
             String remapped = com.chengyinhub.business.util.NarrativeNpcRefs.remapNpcIds(
                     entry.getValue(), npcIdMap, npcWarnings);
+            remapped = com.chengyinhub.business.util.StateKeyRefs.remapNodeIds(remapped,nodeIdMap);
             if (remapped == entry.getValue()) {
                 continue;
             }
@@ -1803,18 +1858,25 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Override
     public CmsTopic selectCmsTopicDetailById(Long id, Long viewerMemberId) {
         CmsTopic topic = cmsTopicMapper.selectCmsTopicDetailById(id, viewerMemberId);
+        // Resolve visibility first; denied/missing topics must not trigger a node lookup.
         if (topic != null) refreshPublicNodeCounts(Collections.singletonList(topic));
         return topic;
     }
 
     @Override
     public CmsTopic selectMerchantVisibleCmsTopicById(Long id) {
-        return cmsTopicMapper.selectMerchantVisibleCmsTopicById(id);
+        CmsTopic topic = cmsTopicMapper.selectMerchantVisibleCmsTopicById(id);
+        // Count only after the existing visibility/management gate has admitted this topic.
+        if (topic != null) refreshPublicNodeCounts(Collections.singletonList(topic));
+        return topic;
     }
 
     @Override
     public CmsTopic selectMerchantManagedCmsTopicById(Long id, Long merchantId) {
-        return cmsTopicMapper.selectMerchantManagedCmsTopicById(id, merchantId);
+        CmsTopic topic = cmsTopicMapper.selectMerchantManagedCmsTopicById(id, merchantId);
+        // Count only after the existing visibility/management gate has admitted this topic.
+        if (topic != null) refreshPublicNodeCounts(Collections.singletonList(topic));
+        return topic;
     }
 
     /**
@@ -1825,7 +1887,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      */
     @Override
     public List<CmsTopic> selectCmsTopicList(CmsTopic cmsTopic) {
-        return cmsTopicMapper.selectCmsTopicList(cmsTopic);
+        List<CmsTopic> topics = cmsTopicMapper.selectCmsTopicList(cmsTopic);
+        refreshPublicNodeCounts(topics);
+        return topics;
     }
 
     @Override
@@ -1851,7 +1915,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     private void refreshPublicNodeCounts(List<CmsTopic> topics) {
         if (topics == null || topics.isEmpty()) return;
-        List<Long> ids = topics.stream().map(CmsTopic::getId).collect(java.util.stream.Collectors.toList());
+        List<Long> ids = topics.stream().map(CmsTopic::getId).distinct().collect(java.util.stream.Collectors.toList());
         Map<Long, CmsTopic> counts = new HashMap<>();
         for (CmsTopic row : nullToEmpty(cmsTopicMapper.selectPublicNodeCountsByTopicIds(ids))) counts.put(row.getId(), row);
         for (CmsTopic topic : topics) {
@@ -2220,6 +2284,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (CollectionUtils.isEmpty(rawList)) {
             return java.util.Collections.emptyList();
         }
+        // Public templates are the same topic/node records; count the admitted shelf in one batch.
+        refreshPublicNodeCounts(rawList);
         java.util.List<com.chengyinhub.business.domain.vo.TopicTemplateListItemVO> result = new java.util.ArrayList<>(rawList.size());
         for (CmsTopic t : rawList) {
             com.chengyinhub.business.domain.vo.TopicTemplateListItemVO vo =
@@ -2329,6 +2395,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (topic == null) {
             return null;
         }
+        // Preserve the public-template eligibility gate before querying the full-route scalar.
+        refreshPublicNodeCounts(Collections.singletonList(topic));
         boolean viewerIsPublisher = viewerMemberId != null && viewerMemberId.equals(topic.getMemberId());
         boolean viewerCanViewRecruitment = viewerIsMerchant || viewerIsPublisher;
         Integer effectiveCategoryId = viewerIsMerchant && !viewerIsPublisher ? merchantCategoryId : null;
@@ -2774,6 +2842,18 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    public void markContentSafetyHold(Long topicId) {
+        if (topicId == null || topicId <= 0L) return;
+        cmsTopicMapper.markContentSafetyHold(topicId);
+    }
+
+    @Override
+    public void markReviewFlag(Long topicId, boolean flagged) {
+        if (topicId == null || topicId <= 0L) return;
+        cmsTopicMapper.updateReviewFlag(topicId, flagged ? 1 : 0);
+    }
+
+    @Override
     public int graduateBeta(Long topicId) {
         // 竞态安全:仅当前确在 Beta 期(beta_flag=1)才清,重复点击/并发只成功一次
         return cmsTopicMapper.graduateBetaIfBeta(topicId);
@@ -2782,24 +2862,87 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean publishDraft(Long id) {
-        return publishDraftInternal(id) != null;
+        return publishDraftInternal(id, null, false) != null;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TopicBundleSubmitResultVO publishDraftWithReview(Long id) {
-        return publishDraftInternal(id);
+        return publishDraftInternal(id, null, false);
     }
 
-    private TopicBundleSubmitResultVO publishDraftInternal(Long id) {
-        // 竞态安全门禁:仅当前确为草稿(is_draft=1)才清标记并继续,
-        // 防 rejected(审核未通过)/online 主题借道 publish-draft 绕过审核。
-        if (cmsTopicMapper.clearDraftIfDraft(id) <= 0) {
-            return null;
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean publishDraft(Long id, Long expectedOwnerId) {
+        if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
+        return publishDraftInternal(id, expectedOwnerId, true) != null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TopicBundleSubmitResultVO publishDraftWithReview(Long id, Long expectedOwnerId) {
+        if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
+        return publishDraftInternal(id, expectedOwnerId, true);
+    }
+
+    @Override
+    public boolean canResubmitSupplyReview(Long id, Long ownerId) {
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(id);
+        return topic != null && java.util.Objects.equals(ownerId, topic.getMemberId())
+                && supplyReviewService.canResubmit(topic);
+    }
+
+    @Autowired
+    private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
+
+    private void requireChapterDraftMedia(java.util.List<com.chengyinhub.business.domain.dto.ChapterDTO> chapterRows,
+                                           Long owner, boolean publish) {
+        if (chapterRows == null) return;
+        for (com.chengyinhub.business.domain.dto.ChapterDTO chapter : chapterRows) {
+            mediaPublicationGuard.requireChapter(owner, chapter, publish);
+            if (chapter.getBlocks() != null) for (com.chengyinhub.business.domain.dto.ChapterBlockDTO block : chapter.getBlocks()) {
+                if ("image".equals(block.getType()) || "audio".equals(block.getType()))
+                    block.setUrl(mediaPublicationGuard.requireMedia(owner, block.getUrl(), publish));
+                if ("dream".equals(block.getType()) && block.getImages() != null)
+                    for (com.chengyinhub.business.domain.dto.ChapterBlockDTO.DreamImageDTO image : block.getImages())
+                        image.setUrl(mediaPublicationGuard.requireMedia(owner, image.getUrl(), publish));
+            }
+            if (chapter.getNodes() != null) for (com.chengyinhub.business.domain.dto.NodeDTO node : chapter.getNodes())
+                mediaPublicationGuard.requireNode(owner, node, publish);
         }
-        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(id);
-        if (topic == null) {
-            throw new IllegalStateException("草稿发布失败: 主题不存在或无法锁定");
+    }
+
+    private TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission) {
+        CmsTopic topic = supplyReviewService.lockTopic(id);
+        if (expectedOwnerId != null && (topic == null || !expectedOwnerId.equals(topic.getMemberId())))
+            throw new ServiceException("主题归属已变化，无权提交", 403);
+        boolean supplyResubmission = allowSupplyResubmission && supplyReviewService.canResubmit(topic);
+        if (topic != null) mediaPublicationGuard.requireTopicPublication(id);
+        if (cmsTopicMapper.clearDraftIfDraft(id) <= 0 && !supplyResubmission) return null;
+        // D8:逐章/逐节点增量写入的路径(后台章节节点 CRUD、商家补节点)不经整包保存,发布口按库内实数再拦一次
+        assertTopicSizeWithinLimits(id);
+        if (supplyResubmission) {
+            assertOrdinarySupplyRestored(topic);
+            assertPublishReady(topic);
+            com.chengyinhub.business.service.support.TopicBundleReviewService.Submission submission =
+                    topicBundleReviewService.freezeForSubmission(id, topic.getMemberId());
+            Long taskId = auditTaskService.submitOrRefreshTopicBundle(id, topic.getMemberId(), submission.getSnapshotJson());
+            if (Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(topic.getLifecycle())) {
+                AuditTask oldProject = supplyReviewService.cancelledReview(id, AuditTask.BIZ_TOPIC_PROJECT_REVIEW);
+                if (oldProject != null) {
+                    try {
+                        String target = new com.fasterxml.jackson.databind.ObjectMapper().readTree(oldProject.getSnapshotJson())
+                                .path("requestedTarget").asText();
+                        topicCommercialReviewService.submitProjectReview(id, topic.getMemberId(), TopicLifecycleState.valueOf(target));
+                    } catch (Exception ex) { throw new IllegalStateException("旧立项审核目标无法核对，请联系平台", ex); }
+                }
+            } else if (Integer.valueOf(TopicLifecycleState.PRICING.getCode()).equals(topic.getLifecycle())
+                    && supplyReviewService.cancelledReview(id, AuditTask.BIZ_TOPIC_SALE_REVIEW) != null) {
+                topicCommercialReviewService.submitSaleReview(id, topic.getMemberId());
+            }
+            TopicBundleSubmitResultVO result = new TopicBundleSubmitResultVO(id, taskId, "PENDING", submission.getBundledTemplateIds());
+            result.setPublished(false);
+            return result;
         }
         // R19-DRAFT2:草稿保存放宽的那批完整度校验,在这里补回来 —— 半成品可以存,不能发。
         // 直接发布路径的同批校验在 createTopicInternal/rebuildTopicContent 的非草稿分支(它们从未放宽)。
@@ -2830,6 +2973,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (topic.getMerchantStatus() == null || topic.getMerchantStatus() != 1) {
             settlementDebtLedger.requireNoOverdueDebt(topic.getMemberId());
         }
+        // AUDIT-G2-1:内容安全下架留置中的草稿,发布只保存内容并送人工复核,不回到在架。
+        boolean contentSafetyHeld = com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(topic);
+        // #380 草稿缺口:草稿期机审存疑(review_flag=1)的文本发布时不能记成「机审通过」,改走人工抽检。
+        boolean draftReviewFlagged = simple && !contentSafetyHeld
+                && Integer.valueOf(1).equals(cmsTopicMapper.selectReviewFlag(id));
         CmsTopic upd = new CmsTopic();
         upd.setId(id);
         if (!StringUtils.isEmpty(topic.getCircleThemeCode())) {
@@ -2840,22 +2988,56 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 assertOrdinarySupplyRestored(cmsTopicMapper.selectCmsTopicByIdForUpdate(id));
             }
             upd.setStatus(1);      // 简易版免审直发
-            upd.setUserStatus(1);
+            if (!contentSafetyHeld) {
+                upd.setUserStatus(1);
+                // 机审通过/免审,与后审中的 0 区分(见 createTopic 同口径);草稿期机审存疑的记 0 = 后审中
+                upd.setCheckStatus(draftReviewFlagged ? 0 : 1);
+            }
         }
         if ((simple || upd.getCircleReviewedAt() != null) && cmsTopicMapper.updateCmsTopic(upd) != 1) {
             throw new IllegalStateException("主题发布状态保存失败");
         }
+        // 与直接发布同源：带招募截止的草稿发布后必须进入既有立项流程，不能停在 DRAFT 关闭招商。
+        submitPublishedProjectReview(id, topic.getMemberId(), topic.getRecruitDeadline());
         TopicBundleSubmitResultVO reviewResult = simple ? null : submitTopicBundle(id, topic.getMemberId());
-        // 发布草稿后同步恢复公开帖；专业版审核任务留在后台。
-        syncCreativeSquarePostVisibility(id, true);
+        // 发布草稿后同步恢复公开帖；专业版审核任务留在后台。留置中不公开。
+        if (!contentSafetyHeld) syncCreativeSquarePostVisibility(id, true);
         if (simple && cmsTopicMapper.publishRouteSnapshot(id, publishedRouteSnapshot, new Date()) != 1) {
             throw new IllegalStateException("路线发布快照保存失败");
         }
         // R18-DRAFT:草稿期不再预建自办活动壳(草稿不得出现在公开活动列表)⇒ 自办主题在这里补建,
         // 否则「草稿 → 发布」之后没有活动壳,玩家无票可买。商家池主题不建(由中标流程生成)。
-        // 专业版已在 publishBeforeReview 中补建，简易版在这里补建。
+        // 专业版已在 publishBeforeReview 中补建，简易版在这里补建。留置中由复核过审时补建。
+        if (simple && contentSafetyHeld) {
+            Long relistTaskId = requestContentSafetyRelistReview(id, topic.getMemberId());
+            TopicBundleSubmitResultVO held = new TopicBundleSubmitResultVO(
+                    id, relistTaskId, "PENDING", Collections.<Long>emptyList());
+            held.setPublished(false);
+            return held;
+        }
         if (simple) ensureSelfHostActivityShell(id);
+        if (draftReviewFlagged) submitDraftSpotCheck(topic);
         return reviewResult != null ? reviewResult : noBundleReview(id, "NOT_REQUIRED");
+    }
+
+    /**
+     * 草稿发布时补挂先发后审抽检单(与 ApiTopicController.flagForSpotCheck 同口径:BIZ_TOPIC post_review_flag,
+     * 已有未结非举报单则不重复挂)。与发布同事务:抽检单挂不上就不发布,不能静默变成「机审通过」。
+     */
+    private void submitDraftSpotCheck(CmsTopic topic) {
+        AuditTask q = new AuditTask();
+        q.setBizType(AuditTask.BIZ_TOPIC);
+        q.setBizId(topic.getId());
+        for (AuditTask t : nullToEmpty(auditTaskService.selectAuditTaskList(q))) {
+            if ((AuditTask.STATUS_PENDING.equals(t.getStatus()) || AuditTask.STATUS_ESCALATED.equals(t.getStatus()))
+                    && !t.isOpenReport()) {
+                return;
+            }
+        }
+        String name = topic.getName() == null ? "" : topic.getName().replace("\"", "'");
+        String snap = "{\"bizType\":\"TOPIC\",\"bizId\":" + topic.getId()
+                + ",\"flagReason\":\"draft_review_flag\",\"name\":\"" + name + "\"}";
+        auditTaskService.submit(AuditTask.BIZ_TOPIC, topic.getId(), topic.getMemberId(), "post_review_flag", snap);
     }
 
     /**
@@ -2879,6 +3061,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * {@code UserSafeMessage} 的 120 字上限内 —— 超限会被全局异常处理器换成「系统繁忙」,
      * 等于又把「缺什么」藏回去。
      */
+    private void assertTopicSizeWithinLimits(Long topicId) {
+        CmsTopicChapter chapterQuery = new CmsTopicChapter();
+        chapterQuery.setTopicId(topicId);
+        CmsTopicNode nodeQuery = new CmsTopicNode();
+        nodeQuery.setTopicId(topicId);
+        String violation = com.chengyinhub.business.service.support.TopicSizeLimits.violation(
+                nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery)).size(),
+                nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(nodeQuery)).size());
+        if (violation != null) {
+            throw new IllegalStateException("发布前请先调整:" + violation);
+        }
+    }
+
     private void assertPublishReady(CmsTopic topic) {
         List<String> issues = new ArrayList<String>();
         Long topicId = topic == null ? null : topic.getId();
@@ -3426,7 +3621,23 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      */
     private void persistJourneyStoryAfterChapterRebuild(Long topicId, String storedStory,
                                                        RouteNodeMaps routeNodeMaps, String username) {
-        String content = JourneyStory.withOpeningChapterId(storedStory, null);
+        String sourceStory = storedStory;
+        if (!routeNodeMaps.endingChapters.isEmpty() && StringUtils.isNotBlank(storedStory)) {
+            // 本次结局章将整体替换旧 endings；只剔除待废弃列表，保留段仍严格换期。
+            try {
+                JsonNode source = ROUTE_JSON.readTree(storedStory);
+                JsonNode ending = source == null ? null : source.get("ending");
+                if (ending instanceof com.fasterxml.jackson.databind.node.ObjectNode) {
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) ending).remove("endings");
+                    sourceStory = source.toString();
+                }
+            } catch (java.io.IOException invalidStory) {
+                throw new IllegalArgumentException("主题剧情配置无法解析", invalidStory);
+            }
+        }
+        // 来源剧情先按旧节点身份换期；结局章随后独立映射，避免把新 ID 再作旧 ID。
+        String content = JourneyStory.withOpeningChapterId(
+                JourneyStory.remapNodeIds(sourceStory, routeNodeMaps.oldToNew), null);
         String remapped = JourneyStory.withOpeningChapterId(
                 JourneyStory.remapChapterIds(content, routeNodeMaps.chapterOldToNew), routeNodeMaps.openingChapterId);
         if (!routeNodeMaps.endingChapters.isEmpty()) {
@@ -3447,29 +3658,20 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     /**
      * R8-STORY:模板 / 官方复制的章节是整批重建(新 id),副本剧情 stages 的 chapterId 必须跟着
-     * old→new 重映射,否则副本剧情指向来源主题的章节。复制恒全量且保持 sort_id 顺序,
-     * 故两侧按序列一一配对(复制侧见 copyChaptersAndNodes 的 newChapter.setSortId)。
+     * old→new 重映射,否则副本剧情指向来源主题的章节。直接使用插入章节时记录的真实映射,
+     * 不以可能重复的 sort_id 查询顺序推断章节身份。
      *
      * <p>R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一并按 old→new 重映射;
      * 门店分身不随复制,映射不到的 npcId 置空并告警(fail-closed,不静默指向来源主题)。
      */
     private void remapCopiedJourneyStory(Long sourceTopicId, Long newTopicId, String story,
-                                         Map<Long, Long> npcIdMap) {
+                                         Map<Long, Long> chapterIdMap, Map<Long, Long> nodeIdMap, Map<Long, Long> npcIdMap) {
         if (StringUtils.isBlank(story)) {
             return;
         }
-        List<CmsTopicChapter> sourceChapters = orderedChapters(sourceTopicId);
-        List<CmsTopicChapter> copiedChapters = orderedChapters(newTopicId);
-        if (sourceChapters.size() != copiedChapters.size()) {
-            throw new IllegalStateException("剧情章节引用重映射失败:复制前后章节数量不一致");
-        }
-        Map<Long, Long> chapterIdMap = new LinkedHashMap<Long, Long>();
-        for (int i = 0; i < sourceChapters.size(); i++) {
-            chapterIdMap.put(sourceChapters.get(i).getId(), copiedChapters.get(i).getId());
-        }
         List<String> npcWarnings = new ArrayList<String>();
         String remapped = JourneyStory.remapNpcIds(
-                JourneyStory.remapChapterIds(story, chapterIdMap), npcIdMap, npcWarnings);
+                JourneyStory.remapChapterIds(JourneyStory.remapNodeIds(story, nodeIdMap), chapterIdMap), npcIdMap, npcWarnings);
         for (String warning : npcWarnings) {
             logger.warn("复制主题 {} -> {}:{}", sourceTopicId, newTopicId, warning);
         }
@@ -3481,13 +3683,6 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
             throw new IllegalStateException("副本剧情配置回填失败");
         }
-    }
-
-    private List<CmsTopicChapter> orderedChapters(Long topicId) {
-        CmsTopicChapter probe = new CmsTopicChapter();
-        probe.setTopicId(topicId);
-        // selectCmsTopicChapterList 已 order by sort_id asc,与复制顺序同口径
-        return nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(probe));
     }
 
     /**
@@ -3509,21 +3704,22 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if(config==null)return;
         Set<String> keys = new LinkedHashSet<String>();
         for (ThemeStateKey key : nullToEmpty(themeStateKeyService.listByTopic(topic.getId()))) keys.add(key.getStateKey());
-        com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertReferences(config, nodeIds, keys);
+        com.chengyinhub.business.domain.JourneyRules rules=com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson());
+        boolean valuesEnabled=config.has("gameplayRuntime") ? rules.hasRuntimeState() : rules.isCheckEnabled();
+        com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertReferences(config, nodeIds, keys, rules);
         for(JsonNode scene:config.path("scenes")) if(scene.has("journeyStory")) {
             CmsTopic sceneTopic=new CmsTopic();sceneTopic.setId(topic.getId());sceneTopic.setJourneyStoryJson(scene.path("journeyStory").toString());assertJourneyStoryReferences(sceneTopic);
         }
-        com.chengyinhub.business.domain.JourneyRules rules=com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson());
         if(config.path("chapters").size()>0) {
             CmsTopicChapter chapterProbe=new CmsTopicChapter();chapterProbe.setTopicId(topic.getId());
             List<CmsTopicChapter> chapterRows=nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe));
             for(JsonNode ch:config.path("chapters")) {
                 if(ch.path("index").asInt()>=chapterRows.size())throw new IllegalArgumentException("背包配置引用未知章节");
-                if(ch.path("hpCost").asInt()>0 && (!rules.isCheckEnabled() || !rules.getHp().isEnabled()))throw new IllegalArgumentException("请先开启生命值");
-                if(ch.path("luckCost").asInt()>0 && (!rules.isCheckEnabled() || !rules.getLuck().isEnabled()))throw new IllegalArgumentException("请先开启幸运值");
+                if(ch.path("hpCost").asInt()>0 && (!valuesEnabled || !rules.getHp().isEnabled()))throw new IllegalArgumentException("请先开启生命值");
+                if(ch.path("luckCost").asInt()>0 && (!valuesEnabled || !rules.getLuck().isEnabled()))throw new IllegalArgumentException("请先开启幸运值");
             }
         }
-        for(JsonNode item:config.path("items")) if("ITEM".equals(item.path("kind").asText()) && item.has("stat") && (!rules.isCheckEnabled() || ("HP".equals(item.path("stat").asText()) ? !rules.getHp().isEnabled() : !rules.getLuck().isEnabled())))
+        for(JsonNode item:config.path("items")) if("ITEM".equals(item.path("kind").asText()) && item.has("stat") && (!valuesEnabled || ("HP".equals(item.path("stat").asText()) ? !rules.getHp().isEnabled() : !rules.getLuck().isEnabled())))
             throw new IllegalArgumentException("物品对应的生命值或幸运值尚未开启");
     }
 
@@ -3646,9 +3842,68 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
     }
 
+    private void remapRebuiltTemplateNodes(Long topicId,Map<Long,Long> nodeMap,Long ownerId) {
+        if(cmsMemberTemplateMapper==null || nodeMap==null || nodeMap.isEmpty())return;
+        CmsTopicNode query=new CmsTopicNode();query.setTopicId(topicId);Map<Long,Long> copied=new LinkedHashMap<>();
+        for(CmsTopicNode node:nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(query))) {
+            if(node.getTemplateId()==null || node.getTemplateId()<=0)continue;
+            CmsMemberTemplate source=cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+            if(source==null || com.chengyinhub.business.util.StateKeyRefs.collectSysNodeIds(source.getAdvancedConfigJson()).isEmpty())continue;
+            String remapped=com.chengyinhub.business.util.StateKeyRefs.remapNodeIds(source.getAdvancedConfigJson(),nodeMap);
+            if(java.util.Objects.equals(remapped,source.getAdvancedConfigJson()))continue;
+            Long templateId=copyTemplateForOwner(source.getId(),ownerId,copied,true);
+            if(templateId==null || templateId.equals(source.getId()))throw new IllegalStateException("节点条件重映射未取得独立模板");
+            CmsMemberTemplate templatePatch=new CmsMemberTemplate();templatePatch.setId(templateId);templatePatch.setAdvancedConfigJson(remapped);
+            if(cmsMemberTemplateMapper.updateCmsMemberTemplate(templatePatch)!=1)throw new IllegalStateException("节点条件模板重映射失败");
+            CmsTopicNode nodePatch=new CmsTopicNode();nodePatch.setId(node.getId());nodePatch.setTemplateId(templateId);
+            if(cmsTopicNodeMapper.updateCmsTopicNode(nodePatch)!=1)throw new IllegalStateException("节点条件模板绑定失败");
+        }
+    }
+
+    private String remapTemplateRuleIdentities(String raw,Map<Long,Long> nodes) {
+        if(raw==null || raw.trim().isEmpty())return raw;
+        try {
+            com.fasterxml.jackson.databind.node.ObjectNode config=(com.fasterxml.jackson.databind.node.ObjectNode)ROUTE_JSON.readTree(raw);
+            Map<String,String> keys=new HashMap<>();
+            for(JsonNode facility:config.path("gameplayRuntime").path("facilities"))for(Map.Entry<Long,Long> mapping:nodes.entrySet()) {
+                String oldKey="tpl_node_"+mapping.getKey(),newKey="tpl_node_"+mapping.getValue();
+                if(oldKey.equals(facility.path("facilityKey").asText()) && oldKey.equals(facility.path("settlementSlot").asText()) && facility.path("operationNodeId").asLong()==mapping.getValue()) {
+                    ((com.fasterxml.jackson.databind.node.ObjectNode)facility).put("facilityKey",newKey).put("settlementSlot",newKey);keys.put(oldKey,newKey);
+                }
+            }
+            for(JsonNode quest:config.path("gameplayRuntime").path("quests"))if(keys.containsKey(quest.path("facilityKey").asText()))((com.fasterxml.jackson.databind.node.ObjectNode)quest).put("facilityKey",keys.get(quest.path("facilityKey").asText()));
+            com.chengyinhub.business.service.support.GameplayTemplateRules.remapToolIdentities(config,nodes);
+            return com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(config.toString()).toString();
+        }catch(java.io.IOException invalid){throw new IllegalArgumentException("模板运行身份复制失败",invalid);}
+    }
+
+    private void persistTemplateInteractionRules(Long topicId) {
+        if(topicRouteRuntimeService==null)return;
+        CmsTopic actual = cmsTopicMapper.selectCmsTopicById(topicId); if(actual==null)return;
+        String compiled = topicRouteRuntimeService.compileTemplateRules(actual);
+        if(compiled==null || java.util.Objects.equals(compiled,actual.getThemeRuntimeConfigJson()))return;
+        CmsTopic patch=new CmsTopic(); patch.setId(topicId); patch.setThemeRuntimeConfigJson(compiled);
+        if(cmsTopicMapper.updateCmsTopic(patch)!=1)throw new IllegalStateException("模板使用规则保存失败");
+    }
+
+    private boolean requiresFullRuntimeSnapshot(CmsTopic topic) {
+        try {
+            JsonNode rules = ROUTE_JSON.readTree(topic.getJourneyRulesJson() == null ? "{}" : topic.getJourneyRulesJson());
+            JsonNode config = ROUTE_JSON.readTree(topic.getThemeRuntimeConfigJson() == null ? "{}" : topic.getThemeRuntimeConfigJson());
+            if (rules.path("attributes").size() > 0 || rules.path("statLinks").size() > 0 || config.has("gameplayRuntime") || config.has("hpName") || config.has("luckName")) return true;
+            for (JsonNode item : config.path("items")) if (item.has("statKey") || item.has("slotCost")) return true;
+            for (JsonNode chapter : config.path("chapters")) if (chapter.path("statCosts").size() > 0) return true;
+            return false;
+        } catch (java.io.IOException invalid) { throw new IllegalArgumentException("运行配置无法读取", invalid); }
+    }
+
     /** 服务端发布边界重验完整图，并用确定性状态夹具证明每条普通边真实可选。 */
     private String normalizedBranchRouteForPublish(CmsTopic topic) {
-        if (!"BRANCH_GRAPH".equalsIgnoreCase(topic.getRouteMode())) return null;
+        if(topicRouteRuntimeService!=null) {String compiled=topicRouteRuntimeService.compileTemplateRules(topic);if(compiled!=null)topic.setThemeRuntimeConfigJson(compiled);}
+        boolean fullSnapshot = requiresFullRuntimeSnapshot(topic);
+        if (!"BRANCH_GRAPH".equalsIgnoreCase(topic.getRouteMode())) {
+            return fullSnapshot ? topicRouteRuntimeService.freezePublication(topic, null) : null;
+        }
         CmsTopicNode probe = new CmsTopicNode();
         probe.setTopicId(topic.getId());
         probe.setStatus(1L);
@@ -3659,7 +3914,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         String normalized = topicRouteConfigValidator.validateAndNormalize(
                 topic.getRouteGraphJson(), nodeIds, declaredRouteOutcomes(topic.getId()));
         topicRoutePublishGate.assertPublishable(normalized);
-        return normalized;
+        return fullSnapshot ? topicRouteRuntimeService.freezePublication(topic, normalized) : normalized;
     }
 
     @Override
@@ -3873,6 +4128,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (dto == null || StringUtils.isBlank(dto.getName())) {
             throw new IllegalArgumentException("主题名称不能为空");
         }
+        assertCollaboratorIdShape(dto.getCollaboratorIds());
         // R19-DRAFT2:完整度校验按草稿/发布分流,先在这里定型,后面所有闸都用同一个判据
         // (客户端自称不算,与 R18-DRAFT 的活动壳/送审两道副作用闸同源)。
         boolean saveDraft = dto.getSaveDraft() != null && dto.getSaveDraft() == 1;
@@ -3892,11 +4148,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 1. 提取所有节点用于距离计算
         List<NodeDTO> allNodes = extractNodesForStatistics(dto.getChapters(), chapterFlowV2);
         // 2. 计算总距离
-        BigDecimal totalMileage = calculateTotalDistance(allNodes);
+        BigDecimal totalMileage = calculateTotalDistance(nodesForDistance(allNodes, dto.getChapters(), chapterFlowV2));
 
         // 3. 保存主题基本信息
         CmsTopic topic = new CmsTopic();
         BeanUtils.copyProperties(dto, topic);
+        mediaPublicationGuard.requireTopic(memberId, topic, !saveDraft);
+        requireChapterDraftMedia(dto.getChapters(), memberId, !saveDraft);
         normalizeTeamConfig(topic);
         topic.setMemberId(memberId);
         topic.setTopicType(2L);
@@ -3914,7 +4172,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R2-B10 主题数值规则:带才校验落库,不带保持 NULL(= 未启用)。非法配置在这里就抛,
         // 不静默落一份运行期读不懂的 JSON。
         topic.setJourneyRulesJson(journeyRulesValidator.validateAndNormalize(dto.getJourneyRules()));
-        topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.normalize(dto.getThemeRuntimeConfig()));
+        String runtimeRaw = mediaPublicationGuard.requireJson(memberId, dto.getThemeRuntimeConfig(), !saveDraft);
+        topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.withoutClientBindings(runtimeRaw));
+        com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertJourneyReferences(
+                com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(runtimeRaw),
+                com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson()));
         // R8-STORY 主题剧情:建题时章节/NPC 尚无 id,这里只校验形状与自身自洽,
         // 章节/NPC 引用由发布期带上下文重验(assertJourneyStoryReferences)。
         topic.setJourneyStoryJson(journeyStoryValidator.validate(dto.getJourneyStory(),
@@ -3974,6 +4236,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         } else if (simpleMode) {
             topic.setStatus(1);
             topic.setUserStatus(1);
+            // 简易版免人工审核:文本已在控制器过机审门禁 ⇒ check_status=1(机审通过/免审),
+            // 与专业版「已发布、后审中」的 0 区分开。机审存疑的另挂 post_review_flag 抽检单,以未结单为准。
+            topic.setCheckStatus(1);
         } else {
             topic.setStatus(0);      // 内容落库期间尚未公开，事务末尾统一发布
             topic.setUserStatus(0);  // 用户端未上架
@@ -4024,7 +4289,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 在这一步等价(都是「这次没有地址可落」),完整性由发布闸管(见 assertPublishReady)。
         topic.setAddressName(firstLocationAddress(dto.getChapters()));
 
-        cmsTopicMapper.insertCmsTopic(topic);
+        if (cmsTopicMapper.insertCmsTopic(topic) != 1 || topic.getId() == null || topic.getId() <= 0L) {
+            throw new IllegalStateException("主题创建失败，未生成有效主题身份");
+        }
         syncInitialAttributeKeys(topic);
         Long topicId = topic.getId();
 
@@ -4052,17 +4319,22 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 4. 保存章节和节点（同时计算章节距离）
         RouteNodeMaps routeNodeMaps = saveTopicChapters(dto.getChapters(), topicId, username, memberId,
                 productType, chapterFlowV2, chapterFlowV2 && (saveDraft || !simpleMode));
+        remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
         persistJourneyStoryAfterChapterRebuild(topicId, topic.getJourneyStoryJson(), routeNodeMaps, username);
         saveRouteDefinition(topicId, dto.getRouteMode(), dto.getRouteGraphJson(), routeNodeMaps,
                 null, 1L, 1L, productType);
         if (topic.getThemeRuntimeConfigJson() != null) {
             CmsTopic runtimePatch = new CmsTopic(); runtimePatch.setId(topicId);
-            runtimePatch.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapAll(topic.getThemeRuntimeConfigJson(),routeNodeMaps.oldToNew,routeNodeMaps.chapterOldToNew,null));
+            runtimePatch.setThemeRuntimeConfigJson(remapTemplateRuleIdentities(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapForNodeSave(runtimeRaw,routeNodeMaps.oldToNew,routeNodeMaps.chapterOldToNew,routeNodeMaps.createdClientToNew),routeNodeMaps.oldToNew));
             if (cmsTopicMapper.updateCmsTopic(runtimePatch) != 1) throw new IllegalStateException("主题运行配置保存失败");
             if (!saveDraft && simpleMode) {
                 assertThemeRuntimeReferences(cmsTopicMapper.selectCmsTopicById(topicId));
-                if (!"BRANCH_GRAPH".equalsIgnoreCase(dto.getRouteMode()) && cmsTopicMapper.publishRouteSnapshot(topicId,null,new Date()) != 1) throw new IllegalStateException("主题配置发布失败");
             }
+        }
+        persistTemplateInteractionRules(topicId);
+        if (!saveDraft && simpleMode && !"BRANCH_GRAPH".equalsIgnoreCase(dto.getRouteMode())) {
+            CmsTopic ready = cmsTopicMapper.selectCmsTopicById(topicId);
+            if (requiresFullRuntimeSnapshot(ready) && cmsTopicMapper.publishRouteSnapshot(topicId,normalizedBranchRouteForPublish(ready),new Date()) != 1) throw new IllegalStateException("主题模板规则发布失败");
         }
         if (!saveDraft && simpleMode && "BRANCH_GRAPH".equalsIgnoreCase(dto.getRouteMode())) {
             CmsTopic publishedTopic = cmsTopicMapper.selectCmsTopicById(topicId);
@@ -4084,9 +4356,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         saveTickets(dto.getTickets(), topicId, memberId, username, productType, saveDraft);
 
         // DRAFT→RECRUITING 唯一受控出口：商业主题转 PENDING_REVIEW，纯 UGC 才直通。
-        if (!saveDraft && dto.getRecruitDeadline() != null) {
-            topicCommercialReviewService.submitProjectReview(
-                    topicId, memberId, TopicLifecycleState.RECRUITING);
+        if (!saveDraft) {
+            mediaPublicationGuard.requireTopicPublication(topicId);
+            submitPublishedProjectReview(topicId, memberId, dto.getRecruitDeadline());
         }
 
         // 5.1 自办主题(不进商家池)：没有商家承接，自动以发布者本人为承接方生成一条可游玩活动，
@@ -4160,6 +4432,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         boolean hasOpenBundleReview = false;
         if (chapterFlowV2) {
+            supplyReviewService.lockTopic(topicId);
             hasOpenBundleReview = auditTaskService.lockOpenTopicBundleTask(topicId);
             exist = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
             if (exist == null || Integer.valueOf(2).equals(exist.getDelFlag())
@@ -4227,16 +4500,79 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 && !AuditTask.STATUS_ESCALATED.equals(task.getStatus()))) {
             throw new IllegalStateException("审核任务状态读取失败");
         }
-        publishBeforeReview(topicId, memberId);
+        boolean published = publishBeforeReview(topicId, memberId);
         String reviewState = AuditTask.STATUS_ESCALATED.equals(task.getStatus()) ? "ESCALATED" : "PENDING";
         TopicBundleSubmitResultVO result = new TopicBundleSubmitResultVO(
                 topicId, taskId, reviewState, submission.getBundledTemplateIds());
-        result.setPublished(true);
+        result.setPublished(published);
+        attachCommercialPublicationState(result);
         return result;
     }
 
-    /** 内容先发布、后台后审；审核状态独立保留，不能伪装为已过审。 */
-    private void publishBeforeReview(Long topicId, Long memberId) {
+    @Override
+    public Long requestContentSafetyRelistReview(Long topicId, Long submitterId) {
+        if (topicId == null || topicId <= 0L) throw new IllegalArgumentException("主题ID不能为空");
+        Long open = findOpenTopicTaskId(topicId);
+        if (open != null) return open;
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (topic == null) throw new IllegalStateException("主题不存在");
+        java.util.Map<String, Object> snap = new java.util.LinkedHashMap<>();
+        snap.put("bizType", AuditTask.BIZ_TOPIC);
+        snap.put("bizId", topicId);
+        snap.put("holdReason", com.chengyinhub.business.util.TopicContentSafetyHold.REASON);
+        snap.put("name", topic.getName());
+        snap.put("imgUrl", topic.getImgUrl());
+        snap.put("imgArr", topic.getImgArr());
+        String snapshot;
+        try {
+            snapshot = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(snap);
+        } catch (Exception e) {
+            throw new IllegalStateException("复核快照生成失败", e);
+        }
+        Long owner = submitterId != null && submitterId > 0L ? submitterId : topic.getMemberId();
+        try {
+            return auditTaskService.submit(AuditTask.BIZ_TOPIC, topicId, owner,
+                    com.chengyinhub.business.util.TopicContentSafetyHold.SOURCE_RELIST, snapshot);
+        } catch (org.springframework.dao.DuplicateKeyException concurrent) {
+            // uk_audit_biz_open:并发下另一张未结单先落库,复用它即可
+            Long again = findOpenTopicTaskId(topicId);
+            if (again != null) return again;
+            throw concurrent;
+        }
+    }
+
+    private Long findOpenTopicTaskId(Long topicId) {
+        AuditTask query = new AuditTask();
+        query.setBizType(AuditTask.BIZ_TOPIC);
+        query.setBizId(topicId);
+        List<AuditTask> tasks = auditTaskService.selectAuditTaskList(query);
+        if (tasks != null) for (AuditTask task : tasks) {
+            // AUDIT-INT-5:举报单在独立槽,不能顶替复核上架单(举报不成立会顺手解除留置)。
+            if ((AuditTask.STATUS_PENDING.equals(task.getStatus())
+                    || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) && !task.isOpenReport()) {
+                return task.getId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 内容先发布、后台后审；审核状态独立保留，不能伪装为已过审。
+     *
+     * <p>AUDIT-G2-1:内容安全图片回调下架留置中的主题,编辑/重发照常保存内容并送审,但不回到在架、
+     * 不清留置 —— 只确保有人工复核单,过审由审核台恢复在架。
+     *
+     * @return 是否真的上架了(留置中为 false)
+     */
+    private boolean publishBeforeReview(Long topicId, Long memberId) {
+        mediaPublicationGuard.requireTopicPublication(topicId);
+        CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(current)) {
+            // 已发布过的主题照常刷新路线快照,复核通过上架时就是最新内容;未发布的由过审时统一发布。
+            if (Integer.valueOf(1).equals(current.getStatus())) publishValidatedRouteSnapshot(current);
+            requestContentSafetyRelistReview(topicId, memberId);
+            return false;
+        }
         String quotaError = quotaService.lockAndCheckThemeOnline(memberId, topicId);
         if (quotaError != null) throw new ServiceException(quotaError);
         publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId));
@@ -4251,6 +4587,29 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         syncCreativeSquarePostVisibility(topicId, true);
         ensureSelfHostActivityShell(topicId);
+        return true;
+    }
+
+    private void submitPublishedProjectReview(Long topicId, Long memberId, Date recruitDeadline) {
+        boolean commercial = commercialTopicPolicy.evaluate(topicId).isCommercial();
+        if (!commercial && recruitDeadline == null) return;
+        topicCommercialReviewService.submitProjectReview(topicId, memberId,
+                recruitDeadline != null ? TopicLifecycleState.RECRUITING : TopicLifecycleState.PRICING);
+    }
+
+    private void attachCommercialPublicationState(TopicBundleSubmitResultVO result) {
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(result.getTopicId());
+        if (topic == null) throw new IllegalStateException("主题发布后状态读取失败");
+        Integer lifecycle = topic.getLifecycle();
+        boolean awaiting = Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)
+                || Integer.valueOf(TopicLifecycleState.RECRUITING.getCode()).equals(lifecycle)
+                || Integer.valueOf(TopicLifecycleState.PRICING.getCode()).equals(lifecycle);
+        result.setCommercialAwaitingReview(awaiting);
+        if (awaiting) result.setCommercialNextStep(Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)
+                ? "已提交立项审核，审核与定价完成前尚未开售"
+                : Integer.valueOf(TopicLifecycleState.RECRUITING.getCode()).equals(lifecycle)
+                ? "请先完成招募，招募结束后完成定价并自动提交开售审核"
+                : "请在定价工作台保存完整开售参数，保存后自动提交开售审核");
     }
 
     private TopicBundleSubmitResultVO noBundleReview(Long topicId, String state) {
@@ -4261,6 +4620,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             result.setPublished(topic != null && Integer.valueOf(1).equals(topic.getStatus())
                     && Integer.valueOf(1).equals(topic.getUserStatus()));
         }
+        if (!"DRAFT".equals(state)) attachCommercialPublicationState(result);
         return result;
     }
 
@@ -4275,6 +4635,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                                     String username) {
         List<String> locked = new ArrayList<>();
         if(dto.getThemeRuntimeConfig()!=null && !java.util.Objects.equals(com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(dto.getThemeRuntimeConfig()),com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(exist.getThemeRuntimeConfigJson())))locked.add("背包/场景/广播/终局规则");
+        if (dto.getRecruitDeadline() != null
+                && !java.util.Objects.equals(dto.getRecruitDeadline(), exist.getRecruitDeadline())) {
+            locked.add("招募截止时间");
+        }
         if (dto.getStartDate() != null || dto.getEndDate() != null || dto.getSaleEndAt() != null) {
             locked.add("开始/结束日期/售止时间");
         }
@@ -4298,6 +4662,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setCategoryIds(dto.getCategoryIds());
         patch.setUpdateBy(username);
         patch.setUpdateTime(new Date());
+        mediaPublicationGuard.requireTopic(exist.getMemberId(), patch, true);
         // ⚠️ 白名单里没有「营销类型」—— 它是 CoopInvite.shareMode(每条邀约一份),cms_topic 上没有这一列,
         //    改它走邀约侧接口。别为了对齐文档措辞在这儿造一个不存在的字段。
         cmsTopicMapper.updateCmsTopic(patch);
@@ -4314,6 +4679,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     private void rebuildTopicContent(CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto,
                                      Long memberId, String username, boolean chapterFlowV2, boolean draft) {
         Long topicId = exist.getId();
+        // 2026-10-20 分级审核:写前记下开售条款指纹,重建后只有价格/条款变了才重置开售审核。
+        java.util.Map<String, Object> saleTermsBefore = saleTerms(exist);
+        preserveOmittedAuthorConfig(exist, dto);
         // 9-15 拍板:写前记下「已发布免费主题」,整包重建后复核;变商业即抛出,整个事务回滚。
         boolean conversionProtected = commercialTopicPolicy.isConversionProtected(exist);
         // 招募截止会把主题送进 RECRUITING(商业轨道),之后不再受保护 ⇒ 同样算转商业。
@@ -4324,6 +4692,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         assertTopicDeletable(topicId);
         // 整体替换的入场闸:本次没带的子集合若库里现有行,拒收并点名缺什么(见方法注释)
         assertRebuildPayloadComplete(topicId, dto);
+        assertCollaboratorIdShape(dto.getCollaboratorIds());
+        // NodeDTO 不开放前置解锁编辑；重建前保存服务端既有关系，等全部新节点生成后翻译 ID。
+        Map<Long, Long> existingUnlocks = existingNodeUnlocks(topicId);
         Long existingOpeningId = JourneyStory.openingChapterId(exist.getJourneyStoryJson());
         if (existingOpeningId != null && dto.getChapters() != null) {
             for (ChapterDTO chapter : dto.getChapters()) {
@@ -4355,6 +4726,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         //    productType 这一列由 ProductSourceWiringTest 两处计数盯着,其余字段没有门禁。
         CmsTopic patch = new CmsTopic();
         BeanUtils.copyProperties(dto, patch);
+        mediaPublicationGuard.requireTopic(memberId, patch, !draft);
+        requireChapterDraftMedia(dto.getChapters(), memberId, !draft);
         // 路线图引用节点；必须等本次节点重建取得 nodeIdMap 后由专用 CAS 写口落库。
         patch.setRouteMode(null);
         patch.setRouteGraphJson(null);
@@ -4372,7 +4745,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R2-B10 与 createTopicInternal 同形(上面的"已知重复"同样适用):空白/未传 → null,
         // 动态 update 的 <if> 会跳过这一列 ⇒ 老编辑端整包上送不会抹掉已配的规则。
         patch.setJourneyRulesJson(journeyRulesValidator.validateAndNormalize(dto.getJourneyRules()));
-        patch.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.normalize(dto.getThemeRuntimeConfig()));
+        String runtimeRaw = mediaPublicationGuard.requireJson(memberId, dto.getThemeRuntimeConfig() == null ? exist.getThemeRuntimeConfigJson() : dto.getThemeRuntimeConfig(), !draft);
+        patch.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.withoutClientBindings(dto.getThemeRuntimeConfig()));
+        com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertJourneyReferences(
+                com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(runtimeRaw),
+                com.chengyinhub.business.domain.JourneyRules.parse(patch.getJourneyRulesJson() == null ? exist.getJourneyRulesJson() : patch.getJourneyRulesJson()));
         // R8-STORY 主题剧情:空白/未传 → null(同 journeyRules 的「不改原值」语义)。校验用
         // 本次提交前的章节/NPC 引用;章节重建后 chapterId 全部换新,patch 落库后再按
         // old→new 重映射回填(见 persistJourneyStoryAfterChapterRebuild)。
@@ -4410,7 +4787,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setFinishMedalImg(dto.getFinishMedalImg());
         patch.setCompleteRewardCouponId(completeRewardCouponId);
         patch.setTotalTime(calculateTotalTime(allNodes));
-        patch.setTotalMileage(calculateTotalDistance(allNodes));
+        patch.setTotalMileage(calculateTotalDistance(nodesForDistance(allNodes, dto.getChapters(), chapterFlowV2)));
         patch.setLocationCount(Convert.toLong(allNodes.size()));
         patch.setTemplateCount(calculateTemplateCount(allNodes));
         patch.setMerchantStatus(resolveMerchantPoolFlag(dto.getOpenMerchantPool(), memberId));
@@ -4438,11 +4815,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             patch.setStatus(0);
             patch.setReason("");
         }
-        cmsTopicMapper.updateCmsTopic(patch);
+        if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
+            throw new IllegalStateException("主题内容保存失败，未重建章节与节点");
+        }
         syncInitialAttributeKeys(patch);
 
         boolean allowBundledDraft = chapterFlowV2
                 && (draft || !isSimplePublishMode(patch.getPublishMode()));
+        // 重建会删掉全部节点再插回(插回一律 status=1);先记下后台隐藏的,插回后按旧 id 还原,作者重存不得取消隐藏
+        Set<Long> hiddenNodeIds = selectHiddenNodeIds(topicId);
         RouteNodeMaps routeNodeMaps;
         if (shouldCompileChapterFlow(chapterFlowV2, productType, dto.getChapters())) {
             deleteTopicEditableNonFlowChildren(topicId);
@@ -4453,15 +4834,18 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             routeNodeMaps = saveTopicChapters(dto.getChapters(), topicId, username, memberId,
                     productType, chapterFlowV2, allowBundledDraft);
         }
+        restoreHiddenNodes(hiddenNodeIds, routeNodeMaps.oldToNew);
+        remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
+        restoreNodeUnlocks(existingUnlocks, routeNodeMaps);
         persistJourneyStoryAfterChapterRebuild(topicId,
                 patch.getJourneyStoryJson() == null ? exist.getJourneyStoryJson() : patch.getJourneyStoryJson(),
                 routeNodeMaps, username);
-        String runtimeRaw = patch.getThemeRuntimeConfigJson() == null ? exist.getThemeRuntimeConfigJson() : patch.getThemeRuntimeConfigJson();
         if (runtimeRaw != null) {
             CmsTopic runtimePatch = new CmsTopic(); runtimePatch.setId(topicId);
-            runtimePatch.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapAll(runtimeRaw, routeNodeMaps.oldToNew, routeNodeMaps.chapterOldToNew, null));
+            runtimePatch.setThemeRuntimeConfigJson(remapTemplateRuleIdentities(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapForNodeSave(runtimeRaw, routeNodeMaps.oldToNew, routeNodeMaps.chapterOldToNew, routeNodeMaps.createdClientToNew),routeNodeMaps.oldToNew));
             if (cmsTopicMapper.updateCmsTopic(runtimePatch) != 1) throw new IllegalStateException("主题运行配置重映射失败");
         }
+        persistTemplateInteractionRules(topicId);
         long expectedRouteVersion = exist.getConfigVersion() == null ? 1L : exist.getConfigVersion();
         String requestedRouteMode = dto.getRouteMode();
         String requestedRouteGraph = dto.getRouteGraphJson();
@@ -4484,17 +4868,23 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         saveCollaborators(dto.getCollaboratorIds(), topicId, username);
         saveTickets(dto.getTickets(), topicId, memberId, username, productType, draft);
         commercialTopicPolicy.assertNotConvertedToCommercial(topicId, conversionProtected);
+        if (!draft) mediaPublicationGuard.requireTopicPublication(topicId);
 
         // 版本必须先递增，再创建新审核快照；否则本次编辑刚提交的任务会立刻被判为旧批准。
-        invalidateApprovedCanonical(topicId, "topic-content-rebuild");
+        // 2026-10-20 分级审核:开售审核与内容审核解耦 —— 只有价格/条款(TopicSaleTerms)变化才递增版本
+        // (= 重置开售审核);只改故事/名称/简介时版本不动,待审的开售审核单原地刷新快照,不丢进度。
+        if (com.chengyinhub.business.service.support.TopicSaleTerms.changed(saleTermsBefore,
+                saleTerms(cmsTopicMapper.selectCmsTopicById(topicId)))) {
+            invalidateApprovedCanonical(topicId, "topic-content-rebuild");
+        } else {
+            refreshPendingSaleReview(topicId, memberId);
+        }
 
         // R18-DRAFT:草稿保存不得触发任何审核 —— 起草稿只是存内容。这里原来按「带 recruitDeadline
         // 即送立项审」走,对草稿等于一次保存就把主题推进 RECRUITING(商业轨道);草稿要等作者点发布
         // 才走上架/审核路径(与 createTopicInternal 里 !saveDraft 的那道门同口径)。
-        if (!draft && Integer.valueOf(TopicLifecycleState.DRAFT.getCode()).equals(exist.getLifecycle())
-                && dto.getRecruitDeadline() != null) {
-            topicCommercialReviewService.submitProjectReview(
-                    topicId, memberId, TopicLifecycleState.RECRUITING);
+        if (!draft && Integer.valueOf(TopicLifecycleState.DRAFT.getCode()).equals(exist.getLifecycle())) {
+            submitPublishedProjectReview(topicId, memberId, dto.getRecruitDeadline());
         }
 
         if (wasRejected && !chapterFlowV2) {
@@ -4512,6 +4902,96 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 第一次保存草稿就建等于草稿立即可售。发布时由 publishDraft 补建。
         if (!draft) {
             refreshSelfHostActivity(topicId, memberId, username);
+        }
+    }
+
+    /** 开售条款指纹;任何读不到/算不出的情况返回 null,由 {@code TopicSaleTerms.changed} 当作已变化。 */
+    private java.util.Map<String, Object> saleTerms(CmsTopic topic) {
+        if (topic == null || topic.getId() == null || commercialTopicPolicy == null) return null;
+        com.chengyinhub.business.service.support.CommercialTopicPolicy.Evaluation evaluation =
+                commercialTopicPolicy.evaluate(topic.getId());
+        if (evaluation == null) return null;
+        return com.chengyinhub.business.service.support.TopicSaleTerms.of(
+                commercialTopicPolicy.saleParameters(topic, evaluation));
+    }
+
+    /**
+     * 条款没变时,待审(PENDING/ESCALATED)的开售审核单用最新内容刷新快照(同一张单,不重排队),
+     * 审核员通过时看到并冻结的就是当前内容。没有待审开售单、或不在 PRICING,什么都不做。
+     */
+    private void refreshPendingSaleReview(Long topicId, Long memberId) {
+        if (topicCommercialReviewService == null || auditTaskService == null) return;
+        CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (current == null || !Integer.valueOf(TopicLifecycleState.PRICING.getCode()).equals(current.getLifecycle())) {
+            return;
+        }
+        AuditTask query = new AuditTask();
+        query.setBizType(AuditTask.BIZ_TOPIC_SALE_REVIEW);
+        query.setBizId(topicId);
+        List<AuditTask> tasks = auditTaskService.selectAuditTaskList(query);
+        boolean open = false;
+        if (tasks != null) for (AuditTask task : tasks) {
+            if (AuditTask.STATUS_PENDING.equals(task.getStatus()) || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) {
+                open = true;
+                break;
+            }
+        }
+        if (open) topicCommercialReviewService.submitSaleReview(topicId, memberId);
+    }
+
+    private Map<Long, Long> existingNodeUnlocks(Long topicId) {
+        CmsTopicNode query = new CmsTopicNode();
+        query.setTopicId(topicId);
+        Map<Long, Long> unlocks = new LinkedHashMap<Long, Long>();
+        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(query))) {
+            if (node.getId() != null && node.getUnlockAfterNodeId() != null
+                    && node.getUnlockAfterNodeId() > 0L) {
+                unlocks.put(node.getId(), node.getUnlockAfterNodeId());
+            }
+        }
+        return unlocks;
+    }
+
+    private void restoreNodeUnlocks(Map<Long, Long> existingUnlocks, RouteNodeMaps maps) {
+        for (Map.Entry<Long, Long> entry : existingUnlocks.entrySet()) {
+            Long nodeId = maps.oldToNew.get(entry.getKey());
+            if (nodeId == null) continue; // 依赖节点本次已删除，不再保留其前置关系。
+            Long predecessorId = maps.oldToNew.get(entry.getValue());
+            if (predecessorId == null) {
+                throw new IllegalArgumentException("节点前置解锁引用不在本次提交里: " + entry.getValue());
+            }
+            CmsTopicNode patch = new CmsTopicNode();
+            patch.setId(nodeId);
+            patch.setUnlockAfterNodeId(predecessorId);
+            if (cmsTopicNodeMapper.updateCmsTopicNode(patch) != 1) {
+                throw new IllegalStateException("节点前置解锁保存失败: " + nodeId);
+            }
+        }
+    }
+
+    /** 更新沿用已有作者配置；创建时的默认值不能把旧编辑端未认识的字段重置。 */
+    private void preserveOmittedAuthorConfig(CmsTopic exist, TopicCreateDTO dto) {
+        if (dto.getPublishMode() == null) dto.setPublishMode(exist.getPublishMode());
+        if (dto.getTeamMode() == null) dto.setTeamMode(exist.getTeamMode());
+        if (dto.getTeamMaxMembers() == null) dto.setTeamMaxMembers(exist.getTeamMaxMembers());
+        if (dto.getXpBudget() == null) dto.setXpBudget(exist.getXpBudget());
+        if (dto.getSelfPlay() == null) {
+            dto.setSelfPlay(exist.getSelfPlay());
+            if (dto.getSelfPlayPrice() == null) dto.setSelfPlayPrice(exist.getSelfPlayPrice());
+            if (dto.getSelfPlayQuota() == null) dto.setSelfPlayQuota(exist.getSelfPlayQuota());
+        }
+        // 旧客户端仍可用票的 mode 选产品类型；只有请求完全没有模式时才沿用存量真源。
+        boolean hasTicketMode = false;
+        if (dto.getTickets() != null) {
+            for (ActivityTicketRequest ticket : dto.getTickets()) {
+                if (ticket != null && ticket.getMode() != null) {
+                    hasTicketMode = true;
+                    break;
+                }
+            }
+        }
+        if (dto.getProductType() == null && !hasTicketMode && ProductType.isValid(exist.getProductType())) {
+            dto.setProductType(exist.getProductType());
         }
     }
 
@@ -4565,6 +5045,31 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (!missing.isEmpty()) {
             throw new IllegalStateException("保存主题是整体替换:本次请求没有携带 " + String.join("、", missing)
                     + ",直接提交会把它们清空。请回传完整内容;确实要清空请显式传空数组 []");
+        }
+    }
+
+    /** 本主题后台「隐藏」(status=0)的节点 id。走不带商家可见性闸的行锁查询,待审商家节点也算在内。 */
+    private Set<Long> selectHiddenNodeIds(Long topicId) {
+        Set<Long> hidden = new HashSet<Long>();
+        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectByTopicForUpdate(topicId))) {
+            if (node != null && node.getId() != null && Long.valueOf(0L).equals(node.getStatus())) {
+                hidden.add(node.getId());
+            }
+        }
+        return hidden;
+    }
+
+    /** 重建后按旧 id → 新 id 把隐藏态写回;只会隐藏、不会取消隐藏,新节点(无旧 id)不受影响。 */
+    private void restoreHiddenNodes(Set<Long> hiddenNodeIds, Map<Long, Long> oldToNew) {
+        for (Long oldId : hiddenNodeIds) {
+            Long newId = oldToNew.get(oldId);
+            if (newId == null) continue;
+            CmsTopicNode patch = new CmsTopicNode();
+            patch.setId(newId);
+            patch.setStatus(0L);
+            if (cmsTopicNodeMapper.updateCmsTopicNode(patch) != 1) {
+                throw new IllegalStateException("隐藏节点状态保留失败");
+            }
         }
     }
 
@@ -4783,6 +5288,29 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return allNodes;
     }
 
+    /** 仅V2明确标为故事玩法的节点不参与地点距离；缺坐标实体地点仍保留原0边语义。 */
+    private List<NodeDTO> nodesForDistance(List<NodeDTO> allNodes, List<ChapterDTO> chapters, boolean chapterFlowV2) {
+        if (!chapterFlowV2 || chapters == null) return allNodes;
+        Set<NodeDTO> storyGames = Collections.newSetFromMap(new IdentityHashMap<NodeDTO, Boolean>());
+        for (ChapterDTO chapter : chapters) {
+            if (chapter == null || chapter.getNodes() == null || chapter.getBlocks() == null) continue;
+            for (ChapterBlockDTO block : chapter.getBlocks()) {
+                if (block == null || !"node".equals(block.getType())
+                        || !Boolean.FALSE.equals(block.getLocationRequired())) continue;
+                Integer index = block.getNodeIndex();
+                if (index != null && index >= 0 && index < chapter.getNodes().size()) {
+                    storyGames.add(chapter.getNodes().get(index));
+                }
+            }
+        }
+        if (storyGames.isEmpty()) return allNodes;
+        List<NodeDTO> locations = new ArrayList<NodeDTO>();
+        for (NodeDTO node : allNodes) {
+            if (!storyGames.contains(node)) locations.add(node);
+        }
+        return locations;
+    }
+
     private boolean isSimplePublishMode(String publishMode) {
         return "simple".equalsIgnoreCase(publishMode) || "ai_simple".equalsIgnoreCase(publishMode);
     }
@@ -4865,7 +5393,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         long totalTime = 0L;
         for (NodeDTO node : nodes) {
-            totalTime += node.getNodeTime();
+            Integer nodeTime = node.getNodeTime();
+            if (nodeTime != null) totalTime += nodeTime;
         }
 
         return totalTime;
@@ -4909,7 +5438,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (CollectionUtils.isEmpty(chapters)) {
             return routeNodeMaps;
         }
+        // D8(owner 2026-10-23):主题规模上限,任何删除/插入之前先拦
+        com.chengyinhub.business.service.support.TopicSizeLimits.requireWithinLimits(chapters);
 
+        long chapterSortId = 0L;
         for (ChapterDTO chapterDTO : chapters) {
             CmsTopicChapter chapter = new CmsTopicChapter();
 
@@ -4922,10 +5454,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             chapter.setId(null);
             // 配色不靠 copyProperties 隐式透传:枚举必须当场收敛(存量别名也在这里被写成新档)
             chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(chapterDTO.getAtmospherePreset()));
+            chapter.setSortId(++chapterSortId);
             chapter.setTopicId(topicId);
             chapter.setCreateBy(username);
             chapter.setCreateTime(new Date());
-            cmsTopicChapterMapper.insertCmsTopicChapter(chapter);
+            if (cmsTopicChapterMapper.insertCmsTopicChapter(chapter) != 1
+                    || chapter.getId() == null || chapter.getId() <= 0L) {
+                throw new IllegalStateException("章节保存失败，未生成有效章节身份");
+            }
             Long chapterId = chapter.getId();
             routeNodeMaps.recordChapter(chapterDTO.getId(), chapterId);
 
@@ -4967,6 +5503,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      */
     private RouteNodeMaps compileChapterFlow(List<ChapterDTO> chapters, Long topicId, String username, Long memberId,
                                     boolean replaceExisting, boolean allowBundledDraft) {
+        // D8(owner 2026-10-23):主题规模上限,任何删除/插入之前先拦
+        com.chengyinhub.business.service.support.TopicSizeLimits.requireWithinLimits(chapters);
         ChapterFlowCompiler.CompiledFlow flow = ChapterFlowCompiler.compileChapterFlow(chapters);
         RouteNodeMaps routeNodeMaps = new RouteNodeMaps();
 
@@ -5013,7 +5551,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 chapter.setBlocksJson(null);
                 chapter.setCreateBy(username);
                 chapter.setCreateTime(new Date());
-                cmsTopicChapterMapper.insertCmsTopicChapter(chapter);
+                if (cmsTopicChapterMapper.insertCmsTopicChapter(chapter) != 1
+                        || chapter.getId() == null || chapter.getId() <= 0L) {
+                    throw new IllegalStateException("章节保存失败，未生成有效章节身份");
+                }
                 routeNodeMaps.recordChapter(source.getId(), chapter.getId());
                 if (Boolean.TRUE.equals(source.getOpening())) routeNodeMaps.openingChapterId = chapter.getId();
                 if (source.getEnding() != null && !source.getEnding().isNull()) {
@@ -5036,7 +5577,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                     node.setCheckinCode(java.util.UUID.randomUUID().toString().replace("-", ""));
                     node.setCreateBy(username);
                     node.setCreateTime(new Date());
-                    cmsTopicNodeMapper.insertCmsTopicNode(node);
+                    if (cmsTopicNodeMapper.insertCmsTopicNode(node) != 1
+                            || node.getId() == null || node.getId() <= 0L) {
+                        throw new IllegalStateException("节点保存失败，未生成有效节点身份");
+                    }
                     nodeIds.add(node.getId());
                     routeNodeMaps.record(nodeDTO, node.getId());
                 }
@@ -5059,7 +5603,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         query.setTopicId(topicId);
         for (CmsTopicChapter chapter : nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(query))) {
             if (chapter.getBlocksJson() != null && !chapter.getBlocksJson().trim().isEmpty()) {
-                throw new ChapterFlowValidationException("请更新小程序后编辑该主题");
+                throw new ChapterFlowClientUpgradeRequiredException("请更新小程序后编辑该主题");
             }
         }
     }
@@ -5134,6 +5678,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             return;
         }
 
+        long nodeSortId = 0L;
         for (NodeDTO nodeDTO : nodes) {
             CmsTopicNode node = new CmsTopicNode();
             BeanUtils.copyProperties(nodeDTO, node);
@@ -5144,12 +5689,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
             node.setTopicId(topicId);
             node.setChapterId(chapterId);
+            node.setSortId(++nodeSortId);
             node.setStatus(1L); // 默认显示
             node.setCheckinCode(java.util.UUID.randomUUID().toString().replace("-", "")); // 节点打卡码
             node.setCreateBy(username);
             node.setCreateTime(new Date());
 
-            cmsTopicNodeMapper.insertCmsTopicNode(node);
+            if (cmsTopicNodeMapper.insertCmsTopicNode(node) != 1
+                    || node.getId() == null || node.getId() <= 0L) {
+                throw new IllegalStateException("节点保存失败，未生成有效节点身份");
+            }
             routeNodeMaps.record(nodeDTO, node.getId());
         }
     }
@@ -5260,15 +5809,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (chapters == null) return "";
         for (ChapterDTO chapter : chapters) {
             if (chapter == null || Boolean.TRUE.equals(chapter.getOpening()) || chapter.getNodes() == null) continue;
-            Set<Integer> storyGames = new HashSet<>();
-            if (chapter.getBlocks() != null) {
+            if (chapter.getBlocks() != null && !chapter.getBlocks().isEmpty()) {
                 for (com.chengyinhub.business.domain.dto.ChapterBlockDTO block : chapter.getBlocks()) {
-                    if (block != null && Boolean.FALSE.equals(block.getLocationRequired())) storyGames.add(block.getNodeIndex());
+                    if (block == null || !"node".equals(block.getType())
+                            || Boolean.FALSE.equals(block.getLocationRequired())) continue;
+                    Integer index = block.getNodeIndex();
+                    if (index == null || index < 0 || index >= chapter.getNodes().size()) continue;
+                    NodeDTO node = chapter.getNodes().get(index);
+                    if (node != null && StringUtils.isNotBlank(node.getAddress())) return node.getAddress();
                 }
+                continue; // 块化章节的路线顺序来自 blocks，不再回退到 DTO 节点数组顺序。
             }
-            for (int i = 0; i < chapter.getNodes().size(); i++) {
-                NodeDTO node = chapter.getNodes().get(i);
-                if (node != null && !storyGames.contains(i) && StringUtils.isNotBlank(node.getAddress())) return node.getAddress();
+            for (NodeDTO node : chapter.getNodes()) {
+                if (node != null && StringUtils.isNotBlank(node.getAddress())) return node.getAddress();
             }
         }
         return "";
@@ -5279,6 +5832,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         /** 结局章(2026-09-24):按章节顺序,剧情落库前据此重建 ending.endings。 */
         private final List<JourneyStory.EndingChapter> endingChapters = new ArrayList<JourneyStory.EndingChapter>();
         private final Map<String, Long> clientToNew = new LinkedHashMap<String, Long>();
+        private final Map<String, Long> createdClientToNew = new LinkedHashMap<String, Long>();
         private final Map<Long, Long> oldToNew = new LinkedHashMap<Long, Long>();
         private final Set<Long> newNodeIds = new LinkedHashSet<Long>();
         /** R8-STORY:章节 old→new,剧情 stages[].chapterId 重建后据此重映射。 */
@@ -5297,6 +5851,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 if (key.length() > 64) throw new IllegalArgumentException("clientNodeKey 最多 64 位");
                 Long old = clientToNew.put(key, newNodeId);
                 if (old != null) throw new IllegalArgumentException("clientNodeKey 重复:" + key);
+                if (source.getId() == null || source.getId() <= 0L) createdClientToNew.put(key, newNodeId);
             }
         }
 
@@ -5466,6 +6021,18 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
     }
 
+    /** 仅保护署名 ID 形状；缺席/空集合与重复正 ID 的既有语义不变。 */
+    private void assertCollaboratorIdShape(List<Long> collaboratorIds) {
+        if (collaboratorIds == null) {
+            return;
+        }
+        for (Long memberId : collaboratorIds) {
+            if (memberId == null || memberId <= 0L) {
+                throw new IllegalArgumentException("合作者用户ID必须为正整数");
+            }
+        }
+    }
+
     private void saveCollaborators(List<Long> collaboratorIds, Long topicId, String username) {
         if (CollectionUtils.isEmpty(collaboratorIds)) {
             return;
@@ -5587,8 +6154,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         query.setOwnerId(topicId);
         query.setDelFlag(0);
         List<OmsTicket> existing = nullToEmpty(omsTicketMapper.selectOmsTicketList(query));
+        Map<Long, OmsTicket> existingById = new HashMap<>();
         Map<String, Deque<OmsTicket>> reusableByKey = new HashMap<>();
         for (OmsTicket old : existing) {
+            existingById.put(old.getId(), old);
             String key = topicTicketPairingKey(old.getName(), old.getPrice(), old.getStartTime(), old.getEndTime());
             Deque<OmsTicket> bucket = reusableByKey.get(key);
             if (bucket == null) {
@@ -5598,6 +6167,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             bucket.add(old);
         }
         Set<Long> reusedIds = new HashSet<>();
+        Set<Long> explicitIds = new HashSet<>();
+        for (ActivityTicketRequest requested : nullToEmpty(tickets)) {
+            if (requested.getId() != null && existingById.containsKey(requested.getId())
+                    && !explicitIds.add(requested.getId())) {
+                throw new IllegalArgumentException("票种 id 重复:" + requested.getId());
+            }
+        }
 
         for (ActivityTicketRequest ticketDTO : nullToEmpty(tickets)) {
             OmsTicket ticket = new OmsTicket();
@@ -5633,8 +6209,20 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
             Deque<OmsTicket> reusable = reusableByKey.get(topicTicketPairingKey(
                     ticket.getName(), ticket.getPrice(), ticket.getStartTime(), ticket.getEndTime()));
-            OmsTicket reuse = reusable == null ? null : reusable.poll();
+            OmsTicket reuse = ticketDTO.getId() == null ? null : existingById.get(ticketDTO.getId());
+            if (ticketDTO.getId() == null && reusable != null) {
+                // 旧调用仍按业务键配对，但不能占用本次其他条目显式指定的既有票。
+                while (!reusable.isEmpty()) {
+                    OmsTicket candidate = reusable.poll();
+                    if (!reusedIds.contains(candidate.getId()) && !explicitIds.contains(candidate.getId())) {
+                        reuse = candidate;
+                        break;
+                    }
+                }
+            }
             if (reuse == null) {
+                // 显式旧 id 已删除/不属于本主题时沿原 DTO 合同新建，不借同键的另一行身份。
+                ticket.setId(null);
                 omsTicketMapper.insertOmsTicket(ticket);
                 continue;
             }
@@ -5684,6 +6272,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 1) 生成活动：承接方=发布者本人，关联本主题，直接审核通过+上架(用户可报名)
         CmsActivity activity = new CmsActivity();
         activity.setMemberId(memberId);
+        // activity.clubId activates the existing member gate. Public club topics
+        // must remain public; only an explicitly member-only topic inherits it.
+        if (Integer.valueOf(1).equals(topic.getClubMemberOnly())) {
+            if (topic.getClubId() == null || topic.getClubId() <= 0L) {
+                throw new ServiceException("成员限定主题的俱乐部资料不完整，无法生成场次");
+            }
+            activity.setClubId(topic.getClubId());
+        }
         activity.setTopicId(topicId);
         activity.setName(topic.getName());
         activity.setDescription(topic.getDescription());
@@ -5697,7 +6293,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         activity.setDelFlag(0);
         activity.setCreateBy(username);
         activity.setCreateTime(new Date());
-        cmsActivityMapper.insertCmsActivity(activity);
+        if (cmsActivityMapper.insertCmsActivity(activity) != 1
+                || activity.getId() == null || activity.getId() <= 0L) {
+            throw new IllegalStateException("自办活动创建失败，未生成有效活动身份");
+        }
         Long activityId = activity.getId();
 
         // 2) 把主题票(ownerType=1)复制为活动票(ownerType=2)，否则活动无票可买(与进池调配中标共用同一 helper)

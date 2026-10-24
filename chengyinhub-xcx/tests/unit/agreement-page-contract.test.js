@@ -43,7 +43,7 @@ function assertRouteUsesCanonicalTypeResolver(source) {
   assert.match(source, /const\s+doc\s*=\s*getDoc\(type\)/,
     '路由 query 必须经 getDoc 解析，?type=deregister 才会展示账号注销须知');
   assert.match(source, /const\s+docType\s*=\s*resolveKey\(type\)/,
-    'Back 兜底必须使用与正文相同的解析 key，不能把 deregister 送回设置页');
+    'Back 保底必须使用与正文相同的解析 key，不能把 deregister 送回设置页');
   assert.doesNotMatch(source, /const\s+doc\s*=\s*DOCS\[type\]/,
     '禁止直接按原始 query 查 DOCS：短别名会静默回退成用户服务协议');
 }
@@ -190,4 +190,13 @@ test('协议契约的变异负控确实能变红', () => {
   assert.throws(() => assertRouteUsesCanonicalTypeResolver(
     source.replace('const doc = getDoc(type);', 'const doc = DOCS[type] || DOCS.user_agreement;'),
   ));
+});
+
+
+test('用户服务协议仅在明确同意后生效，正文没有以实际使用推定同意', () => {
+  const { getDoc } = require('../../utils/agreement-docs.js');
+  const agreement = getDoc('user_agreement');
+  const text = agreement.sections.map(section => section.p).join('\n');
+  assert.match(text, /明确选择同意后对你生效/);
+  assert.doesNotMatch(text, /实际使用.*(?:同意|表示)|使用.*即.*同意|勾选同意或/);
 });

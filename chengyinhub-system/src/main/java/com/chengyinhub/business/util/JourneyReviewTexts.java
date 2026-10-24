@@ -74,12 +74,39 @@ public final class JourneyReviewTexts {
         }
     }
 
+    public static List<Entry> collectChapters(List<ChapterDTO> chapters) {
+        List<Entry> entries = new ArrayList<>();
+        if (chapters == null) return entries;
+        for (int i = 0; i < chapters.size(); i++) {
+            ChapterDTO chapter = chapters.get(i);
+            if (chapter == null) continue;
+            String path = "chapters[" + i + "]";
+            add(entries, path + ".name", chapter.getName());
+            add(entries, path + ".description", chapter.getDescription());
+            add(entries, path + ".category", chapter.getCategory());
+            if (chapter.getNodes() == null) continue;
+            for (int j = 0; j < chapter.getNodes().size(); j++) {
+                com.chengyinhub.business.domain.dto.NodeDTO node = chapter.getNodes().get(j);
+                if (node == null) continue;
+                String nodePath = path + ".nodes[" + j + "]";
+                add(entries, nodePath + ".name", node.getName());
+                add(entries, nodePath + ".description", node.getDescription());
+                add(entries, nodePath + ".address", node.getAddress());
+                add(entries, nodePath + ".businessTime", node.getBusinessTime());
+                add(entries, nodePath + ".hookText", node.getHookText());
+                add(entries, nodePath + ".cardHookLong", node.getCardHookLong());
+                add(entries, nodePath + ".fragmentText", node.getFragmentText());
+            }
+        }
+        return entries;
+    }
+
     public static List<Entry> collectThemeRuntime(String rawJson) {
         List<Entry> entries=new ArrayList<>();collectThemeRuntime(parse(rawJson),"themeRuntimeConfig",entries);return entries;
     }
     private static void collectThemeRuntime(JsonNode node,String path,List<Entry> entries) {
         if(node==null)return;
-        if(node.isObject())node.fields().forEachRemaining(row->{String key=row.getKey();if(java.util.Arrays.asList("name","hpName","luckName","content","title","summary","body","label","prompt","fb","text","ally","neutral","guarded","opener","brief","line","reply","question","q","a","open").contains(key))add(entries,path+"."+key,row.getValue());collectThemeRuntime(row.getValue(),path+"."+key,entries);});
+        if(node.isObject())node.fields().forEachRemaining(row->{String key=row.getKey();if(java.util.Arrays.asList("name","hpName","luckName","actionName","content","title","summary","body","label","prompt","fb","text","ally","neutral","guarded","opener","brief","line","reply","question","q","a","open","zeroMessage").contains(key))add(entries,path+"."+key,row.getValue());collectThemeRuntime(row.getValue(),path+"."+key,entries);});
         else if(node.isArray())for(JsonNode child:node)collectThemeRuntime(child,path+"[]",entries);
     }
 
@@ -194,6 +221,130 @@ public final class JourneyReviewTexts {
             }
         }
         addPlaySections(entries, root);
+        com.chengyinhub.business.service.support.GameplayOutcomeRules.visit(root,
+                (path, row) -> add(entries, "blockConfig." + path + ".reply", row.get("reply")));
+        // F-L5C-03/13:上面按段列举的字段之外,其余玩法(盲盒、分支、估数、竞猜、找东西、跨日任务等)
+        // 的玩家可见文字按 key 递归兜底收集,新玩法加字段不会再悄悄漏检。已收过的正文不重复送检。
+        java.util.Set<String> seen = new java.util.HashSet<String>();
+        for (Entry entry : entries) seen.add(entry.getText());
+        collectGenericTexts(root, "blockConfig", entries, seen);
+        return entries;
+    }
+
+    /** 玩法配置里给玩家看的文字字段名(取自 AdvancedGameConfigValidator 的文本字段;不含 url / 模板 id 等非展示值)。 */
+    private static final java.util.Set<String> GENERIC_TEXT_KEYS = new java.util.HashSet<String>(java.util.Arrays.asList(
+            "answerText", "body", "cardTitle", "content", "deckName", "doneText", "eyebrow", "failText", "fb",
+            "hint", "kicker", "label", "lead", "name", "outcomeLabel", "prompt", "question", "reply",
+            "requirement", "reveal", "rule", "sealText", "shotNote", "signer", "skill", "startLabel", "steps",
+            "successText", "text", "time", "title", "trackName", "unit", "unlockLabel", "unlockText", "voice",
+            "waitHint", "line", "lineIfFail", "opener", "aside", "hook", "walk", "todo", "target", "reward",
+            "q", "a", "open", "zeroMessage", "action", "suggestions", "faces", "poems", "clues"));
+
+    private static void collectGenericTexts(JsonNode node, String path, List<Entry> entries, java.util.Set<String> seen) {
+        if (node == null) return;
+        if (node.isObject()) {
+            java.util.Iterator<java.util.Map.Entry<String, JsonNode>> fields = node.fields();
+            while (fields.hasNext()) {
+                java.util.Map.Entry<String, JsonNode> field = fields.next();
+                JsonNode value = field.getValue();
+                String childPath = path + "." + field.getKey();
+                if (GENERIC_TEXT_KEYS.contains(field.getKey())) {
+                    // 文字字段的值可能是字符串、字符串数组(候选名、骰面、每日一句),
+                    // 或以 id 为键的字符串表(clues):字符串全收,对象再按 key 递归。
+                    collectTextValues(value, childPath, entries, seen);
+                } else {
+                    collectGenericTexts(value, childPath, entries, seen);
+                }
+            }
+        } else if (node.isArray()) {
+            for (JsonNode child : node) collectGenericTexts(child, path + "[]", entries, seen);
+        }
+    }
+
+    private static void collectTextValues(JsonNode value, String path, List<Entry> entries, java.util.Set<String> seen) {
+        if (value == null) return;
+        if (value.isTextual()) {
+            String text = value.asText().trim();
+            if (!text.isEmpty() && seen.add(text)) add(entries, path, text);
+        } else if (value.isArray()) {
+            for (JsonNode child : value) collectTextValues(child, path + "[]", entries, seen);
+        } else if (value.isObject() && path.endsWith(".clues")) {
+            java.util.Iterator<JsonNode> values = value.elements();
+            while (values.hasNext()) collectTextValues(values.next(), path + "{}", entries, seen);
+        } else {
+            collectGenericTexts(value, path, entries, seen);
+        }
+    }
+
+    /** 商家节点模板表单里、标题/简介/题干之外的玩家可见散字段。 */
+    public static List<Entry> collectTemplateFields(com.chengyinhub.business.domain.CmsMemberTemplate t) {
+        List<Entry> entries = new ArrayList<Entry>();
+        if (t == null) return entries;
+        add(entries, "questionA", t.getQuestionA());
+        add(entries, "questionB", t.getQuestionB());
+        add(entries, "questionC", t.getQuestionC());
+        add(entries, "questionD", t.getQuestionD());
+        add(entries, "ruleInstructions", t.getRuleInstructions());
+        add(entries, "medalName", t.getMedalName());
+        addTemplateStory(entries, t.getHint1(), t.getHint2(), t.getAnswerReveal(), t.getStoryText(),
+                t.getStoryJson(), t.getPhotoRequireDesc(), t.getRewardRulesJson());
+        return entries;
+    }
+
+    /** 模板库提交里、既有 joinText 之外的玩家可见散字段(选项/规则说明/勋章名已在 joinText 内)。 */
+    public static List<Entry> collectTemplateFields(com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest r) {
+        List<Entry> entries = new ArrayList<Entry>();
+        if (r == null) return entries;
+        addTemplateStory(entries, r.getHint1(), r.getHint2(), r.getAnswerReveal(), r.getStoryText(),
+                r.getStoryJson(), r.getPhotoRequireDesc(), r.getRewardRulesJson());
+        return entries;
+    }
+
+    private static void addTemplateStory(List<Entry> entries, String hint1, String hint2, String answerReveal,
+                                         String storyText, String storyJson, String photoRequireDesc,
+                                         String rewardRulesJson) {
+        add(entries, "hint1", hint1);
+        add(entries, "hint2", hint2);
+        add(entries, "answerReveal", answerReveal);
+        add(entries, "storyText", storyText);
+        add(entries, "photoRequireDesc", photoRequireDesc);
+        JsonNode story = parse(storyJson);
+        if (story != null && (story.isObject() || story.isArray())) {
+            collectGenericTexts(story, "storyJson", entries, new java.util.HashSet<String>());
+        } else {
+            add(entries, "storyJson", storyJson);
+        }
+        for (JsonNode rule : array(parse(rewardRulesJson))) {
+            add(entries, "rewardRulesJson[].feedbackText", rule.get("feedbackText"));
+        }
+    }
+
+    /** 主题级念头规则 journeyRules 的玩家可见文字:念头名与一句话。 */
+    public static List<Entry> collectJourneyRules(String rawJson) {
+        List<Entry> entries = new ArrayList<Entry>();
+        JsonNode root = parse(rawJson);
+        if (root == null || !root.isObject()) return entries;
+        for (JsonNode thought : array(root.get("thoughts"))) {
+            add(entries, "journeyRules.thoughts[].name", thought.get("name"));
+            add(entries, "journeyRules.thoughts[].desc", thought.get("desc"));
+        }
+        return entries;
+    }
+
+    /** 完成规则 completeRuleJson 里宾果九宫格的玩家可见文字。 */
+    public static List<Entry> collectCompletionRule(String rawJson) {
+        List<Entry> entries = new ArrayList<Entry>();
+        JsonNode root = parse(rawJson);
+        if (root == null || !root.isObject()) return entries;
+        JsonNode bingo = root.get("bingo");
+        if (bingo == null || !bingo.isObject()) return entries;
+        for (String field : java.util.Arrays.asList("title", "lineReward", "fullReward")) {
+            add(entries, "completeRule.bingo." + field, bingo.get(field));
+        }
+        for (JsonNode cell : array(bingo.get("cells"))) {
+            add(entries, "completeRule.bingo.cells[].label", cell.get("label"));
+            add(entries, "completeRule.bingo.cells[].feedbackText", cell.get("feedbackText"));
+        }
         return entries;
     }
 
@@ -202,6 +353,35 @@ public final class JourneyReviewTexts {
      * 它们与叙事段一样是创作者可写、玩家必看的文本,同一道审核闸。
      */
     private static void addPlaySections(List<Entry> entries, JsonNode root) {
+        JsonNode qa = root.path("qa");
+        for (String field : java.util.Arrays.asList("title", "lead", "answerText", "shotNote")) {
+            add(entries, "blockConfig.qa." + field, qa.get(field));
+        }
+        for (JsonNode option : array(qa.get("options"))) {
+            add(entries, "blockConfig.qa.options[].label", option.get("label"));
+            add(entries, "blockConfig.qa.options[].fb", option.get("fb"));
+        }
+        add(entries, "blockConfig.scan.reply", root.path("scan").get("reply"));
+        for (JsonNode image : array(root.path("album").get("images"))) {
+            add(entries, "blockConfig.album.images[].line", image.get("line"));
+        }
+        JsonNode photo = root.path("photoCheck");
+        for (String field : java.util.Arrays.asList("title", "shotNote", "requirement", "cardTitle")) {
+            add(entries, "blockConfig.photoCheck." + field, photo.get(field));
+        }
+        JsonNode note = root.path("note");
+        add(entries, "blockConfig.note.title", note.get("title"));
+        add(entries, "blockConfig.note.prompt", note.get("prompt"));
+        JsonNode presets = note.get("presets");
+        if (presets != null && presets.isArray()) for (JsonNode preset : presets) {
+            if (preset.isTextual()) add(entries, "blockConfig.note.presets[]", preset);
+            else if (preset.isObject()) {
+                add(entries, "blockConfig.note.presets[].text", preset.get("text"));
+                add(entries, "blockConfig.note.presets[].label", preset.get("label"));
+            }
+        }
+        add(entries, "blockConfig.typeIn.title", root.path("typeIn").get("title"));
+        add(entries, "blockConfig.typeIn.target", root.path("typeIn").get("target"));
         JsonNode sort = root.get("sort");
         if (sort != null && sort.isObject()) {
             add(entries, "blockConfig.sort.prompt", sort.get("prompt"));
@@ -255,7 +435,8 @@ public final class JourneyReviewTexts {
      * R19:章节故事流写接口的 beat 块正文(叙事搬进故事流后的真源)。
      *
      * <p>写路径拿的是 DTO(还没有 nodeId / 物化),字段名带章序号,便于审核员与作者定位;
-     * 非 beat 的 text 块(章节旁白)不在本轮口径内,与既有 V2 保存路径一致。
+     * F-L5C-03:非 beat 块里玩家可见的文字(章节旁白、内心声音/对面名字、梦块相册名与配句)同样收进来,
+     * 简易版主题免审直发时它们和 beat 正文一样直接给玩家看。
      */
     public static List<Entry> collectChapterNarrativeBlocks(List<ChapterDTO> chapters) {
         List<Entry> entries = new ArrayList<Entry>();
@@ -271,17 +452,36 @@ public final class JourneyReviewTexts {
                 if (block == null) {
                     continue;
                 }
+                if ("image".equals(block.getType()) || "audio".equals(block.getType())) {
+                    add(entries, "storyFlow.chapter" + (index + 1) + ".altText", block.getAltText());
+                }
                 String field = storyFlowField(index + 1, block.getBeat(), block.getField(), block.getQid());
                 if (field != null) {
                     add(entries, field, block.getContent());
+                    continue;
+                }
+                String prefix = plainBlockPrefix(index + 1, block.getType());
+                add(entries, prefix + ".content", block.getContent());
+                add(entries, prefix + ".who", block.getWho());
+                add(entries, prefix + ".title", block.getTitle());
+                if (block.getImages() != null) {
+                    for (ChapterBlockDTO.DreamImageDTO image : block.getImages()) {
+                        if (image != null) add(entries, prefix + ".images[].line", image.getLine());
+                    }
                 }
             }
         }
         return entries;
     }
 
+    /** 非 beat 块的字段路径前缀:storyFlow.chapter2.text / storyFlow.chapter2.voice。 */
+    private static String plainBlockPrefix(int chapterNumber, String type) {
+        String kind = type == null || type.trim().isEmpty() ? "block" : type.trim();
+        return "storyFlow.chapter" + chapterNumber + "." + kind;
+    }
+
     /**
-     * R19:已物化章节 blocks 里 beat 块的正文(审核详情只读用)。
+     * R19:已物化章节 blocks 里 beat 块的正文与非 beat 块的玩家可见文字(审核详情只读用)。
      * 坏 JSON / 非数组按「没收」处理 —— 与读取侧对脏块只跳过同一口径。
      */
     public static List<Entry> collectChapterBlocks(String blocksJson, int chapterNumber) {
@@ -294,10 +494,21 @@ public final class JourneyReviewTexts {
             if (block == null || !block.isObject()) {
                 continue;
             }
+            if ("image".equals(block.path("type").asText()) || "audio".equals(block.path("type").asText())) {
+                add(entries, "storyFlow.chapter" + chapterNumber + ".altText", block.get("altText"));
+            }
             String field = storyFlowField(chapterNumber, block.path("beat").asText(""),
                     block.path("field").asText(""), block.path("qid").asText(""));
             if (field != null) {
                 add(entries, field, block.get("content"));
+                continue;
+            }
+            String prefix = plainBlockPrefix(chapterNumber, block.path("type").asText(""));
+            add(entries, prefix + ".content", block.get("content"));
+            add(entries, prefix + ".who", block.get("who"));
+            add(entries, prefix + ".title", block.get("title"));
+            for (JsonNode image : array(block.get("images"))) {
+                add(entries, prefix + ".images[].line", image.get("line"));
             }
         }
         return entries;

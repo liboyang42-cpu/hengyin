@@ -98,6 +98,15 @@ public interface CmsRegistrationMapper
     public boolean hasActiveTopicStoryAccess(@Param("topicId") Long topicId,
                                              @Param("memberId") Long memberId);
 
+    /**
+     * 本人对某个主题(ownerType=1)/活动(ownerType=2)是否有报名成功的记录。
+     * 判据与「带上一次游玩记录」选择器的数据源(/api/registration/my-joined:registration_status=2)同口径,
+     * 用来拒绝伪造他人游玩记录的帖子引用。
+     */
+    public int countSucceededJoin(@Param("memberId") Long memberId,
+                                  @Param("ownerType") Long ownerType,
+                                  @Param("ownerId") Long ownerId);
+
     /** 一账号一票的全入口串行点；返回空即源 topic 不存在。 */
     public Long lockExploreTopicForUpdate(@Param("topicId") Long topicId);
 
@@ -248,12 +257,18 @@ public interface CmsRegistrationMapper
 
     /** P0-10 弃单关单:pay_expire_time 已过且仍待支付的报名单 id(限批 200/轮) */
     public List<Long> selectExpiredUnpaidIds(@Param("now") java.util.Date now);
+    public Long selectExpiredUnpaidMaxId(@Param("now") java.util.Date now);
+    public List<Long> selectExpiredUnpaidIdsAfter(@Param("now") java.util.Date now,
+            @Param("afterId") long afterId, @Param("maxId") long maxId, @Param("limit") int limit);
 
     /** §5-3 PAYING 超时对账:预下单已发起(payment_status=1)且过了付款窗口的单 id(限批 200/轮) */
     public List<Long> selectExpiredPayingIds(@Param("now") java.util.Date now, @Param("afterId") long afterId);
 
     /** 核销码补偿:已支付但核销码为空的报名单 id(近7天,限批 100/轮) */
     public List<Long> selectPaidMissingQrcodeIds();
+    public Long selectPaidMissingQrcodeMaxId();
+    public List<Long> selectPaidMissingQrcodeIdsAfter(@Param("afterId") long afterId,
+            @Param("maxId") long maxId, @Param("limit") int limit);
 
     /**
      * RUN-01 到期自动核销:已支付未核销、所属活动结束满 bufferDays 的场次票(owner_type=2)id,限批 200/轮。

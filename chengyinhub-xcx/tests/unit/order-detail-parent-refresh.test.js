@@ -82,6 +82,53 @@ function harness() {
     active, cancelled, initial, beginCancel, pending, reply };
 }
 
+for (const status of [1, 2]) {
+  for (const memberId of [10, null]) test(`列表取消${status}确认前身份变为${memberId}不提交旧订单`, () => {
+    const h = harness(); h.initial();
+    h.history.cancelOrder({ currentTarget: { dataset: { id: 88, index: 0, status } } });
+    h.app.memberId = memberId;
+    h.modals.at(-1).success({ confirm: true });
+    h.modals.at(-1).complete();
+    assert.equal(h.pending('/api/registration/cancel').length + h.pending('/api/registration/cancel-refund').length, 0);
+    assert.equal(h.history._cancelPromptOpen, false);
+    assert.equal(h.loadingDepth(), 0);
+  });
+  test(`列表取消${status}同账号成功仍按原接口回读而不猜资格`, () => {
+    const h = harness(); h.initial();
+    h.history.cancelOrder({ currentTarget: { dataset: { id: 88, index: 0, status } } });
+    h.modals.at(-1).success({ confirm: true });
+    const request = h.pending(status === 2 ? '/api/registration/cancel-refund' : '/api/registration/cancel').at(-1);
+    assert.equal(request.data.id, 88);
+    h.reply(request, { code: 200, data: {} });
+    assert.equal(h.pending('/api/registration/list').length, 2);
+    assert.equal(h.history.data.list[0].orderStateKey, 'not_started');
+    h.reply(h.pending('/api/registration/list').at(-1), { code: 200, data: { rows: [h.cancelled] } });
+    assert.equal(h.history.data.list[0].orderStateKey, 'cancelled');
+    assert.equal(h.loadingDepth(), 0);
+  });
+}
+
+for (const outcome of ['success', 'business-failure', 'http403', 'unknown']) test(`列表取消旧账号${outcome}回执不影响新账号且释放资源`, () => {
+  const h = harness(); h.initial();
+  h.history.cancelOrderRequest(88, 0, 2);
+  const request = h.pending('/api/registration/cancel-refund').at(-1);
+  assert.equal(h.loadingDepth(), 1);
+  h.app.memberId = 10;
+  h.history.pageLifetimes.show.call(h.history);
+  h.reply(h.pending('/api/registration/list').at(-1), { code: 200, data: { rows: [{ ...h.active, id: 99 }] } });
+  const reads = h.pending('/api/registration/list').length;
+  if (outcome === 'success') request.success({ code: 200, data: {} });
+  else if (outcome === 'business-failure') request.success({ code: 500, msg: 'old rejected' });
+  else request.fail({ errMsg: 'old request failure' }, outcome === 'http403' ? 403 : undefined);
+  request.complete();
+  assert.equal(h.pending('/api/registration/list').length, reads);
+  assert.equal(h.history.data.list[0].id, 99);
+  assert.equal(h.toasts.length, 0);
+  assert.equal(h.loadingDepth(), 0);
+  assert.equal(h.history._cancelRequestInFlight, false);
+  assert.equal(h.history.data.cancellingId, 0);
+});
+
 test('已核销主单及未核销从单均展示人工售后主卡并可回查处理进度', () => {
   for (const verificationStatus of [0, 1]) {
     const h = harness(); h.initial();
@@ -108,15 +155,15 @@ test('已核销主单及未核销从单均展示人工售后主卡并可回查�
   }
 });
 
-for (const close of ['detail', 'sheet']) test('取消成功后' + close + '返回通过权威回读刷新订单列表', () => {
+for (const close of ['detail', 'sheet']) test('取消成功后' + close + '返回通过权威刷新刷新订单列表', () => {
   const h = harness(); h.initial();
   h.reply(h.beginCancel(), { code: 200, data: { cashRefundRequired: false } });
   h.reply(h.pending('/api/registration/info')[1], { code: 200, data: h.cancelled });
   assert.equal(h.detail.data.info.orderStateKey, 'cancelled');
   if (close === 'detail') h.detail.goBack(); else h.sheet.onBack();
   assert.equal(h.parent.data.sceneCurrent, null);
-  assert.equal(h.pending('/api/registration/list').length, 2, '成功取消必须触发一次列表回读');
-  assert.equal(h.history.data.list[0].orderStateKey, 'not_started', '回读完成前不能本地伪造已取消');
+  assert.equal(h.pending('/api/registration/list').length, 2, '成功取消必须触发一次列表刷新');
+  assert.equal(h.history.data.list[0].orderStateKey, 'not_started', '刷新完成前不能本地伪造已取消');
   h.reply(h.pending('/api/registration/list')[1], { code: 200, data: { rows: [h.cancelled] } });
   assert.equal(h.history.data.list[0].orderStateKey, 'cancelled');
 });
@@ -143,11 +190,11 @@ test('取消后列表回读跨账号时丢弃旧回执，新账号正常读取',
   assert.equal(h.history.data.list[0].id, 99);
 });
 
-for (const failure of ['business', 'network']) test('取消' + failure + '失败不触发列表同步且不伪造取消', () => {
+for (const failure of ['business', 'http403']) test('取消' + failure + '明确失败不触发列表同步且不伪造取消', () => {
   const h = harness(); h.initial();
   const request = h.beginCancel();
   if (failure === 'business') request.success({ code: 500, msg: 'cancel rejected' });
-  else request.fail({ msg: 'network failed' });
+  else request.fail({ msg: 'permission failed' }, 403);
   request.complete();
   h.sheet.onBack();
   assert.equal(h.pending('/api/registration/list').length, 1);
@@ -351,4 +398,37 @@ test('ORDER-01:扫码完成后退款主态及真实不可退资格继续阻断�
       assert.equal(h.detail.data.verificationTimeText, '2026-09-30 12:00');
     }
   }
+});
+
+for (const status of [undefined, 408, 502]) test('取消回执未知 ' + status + ' 刷新详情和列表，不重复写入或猜成功', () => {
+  const h = harness(); h.initial();
+  const request = h.beginCancel();
+  request.fail({ errMsg: 'request:fail timeout' }, status); request.complete();
+  assert.equal(h.pending('/api/registration/cancel-refund').length, 1);
+  assert.equal(h.pending('/api/registration/info').length, 2);
+  assert.equal(h.pending('/api/registration/list').length, 2);
+  assert.equal(h.detail.data.info.orderStateKey, 'not_started');
+  assert.match(h.toasts.at(-1), /结果暂未确认/);
+  h.reply(h.pending('/api/registration/info').at(-1), { code: 200, data: h.cancelled });
+  h.reply(h.pending('/api/registration/list').at(-1), { code: 200, data: { rows: [h.cancelled] } });
+  assert.equal(h.detail.data.info.orderStateKey, 'cancelled');
+  assert.equal(h.history.data.list[0].orderStateKey, 'cancelled');
+  assert.equal(h.loadingDepth(), 0);
+});
+
+test('旧账号取消超时不回读新账号或复活旧单', () => {
+  const h = harness(); h.initial(); const request = h.beginCancel();
+  h.app.memberId = 10; request.fail({ errMsg: 'request:fail timeout' }); request.complete();
+  assert.equal(h.pending('/api/registration/info').length, 1);
+  assert.equal(h.pending('/api/registration/list').length, 1);
+});
+
+test('取消终态展示关闭事实，不复用未支付退款资格文案', () => {
+  const h = harness(); h.initial(); h.detail.reloadOrder();
+  h.reply(h.pending('/api/registration/info').at(-1), { code: 200, data: { ...h.cancelled,
+    refundDeadlineDisplay: '未支付订单无需退款',
+    refundInfo: { refundable: false, reason: '未支付订单无需退款' } } });
+  assert.equal(h.detail.data.info.orderStateKey, 'cancelled');
+  assert.equal(h.detail.data.info.refundDeadlineDisplay, '');
+  assert.equal(h.detail.data.info.refundDisplayText, '订单已关闭');
 });

@@ -256,15 +256,15 @@ Page({
   },
 
   removeCert(e) {
-    var i = e.detail.index;
-    var arr = this.data.certImages.slice();
+    var i = e && e.detail ? e.detail.index : -1, arr = this.data.certImages.slice();
+    if (!Number.isInteger(i) || i < 0 || i >= arr.length) return; // 异常索引直接忽略：splice(-1/undefined) 会删错图
     arr.splice(i, 1);
     this.setData({
       certImages: arr,
       certErrorIndexes: this.data.certErrorIndexes
         .filter((index) => index !== i)
         .map((index) => index > i ? index - 1 : index),
-    });
+    }, this.validate);
   },
 
   // ===== 提交(填完即有 → /api/club/become-leader) =====
@@ -272,7 +272,7 @@ Page({
     if (this._submitting || !this.data.canNext || this.data.bootstrapState !== 'ready') return;
     // 账户互斥兜底:提交前再拦一次商户账户
     if (this.isMerchantAccount()) {
-      toast('商户账号不能申请主理人');
+      toast('商家账号不能申请主理人');
       return;
     }
     this._submitting = true;

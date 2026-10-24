@@ -101,6 +101,31 @@ class TopicBundleReviewServiceTest {
         verify(templateMapper, never()).approveBundledDraft(any(), any());
     }
 
+    /** #299:探店日开放商家承接时，未配玩法的站点等商家入驻供给；商家只能承接已上架主题，所以零玩法也可提交。 */
+    @Test
+    void freeExploreRecruitingChaptersMaySubmitWithoutGameplayButOtherShapesStillNeedOne() {
+        CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
+        CmsTopicNode node = nodeMapper.selectCmsTopicNodeList(new CmsTopicNode()).get(0);
+        node.setTemplateId(null);
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        chapter.setRecruitEnabled(1);
+
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        stubLockedRows();
+        service.applyDecision(10L, 7L, submission.getSnapshotJson(), true);
+        verify(templateMapper, never()).approveBundledDraft(any(), any());
+
+        // 负控:章节未开放承接 / 非自由定向 / 有站点落在未开放承接的章节，仍要求至少一个玩法。
+        chapter.setRecruitEnabled(0);
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+        chapter.setRecruitEnabled(1);
+        topic.setProductType(1);
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        node.setChapterId(21L);
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+    }
+
     @Test
     void storyGameWithoutLocationCanBeSubmittedAndReviewed() {
         CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
@@ -141,6 +166,37 @@ class TopicBundleReviewServiceTest {
         assertTrue(snapshot.path("topic").path("contentHash").asText().startsWith("sha256:"));
         assertTrue(snapshot.path("bundledTemplates").get(0).path("contentHash").asText().startsWith("sha256:"));
         assertEquals("17", snapshot.path("bundledTemplates").get(0).path("content").path("questionAnswer").asText());
+    }
+
+    @Test
+    void decimalChapterAmountsSurviveSnapshotRoundTripAndStillDetectEdits() {
+        CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
+        stubLockedRows();
+        for (String amount : new String[]{"10.00", "20.00", "100.00", "15.00", "0.10", "10.25"}) {
+            chapter.setPerkMinValue(new java.math.BigDecimal(amount));
+            TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+            service.applyDecision(10L, 7L, submission.getSnapshotJson(), false);
+            chapter.setPerkMinValue(new java.math.BigDecimal(amount).add(java.math.BigDecimal.ONE));
+            assertThrows(RuntimeException.class,
+                    () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), false));
+        }
+        verify(templateMapper, never()).approveBundledDraft(any(), any());
+    }
+
+    /** F-W2-02:主题层小数(费率/里程/票价)与 Double 评分在快照往返后不能被判为「内容已变化」。 */
+    @Test
+    void topicLevelDecimalsAndDoublesSurviveSnapshotRoundTrip() {
+        stubLockedRows();
+        topic.setFeePlatformRate(new java.math.BigDecimal("0.0500"));
+        topic.setTotalMileage(new java.math.BigDecimal("100.00"));
+        topic.setSelfPlayPrice(new java.math.BigDecimal("0.01"));
+        topic.setMinAmout(new java.math.BigDecimal("0.00"));
+        topic.setRating(4.0d);
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        service.applyDecision(10L, 7L, submission.getSnapshotJson(), false);
+        topic.setTotalMileage(new java.math.BigDecimal("100.01"));
+        assertThrows(RuntimeException.class,
+                () -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), false));
     }
 
     @Test
@@ -295,4 +351,44 @@ class TopicBundleReviewServiceTest {
         when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(100L)))
                 .thenReturn(Collections.singletonList(template));
     }
+    @Test
+    void acceptedMerchantSupplyAllowsOnlyItsApprovedTemplateAndDecisionRechecksSupply() {
+        com.chengyinhub.business.mapper.MerchantChapterApplicationMapper applications = mock(com.chengyinhub.business.mapper.MerchantChapterApplicationMapper.class);
+        com.chengyinhub.business.mapper.MerchantChapterOfferMapper offers = mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class);
+        com.chengyinhub.business.mapper.MmsMerchantMapper merchants = mock(com.chengyinhub.business.mapper.MmsMerchantMapper.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "applicationMapper", applications);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "offerMapper", offers);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "merchantMapper", merchants);
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
+        CmsTopicNode node = nodeMapper.selectCmsTopicNodeList(new CmsTopicNode()).get(0);
+        node.setMerchantMemberId(88L); node.setNodeAuditStatus(1);
+        template.setMemberId(88L); template.setDraftStatus(1); template.setStatus(1L); template.setCheckStatus(1);
+        com.chengyinhub.business.domain.MerchantChapterApplication accepted = new com.chengyinhub.business.domain.MerchantChapterApplication();
+        accepted.setChapterId(20L); accepted.setTopicId(10L); accepted.setMerchantId(88L); accepted.setStatus(1); accepted.setDelFlag(0);
+        when(applications.selectByChapterAndMerchantForUpdate(20L, 88L)).thenReturn(accepted);
+        com.chengyinhub.business.domain.MerchantChapterOffer live = new com.chengyinhub.business.domain.MerchantChapterOffer();
+        live.setId(900L); live.setTopicId(10L); live.setChapterId(20L); live.setMerchantId(88L); live.setStatus(1);
+        when(offers.selectByTopicIncludingInactiveForUpdate(10L)).thenReturn(Collections.singletonList(live));
+        com.chengyinhub.business.domain.MmsMerchant merchant = new com.chengyinhub.business.domain.MmsMerchant();
+        merchant.setMemberId(88L); merchant.setStatus(1L); merchant.setAccountStatus(1L); merchant.setDelFlag(0);
+        when(merchants.selectMmsMerchantByMemberIdForUpdate(88L)).thenReturn(merchant);
+        when(topicMapper.selectCmsTopicByIdForUpdate(10L)).thenReturn(topic);
+        when(chapterMapper.selectByTopicForUpdate(10L)).thenReturn(Collections.singletonList(chapter));
+        when(nodeMapper.selectByTopicForUpdate(10L)).thenReturn(Collections.singletonList(node));
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(any())).thenReturn(Collections.singletonList(template));
+        String snapshot = service.freezeForSubmission(10L, 7L).getSnapshotJson();
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> service.applyDecision(10L, 7L, snapshot, true));
+        live.setStatus(0);
+        assertThrows(IllegalStateException.class, () -> service.applyDecision(10L, 7L, snapshot, true));
+        assertThrows(IllegalStateException.class, () -> service.freezeForSubmission(10L, 7L));
+        live.setStatus(1); accepted.setStatus(0);
+        assertThrows(IllegalStateException.class, () -> service.freezeForSubmission(10L, 7L));
+        accepted.setStatus(1); template.setMemberId(89L);
+        assertThrows(IllegalStateException.class, () -> service.freezeForSubmission(10L, 7L));
+        template.setMemberId(88L); template.setDraftStatus(0); template.setStatus(0L); template.setCheckStatus(0);
+        assertThrows(IllegalStateException.class, () -> service.freezeForSubmission(10L, 7L));
+        verify(templateMapper, never()).approveBundledDraft(100L, 88L);
+    }
+
 }

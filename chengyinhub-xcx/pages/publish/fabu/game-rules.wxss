@@ -1,0 +1,17 @@
+/* 玩法规则编辑层补充样式（2026-10-09 协调者设计）：只补现有 rt-* / node-card 没有的几种小件，
+   颜色、字号、间距全部取既有 token，不新造配色。 */
+.rt-lead{margin:-16rpx 0 24rpx}
+.rt-head-title{display:flex;align-items:center;gap:var(--cy-space-2)}
+.rt-tag{padding:4rpx var(--cy-space-2);border-radius:var(--cy-radius-pill);background:var(--cy-comp-sheet-role-card);font-size:var(--cy-type-caption);font-weight:500;color:var(--cy-comp-sheet-role-muted)}
+.rt-count{font-size:var(--cy-type-label);font-weight:400;color:var(--cy-comp-sheet-role-muted)}
+.rt-editor .node-card .node-card__row.rt-list-row,.rt-editor .node-card .node-card__row.rt-check-row,.rt-editor .node-card .node-card__row.rt-radio-row{padding:20rpx 0;border-top:1rpx solid var(--cy-comp-sheet-role-card)}
+.rt-check{flex:none;width:40rpx;height:40rpx;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2rpx solid var(--cy-color-border-strong);border-radius:8rpx; /* ds-ok: 多选框要方角与单选圆点区分，8rpx 同 rt-grid-glyph 一类小圆角 */color:var(--cy-color-text-inverse)}
+.rt-check.is-on{background:var(--cy-color-text-primary);border-color:var(--cy-color-text-primary)}
+.rt-cond{padding-top:var(--cy-space-2);border-top:1rpx solid var(--cy-comp-sheet-role-card)}
+.rt-cond__head{margin-bottom:var(--cy-space-2);font-size:var(--cy-type-label)}
+.pd-rules__error{padding:0 0 var(--cy-space-2) 88rpx}
+/* 编辑层内的说明与摘要允许换行（详情页行内摘要仍单行省略），长提示不被截断。 */
+.rt-editor .node-card__value{white-space:normal;overflow:visible;text-overflow:clip}
+.rt-editor .rt-field textarea{min-width:0}
+/* 摘要可能含三段信息（到达 · 引导 · 备用数）时允许两行，不在中段截掉关键状态；超过两行才省略。 */
+.node-card__value.pd-summary-2l{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}

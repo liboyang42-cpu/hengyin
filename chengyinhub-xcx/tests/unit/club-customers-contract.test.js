@@ -82,7 +82,7 @@ test('★负控:整形层改成透传原始 summary 时，明文手机号必须�
   // 锚点钉结构(白名单对象的起始),不钉注释文案
   const anchor = '  return {\n    summary: {\n      memberId,'
   const mutated = source.replace(anchor, '  return {\n    summary: {\n      ...raw.summary,\n      memberId,')
-  assert.notEqual(mutated, source, '负控锚点失效:白名单 summary 的结构变了,先修锚点')
+  assert.notEqual(mutated, source, '负控锚点失效:白名单 summary 的结构变了，先修锚点')
   const sandbox = { module: { exports: {} }, exports: {} }
   vm.runInNewContext(mutated, sandbox)
   const leaky = detailPayload()

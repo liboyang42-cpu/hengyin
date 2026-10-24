@@ -41,7 +41,7 @@ function loadPage(relativePath = 'pages/merchant/citynode/index.js') {
   }
 }
 
-test('据点核销扫码只对用户主动取消静默,系统扫码失败必须提示', () => {
+test('据点核销扫码只对用户主动取消静默，系统扫码失败必须提示', () => {
   const env = loadPage()
   try {
     env.page.scanRedeem()
@@ -105,16 +105,16 @@ test('投放提交成功只进入审核态并重新读取，不在客户端伪�
     assert.equal(env.requests[0].data.address, '湖滨路 1 号')
     env.requests[0].success({ code: 200, data: 101 })
 
-    assert.equal(env.requests.length, 2, '成功后必须回读服务端申请/资产状态')
+    assert.equal(env.requests.length, 2, '成功后必须刷新服务端申请/资产状态')
     assert.match(env.toasts[0].title, /申请已提交/)
     env.requests[1].success({ code: 200, data: { applications: [{ id: 101, auditStatus: 0 }] } })
-    assert.equal(returned, 1, '只有回读到同一申请 id 才能离开创建页')
+    assert.equal(returned, 1, '只有刷新到同一申请 id 才能离开创建页')
   } finally {
     env.restore()
   }
 })
 
-test('投放回读没出现新申请时留在原页且禁止重复写入', () => {
+test('投放刷新没出现新申请时留在原页且禁止重复写入', () => {
   const env = loadPage('pages/merchant/citynode/create/index.js')
   try {
     let returned = 0
@@ -126,17 +126,17 @@ test('投放回读没出现新申请时留在原页且禁止重复写入', () =>
     env.requests[0].success({ code: 200, data: 101 })
     env.requests[1].success({ code: 200, data: { applications: [] } })
     assert.equal(returned, 0)
-    assert.match(env.page.data.readbackError, /审核状态暂未同步/)
+    assert.match(env.page.data.readbackError, /审核状态更新中/)
     env.page.data.submitting = false
     env.page.submitNode()
     assert.equal(env.requests.length, 3)
-    assert.equal(env.requests[2].url, '/api/merchant/city-node/list', '重试只能回读，不能再次提交 /save')
+    assert.equal(env.requests[2].url, '/api/merchant/city-node/list', '重试只能刷新，不能再次提交 /save')
   } finally {
     env.restore()
   }
 })
 
-test('认领提交成功回读 roam_poi 审核态，不直接把目标塞进我的据点', () => {
+test('认领提交成功刷新 roam_poi 审核态，不直接把目标塞进我的据点', () => {
   const env = loadPage()
   try {
     env.page.data.showClaim = true
@@ -147,7 +147,7 @@ test('认领提交成功回读 roam_poi 审核态，不直接把目标塞进我�
 
     assert.equal(env.page.data.nodes.length, 0)
     assert.equal(env.page.data.showClaim, false)
-    assert.equal(env.requests.length, 2, '认领提交后必须从服务端回读申请状态')
+    assert.equal(env.requests.length, 2, '认领提交后必须从服务端刷新申请状态')
   } finally {
     env.restore()
   }

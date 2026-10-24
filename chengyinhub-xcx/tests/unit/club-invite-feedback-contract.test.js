@@ -30,7 +30,7 @@ function loadDetail() {
         '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
         '../../../utils/datetime': { toTimestamp: () => 0 },
-        '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+        '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
         '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
         '../../../utils/group-code-session.js': { buildGroupCodeIssuePayload: () => ({}), listGroupCodeActivities: () => [] },
         '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
@@ -41,15 +41,22 @@ function loadDetail() {
         // 因为「可对接的活动」那段就是要保证它按真整形渲染,桩会把问题遮住
         '../../../utils/coop-invite-view.js': require('../../utils/coop-invite-view.js'),
         '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+        '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
         // 帖文卡的 variant 判定与广场共用一份,俱乐部页 require 的就是它
         '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
         // CU-C-60/CU-C-107:俱乐部页新增的三个 require(扫码路由表 / 核销写闸 / 正文摘要),
         // 都是纯模块,沙箱里给真实现。
         '../../../utils/verification-scan.js': require('../../utils/verification-scan.js'),
         '../../../utils/write-action-workflow.js': require('../../utils/write-action-workflow.js'),
+        '../../../utils/merchant-verification.js': require('../../utils/merchant-verification.js'),
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,

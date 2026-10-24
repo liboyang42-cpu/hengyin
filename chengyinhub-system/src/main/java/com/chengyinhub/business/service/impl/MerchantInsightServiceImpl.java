@@ -1,7 +1,9 @@
 package com.chengyinhub.business.service.impl;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -51,8 +53,10 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
     private static final Logger log = LoggerFactory.getLogger(MerchantInsightServiceImpl.class);
 
     private static final int WINDOW_DAYS = 30;
+    /** 店铺参谋主卡可切换的时间窗(自然日,含今天) */
+    private static final int[] TREND_WINDOWS = { 7, 30, 90 };
     private static final int LOW_SAMPLE_THRESHOLD = 10;
-    private static final String CACHE_PREFIX = "ai:merchant:insight:v2:";
+    private static final String CACHE_PREFIX = "ai:merchant:insight:v3:";
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
     private static final String LOW_SAMPLE_SUMMARY =
@@ -93,6 +97,12 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         if (cached != null)
         {
             cached.setProfile(profileView);
+            // facts/AI 可按日缓存，『招商中』不能：报名截止可能在当天跨过，开关也可能被关闭。
+            // 用当前候选池重放缓存里的 AI 选择；失效选择沿用既有规则丢弃并回退到当前池。
+            List<com.chengyinhub.business.domain.CmsTopic> topicPool = recruitingTopicPool(merchantMemberId);
+            AiMerchantInsightResp cachedAi = cached.getAi();
+            cached.setRecommendedTopics(fillTopicPicks(
+                    cachedAi == null ? null : cachedAi.getRecommendedTopics(), topicPool));
             return cached;
         }
 
@@ -119,6 +129,8 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         resp.setFacts(facts);
         // 单客行只做页面展示,绝不放进 facts(facts 会整包喂给模型,昵称头像不许进 prompt)
         resp.setRecentVisitors(buildRecentVisitors(events));
+        // 主卡 7/30/90 天走势:与 recentVisitors 一样只做页面展示,不进 facts、不喂 AI
+        resp.setTrends(buildTrends(events, now.toLocalDate()));
 
         boolean lowSample = facts.getBooleanValue("lowSample", true);
         AiMerchantInsightResp ai = null;
@@ -182,6 +194,9 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         view.put("capacity", m.getCapacity());
         view.put("suitActivityTypes", m.getSuitActivityTypes());
         view.put("demand", m.getDemand());
+        // 页头问候区「Hi，店名」+ 店铺头像;只在展示视图,profileFactsOf 不带它们进 AI
+        view.put("storeName", m.getName());
+        view.put("logo", m.getLogo());
         return view;
     }
 
@@ -214,8 +229,14 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         List<com.chengyinhub.business.domain.CmsTopic> topics = cmsTopicService.selectCmsTopicList(query);
         if (topics == null) return new ArrayList<>();
         // 商家不能承接自己的主题；AI 候选和无 AI 推荐使用同一份过滤后的池。
+        // 合作中心以 merchantSignUpEndDate 判『已截止』；活动 start/end 与商业生命周期
+        // recruitDeadline 都不是商家报名截止。推荐卡固定写『招商中』，所以截止项必须在这里剔除。
+        Date recruitNow = new Date();
         topics = new ArrayList<>(topics);
-        topics.removeIf(topic -> topic == null || merchantMemberId.equals(topic.getMemberId()));
+        topics.removeIf(topic -> topic == null
+                || merchantMemberId.equals(topic.getMemberId())
+                || (topic.getMerchantSignUpEndDate() != null
+                    && !topic.getMerchantSignUpEndDate().after(recruitNow)));
         // CU-M-85(2026-09-24 走查):推荐卡要能区分同名主题的场次,主办方名走 app 侧同一份
         // 「来源」投影(内容是产品槽,不在 cms_topic 表上)。池子 ≤8 条,一次批量查询。
         topicContentPublisherProjectionService.project(topics);
@@ -511,6 +532,89 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         return out;
     }
 
+    /**
+     * 主卡走势:每个时间窗(7/30/90 个自然日,含今天)给本期/上期的 到店玩家/打卡/核销 三数,
+     * 外加逐日三数(daily 按日期升序,长度 = 窗口天数)。计数口径与 buildAttribution 相同:
+     * 到店玩家按事件时刻去重 member,打卡按 checkinAt,核销按 redeemedAt;区别只在窗口按自然日切,
+     * 逐日格才能和窗口合计对得上。逐日到店玩家是当天去重,跨天相加不等于窗口去重人数。
+     */
+    private JSONObject buildTrends(List<com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent> events,
+                                   LocalDate today)
+    {
+        JSONArray windows = new JSONArray();
+        DateTimeFormatter dayLabel = DateTimeFormatter.ofPattern("MM-dd");
+        for (int days : TREND_WINDOWS)
+        {
+            LocalDate start = today.minusDays(days - 1L);
+            LocalDate prevStart = start.minusDays(days);
+            List<Set<Long>> dayMembers = new ArrayList<>();
+            int[] dayCheckins = new int[days];
+            int[] dayRedeems = new int[days];
+            for (int i = 0; i < days; i++) dayMembers.add(new HashSet<>());
+            Set<Long> curMembers = new HashSet<>();
+            Set<Long> prevMembers = new HashSet<>();
+            int curCheckins = 0, prevCheckins = 0, curRedeems = 0, prevRedeems = 0;
+            for (com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent e : events)
+            {
+                LocalDate at = localDay(eventAt(e));
+                if (at != null && e.getMemberId() != null && !at.isAfter(today))
+                {
+                    if (!at.isBefore(start))
+                    {
+                        curMembers.add(e.getMemberId());
+                        dayMembers.get(dayIndex(start, at)).add(e.getMemberId());
+                    }
+                    else if (!at.isBefore(prevStart)) prevMembers.add(e.getMemberId());
+                }
+                LocalDate checkin = localDay(e.getCheckinAt());
+                if (checkin != null && !checkin.isAfter(today))
+                {
+                    if (!checkin.isBefore(start)) { curCheckins++; dayCheckins[dayIndex(start, checkin)]++; }
+                    else if (!checkin.isBefore(prevStart)) prevCheckins++;
+                }
+                LocalDate redeemed = localDay(e.getRedeemedAt());
+                if (redeemed != null && !redeemed.isAfter(today))
+                {
+                    if (!redeemed.isBefore(start)) { curRedeems++; dayRedeems[dayIndex(start, redeemed)]++; }
+                    else if (!redeemed.isBefore(prevStart)) prevRedeems++;
+                }
+            }
+            JSONArray daily = new JSONArray();
+            for (int i = 0; i < days; i++)
+            {
+                JSONObject d = new JSONObject();
+                d.put("date", start.plusDays(i).format(dayLabel));
+                d.put("visitors", dayMembers.get(i).size());
+                d.put("checkins", dayCheckins[i]);
+                d.put("redeems", dayRedeems[i]);
+                daily.add(d);
+            }
+            JSONObject w = new JSONObject();
+            w.put("days", days);
+            w.put("visitors", curMembers.size());
+            w.put("checkins", curCheckins);
+            w.put("redeems", curRedeems);
+            w.put("prevVisitors", prevMembers.size());
+            w.put("prevCheckins", prevCheckins);
+            w.put("prevRedeems", prevRedeems);
+            w.put("daily", daily);
+            windows.add(w);
+        }
+        JSONObject out = new JSONObject();
+        out.put("windows", windows);
+        return out;
+    }
+
+    private static LocalDate localDay(Date d)
+    {
+        return d == null ? null : d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    private static int dayIndex(LocalDate start, LocalDate day)
+    {
+        return (int) java.time.temporal.ChronoUnit.DAYS.between(start, day);
+    }
+
     /** 事件时刻 = 打卡时间优先,无打卡取核销时间 */
     private Date eventAt(com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent e)
     {
@@ -556,7 +660,7 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
             }
         }
         checkin.put("total", checkins);
-        checkin.put("redeemRate", entitlements == 0 ? null : round2((double) redeems / entitlements));
+        checkin.put("redeemRate", com.chengyinhub.common.utils.SafeRatio.ratio(redeems, entitlements, 2));
         // 24 列在几十次样本下必然稀稀拉拉,收成 4 段(调研结论:早/午/晚/夜)
         String[] slotNames = { "早", "午", "晚", "夜" };
         int[] slotCounts = new int[4];
@@ -579,7 +683,7 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         {
             if (n >= 2) repeatMembers++;
         }
-        checkin.put("repeatRate", redeemMembers == 0 ? null : round2((double) repeatMembers / redeemMembers));
+        checkin.put("repeatRate", com.chengyinhub.common.utils.SafeRatio.ratio(repeatMembers, redeemMembers, 2));
         checkin.put("avgWaitMinutes", waitCount == 0 ? null : Math.round(waitSumMs / 60000.0 / waitCount));
         return checkin;
     }
@@ -697,7 +801,7 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
             if (f.getQuotaUsed() != null) quotaUsed += f.getQuotaUsed();
         }
         out.put("topics", new ArrayList<>(topics));
-        out.put("quotaUsedRate", quotaTotal == 0 ? null : round2((double) quotaUsed / quotaTotal));
+        out.put("quotaUsedRate", com.chengyinhub.common.utils.SafeRatio.ratio(quotaUsed, quotaTotal, 2));
         return out;
     }
 

@@ -28,8 +28,8 @@ test('永不回调的写请求到 deadline 进入 unknown 并 abort', () => {
   timers[0].fn();
   assert.equal(aborted, 1);
   assert.equal(result.status, 'unknown');
-  assert.equal(workflow.isBusy('verify:x'), true, 'unknown 必须保持锁定，直到权威回读后显式释放');
-  assert.equal(workflow.run('verify:x', () => {}, () => {}), false, 'unknown 不得立即重发写操作');
+  assert.equal(workflow.isBusy('verify:x'), true, 'unknown 必须保持锁定，直到权威刷新后显式释放');
+  assert.equal(workflow.run('verify:x', () => {}, () => {}), false, 'unknown 不得立即重发操作');
   workflow.reset('verify:x');
   assert.equal(workflow.isBusy('verify:x'), false);
 });

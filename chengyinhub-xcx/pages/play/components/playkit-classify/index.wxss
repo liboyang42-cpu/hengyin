@@ -1,94 +1,81 @@
 @import "/pages/play/style/play-surface.wxss";
 
-/* cy-playkit-classify · 分类题(设计规格:Figma 04 Blocks · 分类) */
-.cf { color: var(--ink); }
-.cf__prompt {
-  font-size: var(--cy-type-sheet-title);
-  font-weight: 800;
-  line-height: 1.4;
-}
-.cf__list {
-  width: 100%;
-  border-radius: var(--cy-radius-md);     /* 圆角 12 = 24rpx */
-  background: var(--soft);
-  overflow: hidden;
-}
-.cf__row { padding: 24rpx; box-sizing: border-box; text-align: left; }
-.cf__row + .cf__row { border-top: 1rpx solid var(--cy-color-border-subtle); }  /* 行间 0.5px */
-.cf__head {
+/* cy-playkit-classify · 分类(2026-10-23 主人定稿:城瘾 排序连线分类试玩原型)
+   中间一摞浅色卡(一次一张),下面一排分类箱;点箱子,最上面那张飞进去。 */
+.cf { color: var(--ink); text-align: left; align-items: stretch; }
+.cf__prompt { font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.4; }
+.cf__hint { margin-top: var(--cy-space-2); font-size: var(--cy-type-label); color: var(--sub); }
+.cf__stack { position: relative; height: 460rpx; margin-top: var(--cy-space-3); flex: none; }
+.cf__card {
+  position: absolute;
+  left: 50%; top: 36rpx;
+  width: 400rpx; height: 400rpx;
+  margin-left: -200rpx;
+  box-sizing: border-box;
+  padding: 36rpx;
+  border-radius: 44rpx;                       /* ds-ok 原型 .ccard 22px */
+  background: #E6E3E4;                        /* ds-ok 原型浅色卡面,与抽卡 .paper 同色 */
+  color: #111114;                             /* ds-ok 同上 */
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 40rpx 100rpx rgba(0, 0, 0, .5);   /* ds-ok 照原型 */
+}
+.cf__card.is-back { transform: translateY(-20rpx) scale(.92); opacity: .5; }
+.cf__card.is-back2 { transform: translateY(-40rpx) scale(.84); opacity: .25; }
+.cf__card-n { font-family: var(--cy-font-numeric); font-size: var(--cy-type-body); font-style: italic; font-weight: 800; color: #6f6f78; } /* ds-ok 浅卡上的次要字 */
+.cf__card-t { font-size: var(--cy-type-sheet-title); font-weight: 900; line-height: 1.3; }
+.cf__done { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); color: var(--sub); }
+/* 飞进去的那张:从牌堆中间往对应分类箱的方向缩小飞走 */
+.cf__ghost {
+  position: absolute;
+  left: 50%; top: 180rpx;
+  margin-left: -120rpx;
+  width: 240rpx;
+  padding: 18rpx 24rpx;
+  box-sizing: border-box;
+  border-radius: 24rpx;   /* ds-ok 玩法屏装饰细节圆角,照原型 */
+  background: #E6E3E4;                        /* ds-ok 同卡面 */
+  color: #111114;                             /* ds-ok 同上 */
+  font-size: var(--cy-type-label);
+  font-weight: 800;
+  text-align: center;
+  z-index: 9;
+}
+.cf__ghost.is-go { opacity: 0; transition: transform .45s cubic-bezier(.5, 0, .3, 1), opacity .45s ease; }
+.cf__bins { display: grid; gap: 20rpx; margin-top: var(--cy-space-2); }
+.cf__bin {
+  min-height: 216rpx;
+  padding: 28rpx 28rpx 24rpx;
+  box-sizing: border-box;
+  border-radius: 36rpx;                       /* ds-ok 原型 .bin 18px */
+  background: var(--soft);
+  display: flex;
+  flex-direction: column;
   gap: 16rpx;
 }
-.cf__label {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--cy-type-body);
-  font-weight: 600;
-  line-height: 1.4;
-}
-/* 行尾的对错小圆:只吃判定结果,不参与布局(判定前整个不渲染) */
-.cf__tail {
-  flex: none;
-  width: 44rpx;
-  height: 44rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: var(--cy-type-micro);
-  font-weight: 800;
-}
-/* 只有整体通过才逐条变绿(那意味着每张都放对了);判错不逐张标红 */
-.cf__row.is-right .cf__tail { background: var(--ok); color: var(--cy-color-text-inverse); }
-/* 分段控件:灰色半透明槽 + 选中的深灰块(带轻投影,像被按下去的一块) */
-.cf__seg {
-  display: flex;
-  gap: 8rpx;
-  margin-top: 18rpx;
-  padding: 6rpx;
-  border-radius: var(--cy-radius-sm);
-  background: var(--cy-bg-subtle);
-}
-.cf__seg-b {
-  flex: 1;
-  min-width: 0;
-  padding: 14rpx 10rpx;
-  border-radius: var(--cy-radius-sm);
-  text-align: center;
-  font-size: var(--cy-type-label);
-  font-weight: 600;
-  color: var(--sub);
-  transition: background .16s ease, color .16s ease;
-}
-.cf__seg-b.is-on {
-  background: var(--cy-color-bg-raised);
+.cf__bin-h { display: flex; align-items: baseline; gap: 16rpx; }
+.cf__bin-t { flex: 1; min-width: 0; font-size: var(--cy-type-body); font-weight: 800; }
+.cf__bin-n { font-family: var(--cy-font-numeric); font-size: var(--cy-type-section-title); font-style: italic; font-weight: 800; color: var(--sub); }
+.cf__chips { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.cf__chip {
+  padding: 8rpx 18rpx;
+  border-radius: var(--cy-radius-pill);
+  background: rgba(255, 255, 255, .14);       /* ds-ok 暗台面上抬一级;--cy-color-bg-raised 在这里解析成浅色 */
   color: var(--ink);
-  font-weight: 800;
-  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, .28);   /* ds-ok 选中块轻投影,照设计稿 */
+  font-size: var(--cy-type-caption);
 }
-.cf__seg-b.is-good {
-  background: var(--ok);
-  color: var(--cy-color-text-inverse);
-  font-weight: 800;
-}
+.cf__chip.is-right { background: rgba(18, 160, 111, .3); }   /* ds-ok 成功色软底,与 --ok 同源 */
 .cf__press { opacity: .88; }
 .g-btn--press { opacity: .88; }
-.cf--reduced .cf__seg-b { transition: none; }
-.cf__foot {
-  flex: none;
-  font-size: var(--cy-type-caption);
-  color: var(--sub);
-}
+.cf__foot { margin-top: var(--cy-space-3); font-size: var(--cy-type-caption); color: var(--sub); text-align: center; }
 .cf__fb {
-  flex: none;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 26rpx 30rpx;
+  margin-top: var(--cy-space-3);
+  padding: var(--cy-space-3) var(--cy-space-4);
   border-radius: var(--cy-radius-md);
   font-size: var(--cy-type-body);
-  line-height: 1.6;
-  text-align: left;
+  font-weight: 700;
 }
-.cf__fb.is-ok { background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); }
-.cf__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--cy-color-status-danger); }
+.cf__fb.is-ok { background: rgba(18, 160, 111, .16); color: var(--ok); }   /* ds-ok 同上 */
+.cf__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--accent); }
+.cf--reduced .cf__ghost { display: none; }

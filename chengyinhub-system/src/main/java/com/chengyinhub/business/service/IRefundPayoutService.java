@@ -15,7 +15,7 @@ public interface IRefundPayoutService {
      * ⚠️ 不带 @Transactional,事务边界跟随调用方 —— 本方法含微信 HTTP 调用,
      * 不应主动开启事务(长事务持连接;且退款已发出时事务回滚只会让账与钱劈叉)。
      *
-     * 幂等:out_refund_no = "RF"+registrationId 确定性,微信侧按其去重;
+     * 幂等:out_refund_no 使用服务端退款单持久化编号，首次为 RF+registrationId，后续申请按前序退款 ID 区分,微信侧按其去重;
      * markPayoutResult 的 updatePayoutResult 只允许从待派发/处理中/待人工(5/0/2)置位,
      * 不覆盖人工已处理(3/4)的成果。
      *

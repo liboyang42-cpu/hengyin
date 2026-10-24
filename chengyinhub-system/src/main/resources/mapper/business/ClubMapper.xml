@@ -96,7 +96,7 @@
 
     <select id="selectClubsByMemberId" parameterType="Long" resultMap="ClubResult">
         <include refid="selectClubVo"/>
-        where member_id = #{memberId} and del_flag = 0 order by create_time desc
+        where member_id = #{memberId} and del_flag = 0 order by create_time desc, id desc
     </select>
 
     <select id="selectOwnedClubIdsForUpdate" parameterType="Long" resultType="java.lang.Long">
@@ -118,6 +118,14 @@
         <foreach collection="clubIds" item="clubId" open="(" separator="," close=")">
             #{clubId}
         </foreach>
+    </select>
+
+    <!-- 俱乐部名称全站唯一(用户 2026-10-20 决定):待审(0)或在营(1)、未删除的俱乐部占用名称;被驳回(2)与已解散/删除(del_flag=2)的不占 -->
+    <select id="countClubsHoldingName" resultType="int">
+        select count(*) from club
+        where del_flag = 0 and status in (0, 1) and trim(name) = #{name}
+        <if test="memberId != null"> and member_id != #{memberId}</if>
+        <if test="excludeClubId != null"> and id != #{excludeClubId}</if>
     </select>
 
     <insert id="insertClub" parameterType="Club" useGeneratedKeys="true" keyProperty="id">
@@ -236,6 +244,7 @@
             <if test="phone != null">phone = #{phone},</if>
             <if test="status != null">status = #{status},</if>
             <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+            <if test="rejectReason == null and status != null and status != 2">reject_reason = null,</if>
             <if test="memberCount != null">member_count = #{memberCount},</if>
             <if test="operationConfigUpdated != null and operationConfigUpdated">
                 priority_signup_enabled = #{prioritySignupEnabled},
@@ -258,6 +267,17 @@
 
     <update id="updateMemberPostAllowed">
         update club set member_post_allowed = #{enabled}, update_time = now()
+        where id = #{clubId} and del_flag = 0
+    </update>
+
+    <!-- 入会欢迎语(2026-10-22 业主):单独读写,不并进 selectClubVo。
+         迁移 migration_club_welcome_note_20261022.sql 落库前,读失败由 service 兜成「没写」,不影响详情。 -->
+    <select id="selectWelcomeNote" resultType="java.lang.String">
+        select welcome_note from club where id = #{clubId} and del_flag = 0
+    </select>
+
+    <update id="updateWelcomeNote">
+        update club set welcome_note = #{note}, update_time = now()
         where id = #{clubId} and del_flag = 0
     </update>
 

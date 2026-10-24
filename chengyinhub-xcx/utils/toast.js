@@ -44,6 +44,30 @@ function toast(title, options) { return show(title, options); }
 toast.success = function (title, options) { return show(title, Object.assign({}, options, { kind: 'success' })); };
 toast.error = function (title, options) { return show(title, Object.assign({}, options, { kind: 'error' })); };
 toast.show = show;
+// 可撤销提示条(snackbar,2026-10-23 业主定):先在界面上做完,提示条留「撤销」,到期才真正提交。
+//   toast.undo('已将「小林」移出俱乐部', { onUndo() { 恢复界面 }, onCommit() { 发请求 } })
+// 只给真的能撤回的动作用:提交前撤销 = 什么都没发生。没挂宿主(历史页/单测沙箱)时没地方放按钮,
+// 直接提交并给一条普通提示 —— 不能让动作卡在半路。
+toast.undo = function (title, options) {
+  const opts = options || {};
+  const text = String(title == null ? '' : title).trim();
+  const commit = typeof opts.onCommit === 'function' ? opts.onCommit : function () {};
+  const host = hostToast();
+  if (!text || !host) {
+    commit();
+    if (text) show(text, { kind: 'success' });
+    return false;
+  }
+  host.show({
+    title: text,
+    kind: 'info',
+    duration: opts.duration,
+    actionText: opts.actionText || '撤销',
+    onAction: opts.onUndo,
+    onCommit: commit,
+  });
+  return true;
+};
 // 主动收起(上传/长任务完成时用)。宿主没有就收原生的 —— 与 show 的回落对称
 toast.hide = function () {
   const host = hostToast();

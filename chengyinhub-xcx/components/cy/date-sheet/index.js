@@ -16,7 +16,7 @@ const exitMotion = require('../../../behaviors/exit-motion.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 
 Component({
-  behaviors: [reducedMotionBehavior, exitMotion(220)],
+  behaviors: [reducedMotionBehavior, exitMotion(250)],
   properties: {
     show: { type: Boolean, value: false },
     title: { type: String, value: '选择时间' },

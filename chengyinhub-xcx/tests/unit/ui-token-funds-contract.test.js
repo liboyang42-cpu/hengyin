@@ -541,7 +541,7 @@ function assertActionTokenContract(dateSheet, dateSheetWxml, fabu, tokens) {
      现在语义色的文字动作只剩 ✕ 一处 ⇒ 它必须是中性次级,不是危险色也不是主动作。 */
   const close = rule(dateSheet, '.ds-pop--dark .ds-close')
   const closeToken = colorToken(close, '日期面板关闭动作')
-  assert.match(closeToken, /^--cy-color-action-secondary-/, '✕ 是中性退出,不许借用主动作色')
+  assert.match(closeToken, /^--cy-color-action-secondary-/, '✕ 是中性退出，不许借用主动作色')
   assert.doesNotMatch(closeToken, /danger/, '关闭一次日期选择不是破坏性动作')
 
   // 「完成」不再是标题行右端的一颗文字,而是 cy-sheet footer 同档的整宽主按钮。
@@ -617,7 +617,7 @@ function assertProfitPresentation(wxml, wxss, js) {
   assert.match(rule(wxss, '.withdraw-reason'), /color:\s*var\(--cy-text-secondary\)/)
   assert.match(js, /canWithdraw:\s*false/)
   assert.match(js, /withdrawState:\s*'unknown'/)
-  assert.match(js, /goWithdraw\(\)\s*\{\s*if \(!this\.data\.canWithdraw\) return;/s)
+  assert.match(js, /goWithdraw\(\)\s*\{\s*if \(!this\._hasCurrentData\(\)\) return;\s*if \(!this\.data\.canWithdraw\) return;/s)
 
   // CU-M-122:这条原本硬性要求空态必须带 sub,而那句 sub 只是把标题换个说法再念一遍
   // (「还没有合作结算 / 完成合作结算后，收入明细会显示在此」),已按要求删掉。
@@ -969,7 +969,7 @@ test('地图视图下压在瓦片上的 chrome 必须自带承托,不能裸压�
   const bar = rule(wxss, '.slopes-tabbar')
   assert.match(bar, /background:\s*linear-gradient\([^;]*var\(--cy-[\w-]+\)/,
     '底部导航条没有承托底 —— 压在浅色地图瓦片上会糊成一片')
-  assert.match(bar, /position:\s*fixed/, '导航条必须固定在屏幕上,跟着列表滚就切不动了')
+  assert.match(bar, /position:\s*fixed/, '导航条必须固定在屏幕上，跟着列表滚就切不动了')
 
   // 返回钮压在瓦片上同样要有承托。原先靠 --on-map 把前景翻成 on-cover 白;
   // 按稿(4028:13649)改成白色圆钮后,承托由「自己的底」提供,比翻色更稳
@@ -979,7 +979,7 @@ test('地图视图下压在瓦片上的 chrome 必须自带承托,不能裸压�
   assert.match(back, /background:\s*var\(--cy-[\w-]+\)/,
     '压在地图上的返回钮必须自带承托底')
   assert.match(back, /border-radius:\s*var\(--cy-radius-pill\)/,
-    '承托底必须是圆钮形,方块会和地图上的建筑色块混在一起')
+    '承托底必须是圆钮形，方块会和地图上的建筑色块混在一起')
 
   // 地图与列表互斥,且都由同一个 viewMode 驱动(不是各写各的条件)
   assert.match(wxml, /class="slopes-map-wrap" wx:if="\{\{editorPage === 1 && viewMode === 'map'\}\}"/)

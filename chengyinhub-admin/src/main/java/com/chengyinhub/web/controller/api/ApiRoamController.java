@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.badge.RuleEvaluator;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
 import com.chengyinhub.business.domain.GrowthBadge;
@@ -66,6 +67,13 @@ public class ApiRoamController extends BaseController {
 
     @Autowired
     private RoamMapper roamMapper;
+    @Autowired private com.chengyinhub.business.service.impl.RoamLocationConsentService locationConsent;
+    @Autowired
+    private com.chengyinhub.business.service.IConsentRecordService consentRecordService;
+    @Autowired
+    private com.chengyinhub.business.service.impl.RoamPresenceRevokeAuditService presenceRevokeAuditService;
+    @Autowired
+    private com.chengyinhub.business.service.impl.AlarmService alarmService;
     @Autowired
     private com.chengyinhub.business.service.support.RoamRecoveryService roamRecoveryService;
     @Autowired
@@ -76,6 +84,9 @@ public class ApiRoamController extends BaseController {
     private PlayerBadgeMapper playerBadgeMapper;
     @Autowired
     private MemberVisitedPoiMapper memberVisitedPoiMapper;
+    /** O-02 点到店稳定身份;开关默认关,未注入时同样走旧 geo_key 路径 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.VisitedPoiIdentityResolver visitedPoiIdentity;
     @Autowired
     private GrowthBadgeMapper growthBadgeMapper;
     @Autowired
@@ -89,6 +100,10 @@ public class ApiRoamController extends BaseController {
     @Autowired
     private IRewardDropService rewardDropService;
     @Autowired
+    private com.chengyinhub.business.service.impl.RoamRewardDeliveryService roamRewardDeliveryService;
+    @Autowired
+    private com.chengyinhub.business.service.impl.RoamBadgeDeliveryService roamBadgeDeliveryService;
+    @Autowired
     private ISmsCouponHistoryService smsCouponHistoryService;
     @Autowired
     private IRoamExploreDayCandidateService roamExploreDayCandidateService;
@@ -100,6 +115,9 @@ public class ApiRoamController extends BaseController {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
 
+    /** /pois 单次最多返回的点数(由近到远截断);地图一屏画不下更多,也不做整城导出口。 */
+    static final int POIS_NEAR_LIMIT = 500;
+
     @Operation(summary = "附近 POI(经纬度包围盒粗筛)")
     @GetMapping("/pois")
     public AjaxResult pois(Double lat, Double lng, Integer radius) {
@@ -109,7 +127,7 @@ public class ApiRoamController extends BaseController {
         double dLat = r / 111320.0;
         double dLng = r / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(lat))));
         // C-13:found 是「这个账号已发现过」的服务端事实(按会员投影),换设备/清缓存不再回到迷雾。
-        List<RoamPoi> list = roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid());
+        List<RoamPoi> list = roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT);
         return success(list);
     }
 
@@ -163,7 +181,7 @@ public class ApiRoamController extends BaseController {
         RoamPoi poi = pois.get(0);
         if (poi.getLat() == null || poi.getLng() == null) return error("地点未设坐标");
         // R6:服务端 haversine 校验到点。伪造 poiId 但人不在附近 → 拒,不记录 → finish 不发该 POI XP
-        double dist = haversineM(lat, lng, poi.getLat().doubleValue(), poi.getLng().doubleValue());
+        double dist = GeoDistanceUtils.haversineMeters(lat, lng, poi.getLat().doubleValue(), poi.getLng().doubleValue());
         int radius = (poi.getRadiusM() != null && poi.getRadiusM() > 0) ? poi.getRadiusM() : POI_DISCOVER_RADIUS_M;
         if (dist > radius + ROAM_GPS_TOLERANCE_M) return error("还没到该地点附近");
         // R6 反作弊:与上一次到点做瞬移速度校验,挡"读 /pois 拿坐标秒发全城 POI"的伪造定位刷取
@@ -171,7 +189,7 @@ public class ApiRoamController extends BaseController {
         if (last != null && last.get("foundAt") instanceof java.util.Date
                 && last.get("lat") instanceof Number && last.get("lng") instanceof Number) {
             long dtSec = Math.max(1L, (System.currentTimeMillis() - ((java.util.Date) last.get("foundAt")).getTime()) / 1000L);
-            double prevDist = haversineM(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
+            double prevDist = GeoDistanceUtils.haversineMeters(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
                     poi.getLat().doubleValue(), poi.getLng().doubleValue());
             if (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {
                 return error("移动过快,疑似伪造定位");
@@ -189,11 +207,12 @@ public class ApiRoamController extends BaseController {
         int poiXp = poi.getXp() != null ? poi.getXp() : 20;
         data.put("xp", poiXp);
         // L1:商户据点首次发现复用 M6 掉落引擎，但用独立 sceneKey 分流规则与流水幂等。
-        if (inserted > 0 && Integer.valueOf(2).equals(poi.getType())) {
+        if (Integer.valueOf(2).equals(poi.getType())) {
             try {
-                Map<String, Object> drop = rewardDropService.rollDrop(memberId, 0L, poiId, sid,
-                        IRewardDropService.SCENE_ROAM_MERCHANT_POI, poiXp);
-                if (drop != null) {
+                Map<String, Object> drop = inserted > 0
+                        ? roamRewardDeliveryService.rollOriginalDrop(memberId, poiId, sid, poiXp)
+                        : rewardDropService.findOriginalDrop(memberId, 0L, poiId, sid, IRewardDropService.SCENE_ROAM_MERCHANT_POI);
+                if (drop != null && (inserted > 0 || Integer.valueOf(3).equals(drop.get("dropType")))) {
                     applyRoamDrop(memberId, drop);
                     data.put("drop", drop);
                 }
@@ -221,21 +240,27 @@ public class ApiRoamController extends BaseController {
         Object rawType = drop.get("dropType");
         int type = rawType instanceof Number ? ((Number) rawType).intValue() : 0;
         if (type == 1 && drop.get("extraXp") instanceof Number) {
-            int extraXp = ((Number) drop.get("extraXp")).intValue();
-            if (extraXp > 0) growthService.addExp(memberId, extraXp, "掉落·漫游探索值翻倍");
+            Object rawSource = drop.get("dropLogId");
+            if (!(rawSource instanceof Number) || ((Number) rawSource).longValue() <= 0)
+                throw new ServiceException("原掉落交付身份缺失");
+            if (!roamRewardDeliveryService.deliverOriginal(memberId, ((Number) rawSource).longValue()))
+                logger.warn("原漫游探索值交付待补 member={} dropLogId={}", memberId, rawSource);
         } else if (type == 3 && drop.get("couponTemplateId") instanceof Number) {
             long couponId = ((Number) drop.get("couponTemplateId")).longValue();
-            // C-30:券已失效(3)/已停发(4) 不可发放 → 跳过发券,掉落照常记录;仅券不存在/库存耗尽才算失败
-            if (couponId > 0 && smsCouponHistoryService.isCouponNotIssuable(couponId)) {
-                logger.warn("COUPON_DISABLED_SKIP caller=roamDrop member={} coupon={}", memberId, couponId);
-            } else if (couponId > 0 && !smsCouponHistoryService.grantCouponById(memberId, couponId)) {
-                logger.error("漫游据点掉落发券失败(券不存在或库存耗尽) member={} coupon={},需人工补发/核查", memberId, couponId);
-            }
+            Object rawSource = drop.get("dropLogId");
+            if (!(rawSource instanceof Number) || ((Number) rawSource).longValue() <= 0)
+                throw new ServiceException("原掉落交付身份缺失");
+            if (couponId > 0 && !roamRewardDeliveryService.deliverOriginal(memberId, ((Number) rawSource).longValue()))
+                logger.warn("原漫游掉落券交付待补 member={} dropLogId={}", memberId, rawSource);
         }
     }
 
     /** 探店入账的到点校验半径(米);比 POI_DISCOVER_RADIUS_M 略紧,探店是"进店"不是"路过" */
     private static final int SHOP_VISIT_RADIUS_M = 100;
+    /** owner 2026-10-23 D7(U-112):探店隐含速度超过它只留痕(warn 日志),照常入账,不拒绝。 */
+    static final double SHOP_VISIT_TELEPORT_WARN_MPS = 50.0;
+    private static final org.slf4j.Logger TELEPORT_AUDIT_LOG =
+            org.slf4j.LoggerFactory.getLogger(ApiRoamController.class.getName() + ".teleportAudit");
 
     @Operation(summary = "探店入账(任意真商家:roam 据点 / 报名商家),服务端校验到点")
     @PostMapping("/shop/visit")
@@ -246,6 +271,7 @@ public class ApiRoamController extends BaseController {
         if (sourceType == null || sourceId == null || sourceId <= 0) return error("参数有误");
         if (lat == null || lng == null) return error("缺少定位");
         if (!validLat(lat) || !validLng(lng)) return error("定位无效");
+        locationConsent.requireCurrentAgreement(memberId);
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
         if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
@@ -286,15 +312,59 @@ public class ApiRoamController extends BaseController {
         // 落库一个空名会把所有无名店在 count(distinct) 里塌成一家。
         if (name == null || name.trim().isEmpty()) return error("该商家未设名称,无法计入");
 
-        if (haversineM(lat, lng, shopLat, shopLng) > SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M) {
+        if (GeoDistanceUtils.haversineMeters(lat, lng, shopLat, shopLng) > SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M) {
             return error("还没到该店附近");
         }
 
+        auditShopVisitSpeed(memberId, sid, sourceType, sourceId, shopLat, shopLng);
+        roamMapper.recordAnonymousShopVisitor(memberId,sourceType,sourceId);
         int inserted = roamMapper.insertShopVisitIgnore(memberId, sid, sourceType, sourceId, name.trim(), new Date());
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("recorded", inserted > 0);
         data.put("shops", roamMapper.countDistinctShopsBySession(sid));
         return AjaxResult.success(inserted > 0 ? "已记入本次漫游" : "本次已记过", data);
+    }
+
+    /**
+     * D7:只记不拦。以该 member 上一个已入账点(最近一次 POI 发现 / 探店,取较新者;坐标均为服务端来源坐标)
+     * 到本店的直线距离 ÷ 时间差算隐含速度,超过 {@link #SHOP_VISIT_TELEPORT_WARN_MPS} 写一条结构化 warn。
+     * 任何读取/解析异常都只跳过留痕,绝不影响入账。
+     */
+    private void auditShopVisitSpeed(Long memberId, Long sid, Integer sourceType, Long sourceId,
+                                     double shopLat, double shopLng) {
+        try {
+            Object[] prev = latestAcceptedPoint(roamMapper.selectLastPoiFoundLoc(memberId), "foundAt", "POI_DISCOVER", null);
+            prev = latestAcceptedPoint(roamMapper.selectLastShopVisitLoc(memberId), "visitedAt", "SHOP_VISIT", prev);
+            if (prev == null) return;
+            long elapsedSec = Math.max(1L, (System.currentTimeMillis() - (Long) prev[0]) / 1000L);
+            double distanceM = GeoDistanceUtils.haversineMeters((Double) prev[1], (Double) prev[2], shopLat, shopLng);
+            double speedMps = distanceM / elapsedSec;
+            if (speedMps > SHOP_VISIT_TELEPORT_WARN_MPS) {
+                TELEPORT_AUDIT_LOG.warn("event=ROAM_SHOP_VISIT_TELEPORT_SUSPECT action=ACCEPTED member={} session={}"
+                                + " sourceType={} sourceId={} prevKind={} distanceM={} elapsedSec={} speedMps={} thresholdMps={}",
+                        memberId, sid, sourceType, sourceId, prev[3], Math.round(distanceM), elapsedSec,
+                        String.format(java.util.Locale.ROOT, "%.1f", speedMps), SHOP_VISIT_TELEPORT_WARN_MPS);
+            }
+        } catch (RuntimeException e) {
+            TELEPORT_AUDIT_LOG.warn("event=ROAM_SHOP_VISIT_TELEPORT_AUDIT_SKIPPED member={} reason={}",
+                    memberId, e.getClass().getSimpleName());
+        }
+    }
+
+    /** 从候选行取 {时间毫秒, lat, lng, 来源};行无效则返回 current;两者都有效时取时间较新的那个。 */
+    private static Object[] latestAcceptedPoint(Map<String, Object> row, String timeKey, String kind, Object[] current) {
+        if (row == null) return current;
+        Object rawTime = row.get(timeKey);
+        Long at = rawTime instanceof java.util.Date ? Long.valueOf(((java.util.Date) rawTime).getTime())
+                : rawTime instanceof java.time.LocalDateTime   // 新版 MySQL 驱动按 Map 取 DATETIME 回 LocalDateTime
+                ? Long.valueOf(((java.time.LocalDateTime) rawTime).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
+                : null;
+        if (at == null) return current;
+        Double lat = row.get("lat") == null ? null : parseCoord(String.valueOf(row.get("lat")), -90d, 90d);
+        Double lng = row.get("lng") == null ? null : parseCoord(String.valueOf(row.get("lng")), -180d, 180d);
+        if (lat == null || lng == null) return current;
+        if (current != null && at <= (Long) current[0]) return current;
+        return new Object[] {at, lat, lng, kind};
     }
 
     /** 商家卡头像堆:一次最多问多少个来源,和横滑卡一次渲染的张数同量级。 */
@@ -304,6 +374,7 @@ public class ApiRoamController extends BaseController {
 
     @Operation(summary = "谁在这儿打过卡(商家卡头像堆 + 人数)")
     @PostMapping("/shop/visitors")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public AjaxResult shopVisitors(Integer sourceType, String sourceIds) {
         if (sourceType == null || (sourceType != 1 && sourceType != 2)) return error("来源有误");
         List<Long> ids = new ArrayList<>();
@@ -371,7 +442,7 @@ public class ApiRoamController extends BaseController {
      * source_id 恒 0 = 终身一次:用阈值做 source_id 会导致调阈值(3→4)后老用户重复拿章。
      * @return 新发放的章(供前端结算屏显示)或 null
      */
-    private Map<String, Object> awardShopStreak(Long memberId, int sessionShops) {
+    private Map<String, Object> awardShopStreak(Long memberId, Long sessionId, int sessionShops) {
         GrowthBadge def = growthBadgeMapper.selectByCode(SHOP_STREAK_CODE);
         if (def == null) {
             logger.warn("三店连亮 def 未落库(badge_code={}),本次不发章 —— 检查 migration_roam_shop_visit_*.sql 是否已跑", SHOP_STREAK_CODE);
@@ -392,12 +463,7 @@ public class ApiRoamController extends BaseController {
         b.setObtainTime(new Date());
         b.setDelFlag(0);
         b.setCreateTime(new Date());
-        try {
-            playerBadgeMapper.insertPlayerBadge(b);
-        } catch (Exception e) {
-            logger.error("三店连亮发放失败 member={},需人工补发", memberId, e);
-            return null;
-        }
+        roamBadgeDeliveryService.prepare(sessionId, b);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("code", def.getBadgeCode());
         m.put("name", def.getBadgeName());
@@ -420,17 +486,6 @@ public class ApiRoamController extends BaseController {
         return success(data);
     }
 
-    /** 两经纬度间距离(米,haversine);POI 到点服务端校验用 */
-    private static double haversineM(double lat1, double lng1, double lat2, double lng2) {
-        double radiusEarth = 6371000d;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return 2 * radiusEarth * Math.asin(Math.sqrt(a));
-    }
-
     @Operation(summary = "历史点亮迷雾格(恢复版图)")
     @GetMapping("/tiles")
     public AjaxResult tiles(Integer limit) {
@@ -451,14 +506,18 @@ public class ApiRoamController extends BaseController {
         boolean hasMore = rows.size() > pageSize;
         int size = Math.min(rows.size(), pageSize);
         List<String> tileList = new ArrayList<>(size);
+        Map<String, Object> tileRetentionAt = new LinkedHashMap<>();
         long nextAfterId = cursor;
         for (int i = 0; i < size; i++) {
             Map<String, Object> row = rows.get(i);
-            tileList.add(String.valueOf(row.get("geohash7")));
+            String tile = String.valueOf(row.get("geohash7"));
+            tileList.add(tile);
+            tileRetentionAt.put(tile, row.get("locationExpiresFrom"));
             nextAfterId = Convert.toLong(row.get("id"), nextAfterId);
         }
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("tiles", tileList);
+        data.put("tileRetentionAt", tileRetentionAt);
         data.put("nextAfterId", nextAfterId);
         data.put("hasMore", hasMore);
         return success(data);
@@ -476,6 +535,22 @@ public class ApiRoamController extends BaseController {
         return success(roamRecoveryService.read(memberId, sessionId, clientSessionKey));
     }
 
+    @PostMapping("/session/records")
+    public AjaxResult archiveRecords(String sessionId, String clientSessionKey, String records) {
+        Long memberId = uid();
+        if (memberId <= 0) return error("请先登录");
+        Long sid = Convert.toLong(sessionId);
+        if (sid == null || sid <= 0 || sessionId == null || !sessionId.matches("[1-9][0-9]{0,18}"))
+            return error("会话编号无效");
+        if (clientSessionKey != null && !clientSessionKey.matches("[a-f0-9]{32}")) return error("会话关联标识无效");
+        int accepted = roamSessionWriteService.archiveFinishedRecords(memberId, sid, clientSessionKey, records);
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("sessionId", String.valueOf(sid));
+        data.put("acceptedRecords", accepted);
+        data.put("evidenceType", "CLIENT_REPORTED");
+        return success(data);
+    }
+
     @Operation(summary = "点亮迷雾格(批量,幂等)")
     @PostMapping("/reveal")
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
@@ -489,6 +564,7 @@ public class ApiRoamController extends BaseController {
         if (clientSessionKey != null && sessionId != null
                 && (!sessionId.matches("0|[1-9][0-9]{0,18}") || Convert.toLong(sessionId) == null))
             return error("会话编号无效");
+        locationConsent.requireCurrentAgreement(memberId);
         if (sid <= 0 && clientSessionKey != null) {
             roamMapper.insertKeyedSession(memberId, clientSessionKey);
             sid = roamMapper.selectOwnedSessionByKeyForUpdate(memberId, clientSessionKey).getId();
@@ -506,7 +582,18 @@ public class ApiRoamController extends BaseController {
         if (clientSessionKey != null && !clientSessionKey.equals(session.getClientSessionKey()))
             return error("会话关联不一致");
         if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
-        int newly = roamMapper.batchInsertTile(memberId, sid, tileList, new Date());
+        // P0-23:格子是客户端上报的,服务端至少按会话时长封顶 —— 不能一次请求就把全城点亮刷里程碑勋章。
+        //   超出预算的部分直接丢弃(不报错):报错会让客户端待传队列卡死、连带结算排不空。
+        Date now = new Date();
+        int remaining = revealTileBudget(session.getStartedAt(), now.getTime()) - roamMapper.countTilesBySession(sid);
+        if (remaining <= 0) {
+            logger.warn("漫游点亮超出会话时长预算,本批丢弃 member={} session={} tiles={}", memberId, sid, tileList.size());
+            tileList = java.util.Collections.emptyList();
+        } else if (tileList.size() > remaining) {
+            logger.warn("漫游点亮超出会话时长预算,截断 member={} session={} tiles={} kept={}", memberId, sid, tileList.size(), remaining);
+            tileList = tileList.subList(0, remaining);
+        }
+        int newly = tileList.isEmpty() ? 0 : roamMapper.batchInsertTile(memberId, sid, tileList, now);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("sessionId", clientSessionKey == null ? sid : String.valueOf(sid));
         data.put("newlyRevealed", Math.max(0, newly));
@@ -535,9 +622,12 @@ public class ApiRoamController extends BaseController {
     private static final int RUNNER_SHOPS_MAX = 3;
     /** 附近的查询半径上限(米)。超过就按上限截 —— 不接受客户端要一个全城范围。 */
     private static final int RUNNERS_RADIUS_MAX = 3000;
+    /** 瞬移校验回看多久内的本人心跳(分钟)。超过这个间隔的旧坐标不再约束新位置。 */
+    private static final int PRESENCE_TELEPORT_WINDOW_MIN = 120;
 
     @Operation(summary = "上报我此刻的位置(漫游心跳,让附近的人看得见我)")
     @PostMapping("/presence")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult presence(String sessionId, Double lat, Double lng, Integer explorePct) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
@@ -549,17 +639,106 @@ public class ApiRoamController extends BaseController {
         // NaN/Infinity 必须在这里拒:旧的区间比较对 NaN 全 false,会漏到 BigDecimal.valueOf(NaN) 抛 500。
         if (!validLat(lat) || !validLng(lng)) return error("位置越界");
 
+        locationConsent.requireCurrentAgreement(memberId);
+        // 附近的人只以服务端记录的本人位置为查询中心;再拒掉会话内瞬移式的坐标,
+        // 换着坐标上报去扫别人位置就不成立(合法的乘车移动按真实时间间隔放行)。
+        // PR10 复审:基线只取本场会话已被接受的上一跳。跨会话比对会让「漫游结束→坐高铁→到站重新开始」
+        // 在 120 分钟窗口内被当成瞬移,且被拒的上报从不刷新基线 ⇒ 整段被拦 ~1.5 小时。
+        Date reportAt = new Date();
+        RoamSession lastFix = roamMapper.selectLatestPresenceFix(memberId, sid,
+                new Date(reportAt.getTime() - PRESENCE_TELEPORT_WINDOW_MIN * 60L * 1000L));
+        if (lastFix != null && lastFix.getLastReportAt() != null
+                && lastFix.getLastLat() != null && lastFix.getLastLng() != null) {
+            long dtSec = Math.max(1L, (reportAt.getTime() - lastFix.getLastReportAt().getTime()) / 1000L);
+            double moved = GeoDistanceUtils.haversineMeters(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
+            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return error("移动过快,疑似伪造定位");
+        }
         BigDecimal blat = BigDecimal.valueOf(lat).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
         BigDecimal blng = BigDecimal.valueOf(lng).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
         // 探索度是本机 20×20 格的口径,后端没有等价物 ⇒ 只存不算,但要 clamp:
         // 它会显示给陌生人,不能让客户端写个 9999 进去。
         int pct = explorePct == null ? 0 : Math.max(0, Math.min(99, explorePct));
 
-        int hit = roamMapper.updatePresence(sid, memberId, blat, blng, new Date(), pct);
+        int hit = roamMapper.updatePresence(sid, memberId, blat, blng, reportAt, pct);
         // 命中 0 = 这场会话不是你的,或已经结算了。不细分原因回话:
         // 分得越细,越能拿它探别人的会话 id。
         if (hit <= 0) return error("会话不存在");
         return success();
+    }
+
+    @GetMapping("/presence-visibility")
+    public AjaxResult presenceVisibility(String sessionId) {
+        Long memberId = uid();
+        if (memberId <= 0) return error("请先登录");
+        RoamSession own = roamMapper.selectSessionById(Convert.toLong(sessionId, 0L));
+        if (own == null || !memberId.equals(own.getMemberId()) || !Integer.valueOf(0).equals(own.getStatus())) {
+            return success(false);
+        }
+        return success(Boolean.TRUE.equals(own.getPresenceVisible()));
+    }
+
+    @PostMapping("/presence-visibility")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public AjaxResult changePresenceVisibility(String sessionId, Boolean visible, String consentVersion) {
+        Long memberId = uid();
+        if (memberId <= 0) return error("请先登录");
+        if (visible == null) return error("请选择是否公开");
+        Long sid = Convert.toLong(sessionId, 0L);
+        if (visible) {
+            if (!"roam-presence-v1".equals(consentVersion)) return error("请先单独同意附近的人位置分享");
+            // 位置分享建立在漫游定位同意之上:撤回漫游定位后不能再单独打开对他人的展示。
+            // 会员互斥锁先于偏好事实锁,与 RoamLocationConsentService 的加锁顺序一致。
+            locationConsent.requireCurrentAgreement(memberId);
+        }
+        presenceRevokeAuditService.lockPreference(memberId);
+        String requestId = "presence-" + java.util.UUID.randomUUID();
+        Date occurredAt = new Date();
+        if (visible) {
+            RoamSession own = roamMapper.selectOwnedSessionForUpdate(sid, memberId);
+            if (own == null || !Integer.valueOf(0).equals(own.getStatus())) return error("请先开始漫游");
+        }
+        // 关闭覆盖本人所有未结束会话，旧会话或在途心跳都不能重新打开。
+        roamMapper.updatePresenceVisibility(null, memberId, false);
+        if (!visible) {
+            presenceRevokeAuditService.remember(memberId, requestId, occurredAt);
+            AjaxResult closed = success(false);
+            closed.put("auditStatus", "PENDING");
+            Runnable audit = () -> {
+                try { enqueuePresenceAudit(memberId, () -> presenceRevokeAuditService.deliver(requestId)); }
+                catch (RuntimeException | LinkageError rejected) { alarmPresenceAuditFailure(memberId, rejected); }
+            };
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override public void afterCommit() { audit.run(); }
+                    });
+            } else { audit.run(); }
+            return closed;
+        }
+        int consentRows = consentRecordService.record(memberId, "privacy_policy", "roam-presence-v1", "roam_presence",
+                "AGREE", requestId, "");
+        if (consentRows != 1) throw new IllegalStateException("位置分享同意未保存，请重试");
+        presenceRevokeAuditService.rememberAgreement(memberId, requestId, occurredAt);
+        if (visible && roamMapper.updatePresenceVisibility(sid, memberId, true) <= 0) {
+            throw new IllegalStateException("漫游会话状态已变化");
+        }
+        return success(visible);
+    }
+
+    protected void enqueuePresenceAudit(Long memberId, Runnable audit) {
+        com.chengyinhub.framework.manager.AsyncManager.me().execute(new java.util.TimerTask() {
+            @Override public void run() {
+                try { audit.run(); }
+                catch (RuntimeException | LinkageError failure) { alarmPresenceAuditFailure(memberId, failure); }
+            }
+        });
+    }
+
+    private void alarmPresenceAuditFailure(Long memberId, Throwable failure) {
+        logger.warn("位置分享已关闭但撤回审计未完成 memberId={} reason={}", memberId,
+                failure == null ? "UNKNOWN" : failure.getClass().getSimpleName());
+        try { alarmService.alarm("位置分享撤回记录失败", "分享已关闭，撤回记录需补存 memberId=" + memberId); }
+        catch (RuntimeException alarmFailure) { logger.warn("位置分享撤回记录告警未送达 reason={}", alarmFailure.getClass().getSimpleName()); }
     }
 
     @Operation(summary = "附近还在走的人(地图上的他人图层 + 点头像的半屏)")
@@ -574,8 +753,13 @@ public class ApiRoamController extends BaseController {
 
         Date now = new Date();
         Date freshAfter = new Date(now.getTime() - PRESENCE_TTL_MIN * 60L * 1000L);
+        RoamSession own = roamMapper.selectActivePresence(memberId, freshAfter);
+        if (own == null || own.getLastLat() == null || own.getLastLng() == null) {
+            return AjaxResult.success(new ArrayList<Map<String, Object>>());
+        }
         List<NearbyRunnerVO> runners =
-                roamMapper.selectNearbyRunners(memberId, lat, lng, radiusM, freshAfter, now, RUNNERS_MAX);
+                roamMapper.selectNearbyRunners(memberId, own.getLastLat().doubleValue(),
+                        own.getLastLng().doubleValue(), radiusM, freshAfter, now, RUNNERS_MAX);
         if (runners == null || runners.isEmpty()) return AjaxResult.success(new ArrayList<Map<String, Object>>());
 
         List<Long> ids = new ArrayList<>(runners.size());
@@ -602,8 +786,8 @@ public class ApiRoamController extends BaseController {
             row.put("memberId", r.getMemberId());
             row.put("nickname", StringUtils.isEmpty(r.getNickname()) ? "漫游者" : r.getNickname());
             row.put("avatar", r.getAvatar());
-            row.put("lat", r.getLat());
-            row.put("lng", r.getLng());
+            row.put("lat", r.getLat() == null ? null : r.getLat().setScale(2, RoundingMode.HALF_UP));
+            row.put("lng", r.getLng() == null ? null : r.getLng().setScale(2, RoundingMode.HALF_UP));
             row.put("explorePct", r.getExplorePct() == null ? 0 : r.getExplorePct());
             row.put("shops", r.getShops() == null ? 0 : r.getShops());
             row.put("elapsedSec", r.getElapsedSec() == null ? 0L : r.getElapsedSec());
@@ -620,6 +804,7 @@ public class ApiRoamController extends BaseController {
     public AjaxResult finish(String sessionId, String poiIds, Integer distanceM) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
+        roamMapper.lockClaimOwner(memberId);
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
         if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
@@ -641,7 +826,8 @@ public class ApiRoamController extends BaseController {
         // ③ 先用 status=0→1 的 CAS 抢结算权。先读后判挡不住两个并发请求同时读到 status=0;
         //    CAS 失败的请求必须在任何 XP/勋章写入前退出。
         session.setFinishedAt(new Date());
-        session.setDistanceM(distanceM != null && distanceM > 0 ? distanceM : 0);
+        // P0-23:里程是客户端自报的展示值(会出现在社区帖的路线引用里),按会话时长与格子数封顶后再落库。
+        session.setDistanceM(clampClientDistance(distanceM, session.getStartedAt(), session.getFinishedAt(), sessionTiles));
         session.setTilesRevealed(sessionTiles);
         session.setPoisFound(newPois);
         session.setXpAwarded(totalXp);
@@ -667,8 +853,8 @@ public class ApiRoamController extends BaseController {
                 b.setObtainTime(new Date());
                 b.setDelFlag(0);
                 b.setCreateTime(new Date());
-                try { playerBadgeMapper.insertPlayerBadge(b); medalName = b.getBadgeName(); }
-                catch (Exception e) { logger.error("漫游里程碑勋章发放失败 member={} tiles={},需人工补发", memberId, crossed, e); }
+                roamBadgeDeliveryService.prepare(sid, b);
+                medalName = b.getBadgeName();
             }
         }
 
@@ -676,9 +862,10 @@ public class ApiRoamController extends BaseController {
         //    _popMedal() 只 setData、零请求,勋章墙永远查不到,而 shareMedal() 还能把它画成图分享出去。
         //    口径 = 本会话 count(distinct source_type, source_id),含 roam 据点与报名商家(用户拍板「任意真商家」)。
         int sessionShops = roamMapper.countDistinctShopsBySession(sid);
-        Map<String, Object> shopMedal = awardShopStreak(memberId, sessionShops);
+        Map<String, Object> shopMedal = awardShopStreak(memberId, sid, sessionShops);
 
         Map<String, Object> data = new LinkedHashMap<>();
+        data.put("finishedAt", session.getFinishedAt().getTime());
         data.put("tileXp", tileXp);
         data.put("poiXp", poiXp);
         data.put("totalXp", totalXp);
@@ -687,6 +874,7 @@ public class ApiRoamController extends BaseController {
         data.put("tilesEver", tilesEver);
         data.put("medal", medalName);
         data.put("sessionShops", sessionShops);
+        data.put("badgeDelivery", roamBadgeDeliveryService.readStatus(memberId, sid));
         data.put("shopMedal", shopMedal);   // null = 未达阈值/已拿过/def 未落库
         // 终点故事只消费本次已经由服务端结算的统计值；开关关闭或内容未审时静默。
         if (npcFeatureFlags.eventOn()) {
@@ -701,11 +889,22 @@ public class ApiRoamController extends BaseController {
         }
         if (roamMapper.saveFinishResult(sid, memberId, com.alibaba.fastjson2.JSON.toJSONString(data)) != 1)
             throw new com.chengyinhub.common.exception.ServiceException("结算结果保存失败，请重新核对");
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            final Long originalSid = sid;
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override public void afterCommit() {
+                            try { data.put("badgeDelivery", roamBadgeDeliveryService.readCommittedStatus(memberId, originalSid)); }
+                            catch (RuntimeException ex) { logger.warn("原漫游徽章回读待重试 sessionId={}", originalSid); }
+                        }
+                    });
+        }
         return success(data);
     }
 
     @Operation(summary = "点到店(bindpoitap):宽松 geo → 参与据点走扫码 / 非参与点亮发探索值")
     @PostMapping("/checkin")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
@@ -713,9 +912,10 @@ public class ApiRoamController extends BaseController {
         // 点到店四个坐标全是客户端上报:NaN/Infinity/越界会让 ①的距离比较恒 false 而直接放行发探索值。
         if (!validLat(poiLat) || !validLng(poiLng) || !validLat(curLat) || !validLng(curLng)) return error("定位无效");
 
+        locationConsent.requireCurrentAgreement(memberId);
         Map<String, Object> data = new LinkedHashMap<>();
         // ① 宽松 geo:玩家离被点 POI 太远则拒
-        if (haversineM(curLat, curLng, poiLat, poiLng) > CHECKIN_LOOSE_RADIUS_M) {
+        if (GeoDistanceUtils.haversineMeters(curLat, curLng, poiLat, poiLng) > CHECKIN_LOOSE_RADIUS_M) {
             data.put("tooFar", true);
             return AjaxResult.success("离得有点远,走近点", data);
         }
@@ -734,9 +934,15 @@ public class ApiRoamController extends BaseController {
         // ③ 非参与:通用点亮,首次到点发探索值(每点终身一次)
         String poiName = (name != null && !name.trim().isEmpty())
                 ? (name.length() > 120 ? name.substring(0, 120) : name) : "未知地点";
-        int inserted = memberVisitedPoiMapper.insertVisitedPoiIgnore(memberId, geoKey(poiLat, poiLng), poiName,
-                java.math.BigDecimal.valueOf(poiLat), java.math.BigDecimal.valueOf(poiLng), new Date());
-        boolean firstVisit = inserted > 0;
+        boolean firstVisit;
+        if (visitedPoiIdentity != null && visitedPoiIdentity.enabled()) {
+            // O-02:身份 = 地标 id 或首访锚点,同一点不同精度只算一次(见 VisitedPoiIdentityResolver)
+            firstVisit = visitedPoiIdentity.recordVisit(memberId, poiLat, poiLng, poiName, new Date());
+        } else {
+            int inserted = memberVisitedPoiMapper.insertVisitedPoiIgnore(memberId, geoKey(poiLat, poiLng), poiName,
+                    java.math.BigDecimal.valueOf(poiLat), java.math.BigDecimal.valueOf(poiLng), new Date());
+            firstVisit = inserted > 0;
+        }
         int xp = 0;
         if (firstVisit) { xp = VISIT_XP; growthService.addExp(memberId, xp, "点亮地点"); }
         data.put("participating", false);
@@ -782,10 +988,47 @@ public class ApiRoamController extends BaseController {
         double bestD = Double.MAX_VALUE;
         for (CityNodeVO n : nodes) {
             if (n.getLat() == null || n.getLng() == null || n.getPoiId() == null) continue;
-            double d = haversineM(lat, lng, n.getLat().doubleValue(), n.getLng().doubleValue());
+            double d = GeoDistanceUtils.haversineMeters(lat, lng, n.getLat().doubleValue(), n.getLng().doubleValue());
             if (d <= maxM && d < bestD) { bestD = d; best = n.getPoiId(); }
         }
         return best;
+    }
+
+    /** 会话首批格子的基础额度(与每日探索值上限同量级),之后按时长增长。 */
+    static final int REVEAL_TILE_BASE = 200;
+    /** 时长预算按「最高速度每走 100 米一格」放宽(geohash7 边长约 150 米,斜穿也不会更密)。 */
+    static final double REVEAL_TILE_EDGE_M = 100.0;
+    /** 单次漫游里程上限(米),防自报一个天文数字。 */
+    static final int ROAM_MAX_DISTANCE_M = 200_000;
+    /** 里程按格子数的额外放宽(米/格):会话可能晚于实际出发才建(离线先走),格子能证明走过。 */
+    static final int DISTANCE_PER_TILE_ALLOWANCE_M = 300;
+
+    /** 本会话最多可点亮的新格子数:基础额度 + 会话时长 × 最高速度 / 每格距离。 */
+    static int revealTileBudget(Date startedAt, long nowMs) {
+        long elapsedSec = startedAt == null ? 0L : Math.max(0L, (nowMs - startedAt.getTime()) / 1000L);
+        double byTime = elapsedSec * MAX_MOVE_SPEED_MPS / REVEAL_TILE_EDGE_M;
+        return (int) Math.min(Integer.MAX_VALUE, REVEAL_TILE_BASE + (long) Math.ceil(byTime));
+    }
+
+    /** 客户端自报里程的服务端上界:min(总上限, 时长×最高速度 + 格子×放宽);负数/空按 0。 */
+    static int clampClientDistance(Integer distanceM, Date startedAt, Date finishedAt, int sessionTiles) {
+        if (distanceM == null || distanceM <= 0) return 0;
+        long elapsedSec = startedAt == null || finishedAt == null ? 0L
+                : Math.max(0L, (finishedAt.getTime() - startedAt.getTime()) / 1000L);
+        long bound = (long) Math.ceil(elapsedSec * MAX_MOVE_SPEED_MPS)
+                + (long) Math.max(0, sessionTiles) * DISTANCE_PER_TILE_ALLOWANCE_M;
+        return (int) Math.min(distanceM, Math.min(bound, ROAM_MAX_DISTANCE_M));
+    }
+
+    private static final String GEOHASH32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+
+    /** 迷雾格只认 7 位 geohash(与小程序 utils/roam-geo.js geohash7 同字母表);其它长度/字符一律丢弃。 */
+    static boolean isGeohash7(String t) {
+        if (t == null || t.length() != 7) return false;
+        for (int i = 0; i < t.length(); i++) {
+            if (GEOHASH32.indexOf(t.charAt(i)) < 0) return false;
+        }
+        return true;
     }
 
     private static List<String> splitTiles(String csv, int cap) {
@@ -793,7 +1036,7 @@ public class ApiRoamController extends BaseController {
         if (csv == null) return out;
         for (String s : csv.split(",")) {
             String t = s.trim();
-            if (!t.isEmpty() && t.length() <= 12) out.add(t);
+            if (isGeohash7(t)) out.add(t);
             if (out.size() >= cap) break;
         }
         return out;

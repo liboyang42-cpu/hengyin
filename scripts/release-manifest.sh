@@ -18,7 +18,7 @@ fi
 
 cd "$ROOT"
 if [[ "${RELEASE_ENV:-}" == "production" ]]; then
-  "$ROOT/scripts/production-preflight.sh"
+  bash "$ROOT/scripts/production-preflight.sh" --env
 fi
 UNTRACKED="$(git ls-files --others --exclude-standard)"
 WORKTREE_CLEAN=true

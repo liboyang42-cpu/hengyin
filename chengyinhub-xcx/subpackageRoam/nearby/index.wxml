@@ -1,7 +1,7 @@
 <!-- 漫游地图 · 附近的队伍(地图组队 P 方案,Figma txQoyVyKb3aQdFCnc8qmhj 590:1014 · P1–P6)
-     地图只做展示层:没有开局入口;顶部白条「附近的队伍 · N 支在招募」;
+     地图只做展示层:没有开局入口;顶部深色计数条「附近的队伍 · N 支在招募」 + 地图/列表切换;
      底部只剩「范围」「我的队伍」两枚角控件,开任何半屏时收起(9-08 裁决)。 -->
-<view class="nb theme-dark">
+<view class="nb theme-dark {{sheet === 'poi' ? 'map-open' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar title="" overlay pill tint="dark" custom-back bind:back="goBack" />
@@ -18,18 +18,49 @@
        2026-09-15 合拢收尾:稿 591:1019 画了个「筛选」,但整份稿没有任何筛选维度(玩法/时间/有票)
        的定义,接过来时只能把它接到 openRange 上 —— 那就是底部「范围」角控件已经在做的事,
        一个动作两个入口、名字还不一样。要么等产品定筛选维度再做真的,要么现在不留半成品。删。 -->
+  <!-- 2026-10-14 地图优化(用户确认原型):深色计数条 + 地图/列表切换;位置仍在胶囊下 10px(hudTop) -->
   <view class="mt-top" style="top:{{hudTop}}px;">
-    <text class="mt-top__t" aria-role="text">{{headerText}}</text>
+    <view class="mt-top__pill"><view class="mt-top__dot"></view><text class="mt-top__t" aria-role="text">{{headerText}}</text></view>
+    <view class="mt-mode">
+      <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80">地图</view>
+      <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80">列表</view>
+    </view>
   </view>
 
-  <view class="nb-load-error" wx:if="{{loadError}}" style="top:{{hudTop + 56}}px;">
-    <cy-error title="附近的队伍没能读到" sub="地图还在，队伍这次没读到" retry="重试" bind:retry="retryNearby" />
+  <!-- 2026-10-22 业主:计数条下面一行筛选 —— 全部 / 主题队伍 / 地点▾ / 商家▾。
+       地点、商家点开是下拉,选项只来自本屏真实数据(主题 / 活动、POI 标签),不预置分类。 -->
+  <scroll-view class="mt-filter" scroll-x enhanced show-scrollbar="{{false}}" style="top:{{hudTop + 52}}px;">
+    <view class="mt-chip {{layer === 'all' ? 'is-on' : ''}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="全部节点" hover-class="cy-pressed" hover-stay-time="80">全部</view>
+    <view class="mt-chip {{layer === 'team' ? 'is-on' : ''}}" data-layer="team" bindtap="onLayerTap" aria-role="button" aria-label="只看主题队伍" hover-class="cy-pressed" hover-stay-time="80">主题队伍</view>
+    <view class="mt-chip {{layer === 'place' ? 'is-on' : ''}}" data-layer="place" bindtap="onLayerTap" aria-role="button" aria-label="地点玩法{{layer === 'place' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'place' && layerSub ? layerSub : '地点玩法'}}<view class="mt-chip__caret {{layerSheet === 'place' ? 'is-up' : ''}}"></view></view>
+    <view class="mt-chip {{layer === 'shop' ? 'is-on' : ''}}" data-layer="shop" bindtap="onLayerTap" aria-role="button" aria-label="商家{{layer === 'shop' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'shop' && layerSub ? layerSub : '商家'}}<view class="mt-chip__caret {{layerSheet === 'shop' ? 'is-up' : ''}}"></view></view>
+  </scroll-view>
+
+  <!-- 列表模式:范围内全部队伍,点一行 = 点地图上的那支(同一张队伍卡) -->
+  <scroll-view class="mt-list" scroll-y enhanced show-scrollbar="{{false}}" wx:if="{{viewMode === 'list'}}" style="top:{{hudTop + 104}}px;">
+    <view class="mt-list__sec">{{rangeText}}内 · {{listRows.length || 0}} 个</view>
+    <view class="mt-row mt-row--list" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
+          aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
+      <image wx:if="{{item.img}}" class="mt-row__im {{item.round ? 'is-r' : ''}}" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
+      <view wx:else class="mt-row__im mt-row__im--ph {{item.round ? 'is-r' : ''}}"></view>
+      <view class="mt-row__body">
+        <text class="mt-row__n">{{item.name}}</text>
+        <text class="mt-row__s">{{item.sub}}</text>
+      </view>
+      <text class="mt-badge mt-badge--{{item.tone}}">{{item.badge}}</text>
+    </view>
+    <view class="mt-foot" wx:if="{{!listRows.length}}">附近暂无节点</view>
+  </scroll-view>
+
+  <view class="nb-load-error" wx:if="{{nearbyReadAccess || loadError}}" style="top:{{hudTop + (viewMode === 'map' ? 100 : 56)}}px;">
+    <cy-error load-failure="{{!nearbyReadAccess}}" title="{{nearbyReadAccess === 'login' ? '登录后查看附近信息' : nearbyReadAccess === 'denied' ? '当前账号无法查看附近信息' : '附近信息获取失败'}}" retry="{{nearbyReadAccess === 'login' ? '去登录' : '重试'}}" bind:retry="retryNearby" />
   </view>
 
   <!-- P1 角控件(稿 591:1020 / 591:1022)。开卡片时收起。 -->
-  <view class="mt-corners" wx:if="{{!sheet}}" style="bottom:{{safeBottom + 26}}px;">
+  <!-- 底栏:范围 · 我的队伍。开任何半屏时收起(9-08 裁决沿用) -->
+  <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:{{safeBottom + 26}}px;">
     <view class="mt-corner" bindtap="openRange" aria-role="button" aria-label="{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80">{{rangeText}}</view>
-    <view class="mt-corner" bindtap="openMyTeams" aria-role="button" aria-label="{{myTeamsText}}" hover-class="cy-pressed" hover-stay-time="80">{{myTeamsText}}</view>
+    <view class="mt-corner" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsText}}" hover-class="cy-pressed" hover-stay-time="80">{{myTeamsText}}</view>
   </view>
 
   <!-- P2 / P3 / P4 / 被拒 / 已加入:队伍卡(稿 593:1017 · 594:1030 · 594:1060) -->
@@ -43,7 +74,7 @@
       <text class="psub">{{current.sub}}</text>
       <view class="mt-members">
         <view class="avs" wx:if="{{current.faces.length}}">
-          <view class="avs__i" wx:for="{{current.faces}}" wx:key="*this"><cy-avatar size="sm" src="{{item}}" bordered /></view>
+          <view class="avs__i" wx:for="{{current.faces}}" wx:key="index"><cy-avatar size="sm" src="{{item}}" bordered /></view>
         </view>
         <text class="mt-members__t">{{current.membersLine}}</text>
       </view>
@@ -76,8 +107,7 @@
           <view class="mt-sbtn mt-sbtn--w {{busy ? 'is-busy' : ''}}" data-id="{{item.memberId}}" data-ok="true" bindtap="onHandle" aria-role="button" aria-label="同意 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">同意</view>
         </view>
       </view>
-      <text class="mt-foot" wx:if="{{!applicants.length}}">现在没有待处理的申请</text>
-      <view class="mt-notice mt-notice--plain" aria-role="text">{{leaderFoot}}</view>
+      <text class="mt-foot" wx:if="{{!applicants.length}}">暂无申请</text>
     </view>
   </view>
   </block>
@@ -90,7 +120,10 @@
     <view class="psheet__x" catchtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
     <view class="pbody">
       <text class="ph1">我的队伍</text>
-      <text class="psub">只显示你已加入或申请过的队伍</text>
+      
+      <view class="mt-notice mt-notice--plain" wx:if="{{myReadAccess}}" aria-role="text">{{myReadAccess === 'login' ? '登录后查看自己的队伍' : '当前账号无法查看队伍'}}</view>
+      <view class="mt-sbtn mt-sbtn--w" wx:if="{{myReadAccess === 'login'}}" bindtap="loginForMyTeams" aria-role="button" aria-label="去登录" hover-class="cy-pressed" hover-stay-time="80">去登录</view>
+      <view class="mt-notice mt-notice--plain" wx:if="{{myReadError}}" aria-role="text">队伍信息未完整读取，请重新打开重试</view>
       <view class="mt-row" wx:for="{{myRows}}" wx:key="key">
         <view class="mt-row__body">
           <text class="mt-row__n">{{item.name}}</text>
@@ -98,7 +131,7 @@
         </view>
         <view class="mt-sbtn mt-sbtn--{{item.action.kind === 'primary' ? 'w' : 's'}} {{busy ? 'is-busy' : ''}}" data-index="{{index}}" bindtap="onMyRowAction" aria-role="button" aria-label="{{item.action.text}}" hover-class="cy-pressed" hover-stay-time="80">{{item.action.text}}</view>
       </view>
-      <text class="mt-foot" wx:if="{{!myLoading && !myRows.length}}">还没有加入或申请过队伍,在地图上点一支看看</text>
+      <text class="mt-foot" wx:if="{{myLoaded && !myReadAccess && !myReadError && !myLoading && !myRows.length}}">暂无队伍</text>
     </view>
   </view>
   </block>
@@ -106,8 +139,8 @@
   <!-- 主题半屏(原型 topicSheet / h-topic) -->
   <block wx:if="{{sheet === 'topic' && topic}}">
   <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭主题" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <scroll-view class="tstrip {{sheetIn ? 'is-in' : ''}}" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{topic.pics.length}}">
-    <image class="tstrip__i" wx:for="{{topic.pics}}" wx:key="*this" src="{{item}}" mode="aspectFill" />
+  <scroll-view class="tstrip {{sheetIn ? 'is-in' : ''}}" style="{{tstripStyle}}" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{topic.pics.length}}">
+    <image class="tstrip__i" wx:for="{{topic.pics}}" wx:key="index" src="{{item}}" mode="aspectFill" />
   </scroll-view>
   <view class="psheet psheet--half {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
     <view class="psheet__grab"></view>
@@ -123,6 +156,61 @@
         <view class="btn2 btn2--w" bindtap="openTopicPage" aria-role="button" aria-label="查看详情" hover-class="cy-pressed" hover-stay-time="80">查看详情</view>
       </view>
     </view>
+  </view>
+  </block>
+
+  <!-- v13 下拉:贴在筛选按钮下面的深色菜单,每项带个数,选中打勾;点空白收起 -->
+  <view class="mdd-mask" wx:if="{{layerSheet}}" bindtap="closeLayerSheet" aria-role="button" aria-label="收起选项" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="mdd {{mddIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{layerSheet}}" style="top:{{hudTop + 52 + 44}}px; left:{{mddLeft}}px;" aria-role="listbox">
+    <view wx:for="{{layerItems}}" wx:key="label" class="mdd__i {{item.on ? 'on' : ''}}" data-index="{{index}}" bindtap="onLayerPickTap" aria-role="option" aria-selected="{{item.on}}" aria-label="{{item.label}}" hover-class="mdd__i--press" hover-stay-time="60">
+      <text>{{item.label}}</text><text class="mdd__hot" wx:if="{{item.hot}}">{{item.hot}}</text><text class="mdd__n">{{item.count}}</text>
+    </view>
+  </view>
+
+  <!-- v13 点位卡:地图把点位移到卡片下面,卡片在屏幕正中长出来(上方小牌写类型);点卡片翻面看介绍,
+       背面上滑展开到胶囊下面;点地图收回。队伍卡点一下进原来的队伍半屏(申请 / 审批都在那儿)。 -->
+  <block wx:if="{{sheet === 'poi' && poiCard}}">
+  <view class="pdim pdim--clear {{poiCardIn ? 'is-in' : ''}}" bindtap="closePoiCard" aria-role="button" aria-label="收起卡片" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pc {{poiCardIn ? 'is-in' : ''}} {{poiExpand ? 'is-x' : ''}} {{reducedMotion ? 'pc--reduced' : ''}}" style="{{poiExpand ? 'top:' + hudTop + 'px; bottom:' + (safeBottom + 20) + 'px;' : 'top:' + pcTop + 'px;'}}"
+        bindtouchstart="onPcStart" bindtouchend="onPcEnd">
+    <view class="pc__chip" wx:if="{{!poiExpand}}"><text class="pc__chip-i" style="background:{{poiCard.chipColor}};">{{poiCard.chipLetter}}</text><text>{{poiCard.chipText}}</text></view>
+    <!-- 点位长成卡:先是点位那张圆照片(白圈),一边放大一边从圆变成圆角卡;展开时按原卡位置裁切再放开 -->
+    <view class="pc__clip" style="{{pcClip}}">
+    <view class="pc__in {{poiFlip ? 'is-flip' : ''}}">
+      <view class="pc__f" bindtap="onPoiFront" aria-role="button" aria-label="{{poiCard.kind === 'team' ? '查看队伍' : '翻面看介绍'}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="pc__ph">
+          <image wx:if="{{poiCard.img}}" class="pc__img" src="{{poiCard.img}}" mode="aspectFill" />
+          <view wx:else class="pc__img pc__img--ph"></view>
+          <view class="pc__phs"></view>
+          <text class="pc__rib" wx:if="{{poiCard.ribbon}}">{{poiCard.ribbon}}</text>
+          <view class="pc__avs" wx:if="{{poiCard.faces.length || poiCard.countText}}">
+            <image wx:for="{{poiCard.faces}}" wx:key="index" class="pc__av" src="{{item}}" mode="aspectFill" />
+            <text class="pc__avn" wx:if="{{poiCard.countText}}">{{poiCard.countText}}</text>
+          </view>
+          <view class="pc__nm"><text class="pc__nmb">{{poiCard.title}}</text><text class="pc__nms" wx:if="{{poiCard.subName}}">{{poiCard.subName}}</text></view>
+        </view>
+        <view class="pc__meta"><text class="pc__ml" wx:if="{{poiCard.metaLine}}">{{poiCard.metaLine}}</text><text class="pc__ml"><text class="pc__st" wx:if="{{poiCard.metaStrong}}">{{poiCard.metaStrong}} · </text>点卡片看详情</text></view>
+      </view>
+      <view class="pc__b">
+        <view class="pb__hd"><text class="pb__t">{{poiCard.title}}</text><view class="pb__x" bindtap="closePoiCard" aria-role="button" aria-label="收起" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__xi"></view></view></view>
+        <text class="pb__sub" wx:if="{{poiCard.address}}">{{poiCard.address}}</text>
+        <text class="pb__rt" wx:if="{{poiCard.metaStrong}}">{{poiCard.metaStrong}}</text>
+        <scroll-view class="pb__sc" scroll-y="{{poiExpand}}" enhanced show-scrollbar="{{false}}">
+          <text class="pb__d">{{poiCard.desc || '这里还没有介绍。'}}</text>
+          <text class="pb__more" wx:if="{{!poiExpand}}">上滑看全部</text>
+          <view class="pb__th" wx:if="{{poiCard.thumbs.length}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view>
+          <view class="pb__info" wx:if="{{poiExpand}}"><view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text>{{item.v}}</text></view></view>
+          <view class="pb__cta" wx:if="{{poiExpand}}">
+            <view class="pb__btn pb__btn--s" wx:if="{{poiCard.secondary}}" bindtap="onPoiSecondary" aria-role="button" aria-label="{{poiCard.secondary}}" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.secondary}}</view>
+            <view class="pb__btn pb__btn--w" bindtap="onPoiPrimary" aria-role="button" aria-label="{{poiCard.primary}}" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.primary}}</view>
+          </view>
+        </scroll-view>
+        <view class="pb__ft" wx:if="{{!poiExpand}}"><view class="pb__hint" bindtap="onPoiExpand" aria-role="button" aria-label="展开" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__up"></view>上滑展开</view><text>{{poiCard.chipText}}</text></view>
+      </view>
+    </view>
+    <image wx:if="{{poiCard.img}}" class="pc__cover" src="{{poiCard.img}}" mode="aspectFill" /><view class="pc__ring"></view>
+    </view>
+    <view class="pc__tail" wx:if="{{!poiExpand}}"></view>
   </view>
   </block>
 

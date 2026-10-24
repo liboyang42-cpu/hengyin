@@ -30,6 +30,7 @@ function loadNormalizer() {
     formatPostTime: (v) => String(v || ''),
     isCompletedShare: require(path.join(ROOT, 'utils/feed-play-card.js')).isCompletedShare,
     hasFeedPlayCover: require(path.join(ROOT, 'utils/feed-play-card.js')).hasFeedPlayCover,
+    decodeDisplayText: require(path.join(ROOT, 'utils/display-text.js')).decodeDisplayText,
   }
   vm.runInNewContext(src.slice(start, end) + '\nmodule.exports = normalizeClubPost;', sandbox, { filename: PAGE })
   return sandbox.module.exports
@@ -55,7 +56,7 @@ test('引用一个模板(refType=2)渲染成模板卡,而不是漫游卡', () =>
   const post = normalize(Object.assign({}, base, {
     refType: 2, refId: 12, sportName: '梧桐区寻味', sportCover: '/t.png', isTopicTemplate: true,
   }), 9)
-  assert.equal(post.isCompletionShare, false, '模板不是成绩,不能挂成漫游卡')
+  assert.equal(post.isCompletionShare, false, '模板不是成绩，不能挂成漫游卡')
   assert.equal(post.hasPlayCover, true)
 })
 
@@ -76,9 +77,9 @@ test('★判定必须复用广场那一份,不许在俱乐部页里再写一套'
 test('★refType 的编号必须和广场的 dataType 对齐', () => {
   const guard = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java')
   assert.match(guard, /if \(refType != 1 && refType != 2\) return error\("暂不支持这种引用"\)/,
-    '只放行 1/2:3(自由漫游成绩)全仓还没有生产者,放行等于开一个没人写得进去的入口')
+    '只放行 1/2:3(自由漫游成绩)全仓还没有生产者，放行等于开一个没人写得进去的入口')
   assert.match(guard, /if \(refType == null \|\| refId == null \|\| refId <= 0\) return error\("引用信息不完整"\)/,
-    '半个引用(只有类型没有 ID)必须挡住,否则投影出来是一张空卡')
+    '半个引用(只有类型没有 ID)必须挡住，否则投影出来是一张空卡')
 })
 
 // 2026-09-11:派生出 variant 却没人渲染,是比不派生更坏的状态 —— 图廊会被
@@ -86,7 +87,7 @@ test('★refType 的编号必须和广场的 dataType 对齐', () => {
 test('★俱乐部帖子的成绩卡/模板卡由帖文卡组件自己画,不靠页面塞 slot', () => {
   const card = read('components/cy/post-card/index.wxml')
   assert.match(card, /<cy-completion-share-card[\s\S]*wx:if="\{\{post\.isCompletionShare\}\}"/,
-    '成绩卡要在组件里按 post 字段出,页面不判')
+    '成绩卡要在组件里按 post 字段出，页面不判')
   assert.match(card, /<cy-feed-play-card[\s\S]*wx:if="\{\{post\.hasPlayCover && !post\.isCompletionShare\}\}"/)
   const json = JSON.parse(read('components/cy/post-card/index.json'))
   assert.equal(json.usingComponents['cy-completion-share-card'], '/components/cy/completion-share-card/index')
@@ -100,5 +101,5 @@ test('★点那张卡要跳被引主题,拿不到 topicId 才退回展开评论(
   assert.match(src, /onPostReference\(e\)\s*\{[\s\S]*sportTopicId[\s\S]*\/pages\/topic\/index\/index\?id='/,
     '跳的是主题详情页;sportTopicId 是 cms_topic 的真实 id')
   assert.match(src, /if \(!post \|\| !post\.sportTopicId\) return this\.onToggleComments\(e\)/,
-    '投影不出主题时退回展开评论,不是静默什么都不做')
+    '投影不出主题时退回展开评论，不是静默什么都不做')
 })

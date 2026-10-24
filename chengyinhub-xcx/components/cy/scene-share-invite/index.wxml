@@ -1,13 +1,18 @@
 <view class="siv siv--{{theme}}">
-  <view wx:if="{{qrState === 'loading' || qrState === 'ready'}}" class="siv__qr-frame">
+  <view wx:if="{{qrState === 'loading' || qrState === 'ready'}}" aria-role="button" aria-label="{{playerCode ? '预览我的个人小程序码' : '邀请二维码'}}" class="siv__qr-frame"
+    hover-class="{{playerCode && qrState === 'ready' ? 'cy-pressed' : 'none'}}" hover-stay-time="80" bindtap="previewQr">
     <cy-progress-status wx:if="{{qrState === 'loading'}}" class="siv__qr-status"
       title="正在加载邀请二维码" sub="加载完成后即可扫码邀请好友" />
-    <image class="siv__qr {{qrState === 'ready' ? 'siv__qr--ready' : ''}}"
-      src="{{qrSrc}}" data-src="{{qrSrc}}" mode="aspectFit"
-      bindload="onQrLoad" binderror="onQrError" aria-role="img" aria-label="邀请二维码" />
+    <image wx:if="{{qrSrc}}" class="siv__qr {{qrState === 'ready' ? 'siv__qr--ready' : ''}}"
+      src="{{qrSrc}}" data-src="{{qrSrc}}" mode="aspectFit" show-menu-by-longpress="{{playerCode}}"
+      bindload="onQrLoad" binderror="onQrError" aria-role="img" aria-label="{{playerCode ? '我的个人小程序码，点击预览，长按可保存' : '邀请二维码'}}" />
+  </view>
+  <view wx:elif="{{qrState === 'code-error'}}" class="siv__qr-state">
+    <cy-error title="个人码加载失败" sub="{{qrErrorText}}"
+      retry="重试" bind:retry="retryQr" />
   </view>
   <view wx:elif="{{qrState === 'error'}}" class="siv__qr-state">
-    <cy-error title="二维码加载失败" sub="可以重试，或直接使用下方分享链接。"
+    <cy-error load-failure title="二维码加载失败" sub="可以重试，或直接使用下方分享链接。"
       retry="重试" bind:retry="retryQr" />
   </view>
   <view wx:else class="siv__qr-state">

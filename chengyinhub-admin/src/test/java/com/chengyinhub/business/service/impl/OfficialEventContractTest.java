@@ -244,13 +244,14 @@ class OfficialEventContractTest {
         OfficialEventServiceImpl svc = eventService(em, sm, mock(MemberCollectibleMapper.class),
                 mock(ISmsCouponHistoryService.class), mock(IGrowthService.class));
 
-        when(em.selectOfficialEventById(1L)).thenReturn(event(OfficialEvent.ST_DRAFT));
+        when(em.selectOfficialEventByIdForUpdate(1L)).thenReturn(event(OfficialEvent.ST_DRAFT));
         assertNotNull(svc.signup(1L, 500L)); // 草稿 → 报错
 
-        when(em.selectOfficialEventById(1L)).thenReturn(event(OfficialEvent.ST_ENDED));
+        when(em.selectOfficialEventByIdForUpdate(1L)).thenReturn(event(OfficialEvent.ST_ENDED));
         assertNotNull(svc.signup(1L, 500L)); // 已结束 → 报错
 
-        when(em.selectOfficialEventById(1L)).thenReturn(event(OfficialEvent.ST_SIGNUP));
+        when(em.selectOfficialEventByIdForUpdate(1L)).thenReturn(event(OfficialEvent.ST_SIGNUP));
+        when(sm.insertIgnore(any(EventSignup.class))).thenReturn(1);
         assertNull(svc.signup(1L, 500L));    // 报名态 → 成功
         verify(sm, times(1)).insertIgnore(any(EventSignup.class));
     }
@@ -291,6 +292,23 @@ class OfficialEventContractTest {
         assertNotNull(svc.completeTask(1L, 101L));
         verify(sm, never()).updateEventSignup(any(EventSignup.class));
         verify(growth, never()).addExp(anyLong(), anyInt(), anyString());
+    }
+
+    @Test
+    void legacyCompletionNeverChangesProgressOrAwardsEvenWhenCalledRepeatedly() {
+        EventSignupMapper signups = mock(EventSignupMapper.class);
+        OfficialEventMapper events = mock(OfficialEventMapper.class);
+        IGrowthService growth = mock(IGrowthService.class);
+        OfficialEventServiceImpl service = eventService(events, signups, mock(MemberCollectibleMapper.class),
+                mock(ISmsCouponHistoryService.class), growth);
+        for (Integer version : new Integer[] {null, 1, 2}) {
+            OfficialEvent event = event(OfficialEvent.ST_LIVE);
+            event.setContractVersion(version);
+            event.setRewardJson("{\"instantXp\":100}");
+            when(events.selectOfficialEventById(1L)).thenReturn(event);
+            for (int i = 0; i < 5; i++) assertNotNull(service.completeTask(1L, 101L));
+        }
+        org.mockito.Mockito.verifyNoInteractions(signups, growth);
     }
 
     @Test

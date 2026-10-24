@@ -67,6 +67,38 @@ class AiCreatorServiceImplTest {
     private RedisTemplate<Object, Object> redisTemplate;
     private ValueOperations<Object, Object> valueOperations;
 
+    private Long reserveResult = 1L;
+    private boolean countByKey;
+    private final java.util.Map<String, Long> counters = new java.util.HashMap<>();
+    private final java.util.List<java.util.List<Object>> reserved = new java.util.ArrayList<>();
+    private final java.util.List<java.util.List<Object>> refunded = new java.util.ArrayList<>();
+    private final java.util.List<Integer> reserveTtls = new java.util.ArrayList<>();
+
+    @SuppressWarnings("unchecked")
+    private void installReservationStub() {
+        when(redisTemplate.execute(org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
+                org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt())).thenAnswer(inv -> {
+            java.util.List<Object> keys = inv.getArgument(1);
+            reserved.add(new java.util.ArrayList<>(keys));
+            Object ttl = inv.getArgument(2);
+            assertTrue(ttl instanceof Integer, "production serializer requires Integer TTL");
+            reserveTtls.add((Integer) ttl);
+            String key = String.valueOf(keys.get(0));
+            if (countByKey) {
+                long value = counters.getOrDefault(key, 0L) + 1;
+                counters.put(key, value);
+                return value;
+            }
+            return reserveResult;
+        });
+        when(redisTemplate.execute(org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
+                org.mockito.ArgumentMatchers.anyList())).thenAnswer(inv -> {
+            refunded.add(new java.util.ArrayList<>((java.util.List<Object>) inv.getArgument(1)));
+            return 1L;
+        });
+    }
+
     private static final Long MEMBER_ID = 1001L;
 
     @BeforeEach
@@ -165,7 +197,8 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.increment(anyString())).thenReturn(1L);
+        reserveResult = 1L;
+        installReservationStub();
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -178,18 +211,21 @@ class AiCreatorServiceImplTest {
                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
         assertEquals("AI 服务暂未就绪,请稍后重试", ex.getMessage());
 
-        verify(valueOperations).increment(anyString());
-        verify(valueOperations).decrement(anyString());
+        assertEquals(1, reserved.size());
+        assertEquals(1, refunded.size());
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void playerThemeDraftCountsOnlyCompleteRealDraft() {
-        LocalDateTime before = LocalDateTime.now();
+        // 额度按北京时间换日:TTL 期望值也按北京时间算,不随运行测试的 JVM 默认时区变。
+        java.time.ZoneId beijing = java.time.ZoneId.of("Asia/Shanghai");
+        LocalDateTime before = LocalDateTime.now(beijing);
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.increment(anyString())).thenReturn(1L);
+        reserveResult = 1L;
+        installReservationStub();
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -200,11 +236,10 @@ class AiCreatorServiceImplTest {
         AiThemeDraftResp resp = service.themeDraft(new AiThemeDraftReq(), MEMBER_ID);
 
         assertNotNull(resp.getDraft());
-        verify(valueOperations).increment(anyString());
-        ArgumentCaptor<Long> ttlCaptor = ArgumentCaptor.forClass(Long.class);
-        verify(redisTemplate).expire(any(), ttlCaptor.capture(), org.mockito.ArgumentMatchers.eq(TimeUnit.SECONDS));
-        LocalDateTime after = LocalDateTime.now();
-        long ttl = ttlCaptor.getValue();
+        assertEquals(1, reserved.size());
+        assertEquals(0, refunded.size());
+        LocalDateTime after = LocalDateTime.now(beijing);
+        long ttl = reserveTtls.get(0).longValue();
         if (before.toLocalDate().equals(after.toLocalDate())) {
             long minExpected = Duration.between(after, after.toLocalDate().plusDays(1).atStartOfDay()).getSeconds();
             long maxExpected = Duration.between(before, before.toLocalDate().plusDays(1).atStartOfDay()).getSeconds();
@@ -220,7 +255,8 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.increment(anyString())).thenReturn(1L);
+        reserveResult = 1L;
+        installReservationStub();
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -230,8 +266,8 @@ class AiCreatorServiceImplTest {
 
         assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
-        verify(valueOperations).increment(anyString());
-        verify(valueOperations).decrement(anyString());
+        assertEquals(1, reserved.size());
+        assertEquals(1, refunded.size());
     }
 
     @Test
@@ -240,7 +276,8 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.increment(anyString())).thenReturn(4L);
+        reserveResult = -2L;
+        installReservationStub();
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -253,7 +290,7 @@ class AiCreatorServiceImplTest {
 
         verify(gateway, never()).generate(any(Long.class), anyString(), eq("theme_draft"),
                 anyString(), anyString());
-        verify(valueOperations).decrement(anyString());
+        assertEquals(0, refunded.size());
     }
 
     @Test
@@ -262,7 +299,8 @@ class AiCreatorServiceImplTest {
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.increment(anyString())).thenReturn(1L);
+        reserveResult = 1L;
+        installReservationStub();
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
         when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"),
@@ -271,8 +309,8 @@ class AiCreatorServiceImplTest {
         assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
                 () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
 
-        verify(valueOperations).increment(anyString());
-        verify(valueOperations).decrement(anyString());
+        assertEquals(1, reserved.size());
+        assertEquals(1, refunded.size());
     }
 
     @Test
@@ -284,12 +322,31 @@ class AiCreatorServiceImplTest {
         when(valueOperations.get(anyString())).thenReturn(2L);
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(gateway.remainingQuota(MEMBER_ID, "theme_draft")).thenReturn(20);
 
         com.chengyinhub.business.domain.vo.ai.AiThemeDraftQuotaResp resp = service.themeDraftQuota(MEMBER_ID);
 
         assertTrue(resp.isLimited());
         assertEquals(Integer.valueOf(3), resp.getLimit());
         assertEquals(Integer.valueOf(1), resp.getRemaining());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void playerThemeDraftQuotaReportsZeroWhenSharedGatewayPoolIsExhausted() {
+        redisTemplate = mock(RedisTemplate.class);
+        valueOperations = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(0L);
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(gateway.remainingQuota(MEMBER_ID, "theme_draft")).thenReturn(0);
+
+        com.chengyinhub.business.domain.vo.ai.AiThemeDraftQuotaResp resp = service.themeDraftQuota(MEMBER_ID);
+
+        assertTrue(resp.isLimited());
+        assertEquals(Integer.valueOf(3), resp.getLimit());
+        assertEquals(Integer.valueOf(0), resp.getRemaining());
     }
 
     // ---- nodeGenerate ----
@@ -727,5 +784,29 @@ class AiCreatorServiceImplTest {
         }
         sb.append("]}");
         return sb.toString();
+    }
+
+    @Test
+    void playerExplicitInputBlockedKeepsReservation() {
+        playerInputFailure(com.chengyinhub.business.service.ai.AiServiceException.Reason.INPUT_BLOCKED, 0);
+    }
+
+    @Test
+    void playerReviewRequiredUnknownRetainsOldRefundPolicy() {
+        playerInputFailure(com.chengyinhub.business.service.ai.AiServiceException.Reason.UNKNOWN, 1);
+    }
+
+    private void playerInputFailure(com.chengyinhub.business.service.ai.AiServiceException.Reason reason, int refunds) {
+        redisTemplate = mock(RedisTemplate.class);
+        installReservationStub();
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(gateway.generate(any(Long.class), eq("player"), eq("theme_draft"), anyString(), anyString()))
+                .thenThrow(new com.chengyinhub.business.service.ai.AiServiceException(reason, "input decision"));
+        assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
+                () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID));
+        assertEquals(1, reserved.size());
+        assertEquals(refunds, refunded.size());
+        if (refunds == 1) assertEquals(reserved, refunded);
     }
 }

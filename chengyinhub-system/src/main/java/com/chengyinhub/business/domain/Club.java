@@ -156,6 +156,9 @@ public class Club extends BaseEntity
     /** 允许成员发帖 0仅管理者可发 1所有成员可发（稿 M 268:223「开放设置」）。默认 1 = 加这列之前的行为。 */
     private Integer memberPostAllowed;
 
+    /** 入会欢迎语(主理人自定,加入后的欢迎弹层最上面显示)。列未落库时为 null。 */
+    private String welcomeNote;
+
     /** 俱乐部公开可见 0仅成员能搜到和打开 1所有人（稿 M 268:223）。默认 1 = 加这列之前的行为。 */
     private Integer publicVisible;
 
@@ -173,6 +176,9 @@ public class Club extends BaseEntity
 
     /** 非持久：当前访问者的入会状态 0待审 1正常 2已拒绝 */
     private Integer myJoinStatus;
+    private String myJoinReviewReason = "";
+    public String getMyJoinReviewReason() { return myJoinReviewReason; }
+    public void setMyJoinReviewReason(String value) { myJoinReviewReason = value == null ? "" : value; }
 
     /** 非持久：当前访问者是否为管理员；仅用于成员接口失败时给出可观察提示 */
     private Boolean viewerIsAdmin;
@@ -250,6 +256,8 @@ public class Club extends BaseEntity
     public Integer getMerchantUndertakeOpen() { return merchantUndertakeOpen; }
     public void setMerchantUndertakeOpen(Integer merchantUndertakeOpen) { this.merchantUndertakeOpen = merchantUndertakeOpen; }
     public Integer getMemberPostAllowed() { return memberPostAllowed; }
+    public String getWelcomeNote() { return welcomeNote; }
+    public void setWelcomeNote(String welcomeNote) { this.welcomeNote = welcomeNote; }
     public void setMemberPostAllowed(Integer memberPostAllowed) { this.memberPostAllowed = memberPostAllowed; }
     public Integer getJoinPolicy() { return joinPolicy; }
     public void setJoinPolicy(Integer joinPolicy) { this.joinPolicy = joinPolicy; }

@@ -31,8 +31,10 @@ const {
   maskJavaScriptComments,
   matchBrace,
   resolveRequireFile,
+  parseJavaScript,
 } = require('../lib/xcx-scan')
 const { readAppRoutes } = require('./build-route-matrix')
+const { CONTRACT: ROAM_REVOKE_CONTRACT } = require('./roam-revocation-evidence')
 
 const OUTPUT = path.join(__dirname, 'action-ledger.json')
 const EVIDENCE_OVERLAY = path.join(__dirname, 'action-evidence.json')
@@ -69,7 +71,8 @@ const APP_WRITE_HELPERS = new Set(['recordConsent', 'chooseImage', 'chooseDocume
 // ApiMerchantAftercareController:respond），路径里没有通用写动词，只能按真实合同逐个登记；
 // 同前缀的 /aftercare/detail、/customers/{param}/detail 是查询读，绝不登记，避免写读串味。
 const EXPLICIT_WRITE_APIS = new Set([
-  '/api/template/draft', '/api/game/session/command', '/api/im/block',
+  '/api/template/draft', '/api/template/adopt-draft', '/api/game/session/command', '/api/im/block',
+  '/api/im/unblock', '/api/im/read',
   '/api/merchant/aftercare/respond',
   '/api/merchant/crm/customers/{param}/notes',
   '/api/merchant/crm/customers/{param}/notes/hide',
@@ -77,8 +80,13 @@ const EXPLICIT_WRITE_APIS = new Set([
   // 俱乐部承接方改运营详情(ApiClubLeadController @PostMapping("/edit-ops"),落库写 cms_activity);
   // 路径里的 `edit-ops` 被连字符截断,匹配不到通用写动词,只能按真实合同登记。
   '/api/club/lead/edit-ops',
+  '/api/club/lead/arrive',
 ])
-const isWriteApi = (api) => API_WRITE_RE.test(api) || EXPLICIT_WRITE_APIS.has(api)
+// 精确读例外:路径段命中通用写动词、但后端只读的端点。只按完整路径逐个登记,不放宽 API_WRITE_RE。
+// /api/publish/home(ApiPublishController#home)是发布广场首页聚合(能力 + 额度 + 项目摘要),只查不写;
+// 同前缀的真实发布写口(/api/activity/publish、/api/coupon/publish、/api/template/publish 等)仍判写。
+const EXPLICIT_READ_APIS = new Set(['/api/publish/home'])
+const isWriteApi = (api) => !EXPLICIT_READ_APIS.has(api) && (API_WRITE_RE.test(api) || EXPLICIT_WRITE_APIS.has(api))
 const TAP_EVENTS = new Set(['bindtap', 'catchtap', 'bind:tap', 'catch:tap'])
 const AUXILIARY_APIS = new Set(['/api/login/code', '/api/role/info', '/api/analytics/events/batch'])
 const SELF_ONLY_WRITE_APIS = new Set([
@@ -91,6 +99,25 @@ const CAPABILITY_WRITE_APIS = new Set(['/api/official/publish', '/api/official/b
 const RECOVERY_ONLY_EXTERNAL_CAPABILITIES = new Set([
   'openSetting', 'authorize', 'openPrivacyContract', 'requestSubscribeMessage',
 ])
+// Only privacy_policy / roam_location / AGREE reads the server revision. A timeout
+// retry reuses its captured CAS baseline; REVOKE and other consent purposes do not.
+function roamAgreeRequestPlan() {
+  const latest = { urlTemplate: '/api/compliance/consents/latest', method: 'POST', kind: 'read' }
+  const record = { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }
+  return {
+    requiredRequests: [latest, record],
+    requiredRequestsByBranch: {
+      'baseline-retry': [record], 'baseline-retry-error': [record], 'baseline-retry-timeout': [record],
+      'duplicate-trigger': [record],
+    },
+    requiredRequestOutcomes: {
+      success: ['success', 'success'], error: ['error'], timeout: ['timeout'],
+      'record-error-after-latest': ['success', 'error'], 'record-timeout-after-latest': ['success', 'timeout'],
+      'baseline-retry': ['success'], 'baseline-retry-error': ['error'], 'baseline-retry-timeout': ['timeout'],
+      'duplicate-trigger': ['duplicate-trigger'],
+    },
+  }
+}
 function twoStepWritePlan(first, second, forbiddenIndex = 0) {
   return {
     requiredRequests: [
@@ -257,6 +284,156 @@ function withdrawSubmitVariant(handler) {
 }
 
 const ACTION_VARIANTS = new Map([
+  // 清本机失败不联网；成功后只作废本人分享，不发布或读取快照。重复确认会再次幂等作废。
+  ['pages/roam/index.js:confirmClearRoamLocal', [{
+    id: null, handler: 'confirmClearRoamLocal',
+    apis: ['/api/roam/share/revoke'], writeApis: ['/api/roam/share/revoke'],
+    effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/roam/share/revoke', method: 'POST', kind: 'write' }],
+    requiredBranches: ['success', 'error', 'timeout', 'clear-local-failed', 'duplicate-trigger'],
+    requiredRequestsByBranch: {
+      'clear-local-failed': [],
+      'duplicate-trigger': [
+        { urlTemplate: '/api/roam/share/revoke', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/roam/share/revoke', method: 'POST', kind: 'write' },
+      ],
+    },
+    requiredRequestOutcomes: {
+      success: ['success'], error: ['error'], timeout: ['timeout'],
+      'clear-local-failed': [], 'duplicate-trigger': ['success', 'success'],
+    },
+  }]],
+  // 集合签到的主事务是本次GPS→arrive；team-progress是独立权威回读。
+  // 生命周期/随后展示刷新不是再次签到，不能把整页所有玩法SDK都要求为本次签到成功。
+  ['pages/play/index.js:leadArrive', [{
+    id: null, handler: 'leadArrive',
+    apis: ['/api/club/lead/arrive', '/api/club/lead/team-progress'],
+    writeApis: ['/api/club/lead/arrive'], effectClasses: ['write', 'read', 'state'],
+    externalCapabilities: ['getLocation'],
+    requiredRequests: [
+      { urlTemplate: '/api/club/lead/arrive', method: 'POST', kind: 'write' },
+      { urlTemplate: '/api/club/lead/team-progress', method: 'GET', kind: 'read' },
+    ],
+    requiredBranches: ['success', 'error', 'timeout', 'progress-error-after-arrive', 'progress-timeout-after-arrive',
+      'duplicate-trigger', 'forbidden-owner', 'getLocation-denied', 'modal-cancelled'],
+    requiredRequestsByBranch: Object.fromEntries(['duplicate-trigger', 'forbidden-owner', 'getLocation-denied', 'modal-cancelled']
+      .map(branch => [branch, [{ urlTemplate: '/api/club/lead/arrive', method: 'POST', kind: 'write' }]])),
+    requiredRequestOutcomes: {
+      success: ['success', 'success'], error: ['error'], timeout: ['timeout'],
+      'progress-error-after-arrive': ['success', 'error'], 'progress-timeout-after-arrive': ['success', 'timeout'],
+      'duplicate-trigger': ['duplicate-trigger'], 'forbidden-owner': ['forbidden-owner'],
+      'getLocation-denied': ['not-called'], 'modal-cancelled': ['not-called'],
+    },
+  }]],
+  // 身份失效会清除金额，但这三个场景入口仍须验成功与拒绝分支。
+  ['components/cy/scene-asset-earnings/index.js:openWithdraw', [
+    { id: null, handler: 'openWithdraw', requiredBranches: ['success', 'error'] },
+  ]],
+  ['components/cy/scene-asset-earnings/index.js:openWithdrawHistory', [
+    { id: null, handler: 'openWithdrawHistory', requiredBranches: ['success', 'error'] },
+  ]],
+  ['components/cy/scene-asset-earnings/index.js:openInvite', [
+    { id: null, handler: 'openInvite', requiredBranches: ['success', 'error'] },
+  ]],
+  ...['closePlayerOperations', 'openPlayerOperation', 'closePlayerOperation', 'choosePlayerOperationTarget', 'inputPlayerOperationTime', 'inputPlayerOperationReason', 'cancelPlayerExit'].map(handler => [`pages/play/index.js:${handler}`, [{ id: 'player-operation-local', handler, apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]]),
+  ['pages/play/index.js:openPlayerOperations', [{ id: 'player-operation-view', handler: 'openPlayerOperations', apis: ['/api/game/session/view'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:submitPlayerOperation', [{
+    id: 'player-operation-command', handler: 'submitPlayerOperation', apis: ['/api/game/session/command', '/api/game/session/receipt', '/api/game/session/view'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequestsByBranch: { 'selection-or-disabled': [], 'exit-confirmation-only': [], 'arrival-issue': [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }], 'manual-sign': [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }] },
+  }]],
+  ['pages/play/index.js:confirmPlayerExit', [{ id: 'player-team-exit', handler: 'confirmPlayerExit', apis: ['/api/game/session/command', '/api/game/session/receipt', '/api/game/session/view'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [], requiredRequestsByBranch: { 'cancel-or-stale': [], 'confirmed-exit': [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }] } }]],
+  ['pages/play/index.js:checkPlayerOperationReceipt', [{ id: 'player-operation-receipt', handler: 'checkPlayerOperationReceipt', apis: ['/api/game/session/receipt', '/api/game/session/view'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [] }]],
+  ['pages/club/topic-detail/index.js:confirmGenericOps', [
+    'ACT_UNLOCK', 'ARRIVAL_CONFIRM', 'ARRIVAL_REVOKE', 'RUN_PAUSE', 'RUN_RESUME', 'RUN_INTERRUPT', 'RUN_CANCEL',
+    'MANUAL_BEGIN', 'STAFF_MANUAL_SIGN', 'MANUAL_IMPORT', 'MANUAL_REVIEW', 'AUTHORITY_RESUME', 'QUEST_GUIDE', 'LOCATION_REBIND', 'STAFF_TEAM_EXIT',
+  ].map(action => ({ id: action.toLowerCase().replace(/_/g, '-'), handler: 'confirmGenericOps', predicate: { genericOpsAction: action },
+    apis: ['/api/game/session/command', '/api/game/session/receipt', '/api/game/session/view', '/api/game/session/shared/control'],
+    writeApis: ['/api/game/session/command'], effectClasses: ['write', 'read', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+  }))],
+  ['pages/club/topic-detail/index.js:openGenericOps', [{ id: 'offline-start', handler: 'openGenericOps', predicate: { action: 'OFFLINE_ANCHOR' },
+    apis: ['/api/game/session/shared/export/anchor', '/api/game/session/shared/control', '/api/game/session/view'],
+    writeApis: ['/api/game/session/shared/export/anchor'], effectClasses: ['write', 'read', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/shared/export/anchor', method: 'POST', kind: 'write' }] },
+    { id: 'ops-form', handler: 'openGenericOps',
+    apis: ['/api/game/session/shared/export'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [] }]],
+  ['pages/club/topic-detail/index.js:closeGenericOps', [{ id: 'ops-close', handler: 'closeGenericOps', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/club/topic-detail/index.js:inputGenericOps', [{ id: 'ops-fields', handler: 'inputGenericOps', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:openThemePlan', [{ id: 'plan-local-state', handler: 'openThemePlan', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:closeThemePlan', [{ id: 'plan-local-state', handler: 'closeThemePlan', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:editThemePlanFunding', [{ id: 'plan-local-state', handler: 'editThemePlanFunding', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:toggleThemePlanAcceptance', [{ id: 'plan-local-state', handler: 'toggleThemePlanAcceptance', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:inputThemePlanFunding', [{ id: 'plan-local-state', handler: 'inputThemePlanFunding', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:cancelThemePlanFunding', [{ id: 'plan-local-state', handler: 'cancelThemePlanFunding', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:openThemePlanOperation', [{ id: 'plan-local-state', handler: 'openThemePlanOperation', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/club/topic-detail/index.js:openPlanFallback', [{ id: 'plan-local-state', handler: 'openPlanFallback', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/club/topic-detail/index.js:closePlanFallback', [{ id: 'plan-local-state', handler: 'closePlanFallback', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/club/topic-detail/index.js:inputPlanFallbackReason', [{ id: 'plan-local-state', handler: 'inputPlanFallbackReason', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  ['pages/play/index.js:saveThemePlanFunding', [{
+    id: 'plan-command', handler: 'saveThemePlanFunding',
+    apis: ['/api/game/session/command', '/api/game/session/receipt', '/api/game/session/view'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+  }]],
+  ['pages/play/index.js:onThemePlanCommand', [{
+    id: 'plan-command', handler: 'onThemePlanCommand',
+    apis: ['/api/game/session/command', '/api/game/session/receipt', '/api/game/session/view'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+  }]],
+  ['pages/play/index.js:rejectThemePlanVote', [{
+    id: 'plan-command', handler: 'rejectThemePlanVote',
+    apis: ['/api/game/session/command', '/api/game/session/receipt', '/api/game/session/view'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+  }]],
+  ['pages/play/index.js:submitThemePlanAcceptance', [{
+    id: 'plan-command', handler: 'submitThemePlanAcceptance',
+    apis: ['/api/game/session/command', '/api/game/session/receipt', '/api/game/session/view'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+  }]],
+  ['pages/play/index.js:checkThemePlanReceipt', [{
+    id: 'plan-receipt-read', handler: 'checkThemePlanReceipt',
+    apis: ['/api/game/session/receipt', '/api/game/session/view'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [],
+  }]],
+  ['pages/club/topic-detail/index.js:confirmPlanFallback', [{
+    id: 'plan-fallback', handler: 'confirmPlanFallback',
+    apis: ['/api/game/session/command', '/api/game/session/receipt', '/api/game/session/view', '/api/game/session/shared/control'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+  }]],
+  ['pages/play/index.js:selectThemeParticipant', [{
+    id: 'participants-preview', handler: 'selectThemeParticipant',
+    apis: ['/api/game/session/shared/preview'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [],
+  }]],
+  ...['pages/play/index.js', 'pages/topic/index/index.js'].map(file => [file + ':replayThemeSession', [{
+    id: 'theme-replay', handler: 'replayThemeSession',
+    requiredBranches: ['success', 'replay-denied', 'replay-unknown', 'replay-unknown-recovered', 'timer-clear-unknown', 'duplicate-trigger'],
+    apis: ['/api/play/theme/state', '/api/play/theme/replay', '/api/play/run-session/clear', '/api/play/run-session'], writeApis: ['/api/play/theme/replay', '/api/play/run-session/clear'],
+    effectClasses: ['read', 'write', 'state', 'navigation'], externalCapabilities: [],
+    requiredRequestsByBranch: {
+      success: [{ urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/theme/replay', method: 'POST', kind: 'write' }, { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/run-session/clear', method: 'POST', kind: 'write' }],
+      'replay-denied': [{ urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }],
+      'replay-unknown': [{ urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/theme/replay', method: 'POST', kind: 'write' }, { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }],
+      'replay-unknown-recovered': [{ urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/theme/replay', method: 'POST', kind: 'write' }, { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/run-session/clear', method: 'POST', kind: 'write' }],
+      'timer-clear-unknown': [{ urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/theme/replay', method: 'POST', kind: 'write' }, { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }, { urlTemplate: '/api/play/run-session/clear', method: 'POST', kind: 'write' }, { urlTemplate: '/api/play/run-session', method: 'GET', kind: 'read' }],
+      'duplicate-trigger': [],
+    },
+  }]]),
+  ['pages/play/index.js:previewThemeTrade', [{
+    id: 'trade-preview', handler: 'previewThemeTrade',
+    apis: ['/api/game/session/shared/preview'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [],
+  }]],
+  ['pages/play/index.js:submitThemeTrade', [{
+    id: 'trade-open', handler: 'submitThemeTrade',
+    apis: ['/api/game/session/command', '/api/game/session/view'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+  }]],
+  ['pages/play/index.js:onThemeTradeAction', [{
+    id: 'trade-confirm-or-cancel', handler: 'onThemeTradeAction',
+    apis: ['/api/game/session/command', '/api/game/session/view'], writeApis: ['/api/game/session/command'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+  }]],
+  ['pages/play/index.js:checkThemeTradeReceipt', [{
+    id: 'trade-receipt-read', handler: 'checkThemeTradeReceipt',
+    apis: ['/api/game/session/receipt', '/api/game/session/view'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [],
+  }]],
   ['subpackageMember/components/cy/profile/index.js:onPrimaryCta', [
     {
       id: 'visitor-follow', handler: 'toggleFollow', predicate: { isSelf: false, subjectIsMerchant: false },
@@ -330,11 +507,11 @@ const ACTION_VARIANTS = new Map([
   ['subpackageMember/tixian/tixian.js:saveData', [withdrawSubmitVariant('saveData')]],
   ['subpackageA/pages/assetcenter/earnings/index.js:onTxSave', [withdrawSubmitVariant('onTxSave')]],
   ['pages/roam/index.js:goStart', [{
-    id: null, handler: 'goStart', apis: ['/api/compliance/consents'],
+    id: null, handler: 'goStart', apis: ['/api/compliance/consents', '/api/compliance/consents/latest'],
     effectClasses: ['write', 'state'], externalCapabilities: ['getLocation'],
   }]],
   ['pages/roam/index.js:goStartAndShoot', [{
-    id: null, handler: 'goStartAndShoot', apis: ['/api/compliance/consents'],
+    id: null, handler: 'goStartAndShoot', apis: ['/api/compliance/consents', '/api/compliance/consents/latest'],
     effectClasses: ['write', 'state'], externalCapabilities: ['getLocation', 'chooseMedia'],
   }]],
   ['pages/roam/index.js:onFogScreenLoad', [{
@@ -343,7 +520,7 @@ const ACTION_VARIANTS = new Map([
   ['pages/roam/index.js:toggleGps', [
     {
       id: 'start', handler: 'toggleGps', predicate: { gpsMode: false },
-      apis: ['/api/compliance/consents'], effectClasses: ['write', 'state'],
+      apis: ['/api/compliance/consents', '/api/compliance/consents/latest'], effectClasses: ['write', 'state'],
       externalCapabilities: ['startLocationUpdateBackground', 'setKeepScreenOn'],
     },
     {
@@ -531,6 +708,18 @@ const ACTION_VARIANTS = new Map([
     { id: 'name', handler: 'openField', locatorInstance: { attribute: 'data-action', value: 'editName' }, apis: [], effectClasses: ['state'] },
     { id: 'slogan', handler: 'openField', locatorInstance: { attribute: 'data-action', value: 'editSlogan' }, apis: [], effectClasses: ['state'] },
   ]],
+  // 门店信息胶囊半屏「保存」:经营类目(kind=preference)走 saveBrand,行业类型走 saveDecor,两条写入互斥,一次点击只发其一。
+  ['pages/merchant/decor/index.js:saveChipSheet', [{
+    id: null, handler: 'saveChipSheet',
+    apis: ['/api/merchant/decor/save', '/api/merchant/update'],
+    writeApis: ['/api/merchant/decor/save', '/api/merchant/update'],
+    effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequestsByBranch: {
+      'busy-or-invalid': [],
+      'preference': [{ urlTemplate: '/api/merchant/update', method: 'POST', kind: 'write' }],
+      'industry': [{ urlTemplate: '/api/merchant/decor/save', method: 'POST', kind: 'write' }],
+    },
+  }]],
   // pages/merchant/decor/story 的 onSave 证据规格随 2026-09-19 审查 #30 撤掉:
   // 那一页没进 app.json、全仓零入口,已整页删除;再留一份「必须验到 8 个分支」的规格,
   // 台账会永远报缺证据。品牌故事的实际写入口在装修首页 goStory→openField(上面那条)。
@@ -560,6 +749,11 @@ const ACTION_VARIANTS = new Map([
     { id: 'create-precheck', handler: 'runPublishPrecheck', predicate: { editingTopicId: '' }, apis: ['/api/ai/safety/precheck'] },
     { id: 'update-precheck', handler: 'runPublishPrecheck', predicate: { editingTopicId: { $not: '' } }, apis: ['/api/ai/safety/precheck'] },
   ]],
+  // 2026-10-12 云端草稿:首次保存草稿 create(saveDraft=1),之后 update 同一份草稿;成功后都回读 edit-detail。
+  ['pages/publish/fabu/index.js:saveServerDraft', [
+    { id: 'create-draft', handler: 'saveServerDraft', predicate: { editingTopicId: '' }, apis: ['/api/topic/v2/create'] },
+    { id: 'update-draft', handler: 'saveServerDraft', predicate: { editingTopicId: { $not: '' } }, apis: ['/api/topic/v2/update'] },
+  ]],
   ['pages/publish/fabu/index.js:confirmPublishCheck', [
     { id: 'create', handler: 'confirmPublishCheck', predicate: { editingTopicId: '' }, apis: ['/api/topic/create'] },
     { id: 'update', handler: 'confirmPublishCheck', predicate: { editingTopicId: { $not: '' } }, apis: ['/api/topic/update'] },
@@ -568,6 +762,67 @@ const ACTION_VARIANTS = new Map([
     { id: 'city-node', handler: 'publishGame', predicate: { from: 'citynode' }, apis: ['/api/merchant/city-node/template/submit'] },
     { id: 'template', handler: 'publishGame', predicate: { from: { $not: 'citynode' } }, apis: ['/api/template/publish'] },
   ]],
+  // 父 kitaction 真正委托 #advancedGame；照片同意仅 SUBMIT_PHOTO_CHECK 分支，其他动作不写 consent。
+  ['pages/play/index.js:onPlayKitAction', [{
+    handler: 'onPlayKitAction',
+    apis: ['/api/play/advanced/action', '/api/play/advanced/state', '/api/common/uploadOSS',
+      '/api/compliance/consents', '/api/game/session/command', '/api/play/theme/action',
+      '/api/play/theme/state', '/api/game/session/view', '/api/play/theme/gameplay-action', '/api/play/journey/thought/sync', '/api/media/asset/{param}', '/api/media/asset/{param}/retry'],
+    writeApis: ['/api/play/advanced/action', '/api/common/uploadOSS', '/api/compliance/consents',
+      '/api/game/session/command', '/api/play/theme/action', '/api/play/theme/gameplay-action', '/api/play/journey/thought/sync', '/api/media/asset/{param}/retry'],
+    requiredRequests: [{ urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' }],
+    requiredRequestsByBranch: {
+      'local-preview-or-invalid': [],
+      'photo-consent-declined': [],
+      'advanced-action': [{ urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' }],
+      'terminal-explicit-retry': [{ urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' }],
+      'advanced-refresh-only': [{ urlTemplate: '/api/play/advanced/state', method: 'GET', kind: 'read' }],
+      'advanced-unknown-readback': [
+        { urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/play/advanced/state', method: 'GET', kind: 'read' },
+      ],
+      'photo-existing-consent': [
+        { urlTemplate: '/api/common/uploadOSS', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' },
+      ],
+      'photo-new-consent': [
+        { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/common/uploadOSS', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' },
+      ],
+      'photo-upload-failed-or-review-pending': [{ urlTemplate: '/api/common/uploadOSS', method: 'POST', kind: 'write' }],
+      'photo-question-changed-after-upload': [{ urlTemplate: '/api/common/uploadOSS', method: 'POST', kind: 'write' }],
+      'profile-avatar-local-draft': [{ urlTemplate: '/api/common/uploadOSS', method: 'POST', kind: 'write' }],
+      'media-existing-pending': [{ urlTemplate: '/api/media/asset/{param}', method: 'GET', kind: 'read' }],
+      'media-rejected-retry': [
+        { urlTemplate: '/api/media/asset/{param}', method: 'GET', kind: 'read' },
+        { urlTemplate: '/api/media/asset/{param}/retry', method: 'POST', kind: 'write' },
+      ],
+      'album-submit-existing-photo': [{ urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' }],
+      'team-zero-hp-already-due-after-view': [
+        { urlTemplate: '/api/game/session/view', method: 'GET', kind: 'read' },
+        { urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' },
+      ],
+      'legacy-personal-chapter-entry-after-state': [
+        { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' },
+        { urlTemplate: '/api/play/theme/action', method: 'POST', kind: 'write' },
+      ],
+      'personal-zero-hp-already-due-after-state': [
+        { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' },
+        { urlTemplate: '/api/play/theme/gameplay-action', method: 'POST', kind: 'write' },
+      ],
+      'personal-step-baseline-after-state': [
+        { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' },
+        { urlTemplate: '/api/play/journey/thought/sync', method: 'POST', kind: 'write' },
+      ],
+    },
+    requiredBranches: ['local-preview-or-invalid', 'photo-consent-declined', 'advanced-action', 'terminal-explicit-retry',
+      'advanced-refresh-only', 'advanced-unknown-readback', 'photo-existing-consent', 'photo-new-consent',
+      'photo-upload-failed-or-review-pending', 'photo-question-changed-after-upload', 'profile-avatar-local-draft',
+      'media-existing-pending', 'media-rejected-retry', 'album-submit-existing-photo', 'team-zero-hp-already-due-after-view',
+      'legacy-personal-chapter-entry-after-state', 'personal-zero-hp-already-due-after-state', 'personal-step-baseline-after-state',
+      'error', 'timeout', 'duplicate-trigger', 'forbidden-owner'],
+  }]],
   ['pages/play/index.js:retryGameSubmission', [
     { id: 'photo', handler: 'submitPhoto', predicate: { gRetryType: 'photo' }, apis: ['/api/play/photo'] },
     { id: 'checkin', handler: 'checkin', predicate: { gRetryType: 'gameCheckin' }, apis: ['/api/play/checkin'] },
@@ -575,6 +830,101 @@ const ACTION_VARIANTS = new Map([
     { id: 'reveal', handler: 'revealAnswer', predicate: { gRetryType: 'puzzleReveal' }, apis: ['/api/play/puzzle/reveal'] },
     { id: 'answer', handler: 'submitGame', predicate: { gRetryType: 'answer' }, apis: ['/api/play/answer'] },
   ]],
+  ...[
+    'onThemeBagAction', 'retryThemeBagAction', 'onThemeGameplayAction', 'onThemeCancelGameplayAction',
+    'confirmThemeCostChoice', 'confirmThemeRewardPreview', 'confirmThemePendingClaim',
+    'selectThemeQuestChoice', 'rereadThemeRewardPreview',
+  ].map((handler) => [`pages/play/index.js:${handler}`, [{
+    handler,
+    // 个人/团队命令互斥；POST preview 是只读模拟，过期后重读不自动再次提交。
+    requiredRequestsByBranch: {
+      'selection-or-disabled': [],
+      ...(handler === 'onThemeGameplayAction' ? {
+        'basic-gps-proof': [{ urlTemplate: '/api/play/arrive', method: 'POST', kind: 'write' }],
+        'basic-gps-with-thought-sync': [
+          { urlTemplate: '/api/play/journey/thought/sync', method: 'POST', kind: 'write' },
+          { urlTemplate: '/api/play/arrive', method: 'POST', kind: 'write' },
+        ],
+      } : {}),
+      ...(handler === 'retryThemeBagAction' ? {
+        'quest-readback-team': [{ urlTemplate: '/api/game/session/receipt', method: 'GET', kind: 'read' }],
+        'quest-readback-personal': [{ urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' }],
+      } : {}),
+      'personal-item': [{ urlTemplate: '/api/play/theme/action', method: 'POST', kind: 'write' }],
+      'personal-gameplay': [{ urlTemplate: '/api/play/theme/gameplay-action', method: 'POST', kind: 'write' }],
+      'personal-preview': [{ urlTemplate: '/api/play/theme/gameplay-preview', method: 'POST', kind: 'read' }],
+      'team-command': [{ urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' }],
+      'team-preview': [{ urlTemplate: '/api/game/session/shared/preview', method: 'POST', kind: 'read' }],
+      'personal-preview-stale': [
+        { urlTemplate: '/api/play/theme/gameplay-action', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/play/theme/state', method: 'GET', kind: 'read' },
+        { urlTemplate: '/api/play/theme/gameplay-preview', method: 'POST', kind: 'read' },
+      ],
+      'team-preview-stale': [
+        { urlTemplate: '/api/game/session/command', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/game/session/view', method: 'GET', kind: 'read' },
+        { urlTemplate: '/api/game/session/shared/preview', method: 'POST', kind: 'read' },
+      ],
+    },
+    requiredBranches: ['success', 'error', 'timeout', 'duplicate-trigger', 'forbidden-owner',
+      'selection-or-disabled', 'personal-item', 'personal-gameplay', 'personal-preview', 'team-command',
+      'team-preview', 'personal-preview-stale', 'team-preview-stale', 'personal-gameplay-with-chapter-grant',
+      ...(handler === 'onThemeGameplayAction' ? ['basic-gps-proof', 'basic-gps-with-thought-sync'] : []),
+      ...(handler === 'retryThemeBagAction' ? ['quest-readback-team', 'quest-readback-personal'] : [])],
+  }]]),
+  ...[
+    ['photoGame', '/api/play/photo', true],
+    ['revealAnswer', '/api/play/puzzle/reveal', false],
+    ['scanGame', '/api/play/checkin', true],
+    ['submitGame', '/api/play/answer', false],
+    ['onScanArriveFromTools', '/api/play/checkin', true],
+    ['onScanArrive', '/api/play/checkin', true],
+  ].map(([handler, primary, external]) => {
+    const first = { urlTemplate: primary, method: 'POST', kind: 'write' }
+    return [`pages/play/index.js:${handler}`, [{
+      handler,
+      requiredRequests: [first],
+      requiredRequestsByBranch: {
+        'preview-or-no-write': [],
+        'personal-chapter-grant': [first, { urlTemplate: '/api/play/theme/action', method: 'POST', kind: 'write' }],
+      },
+      requiredBranches: [
+        'success', 'error', 'timeout', 'duplicate-trigger', 'forbidden-owner',
+        'preview-or-no-write', 'personal-chapter-grant',
+        ...(external ? ['cancelled', 'denied'] : []),
+      ],
+    }]]
+  }),
+  ['pages/play/index.js:onRunToggleFromTools', [{
+    handler: 'onRunToggleFromTools', writeApis: ['/api/play/run-session/save'],
+    requiredRequests: [{ urlTemplate: '/api/play/run-session/save', method: 'POST', kind: 'write' }],
+    requiredRequestsByBranch: { 'start-or-resume': [] },
+    requiredBranches: ['success', 'error', 'timeout', 'duplicate-trigger', 'forbidden-owner', 'start-or-resume'],
+  }]],
+  ['pages/play/index.js:continueChapterStory', [{
+    handler: 'continueChapterStory',
+    requiredRequestsByBranch: {
+      'opening-complete': [{ urlTemplate: '/api/play/journey/opening/complete', method: 'POST', kind: 'write' }],
+      'personal-chapter-end': [{ urlTemplate: '/api/play/theme/action', method: 'POST', kind: 'write' }],
+      'preview-or-not-ready': [],
+    },
+    requiredBranches: ['opening-complete', 'personal-chapter-end', 'preview-or-not-ready', 'error', 'timeout', 'duplicate-trigger', 'forbidden-owner'],
+  }]],
+  ...[
+    ['leadBroadcastFromTools', '/api/club/lead/broadcast'],
+    ['leadUnlockFromTools', '/api/club/lead/unlock-chapter'],
+    ['leadSettleFromTools', '/api/club/lead/settle'],
+  ].map(([handler, primary]) => {
+    const first = { urlTemplate: primary, method: 'POST', kind: 'write' }
+    return [`pages/play/index.js:${handler}`, [{
+      handler,
+      requiredRequests: [first],
+      requiredRequestsByBranch: {
+        'modal-cancelled': [],
+      },
+      requiredBranches: ['success', 'error', 'timeout', 'duplicate-trigger', 'forbidden-owner'],
+    }]]
+  }),
   ['subpackageA/pages/myproject/index.js:deleteItem', [
     { id: 'activity', handler: 'deleteItem', locatorInstance: { attribute: 'data-biz', value: 'activity' }, apis: ['/api/activity/delete'] },
     { id: 'topic', handler: 'deleteItem', locatorInstance: { attribute: 'data-biz', value: 'topic' }, apis: ['/api/topic/delete'] },
@@ -588,9 +938,30 @@ const ACTION_VARIANTS = new Map([
   ]],
   ['subpackageB/pages/im/chat/index.js:onMoreSelect', [
     { id: 'report', handler: 'onMoreSelect', sourceHandler: 'doReport', predicate: { morePick: 'report' }, apis: ['/api/im/report'] },
-    { id: 'block', handler: 'onMoreSelect', sourceHandler: 'doBlock', predicate: { morePick: 'block' }, apis: [], effectClasses: ['state'] },
+    { id: 'block', handler: 'onMoreSelect', sourceHandler: 'doBlock', predicate: { morePick: 'block' }, apis: ['/api/im/conversations'], effectClasses: ['state'] },
+    { id: 'unblock', handler: 'onMoreSelect', sourceHandler: 'doBlock',
+      predicate: { morePick: 'unblock', blockedByMe: true },
+      apis: ['/api/im/conversations', '/api/im/unblock', '/api/im/messages', '/api/im/read'],
+      writeApis: ['/api/im/unblock', '/api/im/read'], effectClasses: ['read', 'write', 'state'],
+      requiredRequests: [
+        { urlTemplate: '/api/im/conversations', method: 'POST', kind: 'read' },
+        { urlTemplate: '/api/im/unblock', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/im/messages', method: 'POST', kind: 'read' },
+        { urlTemplate: '/api/im/read', method: 'POST', kind: 'write' },
+      ],
+    },
     { id: 'clear', handler: 'onMoreSelect', sourceHandler: 'clearConversation', predicate: { morePick: 'clear' }, apis: [], effectClasses: ['state'] },
   ]],
+  ['pages/topic/merchantinfo/merchantinfo.js:onDangerConfirm', [
+    ['chapter-finish', 'doFinishChapter', '/api/topic/chapter/finish'],
+    ['chapter-invitation-revoke', 'submitChapterInvitationRevoke', '/api/merchant/chapter-application/invite/revoke'],
+    ['chapter-application-withdraw', 'submitChapterApplicationWithdraw', '/api/merchant/chapter-application/withdraw'],
+    ['chapter-invitation-reject', 'respondChapterInvitation', '/api/merchant/chapter-application/invite/respond'],
+  ].map(([id, sourceHandler, api]) => ({
+    id, handler: 'onDangerConfirm', sourceHandler, predicate: null,
+    apis: [api], writeApis: [api], effectClasses: ['write', 'state'],
+    requiredRequests: [{ urlTemplate: api, method: 'POST', kind: 'write' }],
+  }))],
   ['subpackageB/pages/im/chat/index.js:onDangerConfirm', [
     // 由确认组件的事件 key 分流，验收按对应单写请求回读，不把互斥动作算成两次写。
     { id: 'block', handler: 'onDangerConfirm', predicate: null, apis: ['/api/im/block'],
@@ -606,13 +977,13 @@ const ACTION_VARIANTS = new Map([
   // 「举报有确认 + 有取消分支」这条棘轮。
   ['pages/square/detail/index.js:onPostAction', [
     { id: 'edit', handler: 'openPostEdit', predicate: { selectAction: 'edit' }, apis: [], effectClasses: ['state'] },
-    { id: 'delete', handler: 'deleteSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/creativesquare/delete'] },
-    { id: 'report', handler: 'reportSquareFromActions', predicate: { selectAction: 'report' }, apis: ['/api/creativesquare/report'], confirmationMode: 'wx.showModal' },
+    { id: 'delete', handler: 'deleteSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/v1/community/posts/{param}'] },
+    { id: 'report', handler: 'reportSquareFromActions', predicate: { selectAction: 'report' }, apis: ['/api/v1/community/capabilities', '/api/v1/community/reports'], confirmationMode: 'wx.showModal' },
   ]],
   ['pages/square/list/index.js:onPostAction', [
     { id: 'edit', handler: 'editCurrentSquarePost', predicate: { selectAction: 'edit' }, apis: [], effectClasses: ['state'] },
-    { id: 'delete', handler: 'deleteCurrentSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/creativesquare/delete'] },
-    { id: 'report', handler: 'reportSquare', predicate: { selectAction: 'report' }, apis: ['/api/creativesquare/report'], confirmationMode: 'wx.showModal' },
+    { id: 'delete', handler: 'deleteCurrentSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/v1/community/posts/{param}'] },
+    { id: 'report', handler: 'reportSquare', predicate: { selectAction: 'report' }, apis: ['/api/v1/community/capabilities', '/api/v1/community/reports'], confirmationMode: 'wx.showModal' },
   ]],
   ['pages/square/components/cy/post-actions/index.js:onDelete', [
     // 组件的删除闸走 this._danger() 间接拿 cy-danger-confirm(selectComponent 不在本函数体),
@@ -714,11 +1085,17 @@ function nestedCallbackRanges(source) {
   return ranges
 }
 
+// 同一源码会被多个控件反复解析；只缓存成功掩码，每轮台账构建清空。
+const nonCodeMasks = new Map()
 function maskNonCodeSafely(source) {
+  const text = String(source || '')
+  if (nonCodeMasks.has(text)) return nonCodeMasks.get(text)
   try {
-    return maskNonCode(String(source || ''))
+    const masked = maskNonCode(text)
+    nonCodeMasks.set(text, masked)
+    return masked
   } catch (_) {
-    return String(source || '')
+    return text
   }
 }
 
@@ -849,7 +1226,11 @@ function reconcileServerContracts(apiContracts) {
     const methods = server.get(normalizeApiTemplate(contract.url))
     if (!methods || methods.size === 0) return contract
     if (methods.size === 1) {
-      return { ...contract, method: [...methods.keys()][0], source: 'server-controller' }
+      const serverMethod = [...methods.keys()][0]
+      if (contract.source === 'local-wrapper' && String(contract.method).toUpperCase() !== serverMethod) {
+        throw new Error(`${contract.url}: 本地 wrapper method ${contract.method} 不匹配后端 Controller ${serverMethod}`)
+      }
+      return { ...contract, method: serverMethod, source: 'server-controller' }
     }
     if (!methods.has(String(contract.method || '').toUpperCase())) {
       throw new Error(`${contract.url}: 前端 method ${contract.method || 'null'} 不在后端 Controller 合同 ${[...methods.keys()].join('/')}`)
@@ -936,7 +1317,8 @@ function inferEffectClasses(handlerName, source, appHelperBodies, targets, direc
   const body = String(source || '')
   const directBody = directSource == null ? body : String(directSource)
   const effects = []
-  const targetWrites = targets && (targets.primaryApis || []).some(isWriteApi)
+  const targetWrites = targets && ((targets.primaryApis || []).some(isWriteApi)
+    || (targets.apiContracts || []).some((c) => c.adapterBranch && c.method !== 'GET'))
   if (NETWORK_RE.test(body)) effects.push(WRITE_RE.test(name) || targetWrites ? 'write' : 'read')
   const appNetworkCalls = appHelperCalls(body, appHelperBodies)
     .filter(([, helperBody]) => NETWORK_RE.test(helperBody))
@@ -1058,6 +1440,22 @@ function parseAttrs(tagSource) {
   return attrs
 }
 
+// Only the two shared error components implement this product-level blank state.
+// Other tags or unknown expressions remain actionable and keep their handler checks.
+function loadFailureEventVisibility(component, tagSource, attrs) {
+  const supported = ['components/cy/error/index', 'components/cy/inline-error/index']
+  if (!supported.includes(component)) return { excluded: false, condition: null }
+  const template = fs.readFileSync(path.join(ROOT, component + '.wxml'), 'utf8')
+  const blankTemplate = component === supported[0]
+    ? template.includes('wx:if="{{loadFailure}}" aria-hidden="true"')
+    : template.includes('wx:if="{{!loadFailure}}"')
+  if (!blankTemplate) return { excluded: false, condition: null }
+  const value = attrs['load-failure']
+  const bare = value === undefined && /(?:^|\s)load-failure(?=\s|\/?>)(?!\s*=)/.test(tagSource)
+  const alwaysBlank = bare || value === 'true' || /^\{\{\s*true\s*\}\}$/.test(value || '')
+  return { excluded: alwaysBlank, condition: bare ? '{{true}}' : (value || null) }
+}
+
 function staticAttr(value) {
   const text = value == null ? '' : String(value)
   return text && !text.includes('{{') ? text : null
@@ -1066,6 +1464,16 @@ function staticAttr(value) {
 function dynamicAttr(value) {
   const text = value == null ? '' : String(value)
   return text.includes('{{') ? text : null
+}
+// ponytail: only literal branches under a simple data-path condition are supported.
+// Extend this grammar when a real binding needs more; unknown expressions fail closed.
+function eventHandlerNames(value) {
+  const classified = classifyBinding(value)
+  if (classified.kind === 'identifier') return [classified.name]
+  if (classified.kind === 'empty') return []
+  const match = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])([A-Za-z_$][\w$]*)\3\s*\}\}$/.exec(value)
+  if (!match) throw new Error(`无法静态解析事件绑定: ${value}`)
+  return [...new Set([match[2], match[4]])]
 }
 
 /**
@@ -1120,6 +1528,67 @@ function expandModuleFunction(file, name, seen) {
     if (bodies.has(m[2])) parts.push(expandModuleFunction(file, m[2], seen))
   }
   return parts.join('\n')
+}
+
+// Narrow only proven flat CommonJS namespaces; unresolved exports/aliases keep the conservative full module.
+function namespaceDependencySource(file, aliases, source, inlineExports) {
+  const full = fs.readFileSync(file, 'utf8')
+  const code = maskNonCodeSafely(source)
+  const called = new Set(inlineExports || [])
+  for (const alias of aliases) {
+    const pattern = new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}\\b`, 'g')
+    for (const reference of code.matchAll(pattern)) {
+      const call = code.slice(reference.index + alias.length).match(/^\.([A-Za-z_$][\w$]*)\s*\(/)
+      if (!call) return full
+      called.add(call[1])
+    }
+  }
+  if (!called.size) return full
+  let ast
+  try { ast = parseJavaScript(full) } catch (error) {
+    if (error.name === 'SyntaxError') return full
+    throw error
+  }
+  const bodies = moduleFunctionBodies(file)
+  const functions = new Set()
+  let exportsObject
+  for (const statement of ast.body) {
+    if (statement.type === 'FunctionDeclaration' && statement.id) {
+      if (bodies.get(statement.id.name) !== full.slice(statement.body.start, statement.body.end)) return full
+      functions.add(statement.id.name)
+      continue
+    }
+    if (statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
+      id.type === 'Identifier' && init && init.type === 'CallExpression' && init.callee.name === 'require'
+      && init.arguments.length === 1 && typeof init.arguments[0].value === 'string')) continue
+    const expression = statement.type === 'ExpressionStatement' && statement.expression
+    if (expression && expression.type === 'Literal' && expression.value === 'use strict') continue
+    if (!exportsObject && expression && expression.type === 'AssignmentExpression' && expression.operator === '='
+        && expression.left.type === 'MemberExpression' && !expression.left.computed
+        && expression.left.object.name === 'module' && expression.left.property.name === 'exports'
+        && expression.right.type === 'ObjectExpression') {
+      exportsObject = expression.right
+      continue
+    }
+    return full
+  }
+  if (!exportsObject || exportsObject.properties.some(property => property.type !== 'Property'
+      || property.computed || property.kind !== 'init' || property.key.type !== 'Identifier'
+      || property.value.type !== 'Identifier' || property.key.name !== property.value.name
+      || !functions.has(property.value.name))) return full
+  const exported = new Set(exportsObject.properties.map(property => property.key.name))
+  if ([...called].some(name => !exported.has(name))) return full
+  const selected = [...called].map(name => expandModuleFunction(file, name)).join('\n')
+  const selectedCode = maskNonCodeSafely(selected)
+  // Passing a local helper as a callback/alias is not a proven direct-call closure.
+  for (const name of functions) {
+    const pattern = new RegExp(`\\b${name.replace(/[$]/g, '\\$&')}\\b`, 'g')
+    for (const reference of selectedCode.matchAll(pattern)) {
+      if (selectedCode[reference.index - 1] === '.'
+          || !/^\s*\(/.test(selectedCode.slice(reference.index + name.length))) return full
+    }
+  }
+  return selected
 }
 
 /** `const { a } = require('x')` 与 `const ns = require('x')` 两种绑定。 */
@@ -1249,7 +1718,14 @@ function discoverExternalHelperNames(jsFiles) {
 function discoverAppHelperBodies(appFile) {
   if (!fs.existsSync(appFile)) return new Map()
   const slices = handlerSlices(appFile)
-  return new Map([...slices.keys()].map((name) => [name, expandHandlerBody(name, slices)]))
+  // Usage consent's record callback belongs to the separate agree gesture, not ensure()/session renewal.
+  const usageFactory = slices.get('getUsageConsent')
+  if (usageFactory) slices.set('getUsageConsent', usageFactory.replace(
+    /record:\s*function\s*\(input\)\s*\{\s*return that\.recordConsent\(input\);?\s*\}/,
+    'record: function (input) { /* invoked only by agreeUsageConsent */ }'))
+  const bodies = new Map([...slices.keys()].map((name) => [name, expandHandlerBody(name, slices)]))
+  if (bodies.has('agreeUsageConsent')) bodies.set('agreeUsageConsent', bodies.get('agreeUsageConsent') + '\n' + bodies.get('recordConsent'))
+  return bodies
 }
 
 function routeFor(wxmlFile, jsFile, registeredRoutes) {
@@ -1279,6 +1755,9 @@ function loadRoles() {
 const ASSET_PATH = /\.(?:png|jpe?g|gif|svg|webp|ico|mp3|wav|m4a|mp4|json|wxss|wxml|wxs)$/i;
 
 function extractTargets(source) {
+  // shortcut: 仅识别此白名单音频拼接；新增资源构造时扩展解析和正负控，真实导航仍保留。
+  source = source.replace(/(function bundledMerchantGameAudioPath\(path\)\s*\{[\s\S]*?if \(typeof path !== 'string' \|\| !path\.startsWith\('\/audio\/merchant-games\/'\)\) return '';\s*)const relocated = '\/pages\/play' \+ path;(\s*return merchantGameAssetSet\.has\(relocated\) \? relocated : '';\s*\})/g,
+    '$1const relocated = path;$2')
   const routes = [...source.matchAll(/["'](\/?(?:pages|subpackage[A-Za-z0-9_-]*)\/[^"']+)["']/g)]
     .map((m) => m[1].replace(/^\//, ''))
     .filter((route) => !ASSET_PATH.test(route))
@@ -1431,11 +1910,180 @@ function discoverComponentHosts() {
 
 function isSelfOnlyWriteApi(api) {
   return SELF_ONLY_WRITE_APIS.has(api) || SELF_ONLY_WRITE_API_RE.test(api)
+    || /^\/api\/v1\/community\/(?:posts|comments)\/\{param\}\/actions(?:\/(?:LIKE|BOOKMARK))?$/.test(api)
+}
+
+function communityAliasesForSource(source, jsFile) {
+  const masked = maskNonCodeSafely(source)
+  return [...source.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*require\(['"]([^'"]+)['"]\)\.createClient\s*\(/g)]
+    .filter((m) => /^(?:const|let|var)\b/.test(masked.slice(m.index))
+      && resolveSourceDependency(rel(jsFile), m[2], ['.js', '/index.js']) === 'utils/community-post-api.js').map((m) => m[1])
+}
+
+// Resolve only real community adapter calls; legacy URLs are commands, not HTTP routes.
+function communityRequestContracts(source, aliases) {
+  const contracts = []
+  const commands = new Set()
+  const base = '/api/v1/community'
+  const add = (path, method, branch) => contracts.push({ url: base + path, method,
+    auth: 'authenticated', source: 'community-adapter-call', adapterBranch: branch })
+  const masked = maskNonCodeSafely(source)
+  for (const alias of aliases) {
+    const pattern = new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}\\.request\\s*\\(\\s*\\{`, 'g')
+    for (const match of source.matchAll(pattern)) {
+      if (!masked.slice(match.index).startsWith(alias + '.request')) continue
+      const start = match.index + match[0].lastIndexOf('{')
+      let depth = 1, end = start + 1
+      for (; end < masked.length && depth; end += 1) {
+        if (masked[end] === '{') depth += 1
+        if (masked[end] === '}') depth -= 1
+      }
+      if (depth) throw new Error('community request object incomplete')
+      const call = source.slice(start, end)
+      const url = call.match(/\burl\s*:\s*['"]([^'"]+)['"]/)?.[1]
+      if (!url) throw new Error('community request URL must be literal')
+      if (!/^\/api\/(creativesquare|comment)\//.test(url)) continue
+      commands.add(url)
+      switch (url) {
+        case '/api/creativesquare/list': {
+          const dataMatch = call.match(/\bdata\s*:\s*([A-Za-z_$][\w$]*|\{)/)
+          let dataSource = ''
+          if (dataMatch) {
+            if (dataMatch[1] === '{') dataSource = call.slice(dataMatch.index)
+            else {
+              const name = dataMatch[1].replace(/[$]/g, '\\$&')
+              const declaration = [...source.matchAll(new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*\\{`, 'g'))]
+                .find((m) => /^(?:const|let|var)\b/.test(masked.slice(m.index)))
+              if (declaration) dataSource = source.slice(declaration.index)
+            }
+          }
+          // Only the request's data object, not its success callback or another request.
+          if (dataSource.includes('{')) {
+            const begin = dataSource.indexOf('{'), clean = maskNonCodeSafely(dataSource)
+            let level = 1, close = begin + 1
+            for (; close < clean.length && level; close++) { if (clean[close] === '{') level++; if (clean[close] === '}') level--; }
+            dataSource = dataSource.slice(begin, close)
+          }
+          const possibilities = (field) => {
+            const value = maskNonCodeSafely(dataSource).match(new RegExp(`\\b${field}\\s*:\\s*([^,}]+)`))?.[1]?.trim()
+            if (value == null || /^(?:0|false|null)$/.test(value)) return [false]
+            if (/^(?:1|true)$/.test(value)) return [true]
+            return [false, true]
+          }
+          const favorite = possibilities('favorite_only'), own = possibilities('is_my')
+          if (favorite.includes(true)) add('/me/bookmarks', 'GET', 'bookmarks')
+          if (favorite.includes(false)) {
+            if (own.includes(false)) add('/feeds/LATEST', 'GET', 'latest')
+            if (own.includes(true)) add('/me/posts', 'GET', 'own')
+          }
+          break
+        }
+        case '/api/comment/list': add('/posts/{param}/comments', 'GET', 'comments'); break
+        case '/api/creativesquare/info': add('/posts/{param}', 'GET', 'detail'); break
+        case '/api/creativesquare/like': case '/api/creativesquare/bookmark': {
+          const type = url.endsWith('/like') ? 'LIKE' : 'BOOKMARK'
+          add('/posts/{param}/actions', 'POST', 'enable-' + type)
+          add('/posts/{param}/actions/' + type, 'DELETE', 'disable-' + type); break
+        }
+        case '/api/comment/like':
+          add('/comments/{param}/actions', 'POST', 'enable-LIKE'); add('/comments/{param}/actions/LIKE', 'DELETE', 'disable-LIKE'); break
+        case '/api/creativesquare/delete': add('/posts/{param}', 'DELETE', 'expected-version'); break
+        case '/api/comment/delete': add('/posts/{param}/comments/{param}', 'DELETE', 'expected-version'); break
+        case '/api/comment/add': add('/posts/{param}/comments', 'POST', 'create-or-reply'); break
+        case '/api/creativesquare/report': case '/api/comment/report':
+          add('/capabilities', 'GET', 'report-taxonomy'); add('/reports', 'POST', 'confirmed-report'); break
+        case '/api/creativesquare/action':
+          add('/guidelines/active', 'GET', 'publish-guideline'); add('/guidelines/ack', 'POST', 'confirmed-guideline')
+          add('/posts/{param}', 'GET', 'edit-version'); add('/media/register', 'POST', 'new-upload-receipt')
+          add('/posts', 'POST', 'create-draft'); add('/posts/{param}', 'PATCH', 'edit-expected-version')
+          add('/posts/{param}/publish', 'POST', 'draft-only-publish'); break
+        default: throw new Error(`未登记 community adapter 指令: ${url}`)
+      }
+    }
+  }
+  return { commands, contracts }
+}
+
+function communityRequestPlan(contracts) {
+  const community = contracts.filter((c) => c.adapterBranch)
+  if (!community.length) return null
+  const byBranch = {}, outcomes = {}
+  const request = (c) => ({ urlTemplate: c.url, method: c.method, kind: c.method === 'GET' ? 'read' : 'write' })
+  const named = (branch) => request(community.find((c) => c.adapterBranch === branch))
+  const plan = (name, sequence) => {
+    byBranch[name] = sequence
+    outcomes[name] = sequence.map(() => 'success')
+  }
+  if (community.some((c) => c.adapterBranch === 'publish-guideline')) {
+    // A media-N branch proves N registrations, not an arbitrary-length upload loop.
+    for (const mode of ['create', 'edit-published', 'edit-draft']) {
+      for (let count = 0; count <= 6; count++) {
+        const sequence = [named('publish-guideline'), named('confirmed-guideline')]
+        if (mode !== 'create') sequence.push(named('edit-version'))
+        for (let n = 0; n < count; n++) sequence.push(named('new-upload-receipt'))
+        sequence.push(named(mode === 'create' ? 'create-draft' : 'edit-expected-version'))
+        if (mode !== 'edit-published') sequence.push(named('draft-only-publish'))
+        plan(`${mode}-media-${count}`, sequence)
+      }
+    }
+    plan('success', byBranch['create-media-0'])
+    byBranch['forbidden-owner'] = byBranch['edit-published-media-0']
+    outcomes['forbidden-owner'] = ['success', 'success', 'success', 'forbidden-owner']
+  } else if (community.some((c) => c.adapterBranch === 'report-taxonomy')) {
+    plan('success', [named('report-taxonomy'), named('confirmed-report')])
+  } else {
+    community.forEach((c) => plan(c.adapterBranch, [request(c)]))
+    const writes = community.filter((c) => c.method !== 'GET')
+    const versioned = writes.filter((c) => c.adapterBranch === 'expected-version')
+    const enabled = writes.filter((c) => /^enable-/.test(c.adapterBranch))
+    const toggled = writes.length === 2 && enabled.length === 1
+      && writes.some((c) => c.adapterBranch === enabled[0].adapterBranch.replace(/^enable-/, 'disable-'))
+    // Conditional readback must not replace the write that authorizes success.
+    const primary = versioned.length === 1 ? versioned[0]
+      : writes.length === 1 ? writes[0] : toggled ? enabled[0] : writes.length === 0 ? community[0] : null
+    if (!primary) throw new Error('ambiguous community write authority: declare an explicit request plan')
+    plan('success', byBranch[primary.adapterBranch])
+  }
+  // A normal write can precede adapter readback (comment follow -> refreshed comments).
+  // Keep that existing write; resolving its readback must not erase the authority step.
+  const precedingWrites = contracts.filter((c) => !c.adapterBranch && c.method !== 'GET'
+    && !AUXILIARY_APIS.has(c.url) && (isWriteApi(c.url) || SELF_ONLY_WRITE_APIS.has(c.url))).map(request)
+  if (precedingWrites.length) {
+    Object.keys(byBranch).forEach((branch) => {
+      byBranch[branch] = precedingWrites.concat(byBranch[branch])
+      outcomes[branch] = precedingWrites.map(() => 'success').concat(outcomes[branch])
+    })
+  }
+  const success = byBranch.success
+  plan('duplicate-trigger', success)
+  for (const failure of ['error', 'timeout']) {
+    byBranch[failure] = success.slice(0, 1); outcomes[failure] = [failure]
+    for (let index = 1; index < success.length; index++) {
+      const branch = `stage-${index + 1}-${failure}`
+      byBranch[branch] = success.slice(0, index + 1)
+      outcomes[branch] = success.slice(0, index).map(() => 'success').concat(failure)
+    }
+  }
+  return { requiredRequests: success, requiredRequestsByBranch: byBranch,
+    requiredRequestOutcomes: outcomes, branches: Object.keys(byBranch).filter((b) => b !== 'forbidden-owner') }
 }
 
 function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodies) {
   const expandedSource = [source].concat(appHelperCalls(source, appHelperBodies).map(([, body]) => body)).join('\n')
   const targets = extractTargets(expandedSource)
+  // The helper contains a conditional roam preflight. Resolve only proven
+  // non-roam literal inputs / app_launch helper, preserving direct readback calls
+  // (merchant_redeem legitimately invokes latest) and unknown dynamic inputs.
+  const consentInputs = [...source.matchAll(/\brecordConsent\s*\(\s*\{([^{}]*)\}/g)].map(match => match[1])
+  const knownNoRoamAgree = consentInputs.length > 0 && consentInputs.every(input =>
+    /\beventType\s*:\s*['"]REVOKE['"]/.test(input)
+      || /\bscene\s*:\s*['"](?!roam_location['"])[^'"]+['"]/.test(input)
+      || /\bdocType\s*:\s*['"](?!privacy_policy['"])[^'"]+['"]/.test(input))
+
+  if (/\bapp\.requestSeparateConsent\s*\(/.test(source)) {
+    targets.apis.push('/api/compliance/consents')
+    targets.apiContracts.push({ url: '/api/compliance/consents', method: 'POST', auth: 'authenticated', source: 'separate-consent-call' })
+  }
   // director.js 的 this._getAdapter() 返回唯一 club adapter。只映射实际调用的方法，
   // 不把整个 game-session-client 的 command/export 等端点灌入一次 receipt 读取。
   if (rel(jsFile) === 'pages/club/topic-detail/index.js'
@@ -1443,6 +2091,8 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     const methods = {
       load: ['/api/game/session/view', 'GET'],
       exportRecap: ['/api/game/session/recap/export', 'GET'],
+      loadSharedExport: ['/api/game/session/shared/export', 'GET'],
+      anchorSharedRun: ['/api/game/session/shared/export/anchor', 'POST'],
       submit: ['/api/game/session/command', 'POST'],
       readReceipt: ['/api/game/session/receipt', 'GET'],
     }
@@ -1451,9 +2101,19 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       const [url, method] = methods[call[1]]
       targets.apis.push(url)
       targets.apiContracts.push({ url, method, auth: 'authenticated', source: 'club-director-adapter-call' })
+      if (call[1] === 'load') {
+        targets.apis.push('/api/game/session/shared/control')
+        targets.apiContracts.push({ url: '/api/game/session/shared/control', method: 'GET', auth: 'authenticated', source: 'club-director-adapter-call' })
+      }
     }
   }
   const fileSource = fs.readFileSync(jsFile, 'utf8')
+  const communityAliases = communityAliasesForSource(fileSource, jsFile)
+  const communityTargets = communityRequestContracts(expandedSource, communityAliases)
+  targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
+  targets.apiContracts = targets.apiContracts.filter((c) => !communityTargets.commands.has(c.url))
+  targets.apis.push(...communityTargets.contracts.map((c) => c.url))
+  targets.apiContracts.push(...communityTargets.contracts)
   for (const declaration of fileSource.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)\s*\{/g)) {
     const helperName = declaration[1]
     const urlParam = declaration[2].split(',')[0].trim()
@@ -1464,9 +2124,21 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     const methodMatch = body.match(/\bmethod\s*:\s*["']([A-Za-z]+)["']/)
     const urlBinding = new RegExp(`\\burl\\s*:\\s*${urlParam.replace(/[$]/g, '\\$&')}\\b`).test(body)
       || (urlParam === 'url' && /(?:^|[,\n{])\s*url\s*,/.test(body))
-    if (!methodMatch || !urlBinding) continue
+    const communityWrapper = communityAliases.some((alias) => new RegExp(`\\b${alias}\\.request\\s*\\(`).test(maskNonCodeSafely(body)))
+    if (!urlBinding || (!methodMatch && !communityWrapper)) continue
     const callPattern = new RegExp(`\\b${helperName.replace(/[$]/g, '\\$&')}\\s*\\(\\s*["'](\\/api\\/[^"']+)["']`, 'g')
     for (const call of expandedSource.matchAll(callPattern)) {
+      if (!maskNonCodeSafely(expandedSource).slice(call.index).startsWith(helperName)) continue
+      if (communityWrapper) {
+        const tail = expandedSource.slice(call.index + call[0].length)
+        const dataName = tail.match(/^\s*,\s*([A-Za-z_$][\w$]*)/)?.[1]
+        const synthetic = `community.request({url:'${call[1]}',data:${dataName || '{}'}});\n` + expandedSource
+        const resolved = communityRequestContracts(synthetic, ['community'])
+        resolved.commands.forEach((url) => communityTargets.commands.add(url))
+        targets.apis.push(...resolved.contracts.map((c) => c.url))
+        targets.apiContracts.push(...resolved.contracts)
+        continue
+      }
       targets.apiContracts.push({
         url: call[1], method: methodMatch[1].toUpperCase(), auth: 'authenticated', source: 'local-wrapper',
       })
@@ -1477,7 +2149,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     if (listName === 'recommendedTopicList') targets.apis.push('/api/topic/list')
     if (listName === 'nearbyActivityList' || listName === 'upcomingActivityList') targets.apis.push('/api/activity/list')
   }
-  const appendDependencyTargets = (scanFile) => {
+  const appendDependencyTargets = (scanFile, inlineSource) => {
     const jsSource = fs.readFileSync(scanFile, 'utf8')
     const dependencies = []
     for (const match of jsSource.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*require\(['"]([^'"]+)['"]\)/g)) {
@@ -1491,18 +2163,27 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         request: match[2],
       })
     }
-    dependencies.forEach(({ names, request, namedImports }) => {
-      if (!names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
+    const inlineCode = maskNonCodeSafely(inlineSource)
+    for (const match of inlineSource.matchAll(/\brequire\(\s*['"]([^'"]+)['"]\s*\)\.([A-Za-z_$][\w$]*)\s*\(/g)) {
+      if (inlineCode.slice(match.index).startsWith('require')) {
+        dependencies.push({ names: [], request: match[1], inlineExports: [match[2]] })
+      }
+    }
+    dependencies.forEach(({ names, request, namedImports, inlineExports }) => {
+      if (!inlineExports && !names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
       if (!dependency) return
+      if (dependency === 'utils/community-post-api.js') return
       if (dependency === 'utils/game-session-client.js') {
         const methods = {
           loadProjection: ['/api/game/session/view', 'GET'],
           loadClubRecapExport: ['/api/game/session/recap/export', 'GET'],
+          loadSharedControl: ['/api/game/session/shared/control', 'GET'],
+          loadSharedExport: ['/api/game/session/shared/export', 'GET'],
           submitAction: ['/api/game/session/command', 'POST'],
           readReceipt: ['/api/game/session/receipt', 'GET'],
         }
-        const called = new Set()
+        const called = new Set(inlineExports || [])
         if (namedImports) {
           namedImports.forEach((parts) => {
             const alias = parts.at(-1).replace(/[$]/g, '\\$&')
@@ -1525,7 +2206,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       }
       // 2026-09-17 第二轮拍板 22:play-run-session 同时有本机快照(无请求)与服务端会话三种请求。
       // 整份依赖扫描会让「调了 readPausedRun」的每个点击都带上 /save 写入;与 game-session-client 同法按方法取端点。
-      if (dependency === 'pages/play/utils/play-run-session.js') {
+      if (dependency === 'pages/play/utils/play-run-session.js' || dependency === 'utils/play-run-session.js') {
         const methods = {
           saveServerPausedRun: ['/api/play/run-session/save', 'POST'],
           clearServerRunSession: ['/api/play/run-session/clear', 'POST'],
@@ -1565,14 +2246,25 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         })
         return
       }
-      const dependencyTargets = extractTargets(fs.readFileSync(path.join(ROOT, dependency), 'utf8'))
+      const dependencyFile = path.join(ROOT, dependency)
+      const dependencyTargets = extractTargets(namedImports ? fs.readFileSync(dependencyFile, 'utf8')
+        : namespaceDependencySource(dependencyFile, names, expandedSource, inlineExports))
       targets.routes.push(...dependencyTargets.routes)
       targets.apis.push(...dependencyTargets.apis)
       targets.apiContracts.push(...dependencyTargets.apiContracts)
     })
   }
-  appendDependencyTargets(jsFile)
-  if (appHelperCalls(source, appHelperBodies).length) appendDependencyTargets(path.join(ROOT, 'app.js'))
+  appendDependencyTargets(jsFile, source)
+  const calledAppHelpers = appHelperCalls(source, appHelperBodies)
+  if (calledAppHelpers.length) appendDependencyTargets(path.join(ROOT, 'app.js'),
+    calledAppHelpers.map(([, body]) => body).join('\n'))
+  targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
+  targets.apiContracts = targets.apiContracts.filter((c) => !communityTargets.commands.has(c.url))
+  if (!/['"]\/api\/compliance\/consents\/latest['"]/.test(source)
+      && (knownNoRoamAgree || /\bapp\.agreeUsageConsent\s*\(/.test(source))) {
+    targets.apis = targets.apis.filter(url => url !== '/api/compliance/consents/latest')
+    targets.apiContracts = targets.apiContracts.filter(contract => contract.url !== '/api/compliance/consents/latest')
+  }
   let apiContracts = [...new Map(targets.apiContracts.map((item) => [`${item.url}\0${item.method || ''}`, item])).values()]
     .sort((a, b) => a.url.localeCompare(b.url) || String(a.method).localeCompare(String(b.method)))
   const templatePrefixes = new Set(apiContracts.filter((item) => item.url.includes('{param}'))
@@ -1600,7 +2292,16 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
   }
 }
 
+// Native page handlers have no WXML binding; reuse the same resolver without adding controls.
+function targetsForHandler(jsFile, handlerName) {
+  const slices = handlerSlices(jsFile)
+  if (!slices.has(handlerName)) throw new Error(`未找到实际 handler: ${handlerName}`)
+  return extractHandlerTargets(expandHandlerBody(handlerName, slices), jsFile, handlerName, {},
+    discoverAppHelperBodies(path.join(ROOT, 'app.js')))
+}
+
 function buildLedger() {
+  nonCodeMasks.clear()
   const roles = loadRoles()
   const registeredRoutes = new Set(readAppRoutes().map((route) => route.pagePath))
   const { map } = buildJsToWxmlMap(ROOT)
@@ -1615,6 +2316,8 @@ function buildLedger() {
     const handlerEntries = extractOwnHandlerEntries(jsFile)
     const handlerSources = new Map(handlerEntries.map((entry) => [entry.name, `${rel(entry.file || jsFile)}:${entry.line}`]))
     const slices = handlerSlices(jsFile)
+    const ownerJson = jsFile.replace(/\.js$/, '.json')
+    const ownerConfig = fs.existsSync(ownerJson) ? JSON.parse(fs.readFileSync(ownerJson, 'utf8')) : {}
     wxmlFiles.slice().sort().forEach((wxmlFile) => {
       const source = fs.readFileSync(wxmlFile, 'utf8')
       const tags = scanTags(source)
@@ -1627,15 +2330,18 @@ function buildLedger() {
       const hostRoutes = [...new Set(hostComponentPaths.map((item) => item.route))].sort()
       // 未被任何 app page（含组件依赖闭包）引用的孤儿组件不属于可操作产品分母。
       if (route.startsWith('component:') && hostRoutes.length === 0) return
-      findEventBindings(source).forEach((binding, bindingIndex) => {
-        const classified = classifyBinding(binding.value)
-        if (classified.kind !== 'identifier') return
+      findEventBindings(source).flatMap((binding, bindingIndex) =>
+        eventHandlerNames(binding.value).map(name => ({ binding, bindingIndex, name }))
+      ).forEach(({ binding, bindingIndex, name }) => {
         const tag = tags.find((candidate) => candidate.start <= binding.offset && binding.offset <= candidate.end)
         const tagSource = tag ? source.slice(tag.start, tag.end + 1) : ''
         const attrs = parseAttrs(tagSource)
+        const component = tag && resolveComponentJson(ownerJson, (ownerConfig.usingComponents || {})[tag.name])
+        const loadFailure = loadFailureEventVisibility(component, tagSource, attrs)
+        if (loadFailure.excluded) return
         const rawAriaLabel = attrs['aria-label'] || attrs['accessibility-label'] || null
-        const variantKey = `${rel(jsFile)}:${classified.name}`
-        const variants = (ACTION_VARIANTS.get(variantKey) || [{ id: null, handler: classified.name, predicate: null }])
+        const variantKey = `${rel(jsFile)}:${name}`
+        const variants = (ACTION_VARIANTS.get(variantKey) || [{ id: null, handler: name, predicate: null }])
           .filter((variant) => !variant.events || variant.events.includes(binding.attrName))
         variants.forEach((variant) => {
         const body = expandHandlerBody(variant.sourceHandler || variant.handler, slices)
@@ -1674,9 +2380,8 @@ function buildLedger() {
           ? variant.confirmationMode
           : modalContractForHandler(variant.handler, slices, interactionModeFor(binding.attrName))
         const inferredWriteApis = effectClasses.includes('write') ? targets.primaryApis.filter((api) => {
-          const contract = targets.apiContracts.find((item) => item.url === api)
-          return contract && contract.method && contract.method !== 'GET'
-            && (isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api))
+          return targets.apiContracts.some((contract) => contract.url === api && contract.method && contract.method !== 'GET'
+            && (contract.adapterBranch || isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api)))
         }) : []
         const writeApis = variant.writeApis || inferredWriteApis
         if (writeApis.some((api) => !targets.primaryApis.includes(api)
@@ -1698,7 +2403,55 @@ function buildLedger() {
             requiredRequestOutcomes: { ...plan.requiredRequestOutcomes, 'without-chapter-grant': ['success'] },
             requiredBranches: plan.requiredBranches.concat(['without-chapter-grant']) }
         }
-        const baseControlId = `${rel(wxmlFile)}:${binding.line}:${binding.attrName}:${classified.name}:${bindingIndex}`
+        const communityPlan = communityRequestPlan(targets.apiContracts)
+        if (communityPlan && !variant.requiredRequests && !variant.requiredRequestsByBranch) {
+          variant = { ...variant, ...communityPlan,
+            requiredBranches: [...new Set(requiredBranchesFor(actionClass, baseActionClass,
+              externalCapabilities, effectClasses, accessBoundary).concat(communityPlan.branches))] }
+        }
+        const isRoamAgree = rel(jsFile) === 'pages/roam/index.js'
+          && (['goStart', 'goStartAndShoot'].includes(variant.handler) || variant.handler === 'toggleGps' && variant.id === 'start')
+        if (isRoamAgree) {
+          const branches = requiredBranchesFor(actionClass, baseActionClass, externalCapabilities, effectClasses, accessBoundary)
+          const plan = roamAgreeRequestPlan()
+          // GO obtains its one-shot position before recording; its delayed chooser
+          // can fail after the record. toggleGps records before starting the SDK.
+          const noRecord = variant.handler === 'toggleGps' ? []
+            : branches.filter(branch => /denied$/.test(branch)
+              && capabilityFailureContract(externalCapabilities).requiredCapabilityByBranch[branch] === 'getLocation')
+          variant = { ...variant, ...plan,
+            requiredRequestsByBranch: { ...plan.requiredRequestsByBranch,
+              ...Object.fromEntries(noRecord.map(branch => [branch, [{ urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }]])) },
+            requiredRequestOutcomes: { ...plan.requiredRequestOutcomes,
+              ...Object.fromEntries(branches.filter(branch => /(?:cancelled|denied)$/.test(branch) && !noRecord.includes(branch))
+                .map(branch => [branch, ['success', 'success']])),
+              ...Object.fromEntries(noRecord.map(branch => [branch, ['not-called']])) },
+            requiredBranches: [...new Set(branches.concat(['record-error-after-latest', 'record-timeout-after-latest',
+              'baseline-retry', 'baseline-retry-error', 'baseline-retry-timeout']))],
+          }
+        }
+        const isRoamRevoke = name === 'withdrawRoamLocationConsent' && [
+          'pages/privacy/index.js', 'pages/shezhi/components/privacy-sheet/index.js',
+        ].includes(rel(jsFile))
+        if (isRoamRevoke) {
+          const request = { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }
+          const branches = requiredBranchesFor(actionClass, baseActionClass, externalCapabilities, effectClasses, accessBoundary)
+          variant = { ...variant, requiredRequests: [request],
+            requiredRequestOutcomes: Object.fromEntries(branches.map(branch => [branch,
+              [branch === 'error' || branch === 'timeout' ? branch : 'success']])),
+            requiredReadbackLinksByBranch: Object.fromEntries(branches.map(branch => [branch, [{
+              fromPath: 'observed.roamRevocation.principalFingerprint',
+              toPath: 'authoritativeReadback.accessScope.principalFingerprint',
+            }].concat(branch === 'error' || branch === 'timeout' ? [] : [
+              { fromPath: 'observed.roamRevocation.recordRequest.body.requestId', toPath: 'observed.roamRevocation.recordEcho.requestId' },
+              { fromPath: 'observed.roamRevocation.recordRequest.body.requestId', toPath: 'authoritativeReadback.authority.after.requestId' },
+              ...['docType', 'scene', 'eventType'].map(field => ({
+                fromPath: `observed.roamRevocation.recordRequest.body.${field}`, toPath: `authoritativeReadback.authority.after.${field}`,
+              })),
+            ])])),
+          }
+        }
+        const baseControlId = `${rel(wxmlFile)}:${binding.line}:${binding.attrName}:${name}:${bindingIndex}`
         const controlId = variant.id ? `${baseControlId}:variant:${variant.id}` : baseControlId
         controls.push({
           id: controlId,
@@ -1729,10 +2482,11 @@ function buildLedger() {
           control: {
             tag: tag ? tag.name : 'unknown',
             event: binding.attrName,
-            handler: classified.name,
+            handler: name,
             line: binding.line,
             selectorHint: attrs.id ? `#${attrs.id}` : (attrs.class ? `.${attrs.class.trim().split(/\s+/)[0]}` : `${tag ? tag.name : 'unknown'}[${binding.attrName}]`),
             visibleCondition: attrs['wx:if'] || attrs['wx:elif'] || attrs.hidden || null,
+            ...(loadFailure.condition ? { loadFailureCondition: loadFailure.condition } : {}),
             disabledCondition: attrs.disabled || null,
             ariaLabel: staticAttr(rawAriaLabel),
             ariaLabelExpression: dynamicAttr(rawAriaLabel),
@@ -1752,6 +2506,7 @@ function buildLedger() {
           accessBoundary,
           externalCapabilities,
           successCapabilities: successCapabilitiesFor(externalCapabilities),
+          ...(isRoamRevoke ? { successCapabilityContract: ROAM_REVOKE_CONTRACT } : {}),
           targets,
           expectedReadback: buildExpectedReadback(actionClass, baseActionClass, effectClasses),
           requiredBranches: [...new Set((variant.requiredBranches || requiredBranchesFor(
@@ -1759,7 +2514,7 @@ function buildLedger() {
           )).concat(confirmationMode ? ['modal-cancelled'] : []))],
           requiredPlatforms: requiredPlatformsFor(actionClass),
           externalGate: actionClass === 'external' ? 'real-device-required' : null,
-          evidence: { status: 'pending', staticSource: handlerSources.get(classified.name) || `${rel(jsFile)}:0` },
+          evidence: { status: 'pending', staticSource: handlerSources.get(name) || `${rel(jsFile)}:0` },
         })
         })
       })
@@ -1767,6 +2522,7 @@ function buildLedger() {
   })
 
   controls.sort((a, b) => a.id.localeCompare(b.id))
+  nonCodeMasks.clear()
   return {
     schemaVersion: 7,
     generatedBy: 'scripts/uiaudit/build-action-ledger.js --write',
@@ -2406,7 +3162,14 @@ function validateEvidenceOverlay(ledger, overlay) {
             return
           }
           try {
-            validateBranchReceipt(control, item.name, item.readback, fixture)
+            const signedBranch = signedBranchReadbackDigests && signedBranchReadbackDigests[item.name]
+            const actualBranch = deviceBranchReadbackDigests([item])[item.name]
+            validateBranchReceipt(control, item.name, item.readback, fixture, {
+              verified: !!signedBranch && signedBranch === actualBranch,
+              captureId: capture.id, sourceDigest: evidence.sourceDigest,
+              principalFingerprint: executionAttestation.identityFingerprint,
+              readbackDigest: crypto.createHash('sha256').update(stableJson(item.readback)).digest('hex'),
+            })
             const externalEffects = control.effectClasses && control.effectClasses.length
               ? control.effectClasses : [control.baseActionClass || 'other']
             const externalKind = externalEffects.includes('write') ? 'write'
@@ -2550,7 +3313,7 @@ function main() {
   const current = serialized()
   if (process.argv.includes('--write')) {
     fs.writeFileSync(OUTPUT, current)
-    console.log(`ACTION-LEDGER WRITE PASS: ${buildLedger().controlCount} controls`)
+    console.log(`ACTION-LEDGER WRITE PASS: ${JSON.parse(current).controlCount} controls`)
     return 0
   }
   if (!fs.existsSync(OUTPUT) || fs.readFileSync(OUTPUT, 'utf8') !== current) {
@@ -2576,6 +3339,8 @@ function main() {
 if (require.main === module) process.exitCode = main()
 
 module.exports = {
+  eventHandlerNames,
+  loadFailureEventVisibility,
   inferActionClass,
   inferEffectClasses,
   buildExpectedReadback,
@@ -2585,9 +3350,17 @@ module.exports = {
   modalContractFor,
   modalContractForHandler,
   expandHandlerBody,
+  handlerSlices,
   discoverExternalHelperNames,
   serverApiContracts,
   buildLedger,
+  targetsForHandler,
+  communityRequestContracts,
+  communityAliasesForSource,
+  communityRequestPlan,
+  isSelfOnlyWriteApi,
+  isWriteApi,
+  extractTargets,
   sourceFilesFor,
   sourceDigestFor,
   sourceDigestAtCommit,

@@ -56,34 +56,29 @@ page{ background:var(--cy-color-bg-page); }
   pointer-events: auto;
 }
 /* ===================== 漫游入口 · 真实地图浏览态 ===================== */
-.entry-map{ position:absolute; inset:0; z-index:9; overflow:hidden; background:var(--cy-color-play-page); --entry-overlay-top:calc(var(--cy-safe-top) + 116rpx); --entry-peek-h:490rpx; } /* ds-ok 标题 + 大卡 + 安全区刚好装下，不留假展开空位 */
-.entry-map__map{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-.entry-map__title{ position:absolute; left:var(--cy-page-x); z-index:12; color:var(--cy-color-text-primary); font-size:48rpx; line-height:58rpx; font-weight:800; text-shadow:0 2rpx 12rpx rgba(0,0,0,.35); } /* ds-ok Figma 11:4 地图标题实测 */
-.entry-map__layers{ position:absolute; right:44rpx; z-index:33; width:96rpx; height:96rpx; border-radius:50%; background:#FFFFFF; color:#111111; display:flex; align-items:center; justify-content:center; box-shadow:0 12rpx 38rpx rgba(0,0,0,.35); } /* ds-ok 与入口白色搜索框同一微信地图控件语言 */
-.entry-map__actions{ display:flex; flex-direction:column; gap:var(--cy-space-3); position:absolute; right:var(--cy-page-x); bottom:calc(var(--entry-peek-h) + var(--cy-space-3)); z-index:12; }
-.entry-map__roam{ height:var(--cy-btn-h); padding:0 var(--cy-space-5); gap:var(--cy-space-2); border-radius:var(--cy-radius-pill); background:var(--cy-color-play-elevated); color:var(--cy-color-text-primary); display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:800; box-shadow:var(--cy-shadow-card); }
-.entry-map__permission{ position:absolute; left:var(--cy-page-x); right:var(--cy-page-x); top:var(--entry-overlay-top); z-index:14; }
-.entry-peek{ position:fixed; left:0; right:0; bottom:0; z-index:223; height:var(--entry-peek-h); box-sizing:border-box; padding:var(--cy-space-4) 0 env(safe-area-inset-bottom); border-radius:var(--cy-radius-xl) var(--cy-radius-xl) 0 0; background:linear-gradient(rgba(0,0,0,.62),rgba(0,0,0,.62)),var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); box-shadow:0 -20rpx 48rpx rgba(0,0,0,.35); } /* ds-ok 常驻抽屉没有详情态的地图遮罩，在玻璃底内补同档暗度后两态肉眼一致 */
-.entry-peek__head{ display:flex; align-items:center; justify-content:space-between; padding:0 var(--cy-page-x) var(--cy-space-4); color:var(--cy-color-text-primary); font-size:var(--cy-type-section-title); line-height:1.25; font-weight:800; }
-.entry-peek__cards{ width:100%; height:340rpx; white-space:nowrap; }
-.entry-peek__state{ height:340rpx; margin:0 var(--cy-page-x); border-radius:var(--cy-radius-lg); background:var(--cy-color-play-elevated); color:var(--cy-color-text-primary); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; }
+/* ds-ok 以下尺寸与渐变来自已确认 HTML；卡片共用同一首卡边距。 */
+.entry-peek{ position:relative; z-index:3; flex:none; height:366rpx; box-sizing:border-box; padding:31rpx 0 38rpx; background:linear-gradient(180deg,transparent 0%,rgba(17,17,17,.45) 55%,var(--roam-home-bg) 100%); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.entry-peek__head{ padding:0 var(--roam-card-inset) 23rpx; color:var(--cy-color-text-primary); font-size:29rpx; line-height:36rpx; font-weight:700; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.entry-peek__cards{ width:100%; height:242rpx; white-space:nowrap; }
+.entry-peek__track{ display:inline-flex; padding:0 var(--roam-card-inset); gap:23rpx; }
+.entry-peek__state{ height:242rpx; margin:0 var(--roam-card-inset); border-radius:27rpx; background:linear-gradient(180deg,var(--cy-color-play-elevated),var(--roam-home-bg)); color:var(--cy-color-text-primary); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .entry-peek__state text:last-child{ margin-top:var(--cy-space-1); color:var(--cy-color-text-tertiary); font-size:var(--cy-type-caption); font-weight:500; }
-.entry-card{ position:relative; display:inline-flex; width:500rpx; height:340rpx; margin-left:var(--cy-page-x); overflow:hidden; border-radius:var(--cy-radius-lg); background:var(--cy-color-play-elevated); vertical-align:top; }
-.entry-card:last-child{ margin-right:var(--cy-page-x); }
+.entry-card{ position:relative; display:inline-flex; flex:none; width:508rpx; height:242rpx; overflow:hidden; border-radius:27rpx; background:linear-gradient(180deg,var(--cy-color-play-elevated),var(--roam-home-bg)); vertical-align:top; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .entry-card__cover{ position:absolute; inset:0; width:100%; height:100%; background:var(--cy-color-play-elevated); }
 .entry-card__cover--empty{ display:flex; align-items:center; justify-content:center; color:var(--cy-color-text-tertiary); }
-.entry-card__shade{ position:absolute; inset:0; background:linear-gradient(180deg,transparent,var(--cy-color-play-page)); }
-.entry-card__copy{ position:absolute; left:var(--cy-space-4); right:var(--cy-space-4); bottom:var(--cy-space-3); display:flex; flex-direction:column; color:var(--cy-color-text-primary); }
-.entry-card__tag{ align-self:flex-start; margin-bottom:var(--cy-space-1); padding:var(--cy-space-1) var(--cy-space-1-5); border-radius:var(--cy-radius-pill); background:var(--cy-color-play-elevated); font-size:var(--cy-type-micro); }
-.entry-card__title{ font-size:var(--cy-type-section-title); line-height:1.25; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.entry-card__meta{ margin-top:var(--cy-space-1); color:var(--cy-color-text-secondary); font-size:var(--cy-type-caption); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.entry-card__shade{ position:absolute; inset:0; background:linear-gradient(180deg,transparent,var(--roam-home-bg)); }
+.entry-card__copy{ position:absolute; left:27rpx; right:27rpx; bottom:23rpx; display:flex; flex-direction:column; color:var(--cy-color-text-primary); }
+.entry-card__tag{ margin-bottom:var(--cy-space-1); color:var(--cy-color-text-secondary); font-size:19rpx; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.entry-card__title{ font-size:27rpx; line-height:1.25; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.entry-card__meta{ margin-top:var(--cy-space-1); color:var(--cy-color-text-secondary); font-size:19rpx; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 
 .entry-sheet__mask{ background:rgba(0,0,0,.62); } /* ds-ok Figma 20:4 地图退后遮罩实测 */
 .entry-sheet{ background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur));
   padding-bottom:env(safe-area-inset-bottom);
   transform:translateY(100%) scale(.985); transform-origin:50% 100%;
-  transition:transform var(--cy-motion-slow) var(--cy-ease-spring), opacity var(--cy-motion-standard) var(--cy-ease-out); }
-.entry-sheet.is-in{ transform:translateY(0) scale(1); }
+  /* 2026-10-23 业主定:弹层不回弹、慢快慢,按档位定速(tokens 的 --cy-motion-sheet-*);原 350ms 弹簧曲线取消 */
+  transition:transform var(--cy-motion-sheet-out) var(--cy-ease-standard), opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
+.entry-sheet.is-in{ transform:translateY(0) scale(1); transition-duration:var(--cy-motion-sheet-in); }
 .entry-sheet__head{ min-height:88rpx; margin-top:var(--cy-space-3); display:flex; align-items:flex-end; gap:var(--cy-space-2); }
 .entry-sheet__head-copy{ min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; }
 .entry-sheet__back{ flex:none; width:88rpx; height:88rpx; margin-left:calc(var(--cy-space-2) * -1); color:var(--cy-comp-sheet-player-text); display:flex; align-items:center; justify-content:center; }
@@ -138,37 +133,17 @@ page{ background:var(--cy-color-bg-page); }
 .entry-layer__switch.is-on view{ transform:translateX(36rpx); background:var(--cy-color-text-inverse); }
 .entry-layer__note{ margin-top:var(--cy-space-3); padding:var(--cy-space-3); border-radius:var(--cy-radius-md); background:var(--cy-comp-sheet-player-card); color:var(--cy-comp-sheet-player-text-secondary); font-size:var(--cy-type-caption); line-height:1.5; }
 /* ===================== A4 起始过场 · 深色 NRC 布局 ===================== */
-.intro{ position:absolute; inset:0; z-index:10; background:var(--cy-color-bg-page); animation:r-fade .4s ease;
-  display:flex; flex-direction:column; align-items:stretch; padding:0 var(--cy-page-x); box-sizing:border-box; }
-/* 出发底图收进「开始主题」的 stage:卡片区是页面底色,地图从卡片下方才开始(Figma 3956:12602 y=375) */
-.intro-map__el{ position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
-/* 大标题左置,与胶囊垂直对齐;右侧不放按钮 */
-.intro-top{ position:relative; z-index:3; box-sizing:border-box; display:flex; align-items:center;
-  padding-top:50rpx; padding-right:200rpx; } /* ds-ok Figma 实测:头像底↔标题 = 114-88pt */
-.intro-title{ font-size:var(--cy-type-display); font-weight:800; line-height:1; color:var(--cy-color-text-primary);
-  letter-spacing:-1rpx; } /* ds-ok: letter-spacing -1rpx 无匹配 token */
-/* 起始页头部三段的间距全部取自 Figma 3956:12602 实测(390pt→750rpx,×1.923):
-   头像 40pt=77rpx 距状态栏 14pt=27rpx · 标题文字底 y=169 → tab 文字顶 y=182 = 25rpx
-   · tab 文字底 y=203 → 卡片顶 y=247 = 85rpx。稿上很宽松,别按感觉收紧。 */
-.intro-head{ display:flex; align-items:center; }
-.intro-ava{ display:block; width:77rpx; height:77rpx; border-radius:var(--cy-radius-pill);
-  background:var(--cy-color-bg-elevated); } /* ds-ok Figma 实测 40pt;顶部与胶囊(chrome.actionTop)同起点 */
-/* 触控热区:头像视觉 77rpx 是 Figma 定死的(上面那条 ds-ok),不动;
-   按 DS §3.2 的透明 wrapper 范式包一层,只把热区抬到 88rpx(差 11rpx)。
-   .intro-head 是一行 flex,同层没有别的元素,外扩 5.5rpx 不会碰到谁。 */
+/* ds-ok 首页几何来自确认 HTML，安全区保留小程序原有胶囊计算。 */
+.intro{ position:absolute; inset:0; z-index:10; --roam-home-bg:#111111; --roam-card-inset:46rpx; background:var(--roam-home-bg); /* ds-ok 漫游原型刻意值(NRC 大读数/原型色) */
+  display:flex; flex-direction:column; align-items:stretch; padding:0 0 var(--cy-tabbar-h); box-sizing:border-box; overflow:hidden; }
+.intro-head{ flex:none; display:flex; align-items:center; padding-left:35rpx; }
+.intro-ava{ display:block; width:77rpx; height:77rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-bg-elevated); }
 .intro-ava-hit{ position:relative; width:77rpx; height:77rpx; flex:none; }
-.intro-ava-hit::after{
-  content:'';
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:88rpx;
-  height:88rpx;
-  transform:translate(-50%, -50%);
-}
-.intro-nav{ padding-top:55rpx; padding-bottom:55rpx; }   /* ds-ok 用户裁决:tab 居中于标题与卡片之间
-   (稿值是 25/85 偏上,实机看不平衡;总距 110rpx 不变,只把 tab 挪到中点) */
-.intro-permission{ position:relative; z-index:3; display:block; margin-top:var(--cy-space-3); }
+.intro-ava-hit::after{ content:''; position:absolute; left:50%; top:50%; width:88rpx; height:88rpx; transform:translate(-50%, -50%); }
+.intro-top{ position:relative; z-index:3; flex:none; margin-top:39rpx; height:108rpx; padding:0 46rpx; box-sizing:border-box; }
+.intro-title{ font-size:54rpx; font-weight:700; line-height:65rpx; color:var(--cy-color-text-primary); letter-spacing:-2rpx; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.intro-nav{ flex:none; height:77rpx; padding:0 46rpx; box-sizing:border-box; }
+.intro-permission{ position:relative; z-index:3; display:block; margin:var(--cy-space-3) 46rpx; }
 .go-wrap{ position:absolute; left:0; right:0; bottom:calc(var(--cy-tabbar-h) + 56rpx); z-index:20; /* ds-ok: 抬离 tabBar */
   display:flex; flex-direction:column; align-items:center; padding:0 var(--cy-page-x); box-sizing:border-box; }
 .go-row{ display:flex; align-items:center; justify-content:center; gap:var(--cy-space-5); width:100%; }
@@ -773,7 +748,7 @@ page{ background:var(--cy-color-bg-page); }
 .settle__big{ display:block; padding:31rpx 38rpx 0; font-size:170rpx; line-height:1.05; font-weight:800; color:#FFFFFF; } /* ds-ok Figma 实测 96pt 级 */
 .settle__unit{ display:block; padding:0 38rpx 23rpx; font-size:42rpx; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .settle__grid{ display:flex; flex-wrap:wrap; padding:23rpx 38rpx 0; }
-.sgc{ width:33.33%; box-sizing:border-box; padding-bottom:38rpx; display:flex; flex-direction:column; }
+.sgc{ width:25%; box-sizing:border-box; /* 四格一行,不再 3+1 落单 */ padding-bottom:38rpx; display:flex; flex-direction:column; }
 .sgc__v{ font-size:44rpx; font-weight:700; color:#FFFFFF; line-height:1.2; /* ds-ok Figma 实测(用户裁决字面值) */
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok Figma 实测 */
 .sgc__l{ margin-top:4rpx; font-size:25rpx; color:#6A7282; } /* ds-ok Figma 实测 */
@@ -809,68 +784,54 @@ page{ background:var(--cy-color-bg-page); }
 .bigqr__title{ margin-top:44rpx; font-size:44rpx; font-weight:700; color:#0A0A0A; } /* ds-ok Figma 实测(用户裁决字面值) */
 .bigqr__desc{ margin-top:16rpx; padding:0 80rpx; text-align:center; font-size:27rpx; line-height:1.6; color:#6A7282; } /* ds-ok Figma 实测(用户裁决字面值) */
 
-/* ===== A4-2 起始页 tabs:开始主题 / 漫游护照(Figma 3956:12602 / 12809)===== */
-/* 版式与 play intro 同构:两页共用「标题→tabs→横滑卡→主行动」的骨架 */
-/* 地图台向上进入分页点背后，从卡片底部就开始渐现；
-   GO 区绝对定位浮在地图上，不再截出独立黑色带。 */
-.intro-stage{ position:relative; flex:1; min-height:0; margin:calc(-1 * var(--cy-space-5)) calc(-1 * var(--cy-page-x)) 0;
-  margin-bottom:0; }
-/* 原生 map 上多个兄弟遮罩或伪元素会破坏合成层；继续只用一个遮罩层，
-   但在该层里叠加纵向渐变 + 水平渐变：上沿承接卡片区黑底，底部融入 tabBar，
-   四角压低微信地图的彩色道路和 POI 文字，中央 GO 行动区仍保留地图信息。 */
+/* ds-ok 首页横向卡片与线性边缘渐变，保持确认 HTML 的比例。 */
+.intro-start{ position:relative; flex:1; min-height:0; display:flex; flex-direction:column; }
+.intro-stage{ position:absolute; inset:0; }
+.intro-map__el{ position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; opacity:.7; }
 .intro-stage__shade{ position:absolute; inset:-2rpx 0 0; z-index:2; pointer-events:none;
-  background:
-    linear-gradient(180deg,var(--cy-color-bg-page) 0%,rgba(0,0,0,.94) 8%,rgba(0,0,0,.62) 24%,rgba(0,0,0,.32) 46%,rgba(0,0,0,.36) 68%,rgba(0,0,0,.78) 88%,var(--cy-color-bg-page) 100%), /* ds-ok NRC 式连续渐隐 */
-    linear-gradient(90deg,rgba(0,0,0,.78) 0%,rgba(0,0,0,.34) 16%,rgba(0,0,0,.10) 38%,rgba(0,0,0,.10) 62%,rgba(0,0,0,.34) 84%,rgba(0,0,0,.78) 100%); } /* ds-ok NRC 式连续渐隐；上移 2rpx 覆盖物理像素接缝 */
-.intro-cards{ height:192rpx; margin:0 calc(-1 * var(--cy-page-x));
-  width:calc(100% + var(--cy-page-x) * 2); } /* ds-ok 卡片槽位固定高;负边距抵消页边距,让卡片贴边横滑 */
-.intro-card{ height:100%; margin:0 var(--cy-space-2) 0 var(--cy-page-x); box-sizing:border-box;
-  display:flex; align-items:center; gap:var(--cy-space-3); padding:0 var(--cy-space-3);
-  border-radius:var(--cy-radius-lg); background:var(--cy-color-action-primary-bg); color:var(--cy-color-action-primary-fg);
-  box-shadow:0 2rpx 16rpx rgba(0,0,0,.4); } /* ds-ok 白卡压深底的投影 */
-/* 白卡是深色页里的「亮岛」:卡内只用反色语义 + 标注过的白底专用字面值 */
-.intro-card__ic{ flex:none; width:120rpx; height:120rpx; overflow:hidden;
-  border-radius:var(--cy-radius-md); background:#F2F2F2; display:flex; align-items:center; justify-content:center; /* ds-ok 白卡内的浅灰图标槽 */
-  color:var(--cy-color-action-primary-fg); }
-.intro-card__copy{ flex:1; min-width:0; display:flex; flex-direction:column; }
-.intro-card__title{ font-size:var(--cy-type-card-title); font-weight:700; line-height:var(--cy-leading-tight);
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-/* #6B6B6B 压白底 5.3:1 达标;Figma 稿上的 #888 只有 3.5:1,正文不能用 */
-.intro-card__sub{ margin-top:var(--cy-space-1); font-size:var(--cy-type-caption); line-height:var(--cy-leading-normal); color:#6B6B6B; /* ds-ok 白底专用次级字色 */
-  display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
-.intro-dots{ position:relative; z-index:3; display:flex; gap:var(--cy-space-1-5); align-items:center; justify-content:center; padding:var(--cy-space-2-5) 0; }
-.intro-dot{ width:12rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-border-strong); } /* ds-ok 分页指示尺寸 */
-.intro-dot.is-on{ width:34rpx; background:var(--cy-color-play-accent); } /* ds-ok 分页指示尺寸 */
-
-/* 护照 tab:与 play 第二 tab 同一套 .pp-* 版式(上排方卡 + 下排大图卡) */
-.intro-passport{ flex:1; min-height:0; padding-top:var(--cy-space-2);
-  padding-bottom:calc(var(--cy-tabbar-h) + var(--cy-space-5)); box-sizing:border-box; }
-.pp-stats{ display:flex; padding:0 0 var(--cy-space-5); }
-.pp-stat{ flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:2rpx; } /* ds-ok 2rpx 微距 */
-.pp-stat__v{ font-size:var(--cy-type-page-title); font-weight:700; line-height:1; color:var(--cy-color-text-primary); }
-.pp-stat__k{ font-size:var(--cy-type-caption); color:var(--cy-color-text-tertiary); }
-/* 横滑区贴边:负边距抵消 .intro 的页边距,padding-left 让首卡仍从页边距起,末卡能滑到屏幕最右 */
-.pp-row{ white-space:nowrap; margin:0 calc(-1 * var(--cy-page-x)); padding-left:var(--cy-page-x); }
-.pp-tile{ display:inline-flex; flex-direction:column; width:308rpx; margin-right:var(--cy-space-2-5); vertical-align:top; }
-.pp-tile__box{ position:relative; width:308rpx; height:308rpx; overflow:hidden; border-radius:var(--cy-radius-md);
-  background:var(--cy-color-action-primary-bg); color:var(--cy-color-action-primary-fg);
-  display:flex; align-items:center; justify-content:center; } /* ds-ok Figma 实测(用户裁决字面值) */
-.pp-tile__img{ position:absolute; inset:0; width:100%; height:100%; }
-.pp-tile__t{ margin-top:var(--cy-space-2); font-size:var(--cy-type-label); font-weight:700; color:var(--cy-color-text-primary);
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.pp-tile__s{ margin-top:2rpx; font-size:var(--cy-type-caption); color:var(--cy-color-text-tertiary); } /* ds-ok 2rpx 微距 */
-.pp-trips{ white-space:nowrap; margin:0 calc(-1 * var(--cy-page-x)); padding:var(--cy-space-5) 0 var(--cy-space-6) var(--cy-page-x); }
-.pp-trip{ display:inline-flex; flex-direction:column; width:615rpx; margin-right:var(--cy-space-3); vertical-align:top; }
-.pp-trip__card{ position:relative; width:615rpx; height:398rpx; overflow:hidden; border-radius:var(--cy-radius-md);
-  background:var(--cy-color-play-elevated); display:flex; align-items:center; justify-content:center; }
+  background:linear-gradient(90deg,var(--roam-home-bg) 0%,rgba(17,17,17,.7) 8%,transparent 26%,transparent 74%,rgba(17,17,17,.7) 92%,var(--roam-home-bg) 100%), /* ds-ok 漫游首页定稿值(用户裁决不改) */
+    linear-gradient(180deg,var(--roam-home-bg) 0%,transparent 25%,transparent 80%,rgba(17,17,17,.45) 100%); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.intro-cards{ position:relative; z-index:3; flex:none; width:100%; height:192rpx; }
+/* 2026-10-22 业主裁决(方案 A 票根)取代此前「用户裁决不改」:占位尺寸不变(swiper 192rpx / 左 46 右 85 / 卡间距 23),只换卡面。 */
+/* 第二轮(业主 2026-10-22 晚):回到优化前的方案 A —— 左联色块 + 打孔边 + NO.0x 编号 + CITY ROAM 落款;去掉「出发/看看/查看」胶囊、
+   左侧不要圆(去掉图标圆底与上下缺口),整体颜色压暗一档。 */
+.intro-card{ height:100%; margin-right:23rpx; box-sizing:border-box; display:flex; align-items:stretch; border-radius:20rpx; background:#E3DED2; color:#141414; overflow:hidden; } /* ds-ok 票根纸色压暗(业主 2026-10-22 裁决) */
+.intro-card__stub{ position:relative; flex:none; width:184rpx; box-sizing:border-box; padding:22rpx 20rpx; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; } /* ds-ok 票根左联 */
+.intro-card__stub::after{ content:''; position:absolute; top:0; bottom:0; right:-12rpx; width:24rpx; background:radial-gradient(circle at 12rpx 16rpx,#0B0B0B 8rpx,transparent 9rpx) 0 0/24rpx 32rpx repeat-y; } /* ds-ok 打孔边:孔色 = 漫游页深底 */
+.intro-card__stub.is-roam{ background-color:#5DBE6E; } /* ds-ok 票根左联(压暗一档,业主 2026-10-22 裁决) */
+.intro-card__stub.is-map{ background-color:#5B8FE0; } /* ds-ok 票根左联(压暗一档,业主 2026-10-22 裁决) */
+.intro-card__stub.is-team{ background-color:#DD9447; } /* ds-ok 票根左联(压暗一档,业主 2026-10-22 裁决) */
+.intro-card__img{ display:block; width:64rpx; height:64rpx; } /* ds-ok 图标直接落在色块上,无圆底 */
+.intro-card__code{ font-size:20rpx; line-height:24rpx; letter-spacing:2rpx; color:#141414; font-family:Menlo,Consolas,monospace; } /* ds-ok NO.0x 编号 */
+.intro-card__tear{ flex:none; width:0; border-left:3rpx dashed rgba(0,0,0,.28); } /* ds-ok 撕线 */
+.intro-card__body{ flex:1; min-width:0; box-sizing:border-box; padding:22rpx 28rpx 22rpx 32rpx; display:flex; flex-direction:column; justify-content:center; gap:6rpx; } /* ds-ok 票根正联 */
+.intro-card__row{ display:flex; align-items:center; min-width:0; } /* ds-ok 票根正联 */
+.intro-card__title{ flex:1; min-width:0; font-size:36rpx; font-weight:800; line-height:44rpx; letter-spacing:1rpx; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 票根正联 */
+.intro-card__sub{ font-size:25rpx; line-height:32rpx; color:#4A463F; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 票根正联 */
+.intro-card__livetx{ margin-top:8rpx; font-size:19rpx; line-height:26rpx; letter-spacing:3rpx; color:#6E695F; font-family:Menlo,Consolas,monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok CITY ROAM 落款(有实时数时显示实时数) */
+.intro-dots{ position:relative; z-index:3; flex:none; height:54rpx; box-sizing:border-box; display:flex; gap:12rpx; align-items:flex-start; justify-content:center; padding-top:19rpx; }
+.intro-dot{ width:12rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-border-strong); }
+.intro-dot.is-on{ width:35rpx; background:var(--cy-color-text-primary); }
+.intro-map-space{ flex:1; min-height:0; }
+.intro-passport{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+.pp-stats{ flex:none; display:flex; padding:8rpx 46rpx 23rpx; }
+.pp-stat{ flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:4rpx; }
+.pp-stat__v{ font-size:42rpx; font-weight:700; line-height:1; color:var(--cy-color-text-primary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-stat__k{ font-size:21rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-row{ flex:none; height:408rpx; width:100%; white-space:nowrap; padding-left:31rpx; box-sizing:border-box; }
+.pp-tile{ display:inline-flex; flex-direction:column; width:308rpx; margin-right:19rpx; vertical-align:top; }
+.pp-tile:last-child{ margin-right:31rpx; }
+.pp-tile__box{ position:relative; width:308rpx; height:308rpx; overflow:hidden; border-radius:27rpx; background:var(--cy-color-action-primary-bg); color:var(--cy-color-action-primary-fg); display:flex; align-items:center; justify-content:center; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-tile__t{ margin-top:15rpx; font-size:27rpx; font-weight:700; color:var(--cy-color-text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-tile__s{ margin-top:4rpx; font-size:23rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-trips{ flex:1; min-height:0; width:100%; white-space:nowrap; padding:38rpx 0 31rpx 31rpx; box-sizing:border-box; }
+.pp-trip{ display:inline-flex; flex-direction:column; width:615rpx; height:100%; margin-right:23rpx; vertical-align:top; }
+.pp-trip:last-child{ margin-right:31rpx; }
+.pp-trip__card{ position:relative; flex:1; min-height:0; width:615rpx; max-height:398rpx; overflow:hidden; border-radius:27rpx; background:var(--cy-color-play-elevated); display:flex; align-items:center; justify-content:center; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-trip__img{ position:absolute; inset:0; width:100%; height:100%; }
-.pp-trip__shade{ position:absolute; inset:0; background:rgba(0,0,0,.32); } /* ds-ok 图上压字的固定遮罩浓度(Figma 32%) */
-.pp-trip__big{ position:relative; max-width:520rpx; font-size:var(--cy-type-section-title); font-weight:700; letter-spacing:4rpx;
-  color:var(--cy-color-play-accent); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.pp-trip__cap{ margin-top:var(--cy-space-1-5); font-size:var(--cy-type-caption); color:var(--cy-color-text-tertiary); }
-.pp-empty{ padding:var(--cy-space-8) var(--cy-page-x); text-align:center;
-  font-size:var(--cy-type-body); color:var(--cy-color-text-tertiary); }
-/* 大卡还没有封面图时的占位:给个图标,别留一整块黑 */
+.pp-trip__shade{ position:absolute; inset:0; background:rgba(0,0,0,.32); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-trip__big{ position:relative; max-width:520rpx; font-size:42rpx; font-weight:700; letter-spacing:4rpx; color:var(--cy-color-text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-trip__cap{ margin-top:13rpx; font-size:23rpx; line-height:35rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-trip__ic{ position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); color:var(--cy-color-text-tertiary); }
 
 /* 取景卡(原型 f-cam)那一层:整屏定位但**不吃点击** —— 原型里取景卡开着的时候
@@ -896,3 +857,56 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 
 /* 2026-09-15 地图组队 P 方案:原型 f-hangout 的 .hn-* 底行样式随整卡退场删除 ——
    搭子局已下线,那张「加入这个局」卡不再有数据源与入口。 */
+
+/* 2026-10-14 漫游护照:新上线方卡的 NEW 标、官方活动「暂未开放」 */
+.pp-new{ position:absolute; left:15rpx; top:15rpx; padding:2rpx 13rpx; border-radius: var(--cy-radius-sm); background:var(--cy-color-text-primary); color:var(--cy-color-text-inverse); font-size: var(--cy-type-micro); font-weight:800; letter-spacing:1rpx; } /* 漫游主路径保持中性色 */
+.pp-trip__card.is-closed .pp-trip__big, .pp-trip__card.is-closed .pp-trip__ic{ opacity:.4; }
+.pp-closed{ position:absolute; left:19rpx; top:19rpx; z-index:2; padding:6rpx 15rpx; border-radius:15rpx; background:rgba(0,0,0,.7); color:#FFFFFF; font-size:21rpx; font-weight:700; } /* ds-ok 原型 .closed-tag */
+/* BL-01 点位筛选(.psheet 内容) */
+.poi-filter{ display:flex; flex-direction:column; gap:var(--cy-space-3); margin-top:var(--cy-space-3); }
+.poi-filter__label{ font-size:var(--cy-type-caption); color:var(--cy-color-text-secondary); }
+
+/* 2026-10-22 护照方卡放大层:与方卡同色起步,放大后底部一层模糊渐变托住标题 */
+.pp-open { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 900; pointer-events: none; }
+.pp-open__dim { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 0, 0, .55); opacity: 0; transition: opacity .4s ease; } /* ds-ok 放大层压暗 */
+.pp-open.is-on .pp-open__dim { opacity: 1; }
+.pp-open__card { position: absolute; overflow: hidden; clip-path: inset(0 round 28px); background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg);
+  box-shadow: 0 24rpx 80rpx rgba(0, 0, 0, .5); } /* ds-ok 浮起投影 */
+.pp-open__ic { position: absolute; top: 0; left: 0; right: 0; bottom: 30%; display: flex; align-items: center; justify-content: center; transform: scale(.7); transition: transform .46s cubic-bezier(.2, .9, .25, 1); }
+.pp-open.is-on .pp-open__ic { transform: scale(1); }
+.pp-open__blur { position: absolute; left: 0; right: 0; bottom: 0; height: 48%; backdrop-filter: blur(24rpx); -webkit-backdrop-filter: blur(24rpx);
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .55)); /* ds-ok 底部模糊渐变 */
+  -webkit-mask-image: linear-gradient(transparent, #000 45%); mask-image: linear-gradient(transparent, #000 45%); } /* ds-ok 遮罩 alpha */
+.pp-open__tx { position: absolute; left: 40rpx; right: 40rpx; bottom: 44rpx; display: flex; flex-direction: column; gap: 8rpx; opacity: 0; transform: translateY(20rpx);
+  transition: opacity .3s ease .18s, transform .4s cubic-bezier(.2, .9, .25, 1) .18s; }
+.pp-open.is-on .pp-open__tx { opacity: 1; transform: none; }
+.pp-open__t { font-size: 48rpx; font-weight: 700; color: #fff; } /* ds-ok 渐变上的白字 */
+.pp-open__s { font-size: 26rpx; color: rgba(255, 255, 255, .78); } /* ds-ok */
+
+/* ===== v13 漫游首页(业主 2026-10-22「和 HTML 一模一样」;护照页不动) ===== */
+/* ds-ok: 本段颜色/尺寸逐项照 v13 原型取值 */
+.intro-head { display: none; }
+.intro-top { position: absolute; left: 0; right: 0; margin: 0; height: 69rpx; padding: 0 46rpx; display: flex; align-items: center; }
+.intro-title { font-size: 54rpx; font-weight: 700; letter-spacing: -2rpx; line-height: 69rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.intro .rh-tabs { position: relative; display: flex; gap: 54rpx; height: auto; padding: 0 46rpx 0; z-index: 3; }
+.rh-tabs__b { padding-bottom: 19rpx; font-size: 31rpx; color: #8E8E93; transition: color .2s; } /* ds-ok */
+.rh-tabs__b.on { color: #fff; font-weight: 600; } /* ds-ok */
+.rh-tabs__u { position: absolute; left: 46rpx; bottom: 0; width: 123rpx; height: 4rpx; border-radius: 2rpx; background: #fff; transition: transform .4s cubic-bezier(.34,1.32,.64,1); } /* ds-ok */
+.rh-tabs__u.is-2 { transform: translateX(177rpx); }
+.intro-start { margin-top: 15rpx; }
+.intro-map__el { opacity: .32; }
+.intro-stage__shade { background: linear-gradient(90deg, #111 0%, rgba(17,17,17,.7) 8%, transparent 26%, transparent 74%, rgba(17,17,17,.7) 92%, #111 100%), linear-gradient(180deg, #111 0%, rgba(17,17,17,.6) 20%, transparent 34%, transparent 62%, rgba(17,17,17,.9) 78%, #111 100%); } /* ds-ok */
+.intro-cards { height: 200rpx; }
+.intro-card { border-radius: 23rpx; padding: 27rpx 31rpx; gap: 23rpx; background: #fff; color: #111; } /* ds-ok */
+.intro-card__ic { width: 119rpx; height: 119rpx; border-radius: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.intro-dot { width: 12rpx; height: 12rpx; background: #48484A; } /* ds-ok */
+.intro-dot.is-on { width: 35rpx; background: #fff; } /* ds-ok */
+.entry-peek__head { font-size: 33rpx; padding-bottom: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.entry-card { width: 481rpx; height: 235rpx; border-radius: 27rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.entry-card__shade { background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.8)); } /* ds-ok */
+.entry-card__copy { left: 23rpx; right: 23rpx; bottom: 19rpx; }
+.entry-card__tag { align-self: flex-start; margin-bottom: 8rpx; padding: 4rpx 13rpx; border-radius: 12rpx; font-size: 21rpx; font-weight: 700; color: #000; } /* ds-ok */
+.entry-card__tag--city { background: var(--cy-play-role-city); } /* v13 城市定向蓝 */
+.entry-card__tag--free { background: var(--cy-play-role-free); } /* v13 自由探索绿 */
+.entry-card__title { font-size: 29rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.entry-card__meta { font-size: 23rpx; color: rgba(255,255,255,.7); } /* ds-ok */

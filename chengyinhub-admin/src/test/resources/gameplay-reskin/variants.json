@@ -1,0 +1,97 @@
+[
+  {
+    "name": "末日寒冬",
+    "hpName": "保温储备",
+    "actionName": "外勤次数",
+    "initialHp": 8,
+    "maxHp": 12,
+    "actionLimit": 8,
+    "rationDelta": 3,
+    "facilityDelta": 3,
+    "facilityCost": 1,
+    "facilityItem": "fuel",
+    "restoreTo": 4,
+    "itemNames": [
+      "口粮",
+      "燃料",
+      "电源",
+      "维修件",
+      "医疗包"
+    ],
+    "endingNames": [
+      "最后的撤离者",
+      "地下方舟",
+      "关闭太阳",
+      "第二次日出",
+      "沉默的城市"
+    ],
+    "questNumbers": {},
+    "endingCount": 4
+  },
+  {
+    "name": "末日热浪",
+    "hpName": "水分储备",
+    "actionName": "外出次数",
+    "initialHp": 8,
+    "maxHp": 12,
+    "actionLimit": 8,
+    "rationDelta": 3,
+    "facilityDelta": 3,
+    "facilityCost": 1,
+    "facilityItem": "fuel",
+    "restoreTo": 4,
+    "itemNames": [
+      "饮水",
+      "冰块",
+      "电源",
+      "遮阳件",
+      "医疗包"
+    ],
+    "endingNames": [
+      "离开热区",
+      "清凉方舟",
+      "关闭热源",
+      "凉风重来",
+      "沉默的热城"
+    ],
+    "questNumbers": {},
+    "endingCount": 4
+  },
+  {
+    "name": "丧尸末日",
+    "hpName": "体力",
+    "actionName": "搜索次数",
+    "initialHp": 10,
+    "maxHp": 15,
+    "actionLimit": 6,
+    "rationDelta": 2,
+    "facilityDelta": 2,
+    "facilityCost": 2,
+    "facilityItem": "parts",
+    "restoreTo": 5,
+    "itemNames": [
+      "罐头",
+      "弹药",
+      "电池",
+      "路障材料",
+      "急救包"
+    ],
+    "endingNames": [
+      "撤离据点",
+      "地下堡垒",
+      "关闭信标",
+      "重建防线",
+      "沉默的据点"
+    ],
+    "questNumbers": {
+      "q2001": {
+        "actionCost": 0
+      },
+      "q5001": {
+        "actionCost": 0,
+        "hpCost": 2
+      }
+    },
+    "endingCount": 3
+  }
+]

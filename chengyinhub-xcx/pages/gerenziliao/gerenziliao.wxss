@@ -10,6 +10,14 @@ page { background: var(--cy-bg-page); }
   color: var(--cy-text-secondary);
   font-size: var(--cy-font-label);
 }
+/* W10b #25 头像审核回执:状态说明,不是按钮 */
+.profile-avatar-review {
+  display: block;
+  margin-top: 16rpx;
+  text-align: center;
+  color: var(--cy-text-secondary);
+  font-size: var(--cy-font-label);
+}
 .shzlskip image{ width: 48rpx; height: 48rpx; vertical-align: top;}
 /* 8pt 网格对齐(WT1 已处理过被导航盖住的旧标题,这里只补剩下的游离间距):
    页边距统一 --cy-page-x,30/40/50rpx 落回 32/48 档 */
@@ -44,6 +52,7 @@ button.shzlbox_bind{
 .shzlbox_li_left_ntu_li image{ width:100%; height: 100%; vertical-align: top;}
 .shzlbox_li_left_txt_li{ height: 50rpx; line-height: 50rpx; overflow: hidden; background: var(--cy-bg-subtle); border: 1rpx solid var(--cy-border-line); border-radius: 25rpx; padding: 0 var(--cy-legacy-10) 0 16rpx; float: left; font-size: var(--cy-font-caption); margin: var(--cy-legacy-10) var(--cy-legacy-18) 0 0;} /* ds-ok */
 .shzlbox_li_left_txt_li image{ width: 24rpx; height: 24rpx; vertical-align: top; margin: var(--cy-space-1-5) var(--cy-legacy-6) 0 0;}
+.profile-category-icon { background: var(--cy-color-action-primary-bg); }
 .shzlbox_li_left_txt_li image.del{width: 24rpx; height: 24rpx; display: block;}
 /* 触控热区:删除图标视觉 24rpx(12px),是全站最小的可点元素。
    ★ 这一处到不了 88rpx,原因是几何而不是没做:
@@ -142,3 +151,33 @@ button.david_tk_con_tgb{border: 2rpx dashed var(--cy-border-line); width:100%; h
 .profile-name-field { display: block; margin-top: var(--cy-space-2-5); }
 .david_tk { height: auto; overflow: visible; }
 .profile-name-field { display: block; margin-top: var(--cy-space-2-5); }
+
+/* 昵称校验/推荐(N4):「换一批」「重新检查」是文字链,命中区用 min-height 撑到 88rpx(44px) */
+.profile-name-actions { display: flex; justify-content: flex-end; align-items: center; gap: var(--cy-space-4); }
+.profile-name-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 88rpx;
+  min-width: 88rpx;
+  justify-content: center;
+  color: var(--cy-accent);
+  font-size: var(--cy-type-body);
+}
+.profile-name-link.is-disabled { color: var(--cy-text-tertiary); }
+/* 推荐昵称:无描边胶囊,点选即填入;命中区 88rpx(44px) */
+.profile-name-suggest { display: flex; flex-direction: column; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
+.profile-name-suggest-title { color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+/* 「换一批」与标题同一行靠右,不再单独占一行悬在推荐与「完成」之间;负外边距只收视觉高度,命中区仍是 88rpx */
+.profile-name-suggest-head { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
+.profile-name-suggest-head .profile-name-link { margin: calc(var(--cy-space-3) * -1) 0; font-size: var(--cy-font-label); }
+.profile-name-chips { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); }
+.profile-name-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 88rpx;
+  padding: 0 var(--cy-space-4);
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-comp-field-idle-bg);
+  color: var(--cy-text-title);
+  font-size: var(--cy-type-body);
+}

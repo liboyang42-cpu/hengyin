@@ -13,9 +13,12 @@ const { chinaDayStart, chinaDayEnd, chinaParts } = require('../../../utils/datet
 /* 数据条的格子只有一份实现:玩家深色版(214:384)与本页浅色版(181:575)是同一块。 */
 const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 
 const { validationMethodLabel } = require('../../../utils/validation-method-labels.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
+const mediaPreview = require('../../../utils/media-preview.js');
+const codeTextUtil = require('../utils/code-text.js');
 
 function recruitBoundaryLabel(allowed, maxXp) {
   const parts = [];
@@ -67,24 +70,61 @@ function replacementPendingReview(row) {
 }
 
 function chapterNodeReadOnlyReason(info, application) {
-  if (application && application.offerState === 'WITHDRAWN') return '供给已退出，点位仅保留历史记录';
+  if (application && application.offerState === 'WITHDRAWN') return '供给已退出，节点仅保留历史记录';
   const lifecycle = info && info.lifecycle;
   if (replacementApplication(application)) {
     const paused = info && Number(info.status) === 1 && info.userStatus != null
       && Number(info.userStatus) === 0 && !String(info.circleThemeCode || '').trim();
-    if (paused && [1, 2, 3, 4, '1', '2', '3', '4'].includes(lifecycle)
+    const pending = info && [0, '0'].includes(info.status)
+      && [0, '0'].includes(info.userStatus) && [0, '0'].includes(info.delFlag)
+      && [2, '2'].includes(info.productType) && info.publishMode === 'pro'
+      && (lifecycle === 7 || lifecycle === '7') && !String(info.circleThemeCode || '').trim();
+    if ((pending || (paused && [1, 2, 3, 4, '1', '2', '3', '4'].includes(lifecycle)))
         && Number(application.status) === 1 && !application.offerActive
         && ((!application.offerId && application.offerState === 'NONE') || replacementPendingReview(application))) return '';
     return '补位状态已变化，请刷新承接进度';
   }
   if (lifecycle === 1 || lifecycle === '1' || lifecycle === 7 || lifecycle === '7') return '';
-  if (lifecycle === 0 || lifecycle === '0') return '主题尚在草稿阶段，暂不可配置点位';
-  if ([2, 3, 4, 5, 6, '2', '3', '4', '5', '6'].includes(lifecycle)) return '主题已进入商业冻结阶段，不可配置点位';
+  if (lifecycle === 0 || lifecycle === '0') return '主题尚在草稿阶段，暂不可配置节点';
+  if ([2, 3, 4, 5, 6, '2', '3', '4', '5', '6'].includes(lifecycle)) return '主题已锁定，不可配置节点';
   return '主题状态暂未确认，请刷新详情后重试';
+}
+
+function projectMemberId() { return memberId(app); }
+function projectSessionKey() {
+  return projectMemberId() + '|' + String((app.globalData || {}).authorization || '');
+}
+function currentProjectRead(page, key) {
+  const owner = page._projectMemberId === undefined ? projectMemberId() : page._projectMemberId;
+  const epoch = page._projectReadEpoch || 0;
+  const topicId = page.data.topicId, regId = page.data.regId, scope = page.data.operationScope;
+  const reads = page._projectReads || (page._projectReads = {});
+  const seq = reads[key] = (reads[key] || 0) + 1;
+  const homeSeq = reads.loadProjectHome || 0;
+  const sameRead = () => !page._disposed && !page._unloaded && (page._projectReadEpoch || 0) === epoch
+    && page.data.topicId === topicId && (key !== 'loadDetail' || page.data.regId === regId)
+    && page.data.operationScope === scope && reads[key] === seq && (reads.loadProjectHome || 0) === homeSeq;
+  const current = () => sameRead() && !!owner && projectMemberId() === owner;
+  // 请求客户端逐跳校验 UID/token；自有续期成功可换 token，页面只核验本次读的 epoch。
+  current.handle = (res, status) => {
+    if (!sameRead()) return true;
+    if (recoverReadSession(page, app, res, page.clearProjectPrivate, page.reloadProjectPrivate, status)) return true;
+    if (!current()) return true;
+    const code = failureStatus(res, status);
+    if (code === 401 || code === 403) {
+      page.clearProjectPrivate(code === 401);
+      page.setData({ projectReadAuth: code === 401 ? 'login' : 'denied' });
+      return true;
+    }
+    page._projectReadOwner = projectSessionKey();
+    return false;
+  };
+  return current;
 }
 
 Page({
   data: {
+    projectReadAuth: '',
     reducedMotion: false,
     // 稿 181:575 的数据条(与玩家版 214:384 同一块,只换色板)
     statBar: [],
@@ -151,6 +191,8 @@ Page({
     //   所以承接视图只有三个,「商家」那格是主办方独有的(他要管自己招了谁、还缺哪几站)。
     role: 'join',                 // join | host,后端 /api/project/home 下发
     operationScope: '',
+    // BL-183:圈层供给角色抽屉(project-host 内勾选,这里只管开关、提交中和后端原文错误)
+    circleConfig: { show: false, submitting: false, errorText: '', errorTitle: '' },
     // 同一主题承接多站时的站点切换条。只有 >1 站才出,单站维持原样不多一条空行。
     myStations: [],
     activeStationId: 0,
@@ -264,12 +306,17 @@ Page({
     checkinVisible: false,
     checkinQrState: 'loading',
     checkinQrUrl: '',
+    checkinCode: '',
     checkinErr: '',
     privacyGateShow: false,
   },
 
   onLoad(options) {
+    this._projectMemberId = projectMemberId();
+    this._projectReadOwner = projectSessionKey();
+    this._hidden = false;
     options = options || {};
+    this._projectRouteRegId = options.topicId && options.id ? parseInt(options.id) : 0;
     this.setData({ operationScope: ['MERCHANT', 'CLUB'].includes(options.scope) ? options.scope : '' });
     try {
       const w = (wx.getWindowInfo && wx.getWindowInfo()) || wx.getSystemInfoSync();
@@ -282,15 +329,14 @@ Page({
     // 3. 品牌招募广场"浏览主题":id=topicId                  → 浏览视图
     if (options.topicId && options.id) {
       this.setData({ regId: parseInt(options.id), topicId: parseInt(options.topicId) });
-      this.loadDetail();
+      this.reloadProjectPrivate();
     } else if (options.topicId) {
       // 身份不由前端猜:同一个人可能既是发布者又接了一站,判据在服务端。
       this.setData({ topicId: parseInt(options.topicId) });
-      this.loadProjectHome();
+      this.reloadProjectPrivate();
     } else if (options.id) {
       this.setData({ topicId: parseInt(options.id), fromMerchantJoin: true });
-      this.getIsJoin();
-      this.loadBrowseData();
+      this.reloadProjectPrivate();
     } else {
       // 2026-09-16 截图冒烟:id 与 topicId 都没有时原先是空壳(渲染出「未命名路线 · 开放时间待定」),
       // 三条入口分支全不命中 ⇒ 不请求、不报错、也没有出口。与其他详情页统一落缺参态。
@@ -299,16 +345,181 @@ Page({
   },
 
   onShow() {
-
+    this._hidden = false;
+    if (this._projectReadOwner !== undefined && this._projectReadOwner !== projectSessionKey()) {
+      this.clearProjectPrivate(!projectMemberId());
+      this.reloadProjectPrivate();
+    } else if (this._readSessionChanged) {
+      this._readSessionChanged = false;
+      this.reloadProjectPrivate();
+    }
     const reducedMotion = readReducedMotion();
-
-    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion }); merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
+    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
+    merchantTheme.merchantPageShow(); this._navigating = false;
+  },
+  onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
+    this._disposed = true;
+    this._unloaded = true;
     this._chapterLifecycleEpoch = (this._chapterLifecycleEpoch || 0) + 1;
     this.closeLiveCheckin();
     merchantTheme.merchantPageRestore();
   },
+
+  clearProjectPrivate(guest) {
+    this._projectReadEpoch = (this._projectReadEpoch || 0) + 1;
+    this._projectReads = {};
+    this._projectMemberId = projectMemberId();
+    this._projectReadOwner = projectSessionKey();
+    this._loadingProjectHome = false;
+    this._hostChaptersLoading = false;
+    if (this._stationLoading) cyLoading.hide();
+    this._stationLoading = false;
+    this._stationPick = null;
+    this._chapterCheckinNodeId = 0;
+    this._isFreeExploreHost = false;
+    this._stationOperable = null;
+    this._hostChapters = null;
+    this._hostCanEdit = false;
+    this._managedChapterProject = false;
+    this._chapterSheetNodes = null;
+    this._runs = [];
+    this._chapterLifecycleEpoch = (this._chapterLifecycleEpoch || 0) + 1;
+    this.closeLiveCheckin();
+    // 所有私有投影使用固定字段清空；路由事实保留供当前账号重新核验。
+    this.setData({
+      regId: this._projectRouteRegId || 0, projectReadAuth: guest ? 'login' : '',
+      statBar: [],
+      hasNodeTemplates: false,
+      chapterProject: false,
+      info: {},
+      loadFailed: false,
+      heroImg: "",
+      heroFailed: false,
+      badgeImg: "",
+      assignedLabel: "",
+      assignedValue: "",
+      scheduleValue: "",
+      templateText: "",
+      templateSubText: "",
+      templateReady: false,
+      perkText: "",
+      sharingText: "",
+      factTailText: "",
+      stepText: "",
+      pendingCount: 0,
+      verifiedCount: 0,
+      totalCount: 0,
+      stateKey: "",
+      stateText: "",
+      stateClass: "",
+      stateSub: "",
+      progress: [],
+      showFulfillment: false,
+      showPrep: false,
+      play: null,
+      reward: null,
+      prepText: "",
+      prepHeadcount: "",
+      coopState: "idle",
+      coopPartner: null,
+      role: "join",
+      myStations: [],
+      activeStationId: 0,
+      quickActions: [],
+      clubSheet: {"show":false,"items":[]},
+      clubActions: [],
+      playerSheet: {"show":false,"filter":"all","groups":[],"summary":{},"contactHint":"","emptyText":"","errorText":"","rows":[]},
+      playerActions: [],
+      merchantSheet: {"show":false},
+      moreSheet: {"show":false,"subtitle":"","groups":[]},
+      stationOpsErrorText: "",
+      stationSheetShow: false,
+      stationSheetItems: [],
+      stationSheetTitle: "选择场次",
+      chapterSheet: {"show":false,"state":"idle","error":"","chapterName":"","story":"","storyOpen":false,"nodes":[]},
+      nodeSheet: {"show":false,"name":"","chapterText":"","play":null,"reward":null,"templateId":"","mine":false,"actions":[]},
+      merchantActions: [],
+      hostTopic: {},
+      hostRecruit: {},
+      hostMerchants: [],
+      hostPlayers: {},
+      chapterImg: "",
+      sharingRateText: "",
+      sharedAmountText: "",
+      fulfillActionText: "",
+      chapterActionText: "",
+      primaryDisabled: false,
+      isSelfTemplate: false,
+      todos: [],
+      primaryAction: "",
+      primaryText: "",
+      rulesOpen: false,
+      topicShow: false,
+      davidShow: false,
+      chapterNodeFormVisible: false,
+      nodeNpcFormVisible: false,
+      nodeNpcNodeId: 0,
+      nodeNpcNodeName: "",
+      chapterNodeSubmitting: false,
+      chapterNodeFormMode: "application",
+      presetChapterNode: null,
+      selectedMode: 2,
+      selectedModeText: "自由探索模式",
+      selectedNodeId: 0,
+      selectedNodeText: "",
+      selectedTemplateId: 0,
+      selectedTemplateName: "",
+      selectedChapterId: 0,
+      selectedChapterText: "",
+      selectedChapterTermsMode: "",
+      selectedChapterCircleMode: false,
+      allNodesList: [],
+      allChaptersList: [],
+      chapterRecruitmentLoading: false,
+      chapterRecruitmentState: "idle",
+      chapterRecruitmentError: "",
+      ownerChapterApplications: [],
+      ownerChapterApplicationsLoaded: false,
+      ownerChapterApplicationsState: "idle",
+      pendingMerchantNodes: [],
+      pendingMerchantNodesLoaded: false,
+      pendingMerchantNodesState: "idle",
+      myChapterApplications: [],
+      myChapterApplicationsLoaded: false,
+      chapterApplicationOpen: false,
+      myChapterNodes: [],
+      myChapterNodesLoaded: false,
+      myChapterNodesError: "",
+      coverFailed: false,
+      detailCoverFailed: false,
+      browseLoadError: "",
+      isJoin: -1,
+      showCheckinQr: false,
+      checkinVisible: false,
+      checkinQrState: "loading",
+      checkinQrUrl: "",
+      checkinErr: "",
+      privacyGateShow: false,
+    });
+  },
+
+  reloadProjectPrivate() {
+    if (this._disposed || this._unloaded || this._hidden || this.data.missingParam) return;
+    if (!projectMemberId()) {
+      this.clearProjectPrivate(true);
+      waitForInitialSession(this, app, this.reloadProjectPrivate);
+      return;
+    }
+    this._projectMemberId = projectMemberId();
+    this._projectReadOwner = projectSessionKey();
+    this.setData({ projectReadAuth: '' });
+    if (this.data.fromMerchantJoin) { this.getIsJoin(); this.loadBrowseData(); }
+    else if (this.data.regId) this.loadDetail();
+    else this.loadProjectHome();
+  },
+
+  retryProjectLogin() { return retryLogin(this, app, this.reloadProjectPrivate); },
 
   showPrivacyGate() {
     this.setData({ privacyGateShow: true });
@@ -336,6 +547,8 @@ Page({
 
   // 商家招商读完整章节投影；已关闭招商的旧经典报名仅在「不存在」时回退公开详情一次。
   loadBrowseData(useMerchantEndpoint) {
+    const current = currentProjectRead(this, 'loadBrowseData');
+    if (!current()) return;
     const that = this;
     const merchantEndpoint = this._managedChapterProject || useMerchantEndpoint === true
       || (useMerchantEndpoint !== false && this.data.operationScope === 'MERCHANT');
@@ -350,6 +563,7 @@ Page({
       data: { id: that.data.topicId, scope: that.data.operationScope },
       method: 'POST',
       success(res) {
+        if (current.handle(res)) return;
         if (res.code == '200' && res.data && res.data.name) {
           const d = res.data;
           d.showStartDate = that.formatDateMd(d.startDate);
@@ -392,7 +606,8 @@ Page({
           that.showBrowseError(reason);
         }
       },
-      fail() {
+      fail(res) {
+        if (current.handle(res)) return;
         that.showBrowseError('网络异常，主题详情暂时未加载。');
       }
     });
@@ -406,6 +621,8 @@ Page({
   // 自由探索的商家可选章节由服务端按商家品类、招募开关、容量和锁价状态过滤；
   // 普通主题详情的原始章节字段不能充当商家承接资格。
   loadMerchantRecruitmentChapters() {
+    const current = currentProjectRead(this, 'loadMerchantRecruitmentChapters');
+    if (!current()) return;
     const that = this;
     that.setData({
       chapterRecruitmentLoading: true,
@@ -418,6 +635,7 @@ Page({
       data: { id: that.data.topicId, scope: that.data.operationScope },
       method: 'POST',
       success(res) {
+        if (current.handle(res)) return;
         if (res && res.code == '200' && Array.isArray(res.data)) {
           that.setData({
             allChaptersList: that.buildMerchantChapters(res.data),
@@ -438,15 +656,16 @@ Page({
         } : {
           chapterRecruitmentLoading: false,
           chapterRecruitmentState: 'error',
-          chapterRecruitmentError: app.getRequestErrorMessage(res, '可承接章节加载失败，请稍后重试'),
+          chapterRecruitmentError: app.getRequestErrorMessage(res, '可承接章节加载失败，请重试'),
         });
         that.refreshMyChapterApplications();
       },
       fail(res) {
+        if (current.handle(res)) return;
         that.setData({
           chapterRecruitmentLoading: false,
           chapterRecruitmentState: 'error',
-          chapterRecruitmentError: app.getRequestErrorMessage(res, '网络异常，可承接章节暂时没能加载'),
+          chapterRecruitmentError: app.getRequestErrorMessage(res, '网络异常，可承接章节加载失败'),
         });
         that.refreshMyChapterApplications();
       }
@@ -455,12 +674,16 @@ Page({
 
   loadMyChapterApplications(force) {
     if (this.data.myChapterApplicationsLoaded && !force) return;
+    const current = currentProjectRead(this, 'loadMyChapterApplications');
+    if (!current()) return;
     const that = this;
     app.sendRequest({
       hideLoading: true,
       url: '/api/merchant/chapter-application/mine',
       method: 'POST',
       success(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         if (res.code != '200') return;
         if (!isRecordList(res.data)) return;
         const rows = res.data;
@@ -470,6 +693,7 @@ Page({
         });
         that.refreshMyChapterApplications();
       },
+      fail(res) { current.handle(res); },
     });
   },
 
@@ -485,7 +709,7 @@ Page({
         const nodeReadOnlyReason = chapterNodeReadOnlyReason(this.data.info, row);
         return Object.assign({}, row, {
           status,
-          statusLabel: offerWithdrawn ? '已退出供给' : chapterApplicationStatusLabel(status),
+          statusLabel: offerWithdrawn ? '已退出供给' : (status === 0 && Number(row.source) === 1 ? '待接受邀请' : chapterApplicationStatusLabel(status)),
           termsMode,
           termsLabel: termsModeLabel(termsMode),
           offerActive,
@@ -498,6 +722,7 @@ Page({
           circleSupplyCheckedAtText: row.circleSupplyCheckedAt
             ? String(row.circleSupplyCheckedAt).slice(0, 10) : '',
           canWithdraw: !offerWithdrawn && status === 0,
+          canAcceptInvite: !offerWithdrawn && status === 0 && Number(row.source) === 1,
           canWithdrawOffer: !offerWithdrawn && offerActive && Number(row.offerId) > 0 && !row.circleThemeCode,
           canSubmitOffer: !offerWithdrawn && !offerPendingReview && (!replacementApplication(row) || !nodeReadOnlyReason) && status === 1 && !offerActive && !!termsModeLabel(termsMode),
         });
@@ -621,6 +846,8 @@ Page({
 
   loadMyChapterNodes(force) {
     if (this.data.myChapterNodesLoaded && !force) return;
+    const current = currentProjectRead(this, 'loadMyChapterNodes');
+    if (!current()) return;
     const that = this;
     const topicId = this.data.topicId;
     this.setData({ myChapterNodesError: '' });
@@ -630,9 +857,11 @@ Page({
       method: 'POST',
       data: { topicId },
       success(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         if (Number(that.data.topicId) !== Number(topicId)) return;
         if (res.code != '200' || !isRecordList(res.data)) {
-          if (that.data.chapterProject) that.setData({ myChapterNodesError: app.getRequestErrorMessage(res, '我的点位没能加载出来') });
+          if (that.data.chapterProject) that.setData({ myChapterNodesError: app.getRequestErrorMessage(res, '我的节点加载失败') });
           return;
         }
         const rows = res.data;
@@ -644,8 +873,10 @@ Page({
         });
       },
       fail(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         if (Number(that.data.topicId) !== Number(topicId)) return;
-        if (that.data.chapterProject) that.setData({ myChapterNodesError: app.getRequestErrorMessage(res, '网络异常，我的点位没能加载出来') });
+        if (that.data.chapterProject) that.setData({ myChapterNodesError: app.getRequestErrorMessage(res, '网络异常，我的节点加载失败') });
       },
     });
   },
@@ -653,6 +884,8 @@ Page({
   retryMyChapterNodes() { this.loadMyChapterNodes(true); },
 
   getIsJoin() {
+    const current = currentProjectRead(this, 'getIsJoin');
+    if (!current()) return;
     const that = this;
     this._joinCheckError = '';
     this.setData({ isJoin: -1 });
@@ -662,6 +895,7 @@ Page({
       data: { id: that.data.topicId },
       method: 'POST',
       success(res) {
+        if (current.handle(res)) return;
         // 此接口 200 表示未报名；已有报名返回明确的业务拒绝。
         const isJoin = res && res.code == '200' ? 1
           : (res && res.code == '500' && res.msg === '您已报名此主题，请勿重复报名' ? 0 : -1);
@@ -670,6 +904,7 @@ Page({
         that.setData({ isJoin });
       },
       fail(res) {
+        if (current.handle(res)) return;
         that._joinCheckError = app.getRequestErrorMessage(res, '报名状态未确认，请重新打开详情后重试');
         that.setData({ isJoin: -1 });
       }
@@ -696,7 +931,7 @@ Page({
 
   previewGuideImage(e) {
     const { url, urls } = e.currentTarget.dataset;
-    if (url) wx.previewImage({ current: url, urls: urls && urls.length ? urls : [url] });
+    if (url) mediaPreview.open(urls && urls.length ? urls : [url], url);
   },
 
 
@@ -704,14 +939,14 @@ Page({
   goTemplateDetail(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
-    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my', complete: () => { this._navigating = false; } });
   },
 
   /** 「我承接的」是个入口,不是一坨字:点进去看这条路线长什么样、我这站在第几位。 */
   goTopicDetail() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!id) return;
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + id });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
   bmClick2(e) {
@@ -791,8 +1026,8 @@ Page({
   },
 
   goMerchantCategory() {
-    this.setData({ topicShow: false });
-    wx.navigateTo({ url: '/pages/merchant/decor/index' });
+    if (this._navigating) return; this.setData({ topicShow: false }); // 跳转中不响应连点,免得叠两层装修页
+    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } });
   },
 
   topicClose() {
@@ -908,9 +1143,9 @@ Page({
 
 
   goCreateTemplate() {
-    this.setData({ topicShow: false });
+    if (this._navigating) return; this.setData({ topicShow: false }); // 跳转中不响应连点,免得叠两层模板编辑页
     // 与 chapter-node-form 的「去创建玩法」同一条路,两处不能分家
-    wx.navigateTo({ url: '/pages/publish/temp/index?scope=MERCHANT' });
+    this._navigating = true; wx.navigateTo({ url: '/pages/publish/temp/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
   goSettlement() {
@@ -961,7 +1196,7 @@ Page({
       `chapterName=${encodeURIComponent(String(this.data.selectedChapterText || ''))}`,
       `nodeName=${encodeURIComponent(String((node && node.name) || ''))}`,
     ].join('&');
-    wx.navigateTo({ url: `/pages/topic/merchantapply/index?${params}` });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: `/pages/topic/merchantapply/index?${params}`, complete: () => { this._navigating = false; } });
   },
 
   /* 按 id 在 chaptersList 里找那一站。找不到就返回 null —— 名字宁可不写,不编。 */
@@ -1014,7 +1249,7 @@ Page({
       if (!application || Number(draft.chapterId) !== Number(this.data.selectedChapterId)) return;
       this._chapterApplying = true;
       this.setData({ chapterNodeSubmitting: true });
-      cyLoading.show('保存点位中...');
+      cyLoading.show('保存节点中...');
       this.submitChapterNodeDraft(draft);
       return;
     }
@@ -1116,6 +1351,51 @@ Page({
     });
   },
 
+  respondChapterInvitation(e) {
+    const applicationId = Number(e.currentTarget.dataset.applicationId);
+    const accepted = e.currentTarget.dataset.accepted === true || e.currentTarget.dataset.accepted === 'true';
+    if (!applicationId || this._chapterWithdrawing) return;
+    const current = currentProjectRead(this, 'respondChapterInvitation');
+    const dc = this.selectComponent && this.selectComponent('#dc');
+    this._chapterWithdrawing = true;
+    app.sendRequest({
+      url: '/api/merchant/chapter-application/invite/respond', method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ applicationId, accepted, scope: this.data.operationScope }),
+      success: (res) => {
+        if (!current()) return;
+        if (res.code == '200') { this.loadMyChapterApplications(true); if (dc && !accepted) dc.done(); else cyToast(accepted ? '已接受邀请' : '已拒绝邀请'); }
+        else if (dc) dc.failed(app.getRequestErrorMessage(res, '邀请未处理，请重试'));
+        else cyToast(app.getRequestErrorMessage(res, '邀请未处理，请重试'));
+      },
+      fail: () => { if (current()) { if (dc) dc.failed('结果未确认，请刷新承接进度确认'); else cyToast('结果未确认，请刷新承接进度确认'); } },
+      complete: () => { this._chapterWithdrawing = false; },
+    });
+  },
+
+  revokeChapterInvitation(e) {
+    const applicationId = Number(e.currentTarget.dataset.id);
+    if (!applicationId || this._chapterApplicationAuditing) return;
+    const dc = this.selectComponent && this.selectComponent('#dc');
+    if (dc) dc.open('merchant.chapterInvitation.revoke', { applicationId });
+  },
+
+  submitChapterInvitationRevoke(applicationId) {
+    if (!applicationId || this._chapterApplicationAuditing) return;
+    const current = currentProjectRead(this, 'revokeChapterInvitation');
+    const dc = this.selectComponent && this.selectComponent('#dc');
+    if (dc) dc.busyOn();
+    this._chapterApplicationAuditing = true;
+    app.sendRequest({
+      url: '/api/merchant/chapter-application/invite/revoke', method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ applicationId, scope: this.data.operationScope }),
+      success: (res) => { if (current()) { if (res.code == '200') { this.loadOwnerChapterApplications(true); if (dc) dc.done(); } else if (dc) dc.failed(app.getRequestErrorMessage(res, '邀请未撤回，请重试')); else cyToast(app.getRequestErrorMessage(res, '邀请未撤回，请重试')); } },
+      fail: () => { if (current()) { if (dc) dc.failed('结果未确认，请刷新邀请列表确认'); else cyToast('结果未确认，请刷新邀请列表确认'); } },
+      complete: () => { this._chapterApplicationAuditing = false; },
+    });
+  },
+
   withdrawChapterApplication(e) {
     const applicationId = Number(e && e.currentTarget && e.currentTarget.dataset.applicationId);
     const application = (this.data.myChapterApplications || [])
@@ -1138,6 +1418,8 @@ Page({
   },
 
   submitChapterApplicationWithdraw(applicationId) {
+    const invited = (this.data.myChapterApplications || []).find(row => Number(row.id) === Number(applicationId));
+    if (invited && Number(invited.source) === 1) return this.respondChapterInvitation({ currentTarget: { dataset: { applicationId, accepted: false } } });
     if (this._chapterWithdrawing) return;
     this._chapterWithdrawing = true;
     const dc = this.selectComponent && this.selectComponent('#dc');
@@ -1238,10 +1520,10 @@ Page({
           this.setData({ chapterNodeFormVisible: false });
           this.loadMyChapterNodes(true);
           this.loadMyChapterApplications(true);
-          cyToast.success(this.data.chapterNodeFormMode === 'node' ? '点位已保存，请查看承接进度' : '已提交，等待审核');
+          cyToast.success(this.data.chapterNodeFormMode === 'node' ? '节点已保存，请查看承接进度' : '已提交，等待审核');
           return;
         }
-        app.tips(app.getRequestErrorMessage(res, '点位提交失败'));
+        app.tips(app.getRequestErrorMessage(res, '节点提交失败'));
       },
       fail: () => {
         cyToast('网络错误，请重试');
@@ -1322,7 +1604,7 @@ Page({
     // 总数只是数量，不授予读取未揭示节点、模板或路线的权限。
     // 缺失值不生成站点条目；章节局部节点标签继续反映各自可见内容。
     const stations = Number(d.locationCount);
-    if (Number.isFinite(stations) && stations > 0) out.push(stations + ' 个站点');
+    if (Number.isFinite(stations) && stations > 0) out.push(stations + ' 个节点');
     const plays = Number(d.templateCount);
     if (Number.isFinite(plays) && plays > 0) out.push(plays + ' 个玩法');
     if (d.audioUrl) {
@@ -1501,6 +1783,8 @@ Page({
       app.tips('缺少参与记录，请返回重试');
       return;
     }
+    const current = currentProjectRead(this, 'loadDetail');
+    if (!current()) return;
     const that = this;
     app.sendRequest({
       hideLoading: true,
@@ -1508,6 +1792,8 @@ Page({
       data: { id: that.data.regId },
       method: 'POST',
       success(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         if (res.code == '200' && res.data) {
           that.setData({ loadFailed: false });
           that.processData(res.data);
@@ -1516,10 +1802,11 @@ Page({
         } else {
           // 整页错误态,不再是 toast 一闪之后留一屏空白
           that.setData({ loadFailed: true });
-          app.tips(res.msg || '加载失败');
         }
       },
-      fail() {
+      fail(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         that.setData({ loadFailed: true });
         app.tips('网络异常，请重试');
       }
@@ -1532,6 +1819,8 @@ Page({
    * 因为承接视图要的字段(玩法/奖励/场次)在那条链路上已经齐了。
    */
   loadProjectHome() {
+    const current = currentProjectRead(this, 'loadProjectHome');
+    if (!current()) return;
     const that = this;
     this._loadingProjectHome = true;
     app.sendRequest({
@@ -1540,6 +1829,8 @@ Page({
       data: JSON.stringify({ topicId: that.data.topicId, scope: that.data.operationScope }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         if (res.code != '200' || !res.data || typeof res.data !== 'object' || Array.isArray(res.data)) {
           that.setData({ loadFailed: true });
           return;
@@ -1564,7 +1855,7 @@ Page({
           }
           const all = rawRegistrations || [];
           const myStations = all.length > 1 ? all.map(function (r) {
-            return { id: r.id, name: r.nodeName || r.chapterName || '未命名站点' };
+            return { id: r.id, name: r.nodeName || r.chapterName || '未命名节点' };
           }) : [];
           that.setData({
             loadFailed: false, role: 'join', chapterProject: false, regId: reg.id,
@@ -1635,8 +1926,9 @@ Page({
         }
         that.setData({ loadFailed: true });
       },
-      fail() { that.setData({ loadFailed: true }); },
-      complete() { that._loadingProjectHome = false; }
+      fail(res) {
+        if (current.handle(res)) return; if (current()) that.setData({ loadFailed: true }); },
+      complete() { if (current()) that._loadingProjectHome = false; }
     });
   },
 
@@ -1644,6 +1936,8 @@ Page({
     if (this.data.role !== 'host' || (this.data.ownerChapterApplicationsLoaded && !force)) return;
     const topicId = Number(this.data.topicId);
     if (!topicId) return;
+    const current = currentProjectRead(this, 'loadOwnerChapterApplications');
+    if (!current()) return;
     const that = this;
     this.setData({ ownerChapterApplicationsState: 'loading' });
     app.sendRequest({
@@ -1653,6 +1947,8 @@ Page({
       header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ topicId, scope: that.data.operationScope }),
       success(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         if (res.code != '200' || !Array.isArray(res.data)) {
           that.setData({ ownerChapterApplicationsState: 'error' });
           return;
@@ -1661,8 +1957,9 @@ Page({
           ownerChapterApplications: res.data.map(function (row) {
             const status = Number(row.status);
             return Object.assign({}, row, {
-              actionable: status === 0,
-              statusLabel: chapterApplicationStatusLabel(status),
+              actionable: status === 0 && Number(row.source) !== 1,
+              revocableInvite: status === 0 && Number(row.source) === 1,
+              statusLabel: status === 0 && Number(row.source) === 1 ? '待商家接受' : chapterApplicationStatusLabel(status),
               sourceLabel: Number(row.source) === 1 ? '主办方邀请' : '商家申请',
             });
           }),
@@ -1670,7 +1967,8 @@ Page({
           ownerChapterApplicationsState: 'ready',
         });
       },
-      fail() { that.setData({ ownerChapterApplicationsState: 'error' }); },
+      fail(res) {
+        if (current.handle(res)) return; if (current()) that.setData({ ownerChapterApplicationsState: 'error' }); },
     });
   },
 
@@ -1678,6 +1976,8 @@ Page({
     if (this.data.role !== 'host' || (this.data.pendingMerchantNodesLoaded && !force)) return;
     const topicId = Number(this.data.topicId);
     if (!topicId) return;
+    const current = currentProjectRead(this, 'loadPendingMerchantNodes');
+    if (!current()) return;
     const that = this;
     this.setData({ pendingMerchantNodesState: 'loading' });
     app.sendRequest({
@@ -1687,6 +1987,8 @@ Page({
       method: 'POST',
       data: { topicId, scope: that.data.operationScope },
       success(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         if (res.code != '200' || !Array.isArray(res.data)) {
           that.setData({ pendingMerchantNodesState: 'error' });
           return;
@@ -1697,7 +1999,8 @@ Page({
           pendingMerchantNodesState: 'ready',
         });
       },
-      fail() { that.setData({ pendingMerchantNodesState: 'error' }); },
+      fail(res) {
+        if (current.handle(res)) return; if (current()) that.setData({ pendingMerchantNodesState: 'error' }); },
     });
   },
 
@@ -1744,7 +2047,7 @@ Page({
          只说供给与点位,商家/主办方看不出点位也会跟着过审 —— 而点位一过审就对玩家公开。 */
       cyModal.show({
         title: '通过章节申请',
-        content: '通过后商家即可按约定准备供给与点位；本次已提交的点位将一并通过审核。',
+        content: '通过后商家即可按约定准备供给与节点；本次已提交的节点将一并通过审核。',
         confirmText: '确认通过',
         success(res) { if (res.confirm) submit('通过'); },
       });
@@ -1778,27 +2081,27 @@ Page({
         data: { nodeId, approve, reason: reason || '', scope: that.data.operationScope },
         success(res) {
           if (res.code != '200') {
-            app.tips(app.getRequestErrorMessage(res, '点位审核失败'));
+            app.tips(app.getRequestErrorMessage(res, '节点审核失败'));
             return;
           }
-          cyToast(approve ? '点位已通过' : '点位已驳回');
+          cyToast(approve ? '节点已通过' : '节点已驳回');
           that.loadPendingMerchantNodes(true);
         },
-        fail(res) { app.tips(app.getRequestErrorMessage(res, '点位审核失败')); },
+        fail(res) { app.tips(app.getRequestErrorMessage(res, '节点审核失败')); },
         complete() { that._merchantNodeAuditing = false; },
       });
     };
     if (approve) {
       cyModal.show({
-        title: '通过商家点位',
-        content: '这是内容准入，不代表平台或主办方为商家背书。',
+        title: '通过商家节点',
+        content: '仅表示内容已通过审核',
         confirmText: '确认通过',
         success(res) { if (res.confirm) submit('通过'); },
       });
       return;
     }
     cyModal.show({
-      title: '驳回商家点位',
+      title: '驳回商家节点',
       editable: true,
       placeholderText: '填写需修改的内容',
       confirmText: '确认驳回',
@@ -1868,6 +2171,8 @@ Page({
 
   // 即将到店的场次(含俱乐部包团)。接口只返回本商家已中标主题的场次。
   loadUpcomingRuns() {
+    const current = currentProjectRead(this, 'loadUpcomingRuns');
+    if (!current()) return;
     const that = this;
     const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!topicId) {
@@ -1882,12 +2187,16 @@ Page({
       method: 'POST',
       header: { 'content-type': 'application/json' },
       success(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         const rows = (res.code == '200' && isRecordList(res.data)) ? res.data : [];
         const runs = that.buildRuns(rows);
         that._runs = runs;
         that.setData({ stepText: that.pickStepText(runs), prepHeadcount: that.pickHeadcount(runs) });
       },
-      fail() {
+      fail(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         that._runs = [];
         that.setData({ stepText: '', prepHeadcount: '' });
       }
@@ -1900,6 +2209,8 @@ Page({
    * 「谁能看到谁的号码」判死在服务端(见 ProjectHomeReadServiceImpl §联系方式)。
    */
   loadCoop() {
+    const current = currentProjectRead(this, 'loadCoop');
+    if (!current()) return;
     const that = this;
     const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!topicId) { this.setData({ coopState: 'idle' }); return; }
@@ -1910,6 +2221,8 @@ Page({
       data: JSON.stringify({ topicId: topicId, scope: that.data.operationScope }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
+        if (current.handle(res)) return;
+        if (!current()) return;
         if (res.code != '200' || !res.data) { that.setData({ coopState: 'error' }); return; }
         const d = res.data;
         const role = d.role === 'host' ? 'host' : 'join';
@@ -1922,7 +2235,8 @@ Page({
           'clubSheet.items': that.mapClubs(raw),
         });
       },
-      fail() { that.setData({ coopState: 'error' }); }
+      fail(res) {
+        if (current.handle(res)) return; if (current()) that.setData({ coopState: 'error' }); }
     });
   },
 
@@ -2014,6 +2328,8 @@ Page({
 
   /** 玩家名单。数据现拉 —— 到没到店是开店当下才有意义的信息,缓存了就是错的。 */
   openPlayerSheet() {
+    const current = currentProjectRead(this, 'openPlayerSheet');
+    if (!current()) return;
     const that = this;
     const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!topicId) return;
@@ -2024,7 +2340,7 @@ Page({
       playerActions: this.data.role === 'host'
         // CU-M-183:商家那本台账不按主题过滤,按钮就得先说清是「全店」——
         // 点进去才发现混着别的项目,主办方会以为名单和台账口径不一致。
-        ? [{ key: 'goLedger', label: '查看全店台账' }]
+        ? [{ key: 'goLedger', label: '查看全店核销记录' }]
         : [],
     });
     app.sendRequest({
@@ -2033,16 +2349,18 @@ Page({
       data: JSON.stringify({ topicId: topicId, scope: that.data.operationScope }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
+        if (current.handle(res)) return;
         if (res.code != '200' || !res.data || typeof res.data !== 'object'
             || Array.isArray(res.data) || !isRecordList(res.data.rows)) {
           // CU-C-67:读失败是「名单没拿到」,不是「一单没卖」—— 原来两件事共用同一句话,
           // 俱乐部主理人看到「名单没加载出来」而顶部还摆着三个 0,分不出是哪一种。
-          that.showPlayerSheetError(app.getRequestErrorMessage(res, '名单没加载出来'));
+          that.showPlayerSheetError(app.getRequestErrorMessage(res, '名单加载失败'));
           return;
         }
         that.setData(that.buildPlayerSheet(res.data, that.data.playerSheet.filter));
       },
       fail(res) {
+        if (current.handle(res)) return;
         that.showPlayerSheetError(app.getRequestErrorMessage(res, '网络异常，客户名单没读到'));
       }
     });
@@ -2051,7 +2369,7 @@ Page({
   /* CU-C-67:名单读失败就要说读失败 —— 分开存、分开渲染(零单的话在 buildPlayerSheet 里)。 */
   showPlayerSheetError(text) {
     this.setData({
-      'playerSheet.errorText': String(text || '名单没加载出来'),
+      'playerSheet.errorText': String(text || '名单加载失败'),
       'playerSheet.raw': {},
       'playerSheet.rows': [],
       'playerSheet.groups': [],
@@ -2129,7 +2447,7 @@ Page({
     let emptyText = '';
     if (!kept.length) {
       emptyText = !rows.length && !shopDay
-        ? (filter === 'all' ? '还没有人下单。路线上架后，报名记录会出现在这里' : '还没有人下单，这一档也是空的')
+        ? (filter === 'all' ? '暂无报名' : '还没有人下单，这一档也是空的')
         : (filter === 'pending' ? '没有待核销的客户'
           : (filter === 'contacted' ? '还没有客户接洽'
             : (filter === 'arrived' ? '没有已核销的客户'
@@ -2165,11 +2483,11 @@ Page({
     // CU-C-64:主题名在 /api/topic/info-to-user 里是 info.name(TopicInfoVO 没有 topicName),
     // 原来读 info.topicName 恒为空 —— 名字一路丢到邀请表单,最后只剩裸主题编号。
     const name = (this.data.hostTopic && this.data.hostTopic.name) || (this.data.info && this.data.info.name) || '';
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/merchant/relation/index?tab=club&topicId=' + topicId
         + '&topicName=' + encodeURIComponent(name)
         + (this.chapterRecruitChapter() ? '&chapterId=' + this.chapterRecruitChapter().id : '')
-        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; },
     });
   },
 
@@ -2186,17 +2504,17 @@ Page({
       return [{ key: 'goInviteMerchant', label: '去找商家' }, review];
     }
     if (this._hostCanEdit === false) return [review];
-    return [{ key: 'goAddStations', label: '去加站点' }, review];
+    return [{ key: 'goAddStations', label: '去加节点' }, review];
   },
 
   /** CU-M-181:「去加站点」= 主题编辑器,与「更多 → 票价与主题内容」同一个落点。 */
   goAddStations() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!id) { app.tips('这条路线还没读到，稍后再试'); return; }
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/publish/fabu/index?id=' + id
         + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
-      fail: () => app.tips('编辑器暂时打不开，稍后重试'),
+      fail: () => app.tips('编辑器无法打开，稍后重试'), complete: () => { this._navigating = false; },
     });
   },
 
@@ -2205,10 +2523,10 @@ Page({
     const topicId = this.data.topicId || (this.data.info && this.data.info.topicId) || '';
     // CU-C-64:同上,读 name 不读不存在的 topicName
     const name = (this.data.hostTopic && this.data.hostTopic.name) || (this.data.info && this.data.info.name) || '';
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/coop/nearby/index?topicId=' + topicId + '&topicName=' + encodeURIComponent(name)
         + (this.chapterRecruitChapter() ? '&chapterId=' + this.chapterRecruitChapter().id : '')
-        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; },
     });
   },
 
@@ -2217,10 +2535,10 @@ Page({
       管理员判断不了这条主题到底有没有申请。 */
   goReceivedApplies() {
     const topicId = this.data.topicId || '';
-    wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
       + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '')
       + (topicId ? '&topicId=' + topicId + '&topicName='
-        + encodeURIComponent((this.data.info && this.data.info.name) || '') : '') });
+        + encodeURIComponent((this.data.info && this.data.info.name) || '') : ''), complete: () => { this._navigating = false; } });
   },
 
   reviewCircleSupplies() {
@@ -2246,11 +2564,60 @@ Page({
     });
   },
 
+  openCircleConfig() {
+    if (!(this.data.hostTopic && this.data.hostTopic.circleThemeCode)) return;
+    this.setData({ circleConfig: { show: true, submitting: false, errorText: '', errorTitle: '' } });
+  },
+
+  closeCircleConfig() {
+    if (this._circleConfiguring) return;
+    this.setData({ 'circleConfig.show': false });
+  },
+
+  // POST /api/circle-theme/instance/configure:服务端校验归属、3—4个且覆盖三种角色、可发布;
+  // 选择变了会清掉旧复核。成功后重载项目首页,以「30天供给复核」那行的复核文案作回读。
+  submitCircleConfig(e) {
+    const topicId = Number(this.data.topicId);
+    const codes = ((e.currentTarget.dataset || {}).candidateCodes || []).map(String);
+    if (!topicId || !codes.length || this._circleConfiguring) return;
+    this._circleConfiguring = true;
+    this.setData({ 'circleConfig.submitting': true, 'circleConfig.errorText': '', 'circleConfig.errorTitle': '' });
+    const that = this;
+    app.sendRequest({
+      hideLoading: false,
+      url: '/api/circle-theme/instance/configure',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ topicId, candidateCodes: codes, scope: that.data.operationScope }),
+      success(res) {
+        if (!res || res.code != '200') {
+          that.setData({
+            'circleConfig.errorTitle': '供给角色没有保存',
+            'circleConfig.errorText': app.getRequestErrorMessage(res, '供给角色保存失败'),
+          });
+          return;
+        }
+        that.setData({ 'circleConfig.show': false });
+        app.tips('供给角色已保存，请重新复核');
+        that.loadProjectHome();
+      },
+      fail() {
+        // 断网时服务端可能已保存:不说失败也不说成功,重载一次让复核文案说话。
+        that.setData({ 'circleConfig.errorTitle': '保存结果未确认', 'circleConfig.errorText': '已重新加载项目，请看复核状态' });
+        that.loadProjectHome();
+      },
+      complete() {
+        that._circleConfiguring = false;
+        that.setData({ 'circleConfig.submitting': false });
+      },
+    });
+  },
+
   /** 主办方的钱统一进「我的资产」，由收益宿主打开分润场景。 */
   goFinance() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
-    wx.navigateTo({
-      url: '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit' + (id ? '&topicId=' + id : ''),
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit' + (id ? '&topicId=' + id : ''), complete: () => { this._navigating = false; },
     });
   },
 
@@ -2281,7 +2648,7 @@ Page({
         stepText: (row.nodeOrder && row.nodeTotal) ? ('第 ' + row.nodeOrder + '/' + row.nodeTotal + ' 站') : '',
         // 一行说完「多少人 · 成不成团」,避免模板里拼三段 text 造出连缀的分隔点
         metaText: [
-          (row.paidCount || 0) + ' 人',
+          row.paidCount != null ? row.paidCount + ' 人' : '',
           that.teamStatusText(row.teamStatus),
         ].filter(Boolean).join(' · '),
         arrivalText: hasWindow
@@ -2454,7 +2821,7 @@ Page({
     if (state.key === 'pending') {
       rows.push({ key: 'audit', label: '主办方审核中', st: 'now', tag: '进行中',
         sub: '一般 1–2 个工作日出结果' });
-      rows.push({ key: 'start', label: '开始接待', time: '待定', st: 'wait', sub: '通过后才会排期' });
+      rows.push({ key: 'start', label: '开始接待', time: '待定', st: 'wait', sub: '' });
       rows.push({ key: 'end', label: '结束', time: '待定', st: 'wait' });
       return rows;
     }
@@ -2574,7 +2941,7 @@ Page({
    */
   buildPlay(tpl) {
     if (!tpl) return null;
-    const VERIFY_TEXT = { 1: '玩家答文字题,你对暗号', 2: '玩家拍照打卡,你确认', 3: '玩家选选项,你确认' };
+    const VERIFY_TEXT = { 1: '玩家答文字题，你对暗号', 2: '玩家拍照打卡，你确认', 3: '玩家选选项，你确认' };
     const chips = [];
     if (tpl.players) chips.push(tpl.players);
     if (tpl.duration) chips.push(tpl.duration + ' 分钟');
@@ -2672,7 +3039,8 @@ Page({
       // CU-M-181:无站点时抽屉主按钮换成「去加站点」,走的仍是这条白名单派发
       goAddStations: 1,
       reviewCircleSupplies: 1,
-      auditChapterApplication: 1, auditMerchantNode: 1, retryChapterReviews: 1,
+      openCircleConfig: 1, closeCircleConfig: 1, submitCircleConfig: 1,
+      auditChapterApplication: 1, revokeChapterInvitation: 1, auditMerchantNode: 1, retryChapterReviews: 1,
       switchStation: 1,
       openNodeNpcForm: 1, openChapterOfferForm: 1, openChapterNodeForm: 1,
       withdrawChapterApplication: 1, reconfirmCircleSupply: 1, pauseCircleSupply: 1, retryMyChapterNodes: 1,
@@ -2755,6 +3123,8 @@ Page({
        null  = 还没探到 / 探失败 → 也置灰,不冒充可点
      探不到不等于没有(空≠错),所以失败留在未确认态,重开抽屉再探。 */
   probeStationOperable() {
+    const current = currentProjectRead(this, 'probeStationOperable');
+    if (!current()) return;
     const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
     if (!topicId) {
       this._stationOperable = false;
@@ -2767,6 +3137,7 @@ Page({
     app.sendRequest({
       url: '/api/game/session/merchant/entries', method: 'GET', hideLoading: true, silentError: true,
       success(res) {
+        if (current.handle(res)) return;
         const ok = res && (res.code == 200 || res.code == '200');
         const rows = ok && Array.isArray(res.data) ? res.data : null;
         if (!rows) {
@@ -2779,7 +3150,8 @@ Page({
         }
         that.refreshMoreGroups();
       },
-      fail() {
+      fail(res) {
+        if (current.handle(res)) return;
         that._stationOperable = null;
         that.setData({ stationOpsErrorText: '没能确认你是否承接本站，稍后重开本面板再试' });
         that.refreshMoreGroups();
@@ -2795,6 +3167,8 @@ Page({
 
   // 管理摘要缺少生命周期或供给档位时，补读本人可访问的主题详情。
   loadChapterProjectLifecycle() {
+    const current = currentProjectRead(this, 'loadChapterProjectLifecycle');
+    if (!current()) return;
     const topicId = Number(this.data.topicId);
     if (!topicId || !this.data.chapterProject) return;
     const memberId = app.getUserID && app.getUserID();
@@ -2804,6 +3178,7 @@ Page({
       url: '/api/topic/info-to-merchant', method: 'POST', hideLoading: true,
       data: { id: topicId, scope: this.data.operationScope },
       success: (res) => {
+        if (current.handle(res)) return;
         if (epoch !== this._chapterLifecycleEpoch || topicId !== Number(this.data.topicId)
             || memberId !== (app.getUserID && app.getUserID())) return;
         const topic = res && res.code == 200 && res.data;
@@ -2813,31 +3188,41 @@ Page({
           lifecycle: topic.lifecycle, status: topic.status, userStatus: topic.userStatus,
           circleThemeCode: topic.circleThemeCode,
         });
+        for (const field of ['productType', 'publishMode']) {
+          if (topic[field] !== undefined) info[field] = topic[field];
+        }
+        info.delFlag = topic.delFlag;
         if (isRecordList(topic.chaptersList)) info.chaptersList = topic.chaptersList;
         this.setData({ info });
         this.refreshMyChapterApplications();
       },
+      fail(res) { current.handle(res); },
     });
   },
 
   loadHostChapters() {
     const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (!topicId || this._hostChaptersLoading) return;
+    const current = currentProjectRead(this, 'loadHostChapters');
+    if (!current()) return;
     this._hostChaptersLoading = true;
     const that = this;
     app.sendRequest({
       url: '/api/topic/info-to-user', method: 'POST', hideLoading: true, silentError: true,
       data: { id: topicId, scope: this.data.operationScope },
       success(res) {
+        if (current.handle(res)) return;
         const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
         if (!d || !Array.isArray(d.chaptersList)) return;   // 读不到 ≠ 没有章节,保持不带标签
         that._hostChapters = d.chaptersList;
+        that.setData({ 'info.canResubmitSupplyReview': d.canResubmitSupplyReview === true });
         if (that.data.moreSheet && that.data.moreSheet.show) {
           const more = that.buildMoreGroups();
           that.setData({ 'moreSheet.groups': more.groups });
         }
       },
-      complete() { that._hostChaptersLoading = false; },
+      complete() { if (!current()) return; that._hostChaptersLoading = false; },
+      fail(res) { current.handle(res); },
     });
   },
 
@@ -2854,17 +3239,19 @@ Page({
       })),
     });
     const OPS = [
-      { key: 'howto',   label: '这一站怎么接待', sub: '商家只做什么 · 不看剧情(剧透隔离)' },
-      { key: 'service', label: '服务时段与接待容量', sub: '决定这一站能接多少人、什么时候接' },
+      { key: 'howto',   label: '这一站怎么接待', sub: '商家须知' },
+      { key: 'service', label: '服务时段与接待容量', sub: '' },
       { key: 'customer', label: '客户 · 谁要来 / 谁还没来',
-        sub: '查看报名、到店和核销情况' },
-      { key: 'pause',   label: '暂停接待', sub: '临时有事 / 设备故障 · 需要已审核的备用方案' },
+        sub: '' },
+      { key: 'pause',   label: '暂停接待', sub: '需已审核的备用方案' },
     ];
     if (this.data.role === 'host') {
       const canEdit = this._hostCanEdit !== false;
-      return present({ subtitle: '你是这条路线的主办方,可以编辑主题内容和管理章节', groups: [
+      return present({ subtitle: '', groups: [
         { head: '编辑', rows: [
-          { key: 'perk',  label: '权益票夹', sub: '商家常备权益 · 挂在店铺装修里' },
+          ...((this.data.info || {}).canResubmitSupplyReview === true ? [{ key: 'supplyReview', label: '补位后重新提交审核',
+            sub: '确认新供给并提交新版本，报名仍保持暂停', disabled: !!this._supplyReviewBusy }] : []),
+          { key: 'perk',  label: '权益票夹', sub: '' },
           { key: 'topic', label: '票价与主题内容', sub: canEdit ? '改票价 / 章节 / 节点' : '当前没有编辑资格',
             disabled: !canEdit, tag: canEdit ? '' : '不可用' },
         ] },
@@ -2895,38 +3282,38 @@ Page({
     }
     const st = this.data.stateKey;
     if (st === 'ended') {
-      return present({ subtitle: '结束后只剩复盘与结算', groups: [
+      return present({ subtitle: '', groups: [
         { head: '本站运营', rows: [
-          { key: 'review',     label: '本站复盘', sub: '只看自己这一站 · 缺的指标不显示为零' },
-          { key: 'settlement', label: '查看结算报告', sub: '结算明细与分润' },
+          { key: 'review',     label: '本站复盘', sub: '' },
+          { key: 'settlement', label: '查看结算报告', sub: '' },
         ] },
-        { head: '其他', rows: [{ key: 'support', label: '联系客服', sub: '结算有疑问找平台' }] },
+        { head: '其他', rows: [{ key: 'support', label: '联系客服', sub: '' }] },
       ] });
     }
     if (this.canEditRegistration()) {
       // pending / rejected:还能改内容,也还没开始接待
-      return present({ subtitle: '这两个状态还能改内容,也还没开始接待', groups: [
+      return present({ subtitle: '', groups: [
         { head: '我的报名', rows: [
-          { key: 'editRegistration', label: '修改承接内容', sub: '改完重新进入审核', tag: '可改' },
+          { key: 'editRegistration', label: '修改承接内容', sub: '', tag: '可改' },
         ] },
         { head: '先配起来', rows: [
-          { key: 'service', label: '服务时段与接待容量', sub: '过审前就能填,过审后直接生效' },
+          { key: 'service', label: '服务时段与接待容量', sub: '' },
         ] },
         { head: '其他', rows: [
-          { key: 'support', label: '联系客服', sub: '审核有疑问找平台' },
-          { key: 'cancel',  label: '取消参与', sub: '审核中可直接取消,不用走客服', danger: true },
+          { key: 'support', label: '联系客服', sub: '' },
+          { key: 'cancel',  label: '取消参与', sub: '', danger: true },
         ] },
       ] });
     }
     // confirmed / running:内容锁死,运营动作才是主角
-    return present({ subtitle: '审核通过后内容锁死,这里全是运营动作', groups: [
+    return present({ subtitle: '', groups: [
       { head: '我的报名', rows: [
         { key: 'editRegistration', label: '修改承接内容',
-          sub: '该报名已通过审核,内容不能再修改', disabled: true, tag: '不可用' },
+          sub: '已过审，不可修改', disabled: true, tag: '不可用' },
       ] },
       { head: '本站运营', rows: OPS },
       { head: '其他', rows: [
-        { key: 'support', label: '联系客服', sub: '要改内容也走客服' },
+        { key: 'support', label: '联系客服', sub: '修改请联系客服' },
         { key: 'quit',    label: '联系客服申请退出', sub: '已确认承接后不能自行取消', danger: true },
       ] },
     ] });
@@ -2988,7 +3375,7 @@ Page({
         : '章节还没读到 · 稍后再试';
     }
     // 这一行管的还是同一章的招商:结束后商家不能再申请承接,已确认的承接不受影响
-    return '结束后商家不能再申请承接本章,已确认的承接不受影响';
+    return '结束后商家不能再申请承接本章，已确认的承接不受影响';
   },
   chapterRecruitTag() {
     const c = this.chapterRecruitChapter();
@@ -3051,11 +3438,34 @@ Page({
     return parts.join(' · ');
   },
 
+  resubmitSupplyReview() {
+    if (this.data.role !== 'host' || (this.data.info || {}).canResubmitSupplyReview !== true || this._supplyReviewBusy) return;
+    const current = currentProjectRead(this, 'resubmitSupplyReview');
+    const operation = {}; this._supplyReviewBusy = operation;
+    this.closeMoreSheet();
+    app.sendRequest({ url: '/api/topic/publish-draft', method: 'POST', retry: false, hideLoading: true,
+      data: { id: this.data.topicId, scope: this.data.operationScope },
+      success: res => {
+        if (!current()) return;
+        if (!res || Number(res.code) !== 200 || !res.data || res.data.reviewState !== 'PENDING') {
+          app.tips(app.getRequestErrorMessage(res, '重提未完成，请确认供给')); return;
+        }
+        this._supplyReviewBusy = false;
+        app.tips('已提交审核，报名保持暂停');
+        this.loadProjectHome();
+      },
+      successStatusAbnormal: () => { if (current()) app.tips('结果未确认，请刷新审核状态'); },
+      fail: () => { if (current()) app.tips('结果未确认，请刷新审核状态'); },
+      complete: () => { if (this._supplyReviewBusy === operation) this._supplyReviewBusy = false; },
+    });
+  },
+
   onMorePick(e) {
     const key = e.currentTarget.dataset.key;
     const row = this.findMoreRow(key);
     if (row && row.disabled) { app.tips(row.sub || '当前不能做这个'); return; }
     if (key === 'chapterOpen') return this.toggleChapterRecruit();
+    if (key === 'supplyReview') return this.resubmitSupplyReview();
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
     this.setData({ 'moreSheet.show': false });
     /* CU-M-56 / CU-C-69:常备权益自己有一页(decor/perks),原来只跳到品牌中心「首页」,
@@ -3064,7 +3474,7 @@ Page({
     if (key === 'perk') {
       wx.navigateTo({
         url: '/pages/merchant/decor/perks/index',
-        fail: () => app.tips('权益票夹暂时打不开，稍后重试'),
+        fail: () => app.tips('权益票夹无法打开，稍后重试'),
       });
       return;
     }
@@ -3078,7 +3488,7 @@ Page({
     if (key === 'support' || key === 'quit') {
       cyModal.show({
         title: key === 'quit' ? '申请退出' : '联系客服',
-        content: '在「我的 → 帮助与客服」里发起,带上这条路线的名字,客服会核对后处理。',
+        content: '在「我的 → 帮助与客服」里发起，带上这条路线的名字，客服会确认后处理。',
         showCancel: false, confirmText: '知道了',
       });
       return;
@@ -3119,6 +3529,7 @@ Page({
   onDangerConfirm(e) {
     const key = e && e.detail && e.detail.key;
     if (key === 'topic.chapter.finish') return this.doFinishChapter(e.detail.params || {});
+    if (key === 'merchant.chapterInvitation.revoke') return this.submitChapterInvitationRevoke((e.detail.params || {}).applicationId);
     return this.onConfirmWithdrawApplication(e);
   },
 
@@ -3167,15 +3578,15 @@ Page({
       ? (this.data.myChapterApplications || []).filter(row => row.canConfigureNode)
       : (this.data.myChapterNodes || []);
     if (!rows.length) {
-      app.tips(action === 'edit' ? '当前没有可编辑的章节' : '请先配置点位，审核通过后可出示二维码');
+      app.tips(action === 'edit' ? '当前没有可编辑的章节' : '请先配置节点，审核通过后可出示二维码');
       return;
     }
     this._stationPick = { chapterAction: action,
       ids: rows.map(row => action === 'edit' ? row.chapterId : row.id) };
     if (rows.length === 1) return this.onStationSheetSelect({ detail: { index: 0 } });
     this.setData({ stationSheetShow: true,
-      stationSheetTitle: action === 'edit' ? '选择编辑章节' : '选择出示码的点位',
-      stationSheetItems: rows.map(row => action === 'edit' ? row.chapterName || '未命名章节' : row.name || '未命名点位') });
+      stationSheetTitle: action === 'edit' ? '选择编辑章节' : '选择出示码的节点',
+      stationSheetItems: rows.map(row => action === 'edit' ? row.chapterName || '未命名章节' : row.name || '未命名节点') });
   },
 
   onStationSheetCancel() { this._stationPick = null; this.setData({ stationSheetShow: false }); },
@@ -3196,6 +3607,8 @@ Page({
 
   goStation(focus) {
     if (this._stationLoading) return;
+    const current = currentProjectRead(this, 'goStation');
+    if (!current()) return;
     const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
     if (!topicId) { app.tips('缺少主题信息，请退出重进'); return; }
     const that = this;
@@ -3204,6 +3617,7 @@ Page({
     app.sendRequest({
       url: '/api/game/session/merchant/entries', method: 'GET', hideLoading: true,
       success(res) {
+        if (current.handle(res)) return;
         const rows = (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data)) ? res.data : null;
         if (!rows) { app.tips(app.getRequestErrorMessage(res, '本站入口没读到')); return; }
         const mine = rows.filter((row) => row && Number(row.topicId) === topicId && Number(row.activityId) > 0);
@@ -3212,7 +3626,7 @@ Page({
           // CU-M-21:原来只 toast 2 秒,点完回到原页像没反应 —— 改成要点「知道了」的说明。
           cyModal.show({
             title: '还没有可接待的场次',
-            content: '本站接待、服务时段和暂停都按场次配置。这条路线开出场次、且你这一站在场次里之后,这里才能进入。',
+            content: '本站接待、服务时段和暂停都按场次配置。这条路线开出场次、且你这一站在场次里之后，这里才能进入。',
             showCancel: false, confirmText: '知道了',
           });
           return;
@@ -3228,18 +3642,19 @@ Page({
           stationSheetItems: mine.map((row) => String(row.activityName || '未命名场次').slice(0, 30)),
         });
       },
-      fail(res) { app.tips(app.getRequestErrorMessage(res, '本站入口没读到,检查网络后重试')); },
+      fail(res) {
+        if (current.handle(res)) return; app.tips(app.getRequestErrorMessage(res, '本站入口没读到，检查网络后重试')); },
       // 闸在 complete 里放:只在 success 里放的话,失败一次这个入口就永久点不动了
-      complete() { that._stationLoading = false; cyLoading.hide(); },
+      complete() { if (!current()) return; that._stationLoading = false; cyLoading.hide(); },
     });
   },
 
   openStation(activityId, focus) {
     // focus=pause 让 game-node 落地后直接把「暂停接待」抽屉打开 —— 抽屉里点的就是这件事,
     // 再让人在那一页自己找一遍按钮是白绕一圈。其余三档只是同一页的不同段落,不传。
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/merchant/game-node/index?activityId=' + activityId
-        + (focus === 'pause' ? '&focus=pause' : ''),
+        + (focus === 'pause' ? '&focus=pause' : ''), complete: () => { this._navigating = false; },
     });
   },
 
@@ -3249,6 +3664,8 @@ Page({
      ⚠️ 分支图主题下后端只放行「自己已中标的节点」(ApiTopicController 2026-09-05),
      所以那种主题这里就只有自己那一站 —— 条数照实显示,不补也不解释成"加载不全"。 */
   openChapterSheet() {
+    const current = currentProjectRead(this, 'openChapterSheet');
+    if (!current()) return;
     if (this._chapterSheetNodes) {
       this.setData({ 'chapterSheet.show': true, 'chapterSheet.state': 'ready' });
       return;
@@ -3261,16 +3678,18 @@ Page({
       url: '/api/topic/info-to-user', method: 'POST', hideLoading: true,
       data: { id: topicId, scope: this.data.operationScope },
       success(res) {
+        if (current.handle(res)) return;
         if (!(res && (res.code == 200 || res.code == '200') && res.data)) {
           that.setData({ 'chapterSheet.state': 'error',
-            'chapterSheet.error': app.getRequestErrorMessage(res, '本章内容没加载出来') });
+            'chapterSheet.error': app.getRequestErrorMessage(res, '本章内容加载失败') });
           return;
         }
         that.applyChapterSheet(res.data);
       },
       fail(res) {
+        if (current.handle(res)) return;
         that.setData({ 'chapterSheet.state': 'error',
-          'chapterSheet.error': app.getRequestErrorMessage(res, '本章内容没加载出来,检查网络后重试') });
+          'chapterSheet.error': app.getRequestErrorMessage(res, '本章内容加载失败，检查网络后重试') });
       },
     });
   },
@@ -3298,7 +3717,7 @@ Page({
       const tpl = n.cmsMemberTemplate || null;
       return {
         id: n.id,
-        name: n.name || '未命名站点',
+        name: n.name || '未命名节点',
         // 玩法与奖励复用承接页那两个 build —— 同一份形状,不另写一套渲染口径
         play: this.buildPlay(tpl),
         reward: this.buildReward(tpl),
@@ -3332,7 +3751,7 @@ Page({
       nodeSheet: {
         show: true,
         name: node.name,
-        chapterText: (node.mine ? '我承接的站点 · ' : '') + (this.data.chapterSheet.chapterName || ''),
+        chapterText: (node.mine ? '我承接的节点 · ' : '') + (this.data.chapterSheet.chapterName || ''),
         play: play,
         reward: node.reward,
         templateId: node.templateId,
@@ -3371,9 +3790,9 @@ Page({
         : '该报名已通过审核,内容不能再修改');
       return;
     }
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/topic/merchantapply/index?mode=1&id=' + this.data.regId,
-      events: { registrationSaved: () => this.loadDetail() },
+      events: { registrationSaved: () => this.loadDetail() }, complete: () => { this._navigating = false; },
     });
   },
 
@@ -3412,6 +3831,7 @@ Page({
       checkinVisible: false,
       checkinQrState: 'loading',
       checkinQrUrl: '',
+      checkinCode: '',
       checkinErr: '',
     });
   },
@@ -3424,6 +3844,8 @@ Page({
   },
 
   issueStationPoster(opts) {
+    const current = currentProjectRead(this, 'issueStationPoster');
+    if (!current()) return;
     const that = this;
     const saveAfter = !!(opts && opts.saveAfter);
     const nodeId = this._checkinNodeId();
@@ -3431,19 +3853,22 @@ Page({
     const epoch = (this._checkinEpoch || 0) + 1;
     this._checkinEpoch = epoch;
     this.clearCheckinTimer();
-    this.setData({ checkinQrState: 'loading', checkinQrUrl: '', checkinErr: '' });
+    this.setData({ checkinQrState: 'loading', checkinQrUrl: '', checkinCode: '', checkinErr: '' });
     app.sendRequest({
       url: '/api/merchant/chapter-node/poster-code',
       method: 'POST',
       data: { nodeId },
       hideLoading: true,
       success(res) {
+        if (current.handle(res)) return;
         if (epoch !== that._checkinEpoch) return;
         const data = res && res.data;
-        if (res && (res.code === 200 || res.code === '200') && data && data.qrcodeUrl) {
+        // C8:无码图但有 code 文本时进 ready,由 cy-qr-voucher 显示文本码(长按复制)
+        if (res && (res.code === 200 || res.code === '200') && codeTextUtil.usable(data)) {
           that.setData({
             checkinQrState: 'ready',
             checkinQrUrl: data.qrcodeUrl || '',
+            checkinCode: data.qrcodeUrl ? '' : codeTextUtil.pickCode(data),
             checkinErr: '',
           });
           if (saveAfter) that.saveCheckinImage(data.qrcodeUrl || '');
@@ -3452,7 +3877,8 @@ Page({
         that.setData({ checkinQrState: 'error', checkinErr: (res && res.msg) || '打卡码暂时没能生成' });
         if (saveAfter) app.tips((res && res.msg) || '打卡码暂时没能生成');
       },
-      fail() {
+      fail(res) {
+        if (current.handle(res)) return;
         if (epoch !== that._checkinEpoch) return;
         that.setData({ checkinQrState: 'error', checkinErr: '网络异常，请重试' });
         if (saveAfter) app.tips('网络异常，请重试');
@@ -3464,6 +3890,8 @@ Page({
       },
     });
   },
+
+  copyCheckinCode() { codeTextUtil.copy(this.data.checkinCode); },
 
   downloadCheckinQr() {
     if (!this._checkinNodeId()) {
@@ -3527,10 +3955,10 @@ Page({
       const clubId = Number((this.data.info && this.data.info.clubId) || 0);
       const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
       if (!clubId || !topicId) { app.tips('这条主题没有关联俱乐部'); return; }
-      wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + clubId + '&topicId=' + topicId });
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + clubId + '&topicId=' + topicId, complete: () => { this._navigating = false; } });
       return;
     }
-    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=redemptions' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=redemptions', complete: () => { this._navigating = false; } });
   },
 
   /* 「查看结算报告」去的是结算明细页,不是核销台账 —— 稿 468:1086 标的就是 coop/settlement-detail。
@@ -3538,8 +3966,8 @@ Page({
      source=finance 时该页拿 topicId 当记录标识(settlement-detail/index.js:79-81)。 */
   goSettlementReport() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
-    if (!id) { app.tips('还没读到主题标识，稍后再试'); return; }
-    wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=finance&topicId=' + id });
+    if (!id) { app.tips('主题加载中，请稍后再试'); return; }
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=finance&topicId=' + id, complete: () => { this._navigating = false; } });
   },
 
   formatShortDate(dateVal) {
@@ -3575,13 +4003,18 @@ Page({
     return parts.join(' ');
   },
 
+  /** BL-200:在途标记 _cancelingRegistration。成功后保持置真直到页面返回,
+      防止 1.5 秒窗口内再取消一次、排两个 navigateBack 把上一页也退掉。 */
   cancelRegistration() {
     const that = this;
+    if (that._cancelingRegistration) return;
     cyModal.show({
       title: '确认取消',
       content: '确定要取消参与吗？取消后不可恢复。',
       success(res) {
         if (res.confirm) {
+          if (that._cancelingRegistration) return;
+          that._cancelingRegistration = true;
           app.sendRequest({
             url: '/api/registration/merchant/cancel',
             data: { id: that.data.regId },
@@ -3591,8 +4024,13 @@ Page({
                 cyToast.success('已取消');
                 setTimeout(() => wx.navigateBack(), 1500);
               } else {
+                that._cancelingRegistration = false;
                 app.tips(res.msg || '取消失败');
               }
+            },
+            fail(res) {
+              that._cancelingRegistration = false;
+              app.tips(app.getRequestErrorMessage(res, '网络异常，请重试'));
             }
           });
         }
@@ -3601,6 +4039,6 @@ Page({
   },
 
   contactService() {
-    wx.navigateTo({ url: '/pages/shezhi/shezhi' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/shezhi/shezhi', complete: () => { this._navigating = false; } });
   },
 });

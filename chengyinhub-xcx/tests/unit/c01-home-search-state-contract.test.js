@@ -8,6 +8,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js·loading.js
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js')
 
 // 2026-08-06：主页统一到 cy-profile 共用组件后，member/index 与 userinfo 的 wxml
 // 只剩一行 <cy-profile />，本文件的断言原本钉在旧结构的节点上。约束没失效、只是搬进了
@@ -78,6 +79,7 @@ const loadPage = (rel, options = {}) => {
   const originalSendRequest = appOverrides.sendRequest || (() => {})
   const app = Object.assign({
     getUserID: () => 0,
+    canUseCommunity: () => true, // Current-account server-open fixture (square detail is gated since F-L5C-06).
     getAvatar: () => '',
     getPageSize: () => 10,
     getTotalPage: () => 1,
@@ -101,10 +103,14 @@ const loadPage = (rel, options = {}) => {
     reLaunch: () => {},
   }, options.wx || {})
   const requireStub = (request) => {
+    if (request.endsWith('community-post-api.js')) return require('../helpers/community-page-seam.js')
     if (request === '../../../utils/datetime') return { toTimestamp: (value) => value }
     if (request === '../../../utils/analytics.js') return { track: () => {} }
+    if (request === '../../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} })
     if (request === '../../../utils/feed-play-card.js') return require(path.join(ROOT, 'utils/feed-play-card.js'))
     if (request === '../../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
+    if (request === '../../../utils/square-share.js') return require(path.join(ROOT, 'utils/square-share.js'))
+    if (request === '../utils/community-report-sheet.js') return require(path.join(ROOT, 'pages/square/utils/community-report-sheet.js'))
     // 性能批4 分页路径追加助手:纯函数无副作用,用真模块不用桩(同上 response-shape 先例)
     if (request.endsWith('list-append.js')) return require(path.join(ROOT, 'utils/list-append.js'))
     if (request === '../utils/topic-template-remix.js') return { remixTopicTemplate: () => Promise.resolve(false) }
@@ -297,9 +303,9 @@ test('square/detail 关注评论者只在服务端回读确认后报成功，回
   failedPost.success({ code: '200' })
   assert.doesNotMatch(failedToasts.join('|'), /关注成功/, 'POST 200 还不是权威终态')
   const failedReadback = failed.requests.find((request) => request.url === '/api/comment/list')
-  assert.ok(failedReadback, '写后必须回读评论行的 isFollowTheUser')
+  assert.ok(failedReadback, '写后必须刷新评论行的 isFollowTheUser')
   failedReadback.fail()
-  assert.deepEqual(failed.page.data.list, original, '回读失败不能清空或伪造列表终态')
+  assert.deepEqual(failed.page.data.list, original, '刷新失败不能清空或伪造列表终态')
   assert.match(failedToasts.at(-1), /状态确认失败.*刷新/)
 
   const malformedToasts = []
@@ -312,7 +318,7 @@ test('square/detail 关注评论者只在服务端回读确认后报成功，回
   malformed.requests.find((request) => request.url === '/api/user/follow/action').success({ code: '200' })
   const malformedReadback = malformed.requests.find((request) => request.url === '/api/comment/list')
   assert.doesNotThrow(() => malformedReadback.success({ code: '200', data: { rows: {} } }))
-  assert.deepEqual(malformed.page.data.list, original, '畸形回读不能写入或清空旧列表')
+  assert.deepEqual(malformed.page.data.list, original, '畸形刷新不能写入或清空旧列表')
   assert.match(malformedToasts.at(-1), /状态确认失败.*刷新/)
 
   const successToasts = []
@@ -418,7 +424,7 @@ test('C01-R4 crop: the pre-cropInit first frame is a neutral waiting state, not 
   })
   timedOut.onLoad()
   assert.equal(timedOut.data.sourceState, 'missing',
-    'cropInit 始终不来时必须落到无源态,不能把用户留在等待里')
+    'cropInit 始终不来时必须落到无源态，不能把用户留在等待里')
 })
 
 // eventChannel 会把 on() 之前就 emit 的事件在 on() 里同步回放。等图闸若晚于 ch.on 才上,
@@ -433,9 +439,9 @@ test('C01-R4 crop: a cropInit that replays synchronously inside on() still cance
   })
   page.onLoad()
   assert.notEqual(page.data.sourceState, 'missing', '同步回放的 cropInit 必须离开无源态')
-  assert.equal(timers.armed.length, 1, '等图闸必须在 ch.on 之前就上,才可能被同步回放撤掉')
+  assert.equal(timers.armed.length, 1, '等图闸必须在 ch.on 之前就上，才可能被同步回放撤掉')
   assert.deepEqual(timers.cleared, [timers.armed[0].id],
-    '同步回放的 cropInit 必须真的撤掉等图闸,不能留悬空定时器')
+    '同步回放的 cropInit 必须真的撤掉等图闸，不能留悬空定时器')
 })
 
 test('C01-R4 crop: leaving the page cancels the wait gate', () => {
@@ -481,7 +487,7 @@ test('C01-R4 crop negative control: dropping the wait gate strands the user on t
   page.onLoad()
   assert.throws(
     () => assert.equal(page.data.sourceState, 'missing',
-      'cropInit 始终不来时必须落到无源态,不能把用户留在等待里'),
+      'cropInit 始终不来时必须落到无源态，不能把用户留在等待里'),
     /不能把用户留在等待里/,
     '拆掉等图闸后必须停在 waiting —— 证明这条断言真的靠那只闸',
   )
@@ -507,7 +513,7 @@ test('C01-R4 crop negative control: arming the wait gate after ch.on leaks a dan
   page.onLoad()
   assert.throws(
     () => assert.deepEqual(timers.cleared, [timers.armed[0].id],
-      '同步回放的 cropInit 必须真的撤掉等图闸,不能留悬空定时器'),
+      '同步回放的 cropInit 必须真的撤掉等图闸，不能留悬空定时器'),
     /悬空定时器/,
   )
 })
@@ -898,7 +904,7 @@ test('C01-R3 C: crop action aria follows its visible state, ready-state cancel s
   assert.ok(baseRule)
   assert.match(baseRule[0], /min-height: 88rpx/)
   assert.match(baseRule[0], /color: var\(--cy-color-text-primary\)/)
-  assert.doesNotMatch(baseRule[0], /background:/, 'ready 态"取消"不许带底色,否则和右侧「选取」的层级就分不清了')
+  assert.doesNotMatch(baseRule[0], /background:/, 'ready 态"取消"不许带底色，否则和右侧「选取」的层级就分不清了')
 
   // 而右侧「选取」是这一屏的主 CTA,必须是白色实心(与全站 --cy-btn-solid-* 一致)。
   // 两条合起来才是"层级",少任何一边都会退回"两个都是纯文字、分不出主次"。
@@ -1114,7 +1120,7 @@ test('C01-R6: square/detail hands its nav back to goBack, and the whole chain ha
   assert.match(read('pages/square/detail/index.js'), /goBack\(\)\s*\{[\s\S]*reLaunch\(\{ url: '\/pages\/square\/list\/index' \}\)/,
     '详情 goBack 必须在栈空时回广场列表')
   assert.match(read('pages/square/list/index.js'), /goBack\(\)\s*\{[\s\S]*switchTab\(\{ url: '\/pages\/index\/index' \}\)/,
-    '广场列表 goBack 必须再有 home 兜底')
+    '广场列表 goBack 必须再有 home 保底')
 })
 
 test('C01-R6 negative control: leaving the detail nav bar bare turns its exact guard red', () => {

@@ -20,8 +20,8 @@ const readJson = (p) => JSON.parse(read(p))
 
 // 豁免必须写清理由,否则这个文件会变成新的逃生口。
 const EXEMPT = {
-  'pages/roam/index': '整页是地图与迷雾图层,内容由定位驱动而不是列表分页;下拉手势会和地图拖拽抢事件。刷新入口是页内「重试」与重新出发。',
-  'pages/template/index': '工具入口页(发布/玩法库),内容基本静态;它的列表刷新由页内分类切换驱动。',
+  'pages/roam/index': '整页是地图与迷雾图层，内容由定位驱动而不是列表分页；下拉手势会和地图拖拽抢事件。刷新入口是页内「重试」与重新出发。',
+  'pages/template/index': '工具入口页(发布/玩法库),内容基本静态；它的列表刷新由页内分类切换驱动。',
 }
 
 function refreshAbility(route) {
@@ -39,14 +39,14 @@ function refreshAbility(route) {
 function tabRoutes() {
   const app = readJson('app.json')
   const list = (app.tabBar && app.tabBar.list) || []
-  assert.ok(list.length >= 3, 'app.json 里读不到 tabBar 列表,契约会恒真')
+  assert.ok(list.length >= 3, 'app.json 里读不到 tabBar 列表，契约会恒真')
   return list.map((item) => item.pagePath)
 }
 
 function assertTabsRefreshable(probe = refreshAbility) {
   tabRoutes().forEach((route) => {
     if (EXEMPT[route]) {
-      assert.ok(EXEMPT[route].length > 20, `${route} 的豁免理由太短,等于没写`)
+      assert.ok(EXEMPT[route].length > 20, `${route} 的豁免理由太短，等于没写`)
       return
     }
     assert.equal(probe(route).ok, true,

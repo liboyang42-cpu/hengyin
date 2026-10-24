@@ -20,11 +20,16 @@ beforeEach(() => {
   pageConfig = null;
   app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    getUserID: () => 11,
     sendRequest: (request) => requests.push(request),
   };
   global.getApp = () => app;
   global.getCurrentPages = () => [];
+  const persisted = {};
   global.wx = {
+    getStorageSync: key => persisted[key],
+    setStorageSync(key, value) { persisted[key] = JSON.parse(JSON.stringify(value)); },
+    removeStorageSync(key) { delete persisted[key]; },
     scanCode: ({ success }) => success({ result: JSON.stringify({ type: 'topic', code: 'TICKET-1' }) }),
     showLoading() {},
     hideLoading() {},
@@ -84,7 +89,7 @@ test('多据点回执只打开选择面板,不直接取第一站或显示核销�
   assert.equal(page.data.stationSheet.items.length, 2);
   assert.deepEqual(openedScenes, ['merchant-station-picker']);
   assert.equal(page.data.verificationResult.show, false,
-    'needStationChoice 是未核销态,不能先显示成功结果');
+    'needStationChoice 是未核销态，不能先显示成功结果');
   assert.equal(requests.length, 1,
     '商家尚未点选时不得自动调用选择端点或拿候选第一行核销');
 });
@@ -96,7 +101,7 @@ test('取消据点选择不发第二次请求,code 仍保持未核销', () => {
   page.onStationSheetClose();
 
   assert.equal(closedScenes, 1);
-  assert.equal(requests.length, 1, '取消只关面板,不能调用核销端点');
+  assert.equal(requests.length, 1, '取消只关面板，不能调用核销端点');
   assert.equal(page.data.verificationResult.show, false,
     '取消不能把错误回执改写为已核销结果');
 });
@@ -141,4 +146,32 @@ test('参与详情快捷扫码识别多据点未核销态,不会退化为普通�
   const js = read('subpackageMember/components/scene-member-participation-detail/index.js');
   assert.match(js, /d\.needChapterChoice\s*\|\|\s*d\.needStationChoice/);
   assert.match(js, /多个章节/);
+});
+
+test('商家扫码历史章与待核销章并存必须点选，重试返回原回执', () => {
+  const page=makePage(); page.goScanQR();
+  requests[0].success({code:500,data:{needChapterChoice:true, chapters:[{id:31,name:'历史章',replayed:true,redemptionId:66},{id:32,name:'待核销章'}]}});
+  assert.equal(requests.length,1);
+  assert.equal(page.data.chapterSheet.items.length,2);
+  assert.equal(page.data.verificationResult.show,false);
+  page.onChapterPick({currentTarget:{dataset:{id:31}}});
+  assert.deepEqual(requests[1].data,{code:'TICKET-1',chapterId:31});
+  requests[1].success({code:200,data:{replayed:true,redemptionId:66,chapterId:31,completionEarnedXp:36}});
+  assert.equal(page.data.verificationResult.state,'duplicate');
+  assert.equal(page.data.verificationResult.message,'该章节已核销，请勿重复提供权益');
+});
+
+test('参与详情实际快捷扫码显示重复回执而非核销成功', () => {
+  let definition; const toasts=[];
+  global.Component = config => {definition=config;};
+  wx.showToast=options=>toasts.push(options);
+  const target=path.join(ROOT,'subpackageMember/components/scene-member-participation-detail/index.js');
+  delete require.cache[require.resolve(target)];require(target);
+  const component=Object.assign({},definition.methods);
+  component.data=JSON.parse(JSON.stringify(definition.data));
+  component.setData=patch=>Object.assign(component.data,patch);
+  component._submitVerification=(key,title,request,callback)=>callback({code:200,data:{replayed:true,redemptionId:66,chapterId:31,completionEarnedXp:36}});
+  component.goScanQR();
+  assert.equal(toasts.at(-1).title,'已核销：该章节已核销，请勿重复提供权益');
+  assert.equal(toasts.at(-1).icon,'none');
 });

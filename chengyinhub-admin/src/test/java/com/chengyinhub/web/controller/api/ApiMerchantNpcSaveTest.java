@@ -84,6 +84,8 @@ class ApiMerchantNpcSaveTest {
         when(umsMemberService.selectUmsMemberById(MEMBER_ID)).thenReturn(owner);
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", accessService);
+        ReflectionTestUtils.setField(controller, "profileReviewService",
+                mock(com.chengyinhub.business.service.impl.ProfileReviewService.class));
     }
 
     @Test
@@ -262,8 +264,32 @@ class ApiMerchantNpcSaveTest {
         // 预设是内置资源,送检没有意义,而且会白白消耗微信的调用额度
         verify(security, never()).submitMediaCheckOne(anyInt(), anyLong(), anyString(), any());
 
+        when(npcProfileMapper.insertMerchantNpc(any())).thenAnswer(invocation -> {
+            invocation.getArgument(0, NpcProfile.class).setId(55L);
+            return 1;
+        });
         controller.npcSave(body("小店长", "/profile/2026/a.png", null));
-        verify(security).submitMediaCheckOne(anyInt(), anyLong(), anyString(), any());
+        // #334 F5:送检对象是这一行 NPC(bizId=npc_profile.id),不是借商家资料(bizId=merchantId)
+        verify(security).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, 55L,
+                "/profile/2026/a.png", "o_test_openid");
+        verify(security, never()).submitMediaCheckOne(
+                org.mockito.ArgumentMatchers.eq(IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE),
+                anyLong(), anyString(), any());
+    }
+
+    @Test
+    void updatedPhotoIsCheckedAgainstOwnNpcRow() {
+        NpcProfile mine = new NpcProfile();
+        mine.setId(42L);
+        mine.setScopeId(MERCHANT_ID);
+        when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null))
+                .thenReturn(new ArrayList<>(Arrays.asList(mine)));
+        when(npcProfileMapper.updateMerchantSelfNpc(any())).thenReturn(1);
+
+        controller.npcSave(body("小店长", "/profile/2026/b.png", null));
+
+        verify(security).submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, 42L,
+                "/profile/2026/b.png", "o_test_openid");
     }
 
     // ===== 读 =====

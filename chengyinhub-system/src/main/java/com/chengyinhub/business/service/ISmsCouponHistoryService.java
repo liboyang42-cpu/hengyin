@@ -78,6 +78,11 @@ public interface ISmsCouponHistoryService
     /** 同 grantCoupon,按券 ID 加载后发放(券不存在或库存耗尽返回 false)。 */
     public boolean grantCouponById(Long memberId, Long couponId);
 
+    /** 原reward_drop来源幂等交付；仅真实来源可调用，重放返回原historyId，尚未交付返回null。 */
+    default Long grantCouponBySource(Long memberId, Long couponId, String sourceType, Long sourceId) {
+        throw new IllegalStateException("原来源发券尚未接入，依赖A包实现");
+    }
+
     /**
      * C-30:券是否已不可发放 —— 平台手动失效(status=3)或商家停发(status=4)。
      * 发券失败即回滚主流程的调用方先问这一句:不可发放 = 跳过发券、主流程照常

@@ -43,8 +43,8 @@ const MSG = {
   conditional: '返回语义必须只在返回钮真渲染时存在(back=false 时一并消失)',
   role: '裸 chevron 返回钮必须声明 button 语义',
   label: '裸 chevron 返回钮必须有中文可读标签',
-  innerBare: '返回钮内层是纯视觉容器,不得挂无障碍语义',
-  chevronBare: '返回图标是装饰层,不得挂无障碍语义',
+  innerBare: '返回钮内层是纯视觉容器，不得挂无障碍语义',
+  chevronBare: '返回图标是装饰层，不得挂无障碍语义',
 }
 
 function assertNavBackAccessibility(wxml) {

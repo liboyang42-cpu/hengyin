@@ -5,6 +5,9 @@ const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
+const codeTextUtil = require('../utils/code-text.js');
+const { createVerificationWorkflow } = require('../../../utils/verification-readback.js');
+const { cityNodeTarget, classifyCityNodeRedeem } = require('../../../utils/citynode-redeem-outcome.js');
 
 function scalarText(value, fallback) {
   if (value === null || value === undefined || value === '') return fallback || '—';
@@ -37,7 +40,7 @@ function normalizeNode(item) {
 function normalizeApplication(item) {
   if (!item || !item.id) return null;
   return Object.assign({}, item, {
-    displayName: scalarText(item.name, '据点申请'),
+    displayName: scalarText(item.name, '节点申请'),
     auditReasonText: scalarText(item.auditReason, ''),
     actionState: 'idle',
     actionError: '',
@@ -112,7 +115,11 @@ Page({
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() {
+    merchantTheme.merchantPageRestore();
+    // 只销毁内存写闸;磁盘上的 UNKNOWN 待办保留,重进本页仍先回读不重放
+    if (this._redeemWorkflow) this._redeemWorkflow.destroy();
+  },
 
   // D-4 统一返回栏:与 cy-nav-bar 同语义;直接进来(无上一页)时退回工作台,避免箭头点了没反应
   onNavBack() {
@@ -200,22 +207,22 @@ Page({
 
   goCreate() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     if (this.data.quotaState !== 'ready') {
-      toast('据点配额暂未取回，请重试');
+      toast('节点配额暂未取回，请重试');
       this.retryQuota();
       return;
     }
     if (this.data.used >= this.data.max) {
-      return toast(this.data.max === 0 ? '当前没有据点配额' : '在架据点已满，请先下线一个');
+      return toast(this.data.max === 0 ? '当前没有节点配额' : '在架节点已满，请先下线一个');
     }
     wx.navigateTo({ url: '/pages/merchant/citynode/create/index' });
   },
 
   toggleClaim() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const showClaim = !this.data.showClaim;
     this.setData({ showClaim: showClaim });
@@ -266,7 +273,7 @@ Page({
 
   submitClaim(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const poiId = Number(e.currentTarget.dataset.poiid || 0);
     if (!Number.isInteger(poiId) || poiId <= 0) return;
@@ -307,7 +314,7 @@ Page({
   /** 撤回自己的待审认领:节点会重新回到可认领池,别人才能认领 —— 不做撤回,这个节点会锁在「已有待审申请」。 */
   cancelClaim(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const poiId = Number(e.currentTarget.dataset.poiid || 0);
     if (!Number.isInteger(poiId) || poiId <= 0) return;
@@ -356,6 +363,7 @@ Page({
         poiId: poiId,
         state: 'loading',
         qrcodeUrl: '',
+        codeText: '',
         nodeName: '',
         errorText: '',
       }
@@ -366,13 +374,16 @@ Page({
         if (requestId !== that._posterRequestId) return;
         const d = (res && res.data) || {};
         const qrcodeUrl = typeof d.qrcodeUrl === 'string' ? d.qrcodeUrl.trim() : '';
-        if (res && (res.code === '200' || res.code === 200) && qrcodeUrl) {
+        // C8:码图缺失但有 code 文本时仍算可用(等宽文本 + 长按复制),仅本页(已鉴权商家)展示
+        const codeText = codeTextUtil.pickCode(d);
+        if (res && (res.code === '200' || res.code === 200) && (qrcodeUrl || codeText)) {
           that.setData({
             posterSheet: {
               show: true,
               poiId: poiId,
               state: 'ready',
               qrcodeUrl: qrcodeUrl,
+              codeText: qrcodeUrl ? '' : codeText,
               nodeName: scalarText(d.nodeName),
               errorText: '',
             }
@@ -397,6 +408,7 @@ Page({
         poiId: poiId,
         state: 'error',
         qrcodeUrl: '',
+        codeText: '',
         nodeName: nodeName,
         errorText: errorText,
       }
@@ -425,7 +437,7 @@ Page({
 
   toggleNode(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const poiId = e.currentTarget.dataset.poiid;
     const row = this.data.nodes.find(function (item) { return String(item.poiId) === String(poiId); });
@@ -456,6 +468,43 @@ Page({
     this.toggleNode(e);
   },
 
+  // PRIVATE-GROUP-nucleation-original-request:与 #424 的四个核销入口同一持久写闸(verification-readback)——POST 前按账号+据点+玩家落持久
+  // UNKNOWN 待办;断网/畸形回执只算「待确认」,同一目标在本机先回读(不重放),只有原请求的明确回执才结算。
+  submitCityNodeRedeem(code) {
+    const owner = String(app.getUserID && app.getUserID() || '');
+    const target = cityNodeTarget(code);
+    const key = owner + ':citynode:' + (target ? target.poiId + ':' + target.memberId : code);
+    if (!this._redeemWorkflow) this._redeemWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
+    if (this._redeemWorkflow.isBusy(key)) return toast('核销处理中，请勿重复提交');
+    this._redeemWorkflow.run(key, function (done) {
+      return app.sendRequest({
+        url: '/api/verify/citynode/redeem', method: 'POST', data: { code: code }, autoErrorToast: false,
+        success(res) { done(classifyCityNodeRedeem(res, 'success', undefined, code)); },
+        fail(res, status) { done(classifyCityNodeRedeem(res, 'fail', status, code)); },
+        successStatusAbnormal(res, status) { done(classifyCityNodeRedeem(res, 'abnormal', status, code)); },
+      });
+    }, function (result) {
+      if (owner !== String(app.getUserID && app.getUserID() || '')) return;
+      const res = result.response || {};
+      if (result.status === 'unknown') {
+        modal.show({
+          title: '核销结果待确认',
+          content: (result.recovered ? '该玩家在本节点的上一次核销结果仍待确认，本次没有重新提交。' : '网络异常，核销可能已经完成。')
+            + '请让玩家在「我的券」确认是否到账，不要重复扫码；无法确认时请联系平台处理。',
+          showCancel: false,
+          confirmText: '知道了',
+        });
+        return;
+      }
+      if (result.status === 'success') {
+        motion.haptic({ type: 'medium', reducedMotion: readReducedMotion() });
+        toast(res.data && res.data.couponGranted === false ? '核销成功，该券已失效或停发，未发放' : '核销成功，优惠券已发放给玩家');
+        return;
+      }
+      modal.show({ title: '核销失败', content: res.msg || '请重试', showCancel: false });
+    });
+  },
+
   // C2 扫码核销:扫玩家「据点核销码」→ 后端校验归属+幂等后发券给玩家(防伪造GPS白领券)
   scanRedeem() {
     if (!this.data.merchantAccess.canVerify) {
@@ -467,18 +516,7 @@ Page({
       success(sc) {
         const code = sc.result;
         if (!code) return toast('未识别到核销码');
-        app.sendRequest({
-          url: '/api/verify/citynode/redeem', method: 'POST', data: { code: code },
-          success(res) {
-            if (res.code === '200' || res.code === 200) {
-              motion.haptic({ type: 'medium', reducedMotion: readReducedMotion() });
-              toast(res.data && res.data.couponGranted === false ? '核销成功，该券已失效或停发，未发放' : '核销成功，优惠券已发放给玩家');
-            } else {
-              modal.show({ title: '核销失败', content: (res && res.msg) || '请重试', showCancel: false });
-            }
-          },
-          fail() { toast('网络异常，请重试'); },
-        });
+        that.submitCityNodeRedeem(code);
       },
       fail(err) {
         const message = err && err.errMsg || '';

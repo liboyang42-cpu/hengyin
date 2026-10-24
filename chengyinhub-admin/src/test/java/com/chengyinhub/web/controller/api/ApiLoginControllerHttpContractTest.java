@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -123,6 +124,22 @@ class ApiLoginControllerHttpContractTest {
         String message = String.valueOf(result.get("msg"));
         assertFalse(message.contains(SECRET_APP_SECRET), "error message must not leak appsecret");
         assertFalse(message.contains("jscode2session"), "error message must not leak the provider URL");
+    }
+
+    @Test
+    void productionAlwaysUsesOfficialWechatButExplicitTestProfileCanUseConfiguredFixture() {
+        ApiLoginController controller = new ApiLoginController();
+        org.springframework.mock.env.MockEnvironment environment = new org.springframework.mock.env.MockEnvironment();
+        environment.setActiveProfiles("prod");
+        ReflectionTestUtils.setField(controller, "environment", environment);
+        ReflectionTestUtils.setField(controller, "wechatApiBaseUrl", "http://127.0.0.1:9999");
+        assertEquals("https://api.weixin.qq.com", controller.wechatSessionBaseUrl());
+        environment.setActiveProfiles("prod", "test");
+        assertEquals("https://api.weixin.qq.com", controller.wechatSessionBaseUrl());
+        environment.setActiveProfiles("test");
+        assertEquals("http://127.0.0.1:9999", controller.wechatSessionBaseUrl());
+        ReflectionTestUtils.setField(controller, "wechatApiBaseUrl", "http://user:pass@127.0.0.1");
+        assertThrows(IllegalArgumentException.class, controller::wechatSessionBaseUrl);
     }
 
     private static ISysConfigService configService(String appSecret) {

@@ -48,13 +48,22 @@ class RewardRulesValidatorTest {
 
     @Test
     void rejectsCodeShapesThatTheFrontEndContractWouldNotProduce() {
-        // 与 node-outcome-contract.js 的 CODE_PATTERN 同一套:大写字母开头
+        // 前后端保留旧模板已有结果码，但仍拒绝超长、空白和非法字符。
         assertThrows(IllegalArgumentException.class,
-                () -> validator.validateAndNormalize("[{\"outcomeCode\":\"hit\",\"xp\":10}]"));
+                () -> validator.validateAndNormalize("[{\"outcomeCode\":\"hit a\",\"xp\":10}]"));
         assertThrows(IllegalArgumentException.class,
-                () -> validator.validateAndNormalize("[{\"outcomeCode\":\"9HIT\",\"xp\":10}]"));
+                () -> validator.validateAndNormalize("[{\"outcomeCode\":\"\",\"xp\":10}]"));
         assertThrows(IllegalArgumentException.class,
-                () -> validator.validateAndNormalize("[{\"outcomeCode\":\"HIT-A\",\"xp\":10}]"));
+                () -> validator.validateAndNormalize("[{\"outcomeCode\":\"结果\",\"xp\":10}]"));
+    }
+
+    @Test
+    void legacyCodesKeepExactCaseAndRewardBinding() {
+        String saved = validator.validateAndNormalize("[{\"outcomeCode\":\"finish_a\",\"xp\":10},"
+                + "{\"outcomeCode\":\"9-end\",\"xp\":20}]");
+        assertEquals(10, validator.ruleFor(saved, "finish_a").path("xp").asInt());
+        assertEquals(20, validator.ruleFor(saved, "9-end").path("xp").asInt());
+        assertNull(validator.ruleFor(saved, "FINISH_A"));
     }
 
     /** 配了奖却什么都不发,是商家最容易犯又最难自查的一种配置事故。 */

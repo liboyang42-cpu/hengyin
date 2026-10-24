@@ -10,7 +10,7 @@ const NO_QRCODE_MESSAGE = '核销码二维码没能生成，请重试';
 Page({
   data: {
     poiId: null,
-    name: '据点',
+    name: '节点',
     qrcodeUrl: '',
     code: '',
     countdown: 0,
@@ -23,7 +23,7 @@ Page({
     const poiId = options.poiId || null;
     this.setData({
       poiId: poiId,
-      name: options.name ? decodeURIComponent(options.name) : '据点',
+      name: options.name ? decodeURIComponent(options.name) : '节点',
     });
     if (!poiId) {
       this.setData({ state: 'missing' });
@@ -62,7 +62,7 @@ Page({
           that.setData({ state: 'error', errMsg: ISSUE_ERROR_MESSAGE });
         }
       },
-      fail() { that.setData({ state: 'error', errMsg: '网络异常，请检查网络后重试' }); },
+      fail() { that.setData({ state: 'error', errMsg: '网络异常，请重试' }); },
       successStatusAbnormal() { that.setData({ state: 'error', errMsg: ISSUE_ERROR_MESSAGE }); },
     });
   },

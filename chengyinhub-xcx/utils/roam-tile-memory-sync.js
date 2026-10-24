@@ -13,12 +13,19 @@ async function syncRoamTileMemory(options) {
   }
   if (typeof fetchPage !== 'function') throw new Error('缺少迷雾记忆分页读取器')
 
+  const epoch = typeof memory.cacheEpoch === 'function' ? memory.cacheEpoch() : null
+  const assertCurrent = () => {
+    if (typeof config.isCurrent === 'function' && !config.isCurrent()) throw new Error('漫游读取上下文已变化')
+    if (epoch !== null && memory.cacheEpoch() !== epoch) throw new Error('漫游缓存已清理')
+  }
+  assertCurrent()
   const initial = memory.readTiles()
   let tiles = { ...((initial && initial.tiles) || {}) }
   let cursor = Number(initial && initial.serverCursor) || 0
 
   while (true) {
     const page = await fetchPage(cursor, pageSize)
+    assertCurrent()
     if (!page || typeof page !== 'object' || !Array.isArray(page.tiles)) {
       throw new Error('迷雾记忆分页响应无效')
     }
@@ -37,7 +44,7 @@ async function syncRoamTileMemory(options) {
     })
     if (page.hasMore === true && next <= cursor) throw new Error('迷雾记忆游标没有推进')
     cursor = Math.max(next, Number(latest && latest.serverCursor) || 0)
-    if (!memory.writeTiles(tiles, cursor)) throw new Error('迷雾记忆本地持久化失败')
+    if (!memory.writeTiles(tiles, cursor, page.tileRetentionAt)) throw new Error('迷雾记忆本地持久化失败')
     onPage(page.tiles.slice(), { tiles, serverCursor: cursor })
     if (page.hasMore !== true) return { tiles, serverCursor: cursor }
   }

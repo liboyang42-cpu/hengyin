@@ -19,13 +19,16 @@ import argparse, hashlib, io, json, pathlib, re, subprocess, sys, tarfile, time
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from ci.sql_splitter import split_statements, executable_statement
-from ci.run_migration import statement_assertion
+from ci.run_migration import (assert_statement_result, required_transaction_declared,
+                              statement_assertion, validate_transaction_statements)
 from ci.migration_ledger import build_manifest, EXPLICIT_MANAGED_SQL, MIGRATION_PATH
+from scripts.e2e.policy_source_custody import SourceCustody
 
 BASELINE = REPO / "sql/base_schema_20260818.sql"
 BASELINE_SEED = REPO / "sql/base_seed_20260818.sql"
 BASELINE_MANIFEST = REPO / "scripts/e2e/base_schema_20260818_migrations.json"
 SCHEMA_REPLAY_POLICY = REPO / "scripts/e2e/schema_replay_policy_20260921.json"
+POLICY_CUSTODY = None
 ALLOWED_HOSTS = {"127.0.0.1", "localhost", "::1"}
 SCRATCH_SCHEMA = re.compile(r"cy_e2e_[A-Za-z0-9_]+\Z")
 SEED_NEGATIVE_CONTROLS = (
@@ -71,34 +74,77 @@ def assertion_is_data_only(sql):
 
 def run_file(cur, path, label, results, keep_going, schema_only=False, observations=None):
     text = pathlib.Path(path).read_text(encoding="utf-8")
-    for idx, st in enumerate(split_statements(text), 1):
-        sql = scratch_schema_sql(executable_statement(st).strip().rstrip(";"))
-        if not sql:
-            continue
-        assertion = statement_assertion(st)
+    statements = split_statements(text)
+    transactional = required_transaction_declared(text)
+    if transactional:
         try:
-            cur.execute(sql)
-        except Exception as e:
-            results.append((label, idx, "EXEC", "%s: %s" % (type(e).__name__, str(e)[:200]),
-                            sql.splitlines()[0][:110]))
-            if not keep_going:
-                return False
-            continue
-        if assertion == "scalar-true":
-            row = cur.fetchone()
-            if int((row or [0])[0] or 0) != 1:
-                target = results
-                kind = "ASSERT"
-                if schema_only and assertion_is_data_only(sql):
-                    target = observations if observations is not None else []
-                    kind = "DATA_ASSERT"
-                target.append((label, idx, kind, "scalar-true 求值不为 1",
-                               sql.splitlines()[0][:110]))
-                if kind == "DATA_ASSERT":
-                    continue
-                if not keep_going:
+            validate_transaction_statements(statements)
+        except ValueError as error:
+            results.append((label, 0, "PREFLIGHT", str(error)[:200], "requires=transaction"))
+            return False
+
+    connection = cur.connection
+    # A caller's open transaction must never be committed implicitly by this file's BEGIN/autocommit switch.
+    server_status = getattr(connection, "server_status", None)
+    if transactional and isinstance(server_status, int) and server_status & 1:
+        results.append((label, 0, "PREFLIGHT", "caller transaction already active", "requires=transaction"))
+        return False
+    repeatable_read = "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ"
+    committed = False
+    ok = True
+    try:
+        # A preceding file's explicit RC is local to that file, as in a fresh runner session.
+        cur.execute(repeatable_read)
+        if transactional:
+            connection.autocommit(False)
+            connection.begin()
+        for idx, st in enumerate(statements, 1):
+            sql = scratch_schema_sql(executable_statement(st).strip().rstrip(";"))
+            if not sql:
+                continue
+            kind = "EXEC"
+            try:
+                assertion = statement_assertion(st)
+                cur.execute(sql)
+                if assertion == "scalar-true":
+                    kind = "ASSERT"
+                    row = cur.fetchone()
+                    if row is None or len(row) != 1 or row[0] not in (0, 1):
+                        raise ValueError("scalar-true readback has an invalid shape or value: %r" % (row,))
+                    if row[0] != 1:
+                        if schema_only and assertion_is_data_only(sql):
+                            if observations is not None:
+                                observations.append((label, idx, "DATA_ASSERT",
+                                                     "scalar-true readback=0", sql.splitlines()[0][:110]))
+                            continue
+                        raise ValueError("scalar-true readback=0")
+                elif assertion:
+                    kind = "ASSERT"
+                    assert_statement_result(cur, assertion, idx)
+            except Exception as error:
+                results.append((label, idx, kind,
+                                "%s: %s" % (type(error).__name__, str(error)[:200]),
+                                sql.splitlines()[0][:110]))
+                ok = False
+                # A declared transaction cannot continue after any failed statement or assertion.
+                if transactional or not keep_going:
                     return False
-    return True
+        if transactional:
+            try:
+                connection.commit()
+                committed = True
+            except Exception as error:
+                results.append((label, 0, "COMMIT_UNKNOWN",
+                                "%s: %s" % (type(error).__name__, str(error)[:200]), "COMMIT"))
+                raise
+        return ok
+    finally:
+        # Also discard unfinished hand-written transactions in ordinary SQL files.
+        # If rollback/session restoration fails, abort instead of continuing on an unknown session.
+        if not committed:
+            connection.rollback()
+        connection.autocommit(True)
+        cur.execute(repeatable_read)
 
 
 def verify_seed_negative_controls(connection):
@@ -126,14 +172,38 @@ def verify_seed_negative_controls(connection):
     return len(SEED_NEGATIVE_CONTROLS)
 
 
+def source_provenance_files(commit):
+    # Public snapshots retain verified SQL hashes, never the credential-bearing Git history.
+    raw = (REPO / "scripts/e2e/source_provenance_20260818.json").read_bytes()
+    if hashlib.sha256(raw).hexdigest() != "de66c97ad1e18603e6b63448634d68ffc5253440cb4bd94039dbcac3a7ee7192":
+        raise RuntimeError("schema source provenance 字节漂移")
+    metadata = json.loads(raw)
+    if metadata.get("schemaVersion") != 1 or metadata.get("sourceCommit") != commit:
+        raise RuntimeError("schema source provenance commit 不匹配")
+    files = metadata["files"]
+    if any(not re.fullmatch(r"[0-9a-f]{64}", item.get("sha256", "")) for item in files):
+        raise RuntimeError("schema source provenance fingerprint 无效")
+    result = {item["path"]: item["sha256"] for item in files}
+    if len(result) != len(files):
+        raise RuntimeError("schema source provenance 路径重复")
+    return result
+
+
+
 def source_migration_fingerprints(commit):
     if not re.fullmatch(r"[0-9a-f]{40}", commit or ""):
         raise RuntimeError("schema replay policy source commit 格式无效")
+    if POLICY_CUSTODY is not None:
+        if POLICY_CUSTODY.commit != commit:
+            raise RuntimeError("Custody source commit mismatch")
+        return POLICY_CUSTODY.migrations
     archived = subprocess.run(
         ["git", "archive", "--format=tar", commit, "--", "chengyinhub-admin/sql"],
         cwd=REPO, capture_output=True)
     if archived.returncode != 0:
-        raise RuntimeError("schema replay policy source commit 不可读:%s" % commit)
+        return {path: digest for path, digest in source_provenance_files(commit).items()
+                if path.startswith("chengyinhub-admin/sql/") and
+                (MIGRATION_PATH.fullmatch(path) or path in EXPLICIT_MANAGED_SQL)}
     fingerprints = {}
     with tarfile.open(fileobj=io.BytesIO(archived.stdout), mode="r:") as archive:
         for member in archive.getmembers():
@@ -145,16 +215,58 @@ def source_migration_fingerprints(commit):
     return fingerprints
 
 
+def source_file_bytes(commit, path):
+    if (not re.fullmatch(r"[0-9a-f]{40}", commit or "") or
+            pathlib.PurePosixPath(path).is_absolute() or
+            ".." in pathlib.PurePosixPath(path).parts):
+        raise RuntimeError("schema replay policy source file 格式无效")
+    if POLICY_CUSTODY is not None:
+        if POLICY_CUSTODY.commit != commit or path not in POLICY_CUSTODY.files:
+            raise RuntimeError("Custody source file missing or wrong commit")
+        return POLICY_CUSTODY.files[path]
+    shown = subprocess.run(
+        ["git", "show", "%s:%s" % (commit, path)], cwd=REPO, capture_output=True)
+    if shown.returncode != 0:
+        # Only this reviewed source snippet is retained as bytes in the public snapshot.
+        approved = "chengyinhub-admin/sql/migration_menu_2050_coupon_to_supply_20260726.sql"
+        expected = source_provenance_files(commit).get(path)
+        if path == approved and expected is not None:
+            retained = (REPO / "scripts/e2e/fixtures/baseline_menu_2050.sql.txt").read_bytes()
+            if hashlib.sha256(retained).hexdigest() != expected:
+                raise RuntimeError("schema retained source bytes 指纹不一致:%s" % path)
+            return retained
+        raise RuntimeError("schema replay policy source file 不可读:%s" % path)
+    return shown.stdout
+
+
 def source_file_fingerprint(commit, path):
     if (not re.fullmatch(r"[0-9a-f]{40}", commit or "") or
             pathlib.PurePosixPath(path).is_absolute() or
             ".." in pathlib.PurePosixPath(path).parts):
         raise RuntimeError("schema replay policy source file 格式无效")
+    if POLICY_CUSTODY is not None:
+        return hashlib.sha256(source_file_bytes(commit, path)).hexdigest()
     shown = subprocess.run(
         ["git", "show", "%s:%s" % (commit, path)], cwd=REPO, capture_output=True)
     if shown.returncode != 0:
-        raise RuntimeError("schema replay policy source file 不可读:%s" % path)
+        digest = source_provenance_files(commit).get(path)
+        if digest is None:
+            raise RuntimeError("schema replay policy source file 不可读:%s" % path)
+        return digest
     return hashlib.sha256(shown.stdout).hexdigest()
+
+
+def verified_policy_custody(directory):
+    metadata = json.loads(BASELINE_MANIFEST.read_text(encoding="utf-8"))
+    policy = json.loads(SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+    if policy["sourceCommit"] != metadata["sourceCommit"]:
+        raise RuntimeError("Custody policy source mismatch")
+    expected = {item["path"]: item["sourceSha256"] for item in metadata["migrations"]}
+    expected.update(policy["baselineMissingMigrations"])
+    if len(expected) != policy["sourceMigrationCount"]:
+        raise RuntimeError("Custody policy migration count mismatch")
+    return SourceCustody(directory, policy["sourceCommit"], MIGRATION_PATH, EXPLICIT_MANAGED_SQL,
+                         expected, policy["baselineSeed"]["sourceFiles"])
 
 
 def migrations_after_baseline(migrations):
@@ -257,6 +369,7 @@ def migrations_after_baseline(migrations):
 
 
 def main():
+    global POLICY_CUSTODY
     ap = argparse.ArgumentParser()
     ap.add_argument("--schema", required=True)
     ap.add_argument("--host", default="127.0.0.1")
@@ -265,68 +378,84 @@ def main():
     ap.add_argument("--password", default="")
     ap.add_argument("--drop", action="store_true", help="先 DROP 再建(默认复用已存在的库)")
     ap.add_argument("--keep-going", action="store_true", help="出错继续,把全部冲突一次收集完")
+    ap.add_argument("--policy-source-custody", type=pathlib.Path,
+                    help="explicit original SQL Merkle proof; all source object and policy hashes must verify")
     a = ap.parse_args()
 
     validate_target(a)
+    if a.policy_source_custody:
+        POLICY_CUSTODY = verified_policy_custody(a.policy_source_custody)
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO,
                           capture_output=True, text=True, check=True).stdout.strip()
     manifest = build_manifest(REPO, target_commit=head,
                               dependency_path=REPO / "ci/migration-dependencies.json")
     all_migrations = manifest["migrations"]
-    ordered = migrations_after_baseline(all_migrations)
+    selected = migrations_after_baseline(all_migrations)
+    deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]
+    ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]
+    if deferred:
+        print("DEFERRED_POST_DEPLOY: " + ", ".join(m["migrationId"] for m in deferred))
 
-    c = connect(a); cur = c.cursor()
-    cur.execute("SELECT VERSION(), @@version_comment")
-    ver = cur.fetchone()
-    print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
-    if a.drop:
-        cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
-    cur.execute("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
-    c.close()
-
-    c = connect(a, a.schema); cur = c.cursor()
-    results = []
-    observations = []
-    t0 = time.time()
-    print("\n[1/3] 导入 base schema 基线快照 …")
-    run_file(cur, BASELINE, "baseline", results, keep_going=True)
-    cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
-    print("      建表数: %d   基线阶段问题: %d" % (cur.fetchone()[0], len(results)))
-
-    print("\n[2/3] 导入指纹化 base seed …")
-    baseline_problems = len(results)
-    seed_ok = run_file(cur, BASELINE_SEED, "baseline-seed", results, keep_going=False)
-    seed_problems = len(results) - baseline_problems
-    print("      seed 阶段问题: %d" % seed_problems)
-    if not seed_ok:
+    c = connect(a)
+    try:
+        cur = c.cursor()
+        cur.execute("SELECT VERSION(), @@version_comment")
+        ver = cur.fetchone()
+        print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
+        if a.drop:
+            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
+        cur.execute("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
+    finally:
         c.close()
-        for label, idx, kind, msg, sql_head in results:
-            print("  [%s] %s #%d  %s\n        %s" %
-                  (kind, label, idx, msg, sql_head))
-        return 1
-    print("      seed 负控: %d/%d 可转红且回滚恢复" %
-          (verify_seed_negative_controls(c), len(SEED_NEGATIVE_CONTROLS)))
 
-    print("\n[3/3] 按台账拓扑序叠加 migration …")
-    print("      台账内迁移数: %d   快照后待回放: %d" %
-          (len(all_migrations), len(ordered)))
-    pre_migration_problems = len(results)
-    for m in ordered:
-        run_file(cur, REPO / m["path"], m["migrationId"], results,
-                 keep_going=a.keep_going, schema_only=True, observations=observations)
-    cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
-    tables = cur.fetchone()[0]
+    c = connect(a, a.schema)
+    try:
+        cur = c.cursor()
+        results = []
+        observations = []
+        t0 = time.time()
+        print("\n[1/3] 导入 base schema 基线快照 …")
+        run_file(cur, BASELINE, "baseline", results, keep_going=True)
+        cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
+        print("      建表数: %d   基线阶段问题: %d" % (cur.fetchone()[0], len(results)))
 
-    print("\n===== 结果 =====")
-    print("最终表数: %d   耗时: %.1fs" % (tables, time.time() - t0))
-    print("基线阶段问题: %d   seed 阶段问题: %d   迁移阶段问题: %d" %
-          (baseline_problems, seed_problems, len(results) - pre_migration_problems))
-    for label, idx, kind, msg, head in results:
-        print("  [%s] %s #%d  %s\n        %s" % (kind, label, idx, msg, head))
-    print("数据前置观察: %d（纯 schema 快照不包含业务行，不冒充数据迁移通过）" % len(observations))
-    for label, idx, kind, msg, head in observations:
-        print("  [%s] %s #%d  %s\n        %s" % (kind, label, idx, msg, head))
-    return 0 if not results else 1
+        print("\n[2/3] 导入指纹化 base seed …")
+        baseline_problems = len(results)
+        seed_ok = run_file(cur, BASELINE_SEED, "baseline-seed", results, keep_going=False)
+        seed_problems = len(results) - baseline_problems
+        print("      seed 阶段问题: %d" % seed_problems)
+        if not seed_ok:
+            for label, idx, kind, msg, sql_head in results:
+                print("  [%s] %s #%d  %s\n        %s" %
+                      (kind, label, idx, msg, sql_head))
+            return 1
+        print("      seed 负控: %d/%d 可转红且回滚恢复" %
+              (verify_seed_negative_controls(c), len(SEED_NEGATIVE_CONTROLS)))
+
+        print("\n[3/3] 按台账拓扑序叠加 migration …")
+        print("      台账内迁移数: %d   快照后待回放: %d" %
+              (len(all_migrations), len(ordered)))
+        pre_migration_problems = len(results)
+        for m in ordered:
+            ok = run_file(cur, REPO / m["path"], m["migrationId"], results,
+                          keep_going=a.keep_going, schema_only=True, observations=observations)
+            if not ok and not a.keep_going:
+                break
+        cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
+        tables = cur.fetchone()[0]
+
+        print("\n===== 结果 =====")
+        print("最终表数: %d   耗时: %.1fs" % (tables, time.time() - t0))
+        print("基线阶段问题: %d   seed 阶段问题: %d   迁移阶段问题: %d" %
+              (baseline_problems, seed_problems, len(results) - pre_migration_problems))
+        for label, idx, kind, msg, head in results:
+            print("  [%s] %s #%d  %s\n        %s" % (kind, label, idx, msg, head))
+        print("数据前置观察: %d（纯 schema 快照不包含业务行，不冒充数据迁移通过）" % len(observations))
+        for label, idx, kind, msg, head in observations:
+            print("  [%s] %s #%d  %s\n        %s" % (kind, label, idx, msg, head))
+        return 0 if not results else 1
+    finally:
+        c.close()
 
 
 if __name__ == "__main__":

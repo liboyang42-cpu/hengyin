@@ -1,0 +1,272 @@
+{
+  "personal": {
+    "sessionId": 7,
+    "version": 8,
+    "status": "ACTIVE",
+    "runtimeScope": "PLAYER",
+    "hpName": "体力",
+    "hpEnabled": true,
+    "hp": 3,
+    "hpMax": 8,
+    "used": 2,
+    "capacity": 6,
+    "contents": [],
+    "recoveries": [
+      {
+        "recoveryKey": "rest",
+        "operationKey": "rest",
+        "kind": "RECOVERY",
+        "operation": "RECOVER",
+        "title": "休息补充",
+        "enabled": true,
+        "disabledReason": null,
+        "limit": 3,
+        "count": 1,
+        "remainingCount": 2,
+        "countScope": "OWNER",
+        "trustedPass": false,
+        "costs": {},
+        "scope": "OWNER",
+        "targetScope": "OWNER"
+      },
+      {
+        "recoveryKey": "rescue",
+        "kind": "RESCUE",
+        "operation": "RECOVER",
+        "title": "请求救援",
+        "enabled": false,
+        "disabledReason": "LIMIT_REACHED",
+        "limit": 1,
+        "count": 1,
+        "remainingCount": 0,
+        "countScope": "OWNER",
+        "trustedPass": false,
+        "costs": {}
+      }
+    ]
+  },
+  "team": {
+    "sessionId": 7,
+    "version": 8,
+    "status": "RUNNING",
+    "runtimeScope": "PLAYER",
+    "hpName": "体力",
+    "hpEnabled": true,
+    "hp": 3,
+    "hpMax": 8,
+    "used": 2,
+    "capacity": 6,
+    "contents": [],
+    "recoveries": [
+      {
+        "recoveryKey": "rest",
+        "operationKey": "rest",
+        "kind": "RECOVERY",
+        "operation": "RECOVER",
+        "title": "休息补充",
+        "enabled": true,
+        "disabledReason": null,
+        "limit": 3,
+        "count": 1,
+        "remainingCount": 2,
+        "countScope": "OWNER",
+        "trustedPass": false,
+        "costs": {},
+        "scope": "OWNER",
+        "targetScope": "OWNER"
+      },
+      {
+        "recoveryKey": "rescue",
+        "kind": "RESCUE",
+        "operation": "RECOVER",
+        "title": "请求救援",
+        "enabled": false,
+        "disabledReason": "LIMIT_REACHED",
+        "limit": 1,
+        "count": 1,
+        "remainingCount": 0,
+        "countScope": "OWNER",
+        "trustedPass": false,
+        "costs": {}
+      }
+    ],
+    "scope": "TEAM",
+    "activityId": 5,
+    "teamId": 1,
+    "revision": 12,
+    "authorityEpoch": 4,
+    "availableActions": [
+      "RECOVER",
+      "FACILITY_USE"
+    ],
+    "interactionTools": [
+      {
+        "kind": "FACILITY",
+        "operationKey": "shelter",
+        "title": "集体恢复",
+        "operation": "FACILITY_USE",
+        "enabled": true,
+        "disabledReason": null,
+        "limit": 3,
+        "count": 1,
+        "remainingCount": 2,
+        "countScope": "WORLD",
+        "trustedPass": false,
+        "costs": {},
+        "scope": "WORLD",
+        "targetScope": "PARTICIPANTS",
+        "payerRequired": true,
+        "participantCatalog": [
+          {
+            "teamId": 1,
+            "teamName": "本队 · 星光",
+            "eligible": true,
+            "disabledReason": null
+          },
+          {
+            "teamId": 2,
+            "teamName": "同行队",
+            "eligible": true,
+            "disabledReason": null
+          },
+          {
+            "teamId": 3,
+            "teamName": "已完成队",
+            "eligible": false,
+            "disabledReason": "COUNTERPART_COMPLETED"
+          }
+        ],
+        "costOptions": [
+          {
+            "label": "物资补充",
+            "resourceCosts": [
+              {
+                "itemId": "food",
+                "quantity": 1
+              }
+            ],
+            "affordable": true,
+            "shortfall": []
+          },
+          {
+            "label": "体力补充",
+            "hpCost": 2,
+            "affordable": false,
+            "shortfall": [
+              {
+                "type": "STAT",
+                "key": "sys.hp",
+                "missing": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "world": {
+      "itemCatalog": [
+        {
+          "id": "food",
+          "name": "补给",
+          "slotCost": 1
+        }
+      ]
+    }
+  },
+  "recoveryResults": [
+    {
+      "recoveryKey": "rest",
+      "hpDelta": 0,
+      "consumed": false,
+      "remaining": 2
+    },
+    {
+      "recoveryKey": "rest",
+      "hpDelta": 0,
+      "consumed": true,
+      "remaining": 1
+    },
+    {
+      "recoveryKey": "rest",
+      "hpDelta": 2,
+      "consumed": true,
+      "remaining": 1
+    }
+  ],
+  "preview": {
+    "expectedRevision": 12,
+    "authorityEpoch": 4,
+    "result": {
+      "previewVersion": "participants-1",
+      "overflow": false,
+      "finalUsed": 2,
+      "capacity": 6,
+      "grants": {},
+      "rewardOwners": [
+        {
+          "ownerId": 1,
+          "finalUsed": 2,
+          "capacity": 6,
+          "overflow": false,
+          "grants": {},
+          "rewardSources": []
+        }
+      ]
+    }
+  },
+  "previewBoth": {
+    "expectedRevision": 12,
+    "authorityEpoch": 4,
+    "result": {
+      "previewVersion": "participants-2",
+      "overflow": false,
+      "finalUsed": 2,
+      "capacity": 6,
+      "grants": {},
+      "rewardOwners": [
+        {
+          "ownerId": 1,
+          "finalUsed": 2,
+          "capacity": 6,
+          "overflow": false,
+          "grants": {},
+          "rewardSources": []
+        },
+        {
+          "ownerId": 2,
+          "finalUsed": 3,
+          "capacity": 6,
+          "overflow": false,
+          "grants": {},
+          "rewardSources": []
+        }
+      ]
+    }
+  },
+  "serializerCatalog": [
+    {
+      "teamId": 90,
+      "teamName": "真实队伍90",
+      "eligible": true,
+      "disabledReason": null
+    },
+    {
+      "teamId": 91,
+      "teamName": "真实队伍91",
+      "eligible": true,
+      "disabledReason": null
+    },
+    {
+      "teamId": 92,
+      "teamName": "真实队伍92",
+      "eligible": false,
+      "disabledReason": "NOT_ARRIVED"
+    },
+    {
+      "teamId": 93,
+      "teamName": "真实队伍93",
+      "eligible": false,
+      "disabledReason": "TEAM_COMPLETED"
+    }
+  ]
+}

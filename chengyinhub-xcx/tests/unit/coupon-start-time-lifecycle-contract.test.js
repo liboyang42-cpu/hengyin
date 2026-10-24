@@ -12,7 +12,7 @@ const { flattenComponentToPage } = require('../helpers/component-as-page.js')
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
-const WALLET = 'components/cy/scene-game-coupon-wallet/index.js'
+const WALLET = 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js'
 const QR_SCENE = 'subpackageMember/components/cy/scene-qr-coupon/index.js'
 const QR_PAGE = 'subpackageMember/coupon-qr/index.js'
 
@@ -21,7 +21,7 @@ const PAST = '2020-01-01 09:00:00'
 
 function loadWallet(rows) {
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   delete require.cache[require.resolve(path.join(ROOT, WALLET))]
@@ -50,7 +50,7 @@ function mount(source, kind, relativePath) {
   const requests = []
   const timers = []
   const vibrations = []
-  const app = { getUserID: () => 'member-A', sendRequest(options) { requests.push(options) } }
+  const app = { getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest(options) { requests.push(options) } }
   let definition
   const sandbox = {
     getApp() { return app },
@@ -112,7 +112,7 @@ test('负控:持券列表忽略 start_time 一律标记可用时必须判红', (
   const mutated = source.replace('_isUsable: status === 0 && started,', '_isUsable: status === 0,')
   assert.notEqual(mutated, source, '负控锚点失效:未找到 start 闸门')
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   delete require.cache[require.resolve(path.join(ROOT, WALLET))]
@@ -161,7 +161,7 @@ test('页面出码:qr-token 带未来 start 时不出码,展示可用时间', ()
   const wxml = read('subpackageMember/coupon-qr/index.wxml')
   assert.match(wxml, /useStatus == 0 && notStarted/, '等待壳必须由 notStarted 驱动')
   assert.match(wxml, /!notStarted/, '码凭证必须被 notStarted 阻断')
-  assert.match(wxml, /起可使用/)
+  assert.match(wxml, /起可用/)
 })
 
 test('负控:出码页忽略 start 继续亮码时必须判红', () => {

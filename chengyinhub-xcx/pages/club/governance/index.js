@@ -260,7 +260,7 @@ Page({
           return
         }
         if (!hasPermission(access, 'club:member:manage')) {
-          that.setData({ state: 'no-permission', errorText: bizFailureMessage(res, '仅主理人与副主理人可进行成员治理') })
+          that.setData({ state: 'no-permission', errorText: bizFailureMessage(res, '仅主理人与管理员可进行成员治理') })
           return
         }
         const roleCodes = Array.isArray(access.roleCodes) ? access.roleCodes : []

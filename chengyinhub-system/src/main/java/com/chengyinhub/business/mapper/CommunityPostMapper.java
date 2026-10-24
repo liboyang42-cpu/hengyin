@@ -21,6 +21,8 @@ public interface CommunityPostMapper {
                     @Param("contentHash") String contentHash, @Param("uploadReceiptHash") String uploadReceiptHash,
                     @Param("now") Date now);
     CommunityPost selectById(@Param("id") Long id, @Param("viewerId") Long viewerId);
+    /** O-05 #1:降分发(LIMITED)帖的直达读取;非作者、受众内、未拉黑/屏蔽才返回。 */
+    CommunityPost selectLimitedById(@Param("id") Long id, @Param("viewerId") Long viewerId);
     CommunityPost selectByIdForUpdate(Long id);
     CommunityPost selectByAuthorRequest(@Param("authorId") Long authorId,
                                         @Param("clientRequestId") String clientRequestId);
@@ -28,6 +30,9 @@ public interface CommunityPostMapper {
     int countActiveMemberEnforcement(@Param("memberId") Long memberId,
                                      @Param("types") List<String> types, @Param("now") Date now);
     List<CommunityPost> selectFeed(CommunityPostFeedQuery query);
+    List<CommunityPost> selectBookmarkedFeed(CommunityPostFeedQuery query);
+    List<CommunityPost> selectOwnPosts(CommunityPostFeedQuery query);
+    List<String> selectTopicCodes(@Param("postId") Long postId);
     List<CommunityPost> selectAuthorDrafts(@Param("authorId") Long authorId,
                                            @Param("cursor") Long cursor, @Param("limit") int limit);
     int insertPost(CommunityPost post);
@@ -60,13 +65,17 @@ public interface CommunityPostMapper {
                     @Param("sortOrder") int sortOrder,
                     @Param("now") Date now);
     int detachMedia(@Param("postId") Long postId, @Param("ownerMemberId") Long ownerMemberId,
-                    @Param("now") Date now);
+                    @Param("retainedMediaIds") List<Long> retainedMediaIds, @Param("now") Date now);
     int orphanMedia(@Param("postId") Long postId, @Param("deleteAfter") Date deleteAfter,
                     @Param("now") Date now);
     List<Map<String, Object>> selectMedia(Long postId);
     List<Map<String, Object>> selectMediaForSafety(Long postId);
     int updateMediaReviewState(@Param("postId") Long postId, @Param("reviewState") String reviewState,
                                @Param("now") Date now);
+    /** 审核分级标记(非生命周期字段,不 bump version;须在已锁行的事务里调用)。null = 保持原值。 */
+    int updateAuditMarks(@Param("postId") Long postId, @Param("auditLevel") Integer auditLevel,
+                         @Param("auditBeforePublish") Integer auditBeforePublish,
+                         @Param("reviewFlag") Integer reviewFlag, @Param("now") Date now);
     int deleteTopics(Long postId);
     int insertTopic(@Param("postId") Long postId, @Param("topicCode") String topicCode,
                     @Param("now") Date now);
@@ -100,6 +109,7 @@ public interface CommunityPostMapper {
     int insertCommandReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId,
                              @Param("commandType") String commandType, @Param("aggregateId") Long aggregateId,
                              @Param("resultJson") String resultJson, @Param("now") Date now);
+    int countAuthorDeleteEvidence(@Param("memberId") Long memberId, @Param("postId") Long postId);
     int recomputeCounts(Long postId);
     int insertOutbox(@Param("eventId") String eventId, @Param("aggregateId") Long aggregateId,
                      @Param("eventType") String eventType, @Param("payloadJson") String payloadJson,
@@ -210,6 +220,8 @@ public interface CommunityPostMapper {
                       @Param("now") Date now);
     Map<String, Object> selectCommentByAuthorRequest(@Param("authorId") Long authorId,
                                                      @Param("clientRequestId") String clientRequestId);
+    Map<String, Object> selectCommentByAuthorRequestForUpdate(@Param("authorId") Long authorId,
+                                                              @Param("clientRequestId") String clientRequestId);
     Map<String, Object> selectCommentForReply(@Param("commentId") Long commentId,
                                               @Param("postId") Long postId,
                                               @Param("viewerId") Long viewerId);
@@ -228,6 +240,10 @@ public interface CommunityPostMapper {
                             @Param("requestId") String requestId, @Param("now") Date now);
     Map<String, Object> selectCommentActionByRequest(@Param("memberId") Long memberId,
                                                      @Param("requestId") String requestId);
+    Map<String, Object> selectCommentLikeActionForUpdate(@Param("commentId") Long commentId,
+                                                         @Param("memberId") Long memberId);
+    Map<String, Object> selectCommandReceiptForUpdate(@Param("memberId") Long memberId,
+                                                      @Param("requestId") String requestId);
     int deleteCommentAction(@Param("commentId") Long commentId, @Param("memberId") Long memberId);
     int recomputeCommentLikes(Long commentId);
     List<Map<String, Object>> selectComments(@Param("postId") Long postId,
@@ -246,6 +262,8 @@ public interface CommunityPostMapper {
                           @Param("operatorUserId") Long operatorUserId, @Param("startsAt") Date startsAt,
                           @Param("endsAt") Date endsAt, @Param("requestId") String requestId,
                           @Param("now") Date now);
+    int linkEnforcement(@Param("id") Long id, @Param("reportCaseId") Long reportCaseId,
+                        @Param("commentId") Long commentId);
     Map<String, Object> selectEnforcement(Long id);
     Map<String, Object> selectEnforcementByRequest(@Param("operatorUserId") Long operatorUserId,
                                                     @Param("requestId") String requestId);
@@ -256,8 +274,11 @@ public interface CommunityPostMapper {
     int insertAppeal(@Param("enforcementId") Long enforcementId,
                      @Param("appellantMemberId") Long appellantMemberId,
                      @Param("reason") String reason, @Param("evidenceJson") String evidenceJson,
-                     @Param("requestId") String requestId, @Param("now") Date now);
+                     @Param("requestId") String requestId, @Param("dueAt") Date dueAt, @Param("now") Date now);
     Map<String, Object> selectAppeal(Long id);
+    int claimAppealCas(@Param("id") Long id, @Param("reviewerUserId") Long reviewerUserId,
+                       @Param("expectedVersion") int expectedVersion, @Param("now") Date now);
+    Integer selectReportCaseFirstResponseMinutes(@Param("reportCaseId") Long reportCaseId);
     List<Map<String, Object>> selectAppeals(@Param("status") String status,
                                             @Param("cursor") Long cursor, @Param("limit") int limit);
     int reviewAppealCas(@Param("id") Long id, @Param("decision") String decision,
@@ -282,9 +303,9 @@ public interface CommunityPostMapper {
                                                   @Param("limit") int limit);
     Map<String, Object> selectNotificationPreferences(@Param("memberId") Long memberId);
     int upsertNotificationPreferences(@Param("memberId") Long memberId,
-                                      @Param("interactionEnabled") boolean interactionEnabled,
-                                      @Param("mentionEnabled") boolean mentionEnabled,
-                                      @Param("socialEnabled") boolean socialEnabled,
+                                      @Param("interactionEnabled") Boolean interactionEnabled,
+                                      @Param("mentionEnabled") Boolean mentionEnabled,
+                                      @Param("socialEnabled") Boolean socialEnabled,
                                       @Param("now") Date now);
     int markNotificationRead(@Param("id") Long id, @Param("memberId") Long memberId,
                              @Param("now") Date now);

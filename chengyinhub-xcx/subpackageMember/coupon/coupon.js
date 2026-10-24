@@ -1,9 +1,11 @@
 const app = getApp();
+const { currentOwnerId } = require('../../utils/coupon-credential.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const datetime = require('../../utils/datetime.js');
 const modal = require('../../utils/modal.js');
 const cyToast = require('../../utils/toast.js');
 const { COUPON_TYPE_LABELS } = require('../../utils/coupon-form.js');
+const { shapeCouponSummary } = require('./coupon-summary.js');
 
 function scalarText(value) {
   if (value === null || value === undefined || value === '') return '—';
@@ -83,6 +85,7 @@ Page({
     loadState: 'loading',
     errorMsg: '',
     operationScope: '',
+    summaryItems: [], // BL-77 商家券领取/核销统计,无数据为空数组即不展示
     tpShow: false, // 弹窗显示状态
     currentCoupon: {} // 当前选中的优惠券
   },
@@ -91,6 +94,8 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this._disposed = false;
+    this._visible = true;
     this.setData({ operationScope: options && options.scope === 'MERCHANT' ? 'MERCHANT' : '' });
   },
 
@@ -98,13 +103,29 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-    merchantTheme.merchantPageShow();
+    this._visible = true;
+    merchantTheme.merchantPageShow(); this._navigating = false;
     var that = this
     that.getList()
+    that.loadSummary()
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._visible = false;
+    this._listEpoch = (this._listEpoch || 0) + 1;
+    this.setData({ tpShow: false, currentCoupon: {} });
+    merchantTheme.merchantPageRestore();
+  },
+  onUnload() {
+    this._disposed = true;
+    merchantTheme.merchantPageRestore();
+  },
+
+  _isCouponContextCurrent(owner, scope, epoch) {
+    return !this._disposed && this._visible !== false
+      && currentOwnerId(app) === owner
+      && this.data.operationScope === scope && this._listEpoch === epoch;
+  },
 
   /**
    * 用户点击右上角分享
@@ -113,6 +134,21 @@ Page({
   // 获取列表
   getList: function () {
     var that = this;
+    if (that._disposed || that._visible === false) return;
+    const owner = currentOwnerId(app);
+    const scope = that.data.operationScope;
+    const epoch = (that._listEpoch || 0) + 1;
+    that._listEpoch = epoch;
+    if (owner !== that._couponOwner) {
+      that._couponOwner = owner;
+      that.setData({ list: [], tpShow: false, currentCoupon: {} });
+    }
+    if (!owner) {
+      that.setData({ list: [], loadState: 'error', errorMsg: '请先登录' });
+      return;
+    }
+    // 过期回包丢弃:onShow/重试/停发后回读并发时只认最后一次
+    const seq = that._listSeq = (that._listSeq || 0) + 1;
     that.setData({ loadState: 'loading', errorMsg: '' });
     app.sendRequest({
       hideLoading: true,
@@ -122,9 +158,10 @@ Page({
       data: {
         keyword: '',
         is_select: 0,
-        scope: that.data.operationScope
+        scope: scope
       },
       success: function (res) {
+        if (seq !== that._listSeq || !that._isCouponContextCurrent(owner, scope, epoch)) return;
         if ((res.code == "200" || res.code === 200) && Array.isArray(res.data)) {
           const list = res.data.map(normalizeCoupon).filter(Boolean);
           that.setData({
@@ -136,7 +173,8 @@ Page({
         }
       },
       fail: function () {
-        that.setData({ loadState: 'error', errorMsg: '网络可能不稳定，请稍后再试' });
+        if (seq !== that._listSeq || !that._isCouponContextCurrent(owner, scope, epoch)) return;
+        that.setData({ loadState: 'error', errorMsg: '网络异常，请重试' });
       },
       complete: function () {
 
@@ -144,7 +182,21 @@ Page({
     })
   },
 
-  retryLoad() { this.getList(); },
+  retryLoad() { this.getList(); this.loadSummary(); },
+
+  // BL-77:只在商家口径下读统计;失败或没有券就不展示,不阻塞列表。
+  loadSummary() {
+    if (this.data.operationScope !== 'MERCHANT') return;
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      autoErrorToast: false,
+      url: '/api/merchant/coupon-summary',
+      method: 'POST',
+      success: (res) => this.setData({ summaryItems: shapeCouponSummary(res) || [] }),
+      fail: () => this.setData({ summaryItems: [] }),
+    });
+  },
 
   // 点击优惠券
   tpClick: function (e) {
@@ -169,19 +221,29 @@ Page({
     const fromRow = e && e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.item : null;
     const item = fromRow || this.data.currentCoupon;
     if (!item || !item.id || !item.canStop) return;
+    // 在途闸:确认后到回包前不再打开确认、不再发停发
+    if (this._stopping) return;
     const that = this;
+    const owner = currentOwnerId(app);
+    const scope = that.data.operationScope;
+    const epoch = that._listEpoch;
+    if (!owner
+        || !that._isCouponContextCurrent(owner, scope, epoch)) return;
     modal.show({
       dangerKey: 'merchant.coupon.stop',
       dangerParams: { name: item.name },
       success(r) {
-        if (!r.confirm) return;
+        if (!r.confirm || that._stopping || !that._isCouponContextCurrent(owner, scope, epoch)) return;
+        that._stopping = true;
         app.sendRequest({
           url: '/api/coupon/stop',
           method: 'POST',
-          data: that.data.operationScope
-            ? { couponId: item.id, scope: that.data.operationScope }
+          data: scope
+            ? { couponId: item.id, scope: scope }
             : { couponId: item.id },
           success(res) {
+            that._stopping = false;
+            if (!that._isCouponContextCurrent(owner, scope, epoch)) return;
             if (res.code == '200' || res.code === 200) {
               cyToast.success('已停发「' + item.name + '」');
               that.setData({ tpShow: false, currentCoupon: {} });
@@ -191,6 +253,8 @@ Page({
             }
           },
           fail(err) {
+            that._stopping = false;
+            if (!that._isCouponContextCurrent(owner, scope, epoch)) return;
             cyToast.error((err && err.msg) || '停发结果待确认，已刷新列表');
             that.getList();
           },
@@ -199,7 +263,7 @@ Page({
     });
   },
   GoAdd: function () {
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/subpackageMember/couponInfo/couponInfo'
         + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '')
     });

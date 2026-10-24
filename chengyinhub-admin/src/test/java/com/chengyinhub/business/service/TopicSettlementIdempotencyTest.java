@@ -56,6 +56,11 @@ class TopicSettlementIdempotencyTest {
         when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
 
         svc = new CmsTopicServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);

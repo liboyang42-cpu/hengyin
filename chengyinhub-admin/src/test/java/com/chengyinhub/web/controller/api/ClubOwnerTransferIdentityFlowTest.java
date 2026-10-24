@@ -97,6 +97,12 @@ class ClubOwnerTransferIdentityFlowTest {
             if (Long.valueOf(OWNER).equals(patch.getId())) ownerAccount.setRole(patch.getRole());
             return 1;
         });
+        org.mockito.Mockito.doAnswer(call -> {
+            Long id = call.getArgument(0, Long.class); String role = call.getArgument(1, String.class);
+            if (id.equals(TARGET)) targetAccount.setRole(role);
+            if (id.equals(OWNER)) ownerAccount.setRole(role);
+            return null;
+        }).when(roleService).changeRole(anyLong(), any(String.class), anyLong());
         when(roleService.resolveRole(any(UmsMember.class))).thenAnswer(call -> {
             String role = call.getArgument(0, UmsMember.class).getRole();
             return role == null ? IRoleService.ROLE_PLAYER : role;
@@ -153,7 +159,9 @@ class ClubOwnerTransferIdentityFlowTest {
         ReflectionTestUtils.setField(topicController, "clubService", clubService);
         ReflectionTestUtils.setField(topicController, "coopInviteService", mock(ICoopInviteService.class));
         ReflectionTestUtils.setField(topicController, "umsMemberService", memberService);
-        ReflectionTestUtils.setField(topicController, "wxContentSecurityService", mock(IWxContentSecurityService.class));
+        IWxContentSecurityService topicSecurity = mock(IWxContentSecurityService.class);
+        ReflectionTestUtils.setField(topicController, "wxContentSecurityService", topicSecurity);
+        TopicContentSafetyTestFixtures.wire(topicController, topicSecurity);
         // RUN-52 发布者实名:本用例测的是「转让后的新Owner能不能接着发团」,实名闸在这里放行
         // (mock 的 checkRegistered 返回 null = 已登记)。
         ReflectionTestUtils.setField(topicController, "memberIdentityService",

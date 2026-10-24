@@ -10,6 +10,8 @@
     "cy-celebrate": "/components/cy/celebrate/index",
     "cy-slide-confirm": "/components/cy/slide-confirm/index",
     "cy-fragment": "/pages/play/components/fragment/index",
+    "cy-finish-medals": "/pages/play/components/finish-medals/index",
+    "cy-medal-screen": "/pages/play/components/medal-screen/index",
     "cy-modal": "/components/cy/modal/index",
     "cy-scene-play-activity-detail": "/subpackageMember/components/cy/scene-play-activity-detail/index",
     "cy-scene-roam-task-list": "/components/cy/scene-roam-task-list/index",
@@ -17,7 +19,7 @@
     "cy-scene-roam-discover": "/components/cy/scene-roam-discover/index",
     "cy-scene-roam-history": "/components/cy/scene-roam-history/index",
     "cy-scene-roam-session": "/components/cy/scene-roam-session/index",
-    "cy-scene-game-coupon-wallet": "/components/cy/scene-game-coupon-wallet/index",
+    "cy-scene-game-coupon-wallet": "/subpackageMember/components/cy/scene-game-coupon-wallet/index",
     "cy-scene-qr-coupon": "/subpackageMember/components/cy/scene-qr-coupon/index",
     "cy-scene-qr-group-code": "/components/cy/scene-qr-group-code/index",
     "cy-scene-qr-citynode": "/components/cy/scene-qr-citynode/index",
@@ -30,6 +32,7 @@
     "cy-advanced-game": "/pages/play/components/advanced-game/index",
     "cy-play-roadmap": "/pages/play/components/roadmap/index",
     "cy-playkit": "/pages/play/components/playkit/index",
+    "cy-play-verdict": "/pages/play/components/play-verdict/index",
     "cy-ai-score-card": "/pages/play/components/ai-score-card/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
@@ -41,11 +44,14 @@
     "cy-chapter-gate": "/components/cy/chapter-gate/index",
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-playkit-album": "/pages/play/components/playkit-album/index",
-    "cy-sheet": "/components/cy/sheet/index"
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-theme-records": "/components/cy/theme-records/index",
+    "cy-dropdown": "/components/cy/dropdown/index"
   },
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",
     "cy-scene-roam-poi-detail": "view",
-    "cy-scene-qr-coupon": "view"
+    "cy-scene-qr-coupon": "view",
+    "cy-scene-game-coupon-wallet": "view"
   }
 }

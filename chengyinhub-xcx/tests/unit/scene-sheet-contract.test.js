@@ -24,10 +24,12 @@ test('scene-sheet exposes full/half shells and semantic close events', () => {
   assert.match(js, /dirty/)
   assert.match(js, /closeLabel/)
   assert.match(js, /closable:\s*\{ type: Boolean, value: true \}/)
-  assert.match(wxss, /--cy-motion-standard/)
+  // 2026-10-23 弹层动效:按档位定速,读 --cy-motion-sheet-in / -out(full 档在根节点重定义),不再是 standard 220
+  assert.match(wxss, /\.ss__panel\s*\{[^}]*transition:\s*transform var\(--cy-motion-sheet-out\) var\(--cy-ease-standard\)/)
+  assert.match(wxss, /\.ss--in \.ss__panel \{ transform: translateY\(0\); transition-duration: var\(--cy-motion-sheet-in\); \}/)
   assert.match(wxss, /box-shadow:\s*var\(--cy-sheet-inset-shadow\)/)
   assert.doesNotMatch(wxss, /--cy-motion-slow/)
-  assert.match(wxss, /\.ss--full \.ss__panel\s*\{[\s\S]*height:\s*var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-full-height\)\);/)
+  assert.match(wxss, /\.ss--full \.ss__panel\s*\{[\s\S]*height:\s*min\(var\(--cy-comp-sheet-full\), var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-full-height\)\)\);/)
   // 2026-09-02 二次修正:一度改成 92vh(手册值),实测**三种机型全部压住微信右上角胶囊**。
   // 写死 vh 与安全区无关,注定复发 —— 改为从安全区反算,细节见 sheet-top-safe-area-contract。
   assert.match(read('style/tokens.wxss'),
@@ -35,10 +37,10 @@ test('scene-sheet exposes full/half shells and semantic close events', () => {
     'T3 全屏高度必须走安全上限 token,不许写字面 vh,也不许写画板量出来的绝对像素')
   // 2026-09-02:peek 并入 half(下限相同、只差 12vh 上限,渲染常一模一样);
   // min-height 一并删掉 —— 它把一句话的说明也撑到近半屏。
-  assert.doesNotMatch(wxss, /^\s*\.ss--peek\b/m, 'peek 档已合并,不该再有 .ss--peek 规则')
-  assert.match(wxss, /\.ss--half \.ss__panel\s*\{[^}]*max-height:\s*min\(70vh, var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-max-height\)\)\);/)
+  assert.doesNotMatch(wxss, /^\s*\.ss--peek\b/m, 'peek 档已合并，不该再有 .ss--peek 规则')
+  assert.match(wxss, /\.ss--half \.ss__panel\s*\{[^}]*max-height:\s*min\(var\(--cy-comp-sheet-full\), var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-max-height\)\)\);/)
   assert.doesNotMatch(wxss, /^\s*min-height:\s*42vh/m, 'T1 不设下限:短内容不该被强行撑高')
-  assert.doesNotMatch(wxss, /--cy-comp-sheet-full-max-height/, 'height 已是上限,孪生 max-height 应删掉')
+  assert.doesNotMatch(wxss, /--cy-comp-sheet-full-max-height/, 'height 已是上限，孪生 max-height 应删掉')
   assert.match(wxss, /\.ss--merchant\s*\{[\s\S]*--cy-comp-sheet-bg:\s*var\(--cy-comp-sheet-merchant-bg\);/)
 })
 
@@ -46,11 +48,11 @@ function assertCloseHitArea(tokens, wxml, wxss) {
   const hit = tokens.match(/--cy-comp-sheet-close-hit-size:\s*([\d.]+)rpx/)
   assert.ok(hit, '缺少关闭/返回控件的独立热区 token')
   assert.ok(Number(hit[1]) >= 88, '关闭/返回热区必须在不同稿宽下都保持至少 88rpx')
-  assert.match(wxml, /class="ss__control"/, '视觉圆必须包在独立热区内,不能直接把圆放大')
+  assert.match(wxml, /class="ss__control"/, '视觉圆必须包在独立热区内，不能直接把圆放大')
   assert.match(wxss, /width:\s*var\(--cy-comp-sheet-close-hit-size\)/)
   assert.match(wxss, /\.ss__control\s*\{[\s\S]*width:\s*var\(--cy-comp-sheet-close-size\)/)
   // 2026-09-02(§3.21 · 用户当面点名):视觉层保留(它是「视觉尺寸 vs 88rpx 热区」的分界),但底色必须透明
-  assert.match(wxss, /\.ss__control\s*\{[\s\S]*background:\s*transparent/, '✕ 去圆底,只留字形')
+  assert.match(wxss, /\.ss__control\s*\{[\s\S]*background:\s*transparent/, '✕ 去圆底，只留字形')
 }
 
 test('scene-sheet 的关闭/返回热区至少 88rpx,视觉圆仍保持 Figma 尺寸', () => {
@@ -71,10 +73,26 @@ test('negative control: 热区退回 63.992rpx 时必须判红', () => {
   )
 })
 
-test('cy-modal remains the only confirmation container and exposes button semantics', () => {
-  const wxml = read('components/cy/modal/index.wxml')
+function assertModalButtonSemantics(wxml) {
   assert.match(wxml, /bindtap="onCancel"[^>]*aria-role="button"[^>]*aria-label="\{\{cancelText\}\}"/)
-  assert.match(wxml, /bindtap="onConfirm"[^>]*aria-role="button"[^>]*aria-label="\{\{confirmText\}\}"/)
+  assert.match(wxml, /bindtap="onConfirm"[^>]*aria-role="button"[^>]*aria-label="\{\{loading \? '处理中' : confirmText\}\}"[^>]*aria-busy="\{\{loading\}\}"/)
+}
+
+test('cy-modal remains the only confirmation container and exposes button semantics', () => {
+  assertModalButtonSemantics(read('components/cy/modal/index.wxml'))
+})
+
+test('negative control: modal 忙碌名称或状态丢失必须判红', () => {
+  const wxml = read('components/cy/modal/index.wxml')
+  for (const [before, after] of [
+    ['aria-label="{{loading ? \'处理中\' : confirmText}}"', 'aria-label="{{confirmText}}"'],
+    ['aria-busy="{{loading}}"', ''],
+  ]) {
+    assert.equal(wxml.split(before).length - 1, 1, 'modal 负控必须命中唯一确认按钮')
+    const mutated = wxml.replace(before, after)
+    assert.notEqual(mutated, wxml, 'modal 负控锚点失效')
+    assert.throws(() => assertModalButtonSemantics(mutated), assert.AssertionError)
+  }
 })
 
 test('roam pilot is wired to the scene stack and requires a real trigger', () => {
@@ -112,7 +130,7 @@ test('scene stack caps depth at two and replaces the active child beyond the cap
 
 test('返回箭头只由实际栈深决定,注册表的子层提示不能污染首层', () => {
   let scenes = stack.pushScene([], { id: 'detail', title: '详情', canBack: true })
-  assert.equal(stack.currentScene(scenes).canBack, false, '从空栈直开仍是首层,只能显示关闭')
+  assert.equal(stack.currentScene(scenes).canBack, false, '从空栈直开仍是首层，只能显示关闭')
   scenes = stack.pushScene(scenes, { id: 'child', title: '子层', canBack: false })
   assert.equal(stack.currentScene(scenes).canBack, true, '实际第二层必须显示返回')
 })

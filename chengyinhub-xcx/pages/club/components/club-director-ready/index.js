@@ -6,7 +6,7 @@
 Component({
   properties: {
     title: { type: String, value: '准备总览' },
-    stationTitle: { type: String, value: '站点准备' },
+    stationTitle: { type: String, value: '节点准备' },
     stationSub: { type: String, value: '' },
     stations: { type: Array, value: [] },
     teamTitle: { type: String, value: '队伍与角色' },

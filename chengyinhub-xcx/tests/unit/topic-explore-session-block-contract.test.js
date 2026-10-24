@@ -16,7 +16,7 @@ function assertSessionBlockContract(js, wxml) {
   // 买了票的玩家花名册,2026-09-04 判定表判定它本身就是错的(阵容=参与品牌),已删。
   // 这里改成断言它**没有回来**:非探店日那支里不许再出现按票列玩家的花名册。
   assert.doesNotMatch(wxml, /cmsRegistrationList/,
-    '按票种展开列报名玩家的花名册已废止,不许恢复')
+    '按票种展开列报名玩家的花名册已废止，不许恢复')
   // 取而代之的「阵容/商家」是参与品牌,和 isExplore 无关,两种主题都出
   assert.match(wxml, /阵容\/商家[\s\S]{0,400}info\.lineup/)
   assert.match(js, /isExplore: Number\(res\.data\.productType\) === 2/)
@@ -147,6 +147,7 @@ test('待审主题所有购票入口均停在未开售提示，开售及普通�
     assert.equal(vm.data.sessionPicker.show, true)
     vm.closeSessionPicker()
   }
-  assert.match(read('pages/topic/index/index.wxml'), /info\.lifecycle==7/)
-  assert.match(read('pages/topic/index/index.wxml'), /立项待审 · 未开售/)
+  // 2026-10-22 v13:详情页没有底栏,未开售的说明写在头图那颗按钮上(topic-motion.buildHeroCta)
+  assert.match(read('pages/topic/utils/topic-motion.js'), /lc === 7 \? '立项待审 · 未开售'/)
+  assert.match(read('pages/topic/index/index.js'), /if \(kind === 'locked'\) return this\.lockedTip\(\)/)
 })

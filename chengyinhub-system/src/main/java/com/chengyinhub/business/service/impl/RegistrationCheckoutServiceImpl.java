@@ -1,14 +1,11 @@
 package com.chengyinhub.business.service.impl;
 
-import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
-import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
-import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
-import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.IMinorProtectionService;
 import com.chengyinhub.business.service.IRegistrationCheckoutService;
 import com.chengyinhub.business.service.IRegistrationOrderService;
 import com.chengyinhub.business.service.IWechatPayService;
@@ -16,6 +13,7 @@ import com.chengyinhub.business.service.PaymentPreorderException;
 import com.chengyinhub.business.service.RegistrationCheckoutException;
 import com.chengyinhub.business.service.RegistrationCheckoutResult;
 import com.chengyinhub.business.service.RegistrationRequestConflictException;
+import com.chengyinhub.business.service.minor.MinorDecision;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,10 +36,9 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     private IRegistrationOrderService registrationOrderService;
     @Autowired
     private IWechatPayService wechatPayService;
+    /** DOC2 F7 未成年支付挂点；开关 feature.flag.minorMode + minorPaymentGate 缺省关闭时恒放行。 */
     @Autowired
-    private ICmsActivityService activityService;
-    @Autowired
-    private IImService imService;
+    private IMinorProtectionService minorProtectionService;
 
     @Override
     public RegistrationQuoteResult quote(Long memberId, RegistrationRequest request) {
@@ -65,13 +62,14 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         if (request == null) {
             throw new RegistrationCheckoutException(400, "报名参数不能为空");
         }
+        requireMinorPurchaseAllowed(memberId);
         RegistrationOrderResult order;
         try {
             order = registrationOrderService.createOrReplay(memberId, request);
         } catch (RegistrationRequestConflictException conflict) {
             throw new RegistrationCheckoutException(409, conflict.getMessage());
         }
-        return finishOrder(memberId, order, !order.isReplayed(), isAppChannel(request));
+        return finishOrder(memberId, order, isAppChannel(request));
     }
 
     @Override
@@ -84,10 +82,23 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         if (!wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
         }
+        requireMinorPurchaseAllowed(memberId);
         CmsRegistration registration = registrationService.beginPaymentAttempt(registrationId, memberId);
         Map<String, Object> data = mapOrder(registration, singleton(registration));
         data.put("payParams", createWechatOrder(registration, appChannel));
         return new RegistrationCheckoutResult("支付参数获取成功", data);
+    }
+
+    /**
+     * 建单/发起支付前的未成年挂点。未装配（既有单测直接 new 本类）等同开关关闭；
+     * 生产由 Spring 必选注入，开关打开后按年龄段拒绝并带 MINOR_* 机器码。
+     */
+    private void requireMinorPurchaseAllowed(Long memberId) {
+        if (minorProtectionService == null) return;
+        MinorDecision decision = minorProtectionService.enforcePurchaseIfEnabled(memberId);
+        if (!decision.allowed()) {
+            throw new RegistrationCheckoutException(403, decision.message(), decision.errorCode());
+        }
     }
 
     /** 请求是否指定走原生 App 支付。大小写不敏感,空值一律按 JSAPI。 */
@@ -96,7 +107,7 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     }
 
     private RegistrationCheckoutResult finishOrder(Long memberId, RegistrationOrderResult order,
-                                                    boolean notify, boolean appChannel) {
+                                                    boolean appChannel) {
         CmsRegistration primary = order == null ? null : order.getPrimary();
         if (primary == null) {
             throw new RegistrationCheckoutException(500, "报名记录不存在");
@@ -119,9 +130,6 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
                     primary.getRegistrationNo()))) {
                 throw new RegistrationCheckoutException(500, "零元报名支付状态确认失败");
             }
-        }
-        if (notify) {
-            notifySignup(memberId, primary);
         }
         String message = Integer.valueOf(1).equals(primary.getOwnerType())
                 ? "自玩通行证创建成功" : "报名创建成功";
@@ -176,18 +184,6 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
     }
 
-    private void notifySignup(Long memberId, CmsRegistration registration) {
-        try {
-            Long topicId = null;
-            if (Long.valueOf(2L).equals(registration.getOwnerType())) {
-                CmsActivity activity = activityService.selectCmsActivityById(registration.getOwnerId());
-                topicId = activity == null ? null : activity.getTopicId();
-            }
-            imService.sendSystem(memberId, ImMessage.MSG_CARD, "报名成功", signupNoticeExtra(topicId));
-        } catch (Exception ignored) {
-            // 通知为 best-effort，不得改变建单与支付状态。
-        }
-    }
 
     /**
      * CU-M-124：报名没挂主题时下发的是通用卡，前端 onCardTap 只认 action，实点停在系统通知详情。

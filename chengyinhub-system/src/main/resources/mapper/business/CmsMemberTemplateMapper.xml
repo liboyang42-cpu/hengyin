@@ -389,6 +389,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{row.id} and member_id = #{ownerId} and del_flag = 0 and status = 0 and draft_status = 1
     </update>
 
+    <!-- AUDIT-G2-2:举报成立下架(审核台举报单 REJECT);只动已公开的行,幂等 -->
+    <update id="takeDownReported">
+        update cms_member_template set status = 2, check_status = 2, publish_status = 0,
+            reason = #{reason}, update_time = now()
+        where id = #{id} and del_flag = 0 and draft_status = 1 and status = 1
+    </update>
+
     <update id="updateCmsMemberTemplate" parameterType="CmsMemberTemplate">
         update cms_member_template
         <trim prefix="SET" suffixOverrides=",">
@@ -405,7 +412,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="difficulty != null">difficulty = #{difficulty},</if>
             <if test="isSync != null">is_sync = #{isSync},</if>
             <if test="ruleInstructions != null">rule_instructions = #{ruleInstructions},</if>
-            <if test="merchantGuide != null">merchant_guide = #{merchantGuide},</if>
+            <choose>
+                <when test="clearFields != null and clearFields.contains('merchantGuide')">merchant_guide = NULL,</when>
+                <otherwise><if test="merchantGuide != null">merchant_guide = #{merchantGuide},</if></otherwise>
+            </choose>
             <if test="validationMethod != null">validation_method = #{validationMethod},</if>
             <choose>
                 <when test="validationMethod != null and (validationMethod != 7 and validationMethod != 2
@@ -414,8 +424,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                     sensor_config = NULL,
                 </when>
                 <otherwise>
-                    <if test="sensorType != null">sensor_type = #{sensorType},</if>
-                    <if test="sensorConfig != null">sensor_config = #{sensorConfig},</if>
+                    <choose>
+                        <when test="clearFields != null and clearFields.contains('sensorType')">sensor_type = NULL,</when>
+                        <otherwise><if test="sensorType != null">sensor_type = #{sensorType},</if></otherwise>
+                    </choose>
+                    <choose>
+                        <when test="clearFields != null and clearFields.contains('sensorConfig')">sensor_config = NULL,</when>
+                        <otherwise><if test="sensorConfig != null">sensor_config = #{sensorConfig},</if></otherwise>
+                    </choose>
                 </otherwise>
             </choose>
             <if test="questionName != null">question_name = #{questionName},</if>
@@ -425,10 +441,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="medalImg != null">medal_img = #{medalImg},</if>
             <if test="medalName != null">medal_name = #{medalName},</if>
             <if test="medalStyle != null">medal_style = #{medalStyle},</if>
-            <if test="rewardRulesJson != null">reward_rules_json = #{rewardRulesJson},</if>
+            <choose>
+                <when test="clearFields != null and clearFields.contains('rewardRulesJson')">reward_rules_json = NULL,</when>
+                <otherwise><if test="rewardRulesJson != null">reward_rules_json = #{rewardRulesJson},</if></otherwise>
+            </choose>
             <if test="xpValue != null">xp_value = #{xpValue},</if>
             <if test="storyText != null">story_text = #{storyText},</if>
-            <if test="storyImg != null">story_img = #{storyImg},</if>
+            <choose>
+                <when test="clearFields != null and clearFields.contains('storyImg')">story_img = NULL,</when>
+                <otherwise><if test="storyImg != null">story_img = #{storyImg},</if></otherwise>
+            </choose>
             <if test="storyJson != null">story_json = #{storyJson},</if>
             <if test="hint1 != null">hint1 = #{hint1},</if>
             <if test="hint2 != null">hint2 = #{hint2},</if>
@@ -522,4 +544,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
+    <update id="reopenAuditDecision">
+        update cms_member_template set status = 0, check_status = 0, publish_status = 0, update_time = now()
+        where id = #{id} and member_id = #{ownerId} and del_flag = 0 and draft_status = 1
+          and status = #{fromStatus} and check_status = #{fromCheckStatus} and publish_status = #{fromPublishStatus}
+    </update>
+
+    <!-- AUDIT-INT-4:举报下架申诉成立,只从举报下架态(2/2/0)原样恢复;作者之后改过(已离开该态)即 0 行 -->
+    <update id="restoreReportTakedown">
+        update cms_member_template set status = #{status}, check_status = #{checkStatus},
+            publish_status = #{publishStatus}, reason = #{reason}, update_time = now()
+        where id = #{id} and member_id = #{ownerId} and del_flag = 0 and draft_status = 1
+          and status = 2 and check_status = 2 and publish_status = 0
+    </update>
+
 </mapper>

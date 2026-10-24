@@ -77,7 +77,7 @@ test('下拉显示:找得到就显示那一项;找不到一律「请选择」;�
   assert.equal(opt.label(list, 'zzz'), '请选择', '老模板存了不认识的值')
   assert.equal(opt.label(list, undefined), '请选择', '还没选过')
   assert.equal(opt.label([{ id: 'b1', label: '' }], 'b1', 'id', '类别 '), '类别 1')
-  assert.equal(opt.idx(list, 'zzz'), -1, '找不到 = -1,面板里不打勾')
+  assert.equal(opt.idx(list, 'zzz'), -1, '找不到 = -1，面板里不打勾')
 })
 
 test('每个下拉触发器上显示的字都走 opt.label,不自己拿下标去取', () => {
@@ -167,7 +167,7 @@ test('呈现方式:下拉选「整屏」写 fullscreen;被锁时硬选内嵌也�
   const locked = instance({ gameSection: 'reaction' })
   const inline = locked.self.data.presentOptions.findIndex((o) => o.key === 'inline')
   locked.self.onPickPresent(pick(inline))
-  assert.deepEqual(locked.calls, [], '「只能整屏」的段被选内嵌,不该写任何东西')
+  assert.deepEqual(locked.calls, [], '「只能整屏」的段被选内嵌，不该写任何东西')
 })
 
 /* 2026-09-23 用户:「选框应该下拉应该是向下的箭头」。图标集是脚本生成、禁手改,没有 chevron-down;

@@ -44,7 +44,7 @@ function navBgOf(body) {
 function assertNavSurfaceContract(source) {
   const blocks = themeBlocks(source)
   // page{}(暗) + .theme-light/.theme-merchant(商家日) + .theme-topic-editor(创建域)
-  assert.ok(blocks.length >= 3, `expected page{} + 两个浅色逃生口,实得 ${blocks.length}`)
+  assert.ok(blocks.length >= 3, `expected page{} + 两个浅色逃生口，实得 ${blocks.length}`)
   blocks.forEach(({ selector, body }) => {
     const navBg = navBgOf(body)
     assert.ok(navBg, `${selector} 重声明了 --cy-color-bg-page,却没有重声明 --cy-comp-nav-bg(顶栏会停在父级求值结果上)`)
@@ -83,7 +83,7 @@ function assertDarkEscapeHatchRestoresNav(source) {
   const darkVars = declaredVars(dark)
   const lightVars = declaredVars(light)
 
-  assert.equal(darkVars.get('--cy-comp-nav-bg'), 'var(--cy-color-bg-page)', '.theme-dark 必须写回顶栏底色,否则嵌在浅色区里会留白顶栏')
+  assert.equal(darkVars.get('--cy-comp-nav-bg'), 'var(--cy-color-bg-page)', '.theme-dark 必须写回顶栏底色，否则嵌在浅色区里会留白顶栏')
 
   // 只查"有没有声明",不查"值是否与浅色不同":遮罩 / 危险色 / 品牌紫这几枚
   // 明暗两套本就同值,拿"必须不同"当判据会把正确实现judge成错的。
@@ -103,10 +103,10 @@ test('.theme-dark 逃生口把顶栏底色写回暗色', () => {
 test('负控:.theme-dark 不写回顶栏底色必须判红', () => {
   const source = read(TOKENS)
   const target = `  --cy-comp-nav-bg:     var(--cy-color-bg-page);
-  --cy-comp-nav-border: var(--cy-color-border-subtle);
+  --cy-comp-nav-border: transparent; /* 2026-10-23 业主:页面上的横线去掉 —— 暗色也与全站默认一致,顶栏不画分隔线 */
 }`
   const idx = source.lastIndexOf(target)
-  assert.ok(idx > 0, '锚点漂了,负控失效')
+  assert.ok(idx > 0, '锚点漂了，负控失效')
   const mutated = source.slice(0, idx) + '}' + source.slice(idx + target.length)
   assert.throws(() => assertDarkEscapeHatchRestoresNav(mutated))
 })
@@ -116,7 +116,7 @@ test('负控:顶栏底色改回 glass(蓝紫带)必须判红', () => {
     '--cy-comp-nav-bg:     var(--cy-color-bg-page);',
     '--cy-comp-nav-bg:     var(--cy-color-bg-glass);',
   )
-  assert.notEqual(mutated, read(TOKENS), '变异未生效,负控本身是假的')
+  assert.notEqual(mutated, read(TOKENS), '变异未生效，负控本身是假的')
   assert.throws(() => assertNavSurfaceContract(mutated))
 })
 
@@ -124,7 +124,7 @@ test('负控:任一浅色主题块漏掉 comp 别名重声明必须判红', () =
   const source = read(TOKENS)
   const target = `  /* comp 别名重声明:见基础 page 规则内「导航」段注释。 */
   --cy-comp-nav-bg:     var(--cy-color-bg-page);
-  --cy-comp-nav-border: var(--cy-color-border-subtle);`
+  --cy-comp-nav-border: transparent; /* 2026-10-23 业主:页面上的横线去掉 —— 暗色也与全站默认一致,顶栏不画分隔线 */`
   assert.ok(source.includes(target), '锚点漂了,负控失效')
   assert.throws(() => assertNavSurfaceContract(source.replace(target, '')))
 })
@@ -171,7 +171,7 @@ function assertNativeNavMatchesBody(route, configSource) {
   // 缺省继承 app.json 的全局暗色顶栏
   const navBg = (cfg.navigationBarBackgroundColor || '#020104').toLowerCase()
   const navLight = LIGHT_NAV_BG.has(navBg)
-  assert.equal(navLight, bodyLight, `${route}:正文${bodyLight ? '浅' : '暗'}色,系统顶栏却是 ${navBg} —— 顶栏与正文断层`)
+  assert.equal(navLight, bodyLight, `${route}:正文${bodyLight ? '浅' : '暗'}色，系统顶栏却是 ${navBg} —— 顶栏与正文断层`)
   if (bodyLight) {
     assert.equal(cfg.navigationBarTextStyle, 'black', `${route}:浅色顶栏必须配深色标题/返回键`)
   }
@@ -220,9 +220,9 @@ const NAV_TOKEN_SOURCES = ['style/tokens.wxss', 'style/merchant-light.wxss']
 function assertNavTokensUseTruthLayer(sources) {
   sources.forEach(({ file, text }) => {
     const decls = text.match(/--cy-comp-nav-bg\s*:\s*[^;]+;/g) || []
-    assert.ok(decls.length > 0, `${file} 里没有 --cy-comp-nav-bg 声明,锚点漂了`)
+    assert.ok(decls.length > 0, `${file} 里没有 --cy-comp-nav-bg 声明，锚点漂了`)
     decls.forEach((d) => {
-      assert.doesNotMatch(d, /var\(--cy-bg-|var\(--cy-text-|var\(--cy-border-/, `${file}:${d} 读了 ② 旧名别名,类作用域下会拿到 page 上求值好的那份`)
+      assert.doesNotMatch(d, /var\(--cy-bg-|var\(--cy-text-|var\(--cy-border-/, `${file}:${d} 读了 ② 旧名别名，类作用域下会拿到 page 上求值好的那份`)
       assert.match(d, /var\(--cy-color-/, `${file}:${d} 必须读 ① 语义真值层`)
     })
   })
@@ -239,7 +239,7 @@ test('负控:顶栏 token 退回 ② 旧名别名必须判红', () => {
   const target = sources.find((s) => s.file === 'style/merchant-light.wxss')
   const before = target.text
   target.text = target.text.replace('--cy-comp-nav-bg: var(--cy-color-bg-page);', '--cy-comp-nav-bg: var(--cy-bg-page);')
-  assert.notEqual(target.text, before, '变异未生效,负控本身是假的')
+  assert.notEqual(target.text, before, '变异未生效，负控本身是假的')
   assert.throws(() => assertNavTokensUseTruthLayer(sources))
 })
 
@@ -248,7 +248,7 @@ test('负控:顶栏 token 退回 ② 旧名别名必须判红', () => {
 // 上面第 2 段只遍历【系统导航】页,navigationStyle:"custom" 的页从一开始就被 collectNativeNavPages 滤掉了。
 // 但 custom 关掉的是【标题栏】,状态栏(时间/信号/电量)那 44px 仍由 json 的
 // navigationBarTextStyle 决定,而它下面的底正是页面自己画的第一屏。
-// 创建域三页(templateadd / fabu / template-intro)根节点恒挂 .theme-topic-editor
+// 创建域页(fabu / temp;原起名页 templateadd 已于 2026-10-23 退役删除)根节点恒挂 .theme-topic-editor
 // (页底 #F3F4F4),却留着全局暗色带的 "white" ⇒ 白字压浅底只剩 1.06:1,
 // 状态栏时间和信号在屏幕上等于不存在(2026-09-24 走查 CU-M-158 / CU-C-151 两条实拍同一病)。
 // 判据要【black】而不是"别写 white":app.json window 全局就是 navigationBarTextStyle:"white",
@@ -298,7 +298,7 @@ function assertCustomNavStatusColor(route, configSource, wxmlSource) {
     cfg.navigationBarTextStyle,
     'black',
     `${route}:恒浅色正文(${rootClassAttr(wxml)})配了 navigationBarTextStyle:"${cfg.navigationBarTextStyle}" —— ` +
-      'custom 导航只关掉标题栏,状态栏字色仍由它决定,白字压浅底等于隐形',
+      'custom 导航只关掉标题栏，状态栏字色仍由它决定，白字压浅底等于隐形',
   )
 }
 
@@ -308,28 +308,29 @@ test('恒浅色正文的自定义导航页,状态栏必须是深色字', () => {
     return rootIsUnconditionallyLight(wxml)
   })
   // 创建域四页 + 后续任何恒浅页都在这条里;下限防的是「判据哪天悄悄变成空集,门禁恒绿」。
-  assert.ok(checked.length >= 4, `恒浅自定义导航页只认出 ${checked.length} 个,判据八成漂了`)
+  assert.ok(checked.length >= 4, `恒浅自定义导航页只认出 ${checked.length} 个，判据八成漂了`)
   checked.forEach((route) => assertCustomNavStatusColor(route))
 })
 
 test('负控:把创建节点玩法页状态栏改回 white 必须判红', () => {
-  const route = 'pages/publish/templateadd/templateadd'
+  // 2026-10-23 起名页 templateadd 退役删除,负控改钉同为恒浅 theme-topic-editor 的发布页 fabu
+  const route = 'pages/publish/fabu/index'
   const mutated = JSON.stringify({ ...JSON.parse(read(`${route}.json`)), navigationBarTextStyle: 'white' })
   assert.throws(
     () => assertCustomNavStatusColor(route, mutated),
     assert.AssertionError,
-    '改回 white 却判绿,说明这条契约没真读到 json',
+    '改回 white 却判绿，说明这条契约没真读到 json',
   )
 })
 
 test('负控:身份翻转页(根 class 可翻到 theme-dark)必须放行,而不是把判据拖成恒绿', () => {
-  // 反向变异:templateadd 的根 class 改成 {{isMerchant ? ... : 'theme-dark'}} 后,
+  // 反向变异:fabu(原 templateadd,已退役)的根 class 改成 {{isMerchant ? ... : 'theme-dark'}} 后,
   // 本条契约应当【放行】它 —— 放行是因为它落进"得走运行时 setNavigationBarColor"的另一格,
   // 不是因为 rootIsUnconditionallyLight 恒返回 false(那会让整条门禁假绿)。
-  const route = 'pages/publish/templateadd/templateadd'
+  const route = 'pages/publish/fabu/index'
   const original = read(`${route}.wxml`)
-  const flipped = original.replace(/<view class="theme-topic-editor/, `<view class="{{isMerchant ? 'theme-topic-editor' : 'theme-dark'}}`)
-  assert.notEqual(flipped, original, '变异锚点漂了,负控本身是假的')
+  const flipped = original.replace(/<view class="fabu slopes theme-topic-editor/, `<view class="fabu slopes {{isMerchant ? 'theme-topic-editor' : 'theme-dark'}}`)
+  assert.notEqual(flipped, original, '变异锚点漂了，负控本身是假的')
   assert.equal(rootIsUnconditionallyLight(flipped), false, '身份翻转页必须被排除在本条射程之外')
   // 排除确实生效:同一份 white config 在恒浅下判红、在翻转下放行。
   assert.throws(() => assertCustomNavStatusColor(route, '{"navigationBarTextStyle":"white"}', original))

@@ -10,7 +10,7 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const stripWxmlComments = (source) => source.replace(/<!--[\s\S]*?-->/g, '');
 
 /* 玩家公开主题页的三条修复(2026-09-24 走查 G4):
-   CU-C-38 分享卡只写「主题详情」 / CU-C-65 站点字段裸插值印出字面 null /
+   CU-C-38 分享卡只写「主题详情」 / CU-C-65 节点字段裸插值印出字面 null /
    CU-C-66 详情写一站、路线节点列出两站(快照过期)。
    这里跑的是页面里那两个真正被调用的整形函数,不是照着源码抄一遍断言。 */
 
@@ -50,7 +50,7 @@ test('CU-C-38:主题还没读到时退回泛化文案,不编一个标题也不�
   assert.equal(page.onShareAppMessage().title, '主题详情');
 });
 
-test('CU-C-65:站点级缺值归一成空串,不把 null 渲染给玩家', () => {
+test('CU-C-65:节点级缺值归一成空串,不把 null 渲染给玩家', () => {
   const page = makePage();
   const chapters = page.processChaptersList([{
     name: '第1章',
@@ -66,7 +66,7 @@ test('CU-C-65:站点级缺值归一成空串,不把 null 渲染给玩家', () =>
     ],
   }]);
   const nodes = chapters[0].nodes;
-  assert.equal(nodes[0].businessTime, '', 'businessTime 缺失 → 空串(商家提交点位不带这一列,该列恒 NULL)');
+  assert.equal(nodes[0].businessTime, '', 'businessTime 缺失 → 空串(商家提交节点不带这一列，该列恒 NULL)');
   assert.equal(nodes[0].address, '', 'address 缺失 → 空串');
   assert.equal(nodes[0].name, '', 'name 缺失 → 空串');
   assert.equal(nodes[0].registrationMerchantList[0].mmsMerchant.name, '', '商家名缺失 → 空串');
@@ -86,10 +86,10 @@ test('CU-C-65:字符串 "null" 也按缺值处理(历史数据里真有这种值
   assert.equal(node.businessTime, '');
 });
 
-test('CU-C-65:站点卡片那几格挂 wx:if,缺值整行不出', () => {
+test('CU-C-65:节点卡片那几格挂 wx:if,缺值整行不出', () => {
   const wxml = stripWxmlComments(read('pages/topic/index/index.wxml'));
   assert.match(wxml, /<view class="david_hp_con_time" wx:if="\{\{ node\.businessTime \}\}">/, '营业时间缺值整行不出');
-  assert.match(wxml, /<view class="item-add flex-ac" wx:if="\{\{ node\.address \}\}">/, '地址缺值时图标+地址一起收起');
+  assert.match(wxml, /<view class="dz" wx:if="\{\{ node\.address \}\}">/, '地址缺值时整行收起(v13 站点行)');
   assert.match(wxml, /<text class="node-card-name" wx:if="\{\{node\.registrationMerchantList\[0\]\.mmsMerchant\.name\}\}">/,
     '商家名缺值不印空名');
 });
@@ -105,24 +105,24 @@ for (const [label, config] of [['玩家', playerPageConfig], ['商家', merchant
       totalChapterCount: 2, locationCount: 8,
       chaptersList: [{ nodes: [{ id: 1 }] }],
     });
-    assert.ok(includes.includes('8 个站点'));
-    assert.ok(!includes.includes('1 个站点'));
+    assert.ok(includes.includes('8 个节点'));
+    assert.ok(!includes.includes('1 个节点'));
     assert.ok(includes.includes('2 个章节'));
   });
   test(label + ': 权威零不回退到可见节点数', () => {
     const includes = config.buildContentIncludes({ locationCount: 0, chaptersList: [{ nodes: [{ id: 1 }] }] });
-    assert.ok(!includes.some(text => text.includes('个站点')));
+    assert.ok(!includes.some(text => text.includes('个节点')));
   });
-  test(label + ': 空 teaser 仍使用完整总站点数且不增加隐藏节点', () => {
+  test(label + ': 空 teaser 仍使用完整总节点数且不增加隐藏节点', () => {
     const data = { locationCount: 3, chaptersList: [] };
     const before = JSON.stringify(data);
-    assert.ok(config.buildContentIncludes(data).includes('3 个站点'));
+    assert.ok(config.buildContentIncludes(data).includes('3 个节点'));
     assert.equal(JSON.stringify(data), before);
   });
   test(label + ': 缺失总数不从子集推测', () => {
     for (const count of [undefined, null, 'invalid']) {
       const includes = config.buildContentIncludes({ locationCount: count, chaptersList: [{ nodes: [{ id: 1 }] }] });
-      assert.ok(!includes.some(text => text.includes('个站点')));
+      assert.ok(!includes.some(text => text.includes('个节点')));
     }
   });
 }

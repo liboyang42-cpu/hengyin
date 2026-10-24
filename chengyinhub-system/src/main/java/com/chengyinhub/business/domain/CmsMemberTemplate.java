@@ -7,6 +7,8 @@ import com.chengyinhub.common.annotation.Excel;
 import com.chengyinhub.common.core.domain.BaseEntity;
 
 import java.util.List;
+import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * 我的模板对象 cms_member_template
@@ -17,6 +19,14 @@ import java.util.List;
 public class CmsMemberTemplate extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
+
+    @JsonIgnore
+    private Set<String> clearFields;
+
+    @JsonIgnore
+    public Set<String> getClearFields() { return clearFields; }
+    @JsonIgnore
+    public void setClearFields(Set<String> clearFields) { this.clearFields = clearFields; }
 
     public static final String MEDAL_STYLE_GLOW = "glow";
     public static final String MEDAL_STYLE_ENAMEL = "enamel";
@@ -31,6 +41,13 @@ public class CmsMemberTemplate extends BaseEntity
     /** 发布用户ID */
     @Excel(name = "发布用户ID")
     private Long memberId;
+
+    /** 当前查看者能否续编，由详情接口按实际归属返回。 */
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private Boolean canEdit;
+
+    public Boolean getCanEdit() { return canEdit; }
+    public void setCanEdit(Boolean canEdit) { this.canEdit = canEdit; }
 
     /** 模板类别ID */
     @Excel(name = "模板类别ID")

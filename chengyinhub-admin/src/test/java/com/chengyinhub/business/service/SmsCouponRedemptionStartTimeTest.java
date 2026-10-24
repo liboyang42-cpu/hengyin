@@ -54,7 +54,7 @@ class SmsCouponRedemptionStartTimeTest {
         SmsCouponHistory history = history();
         history.setStartTime(new Date(System.currentTimeMillis() + 86_400_000L));
         history.setEndTime(new Date(System.currentTimeMillis() + 2 * 86_400_000L));
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
 
         ISmsCouponHistoryService.RedemptionResult result = service.redeemCoupon(
@@ -72,7 +72,7 @@ class SmsCouponRedemptionStartTimeTest {
         SmsCouponHistory legacy = history();
         legacy.setStartTime(null);
         legacy.setEndTime(new Date(System.currentTimeMillis() + 86_400_000L));
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(legacy);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(legacy);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
         when(histories.claimUnusedCoupon(any(), any())).thenReturn(1);
         when(coupons.incrementUseCount(30L)).thenReturn(1);
@@ -84,7 +84,7 @@ class SmsCouponRedemptionStartTimeTest {
         SmsCouponHistory started = history();
         started.setStartTime(new Date(System.currentTimeMillis() - 1_000L));
         started.setEndTime(new Date(System.currentTimeMillis() + 86_400_000L));
-        when(histories.selectSmsCouponHistoryById(302L)).thenReturn(started);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(302L)).thenReturn(started);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.REDEEMED,
@@ -96,7 +96,7 @@ class SmsCouponRedemptionStartTimeTest {
         SmsCouponHistory used = history();
         used.setUseStatus(1);
         used.setStartTime(new Date(System.currentTimeMillis() + 86_400_000L));
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(used);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(used);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.ALREADY_USED,
@@ -105,7 +105,7 @@ class SmsCouponRedemptionStartTimeTest {
         SmsCouponHistory expired = history();
         expired.setUseStatus(2);
         expired.setStartTime(new Date(System.currentTimeMillis() + 86_400_000L));
-        when(histories.selectSmsCouponHistoryById(303L)).thenReturn(expired);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(303L)).thenReturn(expired);
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.EXPIRED,
                 service.redeemCoupon(303L, 9001L, 11L, 7002L, "MERCHANT_CHECKIN"));
@@ -114,20 +114,21 @@ class SmsCouponRedemptionStartTimeTest {
     }
 
     @Test
-    void claimRaceReadbackStillDetectsNotStarted() {
+    void claimZeroRowDefensiveReadbackStillDetectsNotStarted() {
         SmsCouponHistory snapshot = history();
         snapshot.setEndTime(new Date(System.currentTimeMillis() + 86_400_000L));
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(snapshot);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon());
         when(histories.claimUnusedCoupon(any(), any())).thenReturn(0);
 
         SmsCouponHistory current = history();
         current.setStartTime(new Date(System.currentTimeMillis() + 86_400_000L));
-        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(current);
+        // Defensive zero-row simulation only: with a real history lock, another editor cannot change start_time here.
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(snapshot, current);
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.NOT_STARTED,
                 service.redeemCoupon(301L, 9001L, 11L, 7002L, "MERCHANT_CHECKIN"));
 
+        verify(histories).claimUnusedCoupon(any(), any());
         verify(settlements, never()).recordCouponVerification(any(), any());
         verify(audits, never()).insertBusinessAuditEvent(any());
     }

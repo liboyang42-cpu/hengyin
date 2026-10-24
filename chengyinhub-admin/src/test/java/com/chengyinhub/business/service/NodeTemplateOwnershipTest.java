@@ -53,8 +53,18 @@ class NodeTemplateOwnershipTest {
         templateMapper = mock(CmsMemberTemplateMapper.class);
         nodeMapper = mock(CmsTopicNodeMapper.class);
         service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
+        // CORE OWN-C03-13：节点插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填自增 id。
+        java.util.concurrent.atomic.AtomicLong ids = new java.util.concurrent.atomic.AtomicLong(9000L);
+        when(nodeMapper.insertCmsTopicNode(org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> {
+            ((com.chengyinhub.business.domain.CmsTopicNode) inv.getArgument(0)).setId(ids.incrementAndGet());
+            return 1;
+        });
     }
 
     private CmsMemberTemplate tpl(Long owner, Long status, Integer draftStatus) {

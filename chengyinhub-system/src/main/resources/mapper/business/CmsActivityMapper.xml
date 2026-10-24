@@ -49,10 +49,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from cms_activity
     </sql>
 
+    <!-- 挂主题的场次只在父主题在架时公开:status=1(未被驳回/下架) · user_status=1(作者未下架) · del_flag=0。
+         只看 del_flag 时,主题被驳回、作者下架或图片违规下架后,publishBeforeReview 建出的自办场次
+         (status=1/publish_status=1)仍在列表/详情可见、可下单。下单闸见 CmsRegistrationServiceImpl#validateAndGetActivity。 -->
     <sql id="livePublicParentTopic">
         (topic_id is null or topic_id = 0 or exists (
             select 1 from cms_topic live_parent
             where live_parent.id = cms_activity.topic_id and live_parent.del_flag = 0
+              and live_parent.status = 1 and live_parent.user_status = 1
         ))
     </sql>
 
@@ -61,7 +65,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <if test="latitude != null  and latitude != ''  and latitude != null and longitude != ''">
             ROUND(st_distance_sphere(point(#{longitude},#{latitude}),point(IFNULL(longitude,0), IFNULL(latitude,0)))) distance,
         </if>
-        address, status,publish_status, reason, del_flag,start_date,end_date,template_id,
+        address, status,publish_status, cancel_time, reason, del_flag,start_date,end_date,template_id,
         topic_id, club_id, create_by, create_time, update_by, update_time,
         (select t.product_type from cms_topic t where t.id = cms_activity.topic_id) as product_type
         from cms_activity
@@ -345,6 +349,26 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          </trim>
     </insert>
 
+    <!-- #334 F7:已售判断与写入合成一条语句。子查询在 UPDATE 内是加锁读(共享 next-key 锁),
+         并发下单要么先提交被这里看见(0 行),要么排在本次修改之后;不再有「先数后写」的窗口。 -->
+    <update id="updateOpsFieldsIfUnsold" parameterType="CmsActivity">
+        update cms_activity
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="addressName != null">address_name = #{addressName},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="dayNote != null">day_note = #{dayNote},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+          and not exists (
+              select 1 from cms_registration sold
+              where sold.owner_type = 2 and sold.owner_id = #{id}
+                and sold.payment_status in (0, 1, 2)
+          )
+    </update>
+
     <update id="updateCmsActivity" parameterType="CmsActivity">
         update cms_activity
         <trim prefix="SET" suffixOverrides=",">
@@ -464,4 +488,71 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         SET is_settlement = 1, update_by = 'system', update_time = NOW()
         WHERE id = #{id} AND is_settlement = 0 AND del_flag = 0
     </update>
+    <select id="selectSignedUpRegistrationCounts" resultType="java.util.HashMap">
+        select owner_id as activityId, count(*) as signupCount
+        from cms_registration
+        where owner_type = 2 and registration_status = 2
+        <choose>
+            <when test="activityIds != null and activityIds.size() > 0">
+                and owner_id in
+                <foreach collection="activityIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+        group by owner_id
+    </select>
+    <select id="selectTopicSignedUpRegistrationCounts" resultType="java.util.HashMap">
+        select t.id as topicId, count(r.id) as signupCount
+        from cms_topic t
+        join cms_registration r on r.payment_status = 2 and r.registration_status = 2
+          and ((r.owner_type = 1 and r.owner_id = t.id)
+               or (r.owner_type = 2 and exists (
+                   select 1 from cms_activity a where a.id = r.owner_id
+                     and a.topic_id = t.id and a.del_flag = 0
+                     and (t.club_id is null or a.club_id = t.club_id))))
+        <!-- CL-08:与名册(ClubCrmMapper.selectTopicCustomers)同口径,已注销成员(del_flag &lt;&gt; 0)的报名不计 -->
+        join ums_member u on u.id = r.member_id and u.del_flag = 0
+        where t.del_flag = 0
+        <choose>
+            <when test="topicIds != null and topicIds.size() > 0">
+                and t.id in
+                <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+        group by t.id
+    </select>
+    <select id="selectPendingVerificationCounts" resultType="java.util.HashMap">
+        select owner_id as activityId, count(*) as pendingVerifyCount
+        from cms_registration
+        where owner_type = 2 and payment_status = 2 and verification_status = 0
+        <choose>
+            <when test="activityIds != null and activityIds.size() > 0">
+                and owner_id in
+                <foreach collection="activityIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+        group by owner_id
+    </select>
+
+    <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
+    <update id="reopenAuditDecision">
+        update cms_activity set status = 0, check_status = 0, publish_status = 0
+        where id = #{id} and del_flag = 0
+          and status = #{fromStatus} and check_status = #{fromCheckStatus} and publish_status = #{fromPublishStatus}
+          <if test="decidedAt != null">and (update_time is null or update_time &lt;= #{decidedAt})</if>
+    </update>
+
+    <!-- AUDIT-INT-7:内容安全留置标记,独立语句,不进通用 resultMap/动态更新 -->
+    <update id="markContentSafetyHold">
+        update cms_activity set content_safety_hold = 1 where id = #{id}
+    </update>
+    <update id="clearContentSafetyHold">
+        update cms_activity set content_safety_hold = 0 where id = #{id} and content_safety_hold = 1
+    </update>
+    <select id="selectContentSafetyHold" resultType="java.lang.Integer">
+        select content_safety_hold from cms_activity where id = #{id}
+    </select>
+
 </mapper>

@@ -151,7 +151,7 @@ test('读到伏笔块出「得到一个念头」卡;没得到的念头不露名�
   preview.openChapterFull()
   const card = preview.data.chapterParas.find(p => p.kind === 'thought')
   assert.deepEqual([card.name, card.desc, card.need], ['我很幸运', '所有人都这么说', 3000])
-  assert.deepEqual(preview.data.chapterParas.map(p => p.kind), ['text', 'thought', 'text'], '伏笔卡在原位,后文照常')
+  assert.deepEqual(preview.data.chapterParas.map(p => p.kind), ['text', 'thought', 'text'], '伏笔卡在原位，后文照常')
 
   const player = makePage({ blocks }, [])
   player._routeState = { thoughts: [] }
@@ -279,7 +279,7 @@ test('这局配了伏笔:开局请求一次微信运动授权;问过(允许或�
   const fresh = stubWeRun(undefined)
   const page = makePage({}, [])
   page._askWeRunOnce(); page._askWeRunOnce()
-  assert.deepEqual(fresh.authorize, ['scope.werun'], '开局要问,且只问一次')
+  assert.deepEqual(fresh.authorize, ['scope.werun'], '开局要问，且只问一次')
   const denied = stubWeRun(false)
   makePage({}, [])._askWeRunOnce()
   assert.deepEqual(denied.authorize, [], '拒过的不追问')
@@ -296,7 +296,7 @@ test('试玩最后一章读完点继续探索看结局:默认兜底结局,能切
     { code: 'default', title: '预制的一生', summary: '', cond: '其它结局都不中时', fallback: true }]
   page.continueChapterStory()   // 试玩:本章读完点「继续探索」就接结局(顶条的推进钮已删)
   assert.equal(page.data.previewEnding.show, true)
-  assert.equal(page.data.previewEnding.list[page.data.previewEnding.idx].title, '预制的一生', '默认看兜底那条')
+  assert.equal(page.data.previewEnding.list[page.data.previewEnding.idx].title, '预制的一生', '默认看保底那条')
   page.pickPreviewEnding({ currentTarget: { dataset: { idx: 0 } } })
   assert.equal(page.data.previewEnding.list[page.data.previewEnding.idx].title, '醒来')
 
@@ -329,7 +329,7 @@ test('入口卡换成内嵌玩法时重新对准一次锚点(先清空再设),�
   page.data.chapterFull = true
   await new Promise((r) => setTimeout(r, 1300))
   assert.deepEqual(seen.slice(before), ['', 'chapter-game-51'],
-    '第一次长距离滚动途中上方还在重排,实测停在顶栏底下 95px —— 要再对准一次')
+    '第一次长距离滚动途中上方还在重排，实测停在顶栏底下 95px —— 要再对准一次')
 })
 
 test('卡包打开内嵌问答时展示独立题面，故事流打开时继续内嵌', () => {
@@ -430,7 +430,7 @@ test('故事流声音:开场门有启动声,关掉后记住并停,玩法完成�
   page._syncStoryBed({ kind: 'text' })
   assert.ok(calls.includes('bed:afternoon'), '黄色氛围应是午后蝉鸣那层')
   page._syncStoryBed({ kind: 'dream' })
-  assert.equal(calls.filter((c) => c === 'sfx:dream').length, 0, '相册是通用多照片块,读到它不再响「梦」的和弦')
+  assert.equal(calls.filter((c) => c === 'sfx:dream').length, 0, '相册是通用多照片块，读到它不再响「梦」的和弦')
   assert.ok(!calls.includes('bed:dream'))
 
   const stored = {}
@@ -438,7 +438,7 @@ test('故事流声音:开场门有启动声,关掉后记住并停,玩法完成�
   page.toggleStorySound()
   assert.equal(page.data.soundOn, false)
   assert.ok(calls.includes('on:false'))
-  assert.equal(stored.cy_story_sound_off, '1', '关掉要记在本机,下次进来还是关的')
+  assert.equal(stored.cy_story_sound_off, '1', '关掉要记在本机，下次进来还是关的')
 
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /catchtap="toggleStorySound"/)
@@ -476,7 +476,9 @@ test('正文走真实高级玩法入口，内嵌完成继续调用权威收尾�
   page._storyTop = 500
   let arrived
   page.arrive = id => { arrived = id }
-  page.selectComponent = () => ({ continueBase: () => page.onAdvancedReady({ detail: { nodeId: 51 } }) })
+  // 真实 selectComponent 对同一个已挂载组件每次返回同一实例
+  const advancedGame = { continueBase: () => page.onAdvancedReady({ detail: { nodeId: 51 } }) }
+  page.selectComponent = () => advancedGame
   page.continueStoryGame()
   assert.equal(arrived, 51)
   assert.equal(page.data.playKit.show, false, '权威收尾后必须关闭旧玩法结果层')
@@ -512,10 +514,12 @@ test('快速打字提交等待开始请求确认，不被高级玩法在途锁�
   page.data.advancedPlay = { show: true }
   const actions = []
   let confirmStart
-  page.selectComponent = () => ({ action(name) {
+  // 真实 selectComponent 对同一个已挂载组件每次返回同一实例
+  const advancedGame = { action(name) {
     actions.push(name)
     return name === 'START_CHALLENGE' ? new Promise(resolve => { confirmStart = resolve }) : Promise.resolve(true)
-  } })
+  } }
+  page.selectComponent = () => advancedGame
   page._submitPlayKitAction('start', {})
   page._submitPlayKitAction('submit', { text: 'hello world', elapsedMs: 2000 })
   assert.deepEqual(actions, ['START_CHALLENGE'])
@@ -848,7 +852,7 @@ test('buildChapter 把英文占位章节名显示成中文「第 N 章」', () =
   const page = makePage({}, [])
   const built = page.buildChapter({ topicName: '哈哈哈', chapters: [{ name: 'Chapter 1' }] }, [])
 
-  assert.equal(built.name, '第 1 章', '英文占位要换成中文序数,且不能落回主题名')
+  assert.equal(built.name, '第 1 章', '英文占位要换成中文序数，且不能落回主题名')
   assert.equal(built.idxLabel, '', '眉标和标题重复同一个序数时不再重复')
 })
 
@@ -1102,7 +1106,7 @@ test('氛围跟着正文流走:标记之后的段落带上新基调,之前的不
   page.openChapterFull()
 
   assert.deepEqual(page.data.chapterParas.map(p => p.mood), ['', 'YELLOW', 'WHITE'],
-    '滚到哪一段就是哪一段的氛围;第一个标记之前没有基调')
+    '滚到哪一段就是哪一段的氛围；第一个标记之前没有基调')
 })
 
 test('氛围不认的预设名不往下带 —— 服务端白名单兜底，客户端也不渲染野值', () => {
@@ -1160,7 +1164,7 @@ test('反转块:对面的话按行成气泡,占一段;开章时对话框复位',
   const reveal = page.data.chapterParas.find(p => p.kind === 'reveal')
   assert.deepEqual(reveal.lines, ['你在跟谁说话?', '我一直在这儿。'])
   assert.equal(reveal.who, '王倩')
-  assert.equal(page.data.storyChat, false, '重开本章要从故事流开始读,不能直接是对话框')
+  assert.equal(page.data.storyChat, false, '重开本章要从故事流开始读，不能直接是对话框')
 })
 
 test('拍照类玩法的入口卡是相机、动作词是「打开相机」(2026-09-23 用户)', () => {
@@ -1207,7 +1211,7 @@ test('读到哪一段、开着哪个玩法记在本地;重进先重开那个玩�
   fourth.data.topicId = 5
   fourth.startGame = n => { started = n.nodeId }
   fourth.openChapterFull()
-  assert.equal(started, 61, '退出时开着的玩法,重进直接回到它')
+  assert.equal(started, 61, '退出时开着的玩法，重进直接回到它')
   // 主动关掉玩法:不再自动打开
   fourth.closePlayKit()
   started = null
@@ -1254,7 +1258,7 @@ test('开局第一道门先放「开机」,放完自己收掉;第二道门、重
   t.mock.timers.tick(600)
   assert.equal(page.data.bootStage, 'open')
   t.mock.timers.tick(1500)
-  assert.equal(page.data.bootStage, '', '放完整层卸掉,不挡开场门')
+  assert.equal(page.data.bootStage, '', '放完整层卸掉，不挡开场门')
   assert.equal(page.data.chapterGate.show, true, '开机期间开场门不被自动跳过')
   page.continueChapterGate()
   page.data.chapter = { id: 2, name: '学习', blocks: [] }
@@ -1350,7 +1354,7 @@ test('建档交上去之后出初始状态页:只列作者开了的精力/幸运
   const page = make()
   page.onComplete(51, { xp: 0, routeState: { routeMode: 'LINEAR', hp: 10, luck: 3, attributes: [{ label: '想象力', value: 1 }] } })
   assert.equal(page.data.startState.show, true)
-  assert.deepEqual(page.data.startState.rows.map(r => r.label + r.value), ['精力10', '想象力1'], '幸运没开,不列')
+  assert.deepEqual(page.data.startState.rows.map(r => r.label + r.value), ['精力10', '想象力1'], '幸运没开，不列')
   page.closeStartState()
   t.mock.timers.tick(450)
   assert.equal(page.data.startState.show, false)
@@ -1371,7 +1375,7 @@ test('内嵌玩法读到就直接铺开(不出「进入」),每站只自动开�
   inline.startGame = n => { started.push(n.nodeId) }
   inline.openChapterFull()
   const card = inline.data.chapterParas.find(p => p.kind === 'game')
-  assert.equal(card.auto, true, '铺开前那一瞬只是占位,没有「进入」')
+  assert.equal(card.auto, true, '铺开前那一瞬只是占位，没有「进入」')
   assert.deepEqual(started, [71])
   inline.openChapterFull()
   assert.deepEqual(started, [71], '同一站不重复自动开')
@@ -1392,7 +1396,7 @@ test('通关后服务端带回结局章:先当故事流读(不弹开场门、末
   page._loadLifeEnding(() => {})
   const request = requests.filter(r => r.url === '/api/play/journey/ending').at(-1)
   request.success({ code: 200, data: { code: 'ending1', title: '窗外', summary: '你推开了窗。', archive: {},
-    chapter: { id: 88, name: '窗外', blocks: [{ type: 'text', content: '你推开了窗,风很大。' }] } } })
+    chapter: { id: 88, name: '窗外', blocks: [{ type: 'text', content: '你推开了窗，风很大。' }] } } })
   await new Promise(r => setImmediate(r))   // req 是 Promise 包装,回包后等一拍
   assert.equal(page.data.chapterFull, true)
   assert.equal(page.data.chapter.ending, true)
@@ -1422,7 +1426,7 @@ test('试玩:读完最后一章先播兜底那章;卡上点另一个结局就读
     { code: 'ch2', title: '余波', cond: '其它结局都不中时', fallback: true, chapter: { id: 3, name: '余波', blocks: [{ type: 'text', content: '余波' }] } },
   ]
   page.continueChapterStory()
-  assert.equal(page.data.chapter.name, '余波', '先读兜底那章')
+  assert.equal(page.data.chapter.name, '余波', '先读保底那章')
   page.continueChapterStory()
   assert.equal(page.data.previewEnding.show, true)
   page.pickPreviewEnding({ currentTarget: { dataset: { idx: 0 } } })
@@ -1480,4 +1484,53 @@ test('正文打开时切到下一章，标题与正文一起更新，同章重�
     page.rebuild()
     assert.equal(rendered, 1, '同章定位/状态更新不能重新滚动正文')
   } finally { wx.nextTick = previousNextTick }
+})
+
+test('归零挑战呈现题组/弹球组件，章节已打开也不推进普通故事', () => {
+  const node = { nodeId: 51, name: '挑战', hasAdvanced: true };
+  for (const playKit of [{ qa: { mode: 'PICK', title: '题目', options: [] } }, { ballShake: { goal: 10, timed: false, seconds: 0 } }]) {
+    const page = makePage({ blocks: [] }, [node]);
+    page.data.advancedPlay = { show: true, node };
+    page.data.chapterFull = true;
+    page._themeChallengeNodeId = 51;
+    page._mergeStoryVars = () => { throw new Error('挑战不可推进普通路线'); };
+    let reads = 0; page.refreshThemeBackpack = () => { reads++; return Promise.resolve(true); };
+    const challenge = { instanceId: 'one', progress: 6, goal: 10, success: false };
+    page.onAdvancedSession({ detail: { sessionId: 51, nodeId: 51, ownerType: 2, version: 1, present: 'inline', readyForBase: true, playKit, challenge } });
+    assert.equal(page.data.playKit.show, true);
+    assert.equal(page.data.playKit.kit.type, playKit.qa ? 'qa' : 'ballshake');
+    assert.deepEqual(page.data.playKit.kit.challenge, challenge);
+    assert.equal(page.data.playKit.kit.challengeShared, true);
+    assert.equal(page.data.playKit.readyForBase, false);
+    assert.equal(reads, 1);
+  }
+});
+
+test('挑战失败只显示服务端许可的明确重试；次数用完仍不自动重开', () => {
+  for (const disabledReason of [null,'CHALLENGE_LIMIT']) {
+    const node={nodeId:51,name:'挑战'};const page=makePage({blocks:[]},[node]);
+    page.data.advancedPlay={show:true,node};page._themeChallengeNodeId=51;page.refreshThemeBackpack=()=>Promise.resolve(true);
+    let starts=0;page.selectComponent=()=>({start(){starts++;}});
+    page.onAdvancedSession({detail:{nodeId:51,sessionId:51,ownerType:2,status:'FAILED',canRetry:!disabledReason,version:1,challenge:{instanceId:'one',progress:6,goal:10,retry:true,disabledReason},playKit:{ballShake:{goal:10,timed:true,seconds:12}}}});
+    assert.equal(starts,0);
+    assert.equal(page.data.playKit.kit.terminal,true);
+    assert.equal(page.data.playKit.kit.canRetry,!disabledReason);
+    assert.equal(page.data.playKit.readyForBase,false);
+  }
+});
+
+// #18:图片/音频块的 altText 要带进条目并做无障碍呈现 —— 图片 aria-label,音频可见且读屏可读的文字稿。
+test('媒体块 altText 带进章节条目:图片做 aria-label,音频给出可见文字稿', () => {
+  const page = makePage({ blocks: [
+    { type: 'image', url: 'https://cdn.example/a.jpg', altText: ' 桥洞下的旧船 ' },
+    { type: 'audio', url: 'https://cdn.example/b.mp3', altText: '“别回头。”' },
+    { type: 'image', url: 'https://cdn.example/c.jpg' },
+  ] }, [])
+  page.openChapterFull()
+  const media = page.data.chapterParas.filter(p => p.kind === 'image' || p.kind === 'audio')
+  assert.deepEqual(media.map(p => [p.kind, p.altText]), [['image', '桥洞下的旧船'], ['audio', '“别回头。”'], ['image', '']])
+  assert.equal(media.some(p => p.text), false, 'altText 不能当正文打出来')
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /class="chfull__img"[^>]*aria-label="\{\{item\.altText \|\| '章节配图'\}\}"/)
+  assert.match(wxml, /<text wx:if="\{\{item\.altText\}\}" class="chfull__audio-transcript"[^>]*aria-label="音频文字稿：\{\{item\.altText\}\}">文字稿：\{\{item\.altText\}\}<\/text>/)
 })

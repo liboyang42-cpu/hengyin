@@ -194,7 +194,7 @@ class ClubRegistrationRosterSessionLabelTest {
     }
 
     private Date assemblyTime(int month, int day, int hour, int minute) {
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
         cal.set(2026, month - 1, day, hour, minute, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();

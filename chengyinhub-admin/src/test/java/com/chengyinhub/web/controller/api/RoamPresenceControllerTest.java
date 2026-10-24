@@ -15,9 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,12 +30,23 @@ import static org.mockito.Mockito.when;
 class RoamPresenceControllerTest {
 
     private static class StubController extends ApiRoamController {
+        final List<Runnable> auditTasks = new ArrayList<>();
+        boolean rejectAudit;
+        final com.chengyinhub.business.service.impl.RoamPresenceRevokeAuditService revokeAudits =
+                mock(com.chengyinhub.business.service.impl.RoamPresenceRevokeAuditService.class);
         @Override Long uid() { return 9L; }
+        @Override protected void enqueuePresenceAudit(Long memberId, Runnable audit) {
+            if (rejectAudit) throw new java.util.concurrent.RejectedExecutionException("fixture scheduler shutdown");
+            auditTasks.add(audit);
+        }
     }
 
     private StubController controller(RoamMapper mapper) {
         StubController c = new StubController();
         ReflectionTestUtils.setField(c, "roamMapper", mapper);
+        ReflectionTestUtils.setField(c,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
+        ReflectionTestUtils.setField(c, "presenceRevokeAuditService", c.revokeAudits);
+        ReflectionTestUtils.setField(c, "alarmService", mock(com.chengyinhub.business.service.impl.AlarmService.class));
         return c;
     }
 
@@ -80,6 +89,67 @@ class RoamPresenceControllerTest {
     }
 
     @Test
+    void presence_refuses_teleporting_coordinates_so_reports_cannot_scan_the_city() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        com.chengyinhub.business.domain.RoamSession last = new com.chengyinhub.business.domain.RoamSession();
+        last.setLastLat(new BigDecimal("31.230"));
+        last.setLastLng(new BigDecimal("121.474"));
+        last.setLastReportAt(new Date(System.currentTimeMillis() - 30_000L));
+        when(mapper.selectLatestPresenceFix(eq(9L), eq(77L), any(Date.class))).thenReturn(last);
+        when(mapper.updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt())).thenReturn(1);
+        StubController c = controller(mapper);
+
+        // 30 秒前在上海,现在报北京:拒绝,不落库
+        assertEquals(500, c.presence("77", 39.90, 116.40, 0).get("code"));
+        verify(mapper, never()).updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt());
+        // 正常步行距离照常更新
+        assertEquals(200, c.presence("77", 31.2305, 121.4745, 0).get("code"));
+        verify(mapper).updatePresence(anyLong(), anyLong(), any(), any(), any(Date.class), anyInt());
+    }
+
+    /**
+     * PR10 复审:上一场会话 30 秒前在上海结束,新会话第一跳在北京(真实场景是下车后隔了一段时间才重开)——
+     * 基线按会话取,新会话没有基线就放行;同一新会话里再瞬移回上海仍然拒绝。
+     */
+    @Test
+    void presence_baseline_is_per_session_so_a_new_session_starts_fresh_but_in_session_jumps_are_refused() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        com.chengyinhub.business.domain.RoamSession previousSession = new com.chengyinhub.business.domain.RoamSession();
+        previousSession.setLastLat(new BigDecimal("31.230"));
+        previousSession.setLastLng(new BigDecimal("121.474"));
+        previousSession.setLastReportAt(new Date(System.currentTimeMillis() - 30_000L));
+        when(mapper.selectLatestPresenceFix(eq(9L), eq(77L), any(Date.class))).thenReturn(previousSession);
+        when(mapper.updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt())).thenReturn(1);
+        StubController c = controller(mapper);
+
+        // 新会话 78 没有基线:在北京开始漫游被接受
+        assertEquals(200, c.presence("78", 39.90, 116.40, 0).get("code"));
+        verify(mapper).selectLatestPresenceFix(eq(9L), eq(78L), any(Date.class));
+
+        // 会话 78 现在有了北京的基线,同场 30 秒后报上海 = 瞬移,拒绝
+        com.chengyinhub.business.domain.RoamSession beijing = new com.chengyinhub.business.domain.RoamSession();
+        beijing.setLastLat(new BigDecimal("39.900"));
+        beijing.setLastLng(new BigDecimal("116.400"));
+        beijing.setLastReportAt(new Date(System.currentTimeMillis() - 30_000L));
+        when(mapper.selectLatestPresenceFix(eq(9L), eq(78L), any(Date.class))).thenReturn(beijing);
+        assertEquals(500, c.presence("78", 31.23, 121.47, 0).get("code"));
+        verify(mapper, org.mockito.Mockito.times(1)).updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt());
+    }
+
+    @Test
+    void enablingSharingRequiresCurrentRoamLocationAgreement() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        StubController c = controller(mapper);
+        com.chengyinhub.business.service.impl.RoamLocationConsentService location =
+                (com.chengyinhub.business.service.impl.RoamLocationConsentService) ReflectionTestUtils.getField(c, "locationConsent");
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.ServiceException("请先明确同意漫游定位"))
+                .when(location).requireCurrentAgreement(9L);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> c.changePresenceVisibility("77", true, "roam-presence-v1"));
+        verify(mapper, never()).updatePresenceVisibility(any(), anyLong(), eq(true));
+    }
+
+    @Test
     void presence_reports_the_same_refusal_whether_the_session_is_someone_elses_or_already_finished() {
         RoamMapper mapper = mock(RoamMapper.class);
         // where 里带 member_id 与 status=0 ⇒ 别人的、已结算的都命中 0 行
@@ -91,9 +161,136 @@ class RoamPresenceControllerTest {
         assertEquals("会话不存在", r.get("msg"));
     }
 
+    private void activeSharing(RoamMapper mapper) {
+        com.chengyinhub.business.domain.RoamSession own = new com.chengyinhub.business.domain.RoamSession();
+        own.setMemberId(9L);
+        own.setStatus(0);
+        own.setPresenceVisible(true);
+        own.setLastLat(new BigDecimal("31.230"));
+        own.setLastLng(new BigDecimal("121.474"));
+        when(mapper.selectActivePresence(eq(9L), any(Date.class))).thenReturn(own);
+    }
+
+    @Test
+    void privateOrInactiveCallerCannotReadOthers() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        AjaxResult result = controller(mapper).nearbyRunners(31.23, 121.47, 3000);
+        assertEquals(200, result.get("code"));
+        assertTrue(((List<?>) result.get("data")).isEmpty());
+        verify(mapper, never()).selectNearbyRunners(anyLong(), any(), any(), anyInt(), any(), any(), anyInt());
+    }
+
+    @Test
+    void requestedCoordinatesCannotMoveTheQueryAwayFromStoredOwnPosition() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        activeSharing(mapper);
+        controller(mapper).nearbyRunners(1.0, 2.0, 3000);
+        verify(mapper).selectNearbyRunners(eq(9L), eq(31.230), eq(121.474), eq(3000),
+                any(Date.class), any(Date.class), anyInt());
+    }
+
+    @Test
+    void enablingRequiresSeparateConsentAndOwnedActiveSession() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        StubController c = controller(mapper);
+        assertEquals(500, c.changePresenceVisibility("77", true, "").get("code"));
+        assertEquals(500, c.changePresenceVisibility("77", true, "roam-presence-v1").get("code"));
+        verify(mapper, never()).updatePresenceVisibility(any(), anyLong(), anyBoolean());
+    }
+
+    @Test
+    void sharingCanOpenOnlyAfterSeparateConsentActuallyPersists() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        com.chengyinhub.business.service.IConsentRecordService consents = mock(com.chengyinhub.business.service.IConsentRecordService.class);
+        com.chengyinhub.business.domain.RoamSession own = new com.chengyinhub.business.domain.RoamSession();
+        own.setId(77L); own.setMemberId(9L); own.setStatus(0);
+        when(mapper.selectOwnedSessionForUpdate(77L, 9L)).thenReturn(own);
+        StubController controller = controller(mapper);
+        ReflectionTestUtils.setField(controller, "consentRecordService", consents);
+        when(consents.record(anyLong(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(0);
+        assertThrows(IllegalStateException.class, () -> controller.changePresenceVisibility("77", true, "roam-presence-v1"));
+        verify(mapper, never()).updatePresenceVisibility(any(), anyLong(), eq(true));
+        when(consents.record(anyLong(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(1);
+        when(mapper.updatePresenceVisibility(77L, 9L, true)).thenReturn(1);
+        assertEquals(true, controller.changePresenceVisibility("77", true, "roam-presence-v1").get("data"));
+        verify(mapper).updatePresenceVisibility(77L, 9L, true);
+    }
+
+    @Test
+    void revokeAuditStartsAfterCloseCommitAndItsFailuresCannotReopenSharing() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        java.util.concurrent.atomic.AtomicBoolean sharing = new java.util.concurrent.atomic.AtomicBoolean(true);
+        when(mapper.updatePresenceVisibility(isNull(), eq(9L), eq(false))).thenAnswer(call -> { sharing.set(false); return 1; });
+        StubController controller = controller(mapper);
+        when(controller.revokeAudits.deliver(anyString())).thenReturn(false);
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        try {
+            AjaxResult closed = controller.changePresenceVisibility(null, false, null);
+            assertFalse(sharing.get());
+            assertEquals("PENDING", closed.get("auditStatus"));
+            ArgumentCaptor<String> request = ArgumentCaptor.forClass(String.class);
+            verify(controller.revokeAudits).remember(eq(9L), request.capture(), any(Date.class));
+            verify(controller.revokeAudits, never()).deliver(anyString());
+            assertTrue(controller.auditTasks.isEmpty());
+            for (org.springframework.transaction.support.TransactionSynchronization callback :
+                    org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations()) {
+                assertDoesNotThrow(callback::afterCommit);
+            }
+            assertEquals(1, controller.auditTasks.size());
+            assertDoesNotThrow(controller.auditTasks.get(0)::run);
+            verify(controller.revokeAudits).deliver(request.getValue());
+            assertEquals("PENDING", closed.get("auditStatus"));
+            assertFalse(sharing.get());
+            verify(mapper, never()).updatePresenceVisibility(any(), anyLong(), eq(true));
+        } finally { org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization(); }
+    }
+
+    @Test
+    void rejectedAuditSchedulingDoesNotThrowFromCommitOrReopenSharingAndRaisesAlarm() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        StubController controller = controller(mapper);
+        controller.rejectAudit = true;
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        try {
+            AjaxResult closed = controller.changePresenceVisibility(null, false, null);
+            assertEquals(false, closed.get("data"));
+            verify(mapper).updatePresenceVisibility(isNull(), eq(9L), eq(false));
+            for (org.springframework.transaction.support.TransactionSynchronization callback :
+                    org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations())
+                assertDoesNotThrow(callback::afterCommit);
+            assertEquals("PENDING", closed.get("auditStatus"));
+            assertTrue(controller.auditTasks.isEmpty());
+            verify(mapper, never()).updatePresenceVisibility(any(), anyLong(), eq(true));
+            verify((com.chengyinhub.business.service.impl.AlarmService) ReflectionTestUtils.getField(controller, "alarmService"))
+                    .alarm(eq("位置分享撤回记录失败"), anyString());
+        } finally { org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization(); }
+    }
+
+    @Test
+    void closingClearsAllOwnSessionsAndHeartbeatCannotRestoreSharing() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        com.chengyinhub.business.service.IConsentRecordService consents =
+                mock(com.chengyinhub.business.service.IConsentRecordService.class);
+        StubController c = controller(mapper);
+        ReflectionTestUtils.setField(c, "consentRecordService", consents);
+        when(consents.record(anyLong(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(1);
+        AjaxResult closed = c.changePresenceVisibility(null, false, null);
+        assertEquals(false, closed.get("data"));
+        assertEquals("PENDING", closed.get("auditStatus"));
+        c.auditTasks.get(0).run();
+        assertEquals("PENDING", closed.get("auditStatus"), "async audit must not mutate the returned response");
+        verify(mapper).updatePresenceVisibility(isNull(), eq(9L), eq(false));
+        when(mapper.updatePresence(anyLong(), anyLong(), any(), any(), any(), anyInt())).thenReturn(1);
+        c.presence("77", 31.23, 121.47, 12);
+        verify(mapper, never()).updatePresenceVisibility(any(), anyLong(), eq(true));
+        verify(c.revokeAudits).remember(eq(9L), anyString(), any(Date.class));
+        verify(c.revokeAudits).deliver(anyString());
+    }
+
     @Test
     void nearby_runners_returns_only_the_six_agreed_fields_and_never_an_identity_leak() {
         RoamMapper mapper = mock(RoamMapper.class);
+        activeSharing(mapper);
         NearbyRunnerVO v = new NearbyRunnerVO();
         v.setMemberId(12L);
         v.setNickname("小鱼");
@@ -113,6 +310,8 @@ class RoamPresenceControllerTest {
         assertEquals(1, rows.size());
         Map<String, Object> row = rows.get(0);
         assertEquals(12L, row.get("memberId"));
+        assertEquals(new BigDecimal("31.23"), row.get("lat"));
+        assertEquals(new BigDecimal("121.47"), row.get("lng"));
         assertEquals("小鱼", row.get("nickname"));
         assertEquals(9, row.get("explorePct"));
         assertEquals(12, row.get("shops"));
@@ -130,6 +329,7 @@ class RoamPresenceControllerTest {
         when(mapper.selectNearbyRunners(anyLong(), any(), any(), anyInt(), any(), any(), anyInt()))
                 .thenReturn(new ArrayList<NearbyRunnerVO>());
         StubController c = controller(mapper);
+        activeSharing(mapper);
 
         c.nearbyRunners(31.23, 121.47, 999999);
         ArgumentCaptor<Integer> radius = ArgumentCaptor.forClass(Integer.class);

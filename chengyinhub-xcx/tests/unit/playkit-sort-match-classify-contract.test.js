@@ -87,10 +87,10 @@ test('★属性契约:三个组件声明的每个属性都从分发器的 kit.* 
     const tag = new RegExp('<cy-playkit-' + type + '[\\s\\S]*?/>').exec(wxml)
     assert.ok(tag, type + ' 没在分发器里注册 —— 服务端下发了也没有一屏会出现')
     const props = Object.keys(loadComponent(rel).properties || {})
-    assert.ok(props.length >= 4, type + ' 只声明了 ' + props.length + ' 个属性,扫描器多半坏了')
+    assert.ok(props.length >= 4, type + ' 只声明了 ' + props.length + ' 个属性，扫描器多半坏了')
     const notFed = props.filter((p) => !NOT_FED.has(p) && !tag[0].includes('kit.' + p))
     assert.deepEqual(notFed, [],
-      type + ' 的这些属性没人喂,真机上恒为默认值:' + notFed.join(', '))
+      type + ' 的这些属性没人喂，真机上恒为默认值:' + notFed.join(', '))
   }
 })
 
@@ -100,7 +100,7 @@ test('★属性契约:绑的 kit.X 必须真由 pickPlayKit 产出 —— 空键
     const kit = pickPlayKit({ sessionId: 's1', version: 1, playKit: { [type]: { prompt: 't' } } })
     assert.ok(kit && kit.type === type, type + ' 段还不出 kit')
     const bound = [...tag.matchAll(/\{\{kit\.([A-Za-z0-9_]+)/g)].map((m) => m[1])
-    assert.ok(bound.length >= 4, type + ' 在分发器里没绑几个属性,正则或接线坏了')
+    assert.ok(bound.length >= 4, type + ' 在分发器里没绑几个属性，正则或接线坏了')
     const missing = bound.filter((key) => !(key in kit))
     assert.deepEqual(missing, [], type + ' 绑了没人产出的属性:' + missing.join(', '))
   }
@@ -129,9 +129,11 @@ test('排序:题面照服务端顺序铺开,提交报的是一整列 order', () 
     { id: 's3', label: '请求更正展签「从未存在」' },
   ]
   def.observers['show, items'].call(inst, true, items)
-  assert.deepEqual(plain(inst.data.rows.map((r) => r.id)), ['s2', 's1', 's3'], '题面顺序照服务端给,不许客户端再排')
+  assert.deepEqual(plain(inst.data.rows.map((r) => r.id)), ['s2', 's1', 's3'], '题面顺序照服务端给，不许客户端再排')
 
-  inst.onDown({ currentTarget: { dataset: { i: 0 } } })
+  // 2026-10-23 排序重做:上移/下移按钮换成点选对调(先点一行再点另一行),读屏同样走得通
+  inst.onTapRow({ currentTarget: { dataset: { i: 0 } } })
+  inst.onTapRow({ currentTarget: { dataset: { i: 1 } } })
   assert.deepEqual(plain(inst.data.rows.map((r) => r.id)), ['s1', 's2', 's3'], '下移一位')
   inst.onSubmit()
   assert.deepEqual(plain(events[0]), { name: 'submit', detail: { order: ['s1', 's2', 's3'] } })
@@ -162,7 +164,7 @@ test('★连线:没连满按钮拦得住;连满才发 [左,右] 对列表', () =
 
   assert.equal(inst.data.total, 2)
   inst.onSubmit()
-  assert.deepEqual(events, [], '一条都没连就点提交,按钮必须是死的')
+  assert.deepEqual(events, [], '一条都没连就点提交，按钮必须是死的')
 
   inst.onTapLeft({ currentTarget: { dataset: { id: 'l1' } } })
   assert.equal(inst.data.selected, 'l1')
@@ -171,7 +173,7 @@ test('★连线:没连满按钮拦得住;连满才发 [左,右] 对列表', () =
   assert.equal(inst.data.leftRows[0].badge, 1)
   assert.equal(inst.data.rightRows[1].badge, 1, '同一个序号出现在左右两张卡上')
   inst.onSubmit()
-  assert.deepEqual(events, [], '还差一条,仍然不许提交')
+  assert.deepEqual(events, [], '还差一条，仍然不许提交')
 
   inst.onTapLeft({ currentTarget: { dataset: { id: 'l2' } } })
   inst.onTapRight({ currentTarget: { dataset: { id: 'r1' } } })
@@ -197,12 +199,12 @@ test('★分类:没分完按钮拦得住 + 还差几条说得出来;分满才发
   assert.equal(inst.data.placed, 0)
 
   inst.onSubmit()
-  assert.deepEqual(events, [], '一条都没分就点提交,按钮必须是死的')
+  assert.deepEqual(events, [], '一条都没分就点提交，按钮必须是死的')
 
   inst.onPickBin({ currentTarget: { dataset: { i: 0, b: 'b1' } } })
   assert.equal(inst.data.placed, 1)
   inst.onSubmit()
-  assert.deepEqual(events, [], '还差一条,仍然不许提交')
+  assert.deepEqual(events, [], '还差一条，仍然不许提交')
 
   inst.onPickBin({ currentTarget: { dataset: { i: 1, b: 'b2' } } })
   assert.equal(inst.data.placed, 2)
@@ -217,12 +219,12 @@ test('★分类:没分完按钮拦得住 + 还差几条说得出来;分满才发
 test('★qa 多选:勾多个再提交,发的是 optionIds 全集', () => {
   const { def, inst, events } = mount('pages/play/components/playkit-qa/index.js')
   inst.data.mode = 'pick'
-  def.observers['show, options, mode, multi, passed, finished'].call(inst, true,
+  def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages'].call(inst, true,
     [{ id: 'a', t: '冷萃' }, { id: 'b', t: '拿铁' }, { id: 'c', t: '冰滴' }], 'pick', true, false, false)
   inst.data.multi = true
 
   inst.onPick({ currentTarget: { dataset: { i: 0 } } })
-  assert.deepEqual(events, [], '多选点一下只是勾上,不许立刻提交')
+  assert.deepEqual(events, [], '多选点一下只是勾上，不许立刻提交')
   inst.onPick({ currentTarget: { dataset: { i: 2 } } })
   assert.equal(inst.data.ctaDisabled, false)
   inst.onPick({ currentTarget: { dataset: { i: 2 } } })
@@ -237,7 +239,7 @@ test('★qa 多选:勾多个再提交,发的是 optionIds 全集', () => {
 test('★qa 单选一字不变:点选项即提交,仍然是单个 optionId', () => {
   const { def, inst, events } = mount('pages/play/components/playkit-qa/index.js')
   inst.data.mode = 'pick'
-  def.observers['show, options, mode, multi, passed, finished'].call(inst, true,
+  def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages'].call(inst, true,
     [{ id: 'a', t: '冷萃' }, { id: 'b', t: '拿铁' }], 'pick', false, false, false)
   inst.data.multi = false
   inst.onPick({ currentTarget: { dataset: { i: 1 } } })
@@ -249,8 +251,8 @@ test('★回执只有整体对错:判错不逐行标红,只出整体提示条(�
   for (const { type, rel } of SHELLS) {
     const src = fs.readFileSync(path.join(ROOT, path.dirname(rel), 'index.wxml'), 'utf8')
     assert.ok(!/is-wrong|is-bad/.test(src),
-      type + ' 判错时逐行标红了 —— 服务端不给逐项对错,整列红等于假装知道错在哪一条')
-    assert.ok(/verdict/.test(src), type + ' 连整体提示条都没有,玩家人不知道过没过')
+      type + ' 判错时逐行标红了 —— 服务端不给逐项对错，整列红等于假装知道错在哪一条')
+    assert.ok(/verdict/.test(src), type + ' 连整体提示条都没有，玩家人不知道过没过')
 
     // 判定来自「判过 + 整体通过」这两个回执字段,组件自己不判对错
     const js = fs.readFileSync(path.join(ROOT, rel), 'utf8')
@@ -272,5 +274,5 @@ test('★qa 多选回执:多选标记 / 判过没 / 服务端反馈三件都从 
   })
   assert.equal(kit.multi, true)
   assert.equal(kit.attempts, 1)
-  assert.equal(kit.feedback, '冷萃是冷的。', '服务端把所选项的反馈拼成一段,直接显示')
+  assert.equal(kit.feedback, '冷萃是冷的。', '服务端把所选项的反馈拼成一段，直接显示')
 })

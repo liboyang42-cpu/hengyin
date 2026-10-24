@@ -13,13 +13,13 @@
       kind="no-permission"
       fill
       title="当前账号不能编辑承接设置"
-      sub="请切换到已审核通过的商家账号后再试。"
+      sub="请切换到已审核的商家账号"
       cta="返回"
       bind:cta="onNavBack"
     />
   </view>
   <view class="cs-state cy-fade-in" wx:elif="{{loadState === 'error'}}">
-    <cy-error
+    <cy-error load-failure
       size="lg"
       style="display: flex; flex-direction: column; flex: 1; min-height: 0"
       icon="/images/no_data.svg"
@@ -37,7 +37,7 @@
       kind="empty"
       fill
       title="暂时无法编辑承接设置"
-      sub="这个账号还没有店铺，先完成商家入驻拿到店铺，再回来设置承接能力。"
+      sub="完成商家入驻后可用"
       cta="去商家入驻"
       bind:cta="goApply"
     />

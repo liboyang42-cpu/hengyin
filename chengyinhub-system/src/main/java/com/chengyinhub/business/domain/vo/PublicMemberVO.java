@@ -47,6 +47,7 @@ public class PublicMemberVO {
     private Integer topicNum;
     private Integer activityNum;
     private Integer followNum;
+    private Integer friendNum;
     private Integer fansNum;
     private Integer likeNum;
     /**
@@ -158,6 +159,10 @@ public class PublicMemberVO {
     public void setFollowNum(Integer followNum) {
         this.followNum = followNum;
     }
+
+    public Integer getFriendNum() { return friendNum; }
+
+    public void setFriendNum(Integer friendNum) { this.friendNum = friendNum; }
 
     public Integer getFansNum() {
         return fansNum;

@@ -13,6 +13,7 @@ import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.ICmsTemplateLibraryService;
 import com.chengyinhub.business.service.ICouponRewardAuthorizationService;
 import com.chengyinhub.business.service.ITemplatePublishService;
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.util.JourneyReviewTexts;
@@ -52,6 +53,10 @@ import com.chengyinhub.common.enums.LimitType;
 @RequestMapping("/api/template")
 public class ApiTemplateController extends BaseController {
 
+    /** O5b-5:发布时标题相似度提示(WARN,不拦)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.TemplateTitleSimilarityService templateTitleSimilarityService;
+
     @Autowired
     private ITemplatePublishService templatePublishService;
 
@@ -60,6 +65,9 @@ public class ApiTemplateController extends BaseController {
 
     @Autowired
     private ICmsTemplateLibraryService templateLibraryService;
+
+    @Autowired
+    private com.chengyinhub.business.service.IAuditTaskService auditTaskService;
 
     @Autowired
     private ISysCategoryService sysCategoryService;
@@ -119,7 +127,13 @@ public class ApiTemplateController extends BaseController {
             Long id = templatePublishService.publishTemplateWithTransaction(request, member_id, username);
             if (id > 0) {
                 submitTemplateMediaCheck(id, request, member_id);
-                return success(id);
+                AjaxResult ok = success(id);
+                // O5b-5(开关默认关):标题与广场在架模板高度相似只提示,不拦;无提示时不带 warnings,响应形状不变。
+                java.util.List<com.chengyinhub.business.service.support.TopicPublishCheckService.PublishCheckIssue> warnings =
+                        templateTitleSimilarityService == null ? null
+                                : templateTitleSimilarityService.check(request.getTitle(), member_id);
+                if (warnings != null && !warnings.isEmpty()) ok.put("warnings", warnings);
+                return ok;
             } else {
                 return error("发布失败");
             }
@@ -165,6 +179,17 @@ public class ApiTemplateController extends BaseController {
             logger.error("保存草稿失败：", e);
             return error("保存草稿失败，请稍后重试");
         }
+    }
+
+    @Operation(summary = "采用来源模板为草稿")
+    @Log(title = "采用模板草稿", businessType = BusinessType.INSERT)
+    @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
+    @PostMapping("/adopt-draft")
+    public AjaxResult adoptDraft(@RequestBody CmsTemplatePublishRequest request) {
+        if (request == null) return error("请指定来源模板");
+        // 独立入口使旧后端明确拒绝，而非忽略新字段后误存不完整草稿。
+        request.setAdoptSourceOnly(true);
+        return draft(request);
     }
 
     @Operation(summary = "提交模板广场审核")
@@ -252,16 +277,13 @@ public class ApiTemplateController extends BaseController {
 
             // 内容安全(X02):上架 = 重新对所有用户可见,必须复检一次。
             // 下架不检 —— 把违规内容撤下来的动作不该被内容安全拦住。
-            if (publishStatus == 1) {
-                String secMsg = libraryRecordTextSecurity(memberTemplateId, memberId);
-                if (secMsg != null) {
-                    return error(secMsg);
-                }
-            }
+            TemplateLibraryRepublishReview review = publishStatus == 1
+                    ? libraryRecordTextSecurity(memberTemplateId, memberId) : null;
 
-            // 调用事务方法更新状态
-            boolean result = templatePublishService.updateTemplateLibraryStatus(
-                    memberTemplateId, publishStatus, memberId);
+            // 网络复检在锁外完成；事务内绑定完整被检内容后才允许写入。
+            boolean result = publishStatus == 1
+                    ? templatePublishService.updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId, review)
+                    : templatePublishService.updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId);
 
             String statusText = publishStatus == 1 ? "上架" : "下架";
             if (result) {
@@ -358,8 +380,10 @@ public class ApiTemplateController extends BaseController {
         }
         // R12:节点块配置叙事段(enter/outcome/deliver/unlock/revisit/brief/route/check)是创作者可写
         // 文本,与上面各字段同一道内容安全闸;命中时提示里带字段名。
-        return JourneyReviewTexts.check(wxContentSecurityService, openid,
-                JourneyReviewTexts.collectBlocks(request.getAdvancedConfigJson()));
+        // F-L5C-13:提示、揭晓、故事、拍照要求与奖励文案同样是玩家可见文字,按字段分批送检。
+        java.util.List<JourneyReviewTexts.Entry> texts = JourneyReviewTexts.collectTemplateFields(request);
+        texts.addAll(JourneyReviewTexts.collectBlocks(request.getAdvancedConfigJson()));
+        return JourneyReviewTexts.check(wxContentSecurityService, openid, texts);
     }
 
     /** 模板封面与勋章图异步送检(X02):违规经 /api/content-sec/callback 自动下架。 */
@@ -388,35 +412,47 @@ public class ApiTemplateController extends BaseController {
     }
 
 
-    /**
-     * 上架前复检模板库记录的文本(X02)。
-     *
-     * <p>与 {@link #templateTextSecurity} 分开:那条检的是提交上来的 request,
-     * 这条检的是库里已有的记录 —— 上架动作不带正文,必须先读回来。
-     * 读不到记录时返回 null 放行,归属校验由 service 层负责,不在这里替它判。
-     */
-    private String libraryRecordTextSecurity(Long memberTemplateId, Long memberId) {
-        CmsTemplateLibrary record;
+    /** 上架前按我的模板与归属复检全部有效玩法库投影；读取失败不允许跳过审核。 */
+    private TemplateLibraryRepublishReview libraryRecordTextSecurity(Long memberTemplateId, Long memberId) {
+        final String unavailable = "上架复检暂不可用，请刷新后重试";
+        if (memberTemplateId == null || memberTemplateId <= 0 || memberId == null || memberId <= 0) {
+            throw new ServiceException(unavailable, 500);
+        }
+        CmsTemplateLibrary query = new CmsTemplateLibrary();
+        query.setMemberTemplateId(memberTemplateId);
+        query.setMemberId(memberId);
+        query.setDelFlag(0);
+        List<CmsTemplateLibrary> records;
         try {
-            record = templateLibraryService.selectCmsTemplateLibraryById(memberTemplateId);
+            records = templateLibraryService.selectCmsTemplateLibraryList(query);
         } catch (Exception e) {
-            logger.warn("上架复检读取模板库记录失败 id={}", memberTemplateId, e);
-            return null;
+            logger.warn("上架复检读取模板库投影失败 memberTemplateId={}", memberTemplateId, e);
+            throw new ServiceException(unavailable, 500);
         }
-        if (record == null) {
-            return null;
+        if (records == null || records.isEmpty()) {
+            throw new ServiceException(unavailable, 500);
         }
-        String content = IWxContentSecurityService.joinText(record.getTitle(), record.getDescription());
+        // 固化完整内容及坐标；送检只读取不可变文本，不能再读取可变领域对象。
+        TemplateLibraryRepublishReview review = TemplateLibraryRepublishReview.freeze(
+                memberTemplateId, memberId, records);
         String openid = openidOfMember(memberId);
-        if (!StringUtils.isEmpty(content)) {
-            String secMsg = wxContentSecurityService.checkText(content, openid);
+        for (TemplateLibraryRepublishReview.ReviewedText record : review.getReviewedTexts()) {
+            String content = IWxContentSecurityService.joinText(
+                    record.getFreeTextFields().toArray(new String[0]));
+            if (!StringUtils.isEmpty(content)) {
+                String secMsg = wxContentSecurityService.checkText(content, openid);
+                if (secMsg != null) {
+                    throw new ServiceException(secMsg, 500);
+                }
+            }
+            // R12:上架复检同样覆盖块配置叙事段。
+            String secMsg = JourneyReviewTexts.check(wxContentSecurityService, openid,
+                    JourneyReviewTexts.collectBlocks(record.getAdvancedConfigJson()));
             if (secMsg != null) {
-                return secMsg;
+                throw new ServiceException(secMsg, 500);
             }
         }
-        // R12:上架复检同样覆盖块配置叙事段 —— 记录里已同步 advancedConfigJson,别只检标题/描述。
-        return JourneyReviewTexts.check(wxContentSecurityService, openid,
-                JourneyReviewTexts.collectBlocks(record.getAdvancedConfigJson()));
+        return review;
     }
 
     private String openidOfMember(Long memberId) {
@@ -604,12 +640,75 @@ public class ApiTemplateController extends BaseController {
     }
 
 
+    @Operation(summary = "举报模板广场记录(进统一审核队列,不立即下架;同一人同一轮只记一次)")
+    @PostMapping("/report")
+    @Parameters({
+            @Parameter(name = "id", description = "公共模版id"),
+            @Parameter(name = "reason", description = "举报原因")
+    })
+    public AjaxResult libraryReport(String id, String reason) {
+        Long libraryId = Convert.toLong(id, 0L);
+        if (libraryId <= 0) return error("参数不合规");
+        Long reporterId = currentReporter();
+        if (reporterId == null) return error("请先登录");
+        // 与 /info 同一公开谓词:不公开的记录对外「不存在」,也不能借举报建单。
+        CmsTemplateLibrary row = templateLibraryService.selectCmsTemplateLibraryById(libraryId);
+        if (row == null || !Integer.valueOf(0).equals(row.getDelFlag())
+                || !Long.valueOf(1L).equals(row.getStatus()) || !Long.valueOf(1L).equals(row.getPublishStatus())) {
+            return error("模版不存在");
+        }
+        return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, libraryId, reporterId, reason);
+    }
+
+    @Operation(summary = "举报公开的个人玩法(进统一审核队列,不立即下架;同一人同一轮只记一次)")
+    @PostMapping("/personal-report")
+    @Parameters({
+            @Parameter(name = "id", description = "个人玩法id"),
+            @Parameter(name = "reason", description = "举报原因")
+    })
+    public AjaxResult personalTemplateReport(String id, String reason) {
+        Long templateId = Convert.toLong(id, 0L);
+        if (templateId <= 0) return error("参数不合规");
+        Long reporterId = currentReporter();
+        if (reporterId == null) return error("请先登录");
+        // 与 /myinfo 非本人可读的同一谓词:已审核、已上架、非草稿。
+        CmsMemberTemplate template = memberTemplateService.selectCmsMemberTemplateById(templateId);
+        if (template == null || !Integer.valueOf(0).equals(template.getDelFlag())
+                || !Integer.valueOf(1).equals(template.getDraftStatus())
+                || !Long.valueOf(1L).equals(template.getStatus()) || !Long.valueOf(1L).equals(template.getPublishStatus())) {
+            return error("模版不存在");
+        }
+        return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE, templateId, reporterId, reason);
+    }
+
+    private Long currentReporter() {
+        try {
+            Long memberId = getAppUserId();
+            return memberId != null && memberId > 0 ? memberId : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private AjaxResult submitReport(String bizType, Long bizId, Long reporterId, String reason) {
+        try {
+            boolean recorded = auditTaskService.reportContentOnce(bizType, bizId, reporterId, reason);
+            return success(recorded ? "举报已提交，内容将进入审核" : "你已举报过该模版，我们会尽快处理");
+        } catch (IllegalArgumentException | ServiceException e) {
+            return error(e.getMessage());
+        } catch (Exception e) {
+            logger.error("模版举报失败 bizType={} bizId={}", bizType, bizId, e);
+            return error("举报失败");
+        }
+    }
+
     @Operation(summary = "我的模版详情")
     @PostMapping("/myinfo")
     @Parameters({
             @Parameter(name = "id", description = "公共模版id")
     })
-    public AjaxResult myInfo(String id) {
+    public AjaxResult myInfo(@RequestParam(name = "id", required = false) String id,
+                             @RequestParam(name = "scope", required = false) String scope) {
         CmsMemberTemplate cmsMemberTemplate = new CmsMemberTemplate();
         Long templateId = Convert.toLong(id, 0L);
 
@@ -619,14 +718,26 @@ public class ApiTemplateController extends BaseController {
             return error("参数不合规");
         }
 
+        Long viewerId = getAppUserId();
+        if (viewerId == null || viewerId <= 0) return error("请先登录");
+        Long ownerId;
+        try {
+            ownerId = resolveTemplateOwner(viewerId, scope);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
         cmsMemberTemplate = memberTemplateService.selectCmsMemberTemplateById(templateId);
         if (cmsMemberTemplate == null) {
             return error("模版不存在");
         } else {
-            Long viewerId = getAppUserId();
-            boolean isOwner = viewerId != null && viewerId.equals(cmsMemberTemplate.getMemberId());
+            boolean isOwner = ownerId != null && ownerId.equals(cmsMemberTemplate.getMemberId());
+            cmsMemberTemplate.setCanEdit(isOwner);
             // 草稿(draftStatus=0)允许本人回填编辑,跳过"审核中/已下架"拦截
             boolean isDraft = cmsMemberTemplate.getDraftStatus() != null && cmsMemberTemplate.getDraftStatus() == 0;
+            boolean isOwnerPending = isOwner
+                    && Integer.valueOf(0).equals(cmsMemberTemplate.getDelFlag())
+                    && Integer.valueOf(1).equals(cmsMemberTemplate.getDraftStatus())
+                    && Long.valueOf(0L).equals(cmsMemberTemplate.getStatus());
             boolean isPublicEligible = Integer.valueOf(0).equals(cmsMemberTemplate.getDelFlag())
                     && !isDraft
                     && Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())
@@ -636,9 +747,9 @@ public class ApiTemplateController extends BaseController {
                 return error("模版不存在");
             } else if (Integer.valueOf(2).equals(cmsMemberTemplate.getDelFlag())) {
                 return error("模版已删除");
-            } else if (!isDraft && cmsMemberTemplate.getStatus() != 1) {
-                return error("模版审核中");
-            } else if (!isDraft && cmsMemberTemplate.getPublishStatus() == 0) {
+            } else if (!isDraft && !isOwnerPending && !Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())) {
+                return error(Long.valueOf(2L).equals(cmsMemberTemplate.getStatus()) ? "模版审核未通过" : "模版审核中");
+            } else if (!isDraft && !isOwnerPending && cmsMemberTemplate.getPublishStatus() == 0) {
                 return error("模版已下架");
             } else {
                 cmsMemberTemplate.setValidationMethodStr(

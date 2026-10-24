@@ -1,4 +1,19 @@
-<cy-playkit-timewindow wx:if="{{kit.type === 'timewindow'}}"
+<template name="terminal-result">
+  <view class="pk-terminal">
+    <text class="pk-terminal__title">{{kit.sessionStatus === 'EXPIRED' ? '本次玩法已超时' : '本次玩法未通过'}}</text>
+    <text wx:if="{{kit.sessionScore !== undefined}}">得分 {{kit.sessionScore}}</text>
+    <text wx:if="{{kit.completedUnits !== undefined}}">已完成 {{kit.completedUnits}} 项</text>
+    <text wx:if="{{kit.feedback}}">{{kit.feedback}}</text>
+    <text>原结果已保留，重新进入不会重置进度。</text>
+    <cy-btn wx:if="{{kit.canRetry === true}}" variant="primary" bindtap="onRetry">{{kit.retryLabel}}</cy-btn>
+    <cy-btn variant="secondary" bindtap="onClose">关闭</cy-btn>
+  </view>
+</template>
+<cy-sheet wx:if="{{kit.terminal && !inline}}" show="{{show}}" handle="{{true}}" bind:close="onClose">
+  <template is="terminal-result" data="{{kit: kit}}" />
+</cy-sheet>
+<view wx:elif="{{kit.terminal && inline && show}}"><template is="terminal-result" data="{{kit: kit}}" /></view>
+<cy-playkit-timewindow wx:elif="{{kit.type === 'timewindow'}}"
   show="{{show}}" eyebrow="{{kit.eyebrow}}" glyph="{{kit.glyph}}" title="{{kit.title}}"
   open-from="{{kit.openFrom}}" open-to="{{kit.openTo}}"
   remain-seconds="{{kit.remainSeconds}}" subscribed="{{kit.subscribed}}"
@@ -63,25 +78,29 @@
   bind:roll="onRoll" bind:count="onCount" bind:settled="onSettled" bind:close="onClose" />
 
 <cy-playkit-reaction wx:elif="{{kit.type === 'reaction'}}"
-  show="{{show}}" kicker="{{kit.kicker}}" rounds="{{kit.rounds}}" goal-ms="{{kit.goalMs}}"
+  show="{{show}}" kicker="{{kit.kicker}}" rounds="{{kit.rounds}}" goal-ms="{{kit.goalMs}}" attempt-id="{{kit.attemptId}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-ballshake wx:elif="{{kit.type === 'ballshake'}}"
   show="{{show}}" kicker="{{kit.kicker}}" goal="{{kit.goal}}"
-  timed="{{kit.timed}}" seconds="{{kit.seconds}}"
+  challenge="{{kit.challenge}}" shared-challenge="{{kit.challengeShared}}"
+  timed="{{kit.timed}}" seconds="{{kit.seconds}}" attempt-id="{{kit.attemptId}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-quiethold wx:elif="{{kit.type === 'quiethold'}}"
   show="{{show}}" kicker="{{kit.kicker}}" sub="{{kit.sub}}" seconds="{{kit.seconds}}"
+  attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:micdenied="onMicDenied" bind:close="onClose" />
 
 <cy-playkit-compass wx:elif="{{kit.type === 'compass'}}"
   show="{{show}}" kicker="{{kit.kicker}}" target="{{kit.bearing}}" tolerance="{{kit.tolerance}}"
   hold-seconds="{{kit.holdSeconds}}" hint="{{kit.hint}}" done="{{kit.done}}"
-  bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
+  attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
+  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-shout wx:elif="{{kit.type === 'shout'}}"
   show="{{show}}" kicker="{{kit.kicker}}" seconds="{{kit.seconds}}"
+  attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:micdenied="onMicDenied" bind:close="onClose" />
 
 <cy-playkit-countdown wx:elif="{{kit.type === 'countdown'}}"
@@ -91,6 +110,7 @@
 <cy-playkit-stopwatch wx:elif="{{kit.type === 'stopwatch'}}"
   show="{{show}}" kicker="{{kit.kicker}}" target-seconds="{{kit.targetSeconds}}"
   tolerance-ms="{{kit.toleranceMs}}" tries="{{kit.tries}}"
+  attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-qa wx:elif="{{kit.type === 'qa'}}"
@@ -98,7 +118,9 @@
   image-url="{{kit.imageUrl}}" audio-url="{{kit.audioUrl}}" lead="{{kit.lead}}"
   options="{{kit.options}}" shot-lead="{{kit.shotLead}}" shot-note="{{kit.shotNote}}"
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}" reveal="{{kit.reveal}}"
-  answer-id="{{kit.answerId}}"
+  answer-id="{{kit.answerId}}" answer-ids="{{kit.answerIds}}" judge="{{kit.judge !== false}}"
+  last-option-id="{{kit.lastOptionId}}" last-option-ids="{{kit.lastOptionIds}}"
+  feedback-images="{{kit.feedbackImages}}" failure-seq="{{kit.failureSeq}}"
   multi="{{kit.multi}}" attempts="{{kit.attempts}}" feedback-text="{{kit.feedback}}"
   passed="{{kit.passed}}" finished="{{kit.finished}}"
   bind:submit="onSubmit" bind:shoot="onShoot" bind:audio="onAudio"
@@ -107,7 +129,7 @@
 
 <cy-playkit-branch wx:elif="{{kit.type === 'branch'}}"
   show="{{show}}" title="{{kit.title}}" body="{{kit.body}}" options="{{kit.options}}"
-  ended="{{kit.ended}}" limit-seconds="{{kit.limitSeconds}}"
+  ended="{{kit.ended}}" writable="{{kit.writable !== false}}" step-id="{{kit.stepId}}" failure-seq="{{kit.failureSeq}}" limit-seconds="{{kit.limitSeconds}}"
   bind:choose="onChoose" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-estimate wx:elif="{{kit.type === 'estimate'}}"
@@ -127,14 +149,16 @@
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}"
   bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
-<cy-playkit-predict wx:elif="{{kit.type === 'predict'}}"
+<!-- 竞猜转盘与抽卡牌堆都是整屏排版(内容绝对定位贴满台面)。故事流里内嵌时台面高度是 auto,
+     会塌成 0、卡片压到题目上 —— 内嵌时给台面一个固定高度(2026-10-23 走查截图 11/12) -->
+<cy-playkit-predict wx:elif="{{kit.type === 'predict'}}" style="{{inline ? '--pk-stage-height:1100rpx;--pk-stage-body-pos:absolute;--pk-col-pos:absolute;--pk-btn-pos:absolute;--pk-btn-bottom:40rpx' : ''}}"
   show="{{show}}" question="{{kit.question}}" hint="{{kit.hint}}" options="{{kit.options}}"
   close-at-hour="{{kit.closeAtHour}}" reveal-days="{{kit.revealDays}}" reveal-hour="{{kit.revealHour}}"
   settle-status="{{kit.settleStatus}}" settled-option="{{kit.settledOption}}"
   won="{{kit.won}}" my-option-key="{{kit.myOptionKey}}"
   bind:submit="onSubmit" bind:close="onClose" />
 
-<cy-playkit-random wx:elif="{{kit.type === 'random'}}"
+<cy-playkit-random wx:elif="{{kit.type === 'random'}}" style="{{inline ? '--pk-stage-height:1180rpx;--pk-stage-body-pos:absolute' : ''}}"
   show="{{show}}" deck-name="{{kit.deckName}}" cards="{{kit.cards}}"
   drawn="{{kit.drawn}}" draw-count="{{kit.drawCount}}"
   bind:draw="onDraw" bind:drawn="onDrawn" bind:close="onClose" />
@@ -180,6 +204,7 @@
   fallback="{{kit.fallback}}" tries="{{kit.tries}}" passed="{{kit.passed}}"
   flagged="{{kit.flagged}}" degraded="{{kit.degraded}}" last-reason="{{kit.lastReason}}"
   last-url="{{kit.lastUrl}}" card="{{kit.card}}"
+  photo-verified="{{kit.photoVerified}}" reward-ceiling="{{kit.rewardCeiling}}"
   frame-url="{{kit.frameUrl}}" frame-opacity="{{kit.frameOpacity}}" inline="{{inline}}"
   bind:shoot="onShoot" bind:close="onClose" />
 
@@ -191,9 +216,10 @@
 
 <cy-playkit-typein wx:elif="{{kit.type === 'typein'}}"
   show="{{show}}" title="{{kit.title}}" target="{{kit.target}}" seconds="{{kit.seconds}}"
+  r5="{{kit.r5}}" deadline-at="{{kit.deadlineAt}}"
   case-sensitive="{{kit.caseSensitive}}" tries="{{kit.tries}}" attempts="{{kit.attempts}}"
   passed="{{kit.passed}}" terminal-skin="{{kit.terminalSkin}}" start-confirmed="{{kit.startConfirmed}}" start-failure-seq="{{kit.startFailureSeq}}"
-  bind:start="onStart" bind:submit="onSubmit" bind:close="onClose" />
+  bind:start="onStart" bind:submit="onSubmit" bind:refresh="onRefresh" bind:close="onClose" />
 
 <!-- R3 排序 / 连线 / 分类。⚠️ 每个属性都必须真有人喂(kit.X 由 pickPlayKit 产出):
      漏一个不会报错,那一行字只是恒空 —— 由「kit 属性没人喂」门禁与属性契约钉住。 -->
@@ -213,4 +239,11 @@
   attempts="{{kit.attempts}}" passed="{{kit.passed}}" last-correct="{{kit.lastCorrect}}"
   bind:submit="onSubmit" bind:close="onClose" />
 
-<cy-playkit-album wx:if="{{kit.type === 'album'}}" show="{{show}}" title="{{kit.title}}" images="{{kit.images}}" bind:close="onClose" />
+<cy-playkit-journey-check wx:elif="{{kit.type === 'journeycheck'}}"
+  show="{{show}}" loading="{{false}}" skill="{{kit.skill}}" tier="{{kit.tier}}" mods="{{kit.mods}}"
+  advantage="{{kit.advantage}}" disadvantage="{{kit.disadvantage}}" receipt="{{kit.receipt}}"
+  r5="{{false}}" allowed-actions="{{[]}}" bind:action="onCheckAction" bind:close="onClose" />
+
+<cy-playkit-album wx:if="{{kit.type === 'album'}}" show="{{show}}" title="{{kit.title}}" images="{{kit.images}}"
+  completion-enabled="{{kit.completionEnabled}}" done="{{kit.done}}" uploaded="{{kit.uploaded}}" upload-failure="{{kit.uploadFailure}}"
+  bind:shoot="onShoot" bind:submit="onSubmit" bind:close="onClose" />

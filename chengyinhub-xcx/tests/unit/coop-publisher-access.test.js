@@ -32,7 +32,10 @@ test('发布者章节或本人发布列表回读可以显示入口，账号切�
   assert.deepEqual(switched.results, []);
 });
 test('商家和俱乐部宿主的按钮及点击都要求发布者回读', () => {
-  for (const file of ['subpackageMember/components/cy/profile/index', 'pages/club/detail/index']) {
+  // 拍板 2026-10-22:俱乐部主页撤掉了邀约入口,发布者回读只剩商家主页这个宿主。
+  const clubJs = fs.readFileSync(path.resolve(__dirname, '../..', 'pages/club/detail/index.js'), 'utf8');
+  assert.doesNotMatch(clubJs, /readPublisherAccess|canInviteCoop/);
+  for (const file of ['subpackageMember/components/cy/profile/index']) {
     const js = fs.readFileSync(path.resolve(__dirname, '../..', file + '.js'), 'utf8');
     const wxml = fs.readFileSync(path.resolve(__dirname, '../..', file + '.wxml'), 'utf8');
     assert.match(js, /readPublisherAccess\(app,/);

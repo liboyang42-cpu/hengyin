@@ -49,7 +49,7 @@ class ClubOperationBenefitTest {
      * 而不是"测试挂了顺手改数" —— 改回 `club.getMemberDiscountPrice()` 这条会立刻红。
      *
      * <p>⚠️ 只停用**价格**:会员身份识别与优先报名/保留名额是独立能力,必须仍然生效,
-     * 所以下面两条断言保持不变 —— 少了它们,这次改动就可能顺手把整个俱乐部权益打没。
+     * 俱乐部活动另按报名权限规则拒绝非成员；自玩票仍保留独立的名额检查。
      */
     @Test
     void clubMemberPaysSamePriceAsNonMemberAfterDiscountDisabled() {
@@ -67,21 +67,23 @@ class ClubOperationBenefitTest {
     }
 
     @Test
-    void nonMemberCannotQuoteSeatsReservedForClubMembers() {
+    void nonMemberCannotQuoteClubActivityEvenWhenReservedSeatsRemain() {
         Fixture fixture = fixture(2L, false);
 
         RuntimeException error = assertThrows(RuntimeException.class, () -> fixture.service.quoteRegistration(
                 MEMBER_ID, 2, ACTIVITY_ID, TICKET_ID, null, 0));
 
-        assertTrue(error.getMessage().contains("会员保留"));
+        assertTrue(error.getMessage().contains("请先加入俱乐部再报名"));
     }
 
     @Test
-    void nonMemberCreateUsesAtomicReservedInventoryDeduction() {
+    void activityCreatorWithoutMembershipUsesAtomicReservedInventoryDeduction() {
         Fixture fixture = fixture(3L, false);
+        fixture.activityMapper.selectCmsActivityById(ACTIVITY_ID).setMemberId(MEMBER_ID);
+        ReflectionTestUtils.setField(fixture.service, "platformMemberId", MEMBER_ID);
         when(fixture.ticketMapper.deductInventoryKeepingReserved(TICKET_ID, 1L, 2)).thenReturn(1);
         when(fixture.registrationMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
-                .thenReturn(1);
+                .thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(901L); return 1; });
 
         CmsRegistration registration = fixture.service.createRegistration(
                 MEMBER_ID, 2, ACTIVITY_ID, TICKET_ID, 0,
@@ -93,8 +95,21 @@ class ClubOperationBenefitTest {
     }
 
     @Test
-    void registrationCannotBeCreatedAfterOwningClubDissolves() {
+    void nonMemberCannotCreateClubActivityOrderEvenWithUnreservedInventory() {
         Fixture fixture = fixture(3L, false);
+        RuntimeException error = assertThrows(RuntimeException.class, () -> fixture.service.createRegistration(
+                MEMBER_ID, 2, ACTIVITY_ID, TICKET_ID, 0,
+                "张三", "18800000000", null, null));
+        assertTrue(error.getMessage().contains("请先加入俱乐部再报名"));
+        verify(fixture.ticketMapper, never()).deductInventoryKeepingReserved(TICKET_ID, 1L, 2);
+        verify(fixture.ticketMapper, never()).deductInventory(TICKET_ID, 1L);
+        verify(fixture.registrationMapper, never()).insertCmsRegistration(
+                org.mockito.ArgumentMatchers.any(CmsRegistration.class));
+    }
+
+    @Test
+    void registrationCannotBeCreatedAfterOwningClubDissolves() {
+        Fixture fixture = fixture(3L, true);
         when(fixture.clubMapper.selectClubByIdForUpdate(CLUB_ID)).thenReturn(null);
 
         RuntimeException error = assertThrows(RuntimeException.class, () -> fixture.service.createRegistration(
@@ -126,7 +141,7 @@ class ClubOperationBenefitTest {
         when(fixture.productRoleService.isPlatformOwned(500L)).thenReturn(true);
         when(fixture.registrationMapper.countActiveSelfPlayPasses(500L)).thenReturn(0);
         when(fixture.registrationMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
-                .thenReturn(1);
+                .thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(901L); return 1; });
 
         CmsRegistration pass = fixture.service.createSelfPlayPass(MEMBER_ID, 500L, "张三", "18800000000");
 
@@ -168,7 +183,7 @@ class ClubOperationBenefitTest {
         when(fixture.registrationMapper.countActiveSelfPlayPasses(502L)).thenReturn(0);
         when(fixture.productRoleService.isPlatformOwned(502L)).thenReturn(true);
         when(fixture.registrationMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
-                .thenReturn(1);
+                .thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(901L); return 1; });
 
         fixture.service.createSelfPlayPass(MEMBER_ID, 502L, "张三", "18800000000");
 
@@ -203,6 +218,7 @@ class ClubOperationBenefitTest {
         Fixture fixture = new Fixture();
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY_ID);
+        activity.setMemberId(999L);
         activity.setClubId(CLUB_ID);
         activity.setStatus(1L);
         activity.setPublishStatus(1L);
@@ -247,6 +263,7 @@ class ClubOperationBenefitTest {
 
         fixture.service = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(fixture.service, "cmsActivityMapper", fixture.activityMapper);
+        ReflectionTestUtils.setField(fixture.service, "platformMemberId", 999L);
         ReflectionTestUtils.setField(fixture.service, "umsMemberMapper", fixture.memberMapper);
         ReflectionTestUtils.setField(fixture.service, "omsTicketMapper", fixture.ticketMapper);
         ReflectionTestUtils.setField(fixture.service, "clubMapper", fixture.clubMapper);

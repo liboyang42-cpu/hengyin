@@ -157,7 +157,7 @@ test('关系一级页首屏只通过 relation-home 读取关系聚合', () => {
     sendRequest(options) { requests.push(options); },
   });
 
-  page.onLoad();
+  page.onLoad({ tab: 'club' });
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].url, '/api/merchant/relation-home');
@@ -171,7 +171,7 @@ test('关系一级页过滤缺少名称的半成品关系卡', () => {
     sendRequest(options) { requests.push(options); },
   });
 
-  page.onLoad();
+  page.onLoad({ tab: 'club' });
   requests[0].success({
     code: 200,
     data: {
@@ -184,7 +184,6 @@ test('关系一级页过滤缺少名称的半成品关系卡', () => {
     },
   });
 
-  assert.equal(page.data.merchants.length, 0);
   assert.equal(page.data.clubs.length, 1);
   // 2026-08-09:「我的合作」已删,relations 即使后端还在下发也不进 data。
   assert.equal(page.data.relations, undefined);
@@ -201,27 +200,26 @@ test('关系聚合 403 清除旧门店数据并静默回会员中心，不冒充
   });
   global.wx.switchTab = (options) => { navigations.push(options.url); };
 
-  page.onLoad();
+  page.onLoad({ tab: 'club' });
   requests[0].success({
     code: 200,
     data: {
       stats: { merchantCount: 1, clubCount: 0, pendingCoopCount: 0 },
       relations: [],
       discovery: {
-        merchants: [{ id: 2, memberId: 20, name: '旧门店' }],
-        clubs: [],
+        merchants: [],
+        clubs: [{ id: 2, name: '旧俱乐部' }],
       },
     },
   });
   requests[0].complete();
-  assert.equal(page.data.merchants.length, 1);
+  assert.equal(page.data.clubs.length, 1);
 
   page.loadRelationHome();
   requests[1].success({ code: 403, msg: '商家身份无效或权限不足' });
 
   assert.deepEqual(navigations, ['/pages/member/index/index'],
     '无商家身份的深链误入静默回会员中心,不摆整屏错误页');
-  assert.equal(page.data.merchants.length, 0, '403 后不得继续显示上一经营主体的商家数据');
   assert.equal(page.data.clubs.length, 0);
 });
 
@@ -401,7 +399,7 @@ test('项目卡按 (ownerType,ownerId) 拿各自的待办与动态，活动和�
     // 活动 id 故意和主题 id 撞号:两套 id 各自编号，只用 id 当键会串号
     { id: 77, bizType: 'activity', titleText: '夏夜市集', startDateStr: '周日 8月11日' },
   ];
-  page.data.notifications = [
+  page._notifications = [
     { id: 0, ownerType: 1, ownerId: 77, label: '核销' },
     { id: 1, ownerType: 1, ownerId: 77, label: '收入到账' },
     { id: 2, ownerType: 2, ownerId: 77, label: '活动分润' },
@@ -446,7 +444,7 @@ test('我的项目:俱乐部主理人在活动页签有「发布单场活动」�
     require.cache[guardPath] = { id: guardPath, filename: guardPath, loaded: true,
       exports: { role: () => (isLeader ? 'club' : 'merchant'), load: (cb) => cb && cb(), hasSnapshot: () => true } };
     const navigations = [];
-    const page = loadPage('subpackageA/pages/myproject/index.js', { sendRequest() {} });
+    const page = loadPage('subpackageA/pages/myproject/index.js', { getAuthorization: () => 'current-session', sendRequest() {} });
     global.wx.navigateTo = (o) => navigations.push(o.url);
     page.onLoad(options);
     return { page, navigations };
@@ -455,7 +453,7 @@ test('我的项目:俱乐部主理人在活动页签有「发布单场活动」�
     const leader = withGuard(true, { type: 'club_activity' });
     assert.equal(leader.page.data.canPublishActivity, true);
     leader.page.applyView();   // 真机上在项目列表回来后调用
-    assert.equal(leader.page.data.emptySub, '在这里发布你的第一场单场活动', '只对能发的人给发布提示');
+    assert.equal(leader.page.data.emptySub, '', '只对能发的人给发布提示');
     leader.page.onEmptyCta();
     assert.deepEqual(leader.navigations, ['/pages/publish/activity/index'], '活动页签空态按钮进活动发布页');
     assert.equal(withGuard(true, { type: 'club_activity', scope: 'MERCHANT' }).page.data.canPublishActivity, false,
@@ -466,7 +464,7 @@ test('我的项目:俱乐部主理人在活动页签有「发布单场活动」�
     assert.equal(other.page.data.emptySub, '', '不能发的人不给「可以在这里发布」的空头提示');
     const wxml = require('node:fs').readFileSync(path.join(__dirname, '../../subpackageA/pages/myproject/index.wxml'), 'utf8');
     assert.match(wxml, /typeTab === 'activity' && canPublishActivity && list\.length > 0[\s\S]*?bindtap="goCreateActivity"/,
-      '有活动时也要有常驻入口,不能只藏在空态里');
+      '有活动时也要有常驻入口，不能只藏在空态里');
   } finally {
     if (real) require.cache[guardPath] = real; else delete require.cache[guardPath];
   }

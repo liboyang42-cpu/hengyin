@@ -1,5 +1,10 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.service.ICommunityMediaReceiptService;
+import com.chengyinhub.business.service.IAuditTaskService;
+import com.chengyinhub.business.mapper.AppMediaAssetMapper;
+import com.chengyinhub.business.service.impl.AppMediaAssetService;
+import org.springframework.beans.factory.ObjectProvider;
 import com.chengyinhub.common.config.RuoYiConfig;
 import com.chengyinhub.common.constant.Constants;
 import com.chengyinhub.common.utils.DateUtils;
@@ -118,6 +123,57 @@ class ApiCommonUploadSecurityTest
         assertEquals(HttpStatus.OK, localResult.getStatusCode());
         assertFalse(java.util.Arrays.equals(sourceBytes, localBytes));
         assertFalse(new String(localBytes, "ISO-8859-1").contains("GPSLatitude"));
+    }
+
+    @Test
+    void communityUploadResponseAndReceiptUseStoredImageSize() throws Exception
+    {
+        byte[] sourceBytes = insertExif(jpeg("gps.jpg", 160, 90).getBytes(), "Exif\0\0GPSLatitude=31.2");
+        RecordingOssController controller = new RecordingOssController();
+        controller.appMember = 91L;
+        ICommunityMediaReceiptService receipts = mock(ICommunityMediaReceiptService.class);
+        when(receipts.issue(org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn("test-upload-receipt");
+        ReflectionTestUtils.setField(controller, "communityMediaReceiptService", receipts);
+
+        ResponseEntity<AjaxResult> response = controller.uploadOSS(
+                new MockMultipartFile("file", "gps.jpg", "image/jpeg", sourceBytes), UploadImagePolicy.COMMUNITY_POST_BIZ_TYPE, null);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(sourceBytes.length != controller.uploadedBytes.length);
+        long storedSize = controller.uploadedBytes.length;
+        assertEquals(storedSize, response.getBody().get("byteSize"));
+        assertEquals("test-upload-receipt", response.getBody().get("uploadReceipt"));
+        assertEquals("upload/0123456789abcdef0123456789abcdef.gif", response.getBody().get("objectKey"));
+        assertEquals(response.getBody().get("fileName"), response.getBody().get("objectKey"));
+        org.mockito.Mockito.verify(receipts).issue(91L, "upload/0123456789abcdef0123456789abcdef.gif", storedSize);
+    }
+
+    @Test
+    void ossStoredSizeFollowsImageSanitizationAndUnchangedAudio() throws Exception
+    {
+        byte[] image = insertExif(jpeg("gps.jpg", 160, 90).getBytes(), "Exif\0\0GPSLatitude=31.2");
+        for (String bizType : new String[] { "image_free", "merchant_aftercare_evidence" })
+        {
+            RecordingOssController controller = new RecordingOssController();
+            AppUploadService service = (AppUploadService) ReflectionTestUtils.getField(controller, "appUploadService");
+            JSONObject uploaded = service.uploadOss(new MockMultipartFile(
+                    "file", "gps.jpg", "image/jpeg", image), bizType);
+            assertTrue(image.length != controller.uploadedBytes.length);
+            assertEquals((long) controller.uploadedBytes.length, uploaded.get("byteSize"));
+        }
+        RecordingOssController controller = pendingAudioController(91L);
+        AppUploadService service = (AppUploadService) ReflectionTestUtils.getField(controller, "appUploadService");
+        byte[] audio = new byte[] { 'I', 'D', '3', 4, 0, 0, 0, 0, 0, 0 };
+        JSONObject uploaded = service.uploadOss(
+                new MockMultipartFile("file", "voice.mp3", "audio/mpeg", audio), null, 91L, null, null);
+        assertEquals((long) audio.length, uploaded.get("byteSize"));
+        assertEquals("HOLD", uploaded.get("reviewState"));
+        assertFalse(uploaded.containsKey("url"));
+        assertEquals(91L, controller.stagedAsset.get("memberId"));
+        assertEquals("AUDIO", controller.stagedAsset.get("mediaType"));
+        org.junit.jupiter.api.Assertions.assertArrayEquals(audio, controller.uploadedBytes);
     }
 
     @Test
@@ -343,9 +399,9 @@ class ApiCommonUploadSecurityTest
     }
 
     @Test
-    void ossKeepsPublishedAudioUploadFormats() throws Exception
+    void ossKeepsSupportedAudioFormatsWhileHoldingThemForReview() throws Exception
     {
-        RecordingOssController controller = new RecordingOssController();
+        RecordingOssController controller = pendingAudioController(91L);
         ResponseEntity<AjaxResult> mp3 = controller.uploadOSS(
                 new MockMultipartFile("file", "voice.mp3", "audio/mpeg", new byte[] { 'I', 'D', '3' }), null, null);
         ResponseEntity<AjaxResult> m4a = controller.uploadOSS(
@@ -357,6 +413,24 @@ class ApiCommonUploadSecurityTest
         assertEquals(HttpStatus.OK, m4a.getStatusCode());
         assertEquals(HttpStatus.OK, aac.getStatusCode());
         assertEquals(3, controller.uploadCount);
+        for (ResponseEntity<AjaxResult> response : java.util.Arrays.asList(mp3, m4a, aac)) {
+            assertEquals("HOLD", response.getBody().get("reviewState"));
+            org.junit.jupiter.api.Assertions.assertNull(response.getBody().get("url"));
+        }
+        assertEquals(91L, controller.stagedAsset.get("memberId"));
+        assertEquals("AUDIO", controller.stagedAsset.get("mediaType"));
+    }
+
+    @Test
+    void anonymousAudioCannotStoreOrIssueReviewedAsset() {
+        RecordingOssController controller = pendingAudioController(0L);
+        ResponseEntity<AjaxResult> result = controller.uploadOSS(new MockMultipartFile(
+                "file", "voice.mp3", "audio/mpeg", new byte[] { 'I', 'D', '3' }), null, null);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals(400, result.getBody().get(AjaxResult.CODE_TAG));
+        assertEquals(0, controller.uploadCount);
+        assertFalse(controller.uploaded);
+        org.junit.jupiter.api.Assertions.assertNull(controller.stagedAsset);
     }
 
     @Test
@@ -544,6 +618,108 @@ class ApiCommonUploadSecurityTest
         assertTrue(Files.exists(outside));
     }
 
+    @Test
+    void localSingleMissingSecurityReturnsHttp503WithoutWritingOrReturningUrl(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService());
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        mvc.perform(multipart("/api/common/upload").file(png("image.png", 160, 90)))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value(503))
+                .andExpect(jsonPath("$.url").doesNotExist());
+        assertFalse(containsUploadedFile(tempDir));
+    }
+
+    @Test
+    void localSingleRejectedImageReturnsHttp400WithoutWritingOrReturningUrl(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult,
+                file -> { throw new UploadRejectedException("图片包含违规内容"); }));
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        mvc.perform(multipart("/api/common/upload").file(png("image.png", 160, 90)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.url").doesNotExist());
+        assertFalse(containsUploadedFile(tempDir));
+    }
+
+    @Test
+    void localBatchUnavailableOnSecondImageNeverWritesAnEarlierImage(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        java.util.concurrent.atomic.AtomicInteger reviews = new java.util.concurrent.atomic.AtomicInteger();
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult,
+                file -> {
+                    assertNoLocalFiles(tempDir);
+                    if (reviews.incrementAndGet() == 2)
+                        throw new UploadSecurityUnavailableException("安全检查服务异常，请稍后重试");
+                }));
+        ResponseEntity<AjaxResult> response = controller.uploadFiles(java.util.Arrays.asList(
+                png("first.png",160,90), png("second.png",160,90)));
+
+        assertServiceUnavailable(response);
+        assertEquals(2, reviews.get());
+        assertFalse(response.getBody().containsKey("urls"));
+        assertFalse(containsUploadedFile(tempDir));
+    }
+
+    @Test
+    void localBatchRejectedSecondImageNeverWritesAnEarlierImage(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        java.util.concurrent.atomic.AtomicInteger reviews = new java.util.concurrent.atomic.AtomicInteger();
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult,
+                file -> {
+                    assertNoLocalFiles(tempDir);
+                    if (reviews.incrementAndGet() == 2)
+                        throw new UploadRejectedException("图片包含违规内容");
+                }));
+        ResponseEntity<AjaxResult> response = controller.uploadFiles(java.util.Arrays.asList(
+                png("first.png",160,90), png("second.png",160,90)));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(400, response.getBody().get(AjaxResult.CODE_TAG));
+        assertEquals(2, reviews.get());
+        assertFalse(response.getBody().containsKey("urls"));
+        assertFalse(containsUploadedFile(tempDir));
+    }
+
+    @Test
+    void localBatchApprovesEverySanitizedImageOnceBeforeAnyFileIsWritten(@TempDir Path tempDir) throws Exception
+    {
+        configureLocalUpload(tempDir);
+        java.util.concurrent.atomic.AtomicInteger reviews = new java.util.concurrent.atomic.AtomicInteger();
+        ApiCommonController controller = localController();
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult,
+                file -> { assertNoLocalFiles(tempDir); reviews.incrementAndGet(); }));
+
+        ResponseEntity<AjaxResult> response = controller.uploadFiles(java.util.Arrays.asList(
+                png("first.png",160,90), png("second.png",160,90)));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, reviews.get());
+        assertTrue(containsUploadedFile(tempDir));
+        assertEquals(2, String.valueOf(response.getBody().get("urls")).split(",").length);
+    }
+
+    private void assertNoLocalFiles(Path directory)
+    {
+        try { assertFalse(containsUploadedFile(directory), "all image approvals must precede the first write"); }
+        catch (IOException e) { throw new AssertionError(e); }
+    }
+
     private boolean containsUploadedFile(Path uploadDirectory) throws IOException
     {
         if (!Files.exists(uploadDirectory))
@@ -568,6 +744,9 @@ class ApiCommonUploadSecurityTest
         ServerConfig serverConfig = mock(ServerConfig.class);
         when(serverConfig.getUrl()).thenReturn("https://example.test");
         ReflectionTestUtils.setField(controller, "serverConfig", serverConfig);
+        // Explicit approved-image fixture; production constructors still require real content security.
+        ReflectionTestUtils.setField(controller, "appUploadService", new AppUploadService(
+                ApiCommonUploadSecurityTest::successfulOssResult, file -> { }));
         return controller;
     }
 
@@ -646,12 +825,40 @@ class ApiCommonUploadSecurityTest
         return result;
     }
 
+    private RecordingOssController pendingAudioController(Long currentMemberId) {
+        RecordingOssController controller = new RecordingOssController();
+        controller.appMember = currentMemberId;
+        AppMediaAssetMapper mapper = mock(AppMediaAssetMapper.class);
+        when(mapper.insert(org.mockito.ArgumentMatchers.any())).thenAnswer(call -> {
+            java.util.Map<String, Object> row = call.getArgument(0);
+            assertEquals(91L, row.get("memberId"));
+            assertEquals("AUDIO", row.get("mediaType"));
+            assertEquals("HOLD", row.get("reviewState"));
+            row.put("id", 901L);
+            controller.stagedAsset = row;
+            return 1;
+        });
+        when(mapper.bindAuditTask(901L, 0, 902L)).thenReturn(1);
+        IAuditTaskService audits = mock(IAuditTaskService.class);
+        when(audits.submitSafetyHold(org.mockito.ArgumentMatchers.eq("MEDIA_ASSET"),
+                org.mockito.ArgumentMatchers.eq(901L), org.mockito.ArgumentMatchers.eq(91L),
+                org.mockito.ArgumentMatchers.eq("NORMAL"), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(902L);
+        ObjectProvider<IAuditTaskService> provider = mock(ObjectProvider.class);
+        when(provider.getObject()).thenReturn(audits);
+        AppMediaAssetService assets = new AppMediaAssetService(mapper, provider);
+        AppUploadService service = (AppUploadService) ReflectionTestUtils.getField(controller, "appUploadService");
+        ReflectionTestUtils.setField(service, "appMediaAssetService", assets);
+        return controller;
+    }
+
     private static final class RecordingOssController extends ApiCommonController
     {
         private boolean uploaded;
         private int uploadCount;
         private byte[] uploadedBytes;
         private Long appMember;
+        private java.util.Map<String, Object> stagedAsset;
 
         @Override
         public Long getAppUserId()
@@ -667,7 +874,11 @@ class ApiCommonUploadSecurityTest
 
         private JSONObject store(MultipartFile file) throws IOException
         {
-            return store(file, "upload/test.gif");
+            String filename = file.getOriginalFilename();
+            String audioExtension = filename != null && filename.matches(".*\\.(mp3|m4a|aac|wav)")
+                    ? filename.substring(filename.lastIndexOf('.') + 1) : null;
+            return store(file, audioExtension == null ? "upload/0123456789abcdef0123456789abcdef.gif"
+                    : "upload/0123456789abcdef0123456789abcdef." + audioExtension);
         }
 
         private JSONObject storeAftercareEvidence(MultipartFile file) throws IOException

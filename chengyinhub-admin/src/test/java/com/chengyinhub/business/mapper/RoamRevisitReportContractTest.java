@@ -172,7 +172,42 @@ class RoamRevisitReportContractTest {
         }
         assertTrue(backend.contains("mvn -B clean test"));
         assertTrue(workflow.contains("- 'chengyinhub-admin/**'"));
-        assertTrue(workflow.contains("run: bash ci/backend-test.sh"));
+        assertTrue(backendBuildStepRunsTests(workflow));
+        String single = "jobs:\n  backend:\n    steps:\n"
+                + "      - name: Build and test backend\n        run: bash ci/backend-test.sh\n";
+        String block = single.replace("run: bash ci/backend-test.sh",
+                "run: |\n          echo preparation\n          bash ci/backend-test.sh\n        env:\n          READY: true");
+        for (String shape : Arrays.asList(single, block, workflow)) {
+            assertTrue(backendBuildStepRunsTests(shape));
+            assertFalse(backendBuildStepRunsTests(shape.replace("bash ci/backend-test.sh", "echo removed")));
+            assertFalse(backendBuildStepRunsTests(shape.replace("bash ci/backend-test.sh", "# bash ci/backend-test.sh")));
+        }
+        assertFalse(backendBuildStepRunsTests(single.replace("  backend:", "  other:")));
+        assertFalse(backendBuildStepRunsTests(single.replace("Build and test backend", "Other step")));
+        assertFalse(backendBuildStepRunsTests(block.replace("bash ci/backend-test.sh", "echo removed")
+                + "      - name: Other step\n        run: bash ci/backend-test.sh\n"));
+        assertFalse(backendBuildStepRunsTests(block.replace("          bash ci/backend-test.sh", "          echo removed")
+                .replace("          READY: true", "          DESCRIPTION: |\n            bash ci/backend-test.sh")));
+    }
+
+    private static boolean backendBuildStepRunsTests(String workflow) {
+        Matcher job = Pattern.compile("(?ms)^  backend:[^\\r\\n]*\\R(.*?)(?=^  [A-Za-z_][A-Za-z0-9_-]*:|\\z)")
+                .matcher(workflow);
+        if (!job.find()) return false;
+        Matcher step = Pattern.compile("(?ms)^      - name: Build and test backend[ \\t]*\\R(.*?)(?=^      - |\\z)")
+                .matcher(job.group(1));
+        if (!step.find()) return false;
+        String body = step.group(1);
+        Matcher run = Pattern.compile("(?m)^        run:[ \\t]*(.*)$").matcher(body);
+        if (!run.find()) return false;
+        String inline = run.group(1).trim();
+        if (inline.matches("bash ci/backend-test\\.sh[ \\t]*(?:#.*)?")) return true;
+        if (!inline.matches("\\|[-+]?")) return false;
+        String shell = body.substring(run.end());
+        Matcher nextKey = Pattern.compile("(?m)^        \\S").matcher(shell);
+        if (nextKey.find()) shell = shell.substring(0, nextKey.start());
+        return Pattern.compile("(?m)^          bash ci/backend-test\\.sh[ \\t]*(?:#.*)?$")
+                .matcher(shell).find();
     }
 
     private static void assertImmutable(Class<?> type) {

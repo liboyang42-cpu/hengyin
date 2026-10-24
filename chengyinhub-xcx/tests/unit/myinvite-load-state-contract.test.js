@@ -17,6 +17,7 @@ let componentConfig
 let requests
 
 global.getApp = () => ({
+    getUserID: () => 7, /* Explicit authenticated private-list fixture. */
   getPageSize: () => 10,
   sendRequest(options) { requests.push(options) },
 })
@@ -126,8 +127,8 @@ test('积分流水失败不把真实邀请记录整页判错，奖励字段明�
   assert.equal(component.data.loadErr, false)
   assert.equal(component.data.rewardReady, false)
   assert.equal(component.data.groups[0].items[0].timeText, '邀请时间暂未记录')
-  assert.equal(component.data.groups[0].items[0].statusText, '已加入 · 奖励待同步')
-  assert.equal(component.data.groups[0].items[0].rewardText, '待同步')
+  assert.equal(component.data.groups[0].items[0].statusText, '已加入 · 奖励发放中')
+  assert.equal(component.data.groups[0].items[0].rewardText, '发放中')
 })
 
 test('积分流水被分页截断时不把未匹配记录误判为首购未完成', async () => {
@@ -147,8 +148,8 @@ test('积分流水被分页截断时不把未匹配记录误判为首购未完�
   await flush()
 
   assert.equal(component.data.rewardReady, false)
-  assert.equal(component.data.groups[0].items[0].statusText, '已加入 · 奖励待同步')
-  assert.equal(component.data.groups[0].items[0].rewardText, '待同步')
+  assert.equal(component.data.groups[0].items[0].statusText, '已加入 · 奖励发放中')
+  assert.equal(component.data.groups[0].items[0].rewardText, '发放中')
 })
 
 test('邀请人 Long ID 以字符串关联奖励，不经 Number 转换丢精度', async () => {
@@ -215,7 +216,7 @@ test('邀请昵称缺失时显示未知语义，不虚构用户加 ID', async ()
   respond(1, { code: '200', data: { rows: [], total: 0 } })
   await flush()
 
-  assert.equal(component.data.groups[0].items[0].nickname, '昵称待确认')
+  assert.equal(component.data.groups[0].items[0].nickname, '—')
 })
 
 function assertInviteSheetContract(files) {
@@ -224,7 +225,7 @@ function assertInviteSheetContract(files) {
     '邀请记录独立路由不再套常驻半屏（同收益明细 / 提现记录）')
   assert.match(files.route, /<cy-scene-member-invite-history id="inviteHistory"/)
   assert.match(files.earnings, /sceneCurrent\.id === 'member-invite-history'[\s\S]*?<cy-scene-sheet show="\{\{true\}\}"[\s\S]*?<cy-scene-member-invite-history/)
-  assert.match(files.entry, /openInvite\(\)\s*\{\s*this\.triggerEvent\('open', \{ id: 'member-invite-history' \}\)\s*\}/)
+  assert.match(files.entry, /openInvite\(\)\s*\{\s*if \(!this\._hasCurrentBalance\(\)\) return;\s*this\.triggerEvent\('open', \{ id: 'member-invite-history' \}\)\s*\}/)
   assert.match(files.registry, /'member-invite-history':\s*\{[^}]*route:\s*'\/subpackageMember\/myinvite\/myinvite'[^}]*variant:\s*'half'/)
   assert.match(files.scene, /class="ir-row"[\s\S]*?class="ir-time"[\s\S]*?class="ir-status"[\s\S]*?class="ir-reward"/)
   // CU-M-145:空态标题不再复述「邀请记录」(弹层/页头已经说过一次),改陈述事实本身。
@@ -292,18 +293,19 @@ const EMPTY_STATE_SUB = '好友加入后，会按时间出现在这里'
 const EMPTY_STATE_SUB_MAX_CHARS = 16
 
 function assertEmptyStateCopy(sceneWxml) {
-  const m = sceneWxml.match(/<cy-empty[^>]*?title="([^"]*)"[^>]*?sub="([^"]*)"/)
-  assert.ok(m, '邀请记录空态必须同时给出标题与说明句')
-  const [, title, sub] = m
+  const tag = (sceneWxml.match(/<cy-empty[^>]*?title="还没有人接受你的邀请"[^>]*\/>/) || [''])[0]
+  assert.ok(tag, '邀请记录空态必须给出标题')
+  const title = (tag.match(/title="([^"]*)"/) || [])[1] || ''
+  const sub = (tag.match(/\bsub="([^"]*)"/) || [])[1] || ''
 
   const sheetTitle = read(REGISTRY_JS).match(/'member-invite-history':\s*\{[^}]*title:\s*'([^']+)'/)[1]
   assert.ok(
     !title.includes(sheetTitle),
-    `空态标题「${title}」复述了弹层标题「${sheetTitle}」:同一屏两次面名,信息量为零`,
+    `空态标题「${title}」复述了弹层标题「${sheetTitle}」:同一屏两次面名，信息量为零`,
   )
   assert.ok(
     !/[，,]$/.test(sub) && sub.length <= EMPTY_STATE_SUB_MAX_CHARS,
-    `说明句「${sub}」${sub.length} 字,超过一行预算 ${EMPTY_STATE_SUB_MAX_CHARS} 字 —— ` +
+    `说明句「${sub}」${sub.length} 字，超过一行预算 ${EMPTY_STATE_SUB_MAX_CHARS} 字 —— ` +
       '末字会被挤成孤行(走查 CU-M-145 读到的就是这个)',
   )
 }
@@ -313,13 +315,13 @@ test('CU-M-145：空态标题不复述面名，说明句留出一行宽度余量
 })
 
 test('负控:把说明句写回走查里那 21 字长句必须判红', () => {
-  const mutated = read(SCENE_WXML).replace(`sub="${EMPTY_STATE_SUB}"`, 'sub="好友通过你的邀请加入后，会按时间出现在这里"')
-  assert.notEqual(mutated, read(SCENE_WXML), '变异锚点漂了,负控本身是假的')
+  const mutated = read(SCENE_WXML).replace(`title="${EMPTY_STATE_TITLE}"`, `title="${EMPTY_STATE_TITLE}" sub="好友通过你的邀请加入后，会按时间出现在这里"`)
+  assert.notEqual(mutated, read(SCENE_WXML), '变异锚点漂了，负控本身是假的')
   assert.throws(() => assertEmptyStateCopy(mutated), assert.AssertionError)
 })
 
 test('负控:空态标题退回复述「邀请记录」必须判红', () => {
   const mutated = read(SCENE_WXML).replace(`title="${EMPTY_STATE_TITLE}"`, 'title="还没有邀请记录"')
-  assert.notEqual(mutated, read(SCENE_WXML), '变异锚点漂了,负控本身是假的')
+  assert.notEqual(mutated, read(SCENE_WXML), '变异锚点漂了，负控本身是假的')
   assert.throws(() => assertEmptyStateCopy(mutated), assert.AssertionError)
 })

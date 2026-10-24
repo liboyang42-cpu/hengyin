@@ -85,6 +85,17 @@ test('当前账号的用户资料响应可以正常写入', () => {
   assert.equal(page.data.userInfo.nickname, '当前账号')
 })
 
+test('未绑定手机号的账号回到首页不会被主动弹窗索取手机号(F-L5C-04)', () => {
+  const page = makePage()
+  for (let i = 0; i < 3; i += 1) {
+    sent = []
+    page.getUserData()
+    sent[0].success({ code: '200', data: { nickname: '无手机号', phone: '' } })
+    assert.equal(page.data.userInfo.nickname, '无手机号')
+    assert.equal(page.data.showPhoneModal, false)
+  }
+})
+
 test('当前账号的角色响应可以更新身份快照', () => {
   const page = makePage()
   page.fetchCityEvent = () => {}
@@ -251,16 +262,16 @@ test('消毒后的操作失败不能当成手机号写入', () => {
   assert.equal(page.data['userInfo.phone'], undefined)
 })
 
-test('开发预览的游客态不能重新注入示例用户身份', (t) => {
+test('开发环境首页也不注入示例用户或假公开列表', () => {
   const page = makePage()
   isDev = true
   userId = ''
 
-  page._applyIndexUiMock()
-  t.after(() => clearInterval(page.data.countdownTimer))
+  page._buildRecoHero = () => {}
+  page.onReady()
 
   assert.deepEqual(page.data.userInfo, { avatar: '', nickname: '', point: '0' })
-  assert.ok(page.data.nearbyActivityList.length > 0, '游客仍可预览公开首页内容')
+  assert.equal(page.data.nearbyActivityList.length, 0, '真实列表为空不能伪造公开内容')
 })
 
 test('游客态不重试私人资料请求，也不显示登录过期错误', () => {
@@ -300,3 +311,14 @@ test('推荐卡报名数读 signupCount，不读对不上后端的 enrollCount',
   page._buildRecoHero()
   assert.match(page.data.recoCards[0].metaLine, /28 人已报名/)
 })
+
+// 需求变更(F-L5C-04 / F-W1-14):首页不再主动弹窗索取手机号,原"稍后 24 小时再弹"的口径作废。
+test('首页真实资料回读不按稍后期限再弹，任何账号、任何次数都不弹', () => {
+ const store = {}; wx.getStorageSync = key => store[key]; wx.setStorageSync = (key,value) => {store[key]=value};
+ userId='7'; const page=makePage(); page.getUserData();sent[0].success({code:200,data:{phone:''}});
+ assert.equal(page.data.showPhoneModal,false);
+ store['phone-reminder:snooze:7']=0;
+ page.getUserData();sent[1].success({code:200,data:{phone:''}});assert.equal(page.data.showPhoneModal,false);
+ userId='8';page.getUserData();sent[2].success({code:200,data:{phone:''}});assert.equal(page.data.showPhoneModal,false);
+ wx.getStorageSync=()=>'';wx.setStorageSync=()=>{};
+});

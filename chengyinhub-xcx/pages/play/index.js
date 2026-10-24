@@ -7,8 +7,10 @@ const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
 const app = getApp();
 const bgTracker = require('../../utils/location/bg-tracker.js');
+let playLocationOwnerSequence = 0; // 每次实际持有使用独立key，旧页面不能释放新会话。
 const analytics = require('../../utils/analytics.js');
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
+const { bundledMerchantGameAudioPath } = require('./utils/merchant-game-assets.js');
 const geo = require('../../utils/geo.js'); // 纯地理/时间工具(haversine/营业窗判定),可单测
 const recommend = require('./utils/play-recommend.js'); // P0 推荐评分(纯函数,已单测)
 const { buildPlayRoute, createSessionClock, formatElapsed } = require('../../utils/play-ui-contract.js');
@@ -17,6 +19,9 @@ const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
 const gameSessionClient = require('../../utils/game-session-client.js');
+const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
+const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
+const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
 const {
   normalizePlayerProjection,
   buildPlayerChoiceInput,
@@ -33,7 +38,9 @@ const { readReducedMotion, writeReducedMotion } = require('../../utils/motion-pr
 const { chinaParts, formatDayDots, toTimestamp } = require('../../utils/datetime.js');
 const npcFigure = require('./utils/npc-figure.js');   // 低模人形:几何代码里生成,不依赖模型资产
 const { pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, dailySignRevealState, applyStoryVars } = require('./utils/playkit-view.js'); // v5.1 新玩法:会话视图→可渲染 kit
+const { canContinue, feedbackWritable, submitAlbum } = require('./utils/playkit-r5-segments.js');
 
+const THOUGHT_SYNC_WAIT_MS = 8000;   // 伏笔/步数同步最长等待,超时不拦玩家动作
 const RUN_HOLD_MS = 3000;   // 主键长按结束:与漫游页 END_HOLD_MS 同一口径
 
 const { buildMilestone } = require('./utils/play-milestone.js'); // C 分享卡里程碑轴(纯函数,已单测)
@@ -42,7 +49,7 @@ const { getScene } = require('../../utils/scene-registry.js');
 const { resolveOpenState } = require('./utils/play-open-state.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
 const finishRouteRecommendation = require('./finish-route-recommendation.js');
-const { buildPlayRecap } = require('./recap.js');
+const { buildPlayRecap } = require('./recap.js'); const { buildFinishMedals } = require('./utils/finish-medals.js'); // 2026-10-22 完成页勋章堆
 const { summarizePuzzleScores } = require('./utils/play-puzzle-summary.js');
 const { normalizeAtmosphere, atmosphereClass, PRESETS: CHAPTER_ATMOSPHERES } = require('../../utils/chapter-atmosphere.js');
 const CHAPTER_ATMOSPHERE_VALUES = CHAPTER_ATMOSPHERES.map((item) => item.value);
@@ -121,8 +128,8 @@ const PLAY_STORY_CARD = Object.freeze({
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { MAP_STYLE: MAP_DARK } = require('../../utils/map-style.js');
 const storyAudio = require('../../utils/story-audio.js');
-const storyScene = require('../../utils/story-scene.js');
-const lifeArchive = require('../../utils/life-archive.js');
+const storyScene = require('./utils/story-scene.js');
+const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
 const STORY_SOUND_KEY = 'cy_story_sound_off';
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
@@ -154,7 +161,7 @@ function kacchaLines(hits) {
   }));
 }
 // 地点卡的兜底说明;故事玩法入口卡不借用它(那是「走到某处」的话,玩法不需要走)。
-const NODE_DESC_FALLBACK = '走到这里,留意四周——故事就藏在细节里。';
+const NODE_DESC_FALLBACK = '走到这里，留意四周——故事就藏在细节里。';
 /* 入口卡按玩法类型换图标和动作词(2026-09-23 用户:拍照类要是相机)。 */
 const GAME_KINDS = {
   photo: { icon: 'camera', label: '在现场 · 拍一张', go: '打开相机' },
@@ -273,32 +280,32 @@ function buildMockPlayData(kind) {
     {
       nodeId: 1001, sortId: 1, name: '街角绿地补给点', address: '复兴公园南门',
       latitude: 31.21784, longitude: 121.46423, imgUrl: '/pages/play/images/d_topic1.png',
-      description: '找到最安静的一张长椅,拍下今天的城市颜色。', hookText: '离你最近,适合先热身',
-      cardHookLong: '这里不需要按路线走,靠近后完成一次观察打卡。', validationMethod: 2,
-      gameTitle: '城市颜色采样', photoRequireDesc: '拍一张能代表此刻心情的城市细节', storyText: '树影、路灯和行人的脚步,会把城市切成很多层。',
+      description: '找到最安静的一张长椅，拍下今天的城市颜色。', hookText: '离你最近，适合先热身',
+      cardHookLong: '这里不需要按路线走，靠近后完成一次观察打卡。', validationMethod: 2,
+      gameTitle: '城市颜色采样', photoRequireDesc: '拍一张能代表此刻心情的城市细节', storyText: '树影、路灯和行人的脚步，会把城市切成很多层。',
       fragmentText: '你拿到了一枚「午后光斑」。'
     },
     {
       nodeId: 1002, sortId: 2, name: '梧桐下的橱窗', address: '思南路街区',
       latitude: 31.21932, longitude: 121.46716, imgUrl: '/pages/play/images/d_topic2.png',
-      description: '观察一处橱窗或门牌,找出它和这条街的关系。', hookText: '有合作商户标记', merchantId: 10001,
-      cardHookLong: '如果正在营业,可以把这里当成路线中的停靠点。', validationMethod: 1,
+      description: '观察一处橱窗或门牌，找出它和这条街的关系。', hookText: '有合作商家标记', merchantId: 10001,
+      cardHookLong: '如果正在营业，可以把这里当成路线中的停靠点。', validationMethod: 1,
       gameTitle: '门牌线索', question: '这条街最常出现的树是什么?', answerReveal: '梧桐', feedbackText: '答案藏在抬头能看到的树冠里。',
       fragmentText: '你拿到了一枚「旧街门牌」。'
     },
     {
       nodeId: 1003, sortId: 3, name: '隐蔽展墙', address: '淮海中路支弄',
       latitude: 31.22224, longitude: 121.47042, imgUrl: '/pages/play/images/d_topic4.png',
-      description: '进入支弄,找到一面被海报或涂鸦覆盖的墙。', hookText: '更适合自由绕路发现',
-      cardHookLong: '不是必经站,但完成后会解锁一段城市手记。', validationMethod: 5,
+      description: '进入支弄，找到一面被海报或涂鸦覆盖的墙。', hookText: '更适合自由绕路发现',
+      cardHookLong: '不是必经站，但完成后会解锁一段城市手记。', validationMethod: 5,
       storyText: '支弄里的墙面会保存很多短暂出现过的生活痕迹。', fragmentText: '你拿到了一枚「支弄回声」。'
     },
     {
       nodeId: 1004, sortId: 4, name: '黄昏观景口', address: '新天地北里',
       latitude: 31.22458, longitude: 121.47518, imgUrl: '/pages/play/images/d_topic4.png',
-      description: '在天色变化时停留两分钟,记录你看到的城市边界。', hookText: '适合终点收束',
-      cardHookLong: '城市定向模式里,这里会作为最后一站。', validationMethod: 3,
-      gameTitle: '黄昏选择题', question: '此刻更适合记录什么?', options: { A: '灯光', B: '声音', C: '人流' }, answerReveal: '都可以,关键是停下来观察。',
+      description: '在天色变化时停留两分钟，记录你看到的城市边界。', hookText: '适合终点收束',
+      cardHookLong: '城市定向模式里，这里会作为最后一站。', validationMethod: 3,
+      gameTitle: '黄昏选择题', question: '此刻更适合记录什么?', options: { A: '灯光', B: '声音', C: '人流' }, answerReveal: '都可以，关键是停下来观察。',
       fragmentText: '你拿到了一枚「黄昏切面」。'
     }
   ];
@@ -311,7 +318,7 @@ function buildMockPlayData(kind) {
     chapters: [{
       idxLabel: free ? '附近探索' : '第一章',
       name: free ? '今天先从附近开始' : '顺着旧街走到黄昏',
-      description: free ? '没有固定路线,挑一个想去的点位出发,完成附近观察打卡。' : '按推荐顺序走完四站,把线索串成一段完整城市故事。',
+      description: free ? '没有固定路线，挑一个想去的节点出发，完成附近观察打卡。' : '按推荐顺序走完四站，把线索串成一段完整城市故事。',
       cover: '/pages/play/images/d_topic5.png', totalMileage: free ? 1.8 : 2.4, totalTime: free ? 2700 : 3600
     }],
     nodes
@@ -319,12 +326,27 @@ function buildMockPlayData(kind) {
 }
 
 const themeBackpack = require('./utils/theme-backpack.js');
+const r5PlayerRuntime = require('./utils/r5-player-runtime.js');
+const themeRecords = require('../../utils/theme-records.js');
+const themeTrade = require('./utils/theme-trade.js');
+const themePlans = require('./utils/theme-plans.js');
+const playerOps = require('./utils/theme-player-ops.js');
 Page({
+  ...r5PlayerRuntime.methods(), closeR5Verdict() { this.setData({ 'r5Verdict.show': false }); },  // 结果反馈判定屏「继续」(状态见 r5-player-runtime)
   ...themeBackpack.methods(req),
+  ...themeRecords.methods(req, true),
+  openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
+  ...themeTrade.methods(req),
+  ...themePlans.methods(req),
+  ...playerOps.methods(req),
   _routeState: normalizeRouteState(null),
 
   data: {
+    communityPostWrite: false,
+    ...r5PlayerRuntime.data,
     ...themeBackpack.data,
+    ...themeRecords.data,
+    ...playerOps.data,
     tagSheetShow: false,
     tagSheetItems: [],
     privacyGateShow: false,
@@ -341,10 +363,11 @@ Page({
     mode: 1, serverMode: 1, modeLabel: '城市定向',
     routeNotice: '', routeRefreshing: false, journeyAttributes: [],
     screen: '',                 // '' | intro | gameLaunch | gamePlay
-    gpsOk: false, gpsHint: '开始后可开启定位，也可扫码到达',
+    gpsOk: false, gpsLowAcc: false, gpsHint: '开始后可开启定位，也可扫码到达',
     // 底部运行栈三态(Figma 3957:12602 / 3962:14212 / 3962:14341)。
     // idle = 进了地图但还没按「开始」;running / paused 跟着 _sessionClock 走,不另存一份真值。
     runState: 'idle',
+    runHoldLeft: 0,         // 长按结束时还没完成的站数(>0 才在按住时提示)
     runHoldPct: 0,          // 主键长按结束的进度环 0–100
     chapterCount: 0,   // 本主题章节数(开始前读数)
     searchPlaces: [],   // 顶部输入地址的候选,见 _searchPlaces
@@ -468,7 +491,7 @@ Page({
     nightHint: false,
     // 通关
     showFinish: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
-    finishMedals: 0, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
+    finishMedals: 0, finishMedalList: [], medalScreen: { show: false, items: [], title: '', sub: '', stats: [], record: null }, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
     voucher: { show: false },
@@ -478,7 +501,7 @@ Page({
     reviewElapsed: '', reviewDistance: '', reviewEmpty: true,
     // C 结束分享:主视觉徽章 + 里程碑轴。两者都可能为 null,对应「没拿到徽章」「累计数取不到」,
     // 此时各自整块不渲染 —— 不摆假数据(任务书硬要求)。
-    finishBadge: null, milestone: null,
+    finishBadge: null, milestone: null, stageEnd: null,
     // 终章结局信(mode2)
     ending: { show: false, opener: '', fragments: [] }, endingError: false,
     // 音频播放
@@ -496,6 +519,8 @@ Page({
   },
 
   onLoad(options) {
+    this._playOwner = this._playMember();
+    this._playDisposed = false;
     options = options || {};
     this._entryTopicName = options.topicName ? decodeURIComponent(options.topicName) : '';
     this._routeState = normalizeRouteState(null);
@@ -539,16 +564,26 @@ Page({
       return;
     }
     this._pendingInviteCode = String((options.inviteCode) || '').trim();
-    if (this._pendingInviteCode) this._consumeInviteCode().then(() => this.loadData(true));
+    if (this._pendingInviteCode) this._consumeInviteCode().then((current) => { if (current) this.loadData(true); });
     else this.loadData(true);
   },
 
   _consumeInviteCode() {
+    if (!this._isPlayAccountCurrent()) return Promise.resolve(false);
     const code = this._pendingInviteCode;
-    if (!code) return Promise.resolve();
+    if (!code) return Promise.resolve(false);
     this._pendingInviteCode = '';
     const that = this;
+    const activityId = String(this.data.activityId || '');
+    const topicId = String(this.data.topicId || '');
+    const sequence = this._inviteJoinSequence = (this._inviteJoinSequence || 0) + 1;
     return new Promise((resolve) => {
+      let settled = false;
+      const isCurrent = () => !settled && that._isPlayAccountCurrent()
+        && sequence === that._inviteJoinSequence
+        && activityId === String(that.data.activityId || '')
+        && topicId === String(that.data.topicId || '');
+      const finish = () => { const current = isCurrent(); settled = true; resolve(current); };
       app.sendRequest({
         hideLoading: true,
         url: '/api/circle-theme/session/join',
@@ -556,49 +591,89 @@ Page({
         data: JSON.stringify({ inviteCode: code }),
         header: { 'Content-Type': 'application/json' },
         success(res) {
+          if (!isCurrent()) { finish(); return; }
           if (res && (res.code == 200 || res.code == '200')) {
             const sessionId = res.data && res.data.id;
-            if (sessionId && that.data.topicId) {
-              const memberId = app.getUserID && app.getUserID();
+            if (sessionId && topicId) {
+              const memberId = that._boundPlayOwner();
               const key = memberId === null || memberId === undefined || memberId === ''
-                ? '' : 'circle_session_m' + memberId + '_t' + that.data.topicId;
+                ? '' : 'circle_session_m' + memberId + '_t' + topicId;
               try {
-                wx.removeStorageSync('circle_session_' + that.data.topicId);
+                wx.removeStorageSync('circle_session_' + topicId);
                 if (key) wx.setStorageSync(key, sessionId);
               } catch (e) {}
             }
           } else {
             cyToast((res && res.msg) || '无法加入同行探索');
           }
-          resolve();
+          finish();
         },
-        successStatusAbnormal(res) { cyToast((res && res.msg) || '无法加入同行探索'); resolve(); },
-        fail() { cyToast('无法加入同行探索'); resolve(); },
+        successStatusAbnormal(res) { if (isCurrent()) cyToast((res && res.msg) || '无法加入同行探索'); finish(); },
+        fail() { if (isCurrent()) cyToast('无法加入同行探索'); finish(); },
       });
     });
   },
+  _playMember() { return String((app.getUserID && app.getUserID()) || ''); },
+  /** 高级玩法组件句柄;页面未挂 selectComponent(预渲染/桩)时按「无组件」处理。 */
+  _advancedGameComponent() {
+    return typeof this.selectComponent === 'function' ? this.selectComponent('#advancedGame') : null;
+  },
+  /** 本页归属账号:首次使用时绑定(onLoad 已绑;直接调用方法的场景在捕获上下文前补绑)。 */
+  _boundPlayOwner() {
+    if (this._playOwner === undefined) this._playOwner = this._playMember();
+    return this._playOwner;
+  },
+  /** 页面未卸载(_playDisposed 为唯一卸载标记)且仍是进页时的账号。 */
+  _isPlayAccountCurrent() {
+    return !this._playDisposed && this._boundPlayOwner() === this._playMember();
+  },
   onShow() {
+    // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)
+    if (this._playOwner !== undefined && this._playOwner !== this._playMember()) {
+      this._stopLeadPoll(); this._stopTracking(); audioSession.pauseAll(); audioSession.releaseAwake();
+      wx.reLaunch({ url: '/pages/index/index' });
+      return;
+    }
+    this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
+    this._startZeroHpTimer();
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
     else if (this.data.chapStory.show) this._startStoryDust();
+    if (this.data.chapterFull) audioSession.keepAwake('chapterFull', true);
+    if (this.data.chapStory.show) audioSession.keepAwake('chapStory', true);
     this._resetPackFx();   // onHide 清掉定时器后,四拍/拖拽的中间态标志必须归零,否则包把自己挡死
-    if (!this.data.isPreview && !this.data.isMock && (this.data.activityId || this.data.topicId) && !this.data.loading) this.loadData(false);
+    if (!this.data.isPreview && !this.data.isMock && (this.data.activityId || this.data.topicId) && (!this.data.loading || this._playReloadOnShow)) { this._playReloadOnShow = false; this.loadData(false); }
   },
 
   // M2 会话参数:活动会话带 activityId,自玩会话带 topicId(后端二选一,活动优先)
   _sessionParams() { return this.data.activityId ? { activityId: this.data.activityId } : { topicId: this.data.topicId }; },
+  /** 会话归属比较键:id 统一按字符串比,/nodes 回包把 '31' 写回成 31 不算换了场次。 */
+  _sessionKey(params) {
+    const p = params || this._sessionParams();
+    return p.activityId ? 'a:' + String(p.activityId) : 't:' + String(p.topicId == null ? '' : p.topicId);
+  },
   _routeWritePayload(kind, nodeId, payload) {
     if (!this._routeActions) this._routeActions = createRouteActionStore();
     return Object.assign({}, this._sessionParams(), payload || {}, this._routeActions.context(kind, nodeId, this._routeState));
   },
-  _withThoughtSync(write) {
+  _withThoughtSync(write, isCurrent) {
+    const current = () => typeof isCurrent !== 'function' || isCurrent();
+    if (!current()) return Promise.resolve({ obsolete: true });
     if (this.data.isPreview || this.data.isMock
         || (!this._thoughtSyncPending && !(this._routeState && this._routeState.thoughtCount > 0) && !(this.data.themeBag || {}).stepEggs)) return write();
     const pendingClaim = this._thoughtSyncPending || Promise.resolve(true);
-    return pendingClaim.then(ok => ok && this._syncThoughts([])).then(ok => {
-      if (ok) return write();
-      cyToast('步数未同步，请重试');
-      return { code: 'fail', netFail: true, msg: '步数未同步，请重试' };
+    const synced = pendingClaim.then(ok => current() && ok && this._syncThoughts([], isCurrent)).catch(() => false);
+    // F-R2S-01:微信运动授权/登录/读数回调可能迟迟不回,步数同步最多等这么久,之后照常提交玩家动作。
+    let timer = null;
+    const bounded = new Promise((resolve) => {
+      timer = setTimeout(() => resolve(false), THOUGHT_SYNC_WAIT_MS);
+      synced.then(resolve, () => resolve(false));
+    });
+    return bounded.then(ok => {
+      clearTimeout(timer);
+      if (!current()) return { obsolete: true };
+      if (!ok) cyToast('步数暂未同步，仍可继续游玩');
+      return write();
     });
   },
   _resolveRouteAction(kind, nodeId) {
@@ -648,8 +723,29 @@ Page({
     const source = this._routeNodeCatalog || this.data.nodes || [];
     return source.map((node) => Object.assign({}, node, current[String(node.nodeId)] || {}));
   },
+  _routeStateVersionKnown(input) {
+    let source = input;
+    if (typeof source === 'string') {
+      try { source = JSON.parse(source); } catch (e) { source = null; }
+    }
+    const value = source && typeof source === 'object' && !Array.isArray(source) ? source.version : null;
+    return (typeof value === 'number' || typeof value === 'string' && value.trim() !== '')
+      && Number.isFinite(Number(value));
+  },
+  _acceptRouteStateProjection(input) {
+    const next = normalizeRouteState(input), previous = this._routeState || {};
+    const previousKnown = Number.isFinite(previous.version)
+      && (previous.version > 0 || this._versionedRouteState === previous);
+    return !(next.sessionId && next.sessionId === previous.sessionId && previousKnown
+      && (!this._routeStateVersionKnown(input) || next.version < previous.version));
+  },
   _applyRouteState(routeStateInput, callback) {
+    if (!this._acceptRouteStateProjection(routeStateInput)) {
+      if (callback) callback(false);
+      return false;
+    }
     const routeState = normalizeRouteState(routeStateInput);
+    const versionKnown = this._routeStateVersionKnown(routeStateInput);
     if (this._routeState.routeMode === 'BRANCH_GRAPH' && routeState.routeMode !== 'BRANCH_GRAPH') {
       this._failClosedRouteState('路线状态暂未同步，请稍后重试', false);
       if (callback) callback(false);
@@ -658,6 +754,10 @@ Page({
     const catalog = this._mergeRouteCatalogCurrent();
     this._routeNodeCatalog = catalog;
     let nodes = applyRouteStateToNodes(catalog, routeState);
+    if (routeState.routeMode === 'LINEAR' && this._hasGenericProofFlow()) nodes = nodes.map(node => {
+      const state = routeState.nodeStates[String(node.nodeId)];
+      return state ? Object.assign({}, node, { done: state === 'COMPLETED', playable: state === 'PLAYABLE', locked: state === 'DISCOVERED_LOCKED', routeNodeState: state }) : node;
+    });
     if (routeState.routeMode === 'BRANCH_GRAPH' && routeState.status !== 'ACTIVE') {
       const message = this._routeNoticeForState(routeState) || '路线状态异常，当前不可继续';
       nodes = nodes.map((node) => node.done || node.routeNodeState === 'COMPLETED' ? node : Object.assign({}, node, {
@@ -665,6 +765,7 @@ Page({
       }));
     }
     this._routeState = routeState;
+    this._versionedRouteState = versionKnown ? routeState : null;
     this.setData({
       nodes,
       total: nodes.length,
@@ -680,9 +781,17 @@ Page({
     return true;
   },
   refreshRouteState() {
-    if (this.data.isPreview || this.data.isMock) return Promise.resolve(false);
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this.data.isPreview || this.data.isMock) return Promise.resolve(false);
+    const params = this._sessionParams();
+    const sessionKey = this._sessionKey(params);
+    const loadEpoch = this._playLoadEpoch;
+    const sequence = this._routeReadSequence = (this._routeReadSequence || 0) + 1;
+    const isCurrent = () => this._isPlayAccountCurrent() && !this._themeHidden
+      && sequence === this._routeReadSequence && loadEpoch === this._playLoadEpoch
+      && sessionKey === this._sessionKey();
     this._failClosedRouteState('正在同步路线…', true);
-    return req('/api/play/route-state', 'GET', this._sessionParams()).then((response) => {
+    return req('/api/play/route-state', 'GET', params).then((response) => {
+      if (!isCurrent()) return false;
       if (response.code == 200 || response.code == '200') {
         const data = response.data && response.data.routeState ? response.data.routeState : response.data;
         return this._applyRouteState(data || {});
@@ -690,6 +799,7 @@ Page({
       this._failClosedRouteState(response.msg || '路线状态暂未同步，请稍后重试', false);
       return false;
     }).catch(() => {
+      if (!isCurrent()) return false;
       this._failClosedRouteState('路线状态暂未同步，请稍后重试', false);
       return false;
     });
@@ -721,13 +831,28 @@ Page({
 
   /** 行程结束的唯一收尾口(通关/退出/离开页面都走它),幂等 */
   _stopTracking() {
+    this._playLocationEpoch = (this._playLocationEpoch || 0) + 1;
+    this._locationRequesting = false;
     this._watching = false;
-    try { wx.offLocationChange(); } catch (e) {}
-    bgTracker.release(this._trackKey());
+    if (this._playLocationHandler) {
+      try { wx.offLocationChange(this._playLocationHandler); } catch (e) {}
+      this._playLocationHandler = null;
+    }
+    const release = this._releasePlayTracking;
+    this._releasePlayTracking = null;
+    this._playTrackingKey = null;
+    if (release) release();
   },
 
   onUnload() {
+    this._playDisposed = true;
+    this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
+    this._themeRecordsDisposed = true;
+    this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
+    this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
+    this._cancelShopRecording();
     this._themeHidden = true; this._stopThemePoll();
+    this._stopZeroHpTimer();
     this._themeEpoch = (this._themeEpoch || 0) + 1;
     if (this._gateTimer) clearTimeout(this._gateTimer);
     (this._fxTimers || []).forEach(clearTimeout);
@@ -735,6 +860,7 @@ Page({
     this._stopTracking();
     this._watching = false;
     this.destroyAudio();
+    audioSession.releaseAwake();
     this._stopShopNpcVoice();
     this._stopLeadPoll();
     // R9-21:先落盘再销毁时钟 —— 暂停/返回页面不算主动离场,未结束的会话要能回来。
@@ -747,10 +873,10 @@ Page({
     this._clearTransientUiTimers();
     if (this._routeDrawStop) this._routeDrawStop();
     // 玩法音频归页面持有(见 _togglePlayKitAudio),页面走了就得销毁,否则背景里一直在放
-    if (this._kitAudio) { this._kitAudio.destroy(); this._kitAudio = null; }
+    if (this._kitAudio) { audioSession.unregister(this._kitAudio); this._kitAudio.destroy(); this._kitAudio = null; }
     // 章节旁白音频与故事流两个 timer 也归页面持有:若卸载时故事流还开着(没走 closeChapStory),
     // 旁白会留在后台继续放、timer 会在卸载后 setData。跟 _kitAudio 一样就地销毁。
-    if (this._chapAudio) { try { this._chapAudio.stop(); this._chapAudio.destroy(); } catch (e) {} this._chapAudio = null; }
+    if (this._chapAudio) { audioSession.unregister(this._chapAudio); try { this._chapAudio.stop(); this._chapAudio.destroy(); } catch (e) {} this._chapAudio = null; }
     if (this._storyTimer) { clearTimeout(this._storyTimer); this._storyTimer = 0; }
     if (this._settleTimer) { clearTimeout(this._settleTimer); this._settleTimer = 0; }
     this._stopStoryDust();
@@ -764,13 +890,18 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+    this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
+    this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
+    this._playReloadOnShow = true;
+    this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
     this._themeHidden = true; this._stopThemePoll();
+    this._stopZeroHpTimer();
     if (this._sound) { this._sound.dispose(); this._sound = null; }   // 回来时按当前氛围重起
     this._stopStoryDust();
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
     if (this._settleTimer) clearTimeout(this._settleTimer);
     this._storyAt = null;
-    this._clearPackTimers(); this.pauseAudio(); this._stopShopNpcVoice(); this._stopLeadPoll(); this._pauseSessionClock(); this._persistRunSession(); },
+    this._clearPackTimers(); this.pauseAudio(); audioSession.pauseAll(); audioSession.releaseAwake(); this._stopShopNpcVoice(); this._stopLeadPoll(); this._pauseSessionClock(); this._persistRunSession(); },
 
   _clearTransientUiTimers() {
     ['_navBubbleTimer', '_burstTimer', '_couponTimer',
@@ -797,23 +928,26 @@ Page({
   // ===== R9-21 暂停会话恢复 =====
   /** 快照作用域:先按账号隔离，再按 activityId/topicId 隔离；身份未确定时不碰个人快照。 */
   _runSessionScope() {
-    return { memberId: app.getUserID(), activityId: this.data.activityId, topicId: this.data.topicId };
+    this._isPlayAccountCurrent();
+    return { memberId: this._playOwner, activityId: this.data.activityId, topicId: this.data.topicId };
   },
   /** 暂停/离页时落盘。只记「已开始未结束」的行程;结束(通关/退出/服务端判结束)会 clear,
    *  所以重进读到的快照一定是可继续的暂停态,不是一个幽灵计时。 */
   _persistRunSession() {
-    if (!this._runStarted || this.data.isPreview || this.data.isMock) return false;
+    // 卸载时也要落盘(onUnload 先置 _playDisposed):这里只核账号归属,不看卸载标记。
+    if (this._boundPlayOwner() !== this._playMember() || !this._runStarted || this.data.isPreview || this.data.isMock) return false;
     if (this._sessionClock && !this._sessionClock.isPaused()) this._sessionClock.pause();
     const elapsed = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
     const now = Date.now();
     const scope = this._runSessionScope();
     // 第二轮拍板 22:同一份再写服务端,换手机登录同账号能续。写失败本机那份仍在,不影响本机恢复。
-    this._queueRunSync(() => saveServerPausedRun(req, scope, elapsed, now));
+    this._queueRunSync(() => saveServerPausedRun(req, scope, elapsed, now, wx));
     return writePausedRun(wx, scope, elapsed, now);
   },
   /** 本机快照作废 + 服务端留结束墓碑:只清本机的话,换台设备又会把已结束的一局恢复回来。
    *  同时作废在途的服务端恢复读 —— 迟到的旧会话不能把刚结束的局拉回暂停态。 */
   _clearRunSessionEverywhere() {
+    if (!this._isPlayAccountCurrent()) return false;
     const scope = this._runSessionScope();
     const now = Date.now();
     this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
@@ -822,7 +956,11 @@ Page({
   },
   /** 同一页的服务端 save/clear 串行发出:先暂停再结束时,迟到的 save 不能把已结束的会话写回。 */
   _queueRunSync(send) {
-    this._runSyncChain = (this._runSyncChain || Promise.resolve()).then(send);
+    const member = this._playOwner;
+    this._runSyncChain = (this._runSyncChain || Promise.resolve()).then(() => {
+      if (member !== this._playMember()) return false;
+      return send();
+    });
     return this._runSyncChain;
   },
   /** 服务端权威态说这场已经不能继续(时间窗关闭 / 路线终态)时不恢复。 */
@@ -836,8 +974,9 @@ Page({
   /** 重进页面:读暂停快照,投影回 paused(不重开、不偷跑)。服务端说结束就不恢复并清快照。
    *  第二轮拍板 22:本机快照先同步恢复;再读服务端那份,本机没有(换了手机)或服务端更新时改用服务端的。 */
   _restoreRunSession(d, routeState, nodes) {
-    if (this._runStarted || this.data.isPreview || this.data.isMock) return false;
+    if (!this._isPlayAccountCurrent() || this._runStarted || this.data.isPreview || this.data.isMock) return false;
     const scope = this._runSessionScope();
+    const sessionKey = this._sessionKey();
     const openingPending = routeState && routeState.opening && !routeState.opening.complete;
     const allDone = !openingPending && (nodes || []).length > 0 && nodes.every((n) => n && n.done);
     if (allDone || this._serverRunSessionEnded(d, routeState)) {
@@ -848,7 +987,8 @@ Page({
     const restored = stored ? this._applyRestoredRun(stored) : false;
     const epoch = this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
     readServerPausedRun(req, scope).then((result) => {
-      if (epoch !== this._runRestoreEpoch || !result.ok) return;
+      if (!this._isPlayAccountCurrent() || epoch !== this._runRestoreEpoch || !result.ok
+          || sessionKey !== this._sessionKey()) return;
       // 等服务端期间玩家已经自己开了新局 / 点了继续:那一局归玩家,服务端这份不再覆盖或撤销它。
       const untouched = !this._runStarted || (this._restoredRun && this._sessionClock && this._sessionClock.isPaused());
       if (!untouched) return;
@@ -888,6 +1028,7 @@ Page({
    *  R1:通关有多条入口(末站完成 / 勋章层关闭 / 继续),只清快照不够 —— 不清 _runStarted 的话,
    *  onHide/onUnload 的落盘又会把已结束的行程写回去,重进时被当成暂停恢复。 */
   _endRunSession() {
+    this._stopTracking();
     this._pauseSessionClock();
     this._runStarted = false;
     this._restoredRun = false;
@@ -903,8 +1044,7 @@ Page({
       if (!this.data.isPreview && !this.data.isMock && this.data.gpsOk) this.watchLocation();
     } else {
       this._sessionClock.pause();
-      this._watching = false;
-      try { wx.offLocationChange(); wx.stopLocationUpdate(); } catch (e) {}
+      this._stopTracking();
     }
     if (this._sessionClock.isPaused()) this._persistRunSession();
   },
@@ -955,7 +1095,7 @@ Page({
     this._runHoldDelay = setTimeout(() => {
       this._runHoldDelay = null;
       const t0 = Date.now();
-      this.setData({ runHoldPct: 0 });
+      this.setData({ runHoldPct: 0, runHoldLeft: (this.data.nodes || []).filter((n) => !n.done).length });
       this._runHoldTimer = setInterval(() => {
         const pct = Math.min(100, Math.round(((Date.now() - t0) / RUN_HOLD_MS) * 100));
         this.setData({ runHoldPct: pct });
@@ -975,7 +1115,7 @@ Page({
   _cancelRunHold() {
     if (this._runHoldDelay) { clearTimeout(this._runHoldDelay); this._runHoldDelay = null; }
     if (this._runHoldTimer) { clearInterval(this._runHoldTimer); this._runHoldTimer = null; }
-    if (this.data.runHoldPct) this.setData({ runHoldPct: 0 });
+    if (this.data.runHoldPct || this.data.runHoldLeft) this.setData({ runHoldPct: 0, runHoldLeft: 0 });
   },
   /** 结束:交给既有通关/结算路径,不在这里另写一套收尾 */
   _finishRun() {
@@ -1326,6 +1466,7 @@ Page({
     });
     if (at >= paras.length && v.chapCover) lines.push({ id: 'img', img: v.chapCover, in: false, dir: 'up', d: 0 });
     this._storyTop = 0;
+    audioSession.keepAwake('chapStory', true);
     this.setData({ chapStory: { show: true, open: false, title: v.chapName || '', lines, thoughtKeys,
       audio: v.audio || '', audioDur: v.audioDur || '', playing: false, barAway: false, frames: 0 } }, () => {
       this._storyTimer = setTimeout(() => {
@@ -1358,6 +1499,7 @@ Page({
     if (this._settleTimer) { clearTimeout(this._settleTimer); this._settleTimer = 0; }
     this._stopStoryDust();
     this._stopChapAudio();
+    audioSession.keepAwake('chapStory', false);
     this.setData({ 'chapStory.open': false });
     this._storyTimer = setTimeout(() => this.setData({ 'chapStory.show': false, 'chapStory.lines': [] }), 260);
   },
@@ -1371,12 +1513,14 @@ Page({
     if (!st.audio) return;
     if (st.playing) { this._stopChapAudio(); return; }
     if (!this._chapAudio) {
-      const ctx = wx.createInnerAudioContext();
+      const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'chapter' });
       ctx.src = st.audio;
       // 三个终态都要把按钮态收回去,否则暂停图标会一直亮着
-      ctx.onEnded(() => this.setData({ 'chapStory.playing': false }));
-      ctx.onStop(() => this.setData({ 'chapStory.playing': false }));
-      ctx.onError(() => { this.setData({ 'chapStory.playing': false }); cyToast('这段音频放不出来'); });
+      ctx.onPlay(() => audioSession.keepAwake('chapAudio', true));
+      ctx.onPause(() => audioSession.keepAwake('chapAudio', false));
+      ctx.onEnded(() => { audioSession.keepAwake('chapAudio', false); this.setData({ 'chapStory.playing': false }); });
+      ctx.onStop(() => { audioSession.keepAwake('chapAudio', false); this.setData({ 'chapStory.playing': false }); });
+      ctx.onError(() => { audioSession.keepAwake('chapAudio', false); this.setData({ 'chapStory.playing': false }); cyToast('这段音频放不出来'); });
       this._chapAudio = ctx;
     }
     this._chapAudio.play();
@@ -1384,7 +1528,8 @@ Page({
   },
 
   _stopChapAudio() {
-    if (this._chapAudio) { try { this._chapAudio.stop(); this._chapAudio.destroy(); } catch (e) {} this._chapAudio = null; }
+    if (this._chapAudio) { audioSession.unregister(this._chapAudio); try { this._chapAudio.stop(); this._chapAudio.destroy(); } catch (e) {} this._chapAudio = null; }
+    audioSession.keepAwake('chapAudio', false);
     if (this.data.chapStory.playing) this.setData({ 'chapStory.playing': false });
   },
 
@@ -1573,7 +1718,7 @@ Page({
    * 那一段已经不在(作者改过、或本章还没解锁到那)就留在章首,不乱跳。
    */
   _resumeStory() {
-    if (this._resumeTried || this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this._resumeTried || this.data.isPreview || this.data.isMock) return;
     this._resumeTried = true;
     const saved = storyResume.read(this._runSessionScope());
     const paras = this.data.chapterParas || [];
@@ -1588,7 +1733,15 @@ Page({
     const hit = pos.nodeId ? paras.find((p) => String(p.nodeId) === pos.nodeId) : paras.find((p) => p.i === Number(pos.i));
     if (!hit || hit.i === 0) return;
     const anchor = hit.nodeId ? 'chapter-game-' + hit.nodeId : 'chapter-block-' + hit.i;
-    this.setData({ chapterGameAnchor: '' }, () => this.setData({ chapterGameAnchor: anchor }));
+    const sessionKey = this._sessionKey();
+    const chapterId = String((this.data.chapter || {}).id || '');
+    const epoch = this._runRestoreEpoch;
+    this.setData({ chapterGameAnchor: '' }, () => {
+      if (!this._isPlayAccountCurrent() || epoch !== this._runRestoreEpoch
+          || sessionKey !== this._sessionKey()
+          || chapterId !== String((this.data.chapter || {}).id || '')) return;
+      this.setData({ chapterGameAnchor: anchor });
+    });
   },
 
   /** 场景的光:径向光晕 / 斜光束 / 散景(原型 cosmos 引擎的前三层,底色交给章节氛围的 CSS)。 */
@@ -1717,7 +1870,9 @@ Page({
   onNpcTouchEnd() { this._npcX = null; },
 
   closeShopNpc() {
+    this._cancelShopRecording();
     if (!this.data.shopNpc.show) return;
+    this._shopNpcConversationEpoch = (this._shopNpcConversationEpoch || 0) + 1;
     if (this._npcTimer) { clearTimeout(this._npcTimer); this._npcTimer = 0; }
     this._stopThinkBeat();
     this._stopShopNpcVoice();
@@ -1734,39 +1889,109 @@ Page({
    *  所以「点了语音就回不了打字」在结构上不成立:输入框一直在,语音只是它旁边的另一个入口。
    *  ⚠️ 这里直连 wx.uploadFile 而不走 app.getUploadClient():那条通道的契约要求返回
    *  文件 URL(它是给要落 OSS 的资产用的),而语音片段是临时的、刻意不持久化。 */
+  _isShopRecordingCurrent(intent) {
+    const conversation = this.data.shopNpc;
+    return !!intent && this._shopRecordingIntent === intent && !intent.cancelled
+      && this._isPlayAccountCurrent() && intent.owner === this._playOwner
+      && intent.sessionKey === this._sessionKey()
+      && intent.epoch === this._shopNpcConversationEpoch && conversation === intent.conversation
+      && conversation.show && conversation.open !== false && conversation.nodeId === intent.nodeId;
+  },
+  _releaseShopRecording(intent) {
+    if (intent.rec) {
+      try { if (intent.rec.offStop) intent.rec.offStop(intent.onStop); } catch (e) {}
+      try { if (intent.rec.offError) intent.rec.offError(intent.onError); } catch (e) {}
+    }
+    if (this._shopRecordingIntent === intent) this._shopRecordingIntent = null;
+  },
+  _cancelShopRecording() {
+    const intent = this._shopRecordingIntent;
+    if (!intent) return;
+    const current = this._isShopRecordingCurrent(intent);
+    intent.cancelled = true;
+    if (current) this.setData({ 'shopNpc.recording': false });
+    if (!intent.rec) { this._releaseShopRecording(intent); return; }
+    // Keep its terminal listener until stop settles; a new press must not consume this stop event.
+    if (intent.stopping) return;
+    intent.stopping = true;
+    try { intent.rec.stop(); } catch (e) { this._releaseShopRecording(intent); }
+  },
   onVoiceStart() {
     const s = this.data.shopNpc;
-    if (!s.show || s.thinking) return;
-    const that = this;
+    if (!this._isPlayAccountCurrent() || !s.show || s.open === false || s.thinking || this._shopRecordingIntent) return;
+    const intent = { owner: this._boundPlayOwner(), conversation: s, nodeId: s.nodeId,
+      epoch: this._shopNpcConversationEpoch, sessionKey: this._sessionKey() };
+    this._shopRecordingIntent = intent;
     wx.authorize({ scope: 'scope.record' })
-      .then(() => that._beginRecord())
-      .catch(() => cyToast('没有录音权限，先在设置里打开'));
+      .then(() => {
+        if (this._isShopRecordingCurrent(intent)) this._beginRecord(intent);
+        else this._releaseShopRecording(intent);
+      })
+      .catch(() => {
+        const current = this._isShopRecordingCurrent(intent);
+        this._releaseShopRecording(intent);
+        if (current) cyToast('没有录音权限，先在设置里打开');
+      });
   },
 
-  _beginRecord() {
+  _beginRecord(intent) {
+    if (!this._isShopRecordingCurrent(intent)) return;
     const rec = wx.getRecorderManager();
-    this._rec = rec;
-    rec.onStop((res) => {
+    this._rec = rec; intent.rec = rec;
+    intent.onStop = (res) => {
+      const current = this._isShopRecordingCurrent(intent);
+      this._releaseShopRecording(intent);
+      if (!current) return;
       this.setData({ 'shopNpc.recording': false });
-      if (!res || !res.tempFilePath || (res.duration || 0) < 500) return;   // 误触:不到半秒不算一句话
+      if (!res || !res.tempFilePath || (res.duration || 0) < 500) return;
       this._sendVoice(res.tempFilePath);
-    });
-    rec.onError(() => { this.setData({ 'shopNpc.recording': false }); cyToast('录音出错了'); });
-    rec.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
-    this.setData({ 'shopNpc.recording': true, 'shopNpc.started': true });
+    };
+    intent.onError = () => {
+      const current = this._isShopRecordingCurrent(intent);
+      this._releaseShopRecording(intent);
+      if (!current) return;
+      this.setData({ 'shopNpc.recording': false }); cyToast('录音出错了');
+    };
+    rec.onStop(intent.onStop); rec.onError(intent.onError);
+    try {
+      rec.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1 });
+      this.setData({ 'shopNpc.recording': true, 'shopNpc.started': true });
+    } catch (e) { intent.onError(); }
   },
 
   onVoiceEnd() {
-    if (!this.data.shopNpc.recording) return;
-    try { this._rec && this._rec.stop(); } catch (e) { this.setData({ 'shopNpc.recording': false }); }
+    const intent = this._shopRecordingIntent;
+    if (!intent) return;
+    if (!intent.rec) { intent.cancelled = true; this._releaseShopRecording(intent); return; }
+    if (intent.stopping) return;
+    intent.stopping = true;
+    try { intent.rec.stop(); } catch (e) { intent.onError(); }
   },
 
   /** 语音走**统一上传通道的 uploadOne**,不裸调 wx.uploadFile ——
    *  裸调会漏掉认证头构造,而这条链路是要花钱的写操作。
    *  这里用 uploadOne 而不是 uploadAll:后者强制结果里带文件地址,而语音刻意不落盘,
    *  返回的是分身的回答。 */
+  _shopNpcRequestContext() {
+    const conversation = this.data.shopNpc;
+    if (!this._isPlayAccountCurrent() || !conversation || !conversation.show || conversation.open === false) return null;
+    const sequence = this._shopNpcRequestSequence = (this._shopNpcRequestSequence || 0) + 1;
+    return { conversation, nodeId: conversation.nodeId, sequence, epoch: this._shopNpcConversationEpoch,
+      sessionKey: this._sessionKey(), settled: false };
+  },
+
+  _isShopNpcRequestCurrent(context) {
+    const conversation = this.data.shopNpc;
+    return !!context && !context.settled && this._isPlayAccountCurrent()
+      && context.sequence === this._shopNpcRequestSequence && context.epoch === this._shopNpcConversationEpoch
+      && context.sessionKey === this._sessionKey() && conversation === context.conversation
+      && conversation.show && conversation.open !== false && conversation.nodeId === context.nodeId;
+  },
+
   _sendVoice(filePath) {
-    const s = this.data.shopNpc;
+    const context = this._shopNpcRequestContext();
+    if (!context) return;
+    const s = context.conversation;
     const that = this;
     this.setData({ 'shopNpc.thinking': true });
     this._startThinkBeat();
@@ -1774,6 +1999,8 @@ Page({
       path: '/api/ai/npc/voice-chat',
       formData: { nodeId: s.nodeId, requestId: uuid4() },
       onDone(r) {
+        if (!that._isShopNpcRequestCurrent(context)) return;
+        context.settled = true;
         if (!r.ok) { that._pushShopNpcReply(r.msg || '没听清，再说一次'); return; }
         const d = r.data;
         // 先把识别出的原话作为我方消息补上 —— 玩家要能看见自己被听成了什么
@@ -1805,9 +2032,13 @@ Page({
   /** 真正发问那一段。打字与「重答」共用 —— 兜底文案的口径只能有一份。
    *  @param replaceIdx 传了就改写这一条(重答),不传则追加一条(正常问答)。 */
   _askShopNpc(text, replaceIdx) {
+    const context = this._shopNpcRequestContext();
+    if (!context) return;
     const that = this;
     const requestId = uuid4();
-    req('/api/ai/npc/shop-chat', 'POST', { requestId, nodeId: this.data.shopNpc.nodeId, message: text }).then((r) => {
+    req('/api/ai/npc/shop-chat', 'POST', { requestId, nodeId: context.nodeId, message: text }, { 'content-type': 'application/json' }).then((r) => {
+      if (!that._isShopNpcRequestCurrent(context)) return;
+      context.settled = true;
       const d = (r && r.data) || {};
       // safeText 是后端在拒绝/失败时给的安全兜底文案;正常回答也走同一个字段。
       const reply = d.safeText || d.text || '';
@@ -1844,7 +2075,7 @@ Page({
   _playShopNpcVoice(audioUrl) {
     if (!audioUrl) return;
     this._stopShopNpcVoice();
-    const audio = wx.createInnerAudioContext();
+    const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'npc' });
     this._shopNpcVoiceAudio = audio;
     audio.src = audioUrl;
     audio.onEnded(() => this._stopShopNpcVoice());
@@ -1854,6 +2085,7 @@ Page({
 
   _stopShopNpcVoice() {
     if (!this._shopNpcVoiceAudio) return;
+    audioSession.unregister(this._shopNpcVoiceAudio);
     try { this._shopNpcVoiceAudio.stop(); this._shopNpcVoiceAudio.destroy(); } catch (e) {}
     this._shopNpcVoiceAudio = null;
   },
@@ -2124,6 +2356,20 @@ Page({
     return true;
   },
 
+  _playerProjectionContext() {
+    const module = this.data.gameModule || {};
+    return { sessionKey: this._sessionKey(), activityId: module.activityId,
+      sessionId: module.sessionId, revision: module.revision };
+  },
+
+  _isPlayerProjectionContextCurrent(context) {
+    const module = this.data.gameModule || {};
+    return !!context && this._isPlayAccountCurrent() && module.enabled === true
+      && context.sessionKey === this._sessionKey()
+      && context.activityId === module.activityId && context.sessionId === module.sessionId
+      && context.revision === module.revision;
+  },
+
   /** 角色卡只展示服务端投影；客户端不再按 roleCode 自带角色秘密或技能正文。 */
   _maybeShowRoleCard(myRole) {
     const game = this.data.gameModule || {};
@@ -2141,6 +2387,7 @@ Page({
     let seen = false; try { seen = key ? !!wx.getStorageSync(key) : false; } catch (e) {}
     try { wx.removeStorageSync('role_seen_' + roleScope); } catch (e) {}
     if (seen && myRole.confirmed !== false) return;
+    this._roleCardContext = Object.assign(this._playerProjectionContext(), { roleCode: myRole.roleCode });
     this.setData({ roleCard: {
       show: true,
       code: myRole.roleCode,
@@ -2154,13 +2401,19 @@ Page({
       try { if (key) wx.setStorageSync(key, 1); } catch (e) {}
     }
   },
-  closeRoleCard() { this.setData({ 'roleCard.show': false }); },
+  closeRoleCard() { this._roleCardContext = null; this.setData({ 'roleCard.show': false }); },
 
   confirmPlayerRole() {
+    if (!this._isPlayAccountCurrent()) return;
     if (this.data.roleCard.confirmed) { this.closeRoleCard(); return; }
     if (this.data.gameModule.write.status === 'unknown') { this.reconcilePlayerChoice(); return; }
     if (this.data.gameModule.write.status === 'submitting') return;
     const gameModule = this.data.gameModule || {};
+    if (!this._isPlayerProjectionContextCurrent(this._roleCardContext)
+        || !gameModule.role || this._roleCardContext.roleCode !== gameModule.role.code) {
+      cyToast('身份状态暂未同步');
+      return;
+    }
     const requestId = 'pg-role-' + gameModule.activityId + '-' + Date.now();
     let input;
     try {
@@ -2174,8 +2427,12 @@ Page({
       this._failPlayerPendingSave(requestId, false);
       return false;
     }
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', input).then((result) => {
-      const pending = this._playerPendingWrite;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      if (this._handlePlayerAuthorityConflict(result)) return;
+      if (result && result.reasonCode === 'GAME_STATE_CONFLICT') this._loadPlayerGameModule();
+      const pending = context.pending;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2191,6 +2448,7 @@ Page({
         return;
       }
       if (failed) {
+        this._loadPlayerGameModule();
         this._clearPlayerPending();
         this.setData({ 'gameModule.write': { status: 'error', requestId, message: result.message || '身份确认未被接受' } });
         return;
@@ -2198,23 +2456,41 @@ Page({
       this.setData({ 'gameModule.write': {
         status: 'unknown', requestId,
         canRetry: true,
-        message: (result && result.message) || '身份确认结果待核对，请勿重复提交',
+        message: (result && result.message) || '身份确认中，请勿重复提交',
       } });
     }).catch(() => {
-      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '身份确认结果待核对，请勿重复提交', canRetry: true } });
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '身份确认中，请勿重复提交', canRetry: true } });
     });
   },
 
   _roleSeenKey(scope) {
-    const memberId = app.getUserID && app.getUserID();
+    if (!this._isPlayAccountCurrent()) return '';
+    const memberId = this._playOwner;
     return memberId === null || memberId === undefined || memberId === '' || !scope
       ? '' : 'role_seen_m' + memberId + '_s' + scope;
   },
 
   _playerPendingKey() {
-    const memberId = app.getUserID && app.getUserID();
+    if (!this._isPlayAccountCurrent()) return '';
+    const memberId = this._playOwner;
     return memberId === null || memberId === undefined || memberId === '' || !this.data.activityId
       ? '' : 'game_player_pending_m' + memberId + '_a' + this.data.activityId;
+  },
+
+  _playerPendingContext() {
+    const module = this.data.gameModule || {};
+    return { pending: this._playerPendingWrite, activityId: Number(this.data.activityId),
+      moduleActivityId: module.activityId, sessionId: module.sessionId };
+  },
+
+  _isPlayerPendingContextCurrent(context) {
+    const module = this.data.gameModule || {};
+    return this._isPlayAccountCurrent() && !!context.pending
+      && Number(this.data.activityId) === context.activityId
+      && module.activityId === context.moduleActivityId && module.sessionId === context.sessionId
+      && this._playerPendingWrite === context.pending
+      && module.write && module.write.requestId === context.pending.requestId;
   },
 
   _savePlayerPending(input, preserveMemoryCommand) {
@@ -2246,7 +2522,7 @@ Page({
   _failPlayerPendingSave(requestId, keepUnknown) {
     if (!keepUnknown) this._playerPendingWrite = null;
     const message = keepUnknown
-      ? '无法安全保存重试状态；原操作仍待核对'
+      ? '无法保存重试状态，上次操作仍待确认'
       : '无法安全保存本次操作，请检查小程序存储后重试';
     this.setData({ 'gameModule.write': {
       status: keepUnknown ? 'unknown' : 'error',
@@ -2259,6 +2535,7 @@ Page({
   },
 
   _clearPlayerPending() {
+    if (!this._isPlayAccountCurrent()) return;
     this._playerPendingWrite = null;
     try {
       const key = this._playerPendingKey();
@@ -2291,9 +2568,18 @@ Page({
 
   _loadPlayerGameModule() {
     const activityId = Number(this.data.activityId) || 0;
-    if (!activityId || this.data.isPreview || this.data.isMock) return;
+    if (this._playDisposed || !activityId || this.data.isPreview || this.data.isMock) return;
+    const requestEpoch = (this._playerProjectionEpoch || 0) + 1;
+    this._playerProjectionEpoch = requestEpoch;
+    const memberId = app.getUserID && app.getUserID();
+    const sessionId = (this.data.gameModule || {}).sessionId;
+    const currentRequest = () => !this._playDisposed
+      && requestEpoch === this._playerProjectionEpoch && activityId === Number(this.data.activityId)
+      && memberId === (app.getUserID && app.getUserID())
+      && (this.data.gameModule || {}).sessionId === sessionId;
     this.setData({ 'gameModule.loading': true, 'gameModule.error': '' });
-    gameSessionClient.loadProjection('player', activityId).then((result) => {
+    return gameSessionClient.loadProjection('player', activityId).then((result) => {
+      if (!currentRequest()) return;
       if (!result || result.status !== 'ready') {
         const absent = result && ['GAME_SESSION_NOT_FOUND', 'GAME_SESSION_NOT_PREPARED', 'GAME_MODULE_DISABLED'].includes(result.reasonCode);
         const current = this.data.gameModule || {};
@@ -2307,13 +2593,21 @@ Page({
         });
         return;
       }
+      if (Number(result.data && result.data.activityId) !== activityId
+          || (sessionId && Number(result.data && result.data.sessionId) !== Number(sessionId))) return;
       if (result.data && result.data.player && result.data.player.playMode === 'ROUTE') {
         if (['FINISHED', 'CANCELLED'].includes(result.data.status)) this._applyServerRunSessionEnd();
+        if (result.data.player.scope === 'TEAM') this._applyThemeTeamView(result.data.player, result.data);
         this.setData({ 'gameModule.loading': false, 'gameModule.enabled': false,
           'gameModule.stale': false, 'gameModule.error': '' });
         return;
       }
       const projection = normalizePlayerProjection(result.data);
+      const previous = this.data.gameModule || {};
+      if (previous.sessionId === projection.sessionId && Number(previous.revision) > Number(projection.revision)) {
+        this.setData({ 'gameModule.loading': false });
+        return;
+      }
       if (!projection.enabled) {
         this.setData({
           'gameModule.loading': false, 'gameModule.enabled': false,
@@ -2321,6 +2615,7 @@ Page({
         });
         return;
       }
+      const current = this.data.gameModule || {};
       // R9-21:服务端会话已经结束(通关/取消)时,本地兜底的暂停快照不能把玩家拉回一局已结束的计时。
       if (projection.status === 'FINISHED' || projection.status === 'CANCELLED') {
         this._applyServerRunSessionEnd();
@@ -2330,10 +2625,14 @@ Page({
       ((this.data.gameModule && this.data.gameModule.nodes) || []).forEach((node) => {
         if (!node || !node.nodeId) return;
         previousRuntimeByNode[String(node.nodeId)] = node;
-        if (node.taskEvidence) taskEvidenceByNode[String(node.nodeId)] = node.taskEvidence;
+        if (node.taskEvidence && node.playerTask) taskEvidenceByNode[String(node.nodeId)] = {
+          task: this._playerTaskSignature(node.playerTask), evidence: node.taskEvidence,
+        };
       });
       projection.nodes = projection.nodes.map((node) => Object.assign({}, node, {
-        taskEvidence: taskEvidenceByNode[String(node.nodeId)] || {
+        taskEvidence: node.playerTask && taskEvidenceByNode[String(node.nodeId)]
+          && taskEvidenceByNode[String(node.nodeId)].task === this._playerTaskSignature(node.playerTask)
+          ? taskEvidenceByNode[String(node.nodeId)].evidence : {
           type: node.playerTask ? node.playerTask.inputType : '',
           ready: false,
           text: '',
@@ -2352,13 +2651,22 @@ Page({
         const pendingKey = this._playerPendingKey();
         savedPending = pendingKey ? (wx.getStorageSync(pendingKey) || null) : null;
       } catch (e) { savedPending = null; }
-      const pending = normalizePlayerPendingReceiptIndex(savedPending, activityId);
+      const restoredPending = normalizePlayerPendingReceiptIndex(savedPending, activityId);
+      const memory = this._playerPendingWrite;
+      const memoryIndex = memory && normalizePlayerPendingReceiptIndex(memory.command || memory, activityId);
+      // Same receipt identity keeps its original command in memory; storage stays a redacted index.
+      const pending = restoredPending && memoryIndex
+        && ['activityId', 'nodeId', 'requestId', 'expectedRevision', 'action']
+          .every(key => restoredPending[key] === memoryIndex[key]) ? memory : restoredPending;
       this._playerPendingWrite = pending;
       if (savedPending && !pending) this._clearPlayerPending();
       if (pending) {
-        projection.write = {
+        projection.write = pending === memory && current.write
+          && current.write.requestId === pending.requestId && current.write.status === 'submitting'
+          ? current.write : {
           status: 'unknown', requestId: pending.requestId,
-          message: '正在核对上次操作；不会自动重发现场内容', canRetry: false,
+          message: pending.command ? '正在确认上次操作' : '正在确认上次操作；不会自动重发现场内容',
+          canRetry: !!pending.command,
         };
       }
       const projectedByNode = {};
@@ -2391,6 +2699,7 @@ Page({
       this.setData({
         gameModule: Object.assign({}, projection, {
           loading: false, error: '', stale: false, sheetShow: this.data.gameModule.sheetShow,
+          write: previous.write && previous.write.status === 'error' ? previous.write : projection.write,
         }),
         nodes,
         myRole,
@@ -2401,6 +2710,7 @@ Page({
         if (pending) this.reconcilePlayerChoice();
       });
     }).catch(() => {
+      if (!currentRequest()) return;
       const current = this.data.gameModule || {};
       const retainedSnapshot = current.enabled === true
         && typeof current.snapshotAt === 'string' && !!current.snapshotAt;
@@ -2420,6 +2730,7 @@ Page({
   retryGameModule() { this._loadPlayerGameModule(); },
 
   submitPlayerChoice(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     if (!gameModule.enabled || gameModule.write.status === 'submitting' || gameModule.write.status === 'unknown') return;
     const nodeId = Number(e.currentTarget.dataset.node) || 0;
@@ -2427,7 +2738,7 @@ Page({
     const requestId = 'pg-' + gameModule.activityId + '-' + nodeId + '-' + Date.now();
     let input;
     try {
-      input = buildPlayerChoiceInput({ activityId: gameModule.activityId, nodeId, revision: gameModule.revision }, choiceId, requestId);
+      input = buildPlayerChoiceInput({ activityId: gameModule.activityId, nodeId, revision: gameModule.revision, authorityEpoch: gameModule.authorityEpoch }, choiceId, requestId);
     } catch (error) {
       cyToast('这个选择暂时不能提交');
       return;
@@ -2437,8 +2748,12 @@ Page({
       this._failPlayerPendingSave(requestId, false);
       return false;
     }
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', input).then((result) => {
-      const pending = this._playerPendingWrite;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      if (this._handlePlayerAuthorityConflict(result)) return;
+      if (result && result.reasonCode === 'GAME_STATE_CONFLICT') this._loadPlayerGameModule();
+      const pending = context.pending;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2450,19 +2765,22 @@ Page({
         return;
       }
       if (failed) {
+        this._loadPlayerGameModule();
         this._clearPlayerPending();
         this.setData({ 'gameModule.write': { status: 'error', requestId, message: result.message || '选择未被接受' } });
         return;
       }
       this.setData({ 'gameModule.write': {
-        status: 'unknown', requestId, message: (result && result.message) || '结果待核对，请勿重复提交', canRetry: true,
+        status: 'unknown', requestId, message: (result && result.message) || '结果待确认，请勿重复提交', canRetry: true,
       } });
     }).catch(() => {
-      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '结果待核对，请勿重复提交', canRetry: true } });
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '结果待确认，请勿重复提交', canRetry: true } });
     });
   },
 
   submitPlayerTask(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     if (!gameModule.enabled || gameModule.write.status === 'submitting' || gameModule.write.status === 'unknown') return;
     if (!(gameModule.availableActions || []).includes('PLAYER_SUBMIT')) return;
@@ -2480,7 +2798,7 @@ Page({
     let input;
     try {
       input = buildPlayerSubmissionInput(
-        { activityId: gameModule.activityId, nodeId, revision: gameModule.revision },
+        { activityId: gameModule.activityId, nodeId, revision: gameModule.revision, authorityEpoch: gameModule.authorityEpoch },
         taskCode,
         requestId,
         evidence.evidenceUrls
@@ -2494,8 +2812,12 @@ Page({
       this._failPlayerPendingSave(requestId, false);
       return false;
     }
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', input).then((result) => {
-      const pending = this._playerPendingWrite;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      if (this._handlePlayerAuthorityConflict(result)) return;
+      if (result && result.reasonCode === 'GAME_STATE_CONFLICT') this._loadPlayerGameModule();
+      const pending = context.pending;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2516,28 +2838,39 @@ Page({
         return;
       }
       if (failed) {
+        this._loadPlayerGameModule();
         this._clearPlayerPending();
         this.setData({ 'gameModule.write': { status: 'error', requestId, message: result.message || '任务未被接受' } });
         return;
       }
       this.setData({ 'gameModule.write': {
-        status: 'unknown', requestId, message: (result && result.message) || '提交结果待核对，请勿重复提交', canRetry: true,
+        status: 'unknown', requestId, message: (result && result.message) || '提交结果待确认，请勿重复提交', canRetry: true,
       } });
     }).catch(() => {
-      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '提交结果待核对，请勿重复提交', canRetry: true } });
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '提交结果待确认，请勿重复提交', canRetry: true } });
     });
   },
 
   _submitPlayerAssist(input, labels) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
+    if (!gameModule.enabled || !gameModule.write || gameModule.write.status === 'submitting'
+        || gameModule.write.status === 'unknown' || input.activityId !== gameModule.activityId
+        || input.expectedRevision !== gameModule.revision
+        || !(gameModule.availableActions || []).includes(input.action)) return false;
     const requestId = input.requestId;
     this.setData({ 'gameModule.write': { status: 'submitting', requestId, message: labels.submitting } });
     if (!this._savePlayerPending(input)) {
       this._failPlayerPendingSave(requestId, false);
       return false;
     }
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', input).then((result) => {
-      const pending = this._playerPendingWrite;
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      if (this._handlePlayerAuthorityConflict(result)) return;
+      if (result && result.reasonCode === 'GAME_STATE_CONFLICT') this._loadPlayerGameModule();
+      const pending = context.pending;
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2552,6 +2885,7 @@ Page({
         return;
       }
       if (failed) {
+        this._loadPlayerGameModule();
         this._clearPlayerPending();
         this.setData({
           'gameModule.write': { status: 'error', requestId, message: result.message || labels.rejected },
@@ -2564,11 +2898,13 @@ Page({
         message: (result && result.message) || labels.unknown,
       } });
     }).catch(() => {
+      if (!this._isPlayerPendingContextCurrent(context)) return;
       this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: labels.unknown, canRetry: true } });
     });
   },
 
   requestPlayerHint(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     if (!gameModule.enabled || gameModule.write.status === 'submitting' || gameModule.write.status === 'unknown') return;
     if (!(gameModule.availableActions || []).includes('PLAYER_HINT')) return;
@@ -2577,18 +2913,26 @@ Page({
     const node = (gameModule.nodes || []).find((item) => item.nodeId === nodeId);
     const hint = node && node.hint;
     if (!hint || level !== hint.nextLevel || (level !== 1 && level !== 2) || !hint.nextImpactLabel) return;
+    const context = this._playerProjectionContext();
+    const hintState = JSON.stringify(hint);
+    const nodeStatus = node.status;
     cyModal.show({
       title: '查看第 ' + level + ' 级提示',
       content: hint.nextImpactLabel,
       confirmText: '查看提示',
       cancelText: '继续想想',
       success: (modal) => {
-        if (!modal.confirm) return;
+        if (!modal.confirm || !this._isPlayerProjectionContextCurrent(context)) return;
+        const current = this.data.gameModule;
+        const currentNode = (current.nodes || []).find(item => item.nodeId === nodeId);
+        if (!currentNode || currentNode.status !== nodeStatus || JSON.stringify(currentNode.hint) !== hintState
+            || !current.write || current.write.status === 'submitting' || current.write.status === 'unknown'
+            || !(current.availableActions || []).includes('PLAYER_HINT')) return;
         const requestId = 'pg-hint-' + gameModule.activityId + '-' + nodeId + '-' + level + '-' + Date.now();
         let input;
         try {
           input = buildPlayerHintInput(
-            { activityId: gameModule.activityId, nodeId, revision: gameModule.revision },
+            { activityId: gameModule.activityId, nodeId, revision: gameModule.revision, authorityEpoch: gameModule.authorityEpoch },
             level,
             requestId
           );
@@ -2601,13 +2945,14 @@ Page({
           success: '提示已揭示',
           confirmed: '提示已确认揭示',
           rejected: '提示暂时不可用',
-          unknown: '提示结果待核对，请勿重复请求',
+          unknown: '提示结果待确认，请勿重复请求',
         });
       },
     });
   },
 
   requestPlayerReveal(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     if (!gameModule.enabled || gameModule.write.status === 'submitting' || gameModule.write.status === 'unknown') return;
     if (!(gameModule.availableActions || []).includes('PLAYER_REVEAL')) return;
@@ -2615,18 +2960,26 @@ Page({
     const node = (gameModule.nodes || []).find((item) => item.nodeId === nodeId);
     const hint = node && node.hint;
     if (!hint || hint.revealAvailable !== true || !hint.revealImpactLabel) return;
+    const context = this._playerProjectionContext();
+    const hintState = JSON.stringify(hint);
+    const nodeStatus = node.status;
     cyModal.show({
       title: '揭示答案',
       content: hint.revealImpactLabel,
       confirmText: '查看答案',
       cancelText: '继续想想',
       success: (modal) => {
-        if (!modal.confirm) return;
+        if (!modal.confirm || !this._isPlayerProjectionContextCurrent(context)) return;
+        const current = this.data.gameModule;
+        const currentNode = (current.nodes || []).find(item => item.nodeId === nodeId);
+        if (!currentNode || currentNode.status !== nodeStatus || JSON.stringify(currentNode.hint) !== hintState
+            || !current.write || current.write.status === 'submitting' || current.write.status === 'unknown'
+            || !(current.availableActions || []).includes('PLAYER_REVEAL')) return;
         const requestId = 'pg-reveal-' + gameModule.activityId + '-' + nodeId + '-' + Date.now();
         let input;
         try {
           input = buildPlayerRevealInput(
-            { activityId: gameModule.activityId, nodeId, revision: gameModule.revision },
+            { activityId: gameModule.activityId, nodeId, revision: gameModule.revision, authorityEpoch: gameModule.authorityEpoch },
             requestId
           );
         } catch (error) {
@@ -2635,13 +2988,41 @@ Page({
         }
         this._submitPlayerAssist(input, {
           submitting: '正在揭示答案…',
-          success: '已按兜底完成',
-          confirmed: '答案已揭示，并记为兜底完成',
+          success: '已按保底完成',
+          confirmed: '答案已揭示，记为保底完成',
           rejected: '暂时不能揭示答案',
-          unknown: '揭示结果待核对，请勿重复请求',
+          unknown: '揭示结果待确认，请勿重复请求',
         });
       },
     });
+  },
+
+  _playerTaskSignature(task) {
+    return task ? JSON.stringify([task.taskCode, task.inputType, task.prompt,
+      task.verificationRequired === true, task.completionPolicy || '']) : '';
+  },
+
+  _playerTaskEvidenceContext(node) {
+    const module = this.data.gameModule || {};
+    const requests = this._playerEvidenceRequests = this._playerEvidenceRequests || Object.create(null);
+    const sequence = requests[node.nodeId] = (requests[node.nodeId] || 0) + 1;
+    return { nodeId: node.nodeId, sequence, sessionKey: this._sessionKey(),
+      sessionId: module.sessionId, activityId: module.activityId, status: node.status,
+      task: this._playerTaskSignature(node.playerTask),
+      submission: JSON.stringify(node.submission || null) };
+  },
+
+  _isPlayerTaskEvidenceCurrent(context) {
+    if (!this._isPlayAccountCurrent()) return false;
+    const module = this.data.gameModule || {};
+    const node = (module.nodes || []).find(item => item.nodeId === context.nodeId);
+    return module.enabled === true && module.activityId === context.activityId
+      && module.sessionId === context.sessionId
+      && context.sessionKey === this._sessionKey()
+      && this._playerEvidenceRequests[context.nodeId] === context.sequence
+      && !!node && node.status === context.status
+      && this._playerTaskSignature(node.playerTask) === context.task
+      && JSON.stringify(node.submission || null) === context.submission;
   },
 
   _setPlayerTaskEvidence(nodeId, evidence) {
@@ -2670,9 +3051,11 @@ Page({
     const nodeId = Number(e.currentTarget && e.currentTarget.dataset.node) || 0;
     const node = ((this.data.gameModule && this.data.gameModule.nodes) || []).find((item) => item.nodeId === nodeId);
     if (!node || !node.playerTask || node.playerTask.inputType !== 'SCAN') return;
+    const context = this._playerTaskEvidenceContext(node);
     wx.scanCode({
       onlyFromCamera: true,
       success: (result) => {
+        if (!this._isPlayerTaskEvidenceCurrent(context)) return;
         const value = String((result && result.result) || '').trim().slice(0, 400);
         if (!value) {
           cyToast('没有识别到任务码');
@@ -2685,6 +3068,7 @@ Page({
         });
       },
       fail: (error) => {
+        if (!this._isPlayerTaskEvidenceCurrent(context)) return;
         if (!isScanCancelled(error)) cyToast('未能扫码，请检查相机权限后重试');
       },
     });
@@ -2694,7 +3078,9 @@ Page({
     const nodeId = Number(e.currentTarget && e.currentTarget.dataset.node) || 0;
     const node = ((this.data.gameModule && this.data.gameModule.nodes) || []).find((item) => item.nodeId === nodeId);
     if (!node || !node.playerTask || node.playerTask.inputType !== 'PHOTO') return;
+    const context = this._playerTaskEvidenceContext(node);
     app.chooseImage((urls) => {
+      if (!this._isPlayerTaskEvidenceCurrent(context)) return;
       const evidenceUrls = (Array.isArray(urls) ? urls : [])
         .map((url) => String(url || '').trim())
         .filter((url) => url.toLowerCase().startsWith('https://'))
@@ -2708,19 +3094,26 @@ Page({
   },
 
   reconcilePlayerChoice() {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     const requestId = gameModule.write && gameModule.write.requestId;
     const pendingWrite = this._playerPendingWrite;
-    if (!requestId || gameModule.write.status !== 'unknown') return;
+    if (!requestId || !pendingWrite || pendingWrite.requestId !== requestId
+        || gameModule.write.status !== 'unknown') return;
+    const context = this._playerPendingContext();
+    const isCurrent = () => this._isPlayerPendingContextCurrent(context)
+      && this.data.gameModule.write.status === 'unknown';
     this.setData({ 'gameModule.write.message': '正在确认操作结果…' });
     gameSessionClient.readReceipt(gameModule.activityId, requestId).then((result) => {
+      if (!isCurrent()) return;
       const applied = result && result.status === 'matched'
         && matchingPlayerTerminalReceipt(result, pendingWrite, 'APPLIED');
       const failed = result && result.status === 'business-error'
         && matchingPlayerTerminalReceipt(result, pendingWrite, 'FAILED');
       if (applied) {
-        const merged = mergeConfirmedReceipt(gameModule, result.receipt);
-        if (merged !== gameModule) {
+        const current = this.data.gameModule;
+        const merged = mergeConfirmedReceipt(current, result.receipt);
+        if (merged !== current) {
           try {
             this._rememberPlayerReveal(result.receipt, pendingWrite);
             this._clearPlayerPending();
@@ -2730,13 +3123,14 @@ Page({
             }
           } catch (error) {}
           this.setData({
-            gameModule: Object.assign({}, merged, { sheetShow: gameModule.sheetShow, loading: false, error: '' }),
+            gameModule: Object.assign({}, merged, { nodes: this.data.gameModule.nodes, sheetShow: current.sheetShow, loading: false, error: '' }),
             'roleCard.show': result.receipt.action === 'CONFIRM_ROLE' ? false : this.data.roleCard.show,
           }, () => this._loadPlayerGameModule());
           return;
         }
       }
       if (failed) {
+        this._loadPlayerGameModule();
         this._clearPlayerPending();
         this.setData({ 'gameModule.write': {
           status: 'error', requestId: pendingWrite.requestId,
@@ -2747,16 +3141,28 @@ Page({
       const pending = result && result.status === 'pending';
       const restored = !pendingWrite.command;
       this.setData({ 'gameModule.write.message': pending
-        ? (restored ? '结果仍在核对；不会自动重发现场内容' : '结果仍在核对，请稍后再试')
-        : (restored ? '暂时无法核对；不会自动重发现场内容' : '暂时无法核对，请保留本页稍后重试') });
+        ? (restored ? '结果仍在确认；不会自动重发现场内容' : '结果仍在确认，请稍后再试')
+        : (restored ? '暂时无法确认；不会自动重发现场内容' : '暂时无法确认，请保留本页稍后重试') });
     }).catch(() => {
+      if (!isCurrent()) return;
       this.setData({ 'gameModule.write.message': pendingWrite && !pendingWrite.command
-        ? '暂时无法核对；不会自动重发现场内容'
-        : '暂时无法核对，请保留本页稍后重试' });
+        ? '暂时无法确认；不会自动重发现场内容'
+        : '暂时无法确认，请保留本页稍后重试' });
     });
   },
 
+  _handlePlayerAuthorityConflict(result) {
+    if (!result || result.status !== 'business-error' || result.reasonCode !== 'GAME_AUTHORITY_CONFLICT') return false;
+    // 服务端在创建回执之前拒绝旧纪元；只重新读取，不换纪元重发。
+    this._clearPlayerPending();
+    this.setData({ 'gameModule.write': { status: 'error', requestId: result.requestId || '', message: result.message } });
+    cyToast(result.message || '本局权威版本已更新，请刷新');
+    this._loadPlayerGameModule();
+    return true;
+  },
+
   retryPlayerUnknownWrite() {
+    if (!this._isPlayAccountCurrent()) return;
     const gameModule = this.data.gameModule || {};
     const pending = this._playerPendingWrite;
     if (!pending || !pending.command || !gameModule.write || gameModule.write.status !== 'unknown') return false;
@@ -2764,9 +3170,13 @@ Page({
       return this._failPlayerPendingSave(pending.requestId, true);
     }
     this.setData({ 'gameModule.write': {
-      status: 'submitting', requestId: pending.requestId, message: '正在用原请求号重试…',
+      status: 'submitting', requestId: pending.requestId, message: '正在重试…',
     } });
+    const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', pending.command).then((result) => {
+      if (!this._isPlayerPendingContextCurrent(context)) return;
+      if (this._handlePlayerAuthorityConflict(result)) return;
+      if (result && result.reasonCode === 'GAME_STATE_CONFLICT') this._loadPlayerGameModule();
       const applied = result && result.status === 'success'
         && matchingPlayerTerminalReceipt(result, pending, 'APPLIED');
       const failed = result && result.status === 'business-error'
@@ -2788,6 +3198,7 @@ Page({
         return;
       }
       if (failed) {
+        this._loadPlayerGameModule();
         this._clearPlayerPending();
         this.setData({ 'gameModule.write': {
           status: 'error', requestId: pending.requestId, message: result.message || '原操作未被接受',
@@ -2795,11 +3206,12 @@ Page({
         return;
       }
       this.setData({ 'gameModule.write': {
-        status: 'unknown', requestId: pending.requestId, message: '重试结果仍待核对，请勿另起请求', canRetry: true,
+        status: 'unknown', requestId: pending.requestId, message: '重试结果仍待确认，请勿另起请求', canRetry: true,
       } });
     }).catch(() => {
+      if (!this._isPlayerPendingContextCurrent(context)) return;
       this.setData({ 'gameModule.write': {
-        status: 'unknown', requestId: pending.requestId, message: '重试结果仍待核对，请勿另起请求', canRetry: true,
+        status: 'unknown', requestId: pending.requestId, message: '重试结果仍待确认，请勿另起请求', canRetry: true,
       } });
     });
     return true;
@@ -2807,8 +3219,15 @@ Page({
 
   /** 升级3:同行者榜(GET /api/play/leaderboard,score=完成关数)。入口在通关 sheet。 */
   openBoard() {
+    if (!this._isPlayAccountCurrent()) return;
+    const owner = this._boundPlayOwner(), params = this._sessionParams(), sessionKey = this._sessionKey(params);
+    const sequence = this._boardReadSequence = (this._boardReadSequence || 0) + 1;
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && sequence === this._boardReadSequence && this.data.board.show
+      && sessionKey === this._sessionKey();
     this.setData({ board: { show: true, loading: true, list: [], me: null, error: '' } });
-    req('/api/play/leaderboard', 'GET', this._sessionParams()).then((res) => {
+    req('/api/play/leaderboard', 'GET', params).then((res) => {
+      if (!current()) return;
       if (res.code == 200 || res.code == '200') {
         const d = res.data || {};
         this.setData({ board: { show: true, loading: false, list: d.list || [], me: d.me || null, error: '' } });
@@ -2817,10 +3236,14 @@ Page({
         this.setData({ 'board.loading': false, 'board.error': (res && res.msg) || '榜单加载失败' });
       }
     }).catch(() => {
-      this.setData({ 'board.loading': false, 'board.error': '网络不太好,榜单没拉到' });
+      if (!current()) return;
+      this.setData({ 'board.loading': false, 'board.error': '网络不太好，榜单没拉到' });
     });
   },
-  closeBoard() { this.setData({ 'board.show': false }); },
+  closeBoard() {
+    this._boardReadSequence = (this._boardReadSequence || 0) + 1;
+    this.setData({ 'board.show': false });
+  },
   /** 核销入场:动态码收进场景栈(#572 单宿主收口),票面+放大码都在 scene-qr-ticket 组件里 */
   openEntryQr() {
     if (this.data.isPreview || this.data.isMock) return;
@@ -2836,7 +3259,7 @@ Page({
   _explainMissingEntryQr() {
     cyModal.show({
       title: '从票夹进入才能出示入场码',
-      content: '入场码要绑定你那张票,所以只有从票夹点进来才带得到。现在去票夹?',
+      content: '入场码要绑定你那张票，所以只有从票夹点进来才带得到。现在去票夹?',
       confirmText: '去票夹',
       cancelText: '先不去',
       success: (r) => { if (r.confirm) wx.reLaunch({ url: '/subpackageMember/signup/index' }); },
@@ -2884,27 +3307,48 @@ Page({
      ② 读到正文里的伏笔块就认领 —— 不依赖微信运动:没授权也照样得到,只是步数不涨。
      ③ 到站同步一次步数。步数只交密文,解密在服务端。 */
   _askWeRunOnce() {
-    if (this.data.isPreview || this.data.isMock || this._weRunAsked) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || this._weRunAsked) return;
+    const owner = this._boundPlayOwner(), sessionKey = this._sessionKey();
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && !this.data.isPreview && !this.data.isMock && sessionKey === this._sessionKey()
+      && routeSessionId === String((this._routeState || {}).sessionId || '');
     this._weRunAsked = true;
+    let settled = false;
     wx.getSetting({
       success: (res) => {
+        if (settled) return;
+        settled = true;
+        if (!current()) return;
         const granted = res && res.authSetting ? res.authSetting['scope.werun'] : undefined;
-        if (granted !== undefined) return;            // 允许过或拒过:不再打扰
-        wx.authorize({ scope: 'scope.werun', fail: () => {} });   // 拒了 = 伏笔只靠选项与剧情,不影响游玩
+        this.setData({ weRunDenied: granted === false });
+        if (granted !== undefined) return;
+        wx.authorize({ scope: 'scope.werun', success: () => this.setData({ weRunDenied: false }), fail: () => this.setData({ weRunDenied: true }) });   // 拒了 = 伏笔只靠选项与剧情,不影响游玩
       },
     });
   },
-  _weRunCipher() {
+  openWeRunSettings() {
+    wx.openSetting({ success: (res) => {
+      this.setData({ weRunDenied: !(res && res.authSetting && res.authSetting['scope.werun']) });
+      if (!this.data.weRunDenied) this._syncThoughts([]);
+    } });
+  },
+  _weRunCipher(isCurrent) {
+    const current = () => typeof isCurrent !== 'function' || isCurrent();
     return new Promise((resolve) => {
       wx.getSetting({
         success: (res) => {
+          if (!current()) { resolve(false); return; }
           if (!(res && res.authSetting && res.authSetting['scope.werun'])) { resolve(null); return; }
           // 必须先 wx.login 再 getWeRunData(session_key 要新鲜,否则服务端解不开)
           wx.login({
-            success: (login) => wx.getWeRunData({
-              success: (run) => resolve(login && login.code ? { code: login.code, encryptedData: run.encryptedData, iv: run.iv } : false),
+            success: (login) => {
+              if (!current()) { resolve(false); return; }
+              wx.getWeRunData({
+              success: (run) => resolve(current() && login && login.code ? { code: login.code, encryptedData: run.encryptedData, iv: run.iv } : false),
               fail: () => resolve(false),
-            }),
+            });
+            },
             fail: () => resolve(false),
           });
         },
@@ -2914,22 +3358,38 @@ Page({
   },
   _claimThoughts(keys) {
     if (this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent()) return;
+    const scope = JSON.stringify([this._boundPlayOwner(), this._sessionKey(), (this._routeState || {}).sessionId || '']);
+    if (scope !== this._thoughtClaimScope) { this._thoughtClaimScope = scope; this._thoughtClaimed = {}; }
     this._thoughtClaimed = this._thoughtClaimed || {};
     const fresh = keys.filter((k) => !this._thoughtClaimed[k]);
     if (!fresh.length) return;
     fresh.forEach((k) => { this._thoughtClaimed[k] = true; });
     this._syncThoughts(fresh);
   },
-  _syncThoughts(claim) {
+  _syncThoughts(claim, isCurrent) {
     if (this.data.isPreview || this.data.isMock) return Promise.resolve(true);
-    const releaseClaims = () => claim.forEach((k) => { if (this._thoughtClaimed) delete this._thoughtClaimed[k]; });
-    const sync = () => this._weRunCipher().then((cipher) => {
+    const owner = this._boundPlayOwner(), params = Object.assign({}, this._sessionParams());
+    const topicId = this.data.topicId, sessionKey = this._sessionKey(params);
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const claimed = this._thoughtClaimed;
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && sessionKey === this._sessionKey()
+      && routeSessionId === String((this._routeState || {}).sessionId || '')
+      && (typeof isCurrent !== 'function' || isCurrent());
+    const releaseClaims = () => { if (current()) claim.forEach((k) => { if (claimed && this._thoughtClaimed === claimed) delete claimed[k]; }); };
+    const sync = () => {
+      if (!current()) return Promise.resolve(false);
+      return this._weRunCipher(current).then((cipher) => {
+      if (!current()) return false;
       if (cipher === false) { releaseClaims(); return false; }
       if (!claim.length && !cipher) return true;       // 未授权运动:继续正常游玩,使用未应验结局
-      return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId: this.data.topicId },
-        this._sessionParams(), { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
+      return req('/api/play/journey/thought/sync', 'POST', Object.assign({ topicId },
+        params, { claim }, cipher || {}), { 'content-type': 'application/json' }).then((res) => {
+        if (!current()) return false;
         if ((res.code == 200 || res.code == '200') && res.data) {
           this._applyRouteState(res.data, () => {
+            if (!current()) return;
             if (this.data.chapterFull) this.openChapterFull();
             if (this.data.chapStory.show) this._refreshChapStoryThoughts();
           });
@@ -2940,6 +3400,7 @@ Page({
         return false;
       });
     }).catch(() => { releaseClaims(); return false; });
+    };
     // 认领与到站同步串行:先拿到伏笔,再同步步数,最后才提交可能结束本局的动作。
     const pending = (this._thoughtSyncPending || Promise.resolve()).then(sync);
     this._thoughtSyncPending = pending;
@@ -3075,7 +3536,7 @@ Page({
           curOdd = previousOdd;
         }
         else if ((b.type === 'image' || b.type === 'audio') && b.url) {
-          items.push({ kind: b.type, text: '', url: String(b.url), mood: curMood, odd: curOdd });
+          items.push({ kind: b.type, text: '', url: String(b.url), altText: typeof b.altText === 'string' ? b.altText.trim() : '', mood: curMood, odd: curOdd }); // altText(#18):图片 aria-label / 音频文字稿
         } else if (b.type === 'dream') {
           /* 梦块(契约 §3.2):一组图 + 每张一句,一张张「穿过去」。
              ⚠️ 整块仍是**一个** .chfull__para —— measureChapter 用 selectAll('.chfull__para')
@@ -3119,6 +3580,7 @@ Page({
     if (inlineCheck && !(blocks && blocks.length)) items.push({ kind: 'journeyCheck', nodeId: check.nodeId, mood: curMood });
     if (!items.length) push('这一章还没有写下的内容。');
     if (claims.length) this._claimThoughts(claims);
+    audioSession.keepAwake('chapterFull', true);
     this.setData({
       chapterFull: true,
       chapterParas: items.map((item, i) => Object.assign({
@@ -3205,6 +3667,7 @@ Page({
     this._stopStoryDust();
     if (this._settleTimer) clearTimeout(this._settleTimer);
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
+    audioSession.keepAwake('chapterFull', false);
     this.setData({ chapterFull: false, 'chapterGate.show': false });
   },
 
@@ -3223,7 +3686,21 @@ Page({
     if (this.data.isMock || !opening || opening.complete || !this.data.chapter.opening) {
       const next = this.data.nextNode;
       const node = next && (this.data.nodes || []).find(n => String(n.nodeId) === String(next.nodeId));
-      return this._endThemeChapter().then(ok => { if (ok && node) this.openSheet(node); });
+      if (!this._isPlayAccountCurrent()) return Promise.resolve();
+      const context = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+        routeSessionId: String((this._routeState || {}).sessionId || ''), chapter: this.data.chapter };
+      this._chapterContinueIntent = context;
+      return this._endThemeChapter().then(ok => {
+        if (!ok || !node || this._chapterContinueIntent !== context || !this._isPlayAccountCurrent()
+            || context.owner !== this._playOwner || context.sessionKey !== this._sessionKey()
+            || context.routeSessionId !== String((this._routeState || {}).sessionId || '')
+            || this.data.chapter !== context.chapter) return;
+        const currentNext = this.data.nextNode;
+        const currentNode = (this.data.nodes || []).find(n => String(n.nodeId) === String(node.nodeId));
+        if (!currentNext || String(currentNext.nodeId) !== String(node.nodeId) || currentNode !== node || currentNode.done) return;
+        this._chapterContinueIntent = null;
+        this.openSheet(node);
+      });
     }
     if (!opening.ready) {
       const nodeId = this._routeState.currentNodeId;
@@ -3231,11 +3708,18 @@ Page({
       cyToast('请先完成开局玩法');
       return Promise.resolve();
     }
-    if (this._openingSubmitting) return Promise.resolve();
+    if (!this._isPlayAccountCurrent() || this._openingSubmitting) return Promise.resolve();
+    const context = this._beginRouteWriteContext('_openingWrite');
+    const chapter = this.data.chapter;
+    const current = () => this._isRouteWriteContextCurrent(context)
+      && this.data.chapter === chapter && (this._routeState || {}).opening
+      && String(this._routeState.opening.chapterId) === String(opening.chapterId);
+    const payload = Object.assign({}, this._sessionParams(), { topicId: this.data.topicId, chapterId: opening.chapterId });
     this._openingSubmitting = true;
-    return this._withThoughtSync(() => req('/api/play/journey/opening/complete', 'POST', Object.assign({}, this._sessionParams(), {
-      topicId: this.data.topicId, chapterId: opening.chapterId, expectedVersion: this._routeState.version,
-    }), { 'content-type': 'application/json' })).then(res => {
+    return this._withThoughtSync(() => req('/api/play/journey/opening/complete', 'POST', Object.assign({}, payload, {
+      expectedVersion: this._routeState.version,
+    }), { 'content-type': 'application/json' }), current).then(res => {
+      if (!current() || res && res.obsolete) return;
       if (Number(res.code) !== 200) {
         cyToast(res.msg || '保存失败，请重试');
         if (isRouteConflict(res)) this.loadData(false);
@@ -3243,7 +3727,11 @@ Page({
       }
       this.closeChapterFull();
       this.loadData(false);
-    }).catch(() => cyToast('保存失败，请重试')).finally(() => { this._openingSubmitting = false; });
+    }).catch(() => { if (current()) cyToast('保存失败，请重试'); }).finally(() => {
+      if (this._openingWriteIntent !== context) return;
+      this._finishRouteWriteContext(context);
+      this._openingSubmitting = false;
+    });
   },
 
   /** 章节背景旁白。2026-09-04 起音频是章节属性(chapter.audioUrl)、一章一段,
@@ -3408,13 +3896,19 @@ Page({
 
   // ---------- 数据 ----------
   loadData(first) {
+    if (!this._isPlayAccountCurrent() || this._themeHidden) return;
+    const loadEpoch = this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
+    const sessionKey = this._sessionKey();
+    const isCurrent = () => this._isPlayAccountCurrent() && loadEpoch === this._playLoadEpoch
+      && sessionKey === this._sessionKey();
     const that = this;
     if (this.data.isPreview || this.data.isMock) { this.setData({ loading: false }); return; }
     this._loadCommitted = false;   // 每轮加载重新武装:上一轮的成功不能替这一轮的失败背书
     // 缺场次参数 ≠ 加载失败:reloadPlay 会再次命中这一行 return,给「重新加载」等于给一个
     // 物理上永远回到同一状态的假按钮。单独落 missing,只留真的走得通的出口(回活动详情)。
-    if (!this.data.activityId && !this.data.topicId) { this.setData({ loading: false, emptyTip: '场次信息缺失，请从票夹或路线详情进入', emptyKind: 'missing' }); return; }
+    if (!this.data.activityId && !this.data.topicId) { this.setData({ loading: false, emptyTip: '链接已失效，请返回重新进入', emptyKind: 'missing' }); return; }
     req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => {
+      if (!isCurrent()) return;
       if (res.code == 402 || res.code == '402') {
         // C-26:未购/过期自玩通行证 → needPass 空态 + 「获取通行证」按钮(goGetPass 跳主题详情)。
         // 不再落 registered=false 的「你还没有报名这个场次」——自玩没有报名这个动作,那句指引是错的。
@@ -3423,12 +3917,12 @@ Page({
       }
       if (res.code != 200 && res.code != '200') {
         var isAuth = (res.msg && (res.msg.indexOf('登录') >= 0 || res.msg.indexOf('认证') >= 0));
-        that.setData({ loading: false, emptyTip: isAuth ? '登录已过期，请重新登录' : (res.msg || '加载失败，请稍后重试'), emptyKind: isAuth ? 'auth' : 'error' });
+        that.setData({ loading: false, emptyTip: isAuth ? '登录已过期，请重新登录' : (res.msg || '加载失败，请重试'), emptyKind: isAuth ? 'auth' : 'error' });
         return;
       }
       const d = res.data;
       if (!isRecord(d) || !isRecordList(d.nodes)) {
-        that.setData({ loading: false, emptyTip: '路线没加载出来，请稍后重试', emptyKind: 'error' });
+        that.setData({ loading: false, emptyTip: '加载失败，请重试', emptyKind: 'error' });
         return;
       }
       // 领队(leadSpectator)是运营身份,本来就不报名本场,不该被未报名空态挡住;
@@ -3440,7 +3934,7 @@ Page({
       that._playable = d.playable !== false;
       const raw = d.nodes;
       if (!raw.length && !(d.routeState && d.routeState.opening)) {
-        that.setData({ loading: false, emptyTip: '本场路线节点还在配置中，请稍后查看', emptyKind: 'empty' });
+        that.setData({ loading: false, emptyTip: '路线配置中', emptyKind: 'empty' });
         return;
       }
       const mode = Number(d.mode) || that.data.mode || 1;
@@ -3456,9 +3950,12 @@ Page({
       // 只喂 buildJournal / _historyNodeById 的内部状态,不渲染、不进 setData(UI-GATE-0 死数据字段口径)。
       that._historyNodes = historyNodes;
       const catalog = raw.map((n, i) => that.normNode(n, i, mode));
-      const routeState = normalizeRouteState(d.routeState || { routeMode: d.routeMode });
+      const routeInput = d.routeState || { routeMode: d.routeMode };
+      const acceptProjection = that._acceptRouteStateProjection(routeInput);
+      const routeState = acceptProjection ? normalizeRouteState(routeInput) : that._routeState;
       const nodes = applyRouteStateToNodes(catalog, routeState);
       that._routeState = routeState;
+      if (acceptProjection) that._versionedRouteState = that._routeStateVersionKnown(routeInput) ? routeState : null;
       that._routeNodeCatalog = catalog;
       if (routeState.thoughtCount > 0) that._askWeRunOnce();
       if (that._routeActions) that._routeActions.clear();
@@ -3497,6 +3994,7 @@ Page({
         // 2026-09-22 删起始页后首屏直接落卡包,first 不再切屏,保持当前 screen。
         screen: that.data.screen
       }, () => {
+        if (!isCurrent()) return;
         that.rebuild();
         that._ensureSessionClock();
         that._syncIdleStats(d.chapters, nodes);
@@ -3515,14 +4013,15 @@ Page({
         that._loadPlayerGameModule();
       });
     }).catch(() => {
+      if (!isCurrent()) return;
       // 网络层 reject(超时/断网/req 抛错):落加载失败态,复用「重新加载」(reloadPlay),避免 loading 死转。
       // 已经落地的成功首屏不在这里被覆盖(见上面的 _loadCommitted)。
       if (that._loadCommitted) {
         // 只打固定标签:生产 console 门禁禁止把异常/响应/身份动态值写进开发者日志。
-        console.error('[play] 首屏数据已落地,后处理异常');
+        console.error('[play] 首屏数据已落地，后处理异常');
         return;
       }
-      that.setData({ loading: false, emptyTip: '加载失败，请稍后重试', emptyKind: 'error' });
+      that.setData({ loading: false, emptyTip: '加载失败，请重试', emptyKind: 'error' });
     });
   },
 
@@ -3539,6 +4038,7 @@ Page({
     const routeState = normalizeRouteState(d.routeState || { routeMode: d.routeMode });
     const nodes = applyRouteStateToNodes(catalog, routeState);
     that._routeState = routeState;
+    that._versionedRouteState = that._routeStateVersionKnown(d.routeState) ? routeState : null;
     that._routeNodeCatalog = catalog;
     const chapter = that.buildChapter(d, nodes);
     this._historyNodes = [];
@@ -3620,7 +4120,7 @@ Page({
       optionMedia: n.optionMedia || null,
       points: n.xp || 12,
       // 模板呈现字段(/api/play/nodes 已下发)
-      gameTitle: n.gameTitle || (vm === 6 ? '生活偏好校准' : (vm === 4 ? '现场打卡' : (vm === 2 ? '拍照任务' : (vm ? '点位任务' : '')))),
+      gameTitle: n.gameTitle || (vm === 6 ? '生活偏好校准' : (vm === 4 ? '现场打卡' : (vm === 2 ? '拍照任务' : (vm ? '节点任务' : '')))),
       duration: n.duration ? (n.duration + ' 分钟') : '', difficulty: n.difficulty || '', players: n.players || '',
       materials: n.requiredMaterials || '', rule: n.ruleInstructions || '',
       story: n.storyText || '', cover: n.storyImg || n.imgUrl || '',
@@ -3699,7 +4199,7 @@ Page({
       // 2026-09-18 UI-20 返修:publish/simple、fabu 建主题时给章节写的默认名是英文占位「Chapter 1」,
       // 不再原样上屏(也不落回主题名把章节标题变成主题名),统一显示「第 N 章」。
       name: displayChapterName(c.name, 0, d.topicName || '城市探索'),
-      description: c.description || '跟着脚步走完这几处坐标,把散落的线索串成一段属于你的城市故事。',
+      description: c.description || '跟着脚步走完这几处坐标，把散落的线索串成一段属于你的城市故事。',
       cover: this._coverOf(c.imgArr ? String(c.imgArr).split(',')[0] : (c.cover || ''), nodes),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
@@ -3835,7 +4335,7 @@ Page({
     }));
     const ringSegs = this._ringSegs(doneCount, nodes.length);
     // 顶部输入地址只搜这一局里的地点(§6.1「只显示这一个主题里的地点」);
-    // 针的颜色按玩法给 —— 城市定向绿 / 自由探索蓝。
+    // 针的颜色按玩法给 —— 城市定向蓝 / 自由探索绿。
     const searchPlaces = visibleNodes.filter((x) => x.lat && x.lng).map((x) => ({
       id: String(x.nodeId), name: x.name || '未命名地点', address: x.address || '',
       kind: mode === 2 ? 'free' : 'city', lat: x.lat, lng: x.lng, nodeId: x.nodeId,
@@ -3946,9 +4446,15 @@ Page({
   // ---------- 定位 ----------
   // 仅由「开始游玩」或「前往此站」触发。进入页面时不预先请求，拒绝后仍可扫码完成。
   requestPlayLocation() {
-    if (this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting) return;
     const that = this;
+    // 与加载代际分开：锁屏或切后台不撤回已明确同意的游玩定位。
+    const epoch = this._playLocationEpoch = (this._playLocationEpoch || 0) + 1;
+    const sessionKey = this._sessionKey();
+    const current = () => that._isPlayAccountCurrent() && epoch === that._playLocationEpoch
+      && sessionKey === that._sessionKey();
     const unavailable = (hint) => {
+      if (!current()) return;
       that._locationRequesting = false;
       that.setData({ gpsOk: false, gpsHint: hint });
     };
@@ -3956,19 +4462,23 @@ Page({
     this.setData({ gpsHint: '正在请求定位…' });
     cyModal.show({
       title: '开启定位',
-      content: '仅在你主动开始游玩后，用于显示当前位置和自动判断到点；未开启时仍可扫码到达。',
+      content: '仅在你主动开始游玩后，持续获取位置，用于显示当前位置和自动判断到点。锁屏或切到后台仍会获取；暂停、结束本次或离开游玩页后停止。未开启时仍可扫码到达。',
       confirmText: '开启定位',
       cancelText: '先用扫码',
       success(result) {
+        if (!current()) return;
         if (!result.confirm) { unavailable('定位未开启 · 可扫码完成到达'); return; }
         wx.getLocation({
           type: 'gcj02', isHighAccuracy: true,
           success(loc) {
-            that._loc = { longitude: loc.longitude, latitude: loc.latitude };
+            if (!current()) return;
+            that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
             that._locationRequesting = false;
             that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
+              if (!current()) return;
+              that._noteLocAccuracy(loc.accuracy);
               that.rebuild();
-              that.watchLocation();
+              if (current()) that.watchLocation();
             });
           },
           fail() { unavailable('定位未开启 · 可扫码完成到达'); }
@@ -3977,22 +4487,59 @@ Page({
       fail() { unavailable('定位暂不可用 · 可扫码完成到达'); }
     });
   },
+  /** 定位精度提示:只在「不足/恢复」翻转时 setData,不随每次定位回调刷新 */
+  _noteLocAccuracy(accuracy) {
+    const low = playAccuracy.isLowAccuracy(accuracy);
+    if (low === !!this.data.gpsLowAcc) return;
+    if (low) this.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
+    else this.setData({ gpsLowAcc: false, gpsHint: '定位已开启 · 靠近后会自动点亮' });
+  },
   watchLocation() {
     const that = this;
-    if (this._watching) return;                       // 防 onShow 重复注册→监听叠加→一次定位多次 arrive
+    if (!this._isPlayAccountCurrent()) { this._stopTracking(); return; }
+    if (this._watching) return; // 同一持有者不重复注册监听。
     this._watching = true;
-    try { wx.offLocationChange(); } catch (e) {}
+    const epoch = this._playLocationEpoch || 0;
+    const sessionKey = this._sessionKey();
+    const trackingKey = this._trackKey() + ':' + (++playLocationOwnerSequence);
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
+      if (that._releasePlayTracking === release) {
+        that._releasePlayTracking = null;
+        that._playTrackingKey = null;
+        that._watching = false;
+        if (that._playLocationHandler) {
+          try { wx.offLocationChange(that._playLocationHandler); } catch (e) {}
+          that._playLocationHandler = null;
+        }
+      }
+      bgTracker.release(trackingKey);
+    };
+    this._playTrackingKey = trackingKey;
+    this._releasePlayTracking = release;
+    const current = () => that._releasePlayTracking === release && that._isPlayAccountCurrent()
+      && epoch === (that._playLocationEpoch || 0) && sessionKey === that._sessionKey();
+    if (this._playLocationHandler) {
+      try { wx.offLocationChange(this._playLocationHandler); } catch (e) {}
+      this._playLocationHandler = null;
+    }
     // 后台定位:玩家锁屏塞兜里走路是本场景的常态(在架路线 2–4.5 小时、7.8–10.5 公里),
     // 前台版一锁屏就断,轨迹断段、走到点位也判不出到达。拿不到后台权限时自动降级前台。
     // ⚠️ 停的时机见 onUnload / _stopTracking —— **不能**在 onHide 停。
-    bgTracker.acquire(this._trackKey(), {
+    bgTracker.acquire(trackingKey, {
       fail() {
-        that._watching = false;
-        that.setData({ gpsOk: false, gpsHint: '实时定位未开启 · 可扫码完成到达' });
+        if (!current()) { release(); return; }
+        release();
+        that.setData({ gpsOk: false, gpsHint: '定位未开启，可扫码到达' });
       },
       success() {
-        wx.onLocationChange((loc) => {
-          that._loc = { longitude: loc.longitude, latitude: loc.latitude };
+        if (!current() || !that._watching) { release(); return; }
+        that._playLocationHandler = (loc) => {
+          if (!current() || !that._watching) { release(); return; }
+          that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
+          that._noteLocAccuracy(loc.accuracy);
           // S2 陪伴态:仅 nav.active 时才把玩家位置回灌地图(箭头需要跟着走)+ 刷新剩余距离/途中气泡阈值
           // 性能:回灌地图会触发 free-map 全量 _rebuild(重画节点+circles+箭头),GPS 每 1-3s 一次太频繁,
           // 节流成"移动 ≥5 米才回灌";nav.remainM/气泡阈值仍每 tick 刷(便宜,不受影响)。
@@ -4015,17 +4562,24 @@ Page({
             const d = that.haversine(that._loc.latitude, that._loc.longitude, node.lat, node.lng);
             // 仅"到点即完成(vm0)/GPS到达(vm5)"节点自动到达;答题/拍照/选项/扫码(1/2/3/4)须玩家手动完成,
             // 否则后端 arrive 闸会拒绝并在每次定位回调刷 toast。
-            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5)) that.arrive(node.nodeId, 'gps');
+            // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
+            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5) && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
-        });
+        };
+        wx.onLocationChange(that._playLocationHandler);
       }
     });
   },
   // ---------- P1 俱乐部带领(轮询 + 队长控) ----------
   loadTeamProgress() {
     const that = this;
+    const progressContext = this._leadOperationContext();
     const options = arguments[0];
-    if (!this.data.activityId || this.data.isPreview || this.data.isMock) return;
+    // 返回 promise:true=本次成功(或被更新的响应顶替,不算失败),false=失败 —— 轮询器据此退避
+    if (this._playDisposed || !this._isPlayAccountCurrent() || this._themeHidden || !this.data.activityId || this.data.isPreview || this.data.isMock) return Promise.resolve(true);
+    const memberId = app.getUserID && app.getUserID();
+    const activityId = this.data.activityId;
+    const lifecycleEpoch = this._leadLifecycleEpoch || 0;
     const requestEpoch = (this._leadProgressEpoch || 0) + 1;
     this._leadProgressEpoch = requestEpoch;
     const explicitAuditToken = options && options.unlockAuditToken;
@@ -4033,24 +4587,35 @@ Page({
       ? explicitAuditToken
       : (this._leadUnlockChecking ? this._leadUnlockAuditToken : null);
     const claimResponse = () => {
+      if (that._playDisposed || that._themeHidden || memberId !== (app.getUserID && app.getUserID()) || activityId !== that.data.activityId) return false;
       // 只拒绝比「已落地」结果更旧的响应，不能以「最新已发起」为准。
       // 否则当 GET 持续慢于 4s 轮询间隔时，每个响应都会被下一请求提前作废而永不刷新。
+      if (!that._isLeadOperationContextCurrent(progressContext, false) || that._themeHidden || lifecycleEpoch !== (that._leadLifecycleEpoch || 0)) return false;
       if (requestEpoch < (that._leadProgressAppliedEpoch || 0)) return false;
       that._leadProgressAppliedEpoch = requestEpoch;
       return true;
     };
     const markLeadLoadFailure = () => {
       if (claimResponse()) that.setData({ leadLoadError: true });
+      return false;
     };
-    req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }).then((res) => {
+    // F-W1-10:4 秒轮询的读取失败只落到 leadLoadError,不再每轮弹后端 toast(如换号后的「无权查看本场队伍进度」)。
+    return req('/api/club/lead/team-progress', 'GET', { activityId: this.data.activityId }, undefined, true).then((res) => {
       // 轮询、手动重试和放行后对账可能并发；旧响应不得覆盖较新的章节真相。
-      if (!claimResponse()) return;
+      if (!claimResponse()) return true;
       if (!(res.code == 200 || res.code == '200') || !res.data) {
         that.setData({ leadLoadError: true });
-        return;
+        return false;
       }
       const d = res.data;
-      const unlockAuditDone = unlockAuditToken != null && unlockAuditToken === that._leadUnlockAuditToken;
+      const auditIntent = that._leadUnlockIntent;
+      const unlockAuditDone = unlockAuditToken != null && unlockAuditToken === that._leadUnlockAuditToken
+        && auditIntent && auditIntent.auditToken === unlockAuditToken
+        && that._isLeadOperationContextCurrent(auditIntent.context, false);
+      if (unlockAuditDone && that._leadUnlockIntents[auditIntent.key] === auditIntent) {
+        delete that._leadUnlockIntents[auditIntent.key];
+        that._leadUnlockIntent = null;
+      }
       if (!d.exists) {
         if (unlockAuditDone) that._leadUnlockChecking = false;
         that.setData({
@@ -4059,7 +4624,7 @@ Page({
           leadUnlockChecking: unlockAuditDone ? false : !!that._leadUnlockChecking,
         });
         that._stopLeadPoll();
-        return;
+        return true;
       }
       // 广播变化时轻提示(一次)
       if (d.broadcast && d.broadcast !== that._lastBroadcast) {
@@ -4081,29 +4646,82 @@ Page({
       if (unlockAuditDone) that._leadUnlockChecking = false;
       if (openedWhileWaiting) that.loadData(false);
       that._startLeadPoll();
+      return true;
     }).catch(markLeadLoadFailure);
   },
+  // 带领场进度轮询:setTimeout 链(./utils/poller.js),上一发没回来不叠发;连续失败 4s→8s→10s 退避,成功复位。
   _startLeadPoll() {
-    if (this._leadTimer) return;
-    const that = this;
-    this._leadTimer = setInterval(() => that.loadTeamProgress(), 4000);
+    if (this._playDisposed || !this._isPlayAccountCurrent() || this._themeHidden) return;
+    if (!this._leadPoller) {
+      this._leadPoller = createPoller({ run: () => this.loadTeamProgress(), interval: 4000, maxInterval: 10000 });
+    }
+    this._leadPoller.start();
   },
   _stopLeadPoll() {
-    if (this._leadTimer) { clearInterval(this._leadTimer); this._leadTimer = null; }
+    this._leadLifecycleEpoch = (this._leadLifecycleEpoch || 0) + 1;
+    if (this._leadPoller) this._leadPoller.stop();
   },
   retryLeadProgress() {
     this.setData({ leadLoadError: false }, () => this.loadTeamProgress());
   },
   leadArrive() {
     const that = this;
-    req('/api/club/lead/arrive', 'POST', { activityId: this.data.activityId }).then((r) => {
-      that.diegetic(r.msg || '已到集合点');
-      that.loadTeamProgress();
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this._leadArriving || this.data.isPreview || this.data.isMock) return;
+    const activityId = this.data.activityId;
+    const memberId = app.getUserID && app.getUserID();
+    const authorization = app.getAuthorization && app.getAuthorization();
+    if (!(Number(activityId) > 0) || !(Number(memberId) > 0) || !authorization || authorization === app.DEV_TOKEN) {
+      this.diegetic('请先登录并进入本场'); return;
+    }
+    const epoch = (this._leadArrivalEpoch || 0) + 1;
+    this._leadArrivalEpoch = epoch; this._leadArriving = true;
+    const lifecycleEpoch = this._leadLifecycleEpoch || 0;   // 带领轮询生命周期换代(停轮询)后旧签到不再回写
+    const live = () => !that._playDisposed && !that._themeHidden && that._leadArrivalEpoch === epoch
+      && lifecycleEpoch === (that._leadLifecycleEpoch || 0)
+      && activityId === that.data.activityId && memberId === (app.getUserID && app.getUserID())
+      && authorization === (app.getAuthorization && app.getAuthorization());
+    const finish = (message) => {
+      if (that._leadArrivalEpoch === epoch) that._leadArriving = false;
+      if (message && live()) that.diegetic(message);
+    };
+    cyModal.show({
+      title: '集合签到定位',
+      content: '仅本次签到获取当前位置，用于确认你是否在集合点500米内，不开启持续或后台定位。集合前60分钟起可签到。',
+      confirmText: '定位并签到', cancelText: '取消',
+      success(result) {
+        if (!live()) { finish(); return; }
+        if (!result.confirm) { finish(); return; }
+        if (typeof wx.getLocation !== 'function') { finish('定位暂不可用'); return; }
+        wx.getLocation({
+          type: 'gcj02', isHighAccuracy: true,
+          success(loc) {
+            if (!live()) { finish(); return; }
+            if (!loc || !Number.isFinite(loc.latitude) || !Number.isFinite(loc.longitude)
+              || Math.abs(loc.latitude) > 90 || Math.abs(loc.longitude) > 180) {
+              finish('当前位置无效，请重新定位'); return;
+            }
+            req('/api/club/lead/arrive', 'POST', { activityId, latitude: loc.latitude, longitude: loc.longitude }).then((r) => {
+              if (!live()) { finish(); return; }
+              const ok = r.code == 200;
+              finish(r.msg || (ok ? '已到集合点' : '签到未完成，请重试'));
+              if (ok) that.loadTeamProgress();
+            });
+          },
+          fail() { finish('定位未开启，未提交签到'); }
+        });
+      },
+      fail() { finish('签到确认未完成'); }
     });
   },
   leadStart() {
+    if (!this._isPlayAccountCurrent() || !this.data.activityId) return;
     const that = this;
-    req('/api/club/lead/start', 'POST', { activityId: this.data.activityId }).then((r) => {
+    const context = this._leadOperationContext();
+    const lifecycleEpoch = this._leadLifecycleEpoch || 0;
+    const sequence = this._leadStartSequence = (this._leadStartSequence || 0) + 1;
+    req('/api/club/lead/start', 'POST', { activityId: context.activityId }).then((r) => {
+      if (!that._isLeadOperationContextCurrent(context, false)
+          || lifecycleEpoch !== (that._leadLifecycleEpoch || 0) || sequence !== that._leadStartSequence) return;
       that.diegetic(r.msg || '出发!');
       that.loadTeamProgress();
     });
@@ -4112,30 +4730,50 @@ Page({
     const lead = this.data.lead;
     return !!(lead && lead.exists && lead.isLeader);
   },
+  _leadOperationContext() {
+    return { owner: this._boundPlayOwner(), activityId: this.data.activityId,
+      sessionKey: this._sessionKey() };
+  },
+  _isLeadOperationContextCurrent(context, requireLeader) {
+    return !!context && this._isPlayAccountCurrent() && context.owner === this._playOwner
+      && context.activityId === this.data.activityId && context.sessionKey === this._sessionKey()
+      && (!requireLeader || this._canUseLeadTools());
+  },
   // 规则 1：带队主题的玩家票必须从当前 activity 入口核销。不能复用商家首页的通用扫码，
   // 否则请求没有场次身份，后端会 fail closed，结算也无法区分同主题的不同团。
   leadVerifyMemberTicket() {
     const that = this;
-    if (!this._canUseLeadTools() || !this.data.activityId) return;
+    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    const context = this._leadOperationContext();
+    const sequence = this._leadTicketScanSequence = (this._leadTicketScanSequence || 0) + 1;
+    const isCurrent = () => that._isLeadOperationContextCurrent(context, true)
+      && sequence === that._leadTicketScanSequence;
+    let scanSettled = false, loadingShown = false;
+    const finishLoading = () => { if (loadingShown) { loadingShown = false; cyLoading.hide(); } };
     wx.scanCode({
       onlyFromCamera: true,
       success(scan) {
+        if (!isCurrent() || scanSettled) return;
+        scanSettled = true;
         const ticket = resolveLeadMemberTicket(scan.result);
         if (ticket.error) {
           that.diegetic(ticket.error);
           return;
         }
-        cyLoading.show('正在核销');
+        loadingShown = true; cyLoading.show('正在核销');
         req('/api/registration/scan_group_member_ticket', 'POST', {
-          code: ticket.code, activityId: that.data.activityId
+          code: ticket.code, activityId: context.activityId
         }).then((r) => {
-          cyLoading.hide();
+          finishLoading();
+          if (!isCurrent()) return;
           const verified = r.code == 200 || r.code == '200';
           if (verified) motion.haptic({ type: 'medium', reducedMotion: that.data.reducedMotion });
           that.diegetic(r.msg || (verified ? '核销成功' : '核销失败'));
-        });
+        }).catch(() => { finishLoading(); if (isCurrent()) that.diegetic('核销失败'); });
       },
       fail(error) {
+        if (!isCurrent() || scanSettled) return;
+        scanSettled = true;
         that.diegetic(isScanCancelled(error) ? '已取消扫码' : '扫码未完成，请重试');
       }
     });
@@ -4145,81 +4783,133 @@ Page({
     this.openScene('qr-group-code', { activityId: this.data.activityId, name: '本场次' });
   },
   leadUnlock() {
-    if (!this._canUseLeadTools() || !this.data.activityId) return;
-    if (this._leadUnlockInFlight || this._leadUnlockChecking) return;
-    this._leadUnlockInFlight = true;
-    const that = this;
+    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    const context = this._leadOperationContext();
+    const key = JSON.stringify([context.owner, context.activityId, context.sessionKey]);
+    const intents = this._leadUnlockIntents = this._leadUnlockIntents || Object.create(null);
+    let intent = intents[key];
+    const current = () => this._leadUnlockIntent === intent && this._isLeadOperationContextCurrent(context, true);
+    const audit = () => {
+      if (!current()) return;
+      this._leadUnlockInFlight = false; this._leadUnlockChecking = true;
+      intent.auditToken = this._leadUnlockAuditToken = (this._leadUnlockAuditToken || 0) + 1;
+      this.setData({ leadUnlockChecking: true });
+      this.loadTeamProgress({ unlockAuditToken: intent.auditToken });
+    };
+    if (intent) {
+      this._leadUnlockIntent = intent;
+      // 已有放行读回在途时再点不再追加读取;读回中断(换页回来等)后再点才重新核对。
+      if (intent.phase === 'checking' && !this._leadUnlockChecking) audit();
+      return;
+    }
+    intent = intents[key] = { key, context, phase: 'confirming' };
+    this._leadUnlockIntent = intent;
+    this._leadUnlockInFlight = true; this._leadUnlockChecking = false;
+    this.setData({ leadUnlockChecking: false });
+    const release = () => { if (intents[key] === intent) delete intents[key]; };
+    let modalSettled = false, loadingShown = false;
+    const finishLoading = () => { if (loadingShown) { loadingShown = false; cyLoading.hide(); } };
     cyModal.show({
       title: '解锁下一章节',
       content: '确认让全队进入下一章节?',
       confirmText: '确认解锁',
-      success(res) {
-        if (!res.confirm) {
-          that._leadUnlockInFlight = false;
-          that.diegetic('已取消解锁');
-          return;
-        }
-        cyLoading.show('正在放行');
-        req('/api/club/lead/unlock-chapter', 'POST', { activityId: that.data.activityId }).then((r) => {
-          cyLoading.hide();
-          that._leadUnlockInFlight = false;
+      success: (res) => {
+        if (modalSettled) return;
+        modalSettled = true;
+        if (!current()) { release(); return; }
+        if (!res.confirm) { release(); this._leadUnlockInFlight = false; this.diegetic('已取消解锁'); return; }
+        intent.phase = 'submitting';
+        loadingShown = true; cyLoading.show('正在放行');
+        req('/api/club/lead/unlock-chapter', 'POST', { activityId: context.activityId }).then((r) => {
+          finishLoading();
           if (r.httpFail) {
-            that._leadUnlockChecking = true;
-            that._leadUnlockAuditToken = (that._leadUnlockAuditToken || 0) + 1;
-            that.setData({ leadUnlockChecking: true });
-            that.diegetic('章节放行结果待核对，正在读取队伍进度');
-            that.loadTeamProgress({ unlockAuditToken: that._leadUnlockAuditToken });
+            intent.phase = 'checking';
+            if (current()) { this.diegetic('章节放行结果待确认，正在读取队伍进度'); audit(); }
             return;
           }
+          release();
+          if (!current()) return;
+          this._leadUnlockInFlight = false;
           const ok = r.code == 200 || r.code == '200';
-          that.diegetic(r.msg || (ok ? '已放行' : '章节放行失败，请重试'));
-          if (ok) that.loadTeamProgress();
+          this.diegetic(r.msg || (ok ? '已放行' : '章节放行失败，请重试'));
+          if (ok) this.loadTeamProgress();
         }).catch(() => {
-          cyLoading.hide();
-          that._leadUnlockInFlight = false;
-          that.diegetic('章节放行没有送达，请检查网络后重试');
+          finishLoading(); release();
+          if (!current()) return;
+          this._leadUnlockInFlight = false;
+          this.diegetic('章节放行没有送达，请检查网络后重试');
         });
       },
-      fail() {
-        that._leadUnlockInFlight = false;
-        that.diegetic('解锁确认未打开，请重试');
+      fail: () => {
+        if (modalSettled) return;
+        modalSettled = true; release();
+        if (current()) { this._leadUnlockInFlight = false; this.diegetic('解锁确认未打开，请重试'); }
       }
     });
   },
   leadBroadcast() {
-    const that = this;
+    if (!this._isPlayAccountCurrent()) return;
+    const context = this._leadOperationContext();
+    const intent = {};
+    this._leadBroadcastIntent = intent;
+    const current = () => this._leadBroadcastIntent === intent && this._isLeadOperationContextCurrent(context);
+    let settled = false;
     cyModal.show({
       title: '队长广播',
       editable: true,
       placeholderText: '对全队说一句…',
-      success(res) {
+      success: (res) => {
+        if (settled || !current()) return;
+        settled = true;
         if (res.confirm && res.content) {
-          req('/api/club/lead/broadcast', 'POST', { activityId: that.data.activityId, text: res.content })
-            .then((r) => { that.diegetic(r.msg || '已广播'); that.loadTeamProgress(); });
+          req('/api/club/lead/broadcast', 'POST', { activityId: context.activityId, text: res.content })
+            .then((r) => {
+              if (!current()) return;
+              this.diegetic(r.msg || '已广播'); this.loadTeamProgress();
+            });
         }
       }
     });
   },
+
   // D-9 队长全团结算:一次核销=全团入结算(到场∩已付)。资金动作,二次确认。
   leadSettle() {
-    const that = this;
-    if (!this._canUseLeadTools() || !this.data.activityId) return;
+    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    const context = this._leadOperationContext();
+    if (this._leadSettleIntent && this._isLeadOperationContextCurrent(this._leadSettleIntent.context)) return;
+    const intent = { context };
+    this._leadSettleIntent = intent;
+    const current = () => this._leadSettleIntent === intent && this._isLeadOperationContextCurrent(context, true);
+    const release = () => { if (this._leadSettleIntent === intent) this._leadSettleIntent = null; };
+    let settled = false, loading = false;
+    const hideLoading = () => { if (loading) { loading = false; cyLoading.hide(); } };
     cyModal.show({
       title: '全团结算',
-      content: '将为到场已购票的全体队员核销并入结算,确认结算?',
+      content: '将为到场已购票的全体队员核销并入结算，确认结算?',
       confirmText: '结算全团',
-      success(res) {
-        if (!res.confirm) { that.diegetic('已取消结算'); return; }
-        cyLoading.show('正在结算');
-        req('/api/club/lead/settle', 'POST', { activityId: that.data.activityId }).then((r) => {
-          cyLoading.hide();
+      success: (res) => {
+        if (settled) return;
+        settled = true;
+        if (!current()) { release(); return; }
+        if (!res.confirm) { release(); this.diegetic('已取消结算'); return; }
+        cyLoading.show('正在结算'); loading = true;
+        req('/api/club/lead/settle', 'POST', { activityId: context.activityId }).then((r) => {
+          hideLoading();
+          const owned = current(); release();
+          if (!owned) return;
           const ok = r.code == 200 || r.code == '200';
-          that.diegetic(r.msg || (ok ? '全团结算完成' : '整团结算失败，请重试'));
-          if (!ok) return;
-          that.loadTeamProgress();
+          this.diegetic(r.msg || (ok ? '全团结算完成' : '整团结算失败，请重试'));
+          if (ok) this.loadTeamProgress();
+        }).catch(() => {
+          hideLoading(); const owned = current(); release();
+          if (owned) this.diegetic('整团结算失败，请重试');
         });
       },
-      fail() { that.diegetic('结算确认未打开，请重试'); }
+      fail: () => {
+        if (settled) return;
+        settled = true; const owned = current(); release();
+        if (owned) this.diegetic('结算确认未打开，请重试');
+      }
     });
   },
 
@@ -4295,9 +4985,18 @@ Page({
     else if (ratio >= 0.5 && !this.data.nav.hit50) { this.setData({ 'nav.hit50': true }); this._fetchCompanionLine(); }
   },
   _fetchCompanionLine() {
-    if (this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;
     const that = this;
-    req('/api/play/companionLine', 'GET', this._sessionParams()).then((r) => {
+    const nav = this.data.nav;
+    if (!nav || !nav.active) return;
+    const targetNodeId = nav.targetNodeId;
+    const params = this._sessionParams();
+    const sessionKey = this._sessionKey(params);
+    const sequence = this._companionReadSequence = (this._companionReadSequence || 0) + 1;
+    req('/api/play/companionLine', 'GET', params).then((r) => {
+      if (!that._isPlayAccountCurrent() || sequence !== that._companionReadSequence
+          || sessionKey !== that._sessionKey() || that.data.nav !== nav
+          || !nav.active || nav.targetNodeId !== targetNodeId) return;
       if (!(r.code == 200 || r.code == '200') || !r.data || !r.data.line) return;
       that.showNavBubble(r.data.line);
     });
@@ -4338,7 +5037,7 @@ Page({
       cardHook: node.cardHook || ''
     });
     this.setData({
-      'sheet.show': true, 'sheet.node': sheetNode,
+      'sheet.show': true, sheetOut: false, 'sheet.node': sheetNode,
       'sheet.continueText': this.data.allDone ? '查看城市足迹卡' : '前往下一站'
     });
     // M6:开卡时相机平移,让选中节点落到上 1/3 视野(半屏大卡遮住下半屏时仍可见);无坐标节点优雅跳过
@@ -4358,6 +5057,11 @@ Page({
       name: n.name || '目的地', address: n.address || '', scale: 18
     });
   },
+  // 线索图片：全屏预览同一段的全部图片
+  previewThemeClueImage(e) {
+    const urls = e.currentTarget.dataset.urls || [];
+    if (urls.length) wx.previewImage({ current: e.currentTarget.dataset.url || urls[0], urls: urls });
+  },
   // 节点封面点击:多图时全屏预览(单图/无图不弹)
   previewNodeImages(e) {
     const raw = e.currentTarget.dataset.imgs;
@@ -4371,7 +5075,7 @@ Page({
     if (n && !n.done && !this.data.isPreview && !this.data.isMock) {
       analytics.track('node_abandon', { bizType: 'topic', bizId: this.data.topicId, properties: { nodeId: n.nodeId, via: 'sheet' } });
     }
-    this.setData({ 'sheet.show': false });
+    this._outThen('sheet');
   },
   pickPreviewEnding(e) {
     const idx = Number(e.currentTarget.dataset.idx) || 0;
@@ -4469,14 +5173,42 @@ Page({
       }
     });
   },
+  _beginRouteWriteContext(channel) {
+    // 先建好路线动作存储:否则首写时 _routeWritePayload 才懒建,刚捕获的 routeActions 立刻失配。
+    if (!this._routeActions) this._routeActions = createRouteActionStore();
+    const context = { channel, owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+      routeSessionId: String((this._routeState || {}).sessionId || ''), routeActions: this._routeActions };
+    this[channel + 'Intent'] = context;
+    return context;
+  },
+  _isRouteWriteContextCurrent(context) {
+    return this._isPlayAccountCurrent() && context.owner === this._playOwner
+      && this[context.channel + 'Intent'] === context
+      && context.sessionKey === this._sessionKey() && context.routeActions === this._routeActions
+      && (!context.routeSessionId || context.routeSessionId === String((this._routeState || {}).sessionId || ''));
+  },
+  _finishRouteWriteContext(context) {
+    if (this[context.channel + 'Intent'] !== context) return;
+    this[context.channel + 'Intent'] = null;
+    this[context.channel + 'InFlight'] = false;
+  },
+
   arrive(nodeId, via) {
+    if (!this._isPlayAccountCurrent()) return;
     if (this.data.isPreview || this.data.isMock) { this.onComplete(nodeId, {}); return; }
     if (!this.beginArrivalWrite()) return;
     const that = this;
     const loc = this._loc || {};
-    this._withThoughtSync(() => req('/api/play/arrive', 'POST', this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude })))
+    const context = this._beginRouteWriteContext('_arrivalWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context);
+    // 完成请求在伏笔/步数同步之后才生成,带上同步后的路线版本。
+    this._withThoughtSync(() => {
+      if (!isCurrent()) return Promise.resolve({ obsolete: true });
+      return req('/api/play/arrive', 'POST', this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) }));
+    }, isCurrent)
       .then((r) => {
-        that._arrivalWriteInFlight = false;
+        const current = isCurrent(); that._finishRouteWriteContext(context);
+        if (!current || (r && r.obsolete)) return;
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('arrive', nodeId);
           if (that.data.mode === 2) { that.onShopDayArrived(nodeId, r.data); return; }
@@ -4485,22 +5217,40 @@ Page({
         else if (that._handleRouteConflict(r, 'arrive', nodeId)) return;
         else if (r.httpFail) that.recordArrivalHttpUnknown(r.msg, nodeId);
         else if (r.netFail) that.recordArrivalNetworkFailure('打卡请求没有送达', { type: 'arrive', nodeId, via });
-        else { that._resolveRouteAction('arrive', nodeId); that.diegetic(r.msg || '还没到这一站附近'); }
+        else {
+          that._resolveRouteAction('arrive', nodeId);
+          if (playAccuracy.isLowAccuracyMsg(r.msg)) that.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
+          that.diegetic(r.msg || '还没到这一站附近');
+          if (that._hasGenericProofFlow()) return that._readGenericProof(nodeId);
+        }
       }).catch(() => {
-        that._arrivalWriteInFlight = false;
+        const current = isCurrent(); that._finishRouteWriteContext(context);
+        if (!current) return;
         that.recordArrivalNetworkFailure('打卡请求没有送达', { type: 'arrive', nodeId, via });
       });
   },
   checkin(nodeId, code, source) {
+    if (!this._isPlayAccountCurrent()) return;
     if (this.data.isPreview || this.data.isMock) { this.onComplete(nodeId, {}); return; }
     const that = this;
     const isGame = source === 'game';
     if (isGame ? !this.beginGameWrite() : !this.beginArrivalWrite()) return;
-    const attempt = isGame ? { type: 'gameCheckin', nodeId, code } : null;
-    this._withThoughtSync(() => req('/api/play/checkin', 'POST', this._routeWritePayload('checkin', nodeId, { nodeId, code, registrationId: this.data.regId || undefined })))
+    const attempt = isGame ? { type: 'gameCheckin', nodeId, code, viewContext: this._legacyGameContext() } : null;
+    const retryAttempt = this._retryGameAttempt || null;
+    const extra = { nodeId, code, registrationId: this.data.regId || undefined };   // 点击时的输入,同步期间不变
+    const context = this._beginRouteWriteContext(isGame ? '_gameWrite' : '_arrivalWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context) && (!isGame || this._isLegacyGameCurrent(attempt.viewContext));
+    this._withThoughtSync(() => {
+      if (!isCurrent()) return Promise.resolve({ obsolete: true });
+      // 完成请求在伏笔/步数同步之后才生成,带上同步后的路线版本。
+      const payload = isGame ? this._legacyGameWritePayload('gameCheckin', 'checkin', nodeId, extra, retryAttempt)
+        : this._routeWritePayload('checkin', nodeId, extra);
+      if (attempt) attempt.payload = payload;
+      return req('/api/play/checkin', 'POST', this._retriedRouteWriteBody(payload, isGame && retryAttempt));
+    }, isCurrent)
       .then((r) => {
-        if (isGame) that._gameWriteInFlight = false;
-        else that._arrivalWriteInFlight = false;
+        const current = isCurrent(); that._finishRouteWriteContext(context);
+        if (!current || (r && r.obsolete)) return;
         // 扫码以"码→节点"为准:用后端返回的 nodeId 点亮(自由定向扫错码不会点亮错节点)
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('checkin', nodeId);
@@ -4521,20 +5271,26 @@ Page({
           that._resolveRouteAction('checkin', nodeId);
           that._lastGameAttempt = null;
           that.setData({ gNetErr: r.msg || '这枚码对不上这一站', gNetRetryable: false });
+          if (that._hasGenericProofFlow()) return that._readGenericProof(nodeId);
         } else {
           that._resolveRouteAction('checkin', nodeId);
           that.diegetic(r.msg || '这枚码对不上这一站');
+          if (that._hasGenericProofFlow()) return that._readGenericProof(nodeId);
         }
       }).catch(() => {
-        if (isGame) that._gameWriteInFlight = false;
-        else that._arrivalWriteInFlight = false;
+        const current = isCurrent(); that._finishRouteWriteContext(context);
+        if (!current) return;
         if (isGame) that.recordGameNetworkFailure('扫码结果没有送达', attempt);
         else that.recordArrivalNetworkFailure('扫码结果没有送达', { type: 'checkin', nodeId, code });
       });
   },
   // 2026-09-22 原来这条失败画在底部读数卡的错误条上(带一枚「重试」)。卡随地图层删除后改走
   // 全局 toast:写请求失败必须留下可见提示,重试就是用户再点一次那个动作 —— 静默是最糟的一种。
-  recordArrivalNetworkFailure(message) {
+  recordArrivalNetworkFailure(message, attempt) {
+    if (this._hasGenericProofFlow() && attempt && ['arrive', 'checkin'].includes(attempt.type)) {
+      this._arrivalWriteUnknown = true;
+      return this._readGenericProof(attempt && attempt.nodeId, '打卡结果待确认，请勿重复提交', 'arrive');
+    }
     cyToast(message);
   },
   beginArrivalWrite() {
@@ -4542,13 +5298,18 @@ Page({
     this._arrivalWriteInFlight = true;
     return true;
   },
-  recordArrivalHttpUnknown(message) {
+  recordArrivalHttpUnknown(message, nodeId) {
     this._arrivalWriteUnknown = true;
+    if (this._hasGenericProofFlow()) return this._readGenericProof(nodeId, '打卡结果待确认，请勿重复提交', 'arrive');
     // 结果未知这条尤其不能静默:看不见它的人只会反复点,而 beginArrivalWrite 已经把后续写拦住了。
-    cyToast((message ? message + '；' : '') + '打卡结果待核对，请重新进入后查看，暂不要重复提交');
+    cyToast((message ? message + '；' : '') + '打卡结果待确认，请重新进入后查看，暂请勿重复提交');
   },
   recordGameNetworkFailure(message, attempt) {
     if (this._gameWriteUnknown) return;
+    if (!attempt) return;
+    if (!attempt.viewContext) attempt.viewContext = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(attempt.viewContext)) return;
+    if (this._hasGenericProofFlow() && ['photo', 'gameCheckin', 'gameScan', 'answer'].includes(attempt.type)) return this.recordGameHttpUnknown(message, attempt.nodeId);
     this._lastGameAttempt = attempt;
     this.setData({ gNetErr: message, gNetRetryable: true, gRetryType: attempt && attempt.type || '', gWriteUnknown: false });
   },
@@ -4557,11 +5318,12 @@ Page({
     this._gameWriteInFlight = true;
     return true;
   },
-  recordGameHttpUnknown(message) {
+  recordGameHttpUnknown(message, nodeId) {
     this._gameWriteUnknown = true;
-    this._gameWriteUnknownMessage = (message ? message + '；' : '') + '提交结果待核对，请重新进入后查看，暂不要重复提交';
+    this._gameWriteUnknownMessage = (message ? message + '；' : '') + '提交结果待确认，请重新进入后查看，暂请勿重复提交';
     this._lastGameAttempt = null;
     this.setData({ gWrong: false, gNetErr: this._gameWriteUnknownMessage, gNetRetryable: false, gWriteUnknown: true });
+    if (this._hasGenericProofFlow()) return this._readGenericProof(nodeId || this.data.game.nodeId, '', 'game');
   },
   clearGameNetworkError() {
     this._lastGameAttempt = null;
@@ -4575,16 +5337,29 @@ Page({
       });
     }
   },
+  /** 显式重试沿用原请求体(同一 routeActionId 幂等),只把路线版本换成同步后的当前值;首发请求体本就在同步后生成。 */
+  _retriedRouteWriteBody(payload, retried) {
+    return retried ? Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version }) : payload;
+  },
+  _legacyGameWritePayload(type, kind, nodeId, extra, retryAttempt) {
+    // 显式重试在同步等待期间就会结束;调用方须在发起时捕获重试意图并传进来。
+    const retry = retryAttempt === undefined ? this._retryGameAttempt : retryAttempt;
+    if (retry && retry.type === type && retry.payload) return Object.assign({}, retry.payload);
+    return this._routeWritePayload(kind, nodeId, extra);
+  },
   retryGameSubmission() {
-    if (this._gameWriteUnknown) return;
+    if (this._gameWriteUnknown || this._gameWriteInFlight) return;
     const attempt = this._lastGameAttempt;
     this.clearGameNetworkError();
-    if (!attempt) return;
-    if (attempt.type === 'photo') this.submitPhoto(attempt.nodeId, attempt.pic);
-    else if (attempt.type === 'gameCheckin') this.checkin(attempt.nodeId, attempt.code, 'game');
-    else if (attempt.type === 'gameScan') this.scanGame();
-    else if (attempt.type === 'puzzleReveal') this.revealAnswer();
-    else this.submitGame();
+    if (!attempt || !this._isLegacyGameCurrent(attempt.viewContext)) return;
+    this._retryGameAttempt = attempt;
+    try {
+      if (attempt.type === 'photo') this.submitPhoto(attempt.nodeId, attempt.pic);
+      else if (attempt.type === 'gameCheckin') this.checkin(attempt.nodeId, attempt.code, 'game');
+      else if (attempt.type === 'gameScan') this.scanGame();
+      else if (attempt.type === 'puzzleReveal') this.revealAnswer();
+      else if (attempt.type === 'answer') this.submitGame();
+    } finally { if (this._retryGameAttempt === attempt) this._retryGameAttempt = null; }
   },
 
   // ---------- 节点玩法 ----------
@@ -4594,7 +5369,7 @@ Page({
       return;
     }
     if (nodeOverride && nodeOverride.nodeId != null) {
-      this.setData({ 'sheet.node': nodeOverride, 'sheet.show': true }, () => this.startGame());
+      this.setData({ 'sheet.node': nodeOverride, 'sheet.show': true, sheetOut: false }, () => this.startGame());
       return;
     }
     this.stopAudio();
@@ -4625,6 +5400,7 @@ Page({
       opts.push({ k, v: node.options[k], img: media.img || '', audio: media.audio || '' });
     });
     this.setData({
+      hintUnlocking: this._isLegacyHintPending(node.nodeId), scanning: false,
       screen: 'gamePlay', 'sheet.show': false,   // 启动页(p02)已删:详情卡直接进任务
       game: {
         nodeId: node.nodeId, num: node.num, vm: node.vm, title: node.gameTitle || '本站任务',
@@ -4650,24 +5426,44 @@ Page({
     }, () => { if (node.vm === 6) this.loadPreference(node); });
   },
   async onAdvancedReady(e) {
-    const node = this.data.advancedPlay.node;
-    if (!node || (e.detail && e.detail.nodeId != null && e.detail.nodeId !== node.nodeId)) return;
+    if (!this._isPlayAccountCurrent()) return;
+    const active = this.data.advancedPlay, node = active.node;
+    if (!active.show || !node || (e.detail && e.detail.nodeId != null && e.detail.nodeId !== node.nodeId)) return;
+    if (this._themeChallengeNodeId === Number(node.nodeId)) {
+      this._themeChallengeNodeId = null;
+      this.setData({ advancedPlay: { show: false, node: null }, playKit: { show: false, kit: null } });
+      this.refreshThemeBackpack();
+      return;
+    }
+    const context = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+      epoch: this._playLoadEpoch, active, chapter: this.data.chapter,
+      component: this._advancedGameComponent() };
+    this._advancedReadyIntent = context;
+    const scopeCurrent = () => this._isPlayAccountCurrent() && this._advancedReadyIntent === context
+      && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
+      && context.sessionKey === this._sessionKey() && this.data.chapter === context.chapter;
+    const current = () => scopeCurrent() && this.data.advancedPlay === active
+      && active.show && active.node === node && this._advancedGameComponent() === context.component;
     // 玩法作答可能更新路线变量和版本，收尾写入前先读取新的权威版本。
     if (!this.data.isPreview && !this.data.isMock
         && this._routeState
         && (this._routeState.routeMode === 'BRANCH_GRAPH' || this._routeState.sessionId)) {
       if (!(await this.refreshRouteState())) return;
-      if (!this.data.advancedPlay.node || this.data.advancedPlay.node.nodeId !== node.nodeId) return;
+      if (!current()) return;
     }
+    if (!current()) return;
     this._advancedReadyNodeId = node.nodeId;
-    this.setData({ advancedPlay: { show: false, node: null }, playKit: { show: false, kit: null }, 'sheet.node': node }, () => {
+    const closed = { show: false, node: null };
+    this.setData({ advancedPlay: closed, playKit: { show: false, kit: null }, 'sheet.node': node }, () => {
+      if (!scopeCurrent() || this.data.advancedPlay !== closed) return;
+      this._advancedReadyIntent = null;
       /* vm 0/5 靠到达收尾;8/9/10(猜数字/猜图/找东西)也是 —— 后端
          ValidationMethod.completesOnArrive 白名单就把这三个算作「arrive 收尾」。
        以前只放 0/5 过,其余全被塞进 startGame:守卫刚被 _advancedReadyNodeId
        放行,于是落到老任务页 —— 那屏只写了 vm 1/2/3/4/6,这三个进来只剩一屏
        标题文字、零按钮的死路。 */
       if (node.vm === 0 || node.vm === 5 || node.vm === 8 || node.vm === 9 || node.vm === 10) {
-        this.setData({ 'sheet.show': true });
+        this.setData({ 'sheet.show': true, sheetOut: false });
         this.onSheetGoTap();
       } else {
         this.startGame();
@@ -4675,7 +5471,14 @@ Page({
     });
   },
   onAdvancedClose() {
+    this._advancedReadyIntent = null;
     const node = this.data.advancedPlay.node;
+    if (node && this._themeChallengeNodeId === Number(node.nodeId)) {
+      this._themeChallengeNodeId = null;
+      this.setData({ advancedPlay: { show: false, node: null }, playKit: { show: false, kit: null } });
+      this.refreshThemeBackpack();
+      return;
+    }
     this.setData({ advancedPlay: { show: false, node: null },
       playKit: { show: false, kit: null },
       'sheet.show': !this.data.chapterFull && !!node, 'sheet.node': node || null });
@@ -4691,26 +5494,34 @@ Page({
       if (n && !n.done) analytics.track('node_abandon', { bizType: 'topic', bizId: this.data.topicId, properties: { nodeId: g.nodeId, via: 'game' } });
     }
     this._preferenceEpoch = (this._preferenceEpoch || 0) + 1;
-    this.stopAudio(); this.clearGameNetworkError(); this.setData({ screen: '', scanning: false, gNetRetryable: false });
+    this.stopAudio(); this.clearGameNetworkError(); this.setData({ screen: '', scanning: false, hintUnlocking: false, gNetRetryable: false });
   },
   onInput(e) { this.setData({ answerInput: e.detail.value }); },
   selOpt(e) { this.setData({ answerSel: e.currentTarget.dataset.k }); },
+  _isPreferenceContextCurrent(context) {
+    return !!context && this._preferenceContext === context && context.epoch === this._preferenceEpoch
+      && this._isLegacyGameCurrent(context.viewContext);
+  },
   loadPreference(node) {
     if (this.data.isPreview) {
-      this.setData({ preference: { loading: false, error: '偏好题结果预览尚未接通，可跳过玩法继续查看故事', steps: [], submitting: false, result: null } });
+      this.setData({ preference: { loading: false, error: '偏好题暂不支持预览，可跳过玩法继续查看故事', steps: [], submitting: false, result: null } });
       return;
     }
+    if (!this._isPlayAccountCurrent() || !node || node.nodeId !== this.data.game.nodeId) return;
     const that = this;
     const nodeId = node.nodeId;
     const epoch = (this._preferenceEpoch || 0) + 1;
     this._preferenceEpoch = epoch;
+    const context = { epoch, nodeId, viewContext: this._legacyGameContext() };
+    this._preferenceContext = context;
+    this._preferenceResultContext = null;
     this.setData({ preference: {
       loading: true, error: '', steps: [], stepIndex: 0, choices: {}, inheritedTags: [],
       answerHere: false, submitting: false, result: null, pendingTag: null,
       tagDisclosure: null, progress: null, availableTagValues: []
     } });
     req('/api/play/preference/' + nodeId, 'GET', this._sessionParams()).then((r) => {
-      if (that._preferenceEpoch !== epoch || that.data.game.nodeId !== nodeId) return;
+      if (!that._isPreferenceContextCurrent(context)) return;
       if (r.code == 200 || r.code == '200') {
         const d = r.data || {};
         that.setData({
@@ -4719,7 +5530,7 @@ Page({
           'preference.inheritedTags': Array.isArray(d.inheritedTags) ? d.inheritedTags : []
         });
       } else {
-        that.setData({ 'preference.loading': false, 'preference.error': r.msg || '偏好题暂时没加载出来' });
+        that.setData({ 'preference.loading': false, 'preference.error': r.msg || '偏好题加载失败' });
       }
     });
   },
@@ -4748,14 +5559,19 @@ Page({
   },
   submitPreference(payload) {
     if (this.data.isPreview) { cyToast('预览中可跳过此玩法'); return; }
-    if (this.data.preference.submitting) return;
+    const context = this._preferenceContext;
+    if (!this._isPreferenceContextCurrent(context) || this.data.preference.submitting) return;
     const that = this;
     const nodeId = this.data.game.nodeId;
-    const epoch = this._preferenceEpoch;
+    const intent = { context };
+    this._preferenceWriteIntent = intent;
+    const current = () => this._preferenceWriteIntent === intent && this._isPreferenceContextCurrent(context);
+    const original = Object.assign({}, payload, { choices: Object.assign({}, payload.choices || {}) });
     this.setData({ 'preference.submitting': true, 'preference.error': '' });
-    this._withThoughtSync(() => req('/api/play/preference/' + nodeId + '/submit', 'POST', this._routeWritePayload('preference', nodeId, payload)))
+    this._withThoughtSync(() => req('/api/play/preference/' + nodeId + '/submit', 'POST',
+      this._routeWritePayload('preference', nodeId, original), { 'content-type': 'application/json' }), current)
       .then((r) => {
-        if (that._preferenceEpoch !== epoch || that.data.game.nodeId !== nodeId) return;
+        if (!current() || r && r.obsolete) return;
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('preference', nodeId);
           const d = r.data || {};
@@ -4765,6 +5581,7 @@ Page({
             that.setData({ 'preference.submitting': false, 'preference.steps': steps, 'preference.stepIndex': steps.length - 1 });
             return;
           }
+          that._preferenceResultContext = { context, nodeId, progress: d.progress || {} };
           that.setData({
             'preference.submitting': false,
             'preference.result': d.evaluation || null,
@@ -4779,72 +5596,122 @@ Page({
           if (!r.netFail && !r.httpFail) that._resolveRouteAction('preference', nodeId);
           that.setData({ 'preference.submitting': false, 'preference.error': r.msg || '结果没有生成，请重试' });
         }
+      }).catch(() => {
+        if (current()) this.setData({ 'preference.submitting': false, 'preference.error': '结果没有生成，请重试' });
+      }).finally(() => {
+        if (this._preferenceWriteIntent === intent) this._preferenceWriteIntent = null;
       });
+  },
+  _preferenceTagContext(tag) {
+    return { preference: this._preferenceContext, tag };
+  },
+  _isPreferenceTagContextCurrent(context) {
+    return !!context && this._isPreferenceContextCurrent(context.preference)
+      && this.data.preference.pendingTag === context.tag;
+  },
+  _hasPreferenceTagWrite() {
+    return !!this._preferenceTagIntent && this._isPreferenceTagContextCurrent(this._preferenceTagIntent.context);
+  },
+  _finishPreferenceTagWrite(intent) {
+    if (this._preferenceTagIntent !== intent) return;
+    this._preferenceTagIntent = null; this._preferenceTagWrite = false;
   },
   confirmPreferenceTag() {
     if (this.data.isPreview) { cyToast('预览中可跳过此玩法'); return; }
     const tag = this.data.preference.pendingTag;
-    if (!tag || !tag.id || this._preferenceTagWrite) return;
-    const that = this;
-    const epoch = this._preferenceEpoch;
-    this._preferenceTagWrite = true;
+    const context = this._preferenceTagContext(tag);
+    if (!tag || !tag.id || !this._isPreferenceTagContextCurrent(context) || this._hasPreferenceTagWrite()) return;
+    const intent = { context };
+    this._preferenceTagIntent = intent; this._preferenceTagWrite = true;
     req('/api/play/tag/' + tag.id + '/confirm', 'POST', {}).then((r) => {
-      that._preferenceTagWrite = false;
-      if (that._preferenceEpoch !== epoch || !that.data.preference.pendingTag || that.data.preference.pendingTag.id !== tag.id) return;
-      if (r.code == 200 || r.code == '200') that.setData({ 'preference.pendingTag': r.data });
+      const current = this._preferenceTagIntent === intent && this._isPreferenceTagContextCurrent(context);
+      this._finishPreferenceTagWrite(intent);
+      if (!current) return;
+      if (r.code == 200 || r.code == '200') this.setData({ 'preference.pendingTag': r.data });
       else cyToast(r.msg || '标签没有确认成功');
+    }).catch(() => {
+      const current = this._preferenceTagIntent === intent && this._isPreferenceTagContextCurrent(context);
+      this._finishPreferenceTagWrite(intent);
+      if (current) cyToast('标签没有确认成功');
     });
   },
-  /* 2026-09-02:原来弹 wx.showActionSheet(系统弹层,设计体系外)。改标签值属于「一次选择」,
-     走 cy-option-sheet 默认形态。⚠️ 这处在玩法主流程里,写闸 _preferenceTagWrite 与
-     _preferenceEpoch 的判断一条不动,只把「怎么问」换掉。 */
   correctPreferenceTag() {
     const tag = this.data.preference.pendingTag;
     const values = this.data.preference.availableTagValues || [];
-    if (!tag || !tag.id || !values.length || this._preferenceTagWrite) return;
+    const context = this._preferenceTagContext(tag);
+    if (!tag || !tag.id || !values.length || !this._isPreferenceTagContextCurrent(context) || this._hasPreferenceTagWrite()) return;
+    this._preferenceTagSheet = { context, values: values.slice() };
     this.setData({ tagSheetShow: true, tagSheetItems: values });
   },
-  onTagSheetCancel() { this.setData({ tagSheetShow: false }); },
+  onTagSheetCancel() { this._preferenceTagSheet = null; this.setData({ tagSheetShow: false }); },
   onTagSheetSelect(e) {
     if (this.data.isPreview) { cyToast('预览中可跳过此玩法'); return; }
-    const tag = this.data.preference.pendingTag;
-    const values = this.data.preference.availableTagValues || [];
-    const value = values[e.detail.index];
+    const sheet = this._preferenceTagSheet;
+    this._preferenceTagSheet = null;
     this.setData({ tagSheetShow: false });
-    if (!tag || !tag.id || !value || value === tag.tagValue || this._preferenceTagWrite) return;
-    const epoch = this._preferenceEpoch;
-    this._preferenceTagWrite = true;
-    req('/api/play/tag/' + tag.id + '/correct', 'POST', { tagValue: value }).then((r) => {
-      this._preferenceTagWrite = false;
-      if (this._preferenceEpoch !== epoch || !this.data.preference.pendingTag || this.data.preference.pendingTag.id !== tag.id) return;
+    if (!sheet || !this._isPreferenceTagContextCurrent(sheet.context)) return;
+    const tag = sheet.context.tag, value = sheet.values[e.detail.index];
+    if (!tag.id || !value || value === tag.tagValue || this._hasPreferenceTagWrite()) return;
+    const intent = { context: sheet.context };
+    this._preferenceTagIntent = intent; this._preferenceTagWrite = true;
+    req('/api/play/tag/' + tag.id + '/correct', 'POST', { tagValue: value }, { 'content-type': 'application/json' }).then((r) => {
+      const current = this._preferenceTagIntent === intent && this._isPreferenceTagContextCurrent(sheet.context);
+      this._finishPreferenceTagWrite(intent);
+      if (!current) return;
       if (r.code == 200 || r.code == '200') {
-        this.setData({ 'preference.pendingTag': r.data });
-        cyToast('已改为 ' + value);
+        this.setData({ 'preference.pendingTag': r.data }); cyToast('已改为 ' + value);
       } else cyToast(r.msg || '结果没有改成功');
+    }).catch(() => {
+      const current = this._preferenceTagIntent === intent && this._isPreferenceTagContextCurrent(sheet.context);
+      this._finishPreferenceTagWrite(intent);
+      if (current) cyToast('结果没有改成功');
     });
   },
   skipPreferenceTag() { this.setData({ 'preference.pendingTag': null }); },
   finishPreferenceResult() {
-    const p = this.data.preference;
-    this.onComplete(this.data.game.nodeId, p.progress || {});
+    const result = this._preferenceResultContext;
+    if (!result || !this._isPreferenceContextCurrent(result.context)) return;
+    this._preferenceResultContext = null;
+    this.onComplete(result.nodeId, result.progress);
+  },
+  _legacyGameContext() {
+    return { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+      epoch: this._playLoadEpoch, game: this.data.game };
+  },
+  _isLegacyGameCurrent(context) {
+    return this._isPlayAccountCurrent() && context.owner === this._playOwner
+      && context.sessionKey === this._sessionKey()
+      && context.epoch === this._playLoadEpoch && context.game === this.data.game;
   },
   scanGame() {
     if (this._gameWriteUnknown) return;
-    const that = this; this.setData({ scanning: true });
+    const that = this, context = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(context)) return;
+    let settled = false;
+    this.setData({ scanning: true });
     wx.scanCode({
       onlyFromCamera: true,
-      success(r) { that.setData({ scanning: false }); that.checkin(that.data.game.nodeId, r.result, 'game'); },
+      success(r) {
+        if (settled || !that._isLegacyGameCurrent(context)) return;
+        settled = true; that.setData({ scanning: false }); that.checkin(context.game.nodeId, r.result, 'game');
+      },
       fail(error) {
+        if (settled || !that._isLegacyGameCurrent(context)) return;
+        settled = true;
         that.setData({ scanning: false });
-        if (!isScanCancelled(error)) that.recordGameNetworkFailure('未能打开扫码，请检查相机权限后重试', { type: 'gameScan' });
+        if (!isScanCancelled(error)) that.recordGameNetworkFailure('未能打开扫码，请检查相机权限后重试', { type: 'gameScan', viewContext: context });
       }
     });
   },
   photoGame() {
     if (this._gameWriteUnknown) return;
-    const that = this, g = this.data.game;
+    const that = this, g = this.data.game, context = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(context)) return;
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }
+    let picked = false;
     app.chooseImage(function (urls) {
+      if (picked || !that._isLegacyGameCurrent(context)) return;
+      picked = true;
       const pic = (urls && urls[0]) || '';
       if (!pic) return;
       that.setData({ photoTaken: true, gNetErr: '', gNetRetryable: false });
@@ -4852,13 +5719,23 @@ Page({
     }, 1);
   },
   submitPhoto(nodeId, pic) {
+    const viewContext = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
+    const retryAttempt = this._retryGameAttempt || null;
+    const context = this._beginRouteWriteContext('_gameWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
     const that = this;
-    const attempt = { type: 'photo', nodeId, pic };
+    const attempt = { type: 'photo', nodeId, pic, viewContext };
     this._lastGameAttempt = attempt;
-    this._withThoughtSync(() => req('/api/play/photo', 'POST', this._routeWritePayload('photo', nodeId, { nodeId, picUrl: pic })))
+    this._withThoughtSync(() => {
+      attempt.payload = this._legacyGameWritePayload('photo', 'photo', nodeId, { nodeId, picUrl: pic }, retryAttempt);
+      return req('/api/play/photo', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt));
+    }, isCurrent)
       .then((r) => {
-        that._gameWriteInFlight = false;
+        const current = isCurrent();
+        that._finishRouteWriteContext(context);
+        if (!current) return;
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('photo', nodeId);
           that.clearGameNetworkError();
@@ -4873,29 +5750,44 @@ Page({
           that._resolveRouteAction('photo', nodeId);
           that._lastGameAttempt = null;
           that.setData({ gNetErr: r.msg || '照片未上传成功，请重新选择', gNetRetryable: false });
+          if (that._hasGenericProofFlow()) return that._readGenericProof(nodeId);
         }
       }).catch(() => {
-        that._gameWriteInFlight = false;
+        const current = isCurrent();
+        that._finishRouteWriteContext(context);
+        if (!current) return;
         that.recordGameNetworkFailure('照片上传没有送达', attempt);
       });
   },
   submitGame() {
     if (this._gameWriteUnknown) return;
     const g = this.data.game;
-    const answer = g.vm == 3 ? this.data.answerSel : this.data.answerInput;
+    const retry = this._retryGameAttempt;
+    const answer = retry && retry.type === 'answer' ? retry.answer : (g.vm == 3 ? this.data.answerSel : this.data.answerInput);
     if (!answer) return this.setData({ gWrong: true, 'game.feedback': '先把答案填上再提交。' });
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }   // 路线级预览只跳过服务端判题,不跳过空值校验
+    const viewContext = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
+    const retryAttempt = this._retryGameAttempt || null;
+    const context = this._beginRouteWriteContext('_gameWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
+    const attempt = { type: 'answer', nodeId: g.nodeId, answer, viewContext };
     const that = this;
-    this._withThoughtSync(() => req('/api/play/answer', 'POST', this._routeWritePayload('answer', g.nodeId, { nodeId: g.nodeId, answer })))
+    this._withThoughtSync(() => {
+      attempt.payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, { nodeId: g.nodeId, answer }, retryAttempt);
+      return req('/api/play/answer', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt));
+    }, isCurrent)
       .then((r) => {
-        that._gameWriteInFlight = false;
+        const current = isCurrent();
+        that._finishRouteWriteContext(context);
+        if (!current) return;
         if (r.code == 200 || r.code == '200') { that._resolveRouteAction('answer', g.nodeId); that.clearGameNetworkError(); that.onComplete(g.nodeId, r.data); }
         else if (that._handleRouteConflict(r, 'answer', g.nodeId)) return;
         // 请求没送到 ≠ 服务端判你答错。原码把 code!=200 一律记 wrongCount++,断网提交两次
         // 就满足 canReveal(wc>=2) —— 系统替你答错两次、直接把答案揭示了。
         else if (r.httpFail) that.recordGameHttpUnknown(r.msg);
-        else if (r.netFail) that.recordGameNetworkFailure('提交没送出去，检查网络后重试', { type: 'answer' });
+        else if (r.netFail) that.recordGameNetworkFailure('提交没送出去，检查网络后重试', attempt);
         else {
           that._resolveRouteAction('answer', g.nodeId);
           that._lastGameAttempt = null;
@@ -4905,20 +5797,52 @@ Page({
           const answerWrong = !!(r.data && r.data.answerWrong);
           const wc = answerWrong ? that.data.wrongCount + 1 : that.data.wrongCount;
           that.setData({ gWrong: true, gNetErr: '', gNetRetryable: false, wrongCount: wc, 'game.feedback': r.msg || g.feedback, canReveal: wc >= 2 && (!!g.reveal || !!g.puzzleScoring) });
+          if (that._hasGenericProofFlow()) return that._readGenericProof(g.nodeId);
         }
       }).catch(() => {
-        that._gameWriteInFlight = false;
-        that.recordGameNetworkFailure('提交没送出去，检查网络后重试', { type: 'answer' });
+        const current = isCurrent();
+        that._finishRouteWriteContext(context);
+        if (!current) return;
+        that.recordGameNetworkFailure('提交没送出去，检查网络后重试', attempt);
       });
+  },
+  _legacyHintBusinessKey(nodeId) {
+    return JSON.stringify([this._boundPlayOwner(), this._sessionKey(), (this._routeState || {}).sessionId || '', String(nodeId)]);
+  },
+  _isLegacyHintPending(nodeId) {
+    return !!(this._legacyHintPending && this._legacyHintPending[this._legacyHintBusinessKey(nodeId)]);
+  },
+  _beginLegacyHint() {
+    const context = this._legacyGameContext(), key = this._legacyHintBusinessKey(context.game.nodeId);
+    const pending = this._legacyHintPending = this._legacyHintPending || {};
+    if (pending[key]) return null;
+    const intent = { context, key, pending };
+    pending[key] = intent; this._legacyHintIntent = intent;
+    return intent;
+  },
+  _isLegacyHintCurrent(intent) {
+    return !!intent && this._legacyHintIntent === intent && this._isLegacyGameCurrent(intent.context);
+  },
+  _finishLegacyHint(intent) {
+    if (!intent) return;
+    if (intent.pending[intent.key] === intent) delete intent.pending[intent.key];
+    if (this._legacyHintIntent === intent) this._legacyHintIntent = null;
+    const game = this.data.game;
+    if (this._isPlayAccountCurrent() && game && this._legacyHintBusinessKey(game.nodeId) === intent.key
+        && !this._isLegacyHintPending(game.nodeId)) this.setData({ hintUnlocking: false });
   },
   useHint() {
     const g = this.data.game;
+    if (!this._isPlayAccountCurrent()) return;
     if (!this.data.isPreview && g.puzzleScoring && this.data.mode === 1) {
       if (this.data.hintUnlocking) return;
       const level = this.data.shownHints.length + 1;
+      const intent = this._beginLegacyHint();
+      if (!intent) return;
       this.setData({ hintUnlocking: true });
       req('/api/play/puzzle/hint', 'POST', Object.assign(this._sessionParams(), { nodeId: g.nodeId, level }))
         .then((r) => {
+          if (!this._isLegacyHintCurrent(intent)) { this._finishLegacyHint(intent); return; }
           if (r.code == 200 || r.code == '200') {
             const hints = Array.isArray(r.data.hints) ? r.data.hints.filter(Boolean)
               : this.data.shownHints.concat([r.data.hint]).filter(Boolean);
@@ -4943,11 +5867,13 @@ Page({
           } else {
             cyToast(r.msg || '提示暂时不可用');
           }
-          this.setData({ hintUnlocking: false });
+          this._finishLegacyHint(intent);
         })
         .catch(() => {
-          this.setData({ hintUnlocking: false });
-          cyToast('提示没有加载出来，请重试');
+          const current = this._isLegacyHintCurrent(intent);
+          this._finishLegacyHint(intent);
+          if (!current) return;
+          cyToast('提示加载失败，请重试');
         });
       return;
     }
@@ -4962,21 +5888,30 @@ Page({
   unlockHint() {
     if (this.data.isPreview) { this.useHint(); return; }
     const that = this, g = this.data.game;
+    if (!this._isPlayAccountCurrent()) return;
     if (this.data.hintUnlocking) return;
+    const intent = this._beginLegacyHint();
+    if (!intent) return;
+    const payload = Object.assign({ nodeId: g.nodeId }, this._sessionParams());
+    let confirmed = false;
     this.setData({ hintUnlocking: true }); // 弹窗期间即占位:连点不再叠出第二个弹窗
     cyModal.show({
       title: '解锁提示',
-      content: '解锁本节点提示需 ' + (g.hintCost || 0) + ' 积分,确认解锁?',
+      content: '解锁本节点提示需 ' + (g.hintCost || 0) + ' 积分，确认解锁?',
       confirmText: '解锁',
       cancelText: '再想想',
       success(res) {
-        if (!res.confirm) { that.setData({ hintUnlocking: false }); return; }
+        if (confirmed) return;
+        if (!that._isLegacyHintCurrent(intent)) { that._finishLegacyHint(intent); return; }
+        confirmed = true;
+        if (!res.confirm) { that._finishLegacyHint(intent); return; }
         app.sendRequest({
           url: '/api/play/hint/unlock', method: 'POST',
           // 必须带会话上下文:后端按它验「真的在这场/这个主题里」(与解谜提示同口径),
           // 只发 nodeId 会被拒 —— 否则任何登录用户拿到节点 id 就能读走提示正文。
-          data: Object.assign({ nodeId: g.nodeId }, that._sessionParams()),
+          data: payload,
           success(resp) {
+            if (!that._isLegacyHintCurrent(intent)) return;
             if (resp.code == '200' && resp.data) {
               that.setData({
                 'game.hint1': resp.data.hint1 || '',
@@ -4985,16 +5920,17 @@ Page({
               });
               that.useHint(); // 解锁后立即揭示第一条
             } else {
-              cyToast(app.getRequestErrorMessage(resp, '解锁失败,请重试'));
+              cyToast(app.getRequestErrorMessage(resp, '解锁失败，请重试'));
             }
           },
           fail(resp) {
+            if (!that._isLegacyHintCurrent(intent)) return;
             cyToast(app.getRequestErrorMessage(resp, '网络异常，请重试'));
           },
-          complete() { that.setData({ hintUnlocking: false }); }
+          complete() { that._finishLegacyHint(intent); }
         });
       },
-      fail() { that.setData({ hintUnlocking: false }); }
+      fail() { if (!confirmed) that._finishLegacyHint(intent); }
     });
   },
   revealAnswer() {
@@ -5003,12 +5939,22 @@ Page({
       this.setData({ revealed: true, canReveal: false });
       return;
     }
+    const viewContext = this._legacyGameContext();
+    if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
-    const attempt = { type: 'puzzleReveal', nodeId: g.nodeId };
+    const retryAttempt = this._retryGameAttempt || null;
+    const context = this._beginRouteWriteContext('_gameWrite');
+    const isCurrent = () => this._isRouteWriteContextCurrent(context) && this._isLegacyGameCurrent(viewContext);
+    const attempt = { type: 'puzzleReveal', nodeId: g.nodeId, viewContext };
     this._lastGameAttempt = attempt;
-    this._withThoughtSync(() => req('/api/play/puzzle/reveal', 'POST', this._routeWritePayload('puzzleReveal', g.nodeId, { nodeId: g.nodeId })))
+    this._withThoughtSync(() => {
+      attempt.payload = this._legacyGameWritePayload('puzzleReveal', 'puzzleReveal', g.nodeId, { nodeId: g.nodeId }, retryAttempt);
+      return req('/api/play/puzzle/reveal', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt));
+    }, isCurrent)
       .then((r) => {
-        this._gameWriteInFlight = false;
+        const current = isCurrent();
+        this._finishRouteWriteContext(context);
+        if (!current) return;
         if (r.code == 200 || r.code == '200') {
           this._resolveRouteAction('puzzleReveal', g.nodeId);
           this.clearGameNetworkError();
@@ -5016,7 +5962,7 @@ Page({
           this.setData({ revealed: true, canReveal: false, puzzleScoreCap: 0, 'game.reveal': answer });
           cyModal.show({
             title: '答案', content: answer, showCancel: false, confirmText: '继续',
-            success: () => this.onComplete(g.nodeId, r.data || {}),
+            success: () => { if (this._isLegacyGameCurrent(viewContext)) this.onComplete(g.nodeId, r.data || {}); },
           });
         } else if (this._handleRouteConflict(r, 'puzzleReveal', g.nodeId)) return;
         else if (r.httpFail) this.recordGameHttpUnknown(r.msg);
@@ -5028,7 +5974,9 @@ Page({
         }
       })
       .catch(() => {
-        this._gameWriteInFlight = false;
+        const current = isCurrent();
+        this._finishRouteWriteContext(context);
+        if (!current) return;
         this.recordGameNetworkFailure('查看答案请求没有送达', attempt);
       });
   },
@@ -5061,14 +6009,65 @@ Page({
       this.setData({ fmPolyline: base.concat(line) });
     }, { reducedMotion: this.data.reducedMotion });
   },
+  _hasGenericProofFlow() {
+    const bag = this.data.themeBag || {};
+    return !this.data.isPreview && !this.data.isMock && !!bag.sessionId
+      && ((bag.quests || []).length > 0 || bag.activeQuest || bag.gameplay && bag.gameplay.activeQuest || bag.activeOperation && bag.activeOperation.operationKey);
+  },
+  _readGenericProof(nodeId, message, domain) {
+    const epoch = this._themeEpoch || 0;
+    return Promise.allSettled([this.refreshRouteState(), this.refreshThemeBackpack()]).then(reads => {
+      if (epoch !== (this._themeEpoch || 0)) return false;
+      const node = this._nodeById(nodeId);
+      const bag = this.data.themeBag || {};
+      const quest = (bag.quests || []).find(row => String(row.nodeId) === String(nodeId));
+      const operation = bag.activeOperation || {};
+      const confirmed = nodeId != null && (reads[0].status === 'fulfilled' && reads[0].value === true && !!(node && node.done)
+        || reads[1].status === 'fulfilled' && reads[1].value === true && (!!(quest && quest.trustedPass === true)
+          || String(operation.nodeId) === String(nodeId) && operation.verified === true));
+      if (confirmed && domain === 'arrive') this._arrivalWriteUnknown = false;
+      if (confirmed && domain === 'game') { this._gameWriteUnknown = false; this._gameWriteUnknownMessage = ''; this.clearGameNetworkError(); }
+      if (!confirmed && message) this.diegetic(message);
+      return confirmed;
+    });
+  },
+  _captureCompletionEffects() {
+    const context = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+      routeSessionId: String((this._routeState || {}).sessionId || '') };
+    this._completionEffects = context;
+    return context;
+  },
+  _isCompletionEffectCurrent(context) {
+    return !!context && this._completionEffects === context && this._isPlayAccountCurrent()
+      && context.owner === this._playOwner && context.sessionKey === this._sessionKey()
+      && context.routeSessionId === String((this._routeState || {}).sessionId || '');
+  },
   onComplete(nodeId, data) {
-    if (this._sound) this._sound.sfx('ok');
     const afterProfile = !!this._profileNodeId && String(nodeId) === this._profileNodeId;
     if (this.data.isPreview) {
       this._completePreviewNode(nodeId);
       if (afterProfile) this._showStartState(this._previewStartRows || []);
       return;
     }
+    // 基础到达/凭证不等于正式结算；照片机审仍可能返回 advanceProgress 的完整回执。
+    const returnedNodeState = data && data.routeState && data.routeState.nodeStates && data.routeState.nodeStates[String(nodeId)];
+    const completedReceipt = data && typeof data.firstTime === 'boolean' && Number.isInteger(data.done) && String(data.nodeId) === String(nodeId);
+    if (this._hasGenericProofFlow() && !completedReceipt || returnedNodeState && returnedNodeState !== 'COMPLETED'
+      || data && (data.done === false || data.themeRuntime || data.sharedRuntime || data.disabledReason === 'PROOF_PENDING')) {
+      data = data || {};
+      const patch = {}; for (const field of ['arrived', 'arrivedAt', 'selfReported', 'picUrl', 'gameDone']) if (data[field] !== undefined) patch[field] = data[field];
+      const merge = node => String(node.nodeId) === String(nodeId) ? Object.assign({}, node, patch) : node;
+      if (this._routeNodeCatalog) this._routeNodeCatalog = this._routeNodeCatalog.map(merge);
+      this.stopNav(); this.clearGameNetworkError();
+      this.setData({ nodes: this.data.nodes.map(merge), screen: '', 'sheet.show': false, flyScore: false, themeBackpackOpen: true, themeBackpackTab: 'game' }, () => this.rebuild());
+      if (data.themeRuntime && data.themeRuntime.sessionId) this._applyThemeView(data.themeRuntime);
+      const message = data.disabledReason === 'PROOF_PENDING' ? '待审核 / 凭证未通过，请确认原任务' : '凭证已记录，请继续当前任务';
+      this.diegetic(message);
+      return data.sharedRuntime ? Promise.resolve(this._loadPlayerGameModule()).then(() => this._readGenericProof(nodeId)) : this._readGenericProof(nodeId);
+    }
+    if (this._sound) this._sound.sfx('ok');
+    const effectContext = this._captureCompletionEffects();
+    const effectsCurrent = () => this._isCompletionEffectCurrent(effectContext);
     const storyOpen = this.data.chapterFull && this._isStoryGame(
       (this.data.nodes || []).find((node) => String(node.nodeId) === String(nodeId)));
     // arrival/game 是可并发的两个写域；任一节点完成都不能解除另一写域的在途/待核对锁。
@@ -5082,7 +6081,7 @@ Page({
     // 完成事实来自本次服务端成功回执；BRANCH_GRAPH 的下一站仍只认随回执返回或只读刷新得到的 routeState。
     const patchCompleted = (n) => n.nodeId === nodeId ? Object.assign({}, n, {
       done: true,
-      doneAt: parseGameCompletedAt(data && data.completedAt) || n.doneAt || Date.now(),
+      doneAt: parseGameCompletedAt(data && data.completedAt) || n.doneAt || 0,
       earnedXp: (data && (data.xp != null || data.score != null))
         ? Number(data.xp != null ? data.xp : data.score) : n.earnedXp,
       routeNodeState: this._routeState.routeMode === 'BRANCH_GRAPH' ? 'COMPLETED' : n.routeNodeState,
@@ -5092,26 +6091,31 @@ Page({
     }) : n;
     const catalog = (this._routeNodeCatalog || this.data.nodes).map(patchCompleted);
     this._routeNodeCatalog = catalog;
-    const returnedRouteState = data && data.routeState ? normalizeRouteState(data.routeState) : null;
+    const hasRouteProjection = !!(data && data.routeState);
+    const acceptedProjection = hasRouteProjection && this._acceptRouteStateProjection(data.routeState);
+    const returnedRouteState = acceptedProjection ? normalizeRouteState(data.routeState) : null;
     const routeState = returnedRouteState || this._routeState;
-    const nodes = returnedRouteState
+    effectContext.routeSessionId = String((routeState || {}).sessionId || '');
+    const nodes = hasRouteProjection
       ? applyRouteStateToNodes(catalog, routeState)
       : this.data.nodes.map(patchCompleted);
     if (data && data.puzzlePersonalBest != null) {
       this._puzzlePersonalBest = Number(data.puzzlePersonalBest) || 0;
     }
     const node = nodes.find((n) => n.nodeId === nodeId) || {};
-    // P0.5 双轨文案:后端回传本次探索值(节点+掉落翻倍);旧后端无 xp 字段时退 12
-    const score = (data && data.xp) || (data && data.score) || node.points || 12;
+    const score = Number(data && (data.xp != null ? data.xp : data.score));
     // M8 到达双震:两次短震间隔 ~120ms,只强化到达这一处;彩蛋(light)/券(heavy)分级不动
     wx.vibrateShort({ type: 'medium' });
-    setTimeout(() => wx.vibrateShort({ type: 'medium' }), 120);
+    setTimeout(() => { if (effectsCurrent()) wx.vibrateShort({ type: 'medium' }); }, 120);
     // 飞字(双轨文案:探索值升等级,区别于可抵现积分)
-    this.setData({ flyScore: true, flyText: '+' + score + ' 探索值' });
-    setTimeout(() => this.setData({ flyScore: false }), 1100);
+    if (Number.isFinite(score) && score > 0 && data.firstTime !== false) {
+      this.setData({ flyScore: true, flyText: '+' + score + ' 探索值' });
+      setTimeout(() => { if (effectsCurrent()) this.setData({ flyScore: false }); }, 1100);
+    }
     // 标记 just-wrote(手记写入)
     const justId = nodeId;
     this._routeState = routeState;
+    if (acceptedProjection) this._versionedRouteState = this._routeStateVersionKnown(data.routeState) ? routeState : null;
     this.setData({
       nodes,
       routeNotice: returnedRouteState ? this._routeNoticeForState(returnedRouteState) : this.data.routeNotice,
@@ -5119,9 +6123,10 @@ Page({
       screen: '',
       'sheet.show': false
     }, () => {
+      if (!effectsCurrent()) return;
       this.rebuild();
       if (afterProfile) this._showStartState(startStateRows(routeState, this._vitalsOn));
-      setTimeout(() => this._animateCompletedSegment(nodes, nodeId), 0);
+      setTimeout(() => { if (effectsCurrent()) this._animateCompletedSegment(nodes, nodeId); }, 0);
       this._triggerCelebration('task-complete');
       // M2 夜间提示(自玩 22:00–06:00 后端下发 nightWarning):结果时刻一句,非阻断、自动收
       if (data && data.nightWarning === true) this._flashNightHint();
@@ -5155,11 +6160,12 @@ Page({
       const previewMedal = !!(this.data.isPreview || this.data.isMock);
       if (hasMedalArt && (medalRank || previewMedal)) {
         // 模板勋章弹层;关闭时若已通关由 closeMedal 触发通关卡
-        this.setData({ medal: { show: true, name: node.medalName || '专属徽章', shortName: (node.medalName || '徽章').slice(0, 2), img: node.medalImg, style: node.medalStyle || 'glow', coupon: node.couponId ? '到店出示核销' : '' } });
+        this._medalCompletionContext = effectContext;
+        this.setData({ medal: { show: true, name: node.medalName || '专属徽章', shortName: (node.medalName || '徽章').slice(0, 2), img: node.medalImg, style: node.medalStyle || 'glow', coupon: node.couponId ? '到店出示核销' : '' } }); if (medalRank) (this._wonMedals = this._wonMedals || []).push({ nodeId: node.nodeId, name: node.medalName || '专属徽章', img: node.medalImg || '', rank: medalRank }); // 完成页勋章堆只收真夺到的
       } else {
         if (hasMedalArt) this.diegetic('这个节点的名次奖牌已经发完，完成记录已保存');
         if (node.couponId) this.showCoupon('到店出示核销');
-        if (completed) setTimeout(() => this.openFinish(), 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
+        if (completed) setTimeout(() => { if (effectsCurrent()) this.openFinish(); }, 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
       }
       if (newBadges.length || (hasMedalArt && (medalRank || previewMedal))) this._triggerCelebration('medal-earned');
       this.setData({ journalDot: !this.data.showJournal });
@@ -5171,7 +6177,14 @@ Page({
       }
     });
   },
-  closeMedal() { this.setData({ 'medal.show': false }); if (this.data.allDone) setTimeout(() => this.openFinish(), 300); },
+  closeMedal() {
+    const context = this._medalCompletionContext;
+    this._medalCompletionContext = null;
+    this.setData({ 'medal.show': false });
+    if (this.data.allDone && this._isCompletionEffectCurrent(context)) {
+      setTimeout(() => { if (this._isCompletionEffectCurrent(context)) this.openFinish(); }, 300);
+    }
+  },
   // P0 券断链修复:落袋可见(文案+重震动)+ 可点击一跳到卡券包;停留 5s 给足点击窗口
   // M11 掉落分级·重:券=独立 couponBurst 彩带+重震动,不并入完成庆祝语义
   showCoupon(text) {
@@ -5213,7 +6226,7 @@ Page({
     wx.navigateTo({
       url: '/subpackageP3/pages/badge-wall/index/index'
         + (first.code ? '?badgeCode=' + encodeURIComponent(first.code) : ''),
-      fail: () => this.diegetic('徽章墙没打开,可以从成长中心进入'),
+      fail: () => this.diegetic('徽章墙无法打开，可以从成长中心进入'),
     });
   },
   closeRewardDrop() { this.setData({ 'rewardDrop.show': false }); },
@@ -5297,13 +6310,13 @@ Page({
     wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
   },
   blockSceneTouch() {},
-  openSessionTools() { this.setData({ sessionToolsOpen: true }); },
+  openSessionTools() { this.setData({ sessionToolsOpen: true, toolsOut: false }); },
   // 收进菜单的动作:先关菜单再执行,与其它 *FromTools 同一条规矩。
   onScanArriveFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onScanArrive()); },
   onRunToggleFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onRunToggle()); },
   openStackOrChaptersFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openStackOrChapters()); },
-  toggleSessionTools() { this.setData({ sessionToolsOpen: !this.data.sessionToolsOpen }); },
-  closeSessionTools() { this.setData({ sessionToolsOpen: false }); },
+  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else this.setData({ sessionToolsOpen: true, toolsOut: false }); },
+  closeSessionTools() { this._toolsClose(); },
   /* 定位驱动的两行(自动记录足迹 / 到点提醒)在这一页翻不动:它们跟着系统定位权限走。
    * 没开就去要权限,已经开着就说清楚它由谁决定 —— 不留一枚按下去毫无反应的开关。 */
   onLocationRowTap() {
@@ -5312,7 +6325,7 @@ Page({
   },
 
   toggleReducedMotion() {
-    const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion);
+    const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion); if (reducedMotion === null) { cyToast('设置未保存，请重试'); return; }
     this.setData({ reducedMotion });
     cyToast(reducedMotion ? '已减少动态效果' : '已恢复动态效果');
   },
@@ -5351,7 +6364,7 @@ Page({
   // ---------- 旅程手记(原型 journalScreen:半屏 + 一行行 .kv) ----------
   openJournal() {
     this._endingEpoch = (this._endingEpoch || 0) + 1;
-    this.setData({ showJournal: true, journalDot: false, 'ending.show': false }, () => {
+    this.setData({ showJournal: true, journalOut: false, journalDot: false, 'ending.show': false }, () => {
       this.buildJournal();
     });
   },
@@ -5364,17 +6377,23 @@ Page({
   /* 自由探索的地图模式(原型 x-run):把卡包让开,露出本页本来就有的地图台、读数卡与底栏 ——
      它们原先被 mode!=2 一律关掉。地图那套是按城市定向写的,自由探索只借它的「看」,
      不借「一场会话」:所以底栏没有中键(原型 freeBar 的原话)。 */
-  closeJournal() { this.setData({ showJournal: false }); },
+  closeJournal() { this._outThen('journal'); },
 
   // FE-19 入场码:动态核销码,5 分钟有效,过期重开即重签发。
   // 拆两层(用户裁决:核销≠优惠券页):ensureTicket 只取码;展示层各自决定开哪个面。
   ensureTicket() {
     const that = this;
-    if (this.data.isPreview || this.data.isMock) return;             // 预览/mock 不出码
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;             // 预览/mock 不出码
     const regId = this.data.regId;
     if (!regId) { this._explainMissingEntryQr(); return; }
+    const owner = this._boundPlayOwner(), sessionKey = this._sessionKey();
+    const sequence = this._ticketIssueSequence = (this._ticketIssueSequence || 0) + 1;
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && !this.data.isPreview && !this.data.isMock && this.data.regId === regId
+      && sequence === this._ticketIssueSequence && sessionKey === this._sessionKey();
     this.setData({ ticket: { show: this.data.ticket.show, url: '', code: '', loading: true, expiresAt: 0 } });
     req('/api/verify/dyncode/issue', 'POST', { registrationId: regId }).then((res) => {
+      if (!current()) return;
       if (String(res.code) === '200' && res.data) {
         that.setData({ 'ticket.url': res.data.qrcodeUrl || '', 'ticket.code': res.data.code || '', 'ticket.loading': false, 'ticket.expiresAt': res.data.expiresAt || 0 });
       } else {
@@ -5397,17 +6416,43 @@ Page({
   /** cy-advanced-game 每次拿到权威视图都会抛上来;v5.1 新玩法的 sheet 由本页渲染
    *  (那些壳是独立 sheet,套不进面板自己那层 sheet)。 */
   onAdvancedSession(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const view = e.detail || {};
     const active = this.data.advancedPlay;
     if (!active.show || !active.node
         || (view.nodeId != null && String(view.nodeId) !== String(active.node.nodeId))) return;
+    const component = this._advancedGameComponent();
+    const state = component && component.data && component.data.state;
+    if (state && view.sessionId != null && state.sessionId != null && String(view.sessionId) !== String(state.sessionId)) return;
+    if (state && view.version != null && state.version != null && String(view.version) !== String(state.version)) return;
+    const previousKit = this._kit() || {};
+    if (view.sessionId != null && previousKit.sessionId != null && String(view.sessionId) === String(previousKit.sessionId)
+        && view.version != null && previousKit.version != null
+        && Number.isFinite(Number(view.version)) && Number.isFinite(Number(previousKit.version))
+        && Number(view.version) < Number(previousKit.version)) return;
+    const context = { owner: this._boundPlayOwner(), active, component, epoch: this._playLoadEpoch,
+      chapter: this.data.chapter, sessionKey: this._sessionKey() };
+    this._advancedSessionContext = context;
+    // scopeCurrent 不要求本回调仍是最新视图:同一会话的重复视图不应吞掉已排好的故事衔接。
+    const scopeCurrent = () => this._isPlayAccountCurrent()
+      && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
+      && context.sessionKey === this._sessionKey() && this.data.chapter === context.chapter
+      && this.data.advancedPlay === active && active.show && this._advancedGameComponent() === component;
+    const current = () => this._advancedSessionContext === context && scopeCurrent();
+    if (this._applyR5AdvancedView(view)) return;
+    if (this._themeChallengeNodeId === Number(active.node.nodeId)) {
+      const kit = pickPlayKit(view, new Date());
+      this.setData({ playKit: { show: !!kit, kit: kit && Object.assign(kit, { challenge: view.challenge || null, challengeShared: view.ownerType === 2 }), readyForBase: false } });
+      this.refreshThemeBackpack();
+      return; // 展示挑战玩法，但不接普通章节的继续/完成路径。
+    }
     // 故事变量随权威会话视图一起下来(契约 §3.1):{名字} 的取值 = profile 答案 + 已完成 kit 的结果,
     // 由服务端拼成 map。与 /api/play/nodes 那份走同一套合并口径(见 _mergeStoryVars)。
     this._mergeStoryVars(view.vars);
     if (this._freshStoryGame && String(active.node.nodeId) === this._freshStoryGame) {
       this._freshStoryGame = '';
       // 退出前已经做完、只差「继续故事」:重进打开它时直接接上,不让玩家再点一次
-      if (!this.data.isPreview && !this.data.isMock && view.readyForBase === true) setTimeout(() => this.continueStoryGame(), 400);
+      if (!this.data.isPreview && !this.data.isMock && canContinue(view)) setTimeout(() => { if (current()) this.continueStoryGame(); }, 400);
     }
     /* profile 提交成功后必须重拉一次 nodes:页面级 nodes 是读一次的快照,刚填的名字不会自己
        回到 _storyVars 里,章节里就还是 {name}。只认这一条上升沿,后续每个会话视图不重拉。 */
@@ -5423,6 +6468,7 @@ Page({
     const placeName = [this.data.topicName, placeNode && placeNode.name].filter(Boolean).join(' · ');
     const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName }), new Date());
     const kit = dailySignRevealState(previous, picked);
+    if (kit && kit.type === 'album' && !kit.done && kit.sessionId === previous.sessionId && kit.version === previous.version) kit.uploaded = !!previous.uploaded;
     if (!kit) { this.setData({ playKit: { show: false, kit: null } }); return; }
     /* 内嵌(契约 §1.5):不弹整屏那一层 —— 它已经长在故事流里了(见 openChapterFull 的
        kind:'kit' 段)。show 关掉、kit 留着,那一块绑的就是它。整屏 / 缺字段照旧。 */
@@ -5433,17 +6479,17 @@ Page({
       this.setData({ nodes: this.data.nodes.map(remember) });
     }
     const inline = kit.present === 'inline' && this.data.chapterFull;
-    const ready = view.readyForBase === true;
+    const ready = canContinue(view);
     const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase;
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
-    this.setData({ playKit: { show: !inline, kit, readyForBase: view.readyForBase === true } });
+    this.setData({ playKit: { show: !inline, kit, readyForBase: ready } });
     if (advanceStory) {
       const nodeId = String(active.node.nodeId);
       setTimeout(() => {
-        const current = this.data.advancedPlay;
-        if (current.show && current.node && String(current.node.nodeId) === nodeId
+        const latest = this.data.advancedPlay;
+        if (scopeCurrent() && latest.show && latest.node && String(latest.node.nodeId) === nodeId
             && this.data.playKit.readyForBase) this.continueStoryGame();
       }, this.data.reducedMotion ? 0 : 900);
     }
@@ -5456,13 +6502,16 @@ Page({
       // 先清空再设:入口卡用的就是同一个 id,同值 setData 不会让 scroll-view 再对准一次,
       // 内嵌玩法的题干会停在入口卡当时的位置、被顶到顶栏底下(2026-09-23 整本试玩)。
       const anchor = 'chapter-game-' + this._playKitNodeId;
-      const aim = () => this.setData({ chapterGameAnchor: '' }, () => this.setData({ chapterGameAnchor: anchor }));
+      const aim = () => {
+        if (!current()) return;
+        this.setData({ chapterGameAnchor: '' }, () => { if (current()) this.setData({ chapterGameAnchor: anchor }); });
+      };
       aim();
       // 第一次是带动画的长距离滚动,途中上方段落还在重排(入场标记),实测会偏 95px 停在顶栏底下;
       // 动画结束后再对准一次(短距离,不会再偏)。ponytail: 固定 1200ms(实测 600ms 仍在重排),改动画要跟着改。
       clearTimeout(this._kitAnchorTimer);
       this._kitAnchorTimer = setTimeout(() => {
-        if (this.data.chapterFull && this.data.chapterGameAnchor === anchor) aim();
+        if (current() && this.data.chapterFull && this.data.chapterGameAnchor === anchor) aim();
       }, 1200);
     }
   },
@@ -5514,9 +6563,17 @@ Page({
 
   /** profile 提交成功后的补拉:只取 vars,不重跑 loadData(那会把首屏/章节/角色卡整套重演一遍)。 */
   _refreshStoryVarsFromNodes() {
-    if (this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;
     if (!this.data.activityId && !this.data.topicId) return;
-    req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => { // 补拉
+    const params = this._sessionParams();
+    const sessionKey = this._sessionKey(params);
+    const chapterId = String((this.data.chapter || {}).id || '');
+    const loadEpoch = this._playLoadEpoch;
+    const sequence = this._storyVarsReadSequence = (this._storyVarsReadSequence || 0) + 1;
+    req('/api/play/nodes', 'GET', params).then((res) => { // 补拉
+      if (!this._isPlayAccountCurrent() || sequence !== this._storyVarsReadSequence
+          || loadEpoch !== this._playLoadEpoch || sessionKey !== this._sessionKey()
+          || chapterId !== String((this.data.chapter || {}).id || '')) return;
       if (!(res.code == 200 || res.code == '200') || !res.data) return;
       if (!this._applyStoryVars(res.data)) return;
       // 章节屏正开着就地重铺一次,让刚填的名字立刻显形(measureChapter 会重新量几何)
@@ -5584,6 +6641,14 @@ Page({
       return;
     }
     switch (evt.action) {
+      case 'retry': {
+        const game = this.selectComponent('#advancedGame');
+        const state = game && game.data && game.data.state;
+        const kit = this._kit();
+        if (!state || !kit.terminal || kit.canRetry !== true || state.canRetry !== true
+            || String(state.sessionId) !== String(kit.sessionId) || state.version !== kit.version) return;
+        return game.retry();
+      }
       case 'continue':
         if (evt.type === 'qa' && this._kit().type === 'qa' && this.data.playKit.readyForBase) {
           this.continueStoryGame();
@@ -5603,6 +6668,8 @@ Page({
         // 音乐角抛 'toggle' —— 两个名字同一件事,以前只有 toggle 有人接。
         this._togglePlayKitAudio(!!detail.playing);
         return;
+      case 'refresh':
+        if (evt.type !== 'typein' || !this._kit().r5) { this._submitPlayKitAction(evt.action, detail); return; }
       case 'open':
         // 时段限定到点:组件不自己开门(本地时钟不是权威),回 /state 问一次,
         // 权威视图回来后重新 pickPlayKit —— 门真开了就会弹该节点真正的玩法。
@@ -5633,8 +6700,24 @@ Page({
    * 不在本页自己拼请求 —— 幂等键、CAS 版本、unknown 回读那一整套都在组件里,
    * 页面再发一份就会和组件的 version 漂移,漂移之后每次提交都撞"状态已更新"。
    */
+  _isTypeInStartCurrent(pending) {
+    const context = pending && pending.context, kit = this._kit();
+    return !!context && this._typeInStart === pending && this._isPlayAccountCurrent()
+      && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
+      && context.sessionKey === this._sessionKey() && this.data.advancedPlay === context.active
+      && context.active.show && this._advancedGameComponent() === context.component
+      && kit.type === 'typein' && pending.sessionId === kit.sessionId;
+  },
   _submitPlayKitAction(action, detail) {
     const kit = this._kit();
+    if (kit.type === 'album' && ['shoot', 'submit'].includes(action)) {
+      submitAlbum(this, action, detail, cyToast); return;
+    }
+    if (kit.type === 'branch' && action === 'choose' && kit.feedback) {
+      const game = this.selectComponent('#advancedGame');
+      const visible = this.data.advancedPlay.show && (this.data.playKit.show || this.data.chapterFull && kit.present === 'inline');
+      if (!visible || !game || !feedbackWritable(game.data.state, kit)) { cyToast('这段反馈仅可阅读'); return; }
+    }
     /* 拍照问答(qa:shoot)不在服务端动作表里(playkit-view 明确注释:放进去会被当成一步直发,
        而组件手里只有出了手机就不存在的临时路径)。所以必须在 serverAction 门禁**之前**分派,
        否则被 `if (!name) return` 拦成死分支 —— 玩家拍完照既不报错也永远不提交。
@@ -5672,11 +6755,14 @@ Page({
        直接把 detail 发过去,服务端读不到字段会按 0 判 —— 不报错,只是永远不通过。 */
     const payload = serverPayload(kit.type, action, detail);
     if (kit.type === 'typein' && action === 'start') {
+      if (!this._isPlayAccountCurrent() || !this.data.advancedPlay.show) return;
+      const context = { owner: this._boundPlayOwner(), epoch: this._playLoadEpoch,
+        sessionKey: this._sessionKey(), active: this.data.advancedPlay, component: game };
       this.setData({ 'playKit.kit.startConfirmed': false });
-      this._typeInStart = { sessionId: kit.sessionId, promise: Promise.resolve(game.action(name, payload)) };
+      this._typeInStart = { sessionId: kit.sessionId, context, promise: Promise.resolve(game.action(name, payload)) };
       const pending = this._typeInStart;
       pending.promise.then(ok => {
-        if (this._typeInStart !== pending || pending.sessionId !== this._kit().sessionId) return;
+        if (!this._isTypeInStartCurrent(pending)) return;
         if (ok === true) this.setData({ 'playKit.kit.startConfirmed': true });
         else if (!this._kit().startConfirmed && !(game.data || {}).unknown && !(game.data || {}).acting) {
           this.onAdvancedActionFail({ detail: { action: name, sessionId: pending.sessionId } });
@@ -5686,16 +6772,16 @@ Page({
     }
     if (kit.type === 'typein' && action === 'submit' && !kit.startConfirmed) {
       const pending = this._typeInStart;
-      if (pending && !pending.submitQueued && pending.sessionId === kit.sessionId && !(game.data || {}).unknown) {
+      if (this._isTypeInStartCurrent(pending) && !pending.submitQueued && !(game.data || {}).unknown) {
         pending.submitQueued = true;
         pending.promise.then(() => {
-          if (this._typeInStart !== pending || pending.sessionId !== this._kit().sessionId
+          if (!this._isTypeInStartCurrent(pending)
               || !this.data.advancedPlay.show || !this._kit().startConfirmed || (game.data || {}).unknown || (game.data || {}).acting) return;
           game.action(name, payload);
         });
         return;
       }
-      cyToast('开始计时还未确认，请先核对结果');
+      cyToast('开始计时还未确认，请先确认结果');
       return;
     }
     game.action(name, payload);
@@ -5724,6 +6810,24 @@ Page({
     const detail = (e && e.detail) || {};
     const action = detail.action;
     const kit = this._kit();
+    if (action === 'SUBMIT_QA' && kit.type === 'qa' && kit.judge === false
+        && !kit.finished && !kit.passed
+        && (detail.sessionId == null || String(detail.sessionId) === String(kit.sessionId))) {
+      const game = this.selectComponent('#advancedGame');
+      if (game && !game.data.unknown) this.setData({ 'playKit.kit.failureSeq': (kit.failureSeq || 0) + 1 });
+    }
+    if (action === 'CHOOSE' && kit.type === 'branch' && kit.feedback
+        && (detail.sessionId == null || String(detail.sessionId) === String(kit.sessionId))) {
+      const game = this.selectComponent('#advancedGame');
+      if (game && !game.data.unknown) this.setData({ 'playKit.kit.failureSeq': (kit.failureSeq || 0) + 1 });
+    }
+    if (!this._isPlayAccountCurrent() || !this.data.advancedPlay || !this.data.advancedPlay.show) return;
+    if (action !== 'START_CHALLENGE' && action !== 'SUBMIT_PHOTO_CHECK') return;
+    const currentGame = this._advancedGameComponent();
+    const state = currentGame && currentGame.data && currentGame.data.state;
+    // Existing producer emits sessionId for both action failure and unknown-result readback failure.
+    if (detail.sessionId == null || kit.sessionId == null || !state || state.sessionId == null
+        || String(detail.sessionId) !== String(kit.sessionId) || String(detail.sessionId) !== String(state.sessionId)) return;
     if (action === 'START_CHALLENGE' && kit.type === 'typein') {
       if (detail.sessionId != null && String(detail.sessionId) !== String(kit.sessionId)) return;
       const game = this.selectComponent('#advancedGame');
@@ -5738,6 +6842,7 @@ Page({
   },
 
   _submitKitPhoto(detail, cfg) {
+    if (!this._isPlayAccountCurrent()) return;
     const path = (detail && detail.tempFilePath) || '';
     if (!path) return;
     const option = cfg || {};
@@ -5764,27 +6869,38 @@ Page({
     /* ★ 业务身份 + 题目版本隔离:照片是异步上传的,回来时必须仍是**同一 session、同一版本**
        (页面 kit 与 advanced-game 权威 state 都要对得上)。否则玩家在同一页面切到别的节点/会话后,
        旧回包会经 game.action 把上一题的照片提交到下一题/下一个会话。 */
+    const intent = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+      epoch: this._playLoadEpoch, active: this.data.advancedPlay, game, settled: false, loading: false };
+    this._kitPhotoIntent = intent;
+    const contextCurrent = () => this._isPlayAccountCurrent() && intent.owner === this._playOwner
+      && intent.sessionKey === this._sessionKey() && intent.epoch === this._playLoadEpoch
+      && this.data.advancedPlay === intent.active && this._advancedGameComponent() === game;
+    const settle = () => {
+      if (intent.settled) return false;
+      intent.settled = true;
+      if (this._kitPhotoIntent === intent) { this._kitPhotoIntent = null; this._kitPhotoUploading = false; }
+      if (intent.loading) { intent.loading = false; cyLoading.hide(); }
+      return true;
+    };
     this._kitPhotoUploading = true;
     /* ★ 绑页面生命周期:上传中途玩家返回的话,不绑会留下三样东西 ——
        转不掉的遮罩、取消不了的请求、对着已销毁组件调的 game.action。
        写法与 app.js 里既有的两处上传一致(attach + isAborted 双守卫)。 */
     const operation = app.createPageBoundOperation();
-    operation.onAbort(() => { this._kitPhotoUploading = false; if (!cardMode) cyLoading.hide(); });
+    operation.onAbort(() => { settle(); });
     if (!cardMode) cyLoading.show('正在上传');
-    operation.attach(app.getUploadClient().uploadAll([path], {
+    intent.loading = !cardMode;
+    const upload = () => operation.attach(app.getUploadClient().uploadAll([path], {
       // 组件拍照回调带了真实 size 就交给共享入口按生产 10MB 预检:超限不发起 wxUploadFile,
       // 直接给「压缩/换文件」可操作文案;size 未知(旧组件/拿不到)按 undefined 放行,由服务端拦截。
       fileSizes: [detail && detail.size],
       onDone: (r) => {
-        this._kitPhotoUploading = false;
+        const owned = this._kitPhotoIntent === intent && contextCurrent();
+        if (!settle()) return;
         if (operation.isAborted()) return;
         operation.finish();
-        if (!cardMode) cyLoading.hide();
+        if (!owned) return;
         const url = r && r.ok && r.results && r.results[0];
-        if (!url) {
-          fail((r && r.failures && r.failures[0] && r.failures[0].msg) || '照片没传上去');
-          return;
-        }
         const currentGame = this.selectComponent('#advancedGame');
         const currentState = currentGame && currentGame.data && currentGame.data.state;
         const currentKit = this._kit();
@@ -5796,6 +6912,10 @@ Page({
           fail('题目已变化，上一张照片未提交');
           return;
         }
+        if (!url) {
+          fail((r && r.failures && r.failures[0] && r.failures[0].msg) || '照片没传上去');
+          return void (option.onUploadFailed && option.onUploadFailed((r && r.failures && r.failures[0]) || {}));
+        }
         // advanced-game 正在 acting/unknown 时会静默 no-op:这里不装成功,给一句可恢复的实话。
         if (currentGame.data.acting || currentGame.data.unknown) {
           fail('确认中，照片未提交，请稍后再试');
@@ -5805,9 +6925,28 @@ Page({
         // cfg 缺省 = qa 拍照题那条老路(不带 name/payload 时按它提交),历史行为逐字不变
         const actionName = option.name || 'SUBMIT_QA';
         const payload = option.payload ? option.payload(url) : { imageUrl: url };
+        if (option.onUploaded) option.onUploaded(url);
         currentGame.action(actionName, payload);
       },
     }));
+    if (option.name === 'SUBMIT_PHOTO_CHECK') {
+      app.requestSeparateConsent('photo', () => !operation.isAborted()).then(() => {
+        const currentGame = this.selectComponent('#advancedGame');
+        const currentState = currentGame && currentGame.data && currentGame.data.state;
+        const currentKit = this._kit();
+        if (operation.isAborted()) return;
+        if (!currentState || currentState.sessionId !== state.sessionId || !sameVersion(currentState.version, state.version)
+            || currentKit.sessionId !== state.sessionId || !sameVersion(currentKit.version, state.version)) {
+          settle(); operation.finish();
+          fail('题目已变化，照片未发送'); return;
+        }
+        upload();
+      }).catch(error => {
+        settle();
+        if (operation.isAborted()) return;
+        operation.finish(); fail(error.message);
+      });
+    } else upload();
   },
 
   // ================= R14 旅程检定(入口在 encounter.allowedActions,不在 playKit) =================
@@ -5817,15 +6956,28 @@ Page({
    * ⚠️ 探测失败一律静默:检定不是通关闸,探测不成功不该打断任何已有路径(打卡/任务/导航都不受影响)。
    */
   _probeJourneyCheck(node) {
-    if (this.data.isPreview || this.data.isMock || !node || node.done) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || !node || node.done) return;
     if (!this.data.topicId) return;
     const current = this.data.journeyCheck;
     if (current.show && current.nodeId === node.nodeId) return;
     const epoch = (this._checkProbeEpoch || 0) + 1;
     this._checkProbeEpoch = epoch;
-    req('/api/play/encounter', 'GET', { topicId: this.data.topicId, activityId: this.data.activityId || 0, nodeId: node.nodeId }, undefined, true).then((r) => {
-      if (epoch !== this._checkProbeEpoch) return;
+    const params = { topicId: this.data.topicId, activityId: this.data.activityId || 0, nodeId: node.nodeId };
+    const loadEpoch = this._playLoadEpoch;
+    req('/api/play/encounter', 'GET', params, undefined, true).then((r) => {
+      const sheet = this.data.sheet || {};
+      const currentNode = (this.data.nodes || []).find(item => String(item.nodeId) === String(node.nodeId));
+      if (!this._isPlayAccountCurrent() || epoch !== this._checkProbeEpoch || loadEpoch !== this._playLoadEpoch
+          || params.topicId !== this.data.topicId || params.activityId !== (this.data.activityId || 0)
+          || !sheet.show || !sheet.node || String(sheet.node.nodeId) !== String(node.nodeId)
+          || !currentNode || currentNode.done) return;
       if (!(r.code == 200 || r.code == '200') || !r.data) return;
+      if (r5PlayerRuntime.isR5(r.data)) {
+        if ((r.data.allowedActions || []).includes('check')) this.setData({
+          'sheet.show': false, journeyCheck: { show: false }, advancedPlay: { show: true, node },
+        });
+        return;
+      }
       const kit = pickJourneyCheck(r.data);
       if (!kit) return;
       this.setData({ journeyCheck: Object.assign({ show: true, nodeId: node.nodeId, receipt: null }, kit) });
@@ -5836,9 +6988,29 @@ Page({
     }).catch(() => {});
   },
 
-  /** 上局已结算过:掷骰会被拒,而 settle 是幂等的 —— 回读那份回执补上最终文案,别把玩家卡在掷不了 */
-  _recoverSettledCheck(payload) {
+  _releaseJourneyCheckIntent(intent) {
+    const pending = this._checkPendingByKey;
+    if (intent && pending && pending[intent.key] === intent) delete pending[intent.key];
+  },
+
+  _isJourneyCheckIntentCurrent(intent) {
+    const kit = this.data.journeyCheck || {};
+    return !!intent && this._isPlayAccountCurrent() && this._checkWriteIntent === intent
+      && intent.loadEpoch === this._playLoadEpoch && kit.show
+      && intent.payload.topicId === this.data.topicId
+      && intent.payload.activityId === (this.data.activityId || 0)
+      && String(intent.payload.nodeId) === String(kit.nodeId)
+      && intent.payload.checkId === kit.checkId;
+  },
+
+  /** 上局已结算过时只回读原检定；旧回包不得写入新检定。 */
+  _recoverSettledCheck(payload, intent) {
+    if (!this._isJourneyCheckIntentCurrent(intent)) return;
     req('/api/play/check/settle', 'POST', payload).then((r) => {
+      this._releaseJourneyCheckIntent(intent);
+      if (!this._isJourneyCheckIntentCurrent(intent)) return;
+      this._checkActing = false;
+      this._checkWriteIntent = null;
       if ((r.code == 200 || r.code == '200') && r.data) {
         this.setData({ 'journeyCheck.receipt': checkReceiptView(r.data) });
         return;
@@ -5848,42 +7020,57 @@ Page({
   },
 
   onJourneyCheckAction(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const action = (e.detail && e.detail.action) || '';
     const kit = this.data.journeyCheck;
-    if (!kit.show || !kit.checkId || this._checkActing) return;
+    if (kit.r5) return this._r5CheckAction(action);
+    if (!kit.show || !kit.checkId || !['roll', 'reroll', 'settle'].includes(action)
+        || (this._checkActing && this._isJourneyCheckIntentCurrent(this._checkWriteIntent))) return;
     const payload = { topicId: this.data.topicId, activityId: this.data.activityId || 0, nodeId: kit.nodeId, checkId: kit.checkId };
+    const key = JSON.stringify([this._boundPlayOwner(), payload.topicId, payload.activityId, payload.nodeId, payload.checkId]);
+    const pending = this._checkPendingByKey = this._checkPendingByKey || Object.create(null);
+    if (pending[key]) return;
+    const intent = this._checkWriteIntent = { payload, key, loadEpoch: this._playLoadEpoch };
+    pending[key] = intent;
     this._checkActing = true;
-    // 触感在组件里(掷/结算各一次);这里只管请求与把回执搬进视图。
-    // ⚠️ 三条路径各写各的字面 URL:U1 门禁要能枚举出所有 /api 端点,把 URL 包成参数它认不出。
+    // 保留三条字面URL和原操作；本地意图只用于回包归属，不是新的服务端请求身份。
     if (action === 'roll') {
-      req('/api/play/check/roll', 'POST', payload).then((r) => this._afterCheck('roll', r, payload));
+      req('/api/play/check/roll', 'POST', payload).then((r) => this._afterCheck('roll', r, payload, intent));
       return;
     }
     if (action === 'reroll') {
-      req('/api/play/check/reroll', 'POST', payload).then((r) => this._afterCheck('reroll', r, payload));
+      req('/api/play/check/reroll', 'POST', payload).then((r) => this._afterCheck('reroll', r, payload, intent));
       return;
     }
-    if (action === 'settle') {
-      req('/api/play/check/settle', 'POST', payload).then((r) => this._afterCheck('settle', r, payload));
-      return;
-    }
-    this._checkActing = false;
+    req('/api/play/check/settle', 'POST', payload).then((r) => this._afterCheck('settle', r, payload, intent));
   },
 
-  /** 检定回包的统一落点:成功搬回执;「已结算」用幂等 settle 回读;其余给可恢复提示。 */
-  _afterCheck(action, r, payload) {
-    this._checkActing = false;
+  /** 检定回包只能收尾发起它的意图；原幂等settle回读继续沿同一意图。 */
+  _afterCheck(action, r, payload, intent) {
+    if (!this._isJourneyCheckIntentCurrent(intent)) { this._releaseJourneyCheckIntent(intent); return; }
     const res = r || {};
     const ok = res.code == 200 || res.code == '200';
+    if (action === 'roll' && !ok && /已结算/.test(res.msg || '')) {
+      this._recoverSettledCheck(payload, intent);
+      return;
+    }
+    this._releaseJourneyCheckIntent(intent);
+    this._checkActing = false;
+    this._checkWriteIntent = null;
     const FAIL = { roll: '掷骰没成功，再试一次', reroll: '重掷没成功，再试一次', settle: '结算没成功，再试一次' };
     if (ok && res.data) { this.setData({ 'journeyCheck.receipt': checkReceiptView(res.data) }); return; }
-    if (action === 'roll' && /已结算/.test(res.msg || '')) { this._recoverSettledCheck(payload); return; }
     cyToast(res.msg || FAIL[action] || '操作没成功，再试一次');
   },
 
   /** 检定屏退出。结算前后都能关 —— 失败也推进是产品口径,这里不设任何通关闸。 */
   closeJourneyCheck() {
+    this._checkWriteIntent = null; this._checkActing = false;
     const inline = this.data.journeyCheck.present === 'inline';
+    if (this.data.journeyCheck.r5) {
+      const pending = this.data.journeyCheck.receipt && this.data.journeyCheck.receipt.pending;
+      this._r5CheckView = null;
+      this.setData({ advancedPlay: { show: false, node: null }, themeBackpackOpen: !!pending, themeBackpackTab: 'game' });
+    }
     this.setData({ 'journeyCheck.show': false });
     if (inline && this.data.chapterFull) {
       const chapterParas = (this.data.chapterParas || []).filter((p) => p.kind !== 'journeyCheck')
@@ -5898,19 +7085,35 @@ Page({
    * 前端不解密也不上报步数本身,只把密文原样转交。
    */
   _submitSteps() {
+    if (!this._isPlayAccountCurrent()) return;
+    if (this.data.zeroHpView) {
+      this.setData({ themeBackpackOpen: true, themeBackpackTab: 'game' });
+      return this.syncZeroHpSteps();
+    }
     const game = this.selectComponent('#advancedGame');
     if (!game) { cyToast('玩法未就绪，请退出后重进'); return; }
+    const sessionKey = this._sessionKey();
+    const kit = this._kit();
+    const nodeKey = () => String(this._playKitNodeId || (this.data.advancedPlay && this.data.advancedPlay.node
+      && this.data.advancedPlay.node.nodeId) || '');
+    const nodeId = nodeKey();
+    const sequence = this._stepsSubmitSequence = (this._stepsSubmitSequence || 0) + 1;
+    const isCurrent = () => this._isPlayAccountCurrent() && sequence === this._stepsSubmitSequence
+      && sessionKey === this._sessionKey() && nodeId === nodeKey()
+      && this._kit() === kit && this._advancedGameComponent() === game;
     wx.login({
       success: (login) => {
+        if (!isCurrent()) return;
         if (!login || !login.code) { cyToast('微信登录态获取失败'); return; }
         wx.getWeRunData({
-          success: (run) => game.action('SUBMIT_STEPS', {
-            code: login.code, encryptedData: run.encryptedData, iv: run.iv,
-          }),
-          fail: () => cyToast('需要授权微信运动才能计步'),
+          success: (run) => {
+            if (!isCurrent()) return;
+            game.action('SUBMIT_STEPS', { code: login.code, encryptedData: run.encryptedData, iv: run.iv });
+          },
+          fail: () => { if (isCurrent()) cyToast('需要授权微信运动才能计步'); },
         });
       },
-      fail: () => cyToast('微信登录态获取失败'),
+      fail: () => { if (isCurrent()) cyToast('微信登录态获取失败'); },
     });
   },
   /** 治愈音乐角:音频归页面持有,弹窗收起后还能继续放(这一站的玩法就是"听完") */
@@ -5918,7 +7121,10 @@ Page({
     const kit = this._kit();
     if (!kit.audioUrl) { cyToast('这一站还没有配曲目'); return; }
     if (!this._kitAudio) {
-      this._kitAudio = wx.createInnerAudioContext();
+      this._kitAudio = audioSession.register(wx.createInnerAudioContext(), { kind: 'kit' });
+      this._kitAudio.onPlay(() => audioSession.keepAwake('kitAudio', true));
+      this._kitAudio.onPause(() => audioSession.keepAwake('kitAudio', false));
+      this._kitAudio.onStop(() => audioSession.keepAwake('kitAudio', false));
       this._kitAudio.onTimeUpdate(() => {
         this.setData({
           'playKit.kit.position': Math.floor(this._kitAudio.currentTime || 0),
@@ -5929,9 +7135,11 @@ Page({
         // 只收播放态:音乐角明确**不判定通关**(2026-08-26 拍板,utils/playkit-view.js:318)。
         // 这里原来还跟一句 _submitPlayKitAction('finished'),但 ACTION_OF 没有 musiccorner:finished,
         // 组件也只发 toggle/close —— 那是一次谁也收不到的空提交(审查 #24)。
+        audioSession.keepAwake('kitAudio', false);
         this.setData({ 'playKit.kit.playing': false });
       });
       this._kitAudio.onError(() => {
+        audioSession.keepAwake('kitAudio', false);
         this.setData({ 'playKit.kit.playing': false });
         cyToast('曲目播放失败');
       });
@@ -6046,7 +7254,7 @@ Page({
       });
     this.setData({
       journalCards: cards.concat(historyCards),
-      nextChapterText: this.data.allDone ? '你已写满本章。翻过这一页,新的街巷正在等你。' : '走完本章坐标,下一章的扉页才会在流的尽头显形。'
+      nextChapterText: this.data.allDone ? '你已写满本章。翻过这一页，新的街巷正在等你。' : '走完本章坐标，下一章的扉页才会在流的尽头显形。'
     });
   },
   /* ⚠️ onJournalTouchMove / onJournalScroll(滚动沉降:越靠屏幕中央越清晰)
@@ -6057,12 +7265,18 @@ Page({
 
   // ---------- 通关足迹卡 ----------
   loadEnding() {
-    if (this.data.mode !== 2 || this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this.data.mode !== 2 || this.data.isPreview || this.data.isMock) return;
     const that = this;
     const epoch = this._endingEpoch = (this._endingEpoch || 0) + 1;
+    const params = this._sessionParams();
+    const sessionKey = this._sessionKey(params);
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const isCurrent = () => that._isPlayAccountCurrent() && epoch === that._endingEpoch && that.data.mode === 2
+      && sessionKey === that._sessionKey()
+      && routeSessionId === String((that._routeState || {}).sessionId || '');
     this.setData({ endingError: false });
-    req('/api/play/ending', 'GET', this._sessionParams()).then((r) => {
-      if (epoch !== that._endingEpoch) return;
+    req('/api/play/ending', 'GET', params).then((r) => {
+      if (!isCurrent()) return;
       if ((r.code == 200 || r.code == '200') && r.data) {
         const opener = typeof r.data.opener === 'string' ? r.data.opener : '';
         const fragments = Array.isArray(r.data.fragments) ? r.data.fragments : [];
@@ -6073,7 +7287,7 @@ Page({
         that.setData({ endingError: true });
       }
     }).catch(() => {
-      if (epoch !== that._endingEpoch) return;
+      if (!isCurrent()) return;
       that.setData({ endingError: true });
     });
   },
@@ -6083,28 +7297,39 @@ Page({
    * 盖在完成页之前;点「继续」才进完成页。主题没配结局 / 拿不到 → 直接进完成页,不挡路。
    */
   _loadLifeEnding(next) {
-    req('/api/play/journey/ending', 'GET', { topicId: this.data.topicId, activityId: this.data.activityId || 0 }).then((res) => {
+    if (!this._isPlayAccountCurrent()) return;
+    const params = { topicId: this.data.topicId, activityId: this.data.activityId || 0 };
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const sequence = this._lifeEndingReadSequence = (this._lifeEndingReadSequence || 0) + 1;
+    const isCurrent = () => this._isPlayAccountCurrent() && sequence === this._lifeEndingReadSequence
+      && params.topicId === this.data.topicId && params.activityId === (this.data.activityId || 0)
+      && routeSessionId === String((this._routeState || {}).sessionId || '');
+    const finish = () => { if (isCurrent()) next(); };
+    req('/api/play/journey/ending', 'GET', params).then((res) => {
+      if (!isCurrent()) return;
       const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
-      if (!d || !d.title) { next(); return; }
+      if (!d || !d.title) { finish(); return; }
       const archive = lifeArchive.fromServer(d.archive, this.data.nodes);
-      const card = () => this._showEnding({ show: true, real: true, idx: 0, list: [{ code: d.code, title: d.title, summary: d.summary || '' }],
-        archive, hasArchive: !lifeArchive.isEmpty(archive) });
+      const card = () => { if (isCurrent()) this._showEnding({ show: true, real: true, idx: 0, list: [{ code: d.code, title: d.title, summary: d.summary || '' }],
+        archive, hasArchive: !lifeArchive.isEmpty(archive) }); };
       // 结局章(2026-09-24):服务端挑中的那一章先当故事流读,读完才出结局卡与这一生的档案
       const ch = d.chapter;
       if (ch && Array.isArray(ch.blocks) && ch.blocks.length) {
         this._playEndingChapter({ id: ch.id, chapterId: ch.id, name: ch.name, blocks: ch.blocks,
-          atmospherePreset: ch.atmospherePreset, audioUrl: ch.audioUrl }, card);
+          atmospherePreset: ch.atmospherePreset, audioUrl: ch.audioUrl }, card, isCurrent);
         return;
       }
       card();
-    }).catch(() => next());
+    }).catch(finish);
   },
   /** 把一章结局章当故事流播;章末「继续」时收起它并走 after(出结局卡) */
-  _playEndingChapter(chapter, after) {
-    this._afterEndingChapter = after;
+  _playEndingChapter(chapter, after, isCurrent) {
+    const current = () => typeof isCurrent !== 'function' || isCurrent();
+    if (!current()) return;
+    this._afterEndingChapter = () => { if (current()) after(); };
     this.stopAudio();
     const built = Object.assign(this.buildChapter({ chapters: [chapter] }, this.data.nodes), { ending: true, idxLabel: '结局' });
-    this.setData({ chapter: built, chapterGameAnchor: '' }, () => this.openChapterFull());
+    this.setData({ chapter: built, chapterGameAnchor: '' }, () => { if (current()) this.openChapterFull(); });
   },
   continueLifeEnding() {
     const done = () => this.setData({ 'previewEnding.show': false }, () => this.openFinish());
@@ -6116,6 +7341,15 @@ Page({
       setTimeout(() => this.setData({ 'previewEnding.off': 'gone' }), 480),
       setTimeout(done, 820));
   },
+  _finishViewContext() {
+    return { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+      routeSessionId: String((this._routeState || {}).sessionId || ''), epoch: this._finishArtworkEpoch };
+  },
+  _isFinishViewCurrent(context) {
+    return !!context && this._isPlayAccountCurrent() && context.owner === this._playOwner
+      && context.sessionKey === this._sessionKey() && context.epoch === this._finishArtworkEpoch
+      && context.routeSessionId === String((this._routeState || {}).sessionId || '');
+  },
   openFinish() {
     // R9-21 + R1:通关是会话终点,不管从哪条入口进来都要走统一收尾 —— 只清快照不置 _runStarted,
     // 离页时会被写回;正在跑的那局也在这一刻停表,不能再被当成「暂停中」恢复。
@@ -6124,8 +7358,10 @@ Page({
     // 故事主题先看结局与档案(只看一次);探店日与试玩不走这条
     // 只有故事流主题(本章有块流)才配得出结局;经典路线照旧直接进完成页
     const storyTopic = Array.isArray(this.data.chapter && this.data.chapter.blocks);
-    if (storyTopic && !this.data.isPreview && !this.data.isMock && this.data.mode !== 2 && !this._lifeEndingShown) {
-      this._lifeEndingShown = true;
+    const lifeEndingScope = JSON.stringify([this._boundPlayOwner(), this._sessionKey(), String((this._routeState || {}).sessionId || '')]);
+    if (storyTopic && !this.data.isPreview && !this.data.isMock && this.data.mode !== 2
+        && (!this._lifeEndingShown || this._lifeEndingShownScope !== lifeEndingScope)) {
+      this._lifeEndingShown = true; this._lifeEndingShownScope = lifeEndingScope;
       this._loadLifeEnding(() => this.openFinish());
       return;
     }
@@ -6138,12 +7374,14 @@ Page({
     const finishStamps = isShopDay
       ? this.data.nodes.filter((n) => n.done).map((n) => ({ nodeId: n.nodeId, name: n.name })) : [];
     const puzzleSummary = summarizePuzzleScores(this.data.nodes);
-    this._finishMedals = this.data.nodes.filter((n) => n.medalName || n.medalImg).length;
+    this._finishMedals = this.data.nodes.filter((n) => n.medalName || n.medalImg).length; this.setData({ finishMedalList: buildFinishMedals({ allDone: !!this.data.allDone && !isShopDay, reward: this._themeReward, won: this._wonMedals, nodes: this.data.nodes }) });
     // ⚠️ 别在这里加「通关奖励已发放」行:后端对 FREE_COLLECT 不下发 themeReward(B5 剥离),
     //    前端拿不到真数据,写了就是恒空的死 UI。奖励到账明细归修C后端(grantOnce 结果上凭证面)。
     const earnedXp = (this.data.nodes || []).reduce(function (sum, node) {
       return sum + (node && node.done ? (Number(node.earnedXp) || 0) : 0);
     }, 0);
+    this._finishArtworkEpoch = (this._finishArtworkEpoch || 0) + 1;
+    const finishView = this._finishViewContext();
     this.setData({
       showFinish: true,
       finishScore: earnedXp,
@@ -6159,11 +7397,12 @@ Page({
       // 主视觉:本次拿到的徽章(有图用图,无图用名字首字);一枚都没有时不硬凑
       finishBadge: this._pickFinishBadge(),
     }, () => {
+      if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
       this._triggerCelebration(this.data.mode === 2 ? 'free-finish' : 'classic-finish');
       this.paintRouteThumb();   // finish-map 盒内=路线缩略图(全卡仅保存时生成,避免和 HTML 数字行重复)
-      this.buildReview();       // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离)
+      this.buildReview(); this._openMedalScreen(); // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
     });
-    this.loadMilestone();
+    this.loadMilestone(); this.loadStageEnd(); // BL-186 本章结算与里程碑并列读,不挡完成页
     this.loadFinishRouteRecommendation();
   },
   closeFinish() {
@@ -6172,20 +7411,32 @@ Page({
     });
   },
   _hideFinish(callback) {
+    this._finishArtworkEpoch = (this._finishArtworkEpoch || 0) + 1;
+    this._milestoneReadSequence = (this._milestoneReadSequence || 0) + 1;
     if (this._reviewTimer) { clearTimeout(this._reviewTimer); this._reviewTimer = null; }
     this._finishRecommendationEpoch = (this._finishRecommendationEpoch || 0) + 1;
     this._endingEpoch = (this._endingEpoch || 0) + 1;
-    this.setData({ showFinish: false, 'ending.show': false }, callback);
+    const finishView = this._finishViewContext();
+    this.setData({ showFinish: false, 'ending.show': false }, () => {
+      if (this._isFinishViewCurrent(finishView) && !this.data.showFinish && callback) callback();
+    });
   },
   openFinishJournal() {
     this._hideFinish(() => this.openJournal());
   },
 
   loadNewLifeOS() {
-    if (this.data.mode !== 2 || this.data.isPreview || this.data.isMock || !this.data.topicId) return;
+    if (!this._isPlayAccountCurrent() || this.data.mode !== 2 || this.data.isPreview || this.data.isMock || !this.data.topicId) return;
     const that = this;
+    const topicId = String(this.data.topicId);
+    const sessionKey = this._sessionKey();
+    const loadEpoch = this._playLoadEpoch;
+    const sequence = this._osReadSequence = (this._osReadSequence || 0) + 1;
     this.setData({ 'newLifeOS.loading': true });
-    req('/api/play/os/' + this.data.topicId, 'GET', {}, undefined, true).then((r) => {
+    req('/api/play/os/' + topicId, 'GET', {}, undefined, true).then((r) => {
+      if (!that._isPlayAccountCurrent() || sequence !== that._osReadSequence
+          || topicId !== String(that.data.topicId) || sessionKey !== that._sessionKey()
+          || loadEpoch !== that._playLoadEpoch || that.data.mode !== 2) return;
       if (!(r.code == 200 || r.code == '200') || !r.data) {
         that.setData({ 'newLifeOS.loading': false, 'newLifeOS.show': false });
         return;
@@ -6207,16 +7458,29 @@ Page({
     });
   },
   revokeOsTag(e) {
+    if (!this._isPlayAccountCurrent()) return;
     const tagId = e.currentTarget.dataset.id;
-    this._osTagWrites = this._osTagWrites || {};
-    if (!tagId || this._osTagWrites[tagId]) return;
-    this._osTagWrites[tagId] = true;
-    const that = this;
+    if (!tagId) return;
+    const topicId = String(this.data.topicId || '');
+    const sessionKey = this._sessionKey();
+    const loadEpoch = this._playLoadEpoch;
+    const requests = this._osTagWrites = this._osTagWrites || Object.create(null);
+    const requestKey = JSON.stringify([this._boundPlayOwner(), topicId, sessionKey, String(tagId)]);
+    if (requests[requestKey]) return;
+    const intent = requests[requestKey] = {};
+    const unlock = () => { if (requests[requestKey] === intent) delete requests[requestKey]; };
+    const isCurrent = () => this._isPlayAccountCurrent()
+      && topicId === String(this.data.topicId || '') && loadEpoch === this._playLoadEpoch
+      && sessionKey === this._sessionKey();
     req('/api/play/tag/' + tagId + '/revoke', 'POST', {}).then((r) => {
-      delete that._osTagWrites[tagId];
+      unlock();
+      if (!isCurrent()) return;
       if (r.code == 200 || r.code == '200') {
-        that.setData({ 'newLifeOS.tags': that.data.newLifeOS.tags.filter((tag) => tag.id != tagId) });
+        this.setData({ 'newLifeOS.tags': this.data.newLifeOS.tags.filter((tag) => String(tag.id) !== String(tagId)) });
       } else cyToast(r.msg || '撤回没有成功');
+    }).catch(() => {
+      unlock();
+      if (isCurrent()) cyToast('撤回没有成功');
     });
   },
 
@@ -6366,8 +7630,16 @@ Page({
   // ⚠️ 拿不到就整条轴不渲染(milestone=null),不拿本章数据冒充累计、也不填 0 凑一个「第 1 档」。
   //   这条与成长中心「失败不把数据伪装为零」的既有约定一致。
   loadFinishRouteRecommendation() {
+    if (!this._isPlayAccountCurrent() || !this.data.showFinish) return Promise.resolve(null);
     const requestEpoch = (this._finishRecommendationEpoch || 0) + 1;
     this._finishRecommendationEpoch = requestEpoch;
+    const sessionKey = this._sessionKey();
+    const activityId = this.data.activityId, topicId = this.data.topicId, mode = this.data.mode;
+    const loadEpoch = this._playLoadEpoch;
+    const isCurrent = () => this._isPlayAccountCurrent() && this.data.showFinish
+      && requestEpoch === this._finishRecommendationEpoch && loadEpoch === this._playLoadEpoch
+      && sessionKey === this._sessionKey()
+      && activityId === this.data.activityId && topicId === this.data.topicId && mode === this.data.mode;
     this.setData({ finishRouteRecommendation: null });
     if (!finishRouteRecommendation.isEnabled(app.globalData && app.globalData.features)
         || this.data.isPreview || this.data.isMock) return Promise.resolve(null);
@@ -6381,16 +7653,16 @@ Page({
       longitude: origin.longitude,
       latitude: origin.latitude
     }).then((response) => {
-      if (requestEpoch !== this._finishRecommendationEpoch || !this.data.showFinish) return null;
+      if (!isCurrent()) return null;
       const rows = response && response.code == 200 && response.data && response.data.rows;
       const card = finishRouteRecommendation.pickCandidate(
-        Array.isArray(rows) ? rows : [], this.data.activityId, this.data.topicId
+        Array.isArray(rows) ? rows : [], activityId, topicId
       );
       this.setData({ finishRouteRecommendation: card }, () => {
-        if (!card || requestEpoch !== this._finishRecommendationEpoch || !this.data.showFinish) return;
+        if (!card || !isCurrent()) return;
         analytics.track('finish_route_recommendation_shown', {
           bizType: 'activity', bizId: card.id,
-          properties: { mode: this.data.mode, placement: 'play_finish' }
+          properties: { mode, placement: 'play_finish' }
         });
       });
       return card;
@@ -6407,10 +7679,17 @@ Page({
   },
 
   loadMilestone() {
+    if (!this._isPlayAccountCurrent() || !this.data.showFinish) return;
+    const sequence = this._milestoneReadSequence = (this._milestoneReadSequence || 0) + 1;
+    const sessionKey = this._sessionKey();
+    const loadEpoch = this._playLoadEpoch;
     this.setData({ milestone: null });
     app.sendRequest({
       url: '/api/play/my-completed', method: 'POST', hideLoading: true, silentError: true,
       success: (res) => {
+        if (!this._isPlayAccountCurrent() || !this.data.showFinish
+            || sequence !== this._milestoneReadSequence || loadEpoch !== this._playLoadEpoch
+            || sessionKey !== this._sessionKey()) return;
         const ok = res && (res.code === 200 || res.code === '200');
         if (!ok || !Array.isArray(res.data)) return;      // 保持 null,轴不出现
         const ids = {};
@@ -6423,15 +7702,45 @@ Page({
     });
   },
 
+  /**
+   * BL-186 章节阶段结算:本章(未通关)的结算半屏补上作者写的「这一章改变了什么 / 接下来打开什么」。
+   * 取数与降级照 _loadLifeEnding 的 /journey/ending:只给故事流真玩家;没配阶段 / 拿不到 → 整块不渲染,不挡路。
+   */
+  loadStageEnd() {
+    const sequence = this._stageEndReadSequence = (this._stageEndReadSequence || 0) + 1;
+    if (this.data.stageEnd) this.setData({ stageEnd: null });
+    const chapter = this.data.chapter || {};
+    const chapterId = Number(chapter.chapterId || chapter.id);
+    if (!this._isPlayAccountCurrent() || this.data.allDone || this.data.isPreview || this.data.isMock
+        || this.data.mode === 2 || chapter.ending || !Array.isArray(chapter.blocks)
+        || !Number.isSafeInteger(chapterId) || chapterId <= 0) return;
+    const params = { topicId: this.data.topicId, activityId: this.data.activityId || 0, chapterId };
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const isCurrent = () => this._isPlayAccountCurrent() && sequence === this._stageEndReadSequence
+      && this.data.showFinish && params.topicId === this.data.topicId
+      && routeSessionId === String((this._routeState || {}).sessionId || '');
+    req('/api/play/journey/stage-end', 'GET', params, undefined, true).then((res) => {
+      if (!isCurrent()) return;
+      const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
+      const changed = d && Array.isArray(d.changed)
+        ? d.changed.filter((text) => typeof text === 'string' && text.trim() !== '') : [];
+      const open = d && typeof d.open === 'string' ? d.open.trim() : '';
+      if (!changed.length && !open) return;
+      this.setData({ stageEnd: { changed, open } });
+    });
+  },
+
   // ---------- P1 足迹卡:盒内路线缩略图 + 保存用全卡(AD 风格) ----------
   // 共享的路线绘制:把节点(lat/lng)归一化画进 (bx,by,bw,bh) 框(线 + done 实心/未完成描边)
-  _drawRoute(g, nodes, bx, by, bw, bh) {
+  _drawRoute(g, nodes, bx, by, bw, bh, artwork) {
     // P1 自由定向分享卡:按"我的完成顺序"连线+标序号(每个人路径不同=个性化传播点);mode1 保持 sortId 序
-    const free = this.data.mode === 2;
+    const mode = artwork ? artwork.mode : this.data.mode;
+    const routeState = artwork ? artwork.routeState : this._routeState;
+    const free = mode === 2;
     const src = (nodes || []).filter((n) => n.lat && n.lng);
-    const branch = this._routeState.routeMode === 'BRANCH_GRAPH';
+    const branch = routeState.routeMode === 'BRANCH_GRAPH';
     const ordered = branch
-      ? orderedJourneyNodes(src, this._routeState)
+      ? orderedJourneyNodes(src, routeState)
       : free
       ? src.slice().sort((a, b) => (a.doneAt || 9e15) - (b.doneAt || 9e15))
       : src.slice().sort((a, b) => (a.sortId || 0) - (b.sortId || 0));
@@ -6468,50 +7777,97 @@ Page({
     g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
     g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
   },
+  _captureFinishArtwork(channel) {
+    const sequenceKey = channel + 'ArtworkSequence';
+    const sequence = this[sequenceKey] = (this[sequenceKey] || 0) + 1;
+    return { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+      routeSessionId: String((this._routeState || {}).sessionId || ''), epoch: this._finishArtworkEpoch,
+      sequenceKey, sequence, mode: this.data.mode, chapter: Object.assign({}, this.data.chapter),
+      nodes: (this.data.nodes || []).map(node => Object.assign({}, node)),
+      routeState: JSON.parse(JSON.stringify(this._routeState || {})), doneCount: this.data.doneCount,
+      finishScore: this.data.finishScore, medals: this._finishMedals,
+      lead: Object.assign({}, this.data.lead), milestone: this.data.milestone ? JSON.parse(JSON.stringify(this.data.milestone)) : null };
+  },
+  _isFinishArtworkCurrent(artwork) {
+    return !!artwork && this._isPlayAccountCurrent() && this.data.showFinish
+      && artwork.owner === this._playOwner && artwork.epoch === this._finishArtworkEpoch
+      && artwork.sequence === this[artwork.sequenceKey] && artwork.sessionKey === this._sessionKey()
+      && artwork.routeSessionId === String((this._routeState || {}).sessionId || '');
+  },
+  _queueFinishCanvas(current, draw, onError) {
+    this._finishCanvasQueue = this._finishCanvasQueue || [];
+    this._finishCanvasQueue.push({ current, draw, onError });
+    this._drainFinishCanvas();
+  },
+  _drainFinishCanvas() {
+    if (this._finishCanvasBusy) return;
+    const queue = this._finishCanvasQueue || [];
+    let task;
+    while (queue.length) { const next = queue.shift(); if (next.current()) { task = next; break; } }
+    if (!task) return;
+    this._finishCanvasBusy = true;
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true; this._finishCanvasBusy = false; this._drainFinishCanvas();
+    };
+    try { task.draw(release); } catch (e) { release(); if (task.current() && task.onError) task.onError(); }
+  },
   // 盒内路线缩略图 → finishSnap(仅路线,数字由 HTML finish-stat 负责,不重复)
   paintRouteThumb() {
-    const that = this;
-    wx.createSelectorQuery().select('#snapcv').fields({ node: true }).exec((res) => {
-      if (!res || !res[0] || !res[0].node) { that.setData({ finishSnapError: true }); return; }
-      const cv = res[0].node;
-      const W = 690, H = 320, dpr = 2;
-      cv.width = W * dpr; cv.height = H * dpr;
-      const g = cv.getContext('2d'); g.scale(dpr, dpr);
-      g.fillStyle = PLAY_STORY_CARD.surface; that._rr(g, 0, 0, W, H, 24); g.fill();
-      that._drawRoute(g, that.data.nodes || [], 0, 0, W, H);
-      wx.canvasToTempFilePath({
-        canvas: cv, destWidth: W * dpr, destHeight: H * dpr,
-        success(r) { that.setData({ finishSnap: r.tempFilePath, finishSnapError: false }); },
-        fail() { that.setData({ finishSnapError: true }); }
+    const artwork = this._captureFinishArtwork('_thumb');
+    const current = () => this._isFinishArtworkCurrent(artwork);
+    if (!current()) return;
+    this._queueFinishCanvas(current, release => {
+      wx.createSelectorQuery().select('#snapcv').fields({ node: true }).exec((res) => {
+        if (!current()) { release(); return; }
+        if (!res || !res[0] || !res[0].node) { release(); this.setData({ finishSnapError: true }); return; }
+        const cv = res[0].node;
+        const W = 690, H = 320, dpr = 2;
+        cv.width = W * dpr; cv.height = H * dpr;
+        const g = cv.getContext('2d'); g.scale(dpr, dpr);
+        g.fillStyle = PLAY_STORY_CARD.surface; this._rr(g, 0, 0, W, H, 24); g.fill();
+        this._drawRoute(g, artwork.nodes, 0, 0, W, H, artwork);
+        wx.canvasToTempFilePath({
+          canvas: cv, destWidth: W * dpr, destHeight: H * dpr,
+          success: r => { release(); if (current()) this.setData({ finishSnap: r.tempFilePath, finishSnapError: false }); },
+          fail: () => { release(); if (current()) this.setData({ finishSnapError: true }); }
+        });
       });
-    });
+    }, () => { if (current()) this.setData({ finishSnapError: true }); });
   },
   retryRouteThumb() {
     this.setData({ finishSnapError: false }, () => this.paintRouteThumb());
   },
   // 保存/分享用全卡(眉标+衬线题+路线+三列大数字+带领行+品牌脚);回调拿临时路径,不占 finishSnap
   paintFinishCard(cb) {
-    const that = this;
+    const that = this, artwork = this._captureFinishArtwork('_card');
+    const current = () => this._isFinishArtworkCurrent(artwork);
+    if (!current()) return;
+    this._queueFinishCanvas(current, release => {
+    let delivered = false;
+    const deliver = path => { if (delivered) return; delivered = true; release(); if (current() && cb) cb(path); };
     wx.createSelectorQuery().select('#snapcv').fields({ node: true }).exec((res) => {
-      if (!res || !res[0] || !res[0].node) { cb && cb(''); return; }
+      if (!current()) { release(); return; }
+      if (!res || !res[0] || !res[0].node) { deliver(''); return; }
       const cv = res[0].node;
       const W = 750, H = 1000, dpr = 2;
       cv.width = W * dpr; cv.height = H * dpr;
       const g = cv.getContext('2d'); g.scale(dpr, dpr);
       g.fillStyle = PLAY_STORY_CARD.page; g.fillRect(0, 0, W, H);
       g.fillStyle = PLAY_STORY_CARD.muted; g.font = '600 22px Menlo, monospace'; g.textAlign = 'left';
-      g.fillText(that.data.mode === 2 ? 'C H E N G Y I N · 我 的 探 索 顺 序' : 'C H E N G Y I N · 主 题 通 关', 56, 88);
+      g.fillText(artwork.mode === 2 ? 'C H E N G Y I N · 我 的 探 索 顺 序' : 'C H E N G Y I N · 主 题 通 关', 56, 88);
       g.fillStyle = PLAY_STORY_CARD.text; g.font = '500 52px Georgia, serif';
-      g.fillText(String(that.data.chapter.name || '城市探索').slice(0, 12), 56, 160);
+      g.fillText(String(artwork.chapter.name || '城市探索').slice(0, 12), 56, 160);
       const bx = 56, by = 210, bw = W - 112, bh = 380;
       g.fillStyle = PLAY_STORY_CARD.surface; that._rr(g, bx, by, bw, bh, 24); g.fill();
-      that._drawRoute(g, that.data.nodes || [], bx, by, bw, bh);
+      that._drawRoute(g, artwork.nodes || [], bx, by, bw, bh, artwork);
       const stats = [
         // 与通关卡同一处修正:标签是"点亮坐标"就得给已点亮数,不是总数。
         // 这份是**分享卡**,错数字会被烤进图片传播出去,比页面上错得更久。
-        [String(that.data.doneCount || 0), '点亮坐标'],
-        [String(that.data.finishScore || 0), '探索值'],
-        [String(that._finishMedals || 0), '获得徽章']
+        [String(artwork.doneCount || 0), '点亮坐标'],
+        [String(artwork.finishScore || 0), '探索值'],
+        [String(artwork.medals || 0), '获得徽章']
       ];
       stats.forEach((st, i) => {
         const cx = 56 + i * ((W - 112) / 3) + ((W - 112) / 6);
@@ -6522,13 +7878,13 @@ Page({
         g.fillText(st[1], cx, by + bh + 170);
       });
       g.textAlign = 'center'; g.fillStyle = PLAY_STORY_CARD.muted; g.font = '400 24px -apple-system, sans-serif';
-      if (that.data.lead && that.data.lead.exists) {
-        g.fillText('全队 ' + that.data.lead.total + ' 人同行', W / 2, by + bh + 230);
+      if (artwork.lead && artwork.lead.exists) {
+        g.fillText('全队 ' + artwork.lead.total + ' 人同行', W / 2, by + bh + 230);
       }
       const footerY = H - 24;
       // 里程碑轴:海报要和屏幕上那张卡是同一件东西,所以这里也画一条。
       // milestone 为 null(累计数没取到)时整条不画 —— 与页面同一条口径,不在海报上补假数字。
-      const ms = that.data.milestone;
+      const ms = artwork.milestone;
       if (ms && ms.tiers && ms.tiers.length) {
         const my = by + bh + 290;
         const r = 30, gap = (W - 112 - r * 2) / (ms.tiers.length - 1);
@@ -6551,27 +7907,43 @@ Page({
       g.fillText('城 瘾 · 走 进 城 市 的 瘾', W / 2, footerY);
       wx.canvasToTempFilePath({
         canvas: cv, destWidth: W * dpr, destHeight: H * dpr,
-        success(r) { cb && cb(r.tempFilePath); }, fail() { cb && cb(''); }
+        success(r) { deliver(r.tempFilePath); }, fail() { deliver(''); }
       });
     });
+    }, () => { if (current() && cb) cb(''); });
   },
   saveFinishCard() {
-    const that = this;
+    const that = this, intent = this._captureFinishArtwork('_album');
+    const current = () => this._isFinishArtworkCurrent(intent);
+    if (!current()) return;
     that.diegetic('生成足迹卡…');
     that.paintFinishCard((path) => {
-      if (!path) { that.diegetic('足迹卡生成失败,再试一次'); return; }
+      if (!current()) return;
+      if (!path) { that.diegetic('足迹卡生成失败，再试一次'); return; }
       wx.saveImageToPhotosAlbum({
         filePath: path,
-        success() { that.diegetic('已保存到相册'); },
+        success() { if (current()) that.diegetic('已保存到相册'); },
         fail(e) {
+          if (!current()) return;
           if (e.errMsg && e.errMsg.indexOf('auth') >= 0) { wx.openSetting({}); }
           else if (e.errMsg && e.errMsg.indexOf('cancel') >= 0) { /* 用户取消 */ }
-          else { that.diegetic('保存失败,再试一次'); }
+          else { that.diegetic('保存失败，再试一次'); }
         }
       });
     });
   },
+  _syncCommunityEntry() {
+    const owner = app.getUserID && app.getUserID();
+    const sync = () => {
+      if (this._playDisposed || owner !== (app.getUserID && app.getUserID())) return;
+      this.setData({ communityPostWrite: typeof app.canUseCommunity === 'function' && app.canUseCommunity(true) });
+    };
+    const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
+    sync();
+    if (pending && typeof pending.then === 'function') pending.then(sync);
+  },
   shareFinish() {
+    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) { cyToast('当前账号未开放广场发布'); return; }
     // 通关→广场发布:发帖时活动选择器列出已通关活动(本场已在 /api/play/my-completed 中),选中即关联
     cyToast('去广场发布你的城市足迹');
     setTimeout(() => { wx.navigateTo({ url: '/pages/square/list/index' }); }, 800);
@@ -6581,22 +7953,27 @@ Page({
   initAudio() {
     if (this._audio) return;
     const that = this;
-    const audio = wx.createInnerAudioContext();
+    const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'guide' });
     audio.obeyMuteSwitch = false;       // 静音开关下也出声（语音导览属于内容消费）
     audio.onPlay(() => {
+      audioSession.keepAwake('guideAudio', true);
       that.setData({ audioPlaying: true, audioLoading: false, audioError: '' });
     });
     audio.onPause(() => {
+      audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false });
     });
     audio.onStop(() => {
+      audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onEnded(() => {
+      audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onError((err) => {
       const msg = (err && err.errMsg) ? err.errMsg : '音频加载失败';
+      audioSession.keepAwake('guideAudio', false);
       that.setData({ audioPlaying: false, audioLoading: false, audioError: msg });
       cyToast(msg);
     });
@@ -6637,6 +8014,10 @@ Page({
    *  audioNodeId 在这里存字符串键('q' / 'optA'),节点侧存的是数字 nodeId,=== 比较不会撞。 */
   _toggleMediaAudio(key, url) {
     if (!url) return;
+    if (typeof url === 'string' && url.startsWith('/audio/merchant-games/')) {
+      url = bundledMerchantGameAudioPath(url);
+      if (!url) { cyToast('音频素材不存在'); return; }
+    }
     this.initAudio();
     const audio = this._audio;
     const same = this.data.audioNodeId === key;
@@ -6670,6 +8051,8 @@ Page({
   },
 
   pauseAudio() {
+    // 走统一音频会话:登记过的 ctx(导览/旁白/玩法音乐/NPC 语音)一并暂停,并记下谁在播
+    audioSession.pauseAll();
     if (!this._audio) return;
     try { this._audio.pause(); } catch (e) {}
     // 不清理 audioNodeId——回前台可继续播同一段
@@ -6677,6 +8060,7 @@ Page({
 
   destroyAudio() {
     if (!this._audio) return;
+    audioSession.unregister(this._audio);
     try { this._audio.destroy(); } catch (e) {}
     this._audio = null;
     this.setData({ audioPlaying: false, audioLoading: false, audioError: '', audioNodeId: null });
@@ -6684,8 +8068,57 @@ Page({
 
   onShareAppMessage(event) {
     return activityShareFromEvent(event)
-      || { title: '来城瘾,走一段城市探索', path: '/pages/play/index?activityId=' + this.data.activityId };
+      || { title: '来城瘾，走一段城市探索', path: '/pages/play/index?activityId=' + this.data.activityId };
   },
   // FE-17 朋友圈分享(游玩页高传播)
-  onShareTimeline() { return { title: '来城瘾,走一段城市探索', query: 'activityId=' + this.data.activityId }; }
+  onShareTimeline() { return { title: '来城瘾，走一段城市探索', query: 'activityId=' + this.data.activityId }; },
+
+  /* v13 通关勋章页:只在整个主题走完时出。勋章取本次真拿到的;一枚没有就用这个主题本身(通关是真的)。
+     四格统计只写拿得到的数(用时 / 步行 / 站点或商家 / 邮票或解谜分);新纪录只在解谜分超过个人最好时出。 */
+  _openMedalScreen() {
+    if (!this.data.allDone) return;
+    const shop = this.data.mode === 2;
+    const mics = ['env', 'leaf', 'moon', 'key'];
+    let items = (this.data.finishMedalList || []).map((m, i) => ({ key: m.key || 'm' + i, name: m.name, sub: m.sub, img: m.img || '', mic: mics[i % 4] }));
+    if (!items.length) items = [{ key: 'theme', name: this.data.topicName || '主题通关', sub: shop ? '全部去完' : '主题通关', img: '', mic: shop ? 'stamp' : 'env' }];
+    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const hms = sec > 0 ? Math.floor(sec / 3600) + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0') + ':' + String(Math.floor(sec) % 60).padStart(2, '0') : '';
+    const km = this._reviewDistanceKm(this._reviewOrderedNodes());
+    const stats = [];
+    if (hms) stats.push({ k: '用时', v: hms, glyph: 'clock' });
+    if (km) stats.push({ k: '步行 · 公里', v: km, glyph: 'walk' });
+    if (this.data.total) stats.push({ k: shop ? '去过 · 家' : '节点', v: this.data.doneCount + '/' + this.data.total, glyph: shop ? 'shop' : 'book' });
+    if (shop && this.data.finishStamps.length) stats.push({ k: '邮票 · 枚', v: String(this.data.finishStamps.length), glyph: 'stamp' });
+    else if (!shop && this.data.finishPuzzleCount) stats.push({ k: '解谜分', v: String(this.data.finishPuzzleScore), glyph: 'stamp' });
+    const best = Number(this.data.finishPuzzleBest) || 0, score = Number(this.data.finishPuzzleScore) || 0;
+    const record = !shop && best > 0 && score > best ? { label: '解谜分 · 个人最好', text: '比上次最好多 ' + (score - best) + ' 分', tag: 'BEST' } : null;
+    this.setData({ medalScreen: { show: true, items, title: shop ? '探店完成' : '主题通关', sub: (this.data.topicName ? this.data.topicName + ' · ' : '') + '获得 ' + items.length + ' 枚勋章' + (items.length > 1 ? '，点或拖动切换' : ''), stats: stats.slice(0, 4), record } });
+  },
+  onMedalRecords() { this.setData({ 'medalScreen.show': false }); },
+  // 2026-10-23 弹层动效:手动关闭的面板先挂 is-out 播退场(full 档 280ms = --cy-motion-sheet-full-out),
+  // 播完再卸载;减动效直接卸载。程序里一关一开的切换不走这里(那是直接换下一层,不叠)。
+  _outThen(which) {
+    const journal = which === 'journal';
+    const still = () => (journal ? this.data.journalOut : this.data.sheetOut);
+    const unmount = () => {
+      if (journal) this.setData({ journalOut: false, showJournal: false });
+      else this.setData({ sheetOut: false, 'sheet.show': false });
+    };
+    if (this.data.reducedMotion) { unmount(); return; }
+    if (still()) return;
+    if (journal) this.setData({ journalOut: true });
+    else this.setData({ sheetOut: true });
+    // 退场期间又被打开(打开处会把标记清回 false):不再卸载新开的那一层
+    setTimeout(() => { if (still()) unmount(); }, 280);
+  },
+
+  // 2026-10-23 弹层动效:右上角工具菜单原来一帧收起;点遮罩 / 再点按钮先淡出(--cy-motion-fast 140ms)再卸载。
+  // 菜单里点某一项去别处(扫码、打开章节…)仍是直接收起,马上接下一层,不会两层同时动。
+  _toolsClose() {
+    if (!this.data.sessionToolsOpen) return;
+    if (this.data.reducedMotion) { this.setData({ sessionToolsOpen: false, toolsOut: false }); return; }
+    if (this.data.toolsOut) return;
+    this.setData({ toolsOut: true });
+    setTimeout(() => { if (this.data.toolsOut) this.setData({ sessionToolsOpen: false, toolsOut: false }); }, 140);
+  },
 });

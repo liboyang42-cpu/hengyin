@@ -10,6 +10,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
@@ -20,14 +21,18 @@ import com.chengyinhub.common.core.domain.model.LoginAppUser;
 import com.chengyinhub.common.utils.SecurityUtils;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.ip.IpUtils;
+import com.chengyinhub.framework.config.DeadlockRetryConfig;
 
 /**
  * 限流处理
+ *
+ * <p>排在 @DeadlockRetry 外层：死锁重试整笔重来时不再计一次限流（Redis 计数不随事务回滚）。
  *
  * @author ruoyi
  */
 @Aspect
 @Component
+@Order(DeadlockRetryConfig.ORDER - 1)
 public class RateLimiterAspect
 {
     private static final Logger log = LoggerFactory.getLogger(RateLimiterAspect.class);
@@ -71,7 +76,9 @@ public class RateLimiterAspect
         }
         catch (Exception e)
         {
-            throw new RuntimeException("服务器限流异常，请稍候再试");
+            // 保留根因：Redis 连接/池异常要能被 RuntimeFailureAlarmFilter 识别为 runtime.redis.connection 告警，
+            // 而不是一律记成无类型的 RuntimeException。对用户的文案不变。
+            throw new RuntimeException("服务器限流异常，请稍候再试", e);
         }
     }
 

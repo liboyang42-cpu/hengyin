@@ -97,6 +97,36 @@ class ApiMedalControllerTest {
         assertNotNull(earned.get("getTime"));
     }
 
+    private static PlayerBadge badge(String code, long sourceId) {
+        PlayerBadge badge = new PlayerBadge();
+        badge.setBadgeCode(code);
+        badge.setBadgeName(code);
+        badge.setSourceId(sourceId);
+        badge.setObtainTime(new Date());
+        return badge;
+    }
+
+    @Test
+    void wall_shows_one_achievement_per_badge_code_even_when_granted_for_several_sources() {
+        when(playerNodeProgressService.selectPlayerNodeProgressList(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Collections.emptyList());
+        when(playerBadgeMapper.selectListByMember(MEMBER_ID)).thenReturn(java.util.Arrays.asList(
+                badge("TOPIC_CLEAR", 9L), badge("TOPIC_CLEAR", 10L), badge("MILE_10", 0L), badge("TOPIC_CLEAR", 11L)));
+
+        ApiMedalController loggedIn = spy(controller);
+        doReturn(MEMBER_ID).when(loggedIn).getAppUserId();
+
+        AjaxResult response = loggedIn.wall();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.get("data");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> medals = (List<Map<String, Object>>) data.get("medals");
+        assertEquals(2, medals.size());
+        assertEquals(2, data.get("count"));
+        assertEquals("TOPIC_CLEAR", medals.get(0).get("badgeCode"));
+        assertEquals("MILE_10", medals.get(1).get("badgeCode"));
+    }
+
     @Test
     void wall_arrivalOnly_row_does_not_earn_template_medal() {
         PlayerNodeProgress arrivedOnly = new PlayerNodeProgress();

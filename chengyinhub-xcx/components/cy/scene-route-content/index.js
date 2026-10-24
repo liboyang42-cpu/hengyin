@@ -52,7 +52,7 @@ function amountText(value) {
 }
 
 function nameOf(item) {
-  return valueOf(item, ['name', 'title', 'topicName', 'activityName', 'templateName', 'merchantName', 'couponName']) || '记录名称待确认'
+  return valueOf(item, ['name', 'title', 'topicName', 'activityName', 'templateName', 'merchantName', 'couponName']) || '—'
 }
 
 function normalizeRows(rows, sceneId) {
@@ -160,7 +160,7 @@ Component({
       this._loadToken = (this._loadToken || 0) + 1
       this._submitToken = (this._submitToken || 0) + 1
     },
-  },
+  }, pageLifetimes: { show() { this._navigating = false } },
 
   methods: {
     loadScene() {
@@ -182,7 +182,7 @@ Component({
         return
       }
       if (config.requiresId && !config.data.id) {
-        this.setData({ state: 'error', errorText: '缺少记录参数，请返回上一级重新进入' })
+        this.setData({ state: 'error', errorText: '链接已失效，请返回重新进入' })
         return
       }
       if (sceneId === 'settings-likes') {
@@ -210,7 +210,7 @@ Component({
         success: (res) => {
           if (token !== this._loadToken) return
           if (!isOk(res)) {
-            this.setData({ state: 'error', errorText: (res && res.msg) || '服务暂时没有响应' })
+            this.setData({ state: 'error', errorText: (res && res.msg) || '服务暂不可用' })
             return
           }
           const access = merchantAccessPolicy.normalizeMerchantAccess(payloadOf(res))
@@ -245,7 +245,7 @@ Component({
         success: (res) => {
           if (token !== this._loadToken) return
           if (!isOk(res)) {
-            this.setData({ state: 'error', errorText: (res && res.msg) || '服务暂时没有响应' })
+            this.setData({ state: 'error', errorText: (res && res.msg) || '服务暂不可用' })
             return
           }
           this.applyPayload(sceneId, payloadForScene(sceneId, res), config.formType, params)
@@ -254,7 +254,7 @@ Component({
           if (token === this._loadToken) this.setData({ state: 'error', errorText: '网络没连上，请稍后重试' })
         },
         successStatusAbnormal: () => {
-          if (token === this._loadToken) this.setData({ state: 'error', errorText: '服务暂时不可用，请稍后重试' })
+          if (token === this._loadToken) this.setData({ state: 'error', errorText: '服务暂不可用，请稍后重试' })
         },
       })
     },
@@ -320,7 +320,7 @@ Component({
         'member-withdraw-history': '还没有提现记录',
         'member-order-history': '还没有订单',
         'settings-likes': '还没有收藏内容',
-        'merchant-citynode': '还没有城市据点',
+        'merchant-citynode': '还没有城市节点',
         'club-manage': '还没有可管理的俱乐部',
       }
       return texts[sceneId] || '这里还没有记录'
@@ -339,7 +339,7 @@ Component({
       const id = item.id
       if (this.data.sceneId === 'member-order-history' && id) this.emitOpen('member-order-detail', { id })
       else if (this.data.sceneId === 'settings-how-to-play' && id) this.emitOpen('settings-how-to-play-detail', { id })
-      else if (this.data.sceneId === 'settings-likes' && id) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id })
+      else if (this.data.sceneId === 'settings-likes' && id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false } }) }
       else if (this.data.sceneId === 'merchant-citynode' && item.poiId) this.emitOpen('qr-citynode', { poiId: item.poiId, name: item.title })
     },
 
@@ -362,9 +362,9 @@ Component({
                 toast((res && res.msg) || '操作失败')
                 return
               }
-              const items = this.data.items.slice()
-              items.splice(index, 1)
-              this.setData({ items, state: items.length ? 'ready' : 'empty' })
+              // BL-190:按 id 移除，请求期间列表重载过也不会删错行
+              const items = this.data.items.filter((row) => !row || row.id !== item.id)
+              if (items.length !== this.data.items.length) this.setData({ items, state: items.length ? 'ready' : 'empty' })
               toast.success('取消点赞成功')
             },
             fail: () => toast('网络错误，请重试'),
@@ -401,7 +401,7 @@ Component({
     onNestedTransferOwner() {
       const clubId = this.data.params && (this.data.params.id || this.data.params.clubId)
       if (!clubId) return
-      wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId })
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/governance/index?clubId=' + clubId, complete: () => { this._navigating = false } })
     },
     onNestedDirtyChange(event) {
       this.triggerEvent('dirtychange', { dirty: !!(event.detail && event.detail.dirty) })
@@ -494,7 +494,7 @@ Component({
         return
       }
       if (sceneId === 'merchant-citynode' && !this.data.merchantAccess.canManageProjects) {
-        toast('当前岗位没有据点管理权限')
+        toast('当前岗位没有节点管理权限')
         return
       }
       // 商家入驻先登记实名再发业务单；主理人能力档案没有票费，直接提交。
@@ -542,7 +542,7 @@ Component({
           }
         },
         successStatusAbnormal: () => {
-          if (token === this._submitToken && sceneId === this.data.sceneId) this.setData({ submitting: false, submitError: '服务暂时不可用，已填写内容不会丢失，请重试' })
+          if (token === this._submitToken && sceneId === this.data.sceneId) this.setData({ submitting: false, submitError: '提交失败，请重试' })
         },
         cancel: () => {
           if (token === this._submitToken && sceneId === this.data.sceneId) this.setData({ submitting: false, submitError: '' })

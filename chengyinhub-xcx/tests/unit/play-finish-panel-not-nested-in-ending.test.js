@@ -23,7 +23,7 @@ const WXML = path.join(ROOT, 'pages/play/index.wxml')
 function endingBlockRange(source) {
   const lines = source.split('\n')
   const openIndex = lines.findIndex(line => line.includes('class="finsheet__game-ending"'))
-  assert.notEqual(openIndex, -1, '找不到 finsheet__game-ending 起始标签,选择器可能被改名了')
+  assert.notEqual(openIndex, -1, '找不到 finsheet__game-ending 起始标签，选择器可能被改名了')
 
   // 自闭合的 <view ... /> 不增加深度
   const openCount = line => (line.match(/<view\b(?![^>]*\/>)/g) || []).length

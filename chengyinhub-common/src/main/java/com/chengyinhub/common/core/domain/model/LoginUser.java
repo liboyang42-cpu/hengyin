@@ -40,6 +40,7 @@ public class LoginUser implements UserDetails
      * 过期时间
      */
     private Long expireTime;
+    private Long absoluteExpireTime;
 
     /**
      * 登录IP地址
@@ -238,6 +239,9 @@ public class LoginUser implements UserDetails
         this.expireTime = expireTime;
     }
 
+    public Long getAbsoluteExpireTime() { return absoluteExpireTime; }
+    public void setAbsoluteExpireTime(Long absoluteExpireTime) { this.absoluteExpireTime = absoluteExpireTime; }
+
     public Set<String> getPermissions()
     {
         return permissions;
@@ -261,6 +265,6 @@ public class LoginUser implements UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
-        return null;
+        return java.util.Collections.emptyList();
     }
 }

@@ -243,7 +243,7 @@ function normalizeTeamActions(value) {
   const allowedStatuses = new Set(['JOINED', 'ASSIGNED', 'CONFIRMED', 'IN_PROGRESS', 'SUBMITTED', 'COMPLETED', 'FALLBACK_COMPLETED'])
   const labels = {
     JOINED: '待分配', ASSIGNED: '待确认身份', CONFIRMED: '身份已确认', IN_PROGRESS: '行动中',
-    SUBMITTED: '等待核验', COMPLETED: '已完成', FALLBACK_COMPLETED: '已通过兜底完成',
+    SUBMITTED: '等待核验', COMPLETED: '已完成', FALLBACK_COMPLETED: '已保底完成',
   }
   return value.map((item) => {
     const status = safeText(item && item.status, 40).toUpperCase()
@@ -342,6 +342,7 @@ function normalizePlayerPendingWrite(value, activityId) {
       nodeId,
       requestId,
       expectedRevision: revision,
+      ...(command.authorityEpoch != null ? { authorityEpoch: command.authorityEpoch } : {}),
       action,
       payload,
     },
@@ -378,6 +379,8 @@ function normalizePlayerProjection(raw) {
     activityId,
     status,
     revision,
+    ...((raw.authorityEpoch != null || player.authorityEpoch != null)
+      ? { authorityEpoch: raw.authorityEpoch != null ? raw.authorityEpoch : player.authorityEpoch } : {}),
     snapshotAt: safeSnapshotAt(raw.snapshotAt),
     availableActions,
     canSubmitTask: availableActions.includes('PLAYER_SUBMIT'),
@@ -419,6 +422,7 @@ function buildPlayerChoiceInput(projection, choiceId, requestId) {
     nodeId,
     requestId: stableRequestId,
     expectedRevision: revision,
+    ...(source.authorityEpoch != null ? { authorityEpoch: source.authorityEpoch } : {}),
     action: 'PLAYER_CHOICE',
     payload: { choiceId: choice },
   }
@@ -435,6 +439,7 @@ function buildPlayerRoleConfirmInput(projection, requestId) {
     nodeId: null,
     requestId: stableRequestId,
     expectedRevision: revision,
+    ...(source.authorityEpoch != null ? { authorityEpoch: source.authorityEpoch } : {}),
     action: 'CONFIRM_ROLE',
     payload: {},
   }
@@ -456,6 +461,7 @@ function buildPlayerHintInput(projection, level, requestId) {
     nodeId,
     requestId: stableRequestId,
     expectedRevision: revision,
+    ...(source.authorityEpoch != null ? { authorityEpoch: source.authorityEpoch } : {}),
     action: 'PLAYER_HINT',
     payload: { level: hintLevel },
   }
@@ -475,6 +481,7 @@ function buildPlayerRevealInput(projection, requestId) {
     nodeId,
     requestId: stableRequestId,
     expectedRevision: revision,
+    ...(source.authorityEpoch != null ? { authorityEpoch: source.authorityEpoch } : {}),
     action: 'PLAYER_REVEAL',
     payload: {},
   }
@@ -494,6 +501,7 @@ function buildPlayerSubmissionInput(projection, taskCode, requestId, evidenceUrl
     nodeId,
     requestId: stableRequestId,
     expectedRevision: revision,
+    ...(source.authorityEpoch != null ? { authorityEpoch: source.authorityEpoch } : {}),
     action: 'PLAYER_SUBMIT',
     payload: { taskCode: code, evidenceUrls: evidence },
   }
@@ -504,7 +512,7 @@ function mergeConfirmedReceipt(projection, receipt) {
   if (!receipt || receipt.requestId !== projection.write.requestId) return projection
   if (receipt.outcome !== 'APPLIED' && receipt.outcome !== 'COMMITTED') return projection
   return Object.assign({}, projection, {
-    revision: safeRevision(receipt.revision),
+    revision: Math.max(safeRevision(projection.revision), safeRevision(receipt.revision)),
     write: {
       status: 'confirmed',
       requestId: projection.write.requestId,

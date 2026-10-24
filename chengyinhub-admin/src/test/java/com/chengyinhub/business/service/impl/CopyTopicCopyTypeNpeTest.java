@@ -60,6 +60,11 @@ class CopyTopicCopyTypeNpeTest {
         }).when(cmsTopicMapper).insertCmsTopic(any());
 
         svc = new CmsTopicServiceImpl();
+
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "productRoleService", mock(IProductRoleService.class));
         // [W4闭环] copyNodes 会查节点模板决定是否深拷贝;本测试聚焦 copyType 语义,
@@ -146,6 +151,11 @@ class CopyTopicCopyTypeNpeTest {
         node.setTemplateId(77L);   // ←「游戏」:节点挂的 CmsMemberTemplate
         node.setXpValue(50);       // ← M7 停靠节点探索值
         when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(node));
+        // CORE OWN-C03-13：复制写入节点后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        doAnswer(inv -> {
+            ((CmsTopicNode) inv.getArgument(0)).setId(41L);
+            return 1;
+        }).when(nodeMapper).insertCmsTopicNode(any());
 
         Map<String, Object> params = new HashMap<>();
         params.put("memberId", MEMBER);

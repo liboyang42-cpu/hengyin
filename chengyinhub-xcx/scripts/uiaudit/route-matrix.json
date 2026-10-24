@@ -3,8 +3,8 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 130,
-    "scenes": 26,
+    "routes": 144,
+    "scenes": 27,
     "added": 0,
     "removed": 0
   },
@@ -52,7 +52,7 @@
       "pkg": "main",
       "tabBar": true,
       "role": "player",
-      "needsLogin": false,
+      "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,
@@ -77,7 +77,7 @@
       "pkg": "main",
       "tabBar": false,
       "role": "player",
-      "needsLogin": false,
+      "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,
@@ -248,6 +248,19 @@
       "hasWxml": true
     },
     {
+      "pagePath": "pages/activity/official-organizer/index",
+      "pkg": "pages/activity",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageA/pages/myproject/index",
       "pkg": "subpackageA",
       "tabBar": false,
@@ -358,7 +371,7 @@
       "pkg": "subpackageP3",
       "tabBar": false,
       "role": "player",
-      "needsLogin": false,
+      "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,
@@ -479,23 +492,10 @@
       "hasWxml": true
     },
     {
-      "pagePath": "pages/publish/templateadd/templateadd",
-      "pkg": "pages/publish",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": false,
-      "needsData": true,
-      "dataKeys": [
-        "id"
-      ],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
       "pagePath": "pages/publish/template-intro/index",
       "pkg": "pages/publish",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
@@ -510,6 +510,20 @@
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/club/badges/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "id"
+      ],
       "hasJs": true,
       "hasWxml": true
     },
@@ -562,8 +576,7 @@
       "dataKeys": [
         "id",
         "postId",
-        "topicId",
-        "chapterId"
+        "topicId"
       ],
       "hasJs": true,
       "hasWxml": true
@@ -1109,6 +1122,28 @@
       "hasWxml": true
     },
     {
+      "pagePath": "pages/merchant/verify-records/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/crm-campaigns/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "pages/merchant/team/index",
       "pkg": "pages/merchant",
       "tabBar": false,
@@ -1520,6 +1555,41 @@
       "hasWxml": true
     },
     {
+      "pagePath": "subpackageMember/points-history/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/report-mine/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/report-detail/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "reportId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageMember/signup/index",
       "pkg": "subpackageMember",
       "tabBar": false,
@@ -1625,6 +1695,96 @@
       "dataKeys": [],
       "hasJs": true,
       "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/my-teams/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/official-routes/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageRoam/official-route/index",
+      "pkg": "subpackageRoam",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageTools/capsule/index",
+      "pkg": "subpackageTools",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageTools/monthly-recap/index",
+      "pkg": "subpackageTools",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageTools/exploration-goals/index",
+      "pkg": "subpackageTools",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageTools/anniversary/index",
+      "pkg": "subpackageTools",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageTools/exploration-export/index",
+      "pkg": "subpackageTools",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
     }
   ],
   "scenes": [
@@ -1654,7 +1814,7 @@
     },
     {
       "component": "scene-game-coupon-wallet",
-      "dir": "components/cy/scene-game-coupon-wallet",
+      "dir": "subpackageMember/components/cy/scene-game-coupon-wallet",
       "twin": {
         "route": "subpackageMember/coupon-wallet/index",
         "score": 12
@@ -1672,37 +1832,40 @@
       "component": "scene-member-invite-history",
       "dir": "components/cy/scene-member-invite-history",
       "twin": {
-        "route": "subpackageMember/myinvite/myinvite",
-        "score": 12
+        "route": "subpackageMember/points-history/index",
+        "score": 13
       }
     },
     {
       "component": "scene-member-order-detail",
       "dir": "subpackageMember/components/cy/scene-member-order-detail",
       "twin": {
-        "route": "pages/merchant/ledger/order-detail/index",
-        "score": 11
+        "route": "subpackageMember/report-detail/index",
+        "score": 12
       }
     },
     {
       "component": "scene-member-order-history",
       "dir": "subpackageMember/components/cy/scene-member-order-history",
       "twin": {
-        "route": "subpackageMember/order/order",
-        "score": 11
+        "route": "subpackageMember/points-history/index",
+        "score": 13
       }
     },
     {
       "component": "scene-member-participation-detail",
       "dir": "subpackageMember/components/scene-member-participation-detail",
-      "twin": null
+      "twin": {
+        "route": "subpackageMember/report-detail/index",
+        "score": 12
+      }
     },
     {
       "component": "scene-member-withdraw-history",
       "dir": "components/cy/scene-member-withdraw-history",
       "twin": {
-        "route": "pages/coop/withdraw/index",
-        "score": 8
+        "route": "subpackageMember/points-history/index",
+        "score": 13
       }
     },
     {
@@ -1770,6 +1933,11 @@
         "route": "subpackageRoam/poi-detail/index",
         "score": 13
       }
+    },
+    {
+      "component": "scene-roam-resume-bar",
+      "dir": "subpackageRoam/components/scene-roam-resume-bar",
+      "twin": null
     },
     {
       "component": "scene-roam-session",

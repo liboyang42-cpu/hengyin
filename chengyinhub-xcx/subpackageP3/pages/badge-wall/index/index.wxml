@@ -27,10 +27,10 @@
     </scroll-view>
   </block>
 
-  <scroll-view class="bw-list" scroll-y wx:if="{{viewMode === 'list' && badges.length && !loadFail && !partialFail}}">
+  <scroll-view class="bw-list" scroll-y wx:if="{{viewMode === 'list' && badges.length && !loadFail && !partialFail}}" style="{{pmList === 1 ? '--pm-b:1;' : (pmList === 2 ? '--pm-b-d:.32s;--pm-b-s:1;' : '')}}">
     <block wx:for="{{badgeGroups}}" wx:for-item="group" wx:key="key">
       <text class="bw-list-h" wx:if="{{group.title}}">{{group.title}}</text>
-      <view class="bw-list-row" wx:for="{{group.items}}" wx:for-item="item" wx:key="_idx" bindtap="onFbTap" data-idx="{{item._idx}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="bw-list-row" wx:for="{{group.items}}" wx:for-item="item" wx:key="_idx" bindtap="onFbTap" data-idx="{{item._idx}}" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{item._idx}};">
         <view class="bw-list-mark {{item.locked ? 'is-locked' : ''}}">
           <image wx:if="{{item.iconUrl}}" src="{{item.iconUrl}}" mode="aspectFit" />
           <cy-icon wx:else name="star" size="36" />
@@ -44,8 +44,13 @@
     </block>
   </scroll-view>
 
+  <!-- 列表模式首屏加载占位:数据未到前不留空白黑屏 -->
+  <view class="bw-list" wx:if="{{viewMode === 'list' && !loaded && !loadFail && !partialFail}}">
+    <cy-skeleton type="list" count="5" loading-label="正在加载勋章" />
+  </view>
+
   <cy-empty class="bw-empty-state" fill size="lg" title="还没有点亮勋章"
-    sub="完成一次城市探索或成长里程，第一枚勋章会在这里出现" cta="去探索" bind:cta="goExplore"
+    cta="去探索" bind:cta="goExplore"
     wx:if="{{loaded && !badges.length && !loadFail && !partialFail}}" />
 
   <!-- 原生 WebGL 覆盖层:普通 view 会被 canvas 原生层压住,返回必须留在 cover-view 上 -->
@@ -74,11 +79,11 @@
   </cover-view>
 
   <!-- 请求失败/部分数据失败:身份卡仍可见,但不能把缺失的城市纪念章静默当成完整结果 -->
-  <cy-error class="bw-error-state" wx:if="{{loadFail || partialFail || (glFail && viewMode === 'wall')}}" fill size="lg"
+  <cy-error load-failure="{{loadFail && !wallAuthRequired && !wallAccessDenied}}" class="bw-error-state" wx:if="{{loadFail || partialFail || (glFail && viewMode === 'wall')}}" fill size="lg"
     icon="/images/no_data.svg"
-    title="{{loadFail ? '勋章数据没有到达' : partialFail ? '部分勋章数据未到达，当前结果不完整' : glFail ? '勋章墙渲染失败' : ''}}"
-    sub="{{partialFail ? '当前结果不完整，请重试获取全部勋章。' : '网络或渲染暂时失败，重试会重新加载'}}"
-    retry="重试" bind:retry="loadData" />
+    title="{{wallAuthRequired ? '登录后查看我的勋章' : loadFail ? '勋章数据没有到达' : partialFail ? '部分勋章数据未到达，当前结果不完整' : glFail ? '勋章墙渲染失败' : ''}}"
+    sub="{{partialFail ? '部分内容未更新' : ''}}"
+    retry="{{wallAuthRequired ? '登录' : '重试'}}" bind:retry="retryWall" />
 
   <!-- 详情 veil + sheet:同样必须在原生 canvas 之上;外观照玩家场景弹窗 cy-scene-sheet(标题行只放标题与叉) -->
   <cover-view class="bw-veil {{sheetOn ? 'on' : ''}}" bindtap="closeSheet" catchtouchmove="noop" hover-class="cy-pressed" hover-stay-time="80"></cover-view>

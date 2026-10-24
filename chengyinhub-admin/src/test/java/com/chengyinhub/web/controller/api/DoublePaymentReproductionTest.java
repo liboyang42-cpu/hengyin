@@ -118,6 +118,8 @@ class DoublePaymentReproductionTest {
         CmsRegistration registration = registration();
         CoopOrder order = merchantOrder();
         when(registrationMapper.selectByverificationCode(CODE)).thenReturn(registration);
+        // A包核销在原事务内按原ID锁读当前订单(requireCurrentUsableRegistration)；同一已付原行。
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(REGISTRATION)).thenReturn(registration);
         when(registrationMapper.verifyIfNotVerified(REGISTRATION, MERCHANT)).thenReturn(1);
         when(scanMapper.selectCmsRegistrationScanList(any()))
                 .thenReturn(Collections.<CmsRegistrationScan>emptyList());
@@ -176,6 +178,10 @@ class DoublePaymentReproductionTest {
         when(transactionManager.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
         CoopComplaintMapper complaintMapper = mock(CoopComplaintMapper.class);
         topicService = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(topicService, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicService, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(topicService, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(topicService, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(topicService, "settlementRuleService", ruleService);
@@ -273,6 +279,7 @@ class DoublePaymentReproductionTest {
         registration.setOwnerId(TOPIC);
         registration.setMemberId(PLAYER);
         registration.setPaymentStatus(2);
+        registration.setRegistrationStatus(2); // 已付订单的真实状态即报名成功
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setFeePlatformRate(new BigDecimal("0.10"));
         return registration;

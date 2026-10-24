@@ -41,6 +41,7 @@ function requestPhoto(data) {
 Page({
   data: {
     node: null, notFound: false, statusBarHeight: 20, regId: 0,
+    safetyRatingShow: false,
     // sheetTop 兜底 69px(常规机胶囊底+5):.mp-sheet 的 max-height 用它,不能让 calc 引用空值
     chrome: { actionTop: 28, actionRight: 12, contentTop: 76, sheetTop: 69 },
     heroImg: '', busy: false, feedback: '', degradedMessage: '',
@@ -199,7 +200,7 @@ Page({
     })
     const fresh = await this._readbackNode()
     if (!fresh) {
-      this.setData({ 'game.errText': '还是没核对上，网络恢复后点这里再试 · 期间请勿重复提交' })
+      this.setData({ 'game.errText': '还是没确认上，网络恢复后点这里再试 · 期间请勿重复提交' })
       return
     }
     if (fresh.gameDone) {
@@ -229,6 +230,14 @@ Page({
   goBack() {
     wx.navigateBack({ delta: 1, fail: () => wx.reLaunch({ url: '/pages/play/index' }) })
   },
+
+  // BL-89 到访安全感受评价:只在已核销后可点,资格与重复评价由后端判定并在半屏内如实回显。
+  openSafetyRating() {
+    const node = this.data.node
+    if (!node || !node.done || !node.merchantId) return
+    this.setData({ safetyRatingShow: true })
+  },
+  closeSafetyRating() { this.setData({ safetyRatingShow: false }) },
 
   openMap() {
     const node = this.data.node
@@ -297,7 +306,7 @@ Page({
     const before = this.data.node || {}
     const fresh = await this._readbackNode()
     if (!fresh) {
-      this.setData({ degradedMessage: '还是没核对上，网络恢复后点这里再试 · 期间请勿重复核销' })
+      this.setData({ degradedMessage: '还是没确认上，网络恢复后点这里再试 · 期间请勿重复核销' })
       return
     }
     const landed = (!!fresh.done && !before.done)
@@ -417,7 +426,7 @@ Page({
       requestId: `merchant-${eventType.toLowerCase()}-${merchantId}-${Date.now()}`,
     }), { json: true })
     if (!(write.code === 200 || write.code === '200')) {
-      this.setData({ consentBusy: false, merchantConsent: 'UNAVAILABLE', feedback: write.msg || '门店授权写入失败，核销码未打开' })
+      this.setData({ consentBusy: false, merchantConsent: 'UNAVAILABLE', feedback: write.msg || '门店授权失败，核销码未打开' })
       return false
     }
     const readback = await this._readbackConsent()
@@ -449,4 +458,7 @@ Page({
       scopeId: this.data.node && this.data.node.merchantId,
     }
   },
+
+  // 遮罩 catchtouchmove 吃掉滑动,面板打开时底下页面不跟着滚
+  noop() {},
 })

@@ -7,12 +7,13 @@
 // 这一点与猜数字相反 —— 那边容差能反推出答案区间,所以那边藏。
 //
 // 判定仍在服务端:客户端报的毫秒数是设备时钟算的,而设备时钟玩家改得动。
-// 后端 SUBMIT_STOPWATCH 用 START_CHALLENGE 记的服务器时间戳复核。
+// 后端用 START_CHALLENGE 的服务端经过时间检查上报值的合理性上界，
+// 命中仍按本机上报的停表毫秒数计算，不是服务端精确测量。
 
 const TICK_MS = 50;                 // 与原型同值
 const HIDE_AFTER_MS = 1000;         // 开跑 1 秒后数字消失
 const MASK = '––:––.––';
-const EYEBROW = '把手机拿到面前,随时可以开始';
+const EYEBROW = '把手机拿到面前，随时可以开始';
 const CAP_ON = '开跑 1 秒后数字消失 · 点屏幕任意处停';
 const CAP_HID = '数字已隐藏 · 点屏幕任意处停';
 
@@ -39,6 +40,8 @@ function tierLabel(diff, tolSeconds) {
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
+// C1:停表毫秒是本机自报;挑战身份与奖励上限只搬服务端的
+const { withAttempt, freshAttempt, rewardNote } = require('../../utils/sensor-contract.js');
 
 Component({
   behaviors: [reducedMotionBehavior],
@@ -49,6 +52,9 @@ Component({
     targetSeconds: { type: Number, value: 10 },
     toleranceMs: { type: Number, value: 300 },
     tries: { type: Number, value: 0 },      // 0 = 不限
+    // C1:服务端开表发的挑战身份(0 = 没有)与奖励上限(空 = 服务端没说,什么都不承诺)
+    attemptId: { type: Number, value: 0 },
+    rewardCeiling: { type: String, value: '' },
   },
   data: {
     phase: 'intro',                          // intro | run | paused | over
@@ -58,15 +64,17 @@ Component({
     timeText: '00:00.00',
     cap: CAP_ON,
     round: 1,
-    targetText: '10.00',
-    tolText: '0.30',
+    targetText: '10.000',
+    tolText: '0.300',
     dev: '',                                 // 没停准时的偏差「早 2.40 秒」
     left: 0,                                 // 没停准时还剩几次(台面记账,这里只读来显示)
+    rewardNote: '',
   },
   /* ⚠️ 这里监听的四个全是**属性**,组件内部一个都不许写(targetText / tolText 才是
      内部那份)。observer 监听它、内部又写它,会自己触发自己,死循环把运行时打挂,
      而且一条错都不报 —— 掷骰子那屏踩过一次,查了很久才发现不是环境的问题。 */
   observers: {
+    rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, kicker, targetSeconds, toleranceMs, tries': function (show, kicker, target, tol) {
       this._stop();
       if (!show) return;
@@ -75,8 +83,8 @@ Component({
         cap: CAP_ON, round: 1,
         // 商家没填标题就用原型那句 —— 空着的话这一屏最上面会缺一行
         eyebrow: String(kicker || '').trim() || EYEBROW,
-        targetText: Number(target || 0).toFixed(2),
-        tolText: (Number(tol || 0) / 1000).toFixed(2),
+        targetText: Number(target || 0).toFixed(3),
+        tolText: (Number(tol || 0) / 1000).toFixed(3),
       });
     },
   },
@@ -100,10 +108,12 @@ Component({
 
     onRun() {
       this._t0 = Date.now();
+      // 开局那一刻手里的号是上一局的;只有这一局开表后服务端新发的号才随成绩交
+      this._attemptAtRun = this.data.attemptId;
       this.setData({ phase: 'run', big: '0.00', hidden: false, timeText: '00:00.00', cap: CAP_ON });
       this._stop();
       this._timer = setInterval(() => this._tick(), TICK_MS);
-      // 开表要报给服务端:成绩按服务器时间复核(设备时钟玩家改得动),
+      // 开表要报给服务端，用于检查本机上报用时的合理性上界；
       // 不先开表,SUBMIT_STOPWATCH 会被判成「还没开始」
       this.triggerEvent('start');
     },
@@ -165,7 +175,8 @@ Component({
         if (hit) stage.win(tierLabel(diff, tol) + ' · ' + detail);
         else if (exhausted) stage.fail(false);
       }
-      this.triggerEvent('submit', { elapsedMs: elapsed, deviationMs: diff * 1000, hit: hit });
+      this.triggerEvent('submit', withAttempt({ elapsedMs: elapsed, deviationMs: diff * 1000, hit: hit },
+        { attemptId: freshAttempt(this.data.attemptId, this._attemptAtRun) }));
     },
 
     onVerdict(e) { this.triggerEvent('verdict', e.detail); },

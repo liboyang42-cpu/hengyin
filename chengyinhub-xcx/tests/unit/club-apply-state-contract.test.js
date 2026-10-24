@@ -297,7 +297,7 @@ test('开场形变的起止几何按中心对中心算，不是按顶边', () =>
   const m = h.page.data.morph
   assert.ok(m, '没量到几何就不该进形变态')
   // CTA 中心 y = 600 + 48/2 = 624;进度轨中心 y = 54 + 3/2 = 55.5
-  assert.equal(m.dy, 55.5 - 624, 'scaleY 以中心为原点,位移必须按中心算')
+  assert.equal(m.dy, 55.5 - 624, 'scaleY 以中心为原点，位移必须按中心算')
   assert.equal(m.sy, 3 / 48, '纵向压扁比 = 轨道高 / 胶囊高')
   // 白色占比 = 第一段 / 整条轨道(含段间空隙),不是写死的 25%
   assert.equal(m.fx, 82.75 / (16 + 3 * 86.75 + 82.75 - 16))
@@ -316,7 +316,7 @@ test('负控：位移按顶边算(漏掉中心修正)必须判红', () => {
     'dy: first.top - cta.top,')
   assert.notEqual(broken, src, '负控锚点失效')
   assert.match(src, /first\.height \/ 2\) - \(cta\.top \+ cta\.height \/ 2\)/,
-    '位移必须按中心对中心算:scaleY 以中心为原点,按顶边算会差半个胶囊高')
+    '位移必须按中心对中心算:scaleY 以中心为原点，按顶边算会差半个胶囊高')
 })
 
 test('减动效时不放形变，直接切到第一步', () => {
@@ -346,6 +346,119 @@ test('申请主理人不要求实名，直接提交资料且不发送身份证�
   assert.equal(h.page.data.mode, 'done')
 })
 
+test('删除最后一张失败资质图后恢复无资质提交', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['wxfile://tmp/failed-cert.jpg'], certErrorIndexes: [0],
+  })
+  h.page.validate()
+  assert.equal(h.page.data.canNext, false)
+
+  h.page.removeCert({ detail: { index: 0 } })
+
+  assert.equal(h.page.data.certImages.length, 0)
+  assert.equal(h.page.data.certErrorIndexes.length, 0)
+  assert.equal(h.page.data.canNext, true)
+  h.page.submit()
+  assert.equal(h.requests.length, 1)
+  assert.equal(JSON.parse(h.requests[0].data).certImages, '')
+})
+
+test('删除一张资质图后仍有失败项不得提交', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['wxfile://tmp/first.jpg', 'wxfile://tmp/second.jpg'],
+    certErrorIndexes: [0, 1],
+  })
+  h.page.validate()
+  h.page.removeCert({ detail: { index: 0 } })
+
+  assert.equal(h.page.data.certImages.length, 1)
+  assert.equal(h.page.data.certErrorIndexes.length, 1)
+  assert.equal(h.page.data.certErrorIndexes[0], 0)
+  assert.equal(h.page.data.canNext, false)
+  h.page.submit()
+  assert.equal(h.requests.length, 0)
+})
+
+test('删除失败资质图后仍有上传项不得提交', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['wxfile://tmp/uploading.jpg', 'wxfile://tmp/failed.jpg'],
+    certUploading: [0], certErrorIndexes: [1],
+  })
+  h.page.validate()
+  h.page.removeCert({ detail: { index: 1 } })
+
+  assert.equal(h.page.data.certErrorIndexes.length, 0)
+  assert.equal(h.page.data.certUploading.length, 1)
+  assert.equal(h.page.data.canNext, false)
+  h.page.submit()
+  assert.equal(h.requests.length, 0)
+})
+
+test('删除失败资质图后错误标记随索引重排贴到正确图片', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['/profile/upload/ok-a.jpg', 'wxfile://tmp/failed-b.jpg', '/profile/upload/ok-c.jpg', 'wxfile://tmp/failed-d.jpg'],
+    certErrorIndexes: [1, 3],
+  })
+  h.page.validate()
+  h.page.removeCert({ detail: { index: 1 } })
+
+  assert.deepEqual(h.page.data.certImages, ['/profile/upload/ok-a.jpg', '/profile/upload/ok-c.jpg', 'wxfile://tmp/failed-d.jpg'])
+  assert.deepEqual(h.page.data.certErrorIndexes, [2])
+  assert.equal(h.page.data.certImages[h.page.data.certErrorIndexes[0]], 'wxfile://tmp/failed-d.jpg')
+  assert.equal(h.page.data.canNext, false)
+})
+
+test('异常删除索引不删错资质图也不清错误标记', () => {
+  for (const index of [-1, 2, 9, 0.5, NaN, '0', '', null, undefined, true]) {
+    const h = loadPage()
+    const certImages = ['wxfile://tmp/first.jpg', 'wxfile://tmp/second-failed.jpg']
+    Object.assign(h.page.data, {
+      bootstrapState: 'ready', mode: 'form', step: 4,
+      certImages: certImages.slice(), certErrorIndexes: [1],
+    })
+    h.page.validate()
+    h.page.removeCert({ detail: { index } })
+    assert.deepEqual(h.page.data.certImages, certImages, String(index))
+    assert.deepEqual(h.page.data.certErrorIndexes, [1], String(index))
+    assert.equal(h.page.data.canNext, false, String(index))
+  }
+  const h = loadPage()
+  Object.assign(h.page.data, { step: 4, certImages: ['wxfile://tmp/only.jpg'], certErrorIndexes: [0] })
+  h.page.removeCert({})
+  h.page.removeCert(undefined)
+  assert.deepEqual(h.page.data.certImages, ['wxfile://tmp/only.jpg'])
+})
+
+test('真实页面 setData 回调延后执行时删除最后失败图后仍恢复提交', () => {
+  const h = loadPage()
+  const pending = []
+  // 真机 setData 回调在渲染层回包后才执行；回调前按钮仍应保持原态，回调后必须恢复。
+  h.page.setData = function (patch, done) {
+    Object.assign(this.data, patch)
+    if (done) pending.push(done)
+  }
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['wxfile://tmp/failed-cert.jpg'], certErrorIndexes: [0], canNext: false,
+  })
+  h.page.removeCert({ detail: { index: 0 } })
+  assert.equal(h.page.data.certImages.length, 0)
+  assert.equal(h.page.data.canNext, false)
+  assert.equal(pending.length, 1, '删除后必须挂 validate 回调')
+  pending.shift().call(h.page)
+  assert.equal(h.page.data.canNext, true)
+  h.page.submit()
+  assert.equal(h.requests.length, 1)
+})
+
 test('资质图片上传失败或仍在上传时不得提交本机临时路径', () => {
   const h = loadPage()
   Object.assign(h.page.data, {
@@ -365,4 +478,27 @@ test('资质图片上传失败或仍在上传时不得提交本机临时路径',
   assert.equal(h.page.data.canNext, false)
   h.page.submit()
   assert.equal(h.requests.length, 0)
+})
+
+function assertDirectLeaderActivationCopy(wxml) {
+  assert.doesNotMatch(wxml, /有证的话审核会快一些|等待审核|待审核|审核通过后/, '即时生效的身份申请不得暗示等待审核')
+  assert.match(wxml, /填完身份立即生效，不用等审核/)
+  assert.match(wxml, /class="st-desc">你已成为俱乐部主理人，身份立即生效。/)
+  assert.match(wxml, /用于后续等级评定/)
+}
+
+test('主理人身份立即生效，资质只说明后续等级评定', () => {
+  assertDirectLeaderActivationCopy(WXML)
+})
+
+test('负控：资质文案恢复审核提速暗示必须判红', () => {
+  const mutated = WXML.replace('用于后续等级评定', '有证的话审核会快一些')
+  assert.notEqual(mutated, WXML, '文案负控锚点必须存在')
+  assert.throws(() => assertDirectLeaderActivationCopy(mutated), /即时生效的身份申请不得暗示等待审核/)
+})
+
+test('负控：完成态失去身份立即生效提示必须判红', () => {
+  const mutated = WXML.replace('你已成为俱乐部主理人，身份立即生效。', '身份申请已提交。')
+  assert.notEqual(mutated, WXML, '完成态负控锚点必须存在')
+  assert.throws(() => assertDirectLeaderActivationCopy(mutated))
 })

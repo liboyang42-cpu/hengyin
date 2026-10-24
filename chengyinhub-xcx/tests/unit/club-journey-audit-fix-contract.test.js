@@ -49,7 +49,7 @@ function loadClubDetail(activityList) {
         '../../../utils/motion-preference.js': { readReducedMotion: () => false },
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
         '../../../utils/datetime': { toTimestamp: () => 0 },
-        '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+        '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
         '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
         '../../../utils/group-code-session.js': require('../../utils/group-code-session.js'),
         '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
@@ -57,15 +57,22 @@ function loadClubDetail(activityList) {
         '../../../utils/topic-share.js': require('../../utils/topic-share.js'),
         '../../../utils/response-shape.js': { isRecordList: Array.isArray, isRecord: (v) => !!v && typeof v === 'object' && !Array.isArray(v) },
         '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+        '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
         // 帖文卡的 variant 判定与广场共用一份,俱乐部页 require 的就是它
         '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
         // CU-C-60/CU-C-107:俱乐部页新增的三个 require(扫码路由表 / 核销写闸 / 正文摘要),
         // 都是纯模块,沙箱里给真实现。
         '../../../utils/verification-scan.js': require('../../utils/verification-scan.js'),
         '../../../utils/write-action-workflow.js': require('../../utils/write-action-workflow.js'),
+        '../../../utils/merchant-verification.js': require('../../utils/merchant-verification.js'),
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,
@@ -102,9 +109,9 @@ test('俱乐部详情场次与工具选择不得走 wx.showActionSheet', () => {
     '一周七场或场次名偏长时原生菜单直接 fail，点击无反馈；导演台已改 cy-sheet')
   // 负控:剥注释不能把判据剥成瞎子 —— 真调用必须照样被抓出来
   assert.match(stripJsComments('foo() { wx.showActionSheet({ itemList: [] }) }'), /wx\.showActionSheet/,
-    '剥注释后连真调用都不见了,这道门禁成了摆设')
+    '剥注释后连真调用都不见了，这道门禁成了摆设')
   assert.doesNotMatch(stripJsComments('// 不走 wx.showActionSheet,理由见上'), /wx\.showActionSheet/,
-    '注释里的提及仍被判违规,门禁会逼人删掉解释')
+    '注释里的提及仍被判违规，门禁会逼人删掉解释')
   assert.match(wxml, /choiceSheetShow/,
     '超过 6 项必须用半屏清单，不能再依赖系统 ActionSheet 的 6 项上限')
   assert.match(wxml, /bindtap="onChoiceSheetSelect"/)

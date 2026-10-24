@@ -30,7 +30,8 @@
         "list/index",
         "official-detail/index",
         "official-inbox/index",
-        "official-mine/index"
+        "official-mine/index",
+        "official-organizer/index"
       ]
     },
     {
@@ -71,7 +72,6 @@
         "temp/index",
         "activity/index",
         "topicadd/topicadd",
-        "templateadd/templateadd",
         "template-intro/index"
       ]
     },
@@ -80,6 +80,7 @@
       "name": "subpackageClub",
       "pages": [
         "apply/index",
+        "badges/index",
         "create/index",
         "customer-detail/index",
         "customers/index",
@@ -138,6 +139,8 @@
         "customer/index",
         "game-node/index",
         "customer/detail/index",
+        "verify-records/index",
+        "crm-campaigns/index",
         "team/index"
       ]
     },
@@ -250,6 +253,9 @@
         "mytemplate/mytemplate",
         "order/order",
         "orderinfo/orderinfo",
+        "points-history/index",
+        "report-mine/index",
+        "report-detail/index",
         "signup/index",
         "tixian/tixian",
         "tixianjilu/tixianjilu"
@@ -264,7 +270,21 @@
         "poi-detail/index",
         "session/index",
         "nearby/index",
-        "citystamp/index"
+        "citystamp/index",
+        "my-teams/index",
+        "official-routes/index",
+        "official-route/index"
+      ]
+    },
+    {
+      "root": "subpackageTools",
+      "name": "subpackageTools",
+      "pages": [
+        "capsule/index",
+        "monthly-recap/index",
+        "exploration-goals/index",
+        "anniversary/index",
+        "exploration-export/index"
       ]
     }
   ],
@@ -278,10 +298,7 @@
     "pages/index/index": {
       "network": "wifi",
       "packages": [
-        "subpackageA",
-        "subpackagePublish",
-        "subpackageClub",
-        "subpackageActivity"
+        "subpackageA"
       ]
     },
     "pages/square/list/index": {
@@ -293,7 +310,6 @@
     "subpackageMember/signup/index": {
       "network": "all",
       "packages": [
-        "subpackagePlay",
         "subpackageActivity"
       ]
     }
@@ -309,10 +325,7 @@
   ],
   "permission": {
     "scope.userLocation": {
-      "desc": "用于附近活动推荐、到点打卡判定与漫游足迹记录"
-    },
-    "scope.userFuzzyLocation": {
-      "desc": "用于按城市推荐附近活动"
+      "desc": "用于确定首页城市、到点打卡判定与漫游足迹记录"
     }
   },
   "darkmode": true,

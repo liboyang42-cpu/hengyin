@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -143,6 +144,7 @@ class ApiRegistrationCompletionCouponTest
         CmsActivity activity = new CmsActivity();
         activity.setId(ACTIVITY);
         activity.setTopicId(TOPIC);
+        activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
         activity.setMemberId(99L);
         ICmsActivityService activityService = (ICmsActivityService) ReflectionTestUtils.getField(
                 controller, "cmsActivityService");
@@ -161,17 +163,17 @@ class ApiRegistrationCompletionCouponTest
     @Test
     void controllerNeverRunsCompletionSideEffectsOutsideTransactionalService()
     {
-        when(perkLedgerService.resolveRedeemableChapters(REGISTRATION, TOPIC, MERCHANT))
-                .thenReturn(Collections.singletonList(31L), Collections.singletonList(32L),
-                        Collections.singletonList(33L), Collections.singletonList(34L),
-                        Collections.singletonList(34L));
+        when(perkLedgerService.resolveScannableChapters(REGISTRATION, TOPIC, MERCHANT))
+                .thenReturn(Collections.singletonMap(31L, null), Collections.singletonMap(32L, null),
+                        Collections.singletonMap(33L, null), Collections.singletonMap(34L, null),
+                        Collections.singletonMap(34L, 104L));
         when(registrationService.redeemExploreChapterAndRecord(eq(registration), anyLong(), eq(TOPIC),
                 eq(MERCHANT), eq(MERCHANT), any())).thenReturn(
                         new ExploreChapterRedemptionResult(101L, 0),
                         new ExploreChapterRedemptionResult(102L, 0),
                         new ExploreChapterRedemptionResult(103L, 0),
                         new ExploreChapterRedemptionResult(104L, 40),
-                        new ExploreChapterRedemptionResult(104L, 0));
+                        new ExploreChapterRedemptionResult(104L, 0, true));
         when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC))
                 .thenReturn(false, false, false, true, true);
 
@@ -194,22 +196,39 @@ class ApiRegistrationCompletionCouponTest
         when(badgeMapper.selectOne(PLAYER, "TOPIC_FINISH_" + TOPIC, TOPIC)).thenReturn(storedBadge);
 
         for (int i = 0; i < 3; i++) {
-            assertEquals(200, controller.scanQrCode("activity", CODE).get("code"));
+            AjaxResult result = controller.scanQrCode("activity", CODE);
+            assertEquals(200, result.get("code"));
+            java.util.Map<?, ?> data = (java.util.Map<?, ?>) result.get("data");
+            assertEquals(31L + i, data.get("chapterId"));
+            assertEquals(101L + i, data.get("redemptionId"));
             verify(badgeMapper, never()).insertPlayerBadge(any(PlayerBadge.class));
             verify(pointsAwardService, never()).award(eq(PLAYER), eq(13L), anyLong(), any());
         }
 
-        assertEquals(200, controller.scanQrCode("activity", CODE).get("code"));
+        AjaxResult completed = controller.scanQrCode("activity", CODE);
+        assertEquals(200, completed.get("code"));
+        java.util.Map<?, ?> completedData = (java.util.Map<?, ?>) completed.get("data");
+        assertEquals(34L, completedData.get("chapterId"));
+        assertEquals(104L, completedData.get("redemptionId"));
+        assertEquals(40, completedData.get("completionEarnedXp"));
         verify(pointsAwardService, never()).award(eq(PLAYER), eq(13L), anyLong(), any());
         verify(progressionService, never()).onTopicComplete(PLAYER, TOPIC);
         verify(couponRewardService, never()).grantOnce(TOPIC, PLAYER, COUPON);
 
-        assertEquals(200, controller.scanQrCode("activity", CODE).get("code"));
+        AjaxResult replayed = controller.scanQrCode("activity", CODE);
+        assertEquals(200, replayed.get("code"));
+        java.util.Map<?, ?> replayedData = (java.util.Map<?, ?>) replayed.get("data");
+        assertEquals(Boolean.TRUE, replayedData.get("replayed"));
+        assertEquals(34L, replayedData.get("chapterId"));
+        assertEquals(104L, replayedData.get("redemptionId"));
+        assertNull(replayedData.get("completionEarnedXp"));
         verify(badgeMapper, never()).insertPlayerBadge(any(PlayerBadge.class));
         verify(collectibleService).record(PLAYER, TOPIC, 31L, MERCHANT);
         verify(collectibleService).record(PLAYER, TOPIC, 32L, MERCHANT);
         verify(collectibleService).record(PLAYER, TOPIC, 33L, MERCHANT);
-        verify(collectibleService, times(2)).record(PLAYER, TOPIC, 34L, MERCHANT);
+        verify(collectibleService).record(PLAYER, TOPIC, 34L, MERCHANT);
+        verify(pointsAwardService, times(4)).award(eq(PLAYER), eq(11L), eq(REGISTRATION), any());
+        verify(growthService, times(4)).deliverStoreVerification(REGISTRATION);
         verify(pointsAwardService, never()).award(eq(PLAYER), eq(13L), anyLong(), any());
         verify(progressionService, never()).onTopicComplete(PLAYER, TOPIC);
         verify(couponRewardService, never()).grantOnce(TOPIC, PLAYER, COUPON);
@@ -228,6 +247,7 @@ class ApiRegistrationCompletionCouponTest
         assertEquals(500, result.get("code"));
         assertTrue(String.valueOf(result.get("msg")).contains("退款"));
         verify(perkLedgerService, never()).resolveRedeemableChapters(anyLong(), anyLong(), anyLong());
+        verify(perkLedgerService, never()).resolveScannableChapters(anyLong(), anyLong(), anyLong());
         verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());
         verify(badgeMapper, never()).insertPlayerBadge(any(PlayerBadge.class));
     }
@@ -235,8 +255,8 @@ class ApiRegistrationCompletionCouponTest
     @Test
     void missingPendingEntitlementCannotRedeemOrTriggerAwards()
     {
-        when(perkLedgerService.resolveRedeemableChapters(REGISTRATION, TOPIC, MERCHANT))
-                .thenReturn(Collections.emptyList());
+        when(perkLedgerService.resolveScannableChapters(REGISTRATION, TOPIC, MERCHANT))
+                .thenReturn(Collections.emptyMap());
 
         AjaxResult result = controller.scanQrCode("activity", CODE);
 

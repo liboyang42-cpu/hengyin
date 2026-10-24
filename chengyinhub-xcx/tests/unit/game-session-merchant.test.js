@@ -49,7 +49,7 @@ function merchantView(overrides) {
           taskCode: 'DOCK_CODE', prompt: '扫描柜台上的本站任务码', inputType: 'SCAN',
           verificationRequired: true, expectedToken: '不能下发',
         },
-        merchantInstruction: '只核对玩家出示的编号与现场任务完成情况',
+        merchantInstruction: '只确认玩家出示的编号与现场任务完成情况',
         hiddenInfoReminder: '不要透露其他角色线索或后台答案',
         capacity: 12,
         serviceStartAt: '2026-08-23 10:00',
@@ -109,7 +109,7 @@ test('商家投影只保留本站运行字段，并从服务端动作白名单�
     playerTask: {
       taskCode: 'DOCK_CODE', prompt: '扫描柜台上的本站任务码', inputType: 'SCAN', verificationRequired: true,
     },
-    merchantInstruction: '只核对玩家出示的编号与现场任务完成情况',
+    merchantInstruction: '只确认玩家出示的编号与现场任务完成情况',
     hiddenInfoReminder: '不要透露其他角色线索或后台答案',
     capacity: 12,
     serviceStartAt: '2026-08-23 10:00',
@@ -296,7 +296,7 @@ test('准备、暂停、恢复、核验命令只包含契约字段和当前 revi
   assert.deepEqual(sanitizeMerchantCommandForRetry({
     activityId: 71, nodeId: 8, requestId: 'merchant_pause_71_8', expectedRevision: 4,
     action: 'STATION_PAUSE', payload: { reasonCode: 'CAPACITY', resumeEta: '2026-08-23 16:00' },
-  }).payload, { reasonCode: 'CAPACITY', resumeEta: '2026-08-23 16:00' }, '无方案暂停的待确认写必须能恢复核对')
+  }).payload, { reasonCode: 'CAPACITY', resumeEta: '2026-08-23 16:00' }, '无方案暂停的待确认写必须能恢复确认')
   assert.equal(sanitizeMerchantCommandForRetry({
     activityId: 71, nodeId: 8, requestId: 'merchant_pause_71_8', expectedRevision: 4,
     action: 'STATION_PAUSE', payload: { reasonCode: 'CAPACITY', resumeEta: '2026-08-23 16:00', fallbackPlanCode: 'DOCK_TO_CLOCK' },
@@ -318,7 +318,7 @@ test('准备、暂停、恢复、核验命令只包含契约字段和当前 revi
   assert.deepEqual(buildStationResumeCommand(paused, paused.stations[0], 'merchant_resume_71_8').payload, {})
 
   assert.deepEqual(buildVerifySubmissionCommand(active, active.stations[0], {
-    submissionId: '300', decision: 'REJECT', reasonCode: 'ANSWER_MISMATCH', reason: '答案不匹配',
+    submissionId: '300', decision: 'REJECT', reasonCode: 'ANSWER_MISMATCH', reason: '答案不正确',
   }, 'merchant_verify_71_8'), {
     activityId: 71,
     nodeId: 8,
@@ -515,4 +515,10 @@ test('路线运行态空清单可接待；缺失或未知模式仍保留剧情�
     checklist: [{ code: 'REAL_CHECK', checked: false }], capacity: 12,
     serviceStartAt: '2026-08-23 10:00', serviceEndAt: '2026-08-23 18:00',
   }, 'route_ready_unchecked'), /STATION_READY_INPUT_INVALID/)
+})
+
+test('商家重试清洗保留原命令纪元，不能拿新投影纪元替换', () => {
+  const raw = { activityId: 71, nodeId: 8, requestId: 'merchant-retry-epoch', expectedRevision: 4,
+    authorityEpoch: 3, action: 'STATION_ACCEPT', payload: {} }
+  assert.deepEqual(sanitizeMerchantCommandForRetry(raw, { authorityEpoch: 5 }), raw)
 })

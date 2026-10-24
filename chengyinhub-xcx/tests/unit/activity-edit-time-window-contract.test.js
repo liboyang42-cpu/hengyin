@@ -90,12 +90,12 @@ test('编辑远期活动:原定日期进可选表并被预选,不再静默退回
 
   const dates = page.data.dateList.map((item) => item.date)
   assert.ok(dates.includes(ymd(originalStart)),
-    `原定日期 ${ymd(originalStart)} 必须在可选表内,否则面板定位不过去也选不回来`)
+    `原定日期 ${ymd(originalStart)} 必须在可选表内，否则面板定位不过去也选不回来`)
 
   const draft = page.resolveTimePickerDraft(startValue, [0], [9, 0])
   assert.equal(page.data.dateList[draft.dateIndex[0]].date, ymd(originalStart),
     '起止草稿必须预选原定日期')
-  assert.equal(draft.dateIndex[0], 40, '第 41 项就是原定日,不能停在 fallback 的下标 0')
+  assert.equal(draft.dateIndex[0], 40, '第 41 项就是原定日，不能停在 fallback 的下标 0')
   assert.equal(draft.preview, `${dayOffset(40).getMonth() + 1}月${dayOffset(40).getDate()}日 09:00`)
 })
 

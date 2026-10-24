@@ -61,6 +61,32 @@ test('privacy contract passes when every location API is declared and consent ch
   assert.deepEqual(result.missingConsentPieces, []);
 });
 
+test('privacy contract rejects declaring getFuzzyLocation together with getLocation (F-L5C-14)', () => {
+  const app = { ...BASE_APP, requiredPrivateInfos: [...BASE_APP.requiredPrivateInfos, 'getFuzzyLocation'] };
+  const result = analyzePrivacyContract(app, BASE_SOURCE);
+  assert.equal(result.ok, false);
+  assert.ok(result.permissionProblems.some((item) => /cannot both be declared/.test(item)), result.permissionProblems.join(';'));
+  assert.equal(analyzePrivacyContract(BASE_APP, BASE_SOURCE).ok, true);
+});
+
+for (const preciseApi of ['onLocationChange', 'startLocationUpdate', 'startLocationUpdateBackground']) {
+  test(`privacy contract rejects declaring getFuzzyLocation together with unused ${preciseApi}`, () => {
+    const result = analyzePrivacyContract({ requiredPrivateInfos: ['getFuzzyLocation', preciseApi] }, []);
+    assert.equal(result.ok, false);
+    assert.deepEqual(result.missingDeclarations, []);
+    assert.deepEqual(result.permissionProblems,
+      [`getFuzzyLocation and ${preciseApi} cannot both be declared in requiredPrivateInfos`]);
+  });
+}
+
+test('privacy contract accepts fuzzy-only declarations with nonexclusive picker APIs', () => {
+  const result = analyzePrivacyContract({
+    requiredPrivateInfos: ['getFuzzyLocation', 'chooseLocation', 'choosePoi', 'chooseAddress'],
+  }, []);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.permissionProblems, []);
+});
+
 test('privacy contract turns red when a used location API is removed from app.json', () => {
   const app = { ...BASE_APP, requiredPrivateInfos: BASE_APP.requiredPrivateInfos.filter((name) => name !== 'choosePoi') };
   const result = analyzePrivacyContract(app, BASE_SOURCE);
@@ -331,12 +357,12 @@ test('CLI scans every registered subpackage for missing privacy declarations', (
         fs.writeFileSync(path.join(dir, 'app.json'), JSON.stringify(app));
         fs.writeFileSync(path.join(dir, 'app.js'), BASE_SOURCE[0].content);
         fs.writeFileSync(path.join(dir, 'pages/privacy/index.wxml'), BASE_SOURCE[1].content);
-        fs.writeFileSync(path.join(dir, root, 'index.js'), 'wx.getFuzzyLocation({});');
+        fs.writeFileSync(path.join(dir, root, 'index.js'), 'wx.chooseAddress({});');
         fs.writeFileSync(path.join(dir, 'tests/fixture.js'), 'wx.startLocationUpdateBackground({});');
 
         assert.equal(main(['--source-only'], dir), 1, `${registryKey}: ${root} must be scanned`);
         fs.writeFileSync(path.join(dir, 'app.json'), JSON.stringify({
-          ...app, requiredPrivateInfos: [...app.requiredPrivateInfos, 'getFuzzyLocation'],
+          ...app, requiredPrivateInfos: [...app.requiredPrivateInfos, 'chooseAddress'],
         }));
         assert.equal(main(['--source-only'], dir), 0, `${registryKey}: ${root} declaration resolves the violation`);
         fs.writeFileSync(path.join(dir, 'app.json'), JSON.stringify({
@@ -365,14 +391,14 @@ for (const registryKey of ['subPackages', 'subpackages']) {
         fs.writeFileSync(path.join(dir, 'app.json'), JSON.stringify(app));
         fs.writeFileSync(path.join(dir, 'app.js'), BASE_SOURCE[0].content);
         fs.writeFileSync(path.join(dir, 'pages/privacy/index.wxml'), BASE_SOURCE[1].content);
-        fs.writeFileSync(path.join(dir, root, child, 'index.js'), 'wx.getFuzzyLocation({});');
+        fs.writeFileSync(path.join(dir, root, child, 'index.js'), 'wx.chooseAddress({});');
         fs.writeFileSync(path.join(dir, 'tests/fixture.js'), 'wx.startLocationUpdateBackground({});');
         fs.writeFileSync(path.join(dir, 'features/pkg-shadow/tests/index.js'), 'wx.chooseAddress({});');
 
         assert.equal(main(['--source-only'], dir), 1,
-          `${registryKey}: registered ${root}/${child}/index must require getFuzzyLocation`);
+          `${registryKey}: registered ${root}/${child}/index must require chooseAddress`);
         fs.writeFileSync(path.join(dir, 'app.json'), JSON.stringify({
-          ...app, requiredPrivateInfos: [...app.requiredPrivateInfos, 'getFuzzyLocation'],
+          ...app, requiredPrivateInfos: [...app.requiredPrivateInfos, 'chooseAddress'],
         }));
         assert.equal(main(['--source-only'], dir), 0,
           `${registryKey}: declared business API passes without unrelated root tests or sibling fixtures`);

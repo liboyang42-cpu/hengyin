@@ -10,6 +10,7 @@ let pageConfig
 let requests
 
 global.getApp = () => ({
+  getUserID: () => 7, // Explicit authenticated growth reader fixture.
   sendRequest(options) {
     requests.push(options)
   },
@@ -73,12 +74,13 @@ const okRank = (me) => ({
   data: { metric: 'point', period: 'total', list: [], me }
 })
 
-test('成长中心：徽章源失败时不得伪装成空徽章，必须给出可重试状态', async () => {
+test('成长中心：徽章源失败时不得伪装成空徽章，保持失败状态且不显示假零', async () => {
   const page = loadPage()
   await loadOverview(page, ['fail', okPlay, okCompleted])
 
-  assert.equal(page.data.badgeLoadError, true)
-  assert.equal(page.data.badgeCountText, '0')  // UI-04(2026-09-18):数字统计没取到显示 0
+  assert.equal(page.badgeLoadError, true)
+  assert.equal(page.data.overviewAvailable.center, false)
+  assert.equal(page.data.overviewState, 'partial')
   assert.equal(page.data.showBadges, false)
   assert.equal(page.data.showBadgeEmpty, false)
   assert.equal(page.data.overview.stats[2].value, '1')
@@ -88,7 +90,7 @@ test('成长中心：徽章源成功且为空才进入“还没有点亮”空�
   const page = loadPage()
   await loadOverview(page, [okCenter([]), okPlay, okCompleted])
 
-  assert.equal(page.data.badgeLoadError, false)
+  assert.equal(page.badgeLoadError, false)
   assert.equal(page.data.badgeCountText, '0')
   assert.equal(page.data.showBadges, false)
   assert.equal(page.data.showBadgeEmpty, true)
@@ -99,22 +101,19 @@ test('成长中心：徽章源恢复后清除错误态并显示徽章', async ()
   await loadOverview(page, ['fail', okPlay, okCompleted])
   await loadOverview(page, [okCenter([{ badgeName: '开始在场' }]), okPlay, okCompleted])
 
-  assert.equal(page.data.badgeLoadError, false)
+  assert.equal(page.badgeLoadError, false)
   assert.equal(page.data.badgeCountText, '1')
   assert.equal(page.data.showBadges, true)
   assert.equal(page.data.showBadgeEmpty, false)
 })
 
-test('负控：删除徽章失败态接线时契约必须变红', () => {
+test('成长中心：视图暂不提示错误，未知数据不得伪装为零或空徽章', () => {
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
-  const assertContract = (source) => {
-    assert.match(source, /wx:if="\{\{badgeLoadError\}\}"/)
-    assert.match(source, /bindtap="loadOverview"/)
-    assert.match(source, /徽章数据暂时不可用/)
-  }
-  assertContract(wxml)
-  assert.throws(() => assertContract(wxml.replace(/wx:if="\{\{badgeLoadError\}\}"/, 'wx:if="{{false}}"')))
-  assert.throws(() => assertContract(wxml.replace('bindtap="loadOverview"', 'bindtap="noop"')))
+  assert.doesNotMatch(wxml, /<cy-inline-error|<cy-progress-status|徽章数据暂时不可用|排行榜没有加载出来/)
+  assert.match(wxml, /overviewAvailable\.center/)
+  assert.match(wxml, /overviewAvailable\.play/)
+  assert.match(wxml, /overviewAvailable\.completed/)
+  assert.match(wxml, /showBadgeEmpty/)
 })
 
 test('成长中心：空榜不得把无排名用户显示成第一名', () => {
@@ -133,7 +132,7 @@ test('成长中心：后端契约空榜 rank=null 是合法空态，不得误报
   assert.equal(page.data.rankState, 'ready')
   assert.equal(page.data.rankLoaded, true)
   assert.equal(page.data.me, null)
-  assert.equal(page.data.errorMsg, '')
+  assert.equal(page.errorMsg, '')
 })
 
 test('成长中心：已确认空榜刷新失败保留空态快照，不退回首载错误', () => {
@@ -149,7 +148,7 @@ test('成长中心：已确认空榜刷新失败保留空态快照，不退回�
   assert.equal(page.data.rankState, 'stale-error')
   assert.equal(page.data.rankLoaded, true)
   assert.equal(page.data.me, null)
-  assert.equal(page.data.rankErrorKind, 'network')
+  assert.equal(page.rankErrorKind, 'network')
 })
 
 test('成长中心：排行首载 single-flight，刷新失败保留旧排名，离页后迟到响应失效', () => {
@@ -169,7 +168,7 @@ test('成长中心：排行首载 single-flight，刷新失败保留旧排名，
   requests[1].fail({ errMsg: 'request:fail timeout' })
   requests[1].complete()
   assert.equal(page.data.rankState, 'stale-error')
-  assert.equal(page.data.rankErrorKind, 'network')
+  assert.equal(page.rankErrorKind, 'network')
   assert.equal(page.data.me.name, '林野')
 
   page.loadMyRank()
@@ -192,10 +191,10 @@ test('成长中心：排行榜 HTTP 403、404 与 500 分别落权限错误与�
     requests = []
     page.loadMyRank()
     requests[0].successStatusAbnormal(response)
-    assert.equal(page.data.boardState, boardState)
+    assert.equal(page.boardState, boardState)
     assert.equal(page.data.rankState, rankState)
-    assert.match(page.data.errorMsg, message)
-    assert.doesNotMatch(page.data.errorMsg, /暂未开放/)
+    assert.match(page.errorMsg, message)
+    assert.doesNotMatch(page.errorMsg, /暂未开放/)
   })
 })
 
@@ -207,7 +206,7 @@ test('成长中心：HTTP 200 但排行榜结构缺失必须 fail-closed', () =>
 
   assert.equal(page.data.rankState, 'error')
   assert.equal(page.data.me, null)
-  assert.match(page.data.errorMsg, /不完整|重试/)
+  assert.match(page.errorMsg, /不完整|重试/)
 })
 
 test('成长中心：排行榜 null 数值或畸形榜单元素不得进入 ready', () => {
@@ -232,7 +231,7 @@ test('成长中心：排行榜 null 数值或畸形榜单元素不得进入 read
     requests[0].success(response)
     assert.equal(page.data.rankState, 'error')
     assert.equal(page.data.me, null)
-    assert.match(page.data.errorMsg, /不完整|重试/)
+    assert.match(page.errorMsg, /不完整|重试/)
   })
 })
 
@@ -246,10 +245,10 @@ test('成长中心：三路 HTTP 200 空对象不得伪造为零或空徽章', a
 
   assert.equal(page.data.overviewState, 'error')
   assert.equal(page.data.overviewLoaded, false)
-  assert.equal(page.data.badgeLoadError, true)
+  assert.equal(page.badgeLoadError, true)
   assert.equal(page.data.showBadges, false)
   assert.equal(page.data.showBadgeEmpty, false)
-  assert.ok(page.data.overview.stats.every((item) => item.value === '0'), 'UI-04:概览统计没取到显示 0')
+  assert.deepEqual(page.data.overviewAvailable, { center: false, play: false, completed: false })
 })
 
 test('成长中心：概览 null 数值和畸形数组元素必须 fail-closed', async () => {
@@ -273,21 +272,23 @@ test('成长中心：概览 null 数值和畸形数组元素必须 fail-closed',
     const page = loadPage()
     await loadOverview(page, responses)
     assert.notEqual(page.data.overviewState, 'ready')
-    assert.match(page.data.overviewError, /部分|不可用|重试/)
+    assert.match(page.overviewError, /部分|不可用|重试/)
   }
 })
 
 test('成长中心：概览首载有同构骨架，刷新保留内容且新徽章只在第二次真实新增时庆祝', async () => {
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
   const json = fs.readFileSync(WXML_PATH.replace(/\.wxml$/, '.json'), 'utf8')
-  assert.match(wxml, /rankState === 'loading' && !me[\s\S]*?<cy-skeleton/)
-  assert.match(wxml, /overviewState === 'loading' && !overviewLoaded[\s\S]*?<cy-skeleton/)
+  assert.match(wxml, /rankState === 'loading' && !rankLoaded[^>]*class="gc-score-skeleton"/)
+  assert.match(wxml, /overviewState === 'loading' && !overviewLoaded[\s\S]*?gc-skeleton-label[\s\S]*?gc-skeleton-value/)
   assert.doesNotMatch(wxml, /<cy-inline-error[^>]*rankState === 'stale-error'/)
   assert.match(wxml, /<cy-celebrate\b[^>]*event-key="\{\{celebrationEvent\}\}"/)
   assert.match(json, /"cy-celebrate"/)
-  assert.match(json, /"cy-inline-error"/)
-  assert.match(json, /"cy-progress-status"/)
-  assert.match(json, /"cy-skeleton"/)
+  assert.match(wxml, /wx:elif="\{\{showBadgeEmpty\}\}"[^>]*class="gc-badge-empty"/)
+  assert.match(wxml, /wx:else[^>]*class="gc-badge-loading"[\s\S]*?class="gc-badge-skeleton"/)
+  assert.match(wxml, /bindtap="goLeaderboard"/)
+  assert.match(wxml, /bindtap="onBadgeTap"/)
+  assert.match(wxml, /bindtap="goExplore"/)
 
   const page = loadPage()
   await loadOverview(page, [okCenter([{ badgeCode: 'A', badgeName: '先行者' }]), okPlay, okCompleted])
@@ -317,9 +318,169 @@ test('负控：去掉排行 single-flight 或离页 epoch 后，状态机契约�
   const assertGuard = (candidate) => {
     assert.match(candidate, /if \(this\._rankLoading\)/)
     assert.match(candidate, /this\._rankEpoch = \(this\._rankEpoch \|\| 0\) \+ 1/)
-    assert.match(candidate, /if \(epoch !== this\._rankEpoch\) return/)
+    assert.match(candidate, /if \(epoch !== this\._rankEpoch \|\| this\._unloaded \|\| owner !== String\(app\.getUserID/)
   }
   assertGuard(source)
   assert.throws(() => assertGuard(source.replace('if (this._rankLoading)', 'if (false)')))
-  assert.throws(() => assertGuard(source.replaceAll('if (epoch !== this._rankEpoch) return', 'if (false) return')))
+  assert.throws(() => assertGuard(source.replaceAll('epoch !== this._rankEpoch', 'false')))
+})
+
+test('成长中心：独立身份来自当前会话，合法无排名积分仍显示且失败保留快照', () => {
+  const originalGetApp = global.getApp
+  global.getApp = () => ({
+  getUserID: () => 7, // Explicit authenticated growth reader fixture.
+    ...originalGetApp(),
+    getNickname: () => '真实当前用户',
+    getAvatar: () => '/profile/current.png',
+  })
+  try {
+    requests = []
+    const page = loadPage()
+    page.onLoad()
+    assert.deepEqual(page.data.profile, { name: '真实当前用户', avatarUrl: '/profile/current.png' })
+    const rank = requests.find(request => request.url === '/api/growth/leaderboard')
+    rank.success(okRank({ rank: null, score: 1234, nickname: '榜单昵称', avatar: '/profile/rank.png' }))
+    assert.equal(page.data.me, null)
+    assert.equal(page.data.scoreText, '1,234')
+    assert.equal(page.data.profile.name, '榜单昵称')
+    assert.equal(page.data.profile.avatarUrl, '/profile/rank.png')
+    page.loadMyRank()
+    requests.at(-1).fail({ errMsg: 'request:fail timeout' })
+    assert.equal(page.data.scoreText, '1,234')
+    assert.equal(page.data.rankState, 'stale-error')
+    page.onUnload()
+  } finally { global.getApp = originalGetApp }
+
+  requests = []
+  const page = loadPage()
+  assert.equal(page.data.profile.name, '')
+  assert.equal(page.data.scoreText, '—')
+  page.loadMyRank()
+  requests[0].success(okRank({ rank: null, score: 0, nickname: '服务端用户', avatar: '/profile/server.png' }))
+  assert.deepEqual(page.data.profile, { name: '服务端用户', avatarUrl: '/profile/server.png' })
+  assert.equal(page.data.scoreText, '0')
+})
+
+test('成长中心：概览可用性跟随旧快照，局部失败不得标为真实零', async () => {
+  const page = loadPage()
+  await loadOverview(page, ['fail', okPlay, okCompleted])
+  assert.deepEqual(page.data.overviewAvailable, { center: false, play: true, completed: true })
+  const oldOverview = page.data.overview
+  await loadOverview(page, [okCenter([]), 'fail', okCompleted])
+  assert.equal(page.data.overview, oldOverview)
+  assert.deepEqual(page.data.overviewAvailable, { center: false, play: true, completed: true })
+  await loadOverview(page, [okCenter([]), okPlay, okCompleted])
+  assert.deepEqual(page.data.overviewAvailable, { center: true, play: true, completed: true })
+})
+
+test('成长中心：下拉刷新仍重拉两组数据，内部诊断不进入渲染data', async () => {
+  const page = loadPage()
+  const diagnostics = ['errorMsg', 'rankErrorKind', 'boardState', 'overviewErrorKind', 'overviewError', 'badgeLoadError']
+  diagnostics.forEach(field => assert.equal(Object.hasOwn(page.data, field), false))
+  let stops = 0
+  const originalStop = wx.stopPullDownRefresh
+  wx.stopPullDownRefresh = () => { stops += 1 }
+  try {
+    requests = []
+    page.onPullDownRefresh()
+    assert.equal(requests.length, 4)
+    assert.ok(requests.every(request => request.silentError === true))
+    requests.find(request => request.url === '/api/growth/leaderboard').fail({ errMsg: 'request:fail timeout' })
+    assert.equal(stops, 0, '排行榜结束不能提前结束概览刷新')
+    requests.filter(request => request.url !== '/api/growth/leaderboard')
+      .forEach(request => request.fail({ errMsg: 'request:fail timeout' }))
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(stops, 1)
+    assert.equal(page.rankErrorKind, 'network')
+    assert.equal(page.overviewErrorKind, 'network')
+    assert.equal(page.badgeLoadError, true)
+    assert.equal(page.data.showBadgeEmpty, false)
+    diagnostics.forEach(field => assert.equal(Object.hasOwn(page.data, field), false))
+  } finally { wx.stopPullDownRefresh = originalStop }
+})
+
+test('总积分排名单位保留真实名次并对缺失或0提供兜底', () => {
+  const wxml=fs.readFileSync(WXML_PATH,'utf8')
+  const expression=wxml.match(/第\s*{{([^}]+)}}\s*名/)
+  assert.ok(expression)
+  assert.match(expression[1], /^\s*me\.rank\s*\|\|\s*['"]—['"]\s*$/)
+  const render=new Function('me','return '+expression[1])
+  for(const rank of [1,7,100]) assert.equal(render({rank}),rank)
+  for(const rank of [undefined,null,0]) assert.equal(render({rank}),'—')
+  assert.match(wxml,/wx:elif="{{rankLoaded}}"[^>]*>暂无排名/)
+})
+
+
+test('资料页改昵称返回成长中心时立即同步，并拒绝在途旧排名覆盖', () => {
+  const originalGetApp = global.getApp
+  let nickname = '旧昵称', avatar = 'old.png'
+  requests = []
+  global.getApp = () => ({ getUserID: () => 7, getNickname: () => nickname, getAvatar: () => avatar,
+    sendRequest(options) { requests.push(options) } })
+  try {
+    const page = loadPage()
+    page._growthOwner = '7'
+    page.setData({ profile: { name: nickname, avatarUrl: avatar } })
+    page.onShow()
+    page.loadMyRank()
+    const oldRequest = requests[0]
+    nickname = '已保存的新昵称'; avatar = 'new.png'
+    page.onShow()
+    assert.equal(page.data.profile.name, nickname)
+    assert.equal(page.data.profile.avatarUrl, avatar)
+    assert.equal(requests.length, 2, '资料变化只补一条本人排名读取')
+    oldRequest.success(okRank({ rank: 2, score: 1, nickname: '旧昵称', avatar: 'old.png' }))
+    assert.equal(page.data.profile.name, nickname, '旧回包不得恢复旧昵称')
+    assert.equal(page.data.profile.avatarUrl, avatar)
+    requests[1].success(okRank({ rank: 2, score: 1, nickname, avatar }))
+    assert.equal(page.data.rankState, 'ready')
+    page.onShow()
+    assert.equal(requests.length, 2, '普通返回且资料没变不重复拉取')
+  } finally { global.getApp = originalGetApp }
+})
+
+
+test('会话未变时保留API新昵称，普通返回不被旧会话回写或重复拉取', () => {
+  const originalGetApp = global.getApp
+  requests = []
+  global.getApp = () => ({ getUserID: () => 7, getNickname: () => '会话旧名', getAvatar: () => 'session.png',
+    sendRequest(options) { requests.push(options) } })
+  try {
+    const page = loadPage()
+    page._growthOwner = '7'
+    page.setData({ profile: { name: '会话旧名', avatarUrl: 'session.png' } })
+    page.onShow()
+    page.buildMyRank({ me: { rank: 1, score: 1, nickname: '服务端新名', avatar: 'server.png' } })
+    page.onShow()
+    assert.equal(page.data.profile.name, '服务端新名')
+    assert.equal(page.data.profile.avatarUrl, 'server.png')
+    assert.equal(requests.length, 0)
+  } finally { global.getApp = originalGetApp }
+})
+
+test('会话明确保存新昵称后，新排名请求的缓存旧昵称也不能覆盖且不改未保存头像', () => {
+  const originalGetApp = global.getApp
+  let nickname = '旧昵称', owner = 7
+  requests = []
+  global.getApp = () => ({ getUserID: () => owner, getNickname: () => nickname, getAvatar: () => 'session.png',
+    sendRequest(options) { requests.push(options) } })
+  try {
+    const page = loadPage()
+    page._growthOwner = '7'
+    page.setData({ profile: { name: nickname, avatarUrl: 'server.png' } })
+    page.onShow()
+    nickname = '刚保存的昵称'
+    page.onShow()
+    assert.equal(page.data.profile.avatarUrl, 'server.png', '没保存头像不把API头像退回旧会话头像')
+    assert.equal(requests.length, 1)
+    requests[0].success(okRank({ rank: 1, score: 2, nickname: '缓存旧昵称', avatar: 'server.png' }))
+    assert.equal(page.data.profile.name, nickname)
+    assert.equal(page.data.me.name, nickname)
+    assert.equal(page.data.profile.avatarUrl, 'server.png')
+    page.onShow()
+    assert.equal(requests.length, 1)
+    owner = 8
+    page._syncGrowthOwner()
+    assert.equal(page._growthProfileOverride, null, '换号后不复用旧账号的本地资料优先值')
+  } finally { global.getApp = originalGetApp }
 })

@@ -17,6 +17,7 @@ function harness(relativePath, kind) {
   const toasts = [];
   let definition;
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44, menuButtonInfo: { left: 300 } },
     sendRequest(options) { requests.push(options); },
     getRequestErrorMessage(_res, fallback) { return fallback; },
@@ -28,6 +29,7 @@ function harness(relativePath, kind) {
     setUserRole() {},
     getImgUrl(value) { return value || ''; },
   };
+  if (relativePath === 'subpackageA/pages/myproject/index.js' || relativePath === 'subpackageMember/components/cy/profile/index.js') app.getAuthorization = () => 'current-session';
   global.getApp = () => app;
   global.wx = {
     getStorageSync() { return ''; },
@@ -45,6 +47,7 @@ function harness(relativePath, kind) {
     ? Object.assign({}, definition, definition.methods || {})
     : Object.assign({}, definition);
   vm.data = JSON.parse(JSON.stringify(definition.data || {}));
+  if (relativePath === 'subpackageB/pages/im/chat/index.js') vm.data.myId = app.getUserID();
   vm.setData = function (patch, callback) {
     Object.entries(patch).forEach(([key, value]) => setPath(this.data, key, value));
     if (callback) callback();
@@ -134,7 +137,7 @@ test('官方活动列表 200 非数组载荷进入可重试错误态', () => {
   const h = harness('pages/activity/list/index.js', 'page');
   h.vm.fetchAll();
   assert.doesNotThrow(() => h.requests[0].success({ code: 200, data: {} }));
-  assert.equal(h.vm.data.loadError, true);
+  assert.equal(h.vm.data.curError, true);
 });
 
 test('官方邀约 200 非数组载荷进入错误态', () => {
@@ -188,11 +191,13 @@ test('俱乐部首页聚合列表包含空元素时显式可重试且不崩溃',
   assert.equal(h.vm.data.clubsError, true);
 });
 
-test('报名参与人列表包含空元素时提示加载失败且不崩溃', () => {
+// F-R2U-01(用户要求 2026-10-11):加载失败留白,原「必须弹加载失败 toast」契约改为进入错误态且不弹 toast。
+test('报名参与人列表包含空元素时进入失败态、不弹 toast 且不崩溃', () => {
   const h = harness('pages/activity/baoming/baoming.js', 'page');
   h.vm.getAddressList();
   assert.doesNotThrow(() => h.requests[0].success({ code: '200', data: { rows: [null] } }));
-  assert.equal(h.toasts.at(-1), '参与人信息加载失败，请重试');
+  assert.equal(h.vm.data.participantState, 'error');
+  assert.ok(!h.toasts.includes('参与人信息加载失败，请重试'));
 });
 
 test('首页列表包含空元素时进入显式错误态且不崩溃', () => {

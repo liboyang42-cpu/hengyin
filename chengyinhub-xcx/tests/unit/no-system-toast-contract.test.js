@@ -43,7 +43,7 @@ test('生产 JS 不许新增 wx.showToast / showLoading / hideLoading / showModa
   const grown = Object.entries(hits).filter(([f, n]) => n > (BASELINE[f] || 0))
   assert.deepEqual(grown, [], '这些文件的原生 toast/loading 调用比棘轮基线多:\n' + grown.map(([f, n]) => `  ${f}: ${n} > ${BASELINE[f] || 0}`).join('\n'))
   const stale = Object.entries(BASELINE).filter(([f, n]) => (hits[f] || 0) < n)
-  assert.deepEqual(stale, [], '这些基线项已经少于实际,把棘轮往下拧:\n' + stale.map(([f, n]) => `  ${f}: ${hits[f] || 0} < ${n}`).join('\n'))
+  assert.deepEqual(stale, [], '这些基线项已经少于实际，把棘轮往下拧:\n' + stale.map(([f, n]) => `  ${f}: ${hits[f] || 0} < ${n}`).join('\n'))
 })
 
 test('两个出口文件各自只允许一处原生调用形态', () => {

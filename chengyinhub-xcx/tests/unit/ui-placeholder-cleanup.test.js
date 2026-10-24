@@ -56,7 +56,7 @@ test('商家工作台「更多」不留评价死入口', () => {
   const wxml = read('pages/merchant/index/index.wxml');
 
   assert.doesNotMatch(wxml, /data-action="review"/, '「更多」里的评价入口已删');
-  assert.doesNotMatch(js, /goReviews/, 'goReviews handler 一并删掉,不留孤儿');
+  assert.doesNotMatch(js, /goReviews/, 'goReviews handler 一并删掉，不留孤儿');
   // 负控:同组其它入口仍在,证明上面两条不是因为文件读空而恒真
   assert.match(wxml, /data-action="messages"/);
   assert.match(js, /goMessages\(\)/);
@@ -73,7 +73,7 @@ test('A14：俱乐部目录按用户备注删除顶部搜索，旧占位 handler
 test('商家台账使用 view 条件链，已撤销合作分润 tab 不会产生孤立 wx:elif', () => {
   const source = read('pages/merchant/ledger/index.wxml');
   assert.match(source,
-    /<cy-state-shell[^>]*wx:if="\{\{routeError\}\}"[\s\S]*?<block wx:elif="\{\{view === 'redemptions'\}\}">[\s\S]*?<cy-skeleton wx:elif="\{\{loading && !hasLoaded\}\}"[\s\S]*?<cy-error wx:elif="\{\{error && !hasLoaded\}\}"[\s\S]*?<block wx:else>[\s\S]*?<block wx:if="\{\{view === 'settlement'\}\}">/,
+    /<cy-state-shell[^>]*wx:if="\{\{routeError\}\}"[\s\S]*?<block wx:elif="\{\{view === 'redemptions'\}\}">[\s\S]*?<cy-skeleton wx:elif="\{\{loading && !hasLoaded\}\}"[\s\S]*?<cy-error load-failure wx:elif="\{\{error && !hasLoaded\}\}"[\s\S]*?<block wx:else>[\s\S]*?<block wx:if="\{\{view === 'settlement'\}\}">/,
     '路由、核销、结算首载和正文必须组成合法条件链，正文内从 settlement 的 wx:if 开始');
   assert.match(source, /<block wx:else>/);
   assert.doesNotMatch(source, /tab===3|wx:elif="\{\{tab/);

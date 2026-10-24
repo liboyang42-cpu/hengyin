@@ -16,7 +16,7 @@ public class MerchantAftercareRespondRequest {
     public void setContent(String content) { this.content = content; }
     public List<String> getEvidenceKeys() { return evidenceKeys; }
     public void setEvidenceKeys(List<String> evidenceKeys) { this.evidenceKeys = evidenceKeys; }
-    /** 已停用输入；保留字段仅用于对旧客户端明确返回 400，不能重新落库长期 URL。 */
+    /** 已停用输入；保留字段仅用于对旧客户端明确返回 426（需更新客户端），不能重新落库长期 URL。 */
     public String getEvidenceUrl() { return evidenceUrl; }
     public void setEvidenceUrl(String evidenceUrl) { this.evidenceUrl = evidenceUrl; }
     public String getRequestId() { return requestId; }

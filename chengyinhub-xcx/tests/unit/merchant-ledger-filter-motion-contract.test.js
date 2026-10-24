@@ -10,17 +10,20 @@ const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
 function assertSharedSlabContract(js, wxml, wxss) {
+  const sharedBranch = wxml.match(/<view\b[^>]*wx:if="\{\{variant === 'chip' && sharedSlab\}\}"[\s\S]*?(?=<scroll-view\b)/)
+  assert.ok(sharedBranch, '共享筛选分支必须独立于普通 chip/fill 分支')
+  const sharedWxml = sharedBranch[0]
   assert.match(js, /sharedSlab:\s*\{\s*type:\s*Boolean,\s*value:\s*false\s*\}/,
     '共享选中块必须是默认关闭的公开属性')
   assert.match(js, /reduced-motion\.js/,
     '选中块必须复用系统减少动态效果偏好')
   assert.match(wxml, /variant === 'chip'\s*&&\s*sharedSlab/,
     '共享选中块只能由 chip 调用方显式开启')
-  assert.match(wxml, /class="cy-tabs__slab"[^>]*aria-hidden="true"/,
+  assert.match(sharedWxml, /class="cy-tabs__slab"[^>]*aria-hidden="true"/,
     '纯装饰选中块不得进入无障碍树')
-  assert.match(wxml, /variant === 'chip'\s*&&\s*sharedSlab[^>]*aria-role="tablist"/,
+  assert.match(sharedWxml, /variant === 'chip'\s*&&\s*sharedSlab[^>]*aria-role="tablist"/,
     '共享筛选容器必须向读屏声明 tablist')
-  assert.match(wxml, /aria-role="tab"[\s\S]{0,120}?aria-selected="\{\{item\.key === active\}\}"/,
+  assert.match(sharedWxml, /aria-role="tab"[^>]*aria-selected="\{\{item\.key === active\}\}"/,
     '每个共享筛选项必须向读屏声明当前选中态')
   assert.match(wxss, /\.cy-tabs--shared-slab \.cy-tabs__slab\s*\{[^}]*transition:\s*transform var\(--cy-motion-standard\)[^;]*,\s*opacity var\(--cy-motion-standard\)/s,
     '选中块只用 transform/opacity，并统一读取 220ms standard token')
@@ -77,7 +80,7 @@ function assertLedgerFilterShellContract(js, wxml) {
     /<view class="ledger-redemption-content"[^>]*>[\s\S]*?<cy-skeleton wx:if="\{\{loading && !hasLoaded\}\}" type="list"/,
     '筛选切换只替换内容区为列表骨架')
   assert.match(wxml,
-    /<cy-error wx:elif="\{\{error && !hasLoaded\}\}"[\s\S]*?<cy-empty wx:elif="\{\{!loading && !error && !redemptionGroups\.length\}\}"/,
+    /<cy-error load-failure wx:elif="\{\{error && !hasLoaded\}\}"[\s\S]*?<cy-empty wx:elif="\{\{!loading && !error && !redemptionGroups\.length\}\}"/,
     '失败态必须先于业务空态且两者互斥')
   assert.match(js, /onRedemptionFilter\(event\)\s*\{[\s\S]*?_redemptionEpoch\s*=\s*\(this\._redemptionEpoch \|\| 0\) \+ 1/,
     '点击筛选必须立刻推进 epoch，不能等身份探针返回后才防迟到响应')
@@ -275,8 +278,11 @@ test('负控：动效降级、epoch 或错误空态互斥任一回退都必须�
   assert.notEqual(missingTablist, tabsWxml, 'tablist 负控锚点失效')
   assert.throws(() => assertSharedSlabContract(tabsJs, missingTablist, tabsWxss), /tablist/)
 
-  const missingSelected = tabsWxml.replace('    aria-selected="{{item.key === active}}"\n', '')
+  const selectedAnchor = '    aria-selected="{{item.key === active}}"\n'
+  assert.equal(tabsWxml.split(selectedAnchor).length - 1, 1, 'aria-selected 负控必须唯一命中共享筛选项')
+  const missingSelected = tabsWxml.replace(selectedAnchor, '')
   assert.notEqual(missingSelected, tabsWxml, 'aria-selected 负控锚点失效')
+  assert.match(missingSelected, /aria-selected="\{\{item\.key === active\}\}"/, '其他变体的选中态必须保留，不能掩盖共享筛选的缺失')
   assert.throws(() => assertSharedSlabContract(tabsJs, missingSelected, tabsWxss), /选中态/)
 
   const staleEpoch = ledgerJs.replace(
@@ -337,7 +343,7 @@ test('退款按状态并入 tab:待处理含待回应+处理中,已处理只含�
   page.data.redemptionFilter = 'pending'
   page._applyRedemptionView()
   assert.deepEqual(page.data.redemptions.map((item) => item.recordKey), ['aftercare:2', 'aftercare:1'],
-    '待处理 tab 只含未完成的退款,且按时间倒序')
+    '待处理 tab 只含未完成的退款，且按时间倒序')
 
   page.data.redemptionFilter = 'handled'
   page._applyRedemptionView()
@@ -345,7 +351,7 @@ test('退款按状态并入 tab:待处理含待回应+处理中,已处理只含�
 
   page.data.redemptionFilter = 'no_cash'
   page._applyRedemptionView()
-  assert.equal(page.data.redemptions.length, 0, '不结现金是核销口径,不掺退款')
+  assert.equal(page.data.redemptions.length, 0, '不结现金是核销口径，不掺退款')
 
   page.data.redemptionFilter = 'all'
   page._applyRedemptionView()

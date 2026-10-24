@@ -105,7 +105,7 @@ function loadComponent(rel) {
 
 test('重掷只在「掷过、没结算、没重掷、还有幸运」时可见', () => {
   const can = loadComponent(COMPONENT).methods._canReroll
-  assert.equal(can(checkReceiptView(ROLL_RECEIPT)), true, 'roll 完还有 2 点幸运,可以重掷')
+  assert.equal(can(checkReceiptView(ROLL_RECEIPT)), true, 'roll 完还有 2 点幸运，可以重掷')
   assert.equal(can(null), false, '还没掷就没有重掷')
   assert.equal(can(checkReceiptView(Object.assign({}, ROLL_RECEIPT, { settled: true }))), false)
   assert.equal(can(checkReceiptView(Object.assign({}, ROLL_RECEIPT, { rerolled: true }))), false)
@@ -187,6 +187,10 @@ test('★探测:encounter 把 check 放进 allowedActions 才弹;没到店/已�
     options.success({ code: 200, data: ENCOUNTER })
   }
 
+  // 探测由打开节点卡触发(onSheetOpen):回包落地时节点卡仍开着同一节点,该节点未完成
+  page.data.nodes = [{ nodeId: 501, done: false }]
+  page.data.sheet.show = true
+  page.data.sheet.node = page.data.nodes[0]
   page._probeJourneyCheck({ nodeId: 501, done: false })
   await flush()
   assert.equal(requests.length, 1)
@@ -328,6 +332,7 @@ test('真实检定探测回包为内嵌时，关闭节点卡并在当前节点�
   page.data.sheet.show = true
   page.data.chapter = { blocks: [{ type: 'text', content: '开场' }, { type: 'node', nodeId: 501 }, { type: 'text', content: '未来剧情' }] }
   page.data.nodes = [{ nodeId: 501, done: false }]
+  page.data.sheet.node = page.data.nodes[0]   // 节点卡开着的就是被探测的节点
   page.measureChapter = () => {}
   page.playChapterAudio = () => {}
   responder = options => options.success({ code: 200, data: { ...ENCOUNTER, check: { ...ENCOUNTER.check, present: 'inline' } } })

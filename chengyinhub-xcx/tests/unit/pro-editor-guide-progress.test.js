@@ -40,7 +40,7 @@ test('逐步喂数据逐步变 true', () => {
   assert.deepEqual(steps, { pick: true, photo: true, research: false, story: false, allDone: false })
 
   // ③ 查资料:节点介绍文案
-  draft.chapters[0].nodes[0].description = '这里是石库门里弄,建于 1925 年'
+  draft.chapters[0].nodes[0].description = '这里是石库门里弄，建于 1925 年'
   steps = guideStepsOf(draft)
   assert.deepEqual(steps, { pick: true, photo: true, research: true, story: false, allDone: false })
 

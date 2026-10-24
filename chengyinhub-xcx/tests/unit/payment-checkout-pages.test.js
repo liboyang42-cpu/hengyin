@@ -280,7 +280,7 @@ test('baoming:取消订单成功后才换幂等键,下次提交不再重放已�
   assert.ok(cancelReq, '取消必须发出请求');
   assert.equal(vm._reqId, 'req_replay', '取消还没落库时不得换键');
   cancelReq.success(httpOk({}));
-  assert.equal(vm._reqId, null, '取消落库后旧幂等键必须作废,否则重试重放已取消单');
+  assert.equal(vm._reqId, null, '取消落库后旧幂等键必须作废，否则重试重放已取消单');
 });
 
 test('baoming:hostShareChecked 未勾选时阻止支付,不发请求', () => {
@@ -434,14 +434,14 @@ test('baoming:A 模式确认报名页不再提供报名后建队分支', () => {
      被保护的行为一字未变 —— A 模式成功后仍要自己收掉并跳订单 —— 断言随之从
      「本页起了 _successHoldTimer」改成「面板拿到的是一个会自愈的配置」:
      没有按钮(不等人选)且 duration > 0。 */
-  assert.equal(vm.data.resultSheet.primaryText, '', 'A 模式面板不该有按钮,否则它就不自愈了');
+  assert.equal(vm.data.resultSheet.primaryText, '', 'A 模式面板不该有按钮，否则它就不自愈了');
   assert.ok(vm.data.resultSheet.duration > 0, 'A 模式成功后仍按普通报名自动跳订单');
   assert.equal(vm.data.resultSheet.kind, 'success');
 });
 
 /* 2026-09-06 用户裁决:买完就直接跳,成功面板不放按钮 —— B 模式也一样。
  * 建队入口没有消失,它在**落地页**:订单详情的「和队友一起出发」卡
- * (subpackageMember/components/cy/scene-member-order-detail/index.wxml 的 teamMode == 2 分支)。
+ * (subpackageMember/components/cy/scene-member-order-detail/index.wxml 的 info.teamOpen 分支(A/B 两种模式))。
  * 所以本用例从「面板上有建队按钮」改成钉两件事:
  *   ① B 模式和 A 模式一样自愈(无按钮 + duration>0),不再半路拦一次;
  *   ② 面板收掉后跳的正是那个带建队卡的订单详情页。
@@ -460,9 +460,9 @@ test('baoming:支付在途是面板的 loading 态,且不自愈', () => {
   const verifying = src.slice(src.indexOf('onPayVerifying:'), src.indexOf('onPaySuccess:'));
   assert.ok(verifying.length > 0, '切不出 onPayVerifying 就等于下面是空断言');
   assert.match(verifying, /kind: 'loading'/, '在途必须是面板的 loading 态');
-  assert.match(verifying, /duration: 0/, '在途没有终点,不能自愈');
+  assert.match(verifying, /duration: 0/, '在途没有终点，不能自愈');
   assert.doesNotMatch(verifying, /cyLoading\.show/,
-    '支付这条链路有结果面板,不该再盖一层全屏遮罩 —— 那会变成先遮罩再弹窗两拍');
+    '支付这条链路有结果面板，不该再盖一层全屏遮罩 —— 那会变成先遮罩再弹窗两拍');
 
   /* 每个出口都要有交代:要么改写成结果(success/fail),要么收掉(cancel/unknown)。
      漏一个就是一块永不消失的遮罩挡死整页。 */
@@ -470,7 +470,7 @@ test('baoming:支付在途是面板的 loading 态,且不自愈', () => {
   //    直接 indexOf 会让终点落在起点之前 ⇒ 切出空串 ⇒ 下面全是空断言(第一版实测踩到)。
   const flowFrom = src.indexOf('onPayVerifying:');
   const flow = src.slice(flowFrom, src.indexOf('checkPaymentReadiness(', flowFrom));
-  assert.ok(flow.length > 200, '支付回调整段切得太短,八成锚点错了 —— 空串会让下面变成空断言');
+  assert.ok(flow.length > 200, '支付回调整段切得太短，八成锚点错了 —— 空串会让下面变成空断言');
   // ⚠️ 按「下一个 onPay* handler」切,别按第一个 `},` 切 —— setData 的回调里就有一个,
   //    那样会切出半句话,断言变成对着残句判(第一版实测踩到)。
   const bounds = { onPayCancel: 'onPayFail', onPayUnknown: '});' };
@@ -478,7 +478,7 @@ test('baoming:支付在途是面板的 loading 态,且不自愈', () => {
     const from = flow.indexOf(exit);
     assert.ok(from >= 0, '切不到 ' + exit);
     const block = flow.slice(from, flow.indexOf(next, from));
-    assert.ok(block.length > 40, exit + ' 切出来的段太短,八成切错了');
+    assert.ok(block.length > 40, exit + ' 切出来的段太短，八成切错了');
     assert.match(block, /'resultSheet\.show': false/, exit + ' 必须收掉在途面板');
   }
 });
@@ -499,8 +499,8 @@ test('baoming:B 模式成功弹窗与 A 模式一样自愈,建队入口交给订
 
   const orderWxml = fs.readFileSync(
     path.join(__dirname, '../../subpackageMember/components/cy/scene-member-order-detail/index.wxml'), 'utf8');
-  assert.match(orderWxml, /teamMode == 2[\s\S]{0,400}叫上队友/,
-    '建队入口必须真的在落地的订单详情页上,否则这一删就是把入口弄丢了');
+  assert.match(orderWxml, /info\.teamOpen[\s\S]{0,400}叫上队友/,
+    '建队入口必须真的在落地的订单详情页上，否则这一删就是把入口弄丢了');
 });
 
 test('baoming:付费订单后 verifyPayment 轮询后端终态才跳转', () => {

@@ -18,7 +18,7 @@
     <cy-skeleton type="detail" />
   </view>
   <view class="xb-state" style="padding-top:{{statusBarHeight + navBarHeight + 24}}px;" wx:if="{{ loadError && !loading }}">
-    <cy-error class="fill-slot" fill="{{true}}" size="lg" title="玩法没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
+    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="玩法没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
   </view>
 
   <!-- ADA:成功态 hero 全出血,故 scroll 不再让顶(padding-top:0);nav 是 overlay pill,
@@ -47,8 +47,7 @@
       </view>
     </view>
 
-    <!-- 主动作:头部正下方的通栏大按钮 + 右侧圆形 ···(参考图 Xbox 63 的形态,在页面流里)。
-         2026-08-04 用户定:文案两页统一为「开始应用」。 -->
+    <!-- 主动作:头部正下方的通栏大按钮 + 右侧圆形 ···(参考图 Xbox 63 的形态,在页面流里)。 -->
     <view class="xb-cta">
       <cy-btn class="xb-cta-btn" variant="primary" bindtap="goPrimary">{{ primaryLabel }}</cy-btn>
       <view class="xb-more" bindtap="openMore" aria-role="button" aria-label="更多操作" hover-class="cy-pressed" hover-stay-time="80">
@@ -88,6 +87,7 @@
         </view>
       </view>
 
+      <view class="xb-block" wx:if="{{isMyScope && info.reason}}"><text class="xb-body">审核反馈：{{info.reason}}</text></view>
       <view class="xb-stat-grid" wx:if="{{ detailStats.length }}">
         <view class="xb-stat-card" wx:for="{{ detailStats }}" wx:key="label">
           <view class="xb-stat-value">{{ item.value }}</view>
@@ -97,15 +97,22 @@
 
       <!-- 2026-08-05 §4.3 tab1 ③:规则说明就是这一页的「流程」,要紧跟简介 ——
            原来它排在「包含内容」之后,读者先看到包装再看到怎么玩,顺序反了。 -->
-      <view class="xb-block" wx:if="{{ info.ruleInstructions }}">
+      <view class="xb-block" wx:if="{{ ruleSteps.length }}">
         <view class="xb-section-title">
           <cy-icon name="route" size="30" />
           <text>规则</text>
         </view>
+        <!-- F-W5-06:规则按编辑器「一行一步」拆开,每步一个序号;收起态整组限高,「更多」看全部。 -->
         <view class="xb-rule-card">
-          <view class="xb-rule-mark">1</view>
-          <view class="xb-rule-copy">
-            <view id="tpl-rule" class="xb-body xb-body--soft {{ ruleExpanded ? '' : 'xb-body--clamp' }}">{{ info.ruleInstructions }}</view>
+          <view id="tpl-rule-box" class="xb-rule-box {{ ruleExpanded ? '' : 'xb-rule-box--clamp' }}">
+            <view id="tpl-rule" class="xb-rule-list">
+              <view class="xb-rule-step" wx:for="{{ ruleSteps }}" wx:key="index">
+                <view class="xb-rule-mark">{{ index + 1 }}</view>
+                <view class="xb-rule-copy">
+                  <text class="xb-body xb-body--soft">{{ item }}</text>
+                </view>
+              </view>
+            </view>
           </view>
         </view>
         <view class="xb-link-more" wx:if="{{ ruleNeedMore || ruleExpanded }}" bindtap="toggleRuleMore" hover-class="cy-pressed" hover-stay-time="80">
@@ -264,7 +271,7 @@
     <view class="xb-block">
       <view class="xb-notice-card">
         <view class="xb-notice-tit">这是玩法模板，不能直接开团</view>
-        <view class="xb-notice-txt">「开始应用」会把这个玩法复制成你自己的玩法模板；玩家要在活动发布后才能玩到。</view>
+        <view class="xb-notice-txt">{{isMyScope ? (info.canEdit === true ? '这是你的玩法模板，可以继续编辑；玩家要在活动发布后才能玩到。' : '此个人模板仅供查看，请到模板广场的“游戏”中选用玩法；保存为自己的副本后可查看完整配置。') : '「开始应用」会把这个玩法复制成你自己的玩法模板；玩家要在活动发布后才能玩到。'}}</view>
       </view>
     </view>
 
@@ -275,8 +282,14 @@
   <cy-sheet variant="full" show="{{moreShow}}" maskClosable bind:close="closeMore">
     <button class="xb-sheet-item" open-type="share" bindtap="onShare" hover-class="xb-sheet-item--press" hover-stay-time="80">分享玩法</button>
     <view class="xb-sheet-item" wx:if="{{ info.validationMethod }}" bindtap="openPopFromMore" hover-class="xb-sheet-item--press" hover-stay-time="80">预览节点</view>
+    <view class="xb-sheet-item" wx:if="{{ reportKind === 'template' }}" bindtap="reportTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
+    <view class="xb-sheet-item" wx:elif="{{ reportKind === 'personalTemplate' }}" bindtap="reportPersonalTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
     <view class="xb-sheet-item xb-sheet-cancel" bindtap="closeMore" hover-class="xb-sheet-item--press" hover-stay-time="80">取消</view>
   </cy-sheet>
+
+  <!-- FOLLOWUP-A-1:举报原因弹层,与动态详情同一组件 / 同一文案 -->
+  <cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+    confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />
 
   <!-- 节点预览:chrome 交给 cy-sheet(标题 + 右上角 ✕)。
        原来面板自己摆一行「取消 / 节点交互预览 / 关闭」,与全站统一的右上 ✕ 是两套关闭手势;

@@ -29,7 +29,11 @@ beforeEach(() => {
   };
   global.getApp = () => app;
   global.getCurrentPages = () => [];
+  const persisted = {};
   global.wx = {
+    getStorageSync: key => persisted[key],
+    setStorageSync(key, value) { persisted[key] = JSON.parse(JSON.stringify(value)); },
+    removeStorageSync(key) { delete persisted[key]; },
     scanCode({ success }) {
       success({ result: JSON.stringify({ type: 'topic', code: 'OLD-TICKET' }) });
     },
@@ -61,7 +65,7 @@ function makePage() {
   page.data.stationSheet = {
     show: true,
     code: 'OLD-TICKET',
-    items: [{ registrationMerchantId: 9, name: '旧商家据点' }],
+    items: [{ registrationMerchantId: 9, name: '旧商家节点' }],
   };
   page.data.verificationResult = { show: true, state: 'success', title: '旧回执', message: '旧商家核销成功' };
   return page;
@@ -101,7 +105,8 @@ test('切换商家后，旧核销响应不得打开上一商家的选章或结�
     { code: 200, msg: '旧商家核销成功', data: {} },
   ];
 
-  for (const response of lateResponses) {
+  for (const [index, response] of lateResponses.entries()) {
+    wx.scanCode = ({ success }) => success({ result: JSON.stringify({ type: 'topic', code: 'synthetic-case-' + index }) });
     requests = [];
     userId = 11;
     const page = makePage();
@@ -111,7 +116,7 @@ test('切换商家后，旧核销响应不得打开上一商家的选章或结�
 
     assert.equal(page.data.sceneCurrent, null, '迟到回调不能在新账号上打开场景');
     assert.deepEqual(page.data.chapterSheet.items, [], '不得泄漏上一商家的候选章节');
-    assert.deepEqual(page.data.stationSheet.items, [], '不得泄漏上一商家的候选据点');
+    assert.deepEqual(page.data.stationSheet.items, [], '不得泄漏上一商家的候选节点');
     assert.equal(page.data.verificationResult.show, false, '不得显示上一商家的核销回执');
   }
 });
@@ -152,7 +157,7 @@ test('仅刷新经营读数据不得静默丢弃在途核销回执', () => {
   page.goScanQR();
   const verificationRequest = requests.find((request) => request.url === '/api/registration/scan_qr_code');
   page._reloadAll();
-  verificationRequest.success({ code: 200, msg: '刷新期间核销成功', data: {} });
+  verificationRequest.success({ code: 200, msg: '核销成功' });
 
   assert.equal(page.data.sceneCurrent.id, 'merchant-verification-result');
   assert.equal(page.data.verificationResult.state, 'success');
@@ -164,7 +169,7 @@ test('当前商家当前数据轮次的核销回执仍可正常打开', () => {
 
   page.goScanQR();
   const verificationRequest = requests.find((request) => request.url === '/api/registration/scan_qr_code');
-  verificationRequest.success({ code: 200, msg: '核销成功', data: {} });
+  verificationRequest.success({ code: 200, msg: '核销成功' });
 
   assert.equal(page.data.sceneCurrent.id, 'merchant-verification-result');
   assert.equal(page.data.verificationResult.state, 'success');
@@ -181,8 +186,8 @@ test('核销请求在途时离页必须中止请求并收掉全局 loading', () 
   assert.equal(loadingVisible, false, 'destroy 后回调不会再执行，页面必须主动 hideLoading');
 });
 
-// #20 / F-RM-1:据点码在这颗扫码口必须被挡下,但挡下以后要给出能点过去的指路。
-test('据点码在首页扫码口:不发任何核销请求，但弹窗指路且真的跳得过去', () => {
+// #20 / F-RM-1:节点码在这颗扫码口必须被挡下,但挡下以后要给出能点过去的指路。
+test('节点码在首页扫码口:不发任何核销请求，但弹窗指路且真的跳得过去', () => {
   const page = makePage();
   const modals = [];
   const jumps = [];
@@ -192,10 +197,10 @@ test('据点码在首页扫码口:不发任何核销请求，但弹窗指路且�
 
   page.goScanQR();
 
-  assert.equal(requests.length, 0, '据点码不得被送进首页这张共享核销路由表');
-  assert.equal(modals.length, 1, '护栏不能是哑巴 —— 要弹窗指路,不是 2 秒就消失的 toast');
-  assert.match(modals[0].content, /城市据点/);
-  assert.equal(modals[0].confirmText, '去据点页');
+  assert.equal(requests.length, 0, '节点码不得被送进首页这张共享核销路由表');
+  assert.equal(modals.length, 1, '护栏不能是哑巴 —— 要弹窗指路，不是 2 秒就消失的 toast');
+  assert.match(modals[0].content, /城市节点/);
+  assert.equal(modals[0].confirmText, '去节点页');
 
   modals[0].success({ confirm: true, cancel: false });
   assert.deepEqual(jumps, ['/pages/merchant/citynode/index']);

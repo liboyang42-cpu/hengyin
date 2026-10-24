@@ -61,6 +61,62 @@ public final class WeRunDecryptor {
      */
     public static WeRunResult decrypt(String sessionKeyBase64, String encryptedDataBase64,
                                       String ivBase64, String expectedAppId) {
+        JsonNode root = decryptRoot(sessionKeyBase64, encryptedDataBase64, ivBase64, expectedAppId, false);
+
+        JsonNode list = root.path("stepInfoList");
+        if (!list.isArray() || list.size() == 0) {
+            throw new IllegalArgumentException("微信运动数据里没有步数记录");
+        }
+        // stepInfoList 是最近 30 天的升序序列,今天是最后一条
+        JsonNode today = list.get(list.size() - 1);
+        JsonNode step=today.path("step"),stamp=today.path("timestamp");
+        if(!step.isIntegralNumber() || !step.canConvertToInt() || !stamp.isIntegralNumber()
+                || !stamp.canConvertToLong() || stamp.asLong()<=0) {
+            throw new IllegalArgumentException("微信运动步数或时间不合法");
+        }
+        int steps = step.asInt(-1);
+        if (steps < 0) {
+            throw new IllegalArgumentException("微信运动步数不合法");
+        }
+        long timestamp = today.path("timestamp").asLong(0L);
+        return new WeRunResult(steps, timestamp);
+    }
+
+    public static final class VerifiedWeRunReading {
+        private final java.util.SortedMap<String,Integer> days;
+        private final long watermarkTime;
+        private VerifiedWeRunReading(java.util.SortedMap<String,Integer> days,long watermarkTime) {
+            this.days=java.util.Collections.unmodifiableSortedMap(new java.util.TreeMap<>(days));this.watermarkTime=watermarkTime;
+        }
+        public java.util.SortedMap<String,Integer> getDays() { return days; }
+        public long getWatermarkTime() { return watermarkTime; }
+    }
+
+    public static VerifiedWeRunReading decryptVerified(String sessionKeyBase64,String encryptedDataBase64,
+            String ivBase64,String expectedAppId,long serverNow) {
+        JsonNode root=decryptRoot(sessionKeyBase64,encryptedDataBase64,ivBase64,expectedAppId,true);
+        JsonNode watermark=root.path("watermark").path("timestamp");long seconds=serverNow/1000;
+        if(!watermark.isIntegralNumber() || !watermark.canConvertToLong() || watermark.asLong()<seconds-300 || watermark.asLong()>seconds+30)
+            throw new IllegalArgumentException("微信运动读数已过期，请重新同步");
+        JsonNode list=root.path("stepInfoList");
+        if(!list.isArray() || list.size()<1 || list.size()>31)throw new IllegalArgumentException("微信运动日期序列不正确");
+        java.time.ZoneId zone=java.time.ZoneId.of("Asia/Shanghai");
+        java.time.LocalDate today=java.time.Instant.ofEpochMilli(serverNow).atZone(zone).toLocalDate();
+        java.time.LocalDate previous=null;java.util.SortedMap<String,Integer> days=new java.util.TreeMap<>();
+        for(JsonNode row:list) {
+            JsonNode timestamp=row.path("timestamp"),step=row.path("step");
+            if(!timestamp.isIntegralNumber() || !timestamp.canConvertToLong() || timestamp.asLong()<1 || timestamp.asLong()>seconds+30
+                    || !step.isIntegralNumber() || !step.canConvertToInt() || step.asInt()<0)throw new IllegalArgumentException("微信运动日期或步数不合法");
+            java.time.LocalDate day=java.time.Instant.ofEpochSecond(timestamp.asLong()).atZone(zone).toLocalDate();
+            if(day.isBefore(today.minusDays(30)) || day.isAfter(today) || previous!=null && !day.isAfter(previous))
+                throw new IllegalArgumentException("微信运动日期序列须唯一且递增");
+            days.put(day.toString(),step.asInt());previous=day;
+        }
+        if(!today.equals(previous))throw new IllegalArgumentException("微信运动缺少今天读数，请重新同步");
+        return new VerifiedWeRunReading(days,watermark.asLong()*1000);
+    }
+
+    private static JsonNode decryptRoot(String sessionKeyBase64,String encryptedDataBase64,String ivBase64,String expectedAppId,boolean strict) {
         if (isBlank(sessionKeyBase64) || isBlank(encryptedDataBase64) || isBlank(ivBase64)) {
             throw new IllegalArgumentException("微信运动数据不完整");
         }
@@ -78,7 +134,7 @@ public final class WeRunDecryptor {
             }
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
-            plain = stripPkcs7(cipher.doFinal(data));
+            plain = stripPkcs7(cipher.doFinal(data), strict);
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -99,18 +155,7 @@ public final class WeRunDecryptor {
             throw new IllegalArgumentException("微信运动数据来源不匹配");
         }
 
-        JsonNode list = root.path("stepInfoList");
-        if (!list.isArray() || list.size() == 0) {
-            throw new IllegalArgumentException("微信运动数据里没有步数记录");
-        }
-        // stepInfoList 是最近 30 天的升序序列,今天是最后一条
-        JsonNode today = list.get(list.size() - 1);
-        int steps = today.path("step").asInt(-1);
-        if (steps < 0) {
-            throw new IllegalArgumentException("微信运动步数不合法");
-        }
-        long timestamp = today.path("timestamp").asLong(0L);
-        return new WeRunResult(steps, timestamp);
+        return root;
     }
 
     /**
@@ -118,7 +163,7 @@ public final class WeRunDecryptor {
      * BadPaddingException —— 那样连"数据本身没问题只是补位怪"都区分不了。
      * 这里用 NoPadding 解完自己剥,补位不合法就当密文不可信。
      */
-    private static String stripPkcs7(byte[] decrypted) {
+    private static String stripPkcs7(byte[] decrypted, boolean strict) {
         if (decrypted == null || decrypted.length == 0) {
             throw new IllegalArgumentException("微信运动数据为空");
         }
@@ -126,6 +171,7 @@ public final class WeRunDecryptor {
         if (pad < 1 || pad > BLOCK_SIZE || pad > decrypted.length) {
             throw new IllegalArgumentException("微信运动数据补位不合法");
         }
+        if(strict)for(int i=decrypted.length-pad;i<decrypted.length;i++)if((decrypted[i]&255)!=pad)throw new IllegalArgumentException("微信运动数据补位不合法");
         return new String(decrypted, 0, decrypted.length - pad, StandardCharsets.UTF_8);
     }
 

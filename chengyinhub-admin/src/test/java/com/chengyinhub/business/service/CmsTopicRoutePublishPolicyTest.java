@@ -40,6 +40,10 @@ class CmsTopicRoutePublishPolicyTest {
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         stubLockedTopicRead(topicMapper);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         // R19-DRAFT2:发布闸要读票种(完整度),不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
@@ -52,6 +56,7 @@ class CmsTopicRoutePublishPolicyTest {
         topic.setRecruitDeadline(new java.util.Date(System.currentTimeMillis() + 86400000L));
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertThrows(IllegalArgumentException.class, () -> service.publishDraft(10L));
     }
 
@@ -62,6 +67,10 @@ class CmsTopicRoutePublishPolicyTest {
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
@@ -82,6 +91,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null), node(3L, null)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> service.publishDraft(10L));
 
@@ -97,6 +107,10 @@ class CmsTopicRoutePublishPolicyTest {
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
@@ -123,6 +137,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertEquals(true, service.publishDraft(10L));
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
@@ -136,6 +151,10 @@ class CmsTopicRoutePublishPolicyTest {
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         stubLockedTopicRead(topicMapper);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service,"cmsTopicNodeMapper",mock(CmsTopicNodeMapper.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "quotaService", mock(IQuotaService.class));
@@ -170,6 +189,7 @@ class CmsTopicRoutePublishPolicyTest {
         topic.setName("夜跑路线");
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertThrows(IllegalArgumentException.class, () -> service.publishDraft(10L));
 
         verify(topicMapper, never()).publishRouteSnapshot(
@@ -182,6 +202,10 @@ class CmsTopicRoutePublishPolicyTest {
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
@@ -196,6 +220,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         service.publishApprovedRouteSnapshot(10L);
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
@@ -207,6 +232,10 @@ class CmsTopicRoutePublishPolicyTest {
     void pendingTopicCannotAdvancePublishedSnapshot() {
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         CmsTopic topic = new CmsTopic();
         topic.setId(10L); topic.setStatus(0); topic.setRouteMode("BRANCH_GRAPH");
@@ -224,6 +253,10 @@ class CmsTopicRoutePublishPolicyTest {
     void approvedLinearTopicPublishesNullGraphAndAdvancesPublishedVersion() {
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service,"cmsTopicNodeMapper",mock(CmsTopicNodeMapper.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         CmsTopic topic = new CmsTopic();
@@ -231,6 +264,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
         when(topicMapper.publishRouteSnapshot(eq(10L), eq(null), any(java.util.Date.class))).thenReturn(1);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         service.publishApprovedRouteSnapshot(10L);
 
         verify(topicMapper).publishRouteSnapshot(
@@ -243,6 +277,10 @@ class CmsTopicRoutePublishPolicyTest {
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
 

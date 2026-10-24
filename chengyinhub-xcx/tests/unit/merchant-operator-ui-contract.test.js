@@ -22,8 +22,10 @@ function mountTeamPage(storage = {}, options = {}) {
     // 静默登录成功等价于 session-store 落地(真实 session-manager 会写 user_id)。
     getSessionManager: () => ({
       ensureSession: () => {
-        if (!memberId) memberId = 'member-7';
-        return Promise.resolve({ ok: true });
+        if (options.ensureSession) return options.ensureSession();
+        const result = options.sessionResult === undefined ? { ok: true } : options.sessionResult;
+        if (result && result.ok && !memberId) memberId = 'member-7';
+        return Promise.resolve(result);
       },
     }),
     sendRequest(options) { requests.push(options); },
@@ -41,6 +43,7 @@ function mountTeamPage(storage = {}, options = {}) {
     Page: value => { definition = value; },
     getApp: () => app,
     require: request => {
+      if (request.includes('login-reload')) return require('../../utils/session/login-reload.js');
       if (request.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };
       if (request.includes('response-shape')) {
         return {
@@ -72,7 +75,7 @@ function mountTeamPage(storage = {}, options = {}) {
   const page = Object.assign({}, definition);
   page.data = JSON.parse(JSON.stringify(definition.data));
   page.setData = function setData(patch) { Object.assign(this.data, patch); };
-  return { page, requests, toasts, storage, switches };
+  return { page, requests, toasts, storage, switches, setMemberId(value) { memberId = value; } };
 }
 
 test('商家岗位权限只认服务端白名单，未知或脏访问上下文关闭全部经营入口', () => {
@@ -308,7 +311,7 @@ test('店长(MERCHANT_MANAGER)与后端 operatorRoles 对齐:名单、邀请、�
   });
   roleMounted.requests[0].complete();
   assert.equal(roleMounted.toasts.includes('岗位已更新'), true, '调岗成店长的成功回执不得被判无效');
-  assert.equal(roleMounted.requests[1].url, '/api/merchant/operators/list', '成功后回读权威名单');
+  assert.equal(roleMounted.requests[1].url, '/api/merchant/operators/list', '成功后刷新权威名单');
 
   // 邀请店长:回执同样要认
   const inviteMounted = mountTeamPage();
@@ -433,7 +436,7 @@ test('改岗网络结果未知时持久化复用 requestId，收到权威回执�
   replay.complete();
 
   assert.equal(reopened.requests[1].url, '/api/merchant/operators/list',
-    '改岗成功回执后必须以权威名单回读收口');
+    '改岗成功回执后必须以权威名单刷新收口');
   assert.doesNotMatch(JSON.stringify(storage), new RegExp(firstRequestId),
     '成功回执后应清理本次意图');
 });
@@ -470,7 +473,7 @@ test('改岗重放返回 later authoritative state 时只刷新名单，不假�
   assert.equal(mounted.toasts.includes('岗位已更新'), false,
     '后续状态已变化时不得继续显示原操作成功');
   assert.ok(mounted.toasts.some(message => /后续.*变化|最新名单/.test(message)),
-    '必须明确告知用户已回读后续状态');
+    '必须明确告知用户已刷新后续状态');
   assert.doesNotMatch(JSON.stringify(storage), new RegExp(requestId),
     'HTTP 200 later authoritative 已给出已知终态，不得留下永久重放意图');
 });
@@ -768,7 +771,7 @@ test('商家项目招商从项目页到邀约提交全程保留 MERCHANT 主体'
   // 主页现在就地弹邀约；scope 不再拼入旧页面 URL，而是走发布者预检和共享 sheet。
   assert.match(profile, /readPublisherAccess\(app, this\.data, allowed =>/);
   assert.match(profile, /onCoopInvite\(\)\s*\{[\s\S]{0,180}this\._coopPublisherMemberId !== String\(app\.getUserID\(\) \|\| ''\)/);
-  assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /<cy-coop-invite-sheet[^>]*topic-id="\{\{topicId\}\}"[^>]*operation-scope="\{\{operationScope\}\}"/);
+  assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /<cy-coop-invite-sheet[^>]*topic-id="\{\{topicId\}\}"[^>]*operation-scope="\{\{operationScope \|\| ''\}\}"/);
   const { readPublisherAccess } = require('../../utils/coop-publisher-access');
   const accessRequests = [];
   const accessResults = [];
@@ -827,4 +830,69 @@ test('邀请有效期认 ISO(带 T、带不带偏移都认),不再显示「—�
     }] } });
     assert.equal(mounted.page.data.pendingInvites[0].expiresAtText, text, expiresAt);
   });
+});
+
+
+test('经营团队匿名静默登录失败提供可见重试，未发送私有团队读', async()=>{
+ const h=mountTeamPage({}, {memberId:'',sessionResult:{ok:false}});h.page.enterTeam(false);await new Promise(r=>setImmediate(r));
+ assert.equal(h.requests.length,0);assert.equal(h.page.data.accessState,'error');assert.equal(h.page.data.accessErrorIsDenied,true);assert.match(h.page.data.accessError,/登录失败/);
+});
+test('经营团队真实401续期失败仍可见，不伪造成功或产生第二次私有读取',async()=>{
+ const h=mountTeamPage({}, {sessionResult:{ok:false}});h.page.loadAccess();h.requests[0].successStatusAbnormal({statusCode:401},401);await new Promise(r=>setImmediate(r));
+ assert.equal(h.requests.length,1);assert.equal(h.page.data.accessErrorIsDenied,true);assert.match(h.page.data.accessError,/登录失败/);
+});
+test('经营团队真实400/403/422与普通500准确区分，不用权限提示冒充网络故障',()=>{
+ for(const code of [400,403,422,500]){const h=mountTeamPage();h.page.loadAccess();h.requests[0].successStatusAbnormal({statusCode:code,msg:'真实拒绝'},code);assert.equal(h.page.data.accessState,'error');assert.equal(h.page.data.accessErrorIsDenied,[400,403,422].includes(code));assert.equal(h.page.data.accessError,'真实拒绝');}
+});
+test('经营团队换号立即清旧员工/邀请和分享凭据；旧access和team回包不得复活',()=>{
+ const h=mountTeamPage();h.page.loadAccess();const oldAccess=h.requests[0];h.page.loadTeam();const oldTeam=h.requests[1];
+ h.page.data.operators=[{id:7,nickname:'旧员工'}];h.page.data.createdInvite={inviteToken:'fixture-old'};h.page.data.canShareCreatedInvite=true;
+ h.setMemberId('member-8');h.page.loadAccess();assert.equal(h.page.data.operators.length,0);assert.equal(h.page.data.createdInvite,null);assert.equal(h.page.data.canShareCreatedInvite,false);
+ oldAccess.success({code:200,data:{active:true}});oldTeam.success({code:200,data:{operators:[{id:7,nickname:'旧员工'}],invites:[]}});assert.equal(h.page.data.operators.length,0);
+});
+
+for (const method of ['enterTeam', 'recoverSession']) {
+  for (const lifecycle of ['onHide', 'onUnload']) {
+    test(`经营团队 ${method} 登录晚回包在 ${lifecycle} 后不读取或覆盖页面`, async () => {
+      let resolve;
+      const session = new Promise(done => { resolve = done; });
+      const h = mountTeamPage({}, { memberId: method === 'enterTeam' ? '' : 'member-7',
+        ensureSession: () => session });
+      h.page[method](false);
+      h.page[lifecycle]();
+      const state = JSON.stringify(h.page.data);
+      h.setMemberId('member-7'); resolve({ ok: true }); await flush();
+      assert.equal(h.requests.length, 0);
+      assert.equal(JSON.stringify(h.page.data), state);
+    });
+  }
+}
+
+test('经营团队重复匿名入口只让最新入口继续，隐藏后重新显示保留新入口', async () => {
+  let resolve;
+  const session = new Promise(done => { resolve = done; });
+  const h = mountTeamPage({}, { memberId: '', ensureSession: () => session });
+  h.page.enterTeam(false); h.page.onHide(); h.page.onShow();
+  h.setMemberId('member-7'); resolve({ ok: true }); await flush();
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0].url, '/api/merchant/access/me');
+});
+
+test('经营团队续期期间换成另一账号，旧续期不为新账号发起私有读取', async () => {
+  let resolve;
+  const session = new Promise(done => { resolve = done; });
+  const h = mountTeamPage({}, { ensureSession: () => session });
+  h.page.recoverSession(); h.setMemberId('member-8'); resolve({ ok: true }); await flush();
+  assert.equal(h.requests.length, 0);
+});
+
+test('经营团队当前账号前台续期成功继续读取，续期失败仍明确提示', async () => {
+  for (const ok of [true, false]) {
+    let resolve;
+    const session = new Promise(done => { resolve = done; });
+    const h = mountTeamPage({}, { ensureSession: () => session });
+    h.page.recoverSession(); resolve({ ok }); await flush();
+    assert.equal(h.requests.length, ok ? 1 : 0);
+    if (!ok) assert.match(h.page.data.accessError, /登录失败/);
+  }
 });

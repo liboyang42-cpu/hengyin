@@ -3,6 +3,7 @@
 //   展示层存 /api/merchant/decor/save;品牌基础存 /api/merchant/update;
 //   承接能力存 /api/merchant/coop-profile/save;营业状态存 /api/merchant/business-status/update
 const modal = require('../../../utils/modal.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
@@ -11,6 +12,10 @@ const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../utils/checkout/checkout-workflow.js');
 const { createPaymentVerifier } = require('../../../utils/checkout/payment-verifier.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
+const { buildActiveSubscriptions } = require('../utils/merchant-subscription-view.js');
+// 胶囊图标走 cy-tag-sheet 的 Figma 图标表(文件名),不再用 cy-icon 的分类图标名(L11)
+const { tagIconName } = require('../components/cy/tag-sheet/model.js');
+const { isValidMobile } = require('../../../utils/form-state.js');
 
 // 单字段编辑 sheet 的字段表(§〇.2:单字段/短选择 → 半屏 sheet,正文不留内联 input)。
 // saver 指明这一条存去哪个接口 —— 三个接口的白名单不同,存错地方会静默丢字段。
@@ -22,7 +27,85 @@ const FIELDS = {
   preference: { label: '经营类目', placeholder: '如 餐饮 · 咖啡', saver: 'brand', max: 100 },
   description: { label: '品牌故事', placeholder: '写下店铺的故事', saver: 'brand', max: 300, multiline: true },
   derivativeBenefits: { label: '衍生权益', placeholder: '如 限定饮品 / 核销折扣 / 路线纪念章', saver: 'brand' },
+  // owner 2026-10-22:联系电话 / 门店微信号改由商家自助维护(原 CU-M-08 只读),格式与 /api/merchant/update 同口径
+  phone:       { label: '联系电话', placeholder: '11 位手机号', saver: 'brand', max: 11, inputType: 'number',
+                 validate: isValidMobile, invalid: '请填写 11 位手机号' },
+  wechat:      { label: '门店微信', placeholder: '微信号：字母、数字、_ 或 -', saver: 'brand', max: 20,
+                 validate: v => /^[A-Za-z0-9_-]{0,20}$/.test(v), invalid: '微信号只能包含字母、数字、_ 或 -，最多 20 位' },
 };
+
+// 经营类目(preference)固定词库,多选,以「、」拼回原有的 preference 字符串(owner 2026-10-22)
+// 2026-10-22 owner:类目再多一些,每个配合适图标(图标表见 cy-tag-sheet/model.js RULES)
+const PREFERENCE_OPTIONS = ['城市运动', '户外活动', '健康生活', '美食', '咖啡', '茶饮', '烘焙甜品', '酒吧小酌',
+  '手作', '亲子', '夜生活', '文化艺术', '展览', '书店阅读', '音乐现场', '剧本密室', '桌游', '电玩',
+  '摄影', '城市漫步', '骑行', '露营', '瑜伽', '球类', '水上运动', '花艺', '美容美发', '宠物友好'];
+const PREFERENCE_SPLIT = /[、,，·\/|]+|\s+/;
+
+// 行业类型:只给一份常见行业短表,按名称关键字映射到后端已有的分类记录(不再平铺整张分类表)。
+// label 是胶囊上显示的短名,match 用来在 /api/category/list 里认领一条真实记录(存它的 id)。
+const INDUSTRY_OPTIONS = [
+  { label: '餐饮美食', match: /美食|餐饮|烹饪|餐厅|食堂/ },
+  { label: '咖啡茶饮', match: /咖啡|茶饮|饮品|奶茶/ },
+  { label: '烘焙甜品', match: /烘焙|甜品|蛋糕/ },
+  { label: '运动健身', match: /运动|健身|体育/ },
+  { label: '户外出行', match: /户外|徒步|骑行|出行|旅行/ },
+  { label: '文化艺术', match: /文化|艺术|书|展/ },
+  { label: '生活美学', match: /生活|美学|美妆|花艺|时尚/ },
+  { label: '娱乐休闲', match: /娱乐|游戏|音乐|演出|电影|休闲/ },
+  { label: '亲子社交', match: /亲子|社交|交友|组队/ },
+  { label: '摄影', match: /摄影|相机/ },
+];
+const MAX_INDUSTRIES = 5;
+
+/** 胶囊选项里勾选中的 key(按选项顺序,第一个仍是主行业)。 */
+function checkedKeys(options) {
+  return (options || []).filter(o => o && o.checked).map(o => String(o.key));
+}
+
+function parsePreference(value) {
+  return String(value == null ? '' : value).split(PREFERENCE_SPLIT)
+    .map(x => x.trim()).filter((x, i, all) => x && all.indexOf(x) === i);
+}
+
+/** 旧数据里 wechat 列存的是二维码图片 URL —— 拿来当微信号显示就是一串网址。 */
+function looksLikeUrl(value) {
+  return /^https?:\/\//i.test(String(value == null ? '' : value).trim());
+}
+
+/** 选中的行业 id:多选列优先,迁移前回退到单值 categoryId。 */
+function selectedCategoryIds(m) {
+  const raw = m && m.categoryIds ? m.categoryIds : (m && m.categoryId != null ? m.categoryId : '');
+  return String(raw).split(',').map(x => x.trim()).filter(x => /^\d+$/.test(x) && x !== '0');
+}
+
+/**
+ * 常见行业短表 → 胶囊选项。每个短表项认领一条名字匹配的真实记录;没匹配上的短表项不出现。
+ * 已选中但不在短表里的记录照常列出(用其原名),老数据保持可见可取消。
+ * 一个都匹配不上(分类表全是陌生名字)时退回前 10 条真实记录,别给商家一张空面板。
+ */
+function buildIndustryOptions(rows, selectedIds) {
+  const list = Array.isArray(rows) ? rows.filter(r => r && r.id != null && r.categoryName) : [];
+  const used = {};
+  const out = [];
+  INDUSTRY_OPTIONS.forEach(def => {
+    const hit = list.filter(r => !used[r.id] && def.match.test(String(r.categoryName)))[0];
+    if (!hit) return;
+    used[hit.id] = true;
+    out.push({ key: String(hit.id), label: def.label, name: String(hit.categoryName), icon: tagIconName(def.label) });
+  });
+  if (!out.length) {
+    list.slice(0, 10).forEach(r => {
+      used[r.id] = true;
+      out.push({ key: String(r.id), label: String(r.categoryName), name: String(r.categoryName), icon: tagIconName(r.categoryName) });
+    });
+  }
+  (selectedIds || []).forEach(id => {
+    if (out.some(o => o.key === String(id))) return;
+    const row = list.filter(r => String(r.id) === String(id))[0];
+    if (row) out.push({ key: String(row.id), label: String(row.categoryName), name: String(row.categoryName), icon: tagIconName(row.categoryName) });
+  });
+  return out.map(o => Object.assign(o, { checked: (selectedIds || []).indexOf(o.key) >= 0 }));
+}
 
 // 特色标签预置词库(空间/体验/人群),与 E5 搜索共用
 const TAG_LIBRARY = {
@@ -53,16 +136,37 @@ function classifyFailure(error, fallback) {
   }
   const transportText = error && typeof error === 'object' ? String(error.errMsg || '') : '';
   if (code === undefined && /request:fail|timeout|network|网络|断网/i.test(transportText)) {
-    return { kind: 'network', text: '网络连接失败，请检查网络后重试。' };
+    return { kind: 'network', text: '网络异常，请重试。' };
   }
   return { kind: 'data', text: requestText(error, fallback) };
+}
+
+// BL-141:营业状态写后回读。回读值与提交值不一致、或回读不到,都按失败处理(由 _startSave 回滚开关并给重试)。
+function readBackBusinessStatus(expected, success) {
+  app.sendRequest({
+    hideLoading: true, silentError: true, url: '/api/merchant/business-status', method: 'POST',
+    success: function (res) {
+      const data = res && (res.code === '200' || res.code === 200) ? res.data : null;
+      const actual = data ? Number(data.businessStatus) : NaN;
+      if (actual === expected) { success(res); return; }
+      success({ code: 'READBACK', msg: actual === 0 || actual === 1
+        ? '状态更新中：当前仍为' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')) + '，请重试'
+        : '状态更新中，请刷新' });
+    },
+    fail: function () { success({ code: 'READBACK', msg: '状态更新中，请刷新' }); },
+  });
 }
 
 Page({
   data: {
     view: 'home', basicEditing: false, pageTitle: '品牌中心',
-    imageEditor: null, discardVisible: false, brandImages: [],
+    imageEditor: null, discardVisible: false, backGuardOff: false, brandImages: [],
     categoryOptions: [], categoryDraft: [], categoryError: '',
+    // 经营类目/行业类型共用的胶囊多选底部 sheet(owner 2026-10-22)
+    chipSheet: { show: false, kind: '', title: '', options: [], value: [], loading: false, error: '' },
+    imagePicking: false,
+    hoursOpen: false,
+    wechatId: '', wechatQr: '',
     tagDraft: [], tagChoices: [],
     statusBarHeight: 20,
     navBarHeight: 44,
@@ -102,7 +206,11 @@ Page({
 
     perkTypes: ['礼品', '优惠券', '折扣'],
     // E4 升级权益(先做能力,收费开关默认关)
-    chargeEnabled: false,
+    chargeEnabled: null,
+    capabilityState: 'loading',
+    subscriptionState: 'loading',
+    // BL-108 已生效权益(只读,/api/merchant/subscription);空列表不展示
+    activeSubs: [],
 
     checkoutBusy: false,
     checkoutState: 'idle', // idle | submitting | paying | verifying | unknown | success | failed
@@ -155,7 +263,7 @@ Page({
         that.setData({
           loadState: 'permission',
           loadErrTitle: '当前岗位没有资料编辑权限',
-          loadErrSub: '如需修改门店资料，请联系店主或店长。',
+          loadErrSub: '请联系店主开通',
         });
         return;
       }
@@ -185,9 +293,16 @@ Page({
   // 从承接设置/品牌故事子页返回时重拉:行上的摘要与完整度必须跟着子页的保存走
   onShow() {
     merchantTheme.merchantPageShow && merchantTheme.merchantPageShow();
-    if (this._loadedOnce && this.canReadProfileView() && !this.data.fieldSheet.show && !this.data.imageEditor) this.load();
+    // 从相册/裁剪页回来:上传回调还没落地,这次不刷新(刷新会挡住随后的保存),只把返回守卫重新挂上
+    const backFromPicker = this._imagePicking && this._pickingHidden;
+    if (backFromPicker) this._endPicking();
+    if (!backFromPicker && !this.data.chipSheet.show && !this.data.hoursOpen) {
+      if (this._loadedOnce && this.canReadProfileView() && !this.data.fieldSheet.show && !this.data.imageEditor) this.load();
+    }
     if (this._loadedOnce) this.loadPerks();
-    this._loadedOnce = true;
+    if (this._loadedOnce && this.data.merchantAccess.canWriteProfile
+        && this._capabilityScope !== this._commerceScope()) this.loadSubs();
+    this._loadedOnce = true; this._navigating = false;
   },
 
   /** basic/brand/qualification 三个资料视图要 PROFILE_WRITE;深链进来时也要拦住。 */
@@ -196,7 +311,10 @@ Page({
       || this.data.view === 'qualification';
     return !needsProfileWrite || this.data.merchantAccess.canWriteProfile;
   },
-  onHide() { merchantTheme.merchantPageRestore && merchantTheme.merchantPageRestore(); },
+  onHide() {
+    if (this._imagePicking) this._pickingHidden = true;
+    merchantTheme.merchantPageRestore && merchantTheme.merchantPageRestore();
+  },
   onUnload() {
     this._destroyed = true;
     this._loadEpoch = (this._loadEpoch || 0) + 1;
@@ -278,7 +396,7 @@ Page({
 
           refreshing: false,
           loadState: 'error',
-          loadErrTitle: failure.kind === 'network' ? '网络没连上' : '店铺资料没打开',
+          loadErrTitle: failure.kind === 'network' ? '网络没连上' : '店铺资料无法打开',
           loadErrSub: failure.text,
         });
       }
@@ -341,6 +459,7 @@ Page({
             loadState: 'ok',
           });
           that.refreshGuide();
+          that.refreshContact();
           // CU-M-77:已选主推的商家要在卡片上直接看到是哪场活动 —— 名字只在会话里有,
           // 重进就丢了。这里顺手拉一次活动列表反查回填(拉不到就维持兑底串)。
           if (m.featuredId != null) that.loadFeatured();
@@ -357,7 +476,7 @@ Page({
   retryLoad() { this.load(); },
 
   // 空态引导:没有店铺记录 → 去商家入驻
-  goApply() { wx.navigateTo({ url: '/pages/merchant/apply/index' }); },
+  goApply() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/apply/index', complete: () => { this._navigating = false; } }); },
 
   _startSave(options) {
     if (this.data.saving || this.data.refreshing) return false;
@@ -388,12 +507,15 @@ Page({
       if (!isCurrent()) return;
       if (res.code === '200' || res.code === 200) {
         that._retrySave = null;
+        const receipt = options.receipt || '店铺资料已保存';
         that.setData({
           saving: false,
           saveErrorKind: '',
           saveError: '',
-          saveReceipt: options.receipt || '店铺资料已保存',
+          saveReceipt: receipt,
         });
+        // owner 2026-10-22:回执不再插在标题上方把内容顶下去,改用现有 toast 确认
+        toast.success(receipt);
         if (options.onSuccess) options.onSuccess();
       } else {
         fail(res);
@@ -414,7 +536,7 @@ Page({
       receipt: '店铺资料已保存',
       retry: () => this.saveDecor(stablePatch, onSuccess, onFailure),
       onFailure: () => { if (onFailure) onFailure(); },
-      onSuccess: () => { this.setData({m: Object.assign({}, this.data.m, stablePatch)}); this.refreshGuide(); if (onSuccess) onSuccess(); },
+      onSuccess: () => { this.setData({m: Object.assign({}, this.data.m, stablePatch)}); this.refreshGuide(); this.refreshContact(); if (onSuccess) onSuccess(); },
       send(success, fail) {
         app.sendRequest({
           hideLoading: true, url: '/api/merchant/decor/save', method: 'POST',
@@ -432,7 +554,7 @@ Page({
       failureText: '品牌资料保存失败',
       receipt: '品牌资料已保存',
       retry: () => this.saveBrand(stablePatch, onSuccess),
-      onSuccess: () => { this.setData({m: Object.assign({}, this.data.m, stablePatch)}); this.refreshGuide(); if (onSuccess) onSuccess(); },
+      onSuccess: () => { this.setData({m: Object.assign({}, this.data.m, stablePatch)}); this.refreshGuide(); this.refreshContact(); if (onSuccess) onSuccess(); },
       send(success, fail) {
         app.sendRequest({
           hideLoading: true, url: '/api/merchant/update', method: 'POST',
@@ -466,22 +588,80 @@ Page({
     });
   },
   // ===== E4 升级权益 =====
+  _commerceScope() {
+    const owner = app.getUserID ? app.getUserID() : app.globalData && app.globalData.user_id;
+    const merchant = this.data.merchantAccess && this.data.merchantAccess.merchant;
+    return JSON.stringify([String(owner || ''), String(merchant && merchant.id || '')]);
+  },
+  _commerceCurrent(scope) { return !this._destroyed && scope === this._commerceScope(); },
   loadSubs() {
-    const that = this;
+    const scope = this._commerceScope(), epoch = this._capabilityEpoch = (this._capabilityEpoch || 0) + 1;
+    if (this._capabilityScope && this._capabilityScope !== scope) {
+      this.data.checkoutBusy = false; this.setData({ checkoutState: 'idle' });
+    }
+    this._capabilityScope = scope;
+    this.setData({ capabilityState: 'loading', chargeEnabled: null });
+    const finish = (enabled) => {
+      if (!this._commerceCurrent(scope) || epoch !== this._capabilityEpoch) return;
+      this.setData({ capabilityState: typeof enabled === 'boolean' ? 'ready' : 'error',
+        chargeEnabled: typeof enabled === 'boolean' ? enabled : null });
+    };
     app.sendRequest({
-      hideLoading: true, url: '/api/merchant/commerce/capabilities', method: 'POST',
-      success(res) {
-        if ((res.code == '200' || res.code == 200) && res.data) {
-          (Object.assign(that.data, {chargeEnabled: !!res.data.selfCheckoutEnabled}), that.setData({}));
-        }
-      }
+      hideLoading: true, autoErrorToast: false,
+      url: '/api/merchant/commerce/capabilities', method: 'POST',
+      success(res) { finish(res && res.code == 200 && res.data ? res.data.selfCheckoutEnabled : null); },
+      successStatusAbnormal() { finish(null); }, fail() { finish(null); }
     });
-
+    this.loadActiveSubs();
+  },
+  loadActiveSubs() {
+    const scope = this._commerceScope(), epoch = this._subscriptionEpoch = (this._subscriptionEpoch || 0) + 1;
+    this.setData({ subscriptionState: 'loading', activeSubs: [] });
+    const finish = (rows) => {
+      if (!this._commerceCurrent(scope) || epoch !== this._subscriptionEpoch) return;
+      const valid = Array.isArray(rows) && rows.every(row => row && typeof row === 'object'
+        && !Array.isArray(row) && typeof row.subscriptionType === 'string'
+        && (row.isActive === 1 || row.isActive === '1'));
+      const active = valid ? buildActiveSubscriptions(rows, this.data.tiers) : [];
+      this.setData({ activeSubs: active, subscriptionState: !valid ? 'error' : active.length ? 'ready' : 'empty' });
+      const pending = this._pendingEntitlement;
+      if (!pending || pending.scope !== scope) return;
+      // subscription 是 owner 范围的生效授予列表，不含订单关联或可用额度。
+      const confirmed = valid && rows.some(row => row.subscriptionType === pending.bizType
+        && active.some(item => item.key === String(row.id)));
+      this.setData({ checkoutState: confirmed ? 'success' : 'entitlementUnknown' });
+      if (confirmed) {
+        this._pendingEntitlement = null;
+        this._commerceRequestId = null; this._commerceRequestBizType = null;
+        toast.success('已确认该权益生效');
+      }
+    };
+    app.sendRequest({
+      hideLoading: true, silentError: true, autoErrorToast: false,
+      url: '/api/merchant/subscription', method: 'POST',
+      success(res) { finish(res && res.code == 200 ? res.data : null); },
+      successStatusAbnormal() { finish(null); }, fail() { finish(null); }
+    });
+  },
+  retryEntitlements() { this.loadSubs(); },
+  _confirmCommerceEntitlement(bizType, scope) {
+    this._pendingEntitlement = { bizType, scope };
+    this.data.checkoutBusy = false;
+    this.setData({ checkoutState: 'entitlementPending' });
+    this.loadActiveSubs();
   },
   _initCommerceWorkflow() {
-    if (this._commerceWorkflow) return this._commerceWorkflow;
+    const that = this, scope = this._commerceScope();
+    if (this._commerceWorkflow && this._commerceWorkflowScope === scope) return this._commerceWorkflow;
+    if (this._commerceWorkflow) {
+      this._commerceWorkflow.destroy();
+      this._commerceRequestId = null; this._commerceRequestBizType = null; this._pendingEntitlement = null;
+      this.data.checkoutBusy = false; this.setData({ checkoutState: 'idle' });
+    }
+    this._commerceWorkflowScope = scope;
     const verifyPayment = createPaymentVerifier({
       requestStatus(ref, options, cb) {
+        if (!that._commerceCurrent(scope)) return;
         return app.sendRequest({
           hideLoading: true,
           silentError: true,
@@ -510,6 +690,7 @@ Page({
           data: JSON.stringify(payload),
           header: { 'Content-Type': 'application/json' },
           success(res) {
+            if (!that._commerceCurrent(scope)) return;
             if (!(res.code == '200' || res.code == 200) || !res.data) {
               cb({ ok: false, errMsg: '暂不能自助开通' });
               return;
@@ -543,9 +724,11 @@ Page({
         });
       },
       requestPayment(order, cb) {
+        if (!that._commerceCurrent(scope)) return;
         wx.requestPayment(Object.assign({}, order.payParams, {
-          success() { cb({ ok: true }); },
+          success() { if (that._commerceCurrent(scope)) cb({ ok: true }); },
           fail(err) {
+            if (!that._commerceCurrent(scope)) return;
             const cancelled = !!err && String(err.errMsg || '').indexOf('cancel') >= 0;
             cb({ ok: false, cancelled: cancelled, errMsg: cancelled ? '已取消支付' : '支付未完成' });
           }
@@ -559,6 +742,11 @@ Page({
   },
   tapTier(e) {
     const bizType = e.currentTarget.dataset.key;
+    if (bizType !== 'brand_home' && this._capabilityScope !== this._commerceScope()) { this.loadSubs(); return; }
+    if (bizType !== 'brand_home' && this.data.capabilityState !== 'ready') {
+      toast(this.data.capabilityState === 'loading' ? '开通能力读取中' : '开通能力读取失败，请重试');
+      return;
+    }
     if (!this.data.chargeEnabled || bizType === 'brand_home') {
       // CU-M-80:自助结账没开(何况 brand_home 永远只走人工)时不能只弹一句就断头 ——
       // 面板底部挂了真实的客服会话入口(联系运营开通),这里把用户指过去。
@@ -571,8 +759,8 @@ Page({
       this._commerceRequestId = 'commerce_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
       this._commerceRequestBizType = bizType;
     }
-    const that = this;
-    const submitted = workflow.submit({ bizType: bizType, requestId: this._commerceRequestId }, {
+    const that = this, scope = this._commerceScope();
+    const handlers = {
       onOrderFail(res) {
         if (res && res.terminal) {
           that._commerceRequestId = null;
@@ -581,21 +769,9 @@ Page({
         (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'failed'}));
         toast(res && res.errMsg || '暂不能自助开通');
       },
-      onFreeSuccess() {
-        that._commerceRequestId = null;
-        that._commerceRequestBizType = null;
-        (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'success'}));
-        toast.success('权益已到账');
-        that.loadSubs();
-      },
+      onFreeSuccess() { that._confirmCommerceEntitlement(bizType, scope); },
       onPayVerifying() { that.setData({ checkoutState: 'verifying' }); },
-      onPaySuccess() {
-        that._commerceRequestId = null;
-        that._commerceRequestBizType = null;
-        (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'success'}));
-        toast.success('支付成功，权益已到账');
-        that.loadSubs();
-      },
+      onPaySuccess() { that._confirmCommerceEntitlement(bizType, scope); },
       onPayCancel() {
         (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'idle'}));
       },
@@ -611,12 +787,19 @@ Page({
         (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'unknown'}));
         modal.show({
           title: '支付结果待确认',
-          content: '暂不要重复支付，请稍后查看已开通权益或联系官方运营。',
+          content: '请勿重复支付，稍后查看已开通权益或联系平台',
           showCancel: false
         });
       }
+    };
+    Object.keys(handlers).forEach(key => {
+      const handler = handlers[key];
+      handlers[key] = value => { if (that._commerceCurrent(scope)) handler(value); };
     });
-    if (submitted) (Object.assign(this.data, {checkoutBusy: true}), this.setData({checkoutState: 'submitting'}));
+    const submitted = workflow.submit({ bizType, requestId: this._commerceRequestId }, handlers);
+    if (submitted && workflow.getState() === 'submitting') {
+      this.data.checkoutBusy = true; this.setData({checkoutState: 'submitting'});
+    }
   },
 
   // 图片编辑保持独立草稿；只有确认且服务端成功后更新主页。
@@ -632,12 +815,35 @@ Page({
     if (image && image.value !== image.initial) (Object.assign(this.data, {discardTarget:'image'}), this.setData({discardVisible:true}));
     else this.setData({imageEditor:null});
   },
+  // 选图要跳 /pages/crop/index:离页会让下面的 page-container 返回守卫 leave → 以前就此 closeImage,
+  // 编辑器变 null,上传回来的图被静默丢掉。现在:选图期间标记 picking、守卫让位,回来后重挂;
+  // 上传结果无论编辑器此刻是否还开着都落到编辑器预览里,由「使用这个 Logo / 使用这张封面」保存。
+  _beginPicking() {
+    this._imagePicking = true;
+    this._pickingHidden = false;
+    this.setData({ imagePicking: true });
+  },
+  _endPicking() {
+    if (!this._imagePicking) return;
+    this._imagePicking = false;
+    this._pickingHidden = false;
+    if (!this._destroyed) this.setData({ imagePicking: false });
+  },
   chooseEditImage() {
     if (this.data.saving || !this.data.imageEditor) return;
     const key = this.data.imageEditor.key;
+    this._beginPicking();
     app.chooseImage(urls => {
-      if (urls && urls[0] && this.data.imageEditor && this.data.imageEditor.key === key) this.setData({'imageEditor.value': urls[0]});
-    }, 1, {crop: true, cropScale: key === 'logo' ? '1:1' : '5:3'});
+      this._endPicking();
+      if (this._destroyed || !urls || !urls[0]) return;
+      this.applyPickedImage(key, urls[0]);
+    }, 1, {crop: true, cropScale: key === 'logo' ? '1:1' : '5:3',
+      onUploadDone: () => { this._endPicking(); return false; }});
+  },
+  applyPickedImage(key, url) {
+    const current = this.data.imageEditor;
+    const initial = current && current.key === key ? current.initial : ((this.data.m && this.data.m[key]) || '');
+    this.setData({ imageEditor: { key, value: url, initial }, discardVisible: false });
   },
   saveImage() {
     if (!this.data.imageEditor || this.data.saving) return;
@@ -673,6 +879,7 @@ Page({
         show: true, key: key, label: def.label, placeholder: def.placeholder,
         value: m[key] == null ? '' : String(m[key]),
         initial: m[key] == null ? '' : String(m[key]), max: def.max || 100, multiline: !!def.multiline,
+        inputType: def.inputType || 'text',
       },
     });
   },
@@ -685,6 +892,21 @@ Page({
     else this.setData({'fieldSheet.show': false});
   },
   keepEditing() { this.setData({discardVisible: false}); },
+  // 物理返回守卫(见 wxml 尾部 page-container):先关最上层浮层(放弃确认 > 字段面板 > 图片编辑),不退出装修页
+  onNativeBackGuard() {
+    // 选图跳裁剪页也会让守卫 leave:那不是用户按返回,不关任何浮层(onShow 回来时重挂)
+    if (this._imagePicking) return;
+    const d = this.data;
+    if (d.discardVisible) this.keepEditing();
+    else if (d.fieldSheet && d.fieldSheet.show) this.closeFieldSheet();
+    else if (d.chipSheet && d.chipSheet.show) this.closeChipSheet();
+    else if (d.imageEditor) this.closeImage();
+    const n = this.data;
+    if (n.imageEditor || (n.fieldSheet && n.fieldSheet.show) || n.discardVisible || (n.chipSheet && n.chipSheet.show)) {
+      this.setData({backGuardOff: true});
+      setTimeout(() => { if (!this._destroyed) this.setData({backGuardOff: false}); }, 50);
+    }
+  },
   discardField() {
     if(this.data.discardTarget === 'image') this.setData({discardVisible:false,saveError:'',imageEditor:null});
     else this.setData({discardVisible:false,saveError:'','fieldSheet.show':false});
@@ -692,11 +914,14 @@ Page({
   // 确认即保存(§1:主页面无总保存,各编辑落点自己 Save)
   confirmField() {
     if (this.data.saving || this.data.refreshing) return;
-    const { key, value } = this.data.fieldSheet;
+    const key = this.data.fieldSheet.key;
     const def = FIELDS[key];
     if (!def) return;
+    // 电话/微信号按格式存,首尾空格不算内容
+    const value = def.validate ? String(this.data.fieldSheet.value).trim() : this.data.fieldSheet.value;
     if (key === 'name' && !String(value).trim()) return toast('请填写店铺名称');
     if (String(value).length > (def.max || 100)) return toast('内容超过字数限制');
+    if (def.validate && !def.validate(value)) return toast(def.invalid);
     const done = () => this.setData({'fieldSheet.show': false});
     if (def.saver === 'brand') this.saveBrand({[key]: value}, done);
     else this.saveDecor({[key]: value}, done);
@@ -712,28 +937,35 @@ Page({
   onBasicAction(e) {
     if (!this.data.basicEditing) return;
     const action = e.currentTarget.dataset.action;
-    if (['openField','geoLocate','goStory','previewLicense','previewBrandImages'].includes(action)) this[action](e);
+    if (['openField','geoLocate','goStory','previewLicense','previewBrandImages',
+      'openPreference','goCategory','openHours','chooseQrcode'].includes(action)) this[action](e);
   },
-  goSection(e) { wx.navigateTo({url: '/pages/merchant/decor/index?view=' + e.currentTarget.dataset.view}); },
+  goSection(e) { if (this._navigating) return; this._navigating = true; wx.navigateTo({url: '/pages/merchant/decor/index?view=' + e.currentTarget.dataset.view, complete: () => { this._navigating = false; } }); },
   openDerivatives() {
     this.openField({currentTarget:{dataset:{k:'derivativeBenefits'}}});
   },
-  goAiNpc() { wx.navigateTo({url: '/pages/merchant/decor/ai-npc/index'}); },
+  goAiNpc() { if (this._navigating) return; this._navigating = true; wx.navigateTo({url: '/pages/merchant/decor/ai-npc/index', complete: () => { this._navigating = false; } }); },
   // CU-M-71:执照/品牌图是入驻时提交的只读资料(补交入口在入驻流程)。无图时行上已无箭头,
   // 点击还得给一句稳定解释,别把「没图」当无事发生。说明落在行上的 description,toast 只做反馈。
   previewLicense() {
-    if (this.data.m.businessLicense) wx.previewImage({urls: [this.data.m.businessLicense]});
+    if (this.data.m.businessLicense) mediaPreview.open([this.data.m.businessLicense], this.data.m.businessLicense);
     else toast('入驻时提交，如需更新请联系平台');
   },
   previewBrandImages() {
-    if (this.data.brandImages.length) wx.previewImage({urls: this.data.brandImages});
+    if (this.data.brandImages.length) mediaPreview.open(this.data.brandImages, this.data.brandImages[0]);
     else toast('入驻时提交，如需更新请联系平台');
   },
+  openHours() {
+    if (this.data.saving || this.data.refreshing) return;
+    const hours = this.selectComponent('#business-hours');
+    if (hours) hours.open();
+  },
+  onHoursVisible(e) { this.setData({ hoursOpen: !!(e.detail && e.detail.visible) }); },
   onHoursSave(e) { this.saveBrand({businessTime: e.detail.value}, () => this.selectComponent('#business-hours').close()); },
-  goCoopSetting() { wx.navigateTo({ url: '/pages/merchant/decor/coop-setting/index' }); },
-  goGallery() { wx.navigateTo({ url: '/pages/merchant/decor/gallery/index' }); },
-  goPerks() { wx.navigateTo({ url: '/pages/merchant/decor/perks/index' }); },
-  goReviews() { wx.navigateTo({ url: '/pages/merchant/reviews/index?mode=manage' }); },
+  goCoopSetting() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/coop-setting/index', complete: () => { this._navigating = false; } }); },
+  goGallery() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/gallery/index', complete: () => { this._navigating = false; } }); },
+  goPerks() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/perks/index', complete: () => { this._navigating = false; } }); },
+  goReviews() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/reviews/index?mode=manage', complete: () => { this._navigating = false; } }); },
 
 
   // ===== 营业状态(即时) =====
@@ -754,10 +986,16 @@ Page({
         this.saveBusinessStatus(bs, previous);
       },
       onFailure: () => this.setData({ 'm.businessStatus': previous }),
+      // BL-141:写成功后先读 /api/merchant/business-status,回读值一致才算保存成功(才出回执)。
       send(success, fail) {
         app.sendRequest({
           hideLoading: true, url: '/api/merchant/business-status/update', method: 'POST',
-          data: { business_status: bs }, success: success, fail: fail,
+          data: { business_status: bs },
+          success: function (res) {
+            if (!res || !(res.code === '200' || res.code === 200)) { success(res); return; }
+            readBackBusinessStatus(bs, success);
+          },
+          fail: fail,
         });
       },
     });
@@ -822,27 +1060,114 @@ Page({
     });
   },
 
-  // ===== 行业类型选择(复用 cy-category-sheet,2026-07-31 弹窗化:不再跳转独立页面)=====
+  // ===== 门店联系方式(owner 2026-10-22:门店微信 = 微信号文本;二维码单独一行上传/缩略图) =====
+  refreshContact() {
+    const m = this.data.m || {};
+    const legacyQr = looksLikeUrl(m.wechat) ? String(m.wechat).trim() : '';
+    this.setData({
+      wechatId: legacyQr ? '' : (m.wechat || ''),
+      wechatQr: m.wechatQrcode || legacyQr,
+    });
+  },
+  chooseQrcode() {
+    if (this.data.saving || this.data.refreshing) return;
+    this._beginPicking();
+    // 不传 crop/cropScale = 自由比例:二维码的定位角一裁就扫不出来(见 app.chooseImage 注释)
+    app.chooseImage(urls => {
+      this._endPicking();
+      if (this._destroyed || !urls || !urls[0]) return;
+      this.saveBrand({ wechatQrcode: urls[0] });
+    }, 1, { onUploadDone: () => { this._endPicking(); return false; } });
+  },
+  previewQrcode() {
+    if (this.data.wechatQr) mediaPreview.open([this.data.wechatQr], this.data.wechatQr);
+  },
+  onQrcodeTap(e) {
+    if (this.data.basicEditing) this.chooseQrcode(e);
+    else if (this.data.wechatQr) this.previewQrcode();
+  },
+
+  // ===== 经营类目 / 行业类型:底部 sheet + 胶囊多选(owner 2026-10-22) =====
+  openPreference() {
+    if (this.data.saving || this.data.refreshing) return;
+    const current = parsePreference(this.data.m && this.data.m.preference);
+    const options = PREFERENCE_OPTIONS.concat(current.filter(x => PREFERENCE_OPTIONS.indexOf(x) < 0))
+      .map(label => ({ key: label, label, icon: tagIconName(label), checked: current.indexOf(label) >= 0 }));
+    this.setData({ saveError: '', saveErrorKind: '',
+      chipSheet: { show: true, kind: 'preference', title: '经营类目', options, value: checkedKeys(options), loading: false, error: '' } });
+  },
   goCategory() {
     if (this.data.saving || this.data.refreshing) return;
-    const ids = String(this.data.m.categoryId || '').split(',');
-    this.setData({categoryError: '', categoryOptions: []});
+    const ids = selectedCategoryIds(this.data.m);
+    const cached = this._categoryRows;
+    const initial = cached ? buildIndustryOptions(cached, ids) : [];
+    this.setData({ saveError: '', saveErrorKind: '', chipSheet: {
+      show: true, kind: 'category', title: '行业类型',
+      options: initial, value: checkedKeys(initial), loading: false, error: '' } });
+    if (cached) return;
+    // 不闪:400ms 内回来就直接出胶囊,超过才显示「正在载入」
+    if (this._categoryLoadingTimer) clearTimeout(this._categoryLoadingTimer);
+    this._categoryLoadingTimer = setTimeout(() => {
+      this._categoryLoadingTimer = null;
+      if (!this._destroyed && this.data.chipSheet.kind === 'category' && !this.data.chipSheet.options.length
+          && !this.data.chipSheet.error) this.setData({ 'chipSheet.loading': true });
+    }, 400);
+    const done = (error, options) => {
+      if (this._categoryLoadingTimer) { clearTimeout(this._categoryLoadingTimer); this._categoryLoadingTimer = null; }
+      if (this._destroyed || this.data.chipSheet.kind !== 'category') return;
+      if (error) this.setData({ 'chipSheet.loading': false, 'chipSheet.error': error });
+      else this.setData({ 'chipSheet.loading': false, 'chipSheet.error': '', 'chipSheet.options': options, 'chipSheet.value': checkedKeys(options) });
+    };
     app.sendRequest({hideLoading:true, url:'/api/category/list', method:'POST', data:{type:1,parentid:0},
       success: res => {
-        if (String(res.code) !== '200' || !Array.isArray(res.data)) return this.setData({categoryError:'行业类型没能载入，请重试'});
-        this.setData({categoryOptions: res.data.map(c => Object.assign({}, c, {checked: ids.indexOf(String(c.id)) >= 0}))});
-      }, fail: () => this.setData({categoryError:'网络异常，请重试'})});
+        if (String(res.code) !== '200' || !Array.isArray(res.data)) return done('行业类型没能载入，请重试');
+        this._categoryRows = res.data;
+        done('', buildIndustryOptions(res.data, selectedCategoryIds(this.data.m)));
+      }, fail: () => done('网络异常，请重试')});
   },
-  toggleCategory(e) {
+  retryChipSheet() {
+    if (this.data.chipSheet.kind === 'category') { this._categoryRows = null; this.goCategory(); }
+  },
+  toggleChip(e) {
     if (this.data.saving) return;
-    const i = e.currentTarget.dataset.index;
-    this.setData({categoryOptions: this.data.categoryOptions.map((c, index) => Object.assign({}, c, {checked:index === Number(i)}))});
+    const key = String(e.currentTarget.dataset.key);
+    const options = this.data.chipSheet.options;
+    const target = options.filter(o => o.key === key)[0];
+    if (!target) return;
+    if (!target.checked && this.data.chipSheet.kind === 'category'
+        && options.filter(o => o.checked).length >= MAX_INDUSTRIES) return toast('最多选 ' + MAX_INDUSTRIES + ' 个');
+    const next = options.map(o => o.key === key ? Object.assign({}, o, { checked: !o.checked }) : o);
+    this.setData({ 'chipSheet.options': next, 'chipSheet.value': checkedKeys(next) });
   },
-  saveCategories() {
-    const selected = this.data.categoryOptions.filter(c => c.checked);
-    this.saveDecor({categoryId:selected.map(c=>c.id).join(',')}, () => {
-      this.setData({catNames:selected.map(c=>c.categoryName).join(' · ')});
-      this.selectComponent('#category-menu').close();
+  /** cy-tag-sheet 点选回传整份选中 key(上限由组件按 max 拦并 toast),落回 options.checked,保存链路不变。 */
+  onChipSheetChange(e) {
+    if (this.data.saving) return;
+    const value = ((e && e.detail && e.detail.value) || []).map(String);
+    const next = this.data.chipSheet.options.map(o => Object.assign({}, o, { checked: value.indexOf(o.key) >= 0 }));
+    this.setData({ 'chipSheet.options': next, 'chipSheet.value': checkedKeys(next) });
+  },
+  closeChipSheet() {
+    if (this.data.saving) return;
+    this.setData({ 'chipSheet.show': false });
+  },
+  saveChipSheet() {
+    if (this.data.saving || this.data.refreshing) return;
+    const sheet = this.data.chipSheet;
+    const picked = sheet.options.filter(o => o.checked);
+    const close = () => this.setData({ 'chipSheet.show': false });
+    if (sheet.kind === 'preference') {
+      const preference = picked.map(o => o.label).join('、');
+      if (preference.length > 100) return toast('内容超过字数限制');
+      this.saveBrand({ preference }, close);
+      return;
+    }
+    if (!picked.length) return toast('请至少选择一个行业类型');
+    const categoryIds = picked.map(o => o.key).join(',');
+    // 行上显示真实分类名(与重进页面时 sysCategoryList 拼出的一致),胶囊上才用短名
+    const names = picked.map(o => o.name || o.label).join(' · ');
+    this.saveDecor({ categoryIds }, () => {
+      this.setData({ catNames: names, 'm.categoryId': Number(picked[0].key) });
+      close();
     });
   },
   // ===== 招牌主推:拉"我发起的活动"选一个置顶 =====
@@ -863,7 +1188,7 @@ Page({
         const raw = ok && res.data && Array.isArray(res.data.rows)
           ? res.data.rows : (ok && Array.isArray(res.data) ? res.data : null);
         if (!raw || raw.some(a => !a || a.id === null || a.id === undefined || a.id === '')) {
-          that.setFeaturedError('活动列表暂时没能加载，请稍后重试');
+          that.setFeaturedError('活动列表加载失败，请重试');
           return;
         }
         that.setData({
@@ -877,7 +1202,7 @@ Page({
         if (requestId === that._featuredRequestId) that.setFeaturedError('网络异常，检查网络后重试');
       },
       successStatusAbnormal() {
-        if (requestId === that._featuredRequestId) that.setFeaturedError('活动列表暂时没能加载，请稍后重试');
+        if (requestId === that._featuredRequestId) that.setFeaturedError('活动列表加载失败，请重试');
       },
     });
   },
@@ -899,7 +1224,7 @@ Page({
   goPublishActivity() {
     // CU-M-05:招牌主推的空候选里「去发布一个活动」是商家主办入口,必须带 scope ——
     // 不带的话发布页按俱乐部主理人判身份,商家进来直接被拦回本页且没有任何失败提示。
-    wx.navigateTo({ url: '/pages/publish/activity/index?scope=MERCHANT' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
   selectFeatured(e) {
     if (this.data.saving || this.data.refreshing) return;
@@ -913,7 +1238,7 @@ Page({
 
   // ===== 成为城市节点(E1/E2 citynode) =====
   goCityNode() {
-    wx.navigateTo({ url: '/pages/merchant/citynode/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/citynode/index', complete: () => { this._navigating = false; } });
   },
 
   // ===== 看公开主页 =====
@@ -921,7 +1246,7 @@ Page({
   goPreview() {
     const url = merchantHomeUrl(this.data.m && this.data.m.memberId);
     if (!url) { toast('资料加载中'); return; }
-    wx.navigateTo({ url: url + '&preview=1' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: url + '&preview=1', complete: () => { this._navigating = false; } });
   },
 
   // ===== 门店定位校准(E2 geo,手动打点) =====

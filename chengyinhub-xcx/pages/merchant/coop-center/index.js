@@ -1,5 +1,6 @@
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
 const officialChannel = require('../../../utils/merchant-official-channel.js');
 const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
@@ -41,8 +42,17 @@ function termsLine(item) {
   return TERMS_MODE_TEXT[mode];
 }
 
+// 2026-10-22 owner:已过期的不展示 —— 招商截止或活动已结束都不进广场(后端 recruiting() 同口径先滤一遍)。
+function isRouteExpired(item, now) {
+  const deadline = toTimestamp(item.recruitDeadline || item.merchantSignUpEndDate);
+  if (deadline && deadline <= now) return true;
+  const end = toTimestamp(item.endDate);
+  return !!(end && end <= now);
+}
+
 function routeCards(items) {
-  return (items || []).filter((item) => item && hasValue(item.id) && hasValue(item.name)).map((item) => {
+  const now = Date.now();
+  return (items || []).filter((item) => item && hasValue(item.id) && hasValue(item.name) && !isRouteExpired(item, now)).map((item) => {
     const deadline = toTimestamp(item.recruitDeadline || item.merchantSignUpEndDate);
     const start = monthDay(item.startDate);
     const end = monthDay(item.endDate);
@@ -54,10 +64,13 @@ function routeCards(items) {
       cover: item.imgUrl || '',
       modeText: PRODUCT_TYPE_TEXT[item.productType] || '',
       dateText: start && end && start !== end ? start + ' – ' + end : start,
+      // 卡片底行的短统计(图上空间有限):城市放进档期行,这里只留站数 / 截止日
+      cityText: item.cityKeyword || '',
+      stationText: item.locationCount ? item.locationCount + ' 站' : '',
+      deadlineShort: deadline && deadline > now ? '截止 ' + monthDay(deadline) : '',
       metaText: meta.join(' · '),
       termsText: termsLine(item),
-      // 已截止也展示(稿上有「已截止」态):决定权在商家,不替他藏
-      deadlineText: !deadline ? '' : (deadline > Date.now() ? '招商截止 ' + monthDay(deadline) : '已截止'),
+      deadlineText: deadline ? '招商截止 ' + monthDay(deadline) : '',
     }, seatOf(item.remainingMerchantCount));
   });
 }
@@ -74,6 +87,7 @@ function routeScopeText(recruiting) {
 
 Page({
   data: {
+    flyClass: '',   // owner 10-22:每次打开页面广场卡飞入(onShow 飞入、onHide 先藏好等下次重播)
     statusBarHeight: app.globalData.statusBarHeight || 20,
     navBarHeight: app.globalData.navBarHeight || 44,
     tabs: [
@@ -98,8 +112,14 @@ Page({
     this.loadAvailable();
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    merchantTheme.merchantPageShow();
+    this.setData({ flyClass: readReducedMotion() ? '' : 'cy-fly-in' });
+  },
+  onHide() {
+    merchantTheme.merchantPageRestore();
+    this.setData({ flyClass: readReducedMotion() ? '' : 'cy-fly-wait' });
+  },
   onUnload() { merchantTheme.merchantPageRestore(); },
 
   onNavBack() {
@@ -109,8 +129,8 @@ Page({
 
   onTabChange(e) { this.setData({ activeTab: e.detail.key }); },
 
-  // 右上角铃铛:协作邀请(收到的 / 我发出的)是全站唯一的合作收发入口
-  goInbox() { wx.navigateTo({ url: '/pages/coop/list/index' }); },
+  // 右上角铃铛:2026-10-22 owner 裁决 —— 邀请就是收件箱 / 发件箱,进消息页(收件箱=会话+收到的邀请,发件箱=发出的邀请)
+  goInbox() { wx.navigateTo({ url: '/subpackageB/pages/im/list/index' }); },
 
   loadAvailable() {
     this.loadRoutes();

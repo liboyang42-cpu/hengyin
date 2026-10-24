@@ -45,7 +45,7 @@ function compositeOver(rgbaLiteral, backdropHex) {
 
 // 在一份 wxss 里查某个 CSS 变量的定义值,支持 `--a: var(--b)` 的一层层跳转
 function resolveToken(name, sources, depth = 0) {
-  assert.ok(depth < 8, `token ${name} 解析层数过深,可能有环`)
+  assert.ok(depth < 8, `token ${name} 解析层数过深，可能有环`)
   for (const src of sources) {
     const re = new RegExp(`${name.replace(/[-]/g, '\\-')}\\s*:\\s*([^;]+);`)
     const hit = src.match(re)
@@ -76,7 +76,7 @@ test('商家资质上传框的 + 号对比度必须达到 WCAG 非文本 3:1', (
   // 前提断言:这个控件确实是「无边框」的,+ 号才是唯一可点提示。
   // 如果哪天给 .up-box 补了达标边框,这条前提会红 —— 那时该重写本契约,而不是删掉它。
   const boxBorder = declarationOf(applyWxss, '.up-box', 'border')
-  assert.equal(boxBorder, 'none', '.up-box 已经不是无边框了,本契约的前提变了,请重新评估可感知边界从哪来')
+  assert.equal(boxBorder, 'none', '.up-box 已经不是无边框了，本契约的前提变了，请重新评估可感知边界从哪来')
 
   const surface = resolveToken('--cy-color-bg-surface', themeSources)
   const plusColor = declarationOf(applyWxss, '.up-plus', 'color')
@@ -88,7 +88,7 @@ test('商家资质上传框的 + 号对比度必须达到 WCAG 非文本 3:1', (
   const ratio = contrastRatio(effective, surface)
   assert.ok(
     ratio >= WCAG_NON_TEXT_MIN,
-    `.up-plus 实际呈现 ${effective} 落在 ${surface} 上,对比度 ${ratio.toFixed(2)}:1,` +
+    `.up-plus 实际呈现 ${effective} 落在 ${surface} 上，对比度 ${ratio.toFixed(2)}:1,` +
       `低于 WCAG 1.4.11 非文本门槛 ${WCAG_NON_TEXT_MIN}:1。` +
       `这是这个上传框唯一的「可以点」提示(.up-box 无边框、与容器只差 1.10:1)。`
   )
@@ -105,6 +105,6 @@ test('上传框与其容器的边界确实低于门槛 —— 本契约的立论
   assert.ok(
     ratio < WCAG_NON_TEXT_MIN,
     `surface(${surface})与 surface-subtle(${subtle})现在有 ${ratio.toFixed(2)}:1,` +
-      `边界已可独立感知 —— 请回头放宽 .up-plus 那条契约,别让它以过时理由继续卡着。`
+      `边界已可独立感知 —— 请回头放宽 .up-plus 那条契约，别让它以过时理由继续卡着。`
   )
 })

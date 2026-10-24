@@ -23,12 +23,12 @@
   <cy-page-title title="协作详情" safe-top="{{false}}" flush="{{true}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="3" loading-label="正在加载协作详情" />
-  <cy-error wx:elif="{{state === 'missing'}}" fill size="lg" title="打不开这条邀约" sub="{{errorText}}"
+  <cy-error load-failure wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条邀约" sub="{{errorText}}"
             retry="回协作邀请" bind:retry="goBack" />
   <cy-error wx:elif="{{state === 'notfound'}}" fill size="lg" title="这条邀约不在当前列表里了"
-            sub="它可能已经被撤回，或移到了另一侧。回列表看看最新的。"
+            sub=""
             retry="回协作邀请" bind:retry="goBack" />
-  <cy-error wx:elif="{{state !== 'ready'}}" fill size="lg" title="协作详情没加载出来" sub="{{errorText}}"
+  <cy-error load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="协作详情加载失败" sub="{{errorText}}"
             auto-back custom-back bind:back="goBack" retry="重试" bind:retry="retry" />
 
   <block wx:else>
@@ -77,6 +77,8 @@
       <!-- 保证金单独给强调色:它是唯一一条要掏钱的 -->
       <view class="kv"><text class="k">保证金</text>
         <text class="v {{invite.depositDueText ? 'v--owed' : ''}}">{{invite.depositDueText || '无'}}</text></view>
+      <!-- BL-103:对方近 90 天履约信用(POST /api/coop/credit,只读);样本为 0 或读不到不展示 -->
+      <view wx:if="{{partnerCredit}}" class="kv"><text class="k">{{partnerCredit.label}}</text><text class="v">{{partnerCredit.text}}</text></view>
     </view>
 
     <view class="card">
@@ -132,9 +134,10 @@
         <text class="op-name">已评价</text>
         <text class="op-hint">{{myReviewStars}}</text>
       </view>
-      <view class="op" wx:elif="{{box === 'received' || invite.toType === 'merchant'}}" bindtap="reviewCoop" aria-role="button" aria-label="评价本次合作" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="op" wx:elif="{{box === 'received' || invite.toType === 'merchant'}}" bindtap="reviewCoop" aria-role="button" aria-label="评价本次合作" aria-disabled="{{reviewVerifying}}" hover-class="cy-pressed" hover-stay-time="80">
         <text class="op-name">评价</text>
-        <cy-icon name="arrow-right" size="24" />
+        <text class="op-hint" wx:if="{{reviewVerifying}}">确认中…</text>
+        <cy-icon wx:else name="arrow-right" size="24" />
       </view>
       <!-- 取消合作是涉资动作(锁价前可取消并退保证金):后端 status==1 双方都可取消
            (ApiCoopController 取消分支只拦「既非发起方又非收件方」),所以这一行不按 box 分侧。
@@ -145,7 +148,7 @@
       </view>
       <view class="op op--disabled" wx:if="{{invite.termsFrozen}}" bindtap="explainCancelLocked" aria-role="button" aria-label="已锁价，取消合作需联系客服" hover-class="cy-pressed" hover-stay-time="80">
         <text class="op-name">取消合作</text>
-        <text class="op-hint">已锁价，需联系客服</text>
+        <text class="op-hint">已锁价，修改请联系客服</text>
       </view>
     </view>
 
@@ -168,7 +171,7 @@
       <block wx:elif="{{invite.status === 1}}">
         <view wx:if="{{depositActionVisible}}" class="act act--solid act--wide" bindtap="goDeposit" aria-role="button" aria-label="去缴纳保证金"
               hover-class="cy-pressed" hover-stay-time="80">去缴纳保证金</view>
-        <view wx:else class="act act--dead">合作进行中{{invite.termsFrozen ? '，条款已冻结' : ''}}</view>
+        <view wx:else class="act act--dead">合作进行中{{invite.termsFrozen ? '，条款已锁定' : ''}}</view>
       </block>
       <block wx:else>
         <view class="act act--dead">这条邀约已失效，没有可执行的操作</view>
@@ -178,9 +181,9 @@
 
   <!-- 供给申报勾选浮层:随卡片动作从 pages/coop/list 搬来,口径原样(ds 主题宿主 class 同样兜住变量继承) -->
   <cy-sheet variant="full" class="theme-merchant" show="{{showPerkPick}}" title="申报本次供给" handle closable maskClosable bind:close="closePerkPick">
-  <view class="pk-hint">勾选本次合作提供的礼品/券(来自你的常备权益)。到店玩家可领,成本按核销人头计入结算。</view>
+  <view class="pk-hint">勾选本次提供的权益，按核销人数结算</view>
   <cy-skeleton wx:if="{{perkState === 'loading'}}" type="list" count="3" />
-  <cy-error wx:elif="{{perkState === 'error'}}" title="常备权益没加载出来" sub="{{perkErrorText}}" bind:retry="retryPerkPick" />
+  <cy-error load-failure wx:elif="{{perkState === 'error'}}" title="常备权益加载失败" sub="{{perkErrorText}}" bind:retry="retryPerkPick" />
   <scroll-view wx:elif="{{perkState === 'ready'}}" scroll-y class="pk-list">
     <view class="pk-item {{item.checked ? 'on' : ''}}" wx:for="{{perkTemplates}}" wx:key="id" catchtap="togglePerk" data-idx="{{index}}" aria-role="checkbox" aria-checked="{{item.checked}}" aria-label="选择供给：{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="pk-box {{item.checked ? 'on' : ''}}"></view>

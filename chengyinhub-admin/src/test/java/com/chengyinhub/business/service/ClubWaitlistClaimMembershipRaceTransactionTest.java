@@ -181,8 +181,6 @@ class ClubWaitlistClaimMembershipRaceTransactionTest {
                 .thenAnswer(call -> {
                     assertEquals(1, jdbc.update(
                             "update waitlist_offer set state='CLAIMED' where id=? and state='OFFERED'", OFFER));
-                    offerClaimed.countDown();
-                    assertTrue(exitCommitted.await(5, TimeUnit.SECONDS));
                     return new ClubWaitlistClaim(OFFER, CLUB, MEMBER, ACTIVITY, TICKET,
                             new Date(System.currentTimeMillis() + 60_000L));
                 });
@@ -218,6 +216,19 @@ class ClubWaitlistClaimMembershipRaceTransactionTest {
 
     private ClubMemberMapper dataBackedMemberMapper() {
         ClubMemberMapper mapper = mock(ClubMemberMapper.class);
+        when(mapper.selectByClubAndMember(CLUB, MEMBER)).thenAnswer(call -> {
+            assertEquals(1, jdbc.queryForObject("select count(*) from club_member "
+                    + "where club_id=? and member_id=? and status=1 and del_flag=0", Integer.class, CLUB, MEMBER));
+            ClubMember active = new ClubMember();
+            active.setClubId(CLUB);
+            active.setMemberId(MEMBER);
+            active.setStatus(1);
+            active.setDelFlag(0);
+            // 退出发生在普通资格读取之后，确保仍覆盖行锁后的重验和事务回滚。
+            offerClaimed.countDown();
+            assertTrue(exitCommitted.await(5, TimeUnit.SECONDS));
+            return active;
+        });
         when(mapper.selectByClubAndMemberForUpdate(CLUB, MEMBER)).thenAnswer(call -> {
             List<ClubMember> rows = jdbc.query(
                     "select id,club_id,member_id,status,del_flag from club_member "

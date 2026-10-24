@@ -7,7 +7,8 @@
 //   FIRST_STEP / TOPIC_CLEAR 复用为 开始在场 / 完成一程(§12.4,已在 p5 迁移里于库中改名);
 //   未获得的身份卡以锁定态展示可理解的下一步(§8.3,库 unlock_hint 列)。
 const app = getApp();
-const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js');
+const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
+const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const ENGINE = require('./engine.js');
 const { chinaDateKey } = require('../../../../utils/datetime');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
@@ -150,17 +151,18 @@ function medalToBadge(item) {
     time,
     family: 'medal',
     source: '城市纪念章 · 节点通关',
-    desc: '完成带勋章的城市节点点亮,这一枚来自你走过的路。',
+    desc: '城市节点点亮奖励',
     cond: item.condition || ''
   };
 }
 
-function req(url) {
+function req(url, onFailure) {
   return new Promise(function (resolve) {
     sendUiStateRequest(app, url, {
       method: 'POST', data: {},
       success: function (res) { resolve(res || {}); },
-      fail: function () { resolve({ code: 'fail' }); }
+      successStatusAbnormal: function (res, statusCode) { resolve({ code: statusCode || res && (res.code || res.statusCode) || 'fail', msg: res && res.msg }); },
+      fail: function (res, statusCode) { const reply = Object.assign({}, res || {}, { code: statusCode || res && (res.code || res.statusCode) || 'fail' }); if (onFailure) onFailure(reply); resolve(reply); }
     });
   });
 }
@@ -174,6 +176,8 @@ Page({
     // 从玩法侧带 badgeCode 跳进来时的回读结论:这枚徽章到底在不在墙上
     focusText: '',
     loadFail: false,
+    wallAuthRequired: false,
+    wallAccessDenied: false,
     partialFail: false,
     glFail: false,
     badges: [],
@@ -201,12 +205,19 @@ Page({
 
   onReady() { this.initCanvas(); },
   onShow() {
+    this._hidden = false;
+    if (this._readSessionChanged) { this._readSessionChanged = false; this.loadData(); return; }
+    if (this._wallOwner !== undefined && this._wallOwner !== String(app.getUserID && app.getUserID() || '')) { this.loadData(); return; }
     if (this.engine && this.data.viewMode === 'wall' && !this.data.loadFail && !this.data.partialFail && !this.data.glFail) {
       this.engine.start();
     }
   },
-  onHide() { if (this.engine) this.engine.stop(); },
-  onUnload() { this.destroyEngine(); },
+  onHide() { this._hidden = true; if (this.engine) this.engine.stop(); },
+  onUnload() {
+    this._unloaded = true;
+    this._loadRequestId = (this._loadRequestId || 0) + 1;
+    this.destroyEngine();
+  },
 
   destroyEngine() {
     if (!this.engine) return;
@@ -216,14 +227,14 @@ Page({
   },
 
   initCanvas() {
-    if (this.data.viewMode !== 'wall') return;
+    if (this._unloaded || this.data.viewMode !== 'wall') return;
     if (this.data.loaded && !this.data.badges.length && !this.data.loadFail && !this.data.partialFail && !this.data.glFail) return;
     const that = this;
     this.destroyEngine();
     wx.createSelectorQuery().in(this)
       .select('#wall').fields({ node: true, size: true })
       .exec(function (res) {
-        if (that.data.viewMode !== 'wall') return;
+        if (that._unloaded || that.data.viewMode !== 'wall') return;
         const item = res && res[0];
         if (!item || !item.node) { that.setData({ glFail: true }); return; }
         const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
@@ -246,10 +257,26 @@ Page({
   },
 
   loadData() {
+    if (this._unloaded) return;
     const that = this;
+    const owner = String(app.getUserID && app.getUserID() || '');
+    if (this._wallOwner !== undefined && owner !== this._wallOwner) { this.destroyEngine(); this._badgeCache = []; this.setData({ badges: [], loaded: false, sheetOn: false }); }
+    this._wallOwner = owner;
+    if (!owner) { this.setData({ loaded: true, loadFail: true, wallAuthRequired: true, wallAccessDenied: false }); return; }
+    const requestId = this._loadRequestId = (this._loadRequestId || 0) + 1;
     const hadError = this.data.loadFail || this.data.partialFail || this.data.glFail;
-    this.setData({ loadFail: false, partialFail: false });
-    Promise.all([req('/api/medal/wall'), req('/api/badge/wall-v2')]).then(function (arr) {
+    this.setData({ loadFail: false, partialFail: false, wallAuthRequired: false, wallAccessDenied: false });
+    const recover = res => !that._unloaded && requestId === that._loadRequestId && recoverReadSession(that, app, res,
+      function (anonymous) { this._loadRequestId++; this._wallOwner = undefined; this.destroyEngine(); this._badgeCache = []; this.setData({ badges: [], loaded: true, loadFail: true, sheetOn: false, wallAuthRequired: anonymous, wallAccessDenied: false }); }, that.loadData);
+    Promise.all([req('/api/medal/wall', recover), req('/api/badge/wall-v2', recover)]).then(function (arr) {
+      if (that._unloaded || requestId !== that._loadRequestId || owner !== String(app.getUserID && app.getUserID() || '')) return;
+      const auth = arr.some(res => Number(res.code) === 401);
+      const denied = arr.some(res => Number(res.code) === 403);
+      if (auth || denied) {
+        that.destroyEngine(); that._badgeCache = [];
+        that.setData({ loaded: true, loadFail: true, wallAuthRequired: auth, wallAccessDenied: denied && !auth, badges: [], sheetOn: false });
+        return;
+      }
       const wall = (arr[0].code == '200' && isRecord(arr[0].data) && isRecordList(arr[0].data.medals)) ? arr[0].data : null;
       const wallV2 = (arr[1].code == '200' && isRecord(arr[1].data) && isRecordList(arr[1].data.identity)) ? arr[1].data : null;
 
@@ -305,6 +332,18 @@ Page({
     });
   },
 
+  retryWall() {
+    if (!this.data.wallAuthRequired) { this.loadData(); return; }
+    if (this._wallLoginPending) return;
+    this._wallLoginPending = true;
+    const login = app.getUserID && app.getUserID() && typeof app.reLogin === 'function' ? app.reLogin()
+      : typeof app.firstLogin === 'function' ? app.firstLogin() : null;
+    Promise.resolve(login).then(result => {
+      this._wallLoginPending = false;
+      if (!this._unloaded && app.getUserID && app.getUserID() && !(result && result.ok === false)) this.loadData();
+    }).catch(() => { this._wallLoginPending = false; });
+  },
+
   /** 玩法侧「查看收藏」的权威回读:墙的数据来自 /api/badge/wall-v2 与 /api/medal/wall,
    *  与完成响应是两条独立来路 —— 找得到才敢说落位了,找不到就照实说。 */
   _resolveFocus(list) {
@@ -317,7 +356,7 @@ Page({
     //   —— 连没点亮的也在 list 里 —— 所以「不在 list」= 它压根不是身份卡,
     //   不是「还没同步」。原来那句「还没出现在墙上,稍后下拉重试」是在断言一件
     //   本页无权断言的事:徽章明明发了,却被说成没到。
-    this.setData({ focusText: '这枚不是身份卡,记在成长中心' });
+    this.setData({ focusText: '这枚不是身份卡，记在成长中心' });
   },
 
   applyBadges(list) {
@@ -332,7 +371,7 @@ Page({
         items: numbered.filter(function (badge) { return badge.family === fam.key; }),
       };
     }).filter(function (group) { return group.items.length; });
-    this._badgeCache = list;
+    if (this.data.viewMode === 'list' && !this.data.badges.length) pageMotion.enter(this, 'pmList'); this._badgeCache = list; // 2026-10-23:列表首次到达时依次浮上来
     this._resolveFocus(list);
     if (!list.length) this.destroyEngine();
     this.setData({
@@ -414,7 +453,7 @@ Page({
     if (this.data.viewMode === 'list') return;
     this.closeSheet();
     this.destroyEngine();
-    this.setData({ viewMode: 'list' });
+    pageMotion.enter(this, 'pmList'); this.setData({ viewMode: 'list' }); // 2026-10-23:切到列表时勋章行依次浮上来
   },
 
   goExplore() {

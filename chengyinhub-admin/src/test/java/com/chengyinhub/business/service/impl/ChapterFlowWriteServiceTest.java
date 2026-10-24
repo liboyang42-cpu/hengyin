@@ -27,6 +27,7 @@ import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.IXpBudgetService;
 import com.chengyinhub.business.service.support.TopicBundleReviewService;
+import com.chengyinhub.business.util.ChapterBlockReadSupport;
 import com.chengyinhub.web.controller.api.ApiPlayProgressController;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.utils.DistanceCalculatorUtils;
@@ -57,6 +58,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,6 +86,10 @@ class ChapterFlowWriteServiceTest
     void setUp()
     {
         service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         topicMapper = mock(CmsTopicMapper.class);
         chapterMapper = mock(CmsTopicChapterMapper.class);
         nodeMapper = mock(CmsTopicNodeMapper.class);
@@ -160,12 +166,29 @@ class ChapterFlowWriteServiceTest
         when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
         set("topicBundleReviewService", bundleReviewService);
         set("topicCommercialReviewService", mock(ITopicCommercialReviewService.class));
-        set("commercialTopicPolicy", mock(com.chengyinhub.business.service.support.CommercialTopicPolicy.class));
+        set("commercialTopicPolicy", new com.chengyinhub.business.service.support.CommercialTopicPolicy(
+                (OmsTicketMapper) ReflectionTestUtils.getField(service, "omsTicketMapper"), chapterMapper,
+                mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class), topicMapper));
         set("omsTicketService", mock(IOmsTicketService.class));
         set("distanceCalculatorUtils", mock(DistanceCalculatorUtils.class));
         set("sysCategoryService", mock(ISysCategoryService.class));
         memberTemplateMapper = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         set("cmsMemberTemplateMapper", memberTemplateMapper);
+        // Actual media schema/reference admission; only reviewed persistence is a fixture.
+        com.chengyinhub.business.mapper.AppMediaAssetMapper assets = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        for (long mediaId : new long[] {901L, 902L, 903L}) when(assets.select(mediaId)).thenReturn(java.util.Map.of(
+                "id", mediaId, "ownerType", "APP", "memberId", 19L, "reviewState", "APPROVED"));
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard references =
+                new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
+        ReflectionTestUtils.setField(references, "mapper", assets);
+        com.chengyinhub.business.service.support.AppMediaPublicationGuard media =
+                new com.chengyinhub.business.service.support.AppMediaPublicationGuard();
+        ReflectionTestUtils.setField(media, "references", references);
+        ReflectionTestUtils.setField(media, "topics", topicMapper);
+        ReflectionTestUtils.setField(media, "chapters", chapterMapper);
+        ReflectionTestUtils.setField(media, "nodes", nodeMapper);
+        ReflectionTestUtils.setField(media, "templates", memberTemplateMapper);
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", media);
     }
 
     @Test
@@ -245,8 +268,9 @@ class ChapterFlowWriteServiceTest
 
         verify(bundleReviewService).freezeForSubmission(TOPIC_ID, MEMBER_ID);
         verify(auditTaskService).submitOrRefreshTopicBundle(TOPIC_ID, MEMBER_ID, submission.getSnapshotJson());
-        verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
+        verify(topicMapper, times(2)).selectCmsTopicByIdForUpdate(TOPIC_ID);
         org.mockito.InOrder lockOrder = inOrder(auditTaskService, topicMapper);
+        lockOrder.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
         lockOrder.verify(auditTaskService).lockOpenTopicBundleTask(TOPIC_ID);
         lockOrder.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
         assertTrue(updatedTopics.stream().anyMatch(topic -> Integer.valueOf(1).equals(topic.getStatus())
@@ -392,6 +416,7 @@ class ChapterFlowWriteServiceTest
     @Test
     void nonBlockSimpleV2PublishCannotBypassReviewWithAPrivateDraftTemplate() {
         when(topicMapper.selectTopicIsDraft(TOPIC_ID)).thenReturn(0);
+        existing.setProductType(ProductType.FREE_EXPLORE);
         com.chengyinhub.business.domain.CmsMemberTemplate draft =
                 new com.chengyinhub.business.domain.CmsMemberTemplate();
         draft.setId(100L);
@@ -832,6 +857,81 @@ class ChapterFlowWriteServiceTest
                 "必须由 node 字段形状闸拒绝: " + nodeFieldError.getMessage());
     }
 
+    @Test
+    void mediaAltTextJsonRoundTripSurvivesWriteAndPlayerProgressProjection() throws Exception
+    {
+        ChapterBlockDTO image = JSON.readValue(
+                "{\"type\":\"image\",\"url\":\"media-asset:901\",\"altText\":\"路口的指示牌\"}", ChapterBlockDTO.class);
+        ChapterBlockDTO audio = JSON.readValue(
+                "{\"type\":\"audio\",\"url\":\"media-asset:902\",\"altText\":\"向左转后到达广场\"}", ChapterBlockDTO.class);
+        assertEquals("路口的指示牌", JSON.readTree(JSON.writeValueAsString(image)).path("altText").asText());
+        assertEquals("向左转后到达广场", JSON.readTree(JSON.writeValueAsString(audio)).path("altText").asText());
+        ChapterDTO chapter = chapter("媒体章", node("关卡"));
+        chapter.setBlocks(Arrays.asList(text("开场"), image, nodeBlock(0), audio));
+
+        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+
+        CmsTopicChapter saved = updatedChapters.get(0);
+        List<Map<String, Object>> stored = storedBlocks(saved);
+        assertEquals("路口的指示牌", stored.get(1).get("altText"));
+        assertEquals("向左转后到达广场", stored.get(3).get("altText"));
+        assertFalse(saved.getDescription().contains("路口的指示牌"));
+        List<Object> resolved = ChapterBlockReadSupport.resolve(saved, Collections.emptyList());
+        List<Object> beforeNode = ChapterBlockReadSupport.projectForPlayer(resolved, Collections.emptySet());
+        assertEquals(3, beforeNode.size(), "未完成节点后的音频及转写不能提前下发");
+        assertEquals("路口的指示牌", ((Map<?, ?>) beforeNode.get(1)).get("altText"));
+        List<Object> afterNode = ChapterBlockReadSupport.projectForPlayer(resolved,
+                Collections.singleton(longValue(stored.get(2).get("nodeId"))));
+        assertEquals("向左转后到达广场", ((Map<?, ?>) afterNode.get(3)).get("altText"));
+    }
+
+    @Test
+    void mediaAltTextMissingNullAndEmptyKeepExistingMediaCompatible() throws Exception
+    {
+        ChapterBlockDTO image = JSON.readValue(
+                "{\"type\":\"image\",\"url\":\"media-asset:901\"}", ChapterBlockDTO.class);
+        ChapterBlockDTO audio = JSON.readValue(
+                "{\"type\":\"audio\",\"url\":\"media-asset:902\",\"altText\":null}", ChapterBlockDTO.class);
+        assertNull(image.getAltText());
+        assertNull(audio.getAltText());
+        ChapterBlockDTO empty = imageBlock("media-asset:903");
+        empty.setAltText("");
+        ChapterDTO chapter = chapter("旧媒体章", node("关卡"));
+        chapter.setBlocks(Arrays.asList(image, audio, empty, nodeBlock(0)));
+
+        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+
+        List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
+        assertFalse(stored.get(0).containsKey("altText"));
+        assertFalse(stored.get(1).containsKey("altText"));
+        assertEquals("", stored.get(2).get("altText"));
+        assertEquals("media-asset:901", stored.get(0).get("url"));
+        assertEquals("media-asset:902", stored.get(1).get("url"));
+    }
+
+    @Test
+    void mediaAltTextAcceptsLimitAndRejectsOversizeBeforeWrites() throws Exception
+    {
+        for (String type : Arrays.asList("image", "audio"))
+        {
+            ChapterBlockDTO media = imageBlock("media-asset:901");
+            media.setType(type);
+            media.setAltText(repeat("字", 2000));
+            ChapterDTO chapter = chapter("媒体章", node("关卡"));
+            chapter.setBlocks(Arrays.asList(media, nodeBlock(0)));
+            String stored = ChapterFlowCompiler.compileChapterFlow(Collections.singletonList(chapter))
+                    .getChapters().get(0).materializeBlocks(Collections.singletonList(901L));
+            assertEquals(media.getAltText(), JSON.readTree(stored).get(0).path("altText").asText());
+
+            media.setAltText(repeat("字", 2001));
+            ChapterFlowValidationException failure = assertThrows(ChapterFlowValidationException.class,
+                    () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+            assertTrue(failure.getMessage().contains("媒体文字替代最多 2000 字"));
+        }
+        verify(chapterMapper, never()).insertCmsTopicChapter(any());
+        verify(nodeMapper, never()).insertCmsTopicNode(any());
+    }
+
     /**
      * 章节图片块（2026-08-16）。写入端是严格白名单，媒体块要真能落进 blocks_json，
      * 否则编辑器摆好的图在提交时被整章打回，而报错只说「块类型只允许…」。
@@ -841,7 +941,7 @@ class ChapterFlowWriteServiceTest
     {
         ChapterDTO chapter = chapter("有图章", node("关卡"));
         chapter.setBlocks(Arrays.asList(
-                text("开场"), imageBlock("https://cdn/x.jpg"),
+                text("开场"), imageBlock("media-asset:901"),
                 nodeBlock(0), text("锁后正文")));
 
         service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
@@ -849,7 +949,7 @@ class ChapterFlowWriteServiceTest
         List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
         assertEquals(4, stored.size(), "媒体块必须原样落库，不得被静默丢弃");
         assertEquals("image", stored.get(1).get("type"));
-        assertEquals("https://cdn/x.jpg", stored.get(1).get("url"));
+        assertEquals("media-asset:901", stored.get(1).get("url"));
         assertFalse(stored.get(1).containsKey("duration"), "块只承载 type + url，不该冒出别的键");
     }
 
@@ -864,13 +964,13 @@ class ChapterFlowWriteServiceTest
     {
         ChapterDTO chapter = chapter("音频章", node("关卡"));
         chapter.setBlocks(Arrays.asList(
-                text("开场"), audioBlock("https://cdn/x.mp3"), nodeBlock(0)));
+                text("开场"), audioBlock("media-asset:902"), nodeBlock(0)));
 
         service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
         assertEquals("audio", stored.get(1).get("type"));
-        assertEquals("https://cdn/x.mp3", stored.get(1).get("url"));
+        assertEquals("media-asset:902", stored.get(1).get("url"));
         assertFalse(stored.get(1).containsKey("duration"), "块只承载 type + url");
     }
 
@@ -879,24 +979,24 @@ class ChapterFlowWriteServiceTest
     void chapterAudioUrlIsCarriedOntoTheChapterEntity()
     {
         ChapterDTO chapter = chapter("旁白章", node("关卡"));
-        chapter.setAudioUrl("https://cdn/narration.mp3");
+        chapter.setAudioUrl("media-asset:903");
         chapter.setBlocks(Arrays.asList(text("开场"), nodeBlock(0)));
 
         service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
-        assertEquals("https://cdn/narration.mp3", insertedChapters.get(0).getAudioUrl());
+        assertEquals("media-asset:903", insertedChapters.get(0).getAudioUrl());
     }
 
     /**
      * ★ description 是章节摘要，会漏到列表页与分享卡。把媒体 url 投影进去不会报错，
-     * 只会在列表页出现一行 https://cdn/x.jpg —— 前端 pro-editor-story 用的是同一条口径。
+     * 只会在列表页出现一行 media-asset:901 —— 前端 pro-editor-story 用的是同一条口径。
      */
     @Test
     void mediaBlocksNeitherProjectIntoDescriptionNorCloseTheProjectionWindow()
     {
         ChapterDTO chapter = chapter("投影章", node("关卡"));
         chapter.setBlocks(Arrays.asList(
-                text("第一段"), imageBlock("https://cdn/x.jpg"), text("第二段"), nodeBlock(0)));
+                text("第一段"), imageBlock("media-asset:901"), text("第二段"), nodeBlock(0)));
 
         service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
@@ -915,7 +1015,7 @@ class ChapterFlowWriteServiceTest
                 "必须由媒体 url 闸拒绝: " + urlError.getMessage());
 
         ChapterDTO withContent = chapter("串位", node("节点"));
-        ChapterBlockDTO dirty = imageBlock("https://cdn/x.jpg");
+        ChapterBlockDTO dirty = imageBlock("media-asset:901");
         dirty.setContent("不该出现");
         withContent.setBlocks(Arrays.asList(dirty, nodeBlock(0)));
         ChapterFlowValidationException contentError = assertThrows(ChapterFlowValidationException.class,
@@ -942,7 +1042,7 @@ class ChapterFlowWriteServiceTest
         ChapterDTO chapter = chapter("可恢复章节", node("入口"));
         ChapterBlockDTO first = text("第一段"); first.setKey("paragraph-first");
         ChapterBlockDTO point = nodeBlock(0); point.setKey("place-entry");
-        ChapterBlockDTO image = imageBlock("https://cdn.example/photo.jpg");
+        ChapterBlockDTO image = imageBlock("media-asset:901");
         chapter.setBlocks(Arrays.asList(first, point, image));
         service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
         com.fasterxml.jackson.databind.JsonNode read = JSON.valueToTree(

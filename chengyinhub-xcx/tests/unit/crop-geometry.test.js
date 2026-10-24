@@ -57,8 +57,8 @@ test('clampTransform 方图方框、scale=1 时位移锁死为 0(没有可拖动
 test('clampTransform 竖图方框 scale=1 时可上下拖、不可左右拖', () => {
   // 1000x2000 → base 0.3 → 渲染 300x600;方框 300x300;纵向余量 (600-300)/2=150
   const r = clampTransform({ imgW: 1000, imgH: 2000, frameW: 300, frameH: 300, scale: 1, x: 40, y: 400 });
-  assert.strictEqual(r.x, 0, '横向无余量,必须锁 0');
-  assert.strictEqual(r.y, 150, '纵向余量 150,超出即夹到边界');
+  assert.strictEqual(r.x, 0, '横向无余量，必须锁 0');
+  assert.strictEqual(r.y, 150, '纵向余量 150，超出即夹到边界');
 });
 
 test('clampTransform 放大后横向出现余量', () => {

@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.EventSignup;
@@ -34,6 +36,8 @@ import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.dto.OfficialEventV2ArrivalRequest;
 import com.chengyinhub.business.domain.dto.OfficialEventV2DraftRequest;
 import com.chengyinhub.business.domain.dto.OfficialEventV2PublishCheck;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.mapper.ClubMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.EventSignupMapper;
@@ -42,7 +46,10 @@ import com.chengyinhub.business.mapper.OfficialEventMapper;
 import com.chengyinhub.business.mapper.OfficialEventV2Mapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
+import com.chengyinhub.business.service.IAuditTaskService;
+import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
+import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.IOfficialBroadcastService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.common.exception.ServiceException;
@@ -72,6 +79,8 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private static final int GPS_TOLERANCE_M = 30;
     private static final int DEFAULT_MAX_ACCURACY_M = 80;
     private static final long ARRIVAL_MIN_INTERVAL_MILLIS = 30_000L;
+    /** 发布检查 WARN：报名期/距开场不足该时长时提示(不阻断)。 */
+    private static final long PUBLISH_WARN_LEAD_MILLIS = 24L * 3600_000L;
 
     @Autowired
     private OfficialEventMapper eventMapper;
@@ -91,6 +100,10 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private ISysConfigService configService;
     @Autowired
     private IUmsMemberService umsMemberService;
+    @Autowired
+    private IContentSafetyGate contentSafetyGate;
+    @Autowired
+    private IAuditTaskService auditTaskService;
     @Autowired
     private ISysUserService sysUserService;
     @Autowired
@@ -198,6 +211,10 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             }
             if (stored.getStatus() == null || stored.getStatus() != OfficialEvent.ST_DRAFT) {
                 throw new ServiceException("仅草稿活动可整体修改；运行中请走受控变更命令");
+            }
+            if (OfficialEvent.CONTROL_PENDING_REVIEW.equals(stored.getControlState())) {
+                // 审核中改内容会让审核员看到的快照与实际上架内容不一致
+                throw new ServiceException("活动审核中，暂不能修改");
             }
             preservedParties = v2Mapper.selectPartiesByEventForUpdate(stored.getId());
             if (preservedParties == null) preservedParties = new ArrayList<>();
@@ -320,7 +337,25 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         validateMissionBindingUniqueness(missions, check);
         validatePartyAvailability(parties, check);
         validateCoverage(event, requirements, parties, check);
+        if (publishCheckWarnEnabled()) {
+            check.enableTiers();
+            collectPublishWarnings(event, check, new Date());
+        }
         return check;
+    }
+
+    /** 发布前提示(WARN)：只提醒、不阻断；阻断项仍只由上面的 BLOCK 校验决定。 */
+    static void collectPublishWarnings(OfficialEvent event, OfficialEventV2PublishCheck check, Date now) {
+        if (StringUtils.isBlank(event.getCoverImg())) check.warn("未设置封面图，活动卡片将使用默认图");
+        if (StringUtils.isBlank(event.getStory())) check.warn("活动介绍为空，玩家可能不清楚玩法与规则");
+        if (event.getSignupStart() != null && event.getActivityStart() != null
+                && event.getActivityStart().getTime() - event.getSignupStart().getTime() < PUBLISH_WARN_LEAD_MILLIS) {
+            check.warn("报名期不足 24 小时，可能影响报名人数");
+        }
+        if (event.getActivityStart() != null && now != null
+                && event.getActivityStart().getTime() - now.getTime() < PUBLISH_WARN_LEAD_MILLIS) {
+            check.warn("距活动开始不足 24 小时，平台审核可能来不及完成");
+        }
     }
 
     @Override
@@ -425,10 +460,67 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         if (!isEffectiveOrganizerOperator(event, v2Mapper.selectPartiesByEventForUpdate(eventId), operatorId)) {
             return "仅本场有效主办方账号可执行该命令";
         }
+        if (OfficialEvent.CONTROL_PENDING_REVIEW.equals(event.getControlState())) {
+            return "活动已提交审核，请等待审核结果";
+        }
         OfficialEventV2PublishCheck check = checkPublishableInternal(eventId);
         if (!check.isPass()) {
             return "发布检查未通过：" + join(check.getBlockers());
         }
+        // 2026-10-20 分级审核:官方活动先审后发。文本过统一门禁(PRE_REVIEW),明确违规直接拒;
+        // 其余一律进待审(仍是草稿,不公开、不进生命周期),审核台通过后 applyAuditDecision 才真正排期。
+        PublishSafetyRequest safety = new PublishSafetyRequest();
+        safety.setContentType(AuditTask.BIZ_OFFICIAL_EVENT);
+        safety.setMemberId(operatorId);
+        safety.setOpenid(openidOf(operatorId));
+        safety.setText(IWxContentSecurityService.joinText(event.getTitle(), event.getSubtitle(), event.getStory()));
+        safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
+        SafetyDecision decision = contentSafetyGate.decide(safety);
+        if (decision == null || decision.isBlock()) {
+            return "活动内容包含违规信息，请修改后重试";
+        }
+        event.setControlState(OfficialEvent.CONTROL_PENDING_REVIEW);
+        eventMapper.updateOfficialEvent(event);
+        v2Mapper.insertAuditLog(eventId, "SUBMITTED_FOR_REVIEW", operatorId, "发布检查通过，已提交平台审核", null, null);
+        JSONObject snap = new JSONObject();
+        snap.put("bizType", AuditTask.BIZ_OFFICIAL_EVENT);
+        snap.put("bizId", eventId);
+        snap.put("contractVersion", event.getContractVersion());
+        snap.put("title", event.getTitle());
+        snap.put("subtitle", event.getSubtitle());
+        snap.put("story", event.getStory());
+        snap.put("coverImg", event.getCoverImg());
+        snap.put("city", event.getCity());
+        snap.put("gateReason", decision.getReasonCode());
+        auditTaskService.submit(AuditTask.BIZ_OFFICIAL_EVENT, eventId, operatorId, "user_publish", snap.toJSONString());
+        return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void applyAuditDecision(Long eventId, boolean approved, String reason, Long submitterId) {
+        OfficialEvent event = requireV2EventForUpdate(eventId);
+        if (event.getStatus() == null || event.getStatus() != OfficialEvent.ST_DRAFT
+                || !OfficialEvent.CONTROL_PENDING_REVIEW.equals(event.getControlState())) {
+            throw new ServiceException("官方活动审核状态已变化，请刷新后重试");
+        }
+        if (!approved) {
+            // 驳回:退回草稿(仍不公开),主办方可修改后重新提交排期
+            event.setControlState(CONTROL_NORMAL);
+            eventMapper.updateOfficialEvent(event);
+            v2Mapper.insertAuditLog(eventId, "REVIEW_REJECTED", submitterId,
+                    "平台审核未通过：" + (reason == null ? "" : reason), null, null);
+            return;
+        }
+        // 审核期间时间线可能已过期:过审时复核同一套结构化发布检查,不通过则审核不提交
+        OfficialEventV2PublishCheck check = checkPublishableInternal(eventId);
+        if (!check.isPass()) {
+            throw new ServiceException("发布检查未通过：" + join(check.getBlockers()));
+        }
+        activateScheduled(event, eventId, submitterId, "平台审核通过，活动进入已排期");
+    }
+
+    private void activateScheduled(OfficialEvent event, Long eventId, Long operatorId, String note) {
         v2Mapper.activateDraftBindings(eventId);
         v2Mapper.activateDraftMissions(eventId);
         v2Mapper.activateDraftRequirements(eventId);
@@ -446,8 +538,16 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         eventMapper.updateOfficialEvent(event);
         v2Mapper.updateV2ControlState(eventId, CONTROL_NORMAL, null, null, null, null,
                 null, null, null, null, null);
-        v2Mapper.insertAuditLog(eventId, "SCHEDULED", operatorId, "发布检查通过，活动进入已排期", null, null);
-        return null;
+        v2Mapper.insertAuditLog(eventId, "SCHEDULED", operatorId, note, null, null);
+    }
+
+    private String openidOf(Long memberId) {
+        try {
+            UmsMember m = umsMemberService.selectUmsMemberById(memberId);
+            return m == null ? null : m.getWxOpenId();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -793,7 +893,7 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             return persistRejectedArrival(result, event, mission, binding, memberId, requestId, "MISSION_TYPE_INVALID");
         }
 
-        int distance = (int) Math.round(haversineM(request.getLatitude(), request.getLongitude(), targetLat, targetLng));
+        int distance = (int) Math.round(GeoDistanceUtils.haversineMeters(request.getLatitude(), request.getLongitude(), targetLat, targetLng));
         if (distance > radius + GPS_TOLERANCE_M) {
             return persistRejectedArrival(result, event, mission, binding, memberId, requestId, "DISTANCE_TOO_FAR", distance, accuracyBucket(request.getAccuracyM()));
         }
@@ -1236,6 +1336,8 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             try {
                 if (settlementHelper.issue(issuance, couponId, xp, badge, collectiveCouponId, collectiveReached)) issued++;
             } catch (Exception ex) {
+                // 锁冲突时 savepoint 已随整笔事务回滚，不能在隐式新事务里接着落 FAILED。
+                com.chengyinhub.business.service.support.SavepointLockFailures.rethrowIfLockFailure(ex);
                 // Helper 的独立事务已回滚 ISSUED → PENDING；这里落可读失败态，下次结算会重新置 PENDING 重试。
                 v2Mapper.updateRewardIssuanceStatus(issuance.getId(), OfficialEventRewardIssuance.FAILED, safeMessage(ex));
             }
@@ -1998,7 +2100,7 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private boolean anchorTooFast(Map<String, Object> anchor, double targetLat, double targetLng) {
         if (anchor == null || !(anchor.get("foundAt") instanceof Date) || !(anchor.get("lat") instanceof Number) || !(anchor.get("lng") instanceof Number)) return false;
         long elapsed = Math.max(1L, (System.currentTimeMillis() - ((Date) anchor.get("foundAt")).getTime()) / 1000L);
-        double distance = haversineM(((Number) anchor.get("lat")).doubleValue(), ((Number) anchor.get("lng")).doubleValue(), targetLat, targetLng);
+        double distance = GeoDistanceUtils.haversineMeters(((Number) anchor.get("lat")).doubleValue(), ((Number) anchor.get("lng")).doubleValue(), targetLat, targetLng);
         return distance > MIN_SPEED_DISTANCE_M && distance / elapsed > MAX_MOVE_SPEED_MPS;
     }
 
@@ -2009,6 +2111,16 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             return configured != null && configured > 0 ? configured : DEFAULT_MAX_ACCURACY_M;
         } catch (Exception ex) {
             return DEFAULT_MAX_ACCURACY_M;
+        }
+    }
+
+    /** 发布检查 WARN 分级开关，默认关闭：关闭时发布检查响应与旧版一致。 */
+    private boolean publishCheckWarnEnabled() {
+        try {
+            return configService != null
+                    && "true".equalsIgnoreCase(configService.selectConfigByKey("official_event.publish_check_warn_enabled"));
+        } catch (Exception ex) {
+            return false;
         }
     }
 
@@ -2201,14 +2313,4 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private boolean equalsLong(Long a, Long b) { return a == null ? b == null : a.equals(b); }
     private Long asLong(Object value) { return value instanceof Number ? ((Number) value).longValue() : null; }
     private String join(List<String> values) { return String.join("；", values); }
-
-    private double haversineM(double lat1, double lng1, double lat2, double lng2) {
-        double r = 6371000D;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2D) * Math.sin(dLat / 2D)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2D) * Math.sin(dLng / 2D);
-        return 2D * r * Math.atan2(Math.sqrt(a), Math.sqrt(1D - a));
-    }
 }

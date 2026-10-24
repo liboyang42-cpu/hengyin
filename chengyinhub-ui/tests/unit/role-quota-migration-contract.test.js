@@ -8,6 +8,83 @@ const legacyPage = fs.readFileSync(path.join(uiRoot, 'src/views/business/userper
 const canonicalPage = fs.readFileSync(path.join(uiRoot, 'src/views/business/config/role-quota/index.vue'), 'utf8')
 const routerSource = fs.readFileSync(path.join(uiRoot, 'src/router/index.js'), 'utf8')
 
+function loadDynamicRouteFilter(loadView) {
+  const source = fs.readFileSync(path.join(uiRoot, 'src/store/modules/permission.js'), 'utf8')
+  const body = source.slice(source.indexOf('function filterAsyncRouter('),
+    source.indexOf('// 动态路由遍历，验证是否具备权限'))
+  return new Function('Layout', 'ParentView', 'InnerLink', 'loadView',
+    body + '\nreturn filterAsyncRouter;')({}, {}, {}, loadView)
+}
+
+function loadTagsModule() {
+  const utilsSource = fs.readFileSync(path.join(uiRoot, 'src/utils/tagsView.js'), 'utf8')
+    .replace(/export\s+const\s+/g, 'const ')
+  const utils = new Function(utilsSource + '\nreturn { MAX_RECENT_VIEWS, hasEntityId, getViewKey };')()
+  const source = fs.readFileSync(path.join(uiRoot, 'src/store/modules/tagsView.js'), 'utf8')
+    .replace("import { MAX_RECENT_VIEWS, hasEntityId, getViewKey } from '@/utils/tagsView'",
+      'const { MAX_RECENT_VIEWS, hasEntityId, getViewKey } = utils')
+    .replace(/export\s+default\s*/, 'return ')
+  return new Function('utils', source)(utils)
+}
+
+test('动态角色配额旧叶路由在进入组件前跳转，真实路由与标签状态只保留规范页', async () => {
+  const Vue = require('vue')
+  const VueRouter = require('vue-router')
+  const Vuex = require('vuex')
+  Vue.use(VueRouter)
+  Vue.use(Vuex)
+  const loaded = []
+  const filter = loadDynamicRouteFilter(view => {
+    loaded.push(view)
+    return { render: h => h('div') }
+  })
+  const meta = { title: '角色配额', icon: 'quota', noCache: true }
+  const permissions = ['business:userpermission:list']
+  const [legacy] = filter([{
+    path: '/rules/userpermission', name: 'Userpermission',
+    component: 'business/userpermission/index', redirect: 'noRedirect',
+    children: [], meta, permissions
+  }])
+  assert.deepEqual(loaded, [])
+  assert.equal(legacy.component, undefined)
+  assert.equal(legacy.meta, meta)
+  assert.equal(legacy.permissions, permissions)
+  assert.equal(legacy.path, '/rules/userpermission')
+
+  const store = new Vuex.Store({ modules: { tagsView: loadTagsModule() } })
+  const router = new VueRouter({ mode: 'abstract', routes: [
+    { path: '/config/role-quota', name: 'roleQuotaConfig',
+      component: { render: h => h('div') }, meta: { title: '角色配额' } },
+    legacy
+  ] })
+  router.afterEach(to => store.dispatch('tagsView/addView', to))
+  await router.push({ path: '/rules/userpermission', query: { probe: 'kept', id: '7' } })
+  assert.equal(router.currentRoute.path, '/config/role-quota')
+  assert.deepEqual(router.currentRoute.query, { probe: 'kept', id: '7' })
+  assert.deepEqual(store.state.tagsView.visitedViews.map(v => v.path), ['/config/role-quota'])
+  assert.deepEqual(store.state.tagsView.visitedViews.map(v => v.tagKey), ['/config/role-quota?id=7'])
+})
+
+test('动态解析只处理精确旧叶入口，普通叶加载和redirect清理及非叶分支保持原样', () => {
+  const loaded = []
+  const filter = loadDynamicRouteFilter(view => {
+    loaded.push(view)
+    return { sourceView: view }
+  })
+  const routes = filter([
+    { path: '/ordinary', component: 'business/topic/index', redirect: 'noRedirect', children: [] },
+    { path: '/quota-parent', component: 'business/userpermission/index',
+      children: [{ path: 'child', component: 'business/topic/index' }] }
+  ])
+  assert.deepEqual(loaded, ['business/topic/index', 'business/userpermission/index', 'business/topic/index'])
+  assert.equal(routes[0].component.sourceView, 'business/topic/index')
+  assert.equal(routes[0].redirect, undefined)
+  assert.equal(routes[0].children, undefined)
+  assert.equal(routes[1].component.sourceView, 'business/userpermission/index')
+  assert.equal(routes[1].redirect, undefined)
+  assert.equal(routes[1].children[0].component.sourceView, 'business/topic/index')
+})
+
 test('旧角色配额入口只兼容跳到规范配置页', () => {
   assert.match(legacyPage, /path:\s*'\/config\/role-quota'/)
   assert.match(legacyPage, /query:\s*this\.\$route\.query/)

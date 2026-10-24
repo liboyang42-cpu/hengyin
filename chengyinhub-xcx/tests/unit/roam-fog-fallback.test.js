@@ -101,7 +101,7 @@ test('screen canvas 不可用时显式阻断并可重试，不在背后白画 po
   assert.strictEqual(page._fog, undefined, 'blocked 状态不应继续构建永远不可见的旧网格');
   assert.deepStrictEqual(page.data.fogPolys, [], 'blocked 状态不能把旧 map polygon 当作可用降级');
   assert.strictEqual(page.data.fogScreenGuard, true, 'screen 不可用时必须以全黑层遮住原生文字');
-  assert.strictEqual(page.data.fogScreenError, true, 'screen 不可用时必须给用户可重试状态');
+  assert.strictEqual(page.data.fogScreenError, undefined, '读取失败留白，fail-closed guard仍保留');
 });
 
 test('旧 overlay helper 中途失败仍回落到 poly,不清空雾', () => {
@@ -170,7 +170,7 @@ test('当前 screen image 解码失败时保持全黑，不回退到会浮字的
 
   assert.strictEqual(page._fogMode, 'screen', 'image 失败不能退回 map 内 poly');
   assert.strictEqual(page.data.fogScreenGuard, true, 'image 失败必须立刻全黑 fail-closed');
-  assert.strictEqual(page.data.fogScreenError, true, 'image 失败必须显示可重试状态');
+  assert.strictEqual(page.data.fogScreenError, undefined, '图层读取失败不显示错误提示');
 });
 
 test('全黑等待或失败态直接拦住原生 POI，不允许盲点到店', () => {
@@ -214,7 +214,8 @@ test('首张当前世代 image load 前不启动计时或持续定位', () => {
   page._fogLifecycleGen = 6;
   page._fogMode = 'screen';
   page._fogScreenG = {};
-  page._fogStartPending = { p: page._c, startTracking: true, generation: 6 };
+  page._fogStartPending = { p: page._c, startTracking: true, generation: 6,
+    locationRevision: require('../../utils/location/bg-tracker.js').revision('roam') };
   page._addReveal = () => {};
   let clocks = 0;
   let locations = 0;
@@ -232,6 +233,19 @@ test('首张当前世代 image load 前不启动计时或持续定位', () => {
   page._completeRoamAfterFogLoad(6);
   assert.strictEqual(clocks, 1, '重复 load 不得重复启动计时');
   assert.strictEqual(locations, 1, '重复 load 不得重复启动持续定位');
+});
+
+test('缺用途授权世代的旧fog pending不能开启持续定位', () => {
+  const page = loadRoamPage();
+  page._fogLifecycleGen = 6;
+  page._fogMode = 'screen';
+  page._fogStartPending = { p: page._c, startTracking: true, generation: 6 };
+  page._startClock = () => {};
+  let locations = 0;
+  page._startReal = () => { locations++; };
+  page.data.fogScreenReady = true;
+  page._completeRoamAfterFogLoad(6);
+  assert.strictEqual(locations, 0, '未知授权的旧pending只读地图，不能补授定位许可');
 });
 
 test('已探索点会在雾上擦出洞(降级路径的擦除真的生效)', async () => {
@@ -302,11 +316,11 @@ test('poly 800 个离散历史点会保留揭雾且压住 polygon/setData 上限
     assert.strictEqual(fogStateAtOffset(page._fog, eastM, northM), 0, '离散历史揭雾点不能被性能降级吞掉');
   });
   assert.ok(fogStateAtOffset(page._fog, -2350, -2350) > 0,
-    '四个 55m 揭雾圆之间的未探索间隙必须保留雾,不能靠过度揭雾压 polygon');
+    '四个 55m 揭雾圆之间的未探索间隙必须保留雾，不能靠过度揭雾压 polygon');
   page._fogApplyReveal(page._c);
   const nextRevealErrorM = radialContourError(page._fog, 55);
   assert.ok(nextRevealErrorM <= 1.4,
-    '超限保护后新揭雾仍须保持精细硬边,当前误差 ' + nextRevealErrorM.toFixed(2) + 'm');
+    '超限保护后新揭雾仍须保持精细硬边，当前误差 ' + nextRevealErrorM.toFixed(2) + 'm');
   page._updateFogNow();
   const polygonCount = page.data.fogPolys.length;
   const payloadBytes = Buffer.byteLength(JSON.stringify(page.data.fogPolys));
@@ -323,8 +337,8 @@ test('poly 800 个离散历史点会保留揭雾且压住 polygon/setData 上限
   let scheduled = 0;
   page._scheduleFogUpdate = () => { scheduled++; page._updateFogNow(); };
   page._addReveal(backtrack);
-  assert.strictEqual(scheduled, 1, '裁窗后回走已探索区也必须重算玩家周边,不能被旧全雾挡板盖住');
-  assert.ok(page.data.fogPolys.length > 4, '回走点周边必须重新显示已揭区域,不能只剩全雾挡板');
+  assert.strictEqual(scheduled, 1, '裁窗后回走已探索区也必须重算玩家周边，不能被旧全雾挡板盖住');
+  assert.ok(page.data.fogPolys.length > 4, '回走点周边必须重新显示已揭区域，不能只剩全雾挡板');
 });
 
 test('poly 最小渲染窗仍碎片过多时 fail-closed 为全雾,绝不发超限或空数组', () => {
@@ -339,7 +353,7 @@ test('poly 最小渲染窗仍碎片过多时 fail-closed 为全雾,绝不发超�
   }
   page._updateFogNow();
   assert.ok(page.data.fogPolys.length > 0, '极端碎片时不能退成什么都不画');
-  assert.strictEqual(page.data.fogPolys.length, 1, '极端碎片必须收口成单块全雾,不能继续发送碎片 polygons');
+  assert.strictEqual(page.data.fogPolys.length, 1, '极端碎片必须收口成单块全雾，不能继续发送碎片 polygons');
   assert.strictEqual(page.data.fogPolys[0].fillColor, page._fogBandColor(1),
-    'fail-closed 只能回到全雾,不能通过降低浓度或透明来伪装通过');
+    'fail-closed 只能回到全雾，不能通过降低浓度或透明来伪装通过');
 });

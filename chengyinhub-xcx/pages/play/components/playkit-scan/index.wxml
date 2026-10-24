@@ -7,18 +7,20 @@
     <!-- 显形档是整屏相机(上面不留玩法页的地址栏,用户 2026-09-22 纠正):
          标题跟着内容走 —— 取景时在底部说明条里,相机起不来时是旁路块的第一行。 -->
     <view class="sc__q" wx:if="{{kindKey !== '显形'}}">{{titleText}}</view>
+    <!-- C1:比对的是这一站的静态任务码 —— 说清是码对得上,不是到场核验 -->
+    <view class="sc__sub pe pe--fade" style="--pe-d:.2s" wx:if="{{kindKey !== '显形'}}">{{matchNote}}</view>
 
     <view class="sc__wrap">
       <!-- 取景框是正方形,而且摆在屏幕正中 —— 扫码这件事人是举着手机对准的,
            框子是个「洞」不是一条横幅;扁的框会让人以为要横过来扫。
            四个角是四个直角括号,不是一整圈描边:整圈会把它变成一个「相框」。 -->
       <view class="sc__frame {{reducedMotion ? 'sc__frame--reduced' : ''}}" wx:if="{{kindKey !== '显形'}}" bindtap="onScan"
-            aria-role="button" aria-label="扫这个点位的码"
+            aria-role="button" aria-label="扫这个节点的码"
             hover-class="sc__press" hover-stay-time="80">
-        <view class="sc__c sc__c--tl"></view>
-        <view class="sc__c sc__c--tr"></view>
-        <view class="sc__c sc__c--bl"></view>
-        <view class="sc__c sc__c--br"></view>
+        <view class="sc__c sc__c--tl pe pe--corner" style="--pe-d:.25s;--pe-cx:-160rpx;--pe-cy:-160rpx"></view>
+        <view class="sc__c sc__c--tr pe pe--corner" style="--pe-d:.25s;--pe-cx:160rpx;--pe-cy:-160rpx"></view>
+        <view class="sc__c sc__c--bl pe pe--corner" style="--pe-d:.25s;--pe-cx:-160rpx;--pe-cy:160rpx"></view>
+        <view class="sc__c sc__c--br pe pe--corner" style="--pe-d:.25s;--pe-cx:160rpx;--pe-cy:160rpx"></view>
         <!-- 框里没有东西在动的话,看着像一张静态图,不像相机开着 -->
         <view class="sc__line"></view>
       </view>
@@ -64,6 +66,7 @@
             <view class="sc__pill">
               <view class="sc__pill-t">{{titleText}}</view>
               <view class="sc__pill-s">对准这一站的码</view>
+              <view class="sc__pill-s">{{matchNote}}</view>
             </view>
           </block>
           <!-- 显形:不是「啪」一下出现,是从镜头里浮出来。只动透明度与 transform(transition,不新增 keyframes)。

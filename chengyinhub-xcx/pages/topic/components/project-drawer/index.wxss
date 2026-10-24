@@ -37,7 +37,7 @@
   right: var(--cy-space-2);
   top: auto;
   bottom: var(--cy-space-2);
-  max-height: var(--cy-comp-sheet-max-h, 70vh);
+  max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));   /* 2026-10-23 业主:弹窗上限到胶囊底,不再卡 70vh */
   border-radius: var(--cy-comp-sheet-radius);
 }
 .dw--compact .dw-scroll {

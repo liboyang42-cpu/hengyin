@@ -110,6 +110,38 @@ class MerchantCrmDeliveryGuardServiceTest {
     }
 
     @Test
+    void deterministicFailureReleasesOnlyOwnedDispatchLease() {
+        MerchantCrmDeliveryGuardService.Claim dispatching =
+                MerchantCrmDeliveryGuardService.Claim.acquired(101L, "lease-token", 4L);
+        when(mapper.releaseDeliveryGuardForRetry(101L, "lease-token", 4L)).thenReturn(1);
+
+        service.releaseForRetry(dispatching);
+
+        verify(mapper).releaseDeliveryGuardForRetry(101L, "lease-token", 4L);
+    }
+
+    @Test
+    void releaseCasLossFailsClosed() {
+        MerchantCrmDeliveryGuardService.Claim dispatching =
+                MerchantCrmDeliveryGuardService.Claim.acquired(101L, "lease-token", 4L);
+        when(mapper.releaseDeliveryGuardForRetry(101L, "lease-token", 4L)).thenReturn(0);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.releaseForRetry(dispatching));
+
+        assertEquals(409, error.getCode());
+    }
+
+    @Test
+    void deterministicReleaseCommitsBeforeRecipientFailureIsRecorded() throws Exception {
+        Transactional annotation = MerchantCrmDeliveryGuardService.class
+                .getMethod("releaseForRetry", MerchantCrmDeliveryGuardService.Claim.class)
+                .getAnnotation(Transactional.class);
+
+        assertEquals(Propagation.REQUIRES_NEW, annotation.propagation());
+    }
+
+    @Test
     void deliveredGuardReceiptJoinsChannelTransactionInsteadOfCommittingAheadOfIt() throws Exception {
         Transactional annotation = MerchantCrmDeliveryGuardService.class
                 .getMethod("markDelivered", MerchantCrmDeliveryGuardService.Claim.class, Long.class, Long.class)

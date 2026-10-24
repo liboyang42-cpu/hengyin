@@ -98,4 +98,12 @@
     bind:cancel="onRangeCancel"
     bind:confirm="onRangeConfirm"
   />
+
+  <!-- BL-19 物理返回守卫(照 merchant/decor):表单已填内容或浮层开着时,返回键/侧滑先关浮层、
+       再走 onCancel 的「放弃编辑？」确认,不直接丢掉已填的券。确认离开后 guardLeaving 关掉守卫。 -->
+  <page-container
+    show="{{!backGuardOff && !guardLeaving && (formDirty || couponTypeSheetVisible || rangePickerShow)}}"
+    duration="{{0}}" overlay="{{false}}"
+    custom-style="width:0;height:0;background:transparent;pointer-events:none"
+    bind:afterleave="onNativeBackGuard" />
 </view>

@@ -10,8 +10,8 @@
 <cy-empty wx:if="{{loadState === 'loading'}}" kind="loading" title="参与详情加载中" fill class="cy-fill-state" size="lg" />
 <!-- 缺参 ≠ 加载失败：缺参走 missing-param（info 图标 + 返回），真错误才走 cy-error。
      R2 动作槽：缺 id 给「返回参与列表」，有 id 给「重试」，标签与行为一一对应。 -->
-<cy-empty wx:elif="{{loadState === 'missing-param'}}" kind="missing-param" title="缺少参与记录" sub="请返回列表重新进入" cta="返回参与列表" bind:cta="onErrorAction" fill class="cy-fill-state" size="lg" />
-<cy-error wx:elif="{{loadState === 'error'}}" title="参与详情没能打开" sub="{{loadErrorText}}" retry="{{errorActionText}}" bind:retry="onErrorAction" fill class="cy-fill-state" size="lg" />
+<cy-empty wx:elif="{{loadState === 'missing-param'}}" kind="missing-param" title="缺少参与记录" sub="请返回重新进入" cta="返回参与列表" bind:cta="onErrorAction" fill class="cy-fill-state" size="lg" />
+<cy-error load-failure wx:elif="{{loadState === 'error'}}" title="参与详情没能打开" sub="{{loadErrorText}}" retry="{{errorActionText}}" bind:retry="onErrorAction" fill class="cy-fill-state" size="lg" />
 
 <block wx:else>
 <view class="cyinfotop">
@@ -99,8 +99,7 @@
     <image class="mci-avatar" lazy-load="true" src="/subpackageMember/images/d_cyinfo4.png" mode="widthFix" />
   </view>
   <view class="cyinfobottom_sum_txt">
-    退出与暂停规则说明： 商家仅可在路线场次开始前3天申请退出。一旦场次启动，鉴于官方统一调度及多方协作的特性，商家不可中途退出或自行暂停。如遇不可抗力等紧急情况，请务必联系客服介入处理。
-  </view>
+    退出与暂停规则：场次开始前 3 天可申请退出，开始后不能退出或暂停，紧急情况请联系客服。</view>
 </view>
 
 <!-- 固定底栏避让走 token,不再内联字面高度(全局规范 §3.11-2) -->

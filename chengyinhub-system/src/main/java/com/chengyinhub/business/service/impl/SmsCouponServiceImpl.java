@@ -2,7 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import java.util.List;
 import com.chengyinhub.common.utils.DateUtils;
-import javax.annotation.PostConstruct;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.constant.CmsConstants;
 import com.chengyinhub.common.utils.VerifyDynCodeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +25,13 @@ public class SmsCouponServiceImpl implements ISmsCouponService
     private SmsCouponMapper smsCouponMapper;
 
     /** 券出示码 HMAC 密钥:只从配置/环境变量注入,不入库。见 application.yml coupon.qr-secret */
-    @Value("${coupon.qr-secret}")
+    @Value("${coupon.qr-secret:}")
     private String couponQrSecret;
 
-    /** 启动即校验:密钥缺失/空白直接起不来,绝不带着空密钥签发或验签。 */
-    @PostConstruct
+    /** 缺配置只关闭券码功能；应用其他业务仍可启动。 */
     public void requireCouponQrSecret() {
         if (couponQrSecret == null || couponQrSecret.trim().isEmpty()) {
-            throw new IllegalStateException("coupon.qr-secret 未配置,拒绝启动券核销(fail-closed)");
+            throw new ServiceException("优惠券出示码暂不可用：独立签名密钥未配置，请联系管理员", 503);
         }
     }
 
@@ -163,6 +162,7 @@ public class SmsCouponServiceImpl implements ISmsCouponService
 
     @Override
     public Long verifyCouponQrToken(String token){
+        requireCouponQrSecret();
         return VerifyDynCodeUtil.verifyCoupon(token, System.currentTimeMillis() / 1000L,
                 CmsConstants.COUPON_QR_TTL_SEC, couponQrSecret);
     }

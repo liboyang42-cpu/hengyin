@@ -35,9 +35,11 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -58,12 +60,17 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
     private static final String OSS_BUCKET_PROPERTY = "CHENGYIN_OSS_BUCKET_NAME";
     private static final String SUBMISSION_REVIEW_REASON = "新评价发布复核";
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String MANAGE_FILTER_ALL = "all";
+    private static final List<String> MANAGE_FILTERS = Collections.unmodifiableList(
+            Arrays.asList(MANAGE_FILTER_ALL, "pending", "low", "photo", "platform"));
 
     @Autowired private MerchantReviewMapper merchantReviewMapper;
     @Autowired private IMerchantAccessService merchantAccessService;
     @Autowired private IAuditTaskService auditTaskService;
     @Autowired private BusinessAuditEventMapper businessAuditEventMapper;
     @Autowired private Environment environment;
+    @Autowired private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+    @Autowired private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
 
     @Override
     public MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
@@ -104,19 +111,40 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
     }
 
     @Override
-    public MerchantReviewPageVO manageList(Long principalMemberId, Integer pageNum, Integer pageSize) {
+    public MerchantReviewPageVO manageList(Long principalMemberId, String filter, Integer pageNum, Integer pageSize) {
         MerchantAccessContext access = merchantAccessService.require(
                 principalMemberId, MerchantPermission.MARKETING_READ);
+        String manageFilter = normalizeManageFilter(filter);
         Page page = page(pageNum, pageSize);
-        long total = merchantReviewMapper.countManageReviews(access.getMerchantId());
+        long total = merchantReviewMapper.countManageReviews(access.getMerchantId(), manageFilter);
         List<MerchantReview> rows = total == 0 ? Collections.<MerchantReview>emptyList()
-                : merchantReviewMapper.selectManageReviews(access.getMerchantId(), page.offset, page.size);
+                : merchantReviewMapper.selectManageReviews(access.getMerchantId(), manageFilter, page.offset, page.size);
         MerchantReviewPageVO out = basePage("manage", page, total, rows,
                 access.hasPermission(MerchantPermission.MARKETING_WRITE), true);
         out.setAverageRating(decimalValue(merchantReviewMapper.selectPublicRatingSummary(access.getMerchantId()), "averageRating"));
         applyReviewStats(out, access.getMerchantId());
+        out.setFilter(manageFilter);
+        out.setFilterCounts(manageFilterCounts(access.getMerchantId()));
         out.setEligibility(null);
         return out;
+    }
+
+    private String normalizeManageFilter(String filter) {
+        if (filter == null || filter.trim().isEmpty()) return MANAGE_FILTER_ALL;
+        String value = filter.trim();
+        if (!MANAGE_FILTERS.contains(value)) throw badRequest("filter 不合法");
+        return value;
+    }
+
+    private Map<String, Integer> manageFilterCounts(Long merchantRowId) {
+        Map<String, Object> raw = merchantReviewMapper.selectManageFilterCounts(merchantRowId);
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        counts.put("all", intValue(raw, "all_count"));
+        counts.put("pending", intValue(raw, "pending_count"));
+        counts.put("low", intValue(raw, "low_count"));
+        counts.put("photo", intValue(raw, "photo_count"));
+        counts.put("platform", intValue(raw, "platform_count"));
+        return counts;
     }
 
     @Override
@@ -213,6 +241,7 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
         }
         if (review.getReplyContent() != null) throw conflict("每条评价只允许一次公开回复");
         if (!input.expectedVersion.equals(review.getVersion())) throw conflict("评价已变化，请刷新后重试");
+        checkReplyText(principalMemberId, input.content);
         if (merchantReviewMapper.replyCas(review.getId(), access.getMerchantId(), access.getOwnerMemberId(), input.content,
                 access.getPrincipalMemberId(), access.getRoleCode(), input.requestId,
                 input.fingerprint, input.expectedVersion) != 1) {
@@ -248,6 +277,7 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
         }
         if (review.getReplyContent() == null) throw conflict("这条评价还没有公开回复，不能修改");
         if (!input.expectedVersion.equals(review.getVersion())) throw conflict("评价已变化，请刷新后重试");
+        checkReplyText(principalMemberId, input.content);
         if (merchantReviewMapper.updateReplyCas(review.getId(), access.getMerchantId(),
                 access.getOwnerMemberId(), input.content, access.getPrincipalMemberId(), access.getRoleCode(),
                 input.requestId, input.fingerprint, input.expectedVersion) != 1) {
@@ -258,6 +288,12 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
                 "MERCHANT_REVIEW_REPLY_UPDATED", null, input.requestId, "merchant public reply updated",
                 "{\"reviewId\":" + review.getId() + ",\"version\":" + review.getVersion() + "}");
         return writeResult(review, false, null);
+    }
+
+    private void checkReplyText(Long principalMemberId, String content) {
+        com.chengyinhub.business.domain.UmsMember member = umsMemberService.selectUmsMemberById(principalMemberId);
+        String risk = wxContentSecurityService.checkText(content, member == null ? null : member.getWxOpenId());
+        if (risk != null) throw badRequest(risk);
     }
 
     @Override
@@ -454,6 +490,7 @@ public class MerchantReviewServiceImpl implements IMerchantReviewService {
         out.setCanEditReply(manage && canAct && MerchantReview.STATUS_VISIBLE.equals(row.getStatus())
                 && row.getReplyContent() != null);
         out.setCanReport(canAct && MerchantReview.STATUS_VISIBLE.equals(row.getStatus()));
+        out.setUnderPlatformReview(manage && Integer.valueOf(1).equals(row.getUnderPlatformReview()));
         return out;
     }
 

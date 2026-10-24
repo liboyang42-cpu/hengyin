@@ -20,6 +20,15 @@ public class CmsTopicLikeServiceImpl implements ICmsTopicLikeService
     @Autowired
     private CmsTopicLikeMapper cmsTopicLikeMapper;
 
+    @Override
+    public int setLiked(Long memberId, Long topicId, boolean liked) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0) {
+            throw new IllegalArgumentException("点赞身份或主题参数不完整");
+        }
+        return liked ? cmsTopicLikeMapper.ensureOwnedLike(memberId, topicId)
+                : cmsTopicLikeMapper.deleteOwnedLike(memberId, topicId);
+    }
+
 
     /**
      * 查询用户点赞数

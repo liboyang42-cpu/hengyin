@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "usingComponents": {
     "cy-btn": "/components/cy/btn/index",
+    "cy-club-pinned-notice": "/pages/club/components/club-pinned-notice/index",
     "cy-avatar": "/components/cy/avatar/index",
     "cy-danger-confirm": "/components/cy/danger-confirm/index",
     "cy-date-field": "/components/cy/date-field/index",
@@ -24,8 +25,7 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "cy-inline-error": "/components/cy/inline-error/index",
-    "cy-coop-invite-sheet": "/components/cy/coop-invite-sheet/index"
+    "cy-inline-error": "/components/cy/inline-error/index"
   },
   "navigationBarTitleText": "俱乐部",
   "navigationBarBackgroundColor": "#000000",

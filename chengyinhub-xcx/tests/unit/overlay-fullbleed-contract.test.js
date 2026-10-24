@@ -141,7 +141,7 @@ test('全屏浮层里不得出现「声明满宽又把自己夹窄」的自相�
     offenders,
     [],
     '这些浮层元素同时声明了 width:100% 和定长夹宽,>393px 的机器上右侧会露出底层页面。\n' +
-      '面板要满宽就别夹;确属居中窄卡请改掉 width:100%,或在该行加 /* fullbleed-ok: 理由 */:\n' +
+      '面板要满宽就别夹；确属居中窄卡请改掉 width:100%,或在该行加 /* fullbleed-ok: 理由 */:\n' +
       offenders.join('\n'),
   )
 })
@@ -158,7 +158,7 @@ test('自相矛盾检测器自证:能判红也能判绿', () => {
   assert.deepEqual(
     findSelfClampingFullBleed(overlay + '.ov__stack { width: 100%; max-width: var(--x); }'),
     ['.ov__stack { width: 100%; max-width: var(--x) }'],
-    'token 包装的夹宽同样要认 —— 真实那次就是 var() 形态,只认字面量等于没拦',
+    'token 包装的夹宽同样要认 —— 真实那次就是 var() 形态，只认字面量等于没拦',
   )
   assert.deepEqual(
     findSelfClampingFullBleed(overlay + '.ov__panel { width: 100%; margin-right: 40px; }'),
@@ -177,13 +177,13 @@ test('自相矛盾检测器自证:能判红也能判绿', () => {
   //   一堆假阳性(实测本仓 3 处),而假阳性会让门禁被当噪音关掉。
   assert.deepEqual(
     findSelfClampingFullBleed(overlay + '.ov__panel { width: 100%; max-width: 560rpx; }'), [],
-    'rpx 夹宽随屏等比放大,不构成本类缺陷',
+    'rpx 夹宽随屏等比放大，不构成本类缺陷',
   )
   assert.deepEqual(
     findSelfClampingFullBleed(overlay + '.ov__panel { width: 100%; margin-left: var(--cy-space-3-5); }'), [],
     'token 要解析到底层单位再判 —— --cy-space-3-5 是 28rpx,无害',
   )
-  assert.ok(TOKENS.get('--cy-space-3-5'), 'token 表没加载起来,上面那条 rpx 断言就是空转')
+  assert.ok(TOKENS.get('--cy-space-3-5'), 'token 表没加载起来，上面那条 rpx 断言就是空转')
   assert.deepEqual(
     findSelfClampingFullBleed(overlay + '.ov__panel { width: 100%; margin: 0 auto; max-width: 100%; }'), [],
     'auto 居中与 max-width:100% 都不构成夹窄',
@@ -194,7 +194,7 @@ test('自相矛盾检测器自证:能判红也能判绿', () => {
   )
   assert.deepEqual(
     findSelfClampingFullBleed(overlay + '.ov__dialog { width: 640rpx; max-width: 90vw; }'), [],
-    '居中窄卡(没写 width:100%)是有意设计,不该拦 —— cy-modal 就是这一类',
+    '居中窄卡(没写 width:100%)是有意设计，不该拦 —— cy-modal 就是这一类',
   )
   assert.deepEqual(
     findSelfClampingFullBleed(overlay + '.ov__panel { width: 100%; max-width: 392px; /* fullbleed-ok: 有意为之 */ }'), [],

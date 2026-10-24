@@ -187,6 +187,25 @@ public class ApiAiNpcController extends BaseController
     }
 
     /**
+     * 按 requestId 只读回读一条 NPC 对话原请求的状态与回复(关闭/重开后恢复,不重发)。
+     *
+     * <p>不挂 chatOn()/shopChatOn()/merchantChatOn():开关只拦新提问;回读只返回本人已落库的那一条,
+     * 不进模型、不扣额度。归属在 Service 里按 本人 + 原会话/原店 + 原 requestId 限定,
+     * 任一不符一律 INVALID_REQUEST,不区分「不存在」与「不是你的」。
+     *
+     * @param scope roam | merchant | shop,与发起时的端点一一对应
+     */
+    @Operation(summary = "NPC对话原请求回读")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    @GetMapping("/chat/request")
+    public AjaxResult chatRequest(@RequestParam(required = false) String requestId,
+                                  @RequestParam(required = false) String scope,
+                                  @RequestParam(required = false) Long bizId)
+    {
+        return success(npcChatService.readOriginalRequest(scope, bizId, requestId, getAppUserId()));
+    }
+
+    /**
      * 门店分身自由追问(自由探索:卡片详情 → 店铺卡 → 对话)。
      *
      * <p>与 /chat 的分工:那条是全局 NPC 聊漫游进度,这条是**这一家店的分身**聊这家店。
@@ -210,6 +229,9 @@ public class ApiAiNpcController extends BaseController
         }
         if (req == null) return AjaxResult.error("参数有误");
         Long userId = getAppUserId();
+        com.chengyinhub.business.domain.vo.ai.NpcChatResp stored=
+                npcChatService.storedShopRequest(req.getRequestId(),userId,req.getNodeId());
+        if(stored!=null) return success(stored);
         ShopGate gate = gateShopChat(userId, req.getNodeId());
         if (gate.deny != null) return gate.deny;
         return success(npcChatService.chatWithShop(req.getRequestId(), userId, gate.node.getId(),
@@ -232,7 +254,7 @@ public class ApiAiNpcController extends BaseController
         {
             return ShopGate.deny(AjaxResult.error("这家店不存在或还没绑定商家"));
         }
-        if (playTeamMapper.hasPaidRegistration(userId, 1, node.getTopicId()) <= 0)
+        if (playTeamMapper.hasCurrentNpcRegistration(userId, node.getTopicId()) <= 0)
         {
             return ShopGate.deny(AjaxResult.error(HttpStatus.FORBIDDEN, "先拿到这个主题的通行证再来问我"));
         }
@@ -276,6 +298,10 @@ public class ApiAiNpcController extends BaseController
         {
             return AjaxResult.error(HttpStatus.FORBIDDEN, "店铺分身对话还没开放");
         }
+        Long userId = getAppUserId();
+        com.chengyinhub.business.domain.vo.ai.NpcChatResp stored=
+                npcChatService.storedShopRequest(requestId,userId,nodeId);
+        if(stored!=null) return success(stored);
         if (!speechToTextService.available())
         {
             // 说清楚缺的是什么,不要含糊成「暂时不可用」——含糊会让人以为是抖动、反复重试
@@ -283,7 +309,6 @@ public class ApiAiNpcController extends BaseController
         }
         if (file == null || file.isEmpty()) return AjaxResult.error("参数有误");
         if (file.getSize() > VOICE_MAX_BYTES) return AjaxResult.error("这段录音太长了，说短一点");
-        Long userId = getAppUserId();
         ShopGate gate = gateShopChat(userId, nodeId);
         if (gate.deny != null) return gate.deny;
         CmsTopicNode node = gate.node;
@@ -311,13 +336,23 @@ public class ApiAiNpcController extends BaseController
         catch (RuntimeException e)
         {
             log.warn("[npc/voice-chat] 转写失败 nodeId={}, format={}", nodeId, format, e);
+            // Another call using the original requestId may have completed while ASR was in flight.
+            stored = npcChatService.storedShopRequest(requestId, userId, nodeId);
+            if (stored != null) return success(stored);
             return AjaxResult.error("语音识别没成功，稍后再试");
         }
+        // Recovery retains its existing priority over current eligibility and new transcript echo.
+        stored = npcChatService.storedShopRequest(requestId, userId, nodeId);
+        if (stored != null) return success(stored);
         if (text == null || text.trim().isEmpty())
         {
             // 拿空问题去调模型 = 白花钱且必然答非所问
             return AjaxResult.error("没听清，再说一次");
         }
+        // 转写可能跨过通行证有效期，进模型前重新读取当前资格与节点归属。
+        gate = gateShopChat(userId, nodeId);
+        if (gate.deny != null) return gate.deny;
+        node = gate.node;
         AjaxResult ok = success(npcChatService.chatWithShop(requestId, userId, node.getId(),
                 node.getMerchantMemberId(), shopMemoryOf(node), text));
         ok.put("asr", text);   // 回显识别文本:玩家要能看见自己"说了什么"被听成了什么

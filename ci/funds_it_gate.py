@@ -28,11 +28,15 @@ REQUIRED_TRIGGER_PATHS = (
     # service/impl/ActivityCancelFreeOrderMybatisIT 不触发真库 job,零告警。两条都钉死。
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MybatisIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MySqlIT.java",
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/*MySqlIT.java",
     # 2026-09-16 暗测试 23 套里 2 套落在这两个目录(mapper/RegistrationReadContract、
     # web/controller/api/RoamSessionWrite),原来的 test 侧 glob 都覆盖不到 —— 单改不触发复验。
     "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/**",
     "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/**",
+    "chengyinhub-admin/sql/migration_20261012_member_password_width.sql",
+    "chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_intent.sql",
+    "chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_job.sql",
 )
 
 
@@ -85,6 +89,7 @@ def enforce_trigger_contract(workflow_text):
 # ⚠️ 这个数字曾经手滑数错(把 @TestInstance 当成 @Test 算了一遍,50/9/30 错写成 51/10/31)——
 # 见 count_test_methods() 和 ci/test_funds_it_gate.py 里的自测,直接从源码正则数,不再手记。
 EXPECTED = {
+    "CommunityPostCommentIdempotencyMySqlIT": 2,
     "CoopListReadOnlyMybatisIntegrationTest": 5,
     # 2026-08-17 R9-P1:59 → 60,+1 = forgedClubMarkerFromPublicCreateCannotSurviveIntoPaymentFreeze
     # (自报 sourceClubId 经真实 create 落库后,真实冻结 SQL 仍必须归平台)。
@@ -130,6 +135,9 @@ EXPECTED = {
     # 现在:由 gate 脚本点名跑,库不可达改为硬失败,再由本门禁回读 skipped=0。
     "ExploreAllianceMvpRealDbIT": 5,
     "ExploreAllianceRedeemRealDbIT": 4,
+    # 2026-10-19 并入:F-L3-08 按章核销重放的并发证明(SC-SCAN-RACE,4 条 @Test)。
+    # 它和上面两套用同一个 ExploreItDatabase,但从未被点名 ⇒ 任何 CI 都没在真库上跑过它。
+    "ExploreScanReplayRealDbIT": 4,
     # 2026-09-16 提现闸(用户硬规则「等所有玩家都退不了才可提现」):14 → 16,+2 = 活动/主题结算选单
     # 在仍有已付未退未核销、退款截止未到的票时不入选(活动结束早于集合 / 自由定向票期长于主题)。
     "TandianriBatch0FundsMybatisIntegrationTest": 16,
@@ -144,7 +152,7 @@ EXPECTED = {
     # test_expected_counts_match_source_files 会拿 SOURCE_FILES 现数来比,加一条不改这里当场红。
     # 2026-08-16 R3:+1 = thePayeeVerifyAndPayoutPermissionsLandOnTwoDifferentRoles
     # (把 remark 里那句「与审核权限互斥分派」做成可回读的事实)。
-    "ClubCorporatePayeeMybatisIntegrationTest": 11,
+    "ClubCorporatePayeeMybatisIntegrationTest": 14,
     # 2026-08-16 R4:18 → 21,+3 = 已决质量行必须带 reason 的 DB CHECK、
     # business:clubextra:approve 真授到 cy_operator、business:topic:query 真授到两个资金角色。
     "ClubEditionCompensationMybatisIntegrationTest": 21,
@@ -173,14 +181,15 @@ EXPECTED = {
     # +3 真实领取:最后一张并发不超发、不限量正常计数、领取记录失败回滚库存后可重试。
     # +2 撤销状态 1/2 保留历史事实，以及初读后撤销由真实 CAS/当前读识别。
     # 2026-09-15 F1 +1:selectSmsCouponHistoryList 的 delFlag 条件经真实 XML 排除软删行,不传则不过滤。
-    "CouponLifecycleMybatisIntegrationTest": 12,
+    "CouponLifecycleMybatisIntegrationTest": 16,
     # 2026-09-16 并入支付回调 fencing 真库 IT(5 条 @Test)。
     # 病象:它自己发明了门控变量 CHENGYIN_PAYMENT_MYSQL_IT(全仓真库 IT 统一用
     # CHENGYIN_FUNDS_MYSQL_IT),又不在 EXPECTED/-Dtest 里 ⇒ CI 里这 5 条永远 skip、永远算绿。
     # 与上面 Explore 两套是同一个病。现门控已改回标准变量,并登记三侧:
     # EXPECTED(这里)+ SOURCE_FILES + ci/funds-mysql-it-gate.sh 的 -Dtest,
     # 少一侧当场红:漏 EXPECTED=回读没人管,漏 SOURCE_FILES=计数没人对,漏 -Dtest=压根不跑。
-    "WxPaymentCallbackFencingMySqlIT": 5,
+    # 2026-10-22 W3:+1 同 hash 换业务身份在真唯一键上拒收(6 条)。
+    "WxPaymentCallbackFencingMySqlIT": 6,
     # 2026-09-16 第二轮并入内容回调 fencing 真库 IT(3 条 @Test),与上面同病:
     # 自造门控变量 CHENGYIN_CONTENT_MYSQL_IT 且未登记 —— CI 里 3 条永远 skip 永远绿。
     # 现门控改标准 CHENGYIN_FUNDS_MYSQL_IT + MysqlIntegrationTestConfig 唯一临时 schema,
@@ -194,11 +203,12 @@ EXPECTED = {
     # C 组 18 套原用标准变量但三处均未登记。每套首跑证据与红绿分类见
     # ~/Documents/城瘾/小程序/修复交接材料/worktree收口_0915/暗测试真跑_报告.md。
     "CoopDepositRefundMybatisIntegrationTest": 27,
-    "GrowthMissionProofMybatisIntegrationTest": 15,
+    "GrowthMissionProofMybatisIntegrationTest": 25,
     "MerchantIdentityMybatisIntegrationTest": 21,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。
     "MerchantProfilePersistenceMybatisIntegrationTest": 9,
-    "StoreVerifyGrowthDeliveryTransactionTest": 3,
+    # 2026-10-15 PR10 复审 +1 条(整单核销撤销:真库标记核销台账已撤销、作废未发放成长待办),3 → 4。
+    "StoreVerifyGrowthDeliveryTransactionTest": 4,
     "RefundNotificationMybatisIntegrationTest": 9,
     "SessionRefundClockMybatisIntegrationTest": 3,
     "SettlementGenerateBatchMybatisIntegrationTest": 3,
@@ -210,36 +220,65 @@ EXPECTED = {
     "ClubWaitlistTokenMybatisIntegrationTest": 7,
     "CmsMemberTemplateAudioPatchMybatisIntegrationTest": 9,
     "CmsTemplateLibraryAudioPatchMybatisIntegrationTest": 9,
+    # 2026-10-20 AUDIT-G2-5:模板市场 use_num 按会员首次采用计数(同人重复/删了再建不涨、他人首次 +1)。
+    "TemplateUseNumFirstAdoptionMybatisIntegrationTest": 3,
     # 2026-09-17 3-11 修复 +3 条(对象存不存在都不发分 / 未参与者不发分 / 主题认其下活动已核销票),14 → 17。
     # 2026-09-18 RV-p3 F3:+1 会员隔离用例(别人的已支付票不能给评价人换分),17 → 18。
     "ContentInteractionMybatisIntegrationTest": 18,
     "CreativeSquarePublishIdempotencyMybatisIntegrationTest": 7,
     "FollowConcurrencyMybatisIntegrationTest": 4,
     "FollowEditRaceMybatisIntegrationTest": 7,
-    "NearbyRunnerShopsMybatisIntegrationTest": 5,
+    # 2026-10-15 PR10 复审 +1 条(瞬移基线按会话取,真库回读),6 → 7。
+    "NearbyRunnerShopsMybatisIntegrationTest": 7,
     # 2026-09-17 拍照一律机审:原 5 条(人工审核三条 CAS)→ 6 条:
     # 通过 CAS 恰好一次 / 存量驳回态同 CAS 转正 / 已完成行永不再通过 /
     # 按 id 取行 / 待审重复插入撞唯一键 / 存量待审行读侧不算完成。
     "PhotoReviewProgressMybatisIntegrationTest": 6,
     "SpoilerAccessMybatisIntegrationTest": 7,
     "SquareEditFollowMybatisIntegrationTest": 7,
-    "RoamSessionWriteMybatisIntegrationTest": 10,
+    # 2026-10-13 小程序底层C包移植到 master:12 → 15,+3 = 结束后档案幂等 / 徽章失败不撤原结算 / 原XP快照并发只发一次。
+    "RoamSessionWriteMybatisIntegrationTest": 15,
+    # Actual retention/claim dedupe, rollback, owner races, anonymous totals and consent revocation SQL.
+    # +1: real cleanup task preserves favorite routes, non-location facts and reward dedupe across replay.
+    "RoamLocationRetentionMySqlIT": 21,
     # 2026-09-17 客诉期提现闸(9-16 晚拍板 1-5):到期前不可提现 / 到期后可提现 / 涉诉只冻结部分
     # (含结案补结与退款作废)/ 超期退款欠款从后续结算抵扣,共 5 条。
     # 2026-09-17 总控裁定补做:+2 平台人工倒扣余额不足扣到 0 + 差额记欠款 / 按加锁读的当前余额算(非事务快照)且重复复核空转。
     "ComplaintPeriodWithdrawalGateMybatisIntegrationTest": 7,
     # 2026-09-17 第二轮拍板 17/22:足迹分享快照 + 进行中游戏会话的真迁移/真 XML IT(4 条 @Test)。
-    "ShareSnapshotRunSessionMybatisIntegrationTest": 4,
+    "ShareSnapshotRunSessionMybatisIntegrationTest": 5,
+    "PlayerRunSessionOrderingMybatisIntegrationTest": 6,
     # 2026-09-21 CYV-P2-002:49 条时两个并发首次发布必须被会员行锁串行化；
     # 达到上限后更新既有 token 不得误删其他分享。
-    "RoamShareSnapshotConcurrencyMySqlIT": 2,
+    "RoamShareSnapshotConcurrencyMySqlIT": 3,
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
     "ClubEventTransferCancellationMySqlIT": 3,
+    "RefundRetryAndRemainderMySqlIT": 5,
+    "SignupNoticeAfterCommitPersistenceMySqlIT": 5,
+    "TopicLikeDesiredStateMySqlIT": 3,
+    "MonitorMissingJobsMySqlIT": 3,
+    "MemberPasswordWidthMySqlIT": 3,
+    "LegacyCategoryForwardGuardMySqlIT": 4,
+    "MissingBusinessSeedsMySqlIT": 4,
+    "RoamPresenceRevokeDurabilityMySqlIT": 10,
+    "RoamPresenceRevokeJobMySqlIT": 4,
+    "WxBillIngestionPersistenceTest": 6,
 }
 
 # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。
 SOURCE_FILES = {
+    "WxBillIngestionPersistenceTest": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WxBillIngestionPersistenceTest.java",
+    "CommunityPostCommentIdempotencyMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CommunityPostCommentIdempotencyMySqlIT.java",
+    "MissingBusinessSeedsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MissingBusinessSeedsMySqlIT.java",
+    "RefundRetryAndRemainderMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",
+    "SignupNoticeAfterCommitPersistenceMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java",
+    "TopicLikeDesiredStateMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicLikeDesiredStateMySqlIT.java",
+    "MonitorMissingJobsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MonitorMissingJobsMySqlIT.java",
+    "MemberPasswordWidthMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MemberPasswordWidthMySqlIT.java",
+    "LegacyCategoryForwardGuardMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/LegacyCategoryForwardGuardMySqlIT.java",
+    "RoamPresenceRevokeDurabilityMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamPresenceRevokeDurabilityMySqlIT.java",
+    "RoamPresenceRevokeJobMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RoamPresenceRevokeJobMySqlIT.java",
     "CoopListReadOnlyMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "CoopListReadOnlyMybatisIntegrationTest.java",
@@ -261,6 +300,9 @@ SOURCE_FILES = {
     "ExploreAllianceRedeemRealDbIT":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/"
         "ExploreAllianceRedeemRealDbIT.java",
+    "ExploreScanReplayRealDbIT":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/"
+        "ExploreScanReplayRealDbIT.java",
     "TandianriBatch0FundsMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "TandianriBatch0FundsMybatisIntegrationTest.java",
@@ -346,6 +388,9 @@ SOURCE_FILES = {
     "CmsTemplateLibraryAudioPatchMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "CmsTemplateLibraryAudioPatchMybatisIntegrationTest.java",
+    "TemplateUseNumFirstAdoptionMybatisIntegrationTest":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
+        "TemplateUseNumFirstAdoptionMybatisIntegrationTest.java",
     "ContentInteractionMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "ContentInteractionMybatisIntegrationTest.java",
@@ -370,6 +415,9 @@ SOURCE_FILES = {
     "SquareEditFollowMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/"
         "SquareEditFollowMybatisIntegrationTest.java",
+    "RoamLocationRetentionMySqlIT":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/"
+        "RoamLocationRetentionMySqlIT.java",
     "RoamSessionWriteMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/"
         "RoamSessionWriteMybatisIntegrationTest.java",
@@ -379,6 +427,9 @@ SOURCE_FILES = {
     "ShareSnapshotRunSessionMybatisIntegrationTest":
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/"
         "ShareSnapshotRunSessionMybatisIntegrationTest.java",
+    "PlayerRunSessionOrderingMybatisIntegrationTest":
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/"
+        "PlayerRunSessionOrderingMybatisIntegrationTest.java",
     "RoamShareSnapshotConcurrencyMySqlIT":
         "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/"
         "RoamShareSnapshotConcurrencyMySqlIT.java",
@@ -491,6 +542,22 @@ def enforce_workflow(workflow_text, gate_text):
     if ("if: always() && steps.mysql.outputs.container != ''" not in main_job_text
             or "docker rm -f -v \"$MYSQL_CONTAINER\"" not in main_job_text):
         problems.append("资金 IT 必须 always() 清理 scratch MySQL 容器")
+    cleanup_step = re.search(
+        r"^      - name: Stop Oracle MySQL scratch\n([\s\S]*?)(?=^      - |\Z)",
+        main_job_text, re.MULTILINE,
+    )
+    cleanup_text = cleanup_step.group(1) if cleanup_step else ""
+    if ('''if ! names="$(docker ps -a --format '{{.Names}}' 2>/dev/null)"; then
+            echo "::error::Funds scratch absence readback failed"
+            exit 1
+          fi''' not in cleanup_text
+            or '''while IFS= read -r name; do
+            if [ "$name" = "$MYSQL_CONTAINER" ]; then
+              echo "::error::Funds scratch container remains"
+              exit 1
+            fi
+          done <<< "$names"''' not in cleanup_text):
+        problems.append("资金 IT 清理必须独立确认 docker ps 成功，并精确拒绝同名残留容器")
     container_output = main_job_text.find('echo "container=$container" >> "$GITHUB_OUTPUT"')
     if container_output < 0 or container_output > main_job_text.find("docker run -d"):
         problems.append("资金 IT 必须在容器启动前登记名称，确保启动后失败仍可清理")

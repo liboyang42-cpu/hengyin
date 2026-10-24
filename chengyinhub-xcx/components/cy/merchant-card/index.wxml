@@ -5,7 +5,7 @@
     <view class="photo-card__gradient mc__gradient" aria-hidden="true"></view>
     <view class="photo-card__top">
       <view class="photo-card__logo"><image class="{{logo && !_logoFailed ? 'photo-card__logo-image' : 'photo-card__brand'}}" src="{{logo && !_logoFailed ? logo : '/images/cards/citylink.svg'}}" mode="aspectFit" binderror="onLogoError" /></view>
-      <view class="mc__tags"><text wx:for="{{_tags}}" wx:key="*this" class="mc__tag">{{item}}</text></view>
+      <view class="mc__tags"><text wx:for="{{_tags}}" wx:key="index" class="mc__tag">{{item}}</text></view>
     </view>
     <view class="photo-card__space"></view>
     <view class="photo-card__body">

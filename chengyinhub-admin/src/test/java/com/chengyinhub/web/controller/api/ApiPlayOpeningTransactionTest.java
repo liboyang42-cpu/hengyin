@@ -89,8 +89,11 @@ class ApiPlayOpeningTransactionTest
 
         CmsRegistration pass = new CmsRegistration();
         pass.setExpiresAt(null);
+        // 7 号对主题 10 的有效自玩通行证真实行；C包新使用按原ID锁读同一行。
+        pass.setId(9_000_001L); pass.setMemberId(7L); pass.setOwnerType(1L); pass.setOwnerId(10L); pass.setRegistrationStatus(2);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.singletonList(pass));
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(9_000_001L)).thenReturn(pass);
         // 本局读不到 ⇒ openingSnapshot 为空 ⇒ completeOpening 抛 IllegalArgumentException
         when(routeMapper.selectByOwner(0L, 10L, 7L, "default")).thenReturn(null);
 

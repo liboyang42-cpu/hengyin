@@ -41,6 +41,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -71,7 +72,8 @@ class JourneyNarrativeSecuritySaveTest {
 
         AjaxResult result = controller.createTopic(dto);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // CORE OWN-C03-21/24：内容安全拒绝在任何写入前发生，业务码改为 400，与写入结果不确定的 500 区分。
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("journeyStory.call.opener"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));
         verify(topicService, never()).createTopic(any(), anyLong(), anyString());
@@ -92,7 +94,8 @@ class JourneyNarrativeSecuritySaveTest {
 
         AjaxResult result = controller.updateTopic(dto);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // CORE OWN-C03-21/24：内容安全拒绝在任何写入前发生，业务码改为 400，与写入结果不确定的 500 区分。
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG))
                         .contains("journeyStory.ending.epilogues[].ally"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));
@@ -119,6 +122,30 @@ class JourneyNarrativeSecuritySaveTest {
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("blockConfig.enter.aside"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));
+        verify(templateRows, never()).insertCmsMemberTemplate(any());
+    }
+
+    @Test
+    void merchantNodeTemplateSubmitPrimaryTextCheckCoversRuleInstructions() {
+        ApiMerchantNodeController controller = spy(new ApiMerchantNodeController());
+        doReturn(MEMBER).when(controller).getAppUserId();
+        ICmsMemberTemplateService templateRows = mock(ICmsMemberTemplateService.class);
+        IWxContentSecurityService security = mock(IWxContentSecurityService.class);
+        setUpMerchantNodeController(controller, templateRows, security);
+
+        CmsMemberTemplate body = new CmsMemberTemplate();
+        body.setTitle("商家据点玩法");
+        body.setValidationMethod(2);
+        body.setSensorType("");
+        body.setSensorConfig("");
+        body.setRuleInstructions("违规规则说明");
+
+        AjaxResult result = controller.templateSubmit(body);
+
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // #398 F5:主送检文本(标题/简介/题干…)本身就要带上规则说明,不能只靠后续叙事批次兜底。
+        verify(security).checkText(eq(IWxContentSecurityService.joinText("商家据点玩法", null, null, null, null, null,
+                "违规规则说明")), any());
         verify(templateRows, never()).insertCmsMemberTemplate(any());
     }
 
@@ -208,6 +235,7 @@ class JourneyNarrativeSecuritySaveTest {
         ReflectionTestUtils.setField(controller, "memberIdentityService",
                 mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
+        TopicContentSafetyTestFixtures.wire(controller, security);
         ReflectionTestUtils.setField(controller, "capabilityGuard", mock(ICapabilityGuard.class));
         ReflectionTestUtils.setField(controller, "merchantAccessService", mock(IMerchantAccessService.class));
     }

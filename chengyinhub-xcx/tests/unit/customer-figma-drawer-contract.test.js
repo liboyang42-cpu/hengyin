@@ -25,7 +25,7 @@ test('客户页的四类业务筛选统一放入底部弹窗', () => {
   assert.doesNotMatch(wxml, /cu-filter-chip--on|cu-seg--on/);
   assert.match(wxml, /wx:if="\{\{segment === item.key\}\}" name="check"/);
   assert.match(wxml, /class="cu-hero-title">客户</);
-  assert.match(wxml, /class="cu-hero-sub">\{\{error \? \'客户数量暂不可用\' : customerSummaryText\}\}<\/text>/);
+  assert.match(wxml, /class="cu-hero-sub" wx:if="\{\{!error && customerSummaryText\}\}">\{\{customerSummaryText\}\}<\/text>/);
   // 2026-09-25 CU-M-120/147 给三段补了 emptyLabel(空态专用说法),这条原来把整个对象字面量写死,
   // 多一个属性就红。钉的其实是「四枚分段的 key/label 与顺序」,所以只钉到 label 为止。
   assert.match(js, /\{ key: 'all', label: '全部' \}[\s\S]*\{ key: 'repeat', label: '回头客'[\s\S]*\{ key: 'new', label: '新客'[\s\S]*\{ key: 'noted', label: '有备注'/);
@@ -35,7 +35,7 @@ test('客户页的四类业务筛选统一放入底部弹窗', () => {
   assert.match(wxml, /class="cu-phone-row" wx:if="\{\{item\.phoneText\}\}"/);
   assert.match(wxml, /catchtap="copyCustomerPhone"[^>]*data-memberid="\{\{item\.memberId\}\}"/);
   assert.match(wxml, /class="cu-copy-img" src="\/pages\/merchant\/images\/icon_copy\.svg"/);
-  // F15:拨打/复制前先向服务端换取明文,拿到的号才用;列表里的脱敏号不得直接拨/复制。
+  // F15:拨打/复制前先向服务端换取明文，拿到的号才用；列表里的脱敏号不得直接拨/复制。
   assert.match(js, /copyCustomerPhone\(e\)\s*\{\s*this\._revealCustomerContact\(e, 'copy'\);\s*\}/);
   assert.match(js, /callCustomer\(e\)\s*\{\s*this\._revealCustomerContact\(e, 'call'\);\s*\}/);
   assert.match(js, /url: `\/api\/merchant\/crm\/customers\/\$\{memberId\}\/contact`/);
@@ -91,14 +91,14 @@ test('主办与承接两套主题名单都使用客户和核销口径', () => {
   assert.match(hostJs, /playerActions:\s*\{ type: Array, value: \[\] \}/,
     '主办组件必须接收客户抽屉动作');
   assert.match(hostWxml, /<project-drawer[^>]*actions="\{\{ playerActions \}\}"[^>]*bind:action="emitDrawerAction"/s,
-    '主办客户抽屉必须保留唯一的查看台账入口');
+    '主办客户抽屉必须保留唯一的查看记录入口');
   assert.doesNotMatch(joinWxml, /actions="\{\{ playerActions \}\}"/,
     '承接方已有页面内真实入口，客户抽屉不重复造入口');
   assert.match(pageJs, /playerActions:\s*\[\]/);
-  assert.match(pageJs, /this\.data\.role === 'host'[\s\S]*key: 'goLedger'[\s\S]*label: '查看全店台账'/,
-    '页面只能为主办方客户抽屉下发查看台账动作，且 CU-M-183 要求写明全店作用域');
+  assert.match(pageJs, /this\.data\.role === 'host'[\s\S]*key: 'goLedger'[\s\S]*label: '查看全店核销记录'/,
+    '页面只能为主办方客户抽屉下发查看记录动作，且 CU-M-183 要求写明全店作用域');
   assert.match(pageWxml, /<project-host[\s\S]*playerActions="\{\{ playerActions \}\}"[\s\S]*bind:act="onJoinAct"/,
-    '主办页必须把查看台账动作传入组件');
+    '主办页必须把查看记录动作传入组件');
 
   const icon = read('pages/topic/images/icon_copy.svg');
   assert.match(icon, /<g id="copy-06">/);

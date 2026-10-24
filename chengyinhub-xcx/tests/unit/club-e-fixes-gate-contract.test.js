@@ -104,7 +104,7 @@ function loadClubDetail() {
     '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
     '../../../utils/scene-registry.js': { getScene: () => ({}) },
     '../../../utils/datetime': { toTimestamp: (v) => Date.parse(String(v).replace(' ', 'T')) || 0 },
-    '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+    '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
     '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
     '../../../utils/group-code-session.js': { buildGroupCodeIssuePayload: () => ({}), listGroupCodeActivities: () => [] },
     '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
@@ -112,6 +112,7 @@ function loadClubDetail() {
     '../../../utils/response-shape.js': require('../../utils/response-shape.js'),
     '../../../utils/coop-invite-view.js': require('../../utils/coop-invite-view.js'),
     '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+    '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
     '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
   };
   return mountWithLastPage('pages/club/detail/index.js', {}, requires);
@@ -197,7 +198,7 @@ test('E-13 客户页守卫与后端 canGovernClub(MEMBER_MANAGE)对齐,列表返
 
   const listJs = read('pages/club/customers/index.js');
   assert.match(listJs, /onShow\(\)/, '列表必须有 onShow 重载');
-  assert.match(listJs, /this\.data\.state === 'ready'/, '只在有内容时重拉,不去覆盖错误态');
+  assert.match(listJs, /this\.data\.state === 'ready'/, '只在有内容时重拉，不去覆盖错误态');
 
   // 后端判据出处:ClubMemberServiceImpl.canGovernClub 只认 MEMBER_MANAGE
   const svc = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMemberServiceImpl.java');
@@ -221,7 +222,7 @@ test('E-15f 场次工具加载失败不再谎报「没有可管理的具体场�
   page.openActivityTools({ currentTarget: { dataset: { id: 31 } } });
   // 业务失败(HTTP 200 + code 500)走的是 success 回调 —— 原来它和「真的没有场次」共用一句话
   requests.find((r) => r.url === '/api/topic/info-to-user').success({ code: 500, msg: '主题服务不可用' });
-  assert.ok(toasts.includes('场次加载失败，请稍后重试'), '业务失败要给失败文案,实得:' + JSON.stringify(toasts));
+  assert.deepEqual(toasts, [], '读取失败留白，不能弹场次空态或错误提示');
   assert.ok(!toasts.includes('这个项目还没有可管理的具体场次'), '失败不许说成「没有场次」');
 
   // 真·空场次仍给「没有场次」文案(别把两态又混回去)
@@ -249,5 +250,5 @@ test('E-15g 解散确认框带的是俱乐部真名,而不是回退成「这一�
   assert.ok(opened, '必须真的调到三段式确认框');
   assert.equal(opened.action, 'club.dissolve');
   assert.equal(opened.meta && opened.meta.name, '夜行团',
-    'name 必须取 data.name(=this.data.form 在组件里不存在,取它文案会回退成「这一项」)');
+    'name 必须取 data.name(=this.data.form 在组件里不存在，取它文案会回退成「这一项」)');
 });

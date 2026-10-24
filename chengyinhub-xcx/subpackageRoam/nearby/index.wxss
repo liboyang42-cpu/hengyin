@@ -20,9 +20,21 @@ page { background: var(--cy-comp-sheet-player-page); }
 /* P1 顶部条(稿 591:1017):白底 358×44 · radius 22 · 左 18 标题 15/600 黑。
    稿上右侧那个「筛选」2026-09-15 已删(见下一条注释),所以这里只剩标题一个子节点,
    space-between 一并撤掉 —— 单子节点下它是空转,留着会让人以为右边还该有东西。 */
-.mt-top { position: absolute; left: 31rpx; right: 31rpx; z-index: 20; height: 85rpx; padding: 0 35rpx; box-sizing: border-box; border-radius: 42rpx; /* ds-ok 稿 591:1017 radius 22,与行尾 24 行同一条规则 */
-  display: flex; align-items: center; background: var(--cy-color-play-accent); } /* ds-ok 稿 591:1017 尺寸 */
-.mt-top__t { font-size: 29rpx; font-weight: 600; color: var(--cy-color-play-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok 稿 15px/600 */
+/* 2026-10-14 地图优化(用户确认原型):白条 → 深色玻璃计数条 + 地图/列表切换,同一行 */
+.mt-top { position: absolute; left: 23rpx; right: 23rpx; z-index: 20; height: 85rpx; display: flex; align-items: center; gap: 15rpx; }
+.mt-top__pill { flex: 1; min-width: 0; height: 85rpx; padding: 0 31rpx; box-sizing: border-box; border-radius: var(--cy-radius-2xl); display: flex; align-items: center; gap: 15rpx;
+  background: rgba(28,28,30,.92); backdrop-filter: blur(24rpx); } /* ds-ok 原型 .nb-title 玻璃 */
+.mt-top__dot { flex: none; width: 15rpx; height: 15rpx; border-radius: 50%; background: #22C55E; box-shadow: 0 0 0 8rpx rgba(34,197,94,.2); } /* ds-ok 原型在线点 */
+.mt-top__t { font-size: 29rpx; font-weight: 600; color: var(--cy-color-play-accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok 稿 15px/600 */
+.mt-mode { flex: none; height: 85rpx; padding: 6rpx; box-sizing: border-box; border-radius: 42rpx; display: flex; background: rgba(28,28,30,.92); backdrop-filter: blur(24rpx); } /* ds-ok 原型 .nb-mode */
+.mt-mode__i { min-width: 88rpx; padding: 0 23rpx; border-radius: 37rpx; display: flex; align-items: center; justify-content: center; font-size: 25rpx; font-weight: 600; color: rgba(255,255,255,.6); } /* ds-ok 原型 .nb-mode 未选 */
+.mt-mode__i.is-on { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); }
+.mt-list { position: absolute; left: 0; right: 0; bottom: 0; z-index: 15; padding: 0 31rpx 260rpx; box-sizing: border-box; background: var(--cy-comp-sheet-player-page); border-radius: var(--cy-radius-2xl) var(--cy-radius-2xl) 0 0; }
+.mt-list__sec { padding: 35rpx 8rpx 8rpx; font-size: 25rpx; color: #8A93A0; } /* ds-ok 同 .mt-row__s */
+.mt-row--list:first-of-type { margin-top: 15rpx; }
+.mt-list .mt-foot { padding: 0 8rpx; } /* 与上方「范围内 · N 支」同一左缘 */
+.mt-badge--plain { background: #292929; color: #C4CBD4; } /* ds-ok 同 .mt-sbtn--s */
+.mt-badge--lead { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); }
 /* 稿 591:1019 的「筛选」2026-09-15 随「无筛选维度定义」删除,.mt-top__f / ::after 命中区一并撤。 */
 
 /* P1 角控件(稿 591:1020 / 591:1022):#1A1A1A · 1px 白 12% 描边 · 44 高 · radius 22 · 14/600 白 */
@@ -76,3 +88,103 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-badge--ok { background: rgba(74,222,128,.18); color: #4ADE80; } /* ds-ok 稿 595:1022 */
 .mt-badge--wait { background: rgba(245,180,70,.18); color: #F5B446; } /* ds-ok 稿 595:1029 */
 .mt-badge--bad { background: rgba(248,113,113,.18); color: #F87171; } /* ds-ok 稿 595:1036 */
+
+/* ===== 2026-10-22 业主:筛选行(计数条下面)· 三类点位色 · 点位卡 ===== */
+.mt-filter { position: absolute; left: 0; right: 0; z-index: 19; white-space: nowrap; padding: 0 23rpx; box-sizing: border-box; }
+.mt-chip { display: inline-flex; align-items: center; gap: 10rpx; height: 64rpx; padding: 0 26rpx; margin-right: 14rpx; border-radius: 32rpx; vertical-align: top; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+  font-size: 25rpx; font-weight: 600; color: rgba(255,255,255,.78); background: rgba(28,28,30,.92); backdrop-filter: blur(24rpx); } /* ds-ok 与计数条同一玻璃 */
+.mt-chip.is-on { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); }
+.mt-chip__caret { width: 0; height: 0; border-left: 8rpx solid transparent; border-right: 8rpx solid transparent; border-top: 10rpx solid currentColor; opacity: .7; }
+
+
+/* ===== v13 地图(业主 2026-10-22「和 HTML 一模一样」) ===== */
+/* ds-ok: 本段颜色/尺寸逐项照 v13 原型取值 */
+.mt-chip { height: 65rpx; padding: 0 25rpx; margin-right: 15rpx; border-radius: 33rpx; gap: 12rpx; font-size: 25rpx; font-weight: 400; color: #fff; background: rgba(28,28,30,.88); box-shadow: inset 0 0 0 1rpx rgba(255,255,255,.1); } /* ds-ok */
+.mt-chip.is-on { background: #fff; color: #000; font-weight: 600; } /* ds-ok */
+.mt-chip__caret { width: 10rpx; height: 10rpx; border: 0; border-right: 4rpx solid currentColor; border-bottom: 4rpx solid currentColor; transform: translateY(-3rpx) rotate(45deg); opacity: 1; transition: transform .2s; }
+.mt-chip__caret.is-up { transform: translateY(3rpx) rotate(225deg); }
+.mdd-mask { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; }
+.mdd { position: absolute; z-index: 31; min-width: 365rpx; padding: 12rpx; box-sizing: border-box; border-radius: 31rpx; background: rgba(36,36,38,.97); box-shadow: 0 35rpx 77rpx rgba(0,0,0,.6); backdrop-filter: blur(38rpx); -webkit-backdrop-filter: blur(38rpx); /* ds-ok */
+  transform-origin: 20% 0; opacity: 0; transform: scale(.9) translateY(-12rpx); transition: opacity .2s, transform .28s cubic-bezier(.34,1.32,.64,1); }
+.mdd.is-in { opacity: 1; transform: none; }
+.mdd.is-still { transition: none; }
+.mdd__i { display: flex; align-items: center; gap: 19rpx; padding: 19rpx; border-radius: 19rpx; font-size: 27rpx; color: #fff; } /* ds-ok */
+.mdd__i--press { background: rgba(255,255,255,.06); } /* ds-ok */
+.mdd__i.on { font-weight: 600; }
+.mdd__i.on::after { content: ''; width: 10rpx; height: 18rpx; margin-left: 15rpx; border-right: 4rpx solid #7CF0A0; border-bottom: 4rpx solid #7CF0A0; transform: translateY(-3rpx) rotate(45deg); } /* ds-ok v13 选中勾 */
+.mdd__n { margin-left: auto; font-size: 21rpx; color: #8E8E93; } /* ds-ok */
+.mdd__hot { font-size: 19rpx; padding: 2rpx 12rpx; border-radius: 12rpx; background: #FF375F; color: #fff; font-weight: 700; } /* ds-ok */
+.mt-badge--team { background: rgba(10,132,255,.18); color: #5AA9FF; } /* ds-ok */
+.mt-badge--place { background: rgba(124,240,160,.16); color: #7CF0A0; } /* ds-ok */
+.mt-badge--shop { background: rgba(255,159,10,.16); color: #FFB547; } /* ds-ok */
+.mt-row__im { flex: none; width: 88rpx; height: 88rpx; border-radius: 23rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.mt-row__im.is-r { border-radius: 50%; }
+.mt-row__im--ph { background: #2C2C2E; } /* ds-ok */
+.mt-row--list { padding: 19rpx 27rpx; }
+.mt-list { background: #000; } /* ds-ok */
+
+/* 点位卡:290×316,深灰底,上方类型小牌,下方小尾巴;正面照片 + 名字压图;背面介绍,上滑展开 */
+.pdim--clear { background: transparent !important; }
+.pc { position: absolute; left: 50%; z-index: 40; width: 558rpx; height: 608rpx; margin-left: -279rpx; opacity: 0; transform: translateY(52rpx) scale(.16); transform-origin: 50% calc(100% + 40rpx);
+  transition: transform .42s cubic-bezier(.5,0,.7,.4), opacity .1s ease .36s; } /* 收回:先缩回点位,最后一下才淡掉 */
+.pc.is-in { opacity: 1; transform: none; transition: transform .5s cubic-bezier(.34,1.32,.64,1), opacity .12s ease; }
+.pc.is-x { width: calc(100% - 46rpx); margin-left: calc(-50% + 23rpx); height: auto; }
+.pc--reduced, .pc--reduced .pc__in { transition: none; }
+.pc__chip { position: absolute; left: 50%; top: -31rpx; z-index: 4; transform: translateX(-50%); display: flex; align-items: center; gap: 12rpx; padding: 10rpx 23rpx 10rpx 12rpx; border-radius: 35rpx; white-space: nowrap; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+  background: #2C2C2E; color: #fff; font-size: 29rpx; font-weight: 800; box-shadow: 0 12rpx 31rpx rgba(0,0,0,.4); } /* ds-ok */
+.pc__chip-i { width: 46rpx; height: 46rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 25rpx; color: #fff; } /* ds-ok */
+.pc__in { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3,.7,.2,1); }
+.pc__in.is-flip { transform: rotateY(180deg); }
+.pc__f, .pc__b { position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 42rpx; overflow: hidden; clip-path: inset(0 round 42rpx); backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #1C1C1E; color: #fff; } /* ds-ok */
+.pc__b { transform: rotateY(180deg); padding: 35rpx 35rpx 27rpx; box-sizing: border-box; display: flex; flex-direction: column; }
+.pc__ph { position: absolute; left: 15rpx; right: 15rpx; top: 15rpx; height: 408rpx; border-radius: 31rpx; overflow: hidden; background: #333; } /* ds-ok */
+.pc__img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.pc__img--ph { background: linear-gradient(160deg, #2a3140, #121418); } /* ds-ok */
+.pc__phs { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.72)); } /* ds-ok */
+.pc__rib { position: absolute; left: 31rpx; top: 31rpx; z-index: 3; font-size: 21rpx; font-weight: 700; padding: 8rpx 17rpx; border-radius: 17rpx; background: #FF9F0A; color: #000; } /* ds-ok */
+.pc__avs { position: absolute; left: 31rpx; top: 31rpx; z-index: 3; display: flex; align-items: center; }
+.pc__av { width: 58rpx; height: 58rpx; border-radius: 50%; margin-right: -15rpx; border: 4rpx solid #1C1C1E; } /* ds-ok */
+.pc__avn { margin-left: 27rpx; font-size: 23rpx; padding: 6rpx 15rpx; border-radius: 15rpx; background: rgba(0,0,0,.6); color: #fff; } /* ds-ok */
+.pc__nm { position: absolute; left: 23rpx; right: 23rpx; bottom: 23rpx; z-index: 2; display: flex; flex-direction: column; }
+.pc__nmb { font-size: 40rpx; font-weight: 700; line-height: 1.15; color: #fff; } /* ds-ok */
+.pc__nms { font-size: 25rpx; color: rgba(255,255,255,.78); } /* ds-ok */
+.pc__meta { position: absolute; left: 35rpx; right: 35rpx; top: 446rpx; display: flex; flex-direction: column; font-size: 23rpx; line-height: 1.6; color: #8E8E93; } /* ds-ok */
+.pc__ml { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc__st { color: #fff; font-weight: 600; } /* ds-ok */
+.pc__tail { position: absolute; left: 50%; bottom: -21rpx; z-index: -1; width: 42rpx; height: 42rpx; margin-left: -21rpx; background: #1C1C1E; transform: rotate(45deg); border-radius: 6rpx; } /* ds-ok */
+.pb__hd { display: flex; align-items: flex-start; gap: 19rpx; }
+.pb__t { flex: 1; font-size: 40rpx; line-height: 1.2; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.pb__x { flex: none; width: 58rpx; height: 58rpx; border-radius: 50%; background: #2C2C2E; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; } /* ds-ok */
+.pc.is-x .pb__x { opacity: 1; }
+.pb__xi { width: 14rpx; height: 14rpx; border-right: 4rpx solid #fff; border-bottom: 4rpx solid #fff; transform: translateY(-4rpx) rotate(45deg); } /* ds-ok */
+.pb__sub, .pb__rt { margin-top: 8rpx; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
+.pb__rt { color: #fff; } /* ds-ok */
+.pb__sc { flex: 1; min-height: 0; margin-top: 19rpx; }
+.pb__d { font-size: 25rpx; line-height: 1.6; color: #8E8E93; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; } /* ds-ok */
+.pc.is-x .pb__d { display: block; color: rgba(255,255,255,.86); } /* ds-ok */
+.pb__more { display: block; margin: 12rpx 0 19rpx; font-size: 23rpx; color: #0A84FF; } /* ds-ok */
+.pb__th { display: flex; gap: 12rpx; }
+.pb__th image { flex: 1; height: 123rpx; border-radius: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.pb__info { margin-top: 27rpx; }
+.pb__row { display: flex; justify-content: space-between; gap: 23rpx; padding: 21rpx 0; border-top: 1rpx solid rgba(255,255,255,.08); font-size: 27rpx; } /* ds-ok */
+.pb__rk { flex: none; color: #8E8E93; } /* ds-ok */
+.pb__cta { display: flex; gap: 19rpx; margin-top: 31rpx; padding-bottom: 12rpx; }
+.pb__btn { flex: 1; height: 88rpx; border-radius: 44rpx; display: flex; align-items: center; justify-content: center; font-size: 29rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.pb__btn--w { background: #fff; color: #000; } /* ds-ok */
+.pb__btn--s { background: #2C2C2E; color: #fff; } /* ds-ok */
+.pb__ft { display: flex; align-items: center; justify-content: space-between; margin-top: 19rpx; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
+.pb__hint { display: flex; align-items: center; gap: 8rpx; }
+.pb__up { width: 12rpx; height: 12rpx; border-left: 4rpx solid currentColor; border-top: 4rpx solid currentColor; transform: translateY(3rpx) rotate(45deg); }
+/* v13 点位长成卡:裁切从圆(点位照片)过渡成圆角卡;点位照片 + 白圈在前段淡出;类型小牌、小尾巴最后出现 */
+.pc__clip { position: absolute; top: 0; right: 0; bottom: 0; left: 0; clip-path: inset(25rpx 0 25rpx 0 round 279rpx); transition: clip-path .45s cubic-bezier(.2,.82,.2,1); }
+.pc.is-in .pc__clip { clip-path: inset(0 round 42rpx); }
+.pc__cover { position: absolute; left: 0; top: 25rpx; width: 558rpx; height: 558rpx; border-radius: 50%; opacity: 1; transition: opacity .25s ease .1s; pointer-events: none; }
+.pc__ring { position: absolute; left: 0; top: 25rpx; width: 558rpx; height: 558rpx; border-radius: 50%; box-shadow: inset 0 0 0 19rpx #fff; opacity: 1; transition: opacity .25s ease .1s; pointer-events: none; } /* ds-ok 点位白圈(缩到 .16 时约 3px) */
+.pc.is-in .pc__cover, .pc.is-in .pc__ring { opacity: 0; }
+.pc__chip, .pc__tail { opacity: 0; transition: opacity .2s ease .3s; }
+.pc.is-in .pc__chip, .pc.is-in .pc__tail { opacity: 1; }
+.pc.is-x .pc__cover, .pc.is-x .pc__ring { display: none; }
+.pc--reduced .pc__clip, .pc--reduced .pc__cover, .pc--reduced .pc__ring, .pc--reduced .pc__chip, .pc--reduced .pc__tail { transition: none; }
+/* 卡开着时顶部计数条、筛选行淡出(原型 map-open),只留地图和卡 */
+.nb .mt-top, .nb .mt-filter { transition: opacity .25s ease; }
+.nb.map-open .mt-top, .nb.map-open .mt-filter { opacity: 0; pointer-events: none; }

@@ -117,6 +117,20 @@ class RefundPayoutServiceTest {
      * 传错会被微信按「退款额>订单额」拒掉 —— 全额退时两值恰好相等,所以这条只有部分退能暴露。
      */
     @Test
+    void subsequentRefundKeepsPersistedNumberInsteadOfReusingFirstRefund() {
+        given(1, "20.00", "100.00");
+        RefundApplication refund = refundApplicationMapper.selectRefundApplicationById(7L);
+        refund.setRefundNo("RF10-6");
+        when(refundApplicationMapper.ensureRefundNo(7L, "RF10-6")).thenReturn(1);
+        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+                .thenReturn(RefundRequestResult.ACCEPTED);
+        svc.payoutAfterReview(7L);
+        verify(wechatPayService).submitRefund(eq("REG20260716001"), eq("RF10-6"),
+                eq(new BigDecimal("20.00")), eq(new BigDecimal("100.00")), any());
+        verify(refundApplicationMapper, never()).ensureRefundNo(7L, "RF10");
+    }
+
+    @Test
     void partialRefund_passesOriginalPaidAmountAsTotal_notRefundAmount() {
         given(1, "30.00", "100.00");
         when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))

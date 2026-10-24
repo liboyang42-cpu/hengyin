@@ -105,10 +105,6 @@
   "selector": "cy-skeleton",
   "min": 1
  },
- "B46": {
-  "selector": ".fbox_sr",
-  "min": 1
- },
  "B48": {
   "selector": ".pd-ai-topic__plan, .pd-field",
   "min": 1
@@ -134,7 +130,7 @@
   "visibleMin": 3
  },
  "B52": {
-  "selector": ".cg-hero-body, .cg-count, .cg-label, .cg-card-head",
+  "selector": ".cg-hero-body, .cg-count, .cg-label, .cg-sec",
   "min": 1
  },
  "B53": {
@@ -290,7 +286,7 @@
   "min": 1
  },
  "F01": {
-  "selector": ".mp-empty__b",
+  "selector": ".mp-empty",
   "min": 1,
   "viewNodeMin": 3
  },
@@ -584,7 +580,7 @@
   "min": 1
  },
  "A58": {
-  "selector": ".privacy-setting-title",
+  "selector": ".privacy-list",
   "min": 1,
   "forbid": [
    ".privacy-actions"
@@ -801,7 +797,7 @@
   ]
  },
  "B45": {
-  "selector": ".ti-card",
+  "selector": ".ti-field",
   "min": 1
  },
  "B57": {
@@ -858,7 +854,7 @@
   "min": 5
  },
  "B70": {
-  "selector": ".gc-score-rank",
+  "selector": ".gc-row-me",
   "min": 1
  },
  "B71": {
@@ -928,9 +924,9 @@
   "_why": "店铺参谋正常态必须同时呈现基础经营事实与 AI 解读。"
  },
  "C12c": {
-  "selector": ".value-card, .ai-card--down",
-  "min": 2,
-  "_why": "AI 降级态仍必须保留基础经营事实，并显示可恢复的降级区。"
+  "selector": ".value-card",
+  "min": 1,
+  "_why": "AI 降级态仍必须保留基础经营事实；2026-10-23 业主：没有解读就整段不显示，降级卡已删。"
  },
  "C14": {
   "selector": ".rel-item",
@@ -969,7 +965,7 @@
   "_why": "店铺装修 normal 态必须进入 loadState=ok && m 的 M2 行式正文；只锚页面根会把尚未入驻兜底误判成通过。"
  },
  "C23": {
-  "selector": ".slide1, .topic-hero-meta",
+  "selector": ".slide1, .hero-info",
   "min": 2,
   "forbid": [
    "cy-empty",

@@ -1,0 +1,47 @@
+package com.chengyinhub.e2e;
+
+import com.chengyinhub.business.service.impl.WxContentSecurityServiceImpl;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+
+/**
+ * ★桩:内容安全外部通道(EXTERNAL_GATE: content security stubbed)。只存在于链路验收的 exploded jar 里,
+ * 仓库产品码一行都没有;扩展名刻意不是 .java,不参与正常编译。
+ *
+ * <p>桩掉的只有两次【对微信的出站调用】:文本 msg_sec_check 与图片 media_check_async(验收机没有小程序
+ * AppSecret,这一层无解)。其余全部继承真实实现:总开关、openid 必填等入口闸、图片送检后的 inbox 登记与
+ * trace 映射、回调验签、时间窗、nonce 防重放、回调结论落地(下架/放行)。
+ *
+ * <p>负控标记:文本或图片地址含 {@link #REJECT_MARKER} 时,文本按微信 87014(命中违规)的真实文案拒绝;
+ * 图片照常拿到 trace,结论仍只能由真实回调入口给出。
+ */
+@Component
+@Primary
+public class E2eWxContentSecurityStub extends WxContentSecurityServiceImpl {
+
+    public static final String EXTERNAL_GATE = "content security stubbed";
+    public static final String REJECT_MARKER = "E2E-SEC-REJECT";
+    static final String RISKY_TEXT = "内容包含违规信息，请修改后重试";
+
+    @Override
+    public String checkText(String content, String openid) {
+        if (content == null || content.isEmpty()) {
+            return null;
+        }
+        // 入口闸与真实实现一致:总开关关闭或缺 openid 时 fail-close。
+        if (!isEnabled() || com.chengyinhub.common.utils.StringUtils.isBlank(openid)) {
+            return MSG_UNAVAILABLE;
+        }
+        return content.contains(REJECT_MARKER) ? RISKY_TEXT : null;
+    }
+
+    @Override
+    public String checkMediaAsync(String mediaUrl, String openid) {
+        if (!isEnabled() || mediaUrl == null || mediaUrl.isEmpty()) {
+            return null;
+        }
+        return "e2e-sec-" + UUID.randomUUID();
+    }
+}

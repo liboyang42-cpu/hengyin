@@ -92,9 +92,12 @@ function marketingHome(items) {
 }
 
 /** 走查里的两条:同名、不同日期。 */
+// 2026-10-22 owner:已结束的路线广场不再显示,夹具日期必须相对"现在"取未来,不能写死。
+const DAY = 86400000;
+const stamp = (offsetDays) => new Date(Date.now() + offsetDays * DAY + 8 * 3600000).toISOString().slice(0, 19).replace('T', ' ');
 const SAME_NAME_SESSIONS = [
-  { id: 21, name: 'E2E 探店日一期', imgUrl: '', productType: 1, startDate: '2026-09-01 00:00:00', endDate: '2026-09-02 00:00:00' },
-  { id: 22, name: 'E2E 探店日一期', imgUrl: '', productType: 1, startDate: '2026-09-20 00:00:00', endDate: '2026-09-21 00:00:00' },
+  { id: 21, name: 'E2E 探店日一期', imgUrl: '', productType: 1, startDate: stamp(10), endDate: stamp(11) },
+  { id: 22, name: 'E2E 探店日一期', imgUrl: '', productType: 1, startDate: stamp(20), endDate: stamp(21) },
 ];
 
 function openPlaza(options) {
@@ -107,7 +110,7 @@ function openPlaza(options) {
 test('带 ?topicId= 进广场:命中那条被标出来并滚进视野,其余不动', () => {
   const { page, scrolled } = openPlaza({ topicId: '22' });
   const focused = page.data.routes.filter((item) => item.focus);
-  assert.equal(focused.length, 1, '只许标一条,不能把同名的两条一起标');
+  assert.equal(focused.length, 1, '只许标一条，不能把同名的两条一起标');
   assert.equal(focused[0].id, 22);
   // 跨 realm 的对象不做 deepStrictEqual(原型不同),逐字段比。
   assert.equal(scrolled.length, 1);
@@ -133,14 +136,15 @@ test('不带 topicId 的老入口(查看全部/直接进广场)行为不变', ()
 test('广场卡上有 id 锚点,命中态才有描边类', () => {
   const wxml = read('pages/merchant/coop-center/index.wxml');
   assert.match(wxml, /id="cc-route-\{\{item\.id\}\}"/, '定位靠这个 id,删了滚动就落空');
-  assert.match(wxml, /class="cc-route \{\{item\.focus \? 'cc-route--focus' : ''\}\}"/);
+  // 2026-10-22 owner:广场卡每次打开都飞入,class 尾部多一个 {{flyClass}}
+  assert.match(wxml, /class="cc-route \{\{item\.focus \? 'cc-route--focus' : ''\}\}( \{\{flyClass\}\})?"/);
   assert.match(read('pages/merchant/coop-center/index.wxss'), /\.cc-route--focus \{/);
 });
 
 test('负控:渲染完成后的定位钩子摘掉时,标记与滚动都必须落空', () => {
   const source = read(COOP_CENTER_JS);
   const regressed = source.replace('}, () => this._locateFocusTopic());', '});');
-  assert.notEqual(regressed, source, '负控锚点失效:定位钩子已改名,扫描口径需同步');
+  assert.notEqual(regressed, source, '负控锚点失效:定位钩子已改名，扫描口径需同步');
   const { page, requests, scrolled } = loadPage(regressed, COOP_CENTER_JS);
   page.onLoad({ topicId: '22' });
   requests[0].success(marketingHome(SAME_NAME_SESSIONS));
@@ -181,8 +185,13 @@ test('点推荐卡带 topicId 进广场;非法 id 退回纯列表', () => {
 
 test('推荐卡本体、卡面场次行、「查看全部」三者都对上', () => {
   const wxml = read('pages/merchant/marketing/ai-insight/index.wxml');
-  assert.match(wxml, /class="tcard" wx:for="\{\{recTopics\}\}" wx:key="topicId" bindtap="goRecTopic"\s+data-topic-id="\{\{item\.topicId\}\}"/);
-  assert.match(wxml, /<text class="tcard-meta" wx:if="\{\{item\.metaText\}\}">\{\{item\.metaText\}\}<\/text>/);
+  // 2026-10-22 owner:点卡先展开详情弹层,弹层主按钮再带 topicId 去合作中心
+  assert.match(wxml, /class="tcard" id="tc-\{\{index\}\}" wx:for="\{\{recTopics\}\}" wx:key="topicId" bindtap="openTopic"\s+data-idx="\{\{index\}\}"/);
+  assert.match(wxml, /bindtap="applyTopic" data-topic-id="\{\{sheetTopic\.topicId\}\}"/, '弹层「去申请承接」必须带上这张卡的 topicId');
+  // 2026-10-23 owner 二次复审:卡面只写标题和描述,场次/主办从卡面撤下;
+  // 同名主题靠点开后的详情弹层「场次 · 主办」一行分开(metaText 仍由 _decorateTopics 生成,下方负控照旧钉它)
+  assert.doesNotMatch(wxml, /class="tcard-stat/, '卡面不再渲染场次/主办');
+  assert.match(wxml, /<text class="ts-k">场次 · 主办<\/text><text class="ts-v">\{\{sheetTopic\.metaText\}\}<\/text>/, '场次/主办改在详情弹层里');
   assert.match(wxml, /class="sec-link" bindtap="goCoopCenter"/, '「查看全部」仍去完整列表');
 });
 
@@ -192,7 +201,7 @@ test('负控:卡面改回只渲染名字时,场次断言必须真红', () => {
     "const dateText = start && end && start !== end ? start + ' – ' + end : start;",
     "const dateText = '';"
   );
-  assert.notEqual(regressed, source, '负控锚点失效:场次拼接已改名,扫描口径需同步');
+  assert.notEqual(regressed, source, '负控锚点失效:场次拼接已改名，扫描口径需同步');
   const { page } = loadAiInsight(regressed);
   const cards = page._decorateTopics([
     { topicId: 21, name: 'E2E 探店日一期', startDate: '2026-09-01 00:00:00', endDate: '2026-09-02 00:00:00' },

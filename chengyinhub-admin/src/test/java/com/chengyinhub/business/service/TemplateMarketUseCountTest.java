@@ -34,6 +34,7 @@ class TemplateMarketUseCountTest {
         libraryService = mock(ICmsTemplateLibraryService.class);
         auditService = mock(IAuditTaskService.class);
         service = new TemplatePublishServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
         ReflectionTestUtils.setField(service, "capabilityGuard", mock(ICapabilityGuard.class));
@@ -64,7 +65,8 @@ class TemplateMarketUseCountTest {
         request.setOriginalTemplateId(9001L);
 
         assertEquals(91L, service.publishTemplateWithTransaction(request, 7L, "member7"));
-        verify(libraryService).incrementUseNum(eq(9001L));
+        // AUDIT-G2-5:计数按「该会员首次采用」幂等 —— 把会员与新建行一起交给 SQL 判重。
+        verify(libraryService).incrementUseNumOnFirstAdoption(eq(9001L), eq(7L), eq(91L));
     }
 
     @Test
@@ -73,6 +75,6 @@ class TemplateMarketUseCountTest {
         request.setTitle("白手起家的玩法");
 
         assertEquals(91L, service.publishTemplateWithTransaction(request, 7L, "member7"));
-        verify(libraryService, never()).incrementUseNum(anyLong());
+        verify(libraryService, never()).incrementUseNumOnFirstAdoption(anyLong(), anyLong(), anyLong());
     }
 }

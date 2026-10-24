@@ -26,7 +26,7 @@ global.getApp = () => ({
     sent.push(p);
   },
   getUserID: () => 1,
-  getToken: () => '',
+  getToken: () => 'current-session',
 });
 global.wx = {
   getStorageSync: () => undefined,
@@ -74,7 +74,7 @@ test('主题卡上送 expectedUserStatus = 渲染这一刻的态(已上架 → 1
   assert.equal(sent[0].url, '/api/topic/update_user_status');
   assert.equal(sent[0].data.id, 101);
   assert.equal(sent[0].data.expectedUserStatus, 1,
-    '按钮写着「下架」就是因为它现在是已上架,期望态必须如实上送,否则后端 CAS 无从比较');
+    '按钮写着「下架」就是因为它现在是已上架，期望态必须如实上送，否则后端 CAS 无从比较');
 });
 
 test('未上架的卡上送 expectedUserStatus = 0', () => {
@@ -90,7 +90,7 @@ test('活动卡走另一个接口,不许塞 expectedUserStatus', () => {
 
   assert.equal(sent[0].url, '/api/activity/update_publish_status');
   assert.equal('expectedUserStatus' in sent[0].data, false,
-    '活动线没有这个参数,乱塞会让它成为一个谁也不读的假字段');
+    '活动线没有这个参数，乱塞会让它成为一个谁也不读的假字段');
 });
 
 test('在途守卫:同一张卡重复点只发一次', () => {
@@ -99,7 +99,7 @@ test('在途守卫:同一张卡重复点只发一次', () => {
   page.toggleStatus(tap(101, true));
   page.toggleStatus(tap(101, true));
 
-  assert.equal(sent.length, 1, '重复点必须只生效一次,否则第二次会把第一次的结果翻回去');
+  assert.equal(sent.length, 1, '重复点必须只生效一次，否则第二次会把第一次的结果翻回去');
 });
 
 test('在途守卫按 id 记:不同卡互不影响', () => {
@@ -116,7 +116,7 @@ test('响应回来后 flag 归零,可以再点', () => {
   sent[0].success({ code: '200' });
 
   page.toggleStatus(tap(101, false));
-  assert.equal(sent.length, 2, 'success 之后必须能再点,否则一次操作就把按钮永久锁死');
+  assert.equal(sent.length, 2, 'success 之后必须能再点，否则一次操作就把按钮永久锁死');
 });
 
 test('失败回来后 flag 也归零', () => {
@@ -164,7 +164,7 @@ test('onShow 无条件归零在途守卫(最后一道防死锁闸)', () => {
 
   page.toggleStatus(tap(101, true));
   assert.equal(sent.length, 2,
-    'onShow 必须把 flag 归零:只在回调里清挡不住「回调永远不来」那一类,那正是死锁的形态');
+    'onShow 必须把 flag 归零:只在回调里清挡不住「回调永远不来」那一类，那正是死锁的形态');
 });
 
 test('个人过审不等于广场上架，isSync 不再决定提交入口', () => {

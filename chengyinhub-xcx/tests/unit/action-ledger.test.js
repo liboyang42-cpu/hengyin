@@ -1,3 +1,4 @@
+// 2026-10-20 修复并集实测：城市定位开关2个tap、四处登录/重试CTA、隐私与录音动作重分类；差异逐项见 docs/plans/mini-completion-20261020/anchor-receipt.json。
 // 2026-10-05 弹窗整合后按最终源码重建实测，精确分母同步；动作验收要求不变。
 const test = require('node:test')
 const assert = require('node:assert/strict')
@@ -18,6 +19,8 @@ const freshAt = (offsetMs = 0) => new Date(Date.now() - 60 * 60 * 1000 + offsetM
 const ledger = require('../../scripts/uiaudit/action-ledger.json')
 const overlay = require('../../scripts/uiaudit/action-evidence.json')
 const {
+  eventHandlerNames,
+  communityRequestContracts,
   inferActionClass,
   inferEffectClasses,
   buildExpectedReadback,
@@ -27,9 +30,12 @@ const {
   modalContractFor,
   modalContractForHandler,
   expandHandlerBody,
+  handlerSlices,
   discoverExternalHelperNames,
   serverApiContracts,
   buildLedger,
+  targetsForHandler,
+  extractTargets,
   sourceDigestFor,
   sourceDigestAtCommit,
   sourceFilesFor,
@@ -43,6 +49,45 @@ const {
   evidenceMaxAgeMs,
   deviceBranchReadbackDigests,
 } = require('../../scripts/uiaudit/build-action-ledger.js')
+
+test('动态事件绑定保留同一入口的全部字面分支，不以别处同名入口去重', () => {
+  const controls = readCurrentLedger().controls
+  for (const [wxml, names] of [
+    ['pages/club/detail/index.wxml', ['expandMembers', 'goMemberProfile']],
+    ['pages/play/index.wxml', ['noop', 'openStory']],
+  ]) {
+    const dynamic = controls.find(item => item.entry.wxml === wxml && item.control.handler === names[0]
+      && controls.some(other => other.entry.wxml === wxml && other.control.line === item.control.line
+        && other.control.handler === names[1]))
+    assert.ok(dynamic, `${wxml} 必须保留同一个动态绑定的两条handler分支`)
+    const entries = controls.filter(item => item.entry.wxml === wxml && item.control.line === dynamic.control.line)
+    assert.deepEqual(entries.map(item => item.control.handler).sort(), names)
+    assert.ok(entries.every(item => item.evidence.status === 'pending'))
+  }
+})
+
+test('同进程重复掩码按源码内容区分真实请求与注释，源码改动不能复用旧分类', () => {
+  const call = "community.request({ url: '/api/creativesquare/info', data: { id: 1 } })"
+  const commented = `// ${call}`
+  const actual = communityRequestContracts(call, ['community']).contracts
+  assert.ok(actual.length > 0)
+  assert.deepEqual(communityRequestContracts(commented, ['community']).contracts, [])
+  assert.deepEqual(communityRequestContracts(call, ['community']).contracts, actual)
+  assert.deepEqual(communityRequestContracts(`/* ${call} */`, ['community']).contracts, [])
+})
+
+test('动态事件绑定未知取值路径显式失败，不能静默漏记', () => {
+  assert.deepEqual(eventHandlerNames('save'), ['save'])
+  assert.deepEqual(eventHandlerNames(''), [])
+  assert.deepEqual(eventHandlerNames("{{item.memberId ? 'goMemberProfile' : 'expandMembers'}}"), ['goMemberProfile', 'expandMembers'])
+  for (const value of ['{{handlerName}}', "{{item.ok ? 'save' : other}}", "{{item.ok ? 'save' : 'cancel'}} + suffix", "{{a ? b ? 'one' : 'two' : 'three'}}"]) {
+    assert.throws(() => eventHandlerNames(value), /无法静态解析事件绑定/)
+  }
+})
+
+// 本文件的源码只读断言共用一次扫描，避免每条用例重复重建全量清单。
+let currentLedger
+const readCurrentLedger = () => currentLedger || (currentLedger = buildLedger())
 
 test('分类只看代码:注释与字符串里的 wx.* 不算能力(A)', () => {
   // 2026-09-22 实证:两行中文注释(里面并无 wx.*)把 play 页 4 个控件从 read 翻成 external。
@@ -60,7 +105,7 @@ test('分类只看代码:注释与字符串里的 wx.* 不算能力(A)', () => {
 })
 
 test('分类跟得进 require 来的模块级 helper(B)', () => {
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
   // publish/fabu 的 choosePoiForNode 调的是 pickLocation(...),内部才是 wx.chooseLocation;
   // 页面代码里根本没有 wx.chooseLocation —— 跟不进 helper 就会漏判成 state,
   // 等于把一个真需要真机验证的控件挪出证据要求。
@@ -95,7 +140,7 @@ test('同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转
   assert.deepEqual(inferEffectClasses('goDetail', "wx.navigateTo({url:'/pages/x/index'});this.setData({busy:true})"), [
     'navigation', 'state',
   ])
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
   const privacy = rebuilt.controls.find((item) => item.entry.wxml === 'pages/shezhi/shezhi.wxml'
     && item.control.handler === 'goPrivacy')
   assert.ok(privacy, '设置页隐私入口必须进入动作台账')
@@ -109,7 +154,7 @@ test('同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转
 test('导航失败回调的 toast 不得污染 success 为 state 复合效果', () => {
   const actions = ledger.controls.filter((item) => item.entry.wxml
     === 'pages/publish/template-intro/index.wxml' && item.control.handler === 'goCreate')
-  assert.equal(actions.length, 2, '开始创建与页内错误重试必须都进入台账')
+  assert.equal(actions.length, 1, '开始创建仍可操作，固定隐藏的加载错误重试不进入分母')
   actions.forEach((action) => {
     // navigating/navigationError 是真实持久状态，不是 toast 污染；导航仍必须保留失败分支。
     assert.deepEqual(action.effectClasses, ['navigation', 'state'])
@@ -169,7 +214,7 @@ test('确认框合同沿同步 helper 展开，但截断异步回调与互斥 va
   ]])
   assert.equal(modalContractForHandler('deleteAddress', legacyProperty, 'tap'), 'wx.showModal')
 
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
   const assertConfirmGate = (action, label) => {
     // 契约钉的是「这个危险动作有确认闸」,不是「必须用 wx.showModal」。
     // 2026-08-30:三段式确认组件 cy-danger-confirm 是同一道闸的新实现 ——
@@ -355,7 +400,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 并 master 前它那边是:2026-09-10 再 +1:开放设置补第二个开关「开放商家承接」,1423 → 1424。
   // 并 master 前它那边是:2026-09-10 帖子引用:发帖框的「带上一次游玩记录」入口 / 撤掉它 / 选择半屏里的选项,1424 → 1427。
   // 并 master 前它那边是:2026-09-10 开放设置补第三个开关「俱乐部公开可见」(生产库早有这一列),1427 → 1428。 */
-  // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1785)  /* rebase 后按重建实测 1406 → 1408 */  /* rebase 后按重建实测 1416 → 1406 */  /* 2026-09-06 空态收编:5 个空态里的裸按钮改成 cy-empty 的 cta 事件合同,1422 → 1417 */  /* rebase 后按重建实测 1424 → 1422 */  /* 2026-09-06 #1007 option-sheet 自身两个点击 + im/chat「+」入口改本地态,1421 → 1424 */  /* 2026-09-03 rebase 后重算 */  /* 2026-09-11 并入 master:两边各自动过这三个冻结数,不是二选一,按合并后重建实测重算 */
+  // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1967)  /* rebase 后按重建实测 1406 → 1408 */  /* rebase 后按重建实测 1416 → 1406 */  /* 2026-09-06 空态收编:5 个空态里的裸按钮改成 cy-empty 的 cta 事件合同,1422 → 1417 */  /* rebase 后按重建实测 1424 → 1422 */  /* 2026-09-06 #1007 option-sheet 自身两个点击 + im/chat「+」入口改本地态,1421 → 1424 */  /* 2026-09-03 rebase 后重算 */  /* 2026-09-11 并入 master:两边各自动过这三个冻结数,不是二选一,按合并后重建实测重算 */
   // 2026-09-08 二次合 master(#1047 专业发布页 / #1048 途中彩蛋整条下线)。两侧数字对合并结果
   //   都不对,按 audit:actions:update 重建实测填。
   // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1785)  /* 2026-09-08 完成奖励选择器加「优惠券/体验卡」两档筛选 +1 */
@@ -530,7 +575,29 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-25 CU-M-92 受邀商家承接视图:project-join 底栏主按钮拆成「扫码核销 / 原主按钮」两个互斥分支,各 1 tap ⇒ 1746 → 1747(重建实测)。
   // 2026-09-30 最终源码重建实测:local tap 1781 → 1785;实际增删/能力分类见本轮差分证据。
   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1781)  /* 2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // B93 saveDraft added two real variants (+2 tap); approved growth bindings have zero net tap change.
+  // 2026-10-13 注销阻断卡「我已处理，重新检查」+1 tap,1968 → 1969(重建实测)。
+  // 2026-10-17 合并漫游上线(我的队伍、地图列表、漫游记录工具行、5 个工具页;删拍照开局与入口地图重试)按重建实测 1969 → 2022。
+  // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):本线新页面与入口按 build-action-ledger --write 重建实测,tap 2022 → 2092。 合并 master #327(owner 批准)后两侧之和:2026-10-20 R5 尾段(#327,owner 批准):章节弹层按 Figma J3 重排 -6 tap(两段完成要求、额外节点/任务位),故事流计数方式标记 +1 等,按重建实测 2022 → 2018。 → 合并实测 2088。
+  // 2026-10-20 审核整合保留举报三入口、模板审核、项目审核、重试与申诉七个 tap，2090 → 2097。
+  // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测),2109 → 2101。
+  // 首页来源说明、原票导航及三项本机草稿操作并集：本地 tap 2106。
+  // 2026-10-22 店铺参谋改版(#511):近7/30/90天三钮、主卡指标格、主题卡开弹层、弹层关闭×3/申请,
+  //   减去店铺档案入口与卡面直跳,本页净增 7 条 tap。2106 → 2113。
+  // 2026-10-22 W10a:口碑管理态「平台复审中」筛选 + 俱乐部月历场次「重试」两个 tap，2106 → 2108(重建实测)。
+  // 2026-10-22 W9 帖子处置(F0521):设置入口 + 提交申诉/取消/提交/加载更多五个 tap,2108 → 2113(batch2 集成重建实测)。
+  // 2026-10-22 Lane W11:收藏页「收藏与推荐」说明 +1 tap(showRecommendNote),2113 → 2114(batch2 集成重建实测)。
+  // 2026-10-22 batch2 集成再并 master(#511 店铺参谋改版 +7 tap):2114 + 7 = 2121(合并树重建实测)。
+  // 2026-10-22 L21 B9:确认退款在同一手势内申请 refund/refundRejected 订阅,订单详情 cancelRegistration ×1 + 订单历史 cancelOrder ×2
+  //   带 requestSubscribeMessage 归 external(real-device-required),移出 local 分母;控件总数不变,2114 → 2111(batch3 集成重建实测)。
+  // 2026-10-22 batch3 集成再并 master(#486 batch2 + #511):master 侧 2121,叠加 L21 B9 −3 ⇒ 2118(合并树重建实测)。
+  // 2026-10-22 玩法模板编辑页按主人定稿原型重排(参与方式开关、结果反馈成功/失败开关与配图、半屏标签选玩法与预览、底部添加互动工具、语音讲解/背景音乐子浮层):重建实测 2121 → 2134(待主人批准冻结数值)。
+  // 2026-10-23 batch3 再并 master(#509 玩法模板编辑页 +13):master 侧 2134,叠加 L21 B9 −3 ⇒ 2131(合并树重建实测)。
+  // 2026-10-23 玩法试玩照试玩台 + 编辑页照原型 + 玩法重做(#550,并 master 后重建实测):试玩退出键、判定屏「继续」、盲品三步、检定卡按住摇骰等,−翻页箭头,净 +2 ⇒ 2133。
+  // 2026-10-23 v13 动效落地(PR #528,用户批准更新冻结数值):主题页换票 / 票夹拖卡 / 地图图层与卡片 / 勋章屏等真实点击 +34,叠加 #550 的 2133 ⇒ 2167(重建实测)。
+  // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:2167 → 2173。
+  // 2026-10-23 合 master:起名页 templateadd 退役 −1(#565)+ 撤销条「撤销」+1,tap 2173 → 2173(重建实测)。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2173)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -590,7 +657,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 并 master 前它那边是:1760 → 1765。
   // 并 master 前它那边是:2026-09-11 复查整改:俱乐部页与达人页各补一条 bind:play(模板卡「试玩」原来渲染了没人接,
   // 并 master 前它那边是:点了不会发生任何事),1765 → 1767。tap 仍是 1601。 */
-  // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2321)  /* rebase 后按重建实测 1735 → 1739 */  /* rebase 后按重建实测 1731 → 1735 */  /* rebase 后按重建实测 1754 → 1731 */  /* rebase 后按重建实测 1753 → 1754 */  /* 2026-09-06 空态收编:5 个 cy-empty cta 事件合同,1747 → 1752 */  /* 2026-09-06 #1007 九处宿主 select/cancel + option-sheet 自身 close/requestclose,1727 → 1747 */  /* 2026-09-06 俱乐部拒绝入会改走 cy-danger-confirm 事件合同,1726 → 1727 */  // 2026-08-26 模板页拆两 tab:L1 用 cy-tabs 承载「主题/游戏」切换,bind:change 是新的一条事件合同,1583 → 1584  // 2026-08-26 营销页重做:三条刷新失败横幅随 #856 退役(-3),全零业务空态的 cy-empty
+  // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2301)  /* rebase 后按重建实测 1735 → 1739 */  /* rebase 后按重建实测 1731 → 1735 */  /* rebase 后按重建实测 1754 → 1731 */  /* rebase 后按重建实测 1753 → 1754 */  /* 2026-09-06 空态收编:5 个 cy-empty cta 事件合同,1747 → 1752 */  /* 2026-09-06 #1007 九处宿主 select/cancel + option-sheet 自身 close/requestclose,1727 → 1747 */  /* 2026-09-06 俱乐部拒绝入会改走 cy-danger-confirm 事件合同,1726 → 1727 */  // 2026-08-26 模板页拆两 tab:L1 用 cy-tabs 承载「主题/游戏」切换,bind:change 是新的一条事件合同,1583 → 1584  // 2026-08-26 营销页重做:三条刷新失败横幅随 #856 退役(-3),全零业务空态的 cy-empty
   // 2026-09-08 二次合 master(#1047 专业发布页 / #1048 途中彩蛋整条下线)。两侧数字对合并结果
   //   都不对,按 audit:actions:update 重建实测填。
   // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2321)  /* 2026-09-08 完成奖励改开关:+1 bindchange */
@@ -737,7 +804,35 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-09-30 项目近期动态首次失败/保留数据重试各新增1个事件合同；本地事件合同 2298 → 2300，tap分母不变。
   // 2026-10-06 合并最新主线后按最终源码重建，数值待生成台账后校准。
   // 2026-09-27 主页空区隐藏与失败保留旧数据：移除四个旧状态控件。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2321)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  // Approved growth removed retryRank/loadOverview bind:action and changed goExplore bind:cta to bindtap: -3 event contracts.
+  // 2026-10-10 举报理由面板两宿主各新增 select/cancel，事件合同 +4，tap 分母不变。
+  const dangerDone = local.find((item) => item.route === 'subpackageB/pages/im/chat/index'
+    && item.control.tag === 'cy-danger-confirm' && item.control.event === 'bind:done')
+  assert.ok(dangerDone, '聊天确认结束必须接回取消处理，释放当前危险操作上下文')
+  assert.equal(dangerDone.control.handler, 'onDangerCancel')
+  assert.equal(dangerDone.interactionMode, 'event-contract')
+  // Three real login/permission component actions became visible; tap count stays unchanged.
+  // 四个章节确认合同替换原合并事件，点击分母不变，事件合同净增三项。
+  // 2026-10-13 三处玩法支持范围读取失败改 load-failure 留白,其 bind:action 重试不可见 -3,2307 → 2304(重建实测)。
+  // 2026-10-17 合并漫游上线:日期选择、输入框、组件事件(cy-date-field / privacy-gate / 弹窗工具行)按重建实测 2315 → 2323。
+  // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):本线举报/纠错/安全感受半屏、主办控制台、AI 对话导出等组件事件按重建实测 2323 → 2436;2026-10-20 用户要求隐私弹窗去掉服务协议勾选框,页面与 cy-privacy-gate 各少一个 checkbox 事件合同,2436 → 2434。 合并 master #327(owner 批准)后两侧之和:2026-10-20 R5 尾段(#327,owner 批准 tap -4 / 控件 -3):两类之和的必然结果,故事流「计数方式」标记 +1 事件合同,按重建实测 2323 → 2324。 → 合并实测 2435。
+  // 2026-10-20 两页举报原因 select/cancel 四合同与审核弹层 close 一合同，2438 → 2443。
+  // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测),2466 → 2459。
+  // badge-3d binderror 与原票 retryFocus 各新增一项事件合同；并集净增两项。
+  // 2026-10-21 移植分支(W4+W8)再并入 master：W8 已批准的活动列表重试、图库登录、投诉登录/重试、券包重试七个事件合同，2457 → 2464。
+  // 2026-10-22 店铺参谋改版(#511):主题详情弹层的遮罩与弹层本体各一个 catchtouchmove 防穿透事件合同，2464 → 2466。
+  // 2026-10-22 W10a:俱乐部期次空态「重新加载」cy-empty cta 事件合同，2464 → 2465(重建实测)。
+  // 2026-10-22 W9 帖子处置:设置半屏 close 与加载失败重试两个事件合同,2465 → 2467(batch2 集成重建实测)。
+  // 2026-10-22 batch2 集成再并 master(#511 +2 事件合同):2467 + 2 = 2469(合并树重建实测)。
+  // 2026-10-22 玩法模板编辑页重排:组件事件合同(开关 / 输入 / 下拉)+7,2469 → 2476(待主人批准冻结数值)。
+  // 2026-10-23 DOC2 FXA:playkit compass 组件 bind:start 事件合同 +1,2476 → 2477(batch6 合并树重建实测)。
+  // 2026-10-23 #550(并 master 后重建实测):判定屏 bind:close ×2、检定卡与盲品的按住事件、排序拖动、连线 / 分类重做,−两个下拉,+9 ⇒ 2486。
+  // 2026-10-23 v13 动效落地(PR #528):换票芯片、拖卡、地图卡与勋章屏的组件事件合同 +25,叠加 #550 的 2486 ⇒ 2511(重建实测)。
+  // 2026-10-23 排行榜「积分榜 / 成长榜」有榜时挪到领奖台下方、空榜时留在顶部,两处各一个 bind:change,+1 ⇒ 2512(重建实测)。
+  // 2026-10-23 上线前 bug 修复合并(BUG-ROAM1 P0-50):漫游地点详情答题半屏返回守卫 page-container bind:afterleave 事件合同 +1,2511 ⇒ 2512(重建实测)。
+  // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:2512 → 2543。
+  // 2026-10-23 合 master:起名页 templateadd 退役 −3(#565)+ 删草稿 / 移出成员两处去掉确认回调 −3,event-contract 2543 → 2537(重建实测)。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2537)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -758,13 +853,6 @@ test('external 分支按微信能力定义，振动不伪造取消/拒权，选�
   ])
   assert.deepEqual(requiredPlatformsFor('external'), ['ios', 'android'])
   assert.deepEqual(requiredPlatformsFor('state'), [])
-})
-
-test('漫游拍照启动的取消事实必须绑定 chooseMedia，不能由定位能力冒充', () => {
-  const control = buildLedger().controls.find((item) => item.entry.js === 'pages/roam/index.js'
-    && item.control.handler === 'goStartAndShoot')
-  assert.ok(control)
-  assert.equal(control.requiredCapabilityByBranch.cancelled, 'chooseMedia')
 })
 
 test('持久化 authority/requestTrace 必须与控制面签名 facts 等值', () => {
@@ -844,7 +932,7 @@ test('真机 capture 的签名起点也必须在 freshness 窗内，不能只刷
 })
 
 test('external success 只要求主能力，不把拒权恢复 openSetting 合并成同一路径', () => {
-  const control = buildLedger().controls.find((item) => item.entry.wxml === 'pages/merchant/apply/index.wxml'
+  const control = readCurrentLedger().controls.find((item) => item.entry.wxml === 'pages/merchant/apply/index.wxml'
     && item.control.handler === 'chooseLocation')
   assert.ok(control)
   assert.ok(control.externalCapabilities.includes('chooseLocation'))
@@ -854,7 +942,7 @@ test('external success 只要求主能力，不把拒权恢复 openSetting 合�
 })
 
 test('互斥 CTA 路径拆成独立 variant，不用一次扫码冒充关注与漫游', () => {
-  const controls = buildLedger().controls.filter((item) => item.entry.wxml === 'subpackageMember/components/cy/profile/index.wxml'
+  const controls = readCurrentLedger().controls.filter((item) => item.entry.wxml === 'subpackageMember/components/cy/profile/index.wxml'
     && item.control.handler === 'onPrimaryCta')
   assert.deepEqual(controls.map((item) => item.variant.id).sort(), ['self-merchant-scan', 'visitor-follow'])
   const follow = controls.find((item) => item.variant.id === 'visitor-follow')
@@ -897,8 +985,11 @@ test('动作分类追踪 app 全局 helper，图片选择不能落回本地 stat
 
   const localReload = ledger.controls.find((item) => item.entry.js === 'pages/merchant/index/index.js'
     && item.control.handler === 'reloadConsole')
-  assert.ok(localReload)
-  assert.notEqual(localReload.actionClass, 'external', '其它页面同名 onShow 不得被 App helper 全局串线')
+  assert.equal(localReload, undefined, '固定隐藏的加载错误重试不进入分母')
+  const consoleFile = path.resolve(__dirname, '../../pages/merchant/index/index.js')
+  const nativeReload = expandHandlerBody('reloadConsole', handlerSlices(consoleFile))
+  assert.notEqual(inferActionClass('reloadConsole', nativeReload), 'external',
+    '其它页面同名 onShow 不得被 App helper 全局串线')
 })
 
 test('用户授权与系统能力必须进入真机门，不能伪装成本地 state/write', () => {
@@ -928,7 +1019,13 @@ test('App 登录续期不能把全部 sendRequest 读写动作污染成真机能
 })
 
 test('写操作与动态 URL 合同不能降级成普通读取', () => {
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
+  const adoptions = rebuilt.controls.filter(item => item.targets.primaryApis.includes('/api/template/adopt-draft'))
+  assert.ok(adoptions.length > 0, '采用草稿必须进入动作台账')
+  assert.ok(adoptions.every(item => item.effectClasses.includes('write')
+    && item.targets.writeApis.includes('/api/template/adopt-draft')
+    && item.accessBoundary === 'owned-resource'
+    && item.requiredBranches.includes('forbidden-owner')), '采用草稿是归属受保护的写入，不能误判为普通读取')
   // 2026-08-30:三段式确认把「点按钮」和「真发请求」拆成两个控件 ——
   //   onDeletePost        第一段,只 dc.open(),不发请求 ⇒ 台账里 apis 为空、class=other
   //   onConfirmDeletePost 第二段,由 <cy-danger-confirm bind:confirm> 绑定,真发请求 ⇒ write
@@ -997,17 +1094,80 @@ test('写操作与动态 URL 合同不能降级成普通读取', () => {
   // 2026-09-03:官方活动改由 Web 后台上传,小程序端的发起面板(pubOnSubmit / _pubPostJson /
   // /api/official/publish|broadcast)整块删除,这两条断言随功能一起退役。
   // 「包装器必须保留 POST 真源」这层保障由下面 my-completed 那组继续守着。
-  ;['reloadProfileMetrics', 'loadOverview'].forEach((handler) => {
+  ;['reloadProfileMetrics'].forEach((handler) => {
     const controls = rebuilt.controls.filter((item) => item.control.handler === handler
-      && item.targets.primaryApis.includes('/api/play/my-completed'))
-    assert.ok(controls.length > 0, `缺少 ${handler} my-completed 合同`)
-    assert.ok(controls.every((item) => item.targets.apiContracts.some((contract) => contract.url === '/api/play/my-completed'
-      && contract.method === 'POST')), `${handler} 必须继承本地 request wrapper 的 POST`)
+      && item.entry.js === 'subpackageMember/components/cy/profile/index.js')
+    assert.equal(controls.length, 0, '固定隐藏的加载错误重试不进入分母')
+    const profileFile = path.resolve(__dirname, '../../subpackageMember/components/cy/profile/index.js')
+    const targets = targetsForHandler(profileFile, handler)
+    assert.ok(targets.apiContracts.some(contract => contract.url === '/api/play/my-completed'
+      && contract.method === 'POST'), `${handler} 必须继承本地 request wrapper 的 POST`)
   })
+  const growthFile = path.resolve(__dirname, '../../subpackageP3/pages/growthcenter/index/index.js')
+  const growthConfig = require('../../subpackageP3/pages/growthcenter/index/index.json')
+  assert.equal(growthConfig.enablePullDownRefresh, true)
+  const growthSource = fs.readFileSync(growthFile, 'utf8')
+  assert.match(growthSource, /onPullDownRefresh\s*\(\)\s*\{[\s\S]*?this\.loadOverview\(done\)/)
+  for (const handler of ['loadOverview', 'onPullDownRefresh']) {
+    const targets = targetsForHandler(growthFile, handler)
+    for (const api of ['/api/growth/center', '/api/play/growth', '/api/play/my-completed']) {
+      assert.ok(targets.primaryApis.includes(api), `${handler} 缺少真实 ${api} 合同`)
+      assert.ok(targets.apiContracts.some(contract => contract.url === api && contract.method === 'POST'),
+        `${handler} 必须继承 requestGrowthData 的 POST`)
+    }
+  }
+})
+
+test('本地 growth wrapper 的错误 method 或缺调用不能伪装成正常 POST 合同', () => {
+  const os = require('node:os')
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'growth-wrapper-contract-'))
+  const file = path.join(dir, 'index.js')
+  const source = method => `function requestGrowthData(url) {
+    return app.sendRequest({url, method: '${method}', data: {}})
+  }
+  Page({loadOverview() { requestGrowthData('/api/play/my-completed') }})`
+  try {
+    fs.writeFileSync(file, source('POST'))
+    assert.ok(targetsForHandler(file, 'loadOverview').apiContracts.some(contract =>
+      contract.url === '/api/play/my-completed' && contract.method === 'POST'))
+    fs.writeFileSync(file, source('GET'))
+    assert.throws(() => targetsForHandler(file, 'loadOverview'), /method|HTTP|POST|GET/)
+    fs.writeFileSync(file, source('POST').replace("requestGrowthData('/api/play/my-completed')", 'void 0'))
+    assert.equal(targetsForHandler(file, 'loadOverview').primaryApis.includes('/api/play/my-completed'), false)
+  } finally {
+    fs.rmSync(dir, {recursive: true, force: true})
+  }
+})
+
+test('批准稿控件差分保留草稿双分支与成长中心真实绑定及身份恢复', () => {
+  const drafts = ledger.controls.filter(item => item.route === 'pages/publish/temp/index'
+    && item.control.handler === 'saveDraft')
+  const bindings = new Map()
+  for (const item of drafts) {
+    const binding = item.id.split(':variant:')[0]
+    if (!bindings.has(binding)) bindings.set(binding, [])
+    bindings.get(binding).push(item)
+  }
+  assert.equal(bindings.size, 2)
+  for (const items of bindings.values()) {
+    assert.equal(items.length, 2)
+    assert.deepEqual(items.map(item => item.variant.id).sort(), ['citynode-unavailable', 'draft'])
+    const draft = items.find(item => item.variant.id === 'draft')
+    assert.equal(draft.actionClass, 'write')
+    assert.deepEqual(draft.targets.primaryApis, ['/api/template/draft'])
+    const refusal = items.find(item => item.variant.id === 'citynode-unavailable')
+    assert.equal(refusal.actionClass, 'other')
+    assert.deepEqual(refusal.targets.primaryApis, [])
+  }
+  const growth = ledger.controls.filter(item => item.route === 'subpackageP3/pages/growthcenter/index/index')
+  assert.equal(growth.length, 4)
+  assert.deepEqual(growth.map(item => `${item.control.event}:${item.control.handler}`).sort(),
+    ['bind:cta:onLoginGrowth', 'bindtap:goExplore', 'bindtap:goLeaderboard', 'bindtap:onBadgeTap'])
+  assert.equal(growth.some(item => ['loadOverview', 'retryRank'].includes(item.control.handler)), false)
 })
 
 test('前端 API method 必须与后端 Controller annotation 真源一致', () => {
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
   const server = serverApiContracts()
   const conflicts = rebuilt.controls.flatMap((control) => control.targets.apiContracts.map((contract) => ({ control, contract })))
     .filter(({ contract }) => server.has(contract.url) && !server.get(contract.url).has(contract.method))
@@ -1018,7 +1178,7 @@ test('前端 API method 必须与后端 Controller annotation 真源一致', () 
 })
 
 test('结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败不能伪装成直接建单', () => {
-  const controls = buildLedger().controls.filter((item) => item.entry.js === 'pages/activity/baoming/baoming.js'
+  const controls = readCurrentLedger().controls.filter((item) => item.entry.js === 'pages/activity/baoming/baoming.js'
     && item.control.handler === 'handlePayment' && item.control.event === 'bindtap')
   assert.equal(controls.length, 6)
   const paid = controls.filter((item) => /-paid-/.test(item.variant.id))
@@ -1033,10 +1193,35 @@ test('结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败
   assert.equal(pending.requiredCapabilityByBranch['payment-cancelled'], 'requestPayment')
 })
 
+test('章节危险确认按实际互斥分支登记单次写入', () => {
+  const rows = readCurrentLedger().controls.filter(row => row.entry.js === 'pages/topic/merchantinfo/merchantinfo.js'
+    && row.control.handler === 'onDangerConfirm');
+  assert.deepEqual(rows.map(row => row.variant.id).sort(), [
+    'chapter-application-withdraw', 'chapter-finish', 'chapter-invitation-reject', 'chapter-invitation-revoke',
+  ]);
+  for (const row of rows) {
+    assert.equal(row.targets.writeApis.length, 1);
+    assert.deepEqual(row.requiredRequests, [{ urlTemplate: row.targets.writeApis[0], method: 'POST', kind: 'write' }]);
+  }
+});
+
 test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入', () => {
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
   assert.equal(rebuilt.controls.filter((item) => (item.targets.writeApis || []).length > 1
     && !(item.requiredRequests || item.requiredRequestsByBranch)).length, 0)
+  const play = (handler) => rebuilt.controls.find((item) => item.entry.js === 'pages/play/index.js' && item.control.handler === handler)
+  const photo = play('photoGame')
+  assert.deepEqual(photo.requiredRequests.map((item) => item.urlTemplate), ['/api/play/photo'])
+  assert.deepEqual(photo.requiredRequestsByBranch['personal-chapter-grant'].map((item) => item.urlTemplate), ['/api/play/photo', '/api/play/theme/action'])
+  // 团队局章节发放由服务端完成，团队命令不接受 ITEM_CHAPTER_*：基础玩法不得声明或产生团队章节写入
+  assert.equal(photo.requiredRequestsByBranch['team-chapter-grant'], undefined)
+  // 通用个人局与团队局均由服务端发章节奖励；背包玩法不得再声明额外章节写入。
+  assert.equal(play('onThemeGameplayAction').requiredRequestsByBranch['personal-gameplay-with-chapter-grant'], undefined)
+  // 玩法完成回读可触发 ZERO_HP_SYNC，但不能追加客户端团队章节发放。
+  assert.deepEqual(photo.targets.writeApis, ['/api/game/session/command', '/api/play/photo', '/api/play/theme/action'])
+  assert.deepEqual(play('continueChapterStory').requiredRequestsByBranch['opening-complete'].map((item) => item.urlTemplate), ['/api/play/journey/opening/complete'])
+  assert.deepEqual(play('onRunToggleFromTools').targets.writeApis, ['/api/play/run-session/save'])
+  assert.equal(play('leadSettleFromTools').requiredRequestsByBranch['team-chapter-grant'], undefined)
   const playEnding = rebuilt.controls.filter((item) => item.targets.primaryApis.includes('/api/play/ending'))
   assert.ok(playEnding.length > 0)
   assert.ok(playEnding.every((item) => !(item.targets.writeApis || []).includes('/api/play/ending')))
@@ -1046,7 +1231,7 @@ test('按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击
 })
 
 test('评价举报与团队危险操作按页面状态拆成互斥单写 variant', () => {
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
   const reports = rebuilt.controls.filter((item) => item.entry.js === 'pages/merchant/reviews/index.js'
     && item.control.handler === 'submitReport')
   assert.deepEqual(reports.map((item) => item.variant.id).sort(), ['manage', 'public'])
@@ -1071,7 +1256,7 @@ test('评价举报与团队危险操作按页面状态拆成互斥单写 variant
 })
 
 test('当前用户关系写不伪造 forbidden-owner，组件动作必须声明真实宿主页', () => {
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
   const favorite = rebuilt.controls.find((item) => item.control.handler === 'toggleFavorite')
   assert.ok(favorite)
   assert.equal(favorite.accessBoundary, 'self')
@@ -1085,23 +1270,45 @@ test('当前用户关系写不伪造 forbidden-owner，组件动作必须声明�
 })
 
 test('服务端写入叠加设备能力时同时保留两类验收事实', () => {
-  const control = buildLedger().controls.find((item) => item.id.includes('pages/privacy/index.wxml')
+  const control = readCurrentLedger().controls.find((item) => item.id.includes('pages/privacy/index.wxml')
     && item.control.handler === 'withdrawRoamLocationConsent')
   assert.ok(control)
   assert.equal(control.actionClass, 'external')
   assert.equal(control.baseActionClass, 'write')
-  assert.deepEqual(control.externalCapabilities, ['stopLocationUpdate'])
+  // revoke移除roam用途后，现有stop完成链会为仍获独立许可的play持有者实际重启。
+  assert.deepEqual(control.externalCapabilities, ['startLocationUpdate', 'startLocationUpdateBackground', 'stopLocationUpdate'])
   assert.match(control.expectedReadback, /服务端/)
   assert.match(control.expectedReadback, /真机/)
   assert.deepEqual(control.requiredBranches, [
     'success', 'error', 'timeout', 'duplicate-trigger',
+    'startLocationUpdate-denied', 'startLocationUpdateBackground-denied',
   ])
   assert.equal(control.accessBoundary, 'self')
   assert.deepEqual(control.requiredPlatforms, ['ios', 'android'])
+  assert.equal(control.successCapabilityContract, 'roam-purpose-revocation')
+  assert.deepEqual(control.requiredRequests, [{ urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }])
+  assert.deepEqual(control.requiredRequestOutcomes['startLocationUpdate-denied'], ['success'])
+  assert.deepEqual(control.requiredRequestOutcomes['startLocationUpdateBackground-denied'], ['success'])
+  assert.deepEqual(control.requiredReadbackLinksByBranch.success, [
+    { fromPath: 'observed.roamRevocation.principalFingerprint', toPath: 'authoritativeReadback.accessScope.principalFingerprint' },
+    { fromPath: 'observed.roamRevocation.recordRequest.body.requestId', toPath: 'observed.roamRevocation.recordEcho.requestId' },
+    { fromPath: 'observed.roamRevocation.recordRequest.body.requestId', toPath: 'authoritativeReadback.authority.after.requestId' },
+    ...['docType', 'scene', 'eventType'].map(field => ({
+      fromPath: `observed.roamRevocation.recordRequest.body.${field}`, toPath: `authoritativeReadback.authority.after.${field}`,
+    })),
+  ])
+  const revokeEntries = readCurrentLedger().controls.filter(item => item.control.handler === 'withdrawRoamLocationConsent')
+  assert.equal(revokeEntries.length, 2)
+  for (const entry of revokeEntries) {
+    assert.equal(entry.successCapabilityContract, control.successCapabilityContract)
+    assert.deepEqual(entry.externalCapabilities, control.externalCapabilities)
+    assert.deepEqual(entry.requiredBranches, control.requiredBranches)
+    assert.deepEqual(entry.requiredRequestOutcomes, control.requiredRequestOutcomes)
+  }
 })
 
 test('Beta 转正式按作者归属写操作验收，不能误归只读', () => {
-  const control = buildLedger().controls.find((item) => item.control.handler === 'onGraduateBeta')
+  const control = readCurrentLedger().controls.find((item) => item.control.handler === 'onGraduateBeta')
   assert.ok(control)
   assert.equal(control.actionClass, 'write')
   assert.equal(control.baseActionClass, 'write')
@@ -1111,7 +1318,7 @@ test('Beta 转正式按作者归属写操作验收，不能误归只读', () => 
 })
 
 test('合并后可达动作 variant 全部进入台账且 handler 真源可定位', () => {
-  const rebuilt = buildLedger()
+  const rebuilt = readCurrentLedger()
   assert.equal(rebuilt.schemaVersion, 7, '并发请求 trace、结算状态 variant 与后端 method 真源变更后必须升级 inventory schema')
   // 商家/俱乐部补全基线 3187；主线详情重做与管理员治理入口净增 9 个 variant。
   // 2026-08-26 状态补全:五个新页各多一条「无权限/网络失败」空态或错误态入口。
@@ -1173,7 +1380,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 并 master 前它那边是:2026-09-10 帖子引用:选择器入口/撤销/选项 + 半屏的 cy-error 重试与 cy-sheet close,3381 → 3386。
   // 并 master 前它那边是:2026-09-10 第三个开关(整行 tap + 它自己的 cy-inline-error 重试),3386 → 3388。 */
   /* 2026-09-11 同上,+5 条事件合同,3388 → 3393;复查整改再 +2 条 bind:play,3393 → 3395。 */
-  // 并 master 前它那边是:assert.equal(ledger.controlCount, 3423)  /* rebase 后按重建实测 3347 → 3353 */  /* rebase 后按重建实测 3343 → 3347 */  /* rebase 后按重建实测 3376 → 3343 */  /* rebase 后按重建实测 3375 → 3376 */  /* rebase 后按重建实测 3377 → 3375 */  /* 2026-09-06 #1007 cy-option-sheet 引入 +26 −2,合到危险确认批之后重建实测 3353 → 3377 */  /* 2026-09-06 危险确认收编重建实测 3352 → 3353 */
+  // 并 master 前它那边是:assert.equal(ledger.controlCount, 4625)  /* rebase 后按重建实测 3347 → 3353 */  /* rebase 后按重建实测 3343 → 3347 */  /* rebase 后按重建实测 3376 → 3343 */  /* rebase 后按重建实测 3375 → 3376 */  /* rebase 后按重建实测 3377 → 3375 */  /* 2026-09-06 #1007 cy-option-sheet 引入 +26 −2,合到危险确认批之后重建实测 3353 → 3377 */  /* 2026-09-06 危险确认收编重建实测 3352 → 3353 */
   // 2026-09-08 二次合 master(#1047 专业发布页 / #1048 途中彩蛋整条下线)。两侧数字对合并结果
   //   都不对,按 audit:actions:update 重建实测填。
   // 并 master 前它那边是:assert.equal(ledger.controlCount, 3381)  /* 同上 */
@@ -1350,7 +1557,114 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-09-30 项目铃铛接真实近期动态列表，首次加载失败与保留数据重试新增2个事件合同；重建实测 4396 → 4398。
   // 清空聊天取消确认及互斥的确认分支各新增1个事件合同，tap分母不变。
   // 2026-10-06 合并最新主线与弹窗分支后按生成台账校准。
-  assert.equal(ledger.controlCount, 4432)  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试控件后按最终树重建。 */
+  // B93 draft variants +2; approved growth bindings 6 -> 3 (-3), hence 4437 + 2 - 3.
+  // 2026-10-10 既有 cy-option-sheet 两宿主 select/cancel 新增四项；原4436项保留。
+  assert.equal(ledger.controls.filter((item) => item.route === 'subpackageB/pages/im/chat/index'
+    && item.control.tag === 'cy-danger-confirm' && item.control.event === 'bind:done'
+    && item.control.handler === 'onDangerCancel').length, 1)
+  const newLoginActions = [
+    'pages/merchant/marketing/ai-insight/index.wxml:12:bind:retry:retry:1',
+    'pages/topic/merchantapply/index.wxml:33:bind:retry:retryLoadRegistration:3',
+    'pages/search2/result/index.wxml:18:bind:action:loginForClubs:3',
+  ];
+  for (const id of newLoginActions) {
+    const action = ledger.controls.find(item => item.id === id);
+    assert.ok(action, id);
+    assert.equal(action.interactionMode, 'event-contract', id);
+  }
+  // 2026-10-13 注销重新检查 +1;三处玩法支持范围读取失败改 load-failure 留白,其重试不可见 -3;4632 → 4630(重建实测)。
+  // 2026-10-15 PR10 复查:七处登录引导「登录」(俱乐部/主题/活动/票夹/私信/收藏×2)、口碑缺参「返回」、modal-host 多行原因输入 +9;4632 → 4641(重建实测)。
+  // 2026-10-17 合并漫游上线同批控件(含组件事件合同)按重建实测 4641 → 4706。
+  // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):本线新页面/组件按重建实测,控件 4706 → 4892;2026-10-20 隐私弹窗简化(去勾选框,两份文件入口并入一句话)重建实测 4892 → 4891。 合并 master #327(owner 批准)后两侧之和:2026-10-20 R5 尾段(#327,owner 批准)章节弹层重排,按重建实测 4706 → 4703。 → 合并实测 4888。
+  // 2026-10-20 与审核分支按最终源码并集合并：新增12条、移除0条，语义差分见本轮记录，4894 → 4906。
+  // 2026-10-20 合并18e：按wxml/tag/event/handler/variant多重集新增40、移除0；本地tap+12、事件+23、外部+5，未添加验收通过证据。
+  // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测),4946 → 4931。
+  const fallbackError = ledger.controls.filter(item => item.route === 'subpackageP3/pages/badge-3d/index'
+    && item.control.tag === 'image' && item.control.event === 'binderror'
+    && item.control.handler === 'onFallbackError')
+  assert.equal(fallbackError.length, 1, '徽章静态图片失败必须接回真实 handler')
+  assert.equal(fallbackError[0].interactionMode, 'event-contract')
+  // 本机草稿恢复、删除草稿、资料回读、原票导航及查读重试均保留。
+  for (const handler of ['restoreDraft', 'discardDraft', 'loadClub']) {
+    const action = ledger.controls.filter(item => item.entry.wxml === 'components/cy/scene-club-edit/index.wxml'
+      && item.control.tag === 'cy-btn' && item.control.event === 'bindtap' && item.control.handler === handler)
+    assert.equal(action.length, 1, handler)
+    assert.equal(action[0].interactionMode, 'tap', handler)
+  }
+  // 权益状态未知时只重读当前商家事实：新增真实 retryEntitlements 点击，非支付重发。
+  const entitlementRetry = ledger.controls.filter(item => item.entry.wxml === 'pages/merchant/decor/index.wxml'
+    && item.control.tag === 'cy-cell' && item.control.event === 'bind:tap'
+    && item.control.handler === 'retryEntitlements')
+  assert.equal(entitlementRetry.length, 1, 'retryEntitlements 必须保持一个真实 cy-cell 点击绑定')
+  assert.equal(entitlementRetry[0].interactionMode, 'tap')
+  assert.equal(entitlementRetry[0].actionClass, 'read')
+  assert.deepEqual(entitlementRetry[0].targets.writeApis, [], '权益重试不得变成写入或支付重发')
+  for (const api of ['/api/merchant/commerce/capabilities', '/api/merchant/subscription']) {
+    assert.ok(entitlementRetry[0].targets.primaryApis.includes(api), '权益重试必须回读 ' + api)
+  }
+  const decorWxml = fs.readFileSync(path.join(__dirname, '../../pages/merchant/decor/index.wxml'), 'utf8')
+  assert.match(decorWxml, /<cy-cell\b[^>]*bind:tap="retryEntitlements"[^>]*>/,
+    '台账不能脱离实际 WXML 绑定')
+  // IM 记录/原单与合法 generic 卡片共用 handler；台账保守包含历史广播 click 写入。
+  const imViews = ledger.controls.filter(item => item.entry.wxml === 'subpackageB/pages/im/chat/index.wxml'
+    && item.control.tag === 'view' && item.control.event === 'catchtap')
+  const imRecord = imViews.filter(item => item.control.handler === 'onCardTap' && item.control.ariaLabel === '查看生成时记录')
+  assert.equal(imRecord.length, 1, '生成时记录必须保持一个独立按钮')
+  assert.equal(imRecord[0].actionClass, 'write')
+  assert.deepEqual(imRecord[0].targets.writeApis, ['/api/official/broadcast/{param}/click'])
+  const imOriginal = imViews.filter(item => item.control.handler === 'onCardBtn' && item.control.ariaLabel === '查看当前原单')
+  assert.equal(imOriginal.length, 1)
+  assert.equal(imOriginal[0].control.visibleCondition, '{{item.currentOriginalUrl}}')
+  const imWxml = fs.readFileSync(path.join(__dirname, '../../subpackageB/pages/im/chat/index.wxml'), 'utf8')
+  for (const handler of ['onCardTap', 'onCardBtn']) {
+    const generic = imViews.filter(item => item.control.handler === handler && !item.control.ariaLabel)
+    assert.equal(generic.length, 1, handler + '合法 generic 卡片保留一个真实绑定')
+    assert.equal(generic[0].interactionMode, 'tap')
+    assert.deepEqual(generic[0].targets.writeApis, ['/api/official/broadcast/{param}/click'])
+  }
+  assert.match(imWxml, /wx:elif="{{item.genericButtons.length}}"[\s\S]*?catchtap="onCardBtn"[^>]*data-index="{{btn.index}}"/)
+  assert.match(imWxml, /wx:elif="{{item.genericAction.url}}"[\s\S]*?catchtap="onCardTap"[^>]*data-msg="{{item.id}}"/)
+  // 共用 handler 的保守写分类不能冒充记录分支会写：执行实际方法，记录仍只展示/回读。
+  const imSource = fs.readFileSync(path.join(__dirname, '../../subpackageB/pages/im/chat/index.js'), 'utf8')
+  const onCardTapSource = imSource.slice(imSource.indexOf('  onCardTap(e) {'), imSource.indexOf('  onCurrentCard(e)'))
+  const onCardTap = require('node:vm').runInNewContext('({' + onCardTapSource + '}).onCardTap', {
+    systemCard: require('../../subpackageB/pages/im/chat/system-card-target'),
+    shouldLoadAuditDetail: require('../../subpackageB/pages/im/chat/audit-detail').shouldLoadAuditDetail,
+  })
+  const recordMessage = { id: 7, senderId: 0, msgType: 3, card: { cardType: 'generic', bcId: 9,
+    result: { taskId: 11, bizId: 13, bizType: 'TOPIC', outcome: 'APPROVED' } } }
+  const recordPage = { data: {}, _cardMessage: () => recordMessage,
+    _openGenericCard: () => assert.fail('记录分支不能进入 generic 导航/广播写入'),
+    setData(value) { Object.assign(this.data, value) }, loadReviewDetail(taskId) { assert.equal(taskId, 11) } }
+  onCardTap.call(recordPage, { currentTarget: { dataset: { msg: 7 } } })
+  assert.equal(recordPage.data.reviewResult.taskId, 11)
+  assert.equal(recordPage.data.reviewResult.bizId, 13)
+  // 两类录音失败链现在真实读取 getSetting：2 tap +4事件移入 external，不是删除动作。
+  for (const kind of ['quiethold', 'shout']) {
+    for (const [handler, event] of [['onStart', 'bindtap'], ['onCalibrated', 'bind:calibrated'], ['onRun', 'bind:run']]) {
+      const permission = ledger.controls.filter(item => item.entry.wxml === `pages/play/components/playkit-${kind}/index.wxml`
+        && item.control.handler === handler && item.control.event === event)
+      assert.equal(permission.length, 1, `${kind}.${handler} 真实录音动作必须保留`)
+      assert.equal(permission[0].actionClass, 'external')
+      assert.ok(permission[0].externalCapabilities.includes('getSetting'), `${kind}.${handler} 必须记录授权状态读取`)
+      assert.equal(permission[0].interactionMode, handler === 'onStart' ? 'tap' : 'event-contract')
+    }
+  }
+  // 2026-10-21 移植分支(W4+W8)再并入 master：同上七个事件合同，tap 不变，4940 → 4947。
+  // 2026-10-22 店铺参谋改版(#511):本页 +7 tap(同上)+2 事件合同(弹层遮罩/弹层本体 catchtouchmove 防穿透)。4947 → 4956。
+  // 2026-10-22 W10a:口碑管理态「平台复审中」筛选、俱乐部月历场次重试、期次空态「重新加载」三个新控件，4947 → 4950。
+  // 2026-10-22 W9 帖子处置:上述五个 tap + 半屏关闭 + 加载失败重试两个事件合同,4950 → 4957(batch2 集成重建实测)。
+  // 2026-10-22 Lane W11:收藏页「收藏与推荐」说明 +1 tap,4957 → 4958(batch2 集成重建实测)。
+  // 2026-10-22 batch2 集成再并 master(#511 +9 控件):4958 + 9 = 4967(合并树重建实测)。
+  // 2026-10-22 玩法模板编辑页重排:新增 30 个控件(本地 tap +13、组件事件合同 +7,其余为上传图片/音频等真机能力动作),4967 → 4997(待主人批准冻结数值)。
+  // 2026-10-23 DOC2 FXA:playkit compass 组件补传 attemptId,新增 bind:start ×1(组件事件合同),4997 → 4998(batch6 合并树重建实测)。
+  // 2026-10-23 #550(并 master 后重建实测):判定屏、试玩退出键、盲品 / 检定卡 / 排序 / 连线 / 分类重做,−形式与回复方式两个下拉 ⇒ 5009。
+  // 2026-10-23 v13 动效落地(PR #528,用户批准更新冻结数值):主题页 / 票夹 / 地图 / 勋章屏按原型重做后的新控件(换票、拖卡、图层下拉、地图卡、勋章屏动作等),+60,叠加 #550 的 5009 ⇒ 5069(重建实测)。
+  // 2026-10-23 排行榜榜种切换按有无领奖台分两处挂载,+1 ⇒ 5070(重建实测)。
+  // 2026-10-23 上线前 bug 修复合并(BUG-ROAM1 P0-50):漫游地点详情答题半屏加 0 尺寸 page-container 返回守卫(bind:afterleave),+1 ⇒ 5070(重建实测)。
+  // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:5070 → 5109。
+  // 2026-10-23 合 master:起名页 templateadd 退役 −4(#565)+ 弹层规范 −2(去掉 3 个确认回调、新增 1 颗「撤销」),controlCount 5109 → 5103(重建实测)。
+  assert.equal(ledger.controlCount, 5103)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
@@ -1382,6 +1696,17 @@ test('动作角色必须来自当前 route-matrix，俱乐部与商家页不得�
       || control.entry.wxml === 'pages/publish/fabu/topic-detail-sheet.wxml')
   assert.ok(included.length > 0, 'include 局部 WXML 必须保留在产品动作分母')
   assert.equal(included.every((control) => control.route === 'pages/publish/fabu/index'), true)
+})
+
+test('guarded 商家音频资源前缀不算路由，动态导航和未知路由仍保留', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../../pages/play/utils/merchant-game-assets.js'), 'utf8')
+  assert.deepEqual(extractTargets(source).routes, [])
+  const withNavigation = source.replace("  // 服务端配置", "  wx.navigateTo({ url: '/pages/play' + path });\n  // 服务端配置") + "\nwx.navigateTo({ url: '/pages/unknown/index' + query });"
+  assert.deepEqual(extractTargets(withNavigation).routes, ['pages/play', 'pages/unknown/index'])
+  assert.deepEqual(extractTargets("wx.navigateTo({ url: '/pages/play' + suffix });").routes, ['pages/play'])
+  assert.deepEqual(extractTargets("wx.navigateTo({ url: '/pages/unknown/index' + query });").routes, ['pages/unknown/index'])
+  assert.deepEqual(extractTargets(source.replace("path.startsWith('/audio/merchant-games/')", 'allowed(path)')).routes, ['pages/play'])
+  assert.deepEqual(extractTargets(source.replace('merchantGameAssetSet.has(relocated)', 'allowed(relocated)')).routes, ['pages/play'])
 })
 
 test('release 前重建 inventory，漏掉新增/修改控件必须变红', () => {
@@ -1422,8 +1747,8 @@ test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行
   assert.deepEqual(validateEvidenceOverlay(ledger, overlay), [])
 
   const control = ledger.controls.find((item) =>
-    item.id === 'components/cy/sheet/index.wxml:10:catchtouchmove:onDragMove:3')
-  assert.ok(control, '负控需要一个源码未被当前改动触及的本地状态动作')
+    item.id === 'components/cy/club-card/index.wxml:4:binderror:onCoverError:1')
+  assert.ok(control, 'fixture需要一个全部依赖仍在HEAD且当前未改的真实本地状态动作（sheet现依赖新增App模块）')
   const id = control.id
   const artifactPath = path.join(__dirname, '../../scripts/uiaudit/action-evidence.json')
   const headSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
@@ -1454,14 +1779,14 @@ test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行
           branch,
           readback: {
             changed: { data: true, dom: true, routeStack: false },
-            assertions: { state: { expected: { show: false }, observed: { show: false } } },
+            assertions: { state: { expected: { _coverFailed: true }, observed: { _coverFailed: true } } },
           },
           artifacts: [{
             uri: 'scripts/uiaudit/action-evidence.json',
             sha256: crypto.createHash('sha256').update(fs.readFileSync(artifactPath)).digest('hex'),
           }],
         })),
-        readback: 'tap 后 DOM 已关闭，page.data.show=false',
+        readback: '图片失败后DOM展示已有封面占位，page.data._coverFailed=true',
       },
     },
   }
@@ -1478,9 +1803,15 @@ test('inventory 与可持久化动态证据分离，freshness 不会抹掉执行
   assert.match(validateEvidenceOverlay(ledger, sample).join('\n'), /证据已过期/)
   sample.results[id].sourceDigest = validDigest
 
-  const rootSha = execFileSync('git', ['rev-list', '--max-parents=0', 'HEAD'], { encoding: 'utf8' }).trim().split('\n')[0]
-  const missingAtRoot = ledger.controls.find((control) => sourceDigestAtCommit(control, rootSha) === null)
-  assert.ok(missingAtRoot, '负控需要一个根提交尚不存在的 WXML/JS 控件')
+  // 空树提交明确缺少源码，负控不依赖仓库是否保留历史；不创建分支或修改工作区。
+  const emptyTree = execFileSync('git', ['mktree'], { input: '', encoding: 'utf8' }).trim()
+  const rootSha = execFileSync('git', ['commit-tree', emptyTree, '-m', 'test: missing source fixture'], {
+    encoding: 'utf8',
+    env: { ...process.env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.invalid',
+      GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.invalid' },
+  }).trim()
+  const missingAtRoot = control
+  assert.equal(sourceDigestAtCommit(missingAtRoot, rootSha), null)
   const forgedHistorical = {
     schemaVersion: 1,
     results: {
@@ -1603,4 +1934,24 @@ test('截图录屏证据必须有真实媒体签名，文本改后缀不能通�
     png.subarray(0, 8), Buffer.from([0, 0, 0, 13]), Buffer.from('IHDR'), Buffer.alloc(8), Buffer.from('IEND'),
   ])
   assert.equal(isRecognizedMedia('truncated.png', truncated), false)
+})
+
+// gate-ledger-read-contract:/api/publish/home(发布广场首页聚合,只读)走精确读例外判读;
+// /publish/ 通用写规则不放宽 —— 同前缀/同动词的真实发布写口仍判写,没登记的 /api/publish/* 新端点也仍判写。
+test('GET /api/publish/home 是读;真实发布写端点仍是写', () => {
+  const { isWriteApi } = require('../../scripts/uiaudit/build-action-ledger.js')
+  assert.equal(isWriteApi('/api/publish/home'), false)
+  for (const api of ['/api/activity/publish', '/api/coupon/publish', '/api/template/publish',
+    '/api/v1/community/posts/{param}/publish', '/api/activity/update_publish_status', '/api/official/publish',
+    '/api/publish/submit', '/api/publish/home/save']) {
+    assert.equal(isWriteApi(api), true, `${api} 必须仍判写`)
+  }
+  const homeControls = ledger.controls.filter((item) => (item.targets?.primaryApis || []).includes('/api/publish/home'))
+  assert.ok(homeControls.length > 0, '台账里必须真有 /api/publish/home 的消费者,否则这条断言是空转')
+  for (const item of homeControls) {
+    assert.deepEqual(item.targets.writeApis.filter((api) => api === '/api/publish/home'), [])
+  }
+  const homeRequests = ledger.controls.flatMap((item) => item.requiredRequests || [])
+    .filter((request) => request.urlTemplate === '/api/publish/home')
+  assert.equal(homeRequests.some((request) => request.kind === 'write'), false)
 })

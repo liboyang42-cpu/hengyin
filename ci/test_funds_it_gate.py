@@ -42,30 +42,32 @@ def all_required_clean(directory):
     write_report(directory, "RefundPayoutMybatisIntegrationTest", 30)
     write_report(directory, "ExploreAllianceMvpRealDbIT", 5)
     write_report(directory, "ExploreAllianceRedeemRealDbIT", 4)
+    write_report(directory, "ExploreScanReplayRealDbIT", 4)
     write_report(directory, "TandianriBatch0FundsMybatisIntegrationTest", 16)
     write_report(directory, "ShopDayOneTicketMySqlIT", 5)
     write_report(directory, "TandianriBatch3FundsMybatisIntegrationTest", 18)
-    write_report(directory, "ClubCorporatePayeeMybatisIntegrationTest", 11)
+    write_report(directory, "ClubCorporatePayeeMybatisIntegrationTest", 14)
     write_report(directory, "ClubEditionCompensationMybatisIntegrationTest", 21)
     write_report(directory, "PlayerWithdrawalCooldownMybatisIntegrationTest", 16)
     write_report(directory, "ClubPayableMybatisIntegrationTest", 20)
-    write_report(directory, "CouponLifecycleMybatisIntegrationTest", 12)
+    write_report(directory, "CouponLifecycleMybatisIntegrationTest", 16)
+    write_report(directory, "CommunityPostCommentIdempotencyMySqlIT", 2)
     write_report(directory, "MysqlItSchemaIsolationTest", 3)
     # 2026-09-15 起登记:R9-16 免费单主办取消真库复现 IT(8 条)。
     write_report(directory, "ActivityCancelFreeOrderMybatisIT", 8)
     write_report(directory, "PlayTeamMybatisIntegrationTest", 21)
     write_report(directory, "PlayTeamNearbyMybatisIntegrationTest", 4)
     # 2026-09-16:支付回调 fencing IT 入闸(5 条);fixture 必须跟着 EXPECTED 走。
-    write_report(directory, "WxPaymentCallbackFencingMySqlIT", 5)
+    write_report(directory, "WxPaymentCallbackFencingMySqlIT", 6)
     # 2026-09-16 第二轮:内容回调 fencing IT 入闸(3 条),与上面同病同修。
     write_report(directory, "WxContentCallbackFencingMySqlIT", 3)
     # 2026-09-16 晚:暗测试 23 套(197 条)首跑判绿后入闸;计数与 EXPECTED/SOURCE_FILES 同源。
     for short, tests in (
         ("CoopDepositRefundMybatisIntegrationTest", 27),
-        ("GrowthMissionProofMybatisIntegrationTest", 15),
+        ("GrowthMissionProofMybatisIntegrationTest", 25),
         ("MerchantIdentityMybatisIntegrationTest", 21),
         ("MerchantProfilePersistenceMybatisIntegrationTest", 9),
-        ("StoreVerifyGrowthDeliveryTransactionTest", 3),
+        ("StoreVerifyGrowthDeliveryTransactionTest", 4),
         ("RefundNotificationMybatisIntegrationTest", 9),
         ("SessionRefundClockMybatisIntegrationTest", 3),
         ("SettlementGenerateBatchMybatisIntegrationTest", 3),
@@ -76,21 +78,34 @@ def all_required_clean(directory):
         ("ClubWaitlistTokenMybatisIntegrationTest", 7),
         ("CmsMemberTemplateAudioPatchMybatisIntegrationTest", 9),
         ("CmsTemplateLibraryAudioPatchMybatisIntegrationTest", 9),
+        ("TemplateUseNumFirstAdoptionMybatisIntegrationTest", 3),
         ("ContentInteractionMybatisIntegrationTest", 18),
         ("CreativeSquarePublishIdempotencyMybatisIntegrationTest", 7),
         ("FollowConcurrencyMybatisIntegrationTest", 4),
         ("FollowEditRaceMybatisIntegrationTest", 7),
-        ("NearbyRunnerShopsMybatisIntegrationTest", 5),
+        ("NearbyRunnerShopsMybatisIntegrationTest", 7),
         # 2026-09-17 release-0917 集成:rule-play-0917 把 funds_it_gate.EXPECTED 5→6(新增存量待审转正真库用例),
         #   自测夹具未同步 → test_green_when_all_required_ran_fully 红;按同源口径同步为 6。
         ("PhotoReviewProgressMybatisIntegrationTest", 6),
         ("SpoilerAccessMybatisIntegrationTest", 7),
         ("SquareEditFollowMybatisIntegrationTest", 7),
-        ("RoamSessionWriteMybatisIntegrationTest", 10),
+        ("RoamSessionWriteMybatisIntegrationTest", 15),
+        ("RoamLocationRetentionMySqlIT", 21),
         ("ComplaintPeriodWithdrawalGateMybatisIntegrationTest", 7),
-        ("ShareSnapshotRunSessionMybatisIntegrationTest", 4),
-        ("RoamShareSnapshotConcurrencyMySqlIT", 2),
+        ("ShareSnapshotRunSessionMybatisIntegrationTest", 5),
+        ("PlayerRunSessionOrderingMybatisIntegrationTest", 6),
+        ("RoamShareSnapshotConcurrencyMySqlIT", 3),
         ("ClubEventTransferCancellationMySqlIT", 3),
+        ("RefundRetryAndRemainderMySqlIT", 5),
+        ("SignupNoticeAfterCommitPersistenceMySqlIT", 5),
+        ("TopicLikeDesiredStateMySqlIT", 3),
+        ("MonitorMissingJobsMySqlIT", 3),
+        ("MemberPasswordWidthMySqlIT", 3),
+        ("LegacyCategoryForwardGuardMySqlIT", 4),
+        ("MissingBusinessSeedsMySqlIT", 4),
+        ("RoamPresenceRevokeDurabilityMySqlIT", 10),
+        ("RoamPresenceRevokeJobMySqlIT", 4),
+        ("WxBillIngestionPersistenceTest", 6),
     ):
         write_report(directory, short, tests)
 
@@ -98,6 +113,16 @@ def all_required_clean(directory):
 class FundsItGateTest(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.mkdtemp()
+
+    def test_bill_ingestion_missing_or_skipped_reports_are_not_a_pass(self):
+        all_required_clean(self.dir)
+        for report in pathlib.Path(self.dir).glob("TEST-*WxBillIngestionPersistenceTest.xml"):
+            report.unlink()
+        self.assertTrue(any("WxBillIngestionPersistenceTest" in error
+                            for error in funds_it_gate.enforce(self.dir)))
+        write_report(self.dir, "WxBillIngestionPersistenceTest", 6, skipped=6)
+        self.assertTrue(any("WxBillIngestionPersistenceTest" in error
+                            for error in funds_it_gate.enforce(self.dir)))
 
     def test_green_when_all_required_ran_fully(self):
         all_required_clean(self.dir)
@@ -112,6 +137,40 @@ class FundsItGateTest(unittest.TestCase):
         problems = funds_it_gate.enforce(self.dir)
         self.assertTrue(any("ExploreAllianceMvpRealDbIT" in p and "skipped" in p for p in problems),
                         "Explore IT 被 skip 必须判红,否则等于把假绿放回来了:%s" % problems)
+
+    def test_red_when_run_ordering_suite_is_missing(self):
+        all_required_clean(self.dir)
+        for report in pathlib.Path(self.dir).glob("TEST-*PlayerRunSessionOrderingMybatisIntegrationTest.xml"):
+            report.unlink()
+        problems = funds_it_gate.enforce(self.dir)
+        self.assertTrue(any("PlayerRunSessionOrderingMybatisIntegrationTest" in p
+                            and "无 surefire 报告" in p for p in problems), problems)
+
+    def test_red_when_run_ordering_suite_is_skipped(self):
+        all_required_clean(self.dir)
+        write_report(self.dir, "PlayerRunSessionOrderingMybatisIntegrationTest", 6, skipped=6)
+        problems = funds_it_gate.enforce(self.dir)
+        self.assertTrue(any("PlayerRunSessionOrderingMybatisIntegrationTest" in p
+                            and "skipped" in p for p in problems), problems)
+
+    def test_retention_suite_rejects_missing_skipped_errors_failures_and_short_runs(self):
+        short = "RoamLocationRetentionMySqlIT"
+        for defect, counts, expected in (
+            ("missing", None, "无 surefire 报告"),
+            ("skipped", dict(tests=21, skipped=1), "skipped"),
+            ("error", dict(tests=21, errors=1), "errors"),
+            ("failure", dict(tests=21, failures=1), "failures"),
+            ("short", dict(tests=20), "实跑用例"),
+        ):
+            with self.subTest(defect=defect):
+                all_required_clean(self.dir)
+                if counts is None:
+                    for report in pathlib.Path(self.dir).glob("TEST-*" + short + ".xml"):
+                        report.unlink()
+                else:
+                    write_report(self.dir, short, **counts)
+                problems = funds_it_gate.enforce(self.dir)
+                self.assertTrue(any(short in problem and expected in problem for problem in problems), problems)
 
     def test_red_when_a_suite_is_skipped(self):
         # 负控①:环境变量缺失 → @EnabledIf 把整套标 skipped,构建仍绿,门禁必须变红。
@@ -177,6 +236,17 @@ class FundsItExpectedCountTest(unittest.TestCase):
         self.assertIn(short, funds_it_gate.EXPECTED)
         self.assertIn(short, funds_it_gate.SOURCE_FILES)
         self.assertIn(short, _GATE_SCRIPT.read_text(encoding="utf-8"))
+
+    def test_roam_retention_suite_is_registered_with_exact_source_count_and_execution_selector(self):
+        short = "RoamLocationRetentionMySqlIT"
+        self.assertEqual(21, funds_it_gate.EXPECTED[short])
+        source = _REPO_ROOT / funds_it_gate.SOURCE_FILES[short]
+        source_text = source.read_text(encoding="utf-8")
+        self.assertEqual(21, funds_it_gate.count_test_methods(source_text))
+        self.assertIn("void realCleanupTaskPreservesFavoriteRouteAndNonLocationFactsAcrossReplay()", source_text)
+        import re
+        selector = re.search(r"-Dtest=([^\s]+)", _GATE_SCRIPT.read_text(encoding="utf-8")).group(1).split(",")
+        self.assertEqual(1, selector.count(short))
 
     def test_roam_share_cap_suite_is_registered_on_both_execution_and_readback_sides(self):
         short = "RoamShareSnapshotConcurrencyMySqlIT"
@@ -411,6 +481,73 @@ class FundsItWorkflowContractTest(unittest.TestCase):
 
     def test_repo_workflow_satisfies_contract(self):
         self.assertEqual([], funds_it_gate.enforce_workflow(self.workflow, self.gate))
+
+    def cleanup_script(self):
+        step = self.workflow.split("      - name: Stop Oracle MySQL scratch\n", 1)[1]
+        lines = step.split("        run: |\n", 1)[1].splitlines()
+        script = []
+        for line in lines:
+            if line and not line.startswith("          "):
+                break
+            script.append(line[10:])
+        return "\n".join(script) + "\n"
+
+    def run_cleanup(self, script, rm_exit, ps_exit, names):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            docker = root / "docker"
+            docker.write_text(
+                "#!/usr/bin/env python3\n"
+                "import json, os, sys\n"
+                "from pathlib import Path\n"
+                "with Path(os.environ['FAKE_CALLS']).open('a') as f:\n"
+                "    f.write(json.dumps(sys.argv[1:])+'\\n')\n"
+                "if sys.argv[1:] == ['rm', '-f', '-v', os.environ['MYSQL_CONTAINER']]:\n"
+                "    raise SystemExit(int(os.environ['FAKE_RM_EXIT']))\n"
+                "if sys.argv[1:] == ['ps', '-a', '--format', '{{.Names}}']:\n"
+                "    print(os.environ['FAKE_NAMES'])\n"
+                "    raise SystemExit(int(os.environ['FAKE_PS_EXIT']))\n"
+                "raise SystemExit(99)\n", encoding="utf-8")
+            docker.chmod(0o700)
+            env = dict(os.environ, PATH=directory + os.pathsep + os.environ.get("PATH", ""),
+                       MYSQL_CONTAINER="cy-funds-fixture-1", FAKE_CALLS=str(root / "calls"),
+                       FAKE_RM_EXIT=str(rm_exit), FAKE_PS_EXIT=str(ps_exit), FAKE_NAMES=names)
+            result = subprocess.run(["bash", "-e", "-c", script], env=env,
+                                    capture_output=True, text=True, timeout=10)
+            calls = (root / "calls").read_text(encoding="utf-8").splitlines()
+            self.assertEqual([
+                '["rm", "-f", "-v", "cy-funds-fixture-1"]',
+                '["ps", "-a", "--format", "{{.Names}}"]',
+            ], calls)
+            return result
+
+    def test_cleanup_actual_block_requires_successful_exact_absence_readback(self):
+        for rm_exit, ps_exit, names, succeeds in (
+            (0, 0, "", True),
+            (1, 0, "", True),
+            (0, 7, "", False),
+            (0, 7, "unrelated-fixture", False),
+            (0, 0, "cy-funds-fixture-1", False),
+            (1, 0, "cy-funds-fixture-1", False),
+            (0, 0, "cy-funds-fixture-1-suffix\nprefix-cy-funds-fixture-1", True),
+        ):
+            with self.subTest(rm_exit=rm_exit, ps_exit=ps_exit, names=names):
+                result = self.run_cleanup(self.cleanup_script(), rm_exit, ps_exit, names)
+                self.assertEqual(succeeds, result.returncode == 0, result.stdout + result.stderr)
+
+    def test_original_cleanup_pipeline_falsely_accepts_failed_empty_ps(self):
+        original = ('docker rm -f -v "$MYSQL_CONTAINER" >/dev/null 2>&1 || true\n'
+                    '! docker ps -a --format \'{{.Names}}\' | grep -Fxq "$MYSQL_CONTAINER"\n')
+        self.assertEqual(0, self.run_cleanup(original, 0, 7, "").returncode)
+
+    def test_red_when_cleanup_loses_ps_success_or_exact_name_guard(self):
+        for before, after in (
+            ('if ! names="$(docker ps', 'if names="$(docker ps'),
+            ('if [ "$name" = "$MYSQL_CONTAINER" ]; then', 'if false; then'),
+        ):
+            with self.subTest(before=before):
+                problems = funds_it_gate.enforce_workflow(self.workflow.replace(before, after), self.gate)
+                self.assertTrue(any("独立确认 docker ps" in p for p in problems), problems)
 
     def test_red_when_self_hosted_label_loses_temp_marker(self):
         self.assertIn("runs-on: ubuntu-latest", self.workflow)

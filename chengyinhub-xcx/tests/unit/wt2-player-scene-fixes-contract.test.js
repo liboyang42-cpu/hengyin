@@ -5,6 +5,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js·loading.js
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
@@ -28,6 +29,9 @@ function loadActivityComponent() {
       if (request.endsWith('datetime.js')) return { chinaDayStart: () => NaN, toTimestamp: () => NaN }
       if (request.endsWith('ticket-window.js')) return require('../../utils/ticket-window.js')
       if (request.endsWith('response-shape.js')) return require('../../utils/response-shape.js')
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request.endsWith('media-preview.js')) return loadMediaPreview({ previewImage() {} })
       throw new Error(`unexpected dependency: ${request}`)
     },
   }, { filename: path.join(ROOT, ACTIVITY_JS) })
@@ -128,11 +132,11 @@ test('活动 missing 与 empty 终态都通过组件事件返回来源列表', (
   assert.deepEqual(events, ['close', 'close'], '两种不可恢复终态都应交给宿主返回来源列表')
 })
 
-test('推文空态按主页归属切换口吻且不虚构发布动作', () => {
+test('帖文空态按主页归属切换口吻且不虚构发布动作', () => {
   const wxml = read(PROFILE_WXML)
   const tag = (wxml.match(/<cy-empty\b[^>]*\/>/g) || [])
     .find((candidate) => candidate.includes('wx:elif="{{nodata}}"'))
-  assert.ok(tag, '推文列表必须保留 nodata 空态')
+  assert.ok(tag, '帖文列表必须保留 nodata 空态')
 
   const copyBinding = attr(tag, 'sub')
   const branches = copyBinding.match(/^\{\{isSelf\s*\?\s*'([^']+)'\s*:\s*'([^']+)'\}\}$/)

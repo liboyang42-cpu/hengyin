@@ -1,5 +1,6 @@
 const cyModal = require('../../../utils/modal.js');
 const { chinaDateKey, chinaParts } = require('../../../utils/datetime.js');
+const { maxWeeklyOccurrences } = require('../utils/weekly-schedule-window.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp()
 const motion = require('../../../utils/motion.js')
@@ -27,15 +28,18 @@ function positiveId(value) {
 // 「今天」,非上海时区的设备上表单显示的是设备日历的今天、后端比的是上海日历的今天 ——
 // 表单里明明写着今天,回包却说「场次日期不能早于今天」。
 function shanghaiToday() { return chinaDateKey(new Date()) }
+// 「仅改未来」的服务端边界是上海明日 00:00:今天的场次不在编辑范围内,表单也不能回填或选今天。
+function shanghaiTomorrow() { return chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000)) }
 // CU-C-35:日期=今天且集合时刻已过 —— 「今天」这一档由后端拒绝,用户看到的日期又没错,
 // 前后端都没人拦在提交之前。这里用同一个上海钟提前判出来,文案直说时刻。
-// 只可能是今天这一档:物化器保证所有日期 >= 今天,WEEKLY 的后续场次都是 +7 天。
+// 页面跨过上海午夜时，表单仍可能保留前一天的日期。
 function assemblyAlreadyPast(dates, startTime, now) {
   const clock = chinaParts(now)
   const parts = /^(\d{2}):(\d{2})$/.exec(String(startTime || ''))
   if (!clock || !parts) return false
   const today = clock.year + '-' + (clock.month < 10 ? '0' + clock.month : clock.month)
     + '-' + (clock.day < 10 ? '0' + clock.day : clock.day)
+  if ((dates || []).some(date => date && date < today)) return true
   if (!(dates || []).some(date => date === today)) return false
   return (Number(parts[1]) * 60 + Number(parts[2])) <= (clock.hours * 60 + clock.minutes)
 }
@@ -187,7 +191,7 @@ function cancellationSummary(result) {
       : refundStatus === 'ACCEPTED_WITH_MANUAL_REVIEW' ? '退款任务已受理，部分需人工跟进'
         : refundStatus === 'ACCEPTED' || refundStatus === 'REFUND_REQUESTED'
           || refundStatus === 'ALREADY_ACCEPTED'
-          ? '退款任务已受理' : '退款状态待回读'
+          ? '退款任务已受理' : '退款状态更新中'
   const registered = String((result && result.registeredNotificationStatus) || '')
   const waitlist = String((result && result.waitlistNotificationStatus) || '')
   const notifications = registered === 'NOT_REQUIRED' && waitlist === 'NOT_REQUIRED'
@@ -304,6 +308,8 @@ function normalizeSeries(value, clubId) {
   return {
     id, clubId: rowClubId, topicId, leadMemberId, version, offerMinutes,
     recurrenceType, capacity, waitlistEnabled: value.waitlistEnabled,
+    startTime: typeof value.startTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value.startTime)
+      ? value.startTime : '',
     futureDates: Array.isArray(value.futureDates)
       ? Array.from(new Set(value.futureDates.filter(item => /^\d{4}-\d{2}-\d{2}$/.test(String(item))))).sort()
       : [],
@@ -341,7 +347,7 @@ function occurrenceRow(raw) {
 // CU-C-03:场次时区固定上海(表单也这么写),必须按上海日历取字段 —— 原来用手机本地
 // getHours/getDate,非上海时区的设备把 9-28 09:00 显示成「9月27日 18:00」。
 function occurrenceDateText(raw) {
-  if (raw === null || raw === undefined || raw === '') return '日期待确认'
+  if (raw === null || raw === undefined || raw === '') return '—'
   const p = chinaParts(typeof raw === 'number' ? raw : String(raw).replace(/\//g, '-'))
   if (!p) return String(raw)
   const week = ['日', '一', '二', '三', '四', '五', '六'][p.weekday]
@@ -367,6 +373,7 @@ Page({
     // 集合时刻是场次退款钟(集合前 24h)的锚点,后端缺它会拒绝开场(5.9 起)。
     startTime: '09:00',
     minDate: shanghaiToday(),
+    futureMinDate: shanghaiTomorrow(),
     occurrenceCount: 4,
     customDates: [shanghaiToday()],
     capacity: '',
@@ -419,7 +426,7 @@ Page({
     this._focusTopicId = positiveId(options && options.topicId)
     const recurrenceType = options && options.recurrence === 'ONCE' ? 'ONCE' : this.data.recurrenceType
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部 ID' })
+      this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
       return
     }
     this.setData({ clubId, activityId, recurrenceType })
@@ -583,7 +590,7 @@ Page({
         const raw = ok(res) && Array.isArray(res.data) ? res.data : null
         const rows = raw && raw.map(item => normalizeSeries(item, that.data.clubId))
         if (!rows || rows.some(item => !item)) {
-          that.setData({ seriesState: 'error', seriesError: bizFailureMessage(res, '系列列表数据不完整') })
+          that.setData({ seriesState: 'error', seriesError: bizFailureMessage(res, '系列列表加载失败') })
           return
         }
         that.setData({
@@ -650,14 +657,17 @@ Page({
           return
         }
         that._expectedVersion = series.version
-        const dates = series.futureDates.length ? series.futureDates : [that.data.minDate]
+        const futureMinDate = shanghaiTomorrow()
+        const futureDates = series.futureDates.filter(date => date >= futureMinDate)
+        const dates = futureDates.length ? futureDates : [futureMinDate]
         that.setData({
+          futureMinDate,
           editingSeriesId: series.id,
           editingTopicId: series.topicId,
           recurrenceType: series.recurrenceType,
           startDate: dates[0],
-          // 后端读模型只回日期,不回每场时刻;编辑态默认 09:00,改后的时刻只作用于本次新增日期。
-          startTime: '09:00',
+          // 未知或混合时刻保持空值，由既有必填校验要求显式选择。
+          startTime: series.startTime,
           occurrenceCount: dates.length,
           customDates: dates,
           capacity: series.capacity === null ? '' : String(series.capacity),
@@ -770,6 +780,14 @@ Page({
       toast('每周场次数需为 1–64')
       return
     }
+    if (this.data.recurrenceType === 'WEEKLY') {
+      // 与后端 90 天窗口同口径:超出的期数会被拒绝,提交前先说清上限。
+      const maxWeekly = maxWeeklyOccurrences(this.data.startDate, shanghaiToday())
+      if (maxWeekly > 0 && count > maxWeekly) {
+        toast('首次日期起 90 天内最多可排 ' + maxWeekly + ' 期')
+        return
+      }
+    }
     if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1 || capacity > 10000)) {
       toast('容量需为 1–10000')
       return
@@ -782,6 +800,15 @@ Page({
     if (this.data.recurrenceType === 'CUSTOM_DATES' && customDates.length === 0) {
       toast('请至少选择一个日期')
       return
+    }
+    if (editingSeriesId) {
+      const futureMinDate = shanghaiTomorrow()
+      const editedDates = this.data.recurrenceType === 'CUSTOM_DATES' ? customDates : [this.data.startDate]
+      if (editedDates.some(date => !date || date < futureMinDate)) {
+        this.setData({ futureMinDate })
+        toast('只能改明天及之后的场次')
+        return
+      }
     }
     const startTime = String(this.data.startTime || '').trim()
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime)) {
@@ -881,14 +908,14 @@ Page({
         if (!state) {
           that.setData({
             cancellationState: 'readback-error',
-            cancellationError: bizFailureMessage(res, '取消状态回读失败，请重试'),
+            cancellationError: bizFailureMessage(res, '取消状态刷新失败，请重试'),
           })
           return
         }
         if (cancelResult && state.occurrenceStatus !== 'CANCELLED') {
           that.setData({
             cancellationState: 'readback-error',
-            cancellationError: '取消请求已受理，但独立回读尚未确认取消，请重试回读',
+            cancellationError: '取消已提交，结果待确认，请刷新',
           })
           return
         }
@@ -910,12 +937,12 @@ Page({
         }
       },
       fail() {
-        that.setData({ cancellationState: 'readback-error', cancellationError: '网络异常，取消状态回读失败' })
+        that.setData({ cancellationState: 'readback-error', cancellationError: '网络异常，取消状态刷新失败' })
       },
       successStatusAbnormal(res) {
         that.setData({
           cancellationState: 'readback-error',
-          cancellationError: (res && res.msg) || '取消状态回读失败，请重试',
+          cancellationError: (res && res.msg) || '取消状态刷新失败，请重试',
         })
       },
     })
@@ -1035,7 +1062,7 @@ Page({
         const noShow = data && normalizeRows(data.noShow)
         if (!data || registered === null || waitlist === null || arrived === null || noShow === null
             || data.phoneIncluded !== false) {
-          that.setData({ rosterState: 'error', rosterError: bizFailureMessage(res, '名册数据不完整') })
+          that.setData({ rosterState: 'error', rosterError: bizFailureMessage(res, '名册加载失败') })
           return
         }
         const buckets = { registered, waitlist, arrived, noShow }

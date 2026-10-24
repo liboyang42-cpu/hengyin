@@ -35,6 +35,9 @@ public interface IGrowthService {
      */
     int addExp(Long memberId, int exp, String reason);
 
+    /** 通关经验返回实际获得明细 ID，供撤销原笔发放使用。 */
+    Long addCompletionExp(Long memberId, int exp, Long topicId);
+
     List<MemberGrowth> selectAdminGrowthList(MemberGrowth growth);
 
     List<GrowthMission> selectAdminMissionList(GrowthMission mission);

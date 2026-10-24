@@ -40,7 +40,7 @@
 .cn-node-btn { display: inline-flex; align-items: center; min-height: var(--cy-btn-h); margin-left: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-title); font-weight: 600; }
 .cn-node-code { display: inline-flex; align-items: center; gap: var(--cy-space-1); min-height: var(--cy-btn-h); margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-title); }
 .cn-row-error { margin: 0 var(--cy-page-x) var(--cy-space-2); }
-.cn-claim { padding: 0 var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); }
+.cn-claim { padding: 0 0 var(--cy-space-3); /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .cn-claim-state { margin: var(--cy-space-2) 0; }
 .cn-claim-row .cn-row-error { margin-left: 0; margin-right: 0; }
 

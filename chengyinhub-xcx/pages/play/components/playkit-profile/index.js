@@ -6,7 +6,7 @@
 // ★ 提交一次即锁档(服务端 done 后拒绝改档),组件看到的 done 就是服务端的权威值。
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
-const kitDraft = require('../../../../utils/kit-draft.js');
+const kitDraft = require('../../utils/kit-draft.js');
 
 Component({
   behaviors: [reducedMotionBehavior],

@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.MemberCollectible;
 import com.chengyinhub.business.domain.vo.CityNodeVO;
@@ -160,11 +161,13 @@ public class ApiCityNodeController extends BaseController {
 
     @Operation(summary = "完成节点互动并领券(半径二次校验 + 按验证方式判定 + 每人每节点仅一次)")
     @PostMapping("/nodes/{id}/complete")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult complete(@PathVariable("id") Long id, Double lat, Double lng,
                                String answer, String photoUrl, String code) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         if (id == null || id <= 0) return error("参数不合规");
+        roamMapper.lockClaimOwner(memberId);
         CityNodeVO node = roamMapper.selectPlayerMerchantNodeDetail(id, 0L);
         if (node == null) return error("据点未开放或已下线");
         if (node.getStatus() == null || node.getStatus() != 1) return error("节点未上线");
@@ -243,11 +246,6 @@ public class ApiCityNodeController extends BaseController {
 
     /** 两点球面距离(米,haversine)。 */
     static double distMeters(double lat1, double lng1, double lat2, double lng2) {
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return 2 * 6371000.0 * Math.asin(Math.min(1.0, Math.sqrt(a)));
+        return GeoDistanceUtils.haversineMeters(lat1, lng1, lat2, lng2);
     }
 }

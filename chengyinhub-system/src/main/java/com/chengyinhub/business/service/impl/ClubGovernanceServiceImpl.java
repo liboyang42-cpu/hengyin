@@ -291,15 +291,7 @@ public class ClubGovernanceServiceImpl implements ClubGovernanceService {
                 || !Integer.valueOf(1).equals(leader.getStatus())) {
             throw conflict("新主理人身份状态不可用");
         }
-        capabilityService.grant(targetMemberId, MemberCapability.CAP_CLUB_LEADER, grantedBy);
-        if (!IRoleService.ROLE_CLUB.equals(roleService.resolveRole(account))) {
-            UmsMember rolePatch = new UmsMember();
-            rolePatch.setId(targetMemberId);
-            rolePatch.setRole(IRoleService.ROLE_CLUB);
-            if (umsMemberService.updateUmsMember(rolePatch) != 1) {
-                throw conflict("新主理人默认视角更新失败，请刷新后重试");
-            }
-        }
+        roleService.changeRole(targetMemberId, IRoleService.ROLE_CLUB, grantedBy);
     }
 
     private void reconcileFormerOwnerIdentity(Long formerOwnerMemberId, Long transferredClubId) {
@@ -313,18 +305,10 @@ public class ClubGovernanceServiceImpl implements ClubGovernanceService {
         if (!activeClubIds.isEmpty()) {
             return;
         }
-        capabilityService.revoke(formerOwnerMemberId, MemberCapability.CAP_CLUB_LEADER);
         UmsMember account = umsMemberService.selectUmsMemberById(formerOwnerMemberId);
-        if (!isActiveAccount(account, formerOwnerMemberId)) {
-            throw forbidden("原主理人账号不可用");
-        }
+        if (!isActiveAccount(account, formerOwnerMemberId)) throw forbidden("原主理人账号不可用");
         if (IRoleService.ROLE_CLUB.equals(roleService.resolveRole(account))) {
-            UmsMember rolePatch = new UmsMember();
-            rolePatch.setId(formerOwnerMemberId);
-            rolePatch.setRole(IRoleService.ROLE_PLAYER);
-            if (umsMemberService.updateUmsMember(rolePatch) != 1) {
-                throw conflict("原主理人默认视角更新失败，请刷新后重试");
-            }
+            roleService.changeRole(formerOwnerMemberId, IRoleService.ROLE_PLAYER, 0L);
         }
     }
 

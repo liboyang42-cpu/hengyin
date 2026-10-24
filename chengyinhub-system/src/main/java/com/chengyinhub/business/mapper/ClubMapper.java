@@ -33,6 +33,13 @@ public interface ClubMapper
     /** 工作台批量补齐俱乐部显示名，避免对申请/邀约/合作单逐条查询。 */
     public List<Club> selectClubsByIds(@Param("clubIds") List<Long> clubIds);
 
+    /**
+     * 俱乐部名称全站唯一(用户 2026-10-20 决定):数去空格后同名、待审或在营、未删除的俱乐部。
+     * memberId 不为空时跳过该主理人自己的行(本人同名按重放处理);excludeClubId 不为空时跳过正在改名的那一行。
+     */
+    public int countClubsHoldingName(@Param("name") String name, @Param("memberId") Long memberId,
+            @Param("excludeClubId") Long excludeClubId);
+
     public List<Club> selectClubList(Club club);
 
     public int insertClub(Club club);
@@ -49,6 +56,11 @@ public interface ClubMapper
 
     /** 稿 M「开放设置 · 允许成员发帖」。0=仅管理者可发 1=所有成员可发。 */
     public int updateMemberPostAllowed(@Param("clubId") Long clubId, @Param("enabled") Integer enabled);
+
+    /** 入会欢迎语:单独读写,不进 selectClubVo —— 列未落库时只影响这一项,不拖垮整个俱乐部查询。 */
+    public String selectWelcomeNote(@Param("clubId") Long clubId);
+
+    public int updateWelcomeNote(@Param("clubId") Long clubId, @Param("note") String note);
 
     /** 稿 M「开放设置 · 开放商家承接」。0=本俱乐部主题不进商家可承接列表 1=进。 */
     public int updateMerchantUndertakeOpen(@Param("clubId") Long clubId, @Param("enabled") Integer enabled);

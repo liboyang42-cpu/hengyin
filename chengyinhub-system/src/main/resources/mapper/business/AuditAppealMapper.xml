@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AuditAppealMapper">
+
+    <resultMap type="AuditAppeal" id="AuditAppealResult">
+        <result property="id" column="id" />
+        <result property="bizType" column="biz_type" />
+        <result property="bizId" column="biz_id" />
+        <result property="taskId" column="task_id" />
+        <result property="memberId" column="member_id" />
+        <result property="reason" column="reason" />
+        <result property="evidenceJson" column="evidence_json" />
+        <result property="state" column="state" />
+        <result property="dueAt" column="due_at" />
+        <result property="handledBy" column="handled_by" />
+        <result property="handledAt" column="handled_at" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <sql id="selectAuditAppealVo">
+        select id, biz_type, biz_id, task_id, member_id, reason, evidence_json, state, due_at,
+               handled_by, handled_at, created_at
+        from audit_appeal
+    </sql>
+
+    <insert id="insertAuditAppeal" parameterType="AuditAppeal" useGeneratedKeys="true" keyProperty="id">
+        insert into audit_appeal(biz_type, biz_id, task_id, member_id, reason, evidence_json, state, due_at, created_at)
+        values (#{bizType}, #{bizId}, #{taskId}, #{memberId}, #{reason}, #{evidenceJson}, #{state}, #{dueAt}, #{createdAt})
+    </insert>
+
+    <select id="selectByBizMember" resultMap="AuditAppealResult">
+        <include refid="selectAuditAppealVo"/>
+        where biz_type = #{bizType} and biz_id = #{bizId} and member_id = #{memberId}
+    </select>
+
+    <select id="selectByTaskIdForUpdate" resultMap="AuditAppealResult">
+        <include refid="selectAuditAppealVo"/>
+        where task_id = #{taskId}
+        order by id desc limit 1 for update
+    </select>
+
+    <update id="markReviewing">
+        update audit_appeal set state = 'REVIEWING'
+        where task_id = #{taskId} and state = 'SUBMITTED'
+    </update>
+
+    <update id="finishAppeal">
+        update audit_appeal
+        set state = #{state}, handled_by = #{handledBy}, handled_at = #{handledAt}
+        where id = #{id} and state in ('SUBMITTED', 'REVIEWING')
+    </update>
+
+    <update id="withdrawByTask">
+        update audit_appeal
+        set state = 'WITHDRAWN', handled_at = #{handledAt}
+        where task_id = #{taskId} and state in ('SUBMITTED', 'REVIEWING')
+    </update>
+</mapper>

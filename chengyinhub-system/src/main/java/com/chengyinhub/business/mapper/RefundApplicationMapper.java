@@ -9,6 +9,8 @@ import java.util.List;
 public interface RefundApplicationMapper {
     List<RefundApplication> selectRefundApplicationList(RefundApplication query);
 
+    List<RefundApplication> selectRegistrationHistoryForUpdate(@Param("registrationId") Long registrationId);
+
     RefundApplication selectRefundApplicationById(@Param("id") Long id);
 
     int insertRefundApplication(RefundApplication refund);
@@ -91,6 +93,12 @@ public interface RefundApplicationMapper {
      */
     List<RefundApplication> selectStalePayoutProcessing(@Param("minutes") int minutes);
 
+    /** 本轮固定上界，避免扫描中新增退款使本轮无限延长。 */
+    Long selectStalePayoutScanUpperBound(@Param("minutes") int minutes);
+
+    List<RefundApplication> selectStalePayoutProcessingAfter(@Param("minutes") int minutes,
+            @Param("afterId") long afterId, @Param("maxId") long maxId, @Param("limit") int limit);
+
     /** 待人工/待复核(payout_status in 2,3)积压数,供巡检告警。 */
     int countManualPayoutBacklog();
 
@@ -99,4 +107,10 @@ public interface RefundApplicationMapper {
      * 这批钱同样一分没退，却不在人工队列里 —— 只数 (2,3) 的积压告警对它们完全失明。
      */
     int countStuckPayoutDispatch(@Param("minutes") int minutes);
+
+    /** 与 countManualPayoutBacklog 同谓词的前 20 个退款单 id，仅作告警定位样本。 */
+    List<Long> sampleManualPayoutBacklogIds();
+
+    /** 与 countStuckPayoutDispatch 同谓词的前 20 个退款单 id，仅作告警定位样本。 */
+    List<Long> sampleStuckPayoutDispatchIds(@Param("minutes") int minutes);
 }

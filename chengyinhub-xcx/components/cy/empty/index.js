@@ -1,3 +1,5 @@
+const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+
 // 统一空态:图 + 主文案 + 副文案 + 可选 CTA。点 CTA 触发 'cta' 事件。
 //
 // ADA 状态族:空 / 错 / 无权限 / 未开始不能继续共用同一张灰色插画。
@@ -10,16 +12,16 @@
 // ⚠️ 这张表里不许出现 cta:默认 CTA 没有默认动作,点下去什么都不发生 = 假按钮。
 //   CTA 只能由页面显式传,并自己 bind:cta 接住。
 const KIND_DEFAULTS = {
-  empty:           { icon: '/images/no_data.svg',  glyph: '',        title: '暂无内容',       sub: '这里还没有内容' },
+  empty:           { icon: '/images/no_data.svg',  glyph: '',        title: '暂无内容',       sub: '' },
   success:         { icon: '',                     glyph: 'check',   title: '已完成',         sub: '' },
-  offline:         { icon: '',                     glyph: 'warning', title: '网络好像断开了', sub: '检查网络连接后重试' },
-  network:         { icon: '',                     glyph: 'warning', title: '网络没连上',     sub: '连接恢复后可继续' },
-  error:           { icon: '',                     glyph: 'warning', title: '出错了',         sub: '请稍后重试' },
-  data:            { icon: '',                     glyph: 'info',    title: '这部分没加载成功', sub: '已加载的内容仍可查看' },
-  'no-permission': { icon: '',                     glyph: 'lock',    title: '暂时不能查看',   sub: '当前账号没有查看权限' },
-  permission:      { icon: '',                     glyph: 'lock',    title: '暂时不能查看',   sub: '当前账号没有查看权限' },
-  forbidden:       { icon: '',                     glyph: 'lock',    title: '暂时不能查看',   sub: '当前账号没有查看权限' },
-  'not-started':   { icon: '',                     glyph: 'clock',   title: '还没开始',       sub: '开始后内容会显示在这里' },
+  offline:         { icon: '',                     glyph: 'warning', title: '网络好像断开了', sub: '' },
+  network:         { icon: '',                     glyph: 'warning', title: '网络没连上',     sub: '' },
+  error:           { icon: '',                     glyph: 'warning', title: '出错了',         sub: '' },
+  data:            { icon: '',                     glyph: 'info',    title: '这部分没加载成功', sub: '' },
+  'no-permission': { icon: '',                     glyph: 'lock',    title: '暂时不能查看',   sub: '' },
+  permission:      { icon: '',                     glyph: 'lock',    title: '暂时不能查看',   sub: '' },
+  forbidden:       { icon: '',                     glyph: 'lock',    title: '暂时不能查看',   sub: '' },
+  'not-started':   { icon: '',                     glyph: 'clock',   title: '还没开始',       sub: '' },
   // 2026-08-11:原默认图是 icon_cat.png —— 那是张 32×32 的**分类小图标**(search2 里就写死
   // width:32rpx 当行内图标用),不是插画。铺在空态那块 240rpx 的位置上,深色图形压在暗底页
   // 几乎看不见:走查 B10 拍到的缺参态就是整屏只有文案、没有图。
@@ -28,9 +30,9 @@ const KIND_DEFAULTS = {
   // ⚠️ 改法不是换成 empty 那张位图(我第一版这么干,违反本文件表头第 3-4 行:位图只留给
   // 真正的 empty,其余状态复用 cy-icon 线性图标)。走 glyph:'info' —— 与 offline/no-permission/
   // not-started 同一档做法,视觉身份也与 empty 区分得开。
-  'missing-param': { icon: '',                     glyph: 'info',    title: '页面参数不完整', sub: '这个链接可能已失效,返回上一页重新进入' },
-  'not-found':     { icon: '',                     glyph: 'info',    title: '没有找到内容',   sub: '内容可能已下线或链接已失效' },
-  stale:           { icon: '',                     glyph: 'warning', title: '内容暂时未更新', sub: '当前仍显示上次加载的内容' },
+  'missing-param': { icon: '',                     glyph: 'info',    title: '链接已失效', sub: '请返回重新进入' },
+  'not-found':     { icon: '',                     glyph: 'info',    title: '没有找到内容',   sub: '' },
+  stale:           { icon: '',                     glyph: 'warning', title: '内容暂时未更新', sub: '' },
   loading:         { icon: '',                     glyph: '',        title: '加载中',         sub: '' },
 };
 
@@ -38,6 +40,7 @@ const KIND_DEFAULTS = {
 const LEGACY_DEFAULT = { icon: '', glyph: '', title: '暂无内容', sub: '' };
 
 Component({
+  behaviors: [reducedMotionBehavior],
   properties: {
     icon: { type: String, value: '' },
     // title 默认由 '暂无内容' 改为 ''(空 = 未指定),真正的默认值下沉到 KIND_DEFAULTS.empty.title,

@@ -35,8 +35,14 @@ function ticketIsSoldOut(ticket) {
 
 function parseOfferDeadline(value) {
   if (!value) return '';
-  let date = new Date(value);
-  if (Number.isNaN(date.getTime())) date = new Date(String(value).replace(/-/g, '/'));
+  // 「yyyy-MM-dd HH:mm:ss」先换斜杠再解析(iOS 不认横杠带时分秒);带 T 的 ISO 原样解析
+  // 数字时间戳 / Date 直接用;字符串才需要处理横杠
+  if (typeof value !== 'string') {
+    const direct = new Date(value);
+    return Number.isNaN(direct.getTime()) ? null : direct;
+  }
+  let date = new Date(value.indexOf('T') > 0 ? value : value.replace(/-/g, '/'));
+  if (Number.isNaN(date.getTime())) date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
@@ -402,7 +408,6 @@ Page({
         participantErrorMsg: message || '请稍后重试'
       }, () => that.refreshPaymentState());
       console.error('获取参与人信息失败');
-      toast('参与人信息加载失败，请重试');
     };
     requestContext.task = app.sendRequest({
       url: '/api/user/address/list',
@@ -444,11 +449,11 @@ Page({
             that.refreshPaymentState();
           });
         } else {
-          showLoadError((res && res.msg) || '返回的数据暂时不可用');
+          showLoadError((res && res.msg) || '加载失败，请重试');
         }
       },
       fail: function (res) {
-        showLoadError('网络开了点小差，请稍后重试');
+        showLoadError('网络异常，请重试');
       }
     });
     return requestContext.task;
@@ -748,7 +753,7 @@ Page({
       fail: function (res) {
         if (!isCurrent()) return;
         finish();
-        that.setData({ pageState: 'error', signupState: 'error', loadErrorMsg: '网络开了点小差，请稍后重试' });
+        that.setData({ pageState: 'error', signupState: 'error', loadErrorMsg: '加载失败，请重试' });
       }
     });
     return requestContext.task;
@@ -868,7 +873,7 @@ Page({
             waitlistState: 'UNKNOWN',
             waitlistEligibility: 'UNKNOWN',
             waitlistJoinAllowed: false,
-            waitlistError: '候补状态数据不完整，请重试',
+            waitlistError: '候补状态加载失败，请重试',
             waitlistOfferId: null,
             waitlistOfferToken: '',
             waitlistRegistrationId: null,
@@ -903,7 +908,7 @@ Page({
         });
       },
       fail() {
-        that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络错误，请重试候补状态' },
+        that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络异常，请重试候补状态' },
           () => that.refreshPaymentState());
       }
     });
@@ -976,7 +981,7 @@ Page({
           () => that.refreshPaymentState());
       },
       fail() {
-        that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络错误，请重试加入候补' },
+        that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络异常，请重试加入候补' },
           () => that.refreshPaymentState());
       }
     });
@@ -1022,7 +1027,7 @@ Page({
               () => that.refreshPaymentState());
           },
           fail() {
-            that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络错误，请重试退出候补' },
+            that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络异常，请重试退出候补' },
               () => that.refreshPaymentState());
           }
         });
@@ -1041,61 +1046,8 @@ Page({
    */
   toggleDiscount() {
     const that = this;
-    const useDiscount = !that.data.useDiscount;
-    
-    let discountAmount = 0;
-    let usedPoints = 0;
-    
-    if (useDiscount) {
-      // 计算可抵扣金额：1积分 = 0.02元
-      const maxDiscount = 50; // 最多抵扣50元
-      const pointValue = 0.02; // 1积分价值
-      
-      // 获取用户积分
-      const userPoints = that.data.userInfo.point || 0;
-      const calculatedDiscount = userPoints * pointValue;
-      
-      // 取计算值和最大值中的较小值
-      discountAmount = Math.min(calculatedDiscount, maxDiscount);
-      
-      // 如果票务价格小于可抵扣金额，则最多抵扣票务价格
-      const ticketPrice = that.data.selectedTicket ? that.data.selectedTicket.price : 0;
-      discountAmount = Math.min(discountAmount, ticketPrice);
-      
-      // 保留两位小数
-      discountAmount = Math.round(discountAmount * 100) / 100;
-      
-      // 计算实际使用的积分
-      let theoreticalPoints = Math.round(discountAmount / pointValue);
-      
-      const maxPointsFromDiscount = Math.floor(maxDiscount / pointValue);
-      const maxPointsFromPrice = Math.floor(ticketPrice / pointValue);
-      
-      usedPoints = Math.min(
-        theoreticalPoints,
-        userPoints,
-        maxPointsFromDiscount,
-        maxPointsFromPrice
-      );
-      
-      // 重新计算实际的折扣金额
-      discountAmount = Math.min(usedPoints * pointValue, ticketPrice, maxDiscount);
-      discountAmount = Math.round(discountAmount * 100) / 100;
-    }
-    
-    // 计算总金额
-    const baseAmount = that.data.selectedTicket ? that.data.selectedTicket.price : 0;
-    const totalAmount = Math.max(0, baseAmount - discountAmount);
-    
-    that.setData({
-      useDiscount: useDiscount,
-      discountAmount: discountAmount,
-      totalAmount: parseFloat(totalAmount.toFixed(2)),
-      usedPoints: usedPoints,
-      submitError: ''
-    }, () => that.refreshPaymentState());
-    // M0-1 实扣报价一致:本地仅做即时估算,随即用服务端 quote 覆盖为权威金额
-    that.refreshQuote();
+    // D1(owner 2026-10-23):抵扣额只认服务端报价,本地不再按汇率/上限估算;切换后先回到票面价等报价覆盖
+    that.setData({ useDiscount: !that.data.useDiscount, submitError: '' }, () => that.recalculateDiscount());
   },
 
   /**
@@ -1160,6 +1112,12 @@ Page({
             toast(noPoints ? '暂无可用积分' : '该票不支持积分抵扣');   // T32:0 积分用户的真实原因是没积分
           }
           if (pay > 0) that.checkPaymentReadiness();
+        } else if (res && res.msg) {
+          // F-W1-05:报价被拒(如主题尚未开售)要说出真实原因,不能停在「重新检查支付服务」。
+          that.setData({ submitError: String(res.msg) });
+          if (Number(that.data.totalAmount || 0) > 0 && !that.data.paymentReadinessChecking) {
+            that.checkPaymentReadiness();
+          }
         }
       }
     });
@@ -1170,57 +1128,15 @@ Page({
    */
   recalculateDiscount() {
     const that = this;
-    const { useDiscount, userInfo, selectedTicket } = that.data;
-    
-    if (useDiscount) {
-      let discountAmount = 0;
-      let usedPoints = 0;
-      
-      // 计算可抵扣金额
-      const maxDiscount = 50;
-      const pointValue = 0.02;
-      const userPoints = userInfo.point || 0;
-      const ticketPrice = selectedTicket ? selectedTicket.price : 0;
-      
-      // 计算理论最大可抵扣金额
-      const calculatedDiscount = userPoints * pointValue;
-      discountAmount = Math.min(calculatedDiscount, maxDiscount, ticketPrice);
-      discountAmount = Math.round(discountAmount * 100) / 100;
-      
-      // 计算实际使用的积分
-      let theoreticalPoints = Math.round(discountAmount / pointValue);
-      
-      const maxPointsFromDiscount = Math.floor(maxDiscount / pointValue);
-      const maxPointsFromPrice = Math.floor(ticketPrice / pointValue);
-      
-      usedPoints = Math.min(
-        theoreticalPoints,
-        userPoints,
-        maxPointsFromDiscount,
-        maxPointsFromPrice
-      );
-      
-      // 重新计算实际的折扣金额
-      discountAmount = Math.min(usedPoints * pointValue, ticketPrice, maxDiscount);
-      discountAmount = Math.round(discountAmount * 100) / 100;
-      
-      // 计算总金额
-      const totalAmount = Math.max(0, ticketPrice - discountAmount);
-      
-      that.setData({
-        discountAmount: discountAmount,
-        totalAmount: parseFloat(totalAmount.toFixed(2)),
-        usedPoints: usedPoints
-      }, () => that.refreshPaymentState());
-    } else {
-      // 如果不使用折扣，重置使用的积分为0
-      const ticketPrice = selectedTicket ? selectedTicket.price : 0;
-      that.setData({
-        totalAmount: parseFloat(ticketPrice.toFixed(2)),
-        usedPoints: 0
-      }, () => that.refreshPaymentState());
-    }
-    // M0-1:用服务端 quote 覆盖为权威金额
+    const { selectedTicket } = that.data;
+    // D1(owner 2026-10-23):积分汇率与单笔上限只在服务端(sys_config),端上不算可抵扣额。
+    // 报价回来之前按票面价展示、抵扣记 0;refreshQuote 用 /api/registration/quote 的权威金额覆盖。
+    const ticketPrice = selectedTicket ? Number(selectedTicket.price) || 0 : 0;
+    that.setData({
+      discountAmount: 0,
+      totalAmount: parseFloat(ticketPrice.toFixed(2)),
+      usedPoints: 0
+    }, () => that.refreshPaymentState());
     that.refreshQuote();
   },
 
@@ -1231,7 +1147,7 @@ Page({
      到点会对着死页面 setData 并强行 redirect。 */
   /* 2026-09-06 用户裁决:买完就直接跳,面板上不放按钮 —— B 模式(teamMode=2)也一样。
      建队入口没有丢:落地的订单详情页有「和队友一起出发」整张卡(见
-     components/cy/scene-member-order-detail/index.wxml 的 teamMode == 2 分支,
+     components/cy/scene-member-order-detail/index.wxml 的 info.teamOpen 分支(A/B 两种模式),
      文案同样写明「组队与否不影响活动举行」)。面板本来就是要跳去那一页的,
      等于把入口放在了用户下一秒就会看到的地方,而不是拦在半路让他先选一次。 */
   showSignupSuccess({ title, detail }) {
@@ -1437,7 +1353,7 @@ Page({
               // 旧代码直接把这些单判成「支付参数不完整」→ onPayFail → 取消订单 → 同一 requestId
               // 再点又重放这张已取消的单,形成死循环。这里照主题自玩页的先例补一次取参数。
               if (Number(payableAmount) > 0 && !hasCompletePaymentParams(res.data)) {
-                cyLoading.show('获取支付参数...');
+                cyLoading.show('正在发起支付…');
                 app.sendRequest({
                   url: '/api/registration/pay',
                   method: 'POST',
@@ -1459,7 +1375,7 @@ Page({
                       return;
                     }
                     that.setData({ isPaying: false }, () => that.refreshPaymentState());
-                    cb({ ok: false, msg: (payRes && payRes.msg) || '支付参数获取失败，请重试' });
+                    cb({ ok: false, msg: (payRes && payRes.msg) || '支付发起失败，请重试' });
                   },
                   fail: function () {
                     cyLoading.hide();
@@ -1539,7 +1455,7 @@ Page({
     }
 
     if (that.data.waitlistEligibility === 'ALREADY_REGISTERED') {
-      app.tips('已有该票种报名，别重复提交');
+      app.tips('已有该票种报名，请勿重复提交');
       return;
     }
 
@@ -1771,11 +1687,13 @@ Page({
           submitError: '',
           waitlistState: that.data.waitlistOfferId ? 'CONVERTED' : that.data.waitlistState
         }, () => that.refreshPaymentState());
+        const registrationId = data.registrationId || data.id || that._regId || '';
         analytics.track('signup_submit', {
+          eventKey: registrationId ? 'signup_submit_registration_' + registrationId : undefined,
           bizType: 'activity',
           bizId: that.data.activityId,
           properties: {
-            registrationId: data.id || '',
+            registrationId: registrationId,
             payableAmount: data.payableAmount
           }
         });
@@ -1794,7 +1712,7 @@ Page({
         that.setData({
           verifyingPayment: true,
           resultSheet: { show: true, kind: 'loading', title: '确认支付结果',
-            sub: '正在和微信核对这笔付款。', meta: '', pill: '', why: '',
+            sub: '正在确认支付', meta: '', pill: '', why: '',
             primaryText: '', secondaryText: '', duration: 0 },
         });
       },
@@ -1808,11 +1726,13 @@ Page({
         cyLoading.hide();
         // 成功由 finishSignup 把面板改写成 success 态(loading → success 同一块面板),
         // 这里不收 —— 收了会先闪一下空白再弹一次。
+        const registrationId = data.registrationId || data.id || that._regId || '';
         analytics.track('payment_success', {
+          eventKey: registrationId ? 'payment_success_registration_' + registrationId : undefined,
           bizType: 'activity',
           bizId: that.data.activityId,
           properties: {
-            registrationId: data.id || '',
+            registrationId: registrationId,
             payableAmount: data.payableAmount || 0
           }
         });
@@ -1837,7 +1757,7 @@ Page({
           // 面板负责「说清楚发生了什么」并自愈;重试出口是页内那条 submitError,
           // 它一直留在页上 —— 恢复动作不能放进会自己消失的面板里。
           // 原来这里还会再 app.tips 一次,和面板+页内错误就是同一句话说三遍,故去掉。
-          resultSheet: { show: true, kind: 'fail', title: '这笔没有付成功', sub: '钱没有扣,可以直接重试。',
+          resultSheet: { show: true, kind: 'fail', title: '这笔没有付成功', sub: '未扣款，可重试',
             meta: '', pill: '', why: message, primaryText: '', secondaryText: '', duration: SUCCESS_HOLD_MS },
         }, () => that.refreshPaymentState());
         that.cancelPendingOrder({ stayOnPage: true });
@@ -1849,7 +1769,7 @@ Page({
           () => that.refreshPaymentState());
         modal.show({
           title: '支付结果待确认',
-          content: '暂不要重复支付，请稍后到订单中查看最终状态。',
+          content: '请勿重复支付，稍后到订单中查看结果',
           showCancel: false
         });
       }

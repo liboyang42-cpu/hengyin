@@ -43,6 +43,15 @@ import static org.mockito.Mockito.when;
  * 以及「整个序列化结果里搜不到答案字段」。
  */
 class ApiPlayEncounterControllerTest {
+    @Test void r5CheckRoutingMarkerUsesFrozenNodeAndNeverLiveDraft() throws Exception {
+        ObjectMapper json=new ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode frozen=json.createObjectNode();frozen.putObject("themeConfig");
+        com.fasterxml.jackson.databind.node.ObjectNode cfg=(com.fasterxml.jackson.databind.node.ObjectNode)json.readTree(CONFIG);cfg.putObject("outcomeRules").put("version",1);
+        frozen.putObject("nodeConfigs").set(String.valueOf(NODE),cfg);session.setConfigSnapshotJson(frozen.toString());
+        assertEquals(1,json.valueToTree(data(controller.encounter(TOPIC,null,NODE))).path("config").path("outcomeRulesVersion").asInt());
+        cfg.remove("outcomeRules");session.setConfigSnapshotJson(frozen.toString());template.setAdvancedConfigJson(CONFIG.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"outcomeRules\":{\"version\":1}"));
+        assertFalse(json.valueToTree(data(controller.encounter(TOPIC,null,NODE))).has("config"));
+    }
 
     private static final Long MEMBER = 71L;
     private static final Long TOPIC = 73L;
@@ -127,6 +136,16 @@ class ApiPlayEncounterControllerTest {
         session.setVersion(3);
         givenState("{}", "[]");
         when(routeSessionMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(java.util.Collections.singletonList(session));
+        // Current lookup follows this fixture's exact scope, including activity changes in team cases.
+        // The legacy list above still controls missing/ambiguous/foreign omitted-activity gates.
+        when(routeSessionMapper.selectCurrentByOwner(any(), any(), any())).thenAnswer(invocation -> {
+            Long activity = invocation.getArgument(0);
+            Long topic = invocation.getArgument(1);
+            Long memberId = invocation.getArgument(2);
+            return session != null && java.util.Objects.equals(activity, session.getActivityId())
+                    && java.util.Objects.equals(topic, session.getTopicId())
+                    && java.util.Objects.equals(memberId, session.getMemberId()) ? session : null;
+        });
 
         when(shopDayProofService.hasArrived(MEMBER, 0L, NODE)).thenReturn(false);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(new ArrayList<>());

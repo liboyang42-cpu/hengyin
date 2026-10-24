@@ -102,6 +102,23 @@ class ApiPlayThoughtSyncTest {
         verify(runtime).syncThoughts(eq(7L), eq(10L), eq(0L), eq(Arrays.asList("afternoon")), eq(-1), eq(0L));
     }
 
+    /** F-R2S-01:微信换钥失败/读数过期不能变成 500 或拦住认领 —— 按「没有读数」继续,步数基线不动。 */
+    @Test
+    void unreadableWeRunCipherFallsBackToClaimWithoutSteps() {
+        ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
+        ApiPlayJourneyActionController controller = controllerWith(runtime, 3120);
+        doThrow(new RuntimeException("code2session failed")).when(controller).decryptTodaySteps(any(Map.class));
+        when(runtime.syncThoughts(anyLong(), anyLong(), anyLong(), anyList(), anyInt(), anyLong())).thenReturn(new TopicRouteState());
+
+        AjaxResult result = controller.syncThoughts(body(Arrays.asList("afternoon")));
+        assertEquals(200, result.get("code"));
+        assertEquals("步数暂未同步，念头已记录", result.get("msg"));
+        verify(runtime).syncThoughts(eq(7L), eq(10L), eq(0L), eq(Arrays.asList("afternoon")), eq(-1), eq(0L));
+
+        doThrow(new IllegalArgumentException("微信运动读数已过期，请重新同步")).when(controller).decryptTodaySteps(any(Map.class));
+        assertEquals(200, controller.syncThoughts(body(null)).get("code"));
+    }
+
     /** controller 不许自己开事务(见类注释)。 */
     @Test
     void controllerDoesNotOpenItsOwnTransaction() throws Exception {

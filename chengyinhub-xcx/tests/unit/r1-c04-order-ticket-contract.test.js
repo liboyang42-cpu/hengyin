@@ -40,7 +40,7 @@ function assertMyCanyuInfoStates(rawWxml) {
   // 整屏无按钮(受控截图 05)。现在钉「动作槽由状态驱动」,具体分档行为由
   // c04-r2-recovery-path-contract.test.js 行为级断言。
   // 总控根因修复轮:补了 fill(整屏居中吃满剩余空间),标签末尾跟在 bind:retry 后面
-  assert.match(wxml, /<cy-error\s+wx:elif="\{\{loadState === 'error'\}\}"[^>]*retry="\{\{errorActionText\}\}"[^>]*bind:retry="onErrorAction"[^>]*\/>/)
+  assert.match(wxml, /<cy-error load-failure\s+wx:elif="\{\{loadState === 'error'\}\}"[^>]*retry="\{\{errorActionText\}\}"[^>]*bind:retry="onErrorAction"[^>]*\/>/)
   assert.doesNotMatch(wxml, /retry="\{\{id \? '重试' : ''\}\}"/, '缺参数时不得退回空动作槽')
   assert.match(wxml, /<block\s+wx:else>/, 'ready 态必须与 loading/error 互斥')
 }
@@ -154,7 +154,7 @@ test('C04 complaint: 使用统一导航并区分 loading、error、empty 三态'
   assert.match(wxml, /<cy-page-title\s+title="投诉与建议"/)
   // aaa 三件套(整屏空态补 fill+size=lg)后属性顺序变了，正则放宽到"包含"而非"紧邻"，断言意图不变
   assert.match(wxml, /<cy-skeleton\b[^>]*wx:if="\{\{loading\}\}"[^>]*type="form-section"[^>]*loading-label="正在加载可投诉的活动"[^>]*\/>/)
-  assert.match(wxml, /<cy-error\b[^>]*\btitle="可投诉活动没能加载出来"[^>]*\bsub="\{\{errorMsg\}\}"[^>]*\bbind:retry="onRetry"[^>]*\/>/)
+  assert.match(wxml, /<cy-error\b[^>]*\btitle="可投诉活动加载失败"[^>]*\bsub="\{\{errorMsg\}\}"[^>]*\bbind:retry="onRetry"[^>]*\/>/)
   assert.match(wxml, /<cy-empty\b[^>]*\bkind="empty"[^>]*\btitle="暂无可投诉的活动"/)
   assert.doesNotMatch(wxml, /class="cp-title"/, '页面标题不能与表单内同名标题重复')
   assert.doesNotMatch(wxml, /class="cp-copy"/, '标题副文案存在时，卡内不得保留同义说明')
@@ -182,7 +182,7 @@ test('C04 order: 订单列表使用注册过的统一 skeleton 与中性主 CTA'
   assert.match(
     rule(wxss, '.orderbox_li'),
     /margin:\s*0\s+0\s+var\(--cy-space-5\)|margin:\s*0\s+0\s+var\(--cy-scene-card-gap,\s*var\(--cy-space-5\)\)/,
-    '卡间距必须解析到 --cy-space-5(可经 --cy-scene-card-gap 兜底)'
+    '卡间距必须解析到 --cy-space-5(可经 --cy-scene-card-gap 保底)'
   )
 })
 
@@ -195,7 +195,7 @@ test('C04 orderinfo: loading 组件化、危险动作描边且不与快捷主动
   const wxss = read('subpackageMember/components/cy/scene-member-order-detail/index.wxss')
   assert.match(json, /"cy-empty":\s*"\/components\/cy\/empty\/index"/)
   assert.match(wxml, /<cy-empty[^>]*wx:if="\{\{loadState==='loading'\}\}"[^>]*kind="loading"[^>]*title="订单详情加载中"[^>]*\/>/)
-  assert.match(wxml, /wx:if="\{\{showSecondaryTicket\}\}"\s+class="sec-btn sec-solid"/, '查看票夹次级动作必须按 showSecondaryTicket 受控展示,不与主 CTA 同屏抢位')
+  assert.match(wxml, /wx:if="\{\{showSecondaryTicket\}\}"\s+class="sec-btn sec-solid"/, '查看票夹次级动作必须按 showSecondaryTicket 受控展示，不与主 CTA 同屏抢位')
   assert.match(rule(wxss, '.body'), /padding:\s*0\s+var\(--cy-page-x\)/, '订单主体必须与页面统一左右边距对齐')
   const cancel = rule(wxss, '.sec-danger')
   assert.match(cancel, /background:\s*transparent/)
@@ -230,7 +230,7 @@ test('C04 mycanyuinfo: 详情标题、三态和真实底部动作一致', () => 
   assert.match(
     read('utils/scene-registry.js'),
     /'member-participation-detail':\s*\{[^}]*title:\s*'参与详情'/,
-    '弹窗标题取自注册表,必须与页面壳一致'
+    '弹窗标题取自注册表，必须与页面壳一致'
   )
   assertMyCanyuInfoStates(wxml)
   assert.match(js, /onErrorAction\(\)\s*\{/)

@@ -73,6 +73,8 @@ class RefundMultiPartyClawbackTest {
         ReflectionTestUtils.setField(svc, "merchantReferralBountyService",
                 mock(com.chengyinhub.business.service.impl.MerchantReferralBountyService.class));
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
+        org.mockito.Mockito.when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(call -> cmsRegistrationMapper.selectCmsRegistrationById(call.getArgument(0)));
         when(cmsRegistrationMapper.claimRegistrationRefunded(anyLong(), any(), any())).thenReturn(1);
         // [P0-1] 本类断言的是「扣多少」,前提是**该扣** = 系统1 已真打过款(is_settlement=1)。
         //        该前提现在必须显式给,否则冲销闸判「没打过款」→ 一分不扣 → 本类断言全落空。
@@ -112,6 +114,8 @@ class RefundMultiPartyClawbackTest {
         when(refundApplicationMapper.selectRefundApplicationById(1L)).thenReturn(refund);
 
         CmsRegistration reg = new CmsRegistration();
+        reg.setPaymentStatus(2);
+        reg.setPayableAmount(new BigDecimal("100"));
         reg.setId(10L);
         reg.setOwnerType(2L);   // 活动报名
         reg.setOwnerId(77L);

@@ -18,7 +18,7 @@ function assertDisabledReadsField(wxml, buttonText, field) {
 // 只剩「联系客服提现」一个动作。旧契约(按钮只读 canSubmit)随表单一起作废,这里改成反向断言。
 function assertTixianFormRetired(js, wxml) {
   assert.doesNotMatch(wxml, /canSubmit/, '表单退役后页面不得再有资金提交门闩')
-  assert.doesNotMatch(js, /canSubmit/, '同上门闩字段必须随表单一起删除,不能留在 js 里')
+  assert.doesNotMatch(js, /canSubmit/, '同上门闩字段必须随表单一起删除，不能留在 js 里')
   assert.doesNotMatch(wxml, /placeholder-class="tx-placeholder"|bindinput=/, '页面不得再采集姓名/银行账号/手机号')
   assert.match(wxml, /bindtap="saveData"/, '页面唯一的提现动作是联系客服(弹客服微信)')
 }
@@ -129,9 +129,9 @@ test('专业发布：发布主动作读取 JS 派生状态(平铺后只剩这一
   const primary = wxml.match(/<cy-btn[^>]*bindtap="submitForm"[^>]*>[\s\S]*?<\/cy-btn>/)
   assert.ok(primary, '发布主动作必须存在')
   assert.match(primary[0], /disabled="\{\{!canPublish\}\}"/, '发布按钮的可用态必须来自 JS 派生的 canPublish')
-  assert.match(primary[0], /loading="\{\{submitting\}\}"/, '提交中必须有 loading 态,不能重复点')
+  assert.match(primary[0], /loading="\{\{submitting\}\}"/, '提交中必须有 loading 态，不能重复点')
   assert.match(primary[0], /submitting \? '发布中\.\.\.' : '发布'/, '提交中文案必须切换')
-  assert.doesNotMatch(wxml, /canAdvanceRoute/, '步骤已退役,不该再有下一步闸的残留接线')
+  assert.doesNotMatch(wxml, /canAdvanceRoute/, '步骤已退役，不该再有下一步闸的残留接线')
   assert.match(js, /canPublish:\s*false/)
   assert.match(js, /refreshPrimaryActionState\s*\(\)/)
   assert.match(js, /setData\(patch, \(\) => that\.refreshPrimaryActionState\(\)\)/)
@@ -148,7 +148,6 @@ const PUBLISH_FORM_ROUTES = [
   ['pages/publish/activity/index.wxml', 'canContinue'],
   ['pages/publish/fabu/index.wxml', 'canPublish'],
   ['pages/publish/fabu/step3.wxml', 'canSaveTicket'],
-  ['pages/publish/templateadd/templateadd.wxml', 'canSubmit'],
   ['pages/publish/temp/index.wxml', 'canOpenPreview'],
   ['pages/publish/temp/index.wxml', 'canPublishGame'],
   ['pages/publish/simple/index.wxml', 'canEnterAiEditor'],
@@ -222,12 +221,12 @@ test('负控：商家据点把始终可见的玩法配置升级为 primary 必�
   assert.equal((broken.match(/variant="primary"/g) || []).length, 3)
 })
 
-test('玩法模板命名：确认按钮不在 WXML 计算 trim，只读 canSubmit', () => {
-  const js = read('pages/publish/templateadd/templateadd.js')
-  const wxml = read('pages/publish/templateadd/templateadd.wxml')
-  assertDisabledReadsField(wxml, '确认', 'canSubmit')
-  assert.match(js, /canSubmit:\s*false/)
-  assert.doesNotMatch(wxml, /\.trim\(\)/)
+// 2026-10-23 业主第四轮去掉「起名字」一步:引导页「开始创建」直接进 temp 编辑器,起名页 templateadd 整页删除。
+test('玩法模板起名页已退役删除:不得注册、不得残留页面文件', () => {
+  const app = JSON.parse(read('app.json'))
+  const routes = app.pages.concat((app.subPackages || []).flatMap((sp) => sp.pages.map((p) => sp.root.replace(/\/$/, '') + '/' + p)))
+  assert.equal(routes.includes('pages/publish/templateadd/templateadd'), false, 'templateadd 不得再注册')
+  assert.equal(fs.existsSync(path.join(ROOT, 'pages/publish/templateadd/templateadd.wxml')), false, 'templateadd 页面文件必须删除')
 })
 
 const SIMPLE_FORM_ROUTES = [
@@ -302,12 +301,12 @@ test('主题评价与票种编辑：输入完成前禁用主按钮', () => {
   assert.match(fabuJs, /refreshTicketSaveState\s*\(\)/)
 })
 
-test('账号注销：勾选确认且填写验证码后才开放危险主操作', () => {
+test('账号注销：服务端验证方式加确认或短信才开放危险主操作', () => {
   const js = read('utils/deregister-flow.js')
   const wxml = read('components/cy/scene-settings-deregister/index.wxml')
-  assert.match(wxml, /disabled="\{\{!canApply\}\}"[^>]*>确认申请注销<\/cy-btn>/)
+  assert.match(wxml, /disabled="\{\{!canApply\}\}"[^>]*>\{\{verificationMethod === \'WECHAT\' \? \'微信确认并申请注销\' : \'确认申请注销\'\}\}<\/cy-btn>/)
   assert.match(js, /canApply:\s*false/)
-  assert.match(js, /refreshApplyState\s*\(\)[\s\S]*confirmed[\s\S]*smscode/)
+  assert.match(js, /refreshApplyState\s*\(\)[\s\S]*status === 'ELIGIBLE'[\s\S]*confirmed[\s\S]*verificationMethod === 'WECHAT'[\s\S]*verificationMethod === 'SMS'[\s\S]*smscode/)
 })
 
 test('活动结算：复杂支付条件收口到 JS canPay，WXML 不重复业务公式', () => {

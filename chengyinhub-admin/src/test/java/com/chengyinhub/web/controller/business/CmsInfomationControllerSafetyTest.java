@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -51,8 +52,8 @@ class CmsInfomationControllerSafetyTest {
 
     @Test
     void writeEndpointsAcceptOnlyWhitelistedFieldsAndUseAuthenticatedAdmin() {
-        when(service.insertCmsInfomation(any(CmsInfomation.class))).thenReturn(1);
-        when(service.updateCmsInfomation(any(CmsInfomation.class))).thenReturn(1);
+        when(service.insertCmsInfomation(any(CmsInfomation.class), eq("新增原因"), eq(1L), eq("guide-admin"))).thenReturn(1);
+        when(service.updateCmsInfomation(any(CmsInfomation.class), eq("编辑原因"), eq(1L), eq("guide-admin"))).thenReturn(1);
 
         CmsInfomationWriteDTO created = request("新增说明", "新增原因");
         created.setId(88L);
@@ -64,8 +65,8 @@ class CmsInfomationControllerSafetyTest {
 
         ArgumentCaptor<CmsInfomation> createdCaptor = ArgumentCaptor.forClass(CmsInfomation.class);
         ArgumentCaptor<CmsInfomation> editedCaptor = ArgumentCaptor.forClass(CmsInfomation.class);
-        verify(service).insertCmsInfomation(createdCaptor.capture());
-        verify(service).updateCmsInfomation(editedCaptor.capture());
+        verify(service).insertCmsInfomation(createdCaptor.capture(), eq("新增原因"), eq(1L), eq("guide-admin"));
+        verify(service).updateCmsInfomation(editedCaptor.capture(), eq("编辑原因"), eq(1L), eq("guide-admin"));
         assertEquals(null, createdCaptor.getValue().getId());
         assertEquals("guide-admin", createdCaptor.getValue().getCreateBy());
         assertEquals(null, createdCaptor.getValue().getUpdateBy());
@@ -83,7 +84,7 @@ class CmsInfomationControllerSafetyTest {
     }
 
     @Test
-    void auditReasonIsAcceptedForOperationLogButNeverExposedToMiniProgramReads() throws Exception {
+    void auditReasonIsAcceptedForPrivateAuditButNeverExposedToMiniProgramReads() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         CmsInfomationWriteDTO submitted = objectMapper.readValue("{\"title\":\"玩法\",\"auditReason\":\"更新文案\"}", CmsInfomationWriteDTO.class);
 

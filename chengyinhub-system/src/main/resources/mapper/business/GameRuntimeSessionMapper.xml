@@ -42,6 +42,41 @@
          #{startedAt}, #{deadlineAt}, #{completedAt}, #{createTime}, #{updateTime})
     </insert>
 
+    <select id="selectOwnerByInstance" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+         where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
+           and s.owner_type=#{ownerType} and s.owner_id=#{ownerId} and s.play_instance_id=#{playInstanceId}
+         limit 1
+    </select>
+
+    <select id="selectLatestZeroChallenge" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
+          and s.owner_type=#{ownerType} and s.owner_id=#{ownerId}
+          and json_valid(s.state_json)
+          and json_extract(s.state_json,'$.zeroChallengeInstance') is not null
+          <choose>
+            <when test="gameSessionId != null and authorityEpoch != null">
+              and (cast(json_unquote(json_extract(s.state_json,'$.originalGameSessionId')) as unsigned)=#{gameSessionId}
+                   or json_extract(s.state_json,'$.originalGameSessionId') is null
+                      and s.play_instance_id like concat('game:',#{gameSessionId},':challenge:%'))
+              and cast(json_unquote(json_extract(s.state_json,'$.runtimeAuthorityEpoch')) as unsigned)=#{authorityEpoch}
+            </when>
+            <when test="routeSessionId != null">
+              and (cast(json_unquote(json_extract(s.state_json,'$.originalRouteSessionId')) as unsigned)=#{routeSessionId}
+                   or json_extract(s.state_json,'$.originalRouteSessionId') is null and exists (
+                       select 1 from topic_route_action a join topic_route_session r on r.id=a.session_id
+                        where r.id=#{routeSessionId} and r.activity_id=s.activity_id and r.topic_id=s.topic_id
+                          and r.member_id=s.owner_id and a.member_id=s.owner_id and a.node_id=s.node_id
+                          and a.outcome_code='CHALLENGE' and json_valid(a.response_json)
+                          and json_unquote(json_extract(a.response_json,'$.instanceId'))=
+                              json_unquote(json_extract(s.state_json,'$.zeroChallengeInstance'))))
+            </when>
+            <otherwise>and 1=0</otherwise>
+          </choose>
+        order by s.id desc limit 1
+    </select>
+
     <select id="selectByOwner" resultMap="GameRuntimeSessionResult">
         select <include refid="columns"/> from game_runtime_session s
         where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.node_id=#{nodeId}
@@ -52,6 +87,9 @@
         limit 1
     </select>
 
+    <select id="selectByIdForUpdate" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s where s.id=#{id} for update
+    </select>
     <select id="selectAccessibleById" resultMap="GameRuntimeSessionResult">
         select <include refid="columns"/> from game_runtime_session s
         where s.id=#{id} and (
@@ -112,6 +150,12 @@
             completed_units=#{completedUnits}, completed_at=#{completedAt},
             version=version+1, update_time=#{updateTime}
         where id=#{id} and version=#{version} and status=0
+    </update>
+
+    <update id="updateFeedbackStateCas" parameterType="com.chengyinhub.business.domain.GameRuntimeSession">
+        update game_runtime_session set state_json=#{stateJson},version=version+1,update_time=#{updateTime}
+        where id=#{id} and version=#{version} and owner_type=#{ownerType} and owner_id=#{ownerId}
+          and status=#{status} and status in (1,2,3)
     </update>
 
     <update id="restartTerminalCas" parameterType="com.chengyinhub.business.domain.GameRuntimeSession">

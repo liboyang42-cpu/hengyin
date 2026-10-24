@@ -2,34 +2,54 @@ const modal = require('../../../utils/modal.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
+const { chinaParts } = require('../../../utils/datetime.js');
+const themeRecords = require('../../../utils/theme-records.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+function recordsRequest(url, method, data, header) {
+  return new Promise(resolve => app.sendRequest({ url, method, data, header, hideLoading: true, autoErrorToast: false,
+    success: res => resolve(res || {}), successStatusAbnormal: () => resolve({ code: 'fail' }), fail: () => resolve({ code: 'fail', netFail: true }) }));
+}
 /* 结果面板终态停留时长;跳转挂在面板 close 上,时长只此一处 */
 const RESULT_SHEET_MS = 2000;
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { createCheckoutWorkflow, isOrderExpiredFailure, isTerminalOrderConflict,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
+const subscribe = require('../../../utils/subscribe.js');
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
 const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
-const { haversine } = require('../../../utils/geo.js');
+const { haversine, distanceText } = require('../../../utils/geo.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
+const { decodeDisplayText } = require('../../../utils/display-text.js');
+const contentReport = require('../../../utils/content-report.js');
+const reportSheet = require('../../../utils/community-report-sheet.js');
+const mediaPreview = require('../../../utils/media-preview.js');
+const motion = require('../utils/topic-motion.js');
+const KB_MS = 3600;          // 封面每张停留时长
+const DOCK_MS = 620;         // 价格/收藏停靠动画时长(慢-快-慢)
 
-/* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
-   接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
-   直线估算(80m/min ≈ 4.8km/h),拿不到坐标就整行不画,不编一个数字充数。
-   ⚠️ 不要拿 node.nodeTime 顶替:那一列的注释写着「建议停留时长(分钟)」,
-      是「在这站待多久」,不是「走多久到下一站」。 */
-const WALK_METERS_PER_MIN = 80;
+// 只接受真实数值/十进制数字串；先验类型，不能把布尔、数组或空值强转为坐标。
+function routeCoordinate(value, limit) {
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  if (typeof value === 'string' && !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim())) return null;
+  const number = Number(value);
+  return Number.isFinite(number) && Math.abs(number) <= limit ? number : null;
+}
+function routePoint(row) {
+  if (!row || typeof row !== 'object' || Array.isArray(row)) return null;
+  const latitude = routeCoordinate(row.latitude === undefined ? row.lat : row.latitude, 90);
+  const longitude = routeCoordinate(row.longitude === undefined ? row.lng : row.longitude, 180);
+  return latitude === null || longitude === null ? null : { latitude, longitude };
+}
+// 只有站点坐标，没有道路距离和实际步行时长；nodeTime 是停留时长，不能代替交通时间。
 function walkText(prev, node) {
-  if (!prev || !node) return '';
-  const la1 = Number(prev.latitude); const lo1 = Number(prev.longitude);
-  const la2 = Number(node.latitude); const lo2 = Number(node.longitude);
-  if (![la1, lo1, la2, lo2].every(Number.isFinite)) return '';
-  if (!la1 || !lo1 || !la2 || !lo2) return '';
-  const meters = haversine(la1, lo1, la2, lo2);
+  const a = routePoint(prev), b = routePoint(node);
+  if (!a || !b) return '';
+  const meters = haversine(a.latitude, a.longitude, b.latitude, b.longitude);
   if (!Number.isFinite(meters) || meters <= 0) return '';
-  return Math.max(1, Math.round(meters / WALK_METERS_PER_MIN)) + 'min 步行';
+  return '直线约 ' + distanceText(meters) + '';
 }
 
 /* CU-C-65:站点级字段裸插值会把 null 印成字面「null」(WXML 文本插值对 null 就是这么做的,
@@ -65,12 +85,25 @@ function hasTopicDetail(data) {
   return true;
 }
 
+// FOLLOWUP-A-1:只有公开可见(审核通过且上架)、且不是本人的主题才给举报;口径同后端 /api/topic/report。
+function canReportTopic(info, me) {
+  if (!info || Number(info.isOwner) === 1) return false;
+  if (me && String(info.memberId || '') === String(me)) return false;
+  return Number(info.status) === 1 && Number(info.userStatus) === 1;
+}
+
 Page({
+  ...themeRecords.methods(recordsRequest, false),
+  openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
   data: {
+    ...themeRecords.data,
     // 选场次 / 选票种弹层(稿 11 240:401 · 11a 240:446)
     sessionPicker: { show: false },
     clubSheetShow: false,
     clubSheetItems: [],
+    canReport: false,
+    reportReasonShow: false,
+    reportReasonItems: [],
     resultSheet: { show: false, kind: 'success', title: '', sub: '', meta: '', pill: '',
       why: '', duration: RESULT_SHEET_MS,
       consentName: '', consentChecked: false, consentState: 'idle', consentError: '' },
@@ -78,7 +111,17 @@ Page({
     // cy-tabs 的数据源。2026-08-05 从手抄组件类名(<view class="cy-tabs cy-tabs--fill
     // cy-tabs--wide">)改成真的用组件 —— 手抄的那份还硬编码了 --cy-tabs-accent:#028707
     // (纯绿 hue 122°，和状态成功色的 161° 不是一档，属页面自选强调色)。
-    topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '路线节点' }, { key: '2', label: '路线' }],
+    // 2026-10-22 业主:三个标签 = 详情 / 故事 / 路线(自由探索没有固定路线,第三个叫「地点」)
+    topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '故事' }, { key: '2', label: '路线' }],
+    // ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) =====
+    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, buyOpts: [], buySel: 0, sessionPreferName: '',
+    publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
+    docked: false, dockCtaStyle: '', dockFavStyle: '',
+    merchantCards: [], storyCards: [], storyMeta: '', openChapter: -1, storyDocked: false,
+    teams: { rows: [], need: 0 },
+    progress: { total: 0, done: 0, labels: [] },
+    selfPlayValidText: '可玩至购买后 90 天', selfPlayCheckoutShow: false, checkout: { cover: '', validText: '', placeText: '', priceText: '', free: false, profileName: '', profilePhone: '' },
+    reveal: { show: false, cover: '', name: '', kindText: '', untilText: '', daysText: '', line: '' },
     id: 0,
     is_join: 0,
     // 自玩通行证购买确认(P1–P6 弹层,替代 wx.showModal);报名信息单独同意必须在建单前落库
@@ -92,6 +135,8 @@ Page({
     loadError: false,
     topicLoaded: false,
     missingTopicId: false,
+    // PR10 F-W1-12:未登录(无会话 / 401)读失败给登录引导,其余加载失败仍按 load-failure 留白
+    loginRequired: false,
     // 拍板 2026-09-16 #10:发布商家已打烊时,购票/报名入口直接提示「商家暂停营业」
     // (文案与后端 IMerchantBusinessStatusService.MERCHANT_CLOSED_MESSAGE 同源)。
     merchantClosed: false,
@@ -100,11 +145,11 @@ Page({
 
     // ===== 路线地图（橙色 polyline）相关 =====
     routeReady: false,        // 是否有可画的路线
-    routeIsRoad: false,       // true=后端算好的贴路线 false=节点直连兜底
     mapLatitude: 0,           // 地图中心纬度
     mapLongitude: 0,          // 地图中心经度
     routeMarkers: [],         // 节点标记（编号 1/2/3…）
-    routePolyline: [],        // 橙色路线
+    routePolyline: [],        // 按章分段的道路/节点虚线
+    routeSourceText: '',
     routeIncludePoints: [],   // 让地图自动缩放到看全整条线
 
     statusBarHeight: getApp().globalData.statusBarHeight,
@@ -159,7 +204,7 @@ Page({
         loadError: true,
         missingTopicId: true,
         loadErrorTitle: '无法打开主题',
-        loadErrorSub: '缺少主题信息，请返回发布广场重新选择。',
+        loadErrorSub: '请返回重新进入',
         topicLoaded: false,
       });
       return;
@@ -263,6 +308,8 @@ Page({
       }
     }
 
+    this._checkDock(scrollTop); this._checkNav(scrollTop);
+
     // 吸顶逻辑
     const { tabSectionTop, topBarHeight, tabHeight } = this.data;
 
@@ -289,7 +336,9 @@ Page({
    */
   onShow() {
     const reducedMotion = readReducedMotion();
-    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
+    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion }); this._navigating = false; // 返回时兜底清跳转锁
+    this._startKenBurns();
+    if (this.data.selfPlayCheckoutShow && !this._signupProfile) this._fillCheckoutProfile(); // 从个人资料补全回来
     const that = this;
     
     // 重新获取所有位置信息
@@ -309,6 +358,7 @@ Page({
    * 页面隐藏时
    */
   onHide() {
+    this._stopKenBurns();
     this.pauseTopicAudio();
     this.setData({
       isTabSticky: false,
@@ -319,7 +369,13 @@ Page({
    * 页面卸载时
    */
   onUnload() {
+    this._unloaded = true;
+    reportSheet.cancel(this);
+    this._themeRecordsDisposed = true;
+    this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
     this.destroyTopicAudio();
+    this._stopKenBurns();
+    (this._motionTimers || []).forEach(clearTimeout);
     if (this._workflow) this._workflow.destroy();
     if (this._scrollTimer) {
       clearTimeout(this._scrollTimer);
@@ -374,12 +430,30 @@ Page({
     // cy-tabs 通过 detail.key 传当前项;保留 dataset 兼容旧调用点(若还有)
     const index = (e.detail && e.detail.key) !== undefined ? e.detail.key : e.currentTarget.dataset.index;
     this.setData({
-      activeTab: index
-    }, () => {
+      activeTab: index, tabPre: !this.data.reducedMotion // v13:切标签时各块从下方依次浮上来
+    }, () => { if (this.data.tabPre) this._later(30, () => this.setData({ tabPre: false })); });
+    if (String(index) === '2') this._loadProgress();
+    if (String(index) === '1') { this.setData({ openChapter: -1 }); this._later(900, () => { if (String(this.data.activeTab) === '1') this.setData({ openChapter: 0 }); }); } // v13:进故事标签后第一章自己展开
+  },
+
+  /* 2026-10-22 业主:点「查看详情与报名」是点按转场,不是往下滑 ——
+     封面文字先退场,再瞬时换到第二屏,第二屏头图回落、标题与按钮逐行上浮。 */
+  scrollToSecond() {
+    if (this.data.isScrolling) return;
+    if (this.data.reducedMotion) return this._scrollToSecondPlain();
+    this.setData({ isScrolling: true, coverLeaving: true });
+    this._later(280, () => {
+      const go = () => wx.pageScrollTo({ scrollTop: this.data.screen2Top, duration: 0,
+        complete: () => {
+          this.setData({ currentScreen: 1, isScrolling: false, detailEnter: true, coverLeaving: false });
+          this._later(1100, () => this.setData({ detailEnter: false }));
+          this._measureHero();
+        } });
+      if (this.data.screen2Top <= 0) { this.calculateScreenHeights(); this._later(200, go); } else go();
     });
   },
 
-  scrollToSecond() {
+  _scrollToSecondPlain() {
     if (this.data.isScrolling) return;
 
     this.setData({
@@ -413,9 +487,340 @@ Page({
     }
   },
   
+  /* ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) ===== */
+  _later(ms, fn) { const t = setTimeout(fn, ms); (this._motionTimers = this._motionTimers || []).push(t); return t; },
+
+  _applyMotionData(data) {
+    const merchantCards = motion.buildMerchantCards(data.chaptersList);
+    const price = data.selfPlayPrice;
+    const priceText = (price === undefined || price === null || price === '') ? '' : '¥' + price;
+    this.setData({
+      coverImages: motion.buildCoverImages(data), kbIdx: 0,
+      publisher: motion.buildPublisher(data),
+      heroCta: motion.buildHeroCta(data, { isJoin: this.data.is_join, merchantClosed: data.merchantClosed === true, priceText }),
+      merchantCards,
+      storyCards: motion.buildStoryCards(data, merchantCards),
+      storyMeta: motion.storyMeta(data),
+      'topicTabs[2].label': Number(data.productType) === 2 ? '地点' : '路线',
+      routeNote: motion.routeNote(data, merchantCards.length), heroIdx: 0, routeReal: false,
+      sketchPoints: [].concat(...(data.chaptersList || []).map((c) => (c && c.nodes) || [])).map(routePoint).filter(Boolean).map((p) => ({ lat: p.latitude, lng: p.longitude })),
+    });
+    this._progressLoaded = false;
+    this._startKenBurns();
+    this._loadTeams(data);
+    this._loadFav(data.id);
+    this._loadChars(data);
+  },
+
+  // 封面轮换:只在停留第一屏时换图,离屏/隐藏/减少动效时不跑
+  _startKenBurns() {
+    this._stopKenBurns();
+    if (this.data.reducedMotion || (this.data.coverImages || []).length < 2) return;
+    this._kbTimer = setInterval(() => {
+      if (this.data.currentScreen !== 0) return;
+      this.setData({ kbIdx: (this.data.kbIdx + 1) % this.data.coverImages.length });
+    }, KB_MS);
+  },
+  _stopKenBurns() { if (this._kbTimer) { clearInterval(this._kbTimer); this._kbTimer = null; } },
+
+  _windowSize() {
+    try { const w = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); return { w: w.windowWidth || 375, h: w.windowHeight || 667, safeBottom: w.safeArea ? Math.max(0, (w.screenHeight || w.windowHeight) - w.safeArea.bottom) : 0 }; }
+    catch (e) { return { w: 375, h: 667, safeBottom: 0 }; }
+  },
+
+  _measureHero() {
+    if (typeof wx === 'undefined' || typeof wx.createSelectorQuery !== 'function') return;
+    try { this._measureHeroNow(); } catch (e) { /* 量不到就不停靠,按钮留在原位 */ }
+  },
+
+  _measureHeroNow() {
+    if (!this._capsule) { try { this._capsule = wx.getMenuButtonBoundingClientRect(); } catch (e) { this._capsule = null; } }
+    // 这里只预取胶囊位置给停靠动画用;
+    // 故事扇形卡收拢后的迷你卡叠已移进顶栏(v13),
+    // 跟在返回键后面自然排布,
+    // 不再按胶囊量位置。
+    // (保留同样行数,行号基线不挪)
+    const q = wx.createSelectorQuery().in(this);
+    q.select('#heroActs').boundingClientRect();
+    q.selectViewport().scrollOffset();
+    q.exec((r) => {
+      const rect = r && r[0], vp = r && r[1];
+      if (!rect || !vp) return;
+      this._heroTop = rect.top + vp.scrollTop;
+      this._heroH = rect.height;
+    });
+  },
+
+  /* 业主:价格按钮和收藏**被滚出顶栏之后**才离开原位,一起走;回到原位才回来。 */
+  _checkDock(scrollTop) {
+    if (this._heroTop == null || this._docking) return;
+    const nav = (this.data.statusBarHeight || 0) + (this.data.navBarHeight || 44);
+    const bottomOnScreen = this._heroTop + this._heroH - scrollTop;
+    const want = this.data.docked ? bottomOnScreen < nav + 12 : bottomOnScreen < nav;
+    if (want !== this.data.docked) this._animDock(want);
+  },
+
+  /* 停靠动画:各自从原位直线飞到停靠位(价格 → 右下角,收藏 → 顶栏胶囊左侧),
+     自己的节奏(620ms,慢-快-慢),不跟滚动速度走。 */
+  _animDock(on) {
+    if (typeof wx.createSelectorQuery !== 'function') return;
+    this._docking = true;
+    const q = wx.createSelectorQuery().in(this);
+    q.select('.hero-cta').boundingClientRect();
+    q.select('.hero-fav').boundingClientRect(); q.select('.bm-main').boundingClientRect();
+    q.exec((r) => {
+      const cta = r && r[0], fav = r && r[1], bar = null; // v13 没有底栏:价格按钮一律停到右下角
+      const win = this._windowSize(), cap = this._capsule || { top: 48, left: win.w - 95, height: 32 };
+      const box = (x, y, w, h) => 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;';
+      const ctaW = cta ? Math.max(cta.width, 150) : 150;
+      const ctaAt = cta ? box(cta.left, cta.top, cta.width, cta.height) : '';
+      const ctaDock = bar ? box(bar.left, bar.top, bar.width, bar.height) : box(win.w - 16 - ctaW, win.h - 16 - 50 - win.safeBottom, ctaW, 50);
+      const favAt = fav ? box(fav.left, fav.top, fav.width, fav.height) : '';
+      const favDock = box(cap.left - 8 - cap.height, cap.top, cap.height, cap.height);
+      const ease = 'transition:left ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),top ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),width ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),height ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1);';
+      const still = 'transition:none;';
+      if (this.data.reducedMotion) {
+        this.setData({ docked: on, dockCtaStyle: ctaDock + still, dockFavStyle: favDock + still });
+        this._docking = false;
+        return;
+      }
+      if (on) {
+        this.setData({ docked: true, dockCtaStyle: ctaAt + still, dockFavStyle: favAt + still });
+        this._later(30, () => this.setData({ dockCtaStyle: ctaDock + ease, dockFavStyle: favDock + ease }));
+        this._later(DOCK_MS + 40, () => { this._docking = false; });
+      } else {
+        this.setData({ dockCtaStyle: ctaAt + ease, dockFavStyle: favAt + ease });
+        this._later(DOCK_MS, () => { this.setData({ docked: false }); this._docking = false; });
+      }
+    });
+  },
+
+  onHeroSwipe(e) { this.setData({ heroIdx: (e && e.detail && e.detail.current) || 0 }); },
+  noop() {},
+  onRouteReal() { this.setData({ routeReal: true }); },
+  onBuyPick(e) { this.setData({ buySel: Number(e.currentTarget.dataset.i) || 0 }); },
+  /* 去结算:自玩通行证进确认订单;发布者的票种绑在场次上,进选场次弹层并预选同名票种 */
+  onBuyGo() {
+    const opt = (this.data.buyOpts || [])[this.data.buySel];
+    if (!opt || opt.kind === 'pass') return this.onSelfPlayGoCheckout();
+    this.setData({ selfPlayConfirmShow: false, buyIn: false, sessionPreferName: opt.name });
+    this.bmClick({ currentTarget: { dataset: {} } });
+  },
+
+  /* v13 顶栏:详情顶部照片滚过一半后,顶栏压黑并写主题名 */
+  _checkNav(scrollTop) {
+    const top = this.data.screen2Top || 0;
+    const want = top > 0 && scrollTop > top + this._windowSize().h * 0.5;
+    if (want !== this.data.navSolid) this.setData({ navSolid: want });
+  },
+
+  /* 主要角色:商家站点的出场 NPC,最多问 4 个站点;没有就整块不出 */
+  _loadChars(data) {
+    if (!this._loggedIn()) return;
+    const asks = [];
+    for (const c of (data && data.chaptersList) || []) {
+      for (const n of (c && c.nodes) || []) {
+        if (n && n.id && (n.registrationMerchantList || []).length && asks.length < 4) asks.push({ nodeId: n.id, place: nodeText(n.name) });
+      }
+    }
+    if (!asks.length) return;
+    const rows = [];
+    let left = asks.length;
+    const done = () => { left -= 1; if (!left && !this._unloaded) this.setData({ storyChars: motion.buildChars(rows) }); };
+    asks.forEach((a) => app.sendRequest({ url: '/api/ai/npc/profile', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { scope: 'node', nodeId: a.nodeId },
+      success: (res) => { const list = res && String(res.code) === '200' && res.data && res.data.npcs; if (Array.isArray(list)) list.forEach((npc) => rows.push({ npc, place: a.place })); done(); },
+      fail: done,
+    }));
+  },
+
+  onHeroCta() {
+    const kind = this.data.heroCta && this.data.heroCta.kind;
+    if (kind === 'locked') return this.lockedTip();
+    if (kind === 'joined') return this.goJoinedPlay();
+    if (kind === 'selfplay') return this.selfPlayBuy();
+    if (kind === 'signup') return this.bmClick({ currentTarget: { dataset: {} } });
+  },
+
+  // 收藏 = 既有的主题「喜欢」(我的-喜欢 同一个接口);进页读一次当前状态
+  _loggedIn() { return typeof app.getUserID === 'function' && !!app.getUserID(); },
+
+  _loadFav(topicId) {
+    if (!topicId || !this._loggedIn()) return;
+    app.sendRequest({ url: '/api/topic/like_list', method: 'POST', hideLoading: true, autoErrorToast: false,
+      data: { pageNum: 1, pageSize: 200 },
+      success: (res) => {
+        if (this._unloaded || !res || String(res.code) !== '200' || !res.data) return;
+        const rows = Array.isArray(res.data.rows) ? res.data.rows : [];
+        this.setData({ faved: rows.some((t) => t && String(t.id) === String(topicId)) });
+      },
+      fail: () => {},
+    });
+  },
+
+  toggleFav() {
+    const id = (this.data.info && this.data.info.id) || this.data.id;
+    if (!id || this._favBusy) return;
+    const next = !this.data.faved;
+    this._favBusy = true;
+    this.setData({ faved: next });
+    app.sendRequest({ url: '/api/topic/like', method: 'POST', hideLoading: true, autoErrorToast: false,
+      data: { id: id, type: next ? 1 : 0 },
+      success: (res) => {
+        this._favBusy = false;
+        if (!res || String(res.code) !== '200') { this.setData({ faved: !next }); toast((res && res.msg) || '收藏没有保存，请重试'); return; }
+        toast(next ? '已收藏' : '已取消收藏');
+      },
+      fail: () => { this._favBusy = false; this.setData({ faved: !next }); toast('网络异常，收藏没有保存'); },
+    });
+  },
+
+  // 组队块:以第一个有坐标的站点为圆心读附近队伍,只留本主题的;读不到整块不出
+  _loadTeams(data) {
+    let lat = null, lng = null;
+    for (const c of (data && data.chaptersList) || []) {
+      for (const n of (c && c.nodes) || []) {
+        const p = routePoint(n);
+        if (p) { lat = p.latitude; lng = p.longitude; break; }
+      }
+      if (lat !== null) break;
+    }
+    if (lat === null || !this._loggedIn()) return;
+    app.sendRequest({ url: '/api/team/nearby', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { lat: lat, lng: lng, radius: 20000 },
+      success: (res) => {
+        if (this._unloaded || !res || String(res.code) !== '200') return;
+        this.setData({ teams: motion.buildTeams(res.data, data.id) });
+      },
+      fail: () => {},
+    });
+  },
+
+  onMerchantOpen(e) {
+    const id = e && e.detail && e.detail.id;
+    this.onLineupTap({ currentTarget: { dataset: { kind: 'merchant', id: id } } });
+  },
+
+  onStoryDock(e) { this.setData({ storyDocked: !!(e && e.detail && e.detail.docked) }); },
+
+  onChapterCard(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    this.setData({ openChapter: this.data.openChapter === i ? -1 : i });
+  },
+
+  // 路线进度:已购才读本人进度(/api/play/nodes 的 total/doneCount);未购就是 0,不演示假进度
+  _loadProgress() {
+    if (this._progressLoaded) return;
+    this._progressLoaded = true;
+    const info = this.data.info || {};
+    const nodes = [];
+    (info.chaptersList || []).forEach((c) => (c.nodes || []).forEach((n) => nodes.push(n)));
+    const labels = (n) => Array.from({ length: n }, (_, i) => (Number(info.productType) === 2 ? '第 ' + (i + 1) + ' 家' : '第' + (i + 1) + '站')); // v13:自由探索按「家」数
+    const fallback = () => { if (!this._unloaded) this.setData({ progress: { total: nodes.length, done: 0, labels: labels(nodes.length) } }); };
+    if (Number(this.data.is_join) !== 1 || !this._loggedIn()) return fallback();
+    app.sendRequest({ url: '/api/play/nodes', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { topicId: info.id || this.data.id },
+      success: (res) => {
+        const d = res && String(res.code) === '200' && res.data;
+        const total = d ? Number(d.total) : 0;
+        if (this._unloaded) return;
+        if (!(total > 0)) return fallback();
+        this.setData({ progress: { total: total, done: Math.min(total, Math.max(0, Number(d.doneCount) || 0)), labels: labels(total) } });
+      },
+      fail: fallback,
+    });
+  },
+
+  /* 自玩:弹层只说清买的是什么,按钮「去结算」进确认订单页(业主:随时开玩不直接付款) */
+  onSelfPlayGoCheckout() {
+    if (this.lockedTip()) return;
+    const info = this.data.info || {};
+    const win = motion.passWindow({ topicEnd: info.endDate });
+    const p = this._signupProfile || {};
+    const phone = String(p.phone || '');
+    const price = Number(info.selfPlayPrice);
+    this.setData({
+      selfPlayConfirmShow: false,
+      selfPlayCheckoutShow: true,
+      selfPlayConsentHint: '',
+      selfPlayConsentError: '',
+      checkout: {
+        cover: (this.data.coverImages && this.data.coverImages[0]) || info.imgUrl || '',
+        validText: win.line.split(' · ')[0],
+        placeText: (info.venue && info.venue.name) || '',
+        priceText: (info.selfPlayPrice === undefined || info.selfPlayPrice === null || info.selfPlayPrice === '') ? '—' : '¥' + info.selfPlayPrice,
+        free: !(price > 0),
+        profileName: p.realName || '',
+        profilePhone: phone.length >= 7 ? phone.slice(0, 3) + '****' + phone.slice(-4) : phone,
+      },
+    });
+  },
+
+  onCheckoutBack() {
+    if (this.data.selfPlayConfirmLoading || this._selfPlaySubmitting) return;
+    this.setData({ selfPlayCheckoutShow: false });
+  },
+
+  onCheckoutProfile() {
+    if (this._navigating) return; this._navigating = true;
+    wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } });
+  },
+
+  /* 付款成功 → 通行证到账动效。可选的商家营销同意行(拍板第 40 条 A)照旧要给:
+     动效收尾时有同意可选才弹原结果面板,否则直接去票夹/开局。 */
+  _showPassReveal(topicId, registrationId) {
+    const info = this.data.info || {};
+    const win = motion.passWindow({ topicEnd: info.endDate });
+    this._revealTopicId = topicId;
+    this._revealRegId = registrationId || 0;
+    const price = info.selfPlayPrice;
+    const priceText = (price === undefined || price === null || price === '') ? '' : '¥' + price;
+    this.setData({
+      is_join: 1,
+      heroCta: motion.buildHeroCta(info, { isJoin: 1, merchantClosed: false, priceText }),
+      reveal: {
+        show: true,
+        cover: (this.data.coverImages && this.data.coverImages[0]) || info.imgUrl || '',
+        name: info.name || '',
+        kindText: '城瘾 · ' + (Number(info.productType) === 2 ? '自由探索' : '城市定向') + '通行证',
+        untilText: win.untilText, daysText: win.daysText, line: win.line,
+      },
+    });
+    // 期限口径同后端建单(CmsRegistrationServiceImpl:购买后 90 天,主题先结束则以主题为准),本地即可算准
+    this._pendingOffer = null;
+    marketingConsent.loadOffer(app, info.memberId || 0, (offer) => { if (offer) this._pendingOffer = offer; });
+  },
+
+  onRevealWallet() { this._finishReveal('wallet'); },
+  onRevealPlay() { this._finishReveal('play'); },
+
+  _finishReveal(kind) {
+    this.setData({ 'reveal.show': false, selfPlayCheckoutShow: false });
+    const hasOffer = !!this._pendingOffer;
+    this._pendingOffer = null;
+    if (hasOffer) {
+      // 商家营销同意(拍板第 40 条 A)仍走原结果面板那一行;面板收起后再去票夹/开局
+      this._revealNext = kind;
+      this._goSelfPlay(this._revealTopicId);
+      return;
+    }
+    this._goAfterReveal(kind);
+  },
+
+  _goAfterReveal(kind) {
+    const topicId = this._revealTopicId || (this.data.info && this.data.info.id) || this.data.id;
+    const regId = this._revealRegId;
+    if (kind === 'play' && regId && topicId) {
+      const name = this.data.info && this.data.info.name ? '&topicName=' + encodeURIComponent(this.data.info.name) : '';
+      wx.navigateTo({ url: '/pages/play/index?topicId=' + topicId + '&registrationId=' + regId + '&entry=ticket' + name });
+      return;
+    }
+    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0&arrive=1' });
+  },
+
   goTemplateDetail(e) {
     let id = e.currentTarget.dataset.id;
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my',
     })
   },
@@ -444,7 +849,7 @@ Page({
   },
   
   goPoint() {
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/subpackageP3/pages/growthcenter/index/index',
     })
   },
@@ -490,7 +895,7 @@ Page({
     // 总数只是数量，不授予读取未揭示节点、模板或路线的权限。
     // 缺失值不生成站点条目；章节局部节点标签继续反映各自可见内容。
     const stations = Number(d.locationCount);
-    if (Number.isFinite(stations) && stations > 0) out.push(stations + ' 个站点');
+    if (Number.isFinite(stations) && stations > 0) out.push(stations + ' 个节点');
     const plays = Number(d.templateCount);
     if (Number.isFinite(plays) && plays > 0) out.push(plays + ' 个玩法');
     if (d.audioUrl) {
@@ -552,7 +957,7 @@ Page({
     const { kind, id } = e.currentTarget.dataset;
     const targetId = Number(id) || 0;
     if (!targetId) return;
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: kind === 'club'
         ? '/pages/club/detail/index?id=' + targetId
         : '/pages/userinfo/userinfo?userId=' + targetId,
@@ -708,6 +1113,9 @@ Page({
       toast('请输入评价内容');
       return;
     }
+    // BL-198:单飞,请求在途时忽略重复点击,避免同一条评价发两次。
+    if (that._commentSubmitting) return;
+    that._commentSubmitting = true;
     app.sendRequest({
       url: '/api/comment/add',
       data: {
@@ -728,6 +1136,9 @@ Page({
         } else {
           app.tips(res.msg);
         }
+      },
+      complete: function () {
+        that._commentSubmitting = false;
       }
     });
   },
@@ -738,10 +1149,10 @@ Page({
     const lc = this.data.info && this.data.info.lifecycle;
     if (![1, 2, 7].includes(Number(lc))) return false;
     if (lc == 2 && this.data.info && this.data.info.isOwner == 1) {
-      wx.navigateTo({ url: '/pages/topic/pricing/index?topicId=' + this.data.id });
+      if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/pricing/index?topicId=' + this.data.id, complete: () => { this._navigating = false; } }); }
       return true;
     }
-    toast(lc == 7 ? '该主题立项待审,暂未开售' : (lc == 1 ? '该主题招募中,暂未开售' : '该主题定价中,暂未开售'));
+    toast(lc == 7 ? '该主题立项待审，暂未开售' : (lc == 1 ? '该主题招募中，暂未开售' : '该主题定价中，暂未开售'));
     return true;
   },
 
@@ -772,7 +1183,7 @@ Page({
     this.setData({ sessionPicker: { show: true } });
   },
 
-  closeSessionPicker() { this.setData({ 'sessionPicker.show': false }); },
+  closeSessionPicker() { this.setData({ 'sessionPicker.show': false, sessionPreferName: '' }); },
 
   // 选完场次与票种 → 结算。参数形状与活动详情页那条入口一致,后端一处都不用改。
   onSessionPicked(e) {
@@ -794,7 +1205,7 @@ Page({
     if (!topicId) return;
     modal.show({
       title: '转为正式主题',
-      content: '转正后不再显示 Beta 试玩标识。主题内容、已售出的票和进行中的行程都不受影响。',
+      content: '转正后不再显示 Beta 标记。主题内容、已售出的票和进行中的行程都不受影响。',
       confirmText: '确认转正',
       success(m) {
         if (!m.confirm) return;
@@ -820,6 +1231,9 @@ Page({
     const that = this;
     const topicId = that.data.id;
     if (!topicId) return;
+    // BL-201:移交每调一次服务端就复制一份新草稿;成功后入口仍在、页面不回读,本实例内不再放行。
+    if (that._transferredToClub) { app.tips('已移交，请到新主题继续配置'); return; }
+    if (that._transferringToClub) return;
     app.sendRequest({
       hideLoading: true, url: '/api/club/my', method: 'POST', data: {},
       success(res) {
@@ -849,10 +1263,12 @@ Page({
     if (!club || !topicId) return;
     modal.show({
       title: '移交给俱乐部承接',
-      content: '将复制一份新的城市定向主题(有人带),挂到「' + club.name + '」承接;原主题会下架,历史票不受影响。',
+      content: '将复制一份新的城市定向主题(有人带),挂到「' + club.name + '」承接；原主题会下架，历史票不受影响。',
       confirmText: '确认移交',
       success(m) {
         if (!m.confirm) return;
+        if (that._transferredToClub || that._transferringToClub) return;
+        that._transferringToClub = true;
         app.sendRequest({
           url: '/api/topic/transfer-to-club',
           // 后端 transferToClub(String topicId, String clubId, …) 是 form 绑定(ApiTopicController:783):
@@ -861,10 +1277,11 @@ Page({
           method: 'POST',
           success(r) {
             if (r.code == '200') {
+              that._transferredToClub = true; // 成功后保持在途标记,直到页面重新加载
               const newId = r.data && r.data.newTopicId;
               modal.show({
                 title: '已移交',
-                content: '已生成新的城市定向草稿,去配置票种并邀请该俱乐部承接?',
+                content: '已生成新的城市定向草稿，去配置票种并邀请该俱乐部承接?',
                 confirmText: '去配置', cancelText: '稍后',
                 success(g) {
                   if (g.confirm && newId) {
@@ -873,10 +1290,11 @@ Page({
                 }
               });
             } else {
+              that._transferringToClub = false;
               app.tips(r.msg || '移交失败');
             }
           },
-          fail() { app.tips('网络异常，请重试'); }
+          fail() { that._transferringToClub = false; app.tips('网络异常，请重试'); }
         });
       }
     });
@@ -925,7 +1343,7 @@ Page({
                 cb({ ok: true, data: d });
               } else if (d.registrationId) {
                 // 重放命中已有订单,回到那张订单取支付参数
-                loading.show('获取支付参数...');
+                loading.show('正在发起支付…');
                 app.sendRequest({
                   url: '/api/registration/pay',
                   method: 'POST',
@@ -1001,12 +1419,15 @@ Page({
     if (that.lockedTip()) return;
     that._selfPlayTopicId = topicId;
     that.setData({
-      selfPlayConfirmShow: true,
+      selfPlayConfirmShow: true, buyIn: false, buyOpts: motion.buyOptions(info), buySel: 0,
+      buyChips: motion.buyChips(info, that.data.storyMeta),
+      selfPlayValidText: motion.passWindow({ topicEnd: info.endDate }).line.split(' · ')[0],
       selfPlayConsentChecked: !!that._hostShareConsentReady,
       selfPlayConsentError: '',
       selfPlayConsentHint: '',
       selfPlayConfirmLoading: false
     });
+    that._later(30, () => { if (that.data.selfPlayConfirmShow) that.setData({ buyIn: true }); });
   },
 
   onSelfPlayConsentChange(e) {
@@ -1016,8 +1437,10 @@ Page({
   },
 
   onSelfPlayCancel() {
-    if (this.data.selfPlayConfirmLoading) return;
-    this.setData({ selfPlayConfirmShow: false });
+    if (this.data.selfPlayConfirmLoading || !this.data.selfPlayConfirmShow) return;
+    if (this.data.reducedMotion) { this.setData({ selfPlayConfirmShow: false, buyIn: false }); return; }
+    this.setData({ buyIn: false });
+    this._later(250, () => { if (!this.data.buyIn) this.setData({ selfPlayConfirmShow: false }); }); // 250 = --cy-motion-sheet-out
   },
 
   // 后端 /api/registration/create 与 /pay 硬校验「报名信息单独同意」已落库(activity_host_data_sharing /
@@ -1026,11 +1449,15 @@ Page({
     const that = this;
     if (that.lockedTip()) return;
     const topicId = that._selfPlayTopicId || (that.data.info && that.data.info.id) || that.data.id;
-    if (!topicId || that.data.selfPlayConfirmLoading) return;
+    if (!topicId || that.data.selfPlayConfirmLoading || that._selfPlaySubmitting) return;
     if (!that.data.selfPlayConsentChecked) {
       // 单独同意只能用户自己勾,按钮不代勾;这里只提示,不算错误态
-      that.setData({ selfPlayConsentHint: '请先勾选上面的同意，才能为你建单' });
+      that.setData({ selfPlayConsentHint: '请先勾选同意' });
       return;
+    }
+    // 保持用户点击手势：订阅拒绝/失败不阻塞既有同意记录和支付链。
+    if (that._hostShareConsentReady || app.recordConsent) {
+      subscribe.request(['signupSuccess', 'activityStart', 'refund']);
     }
     if (that._hostShareConsentReady) {
       that.setData({ selfPlayConfirmShow: false });
@@ -1056,7 +1483,7 @@ Page({
   },
 
   goMyOrders() {
-    wx.navigateTo({ url: '/subpackageMember/order/order' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } });
   },
 
   // /api/registration/create 的 realName/phone 是 @NotBlank(RegistrationRequest.java:37,42)。
@@ -1141,7 +1568,7 @@ Page({
       onFreeSuccess: function (data) {
         that._selfPlaySubmitting = false;
         that._selfPlayReqId = null;
-        that._goSelfPlay(topicId);
+        that._onSelfPlayPaid(topicId, data);
       },
       onPayVerifying: function (data) {
         loading.show('确认支付结果...');
@@ -1150,7 +1577,7 @@ Page({
         that._selfPlaySubmitting = false;
         that._selfPlayReqId = null;
         loading.hide();
-        that._goSelfPlay(topicId);
+        that._onSelfPlayPaid(topicId, data);
       },
       onPayCancel: function () {
         that._selfPlaySubmitting = false;
@@ -1217,7 +1644,7 @@ Page({
           // 走 order 路径的重新支付
           that._workflow.submit({ id: registrationId }, {
             onOrderFail: function () { toast('支付信息不完整，请重试'); },
-            onPaySuccess: function () { that._goSelfPlay(topicId); },
+            onPaySuccess: function () { that._onSelfPlayPaid(topicId, { id: registrationId }); },
             onPayCancel: function () { toast('已取消支付'); },
             onPayFail: function (res) { toast('支付失败'); }
           });
@@ -1233,11 +1660,17 @@ Page({
 
   /* 自玩票买完的唯一落点(三个调用点都走这儿)。原来是 toast + 800ms 硬等,
      现在换成结果面板:跳转挂在面板收掉之后,时长只此一处,不再两个数字各说各话。 */
+  /* 2026-10-22 业主:付完先播「通行证已到账」,再由动效里的「放进票夹 / 开始游戏」决定去向 */
+  _onSelfPlayPaid(topicId, data) {
+    const regId = data && (data.registrationId || data.id);
+    this._showPassReveal(topicId, Number(regId) > 0 ? regId : 0);
+  },
+
   _goSelfPlay(topicId) {
     this.setData({
       resultSheet: {
         show: true, kind: 'success', title: '购买成功',
-        sub: '票已放入票夹,随时可以开始探索。',
+        sub: '已放入票夹',
         meta: '', pill: '', why: '', duration: RESULT_SHEET_MS,
         consentName: '', consentChecked: false, consentState: 'idle', consentError: '',
       },
@@ -1304,13 +1737,14 @@ Page({
 
   onResultSheetClose() {
     this.setData({ 'resultSheet.show': false });
+    if (this._revealNext) { const kind = this._revealNext; this._revealNext = ''; this._goAfterReveal(kind); return; }
     wx.navigateTo({ url: '/subpackageMember/signup/index' });
   },
 
   // 票夹的 focusId 是 registrationId(signup/index.js:118),这里手上只有 topicId,传过去永远定位不到;
   // 老实打开路线票 tab,让用户在票夹里点那张票进 play。
   goJoinedPlay() {
-    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0', complete: () => { this._navigating = false; } });
   },
 
   //投票弹框打开
@@ -1358,10 +1792,7 @@ Page({
   // 预览图片
   previewImage(e) {
     const src = e.currentTarget.dataset.src;
-    wx.previewImage({
-      current: src,
-      urls: this.data.uploadImages
-    });
+    mediaPreview.open(this.data.uploadImages, src);
   },
   
   
@@ -1431,7 +1862,12 @@ Page({
    */
   formatDate(dateString) {
     if (!dateString) return '';
+    if (typeof dateString === 'string' && /^\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:[ T]\d{1,2}:\d{1,2}(?::\d{1,2}(?:\.\d{1,9})?)?)?$/.test(dateString.trim())) {
+      const parts = chinaParts(dateString);
+      return parts ? `${parts.month}.${parts.day}` : '';
+    }
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
     const month = date.getMonth() + 1;
     const day = date.getDate();
     return `${month}.${day}`;
@@ -1524,105 +1960,58 @@ Page({
   },
    
   //获取数据
-  /**
-   * 构建路线地图数据：把所有章节的节点按 sort_id 拍平，
-   * 生成节点 marker + 橙色 polyline。
-   * 贴路线优先：若后端在 chapter 上返回 routeGeometry（算好的沿路坐标），
-   * 则拼接成贴路线；否则用节点直连兜底（开发期立即可见）。
-   */
+  /** 每章单独使用完整道路；缺失或损坏时只画本章节点虚线，不能跨章补线。 */
   buildRouteMap: function (chaptersList) {
-    const that = this;
-    const chapters = chaptersList || [];
-
-    // 1) 拍平所有节点并按 sort_id 排序（后端已排，这里防御性再排一次）
-    const nodes = [];
-    chapters.forEach(function (c) {
-      (c.nodes || []).forEach(function (n) { nodes.push(n); });
+    const chapters = (Array.isArray(chaptersList) ? chaptersList : []).filter(function (chapter) {
+      return chapter && typeof chapter === 'object' && !Array.isArray(chapter);
     });
-    nodes.sort(function (a, b) {
-      return (Number(a.sortId) || 0) - (Number(b.sortId) || 0);
+    const valid = [], polyline = [];
+    let roadSegments = 0, straightSegments = 0;
+    chapters.forEach(function (chapter) {
+      const nodes = (Array.isArray(chapter.nodes) ? chapter.nodes : []).slice().sort(function (a, b) {
+        return (Number(a && a.sortId) || 0) - (Number(b && b.sortId) || 0);
+      }).filter(function (node) { return routePoint(node) !== null; });
+      nodes.forEach(function (node) { valid.push(node); });
+      let points = [];
+      try {
+        const geometry = typeof chapter.routeGeometry === 'string' ? JSON.parse(chapter.routeGeometry) : chapter.routeGeometry;
+        // 不过滤坏道路点：任何断点都让整章道路降级，不能跳点后虚连成道路。
+        if (Array.isArray(geometry) && geometry.length >= 2 && Array.from(geometry).every(function (row) { return routePoint(row) !== null; }))
+          points = geometry.map(routePoint);
+      } catch (error) { points = []; }
+      const road = points.length >= 2;
+      if (road) roadSegments += 1;
+      else points = nodes.map(routePoint);
+      if (points.length >= 2) {
+        if (!road) straightSegments += 1;
+        polyline.push({
+          points: points, color: '#1A1A1A', width: 5, borderColor: '#FFFFFF', borderWidth: 1, /* ds-ok: 原生地图不支持CSS token，沿用既有路线颜色 */
+          arrowLine: road, dottedLine: !road
+        });
+      }
     });
-
-    // 2) 过滤出有合法经纬度的节点（库里是 String，需转 Number）
-    const valid = nodes.filter(function (n) {
-      const lat = Number(n.latitude);
-      const lng = Number(n.longitude);
-      return n.latitude && n.longitude && !isNaN(lat) && !isNaN(lng);
-    });
-
-    if (valid.length === 0) {
-      that.setData({ routeReady: false });
-      return;
-    }
-
-    // 3) 节点 marker（编号 1/2/3…）
-    const markers = valid.map(function (n, i) {
+    const markers = valid.map(function (node, i) {
+      const point = routePoint(node);
       return {
-        id: i,
-        latitude: Number(n.latitude),
-        longitude: Number(n.longitude),
-        width: 24,
-        height: 24,
-        iconPath: '/images/icon_map4.png',
+        id: i, latitude: point.latitude, longitude: point.longitude,
+        width: 24, height: 24, iconPath: '/images/icon_map4.png',
         callout: {
-          content: (i + 1) + (n.name ? ' ' + n.name : ''),
-          color: '#FFFFFF',
-          bgColor: '#1A1A1A',   // 去紫:原生 map callout 是 JS 字面量,吃不到 CSS var
-          padding: 6,
-          borderRadius: 8,
-          fontSize: 11,
-          display: 'BYCLICK'
+          content: (i + 1) + (node.name ? ' ' + node.name : ''),
+          color: '#FFFFFF', bgColor: '#1A1A1A', /* ds-ok: 原生地图callout不支持CSS token，沿用既有颜色 */
+          padding: 6, borderRadius: 8, fontSize: 11, display: 'BYCLICK'
         }
       };
     });
-
-    // 4) 路线：贴路线优先（拼接各章节 routeGeometry），否则节点直连
-    let linePoints = [];
-    let hasRoad = false;
-    chapters.forEach(function (c) {
-      if (c.routeGeometry) {
-        try {
-          const seg = JSON.parse(c.routeGeometry);
-          if (Array.isArray(seg) && seg.length) {
-            seg.forEach(function (p) {
-              const lat = Number(p.latitude !== undefined ? p.latitude : p.lat);
-              const lng = Number(p.longitude !== undefined ? p.longitude : p.lng);
-              if (!isNaN(lat) && !isNaN(lng)) {
-                linePoints.push({ latitude: lat, longitude: lng });
-              }
-            });
-            hasRoad = true;
-          }
-        } catch (e) {
-          // routeGeometry 解析失败则忽略，走兜底
-        }
-      }
-    });
-    if (!hasRoad) {
-      linePoints = valid.map(function (n) {
-        return { latitude: Number(n.latitude), longitude: Number(n.longitude) };
-      });
-    }
-
-    const polyline = linePoints.length >= 2 ? [{
-      points: linePoints,
-      color: '#1A1A1A',        // 去紫:原生 map polyline,与 callout 同色系
-      width: 5,
-      borderColor: '#FFFFFF',
-      borderWidth: 1,
-      arrowLine: true
-    }] : [];
-
-    that.setData({
-      routeReady: true,
-      routeIsRoad: hasRoad,
-      mapLatitude: Number(valid[0].latitude),
-      mapLongitude: Number(valid[0].longitude),
-      routeMarkers: markers,
-      routePolyline: polyline,
-      routeIncludePoints: linePoints.length ? linePoints : markers.map(function (m) {
-        return { latitude: m.latitude, longitude: m.longitude };
-      })
+    // 包含道路以及所有节点，不能因为某章已有道路就把另一章单独的节点排除出视野。
+    const include = markers.map(function (marker) { return { latitude: marker.latitude, longitude: marker.longitude }; });
+    polyline.forEach(function (line) { line.points.forEach(function (point) { include.push(point); }); });
+    const source = roadSegments ? (straightSegments ? '道路段参考 · 虚线为节点直线预览，章间未规划' : '道路段参考 · 按章节分段，章间未规划')
+      : (straightSegments ? '节点直线预览 · 尚未规划步行路线，章间未规划' : '仅显示节节点置 · 尚未规划步行路线，章间未规划');
+    this.setData({
+      routeReady: include.length > 0,
+      routeSourceText: include.length ? source : '', routeMarkers: markers, routePolyline: polyline, routeIncludePoints: include,
+      mapLatitude: include.length ? include[0].latitude : 0,
+      mapLongitude: include.length ? include[0].longitude : 0
     });
   },
 
@@ -1660,6 +2049,8 @@ Page({
             return;
           }
           res.data['chaptersList'] = normalizeChaptersList(res.data['chaptersList'])
+          // 主题文字按纯文本展示:服务端过滤会把 x<y 存成 x&lt;y,在映射这一处解码。
+          for (const key of ['name', 'subtitle', 'description']) res.data[key] = decodeDisplayText(res.data[key])
           const totalChapterCount = Number(res.data.totalChapterCount || 0)
           const unlockedChapterCount = Number(
             res.data.unlockedChapterCount != null
@@ -1690,6 +2081,7 @@ Page({
 
           that.setData({
             info: res.data,
+            canReport: canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : ''),
             // P0(2026-09-05 审核):已购态不再只信 URL 参数 is_join(全仓只有订单详情会传 1,
             // 从首页/搜索进来的已购用户永远看不到「开始玩」)。/info-to-user 已按 ownerType=1 &
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。
@@ -1703,15 +2095,18 @@ Page({
             topicLoaded: true,
             everLoaded: true,   // 成功读到过一次:之后的刷新失败留在原页给重试,不 auto-back 把人踢走
             missingTopicId: false,
+            loginRequired: false,
             merchantClosed: res.data.merchantClosed === true,
             loadErrorTitle: '',
             loadErrorSub: '',
           });
 
+          that._applyMotionData(res.data);
           // 数据加载完成后重新计算位置
           setTimeout(() => {
             that.getTabSectionPosition();
             that.getTabHeight();
+            that._measureHero();
           }, 300);
         } else {
           that.setData({
@@ -1723,12 +2118,13 @@ Page({
           });
         }
       },
-      fail: function (res) {
+      fail: function (res, statusCode) {
         that.setData({
           loadError: true,
           missingTopicId: false,
+          loginRequired: isLoginRequired(app, res, statusCode),
           loadErrorTitle: '主题详情加载失败',
-          loadErrorSub: '网络连接异常，请稍后重试。',
+          loadErrorSub: '',
           topicLoaded: false,
         });
       }
@@ -1743,6 +2139,14 @@ Page({
     }
     this.setData({ loadError: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
     this.getData();
+  },
+
+  // 登录引导「登录」:重登成功后重读详情
+  onLoginRetry: function () {
+    retryLogin(this, app, function () {
+      this.setData({ loadError: false, loginRequired: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
+      this.getData();
+    });
   },
   
   /**
@@ -1802,9 +2206,12 @@ Page({
    */
   processChaptersList(chaptersList) {
     if (!chaptersList || !Array.isArray(chaptersList)) return chaptersList;
+    let seq = 0, prevNode = null; // v13 路线:站号全主题连续编号;站间步行线跨章接上(原型每章标题下也有一段)
 
     for (let j = 0; j < chaptersList.length; j++) {
       const chapter = chaptersList[j];
+      chapter.name = decodeDisplayText(chapter.name);
+      chapter.description = decodeDisplayText(chapter.description);
       // 稿 181:715:章节标题下面这行说的是**这一章**的时长 / 地点数 / 玩法数。
       // 原来读的是 info.*(整个主题的合计),挨着章节标题印,看上去就像这一章的 ——
       // 三章会印出三组一模一样的数,零报错。字段在 CmsTopicChapter 上本来就有。
@@ -1817,18 +2224,22 @@ Page({
       chaptersList[j].metaPlace = nodeCount > 0 ? nodeCount + ' 个节点' : '';
       chaptersList[j].metaPlay = Number(chapter.templateCount) > 0 ? chapter.templateCount + ' 个玩法' : '';
       chaptersList[j].hasMeta = !!(chaptersList[j].metaTime || chaptersList[j].metaPlace || chaptersList[j].metaPlay);
-      // 稿 214:689:站与站之间写「N min 步行」。第一站没有上一站,自然不画。
+      chaptersList[j].chapLabel = motion.chapterLabel(j, chaptersList.length) + (chapter.name ? ' · ' + chapter.name : '');
+      // 站间只写坐标直线距离；第一站没有上一站，不跨章计算。
       const ns = chapter.nodes || [];
       for (let n = 0; n < ns.length; n++) {
         // CU-C-65:站点这一层的裸字段全部归一,别把 null 渲染给玩家
         ns[n].businessTime = nodeText(ns[n].businessTime);
         ns[n].address = nodeText(ns[n].address);
         ns[n].name = nodeText(ns[n].name);
+        ns[n].description = decodeDisplayText(ns[n].description);
         const firstMerchant = (ns[n].registrationMerchantList || [])[0];
         if (firstMerchant && firstMerchant.mmsMerchant) {
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);
         }
-        ns[n].walkText = n === 0 ? '' : walkText(ns[n - 1], ns[n]);
+        ns[n].walkText = prevNode ? walkText(prevNode, ns[n]) : '';
+        seq += 1; ns[n].seq = seq; prevNode = ns[n];
+        ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';
       }
     }
     for (let j = 0; j < chaptersList.length; j++) {
@@ -1856,6 +2267,14 @@ Page({
   },
 
   // 修改展开/收起函数，支持独立控制每个票务
+
+  // FOLLOWUP-A-1:举报主题,流程与动态详情 reportSquare 同一套(utils/content-report.js)
+  reportTopic() {
+    if (!this.data.canReport) return;
+    contentReport.reportTopic(this, app, this.data.id);
+  },
+  onReportReasonSelect(e) { reportSheet.select(this, e); },
+  onReportReasonCancel() { reportSheet.cancel(this); },
 
   /**
    * 用户点击右上角分享

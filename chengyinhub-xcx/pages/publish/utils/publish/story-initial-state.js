@@ -1,4 +1,5 @@
 'use strict';
+const values = require('../../fabu/theme-values.js');
 
 const OPTIONS = [
   { type: 'hp', label: '精力', example: '游戏失败时消耗' },
@@ -37,11 +38,11 @@ function thoughts(list) {
   const seen = [];
   return list.map((row) => {
     const key = String((row && row.key) || '').trim();
-    if (!THOUGHT_KEY.test(key)) throw new Error('伏笔标识不合法:' + key);
-    if (seen.indexOf(key) >= 0) throw new Error('伏笔标识重复:' + key + ';同一个 key 的进度会互相覆盖');
+    if (!THOUGHT_KEY.test(key)) throw new Error('伏笔编号不合法:' + key);
+    if (seen.indexOf(key) >= 0) throw new Error('伏笔编号重复:' + key + ';同一个 key 的进度会互相覆盖');
     seen.push(key);
     const name = String((row && row.name) || '').trim();
-    if (!name || name.length > 20) throw new Error('伏笔要有名字,且不超过 20 字');
+    if (!name || name.length > 20) throw new Error('伏笔要有名字，且不超过 20 字');
     const desc = String((row && row.desc) || '').trim();
     if (desc.length > 60) throw new Error('伏笔的一句话不能超过 60 字');
     // 应验方式(2026-09-22 用户裁决「伏笔不能只是微信步数」):走够步数,或选到某些选项,至少一种。
@@ -53,7 +54,7 @@ function thoughts(list) {
     }
     const when = conditions(row && row.when, name);
     const doneWhen = conditions(row && row.doneWhen, name);
-    if (!hasNeed && !doneWhen) throw new Error('伏笔「' + name + '」还没有应验方式:填步数,或选一个选项');
+    if (!hasNeed && !doneWhen) throw new Error('伏笔「' + name + '」还没有应验方式:填步数，或选一个选项');
     const item = { key: key, name: name };
     if (hasNeed) item.need = need;
     if (desc) item.desc = desc;
@@ -121,12 +122,25 @@ function integer(value, label, min, max) {
   return number;
 }
 
-function serialize(input) {
+function serialize(input, names) {
   const rules = parse(input);
-  rules.hp.max = integer(rules.hp.max, '精力上限', 1, 20);
-  rules.hp.init = integer(rules.hp.init, '初始精力', 1, rules.hp.max);
-  rules.luck.max = integer(rules.luck.max, '幸运上限', 0, 5);
-  rules.luck.init = integer(rules.luck.init, '初始幸运', 0, rules.luck.max);
+  const hpName = names && String(names.hpName || '').trim() || '精力';
+  const luckName = names && String(names.luckName || '').trim() || '幸运';
+  rules.hp.max = integer(rules.hp.max, hpName + '上限', 1, 20);
+  rules.hp.init = integer(rules.hp.init, '初始' + hpName, 1, rules.hp.max);
+  rules.luck.max = integer(rules.luck.max, luckName + '上限', 0, 5);
+  rules.luck.init = integer(rules.luck.init, '初始' + luckName, 0, rules.luck.max);
+  if (Array.isArray(rules.attributes)) {
+    const keys = new Set();
+    rules.attributes = rules.attributes.map(row => {
+      if (!values.COUNTER.test(row.key || '')) return row;
+      if (keys.has(row.key)) throw new Error('数值编号重复：' + row.key);
+      keys.add(row.key);
+      return values.attribute(row);
+    });
+    if (rules.attributes.length > 32) throw new Error('初始属性最多配置 32 项');
+  }
+  if (rules.statLinks) rules.statLinks = values.links(rules.statLinks, rules.attributes, rules.hp.enabled);
   // 降低资源上限时同步收口已有恢复值，避免默认恢复量大于新上限而无法保存。
   const recovery = Object.assign({ stationEndIfHurt: 2, stageRestHpFloor: 6, stageRestLuckFloor: 1, exhaustRestHp: 5 }, rules.recovery);
   ['stationEndIfHurt', 'stageRestHpFloor', 'exhaustRestHp'].forEach(key => { recovery[key] = Math.min(recovery[key], rules.hp.max); });
@@ -137,4 +151,13 @@ function serialize(input) {
   return JSON.stringify(rules);
 }
 
-module.exports = { optionTagsOf, parse, serialize, OPTIONS };
+function serializeChanges(raw, changed, names) {
+  const serialized = serialize(changed, names);
+  return raw ? require('./preserve-json-edit.js')(raw, parse(raw), changed, serialized) : serialized;
+}
+
+function preserveChanges(raw, changed) {
+  return raw ? require('./preserve-json-edit.js')(raw, parse(raw), changed, changed) : JSON.stringify(changed);
+}
+
+module.exports = { optionTagsOf, parse, serialize, serializeChanges, preserveChanges, OPTIONS };

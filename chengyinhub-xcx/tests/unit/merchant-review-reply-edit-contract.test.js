@@ -61,6 +61,7 @@ function loadPage(mutate) {
     close() { this.closed = true; },
   };
   const app = {
+    getUserID: () => 7,
     globalData: {},
     sendRequest(o) { requests.push(o); },
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
@@ -189,7 +190,7 @@ test('行为层:删除先弹确认再发 /reply/delete,成功后回读列表', (
   const before = env.requests.length;
   write.success({ code: 200, data: { reviewId: 1, status: 'VISIBLE', version: 4, replayed: false } });
   assert.equal(env.fakeConfirm.doneCalled, true, '成功后必须给结果确认卡');
-  assert.ok(env.requests.length > before, '成功后必须回读列表');
+  assert.ok(env.requests.length > before, '成功后必须刷新列表');
 });
 
 test('危险动作登记:删除端点已登记且文案写明不可撤销', () => {
@@ -198,7 +199,7 @@ test('危险动作登记:删除端点已登记且文案写明不可撤销', () =
   assert.ok(site, '删除端点必须登记在 danger-action-registry.json');
   assert.equal(site.file, JS_PATH);
   assert.equal(site.confirmKey, 'merchant.review.reply.delete');
-  assert.equal(site.irreversible, true, '旧回复内容无法找回,必须按不可逆登记');
+  assert.equal(site.irreversible, true, '旧回复内容无法找回，必须按不可逆登记');
 
   const actions = read('utils/danger-actions.js');
   const start = actions.indexOf("'merchant.review.reply.delete'");

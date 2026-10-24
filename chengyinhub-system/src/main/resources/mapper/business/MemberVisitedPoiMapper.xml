@@ -7,4 +7,30 @@
         values (#{memberId}, #{geoKey}, #{poiName}, #{lat}, #{lng}, #{firstVisitTime})
     </insert>
 
+    <select id="countByPoiKey" resultType="int">
+        select count(1) from member_visited_poi
+        where member_id = #{memberId} and poi_key = #{poiKey}
+    </select>
+
+    <select id="selectMemberVisitsInBox" resultType="com.chengyinhub.business.domain.MemberVisitedPoi">
+        select id, member_id as memberId, poi_key as poiKey, poi_name as poiName, lat, lng
+        from member_visited_poi
+        where member_id = #{memberId}
+          and lat between #{minLat} and #{maxLat}
+          and lng between #{minLng} and #{maxLng}
+    </select>
+
+    <select id="selectLandmarkPoisInBox" resultType="com.chengyinhub.business.domain.MemberVisitedPoi">
+        select id, name as poiName, lat, lng
+        from roam_poi
+        where type = 1 and status = 1
+          and lat between #{minLat} and #{maxLat}
+          and lng between #{minLng} and #{maxLng}
+    </select>
+
+    <insert id="insertVisitedPoiWithKeyIgnore">
+        insert ignore into member_visited_poi (member_id, geo_key, poi_key, poi_name, lat, lng, first_visit_time)
+        values (#{memberId}, #{poiKey}, #{poiKey}, #{poiName}, #{lat}, #{lng}, #{firstVisitTime})
+    </insert>
+
 </mapper>

@@ -41,7 +41,7 @@ test('★判过 + 回包带卡:kit 里就有一张能直接喂给 cy-spin-card �
   const kit = kitOf({ sessionId: 's1', version: 3, playKit: { photoCheck: SEG }, objectCard: RECEIPT })
   assert.ok(kit, 'photoCheck 段该出 kit')
   assert.equal(kit.type, 'photocheck')
-  assert.ok(kit.card, '回包带了卡而 kit.card 是空的 —— 当场那一屏永远不会出卡,且没有任何报错')
+  assert.ok(kit.card, '回包带了卡而 kit.card 是空的 —— 当场那一屏永远不会出卡，且没有任何报错')
   assert.deepEqual(kit.card.frames, RECEIPT.frames, '帧清单照搬后端 VO,不在客户端另算')
   assert.equal(kit.card.generating, false)
   assert.equal(kit.card.cutoutUrl, null, '没抠出来就是 null,界面据此走照片卡')
@@ -53,7 +53,7 @@ test('★判过 + 回包带卡:kit 里就有一张能直接喂给 cy-spin-card �
 
 test('负控:回包没带卡(老模板 / 铸卡炸了)→ 这一屏与今天逐字相同', () => {
   const kit = kitOf({ sessionId: 's1', version: 3, playKit: { photoCheck: SEG } })
-  assert.equal(kit.card, null, '没有卡却要渲染,组件手里就是一张空白卡')
+  assert.equal(kit.card, null, '没有卡却要渲染，组件手里就是一张空白卡')
 })
 
 test('READY 时当场就是 24 帧转台,不再标生成中', () => {
@@ -95,7 +95,7 @@ test('负控:cardStyle 缺失时落回 foil —— 与组件默认、后端默�
 test('★回执一路到组件:分发器把 kit.card 传下去,组件收得到', () => {
   const dispatcher = read('../../pages/play/components/playkit/index.wxml')
   const block = (dispatcher.match(/<cy-playkit-photocheck[\s\S]*?\/>/) || [''])[0]
-  assert.ok(block, '分发器里找不到 photocheck 那一块,这条断言就是恒真的')
+  assert.ok(block, '分发器里找不到 photocheck 那一块，这条断言就是恒真的')
   assert.ok(/card="\{\{kit\.card\}\}"/.test(block), 'kit.card 没传给组件:投影再对也到不了屏')
 })
 
@@ -104,7 +104,7 @@ test('★组件里那张卡真的渲出来,而且只在「判过 + 有卡」时�
   const wxml = strip(read(dir + 'index.wxml'))
   const json = JSON.parse(read(dir + 'index.json'))
   assert.equal(json.usingComponents['cy-spin-card'], '/components/cy/spin-card/index',
-    '没注册自定义组件 —— WXML 写了也是白写,渲染时静少一块')
+    '没注册自定义组件 —— WXML 写了也是白写，渲染时静少一块')
 
   const at = wxml.indexOf('<cy-spin-card')
   assert.ok(at > 0, 'WXML 里没有 cy-spin-card')
@@ -165,7 +165,7 @@ test('★拍物成卡模式分到新的一屏,普通拍照审核还是原来那�
   assert.ok(oc, '分发器里没有拍物成卡那一屏')
   assert.ok(/kit\.type === 'photocheck' && kit\.mode === 'CARD'/.test(oc), '拍物成卡的闸不对:' + oc)
   assert.ok(dispatcher.indexOf('<cy-playkit-objectcard ') < dispatcher.indexOf('<cy-playkit-photocheck '),
-    '拍物成卡那一屏必须排在普通拍照前面,否则 wx:elif 链先落到旧屏')
+    '拍物成卡那一屏必须排在普通拍照前面，否则 wx:elif 链先落到旧屏')
   for (const key of ['card', 'place', 'passed', 'tries', 'degraded', 'flagged', 'photoFailSeq']) {
     assert.ok(new RegExp('\\{\\{kit\\.' + key + '\\}\\}').test(oc), '没把 kit.' + key + ' 传给拍物成卡那一屏')
   }
@@ -186,8 +186,8 @@ test('★上传/提交失败时通知拍物成卡那一屏回取景,且这一模
   const notify = strip(page.slice(nAt, page.indexOf('\n  },', nAt)))
   assert.ok(/'playKit\.kit\.photoFailSeq': this\._photoFailSeq/.test(notify), '_notifyPhotoFail 没把计数送到那一屏')
   // 五处失败出口都走 fail(),不许有漏网的 cyToast 直接 return
-  assert.equal((body.match(/\bcyToast\(/g) || []).length, 1, '失败出口里还有直接 cyToast 的,那一屏收不到失败:' + body)
-  assert.ok(/if \(!cardMode\) cyLoading\.show/.test(body), '拍物成卡自己有处理中,不该再盖全屏 loading')
+  assert.equal((body.match(/\bcyToast\(/g) || []).length, 1, '失败出口里还有直接 cyToast 的，那一屏收不到失败:' + body)
+  assert.ok(/if \(!cardMode\) cyLoading\.show/.test(body), '拍物成卡自己有处理中，不该再盖全屏 loading')
 })
 
 test('★拍物成卡那一屏:不用 Behavior、不加 keyframes、减弱动效挂在组件自己的根上', () => {
@@ -239,7 +239,7 @@ test('★拍物成卡是整屏不是弹窗:无抓手、无角标、底色铺满�
   assert.ok(!/oc__grab/.test(wxml + wxss), '还留着弹窗抓手')
   assert.ok(!/oc__corner/.test(wxml + wxss), '取景框四角还压着白色角标')
   const rule = (sel) => ((wxss.match(new RegExp('\\n' + sel.replace(/\./g, '\\.') + ' \\{([^}]*)\\}')) || [])[1] || '')
-  assert.match(rule('.oc'), /background: var\(--cy-color-bg-surface-subtle\)/, '面板外露的是遮罩,看着还是弹窗')
+  assert.match(rule('.oc'), /background: var\(--cy-color-bg-surface-subtle\)/, '面板外露的是遮罩，看着还是弹窗')
   assert.ok(!/border-radius/.test(rule('.oc__sheet')), '面板还带顶部圆角')
   assert.match(wxml, /class="oc__sheet" style="top:\{\{topSafe\}\}px"/, '内容区不能越过胶囊')
   assert.match(rule('.oc__vf'), /border-radius: var\(--cy-radius-2xl\)/, '取景框要整块圆角')

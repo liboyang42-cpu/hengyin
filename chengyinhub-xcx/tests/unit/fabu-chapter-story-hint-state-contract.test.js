@@ -10,7 +10,7 @@ const js = fs.readFileSync(path.resolve(__dirname, '../../pages/publish/fabu/ind
 const sheetStart = wxml.indexOf('pop-chapter-settings');
 const sheetEnd = wxml.indexOf('2026-09-04 拍板:音频', sheetStart);
 assert.ok(sheetStart >= 0, '章节设置弹层还在');
-assert.ok(sheetEnd > sheetStart, '弹层结束标记找不到,切片会串台');
+assert.ok(sheetEnd > sheetStart, '弹层结束标记找不到，切片会串台');
 const sheet = wxml.slice(sheetStart, sheetEnd);
 
 function assertNoEntryCaption(text) {
@@ -31,7 +31,7 @@ test('这句话描述的行为与 JS 一致:完成新增才会自动进入故事
   const editBranchAt = js.indexOf('} else {\n      // 编辑现有章节的逻辑保持不变');
   assert.ok(editBranchAt > 0, '编辑既有章节的分支没被挪走');
   assert.ok(js.slice(editBranchAt, js.indexOf("    this.updateAllStatistics();", editBranchAt)).indexOf('openStoryEditor') < 0,
-    '编辑既有章节不会自动进故事流,所以这句话在这里就是错的');
+    '编辑既有章节不会自动进故事流，所以这句话在这里就是错的');
 });
 
 test('负控:重新加入入口说明小字会被拒绝', () => {

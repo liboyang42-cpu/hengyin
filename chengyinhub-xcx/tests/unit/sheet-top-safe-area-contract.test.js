@@ -97,10 +97,10 @@ test('③ 浮层面板不许用绝对像素钉死高度', () => {
 
 test('④ 三个曾经打架的口径都已收编到同一个 token', () => {
   assert.match(read('components/cy/sheet/index.wxss'),
-    new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?height:\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
+    new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?height:\\s*min\\(var\\(--cy-comp-sheet-full\\),\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
     'cy-sheet 的 full 变体(原 96vh)必须走安全上限')
   const scene = read('components/cy/scene-sheet/index.wxss')
-  assert.match(scene, new RegExp(`\\.ss__panel \\{[\\s\\S]*?max-height:\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
+  assert.match(scene, new RegExp(`\\.ss__panel \\{[\\s\\S]*?max-height:\\s*min\\(var\\(--cy-comp-sheet-full\\),\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
     'scene-sheet 面板通用上限(原 100vh)必须走安全上限')
   assert.match(read('style/tokens.wxss'),
     new RegExp(`--cy-comp-sheet-full-height:\\s*var\\(${SAFE}\\)`),
@@ -113,7 +113,7 @@ test('负控:浮层里写回 96vh 必须判红', () => {
   const real = overlayFiles()
   assert.deepEqual(findUnsafeHeights(real), [], '干净输入不该报')
   const mutated = real.map(([p, s]) => p.endsWith('sheet/index.wxss')
-    ? [p, s.replace('height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));', 'height: 96vh;')] : [p, s])
+    ? [p, s.replace('height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)));', 'height: 96vh;')] : [p, s])
   assert.notEqual(JSON.stringify(mutated), JSON.stringify(real), '负控变异注入失败')
   const bad = findUnsafeHeights(mutated)
   assert.ok(bad.length > 0 && bad.some((b) => b.includes('96vh')), `没抓到注入的 96vh:${bad.join()}`)
@@ -121,9 +121,9 @@ test('负控:浮层里写回 96vh 必须判红', () => {
 
 test('负控:70vh 的 T1 档不该被误伤', () => {
   assert.deepEqual(findUnsafeHeights([['x.wxss', '.a { max-height: 70vh; }']]), [],
-    'T1 的 70vh 是独立设计档位,离胶囊还有 30vh 富余,不该判罚')
+    'T1 的 70vh 是独立设计档位，离胶囊还有 30vh 富余，不该判罚')
   assert.deepEqual(findUnsafeHeights([['x.wxss', '.a { max-height: 71vh; }']]).length, 1,
-    '刚过档就该报 —— 证明阈值真的在起作用,不是恒不报')
+    '刚过档就该报 —— 证明阈值真的在起作用，不是恒不报')
 })
 
 test('负控:写回画板量出来的绝对像素必须判红', () => {
@@ -210,7 +210,7 @@ test('⑤ 覆盖面板上限的地方,减去那一截必须来自胶囊实测', 
   const bad = hits.filter((h) => !derivesFromCapsule(h))
     .map((h) => `${h.rel}: ${SAFE_H}: ${h.value}`)
   assert.deepEqual(bad, [],
-    '全屏弹层的顶必须低于微信胶囊一点点,不是「满屏」。这些覆盖点既没引用 '
+    '全屏弹层的顶必须低于微信胶囊一点点，不是「满屏」。这些覆盖点既没引用 '
       + `var(--cy-comp-sheet-max-height),也没走 utils/${CHROME_UTIL} 的 resolveMenuChrome():\n`
       + bad.join('\n'))
 })
@@ -220,15 +220,15 @@ test('负控:⑤ 三种错法都要能红', () => {
   assert.equal(derivesFromCapsule({ ...base, value: 'var(--cy-comp-sheet-max-height)' }), true, '安全 token 应放行')
   assert.equal(derivesFromCapsule({ ...base, value: 'calc(100vh - {{chrome.sheetTop}}px)' }), true,
     '走共用胶囊工具的运行时值应放行')
-  assert.equal(derivesFromCapsule({ ...base, value: '100vh' }), false, '裸 100vh 必须红:那就是满屏,会压住胶囊')
+  assert.equal(derivesFromCapsule({ ...base, value: '100vh' }), false, '裸 100vh 必须红:那就是满屏，会压住胶囊')
   assert.equal(derivesFromCapsule({ ...base, value: 'calc(100vh - 88px)' }), false,
-    '减一个字面数必须红:那是从画板量的死数,不随机型变')
+    '减一个字面数必须红:那是从画板量的死数，不随机型变')
   // 用独立夹具验证缺少共用工具，避免某个真实组件接入工具后负控失效。
   const dir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'cy-no-nav-'))
   try {
     fs.writeFileSync(path.join(dir, 'index.js'), 'Page({ data: { whatever: 88 } })')
     assert.equal(derivesFromCapsule({ rel: 'y/index.wxml', dir, value: 'calc(100vh - {{whatever}}px)' }), false,
-      '同目录没人走共用胶囊工具 ⇒ 等于自己另算一套,必须红')
+      '同目录没人走共用胶囊工具 ⇒ 等于自己另算一套，必须红')
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 })
 
@@ -270,7 +270,7 @@ function collectClampPaddingBlocks() {
 test('⑥ clamp 面板带安全区内距的必须 border-box', () => {
   const bad = collectClampPaddingBlocks()
   assert.deepEqual(bad, [],
-    '这些面板把 clamp 写在 content-box 上,padding-bottom(env 安全区)会加在 clamp 之外,顶边越过胶囊线:\n'
+    '这些面板把 clamp 写在 content-box 上,padding-bottom(env 安全区)会加在 clamp 之外，顶边越过胶囊线:\n'
       + bad.join('\n'))
 })
 
@@ -283,7 +283,7 @@ test('负控:⑥ content-box + env 内距必须红,border-box 与无内距放行
     return clamped && padded && !/box-sizing\s*:\s*border-box/.test(body)
   }
   assert.equal(src('.a{ max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); padding-bottom: env(safe-area-inset-bottom); }'), true,
-    'content-box + clamp + env 内距 = 2026-09-19 实拍炸过的那种,必须红')
+    'content-box + clamp + env 内距 = 2026-09-19 实拍炸过的那种，必须红')
   assert.equal(src('.a{ box-sizing: border-box; max-height: var(--cy-comp-sheet-max-h); padding: 0 40rpx calc(56rpx + env(safe-area-inset-bottom)); }'), false,
     'border-box 应放行')
   assert.equal(src('.a{ max-height: var(--cy-comp-sheet-max-h); padding: 0 40rpx; }'), false,
@@ -325,13 +325,14 @@ function assertFullVariantGeometry(overrides = {}) {
     `(a) full 变体的面板顶必须由胶囊实测值算出 calc(100vh - <实测>px),只留 env() 的 token 在模拟器上会压进胶囊行`)
 
   assert.doesNotMatch(wxml, /class="sh__nav"[^>]*padding-right/,
-    '(b) ✕ 不许再用 padding-right 往左躲胶囊 —— 那会让右上角关闭停在面板中部偏右,和 bottom 档不一致')
+    '(b) ✕ 不许再用 padding-right 往左躲胶囊 —— 那会让右上角关闭停在面板中部偏右，和 bottom 档不一致')
   assert.doesNotMatch(wxml, /class="sh__nav"[^>]*padding-top/,
     '(b) 顶边让开以后 .sh__nav 也不再吃状态栏 padding-top,否则整行白往下掉一截')
-  assert.match(wxml, /style="\{\{_dragStyle\}\}\{\{variant === 'full' \? fullMaxH : ''\}\}"/,
-    '(c) 面板顶只在 full 档下发:bottom 档的 70vh 是独立设计档位,不能被顺手抬成近全屏')
-  assert.match(wxss, new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?\\n\\s*height:\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
-    `(c) wxss 必须「实测通道优先、${SAFE} 兜底」,拿不到胶囊信息时仍退回安全区 token`)
+  // 2026-10-23 业主:bottom 档也按胶囊实测封顶(高度跟内容走,长内容到胶囊底下),不再是独立的 70vh 档位
+  assert.match(wxml, /style="\{\{_dragStyle\}\}\{\{fullMaxH\}\}"/,
+    '(c) 胶囊实测上限对所有档位下发')
+  assert.match(wxss, new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?\\n\\s*height:\\s*min\\(var\\(--cy-comp-sheet-full\\),\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
+    `(c) wxss 必须「实测通道优先、${SAFE} 保底」,拿不到胶囊信息时仍退回安全区 token`)
 }
 
 test('⑦ full 变体:面板顶走胶囊实测,✕ 贴弹层右缘不再往左躲', () => {
@@ -355,7 +356,8 @@ test('负控:⑦ 面板顶退回 env() 算不出来的字面数必须判红', ()
 
 test('负控:⑦ 顶边通道整条摘掉(退回只吃 token)必须判红', () => {
   const wxss = read(SHEET_WXSS)
-  const mutated = wxss.replace(`height: var(${SAFE_H}, var(${SAFE}));`, `height: var(${SAFE});`)
+  // 锚到行首的 `  height:`(full 档那条);2026-10-23 起面板基础规则多了一条同表达式的 max-height,不能误伤它
+  const mutated = wxss.replace(`\n  height: min(var(--cy-comp-sheet-full), var(${SAFE_H}, var(${SAFE})));`, `\n  height: var(${SAFE});`)
   assert.notEqual(mutated, wxss, '负控变异注入失败:面板高度锚点要先同步')
   assert.throws(() => assertFullVariantGeometry({ [SHEET_WXSS]: mutated }), /\(c\) wxss/)
 })

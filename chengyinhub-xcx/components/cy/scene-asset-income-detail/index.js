@@ -4,6 +4,7 @@
 // subpackageA/pages/assetcenter/income-detail 已退化成深链薄壳,渲染的就是本组件。
 // 页面级的 merchantTheme 换肤留在壳里 —— 弹窗的主题由 scene-sheet 的 theme 作用域给。
 const app = getApp()
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js')
 
 function moneyText(value) {
   return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(2) : null
@@ -42,15 +43,23 @@ Component({
     page_no: 1,
     pageSize: 10,
     hasMore: false,
+    authRequired: false,
+    accessDenied: false,
     loadErr: false,
     loading: false,
   },
   lifetimes: {
-    attached() { this.getList() },
+    attached() { this._detached = false; this.getList() },
+    detached() { this._detached = true; this._loadToken = (this._loadToken || 0) + 1 },
+  },
+  pageLifetimes: {
+    show() { this._hidden = false; if (this._readSessionChanged || this._readOwner !== undefined && this._readOwner !== memberId(app)) { this._readSessionChanged = false; this.getList() } },
+    hide() { this._hidden = true },
   },
   methods: {
     onFilterChange(e) {
       const activeFilter = e.detail.key
+      this._loadToken = (this._loadToken || 0) + 1
       const tab = this.data.filterTabs.filter((item) => item.key === activeFilter)[0]
       this.setData({
         activeFilter,
@@ -68,18 +77,34 @@ Component({
     onClubClose() { this.triggerEvent('close') },
 
     getList() {
+      if (this._detached) return
+      const owner = memberId(app)
+      if (owner !== this._readOwner) { this._readOwner = owner; this.setData({ list: [], page_no: 1, hasMore: false }) }
+      if (!owner) { waitForInitialSession(this, app, () => this.getList()); this.setData({ authRequired: true, accessDenied: false, loadErr: true, loading: false }); return }
       const that = this
       const { activeFilter, page_no, pageSize } = this.data
+      const token = this._loadToken = (this._loadToken || 0) + 1
       const reqData = { pageNum: page_no, pageSize }
       if (activeFilter === 'create') reqData.eventType = '1'
       else if (activeFilter === 'brand') reqData.eventType = '2'
 
-      that.setData({ loading: true, loadErr: false })
+      that.setData({ loading: true, loadErr: false, authRequired: false, accessDenied: false })
+      const current = () => !that._detached && token === that._loadToken && owner === memberId(app)
+      const recover = (res, statusCode) => !that._detached && token === that._loadToken && recoverReadSession(that, app, res,
+        function (anonymous) { this._loadToken++; this._readOwner = undefined; this.setData({ list: [], page_no: 1, hasMore: false, loading: false, loadErr: true, authRequired: anonymous, accessDenied: false }); },
+        that.getList, statusCode)
+      const denied = (res, statusCode) => {
+        const code = failureStatus(res, statusCode)
+        if (!current() || (code !== 401 && code !== 403)) return false
+        that.setData({ list: [], page_no: 1, hasMore: false, loading: false, loadErr: true, authRequired: code === 401, accessDenied: code === 403 })
+        return true
+      }
       app.sendRequest({
         url: '/api/user/balance/list',
         method: 'POST',
         data: reqData,
         success(res) {
+          if (!current() || denied(res)) return
           if (res.code == '200') {
             const data = res.data
             const rows = data && (data.rows || data.list || data)
@@ -99,21 +124,20 @@ Component({
             that.setData({ loadErr: true, loading: false })
           }
         },
-        fail() {
-          that.setData({ loadErr: true, loading: false })
-        },
+        fail(res, statusCode) { if (!recover(res, statusCode) && current() && !denied(res, statusCode)) that.setData({ loadErr: true, loading: false }) },
+        successStatusAbnormal(res, statusCode) { if (!recover(res, statusCode) && current() && !denied(res, statusCode)) that.setData({ loadErr: true, loading: false }) },
       })
     },
 
     onRetry() {
-      this.setData({ page_no: 1, list: [] })
+      if (this.data.authRequired) { retryLogin(this, app, () => this.getList()); return }
       this.getList()
     },
 
     // 壳的 onReachBottom / 弹窗正文的 scrolltolower 都转发到这里
     loadMore() {
       if (this.data.activeFilter === 'club' || this.data.loading || !this.data.hasMore) return
-      this.setData({ page_no: this.data.page_no + 1 })
+      if (!this.data.loadErr) this.setData({ page_no: this.data.page_no + 1 })
       this.getList()
     },
 
@@ -138,7 +162,7 @@ Component({
           displayDate: formatDate(item.createTime, today, yesterday),
           isIncome,
           directionKnown: direction !== 'unknown',
-          directionText: direction === 'income' ? '收入' : (direction === 'expense' ? '支出' : '方向待确认'),
+          directionText: direction === 'income' ? '收入' : (direction === 'expense' ? '支出' : '—'),
           // 符号进文案:方向不能只靠颜色承载(WCAG 1.4.1),色盲用户要能从 +/− 和「收入/支出」读出来
           amountText: abs == null ? null : (direction === 'income' ? '+¥' : (direction === 'expense' ? '−¥' : '¥')) + abs,
         })

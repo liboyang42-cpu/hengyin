@@ -61,7 +61,7 @@ test('★ 兜底伪造名「商家」一律不归组(address_name 可空,一批�
     M({ id: 11, name: '商家', nameKnown: false, state: 'done', ...at(0) }),
     M({ id: 12, name: '商家', nameKnown: false, state: 'done', ...at(5) }),
     M({ id: 13, name: '商家', nameKnown: false, state: 'done', ...at(40) }),
-  ]), 3, '三家无名店探完就是 3 家,不能塌成 1 家(否则「三店连亮」永不触发)');
+  ]), 3, '三家无名店探完就是 3 家，不能塌成 1 家(否则「三店连亮」永不触发)');
 });
 
 test('无坐标不敢合并(宁可多弹一张卡,也不让整家店消失)', () => {
@@ -199,7 +199,7 @@ test('同店多源只弹一张,距离取最近的那条副本', () => {
     M({ id: 'r9', name: '甲', _roamId: 9, ...at(5) }),
   ], HERE, 80);
   assert.strictEqual(sel.length, 1);
-  assert.ok(sel[0].distM <= 8, `应取最近副本的距离,实得 ${sel[0].distM}m`);
+  assert.ok(sel[0].distM <= 8, `应取最近副本的距离，实得 ${sel[0].distM}m`);
   assert.strictEqual(sel[0].group.rep.nodeId, 5, '代表仍是能打卡的那条');
 });
 

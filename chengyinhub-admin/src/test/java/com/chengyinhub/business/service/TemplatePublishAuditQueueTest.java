@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
@@ -55,6 +56,7 @@ class TemplatePublishAuditQueueTest {
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
         ReflectionTestUtils.setField(service, "templateLibraryService", libraryService);
@@ -103,6 +105,7 @@ class TemplatePublishAuditQueueTest {
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
         ReflectionTestUtils.setField(service, "templateLibraryService", libraryService);
@@ -128,11 +131,74 @@ class TemplatePublishAuditQueueTest {
                 .submitOrRefreshTemplateLibrary(any(), any(), any());
     }
 
+    private TemplatePublishServiceImpl approvedMarketCandidate(String title, ICmsTemplateLibraryService libraryService,
+                                                              IAuditTaskService auditService) {
+        ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
+        CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
+        TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
+        wireLocks(service);
+        ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
+        ReflectionTestUtils.setField(service, "templateLibraryService", libraryService);
+        ReflectionTestUtils.setField(service, "auditTaskService", auditService);
+        ReflectionTestUtils.setField(service, "memberTemplateMapper", templateMapper);
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setId(91L);
+        template.setMemberId(7L);
+        template.setTitle(title);
+        template.setDraftStatus(1);
+        template.setStatus(1L);
+        template.setCheckStatus(1);
+        template.setPublishStatus(0L);
+        template.setDelFlag(0);
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(java.util.Collections.singletonList(91L)))
+                .thenReturn(java.util.Collections.singletonList(template));
+        return service;
+    }
+
+    /** owner 2026-10-23 D5(U-036):同作者广场里已有 trim 后同名的未删除模板 ⇒ 友好拒绝,零写入。 */
+    @Test
+    void sameAuthorSameTrimmedTitleIsRejectedBeforeAnyWrite() {
+        ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
+        IAuditTaskService auditService = mock(IAuditTaskService.class);
+        TemplatePublishServiceImpl service = approvedMarketCandidate("  夜游老街 ", libraryService, auditService);
+        when(libraryMapper.selectAuthorLiveTitles(7L, 91L)).thenReturn(java.util.Arrays.asList("别的玩法", "夜游老街 "));
+
+        ServiceException rejected = assertThrows(ServiceException.class,
+                () -> service.submitTemplateToMarket(91L, 7L, "member7"));
+
+        assertEquals("你已经有同名模板了", rejected.getMessage());
+        assertEquals(Integer.valueOf(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST), rejected.getCode());
+        verify(libraryService, org.mockito.Mockito.never()).insertCmsTemplateLibrary(any());
+        verify(libraryService, org.mockito.Mockito.never()).updateCmsTemplateLibrary(any());
+        verify(auditService, org.mockito.Mockito.never()).submitOrRefreshTemplateLibrary(any(), any(), any());
+    }
+
+    @Test
+    void differentTitleOrOnlyCaseDifferenceStillSubmits() {
+        ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
+        IAuditTaskService auditService = mock(IAuditTaskService.class);
+        TemplatePublishServiceImpl service = approvedMarketCandidate("Night Walk", libraryService, auditService);
+        // 逐字相等才算同名:大小写不同、子串都不拦(库排序规则 general_ci 不参与判等)
+        when(libraryMapper.selectAuthorLiveTitles(7L, 91L)).thenReturn(java.util.Arrays.asList("night walk", "Night Walk 2"));
+        when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.emptyList());
+        when(libraryService.insertCmsTemplateLibrary(any())).thenAnswer(invocation -> {
+            CmsTemplateLibrary row = invocation.getArgument(0);
+            row.setId(191L);
+            when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(row));
+            return 1;
+        });
+        when(auditService.submitOrRefreshTemplateLibrary(eq(191L), eq(7L), any())).thenReturn(301L);
+
+        assertEquals(301L, service.submitTemplateToMarket(91L, 7L, "member7"));
+    }
+
     /** 归属不符时不得暴露他人玩法是否存在,但仍要把原因透传给前端。 */
     @Test
     void othersGameCannotBeSubmittedToMarket() {
         CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         ReflectionTestUtils.setField(service, "memberTemplateMapper", templateMapper);
         CmsMemberTemplate foreign = new CmsMemberTemplate();
@@ -157,6 +223,7 @@ class TemplatePublishAuditQueueTest {
         ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
@@ -185,11 +252,53 @@ class TemplatePublishAuditQueueTest {
     }
 
     @Test
+    void editingPendingTemplateKeepsIdentityAndRefreshesPersonalAuditSnapshot() {
+        ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
+        ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
+        IAuditTaskService auditService = mock(IAuditTaskService.class);
+        TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
+        wireLocks(service);
+        ReflectionTestUtils.setField(service, "capabilityGuard", mock(ICapabilityGuard.class));
+        ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
+        ReflectionTestUtils.setField(service, "templateLibraryService", libraryService);
+        ReflectionTestUtils.setField(service, "auditTaskService", auditService);
+        CmsMemberTemplate pending = new CmsMemberTemplate();
+        pending.setId(91L); pending.setMemberId(7L); pending.setDelFlag(0);
+        pending.setDraftStatus(1); pending.setStatus(0L); pending.setCheckStatus(0); pending.setPublishStatus(0L);
+        pending.setCreateBy("member7");
+        java.util.Date created = new java.util.Date(1000);
+        pending.setCreateTime(created);
+        when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(pending);
+        when(memberService.updateCmsMemberTemplate(any())).thenAnswer(invocation -> {
+            CmsMemberTemplate replacement = invocation.getArgument(0);
+            when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(replacement);
+            return 1;
+        });
+        CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
+        request.setId(91L); request.setTitle("本人待审模板");
+        request.setDescription("修改后的重审内容");
+
+        assertEquals(91L, service.publishTemplateWithTransaction(request, 7L, "member7"));
+
+        verify(memberService).updateCmsMemberTemplate(argThat(row -> Long.valueOf(91L).equals(row.getId())
+                && Long.valueOf(7L).equals(row.getMemberId()) && created.equals(row.getCreateTime())
+                && "member7".equals(row.getCreateBy()) && Integer.valueOf(1).equals(row.getDraftStatus())
+                && Long.valueOf(0L).equals(row.getStatus()) && Integer.valueOf(0).equals(row.getCheckStatus())
+                && Long.valueOf(0L).equals(row.getPublishStatus())));
+        verify(memberService, org.mockito.Mockito.never()).insertCmsMemberTemplate(any());
+        verify(libraryService, org.mockito.Mockito.never()).insertCmsTemplateLibrary(any());
+        verify(auditService).submitOrRefreshTemplate(eq(91L), eq(7L),
+                argThat(json -> json.contains("修改后的重审内容") && json.contains("本人待审模板")));
+    }
+
+    @Test
     void adminCreateAlsoWaitsForExplicitMarketSubmit() {
         ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
         ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
@@ -222,6 +331,7 @@ class TemplatePublishAuditQueueTest {
         ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
@@ -259,6 +369,7 @@ class TemplatePublishAuditQueueTest {
         ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
@@ -285,6 +396,7 @@ class TemplatePublishAuditQueueTest {
         edit.setId(191L);
         edit.setMemberTemplateId(91L);
         edit.setTitle("新标题");
+        edit.setUseNum(999);
         when(libraryService.selectCmsTemplateLibraryById(191L)).thenReturn(persistedProjection);
         when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(persistedProjection));
         when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(canonical);
@@ -299,7 +411,8 @@ class TemplatePublishAuditQueueTest {
         assertEquals(1, service.updateTemplateFromLibraryProjection(edit, "operator"));
         verify(memberService, org.mockito.Mockito.never()).updateCmsMemberTemplate(any());
         verify(libraryService).updateCmsTemplateLibrary(argThat(row -> Long.valueOf(191L).equals(row.getId())
-                && Long.valueOf(0L).equals(row.getStatus()) && Long.valueOf(0L).equals(row.getPublishStatus())));
+                && Long.valueOf(0L).equals(row.getStatus()) && Long.valueOf(0L).equals(row.getPublishStatus())
+                && row.getUseNum() == null));
         verify(auditService).submitOrRefreshTemplateLibrary(eq(191L), eq(7L), contains("新标题"));
     }
 
@@ -307,6 +420,7 @@ class TemplatePublishAuditQueueTest {
     void pendingTemplateCannotBePublishedThroughLibraryStatusEndpoint() {
         ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
@@ -346,6 +460,7 @@ class TemplatePublishAuditQueueTest {
         ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
         ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
@@ -363,13 +478,19 @@ class TemplatePublishAuditQueueTest {
         CmsTemplateLibrary projection = new CmsTemplateLibrary();
         projection.setId(191L);
         projection.setMemberTemplateId(91L);
+        projection.setMemberId(7L);
         projection.setStatus(1L);
         projection.setDelFlag(0);
         when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(template);
         when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(projection));
         when(libraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
 
-        assertTrue(service.updateTemplateLibraryStatus(91L, 1, 7L));
+        // #398 F2:上架不带锁外复检快照一律拒绝(fail closed),且不产生任何写入。
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.updateTemplateLibraryStatus(91L, 1, 7L));
+        verify(libraryService, org.mockito.Mockito.never()).updateCmsTemplateLibrary(any());
+        assertTrue(service.updateTemplateLibraryStatus(91L, 1, 7L,
+                TemplateLibraryRepublishReview.freeze(91L, 7L, java.util.Collections.singletonList(projection))));
         verify(memberService, org.mockito.Mockito.never()).updateCmsMemberTemplate(any());
         verify(libraryService).updateCmsTemplateLibrary(argThat(row -> Long.valueOf(1L).equals(row.getStatus())
                 && Long.valueOf(1L).equals(row.getPublishStatus())));
@@ -380,6 +501,7 @@ class TemplatePublishAuditQueueTest {
         ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
         ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。
@@ -395,10 +517,14 @@ class TemplatePublishAuditQueueTest {
         template.setDelFlag(0);
         CmsTemplateLibrary first = new CmsTemplateLibrary();
         first.setId(191L);
+        first.setMemberTemplateId(91L);
+        first.setMemberId(7L);
         first.setStatus(1L);
         first.setDelFlag(0);
         CmsTemplateLibrary second = new CmsTemplateLibrary();
         second.setId(192L);
+        second.setMemberTemplateId(91L);
+        second.setMemberId(7L);
         second.setStatus(1L);
         second.setDelFlag(0);
         when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(template);
@@ -406,13 +532,17 @@ class TemplatePublishAuditQueueTest {
         when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Arrays.asList(first, second));
         when(libraryService.updateCmsTemplateLibrary(any())).thenReturn(1, 0);
 
-        assertThrows(RuntimeException.class, () -> service.updateTemplateLibraryStatus(91L, 1, 7L));
+        assertThrows(RuntimeException.class, () -> service.updateTemplateLibraryStatus(91L, 1, 7L,
+                TemplateLibraryRepublishReview.freeze(91L, 7L, java.util.Arrays.asList(first, second))));
+        verify(libraryService).updateCmsTemplateLibrary(first);
+        verify(libraryService).updateCmsTemplateLibrary(second);
     }
 
     @Test
     void preferenceTemplateCannotEnterReviewWithInvalidBranchContract() {
         ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
         TemplatePublishServiceImpl service = new TemplatePublishServiceImpl();
+        ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
         wireLocks(service);
         // X03:publish/draft 现在会先过身份能力位闸(分支/博弈/勋章)。
         // mock 默认返回 null = 放行,本用例断言的不是能力位,行为与接闸前一致。

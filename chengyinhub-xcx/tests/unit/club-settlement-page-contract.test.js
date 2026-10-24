@@ -10,11 +10,16 @@ const withdrawCs = require(path.join(root, 'utils/withdraw-cs.js'))
 function mount() {
   let config
   const requests = []
-  global.getApp = () => ({ globalData: {}, sendRequest(options) { requests.push(options) } })
+  const app = { globalData: { user_id: 990001, role: 'merchant', user_type: 2 },
+    getUserID() { return this.globalData.user_id }, sendRequest(options) { requests.push(options) } }
+  const navigations = []
+  let stops = 0
+  global.getApp = () => app
   global.Page = value => { config = value }
   global.getCurrentPages = () => [{}, {}]
   global.wx = {
-    showToast() {}, stopPullDownRefresh() {}, navigateBack() {}, switchTab() {}, navigateTo() {},
+    showToast() {}, stopPullDownRefresh() { stops += 1 }, navigateBack() {}, switchTab() {},
+    navigateTo(o) { navigations.push(o.url) },
     showModal() {},
   }
   delete require.cache[require.resolve(PAGE)]
@@ -23,7 +28,7 @@ function mount() {
     data: Object.assign({}, config.data),
     setData(patch) { Object.assign(this.data, patch) },
   })
-  return { vm, requests }
+  return { vm, requests, app, navigations, get stops() { return stops } }
 }
 
 const VALID_SUMMARY = {
@@ -40,6 +45,86 @@ const VALID_SUMMARY = {
     { id: 31, topicId: 9001, name: '外滩夜行', amountText: '¥128.00', amountStatus: 'verified', originalAmountText: '¥130.00', executedAdjustmentText: '¥-2.00', netAmountText: '¥128.00', arrivedText: '已入账', paidText: '已打款', status: 'settled' },
   ],
 }
+
+const contextSummary = amount => ({ code: 200, data: { ...VALID_SUMMARY, settledAmountText: amount } })
+
+test('真实请求封装的俱乐部首登、HTTP403及换号401保持当前身份和正确余额', () => {
+  const h = mount(); let logins = 0
+  const client = require('../../utils/transport/request-client.js').createRequestClient({
+    wxRequest: o => { h.requests.push(o); return { abort() {} } }, getBaseUrl: () => 'http://127.0.0.1',
+    getUserID: () => h.app.getUserID(), reLogin: cb => {
+      logins += 1; h.app.globalData.user_id = 990001; cb(true, { isCurrentSession: () => true })
+    },
+  })
+  h.app.sendRequest = o => client.send(o); h.app.globalData.user_id = ''; h.vm.onLoad({ clubId: 21 })
+  h.requests[0].success({ statusCode: 401, data: { code: 401 } })
+  h.requests[1].success({ statusCode: 200, data: contextSummary('¥60.00') })
+  assert.equal(h.requests.length, 3); assert.equal(h.vm.data.summary, null)
+  h.requests[2].success({ statusCode: 200, data: contextSummary('¥20.00') })
+  assert.equal(h.vm.data.summary.settledAmountText, '¥20.00')
+  h.vm.loadSummary(); h.requests[3].success({ statusCode: 403, data: { msg: '无权限' } })
+  assert.equal(h.vm.data.summary, null); assert.equal(h.vm.data.withdrawState, 'unknown')
+  h.vm.loadSummary(); h.app.globalData.user_id = 990002
+  h.requests[4].success({ statusCode: 401, data: { code: 401 } })
+  assert.equal(logins, 1); assert.equal(h.requests.length, 5); assert.equal(h.vm.data.summary, null)
+})
+
+test('俱乐部换号或切俱乐部立即清除旧金额与余额，旧回调不改新结果或停止新下拉', () => {
+  for (const change of [h => { h.app.globalData.user_id = 990002 }, h => { h.vm._clubId = 22 }]) {
+    const h = mount(); h.vm.onLoad({ clubId: 21 }); h.requests[0].success(contextSummary('¥60.00'))
+    h.vm.onStages({ detail: { known: true, positive: true } })
+    h.vm.loadSummary(); const old = h.requests[1]
+    change(h); h.vm.loadSummary()
+    assert.equal(h.vm.data.summary, null); assert.equal(h.vm.data.withdrawState, 'unknown')
+    h.requests[2].success(contextSummary('¥20.00')); const stops = h.stops
+    old.success(contextSummary('¥60.00')); old.fail(); old.complete()
+    assert.equal(h.vm.data.summary.settledAmountText, '¥20.00')
+    assert.equal(h.vm.data.state, 'ready'); assert.equal(h.stops, stops)
+  }
+})
+
+test('俱乐部无新请求时的身份/范围失效清除旧结果，旧余额事件不能再次启用提现', () => {
+  for (const change of [h => { h.app.globalData.user_id = 990002 },
+    h => { h.app.globalData.role = 'player' }, h => { h.app.globalData.user_type = 1 },
+    h => { h.vm._clubId = 22 }, h => { h.app.globalData.user_id = '' }]) {
+    const h = mount(); h.vm.onLoad({ clubId: 21 }); h.requests[0].success(contextSummary('¥60.00'))
+    h.vm.loadSummary(); change(h); h.requests[1].success(contextSummary('¥60.00'))
+    h.vm.onStages({ detail: { known: true, positive: true } })
+    assert.equal(h.vm.data.summary, null); assert.equal(h.vm.data.withdrawState, 'unknown')
+    assert.equal(h.requests.length, 2)
+  }
+})
+
+test('俱乐部已失效的金额不能驱动明细/客服动作，当前列表之外的记录不跳转', () => {
+  const h = mount(); h.vm.onLoad({ clubId: 21 }); h.requests[0].success(contextSummary('¥60.00'))
+  h.vm.goTopicSettlement({ currentTarget: { dataset: { id: 99, topicId: 9999 } } })
+  assert.equal(h.navigations.length, 0)
+  h.vm.onStages({ detail: { known: true, positive: true } }); h.app.globalData.user_id = 990002
+  const modals = []; global.wx.showModal = o => modals.push(o)
+  h.vm.goTopicSettlement({ currentTarget: { dataset: { id: 31, topicId: 9001 } } }); h.vm.goWithdraw()
+  assert.equal(h.navigations.length, 0); assert.equal(modals.length, 0)
+  assert.equal(h.vm.data.summary, null); assert.equal(h.vm.data.withdrawState, 'unknown')
+})
+
+test('俱乐部隐藏/卸载丢弃旧回调，返回重读，初次show不重复请求', () => {
+  const h = mount(); h.vm.onLoad({ clubId: 21 }); h.vm.onShow(); assert.equal(h.requests.length, 1)
+  h.vm.onHide(); h.requests[0].success(contextSummary('¥60.00')); h.requests[0].complete()
+  assert.equal(h.vm.data.summary, null); assert.equal(h.stops, 0)
+  h.vm.onShow(); assert.equal(h.requests.length, 2)
+  h.requests[1].success(contextSummary('¥20.00'))
+  h.vm.onUnload(); h.vm.loadSummary(); h.requests[1].fail(); h.requests[1].complete()
+  assert.equal(h.requests.length, 2); assert.equal(h.vm.data.state, 'ready'); assert.equal(h.stops, 0)
+})
+
+test('俱乐部匿名首登重读、刷新失败和重试均不沿用旧余额，缺ID不发送请求', () => {
+  const h = mount(); h.app.globalData.user_id = ''; h.vm.onLoad({ clubId: 21 })
+  h.app.globalData.user_id = 990001; h.requests[0].success(contextSummary('¥60.00'))
+  assert.equal(h.requests.length, 2); assert.equal(h.vm.data.summary, null)
+  h.requests[1].success(contextSummary('¥20.00')); h.vm.onStages({ detail: { known: true, positive: true } })
+  h.vm.loadSummary(); h.requests[2].fail(); assert.equal(h.vm.data.summary, null)
+  assert.equal(h.vm.data.withdrawState, 'unknown'); assert.equal(h.vm.data.state, 'network-error')
+  h.vm._clubId = ''; h.vm.loadSummary(); assert.equal(h.requests.length, 3)
+})
 
 // E-02(2026-09-16):「俱乐部分润 → 结算详情」双重坏链之参数错配。
 // 病:列表传的是结算行 id,明细页 source=finance 按 topicId 在 /api/coop/finance 里找 ⇒ 恒 missing-record。
@@ -219,7 +304,7 @@ test('CU-C-92:可提现为 0 或余额未取到时禁用提现主按钮并说明
   // wxml 是真正决定按钮可不可点的一侧:禁用与提示文案都必须落在模板上
   const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
   assert.match(wxml, /disabled="\{\{withdrawing \|\| withdrawState !== 'positive'\}\}"/)
-  assert.match(wxml, /wx:if="\{\{withdrawState === 'zero'\}\}"[^>]*>可提现为 0/)
+  assert.match(wxml, /wx:if="\{\{withdrawState === 'zero'\}\}"[^>]*>客诉期结束后可提现/)
   assert.match(wxml, /<cy-funds-stages[^>]*bind:stages="onStages"/, '余额事件必须真接到页面')
 })
 
@@ -231,5 +316,5 @@ test('CU-C-93:chip 已经说清的状态不再在 meta 行重复一次', () => {
   const paidLine = wxml.match(/<text class="topic-row-meta-line"[^>]*>\{\{item\.paidText\}\}<\/text>/)
   assert.ok(paidLine, 'paidText 行还在(作废细节仍要说)')
   assert.match(paidLine[0], /wx:if="\{\{item\.status === 'void' \|\| item\.amountStatus !== 'verified'\}\}"/,
-    'pending/已入账 两档与 chip 同词,不得再渲染一次')
+    'pending/已入账 两档与 chip 同词，不得再渲染一次')
 })

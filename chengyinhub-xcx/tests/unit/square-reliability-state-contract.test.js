@@ -31,6 +31,7 @@ function loadPage(relativePath) {
   let definition
   const absolutePath = path.join(ROOT, relativePath)
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getAvatar: () => '',
     getNickname: () => '',
@@ -61,7 +62,7 @@ function loadPage(relativePath) {
     console,
     getApp: () => app,
     Page: (config) => { definition = config },
-    require: createRequire(absolutePath),
+    require: (id) => id.includes('community-post-api') ? require('../helpers/community-page-seam') : createRequire(absolutePath)(id),
     setTimeout() {},
     clearTimeout() {},
     wx: wxApi,
@@ -167,7 +168,7 @@ test('广场发布成功关闭编辑层，并在刷新回读前保留原列表',
   })
 
   h.page.submitFormData()
-  h.requests[0].success({ code: '200' })
+  h.requests[0].success({ code: '200', data: { lifecycle: 'PUBLISHED' } })
 
   assert.equal(h.page.data.popOrig, false)
   assert.equal(h.page.data.popShow, false)
@@ -229,7 +230,7 @@ test('动态评论首载、空态和分页失败都有独立且可恢复的状�
 
   h.page.getList()
   assert.equal(h.page.data.commentsState, 'loading')
-  h.requests[0].success({ code: '200', data: { rows: [], total: 0 } })
+  h.requests[0].success({ code: '200', data: { rows: [], total: 0, hasMore: false } })
   h.requests[0].complete()
   assert.equal(h.page.data.commentsState, 'ready')
   assert.equal(h.page.data.nodata, true)
@@ -336,7 +337,7 @@ test('两个广场页面把恢复状态和按钮忙碌语义呈现在界面上',
   // 忙碌语义因此不再有可挂的按钮 —— 契约改为守住「提交路径没消失」:
   // 键盘发送键(confirm-type="send" + bindconfirm="addComment")是现在唯一的提交入口,
   // 且失败后仍有 comment-submit-feedback 里的原位重试。少任何一条都判红。
-  assert.doesNotMatch(detailWxml, /class="comment-submit"/, '发送圆钮已按稿删除,不许回流')
+  assert.doesNotMatch(detailWxml, /class="comment-submit"/, '发送圆钮已按稿删除，不许回流')
   // 2026-09-02:删掉发送键后 commentSubmitting / canComment 会变成孤儿状态(setData 了但没人消费),
   // 用户按完软键盘发送屏幕上毫无反馈。反馈改挂到输入框自己身上,这三条钉住它不再丢。
   assert.match(detailWxml, /class="david_npl_right[^"]*\{\{commentSubmitting \? 'is-sending'/,
@@ -346,7 +347,7 @@ test('两个广场页面把恢复状态和按钮忙碌语义呈现在界面上',
   assert.match(detailWxml, /class="comment-sending"[\s\S]*?aria-live="polite"[\s\S]*?aria-label="正在发送评论"/,
     '提交态必须能被读屏念出来(原来挂在已删按钮的 accessibility-label 上)')
   assert.match(detailWxml, /<input[^>]*bindconfirm="addComment"[^>]*confirm-type="send"/s,
-    '删掉发送键后,评论提交只剩键盘发送键这一条路,它必须还在')
+    '删掉发送键后，评论提交只剩键盘发送键这一条路，它必须还在')
   assert.match(detailWxml, /<cy-inline-error[^>]*action="重试"[^>]*bind:action="retryCommentSubmit"/s,
     '提交失败仍要有原位重试入口')
   assert.match(detailWxml, /<cy-inline-error[^>]*wx:if="\{\{replySubmitError\}\}"[^>]*bind:action="retryReplySubmit"/s)
@@ -376,7 +377,7 @@ test('广场评论与举报入口有准确可读名称，举报不再错用默�
   // (编辑/删除/举报)。守的判据不变:举报必须有可读名称,且不许顶一张默认头像冒充。
   assert.match(listWxml, /<cy-post-actions id="post-actions"[\s\S]{0,200}?bind:select="onPostAction"/s)
   assert.match(postActionsWxml, /aria-label="举报这条帖文"/s)
-  assert.doesNotMatch(listWxml, /report-icon|bmClose/, '旧自绘举报弹层必须整体退役,不许留半截')
+  assert.doesNotMatch(listWxml, /report-icon|bmClose/, '旧自绘举报弹层必须整体退役，不许留半截')
   assert.doesNotMatch(listWxml, /bindtap="reportSquare"[\s\S]*?src="\/images\/d_profile\.png"/)
 })
 

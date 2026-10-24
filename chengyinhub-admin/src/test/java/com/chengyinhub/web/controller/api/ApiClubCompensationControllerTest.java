@@ -6,6 +6,7 @@ import com.chengyinhub.business.domain.ClubQualityDecision;
 import com.chengyinhub.business.service.IClubEditionCompensationService;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubService;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -93,6 +94,54 @@ class ApiClubCompensationControllerTest {
         verify(compensationService).editionsForExecutingClub(CLUB);
     }
 
+    /** W10a #26:空原因端点 —— 未登录报错;非归属人只得到 NO_PERMISSION,服务层零读。 */
+    @Test
+    void emptyReasonNeedsLoginAndAnswersNoPermissionWithoutReadingOtherClubs() {
+        loggedInMember = null;
+        assertEquals(500, controller.editionsEmptyReason(clubBody(CLUB)).get(AjaxResult.CODE_TAG));
+
+        loggedInMember = OUTSIDER;
+        AjaxResult outsider = controller.editionsEmptyReason(clubBody(CLUB));
+        assertEquals(200, outsider.get(AjaxResult.CODE_TAG));
+        assertEquals(IClubEditionCompensationService.EDITIONS_REASON_NO_PERMISSION,
+                ((Map<?, ?>) outsider.get(AjaxResult.DATA_TAG)).get("reasonCode"));
+
+        loggedInMember = OWNER;
+        AjaxResult forged = controller.editionsEmptyReason(clubBody(CLUB + 1));
+        assertEquals(IClubEditionCompensationService.EDITIONS_REASON_NO_PERMISSION,
+                ((Map<?, ?>) forged.get(AjaxResult.DATA_TAG)).get("reasonCode"));
+
+        verifyNoInteractions(compensationService);
+    }
+
+    @Test
+    void emptyReasonForTheOwnerComesFromTheService() {
+        when(compensationService.editionsEmptyReason(CLUB))
+                .thenReturn(IClubEditionCompensationService.EDITIONS_REASON_UNDERTAKEN_NOT_ON_SALE);
+
+        AjaxResult result = controller.editionsEmptyReason(clubBody(CLUB));
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
+        assertEquals(IClubEditionCompensationService.EDITIONS_REASON_UNDERTAKEN_NOT_ON_SALE, data.get("reasonCode"));
+        assertEquals(CLUB, data.get("clubId"));
+    }
+
+    @Test
+    void emptyReasonAlsoServesClubAdminsWithRoleOne() {
+        loggedInMember = OUTSIDER;
+        ClubMember admin = new ClubMember();
+        admin.setRole(1);
+        when(clubMemberService.selectByClubAndMember(CLUB, OUTSIDER)).thenReturn(admin);
+        when(compensationService.editionsEmptyReason(CLUB))
+                .thenReturn(IClubEditionCompensationService.EDITIONS_REASON_NOT_UNDERTAKEN);
+
+        AjaxResult result = controller.editionsEmptyReason(clubBody(CLUB));
+
+        assertEquals(IClubEditionCompensationService.EDITIONS_REASON_NOT_UNDERTAKEN,
+                ((Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("reasonCode"));
+    }
+
     private static Map<String, Object> clubBody(long clubId) {
         Map<String, Object> body = new LinkedHashMap<String, Object>();
         body.put("clubId", clubId);
@@ -109,7 +158,8 @@ class ApiClubCompensationControllerTest {
     void theRetiredReportEndpointRefusesReadablyAndNeverReachesTheService() {
         Map<String, Object> result = controller.reportHours(hoursBody(CLUB));
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // F-L6-09：只有旧客户端还会打这个地址 → 426 走小程序统一的「版本需更新」分支，文案不变。
+        assertEquals(HttpStatus.UPGRADE_REQUIRED, result.get(AjaxResult.CODE_TAG));
         assertEquals("工时自报已下线，本期结算不再需要填写工时", result.get(AjaxResult.MSG_TAG),
                 "旧版本小程序拿到的必须是一句人话，不是 500 白屏");
         verifyNoInteractions(compensationService);

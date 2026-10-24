@@ -261,6 +261,11 @@ public class UmsMemberFollowServiceImpl implements IUmsMemberFollowService
         return umsMemberFollowMapper.selectUmsMemberFollowNumByMemberId(member_id);
     }
 
+    @Override
+    public int selectMutualFollowCount(Long memberId) {
+        return umsMemberFollowMapper.selectMutualFollowCount(memberId);
+    }
+
     /**
      * 查询用户粉丝数
      *

@@ -127,8 +127,8 @@ test('CU-C-120 静态:输入控件整组挂在 !readOnly 下,原位给出说明'
 test('CU-C-120 行为:type=2 系统通知 ⇒ 只读,一个字都发不出去', () => {
   const ctx = openChat(2)
   assert.equal(ctx.page.data.readOnly, true, 'type=2 必须落进只读')
-  assert.deepEqual(ctx.page.data.moreSheetItems, ['清空聊天'],
-    '系统通知的对方是 id=0 的平台,举报/拉黑没有目标 ⇒ 只留真能做的清空聊天')
+  assert.deepEqual(ctx.page.data.moreSheetItems, ['隐藏会话'],
+    '系统通知的对方是 id=0 的平台，举报/拉黑没有目标 ⇒ 只留真能做的隐藏会话')
   assert.equal(ctx.page._canSend(), false)
 
   ctx.page.setData({ text: '隔离走查：系统通知回复入口验证' })
@@ -142,8 +142,8 @@ test('CU-C-120 行为:type=2 系统通知 ⇒ 只读,一个字都发不出去', 
 test('CU-C-120 行为:type=1/3 仍可回复,只读不许扩大', () => {
   ;[1, 3].forEach((type) => {
     const ctx = openChat(type)
-    assert.equal(ctx.page.data.readOnly, false, `type=${type} 是可回复会话,不能被一起锁死`)
-    assert.deepEqual(ctx.page.data.moreSheetItems, ['举报', '拉黑', '清空聊天'])
+    assert.equal(ctx.page.data.readOnly, false, `type=${type} 是可回复会话，不能被一起锁死`)
+    assert.deepEqual(ctx.page.data.moreSheetItems, ['举报这条消息', '举报对方', '拉黑', '隐藏会话'])
     assert.equal(ctx.page._canSend(), true)
   })
 })
@@ -161,11 +161,11 @@ test('negative control CU-C-120: 撤掉只读闸 ⇒ 系统通知又能发消息
 
   // 行为侧:onLoad 不再按 type 收 moreSheetItems ⇒ 举报/拉黑复活
   const items = openChat(2, (src) => src.replace(
-    "moreSheetItems: readOnly ? ['清空聊天'] : ['举报', '拉黑', '清空聊天'],",
-    "moreSheetItems: ['举报', '拉黑', '清空聊天'],",
+    "moreSheetItems: readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],",
+    "moreSheetItems: ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],",
   ))
   assert.throws(
-    () => assert.deepEqual(items.page.data.moreSheetItems, ['清空聊天']),
+    () => assert.deepEqual(items.page.data.moreSheetItems, ['隐藏会话']),
     assert.AssertionError,
   )
 

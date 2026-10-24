@@ -261,6 +261,7 @@ class ApiClubLeaderProfileSecurityTest {
     private String maliciousJson(String leaderName) {
         return "{"
                 + "\"id\":999,\"memberId\":888,\"leaderName\":\"" + leaderName + "\","
+                + "\"phone\":\"13800000000\",\"experience\":\"1-3次\","
                 + "\"level\":5,\"tags\":\"伪造官方标签\",\"status\":9,"
                 + "\"auditBy\":\"attacker\",\"auditTime\":\"2026-08-25 12:00:00\","
                 + "\"createBy\":\"attacker\",\"createTime\":\"2026-08-25 12:00:00\","

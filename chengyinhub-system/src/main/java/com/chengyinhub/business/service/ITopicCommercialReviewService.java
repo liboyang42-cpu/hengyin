@@ -6,4 +6,5 @@ import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 public interface ITopicCommercialReviewService {
     Long submitProjectReview(Long topicId, Long submitterId, TopicLifecycleState requestedTarget);
     Long submitSaleReview(Long topicId, Long submitterId);
+    com.chengyinhub.business.domain.vo.TopicSaleReviewProgress submitSaleReviewIfReady(Long topicId, Long submitterId);
 }

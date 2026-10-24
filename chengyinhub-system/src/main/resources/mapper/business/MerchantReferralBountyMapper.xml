@@ -26,6 +26,24 @@
     WHERE merchant_member_id = #{merchantMemberId} AND del_flag = '0'
   </select>
 
+  <select id="selectByMerchantMemberIdForUpdate" resultMap="BaseResultMap" useCache="false" flushCache="true">
+    SELECT * FROM merchant_referral_bounty
+    WHERE merchant_member_id = #{merchantMemberId} AND del_flag = '0' FOR UPDATE
+  </select>
+
+  <select id="selectPaidIdsByInviterForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+    SELECT id FROM merchant_referral_bounty
+    WHERE inviter_member_id = #{inviterMemberId} AND status = 1 AND del_flag = '0'
+    ORDER BY id FOR UPDATE
+  </select>
+
+  <select id="selectFrozenAmountsForUpdate" resultType="java.math.BigDecimal" useCache="false" flushCache="true">
+    SELECT bounty_amount FROM merchant_referral_bounty
+    WHERE inviter_member_id = #{inviterMemberId} AND status = 1
+      AND frozen_until &gt; #{now} AND del_flag = '0'
+    ORDER BY id FOR UPDATE
+  </select>
+
   <insert id="insertBounty" parameterType="com.chengyinhub.business.domain.MerchantReferralBounty"
           useGeneratedKeys="true" keyProperty="id">
     INSERT INTO merchant_referral_bounty
@@ -126,6 +144,7 @@
         WHERE s.registration_id = r.id
           AND s.member_id = #{merchantMemberId}
           AND s.registration_type = 1
+          AND IFNULL(s.status, 0) &lt;&gt; 2
           AND s.create_time &gt;= #{windowStart}
           AND s.create_time &lt; #{windowEnd}
       )
@@ -152,6 +171,7 @@
         WHERE s.registration_id = r.id
           AND s.member_id = #{merchantMemberId}
           AND s.registration_type = 1
+          AND IFNULL(s.status, 0) &lt;&gt; 2
           AND s.create_time &gt;= #{windowStart}
           AND s.create_time &lt; #{windowEnd}
       )
@@ -178,6 +198,7 @@
         WHERE s.registration_id = r.id
           AND s.member_id = #{merchantMemberId}
           AND s.registration_type = 1
+          AND IFNULL(s.status, 0) &lt;&gt; 2
           AND s.create_time &gt;= #{windowStart}
           AND s.create_time &lt; #{windowEnd}
       )
@@ -210,6 +231,7 @@
         WHERE s.registration_id = r.id
           AND s.member_id = #{merchantMemberId}
           AND s.registration_type = 1
+          AND IFNULL(s.status, 0) &lt;&gt; 2
       )
   </select>
 

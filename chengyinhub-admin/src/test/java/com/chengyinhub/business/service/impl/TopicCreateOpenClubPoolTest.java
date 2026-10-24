@@ -28,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 /**
  * P0-4 开放范围:小程序发布链(TopicCreateDTO → createTopic)必须把 openClubPool 落到
@@ -41,6 +43,10 @@ class TopicCreateOpenClubPoolTest {
     @BeforeEach
     void setUp() {
         svc = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(svc, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         // createTopic 途经的协作者很多且与本测试无关:全部依赖统一置 mock(默认返回 null/空),
         // 只对断言目标 cmsTopicMapper 捕参。
         for (Field f : CmsTopicServiceImpl.class.getDeclaredFields()) {
@@ -54,6 +60,19 @@ class TopicCreateOpenClubPoolTest {
             }
         }
         cmsTopicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
+        // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
+        com.chengyinhub.business.mapper.CmsActivityMapper activities = (com.chengyinhub.business.mapper.CmsActivityMapper)
+                ReflectionTestUtils.getField(svc, "cmsActivityMapper");
+        Mockito.lenient().when(activities.insertCmsActivity(any())).thenAnswer(inv -> {
+            ((com.chengyinhub.business.domain.CmsActivity) inv.getArgument(0)).setId(880001L);
+            return 1;
+        });
+        when(cmsTopicMapper.insertCmsTopic(any(CmsTopic.class))).thenAnswer(invocation -> {
+            CmsTopic topic = invocation.getArgument(0);
+            topic.setId(700L);
+            when(cmsTopicMapper.selectCmsTopicById(700L)).thenReturn(topic);
+            return 1;
+        });
     }
 
     private TopicCreateDTO freeExploreDto(Integer openClubPool) {
@@ -85,6 +104,7 @@ class TopicCreateOpenClubPoolTest {
 
     @Test
     void createTopic_persists_open_club_pool_flag_for_city_orientation() {
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(cityOrientationDto(1), 42L, "tester");
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
@@ -135,6 +155,7 @@ class TopicCreateOpenClubPoolTest {
         TopicCreateDTO dto = freeExploreDto(null);
         Date deadline = dto.getRecruitDeadline();
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(dto, 42L, "tester");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
@@ -149,6 +170,7 @@ class TopicCreateOpenClubPoolTest {
     @Test
     void createTopic_defaults_open_club_pool_to_open_for_city_orientation() {
         // 2026-09-15 裁决 12B:未传 = 开(专业版与简易版统一默认开,主办可手动关)。
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(cityOrientationDto(null), 42L, "tester");
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
@@ -159,6 +181,7 @@ class TopicCreateOpenClubPoolTest {
     @Test
     void createTopic_keeps_explicit_closed_switch_for_city_orientation() {
         // 主办手动关 = 显式 0,必须如实落库(默认开不等于写死开)。
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(cityOrientationDto(0), 42L, "tester");
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
@@ -171,6 +194,7 @@ class TopicCreateOpenClubPoolTest {
      */
     @Test
     void createTopic_neverOpensClubPoolForFreeExplore() {
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(freeExploreDto(null), 42L, "tester");
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
@@ -187,6 +211,7 @@ class TopicCreateOpenClubPoolTest {
         TopicCreateDTO dto = cityOrientationDto(null);
         dto.setClubId(9L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(dto, 42L, "tester");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
@@ -202,6 +227,7 @@ class TopicCreateOpenClubPoolTest {
         TopicCreateDTO dto = cityOrientationDto(1);
         dto.setClubId(9L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(dto, 42L, "tester");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
@@ -214,6 +240,7 @@ class TopicCreateOpenClubPoolTest {
     void createTopic_autoAttachedClub_neverOpensPublicClubPool() {
         stubMyOwnedClub(9L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(cityOrientationDto(null), 42L, "tester");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
@@ -303,6 +330,7 @@ class TopicCreateOpenClubPoolTest {
         TopicCreateDTO dto = freeExploreDto(0);
         dto.setCompleteRewardCouponId(77L);
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         svc.createTopic(dto, 42L, "tester");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
@@ -318,6 +346,7 @@ class TopicCreateOpenClubPoolTest {
         TopicCreateDTO dto = freeExploreDto(0);
         dto.setPublishMode("ai_simple");
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         assertThrows(IllegalArgumentException.class, () -> svc.createTopic(dto, 42L, "tester"));
     }
 
@@ -331,6 +360,7 @@ class TopicCreateOpenClubPoolTest {
         chapter.setNodes(Arrays.asList(node));
         dto.setChapters(Arrays.asList(chapter));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         assertThrows(IllegalArgumentException.class, () -> svc.createTopic(dto, 42L, "tester"));
     }
 
@@ -348,6 +378,7 @@ class TopicCreateOpenClubPoolTest {
         chapter.setNodes(Arrays.asList(node));
         dto.setChapters(Arrays.asList(chapter));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
         assertThrows(IllegalArgumentException.class, () -> svc.createTopic(dto, 42L, "tester"));
     }
 }

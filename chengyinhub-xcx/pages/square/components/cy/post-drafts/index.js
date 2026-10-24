@@ -7,11 +7,7 @@
  *                         bind:select="onDraftPick" bind:delete="onDraftDelete" bind:close="closeDrafts" />
  *   js:   onDraftPick(e)   { ... }   // e.detail = { index, key, item } —— 拿 key 去 loadDraft
  *         onDraftDelete(e) {
- *           // e.detail 同上。⚠ 走到这里时用户**已经**过完危险确认弹窗,
- *           //   页面直接 removeDraft 即可,不要再自建一道 wx.showModal —— 那是两道闸。
- *           const c = this.selectComponent('#drafts');
- *           removeDraft(wx, { draftUuid: e.detail.key }, { memberId });
- *           c.deleteDone();            // 失败走 c.deleteFailed('...')
+ *           // e.detail 同上。先从列表拿掉,再 toast.undo:4 秒内撤销就恢复,到期才 removeDraft。
  *         }
  *
  * 数据边界:组件**不读 storage**。草稿的真源是 utils/publish/pro-editor-draft.js
@@ -22,16 +18,9 @@
  *   date     = 已格式化好的展示串(组件不做时间格式化,那是页面/工具层的事)。
  *   summary  = 摘要,两行截断。
  *
- * 危险确认闸长在组件内部(2026-09-02 Q1=A 拍板):接入页一挂上就自动带闸,
- * 不会出现「某个页面忘了加确认」这种漏。文案来自 utils/danger-actions.js 的
- * 'post.draft.delete' 登记条,不在这里硬写。
- *
- * ⚠ selectComponent 前面那个 && 不是防御性废话:单测的页面 VM 是裸对象没有这个方法,
- *   组件还没上屏时它也返回 null。拿不到确认组件就什么都不做 ——
- *   宁可删不掉,也不能绕过闸直接把 delete 发出去。
+ * 删除不再走确认闸(2026-10-23 业主定):草稿只在本机,改成「先删、提示条里可撤销」。
+ * 组件点垃圾桶直接上报 delete;页面负责从列表拿掉 + toast.undo + 到期才真正删 storage。
  */
-const DELETE_CONFIRM_KEY = 'post.draft.delete';
-
 Component({
   behaviors: [require('../../../../../behaviors/reduced-motion.js')],
   properties: {
@@ -57,33 +46,13 @@ Component({
       this.triggerEvent('select', row);
     },
 
-    /* 点垃圾桶只负责开闸。⚠ 这里不许 triggerEvent('delete') —— 那就是绕过确认。 */
+    /* 2026-10-23 业主定:删草稿改成「先删、提示条里可撤销」,不再先弹确认 ——
+     * 草稿只在本机,撤销就是什么都没发生。点垃圾桶直接上报,由页面先从列表拿掉、
+     * 再用 toast.undo 留 4 秒撤销,到期才真正删 storage(见 post-compose 的 onDeleteDraft)。 */
     onDelete(e) {
       const row = this._row(e);
-      const dc = this._danger();
-      if (!row || !dc) return;
-      this._pending = row;
-      dc.open(DELETE_CONFIRM_KEY, { id: row.key });
-    },
-
-    /* 用户在确认弹窗里点了「删除草稿」才走到这 —— 此刻才把 delete 交给页面。 */
-    onDeleteConfirmed() {
-      const row = this._pending;
       if (!row) return;
-      const dc = this._danger();
-      if (dc) dc.busyOn();
       this.triggerEvent('delete', row);
-    },
-
-    /* 页面删完后的回执,透传给确认组件的第三段。不调不会卡死用户,但会少掉结果确认卡。 */
-    deleteDone(text) {
-      this._pending = null;
-      const dc = this._danger();
-      if (dc) dc.done(text);
-    },
-    deleteFailed(text) {
-      const dc = this._danger();
-      if (dc) dc.failed(text);
     },
 
     /* dataset.index → 那一条草稿。越界/脏 index 一律返回 null,不让它往下走。 */
@@ -95,8 +64,5 @@ Component({
       return { index, key: item.key, item };
     },
 
-    _danger() {
-      return (this.selectComponent && this.selectComponent('#pd-danger')) || null;
-    },
   },
 });

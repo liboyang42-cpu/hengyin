@@ -20,7 +20,14 @@
   <scroll-view class="msgs" scroll-y enhanced show-scrollbar="{{false}}"
                scroll-into-view="{{toView}}" scroll-with-animation
                style="top: {{headerH + heroH}}px; bottom: {{inputH}}px;">
-    <cy-inline-error wx:if="{{loadMoreError}}" class="load-more-error" kind="network"
+    <view class="msgs-top" aria-hidden="true"></view>
+    <view wx:if="{{type == 2 && reportEntry}}" class="sys-entry" bindtap="openReportMine" hover-class="cy-pressed-bg" hover-stay-time="80"
+          aria-role="button" aria-label="我的举报{{reportUnread ? '，' + reportUnread + ' 条新进度' : ''}}">
+      <text class="sys-entry__title">我的举报</text>
+      <view wx:if="{{reportUnread}}" class="sys-entry__badge">{{reportUnread > 99 ? '99+' : reportUnread}}</view>
+      <cy-icon name="chevron-right" size="32" />
+    </view>
+    <cy-inline-error load-failure wx:if="{{loadMoreError}}" class="load-more-error" kind="network"
                      title="更早消息没有加载" sub="{{loadMoreError}}" action="重试"
                      bind:action="retryLoadMore" />
     <view wx:elif="{{loadingMore}}" class="load-more" aria-live="polite">正在加载更早消息</view>
@@ -28,10 +35,10 @@
 
     <!-- 四态分流:加载中 / 坏链接 / 失败 / 真的没消息。原来只有最后一条,前三种全被说成「还没有消息」。 -->
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="{{4}}" />
-    <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话打不开" sub="链接可能已失效，回消息列表重新进入" />
-    <cy-empty wx:elif="{{loadState === 'closed'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="这个组局已结束" sub="聊天已关闭。如有平台处置，可在消息列表的系统通知中查看处理结果。" cta="返回消息列表" bind:cta="returnToMessageList" />
-    <cy-error wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息没加载出来" sub="{{loadErrorText || '网络或服务暂时不可用，已发出的消息不会丢'}}" retry="重试" bind:retry="retryLoad" />
-    <cy-empty wx:elif="{{!msgs.length}}" class="chat-empty" kind="empty" title="还没有消息" sub="{{readOnly ? '平台通知会出现在这里' : '发送第一条消息，和对方确认路线、集合点或合作细节'}}" />
+    <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话无法打开" sub="请返回重新进入" />
+    <cy-empty wx:elif="{{loadState === 'closed'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="这个组局已结束" cta="返回消息列表" bind:cta="returnToMessageList" />
+    <cy-error load-failure wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息加载失败" sub="{{loadErrorText}}" retry="重试" bind:retry="retryLoad" />
+    <cy-empty wx:elif="{{!msgs.length}}" class="chat-empty" kind="empty" title="还没有消息" />
 
     <block wx:for="{{msgs}}" wx:key="id">
       <!-- 卡片/系统消息仍走居中时间分隔(与改动前一致);普通文字/图片气泡改用贴气泡的行内时间(见下方),
@@ -60,7 +67,7 @@
 
             <!-- 路线卡 / 报名卡(同构:都是 {cardType,topicId},都现拉、永远最新) -->
             <cy-card wx:else class="rcard" interactive="{{true}}" accessibility-label="查看路线或报名详情" hover-class="cy-pressed" hover-stay-time="80" catchtap="onRouteTap" data-topicid="{{item.card.topicId}}">
-              <view wx:if="{{item.card.cardType === 'signup'}}" class="rcard-flag">报名成功</view>
+              <view wx:if="{{item.card.cardType === 'signup'}}" class="rcard-flag">发送时：报名成功</view>
               <block wx:if="{{topicCache[item.card.topicId]}}">
                 <!-- CU-C-121:imgUrl 为空时 <image> 仍按 270rpx 渲染,卡面一半是死黑块。
                      没图就不是"图在加载",给一个说得清的缺图占位。 -->
@@ -74,11 +81,11 @@
                   <view class="rcard-sub">{{topicCache[item.card.topicId].totalMileage || 0}} km · {{ topicCache[item.card.topicId].locationCount || 0 }} 个点</view>
                 </view>
               </block>
-              <!-- 降级态:主题已下架/已删(现拉的必付代价)。只认 === null,不能与「加载中」混为一谈 -->
+              <!-- 降级态:拉不到(下架/私密/网络失败都可能)。只认 === null,文案一律泛称「暂不可用」,不能与「加载中」混为一谈 -->
               <block wx:elif="{{topicCache[item.card.topicId] === null}}">
                 <view class="rcard-img rcard-img--ph"></view>
                 <view class="rcard-tt">
-                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '该活动已下架' : '该路线已下架'}}</view>
+                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '活动暂不可用' : '路线暂不可用'}}</view>
                 </view>
               </block>
               <!-- 加载中(undefined,尚未 fetch 回来):骨架占位,shimmer 本身即为「加载中」语义(DS §5:禁裸文字) -->
@@ -96,7 +103,7 @@
 
       <!-- 通用卡(仅系统可发;渲染路径与改动前一致)。CU-M-124:可点性按卡真有的动作给,
            没有去处、没有结果可查的通知不再报成「查看卡片详情」按钮。 -->
-      <cy-card wx:elif="{{item.msgType == 3}}" class="card" interactive="{{item.cardTarget}}" accessibility-label="{{item.card.title || '查看卡片详情'}}" hover-class="{{item.cardTarget ? 'cy-pressed' : 'none'}}" hover-stay-time="80" bindtap="onCardTap" data-msg="{{item.id}}" data-bcid="{{item.card.bcId}}" data-url="{{item.card.action}}">
+      <cy-card wx:elif="{{item.msgType == 3}}" class="card" interactive="{{item.cardTarget}}" accessibility-label="{{item.card.title || '查看卡片详情'}}" hover-class="{{item.cardTarget ? 'cy-pressed' : 'none'}}" hover-stay-time="80" bindtap="onCardTap" data-msg="{{item.id}}">
         <view class="card-hd">
           <view class="card-icon" aria-hidden="true"><cy-icon name="info" size="36" /></view>
           <view class="card-tt">
@@ -105,17 +112,15 @@
           </view>
         </view>
         <view class="card-meta" wx:if="{{item.card.meta}}">{{item.card.meta}}</view>
-        <view class="card-btns" wx:if="{{item.card.result && item.senderId == 0}}">
-          <view class="card-btn full" hover-class="cy-pressed" catchtap="onCardTap" data-msg="{{item.id}}" aria-role="button" aria-label="查看处理结果">查看处理结果</view>
+        <view class="card-btns" wx:if="{{item.systemRecord}}">
+          <view class="card-btn full" hover-class="cy-pressed" catchtap="onCardTap" data-msg="{{item.id}}" aria-role="button" aria-label="查看生成时记录">查看生成时记录</view>
+          <view wx:if="{{item.currentOriginalUrl}}" class="card-btn full" hover-class="cy-pressed" catchtap="onCardBtn" data-mode="original" data-msg="{{item.id}}" aria-role="button" aria-label="查看当前原单">查看当前原单</view>
         </view>
-        <view class="card-btns" wx:elif="{{item.card.buttons.length}}">
-          <view class="card-btn {{btn.type === 'reject' ? 'reject' : ''}}"
-                wx:for="{{item.card.buttons}}" wx:for-item="btn" wx:key="text"
-                hover-class="cy-pressed" hover-stay-time="80"
-                catchtap="onCardBtn" data-action="{{btn.action}}" data-key="{{btn.key}}" data-msg="{{item.id}}" hover-stop-propagation="true">{{btn.text}}</view>
+        <view class="card-btns" wx:elif="{{item.genericButtons.length}}">
+          <view wx:for="{{item.genericButtons}}" wx:for-item="btn" wx:key="index" class="card-btn {{btn.type === 'reject' ? 'reject' : ''}}" hover-class="cy-pressed" catchtap="onCardBtn" data-msg="{{item.id}}" data-index="{{btn.index}}" hover-stop-propagation="true">{{btn.text}}</view>
         </view>
-        <view class="card-btns" wx:elif="{{item.card.action}}">
-          <view class="card-btn full" hover-class="cy-pressed" hover-stay-time="80" catchtap="onCardTap" data-url="{{item.card.action}}" hover-stop-propagation="true">查看详情</view>
+        <view class="card-btns" wx:elif="{{item.genericAction.url}}">
+          <view class="card-btn full" hover-class="cy-pressed" catchtap="onCardTap" data-msg="{{item.id}}" hover-stop-propagation="true">查看详情</view>
         </view>
       </cy-card>
 
@@ -125,7 +130,7 @@
           <text wx:if="{{item.timeDivider}}" class="msg-time">{{item.timeDivider}}</text>
           <view class="bubble me {{item.failed?'failed':''}}">
             <image wx:if="{{item.msgType==2}}" class="b-img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
-            <text wx:else>{{item.content}}</text>
+            <text wx:else>{{item.displayContent}}</text>
           </view>
         </view>
         <view wx:if="{{item.sending}}" class="sending"></view>
@@ -141,7 +146,7 @@
           <text wx:if="{{item.displayName || item.timeDivider}}" class="sender-name">{{item.displayName}}{{item.displayName && item.timeDivider ? ' · ' : ''}}{{item.timeDivider}}</text>
           <view class="bubble other">
             <image wx:if="{{item.msgType==2}}" class="b-img" src="{{item.content}}" mode="widthFix" lazy-load="true" />
-            <text wx:else>{{item.content}}</text>
+            <text wx:else>{{item.displayContent}}</text>
           </view>
         </view>
       </view>
@@ -182,12 +187,22 @@
     <text wx:else class="input-notice">{{readOnlyTip}}</text>
   </view>
 
-  <cy-sheet show="{{!!reviewResult}}" title="处理结果" bind:close="closeReviewResult">
+  <cy-sheet show="{{!!reviewResult}}" title="生成时记录" bind:close="closeReviewResult">
     <view class="review-result" wx:if="{{reviewResult}}">
-      <view>审核任务 #{{reviewResult.taskId}} · 业务 #{{reviewResult.bizId}}</view>
+      <view wx:if="{{reviewResult.taskId}}">审核任务 #{{reviewResult.taskId}}</view>
+      <view wx:if="{{reviewResult.bizId}}">业务 #{{reviewResult.bizId}}</view>
       <view>{{reviewResult.outcome}}</view>
       <view>原因：{{reviewResult.reason}}</view>
       <view>{{reviewResult.followUp}}</view>
+      <view wx:if="{{reviewDetail}}">当前审核记录</view>
+      <!-- BL-87 审核记录回读(GET /api/audit/{taskId}/detail):只读,沿用本半屏的文字行写法 -->
+      <view wx:if="{{reviewDetail && reviewDetail.state === 'loading'}}" aria-role="status">正在读取当前审核记录…</view>
+      <cy-inline-error wx:elif="{{reviewDetail && reviewDetail.state === 'error'}}" kind="data"
+                       title="审核记录没有加载" sub="{{reviewDetail.error}}" action="{{reviewDetail.retryable ? '重试' : ''}}" bind:action="retryReviewDetail" />
+      <block wx:elif="{{reviewDetail && reviewDetail.state === 'ready'}}">
+        <view wx:if="{{reviewDetail.statusLabel}}">当前审核状态：{{reviewDetail.statusLabel}}</view>
+        <view wx:for="{{reviewDetail.timeline}}" wx:key="key">{{item.time}} {{item.label}}{{item.reason ? '：' + item.reason : ''}}</view>
+      </block>
     </view>
   </cy-sheet>
 
@@ -195,7 +210,7 @@
   <cy-sheet show="{{routePickerOpen}}" title="选择路线" bind:close="closeRoutePicker">
     <cy-search placeholder="搜索路线" value="{{routeKeyword}}" bind:input="onRouteSearch" />
     <cy-skeleton wx:if="{{routeLoading}}" type="list" count="{{4}}" />
-    <cy-inline-error wx:elif="{{routeError}}" kind="network" title="路线没有加载" sub="{{routeError}}" action="重试" bind:action="retryRoutes" />
+    <cy-inline-error load-failure wx:elif="{{routeError}}" kind="network" title="路线没有加载" sub="{{routeError}}" action="重试" bind:action="retryRoutes" />
     <cy-empty class="cy-fade-in" wx:elif="{{!routeList.length}}" title="没有找到路线" sub="换个关键词试试" />
     <scroll-view wx:else class="route-picker" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="route-item" wx:for="{{routeList}}" wx:key="id"
@@ -214,7 +229,8 @@
                    bind:select="onPlusSelect" bind:cancel="onPlusCancel" />
   <cy-option-sheet show="{{moreSheetShow}}" title="更多" items="{{moreSheetItems}}" immediate="{{true}}"
                    bind:select="onMoreSelect" bind:cancel="onMoreCancel" />
+  <cy-report-sheet wx:if="{{!readOnly}}" show="{{reportShow}}" target-type="MEMBER" target-id="{{reportPeerId}}" title="举报对方" bind:close="onReportClose" />
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 <!-- 危险动作三段式确认(文案在 utils/danger-actions.js) -->
-<cy-danger-confirm id="dc" bind:confirm="onDangerConfirm" bind:cancel="onDangerCancel" />
+<cy-danger-confirm id="dc" bind:confirm="onDangerConfirm" bind:cancel="onDangerCancel" bind:done="onDangerCancel" />

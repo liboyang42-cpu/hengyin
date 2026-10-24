@@ -45,7 +45,7 @@ function condLabels(form) {
 }
 
 function buildTopicPreview(form) {
-  if (form.routeMode === 'BRANCH_GRAPH') throw new Error('分支路线的整局预览尚未接通，可先从玩法配置预览单个游戏');
+  if (form.routeMode === 'BRANCH_GRAPH') throw new Error('分支路线暂不支持整局预览，可先预览单个玩法');
   const conds = condLabels(form);
   const nodes = [];
   let chapterNumber = 0;

@@ -55,6 +55,9 @@ class NpcChatServiceTest {
     private static final Long USER_TWO = 2003L;
     private static final Long SESSION_ID = 99L;
 
+    private com.chengyinhub.business.mapper.MmsMerchantMapper audioMerchants;
+    private com.chengyinhub.business.service.ai.impl.OssCardCutoutStorage generatedAudio;
+    private AppMediaAssetService audioAssets;
     private NpcChatService service;
     private AiGatewayService aiGatewayService;
     private VoiceCloneClient voiceCloneClient;
@@ -82,7 +85,28 @@ class NpcChatServiceTest {
 
         when(memoryBuilder.buildRoam(any(RoamSession.class))).thenReturn("[漫游进度] 本次已探索 25 个唯一格子。");
         when(roamMapper.selectSessionById(SESSION_ID)).thenReturn(activeSession(USER_ONE));
-        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenReturn(1);
+        // Unit orchestration uses real write-service code over mapper doubles; MySQL IT proves locking.
+        java.util.Map<String, NpcChatRequest> rows = new java.util.HashMap<>();
+        when(npcChatRequestMapper.lockChatUser(anyLong())).thenAnswer(inv -> inv.getArgument(0));
+        when(npcChatRequestMapper.insertNpcChatRequest(any(NpcChatRequest.class))).thenAnswer(inv -> {
+            NpcChatRequest row = inv.getArgument(0);
+            rows.put(row.getUserId() + ":" + row.getRequestId(), copyRequest(row));
+            return 1;
+        });
+        when(npcChatRequestMapper.selectByUserAndRequestId(anyLong(), anyString())).thenAnswer(inv -> {
+            NpcChatRequest row = rows.get(inv.getArgument(0) + ":" + inv.getArgument(1));
+            return row == null ? null : copyRequest(row);
+        });
+        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenAnswer(inv -> {
+            NpcChatRequest row = inv.getArgument(0);
+            rows.put(row.getUserId() + ":" + row.getRequestId(), copyRequest(row));
+            return 1;
+        });
+        when(npcChatLogMapper.insertNpcChatLog(any())).thenReturn(1);
+        org.springframework.transaction.PlatformTransactionManager transactions =
+                mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenAnswer(inv -> new org.springframework.transaction.support.SimpleTransactionStatus());
+        NpcChatWriteService writes = new NpcChatWriteService(npcChatRequestMapper, npcChatLogMapper, transactions);
         when(npcChatRequestMapper.renewLease(anyLong(), anyString(), anyString(), any(Date.class))).thenReturn(1);
         doReturn(leaseHeartbeat).when(scheduledExecutorService).scheduleAtFixedRate(any(Runnable.class),
                 eq(5000L), eq(5000L), eq(TimeUnit.MILLISECONDS));
@@ -91,16 +115,28 @@ class NpcChatServiceTest {
         globalProfile.setPersona("你是漫游向导。");
         when(npcProfileMapper.selectGlobalNpc()).thenReturn(globalProfile);
 
+        audioMerchants=mock(com.chengyinhub.business.mapper.MmsMerchantMapper.class);
+        generatedAudio=mock(com.chengyinhub.business.service.ai.impl.OssCardCutoutStorage.class);
+        audioAssets=mock(AppMediaAssetService.class);
         service = new NpcChatService();
+        ReflectionTestUtils.setField(service,"audioMerchantMapper",audioMerchants);
+        ReflectionTestUtils.setField(service,"generatedAudioStorage",generatedAudio);
+        ReflectionTestUtils.setField(service,"audioAssets",audioAssets);
         ReflectionTestUtils.setField(service, "aiGatewayService", aiGatewayService);
         ReflectionTestUtils.setField(service, "voiceCloneClient", voiceCloneClient);
         ReflectionTestUtils.setField(service, "npcProfileMapper", npcProfileMapper);
         ReflectionTestUtils.setField(service, "memoryBuilder", memoryBuilder);
         ReflectionTestUtils.setField(service, "merchantFactsBuilder", merchantNpcFactsBuilder);
-        ReflectionTestUtils.setField(service, "npcChatLogMapper", npcChatLogMapper);
+        ReflectionTestUtils.setField(service, "npcChatWriteService", writes);
         ReflectionTestUtils.setField(service, "npcChatRequestMapper", npcChatRequestMapper);
         ReflectionTestUtils.setField(service, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(service, "scheduledExecutorService", scheduledExecutorService);
+    }
+
+    private static NpcChatRequest copyRequest(NpcChatRequest request) {
+        NpcChatRequest copy = new NpcChatRequest();
+        org.springframework.beans.BeanUtils.copyProperties(request, copy);
+        return copy;
     }
 
     @Test
@@ -237,12 +273,12 @@ class NpcChatServiceTest {
     }
 
     @Test
-    void merchantChatReturnsSynthesizedAudioWhenVoiceIsReady() {
+    void merchantAudioRemainsPrivateUntilApprovalAndSameRequestReplaysWithoutSynthesis() {
         NpcProfile profile = new NpcProfile();
         profile.setId(8L);
         profile.setPersona("你是店主。");
         profile.setVoiceId("voice-ready");
-        profile.setVoiceStatus(2);
+        profile.setVoiceStatus(2);profile.setScopeType(2);profile.setScopeId(42L);
         when(npcProfileMapper.selectEnabledByScope(2, 42L)).thenReturn(Collections.singletonList(profile));
         when(merchantNpcFactsBuilder.build(profile, 42L)).thenReturn("【本店事实】\n店名:老周咖啡");
         when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
@@ -250,12 +286,24 @@ class NpcChatServiceTest {
         when(voiceCloneClient.synthesize("voice-ready", "推荐手冲。"))
                 .thenReturn("https://cdn.example/reply.mp3");
 
+        com.chengyinhub.business.domain.MmsMerchant merchant=new com.chengyinhub.business.domain.MmsMerchant();merchant.setMemberId(99L);
+        when(audioMerchants.selectMmsMerchantById(42L)).thenReturn(merchant);
+        when(generatedAudio.stageGeneratedAudio(99L,"https://cdn.example/reply.mp3")).thenReturn(java.util.Map.of("assetId",12L,"reviewState","HOLD"));
+        when(npcChatRequestMapper.bindApprovedTextAudio(eq(USER_ONE),anyString(),eq(12L))).thenReturn(1);
+        when(audioAssets.approvedUrl(12L)).thenThrow(new com.chengyinhub.common.exception.ServiceException("pending"));
         NpcChatReq request = req("merchant-audio", "有什么推荐");
         request.setBizId(42L);
         NpcChatResp response = service.chatWithMerchant(request, USER_ONE, 42L);
 
         assertEquals("推荐手冲。", response.getSafeText());
-        assertEquals("https://cdn.example/reply.mp3", response.getAudioUrl());
+        assertNull(response.getAudioUrl());
+        verify(generatedAudio).stageGeneratedAudio(99L,"https://cdn.example/reply.mp3");
+        NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setRequestId(request.getRequestId());
+        stored.setStatus("SUCCEEDED");stored.setSafetyDecision("PASS");stored.setSafeText("推荐手冲。");stored.setAudioAssetId(12L);stored.setSessionId(-(Long.MAX_VALUE / 2 + 42L)); // A包：原 requestId 只在原商家会话(-合成节点)内回放
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,request.getRequestId())).thenReturn(stored);
+        doReturn("https://owned.example/approved.mp3").when(audioAssets).approvedUrl(12L);
+        assertEquals("https://owned.example/approved.mp3",service.chatWithMerchant(request,USER_ONE,42L).getAudioUrl());
+        verify(voiceCloneClient,times(1)).synthesize("voice-ready","推荐手冲。");
     }
 
     @Test
@@ -264,7 +312,7 @@ class NpcChatServiceTest {
         profile.setId(8L);
         profile.setPersona("你是店主。");
         profile.setVoiceId("voice-ready");
-        profile.setVoiceStatus(2);
+        profile.setVoiceStatus(2);profile.setScopeType(2);profile.setScopeId(42L);
         when(npcProfileMapper.selectEnabledByScope(2, 42L)).thenReturn(Collections.singletonList(profile));
         when(merchantNpcFactsBuilder.build(profile, 42L)).thenReturn("【本店事实】\n店名:老周咖啡");
         when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
@@ -272,6 +320,8 @@ class NpcChatServiceTest {
         when(voiceCloneClient.synthesize("voice-ready", "推荐手冲。"))
                 .thenThrow(new IllegalStateException("tts unavailable"));
 
+        com.chengyinhub.business.domain.MmsMerchant merchant=new com.chengyinhub.business.domain.MmsMerchant();merchant.setMemberId(99L);
+        when(audioMerchants.selectMmsMerchantById(42L)).thenReturn(merchant);
         NpcChatReq request = req("merchant-audio-fallback", "有什么推荐");
         request.setBizId(42L);
         NpcChatResp response = service.chatWithMerchant(request, USER_ONE, 42L);
@@ -317,7 +367,7 @@ class NpcChatServiceTest {
         verify(scheduledExecutorService).scheduleAtFixedRate(heartbeat.capture(), eq(5000L), eq(5000L),
                 eq(TimeUnit.MILLISECONDS));
         heartbeat.getValue().run();
-        verify(npcChatRequestMapper).renewLease(eq(USER_ONE), eq(requestId("lease-heartbeat")), anyString(),
+        verify(npcChatRequestMapper, times(2)).renewLease(eq(USER_ONE), eq(requestId("lease-heartbeat")), anyString(),
                 any(Date.class));
         verify(leaseHeartbeat).cancel(false);
     }
@@ -369,4 +419,123 @@ class NpcChatServiceTest {
     private String requestId(String label) {
         return String.format("00000000-0000-4000-8000-%012d", Math.abs((long) label.hashCode()));
     }
+
+    @Test
+    void typedInputBlockIsNonRetryableAndNeverSynthesizesAudio() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, "blocked"));
+        NpcChatResp response = service.chat(req("blocked-1", "hi"), USER_ONE);
+        assertEquals("REJECTED", response.getOutcomeStatus());
+        assertEquals("INPUT_BLOCK", response.getErrorCode());
+        assertEquals(false, response.isRetryable());
+        ArgumentCaptor<NpcChatRequest> terminal = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).finishIfLeaseOwned(terminal.capture());
+        assertEquals("BLOCKED", terminal.getValue().getSafetyDecision());
+        org.mockito.Mockito.verifyNoInteractions(voiceCloneClient);
+    }
+
+    @Test
+    void providerUnknownIsStoredAndReplayedWithoutCallingModelAgain() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException(
+                        "unknown", new RuntimeException("timeout")));
+        NpcChatResp response = service.chat(req("provider-unknown", "hi"), USER_ONE);
+        assertEquals("PROCESSING", response.getOutcomeStatus());
+        assertEquals("UNKNOWN", response.getSafetyDecision());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN", response.getErrorCode());
+        assertEquals(false, response.isRetryable());
+        ArgumentCaptor<NpcChatRequest> stored = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).finishIfLeaseOwned(stored.capture());
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("provider-unknown")))
+                .thenReturn(stored.getValue());
+        NpcChatResp replay = service.chat(req("provider-unknown", "hi"), USER_ONE);
+        assertEquals(response.getRequestId(), replay.getRequestId());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN", replay.getErrorCode());
+        assertEquals(false, replay.isRetryable());
+        verify(aiGatewayService, times(1)).generate(anyLong(), anyString(), anyString(), anyString(), anyString());
+        verifyNoInteractions(voiceCloneClient);
+    }
+
+    @Test
+    void unknownReviewDecisionKeepsOriginalRetryableFailure() {
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new AiServiceException(AiServiceException.Reason.UNKNOWN, "review"));
+        NpcChatResp response = service.chat(req("review-1", "hi"), USER_ONE);
+        assertEquals("FAILED", response.getOutcomeStatus());
+        assertEquals("AI_UNAVAILABLE", response.getErrorCode());
+        assertTrue(response.isRetryable());
+        ArgumentCaptor<NpcChatRequest> terminal = ArgumentCaptor.forClass(NpcChatRequest.class);
+        verify(npcChatRequestMapper).finishIfLeaseOwned(terminal.capture());
+        assertEquals("NOT_RUN", terminal.getValue().getSafetyDecision());
+        org.mockito.Mockito.verifyNoInteractions(voiceCloneClient);
+    }
+    @Test
+    void leaseLostBeforeProviderDoesNotStartGateway() {
+        when(npcChatRequestMapper.renewLease(anyLong(),anyString(),anyString(),any(Date.class))).thenAnswer(inv -> {
+            // Preserve the original unavailable-state case: the persistent row cannot be read.
+            when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("lost-before-provider"))).thenReturn(null);
+            return 0;
+        });
+        NpcChatResp result=service.chat(req("lost-before-provider","hi"),USER_ONE);
+        assertEquals("REQUEST_STATE_UNAVAILABLE",result.getErrorCode());
+        verify(aiGatewayService,never()).generate(anyLong(),anyString(),anyString(),anyString(),anyString());
+        verify(npcChatRequestMapper,never()).finishIfLeaseOwned(any(NpcChatRequest.class));
+        verify(leaseHeartbeat).cancel(false);
+    }
+
+    @Test
+    void oldWorkerCannotReturnOrSynthesizeItsUnsavedResult() {
+        when(aiGatewayService.generate(anyLong(),anyString(),anyString(),anyString(),anyString()))
+                .thenReturn(new AiGatewayResult("trace","旧答案","real",0));
+        when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenAnswer(inv -> {
+            when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("lost-after-provider"))).thenReturn(null);
+            return 0;
+        });
+        NpcChatResp result=service.chat(req("lost-after-provider","hi"),USER_ONE);
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());
+        assertEquals("UNKNOWN",result.getSafetyDecision());
+        assertTrue(!result.isRetryable());
+        assertTrue(!"旧答案".equals(result.getSafeText()));
+        verify(npcChatLogMapper, never()).insertNpcChatLog(any());
+        verifyNoInteractions(voiceCloneClient);
+    }
+
+    @Test
+    void revokedLeaseReturnsPersistentDeletionTombstoneInsteadOfWorkerAnswer() {
+        String id = requestId("deleted-in-flight");
+        NpcChatRequest erased = terminal("deleted-in-flight", USER_ONE, "PROCESSING", "UNKNOWN",
+                "REQUEST_OUTCOME_UNKNOWN", false, null);
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString())).thenAnswer(inv -> {
+            when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, id)).thenReturn(erased);
+            when(npcChatRequestMapper.finishIfLeaseOwned(any(NpcChatRequest.class))).thenReturn(0);
+            return new AiGatewayResult("trace", "已删除的旧答案", "fixture", 0);
+        });
+        NpcChatResp result = service.chat(req("deleted-in-flight", "hi"), USER_ONE);
+        assertEquals("REQUEST_OUTCOME_UNKNOWN", result.getErrorCode());
+        assertEquals(false, result.isRetryable());
+        assertTrue(!"已删除的旧答案".equals(result.getSafeText()));
+        verify(npcChatLogMapper, never()).insertNpcChatLog(any());
+        service.chat(req("deleted-in-flight", "hi"), USER_ONE);
+        verify(aiGatewayService, times(1)).generate(anyLong(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test void storedShopAnswerKeepsOriginalNodeAndDoesNotCallProvider() {
+        NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setSessionId(-21L);
+        stored.setRequestId(requestId("stored-shop"));stored.setStatus(NpcChatRequest.STATUS_SUCCEEDED);
+        stored.setSafeText("原答案");stored.setSafetyDecision("PASS");
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,stored.getRequestId())).thenReturn(stored);
+        assertEquals("原答案",service.storedShopRequest(stored.getRequestId(),USER_ONE,21L).getSafeText());
+        assertEquals("INVALID_REQUEST",service.storedShopRequest(stored.getRequestId(),USER_ONE,22L).getErrorCode());
+        verifyNoInteractions(aiGatewayService,voiceCloneClient);
+    }
+    @Test void expiredLeaseReplayIsUnknownRatherThanClaimingNoProviderRan() {
+        NpcChatRequest stored=new NpcChatRequest();stored.setUserId(USER_ONE);stored.setSessionId(-21L);
+        stored.setRequestId(requestId("expired-shop"));stored.setStatus(NpcChatRequest.STATUS_PROCESSING);
+        stored.setLeaseUntil(new Date(0L));
+        when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE,stored.getRequestId())).thenReturn(stored);
+        NpcChatResp result=service.storedShopRequest(stored.getRequestId(),USER_ONE,21L);
+        assertEquals("UNKNOWN",result.getSafetyDecision());assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());
+        assertTrue(!result.isRetryable());verifyNoInteractions(aiGatewayService);
+    }
+
 }

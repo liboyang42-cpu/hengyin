@@ -10,10 +10,10 @@
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
-            title="你没有管理角色的权限" sub="{{errorText || '只有主理人可以分配角色。想帮忙管角色,让主理人先把你提为主理人。'}}" auto-back />
-  <cy-error wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
-  <cy-error wx:elif="{{state === 'error'}}" title="角色管理暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
-  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="还没有可委派的成员" sub="先邀请成员加入俱乐部，再为他们分配运营角色。" />
+            title="你没有管理角色的权限" sub="{{errorText || '仅主理人可分配角色'}}" auto-back />
+  <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
+  <cy-error load-failure wx:elif="{{state === 'error'}}" title="角色管理暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
+  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="暂无成员" />
 
   <block wx:elif="{{state === 'ready'}}">
     <!-- Figma 290:393「当前委派」——主理人固定第一行(全部权限,不可撤销)，
@@ -47,7 +47,7 @@
          不是拆成带编号的两节。成员与角色都收进行内选择器,选中的名字显示在行右侧。 -->
     <view class="section">
       <text class="section-title">分配固定角色</text>
-      <text class="section-caption">选择成员后，从下方分配一个固定角色</text>
+      
       <view class="ds-card">
         <view class="row" bindtap="openMemberPicker" aria-role="button"
           aria-label="选择成员" hover-class="cy-pressed" hover-stay-time="80">
@@ -65,10 +65,10 @@
         aria-disabled="{{!selectedMemberId || !selectedRoleCode || actingKey !== ''}}"
         hover-class="{{(!selectedMemberId || !selectedRoleCode || actingKey) ? 'none' : 'cy-pressed'}}"
         hover-stay-time="80">分配</view>
-      <cy-empty wx:if="{{members.length === 0}}" size="sm" title="还没有可委派的成员" sub="先邀请成员加入俱乐部，再为他们分配运营角色。" />
+      <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
     </view>
 
-    <text class="page-note">撤销角色要二次确认；撤销后该成员立即失去对应入口。</text>
+    <text class="page-note">撤销后立即生效</text>
   </block>
 </view>
 </view>
@@ -83,7 +83,7 @@
       <text class="picker-name">{{item.nickname}}</text>
       <text class="picker-mark">{{selectedMemberId == item.memberId ? '已选' : '选择'}}</text>
     </view>
-    <cy-empty wx:if="{{members.length === 0}}" size="sm" title="还没有可委派的成员" sub="先邀请成员加入俱乐部。" />
+    <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
   </view>
 </cy-sheet>
 

@@ -8,7 +8,7 @@
 >
   <view class="cto">
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="form-section" count="4" loading-label="正在读取招商信息" />
-    <cy-error wx:elif="{{loadState === 'error'}}" title="招商信息没能打开" sub="{{loadErrorText}}" retry="重试" bind:retry="onRetry" />
+    <cy-error load-failure wx:elif="{{loadState === 'error'}}" title="招商信息没能打开" sub="{{loadErrorText}}" retry="重试" bind:retry="onRetry" />
     <cy-empty wx:elif="{{loadState === 'empty'}}" kind="empty" title="还没有可招商的{{mode === 'chapter' ? '章节' : '节点'}}" sub="回到编辑主题页配置后再来招商" />
 
     <!-- ============ mode = node:城市定向按节点招商(J3-A) ============ -->
@@ -56,7 +56,7 @@
 
           <block wx:if="{{chapter.recruiting}}">
             <view class="cto__tags">
-              <text class="cto__tag" wx:for="{{chapter.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+              <text class="cto__tag" wx:for="{{chapter.tags}}" wx:key="index" wx:for-item="tag">{{tag}}</text>
             </view>
             <text class="cto__approved">已通过 {{chapter.approvedCount}} / 上限 {{chapter.capLimit || 0}} 家</text>
             <text class="cto__meta">{{chapter.thresholdText}}</text>
@@ -75,7 +75,7 @@
         </view>
       </block>
 
-      <text class="cto__footnote">商家申请通过后，还要各自提交点位并过点位审核，才会出现在玩家路线上。</text>
+      <text class="cto__footnote">商家申请通过后，还要各自提交节点并过节点审核，才会出现在玩家路线上。</text>
     </block>
   </view>
 </cy-scene-sheet>

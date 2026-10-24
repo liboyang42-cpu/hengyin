@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
@@ -113,6 +114,8 @@ class ApiPlayHistoryNodesContractTest
         topic.setId(TOPIC);
         topic.setProductType(1);
         when(topicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        // O-08:未报名者看节点要求主题对其公开可见;本夹具的主题是公开在架主题。
+        when(topicService.selectCmsTopicDetailById(eq(TOPIC), any())).thenReturn(topic);
 
         CmsTopicNode active = node(ACTIVE_NODE, "在线站", 1L, "在线碎片");
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(active));
@@ -126,6 +129,7 @@ class ApiPlayHistoryNodesContractTest
                 arrival(MEMBER, DELISTED_ARRIVAL, 2000L),
                 done(MEMBER, ACTIVE_NODE, 3000L)));
         when(progressService.selectPlayerNodeProgressList(any())).thenAnswer(inv -> progressRows);
+        CurrentPlayControllerFixtures.install(controller);
     }
 
     private CmsTopicNode node(long id, String name, Long status, String fragment)

@@ -4,6 +4,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const PAGE_MODULE = '../../pages/roam/index.js'
+const settle = () => new Promise(resolve => setImmediate(resolve))
 const ROOT = path.resolve(__dirname, '../..')
 
 function loadRoamPage() {
@@ -47,6 +48,7 @@ function startWithLocation({ reducedMotion = false } = {}) {
   })
   global.wx = {
     getStorageSync: () => undefined,
+    showModal: options => options.success({ confirm: true }),
     getLocation(options) {
       options.success({ latitude: 31.2304, longitude: 121.4737 })
       if (options.complete) options.complete()
@@ -74,10 +76,11 @@ function startWithLocation({ reducedMotion = false } = {}) {
   }
 }
 
-test('点击 GO 且定位成功后先进入 opening，动画完成才交给漫游地图', () => {
+test('点击 GO 明确同意且定位成功后先进入 opening，动画完成才交给漫游地图', async () => {
   const h = startWithLocation()
   try {
     h.page.goStart()
+    await settle()
     assert.equal(h.page.data.screen, 'opening', '定位成功后不能硬切地图，应先进入开场态')
     const opening = h.timers.find(timer => timer.delay === 4200)
     assert.ok(opening, '常规动态效果应保留完整开场节奏')
@@ -93,10 +96,11 @@ test('点击 GO 且定位成功后先进入 opening，动画完成才交给漫�
   }
 })
 
-test('减少动态效果时仍经过 opening 语义态，但缩短为近乎瞬时过渡', () => {
+test('减少动态效果时仍经过 opening 语义态，但缩短为近乎瞬时过渡', async () => {
   const h = startWithLocation({ reducedMotion: true })
   try {
     h.page.goStart()
+    await settle()
     assert.equal(h.page.data.screen, 'opening')
     const opening = h.timers.find(timer => timer.delay === 220)
     assert.ok(opening, '减少动态效果不能继续等待完整动画')

@@ -1,0 +1,3000 @@
+{
+  "schemaVersion": 1,
+  "scope": "missing defaults and menus; no grants",
+  "roleRows": [
+    {
+      "role": "player",
+      "max_themes": 2,
+      "max_nodes_per_theme": 2,
+      "max_events": 0,
+      "max_coupons": 1,
+      "can_create_theme": 1,
+      "can_create_event": 0,
+      "can_publish_coupon": 1,
+      "can_redeem_coupon": 0,
+      "node_types": "checkin",
+      "can_branch": 0,
+      "can_game_mechanic": 0,
+      "can_open_as_node": 0,
+      "can_design_medal": 0,
+      "can_create_group": 0,
+      "data_scope": "self",
+      "withdrawable": 1,
+      "max_city_nodes": 0
+    },
+    {
+      "role": "club",
+      "max_themes": 5,
+      "max_nodes_per_theme": null,
+      "max_events": 3,
+      "max_coupons": 3,
+      "can_create_theme": 1,
+      "can_create_event": 1,
+      "can_publish_coupon": 1,
+      "can_redeem_coupon": 0,
+      "node_types": "checkin,scan,quiz,puzzle,collect,occupy,minigame",
+      "can_branch": 1,
+      "can_game_mechanic": 1,
+      "can_open_as_node": 0,
+      "can_design_medal": 1,
+      "can_create_group": 1,
+      "data_scope": "theme+city",
+      "withdrawable": 1,
+      "max_city_nodes": 0
+    },
+    {
+      "role": "merchant",
+      "max_themes": 0,
+      "max_nodes_per_theme": null,
+      "max_events": 0,
+      "max_coupons": 3,
+      "can_create_theme": 0,
+      "can_create_event": 0,
+      "can_publish_coupon": 1,
+      "can_redeem_coupon": 1,
+      "node_types": "checkin,scan",
+      "can_branch": 0,
+      "can_game_mechanic": 0,
+      "can_open_as_node": 1,
+      "can_design_medal": 0,
+      "can_create_group": 1,
+      "data_scope": "store",
+      "withdrawable": 1,
+      "max_city_nodes": 3
+    }
+  ],
+  "roleFieldPrecedence": {
+    "all": "existing DEFAULT_ROLE_PERMISSIONS tuple",
+    "player.withdrawable": "existing migration_20260808_player_withdrawable final rule 1; supersedes historical tuple 0"
+  },
+  "sourceFiles": {
+    "scripts/e2e/seed_fixtures.py": "c0b7f1468555520113da84ec1f3f35f847c4950a0fdd2680fb7348d3bd237ac5",
+    "chengyinhub-admin/sql/migration_20260808_player_withdrawable.sql": "3153581f219ff4aeb72c8acb12cd6907ec77b5ab1c5e94a06e99432d636344ec",
+    "chengyinhub-admin/sql/migration_p2_4_admin_ia_menu.sql": "e56f1e2ae1227af1ee56f93a48227460b0eea252a0320a2369811d9b37c91743",
+    "chengyinhub-admin/sql/migration_web_admin_nine_domains_20260719.sql": "d7dfb04a890923dbe6b946393c0c5db62450e56036b67a5c18359563cb11d358",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java": "0ac7044d7d65aef23006fdccd33c2527193c8d8ee309a4208f5f5509fddc0821",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsMemberTemplateController.java": "9b4e7579acdc0d7e13121f63447606bdc43eee3688646603e799d3cd26022b72",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OmsTicketController.java": "456f847d569996c3a57349ab77f620f3e61de3ed46e19078450ed6340ed4f367",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MmsMerchantController.java": "714f2e37dc86303a9bc2e47307eeb2c3a98349019fb3234f5b0871bf4618acd3",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java": "2e68901515fdd8b680246d19294401635f7d06dba244f656f3a577d3a11ff3b3",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsCreativeSquareController.java": "af4ce83bcb1a466b6d913655360b629645c756c7c346b116cf0b184c987d1606",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsCommentController.java": "ff1f68a0fb7e23a6f2aed810e26d7a5f65e716b836ef601dd29e4205cdce0608",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsBetaGameController.java": "29b9ed5afbc61be1503ea1a83026b3909d580f9cae5f7d4345b4df1c9523b7a3",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysCategoryController.java": "a50ea4b63e732b2e190fdd06f0277c7e3a7b734dae18383e23cd1b746eec81fc",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysBannerController.java": "f32dbf06c739e8b9644b5b677ef7daff6ba83100b81ebb1909f990c012df2835",
+    "sql/base_seed_20260818.sql": "e935558e9afb95ce91c0e5247c51c9c04d87bec813edbee9396e522f31a0e1a9",
+    "chengyinhub-admin/sql/migration_official_event_menu.sql": "0abca9a8576729914ace3874eaa1b7ae25eef5321d15b971fc0c9c39c2ced4c9",
+    "chengyinhub-admin/sql/migration_console_menus_20260721.sql": "23d7f0ed710d95dd502f6f0b5d2342a0d8b092b53b7ad40950aa68fa09627909",
+    "chengyinhub-admin/sql/migration_ai_log_menu_20260716.sql": "66ff8279b10cb75c728110050e85b368ede4333793538617b0bd1a239fec8001",
+    "chengyinhub-admin/sql/migration_chapter_offer_menu_20260721.sql": "6a9235ee2fa8af2cd039ff66792ce6b46e12a80892db6f1be20e08ecd0d1b388",
+    "chengyinhub-admin/sql/migration_userpermission_menu.sql": "16c3460d716494d6affe16c21706a88eb9e245204547915e55ad981fd4080b51",
+    "chengyinhub-admin/sql/migration_p3_phase_c_web_rules_refund.sql": "d1923359a75673408dd724867db535b699d7d09d7eefb28e458666041dbfdd6f",
+    "chengyinhub-admin/sql/migration_20260817_tandianri_batch5_admin_menus.sql": "79bfc03a68898a1ea478b99e2fc7733119d86ba7147432811123960a3f9636c6",
+    "chengyinhub-admin/sql/_deploy_ALL_20260704.sql": "f1385f280bbf4136e07e9e089a56e2eaab43e332bd5858f7c6d7a9315600eb59",
+    "chengyinhub-admin/sql/migration_merchant_lead_menu.sql": "a08bbe4763903b672e16bbd2065fb4eae94d9dab6a8e5d2ad42de9fa9f3c204f",
+    "chengyinhub-admin/sql/migration_roam_ai_content_menu_20260727.sql": "94d58ee2c9fd11a66c70adfe9b1448994223e3a725f258ee6128c143b9bab061",
+    "chengyinhub-admin/sql/migration_p3_platform_foundation.sql": "3a27459afddb12f9290a7beeffab1357c17e00bfdb02861792c69c193c7f36ee",
+    "chengyinhub-admin/sql/migration_revshare_payable_menu_20260717.sql": "97f9cbc1be6dbef386fa395d50c73479efa70de50dd7a54cd10b6e5ffe24c981",
+    "chengyinhub-admin/sql/migration_coop_complaint_menu.sql": "9659136b5174d04d36f1b7752a2c6aaad4f4edd38da2199b9f0c54c59e06ca9d",
+    "chengyinhub-admin/sql/migration_im_menu.sql": "364142961dc6710297f700d9234173c37049f560527da3b357653d458e01b1df",
+    "chengyinhub-admin/sql/migration_preset_menu.sql": "b0a3532cd4a79a17fd11228979bcc5d5bc67894af3396af23c4ad3c197ac875a",
+    "sql/ry_20250522.sql": "2664b5d5bba1742778cb7668d6e25fda8179bdf8b2e597143b6813f3f38c788a",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/PmsProductController.java": "d9b43e91235511e7d7ff973a2e32f77ad860c3b681b47c536b21bae1734e1c5f",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsInfomationController.java": "fa57c59ade0d5a5bd8c9bfba0d0c36cac6ac4076748710397de0e9395dc5f05f",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SmsCouponController.java": "547af3490978c0fa80e0fcb55c3c2751a9904e8e3ee362a745c9b497ab55a823",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OmsOrderController.java": "13eb3c92163952232b4b472b6a86490471196f01a15c6264d3b392896c2b2cba",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/PmsGiftController.java": "8f5a64a0651a58388f924eecd6b7717e9f53a2d47b2731d821af001d854f4863",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberController.java": "5e7e9ca23fd8b1150bd49bfb5eeff03672e8492536895d462b1ecd30af43e25b",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsPointsSettingController.java": "4ff9de9e8075f80669d7b8cc72027627f8d4c355ccbfd4d053c1f22832cda2b1",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java": "9ed202d3bb23965cb2cd522c2935a41589b2fb1eae39fd1b435367fc16e55fef",
+    "chengyinhub-admin/sql/migration_merchant_npc_menu_20260824.sql": "033c429fafa0b957a05d091974a0625edd04180ab8e4be04045014d9e9f5c4e3",
+    "chengyinhub-admin/sql/migration_menu_2050_coupon_to_supply_20260726.sql": "2a70d867d4405ac075125609d76f860270e628acab952416123543c20b6b0316",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java": "3afd3f0c70c4dc7fe639906caa32c0eaa0cb608a580853829cee1c2b20b64217",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberWithdrawalController.java": "7e3d6a55eba42b800b92c35e91b9c960622287bc7d637134021d575a0cab6fe9",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubController.java": "91dd8dfa824dba5a2d373ae6ea09104e9879c3f55735648e0ac538c284e82b6c",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubGovernancePlatformController.java": "dd6e76dc0c573006c639cff3149555a32c7585f970de4fa1a4049060bd0994ed",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java": "8c2953bf9e1f429215d1c97cb4b4add01c78143ee4ed02e80adeb041c619f141",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java": "0f074d4e72bee13fbbdd161a376ed7edd56dd86b9f43a10d01f96c50188c436d",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RoamPoiAdminController.java": "33db10930e2071518f3ce7444661f9a20410cbd24469284cc7af252bab6979ed",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerifyEvidenceController.java": "736303363af0589d98b5c84a1708a23bfd6785fd0c86845b88f982008e470c0f",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubRunController.java": "f40553d6f39eb21772a7471b0b709deb67c2f00caba061747cf1228ae5f53028",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AiGenerationLogController.java": "56c049dc3397525ca851abdfaee914002b70cd1750bd1414e514953b258ff263",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantChapterOfferController.java": "b44d40251020bb29981ce81db07461728bc4256a6e936b18d6d500b203802df9",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UserPermissionController.java": "e01323276670d30daf478f91c3df5471a3fbd9c026ff804f39573e9c4a3a1912",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SettlementRuleController.java": "7b20c8c455071f0747f5d1f93bc602576f600e0766ed719a116857f5d5f84b37",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java": "a599fdb594a288251e5c80d19ad34c553d6dc8b068c80debbd5e1657cfc094bf",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerificationReviewController.java": "ec1b06ae9da93eef90d424abf930cfa003c0460fa2da3ea5e5c137bbd791cdf3",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/GrowthController.java": "1e7535cf3ae3b04b037cb7ca3243ba12d8f636384726a59ebc7b5ca235b9068e",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/IpWorldController.java": "32ae32b016ddc8db407fef1cc513380d5e6da214eafbc04cbbdbfd0f21abfbd3",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CreatorCenterController.java": "2976295e496cbdd0db30fd7e41cd3a07d4a29026c148e2be55d55872575a47a1",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantCrmController.java": "4782e75fb3f1b949285f17a6c2df05446621926c2bc460325d492feaa531d18f",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SettlementController.java": "49db0fa78dae08c95d1b50000d70827f40aa690b92bb607fabd9e8b2482559a7",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantLeadController.java": "ed746fe8681a529f9804afa5cad5db161e0afdbd877b31e4533c9ffddf14d881",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRoamAiContentController.java": "c960616831923a9a4948dee0f51bf78cce2fe35c7ead130575d66c4d410180f3",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java": "555d73efbec57d1d72f55a154cd388cd74d62d180141317ce517786dc80277e2",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RecommendationController.java": "074e57ab66df7c9ab00e564a92eda2cf6246a1a0dd1a90baccf11718baf53bc6",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantPayableBatchController.java": "38a276a82ab4ce9e3c608146984c9a2c99520ed57590cda0f98a83d3a9dbac74",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java": "73801ec1958327b9531dd0a1b62811d35343651bb6abb8381009ccfa4e7aa9dd",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessImController.java": "4795af1eb0938c467fe90dcc464c60be2f295c62d20cbf4eb7aaa59768e31fc0",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsPresetThemeStyleController.java": "34c944a0ab7d4860192ac010edb7cdc8130f9de6db6f791af154ea8d1fa20f73",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsPresetRouteController.java": "43745994f7be42c3e46876ff43d9c6b0b75f10a9b365ada47a57aa13b022b8ab",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysUserController.java": "39e9fea5232699cfc8ea4123fd395c4f85ece6430c2e00e124f864a8a3ee9817",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysRoleController.java": "b93e3ae48d1c915a9f7645e6fc2350ad99406bd75a7e2c4e0f43adaed05330d3",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysMenuController.java": "a5cb5083a1cb6cc9cd73f16551764a5b1430cb36dd3d357c6a73a4d540b16851",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysDeptController.java": "368bc328a30ac6ac263159e2318451fa66faca9145989ef82fa78daaf7ac93ce",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysPostController.java": "19425581eea756312ca071ec3314b6bd12196ea52b5542883ba9453c124cf820",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysDictTypeController.java": "05df457f8dffd86b0679d3452c202aa783cf0f419a81645cad0c237bd52712b9",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysConfigController.java": "f56077ceeb1f1c015ce8e6238e1a406706c7ef96c3ce608534490f991adc0c74",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysNoticeController.java": "b306163b53633f0e84c50dc3a47c99eb5f6ef56b360175cccaa12c78b000deec",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/monitor/SysUserOnlineController.java": "b87b3bde3a9019fd01bf6746d8bc9ee2ce97f8c250ffdc763c8e14b06dc76ae8",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/monitor/ServerController.java": "114b9dff5b10c75e4cab40469d380a53911eb139656ab4af2bbb81c4c85ff891",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/monitor/CacheController.java": "958036cba044d51f736810099cd4c5ea67cdea760be21a21525dce4c829f7434",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/monitor/SysOperlogController.java": "79683af93e40337272603545a8e06eb4eaf372507de27cdac43e80833f7bc625",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/monitor/SysLogininforController.java": "6c3ad82f0ba592051932f5b5a893b6290d520d4bf24f95b2be7dc2b1cbbf7a8f",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsMerchantNpcController.java": "aecc0d3ee6e9be06d45d9e26183e2146729783accd1639b165b37e1cd4ab7429",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberBalanceDetailController.java": "030148531f5d8d46eb74bf084cf1da8c7640582d4bba1753da1be82da77caa08",
+    "chengyinhub-ui/src/router/index.js": "7f89bf6a6420630e8982d2e16441a07f5eed784cd883d0b6fadd6846a047515c",
+    "chengyinhub-ui/src/views/business/contentsearch/index.vue": "3247f5dab71011636e811e8aeaaf75d0ab15bc68064d3f840bc4674b4f4be9a2",
+    "chengyinhub-ui/src/views/business/couponhistory/index.vue": "09af4147406e525a8bfe1117c8544d7006ada41711782184ebbcc642511ffa01",
+    "chengyinhub-ui/src/views/business/creator/index.vue": "5843a3c18213aa1a18638e3fea4a25fa20a7c553a2e63da843b2973465f3a09a",
+    "chengyinhub-ui/src/views/business/gift/index.vue": "8f3ba2afd870a7a0a26ba59ef6fee27771c037e314ffcd91db0e84e287204834",
+    "chengyinhub-ui/src/views/business/infomation/index.vue": "8583cbb2153afcd53f5e2f2e93de1f3599e746c32f58e907d5473df911a30974",
+    "chengyinhub-ui/src/views/business/memberbalancedetail/index.vue": "278a6d49d929145efba6f4dab7c322cfcc68a26fdb3192556b77e36dec420c1d",
+    "chengyinhub-ui/src/views/business/order/index.vue": "19f02537aa89545ddf1212986b4f8f0b4d365c06bc33c5544fe50880e1fc38f3",
+    "chengyinhub-ui/src/views/business/payablebatch/index.vue": "110e02fafc8b7725ec01b069da8835e2b165bcabbf7042d9838b1ffa1408fd53",
+    "chengyinhub-ui/src/views/business/pointsetting/index.vue": "ff37d45c3990a16894c1e78504e284d2781da4642bc896c981a3e5005ca742a3",
+    "chengyinhub-ui/src/views/business/product/index.vue": "7e58910f3d67f3cbf8bf8e0d52cdfdc14e745c0f24a5d7816e5c35a9a15056fe",
+    "chengyinhub-ui/src/views/business/refund/index.vue": "30b96635e67b18d70acacb8e0ff3f4a7175f3e7a7cbed4871d09388e763deab4",
+    "chengyinhub-ui/src/views/business/registrationmerchant/index.vue": "3d08e4d62eb83cec1ef1e068a01477e4dbfee06dc801c049f66af773e2ad3e62",
+    "chengyinhub-ui/src/views/business/setting/index.vue": "754d92176e0e7374c77b4e7f1a71ec87bb10158cac9c0928146a95ddf003056f",
+    "chengyinhub-ui/src/views/business/templatelibrary/index.vue": "2a6eea7270d3105a57410300c549f777d47feeee3a0a84d2b8638f6161bda19b"
+  },
+  "menuRows": [
+    {
+      "name": "活动管理",
+      "parentPath": "supply",
+      "order": 60,
+      "path": "activity",
+      "component": "business/activity/index",
+      "permission": "business:activity:list",
+      "controller": "CmsActivityController.java"
+    },
+    {
+      "name": "模板中心",
+      "parentPath": "supply",
+      "order": 50,
+      "path": "membertemplate",
+      "component": "business/membertemplate/index",
+      "permission": "business:membertemplate:list",
+      "controller": "CmsMemberTemplateController.java"
+    },
+    {
+      "name": "票务管理",
+      "parentPath": "supply",
+      "order": 70,
+      "path": "ticket",
+      "component": "business/ticket/index",
+      "permission": "business:ticket:list",
+      "controller": "OmsTicketController.java"
+    },
+    {
+      "name": "商家准入",
+      "parentPath": "merchants-coop",
+      "order": 10,
+      "path": "merchant",
+      "component": "business/merchant/index",
+      "permission": "business:merchant:list",
+      "controller": "MmsMerchantController.java"
+    },
+    {
+      "name": "商家报名与调配",
+      "parentPath": "merchants-coop",
+      "order": 30,
+      "path": "registrationmerchant-dispatch",
+      "component": "business/registrationmerchant/dispatch",
+      "permission": "business:registrationmerchant:list",
+      "controller": "CmsRegistrationMerchantController.java"
+    },
+    {
+      "name": "创意广场",
+      "parentPath": "audit-center",
+      "order": 50,
+      "path": "square",
+      "component": "business/square/index",
+      "permission": "business:square:list",
+      "controller": "UmsCreativeSquareController.java"
+    },
+    {
+      "name": "评论管理",
+      "parentPath": "audit-center",
+      "order": 60,
+      "path": "comment",
+      "component": "business/comment/index",
+      "permission": "business:comment:list",
+      "controller": "UmsCommentController.java"
+    },
+    {
+      "name": "游戏管理",
+      "parentPath": "rules",
+      "order": 40,
+      "path": "betagame",
+      "component": "business/betagame/index",
+      "permission": "business:betagame:list",
+      "controller": "CmsBetaGameController.java"
+    },
+    {
+      "name": "分类管理",
+      "parentPath": "supply",
+      "order": 130,
+      "path": "category",
+      "component": "system/category/index",
+      "permission": "system:category:list",
+      "controller": "SysCategoryController.java"
+    },
+    {
+      "name": "轮播图",
+      "parentPath": "supply",
+      "order": 140,
+      "path": "banner",
+      "component": "system/banner/index",
+      "permission": "system:banner:list",
+      "controller": "SysBannerController.java"
+    },
+    {
+      "name": "官方主题",
+      "parentPath": "supply",
+      "order": 10,
+      "path": "official-topic",
+      "component": "business/topic/index",
+      "permission": "business:topic:list",
+      "source": "sql/base_seed_20260818.sql",
+      "controller": "CmsTopicController.java"
+    },
+    {
+      "name": "银行卡提现审核",
+      "parentPath": "funds-aftercare",
+      "order": 30,
+      "path": "memberwithdrawal",
+      "component": "business/memberwithdrawal/index",
+      "permission": "business:memberwithdrawal:list",
+      "source": "sql/base_seed_20260818.sql",
+      "controller": "UmsMemberWithdrawalController.java"
+    },
+    {
+      "name": "俱乐部工作台",
+      "parentPath": "clubs-roam",
+      "order": 10,
+      "path": "club",
+      "component": "business/club/index",
+      "permission": "business:club:list",
+      "source": "sql/base_seed_20260818.sql",
+      "controller": "ClubController.java"
+    },
+    {
+      "name": "审核工作台",
+      "parentPath": "audit-center",
+      "order": 20,
+      "path": "audit",
+      "component": "business/audit/index",
+      "permission": "business:audit:list",
+      "source": "sql/base_seed_20260818.sql",
+      "controller": "ClubGovernancePlatformController.java"
+    },
+    {
+      "name": "微信提现回补",
+      "parentPath": "funds-aftercare",
+      "order": 20,
+      "path": "cashwithdraw",
+      "component": "business/cashwithdraw/index",
+      "permission": "business:cashwithdraw:list",
+      "source": "sql/base_seed_20260818.sql",
+      "controller": "CashWithdrawAdminController.java"
+    },
+    {
+      "name": "官方活动",
+      "parentPath": "supply",
+      "order": 30,
+      "path": "officialevent",
+      "component": "business/officialevent/index",
+      "permission": "business:officialevent:list",
+      "source": "chengyinhub-admin/sql/migration_official_event_menu.sql",
+      "controller": "BusinessOfficialEventController.java"
+    },
+    {
+      "name": "POI治理",
+      "parentPath": "roam",
+      "order": 10,
+      "path": "roampoi",
+      "component": "business/roampoi/index",
+      "permission": "business:roamPoi:list",
+      "source": "chengyinhub-admin/sql/migration_console_menus_20260721.sql",
+      "controller": "RoamPoiAdminController.java"
+    },
+    {
+      "name": "核销证据",
+      "parentPath": "audit-center",
+      "order": 10,
+      "path": "verifyevidence",
+      "component": "business/verifyevidence/index",
+      "permission": "business:verifyEvidence:list",
+      "source": "chengyinhub-admin/sql/migration_console_menus_20260721.sql",
+      "controller": "VerifyEvidenceController.java"
+    },
+    {
+      "name": "带队场次",
+      "parentPath": "clubs-roam",
+      "order": 20,
+      "path": "clubrun",
+      "component": "business/clubrun/index",
+      "permission": "business:clubRun:list",
+      "source": "chengyinhub-admin/sql/migration_console_menus_20260721.sql",
+      "controller": "ClubRunController.java"
+    },
+    {
+      "name": "AI 调用审计",
+      "parentPath": "audit-center",
+      "order": 40,
+      "path": "ailog",
+      "component": "business/ailog/index",
+      "permission": "business:ailog:list",
+      "source": "chengyinhub-admin/sql/migration_ai_log_menu_20260716.sql",
+      "controller": "AiGenerationLogController.java"
+    },
+    {
+      "name": "三档承接审核",
+      "parentPath": "merchants-coop",
+      "order": 20,
+      "path": "chapteroffer",
+      "component": "business/chapteroffer/index",
+      "permission": "business:chapterOffer:list",
+      "source": "chengyinhub-admin/sql/migration_chapter_offer_menu_20260721.sql",
+      "controller": "MerchantChapterOfferController.java"
+    },
+    {
+      "name": "角色配额",
+      "parentPath": "rules",
+      "order": 30,
+      "path": "userpermission",
+      "component": "business/userpermission/index",
+      "permission": "business:userpermission:list",
+      "source": "chengyinhub-admin/sql/migration_userpermission_menu.sql",
+      "controller": "UserPermissionController.java"
+    },
+    {
+      "name": "结算规则",
+      "parentPath": "funds-aftercare",
+      "order": 80,
+      "path": "settlementrule",
+      "component": "business/settlementrule/index",
+      "permission": "business:settlementrule:list",
+      "source": "chengyinhub-admin/sql/migration_p3_phase_c_web_rules_refund.sql",
+      "controller": "SettlementRuleController.java"
+    },
+    {
+      "name": "退款处理台",
+      "parentPath": "funds-aftercare",
+      "order": 50,
+      "path": "refund",
+      "component": "business/finance/refund/index",
+      "permission": "business:refund:list",
+      "source": "chengyinhub-admin/sql/migration_p3_phase_c_web_rules_refund.sql",
+      "controller": "RefundController.java"
+    },
+    {
+      "name": "核销异常复核",
+      "parentPath": "audit-center",
+      "order": 60,
+      "path": "verification-review",
+      "component": "business/verificationReview/index",
+      "permission": "business:verificationReview:list",
+      "source": "chengyinhub-admin/sql/migration_20260817_tandianri_batch5_admin_menus.sql",
+      "controller": "VerificationReviewController.java"
+    },
+    {
+      "name": "成长任务配置",
+      "parentPath": "rules",
+      "order": 10,
+      "path": "growth",
+      "component": "business/growth/index",
+      "permission": "business:growth:list",
+      "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+      "controller": "GrowthController.java"
+    },
+    {
+      "name": "IP世界观",
+      "parentPath": "supply",
+      "order": 90,
+      "path": "world",
+      "component": "business/world/index",
+      "permission": "business:world:list",
+      "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+      "controller": "IpWorldController.java"
+    },
+    {
+      "name": "创作者准入",
+      "parentPath": "audit-center",
+      "order": 30,
+      "path": "creator",
+      "component": "business/risk/creator-admission/index",
+      "permission": "business:creator:list",
+      "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+      "controller": "CreatorCenterController.java"
+    },
+    {
+      "name": "商家CRM",
+      "parentPath": "merchants-coop",
+      "order": 60,
+      "path": "crm",
+      "component": "business/crm/index",
+      "permission": "business:crm:list",
+      "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+      "controller": "MerchantCrmController.java"
+    },
+    {
+      "name": "结算管理",
+      "parentPath": "funds-aftercare",
+      "order": 70,
+      "path": "settlement",
+      "component": "business/settlement/index",
+      "permission": "business:settlement:list",
+      "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+      "controller": "SettlementController.java"
+    },
+    {
+      "name": "商家目录",
+      "parentPath": "merchants-coop",
+      "order": 40,
+      "path": "merchantlead",
+      "component": "business/merchantlead/index",
+      "permission": "business:merchantlead:list",
+      "source": "chengyinhub-admin/sql/migration_merchant_lead_menu.sql",
+      "controller": "MerchantLeadController.java"
+    },
+    {
+      "name": "漫游陪伴内容审核",
+      "parentPath": "roam",
+      "order": 2,
+      "path": "ai-content",
+      "component": "business/roamaicontent/index",
+      "permission": "business:roamAiContent:list",
+      "source": "chengyinhub-admin/sql/migration_roam_ai_content_menu_20260727.sql",
+      "controller": "CmsRoamAiContentController.java"
+    },
+    {
+      "name": "增长漏斗",
+      "parentPath": "workbench",
+      "order": 10,
+      "path": "analytics",
+      "component": "business/analytics/index",
+      "permission": "business:analytics:list",
+      "source": "chengyinhub-admin/sql/migration_p3_platform_foundation.sql",
+      "controller": "AnalyticsController.java"
+    },
+    {
+      "name": "推荐配置",
+      "parentPath": "supply",
+      "order": 80,
+      "path": "recommendation",
+      "component": "business/recommendation/index",
+      "permission": "business:recommendation:list",
+      "source": "chengyinhub-admin/sql/migration_p3_platform_foundation.sql",
+      "controller": "RecommendationController.java"
+    },
+    {
+      "name": "应付月结",
+      "parentPath": "funds-aftercare",
+      "order": 60,
+      "path": "payablebatch",
+      "component": "business/finance/payable-batch/index",
+      "permission": "business:payablebatch:list",
+      "source": "chengyinhub-admin/sql/migration_revshare_payable_menu_20260717.sql",
+      "controller": "MerchantPayableBatchController.java"
+    },
+    {
+      "name": "客诉工单",
+      "parentPath": "merchants-coop",
+      "order": 50,
+      "path": "coopcomplaint",
+      "component": "business/coopcomplaint/index",
+      "permission": "business:coopcomplaint:list",
+      "source": "chengyinhub-admin/sql/migration_coop_complaint_menu.sql",
+      "controller": "CoopComplaintController.java"
+    },
+    {
+      "name": "客服会话",
+      "parentPath": "users-support",
+      "order": 20,
+      "path": "im",
+      "component": "business/im/index",
+      "permission": "business:im:list",
+      "source": "chengyinhub-admin/sql/migration_im_menu.sql",
+      "controller": "BusinessImController.java"
+    },
+    {
+      "name": "主题风格",
+      "parentPath": "supply",
+      "order": 100,
+      "path": "style",
+      "component": "business/preset/style/index",
+      "permission": "business:presetStyle:list",
+      "source": "chengyinhub-admin/sql/migration_preset_menu.sql",
+      "controller": "CmsPresetThemeStyleController.java"
+    },
+    {
+      "name": "城市路线",
+      "parentPath": "supply",
+      "order": 110,
+      "path": "route",
+      "component": "business/preset/route/index",
+      "permission": "business:presetRoute:list",
+      "source": "chengyinhub-admin/sql/migration_preset_menu.sql",
+      "controller": "CmsPresetRouteController.java"
+    },
+    {
+      "name": "用户管理",
+      "parentPath": "system",
+      "order": 1,
+      "path": "user",
+      "component": "system/user/index",
+      "permission": "system:user:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysUserController.java"
+    },
+    {
+      "name": "角色管理",
+      "parentPath": "system",
+      "order": 2,
+      "path": "role",
+      "component": "system/role/index",
+      "permission": "system:role:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysRoleController.java"
+    },
+    {
+      "name": "菜单管理",
+      "parentPath": "system",
+      "order": 3,
+      "path": "menu",
+      "component": "system/menu/index",
+      "permission": "system:menu:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysMenuController.java"
+    },
+    {
+      "name": "部门管理",
+      "parentPath": "system",
+      "order": 4,
+      "path": "dept",
+      "component": "system/dept/index",
+      "permission": "system:dept:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysDeptController.java"
+    },
+    {
+      "name": "岗位管理",
+      "parentPath": "system",
+      "order": 5,
+      "path": "post",
+      "component": "system/post/index",
+      "permission": "system:post:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysPostController.java"
+    },
+    {
+      "name": "字典管理",
+      "parentPath": "system",
+      "order": 6,
+      "path": "dict",
+      "component": "system/dict/index",
+      "permission": "system:dict:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysDictTypeController.java"
+    },
+    {
+      "name": "参数设置",
+      "parentPath": "system",
+      "order": 7,
+      "path": "config",
+      "component": "system/config/index",
+      "permission": "system:config:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysConfigController.java"
+    },
+    {
+      "name": "通知公告",
+      "parentPath": "system",
+      "order": 8,
+      "path": "notice",
+      "component": "system/notice/index",
+      "permission": "system:notice:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysNoticeController.java"
+    },
+    {
+      "name": "在线用户",
+      "parentPath": "monitor",
+      "order": 1,
+      "path": "online",
+      "component": "monitor/online/index",
+      "permission": "monitor:online:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysUserOnlineController.java"
+    },
+    {
+      "name": "定时任务",
+      "parentPath": "monitor",
+      "order": 2,
+      "path": "job",
+      "component": "monitor/job/index",
+      "permission": "monitor:job:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": null
+    },
+    {
+      "name": "数据监控",
+      "parentPath": "monitor",
+      "order": 3,
+      "path": "druid",
+      "component": "monitor/druid/index",
+      "permission": "monitor:druid:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": null
+    },
+    {
+      "name": "服务监控",
+      "parentPath": "monitor",
+      "order": 4,
+      "path": "server",
+      "component": "monitor/server/index",
+      "permission": "monitor:server:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "ServerController.java"
+    },
+    {
+      "name": "缓存监控",
+      "parentPath": "monitor",
+      "order": 5,
+      "path": "cache",
+      "component": "monitor/cache/index",
+      "permission": "monitor:cache:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "CacheController.java"
+    },
+    {
+      "name": "表单构建",
+      "parentPath": "tool",
+      "order": 1,
+      "path": "build",
+      "component": "tool/build/index",
+      "permission": "tool:build:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": null
+    },
+    {
+      "name": "代码生成",
+      "parentPath": "tool",
+      "order": 2,
+      "path": "gen",
+      "component": "tool/gen/index",
+      "permission": "tool:gen:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": null
+    },
+    {
+      "name": "系统接口",
+      "parentPath": "tool",
+      "order": 3,
+      "path": "swagger",
+      "component": "tool/swagger/index",
+      "permission": "tool:swagger:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": null
+    },
+    {
+      "name": "操作日志",
+      "parentPath": "log",
+      "order": 1,
+      "path": "operlog",
+      "component": "monitor/operlog/index",
+      "permission": "monitor:operlog:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysOperlogController.java"
+    },
+    {
+      "name": "登录日志",
+      "parentPath": "log",
+      "order": 2,
+      "path": "logininfor",
+      "component": "monitor/logininfor/index",
+      "permission": "monitor:logininfor:list",
+      "source": "sql/ry_20250522.sql",
+      "controller": "SysLogininforController.java"
+    },
+    {
+      "name": "积分商城商品",
+      "parentPath": "funds-aftercare",
+      "order": 130,
+      "path": "product",
+      "component": "business/config/points-product/index",
+      "permission": "business:product:list",
+      "controller": "PmsProductController.java"
+    },
+    {
+      "name": "玩法说明",
+      "parentPath": "supply",
+      "order": 120,
+      "path": "infomation",
+      "component": "business/content/guide/index",
+      "permission": "business:infomation:list",
+      "controller": "CmsInfomationController.java"
+    },
+    {
+      "name": "优惠券目录",
+      "parentPath": "supply",
+      "order": 150,
+      "path": "coupon",
+      "component": "business/coupon/index",
+      "permission": "business:coupon:list",
+      "controller": "SmsCouponController.java"
+    },
+    {
+      "name": "订单查询",
+      "parentPath": "funds-aftercare",
+      "order": 10,
+      "path": "order",
+      "component": "business/finance/order/index",
+      "permission": "business:order:list",
+      "controller": "OmsOrderController.java"
+    },
+    {
+      "name": "礼物目录与定价",
+      "parentPath": "funds-aftercare",
+      "order": 120,
+      "path": "gift",
+      "component": "business/gift-catalog/index",
+      "permission": "business:gift:list",
+      "controller": "PmsGiftController.java"
+    },
+    {
+      "name": "用户管理",
+      "parentPath": "users-support",
+      "order": 10,
+      "path": "member",
+      "component": "business/member/index",
+      "permission": "business:member:list",
+      "controller": "UmsMemberController.java"
+    },
+    {
+      "name": "积分配置",
+      "parentPath": "rules",
+      "order": 20,
+      "path": "pointsetting",
+      "component": "business/points/index",
+      "permission": "business:pointsetting:list",
+      "controller": "CmsPointsSettingController.java"
+    },
+    {
+      "name": "报名台账",
+      "parentPath": "funds-aftercare",
+      "order": 100,
+      "path": "registration",
+      "component": "business/registration/index",
+      "permission": "business:registration:list",
+      "controller": "CmsRegistrationController.java"
+    },
+    {
+      "name": "门店AI形象",
+      "parentPath": "system",
+      "order": 91,
+      "path": "merchantnpc",
+      "component": "business/merchantnpc/index",
+      "permission": "business:merchantNpc:list",
+      "source": "chengyinhub-admin/sql/migration_merchant_npc_menu_20260824.sql",
+      "controller": "CmsMerchantNpcController.java",
+      "parentFact": "actual scratch M system; original selector includes 系统管理"
+    },
+    {
+      "name": "资金流水",
+      "parentPath": "funds-aftercare",
+      "order": 40,
+      "path": "memberbalancedetail",
+      "component": "business/finance/ledger",
+      "permission": "business:memberbalancedetail:list",
+      "controller": "UmsMemberBalanceDetailController.java",
+      "canonicalSource": "chengyinhub-ui/src/router/index.js"
+    }
+  ],
+  "functionRows": [
+    {
+      "parentPermission": "business:activity:list",
+      "permission": "business:activity:add"
+    },
+    {
+      "parentPermission": "business:activity:list",
+      "permission": "business:activity:edit"
+    },
+    {
+      "parentPermission": "business:activity:list",
+      "permission": "business:activity:export"
+    },
+    {
+      "parentPermission": "business:activity:list",
+      "permission": "business:activity:query"
+    },
+    {
+      "parentPermission": "business:activity:list",
+      "permission": "business:activity:remove"
+    },
+    {
+      "parentPermission": "business:membertemplate:list",
+      "permission": "business:membertemplate:add"
+    },
+    {
+      "parentPermission": "business:membertemplate:list",
+      "permission": "business:membertemplate:edit"
+    },
+    {
+      "parentPermission": "business:membertemplate:list",
+      "permission": "business:membertemplate:export"
+    },
+    {
+      "parentPermission": "business:membertemplate:list",
+      "permission": "business:membertemplate:query"
+    },
+    {
+      "parentPermission": "business:membertemplate:list",
+      "permission": "business:membertemplate:remove"
+    },
+    {
+      "parentPermission": "business:ticket:list",
+      "permission": "business:ticket:add"
+    },
+    {
+      "parentPermission": "business:ticket:list",
+      "permission": "business:ticket:edit"
+    },
+    {
+      "parentPermission": "business:ticket:list",
+      "permission": "business:ticket:export"
+    },
+    {
+      "parentPermission": "business:ticket:list",
+      "permission": "business:ticket:query"
+    },
+    {
+      "parentPermission": "business:ticket:list",
+      "permission": "business:ticket:remove"
+    },
+    {
+      "parentPermission": "business:merchant:list",
+      "permission": "business:merchant:add"
+    },
+    {
+      "parentPermission": "business:merchant:list",
+      "permission": "business:merchant:edit"
+    },
+    {
+      "parentPermission": "business:merchant:list",
+      "permission": "business:merchant:export"
+    },
+    {
+      "parentPermission": "business:merchant:list",
+      "permission": "business:merchant:query"
+    },
+    {
+      "parentPermission": "business:merchant:list",
+      "permission": "business:merchant:remove"
+    },
+    {
+      "parentPermission": "business:registrationmerchant:list",
+      "permission": "business:registrationmerchant:add"
+    },
+    {
+      "parentPermission": "business:registrationmerchant:list",
+      "permission": "business:registrationmerchant:edit"
+    },
+    {
+      "parentPermission": "business:registrationmerchant:list",
+      "permission": "business:registrationmerchant:export"
+    },
+    {
+      "parentPermission": "business:registrationmerchant:list",
+      "permission": "business:registrationmerchant:query"
+    },
+    {
+      "parentPermission": "business:registrationmerchant:list",
+      "permission": "business:registrationmerchant:remove"
+    },
+    {
+      "parentPermission": "business:square:list",
+      "permission": "business:square:add"
+    },
+    {
+      "parentPermission": "business:square:list",
+      "permission": "business:square:edit"
+    },
+    {
+      "parentPermission": "business:square:list",
+      "permission": "business:square:export"
+    },
+    {
+      "parentPermission": "business:square:list",
+      "permission": "business:square:query"
+    },
+    {
+      "parentPermission": "business:square:list",
+      "permission": "business:square:remove"
+    },
+    {
+      "parentPermission": "business:comment:list",
+      "permission": "business:comment:add"
+    },
+    {
+      "parentPermission": "business:comment:list",
+      "permission": "business:comment:edit"
+    },
+    {
+      "parentPermission": "business:comment:list",
+      "permission": "business:comment:export"
+    },
+    {
+      "parentPermission": "business:comment:list",
+      "permission": "business:comment:query"
+    },
+    {
+      "parentPermission": "business:comment:list",
+      "permission": "business:comment:remove"
+    },
+    {
+      "parentPermission": "business:betagame:list",
+      "permission": "business:betagame:add"
+    },
+    {
+      "parentPermission": "business:betagame:list",
+      "permission": "business:betagame:edit"
+    },
+    {
+      "parentPermission": "business:betagame:list",
+      "permission": "business:betagame:export"
+    },
+    {
+      "parentPermission": "business:betagame:list",
+      "permission": "business:betagame:query"
+    },
+    {
+      "parentPermission": "business:betagame:list",
+      "permission": "business:betagame:remove"
+    },
+    {
+      "parentPermission": "system:category:list",
+      "permission": "system:category:add"
+    },
+    {
+      "parentPermission": "system:category:list",
+      "permission": "system:category:edit"
+    },
+    {
+      "parentPermission": "system:category:list",
+      "permission": "system:category:export"
+    },
+    {
+      "parentPermission": "system:category:list",
+      "permission": "system:category:query"
+    },
+    {
+      "parentPermission": "system:category:list",
+      "permission": "system:category:remove"
+    },
+    {
+      "parentPermission": "system:banner:list",
+      "permission": "system:banner:add"
+    },
+    {
+      "parentPermission": "system:banner:list",
+      "permission": "system:banner:edit"
+    },
+    {
+      "parentPermission": "system:banner:list",
+      "permission": "system:banner:export"
+    },
+    {
+      "parentPermission": "system:banner:list",
+      "permission": "system:banner:query"
+    },
+    {
+      "parentPermission": "system:banner:list",
+      "permission": "system:banner:remove"
+    },
+    {
+      "parentPermission": "business:topic:list",
+      "permission": "business:topic:add"
+    },
+    {
+      "parentPermission": "business:topic:list",
+      "permission": "business:topic:copy"
+    },
+    {
+      "parentPermission": "business:topic:list",
+      "permission": "business:topic:edit"
+    },
+    {
+      "parentPermission": "business:topic:list",
+      "permission": "business:topic:export"
+    },
+    {
+      "parentPermission": "business:topic:list",
+      "permission": "business:topic:query"
+    },
+    {
+      "parentPermission": "business:topic:list",
+      "permission": "business:topic:remove"
+    },
+    {
+      "parentPermission": "business:memberwithdrawal:list",
+      "permission": "business:memberwithdrawal:add"
+    },
+    {
+      "parentPermission": "business:memberwithdrawal:list",
+      "permission": "business:memberwithdrawal:audit"
+    },
+    {
+      "parentPermission": "business:memberwithdrawal:list",
+      "permission": "business:memberwithdrawal:edit"
+    },
+    {
+      "parentPermission": "business:memberwithdrawal:list",
+      "permission": "business:memberwithdrawal:export"
+    },
+    {
+      "parentPermission": "business:memberwithdrawal:list",
+      "permission": "business:memberwithdrawal:query"
+    },
+    {
+      "parentPermission": "business:memberwithdrawal:list",
+      "permission": "business:memberwithdrawal:remove"
+    },
+    {
+      "parentPermission": "business:memberwithdrawal:list",
+      "permission": "business:memberwithdrawal:viewpii"
+    },
+    {
+      "parentPermission": "business:club:list",
+      "permission": "business:club:add"
+    },
+    {
+      "parentPermission": "business:club:list",
+      "permission": "business:club:audit"
+    },
+    {
+      "parentPermission": "business:club:list",
+      "permission": "business:club:edit"
+    },
+    {
+      "parentPermission": "business:club:list",
+      "permission": "business:club:export"
+    },
+    {
+      "parentPermission": "business:club:list",
+      "permission": "business:club:query"
+    },
+    {
+      "parentPermission": "business:club:list",
+      "permission": "business:club:remove"
+    },
+    {
+      "parentPermission": "business:audit:list",
+      "permission": "business:audit:review"
+    },
+    {
+      "parentPermission": "business:cashwithdraw:list",
+      "permission": "business:cashwithdraw:freeze"
+    },
+    {
+      "parentPermission": "business:cashwithdraw:list",
+      "permission": "business:cashwithdraw:manage"
+    },
+    {
+      "parentPermission": "business:cashwithdraw:list",
+      "permission": "business:cashwithdraw:query"
+    },
+    {
+      "parentPermission": "business:officialevent:list",
+      "permission": "business:officialevent:add"
+    },
+    {
+      "parentPermission": "business:officialevent:list",
+      "permission": "business:officialevent:audit"
+    },
+    {
+      "parentPermission": "business:officialevent:list",
+      "permission": "business:officialevent:authorize"
+    },
+    {
+      "parentPermission": "business:officialevent:list",
+      "permission": "business:officialevent:edit"
+    },
+    {
+      "parentPermission": "business:officialevent:list",
+      "permission": "business:officialevent:notify"
+    },
+    {
+      "parentPermission": "business:officialevent:list",
+      "permission": "business:officialevent:query"
+    },
+    {
+      "parentPermission": "business:officialevent:list",
+      "permission": "business:officialevent:settle"
+    },
+    {
+      "parentPermission": "business:roamPoi:list",
+      "permission": "business:roamPoi:edit"
+    },
+    {
+      "parentPermission": "business:ailog:list",
+      "permission": "business:ailog:query"
+    },
+    {
+      "parentPermission": "business:chapterOffer:list",
+      "permission": "business:chapterOffer:edit"
+    },
+    {
+      "parentPermission": "business:userpermission:list",
+      "permission": "business:userpermission:edit"
+    },
+    {
+      "parentPermission": "business:settlementrule:list",
+      "permission": "business:settlementrule:edit"
+    },
+    {
+      "parentPermission": "business:refund:list",
+      "permission": "business:refund:review"
+    },
+    {
+      "parentPermission": "business:verificationReview:list",
+      "permission": "business:verificationReview:handle"
+    },
+    {
+      "parentPermission": "business:growth:list",
+      "permission": "business:growth:edit"
+    },
+    {
+      "parentPermission": "business:world:list",
+      "permission": "business:world:edit"
+    },
+    {
+      "parentPermission": "business:creator:list",
+      "permission": "business:creator:review"
+    },
+    {
+      "parentPermission": "business:crm:list",
+      "permission": "business:crm:aggregate"
+    },
+    {
+      "parentPermission": "business:settlement:list",
+      "permission": "business:settlement:confirm"
+    },
+    {
+      "parentPermission": "business:settlement:list",
+      "permission": "business:settlement:generate"
+    },
+    {
+      "parentPermission": "business:merchantlead:list",
+      "permission": "business:merchantlead:add"
+    },
+    {
+      "parentPermission": "business:merchantlead:list",
+      "permission": "business:merchantlead:edit"
+    },
+    {
+      "parentPermission": "business:merchantlead:list",
+      "permission": "business:merchantlead:query"
+    },
+    {
+      "parentPermission": "business:merchantlead:list",
+      "permission": "business:merchantlead:remove"
+    },
+    {
+      "parentPermission": "business:roamAiContent:list",
+      "permission": "business:roamAiContent:add"
+    },
+    {
+      "parentPermission": "business:roamAiContent:list",
+      "permission": "business:roamAiContent:audit"
+    },
+    {
+      "parentPermission": "business:roamAiContent:list",
+      "permission": "business:roamAiContent:edit"
+    },
+    {
+      "parentPermission": "business:roamAiContent:list",
+      "permission": "business:roamAiContent:query"
+    },
+    {
+      "parentPermission": "business:roamAiContent:list",
+      "permission": "business:roamAiContent:remove"
+    },
+    {
+      "parentPermission": "business:payablebatch:list",
+      "permission": "business:payablebatch:edit"
+    },
+    {
+      "parentPermission": "business:payablebatch:list",
+      "permission": "business:payablebatch:freeze"
+    },
+    {
+      "parentPermission": "business:coopcomplaint:list",
+      "permission": "business:coopcomplaint:handle"
+    },
+    {
+      "parentPermission": "business:coopcomplaint:list",
+      "permission": "business:coopcomplaint:query"
+    },
+    {
+      "parentPermission": "business:im:list",
+      "permission": "business:im:block"
+    },
+    {
+      "parentPermission": "business:im:list",
+      "permission": "business:im:send"
+    },
+    {
+      "parentPermission": "business:presetStyle:list",
+      "permission": "business:presetStyle:add"
+    },
+    {
+      "parentPermission": "business:presetStyle:list",
+      "permission": "business:presetStyle:edit"
+    },
+    {
+      "parentPermission": "business:presetStyle:list",
+      "permission": "business:presetStyle:query"
+    },
+    {
+      "parentPermission": "business:presetStyle:list",
+      "permission": "business:presetStyle:remove"
+    },
+    {
+      "parentPermission": "business:presetRoute:list",
+      "permission": "business:presetRoute:add"
+    },
+    {
+      "parentPermission": "business:presetRoute:list",
+      "permission": "business:presetRoute:edit"
+    },
+    {
+      "parentPermission": "business:presetRoute:list",
+      "permission": "business:presetRoute:query"
+    },
+    {
+      "parentPermission": "business:presetRoute:list",
+      "permission": "business:presetRoute:remove"
+    },
+    {
+      "parentPermission": "system:user:list",
+      "permission": "system:user:add"
+    },
+    {
+      "parentPermission": "system:user:list",
+      "permission": "system:user:edit"
+    },
+    {
+      "parentPermission": "system:user:list",
+      "permission": "system:user:export"
+    },
+    {
+      "parentPermission": "system:user:list",
+      "permission": "system:user:import"
+    },
+    {
+      "parentPermission": "system:user:list",
+      "permission": "system:user:query"
+    },
+    {
+      "parentPermission": "system:user:list",
+      "permission": "system:user:remove"
+    },
+    {
+      "parentPermission": "system:user:list",
+      "permission": "system:user:resetPwd"
+    },
+    {
+      "parentPermission": "system:role:list",
+      "permission": "system:role:add"
+    },
+    {
+      "parentPermission": "system:role:list",
+      "permission": "system:role:edit"
+    },
+    {
+      "parentPermission": "system:role:list",
+      "permission": "system:role:export"
+    },
+    {
+      "parentPermission": "system:role:list",
+      "permission": "system:role:query"
+    },
+    {
+      "parentPermission": "system:role:list",
+      "permission": "system:role:remove"
+    },
+    {
+      "parentPermission": "system:menu:list",
+      "permission": "system:menu:add"
+    },
+    {
+      "parentPermission": "system:menu:list",
+      "permission": "system:menu:edit"
+    },
+    {
+      "parentPermission": "system:menu:list",
+      "permission": "system:menu:query"
+    },
+    {
+      "parentPermission": "system:menu:list",
+      "permission": "system:menu:remove"
+    },
+    {
+      "parentPermission": "system:dept:list",
+      "permission": "system:dept:add"
+    },
+    {
+      "parentPermission": "system:dept:list",
+      "permission": "system:dept:edit"
+    },
+    {
+      "parentPermission": "system:dept:list",
+      "permission": "system:dept:query"
+    },
+    {
+      "parentPermission": "system:dept:list",
+      "permission": "system:dept:remove"
+    },
+    {
+      "parentPermission": "system:post:list",
+      "permission": "system:post:add"
+    },
+    {
+      "parentPermission": "system:post:list",
+      "permission": "system:post:edit"
+    },
+    {
+      "parentPermission": "system:post:list",
+      "permission": "system:post:export"
+    },
+    {
+      "parentPermission": "system:post:list",
+      "permission": "system:post:query"
+    },
+    {
+      "parentPermission": "system:post:list",
+      "permission": "system:post:remove"
+    },
+    {
+      "parentPermission": "system:dict:list",
+      "permission": "system:dict:add"
+    },
+    {
+      "parentPermission": "system:dict:list",
+      "permission": "system:dict:edit"
+    },
+    {
+      "parentPermission": "system:dict:list",
+      "permission": "system:dict:export"
+    },
+    {
+      "parentPermission": "system:dict:list",
+      "permission": "system:dict:query"
+    },
+    {
+      "parentPermission": "system:dict:list",
+      "permission": "system:dict:remove"
+    },
+    {
+      "parentPermission": "system:config:list",
+      "permission": "system:config:add"
+    },
+    {
+      "parentPermission": "system:config:list",
+      "permission": "system:config:edit"
+    },
+    {
+      "parentPermission": "system:config:list",
+      "permission": "system:config:export"
+    },
+    {
+      "parentPermission": "system:config:list",
+      "permission": "system:config:query"
+    },
+    {
+      "parentPermission": "system:config:list",
+      "permission": "system:config:remove"
+    },
+    {
+      "parentPermission": "system:notice:list",
+      "permission": "system:notice:add"
+    },
+    {
+      "parentPermission": "system:notice:list",
+      "permission": "system:notice:edit"
+    },
+    {
+      "parentPermission": "system:notice:list",
+      "permission": "system:notice:query"
+    },
+    {
+      "parentPermission": "system:notice:list",
+      "permission": "system:notice:remove"
+    },
+    {
+      "parentPermission": "monitor:online:list",
+      "permission": "monitor:online:forceLogout"
+    },
+    {
+      "parentPermission": "monitor:operlog:list",
+      "permission": "monitor:operlog:export"
+    },
+    {
+      "parentPermission": "monitor:operlog:list",
+      "permission": "monitor:operlog:remove"
+    },
+    {
+      "parentPermission": "monitor:logininfor:list",
+      "permission": "monitor:logininfor:export"
+    },
+    {
+      "parentPermission": "monitor:logininfor:list",
+      "permission": "monitor:logininfor:remove"
+    },
+    {
+      "parentPermission": "monitor:logininfor:list",
+      "permission": "monitor:logininfor:unlock"
+    },
+    {
+      "parentPermission": "business:product:list",
+      "permission": "business:product:add"
+    },
+    {
+      "parentPermission": "business:product:list",
+      "permission": "business:product:edit"
+    },
+    {
+      "parentPermission": "business:product:list",
+      "permission": "business:product:export"
+    },
+    {
+      "parentPermission": "business:product:list",
+      "permission": "business:product:query"
+    },
+    {
+      "parentPermission": "business:product:list",
+      "permission": "business:product:remove"
+    },
+    {
+      "parentPermission": "business:infomation:list",
+      "permission": "business:infomation:add"
+    },
+    {
+      "parentPermission": "business:infomation:list",
+      "permission": "business:infomation:edit"
+    },
+    {
+      "parentPermission": "business:infomation:list",
+      "permission": "business:infomation:export"
+    },
+    {
+      "parentPermission": "business:infomation:list",
+      "permission": "business:infomation:query"
+    },
+    {
+      "parentPermission": "business:infomation:list",
+      "permission": "business:infomation:remove"
+    },
+    {
+      "parentPermission": "business:coupon:list",
+      "permission": "business:coupon:add"
+    },
+    {
+      "parentPermission": "business:coupon:list",
+      "permission": "business:coupon:edit"
+    },
+    {
+      "parentPermission": "business:coupon:list",
+      "permission": "business:coupon:export"
+    },
+    {
+      "parentPermission": "business:coupon:list",
+      "permission": "business:coupon:query"
+    },
+    {
+      "parentPermission": "business:coupon:list",
+      "permission": "business:coupon:remove"
+    },
+    {
+      "parentPermission": "business:order:list",
+      "permission": "business:order:add"
+    },
+    {
+      "parentPermission": "business:order:list",
+      "permission": "business:order:edit"
+    },
+    {
+      "parentPermission": "business:order:list",
+      "permission": "business:order:export"
+    },
+    {
+      "parentPermission": "business:order:list",
+      "permission": "business:order:query"
+    },
+    {
+      "parentPermission": "business:order:list",
+      "permission": "business:order:remove"
+    },
+    {
+      "parentPermission": "business:gift:list",
+      "permission": "business:gift:add"
+    },
+    {
+      "parentPermission": "business:gift:list",
+      "permission": "business:gift:edit"
+    },
+    {
+      "parentPermission": "business:gift:list",
+      "permission": "business:gift:export"
+    },
+    {
+      "parentPermission": "business:gift:list",
+      "permission": "business:gift:query"
+    },
+    {
+      "parentPermission": "business:gift:list",
+      "permission": "business:gift:remove"
+    },
+    {
+      "parentPermission": "business:member:list",
+      "permission": "business:member:add"
+    },
+    {
+      "parentPermission": "business:member:list",
+      "permission": "business:member:edit"
+    },
+    {
+      "parentPermission": "business:member:list",
+      "permission": "business:member:export"
+    },
+    {
+      "parentPermission": "business:member:list",
+      "permission": "business:member:query"
+    },
+    {
+      "parentPermission": "business:member:list",
+      "permission": "business:member:remove"
+    },
+    {
+      "parentPermission": "business:pointsetting:list",
+      "permission": "business:pointsetting:add"
+    },
+    {
+      "parentPermission": "business:pointsetting:list",
+      "permission": "business:pointsetting:edit"
+    },
+    {
+      "parentPermission": "business:pointsetting:list",
+      "permission": "business:pointsetting:export"
+    },
+    {
+      "parentPermission": "business:pointsetting:list",
+      "permission": "business:pointsetting:query"
+    },
+    {
+      "parentPermission": "business:pointsetting:list",
+      "permission": "business:pointsetting:remove"
+    },
+    {
+      "parentPermission": "business:registration:list",
+      "permission": "business:registration:add"
+    },
+    {
+      "parentPermission": "business:registration:list",
+      "permission": "business:registration:edit"
+    },
+    {
+      "parentPermission": "business:registration:list",
+      "permission": "business:registration:export"
+    },
+    {
+      "parentPermission": "business:registration:list",
+      "permission": "business:registration:query"
+    },
+    {
+      "parentPermission": "business:registration:list",
+      "permission": "business:registration:remove"
+    },
+    {
+      "parentPermission": "business:registration:list",
+      "permission": "business:registration:reverseRedeem"
+    },
+    {
+      "parentPermission": "business:merchantNpc:list",
+      "permission": "business:merchantNpc:add"
+    },
+    {
+      "parentPermission": "business:merchantNpc:list",
+      "permission": "business:merchantNpc:edit"
+    },
+    {
+      "parentPermission": "business:merchantNpc:list",
+      "permission": "business:merchantNpc:query"
+    },
+    {
+      "parentPermission": "business:merchantNpc:list",
+      "permission": "business:merchantNpc:remove"
+    },
+    {
+      "parentPermission": "business:memberbalancedetail:list",
+      "permission": "business:memberbalancedetail:add"
+    },
+    {
+      "parentPermission": "business:memberbalancedetail:list",
+      "permission": "business:memberbalancedetail:edit"
+    },
+    {
+      "parentPermission": "business:memberbalancedetail:list",
+      "permission": "business:memberbalancedetail:export"
+    },
+    {
+      "parentPermission": "business:memberbalancedetail:list",
+      "permission": "business:memberbalancedetail:query"
+    },
+    {
+      "parentPermission": "business:memberbalancedetail:list",
+      "permission": "business:memberbalancedetail:remove"
+    }
+  ],
+  "originalSeedFixtureSha256": "a995a54256cd3a561cef773ff04f8138f7eac8d3931b9289129265c301041956",
+  "scratchReadback": {
+    "path": "/private/tmp/chengyin-fix1012/menu-scratch-readback.tsv",
+    "sha256": "d7863f54bd0b5ca3b7f4475f7d7f43df21b7bd3a4aaf79f0fa43c4d8ddf51e78",
+    "rows": 24,
+    "C": 5,
+    "F": 13,
+    "sourceCommit": "491283214cb68836714e5dca095b13c354e870ba",
+    "scope": "NOT_RELEASE scratch fixture"
+  },
+  "directoryRows": [
+    {
+      "name": "工作台",
+      "path": "workbench",
+      "order": 1,
+      "parentPath": null
+    },
+    {
+      "name": "供给与发布",
+      "path": "supply",
+      "order": 2,
+      "parentPath": null
+    },
+    {
+      "name": "审核与风控",
+      "path": "audit-center",
+      "order": 3,
+      "parentPath": null
+    },
+    {
+      "name": "俱乐部",
+      "path": "clubs-roam",
+      "order": 4,
+      "parentPath": null
+    },
+    {
+      "name": "漫游",
+      "path": "roam",
+      "order": 5,
+      "parentPath": null
+    },
+    {
+      "name": "商家与合作",
+      "path": "merchants-coop",
+      "order": 6,
+      "parentPath": null
+    },
+    {
+      "name": "用户与客服",
+      "path": "users-support",
+      "order": 7,
+      "parentPath": null
+    },
+    {
+      "name": "资金与交易",
+      "path": "funds-aftercare",
+      "order": 8,
+      "parentPath": null
+    },
+    {
+      "name": "玩法与规则",
+      "path": "rules",
+      "order": 9,
+      "parentPath": null
+    },
+    {
+      "name": "系统与运维",
+      "path": "system-ops",
+      "order": 10,
+      "parentPath": null
+    },
+    {
+      "name": "系统管理",
+      "path": "system",
+      "order": 10,
+      "parentPath": "system-ops"
+    },
+    {
+      "name": "系统监控",
+      "path": "monitor",
+      "order": 20,
+      "parentPath": "system-ops"
+    },
+    {
+      "name": "系统工具",
+      "path": "tool",
+      "order": 30,
+      "parentPath": "system-ops"
+    },
+    {
+      "name": "日志管理",
+      "path": "log",
+      "order": 4,
+      "parentPath": "system"
+    }
+  ],
+  "viewCoverage": [
+    {
+      "component": "business/activity",
+      "vue": "chengyinhub-ui/src/views/business/activity/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "活动管理",
+        "parentPath": "supply",
+        "order": 60,
+        "path": "activity",
+        "component": "business/activity/index",
+        "permission": "business:activity:list",
+        "controller": "CmsActivityController.java"
+      }
+    },
+    {
+      "component": "business/ailog",
+      "vue": "chengyinhub-ui/src/views/business/ailog/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "AI 调用审计",
+        "parentPath": "audit-center",
+        "order": 40,
+        "path": "ailog",
+        "component": "business/ailog/index",
+        "permission": "business:ailog:list",
+        "source": "chengyinhub-admin/sql/migration_ai_log_menu_20260716.sql",
+        "controller": "AiGenerationLogController.java"
+      }
+    },
+    {
+      "component": "business/analytics",
+      "vue": "chengyinhub-ui/src/views/business/analytics/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "增长漏斗",
+        "parentPath": "workbench",
+        "order": 10,
+        "path": "analytics",
+        "component": "business/analytics/index",
+        "permission": "business:analytics:list",
+        "source": "chengyinhub-admin/sql/migration_p3_platform_foundation.sql",
+        "controller": "AnalyticsController.java"
+      }
+    },
+    {
+      "component": "business/audit",
+      "vue": "chengyinhub-ui/src/views/business/audit/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "审核工作台",
+        "parentPath": "audit-center",
+        "order": 20,
+        "path": "audit",
+        "component": "business/audit/index",
+        "permission": "business:audit:list",
+        "source": "sql/base_seed_20260818.sql",
+        "controller": "ClubGovernancePlatformController.java"
+      }
+    },
+    {
+      "component": "business/betagame",
+      "vue": "chengyinhub-ui/src/views/business/betagame/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "游戏管理",
+        "parentPath": "rules",
+        "order": 40,
+        "path": "betagame",
+        "component": "business/betagame/index",
+        "permission": "business:betagame:list",
+        "controller": "CmsBetaGameController.java"
+      }
+    },
+    {
+      "component": "business/cashwithdraw",
+      "vue": "chengyinhub-ui/src/views/business/cashwithdraw/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "微信提现回补",
+        "parentPath": "funds-aftercare",
+        "order": 20,
+        "path": "cashwithdraw",
+        "component": "business/cashwithdraw/index",
+        "permission": "business:cashwithdraw:list",
+        "source": "sql/base_seed_20260818.sql",
+        "controller": "CashWithdrawAdminController.java"
+      }
+    },
+    {
+      "component": "business/chapteroffer",
+      "vue": "chengyinhub-ui/src/views/business/chapteroffer/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "三档承接审核",
+        "parentPath": "merchants-coop",
+        "order": 20,
+        "path": "chapteroffer",
+        "component": "business/chapteroffer/index",
+        "permission": "business:chapterOffer:list",
+        "source": "chengyinhub-admin/sql/migration_chapter_offer_menu_20260721.sql",
+        "controller": "MerchantChapterOfferController.java"
+      }
+    },
+    {
+      "component": "business/club",
+      "vue": "chengyinhub-ui/src/views/business/club/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "俱乐部工作台",
+        "parentPath": "clubs-roam",
+        "order": 10,
+        "path": "club",
+        "component": "business/club/index",
+        "permission": "business:club:list",
+        "source": "sql/base_seed_20260818.sql",
+        "controller": "ClubController.java"
+      }
+    },
+    {
+      "component": "business/clubrun",
+      "vue": "chengyinhub-ui/src/views/business/clubrun/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "带队场次",
+        "parentPath": "clubs-roam",
+        "order": 20,
+        "path": "clubrun",
+        "component": "business/clubrun/index",
+        "permission": "business:clubRun:list",
+        "source": "chengyinhub-admin/sql/migration_console_menus_20260721.sql",
+        "controller": "ClubRunController.java"
+      }
+    },
+    {
+      "component": "business/comment",
+      "vue": "chengyinhub-ui/src/views/business/comment/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "评论管理",
+        "parentPath": "audit-center",
+        "order": 60,
+        "path": "comment",
+        "component": "business/comment/index",
+        "permission": "business:comment:list",
+        "controller": "UmsCommentController.java"
+      }
+    },
+    {
+      "component": "business/config/points-product",
+      "vue": "chengyinhub-ui/src/views/business/config/points-product/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "积分商城商品",
+        "parentPath": "funds-aftercare",
+        "order": 130,
+        "path": "product",
+        "component": "business/config/points-product/index",
+        "permission": "business:product:list",
+        "controller": "PmsProductController.java"
+      }
+    },
+    {
+      "component": "business/config/role-quota",
+      "vue": "chengyinhub-ui/src/views/business/config/role-quota/index.vue",
+      "state": "STATIC_ALREADY_DEFINED",
+      "proof": {
+        "route": "hidden /config/role-quota via business:userpermission:list"
+      }
+    },
+    {
+      "component": "business/content/guide",
+      "vue": "chengyinhub-ui/src/views/business/content/guide/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "玩法说明",
+        "parentPath": "supply",
+        "order": 120,
+        "path": "infomation",
+        "component": "business/content/guide/index",
+        "permission": "business:infomation:list",
+        "controller": "CmsInfomationController.java"
+      }
+    },
+    {
+      "component": "business/contentsearch",
+      "vue": "chengyinhub-ui/src/views/business/contentsearch/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/square/index",
+            "permission": "business:square:list"
+          },
+          {
+            "component": "business/comment/index",
+            "permission": "business:comment:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/contentsearch/index.vue",
+        "sha256": "3247f5dab71011636e811e8aeaaf75d0ab15bc68064d3f840bc4674b4f4be9a2",
+        "mechanism": "REUSED_COMPONENT",
+        "runtimeVerified": false,
+        "wrapperSources": {
+          "chengyinhub-ui/src/views/business/square/index.vue": "90a40c11ff8ab3ae0fdcd65179857a41cb2699eb5ffb2b9abb2b219852cc8d89",
+          "chengyinhub-ui/src/views/business/comment/index.vue": "75ef8ae535b4aae84b435c3d583f52946332573d613ee8c743049c76a0dac94e"
+        }
+      }
+    },
+    {
+      "component": "business/coopcomplaint",
+      "vue": "chengyinhub-ui/src/views/business/coopcomplaint/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "客诉工单",
+        "parentPath": "merchants-coop",
+        "order": 50,
+        "path": "coopcomplaint",
+        "component": "business/coopcomplaint/index",
+        "permission": "business:coopcomplaint:list",
+        "source": "chengyinhub-admin/sql/migration_coop_complaint_menu.sql",
+        "controller": "CoopComplaintController.java"
+      }
+    },
+    {
+      "component": "business/coupon",
+      "vue": "chengyinhub-ui/src/views/business/coupon/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "优惠券目录",
+        "parentPath": "supply",
+        "order": 150,
+        "path": "coupon",
+        "component": "business/coupon/index",
+        "permission": "business:coupon:list",
+        "controller": "SmsCouponController.java"
+      }
+    },
+    {
+      "component": "business/couponhistory",
+      "vue": "chengyinhub-ui/src/views/business/couponhistory/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/coupon/index",
+            "permission": "business:coupon:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/couponhistory/index.vue",
+        "sha256": "09af4147406e525a8bfe1117c8544d7006ada41711782184ebbcc642511ffa01",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/creator",
+      "vue": "chengyinhub-ui/src/views/business/creator/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/risk/creator-admission/index",
+            "permission": "business:creator:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/creator/index.vue",
+        "sha256": "5843a3c18213aa1a18638e3fea4a25fa20a7c553a2e63da843b2973465f3a09a",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/crm",
+      "vue": "chengyinhub-ui/src/views/business/crm/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "商家CRM",
+        "parentPath": "merchants-coop",
+        "order": 60,
+        "path": "crm",
+        "component": "business/crm/index",
+        "permission": "business:crm:list",
+        "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+        "controller": "MerchantCrmController.java"
+      }
+    },
+    {
+      "component": "business/finance/order",
+      "vue": "chengyinhub-ui/src/views/business/finance/order/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "订单查询",
+        "parentPath": "funds-aftercare",
+        "order": 10,
+        "path": "order",
+        "component": "business/finance/order/index",
+        "permission": "business:order:list",
+        "controller": "OmsOrderController.java"
+      }
+    },
+    {
+      "component": "business/finance/payable-batch",
+      "vue": "chengyinhub-ui/src/views/business/finance/payable-batch/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "应付月结",
+        "parentPath": "funds-aftercare",
+        "order": 60,
+        "path": "payablebatch",
+        "component": "business/finance/payable-batch/index",
+        "permission": "business:payablebatch:list",
+        "source": "chengyinhub-admin/sql/migration_revshare_payable_menu_20260717.sql",
+        "controller": "MerchantPayableBatchController.java"
+      }
+    },
+    {
+      "component": "business/finance/refund",
+      "vue": "chengyinhub-ui/src/views/business/finance/refund/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "退款处理台",
+        "parentPath": "funds-aftercare",
+        "order": 50,
+        "path": "refund",
+        "component": "business/finance/refund/index",
+        "permission": "business:refund:list",
+        "source": "chengyinhub-admin/sql/migration_p3_phase_c_web_rules_refund.sql",
+        "controller": "RefundController.java"
+      }
+    },
+    {
+      "component": "business/gift",
+      "vue": "chengyinhub-ui/src/views/business/gift/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/gift-catalog/index",
+            "permission": "business:gift:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/gift/index.vue",
+        "sha256": "8f3ba2afd870a7a0a26ba59ef6fee27771c037e314ffcd91db0e84e287204834",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/gift-catalog",
+      "vue": "chengyinhub-ui/src/views/business/gift-catalog/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "礼物目录与定价",
+        "parentPath": "funds-aftercare",
+        "order": 120,
+        "path": "gift",
+        "component": "business/gift-catalog/index",
+        "permission": "business:gift:list",
+        "controller": "PmsGiftController.java"
+      }
+    },
+    {
+      "component": "business/growth",
+      "vue": "chengyinhub-ui/src/views/business/growth/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "成长任务配置",
+        "parentPath": "rules",
+        "order": 10,
+        "path": "growth",
+        "component": "business/growth/index",
+        "permission": "business:growth:list",
+        "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+        "controller": "GrowthController.java"
+      }
+    },
+    {
+      "component": "business/im",
+      "vue": "chengyinhub-ui/src/views/business/im/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "客服会话",
+        "parentPath": "users-support",
+        "order": 20,
+        "path": "im",
+        "component": "business/im/index",
+        "permission": "business:im:list",
+        "source": "chengyinhub-admin/sql/migration_im_menu.sql",
+        "controller": "BusinessImController.java"
+      }
+    },
+    {
+      "component": "business/infomation",
+      "vue": "chengyinhub-ui/src/views/business/infomation/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/content/guide/index",
+            "permission": "business:infomation:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/infomation/index.vue",
+        "sha256": "8583cbb2153afcd53f5e2f2e93de1f3599e746c32f58e907d5473df911a30974",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/member",
+      "vue": "chengyinhub-ui/src/views/business/member/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "用户管理",
+        "parentPath": "users-support",
+        "order": 10,
+        "path": "member",
+        "component": "business/member/index",
+        "permission": "business:member:list",
+        "controller": "UmsMemberController.java"
+      }
+    },
+    {
+      "component": "business/memberbalancedetail",
+      "vue": "chengyinhub-ui/src/views/business/memberbalancedetail/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/finance/ledger",
+            "permission": "business:memberbalancedetail:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/memberbalancedetail/index.vue",
+        "sha256": "278a6d49d929145efba6f4dab7c322cfcc68a26fdb3192556b77e36dec420c1d",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/membertemplate",
+      "vue": "chengyinhub-ui/src/views/business/membertemplate/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "模板中心",
+        "parentPath": "supply",
+        "order": 50,
+        "path": "membertemplate",
+        "component": "business/membertemplate/index",
+        "permission": "business:membertemplate:list",
+        "controller": "CmsMemberTemplateController.java"
+      }
+    },
+    {
+      "component": "business/memberwithdrawal",
+      "vue": "chengyinhub-ui/src/views/business/memberwithdrawal/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "银行卡提现审核",
+        "parentPath": "funds-aftercare",
+        "order": 30,
+        "path": "memberwithdrawal",
+        "component": "business/memberwithdrawal/index",
+        "permission": "business:memberwithdrawal:list",
+        "source": "sql/base_seed_20260818.sql",
+        "controller": "UmsMemberWithdrawalController.java"
+      }
+    },
+    {
+      "component": "business/merchant",
+      "vue": "chengyinhub-ui/src/views/business/merchant/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "商家准入",
+        "parentPath": "merchants-coop",
+        "order": 10,
+        "path": "merchant",
+        "component": "business/merchant/index",
+        "permission": "business:merchant:list",
+        "controller": "MmsMerchantController.java"
+      }
+    },
+    {
+      "component": "business/merchantlead",
+      "vue": "chengyinhub-ui/src/views/business/merchantlead/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "商家目录",
+        "parentPath": "merchants-coop",
+        "order": 40,
+        "path": "merchantlead",
+        "component": "business/merchantlead/index",
+        "permission": "business:merchantlead:list",
+        "source": "chengyinhub-admin/sql/migration_merchant_lead_menu.sql",
+        "controller": "MerchantLeadController.java"
+      }
+    },
+    {
+      "component": "business/merchantnpc",
+      "vue": "chengyinhub-ui/src/views/business/merchantnpc/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "门店AI形象",
+        "parentPath": "system",
+        "order": 91,
+        "path": "merchantnpc",
+        "component": "business/merchantnpc/index",
+        "permission": "business:merchantNpc:list",
+        "source": "chengyinhub-admin/sql/migration_merchant_npc_menu_20260824.sql",
+        "controller": "CmsMerchantNpcController.java",
+        "parentFact": "actual scratch M system; original selector includes 系统管理"
+      }
+    },
+    {
+      "component": "business/officialevent",
+      "vue": "chengyinhub-ui/src/views/business/officialevent/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "官方活动",
+        "parentPath": "supply",
+        "order": 30,
+        "path": "officialevent",
+        "component": "business/officialevent/index",
+        "permission": "business:officialevent:list",
+        "source": "chengyinhub-admin/sql/migration_official_event_menu.sql",
+        "controller": "BusinessOfficialEventController.java"
+      }
+    },
+    {
+      "component": "business/order",
+      "vue": "chengyinhub-ui/src/views/business/order/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/finance/order/index",
+            "permission": "business:order:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/order/index.vue",
+        "sha256": "19f02537aa89545ddf1212986b4f8f0b4d365c06bc33c5544fe50880e1fc38f3",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/payablebatch",
+      "vue": "chengyinhub-ui/src/views/business/payablebatch/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/finance/payable-batch/index",
+            "permission": "business:payablebatch:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/payablebatch/index.vue",
+        "sha256": "110e02fafc8b7725ec01b069da8835e2b165bcabbf7042d9838b1ffa1408fd53",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/points",
+      "vue": "chengyinhub-ui/src/views/business/points/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "积分配置",
+        "parentPath": "rules",
+        "order": 20,
+        "path": "pointsetting",
+        "component": "business/points/index",
+        "permission": "business:pointsetting:list",
+        "controller": "CmsPointsSettingController.java"
+      }
+    },
+    {
+      "component": "business/pointsetting",
+      "vue": "chengyinhub-ui/src/views/business/pointsetting/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/points/index",
+            "permission": "business:pointsetting:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/pointsetting/index.vue",
+        "sha256": "ff37d45c3990a16894c1e78504e284d2781da4642bc896c981a3e5005ca742a3",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/preset/route",
+      "vue": "chengyinhub-ui/src/views/business/preset/route/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "城市路线",
+        "parentPath": "supply",
+        "order": 110,
+        "path": "route",
+        "component": "business/preset/route/index",
+        "permission": "business:presetRoute:list",
+        "source": "chengyinhub-admin/sql/migration_preset_menu.sql",
+        "controller": "CmsPresetRouteController.java"
+      }
+    },
+    {
+      "component": "business/preset/style",
+      "vue": "chengyinhub-ui/src/views/business/preset/style/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "主题风格",
+        "parentPath": "supply",
+        "order": 100,
+        "path": "style",
+        "component": "business/preset/style/index",
+        "permission": "business:presetStyle:list",
+        "source": "chengyinhub-admin/sql/migration_preset_menu.sql",
+        "controller": "CmsPresetThemeStyleController.java"
+      }
+    },
+    {
+      "component": "business/product",
+      "vue": "chengyinhub-ui/src/views/business/product/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/config/points-product/index",
+            "permission": "business:product:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/product/index.vue",
+        "sha256": "7e58910f3d67f3cbf8bf8e0d52cdfdc14e745c0f24a5d7816e5c35a9a15056fe",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/recommendation",
+      "vue": "chengyinhub-ui/src/views/business/recommendation/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "推荐配置",
+        "parentPath": "supply",
+        "order": 80,
+        "path": "recommendation",
+        "component": "business/recommendation/index",
+        "permission": "business:recommendation:list",
+        "source": "chengyinhub-admin/sql/migration_p3_platform_foundation.sql",
+        "controller": "RecommendationController.java"
+      }
+    },
+    {
+      "component": "business/refund",
+      "vue": "chengyinhub-ui/src/views/business/refund/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/finance/refund/index",
+            "permission": "business:refund:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/refund/index.vue",
+        "sha256": "30b96635e67b18d70acacb8e0ff3f4a7175f3e7a7cbed4871d09388e763deab4",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/registration",
+      "vue": "chengyinhub-ui/src/views/business/registration/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "报名台账",
+        "parentPath": "funds-aftercare",
+        "order": 100,
+        "path": "registration",
+        "component": "business/registration/index",
+        "permission": "business:registration:list",
+        "controller": "CmsRegistrationController.java"
+      }
+    },
+    {
+      "component": "business/registrationmerchant",
+      "vue": "chengyinhub-ui/src/views/business/registrationmerchant/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/registrationmerchant/dispatch",
+            "permission": "business:registrationmerchant:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/registrationmerchant/index.vue",
+        "sha256": "3d08e4d62eb83cec1ef1e068a01477e4dbfee06dc801c049f66af773e2ad3e62",
+        "mechanism": "REUSED_COMPONENT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/risk/creator-admission",
+      "vue": "chengyinhub-ui/src/views/business/risk/creator-admission/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "创作者准入",
+        "parentPath": "audit-center",
+        "order": 30,
+        "path": "creator",
+        "component": "business/risk/creator-admission/index",
+        "permission": "business:creator:list",
+        "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+        "controller": "CreatorCenterController.java"
+      }
+    },
+    {
+      "component": "business/roamaicontent",
+      "vue": "chengyinhub-ui/src/views/business/roamaicontent/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "漫游陪伴内容审核",
+        "parentPath": "roam",
+        "order": 2,
+        "path": "ai-content",
+        "component": "business/roamaicontent/index",
+        "permission": "business:roamAiContent:list",
+        "source": "chengyinhub-admin/sql/migration_roam_ai_content_menu_20260727.sql",
+        "controller": "CmsRoamAiContentController.java"
+      }
+    },
+    {
+      "component": "business/roampoi",
+      "vue": "chengyinhub-ui/src/views/business/roampoi/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "POI治理",
+        "parentPath": "roam",
+        "order": 10,
+        "path": "roampoi",
+        "component": "business/roampoi/index",
+        "permission": "business:roamPoi:list",
+        "source": "chengyinhub-admin/sql/migration_console_menus_20260721.sql",
+        "controller": "RoamPoiAdminController.java"
+      }
+    },
+    {
+      "component": "business/setting",
+      "vue": "chengyinhub-ui/src/views/business/setting/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/settlementrule/index",
+            "permission": "business:settlementrule:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/setting/index.vue",
+        "sha256": "754d92176e0e7374c77b4e7f1a71ec87bb10158cac9c0928146a95ddf003056f",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/settlement",
+      "vue": "chengyinhub-ui/src/views/business/settlement/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "结算管理",
+        "parentPath": "funds-aftercare",
+        "order": 70,
+        "path": "settlement",
+        "component": "business/settlement/index",
+        "permission": "business:settlement:list",
+        "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+        "controller": "SettlementController.java"
+      }
+    },
+    {
+      "component": "business/settlementrule",
+      "vue": "chengyinhub-ui/src/views/business/settlementrule/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "结算规则",
+        "parentPath": "funds-aftercare",
+        "order": 80,
+        "path": "settlementrule",
+        "component": "business/settlementrule/index",
+        "permission": "business:settlementrule:list",
+        "source": "chengyinhub-admin/sql/migration_p3_phase_c_web_rules_refund.sql",
+        "controller": "SettlementRuleController.java"
+      }
+    },
+    {
+      "component": "business/square",
+      "vue": "chengyinhub-ui/src/views/business/square/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "创意广场",
+        "parentPath": "audit-center",
+        "order": 50,
+        "path": "square",
+        "component": "business/square/index",
+        "permission": "business:square:list",
+        "controller": "UmsCreativeSquareController.java"
+      }
+    },
+    {
+      "component": "business/templatelibrary",
+      "vue": "chengyinhub-ui/src/views/business/templatelibrary/index.vue",
+      "state": "ALIAS_BACKED_BY_CANONICAL",
+      "proof": {
+        "canonicalTargets": [
+          {
+            "component": "business/membertemplate/index",
+            "permission": "business:membertemplate:list"
+          }
+        ],
+        "source": "chengyinhub-ui/src/views/business/templatelibrary/index.vue",
+        "sha256": "2a6eea7270d3105a57410300c549f777d47feeee3a0a84d2b8638f6161bda19b",
+        "mechanism": "EXISTING_REDIRECT",
+        "runtimeVerified": false
+      }
+    },
+    {
+      "component": "business/ticket",
+      "vue": "chengyinhub-ui/src/views/business/ticket/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "票务管理",
+        "parentPath": "supply",
+        "order": 70,
+        "path": "ticket",
+        "component": "business/ticket/index",
+        "permission": "business:ticket:list",
+        "controller": "OmsTicketController.java"
+      }
+    },
+    {
+      "component": "business/topic",
+      "vue": "chengyinhub-ui/src/views/business/topic/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "官方主题",
+        "parentPath": "supply",
+        "order": 10,
+        "path": "official-topic",
+        "component": "business/topic/index",
+        "permission": "business:topic:list",
+        "source": "sql/base_seed_20260818.sql",
+        "controller": "CmsTopicController.java"
+      }
+    },
+    {
+      "component": "business/userpermission",
+      "vue": "chengyinhub-ui/src/views/business/userpermission/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "角色配额",
+        "parentPath": "rules",
+        "order": 30,
+        "path": "userpermission",
+        "component": "business/userpermission/index",
+        "permission": "business:userpermission:list",
+        "source": "chengyinhub-admin/sql/migration_userpermission_menu.sql",
+        "controller": "UserPermissionController.java"
+      }
+    },
+    {
+      "component": "business/verificationReview",
+      "vue": "chengyinhub-ui/src/views/business/verificationReview/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "核销异常复核",
+        "parentPath": "audit-center",
+        "order": 60,
+        "path": "verification-review",
+        "component": "business/verificationReview/index",
+        "permission": "business:verificationReview:list",
+        "source": "chengyinhub-admin/sql/migration_20260817_tandianri_batch5_admin_menus.sql",
+        "controller": "VerificationReviewController.java"
+      }
+    },
+    {
+      "component": "business/verifyevidence",
+      "vue": "chengyinhub-ui/src/views/business/verifyevidence/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "核销证据",
+        "parentPath": "audit-center",
+        "order": 10,
+        "path": "verifyevidence",
+        "component": "business/verifyevidence/index",
+        "permission": "business:verifyEvidence:list",
+        "source": "chengyinhub-admin/sql/migration_console_menus_20260721.sql",
+        "controller": "VerifyEvidenceController.java"
+      }
+    },
+    {
+      "component": "business/world",
+      "vue": "chengyinhub-ui/src/views/business/world/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "IP世界观",
+        "parentPath": "supply",
+        "order": 90,
+        "path": "world",
+        "component": "business/world/index",
+        "permission": "business:world:list",
+        "source": "chengyinhub-admin/sql/_deploy_ALL_20260704.sql",
+        "controller": "IpWorldController.java"
+      }
+    },
+    {
+      "component": ".",
+      "vue": "chengyinhub-ui/src/views/index.vue",
+      "state": "STATIC_ALREADY_DEFINED",
+      "proof": {
+        "route": "constantRoutes Index"
+      }
+    },
+    {
+      "component": "monitor/cache",
+      "vue": "chengyinhub-ui/src/views/monitor/cache/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "缓存监控",
+        "parentPath": "monitor",
+        "order": 5,
+        "path": "cache",
+        "component": "monitor/cache/index",
+        "permission": "monitor:cache:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "CacheController.java"
+      }
+    },
+    {
+      "component": "monitor/druid",
+      "vue": "chengyinhub-ui/src/views/monitor/druid/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "数据监控",
+        "parentPath": "monitor",
+        "order": 3,
+        "path": "druid",
+        "component": "monitor/druid/index",
+        "permission": "monitor:druid:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": null
+      }
+    },
+    {
+      "component": "monitor/job",
+      "vue": "chengyinhub-ui/src/views/monitor/job/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "定时任务",
+        "parentPath": "monitor",
+        "order": 2,
+        "path": "job",
+        "component": "monitor/job/index",
+        "permission": "monitor:job:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": null
+      }
+    },
+    {
+      "component": "monitor/logininfor",
+      "vue": "chengyinhub-ui/src/views/monitor/logininfor/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "登录日志",
+        "parentPath": "log",
+        "order": 2,
+        "path": "logininfor",
+        "component": "monitor/logininfor/index",
+        "permission": "monitor:logininfor:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysLogininforController.java"
+      }
+    },
+    {
+      "component": "monitor/online",
+      "vue": "chengyinhub-ui/src/views/monitor/online/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "在线用户",
+        "parentPath": "monitor",
+        "order": 1,
+        "path": "online",
+        "component": "monitor/online/index",
+        "permission": "monitor:online:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysUserOnlineController.java"
+      }
+    },
+    {
+      "component": "monitor/operlog",
+      "vue": "chengyinhub-ui/src/views/monitor/operlog/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "操作日志",
+        "parentPath": "log",
+        "order": 1,
+        "path": "operlog",
+        "component": "monitor/operlog/index",
+        "permission": "monitor:operlog:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysOperlogController.java"
+      }
+    },
+    {
+      "component": "monitor/server",
+      "vue": "chengyinhub-ui/src/views/monitor/server/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "服务监控",
+        "parentPath": "monitor",
+        "order": 4,
+        "path": "server",
+        "component": "monitor/server/index",
+        "permission": "monitor:server:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "ServerController.java"
+      }
+    },
+    {
+      "component": "system/banner",
+      "vue": "chengyinhub-ui/src/views/system/banner/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "轮播图",
+        "parentPath": "supply",
+        "order": 140,
+        "path": "banner",
+        "component": "system/banner/index",
+        "permission": "system:banner:list",
+        "controller": "SysBannerController.java"
+      }
+    },
+    {
+      "component": "system/category",
+      "vue": "chengyinhub-ui/src/views/system/category/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "分类管理",
+        "parentPath": "supply",
+        "order": 130,
+        "path": "category",
+        "component": "system/category/index",
+        "permission": "system:category:list",
+        "controller": "SysCategoryController.java"
+      }
+    },
+    {
+      "component": "system/config",
+      "vue": "chengyinhub-ui/src/views/system/config/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "参数设置",
+        "parentPath": "system",
+        "order": 7,
+        "path": "config",
+        "component": "system/config/index",
+        "permission": "system:config:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysConfigController.java"
+      }
+    },
+    {
+      "component": "system/dept",
+      "vue": "chengyinhub-ui/src/views/system/dept/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "部门管理",
+        "parentPath": "system",
+        "order": 4,
+        "path": "dept",
+        "component": "system/dept/index",
+        "permission": "system:dept:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysDeptController.java"
+      }
+    },
+    {
+      "component": "system/dict",
+      "vue": "chengyinhub-ui/src/views/system/dict/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "字典管理",
+        "parentPath": "system",
+        "order": 6,
+        "path": "dict",
+        "component": "system/dict/index",
+        "permission": "system:dict:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysDictTypeController.java"
+      }
+    },
+    {
+      "component": "system/menu",
+      "vue": "chengyinhub-ui/src/views/system/menu/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "菜单管理",
+        "parentPath": "system",
+        "order": 3,
+        "path": "menu",
+        "component": "system/menu/index",
+        "permission": "system:menu:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysMenuController.java"
+      }
+    },
+    {
+      "component": "system/notice",
+      "vue": "chengyinhub-ui/src/views/system/notice/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "通知公告",
+        "parentPath": "system",
+        "order": 8,
+        "path": "notice",
+        "component": "system/notice/index",
+        "permission": "system:notice:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysNoticeController.java"
+      }
+    },
+    {
+      "component": "system/post",
+      "vue": "chengyinhub-ui/src/views/system/post/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "岗位管理",
+        "parentPath": "system",
+        "order": 5,
+        "path": "post",
+        "component": "system/post/index",
+        "permission": "system:post:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysPostController.java"
+      }
+    },
+    {
+      "component": "system/role",
+      "vue": "chengyinhub-ui/src/views/system/role/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "角色管理",
+        "parentPath": "system",
+        "order": 2,
+        "path": "role",
+        "component": "system/role/index",
+        "permission": "system:role:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysRoleController.java"
+      }
+    },
+    {
+      "component": "system/user",
+      "vue": "chengyinhub-ui/src/views/system/user/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "用户管理",
+        "parentPath": "system",
+        "order": 1,
+        "path": "user",
+        "component": "system/user/index",
+        "permission": "system:user:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": "SysUserController.java"
+      }
+    },
+    {
+      "component": "system/user/profile",
+      "vue": "chengyinhub-ui/src/views/system/user/profile/index.vue",
+      "state": "STATIC_ALREADY_DEFINED",
+      "proof": {
+        "route": "constantRoutes Profile"
+      }
+    },
+    {
+      "component": "tool/build",
+      "vue": "chengyinhub-ui/src/views/tool/build/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "表单构建",
+        "parentPath": "tool",
+        "order": 1,
+        "path": "build",
+        "component": "tool/build/index",
+        "permission": "tool:build:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": null
+      }
+    },
+    {
+      "component": "tool/gen",
+      "vue": "chengyinhub-ui/src/views/tool/gen/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "代码生成",
+        "parentPath": "tool",
+        "order": 2,
+        "path": "gen",
+        "component": "tool/gen/index",
+        "permission": "tool:gen:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": null
+      }
+    },
+    {
+      "component": "tool/swagger",
+      "vue": "chengyinhub-ui/src/views/tool/swagger/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "系统接口",
+        "parentPath": "tool",
+        "order": 3,
+        "path": "swagger",
+        "component": "tool/swagger/index",
+        "permission": "tool:swagger:list",
+        "source": "sql/ry_20250522.sql",
+        "controller": null
+      }
+    }
+  ]
+}

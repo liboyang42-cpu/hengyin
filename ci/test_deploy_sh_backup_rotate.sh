@@ -84,3 +84,114 @@ else say "❌ 口径不一致:deploy.sh=$a ci/deploy-restart.sh=$b"; fail=1; fi
 
 [ "$fail" = "0" ] || { echo "轮转负控未通过"; exit 1; }
 echo "轮转负控通过(4 组行为 + 3 条结构断言)"
+
+echo "== 原部署入口:服务配置预检失败必须挡在 JAR 检查与写入之前 =="
+d=$(mktemp -d)
+mkdir -p "$d/scripts" "$d/bin" "$d/ci"
+cp ci/check_deploy_health.py "$d/ci/check_deploy_health.py"
+# 执行真脚本；仅在首次 JAR 检查前换成哨兵退出，绝不触碰生产目录或启动 Java。
+sed 's/test -s "$NEW_JAR" || exit 1/printf "would-inspect-jar\\n"; exit 0/' deploy.sh > "$d/deploy.sh"
+grep -q 'would-inspect-jar' "$d/deploy.sh" || { rm -rf "$d"; exit 1; }
+cat > "$d/scripts/production-preflight.sh" <<'PREFLIGHT'
+#!/bin/sh
+[ "$1" = --service ] && [ "$2" = spring_chengyinhub-admin ] || exit 90
+echo checked-running-service
+exit "$PREFLIGHT_FIXTURE_STATUS"
+PREFLIGHT
+printf '%s\n' '#!/bin/sh' 'echo 0' > "$d/bin/id"
+printf '%s\n' '#!/bin/sh' 'printf "systemctl:%s:%s\n" "$1" "$2"' > "$d/bin/systemctl"
+cat > "$d/bin/python3" <<'HEALTH'
+#!/bin/sh
+if [ "$2" = --validate-token-file ]; then
+  [ -n "$3" ] || exit 42
+  echo checked-private-token-file
+  exit "${TOKEN_FIXTURE_STATUS:-0}"
+fi
+echo checked-protected-health
+exit "${HEALTH_FIXTURE_STATUS:-0}"
+HEALTH
+chmod +x "$d/bin/id" "$d/bin/systemctl" "$d/bin/python3"
+for mode in start restart; do
+  for status in 0 17; do
+    output=$(env PATH="$d/bin:$PATH" PREFLIGHT_FIXTURE_STATUS="$status" DEPLOY_HEALTH_TOKEN_FILE=/fixture/private-token sh "$d/deploy.sh" "$mode" 2>&1)
+    rc=$?
+    if [ "$status" = 0 ]; then
+      [ "$rc" = 0 ] && printf '%s' "$output" | grep -q 'would-inspect-jar' || fail=1
+    else
+      [ "$rc" != 0 ] && ! printf '%s' "$output" | grep -q 'would-inspect-jar' || fail=1
+    fi
+    printf '%s' "$output" | grep -q 'checked-running-service' || fail=1
+    ! printf '%s' "$output" | grep -q 'systemctl:' || fail=1
+  done
+done
+
+for missing in helper token; do
+  if [ "$missing" = helper ]; then mv "$d/ci/check_deploy_health.py" "$d/ci/check_deploy_health.py.saved"; fi
+  token=/fixture/private-token
+  [ "$missing" != token ] || token=''
+  output=$(env PATH="$d/bin:$PATH" PREFLIGHT_FIXTURE_STATUS=0 DEPLOY_HEALTH_TOKEN_FILE="$token" sh "$d/deploy.sh" restart 2>&1)
+  rc=$?
+  [ "$rc" != 0 ] && ! printf '%s' "$output" | grep -q 'would-inspect-jar' || fail=1
+  if [ "$missing" = helper ]; then mv "$d/ci/check_deploy_health.py.saved" "$d/ci/check_deploy_health.py"; fi
+done
+
+mkdir "$d/bin-no-python"
+for program in id systemctl bash dirname; do
+  if [ -f "$d/bin/$program" ]; then ln -s "$d/bin/$program" "$d/bin-no-python/$program"
+  else ln -s "$(command -v "$program")" "$d/bin-no-python/$program"; fi
+done
+output=$(env PATH="$d/bin-no-python" PREFLIGHT_FIXTURE_STATUS=0 DEPLOY_HEALTH_TOKEN_FILE=/fixture/private-token "$(command -v sh)" "$d/deploy.sh" restart 2>&1)
+rc=$?
+[ "$rc" != 0 ] && printf '%s' "$output" | grep -q '缺少 Python3' || fail=1
+! printf '%s' "$output" | grep -q 'would-inspect-jar' || fail=1
+
+# 复用真健康函数；mock 仅是进程检查和已独立测试过的健康出口，不连接生产。
+health_function=$(sed -n '/^is_healthy() {$/,/^}$/p' deploy.sh)
+[ -n "$health_function" ] || fail=1
+for status in 0 17; do
+  output=$(env PATH="$d/bin:$PATH" HEALTH_FIXTURE_STATUS="$status" bash -c '
+    SERVICE=spring_chengyinhub-admin
+    HEALTH_CHECKER=$1
+    DEPLOY_HEALTH_TOKEN_FILE=/fixture/private-token
+    eval "$2"
+    is_healthy
+  ' fixture "$d/ci/check_deploy_health.py" "$health_function" 2>&1)
+  rc=$?
+  [ "$rc" = "$status" ] && printf '%s' "$output" | grep -q 'checked-protected-health' || fail=1
+done
+! printf '%s' "$health_function" | grep -q 'ss -ltn' || fail=1
+
+# 真回滚流程：任何关键步骤失败都不能被健康 UP 掩盖；原部署最终仍失败。
+rollback_function=$(sed -n '/^rollback() {$/,/^}$/p' deploy.sh | sed 's|/usr/bin/cp|fixture_cp|g; s|/usr/bin/chown|fixture_chown|g')
+[ -n "$rollback_function" ] || fail=1
+: > "$d/backup.jar"
+for fault in none stop cp chown reset-failed start health missing-backup; do
+  output=$(bash -c '
+    SERVICE=spring_chengyinhub-admin
+    BACKUP_JAR=$1
+    APP_JAR=/fixture/current.jar
+    FAULT=$2
+    [ "$FAULT" != missing-backup ] || BACKUP_JAR=/fixture/nonexistent-backup.jar
+    systemctl() { [ "$FAULT" != "$1" ]; }
+    fixture_cp() { [ "$FAULT" != cp ]; }
+    fixture_chown() { [ "$FAULT" != chown ]; }
+    wait_healthy() { [ "$FAULT" != health ]; }
+    eval "$3"
+    rollback
+  ' fixture "$d/backup.jar" "$fault" "$rollback_function" 2>&1)
+  rc=$?
+  [ "$rc" = 1 ] || fail=1
+  if [ "$fault" = none ]; then
+    printf '%s' "$output" | grep -q '回滚成功' || fail=1
+  else
+    ! printf '%s' "$output" | grep -q '回滚成功' || fail=1
+    printf '%s' "$output" | grep -q '回滚未验证成功' || fail=1
+  fi
+done
+output=$(env PATH="$d/bin:$PATH" PREFLIGHT_FIXTURE_STATUS=17 sh "$d/deploy.sh" stop 2>&1)
+rc=$?
+[ "$rc" = 0 ] && printf '%s' "$output" | grep -q 'systemctl:stop:spring_chengyinhub-admin' || fail=1
+! printf '%s' "$output" | grep -q 'checked-running-service' || fail=1
+rm -rf "$d"
+[ "$fail" = "0" ] || { echo "原部署入口预检负控未通过"; exit 1; }
+echo "原部署入口配置/健康预检正负控通过(start/restart 各两组 + 缺 helper/token/Python + 健康出口两组 + 回滚八组 + 独立 stop)"

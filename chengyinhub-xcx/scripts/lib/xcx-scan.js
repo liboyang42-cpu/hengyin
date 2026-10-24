@@ -24,6 +24,10 @@ const ROOT = path.resolve(__dirname, '..', '..');
 // 与 js-scope-lint 使用 Node 自带的 Acorn；普通 node 门禁没有 --expose-internals。
 // 延迟加载，默认 maskNonCode 及其 U2/U3/U4 调用者不依赖该解析器。
 let commentParser;
+function parseJavaScript(source) {
+  maskJavaScriptComments(source);
+  return commentParser.parse(source, { ecmaVersion: 'latest', sourceType: 'script', locations: true });
+}
 function maskJavaScriptComments(src) {
   if (!commentParser) {
     try {
@@ -334,10 +338,124 @@ function ownHandlerEntries(masked) {
   return scanTopLevelKeys(masked, def.bodyStart, def.bodyEnd).filter((k) => k.isFunction);
 }
 
+// Resolve only the object actually returned by a statically imported Page factory.
+// No module execution: unrelated declarations and non-exported functions cannot satisfy bindings.
+function extractFactoryHandlerEntries(filePath) {
+  if (!/\bPage\s*\(\s*[A-Za-z_$][\w$]*\s*\(/.test(maskNonCode(fs.readFileSync(filePath, 'utf8')))) return null;
+  const modules = new Map();
+  const unknown = Symbol('unresolved static value');
+  function load(file) {
+    if (modules.has(file)) return modules.get(file);
+    const source = fs.readFileSync(file, 'utf8');
+    maskJavaScriptComments(source); // initializes the existing Node-bundled Acorn parser
+    const ast = commentParser.parse(source, { ecmaVersion: 'latest', sourceType: 'script', locations: true });
+    const context = { file, source, ast, bindings: new Map() };
+    modules.set(file, context);
+    declarations(ast.body, context);
+    return context;
+  }
+  function declarations(statements, context) {
+    for (const statement of statements) {
+      if (statement.type === 'FunctionDeclaration' && statement.id) context.bindings.set(statement.id.name, { node: statement, context });
+      if (statement.type !== 'VariableDeclaration') continue;
+      for (const declaration of statement.declarations) {
+        const init = declaration.init;
+        if (declaration.id.type === 'Identifier') context.bindings.set(declaration.id.name, { node: init, context });
+        if (declaration.id.type === 'ObjectPattern' && init && init.type === 'CallExpression' && init.callee.name === 'require' && init.arguments[0] && typeof init.arguments[0].value === 'string') {
+          for (const property of declaration.id.properties) {
+            if (property.type === 'Property' && !property.computed && property.value.type === 'Identifier') {
+              context.bindings.set(property.value.name, { importPath: init.arguments[0].value, exportName: property.key.name || property.key.value, context });
+            }
+          }
+        }
+      }
+    }
+  }
+  function exported(context, name, active) {
+    let target;
+    for (const statement of context.ast.body) {
+      const expression = statement.type === 'ExpressionStatement' && statement.expression;
+      if (expression && expression.type === 'AssignmentExpression' && expression.operator === '=' && expression.left.type === 'MemberExpression' && !expression.left.computed && expression.left.object.name === 'module' && expression.left.property.name === 'exports') target = expression.right;
+    }
+    if (!target) return unknown;
+    const value = evaluate(target, context, active);
+    return name == null ? value : value && value.type === 'object' ? value.entries.get(name) : undefined;
+  }
+  function imported(rel, name, context, active) {
+    if (!rel.startsWith('.')) return unknown;
+    const file = resolveRequireFile(path.dirname(context.file), rel);
+    return file ? exported(load(file), name, active) : unknown;
+  }
+  function evaluate(node, context, active = new Set()) {
+    if (!node) return undefined;
+    if (active.has(node)) return unknown;
+    const next = new Set(active); next.add(node);
+    if (['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression'].includes(node.type)) return { type: 'function', node, context };
+    if (node.type === 'Literal') return node.value;
+    if (node.type === 'Identifier') {
+      const binding = context.bindings.get(node.name);
+      if (!binding) return node.name === 'undefined' ? undefined : unknown;
+      if (Object.prototype.hasOwnProperty.call(binding, 'value')) return binding.value;
+      if (binding.importPath) return imported(binding.importPath, binding.exportName, binding.context, next);
+      return evaluate(binding.node, binding.context, next);
+    }
+    if (node.type === 'ObjectExpression') {
+      const entries = new Map();
+      for (const property of node.properties) {
+        if (property.type === 'SpreadElement') {
+          const spread = evaluate(property.argument, context, next);
+          if (spread === unknown) return unknown;
+          if (spread && spread.type === 'object') for (const [key, value] of spread.entries) entries.set(key, value);
+        } else if (!property.computed && property.kind === 'init') {
+          entries.set(property.key.name || property.key.value, evaluate(property.value, context, next));
+        }
+      }
+      return { type: 'object', entries };
+    }
+    if (node.type === 'MemberExpression' && !node.computed) {
+      const object = evaluate(node.object, context, next);
+      return object && object.type === 'object' ? object.entries.get(node.property.name) : unknown;
+    }
+    if (node.type === 'LogicalExpression' && node.operator === '||') return evaluate(node.left, context, next) || evaluate(node.right, context, next);
+    if (node.type !== 'CallExpression') return unknown;
+    if (node.callee.name === 'require' && node.arguments[0] && typeof node.arguments[0].value === 'string') return imported(node.arguments[0].value, null, context, next);
+    if (node.callee.type === 'MemberExpression' && node.callee.object.name === 'Object' && node.callee.property.name === 'assign' && !context.bindings.has('Object')) {
+      const entries = new Map();
+      for (const argument of node.arguments) {
+        const value = evaluate(argument, context, next);
+        if (value === unknown) return unknown;
+        if (value && value.type === 'object') for (const [key, field] of value.entries) entries.set(key, field);
+      }
+      return { type: 'object', entries };
+    }
+    const factory = evaluate(node.callee, context, next);
+    if (!factory || factory.type !== 'function') return unknown;
+    const scope = { ...factory.context, bindings: new Map(factory.context.bindings) };
+    factory.node.params.forEach((parameter, index) => {
+      if (parameter.type === 'Identifier') scope.bindings.set(parameter.name, { value: evaluate(node.arguments[index], context, next) });
+    });
+    if (factory.node.body.type !== 'BlockStatement') return evaluate(factory.node.body, scope, next);
+    if (factory.node.body.body.some(statement => !['VariableDeclaration', 'FunctionDeclaration', 'ReturnStatement'].includes(statement.type)) || factory.node.body.body.filter(statement => statement.type === 'ReturnStatement').length !== 1) return unknown;
+    declarations(factory.node.body.body, scope);
+    const returned = factory.node.body.body.find(statement => statement.type === 'ReturnStatement');
+    return returned ? evaluate(returned.argument, scope, next) : unknown;
+  }
+  const context = load(filePath);
+  const statement = context.ast.body.find(item => item.type === 'ExpressionStatement' && item.expression.type === 'CallExpression' && item.expression.callee.name === 'Page');
+  if (!statement) return null;
+  const argument = statement.expression.arguments[0];
+  if (!argument || argument.type !== 'CallExpression' || argument.callee.type !== 'Identifier' || !context.bindings.has(argument.callee.name)) return null;
+  const output = evaluate(argument, context);
+  if (!output || output.type !== 'object') return [];
+  return [...output.entries].filter(([, value]) => value && value.type === 'function').map(([name, value]) => ({ name, line: value.node.loc.start.line, file: value.context.file, start: value.node.start, end: value.node.end }));
+}
+
 function extractOwnHandlerEntries(filePath, seen) {
   seen = seen || new Set();
   if (seen.has(filePath)) return [];
   seen.add(filePath);
+  const factoryEntries = extractFactoryHandlerEntries(filePath);
+  if (factoryEntries !== null) return factoryEntries;
   const src = fs.readFileSync(filePath, 'utf8');
   const masked = maskNonCode(src);
   // k.start 落在上一个逗号之后(可能还带着换行+缩进),直接算行号会偏到上一行。
@@ -381,6 +499,8 @@ function extractHandlerNames(filePath, seen) {
   seen = seen || new Set();
   if (seen.has(filePath)) return [];
   seen.add(filePath);
+  const factoryEntries = extractFactoryHandlerEntries(filePath);
+  if (factoryEntries !== null) return factoryEntries.map(entry => entry.name);
   const src = fs.readFileSync(filePath, 'utf8');
   const masked = maskNonCode(src);
 
@@ -813,6 +933,7 @@ function rel(p) {
 }
 
 module.exports = {
+  parseJavaScript,
   ROOT,
   rel,
   maskNonCode,

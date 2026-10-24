@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-# 漂移对账的自愈触发器：gh 失败必须向调用者传播非零。
+# Automatic redeployment is disabled; keep callers fail-closed and give a manual recovery path.
 set -euo pipefail
-
 WORKFLOW="${1:?缺少 workflow 名}"
-if ! gh workflow run "$WORKFLOW" -f ref=master -f force_deploy=false; then
-  echo "::error::触发 $WORKFLOW 失败 —— 自愈没发生,请手动去 Actions 里 Run workflow"
-  exit 1
-fi
-
-echo "已接受 $WORKFLOW 补部署请求(回执不是部署观测)"
+printf '::error::自动补部署已关闭；请人工选择通过完整 CI 的精确 SHA 后在 %s Run workflow\n' "$WORKFLOW"
+exit 1

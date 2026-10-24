@@ -12,18 +12,22 @@
     <!-- 01 准备 · 开局不套白框:这一屏只有两个数,框住反而像一段说明文字 -->
     <block wx:if="{{phase === 'intro'}}">
       <view class="sw__mid sw__mid--intro">
-        <view class="sw__eyebrow">{{eyebrow}}</view>
+        <view class="sw__eyebrow pe pe--blur" style="--pe-d:.05s">{{eyebrow}}</view>
         <view class="sw__lbl sw__lbl--target">目标</view>
-        <view class="sw__target">{{targetText}}<text class="sw__unit">秒</text></view>
+        <view class="sw__target pe pe--roll" style="--pe-d:.2s">{{targetText}}<text class="sw__unit">秒</text></view>
         <view class="sw__lbl sw__lbl--tol">误差</view>
-        <view class="sw__tol">±{{tolText}}<text class="sw__unit2">秒</text></view>
-        <view class="sw__tip">
+        <view class="sw__tol pe pe--roll" style="--pe-d:.35s">±{{tolText}}<text class="sw__unit2">秒</text></view>
+        <view class="sw__tip pe pe--up" style="--pe-d:.7s">
           <view>开跑 1 秒后数字会消失</view>
           <view>点屏幕任意处停</view>
+          <view>本机测量读数，仅供娱乐参考。</view>
+          <view>与目标相差不超过 {{tolText}} 秒算命中。</view>
+          <view>切到后台会中断本机计时，返回后请重新开始。</view>
+          <view wx:if="{{rewardNote}}">{{rewardNote}}</view>
         </view>
       </view>
       <view class="sw__foot">
-        <view class="sw__btn" bindtap="onStart" aria-role="button" aria-label="开始"
+        <view class="sw__btn pe pe--up" style="--pe-d:.85s" bindtap="onStart" aria-role="button" aria-label="开始"
               hover-class="sw__btn--press" hover-stay-time="80">开始</view>
       </view>
     </block>
@@ -44,7 +48,7 @@
           <!-- 盲停:1 秒后只藏走动的数字,目标和容差一直挂着 -->
           <view class="sw__giant" wx:if="{{!hidden}}">{{big}}</view>
           <view class="sw__dash" wx:else>—— · ——</view>
-          <view class="sw__pill">目标 {{targetText}} 秒 · 容差 ±{{tolText}}</view>
+          <view class="sw__pill">目标 {{targetText}} 秒 · 容差 ±{{tolText}} 秒</view>
           <block wx:if="{{phase === 'over'}}">
             <view class="sw__dev">{{dev}}</view>
             <view class="sw__cap" wx:if="{{left > 0}}">还有 {{left}} 次机会</view>

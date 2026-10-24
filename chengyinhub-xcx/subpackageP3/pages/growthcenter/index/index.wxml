@@ -1,88 +1,58 @@
+<wxs src="../../../../utils/wxs/count.wxs" module="cnt" />
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="gc-page">
-  <cy-nav-bar />
-  <cy-page-title title="成长中心" subtitle="城市探索 · 成就与排行榜" />
+  <cy-nav-bar plain />
+  <cy-page-title title="成长中心" style="--cy-space-5: 0px; --cy-space-2: 16px; --cy-page-title-leading: 38px; --cy-page-title-weight: 700;" />
 
-  <!-- 第一层：积分与本人名次。只用中性色面，不再把分数做成彩色仪表。 -->
+  <cy-empty wx:if="{{growthAuthRequired || growthAccessDenied}}" kind="no-permission" fill size="lg"
+    title="{{growthAuthRequired ? '登录后查看成长记录' : '当前账号无法查看成长记录'}}"
+    sub=""
+    cta="{{growthAuthRequired ? '登录' : '刷新'}}" bind:cta="onLoginGrowth" />
+  <block wx:else>
   <view class="gc-score-card">
-    <text class="gc-score-kicker">当前积分</text>
-    <cy-skeleton wx:if="{{rankState === 'loading' && !me}}" type="amount" count="{{1}}" />
-    <block wx:else>
-      <view class="gc-score-line">
-        <text class="gc-score-value">{{me ? me.scoreText : '0'}}</text>
-        <text class="gc-score-unit">{{unit}}</text>
-      </view>
-      <cy-progress-status wx:if="{{rankState === 'refreshing'}}" class="gc-rank-inline"
-        title="正在更新我的排名" sub="现有排名仍可查看" />
-      <view wx:elif="{{errorMsg && !me}}" class="gc-state gc-state--error">
-        <cy-inline-error kind="{{rankErrorKind}}"
-          title="{{boardState === 'permission' ? '当前无法查看排行榜' : '排行榜没有加载出来'}}"
-          sub="{{errorMsg}}" action="重试" bind:action="retryRank" />
-      </view>
-    </block>
-    <view wx:if="{{me}}" class="gc-score-rank" bindtap="goLeaderboard" aria-role="button" aria-label="查看完整排行榜"
-      hover-class="gc-row--press" hover-stay-time="80">
+    <view class="gc-profile-row">
       <view class="gc-score-person">
-        <image wx:if="{{me.avatarUrl}}" class="gc-score-avatar" src="{{me.avatarUrl}}" mode="aspectFill" />
-        <view wx:else class="gc-score-avatar gc-score-avatar--text">{{me.initial}}</view>
-        <view class="gc-score-rank-copy">
-          <text>{{me.name}}</text>
-          <text>总榜第 {{ me.rank || 0 }} 名</text>
-        </view>
+        <!-- PR10:兜底原指向不存在的 /images/growthcenter/avatar-default.svg ⇒ 无头像成员留一块空位把名字顶偏(p2-04)。
+             改用全站唯一的默认头像 d_profile.png(cy-avatar placeholder 档同一张)。 -->
+        <image class="gc-score-avatar" src="{{profile.avatarUrl || '/images/d_profile.png'}}" mode="aspectFill" />
+        <text class="gc-profile-name">{{profile.name}}</text>
       </view>
-      <view class="gc-score-link"><text>查看榜单</text><cy-icon name="arrow-right" size="28" /></view>
+      <view class="gc-score-line">
+        <view wx:if="{{rankState === 'loading' && !rankLoaded}}" class="gc-score-skeleton" aria-label="正在加载积分" />
+        <block wx:else><text class="gc-score-value">{{cnt.f(scoreText, gsK)}}</text><text class="gc-score-unit">{{unit}}</text></block>
+      </view>
     </view>
-    <cy-empty wx:elif="{{rankLoaded}}" title="暂无排名" />
+    <view class="gc-score-rank" bindtap="goLeaderboard" aria-role="button" aria-label="查看完整排行榜" hover-class="gc-row--press" hover-stay-time="80">
+      <text wx:if="{{me}}" class="gc-rank-label">总积分榜 · 第 {{me.rank || '—'}} 名</text>
+      <text wx:elif="{{rankLoaded}}" class="gc-rank-label">暂无排名</text>
+      <text wx:elif="{{rankState === 'loading'}}" class="gc-rank-label gc-muted">正在加载我的排名</text>
+      <text wx:else class="gc-rank-label gc-muted">总积分榜</text>
+      <view class="gc-score-link"><text>查看榜单</text><cy-icon class="gc-arrow-icon" name="chevron-right" size="32" /></view>
+    </view>
   </view>
-
-  <!-- 第二层：四项足迹指标。 -->
   <view class="gc-section">
-    <view class="gc-section-head">
-      <text class="gc-section-title">我的足迹</text>
-      <text class="gc-section-meta">{{overview.levelText}}</text>
+    <view class="gc-section-head"><text class="gc-section-title">我的足迹</text><text wx:if="{{overviewAvailable.center}}" class="gc-section-meta">{{overview.levelText}}</text></view>
+    <view wx:if="{{overviewState === 'loading' && !overviewLoaded}}" class="gc-metric-list" aria-label="正在加载足迹">
+      <view class="gc-metric-row" wx:for="{{overview.stats}}" wx:key="key"><view class="gc-skeleton-label" /><view class="gc-skeleton-value" /></view>
     </view>
-    <cy-skeleton wx:if="{{overviewState === 'loading' && !overviewLoaded}}" type="list" count="{{4}}" />
-    <block wx:else>
-      <cy-progress-status wx:if="{{overviewState === 'refreshing'}}" class="gc-overview-inline"
-        title="正在更新足迹" sub="现有数据仍可查看" />
-      <cy-inline-error wx:elif="{{overviewError}}" class="gc-overview-inline"
-        kind="{{overviewErrorKind}}" title="{{overviewState === 'partial' ? '部分足迹暂不可用' : '足迹没有更新'}}"
-        sub="{{overviewError}}" action="重试" bind:action="loadOverview" />
-    <view class="gc-metric-list" aria-role="list" aria-label="我的城市足迹">
+    <view wx:else class="gc-metric-list" aria-role="list" aria-label="我的城市足迹" style="{{pmPage === 1 ? '--pm-g:1;' : (pmPage === 2 ? '--pm-g-d:.32s;--pm-g-s:1;' : '')}}">
       <view class="gc-metric-row" wx:for="{{overview.stats}}" wx:key="key" aria-role="listitem">
         <text class="gc-metric-label">{{item.label}}</text>
-        <view class="gc-metric-value"><text>{{item.value}}</text><text>{{item.unit}}</text></view>
-      </view>
-    </view>
-    </block>
-  </view>
-
-  <!-- 第三层：中性徽章列表；点按只展开真实获得时刻。 -->
-  <view class="gc-section gc-badge-sec">
-    <view class="gc-section-head">
-      <text class="gc-section-title">我的徽章</text>
-      <text class="gc-section-meta">{{badgeCountText}}</text>
-    </view>
-
-    <cy-skeleton wx:if="{{overviewState === 'loading' && !overviewLoaded}}" type="list" count="{{2}}" />
-    <block wx:else>
-      <view wx:if="{{badgeLoadError}}" class="gc-badge-state">
-        <text class="gc-badge-state-copy">{{showBadges ? '徽章数据暂时不可用，已保留上次成功内容' : '徽章数据暂时不可用'}}</text>
-        <view class="gc-badge-state-retry" bindtap="loadOverview" aria-role="button" aria-label="重试徽章数据"
-          hover-class="gc-row--press" hover-stay-time="80">重试</view>
-      </view>
-
-    <view wx:if="{{showBadges}}" class="gc-badge-list" aria-role="list" aria-label="我的徽章">
-      <view class="gc-badge-row {{expandedBadge === item.code ? 'is-open' : ''}}" wx:for="{{badges}}" wx:key="name"
-        data-code="{{item.code}}" bindtap="onBadgeTap" aria-role="button" aria-label="{{item.name}}，查看获得时刻"
-        hover-class="gc-row--press" hover-stay-time="80">
-        <view class="gc-badge-disc">
-          <image wx:if="{{item.iconUrl}}" class="gc-badge-icon" src="{{item.iconUrl}}" mode="aspectFit" />
-          <text wx:else>{{item.initial}}</text>
+        <view class="gc-metric-value">
+          <block wx:if="{{(index < 2 && overviewAvailable.center) || (index === 2 && overviewAvailable.completed) || (index === 3 && overviewAvailable.play)}}"><text>{{cnt.f(item.value, gcK)}}</text><text>{{item.unit}}</text></block>
+          <text wx:else>—</text>
         </view>
+      </view>
+    </view>
+  </view>
+  <view class="gc-section gc-badge-sec">
+    <view class="gc-section-head"><text class="gc-section-title">我的徽章</text><text wx:if="{{overviewAvailable.center}}" class="gc-section-meta">{{badgeCountText}}</text></view>
+    <view wx:if="{{showBadges}}" class="gc-badge-list" aria-role="list" aria-label="我的徽章" style="{{pmPage === 1 ? '--pm-g:1;' : (pmPage === 2 ? '--pm-g-d:.32s;--pm-g-s:1;' : '')}}">
+      <view class="gc-badge-row {{expandedBadge === item.code ? 'is-open' : ''}}" wx:for="{{badges}}" wx:key="code" data-code="{{item.code}}" bindtap="onBadgeTap" aria-role="button" aria-label="{{item.name}}，查看获得时刻" hover-class="gc-row--press" hover-stay-time="80">
+        <view class="gc-badge-disc"><image wx:if="{{item.iconUrl}}" class="gc-badge-icon" src="{{item.iconUrl}}" mode="aspectFit" /><text wx:else>{{item.initial}}</text></view>
         <view class="gc-badge-copy">
           <text class="gc-badge-name">{{item.name}}</text>
           <text class="gc-badge-moment" wx:if="{{expandedBadge === item.code && item.unlockText}}">获得于 {{item.unlockText}}</text>
@@ -92,13 +62,19 @@
         <text class="gc-badge-arrow">{{expandedBadge === item.code ? '收起' : '查看'}}</text>
       </view>
     </view>
-
-    <cy-empty wx:if="{{showBadgeEmpty}}" kind="empty" size="lg" title="还没有点亮任何徽章"
-      sub="继续探索城市，第一枚徽章会在这里出现" cta="去探索" bind:cta="goExplore" />
-    </block>
+    <view wx:elif="{{showBadgeEmpty}}" class="gc-badge-empty">
+      <view class="gc-empty-heading"><cy-icon class="gc-star-icon" name="star" size="40" /><text>还没有点亮任何徽章</text></view>
+      <text class="gc-empty-copy">
+</text>
+      <view class="gc-explore-button" bindtap="goExplore" aria-role="button" aria-label="去探索" hover-class="gc-row--press" hover-stay-time="80">去探索</view>
+    </view>
+    <view wx:else class="gc-badge-loading">
+      <text wx:if="{{overviewState === 'loading'}}" class="gc-muted">正在加载徽章</text><view class="gc-badge-skeleton" aria-label="徽章数据尚未就绪" />
+    </view>
   </view>
 
   <view wx:if="{{badgeAnnouncement}}" class="gc-sr-status" aria-role="status" aria-live="polite">{{badgeAnnouncement}}</view>
   <cy-celebrate event-key="{{celebrationEvent}}" />
+  </block>
 </view>
 </view>

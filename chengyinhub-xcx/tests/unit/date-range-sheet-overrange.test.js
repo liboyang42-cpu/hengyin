@@ -47,7 +47,7 @@ test('越界时组件自己给一句人话,并且仍然把 overrange 抛给宿�
 
   component.onOverrange({ detail: { value: ['2026-09-01', '2026-09-11'], span: 11, max: 7 } })
 
-  assert.ok(data._overTitle, '必须立刻有标题,不能只留一个事件')
+  assert.ok(data._overTitle, '必须立刻有标题，不能只留一个事件')
   assert.match(data._overTitle, /最多选 7 天/)
   assert.match(data._overSub, /11 天/)
   assert.match(data._overSub, /请重新选结束日期/)
@@ -90,9 +90,9 @@ test('提示走 cy-inline-error 且组件真的注册了它(漏注册等于渲�
   const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/date-range-sheet/index.json'), 'utf8'))
 
   const tag = wxml.match(/<cy-inline-error[\s\S]*?\/>/)
-  assert.ok(tag, '越界提示必须用站内联反馈组件,不能自造一行字')
+  assert.ok(tag, '越界提示必须用站内联反馈组件，不能自造一行字')
   assert.match(tag[0], /wx:if="\{\{_overTitle\}\}"/)
-  assert.match(tag[0], /kind="data"/, '选长了不是动作失败,不能穿红色失败衣')
+  assert.match(tag[0], /kind="data"/, '选长了不是动作失败，不能穿红色失败衣')
   // #1103 下沉后组件住在 pages/topic,注册路径改回指主包 components/cy/inline-error
   assert.ok(String(json.usingComponents['cy-inline-error']).endsWith('/components/cy/inline-error/index'))
   assert.ok(fs.existsSync(path.join(ROOT, 'components/cy/inline-error/index.js')))

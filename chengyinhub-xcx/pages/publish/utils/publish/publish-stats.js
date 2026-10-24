@@ -118,6 +118,16 @@ function totalDurationText(chapters) {
 
 // 路线总统计:时长/节点/模板/格式化里程(= 原 calculateTotalStats)。
 // totalDistance 由调用方传入(= totalDistanceKm(chapters)),与原实现内部调用 calculateTotalDistance() 等价。
+// 站数口径与服务端一致:只数上架节点。status=0 = 后台隐藏(edit-detail 会带回,保存时服务端保留隐藏);
+// 编辑器里新加的节点还没有 status,按上架算。
+function isListedNode(node) {
+  return !!node && node.status !== 0 && node.status !== '0';
+}
+
+function listedNodeCount(chapters) {
+  return (chapters || []).reduce((sum, c) => sum + ((c && c.nodes) || []).filter(isListedNode).length, 0);
+}
+
 function totalStats(chapters, totalDistance) {
   const list = chapters || [];
   let totalMinutes = 0;
@@ -126,8 +136,8 @@ function totalStats(chapters, totalDistance) {
 
   list.forEach(chapter => {
     if (chapter.nodes) {
-      // 节点总数
-      totalNodes += chapter.nodes.length;
+      // 节点总数(只数上架节点)
+      totalNodes += chapter.nodes.filter(isListedNode).length;
 
       chapter.nodes.forEach(node => {
         // 总时长
@@ -201,7 +211,7 @@ function computeCompleteness(formData, ctx) {
   });
   const okAllCoords = nodeCount > 0 && coordMissing === 0;
   checks.push(okAllCoords);
-  if (!okAllCoords) missing.push(nodeCount === 0 ? '至少一个站点' : `${coordMissing} 个站点还没选地点`);
+  if (!okAllCoords) missing.push(nodeCount === 0 ? '至少一个节点' : `${coordMissing} 个节点还没选地点`);
 
   // —— 节点级:每个节点需有地点 + 描述 + 时长 ——
   let nodeTotal = 0, nodeAddrOk = 0, nodeDescOk = 0, nodeTimeOk = 0;
@@ -215,13 +225,13 @@ function computeCompleteness(formData, ctx) {
   });
   if (nodeTotal > 0) {
     const aAddr = nodeAddrOk === nodeTotal;
-    checks.push(aAddr); if (!aAddr) missing.push('部分站点缺地点');
+    checks.push(aAddr); if (!aAddr) missing.push('部分节点缺地点');
     const aDesc = nodeDescOk === nodeTotal;
-    checks.push(aDesc); if (!aDesc) missing.push('部分站点缺描述');
+    checks.push(aDesc); if (!aDesc) missing.push('部分节点缺描述');
     const aTime = nodeTimeOk === nodeTotal;
-    checks.push(aTime); if (!aTime) missing.push('部分站点缺时长');
+    checks.push(aTime); if (!aTime) missing.push('部分节点缺时长');
   } else {
-    checks.push(false); missing.push('尚未添加站点');
+    checks.push(false); missing.push('尚未添加节点');
   }
 
   const passed = checks.filter(Boolean).length;
@@ -235,5 +245,6 @@ module.exports = {
   totalDistanceKm: totalDistanceKm,
   totalDurationText: totalDurationText,
   totalStats: totalStats,
+  listedNodeCount: listedNodeCount,
   computeCompleteness: computeCompleteness,
 };

@@ -54,16 +54,16 @@ test('cy-page-title 的全部调用点只传组件声明过的属性(传错名�
     extractSheetProps(fs.readFileSync(path.join(COMPONENT_DIR, 'index.js'), 'utf8'), COMPONENT_DIR)
   );
   // 先证明属性表真解析出来了,否则下面的断言会因为"表是空的"而恒绿
-  assert.ok(declared.has('title') && declared.has('subtitle'), 'properties 解析失败,断言会恒真');
+  assert.ok(declared.has('title') && declared.has('subtitle'), 'properties 解析失败，断言会恒真');
 
   const sites = callSites();
-  assert.ok(sites.length > 20, `只扫到 ${sites.length} 个属性,扫描器大概率没对上真实写法`);
+  assert.ok(sites.length > 20, `只扫到 ${sites.length} 个属性，扫描器大概率没对上真实写法`);
 
   const bad = sites.filter((s) => !isPlatformAttr(s.attr) && !declared.has(S.kebabToCamel(s.attr)));
   assert.deepEqual(
     bad.map((b) => `${path.relative(S.ROOT, b.file)}:${b.line} ${s2(b.attr)}`),
     [],
-    ' 上面这些调用点传了 cy-page-title 没声明的属性,会被框架静默丢弃'
+    ' 上面这些调用点传了 cy-page-title 没声明的属性，会被框架静默丢弃'
   );
 });
 

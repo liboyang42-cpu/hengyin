@@ -29,11 +29,13 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -73,6 +75,10 @@ class CashWithdrawStateMachineTest {
         alarmService = mock(AlarmService.class);
         merchantReferralBountyService = mock(MerchantReferralBountyService.class);
         svc = new CashWithdrawServiceImpl();
+        org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        ReflectionTestUtils.setField(svc, "transactionManager", transactions);
+        when(mapper.updateStatusIfManual(any())).thenReturn(1);
         ReflectionTestUtils.setField(svc, "mapper", mapper);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "wechatPayService", wechatPayService);
@@ -87,7 +93,12 @@ class CashWithdrawStateMachineTest {
                 .thenReturn(BigDecimal.ZERO);
         ReflectionTestUtils.setField(svc, "frozenAmountResolver",
                 new com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver(merchantReferralBountyService, cooldownStub));
+        ReflectionTestUtils.setField(svc, "balanceAdmissionService",
+                com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(umsMemberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(svc, "frozenAmountResolver")));
         when(merchantReferralBountyService.frozenAmount(any())).thenReturn(BigDecimal.ZERO);
+        when(mapper.selectById(1L)).thenAnswer(i -> pendingRecord());
+        when(mapper.updateMemberCashWithdraw(any())).thenReturn(1);
+        when(mapper.updateReceiptIfProcessing(any())).thenReturn(1);
         when(mapper.insertMemberCashWithdraw(any())).thenAnswer(inv -> {
             ((MemberCashWithdraw) inv.getArgument(0)).setId(1L);
             return 1;
@@ -135,18 +146,19 @@ class CashWithdrawStateMachineTest {
         res.put("batchStatus", "ACCEPTED");
         when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
 
-        svc.withdraw(9L, new BigDecimal("10.00"));
+        MemberCashWithdraw current = svc.withdraw(9L, new BigDecimal("10.00"));
+        assertEquals(Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING), current.getStatus());
 
         // 绝不置成功(不走终态守卫)
         verify(mapper, never()).updateStatusIfProcessing(any());
         verify(umsMemberService, never()).addBalance(anyLong(), any());
-        // 受理更新:某次 update 带 submitTime 且 status=处理中
+        // 受理只写观察字段，返回的原持久状态仍是处理中
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateReceiptIfProcessing(cap.capture());
         boolean acceptedUpdate = cap.getAllValues().stream().anyMatch(v ->
-                v.getSubmitTime() != null && Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(v.getStatus())
+                v.getSubmitTime() != null && v.getStatus() == null
                         && "B1".equals(v.getTransferBatchId()));
-        assertTrue(acceptedUpdate, "受理应置处理中+记录批次号与提交时间");
+        assertTrue(acceptedUpdate, "受理仅记录批次号与提交时间，不写状态");
     }
 
     // ② 原子防重:insert 唯一键冲突(DuplicateKey)→ 拦截,不扣款不转账
@@ -173,6 +185,7 @@ class CashWithdrawStateMachineTest {
     // ④ 扣款抛异常(DB 未知异常,余额可能已扣)→ 置待人工(status=3)+告警,不假称已退款,不转账
     @Test
     void deductThrows_marksFailed_noZombie_noTransfer() {
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
         when(mapper.countPendingByMember(9L)).thenReturn(0);
         stubMemberWithOpenid();
         doThrow(new RuntimeException("扣款状态不明")).when(umsMemberService).deductWithdrawableBalance(eq(9L), any(), any());
@@ -182,7 +195,7 @@ class CashWithdrawStateMachineTest {
         verify(wechatPayService, never()).transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString());
         // 未知异常 → STATUS_FAILED_MANUAL=3(非 FAILED_REFUNDED),且触发告警
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(cap.capture());
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateStatusIfProcessing(cap.capture());
         boolean markedManual = cap.getAllValues().stream()
                 .anyMatch(v -> Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(v.getStatus()));
         assertTrue(markedManual, "扣款异常应置待人工(3),不可假称已退款");
@@ -237,7 +250,7 @@ class CashWithdrawStateMachineTest {
         verify(mapper).updateStatusIfProcessing(claim.capture());
         assertEquals(MemberCashWithdraw.STATUS_FAILED_MANUAL, claim.getValue().getStatus());
         ArgumentCaptor<MemberCashWithdraw> fin = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, org.mockito.Mockito.atLeastOnce()).updateMemberCashWithdraw(fin.capture());
+        verify(mapper).updateStatusIfManual(fin.capture());
         assertTrue(fin.getAllValues().stream()
                 .anyMatch(v -> Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_REFUNDED).equals(v.getStatus())));
     }
@@ -273,6 +286,25 @@ class CashWithdrawStateMachineTest {
         verify(umsMemberService, never()).deductBalance(anyLong(), any());
     }
 
+    // PR #8 回归:抢占 0→3 成功,但 3→2 回补领取 CAS 落空(已被人工/并发处理)→ 不加余额、不告警、只写一次领取
+    @Test
+    void sync_fail_refundClaimLost_noBalanceNoAlarm() {
+        when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
+        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1); // 抢占成功
+        when(mapper.updateStatusIfManual(any())).thenReturn(0);     // 回补领取输掉
+
+        svc.syncPendingWithdrawals(50);
+
+        verify(umsMemberService, never()).addBalance(anyLong(), any());
+        verify(umsMemberService, never()).deductBalance(anyLong(), any());
+        verify(alarmService, never()).alarm(anyString(), anyString());
+        verify(mapper, times(1)).updateStatusIfProcessing(any());
+        ArgumentCaptor<MemberCashWithdraw> fin = ArgumentCaptor.forClass(MemberCashWithdraw.class);
+        verify(mapper, times(1)).updateStatusIfManual(fin.capture());
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, fin.getValue().getStatus());
+    }
+
     // ⑧ 退款失败(addBalance 抛异常,真实语义)→ 保持待人工 + 告警
     @Test
     void sync_fail_refundThrows_manualAndAlarm() {
@@ -300,7 +332,7 @@ class CashWithdrawStateMachineTest {
 
         verify(umsMemberService, never()).addBalance(anyLong(), any());
         verify(mapper, never()).updateStatusIfProcessing(any()); // 未超时不升级
-        verify(mapper, times(1)).updateMemberCashWithdraw(any());
+        verify(mapper, times(1)).updateReceiptIfProcessing(any());
     }
 
     // ⑩ 超时兜底:处理中过久(submitTime 很旧)+ 仍 UNKNOWN → CAS 升级人工 + 告警
@@ -337,6 +369,38 @@ class CashWithdrawStateMachineTest {
         assertThrows(IllegalStateException.class, () -> svc.withdraw(9L, new BigDecimal("10.00")));
 
         verify(umsMemberService, times(1)).addBalance(eq(9L), any());
+    }
+
+    // ⑪b F-L4-05:回补事务提交结果未知(commit 抛异常,库里可能已是 2 且余额已加)。
+    //     兜底分支绝不能无条件把状态改回 3,否则人工双人补单会再加一次余额。
+    @Test
+    void initiateFail_refundCommitUnknown_neverRevertsStatusToManual() {
+        when(mapper.countPendingByMember(9L)).thenReturn(0);
+        stubMemberWithOpenid();
+        when(umsMemberService.deductWithdrawableBalance(eq(9L), any(), any())).thenReturn(true);
+        Map<String, String> res = new HashMap<>();
+        res.put("ok", "false");
+        res.put("error", "转账服务未就绪");
+        when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        doThrow(new org.springframework.transaction.TransactionSystemException("commit outcome unknown"))
+                .when(transactions).commit(any());
+        ReflectionTestUtils.setField(svc, "transactionManager", transactions);
+
+        assertThrows(IllegalStateException.class, () -> svc.withdraw(9L, new BigDecimal("10.00")));
+
+        ArgumentCaptor<MemberCashWithdraw> plain = ArgumentCaptor.forClass(MemberCashWithdraw.class);
+        verify(mapper, org.mockito.Mockito.atLeast(0)).updateMemberCashWithdraw(plain.capture());
+        assertTrue(plain.getAllValues().stream().noneMatch(v -> v.getStatus() != null),
+                "兜底不得用无条件 update 改状态");
+        ArgumentCaptor<MemberCashWithdraw> manual = ArgumentCaptor.forClass(MemberCashWithdraw.class);
+        verify(mapper, times(2)).updateStatusIfManual(manual.capture());
+        MemberCashWithdraw note = manual.getAllValues().get(1);
+        assertEquals(null, note.getStatus());
+        assertTrue(note.getManualNote().contains("待人工"));
+        verify(alarmService, times(1)).alarm(eq("提现待人工"), anyString());
     }
 
     // ⑫ 第一人仅登记:失败待人工 → 待复核，不移动余额
@@ -451,7 +515,10 @@ class CashWithdrawStateMachineTest {
 
         svc.reconcile(12);
 
-        verify(alarmService, times(2)).alarm(anyString(), anyString());
+        verify(alarmService).alarmThrottled(eq("monitor.withdraw.stuck"), anyString(), contains("提现单=2"));
+        verify(alarmService).alarmThrottled(eq("monitor.withdraw.manual"), anyString(), contains("提现单=3"));
+        verify(alarmService, never()).alarmThrottled(eq("monitor.withdraw.missing_batch"), anyString(), anyString());
+        verifyNoMoreInteractions(alarmService);
     }
 
     // ⑰ 对账:全清零 → 不告警
@@ -464,6 +531,7 @@ class CashWithdrawStateMachineTest {
         svc.reconcile(12);
 
         verify(alarmService, never()).alarm(anyString(), anyString());
+        verify(alarmService, never()).alarmThrottled(anyString(), anyString(), anyString());
     }
 
     // ===== P块冻结:暂停自动化/人工处理,不动余额 =====

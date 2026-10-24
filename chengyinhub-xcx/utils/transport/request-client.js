@@ -10,23 +10,63 @@
 //   - wxRequest(opts):      执行请求(success/fail/complete 回调),生产 = wx.request。
 //   - getBaseUrl():          默认基础 URL(globalData.siteBaseUrl)。
 //   - getAuthorization():    当前 token。
+//   - getUserID():           当前会员，重试沿用发起身份。
 //   - reLogin(cb):           单航班静默重登,cb(ok)。
 //   - showToast(msg)/hideToast()
 //   - getErrorMessage(res, fallback) / shouldAutoToast(param, body):沿用 app.js 既有纯函数。
+//   - newRequestId():         同意接口 requestId 冲突时换的新号(默认 consent-时间-随机)。
 
 var sanitizeResponseMessage = require('./safe-user-message.js').sanitizeResponseMessage;
+var normalizeClientVersion = require('../client-version.js').normalizeClientVersion;
+
+// #472-2(owner 2026-10-23 批准改动本 C00 文件):同意留痕接口回 409 + CONSENT_REQUEST_CONFLICT
+// = 这个 requestId 已属于另一条同意事件(例如协议重新发布后客户端重放了旧号)。这时换一个新号重发
+// **恰好一次**;第二次仍冲突就如实交给调用方,不循环。只认这一个端点 + 服务端显式错误码:
+// 别的 409(如定位同意的状态已变)换号也解决不了,照旧原样返回。
+// 按路径比对(不是发起调用):写成正则,query 不影响判定。
+var CONSENT_ENDPOINT = /^\/api\/agreement\/consent(?:\?|$)/;
+var CONSENT_REQUEST_CONFLICT = 'CONSENT_REQUEST_CONFLICT';
+
+function defaultConsentRequestId() {
+  return 'consent-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+function isConsentRequestConflict(param, res, bodyCode) {
+  var body = res && res.data;
+  return CONSENT_ENDPOINT.test(String(param.url || '')) && !!body && typeof body === 'object'
+    && body.errorCode === CONSENT_REQUEST_CONFLICT && (res.statusCode == 409 || bodyCode == 409);
+}
+
+/** 换上新 requestId 的请求参数;原请求没带 requestId(或读不出来)就返回 null,不重发。 */
+function withFreshConsentRequestId(param, newRequestId) {
+  var raw = param.data;
+  var asString = typeof raw === 'string';
+  var data = raw;
+  if (asString) {
+    try { data = JSON.parse(raw); } catch (notJson) { return null; }
+  }
+  if (!data || typeof data !== 'object' || !data.requestId) return null;
+  var fresh = String(newRequestId() || '');
+  if (!fresh || fresh === String(data.requestId) || fresh.length > 64) return null;
+  var next = Object.assign({}, data, { requestId: fresh });
+  return Object.assign({}, param, { data: asString ? JSON.stringify(next) : next });
+}
 
 function createRequestClient(deps) {
   deps = deps || {};
   var wxRequest = deps.wxRequest;
   var getBaseUrl = deps.getBaseUrl;
   var getAuthorization = deps.getAuthorization || function () { return ''; };
+  var getClientVersion = deps.getClientVersion || function () { return ''; };
+  var upgradePrompted = false;
+  var getUserID = deps.getUserID || function () { return ''; };
   var reLogin = deps.reLogin || function (cb) { cb(false); };
   var showToast = deps.showToast || function () {};
   var hideToast = deps.hideToast || function () {};
   var getErrorMessage = deps.getErrorMessage || function (res, fb) { return fb; };
   var shouldAutoToast = deps.shouldAutoToast || function () { return false; };
   var scheduleRetry = deps.scheduleRetry || function (fn, ms) { setTimeout(fn, ms); };
+  var newRequestId = deps.newRequestId || defaultConsentRequestId;
   var defaultTimeoutMs = Math.max(1000, Number(deps.defaultTimeoutMs) || 12000);
 
   if (!wxRequest || !getBaseUrl) {
@@ -45,6 +85,11 @@ function createRequestClient(deps) {
     if (param.auth !== false && header.Authorization === undefined) {
       header = Object.assign({}, header, { 'Authorization': getAuthorization() });
     }
+    var version = '';
+    try { version = normalizeClientVersion(getClientVersion()); } catch (unavailable) {}
+    if (version) {
+      header = Object.assign({}, header, { 'X-Mini-Program-Version': version });
+    }
     return header;
   }
 
@@ -52,7 +97,7 @@ function createRequestClient(deps) {
     if (state.control) return state.control;
     state.control = {
       abort: function () {
-        if (state.aborted) return;
+        if (state.aborted || state.sessionChanged) return;
         state.aborted = true;
         if (state.task && typeof state.task.abort === 'function') state.task.abort();
       }
@@ -66,13 +111,23 @@ function createRequestClient(deps) {
     var header = buildHeader(param, method);
     // 重试守卫存于内部 state(不污染调用方 param;复用同一 param 的多次请求各自独立重登)。
     // task/aborted 让调用方能取消当前尝试和静默重登后的下一跳；同一个 state 只暴露一个 control。
-    var state = _state || { retried: false, aborted: false, task: null, attempt: 0, transportRetryAttempt: 0 };
+    var state = _state || { retried: false, aborted: false, task: null, attempt: 0, transportRetryAttempt: 0, owner: String(getUserID() || ''), authorization: getAuthorization() };
     var control = requestControl(state);
-    if (state.aborted) return control;
+    if (state.aborted || state.sessionChanged) return control;
+    function ownerChanged() { return state.owner !== String(getUserID() || ''); }
+    function sessionChanged() { return ownerChanged() || (param.auth !== false && state.authorization !== getAuthorization()); }
+    function stopForSessionChange() {
+      state.sessionChanged = true;
+      var failure = { reason: 'sessionChanged', msg: '登录状态已变更，请重试' };
+      typeof param.fail == 'function' && param.fail(failure);
+      typeof param.complete == 'function' && param.complete(failure);
+    }
+    if (sessionChanged()) { stopForSessionChange(); return control; }
     var attempt = (state.attempt || 0) + 1;
     state.attempt = attempt;
     // 静默重登窗口内抑制本次 wxRequest 的 complete;complete 改由最终一跳(重试成功)或重登失败分支触发一次。
     var suppressComplete = false;
+    var responseObserved = false;
 
     var requestOptions = {
       url: requestUrl,
@@ -80,17 +135,38 @@ function createRequestClient(deps) {
       method: method,
       header: header,
       success: function (res) {
-        if (state.aborted) return;
+        if (state.aborted || state.sessionChanged) return;
+        if (sessionChanged()) { stopForSessionChange(); return; }
+        responseObserved = true;
         if (res && res.data && typeof res.data === 'object') sanitizeResponseMessage(res.data, '操作失败');
         // 登录态失效(HTTP 401、RuoYi 业务 code=401 或历史 code=2)→ 静默重登并重试一次(内部 state.retried 防死循环)。
         var bodyCode = res.data && (res.data.code == null ? null : Number(res.data.code));
+        if (res.statusCode == 426 || (res.statusCode == 200 && bodyCode == 426)) {
+          hideToast();
+          if (!upgradePrompted) {
+            upgradePrompted = true;
+            showToast('版本需更新，请保存后重开');
+          }
+          if (typeof param.successStatusAbnormal == 'function') param.successStatusAbnormal(res.data, 426);
+          else if (typeof param.fail == 'function') param.fail(res.data, 426);
+          return;
+        }
         var needReLogin = res.statusCode == 401 || bodyCode == 401 || bodyCode == 2;
         if (needReLogin && !state.retried) {
           state.retried = true;
           suppressComplete = true; // 本次被重试/重登失败接管,complete 不在此处双触发
-          reLogin(function (ok) {
-            if (state.aborted) return;
+          if (ownerChanged()) { stopForSessionChange(); return; }
+          reLogin(function (ok, result) {
+            if (state.aborted || state.sessionChanged) return;
+            // 只有自己完成的首登可把匿名请求绑定到新身份，外部换号不能冒充首登。
+            if (!state.owner && ok && result && typeof result.isCurrentSession === 'function' && result.isCurrentSession()) {
+              state.owner = String(getUserID() || '');
+            }
+            var ownSessionCleared = !ok && result && result.sessionCleared && !getUserID() && !getAuthorization();
+            if ((ownerChanged() && !ownSessionCleared) || (result && result.reason === 'sessionChanged')) { stopForSessionChange(); return; }
             if (ok) {
+              if (result && typeof result.isCurrentSession === 'function' && !result.isCurrentSession()) { stopForSessionChange(); return; }
+              state.authorization = getAuthorization();
               send(param, customSiteUrl, state); // 用新 token 重试原请求(共享 state 防二次重登)
             } else {
               hideToast();
@@ -109,6 +185,16 @@ function createRequestClient(deps) {
             }
           });
           return;
+        }
+        // #472-2:同意接口 requestId 冲突 → 换新号重发恰好一次(共享 state.consentRetried,第二次冲突不再重发)。
+        if (!state.consentRetried && isConsentRequestConflict(param, res, bodyCode)) {
+          var freshParam = withFreshConsentRequestId(param, newRequestId);
+          if (freshParam) {
+            state.consentRetried = true;
+            suppressComplete = true; // 本次交给重发那一跳收尾,complete 只触发一次
+            send(freshParam, customSiteUrl, state);
+            return;
+          }
         }
         // HTTP 状态码异常(非可重试 401)。
         if (res.statusCode && res.statusCode != 200) {
@@ -140,7 +226,9 @@ function createRequestClient(deps) {
         typeof param.success == 'function' && param.success(body);
       },
       fail: function (res) {
-        if (state.aborted) return;
+        if (state.aborted || state.sessionChanged) return;
+        if (sessionChanged()) { stopForSessionChange(); return; }
+        responseObserved = true;
         // 传输层失败(断网/超时)可以原样重发:调用方显式声明 retry 才重试,
         // 而且只在这一支重试 —— code!=200 是业务结论,重试只会把同一个错误再问一遍。
         // ⚠️ 仅供只读请求声明。写请求重发 = 可能重复下单/重复核销。
@@ -151,7 +239,7 @@ function createRequestClient(deps) {
           var attemptIndex = state.transportRetryAttempt;
           suppressComplete = true; // 这次失败交给重试那一跳收尾,complete 只在最后一跳触发一次
           scheduleRetry(function () {
-            if (state.aborted) return;
+            if (state.aborted || state.sessionChanged) return;
             send(next, customSiteUrl, state);
           }, 400 * attemptIndex);
           return;
@@ -166,8 +254,9 @@ function createRequestClient(deps) {
         }
       },
       complete: function (res) {
-        if (state.aborted) return;
+        if (state.aborted || state.sessionChanged) return;
         if (suppressComplete) return; // 被重登重试/失败分支接管,避免 complete 双触发或早于 fail
+        if (!responseObserved && sessionChanged()) { stopForSessionChange(); return; }
         typeof param.complete == 'function' && param.complete(res && res.data ? res.data : res);
       }
     };

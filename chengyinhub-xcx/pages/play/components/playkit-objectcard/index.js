@@ -187,7 +187,7 @@ Component({
     onCamError() {
       this._camErr = true;
       this.setData({ camOn: false });
-      cyToast('相机打不开，可以从相册选一张');
+      cyToast('相机无法打开，可以从相册选一张');
     },
     _shoot(path, size) {
       if (!path) { this.setData({ busy: false }); cyToast('没拿到照片'); return; }

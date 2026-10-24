@@ -27,7 +27,7 @@ test('帖文菜单使用真实依赖可注册，删除仍先打开确认闸', ()
   assert.equal(typeof component.methods.onDelete, 'function')
   const events = []
   const ctx = {
-    data: { postId: '42', summary: '待核对的帖文' },
+    data: { postId: '42', summary: '待确认的帖文' },
     _danger: () => ({ open: (key, params) => events.push([key, params.id]) }),
     triggerEvent: (name) => events.push(name),
   }
@@ -43,14 +43,14 @@ function rule(source, selector) {
 
 test('面板底走 cy-sheet 的玻璃档,组件不自绘实底与遮罩', () => {
   assert.match(WXML, /<cy-sheet inset show="\{\{show\}\}"/, '面板必须是 cy-sheet,玻璃底/模糊/24 圆角/遮罩都由它出')
-  assert.doesNotMatch(WXSS, /backdrop-filter/, '模糊是 cy-sheet 的职责,组件里重复一份会两处漂移')
-  assert.doesNotMatch(WXSS, /background:\s*var\(--cy-color-overlay\)/, '遮罩是 cy-sheet 的职责,组件不得另画一层')
+  assert.doesNotMatch(WXSS, /backdrop-filter/, '模糊是 cy-sheet 的职责，组件里重复一份会两处漂移')
+  assert.doesNotMatch(WXSS, /background:\s*var\(--cy-color-overlay\)/, '遮罩是 cy-sheet 的职责，组件不得另画一层')
   assert.match(WXML, /title="帖文操作"[^>]*bind:close="onClose"/, '玩家走查修复：菜单需要可识别标题及共用关闭出口')
 })
 
 test('内容是两张分组卡,不是平列表', () => {
   const cards = WXML.match(/class="pa-card"/g) || []
-  assert.equal(cards.length, 2, '编辑(可逆)与 删除/举报(处置)是两种性质,必须分两张卡')
+  assert.equal(cards.length, 2, '编辑(可逆)与 删除/举报(处置)是两种性质，必须分两张卡')
 
   const card = rule(WXSS, 'pa-card')
   assert.match(card, /background:\s*var\(--cy-color-bg-interactive\)/, '卡面走 bg-interactive')
@@ -60,7 +60,7 @@ test('内容是两张分组卡,不是平列表', () => {
   assert.match(
     hairline,
     /border-top:\s*2rpx solid var\(--cy-color-border-subtle\)/,
-    '组内两行之间必须有 1px(=2rpx)发丝线,且用 border-subtle',
+    '组内两行之间必须有 1px(=2rpx)发丝线，且用 border-subtle',
   )
 })
 
@@ -70,7 +70,7 @@ test('行:16pt 文字弹性撑开 + 22×22 图标,危险行用登记过 AA 豁�
   assert.match(row, /align-items:\s*center/, '稿:行内垂直居中')
 
   const label = rule(WXSS, 'pa-row__label')
-  assert.match(label, /flex:\s*1/, '稿:文字弹性撑开,图标贴右')
+  assert.match(label, /flex:\s*1/, '稿:文字弹性撑开，图标贴右')
   assert.match(label, /font-size:\s*var\(--cy-type-button\)/, '稿:16pt = 32rpx,用既有 token 不写裸值')
 
   assert.match(
@@ -78,7 +78,7 @@ test('行:16pt 文字弹性撑开 + 22×22 图标,危险行用登记过 AA 豁�
     /color:\s*var\(--cy-color-status-danger-on-interactive\)/,
     '删除/举报用的是那条明写 AA 豁免的红(2.41:1),边界见 tokens.wxss 注释',
   )
-  assert.match(WXSS, /AA 豁免/, '豁免理由必须写在组件里,免得后来的人当对比度 bug 改掉')
+  assert.match(WXSS, /AA 豁免/, '豁免理由必须写在组件里，免得后来的人当对比度 bug 改掉')
 
   for (const [name, icon] of [['编辑', 'edit'], ['删除', 'trash'], ['举报', 'warning']]) {
     assert.match(
@@ -105,17 +105,17 @@ test('只有本人看得到编辑与删除', () => {
   assert.doesNotMatch(
     WXML,
     /bindtap="onReport"[^>]*wx:if/,
-    '举报对所有人可见,非本人时它是卡2 里唯一一行(发丝线自然不画)',
+    '举报对所有人可见，非本人时它是卡2 里唯一一行(发丝线自然不画)',
   )
 })
 
 test('删除必须过组件内部的危险确认闸,不能裸发', () => {
-  assert.match(JSON_SRC, /"cy-danger-confirm"/, '确认闸长在组件内部,接入页挂上就自动带闸')
+  assert.match(JSON_SRC, /"cy-danger-confirm"/, '确认闸长在组件内部，接入页挂上就自动带闸')
   assert.match(WXML, /<cy-danger-confirm id="pa-danger" bind:confirm="onDeleteConfirmed"/, '确认通过才回调')
 
   const { DANGER_ACTIONS } = require(path.join(ROOT, 'utils/danger-actions.js'))
   const key = (JS.match(/DELETE_CONFIRM_KEY\s*=\s*'([^']+)'/) || [])[1]
-  assert.ok(key, '删除的 confirmKey 必须是一个常量,门禁才扫得到')
+  assert.ok(key, '删除的 confirmKey 必须是一个常量，门禁才扫得到')
   assert.ok(DANGER_ACTIONS[key], `confirmKey「${key}」必须在 utils/danger-actions.js 登记过`)
   assert.equal(DANGER_ACTIONS[key].irreversible, true, '删帖不可逆')
 

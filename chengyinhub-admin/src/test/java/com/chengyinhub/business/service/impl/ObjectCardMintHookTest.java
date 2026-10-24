@@ -73,7 +73,7 @@ class ObjectCardMintHookTest {
     private static final long NODE_ID = 29L;
     private static final long TEMPLATE_ID = 39L;
     private static final long SESSION_ID = 51L;
-    private static final String PHOTO_URL = "/profile/upload/window.jpg";
+    private static final String PHOTO_URL = "/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg";
     /** 抠图转存后自家 OSS 上的地址:T5 铸卡时并行跑出来,只能随这次回包一起下去。 */
     private static final String CUTOUT_URL = "https://cdn.chengyinhub.com/profile/upload/cutout.png";
     private static final String CATEGORY = "玩具摆件";
@@ -106,7 +106,8 @@ class ObjectCardMintHookTest {
         new RuoYiConfig().setProfile(profileDir.toString());
         File uploadDir = profileDir.resolve("upload").toFile();
         assertTrue(uploadDir.mkdirs());
-        Files.write(uploadDir.toPath().resolve("window.jpg"), jpeg());
+        Files.createDirectories(profileDir.resolve("upload/2026/10/12"));
+        Files.write(profileDir.resolve("upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg"), jpeg());
 
         sessionMapper = mock(GameRuntimeSessionMapper.class);
         attemptMapper = mock(PlayAttemptLogMapper.class);
@@ -125,9 +126,21 @@ class ObjectCardMintHookTest {
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
 
         visionService = new PhotoCheckVisionService();
+        org.springframework.test.util.ReflectionTestUtils.setField(visionService, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
+        com.chengyinhub.business.mapper.AppMediaAssetMapper reviewedImages = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        when(reviewedImages.selectByObjectKey("/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg")).thenReturn(Map.of(
+                "id", 101L, "memberId", MEMBER_ID, "ownerType", "APP", "reviewState", "APPROVED",
+                "mediaType", "IMAGE", "storageType", "LOCAL", "objectKey", "/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg"));
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard reviewedMedia = new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
+        ReflectionTestUtils.setField(reviewedMedia, "mapper", reviewedImages);
+        ReflectionTestUtils.setField(visionService, "mediaReferences", reviewedMedia);
         ReflectionTestUtils.setField(service, "photoCheckVisionService", visionService);
         objectCardService = mock(ObjectCardService.class);
         ReflectionTestUtils.setField(service, "objectCardService", objectCardService);
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
+        when(media.visibleUrl(PHOTO_URL, MEMBER_ID)).thenReturn(PHOTO_URL);
+        when(media.visibleUrl(CUTOUT_URL, MEMBER_ID)).thenReturn(CUTOUT_URL);
+        ReflectionTestUtils.setField(service, "mediaReferences", media);
 
         CmsTopicNode node = new CmsTopicNode();
         node.setId(NODE_ID);
@@ -138,6 +151,7 @@ class ObjectCardMintHookTest {
         activity.setId(ACTIVITY_ID);
         activity.setTopicId(TOPIC_ID);
         when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 
     @AfterEach
@@ -348,6 +362,31 @@ class ObjectCardMintHookTest {
         service.finishPendingCardMint(judged);
         verify(objectCardService, times(1)).mint(eq(MEMBER_ID), eq(PHOTO_URL), any(JsonNode.class), anyString(),
                 eq(String.valueOf(NODE_ID)));
+    }
+
+    @Test
+    void mintedCardNeverReturnsUnreviewedSourceCutoutOrTurntableUrls() {
+        given(CARD_CONFIG);
+        modelSays("{\"pass\":true,\"confidence\":88,\"reason\":\"拍到了\"}");
+        when(objectCardService.mint(anyLong(), anyString(), any(JsonNode.class), anyString(), anyString())).thenReturn(card());
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
+        when(media.visibleUrl(anyString(), eq(MEMBER_ID))).thenReturn("");
+        ReflectionTestUtils.setField(service, "mediaReferences", media);
+        PlayerObjectCardVO result = (PlayerObjectCardVO) act("card-unreviewed").get("objectCard");
+        assertEquals("", result.getSourceUrl()); assertEquals("", result.getCutoutUrl()); assertTrue(result.getFrames().isEmpty());
+    }
+
+    @Test
+    void mediaRegistryFailureKeepsCommittedGameplayWithoutLeakingCardUrls() {
+        given(CARD_CONFIG);
+        modelSays("{\"pass\":true,\"confidence\":88,\"reason\":\"拍到了\"}");
+        when(objectCardService.mint(anyLong(), anyString(), any(JsonNode.class), anyString(), anyString())).thenReturn(card());
+        com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
+        when(media.visibleUrl(anyString(), eq(MEMBER_ID))).thenThrow(new IllegalStateException("registry unavailable"));
+        ReflectionTestUtils.setField(service, "mediaReferences", media);
+        Map<String, Object> view = act("card-registry-down");
+        assertFalse(view.containsKey("objectCard"));
+        assertTrue(view.containsKey("sessionId"));
     }
 
     @Test

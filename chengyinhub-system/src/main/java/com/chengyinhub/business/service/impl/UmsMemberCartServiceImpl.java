@@ -46,6 +46,14 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
 {
     private static final long MAX_CART_QUANTITY = Integer.MAX_VALUE;
 
+    /**
+     * D1:与报名结算同一份积分汇率/单笔上限(sys_config)。required=false + 缺省值:
+     * 只装配部分协作者的事务测试上下文里没有这个 bean 时,行为等同缺省配置。
+     */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.PointsValuePolicy pointsValuePolicy =
+            com.chengyinhub.business.service.support.PointsValuePolicy.codeDefaults();
+
     @Autowired
     private UmsMemberCartMapper umsMemberCartMapper;
 
@@ -250,6 +258,11 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
         result.setTaxFee(BigDecimal.ZERO);
         result.setTotalAmount(productAmount);
         result.setProductList(carts);
+        // D1:积分花费、折合金额与单笔上限都由服务端给出,端上只展示
+        int pointsCost = toPointsCost(productAmount);
+        result.setPointsCost(pointsCost);
+        result.setPointsValueYuan(pointsValuePolicy.yuanOf(pointsCost));
+        result.setMaxDeductYuan(pointsValuePolicy.maxPerOrder());
 
         List<UmsMemberAddress> addresses = umsMemberAddressService.selectOwnedAddressList(memberId);
         if (addresses != null && !addresses.isEmpty()) {
@@ -283,6 +296,8 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
             totalCost = totalCost.add(cart.getPrice().multiply(BigDecimal.valueOf(cart.getQuantity())));
         }
         int pointsCost = toPointsCost(totalCost);
+        // D1:单笔积分折合金额不得超过上限(与报名侧同一份配置);先拦,不扣分不建单
+        pointsValuePolicy.requireMallOrderWithinCap(pointsCost);
         if (pointsCost > 0) {
             Long point = member.getPoint();
             if (point == null || point < pointsCost) {

@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -66,7 +67,10 @@ class PublicVisibilityMyBatisTest {
             seedActivities(st);
             seedTopics(st);
             st.execute("INSERT INTO cms_activity (id,member_id,name,status,publish_status,del_flag,topic_id,create_time)"
-                    + " VALUES (106,7,'删除父主题',1,1,0,5,NOW()),(107,7,'缺失父主题',1,1,0,999,NOW())");
+                    + " VALUES (106,7,'删除父主题',1,1,0,5,NOW()),(107,7,'缺失父主题',1,1,0,999,NOW()),"
+                    // AUDIT-G1-1:自办壳是 status=1/publish_status=1 建的,父主题被驳回/作者下架/仍待审时不能跟着公开。
+                    + " (108,7,'驳回父主题',1,1,0,3,NOW()),(109,7,'作者下架父主题',1,1,0,2,NOW()),"
+                    + " (110,7,'待审父主题',1,1,0,4,NOW())");
             st.execute("INSERT INTO cms_registration (id,owner_type,owner_id,member_id,registration_status,payment_status)"
                     + " VALUES (1,2,106,8,2,2)");
             CmsActivityMapper mapper = s.getMapper(CmsActivityMapper.class);
@@ -74,9 +78,9 @@ class PublicVisibilityMyBatisTest {
                 PageHelper.startPage(1, 20);
                 List<CmsActivity> rows = mapper.selectPublicCmsActivityList(new CmsActivity());
                 assertEquals(4, ((Page<?>) rows).getTotal());
-                assertFalse(rows.stream().anyMatch(a -> a.getId() == 106L || a.getId() == 107L));
+                assertFalse(rows.stream().anyMatch(a -> a.getId() >= 106L && a.getId() <= 110L));
             } else {
-                for (long id : new long[]{106L, 107L}) {
+                for (long id : new long[]{106L, 107L, 108L, 109L, 110L}) {
                     assertNull("byId".equals(query) ? mapper.selectPublicCmsActivityById(id)
                             : mapper.selectCmsActivityDetailById(id, 8L));
                 }
@@ -85,7 +89,7 @@ class PublicVisibilityMyBatisTest {
                 assertEquals(id, mapper.selectPublicCmsActivityById(id).getId().longValue());
                 assertEquals(id, mapper.selectCmsActivityDetailById(id, 8L).getId().longValue());
             }
-            for (long id : new long[]{106L, 107L}) {
+            for (long id : new long[]{106L, 107L, 108L, 109L, 110L}) {
                 assertEquals(id, mapper.selectCmsActivityDetailById(id, 7L).getId().longValue());
                 assertEquals(id, mapper.selectCmsActivityById(id).getId().longValue());
             }
@@ -178,8 +182,9 @@ class PublicVisibilityMyBatisTest {
             forgedTopic.setCheckStatus(9);
             PageHelper.startPage(1, 20);
             List<CmsTopic> publicTopics = topicMapper.selectPublicCmsTopicList(forgedTopic);
-            assertEquals(1, ((Page<?>) publicTopics).getTotal(), "主题分页 total 不含隐藏项");
-            assertEquals(1L, publicTopics.get(0).getId());
+            assertEquals(2, ((Page<?>) publicTopics).getTotal(), "主题分页 total 不含隐藏项");
+            assertEquals(List.of(1L, 900L), publicTopics.stream().map(CmsTopic::getId).sorted().toList(),
+                    "只剩两个在架主题:公开主题 1 与承接主题 900");
             assertEquals(1L, topicMapper.selectPublicCmsTopicById(1L).getId(),
                     "审核通过且已上架的主题详情可见");
             assertNull(topicMapper.selectPublicCmsTopicById(2L));
@@ -247,12 +252,10 @@ class PublicVisibilityMyBatisTest {
                 mock(com.chengyinhub.business.service.ICoopInviteService.class);
         ReflectionTestUtils.setField(controller, "coopInviteService", inviteService);
         when(inviteService.selectCoopInviteList(any())).thenReturn(Collections.emptyList());
-        // 承办活动卡的「待核销 N」要查一次报名表。本用例只验归属派生,空返回即可 ——
-        // 但依赖必须注入,漏了会在 mapActivity 直接 NPE。
-        com.chengyinhub.business.service.ICmsRegistrationService registrationService =
-                mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
-        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        when(activityService.countSignedUpRegistrationsByActivityIds(anyList()))
+                .thenReturn(Collections.emptyMap());
+        when(activityService.countPendingVerificationByActivityIds(anyList()))
+                .thenReturn(Collections.emptyMap());
         when(topicService.selectDraftTopicIds(anyLong())).thenReturn(Collections.emptyList());
         when(topicService.selectCmsTopicList(any())).thenReturn(Collections.emptyList());
         when(activityService.selectCmsActivityList(any())).thenReturn(new ArrayList<>(ownerRows));
@@ -454,6 +457,7 @@ class PublicVisibilityMyBatisTest {
                 + "(5,7,NULL,1,'删除主题',1,1,1,2,0,NOW()),"
                 + "(6,7,NULL,1,'未知主题',9,1,9,0,0,NOW()),"
                 + "(7,43,701,1,'已解散俱乐部主题',1,1,1,0,0,NOW()),"
-                + "(900,42,NULL,2,'自由探索承接主题',0,0,0,0,0,NOW())");
+                // 承接场次 102 公开的前提是父主题在架(AUDIT-G1-1),所以 900 是在架主题。
+                + "(900,42,NULL,2,'自由探索承接主题',1,1,0,0,0,NOW())");
     }
 }

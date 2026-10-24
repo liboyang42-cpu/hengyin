@@ -37,6 +37,7 @@ Page({
     loading: true,
     error: false,
     hasLoaded: false,
+    accessDenied: false,
     merchantAccess: { canReadAftercare: false },
     redemptions: [],
     redemptionGroups: [],
@@ -55,6 +56,8 @@ Page({
     settlementLoading: { overview: false, entries: false, batches: false },
     settleAlertsEnabled: false,
     settleAlertsLoading: false,
+    settleAlertsState: 'unknown',
+    settleAlertsHint: '—',
   },
 
   onLoad(options) {
@@ -76,18 +79,20 @@ Page({
 
   onShow() {
     merchantTheme.merchantPageShow();
-    if (this.data.view === 'settlement') this.syncCoopSettleAlertSetting();
     const memberId = currentMemberId();
     if (this._scopeMemberId === undefined) {
       this._scopeMemberId = memberId;
+      if (this.data.view === 'settlement') this.syncCoopSettleAlertSetting();
       return;
     }
     if (memberId !== this._scopeMemberId) {
       this._skipNextShowReload = false;
       this._resetMemberScope(memberId);
+      if (this.data.view === 'settlement') this.syncCoopSettleAlertSetting();
       if (!this.data.routeError) this.revalidateCurrentView();
       return;
     }
+    if (this.data.view === 'settlement') this.syncCoopSettleAlertSetting();
     if (this._skipNextShowReload) {
       this._skipNextShowReload = false;
       return;
@@ -101,6 +106,8 @@ Page({
     this._invalidateScopedRequests();
   },
   _invalidateScopedRequests() {
+    this._settleAlertsEpoch = (this._settleAlertsEpoch || 0) + 1;
+    this._settleAlertsOperation = null;
     this._identityEpoch = (this._identityEpoch || 0) + 1;
     this._projectEventEpoch = (this._projectEventEpoch || 0) + 1;
     this._redemptionEpoch = (this._redemptionEpoch || 0) + 1;
@@ -124,6 +131,7 @@ Page({
       loading,
       error,
       hasLoaded: false,
+      accessDenied: false,
       projectEvents: [],
       redemptions: [],
       redemptionGroups: [],
@@ -133,12 +141,17 @@ Page({
       batches: [],
       settlementErrors: { overview: '', entries: '', batches: '' },
       settlementLoading: { overview: false, entries: false, batches: false },
+      settleAlertsEnabled: false,
+      settleAlertsLoading: false,
+      settleAlertsState: 'unknown',
+      settleAlertsHint: '—',
     });
   },
 
   _denyMerchantAccess() {
     this._invalidateScopedRequests();
     this._clearScopedData(false, true);
+    this.setData({ accessDenied: true });
   },
 
   _isCurrentMemberScope(memberId) {
@@ -165,7 +178,7 @@ Page({
     const identityEpoch = this._identityEpoch;
     const isCurrent = () => identityEpoch === this._identityEpoch
       && this._isCurrentMemberScope(memberId);
-    this.setData({ loading: true, error: false });
+    this.setData({ loading: true, error: false, accessDenied: false });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -173,6 +186,13 @@ Page({
       method: 'POST',
       success: (res) => {
         if (!isCurrent()) return;
+        const validAccess = res && (res.code === '200' || res.code === 200) && res.data
+          && typeof res.data === 'object' && !Array.isArray(res.data) && typeof res.data.active === 'boolean';
+        if (!validAccess) {
+          this._invalidateScopedRequests();
+          this._clearScopedData(false, true);
+          return;
+        }
         const access = (res && (res.code === '200' || res.code === 200))
           ? normalizeMerchantAccess(res.data) : { active: false };
         const allowed = access.active && (this.data.view === 'settlement'
@@ -486,7 +506,7 @@ Page({
       item.amountDisplay = null;
       item.amountTone = 'mute';
       item.stateText = row.fulfillmentState === 'REVERSED'
-        ? '核销已撤销' : (row.fulfillmentState === 'ACTIVE' ? '核销有效' : '核销状态待确认');
+        ? '核销已撤销' : (row.fulfillmentState === 'ACTIVE' ? '核销有效' : '—');
       item.stateVariant = row.fulfillmentState === 'ACTIVE' ? 'success' : 'neutral';
       return item;
     }
@@ -557,46 +577,112 @@ Page({
   },
   goAssets() { wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index' }); },
   goInbox() { wx.navigateTo({ url: '/subpackageB/pages/im/list/index' }); },
-  syncCoopSettleAlertSetting() {
-    const templateId = subscribe.TEMPLATES && subscribe.TEMPLATES.coopSettle;
-    if (!templateId || typeof wx.getSetting !== 'function') return;
-    wx.getSetting({
-      withSubscriptions: true,
-      success: (res) => {
-        const settings = res && res.subscriptionsSetting;
-        const itemSettings = settings && settings.itemSettings;
-        this.setData({
-          settleAlertsEnabled: !!(settings && settings.mainSwitch !== false
-            && itemSettings && itemSettings[templateId] === 'accept'),
-        });
-      },
+  _beginCoopSettleAlertOperation(loading) {
+    const memberId = this._scopeMemberId;
+    if (!memberId || !this._isCurrentMemberScope(memberId) || this.data.settleAlertsLoading) return null;
+    const operation = { memberId, epoch: (this._settleAlertsEpoch || 0) + 1 };
+    this._settleAlertsEpoch = operation.epoch;
+    this._settleAlertsOperation = operation;
+    this.setData({
+      settleAlertsEnabled: false,
+      settleAlertsState: 'unknown',
+      settleAlertsHint: loading ? '正在确认微信通知授权…' : '—',
+      settleAlertsLoading: loading,
     });
+    return operation;
+  },
+  _isCurrentCoopSettleAlertOperation(operation) {
+    return !!operation && this._settleAlertsOperation === operation
+      && operation.epoch === this._settleAlertsEpoch
+      && this._isCurrentMemberScope(operation.memberId);
+  },
+  _finishCoopSettleAlertOperation(operation, state, hint) {
+    if (!this._isCurrentCoopSettleAlertOperation(operation)) return false;
+    this._settleAlertsOperation = null;
+    this.setData({
+      settleAlertsEnabled: state === 'allowed',
+      settleAlertsState: state,
+      settleAlertsHint: hint,
+      settleAlertsLoading: false,
+    });
+    return true;
+  },
+  syncCoopSettleAlertSetting() {
+    const operation = this._beginCoopSettleAlertOperation(false);
+    if (!operation) return;
+    const finish = (state, hint) => this._finishCoopSettleAlertOperation(operation, state, hint);
+    const templateId = subscribe.TEMPLATES && subscribe.TEMPLATES.coopSettle;
+    if (!templateId) { finish('unknown', '此通知暂不可申请'); return; }
+    if (typeof wx.getSetting !== 'function') { finish('unknown', '当前微信无法读取通知授权'); return; }
+    try {
+      wx.getSetting({
+        withSubscriptions: true,
+        success: (res) => {
+          const settings = res && res.subscriptionsSetting;
+          const item = settings && settings.itemSettings && settings.itemSettings[templateId];
+          if (settings && settings.mainSwitch === false) {
+            finish('not_allowed', '微信通知总开关未开启');
+          } else if (settings && settings.mainSwitch === true && item === 'accept') {
+            finish('allowed', '已允许微信通知');
+          } else if (settings && settings.mainSwitch === true && (item === 'reject' || item === 'ban')) {
+            finish('not_allowed', '此微信通知尚未获允许');
+          } else {
+            finish('unknown', '授权状态待确认，可点击申请');
+          }
+        },
+        fail: () => finish('unknown', '暂未读到授权状态，可重试'),
+      });
+    } catch (e) {
+      finish('unknown', '暂未读到授权状态，可重试');
+    }
   },
   enableCoopSettleAlerts(event) {
+    const operation = this._beginCoopSettleAlertOperation(true);
+    if (!operation) return;
+    const finish = (state, hint) => this._finishCoopSettleAlertOperation(operation, state, hint);
     const enabled = !!(event && event.detail && event.detail.value);
     if (!enabled) {
-      this.setData({ settleAlertsLoading: true });
       if (typeof wx.openSetting !== 'function') {
-        this.setData({ settleAlertsLoading: false });
+        finish('unknown', '当前微信无法打开通知设置');
         return;
       }
-      wx.openSetting({
-        withSubscriptions: true,
-        success: () => this.syncCoopSettleAlertSetting(),
-        complete: () => this.setData({ settleAlertsLoading: false }),
-      });
+      try {
+        wx.openSetting({
+          withSubscriptions: true,
+          success: () => {
+            if (!finish('unknown', '正在读取微信通知设置…')) return;
+            this.syncCoopSettleAlertSetting();
+          },
+          fail: () => finish('unknown', '未能打开微信设置，请重试'),
+          complete: () => finish('unknown', '通知设置尚未确认，可重试'),
+        });
+      } catch (e) {
+        finish('unknown', '未能打开微信设置，请重试');
+      }
       return;
     }
-    this.setData({ settleAlertsLoading: true });
-    return subscribe.request(['coopSettle']).then((result) => {
-      if (result && Array.isArray(result.acceptedKeys) && result.acceptedKeys.includes('coopSettle')) {
-        this.setData({ settleAlertsEnabled: true });
-        toast('已开启到账提醒');
-      } else {
-        this.setData({ settleAlertsEnabled: false });
-      }
-      return result;
-    }).finally(() => this.setData({ settleAlertsLoading: false }));
+    // 直接留在用户 tap 同步栈；只记录本机授权结果，不承诺每笔到账均有通知。
+    try {
+      return subscribe.request(['coopSettle']).then((result) => {
+        if (result && result.status === subscribe.STATUS.ACCEPTED
+            && Array.isArray(result.acceptedKeys) && result.acceptedKeys.includes('coopSettle')) {
+          if (finish('allowed', '已允许微信通知')) toast('已允许微信通知');
+        } else if (result && result.status === subscribe.STATUS.REJECTED
+            && Array.isArray(result.rejectedKeys) && result.rejectedKeys.includes('coopSettle')) {
+          finish('not_allowed', '此微信通知尚未获允许');
+        } else {
+          const hint = result && result.status === subscribe.STATUS.NOT_CONFIGURED ? '此通知暂不可申请'
+            : (result && result.status === subscribe.STATUS.UNSUPPORTED ? '当前微信不支持通知授权' : '授权结果未确认，请重试');
+          finish('unknown', hint);
+        }
+        return result;
+      }).catch(() => {
+        finish('unknown', '授权结果未确认，请重试');
+        return null;
+      });
+    } catch (e) {
+      finish('unknown', '授权结果未确认，请重试');
+    }
   },
 });
 

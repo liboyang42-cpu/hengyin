@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,6 +65,15 @@ public class ApiUmsMemberController extends BaseController {
     private IWxContentSecurityService wxContentSecurityService;
 
     @Autowired
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
+    private String reviewedMedia(Long memberId, String reference, boolean multiple) {
+        if (reference == null || reference.trim().isEmpty()) return reference;
+        return multiple ? mediaReferences.requireAttachments(memberId, reference, true)
+                : mediaReferences.requireAttachment(memberId, reference, true);
+    }
+
+    @Autowired
     private IUmsMemberAddressService umsMemberAddressService;
 
     @Autowired
@@ -104,6 +114,9 @@ public class ApiUmsMemberController extends BaseController {
 
     @Autowired
     private INicknameSuggestionService nicknameSuggestionService;
+
+    @Autowired
+    private com.chengyinhub.business.service.impl.ProfileReviewService profileReviewService;
 
     @Autowired
     private IPlayerProgressionService playerProgressionService;
@@ -561,31 +574,14 @@ public class ApiUmsMemberController extends BaseController {
             umsMember.setAppleId(null);
             umsMember.setLoginIp(null);
             if (isMy) {
-                if (umsMember.getStatus() == 2) {
-                    return error("用户被禁用");
+                if (!Long.valueOf(1L).equals(umsMember.getStatus()) || !Integer.valueOf(0).equals(umsMember.getDelFlag())) {
+                    return error("用户不可用");
                 }
-                if (umsMember.getDelFlag() == 2) {
-                    return error("用户被删除");
+                // 资料只用于展示，不改变持久角色或兼容身份投影。
+                if ("merchant".equals(umsMember.getRole())) {
+                    umsMember.setMerchant(mmsMerchantService.selectMmsMerchantByMemberId(memberId));
                 }
-                if (umsMember.getUserType() == 2) {
-                    //商家会员
-                    MmsMerchant merchant = new MmsMerchant();
-                    merchant.setMemberId(memberId);
-                    merchant.setDelFlag(0);
-                    List<MmsMerchant> list = mmsMerchantService.selectMmsMerchantList(merchant);
-                    if (list.size() > 0) {
-                        merchant = list.get(0);
-                        umsMember.setMerchant(merchant);
-                        //账号状态：1启用  2禁用
-                        if (merchant.getAccountStatus() == 2) {
-                            umsMember.setUserType(1L); //商家如果禁用，把用户的类型改成普通用户
-                            umsMember.setRole("player"); //RBAC：禁用商家回退玩家
-                        }
-                    } else {
-                        umsMember.setUserType(1L); //商家如果不存在数据，把用户的类型改成普通用户
-                        umsMember.setRole("player"); //RBAC：无商家数据回退玩家
-                    }
-                }
+                umsMember.setUserType("merchant".equals(umsMember.getRole()) ? 2L : 1L);
             }
 
             int followNum = umsMemberFollowService.selectUmsMemberFollowNumByMemberId(memberId);
@@ -636,6 +632,7 @@ public class ApiUmsMemberController extends BaseController {
             // 本人分支只下发逐字段白名单投影(UmsMember 整实体含 password 兜底清空、
             // unionId/appOpenId/appleId/loginIp 等账号标识;见 SelfMemberVO 类注释)。
             SelfMemberVO selfVo = SelfMemberVO.from(umsMember);
+            selfVo.setFriendNum(umsMemberFollowService.selectMutualFollowCount(memberId));
             // RUN-13(拍板 2026-09-19 第4条)等级单一真源 = player_growth:本人视角的 levelId 也不再用
             // 旧 ums_member.level_id(前端资料页徽章图/Lv. 文案跟这个字段)。无行兜底 Lv.1 与 getGrowth 同口径。
             if (playerProgressionService != null) {
@@ -698,9 +695,9 @@ public class ApiUmsMemberController extends BaseController {
         umsMember.setId(member_id);
         umsMember.setName(request.getName());
         umsMember.setNickname(request.getName());
-        umsMember.setAvatar(request.getAvatar());
+        umsMember.setAvatar(reviewedMedia(member_id, request.getAvatar(), false));
         umsMember.setWechat(request.getWechat());
-        umsMember.setCasePics(request.getCasePics());
+        umsMember.setCasePics(reviewedMedia(member_id, request.getCasePics(), true));
         umsMember.setIntroduction(request.getIntroduction());
         umsMember.setCaseIntroducton(request.getCaseIntroducton());
         umsMember.setWebsite(request.getWebsite());
@@ -716,17 +713,50 @@ public class ApiUmsMemberController extends BaseController {
             conflict.put("errorCode", NicknameSuggestionServiceImpl.ERROR_NICKNAME_TAKEN);
             return conflict;
         }
-        // 头像/案例图异步内容安全送检,违规经回调自动清除(BIZ_TYPE_MEMBER_PROFILE)
+        // 头像/作品图/联系二维码异步内容安全送检,违规经回调按字段清除(BIZ_TYPE_MEMBER_PROFILE)。
+        // 联系二维码此前不在送检组合里:能保存、能回显,违规也永远不会被清。
         String profileImgs = (StringUtils.isNotEmpty(request.getAvatar()) ? request.getAvatar() : "")
-                + ";" + (StringUtils.isNotEmpty(request.getCasePics()) ? request.getCasePics() : "");
+                + ";" + (StringUtils.isNotEmpty(request.getCasePics()) ? request.getCasePics() : "")
+                + ";" + (StringUtils.isNotEmpty(request.getWechat()) ? request.getWechat() : "");
         if (profileImgs.length() > 1) {
             try { wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_MEMBER_PROFILE, member_id, profileImgs, openid); } catch (Exception ignore) {}
         }
         if (rows > 0) {
-            return success("更新成功");
+            // #25:记一版资料提交;头像复核结论另由 /profile/review 按送检记录实时回读,这里不假定已通过。
+            Integer version = profileReviewService.recordMemberSubmission(member_id, changedProfileFields(request),
+                    umsMember.getAvatar(), StringUtils.isNotEmpty(request.getAvatar()) ? request.getAvatar() : null);
+            AjaxResult ok = success("更新成功");
+            ok.put("profileVersion", version);
+            return ok;
         } else {
             return error("更新失败");
         }
+    }
+
+    private static java.util.List<String> changedProfileFields(UmsMemberUpdateDTO request) {
+        java.util.List<String> fields = new java.util.ArrayList<String>();
+        if (request.getName() != null) fields.add("name");
+        if (request.getAvatar() != null) fields.add("avatar");
+        if (request.getWechat() != null) fields.add("wechat");
+        if (request.getCasePics() != null) fields.add("casePics");
+        if (request.getIntroduction() != null) fields.add("introduction");
+        if (request.getCaseIntroducton() != null) fields.add("caseIntroducton");
+        if (request.getWebsite() != null) fields.add("website");
+        if (request.getWorkAddress() != null) fields.add("workAddress");
+        if (request.getTagIds() != null) fields.add("tagIds");
+        return fields;
+    }
+
+    /**
+     * 本人资料审核回执(#25):当前资料版本 + 最近一次头像提交的图片安全复核状态(PENDING/APPROVED/REJECTED/NOT_SUBMITTED)
+     * 与它此刻是否就是对外展示的那张。身份只取登录态,不收任何会员 id 入参。
+     */
+    @Operation(summary = "个人资料审核回执")
+    @GetMapping("/profile/review")
+    public AjaxResult profileReview() {
+        Long memberId = optionalMemberId();
+        if (memberId == null) return error("请先登录");
+        return success(profileReviewService.memberReceipt(memberId));
     }
 
     private Long optionalMemberId() {

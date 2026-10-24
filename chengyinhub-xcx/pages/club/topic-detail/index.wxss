@@ -156,7 +156,7 @@
 
 /* ---------- ⑥ 接下来 ---------- */
 .ctd-next { padding: var(--cy-space-4) 0; border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-elevated); }
-.ctd-next__row { position: relative; display: flex; align-items: flex-start; padding: 0 var(--cy-space-4) 0 40rpx; }
+.ctd-next__row { position: relative; display: flex; align-items: flex-start; padding: 0 var(--cy-space-4) 0 calc(var(--cy-space-4) + var(--cy-space-6)); }
 .ctd-next__row + .ctd-next__row { margin-top: 44rpx; }
 .ctd-next__dot { position: absolute; left: var(--cy-space-4); top: 14rpx; width: 16rpx; height: 16rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); }
 .ctd-next__main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
@@ -231,7 +231,7 @@
 .ctd-chrome-clear { padding-top: var(--cy-safe-top); }
 
 /* ——— Figma J4 主题设置 / J3 招商台(两张弹层共用行样式)——— */
-.tset { padding: 8rpx var(--cy-page-x) calc(24rpx + env(safe-area-inset-bottom)); }
+.tset { padding: 8rpx 0 24rpx; /* cy-scene-sheet 正文已带页边距与底部安全区 */ }
 .tset-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16rpx; padding: 8rpx 0 16rpx; }
 .tset-name { font-size: var(--cy-font-subtitle); font-weight: 700; }
 .tset-stage { color: var(--cy-color-status-success); font-size: var(--cy-font-caption); }
@@ -284,3 +284,14 @@
 .tset-rules-paragraph { display: block; margin-bottom: var(--cy-space-2); }
 
 .ctd-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+.ctd-plan-fallback{padding:var(--cy-space-4);margin-top:var(--cy-space-4);border-radius:var(--cy-radius-lg);background:var(--cy-color-bg-elevated)}
+.ctd-plan-fallback__title{display:block;font-size:var(--cy-type-body);font-weight:600}
+.ctd-generic-ops { margin: var(--cy-space-4); padding: var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-elevated); }
+.ctd-generic-ops .ctd-director-note, .ctd-generic-ops__form .ctd-director-note { display: block; padding: var(--cy-space-1) 0; }
+.ctd-generic-ops__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
+.ctd-generic-ops__actions .ctd-director-field__act { padding: var(--cy-space-2); gap: var(--cy-space-1); font-size: var(--cy-type-label); }
+.ctd-generic-ops__form { max-height: 60vh; padding: var(--cy-space-4); box-sizing: border-box; }
+.ctd-generic-ops__input { width: 100%; box-sizing: border-box; min-height: var(--cy-btn-h); padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
+.ctd-generic-ops__confirm { margin-top: var(--cy-space-4); padding-bottom: var(--cy-space-5); }
+.ctd-plan-fallback__input{width:100%;box-sizing:border-box;padding:var(--cy-space-3);border-radius:var(--cy-radius-md);background:var(--cy-color-bg-elevated);color:var(--cy-color-text-primary);font-size:var(--cy-type-body)}

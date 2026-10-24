@@ -118,6 +118,8 @@ class PerkLedgerServiceTest {
         // [P0-14] 撤销核销时清 verification_status(与「首次核销就置位」成对);本类不测该链路,注入空 mock。
         cmsRegistrationMapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", cmsRegistrationMapper);
+        when(cmsRegistrationMapper.selectCmsRegistrationById(REG)).thenAnswer(invocation -> registrationRow());
+        when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenAnswer(invocation -> registrationRow());
         // [③应付] 撤销核销时冲正平台应付(与「核销即计提」成对)。台账口径本身由
         // MerchantPayableServiceTest 测,这里只保证 reverseRedemption 真的把它调起来了(见 reverse_* 用例)。
         merchantPayableService = mock(com.chengyinhub.business.service.IMerchantPayableService.class);
@@ -720,6 +722,8 @@ class PerkLedgerServiceTest {
         com.chengyinhub.business.domain.CmsRegistration reg = new com.chengyinhub.business.domain.CmsRegistration();
         reg.setId(REG);
         reg.setMemberId(4242L);
+        reg.setOwnerType(1L);
+        reg.setOwnerId(TOPIC);
         return reg;
     }
 
@@ -1137,5 +1141,84 @@ class PerkLedgerServiceTest {
 
         assertEquals(3, service.releaseOnRefund(REG, "REFUND"));
         verify(entitlementMapper).invalidateByRegistration(REG, "REFUND");
+    }
+    @Test
+    void reverseLocksCancelledRefundedActivityThenRegistrationBeforeAnyRedemptionMutation() {
+        com.chengyinhub.business.domain.CmsRegistration registration = registrationRow();
+        registration.setOwnerType(2L); registration.setOwnerId(800L);
+        registration.setPaymentStatus(4); registration.setRegistrationStatus(3);
+        com.chengyinhub.business.mapper.CmsActivityMapper activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        com.chengyinhub.business.domain.CmsActivity cancelled = new com.chengyinhub.business.domain.CmsActivity();
+        cancelled.setCancelTime(new java.util.Date()); cancelled.setDelFlag(2);
+        when(activities.selectCmsActivityByIdForUpdate(800L)).thenReturn(cancelled);
+        ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
+        when(cmsRegistrationMapper.selectCmsRegistrationById(REG)).thenReturn(registration);
+        when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(registration);
+        when(redemptionMapper.selectById(3L)).thenReturn(activeRedemption());
+        when(redemptionMapper.reverse(eq(3L), anyString())).thenReturn(1);
+        assertTrue(service.reverseRedemption(3L, "已退款历史核销冲回", SYS_OPERATOR));
+        org.mockito.InOrder locks = org.mockito.Mockito.inOrder(activities, cmsRegistrationMapper, redemptionMapper);
+        locks.verify(redemptionMapper).selectById(3L);
+        locks.verify(cmsRegistrationMapper).selectCmsRegistrationById(REG);
+        locks.verify(activities).selectCmsActivityByIdForUpdate(800L);
+        locks.verify(cmsRegistrationMapper).selectCmsRegistrationByIdForUpdate(REG);
+        locks.verify(redemptionMapper).reverse(eq(3L), anyString());
+        verify(offerMapper).releaseQuota(OFFER);
+        verify(entitlementMapper).restoreToPending(REG, CH1);
+    }
+
+    @Test
+    void reverseMissingOrChangedRegistrationOwnerRejectsBeforeAnyRollbackMutation() {
+        when(redemptionMapper.selectById(3L)).thenReturn(activeRedemption());
+        when(cmsRegistrationMapper.selectCmsRegistrationById(REG)).thenReturn(null);
+        assertThrows(IllegalStateException.class, () -> service.reverseRedemption(3L, "缺失关联票", SYS_OPERATOR));
+        when(cmsRegistrationMapper.selectCmsRegistrationById(REG)).thenReturn(registrationRow());
+        com.chengyinhub.business.domain.CmsRegistration changed = registrationRow(); changed.setOwnerId(800L);
+        when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(changed);
+        assertThrows(IllegalStateException.class, () -> service.reverseRedemption(3L, "归属变更", SYS_OPERATOR));
+        verify(redemptionMapper, never()).reverse(anyLong(), anyString());
+        verify(offerMapper, never()).releaseQuota(anyLong());
+        verify(entitlementMapper, never()).restoreToPending(anyLong(), anyLong());
+        verify(merchantPayableService, never()).reverseOnRedemption(anyLong());
+    }
+
+    @Test
+    void parentOrderReversesOnlyActualCurrentReceiptsAndFailsWholeBatchOnAnyCasFailure() {
+        com.chengyinhub.business.domain.CmsRegistration registration = registrationRow();
+        registration.setParentOrderNo("PARENT-1");
+        when(cmsRegistrationMapper.selectByParentOrderNo("PARENT-1")).thenReturn(Collections.singletonList(registration));
+        when(cmsRegistrationMapper.selectByParentOrderNoForUpdate("PARENT-1", null)).thenReturn(Collections.singletonList(registration));
+        Redemption first = activeRedemption();
+        Redemption second = activeRedemption(); second.setId(4L); second.setChapterId(CH1 + 1L);
+        when(redemptionMapper.selectActiveByRegistrationForUpdate(REG)).thenReturn(Arrays.asList(first, second));
+        when(redemptionMapper.reverse(3L, "错误核销")).thenReturn(1);
+        when(redemptionMapper.reverse(4L, "错误核销")).thenReturn(1);
+        assertEquals(Arrays.asList(3L, 4L), service.reverseParentOrderRedemptions("PARENT-1", "错误核销", SYS_OPERATOR, false));
+        InOrder order = inOrder(cmsRegistrationMapper, redemptionMapper);
+        order.verify(cmsRegistrationMapper).selectByParentOrderNo("PARENT-1");
+        order.verify(cmsRegistrationMapper).selectByParentOrderNoForUpdate("PARENT-1", null);
+        order.verify(redemptionMapper).selectActiveByRegistrationForUpdate(REG);
+        order.verify(redemptionMapper).reverse(3L, "错误核销");
+        order.verify(redemptionMapper).reverse(4L, "错误核销");
+        when(redemptionMapper.reverse(4L, "错误核销")).thenReturn(0);
+        assertThrows(IllegalStateException.class, () -> service.reverseParentOrderRedemptions("PARENT-1", "错误核销", SYS_OPERATOR, false));
+    }
+
+    @Test
+    void parentOrderMissingChangedScopeForeignReceiptAndNoActiveRowsNeverReverse() {
+        assertThrows(IllegalStateException.class, () -> service.reverseParentOrderRedemptions("MISSING", "错误", SYS_OPERATOR, false));
+        com.chengyinhub.business.domain.CmsRegistration registration = registrationRow(); registration.setParentOrderNo("PARENT-1");
+        when(cmsRegistrationMapper.selectByParentOrderNo("PARENT-1")).thenReturn(Collections.singletonList(registration));
+        com.chengyinhub.business.domain.CmsRegistration changed = registrationRow(); changed.setParentOrderNo("PARENT-1"); changed.setOwnerId(800L);
+        when(cmsRegistrationMapper.selectByParentOrderNoForUpdate("PARENT-1", null)).thenReturn(Collections.singletonList(changed));
+        assertThrows(IllegalStateException.class, () -> service.reverseParentOrderRedemptions("PARENT-1", "错误", SYS_OPERATOR, false));
+        when(cmsRegistrationMapper.selectByParentOrderNoForUpdate("PARENT-1", null)).thenReturn(Collections.singletonList(registration));
+        Redemption foreign = activeRedemption(); foreign.setRegistrationId(REG + 1L);
+        when(redemptionMapper.selectActiveByRegistrationForUpdate(REG)).thenReturn(Collections.singletonList(foreign));
+        assertThrows(IllegalStateException.class, () -> service.reverseParentOrderRedemptions("PARENT-1", "错误", SYS_OPERATOR, false));
+        when(redemptionMapper.selectActiveByRegistrationForUpdate(REG)).thenReturn(Collections.emptyList());
+        assertThrows(IllegalStateException.class, () -> service.reverseParentOrderRedemptions("PARENT-1", "错误", SYS_OPERATOR, false));
+        verify(redemptionMapper, never()).reverse(anyLong(), anyString());
+        verify(merchantPayableService, never()).reverseOnRedemption(anyLong());
     }
 }

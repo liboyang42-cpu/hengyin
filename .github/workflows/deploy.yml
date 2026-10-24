@@ -1,22 +1,11 @@
 name: Deploy verified master to ECS
 
 on:
-  workflow_run:
-    workflows: [GitHub CI]
-    types: [completed]
-    # 不加这条,每个 PR 的 CI 完成都会创建一个 Deploy run。它们会被下面 prepare 的 if
-    # 挡掉(head_branch != master),但 run 已经建出来了:占 concurrency 组、互相挤成
-    # cancelled,看起来像生产事故。2026-07-16 实证:一次 master push 冒出三个同 SHA run
-    # (success/cancelled/skipped),其中两个是 PR CI 的噪音,害人误判"部署被取消"。
-    # ⚠️ 这里的 headSha 恒等于默认分支 tip,跟触发它的 CI 是哪个分支无关 —— 所以光看
-    # run 的 SHA 分不出真假,必须从源头挡。
-    branches: [master]
   workflow_dispatch:
     inputs:
       ref:
-        description: Commit SHA、tag 或分支；仅用于受控的人工恢复验证
+        description: 要部署的完整 40 位 commit SHA（该 SHA 的最新 Main CI 与 Funds MySQL IT 须全部成功）
         required: true
-        default: master
         type: string
       force_deploy:
         description: 忽略文件分类，强制部署该 ref
@@ -26,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: production-deploy
@@ -36,11 +26,7 @@ jobs:
     # workflow_run 只有「master push 触发的 GitHub CI 成功」才有资格部署；
     # workflow_dispatch 仅供仓库管理员在迁移/恢复时显式使用。
     if: >-
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'master') ||
-      github.event_name == 'workflow_dispatch'
+      github.repository == 'liboyang42-cpu/chengyin' && ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'master') || github.event_name == 'workflow_dispatch')
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     outputs:
       sha: ${{ steps.classify.outputs.sha }}
@@ -52,6 +38,17 @@ jobs:
           # 0 而不是 2:base 是「生产实际在跑的 commit」,可能落后很多个;
           # 浅克隆会让 git diff / cat-file 找不到它,分类直接失准。
           fetch-depth: 0
+
+      - name: Require complete exact-SHA CI before manual deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_REF: ${{ inputs.ref }}
+          REPOSITORY: ${{ github.repository }}
+        # 只认完整 SHA：分支名（尤其落后生产、框架代际不同的 master）在联网前即拒绝。
+        run: |
+          set -euo pipefail
+          python3 ci/verify_deploy_ci.py "$DEPLOY_REF" "$REPOSITORY"
+          test "$(git rev-parse HEAD)" = "$DEPLOY_REF"
 
       - id: classify
         env:
@@ -73,7 +70,8 @@ jobs:
 
   deploy:
     needs: prepare
-    if: needs.prepare.outputs.should_deploy == 'true'
+    if: >-
+      github.repository == 'liboyang42-cpu/chengyin' && (needs.prepare.outputs.should_deploy == 'true')
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     environment: production
     timeout-minutes: 90
@@ -85,7 +83,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '11'
+          java-version: '21'
           # self-hosted runner 保留 ~/.m2；额外走 Actions cache 会在 Azure Blob TLS
           # 断连时卡住整个生产部署，宁可复用本机 Maven 缓存。
 

@@ -106,6 +106,11 @@
         select coalesce(balance, 0) from ums_member where id = #{id} for update
     </select>
 
+    <select id="selectPointsForUpdate" parameterType="Long" resultType="java.lang.Long"
+            useCache="false" flushCache="true">
+        select point from ums_member where id = #{id} for update
+    </select>
+
     <select id="lockActiveMemberById" parameterType="Long" resultType="java.lang.Long"
             useCache="false" flushCache="true">
         select id from ums_member
@@ -113,11 +118,15 @@
         for update
     </select>
 
+    <select id="selectRolePermissionSubject" resultMap="UmsMemberResult">
+        SELECT id, role, status, del_flag FROM ums_member WHERE id = #{id}
+    </select>
+
     <insert id="insertUmsMember" parameterType="UmsMember" useGeneratedKeys="true" keyProperty="id">
         insert into ums_member
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="userType != null">user_type,</if>
-            <if test="role != null">role,</if>
+            user_type,
+            role,
             <if test="phone != null">phone,</if>
             <if test="password != null">password,</if>
             <if test="levelId != null">level_id,</if>
@@ -153,8 +162,8 @@
             <if test="updateTime != null">update_time,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="userType != null">#{userType},</if>
-            <if test="role != null">#{role},</if>
+            1,
+            'player',
             <if test="phone != null">#{phone},</if>
             <if test="password != null">#{password},</if>
             <if test="levelId != null">#{levelId},</if>
@@ -191,11 +200,14 @@
         </trim>
     </insert>
 
+    <update id="updateCanonicalRole">
+        UPDATE ums_member SET role = #{role}, user_type = #{userType}, update_time = NOW()
+        WHERE id = #{id} AND status = 1 AND del_flag = 0
+    </update>
+
     <update id="updateUmsMember" parameterType="UmsMember">
         update ums_member
         <trim prefix="SET" suffixOverrides=",">
-            <if test="userType != null">user_type = #{userType},</if>
-            <if test="role != null">role = #{role},</if>
             <if test="phone != null">phone = #{phone},</if>
             <if test="password != null">password = #{password},</if>
             <if test="levelId != null">level_id = #{levelId},</if>
@@ -246,6 +258,25 @@
         set password = #{upgradedPassword}
         where id = #{id}
           and password = #{observedPassword}
+    </update>
+
+    <select id="selectLegacyPlaintextPasswords" resultMap="UmsMemberResult">
+        select id, password
+        from ums_member
+        where id &gt; #{afterId}
+          and password is not null
+          and password &lt;&gt; ''
+          and password not like '$2%'
+        order by id
+        limit #{limit}
+    </select>
+
+    <update id="hashLegacyPasswordIfUnchanged">
+        update ums_member
+        set password = #{hashedPassword}
+        where id = #{id}
+          and binary password = binary #{observedPassword}
+          and password not like '$2%'
     </update>
 
     <delete id="deleteUmsMemberById" parameterType="Long">
@@ -353,7 +384,7 @@
         FROM (
                  SELECT
                      @user_rank := @user_rank + 1 as user_rank,
-                @total_users := total_users,
+                @total_users := total_users AS total_users,
                 (@user_rank / total_users) as user_rank_percentage,
                 m.id
                  FROM
@@ -388,7 +419,7 @@
         FROM (
                  SELECT
                      @user_rank := @user_rank + 1 as user_rank,
-                @total_users := total_users,
+                @total_users := total_users AS total_users,
                 (@user_rank / total_users) as user_rank_percentage,
                 m.id
                  FROM
@@ -416,6 +447,17 @@
     </select>
     <update id="clearProfileMedia">
         update ums_member set avatar = null, case_pics = null where id = #{id}
+    </update>
+
+    <!-- 按字段清违规图:二维码违规不连坐作品图;作品图只摘掉命中的那一张(由调用方算好剩余串)。 -->
+    <update id="clearRiskyProfileMedia">
+        update ums_member
+        <set>
+            <if test="clearAvatar">avatar = null,</if>
+            <if test="clearWechat">wechat = null,</if>
+            <if test="rewriteCasePics">case_pics = #{casePics},</if>
+        </set>
+        where id = #{id}
     </update>
 
 </mapper>

@@ -33,7 +33,7 @@ const MERCHANT = {
   storyTitle: '我们的故事',
   description: '开在弄堂口的第九年。',
   gallery: '["https://cdn/g1.png","https://cdn/g2.png"]',
-  tags: '安静,有插座',
+  tags: '安静，有插座',
   businessStatus: 1,
   businessTime: '09:00-21:00',
   address: '愚园路 1 号',
@@ -72,8 +72,10 @@ function mountProfile(opts) {
   let definition = null
 
   const app = {
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => options.loginId,
+    getAuthorization: () => options.loginId ? 'Bearer unit-fixture' : '',
     getUserRole: () => options.role,
     getUserType: () => (options.role === 'merchant' ? 2 : 1),
     isDevEnv: () => false,
@@ -142,6 +144,8 @@ function mountProfile(opts) {
     Object.entries(patch).forEach(([key, value]) => setByPath(component.data, key, value))
     if (callback) callback()
   }
+  component.profileApp = app
+  component.profileShow = () => definition.pageLifetimes.show.call(component)
   component.requests = requests
   component.navigations = navigations
   component.themes = themes
@@ -203,8 +207,8 @@ test('§3.3 initialTab 白名单:合法值激活,非法值回退原默认(他人
 
 test('§3.3 负控:把他人视角写死回 posts,白名单契约必须红', () => {
   const mutated = read(PROFILE_JS)
-    .replace("activeTab: initialTab || (isSelf ? 'projects' : 'posts'),", "activeTab: isSelf ? 'projects' : 'posts',")
-  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效,负控无意义')
+    .replace("activeTab: initialTab || (isSelf ? 'projects' : (communityReadable() ? 'posts' : 'about')),", "activeTab: isSelf ? 'projects' : 'posts',")
+  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效，负控无意义')
   const component = mountProfile({ userId: '88', initialTab: 'about', source: mutated })
   component.initializeProfile()
   assert.equal(component.data.activeTab, 'posts', '变异体确实回到了写死 posts')
@@ -264,7 +268,7 @@ test('§3.5 负控:用观看者身份决定 About,互换契约必须红', () => 
   const mutated = read(PROFILE_JS).replace(
     'that.clearSubjectMerchant(\'not-merchant\');\n          return;',
     'that.setData({ merchantState: \'merchant\', subjectIsMerchant: that._viewerIsMerchant });\n          return;')
-  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效,负控无意义')
+  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效，负控无意义')
   const component = mountProfile({ userId: '88', role: 'merchant', source: mutated })
   component.initializeProfile()
   component.answer(PUBLIC_HOME, { code: '500', msg: '商家不存在或未开放' })
@@ -276,10 +280,10 @@ test('§3.5 canonical 本人打开:宿主仍是 userinfo,但 effectiveIsSelf 必
   const self = mountProfile({ viewer: 'other', userId: '88', loginId: '88', role: 'merchant' })
   self.initializeProfile()
   assert.equal(self.data.isSelf, true, '登录 ID == 目标 ID ⇒ 本人')
-  assert.equal(self.data.hostSelf, false, 'canonical 仍停在 userinfo 宿主,不能挂 tabBar')
+  assert.equal(self.data.hostSelf, false, 'canonical 仍停在 userinfo 宿主，不能挂 tabBar')
   assert.match(read(PROFILE_WXML), /<view wx:if="\{\{hostSelf\}\}"[^>]*bindtap="goSetting"/,
     '只有我的主页宿主显示设置，从俱乐部打开本人资料也须保留返回入口')
-  assert.equal(self.asked('/api/user/info'), true, '本人读自己那条,不走公开分支')
+  assert.equal(self.asked('/api/user/info'), true, '本人读自己那条，不走公开分支')
   assert.equal(self.asked(PUBLIC_INFO), false)
 
   const other = mountProfile({ viewer: 'other', userId: '88', loginId: '99' })
@@ -291,7 +295,7 @@ test('§3.5 负控:只看宿主 viewer 判本人,canonical 本人契约必须红
   const mutated = read(PROFILE_JS).replace(
     "  computeIsSelf: function () {\n    if (this.data.viewer !== 'other') return true;",
     "  computeIsSelf: function () {\n    return this.data.viewer !== 'other';\n    /* eslint-disable */ if (this.data.viewer !== 'other') return true;")
-  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效,负控无意义')
+  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效，负控无意义')
   const component = mountProfile({ viewer: 'other', userId: '88', loginId: '88', source: mutated })
   component.initializeProfile()
   assert.equal(component.data.isSelf, false, '变异体确实把本人当成了他人')
@@ -328,7 +332,7 @@ test('§3.7 负控:他人分支改回私有接口,匿名契约必须红', () => 
   const mutated = read(PROFILE_JS)
     .replace("var url = this.data.isSelf ? '/api/user/info' : '/api/user/public-info';",
       "var url = '/api/user/info';")
-  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效,负控无意义')
+  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效，负控无意义')
   const component = mountProfile({ viewer: 'other', userId: '88', source: mutated })
   component.initializeProfile()
   assert.equal(component.asked(PUBLIC_INFO), false, '变异体确实退回了要求登录的接口')
@@ -380,14 +384,14 @@ test('§3.7 网络错误在 About 有自己的出口,不落进玩家 About', () 
   // 2026-08-19:重取按钮收编进 cy-error 的 retry(原先自绘一个「重新加载」,而 cy-error 默认
   // 还会渲染一个没人监听的「重试」= 死按钮 + 双 CTA)。契约认「事件绑在组件上」。
   assert.match(wxml, /wx:elif="\{\{merchantState === 'network-error'\}\}"[\s\S]{0,400}?bind:retry="retryMerchantProbe"/,
-    '网络错误必须给独立的错误态 + 重试,不能掉进玩家 About 或空态')
+    '网络异常必须给独立的错误态 + 重试，不能掉进玩家 About 或空态')
 })
 
 test('§3.7 负控:把网络失败收敛成 not-merchant,状态机契约必须红', () => {
   const mutated = read(PROFILE_JS)
-    .replace("fail: function () { that.clearSubjectMerchant('network-error'); }",
-      "fail: function () { that.clearSubjectMerchant('not-merchant'); }")
-  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效,负控无意义')
+    .replace("fail: function () { if (that._currentProfileRead(read)) that.clearSubjectMerchant('network-error'); }",
+      "fail: function () { if (that._currentProfileRead(read)) that.clearSubjectMerchant('not-merchant'); }")
+  assert.notEqual(mutated, read(PROFILE_JS), '变异没生效，负控无意义')
   const component = mountProfile({ userId: '88', source: mutated })
   component.initializeProfile()
   component.answer(PUBLIC_HOME, 'fail')
@@ -411,20 +415,20 @@ test('§3.6 商家公开身份接管身份头,不残留个人昵称/玩家角色
   assert.match(js, /_avatarSrc: isMerchant \? \(m\.logo \|\| ''\)/,
     'logo 必须接管商家的头像位')
   assert.match(js, /_avatarInitial: isMerchant \? \(name \? name\.charAt\(0\) : '店'\)/,
-    '商家没 logo 时落店名首字,不借玩家默认头像那张人脸')
+    '商家没 logo 时落店名首字，不借玩家默认头像那张人脸')
   assert.match(wxml, /wx:else class="pc-avatar pc-avatar--initial"/,
     'lettermark 档必须真的渲染出来')
   assert.doesNotMatch(wxml, /subjectMerchant\.logo[^}]*d_profile/,
-    '商家档不得兜底到玩家默认头像')
+    '商家档不得保底到玩家默认头像')
   assert.match(wxml, /class="pc-gamer-lv" wx:if="\{\{subjectIsMerchant\}\}"/,
-    'cityRole 必须接管角色行,不再显示玩家 roleBadge / Lv')
+    'cityRole 必须接管角色行，不再显示玩家 roleBadge / Lv')
   assert.match(wxml, /class="pc-gamer-slogan" wx:if="\{\{subjectIsMerchant && subjectMerchant\.slogan\}\}"/)
 })
 
 test('§3.6 商家资料按旧页同一口径解析,空值规则不造文案', () => {
   const component = mountMerchantSubject({})
   assert.deepEqual(component.data.merchantGallery, ['https://cdn/g1.png', 'https://cdn/g2.png'],
-    'gallery 是 JSON 串,按 parseDisplayList 同一口径解析')
+    'gallery 是 JSON 串，按 parseDisplayList 同一口径解析')
   assert.deepEqual(component.data.merchantTags, ['安静', '有插座'], 'tags 逗号分隔同样解析')
   assert.deepEqual(component.data.merchantCategories, MERCHANT.sysCategoryList)
   assert.equal(component.data.subjectMerchant.capacityText, '20 人')
@@ -493,7 +497,7 @@ test('C2 旧字段名 latitude/longitude 不再被当坐标(它在实体上不�
     data: Object.assign({}, MERCHANT, { latitude: 31.2216, longitude: 121.4365 }),
   })
   assert.equal(component.data.merchantHasGeo, false,
-    'latitude/longitude 是旧页那组错字段名,给了也不能当坐标用')
+    'latitude/longitude 是旧页那组错字段名，给了也不能当坐标用')
   component.goMerchantLocation()
   assert.equal(component.locations.length, 0)
 
@@ -512,7 +516,7 @@ test('C2 负控:字段名改回 latitude/longitude,导航契约必须红', () =>
   const mutated = source
     .replace('var lat = toCoordinate(m.locationLat, 90);', 'var lat = toCoordinate(m.latitude, 90);')
     .replace('var lng = toCoordinate(m.locationLng, 180);', 'var lng = toCoordinate(m.longitude, 180);')
-  assert.notEqual(mutated, source, '变异没生效,负控无意义')
+  assert.notEqual(mutated, source, '变异没生效，负控无意义')
 
   // 变异体:给对字段名反而失效
   const right = mountProfile({ userId: '88', source: mutated })
@@ -540,7 +544,7 @@ test('C2 负控:放行 0 坐标,几内亚湾闸必须红', () => {
   const mutated = source.replace(
     'if (!isFinite(n) || n === 0 || Math.abs(n) > limit) return null;',
     'if (!isFinite(n)) return null;')
-  assert.notEqual(mutated, source, '变异没生效,负控无意义')
+  assert.notEqual(mutated, source, '变异没生效，负控无意义')
   const component = mountProfile({ userId: '88', source: mutated })
   component.initializeProfile()
   component.answer(PUBLIC_HOME, { code: '200', data: Object.assign({}, MERCHANT, { locationLat: 0, locationLng: 0 }) })
@@ -605,7 +609,7 @@ test('4-12 主推卡按 featuredType/featuredId 渲染并可点:活动进详情�
   const wxml = read(PROFILE_WXML)
   const about = wxml.slice(wxml.indexOf('===== 关于 · 商家被看者 ====='),
     wxml.indexOf('===== 关于 · 玩家 / 俱乐部被看者'))
-  assert.match(about, /wx:if="\{\{featured\}\}"/, '主推卡整块条件渲染,没选就不给空壳')
+  assert.match(about, /wx:if="\{\{featured\}\}"/, '主推卡整块条件渲染，没选就不给空壳')
   assert.match(about, /bindtap="goFeatured"/)
   assert.match(about, /featured\.titleText/, '卡面标题取后端 name')
 })
@@ -662,7 +666,7 @@ test('H1 商家分支撤销 type2「发起合作」，玩家关注/发消息原�
   assert.doesNotMatch(js + wxml, /type=2/,
     '商家主页不得再出现或跳转到 type2 新建入口')
   assert.match(wxml, /isMerchantView && !isSelf && canInviteCoop\}\}" class="pc-coop-bar"/,
-    '发起合作:非商家访客照旧;商家观看者仅带主题上下文时渲染;看自己不渲染')
+    '发起合作:非商家访客照旧；商家观看者仅带主题上下文时渲染；看自己不渲染')
   assert.match(wxml, /invite-type="\{\{0\}\}"/, '主页弹窗使用商家邀约类型')
 
   // 共享组件仍要保留普通主页的关注 / 发消息(不做全文件字符串禁用),
@@ -690,7 +694,7 @@ test('2026-09-28:商家主页直接邀约，有主题时传给弹窗，无主题
   assert.match(wxml, /isMerchantView && !isSelf/,
     '发起合作的可见性 = 非商家访客 ∪ 带主题上下文的商家观看者')
   assert.match(js, /topicId: \{ type: String, value: '' \}/,
-    'topicId 是组件属性,带上下文进主页才判定得出')
+    'topicId 是组件属性，带上下文进主页才判定得出')
   assert.match(wxml, /topic-id="\{\{topicId\}\}"/,
     '固定主题传给主页邀约弹窗')
   assert.doesNotMatch(wxml, /chapter-application|邀请承接/,
@@ -952,3 +956,182 @@ test('H1 负控:type2 商家主页 CTA 回潮会判红', () => {
     + "wx.navigateTo({ url: '/pages/coop/invite/index?type=2' })"
   assert.throws(() => assert.doesNotMatch(mutation, /onCoopInvite|type=2|发起合作/))
 })
+
+
+function readyCachedPosts(opts) {
+  const component = mountProfile(Object.assign({ viewer: 'self', loginId: '5' }, opts))
+  component.data.isSelf = opts && opts.viewer === 'other' ? false : true
+  component.data.userId = opts && opts.userId || '5'
+  component.data.activeTab = 'posts'
+  component.data.page_no = 3
+  component.data.list = [{ id: 59, commentCount: 2 }]
+  component._profileAttached = true
+  component._profileShown = true
+  component._syncProfileReducedMotion = () => {}
+  component.syncViewerIdentity = () => {}
+  component.refreshCoopPublisherAccess = () => {}
+  component.computeIsSelf = () => component.data.isSelf
+  component.refreshAll = () => Promise.resolve()
+  component.refreshPublicProfile = () => Promise.resolve()
+  return component
+}
+const settlePosts = () => new Promise(resolve => setImmediate(resolve))
+
+test('缓存推文返回仅脏时重拉一次，不吞广场全局脏标', async () => {
+  const component = readyCachedPosts()
+  component.profileApp.globalData.squareListDirty = true
+  component.profileShow()
+  assert.equal(component.requests.length, 0)
+  component.markSquareListDirty()
+  component.profileShow()
+  component.profileShow()
+  assert.equal(component.requests.length, 1)
+  assert.equal(component.requests[0].url, '/api/v1/community/me/posts')
+  assert.equal(component.data.page_no, 1)
+  assert.equal(component.data.list[0].commentCount, 2, '后台刷新不可清旧列表')
+  component.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, authorId: 5, commentCount: 1 } }], hasMore: false } })
+  await settlePosts()
+  assert.equal(component.data.list[0].commentCount, 1)
+  assert.equal(component.profileApp.globalData.squareListDirty, true)
+  component.profileShow()
+  assert.equal(component.requests.length, 1)
+})
+
+test('脏推文失败保留列表和脏标，其他tab延迟刷新且他人scope保持', async () => {
+  const component = readyCachedPosts({ viewer: 'other', userId: '88', loginId: '5' })
+  component.data.activeTab = 'about'
+  component.markSquareListDirty()
+  component.profileShow()
+  assert.equal(component.requests.length, 0)
+  component.onTabChange({ detail: { key: 'posts' } })
+  assert.equal(component.requests.length, 1)
+  assert.match(component.requests[0].url, /\/api\/v1\/community\/feeds\/LATEST/)
+  assert.equal(component.requests[0].data.authorId, '88')
+  const url = component.requests[0].url
+  component.answer(url, 'fail')
+  await settlePosts()
+  assert.equal(component.data.list[0].commentCount, 2)
+  component.profileShow()
+  assert.equal(component.requests.length, 2)
+})
+
+test('后台在途再次置脏，旧成功不能吞掉新修改', async () => {
+  const component = readyCachedPosts()
+  component.markSquareListDirty()
+  component.profileShow()
+  component.markSquareListDirty()
+  component.answer('/api/v1/community/me/posts', { code: 200, data: { items: [], hasMore: false } })
+  await settlePosts()
+  component.profileShow()
+  assert.equal(component.requests.length, 2)
+})
+
+test('dirty首屏在途触底不得升页或并发，完成后替换旧列表', async () => {
+  const c = readyCachedPosts()
+  c.data.hasMore = true
+  c.markSquareListDirty()
+  c.profileShow()
+  c.onFeedReachBottom()
+  assert.equal(c.data.page_no, 1)
+  assert.equal(c.requests.length, 1)
+  c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, commentCount: 1 } }], hasMore: true, nextCursor: 'next' } })
+  await settlePosts()
+  assert.equal(c.data.list.length, 1)
+  assert.equal(c.data.list[0].commentCount, 1)
+})
+
+test('旧分页成功或失败晚到均不得污染dirty首屏刷新结果', async () => {
+  for (const outcome of ['success', 'failure']) {
+    const c = readyCachedPosts()
+    c.data.page_no = 1
+    c.getCreativesquareList()
+    c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59 } }], hasMore: true, nextCursor: 'next' } })
+    await settlePosts()
+    c.onFeedReachBottom()
+    const oldPage = c.requests[c.requests.length - 1]
+    c.markSquareListDirty()
+    c.profileShow()
+    c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, commentCount: 1 } }], hasMore: true, nextCursor: 'new' } })
+    await settlePosts()
+    c.markSquareListDirty()
+    if (outcome === 'success') oldPage.success({ code: 200, data: { items: [{ post: { id: 99 } }], hasMore: false } })
+    else oldPage.fail({ errMsg: 'request:fail' })
+    await settlePosts()
+    assert.deepEqual(c.data.list.map(row => row.id), [59])
+    assert.equal(c.data.list[0].commentCount, 1)
+    assert.equal(c.data.hasMore, true)
+    assert.equal(c.data.feedErr, false)
+    assert.equal(c._squareListDirty, true)
+  }
+})
+
+test('attached后初始show未发生，首次返回posts的dirty仍须刷新', async () => {
+  const c = readyCachedPosts()
+  c._profileShown = false
+  c.markSquareListDirty()
+  c.profileShow()
+  assert.equal(c.requests.length, 1)
+  assert.equal(c.requests[0].url, '/api/v1/community/me/posts')
+  c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, commentCount: 0 } }], hasMore: false } })
+  await settlePosts()
+  assert.equal(c.data.list[0].commentCount, 0)
+  assert.equal(c._squareListDirty, false)
+})
+
+test('首次show保持身份保护优先且非dirty不触发全量重拉', () => {
+  const c = readyCachedPosts()
+  c._profileShown = false
+  let full = 0
+  c.refreshAll = () => { full++ }
+  c.profileShow()
+  assert.equal(full, 0)
+  assert.equal(c.requests.length, 0)
+  c._profileShown = false
+  c.markSquareListDirty()
+  c.computeIsSelf = () => false
+  let initialized = 0
+  c.initializeProfile = () => { initialized++ }
+  c.profileShow()
+  assert.equal(initialized, 1)
+  assert.equal(c.requests.length, 0, '身份变化不得用旧scope刷新')
+})
+
+test('两个缓存主页分别刷新同一社区变更，广场清旧脏标不影响主页', async () => {
+  const first = readyCachedPosts(), second = readyCachedPosts();
+  const shared = { squareListDirty: false, squareListDirtyVersion: 1 };
+  first.profileApp.globalData = shared;
+  second.profileApp.globalData = shared;
+  first.profileShow(); second.profileShow();
+  assert.equal(first.requests.length, 1);
+  assert.equal(second.requests.length, 1);
+  for (const c of [first, second]) {
+    c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [], hasMore: false } });
+    await settlePosts(); c.profileShow();
+    assert.equal(c.requests.length, 1);
+  }
+  assert.equal(shared.squareListDirtyVersion, 1);
+});
+test('社区版本在其他tab延迟读取，失败后继续重试且保留旧列表', async () => {
+  const c = readyCachedPosts();
+  c.data.activeTab = 'about';
+  c.profileApp.globalData.squareListDirtyVersion = 1;
+  c.onTabChange({ detail: { key: 'posts' } });
+  assert.equal(c.requests.length, 1);
+  c.answer('/api/v1/community/me/posts', 'fail');
+  await settlePosts();
+  assert.equal(c.data.list[0].id, 59);
+  c.profileShow();
+  assert.equal(c.requests.length, 2);
+});
+test('在途新社区版本不被旧成功吞掉', async () => {
+  const c = readyCachedPosts();
+  c.profileApp.globalData.squareListDirtyVersion = 1;
+  c.profileShow();
+  c.profileApp.globalData.squareListDirtyVersion = 2;
+  c.profileShow();
+  assert.equal(c.requests.length, 1);
+  c.answer('/api/v1/community/me/posts', { code: 200, data: { items: [], hasMore: false } });
+  await settlePosts();
+  c.profileShow();
+  assert.equal(c.requests.length, 2);
+});

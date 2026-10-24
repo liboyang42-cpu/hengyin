@@ -61,7 +61,7 @@ public final class ItSchema {
      * {@code COMMENT 'activityId 或 merchantId;全局NPC固定0'} —— 天真的 split(";")
      * 会把这条 CREATE TABLE 从注释中间劈成两半,报一个看不懂的语法错。</p>
      */
-    private static java.util.List<String> splitStatements(String text) {
+    static java.util.List<String> splitStatements(String text) {
         java.util.List<String> out = new ArrayList<>();
         StringBuilder cur = new StringBuilder();
         boolean inQuote = false;

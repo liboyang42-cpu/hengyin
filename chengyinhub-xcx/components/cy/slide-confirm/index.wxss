@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 :host{ display:block; }
 /* 三态照 Figma 3965:17359 源码:
  *   default  蓝 #147CE1,白字

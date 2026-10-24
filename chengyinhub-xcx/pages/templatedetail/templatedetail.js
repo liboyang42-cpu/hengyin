@@ -1,12 +1,12 @@
 const { applyHeroRecede } = require('./utils/scroll-motion.js');
 const app = getApp();
-const mockData = require('../../utils/mockData.js');
 const analytics = require('../../utils/analytics.js');
 const templateDetailUtil = require('./utils/templateDetail.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const { isRecord } = require('../../utils/response-shape.js');
 const toast = require('../../utils/toast.js');
+const mediaPreview = require('../../utils/media-preview.js');
 
 function difficultyMeta(difficulty) {
   var d = String(difficulty || '').trim();
@@ -100,14 +100,14 @@ function buildDetailDisplay(info, categoryText) {
 }
 
 // R9-05:发布者显示的唯一派生口。缺作者字段不得回退成「城瘾/官方」——
-// scope=my 是本人作品,没名字就用本人昵称;公共库有作者但没名字时用中性「创作者」;
+// 个人模板经服务端确认可编辑才回退本人昵称;其他作者缺名字时用中性「创作者」;
 // 只有平台内容(没有 memberId 也没有 publisher)才保留「城瘾 + 官方」。
 function resolvePublisherDisplay(info, scope) {
   var source = info || {};
   var name = source.publisher ? String(source.publisher).trim() : '';
   var hasAuthor = Number(source.memberId) > 0;
   if (name) return { text: name, official: scope !== 'my' && !hasAuthor };
-  if (scope === 'my') {
+  if (scope === 'my' && source.canEdit === true) {
     var nickname = '';
     try {
       var global = getApp().globalData || {};
@@ -115,7 +115,7 @@ function resolvePublisherDisplay(info, scope) {
     } catch (e) { /* 取不到昵称时留空 */ }
     return { text: nickname || '我的作品', official: false };
   }
-  if (hasAuthor) return { text: '创作者', official: false };
+  if (scope === 'my' || hasAuthor) return { text: '创作者', official: false };
   return { text: '城瘾', official: true };
 }
 
@@ -150,6 +150,7 @@ Page({
   data: {
     id: 0,
     scope: 'library',
+    operationScope: '',
     info: {},
     gallery: [],
     coverUrl: '',
@@ -171,6 +172,7 @@ Page({
     descNeedMore: false,
     ruleExpanded: false,
     ruleNeedMore: false,
+    ruleSteps: [],
     statusBarHeight: getApp().globalData.statusBarHeight,
     navBarHeight: getApp().globalData.navBarHeight,
     popDavid: false,
@@ -181,36 +183,24 @@ Page({
     moreShow: false,
     isMyScope: false,
     isMerchant: false,
-    // 2026-08-05 用户定:两页两态文案统一为「开始应用」。原来 scope=my 下叫「编辑玩法」,
-    // 但两个 scope 的 goPrimary 跳的是同一个 /pages/publish/temp —— 那里做的是基于模板起草,
-    // 不是就地编辑,「编辑玩法」这个叫法本身就与行为对不上。
+    // 公共库主动作统一「开始应用」(基于模板起草)。scope=my 按服务端 canEdit 定:
+    // 本人可编辑才叫「继续编辑」,否则「去模板广场选用」,不让非本人进编辑器。
+    // 详情回包前保持默认文案,goPrimary 在 canEdit 未确认时不进编辑页。
     primaryLabel: '开始应用',
     tplTabs: [TAB_DETAILS, TAB_CAPABILITIES]
   },
 
-  isDevEnv() {
-    try {
-      return wx.getAccountInfoSync().miniProgram.envVersion === 'develop';
-    } catch (e) {
-      return false;
-    }
-  },
-
   onLoad(options) {
+    this._disposed = false;
     var scope = options.scope === 'my' ? 'my' : 'library';
     var data = {
       id: options.id || 0,
       scope: scope,
+      operationScope: options.operationScope === 'MERCHANT' ? 'MERCHANT' : '',
       isMyScope: scope === 'my'
     };
     if (options.tab === 'capabilities') {
       data.activeTab = 'capabilities';
-    }
-    if (this.isDevEnv() && options.id) {
-      var mock = mockData.getTemplateById(options.id);
-      if (mock) {
-        this.patchNormalized(data, mock);
-      }
     }
     this.setData(data);
     this.getData();
@@ -231,13 +221,34 @@ Page({
 
   onShow() {
     var isMerchant = policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
-    this.setData({ isMerchant: isMerchant });
+    this.setData({ isMerchant: isMerchant }); this._navigating = false;
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();
+    var context = this.detailContext();
+    var returnedFromEditor = this._editorContext === context;
+    this._editorContext = null;
+    if (!this._disposed && this._detailContext &&
+        (this._detailContext !== context || returnedFromEditor)) this.getData();
   },
 
   onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onUnload() {
+    this._disposed = true; this._unloaded = true; if (this._reportReasonSelection) require('../../utils/community-report-sheet.js').cancel(this);
+    this._editorContext = null;
+    merchantTheme.merchantPageRestore();
+  },
+
+  detailContext() {
+    return JSON.stringify([
+      typeof app.getUserID === 'function' ? app.getUserID() : '',
+      app.getUserRole(), app.getUserType(),
+      this.data.id, this.data.scope, this.data.operationScope
+    ]);
+  },
+
+  isDetailRequestCurrent(token, context) {
+    return !this._disposed && token === this._detailRequestToken && context === this.detailContext();
+  },
 
   patchNormalized(target, raw) {
     var normalized = templateDetailUtil.normalizeTemplateDetail(raw);
@@ -252,6 +263,7 @@ Page({
     target.capRows = buildCapRows(normalized.info, normalized.categoryText);
     target.tplTabs = buildTplTabs(hasCapabilityInfo(target.capRows));
     if (!hasCapabilityInfo(target.capRows)) target.activeTab = 'details';
+    target.ruleSteps = templateDetailUtil.splitRuleSteps(normalized.info.ruleInstructions);
     target.detailStats = detail.detailStats;
     target.materialChips = detail.materialChips;
     target.sceneChips = detail.sceneChips;
@@ -268,7 +280,7 @@ Page({
     var capRows = buildCapRows(normalized.info, normalized.categoryText);
     var capable = hasCapabilityInfo(capRows);
     this.setData({
-      info: normalized.info,
+      info: normalized.info, primaryLabel: this.data.scope !== 'my' ? '开始应用' : (normalized.info.canEdit === true ? '继续编辑' : '去模板广场选用'),
       gallery: normalized.gallery,
       coverUrl: normalized.coverUrl,
       publisherText: publisher.text,
@@ -276,6 +288,7 @@ Page({
       capRows: capRows,
       tplTabs: buildTplTabs(capable),
       activeTab: capable ? this.data.activeTab : 'details',
+      ruleSteps: templateDetailUtil.splitRuleSteps(normalized.info.ruleInstructions),
       detailStats: detail.detailStats,
       materialChips: detail.materialChips,
       sceneChips: detail.sceneChips,
@@ -284,21 +297,28 @@ Page({
       difficultyLetter: meta.letter,
       difficultyLabel: meta.label,
       descExpanded: false,
-      ruleExpanded: false
+      descNeedMore: false,
+      ruleExpanded: false,
+      ruleNeedMore: false
     }, this.checkTextOverflow);
   },
 
   checkTextOverflow() {
     var that = this;
+    var token = that._detailRequestToken;
+    var context = that.detailContext();
     wx.nextTick(function () {
+      if (!that.isDetailRequestCurrent(token, context)) return;
       var query = wx.createSelectorQuery().in(that);
       query.select('#tpl-desc').boundingClientRect();
       query.select('#tpl-rule').boundingClientRect();
+      query.select('#tpl-rule-box').boundingClientRect();
       query.exec(function (res) {
-        if (!res || !res.length) return;
+        if (!that.isDetailRequestCurrent(token, context) || !res || !res.length) return;
         var patch = {};
         if (res[0] && res[0].height > 110) patch.descNeedMore = true;
-        if (res[1] && res[1].height > 110) patch.ruleNeedMore = true;
+        // 规则卡收起态限高、内层步骤列表不限高:内层比卡片内容区高才说明有被收起的步骤。
+        if (res[1] && res[2] && res[1].height > res[2].height + 1) patch.ruleNeedMore = true;
         if (Object.keys(patch).length) that.setData(patch);
       });
     });
@@ -306,6 +326,16 @@ Page({
 
   getData() {
     var that = this;
+    if (that._disposed) return;
+    var token = (that._detailRequestToken || 0) + 1;
+    var context = that.detailContext();
+    that._detailRequestToken = token;
+    if (that._detailContext && that._detailContext !== context) {
+      that.applyDetailPayload({});
+      that.setData({ moreShow: false, reportKind: '' });
+      that.closePop();
+    }
+    that._detailContext = context;
     if (!that.data.id) {
       that.setData({ loading: false, loadError: true, loadErrorMsg: '玩法链接不完整，请从玩法列表重新进入。' });
       return;
@@ -315,11 +345,13 @@ Page({
       hideLoading: true,
       silentError: true,
       url: that.data.scope === 'my' ? '/api/template/myinfo' : '/api/template/info',
-      data: { id: that.data.id },
+      data: { id: that.data.id, scope: that.data.scope === 'my' ? that.data.operationScope : '' },
       method: 'POST',
       success: function (res) {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         if (res && res.code == '200' && isRecord(res.data)) {
           that.applyDetailPayload(res.data);
+          that.setData({ reportKind: reportKindOf(res.data, that.data.scope, typeof app.getUserID === 'function' ? app.getUserID() : '') });
         } else {
           that.setData({
             loadError: true,
@@ -328,12 +360,14 @@ Page({
         }
       },
       fail: function (res) {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         that.setData({
           loadError: true,
-          loadErrorMsg: app.getRequestErrorMessage(res, '网络错误，玩法详情暂时没有加载出来。')
+          loadErrorMsg: app.getRequestErrorMessage(res, '网络异常，玩法详情加载失败。')
         });
       },
       complete: function () {
+        if (!that.isDetailRequestCurrent(token, context)) return;
         that.setData({ loading: false });
       }
     });
@@ -345,11 +379,12 @@ Page({
 
   goBack() {
     var isMyScope = this.data.isMyScope;
+    var operationScope = this.data.operationScope;
     wx.navigateBack({
       delta: 1,
       fail: function () {
         // T36:模板页是 tabBar 页,redirectTo 必失败,只能 switchTab
-        if (isMyScope) wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' });
+        if (isMyScope) wx.redirectTo({ url: '/subpackageMember/mytemplate/mytemplate' + (operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
         else wx.switchTab({ url: '/pages/template/index' });
       }
     });
@@ -388,10 +423,7 @@ Page({
   previewGallery(e) {
     var urls = this.data.gallery;
     if (!urls.length) return;
-    wx.previewImage({
-      current: e.currentTarget.dataset.url || urls[0],
-      urls: urls
-    });
+    mediaPreview.open(urls, e.currentTarget.dataset.url || urls[0]);
   },
 
   // 画廊「查看全部」:从第一张进全量预览。复用 previewGallery 的同一条通道,
@@ -399,7 +431,7 @@ Page({
   previewGalleryAll() {
     var urls = this.data.gallery;
     if (!urls.length) return;
-    wx.previewImage({ current: urls[0], urls: urls });
+    mediaPreview.open(urls, urls[0]);
   },
 
   openMore() {
@@ -424,6 +456,21 @@ Page({
   onShare() {
     this.setData({ moreShow: false });
   },
+
+  // FOLLOWUP-A-1:举报玩法,流程与动态详情 reportSquare 同一套(utils/content-report.js)。
+  // 广场记录与个人玩法各走各的举报接口,两个入口分开绑定。
+  reportTemplate() {
+    if (this.data.reportKind !== 'template') return;
+    this.setData({ moreShow: false });
+    require('../../utils/content-report.js').reportTemplate(this, app, this.data.id);
+  },
+  reportPersonalTemplate() {
+    if (this.data.reportKind !== 'personalTemplate') return;
+    this.setData({ moreShow: false });
+    require('../../utils/content-report.js').reportPersonalTemplate(this, app, this.data.id);
+  },
+  onReportReasonSelect(e) { require('../../utils/community-report-sheet.js').select(this, e); },
+  onReportReasonCancel() { require('../../utils/community-report-sheet.js').cancel(this); },
 
   closePop() {
     this.setData({
@@ -471,7 +518,11 @@ Page({
   },
 
   goPrimary() {
-    var that = this;
+    var that = this; if (that._navigating) return; that._navigating = true;
+    if (that.data.scope === 'my' && (!that.data.info || that.data.info.canEdit !== true)) {
+      wx.switchTab({ url: '/pages/template/index', complete: function () { that._navigating = false; } });
+      return;
+    }
     if (that.data.scope !== 'my') {
       analytics.track('template_reuse', {
         bizType: 'template',
@@ -480,9 +531,16 @@ Page({
     }
     // R9-04:scope=my 的 id 是个人草稿(cms_member_template),编辑页必须知道这一点
     // 才会走 /api/template/myinfo;丢掉它就会拿公共库接口查草稿 id,报「模版不存在」。
+    var context = that.detailContext();
+    var ownTemplate = that.data.scope === 'my';
     wx.navigateTo({
       url: '/pages/publish/temp/index?id=' + that.data.id +
-        (that.data.scope === 'my' ? '&scope=my' : '')
+        (that.data.scope === 'my' ? (that.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT&templateScope=my' : '&scope=my')
+          : (that.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '')),
+      success: function () {
+        if (ownTemplate && !that._disposed && context === that.detailContext()) that._editorContext = context;
+      },
+      complete: function () { that._navigating = false; }
     });
   },
 
@@ -495,3 +553,14 @@ Page({
     };
   }
 });
+
+// FOLLOWUP-A-1:公开可见、且不是本人的玩法才给举报;谓词与后端 /api/template/report、/personal-report 一致。
+// library = 广场记录(已审核 + 已上架);my = 个人玩法(非草稿 + 已审核 + 已上架)。返回 '' 即不出入口。
+function reportKindOf(info, scope, me) {
+  info = info || {};
+  if (!(Number(info.id) > 0) || Number(info.delFlag || 0) !== 0) return '';
+  if (me && String(info.memberId || '') === String(me)) return '';
+  if (Number(info.status) !== 1 || Number(info.publishStatus) !== 1) return '';
+  if (scope === 'my') return Number(info.draftStatus) === 1 ? 'personalTemplate' : '';
+  return 'template';
+}

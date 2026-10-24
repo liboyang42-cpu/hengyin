@@ -5,6 +5,8 @@ import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
+import java.util.Date;
 import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.vo.CityNodeVO;
 import com.chengyinhub.business.mapper.RoamMapper;
@@ -103,7 +105,8 @@ public class ApiVerifyController extends BaseController {
         }
         // 只给"已支付/报名成功"(registrationStatus==2)的报名单出核销码;待支付/已取消/已退款一律拒
         Integer regStatus = reg.getRegistrationStatus();
-        if (regStatus == null || regStatus.intValue() != 2) {
+        if (regStatus == null || regStatus.intValue() != 2
+                || !Integer.valueOf(2).equals(reg.getPaymentStatus())) {
             return error("订单未完成支付或已结束,无法生成核销码");
         }
         // 消费完了的不再出码。
@@ -127,6 +130,10 @@ public class ApiVerifyController extends BaseController {
             if (activity.getCancelTime() != null) {
                 return error("活动已取消，无法生成核销码");
             }
+            String rejection = ExploreTicketUsePolicy.rejection(reg.getPurchaseKind(), activity.getEndDate(), new Date());
+            if (rejection != null) return error(rejection);
+        } else if (Integer.valueOf(3).equals(reg.getPurchaseKind())) {
+            return error("探索票所属活动不可用");
         }
         String type = (ownerType != null && ownerType.longValue() == 2L) ? "activity" : "topic";
         long now = System.currentTimeMillis();
@@ -200,6 +207,7 @@ public class ApiVerifyController extends BaseController {
         } catch (Exception e) {
             return error("核销码格式错误");
         }
+        roamMapper.lockClaimOwner(playerId);
         CityNodeVO poi = roamMapper.selectMerchantNodeDetail(poiId);
         if (poi == null) return error("据点不存在");
         // roam_poi.merchant_id 是 mms_merchant.id，不能拿登录 memberId 或 Owner memberId 比。

@@ -25,26 +25,7 @@ name: Production drift audit
 #   (补部署仍需 Mac 构建 jar,故触发 deploy.yml 后会排队等它醒 —— 但至少你已经被告警了。)
 
 on:
-  schedule:
-    # 每 6 小时的 :25(错开整点高峰)。UTC。
-    # 生产漂移最大延迟由 1 小时放宽到 6 小时，以减少无业务变更时的云端 runner 消耗；
-    # 紧急发布后仍可用 workflow_dispatch 立即对账。
-    - cron: '25 */6 * * *'
   workflow_dispatch:
-  # ★ 部署链路一旦没跑成,立刻对账一次,不等下一个 6 小时窗口。
-  #   2026-09-06 实证:deploy-ui.yml 的 prepare 在 self-hosted Mac 上连红两次,
-  #   每次整 10 分钟、`steps: []`、`--log-failed` 报 "log not found" —— runner 通过本机
-  #   clash 代理跟 GitHub 失联,acquirejob 拿到 Conflict,重投的 Job 消息缺密钥
-  #   (`job assignment is invalid: MissingKey`),JobDispatcher 没能把它交给 worker,
-  #   SIGKILL(137)收场;服务端等到 10 分钟租约到期才把 job 判失败。
-  #   **一个 step 都没上报的 job,失败原因是不可读的** —— 而这种失败与「生产到底是哪一版」
-  #   完全解耦:那天恰好没有前端改动,所以没有后果;换成有改动的那天,后台 UI 就停在旧版。
-  #   对账本身早就能红(轴二 audit_ui),缺的只是**别等 6 小时**。cancelled 同理:
-  #   concurrency 挤掉的 run 正是本文件抬头那条「没有下一次 push 来自愈」的尾巴。
-  workflow_run:
-    workflows: [Deploy verified master to ECS, Deploy admin UI to ECS]
-    types: [completed]
-    branches: [master]
 
 permissions:
   contents: read
@@ -70,11 +51,7 @@ jobs:
     #   把它算进来 = 每次 CI 红都白烧一次云端对账,恰好抵掉把 cron 从 1 小时放宽到 6 小时
     #   省下的额度;而 CI 红本身已经是个告警了。
     if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.event != 'workflow_dispatch' &&
-       (github.event.workflow_run.conclusion == 'failure' ||
-        github.event.workflow_run.conclusion == 'cancelled' ||
-        github.event.workflow_run.conclusion == 'timed_out'))
+      github.repository == 'liboyang42-cpu/chengyin' && (github.event_name != 'workflow_run' || (github.event.workflow_run.event != 'workflow_dispatch' && (github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'cancelled' || github.event.workflow_run.conclusion == 'timed_out')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -246,7 +223,8 @@ jobs:
     # 部署失败触发的快速对账只走云端那条轴:迁移落差只在「合了带迁移的 PR」时才新增,
     # 与一次部署失败无关;而这个 job 在 Mac 上,Mac 睡着时它会排队挂住,把整个 run 的
     # 结论拖成 pending —— 那正好毁掉「快速拿到红/绿判决」这唯一的用处。
-    if: github.event_name != 'workflow_run'
+    if: >-
+      github.repository == 'liboyang42-cpu/chengyin' && (github.event_name != 'workflow_run')
     # ★ 跑在自托管 Mac,不在 ubuntu-latest —— 那台机器已经有 ~/.ssh/chengyin_deploy,
     #   ci/run_migration.py 的 SSH_KEY 就是写死的这个路径(没有 env 覆盖)。
     #   换云端 runner 就得改那个文件,而它是生产迁移执行器、带契约测试,不该为接一道
@@ -264,6 +242,9 @@ jobs:
         env:
           ECS_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
           ECS_SSH_USER: ${{ secrets.ECS_SSH_USER }}
+          # 2026-10-19:ci/run_migration.py 不再内置生产库主机地址(公开仓),未设置即退出。
+          # 应用与库同机,隧道目标就是上面读进程 environ 的同一台机器。
+          CHENGYIN_DB_SSH_HOST: ${{ secrets.ECS_SSH_HOST }}
         run: |
           set -euo pipefail
           # DB 密码不做成 GitHub secret:沿用 ci/preflight-h8-schema.sh 的既有手法 ——

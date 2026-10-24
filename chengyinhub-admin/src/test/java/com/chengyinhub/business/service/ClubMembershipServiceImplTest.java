@@ -147,6 +147,159 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
+    void flagOffResumeStillReconcilesWechatButNeverCreatesNewPrepay() {
+        flagOff();
+        ClubMembershipInvoice invoice = resumableInvoiceWithoutParams();
+        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder(invoice, "NOTPAY"));
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.resumeInvoice(MEMBER, action(invoice.getId(), "resume-flag-off")));
+
+        assertEquals(HttpStatus.NOT_FOUND, error.getCode());
+        InOrder order = inOrder(pay, feature);
+        order.verify(pay).queryOrderStatus(invoice.getOutTradeNo());
+        order.verify(feature).requireEnabled();
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+        verify(mapper, never()).attachPayParamsCas(any(), anyInt(), any(), any());
+    }
+
+    @Test
+    void flagOffResumeStillAppliesWechatClosedReconcile() {
+        flagOff();
+        ClubMembershipInvoice invoice = validPayingInvoice();
+        invoice.setVersion(1);
+        when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder(invoice, "CLOSED"));
+        when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(1), any())).thenReturn(1);
+
+        ClubMembershipRenewalVO result = service.resumeInvoice(
+                MEMBER, action(invoice.getId(), "resume-flag-off-closed"));
+
+        assertEquals(ClubMembershipInvoice.STATUS_CLOSED, result.getPaymentState());
+        verify(mapper).markInvoiceClosedCas(eq(invoice.getId()), eq(1), any());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+    }
+
+    @Test
+    void flagOnResumeChecksGateAfterReconcileThenCreatesPrepay() {
+        ClubMembershipInvoice invoice = resumableInvoiceWithoutParams();
+        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder(invoice, "NOTPAY"));
+        when(pay.createGenericOrder(eq(invoice.getOutTradeNo()), any(), any(), eq("openid-71")))
+                .thenReturn(payParams("prepay_id=flag-on"));
+        when(mapper.attachPayParamsCas(eq(invoice.getId()), eq(1), any(), any())).thenReturn(1);
+
+        ClubMembershipRenewalVO result = service.resumeInvoice(
+                MEMBER, action(invoice.getId(), "resume-flag-on"));
+
+        assertEquals(ClubMembershipInvoice.STATUS_PAYING, result.getPaymentState());
+        InOrder order = inOrder(pay, feature);
+        order.verify(pay).queryOrderStatus(invoice.getOutTradeNo());
+        order.verify(feature).requireEnabled();
+        order.verify(pay).createGenericOrder(eq(invoice.getOutTradeNo()), any(), any(), eq("openid-71"));
+    }
+
+    @Test
+    void flagOffCloseInvoiceStillClosesExistingPayingInvoice() {
+        flagOff();
+        ClubMembershipInvoice invoice = validPayingInvoice();
+        invoice.setVersion(2);
+        when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+        when(pay.queryOrderStatus(invoice.getOutTradeNo()))
+                .thenReturn(wxOrder(invoice, "NOTPAY"), wxOrder(invoice, "CLOSED"));
+        when(pay.closeOrder(invoice.getOutTradeNo())).thenReturn(true);
+        when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenReturn(1);
+
+        ClubMembershipRenewalVO result = service.closeInvoice(
+                MEMBER, action(invoice.getId(), "close-flag-off"));
+
+        assertEquals(ClubMembershipInvoice.STATUS_CLOSED, result.getPaymentState());
+        verify(pay).closeOrder(invoice.getOutTradeNo());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+    }
+
+    @Test
+    void flagOffCloseInvoiceStillRejectsAnotherMembersInvoice() {
+        flagOff();
+        ClubMembershipInvoice invoice = validPayingInvoice();
+        invoice.setMemberId(72L);
+        invoice.setSnapshotHash(ClubMembershipSnapshotCodec.hash(invoice));
+        when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.closeInvoice(MEMBER, action(invoice.getId(), "close-flag-off-idor")));
+
+        assertEquals(HttpStatus.FORBIDDEN, error.getCode());
+        verify(pay, never()).queryOrderStatus(any());
+        verify(pay, never()).closeOrder(any());
+    }
+
+    @Test
+    void invoiceQueryWorksWithFlagOffAndOn() {
+        ClubMembershipInvoice invoice = validPayingInvoice();
+        when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+
+        assertEquals(invoice.getId(), service.invoice(MEMBER, CLUB, invoice.getId()).getId());
+        flagOff();
+        ClubMembershipInvoice offRead = service.invoice(MEMBER, CLUB, invoice.getId());
+
+        assertEquals(invoice.getId(), offRead.getId());
+        assertEquals(null, offRead.getIdempotencyKey());
+        verify(access, times(2)).resolve(MEMBER, CLUB, null);
+    }
+
+    @Test
+    void flagOffInvoiceQueryStillRejectsCrossMemberRows() {
+        flagOff();
+        ClubMembershipInvoice crossMember = validPayingInvoice();
+        crossMember.setMemberId(72L);
+        when(mapper.selectInvoiceById(100L)).thenReturn(crossMember);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.invoice(MEMBER, CLUB, 100L));
+
+        assertEquals(HttpStatus.FORBIDDEN, error.getCode());
+    }
+
+    @Test
+    void financeListWorksWithFlagOffAndOnButStillRequiresFinanceRead() {
+        when(access.require(OWNER, CLUB, null, ClubPermission.FINANCE_READ)).thenReturn(ownerAccess());
+        when(mapper.selectInvoicesForFinance(CLUB))
+                .thenAnswer(call -> Collections.singletonList(validPayingInvoice()));
+
+        assertEquals(1, service.financeInvoices(OWNER, CLUB).size());
+        flagOff();
+        java.util.List<ClubMembershipInvoice> offRows = service.financeInvoices(OWNER, CLUB);
+
+        assertEquals(1, offRows.size());
+        assertEquals(null, offRows.get(0).getPayParamsJson());
+        verify(access, times(2)).require(OWNER, CLUB, null, ClubPermission.FINANCE_READ);
+
+        when(access.require(MEMBER, CLUB, null, ClubPermission.FINANCE_READ))
+                .thenThrow(new ServiceException("无权限", HttpStatus.FORBIDDEN));
+        ServiceException denied = assertThrows(ServiceException.class,
+                () -> service.financeInvoices(MEMBER, CLUB));
+        assertEquals(HttpStatus.FORBIDDEN, denied.getCode());
+    }
+
+    @Test
+    void flagOffStillBlocksRenewAndOtherWriteEntries() {
+        flagOff();
+
+        ServiceException renewError = assertThrows(ServiceException.class,
+                () -> service.renew(MEMBER, renew(9L, "idem-flag-off")));
+        ServiceException cancelError = assertThrows(ServiceException.class,
+                () -> service.cancelTerm(MEMBER, action(500L, "cancel-term-flag-off")));
+        ServiceException planError = assertThrows(ServiceException.class,
+                () -> service.savePlan(OWNER, planRequest(CLUB)));
+
+        assertEquals(HttpStatus.NOT_FOUND, renewError.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, cancelError.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, planError.getCode());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+        verify(mapper, never()).insertInvoice(any());
+    }
+
+    @Test
     void missingClubSettingKeepsNormalMemberFreeAndNeverExposesPaidPlans() {
         when(mapper.selectSetting(CLUB)).thenReturn(null);
 
@@ -1807,6 +1960,24 @@ class ClubMembershipServiceImplTest {
         receipt.setAfterJson("{\"status\":\"PAYING\",\"recoverable\":true}");
         receipt.setRequestId(requestId);
         return receipt;
+    }
+
+    private void flagOff() {
+        org.mockito.Mockito.doThrow(new ServiceException("未开放", HttpStatus.NOT_FOUND))
+                .when(feature).requireEnabled();
+    }
+
+    private ClubMembershipInvoice resumableInvoiceWithoutParams() {
+        ClubMembershipInvoice invoice = validPayingInvoice();
+        invoice.setPayParamsJson(null);
+        invoice.setVersion(1);
+        when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+        when(mapper.selectInvoiceByOutTradeNoForUpdate(invoice.getOutTradeNo())).thenReturn(invoice);
+        UmsMember member = new UmsMember();
+        member.setId(MEMBER);
+        member.setWxOpenId("openid-71");
+        when(members.selectUmsMemberById(MEMBER)).thenReturn(member);
+        return invoice;
     }
 
     private Map<String, String> wxOrder(ClubMembershipInvoice invoice, String state) {

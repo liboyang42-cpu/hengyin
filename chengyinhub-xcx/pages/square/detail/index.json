@@ -15,7 +15,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-post-actions": "/pages/square/components/cy/post-actions/index",
-    "cy-post-compose": "/pages/square/components/cy/post-compose/index"
+    "cy-post-compose": "/pages/square/components/cy/post-compose/index",
+    "cy-option-sheet": "/components/cy/option-sheet/index"
   },
   "navigationBarTitleText": "动态",
   "navigationBarTextStyle": "white",

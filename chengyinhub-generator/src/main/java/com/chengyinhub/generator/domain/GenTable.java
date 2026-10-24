@@ -1,8 +1,8 @@
 package com.chengyinhub.generator.domain;
 
 import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.apache.commons.lang3.ArrayUtils;
 import com.chengyinhub.common.constant.GenConstants;
 import com.chengyinhub.common.core.domain.BaseEntity;

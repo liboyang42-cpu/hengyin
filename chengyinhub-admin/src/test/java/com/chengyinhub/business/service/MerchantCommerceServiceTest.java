@@ -112,6 +112,18 @@ class MerchantCommerceServiceTest {
     }
 
     @Test
+    void renewalAcceptsMysqlUpdatedRowCountWithoutRetryingGrant() {
+        OmsOrder pending = new OmsOrder(); pending.setId(8L); pending.setOrderSn("TPLTM_8");
+        pending.setMemberId(12L); pending.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
+        pending.setStatus(0L); pending.setPayAmount(new BigDecimal("19.90"));
+        when(orderMapper.selectOmsOrderByOrderSn("TPLTM_8")).thenReturn(pending);
+        when(orderMapper.markCommerceOrderPaid(8L, "wx-tx-8")).thenReturn(1);
+        when(subscriptionMapper.grantMerchantSubscription(any())).thenReturn(2);
+        assertTrue(service.handlePaidOrder("TPLTM_8", true, 1990, "wx-tx-8"));
+        verify(subscriptionMapper).grantMerchantSubscription(any());
+    }
+
+    @Test
     void paidCommerceCallback_rejectsAmountMismatchBeforePaidCas() {
         OmsOrder pending = new OmsOrder();
         pending.setId(8L);
@@ -224,6 +236,97 @@ class MerchantCommerceServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> service.orderStatus(12L, 34L, "TPLTM_owned"));
+    }
+
+    @Test
+    void missedPaidCallbackIsRecoveredFromWechatAndUnknownResultIsNeverClosed() {
+        OmsOrder order = new OmsOrder();
+        order.setId(8L); order.setOrderSn("TPLTM_8"); order.setStatus(0L); order.setMemberId(12L);
+        order.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
+        order.setPayAmount(new BigDecimal("19.90")); order.setEntitlementDays(30); order.setEntitlementMaxUsage(3);
+        when(orderMapper.selectOmsOrderByOrderSn("TPLTM_8")).thenReturn(order);
+        java.util.Map<String, String> observed = new java.util.HashMap<>();
+        observed.put("trade_state", "SUCCESS"); observed.put("out_trade_no", "TPLTM_8");
+        observed.put("currency", "CNY"); observed.put("total", "1990"); observed.put("transaction_id", "wx-tx-8");
+        when(wechatPayService.queryOrderStatus("TPLTM_8")).thenReturn(observed);
+        when(orderMapper.markCommerceOrderPaid(8L, "wx-tx-8")).thenReturn(1);
+        when(subscriptionMapper.grantMerchantSubscription(any())).thenReturn(1);
+        service.reconcileOrder("TPLTM_8");
+        verify(subscriptionMapper).grantMerchantSubscription(any());
+        observed.put("trade_state", "UNKNOWN");
+        assertThrows(IllegalStateException.class, () -> service.reconcileOrder("TPLTM_8"));
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
+        verify(wechatPayService, never()).closeOrder(any());
+    }
+
+    @Test
+    void queriedPaymentRejectsWrongCurrencyOrOutTradeNoBeforeGrant() {
+        OmsOrder order = new OmsOrder();
+        order.setOrderSn("CUSTOM_9"); order.setStatus(0L); order.setBizType(MerchantCommerceService.BIZ_CUSTOM_EVENT);
+        when(orderMapper.selectOmsOrderByOrderSn("CUSTOM_9")).thenReturn(order);
+        java.util.Map<String, String> observed = new java.util.HashMap<>();
+        observed.put("trade_state", "SUCCESS"); observed.put("out_trade_no", "CUSTOM_9");
+        observed.put("currency", "USD"); observed.put("total", "8800"); observed.put("transaction_id", "wx-tx");
+        when(wechatPayService.queryOrderStatus("CUSTOM_9")).thenReturn(observed);
+        assertThrows(IllegalStateException.class, () -> service.reconcileOrder("CUSTOM_9"));
+        observed.put("currency", "CNY"); observed.put("out_trade_no", "CUSTOM_other");
+        assertThrows(IllegalStateException.class, () -> service.reconcileOrder("CUSTOM_9"));
+        verify(orderMapper, never()).markCommerceOrderPaid(any(), any());
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+    }
+
+    @Test
+    void abandonedUnpaidOrderIsClosedAtWechatBeforeLocalCloseButFreshOneStaysPending() {
+        OmsOrder order = new OmsOrder();
+        order.setId(18L); order.setOrderSn("PROMOT_18"); order.setStatus(0L);
+        order.setBizType(MerchantCommerceService.BIZ_PROMOTION_SLOT);
+        order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 2 * 60 * 60 * 1000L));
+        when(orderMapper.selectOmsOrderByOrderSn("PROMOT_18")).thenReturn(order);
+        java.util.Map<String, String> observed = new java.util.HashMap<>();
+        observed.put("trade_state", "NOTPAY"); observed.put("out_trade_no", "PROMOT_18");
+        when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(observed);
+        service.reconcileOrder("PROMOT_18");
+        verify(wechatPayService, never()).closeOrder(any());
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
+
+        order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L));
+        org.mockito.Mockito.doThrow(new RuntimeException("ORDERPAID")).when(wechatPayService).closeOrder("PROMOT_18");
+        assertThrows(RuntimeException.class, () -> service.reconcileOrder("PROMOT_18"));
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
+
+        org.mockito.Mockito.reset(wechatPayService);
+        when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(observed);
+        when(wechatPayService.closeOrder("PROMOT_18")).thenReturn(true);
+        service.reconcileOrder("PROMOT_18");
+        verify(wechatPayService).closeOrder("PROMOT_18");
+        verify(orderMapper).markCommerceOrderClosed(18L);
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+    }
+
+    @Test
+    void wechatMissingOrderIsClosedOnlyAfterAbandonWindowAndRenewalGrantCountsAsSuccess() {
+        OmsOrder order = new OmsOrder();
+        order.setId(19L); order.setOrderSn("CUSTOM_19"); order.setStatus(0L);
+        order.setBizType(MerchantCommerceService.BIZ_CUSTOM_EVENT);
+        order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 10 * 60 * 1000L));
+        when(orderMapper.selectOmsOrderByOrderSn("CUSTOM_19")).thenReturn(order);
+        when(wechatPayService.queryOrderStatus("CUSTOM_19"))
+                .thenThrow(new com.chengyinhub.business.service.WechatOrderNotExistException("missing", null));
+        service.reconcileOrder("CUSTOM_19");   // 未建单=未付款的已知状态:窗口内保持待支付,不报失败
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+        order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L));
+        service.reconcileOrder("CUSTOM_19");
+        verify(orderMapper).markCommerceOrderClosed(19L);
+
+        OmsOrder renewal = new OmsOrder();
+        renewal.setId(20L); renewal.setOrderSn("TPLTM_20"); renewal.setStatus(0L); renewal.setMemberId(12L);
+        renewal.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
+        renewal.setPayAmount(new BigDecimal("19.90")); renewal.setEntitlementDays(30); renewal.setEntitlementMaxUsage(3);
+        when(orderMapper.selectOmsOrderByOrderSn("TPLTM_20")).thenReturn(renewal);
+        when(orderMapper.markCommerceOrderPaid(20L, "wx-tx-20")).thenReturn(1);
+        when(subscriptionMapper.grantMerchantSubscription(any())).thenReturn(2);
+        org.junit.jupiter.api.Assertions.assertTrue(service.handlePaidOrder("TPLTM_20", true, 1990, "wx-tx-20"));
     }
 
     private MerchantCommerceService enabledService() {

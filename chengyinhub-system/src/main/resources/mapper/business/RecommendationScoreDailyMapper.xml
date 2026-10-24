@@ -41,6 +41,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 where a.status = 1
                   and a.publish_status = 1
                   and (a.del_flag = 0 or a.del_flag is null)
+                  and (a.topic_id is null or a.topic_id = 0 or exists (
+                      select 1 from cms_topic live_parent
+                      where live_parent.id = a.topic_id and live_parent.del_flag = 0
+                        and live_parent.status = 1 and live_parent.user_status = 1))
                 order by a.create_time desc, a.id desc
                 limit #{limit}
             </when>
@@ -82,6 +86,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 inner join cms_activity a on a.id = s.candidate_id
                 where s.member_id = #{memberId}
                   and s.candidate_type = 'activity'
+                  and s.stat_date = (select max(latest.stat_date) from recommendation_score_daily latest
+                                     where latest.member_id = #{memberId} and latest.candidate_type = 'activity')
+                  and not exists (select 1 from cms_topic member_only_parent
+                                  where member_only_parent.id = a.topic_id
+                                    and coalesce(member_only_parent.club_member_only, 0) = 1)
+                  and (a.topic_id is null or a.topic_id = 0 or exists (
+                      select 1 from cms_topic live_parent
+                      where live_parent.id = a.topic_id and live_parent.del_flag = 0
+                        and live_parent.status = 1 and live_parent.user_status = 1))
                 order by s.rank_position asc, s.score desc
                 limit #{limit}
             </when>
@@ -100,9 +113,72 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 inner join cms_topic t on t.id = s.candidate_id
                 where s.member_id = #{memberId}
                   and s.candidate_type = 'topic'
+                  and s.stat_date = (select max(latest.stat_date) from recommendation_score_daily latest
+                                     where latest.member_id = #{memberId} and latest.candidate_type = 'topic')
+                  and t.is_template = 0
+                  and coalesce(t.club_member_only, 0) = 0
                 order by s.rank_position asc, s.score desc
                 limit #{limit}
             </otherwise>
         </choose>
     </select>
+
+    <!-- O-14 候选池:只取对任何人都公开的内容(会员专属主题及其场次排除),热度 = 近 N 天收藏 + 3×已付报名。 -->
+    <select id="selectTopicCandidatePool" resultType="com.chengyinhub.business.domain.vo.RecommendationCandidateVO">
+        select 'topic' as candidateType, cms_topic.id as candidateId, cms_topic.member_id as ownerMemberId,
+               cms_topic.city_code as cityCode,
+               ((select count(*) from cms_topic_like l where l.data_id = cms_topic.id and l.create_time &gt;= #{since})
+                + 3 * (select count(*) from cms_registration r
+                       where r.owner_type = 1 and r.owner_id = cms_topic.id
+                         and r.payment_status = 2 and r.registration_status = 2
+                         and r.create_time &gt;= #{since})) as popularity
+        from cms_topic
+        where <include refid="com.chengyinhub.business.mapper.ContentSearchMapper.topicStaticPublicGate"/>
+        order by popularity desc, cms_topic.create_time desc, cms_topic.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectActivityCandidatePool" resultType="com.chengyinhub.business.domain.vo.RecommendationCandidateVO">
+        select 'activity' as candidateType, cms_activity.id as candidateId, cms_activity.member_id as ownerMemberId,
+               cms_activity.city_code as cityCode,
+               ((select count(*) from cms_activity_like l where l.data_id = cms_activity.id and l.create_time &gt;= #{since})
+                + 3 * (select count(*) from cms_registration r
+                       where r.owner_type = 2 and r.owner_id = cms_activity.id
+                         and r.payment_status = 2 and r.registration_status = 2
+                         and r.create_time &gt;= #{since})) as popularity
+        from cms_activity
+        where <include refid="com.chengyinhub.business.mapper.ContentSearchMapper.activityStaticPublicGate"/>
+        order by popularity desc, cms_activity.create_time desc, cms_activity.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectActiveInterestProfiles" resultType="MemberInterestProfile">
+        select member_id as memberId, city_code as cityCode, category_weights_json as categoryWeightsJson
+        from member_interest_profile
+        where member_id &gt; #{afterMemberId}
+          and last_event_at &gt;= #{activeSince}
+        order by member_id
+        limit #{limit}
+    </select>
+
+    <delete id="deleteMemberDailyScores">
+        delete from recommendation_score_daily
+        where stat_date = #{statDate} and member_id = #{memberId} and candidate_type = #{candidateType}
+    </delete>
+
+    <insert id="batchInsertRecommendationScoreDaily">
+        insert into recommendation_score_daily
+        (stat_date, member_id, candidate_type, candidate_id, score, reason_codes, rank_position, create_time, update_time)
+        values
+        <foreach collection="list" item="s" separator=",">
+            (#{s.statDate}, #{s.memberId}, #{s.candidateType}, #{s.candidateId}, #{s.score}, #{s.reasonCodes},
+             #{s.rankPosition}, #{s.createTime}, #{s.createTime})
+        </foreach>
+        on duplicate key update score = values(score), reason_codes = values(reason_codes),
+            rank_position = values(rank_position), update_time = values(update_time)
+    </insert>
+
+    <delete id="deleteScoresBefore">
+        delete from recommendation_score_daily where stat_date &lt; #{cutoff}
+    </delete>
 </mapper>

@@ -1,8 +1,8 @@
 package com.chengyinhub.web.health;
 
 import com.chengyinhub.business.service.IWechatPayService;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 /** 微信支付初始化状态，不输出商户配置或异常详情。 */

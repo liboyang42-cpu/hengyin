@@ -34,7 +34,7 @@ page { background: var(--cy-bg-page); }
   justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-text-title);
   color: var(--cy-color-bg-page); font-size: var(--cy-font-body); font-weight: 700; }
 .assign-btn.disabled { opacity: .45; }
-.picker { padding: 0 var(--cy-page-x) calc(24rpx + env(safe-area-inset-bottom)); }
+.picker { padding: 0 0 24rpx; /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .picker-row { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0;
   border-top: 1rpx solid var(--cy-color-border-subtle); }
 .picker-row--on .picker-mark { color: var(--cy-color-status-success); }

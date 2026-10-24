@@ -5,13 +5,18 @@ import com.chengyinhub.business.service.support.RoamSharePrivacyService;
 import com.chengyinhub.business.service.support.RoamShareSnapshotService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.utils.UserSafeMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Collections;
 import java.util.regex.Pattern;
@@ -38,27 +43,68 @@ public class ApiRoamShareController extends BaseController {
     private RoamSharePrivacyService privacyService;
     @Autowired
     private RoamShareSnapshotService snapshotService;
+    @Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
+    @Autowired
+    private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
 
     /** 包级可见 + 非 final:测试用子类覆写注入身份。 */
     Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
 
-    @Operation(summary = "发布足迹分享快照(同一条足迹复用令牌)")
+    @Operation(summary = "发布足迹分享快照(同一条足迹复用令牌;带 expectedVersion 时做版本 CAS)")
     @PostMapping("/snapshot")
-    public AjaxResult publish(Long clientTs, String snapshot) {
+    public AjaxResult publish(Long clientTs, Long sessionId, String snapshot, Integer expectedVersion) {
         Long memberId = uid();
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (clientTs == null || clientTs <= 0) return error("足迹记录无效");
-        String normalized;
+        com.alibaba.fastjson2.JSONObject normalizedJson;
         try {
-            normalized = privacyService.normalize(clientTs, snapshot).toJSONString();
+            normalizedJson = privacyService.normalize(clientTs, snapshot);
         } catch (RuntimeException e) {
             return error("足迹数据无效");
         }
-        String token = snapshotService.publish(memberId, clientTs, normalized);
-        if (token == null) return error("足迹分享暂时不可用，请重试");
-        return success(Collections.singletonMap("token", token));
+        // F-L5C-02:快照里的路线名、勋章名、地点名由客户端提交、对任何拿到链接的人可见,公开前送检。
+        String secText = shareTexts(normalizedJson);
+        if (!secText.isEmpty()) {
+            String risk = com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(wxContentSecurityService, umsMemberService,
+                    memberId, secText);
+            if (risk != null) return error(risk);
+        }
+        String normalized = normalizedJson.toJSONString();
+        RoamShareSnapshotService.Published published;
+        try { published = snapshotService.publish(memberId, clientTs, sessionId, normalized, expectedVersion); }
+        catch (RoamShareSnapshotService.VersionConflictException conflict) {
+            AjaxResult result = new AjaxResult(com.chengyinhub.common.constant.HttpStatus.CONFLICT, conflict.getMessage());
+            result.put("errorCode", "SHARE_VERSION_CONFLICT");
+            return result;
+        }
+        catch (IllegalStateException unavailable) { return error(unavailable.getMessage()); }
+        if (published == null || published.getToken() == null) return error("足迹分享暂时不可用，请重试");
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<String, Object>();
+        data.put("token", published.getToken());
+        data.put("version", published.getVersion());
+        return success(data);
+    }
+
+    public AjaxResult publish(Long clientTs, Long sessionId, String snapshot) { return publish(clientTs, sessionId, snapshot, null); }
+
+    public AjaxResult publish(Long clientTs, String snapshot) { return publish(clientTs, null, snapshot); }
+
+    static String shareTexts(com.alibaba.fastjson2.JSONObject snapshot) {
+        java.util.List<String> parts = new java.util.ArrayList<String>();
+        parts.add(snapshot.getString("routeName"));
+        parts.add(snapshot.getString("medal"));
+        parts.add(snapshot.getString("shopMedalName"));
+        com.alibaba.fastjson2.JSONArray pois = snapshot.getJSONArray("pois");
+        if (pois != null) for (int i = 0; i < pois.size(); i++) {
+            com.alibaba.fastjson2.JSONObject poi = pois.getJSONObject(i);
+            if (poi == null) continue;
+            parts.add(poi.getString("name"));
+            parts.add(poi.getString("catLabel"));
+        }
+        return com.chengyinhub.business.service.IWxContentSecurityService.joinText(parts.toArray(new String[0]));
     }
 
     @Operation(summary = "作废本人全部足迹分享快照")
@@ -69,16 +115,54 @@ public class ApiRoamShareController extends BaseController {
         return success(Collections.singletonMap("revoked", snapshotMapper.deleteByMember(memberId)));
     }
 
+    /**
+     * 按令牌撤销本人的一条分享(/revoke 仍是「作废本人全部」,语义不变)。
+     * 令牌不存在、已撤销、或不是本人的,一律 revoked=0 —— 不区分,免得变成探测别人令牌的口子。
+     */
+    @Operation(summary = "按令牌撤销本人的一条足迹分享")
+    @PostMapping("/revoke-token")
+    public AjaxResult revokeToken(String token) {
+        Long memberId = uid();
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (token == null || !TOKEN.matcher(token).matches()) {
+            AjaxResult result = new AjaxResult(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, "分享链接无效");
+            result.put("errorCode", "SHARE_TOKEN_INVALID");
+            return result;
+        }
+        return success(Collections.singletonMap("revoked", snapshotMapper.deleteByMemberToken(memberId, token)));
+    }
+
     @Operation(summary = "读取足迹分享快照(未登录可读)")
     @GetMapping("/snapshot")
     public AjaxResult read(String token) {
         if (token == null || !TOKEN.matcher(token).matches()) return error(GONE);
-        String json = snapshotMapper.selectSnapshotJsonByToken(token);
+        String json;
+        try {
+            json = snapshotMapper.selectSnapshotJsonByToken(token);
+        } catch (DataAccessException e) {
+            // A failed lookup does not prove the share is gone. Preserve a
+            // transport failure so existing readers offer retry instead.
+            throw new ShareReadUnavailableException(e);
+        }
         if (json == null) return error(GONE);
         try {
             return success(privacyService.normalizeStored(json));
         } catch (RuntimeException e) {
             return error(GONE);
+        }
+    }
+
+    @ExceptionHandler(ShareReadUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public AjaxResult handleShareReadUnavailable() {
+        return error(UserSafeMessage.GENERIC);
+    }
+
+    private static final class ShareReadUnavailableException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        private ShareReadUnavailableException(DataAccessException cause) {
+            super(UserSafeMessage.GENERIC, cause);
         }
     }
 }

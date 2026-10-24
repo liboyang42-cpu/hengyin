@@ -25,7 +25,7 @@
       少减任何一截都会恒定溢出一小段(2026-09-03 在草稿弹层上实际踩过)。 */
 .pc-panel {
   margin: 0 calc(var(--cy-page-x) * -1);
-  min-height: calc(var(--cy-comp-sheet-max-h, 70vh)
+  min-height: calc(min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)))   /* 2026-10-23 随 cy-sheet 上限改到胶囊底 */
                    - env(safe-area-inset-bottom) - 24rpx   /* .sh__panel 的 padding-bottom */
                    - 16rpx);                               /* .sh__body 的 padding: 8rpx 0,上下各一份 */
   display: flex;

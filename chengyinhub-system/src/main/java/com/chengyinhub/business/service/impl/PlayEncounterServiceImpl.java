@@ -100,7 +100,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         CmsMemberTemplate template = node.getTemplateId() == null ? null
                 : cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
 
-        TopicRouteSession run = TopicRouteSessionScope.find(topicRouteSessionMapper, memberId, topicId, activityId);
+        TopicRouteSession run = TopicRouteSessionScope.findCurrent(topicRouteSessionMapper, memberId, topicId, activityId);
         if (run == null) {
             throw new ServiceException("这一局还没开始");
         }
@@ -138,6 +138,8 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         view.put("allowedActions", arrived && !locked
                 ? allowedActions(liveConfig, journey, state, topicCheckEnabled(run, topicId)) : Collections.emptyList());
         view.put("check", check(journey, state));
+        if(themeNodeConfig!=null && themeNodeConfig.path("outcomeRules").path("version").asInt()==1)
+            view.put("config",Collections.singletonMap("outcomeRulesVersion",1));
         view.put("outcomeContract", outcomeContract(journey, liveConfig, run, node.getId(), arrived));
         view.put("fallbackPlan", fallbackPlan());
         view.put("preload", preload(template, node, presentation));
@@ -293,7 +295,8 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
                                         boolean topicCheckOn) {
         List<String> actions = new ArrayList<String>();
         JsonNode playables = journey == null ? null : journey.get(NodeJourneySnapshot.PLAYABLES_KEY);
-        if (playables != null && playables.isObject()) {
+        if (journey != null && journey.has(NodeJourneySnapshot.PLAYABLES_KEY)) {
+            if (!playables.isObject()) throw new ServiceException("玩法配置不可用");
             for (String section : NodeJourneySnapshot.PLAYABLE_SECTIONS) {
                 if (playables.path(section).asBoolean(false)) actions.add(section);
             }
@@ -413,7 +416,8 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         // R22-C1:终点声明(与下一站同源)读本局建局冻结的 branchOutcomes;键在就以快照为准,
         // 老快照没有该键才回退实时模板的 branch 段。
         JsonNode frozen = journey == null ? null : journey.get(NodeJourneySnapshot.BRANCH_OUTCOMES_KEY);
-        if (frozen != null && frozen.isArray()) {
+        if (journey != null && journey.has(NodeJourneySnapshot.BRANCH_OUTCOMES_KEY)) {
+            if (!frozen.isArray()) throw new ServiceException("玩法配置不可用");
             addFrozenOutcomes(frozen, codes, labels);
         } else {
             addDeclaredOutcomes(liveConfig, codes, labels);

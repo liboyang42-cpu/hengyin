@@ -28,11 +28,12 @@
 放进玩家的路线里</view>
     <view class="intro__points">
       <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>基础信息 · 经营信息 · 资质 · 确认</text></view>
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>营业执照用于核验经营主体</text></view>
+
       <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>提交后可随时回来看进度与驳回原因</text></view>
     </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始入驻" bindtap="startForm">开始入驻</cy-btn></view>
-    <view class="intro__fine">审核团队会用你填的联系电话与你确认。</view>
+    
+    <view class="intro__fine intro__claim" bindtap="openClaim" aria-role="button" aria-label="认领已有门店" hover-class="cy-pressed" hover-stay-time="80">门店已在城瘾上线？认领已有门店</view>
   </view>
 
   <!-- 开场胶囊 → 进度条:共享元素形变,几何与约束见 utils/wizard-morph.js -->
@@ -49,15 +50,15 @@
        会把贴底的开场屏顶上去(实测)。只在「ready+form+开场」这一态关。 -->
   <scroll-view scroll-y class="body" wx:if="{{!(bootstrapState === 'ready' && mode==='form' && introMode && !morphing)}}">
     <view class="bootstrap-state" wx:if="{{bootstrapState === 'checking-role'}}">
-      <cy-state-shell kind="loading" title="正在确认申请资格" sub="确认当前账号是否可以申请商家入驻" theme="merchant" />
+      <cy-state-shell kind="loading" title="正在确认申请资格" theme="merchant" />
     </view>
     <view class="bootstrap-state" wx:elif="{{bootstrapState === 'checking-application'}}">
-      <cy-state-shell kind="loading" title="正在检查已有申请" sub="已有资料不会重复提交" theme="merchant" />
+      <cy-state-shell kind="loading" title="正在检查已有申请" theme="merchant" />
     </view>
     <view class="bootstrap-state" wx:elif="{{bootstrapState === 'error'}}">
       <cy-state-shell kind="{{bootstrapErrorKind || 'error'}}"
-                      title="{{bootstrapErrorKind === 'network' ? '网络没连上' : '暂时无法确认申请状态'}}"
-                      sub="{{bootstrapError}}" primary="重新检查" theme="merchant"
+                      title="{{bootstrapErrorKind === 'no-permission' ? '登录后申请商家入驻' : bootstrapErrorKind === 'network' ? '网络没连上' : '暂时无法确认申请状态'}}"
+                      sub="{{bootstrapError}}" primary="{{bootstrapErrorKind === 'no-permission' ? '登录' : '重新检查'}}" theme="merchant"
                       bind:primary="retryBootstrap" auto-back="{{!everSettled}}" />
     </view>
 
@@ -67,7 +68,7 @@
       <view class="sec-label">主理人身份处理</view>
       <cy-card class="apply-card club-transfer-card">
         <view class="club-transfer-title">商家账号生效前，须完成俱乐部移交</view>
-        <view class="club-transfer-sub">申请可以先提交审核。以下是当前账号名下全部未删除俱乐部；只有已生效俱乐部可进入治理页移交。</view>
+        <view class="club-transfer-sub">仅已生效的俱乐部可移交</view>
         <view class="club-transfer-row" wx:for="{{ownedClubs}}" wx:key="id">
           <view class="club-transfer-copy">
             <view class="club-transfer-name">{{item.name}}</view>
@@ -130,7 +131,7 @@
                  aria-required="true" aria-label="联系电话，必填" />
         </view>
       </cy-card>
-      <view class="foot">请填写真实有效的信息，以便审核团队联系。</view>
+      
     </view>
 
     <!-- ===== 步骤2:经营信息 ===== -->
@@ -177,7 +178,7 @@
       <view class="sec-label mt">品牌形象图（选填）</view>
       <cy-card class="apply-card wizard-card">
         <view class="imgs">
-          <view class="img-item" wx:for="{{derivatives}}" wx:key="*this">
+          <view class="img-item" wx:for="{{derivatives}}" wx:key="index">
             <image lazy-load="true" src="{{item}}" mode="aspectFill" />
             <view class="img-del" catchtap="removeDerivative" data-i="{{index}}" aria-role="button" aria-label="删除品牌形象图 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="img-del__glyph"><cy-icon name="close-sm" size="28" /></view>
@@ -187,7 +188,7 @@
                 aria-role="button" aria-label="添加品牌形象图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="40" /></view>
         </view>
       </cy-card>
-      <view class="foot">门店照片、产品图或品牌海报，最多 6 张。图片越多审核越快。</view>
+      <view class="foot">最多 6 张</view>
     </view>
 
     <!-- ===== 步骤4:预览确认 ===== -->
@@ -210,7 +211,7 @@
       <view class="sec-label mt" wx:if="{{derivatives.length}}">品牌形象图</view>
       <cy-card class="apply-card wizard-card" wx:if="{{derivatives.length}}">
         <view class="imgs">
-          <image lazy-load="true" wx:for="{{derivatives}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="preview-img-sm" />
+          <image lazy-load="true" wx:for="{{derivatives}}" wx:key="index" src="{{item}}" mode="aspectFill" class="preview-img-sm" />
         </view>
       </cy-card>
       <!-- RUN-52 经营者实名:用户裁定这一段【不套白卡】,字段直接铺在灰页底上。
@@ -234,7 +235,7 @@
         </view>
         <cy-consent-check class="identity-consent" checked="{{identityConsented}}" text="{{identityHint}}"
                           bind:change="onIdentityConsent" />
-        <view class="foot">执照核验到主体,这一项核验到人 —— 能收款就得可追溯,二者不互相替代。</view>
+        <view class="foot">用于收款实名核验</view>
       </block>
       <view class="foot" wx:else>{{identityDoneHint}}</view>
       <cy-inline-error class="submit-error" wx:if="{{submitError && step===4}}"
@@ -249,12 +250,12 @@
             aria-label="商家入驻申请已提交，{{submissionReceipt.name}}，正在等待审核">
         <view class="succ-icon" aria-hidden="true"><cy-icon name="check" size="64" /></view>
         <view class="succ-tit">你的申请已提交</view>
-      <view class="succ-desc">我们会在 1-3 个工作日内完成审核。审核通过且身份条件满足后，商家账号才会生效；审核期间不影响正常使用。</view>
+      <view class="succ-desc">预计 1–3 个工作日完成审核</view>
       </view>
       <cy-card class="apply-card receipt-card">
         <view class="preview-kv"><text class="pk">店铺名称</text><text class="pv">{{submissionReceipt.name || '—'}}</text></view>
         <view class="preview-kv last"><text class="pk">联系电话</text><text class="pv">{{submissionReceipt.phone || '—'}}</text></view>
-        <view class="receipt-note">返回后，可再次进入“商家入驻”查看审核进度。</view>
+        
       </cy-card>
       <cy-card class="apply-card timeline">
         <view class="tl-item done">
@@ -280,7 +281,7 @@
     </block>
     <view class="bootstrap-state" wx:else>
       <cy-state-shell kind="error" title="页面状态暂时不可用"
-                      sub="请重新检查当前账号与申请状态" primary="重新检查"
+                      primary="重新检查"
                       theme="merchant" bind:primary="retryBootstrap" auto-back="{{!everSettled}}" />
     </view>
   </scroll-view>
@@ -295,6 +296,7 @@
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='form' && step===5}}">
     <cy-btn variant="primary" bindtap="onHome">返回首页</cy-btn>
   </view>
+  <cy-merchant-claim-sheet show="{{claimShow}}" bind:close="closeClaim" />
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='status'}}">
     <cy-btn variant="primary" bindtap="onStatusAction">{{apply.canReapply ? '重新申请' : '返回'}}</cy-btn>
   </view>

@@ -47,7 +47,7 @@ class SmsCouponDisabledTest {
 
     @Test
     void manuallyDisabledCouponCannotBeRedeemedAndLeavesNoSideEffects() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(0));
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history(0));
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(3));
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.DISABLED,
@@ -61,7 +61,7 @@ class SmsCouponDisabledTest {
 
     @Test
     void alreadyRedeemedCouponStaysAlreadyUsedAfterDisable() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(1));
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history(1));
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(3));
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.ALREADY_USED,
@@ -74,7 +74,7 @@ class SmsCouponDisabledTest {
         // 不回「已停用」(商家扫码时那句理由必须是真的),且不放松 C-30 的零副作用要求。
         SmsCouponHistory expired = history(0);
         expired.setEndTime(new Date(System.currentTimeMillis() - 60_000));
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(expired);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(expired);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(3));
         when(histories.expireUnusedCoupon(any(), any())).thenReturn(1);
 
@@ -89,7 +89,7 @@ class SmsCouponDisabledTest {
 
     @Test
     void activeCouponStillRedeems() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(0));
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history(0));
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(1));
         when(histories.claimUnusedCoupon(any(), any())).thenReturn(1);
         when(coupons.incrementUseCount(30L)).thenReturn(1);
@@ -103,14 +103,14 @@ class SmsCouponDisabledTest {
     void manuallyDisabledCouponIsNotGrantedAndTouchesNoCountersOrHistory() {
         assertNull(service.grantCouponWithReceipt(5001L, coupon(3)));
 
-        verify(coupons, never()).tryIncrementReceiveCount(any());
+        verify(coupons, never()).tryIncrementIssuableReceiveCount(any());
         verify(coupons, never()).incrementReceiveCount(any());
         verify(histories, never()).insertSmsCouponHistory(any());
     }
 
     @Test
     void activeCouponIsGrantedWithoutStaticQrOrObjectStorage() {
-        when(coupons.tryIncrementReceiveCount(30L)).thenReturn(1);
+        when(coupons.tryIncrementIssuableReceiveCount(30L)).thenReturn(1);
         when(histories.insertSmsCouponHistory(any())).thenAnswer(invocation -> {
             SmsCouponHistory granted = invocation.getArgument(0);
             assertNull(granted.getQrcodeUrl());
@@ -124,7 +124,80 @@ class SmsCouponDisabledTest {
     }
 
     @Test
-    void isCouponNotIssuableForManuallyInvalidatedAndMerchantStoppedOnly() {
+    void outsideIssuanceWindowCannotGrantOrConsumeLimitedOrUnlimitedStock() {
+        when(coupons.tryIncrementIssuableReceiveCount(30L)).thenReturn(1);
+        when(coupons.incrementReceiveCount(30L)).thenReturn(1);
+        when(histories.insertSmsCouponHistory(any())).thenAnswer(invocation -> {
+            SmsCouponHistory granted = invocation.getArgument(0);
+            granted.setId(8801L);
+            return 1;
+        });
+        for (Long limit : new Long[]{1L, null, 0L, -1L}) {
+            for (String invalidField : new String[]{"end", "start", "enable"}) {
+                SmsCoupon row = coupon(1);
+                row.setPublishCount(limit);
+                if ("end".equals(invalidField)) row.setEndTime(new Date(System.currentTimeMillis() - 60_000L));
+                if ("start".equals(invalidField)) row.setStartTime(new Date(System.currentTimeMillis() + 60_000L));
+                if ("enable".equals(invalidField)) row.setEnableTime(new Date(System.currentTimeMillis() + 60_000L));
+                assertNull(service.grantCouponWithReceipt(5001L, row), invalidField + ", limit=" + limit);
+                when(coupons.selectSmsCouponById(30L)).thenReturn(row);
+                org.junit.jupiter.api.Assertions.assertTrue(service.isCouponNotIssuable(30L));
+            }
+        }
+        verify(coupons, never()).tryIncrementIssuableReceiveCount(any());
+        verify(coupons, never()).incrementReceiveCount(any());
+        verify(histories, never()).insertSmsCouponHistory(any());
+    }
+
+    @Test
+    void issuanceWindowKeepsNullDatesAndIncludesStartButExcludesEndBoundary() {
+        SmsCoupon row = coupon(1);
+        Date now = new Date(1_800_000_000_000L);
+        org.junit.jupiter.api.Assertions.assertFalse(
+                ReflectionTestUtils.<Boolean>invokeMethod(service, "outsideIssuanceWindow", row, now));
+        row.setStartTime(now);
+        row.setEnableTime(now);
+        row.setEndTime(new Date(now.getTime() + 1L));
+        org.junit.jupiter.api.Assertions.assertFalse(
+                ReflectionTestUtils.<Boolean>invokeMethod(service, "outsideIssuanceWindow", row, now));
+        row.setEndTime(now);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                ReflectionTestUtils.<Boolean>invokeMethod(service, "outsideIssuanceWindow", row, now));
+        row.setEndTime(null);
+        row.setStartTime(new Date(now.getTime() + 1L));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                ReflectionTestUtils.<Boolean>invokeMethod(service, "outsideIssuanceWindow", row, now));
+        row.setStartTime(null);
+        row.setEnableTime(new Date(now.getTime() + 1L));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                ReflectionTestUtils.<Boolean>invokeMethod(service, "outsideIssuanceWindow", row, now));
+    }
+
+    @Test
+    void atomicIssuanceRejectionDoesNotWriteHistoryForLimitedOrUnlimitedCoupons() {
+        for (Long limit : new Long[]{1L, null, 0L, -1L}) {
+            SmsCoupon row = coupon(1);
+            row.setPublishCount(limit);
+            assertNull(service.grantCouponWithReceipt(5001L, row));
+        }
+        verify(coupons, org.mockito.Mockito.times(4)).tryIncrementIssuableReceiveCount(30L);
+        verify(coupons, never()).tryIncrementReceiveCount(any());
+        verify(coupons, never()).incrementReceiveCount(any());
+        verify(histories, never()).insertSmsCouponHistory(any());
+    }
+
+    @Test
+    void issuanceDatabaseFailureIsNotSilentlyConvertedToNotIssuable() {
+        RuntimeException failure = new IllegalStateException("database unavailable");
+        when(coupons.tryIncrementIssuableReceiveCount(30L)).thenThrow(failure);
+        org.junit.jupiter.api.Assertions.assertSame(failure,
+                org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
+                        () -> service.grantCouponWithReceipt(5001L, coupon(1))));
+        verify(histories, never()).insertSmsCouponHistory(any());
+    }
+
+    @Test
+    void isCouponNotIssuableKeepsExistingStatusAndMissingCouponSemantics() {
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(3));
         when(coupons.selectSmsCouponById(31L)).thenReturn(coupon(1));
         when(coupons.selectSmsCouponById(32L)).thenReturn(coupon(4));
@@ -133,6 +206,12 @@ class SmsCouponDisabledTest {
         org.junit.jupiter.api.Assertions.assertFalse(service.isCouponNotIssuable(31L));
         org.junit.jupiter.api.Assertions.assertFalse(service.isCouponNotIssuable(404L), "券不存在走原失败口径,不当失效跳过");
         org.junit.jupiter.api.Assertions.assertFalse(service.isCouponNotIssuable(null));
+        for (Integer status : new Integer[]{0, 2, null}) {
+            SmsCoupon legacy = coupon(1);
+            legacy.setStatus(status);
+            when(coupons.selectSmsCouponById(30L)).thenReturn(legacy);
+            org.junit.jupiter.api.Assertions.assertFalse(service.isCouponNotIssuable(30L));
+        }
     }
 
     @Test
@@ -140,10 +219,10 @@ class SmsCouponDisabledTest {
         // 商家停发(4)=只停新增发放;已领的照常可用、可核销。
         assertNull(service.grantCouponWithReceipt(5001L, coupon(4)),
                 "停发的券不得再新增发放");
-        verify(coupons, never()).tryIncrementReceiveCount(any());
+        verify(coupons, never()).tryIncrementIssuableReceiveCount(any());
         verify(histories, never()).insertSmsCouponHistory(any());
 
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(0));
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history(0));
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(4));
         when(histories.claimUnusedCoupon(any(), any())).thenReturn(1);
         when(coupons.incrementUseCount(30L)).thenReturn(1);

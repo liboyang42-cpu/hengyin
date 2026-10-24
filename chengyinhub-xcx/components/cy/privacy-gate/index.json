@@ -2,7 +2,8 @@
   "component": true,
   "usingComponents": {
     "cy-scene-sheet": "/components/cy/scene-sheet/index",
-    "cy-btn": "/components/cy/btn/index"
+    "cy-btn": "/components/cy/btn/index",
+    "cy-agreement-sheet": "/components/cy/agreement-sheet/index"
   },
   "styleIsolation": "isolated"
 }

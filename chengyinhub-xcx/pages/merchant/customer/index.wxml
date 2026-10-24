@@ -5,7 +5,7 @@
   <cy-nav-bar />
   <view class="cu-hero">
     <view class="cu-hero-title">客户</view>
-    <text class="cu-hero-sub">{{error ? '客户数量暂不可用' : customerSummaryText}}</text>
+    <text class="cu-hero-sub" wx:if="{{!error && customerSummaryText}}">{{customerSummaryText}}</text>
   </view>
 
   <view class="cu-segs">
@@ -43,22 +43,22 @@
       <button wx:if="{{exportError && (exportState === 'PENDING' || exportState === 'RUNNING')}}"
               class="cu-inline-button" bindtap="retryExportStatus">重新查询</button>
       <cy-inline-error class="cu-batch-error" wx:if="{{exportError}}" kind="data"
-        title="导出状态未同步" sub="{{exportError}}" />
+        title="导出状态更新中" sub="{{exportError}}" />
     </view>
 
   <cy-empty class="cy-fade-in cu-state-clear" wx:if="{{noPermission}}" kind="no-permission" fill="{{true}}" size="lg"
-            title="当前岗位没有客户查看权限" sub="请联系店主调整经营团队权限" />
+            title="当前岗位没有客户查看权限" sub="请联系店主开通" />
   <cy-skeleton wx:elif="{{loading && !rows.length}}" type="card" count="{{4}}" />
   <!-- auto-back 只认首屏:换分群 / 换标签 / 换关键词都会清空 rows 再拉一次,
        那一次失败若也自动退页,分群与群发草稿会跟着页面一起没(审查C A1)。 -->
-  <cy-error class="cy-fade-in cu-state-clear" wx:elif="{{error && !rows.length}}" title="客户名单加载失败" sub="{{error}}" bind:retry="retryLoad" fill="{{true}}" size="lg" auto-back="{{!everLoaded}}" />
+  <cy-error load-failure class="cy-fade-in cu-state-clear" wx:elif="{{error && !rows.length}}" title="客户名单加载失败" sub="{{error}}" bind:retry="retryLoad" fill="{{true}}" size="lg" auto-back="{{!everLoaded}}" />
   <cy-empty class="cy-fade-in cu-state-clear" wx:elif="{{!rows.length}}" kind="empty" fill="{{true}}" size="lg"
             title="{{emptyTitle}}" sub="{{emptySub}}"
             cta="{{emptyCta}}" bind:cta="onEmptyAction" />
 
   <scroll-view wx:else scroll-y class="cu-scroll cy-fade-in" enhanced show-scrollbar="{{false}}" bindscrolltolower="loadMore">
     <text class="cu-sync" wx:if="{{loading && rows.length}}" aria-role="status">正在更新客户名单…</text>
-    <view class="cu-list">
+    <view class="cu-list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <view class="cu-row" wx:for="{{rows}}" wx:key="memberId"
           data-memberid="{{item.memberId}}" bindtap="openCustomer"
           aria-role="button" aria-label="查看客户 {{item.displayName}} 详情" hover-class="cy-pressed" hover-stay-time="80">
@@ -109,6 +109,9 @@
             hover-class="{{exportState === 'PENDING' || exportState === 'RUNNING' ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
         {{exportState === 'PENDING' || exportState === 'RUNNING' ? '导出中…' : '导出'}}
       </view>
+      <!-- BL-100:触达任务记录(只读,MARKETING_READ),照「导出」同款工具按钮。 -->
+      <view wx:if="{{canCampaigns}}" class="cu-tool" bindtap="goCampaigns" aria-role="button"
+            aria-label="查看触达记录" hover-class="cy-pressed" hover-stay-time="80">触达记录</view>
 
     </view>
 
@@ -122,7 +125,7 @@
 
   </view>
   </cy-sheet>
-  <cy-sheet show="{{filterOpen}}" class="cu-filter-sheet" title="筛选客户" handle="{{true}}" inset="{{true}}" footer="{{true}}" bind:close="closeFilters">
+  <cy-sheet show="{{filterOpen}}" class="cu-filter-sheet" title="筛选客户" handle="{{true}}" fixed="full" footer="{{true}}" bind:close="closeFilters">
     <view class="cu-filter">
       <cy-inline-error wx:if="{{savedSegmentsError}}" title="保存分群暂未更新" sub="{{savedSegmentsError}}" action="重试" bind:action="loadSavedSegments" />
       <text class="cu-filter-title">客户类型</text>

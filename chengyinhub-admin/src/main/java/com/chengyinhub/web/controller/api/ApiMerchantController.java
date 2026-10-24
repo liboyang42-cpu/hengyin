@@ -54,6 +54,7 @@ import com.chengyinhub.system.service.ISysCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -90,6 +91,9 @@ import com.chengyinhub.common.utils.OwnershipUtils;
 @RequestMapping("/api/merchant")
 public class ApiMerchantController extends BaseController {
     @Autowired
+    private com.chengyinhub.business.service.ConsentGuard consentGuard;
+
+    @Autowired
     private IUmsMemberService umsMemberService;
 
     @Autowired
@@ -97,6 +101,9 @@ public class ApiMerchantController extends BaseController {
 
     @Autowired
     private NpcProfileMapper npcProfileMapper;
+
+    @Autowired
+    private com.chengyinhub.business.service.impl.ProfileReviewService profileReviewService;
 
     @Autowired
     private VoiceCloneClient voiceCloneClient;
@@ -112,6 +119,15 @@ public class ApiMerchantController extends BaseController {
     private IWxContentSecurityService wxContentSecurityService;
 
     @Autowired
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
+
+    private String reviewedMedia(Long memberId, String reference, boolean multiple) {
+        if (reference == null || reference.trim().isEmpty()) return reference;
+        return multiple ? mediaReferences.requireAttachments(memberId, reference, true)
+                : mediaReferences.requireAttachment(memberId, reference, true);
+    }
+
+    @Autowired
     private IMmsMerchantService mmsMerchantService;
 
     /** RUN-52 发布者实名:采集走 /api/publisher/identity,商家入驻只验「登记了没有」。 */
@@ -120,6 +136,14 @@ public class ApiMerchantController extends BaseController {
 
     @Autowired
     private IMapGeocodeService mapGeocodeService;
+
+    /** 门店联系电话:11 位大陆手机号。 */
+    static final java.util.regex.Pattern MERCHANT_PHONE = java.util.regex.Pattern.compile("1[3-9]\\d{9}");
+    /** 门店微信号:字母、数字、下划线或减号,最多 20 位。 */
+    static final java.util.regex.Pattern MERCHANT_WECHAT_ID = java.util.regex.Pattern.compile("[A-Za-z0-9_-]{1,20}");
+    /** 行业类型多选:逗号分隔的正整数 id,最多 MAX_MERCHANT_CATEGORIES 个。 */
+    static final java.util.regex.Pattern MERCHANT_CATEGORY_IDS = java.util.regex.Pattern.compile("[1-9]\\d{0,8}(,[1-9]\\d{0,8})*");
+    static final int MAX_MERCHANT_CATEGORIES = 5;
 
     /** location_verified:1=商家在地图上亲自点的。 */
     static final int LOCATION_PICKED = 1;
@@ -246,8 +270,8 @@ public class ApiMerchantController extends BaseController {
         } else {
 
             // 查询分类信息，categoryId 可能为 null
-            if (mmsMerchant.getCategoryId() != null) {
-                String categoryIds = mmsMerchant.getCategoryId().toString();
+            if (categoryIdsOf(mmsMerchant) != null) {
+                String categoryIds = categoryIdsOf(mmsMerchant);
                 if (!StringUtils.isEmpty(categoryIds)) {
                     String[] ids = categoryIds.split(",");
                     List<SysCategory> listCategory = sysCategoryService.selectSysCategoryListByIds(ids);
@@ -366,7 +390,7 @@ public class ApiMerchantController extends BaseController {
         if (!isPubliclyVisible(m)) return error("商家不存在或未开放");
 
         PublicMerchantVO vo = PublicMerchantVO.from(m);
-        vo.setSysCategoryList(publicCategories(m.getCategoryId()));
+        vo.setSysCategoryList(publicCategories(categoryIdsOf(m)));
         // 装修里选中的招牌主推(活动/券)。旧 public-detail 一直有这张卡,统一主页漏了 ——
         // 商家在装修页看到"发布后即可选一个置顶到主页",公开主页却什么都不显示。
         // 归属与公开状态每次匿名读取都重新核验,保存时合法不代表此刻仍公开。
@@ -390,9 +414,16 @@ public class ApiMerchantController extends BaseController {
     }
 
     /** 品类只出 id/categoryName,不透出分类状态、删除标记与审计字段。 */
-    private List<PublicMemberVO.PublicCategoryVO> publicCategories(Integer categoryId) {
-        if (categoryId == null) return null;
-        List<SysCategory> cats = sysCategoryService.selectSysCategoryListByIds(categoryId.toString().split(","));
+    /** 行业类型 id 串:多选列 category_ids 优先,迁移前/老数据回退到单值 category_id。 */
+    static String categoryIdsOf(MmsMerchant m) {
+        if (m == null) return null;
+        if (m.getCategoryIds() != null && !m.getCategoryIds().trim().isEmpty()) return m.getCategoryIds().trim();
+        return m.getCategoryId() == null ? null : m.getCategoryId().toString();
+    }
+
+    private List<PublicMemberVO.PublicCategoryVO> publicCategories(String categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) return null;
+        List<SysCategory> cats = sysCategoryService.selectSysCategoryListByIds(categoryIds.split(","));
         if (cats == null || cats.isEmpty()) return null;
         List<PublicMemberVO.PublicCategoryVO> out = new java.util.ArrayList<>();
         for (SysCategory c : cats) {
@@ -413,7 +444,7 @@ public class ApiMerchantController extends BaseController {
             return error("商家不存在或未开放");
         }
         PublicMerchantDiscoveryVO publicMerchant = PublicMerchantDiscoveryVO.from(m);
-        publicMerchant.setSysCategoryList(publicCategories(m.getCategoryId()));
+        publicMerchant.setSysCategoryList(publicCategories(categoryIdsOf(m)));
         AjaxResult ajax = success(publicMerchant);
         ajax.put("officialActivities", publicOfficialActivities(
                 coopInviteService.listAwardedOfficialActivities(m.getMemberId())));
@@ -553,7 +584,13 @@ public class ApiMerchantController extends BaseController {
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
         if (m == null) return error("商家不存在");
         MerchantEditProfileVO profile = MerchantEditProfileVO.from(m);
-        profile.setSysCategoryList(publicCategories(m.getCategoryId()));
+        if (!access.hasPermission(MerchantPermission.PROFILE_WRITE)) {
+            // 联系方式只给能改资料的岗位(店主/店长)回显;只管承接的运营看不到
+            profile.setPhone(null);
+            profile.setWechat(null);
+            profile.setWechatQrcode(null);
+        }
+        profile.setSysCategoryList(publicCategories(categoryIdsOf(m)));
         return success(profile);
     }
 
@@ -612,6 +649,7 @@ public class ApiMerchantController extends BaseController {
                 || !matchesIfSupplied(request.getServiceTag(), current.getServiceTag())
                 || !matchesIfSupplied(request.getServiceText(), current.getServiceText())
                 || !matchesIfSupplied(request.getCategoryId(), current.getCategoryId())
+                || !matchesIfSupplied(request.getCategoryIds(), current.getCategoryIds())
                 || !matchesIfSupplied(request.getAddress(), current.getAddress())) {
             return false;
         }
@@ -638,7 +676,8 @@ public class ApiMerchantController extends BaseController {
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
         if (m == null) return error("商家不存在");
         // 内容安全:合作需求自由文本命中违规即拒(商家资料匿名可访问公开)
-        String secMsg = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(body.getDemand()),
+        String secMsg = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(body.getDemand(),
+                        body.getAvailableTime(), body.getSuitActivityTypes()),
                 merchantOpenid(access.getOwnerMemberId()));
         if (secMsg != null) return error(secMsg);
         MmsMerchant upd = new MmsMerchant();
@@ -682,26 +721,44 @@ public class ApiMerchantController extends BaseController {
         // 内容安全:slogan/故事标题/标签等展示文本命中违规即拒
         String secMsg = wxContentSecurityService.checkText(
                 IWxContentSecurityService.joinText(body.getSlogan(), body.getStoryTitle(), body.getTags(),
-                        body.getServiceTag(), body.getServiceText(), body.getAddress()),
+                        body.getServiceTag(), body.getServiceText(), body.getAddress(), body.getCityRole()),
                 merchantOpenid(access.getOwnerMemberId()));
         if (secMsg != null) return error(secMsg);
         String featuredError = validateFeaturedSelection(
                 body.getFeaturedType(), body.getFeaturedId(), access);
         if (featuredError != null) return error(featuredError);
-        // 白名单:只允许改展示层字段 + 行业类型(categoryId),按 memberId 定位自己的商家,防 IDOR
+        // 行业类型多选(owner 2026-10-22):categoryIds 是多选真源,categoryId 恒为其中第一个,
+        // 只认单类目的旧读者(搜索筛选/卡片图标)继续读 category_id。老客户端只传 categoryId 时两列同步成单选。
+        String categoryIds = null;
+        Integer primaryCategoryId = body.getCategoryId();
+        if (body.getCategoryIds() != null) {
+            String raw = body.getCategoryIds().trim();
+            if (raw.isEmpty()) return error("请至少选择一个行业类型");
+            if (!MERCHANT_CATEGORY_IDS.matcher(raw).matches()) return error("行业类型参数错误");
+            java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>(java.util.Arrays.asList(raw.split(",")));
+            if (ids.size() > MAX_MERCHANT_CATEGORIES) return error("行业类型最多选 " + MAX_MERCHANT_CATEGORIES + " 个");
+            List<SysCategory> found = sysCategoryService.selectSysCategoryListByIds(ids.toArray(new String[0]));
+            if (found == null || found.size() != ids.size()) return error("行业类型已变化，请刷新后重选");
+            categoryIds = String.join(",", ids);
+            primaryCategoryId = Integer.valueOf(ids.iterator().next());
+        } else if (primaryCategoryId != null) {
+            categoryIds = String.valueOf(primaryCategoryId);
+        }
+        // 白名单:只允许改展示层字段 + 行业类型(categoryId/categoryIds),按 memberId 定位自己的商家,防 IDOR
         MmsMerchant upd = new MmsMerchant();
         upd.setId(m.getId());
-        upd.setCoverImage(body.getCoverImage());
+        upd.setCoverImage(reviewedMedia(memberId, body.getCoverImage(), false));
         upd.setSlogan(body.getSlogan());
         upd.setCityRole(body.getCityRole());
         upd.setStoryTitle(body.getStoryTitle());
-        upd.setGallery(body.getGallery());
+        upd.setGallery(reviewedMedia(memberId, body.getGallery(), true));
         upd.setTags(body.getTags());
         upd.setFeaturedType(body.getFeaturedType());
         upd.setFeaturedId(body.getFeaturedId());
         upd.setServiceTag(body.getServiceTag());
         upd.setServiceText(body.getServiceText());
-        if (body.getCategoryId() != null) upd.setCategoryId(body.getCategoryId());
+        if (primaryCategoryId != null) upd.setCategoryId(primaryCategoryId);
+        if (categoryIds != null) upd.setCategoryIds(categoryIds);
         // 位置:verified 由服务端按"是否提交了完整坐标"判定,不信任客户端自证的 locationVerified(防自证位置)
         if (body.getLocationLat() != null && body.getLocationLng() != null) {
             upd.setLocationLat(body.getLocationLat());
@@ -714,7 +771,7 @@ public class ApiMerchantController extends BaseController {
         if (rows != 1) {
             MmsMerchant current = rows == 0
                     ? mmsMerchantService.selectMmsMerchantById(m.getId()) : null;
-            if (!decorMatches(current, body)) {
+            if (!decorMatches(current, upd)) {
                 throw merchantWriteConflict();
             }
         }
@@ -826,15 +883,41 @@ public class ApiMerchantController extends BaseController {
         }
 
         // 上传的照片要走异步内容安全;预设是内置资源,没有送检的意义。
-        if (!preset) {
+        // 送检对象必须是这一行 NPC(BIZ_TYPE_MERCHANT_NPC,bizId=npc_profile.id),不能借 MERCHANT_PROFILE
+        // (bizId=merchantId):那条回调核对的是商家 logo/封面/相册,头像哈希永远对不上,违规头像会被当旧媒体放过。
+        Long npcId = mine != null ? mine.getId() : save.getId();
+        if (!preset && npcId != null) {
             try {
                 // 单图走 submitMediaCheckOne:submitMediaCheck 是多图接口,返回不了单一 trace_id
                 wxContentSecurityService.submitMediaCheckOne(
-                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, merchantId,
+                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, npcId,
                         avatar, merchantOpenid(access.getOwnerMemberId()));
             } catch (Exception ignore) {}
         }
-        return AjaxResult.success("已保存");
+        AjaxResult ok = AjaxResult.success("已保存");
+        // #25:保存 ≠ 已上线。回执说明人设待审、玩家此刻能否看到、形象图复核到哪一步。
+        // 回执读失败不能把已经成功的保存变成报错:缺回执时客户端按「审核中」展示。
+        try {
+            List<NpcProfile> saved = npcProfileMapper.selectMerchantNpcList(merchantId, null);
+            ok.put("receipt", profileReviewService.merchantNpcReceipt(merchantId,
+                    saved == null || saved.isEmpty() ? null : saved.get(0)));
+        } catch (RuntimeException receiptUnavailable) {
+            logger.warn("[npc/save] 审核回执暂不可用 merchantId={}", merchantId);
+        }
+        return ok;
+    }
+
+    /** 门店 AI 形象审核回执(#25):只读,归属同 /npc/profile(当前账号所属商家 + PROFILE_WRITE)。 */
+    @GetMapping("/npc/review")
+    public AjaxResult npcReview() {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (memberId == null || memberId < 1) return error("请先登录");
+        MerchantAccessContext access = merchantAccessService.require(
+                memberId, MerchantPermission.PROFILE_WRITE);
+        List<NpcProfile> list = npcProfileMapper.selectMerchantNpcList(access.getMerchantId(), null);
+        return success(profileReviewService.merchantNpcReceipt(access.getMerchantId(),
+                list == null || list.isEmpty() ? null : list.get(0)));
     }
 
     // ===== 门店 AI 形象的声音 =====
@@ -860,6 +943,7 @@ public class ApiMerchantController extends BaseController {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         if (memberId == null || memberId < 1) return error("请先登录");
+        consentGuard.requireCurrentAgreement(memberId, "voice_clone_processing", "merchant_voice");
         if (body == null) return error("参数有误");
         if (!Boolean.TRUE.equals(body.getVoiceConsent())) return error("请先确认声音为本人所有或已获得授权");
         MerchantAccessContext access = merchantAccessService.require(
@@ -867,11 +951,13 @@ public class ApiMerchantController extends BaseController {
 
         String sample = trimOrNull(body.getVoiceSample());
         if (sample == null) return error("请先录一段话");
-        if (sample.length() > 255) return error("录音地址过长");
-        if (!sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) return error("录音地址不支持");
+        if (sample.length() > 4096) return error("录音地址过长");
+        if (!sample.matches("media-asset:[1-9][0-9]{0,18}") && !sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) return error("录音地址不支持");
 
         NpcProfile mine = ownNpcOrNull(access.getMerchantId());
         if (mine == null) return error("请先保存形象,再给它配声音");
+        sample = mediaReferences.requireAttachment(memberId, sample, true);
+        if (sample.length() > 255) return error("录音引用过长");
         if (sample.equals(mine.getVoiceSample()) && (Integer.valueOf(VOICE_PENDING).equals(mine.getVoiceStatus())
                 || Integer.valueOf(VOICE_READY).equals(mine.getVoiceStatus()))) {
             AjaxResult existing = AjaxResult.success();
@@ -886,23 +972,37 @@ public class ApiMerchantController extends BaseController {
             return error("语音服务未开通");
         }
 
+        String processingSample = mediaReferences.processingUrl(sample, memberId, "AUDIO");
+
         // 先落「复刻中」再打上游:反过来的话,上游成功但落库失败就成了花了钱没记住,
         // 而商家看到的是失败、会再点一次,又生成一个音色。
         NpcProfile pending = new NpcProfile();
         pending.setId(mine.getId());
         pending.setScopeId(access.getMerchantId());
+        pending.setVoiceVersion(mine.getVoiceVersion());
         pending.setVoiceId(null);
         pending.setVoiceStatus(VOICE_PENDING);
         pending.setVoiceSample(sample);
-        if (npcProfileMapper.updateMerchantNpcVoice(pending) != 1) return error("声音任务未保存，请重试");
+        if (npcProfileMapper.updateMerchantNpcVoice(pending) != 1) {
+            NpcProfile latest = ownNpcOrNull(access.getMerchantId());
+            if (latest != null && sample.equals(latest.getVoiceSample())
+                    && (Integer.valueOf(VOICE_PENDING).equals(latest.getVoiceStatus())
+                        || Integer.valueOf(VOICE_READY).equals(latest.getVoiceStatus()))) {
+                AjaxResult existing = AjaxResult.success();
+                existing.put("voiceStatus", latest.getVoiceStatus());
+                return existing;
+            }
+            return error("声音任务未保存，请重试");
+        }
 
         String voiceId;
         try {
-            voiceId = voiceCloneClient.enroll(sample);
+            voiceId = voiceCloneClient.enroll(processingSample);
         } catch (AiServiceException e) {
             NpcProfile failed = new NpcProfile();
             failed.setId(mine.getId());
             failed.setScopeId(access.getMerchantId());
+            failed.setVoiceVersion(mine.getVoiceVersion() + 1);
             failed.setVoiceId(null);
             failed.setVoiceStatus(VOICE_FAILED);
             npcProfileMapper.updateMerchantNpcVoice(failed);
@@ -918,6 +1018,7 @@ public class ApiMerchantController extends BaseController {
         NpcProfile done = new NpcProfile();
         done.setId(mine.getId());
         done.setScopeId(access.getMerchantId());
+        done.setVoiceVersion(mine.getVoiceVersion() + 1);
         done.setVoiceId(voiceId);
         done.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
         if (npcProfileMapper.updateMerchantNpcVoice(done) != 1) return error("声音结果待确认，请稍后查询状态");
@@ -950,14 +1051,17 @@ public class ApiMerchantController extends BaseController {
                     NpcProfile upd = new NpcProfile();
                     upd.setId(mine.getId());
                     upd.setScopeId(access.getMerchantId());
+                    upd.setVoiceVersion(mine.getVoiceVersion());
                     upd.setVoiceId(mine.getVoiceId());
                     upd.setVoiceStatus(VOICE_READY);
-                    if (npcProfileMapper.updateMerchantNpcVoice(upd) == 1) status = VOICE_READY;
+                    if (npcProfileMapper.updateMerchantNpcVoice(upd) == 1) mine.setVoiceStatus(VOICE_READY);
                 }
             } catch (AiServiceException ignore) {}
+            mine = ownNpcOrNull(access.getMerchantId());
+            status = mine == null || mine.getVoiceStatus() == null ? VOICE_NONE : mine.getVoiceStatus();
         }
         r.put("voiceStatus", status);
-        r.put("voiceSample", mine.getVoiceSample());
+        r.put("voiceSample", mine == null ? null : mine.getVoiceSample());
         return r;
     }
 
@@ -975,6 +1079,7 @@ public class ApiMerchantController extends BaseController {
         NpcProfile upd = new NpcProfile();
         upd.setId(mine.getId());
         upd.setScopeId(access.getMerchantId());
+        upd.setVoiceVersion(mine.getVoiceVersion());
         upd.setVoiceId(null);
         upd.setVoiceStatus(VOICE_NONE);
         return npcProfileMapper.updateMerchantNpcVoice(upd) == 1
@@ -1173,17 +1278,29 @@ public class ApiMerchantController extends BaseController {
         if (request.getDerivativeBenefits() != null && request.getDerivativeBenefits().length() > 100) {
             return error("衍生权益最多 100 个字");
         }
+        // owner 2026-10-22:联系电话 / 门店微信号 / 门店二维码改由商家在「门店信息」自助维护(原 CU-M-08 只读)。
+        // 电话是到店联系的唯一通道,只收 11 位大陆手机号、不允许清空;微信号与二维码可清空。
+        if (request.getPhone() != null && !MERCHANT_PHONE.matcher(request.getPhone()).matches()) {
+            return error("请填写 11 位手机号");
+        }
+        if (request.getWechat() != null && !request.getWechat().isEmpty()
+                && !MERCHANT_WECHAT_ID.matcher(request.getWechat()).matches()) {
+            return error("微信号只能包含字母、数字、下划线或减号，最多 20 位");
+        }
+        if (request.getWechatQrcode() != null && request.getWechatQrcode().length() > 512) {
+            return error("二维码图片地址过长，请重新上传");
+        }
         // 内容安全:商家名/简介/衍生介绍等文本命中违规即拒(商家资料匿名可访问公开)
         String secMsg = wxContentSecurityService.checkText(
                 IWxContentSecurityService.joinText(request.getName(), request.getDescription(), request.getDerivativeBenefits(), request.getDerivatives(),
-                        request.getPreference(), request.getWebsite()),
+                        request.getPreference(), request.getWebsite(), request.getWechat()),
                 merchantOpenid(access.getOwnerMemberId()));
         if (secMsg != null) return error(secMsg);
         // 部分更新白名单:null 表示本次不修改，空字符串仍可显式清空。
         // 使用新对象而不是修改查询实体，避免 phone/license/status 等非编辑字段被意外带回更新。
         MmsMerchant update = new MmsMerchant();
         update.setId(mmsMerchant.getId());
-        if (request.getLogo() != null) update.setLogo(request.getLogo());
+        if (request.getLogo() != null) update.setLogo(reviewedMedia(member_id, request.getLogo(), false));
         if (request.getName() != null) update.setName(request.getName());
         if (request.getDescription() != null) update.setDescription(request.getDescription());
         if (request.getDerivatives() != null) update.setDerivatives(request.getDerivatives());
@@ -1191,18 +1308,24 @@ public class ApiMerchantController extends BaseController {
         if (request.getWebsite() != null) update.setWebsite(request.getWebsite());
         if (request.getPreference() != null) update.setPreference(request.getPreference());
         if (request.getBusinessTime() != null) update.setBusinessTime(request.getBusinessTime());
+        if (request.getPhone() != null) update.setPhone(request.getPhone());
+        if (request.getWechat() != null) update.setWechat(request.getWechat());
+        if (request.getWechatQrcode() != null) {
+            update.setWechatQrcode(reviewedMedia(member_id, request.getWechatQrcode(), false));
+        }
         if (request.getLogo() == null && request.getName() == null && request.getDescription() == null
                 && request.getDerivatives() == null && request.getDerivativeBenefits() == null && request.getWebsite() == null
-                && request.getPreference() == null && request.getBusinessTime() == null) {
+                && request.getPreference() == null && request.getBusinessTime() == null
+                && request.getPhone() == null && request.getWechat() == null && request.getWechatQrcode() == null) {
             return error("没有可更新的资料");
         }
         int rows = mmsMerchantService.updateAuthorizedProfile(
                 update, member_id, MerchantPermission.PROFILE_WRITE);
-        // logo 异步内容安全送检(BIZ_TYPE_MERCHANT_PROFILE)
-        if (request.getLogo() != null) {
+        // logo / 门店二维码异步内容安全送检(BIZ_TYPE_MERCHANT_PROFILE)
+        if (request.getLogo() != null || request.getWechatQrcode() != null) {
             try {
                 wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE,
-                        mmsMerchant.getId(), mediaCsv(request.getLogo()), merchantOpenid(member_id));
+                        mmsMerchant.getId(), mediaCsv(request.getLogo(), request.getWechatQrcode()), merchantOpenid(member_id));
             } catch (Exception ignore) {}
         }
         if (rows > 0) {

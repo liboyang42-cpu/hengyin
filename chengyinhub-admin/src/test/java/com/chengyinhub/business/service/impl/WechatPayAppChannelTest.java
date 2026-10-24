@@ -81,6 +81,7 @@ class WechatPayAppChannelTest {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(true);
         when(config.getAppAppid()).thenReturn("wx_native_app");
+        when(config.getNotifyUrl()).thenReturn("https://example.test/pay/notify");
         WechatPayServiceImpl service = new WechatPayServiceImpl();
         ReflectionTestUtils.setField(service, "wxPayConfig", config);
         markServiceReady(service);
@@ -125,6 +126,7 @@ class WechatPayAppChannelTest {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(true);
         when(config.getAppAppid()).thenReturn("wx_native_app");
+        when(config.getNotifyUrl()).thenReturn("https://example.test/pay/notify");
         WechatPayServiceImpl service = new WechatPayServiceImpl();
         ReflectionTestUtils.setField(service, "wxPayConfig", config);
         markServiceReady(service);

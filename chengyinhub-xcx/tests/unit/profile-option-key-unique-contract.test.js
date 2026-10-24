@@ -120,7 +120,7 @@ test('没配勋章时不发 medalStyle(删掉奖励模块、或奖励模块在�
   page.data.formData.medalName = ''
   page.data.formData.medalImg = ''
   body = page.prepareFormData()
-  assert.equal(body.medalStyle, '', '没有勋章名也没有勋章图,样式就没有意义')
+  assert.equal(body.medalStyle, '', '没有勋章名也没有勋章图，样式就没有意义')
 })
 
 test('配了勋章时样式照常带上(负控:别把真设计勋章的样式也清掉)', () => {
@@ -178,7 +178,9 @@ test('成功页人数不重字:「1-3人」不再印成「1-3人 人玩法」', 
 
 test('故事玩法不出「模板信息」卡(公共玩法库字段)', () => {
   const wxml = require('fs').readFileSync(path.resolve(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8')
-  assert.match(wxml, /<cy-card class="cg-card" id="sec-basic" wx:if="\{\{from !== 'fabu'\}\}">/)
+  // 2026-10-22 起分区标题在卡外:标题与卡片都挂同一个条件
+  assert.match(wxml, /<view class="cg-sec" id="sec-basic" wx:if="\{\{from !== 'fabu'\}\}">/)
+  assert.match(wxml, /<cy-card class="cg-card" wx:if="\{\{from !== 'fabu'\}\}">/)
 })
 
 test('故事玩法的预览不从「你已抵达」开始(无需到达地点);公共玩法库照旧有到达这一步', () => {
@@ -212,7 +214,7 @@ test('没有分支能力位:分支剧情标成锁住,点「选择」不选中', 
     page.onLoad({ from: 'fabu' })
     assert.ok(page.data.lockedGames && page.data.lockedGames.branch, '分支没有被标成锁住')
     page.pickGame({ currentTarget: { dataset: { key: 'branch' } } })
-    assert.notEqual(page.data.gameKey, 'branch', '没能力位还能选中分支,配完才被服务端拒')
+    assert.notEqual(page.data.gameKey, 'branch', '没能力位还能选中分支，配完才被服务端拒')
   })
 })
 

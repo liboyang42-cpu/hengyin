@@ -92,7 +92,7 @@ test('创建优惠券:提交成功后自动选中新券(核心价值),并回补�
   // loadCoupons 会再发一次请求,把新券也拉进列表(不然列表里的"已选"勾选不出来)
   assert.equal(sandbox.requests.length, 2, '成功后必须刷新优惠券列表')
   assert.equal(sandbox.requests[1].url, '/api/coupon/mypublishlist')
-  assert.equal(sandbox.requests[1].data.scope, 'MERCHANT', '商家券回读必须保持同一 MERCHANT scope')
+  assert.equal(sandbox.requests[1].data.scope, 'MERCHANT', '商家券刷新必须保持同一 MERCHANT scope')
 })
 
 test('C-31 创建优惠券:回包缺 id 时不得挂 couponId=0 冒充已选中,要明确提示去列表里选', () => {
@@ -125,9 +125,9 @@ test('创建优惠券:提交失败不清空表单、不静默吞掉错误', () =
   rs.onCreateSubmit()
   sandbox.requests[0].success({ code: '500', msg: '库存不足' })
 
-  assert.equal(rs.data.creating, true, '失败不能把 sheet 关掉,用户要能重试')
-  assert.equal(rs.data.isSubmitting, false, '必须解除提交中锁定,否则再也点不动提交')
-  assert.deepEqual(sandbox.tips, ['库存不足'], '真实错误信息必须透出给用户,不能吞掉')
+  assert.equal(rs.data.creating, true, '失败不能把 sheet 关掉，用户要能重试')
+  assert.equal(rs.data.isSubmitting, false, '必须解除提交中锁定，否则再也点不动提交')
+  assert.deepEqual(sandbox.tips, ['库存不足'], '真实错误信息必须透出给用户，不能吞掉')
   assert.equal(rs.data.createForm.name, '会失败的券', '失败后表单内容不能丢')
 })
 
@@ -184,7 +184,7 @@ test('dirty 时请求关闭走二次确认;非 dirty 时直接关', () => {
   assert.equal(rs.data.createDirty, true)
   sandbox.modalConfirm = false
   rs.onCreateRequestClose()
-  assert.equal(sandbox.modals.length, 1, 'dirty 时遮罩/✕ 必须弹二次确认,不能静默丢数据')
+  assert.equal(sandbox.modals.length, 1, 'dirty 时遮罩/✕ 必须弹二次确认，不能静默丢数据')
   assert.equal(rs.data.creating, true, '用户没确认放弃前 sheet 不能关')
 
   sandbox.modalConfirm = true

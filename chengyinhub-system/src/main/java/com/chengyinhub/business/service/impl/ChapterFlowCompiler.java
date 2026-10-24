@@ -106,6 +106,8 @@ final class ChapterFlowCompiler
             com.fasterxml.jackson.databind.JsonNode ending = chapter.getEnding();
             if (ending != null && !ending.isNull()) {
                 if (!ending.isObject()) throw invalid(chapterNumber, "结局设置格式不对");
+                if (ending.has("fallback") && !ending.get("fallback").isBoolean())
+                    throw invalid(chapterNumber, "结局兜底 fallback 必须是布尔值");
                 if (Boolean.TRUE.equals(chapter.getOpening())) throw invalid(chapterNumber, "开局不能同时是结局");
                 if (Integer.valueOf(1).equals(chapter.getRecruitEnabled()))
                     throw invalid(chapterNumber, "结局章不能开放商家承接");
@@ -239,6 +241,10 @@ final class ChapterFlowCompiler
                     if (block.getNodeIndex() != null)
                     {
                         throw invalid(chapterNumber, block.getType() + " 块不能携带 nodeIndex");
+                    }
+                    if (block.getAltText() != null && block.getAltText().length() > 2000)
+                    {
+                        throw invalid(chapterNumber, "媒体文字替代最多 2000 字");
                     }
                     String url = block.getUrl();
                     if (url == null || url.trim().isEmpty())
@@ -608,6 +614,7 @@ final class ChapterFlowCompiler
                 else if (TYPE_IMAGE.equals(block.getType()) || TYPE_AUDIO.equals(block.getType()))
                 {
                     row.put("url", block.getUrl());
+                    if (block.getAltText() != null) row.put("altText", block.getAltText());
                 }
                 else if (TYPE_MOOD.equals(block.getType()))
                 {

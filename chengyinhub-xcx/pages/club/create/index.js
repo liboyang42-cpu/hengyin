@@ -58,6 +58,7 @@ Page({
     submitErrorKind: 'data',
     submitError: '',
     submissionReceipt: null,
+    submissionPending: false,
     createdClubId: ''
   },
 
@@ -125,13 +126,15 @@ Page({
             epoch,
             'data',
             hasObjectEnvelope
-              ? '俱乐部名额数据不完整，请重试'
-              : bizFailureMessage(res, '俱乐部名额没有加载出来'),
+              ? '俱乐部名额加载失败，请重试'
+              : bizFailureMessage(res, '俱乐部名额加载失败'),
           );
           return;
         }
         const owned = res.data.owned;
-        if (owned.length >= 2) {
+        // 被驳回的俱乐部不占名额(后端同口径),重新提交会改回原来那一条
+        const counted = owned.filter((club) => !(club && Number(club.status) === 2));
+        if (counted.length >= 2) {
           this._bootstrapChecking = false;
           this._bootstrapEpoch = epoch + 1;
           this.setData({ bootstrapState: 'limit', bootstrapError: '' });
@@ -147,7 +150,7 @@ Page({
           network ? 'network' : 'data',
           network
             ? '网络异常，请检查连接后重试'
-            : ((error && (error.msg || error.message)) || '俱乐部名额没有加载出来'),
+            : ((error && (error.msg || error.message)) || '俱乐部名额加载失败'),
         );
       },
     });
@@ -338,6 +341,7 @@ Page({
             submitState: 'success',
             submitError: '',
             submissionReceipt: { name: payload.name, city: payload.city },
+            submissionPending: Number(res.data && res.data.status) === 0,
           });
         } else {
           that.setData({

@@ -170,11 +170,11 @@ test('弱网长目标在固定卡高中换成两行，且正常与空态仍保�
   // 2026-09-09 读数卡照原型 .dcard 搬之后,头/体不再各写死一个高度:
   // 原型是「固定卡高 + flex column + space-between」,头一变高读数区自然被挤矮。
   // 所以这里改成钉那套机制本身 —— 它才是「长目标换行不撑破卡」的真正保证。
-  assert.match(baseCard, /height:\s*246rpx/, '卡高固定,长文案不许把卡撑大')
+  assert.match(baseCard, /height:\s*246rpx/, '卡高固定，长文案不许把卡撑大')
   assert.match(baseCard, /display:flex/)
   assert.match(baseCard, /flex-direction:column/)
   assert.match(baseCard, /justify-content:space-between/)
-  assert.doesNotMatch(baseHead, /height:\s*\d+rpx/, '头不再写死高度,由内容撑')
+  assert.doesNotMatch(baseHead, /height:\s*\d+rpx/, '头不再写死高度，由内容撑')
   assert.doesNotMatch(baseRow, /height:\s*\d+rpx/, '读数区同上')
   assert.match(longRow, /padding-top:\s*var\(--cy-space-2\)/)
   assert.match(baseTitle, /white-space:\s*nowrap/)
@@ -219,16 +219,16 @@ test('弱网长目标在固定卡高中换成两行，且正常与空态仍保�
   // 原型没有「弱网长目标」这一态,而两行标题 + 读数区在原型的 246rpx 里实测装不下。
   // 所以只有这一档放开成 auto,min-height 仍钉在原型高度上 —— 它只会更高,不会更矮。
   const longGoal = cssRule('.pcard--long-goal')
-  assert.match(longGoal, /height:auto/, '长目标态必须放开卡高,否则读数数字会被压出卡外')
+  assert.match(longGoal, /height:auto/, '长目标态必须放开卡高，否则读数数字会被压出卡外')
   assert.match(longGoal, new RegExp(`min-height:${cardHeight}rpx`), '下限仍是原型的卡高')
   assert.ok(goalCopyHeight + rowHeight > contentBox,
-    '这条断言在提醒:两行标题确实装不进原型卡高,上面那两条放开才有意义 —— 哪天装得下了就把 auto 收回去')
+    '这条断言在提醒:两行标题确实装不进原型卡高，上面那两条放开才有意义 —— 哪天装得下了就把 auto 收回去')
 
   // 读数区不再有「被缩短」这回事:长目标态的卡高放开成 auto,读数区拿的是自己的自然高。
   // 要守的变成「读数区自己算得出高度」,别哪天 .pstat__v 又被写死成一个撑不下数字的行高。
   const valueRule = cssRule('.pstat__v')
   const labelRule = cssRule('.pstat__l')
-  assert.match(valueRule, /line-height:1/, '数字行高按原型取 1,靠字号本身撑')
+  assert.match(valueRule, /line-height:1/, '数字行高按原型取 1，靠字号本身撑')
   assert.ok(rowHeight > 0 && rowHeight < contentBox, `读数区 ${rowHeight}rpx 必须小于卡内容盒`)
   assert.match(labelRule, /margin-top:\s*\d+rpx/)
 })

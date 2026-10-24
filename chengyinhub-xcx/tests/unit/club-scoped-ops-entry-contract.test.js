@@ -31,7 +31,7 @@ test('俱乐部、活动、成员举报与封禁申诉都从公开详情可达�
   assert.match(js, /reportClub\(\)[\s\S]*?targetType=CLUB[\s\S]*?targetId=/)
   assert.match(js, /reportTopicActivity\(e\)[\s\S]*?\/api\/topic\/info-to-user/)
   assert.match(js, /reportActivity\(activityId, activityName\)[\s\S]*?targetType=ACTIVITY[\s\S]*?targetId=/,
-    'CU-C-82:场次举报入口多带一个显示名,目标类型/ID 的写法不变')
+    'CU-C-82:场次举报入口多带一个显示名，目标类型/ID 的写法不变')
   assert.match(js, /goClubAppeal\(\)[\s\S]*?mode=appeal/)
 })
 

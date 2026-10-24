@@ -9,10 +9,12 @@ import java.util.Map;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.EventSignup;
 import com.chengyinhub.business.domain.OfficialEvent;
 import com.chengyinhub.business.mapper.EventSignupMapper;
 import com.chengyinhub.business.mapper.OfficialEventMapper;
+import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IGrowthService;
 import com.chengyinhub.business.service.IOfficialEventService;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
@@ -45,6 +47,8 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
     private OfficialSettlementHelper settlementHelper;
     @Autowired
     private IOfficialEventV2Service officialEventV2Service;
+    @Autowired
+    private IAuditTaskService auditTaskService;
 
     @Override
     public List<Map<String, Object>> listPublic(String city, Long memberId) {
@@ -95,17 +99,18 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
     @Override
     @Transactional
     public String signup(Long eventId, Long memberId) {
-        OfficialEvent e = eventMapper.selectOfficialEventById(eventId);
+        // V1 与 V2 均锁原活动行，最后一个既有名额的计数/插入必须串行。
+        OfficialEvent e = eventMapper.selectOfficialEventByIdForUpdate(eventId);
         if (e == null) return "活动不存在";
         if (isV2(e)) return officialEventV2Service.signup(eventId, memberId);
         int st = e.getStatus() == null ? OfficialEvent.ST_DRAFT : e.getStatus();
         if (st == OfficialEvent.ST_DRAFT || st == OfficialEvent.ST_OFFLINE) return "活动未开放";
         if (st >= OfficialEvent.ST_ENDED) return "活动已结束";
         if (st == OfficialEvent.ST_SETTLING) return "活动已进入结算,报名截止";
-        // 报名上限(软校验;已报名者幂等放行)
+        // 原报名上限：持活动锁计数；已报名者仍幂等放行。
         if (e.getSignupLimit() != null && e.getSignupLimit() > 0) {
-            if (signupMapper.selectByEventAndMember(eventId, memberId) == null
-                    && signupMapper.countByEvent(eventId) >= e.getSignupLimit()) {
+            if (signupMapper.selectByEventAndMemberForUpdate(eventId, memberId) == null
+                    && signupMapper.countByEventForUpdate(eventId) >= e.getSignupLimit()) {
                 return "报名人数已满";
             }
         }
@@ -114,41 +119,19 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
         s.setMemberId(memberId);
         s.setStatus(EventSignup.ST_SIGNED);
         s.setProgress(0);
-        signupMapper.insertIgnore(s); // uk_event_member 幂等
+        if (signupMapper.insertIgnore(s) != 1
+                && signupMapper.selectByEventAndMemberForUpdate(eventId, memberId) == null) {
+            throw new IllegalStateException("官方活动报名写入失败");
+        }
         return null;
     }
 
     @Override
-    @Transactional
     public String completeTask(Long eventId, Long memberId) {
-        OfficialEvent e = eventMapper.selectOfficialEventById(eventId);
-        if (e == null) return "活动不存在";
-        // V2 的完成只能由服务端事实适配器写入 evidence。保留本入口仅为历史 V1 兼容，
-        // 不能让前端或旧 roam 结束回调绕过定位/主题完成验证直接加 progress。
-        if (e.getContractVersion() != null && e.getContractVersion() >= 2) {
-            return "新版活动请完成对应任务后自动验证";
-        }
-        EventSignup s = signupMapper.selectByEventAndMember(eventId, memberId);
-        if (s == null) return "请先报名";
-        int taskCount = taskCountOf(e);
-        int cur = s.getProgress() == null ? 0 : s.getProgress();
-        // progress 封顶到任务总数:杜绝反复调用无脑刷即时XP、以及单人把集体进度(light_count)顶爆。
-        // 注:此处仅做次数封顶,尚无"服务端完成凭证"(应绑真实到点核销/打卡),留待后续按产品口径接入。
-        if (taskCount > 0 && cur >= taskCount) {
-            return null; // 已全部完成,幂等返回
-        }
-        int p = cur + 1;
-        s.setProgress(p);
-        s.setStatus(taskCount > 0 && p >= taskCount ? EventSignup.ST_DONE : EventSignup.ST_DOING);
-        signupMapper.updateEventSignup(s);
-        // 即时奖励(每完成一个任务发 XP;失败不阻断进度记录,但要留痕便于排查)
-        JSONObject rw = parse(e.getRewardJson());
-        Integer instantXp = rw == null ? null : rw.getInteger("instantXp");
-        if (instantXp != null && instantXp > 0) {
-            try { growthService.addExp(memberId, instantXp, "官方活动即时奖 event=" + eventId); }
-            catch (Exception ex) { log.warn("[官方活动] 即时奖发放失败 event={} member={}", eventId, memberId, ex); }
-        }
-        return null;
+        OfficialEvent event = eventMapper.selectOfficialEventById(eventId);
+        if (event == null) return "活动不存在";
+        // 完成进度与奖励只能由服务端任务事实推进，历史 V1 没有可验证的完成凭证。
+        return "请完成对应任务后自动验证；旧版活动请联系主办方处理";
     }
 
     @Override
@@ -223,6 +206,67 @@ public class OfficialEventServiceImpl implements IOfficialEventService {
         }
         eventMapper.insertOfficialEvent(e);
         return e;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public OfficialEvent submitForReview(OfficialEvent e, Long senderAccount) {
+        // 先审后发:请求体带的 status/control_state 一律不认,只能落待审;审核单与活动同事务,
+        // 建单失败整体回滚,不留「永远没人审」的待审活动。
+        if (e != null) {
+            e.setStatus(OfficialEvent.ST_DRAFT);
+            e.setControlState(OfficialEvent.CONTROL_PENDING_REVIEW);
+        }
+        OfficialEvent saved = publish(e, senderAccount);
+        JSONObject snap = new JSONObject();
+        snap.put("bizType", AuditTask.BIZ_OFFICIAL_EVENT);
+        snap.put("bizId", saved.getId());
+        snap.put("contractVersion", saved.getContractVersion());
+        snap.put("title", saved.getTitle());
+        snap.put("subtitle", saved.getSubtitle());
+        snap.put("story", saved.getStory());
+        snap.put("coverImg", saved.getCoverImg());
+        snap.put("city", saved.getCity());
+        auditTaskService.submit(AuditTask.BIZ_OFFICIAL_EVENT, saved.getId(), senderAccount,
+                "user_publish", snap.toJSONString());
+        return saved;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void applyAuditDecision(Long eventId, boolean approved, String reason, Long submitterId) {
+        OfficialEvent e = eventMapper.selectOfficialEventByIdForUpdate(eventId);
+        if (e == null) throw new ServiceException("官方活动不存在");
+        if (isV2(e)) {
+            officialEventV2Service.applyAuditDecision(eventId, approved, reason, submitterId);
+            return;
+        }
+        if (isCoverTakenDownDuringReview(e)) {
+            // 审核期间封面机审违规已自动下线(WxContentSecurityServiceImpl, AUDIT-G1-4):只能驳回结案,
+            // 不能人工通过把违规封面放出去;否则审核单通过/驳回都抛错,永远关不掉。
+            if (approved) {
+                throw new ServiceException("官方活动封面内容安全违规已自动下线，只能驳回，请主办方更换封面后重新提交");
+            }
+        } else if (!isPendingReview(e)) {
+            throw new ServiceException("官方活动审核状态已变化，请刷新后重试");
+        }
+        OfficialEvent upd = new OfficialEvent();
+        upd.setId(eventId);
+        // 过审 → 按时间定状态上架;驳回 → 下线(详情/列表都不出)
+        upd.setStatus(approved ? computeStatusByTime(e) : OfficialEvent.ST_OFFLINE);
+        upd.setControlState("NORMAL");
+        upd.setUpdateTime(new Date());
+        eventMapper.updateOfficialEvent(upd);
+    }
+
+    private boolean isCoverTakenDownDuringReview(OfficialEvent e) {
+        return e.getStatus() != null && e.getStatus() == OfficialEvent.ST_OFFLINE
+                && OfficialEvent.CONTROL_PENDING_REVIEW.equals(e.getControlState());
+    }
+
+    private boolean isPendingReview(OfficialEvent e) {
+        return e.getStatus() != null && e.getStatus() == OfficialEvent.ST_DRAFT
+                && OfficialEvent.CONTROL_PENDING_REVIEW.equals(e.getControlState());
     }
 
     @Override

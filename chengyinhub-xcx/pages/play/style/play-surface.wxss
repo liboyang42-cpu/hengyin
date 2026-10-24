@@ -131,3 +131,39 @@
   from { transform: translateY(36rpx); opacity: 0; }        /* ds-ok 原型 18px */
   to { transform: none; opacity: 1; }
 }
+
+/* ============ 入场(2026-10-23 主人定稿「玩法入场动效」原型) ============
+   每个玩法屏挑自己那几个零件挂 .pe + 一种 .pe--x;cy-play-stage 每次打开把 --pe-go 从 0 翻到 1,
+   零件就从「起点」过渡回原位。--pe-i 是第几个(错峰),--pe-d 是起步延时。
+   ★ 只用 transition(opacity / transform / filter / clip-path),不加关键帧、不动布局属性(两条动效棘轮)。
+   ★ 内嵌在故事里(--pe-unfold:1)时台面先展开,零件整体再晚 .45s。
+   ★ 入场以外 --pe-on = 0:延时归零,零件自己的交互不被拖慢。减少动态时 --pe-go 恒为 1,原样显示。 */
+.pe.pe {
+  --pe-t: calc(1 - var(--pe-go, 1));
+  --pe-delay: calc(var(--pe-on, 0) * (var(--pe-unfold, 0) * .45s + var(--pe-d, .12s) + var(--pe-i, 0) * var(--pe-s, .08s)));
+  transition: opacity var(--pe-dur, .5s) var(--pe-ease, cubic-bezier(.2, 1, .3, 1)) var(--pe-delay),
+    transform var(--pe-dur, .5s) var(--pe-ease, cubic-bezier(.2, 1, .3, 1)) var(--pe-delay),
+    filter var(--pe-dur, .5s) ease-out var(--pe-delay),
+    clip-path var(--pe-dur, .5s) cubic-bezier(.6, 0, .3, 1) var(--pe-delay);
+}
+/* 不透明度单独放在低一档:各屏按下态(xx--press)是同一档、写在后面,按下变淡不能被入场盖掉 */
+.pe { opacity: var(--pe-go, 1); }
+.pe.g-btn--press { opacity: .88; }
+.pe.pe--up     { transform: translateY(calc(var(--pe-t) * 70rpx)) scale(calc(1 - var(--pe-t) * .06)); }
+.pe.pe--left   { transform: translateX(calc(var(--pe-t) * -140rpx)) rotate(calc(var(--pe-t) * -6deg)); }
+.pe.pe--right  { transform: translateX(calc(var(--pe-t) * 160rpx)) rotate(calc(var(--pe-t) * 5deg)); }
+.pe.pe--pop    { transform: scale(calc(1 - var(--pe-t) * .7)); --pe-ease: cubic-bezier(.3, 1.6, .5, 1); }
+.pe.pe--blur   { filter: blur(calc(var(--pe-t) * 10px)); transform: translateY(calc(var(--pe-t) * 12rpx)); --pe-dur: .6s; }
+.pe.pe--flipy  { transform: perspective(1200rpx) rotateY(calc(var(--pe-t) * 95deg)); --pe-dur: .7s; }
+.pe.pe--flipx  { transform-origin: 50% 0; transform: perspective(1400rpx) rotateX(calc(var(--pe-t) * -95deg)); --pe-dur: .75s; }
+.pe.pe--drop   { transform: translateY(calc(var(--pe-t) * -640rpx)); --pe-dur: .85s; --pe-ease: cubic-bezier(.34, 1.56, .64, 1); }
+.pe.pe--spin   { transform: rotate(calc(var(--pe-t) * -540deg)) scale(calc(1 - var(--pe-t) * .4)); --pe-dur: 1.3s; --pe-ease: cubic-bezier(.15, .8, .2, 1); }
+.pe.pe--zoom   { transform: scale(calc(1 + var(--pe-t) * .3)); filter: blur(calc(var(--pe-t) * 12px)); --pe-dur: 1.1s; --pe-ease: cubic-bezier(.2, .8, .2, 1); }
+.pe.pe--draw   { opacity: 1; transform-origin: 0 50%; transform: scaleX(var(--pe-go, 1)); --pe-dur: .7s; }
+.pe.pe--grow   { opacity: 1; transform-origin: 50% 100%; transform: scaleY(var(--pe-go, 1)); --pe-ease: cubic-bezier(.3, 1.5, .5, 1); }
+.pe.pe--corner { transform: translate(calc(var(--pe-t) * var(--pe-cx, 0rpx)), calc(var(--pe-t) * var(--pe-cy, 0rpx))) scale(calc(1 + var(--pe-t) * .4)); }
+.pe.pe--circle { opacity: 1; clip-path: circle(calc(var(--pe-go, 1) * 150%) at 50% 50%); --pe-dur: .8s; }
+.pe.pe--flap   { transform-origin: 50% 100%; transform: perspective(800rpx) rotateX(calc(var(--pe-t) * 90deg)); --pe-dur: .45s; --pe-ease: cubic-bezier(.5, 0, .4, 1.4); }
+.pe.pe--roll   { transform: translateY(calc(var(--pe-t) * 100%)); --pe-dur: 1.1s; --pe-ease: cubic-bezier(.1, .9, .2, 1); }
+.pe.pe--tumble { transform: translateX(calc(var(--pe-t) * 520rpx)) rotate(calc(var(--pe-t) * 540deg)); --pe-dur: 1.1s; --pe-ease: cubic-bezier(.2, .7, .3, 1.15); }
+.pe.pe--coin   { transform: translateY(calc(var(--pe-t) * 520rpx)) rotateY(calc(var(--pe-t) * 1080deg)) scale(calc(1 - var(--pe-t) * .4)); --pe-dur: 1.4s; --pe-ease: cubic-bezier(.2, .7, .3, 1); }

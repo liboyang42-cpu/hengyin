@@ -42,7 +42,7 @@ test('未开减动效时正常挂上,参数完整传给 animate', () => {
   assert.equal(selector, '.hero')
   assert.equal(options.scrollSource, '#s')
   assert.equal(options.endScrollOffset, 240)
-  assert.equal(duration, options.timeRange, 'duration 必须与 timeRange 一致,否则补间与滚动不同步')
+  assert.equal(duration, options.timeRange, 'duration 必须与 timeRange 一致，否则补间与滚动不同步')
   assert.equal(frames[0].offset, 0)
   assert.equal(frames[frames.length - 1].offset, 1, '关键帧必须覆盖 0→1 全程')
 })
@@ -66,7 +66,7 @@ test('参数不全或区间非法一律返回 null(不挂静默无效的动画)'
 test('隐退幅度留底,不整块消失', () => {
   const frames = sm.heroRecedeFrames()
   const last = frames[frames.length - 1]
-  assert.ok(last.opacity > 0, '整块淡到 0 会让页面显得空;应留一点底')
+  assert.ok(last.opacity > 0, '整块淡到 0 会让页面显得空；应留一点底')
   assert.ok(last.opacity < 1, '不隐退等于没做')
   assert.match(last.transform, /scale\(0?\.\d+\)/, '应带轻微缩放以表达「退远了」')
 })
@@ -88,7 +88,7 @@ test('templatedetail 真的接上了滚动驱动(源/选择器/时机三者都�
     `选择器 ${sel[1]} 在 wxml 里找不到对应节点 —— 选不中就是白挂`)
 
   assert.match(js, /onReady\(\)[\s\S]{0,400}applyHeroRecede/,
-    '必须挂在 onReady:onLoad 时节点还没渲染,选择器找不到')
+    '必须挂在 onReady:onLoad 时节点还没渲染，选择器找不到')
 })
 
 /* ---------- 负控 ---------- */

@@ -1,7 +1,7 @@
 package com.chengyinhub.web.controller.business;
 
 import java.util.List;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -89,7 +89,8 @@ public class CmsInfomationController extends BaseController
         cmsInfomation.setCreateTime(null);
         cmsInfomation.setUpdateBy(null);
         cmsInfomation.setUpdateTime(null);
-        return toAjax(cmsInfomationService.insertCmsInfomation(cmsInfomation));
+        return toAjax(cmsInfomationService.insertCmsInfomation(cmsInfomation, request.getAuditReason(),
+                SecurityUtils.getUserId(), SecurityUtils.getUsername()));
     }
 
     /**
@@ -110,7 +111,8 @@ public class CmsInfomationController extends BaseController
         cmsInfomation.setCreateTime(null);
         cmsInfomation.setUpdateBy(SecurityUtils.getUsername());
         cmsInfomation.setUpdateTime(null);
-        return toAjax(cmsInfomationService.updateCmsInfomation(cmsInfomation));
+        return toAjax(cmsInfomationService.updateCmsInfomation(cmsInfomation, request.getAuditReason(),
+                SecurityUtils.getUserId(), SecurityUtils.getUsername()));
     }
 
     /**

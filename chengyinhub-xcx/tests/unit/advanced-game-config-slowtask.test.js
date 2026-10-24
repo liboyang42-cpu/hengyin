@@ -31,8 +31,12 @@ function serverSections() {
   const code = strip(read(VALIDATOR))
   const found = new Set()
   let m
-  const re = /validate\w+\(\s*root\.get\("(\w+)"\)\s*\)/g
+  // 2026-10-10 R5：validateTimer 增加第二参数（是否 R5 outcomeRules），解析允许后续参数，段名单语义不变。
+  const re = /validate\w+\(\s*root\.get\("(\w+)"\)\s*[,)]/g
   while ((m = re.exec(code))) found.add(m[1])
+  // requires / effects 是根级条件与效果块(多参数校验),不是玩法段;旧单参正则只是碰巧没匹配到它们。
+  // clues 是「线索」工具的名称表(2026-10-11)，同样不是玩法段。
+  for (const rootBlock of ['requires', 'effects', 'clues']) found.delete(rootBlock)
   return found
 }
 
@@ -57,22 +61,25 @@ function serverSlowTaskFields() {
 // parse 的「未知段透传」保证这些段读进来原样留、存回去原样带 —— 不丢商家数据,
 // 只是本页配不了。接线是独立工单,不随本批落码;名单外再冒出第六个新段,下面仍会判红。
 const NOT_YET_WIRED_SERVER_SECTIONS = ['sort', 'match', 'classify', 'compare', 'roleViews']
+// 根层的互动工具段:不是玩法段(没有 enabled,有这一段就算开着),编辑页在「互动工具」里单独配,
+// 靠 parse 的未知段透传原样读写。2026-10-22 背景音乐。
+const ROOT_TOOL_SECTIONS = ['backgroundMusic']
 
 test('★后端 Validator 的段名单与本地 SECTIONS 一一对上 —— 少一段,那玩法在本页读不出来也存不回去,而且不报错', () => {
   const server = serverSections()
-  assert.ok(server.size > 20, '后端一个段都没认出来,这条断言就是恒真的')
-  assert.deepEqual([...server].filter(k => cfg.SECTIONS.indexOf(k) < 0 && !NOT_YET_WIRED_SERVER_SECTIONS.includes(k)), [],
-    '服务端有、本地名单没有,且不在「未接线名册」里:这一段商家配不了也存不了')
+  assert.ok(server.size > 20, '后端一个段都没认出来，这条断言就是恒真的')
+  assert.deepEqual([...server].filter(k => cfg.SECTIONS.indexOf(k) < 0 && !NOT_YET_WIRED_SERVER_SECTIONS.includes(k) && !ROOT_TOOL_SECTIONS.includes(k)), [],
+    '服务端有、本地名单没有，且不在「未接线名册」里:这一段商家配不了也存不了')
   assert.deepEqual(cfg.SECTIONS.filter(k => !server.has(k)), [],
     '本地名单有、服务端没有:填了会被服务端整段忽略')
   assert.ok(cfg.KIT_SECTIONS.includes('slowTask'),
-    'slowTask 是叠加型段,应与 timeWindow / dailySign 同组在册')
+    'slowTask 是叠加型段，应与 timeWindow / dailySign 同组在册')
 })
 
 test('slowTask 段在册:默认配置带得出来,默认是关的', () => {
   const seg = cfg.defaultConfig().slowTask
   assert.ok(seg, '没有默认段 —— 输入框没有可绑定的初值')
-  assert.equal(seg.enabled, false, '默认必须关着,不能凭空给每个节点开一个玩法')
+  assert.equal(seg.enabled, false, '默认必须关着，不能凭空给每个节点开一个玩法')
   assert.ok(cfg.SECTIONS.includes('slowTask'))
 })
 
@@ -83,8 +90,8 @@ test('★slowTask 的字段形状与后端 validateSlowTask 一一对上 —— 
 
 test('★商家填进去的内容:存 → 读回 → 再存,一个字不丢', () => {
   const filled = {
-    enabled: true, title: '这家店的三年,分三天读', startLabel: '就这么定了',
-    waitHint: '明天这个时候,这里会多出一点东西。', unlockLabel: '看看留下了什么',
+    enabled: true, title: '这家店的三年，分三天读', startLabel: '就这么定了',
+    waitHint: '明天这个时候，这里会多出一点东西。', unlockLabel: '看看留下了什么',
     unlockText: '第二年:门口那棵树是老板爷爷种的。', waitDays: 3, xp: 20,
   }
   const raw = JSON.stringify({ schemaVersion: 1, slowTask: filled })
@@ -109,32 +116,22 @@ test('只开 slowTask 一段时,enabledSections 要数到它 —— 数不到就
   assert.notEqual(cfg.serialize(m), '')
 })
 
-test('★编辑页里真有一块 slowTask 表单 —— 段在册但页面没写,商家照样配不了', () => {
-  const wxml = read('pages/publish/temp/index.wxml')
-  assert.ok(wxml.includes('advanced.slowTask.enabled'),
-    '编辑页没有跨日任务的开关 —— 商家打不开这一段')
-  assert.ok(wxml.includes('data-key="slowTask"'), '开关没接到 onAdvancedToggle 的 data-key 上')
-  const bound = boundSlowTaskFields(wxml)
-  const want = [...serverSlowTaskFields()].filter(f => f !== 'enabled')
-  assert.deepEqual(want.filter(f => !bound.includes(f)), [],
-    '这些后端认得的字段在编辑页里没有输入框')
-})
-
-/** 页面上 `data-section="slowTask" data-field="x"` 的绑定(与 onAdvancedField 的形状一致)。 */
-function boundSlowTaskFields(wxml) {
-  const out = []
-  const re = /data-section="slowTask"[^>]*data-field="([^"]+)"/g
-  let m
-  while ((m = re.exec(wxml))) out.push(m[1])
-  return out
-}
-
-test('★负控:字段名写错一个字母,上面的绑定断言真的抓得到', () => {
-  const wxml = read('pages/publish/temp/index.wxml')
-  assert.ok(boundSlowTaskFields(wxml).includes('unlockText'))
-  assert.ok(!boundSlowTaskFields(wxml).includes('unlockTxt'),
-    '负控失效:拼错的名字也被认成已绑定,那条断言是恒真的')
-})
+// R5 已批准移除新建跨日任务；旧段以 legacyRows 只读展示，字段保存仍受合同保护。
+function slowLegacy(config) { return require('../../pages/publish/temp/r5-editor.js').legacyRows(config).find(row => row.path === 'slowTask'); }
+function missingSlowFields(row) { return [...serverSlowTaskFields()].filter(field => !Object.keys(row.value).includes(field)); }
+test('R5 跨日旧段只读展示全部后端字段，不能从新入口编辑或丢失', () => {
+  const wxml = read('pages/publish/temp/index.wxml'), config = cfg.defaultConfig(); config.slowTask.enabled = true; config.slowTask.title = '旧任务'; config.slowTask.unlockText = '旧解锁内容';
+  const row = slowLegacy(config); assert.equal(row.readOnly, true); assert.deepEqual(missingSlowFields(row), []);
+  assert.deepEqual(JSON.parse(row.displayValue), config.slowTask); assert.deepEqual(cfg.parse(cfg.serialize(config)).value.slowTask, config.slowTask);
+  assert.match(wxml, /r5Editor.legacyRows/); assert.match(wxml, /item.displayValue/);
+  assert.doesNotMatch(wxml, /data-key="slowTask"|data-section="slowTask"/);
+});
+test('负控：旧跨日字段拼错会被完整字段保留断言抓到', () => {
+  const config = cfg.defaultConfig(); config.slowTask.enabled = true;
+  const row = slowLegacy(config); assert.deepEqual(missingSlowFields(row), []);
+  row.value.unlockTxt = row.value.unlockText; delete row.value.unlockText;
+  assert.deepEqual(missingSlowFields(row), ['unlockText']);
+});
 
 test('存盘前清洗:没填的选填字段删键,数字字段商家删空时不能把空串存回去', () => {
   const m = cfg.defaultConfig()
@@ -143,7 +140,7 @@ test('存盘前清洗:没填的选填字段删键,数字字段商家删空时不
     unlockText: '明天再看', waitDays: 2, xp: '',
   }
   const out = JSON.parse(cfg.serialize(m)).slowTask
-  assert.ok(!('startLabel' in out), '空的按钮文案必须删键,不能留空串')
+  assert.ok(!('startLabel' in out), '空的按钮文案必须删键，不能留空串')
   assert.ok(!('waitHint' in out), '空的等待提示必须删键')
   assert.ok(!('unlockLabel' in out), '空的解锁文案必须删键')
   assert.equal(out.xp, 0, '奖励分留空就是不加分')
@@ -194,6 +191,6 @@ test('关掉的段不清洗、不校验,下次打开还能看见自己填了一�
 test('★它是叠加段,不进「一个节点只选一个玩法」的目录 —— 进了目录,选中任何主玩法都会顺手把它关掉', () => {
   const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js')
   assert.ok(!catalog.GAME_SECTIONS.includes('slowTask'),
-    'slowTask 被当成单选主玩法:选别的玩法会静默关掉它,而玩家侧它排在 KIT_PRIORITY 的叠加带')
+    'slowTask 被当成单选主玩法:选别的玩法会静默关掉它，而玩家侧它排在 KIT_PRIORITY 的叠加带')
   assert.ok(catalog.GAME_SECTIONS.length > 0)
 })

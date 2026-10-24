@@ -108,7 +108,7 @@ const DANGER_ACTIONS = {
     irreversible: false,
     title: '拒绝「{name}」的入会申请?',
     consequences: [
-      { icon: 'bell', text: '对方会看到申请未通过,但看不到具体原因' },
+      { icon: 'bell', text: '对方会收到未通过通知;下一步可选填原因一并告知' },
       { icon: 'clock', text: '对方之后仍可以重新提交申请' },
     ],
     confirmText: '拒绝申请',
@@ -117,6 +117,73 @@ const DANGER_ACTIONS = {
   },
 
   // ===== 小队 =====
+  // ===== 主题状态键 =====
+  'topic.stateKey.delete': {
+    irreversible: true,
+    title: '删除状态键「{name}」?',
+    content: '只有没被节点或剧情配置引用的键才能删除;被引用时后台会拒绝并告诉你引用位置。',
+    consequences: [
+      { icon: 'list', text: '键的显示名和初始值会一起删除,之后需要重新注册' },
+      { icon: 'warning', text: '此操作不可撤销,删除后无法恢复这个状态键的配置' },
+    ],
+    confirmText: '删除状态键',
+    alt: null,
+    done: { title: '状态键已删除', text: '' },
+  },
+  // ===== AI 对话 =====
+  'ai.npc.chatData.delete': {
+    irreversible: true,
+    title: '清除我的对话记录?',
+    content: '会删除你与 AI 向导、店铺形象的全部对话记录,立即生效。',
+    consequences: [
+      { icon: 'trash', text: '范围是你账号下所有 AI 对话(漫游向导和店铺形象),不只是当前这一段' },
+      { icon: 'info', text: '不影响你的漫游足迹、邮票、订单等其他数据' },
+      { icon: 'warning', text: '此操作不可撤销,删除后无法恢复这些对话' },
+    ],
+    confirmText: '清除对话记录',
+    alt: null,
+    done: { title: '对话记录已清除', text: 'AI 对话记录已从你的账号删除,当前对话也已清空。' },
+  },
+  // ===== 官方活动 V2 · 主办控制台(pages/activity/official-organizer)=====
+  // 口径对齐 OfficialEventV2ServiceImpl 的 schedule / pause / resume;「排期」对用户叫「发布活动」(用户决定 2026-10-15)。
+  'official.organizer.schedule': {
+    irreversible: true,
+    title: '发布「{name}」?',
+    content: '通过发布检查后对报名可见,按设定的报名与开始时间自动推进。',
+    consequences: [
+      { icon: 'calendar', text: '任务、绑定点位与履约需求一并生效,按报名/开始时间自动推进' },
+      { icon: 'info', text: '排期后活动详情对玩家可见;之后需要停下只能用暂停' },
+      { icon: 'warning', text: '此操作不可撤销,发布后无法退回草稿' },
+    ],
+    confirmText: '发布活动',
+    alt: null,
+    done: { title: '活动已发布', text: '已按平台最新记录刷新。' },
+  },
+  'official.organizer.pause': {
+    irreversible: false,
+    title: '暂停「{name}」?',
+    content: '暂停后玩家侧显示活动已暂停,通知策略记为待执行。',
+    consequences: [
+      { icon: 'clock', text: '暂停期间不能报名、到达证据不计入、承接方不能变更履约;原定结束时间不变' },
+      { icon: 'bell', text: '填写的通知策略不会自动群发,状态记为「待执行」,需要按策略另行通知' },
+      { icon: 'info', text: '恢复前平台会重新检查主办、履约覆盖和时间窗口;到结束时间仍未恢复会直接转入待结算' },
+    ],
+    confirmText: '暂停活动',
+    alt: null,
+    done: { title: '活动已暂停', text: '已按平台最新记录刷新。' },
+  },
+  'official.organizer.resume': {
+    irreversible: false,
+    title: '恢复「{name}」?',
+    content: '平台会先重新做发布检查,不通过会拒绝恢复并给出原因。',
+    consequences: [
+      { icon: 'check', text: '恢复后活动按当前时间回到对应阶段(已排期/报名中/进行中)' },
+      { icon: 'info', text: '如果活动已过结束时间,会转入待结算而不是恢复运行' },
+    ],
+    confirmText: '恢复活动',
+    alt: null,
+    done: { title: '活动已恢复', text: '已按平台最新记录刷新。' },
+  },
   'team.disband': {
     irreversible: true,
     title: '解散这支队伍?',
@@ -142,6 +209,18 @@ const DANGER_ACTIONS = {
     alt: null,
     done: { title: '队员已移出', text: '对方已收到站内通知。' },
   },
+  // 2026-10-15:地图队长卡「拒绝」申请。被拒后对方不能再申请这支队伍(服务端 REJECTED 终态),回不来
+  'team.reject': {
+    irreversible: true,
+    title: '拒绝「{name}」的申请?',
+    consequences: [
+      { icon: 'bell', text: '对方会在「我的队伍」里看到「未通过」' },
+      { icon: 'warning', text: '此操作不可撤销;对方不能再申请加入这支队伍' },
+    ],
+    confirmText: '拒绝申请',
+    alt: null,
+    done: { title: '已拒绝', text: '这条申请已处理。' },
+  },
   'team.quit': {
     irreversible: true,
     title: '退出这支队伍?',
@@ -157,20 +236,8 @@ const DANGER_ACTIONS = {
   },
 
   // ===== 帖文草稿 =====
-  // 草稿是「还没发出去的东西」,删掉就真没了(本地 storage,服务端没有副本)。
-  // alt 为 null 不是偷懒:草稿本来就不对外可见,没有比「删」更轻的下架档可给。
-  'post.draft.delete': {
-    irreversible: true,
-    title: '删除这条草稿?',
-    content: '草稿只存在这台手机上,删掉不会同步到别处、也没有回收站。',
-    consequences: [
-      { icon: 'draft', text: '这条草稿里的文字会被删掉' },
-      { icon: 'warning', text: '此操作不可撤销,草稿内容无法找回' },
-    ],
-    confirmText: '删除草稿',
-    alt: null,
-    done: { title: '草稿已删除', text: '' },
-  },
+  // 2026-10-23 业主定:删草稿改成「先删、提示条里可撤销」(utils/toast.js 的 toast.undo),不再走确认弹窗,
+  // 原 'post.draft.delete' 登记条随之删除。
 
   // ===== 个人 =====
   // 2026-09-15 R9-13:这份资料页已明确「用于报名联系和到场核验,不用于配送」,
@@ -229,6 +296,18 @@ const DANGER_ACTIONS = {
     done: { title: '申请已撤回', text: '需要时可以重新提交。' },
   },
 
+  'merchant.chapterInvitation.revoke': {
+    irreversible: true,
+    title: '撤回这条章节邀请?',
+    consequences: [
+      { icon: 'close', text: '对方将不能再接受这条邀请' },
+      { icon: 'warning', text: '此操作不可撤销，需要时请重新发起邀请' },
+    ],
+    confirmText: '撤回邀请',
+    alt: null,
+    done: { title: '邀请已撤回', text: '' },
+  },
+
   /* 稿 468:1126「章节控制 → 结束本章」。2026-09-10 用户定:只有发起人能点。
      ⚠️ 三条后果都要能兑现,别写成吓唬人的话:
         · 已售票不受影响 —— 端点只写章节的结束时刻,一条报名/订单都不碰;
@@ -249,6 +328,20 @@ const DANGER_ACTIONS = {
   },
 
   // ===== 权限(逻辑不在本次改动范围,只统一确认文案) =====
+  // N2 俱乐部自建勋章:服务端没有撤回颁发的接口,颁了就收不回 —— 按不可逆登记。
+  'club.badge.grant': {
+    irreversible: true,
+    title: '把「{name}」颁给 {member}?',
+    content: '颁发后对方会拿到这枚俱乐部勋章。',
+    consequences: [
+      { icon: 'star', text: '这枚勋章会写入对方的勋章记录' },
+      { icon: 'mtab-customers', text: '再次颁发同一枚勋章时，平台会提示对方是否已经拥有' },
+      { icon: 'warning', text: '此操作不可撤销，目前没有收回勋章的入口' },
+    ],
+    confirmText: '颁发勋章',
+    alt: null,
+    done: { title: '勋章已颁发', text: '' },
+  },
   'club.role.revoke': {
     irreversible: true,
     title: '撤销「{name}」?',
@@ -387,23 +480,35 @@ const DANGER_ACTIONS = {
     content: '',
     consequences: [
       { icon: 'close', text: '不再收到对方的任何消息' },
-      { icon: 'info', text: '对方不会收到拉黑提示;拉黑后暂不支持解除' },
+      { icon: 'info', text: '对方不会收到拉黑提示;可在此会话更多菜单解除拉黑' },
     ],
     confirmText: '拉黑',
     alt: null,
     done: { title: '已拉黑', text: '你不会再收到对方消息。' },
   },
+  'im.unblock': {
+    irreversible: false,
+    title: '解除拉黑?',
+    content: '',
+    consequences: [
+      { icon: 'info', text: '对方的新消息会重新送达' },
+      { icon: 'info', text: '对方不会收到解除提示' },
+    ],
+    confirmText: '解除拉黑',
+    alt: null,
+    done: { title: '已解除拉黑', text: '' },
+  },
   'im.conversation.delete': {
-    irreversible: true,
-    title: '删除这条会话?',
+    irreversible: false,
+    title: '隐藏这条会话?',
     content: '只删除你这边的会话入口,对方的消息记录不受影响。',
     consequences: [
       { icon: 'trash', text: '会话从你的列表消失' },
-      { icon: 'warning', text: '此操作不可撤销,删除后聊天记录不再显示' },
+      { icon: 'warning', text: '对方再发消息时，会话和历史消息会重新显示' },
     ],
-    confirmText: '删除会话',
+    confirmText: '隐藏会话',
     alt: null,
-    done: { title: '会话已删除', text: '' },
+    done: { title: '会话已隐藏', text: '' },
   },
   'account.logout': {
     irreversible: false,

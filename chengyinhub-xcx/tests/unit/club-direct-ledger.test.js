@@ -81,3 +81,119 @@ test('权限异常与畸形成功都显示取回失败，不以零元掩盖', ()
   vm.load(); requests[2].successStatusAbnormal({ code: 401 });
   assert.equal(vm.data.state, 'error');
 });
+
+const idFields = ['id', 'redemptionId', 'topicId', 'payerClubId', 'merchantMemberId'];
+const badIds = [true, false, [], [1], {}, { valueOf: () => 1 }, null, undefined,
+  '', ' ', 0, -1, 1.5, '1.5', NaN, Infinity, Number.MAX_SAFE_INTEGER + 1,
+  '9007199254740992', '1e0', '0x1', Symbol('id')];
+for (const field of idFields) {
+  test(field + ' 拒绝非标量、非整数和不安全 ID，不能强转成有效账目', () => {
+    const unitRow = Object.fromEntries(idFields.map(key => [key, 1]));
+    for (const value of badIds) {
+      assert.equal(ledgerView({ code: 200, data: [{ ...base, ...unitRow, [field]: value }] },
+        { kind: 'club', clubId: 1, topicId: 0 }), null, field + ': ' + typeof value);
+    }
+  });
+}
+
+test('非法 ID 对象不得执行强转钩子', () => {
+  let calls = 0;
+  const hostile = { [Symbol.toPrimitive]() { calls++; throw new Error('coercion'); } };
+  for (const field of idFields) {
+    assert.equal(ledgerView({ code: 200, data: [{ ...base, [field]: hostile }] }, scope), null);
+  }
+  const view = ledgerView({ code: 200, data: [{ ...base, claimId: hostile }] }, scope);
+  assert.ok(view);
+  assert.equal(view.rows[0].claimNo, '');
+  assert.equal(calls, 0);
+});
+
+test('合法数字及数字字符串 ID 保留原值，正常 scope 和重复行保护不变', () => {
+  for (const stringify of [value => value, value => String(value)]) {
+    const row = { ...base };
+    for (const key of idFields) row[key] = stringify(row[key]);
+    const view = ledgerView({ code: '200', data: [row] },
+      { kind: 'club', clubId: stringify(base.payerClubId), topicId: stringify(base.topicId) });
+    assert.equal(view.rows[0].id, row.id);
+    assert.equal(view.rows[0].redemptionId, row.redemptionId);
+    assert.equal(view.stats[0].value, '¥0.01');
+    assert.ok(ledgerView({ code: 200, data: [row] }, { kind: 'merchant', clubId: 0, topicId: 0 }));
+  }
+  assert.equal(ledgerView({ code: 200, data: [base, { ...base, id: String(base.id) }] }, scope), null);
+});
+
+test('scope ID 也不得接受布尔、数组或对象，空列表不能绕过校验', () => {
+  for (const value of badIds) {
+    for (const data of [[], [base]]) {
+      assert.equal(ledgerView({ code: 200, data }, { ...scope, clubId: value }), null);
+      if (value !== null && value !== undefined && value !== 0) {
+        assert.equal(ledgerView({ code: 200, data }, { ...scope, topicId: value }), null);
+      }
+    }
+  }
+});
+
+test('合法内部记录编号原样展示，缺失或非法编号不伪造也不丢合法账目', () => {
+  for (const claimId of [7788, '007788', Number.MAX_SAFE_INTEGER, String(Number.MAX_SAFE_INTEGER)]) {
+    const row = { ...base, claimId };
+    const club = ledgerView({ code: 200, data: [row] }, scope);
+    const merchant = ledgerView({ code: 200, data: [row] }, { kind: 'merchant', topicId: 0 });
+    assert.equal(club.rows[0].claimNo, String(claimId));
+    assert.deepEqual(club.rows, merchant.rows);
+  }
+  for (const claimId of badIds.filter(value => value !== '9007199254740992')) {
+    const view = ledgerView({ code: 200, data: [{ ...base, claimId }] }, scope);
+    assert.ok(view);
+    assert.equal(view.rows.length, 1);
+    assert.equal(view.rows[0].claimNo, '');
+    assert.equal(view.stats[0].value, '¥0.01');
+  }
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../components/cy/club-direct-ledger/index.wxml'), 'utf8');
+  // owner 选项 B：内部 SettlementClaim id 只作“记录编号”供联系客服，不称结算单/收据/平台单号。
+  assert.match(wxml, /wx:if="\{\{item\.claimNo\}\}"[^>]*>记录编号 \{\{item\.claimNo\}\}/);
+  assert.doesNotMatch(wxml, /结算单|收据|平台单号/);
+  assert.match(wxml, /class="direct-support"[^>]*wx:if="\{\{ledger\.rows\.length\}\}"[\s\S]*open-type="contact"[^>]*>联系客服</);
+  assert.doesNotMatch(wxml, /bindtap=.*pay|仲裁/);
+});
+
+test('负控：恢复旧强转校验，布尔 ID 会再次产出有效一元账目', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const vm = require('node:vm');
+  const source = fs.readFileSync(path.join(__dirname, '../../components/cy/club-direct-ledger/view-model.js'), 'utf8');
+  const guard = "  if (typeof value !== 'number' && (typeof value !== 'string' || !/^\\d+$/.test(value))) return false;\n";
+  assert.ok(source.includes(guard), '负控必须精确命中类型边界');
+  const sandbox = { module: { exports: {} } };
+  vm.runInNewContext(source.replace(guard, ''), sandbox);
+  const row = { ...base, ...Object.fromEntries(idFields.map(key => [key, true])), perHeadFeeSnapshot: 1 };
+  const response = { code: 200, data: [row] };
+  const unitScope = { kind: 'club', clubId: 1, topicId: 0 };
+  assert.equal(ledgerView(response, unitScope), null);
+  assert.equal(sandbox.module.exports.ledgerView(response, unitScope).stats[0].value, '¥1.00');
+});
+
+
+test('记录编号展示接受精确Long字符串，仍拒绝溢出与不安全数字', () => {
+  for (const claimId of ['9007199254740992', '9007199254740993', '9223372036854775807', '009223372036854775807']) {
+    const view = ledgerView({ code: 200, data: [{ ...base, claimId }] }, scope);
+    assert.equal(view.rows[0].claimNo, claimId);
+    assert.equal(view.stats[0].value, '¥0.01');
+  }
+  for (const claimId of ['9223372036854775808', '99999999999999999999', '000', '-1', '1.5',
+    true, [], ['9223372036854775807'], {}, 9007199254740992]) {
+    const view = ledgerView({ code: 200, data: [{ ...base, claimId }] }, scope);
+    assert.equal(view.rows[0].claimNo, '');
+    assert.equal(view.rows.length, 1);
+  }
+});
+
+test('数字0与字符串0的scope均不按主题过滤，正主题仍严格匹配', () => {
+  for (const kind of ['club', 'merchant']) {
+    const s = { ...scope, kind };
+    assert.deepEqual(ledgerView({ code: 200, data: [base] }, { ...s, topicId: '0' }),
+      ledgerView({ code: 200, data: [base] }, { ...s, topicId: 0 }));
+    assert.equal(ledgerView({ code: 200, data: [base] }, { ...s, topicId: 1 }), null);
+  }
+});

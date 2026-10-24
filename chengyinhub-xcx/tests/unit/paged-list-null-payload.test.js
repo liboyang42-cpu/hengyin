@@ -15,11 +15,13 @@ function loadPage(relativePath) {
   const requests = [];
   let definition;
   global.getApp = () => ({
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: {},
     getImgUrl: name => '/images/' + name,
     getPageSize: () => 10,
     getTotalPage: (total, size) => Math.ceil(Number(total || 0) / size),
     getUserID: () => 7,
+    ...(relativePath === 'subpackageMember/mytemplate/mytemplate.js' ? { getAuthorization: () => 'Bearer unit-fixture' } : {}),
     getAvatar: () => '',
     getNickname: () => '',
     getRequestErrorMessage: (_response, fallback) => fallback,

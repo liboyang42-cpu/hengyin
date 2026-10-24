@@ -17,10 +17,10 @@
                     then true else false end as organizerScopeCovered,
                exists (select 1 from cms_registration_scan scan
                        where scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
-                         and scan.registration_type = 1) as merchantScanPresent,
+                         and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2) as merchantScanPresent,
                (select min(scan.create_time) from cms_registration_scan scan
                 where scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
-                  and scan.registration_type = 1) as merchantScanTime,
+                  and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2) as merchantScanTime,
                exists (select 1 from coop_group_member_verify gm
                        join coop_group_verify gv on gv.activity_id = gm.activity_id
                        where gm.registration_id = r.id and gv.coop_order_id = #{snapshot.orderId}
@@ -55,10 +55,10 @@
                     then true else false end as organizerScopeCovered,
                exists (select 1 from cms_registration_scan scan
                        where scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
-                         and scan.registration_type = 1) as merchantScanPresent,
+                         and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2) as merchantScanPresent,
                (select min(scan.create_time) from cms_registration_scan scan
                 where scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
-                  and scan.registration_type = 1) as merchantScanTime,
+                  and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2) as merchantScanTime,
                exists (select 1 from coop_group_member_verify gm
                        join coop_group_verify gv on gv.activity_id = gm.activity_id
                        where gm.registration_id = r.id and gv.coop_order_id = #{snapshot.orderId}

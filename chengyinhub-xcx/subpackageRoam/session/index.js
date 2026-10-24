@@ -33,7 +33,7 @@ const SHARE_CARD = Object.freeze({
 function sharePath(token) {
   return '/subpackageRoam/session/index?shareToken=' + token;
 }
-
+const { ALBUM_SAVE, classifyAlbumSaveError, normalizeAlbumOutcome } = require('../../utils/album-save-outcome.js');
 Page({
   // err: '' | 'read'(storage 读失败) | 'notfound'(ts 对应的记录不存在)
   data: {
@@ -407,11 +407,12 @@ Page({
       if (this._saveInFlight === flight) this._saveInFlight = null;
       return result;
     };
-    flight = request.then((saved) => {
+    flight = request.then((result) => {
       if (!this._isShareCurrent(token)) return { ok: false, saved: false };
       loading.hide();
       this.setData({ 'share.saving': false });
-      if (saved) {
+      const outcome = normalizeAlbumOutcome(result);
+      if (outcome === ALBUM_SAVE.SAVED) {
         this.setData({ 'share.error': '', 'share.retrySave': false });
         return { ok: true, saved: true };
       }
@@ -434,16 +435,18 @@ Page({
   _saveToAlbum(imagePath, token) {
     const activeToken = token == null ? (this._shareEpoch || 0) : token;
     return new Promise((resolve) => {
-      if (!this._isShareCurrent(activeToken)) { resolve(false); return; }
+      if (!this._isShareCurrent(activeToken)) { resolve(ALBUM_SAVE.FAILED); return; }
       wx.saveImageToPhotosAlbum({
         filePath: imagePath,
         success: () => {
           if (this._isShareCurrent(activeToken)) toast('已保存到相册');
-          resolve(true);
+          resolve(ALBUM_SAVE.SAVED);
         },
         fail: (error) => {
-          const message = (error && error.errMsg) || '';
-          const denied = /auth|deny/i.test(message);
+          const outcome = classifyAlbumSaveError(error);
+          const denied = outcome === ALBUM_SAVE.DENIED;
+          // 用户自己取消不是失败:不挂「保存失败」错误条,保持可再点保存。
+          if (outcome === ALBUM_SAVE.CANCELLED) { resolve(outcome); return; }
           if (this._isShareCurrent(activeToken)) {
             this.setData({
               'share.error': denied
@@ -463,7 +466,7 @@ Page({
               },
             });
           }
-          resolve(false);
+          resolve(outcome);
         },
       });
     });

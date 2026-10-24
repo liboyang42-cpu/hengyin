@@ -11,12 +11,12 @@
   </view>
 
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="3" />
-  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+  <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="退款售后加载失败" sub="{{errorMessage}}"
             retry="重新加载" bind:retry="retry" auto-back />
   <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
             title="当前岗位没有售后查看权限"
-            sub="请联系店主调整经营团队权限"
+            sub="请联系店主开通"
             retry="" bind:back="onNavBack" auto-back custom-back />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="ac-scroll" enhanced show-scrollbar="{{false}}">
@@ -75,7 +75,7 @@
           <text class="ac-kv-v">{{detail.refundDeadlineText}}</text>
         </view>
         <view class="ac-kv" wx:if="{{detail.hasRefundPolicy}}">
-          <text class="ac-kv-k">退款政策快照</text>
+          <text class="ac-kv-k">下单时的退款政策</text>
           <view class="ac-kv-v ac-kv-v--stack">
             <text>{{detail.refundPolicyText}}</text>
             <text class="ac-kv-meta" wx:if="{{detail.refundPolicyVersionText}}">{{detail.refundPolicyVersionText}}</text>

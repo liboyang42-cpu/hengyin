@@ -1,0 +1,175 @@
+name: Real Storage IT (manual)
+
+# 冻结候选的真 MySQL / Redis 回归入口：只手动触发，不进 required checks，不碰 VPS、生产库或仓库 secrets。
+#
+# 为什么另起一个 workflow：funds-mysql-it.yml 是固定名单 + 只有 MySQL，且它的两个 job 名已进
+# master 的必需检查；候选三队（CORE / EXTRA / F3）与 B05 的真库类、AI 额度的 Redis 类都不在其中。
+# 改它会让每个无关 PR 一起付费。这里按 ci/real-storage-it-registry.json 登记的批次，
+# 对任意已推送的完整 SHA 逐类起 job：每类一台新 runner、一套新容器、只开该类自己的门控变量。
+#
+# 结论只看回读：ci/real_storage_it.py 从 surefire 报告读回该类（含 @Nested）实跑条数 == 登记数、
+# skipped / failures / errors 为 0，再写回执；mvn 退出码只是回执之一。
+# 失败后只复跑受影响的类：再次触发时在 classes 填简单类名即可，不重跑已通过且未变的类。
+#
+# 本入口不证明：真 HTTP 与真实身份、真机业务、合并后的候选、迁移在持久库执行、合并或部署。
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: 待验候选的完整 40 位 commit SHA（须已推到本仓库）
+        required: true
+        type: string
+      batch:
+        description: 登记批次（ci/real-storage-it-registry.json）
+        required: true
+        type: choice
+        options:
+          - core-funds
+          - ai-quota
+          - e04-07-coupon
+          - community-e02
+          - b05-visibility
+          - f3-growth
+          - extra-storage
+          - port-core-funds
+          - port-ai-quota
+          - port-f3-growth
+          - port-f3-evidence
+          - port-e04-07-coupon
+          - port-community-e02
+          - port-b05-visibility
+          - port-extra-storage
+          - funnel-max-date
+          - port-prelaunch-69
+          - p0-acceptance-ac1
+      classes:
+        description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
+        required: false
+        default: ''
+        type: string
+      timezone:
+        description: JVM 与 MySQL 的默认时区（UTC 与现有真库 CI 一致；Asia/Shanghai 对应生产 GMT+8 连接）
+        required: true
+        default: UTC
+        type: choice
+        options:
+          - UTC
+          - Asia/Shanghai
+
+permissions:
+  contents: read
+
+concurrency:
+  group: real-storage-it-${{ inputs.batch }}-${{ inputs.source_sha }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan and static precheck
+    if: github.repository == 'liboyang42-cpu/hengyin'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      sha12: ${{ steps.plan.outputs.sha12 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Real storage gate negative controls
+        run: python3 -m unittest -v ci/test_real_storage_it.py
+      - name: Checkout candidate source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Resolve batch and precheck every class
+        id: plan
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          BATCH: ${{ inputs.batch }}
+          CLASSES: ${{ inputs.classes }}
+          TIMEZONE: ${{ inputs.timezone }}
+        run: python3 ci/real_storage_it.py plan --source candidate
+
+  storage_it:
+    name: ${{ matrix.simple }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      TEST_CLASS: ${{ matrix.class }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      BATCH: ${{ inputs.batch }}
+      TIMEZONE: ${{ inputs.timezone }}
+    steps:
+      - name: Checkout gate scripts
+        uses: actions/checkout@v4
+        with:
+          path: gate
+          persist-credentials: false
+      - name: Checkout candidate source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Static precheck
+        id: precheck
+        run: python3 gate/ci/real_storage_it.py precheck --source candidate
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.precheck.outputs.jdk }}
+          cache: maven
+          cache-dependency-path: candidate/**/pom.xml
+      - name: Start scratch MySQL / Redis
+        run: python3 gate/ci/real_storage_it.py storage-start
+      - name: Run class on real storage and read back
+        run: python3 gate/ci/real_storage_it.py run --source candidate
+      - name: Remove scratch containers
+        if: always()
+        run: python3 gate/ci/real_storage_it.py storage-stop
+      - name: Upload class receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rs-class-${{ matrix.simple }}-a${{ github.run_attempt }}
+          path: out/
+          if-no-files-found: error
+
+  summary:
+    name: Batch summary
+    needs: [plan, storage_it]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: rs-class-*
+          path: receipts
+      - name: Summarize batch (fail-closed)
+        env:
+          PLANNED: ${{ needs.plan.outputs.matrix }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          BATCH: ${{ inputs.batch }}
+          TIMEZONE: ${{ inputs.timezone }}
+        run: python3 ci/real_storage_it.py summarize --receipts receipts --out summary
+      - name: Upload batch summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rs-summary-${{ inputs.batch }}-${{ needs.plan.outputs.sha12 }}-a${{ github.run_attempt }}
+          path: summary/
+          if-no-files-found: warn

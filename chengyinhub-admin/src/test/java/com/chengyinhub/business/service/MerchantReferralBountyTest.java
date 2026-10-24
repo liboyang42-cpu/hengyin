@@ -86,6 +86,25 @@ class MerchantReferralBountyTest {
     @InjectMocks
     private MerchantReferralBountyService service;
 
+    @org.junit.jupiter.api.BeforeEach
+    void wireFinancialLockFixture() {
+        org.springframework.transaction.PlatformTransactionManager manager =
+                org.mockito.Mockito.mock(org.springframework.transaction.PlatformTransactionManager.class);
+        org.mockito.Mockito.when(manager.getTransaction(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(i -> new org.springframework.transaction.support.SimpleTransactionStatus());
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "transactionManager", manager);
+        org.mockito.Mockito.when(umsMemberMapper.selectBalanceForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(i -> {
+                    UmsMember member = umsMemberService.selectUmsMemberById(i.getArgument(0));
+                    // Lock-row fixture is independent of the legacy existence guard being tested.
+                    return member == null || member.getBalance() == null ? BigDecimal.ZERO : member.getBalance();
+                });
+        org.mockito.Mockito.when(bountyMapper.selectPaidIdsByInviterForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(i -> java.util.Collections.nCopies(bountyMapper.countPaidByInviter(i.getArgument(0)), 0L));
+        org.mockito.Mockito.when(bountyMapper.selectByMerchantMemberIdForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(i -> bountyMapper.selectByMerchantMemberId(i.getArgument(0)));
+    }
+
     private static Date daysFromNow(int days) {
         Calendar c = Calendar.getInstance();
         c.add(Calendar.DAY_OF_MONTH, days);

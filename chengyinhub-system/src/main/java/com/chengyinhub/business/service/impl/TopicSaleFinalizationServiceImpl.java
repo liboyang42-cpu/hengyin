@@ -270,7 +270,6 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
             throw new IllegalStateException("SALE_TICKET_PROJECTION_MISSING");
         }
         List<OmsTicket> source = new ArrayList<OmsTicket>(topicTickets);
-        source.sort(Comparator.comparing(this::ticketProjectionKey));
         for (CmsActivity activity : activities) {
             if (activity == null) throw new IllegalStateException("SALE_TICKET_PROJECTION_MISSING");
             OmsTicket activityQuery = new OmsTicket();
@@ -281,28 +280,35 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
                 throw new IllegalStateException("SALE_TICKET_PROJECTION_MISSING");
             }
             projected = new ArrayList<OmsTicket>(projected);
-            projected.sort(Comparator.comparing(this::ticketProjectionKey));
-            for (int i = 0; i < source.size(); i++) assertTicketProjection(source.get(i), projected.get(i));
+            source.sort(Comparator.comparing(ticket -> ticketProjectionKey(ticket, activity)));
+            projected.sort(Comparator.comparing(ticket -> ticketProjectionKey(ticket, activity)));
+            for (int i = 0; i < source.size(); i++) {
+                assertTicketProjection(source.get(i), projected.get(i), activity);
+            }
         }
     }
 
-    private String ticketProjectionKey(OmsTicket ticket) {
+    private String ticketProjectionKey(OmsTicket ticket, CmsActivity activity) {
         return String.valueOf(ticket.getName()) + '|' + String.valueOf(ticket.getMode()) + '|'
                 + String.valueOf(ticket.getPrice()) + '|' + String.valueOf(ticket.getTotalInventory()) + '|'
-                + String.valueOf(ticket.getStartTime()) + '|' + String.valueOf(ticket.getEndTime()) + '|'
+                + String.valueOf(OmsTicketServiceImpl.projectedStartTime(ticket, activity)) + '|'
+                + String.valueOf(OmsTicketServiceImpl.projectedEndTime(ticket, activity)) + '|'
                 + String.valueOf(ticket.getSignupDeadline()) + '|' + String.valueOf(ticket.getMeetingPoint()) + '|'
                 + String.valueOf(ticket.getGatherLng()) + '|' + String.valueOf(ticket.getGatherLat()) + '|'
                 + String.valueOf(ticket.getSubType()) + '|' + String.valueOf(ticket.getRefundRule()) + '|'
                 + String.valueOf(ticket.getNeedAudit()) + '|' + String.valueOf(ticket.getTeamSize());
     }
 
-    private void assertTicketProjection(OmsTicket source, OmsTicket projected) {
+    private void assertTicketProjection(OmsTicket source, OmsTicket projected, CmsActivity activity) {
         assertTicketField("NAME", source.getName(), projected.getName());
         assertTicketField("MODE", source.getMode(), projected.getMode());
         assertTicketField("PRICE", source.getPrice(), projected.getPrice());
         assertTicketField("TOTAL_INVENTORY", source.getTotalInventory(), projected.getTotalInventory());
-        assertTicketField("START_TIME", source.getStartTime(), projected.getStartTime());
-        assertTicketField("END_TIME", source.getEndTime(), projected.getEndTime());
+        // 俱乐部票投影按真实场次时间生成，开售校验须沿用同一时间来源。
+        assertTicketField("START_TIME", OmsTicketServiceImpl.projectedStartTime(source, activity),
+                projected.getStartTime());
+        assertTicketField("END_TIME", OmsTicketServiceImpl.projectedEndTime(source, activity),
+                projected.getEndTime());
         assertTicketField("SIGNUP_DEADLINE", source.getSignupDeadline(), projected.getSignupDeadline());
         assertTicketField("MEETING_POINT", source.getMeetingPoint(), projected.getMeetingPoint());
         assertTicketField("GATHER_LNG", source.getGatherLng(), projected.getGatherLng());

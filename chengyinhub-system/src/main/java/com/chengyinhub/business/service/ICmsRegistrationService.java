@@ -203,6 +203,13 @@ public interface ICmsRegistrationService
      */
     public String handleWechatPayCallback(Map<String, String> resultMap);
 
+    /**
+     * 调用方已在自己的事务内向微信查单确认 SUCCESS 时的补记(不走回调 inbox,必须已有事务)。
+     * @param resultMap 查单结果(out_trade_no/transaction_id/trade_state/total)
+     * @return SUCCESS 或 FAIL
+     */
+    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
+
     /** 零现金报名专用完成入口；不得伪造微信 SUCCESS 回调。 */
     public String completeZeroAmountPayment(String registrationNo);
 
@@ -239,6 +246,13 @@ public interface ICmsRegistrationService
      */
     public List<Long> listExpiredUnpaidIds();
 
+    /** 固定本轮时间及最大ID，失败订单不阻塞后页。 */
+    public Long getExpiredUnpaidScanUpperBound(java.util.Date now);
+    public List<Long> listExpiredUnpaidIdsAfter(java.util.Date now, long afterId, long maxId, int limit);
+
+    /** 在调用方事务内按 activity→registration 当前读，拒绝旧归属/退款/到期快照。 */
+    public CmsRegistration requireCurrentUsableRegistration(CmsRegistration snapshot);
+
     /**
      * §5-3 PAYING 超时对账:过支付窗口仍处支付中(payment_status=1)的订单 id 列表(供定时任务扫描)。
      * 这些单既不能被用户再支付(/pay 拒过期),也不会被 {@link #listExpiredUnpaidIds()} 扫到。
@@ -271,6 +285,8 @@ public interface ICmsRegistrationService
      * 场景=支付回调期 generateVerificationQrcode 失败被吞:钱已扣、码为空,微信不再重推回调。
      */
     public List<Long> listPaidMissingQrcodeIds();
+    public Long getPaidMissingQrcodeScanUpperBound();
+    public List<Long> listPaidMissingQrcodeIdsAfter(long afterId, long maxId, int limit);
 
     /**
      * P0-10 弃单关单:关闭单笔过期未支付订单(回补库存+退还预扣积分)
@@ -365,6 +381,22 @@ public interface ICmsRegistrationService
     boolean verifyAndSettleForGroupActivity(CmsRegistration registration, Long verifierId,
                                             Long activityId, Long actorMemberId,
                                             String actorRoleCode);
+
+    /**
+     * 平台后台撤销一张活动票(owner_type=2)的整单核销,用于店员扫错/核错等现场事故。
+     *
+     * <p>只清核销态并留痕(操作人/原因/时间);活动票款在支付时已按活动入账,本动作不改账本。
+     * ③ 探索票走按章撤销;主题整单票的核销会计入执行商家结算,不在此入口内;
+     * 活动已结算时拒绝。返回 true = 本次已撤销。</p>
+     */
+    boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId);
+
+    /**
+     * 同上;撤销同时把核销台账行标为已撤销、作废尚未发放的到店成长待办。
+     * clawbackRewards=true 时与按章撤销同口径冲回这次到店核销已发的积分和经验。
+     */
+    boolean reverseWholeOrderVerification(Long registrationId, String reason, Long operatorUserId,
+                                          boolean clawbackRewards);
 
     /**
      * [#22 二清闸] 对已存在的单再判一次「这笔钱平台能不能收」,不能收就抛。

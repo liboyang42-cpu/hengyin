@@ -15,6 +15,11 @@
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-empty fill size="lg" kind="missing-param" cta="返回上一页" bind:cta="goBack" />
 </block>
+<block wx:elif="{{ projectReadAuth }}">
+  <cy-nav-bar custom-back bind:back="goBack" />
+  <cy-empty wx:if="{{ projectReadAuth === 'login' }}" fill size="lg" kind="login" title="登录后查看主题" cta="登录" bind:cta="retryProjectLogin" />
+  <cy-empty wx:else fill size="lg" kind="error" title="当前账号无权查看" sub="" cta="返回上一页" bind:cta="goBack" />
+</block>
 <project-host wx:elif="{{ role === 'host' }}"
     hostOwnerType="{{ hostOwnerType || '' }}"
     statusBarHeight="{{ statusBarHeight }}"
@@ -41,6 +46,7 @@
     pending-merchant-nodes="{{pendingMerchantNodes}}"
     pending-merchant-nodes-state="{{pendingMerchantNodesState}}"
     station-ops-error-text="{{stationOpsErrorText}}"
+    circle-config="{{circleConfig}}"
     bind:act="onJoinAct" />
 
 <project-join wx:elif="{{ !fromMerchantJoin }}"
@@ -105,7 +111,7 @@
 <!-- ============ 品牌浏览视图（从品牌招募广场进入，看主题详情后报名） ============ -->
 <view class="topic theme-merchant" wx:if="{{ fromMerchantJoin }}">
   <cy-nav-bar />
-  <cy-error class="browse-error" wx:if="{{browseLoadError}}" fill title="加载失败"
+  <cy-error load-failure class="browse-error" wx:if="{{browseLoadError}}" fill title="加载失败"
             sub="{{browseLoadError}}" retry="重试" bind:retry="retryBrowseData" />
   <view class="slide1 {{info.name && (!info.imgUrl || coverFailed) ? 'slide1--no-cover' : ''}}" wx:else>
     <!-- P1-2:封面图挂掉(后台留了 example.com 占位假图)时整屏空白,这里给带主题名的兜底占位 -->
@@ -156,7 +162,7 @@
       </view>
       <view class="cont">
         <view class="row1">
-          <text wx:for="{{ info.sysCategoryList }}" wx:key="*this">{{item.categoryName}}</text>
+          <text wx:for="{{ info.sysCategoryList }}" wx:key="index">{{item.categoryName}}</text>
         </view>
       </view>
     </view>
@@ -171,7 +177,7 @@
             <text class="statbar__label">{{item.label}}</text>
             <text class="statbar__value">{{item.value}}</text>
             <view class="statbar__stars" wx:if="{{item.starList.length}}">
-              <cy-icon wx:for="{{item.starList}}" wx:for-item="s" wx:key="*this" name="star-filled" size="24" />
+              <cy-icon wx:for="{{item.starList}}" wx:for-item="s" wx:key="index" name="star-filled" size="24" />
             </view>
             <text class="statbar__sub" wx:elif="{{item.sub}}">{{item.sub}}</text>
           </view>
@@ -243,7 +249,7 @@
                    却从来没在详情页露过面的字段。一条都没有整块不出。 -->
               <view class="topic-includes" wx:if="{{info.contentIncludes.length}}">
                 <view class="topic-includes__t">活动内容</view>
-                <view class="topic-includes__li" wx:for="{{info.contentIncludes}}" wx:key="*this">{{item}}</view>
+                <view class="topic-includes__li" wx:for="{{info.contentIncludes}}" wx:key="index">{{item}}</view>
               </view>
           </view>
         </view>
@@ -272,7 +278,7 @@
               <view class="guide-divider"><text>{{part.step}}</text></view>
               <view class="guide-place-photo" wx:if="{{part.images.length}}">
                 <swiper class="guide-gallery" indicator-dots="{{part.images.length > 1}}">
-                  <swiper-item wx:for="{{part.images}}" wx:key="*this" wx:for-item="url">
+                  <swiper-item wx:for="{{part.images}}" wx:key="index" wx:for-item="url">
                     <image src="{{url}}" mode="aspectFill" data-url="{{url}}" data-urls="{{part.images}}" bindtap="previewGuideImage" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看{{part.title}}图片" />
                   </swiper-item>
                 </swiper>
@@ -297,7 +303,7 @@
         <view class="wp">
         <view class="det-type">我在这条路线上的承接</view>
         <view wx:if="{{myChapterNodes.length}}">
-          <view class="dt">我的点位</view>
+          <view class="dt">我的节点</view>
           <view class="dd merchant-chapter-option" wx:for="{{myChapterNodes}}" wx:key="id" wx:for-item="chapterNode">
             <view>{{chapterNode.name}}</view>
             <view class="merchant-chapter-meta">{{chapterNode.address || '未填地址'}} · {{chapterNode.auditLabel}}</view>
@@ -323,9 +329,11 @@
             <view class="merchant-chapter-meta" wx:if="{{application.termsLabel}}">{{application.termsLabel}}</view>
             <view class="merchant-chapter-actions" wx:if="{{application.canSubmitOffer || application.canWithdraw || application.canConfigureNode}}">
               <cy-btn wx:if="{{application.canConfigureNode}}" variant="ghost" size="sm" class="cy-btn-inline"
-                data-chapter-id="{{application.chapterId}}" bindtap="openChapterNodeForm">配置点位</cy-btn>
+                data-chapter-id="{{application.chapterId}}" bindtap="openChapterNodeForm">配置节点</cy-btn>
               <cy-btn wx:if="{{application.canSubmitOffer}}" variant="ghost" size="sm" class="cy-btn-inline"
                 data-chapter-id="{{application.chapterId}}" bindtap="openChapterOfferForm">填写实际供给</cy-btn>
+              <cy-btn wx:if="{{application.canAcceptInvite}}" variant="primary" size="sm" class="cy-btn-inline"
+                data-application-id="{{application.id}}" data-accepted="{{true}}" bindtap="respondChapterInvitation">接受邀请</cy-btn>
               <cy-btn wx:if="{{application.canWithdraw}}" variant="ghost" size="sm" class="cy-btn-inline"
                 data-application-id="{{application.id}}" bindtap="withdrawChapterApplication">{{application.source == 1 ? '拒绝邀请' : '撤回申请'}}</cy-btn>
             </view>
@@ -492,11 +500,13 @@
   show="{{true}}"
   state="{{checkinQrState}}"
   qr="{{checkinQrUrl}}"
+  code="{{checkinCode}}"
+  bindlongpress="copyCheckinCode"
   title="本站打卡码"
-  desc="请让玩家扫这一张。可下载到相册，贴在店里长期使用。"
+  desc="长期有效，可保存后张贴"
   countdown=""
   error-text="{{checkinErr || '打卡码暂时没能生成'}}"
-  secondary-text="{{checkinQrState === 'ready' ? '保存到相册' : ''}}"
+  secondary-text="{{checkinQrState === 'ready' && checkinQrUrl ? '保存到相册' : ''}}"
   mask-closable="{{true}}"
   bind:close="closeLiveCheckin"
   bind:retry="issueStationPoster"

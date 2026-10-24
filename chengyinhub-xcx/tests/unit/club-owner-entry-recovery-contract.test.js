@@ -39,7 +39,7 @@ function loadDetail() {
         '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../../utils/scene-registry.js': { getScene: () => ({}) },
         '../../../utils/datetime': { toTimestamp: (value) => Date.parse(String(value).replace(' ', 'T')) || 0 },
-        '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+        '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
         '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
         '../../../utils/group-code-session.js': { buildGroupCodeIssuePayload: () => ({}), listGroupCodeActivities: () => [] },
         '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
@@ -48,14 +48,21 @@ function loadDetail() {
         '../../../utils/response-shape.js': require('../../utils/response-shape.js'),
         '../../../utils/coop-invite-view.js': require('../../utils/coop-invite-view.js'),
         '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+        '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
         '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
         // CU-C-60/CU-C-107:俱乐部页新增的三个 require(扫码路由表 / 核销写闸 / 正文摘要),
         // 都是纯模块,沙箱里给真实现。
         '../../../utils/verification-scan.js': require('../../utils/verification-scan.js'),
         '../../../utils/write-action-workflow.js': require('../../utils/write-action-workflow.js'),
+        '../../../utils/merchant-verification.js': require('../../utils/merchant-verification.js'),
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error('unexpected require: ' + request)
     },
     setTimeout(fn) { scheduled.push(fn); return 1 },
@@ -64,6 +71,7 @@ function loadDetail() {
     Date,
     JSON,
     wx: {
+      stopPullDownRefresh() {},
       navigateTo(options) { navigations.push(options.url) },
       navigateBack() { navigations.push('__back__') },
       switchTab(options) { navigations.push(options.url) },
@@ -99,9 +107,9 @@ test('owner 入口业务失败 = 可重试错误态,不弹「没有俱乐部」�
 
   // 点「重新加载」:必须重发 /api/club/my,而不是对着空 clubId 空转(永久骨架)
   const before = requests.length
-  page.onRetry()
+  page.onPullDownRefresh()
   const again = requests.slice(before).filter((r) => r.url === '/api/club/my')
-  assert.equal(again.length, 1, 'clubId 为空时 onRetry 必须重走 owner 解析')
+  assert.equal(again.length, 1, 'clubId 为空时下拉刷新必须重走 owner 解析')
 
   again[0].success({ code: 200, data: { owned: [{ id: 7, name: '夜行团' }] } })
   assert.equal(page.data.clubId, 7)

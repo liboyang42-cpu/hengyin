@@ -117,6 +117,7 @@ function makeAppStub() {
   })
   return {
     globalData: { user_id: 9, features: {} },
+    getUserID: () => 9,
     isDevEnv: () => false,
     sendRequest: (opts) => server.onRequest(opts),
     getAuthorization: () => 'token',
@@ -251,7 +252,7 @@ test('真实生命周期:start→emitSession→页面 kit 携带 sessionId/versi
   const comp = loadQaComponent()
   shootAndUpload(page, comp, 'life.jpg')
   await tick()
-  assert.equal(server.posts.length, 1, '身份字段存在,拍照链必须能走到 SUBMIT_QA')
+  assert.equal(server.posts.length, 1, '身份字段存在，拍照链必须能走到 SUBMIT_QA')
   assert.equal(server.posts[0].action, 'SUBMIT_QA')
   assert.equal(server.persisted.length, 1)
   assert.equal(server.persisted[0].payload.imageUrl, 'https://cdn/life.jpg', '提交的必须是刚拍的那张')
@@ -270,7 +271,7 @@ test('负控:生命周期视图缺 sessionId/version 时失败关闭并明确提
   dispatchShoot(page, chooseAndShoot(comp, { tempFilePath: '/tmp/x.jpg', name: 'x.jpg', size: 1 * MIB }))
   assert.equal(wxUploads.length, 0, '状态不完整不得上传')
   assert.equal(server.posts.length, 0)
-  assert.ok(toasts.some((t) => /玩法状态不完整/.test(t)), '必须给人话提示,不静默')
+  assert.ok(toasts.some((t) => /玩法状态不完整/.test(t)), '必须给人话提示，不静默')
 })
 
 test('SUBMIT_QA 未提交网络失败:不重复发、不假完成、基础路线可继续', async () => {
@@ -286,8 +287,8 @@ test('SUBMIT_QA 未提交网络失败:不重复发、不假完成、基础路线
 
   assert.equal(server.posts.length, 1, '不得自动重发')
   assert.equal(server.persisted.length, 0, '不得算完成')
-  assert.equal(advanced.data.unknown, false, '回读给出结论后应退出 unknown')
-  assert.match(advanced.data.error, /没有提交成功/, '必须明说未提交,不装成功')
+  assert.equal(advanced.data.unknown, false, '刷新给出结论后应退出 unknown')
+  assert.match(advanced.data.error, /没有提交成功/, '必须明说未提交，不装成功')
   assert.equal(advanced.data.state.version, 1)
   assert.equal(page.data.playKit.kit.version, 1, '题目会话保持一致')
   assert.equal(page.data.playKit.show, true, '基础路线不得丢')
@@ -320,7 +321,7 @@ test('SUBMIT_QA 已提交但丢回包:回读判 landed,不重复算完成', asyn
   assert.equal(server.persisted[0].payload.imageUrl, 'https://cdn/c.jpg')
   assert.equal(advanced.data.unknown, false)
   assert.equal(advanced.data.error, '', 'landed 后不得再报失败')
-  assert.equal(advanced.data.state.version, 2, '本地必须回读权威版本')
+  assert.equal(advanced.data.state.version, 2, '本地必须刷新权威版本')
   assert.equal(page.data.playKit.kit.version, 2, '页面会话与权威一致')
 
   await tick()
@@ -338,7 +339,7 @@ test('unknown 回读失败后再次恢复(点再核对一次),期间不得提交
   shootAndUpload(page, comp, 'd.jpg')
   await tick()
 
-  assert.equal(advanced.data.unknown, true, '回读失败必须保持 unknown')
+  assert.equal(advanced.data.unknown, true, '刷新失败必须保持 unknown')
   assert.equal(advanced.data.readingBack, false)
   assert.match(advanced.data.unknownText, /再试/)
   assert.equal(advanced.data.state.version, 1, '未知态不得伪装完成')

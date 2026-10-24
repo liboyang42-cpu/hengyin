@@ -114,7 +114,7 @@ test('cy-state-shell 统一语义、主题、aria 与双动作；没有显式文
   assert.equal(instance.data._renderer, 'empty');
   assert.equal(instance.data._emptyKind, 'offline');
   assert.equal(instance.data._title, '网络没连上');
-  assert.equal(instance.data._sub, '连接恢复后可继续');
+  assert.equal(instance.data._sub, '');
   instance.onPrimary();
   instance.onSecondary();
   assert.deepEqual(instance.events.map((event) => event.name), ['primary', 'secondary']);
@@ -122,11 +122,11 @@ test('cy-state-shell 统一语义、主题、aria 与双动作；没有显式文
   const wxml = read('components/cy/state-shell/index.wxml');
   assert.match(wxml, /retry="\{\{_primary\}\}"/);
   assert.match(wxml, /cta="\{\{_primary\}\}"/);
-  assert.equal((wxml.match(/fill="\{\{fill\}\}"/g) || []).length, 2,
-    'empty / error 两条内部渲染路径都必须收到 fill');
+  assert.equal((wxml.match(/fill="\{\{fill\}\}"/g) || []).length, 3,
+    'blank / empty / error 两条内部渲染路径都必须收到 fill');
   assert.match(wxml, /secondary="\{\{secondary\}\}"/,
     'error 分支必须把第二出口交给 cy-error 的冻结 API');
-  assert.match(wxml, /wx:if="\{\{_renderer !== 'error' && secondary\}\}"/,
+  assert.match(wxml, /wx:if="\{\{!_loadFailure && _renderer !== 'error' && secondary\}\}"/,
     'empty 分支由状态壳渲染第二出口，error 分支不能重复渲染');
   assert.match(wxml, /aria-role="group"/,
     '状态壳只负责分组，实际播报语义由 cy-empty / cy-error 单独拥有')
@@ -149,11 +149,11 @@ test('cy-inline-error 区分 network / data，保留单一局部恢复动作', (
   const network = resolve('network');
   assert.equal(network.data._glyph, 'warning');
   assert.equal(network.data._title, '网络没连上');
-  assert.equal(network.data._sub, '连接恢复后可继续');
+  assert.equal(network.data._sub, '');
   const data = resolve('data');
   assert.equal(data.data._glyph, 'info');
   assert.equal(data.data._title, '这部分没更新成功');
-  assert.equal(data.data._sub, '已有内容仍可查看');
+  assert.equal(data.data._sub, '');
 
   data.onAction();
   assert.deepEqual(data.events.map((event) => event.name), ['action']);

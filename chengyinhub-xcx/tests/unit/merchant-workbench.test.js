@@ -127,10 +127,12 @@ function assertLegacyMerchantHero(wxml, wxss) {
   // ⚠️ 负向断言不能写成 /\|\|\s*(?!'')/ —— \s* 会回溯成零宽,于是 (?!'') 在那个空格上成立,
   //   任何兜底都判绿(本文件下方 box-shadow 那条注释记的是同一个坑)。把 \s* 挪进断言里面。
   assert.doesNotMatch(wxml, /merchantInfo\.logo\s*\|\|(?!\s*'')/,
-    '商家没配 logo 时是空位,不能兜底到个人头像或玩家默认头像');
-  assert.match(wxml, /class="rv-revenue-amount"[^>]*>[\s\S]*dashboardData\.revenue/);
-  assert.match(wxml, /<cy-skeleton[^>]*wx:if="\{\{dashboardLoading && dashboardData\.revenue == null\}\}"[^>]*type="amount"/,
-    '只有未知收入的首载才显示 amount 骨架');
+    '商家没配 logo 时是空位，不能保底到个人头像或玩家默认头像');
+  assert.match(wxml, /class="rv-revenue-amount"[^>]*dashboardData\.revenue/);  // 读屏文本绑真值;反馈副文案已按文案精简清空(上线合并 2026-10-24)
+  // 2026-10-22 owner 裁决推翻「首载 amount 骨架」:金额永远在位(首帧 ¥0.00),真值到了滚过去。
+  const revenueZone = wxml.slice(wxml.indexOf('class="rv-revenue-zone"'), wxml.indexOf('<!-- 快捷操作 -->'));
+  assert.match(revenueZone, /class="rv-revenue-amount"[^>]*>\{\{money\.amount2\(revenueShown\)\}\}</, '金额永远渲染屏上当前显示值');
+  assert.doesNotMatch(revenueZone, /<cy-skeleton|rv-revenue-unknown|rv-revenue-sync/, '收入区不再骨架/暂未取到/正在更新三态轮换');
   assert.match(wxml, /class="rv-actions"/);
   [
     ['goScanQR', '扫码'],
@@ -177,7 +179,7 @@ function assertWorkbenchStateSemantics(wxml) {
 
   // 局部失败保留已加载内容，并用 inline error 只重试该区块。
   assert.doesNotMatch(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{joinError \|\| hostError \|\| todoError\}\}"/,
-    '项目刷新失败静默降级:已加载的卡片留在屏上,不挂横幅');
+    '项目刷新失败静默降级:已加载的卡片留在屏上，不挂横幅');
 }
 
 test('工作台首屏恢复收入大数字 + 四个圆形快捷入口，待办仍使用 checklist', () => {
@@ -214,8 +216,8 @@ test('工作台状态语义:加载失败落页内 inline error，不再有整屏
 test('负控:把整屏身份闸加回工作台时必须判红', () => {
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/merchant/index/index.wxml'), 'utf8');
   const mutated = wxml.replace(
-    '<cy-inline-error class="rv-console-error"',
-    '<view class="rv-gate" wx:if="{{consoleState}}"><cy-empty cta="去登录" /></view>\n    <cy-inline-error class="rv-console-error"',
+    '<cy-inline-error load-failure class="rv-console-error"',
+    '<view class="rv-gate" wx:if="{{consoleState}}"><cy-empty cta="去登录" /></view>\n    <cy-inline-error load-failure class="rv-console-error"',
   );
   assert.notEqual(mutated, wxml, '负控锚点失效：找不到工作台页内错误态');
   assert.throws(() => assertWorkbenchStateSemantics(mutated), /整屏身份闸必须删除/);
@@ -257,7 +259,7 @@ test('亮色域纪律:工作台带阴影的卡不再同时描边', () => {
 
 test('负控:描边+阴影真的双上时必须判红,且 none 的两种写法都算"没有"', () => {
   const bad = '.x { box-shadow: var(--cy-shadow-card);\n  border: 2rpx solid #000; }';
-  assert.ok(HAS_SHADOW.test(bad) && HAS_BORDER.test(bad), '真双上必须被抓到,否则门禁被改废了');
+  assert.ok(HAS_SHADOW.test(bad) && HAS_BORDER.test(bad), '真双上必须被抓到，否则门禁被改废了');
 
   // 二选一的合法写法:留描边、显式取消阴影。带不带空格都不该算"有阴影"。
   assert.ok(!HAS_SHADOW.test('.y { box-shadow: none;\n  border: 2rpx dashed #ccc; }'), 'box-shadow: none 不算有阴影');

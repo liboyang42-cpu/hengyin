@@ -74,7 +74,7 @@ test('负控:opacity 写法必须判红', () => {
   assert.throws(
     () => assertDisabledIsTokenRecolor(' opacity: .4; ', '负控'),
     /不得用 opacity/,
-    '负控失效:opacity 写法没被判红,说明正向断言是恒真的')
+    '负控失效:opacity 写法没被判红，说明正向断言是恒真的')
 })
 
 test('负控:硬编码色值(不走 token)必须判红', () => {

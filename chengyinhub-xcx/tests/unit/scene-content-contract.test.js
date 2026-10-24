@@ -43,7 +43,7 @@ test('漫游会话子层使用真实本地足迹数据，并保留返回/关闭�
   assert.doesNotMatch(componentJs, /getStorageSync\(['"]roam_sessions/)
   assert.match(componentJs, /state: 'loading'/)
   assert.match(componentWxml, /正在读取本次漫游/)
-  assert.match(componentWxml, /这次漫游暂时打不开/)
+  assert.match(componentWxml, /这次漫游无法打开/)
   assert.match(componentWxml, /找不到这次漫游/)
   assert.match(componentWxml, /分享足迹卡/)
   assert.doesNotMatch(componentJs, /wx\.navigateTo/)
@@ -74,7 +74,9 @@ test('集邮册场景复用真实分页接口与失败/空态互斥，不用静�
   assert.equal(hostJson.usingComponents['cy-scene-roam-stamp-album'], '/components/cy/scene-roam-stamp-album/index')
   assert.match(hostWxml, /sceneCurrent && sceneCurrent\.id === 'roam-stamp-album'/)
   assert.match(hostWxml, /<cy-scene-roam-stamp-album[^>]*bind:camera="openStampCamera"[^>]*bind:close="closeScene"/)
-  assert.match(componentJs, /url: '\/api\/roam\/stamp\/list'/)
+  // 集邮册「我的 / 收到的」两个 tab 各用一个字面量路径(UI-GATE 要求请求路径可枚举)
+  assert.match(componentJs, /'\/api\/roam\/stamp\/list'/)
+  assert.match(componentJs, /'\/api\/roam\/stamp\/received'/)
   assert.match(componentJs, /pageSize: 50/)
   // 2026-09-10 漫游四模式脱离小程序 DS:集邮册整屏照原型 f-sticker 重做成三列方格,
   //   「收藏夹合上/展开 + 散落票面」(Figma 220:1388)整套退场。
@@ -83,14 +85,14 @@ test('集邮册场景复用真实分页接口与失败/空态互斥，不用静�
   assert.match(componentWxml, /class="stkcell stkcell--lock"/, '末尾那格虚线「还没收到」是原型自带的')
   assert.doesNotMatch(componentWxml, /album-folder/, '旧收藏夹皮肤不许回来')
   assert.match(componentWxml, /bindtap="loadMore"/)
-  assert.match(componentWxml, /集邮册没打开/)
+  assert.match(componentWxml, /集邮册无法打开/)
   assert.match(componentWxml, /还没有邮票/)
   assert.match(componentWxml, /wx:elif="\{\{loading && !items\.length\}\}"/)
   assert.match(componentWxml, /wx:elif="\{\{loaded && total === 0\}\}"/)
   assert.doesNotMatch(componentWxml, /d_qrcode|d_subtrac|d_subtraction/)
 })
 
-test('发现商家场景使用真实商家列表接口，并把卡片点击推入点位详情子场景', () => {
+test('发现商家场景使用真实商家列表接口，并把卡片点击推入节点详情子场景', () => {
   /* 2026-09-11:漫游页的「查找附近好玩的」换成了原型 f-fun 的横滑白卡,不再挂这件半屏
      (原型那一屏就是横滑条,不是列表)。组件本身还活着 —— 游玩页与深链仍在用,
      所以宿主断言从漫游改成游玩页;组件自身的接口与事件契约一字未改。 */
@@ -107,7 +109,7 @@ test('发现商家场景使用真实商家列表接口，并把卡片点击推�
   assert.match(read('pages/roam/index.js'), /openRoamDiscover\(\) \{ this\.openShopStrip\(\); \}/)
   assert.match(componentJs, /url: '\/api\/merchant\/list'/)
   assert.match(componentJs, /triggerEvent\('open', \{ id: 'roam-poi-detail'/)
-  assert.match(componentWxml, /附近商家暂时没打开/)
+  assert.match(componentWxml, /附近商家无法打开/)
   assert.match(componentWxml, /没有找到匹配的商家/)
   assert.match(componentWxml, /cy-merchant-card/)
   assert.doesNotMatch(componentJs, /wx\.navigateTo/)
@@ -127,7 +129,7 @@ test('任务场景复用官方活动与我的活动接口，详情打开官方�
   // 3-18:行是 official_event,不能进查 cms_activity 的 play-activity-detail
   assert.match(componentJs, /triggerEvent\('official'/)
   assert.match(hostWxml, /<cy-scene-roam-task-list[^>]*bind:official="openOfficialEvent"/)
-  assert.match(read('pages/roam/index.js'), /openOfficialEvent\(e\) \{ wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ e\.detail\.id/)
+  assert.match(read('pages/roam/index.js'), /openOfficialEvent\(e\) \{ const id = e && e\.detail && e\.detail\.id; if \(!id \|\| this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ id/)
   assert.doesNotMatch(componentJs, /id: 'play-activity-detail'/)
   assert.match(componentWxml, /state === 'loading'/)
   assert.match(componentWxml, /活动列表没能打开/)
@@ -136,7 +138,7 @@ test('任务场景复用官方活动与我的活动接口，详情打开官方�
   assert.doesNotMatch(componentJs, /wx\.navigateTo/)
 })
 
-test('点位详情场景保留节点/商家真实接口，并将核销码推入子场景而非新页面', () => {
+test('节点详情场景保留节点/商家真实接口，并将核销码推入子场景而非新页面', () => {
   const hostJson = JSON.parse(read('pages/roam/index.json'))
   const hostWxml = read('pages/roam/index.wxml')
   const componentWxml = read('subpackageMember/components/cy/scene-roam-poi-detail/index.wxml')
@@ -148,16 +150,16 @@ test('点位详情场景保留节点/商家真实接口，并将核销码推入�
   assert.match(componentJs, /url: '\/api\/city\/nodes\/'/)
   assert.match(componentJs, /url: '\/api\/merchant\/public-detail'/)
   assert.match(componentJs, /id: 'qr-citynode'/)
-  assert.match(componentWxml, /据点暂时打不开/)
+  assert.match(componentWxml, /节点无法打开/)
   assert.match(componentWxml, /开始互动/)
   assert.match(componentWxml, /店铺相册/)
   assert.doesNotMatch(componentJs, /wx\.navigateTo/)
 })
 
-// 据点内容有三个入口(地图 marker / 站外深链 / 漫游页内弹层),但只能有一份实现。
+// 节点内容有三个入口(地图 marker / 站外深链 / 漫游页内弹层),但只能有一份实现。
 // 深链宿主是薄壳:它只挂 cy-scene-deep-link 并透传 poiId,自己不取数、不画正文、
 // 更不复制到店验证逻辑 —— 复制了就会重演「商家选了拍照、实际生效 GPS」那类静默分叉。
-test('据点深链宿主是薄壳：挂已有组件、透传 poiId、输出稳定深链', () => {
+test('节点深链宿主是薄壳：挂已有组件、透传 poiId、输出稳定深链', () => {
   const HOST = 'subpackageRoam/poi-detail/index'
   const hostJson = JSON.parse(read(`${HOST}.json`))
   const hostWxml = read(`${HOST}.wxml`)
@@ -169,11 +171,11 @@ test('据点深链宿主是薄壳：挂已有组件、透传 poiId、输出稳�
   assert.match(
     registry,
     /'roam-poi-detail':\s*\{[^}]*route:\s*'\/subpackageRoam\/poi-detail\/index'/,
-    'roam-poi-detail 的 route 必须指向据点深链宿主',
+    'roam-poi-detail 的 route 必须指向节点深链宿主',
   )
   assert.ok(
     JSON.parse(read('app.json')).subPackages.find((pkg) => pkg.root === 'subpackageRoam').pages.includes('poi-detail/index'),
-    '宿主必须注册在 subpackageRoam,否则深链打不开',
+    '宿主必须注册在 subpackageRoam,否则深链无法打开',
   )
 
   // 薄壳:只挂组件 + 透传 poiId
@@ -205,18 +207,18 @@ test('活动详情场景读取真实活动接口，票种选择后只进入既�
   assert.match(componentJs, /url: '\/api\/activity\/info'/)
   assert.match(componentJs, /activity\/baoming\/baoming\?activityId=/)
   assert.match(componentWxml, /state === 'loading'/)
-  assert.match(componentWxml, /活动详情暂时打不开/)
-  assert.match(componentWxml, /暂无可选票种/)
+  assert.match(componentWxml, /活动详情无法打开/)
+  assert.match(componentWxml, /暂无票种/)
   assert.match(componentWxml, /票种/)
 })
 
 test('游戏券夹读取真实领取记录，并把未使用券推入动态核销码场景', () => {
   const hostJson = JSON.parse(read('pages/roam/index.json'))
   const hostWxml = read('pages/roam/index.wxml')
-  const componentWxml = read('components/cy/scene-game-coupon-wallet/index.wxml')
-  const componentJs = read('components/cy/scene-game-coupon-wallet/index.js')
+  const componentWxml = read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml')
+  const componentJs = read('subpackageMember/components/cy/scene-game-coupon-wallet/index.js')
 
-  assert.equal(hostJson.usingComponents['cy-scene-game-coupon-wallet'], '/components/cy/scene-game-coupon-wallet/index')
+  assert.equal(hostJson.usingComponents['cy-scene-game-coupon-wallet'], '/subpackageMember/components/cy/scene-game-coupon-wallet/index')
   assert.match(hostWxml, /sceneCurrent && sceneCurrent\.id === 'game-coupon-wallet'/)
   assert.match(componentJs, /url: '\/api\/coupon\/myrecvlist'/)
   assert.match(componentJs, /id: 'qr-coupon'/)
@@ -249,7 +251,7 @@ test('三个核销码场景都复用嵌入式白码卡，保留真实出码接�
   assert.match(groupJs, /url: '\/api\/topic\/info-to-user'/)
   assert.match(groupWxml, /state === 'selecting'/)
   assert.match(cityJs, /url: '\/api\/verify\/citynode\/issue'/)
-  assert.match(cityWxml, /这个核销码打不开/)
+  assert.match(cityWxml, /这个核销码无法打开/)
   assert.match(qrVoucherJs, /embedded:.*只渲染码卡正文/)
   assert.doesNotMatch(couponJs + groupJs + cityJs, /wx\.navigateTo/)
 })
@@ -349,7 +351,7 @@ test('Figma 三个弹窗接入真实入口，并锁定玩家深色/商户浅色�
 function assertProfileUserAssetEntries(profileJs, registry, hostWxml, hostJson, appJson) {
   assert.match(
     profileJs,
-    /goCoupon: function \(\) \{ wx\.navigateTo\(\{ url: '\/subpackageMember\/coupon-wallet\/index' \}\); \}/,
+    /goCoupon: function \(\) \{ if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/subpackageMember\/coupon-wallet\/index', complete: \(\) => \{ this\._navigating = false; \} \}\); \}/,
     '个人页优惠券入口必须打开玩家券夹，不能进入商家发券管理页',
   )
   assert.match(
@@ -365,7 +367,7 @@ function assertProfileUserAssetEntries(profileJs, registry, hostWxml, hostJson, 
   )
   assert.match(
     profileJs,
-    /goComplaint: function \(\) \{ wx\.navigateTo\(\{ url: '\/subpackageMember\/complaint\/index' \}\); \}/,
+    /goComplaint: function \(\) \{ if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/subpackageMember\/complaint\/index', complete: \(\) => \{ this\._navigating = false; \} \}\); \}/,
     '投诉建议必须进入完整投诉页',
   )
 }

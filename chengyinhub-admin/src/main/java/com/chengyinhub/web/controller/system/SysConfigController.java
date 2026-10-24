@@ -1,7 +1,7 @@
 package com.chengyinhub.web.controller.system;
 
 import java.util.List;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -43,6 +43,7 @@ public class SysConfigController extends BaseController
     {
         startPage();
         List<SysConfig> list = configService.selectConfigList(config);
+        list.forEach(this::maskSensitive);
         return getDataTable(list);
     }
 
@@ -52,6 +53,7 @@ public class SysConfigController extends BaseController
     public void export(HttpServletResponse response, SysConfig config)
     {
         List<SysConfig> list = configService.selectConfigList(config);
+        list.forEach(this::maskSensitive);
         ExcelUtil<SysConfig> util = new ExcelUtil<SysConfig>(SysConfig.class);
         util.exportExcel(response, list, "参数数据");
     }
@@ -63,23 +65,38 @@ public class SysConfigController extends BaseController
     @GetMapping(value = "/{configId}")
     public AjaxResult getInfo(@PathVariable Long configId)
     {
-        return success(configService.selectConfigById(configId));
+        return success(maskSensitive(configService.selectConfigById(configId)));
     }
 
     /**
      * 根据参数键名查询参数值
      */
+    @PreAuthorize("@ss.hasPermi('system:config:query')")
     @GetMapping(value = "/configKey/{configKey}")
     public AjaxResult getConfigKey(@PathVariable String configKey)
     {
+        if (sensitiveKey(configKey)) return error("敏感参数不支持明文读取");
         return success(configService.selectConfigByKey(configKey));
+    }
+
+    public static boolean sensitiveKey(String key) {
+        String normalized = key == null ? "" : key.toLowerCase(java.util.Locale.ROOT);
+        return normalized.contains("secret") || normalized.contains("token")
+                || normalized.contains("password") || normalized.contains("privatekey")
+                || normalized.contains("accesskey") || normalized.contains("aeskey")
+                || normalized.contains("apikey") || normalized.contains("credential");
+    }
+
+    private SysConfig maskSensitive(SysConfig config) {
+        if (config != null && sensitiveKey(config.getConfigKey())) config.setConfigValue("******");
+        return config;
     }
 
     /**
      * 新增参数配置
      */
     @PreAuthorize("@ss.hasPermi('system:config:add')")
-    @Log(title = "参数管理", businessType = BusinessType.INSERT)
+    @Log(title = "参数管理", businessType = BusinessType.INSERT, isSaveRequestData = false)
     @PostMapping
     public AjaxResult add(@Validated @RequestBody SysConfig config)
     {
@@ -95,13 +112,22 @@ public class SysConfigController extends BaseController
      * 修改参数配置
      */
     @PreAuthorize("@ss.hasPermi('system:config:edit')")
-    @Log(title = "参数管理", businessType = BusinessType.UPDATE)
+    @Log(title = "参数管理", businessType = BusinessType.UPDATE, isSaveRequestData = false)
     @PutMapping
     public AjaxResult edit(@Validated @RequestBody SysConfig config)
     {
         if (!configService.checkConfigKeyUnique(config))
         {
             return error("修改参数'" + config.getConfigName() + "'失败，参数键名已存在");
+        }
+        SysConfig existing = configService.selectConfigById(config.getConfigId());
+        if (existing != null && sensitiveKey(existing.getConfigKey())
+                && !existing.getConfigKey().equals(config.getConfigKey())) {
+            return error("敏感参数不支持修改键名");
+        }
+        if (sensitiveKey(config.getConfigKey()) && "******".equals(config.getConfigValue())) {
+            if (existing == null || !config.getConfigKey().equals(existing.getConfigKey())) return error("敏感参数未确认");
+            config.setConfigValue(existing.getConfigValue());
         }
         config.setUpdateBy(getUsername());
         return toAjax(configService.updateConfig(config));

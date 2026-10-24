@@ -53,7 +53,7 @@ ARTIST_DISPLAY_NAME = {
 }
 
 SOURCES_DOC = ASSET_ROOT / "SOURCES.md"
-ATTRIBUTION_VIEW = REPO / "chengyinhub-xcx/pages/shezhi/shezhi.wxml"
+ATTRIBUTION_VIEW = REPO / "chengyinhub-xcx/pages/shezhi/about/index.wxml"
 APP_JSON = REPO / "chengyinhub-xcx/app.json"
 PIXEL_ROOT = ASSET_ROOT / "sources-pixel"
 ICON_ROOT = ASSET_ROOT / "sources-icons"
@@ -141,11 +141,11 @@ class TemplateCoverContractTest(unittest.TestCase):
             self.assertIn(display, page, f"署名页缺少作者 {display}(来自 {folder}/)")
         app_config = json.loads(APP_JSON.read_text(encoding="utf-8"))
         settings_registered = any(
-            package.get("root") == "pages/shezhi" and "shezhi" in package.get("pages", [])
+            package.get("root") == "pages/shezhi" and "about/index" in package.get("pages", [])
             for package in app_config.get("subPackages", [])
         )
         self.assertTrue(settings_registered,
-                        "承载署名的设置页没在 app.json 注册 = 用户根本打不开")
+                        "承载署名的关于页没在 app.json 注册 = 用户根本打不开")
 
     # ── 素材必须真的在仓库里:渲染脚本引用的每个图层/图标都要能找到
     def test_every_referenced_source_asset_is_vendored(self):

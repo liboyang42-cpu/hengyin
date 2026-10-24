@@ -57,6 +57,10 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         templateMapper = mock(CmsMemberTemplateMapper.class);
         npcProfileMapper = mock(NpcProfileMapper.class);
         service = new CmsTopicServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
+                invocation -> "lockTopic".equals(invocation.getMethod().getName())
+                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
+                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "settlementDebtLedger",
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
@@ -97,6 +101,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         when(npcProfileMapper.selectEnabledByScope(NpcProfileService.SCOPE_NODE, NODE_ID))
                 .thenReturn(Collections.singletonList(profile(5L)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
@@ -118,6 +123,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         when(npcProfileMapper.selectEnabledByScope(NpcProfileService.SCOPE_NODE, NODE_ID))
                 .thenReturn(Collections.singletonList(profile(5L)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
@@ -135,6 +141,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         when(templateMapper.selectCmsMemberTemplateByIds(any())).thenReturn(Collections.singletonList(template(
                 "{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}")));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(npcProfileMapper, never()).selectEnabledByScope(anyInt(), anyLong());
@@ -159,6 +166,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         when(npcProfileMapper.selectEnabledByScope(NpcProfileService.SCOPE_NODE, NODE_ID))
                 .thenReturn(Collections.singletonList(profile(5L)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
@@ -182,6 +190,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         when(npcProfileMapper.selectEnabledByScope(NpcProfileService.SCOPE_NODE, NODE_ID))
                 .thenReturn(Collections.singletonList(profile(5L)));
 
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         assertTrue(service.publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));

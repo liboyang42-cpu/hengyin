@@ -1,0 +1,38 @@
+{
+  "scope": "TEAM",
+  "sessionId": 7,
+  "activityId": 5,
+  "revision": 12,
+  "authorityEpoch": 4,
+  "teamId": 8,
+  "status": "RUNNING",
+  "worldMode": "WORLD_SHARED",
+  "availableActions": [
+    "ARRIVAL_ISSUE",
+    "TEAM_EXIT"
+  ],
+  "quests": [
+    {
+      "questKey": "q1",
+      "nodeId": 41,
+      "locationKey": "gather",
+      "bindingVersion": 2,
+      "operation": "QUEST_START",
+      "enabled": false,
+      "trustedPass": false,
+      "disabledReason": "NOT_ARRIVED"
+    }
+  ],
+  "activeOperation": {
+    "operationKind": "PLAN",
+    "operationKey": "leave",
+    "nodeId": 41,
+    "epoch": 4
+  },
+  "run": {
+    "operationStatus": "RUNNING",
+    "authorityMode": "ONLINE",
+    "authorityEpoch": 4,
+    "exitedTeams": {}
+  }
+}

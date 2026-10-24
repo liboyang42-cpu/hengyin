@@ -282,6 +282,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and status = 0 and biz_type is not null
     </update>
 
+    <select id="selectPendingCommerceOrders" resultMap="OmsOrderResult">
+        <include refid="selectOmsOrderVo"/>
+        where id &gt; #{afterId} and status = 0 and create_time &lt; #{before}
+          and biz_type in ('premium_template','promotion_slot','custom_event')
+        order by id limit #{limit}
+    </select>
+    <update id="markCommerceOrderClosed">
+        update oms_order set status = 5, update_time = now()
+        where id = #{id} and status = 0 and biz_type in ('premium_template','promotion_slot','custom_event')
+    </update>
+
     <delete id="deleteOmsOrderById" parameterType="Long">
         delete from oms_order where id = #{id}
     </delete>

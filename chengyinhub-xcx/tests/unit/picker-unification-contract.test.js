@@ -12,6 +12,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const os = require('node:os')
 
 const ROOT = path.resolve(__dirname, '../..')
 const SKIP = new Set(['node_modules', 'miniprogram_npm', 'dist', 'scripts', 'tests', 'docs', 'artifacts'])
@@ -56,21 +57,25 @@ test('两个替代组件都在,且各自声明了适用判据', () => {
 })
 
 test('negative control:任何一处写回 <picker mode="date"> 必须判红', () => {
-  const tmp = path.join(ROOT, 'tests/unit/__picker_negative_control__.wxml')
+  // 夹具写到系统临时目录:写进仓内会被同分片并发遍历 wxml 的契约读到半途删除的文件(ENOENT)。
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'picker-nc-'))
+  const tmp = path.join(dir, '__picker_negative_control__.wxml')
   fs.writeFileSync(tmp, '<view><picker mode="date" value="{{x}}"><view>选日期</view></picker></view>')
   try {
     assert.deepEqual(offenders([tmp]).length, 1, '检查器认不出系统 picker,这条门禁是恒真的')
   } finally {
-    fs.unlinkSync(tmp)
+    fs.rmSync(dir, { recursive: true, force: true })
   }
 })
 
 test('negative control:<picker-view> 是面板内部滚轮,不许被误伤', () => {
-  const tmp = path.join(ROOT, 'tests/unit/__pickerview_negative_control__.wxml')
+  // 夹具写到系统临时目录:写进仓内会被同分片并发遍历 wxml 的契约读到半途删除的文件(ENOENT)。
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'picker-nc-'))
+  const tmp = path.join(dir, '__pickerview_negative_control__.wxml')
   fs.writeFileSync(tmp, '<picker-view value="{{i}}"><picker-view-column><view>1</view></picker-view-column></picker-view>')
   try {
     assert.deepEqual(offenders([tmp]), [], 'picker-view 被误判成系统 picker,会把所有滚轮面板一起判红')
   } finally {
-    fs.unlinkSync(tmp)
+    fs.rmSync(dir, { recursive: true, force: true })
   }
 })

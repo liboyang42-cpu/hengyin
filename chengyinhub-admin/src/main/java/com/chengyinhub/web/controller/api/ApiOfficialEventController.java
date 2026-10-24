@@ -3,6 +3,7 @@ package com.chengyinhub.web.controller.api;
 import java.util.List;
 import java.util.Map;
 
+import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.OfficialBroadcast;
 import com.chengyinhub.business.domain.OfficialEvent;
 import com.chengyinhub.business.domain.UmsMember;
@@ -13,6 +14,8 @@ import com.chengyinhub.business.domain.dto.OfficialEventV2OrganizerTransferReque
 import com.chengyinhub.business.domain.dto.OfficialEventV2PartyActionRequest;
 import com.chengyinhub.business.domain.dto.OfficialEventV2PauseRequest;
 import com.chengyinhub.business.domain.dto.OfficialMerchantInviteRequest;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.domain.CoopInvite;
 import com.chengyinhub.business.service.IOfficialBroadcastService;
 import com.chengyinhub.business.service.IOfficialEventService;
@@ -20,6 +23,7 @@ import com.chengyinhub.business.service.IOfficialEventV2Service;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.ICoopInviteService;
+import com.chengyinhub.business.service.IContentSafetyGate;
 import com.chengyinhub.business.service.INotifyService;
 import com.chengyinhub.business.service.NotActiveMerchantException;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -66,6 +70,8 @@ public class ApiOfficialEventController extends BaseController {
     private ICoopInviteService coopInviteService;
     @Autowired
     private INotifyService notifyService;
+    @Autowired
+    private IContentSafetyGate contentSafetyGate;
 
     private Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
@@ -103,7 +109,7 @@ public class ApiOfficialEventController extends BaseController {
         return err == null ? success("报名成功") : error(err);
     }
 
-    @Operation(summary = "完成一个活动任务(progress+1)")
+    @Operation(summary = "旧版完成入口提示（不写进度或奖励）")
     @PostMapping("/events/{id}/complete")
     public AjaxResult complete(@PathVariable("id") Long id) {
         Long memberId = uid();
@@ -243,17 +249,23 @@ public class ApiOfficialEventController extends BaseController {
     public AjaxResult publish(@RequestBody OfficialEvent event) {
         Long memberId = uid();
         if (!canPublish(memberId)) return error("无官方发布权限");
-        // 内容安全:标题/副标题/故事
-        String sec = wxSec.checkText(
-                IWxContentSecurityService.joinText(event.getTitle(), event.getSubtitle(), event.getStory()),
-                openidOf(memberId));
-        if (sec != null) return error(sec);
-        OfficialEvent saved = officialEventService.publish(event, memberId);
+        if (event == null) return error("活动不能为空");
+        // 2026-10-20 分级审核:官方活动先审后发。标题/副标题/故事过统一门禁(PRE_REVIEW),明确违规直接拒;
+        // 其余一律落待审并建 OFFICIAL_EVENT 审核单,审核台通过后才公开。
+        PublishSafetyRequest safety = new PublishSafetyRequest();
+        safety.setContentType(AuditTask.BIZ_OFFICIAL_EVENT);
+        safety.setMemberId(memberId);
+        safety.setOpenid(openidOf(memberId));
+        safety.setText(IWxContentSecurityService.joinText(event.getTitle(), event.getSubtitle(), event.getStory()));
+        safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
+        SafetyDecision decision = contentSafetyGate.decide(safety);
+        if (decision == null || decision.isBlock()) return error("活动内容包含违规信息，请修改后重试");
+        OfficialEvent saved = officialEventService.submitForReview(event, memberId);
         // 封面图异步内容安全送检(BIZ_TYPE_OFFICIAL_EVENT,违规经回调告警人工下架)
         if (event.getCoverImg() != null && !event.getCoverImg().trim().isEmpty()) {
             try { wxSec.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_OFFICIAL_EVENT, saved.getId(), event.getCoverImg(), openidOf(memberId)); } catch (Exception ignore) {}
         }
-        return AjaxResult.success("已发布", saved.getId());
+        return AjaxResult.success("已提交审核，审核通过后公开", saved.getId());
     }
 
     @Operation(summary = "V2 活动草稿保存(白名单发布者)")
@@ -282,7 +294,7 @@ public class ApiOfficialEventController extends BaseController {
         Long memberId = uid();
         if (!canPublish(memberId)) return error("无官方发布权限");
         String err = officialEventV2Service.schedule(id, memberId);
-        return err == null ? success("活动已排期") : error(err);
+        return err == null ? success("已提交审核，审核通过后进入排期") : error(err);
     }
 
     @Operation(summary = "邀请候任主办方(仅当前有效主办)")

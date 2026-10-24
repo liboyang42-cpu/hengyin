@@ -86,7 +86,12 @@ function loadPage(source) {
 
 const NO_SESSION = { status: 1, isOwner: 1, name: '还没有场次的主题', activityList: [] }
 const ONE_SESSION = { status: 1, isOwner: 1, name: 't', activityList: [{ id: 702, name: '第一场' }] }
-const TWO_SESSIONS = { status: 1, isOwner: 1, name: 't', activityList: [{ id: 701, name: '一场' }, { id: 702, name: '二场' }] }
+// CL-06:选场半屏与「接下来」同源(F-W5-08 只留未取消、未过期的场次),候选场次须带未来集合时刻。
+const FUTURE = (days) => new Date(Date.now() + days * 86400000 + 8 * 3600000).toISOString().slice(0, 10)
+const TWO_SESSIONS = { status: 1, isOwner: 1, name: 't', activityList: [
+  { id: 701, name: '一场', startDate: FUTURE(1) + ' 09:00:00', endDate: FUTURE(1) + ' 23:59:00' },
+  { id: 702, name: '二场', startDate: FUTURE(2) + ' 09:00:00', endDate: FUTURE(2) + ' 23:59:00' },
+] }
 
 test('没场次:主键是真动作「去开场」,点它进场次管理;不再弹「还没有场次」的 toast', () => {
   const { page, navigations, toasts } = loadPage()
@@ -94,11 +99,11 @@ test('没场次:主键是真动作「去开场」,点它进场次管理;不再�
   page.applyDetail(NO_SESSION)
   assert.equal(page.data.primary.text, '去开场', '没场次时主键还是导演台文案 = 点了没反应的死入口')
   assert.equal(page.data.primary.disabled, false)
-  assert.match(page.data.sessionHint, /先开一场/, '就地要说明为什么核销/团码出不来')
+  assert.match(page.data.sessionHint, /暂无场次/, '就地要说明为什么核销/团码出不来')
   // ⚠️ 只断言 data.sessionHint 守不住渲染层:2026-09-16 实测,把 wxml 里渲染它的那一行删掉,
   // 这 5 条测试照样全绿,而用户界面上那句说明已经没了。所以必须同时钉住 wxml 真的把它渲染出来。
   assert.match(read(PAGE_WXML), /\{\{sessionHint\}\}/,
-    'wxml 没有渲染 sessionHint —— 数据算出来了但用户看不到,等于没做')
+    'wxml 没有渲染 sessionHint —— 数据算出来了但用户看不到，等于没做')
   page.onPrimary()
   assert.deepEqual(navigations, ['/pages/club/event-ops/index?clubId=9&topicId=88'])
   assert.deepEqual(toasts, [], '点了没反应的 toast 不许再出现')
@@ -158,7 +163,7 @@ test('有唯一一场时:主键仍归导演台状态机,「去开场」不许劫
   page._topicId = 88; page._clubId = 9
   page.applyDetail(ONE_SESSION)
   assert.equal(page._directorActivityId, 702, '唯一一场必须照旧自动进导演台')
-  assert.equal(page.data.primary.text, '开始准备', '有场次时主键是状态机动作,不该被换掉')
+  assert.equal(page.data.primary.text, '开始准备', '有场次时主键是状态机动作，不该被换掉')
   page.onPrimary()
   assert.equal(page._prepared, true, '有场次时点主键要落到导演台动作上')
   assert.deepEqual(navigations, [])

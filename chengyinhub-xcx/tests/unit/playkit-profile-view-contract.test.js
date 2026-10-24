@@ -34,7 +34,7 @@ test('★四个新段在 KIT_PRIORITY / TYPE_OF / ACTION_OF 三张表里都在�
       s.name + ' 不在 KIT_PRIORITY —— 服务端下发了客户端也当它不存在')
     const kit = pickPlayKit({ sessionId: 1, version: 0, playKit: { [s.name]: { title: 't' } } }, at(12, 0))
     assert.ok(kit, s.name + ' 拿不到 kit')
-    assert.equal(kit.type, s.type, s.name + ' 的 type 映射对不上,分发器整块不渲染')
+    assert.equal(kit.type, s.type, s.name + ' 的 type 映射对不上，分发器整块不渲染')
     if (s.action) {
       assert.equal(serverAction(s.type, s.action), s.serverAction,
         s.type + ':' + s.action + ' 不在 ACTION_OF —— 玩家做完那一下什么都不发生')
@@ -44,9 +44,9 @@ test('★四个新段在 KIT_PRIORITY / TYPE_OF / ACTION_OF 三张表里都在�
 
 test('负控:段名从优先级表里摘掉一条,上一条必须能红', () => {
   const src = read()
-  const ROW = "  'profile', 'photoCheck', 'note', 'typeIn',"
+  const ROW = "  'profile', 'photoCheck', 'album', 'note', 'typeIn',"
   assert.ok(src.includes(ROW), '负控构造失败:优先级表那行已经不是预期形状')
-  const stripped = src.replace(ROW, "  'photoCheck', 'note', 'typeIn',")
+  const stripped = src.replace(ROW, "  'photoCheck', 'album', 'note', 'typeIn',")
   assert.notEqual(stripped, src, '负控构造失败:没真摘掉')
   assert.ok(!stripped.includes(ROW), '坏版本里 profile 确实没了 —— 全表跑的断言会因此判红')
 })
@@ -122,9 +122,9 @@ test('photoCheck:状态原样下发;rule.mode/threshold 已作废,不再下发',
   assert.equal(kit.maxTries, 3)
   assert.equal(kit.fallback, 'retake')
   assert.equal(kit.tries, 1)
-  assert.equal(kit.lastReason, '画面里没看到窗框', '不过的理由必须下发,否则玩家看不到为什么')
+  assert.equal(kit.lastReason, '画面里没看到窗框', '不过的理由必须下发，否则玩家看不到为什么')
   assert.equal(kit.degraded, false)
-  assert.equal('rule' in kit, false, 'rule 那一组本地算分键已作废,不许回来')
+  assert.equal('rule' in kit, false, 'rule 那一组本地算分键已作废，不许回来')
   assert.equal('threshold' in kit, false, 'threshold 已作废')
   /* ⚠️ mode 这个名字从 2026-09-22 起有了**第二个**意思:立体藏品卡的玩法判别键
      (空 = 普通拍照审核,'CARD' = 拍物成卡),与作废的 rule.mode 毫无关系。
@@ -146,7 +146,7 @@ test('photoCheck:过了或兜底放行(flagged)都算完;还在重拍不算', ()
   assert.equal(pick({ tries: 2, passed: false, flagged: false }), 'photocheck', '还在重拍就得接着弹')
   assert.equal(pick({ tries: 2, passed: true }), 'note', '过了就让位')
   assert.equal(pick({ tries: 3, passed: false, flagged: true, fallback: 'pass' }), 'note',
-    '次数用尽兜底放过(flagged)也算完,不然这一段永远走不掉')
+    '次数用尽保底放过(flagged)也算完，不然这一段永远走不掉')
 })
 
 // ===== check(契约 §2.3 已作废:master 上的 R14 检定走 JOURNEY_SEGMENTS,不在 playKit 里)=====
@@ -222,9 +222,9 @@ test('★四个新 type 都要注册进分发器并真的有 wxml 分支 —— 
 
 test('★页面接住了两条不在服务端动作表里的路:photoCheck 两段式提交、建档头像上传', () => {
   const src = fs.readFileSync(path.resolve(__dirname, '../../pages/play/index.js'), 'utf8')
-  assert.match(src, /'SUBMIT_PHOTO_CHECK'/, 'photoCheck 的提交动作没接到页面上,拍完只会静默什么都不发生')
+  assert.match(src, /'SUBMIT_PHOTO_CHECK'/, 'photoCheck 的提交动作没接到页面上，拍完只会静默什么都不发生')
   assert.match(src, /payload: \(url\) => \(\{ imageUrl: url \}\)/, 'photoCheck 提交必须只带图片地址(契约 §2.2:判定全在服务端)')
   assert.equal(/imageUrl: url[^)]*score/.test(src), false,
-    'score 又回到 payload 了 —— 客户端报分就是个可伪造的后门,契约明确不再接受')
-  assert.match(src, /\{ avatar: true \}/, '建档头像没接上传路径,选了也不会出现在档案里')
+    'score 又回到 payload 了 —— 客户端报分就是个可伪造的后门，契约明确不再接受')
+  assert.match(src, /\{ avatar: true \}/, '建档头像没接上传路径，选了也不会出现在档案里')
 })

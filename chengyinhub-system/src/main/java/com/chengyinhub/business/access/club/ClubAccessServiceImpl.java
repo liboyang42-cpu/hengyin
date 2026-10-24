@@ -60,6 +60,8 @@ public class ClubAccessServiceImpl implements IClubAccessService {
         Long lockedPrincipal = umsMemberMapper.lockActiveMemberById(principalMemberId);
         if (!principalMemberId.equals(lockedPrincipal)) throw forbidden();
         if (principalMemberId.equals(club.getMemberId())) {
+            com.chengyinhub.business.domain.UmsMember owner = umsMemberMapper.selectRolePermissionSubject(principalMemberId);
+            if (owner == null || !com.chengyinhub.business.service.IRoleService.ROLE_CLUB.equals(owner.getRole())) throw forbidden();
             return new ClubAccessContext(principalMemberId, clubId, club.getMemberId(), activityId,
                     Collections.singleton(ClubRoleCode.CLUB_OWNER));
         }

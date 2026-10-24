@@ -67,6 +67,8 @@ public class AiCreatorServiceImpl implements IAiCreatorService
             new java.util.HashSet<>(java.util.Arrays.asList("topic_coop", "decor", "content"));
     private static final String PLAYER_THEME_DRAFT_RATE_PREFIX = "ai:theme:draft:player:";
     private static final DateTimeFormatter RATE_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    /** 每日额度按北京时间换日，不随 JVM 默认时区漂移。 */
+    private static final java.time.ZoneId QUOTA_ZONE = java.time.ZoneId.of("Asia/Shanghai");
 
     @Autowired
     private IAiTopicPlanService aiTopicPlanService;
@@ -86,6 +88,9 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     @Autowired
     private RedisTemplate<Object, Object> redisTemplate;
 
+    @Autowired
+    private com.chengyinhub.business.service.ai.AiQuotaRecoveryService quotaRecovery;
+
     @Override
     public AiMerchantPlanResp merchantPlan(AiMerchantPlanReq req, Long memberId)
     {
@@ -98,6 +103,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         String role = resolveRole(memberId);
         PlayerThemeDraftQuotaReservation reservation = null;
         boolean accepted = false;
+        boolean inputBlocked = false;
         JSONObject user = new JSONObject();
         user.put("idea", req.getIdea());
         user.put("productType", req.getProductType());
@@ -112,6 +118,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
                 // 必须在调模型前占位；事后才计数会让第 4 次请求仍消耗一次模型调用。
                 reservation = reservePlayerThemeDraftQuota(memberId);
             }
+            if(reservation!=null && quotaRecovery!=null) quotaRecovery.stage(reservation.receipt,"INPUT_REVIEW_STARTED");
             AiGatewayResult r = gateway.generate(memberId, role, "theme_draft", SYS_THEME_DRAFT, user.toJSONString());
             AiThemeDraftResp resp = new AiThemeDraftResp();
             resp.setTraceId(r.getTraceId());
@@ -134,6 +141,11 @@ public class AiCreatorServiceImpl implements IAiCreatorService
             accepted = true;
             return resp;
         }
+        catch (AiServiceException failure)
+        {
+            inputBlocked = failure.getReason() == AiServiceException.Reason.INPUT_BLOCKED;
+            throw failure;
+        }
         catch (com.alibaba.fastjson2.JSONException je)
         {
             log.error("[AiCreator] JSON parse failed bizType=theme_draft", je);
@@ -141,9 +153,9 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         }
         finally
         {
-            if (reservation != null && !accepted)
-            {
-                releasePlayerThemeDraftQuota(reservation);
+            if (reservation != null) {
+                if (!accepted && !inputBlocked) releasePlayerThemeDraftQuota(reservation);
+                else if(quotaRecovery!=null) quotaRecovery.retain(reservation.receipt,inputBlocked ? "INPUT_BLOCKED" : "VALID_PLAYER_DRAFT");
             }
         }
     }
@@ -164,9 +176,11 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         }
         // player 走独立的 theme_draft 专项额度(比 gen 池更紧),两者取更紧的那个。
         int playerRemaining = Math.max(0, PLAYER_THEME_DRAFT_DAILY_LIMIT - playerThemeDraftUsed(memberId));
+        // 网关 gen 池与其它创作类共用,被用光时专项额度再有剩余也生成不了。
+        int gatewayRemaining = Math.max(0, gateway.remainingQuota(memberId, "theme_draft"));
         resp.setLimited(true);
         resp.setLimit(PLAYER_THEME_DRAFT_DAILY_LIMIT);
-        resp.setRemaining(playerRemaining);
+        resp.setRemaining(Math.min(playerRemaining, gatewayRemaining));
         return resp;
     }
 
@@ -552,62 +566,82 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         return value == null || value.trim().isEmpty();
     }
 
-    /** 在模型调用前预占一次额度；调用失败、Mock 或草稿无效时由 finally 归还。 */
+    private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> RESERVE_QUOTA_SCRIPT =
+            new org.springframework.data.redis.core.script.DefaultRedisScript<>(
+                    "local ttl=tonumber(ARGV[1]); local limit=tonumber(ARGV[2]); local capped=tonumber(ARGV[3]);\n" +
+                    "if not ttl or ttl<1 or ttl>86400 or ttl~=math.floor(ttl) or not limit or limit<0 then return redis.error_reply('invalid quota arguments') end;\n" +
+                    "local prior=redis.call('GET',KEYS[3]);\n" +
+                    "if prior=='0' then return -1 end;\n" +
+                    "if prior then local sep=string.find(prior,'|',1,true); if not sep then return -1 end; local gen=string.sub(prior,1,sep-1); if redis.call('EXISTS',KEYS[1])==1 and redis.call('GET',KEYS[2])==gen then return tonumber(string.sub(prior,sep+1)) end; return -1 end;\n" +
+                    "local raw=redis.call('GET',KEYS[1]);\n" +
+                    "if raw and not (raw=='0' or string.match(raw,'^[1-9]%d*$')) then return redis.error_reply('invalid quota counter') end;\n" +
+                    "local used=raw and tonumber(raw) or 0;\n" +
+                    "if not used or used>9007199254740990 then return redis.error_reply('quota counter out of range') end;\n" +
+                    "if capped==1 and used>=limit then redis.call('SET',KEYS[3],'0','EX',172800); return -2 end;\n" +
+                    "local gen=redis.call('GET',KEYS[2]); if not raw or not gen then gen=KEYS[3] end;\n" +
+                    "local next=redis.call('INCR',KEYS[1]); if next==1 then redis.call('EXPIRE',KEYS[1],ttl) end;\n" +
+                    "local life=redis.call('PTTL',KEYS[1]); if life>0 then redis.call('SET',KEYS[2],gen,'PX',life) elseif life==-1 then redis.call('SET',KEYS[2],gen) else redis.call('DEL',KEYS[2]) end;\n" +
+                    "redis.call('SET',KEYS[3],gen..'|'..next,'EX',172800); return next;", Long.class);
+    private static final org.springframework.data.redis.core.script.DefaultRedisScript<Long> REFUND_QUOTA_SCRIPT =
+            new org.springframework.data.redis.core.script.DefaultRedisScript<>(
+                    "local receipt=redis.call('GET',KEYS[3]); if receipt=='0' then return 0 end;\n" +
+                    "if not receipt then redis.call('SET',KEYS[3],'0','EX',172800); return 0 end;\n" +
+                    "local sep=string.find(receipt,'|',1,true); if not sep then return redis.error_reply('invalid quota receipt') end;\n" +
+                    "local gen=string.sub(receipt,1,sep-1); local raw=redis.call('GET',KEYS[1]); local refunded=0;\n" +
+                    "if raw and redis.call('GET',KEYS[2])==gen then\n" +
+                    "if not (raw=='0' or string.match(raw,'^[1-9]%d*$')) then return redis.error_reply('invalid quota counter') end;\n" +
+                    "local used=tonumber(raw); if not used or used>9007199254740991 then return redis.error_reply('quota counter out of range') end;\n" +
+                    "if used>0 then redis.call('DECR',KEYS[1]); refunded=1 end; end;\n" +
+                    "redis.call('SET',KEYS[3],'0','EX',172800); return refunded;", Long.class);
+    /** 原日、nonce 与代际绑定；未知响应只补偿自己的预占。 */
     private PlayerThemeDraftQuotaReservation reservePlayerThemeDraftQuota(Long memberId)
     {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(QUOTA_ZONE);
         String key = PLAYER_THEME_DRAFT_RATE_PREFIX + memberId + ":" + now.toLocalDate().format(RATE_DATE_FMT);
-        boolean incremented = false;
-        try
-        {
-            Long used = redisTemplate.opsForValue().increment(key);
-            if (used == null)
-            {
-                throw new AiServiceException("AI 服务繁忙,请稍后重试");
-            }
-            incremented = true;
-            if (used == 1)
-            {
-                redisTemplate.expire(key, secondsUntilNextLocalMidnight(now), TimeUnit.SECONDS);
-            }
-            if (used > PLAYER_THEME_DRAFT_DAILY_LIMIT)
-            {
-                redisTemplate.opsForValue().decrement(key);
-                throw new AiServiceException("今日简单创作次数已用完(3/天),明天再来吧");
-            }
-            return new PlayerThemeDraftQuotaReservation(key,
-                    PLAYER_THEME_DRAFT_DAILY_LIMIT - used.intValue());
+        String receipt = "ai:player:theme:draft:reservation:" + key + ":"
+                + com.chengyinhub.common.utils.uuid.IdUtils.simpleUUID();
+        if(quotaRecovery!=null) quotaRecovery.prepare(memberId,"theme_draft","player-draft",key,receipt);
+        PlayerThemeDraftQuotaReservation reservation = new PlayerThemeDraftQuotaReservation(key, receipt, 0);
+        Long used;
+        try {
+            used = redisTemplate.execute(RESERVE_QUOTA_SCRIPT,
+                    java.util.Arrays.<Object>asList(key, key + ":generation", receipt),
+                    Integer.valueOf((int) secondsUntilNextLocalMidnight(now)),
+                    Integer.valueOf(PLAYER_THEME_DRAFT_DAILY_LIMIT), Integer.valueOf(1));
+        } catch (RuntimeException unknown) {
+            releasePlayerThemeDraftQuota(reservation);
+            throw new AiServiceException("AI 服务繁忙,请稍后重试", unknown);
         }
-        catch (AiServiceException e)
-        {
-            throw e;
+        if (Long.valueOf(-2L).equals(used)) {
+            if(quotaRecovery!=null) quotaRecovery.retain(receipt,"RATE_LIMITED");
+            throw new AiServiceException("今日简单创作次数已用完(3/天),明天再来吧");
         }
-        catch (RuntimeException e)
-        {
-            if (incremented)
-            {
-                releasePlayerThemeDraftQuota(new PlayerThemeDraftQuotaReservation(key, 0));
-            }
-            log.warn("[AiCreator] player-theme-draft quota unavailable memberId={}", memberId, e);
+        if (used == null || used < 1) {
+            releasePlayerThemeDraftQuota(reservation);
             throw new AiServiceException("AI 服务繁忙,请稍后重试");
         }
+        if(quotaRecovery!=null) {
+            try { quotaRecovery.reserved(receipt,used); }
+            catch(RuntimeException persistenceFailure) { releasePlayerThemeDraftQuota(reservation); throw persistenceFailure; }
+        }
+        return new PlayerThemeDraftQuotaReservation(key, receipt,
+                PLAYER_THEME_DRAFT_DAILY_LIMIT - used.intValue());
     }
 
     private void releasePlayerThemeDraftQuota(PlayerThemeDraftQuotaReservation reservation)
     {
-        try
-        {
-            redisTemplate.opsForValue().decrement(reservation.key);
-        }
-        catch (RuntimeException e)
-        {
-            log.warn("[AiCreator] player-theme-draft quota release failed", e);
+        try {
+            if(quotaRecovery!=null) { quotaRecovery.requireRefund(reservation.receipt,"PLAYER_DRAFT_FAILED"); return; }
+            redisTemplate.execute(REFUND_QUOTA_SCRIPT, java.util.Arrays.<Object>asList(
+                    reservation.key, reservation.key + ":generation", reservation.receipt));
+        } catch (RuntimeException unavailable) {
+            log.warn("[AiCreator] player-theme-draft quota compensation unavailable", unavailable);
         }
     }
 
     private int playerThemeDraftUsed(Long memberId)
     {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(QUOTA_ZONE);
         String key = PLAYER_THEME_DRAFT_RATE_PREFIX + memberId + ":" + now.toLocalDate().format(RATE_DATE_FMT);
         try
         {
@@ -626,11 +660,13 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     private static final class PlayerThemeDraftQuotaReservation
     {
         private final String key;
+        private final String receipt;
         private final int remaining;
 
-        private PlayerThemeDraftQuotaReservation(String key, int remaining)
+        private PlayerThemeDraftQuotaReservation(String key, String receipt, int remaining)
         {
             this.key = key;
+            this.receipt = receipt;
             this.remaining = remaining;
         }
     }

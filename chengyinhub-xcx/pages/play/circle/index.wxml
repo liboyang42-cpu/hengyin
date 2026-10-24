@@ -15,15 +15,15 @@
       <view class="cy-status__dot"></view>
       <view class="cy-status__body">
         <text class="cy-status__text">{{receiptText}}</text>
-        <text class="cy-status__act" wx:if="{{receipt === 'unknown'}}">再核对一次</text>
+        <text class="cy-status__act" wx:if="{{receipt === 'unknown'}}">再确认一次</text>
       </view>
     </view>
     <view class="circle-sync-state">
-      <text wx:if="{{refreshing && card}}" class="circle-sync" aria-role="status">正在核对探索状态…</text>
+      <text wx:if="{{refreshing && card}}" class="circle-sync" aria-role="status">正在确认探索状态…</text>
     </view>
   <block wx:if="{{card}}">
     <view class="hero">
-      <view class="eyebrow">玩家自助记录</view>
+      
       <view class="title">{{theme.name}}</view>
       <view class="subtitle">{{theme.subtitle}}</view>
       <view class="combination">本地组合：{{combinationText || '已有记录中的商家组合'}}</view>
@@ -86,7 +86,7 @@
         <view class="history-note" wx:if="{{record.note}}">{{record.note}}</view>
       </view>
     </view>
-    <view class="disclaimer">本卡仅记录玩家自助选择，不代表商家确认到店、预约、核销或成交。</view>
+    <view class="disclaimer">本卡仅记录玩家自己的选择</view>
   </block>
   </block>
 </view>

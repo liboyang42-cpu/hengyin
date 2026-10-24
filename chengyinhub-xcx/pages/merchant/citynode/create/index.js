@@ -8,6 +8,7 @@ const modal = require('../../../../utils/modal.js');
 const toast = require('../../../../utils/toast.js');
 const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../../utils/album-template.js');
 const app = getApp();
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../../utils/session/login-reload.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../../../utils/merchant-access-policy.js');
 
@@ -34,6 +35,7 @@ function requestErrorText(res, fallback) {
 
 Page({
   data: {
+    accessErrorIsDenied: false,
     statusBarHeight: 20,
     navBarHeight: 44,
     accessState: 'loading',
@@ -90,11 +92,18 @@ Page({
   },
 
   onShow() {
+    this._hidden = false;
     merchantTheme.merchantPageShow();
     this.syncLeaveGuard();
+    if (this._readSessionChanged || this._accessOwner !== undefined && this._accessOwner !== memberId(app)) {
+      this._readSessionChanged = false;
+      this.setData({ tpl: null, picked: null, addressConfirmed: false, shopLoaded: false }); this.loadAccess();
+    }
   },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
+    this._unloaded = true;
+    this._accessEpoch = (this._accessEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
     this.disableLeaveGuard();
   },
@@ -151,7 +160,36 @@ Page({
     this._leaveGuardEnabled = false;
   },
 
+  onLogin() { return retryLogin(this, app, this.loadAccess); },
+  _readError(res, fallback, statusCode) {
+    const status = failureStatus(res, statusCode);
+    const state = status === 401 ? 'login' : status === 403 ? 'no-permission' : 'error';
+    if (status === 401 || status === 403) {
+      this._accessEpoch = (this._accessEpoch || 0) + 1;
+      this.setData({ tpl: null, picked: null, addressConfirmed: false, merchantAccess: merchantAccessPolicy.inactiveAccess() });
+    }
+    this.setData({ accessState: state, accessErrorIsDenied: [400, 422].includes(status), accessErrorText: res && res.msg || fallback });
+  },
+
+  _recoverAccess(res, status, epoch) {
+    if (this._unloaded || epoch !== this._accessEpoch) return false;
+    return recoverReadSession(this, app, res, function (anonymous) {
+      this._accessEpoch++; this._accessOwner = undefined;
+      this.setData({ tpl: null, picked: null, addressConfirmed: false, shopLoaded: false, merchantAccess: merchantAccessPolicy.inactiveAccess(), accessState: anonymous ? 'login' : 'loading', accessErrorText: '', canSubmit: false });
+    }, this.loadAccess, status);
+  },
+
   loadAccess() {
+    const owner = memberId(app);
+    const token = (this._accessEpoch || 0) + 1;
+    this._accessEpoch = token;
+    this._accessOwner = owner;
+    if (!owner) {
+      this.setData({ accessState: 'login', accessErrorText: '' });
+      waitForInitialSession(this, app, this.loadAccess);
+      return;
+    }
+    const current = () => token === this._accessEpoch && owner === memberId(app) && !this._unloaded;
     const that = this;
     this.setData({
       accessState: 'loading',
@@ -163,11 +201,13 @@ Page({
     app.sendRequest({
       url: '/api/merchant/access/me', method: 'POST', hideLoading: true, silentError: true,
       success(res) {
+        if (!current()) return;
         if (!(res && (res.code === '200' || res.code === 200))) {
-          that.setData({ accessState: 'error', accessErrorText: (res && res.msg) || '商家权限没能读取' });
+          that._readError(res, '商家权限没能读取');
           return;
         }
         const access = merchantAccessPolicy.normalizeMerchantAccess(res.data);
+        if (access.invalid) { that._readError(res, '商家权限资料不完整'); return; }
         if (!access.active || !access.canManageProjects) {
           that.setData({ accessState: 'no-permission', merchantAccess: access });
           return;
@@ -175,8 +215,8 @@ Page({
         that.setData({ accessState: 'ready', merchantAccess: access });
         that.loadShop();
       },
-      fail() { that.setData({ accessState: 'error', accessErrorText: '网络异常，商家权限没能读取' }); },
-      successStatusAbnormal() { that.setData({ accessState: 'error', accessErrorText: '商家权限没能读取' }); },
+      fail(res, status) { if (!that._recoverAccess(res, status, token) && current()) that._readError(res, '网络异常，商家权限没能读取', status); },
+      successStatusAbnormal(res, status) { if (!that._recoverAccess(res, status, token) && current()) that._readError(res, '商家权限没能读取', status); },
     });
   },
 
@@ -189,13 +229,18 @@ Page({
    * 「玩家永远打不了卡、还零报错」—— 静默失败,商家也不知道为什么没人核销。
    */
   loadShop() {
+    const owner = memberId(app), epoch = this._accessEpoch;
+    if (!owner) { this._readError({ code: 401 }, '请登录后查看'); return; }
     if (!this.data.merchantAccess.canManageProjects) return;
+    const current = () => owner === memberId(app) && epoch === this._accessEpoch && !this._unloaded;
     const that = this;
     this.setData({ shopLoaded: false, shopLoadError: '' });
     app.sendRequest({
       hideLoading: true, silentError: true,
       url: '/api/merchant/info', method: 'POST',
       success(res) {
+        if (!current()) return;
+        if ([401, 403, 400, 422].includes(failureStatus(res))) { that._readError(res, '无法读取店铺资料'); return; }
         if (res.code != '200' || !res.data) {
           that.setData({ shopLoaded: true, shopLoadError: requestErrorText(res, '店铺资料没读出来') });
           return;
@@ -212,16 +257,19 @@ Page({
         });
         that.refreshSubmitState();
       },
-      fail() {
-        that.setData({ shopLoaded: true, shopLoadError: '网络异常,店铺资料没读出来' });
+      fail(res, status) {
+        if (that._recoverAccess(res, status, epoch) || !current()) return;
+        if ([401, 403, 400, 422].includes(failureStatus(res, status))) { that._readError(res, '无法读取店铺资料', status); return; }
+        that.setData({ shopLoaded: true, shopLoadError: '网络异常，店铺资料没读出来' });
       },
+      successStatusAbnormal(res, status) { if (!that._recoverAccess(res, status, epoch) && current()) that._readError(res, '店铺资料没能读取', status); },
     });
   },
 
   /** 去配玩法:temp 页保存后用 eventChannel 把 templateId 回传过来 */
   goConfigTemplate() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const that = this;
     wx.navigateTo({
@@ -246,7 +294,7 @@ Page({
   /** 挪一下:打开地图重选,选完就不再是「档案坐标」了 */
   repick() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const that = this;
     wx.chooseLocation({
@@ -322,7 +370,7 @@ Page({
   // 提交据点投放申请;审核通过前绝不在客户端伪造成已上线节点。
   submitNode() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     if (this.data.submitting) return;
     if (this.data.submittedApplicationId) return this.readBackAndReturn(this.data.submittedApplicationId);
@@ -380,7 +428,7 @@ Page({
           that.onNavBack();
           return;
         }
-        that.setData({ readbackError: '申请已提交，审核状态暂未同步' });
+        that.setData({ readbackError: '申请已提交，审核状态更新中' });
       },
       fail() {
         that.setData({ readbackError: '申请已提交，但审核状态读取失败' });

@@ -76,6 +76,7 @@ class ApiRoamCoordinateBoundaryTest
 
         controller = new StubController();
         ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
+        ReflectionTestUtils.setField(controller,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
         ReflectionTestUtils.setField(controller, "roamSessionWriteService", writeService);
         ReflectionTestUtils.setField(controller, "growthService", growthService);
         ReflectionTestUtils.setField(controller, "memberVisitedPoiMapper", visitedPoiMapper);
@@ -223,6 +224,31 @@ class ApiRoamCoordinateBoundaryTest
         verify(visitedPoiMapper).insertVisitedPoiIgnore(anyLong(), any(), any(), any(), any(), any());
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    void checkinUsesStableIdentityOnlyWhenSwitchOn()
+    {
+        com.chengyinhub.business.service.support.VisitedPoiIdentityResolver identity =
+                mock(com.chengyinhub.business.service.support.VisitedPoiIdentityResolver.class);
+        ReflectionTestUtils.setField(controller, "visitedPoiIdentity", identity);
+        when(visitedPoiMapper.insertVisitedPoiIgnore(anyLong(), any(), any(), any(), any(), any())).thenReturn(1);
+
+        // 开关关(默认):旧 geo_key 路径一字不变
+        assertEquals(200, controller.checkin("测试点", NEAR_LAT, NEAR_LNG, NEAR_LAT, NEAR_LNG).get("code"));
+        verify(visitedPoiMapper).insertVisitedPoiIgnore(org.mockito.ArgumentMatchers.eq(PLAYER),
+                org.mockito.ArgumentMatchers.eq("31.230,121.474"), any(), any(), any(), any());
+        verify(identity, never()).recordVisit(anyLong(), anyDouble(), anyDouble(), any(), any());
+
+        // 开关开:走稳定身份,已点亮过则不再发探索值
+        when(identity.enabled()).thenReturn(true);
+        when(identity.recordVisit(anyLong(), anyDouble(), anyDouble(), any(), any())).thenReturn(false);
+        AjaxResult again = controller.checkin("测试点", NEAR_LAT, NEAR_LNG, NEAR_LAT, NEAR_LNG);
+        assertEquals(Boolean.FALSE, ((Map<String, Object>) again.get("data")).get("firstVisit"));
+        verify(identity).recordVisit(org.mockito.ArgumentMatchers.eq(PLAYER), org.mockito.ArgumentMatchers.eq(NEAR_LAT),
+                org.mockito.ArgumentMatchers.eq(NEAR_LNG), org.mockito.ArgumentMatchers.eq("测试点"), any());
+        verify(growthService).addExp(PLAYER, 20, "点亮地点");
+    }
+
     // ---------- 心跳/查询 ----------
 
     @Test
@@ -247,7 +273,7 @@ class ApiRoamCoordinateBoundaryTest
         assertNotEquals(200, controller.pois(Double.NaN, NEAR_LNG, null).get("code"));
         assertNotEquals(200, controller.nearbyExploreDay(Double.NaN, NEAR_LNG).get("code"));
         assertNotEquals(200, controller.nearbyRunners(Double.NaN, NEAR_LNG, null).get("code"));
-        verify(roamMapper, never()).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), any());
+        verify(roamMapper, never()).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), any(), anyInt());
         verify(roamMapper, never()).selectNearbyRunners(anyLong(), anyDouble(), anyDouble(), anyInt(), any(), any(), anyInt());
     }
 
@@ -260,7 +286,8 @@ class ApiRoamCoordinateBoundaryTest
         RoamPoi found = new RoamPoi();
         found.setId(POI_ID);
         found.setFound(true);
-        when(roamMapper.selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER)))
+        when(roamMapper.selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER),
+                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT)))
                 .thenReturn(Collections.singletonList(found));
 
         AjaxResult r = controller.pois(NEAR_LAT, NEAR_LNG, 3000);
@@ -268,6 +295,7 @@ class ApiRoamCoordinateBoundaryTest
         assertEquals(200, r.get("code"));
         assertEquals(Boolean.TRUE, ((java.util.List<RoamPoi>) r.get("data")).get(0).getFound(),
                 "found 是服务端按账号投影的事实,必须原样下发 —— 前端靠它把已发现地点保持点亮");
-        verify(roamMapper).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER));
+        verify(roamMapper).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER),
+                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT));
     }
 }

@@ -39,6 +39,61 @@ import static org.mockito.Mockito.when;
 class JourneyReviewTextsTest {
 
     @Test
+    void mediaAltTextIsReviewedFromBothDtoAndStoredBlocksWithoutTreatingUrlsAsText() {
+        ChapterBlockDTO image = new ChapterBlockDTO();
+        image.setType("image"); image.setUrl("media-asset:901"); image.setAltText("图片说明");
+        ChapterBlockDTO audio = new ChapterBlockDTO();
+        audio.setType("audio"); audio.setUrl("media-asset:902"); audio.setAltText("音频转写");
+        ChapterBlockDTO legacy = new ChapterBlockDTO();
+        legacy.setType("image"); legacy.setUrl("media-asset:903");
+        ChapterBlockDTO nonMedia = new ChapterBlockDTO();
+        nonMedia.setType("text"); nonMedia.setAltText("非媒体字段不采集");
+        ChapterDTO chapter = new ChapterDTO();
+        chapter.setBlocks(Arrays.asList(image, audio, legacy, nonMedia));
+        List<JourneyReviewTexts.Entry> dtoEntries =
+                JourneyReviewTexts.collectChapterNarrativeBlocks(Collections.singletonList(chapter));
+        assertEquals(Arrays.asList("图片说明", "音频转写"), texts(dtoEntries));
+        assertEquals(Arrays.asList("storyFlow.chapter1.altText", "storyFlow.chapter1.altText"), fields(dtoEntries));
+
+        String stored = "[{\"type\":\"image\",\"url\":\"media-asset:901\",\"altText\":\"图片说明\"},"
+                + "{\"type\":\"audio\",\"url\":\"media-asset:902\",\"altText\":\"音频转写\"},"
+                + "{\"type\":\"image\",\"altText\":null},{\"type\":\"audio\",\"altText\":\"\"},"
+                + "{\"type\":\"text\",\"altText\":\"非媒体字段不采集\"}]";
+        List<JourneyReviewTexts.Entry> storedEntries = JourneyReviewTexts.collectChapterBlocks(stored, 1);
+        assertEquals(texts(dtoEntries), texts(storedEntries));
+        assertEquals(fields(dtoEntries), fields(storedEntries));
+    }
+
+    @Test
+    void chapterAndNodeUserFacingTextIsCollectedButCoordinatesAndMediaAreNotText() {
+        ChapterDTO chapter = new ChapterDTO();
+        chapter.setName("章节名"); chapter.setDescription("章节正文"); chapter.setCategory("咖啡");
+        chapter.setAudioUrl("https://cdn/private-audio.mp3");
+        com.chengyinhub.business.domain.dto.NodeDTO node = new com.chengyinhub.business.domain.dto.NodeDTO();
+        node.setName("站点名"); node.setDescription("站点正文"); node.setAddress("地点");
+        node.setBusinessTime("营业说明"); node.setHookText("钩子"); node.setCardHookLong("长钩子"); node.setFragmentText("碎片");
+        node.setLongitude("121"); node.setLatitude("31"); node.setImgUrl("https://cdn/photo.jpg");
+        chapter.setNodes(Arrays.asList(null, node));
+        List<JourneyReviewTexts.Entry> entries = JourneyReviewTexts.collectChapters(Arrays.asList(null, chapter));
+        assertEquals(Arrays.asList("章节名", "章节正文", "咖啡", "站点名", "站点正文", "地点", "营业说明", "钩子", "长钩子", "碎片"), texts(entries));
+        assertEquals("chapters[1].nodes[1].fragmentText", entries.get(9).getField());
+        assertTrue(JourneyReviewTexts.collectChapters(null).isEmpty());
+    }
+
+    @Test
+    void r5RepliesAndZeroMessageReachExistingAuditWithoutCollectingRuleIdentifiers() {
+        String config = "{\"outcomeRules\":{\"version\":1,\"pass\":{\"reply\":\"通过反馈\",\"costs\":[{\"statKey\":\"counter.secret\",\"amount\":3}]},\"fail\":{\"reply\":\"失败反馈\"}},\"qa\":{\"options\":[{\"after\":{\"reply\":\"选项反馈\"}}]},\"private\":{\"reply\":\"不采集\"}}";
+        // F-L5C-13 起未列举段落按 key 递归兜底:未知段的 reply 文本也送检;规则标识(statKey/amount)仍不收。
+        List<String> collected = texts(JourneyReviewTexts.collectBlocks(config));
+        assertEquals(Arrays.asList("通过反馈", "失败反馈", "选项反馈", "不采集"), collected);
+        assertFalse(collected.contains("counter.secret"), collected.toString());
+        List<JourneyReviewTexts.Entry> zero = JourneyReviewTexts.collectThemeRuntime(
+                "{\"gameplayRuntime\":{\"survival\":{\"zeroHpPolicy\":\"WAIT\",\"zeroMessage\":\"归零反馈\"}}}");
+        assertEquals(Collections.singletonList("归零反馈"), texts(zero));
+        assertEquals("themeRuntimeConfig.gameplayRuntime.survival.zeroMessage", zero.get(0).getField());
+    }
+
+    @Test
     void collectsEveryJourneyStoryTextField() {
         String json = "{\"schemaVersion\":1,"
                 + "\"call\":{\"npcId\":1,\"opener\":\"开场白\",\"brief\":\"委托简报\","
@@ -137,16 +192,18 @@ class JourneyReviewTextsTest {
         List<JourneyReviewTexts.Entry> entries =
                 JourneyReviewTexts.collectChapterNarrativeBlocks(Collections.singletonList(chapter));
 
-        assertFields(entries, "到店开场",
+        // 需求变更(F-L5C-03):章节旁白也是玩家直接读到的文字,一并送检。
+        assertFields(entries, "章节旁白",
+                "storyFlow.chapter1.text.content",
                 "storyFlow.chapter1.enter.opener",
                 "storyFlow.chapter1.enter.q(night)",
                 "storyFlow.chapter1.brief.carry");
-        assertEquals(3, entries.size(), fields(entries).toString());
+        assertEquals(4, entries.size(), fields(entries).toString());
     }
 
     /**
      * R19:审核详情读的是存量 blocks(物化后 nodeId 已在),收 beat 块正文;
-     * 非 beat 的章节旁白不在本轮口径内。
+     * F-L5C-03 起非 beat 的章节旁白也收。
      *
      * <p>负控:让 collectChapterBlocks 直接返回空清单,本用例立刻红。
      */
@@ -161,9 +218,10 @@ class JourneyReviewTextsTest {
 
         List<JourneyReviewTexts.Entry> entries = JourneyReviewTexts.collectChapterBlocks(blocks, 2);
 
-        assertFields(entries, "翻到过",
+        assertFields(entries, "章节旁白",
+                "storyFlow.chapter2.text.content",
                 "storyFlow.chapter2.outcome.fact", "storyFlow.chapter2.deliver.reward");
-        assertEquals(2, entries.size(), fields(entries).toString());
+        assertEquals(3, entries.size(), fields(entries).toString());
     }
 
     @Test
@@ -279,7 +337,9 @@ class JourneyReviewTextsTest {
                 "把线索连到出处", "剪掉的一分钟", "合照背后的名字", "录音带", "相纸",
                 "把材料分进两箱", "可公开", "需授权", "公共演奏录音", "私人告别",
                 "两版录音哪里不一样", "母带", "0:12", "一段留白", "1:30", "关门声",
-                "播出带", "0:12", "留白被剪掉", "1:30", "关门声"), texts(entries));
+                "播出带", "0:12", "留白被剪掉", "1:30", "关门声",
+                // F-L5C-13:未逐段列举的玩法(找东西)由按 key 递归兜底收集
+                "找东西", "不该被收进来的标签"), texts(entries));
         assertFields(entries, "留白咖啡",
                 "blockConfig.sort.prompt", "blockConfig.sort.items[].label",
                 "blockConfig.match.prompt", "blockConfig.match.left[].label",
@@ -313,10 +373,26 @@ class JourneyReviewTextsTest {
         assertTrue(fields.contains("blockConfig.compare.right.items[].text"), fields.toString());
     }
 
+    /**
+     * 需求变更(F-L5C-03 / F-L5C-13):原「只收列举段落」的口径会让新玩法文字漏检,
+     * 改为按 key 递归兜底 —— 找东西、盲盒、估数等未逐段列举的玩法文字同样送检,ID 不送。
+     */
     @Test
-    void onlyListedSectionsAreCollected() {
-        assertFalse(texts(JourneyReviewTexts.collectBlocks(CONFIG)).contains("不该被收进来的标签"),
-                "R14 的收集范围只有 sort / match / classify / compare 的题面与标签");
+    void unlistedGameplaySectionsAreCollectedByKeyButIdsAreNot() {
+        List<JourneyReviewTexts.Entry> entries = JourneyReviewTexts.collectBlocks(CONFIG);
+        assertTrue(texts(entries).contains("不该被收进来的标签"), fields(entries).toString());
+        assertTrue(fields(entries).contains("blockConfig.hiddenObject.hotspots[].label"), fields(entries).toString());
+        assertFalse(texts(entries).contains("h1"), "id 不是展示文字");
+
+        String blind = "{\"random\":{\"deckName\":\"今日签\",\"items\":[{\"id\":\"x\",\"label\":\"上上签\",\"content\":\"盲盒正文\"}]},"
+                + "\"estimate\":{\"title\":\"猜重量\",\"unit\":\"克\",\"reveal\":\"揭晓文案\"},"
+                + "\"timeWindow\":{\"subscribeTmplId\":\"tmpl-secret-id\"}}";
+        List<String> got = texts(JourneyReviewTexts.collectBlocks(blind));
+        for (String expected : new String[]{"今日签", "上上签", "盲盒正文", "猜重量", "克", "揭晓文案"}) {
+            assertTrue(got.contains(expected), expected + " 漏收:" + got);
+        }
+        assertFalse(got.contains("tmpl-secret-id"), "订阅模板 id 不是展示文字");
+        assertFalse(got.contains("x"), "id 不是展示文字");
     }
 
     @Test
@@ -329,6 +405,75 @@ class JourneyReviewTextsTest {
         assertTrue(JourneyReviewTexts.collectBlocks(
                 "{\"compare\":{\"prompt\":\" \",\"left\":\"x\",\"right\":{\"items\":[1,{},{\"time\":\" \"}]}}}")
                 .isEmpty());
+    }
+
+    @Test
+    void notePresetsCollectTextAndObjectLabelsWithoutLooseningThePublishValidator() {
+        List<JourneyReviewTexts.Entry> entries = JourneyReviewTexts.collectBlocks(
+                "{\"note\":{\"presets\":[\"纯文本\",null,4,{\"text\":\"旧正文\",\"label\":\"旧标签\",\"code\":\"identifier\"}]}}");
+        assertEquals(Arrays.asList("纯文本", "旧正文", "旧标签"), texts(entries));
+        assertEquals("blockConfig.note.presets[]", entries.get(0).getField());
+        assertEquals("blockConfig.note.presets[].text", entries.get(1).getField());
+        assertEquals("blockConfig.note.presets[].label", entries.get(2).getField());
+    }
+
+    @Test
+    void collectsQaScanAlbumAndOtherPlayerVisibleText() {
+        String config = "{\"qa\":{\"title\":\"问题\",\"lead\":\"提示\",\"answerText\":\"答案\","
+                + "\"shotNote\":\"拍照说明\",\"options\":[{\"label\":\"选项\",\"fb\":\"反馈\"}]},"
+                + "\"scan\":{\"reply\":\"扫码回复\"},\"album\":{\"images\":[{\"line\":\"配文\"}]},"
+                + "\"photoCheck\":{\"title\":\"拍照\",\"requirement\":\"要求\",\"shotNote\":\"说明\",\"cardTitle\":\"卡名\"},"
+                + "\"note\":{\"title\":\"留言\",\"prompt\":\"写留言\",\"presets\":[\"预设留言\"]},"
+                + "\"typeIn\":{\"title\":\"打字\",\"target\":\"目标文字\"}}";
+        List<JourneyReviewTexts.Entry> entries = JourneyReviewTexts.collectBlocks(config);
+        assertFields(entries, "反馈", "blockConfig.qa.title", "blockConfig.qa.lead",
+                "blockConfig.qa.answerText", "blockConfig.qa.shotNote", "blockConfig.qa.options[].label",
+                "blockConfig.qa.options[].fb", "blockConfig.scan.reply", "blockConfig.album.images[].line",
+                "blockConfig.photoCheck.title", "blockConfig.photoCheck.requirement", "blockConfig.photoCheck.shotNote",
+                "blockConfig.photoCheck.cardTitle", "blockConfig.note.title", "blockConfig.note.prompt",
+                "blockConfig.note.presets[]", "blockConfig.typeIn.title", "blockConfig.typeIn.target");
+        assertEquals(17, entries.size());
+        assertTrue(JourneyReviewTexts.collectBlocks("{\"qa\":null,\"album\":{\"images\":[null,1]}}").isEmpty());
+    }
+
+    /** F-L5C-13:字符串数组(候选名/骰面/每日一句)、动作文案与线索名表同样是玩家可见文字。 */
+    @Test
+    void stringArraysActionsAndClueNamesAreCollected() {
+        String config = "{\"diyName\":{\"suggestions\":[\"候选甲\",\"候选乙\"]},"
+                + "\"dailySign\":{\"poems\":[[\"第一句\",\"第二句\"]]},"
+                + "\"diceRoll\":{\"faces\":[\"骰面一\",{\"action\":\"骰面动作\"}]},"
+                + "\"coinFlip\":{\"heads\":{\"action\":\"正面动作\"}},"
+                + "\"clues\":{\"clue.h_1\":\"线索名\"}}";
+        List<String> got = texts(JourneyReviewTexts.collectBlocks(config));
+        for (String expected : new String[]{"候选甲", "候选乙", "第一句", "第二句", "骰面一", "骰面动作", "正面动作", "线索名"}) {
+            assertTrue(got.contains(expected), expected + " 漏收:" + got);
+        }
+        assertFalse(got.contains("clue.h_1"), "线索 id 不是展示文字");
+    }
+
+    /** F-L5C-03:主题动作名、念头规则、宾果格子、模板散字段都进入送检清单。 */
+    @Test
+    void topicRulesBingoAndTemplateLooseFieldsAreCollected() {
+        assertEquals(Collections.singletonList("出拳"),
+                texts(JourneyReviewTexts.collectThemeRuntime("{\"actionName\":\"出拳\"}")));
+        assertEquals(Arrays.asList("念头名", "一句话"), texts(JourneyReviewTexts.collectJourneyRules(
+                "{\"thoughts\":[{\"key\":\"t1\",\"name\":\"念头名\",\"desc\":\"一句话\"}]}")));
+        assertEquals(Arrays.asList("九宫格", "连线奖", "格子名", "格子奖"), texts(JourneyReviewTexts.collectCompletionRule(
+                "{\"bingo\":{\"enabled\":true,\"title\":\"九宫格\",\"lineReward\":\"连线奖\","
+                        + "\"cells\":[{\"label\":\"格子名\",\"feedbackText\":\"格子奖\"}]}}")));
+
+        com.chengyinhub.business.domain.CmsMemberTemplate t = new com.chengyinhub.business.domain.CmsMemberTemplate();
+        t.setQuestionA("选项甲");
+        t.setHint1("提示一");
+        t.setAnswerReveal("揭晓");
+        t.setStoryJson("[{\"title\":\"分节标题\",\"text\":\"分节正文\"}]");
+        t.setRewardRulesJson("[{\"outcomeCode\":\"win\",\"feedbackText\":\"奖励文案\"}]");
+        t.setMedalName("勋章名");
+        List<String> got = texts(JourneyReviewTexts.collectTemplateFields(t));
+        for (String expected : new String[]{"选项甲", "提示一", "揭晓", "分节标题", "分节正文", "奖励文案", "勋章名"}) {
+            assertTrue(got.contains(expected), expected + " 漏收:" + got);
+        }
+        assertFalse(got.contains("win"), "结果码不是展示文字");
     }
 
     private static List<String> texts(List<JourneyReviewTexts.Entry> entries) {

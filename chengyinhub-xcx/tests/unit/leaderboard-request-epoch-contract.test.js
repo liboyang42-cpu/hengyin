@@ -9,6 +9,7 @@ const MODULE = path.join(ROOT, 'subpackageP3/pages/growthcenter/leaderboard/inde
 function loadPage() {
   const sandbox = { requests: [] }
   global.getApp = () => ({
+  getUserID: () => 7, // Explicit authenticated leaderboard reader fixture.
     sendRequest: (options) => sandbox.requests.push(options),
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   })
@@ -54,13 +55,40 @@ test('最新请求失败后，旧成功/失败都不能复活或覆盖终态', (
 
   sandbox.requests[1].fail({ errMsg: 'offline' })
   sandbox.requests[1].complete()
-  assert.equal(page.data.errorMsg, '排行榜没有加载出来')
+  assert.equal(page.data.errorMsg, '排行榜加载失败')
   assert.equal(page.data.loading, false)
 
   sandbox.requests[0].success({ code: 200, data: board(99) })
   sandbox.requests[0].complete()
-  assert.equal(page.data.errorMsg, '排行榜没有加载出来')
+  assert.equal(page.data.errorMsg, '排行榜加载失败')
   assert.equal(page.data.top3.length, 0)
+})
+
+test('离开排行榜后旧成功、异常、失败和 complete 不写退役页，重开可正常加载', () => {
+  for (const callback of ['success', 'successStatusAbnormal', 'fail']) {
+    const { page, sandbox } = loadPage()
+    page.onLoad({})
+    page.switchMetric('exp')
+    page.switchPeriod('week')
+    const pending = sandbox.requests[2]
+    const snapshot = JSON.stringify(page.data)
+    let writes = 0
+    page.setData = () => { writes++ }
+    assert.equal(typeof page.onUnload, 'function')
+    page.onUnload()
+    pending[callback]({ code: 200, data: board(99, 99) })
+    pending.complete()
+    assert.equal(writes, 0)
+    assert.equal(JSON.stringify(page.data), snapshot)
+
+    const current = loadPage()
+    current.page.onLoad({ metric: 'exp', period: 'week' })
+    current.sandbox.requests[0].success({ code: 200, data: board(10, 10) })
+    current.sandbox.requests[0].complete()
+    assert.equal(current.page.data.top3[0].memberId, 10)
+    assert.equal(current.page.data.unit, 'EXP')
+    assert.equal(current.page.data.loading, false)
+  }
 })
 
 test('榜首标记使用项目图标资产，不用文字皇冠', () => {

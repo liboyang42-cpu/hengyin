@@ -33,6 +33,7 @@ Component({
        bingo/draw/qa/qadark/branch;glass = 精准停表的浅色玻璃。空的落到 skin-none(问答暗版)。 */
     skin: { type: String, value: '' },
     limitSeconds: { type: Number, value: 0 },     // 0 = 不限时
+    deadlineAt: { type: Number, value: 0 },       // 服务端绝对截止，仅展示并触发回读
     /* 不限时但开局也要数 3-2-1 的玩法(精准停表):它的成绩从第一毫秒起算,
        不数完就开跑等于把「还没准备好」那半秒记进成绩里。 */
     countIn: { type: Boolean, value: false },
@@ -59,12 +60,28 @@ Component({
     shaking: false,
     verdictText: '',
     timedOut: false,
+    // 入场(2026-10-23 主人定稿「玩法入场动效」):每次打开 0 → 1,各玩法屏的 .pe 零件按它过渡。
+    // peOn 只在入场那两秒为 1,之后各零件的延时归零,别的交互不再被拖慢。
+    peGo: 1,
+    peOn: 0,
   },
   observers: {
+    show: function (show) {
+      this._clearEnter();
+      if (!show || this.data.reducedMotion) { if (this.data.peGo !== 1 || this.data.peOn) this.setData({ peGo: 1, peOn: 0 }); return; }
+      this.setData({ peGo: 0, peOn: 1 });
+      // 先让「起点」那一帧落地,再翻到 1 —— 同一帧里设的话过渡没有起点
+      this._peT1 = setTimeout(() => this.setData({ peGo: 1 }), 60);
+      this._peT2 = setTimeout(() => this.setData({ peOn: 0 }), 2800);
+    },
+    'show, deadlineAt': function (show, deadlineAt) {
+      if (!show) { this._stopServerDeadline(); return; }
+      if (deadlineAt > 0) this._syncServerDeadline(); else this._stopServerDeadline();
+    },
     'show, tries, limitSeconds': function (show, tries, limitSeconds) {
       if (!show) { this._stopAll(); return; }
       const n = tries > 0 ? tries : 0;
-      const top = this._layout(limitSeconds > 0, n > 0);
+      const top = this._layout(limitSeconds > 0 || this.data.deadlineAt > 0, n > 0);
       this.setData({
         contentTop: top.contentTop,
         triesTop: top.triesTop,
@@ -72,7 +89,7 @@ Component({
         triesDots: Array.from({ length: n }, (_, i) => i),
         // 还没开跑时条是**满**的、读数是总时长。初值留 0 的话,
         // 玩家在 3-2-1 那两秒里看到的是「限时 0s」—— 像是已经超时了
-        limitLeft: limitSeconds > 0 ? limitSeconds : 0,
+        limitLeft: this.data.deadlineAt > 0 ? Math.max(0, Math.ceil((this.data.deadlineAt - Date.now()) / 1000)) : limitSeconds > 0 ? limitSeconds : 0,
         limitScale: 1,
       });
     },
@@ -85,15 +102,17 @@ Component({
           /* topPad 是异步读回来的,读到之后那两行的位置和内容起点都要跟着重算 ——
              只 setData topPad 的话,--pk-top 还停在默认 44 那一版上。 */
           this.setData({ topPad: info.statusBarHeight });
-          const top = this._layout(this.data.limitSeconds > 0, this.data.triesTotal > 0);
+          const top = this._layout(this.data.limitSeconds > 0 || this.data.deadlineAt > 0, this.data.triesTotal > 0);
           this.setData({ contentTop: top.contentTop, triesTop: top.triesTop });
         }
       } catch (e) { /* 读不到就用默认 44,不让一次读取失败把整屏顶掉 */ }
     },
-    detached() { this._stopAll(); },
+    detached() { this._stopAll(); this._stopServerDeadline(); this._clearEnter(); },
   },
-  pageLifetimes: { hide() { this._stopTick(); } },
+  pageLifetimes: { hide() { this._stopTick(); this._stopServerDeadline(); },
+    show() { if (this.data.show && this.data.deadlineAt > 0) this._syncServerDeadline(); } },
   methods: {
+    _clearEnter() { clearTimeout(this._peT1); clearTimeout(this._peT2); },
     /* 顶上那两行谁在、谁不在,决定内容从哪儿开始。
        ⚠️ 不能写死:2026-09-16 之前限时条从来喂不到值、永远不显示,于是写死的
        `topPad + 62` 一直看着没问题;接通那天起它就正好压在题干上。 */
@@ -113,6 +132,25 @@ Component({
     },
 
     _limitPercent: limitPercent,        // 纯算法出口,供单测
+
+    _stopServerDeadline() { if (this._serverTick) clearInterval(this._serverTick); this._serverTick = null; },
+    _syncServerDeadline() {
+      this._stopServerDeadline();
+      const deadline = this.data.deadlineAt;
+      const top = this._layout(true, this.data.triesTotal > 0);
+      const tick = () => {
+        const left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        this.setData({ limitLeft: left, contentTop: top.contentTop, triesTop: top.triesTop });
+        if (!left) {
+          this._stopServerDeadline();
+          if (this._reportedServerDeadline !== deadline) {
+            this._reportedServerDeadline = deadline; this.triggerEvent('deadline');
+          }
+        }
+      };
+      tick();
+      if (deadline > Date.now()) this._serverTick = setInterval(tick, 1000);
+    },
 
     _stopTick() { if (this._tick) { clearInterval(this._tick); this._tick = null; } },
     _stopDeadline() { if (this._deadline) { clearTimeout(this._deadline); this._deadline = null; } },
@@ -211,6 +249,6 @@ Component({
       }, 300);
     },
 
-    onBack() { this._stopAll(); this.triggerEvent('back'); },
+    onBack() { this._stopAll(); this._stopServerDeadline(); this.triggerEvent('back'); },
   },
 });

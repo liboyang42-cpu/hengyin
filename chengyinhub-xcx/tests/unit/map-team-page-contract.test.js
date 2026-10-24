@@ -24,7 +24,7 @@ test('顶部条「附近的队伍 · N 支在招募」+ 底部只剩「范围」
   assert.equal(corners.length, 2, '底部角控件必须恰好两枚')
   const wrap = WXML.match(/<view class="mt-corners"[^>]*>/)
   assert.ok(wrap, '角控件要包在 mt-corners 里')
-  assert.match(wrap[0], /wx:if="\{\{!sheet\}\}"/, '开任何半屏时角控件收起')
+  assert.match(wrap[0], /wx:if="\{\{!sheet( && viewMode === 'map')?\}\}"/, '开任何半屏时角控件收起(v13:列表模式也收起)')
   assert.match(WXML, /\{\{rangeText\}\}/)
   assert.match(WXML, /\{\{myTeamsText\}\}/)
   assert.doesNotMatch(WXML, /openTools|openStampCamera|pgrabhit/, '旧抽屉/拍照入口不再留在地图上')
@@ -57,6 +57,7 @@ let navigations
 // 申请留言弹层(stub 无 cy-modal-host 时 modal.js 回落 wx.showModal):默认确认并带一句留言。
 let modalAnswer = { confirm: true, content: '一起走完全程' }
 global.getApp = () => ({
+  getUserID: () => 7,
   globalData: {},
   getImgUrl: (u) => u || '',
   sendRequest: (opts) => { requests.push(opts) },
@@ -65,7 +66,7 @@ global.wx = {
   getWindowInfo: () => ({ screenHeight: 844, safeArea: { bottom: 810 } }),
   getMenuButtonBoundingClientRect: () => ({ bottom: 88 }),
   getLocation: () => {},
-  navigateTo: (o) => { navigations.push(o.url) },
+  navigateTo: (o) => { navigations.push(o.url); if (o.complete) o.complete() },
   showToast: () => {},
   showModal: (o) => { o && typeof o.success === 'function' && o.success(Object.assign({}, modalAnswer)) },
   createSelectorQuery: () => ({ select: () => ({ fields: () => ({ exec: () => {} }) }) }),
@@ -107,19 +108,22 @@ function feedTeams(page, rows) {
   req.success({ code: 200, data: rows })
 }
 
-function tapTeam(page, id) { page.onMarkerTap({ detail: { markerId: id * 10 + 4 } }) }
+// 2026-10-22 v13:点队伍点位先长出点位卡,点卡片再进队伍半屏
+function tapTeam(page, id) { page.onMarkerTap({ detail: { markerId: id * 10 + 4 } }); page.onPoiFront() }
 
-test('nearby 回来:顶部条计数 + 点位;点开卡片 → 角控件收起(sheet 非空)', () => {
+test('nearby 回来:顶部条计数 + 点位;点开卡片 → 角控件收起(sheet 非空)', (t) => {
+  // 2026-10-23 弹层动效:关闭先落下 250ms(--cy-motion-sheet-out)再卸载,用假定时器走完退场
+  t.mock.timers.enable({ apis: ['setTimeout'] })
   const page = load()
-  feedTeams(page, [team(), team({ teamId: 8, latitude: 31.3 })])
-  assert.equal(page.data.headerText, '附近的队伍 · 2 支在招募')
+  feedTeams(page, [team(), team({ teamId: 8, latitude: 31.21 })]) // 2026-10-22:远于范围 1.2 倍的点不画(业主口述),第二支放进范围内
+  assert.equal(page.data.headerText, '附近 · 2 支队伍')
   assert.equal(page.data.markers.filter((m) => m.id % 10 === 4).length, 2)
-  assert.equal(page.data.sheet, '')
+  t.mock.timers.tick(250); assert.equal(page.data.sheet, '')
   tapTeam(page, 7)
   assert.equal(page.data.sheet, 'team')
   assert.equal(page.data.current.teamId, 7)
   page.closeSheet()
-  assert.equal(page.data.sheet, '')
+  t.mock.timers.tick(250); assert.equal(page.data.sheet, '')
 })
 
 test('viewerHasTicket=false → 「去买这场的票」跳活动详情购票', () => {
@@ -166,13 +170,15 @@ test('errorCode=TICKET_REQUIRED → 卡片回到买票态 + 失败半屏(去买�
   assert.deepEqual(navigations, ['/pages/activity/detail/index?id=11'])
 })
 
-test('errorCode=TEAM_FULL → 关卡 + 从地图移除 + 失败半屏;没有 errorCode 只报失败不改状态', () => {
+test('errorCode=TEAM_FULL → 关卡 + 从地图移除 + 失败半屏;没有 errorCode 只报失败不改状态', (t) => {
+  // 2026-10-23 弹层动效:关闭先落下 250ms(--cy-motion-sheet-out)再卸载,用假定时器走完退场
+  t.mock.timers.enable({ apis: ['setTimeout'] })
   const page = load()
   feedTeams(page, [team({ viewerHasTicket: true })])
   tapTeam(page, 7)
   page.onCardPrimary()
   requests.filter((r) => r.url === '/api/team/apply').pop().success({ code: 500, errorCode: 'TEAM_FULL', msg: '已满' })
-  assert.equal(page.data.sheet, '')
+  t.mock.timers.tick(250); assert.equal(page.data.sheet, '')
   assert.equal(page.data.markers.filter((m) => m.id === 74).length, 0)
   assert.equal(page.data.resultSheet.kind, 'fail')
 
@@ -181,7 +187,7 @@ test('errorCode=TEAM_FULL → 关卡 + 从地图移除 + 失败半屏;没有 err
   tapTeam(p2, 7)
   p2.onCardPrimary()
   requests.filter((r) => r.url === '/api/team/apply').pop().success({ code: 500, msg: 'TEAM_FULL 已满' })
-  assert.equal(p2.data.current.card.mode, 'apply', '只有文案里写了码,不能按文案分支')
+  assert.equal(p2.data.current.card.mode, 'apply', '只有文案里写了码，不能按文案分支')
   assert.equal(p2.data.resultSheet.why, 'TEAM_FULL 已满')
 })
 
@@ -190,7 +196,7 @@ test('PENDING / REJECTED 卡片', () => {
   feedTeams(page, [team({ viewerStatus: 'PENDING' }), team({ teamId: 8, viewerStatus: 'REJECTED' })])
   tapTeam(page, 7)
   assert.deepEqual(page.data.current.card.secondary, { text: '撤回申请', action: 'withdraw' })
-  assert.equal(page.data.current.card.foot, '队长没处理或活动开始时,申请自动失效')
+  assert.equal(page.data.current.card.foot, '开场前未处理会自动失效')
   tapTeam(page, 8)
   assert.equal(page.data.current.card.notice.text, '不能再申请这支队伍')
   assert.equal(page.data.current.card.primary, null)
@@ -216,7 +222,9 @@ test('LEADER → P5 申请列表;同意/拒绝发 handle;APPLY_NOT_PENDING 移�
   assert.equal(JSON.parse(h2.data).approved, false)
 })
 
-test('我的队伍 P6:拉 my + my-applications,三态行;开时角控件收起', () => {
+test('我的队伍 P6:拉 my + my-applications,三态行;开时角控件收起', (t) => {
+  // 2026-10-23 弹层动效:关闭先落下 250ms(--cy-motion-sheet-out)再卸载,用假定时器走完退场
+  t.mock.timers.enable({ apis: ['setTimeout'] })
   const page = load()
   page.openMyTeams()
   assert.equal(page.data.sheet, 'mine')
@@ -228,17 +236,19 @@ test('我的队伍 P6:拉 my + my-applications,三态行;开时角控件收起',
   page.onMyRowAction({ currentTarget: { dataset: { index: 0 } } })
   assert.deepEqual(navigations, ['/pages/team/detail/index?teamId=7'])
   page.onMyRowAction({ currentTarget: { dataset: { index: 2 } } })
-  assert.equal(page.data.sheet, '')
+  t.mock.timers.tick(250); assert.equal(page.data.sheet, '')
 })
 
-test('刷新后卡片那支队伍不在了(满员/开场) → 队伍卡收掉,不留过期的「申请加入」', () => {
+test('刷新后卡片那支队伍不在了(满员/开场) → 队伍卡收掉,不留过期的「申请加入」', (t) => {
+  // 2026-10-23 弹层动效:关闭先落下 250ms(--cy-motion-sheet-out)再卸载,用假定时器走完退场
+  t.mock.timers.enable({ apis: ['setTimeout'] })
   const page = load()
   feedTeams(page, [team({ viewerHasTicket: true })])
   tapTeam(page, 7)
   assert.equal(page.data.sheet, 'team')
   feedTeams(page, [])
-  assert.equal(page.data.sheet, '')
-  assert.equal(page.data.headerText, '附近的队伍 · 0 支在招募')
+  t.mock.timers.tick(250); assert.equal(page.data.sheet, '')
+  assert.equal(page.data.headerText, '附近 · 0 支队伍')
 })
 
 test('申请列表迟到的旧响应不串到别的队伍;非队长读列表失败标题是「申请列表没读到」', () => {

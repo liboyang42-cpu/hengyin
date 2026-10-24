@@ -57,6 +57,17 @@ public interface CmsTemplateLibraryMapper
     public int insertCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary);
 
     /**
+     * owner 2026-10-23 D5(U-036):同一作者在模板广场里其它未删除条目的标题(不含 memberTemplateId 自己的投影),
+     * 供提交广场时做「同名」判重;比较在 Java 里按 trim 后逐字相等做,不交给库排序规则(general_ci 大小写不敏感)。
+     */
+    List<String> selectAuthorLiveTitles(@Param("memberId") Long memberId,
+                                        @Param("excludeMemberTemplateId") Long excludeMemberTemplateId);
+
+    /** O5b-5:模板广场在架条目的 id/title(排除指定作者),按 id 倒序取前 limit 条,供标题相似度提示。 */
+    List<CmsTemplateLibrary> selectPublicTitlesForSimilarity(@Param("excludeMemberId") Long excludeMemberId,
+                                                             @Param("limit") int limit);
+
+    /**
      * 修改模板库
      * 
      * @param cmsTemplateLibrary 模板库
@@ -66,13 +77,23 @@ public interface CmsTemplateLibraryMapper
 
     int applyAuditDecision(@Param("row") CmsTemplateLibrary row, @Param("ownerId") Long ownerId);
 
+    /** AUDIT-G2-2:举报成立下架这条广场记录(只动公开中的行) */
+    int takeDownReported(@Param("id") Long id, @Param("reason") String reason);
+
+    /** AUDIT-G2-2:个人玩法举报成立时,连同其仍公开的广场投影一起下架 */
+    int takeDownReportedByMemberTemplate(@Param("memberTemplateId") Long memberTemplateId, @Param("reason") String reason);
+
     /**
-     * 模板市场热度:被采用一次 use_num +1(单条原子 UPDATE,避免读改写竞态)
+     * 模板市场热度:会员首次采用该库模板时 use_num +1(单条原子 UPDATE,避免读改写竞态)。
+     * 该会员已有其它出自本库模板的个人玩法(含已删除)时命中 0 行,不重复计数。
      *
-     * @param id 模板库主键
+     * @param libraryId 模板库主键
+     * @param memberId 采用者
+     * @param memberTemplateId 本次新建的个人玩法(判重时排除自身)
      * @return 结果
      */
-    public int incrementUseNum(Long id);
+    public int incrementUseNumOnFirstAdoption(@Param("libraryId") Long libraryId, @Param("memberId") Long memberId,
+                                              @Param("memberTemplateId") Long memberTemplateId);
 
     /**
      * 删除模板库
@@ -89,4 +110,13 @@ public interface CmsTemplateLibraryMapper
      * @return 结果
      */
     public int deleteCmsTemplateLibraryByIds(Long[] ids);
+
+    /** 审核撤销/申诉复核：把模板广场审核决定写下的状态 CAS 回待审(0/0)。 */
+    int reopenAuditDecision(@Param("id") Long id, @Param("ownerId") Long ownerId,
+                            @Param("memberTemplateId") Long memberTemplateId,
+                            @Param("fromStatus") Long fromStatus, @Param("fromPublishStatus") Long fromPublishStatus);
+
+    /** 举报下架申诉成立(AUDIT-INT-4):从举报下架态(2/0)原样恢复到下架前记录的状态。 */
+    int restoreReportTakedown(@Param("id") Long id, @Param("status") Long status,
+                              @Param("publishStatus") Long publishStatus, @Param("reason") String reason);
 }

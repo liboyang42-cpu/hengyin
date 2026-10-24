@@ -17,6 +17,7 @@ function walk(dir, out = []) {
 
 /** 一个 cy-error 标签是不是「按下去什么都不会发生」。 */
 function isDeadRetry(tag) {
+  if (/\bload-failure(?:="(?:\{\{true\}\}|true)")?(?=\s|\/?>)/.test(tag)) return false // 常量读失败留白，无按钮
   if (/bind:?retry/.test(tag)) return false        // 绑了监听 = 活的
   if (/retry\s*=\s*""/.test(tag)) return false     // 显式关掉按钮 = 压根不渲染
   // auto-back 走的是组件模板第一个分支(cy-error/index.wxml:2):原位只剩一块占位 + 零按钮
@@ -52,7 +53,7 @@ test('判据自身的负控:构造的死/活标签必须分得开', () => {
   assert.equal(isDeadRetry('<cy-error wx:if="{{list.length>0}}" bind:retry="reload" />'), false)
   assert.equal(isDeadRetry('<cy-error title="x" retry="" />'), false)
   assert.equal(isDeadRetry('<cy-error title="x" auto-back />'), false,
-    'auto-back 只渲零按钮半屏,没有重试按钮可死')
+    'auto-back 只渲零按钮半屏，没有重试按钮可死')
 })
 
 test('组件默认值没变:retry 仍默认渲染按钮,所以上面那条契约必须一直在', () => {

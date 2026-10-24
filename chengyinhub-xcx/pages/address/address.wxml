@@ -20,7 +20,7 @@
             <text>{{item.mobilePhone}}</text>
             <!--<text class="default-tag" wx:if="{{item.isDefault == 1}}"> 默认</text>-->
           </view>
-          <view class="dz_li_left_txt">用于报名联系和到场核验</view>
+
         </view>
         <view class="dz_li_edit" catchtap="goEditAddress" data-id="{{item.id}}" aria-role="button" aria-label="编辑{{item.fullName}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">编辑</view>
         <view class="dz_li_right {{deletingIds[item.id] ? 'is-disabled' : ''}}" catchtap="deleteAddress" data-id="{{item.id}}" aria-role="button" aria-disabled="{{deletingIds[item.id]}}" aria-label="删除{{item.fullName}}" hover-class="{{deletingIds[item.id] ? 'none' : 'cy-pressed'}}" hover-stay-time="80" hover-stop-propagation="true">
@@ -32,9 +32,9 @@
     <!-- aaa 标准:fill + size="lg" 撑满剩余空间并放大;.fill-slot 让宿主节点本身也成为 flex 项
          (光有组件内部的 fill 不够,宿主默认 display:block 吃不到父级给的 flex:1) -->
     <cy-empty wx:if="{{loadState === 'ready' && !list.length}}" kind="empty" fill size="lg" class="fill-slot" title="还没有参与人信息"
-              sub="报名活动需要填写联系人；新增后可在报名时直接选用" />
-    <cy-error wx:if="{{loadState === 'error'}}" fill size="lg" class="fill-slot" title="{{loadErrorMsg}}"
-              sub="请检查网络后再进来，数据不会丢失" retry="重试" bind:retry="getList" auto-back />
+              />
+    <cy-error load-failure wx:if="{{loadState === 'error'}}" fill size="lg" class="fill-slot" title="{{loadErrorMsg}}"
+              retry="重试" bind:retry="getList" auto-back />
   </view>
 </view>
 

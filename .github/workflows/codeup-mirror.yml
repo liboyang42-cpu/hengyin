@@ -1,9 +1,7 @@
 name: Mirror verified master to Codeup
 
 on:
-  workflow_run:
-    workflows: [GitHub CI]
-    types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,9 +9,7 @@ permissions:
 jobs:
   mirror:
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'master'
+      github.repository == 'liboyang42-cpu/chengyin' && (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'master')
     # GitHub 托管 runner 当前因 Actions 账单不可用；本机公网 SSH/22 又会在 banner
     # 前被复位。故使用本机免费 runner，但经 Session Manager → ECS 跳板访问 Codeup。
     runs-on: [self-hosted, macOS, ARM64, chengyin]

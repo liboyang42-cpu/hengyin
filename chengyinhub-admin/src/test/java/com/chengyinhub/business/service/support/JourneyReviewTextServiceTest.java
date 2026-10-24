@@ -106,10 +106,13 @@ class JourneyReviewTextServiceTest {
         topic.setId(20L);
         List<JourneyReviewTexts.Entry> entries = service.topicTexts(topic);
 
-        assertEquals(2, entries.size(), entries.toString());
-        assertEquals("第1章「消失的第七码头」 storyFlow.chapter1.enter.opener", entries.get(0).getField());
-        assertEquals("到店开场", entries.get(0).getText());
-        assertEquals("第1章「消失的第七码头」 storyFlow.chapter1.enter.q(night)", entries.get(1).getField());
-        assertEquals("账本上写着什么", entries.get(1).getText());
+        // 需求变更(F-L5C-03):非 beat 的章节旁白同样是玩家直接读到的文字,审核详情一并列出。
+        assertEquals(3, entries.size(), entries.toString());
+        assertEquals("第1章「消失的第七码头」 storyFlow.chapter1.text.content", entries.get(0).getField());
+        assertEquals("章节旁白", entries.get(0).getText());
+        assertEquals("第1章「消失的第七码头」 storyFlow.chapter1.enter.opener", entries.get(1).getField());
+        assertEquals("到店开场", entries.get(1).getText());
+        assertEquals("第1章「消失的第七码头」 storyFlow.chapter1.enter.q(night)", entries.get(2).getField());
+        assertEquals("账本上写着什么", entries.get(2).getText());
     }
 }

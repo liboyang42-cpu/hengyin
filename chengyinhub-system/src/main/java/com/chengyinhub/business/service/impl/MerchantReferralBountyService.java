@@ -18,6 +18,7 @@ import com.chengyinhub.business.mapper.MerchantReferralBountyMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.IUmsMemberService;
+import com.chengyinhub.business.service.support.SavepointLockFailures;
 
 /**
  * 拓展人激活赏金(冷启动)。
@@ -43,6 +44,9 @@ import com.chengyinhub.business.service.IUmsMemberService;
 @Service
 public class MerchantReferralBountyService
 {
+    @Autowired
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+
     private static final Logger log = LoggerFactory.getLogger(MerchantReferralBountyService.class);
 
     /** 赏金金额 ¥30(2026-07-17 由 ¥300 下调)。落库时落值不落配置:改价不追溯改写历史。 */
@@ -109,36 +113,73 @@ public class MerchantReferralBountyService
      * <p><b>调用方必须包 try/catch</b> —— 本方法自己也全包了,但核销是核心路径,
      * 赏金是实验性的冷启动功能,<b>任何情况下都不能让它连累核销</b>。
      *
+     * <p>唯一例外是让 savepoint 失效的锁冲突(1213 死锁;1205 只在回滚到 savepoint 失败时):1213 已经让 InnoDB 回滚了整笔核销事务,
+     * 吞掉只会让后续语句在隐式新事务里半截提交。这类原样抛给外层 {@code @DeadlockRetry},整笔回滚重试。
+     *
      * @param merchantMemberId 扫码核销的商家
      */
     public void onVerification(Long merchantMemberId)
     {
         try
         {
-            tryActivate(merchantMemberId);
+            withInviterLock(merchantMemberId, true);
         }
         catch (RuntimeException e)
         {
+            SavepointLockFailures.rethrowIfLockFailure(e);
             // 赏金不该连累核销。这里吞掉并告警,由对账脚本兜底发现落差。
             log.error("[ReferralBounty] activate failed merchantMemberId={}", merchantMemberId, e);
         }
     }
 
-    private void tryActivate(Long merchantMemberId)
+    /** Savepoint retains outer verification visibility and isolates ordinary statement/business failures.
+     * Database deadlock/connection failure can still abort the physical outer transaction; callers rethrow
+     * lock failures via {@link SavepointLockFailures} so the outer {@code @DeadlockRetry} retries the whole unit. */
+    private void withInviterLock(Long merchantMemberId, boolean activate) {
+        if (merchantMemberId == null) return;
+        org.springframework.transaction.support.TransactionTemplate tx =
+                new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+        tx.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_NESTED);
+        tx.executeWithoutResult(status -> {
+            MerchantReferralBounty probe = bountyMapper.selectByMerchantMemberId(merchantMemberId);
+            Long inviterId;
+            if (probe != null) inviterId = probe.getInviterMemberId();
+            else {
+                if (!activate) return;
+                UmsMember merchant = umsMemberService.selectUmsMemberById(merchantMemberId);
+                inviterId = merchant == null ? null : parseInviter(merchant.getInviteUserId());
+            }
+            if (inviterId == null || inviterId.equals(merchantMemberId)) return;
+            // No bounty write or lock precedes this balance lock.
+            if (umsMemberMapper.selectBalanceForUpdate(inviterId) == null) {
+                log.error("[ReferralBounty] inviter missing before write inviterMemberId={}", inviterId);
+                return;
+            }
+            MerchantReferralBounty current = bountyMapper.selectByMerchantMemberIdForUpdate(merchantMemberId);
+            if (current != null && !inviterId.equals(current.getInviterMemberId()))
+                throw new IllegalStateException("Referral bounty owner changed; retry without changing lock order");
+            if (activate) tryActivate(merchantMemberId, inviterId);
+            else tryClawback(merchantMemberId);
+        });
+    }
+
+    private void tryActivate(Long merchantMemberId, Long lockedInviterId)
     {
         if (merchantMemberId == null)
         {
             return;
         }
 
-        MerchantReferralBounty bounty = bountyMapper.selectByMerchantMemberId(merchantMemberId);
+        MerchantReferralBounty bounty = bountyMapper.selectByMerchantMemberIdForUpdate(merchantMemberId);
         if (bounty == null)
         {
-            bounty = tryCreatePending(merchantMemberId);
+            bounty = tryCreatePending(merchantMemberId, lockedInviterId);
             if (bounty == null)
             {
                 return;   // 没有推荐人 / 推荐关系不可用 ⇒ 本商家不参与赏金
             }
+            if (!lockedInviterId.equals(bounty.getInviterMemberId()))
+                throw new IllegalStateException("Referral owner changed during pending claim");
         }
         if (bounty.getStatus() == null || bounty.getStatus() != MerchantReferralBounty.STATUS_PENDING)
         {
@@ -173,7 +214,7 @@ public class MerchantReferralBountyService
         }
 
         // 封顶:只数该拓展人**已发放**的家数(已追回的名额应释放;待激活的不算,否则拉僵尸就能占满)
-        int paid = bountyMapper.countPaidByInviter(bounty.getInviterMemberId());
+        int paid = bountyMapper.selectPaidIdsByInviterForUpdate(bounty.getInviterMemberId()).size();
         if (paid >= INVITER_CAP)
         {
             log.info("[ReferralBounty] inviter cap reached inviterMemberId={} paid={}",
@@ -211,6 +252,7 @@ public class MerchantReferralBountyService
             return;   // 别人已经发过了
         }
 
+        inviter.setBalance(umsMemberMapper.selectBalanceForUpdate(inviter.getId()));
         payBounty(inviter, BOUNTY_AMOUNT, bounty.getId(), merchantMemberId);
         log.info("[ReferralBounty] paid inviterMemberId={} merchantMemberId={} amount={} snapshot={}",
                 bounty.getInviterMemberId(), merchantMemberId, BOUNTY_AMOUNT, snapshot);
@@ -250,10 +292,11 @@ public class MerchantReferralBountyService
     {
         try
         {
-            tryClawback(merchantMemberId);
+            withInviterLock(merchantMemberId, false);
         }
         catch (RuntimeException e)
         {
+            SavepointLockFailures.rethrowIfLockFailure(e);
             log.error("[ReferralBounty] clawback failed merchantMemberId={}", merchantMemberId, e);
         }
     }
@@ -264,7 +307,7 @@ public class MerchantReferralBountyService
         {
             return;
         }
-        MerchantReferralBounty b = bountyMapper.selectByMerchantMemberId(merchantMemberId);
+        MerchantReferralBounty b = bountyMapper.selectByMerchantMemberIdForUpdate(merchantMemberId);
         if (b == null || b.getStatus() == null || b.getStatus() != MerchantReferralBounty.STATUS_PAID)
         {
             return;   // 没发过就没什么可追
@@ -295,6 +338,7 @@ public class MerchantReferralBountyService
         {
             return;   // 已被追过
         }
+        inviter.setBalance(umsMemberMapper.selectBalanceForUpdate(inviter.getId()));
         clawbackBalance(inviter, b.getBountyAmount(), b.getId(), reason);
         log.warn("[ReferralBounty] clawed back inviterMemberId={} merchantMemberId={} amount={} reason={}",
                 b.getInviterMemberId(), merchantMemberId, b.getBountyAmount(), reason);
@@ -343,7 +387,7 @@ public class MerchantReferralBountyService
      * <p>⚠️ 该列是 <b>String</b> 不是数字列。既有代码({@code CmsTopicServiceImpl})是裸
      * {@code Long.valueOf(...trim())},脏数据(空串/非数字)会抛 —— 这里显式校验,不照抄。
      */
-    private MerchantReferralBounty tryCreatePending(Long merchantMemberId)
+    private MerchantReferralBounty tryCreatePending(Long merchantMemberId, Long lockedInviterId)
     {
         UmsMember merchant = umsMemberService.selectUmsMemberById(merchantMemberId);
         if (merchant == null || merchant.getCreateTime() == null)
@@ -355,6 +399,9 @@ public class MerchantReferralBountyService
         {
             return null;   // 无推荐人,或自己推自己
         }
+
+        if (!inviterId.equals(lockedInviterId))
+            throw new IllegalStateException("Referral inviter changed before pending write");
 
         MerchantReferralBounty b = new MerchantReferralBounty();
         b.setMerchantMemberId(merchantMemberId);
@@ -369,8 +416,10 @@ public class MerchantReferralBountyService
         }
         catch (RuntimeException e)
         {
+            // 死锁时 savepoint 已随整笔事务回滚,不能在隐式新事务里接着回读。
+            SavepointLockFailures.rethrowIfLockFailure(e);
             // uk_merchant 撞键 = 并发下别人已占位,不是错误。回读即可。
-            return bountyMapper.selectByMerchantMemberId(merchantMemberId);
+            return bountyMapper.selectByMerchantMemberIdForUpdate(merchantMemberId);
         }
     }
 

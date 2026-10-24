@@ -13,8 +13,9 @@ const MODULE = path.join(ROOT, 'components/cy/scene-asset-income-detail/index.js
 
 function loadComponent() {
   const sandbox = { requests: [] }
-  global.getApp = () => ({ sendRequest: (o) => sandbox.requests.push(o) })
-  global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
+  global.getApp = () => ({
+    getUserID: () => 7, /* Explicit authenticated private-list fixture. */ sendRequest: (o) => sandbox.requests.push(o) })
+  global.Component = (config) => { sandbox.component = config; sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   delete require.cache[require.resolve(MODULE)]
   require(MODULE)
@@ -72,7 +73,7 @@ test('未知 changeType 不得默认为支出,显示中性待确认状态', () =
     const row = vm.formatList([{ changeType, changeBalance: 88 }])[0]
     assert.equal(row.isIncome, null, `changeType=${String(changeType)} 不得伪装成支出`)
     assert.equal(row.directionKnown, false)
-    assert.equal(row.directionText, '方向待确认')
+    assert.equal(row.directionText, '—')
     assert.equal(row.amountText, '¥88.00', '方向未知时金额不得带收入/支出符号')
   }
 })
@@ -84,7 +85,7 @@ test('negative control:把 changeType 当状态用、或退回硬拼 + 号,各�
   assert.notEqual(expense.directionText, '处理中', '支出被说成处理中 = 拿方向字段冒充状态')
   // 退回硬拼 '+¥' 的写法
   assert.doesNotMatch(expense.amountText, /^\+/, '支出不得带加号')
-  assert.doesNotMatch(expense.amountText, /-\d/, '负号必须被方向符号吸收,不能渲成 ¥-50.00')
+  assert.doesNotMatch(expense.amountText, /-\d/, '负号必须被方向符号吸收，不能渲成 ¥-50.00')
 })
 
 test('接口返回的 rows 不是数组时落错误态,不当成空列表', () => {
@@ -93,6 +94,83 @@ test('接口返回的 rows 不是数组时落错误态,不当成空列表', () =
   sandbox.requests[0].success({ code: '200', data: { rows: '不是数组' } })
   assert.equal(vm.data.loadErr, true)
   assert.equal(vm.data.loading, false)
+})
+
+test('旧筛选的成功和失败回执都不能覆盖新筛选', () => {
+  for (const callback of ['success', 'fail']) {
+    const { vm, sandbox } = loadComponent()
+    vm.getList()
+    const old = sandbox.requests[0]
+    vm.onFilterChange({ detail: { key: 'create' } })
+    sandbox.requests[1].success({ code: 200, data: { rows: [{ id: 2, changeBalance: 8, changeType: 1 }], total: 1 } })
+    const current = JSON.parse(JSON.stringify(vm.data))
+    old[callback]({ code: 200, data: { rows: [{ id: 1, changeBalance: 4, changeType: 1 }], total: 20 } })
+    assert.deepEqual(vm.data, current)
+  }
+})
+
+test('切到主办分润或正文卸载后旧请求不再回填', () => {
+  for (const target of ['club', 'detached']) {
+    for (const callback of ['success', 'fail']) {
+      const { vm, sandbox } = loadComponent()
+      vm.getList()
+      if (target === 'club') vm.onFilterChange({ detail: { key: 'club' } })
+      else sandbox.component.lifetimes.detached.call(vm)
+      const current = JSON.parse(JSON.stringify(vm.data))
+      sandbox.requests[0][callback]({ code: 200, data: { rows: [{ id: 1 }], total: 1 } })
+      assert.deepEqual(vm.data, current)
+    }
+  }
+})
+
+test('当前筛选请求失败可以重试恢复，旧重试回执不能覆盖新结果', () => {
+  const { vm, sandbox } = loadComponent()
+  vm.getList()
+  sandbox.requests[0].fail()
+  assert.equal(vm.data.loadErr, true)
+  vm.onRetry()
+  sandbox.requests[1].success({ code: 200, data: { rows: [], total: 0 } })
+  sandbox.requests[0].fail()
+  assert.equal(vm.data.loadErr, false)
+  assert.equal(vm.data.loading, false)
+  assert.deepEqual(vm.data.list, [])
+})
+
+test('当前筛选分页仍追加记录，加载中不能重复发起下一页', () => {
+  const { vm, sandbox } = loadComponent()
+  vm.getList()
+  sandbox.requests[0].success({ code: 200, data: { rows: [{ id: 1, changeBalance: 8, changeType: 1 }], total: 11 } })
+  vm.loadMore()
+  vm.loadMore()
+  assert.equal(sandbox.requests.length, 2)
+  assert.equal(sandbox.requests[1].data.pageNum, 2)
+  sandbox.requests[1].success({ code: 200, data: { rows: [{ id: 2, changeBalance: 4, changeType: 1 }], total: 11 } })
+  assert.deepEqual(vm.data.list.map(row => row.id), [1, 2])
+  assert.equal(vm.data.hasMore, false)
+})
+
+test('失败页重试保留既有流水，连续失败后加载更多仍重试原页且不重复追加', () => {
+  const { vm, sandbox } = loadComponent()
+  const response = id => ({ code: 200, data: {
+    rows: [{ id, changeBalance: id, changeType: 1 }], total: 31,
+  } })
+  vm.getList()
+  sandbox.requests[0].success(response(1))
+  vm.loadMore()
+  sandbox.requests[1].success(response(2))
+  vm.loadMore()
+  sandbox.requests[2].fail({ code: 500 })
+  const saved = JSON.stringify(vm.data.list)
+  vm.onRetry()
+  assert.equal(JSON.stringify(vm.data.list), saved)
+  assert.equal(sandbox.requests[3].data.pageNum, 3)
+  sandbox.requests[3].successStatusAbnormal({ code: 500 })
+  assert.equal(JSON.stringify(vm.data.list), saved)
+  vm.loadMore()
+  assert.equal(sandbox.requests[4].data.pageNum, 3)
+  sandbox.requests[4].success(response(3))
+  assert.deepEqual(vm.data.list.map(row => row.id), [1, 2, 3])
+  assert.equal(vm.data.loadErr, false)
 })
 
 test('wxml 的占位分支确实存在(否则上面的 null 无处落地)', () => {

@@ -10,9 +10,9 @@ Component({
     chips:       { type: Array,   value: [] },        // 示例 prompt
     // idle | generating | done | error —— 由页面按后端结果回推
     state:       { type: String,  value: 'idle' },
-    placeholder: { type: String,  value: '一句话描述想法,如"静安 情侣 夜间 Citywalk 90分钟"' },
-    sourceNote:  { type: String,  value: 'AI 生成内容,请核对后再发布' },  // 合规来源标注
-    errorText:   { type: String,  value: '生成失败,请重试' },
+    placeholder: { type: String,  value: '一句话描述想法，如"静安 情侣 夜间 Citywalk 90分钟"' },
+    sourceNote:  { type: String,  value: '' },
+    errorText:   { type: String,  value: '生成失败，请重试' },
   },
   data: { expanded: false, idea: '' },
   methods: {

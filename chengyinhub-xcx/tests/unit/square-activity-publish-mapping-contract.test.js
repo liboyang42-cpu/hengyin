@@ -3,6 +3,7 @@
 const { beforeEach, test } = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('node:path')
+const fs = require('node:fs')
 
 const LIST_PAGE = '../../pages/square/list/index.js'
 const PICKER = '../../pages/square/components/activity-picker/index.js'
@@ -26,6 +27,7 @@ beforeEach(() => {
   pickerDef = null
   requests = []
   global.getApp = () => ({
+    canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, user_id: 1, features: {} },
     getUserID: () => 1,
     getAvatar: () => '',
@@ -63,7 +65,10 @@ beforeEach(() => {
 
 function loadListPage() {
   delete require.cache[require.resolve(LIST_PAGE)]
-  require(LIST_PAGE)
+  const transport = require.resolve('../../utils/community-post-api');
+  require(transport); const realTransport = require.cache[transport].exports;
+  require.cache[transport].exports = require('../helpers/community-page-seam');
+  try { require(LIST_PAGE); } finally { require.cache[transport].exports = realTransport; }
   const page = Object.assign({}, pageConfig, { data: JSON.parse(JSON.stringify(pageConfig.data)) })
   page.setData = function (patch, callback) {
     Object.keys(patch || {}).forEach((key) => setByPath(this.data, key, patch[key]))
@@ -94,6 +99,32 @@ const ACTIVITY_ITEM = {
   activityId: 501, topicId: 990063, dataType: 1, dataId: 501,
   name: '活动场次', cover: 'https://cdn/act.png', total: 3, doneCount: 3, completed: true,
 }
+
+test('公开关联选择器仅用 query 请求可关联完成记录，历史完成调用方保持默认', () => {
+  const picker = loadPicker()
+  picker.fetchList()
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0].url, '/api/play/my-completed?for_public_reference=true')
+  assert.equal(requests[0].method, 'POST')
+  assert.deepEqual(requests[0].data, {}, 'RequestParam 不得塞入 JSON body')
+  for (const rel of [
+    '../../subpackageP3/pages/growthcenter/index/index.js',
+    '../../subpackageMember/components/cy/profile/index.js',
+    '../../pages/play/index.js',
+  ]) {
+    const source = fs.readFileSync(path.resolve(__dirname, rel), 'utf8')
+    assert.ok(source.includes('/api/play/my-completed'))
+    assert.doesNotMatch(source, /for_public_reference/, `${rel} 必须继续默认历史完成查询`)
+  }
+})
+
+test('关联空态说明公开可用范围，不把历史已完成记录说成不存在', () => {
+  const wxml = fs.readFileSync(path.resolve(__dirname,
+    '../../pages/square/components/activity-picker/index.wxml'), 'utf8')
+  assert.match(wxml, /title="暂无可关联的已完成活动或主题"/)
+  assert.match(wxml, /sub="仅显示已完成的活动"/)
+  assert.doesNotMatch(wxml, /还没有已通关的活动/)
+})
 
 /** 真实 picker:fetchList 成功 → onSelect → route-ready 截图上传 → 真实 emitSelect。 */
 async function pickerEmitFor(item) {
@@ -202,7 +233,7 @@ test('迟回/改动选择后重试:按重试当刻的选择发,不用旧值', ()
   page.retrySubmit()
 
   const body = requests[1].data
-  assert.equal(body.data_type, 1, '重试必须用当前选择,不得残留自玩关联')
+  assert.equal(body.data_type, 1, '重试必须用当前选择，不得残留自玩关联')
   assert.equal(body.data_id, 501)
   assert.equal(body.route_preview_img, 'https://img.example/new.png')
 })

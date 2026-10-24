@@ -1,5 +1,13 @@
 const toast = require('../../utils/toast.js');
+const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const app = getApp();
+function walletOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
+function exactRegistrationId(value) {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 ? String(value) : '';
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return '';
+  const digits = value.replace(/^0+/, '');
+  return digits && (digits.length < 19 || (digits.length === 19 && digits <= '9223372036854775807')) ? digits : '';
+}
 // UI-17 返修(2026-09-18):cy-nav-bar 是 fixed(fixed 导航不占文档流),页面正文必须自己让出
 // 导航实高,否则卡片顶端会钻到导航底下被截掉一截(总控截图实证)。拿不到 globalData 时用兜底值。
 const appGlobal = (app && app.globalData) || {};
@@ -37,16 +45,18 @@ Page({
        ⚠️ 不要为了「合并」去动后端:两类票的字段和落点本来就不同,合到一个接口只会把
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
-    currentSwiperTicket: 0,
-    walletState: 'loading', // loading | ready | error | empty —— 由两条支线的状态合成
+    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, walletTab: 0, tabCount: [0, 0, 0], navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景 / 可用·已用·已过期
+    walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
+    focusState: '',
+    focusError: '',
     slides: [],
     indicatorDots: true,
     vertical: false,
     autoplay: false,
     interval: 2000,
     duration: 500,
-    topicBg: app.getImgUrl('zt1.jpg'),
+    // topicBg 已退役:v13 票夹背景由 wbg 两层交替承担,原字段无人读取(2026-10-23)
     walletList: [{
       pic: app.getImgUrl('zt1.jpg'),
     }, {
@@ -63,6 +73,14 @@ Page({
    */
   onLoad(options) {
     const that = this;
+    that._unloaded = false;
+    that._refreshOnShow = false;
+    that._walletOwner = walletOwner();
+    const focus = options && options.focusId;
+    that._explicitFocus = !!focus; that._arrive = !!(options && String(options.arrive) === '1') && !reducedMotionOn();
+    that._focusId = exactRegistrationId(focus) ? String(focus) : '';
+    that.setData({ focusState: focus ? (that._focusId ? 'loading' : 'missing') : '',
+      focusError: focus && !that._focusId ? '原报名编号无效，请返回参与记录重新打开' : '' });
     // 两条支线的原料。data 里没有它们,所以在这里立好,别让后面的 concat 撞上 undefined
     that._topic = { list: [], state: 'loading', err: '' };
     that._activity = { list: [], state: 'loading', err: '' };
@@ -71,33 +89,116 @@ Page({
     that.getTopicList()
     that.loadMyTeams()
 
-    // §7.6:订单详情「继续探索/查看票夹」带 focusId 过来 → 定位到对应票卡
-    if (options.focusId) {
-      that._focusId = String(options.focusId);
-      that._focusTries = 0;
-      that._tryFocusTicket();
-    }
+    if (that._focusId) that._tryFocusTicket();
   },
 
-  // 轮询等票夹列表就绪,匹配 focusId(=registrationId,与票卡 item.id 一致)→ 切到对应子tab与 swiper 卡
+  onShow() {
+    // onLoad 已发首批请求；只有隐藏后返回才重读服务端票状态。
+    const ownerChanged = this._walletOwner !== walletOwner();
+    if ((!this._refreshOnShow && !ownerChanged) || this._unloaded) return;
+    this._walletOwner = walletOwner();
+    this._refreshOnShow = false;
+    const current = (this.data.ticketList || [])[this.data.currentSwiperTicket];
+    if (current && !this._focusId) this._focusId = String(current.id);
+    if (ownerChanged) this._focusId = '';
+    if (ownerChanged && this.data.focusState) this.setData({ focusState: 'missing', focusError: '账号已变更，请从当前账号的参与记录重新打开凭证' });
+    else if (this._focusId && this._explicitFocus) this.setData({ focusState: 'loading', focusError: '' });
+    this._focusTries = 0;
+    this._topic = { list: [], state: 'loading', err: '' };
+    this._activity = { list: [], state: 'loading', err: '' };
+    this._myTeams = {};
+    this.data.page_no = 1;
+    this.setData({ hasMore: false, nodata: false,
+      currentSwiperTicket: 0, currentTeam: null });
+    this.getActivityList();
+    this.getTopicList();
+    this.loadMyTeams();
+  },
+
+  _invalidateWalletRequests() {
+    this._topicRequestSeq = (this._topicRequestSeq || 0) + 1;
+    this._activityRequestSeq = (this._activityRequestSeq || 0) + 1;
+    this._teamsRequestSeq = (this._teamsRequestSeq || 0) + 1;
+    this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
+    this._focusLookupPending = null;
+  },
+
+  onHide() {
+    this._refreshOnShow = true;
+    this._invalidateWalletRequests();
+  },
+
+  onUnload() {
+    this._unloaded = true;
+    this._invalidateWalletRequests();
+  },
+
+  // 首屏未命中时使用已有本人报名详情接口，不轮询内存或依赖分页 total。
   _tryFocusTicket() {
-    const fid = this._focusId;
+    if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner()) return;
+    const fid = exactRegistrationId(this._focusId);
     if (!fid) return;
     const list = this.data.ticketList || [];
-    const i = list.findIndex(x => String(x.id) === fid);
+    const i = list.findIndex(x => exactRegistrationId(x.id) === fid);
     if (i >= 0) {
       this._focusId = '';
-      this.setData({ currentSwiperTicket: i, topicBg: list[i].wImg || this.data.topicBg });
+      this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
+      this._focusLookupPending = null;
+      this.setData({ currentSwiperTicket: i,
+        focusState: this._explicitFocus ? 'ready' : '', focusError: '' });
       this.syncCurrentTeam();
       return;
     }
-    if ((this._focusTries = (this._focusTries || 0) + 1) < 15) {
-      setTimeout(() => this._tryFocusTicket(), 200);
-    }
+    if (this.data.focusState === 'missing' || (this._topic || {}).state === 'loading'
+        || (this._activity || {}).state === 'loading') return;
+    if (!this._explicitFocus) { this._focusId = ''; return; }
+    this._readFocusTicket();
   },
 
+  _readFocusTicket() {
+    if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner() || this._focusLookupPending) return;
+    const fid = exactRegistrationId(this._focusId);
+    if (!fid) return;
+    const owner = walletOwner();
+    const seq = this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
+    this._focusLookupPending = { seq };
+    const current = () => !this._unloaded && !this._refreshOnShow && owner === walletOwner()
+      && seq === this._focusLookupSeq && exactRegistrationId(this._focusId) === fid;
+    const missing = () => {
+      if (!current()) return;
+      this._focusLookupPending = null;
+      this.setData({ focusState: 'missing', focusError: '未定位到原报名凭证，请返回参与记录确认或重试', currentTeam: null });
+    };
+    app.sendRequest({
+      url: '/api/registration/info', method: 'POST', hideLoading: true,
+      data: { id: this._focusId },
+      success: res => {
+        if (!current()) return;
+        const row = res && res.data;
+        if (!res || ![200, '200'].includes(res.code) || !row || Array.isArray(row)
+            || exactRegistrationId(row.id) !== fid || ![1, '1', 2, '2'].includes(row.ownerType)
+            || ![2, '2'].includes(row.registrationStatus)
+            || (row.memberId != null && String(row.memberId) !== owner)) { missing(); return; }
+        const key = row.ownerType === 1 || row.ownerType === '1' ? '_topic' : '_activity';
+        const branch = this[key] || { list: [] };
+        this[key] = { list: branch.list.filter(item => exactRegistrationId(item.id) !== fid).concat([row]), state: 'ready', err: '' };
+        this._focusLookupPending = null;
+        this.rebuildTicketList();
+        this._tryFocusTicket();
+      },
+      fail: missing, successStatusAbnormal: missing,
+    });
+  },
+  retryFocus() {
+    if (!exactRegistrationId(this._focusId)) return;
+    if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner()) return;
+    this.setData({ focusState: 'loading', focusError: '' });
+    this._readFocusTicket();
+  },
 
   _openTicket(item, kind) {
+    if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner()
+        || this.data.focusState === 'loading' || this.data.focusState === 'missing') return;
     if (!item || !item.id) {
       toast('跳转失败');
       return;
@@ -144,12 +245,6 @@ Page({
        合起来有票        → ready;
        否则              → empty。
      这样「场次接口挂了但路线票还在」不会变成一片空白 —— 那是最容易被读成「我的票没了」的假象。 */
-  /* 合并后的 swiper 只有一个，背景跟着当前那张票走。 */
-  onTicketSwiperChange(e) {
-    const i = e.detail.current;
-    const item = (this.data.ticketList || [])[i] || {};
-    this.setData({ currentSwiperTicket: i, topicBg: item.wImg || this.data.topicBg });
-  },
 
   rebuildTicketList() {
     const topics = ((this._topic && this._topic.list) || []).map(function (item) {
@@ -157,8 +252,8 @@ Page({
       return Object.assign({}, item, {
         kind: 'topic',
         wKey: 'topic-' + item.id,
-        wTitle: t.name || '路线信息待同步',
-        wImg: t.imgUrl || '/images/route_city_cover.png',
+        wTitle: t.name || '—',
+        wImg: t.imgUrl || '/images/route_city_cover.png', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
       });
     });
     const activities = ((this._activity && this._activity.list) || []).map(function (item) {
@@ -166,26 +261,46 @@ Page({
       return Object.assign({}, item, {
         kind: 'activity',
         wKey: 'activity-' + item.id,
-        wTitle: a.name || '活动信息待同步',
+        wTitle: a.name || '—',
         wImg: a.imgUrl || '/images/route_city_cover.png',
+        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', // ds-ok v13 卡角色
       });
     });
-    const list = topics.concat(activities);
+    const seen = new Set();
+    const all = topics.concat(activities).filter(item => {
+      const id = exactRegistrationId(item.id);
+      if (!id) return true;
+      if (seen.has(id)) return false;
+      seen.add(id); return true;
+    }).map(walletCard);
+    // v13 底部「可用 / 已用 / 已过期」:可用 = 待使用 + 待支付,已用 = 已核验,已过期 = 过期或取消
+    const tabCount = [0, 0, 0];
+    all.forEach((item) => { tabCount[item.wTab] += 1; });
+    const list = all.filter((item) => item.wTab === this.data.walletTab);
     const ts = (this._topic || {}).state;
     const as = (this._activity || {}).state;
     let state;
     if (ts === 'loading' && as === 'loading') state = 'loading';
     else if (ts === 'error' && as === 'error') state = 'error';
-    else if (list.length > 0) state = 'ready';
+    else if (all.length > 0) state = 'ready';
     else if (ts === 'loading' || as === 'loading') state = 'loading';
+    else if (ts === 'error' || as === 'error') state = 'error';
     else state = 'empty';
-    const cur = list[this.data.currentSwiperTicket] || list[0] || {};
+    // PR10 F-W1-12:读失败是因为未登录(无会话 / 401)⇒ 登录引导,不是留白的加载失败
+    if (state === 'error' && ((this._topic || {}).login || (this._activity || {}).login)) state = 'login';
+    const previous = (this.data.ticketList || [])[this.data.currentSwiperTicket];
+    const previousIndex = previous ? list.findIndex(item => item.wKey === previous.wKey) : -1;
+    const currentIndex = previousIndex >= 0 ? previousIndex : 0;
+    const cur = list[currentIndex] || {};
     this.setData({
       ticketList: list,
-      walletState: state,
+      currentSwiperTicket: currentIndex,
+      // (原 topicBg 字段已退役,见 data 注释)
+      walletState: state, tabCount,
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
-      topicBg: cur.wImg || this.data.topicBg,
     });
+    if (!this._entering && (state !== 'ready' || this._entered)) this._deckLay(); this._bgTo(cur.wImg); // 入场 / 新卡落入动画进行中不重排,否则第二路列表回来会把动画打断
+    if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._entered = true; this._playArrive(); } else if (state === 'ready' && !this._entered) { this._entered = true; this._playEnter(false); }
   },
 
   /* 点开一张票。两种票的落点不同,由 kind 分流 —— 这就是合并列表之后
@@ -203,15 +318,23 @@ Page({
     if ((this._activity || {}).state === 'error') this.retryActivity();
   },
 
+  /* 登录引导「登录」:重登成功后重拉失败的支线 */
+  loginWallet() {
+    retryLogin(this, app, this.retryWallet);
+  },
+
   /* 我的队伍。票夹一次拉全量,再按 ownerType:ownerId 落到具体那张票上 ——
      每张票各发一次请求会把一屏刷成 N 个请求。
      silentError:队伍拉不到只是这一行不出,不该拿一个全局 toast 盖在票夹上说「出错了」。 */
   loadMyTeams() {
     const that = this;
+    const owner = walletOwner();
+    const requestSeq = this._teamsRequestSeq = (this._teamsRequestSeq || 0) + 1;
     app.sendRequest({
       url: '/api/team/my', method: 'POST', hideLoading: true, silentError: true,
       data: {},
       success(res) {
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._teamsRequestSeq) return;
         const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
         if (!rows) return;            // 读不到 ≠ 没有队伍,保持这一行不出,不写一个空态
         const index = {};
@@ -259,16 +382,14 @@ Page({
   // 主题swiper切换
   // 活动swiper切换
 
-  // 两路都落定且只挂了一路:不出失败半屏,票夹照常显示另一路 —— 这时报一次,别让缺的那半静默
-  _reportHalfFailure() {
-    const t = this._topic || {}, a = this._activity || {};
-    if (t.state === 'loading' || a.state === 'loading') return;
-    const failed = [t, a].filter((x) => x.state === 'error');
-    if (failed.length === 1) toast(failed[0].err || '部分票没加载出来');
-  },
+  // F-R2U-01(用户要求):读取失败一律留白。单路失败时继续显示另一路的票,不再弹「部分票没加载出来」;
+  // 两路都失败由 walletState 留白。保留方法名供两路回调统一收口。
+  _reportHalfFailure() {},
 
   getTopicList: function () {
     var that = this;
+    const owner = walletOwner();
+    const requestSeq = that._topicRequestSeq = (that._topicRequestSeq || 0) + 1;
     that._topic = { list: (that._topic && that._topic.list) || [], state: 'loading', err: '' };
     that.rebuildTicketList();
     app.sendRequest({
@@ -282,6 +403,7 @@ Page({
         pageSize: app.getPageSize(),
       },
       success: function (res) {
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._topicRequestSeq) return;
         const payload = res && res.data;
         if (!(res && res.code == "200" && payload && Array.isArray(payload.rows))) {
           that._topic = { list: that._topic.list, state: 'error',
@@ -297,19 +419,22 @@ Page({
         // 背景图跟着当前那张票走,由 rebuildTicketList 统一写(它知道现在停在哪一张)
         that.rebuildTicketList();
         that.syncCurrentTeam();
+        if (that._focusId) that._tryFocusTicket();
         if (payload.rows.length < 1) {
           that.setData({
             nodata: true,
           })
         }
       },
-      fail: function (err) {
+      fail: function (err, statusCode) {
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._topicRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._topic = { list: that._topic.list, state: 'error',
-          err: (err && err.errMsg) || '网络开了点小差' };
+          err: (err && err.errMsg) || '网络异常，请重试', login: isLoginRequired(app, err, statusCode) };
         that.rebuildTicketList();
       },
       complete: function () {
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._topicRequestSeq) return;
         that._reportHalfFailure();
         that.setData({
           nodata: that._topic.list.length < 1 ? true : false,
@@ -330,6 +455,8 @@ Page({
 
   getActivityList: function () {
     var that = this;
+    const owner = walletOwner();
+    const requestSeq = that._activityRequestSeq = (that._activityRequestSeq || 0) + 1;
     that._activity = { list: (that._activity && that._activity.list) || [], state: 'loading', err: '' };
     that.rebuildTicketList();
     app.sendRequest({
@@ -343,6 +470,7 @@ Page({
         pageSize: app.getPageSize(),
       },
       success: function (res) {
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._activityRequestSeq) return;
         const payload = res && res.data;
         if (!(res && res.code == "200" && payload && Array.isArray(payload.rows))) {
           that._activity = { list: that._activity.list, state: 'error',
@@ -358,19 +486,22 @@ Page({
         });
         that.rebuildTicketList();
         that.syncCurrentTeam();
+        if (that._focusId) that._tryFocusTicket();
         if (payload.rows.length < 1) {
           that.setData({
             nodata: true,
           })
         }
       },
-      fail: function (err) {
+      fail: function (err, statusCode) {
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._activityRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._activity = { list: that._activity.list, state: 'error',
-          err: (err && err.errMsg) || '网络开了点小差' };
+          err: (err && err.errMsg) || '网络异常，请重试', login: isLoginRequired(app, err, statusCode) };
         that.rebuildTicketList();
       },
       complete: function () {
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._activityRequestSeq) return;
         that._reportHalfFailure();
         that.setData({
           nodata: that._activity.list.length < 1 ? true : false,
@@ -379,4 +510,134 @@ Page({
     })
   },
 
+  /* ===== v13 票夹卡堆(业主 2026-10-22「和 HTML 一模一样」) =====
+     卡片叠放:后面的卡往上错开、缩小、变暗;最前一张跟手拖(任意方向,带一点倾斜),
+     后面的卡跟着往前挪;松手越过阈值或甩得够快就按手指方向飞出去,下一张上来;点卡进入。 */
+  _deckPose(r) { return DECK_POSE[Math.min(r, DECK_POSE.length - 1)]; },
+  _deckLay(front) {
+    const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
+    const poses = list.map((_, i) => {
+      const r = (i - cur + n) % n;
+      if (r === 0 && front) return front;
+      const p = this._deckPose(r);
+      return 'transform: translate(0px,' + p.y + 'px) scale(' + p.s + '); filter: brightness(' + p.b + '); opacity: ' + p.o + '; z-index: ' + (30 - r) + ';';
+    });
+    this.setData({ deckPoses: poses });
+  },
+  _bgTo(src) {
+    if (!src || src === this.data.wbg[this.data.wbgOn]) return;
+    const on = 1 - this.data.wbgOn;
+    this.setData({ ['wbg[' + on + ']']: src, wbgOn: on });
+  },
+  onWalletTab(e) {
+    const i = Number(e.currentTarget.dataset.i) || 0;
+    if (i === this.data.walletTab) return;
+    this.setData({ walletTab: i, currentSwiperTicket: 0 });
+    this.rebuildTicketList();
+    this._playEnter(false);
+  },
+
+  /* 进页 / 新卡到账:其余卡从下面依次升上来;新到的那张从右上方斜着落到最前 */
+  _playEnter(arrive) {
+    const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
+    if (!n || reducedMotionOn()) return this._deckLay();
+    const from = list.map((_, i) => {
+      const r = (i - cur + n) % n;
+      return (arrive && r === 0 ? 'transform: translate(40px,-720px) rotate(-12deg) scale(1.15);' : 'transform: translate(0px,560px) scale(.9);') + 'z-index: ' + (30 - r) + '; transition: none;';
+    });
+    this._entering = true; this.setData({ deckPoses: from, deckStill: true }); __end(this, n, arrive);
+    setTimeout(() => {
+      if (this._unloaded) return;
+      this.setData({ deckStill: false });
+      const order = list.map((_, i) => (i - cur + n) % n);
+      order.forEach((r, i) => {
+        const delay = arrive && r === 0 ? 320 : (n - 1 - r) * 90;
+        setTimeout(() => {
+          if (this._unloaded) return;
+          const p = this._deckPose(r);
+          const ease = arrive && r === 0 ? 'transition: transform .78s cubic-bezier(.2,.9,.25,1.08);' : 'transition: transform .7s cubic-bezier(.2,.9,.25,1.08);';
+          this.setData({ ['deckPoses[' + i + ']']: 'transform: translate(0px,' + p.y + 'px) scale(' + p.s + '); filter: brightness(' + p.b + '); opacity: ' + p.o + '; z-index: ' + (30 - r) + ';' + ease });
+        }, delay);
+      });
+    }, 40);
+  },
+  _playArrive() { this._playEnter(true); },
+
+  onDeckStart(e) {
+    const t = e.touches && e.touches[0];
+    if (!t || this._throwing || (this.data.ticketList || []).length === 0) return;
+    this._drag = { x: t.clientX, y: t.clientY, lx: t.clientX, ly: t.clientY, t: Date.now(), vx: 0, vy: 0, dx: 0, dy: 0, at: 0 };
+    this.setData({ deckStill: true });
+  },
+  onDeckMove(e) {
+    const d = this._drag, t = e.touches && e.touches[0];
+    if (!d || !t) return;
+    const now = Date.now(), dt = Math.max(1, now - d.t);
+    d.vx = (t.clientX - d.lx) / dt; d.vy = (t.clientY - d.ly) / dt; d.lx = t.clientX; d.ly = t.clientY; d.t = now;
+    d.dx = t.clientX - d.x; d.dy = t.clientY - d.y;
+    if (now - d.at < 16) return;
+    d.at = now;
+    const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
+    const pr = Math.min(1, Math.hypot(d.dx, d.dy) / 220);
+    const lerp = (a, b) => a + (b - a) * pr;
+    const poses = list.map((_, i) => {
+      const r = (i - cur + n) % n;
+      if (r === 0) return 'transform: translate(' + d.dx + 'px,' + d.dy + 'px) rotate(' + (d.dx * 0.06).toFixed(2) + 'deg); z-index: 30;';
+      const a = this._deckPose(r), b = this._deckPose(r - 1);
+      return 'transform: translate(0px,' + lerp(a.y, b.y) + 'px) scale(' + lerp(a.s, b.s) + '); filter: brightness(' + lerp(a.b, b.b) + '); opacity: ' + lerp(a.o, b.o) + '; z-index: ' + (30 - r) + ';';
+    });
+    this.setData({ deckPoses: poses });
+  },
+  onDeckEnd() {
+    const d = this._drag;
+    this._drag = null;
+    if (!d) return;
+    this.setData({ deckStill: false });
+    const list = this.data.ticketList || [], n = list.length;
+    const dist = Math.hypot(d.dx, d.dy), sp = Math.hypot(d.vx, d.vy);
+    if (dist < 8 || n < 2 || !(dist > 90 || sp > 0.6)) return this._deckLay();
+    const fx = d.dx + d.vx * 80, fy = d.dy + d.vy * 80, L = Math.hypot(fx, fy) || 1;
+    const out = 'transform: translate(' + (fx / L * 620) + 'px,' + (fy / L * 620) + 'px) rotate(' + (fx / L * 20) + 'deg); opacity: 0; z-index: 40; transition: transform .5s cubic-bezier(.2,.7,.3,1), opacity .3s .18s;';
+    const thrown = this.data.currentSwiperTicket;
+    const next = (thrown + 1) % n;
+    this._throwing = true;
+    this.setData({ currentSwiperTicket: next });
+    this._deckLay();
+    this.setData({ ['deckPoses[' + thrown + ']']: out });
+    this._bgTo(list[next] && list[next].wImg);
+    this.syncCurrentTeam && this.syncCurrentTeam();
+    setTimeout(() => {
+      if (this._unloaded) return;
+      this.setData({ deckStill: true });
+      this._deckLay();
+      setTimeout(() => { if (!this._unloaded) this.setData({ deckStill: false }); this._throwing = false; }, 50);
+    }, 520);
+  },
 })
+
+// 与 utils/motion-preference.js 同一组存储键(玩家「减少动态效果」开关);内联读取,不为一个布尔值多挂一个依赖
+function reducedMotionOn() {
+  try {
+    if (typeof wx === 'undefined') return false;
+    const v = wx.getStorageSync('play_reduced_motion');
+    return v === true || (v !== false && wx.getStorageSync('roam_reduced_motion') === true);
+  } catch (e) { return false; }
+}
+
+// v13 卡堆每一层的位置:往上错开 / 缩小 / 变暗,第 4 张以后藏在最后
+const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }, { y: -48, s: 0.86, b: 0.32, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 0 }];
+/* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
+function walletCard(item) {
+  const done = item.verificationStatus == 1, gone = item.registrationStatus == 3 || item.registrationStatus == 4;
+  const ready = !done && !gone && item.registrationStatus == 2;
+  let state = done ? '已核验' : gone ? (item.registrationStatus == 4 ? '已过期' : '已取消') : ready ? '' : '待支付';
+  if (ready) {
+    const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
+    const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
+    state = days !== null && days >= 0 ? '剩 ' + days + ' 天' : '待使用';
+  }
+  return Object.assign(item, { wSub: item.wType + ' · ' + state, wTab: done ? 1 : gone ? 2 : 0 });
+}
+
+/* 入场动画最长时长(最后一张起步 + 过渡 + 余量)后放开重排 */
+function __end(page, n, arrive) { setTimeout(() => { page._entering = false; }, 40 + Math.max(arrive ? 320 : 0, (n - 1) * 90) + 900); }

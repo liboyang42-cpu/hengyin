@@ -29,7 +29,7 @@ function assertHalfSceneContract(scenes) {
     const scene = scenes[id]
     assert.ok(scene, `注册表缺少 ${id}`)
     assert.equal(scene.variant, 'half', `${id} 必须使用 70vh half 场景`)
-    assert.equal(Object.hasOwn(scene, 'canBack'), false, `${id} 半屏场景只能用叉号关闭,不得保留 canBack`)
+    assert.equal(Object.hasOwn(scene, 'canBack'), false, `${id} 半屏场景只能用叉号关闭，不得保留 canBack`)
   }
 }
 
@@ -94,7 +94,7 @@ function assertSharedPlayerCardRecipe(sources) {
 //     sheet: read('components/cy/scene-sheet/index.wxss'),
 //     reference: read('components/cy/scene-roam-history/index.wxss'),
 //     route: read('components/cy/scene-route-content/index.wxss'),
-//     coupon: read('components/cy/scene-game-coupon-wallet/index.wxss'),
+//     coupon: read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxss'),
 //     orderHistory: read('subpackageMember/components/cy/scene-member-order-history/index.wxss'),
 //     orderDetail: read('subpackageMember/components/cy/scene-member-order-detail/index.wxss'),
 //     profile: read('subpackageMember/components/cy/profile/index.wxss'),

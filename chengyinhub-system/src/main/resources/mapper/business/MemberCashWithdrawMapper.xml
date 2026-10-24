@@ -126,6 +126,18 @@
         where id = #{id}
     </update>
 
+    <update id="updateReceiptIfProcessing" parameterType="MemberCashWithdraw">
+        update member_cash_withdraw
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="transferBatchId != null">transfer_batch_id = #{transferBatchId},</if>
+            <if test="wechatBatchStatus != null">wechat_batch_status = #{wechatBatchStatus},</if>
+            <if test="wechatDetailId != null">wechat_detail_id = #{wechatDetailId},</if>
+            <if test="submitTime != null">submit_time = #{submitTime},</if>
+            <if test="lastQueryTime != null">last_query_time = #{lastQueryTime},</if>
+        </trim>
+        where id = #{id} and status = 0 and (frozen is null or frozen = 0)
+    </update>
+
     <select id="selectById" resultMap="MemberCashWithdrawResult">
         select <include refid="cols"/> from member_cash_withdraw where id = #{id}
     </select>
@@ -144,6 +156,10 @@
 
     <!-- D-02 定时查询:扫处理中的单(status=0),最久未查优先(NULL 先)。
          P块冻结:冻结中的单跳过,暂停自动化处理,等运营解冻或人工处置。 -->
+    <select id="selectByIdForUpdate" resultMap="MemberCashWithdrawResult" useCache="false" flushCache="true">
+        select <include refid="cols"/> from member_cash_withdraw where id = #{id} for update
+    </select>
+
     <select id="selectPendingForQuery" resultMap="MemberCashWithdrawResult">
         select <include refid="cols"/> from member_cash_withdraw
         where del_flag = 0 and status = 0 and (frozen is null or frozen = 0)
@@ -170,6 +186,22 @@
     <select id="countSuccessWithoutBatch" resultType="int">
         select count(*) from member_cash_withdraw
         where del_flag = 0 and status = 1 and (transfer_batch_id is null or transfer_batch_id = '')
+    </select>
+
+
+    <select id="sampleStuckProcessingIds" resultType="java.lang.Long">
+        select id from member_cash_withdraw
+        where del_flag = 0 and status = 0 and coalesce(submit_time, create_time) &lt; #{before}
+        order by id asc limit 20
+    </select>
+    <select id="sampleManualPendingIds" resultType="java.lang.Long">
+        select id from member_cash_withdraw where del_flag = 0 and status in (3, 4)
+        order by id asc limit 20
+    </select>
+    <select id="sampleSuccessWithoutBatchIds" resultType="java.lang.Long">
+        select id from member_cash_withdraw
+        where del_flag = 0 and status = 1 and (transfer_batch_id is null or transfer_batch_id = '')
+        order by id asc limit 20
     </select>
 
     <!-- D-02 终态守卫:仅当仍处理中(status=0)才转终态,保证 SUCCESS/退款单次性

@@ -22,6 +22,10 @@ const DRAG_RATIO = 1 / 3;      // 位移阈值:面板高度的三分之一
 const DRAG_VELOCITY = 0.55;    // 速度阈值:px/ms
 const DRAG_UP_DAMP = 3;        // 往上拖给阻尼,不让面板被拽出屏幕
 const SNAP_MS = 220;           // = --cy-motion-standard,和 wxss 里的吸附时长镜像
+/* 2026-10-23 业主定:按档位定速。退场计时器是 wxss 里 --cy-motion-sheet-*-out 的 JS 镜像
+ * (peek 200 / half 250 / full 280),sheet-motion-levels 契约从 tokens 反解比对。 */
+const LEVEL_EXIT_MS = { peek: 200, half: 250, full: 280 };
+const LEVEL_RATIO = { peek: 0.30, half: 0.60 };
 
 Component({
   options: { multipleSlots: true },
@@ -50,6 +54,10 @@ Component({
     /* dirty:有未保存输入。为 true 时遮罩不再直接关闭,只发 requestclose,
      * 由父页面决定"保存草稿/放弃"。组件自己不清业务状态(状态所有权留在发起页)。 */
     dirty:   { type: Boolean, value: false },
+    /* fixed:打开后内容会变(搜索 / 加载 / 分页签 / 多步)时固定在某档高度,不随内容跳。
+     * '' = 贴内容高(默认,上限 full 80%);'peek' | 'half' | 'full' = 30% / 60% / 80%。
+     * 大编辑器与筛选弹窗一律 fixed="full"(2026-10-23 业主定)。 */
+    fixed:   { type: String,  value: '' },
 
   },
   data: {
@@ -64,6 +72,10 @@ Component({
     _dragging: false,
     _dragStyle: '',
     _snapping: false,
+    /* 档位(peek | half | full):决定升起 / 落下用哪一档时长。full 变体与 fixed 档直接知道;
+     * 贴内容高的弹窗挂载时先 _measuring(面板与遮罩不动、不可见),量完高度再起跑 —— 只多一帧。 */
+    _lv: '',
+    _measuring: false,
   },
   observers: {
     'title, navTitle'(title, navTitle) {
@@ -195,6 +207,34 @@ Component({
         this._snapTimer = null;
         this.setData({ _snapping: false });
       }, SNAP_MS);
+    },
+
+    /* ——— 按档位定速(exit-motion 的两个钩子) ——— */
+    _knownLevel() {
+      if (this.data.variant === 'full') return 'full';
+      if (this.data.fixed) return this.data.fixed;
+      // morph 进场有自己的量测与起点,不再插一帧量高;按 half 档定速
+      if (this.data.anchorSelector) return 'half';
+      return '';
+    },
+    _enterData() {
+      const lv = this._knownLevel();
+      this._exitMs = LEVEL_EXIT_MS[lv || 'half'];
+      return lv ? { _lv: lv, _measuring: false } : { _lv: '', _measuring: !this.data.reducedMotion };
+    },
+    _afterEnter() {
+      if (!this.data._measuring) return;
+      const done = (lv) => {
+        this._exitMs = LEVEL_EXIT_MS[lv];
+        this.setData({ _lv: lv, _measuring: false });
+      };
+      const w = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+      const H = (w && (w.windowHeight || w.screenHeight)) || 0;
+      this.createSelectorQuery().select('.sh__panel').boundingClientRect((r) => {
+        if (!r || !r.height || !H) { done('half'); return; }
+        // +1px 容差:贴着档位线的面板算进这一档
+        done(r.height <= H * LEVEL_RATIO.peek + 1 ? 'peek' : (r.height <= H * LEVEL_RATIO.half + 1 ? 'half' : 'full'));
+      }).exec();
     },
 
     noop() {},

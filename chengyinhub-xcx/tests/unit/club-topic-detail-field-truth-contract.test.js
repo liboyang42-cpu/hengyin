@@ -35,7 +35,8 @@ function loadPage() {
   return { vm, requests };
 }
 
-test('主题日期与场次选项统一显示上海日历日，不随设备时区跨日', () => {
+test('主题日期与场次选项统一显示上海日历日，不随设备时区跨日', (t) => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-09-01T00:00:00Z'));
   const previousTZ = process.env.TZ;
   try {
     for (const zone of ['America/Los_Angeles', 'UTC', 'Asia/Shanghai']) {
@@ -46,7 +47,7 @@ test('主题日期与场次选项统一显示上海日历日，不随设备时�
       vm.applyDetail({ status: 1, startDate: '2026-09-30 00:00:00', endDate: '2026-10-07 00:00:00',
         activityList: [{ id: 702, startDate: '2026-10-01 09:00:00', endDate: '2026-10-02 00:00:00' }] });
       assert.equal(vm.data.topic.dateRange, '9月30日 – 10月7日', zone);
-      assert.equal(vm.data.sessions[0].whenText, '10月1日 – 10月2日', zone);
+      assert.equal(vm.data.sessions[0].whenText, '10月1日 09:00', zone);
       assert.equal(vm.formatRange('2026-09-30T16:00:00Z', ''), '10月1日', zone);
       assert.equal(vm.formatRange('2026-02-30', null), '', zone);
     }
@@ -70,7 +71,7 @@ test('主题封面读取详情接口 imgUrl，取首图并保留接口返回的 
 
 test('审核态读 cms_topic.status:0=审核中、2=未通过(带驳回原因),不再读幻字段 auditStatus', () => {
   const src = fs.readFileSync(PAGE_PATH, 'utf8');
-  assert.doesNotMatch(src.replace(/^\s*\/\/.*$/gm, ''), /raw\.auditStatus/, 'auditStatus 全库不存在,不许再读');
+  assert.doesNotMatch(src.replace(/^\s*\/\/.*$/gm, ''), /raw\.auditStatus/, 'auditStatus 全库不存在，不许再读');
 
   const reviewing = loadPage();
   reviewing.vm._topicId = 88; reviewing.vm._clubId = 9;
@@ -120,7 +121,8 @@ test('E-14:普通成员(非 owner)带 clubId 进详情:不出核销区、不出�
   assert.equal(vm.data.showVerify, false, 'projection 回来也不放行非管理者');
 });
 
-test('「接下来」段用 activityList 真实字段渲染(不再读幻字段 raw.sessions)', () => {
+test('「接下来」段用 activityList 真实字段渲染(不再读幻字段 raw.sessions)', (t) => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-09-01T00:00:00Z'));
   const { vm } = loadPage();
   vm._topicId = 88; vm._clubId = 9;
   vm._manageStats = { canDirect: true, canManageSessions: true, canViewVerify: true };
@@ -132,7 +134,7 @@ test('「接下来」段用 activityList 真实字段渲染(不再读幻字段 r
   assert.equal(vm.data.sessions[0].whoText, '周末场');
   assert.equal(vm.data.sessions[0].etaText, '愚园路 68 号');
   assert.match(vm.data.sessions[0].whenText, /9月10日/);
-  assert.equal(vm.data.sessions[0].kindText, '', '场次类型后端没给,不许冒充');
+  assert.equal(vm.data.sessions[0].kindText, '', '场次类型后端没给，不许冒充');
   assert.equal(vm.data.topic.structureText, '3 章', '章节总数读 totalChapterCount');
   // 空 kindText 的胶囊必须整格不渲染(否则会出一个空框)
   const wxml = fs.readFileSync(WXML_PATH, 'utf8');
@@ -152,9 +154,12 @@ test('拍板1:带 clubId 进页就拉 topic-manage-stats,进导演台后按这�
   assert.equal(vm._canDirect, true, '导演台身份只认 canDirect');
   assert.equal(vm._directorActivityId, 702, '唯一一场自动进导演台');
   const again = requests.filter((r) => r.url === '/api/club/crm/topic-manage-stats');
-  assert.equal(again.length, 2, '进了这一场,本场人数要换成这一场的口径');
+  assert.equal(again.length, 2, '进了这一场，本场人数要换成这一场的口径');
   assert.equal(JSON.parse(again[1].data).activityId, 702);
   assert.equal(vm.data.topic.structureText, '2 章 · 5 站', '站数读 nodeCount 真值');
+  // PR10 F-W5-08(b):activityId=null 时的人数是全部场次之和,不能叫「本场」;按这一场重拉回来后才出。
+  assert.deepEqual(vm.data.topic.chips, []);
+  again[1].success({ code: 200, data: { canDirect: true, canManageSessions: true, canViewVerify: true, nodeCount: 5, sessionHeadcount: 3, pendingVerifyCount: 1, verifiedByMeCount: 2 } });
   assert.deepEqual(vm.data.topic.chips, ['本场 3 人']);
   assert.deepEqual(vm.data.topic.statusChips, [], 'gameConfiguredCount 没下发就不出「玩法 0/5」');
 });
@@ -541,7 +546,7 @@ test('商家403和报名参与者业务错误显示真实原因，重读不保�
   requests.at(-1).success({ code: 200, data: { nodes: [] } });
   assert.equal(vm.data.merchantState, 'ready');
   const wxml = fs.readFileSync(WXML_PATH, 'utf8');
-  assert.match(wxml, /title="{{merchantDeniedReason \|\| '商家信息没能取到'}}"/);
+  assert.match(wxml, /title="{{merchantDeniedReason \|\| '商家信息获取失败'}}"/);
   assert.doesNotMatch(wxml, /sub="承接商家需要「活动查看」权限。"/);
   vm.loadCustomers();
   requests.at(-1).success({ code: 500, msg: '当前岗位没有客户查看权限' });
@@ -551,7 +556,7 @@ test('商家403和报名参与者业务错误显示真实原因，重读不保�
   assert.equal(vm.data.customerErrorReason, '');
   requests.at(-1).success({ code: 200, data: { sessions: [], soldCount: 0, pendingCount: 0, verifiedCount: 0 } });
   assert.equal(vm.data.customerState, 'ready');
-  assert.match(wxml, /sub="{{customerErrorReason \|\| '稍后再试一次'}}"/);
+  assert.match(wxml, /sub="{{customerErrorReason}}"/);
   vm.loadCustomers();
   requests.at(-1).success({ code: 200, msg: '操作成功' });
   assert.equal(vm.data.customerState, 'error');
@@ -560,4 +565,18 @@ test('商家403和报名参与者业务错误显示真实原因，重读不保�
   requests.at(-1).fail({ errMsg: 'request:fail' });
   assert.equal(vm.data.customerState, 'error');
   assert.equal(vm.data.customerErrorReason, '');
+});
+
+
+test('upcoming sessions exclude ended/cancelled facts and sort actual Beijing start time', (t) => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-10-12T01:00:00Z'));
+  const { vm } = loadPage();
+  vm.applyDetail({ status: 1, activityList: [
+    { id: 4, startDate: '2026-10-13 12:00:00' },
+    { id: 2, startDate: '2026-10-12 11:00:00' },
+    { id: 1, startDate: '2026-10-11 11:00:00', endDate: '2026-10-11 12:00:00' },
+    { id: 3, cancelTime: '2026-10-11 10:00:00', startDate: '2026-10-12 10:00:00' }
+  ] });
+  assert.deepEqual(vm.data.sessions.map(row => row.id), [2, 4]);
+  assert.equal(vm.data.sessions[0].whenText, '10月12日 11:00');
 });

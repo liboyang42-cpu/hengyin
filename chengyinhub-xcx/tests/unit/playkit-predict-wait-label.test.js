@@ -44,20 +44,20 @@ function waitLabelFor(closeAtHour, revealDays, revealHour) {
 }
 
 test('★押完之后告诉玩家今天几点截止,而且补零', () => {
-  assert.equal(waitLabelFor(9), '今天 09:00 截止,之后由商家给出答案。')
-  assert.equal(waitLabelFor(20), '今天 20:00 截止,之后由商家给出答案。')
+  assert.equal(waitLabelFor(9), '今天 09:00 截止，之后由商家给出答案。')
+  assert.equal(waitLabelFor(20), '今天 20:00 截止，之后由商家给出答案。')
 })
 
 test('★配了揭晓时间就照原型把两件事都说出来', () => {
   // 原型:「第 N 天揭晓,由商家给出答案。」这里把收注截止也说上 —— 少了它玩家不知道还能不能押
-  assert.equal(waitLabelFor(20, 1, 20), '今天 20:00 截止,明天 20:00 由商家给出答案。')
-  assert.equal(waitLabelFor(20, 0, 22), '今天 20:00 截止,今天 22:00 由商家给出答案。')
-  assert.equal(waitLabelFor(9, 2, 18), '今天 09:00 截止,后天 18:00 由商家给出答案。')
-  assert.equal(waitLabelFor(9, 5, 18), '今天 09:00 截止,第 5 天 18:00 由商家给出答案。')
+  assert.equal(waitLabelFor(20, 1, 20), '今天 20:00 截止，明天 20:00 由商家给出答案。')
+  assert.equal(waitLabelFor(20, 0, 22), '今天 20:00 截止，今天 22:00 由商家给出答案。')
+  assert.equal(waitLabelFor(9, 2, 18), '今天 09:00 截止，后天 18:00 由商家给出答案。')
+  assert.equal(waitLabelFor(9, 5, 18), '今天 09:00 截止，第 5 天 18:00 由商家给出答案。')
 })
 
 test('没配揭晓时间就只说截止 —— 不替商家许一个时间', () => {
-  assert.equal(waitLabelFor(20), '今天 20:00 截止,之后由商家给出答案。')
+  assert.equal(waitLabelFor(20), '今天 20:00 截止，之后由商家给出答案。')
   assert.ok(!waitLabelFor(20).includes('揭晓'))
 })
 
@@ -68,8 +68,8 @@ test('没有可信的截止点就一个字都不写 —— 宁可不写,也不�
 })
 
 test('揭晓时间自己越界时,截止那半句照说,不整句作废', () => {
-  assert.equal(waitLabelFor(20, 31, 20), '今天 20:00 截止,之后由商家给出答案。')
-  assert.equal(waitLabelFor(20, 1, 24), '今天 20:00 截止,之后由商家给出答案。')
+  assert.equal(waitLabelFor(20, 31, 20), '今天 20:00 截止，之后由商家给出答案。')
+  assert.equal(waitLabelFor(20, 1, 24), '今天 20:00 截止，之后由商家给出答案。')
 })
 
 test('只有揭晓时间、没有截止点时,也能把揭晓说出来', () => {

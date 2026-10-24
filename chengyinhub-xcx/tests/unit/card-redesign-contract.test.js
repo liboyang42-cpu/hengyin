@@ -44,7 +44,7 @@ test('工作台项目卡:承接签按确认关系判,主办签按真实档期判
 
 test('商家版主页:无成就 tab / tab 无整条底线 / 白卡退场文字落底', () => {
   const js = read('subpackageMember/components/cy/profile/index.js')
-  assert.match(js, /t\.key !== 'achievements'/, '商家版必须滤掉成就 tab')
+  assert.match(js, /tab\.key !== 'achievements'/, '商家版必须滤掉成就 tab')
   const wxml = read('subpackageMember/components/cy/profile/index.wxml')
   // 2026-08-20 解冲突:master(#753)那侧按「用户定不要那条白线」改成一律关掉,
   // 不再按身份区分;本分支原来的 !isMerchantView 让位给它。
@@ -56,9 +56,10 @@ test('商家版主页:无成就 tab / tab 无整条底线 / 白卡退场文字�
   assert.match(tabsWxss, /\.cy-tabs--noline \{[^}]*border-bottom: none/)
 })
 
-test('商家合作页:商家/俱乐部行换新版卡,俱乐部使用商家合作标签', () => {
+test('商家合作页:帖子/俱乐部(2026-10-22 起不列商家),俱乐部使用商家合作标签', () => {
   const wxml = read('pages/merchant/relation/index.wxml')
-  assert.match(wxml, /<cy-merchant-card[\s\S]*?bind:tap="goMerchant"/)
+  assert.doesNotMatch(wxml, /<cy-merchant-card|goMerchant/, '商家不得看到其他商家')
+  assert.match(wxml, /<cy-post-card[\s\S]*?light="\{\{true\}\}"/)
   assert.match(wxml, /<cy-club-card club="\{\{item\}\}" audience="merchant"/)
   assert.doesNotMatch(wxml, /<cy-cell/, '旧 cy-cell 行不许残留')
   const json = JSON.parse(read('pages/merchant/relation/index.json'))

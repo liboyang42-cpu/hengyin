@@ -1,10 +1,11 @@
 {
   "navigationStyle": "custom",
-  "usingComponents": {
+  "usingComponents": {"cy-error": "/components/cy/error/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-modal-host": "/components/cy/modal-host/index"
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-safety-rating-sheet": "./components/safety-rating-sheet/index"
   }
 }

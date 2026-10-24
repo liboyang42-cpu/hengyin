@@ -196,7 +196,7 @@ function declarationsOf(name, sources) {
 test('⑨ loading 弧读自己的 comp 钩子,不是「本主题强调色」', () => {
   assert.match(SHEET_WXSS, /border-top-color:\s*var\(--cy-comp-result-spinner\)/)
   assert.doesNotMatch(SHEET_WXSS, /border-top-color:\s*var\(--cy-color-brand\)/,
-    '--cy-color-brand 玩家域=白、商家域=灰,拿它当品牌紫等于这个颜色从没出现过')
+    '--cy-color-brand 玩家域=白、商家域=灰，拿它当品牌紫等于这个颜色从没出现过')
 })
 
 test('⑩ 该钩子只声明一次且指向品牌紫 —— 任何一档都不许覆盖成别的颜色', () => {
@@ -212,9 +212,9 @@ test('负控:改回 --cy-color-brand 或在深色档覆盖它,都必须判红', 
   assert.notEqual(mutated, SHEET_WXSS, '负控变异注入失败')
   assert.throws(() => assert.match(mutated, /border-top-color:\s*var\(--cy-comp-result-spinner\)/))
 
-  const overridden = DARK.replace(/@media \(prefers-color-scheme: dark\) \{/,
-    '@media (prefers-color-scheme: dark) {\n    --cy-comp-result-spinner: #FFFFFF;')
-  const decls = declarationsOf('--cy-comp-result-spinner', [TOKENS, overridden, MERCHANT])
+  // 系统深色块已移除(2026-10-22):改为在 merchant 样式里多塞一处覆盖
+  const overridden = MERCHANT + '\npage {\n  --cy-comp-result-spinner: #FFFFFF;\n}'
+  const decls = declarationsOf('--cy-comp-result-spinner', [TOKENS, DARK, overridden])
   assert.equal(decls.length, 2, '负控变异注入失败')
   assert.throws(() => assert.deepEqual(decls, ['var(--cy-ref-violet-500)']))
 })

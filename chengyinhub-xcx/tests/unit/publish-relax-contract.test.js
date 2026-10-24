@@ -68,7 +68,7 @@ test('收紧一律拒', () => {
 
 test('题面一个字都不许动', () => {
   for (const p of ['qa.options', 'qa.title', 'qa.xp', 'hiddenObject.hotspots', 'sort.answerOrder']) {
-    assert.match(cfg.relaxError({ [p]: '+1' }, ENABLED), /容错面/, p + ' 属题面,必须拒')
+    assert.match(cfg.relaxError({ [p]: '+1' }, ENABLED), /容错面/, p + ' 属题面，必须拒')
   }
 })
 
@@ -82,7 +82,7 @@ test('=0 是放宽,=K 是收紧', () => {
 test('每条都必须带 when', () => {
   const withVariants = (variants) => Object.assign({}, ENABLED, { variants })
   assert.match(cfg.variantsError(withVariants([{ relax: { 'timer.durationSeconds': '+30' } }])), /必须带 when/)
-  assert.equal(cfg.variantsError(withVariants([{ when: {}, relax: { 'timer.durationSeconds': '+30' } }])), '')
+  assert.equal(cfg.variantsError(withVariants([{ when: { var: 'sys.hp', op: 'LTE', value: 3 }, relax: { 'timer.durationSeconds': '+30' } }])), '')
 })
 
 test('不配 = 合法', () => {
@@ -93,12 +93,12 @@ test('不配 = 合法', () => {
  * 不在本页拦 = 作者存得下、发布被后端拒、且看不到理由。 */
 test('relax 指向未启用的玩法段:两边都拒', () => {
   const java = fs.readFileSync(BACKEND, 'utf8')
-  assert.match(java, /没有启用/, '后端少了这条闸,前端单边拦等于没拦')
+  assert.match(java, /没有启用/, '后端少了这条闸，前端单边拦等于没拦')
   assert.match(
     cfg.variantsError({
       schemaVersion: 1,
       timer: { enabled: true, durationSeconds: 60 },
-      variants: [{ when: {}, relax: { 'typeIn.seconds': '+10' } }],
+      variants: [{ when: { var: 'sys.hp', op: 'LTE', value: 3 }, relax: { 'typeIn.seconds': '+10' } }],
     }),
     /没有启用/)
 })
@@ -110,7 +110,7 @@ test('底值已经是不限还要 +N:两边都拒', () => {
     cfg.variantsError({
       schemaVersion: 1,
       sort: { enabled: true, maxAttempts: 0 },
-      variants: [{ when: {}, relax: { 'sort.maxAttempts': '+3' } }],
+      variants: [{ when: { var: 'sys.hp', op: 'LTE', value: 3 }, relax: { 'sort.maxAttempts': '+3' } }],
     }),
     /已经是不限/)
 })
@@ -123,7 +123,7 @@ test('运行期不再夹值(越界由发布期拒)', () => {
       + '/service/impl/AdvancedGameRuntimeServiceImpl.java'), 'utf8')
   assert.doesNotMatch(runtime, /Math\.min\(value,/, '运行期又出现夹值 —— 越界会被悄悄抹平')
   assert.doesNotMatch(fs.readFileSync(BACKEND, 'utf8'), /RELAX_MAX/,
-    '上界的真源只该有各 kit 校验器那一份,别再抄第二张表')
+    '上界的真源只该有各 kit 校验器那一份，别再抄第二张表')
 })
 
 /* 次数类字段缺省即 0 即不限 —— 只认显式 0 会漏掉「不写」那一半,
@@ -137,7 +137,7 @@ test('缺省的次数字段与显式 0 同判:都算不限', () => {
     const field = key === 'sort' ? 'sort.maxAttempts' : 'typeIn.tries'
     assert.match(
       cfg.variantsError(Object.assign({ schemaVersion: 1 }, seg,
-        { variants: [{ when: {}, relax: { [field]: '+3' } }] })),
+        { variants: [{ when: { var: 'sys.hp', op: 'LTE', value: 3 }, relax: { [field]: '+3' } }] })),
       /已经是不限/, field + ' 缺省时必须拒')
   }
 })
@@ -178,9 +178,9 @@ test('误差与新增次数字段:出选项、方向对、不越界', () => {
   assert.deepEqual(byKey['stopwatch.toleranceMs'], { 'stopwatch.toleranceMs': '+300' })
   assert.deepEqual(byKey['estimate.tolerance'], { 'estimate.tolerance': '+3' })
   assert.deepEqual(byKey['qa.maxTries:more'], { 'qa.maxTries': '+2' })
-  assert.ok(!byKey['stopwatch.tries:more'], '9 + 2 超过上界 10,不该给「多 2 次」')
+  assert.ok(!byKey['stopwatch.tries:more'], '9 + 2 超过上界 10，不该给「多 2 次」')
   assert.deepEqual(byKey['stopwatch.tries:free'], { 'stopwatch.tries': '=0' })
-  assert.ok(!cfg.relaxChoices({ compass: { enabled: true, tolerance: 80 } }).length, '80 + 15 超过 90,不该给')
+  assert.ok(!cfg.relaxChoices({ compass: { enabled: true, tolerance: 80 } }).length, '80 + 15 超过 90，不该给')
   assert.equal(cfg.relaxError({ 'compass.tolerance': '=60' }, m).includes('证明不了'), true, '误差不许 =N')
   assert.match(cfg.relaxError({ 'photoCheck.maxTries': '+2' }, { photoCheck: { enabled: true, maxTries: 2 } }), /不在白名单/)
 })
@@ -201,8 +201,8 @@ test('挑战类:坚持几秒 / 撞几次只能往小里放宽,选项在下界之
   assert.deepEqual(byKey['compass.holdSeconds'], { 'compass.holdSeconds': '-1' })
   assert.deepEqual(byKey['ballShake.goal'], { 'ballShake.goal': '-7' })
   assert.deepEqual(byKey['reaction.goalMs'], { 'reaction.goalMs': '+150' })
-  assert.ok(!byKey['shout.seconds'], '6 - 2 = 4 低于下界 5,不该给')
-  assert.ok(!byKey['ballShake.seconds'], '弹球没开限时,不该给时长选项')
+  assert.ok(!byKey['shout.seconds'], '6 - 2 = 4 低于下界 5，不该给')
+  assert.ok(!byKey['ballShake.seconds'], '弹球没开限时，不该给时长选项')
   m.ballShake.timed = true
   assert.ok(cfg.relaxChoices(m).some((c) => c.key === 'ballShake.seconds'))
   assert.match(cfg.relaxError({ 'quietHold.seconds': '+3' }, m), /只能写 -N/)

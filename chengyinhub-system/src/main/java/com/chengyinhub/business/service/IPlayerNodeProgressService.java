@@ -31,4 +31,13 @@ public interface IPlayerNodeProgressService
      * activityId 与 topicId 二选一;rank 由调用方按列表序补。
      */
     List<LeaderboardItemVO> selectActivityLeaderboard(Long activityId, Long topicId, int limit);
+
+    /**
+     * D-13 分支主题排行榜:到达结局者优先,再按结局用时升序;未到结局按完成节点数。
+     * activityId=0 为自玩榜;rank 由调用方经 LeaderboardRankPolicy 补(同用时并列)。
+     */
+    List<LeaderboardItemVO> selectRouteLeaderboard(Long activityId, Long topicId, int limit);
+
+    /** 分支主题榜外的「我」;没开过局返回 null。 */
+    LeaderboardItemVO selectRouteLeaderboardRow(Long activityId, Long topicId, Long memberId);
 }

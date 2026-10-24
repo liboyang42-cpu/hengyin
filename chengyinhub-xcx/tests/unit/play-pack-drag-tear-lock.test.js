@@ -20,7 +20,7 @@ const WXML = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8')
 
 function jsConst(name) {
   const m = JS.match(new RegExp('^const ' + name + '\\s*=\\s*([0-9.]+)\\s*;', 'm'))
-  assert.ok(m, `index.js 里找不到常量 ${name}(锚点失效,不是代码没问题)`)
+  assert.ok(m, `index.js 里找不到常量 ${name}(锚点失效，不是代码没问题)`)
   return Number(m[1])
 }
 
@@ -61,7 +61,7 @@ test('③ 撕口节点的 wx:if 同时认 packTear 和 tearPct', () => {
   const m = WXML.match(/class="fx-pack__mouth"\s+wx:if="\{\{([^}]+)\}\}"/)
   assert.ok(m, 'WXML 里没抓到撕口节点的 wx:if(锚点失效)')
   assert.ok(/packTear/.test(m[1]) && /tearPct/.test(m[1]),
-    `撕口 wx:if 现在是「${m[1]}」—— 少任何一个,对应路径的撕口就不存在`)
+    `撕口 wx:if 现在是「${m[1]}」—— 少任何一个，对应路径的撕口就不存在`)
 })
 
 test('阈值 sanity:TEAR_DONE_PCT 在 (0,100) 开区间', () => {

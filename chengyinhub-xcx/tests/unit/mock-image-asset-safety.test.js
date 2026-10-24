@@ -10,7 +10,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '../..');
 const REMOVED_ASSET = path.join(ROOT, 'images/d_cy.jpg');
-const mockData = require('../../utils/mockData');
+const mockData = require('../../pages/club/utils/mockData');
 
 function runtimeSources(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -61,7 +61,7 @@ function assertPublishCoverPolicy(home) {
   ['bannerList', 'latestList'].forEach((list) => {
     home[list].forEach((item) => {
       assert.ok(item.imgUrl.startsWith(COVER_PREFIX),
-        `${list} 的开发预览必须走已登记的线上封面目录,不得写回包内路径:${item.imgUrl}`);
+        `${list} 的开发预览必须走已登记的线上封面目录，不得写回包内路径:${item.imgUrl}`);
       const file = item.imgUrl.split('/').pop();
       assert.equal(fs.existsSync(path.join(ROOT, COVER_MASTER_DIR, file)), true,
         `线上封面必须在仓库留有母版:${item.imgUrl}`);
@@ -73,7 +73,7 @@ test('发布广场开发预览只用仓库留有母版的已登记线上封面',
   assertPublishCoverPolicy(mockData.getHomeData());
   const page = fs.readFileSync(path.join(ROOT, 'pages/template/index.js'), 'utf8');
   assert.match(page, /coverErrorSrc:\s*'\/images\/no_data\.svg'/);
-  assert.doesNotMatch(page, /home-route-city-placeholder\.jpg/, '路线图不能被当成主题封面兜底');
+  assert.doesNotMatch(page, /home-route-city-placeholder\.jpg/, '路线图不能被当成主题封面保底');
 });
 
 test('发布广场封面契约具备红控:空图或未登记目录的图片都会失败', () => {

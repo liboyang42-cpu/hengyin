@@ -16,7 +16,7 @@ const { limitTrack } = require('./roam-track-simplify.js')
 
 const REVOKE_PENDING_PREFIX = 'roam_share_revoke_pending:'
 const TOKEN_RE = /^[a-f0-9]{32}$/
-
+const revokeGenerations = new Map()
 function send(app, options) {
   return new Promise((resolve) => {
     app.sendRequest(Object.assign({ hideLoading: true, silentError: true }, options, {
@@ -26,14 +26,11 @@ function send(app, options) {
     }))
   })
 }
-
 const isOk = (res) => !!res && (res.code === 200 || res.code === '200')
-
 function numberOrNull(value) {
   const number = typeof value === 'string' && value.trim() !== '' ? Number(value) : value
   return typeof number === 'number' && Number.isFinite(number) && number >= 0 ? number : null
 }
-
 /** 分享卡上看得到的东西,原样组成快照。session = 页面归一后的 s(含 routeName/time)。 */
 function buildSharePayload(session, privacy) {
   const clipped = limitTrack(clipSavedTrackForSharing((session && session.track) || [], privacy))
@@ -62,53 +59,59 @@ function buildSharePayload(session, privacy) {
     pois,
   }
 }
-
 /** 待办标记按账号分:A 作废失败留下的标记,不能被 B 登录后「补作废 B 自己的」顺手清掉。 */
 function revokePendingKey(app) {
-  return REVOKE_PENDING_PREFIX + String((app && typeof app.getUserID === 'function' && app.getUserID()) || '')
+  const id = String((app && typeof app.getUserID === 'function' && app.getUserID()) || '').trim(); return /^(|0|undefined|null)$/.test(id) ? '' : REVOKE_PENDING_PREFIX + id // 无账号返回 '':不读不写全局键
 }
-
 function readRevokePending(app, storage) {
-  try { return storage.getStorageSync(revokePendingKey(app)) === 1 } catch (_) { return true }
+  try { const key = revokePendingKey(app); return !!key && storage.getStorageSync(key) === 1 } catch (_) { return true }
 }
-
-function writeRevokePending(app, storage, pending) {
-  try {
-    if (pending) storage.setStorageSync(revokePendingKey(app), 1)
-    else storage.removeStorageSync(revokePendingKey(app))
+function writeRevokePending(storage, key, pending) {
+  if (key) try {
+    if (pending) storage.setStorageSync(key, 1)
+    else storage.removeStorageSync(key)
   } catch (_) {}
 }
-
 /** 作废本人全部分享快照。返回 Promise<boolean>;false 时待办标记留着,下次发布前补做。 */
 function revokeShareSnapshots(app, storage) {
-  writeRevokePending(app, storage, true)
+  const key = revokePendingKey(app), generation = (revokeGenerations.get(key) || 0) + 1
+  if (!key) return Promise.resolve(false); revokeGenerations.set(key, generation); writeRevokePending(storage, key, true)
   return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: {} }).then((res) => {
     if (!isOk(res)) return false
-    writeRevokePending(app, storage, false)
+    if (revokeGenerations.get(key) === generation) writeRevokePending(storage, key, false)
     return true
   })
 }
-
 /** Promise<{ token, reason }>:reason = '' | 'private' | 'revoke-pending' | 'failed'。 */
 function publishShareSnapshot(app, storage, session) {
+  const owner = revokePendingKey(app); if (!owner) return Promise.resolve({ token: '', reason: 'failed' })
+  // 与现有 request-client/session-manager 一致：账号与会话凭据共同识别在途所有者。
+  const currentAuthorization = () => typeof app.getAuthorization === 'function'
+    ? app.getAuthorization() : app.globalData && app.globalData.authorization
+  const authorization = currentAuthorization()
+  const isCurrentOwner = () => owner === revokePendingKey(app) && authorization === currentAuthorization()
   const privacy = readSharePrivacy(storage)
   if (privacy.visibility === VISIBILITY.PRIVATE) return Promise.resolve({ token: '', reason: 'private' })
+  const { exactSessionId } = require('./roam-recovery.js')
+  const sessionId = exactSessionId(session && session.sessionId)
+  if (!sessionId || session.locationExpired === true) return Promise.resolve({ token: '', reason: 'failed' })
   const clientTs = Number(session && session.ts)
   if (!Number.isSafeInteger(clientTs) || clientTs <= 0) return Promise.resolve({ token: '', reason: 'failed' })
   const ready = readRevokePending(app, storage) ? revokeShareSnapshots(app, storage) : Promise.resolve(true)
   return ready.then((revoked) => {
-    if (!revoked) return { token: '', reason: 'revoke-pending' }
+    if (!isCurrentOwner()) return { token: '', reason: 'failed' }
+    if (!revoked || readRevokePending(app, storage)) return { token: '', reason: 'revoke-pending' }
     return send(app, {
       url: '/api/roam/share/snapshot',
       method: 'POST',
-      data: { clientTs, snapshot: JSON.stringify(buildSharePayload(session, privacy)) },
+      data: { clientTs, sessionId, snapshot: JSON.stringify(buildSharePayload(session, privacy)) },
     }).then((res) => {
+      if (!isCurrentOwner()) return { token: '', reason: 'failed' }
       const token = isOk(res) && res.data && res.data.token
       return TOKEN_RE.test(token || '') ? { token, reason: '' } : { token: '', reason: 'failed' }
     })
   })
 }
-
 /** 接收方读取。Promise<{ state: 'ready'|'gone'|'error', session }>:
  *  gone = 服务端明确说没有(分享者已作废/令牌不对);error = 没读到(断网/网关),可重试。 */
 function readShareSnapshot(app, token) {
@@ -118,7 +121,8 @@ function readShareSnapshot(app, token) {
     app.sendRequest({
       url: '/api/roam/share/snapshot', method: 'GET', data: { token }, hideLoading: true, silentError: true,
       success: (res) => resolve(isOk(res) && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
-        ? { state: 'ready', session: res.data } : { state: 'gone', session: null }),
+        ? { state: 'ready', session: res.data }
+        : { state: res && res.msg === '这条足迹已不再公开' ? 'gone' : 'error', session: null }),
       successStatusAbnormal: () => resolve({ state: 'error', session: null }),
       fail: () => resolve({ state: 'error', session: null }),
     })

@@ -111,12 +111,12 @@ test('报名或支付失败会持久显示，重新提交及关键选择变化�
   page.data.orderInfo = { registrationId: 99 }
   page._hostShareConsentReady = true
   page.handlePayment()
-  latestHandlers.onPayFail({ errMsg: '支付服务暂时不可用' })
-  assert.equal(page.data.submitError, '支付服务暂时不可用')
+  latestHandlers.onPayFail({ errMsg: '支付服务暂不可用' })
+  assert.equal(page.data.submitError, '支付服务暂不可用')
   /* 2026-09-05:失败不再额外弹 toast(toast + 页内错误 + 结果面板 = 同一句说三遍)。
      页内 submitError 仍是持久出口(上一行),面板负责把这一刻讲清楚。 */
   assert.equal(page.data.resultSheet.kind, 'fail')
-  assert.equal(page.data.resultSheet.why, '支付服务暂时不可用', '面板必须带上失败原因')
+  assert.equal(page.data.resultSheet.why, '支付服务暂不可用', '面板必须带上失败原因')
   assert.equal(goBackCalls, 0, '支付失败应留在结算页展示错误；未支付订单仍由取消接口释放')
   assert.equal(requests.at(-1).url, '/api/registration/cancel')
 })
@@ -139,4 +139,26 @@ test('提交错误在固定动作区使用可访问 inline error，并为扩展�
   assert.match(wxss,
     /\.bmbottom\s*,\s*\.bmbottom-spacer\s*\{[^}]*var\(--baoming-action-extra, 0rpx\)[^}]*env\(safe-area-inset-bottom\)/s,
     '错误出现时动作栏和正文占位必须使用同一高度算式')
+})
+
+test('报名与支付事实携带Checkout原registrationId及稳定原事件键', () => {
+  const analytics = require('../../utils/analytics')
+  const original = analytics.track
+  const events = []
+  analytics.track = (name, payload) => events.push({ name, payload })
+  try {
+    const page = loadReadyPage()
+    page.finishSignup = () => {}
+    page.handlePayment()
+    latestHandlers.onFreeSuccess({ registrationId: 991, payableAmount: 0 })
+    latestHandlers.onFreeSuccess({ registrationId: 991, payableAmount: 0 })
+    latestHandlers.onPaySuccess({ registrationId: 991, payableAmount: 88 })
+    assert.equal(events[0].payload.properties.registrationId, 991)
+    assert.equal(events[0].payload.eventKey, 'signup_submit_registration_991')
+    assert.equal(events[1].payload.eventKey, events[0].payload.eventKey)
+    assert.equal(events[2].payload.properties.registrationId, 991)
+    assert.equal(events[2].payload.eventKey, 'payment_success_registration_991')
+  } finally {
+    analytics.track = original
+  }
 })

@@ -47,16 +47,22 @@ public class MetricsProbeTask {
                 if (samples != null) {
                     for (MetricSample sample : samples) {
                         snapshots.add(toSnapshot(sample, windowStart, windowEnd, sampledAt, "OK"));
+                        if ("http.responses.5xx.rate".equals(sample.getMetricKey())
+                                && sample.getNumerator() != null && sample.getNumerator().compareTo(BigDecimal.valueOf(5)) >= 0
+                                && sample.getValue() != null && sample.getValue().compareTo(new BigDecimal("0.05")) >= 0) {
+                            safeAlarm("monitor.metrics.http5xx", "HTTP失败比例升高", "errors=" + sample.getNumerator()
+                                    + " requests=" + sample.getDenominator() + " rate=" + sample.getValue());
+                        }
                     }
                 }
             } catch (Exception e) {
                 String type = e.getClass().getSimpleName();
-                // 打 reason:此前只打类型,线上刷了 3.1GB 日志却查不出是哪一条 IllegalState,
-                // 只能靠读源码猜。不打堆栈——探针失败是可预期运行态,堆栈无信息量且是刷屏源。
-                logger.error("MetricsProbeTask采样失败 source={} type={} reason={}",
-                        MetricsSnapshotPolicy.safeSource(probe.source()), type, e.getMessage());
+                // Use the source and sampling window for diagnosis without logging exception text or credentials.
+                logger.error("MetricsProbeTask采样失败 source={} type={} windowStart={} windowEnd={}",
+                        MetricsSnapshotPolicy.safeSource(probe.source()), type, windowStart.getTime(), windowEnd.getTime());
                 snapshots.add(failureSnapshot(windowStart, windowEnd, sampledAt));
-                safeAlarm("MetricsProbeTask采样失败", "source=" + MetricsSnapshotPolicy.safeSource(probe.source()) + " type=" + type);
+                safeAlarm("MetricsProbeTask采样失败", "source=" + MetricsSnapshotPolicy.safeSource(probe.source()) + " type=" + type
+                        + " windowStart=" + windowStart.getTime() + " windowEnd=" + windowEnd.getTime());
                 if (failure == null) {
                     failure = new IllegalStateException("metrics probe failed");
                 }
@@ -73,11 +79,14 @@ public class MetricsProbeTask {
         Date latest = metricsSnapshotService.selectLatestSuccessfulSampledAt();
         Date now = clock.now();
         if (latest == null) {
+            logger.warn("Metrics freshness anomaly lastSuccessAt=UNKNOWN graceMinutes={}", properties.getFreshnessGraceMinutes());
             safeAlarm("MetricsProbeTask快照过期", "lastSuccessAt=missing graceMinutes=" + properties.getFreshnessGraceMinutes());
             return;
         }
         long age = now.getTime() - latest.getTime();
         if (age > properties.safeFreshnessMillis()) {
+            logger.warn("Metrics freshness anomaly lastSuccessAt={} ageMinutes={} graceMinutes={}",
+                    latest.getTime(), age / 60000L, properties.getFreshnessGraceMinutes());
             safeAlarm("MetricsProbeTask快照过期", "lastSuccessAt=" + latest.getTime()
                     + " ageMinutes=" + (age / 60000L) + " graceMinutes=" + properties.getFreshnessGraceMinutes());
         }
@@ -118,8 +127,12 @@ public class MetricsProbeTask {
     }
 
     private void safeAlarm(String title, String detail) {
+        safeAlarm("monitor.metrics." + (title.equals("MetricsProbeTask采样失败") ? "sample" : "freshness"), title, detail);
+    }
+
+    private void safeAlarm(String key, String title, String detail) {
         try {
-            alarmService.alarm(title, detail);
+            alarmService.alarmThrottled(key, title, detail);
         } catch (Exception e) {
             logger.error("MetricsProbeTask告警失败 title={} type={}", title, e.getClass().getSimpleName());
             throw new IllegalStateException("metrics alarm failed");

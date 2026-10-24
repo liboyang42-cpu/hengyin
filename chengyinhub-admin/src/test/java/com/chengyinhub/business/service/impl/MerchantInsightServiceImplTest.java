@@ -333,6 +333,53 @@ class MerchantInsightServiceImplTest {
         assertFalse(resp.getFacts().getJSONObject("candidates").toJSONString().contains("自己的主题"));
     }
 
+    @Test
+    void expiredMerchantSignupTopicsAreExcludedByCooperationDeadlineOnly() {
+        long now = System.currentTimeMillis();
+        com.chengyinhub.business.domain.CmsTopic expired = topic(103L, "已截止但活动未开始");
+        expired.setMerchantSignUpEndDate(new Date(now - 60_000L));
+        expired.setStartDate(new Date(now + 86_400_000L));
+        expired.setEndDate(new Date(now + 172_800_000L));
+
+        com.chengyinhub.business.domain.CmsTopic open = topic(104L, "商家报名仍开放");
+        open.setMerchantSignUpEndDate(new Date(now + 86_400_000L));
+        open.setStartDate(new Date(now - 172_800_000L));
+        open.setEndDate(new Date(now - 86_400_000L));
+        open.setRecruitDeadline(new Date(now - 60_000L));
+
+        when(cmsTopicService.selectCmsTopicList(any())).thenReturn(Arrays.asList(expired, open));
+
+        MerchantInsightResp resp = service.insight(MERCHANT_ID);
+
+        assertEquals(1, resp.getRecommendedTopics().size());
+        assertEquals(104L, resp.getRecommendedTopics().get(0).getLongValue("topicId"));
+        String candidates = resp.getFacts().getJSONObject("candidates").toJSONString();
+        assertFalse(candidates.contains("已截止但活动未开始"));
+        assertTrue(candidates.contains("商家报名仍开放"));
+    }
+
+    @Test
+    void cachedRecommendationsAreRevalidatedWhenSignupDeadlinePasses() {
+        com.chengyinhub.business.domain.CmsTopic candidate = topic(105L, "当天截止主题");
+        candidate.setMerchantSignUpEndDate(new Date(System.currentTimeMillis() + 86_400_000L));
+        when(cmsTopicService.selectCmsTopicList(any()))
+                .thenReturn(new ArrayList<>(Arrays.asList(candidate)));
+
+        MerchantInsightResp first = service.insight(MERCHANT_ID);
+        assertEquals(1, first.getRecommendedTopics().size());
+
+        ArgumentCaptor<Object> valueCap = ArgumentCaptor.forClass(Object.class);
+        verify(valueOperations).set(anyString(), valueCap.capture(), anyLong(), eq(TimeUnit.SECONDS));
+        candidate.setMerchantSignUpEndDate(new Date(System.currentTimeMillis() - 60_000L));
+        when(valueOperations.get(anyString())).thenReturn(valueCap.getValue());
+
+        MerchantInsightResp second = service.insight(MERCHANT_ID);
+
+        assertTrue(second.getRecommendedTopics().isEmpty());
+        verify(aiCreatorService, org.mockito.Mockito.times(1)).merchantInsight(anyString(), anyLong());
+        verify(cmsTopicService, org.mockito.Mockito.times(2)).selectCmsTopicList(any());
+    }
+
     private static com.chengyinhub.business.domain.CmsTopic topic(long id, String name) {
         com.chengyinhub.business.domain.CmsTopic t = new com.chengyinhub.business.domain.CmsTopic();
         t.setId(id);
@@ -440,6 +487,104 @@ class MerchantInsightServiceImplTest {
         assertTrue(JSON.parseObject(payload).containsKey("checkin"));
         assertTrue(JSON.parseObject(payload).containsKey("attribution"));
         assertTrue(JSON.parseObject(payload).containsKey("sources"));
+    }
+
+    // ---- 主卡走势:7/30/90 自然日窗口 + 逐日三数,期望值手算 ----
+
+    private static JSONObject trendWindow(MerchantInsightResp resp, int days) {
+        for (Object o : resp.getTrends().getJSONArray("windows")) {
+            JSONObject w = (JSONObject) o;
+            if (w.getIntValue("days") == days) return w;
+        }
+        throw new AssertionError("缺少 " + days + " 天窗口");
+    }
+
+    @Test
+    void trendsWorkedExample() {
+        when(mapper.selectVisitorEvents(MERCHANT_ID)).thenReturn(Arrays.asList(
+                event(1L, "n1", "T", at(0, 10, 0), at(0, 10, 20)),    // 今天:到店+打卡+核销
+                event(1L, "n1", "T", at(-2, 15, 0), null),            // 同一人前天再打卡
+                event(2L, "n2", "T", at(-6, 9, 0), at(-5, 9, 0)),     // 7 天窗首日打卡,次日核销
+                event(3L, "n3", "T", at(-7, 12, 0), null),            // 7 天窗的上期 / 30 天窗本期
+                event(4L, "n4", "T", null, at(-40, 12, 0)),           // 只核销:30 天窗上期 / 90 天窗本期
+                event(2L, "n2", "T", at(-100, 12, 0), null)));        // 90 天窗上期
+
+        MerchantInsightResp resp = service.insight(MERCHANT_ID);
+
+        JSONObject w7 = trendWindow(resp, 7);
+        assertEquals(2, w7.getIntValue("visitors"));
+        assertEquals(3, w7.getIntValue("checkins"));
+        assertEquals(2, w7.getIntValue("redeems"));
+        assertEquals(1, w7.getIntValue("prevVisitors"));
+        assertEquals(1, w7.getIntValue("prevCheckins"));
+        assertEquals(0, w7.getIntValue("prevRedeems"));
+        com.alibaba.fastjson2.JSONArray d7 = w7.getJSONArray("daily");
+        assertEquals(7, d7.size());
+        assertEquals(1, d7.getJSONObject(0).getIntValue("visitors"));   // -6 天:member2
+        assertEquals(1, d7.getJSONObject(0).getIntValue("checkins"));
+        assertEquals(0, d7.getJSONObject(1).getIntValue("visitors"));   // -5 天只有核销,到店算在打卡那天
+        assertEquals(1, d7.getJSONObject(1).getIntValue("redeems"));
+        assertEquals(1, d7.getJSONObject(4).getIntValue("checkins"));   // -2 天
+        assertEquals(1, d7.getJSONObject(6).getIntValue("redeems"));    // 今天
+        assertEquals(new java.text.SimpleDateFormat("MM-dd").format(new Date()),
+                d7.getJSONObject(6).getString("date"));
+
+        JSONObject w30 = trendWindow(resp, 30);
+        assertEquals(3, w30.getIntValue("visitors"));
+        assertEquals(4, w30.getIntValue("checkins"));
+        assertEquals(2, w30.getIntValue("redeems"));
+        assertEquals(1, w30.getIntValue("prevVisitors"));
+        assertEquals(0, w30.getIntValue("prevCheckins"));
+        assertEquals(1, w30.getIntValue("prevRedeems"));
+        assertEquals(30, w30.getJSONArray("daily").size());
+
+        JSONObject w90 = trendWindow(resp, 90);
+        assertEquals(4, w90.getIntValue("visitors"));
+        assertEquals(4, w90.getIntValue("checkins"));
+        assertEquals(3, w90.getIntValue("redeems"));
+        assertEquals(1, w90.getIntValue("prevVisitors"));
+        assertEquals(1, w90.getIntValue("prevCheckins"));
+        assertEquals(0, w90.getIntValue("prevRedeems"));
+        assertEquals(90, w90.getJSONArray("daily").size());
+
+        // 走势只在 resp:喂 AI 的事实包不带 trends/daily
+        ArgumentCaptor<String> factsCap = ArgumentCaptor.forClass(String.class);
+        verify(aiCreatorService).merchantInsight(factsCap.capture(), eq(MERCHANT_ID));
+        assertFalse(factsCap.getValue().contains("daily"));
+        assertFalse(JSON.parseObject(factsCap.getValue()).containsKey("trends"));
+    }
+
+    @Test
+    void trendsSurviveCacheRoundTrip() {
+        when(mapper.selectVisitorEvents(MERCHANT_ID)).thenReturn(Collections.singletonList(
+                event(1L, "n1", "T", at(-1, 14, 0), null)));
+        MerchantInsightResp first = service.insight(MERCHANT_ID);
+        ArgumentCaptor<Object> valueCap = ArgumentCaptor.forClass(Object.class);
+        verify(valueOperations).set(anyString(), valueCap.capture(), anyLong(), eq(TimeUnit.SECONDS));
+        when(valueOperations.get(anyString())).thenReturn(valueCap.getValue());
+
+        MerchantInsightResp second = service.insight(MERCHANT_ID);
+
+        assertNotNull(second.getTrends());
+        assertEquals(first.getTrends().toJSONString(), second.getTrends().toJSONString());
+        assertEquals(1, trendWindow(second, 30).getIntValue("checkins"));
+    }
+
+    @Test
+    void profileCarriesStoreNameAndLogoButPromptDoesNot() {
+        com.chengyinhub.business.domain.MmsMerchant m = new com.chengyinhub.business.domain.MmsMerchant();
+        m.setName("哨兵小馆");
+        m.setLogo("https://img.example/logo-sentinel.png");
+        when(mmsMerchantMapper.selectMmsMerchantByMemberId(MERCHANT_ID)).thenReturn(m);
+
+        MerchantInsightResp resp = service.insight(MERCHANT_ID);
+
+        assertEquals("哨兵小馆", resp.getProfile().getString("storeName"));
+        assertEquals("https://img.example/logo-sentinel.png", resp.getProfile().getString("logo"));
+        ArgumentCaptor<String> factsCap = ArgumentCaptor.forClass(String.class);
+        verify(aiCreatorService).merchantInsight(factsCap.capture(), eq(MERCHANT_ID));
+        assertFalse(factsCap.getValue().contains("哨兵小馆"));
+        assertFalse(factsCap.getValue().contains("logo-sentinel"));
     }
 
     // ---- dashboard(升级5:数字直出,不走 AI) ----

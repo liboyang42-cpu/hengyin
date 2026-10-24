@@ -18,7 +18,7 @@ global.setInterval = () => ({ fake: true });
 global.clearInterval = () => {};
 global.setTimeout = () => ({ fake: true });
 
-function load(triesLeft) {
+function load(triesLeft, source = fs.readFileSync(COMPONENT_PATH, 'utf8')) {
   let definition = null;
   global.Component = (config) => { definition = config; };
   global.Behavior = (b) => b;
@@ -27,7 +27,7 @@ function load(triesLeft) {
   const m = new Module(COMPONENT_PATH, null);
   m.filename = COMPONENT_PATH;
   m.paths = Module._nodeModulePaths(DIR);
-  m._compile(fs.readFileSync(COMPONENT_PATH, 'utf8'), COMPONENT_PATH);
+  m._compile(source, COMPONENT_PATH);
   const props = { show: true, kicker: '', targetSeconds: 10, toleranceMs: 300, tries: 3 };
   const calls = [];
   const stage = {
@@ -44,6 +44,7 @@ function load(triesLeft) {
   vm.triggerEvent = () => {};
   vm.selectComponent = () => stage;
   vm.calls = calls;
+  vm.observeDisplay = definition.observers['show, kicker, targetSeconds, toleranceMs, tries'];
   return vm;
 }
 
@@ -60,7 +61,7 @@ test('没停准还有机会:phase=over,偏差单列,还剩次数取自台面', (
   assert.equal(vm.data.phase, 'over');
   assert.match(vm.data.dev, /^早 2\.\d\d 秒$/);
   assert.equal(vm.data.left, 2);
-  assert.deepEqual(vm.calls, [], '没停准且还有机会,不出判定屏');
+  assert.deepEqual(vm.calls, [], '没停准且还有机会，不出判定屏');
 });
 
 test('负控:停准了不进 over,走台面胜利屏', () => {
@@ -74,5 +75,25 @@ test('over 屏:结论 + 「再来一局」按钮替掉计时条,按钮接的是 
   assert.match(WXML, /wx:if="\{\{phase === 'over'\}\}"><view class="sw__miss-i"><cy-icon name="close-sm" size="28" \/><\/view>没停准/);
   assert.match(WXML, /<view class="sw__foot" wx:if="\{\{phase === 'over'\}\}">[\s\S]*?bindtap="onStop"[\s\S]*?再来一局/);
   assert.match(WXML, /<view class="sw__bar" wx:else>/, '计时条只在非 over 时出现');
-  assert.match(WXML, /<cy-play-stage[^>]*skin="glass"/, '浅色玻璃屏要给台面浅色皮肤,否则还能错 / 倒数是暗版');
+  assert.match(WXML, /<cy-play-stage[^>]*skin="glass"/, '浅色玻璃屏要给台面浅色皮肤，否则还能错 / 倒数是暗版');
+});
+
+
+test('规则显示保留毫秒精度；非整十毫秒容差不能被四舍五入', () => {
+  function assertDisplay(source) {
+    const vm = load(3, source);
+    for (const toleranceMs of [50, 51, 300, 999, 5000]) {
+      Object.assign(vm.data, { targetSeconds: 3.125, toleranceMs });
+      vm.observeDisplay.call(vm, true, '', 3.125, toleranceMs);
+      assert.equal(vm.data.targetText, '3.125');
+      assert.equal(Number(vm.data.tolText), toleranceMs / 1000);
+      assert.equal(vm.data.toleranceMs, toleranceMs, '显示格式不能改写判定属性');
+    }
+  }
+  const source = fs.readFileSync(COMPONENT_PATH, 'utf8');
+  assertDisplay(source);
+  const rounded = source.replace('tolText: (Number(tol || 0) / 1000).toFixed(3)',
+    'tolText: (Number(tol || 0) / 1000).toFixed(2)');
+  assert.notEqual(rounded, source, '负控锚点必须存在');
+  assert.throws(() => assertDisplay(rounded), assert.AssertionError);
 });

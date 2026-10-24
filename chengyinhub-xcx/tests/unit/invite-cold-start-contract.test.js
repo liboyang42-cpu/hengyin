@@ -85,7 +85,7 @@ function setupPage(options) {
     if (typeof cb === 'function') cb();
   };
   // 只桩掉与本契约无关的同步副作用;handleInviter 必须是真的(它才是被测行为)。
-  ['_layoutChrome', 'startCountdownTimer', 'loadPageData', 'getFuzzyLocation']
+  ['_layoutChrome', 'startCountdownTimer', 'loadPageData', 'getHomeCityLocation']
     .forEach((name) => { page[name] = () => { calls.push(name); }; });
 
   global.getCurrentPages = () => [page];
@@ -112,7 +112,7 @@ test('新用户冷启动:?inviter= 在登录落地后补发,邀请关系落库',
   assert.ok(req, '登录落地后必须重试一次邀请写入 —— 否则新用户邀请永久丢失(A-01 根因②)');
   assert.equal(String(req.data.inviter_id), '42');
   req.success({ code: '200' });
-  assert.equal(ctx.storage.has_inviter, true, '成功后必须记账,避免重复写入');
+  assert.equal(ctx.storage.has_inviter, true, '成功后必须记账，避免重复写入');
 });
 
 test('老分享卡片:?id= 仍能落地(读取端兼容两个键)', async () => {
@@ -157,7 +157,7 @@ test('分享端产键 ∩ 读取端认键 不为空(键名契约)', () => {
     for (const m of src.matchAll(/\/pages\/index\/index\?([A-Za-z_]+)=/g)) produced.add(m[1]);
     assert.match(src, /\/pages\/index\/index\?/, rel + ' 必须有邀请分享 path');
   }
-  assert.deepEqual([...produced].sort(), ['inviter'], '分享端键名或新增了别的键,先更新本契约');
+  assert.deepEqual([...produced].sort(), ['inviter'], '分享端键名或新增了别的键，先更新本契约');
 
   const landing = read(PAGE_REL);
   const accepted = new Set();

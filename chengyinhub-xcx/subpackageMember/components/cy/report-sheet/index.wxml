@@ -1,0 +1,28 @@
+<cy-result-sheet show="{{show && stage === 'loading'}}" kind="loading" title="正在读取举报原因" />
+<cy-result-sheet show="{{show && stage === 'loadfail'}}" kind="fail" title="暂时无法举报" why="{{failText}}"
+                 primary-text="重试" secondary-text="取消" bind:primary="loadTaxonomy" bind:secondary="close" bind:close="close" />
+<cy-option-sheet show="{{show && stage === 'pick'}}" title="{{title}}" items="{{reasonLabels}}"
+                 confirm-text="下一步" bind:select="onReasonSelect" bind:cancel="close" />
+<cy-sheet show="{{show && stage === 'form'}}" title="{{title}}" bind:close="close" bind:requestclose="close">
+  <view class="rs">
+    <text class="rs__reason">举报原因：{{reasonLabel}}</text>
+    <text class="rs__note" wx:if="{{reasonResponseText}}">{{reasonResponseText}}</text>
+    <cy-field variant="textarea" label="具体说明" required show-count maxlength="{{maxLength}}"
+              placeholder="写一下具体发生了什么，便于平台核实"
+              value="{{description}}" error="{{!!descriptionError}}" error-text="{{descriptionError}}"
+              bind:input="onDescriptionInput" />
+    <text class="rs__note">被举报方看不到你的身份。</text>
+    <view class="rs__row">
+      <cy-btn class="rs__act" variant="secondary" bindtap="backToPick">换个原因</cy-btn>
+      <cy-btn class="rs__act" variant="primary" bindtap="submit">提交举报</cy-btn>
+    </view>
+  </view>
+</cy-sheet>
+<cy-result-sheet show="{{show && stage === 'busy'}}" kind="loading" title="正在提交举报" />
+<cy-result-sheet show="{{show && stage === 'ok'}}" kind="success" title="举报已提交"
+                 sub="{{receipt ? '受理编号 ' + receipt + '。' : ''}}处理进度会通过系统消息通知你。"
+                 primary-text="知道了" bind:primary="close" bind:close="close" />
+<cy-result-sheet show="{{show && stage === 'fail'}}" kind="fail" title="举报没有提交成功" why="{{failText}}"
+                 primary-text="返回修改" secondary-text="取消" bind:primary="backToForm" bind:secondary="close" bind:close="close" />
+<cy-result-sheet show="{{show && stage === 'unknown'}}" kind="fail" title="提交结果未知" why="{{failText}}"
+                 primary-text="再试一次" secondary-text="稍后再说" bind:primary="submit" bind:secondary="close" bind:close="close" />

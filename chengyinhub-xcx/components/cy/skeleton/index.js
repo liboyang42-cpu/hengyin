@@ -10,16 +10,24 @@ Component({
     type: { type: String, value: 'list' },
     count: { type: Number, value: 4 },
     loadingLabel: { type: String, value: '正在加载内容' },
+    // 超过这么久还在加载才画骨架(ms);快加载什么都不闪。0 = 立即画。
+    delay: { type: Number, value: 400 },
   },
   observers: {
     count(n) {
       this.setData({ items: Array.from({ length: Math.max(1, n) }) });
     },
   },
-  data: { items: [] },
+  data: { items: [], ready: false },
   lifetimes: {
     attached() {
       this.setData({ items: Array.from({ length: Math.max(1, this.data.count) }) });
+      const delay = Number(this.data.delay);
+      if (!(delay > 0)) { this.setData({ ready: true }); return; }
+      this._readyTimer = setTimeout(() => { this._readyTimer = null; this.setData({ ready: true }); }, delay);
+    },
+    detached() {
+      if (this._readyTimer) { clearTimeout(this._readyTimer); this._readyTimer = null; }
     },
   },
 });

@@ -58,7 +58,7 @@ test('未知 scene:不抛未捕获异常、给出可见提示、停在原页零�
   assert.doesNotThrow(() => {
     page.onLoad({ scene: 'no-such-scene-0916' });
   }, '未知 scene 不得把 onLoad 炸掉(否则页面卡在半初始化态)');
-  assert.deepEqual(toasts, ['场景暂时打不开'], '必须有可见提示,不能静默');
+  assert.deepEqual(toasts, ['场景无法打开'], '必须有可见提示，不能静默');
   assert.deepEqual(page.data.sceneStack, [], '坏深链不得压入任何场景');
   assert.equal(page.data.sceneCurrent, null);
 });
@@ -66,7 +66,7 @@ test('未知 scene:不抛未捕获异常、给出可见提示、停在原页零�
 test('已登记的 scene 照常打开(兼容键不受影响)', () => {
   const { page, toasts } = loadPage();
   page.onLoad({ scene: 'settings-deregister' });
-  assert.deepEqual(toasts, [], '合法 scene 不该弹「打不开」');
+  assert.deepEqual(toasts, [], '合法 scene 不该弹「无法打开」');
   assert.equal(page.data.sceneStack.length, 1);
   assert.equal(page.data.sceneCurrent.id, 'settings-deregister');
 });
@@ -80,7 +80,7 @@ test('负控:摘掉 try/catch,未知 scene 用例真红', () => {
     } catch (e) {
       // A-10:深链 ?scene=不存在 时 getScene 会 throw,onLoad 里没有 try 会让页面卡在半初始化态。
       // 与 scene-deep-link 同一口径:toast + 留在原页(兜底返回)。
-      toast('场景暂时打不开');
+      toast('场景无法打开');
       return false;
     }`,
     '    const next = getScene(id, params);');
@@ -89,5 +89,5 @@ test('负控:摘掉 try/catch,未知 scene 用例真红', () => {
   const { page } = loadPage(broken);
   assert.throws(() => {
     page.onLoad({ scene: 'no-such-scene-0916' });
-  }, /unknown scene/, '负控必须真的把兜底摘掉');
+  }, /unknown scene/, '负控必须真的把保底摘掉');
 });

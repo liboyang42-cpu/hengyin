@@ -10,8 +10,10 @@ let pageConfig
 let requests
 let navigations
 let toasts
+let currentPagePath
 
 global.getApp = () => ({
+  ...(currentPagePath === 'subpackageA/pages/myproject/index.js' ? { getAuthorization: () => 'current-session' } : {}),
   globalData: { statusBarHeight: 44, navBarHeight: 44, menuButtonInfo: {} },
   getUserID: () => 7,
   getUserRole: () => 'merchant',
@@ -44,6 +46,7 @@ global.wx = {
 global.Page = (config) => { pageConfig = config }
 
 function loadPage(relativePath) {
+  currentPagePath = relativePath
   pageConfig = null
   requests = []
   navigations = []
@@ -158,7 +161,7 @@ test('分类切换不发请求,因此不存在标签与货架错位的窗口', (
   assert.equal(page.data.activeCat, 2, '选中标签立即生效')
   assert.equal(page.data.banner._title, '餐饮玩法', '首个命中品类展示为精选')
   assert.deepEqual(page.data.topList.map((r) => r._title), ['另一餐饮玩法'], '其余命中品类置顶，精选不重复进列表')
-  assert.deepEqual(page.data.tailList.map((r) => r._title), ['别的玩法'], '未命中的不筛掉,继续显示')
+  assert.deepEqual(page.data.tailList.map((r) => r._title), ['别的玩法'], '未命中的不筛掉，继续显示')
 })
 
 test('节点玩法重新显示时请求全部分类，但成功前不让标签与旧货架错位', () => {
@@ -198,7 +201,7 @@ test('模板货架公开列表 loading、error、stale 和重试，复制失败�
   assert.match(wxml, /<cy-error\b[^>]*errorMsg[^>]*bindretry="retryTemplateLoad"/,
     '列表加载失败必须有可见重试入口')
   assert.match(wxml, /wx:if="\{\{ loading && listLoaded \}\}"[^>]*class="tpl-refreshing"/,
-    '保留旧内容刷新时必须公开 stale/loading 状态,不能让旧货架冒充最新结果')
+    '保留旧内容刷新时必须公开 stale/loading 状态，不能让旧货架冒充最新结果')
   // 2026-08-28 用户裁决撤掉货架按钮:复制动作暂时失去本页可见载体,
   // 但 useTt 仍是未来详情页复用的写入口,失败对象与错误文案必须留给 retryUseTt。
   assert.match(js, /that\.data\.ttUseRetryItem = item;[\s\S]{0,180}?ttUseError:/)
@@ -242,7 +245,7 @@ test('提现页的资金提交门闩随建单链路一起退役,只留客服弹�
   assert.doesNotMatch(stripped, /_submitting\s*=\s*true|submitting:\s*true/, '资金门闩已随建单链路退役')
   // 2026-09-16:表单本身也已退役(页面只留客服入口)——门闩与输入控件一起从 wxml 撤除。
   assert.doesNotMatch(read('subpackageMember/tixian/tixian.wxml'), /canSubmit|placeholder-class="tx-placeholder"/,
-    '银行卡表单已退役,页面不该再有提交门闩或银行卡输入控件')
+    '银行卡表单已退役，页面不该再有提交门闩或银行卡输入控件')
 })
 
 test('设置页查询俱乐部失败不再假装用户未申请，并用真实图标替代字符箭头', () => {

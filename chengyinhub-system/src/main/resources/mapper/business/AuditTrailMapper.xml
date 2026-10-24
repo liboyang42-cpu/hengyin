@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- DOC2 O5c-(a) 统一留痕只读投影:只 SELECT,不投影快照/before/after JSON 与举报人身份。 -->
+<mapper namespace="com.chengyinhub.business.mapper.AuditTrailMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.vo.AuditTrailEntryVO" id="AuditTrailEntryResult">
+        <result property="source"       column="source"        />
+        <result property="sourceId"     column="source_id"     />
+        <result property="refId"        column="ref_id"        />
+        <result property="action"       column="action"        />
+        <result property="operatorType" column="operator_type" />
+        <result property="operatorId"   column="operator_id"   />
+        <result property="reasonCode"   column="reason_code"   />
+        <result property="reasonText"   column="reason_text"   />
+        <result property="eventTime"    column="event_time"    />
+    </resultMap>
+
+    <select id="selectAuditRecordTrail" resultMap="AuditTrailEntryResult">
+        select 'AUDIT_RECORD' as source, r.id as source_id, r.task_id as ref_id, r.action,
+               null as operator_type, r.operator_id, r.reason_code, r.reason_text, r.create_time as event_time
+        from audit_record r
+        join audit_task t on t.id = r.task_id
+        where t.biz_type = #{bizType} and t.biz_id = #{bizId}
+        order by r.create_time, r.id
+        limit #{limit}
+    </select>
+
+    <select id="selectBusinessAuditEventTrail" resultMap="AuditTrailEntryResult">
+        select 'BUSINESS_AUDIT_EVENT' as source, e.id as source_id, e.target_id as ref_id, e.action,
+               e.actor_type as operator_type, e.actor_member_id as operator_id,
+               null as reason_code, e.reason as reason_text, e.create_time as event_time
+        from business_audit_event e
+        join audit_task t on t.id = e.target_id
+        where e.domain_type = 'PLATFORM' and e.target_type = 'AUDIT_TASK'
+          and t.biz_type = #{bizType} and t.biz_id = #{bizId}
+        order by e.create_time, e.id
+        limit #{limit}
+    </select>
+
+    <select id="selectPostEnforcementTrail" resultMap="AuditTrailEntryResult">
+        select 'POST_ENFORCEMENT' as source, p.id as source_id, null as ref_id,
+               concat(p.enforcement_type, ':', p.status) as action,
+               'SYS_USER' as operator_type, p.operator_user_id as operator_id,
+               p.reason_code, p.rule_code as reason_text, p.create_time as event_time
+        from community_post_enforcement p
+        where p.post_id = #{postId}
+        order by p.create_time, p.id
+        limit #{limit}
+    </select>
+
+    <select id="selectReportTimelineTrail" resultMap="AuditTrailEntryResult">
+        select 'REPORT_TIMELINE' as source, tl.id as source_id, tl.report_id as ref_id,
+               concat(tl.event_type, ':', tl.to_stage) as action,
+               tl.actor_type as operator_type, null as operator_id,
+               c.reason_code, tl.public_note as reason_text, tl.create_time as event_time
+        from community_report_timeline tl
+        join community_report_case c on c.id = tl.report_id
+        where c.target_type = #{targetType} and c.target_id = #{targetId}
+        order by tl.create_time, tl.id
+        limit #{limit}
+    </select>
+
+    <select id="selectOfficialEventAuditTrail" resultMap="AuditTrailEntryResult">
+        select 'OFFICIAL_EVENT_AUDIT_LOG' as source, l.id as source_id, null as ref_id, l.action,
+               null as operator_type, l.operator_id, null as reason_code, l.summary as reason_text,
+               l.create_time as event_time
+        from official_event_audit_log l
+        where l.event_id = #{eventId}
+        order by l.create_time, l.id
+        limit #{limit}
+    </select>
+
+</mapper>

@@ -1,0 +1,75 @@
+name: Backend jar (manual)
+
+# 手动入口：在 GitHub 托管 runner 上按指定 SHA 构建 chengyinhub-admin.jar 并上传为 1 天有效的 artifact，
+# 供开发/测试 VPS 起联调后端（微信开发者工具点验）。VPS 上不再编译。
+#
+# 只手动触发，不进 required checks；不读仓库 secrets，不部署，不碰生产。jar 里没有密钥：
+# 数据库、JWT、微信等配置在运行时由测试环境变量注入。产物附 sha256，下载后核对再用。
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: 要构建的完整 40 位 commit SHA（须已推到本仓库）
+        required: true
+        type: string
+      run_http_fixtures:
+        description: 仅运行同提交的隔离 HTTP 验收，不重复构建 JAR
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-jar-${{ inputs.source_sha }}
+  cancel-in-progress: false
+
+jobs:
+  jar:
+    name: Build backend jar
+    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+    steps:
+      - name: Validate SHA
+        run: |
+          if ! printf '%s' "$SOURCE_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "source_sha 必须是完整 40 位小写 SHA" >&2
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - name: Confirm checkout
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build
+        run: mvn -B -q -DskipTests package
+      - name: Stage jar with checksum
+        run: |
+          mkdir -p out
+          cp chengyinhub-admin/target/chengyinhub-admin.jar out/
+          printf '%s\n' "$SOURCE_SHA" > out/SOURCE_SHA
+          (cd out && sha256sum chengyinhub-admin.jar > chengyinhub-admin.jar.sha256)
+          cat out/chengyinhub-admin.jar.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar-${{ inputs.source_sha }}
+          path: out/
+          retention-days: 1
+          if-no-files-found: error
+  http-fixtures:
+    name: Run isolated HTTP fixtures
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures
+    uses: ./.github/workflows/gameplay-http-e2e.yml
+    with:
+      source_sha: ${{ inputs.source_sha }}

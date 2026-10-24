@@ -1,0 +1,24 @@
+<!-- 那年今日:漫游记录顶部卡进入。按上海日期匹配往年本人已完成、且路线当前可见的记录;读取沿用归档 anniversary(index.js)。 -->
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar plain />
+  <cy-page-title title="那年今日" />
+  <view class="an-date">
+    <text class="tu-hero" style="padding-left:0">{{dateLabel}}</text>
+    <cy-date-field mode="date" value="{{pickerValue}}" bind:change="pickDate">
+      <view class="tu-sbtn" aria-role="button" aria-label="换一天" hover-class="cy-pressed" hover-stay-time="80">换一天</view>
+    </cy-date-field>
+  </view>
+  <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{error}}" aria-role="alert"><text>{{error}}</text><view class="tu-retry" bindtap="loadMemories" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
+  <view class="tu-loading" wx:if="{{busy && !rows.length}}">正在翻往年记录…</view>
+  <view class="an-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{rows}}" wx:key="id">
+    <view class="an-cover"><text class="an-years">{{item.yearsAgo || 0}} 年前</text></view>
+    <view class="an-body">
+      <text class="an-t">{{item.title}}</text>
+      <text class="an-m">{{item.completedText}} 完成</text>
+      <view class="tu-sbtn an-go" data-id="{{item.topicId}}" bindtap="openRoute" aria-role="button" aria-label="查看当前路线 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">查看当前路线</view>
+    </view>
+  </view>
+  <view class="tu-empty" wx:if="{{!busy && !rows.length && !error}}"><text class="tu-empty__t">这一天还没有回忆</text></view>
+  <view class="tu-more" wx:if="{{hasMore && !busy}}" bindtap="nextPage" aria-role="button" aria-label="读取更早的回忆" hover-class="cy-pressed" hover-stay-time="80">读取更多</view>
+</view>

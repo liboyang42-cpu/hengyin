@@ -1,6 +1,7 @@
 'use strict'
 
 const app = getApp()
+const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js')
 const { chinaParts } = require('../../../utils/datetime.js')
 
 function success(response) {
@@ -55,14 +56,14 @@ function shortTime(value) {
   return parts.month + '月' + parts.day + '日 ' + hour + ':' + minute
 }
 
-function request(options) {
+function request(options, onFailure) {
   return new Promise((resolve) => {
     app.sendRequest(Object.assign({}, options, {
       hideLoading: true,
       silentError: true,
       success: (response) => resolve(response || {}),
-      fail: () => resolve({}),
-      successStatusAbnormal: () => resolve({}),
+      fail: (res, statusCode) => { const response = Object.assign({}, res || {}, { code: failureStatus(res, statusCode) }); if (onFailure) onFailure(response); resolve(response) },
+      successStatusAbnormal: (res, statusCode) => resolve(Object.assign({}, res || {}, { code: failureStatus(res, statusCode) })),
     }))
   })
 }
@@ -99,7 +100,7 @@ function buildGroups(records, rewards, rewardReady) {
     }
     const nickname = typeof record.nickname === 'string' && record.nickname.trim()
       ? record.nickname.trim()
-      : '昵称待确认'
+      : '—'
     const recordTime = shortTime(record.createTime)
     const earned = !!reward
     const rewardTime = earned ? shortTime(reward.createTime) : ''
@@ -112,8 +113,8 @@ function buildGroups(records, rewards, rewardReady) {
       timeText: recordTime || '邀请时间暂未记录',
       statusText: earned
         ? '首购奖励已到账' + (!recordTime && rewardTime ? ' · ' + rewardTime : '')
-        : (rewardReady ? '已加入 · 首购待完成' : '已加入 · 奖励待同步'),
-      rewardText: earned ? '+' + rewardValue + ' 积分' : (rewardReady ? '待解锁' : '待同步'),
+        : (rewardReady ? '已加入 · 首购待完成' : '已加入 · 奖励发放中'),
+      rewardText: earned ? '+' + rewardValue + ' 积分' : (rewardReady ? '待解锁' : '发放中'),
     })
   })
   groups.forEach((group) => {
@@ -129,6 +130,8 @@ Component({
   },
   data: {
     loading: true,
+    authRequired: false,
+    accessDenied: false,
     loadErr: false,
     loadMoreError: false,
     empty: false,
@@ -140,10 +143,18 @@ Component({
   },
   lifetimes: {
     attached() { this.load(true) },
-    detached() { this._loadSeq = (this._loadSeq || 0) + 1 },
+    detached() { this._detached = true; this._loadSeq = (this._loadSeq || 0) + 1 },
+  },
+  pageLifetimes: {
+    show() { this._hidden = false; if (this._readSessionChanged || this._readOwner !== undefined && this._readOwner !== memberId(app)) { this._readSessionChanged = false; this.load(true) } },
+    hide() { this._hidden = true },
   },
   methods: {
     load(reset) {
+      if (this._detached) return
+      const owner = memberId(app)
+      if (owner !== this._readOwner) { this._readOwner = owner; this._loadSeq = (this._loadSeq || 0) + 1; this._loading = false; this._records = []; this._rewards = {}; this.setData({ groups: [], total: 0, hasMore: false }); reset = true }
+      if (!owner) { waitForInitialSession(this, app, () => this.load(true)); this.setData({ authRequired: true, accessDenied: false, loadErr: true, loading: false }); return }
       if (this._loading) return
       const pageNo = reset ? 1 : (this._pageNo || 1) + 1
       const seq = (this._loadSeq || 0) + 1
@@ -156,22 +167,29 @@ Component({
       }
       this.setData({
         loading: true,
+        authRequired: false, accessDenied: false,
         loadErr: false,
         loadMoreError: false,
         empty: false,
       })
 
+      const recover = res => seq === this._loadSeq && !this._detached && recoverReadSession(this, app, res,
+        function (anonymous) { this._loadSeq++; this._loading = false; this._readOwner = undefined; this._records = []; this._rewards = {}; this.setData({ groups: [], total: 0, loading: false, loadErr: true, authRequired: anonymous, accessDenied: false }); },
+        () => this.load(true))
       const inviteRequest = request({
         url: '/api/user/invite_list',
         method: 'POST',
         data: { pageNum: pageNo, pageSize: app.getPageSize() },
-      })
+      }, recover)
       const rewardsRequest = reset
-        ? request({ url: '/api/user/points/list', method: 'POST', data: { pageNum: 1, pageSize: 200 } })
+        ? request({ url: '/api/user/points/list', method: 'POST', data: { pageNum: 1, pageSize: 200 } }, recover)
         : Promise.resolve(null)
 
       Promise.all([inviteRequest, rewardsRequest]).then(([inviteResponse, rewardsResponse]) => {
-        if (seq !== this._loadSeq) return
+        if (this._detached || seq !== this._loadSeq) return
+        if (recover(inviteResponse) || recover(rewardsResponse) || owner !== memberId(app)) return
+        const code = [inviteResponse, rewardsResponse].map(res => failureStatus(res)).find(value => value === 401 || value === 403)
+        if (code) { this._loading = false; this._records = []; this._rewards = {}; this.setData({ groups: [], loading: false, loadErr: true, authRequired: code === 401, accessDenied: code === 403 }); return }
         this._loading = false
         const rows = rowsOf(inviteResponse)
         const responseTotal = rows && inviteResponse.data
@@ -237,7 +255,7 @@ Component({
         })
       })
     },
-    retry() { this.load(true) },
+    retry() { if (this.data.authRequired) retryLogin(this, app, () => this.load(true)); else this.load(true) },
     loadMore() {
       if (this.data.hasMore && !this.data.loading) this.load(false)
     },

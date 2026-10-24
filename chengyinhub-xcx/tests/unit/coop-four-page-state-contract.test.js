@@ -430,7 +430,7 @@ test('收到的带队申请:拒绝同步防重并回读,回邀约带 originApply
   assert.deepEqual(JSON.parse(writes[0].data), { applyId: 31 })
   writes[0].success({ code: 200 })
   assert.match(page.data.actionReceipt, /已拒绝/)
-  assert.ok(byUrl(requests, '/api/coop/pool/received').length >= 1, '拒绝成功后必须回读申请列表')
+  assert.ok(byUrl(requests, '/api/coop/pool/received').length >= 1, '拒绝成功后必须刷新申请列表')
 
   page.replyApplyInvite({ currentTarget: { dataset: { applyid: 31, clubid: 7, topicid: 8, name: '夜跑团' } } })
   assert.equal(navigations.pop(), '/pages/coop/invite/index?type=1&toId=7&toName=%E5%A4%9C%E8%B7%91%E5%9B%A2&topicId=8&originApplyId=31')
@@ -707,12 +707,12 @@ test('补位须选择并确认才发真实章节 invite，精确原供给不混�
   })
   assert.equal(invite.header['Content-Type'], 'application/json')
   invite.success({ code: 200, data: { id: 901 } })
-  assert.match(page.data.actionReceipt, /第二章.*等待商家提交供给与点位/)
+  assert.match(page.data.actionReceipt, /第二章.*等待商家提交供给与节点/)
   assert.equal(page.data.actionPendingKey, '')
   assert.deepEqual(requests.slice(1).map(request => request.url), [
     '/api/merchant/nearby', '/api/merchant/chapter-application/invitable',
   ])
-  assert.equal(locationCalls.length, 0, '邀请回读复用本次前台定位')
+  assert.equal(locationCalls.length, 0, '邀请刷新复用本次前台定位')
   requests[1].success({ code: 200, data: [{ memberId: '88', name: '咖啡商家' }] })
   requests[2].success({ code: 200, data: [] })
   await flush()
@@ -759,7 +759,7 @@ test('补位确认前候选变更、身份切换或页面卸载均不写入，�
   old.success({ code: 200 })
   assert.equal(page.data.actionReceipt, '')
   assert.equal(page.data.actionPendingKey, '')
-  assert.equal(requests.length, 1, '旧写回包不得触发新身份回读')
+  assert.equal(requests.length, 1, '旧写回包不得触发新身份刷新')
 })
 
 test('多于一组的真实补位候选均可选，动作菜单不超过六项，同章候选可区分', () => {

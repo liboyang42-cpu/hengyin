@@ -33,8 +33,8 @@ const CATEGORY_TEXT = {
 // OfficialEventV2ServiceImpl.validatePublishMission 明确禁止发布(且 missionComplete 对前者恒 false),
 // 前端不得编造「去验证/自动同步」,如实标未支持,但任务条目照常展示(不删入口)。
 const MISSION_TYPE_TEXT = {
-  ROAM_POI_ARRIVAL: { label: '漫游据点到达', action: '该任务类型暂不支持发布与核验', supported: false },
-  EVENT_POINT_ARRIVAL: { label: '活动点位到达', action: '走到活动指定点位，系统会自动确认到达', supported: true },
+  ROAM_POI_ARRIVAL: { label: '漫游节点到达', action: '该任务类型暂不支持发布与核验', supported: false },
+  EVENT_POINT_ARRIVAL: { label: '活动节点到达', action: '走到活动指定节点，系统会自动确认到达', supported: true },
   THEME_VERIFIED_FINISH: { label: '完成绑定主题', action: '完成绑定的主题，完成后自动同步', supported: true },
   ROAM_SESSION_AREA: { label: '漫游区域覆盖', action: '该任务类型暂不支持发布与核验', supported: false },
 };
@@ -145,6 +145,7 @@ Page({
     loadErrSub: '',
     loadErrAction: '重试',
     loadErrActionType: 'retry',
+    organizerEntry: false,
   },
 
   onLoad(q) {
@@ -153,7 +154,7 @@ Page({
     this.fetch();
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
+  onShow() { this._navigating = false; merchantTheme.merchantPageShow(); },
 
   onHide() { merchantTheme.merchantPageRestore(); },
 
@@ -200,7 +201,7 @@ Page({
     this.setData({ loading: true, loadErrTitle: '', loadErrSub: '' });
     app.sendRequest({
       url: '/api/official/events/' + id, method: 'GET',
-      autoErrorToast: false,   // 落 wx:else 整页 = auto-back 半屏讲原因;保留旧详情的刷新失败在下面手动 toast
+      autoErrorToast: false,   // 落 wx:else 整页留白;保留旧详情的刷新失败同样不提示(F-R2U-01)
       success: (res) => {
         if (seq !== this._fetchSeq) return;
         if (!res || (res.code != 200 && res.code != '200') || !res.data) {
@@ -215,12 +216,11 @@ Page({
               e: null,
               loadErrKind: 'data',
               loadErrTitle: '活动内容不可用',
-              loadErrSub: '活动可能已下线，或当前链接已经失效。',
+              loadErrSub: '',
               loadErrAction: '返回活动列表'
             });
           } else {
             this.data.loadErrActionType = 'retry';
-            if (this.data.e) toast(bizFailureMessage(res, '活动内容没加载成功'));
             this.setData({
               loadErrKind: 'data',
               loadErrTitle: '活动内容没加载成功',
@@ -233,15 +233,15 @@ Page({
         const e = this._decorate(res.data);
         this.setData({ e, rewards: this._rewards(e), cta: this._cta(e), countdown: this._countdown(e), boundTopicError: '' });
         this._loadBoundTopicNames(e);
+        this._probeOrganizer(e);
       },
       fail: () => {
         if (seq !== this._fetchSeq) return;
         this.data.loadErrActionType = 'retry';
-        if (this.data.e) toast('网络没连上');
         this.setData({
           loadErrKind: 'network',
           loadErrTitle: '网络没连上',
-          loadErrSub: this.data.e ? '已保留上次加载的活动详情，连接恢复后可以重试。' : '活动详情还没加载出来，连接恢复后可以重试。',
+          loadErrSub: this.data.e ? '已保留上次加载的活动详情，连接恢复后可以重试。' : '活动详情加载失败，连接恢复后可以重试。',
           loadErrAction: '重试'
         });
       },
@@ -249,6 +249,31 @@ Page({
         if (seq === this._fetchSeq) this.setData({ loading: false });
       }
     });
+  },
+
+  // 主办入口探针:publish-check 只对本场主办/协办(且在官方白名单内)返回 200,其余一律当作普通玩家,
+  // 不提示、不报错 —— 对绝大多数玩家这本来就是「不是主办」,不是故障。
+  _probeOrganizer(e) {
+    if (!e || !e._isV2) { this.setData({ organizerEntry: false }); return; }
+    const seq = this._fetchSeq;
+    app.sendRequest({
+      url: `/api/official/v2/events/${this.data.id}/publish-check`, method: 'GET',
+      hideLoading: true, autoErrorToast: false,
+      success: (res) => {
+        if (seq !== this._fetchSeq) return;
+        this.setData({ organizerEntry: !!res && (res.code == 200 || res.code == '200') });
+      },
+      fail: () => {
+        if (seq !== this._fetchSeq) return;
+        this.setData({ organizerEntry: false });
+      },
+    });
+  },
+
+  openOrganizer() {
+    if (!this.data.organizerEntry || this._navigating) return; // 跳转中不响应连点,免得叠两层控制台
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + this.data.id, complete: () => { this._navigating = false; } });
   },
 
   _rewards(e) {
@@ -415,7 +440,7 @@ Page({
     const binding = mission && mission.binding;
     const topicId = binding && binding.bindingType === 'THEME' ? Number(binding.sourceRefId) : 0;
     if (!Number.isSafeInteger(topicId) || topicId <= 0) return false;
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + topicId });
+    if (this._navigating) return true; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + topicId, complete: () => { this._navigating = false; } });
     return true;
   },
 
@@ -442,6 +467,9 @@ Page({
   },
 
   doSignup() {
+    // BL-199:报名/完成任务共用在途标记,连点只发一次。
+    if (this._ctaBusy) return;
+    this._ctaBusy = true;
     // 报名人只会收到活动开始提醒；招募状态发给主题发布者，不能在这里代授权。
     if (subscribe && subscribe.request) {
       subscribe.request(['activityStart']).then((result) => {
@@ -458,7 +486,8 @@ Page({
         } else {
           toast((res && res.msg) || '报名失败');
         }
-      }
+      },
+      complete: () => { this._ctaBusy = false; }
     });
   },
 
@@ -467,6 +496,8 @@ Page({
       toast('任务完成需现场验证');
       return;
     }
+    if (this._ctaBusy) return;
+    this._ctaBusy = true;
     app.sendRequest({
       url: '/api/official/events/' + this.data.id + '/complete', method: 'POST',
       success: (res) => {
@@ -476,7 +507,8 @@ Page({
         } else {
           toast((res && res.msg) || '操作失败');
         }
-      }
+      },
+      complete: () => { this._ctaBusy = false; }
     });
   },
 

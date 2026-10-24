@@ -87,8 +87,10 @@ test('F13 已确认的工程术语不再出现在用户可见文案', () => {
 
 test('F14 票夹四类状态恢复为可见文字，不只藏在 aria-label', () => {
   const wxml = read('subpackageMember/signup/index.wxml')
-  assert.match(wxml, /class="ticket-name__state"/)
-  assert.match(wxml, /tk\.label\(ticketList\[currentSwiperTicket\]\)/)
+  // 2026-10-22 v13 卡组:状态写在每张卡上(类型 · 剩几天 / 待支付 / 已核验 / 已过期 / 已取消)
+  assert.match(wxml, /class="wc__s">\{\{item\.wSub\}\}/)
+  const js = read('subpackageMember/signup/index.js')
+  assert.match(js, /done \? '已核验' : gone \? \(item\.registrationStatus == 4 \? '已过期' : '已取消'\) : ready \? '' : '待支付'/)
 })
 
 test('F17 共享活动详情的可空头像在传入 cy-avatar 前归一为空串', () => {

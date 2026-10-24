@@ -48,6 +48,10 @@ class ClubSessionServiceImplTest {
     private CoopOrderMapper orderMapper;
     private com.chengyinhub.business.mapper.UmsMemberSettlementDebtMapper debtMapper;
     private ClubSessionServiceImpl service;
+    private com.chengyinhub.business.service.IContentSafetyGate gate;
+    private com.chengyinhub.system.service.ISysConfigService config;
+    private com.chengyinhub.business.service.IAuditTaskService auditTaskService;
+    private CmsTopic topic;
 
     @BeforeEach
     void setUp() {
@@ -57,10 +61,18 @@ class ClubSessionServiceImplTest {
         ticketService = mock(IOmsTicketService.class);
         orderMapper = mock(CoopOrderMapper.class);
         debtMapper = mock(com.chengyinhub.business.mapper.UmsMemberSettlementDebtMapper.class);
+        gate = mock(com.chengyinhub.business.service.IContentSafetyGate.class);
+        when(gate.decide(any())).thenReturn(com.chengyinhub.business.domain.dto.SafetyDecision.pass());
+        config = mock(com.chengyinhub.system.service.ISysConfigService.class);
+        com.chengyinhub.business.service.support.ActivityReviewPolicy policy =
+                new com.chengyinhub.business.service.support.ActivityReviewPolicy();
+        org.springframework.test.util.ReflectionTestUtils.setField(policy, "configService", config);
+        auditTaskService = mock(com.chengyinhub.business.service.IAuditTaskService.class);
         service = new ClubSessionServiceImpl(clubService, topicService, activityService, ticketService, orderMapper,
                 new com.chengyinhub.business.service.support.SettlementDebtLedger(debtMapper,
                         mock(com.chengyinhub.business.mapper.UmsMemberMapper.class),
-                        mock(com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper.class)));
+                        mock(com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper.class)),
+                gate, policy, auditTaskService, mock(com.chengyinhub.business.service.IUmsMemberService.class));
 
         Club club = new Club();
         club.setId(CLUB_ID);
@@ -68,11 +80,14 @@ class ClubSessionServiceImplTest {
         when(clubService.selectClubById(CLUB_ID)).thenReturn(club);
         when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(club);
 
-        CmsTopic topic = new CmsTopic();
+        topic = new CmsTopic();
         topic.setId(TOPIC_ID);
         topic.setName("夜行主题");
         topic.setDescription("沿河夜行");
         topic.setImgUrl("cover.jpg");
+        topic.setStatus(1);
+        topic.setUserStatus(1);
+        topic.setDelFlag(0);
         when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         when(orderMapper.selectEffectiveOrdersByTopicId(TOPIC_ID))
                 .thenReturn(Collections.singletonList(clubOrder(CLUB_ID)));
@@ -98,6 +113,53 @@ class ClubSessionServiceImplTest {
         assertEquals(Long.valueOf(1L), activity.getPublishStatus());
         verify(ticketService).copyTopicTicketsToActivity(TOPIC_ID, 51L, OWNER_ID);
         verify(clubService).selectClubByIdForUpdate(CLUB_ID);
+    }
+
+    /** AUDIT-G1-3:父主题被驳回 / 作者下架 / 待审时不能开场次。 */
+    @Test
+    void parentTopicNotLive_refusesOpening() {
+        for (int[] state : new int[][]{{2, 1}, {1, 0}, {0, 1}}) {
+            topic.setStatus(state[0]);
+            topic.setUserStatus(state[1]);
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> service.open(request(), OWNER_ID, "主理人"));
+            assertEquals("主题未上架或已下架，不能开团", error.getMessage());
+        }
+        verify(activityService, never()).insertCmsActivity(any());
+    }
+
+    /** AUDIT-G1-3:场次文本走统一门禁,明确违规拒绝。 */
+    @Test
+    void blockedTopicText_refusesOpening() {
+        when(gate.decide(any())).thenReturn(com.chengyinhub.business.domain.dto.SafetyDecision.block("RISKY"));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.open(request(), OWNER_ID, "主理人"));
+        assertEquals("主题内容包含违规信息，不能开团", error.getMessage());
+        verify(activityService, never()).insertCmsActivity(any());
+        ArgumentCaptor<com.chengyinhub.business.domain.dto.PublishSafetyRequest> safety =
+                ArgumentCaptor.forClass(com.chengyinhub.business.domain.dto.PublishSafetyRequest.class);
+        verify(gate).decide(safety.capture());
+        assertEquals("夜行主题\n沿河夜行", safety.getValue().getText());
+        assertEquals("POST_REVIEW", safety.getValue().getReviewMode());
+    }
+
+    /** AUDIT-G1-3:先审(总闸)⇒ 场次待审 + 建审核单,不直接上架。 */
+    @Test
+    void preReview_opensPendingSessionWithAuditTask() {
+        when(config.selectConfigByKey(
+                com.chengyinhub.business.service.support.ActivityReviewPolicy.CONFIG_PRE_REVIEW_ALL)).thenReturn("true");
+        when(gate.decide(any())).thenReturn(com.chengyinhub.business.domain.dto.SafetyDecision.hold("STRUCTURED_REVIEW", null));
+
+        service.open(request(), OWNER_ID, "主理人");
+
+        ArgumentCaptor<CmsActivity> captor = ArgumentCaptor.forClass(CmsActivity.class);
+        verify(activityService).insertCmsActivity(captor.capture());
+        assertEquals(Long.valueOf(0L), captor.getValue().getStatus());
+        assertEquals(Long.valueOf(0L), captor.getValue().getPublishStatus());
+        verify(auditTaskService).submitOrRefreshActivity(org.mockito.ArgumentMatchers.eq(51L),
+                org.mockito.ArgumentMatchers.eq(OWNER_ID), org.mockito.ArgumentMatchers.eq("user_publish"),
+                org.mockito.ArgumentMatchers.contains("沿河夜行"));
     }
 
     /** 9-16 拍板第 2 条:欠款逾期未补足 ⇒ 限制交易,主理人不能开新场次。 */
@@ -272,6 +334,20 @@ class ClubSessionServiceImplTest {
         verify(activityService, never()).insertCmsActivity(any());
     }
 
+    /** 旧PR#29 E01-12 交接：直接开团入口也不得把 24:00 静默归一成当天 00:00(退款钟锚点会提前一整天)。 */
+    @Test
+    void openWithHourTwentyFourIsRejectedInsteadOfMidnight() {
+        ClubSessionOpenRequest request = request();
+        request.setSessionTime("24:00");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.open(request, OWNER_ID, "主理人"));
+
+        assertTrue(error.getMessage().contains("HH:mm"),
+                "拒绝原因必须给出可用的格式,实际:" + error.getMessage());
+        verify(activityService, never()).insertCmsActivity(any());
+    }
+
     /** 存量口径显式传入 00:00 时仍落当天 00:00 —— 改造只强制入参带时刻,不改这个值本身的含义。 */
     @Test
     void openedSessionWithExplicitMidnightTimeStaysMidnight() {
@@ -288,6 +364,14 @@ class ClubSessionServiceImplTest {
         ArgumentCaptor<CmsActivity> captor = ArgumentCaptor.forClass(CmsActivity.class);
         verify(activityService).insertCmsActivity(captor.capture());
         assertEquals(cal.getTime(), captor.getValue().getStartDate());
+    }
+
+    @Test
+    void pastAssemblyMomentIsRejectedBeforeAnyWrite() {
+        ClubSessionOpenRequest request = request();
+        request.setSessionDate(new Date(0L));
+        assertThrows(IllegalArgumentException.class, () -> service.open(request, OWNER_ID, "主理人"));
+        verify(activityService, org.mockito.Mockito.never()).insertCmsActivity(org.mockito.ArgumentMatchers.any());
     }
 
     private ClubSessionOpenRequest request() {

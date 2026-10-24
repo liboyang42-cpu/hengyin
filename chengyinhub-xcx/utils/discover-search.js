@@ -1,7 +1,9 @@
-// 发现搜索的纯数据层：四类公开对象共用同一套「接口响应 → 结果卡」约定。
+// 发现搜索的纯数据层：六类公开对象(主题/活动/俱乐部/商家 + 主题模板/玩法模板)共用同一套「接口响应 → 结果卡」约定。
 // 页面只负责请求与跳转；这里不依赖 wx/app，便于单测且避免四处手写字段兜底。
 
 const { merchantHomeUrl } = require('./merchant-home-link.js');
+const { templateArt } = require('./template-art.js');
+const { formatDurationMinutes } = require('./template-display.js');
 
 // 商家的落点是统一主页,主体 ID 是 memberId 而不是列表行 id ——「前缀 + id」这种形状拼不出来,
 // 所以它给 pathOf 而不是 path。其余三类的 path 前缀一字未改。
@@ -10,6 +12,10 @@ const TYPE_META = {
   activity: { label: '活动', sceneId: 'play-activity-detail' },
   club: { label: '俱乐部', path: '/pages/club/detail/index?id=' },
   merchant: { label: '商家', pathOf: function (item) { return merchantHomeUrl(item.memberId); } },
+  // 模板是主题/玩法的可复用版本。主题模板本身就是 cms_topic(is_template=1),落到公开主题页;
+  // 玩法模板落到既有模板详情页。
+  topicTemplate: { label: '主题模板', path: '/pages/topic/index/index?id=' },
+  gameTemplate: { label: '玩法模板', path: '/pages/templatedetail/templatedetail?id=' },
 };
 
 function firstImage(value) {
@@ -54,15 +60,20 @@ function decorateItem(type, item) {
 
   const detail = {
     topic: item.addressName || item.description || '城市主题',
-    activity: item.topicId ? '关联主题点位' : (item.addressName || item.address || '活动地点待公布'),
+    activity: item.topicId ? '关联主题节点' : (item.addressName || item.address || '活动地点待公布'),
     club: item.city || item.description || '城市俱乐部',
     merchant: item.cityRole || item.address || item.slogan || item.description || '合作商家',
+    topicTemplate: item.subtitle || item.description || '主题模板',
+    // 与模板页玩法行同一条 meta:人数 · 时长
+    gameTemplate: [item.players, formatDurationMinutes(item.duration)].filter(Boolean).join(' · ') || item.description || '玩法模板',
   }[type];
   const image = {
     topic: firstImage(item.imgArr || item.imgUrl),
     activity: firstImage(item.imgArr || item.imgUrl),
     club: item.cover || item.logo || '',
     merchant: item.coverImage || item.logo || '',
+    topicTemplate: firstImage(item.imgArr || item.imgUrl),
+    gameTemplate: firstImage(item.imgUrl || item.imgArr),
   }[type];
 
   return {
@@ -70,11 +81,14 @@ function decorateItem(type, item) {
     key: type + ':' + item.id,
     type: type,
     typeLabel: meta.label,
-    title: item.name || meta.label,
+    title: item.name || item.title || meta.label,
     detail: detail,
     cover: image,
-    icon: type === 'club' ? 'users' : (type === 'merchant' ? 'poi-shop' : 'map'),
+    icon: type === 'club' ? 'users' : (type === 'merchant' ? 'poi-shop' : (type === 'topicTemplate' || type === 'gameTemplate' ? 'route' : 'map')),
     tags: tagsOf(item),
+    // 模板结果按模板页的行样式画(cml 行):玩法模板优先用具象图标
+    tplRow: type === 'topicTemplate' || type === 'gameTemplate',
+    art: type === 'gameTemplate' ? templateArt(item) : '',
     cardCover: type === 'merchant' ? firstImage(item.coverImage) : '',
     cardLogo: type === 'merchant' ? firstImage(item.logo) : '',
     cardStatus: type === 'merchant'
@@ -100,13 +114,32 @@ function ymdOf(value) {
   return m ? m[1] : '';
 }
 
-function rowPrice(item) {
-  const raw = item && (item.minAmout != null ? item.minAmout : (item.minAmount != null ? item.minAmount : item.price));
+// 价格/上下限只认数字或非空数字串:Number(null)=0、Number('')=0、Number(true)=1 都不是用户给的值。
+function numericOrNull(raw) {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : null;
+  if (typeof raw !== 'string' || raw.trim() === '') return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 }
 
+// 主题模板列表接口没有 keyword(货架一次取全),按名称/副标题在客户端过;
+// 玩法模板由服务端 keyword 过滤,这里不再重复筛。
+function matchesTemplateKeyword(item, keyword) {
+  const kw = String(keyword || '').trim().toLowerCase();
+  if (!kw) return true;
+  return [item && item.name, item && item.subtitle, item && item.description].some(function (text) {
+    return String(text || '').toLowerCase().indexOf(kw) >= 0;
+  });
+}
+
+function rowPrice(item) {
+  const raw = item && (item.minAmout != null ? item.minAmout : (item.minAmount != null ? item.minAmount : item.price));
+  const n = numericOrNull(raw);
+  return n != null && n >= 0 ? n : null;
+}
+
 function matchesFilters(type, item, filters) {
+  if (type === 'topicTemplate') return matchesTemplateKeyword(item, filters && filters.keyword);
   if (!filters || (type !== 'topic' && type !== 'activity')) return true;
   const startBound = ymdOf(filters.startDate);
   const endBound = ymdOf(filters.endDate);
@@ -115,14 +148,16 @@ function matchesFilters(type, item, filters) {
     if (startBound && rowDay < startBound) return false;
     if (endBound && rowDay > endBound) return false;
   }
-  const minP = Number(filters.minPrice);
-  const maxP = Number(filters.maxPrice);
-  const applyPrice = (Number.isFinite(minP) && minP > 0) || (Number.isFinite(maxP) && maxP < 1000);
-  if (applyPrice) {
+  // 结果页没收到 minPrice/maxPrice 时存的是 null:null/'' 视为不限,不能变成 0 元上限把有价行全滤掉。
+  const minP = numericOrNull(filters.minPrice);
+  const maxP = numericOrNull(filters.maxPrice);
+  const useMin = minP != null && minP > 0;
+  const useMax = maxP != null && maxP >= 0 && maxP < 1000;
+  if (useMin || useMax) {
     const price = rowPrice(item);
     if (price != null) {
-      if (Number.isFinite(minP) && minP > 0 && price < minP) return false;
-      if (Number.isFinite(maxP) && maxP < 1000 && price > maxP) return false;
+      if (useMin && price < minP) return false;
+      if (useMax && price > maxP) return false;
     }
   }
   return true;
@@ -157,7 +192,9 @@ function buildRequests(keyword, categoryId, filters) {
     { type: 'topic', url: '/api/topic/list', data: Object.assign({}, common, categoryData), auth: false },
     { type: 'activity', url: '/api/activity/list', data: Object.assign({ is_my: 0 }, common, categoryData), auth: false },
     { type: 'club', url: '/api/club/list', data: JSON.stringify(clubData), header: { 'Content-Type': 'application/json' } },
-    { type: 'merchant', url: '/api/merchant/list', data: JSON.stringify(merchantData), header: { 'Content-Type': 'application/json' } },
+    { type: 'merchant', url: '/api/merchant/list', auth: false, data: JSON.stringify(merchantData), header: { 'Content-Type': 'application/json' } },
+    { type: 'topicTemplate', url: '/api/template/topic-template/list', data: {} },
+    { type: 'gameTemplate', url: '/api/template/list', data: Object.assign({ keyword: keyword || '' }, categoryData) },
   ];
 }
 
@@ -171,6 +208,7 @@ module.exports = {
   rowsOf: rowsOf,
   decorateItem: decorateItem,
   filterRows: filterRows,
+  rowPrice: rowPrice,
   decorateRows: decorateRows,
   buildRequests: buildRequests,
   mapPointKind: mapPointKind,

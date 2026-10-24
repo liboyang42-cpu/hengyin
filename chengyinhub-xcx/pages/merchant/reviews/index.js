@@ -2,12 +2,15 @@ const toast = require('../../../utils/toast.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 const {
   buildCreateDraft,
   classifyLoadFailure,
   createReviewRequestId,
   fallbackRoute,
   fingerprint,
+  MANAGE_REVIEW_FILTERS,
+  normalizeManageFilter,
   parseReviewRouteOptions,
   positiveId,
   shapePage,
@@ -36,6 +39,9 @@ Page({
     monthNewCount: 0,
     replyRatePct: 0,
     activeFilter: 'all',
+    // 管理态:服务端全量计数(null = 后端未给,页面不显示数字);filterLoading = 切筛选后的重读中。
+    filterCounts: null,
+    filterLoading: false,
     hasMore: false,
     loadingMore: false,
     eligibility: { canCreate: false, reasonCode: 'UNAVAILABLE', registrationId: null },
@@ -70,7 +76,8 @@ Page({
       pageState: 'loading',
     });
     if (mode === 'public' && !this._merchantRowId) {
-      this.setData({ pageState: 'error', errorMessage: '商家信息不完整' });
+      // PR10 F-W1-12:缺商家参数不是「加载失败」(load-failure 留白),是缺参 —— 给可见说明和返回。
+      this.setData({ pageState: 'missing', errorMessage: '商家信息不完整' });
       return;
     }
     // 管理态是商家页面:未登录先静默登录,失败只留页内错误态,不整屏拦。
@@ -82,12 +89,15 @@ Page({
   },
 
   enterManage(authRetryUsed) {
+    if (this._hidden || this._unloaded) return;
+    const entryEpoch = this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
     this._authRetryUsed = authRetryUsed === true;
     this.setData({ pageState: 'loading', errorMessage: '' });
     const that = this;
     ensureSession(app).then(function (ok) {
+      if (that._hidden || that._unloaded || entryEpoch !== that._reviewEntryEpoch) return;
       if (!ok || !app.getUserID()) {
-        that.setData({ pageState: 'error', errorMessage: '登录失败，请重试' });
+        that.setData({ pageState: 'login-required', errorMessage: '登录失败，请重试' });
         return;
       }
       that.loadReviews(false);
@@ -96,24 +106,47 @@ Page({
 
   // 401:静默重登一次后自动重载;重登失败落页内错误态,不整屏「去登录」。
   recoverSession() {
+    if (this._hidden || this._unloaded) return;
     if (this._authRetryUsed) {
-      this.setData({ pageState: 'error', errorMessage: '登录已失效，请重新登录' });
+      this.setData({ pageState: 'login-required', errorMessage: '登录已失效，请重新登录' });
       return;
     }
     this._authRetryUsed = true;
     const that = this;
+    const entryEpoch = this._reviewEntryEpoch;
+    const owner = String(app.getUserID() || '');
     ensureSession(app).then(function (ok) {
+      if (that._hidden || that._unloaded || entryEpoch !== that._reviewEntryEpoch
+          || (app.getUserID() && owner !== String(app.getUserID()))) return;
       if (!ok) {
-        that.setData({ pageState: 'error', errorMessage: '登录失败，请重试' });
+        that.setData({ pageState: 'login-required', errorMessage: '登录失败，请重试' });
         return;
       }
       that.retry();
     });
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    this._hidden = false;
+    merchantTheme.merchantPageShow();
+    if (this._resumeReviewRead || (this._reviewOwner !== undefined && this._reviewOwner !== String(app.getUserID() || ''))) {
+      this._resumeReviewRead = false;
+      this.retry();
+    }
+  },
+  onHide() {
+    this._hidden = true;
+    this._resumeReviewRead = this.data.pageState === 'loading' || this.data.loadingMore;
+    this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
+    this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
+  onUnload() {
+    this._unloaded = true;
+    this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
+    this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
 
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
@@ -127,22 +160,47 @@ Page({
     }
   },
 
+  // F-W1-12:登录失败不是「加载失败」,留可见的登录说明;重新登录走管理态入口的静默登录。
+  retryLogin() {
+    this.enterManage(false);
+  },
+
   retry() {
     this._authRetryUsed = false;
     this._pageNum = 1;
     this.loadReviews(false);
   },
 
-  loadReviews(append) {
+  loadReviews(append, keepShell) {
+    if (this._hidden || this._unloaded) return;
     if (append && (this.data.loadingMore || !this.data.hasMore)) return;
     const mode = this.data.mode;
+    const owner = String(app.getUserID() || '');
+    if (this._reviewOwner !== undefined && this._reviewOwner !== owner) {
+      this.setData({ items: [], filteredItems: [], total: 0, averageRating: '0.0', ratingStars: [],
+        pendingReplyCount: 0, monthNewCount: 0, replyRatePct: 0, filterCounts: null, filterLoading: false,
+        hasMore: false, loadingMore: false,
+        eligibility: { canCreate: false, reasonCode: 'UNAVAILABLE', registrationId: null },
+        replyReviewId: null, replyEditing: false, replyContent: '', replyError: '',
+        reportReviewId: null, reportReason: '', reportError: '', content: '', images: [], rating: 0, canSubmit: false });
+    }
+    this._reviewOwner = owner;
+    if (mode === 'manage' && !owner) { this.enterManage(false); return; }
+    const readEpoch = this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
+    const isCurrent = () => !this._hidden && !this._unloaded && readEpoch === this._reviewReadEpoch
+      && owner === String(app.getUserID() || '');
     const pageNum = append ? this._pageNum + 1 : 1;
+    const filter = normalizeManageFilter(this.data.activeFilter);
     if (append) this.setData({ loadingMore: true });
-    else this.setData({ pageState: 'loading', errorMessage: '' });
+    else if (keepShell === true && this.data.pageState === 'ready') {
+      // 切筛选:保留页头与统计,只清列表 —— 旧筛选的条目不能留在新 tab 下冒充结果。
+      this.setData({ filterLoading: true, items: [], filteredItems: [], hasMore: false, errorMessage: '' });
+    } else this.setData({ pageState: 'loading', errorMessage: '' });
     const requestOptions = {
       hideLoading: true,
       method: 'POST',
       success: (res) => {
+        if (!isCurrent()) return;
         if (mode === 'manage' && isAuthenticationFailure(res)) {
           this.recoverSession();
           return;
@@ -152,25 +210,31 @@ Page({
           this.setData({
             pageState: append ? this.data.pageState : failedState,
             loadingMore: false,
+            filterLoading: false,
             errorMessage: failedState === 'no-permission'
               ? '当前账号没有口碑管理权限'
               : app.getRequestErrorMessage(res, '评价加载失败'),
           });
           return;
         }
-        const shaped = shapePage(res.data, mode, pageNum, 20);
+        const shaped = shapePage(res.data, mode, pageNum, 20, mode === 'manage' ? filter : undefined);
         if (!shaped) {
-          this.setData({ pageState: 'error', loadingMore: false, errorMessage: '评价数据不完整，请稍后重试' });
+          this.setData({ pageState: 'error', loadingMore: false, filterLoading: false, errorMessage: '评价加载失败，请重试' });
           return;
         }
         const items = append ? this.data.items.concat(shaped.items) : shaped.items;
         this._pageNum = shaped.pageNum;
-        const empty = mode === 'manage' && items.length === 0;
+        // 管理态:列表已由服务端按筛选收窄;整页空态只属于「全部」,筛选为空走列表内的筛选空态。
+        const empty = mode === 'manage' && items.length === 0 && filter === 'all';
         this.setData({
           pageState: empty ? 'empty' : 'ready',
           items,
-          filteredItems: filterReviewItems(items, this.data.activeFilter),
-          total: shaped.total,
+          filteredItems: mode === 'manage' ? items : filterReviewItems(items, this.data.activeFilter),
+          filterCounts: shaped.filterCounts,
+          filterLoading: false,
+          // 页头「N 条已核销评价」是全店口径:有服务端全量计数就用它,不用筛选后的 total。
+          total: mode === 'manage' && shaped.filterCounts ? shaped.filterCounts.all
+            : (mode === 'manage' && filter !== 'all' ? this.data.total : shaped.total),
           averageRating: shaped.averageRating,
           ratingStars: shaped.ratingStars,
           pendingReplyCount: shaped.pendingReplyCount,
@@ -184,6 +248,7 @@ Page({
         this.refreshCreateState();
       },
       fail: (res, status) => {
+        if (!isCurrent()) return;
         if (mode === 'manage' && isAuthenticationFailure(res, status)) {
           this.recoverSession();
           return;
@@ -191,14 +256,15 @@ Page({
         this.setData({
           pageState: append ? this.data.pageState : 'error',
           loadingMore: false,
-          errorMessage: '网络连接失败，请稍后重试',
+          filterLoading: false,
+          errorMessage: '网络异常，请重试',
         });
       },
     };
     if (mode === 'manage') {
       app.sendRequest({
-        hideLoading: requestOptions.hideLoading, autoErrorToast: !!append,
-        url: `/api/merchant/reviews/manage?pageNum=${pageNum}&pageSize=20`,
+        hideLoading: requestOptions.hideLoading, autoErrorToast: false,
+        url: `/api/merchant/reviews/manage?filter=${encodeURIComponent(filter)}&pageNum=${pageNum}&pageSize=20`,
         method: requestOptions.method,
         success: requestOptions.success,
         fail: requestOptions.fail,
@@ -206,7 +272,7 @@ Page({
       });
     } else {
       app.sendRequest({
-        hideLoading: requestOptions.hideLoading, autoErrorToast: !!append,
+        hideLoading: requestOptions.hideLoading, autoErrorToast: false,
         url: `/api/merchant/reviews/public?merchantRowId=${encodeURIComponent(this._merchantRowId)}&pageNum=${pageNum}&pageSize=20`,
         method: requestOptions.method,
         success: requestOptions.success,
@@ -220,15 +286,27 @@ Page({
 
   setReviewFilter(event) {
     const filter = String(event && event.currentTarget && event.currentTarget.dataset.filter || 'all');
-    if (!['all', 'pending', 'low', 'photo'].includes(filter)) return;
+    const manage = this.data.mode === 'manage';
+    if (manage ? !MANAGE_REVIEW_FILTERS.includes(filter) : !['all', 'low', 'photo'].includes(filter)) return;
+    if (filter === this.data.activeFilter && !(manage && this.data.filterLoading)) return;
     this.setData({
       activeFilter: filter,
-      filteredItems: filterReviewItems(this.data.items, filter),
       replyReviewId: null,
       replyEditing: false,
       replyContent: '',
       replyError: '',
+      reportReviewId: null,
+      reportReason: '',
+      reportError: '',
     });
+    if (manage) {
+      // W10a #20:管理态筛选走服务端,重读第一页;计数随响应刷新。
+      this._pageNum = 1;
+      this.loadReviews(false, true);
+      return;
+    }
+    // 公开态仍只在已加载评价里筛(没有公开态服务端筛选接口)。
+    this.setData({ filteredItems: filterReviewItems(this.data.items, filter) });
   },
 
   selectRating(event) {
@@ -268,7 +346,7 @@ Page({
     const imageIndex = Number(event.currentTarget.dataset.imageIndex);
     const review = this.data.filteredItems[reviewIndex];
     if (!review || !review.imageUrls[imageIndex]) return;
-    wx.previewImage({ current: review.imageUrls[imageIndex], urls: review.imageUrls });
+    mediaPreview.open(review.imageUrls, review.imageUrls[imageIndex]);
   },
 
   refreshCreateState() {

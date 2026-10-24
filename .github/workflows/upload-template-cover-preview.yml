@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   upload:
+    if: github.repository == 'liboyang42-cpu/chengyin' && github.event_name == 'workflow_dispatch'
     runs-on: [self-hosted, macOS, ARM64, chengyin]
     environment: production
     timeout-minutes: 10

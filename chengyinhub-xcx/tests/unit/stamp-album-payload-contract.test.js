@@ -8,7 +8,7 @@ const MODULE = path.join(ROOT, 'subpackageP3/pages/stamp-album/index/index.js')
 
 function loadPage() {
   const sandbox = { requests: [] }
-  global.getApp = () => ({ sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getUserID: () => 7, sendRequest: (options) => sandbox.requests.push(options) })
   global.wx = { navigateTo() {} }
   global.Page = (config) => { sandbox.def = config }
   delete require.cache[require.resolve(MODULE)]
@@ -97,7 +97,7 @@ test('票面底部压投票人写的那一句;后端没给 caption 时不渲染�
   const src = require('node:fs').readFileSync(
     require('node:path').join(__dirname, '../../components/cy/scene-roam-stamp-album/index.js'), 'utf8')
   assert.match(src, /caption: typeof row\.caption === 'string' \? row\.caption\.trim\(\) : ''/,
-    'caption 必须从回包带到 item 上,否则 wxml 永远拿不到')
+    'caption 必须从回包带到 item 上，否则 wxml 永远拿不到')
   const wxml = require('node:fs').readFileSync(
     require('node:path').join(__dirname, '../../components/cy/scene-roam-stamp-album/index.wxml'), 'utf8')
   // 2026-09-10 集邮册整屏照原型 f-sticker 重做成三列方格,类名随之 album-cap → stkcell__cap。

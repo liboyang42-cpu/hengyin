@@ -11,8 +11,8 @@
 
 <view class="canyubox">
   <cy-skeleton wx:if="{{firstLoading}}" type="list" count="4" />
-  <cy-error fill class="cy-fill-state cy-fade-in" size="lg" wx:elif="{{errorMsg && list.length==0}}" title="参与记录没能打开" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
-  <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{list.length==0}}" icon="/images/d_yhqon.png" title="{{activeTab === 'all' ? '暂无参与记录' : '当前筛选暂无参与记录'}}" sub="{{activeTab === 'all' ? '报名后，路线和活动会出现在这里' : '切换其他状态查看参与记录'}}" />
+  <cy-error load-failure fill class="cy-fill-state cy-fade-in" size="lg" wx:elif="{{errorMsg && list.length==0}}" title="参与记录没能打开" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
+  <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{list.length==0}}" icon="/subpackageMember/images/d_yhqon.png" title="{{activeTab === 'all' ? '暂无参与记录' : '当前筛选暂无参与记录'}}" sub="{{activeTab === 'all' ? '' : '换个筛选试试'}}" />
   <view class="canyu-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在更新参与记录…</view>
 
   <view class="canyubox_li" wx:for="{{list}}" wx:key="id" wx:for-item="item" bindtap="goOrder" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -35,6 +35,8 @@
         <view class="canyubox_li_right_txt ep1">
           <image lazy-load="true" src="/subpackageMember/images/d_cyIcon2.png" mode="widthFix" />{{item.typeLabel}} · {{item.sourceAddress}}
         </view>
+        <cy-badge type="status" variant="neutral" label="{{item.verificationText}}" />
+        <cy-btn wx:if="{{item.voucherAvailable}}" variant="ghost" size="sm" catchtap="viewVoucher" data-id="{{item.id}}">查看报名凭证</cy-btn>
       </view>
     </view>
   </view>

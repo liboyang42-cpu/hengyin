@@ -18,8 +18,8 @@
 
     <block wx:if="{{topics.length}}">
       <view class="sec-title cy-h2">各主题结算</view>
-      <view class="fc-list">
-        <view class="fc-card" wx:for="{{topics}}" wx:key="topicId" bindtap="goSettlementDetail" data-id="{{item.topicId}}" hover-class="fc-card--tap" aria-role="button" aria-label="查看{{item.topicName}}的结算详情">
+      <view class="fc-list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
+        <view class="fc-card" wx:for="{{topics}}" wx:key="topicId" bindtap="goSettlementDetail" data-id="{{item.topicId}}" hover-class="fc-card--tap" aria-role="button" aria-label="查看{{item.topicName}}的结算详情" style="--pmi:{{index}};">
           <view class="fc-main">
             <view class="fc-top">
               <text class="fc-name ep1">{{item.topicName}}</text>
@@ -37,12 +37,12 @@
           <cy-icon class="fc-arrow" name="arrow-right" size="32" />
         </view>
       </view>
-      <view class="fc-explainer">已结算不等于已入账：已结算表示金额完成核算，已入账表示款项已进入个人账户。</view>
+      <view class="fc-explainer">已结算：金额已核算 · 已入账：已到账</view>
     </block>
     <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="还没有合作结算" />
   </block>
 
   <view wx:else class="err-wrap" aria-role="alert">
-    <cy-error size="lg" style="flex:1;min-height:0;" icon="/images/no_data.svg" fill title="分润数据没加载出来" sub="网络可能不稳定，你的分润记录还在" retry="重试" bind:retry="onRetry" />
+    <cy-error load-failure="{{!authRequired && !accessDenied}}" size="lg" style="flex:1;min-height:0;" icon="/images/no_data.svg" fill title="{{authRequired ? '登录后查看主办分润' : accessDenied ? '当前账号无法查看分润' : '分润数据加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="onRetry" />
   </view>
 </view>

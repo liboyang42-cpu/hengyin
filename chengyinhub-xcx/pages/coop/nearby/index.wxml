@@ -39,17 +39,17 @@
       </view>
     </view>
     </block>
-    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="附近暂无可联系商家" sub="按当前定位没找到商家，刷新会重新定位再找一遍" cta="刷新附近商家" bind:cta="retry"></cy-empty>
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="附近暂无商家" cta="刷新附近商家" bind:cta="retry"></cy-empty>
   </block>
 
   <!-- aaa 标准:未定位/空态统一垂直居中 + 放大文字图片(cy-error 原生 fill 变体,不再自己包一层) -->
   <cy-empty class="retry-lg" size="lg" style="flex:1;min-height:0;" kind="permission" wx:elif="{{pageState === 'permission'}}" fill title="当前无法查看附近商家" sub="{{errorText || '需要定位权限才能找附近商家'}}" cta="去设置" bind:cta="openLocationSettings"></cy-empty>
 
-  <cy-empty size="lg" style="flex:1;min-height:0;" kind="missing-param" wx:elif="{{pageState === 'missing-param'}}" fill title="主题参数无效" sub="{{errorText}}" cta="返回上一页" bind:cta="goBack"></cy-empty>
+  <cy-empty size="lg" style="flex:1;min-height:0;" kind="missing-param" wx:elif="{{pageState === 'missing-param'}}" fill title="主题信息无效" sub="{{errorText}}" cta="返回上一页" bind:cta="goBack"></cy-empty>
 
-  <cy-error class="retry-lg error-kind--{{errorKind}}" size="lg" style="flex:1;min-height:0;" wx:elif="{{pageState === 'error'}}" fill title="附近商家没加载出来" sub="{{errorText || '服务暂时不可用,请稍后重试'}}" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
+  <cy-error load-failure class="retry-lg error-kind--{{errorKind}}" size="lg" style="flex:1;min-height:0;" wx:elif="{{pageState === 'error'}}" fill title="附近商家加载失败" sub="{{errorText}}" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
 
-  <cy-error class="retry-lg" size="lg" style="flex:1;min-height:0;" wx:else fill title="附近商家暂不可用" sub="请返回后重试" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
+  <cy-error load-failure class="retry-lg" size="lg" style="flex:1;min-height:0;" wx:else fill title="附近商家暂不可用" auto-back custom-back bind:back="goBack" bind:retry="retry"></cy-error>
 </view>
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

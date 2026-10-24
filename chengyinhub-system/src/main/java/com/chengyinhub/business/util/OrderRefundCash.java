@@ -21,6 +21,26 @@ public final class OrderRefundCash {
     private OrderRefundCash() {
     }
 
+    public static void assertOrderScope(List<CmsRegistration> order, CmsRegistration seed) {
+        if (seed == null || seed.getOwnerType() == null || seed.getOwnerId() == null
+                || order == null || order.isEmpty()) throw new ServiceException("原订单范围缺失，请人工核对", HttpStatus.CONFLICT);
+        boolean found = false;
+        for (CmsRegistration row : order) {
+            if (row == null || !java.util.Objects.equals(row.getParentOrderNo(), seed.getParentOrderNo())
+                    || !java.util.Objects.equals(row.getOwnerType(), seed.getOwnerType())
+                    || !java.util.Objects.equals(row.getOwnerId(), seed.getOwnerId())) {
+                throw new ServiceException("原订单包含不一致报名，请人工核对", HttpStatus.CONFLICT);
+            }
+            if (java.util.Objects.equals(row.getId(), seed.getId())) {
+                found = true;
+                if (!java.util.Objects.equals(row.getMemberId(), seed.getMemberId())) {
+                    throw new ServiceException("报名归属已变化，请刷新后重试", HttpStatus.CONFLICT);
+                }
+            }
+        }
+        if (!found) throw new ServiceException("报名不在原订单中，请人工核对", HttpStatus.CONFLICT);
+    }
+
     /**
      * FX-01:整单现金里还没退出去的部分 = 首单汇总额 − 同单其余票已批准(status=1)的退款额。
      * 拆不出单张票实付(积分/会员价按整单算),已退的那张到底退了多少,只有它自己的退款单说了算。
@@ -28,22 +48,25 @@ public final class OrderRefundCash {
      * (已退金额无从核对)⇒ 409,不按汇总额照退。
      */
     public static BigDecimal remaining(List<CmsRegistration> order, CmsRegistration payer, IRefundService refundService) {
+        return remaining(order, payer, refundService, null);
+    }
+
+    public static BigDecimal remaining(List<CmsRegistration> order, CmsRegistration payer,
+                                       IRefundService refundService, Long excludeRefundId) {
         BigDecimal refunded = BigDecimal.ZERO;
         for (CmsRegistration m : order) {
-            if (m.getId().equals(payer.getId())) {
-                continue;
-            }
-            RefundApplication q = new RefundApplication();
-            q.setSourceType("registration");
-            q.setSourceId(m.getId());
-            List<RefundApplication> apps = refundService.selectRefundList(q);
+            List<RefundApplication> apps = refundService.selectRegistrationHistoryForUpdate(m.getId());
             boolean approved = false;
             if (apps != null) {
                 for (RefundApplication app : apps) {
-                    if (Integer.valueOf(0).equals(app.getStatus())) {
+                    if (excludeRefundId != null && excludeRefundId.equals(app.getId())) continue;
+                    if (excludeRefundId == null && Integer.valueOf(0).equals(app.getStatus())) {
                         throw new ServiceException("同单有退款申请正在审核,请稍后再试", HttpStatus.CONFLICT);
                     }
-                    if (Integer.valueOf(1).equals(app.getStatus()) && app.getRefundAmount() != null) {
+                    if (Integer.valueOf(1).equals(app.getStatus())) {
+                        if (app.getRefundAmount() == null || app.getRefundAmount().signum() <= 0) {
+                            throw new ServiceException("历史退款金额无法核对,请人工处理", HttpStatus.CONFLICT);
+                        }
                         refunded = refunded.add(app.getRefundAmount());
                         approved = true;
                     }
@@ -55,7 +78,10 @@ public final class OrderRefundCash {
                 throw new ServiceException("同单已退金额无法核对,请联系客服人工处理", HttpStatus.CONFLICT);
             }
         }
-        BigDecimal cash = payer.getWechatPaymentAmount() == null ? BigDecimal.ZERO : payer.getWechatPaymentAmount();
+        if (payer.getWechatPaymentAmount() == null) {
+            throw new ServiceException("原订单现金实付快照缺失,请人工处理", HttpStatus.CONFLICT);
+        }
+        BigDecimal cash = payer.getWechatPaymentAmount();
         return cash.subtract(refunded);
     }
 }

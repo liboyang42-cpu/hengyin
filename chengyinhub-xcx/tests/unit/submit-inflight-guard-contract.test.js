@@ -134,7 +134,7 @@ function scanUnguarded() {
 test('会产生后果的按钮都必须挡住连点 —— 界面、js 闸、系统遮罩,三者有其一', () => {
   const bad = scanUnguarded()
   assert.deepEqual(bad, [],
-    '这些按钮会发请求,却既没有界面在途态、也没有 js 闸、还关掉了系统遮罩:\n  ' +
+    '这些按钮会发请求，却既没有界面在途态、也没有 js 闸、还关掉了系统遮罩:\n  ' +
     bad.join('\n  ') +
     '\n三选一:wxml 加 loading/disabled、handler 加在途闸、或去掉 hideLoading: true。')
 })
@@ -160,7 +160,7 @@ test('负控:三种保护各自都要能让它变绿,不能只认其中一种', 
   ]
   for (const [name, markup, src] of variants) {
     assert.deepEqual(scanPairs([{ name: 'probe/index.wxml', markup, src }]), [],
-      name + ' 这一种保护没有被认出来,门禁会误报')
+      name + ' 这一种保护没有被认出来，门禁会误报')
   }
 })
 
@@ -181,7 +181,7 @@ test('负控:「确定/确认/完成/下一步」文案的裸奔提交按钮要�
       markup: '<cy-btn bindtap="doSubmit">' + label + '</cy-btn>',
       src: 'Component({ methods: { doSubmit() { app.sendRequest({ hideLoading: true, url: "/x" }) } } })',
     }])
-    assert.equal(bad.length, 1, '「' + label + '」不在白名单里,这类按钮整个漏扫')
+    assert.equal(bad.length, 1, '「' + label + '」不在白名单里，这类按钮整个漏扫')
   }
 })
 

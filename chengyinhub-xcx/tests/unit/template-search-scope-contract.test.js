@@ -51,28 +51,28 @@ const TWO_TOPICS = [
   { id: 12, name: '主题B', templateStatus: 'VERIFIED' },
 ]
 
-test('CU-M-64 入口不再跳通用搜索,文案与实际范围(模板)一致', () => {
+// 2026-10-22 owner 裁决推翻了 CU-M-64 的「入口只搜模板、页内弹窗」:入口改为打开统一搜索
+// (pages/search2),模板(主题模板/玩法模板)作为结果类型出现在那里;页内 startTemplateSearch 保留。
+test('2026-10-22 入口打开统一搜索页,不再弹「搜索模板」输入框', () => {
+  const h = mountTemplatePage()
+  const navs = []
+  const modals = []
+  global.wx.navigateTo = (options) => navs.push(options.url)
+  global.wx.showModal = (options) => modals.push(options)
+  h.page.goSearch()
+  assert.deepEqual(navs, ['/pages/search2/index'])
+  assert.equal(modals.length, 0)
   const wxml = read('pages/template/index.wxml')
-  const js = read('pages/template/index.js')
-  assert.doesNotMatch(wxml, /pages\/search2/, '入口不能再落到不含「节点玩法」的四类通用搜索')
-  assert.doesNotMatch(js, /navigateTo\(\{\s*url:\s*'\/pages\/search2/, '页面里也不许再有指向通用搜索的真跳转(注释里的旧路径不算)')
   assert.match(wxml, /bindtap="goSearch"/)
   assert.match(wxml, /搜索主题与玩法模板/)
-  assert.doesNotMatch(wxml, /搜索节点玩法与主题/)
+  assert.doesNotMatch(wxml, /cta="刷新试试"/, '空态不再放「刷新试试」')
 })
 
 test('CU-M-64 玩法模板:关键词随请求发给服务端,回来即屏上所见', () => {
   const h = mountTemplatePage()
   h.page.data.tab = 'game'
-  const modals = []
-  global.wx.showModal = (options) => {
-    modals.push(options)
-    options.success({ confirm: true, content: ' 暗号 ' })
-  }
-
-  h.page.goSearch()
-  assert.equal(modals.length, 1, '入口要真的问一次关键词')
-  assert.equal(h.page.data.searchKeyword, '暗号', '关键词要去掉首尾空白')
+  h.page.startTemplateSearch('暗号')
+  assert.equal(h.page.data.searchKeyword, '暗号')
 
   const game = lastRequest(h, GAME_URL)
   assert.ok(game, '搜索必须重取玩法模板')
@@ -100,7 +100,7 @@ test('CU-M-64 主题模板:接口没有 keyword,按名称客户端硬筛,清掉�
   h.page.clearTemplateSearch()
   assert.equal(h.page.data.searchKeyword, '')
   lastRequest(h, TOPIC_URL).success({ code: '200', data: TWO_TOPICS })
-  assert.equal(h.page.data.banner._title, '主题A', '清掉搜索要回到全量,不能被上次的过滤结果粘住')
+  assert.equal(h.page.data.banner._title, '主题A', '清掉搜索要回到全量，不能被上次的过滤结果粘住')
   assert.equal(h.page.data.topList.length, 1)
 })
 

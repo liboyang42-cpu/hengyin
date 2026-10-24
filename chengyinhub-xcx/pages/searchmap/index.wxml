@@ -7,7 +7,7 @@
 <template name="actItem">
   <view class="item">
     <view class="item-pic">
-      <view class="item-cat"><cy-tag variant="mono">{{item.mapPointLabel || '活动点位'}}</cy-tag></view>
+      <view class="item-cat"><cy-tag variant="mono">{{item.mapPointLabel || '活动节点'}}</cy-tag></view>
       <image wx:if="{{item.imgUrl}}" lazy-load="true" bindtap="goActivity" aria-role="button" aria-label="打开活动详情" data-id="{{item.id}}" src="{{item.imgUrl}}" mode="aspectFill"  hover-class="cy-pressed" hover-stay-time="80"/>
       <view wx:else class="item-pic-ph"><cy-icon name="image" size="48" /></view>
       <view class="tags flex-ac">
@@ -94,18 +94,18 @@
 <!-- 全部结果 -->
 <cy-sheet variant="full" show="{{bmShow}}" title="{{listState === 'ready' ? '全部 ' + list.length + ' 个结果' : '搜索结果'}}" bind:close="bmClose">
   <text class="smap-sync" wx:if="{{merchantNodesRefreshing && merchantNodes.length}}"
-        aria-role="status" aria-live="polite">正在更新商家点位…</text>
-  <cy-error wx:if="{{listState === 'error'}}" title="活动没能加载出来" sub="{{errorMsg}}" bind:retry="onRetry" />
-  <cy-empty wx:elif="{{listState === 'empty'}}" title="这一带还没有活动" sub="换个关键词，或拖动地图看看别处" />
+        aria-role="status" aria-live="polite">正在更新商家节点…</text>
+  <cy-error load-failure wx:if="{{listState === 'error'}}" title="活动加载失败" sub="{{errorMsg}}" bind:retry="onRetry" />
+  <cy-empty wx:elif="{{listState === 'empty'}}" title="这一带还没有活动" sub="换个关键词试试" />
   <cy-skeleton wx:elif="{{listState === 'loading'}}" type="map-card" count="3" />
   <block wx:else>
     <text class="smap-sync" wx:if="{{listRefreshing && list.length}}"
           aria-role="status" aria-live="polite">正在更新地图结果…</text>
-    <cy-inline-error wx:if="{{pageError && list.length}}" kind="network"
-                     title="{{pageErrorIsRefresh ? '这次刷新没有成功' : '更多活动没加载出来'}}"
-                     sub="{{pageErrorIsRefresh ? '屏幕上还是上一次的结果，点重试再拉一次' : '已加载的活动和地图点位仍可查看'}}"
+    <cy-inline-error load-failure wx:if="{{pageError && list.length}}" kind="network"
+                     title="{{pageErrorIsRefresh ? '这次刷新没有成功' : '更多活动加载失败'}}"
+                     sub=""
                      action="{{pageErrorIsRefresh ? '重试刷新' : '重试这一页'}}" bind:action="retryListPage" />
-    <view class="smap-listtip" wx:if="{{noCoordCount > 0}}">其中 {{ noCoordCount || 0 }} 个活动暂未提供位置，只在列表中显示</view>
+    <view class="smap-listtip" wx:if="{{noCoordCount > 0}}">{{ noCoordCount || 0 }} 个活动无位置，仅列表显示</view>
     <swiper indicator-dots="{{true}}" autoplay="{{false}}">
       <swiper-item wx:for="{{list}}" wx:key="id">
         <template is="actItem" data="{{item}}" />
@@ -130,7 +130,7 @@
 </cy-sheet>
 
 <!-- 筛选(§11:Modal 走共享组件,原 .screen/.pop-cont 私有弹层已删) -->
-<cy-sheet show="{{popVisible}}" title="筛选" bind:close="popClose">
+<cy-sheet show="{{popVisible}}" title="筛选" fixed="full" bind:close="popClose">
   <view class="form-main">
     <view class="dl">
       <view class="dt">商家发现</view>

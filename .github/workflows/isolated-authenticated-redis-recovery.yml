@@ -1,0 +1,82 @@
+name: Isolated authenticated Redis recovery
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/isolated-authenticated-redis-recovery.yml'
+      - 'ci/authenticated_redis_recovery_probe.py'
+      - 'ci/test_authenticated_redis_recovery_probe.py'
+      - 'ci/authenticated-redis-recovery.sh'
+      - 'ci/upgrade-startup/application.properties'
+      - 'ci/upgrade-startup/logback.xml'
+      - 'ci/upgrade_startup_network.py'
+      - 'ci/migration_ledger.py'
+      - 'ci/migration-dependencies.json'
+      - 'ci/run_migration.py'
+      - 'ci/sql_splitter.py'
+      - 'scripts/bootstrap-test-admin.py'
+      - 'scripts/e2e/build_schema.py'
+      - 'scripts/e2e/base_schema_20260818_migrations.json'
+      - 'scripts/e2e/schema_replay_policy_20260921.json'
+      - 'scripts/e2e/policy_source_custody.py'
+      - 'scripts/e2e/source_provenance_20260818.json'
+      - 'sql/**'
+      - 'chengyinhub-*/sql/**'
+      - 'chengyinhub-*/src/main/**'
+      - '**/pom.xml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-authenticated-redis-recovery:
+    # Pinned: the probe copies host strace into the app container (needs a matching glibc)
+    # and hashes the Redis ACL fixture with Python crypt, which Python 3.13 removed.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Verify hosted target and pure negative controls
+        env:
+          CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -I ci/authenticated_redis_recovery_probe.py --check-execution-only
+          python3 -B ci/test_authenticated_redis_recovery_probe.py
+      - name: Install existing pinned schema client
+        run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
+      - name: Package the same candidate without repeating tests
+        run: mvn -B -DskipTests package
+      - name: Authenticated refund lease across Redis failure and recovery
+        id: recovery
+        env:
+          CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
+          TMPDIR: ${{ runner.temp }}/isolated-authenticated-redis-recovery
+        run: |
+          set -o pipefail
+          mkdir -p "$TMPDIR"
+          if ! command -v strace >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y strace
+          fi
+          bash ci/authenticated-redis-recovery.sh 2>&1 | tee "$TMPDIR/entry.log"
+      - name: Preserve explicit safe evidence including failures
+        if: ${{ !cancelled() && steps.recovery.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-authenticated-redis-recovery-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/entry.log
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/authenticated-redis-recovery.json
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/application.log
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/schema-summary.json
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/network.trace
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/isolation.log

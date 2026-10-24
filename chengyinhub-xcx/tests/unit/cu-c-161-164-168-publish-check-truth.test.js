@@ -3,7 +3,7 @@
 // CU-C-168 两条假绿:
 //   ① 发布钮置灰时点它(onPublishDisabledTap)根本没跑过 AI 预检,却传了空 skipLabel ——
 //      而 _showPublishCheck 里 `precheckOk = !skipLabel && !issues.length`,空串 + 空数组
-//      正好等于「跑过了且没问题」。于是弹层一边列着「还差封面/还差点位」,
+//      正好等于「跑过了且没问题」。于是弹层一边列着「还差封面/还差节点」,
 //      一边绿着「内容安全预检通过」。
 //   ② 「已配置 N 种票单」只数数组长度:一张名称、集合时间、集合地点全空的默认票
 //      既能以缺项身份出现在「还差什么」里,又被算进「自动检查已通过 · N 项」。
@@ -107,10 +107,10 @@ test('CU-C-168 没跑过预检时,「内容安全预检通过」不得出现在�
   page.onPublishDisabledTap();
 
   assert.equal(precheckLine(page.data.publishCheck.passed), undefined,
-    `点灰钮这条路径没发过请求,却报通过: ${JSON.stringify(labels(page.data.publishCheck.passed))}`);
+    `点灰钮这条路径没发过请求，却报通过: ${JSON.stringify(labels(page.data.publishCheck.passed))}`);
   assert.equal(page._publishPrecheckOk, false);
   assert.ok(labels(page.data.publishCheck.advisory).some((label) => /预检还没跑/.test(label)),
-    '没跑过要说成人家听得懂的话,别只留一条空白');
+    '没跑过要说成人家听得懂的话，别只留一条空白');
 });
 
 test('CU-C-168 真跑过预检且没问题时仍算通过 —— 修这个不能把它修成永远红', () => {
@@ -174,7 +174,7 @@ test('CU-C-164 放弃玩法编辑返回时,开关跟着 templateId 落回关闭'
   });
   page.onShow();
   assert.equal(page.data.nodesForm.showTemplate, false,
-    'templateId=0 意味着没有玩法,开关绿着就是假已配置');
+    'templateId=0 意味着没有玩法，开关绿着就是假已配置');
 });
 
 test('CU-C-164 玩法在的时候开关不许被派生动到', () => {
@@ -194,10 +194,10 @@ test('CU-C-164 节点抽屉没开着时不碰表单项(返回页可能正停在�
 // ============================================================ CU-C-161 文案
 function assertNodeAddressCopy(wxml) {
   const address = wxml.match(/<text class="node-card__addr" wx:if="\{\{nodesForm\.address\}\}">\{\{nodesForm\.address\}\}<\/text>/);
-  assert.ok(address, '已选点位的地址必须显示，空态不显示伪造地址');
-  const picker = wxml.match(/<view class="node-pill"[^>]*catchtap="choosePoiForNode"[^>]*><text>\{\{nodesForm\.address \? '修改点位' : '([^']*)'\}\}<\/text>/);
-  assert.ok(picker, '空态必须有可点击的点位选择动作');
-  assert.match(picker[1], /选择点位/);
+  assert.ok(address, '已选节点的地址必须显示，空态不显示伪造地址');
+  const picker = wxml.match(/<view class="node-pill"[^>]*catchtap="choosePoiForNode"[^>]*><text>\{\{nodesForm\.address \? '修改节点' : '([^']*)'\}\}<\/text>/);
+  assert.ok(picker, '空态必须有可点击的节点选择动作');
+  assert.match(picker[1], /选择节点/);
   assert.doesNotMatch(picker[1], /自由探索/, '城市定向不能借用自由探索可稍后补文案');
   return wxml;
 }
@@ -267,8 +267,8 @@ test('negative control:摘掉 onShow 里的重派生,返回后开关又停在假
 
 test('negative control:节点地点文案退回共用一行,CU-C-161 检查器必须判红', () => {
   const broken = mutate(read(FABU_WXML),
-    "{{nodesForm.address ? '修改点位' : '选择点位'}}",
-    "{{nodesForm.address ? '修改点位' : '自由探索可稍后补'}}",
+    "{{nodesForm.address ? '修改节点' : '选择节点'}}",
+    "{{nodesForm.address ? '修改节点' : '自由探索可稍后补'}}",
     '节点地点空态');
   assert.throws(() => assertNodeAddressCopy(broken), assert.AssertionError);
 });

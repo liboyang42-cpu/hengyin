@@ -7,7 +7,9 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface TopicRouteSessionMapper {
+    String selectMemberNickname(@Param("memberId") Long memberId);
     int insertSession(TopicRouteSession session);
+    TopicRouteSession selectAccessibleByIdForUpdate(@Param("id") Long id,@Param("memberId") Long memberId);
     List<TopicRouteSession> selectHistoryPage(@Param("memberId") Long memberId,@Param("topicId") Long topicId,@Param("beforeSessionId") Long beforeSessionId,@Param("limit") int limit);
     List<String> selectEndingResults(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
     int countRuns(@Param("activityId") Long activityId,@Param("topicId") Long topicId,@Param("memberId") Long memberId);

@@ -37,7 +37,7 @@ function mount(props, stack) {
 
 test('原因画进面板:auto-back 分支用 result-sheet fail,标题与 sub 都传进去,且不渲染重试', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/error/index.wxml'), 'utf8')
-  assert.match(wxml, /<block wx:if="\{\{autoBack\}\}">[\s\S]*<cy-result-sheet [^>]*kind="fail"[^>]*title="\{\{title\}\}"[^>]*why="\{\{sub\}\}"[^>]*bind:close="onAutoBack"/)
+  assert.match(wxml, /<block wx:elif="\{\{autoBack\}\}">[\s\S]*<cy-result-sheet [^>]*kind="fail"[^>]*title="\{\{title\}\}"[^>]*why="\{\{sub\}\}"[^>]*bind:close="onAutoBack"/)
   assert.match(wxml, /<view class="cy-error [^>]*wx:else/, '重试按钮只在非 auto-back 分支')
   const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'components/cy/error/index.json'), 'utf8'))
   assert.equal(json.usingComponents['cy-result-sheet'], '/components/cy/result-sheet/index')

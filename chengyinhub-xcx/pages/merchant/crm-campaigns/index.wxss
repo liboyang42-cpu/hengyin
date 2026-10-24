@@ -1,0 +1,34 @@
+@import '../../../style/merchant-light.wxss';
+@import '../style/merchant-finance.wxss';
+
+/* BL-100:样式照 pages/merchant/verify-records(BL-76),只换前缀。 */
+page { background: var(--cy-bg-page); }
+.ccl-page { min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); display: flex; flex-direction: column; }
+.ccl-scroll { flex: 1; min-height: 0; }
+.ccl-shell { box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); }
+.ccl-row { min-height: var(--cy-btn-h); }
+.fin-card .ccl-row + .ccl-row { margin-top: var(--cy-space-5); } /* 三行条目,行距比共享的 40rpx 放宽一档,仍不加分隔线 */
+.ccl-arrow { flex-shrink: 0; color: var(--cy-text-secondary); }
+.ccl-status--success { color: var(--cy-color-status-success); }
+.ccl-status--warning { color: var(--cy-color-status-warning); }
+.ccl-status--neutral { color: var(--cy-text-secondary); }
+.ccl-sub { margin-top: var(--cy-space-1); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.ccl-more { display: block; padding: var(--cy-space-4) 0; text-align: center; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.ccl-detail { box-sizing: border-box; padding: 0 0 var(--cy-space-6); /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
+.ccl-metrics { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-bottom: var(--cy-space-3); }
+.ccl-metric { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-1); }
+.ccl-metric-num { color: var(--cy-text-title); font-size: var(--cy-font-subtitle); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ccl-metric-label { color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.ccl-note { display: block; margin-bottom: var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+
+/* pm20 */
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.ccl-row { filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * 31rpx); transition: filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-l-s, 0) * 0ms), calc(var(--pm-l-s, 0) * 0ms), 0s, 0s; }
+.ccl-row:nth-child(2) { transition-delay: calc(var(--pm-l-s, 0) * 30ms), calc(var(--pm-l-s, 0) * 30ms), 0s, 0s; }
+.ccl-row:nth-child(3) { transition-delay: calc(var(--pm-l-s, 0) * 60ms), calc(var(--pm-l-s, 0) * 60ms), 0s, 0s; }
+.ccl-row:nth-child(4) { transition-delay: calc(var(--pm-l-s, 0) * 90ms), calc(var(--pm-l-s, 0) * 90ms), 0s, 0s; }
+.ccl-row:nth-child(5) { transition-delay: calc(var(--pm-l-s, 0) * 120ms), calc(var(--pm-l-s, 0) * 120ms), 0s, 0s; }
+.ccl-row:nth-child(6) { transition-delay: calc(var(--pm-l-s, 0) * 150ms), calc(var(--pm-l-s, 0) * 150ms), 0s, 0s; }
+.ccl-row:nth-child(7) { transition-delay: calc(var(--pm-l-s, 0) * 180ms), calc(var(--pm-l-s, 0) * 180ms), 0s, 0s; }
+.ccl-row:nth-child(8) { transition-delay: calc(var(--pm-l-s, 0) * 210ms), calc(var(--pm-l-s, 0) * 210ms), 0s, 0s; }
+.ccl-row:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }

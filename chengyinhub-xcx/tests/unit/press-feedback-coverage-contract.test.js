@@ -139,7 +139,13 @@ function surveyAll(overrides = {}) {
    八层壳退场,换成队伍卡/队长审批/我的队伍三层(主题半屏保留),subpackageRoam/nearby 9 → 4。修好五格,显式调小。 */
 /* 2026-09-11 并 github/master:master 那边 10 → 11(cy-popover 的 .pop__catch),
    本分支 10 → 52,两批叠加 ⇒ 53。两边加的都是挡板,各自有反查表。 */
-const RATCHET = 49
+// 2026-10-15 BL-01 +1:漫游点位筛选半屏的防穿透挡板(已登记进 SWALLOWER_CEILING),49 → 50。
+/* 2026-10-12 49 → 50:主题编辑页故事流站点块上的「计入方式」选择器外包一层 catchtap="noop" 挡板,
+   防止点选择器同时打开站点编辑。是挡板不是缺反馈,已登记在下表并由逐文件那条反查必须是 noop。 */
+// 2026-10-20 合并 master 进 #293:上面两条 49 → 50 是不同的两处挡板(漫游点位筛选 / 故事流计入方式),合并后实测 51。
+// 2026-10-22 +1:创建引导页「玩法预览」半屏的防穿透遮罩(已登记进 SWALLOWER_CEILING),51 → 52。
+// 2026-10-22 owner 复审:没有「玩法预览」这一页,半屏连同遮罩一起撤掉,52 → 51。
+const RATCHET = 51
 /** 实测剩下的 9 处全部是 bindtap="noop" 的弹窗挡板(吞点击防穿透关闭)。
  *  挡板本身不是动作,给它按压态就是伪造可交互暗示 —— 所以它们**永远**留在这张表上,
  *  作为「已判定为不该有反馈」的登记,而不是被悄悄移出分母。 */
@@ -161,7 +167,8 @@ const SWALLOWER_CEILING = {
   //   2026-09-10 第三批:补上工具抽屉 + 设置页 + 清空确认三层壳,16 → 19。
   //   2026-09-11 第四批:roam-discover 半屏从漫游摘掉,19 → 18;
   //   同日补 f-topic/f-city 与 f-checkin 两层,18 → 20。
-  'pages/roam/index.wxml': 20,
+  //   2026-10-15 BL-01 点位筛选半屏(走 sceneCurrent 'roam-poi-filter')同一防穿透挡板,20 → 21。
+  'pages/roam/index.wxml': 21,
   // 2026-09-10 旅程手记照原型 journalScreen 重做成半屏:本体带一个防穿透挡板。
   // 2026-09-11 游玩页 12 个 .psheet + 2 个 .sheet 也换完,挡板 1 → 15。
   'pages/play/index.wxml': 15,
@@ -169,6 +176,8 @@ const SWALLOWER_CEILING = {
   // 2026-09-11 补上原型 h-place(别人打过卡的地方)半屏,8 → 9。
   // 2026-09-15 地图组队 P 方案:只剩队伍卡 / 队长审批 / 我的队伍 / 主题半屏四层,9 → 4。
   'subpackageRoam/nearby/index.wxml': 4,
+  // 2026-10-12 主题编辑页故事流站点块:计入方式选择器的防穿透挡板(点选择器不该打开站点编辑)
+  'pages/publish/fabu/index.wxml': 1,
 }
 
 /** 全屏关闭挡板:透明、覆盖全屏、handler 只做 triggerEvent('close')。
@@ -215,7 +224,7 @@ test('.cy-pressed 必须有位移，不能退回「只是变暗」', () => {
 test('减少动态效果时撤位移但保留减淡（反馈不能归零）', () => {
   const css = read('style/components.wxss')
   const guard = /\.cy-motion-reduced\s+\.cy-pressed\s*\{[^}]*\}/.exec(css)
-  assert.ok(guard, '缺少 .cy-motion-reduced 兜底')
+  assert.ok(guard, '缺少 .cy-motion-reduced 保底')
   assert.match(guard[0], /transform:\s*none/, '减少动态效果必须撤掉位移')
   assert.doesNotMatch(guard[0], /opacity:\s*1\b/, '不能把减淡也一起撤掉，那等于按下去毫无回应')
 })
@@ -271,7 +280,7 @@ test('关闭挡板豁免不能被滥用：登记在册的 handler 必须只做�
       // handler 必须存在,且函数体里除了 triggerEvent('close') 没有别的语句 ——
       // 一旦有人往这里塞真动作(跳转 / 发请求),豁免立刻失效。
       const body = new RegExp(handler + "\\s*\\(\\)\\s*\\{([^}]*)\\}").exec(js)
-      assert.ok(body, `${file} 的 ${handler} 在同名 js 里找不到,无法核对它只做关闭`)
+      assert.ok(body, `${file} 的 ${handler} 在同名 js 里找不到，无法确认它只做关闭`)
       const stmts = body[1].split(';').map((x) => x.trim()).filter(Boolean)
       assert.deepEqual(
         stmts, ["this.triggerEvent('close')"],

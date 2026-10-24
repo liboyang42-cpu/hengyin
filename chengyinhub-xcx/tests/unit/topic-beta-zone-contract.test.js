@@ -25,7 +25,8 @@ function balancedBlock(source, opener) {
 }
 
 const BETA_OPENER = '<view class="topic-beta"'
-const HERO_OVERLAY_OPENER = '<view class="cont topic-hero-meta"'
+// 2026-10-22 v13:头图上的覆盖行改为压在照片上的标题区 .hero-info(发布者 / 标题 / 介绍 / 按钮)
+const HERO_OVERLAY_OPENER = '<view class="hero-info dt__txt"'
 
 // Beta 试玩区:后端 betaFlag 是唯一真源,前端只渲染不推断。
 // 这批断言盯的是「渲染到没到」和「谁能看到转正入口」,不是像素。
@@ -58,7 +59,7 @@ test('首页推荐位:无分类的 Beta 主题也要露出 Beta 标识', () => {
   const tags = wxml.slice(wxml.indexOf('<view class="v3-reco-tags'), wxml.indexOf('<view class="v3-reco-title"'))
 
   assert.match(tags, /wx:if="\{\{item\.tags\.length \|\| item\.betaFlag==1\}\}"/,
-    '标签行的显示条件要含 betaFlag，否则无分类时 Beta 标识跟着一起消失')
+    '标签行的显示条件要含 betaFlag，否则无分类时 Beta 信息跟着一起消失')
   assert.match(tags, /v3-reco-tag--beta"\s+wx:if="\{\{item\.betaFlag==1\}\}"/, 'Beta 标签自身也要挂 betaFlag')
   assert.match(js, /betaFlag:\s*item\.betaFlag == 1 \? 1 : 0/, '推荐轮播卡要从列表项透传 betaFlag')
 })
@@ -82,9 +83,9 @@ test('Beta 样式走 info 语义 token，不硬编码色值', () => {
  * 要自成一行排在头图之后、数据条之前。层级能压住装饰图,压不住"两条信息叠一块读不了"。 */
 function assertBetaSitsBelowHero(wxml, label) {
   const overlay = balancedBlock(wxml, HERO_OVERLAY_OPENER)
-  assert.ok(overlay, `${label}:头图覆盖行 .cont 不见了,锚点要重挑`)
+  assert.ok(overlay, `${label}:头图覆盖行 .cont 不见了，锚点要重挑`)
   assert.ok(!overlay.includes(BETA_OPENER),
-    `${label}:Beta 提示条不许压在头图覆盖行里 —— 它会横穿封面里的路线图标记,两边都读不全`)
+    `${label}:Beta 提示条不许压在头图覆盖行里 —— 它会横穿封面里的路线图标记，两边都读不全`)
 
   const betaAt = wxml.indexOf(BETA_OPENER)
   const overlayEnd = wxml.indexOf(overlay) + overlay.length

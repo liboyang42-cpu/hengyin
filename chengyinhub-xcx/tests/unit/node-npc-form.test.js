@@ -44,6 +44,8 @@ function load(options = {}) {
     clearTimer: () => {},
   });
   const app = {
+    getUserID: () => '7',
+    requestSeparateConsent: () => options.consentDenied ? Promise.reject(new Error('已拒绝声音克隆')) : Promise.resolve(),
     getUploadClient: () => client,
     sendRequest(opts) {
       const payload = JSON.parse(opts.data || '{}');
@@ -86,6 +88,7 @@ function load(options = {}) {
   component.data = Object.assign(JSON.parse(JSON.stringify(state.def.data)), {
     show: true, nodeId: NODE, nodeName: '幸会咖啡',
   });
+  component._photoMember = component._voiceMember = '7';
   component.setData = function (patch, cb) {
     Object.keys(patch || {}).forEach((key) => setAtPath(this.data, key, patch[key]));
     if (cb) cb();
@@ -110,8 +113,8 @@ test('动作行最多 2 个标准按钮并排,保存固定在 footer,结果面�
   assert.ok(rows.length >= 2, '至少有「取消/保存」与声音动作两行');
   rows.forEach((row, i) => {
     const count = (row.match(/<cy-btn/g) || []).length;
-    assert.ok(count >= 1 && count <= 2, `第 ${i + 1} 行动作必须是 1–2 个小按钮,实际 ${count}`);
-    assert.ok(!/size="(?:sm|xs)"/.test(row), '表单动作使用标准按钮,不再缩成小文字按钮');
+    assert.ok(count >= 1 && count <= 2, `第 ${i + 1} 行动作必须是 1–2 个小按钮，实际 ${count}`);
+    assert.ok(!/size="(?:sm|xs)"/.test(row), '表单动作使用标准按钮，不再缩成小文字按钮');
   });
   assert.match(WXML, /<cy-sheet[^>]*footer="\{\{true\}\}"/);
   assert.match(WXML, /<view[^>]*slot="footer"[^>]*>[\s\S]*?bindtap="save">保存<\/cy-btn>[\s\S]*?<\/view>/);
@@ -211,7 +214,7 @@ test('保存:名字为空不发请求,失败落 fail 面板且不关半屏(输�
   assert.equal(h.component.data.result.why, '承接已失效或未生效，不能编辑节点内容');
   h.component.onResultClose();
   assert.equal(h.component.triggerEvents.filter((e) => e.name === 'close').length, 0,
-    '保存失败必须留在表单里重试,不能自愈关掉半屏');
+    '保存失败必须留在表单里重试，不能自愈关掉半屏');
 });
 
 test('读取失败:fail 面板自愈后自动关半屏(表单没法用)', async () => {
@@ -286,4 +289,13 @@ test('录音 8MiB / 20 秒:接受并走共享入口的 fileSizes,再发起复刻
   assert.equal(enroll.payload.nodeId, NODE);
   assert.equal(h.component.data.voiceStatus, 1);
   assert.equal(h.component.data.voiceFile, null, '提交成功后不再保留待上传文件');
+});
+
+
+test('拒绝单独声音克隆同意时保留录音且不上传或发起复刻', async () => {
+  const h = load({consentDenied:true});
+  h.component.chooseVoice(); h.chosen.success({tempFiles:[{name:'a.mp3',size:1024,path:'/tmp/a.mp3'}]});
+  await tick(); h.component.uploadVoice(); await tick(); await tick();
+  assert.equal(h.uploads.length,0); assert.equal(h.requests.some(r=>r.url.endsWith('/voice/enroll')),false);
+  assert.ok(h.component.data.voiceFile); assert.equal(h.component.data.voiceBusy,false);
 });

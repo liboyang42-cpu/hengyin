@@ -176,9 +176,10 @@ export default {
   methods: {
     getList() {
       this.loading = true
-      listPresetRoute(this.queryParams).then(response => {
+      return listPresetRoute(this.queryParams).then(response => {
         this.routeList = response.rows
         this.total = response.total
+      }).catch(() => {}).finally(() => {
         this.loading = false
       })
     },

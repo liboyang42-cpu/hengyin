@@ -39,10 +39,19 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
     private final ICmsMemberTemplateService templateService;
     private final MerchantChapterOfferMapper offerMapper;
     private final MerchantChapterApplicationMapper applicationMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.support.TopicSupplyReviewService supplyReviewService;
+
     @Autowired
     private CmsTopicChapterMapper chapterMapper;
     @Autowired
     private CmsTopicMapper topicMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.RegistrationEntitlementMapper registrationEntitlementMapper;
+    @Autowired
+    private com.chengyinhub.business.service.support.CommittedBusinessNotice businessNotice;
+    @Autowired
+    private com.chengyinhub.business.service.INotifyService notifyService;
 
     public ChapterMerchantNodeServiceImpl(ICmsTopicNodeService nodeService,
                                           ICmsTopicChapterService chapterService,
@@ -67,6 +76,7 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
         assertLocation(draft);
 
         // 与原承接申请共用 chapter -> topic 锁序；锁价后不能用旧快照继续改点位。
+        supplyReviewService.lockBeforeChapter(chapterId);
         List<Long> lockedChapters = chapterMapper.lockChaptersForCapacity(Collections.singletonList(chapterId));
         if (lockedChapters == null || lockedChapters.size() != 1) throw new IllegalStateException("章节不存在");
         CmsTopicChapter chapter = chapterService.selectCmsTopicChapterById(chapterId);
@@ -249,6 +259,7 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
         // 只有商家节点走审核;主办方自己的节点不该出现在审核台上
         if (node.getMerchantMemberId() == null) throw new IllegalStateException("该点位不是商家提交的");
 
+        supplyReviewService.lockBeforeChapter(node.getChapterId());
         if (node.getChapterId() == null || chapterMapper.lockChaptersForCapacity(
                 Collections.singletonList(node.getChapterId())).isEmpty()) {
             throw new IllegalStateException("章节不存在");
@@ -258,8 +269,23 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
         if (topic == null || topic.getMemberId() == null || !topic.getMemberId().equals(publisherMemberId)) {
             throw new IllegalStateException("只有主题发布者可以审核该点位");
         }
+        CmsTopicNode lockedNode = nodeService.selectCmsTopicNodeById(nodeId);
+        if (lockedNode == null || !java.util.Objects.equals(node.getChapterId(), lockedNode.getChapterId())
+                || !java.util.Objects.equals(node.getTopicId(), lockedNode.getTopicId())
+                || !java.util.Objects.equals(node.getMerchantMemberId(), lockedNode.getMerchantMemberId())) {
+            throw new IllegalStateException("点位归属已变化，请刷新后重试");
+        }
+        node = lockedNode;
+        if (!Integer.valueOf(AUDIT_PENDING).equals(node.getNodeAuditStatus())) {
+            throw new IllegalStateException("只能审核待审版本，已生效点位请走退出或处置流程");
+        }
         MerchantChapterApplication application = applicationMapper.selectByChapterAndMerchantForUpdate(
                 node.getChapterId(), node.getMerchantMemberId());
+        if (application == null || application.getReplacementOfOfferId() == null) {
+            if (TopicLifecycleState.commercialTermsFrozen(topic.getLifecycle()) || hasStarted(topic)) {
+                throw new IllegalStateException("主题已锁价或开始，不能改变点位审核结论");
+            }
+        }
         if (liveOfferOf(node.getChapterId(), node.getMerchantMemberId()) == null && !inPipeline(application)) {
             throw new IllegalStateException("申请已撤回或不在承接链路中，不能审核点位");
         }
@@ -281,9 +307,13 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
                 }
                 assertWithinTerms(termsOf(confirmed, chapterService.selectCmsTopicChapterById(node.getChapterId())),
                         requireOwnTemplate(node.getTemplateId(), node.getMerchantMemberId()), node);
-                if (Integer.valueOf(0).equals(confirmed.getStatus())
-                        && offerMapper.approveReplacement(confirmed.getId(), confirmed.getMerchantId()) != 1) {
-                    throw new IllegalStateException("补位供给已过期或状态变化，请重新确认");
+                if (Integer.valueOf(0).equals(confirmed.getStatus())) {
+                    if (offerMapper.approveReplacement(confirmed.getId(), confirmed.getMerchantId()) != 1) {
+                        throw new IllegalStateException("补位供给已过期或状态变化，请重新确认");
+                    }
+                    // SC-EXIT-REPLACE-LOCKED:补位供给 0→1 只发生一次,玩家通知挂在这次状态迁移上;
+                    // 重放审核走不到这里(点位已非待审 / 供给已生效),不会重复通知。口径与退出通知一致。
+                    notifyPlayersOfReplacement(topic, node.getChapterId(), confirmed.getId());
                 }
             }
         }
@@ -297,6 +327,21 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
         node.setUpdateTime(new Date());
         nodeService.updateCmsTopicNode(node);
         return node;
+    }
+
+    private void notifyPlayersOfReplacement(CmsTopic topic, Long chapterId, Long replacementOfferId) {
+        if (businessNotice == null) return;
+        businessNotice.executeAfterCommit("chapter-supply-replace-players", replacementOfferId, () -> {
+            List<Long> affected = registrationEntitlementMapper.selectAffectedPaidMembers(topic.getId(), chapterId);
+            boolean delivered = true;
+            if (affected != null) for (Long playerId : new java.util.LinkedHashSet<>(affected)) {
+                if (playerId != null && playerId > 0 && !playerId.equals(topic.getMemberId())) {
+                    delivered = notifyService.notifyOfficialBroadcast(playerId, "已购章节供给有变化",
+                            "主题「" + topic.getName() + "」有待核销章节已由新商家补位，请在出发前查看最新点位，如有疑问请联系主办方。") && delivered;
+                }
+            }
+            return delivered;
+        });
     }
 
     @Override

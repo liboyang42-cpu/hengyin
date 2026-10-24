@@ -1,0 +1,2090 @@
+[
+ {
+  "key": "a1",
+  "title": "最后的广播·三卡核对",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "classify": {
+    "enabled": true,
+    "prompt": "把六句话放进对应栏：有依据的结论、下一步、不成立",
+    "bins": [
+     {
+      "id": "conclusion",
+      "label": "有依据的结论"
+     },
+     {
+      "id": "next",
+      "label": "下一步"
+     },
+     {
+      "id": "wrong",
+      "label": "不成立"
+     }
+    ],
+    "items": [
+     {
+      "id": "c1",
+      "label": "全球寒冬始于03:17"
+     },
+     {
+      "id": "c2",
+      "label": "新播报用了旧采样：03:21引用03:10"
+     },
+     {
+      "id": "c3",
+      "label": "外区已撤空"
+     },
+     {
+      "id": "n1",
+      "label": "查授权及更早记录"
+     },
+     {
+      "id": "n2",
+      "label": "立即判定ECHO制造全球寒冬"
+     },
+     {
+      "id": "n3",
+      "label": "输入0317万能密码"
+     }
+    ],
+    "answer": {
+     "c1": "wrong",
+     "c2": "conclusion",
+     "c3": "wrong",
+     "n1": "next",
+     "n2": "wrong",
+     "n3": "wrong"
+    }
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     },
+     {
+      "key": "r",
+      "kind": "ITEM",
+      "label": "口粮",
+      "required": true
+     },
+     {
+      "key": "f",
+      "kind": "ITEM",
+      "label": "燃料",
+      "required": true
+     },
+     {
+      "key": "e",
+      "kind": "ITEM",
+      "label": "电源",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     },
+     {
+      "key": "m",
+      "kind": "ITEM",
+      "label": "医疗包",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "grantOptions": [
+     {
+      "label": "口粮包",
+      "grants": [
+       {
+        "itemId": "r",
+        "quantity": 2
+       }
+      ]
+     },
+     {
+      "label": "能源包",
+      "grants": [
+       {
+        "itemId": "f",
+        "quantity": 1
+       },
+       {
+        "itemId": "e",
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "label": "维修医疗包",
+      "grants": [
+       {
+        "itemId": "p",
+        "quantity": 1
+       },
+       {
+        "itemId": "m",
+        "quantity": 1
+       }
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "var": "$clue:EV01 原始采样",
+      "op": "SET",
+      "value": 1
+     }
+    ]
+   }
+  }
+ },
+ {
+  "key": "a2",
+  "title": "被删除的记录·时间重建",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "sort": {
+    "enabled": true,
+    "prompt": "按发生或采样时间排序，不按收到时间",
+    "items": [
+     {
+      "id": "t3",
+      "label": "A2-03 本地调度 12-17 03:17"
+     },
+     {
+      "id": "t1",
+      "label": "A2-01 外站事故通告 12-14 09:00"
+     },
+     {
+      "id": "t2",
+      "label": "A2-02 上海启动回执 12-16 18:00"
+     }
+    ],
+    "answerOrder": [
+     "t1",
+     "t2",
+     "t3"
+    ]
+   },
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "哪句结论有依据？",
+    "options": [
+     {
+      "id": "o1",
+      "label": "白日事故造成全球寒冬，本地调度发生在后",
+      "correct": true
+     },
+     {
+      "id": "o2",
+      "label": "上海一关机全球就回暖",
+      "correct": false
+     },
+     {
+      "id": "o3",
+      "label": "全球事故最后才收到，所以发生在最后",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "effects": [
+     {
+      "var": "$clue:EV02 事故与调度先后",
+      "op": "SET",
+      "value": 1
+     },
+     {
+      "var": "$clue:BP-2 缺件标记",
+      "op": "SET",
+      "value": 1
+     }
+    ]
+   }
+  }
+ },
+ {
+  "key": "a3f",
+  "title": "最后的补给站·配给站",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "classify": {
+    "enabled": true,
+    "prompt": "三张货单各是什么",
+    "bins": [
+     {
+      "id": "basis",
+      "label": "当前发放依据"
+     },
+     {
+      "id": "sealed",
+      "label": "已封存旧版"
+     },
+     {
+      "id": "none",
+      "label": "非保障数"
+     }
+    ],
+    "items": [
+     {
+      "id": "fa",
+      "label": "F-A 内区24人 版本V1 已封存"
+     },
+     {
+      "id": "fb",
+      "label": "F-B 内区24人 版本V2 当前保障"
+     },
+     {
+      "id": "fc",
+      "label": "F-C 外区转移待确认"
+     }
+    ],
+    "answer": {
+     "fa": "sealed",
+     "fb": "basis",
+     "fc": "none"
+    }
+   },
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "这能证明城里只有24人吗？",
+    "options": [
+     {
+      "id": "o1",
+      "label": "不能，保障名单不等于全部人口",
+      "correct": true
+     },
+     {
+      "id": "o2",
+      "label": "能，箱单写得很清楚",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     },
+     {
+      "key": "r",
+      "kind": "ITEM",
+      "label": "口粮",
+      "required": true
+     },
+     {
+      "key": "m",
+      "kind": "ITEM",
+      "label": "医疗包",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "grantOptions": [
+     {
+      "label": "三份口粮",
+      "grants": [
+       {
+        "itemId": "r",
+        "quantity": 3
+       }
+      ]
+     },
+     {
+      "label": "口粮和医疗包",
+      "grants": [
+       {
+        "itemId": "r",
+        "quantity": 1
+       },
+       {
+        "itemId": "m",
+        "quantity": 1
+       }
+      ]
+     }
+    ],
+    "effects": [
+     {
+      "var": "$clue:24人保障线索",
+      "op": "SET",
+      "value": 1
+     }
+    ]
+   }
+  }
+ },
+ {
+  "key": "a3w",
+  "title": "最后的补给站·维修站",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "match": {
+    "enabled": true,
+    "prompt": "把部件连到对应物资",
+    "left": [
+     {
+      "id": "l1",
+      "label": "密封燃料单元"
+     },
+     {
+      "id": "l2",
+      "label": "电源模块"
+     },
+     {
+      "id": "l3",
+      "label": "管接头"
+     }
+    ],
+    "right": [
+     {
+      "id": "rf",
+      "label": "燃料 F"
+     },
+     {
+      "id": "re",
+      "label": "电源 E"
+     },
+     {
+      "id": "rp",
+      "label": "维修件 P"
+     }
+    ],
+    "pairs": [
+     [
+      "l1",
+      "rf"
+     ],
+     [
+      "l2",
+      "re"
+     ],
+     [
+      "l3",
+      "rp"
+     ]
+    ]
+   },
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "外区14个终端仍在活动，能直接等于居民数吗？",
+    "options": [
+     {
+      "id": "o1",
+      "label": "不能，终端数还要核对",
+      "correct": true
+     },
+     {
+      "id": "o2",
+      "label": "能",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     },
+     {
+      "key": "f",
+      "kind": "ITEM",
+      "label": "燃料",
+      "required": true
+     },
+     {
+      "key": "e",
+      "kind": "ITEM",
+      "label": "电源",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "grantOptions": [
+     {
+      "label": "燃料包",
+      "grants": [
+       {
+        "itemId": "f",
+        "quantity": 2
+       },
+       {
+        "itemId": "p",
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "label": "电源维修包",
+      "grants": [
+       {
+        "itemId": "e",
+        "quantity": 1
+       },
+       {
+        "itemId": "p",
+        "quantity": 2
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ {
+  "key": "a3l",
+  "title": "最后的补给站·后勤站",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "match": {
+    "enabled": true,
+    "prompt": "把申请连到对应物资",
+    "left": [
+     {
+      "id": "l1",
+      "label": "申请甲：观察站人员需要稳定保障"
+     },
+     {
+      "id": "l2",
+      "label": "申请乙：记录器断供、接头损坏"
+     }
+    ],
+    "right": [
+     {
+      "id": "rm",
+      "label": "医疗包 M"
+     },
+     {
+      "id": "rep",
+      "label": "电源 E 与接头 P"
+     }
+    ],
+    "pairs": [
+     [
+      "l1",
+      "rm"
+     ],
+     [
+      "l2",
+      "rep"
+     ]
+    ]
+   },
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "救援耗材就是现实急救吗？",
+    "options": [
+     {
+      "id": "o1",
+      "label": "不是，只是游戏中的保障包",
+      "correct": true
+     },
+     {
+      "id": "o2",
+      "label": "是",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     },
+     {
+      "key": "e",
+      "kind": "ITEM",
+      "label": "电源",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     },
+     {
+      "key": "m",
+      "kind": "ITEM",
+      "label": "医疗包",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "grantOptions": [
+     {
+      "label": "两份医疗包",
+      "grants": [
+       {
+        "itemId": "m",
+        "quantity": 2
+       }
+      ]
+     },
+     {
+      "label": "电源和维修件",
+      "grants": [
+       {
+        "itemId": "e",
+        "quantity": 1
+       },
+       {
+        "itemId": "p",
+        "quantity": 1
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ {
+  "key": "rescue",
+  "title": "风暴中的求救·救援",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "sort": {
+    "enabled": true,
+    "prompt": "排好联络顺序",
+    "items": [
+     {
+      "id": "s2",
+      "label": "核对姓名表"
+     },
+     {
+      "id": "s3",
+      "label": "确认转送"
+     },
+     {
+      "id": "s1",
+      "label": "稳定保障"
+     }
+    ],
+    "answerOrder": [
+     "s1",
+     "s2",
+     "s3"
+    ]
+   },
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "请求单 X-04 对应的回执号",
+    "options": [
+     {
+      "id": "o1",
+      "label": "X04-17",
+      "correct": true
+     },
+     {
+      "id": "o2",
+      "label": "I-24",
+      "correct": false
+     },
+     {
+      "id": "o3",
+      "label": "X04-71",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     },
+     {
+      "key": "r",
+      "kind": "ITEM",
+      "label": "口粮",
+      "required": true
+     },
+     {
+      "key": "m",
+      "kind": "ITEM",
+      "label": "医疗包",
+      "required": true
+     }
+    ],
+    "costOptions": [
+     {
+      "label": "医疗包",
+      "statCosts": [
+       {
+        "statKey": "h",
+        "amount": 2
+       },
+       {
+        "statKey": "act",
+        "amount": 1
+       }
+      ],
+      "resourceCosts": [
+       {
+        "itemId": "m",
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "label": "两份口粮",
+      "statCosts": [
+       {
+        "statKey": "h",
+        "amount": 2
+       },
+       {
+        "statKey": "act",
+        "amount": 1
+       }
+      ],
+      "resourceCosts": [
+       {
+        "itemId": "r",
+        "quantity": 2
+       }
+      ]
+     }
+    ],
+    "scope": "WORLD",
+    "limit": 1,
+    "effects": [
+     {
+      "var": "$clue:EV03 人口原表",
+      "op": "SET",
+      "value": 1
+     },
+     {
+      "var": "$clue:EV07 许岚留言",
+      "op": "SET",
+      "value": 1
+     }
+    ],
+    "worldEffects": [
+     {
+      "var": "$clue:许遥已稳定",
+      "op": "SET",
+      "value": 1
+     }
+    ]
+   }
+  },
+  "story": [
+   {
+    "text": "梅园外步道，许遥抱着一只铁盒。",
+    "tag": "12-31 22:40",
+    "imgs": []
+   },
+   {
+    "text": "EV03 人口原表（原件）：手写更正栏记录外区 14 人姓名，盖有维护站章。",
+    "tag": "EV03 人口原表",
+    "imgs": [
+     "https://www.chengyinhub.com/favicon.ico"
+    ]
+   },
+   {
+    "text": "EV07 许岚留言：如果有人读到这段，外区还有人活着，请把名单交给能核对的人。",
+    "tag": "EV07 许岚留言",
+    "imgs": [
+     "https://www.chengyinhub.com/favicon.ico"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "recover",
+  "title": "风暴中的求救·回收",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "classify": {
+    "enabled": true,
+    "prompt": "哪些是这次回收批次里未计入维修箱的物资",
+    "bins": [
+     {
+      "id": "new",
+      "label": "未计入"
+     },
+     {
+      "id": "dup",
+      "label": "重复项"
+     }
+    ],
+    "items": [
+     {
+      "id": "x1",
+      "label": "回收批次：密封燃料单元 F1"
+     },
+     {
+      "id": "x2",
+      "label": "回收批次：管接头 P1"
+     },
+     {
+      "id": "x3",
+      "label": "已领取维修包"
+     }
+    ],
+    "answer": {
+     "x1": "new",
+     "x2": "new",
+     "x3": "dup"
+    }
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     },
+     {
+      "key": "f",
+      "kind": "ITEM",
+      "label": "燃料",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 2
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "grants": [
+     {
+      "itemId": "f",
+      "quantity": 1
+     },
+     {
+      "itemId": "p",
+      "quantity": 1
+     }
+    ]
+   }
+  }
+ },
+ {
+  "key": "hold",
+  "title": "风暴中的求救·固守",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "写下准备在A5追问的问题",
+    "options": [
+     {
+      "id": "o1",
+      "label": "谁签了E-17？",
+      "correct": false
+     },
+     {
+      "id": "o2",
+      "label": "外区居民现在在哪里？",
+      "correct": false
+     },
+     {
+      "id": "o3",
+      "label": "BP-2为什么一直没验收？",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0,
+    "judge": false
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ]
+   }
+  }
+ },
+ {
+  "key": "a5",
+  "title": "白日计划·责任重建",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "classify": {
+    "enabled": true,
+    "prompt": "把六张卡放进对应栏",
+    "bins": [
+     {
+      "id": "fact",
+      "label": "已发生事实"
+     },
+     {
+      "id": "decision",
+      "label": "谁作决定"
+     },
+     {
+      "id": "exec",
+      "label": "执行记录"
+     },
+     {
+      "id": "unproven",
+      "label": "尚未证实"
+     }
+    ],
+    "items": [
+     {
+      "id": "c1",
+      "label": "C1 12月14日外站白日联动事故"
+     },
+     {
+      "id": "c2",
+      "label": "C2 03:17本地关闭外区回热"
+     },
+     {
+      "id": "c3",
+      "label": "C3 原表24+14，V2只剩24"
+     },
+     {
+      "id": "c4",
+      "label": "C4 顾闻舟03:00签E-17"
+     },
+     {
+      "id": "c5",
+      "label": "C5 ECHO执行E-17，陈默封门"
+     },
+     {
+      "id": "c6",
+      "label": "C6 BP-2修复将终结全球寒冬"
+     }
+    ],
+    "answer": {
+     "c1": "fact",
+     "c2": "fact",
+     "c3": "fact",
+     "c4": "decision",
+     "c5": "exec",
+     "c6": "unproven"
+    }
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "worldEffects": [
+     {
+      "var": "$clue:EV01 原始采样",
+      "op": "SET",
+      "value": 1
+     },
+     {
+      "var": "$clue:EV02 事故与调度先后",
+      "op": "SET",
+      "value": 1
+     },
+     {
+      "var": "$clue:EV03 人口原表",
+      "op": "SET",
+      "value": 1
+     },
+     {
+      "var": "$clue:EV04 维护规程",
+      "op": "SET",
+      "value": 1
+     },
+     {
+      "var": "$clue:EV05 授权链",
+      "op": "SET",
+      "value": 1
+     }
+    ]
+   }
+  },
+  "story": [
+   {
+    "text": "证据墙前，三队把各自带回的纸页摊开。",
+    "tag": "01-02 证据重建",
+    "imgs": []
+   },
+   {
+    "text": "EV01 原始采样：03:17 前后三组温度读数与模型输入一致，外区回热曲线在同一时刻被截断。",
+    "tag": "EV01 原始采样",
+    "imgs": []
+   },
+   {
+    "text": "EV02 事故与调度先后：12-17 03:00 E-17 优先令签发，03:17 ECHO 按令执行内区优先。",
+    "tag": "EV02 事故与调度先后",
+    "imgs": []
+   },
+   {
+    "text": "EV03 人口原表（镜像）：内区 24 人，外区 14 人；简表删去外区一栏。",
+    "tag": "EV03 人口原表",
+    "imgs": []
+   },
+   {
+    "text": "EV04 维护规程：一、隔离抽热支路 ISO；二、接回热旁路 BYP；三、释放启动供能 START。顺序不可颠倒，旁路接通前必须完成负载校验。",
+    "tag": "EV04 维护规程",
+    "imgs": [
+     "https://www.chengyinhub.com/favicon.ico",
+     "https://www.chengyinhub.com/favicon.ico"
+    ]
+   },
+   {
+    "text": "EV05 授权链：顾闻舟签 E-17 优先令；陈执行封门；周启明维护节点；ECHO 仅按名单调度。",
+    "tag": "EV05 授权链",
+    "imgs": [
+     "https://www.chengyinhub.com/favicon.ico"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "heat",
+  "title": "公共供暖",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "确认各队已在营地安全汇合",
+    "options": [
+     {
+      "id": "o1",
+      "label": "已汇合，启动供暖",
+      "correct": false
+     },
+     {
+      "id": "o2",
+      "label": "工作人员已确认汇合",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0,
+    "judge": false
+   },
+   "outcomeRules": {
+    "version": 1,
+    "pass": {
+     "reply": "供暖启动",
+     "effects": [
+      {
+       "var": "h",
+       "op": "INC",
+       "value": 3
+      }
+     ]
+    },
+    "fail": {
+     "reply": "未完成"
+    }
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "f",
+      "kind": "ITEM",
+      "label": "燃料",
+      "required": true
+     }
+    ],
+    "resourceCosts": [
+     {
+      "itemId": "f",
+      "quantity": 1
+     }
+    ],
+    "scope": "WORLD",
+    "targetScope": "WORLD",
+    "limit": 1,
+    "requireArrival": true
+   }
+  }
+ },
+ {
+  "key": "rest",
+  "title": "战术休整",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "确认在安全停留点休整",
+    "options": [
+     {
+      "id": "o1",
+      "label": "在营地",
+      "correct": false
+     },
+     {
+      "id": "o2",
+      "label": "在已确认的安全停留点",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0,
+    "judge": false
+   },
+   "outcomeRules": {
+    "version": 1,
+    "pass": {
+     "reply": "休整完成",
+     "effects": [
+      {
+       "var": "h",
+       "op": "INC",
+       "value": 2
+      }
+     ]
+    },
+    "fail": {
+     "reply": "未完成"
+    }
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     }
+    ],
+    "limit": 2,
+    "scope": "OWNER"
+   }
+  }
+ },
+ {
+  "key": "aid",
+  "title": "应急救助",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "确认需要应急救助",
+    "options": [
+     {
+      "id": "o1",
+      "label": "保温储备不足以继续",
+      "correct": false
+     },
+     {
+      "id": "o2",
+      "label": "工作人员已确认",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0,
+    "judge": false
+   },
+   "outcomeRules": {
+    "version": 1,
+    "pass": {
+     "reply": "已获救助",
+     "effects": [
+      {
+       "var": "h",
+       "op": "FLOOR",
+       "value": 4
+      }
+     ]
+    },
+    "fail": {
+     "reply": "未完成"
+    }
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     }
+    ],
+    "limit": 1,
+    "scope": "OWNER"
+   }
+  }
+ },
+ {
+  "key": "a6p",
+  "title": "第七避难所·整备",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "旁路方案现在还缺什么才能执行？",
+    "options": [
+     {
+      "id": "o1",
+      "label": "材料与负载校验",
+      "correct": true
+     },
+     {
+      "id": "o2",
+      "label": "只要大家同意",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     },
+     {
+      "key": "f",
+      "kind": "ITEM",
+      "label": "燃料",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "grantOptions": [
+     {
+      "label": "回收维修件",
+      "grants": [
+       {
+        "itemId": "p",
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "label": "整备启动燃料",
+      "grants": [
+       {
+        "itemId": "f",
+        "quantity": 1
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ {
+  "key": "a6e",
+  "title": "第七避难所·电子校验",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "match": {
+    "enabled": true,
+    "prompt": "按完整原表重新验算",
+    "left": [
+     {
+      "id": "pop",
+      "label": "有效人口"
+     },
+     {
+      "id": "used",
+      "label": "占用"
+     },
+     {
+      "id": "left",
+      "label": "剩余容量"
+     }
+    ],
+    "right": [
+     {
+      "id": "v38p",
+      "label": "38 人"
+     },
+     {
+      "id": "v38u",
+      "label": "38 单位"
+     },
+     {
+      "id": "v2",
+      "label": "2 单位"
+     }
+    ],
+    "pairs": [
+     [
+      "pop",
+      "v38p"
+     ],
+     [
+      "used",
+      "v38u"
+     ],
+     [
+      "left",
+      "v2"
+     ]
+    ]
+   },
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "勾选已确认的前提",
+    "options": [
+     {
+      "id": "o1",
+      "label": "使用完整原表",
+      "correct": true
+     },
+     {
+      "id": "o2",
+      "label": "按EV04隔离顺序",
+      "correct": true
+     },
+     {
+      "id": "o3",
+      "label": "终局所需材料已知",
+      "correct": true
+     },
+     {
+      "id": "o4",
+      "label": "只按内区24人计算",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0,
+    "multi": true
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     },
+     {
+      "key": "e",
+      "kind": "ITEM",
+      "label": "电源",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "resourceCosts": [
+     {
+      "itemId": "e",
+      "quantity": 1
+     }
+    ],
+    "scope": "WORLD",
+    "limit": 1,
+    "worldEffects": [
+     {
+      "var": "$clue:EV06 负载校验",
+      "op": "SET",
+      "value": 1
+     }
+    ],
+    "publicOnce": true
+   }
+  }
+ },
+ {
+  "key": "a6m",
+  "title": "第七避难所·人工复核",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "match": {
+    "enabled": true,
+    "prompt": "按完整原表重新验算",
+    "left": [
+     {
+      "id": "pop",
+      "label": "有效人口"
+     },
+     {
+      "id": "used",
+      "label": "占用"
+     },
+     {
+      "id": "left",
+      "label": "剩余容量"
+     }
+    ],
+    "right": [
+     {
+      "id": "v38p",
+      "label": "38 人"
+     },
+     {
+      "id": "v38u",
+      "label": "38 单位"
+     },
+     {
+      "id": "v2",
+      "label": "2 单位"
+     }
+    ],
+    "pairs": [
+     [
+      "pop",
+      "v38p"
+     ],
+     [
+      "used",
+      "v38u"
+     ],
+     [
+      "left",
+      "v2"
+     ]
+    ]
+   },
+   "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "勾选已确认的前提",
+    "options": [
+     {
+      "id": "o1",
+      "label": "使用完整原表",
+      "correct": true
+     },
+     {
+      "id": "o2",
+      "label": "按EV04隔离顺序",
+      "correct": true
+     },
+     {
+      "id": "o3",
+      "label": "终局所需材料已知",
+      "correct": true
+     },
+     {
+      "id": "o4",
+      "label": "只按内区24人计算",
+      "correct": false
+     }
+    ],
+    "maxTries": 0,
+    "xp": 0,
+    "multi": true
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "h",
+      "kind": "VALUE",
+      "label": "保温储备",
+      "required": true
+     },
+     {
+      "key": "act",
+      "kind": "VALUE",
+      "label": "外勤行动",
+      "required": true
+     }
+    ],
+    "statCosts": [
+     {
+      "statKey": "h",
+      "amount": 1
+     },
+     {
+      "statKey": "act",
+      "amount": 1
+     }
+    ],
+    "scope": "WORLD",
+    "limit": 1,
+    "worldEffects": [
+     {
+      "var": "$clue:EV06 负载校验",
+      "op": "SET",
+      "value": 1
+     }
+    ],
+    "publicOnce": true
+   }
+  }
+ },
+ {
+  "key": "end1",
+  "title": "END01 最后的撤离者",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "match": {
+    "enabled": true,
+    "prompt": "完成撤离路线与名单校对",
+    "left": [
+     {
+      "id": "route",
+      "label": "撤离路线"
+     },
+     {
+      "id": "pop",
+      "label": "名单总数"
+     },
+     {
+      "id": "comm",
+      "label": "通讯单"
+     }
+    ],
+    "right": [
+     {
+      "id": "x",
+      "label": "X 全程可达"
+     },
+     {
+      "id": "n38",
+      "label": "38 人"
+     },
+     {
+      "id": "ok",
+      "label": "已确认"
+     }
+    ],
+    "pairs": [
+     [
+      "route",
+      "x"
+     ],
+     [
+      "pop",
+      "n38"
+     ],
+     [
+      "comm",
+      "ok"
+     ]
+    ]
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "f",
+      "kind": "ITEM",
+      "label": "燃料",
+      "required": true
+     },
+     {
+      "key": "e",
+      "kind": "ITEM",
+      "label": "电源",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     }
+    ]
+   },
+   "interactionTools": {
+    "plans": [
+     {
+      "planKey": "go",
+      "title": "END01 最后的撤离者",
+      "summary": "撤离联络已确认，人员表与案卷已交接。你们把有限材料用于离开，上海节点的问题没有因此消失。",
+      "materialCost": [
+       {
+        "itemId": "f",
+        "quantity": 5
+       },
+       {
+        "itemId": "e",
+        "quantity": 2
+       },
+       {
+        "itemId": "p",
+        "quantity": 2
+       }
+      ]
+     }
+    ],
+    "fallback": {
+     "title": "END05 沉默的城市",
+     "summary": "维护窗口结束。没有一个得到接受并执行完成的方案。本节点停止联络。最后上传的不是成功通报，而是你们已经核验的记录，以及那些仍未被兑现的决定。"
+    }
+   }
+  }
+ },
+ {
+  "key": "end2",
+  "title": "END02 地下方舟",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "classify": {
+    "enabled": true,
+    "prompt": "把保障需求配到物资，并写入同一张短期保障表",
+    "bins": [
+     {
+      "id": "fp",
+      "label": "燃料与维修件"
+     },
+     {
+      "id": "m",
+      "label": "医疗包"
+     },
+     {
+      "id": "table",
+      "label": "短期保障表"
+     }
+    ],
+    "items": [
+     {
+      "id": "heat",
+      "label": "供暖保障"
+     },
+     {
+      "id": "med",
+      "label": "医疗保障"
+     },
+     {
+      "id": "inner",
+      "label": "内区24人"
+     },
+     {
+      "id": "outer",
+      "label": "外区14人"
+     }
+    ],
+    "answer": {
+     "heat": "fp",
+     "med": "m",
+     "inner": "table",
+     "outer": "table"
+    }
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "f",
+      "kind": "ITEM",
+      "label": "燃料",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     },
+     {
+      "key": "m",
+      "kind": "ITEM",
+      "label": "医疗包",
+      "required": true
+     }
+    ]
+   },
+   "interactionTools": {
+    "plans": [
+     {
+      "planKey": "go",
+      "title": "END02 地下方舟",
+      "summary": "短期保障已建立，内区与外区被写回同一张表。今天的供暖恢复了，明天的配给和维护仍需要新的承诺。",
+      "materialCost": [
+       {
+        "itemId": "f",
+        "quantity": 4
+       },
+       {
+        "itemId": "p",
+        "quantity": 4
+       },
+       {
+        "itemId": "m",
+        "quantity": 2
+       }
+      ]
+     }
+    ],
+    "fallback": {
+     "title": "END05 沉默的城市",
+     "summary": "维护窗口结束。没有一个得到接受并执行完成的方案。本节点停止联络。最后上传的不是成功通报，而是你们已经核验的记录，以及那些仍未被兑现的决定。"
+    }
+   }
+  }
+ },
+ {
+  "key": "end3",
+  "title": "END03 关闭太阳",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "sort": {
+    "enabled": true,
+    "prompt": "按EV04排列安全停机顺序",
+    "items": [
+     {
+      "id": "s3",
+      "label": "停止持续供能"
+     },
+     {
+      "id": "s1",
+      "label": "安排居民转移"
+     },
+     {
+      "id": "s4",
+      "label": "确认离线"
+     },
+     {
+      "id": "s2",
+      "label": "隔离额外抽热"
+     }
+    ],
+    "answerOrder": [
+     "s1",
+     "s2",
+     "s3",
+     "s4"
+    ]
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "e",
+      "kind": "ITEM",
+      "label": "电源",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     }
+    ]
+   },
+   "interactionTools": {
+    "plans": [
+     {
+      "planKey": "go",
+      "title": "END03 关闭太阳",
+      "summary": "额外抽热已停止，本节点持续供能下线。你们终止了一种伤害，也接受了失去现有供热的代价。全球寒冬仍在。",
+      "materialCost": [
+       {
+        "itemId": "e",
+        "quantity": 2
+       },
+       {
+        "itemId": "p",
+        "quantity": 2
+       }
+      ],
+      "when": [
+       {
+        "var": "$clue:EV04 维护规程",
+        "op": "EQ",
+        "value": 1
+       }
+      ]
+     }
+    ],
+    "fallback": {
+     "title": "END05 沉默的城市",
+     "summary": "维护窗口结束。没有一个得到接受并执行完成的方案。本节点停止联络。最后上传的不是成功通报，而是你们已经核验的记录，以及那些仍未被兑现的决定。"
+    }
+   }
+  }
+ },
+ {
+  "key": "end4",
+  "title": "END04 第二次日出",
+  "validationMethod": 4,
+  "config": {
+   "schemaVersion": 1,
+   "sort": {
+    "enabled": true,
+    "prompt": "B隔离台：排出旁路操作顺序",
+    "items": [
+     {
+      "id": "start",
+      "label": "START 释放启动供能"
+     },
+     {
+      "id": "iso",
+      "label": "ISO 隔离抽热支路"
+     },
+     {
+      "id": "byp",
+      "label": "BYP 接通回热旁路"
+     }
+    ],
+    "answerOrder": [
+     "iso",
+     "byp",
+     "start"
+    ]
+   },
+   "match": {
+    "enabled": true,
+    "prompt": "A观察台与C校验台读回",
+    "left": [
+     {
+      "id": "pop",
+      "label": "完整保障人口"
+     },
+     {
+      "id": "load",
+      "label": "负载校验"
+     },
+     {
+      "id": "read",
+      "label": "三项读回"
+     }
+    ],
+    "right": [
+     {
+      "id": "p38",
+      "label": "POP38"
+     },
+     {
+      "id": "ok",
+      "label": "LOAD_OK"
+     },
+     {
+      "id": "done",
+      "label": "人口/隔离/旁路已读回"
+     }
+    ],
+    "pairs": [
+     [
+      "pop",
+      "p38"
+     ],
+     [
+      "load",
+      "ok"
+     ],
+     [
+      "read",
+      "done"
+     ]
+    ]
+   },
+   "interactionRules": {
+    "resourceSlots": [
+     {
+      "key": "f",
+      "kind": "ITEM",
+      "label": "燃料",
+      "required": true
+     },
+     {
+      "key": "e",
+      "kind": "ITEM",
+      "label": "电源",
+      "required": true
+     },
+     {
+      "key": "p",
+      "kind": "ITEM",
+      "label": "维修件",
+      "required": true
+     },
+     {
+      "key": "m",
+      "kind": "ITEM",
+      "label": "医疗包",
+      "required": true
+     }
+    ]
+   },
+   "interactionTools": {
+    "plans": [
+     {
+      "planKey": "go",
+      "title": "END04 第二次日出",
+      "summary": "人口输入38，隔离完成，旁路接通。外区回热正在恢复。所谓第二次日出，是你们让被漏掉的人重新进入了共同的未来。",
+      "materialCost": [
+       {
+        "itemId": "f",
+        "quantity": 6
+       },
+       {
+        "itemId": "e",
+        "quantity": 3
+       },
+       {
+        "itemId": "p",
+        "quantity": 6
+       },
+       {
+        "itemId": "m",
+        "quantity": 2
+       }
+      ],
+      "when": [
+       {
+        "var": "$clue:EV01 原始采样",
+        "op": "EQ",
+        "value": 1
+       },
+       {
+        "var": "$clue:EV02 事故与调度先后",
+        "op": "EQ",
+        "value": 1
+       },
+       {
+        "var": "$clue:EV03 人口原表",
+        "op": "EQ",
+        "value": 1
+       },
+       {
+        "var": "$clue:EV04 维护规程",
+        "op": "EQ",
+        "value": 1
+       },
+       {
+        "var": "$clue:EV05 授权链",
+        "op": "EQ",
+        "value": 1
+       },
+       {
+        "var": "$clue:EV06 负载校验",
+        "op": "EQ",
+        "value": 1
+       }
+      ]
+     }
+    ],
+    "fallback": {
+     "title": "END05 沉默的城市",
+     "summary": "维护窗口结束。没有一个得到接受并执行完成的方案。本节点停止联络。最后上传的不是成功通报，而是你们已经核验的记录，以及那些仍未被兑现的决定。"
+    }
+   }
+  }
+ }
+]

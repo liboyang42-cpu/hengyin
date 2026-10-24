@@ -9,9 +9,6 @@
   <cy-nav-bar title="消息" custom-back bind:back="onBack" />
   <view class="message-tools">
     <cy-tabs class="tabs-row" tabs="{{tabs}}" active="{{activeTab}}" variant="fill" wide="{{true}}" bind:change="onTabChange" />
-    <view class="hd-icon-btn {{hasUnread ? '' : 'is-disabled'}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="全部已读" aria-disabled="{{!hasUnread}}" bindtap="onReadAll">
-      <cy-icon name="check" size="40" />
-    </view>
   </view>
 
 
@@ -20,29 +17,48 @@
        所以它放在消息里:商家是在这儿被提醒的,不该等到自己想起来去翻点位。
        没有待答的轮次就整行不出 —— 一个常驻的「0 条」入口等于每天骗一次点击。 -->
   <cy-cell wx:if="{{canSettlePredict}}" class="pool-entry" title="竞猜待答"
-           description="玩家押完了，等你公布答案" bind:tap="goPredictInbox" />
+           description="待公布答案" bind:tap="goPredictInbox" />
 
   <view wx:if="{{refreshing}}" class="refresh-status" aria-role="status" aria-live="polite">
     <cy-icon name="clock" size="28" /><text>正在刷新消息</text>
+  </view>
+
+  <!-- 合作邀请:收到的在收件箱、我发出的在发件箱,点进邀约详情处理。与会话是两套数据源,读不到只在这里局部报错。 -->
+  <cy-inline-error wx:if="{{inviteError}}" kind="data" title="{{inviteError}}" action="重试" bind:action="loadInvites" />
+  <view wx:for="{{activeTab === 'in' ? invitesIn : invitesOut}}" wx:key="rowKey" class="invite-row cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms"
+        data-id="{{item.inviteId}}" data-box="{{activeTab === 'in' ? 'received' : 'sent'}}" bindtap="openInvite"
+        aria-role="button" aria-label="合作邀请：{{item.partnerName || item.topicText}}，{{item.statusText}}"
+        hover-class="cy-pressed-bg" hover-stay-time="80">
+    <view class="sys-avatar"><cy-icon name="connect" size="44" /></view>
+    <view class="conv-body">
+      <view class="conv-top">
+        <text class="conv-name">{{item.partnerName || item.topicText}}</text>
+        <text class="invite-status is-{{item.badgeTone}}">{{item.statusText}}</text>
+        <text class="conv-time">{{item.timeText}}</text>
+      </view>
+      <text class="conv-preview">{{activeTab === 'in' ? '邀请你合作' : '你发出的邀请'}}{{item.topicText ? ' · ' + item.topicText : ''}}</text>
+    </view>
   </view>
 
   <!-- 骨架 -->
   <cy-skeleton wx:if="{{loading}}" type="list" count="{{6}}" />
 
   <!-- 错误 -->
-  <cy-error class="cy-fade-in" wx:elif="{{error}}" title="加载失败" sub="{{errorMsg || '网络好像出了点问题'}}" retry="重试" bind:retry="retryConversations" />
+  <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
+  <cy-empty class="cy-fade-in" wx:elif="{{error && loginRequired}}" kind="no-permission" fill size="lg"
+            title="登录后查看消息" cta="登录" bind:cta="loginConversations" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{error}}" title="加载失败" sub="{{errorMsg}}" retry="重试" bind:retry="retryConversations" />
 
   <!-- 空态 -->
-  <cy-empty wx:elif="{{loaded && viewList.length === 0}}"
+  <cy-empty wx:elif="{{loaded && viewList.length === 0 && !(activeTab === 'in' ? invitesIn.length : invitesOut.length)}}"
             fill
             size="lg"
-            title="{{activeTab === 'dm' ? '还没有私信' : '还没有系统通知'}}"
-            sub="{{activeTab === 'dm' ? '去广场认识几个同路的人，聊起来就在这儿了' : '报名、审核这些通知会出现在这里'}}"
-            cta="{{activeTab === 'dm' ? '去广场找人' : ''}}"
+            title="{{activeTab === 'in' ? '还没有消息' : '还没有发出的邀请'}}"
+            cta="{{activeTab === 'in' && communityPostRead ? '去广场找人' : ''}}"
             bindcta="onEmptyCta" />
 
   <!-- 列表 -->
-  <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}">
+  <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <view class="conv-wrap {{item._open ? 'is-open' : ''}}" wx:for="{{viewList}}" wx:key="conversationId">
       <!-- 左滑露出的操作 -->
       <view class="conv-actions" style="opacity: {{item.offset ? 1 : 0}};">

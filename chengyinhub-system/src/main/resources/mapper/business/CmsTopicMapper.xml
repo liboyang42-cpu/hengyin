@@ -596,7 +596,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- 公开查询不复用调用方可写的 status/userStatus/delFlag 条件；三道 Gate 写死在 SQL。 -->
     <!-- 漫游·附近的局 只读叠加:已发布主题(城市定向 / 自由探索)按第一个有坐标的节点落点;口径与 selectPublicCmsTopicList 一致 -->
+    <!-- O-08:仅俱乐部成员可见的主题不能把首个节点坐标落到非成员的地图上(与 selectPublicCmsTopicList 共用 clubMemberOnlyGate)。 -->
     <select id="selectNearbyTopics" resultType="java.util.HashMap">
+        <bind name="viewerMemberId" value="viewerId"/>
         select * from (
             select t.id as id, t.name as name, t.img_url as picUrl, t.product_type as productType,
                    (select count(1) from cms_registration r
@@ -625,12 +627,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             where t.status = 1 and t.user_status = 1 and t.del_flag = 0 and t.is_template = 0
               and (t.club_id is null or t.club_id = 0 or exists (
                   select 1 from club active_club where active_club.id = t.club_id and active_club.del_flag = 0))
+              and exists (select 1 from cms_topic cms_topic
+                  where cms_topic.id = t.id and <include refid="clubMemberOnlyGate"/>)
               and n.lat between #{minLat} and #{maxLat}
               and n.lng between #{minLng} and #{maxLng}
         ) q
         where distance &lt;= #{radius}
         order by distance asc
         limit #{limit}
+    </select>
+
+    <!-- O-08:只拿得到 topicId 的读路径(活动详情、地图附近场次)复用同一道仅成员可见闸,返回对 viewer 隐藏的主题。
+         放在本 namespace,调用方不必跨文件 include(单独加载 CmsActivityMapper/RoamHangoutMapper 的测试不受影响)。 -->
+    <select id="selectClubMemberOnlyHiddenTopicIds" resultType="java.lang.Long">
+        select cms_topic.id from cms_topic
+        where cms_topic.id in
+          <foreach collection="topicIds" item="tid" open="(" separator="," close=")">#{tid}</foreach>
+          and not <include refid="clubMemberOnlyGate"/>
     </select>
 
     <!--
@@ -718,8 +731,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         limit #{limit}
     </select>
 
-    <select id="selectPublicCmsTopicList" parameterType="CmsTopic" resultMap="CmsTopicResult">
-        <include refid="selectCmsTopicVo"/>
+    <sql id="publicTopicListWhere">
         <where>
             status = 1 and user_status = 1 and del_flag = 0
             <!-- 模板是创作者侧素材,有自己的货架(/api/template/*)。玩家侧四个消费方
@@ -757,6 +769,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isLike == 1"> and id in (select data_id from cms_topic_like where member_id=#{isLikeMemberId})</if>
             and <include refid="clubMemberOnlyGate"/>
         </where>
+    </sql>
+
+    <!-- PageHelper 优先使用显式 COUNT，避免反复解析公开列表复杂 SQL；两者共用同一可见性谓词。 -->
+    <select id="selectPublicCmsTopicList_COUNT" parameterType="CmsTopic" resultType="Long">
+        select count(*) from cms_topic
+        <include refid="publicTopicListWhere"/>
+    </select>
+
+    <select id="selectPublicCmsTopicList" parameterType="CmsTopic" resultMap="CmsTopicResult">
+        <include refid="selectCmsTopicVo"/>
+        <include refid="publicTopicListWhere"/>
         <!-- club_pinned 只在俱乐部自己的列表里有意义:不限定 clubId 时按它排,
              等于让某个俱乐部的置顶浮到全站推荐流最前面。 -->
         order by <if test="clubId != null">coalesce(club_pinned, 0) desc, </if>id desc
@@ -769,6 +792,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectRoamReferralEnabledById" parameterType="Long" resultType="Integer">
         select roam_referral_enabled from cms_topic where id = #{id}
+    </select>
+
+    <select id="selectProductTypeById" parameterType="Long" resultType="Integer">
+        select product_type from cms_topic where id = #{id}
     </select>
 
     <select id="selectCmsTopicLifecycleById" parameterType="Long" resultMap="CmsTopicResult">
@@ -1083,8 +1110,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and coalesce(user_status, 0) = #{expected} and del_flag = 0
         <if test="target == 1">
             and status = 1 and is_draft = 0
+            <!-- AUDIT-G2-1:内容安全下架留置(check_status=2)中不得自助上架,须人工复核 -->
+            and coalesce(check_status, 0) &lt;&gt; 2
         </if>
     </update>
+
+    <update id="updateReviewFlag">
+        update cms_topic set review_flag = #{reviewFlag} where id = #{id}
+    </update>
+
+    <select id="selectReviewFlag" resultType="Integer">
+        select review_flag from cms_topic where id = #{id}
+    </select>
 
     <update id="transitionLifecycle">
         update cms_topic
@@ -1126,18 +1163,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <if test="excludeId != null and excludeId > 0"> and id != #{excludeId} </if>
     </select>
 
+    <!-- 2026-10-22 owner 裁决:货架展示所有已发布模板,不再要求 cms_topic_template_meta=VERIFIED
+         (没有任何代码写该行,导致货架恒空)。VERIFIED 只用于 recommendedOnly=1 的推荐口径(service 层过滤)。 -->
     <sql id="publicTopicTemplateEligibility">
         del_flag = 0 and is_template = 1 and status = 1 and user_status = 1
-          and exists (
-              select 1
-                from cms_topic_template_meta tm
-               where tm.topic_id = cms_topic.id
-                 and tm.del_flag = 0
-                 and tm.template_status = 'VERIFIED'
-          )
     </sql>
 
-    <!-- T7 公共模板库:只有已审核、在架、已验证模板可见。 -->
+    <!-- T7 公共模板库:已审核、在架的模板均可见(含未验证)。 -->
     <select id="selectTopicTemplateList" resultMap="CmsTopicResult">
         <include refid="selectCmsTopicVo"/>
         where <include refid="publicTopicTemplateEligibility"/>
@@ -1150,7 +1182,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and <include refid="publicTopicTemplateEligibility"/>
     </select>
 
-    <!-- T7 /info /use 门禁与公共货架同口径：必须已审核、是模板且成熟度 VERIFIED。 -->
+    <!-- T7 /info /use 门禁与公共货架同口径：必须已审核、在架且是模板(不再要求 VERIFIED)。 -->
     <select id="selectTopicIsTemplate" resultType="Integer">
         select is_template
           from cms_topic
@@ -1250,6 +1282,26 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          selectCmsTopicVo:该列由 R9-STORY 落地,加进公共列表会让「列还没落库」波及全部主题查询。 -->
     <select id="selectJourneyStoryJsonById" parameterType="Long" resultType="String">
         select journey_story_json from cms_topic where id = #{id}
+    </select>
+
+
+    <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
+    <update id="reopenAuditDecision">
+        update cms_topic set status = 0, check_status = 0, user_status = 0
+        where id = #{id} and del_flag = 0
+          and status = #{fromStatus} and check_status = #{fromCheckStatus}
+          <if test="configVersion != null">and config_version = #{configVersion}</if>
+    </update>
+
+    <!-- AUDIT-INT-7:内容安全留置标记,独立语句,不进通用 resultMap/动态更新 -->
+    <update id="markContentSafetyHold">
+        update cms_topic set content_safety_hold = 1 where id = #{id}
+    </update>
+    <update id="clearContentSafetyHold">
+        update cms_topic set content_safety_hold = 0 where id = #{id} and content_safety_hold = 1
+    </update>
+    <select id="selectContentSafetyHold" resultType="java.lang.Integer">
+        select content_safety_hold from cms_topic where id = #{id}
     </select>
 
 </mapper>

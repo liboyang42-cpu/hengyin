@@ -43,14 +43,14 @@ Component({
         success: (res) => {
           if (token !== this._requestToken) return
           const raw = res && res.data && res.data.activityList
-          if (!ok(res) || !Array.isArray(raw)) { this.setData({ state: 'error', options: [], errorText: this.friendly(res && res.msg, '场次暂时没能加载，请稍后重试') }); return }
+          if (!ok(res) || !Array.isArray(raw)) { this.setData({ state: 'error', options: [], errorText: this.friendly(res && res.msg, '场次加载失败，请重试') }); return }
           if (raw.length === 0) { this.setData({ state: 'empty', options: [], errorText: '' }); return }
           const options = listGroupCodeActivities(raw)
           if (!options.length) { this.setData({ state: 'error', options: [], errorText: this.friendly(res && res.msg, '场次信息不完整，请稍后重试') }); return }
           if (options.length === 1) { this.setData({ currentActivityId: String(options[0].id), title: options[0].name }, () => this.issue()); return }
           this.setData({ state: 'selecting', options, pickerTitle: '选择场次', pickerSubtitle: '选择本次带队场次' })
         },
-        successStatusAbnormal: (res) => { if (token === this._requestToken) this.setData({ state: 'error', errorText: this.friendly(res && res.msg, '场次暂时没能加载，请稍后重试') }) },
+        successStatusAbnormal: (res) => { if (token === this._requestToken) this.setData({ state: 'error', errorText: this.friendly(res && res.msg, '场次加载失败，请重试') }) },
         fail: () => { if (token === this._requestToken) this.setData({ state: 'error', errorText: '网络异常，请稍后重试' }) },
       })
     },

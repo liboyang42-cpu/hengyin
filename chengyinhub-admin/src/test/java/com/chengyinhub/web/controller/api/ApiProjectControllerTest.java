@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -88,15 +89,6 @@ class ApiProjectControllerTest {
         when(coopInviteService.selectCoopInviteList(any(com.chengyinhub.business.domain.CoopInvite.class)))
                 .thenReturn(Collections.emptyList());
         ReflectionTestUtils.setField(controller, "coopInviteService", coopInviteService);
-        /* 承办活动卡底行的「待核销 N」(稿 260:277)要查一次报名表。
-           本用例不关心这个数,空返回即可 —— 但这个依赖必须注入:
-           漏了它 mapActivity 会 NPE,七条用例一起变成 Error 而不是 Failure,
-           看上去像「测试环境挂了」,其实是少接了一个 service。 */
-        com.chengyinhub.business.service.ICmsRegistrationService cmsRegistrationService =
-                mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
-        when(cmsRegistrationService.selectCmsRegistrationList(any(com.chengyinhub.business.domain.CmsRegistration.class)))
-                .thenReturn(Collections.emptyList());
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", cmsRegistrationService);
 
         // 主题:个人(clubId=null) + 俱乐部(clubId=7)
         CmsTopic personalTopic = topic(1L, null, "simple");
@@ -299,6 +291,76 @@ class ApiProjectControllerTest {
     }
 
     @Test
+    void projectMetricsQueryBudgetDoesNotGrowWithProjectCount() {
+        com.chengyinhub.business.service.ICoopInviteService invites =
+                (com.chengyinhub.business.service.ICoopInviteService) ReflectionTestUtils.getField(controller, "coopInviteService");
+        for (int projectCount : new int[]{1, 100}) {
+            org.mockito.Mockito.clearInvocations(invites, cmsActivityService);
+            List<CmsTopic> topics = new ArrayList<>();
+            List<CmsActivity> activities = new ArrayList<>();
+            for (long id = 1; id <= projectCount; id++) {
+                topics.add(topic(id, null, "pro"));
+                activities.add(activity(1000 + id, null, SELF_TOPIC_ID));
+            }
+            when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class))).thenReturn(topics);
+            when(cmsActivityService.selectCmsActivityList(any(CmsActivity.class))).thenReturn(activities);
+            Map<String, Object> data = (Map<String, Object>) controller.my(null, null, null, 1, 200, null).get("data");
+            assertEquals(projectCount * 2, ((List<?>) data.get("rows")).size());
+            long metricReads = org.mockito.Mockito.mockingDetails(invites).getInvocations().stream()
+                    .filter(i -> i.getMethod().getName().equals("selectCoopInviteList")).count()
+                    + org.mockito.Mockito.mockingDetails(cmsActivityService).getInvocations().stream()
+                    .filter(i -> i.getMethod().getName().startsWith("countSignedUpRegistrations")
+                            || i.getMethod().getName().startsWith("countPendingVerification")).count();
+            assertEquals(3L, metricReads, "承接、主题报名、活动报名各一次固定批查询，不随项目数增长");
+            verify(invites).selectCoopInviteList(any(com.chengyinhub.business.domain.CoopInvite.class));
+            verify(cmsActivityService).countSignedUpRegistrationsByTopicIds(
+                    topics.stream().map(CmsTopic::getId).collect(java.util.stream.Collectors.toList()));
+            verify(cmsActivityService).countSignedUpRegistrationsByActivityIds(
+                    activities.stream().map(CmsActivity::getId).collect(java.util.stream.Collectors.toList()));
+            verify(cmsActivityService, never()).countSignedUpRegistrations(anyLong());
+            verify(cmsActivityService, never()).countOpenSaleRegistrations(anyLong());
+            verify(cmsActivityService, never()).countPendingVerificationByActivityIds(anyList());
+        }
+    }
+
+    @Test
+    void batchedSignupCountsStayOnTheirOwnActivityCards() {
+        when(cmsActivityService.countSignedUpRegistrationsByActivityIds(anyList()))
+                .thenReturn(Collections.singletonMap(101L, 7));
+        List<Map<String, Object>> cards = rows(call(null));
+        assertEquals(7, rowById(cards, 101L).get("signupCount"));
+        assertEquals(0, rowById(cards, 102L).get("signupCount"));
+        assertEquals(0, rowById(cards, 103L).get("signupCount"));
+        verify(cmsActivityService).countSignedUpRegistrationsByActivityIds(Arrays.asList(101L, 102L, 103L));
+        verify(cmsActivityService, never()).countSignedUpRegistrations(anyLong());
+    }
+
+    @Test
+    void pendingVerificationCountsOnlyBelongToUndertakenMerchantActivities() {
+        when(cmsActivityService.countPendingVerificationByActivityIds(anyList()))
+                .thenReturn(Collections.singletonMap(102L, 4));
+        List<Map<String, Object>> cards = rows(call(null));
+        assertEquals(4, rowById(cards, 102L).get("pendingVerifyCount"));
+        assertTrue(!rowById(cards, 101L).containsKey("pendingVerifyCount"));
+        assertTrue(!rowById(cards, 103L).containsKey("pendingVerifyCount"));
+        verify(cmsActivityService).countPendingVerificationByActivityIds(Collections.singletonList(102L));
+    }
+
+    @Test
+    void manyUndertakenActivitiesReadEachStatisticOnlyOnce() {
+        List<CmsActivity> activities = new ArrayList<>();
+        for (long id = 1; id <= 100; id++) activities.add(activity(1000 + id, null, WON_TOPIC_ID));
+        when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class))).thenReturn(Collections.emptyList());
+        when(cmsActivityService.selectCmsActivityList(any(CmsActivity.class))).thenReturn(activities);
+        assertEquals(100, rows(controller.my(null, null, null, 1, 200, null)).size());
+        verify(cmsActivityService, org.mockito.Mockito.times(1))
+                .countSignedUpRegistrationsByActivityIds(org.mockito.ArgumentMatchers.argThat(ids -> ids.size() == 100));
+        verify(cmsActivityService, org.mockito.Mockito.times(1))
+                .countPendingVerificationByActivityIds(org.mockito.ArgumentMatchers.argThat(ids -> ids.size() == 100));
+        verify(cmsActivityService, never()).countSignedUpRegistrations(anyLong());
+    }
+
+    @Test
     void freeClubProjectAcceptanceRequiresApprovedActiveChapterSupply() {
         CmsTopic free = topic(301L, 7L, "simple");
         free.setProductType(2);
@@ -330,6 +392,15 @@ class ApiProjectControllerTest {
         assertEquals("merchantOpen", rowById(rows(call(null)), free.getId()).get("acceptStatus"),
                 "城市定向继续使用原邀约承接口径");
         verify(merchantChapterApplicationService, org.mockito.Mockito.times(6)).selectForPublisher(ME);
+    }
+
+    @Test
+    void topicSignupCountsIncludeTheBatchStatistic() {
+        when(cmsActivityService.countSignedUpRegistrationsByTopicIds(anyList()))
+                .thenReturn(Collections.singletonMap(2L, 18));
+        AjaxResult result = call(null);
+        Map<String, Object> row = rowById(rows(result), 2L);
+        assertEquals(18, row.get("signupCount"));
     }
 
     // ---- helpers ----

@@ -66,7 +66,7 @@ function loadClubDetail() {
     '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
     '../../../utils/scene-registry.js': { getScene: () => ({}) },
     '../../../utils/datetime': { toTimestamp: (v) => Date.parse(String(v).replace(' ', 'T')) || 0 },
-    '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+    '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
     '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
     '../../../utils/group-code-session.js': { buildGroupCodeIssuePayload: () => ({ activityId: 30 }), listGroupCodeActivities: () => [] },
     '../../../utils/merchant-home-link.js': require('../../utils/merchant-home-link.js'),
@@ -74,6 +74,7 @@ function loadClubDetail() {
     '../../../utils/response-shape.js': require('../../utils/response-shape.js'),
     '../../../utils/coop-invite-view.js': require('../../utils/coop-invite-view.js'),
     '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+    '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
     '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
   });
 }

@@ -1,0 +1,30 @@
+<view class="theme-dark orr">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="orr__shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="{{route.name || '线路详情'}}" subtitle="{{route.metaText}}" safe-top="{{false}}" />
+    <view class="orr__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="2" />
+      <cy-error wx:elif="{{state === 'error'}}" title="线路加载失败" retry="重试" bind:retry="load" />
+      <cy-empty wx:elif="{{state === 'notfound'}}" kind="empty" title="这条线路不存在或已下架" />
+      <block wx:else>
+        <image wx:if="{{route.cover}}" class="orr__cover" src="{{route.cover}}" mode="aspectFill" />
+        <text class="orr__sec">节点（{{route.nodes.length}}）</text>
+        <cy-empty wx:if="{{!route.nodes.length}}" kind="empty" title="这条线路还没有节点" sub="" />
+        <view class="orr-node" wx:for="{{route.nodes}}" wx:key="key" data-index="{{index}}" bindtap="openNode"
+              aria-role="button" aria-label="第{{item.order}}站 {{item.name}}{{item.lat !== null ? '，点击查看位置' : ''}}"
+              hover-class="{{item.lat !== null ? 'cy-pressed' : 'none'}}" hover-stay-time="80">
+          <text class="orr-node__no">{{item.order}}</text>
+          <view class="orr-node__main">
+            <text class="orr-node__name">{{item.name}}</text>
+            <text class="orr-node__sub" wx:if="{{item.address}}">{{item.address}}</text>
+            <text class="orr-node__sub" wx:if="{{item.stayText}}">参考停留 {{item.stayText}}</text>
+          </view>
+          <image wx:if="{{item.img}}" class="orr-node__img" src="{{item.img}}" mode="aspectFill" />
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

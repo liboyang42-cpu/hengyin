@@ -45,7 +45,7 @@ function createPage(relativePath, appOverrides = {}, wxOverrides = {}) {
   global.Page = (pageDefinition) => { definition = pageDefinition }
   const modulePath = path.join(ROOT, relativePath)
   delete require.cache[require.resolve(modulePath)]
-  require(modulePath)
+  require('../helpers/community-page-seam.js').loadPage(modulePath)
 
   const page = Object.assign({}, definition)
   page.data = JSON.parse(JSON.stringify(definition.data))
@@ -74,7 +74,7 @@ function createComponent(relativePath, appOverrides = {}) {
   global.Component = (componentDefinition) => { definition = componentDefinition }
   const modulePath = path.join(ROOT, relativePath)
   delete require.cache[require.resolve(modulePath)]
-  require(modulePath)
+  require('../helpers/community-page-seam.js').loadPage(modulePath)
 
   const component = Object.assign({}, definition.methods)
   component.data = JSON.parse(JSON.stringify(definition.data || {}))
@@ -245,13 +245,14 @@ test('团码页面与真实 scene owner 都把成功零场次落到 empty，失�
 
 // 2026-08-09:合作页本身就是发现列表(商家 / 俱乐部两个 tab),空态再挂一个「发现合作对象」
 // CTA 跳另一个选择器是自指。CTA 与 goCoopDiscovery 一并删除,空态只留说明。
-test('合作页两个发现 tab 各自有空态，且不再自指到另一个选择器', () => {
+test('合作页(帖子/俱乐部)两个 tab 各自有空态，且不再自指到另一个选择器', () => {
   const { page } = createPage('pages/merchant/relation/index.js')
   assert.equal(typeof page.goCoopDiscovery, 'undefined')
 
   const view = read('pages/merchant/relation/index.wxml')
   assert.doesNotMatch(view, /cta="发现合作对象"|goCoopDiscovery/)
-  assert.match(view, /activeTab === 'merchant'[\s\S]*title="暂无可合作商家"[\s\S]*title="暂无可合作俱乐部"/)
+  assert.match(view, /activeTab === 'feed'[\s\S]*title="\{\{feedEmptyTitle\}\}"[\s\S]*title="暂无可合作俱乐部"/)
+  assert.doesNotMatch(view, /暂无可合作商家/, '2026-10-22 owner:商家不看其他商家')
 })
 
 test('附近商家权限态打开设置后重新定位，成功空态可刷新附近商家', () => {

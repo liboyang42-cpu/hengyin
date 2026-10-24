@@ -7,9 +7,12 @@ import java.util.List;
 /** 注销预检/状态的统一返回。 */
 public class DeregistrationStatusVO {
     private String status;
+    private String verificationMethod = "UNAVAILABLE";
     private Date executeAfter;
     private List<String> blockers = new ArrayList<>();
 
+    public String getVerificationMethod() { return verificationMethod; }
+    public void setVerificationMethod(String verificationMethod) { this.verificationMethod = verificationMethod; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public Date getExecuteAfter() { return executeAfter; }

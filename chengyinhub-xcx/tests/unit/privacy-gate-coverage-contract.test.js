@@ -81,7 +81,7 @@ test('★负控:检查器本身能判红 —— 摘掉一页的 gate 必须被�
   const cfg = JSON.parse(readIfExists(`${route}.json`))
   assert.ok(cfg.usingComponents['cy-privacy-gate'], '前提:该页当前挂着 gate')
   const apis = privacyApisOf(route)
-  assert.ok(apis.length, `前提:该页确实会触发隐私授权,实际 ${apis}`)
+  assert.ok(apis.length, `前提:该页确实会触发隐私授权，实际 ${apis}`)
   // 模拟摘掉:hasGate 的判据只看 usingComponents,这里直接验判据本身
   const without = { ...cfg, usingComponents: { ...cfg.usingComponents } }
   delete without.usingComponents['cy-privacy-gate']
@@ -96,5 +96,5 @@ test('negative control:注释里提到隐私 API 不算调用,真代码里调了
     '注释里的 API 名被当成了调用 —— 会逼着人把说明写含糊')
   const real = "// 说明\nwx.chooseMedia({})"
   assert.deepEqual(stripComments(real).match(PRIVACY_APIS), ['wx.chooseMedia'],
-    '剥注释剥过头,真调用也被吃掉了 —— 那这道门禁就哑了')
+    '剥注释剥过头，真调用也被吃掉了 —— 那这道门禁就哑了')
 })

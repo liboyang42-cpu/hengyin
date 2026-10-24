@@ -67,7 +67,7 @@ function assertThemePlumbing(source) {
     '城瘾玩法消费旧颜色别名，商家浅色必须桥接 alias')
   assert.match(source.likes.wxss, /merchant-light-scope\.wxss/,
     '我的喜欢消费旧颜色别名，商家浅色必须桥接 alias')
-  assert.match(source.about.wxml, /tint="\{\{isMerchantView \? '' : 'mono'\}\}"/,
+  assert.match(source.about.wxml, /tint="\{\{isMerchantView \? 'ink' : 'mono'\}\}"/,
     '关于页图标染色必须随商家浅色/玩家深色切换')
   assert.match(source.about.wxml, /<cy-agreement-sheet[^>]*theme="\{\{isMerchantView \? 'merchant' : 'player'\}\}"/,
     '关于页里的协议也必须继承当前视角')
@@ -148,4 +148,23 @@ test('负控：把协议重新写死 player 时主题契约必须变红', () => 
   const source = sources()
   source.agreementWxml = source.agreementWxml.replace('theme="{{theme}}"', 'theme="player"')
   assert.throws(() => assertThemePlumbing(source))
+})
+
+test('正常隐私设置明确提供城市定位入口，并沿原按钮到达真实设置页',()=>{
+  const page=loadSettingsPage();page.goPrivacy();assert.equal(page.data.showPrivacySheet,true)
+  const wxml=read('pages/shezhi/components/privacy-sheet/index.wxml')
+  const entry=wxml.match(/<cy-btn[^>]*bindtap="([^"]+)"[^>]*>城市定位与更多隐私设置<\/cy-btn>/)
+  assert.ok(entry,'城市定位设置不能藏在仅标注媒体管理的入口下')
+  // 文案以 master #293 精简版为准，只要求明确告知首页城市定位这一用途。
+  assert.match(wxml,/首页城市定位/)
+  assert.doesNotMatch(wxml,/仅用于推荐附近活动/)
+  let definition;global.Component=value=>{definition=value}
+  const sourcePath=path.join(ROOT,'pages/shezhi/components/privacy-sheet/index.js')
+  delete require.cache[require.resolve(sourcePath)];require(sourcePath)
+  const closed=[];const sheet=Object.assign({},definition.methods,{data:{submitting:false},triggerEvent:event=>closed.push(event)})
+  wx.navigateTo=options=>{wx.lastNavigation=options.url;options.success()}
+  sheet[entry[1]]()
+  assert.equal(wx.lastNavigation,'/pages/privacy/index');assert.deepEqual(closed,['close'])
+  const route=read('pages/privacy/index.wxml')
+  assert.match(route,/bindtap="enableHomeCityLocation"/);assert.match(route,/bindtap="disableHomeCityLocation"/)
 })

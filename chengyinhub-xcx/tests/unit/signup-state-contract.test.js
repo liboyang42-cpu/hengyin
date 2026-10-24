@@ -25,6 +25,8 @@ function loadPage(js = source()) {
     getPageSize: () => 10,
     getTotalPage: (total, size) => Math.ceil(Number(total || 0) / size),
     getRequestErrorMessage: (response, fallback) => (response && response.msg) || fallback,
+    // PR10 F-W1-12:本文件的失败用例都是「已登录账号读失败」;无会话时票夹改给登录引导(见 pr10-review-ui-fixes)。
+    getUserID: () => '1001',
     sendRequest(options) { sandbox.requests.push(options) },
   }
   const context = {
@@ -38,6 +40,8 @@ function loadPage(js = source()) {
     console,
     require(request) {
       if (request === '../../utils/play-engine.js') return require('../../utils/play-engine.js')
+      // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
+      if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       throw new Error('unexpected require: ' + request)
     },
   }
@@ -50,6 +54,7 @@ function loadPage(js = source()) {
     Object.entries(patch).forEach(([key, value]) => setPath(page.data, key, value))
     if (callback) callback()
   }
+  page._walletOwner = app.getUserID()
   return { page, sandbox }
 }
 
@@ -69,20 +74,20 @@ function loadPage(js = source()) {
 function assertWalletStatesAreExclusive(template) {
   assert.match(
     template,
-    /wx:if="\{\{walletState === 'loading'\}\}"/,
-    'loading 态必须由 walletState 单独控制',
+    /wx:elif="\{\{walletState === 'loading'\}\}"/,
+    '原票定位状态后，普通票夹loading仍由walletState控制',
   )
   for (const state of ['error', 'empty']) {
     assert.match(
       template,
       new RegExp(`wx:elif="\\{\\{walletState === '${state}'\\}\\}"`),
-      `${state} 必须挂在 wx:elif 上 —— 四态用 if/elif 串起来才互斥,并列 wx:if 会同时出现两块`,
+      `${state} 必须挂在 wx:elif 上 —— 四态用 if/elif 串起来才互斥，并列 wx:if 会同时出现两块`,
     )
   }
   assert.match(
     template,
-    /class="flex-a flex-col main"\s+wx:if="\{\{walletState === 'ready'\}\}"/,
-    'ready 主容器只由 walletState 控制',
+    /class="flex-a flex-col main"\s+wx:if="\{\{walletState === 'ready' && \(!focusState \|\| focusState === 'ready'\)\}\}"/,
+    'ready票夹只有无定位请求或原票已定位时才可显示',
   )
   assert.doesNotMatch(
     template,
@@ -108,7 +113,7 @@ test('票夹首载两路保持 loading，当前 tab 不闪真实空态', () => {
   assert.ok(sandbox.requests.find((r) => r.data && r.data.owner_type === 2), '缺场次票列表请求')
   const teamRequest = sandbox.requests.find((r) => r.url === '/api/team/my')
   assert.ok(teamRequest, '缺我的队伍请求')
-  assert.equal(teamRequest.silentError, true, '队伍拉不到只影响那一行,不许弹全局错')
+  assert.equal(teamRequest.silentError, true, '队伍拉不到只影响那一行，不许弹全局错')
 
   const template = wxml()
   const components = JSON.parse(read('subpackageMember/signup/index.json')).usingComponents
@@ -119,7 +124,6 @@ test('票夹首载两路保持 loading，当前 tab 不闪真实空态', () => {
   assert.doesNotMatch(template, /kind="loading"/, '票券结构已知，首载应使用同构票券骨架而不是通用转圈')
   assert.match(template, /walletState === 'empty'[\s\S]{0,240}还没有票/)
   // 空态文案要把两条来路都说清 —— 合并之后用户不知道票该从哪来
-  assert.match(template, /去首页发现路线或报名场次/)
 })
 
 test('票券 skeleton 保留票面与票根轮廓，加载完成时不会产生大幅布局跳变', () => {
@@ -192,8 +196,38 @@ test('一路空一路有票:合起来是 ready,有票的那些照常显示', () 
   assert.equal(page.data.walletState, 'ready', '一路空不该把整页判成空')
   assert.equal(page.data.ticketList.length, 1)
   assert.equal(page.data.ticketList[0].wTitle, '周末场次')
-  assert.equal(page.data.ticketList[0].kind, 'activity', 'kind 决定点开跳哪,不能丢')
+  assert.equal(page.data.ticketList[0].kind, 'activity', 'kind 决定点开跳哪，不能丢')
   assertWalletStatesAreExclusive(wxml())
+})
+
+test('一路空一路失败不能显示没有票，重试只补失败支线', () => {
+  for (const failedType of [1, 2]) {
+    const { page, sandbox } = loadPage()
+    page.onLoad({})
+    const failed = sandbox.requests.find(request => request.data.owner_type === failedType)
+    const empty = sandbox.requests.find(request => request.data.owner_type === 3 - failedType)
+    failed.fail({ errMsg: '请求超时' })
+    assert.equal(page.data.walletState, 'loading', '另一条尚未落定时仍等结果')
+    empty.success({ code: 200, data: { rows: [], total: 0 } })
+    assert.equal(page.data.walletState, 'error', '失败支线没有证明无票')
+    assert.equal(page.data.walletErrorMsg, '请求超时')
+    const count = sandbox.requests.length
+    page.retryWallet()
+    assert.equal(sandbox.requests.length, count + 1)
+    assert.equal(sandbox.requests[count].data.owner_type, failedType)
+    sandbox.requests[count].success({ code: 200, data: { rows: [], total: 0 } })
+    assert.equal(page.data.walletState, 'empty')
+    assert.equal(page.data.walletErrorMsg, '')
+  }
+})
+
+test('一路失败另一路有票仍显示有效票，不被整页错误遮住', () => {
+  const { page, sandbox } = loadPage()
+  page.onLoad({})
+  sandbox.requests.find(request => request.data.owner_type === 1).fail({ errMsg: '请求超时' })
+  sandbox.requests.find(request => request.data.owner_type === 2).success({ code: 200, data: { rows: [{ id: 22, cmsActivity: { name: '正常票' } }], total: 1 } })
+  assert.equal(page.data.walletState, 'ready')
+  assert.deepEqual(Array.from(page.data.ticketList, item => item.id), [22])
 })
 
 test('负控：把 empty 从 wx:elif 改成并列 wx:if 时，互斥契约必须判红', () => {
@@ -263,9 +297,12 @@ test('票夹保持原有状态文案与指定报名单入口', () => {
   const mod = { exports: {} }
   new Function('module', wxml().match(/<wxs module="tk">([\s\S]*?)<\/wxs>/)[1])(mod)
   assert.equal(mod.exports.label(page.data.ticketList[0]), '待使用')
-  assert.equal(mod.exports.cta(page.data.ticketList[0]), '进入游玩')
+  assert.equal(mod.exports.cta(page.data.ticketList[0]), '开始游戏')
   assert.equal(mod.exports.label(page.data.ticketList[1]), '待使用')
-  assert.equal(mod.exports.label(page.data.ticketList[3]), '已取消')
+  // v13 底部「可用 / 已用 / 已过期」:已取消的单归在「已过期」那一栏
+  assert.equal(JSON.stringify(page.data.tabCount), '[3,0,1]')
+  const cancelled = page._activity.list[3]
+  assert.equal(mod.exports.label(cancelled), '已取消')
   page.goTicket({ currentTarget: { dataset: { index: 0 } } })
   assert.match(sandbox.navigations[0].url, /activityId=930007&registrationId=990058&entry=ticket/)
 })

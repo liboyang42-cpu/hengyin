@@ -30,9 +30,11 @@ import com.chengyinhub.business.mapper.CommunityTrustMapper;
 import com.chengyinhub.business.mapper.CommunityPostMapper;
 import com.chengyinhub.business.mapper.MmsMerchantMapper;
 import com.chengyinhub.business.service.CommunityTrustService;
+import com.chengyinhub.business.service.ICommunityPostService;
 import com.chengyinhub.business.service.support.CommunityReportPolicy;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,6 +79,8 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
     @Autowired private CommunityTrustMapper communityTrustMapper;
     @Autowired private CommunityPostMapper communityPostMapper;
     @Autowired private MmsMerchantMapper mmsMerchantMapper;
+    /** 帖文服务反向依赖本服务(举报受理),ObjectProvider 懒取破环。 */
+    @Autowired private ObjectProvider<ICommunityPostService> communityPostServiceProvider;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -229,14 +233,20 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
 
     @Override
     public List<CommunityReportVO> listMyReports(Long principalMemberId, String stage) {
+        return listMyReports(principalMemberId, stage, null);
+    }
+
+    @Override
+    public List<CommunityReportVO> listMyReports(Long principalMemberId, String stage, String requestId) {
         requirePrincipal(principalMemberId);
         String normalizedStage = optionalUpper(stage);
         if (normalizedStage != null && !REPORT_STAGES.contains(normalizedStage)) {
             throw badRequest("举报阶段筛选不合法");
         }
         List<CommunityReportVO> result = new ArrayList<>();
+        String normalizedRequestId = requestId == null ? null : requireKey(requestId, "举报幂等键无效");
         for (CommunityReportCase row : communityTrustMapper.selectReportsForOwner(
-                principalMemberId, normalizedStage)) {
+                principalMemberId, normalizedStage, normalizedRequestId)) {
             result.add(CommunityReportVO.from(row));
         }
         return result;
@@ -318,9 +328,17 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
         String publicNote = requireText(request.getPublicNote(), 500, "公开进度说明不能为空");
         String internalNote = optionalText(request.getInternalNote(), 1000);
         String decisionSummary = optionalText(request.getDecisionSummary(), 500);
+        com.chengyinhub.business.domain.dto.CommunityPostRequests.Enforcement enforcement = request.getEnforcement();
+        if (enforcement != null && !CommunityReportCase.STAGE_RESOLVED.equals(next)) {
+            throw badRequest("只有结案(RESOLVED)时才能附带处置");
+        }
+        if (enforcement != null && decisionSummary == null) {
+            decisionSummary = "违规成立，已处置：" + upper(enforcement.getEnforcementType());
+        }
         String transitionHash = hash(request.getReportId() + "|" + request.getExpectedVersion()
                 + "|" + next + "|" + publicNote + "|" + internalNote + "|" + decisionSummary
-                + "|" + dateMillis(request.getEstimatedResolveAt()));
+                + "|" + dateMillis(request.getEstimatedResolveAt())
+                + (enforcement == null ? "" : "|" + JSON.toJSONString(enforcement)));
         CommunityReportCase row = communityTrustMapper.selectReportForUpdate(request.getReportId());
         if (row == null) throw badRequest("举报不存在");
         CommunityReportTimeline replay = communityTrustMapper.selectTimelineByEventKeyForUpdate(
@@ -331,6 +349,10 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
         }
         if (!allowedStageTransition(row.getStage(), next)) throw conflict("举报阶段跳变不合法");
         if (!request.getExpectedVersion().equals(row.getVersion())) throw conflict("举报版本已变化");
+        if (enforcement != null && !CommunityReportCase.TARGET_CONTENT.equals(row.getTargetType())
+                && !CommunityReportCase.TARGET_COMMENT.equals(row.getTargetType())) {
+            throw badRequest("该举报对象不支持内容处置");
+        }
         if (communityTrustMapper.transitionReportCas(row.getId(), row.getStage(), next,
                 request.getExpectedVersion(), decisionSummary, request.getEstimatedResolveAt()) != 1) {
             throw conflict("举报阶段已变化，请刷新");
@@ -338,6 +360,17 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
         if (communityTrustMapper.insertReportTimeline(timeline(row.getId(), eventKey, transitionHash, "PLATFORM",
                 "STAGE_CHANGED", row.getStage(), next, publicNote, internalNote, new Date())) != 1) {
             throw conflict("举报时间线写入失败");
+        }
+        if (enforcement != null) {
+            // AUDIT-G3-5:举报裁定违规 → 同一事务里落处置(处置行带 report_case_id),处置 id 回写到举报时间线。
+            Long enforcementId = communityPostServiceProvider.getObject().enforceReportedTarget(operatorUserId,
+                    row.getId(), row.getTargetType(), row.getTargetId(), enforcement);
+            if (communityTrustMapper.insertReportTimeline(timeline(row.getId(), "ENFORCE:" + requestId,
+                    transitionHash, "PLATFORM", "ENFORCEMENT_APPLIED", next, next, "平台已按社区规范处置",
+                    "enforcementId=" + enforcementId + ";type=" + upper(enforcement.getEnforcementType()),
+                    new Date())) != 1) {
+                throw conflict("举报处置时间线写入失败");
+            }
         }
         row.setStage(next);
         row.setDecisionSummary(decisionSummary);

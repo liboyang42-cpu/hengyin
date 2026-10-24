@@ -233,14 +233,14 @@ function assertSoftBackgroundUsesStrong(sources) {
     }
   }
   assert.deepEqual(hits, [],
-    '软底上的前景必须用 -strong 档(基色只保证白底 ≥4.5,压到同色系软底上会掉出 AA)');
+    '软底上的前景必须用 -strong 档(基色只保证白底 ≥4.5，压到同色系软底上会掉出 AA)');
 }
 
 const CONSUMER_FILES = [
   'pages/publish/temp/index.wxss',
   'pages/publish/simple/index.wxss',
   'pages/publish/topicadd/topicadd.wxss',
-  'pages/publish/templateadd/templateadd.wxss',
+  // 2026-10-23 templateadd 退役删除,不再是消费方
 ];
 const readConsumers = () => Object.fromEntries(
   CONSUMER_FILES.map((f) => [f, fs.readFileSync(path.join(XCX, f), 'utf8')])
@@ -258,14 +258,14 @@ test('负控：软底上把前景改回基色时必须判红', () => {
     'background: var(--cy-brand-soft); color: var(--cy-brand);'
   );
   assert.throws(() => assertSoftBackgroundUsesStrong(sources), assert.AssertionError,
-    '把 .cg-hint-emoji 的前景改回基色后,消费方闸没有判红');
+    '把 .cg-hint-emoji 的前景改回基色后，消费方闸没有判红');
 });
 
 test('负控：软底上的 -strong 档被换成过不了 AA 的浅灰时必须判红', () => {
   const theme = tokenTheme();
   const broken = { ...theme, '--cy-color-brand-strong': '#8A8A8A' };
   assert.throws(() => assertContrast(broken), assert.AssertionError,
-    'brand-strong 换成浅灰后,软底对比度契约没有判红');
+    'brand-strong 换成浅灰后，软底对比度契约没有判红');
 });
 
 test('负控：删掉 text alias 桥接时契约必须判红', () => {

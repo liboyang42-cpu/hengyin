@@ -12,7 +12,7 @@ test('票种编辑:退款是只读规则说明,不是开关;城市定向按集�
   const js = read('pages/publish/fabu/index.js')
   assert.doesNotMatch(wxml, /onEditTicketRefundToggle/, '不能再给一个关了也照样退的开关')
   assert.doesNotMatch(wxml, />支持随时退款</)
-  assert.doesNotMatch(js, /onEditTicketRefundToggle/, '开关删了,处理函数不留孤儿')
+  assert.doesNotMatch(js, /onEditTicketRefundToggle/, '开关删了，处理函数不留孤儿')
   assert.match(wxml, /formData\.productType === 2 \? '有效期开始前可全额退款；开始后或已核销不退' : '集合时间前可全额退款；错过集合或已核销不退'/)
   // 口径钉在主题票实际在跑的判定上(TeamGroupServiceImpl / ApiRegistrationController 都调它):
   // 截止点 = 履约窗起点 = 票的开始时间。它改了,这里的文案要跟着改。

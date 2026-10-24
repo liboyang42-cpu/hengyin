@@ -104,7 +104,7 @@ test('迟到的游戏响应落在主题 tab 上:只进缓存,不得把未加载�
   gameReq.success({ code: '200', data: { rows: [{ id: 21, title: '游戏A' }] } });
   gameReq.complete();
 
-  assert.equal(h.page._gameLoaded, true, '数据照常进缓存,回到游戏 tab 时直接可用');
+  assert.equal(h.page._gameLoaded, true, '数据照常进缓存，回到游戏 tab 时直接可用');
   assert.equal(h.page.data.listLoaded, false,
     '主题还没回来:游戏响应把 listLoaded 置 true 会让主题 tab 渲染成假空态');
   assert.equal(h.page.data.topList.length, 0);
@@ -123,7 +123,7 @@ test('迟到的游戏失败落在主题 tab 上:错误文案不得画到主题�
     '游戏的失败文案画在主题的错误卡上 —— 失败半边也必须按当前 tab 闸');
   assert.equal(h.page.data.loading, true,
     '游戏的 complete 把主题在途的骨架屏掐成了空白 —— complete 也必须按当前 tab 闸');
-  assert.equal(h.page._gameLoaded, false, '失败不得进缓存,切回游戏 tab 要重新加载');
+  assert.equal(h.page._gameLoaded, false, '失败不得进缓存，切回游戏 tab 要重新加载');
 });
 
 test('请求在途时切去已加载 tab:loading 由 switchTab 显式清掉,不留游离的 true', () => {
@@ -133,15 +133,15 @@ test('请求在途时切去已加载 tab:loading 由 switchTab 显式清掉,不�
   assert.equal(h.page.data.loading, true);
   h.page.switchTab({ detail: { key: 'topic' } });  // 切回已加载的主题:不发请求
   assert.equal(h.page.data.loading, false,
-    '游戏的 complete 已按 tab 闸不再兜底,switchTab 不显式清就永远 true');
+    '游戏的 complete 已按 tab 闸不再保底,switchTab 不显式清就永远 true');
 });
 
 // ===== P2:空态判定必须把 banner 计入 =====
 function assertEmptyStateCountsBanner(wxml) {
   const empty = wxml.match(/<cy-empty[^>]*wx:elif="\{\{([^}]*)\}\}"/);
-  assert.ok(empty, 'cy-empty 的 wx:elif 条件不存在,锚点失效');
+  assert.ok(empty, 'cy-empty 的 wx:elif 条件不存在，锚点失效');
   assert.match(empty[1], /!\s*banner\.id/,
-    '空态条件必须包含 !banner.id —— 单条数据时 banner 占用了唯一内容、两个列表全空,只看列表会让 cy-empty 与 banner 大卡同屏');
+    '空态条件必须包含 !banner.id —— 单条数据时 banner 占用了唯一内容、两个列表全空，只看列表会让 cy-empty 与 banner 大卡同屏');
 }
 
 test('单条数据时 banner 有值、两个列表全空:空态判定必须把 banner 计入', () => {
@@ -161,5 +161,14 @@ test('单条数据时 banner 有值、两个列表全空:空态判定必须把 b
   if (mutant !== wxml) {
     assert.throws(() => assertEmptyStateCountsBanner(mutant),
       '摘掉 !banner.id 后检查器仍然放行 —— 这条断言是摆设');
+  }
+});
+
+test('开发版主题模板真实空结果和故障不注入演示主题', () => {
+  for(const response of [{code:200,data:[]},{code:500,msg:'真实故障'}]){
+    const h=mountTemplatePage();global.wx.getAccountInfoSync=()=>({miniProgram:{envVersion:'develop'}});
+    h.page.getTopicTemplates();lastRequest(h,TOPIC_URL).success(response);lastRequest(h,TOPIC_URL).complete();
+    assert.equal(h.page.data.topList.length,0);assert.equal(h.page.data.tailList.length,0);assert.ok(!h.page.data.banner.id);
+    if(response.code===200)assert.equal(h.page.data.listLoaded,true);else assert.equal(h.page.data.errorMsg,'真实故障');
   }
 });

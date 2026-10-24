@@ -64,7 +64,7 @@ test('深链壳 id 后到:attached 读到空 → 属性更新后必须发请求�
 
   // ② 属性后到:必须有观察器接手
   assert.equal(typeof (config.observers && config.observers.recordId), 'function',
-    'recordId 必须有属性观察器,否则后到的 id 永远没人处理')
+    'recordId 必须有属性观察器，否则后到的 id 永远没人处理')
   config.observers.recordId.call(ctx, '43')
 
   assert.equal(ctx.data.loadState, 'loading', '加载请求发出后不得还停在缺参死文字上')

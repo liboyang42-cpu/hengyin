@@ -1,7 +1,10 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.MerchantChapterOffer;
@@ -32,6 +35,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Set;
 
 /**
@@ -69,6 +73,9 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     @Autowired
     private CmsRegistrationMapper cmsRegistrationMapper;
 
+    @Autowired
+    private CmsActivityMapper cmsActivityMapper;
+
     /** 撤销核销时冲正平台应付 —— 与「核销即计提」成对,不冲就继续欠着一笔已不存在的核销的钱。 */
     @Autowired
     private IMerchantPayableService merchantPayableService;
@@ -83,6 +90,10 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
 
     @Autowired
     private RedemptionRewardClawbackService redemptionRewardClawbackService;
+
+    /** DOC2 F3 Phase 1 套票账本:核销/撤销/退款同事务记单位账;ledger 开关默认关 ⇒ 空转。 */
+    @Autowired
+    private com.chengyinhub.business.service.IFreeExploreBundleService freeExploreBundleService;
 
     // ------------------------------------------------------------ 容量
 
@@ -276,7 +287,11 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int releaseOnRefund(Long registrationId, String reason) {
-        return entitlementMapper.invalidateByRegistration(registrationId, reason);
+        int released = entitlementMapper.invalidateByRegistration(registrationId, reason);
+        if (freeExploreBundleService != null) {
+            freeExploreBundleService.onRegistrationRefunded(registrationId);
+        }
+        return released;
     }
 
     // ------------------------------------------------------------ 核销
@@ -317,7 +332,60 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     }
 
     @Override
+    public Map<Long, Long> resolveScannableChapters(Long registrationId, Long topicId, Long merchantId) {
+        Map<Long, Long> candidates = new TreeMap<>();
+        if (registrationId == null || topicId == null || merchantId == null) return candidates;
+        for (Long chapterId : resolveRedeemableChapters(registrationId, topicId, merchantId)) {
+            candidates.put(chapterId, null);
+        }
+        Set<Long> redeemed = new LinkedHashSet<>();
+        List<RegistrationEntitlement> entitlements = entitlementMapper.selectByRegistration(registrationId);
+        if (entitlements != null) {
+            for (RegistrationEntitlement entitlement : entitlements) {
+                if (entitlement != null && registrationId.equals(entitlement.getRegistrationId())
+                        && topicId.equals(entitlement.getTopicId()) && Integer.valueOf(1).equals(entitlement.getStatus())
+                        && entitlement.getChapterId() != null) redeemed.add(entitlement.getChapterId());
+            }
+        }
+        List<Redemption> receipts = redemptionMapper.selectActiveByRegistration(registrationId);
+        if (receipts != null) {
+            for (Redemption receipt : receipts) {
+                if (receipt != null && receipt.getId() != null && "ACTIVE".equals(receipt.getStatus())
+                        && registrationId.equals(receipt.getRegistrationId()) && topicId.equals(receipt.getTopicId())
+                        && merchantId.equals(receipt.getMerchantId()) && redeemed.contains(receipt.getChapterId())) {
+                    candidates.put(receipt.getChapterId(), receipt.getId());
+                }
+            }
+        }
+        return candidates;
+    }
+
+    @Override
+    public Long findReplayableChapterRedemptionIdForUpdate(Long registrationId, Long topicId,
+                                                           Long chapterId, Long merchantId) {
+        if (registrationId == null || topicId == null || chapterId == null || merchantId == null) return null;
+        Redemption receipt = redemptionMapper.selectActiveByIdempotencyKeyForUpdate(
+                redeemKey(registrationId, chapterId, merchantId));
+        if (receipt == null) return null;
+        if (receipt.getId() == null || !"ACTIVE".equals(receipt.getStatus())
+                || !registrationId.equals(receipt.getRegistrationId()) || !topicId.equals(receipt.getTopicId())
+                || !chapterId.equals(receipt.getChapterId()) || !merchantId.equals(receipt.getMerchantId())) {
+            throw new IllegalStateException("核销回执与当前票、章节或商家不一致");
+        }
+        List<RegistrationEntitlement> entitlements = entitlementMapper.selectByRegistrationForUpdate(registrationId);
+        if (entitlements != null) {
+            for (RegistrationEntitlement entitlement : entitlements) {
+                if (entitlement != null && registrationId.equals(entitlement.getRegistrationId())
+                        && topicId.equals(entitlement.getTopicId()) && chapterId.equals(entitlement.getChapterId())
+                        && Integer.valueOf(1).equals(entitlement.getStatus())) return receipt.getId();
+            }
+        }
+        throw new IllegalStateException("核销权益状态不一致，请核对原核销记录");
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_REDEMPTION_FAILED, op = "chapter")
     public Long redeemChapter(Long registrationId, Long chapterId, Long merchantId, Long operatorId) {
         // ⓪ 请求级幂等:同一(票,章,商家)之前已成功核销过 ⇒ 直接返回原 redemptionId。
         //
@@ -401,6 +469,12 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         r.setIdempotencyKey(idemKey);   // 与 ⓪ 查的是同一个键,别在这里重算(改一处漏一处 = 幂等静默失效)
         r.setCreateTime(new Date());
         redemptionMapper.insertRedemption(r);
+
+        // ④ DOC2 F3 套票:消耗该持有人本章的一个单位(余额不足/过期/已约他店 ⇒ 抛出,①②③ 一并回滚)。
+        //    放在插流水之后:单位要记下真实 redemptionId(ck_bundle_unit_redeemed 要求二者同在)。
+        if (freeExploreBundleService != null) {
+            freeExploreBundleService.onChapterRedeemed(registrationId, chapterId, merchantId, r.getId());
+        }
         return r.getId();
     }
 
@@ -418,6 +492,93 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         if (r == null) {
             throw new RuntimeException("核销记录不存在");
         }
+        // 与扫码/活动取消共享 activity→registration→redemption 锁序。
+        // 这里只序列化既有撤销，不以当前退款/取消态否定原核销的冲回。
+        CmsRegistration located = cmsRegistrationMapper.selectCmsRegistrationById(r.getRegistrationId());
+        if (located == null || located.getOwnerType() == null || located.getOwnerId() == null) {
+            throw new IllegalStateException("核销关联报名或归属缺失，无法撤销");
+        }
+        if (Long.valueOf(2L).equals(located.getOwnerType())) {
+            if (cmsActivityMapper.selectCmsActivityByIdForUpdate(located.getOwnerId()) == null) {
+                throw new IllegalStateException("核销关联活动不存在，无法撤销");
+            }
+        }
+        CmsRegistration locked = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(r.getRegistrationId());
+        if (locked == null || !located.getOwnerType().equals(locked.getOwnerType())
+                || !located.getOwnerId().equals(locked.getOwnerId())) {
+            throw new IllegalStateException("核销关联报名归属已变更，请重新核对");
+        }
+        return reverseLockedRedemption(r, reason, operatorUserId, clawbackRewards);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<Long> reverseParentOrderRedemptions(String parentOrderNo, String reason,
+                                                   Long operatorUserId, boolean clawbackRewards) {
+        if (parentOrderNo == null || parentOrderNo.trim().isEmpty() || parentOrderNo.length() > 64
+                || reason == null || reason.trim().isEmpty() || reason.trim().length() > 255
+                || operatorUserId == null || operatorUserId <= 0L) {
+            throw new IllegalArgumentException("父订单、撤销原因或操作人无效");
+        }
+        String orderNo = parentOrderNo.trim();
+        List<CmsRegistration> located = cmsRegistrationMapper.selectByParentOrderNo(orderNo);
+        if (located == null || located.isEmpty()) throw new IllegalStateException("父订单不存在");
+        Map<Long, CmsRegistration> originals = new TreeMap<>();
+        Set<Long> activityIds = new java.util.TreeSet<>();
+        for (CmsRegistration row : located) {
+            if (row == null || row.getId() == null || row.getOwnerType() == null || row.getOwnerId() == null
+                    || row.getMemberId() == null || !orderNo.equals(row.getParentOrderNo())
+                    || originals.put(row.getId(), row) != null) {
+                throw new IllegalStateException("父订单关联报名或归属缺失");
+            }
+            if (Long.valueOf(2L).equals(row.getOwnerType())) activityIds.add(row.getOwnerId());
+        }
+        for (Long activityId : activityIds) {
+            if (cmsActivityMapper.selectCmsActivityByIdForUpdate(activityId) == null) {
+                throw new IllegalStateException("父订单关联活动不存在");
+            }
+        }
+        List<CmsRegistration> locked = cmsRegistrationMapper.selectByParentOrderNoForUpdate(orderNo, null);
+        if (locked == null || locked.size() != originals.size()) {
+            throw new IllegalStateException("父订单报名已变化，请刷新后重试");
+        }
+        Map<Long, CmsRegistration> registrations = new TreeMap<>();
+        for (CmsRegistration row : locked) {
+            CmsRegistration original = row == null ? null : originals.get(row.getId());
+            if (original == null || !orderNo.equals(row.getParentOrderNo())
+                    || !java.util.Objects.equals(original.getOwnerType(), row.getOwnerType())
+                    || !java.util.Objects.equals(original.getOwnerId(), row.getOwnerId())
+                    || !java.util.Objects.equals(original.getMemberId(), row.getMemberId())
+                    || registrations.put(row.getId(), row) != null) {
+                throw new IllegalStateException("父订单报名归属已变化，请刷新后重试");
+            }
+        }
+        List<Redemption> receipts = new ArrayList<>();
+        for (Long registrationId : registrations.keySet()) {
+            List<Redemption> active = redemptionMapper.selectActiveByRegistrationForUpdate(registrationId);
+            if (active == null) throw new IllegalStateException("父订单核销流水读取失败");
+            for (Redemption receipt : active) {
+                if (receipt == null || receipt.getId() == null || !"ACTIVE".equals(receipt.getStatus())
+                        || !registrationId.equals(receipt.getRegistrationId())) {
+                    throw new IllegalStateException("父订单核销流水归属或状态异常");
+                }
+                receipts.add(receipt);
+            }
+        }
+        if (receipts.isEmpty()) throw new IllegalStateException("父订单没有生效核销，无需重复撤销");
+        List<Long> reversedIds = new ArrayList<>();
+        for (Redemption receipt : receipts) {
+            if (!reverseLockedRedemption(receipt, reason.trim(), operatorUserId, clawbackRewards)) {
+                throw new IllegalStateException("核销状态已变化，父订单撤销已全部回滚");
+            }
+            reversedIds.add(receipt.getId());
+        }
+        return reversedIds;
+    }
+
+    private boolean reverseLockedRedemption(Redemption r, String reason, Long operatorUserId,
+                                             boolean clawbackRewards) {
+        Long redemptionId = r.getId();
         // 条件置位:0 行 = 已被撤销过。**必须在这里返回**,不能继续往下回补配额 ——
         // 重复撤销各回补一次会把 quota_used 扣成负数,凭空多出配额(库里 ck_offer_quota 会拦,
         // 但那是兜底不是设计;让它走到 CHECK 就已经是 500 了)。
@@ -441,6 +602,10 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         if (r.getChapterId() != null && r.getChapterId() != 0L) {
             // 权益退回「应得」态,玩家可重新核销(uk 不含 status,失效行永久占坑 ⇒ 只能 UPDATE 不能 INSERT)
             entitlementMapper.restoreToPending(r.getRegistrationId(), r.getChapterId());
+        }
+        // DOC2 F3 套票:与上面 restoreToPending 成对,单位退回(票已退款则置 REFUNDED)。
+        if (freeExploreBundleService != null) {
+            freeExploreBundleService.onRedemptionReversed(redemptionId);
         }
 
         // ★ 与「首次核销就置 verification_status」成对:撤销到**一笔 ACTIVE 核销都不剩**时,清回未核销态。

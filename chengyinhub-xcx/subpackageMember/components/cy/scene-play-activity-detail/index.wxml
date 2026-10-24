@@ -1,15 +1,19 @@
 <view class="activity-body">
   <cy-skeleton wx:if="{{state === 'loading'}}" type="detail" />
-  <cy-error class="cy-fade-in" wx:elif="{{state === 'error'}}" fill title="活动详情暂时打不开" sub="{{errorMsg}}" retry="重新读取" bind:retry="retry" />
-  <cy-empty class="cy-fade-in" wx:elif="{{state === 'missing'}}" fill size="lg" title="活动链接无效" sub="没有收到活动编号，无法读取详情。" cta="返回活动列表" bind:cta="close" />
-  <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty'}}" fill size="lg" title="活动不存在" sub="这场活动可能已下线或暂时不可见。" cta="返回活动列表" bind:cta="close" />
+  <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill title="活动详情无法打开" sub="{{errorMsg}}" retry="重新读取" bind:retry="retry" />
+  <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导 -->
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'login'}}" kind="no-permission" fill size="lg" title="登录后查看活动详情" cta="登录" bind:cta="loginRetry" />
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'cancelled'}}" fill size="lg" title="活动已取消"
+            sub="退款进度见订单" cta="{{cancelledHasOwnOrder ? '查看我的订单' : '返回活动列表'}}" bind:cta="onCancelledAction" />
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'missing'}}" fill size="lg" title="活动链接无效" sub="请返回重新进入" cta="返回活动列表" bind:cta="close" />
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty'}}" fill size="lg" title="活动不存在" cta="返回活动列表" bind:cta="close" />
   <!-- M1-3 门卡:非俱乐部成员看到的是加入引导,而不是占位标题 + 空票种的假详情 -->
-  <cy-empty class="cy-fade-in" wx:elif="{{state === 'gate'}}" fill size="lg" title="{{gateMessage}}" sub="加入俱乐部后即可查看活动详情与票种" cta="{{gateClubId ? '去加入俱乐部' : '返回活动列表'}}" bind:cta="goGateClub" />
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'gate'}}" fill size="lg" title="{{gateMessage}}" cta="{{gateClubId ? '去加入俱乐部' : '返回活动列表'}}" bind:cta="goGateClub" />
 
-  <view class="cy-fade-in" wx:elif="{{state === 'ready'}}">
+  <view class="cy-fade-in" wx:elif="{{state === 'ready'}}" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
     <view class="activity-hero">
       <image wx:if="{{info.imgUrl}}" class="activity-hero__image" src="{{info.imgUrl}}" mode="aspectFill" />
-      <view wx:else class="activity-hero__fallback"><cy-icon name="image" size="48" /><text>封面待确认</text></view>
+      <view wx:else class="activity-hero__fallback"></view>
       <view class="activity-hero__shade"></view>
       <view class="activity-hero__copy">
         <cy-badge type="status" variant="{{statusVariant}}" label="{{statusText}}" />
@@ -21,16 +25,16 @@
     <view wx:if="{{info.cancelTime}}" class="activity-cancelled">
       <text class="activity-cancelled__title">该活动已被主办方取消</text>
       <text wx:if="{{info.cancelReason}}" class="activity-cancelled__reason">原因：{{info.cancelReason}}</text>
-      <text class="activity-cancelled__sub">已报名费用将原路全额退回，预计 1–3 个工作日到账。</text>
+      <text class="activity-cancelled__sub">退款进度见对应订单详情</text>
     </view>
 
     <view class="activity-section activity-meta">
       <!-- rebase 并集时 master 的旧三行(写死「城市探索」「位置待定」、把缺失报名数显示成 0)
            与本分支的新三行叠在了一起。保留下面这套:hasLocation 分叉 + registrationCountText
            不把「没取到」伪装成 0;master 的按压反馈已嫁接到可点的集合点行上。 -->
-      <view class="activity-row"><text class="activity-row__key">主题</text><text class="activity-row__value">{{categoryText || '主题待确认'}}</text></view>
+      <view class="activity-row"><text class="activity-row__key">分类</text><text class="activity-row__value">{{categoryText || '—'}}</text></view>
       <view wx:if="{{hasLocation}}" class="activity-row" bindtap="openLocation" hover-class="activity-row--press" hover-stay-time="80" aria-role="button" aria-label="导航到集合点"><text class="activity-row__key">集合点</text><text class="activity-row__value activity-row__link">{{info.addressName || info.address || '查看地图'}}</text></view>
-      <view wx:else class="activity-row"><text class="activity-row__key">集合点</text><text class="activity-row__value">{{info.addressName || info.address || '位置待确认'}}</text></view>
+      <view wx:else class="activity-row"><text class="activity-row__key">集合点</text><text class="activity-row__value">{{info.addressName || info.address || '—'}}</text></view>
       <view class="activity-row"><text class="activity-row__key">已报名</text><text class="activity-row__value">{{registrationCountText || 0}} 人</text></view>
       <view wx:if="{{info.topicId}}" class="activity-row" bindtap="goTopic" aria-role="button" aria-label="查看主题路线" hover-class="activity-row--press"><text class="activity-row__key">主题路线</text><view class="activity-row__value activity-row__route"><text>查看路线</text><cy-icon name="chevron-right" size="28" /></view></view>
     </view>
@@ -51,7 +55,7 @@
     <view wx:if="{{info.registrationList.length}}" class="activity-section">
       <text class="activity-section__title">{{registrationCountText || 0}} 人已报名</text>
       <view class="activity-people">
-        <view class="activity-person" wx:for="{{info.registrationList}}" wx:key="id" bindtap="goUserInfo" hover-class="activity-row--press" hover-stay-time="80" data-id="{{item.memberId}}" aria-role="button" aria-label="查看{{item.nickname || '报名用户'}}主页">
+        <view class="activity-person" wx:for="{{info.registrationList}}" wx:key="id" bindtap="goUserInfo" hover-class="activity-row--press" hover-stay-time="80" data-id="{{item.memberId}}" aria-role="button" aria-label="查看{{item.nickname || '报名用户'}}主页" style="--pmi:{{index}};">
           <cy-avatar size="64" src="{{item.avatar || ''}}" name="{{item.nickname}}" />
         </view>
       </view>
@@ -63,7 +67,7 @@
         <!-- rebase 并集时 master 的旧节点块(缺闭合、写死兜底封面、直接读 item.title)
              与本分支的完整块叠在一起。保留下面这套:无图走占位、_titleText 归一、箭头用图标;
              master 的按压反馈已嫁接过去。 -->
-        <view class="activity-node" wx:for="{{info.memberTemplateList}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="activity-row--press" hover-stay-time="80">
+        <view class="activity-node" wx:for="{{info.memberTemplateList}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="activity-row--press" hover-stay-time="80" style="--pmi:{{index}};">
           <image wx:if="{{item._imageUrl}}" class="activity-node__image" src="{{item._imageUrl}}" mode="aspectFill" />
           <view wx:else class="activity-node__placeholder"><cy-icon name="image" size="32" /></view>
           <view class="activity-node__copy"><text class="activity-node__name">{{item._titleText}}</text><text class="activity-node__meta">{{item._playersText}} · {{item._durationText}}</text></view>
@@ -75,7 +79,7 @@
     <view class="activity-section">
       <text class="activity-section__title">票种</text>
       <view wx:if="{{tickets.length}}" class="ticket-list">
-        <view wx:for="{{tickets}}" wx:key="id" class="ticket {{item._id === selectedTicketId ? 'ticket--selected' : ''}} {{!item._available || item._windowPassed ? 'ticket--disabled' : ''}}" data-id="{{item._id}}" bindtap="selectTicket" hover-class="cy-pressed" hover-stay-time="80">
+        <view wx:for="{{tickets}}" wx:key="id" class="ticket {{item._id === selectedTicketId ? 'ticket--selected' : ''}} {{!item._available || item._windowPassed ? 'ticket--disabled' : ''}}" data-id="{{item._id}}" bindtap="selectTicket" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
           <view class="ticket__head"><text class="ticket__name">{{item._nameText}}</text><text class="ticket__price">{{item._priceText}}</text></view>
           <!-- CU-C-32:过期/已开始的场次在卡面上就说清楚(原来只在点下去的那一刻给一句 toast,
                卡面跟可卖的票一模一样)。 -->
@@ -96,7 +100,7 @@
       </view>
       <!-- CU-M-107:这句原本固定写「主理人」,但活动也可以由商家主办 —— 商家看自己主办的活动
            被指向一个与自己无关的角色。本场景拿不到主办身份字段,统一说「主办方」。 -->
-      <cy-empty wx:else size="sm" title="暂无可选票种" sub="主办方还没有发布可报名票种。" />
+      <cy-empty wx:else size="sm" title="暂无票种" />
     </view>
 
     <view class="activity-section">
@@ -111,7 +115,7 @@
           <text class="activity-comment__text">{{item.contents}}</text>
         </view>
       </view>
-      <cy-empty wx:else size="sm" title="还没有评价" sub="参加后，来分享你的真实体验。" />
+      <cy-empty wx:else size="sm" title="还没有评价" />
     </view>
 
     <view class="activity-points"><cy-icon class="activity-points__icon" name="star" size="30" /><text class="activity-points__text">首次真实评价的积分以平台当前规则为准</text></view>
@@ -121,7 +125,7 @@
       <!-- 预检 500 既可能是业务拒绝(无权限),也可能是「系统繁忙」:给重新检查,别把一次抖动判成永久不能取消 -->
       <cy-error wx:if="{{cancelBlocked}}" title="暂不能取消这场活动" sub="{{cancelError}}" retry="重新检查" bind:retry="openCancel" />
       <block wx:else>
-      <text class="activity-form__hint">将为所有未核销报名全额退款，并同步下架活动，操作不可撤销。</text>
+      <text class="activity-form__hint">未核销报名全额退款并下架，不可撤销</text>
       <textarea class="activity-form__textarea" value="{{cancelReason}}" bindinput="onCancelReasonInput" maxlength="100" placeholder="填写取消原因（会展示给已报名用户）" />
       <cy-error wx:if="{{cancelError}}" title="活动取消失败" sub="{{cancelError}}" retry="重试" bind:retry="submitCancel" />
       <cy-btn variant="danger" loading="{{cancelling}}" disabled="{{!canCancel}}" bindtap="submitCancel">确认取消并退款</cy-btn>
@@ -131,11 +135,11 @@
     <view wx:if="{{voteShow}}" class="activity-form">
       <view class="activity-form__head"><text class="activity-form__title">评价场次</text><text class="activity-form__close" bindtap="closeComment" hover-class="cy-pressed" hover-stay-time="80">关闭</text></view>
       <!-- CU-C-104:填表前先说明资格口径,人人可评但未参与不计首评积分 -->
-      <text class="activity-form__hint">人人可评；未参与本次活动的评价不计首评积分。</text>
+      <text class="activity-form__hint">未参与本次活动的评价不计首评积分</text>
       <view class="activity-rating"><view aria-role="button" aria-label="选择评分" class="activity-rating__target {{index <= answer ? 'activity-rating__target--on' : ''}}" wx:for="{{starsBox}}" wx:key="index" data-index="{{index}}" bindtap="changeRating" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="star" size="44" /></view></view>
       <textarea class="activity-form__textarea" value="{{plnr}}" bindinput="onCommentInput" maxlength="300" placeholder="写下你的真实体验" />
       <view class="activity-upload-list">
-        <view class="activity-upload" wx:for="{{uploadImages}}" wx:key="*this"><image class="activity-upload__image" src="{{item}}" mode="aspectFill" bindtap="previewCommentImage" aria-role="button" aria-label="查看评论大图" data-src="{{item}}"  hover-class="cy-pressed" hover-stay-time="80"/><view class="activity-upload__delete" bindtap="deleteCommentImage" aria-role="button" aria-label="删除这张评论图" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80"><view class="activity-upload__delete-icon"><cy-icon name="close-sm" size="20" /></view></view></view>
+        <view class="activity-upload" wx:for="{{uploadImages}}" wx:key="index"><image class="activity-upload__image" src="{{item}}" mode="aspectFill" bindtap="previewCommentImage" aria-role="button" aria-label="查看评论大图" data-src="{{item}}"  hover-class="cy-pressed" hover-stay-time="80"/><view class="activity-upload__delete" bindtap="deleteCommentImage" aria-role="button" aria-label="删除这张评论图" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80"><view class="activity-upload__delete-icon"><cy-icon name="close-sm" size="20" /></view></view></view>
         <view wx:if="{{uploadImages.length < 9}}" class="activity-upload activity-upload--add" bindtap="chooseCommentImages" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="28" /><text class="activity-upload__label">添加图片</text></view>
       </view>
       <cy-error wx:if="{{commentError}}" title="评价没有发布" sub="{{commentError}}" retry="重试" bind:retry="submitComment" />

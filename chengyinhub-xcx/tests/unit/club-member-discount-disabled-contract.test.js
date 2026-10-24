@@ -32,14 +32,14 @@ test('停用不等于抹数据:提交体不得再带 memberDiscountPrice', () =>
   // 而这一列是有意保留的恢复退路(服务端改回一行即生效)。不读,也不许动。
   const js = stripComments(read(EDIT_SCENE_JS))
   assert.doesNotMatch(js, /memberDiscountPrice\s*:/,
-    '提交体/data 都不得再出现 memberDiscountPrice —— 停的是价格,不是那一列的数据')
+    '提交体/data 都不得再出现 memberDiscountPrice —— 停的是价格，不是那一列的数据')
 })
 
 test('负控:把输入框或提交字段加回来,上面两条必须判红', () => {
   const wxml = stripComments(read(EDIT_SCENE_WXML))
   const brokenWxml = wxml.replace('<view class="frow last">',
     '<view class="frow"><input data-field="memberDiscountPrice" /></view>\n      <view class="frow last">')
-  assert.notEqual(brokenWxml, wxml, '负控锚点失效,说明模板结构变了')
+  assert.notEqual(brokenWxml, wxml, '负控锚点失效，说明模板结构变了')
   assert.match(brokenWxml, /data-field="memberDiscountPrice"/, '负控样本必须真的含有该入口')
 
   const js = stripComments(read(EDIT_SCENE_JS))

@@ -1,12 +1,14 @@
 'use strict'
 
 const modal = require('../../../../utils/modal.js');
-const toast = require('../../../../utils/toast.js');
+const toast = require('../../../../utils/toast.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const app = getApp()
 const analytics = require('../../../../utils/analytics.js')
 const { chinaDayStart, toTimestamp } = require('../../../../utils/datetime.js')
 const { isRecordList } = require('../../../../utils/response-shape.js')
 const { ticketWindowPassed, ticketWindowText } = require('../../../../utils/ticket-window.js')
+const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js')
+const mediaPreview = require('../../../../utils/media-preview.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
 
@@ -54,9 +56,9 @@ function normalizeTicket(ticket) {
     _id: String(source.id == null ? '' : source.id),
     _dateText: source.startTime ? `场次时间 ${dateText(source.startTime)}${source.endTime ? ` - ${dateText(source.endTime)}` : ''}` : '',
     _deadlineText: source.endTime ? dateText(source.endTime) : '',
-    _nameText: nonEmptyString(source.name) || '票种名称待确认',
+    _nameText: nonEmptyString(source.name) || '—',
     _priceText: price === null ? '价格待定' : `¥${price}`,
-    _inventoryText: remaining === null ? '余票待确认' : remaining > 0 ? `剩余 ${remaining} 张` : '已售罄',
+    _inventoryText: remaining === null ? '—' : remaining > 0 ? `剩余 ${remaining} 张` : '已售罄',
     // remaining_inventory 可空:商家没填库存 ≠ 卖完了。只把**确证的 0** 当售罄,
     // 空值照常可选(原来这里显示「余票待确认」、点下去却说「已售罄」并硬拦);
     // 真超卖由服务端建单时判,不在这里替它猜。
@@ -67,7 +69,7 @@ function normalizeTicket(ticket) {
 }
 
 function actionFor(info) {
-  if (!info || (info.isSignUp !== 0 && info.isSignUp !== 1)) return { state: 'unavailable', text: '报名状态待确认' }
+  if (!info || (info.isSignUp !== 0 && info.isSignUp !== 1)) return { state: 'unavailable', text: '—' }
   if (info.isSignUp === 0) return { state: 'signup', text: '立即报名' }
   const now = Date.now()
   const start = info.startDate ? toTimestamp(String(info.startDate)) : NaN
@@ -93,11 +95,12 @@ const STATE_VARIANT = {
 Component({
   properties: { activityId: { type: String, value: '' } },
   data: {
-    state: 'loading', // loading | error | empty | ready | missing | gate
+    state: 'loading', // loading | error | login | empty | ready | missing | gate
     info: {},
     tickets: [],
     // M1-3 门卡:非俱乐部成员拿到的是 {gate:true, clubId, activityName, message},
     // 不是详情。当成正常详情渲染会得到「活动标题待确认 + 空票种」(B-03)。
+    cancelledHasOwnOrder: false,
     gateClubId: 0,
     gateMessage: '',
     selectedTicketId: '',
@@ -108,7 +111,7 @@ Component({
     hostName: '',
     hostAvatar: '',
     categoryText: '',
-    titleText: '活动标题待确认',
+    titleText: '—',
     registrationCountText: '0',
     averageRatingText: '—',
     commentCountText: '0',
@@ -140,21 +143,44 @@ Component({
   },
   lifetimes: {
     attached() {
+      this._detached = false
       this.load(this.data.activityId)
     },
     detached() {
+      this._detached = true
       this._loadToken = (this._loadToken || 0) + 1
       this._cancelToken = (this._cancelToken || 0) + 1
       this._commentToken = (this._commentToken || 0) + 1
     },
   },
+  pageLifetimes: {
+    show() {
+      this._hidden = false; this._navigating = false
+      if (this.data.activityId && this._activityReadOwner !== this._activityReadIdentity()) this.load(this.data.activityId)
+    },
+    hide() { this._hidden = true },
+  },
   methods: {
+    _activityReadIdentity() { return [typeof app.getUserID === 'function' ? app.getUserID() : '', (app.globalData || {}).authorization || ''].join('|') },
+    _activityReadCurrent(token, res) {
+      if (this._detached || token !== this._loadToken) return false
+      if (this._activityReadOwner !== this._activityReadIdentity() || res && res.reason === 'sessionChanged') {
+        this._loadToken += 1
+        this._loadingId = ''; this._loadedId = ''
+        this.setData({ state: 'loading', info: {}, tickets: [], canConfirmSignup: false, cancelledHasOwnOrder: false })
+        if (!this._hidden) this.load(this.data.activityId)
+        return false
+      }
+      return true
+    },
     goTopic() {
       const id = Number(this.data.info.topicId)
-      if (Number.isSafeInteger(id) && id > 0) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id })
+      if (Number.isSafeInteger(id) && id > 0 && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false } }) }
     },
     load(id) {
+      if (this._detached) return
       const requestedId = String(id || '')
+      const owner = this._activityReadIdentity()
       if (!requestedId) {
         this._loadToken = (this._loadToken || 0) + 1
         this._loadingId = ''
@@ -162,7 +188,8 @@ Component({
         this.setData({ state: 'missing', info: {}, tickets: [] })
         return
       }
-      if (this._loadingId === requestedId || this._loadedId === requestedId) return
+      if (owner === this._activityReadOwner && (this._loadingId === requestedId || this._loadedId === requestedId)) return
+      this._activityReadOwner = owner
       const token = (this._loadToken || 0) + 1
       this._loadToken = token
       this._cancelToken = (this._cancelToken || 0) + 1
@@ -171,6 +198,7 @@ Component({
       this._loadedId = ''
       this.setData({
         state: 'loading',
+        cancelledHasOwnOrder: false,
         errorMsg: '',
         info: {},
         tickets: [],
@@ -188,10 +216,10 @@ Component({
       app.sendRequest({
         url: '/api/activity/info', method: 'POST', data: { id: requestedId }, hideLoading: true, silentError: true,
         success: (res) => {
-          if (token !== this._loadToken) return
+          if (!this._activityReadCurrent(token, res)) return
           this._loadingId = ''
           if (!ok(res)) {
-            this.failLoad(token, res && res.msg ? res.msg : '活动详情暂时打不开，请稍后重试。', res)
+            this.failLoad(token, res && res.msg ? res.msg : '活动详情无法打开，请稍后重试。', res)
             return
           }
           if (!res.data) {
@@ -224,10 +252,10 @@ Component({
               || (nonNegativeInteger(item.players) === null ? '' : String(item.players))
             return {
               ...item,
-              _titleText: nonEmptyString(item.title) || '节点名称待确认',
+              _titleText: nonEmptyString(item.title) || '—',
               _imageUrl: nonEmptyString(item.imgUrl),
-              _playersText: players ? (/人$/.test(players) ? players : `${players}人`) : '人数待确认',
-              _durationText: duration === null ? '时长待确认' : `${duration} 分钟`,
+              _playersText: players ? (/人$/.test(players) ? players : `${players}人`) : '—',
+              _durationText: duration === null ? '—' : `${duration} 分钟`,
             }
           })
           const info = {
@@ -245,7 +273,7 @@ Component({
           const latitude = coordinate(info.latitude, 90)
           const longitude = coordinate(info.longitude, 180)
           const averageRating = nonNegativeNumber(info.averageRating)
-          this._loadedId = requestedId
+          this._loadedId = requestedId; pageMotion.enter(this, 'pmPage') // 2026-10-23:详情各块依次浮上来
           this.setData({
             state: 'ready',
             info,
@@ -262,7 +290,7 @@ Component({
               : '时间待定',
             hostName: nonEmptyString(host.memberRealName),
             hostAvatar: nonEmptyString(host.memberAvatar),
-            titleText: nonEmptyString(info.name) || '活动标题待确认',
+            titleText: nonEmptyString(info.name) || '—',
             categoryText: info.sysCategoryList.map((item) => nonEmptyString(item.categoryName)).filter(Boolean).join(' · '),
             registrationCountText: countText(info.registrationCount),
             averageRatingText: averageRating !== null && averageRating <= 5 ? String(averageRating) : '—',
@@ -275,17 +303,29 @@ Component({
           this.triggerEvent('loaded', { id: requestedId, name: info.name || '', imgUrl: info.imgUrl || '' })
         },
         successStatusAbnormal: (res, status) => this.failLoad(token, '服务暂时不可用，请稍后重试。', res, status),
-        fail: (res, status) => this.failLoad(token, '网络异常，请检查网络后重试。', res, status),
+        fail: (res, status) => this.failLoad(token, '网络异常，请重试。', res, status),
       })
     },
 
     failLoad(token, errorMsg, res, status) {
-      if (token !== this._loadToken) return
-      if (status == 401 || status == 2 || (res && (res.code == 401 || res.code == 2))) {
-        errorMsg = '登录已过期，请重新进入'
+      if (!this._activityReadCurrent(token, res)) return
+      if (res && res.errorCode === 'ACTIVITY_CANCELLED') {
+        this._loadingId = ''
+        this.setData({ state: 'cancelled', info: {}, tickets: [], canConfirmSignup: false,
+          cancelledHasOwnOrder: res.canViewOwnOrders === true })
+        return
       }
       this._loadingId = ''
+      // PR10 F-W1-12:未登录(无会话 / 401)不是加载失败 —— 给登录引导,其余失败仍按 load-failure 留白
+      if (isLoginRequired(app, res, status)) {
+        this.setData({ state: 'login', errorMsg: '登录已过期，请重新进入' })
+        return
+      }
       this.setData({ state: 'error', errorMsg })
+    },
+
+    loginRetry() {
+      retryLogin(this, app, function () { this.retry() })
     },
 
     retry() {
@@ -322,7 +362,7 @@ Component({
     },
 
     openSignup() {
-      if (!this.data.canConfirmSignup) return
+      if (!this.data.canConfirmSignup || this._navigating) return
       if (app.getUserType() == 2) {
         toast('商家用户不可报名活动')
         return
@@ -356,21 +396,26 @@ Component({
         toast('该票种已截止报名')
         return
       }
-      wx.navigateTo({ url: `/pages/activity/baoming/baoming?activityId=${this.data.activityId}&ticketId=${ticket.id}` })
+      this._navigating = true; wx.navigateTo({ url: `/pages/activity/baoming/baoming?activityId=${this.data.activityId}&ticketId=${ticket.id}`, complete: () => { this._navigating = false } })
+    },
+
+    onCancelledAction() {
+      if (this.data.cancelledHasOwnOrder) this.goPlay()
+      else this.close()
     },
 
     goPlay() {
-      wx.navigateTo({ url: '/subpackageMember/signup/index' })
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index', complete: () => { this._navigating = false } })
     },
 
     goUserInfo(event) {
       const id = event.currentTarget.dataset.id
-      if (id) wx.navigateTo({ url: `/pages/userinfo/userinfo?userId=${id}` })
+      if (id && !this._navigating) { this._navigating = true; wx.navigateTo({ url: `/pages/userinfo/userinfo?userId=${id}`, complete: () => { this._navigating = false } }) }
     },
 
     goTemplateDetail(event) {
       const id = event.currentTarget.dataset.id
-      if (id) wx.navigateTo({ url: `/pages/templatedetail/templatedetail?id=${id}&scope=my` })
+      if (id && !this._navigating) { this._navigating = true; wx.navigateTo({ url: `/pages/templatedetail/templatedetail?id=${id}&scope=my`, complete: () => { this._navigating = false } }) }
     },
 
     openLocation() {
@@ -453,7 +498,7 @@ Component({
               if (token === this._cancelToken && activityId === this.data.activityId) this.setData({ cancelling: false, cancelError: '网络异常，取消原因已保留，请重试。' })
             },
             successStatusAbnormal: () => {
-              if (token === this._cancelToken && activityId === this.data.activityId) this.setData({ cancelling: false, cancelError: '服务暂时不可用，取消原因已保留，请重试。' })
+              if (token === this._cancelToken && activityId === this.data.activityId) this.setData({ cancelling: false, cancelError: '服务暂不可用，取消原因已保留，请重试。' })
             },
           })
         },
@@ -512,7 +557,7 @@ Component({
 
     previewCommentImage(event) {
       const current = event.currentTarget.dataset.src
-      if (current) wx.previewImage({ current, urls: this.data.uploadImages })
+      if (current) mediaPreview.open(this.data.uploadImages, current)
     },
 
     changeRating(event) {
@@ -560,7 +605,7 @@ Component({
           if (token === this._commentToken && activityId === this.data.activityId) this.setData({ commentSubmitting: false, commentError: '网络异常，评分和文案已保留，请重试。' })
         },
         successStatusAbnormal: () => {
-          if (token === this._commentToken && activityId === this.data.activityId) this.setData({ commentSubmitting: false, commentError: '服务暂时不可用，评分和文案已保留，请重试。' })
+          if (token === this._commentToken && activityId === this.data.activityId) this.setData({ commentSubmitting: false, commentError: '服务暂不可用，评分和文案已保留，请重试。' })
         },
       })
     },
@@ -573,7 +618,7 @@ Component({
     goGateClub() {
       const clubId = Number(this.data.gateClubId) || 0
       if (clubId > 0) {
-        wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId })
+        if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId, complete: () => { this._navigating = false } }) } // 跳转中不响应连点,免得叠两层俱乐部页
         return
       }
       this.close()

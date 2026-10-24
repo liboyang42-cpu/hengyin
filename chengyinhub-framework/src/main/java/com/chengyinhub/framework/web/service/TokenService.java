@@ -3,7 +3,7 @@ package com.chengyinhub.framework.web.service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +53,11 @@ public class TokenService
 
     @Autowired
     private RedisCache redisCache;
+    @Autowired
+    private com.chengyinhub.system.mapper.SysUserMapper sysUserMapper;
+    @Autowired
+    private SysPermissionService sysPermissionService;
+    private static final long ABSOLUTE_SESSION_MILLIS = 24L * 60 * 60 * 1000;
 
     /**
      * 获取用户身份信息
@@ -72,6 +77,19 @@ public class TokenService
                 String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
                 String userKey = getTokenKey(uuid);
                 LoginUser user = redisCache.getCacheObject(userKey);
+                if (user == null) return null;
+                long now = System.currentTimeMillis();
+                Long absolute = user.getAbsoluteExpireTime();
+                if (absolute == null && user.getLoginTime() != null) absolute = user.getLoginTime() + ABSOLUTE_SESSION_MILLIS;
+                com.chengyinhub.common.core.domain.entity.SysUser current = sysUserMapper.selectUserById(user.getUserId());
+                if (absolute == null || now >= absolute || current == null
+                        || !"0".equals(current.getStatus()) || !"0".equals(current.getDelFlag())) {
+                    redisCache.deleteObject(userKey);
+                    return null;
+                }
+                user.setAbsoluteExpireTime(absolute);
+                user.setUser(current);
+                user.setPermissions(sysPermissionService.getMenuPermission(current));
                 return user;
             }
             catch (Exception e)
@@ -79,11 +97,8 @@ public class TokenService
                 // 与 AppTokenService 同因:客户端送来无法解析的 token 是客户端错误,不是服务端故障。
                 // 记 WARN 且不带堆栈 —— 堆栈全落在 jjwt 内部与 servlet 调用链上,对定位零帮助,
                 // 却是日志刷屏的主要来源(2026-08-01 生产 3.1GB 日志的成因之一)。
-                log.warn("认证失败-JWT解析异常: uri={}, tokenPrefix={}, errorType={}, error={}",
-                        request.getRequestURI(),
-                        token.length() > 20 ? token.substring(0, 20) + "..." : token,
-                        e.getClass().getSimpleName(),
-                        e.getMessage());
+                log.warn("认证失败-JWT解析异常: uri={}, errorType={}",
+                        request.getRequestURI(), e.getClass().getSimpleName());
             }
         }
         return null;
@@ -122,6 +137,8 @@ public class TokenService
     {
         String token = IdUtils.fastUUID();
         loginUser.setToken(token);
+        loginUser.setLoginTime(System.currentTimeMillis());
+        loginUser.setAbsoluteExpireTime(loginUser.getLoginTime() + ABSOLUTE_SESSION_MILLIS);
         setUserAgent(loginUser);
         refreshToken(loginUser);
 
@@ -147,18 +164,21 @@ public class TokenService
         }
     }
 
-    /**
-     * 刷新令牌有效期
-     * 
-     * @param loginUser 登录信息
-     */
     public void refreshToken(LoginUser loginUser)
     {
-        loginUser.setLoginTime(System.currentTimeMillis());
-        loginUser.setExpireTime(loginUser.getLoginTime() + expireTime * MILLIS_MINUTE);
-        // 根据uuid将loginUser缓存
+        long now = System.currentTimeMillis();
+        if (loginUser.getLoginTime() == null) loginUser.setLoginTime(now);
+        Long absolute = loginUser.getAbsoluteExpireTime();
+        if (absolute == null) absolute = loginUser.getLoginTime() + ABSOLUTE_SESSION_MILLIS;
+        loginUser.setAbsoluteExpireTime(absolute);
         String userKey = getTokenKey(loginUser.getToken());
-        redisCache.setCacheObject(userKey, loginUser, expireTime, TimeUnit.MINUTES);
+        if (now >= absolute) {
+            redisCache.deleteObject(userKey);
+            return;
+        }
+        loginUser.setExpireTime(Math.min(now + expireTime * MILLIS_MINUTE, absolute));
+        long remainingSeconds = Math.max(1, (loginUser.getExpireTime() - now) / 1000);
+        redisCache.setCacheObject(userKey, loginUser, (int) remainingSeconds, TimeUnit.SECONDS);
     }
 
     /**

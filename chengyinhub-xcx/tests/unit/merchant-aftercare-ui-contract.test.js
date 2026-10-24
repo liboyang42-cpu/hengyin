@@ -15,7 +15,7 @@ test('售后页显式覆盖访问与加载状态，ready 态展示三轨真实�
   assert.match(wxml, /\{\{detail\.processingText\}\}/);
   assert.match(wxml, /\{\{detail\.merchantOpinionText\}\}/);
   assert.match(wxml, /\{\{detail\.refundedText\}\}/);
-  assert.match(wxml, /退款政策快照/);
+  assert.match(wxml, /下单时的退款政策/);
   assert.match(wxml, /\{\{detail\.refundPolicyText\}\}/);
   assert.match(wxml, /\{\{detail\.refundDeadlineText\}\}/);
   assert.doesNotMatch(wxml, /退款成功/, '页面不得用笼统成功文案覆盖真实款项状态');
@@ -37,10 +37,10 @@ test('回应表单按服务端 decision 白名单展示，并用真实图片上�
   assert.doesNotMatch(wxml, /bindinput="onEvidenceInput"|凭证 URL/, '不得继续要求商家手贴 URL');
   assert.match(wxml, /catchtap="previewResponseEvidence"/, '历史凭证只能走当前详情短时预览');
   assert.match(wxml, /wx:elif="\{\{item\.evidenceUnavailable\}\}"[\s\S]*?暂不可查看/,
-    '凭证核验失败必须显示暂不可查看占位,不能悄悄消失');
+    '凭证核验失败必须显示暂不可查看占位，不能悄悄消失');
   assert.match(js, /formData:\s*\(\)\s*=>\s*\(\{\s*refundId:/, '凭证上传必须带退款单号');
   assert.match(read('app.js'), /formData:\s*options\.formData/,
-    'app.chooseImage 必须把调用方 formData 透传给上传池,否则 refundId 到不了服务端');
+    'app.chooseImage 必须把调用方 formData 透传给上传池，否则 refundId 到不了服务端');
   assert.doesNotMatch(wxml, /copyEvidenceUrl|复制凭证地址|\{\{item\.evidenceUrl\}\}/,
     '不得把 bearer URL 展示或复制给用户');
   assert.match(wxml, /disabled="\{\{!canSubmit\}\}"[^>]*bindtap="submitResponse"/);
@@ -63,7 +63,7 @@ test('详情照 Revolut 313:大金额头 + 操作胶囊 + 键值卡 + 处理记�
   const bare = wxml.replace(/<!--[\s\S]*?-->/g, '');
   assert.match(bare, /<view class="fin-group ac-group" wx:if="\{\{detail\.customerNicknameText\}\}">\s*<view class="ac-group-title">客户<\/view>/,
     '客户组只在后端下发昵称时渲染');
-  assert.doesNotMatch(bare, /手机号|detail\.phone|detail\.customerPhone|openid/i, '客户组只放昵称,不得出现 PII');
+  assert.doesNotMatch(bare, /手机号|detail\.phone|detail\.customerPhone|openid/i, '客户组只放昵称，不得出现 PII');
   assert.match(bare, /<text class="ac-kv-k">已转平台客服<\/text>\s*<text class="ac-kv-v">\{\{detail\.platformTakeoverText\}\}<\/text>/);
   ['cy-sheet', 'cy-timeline', 'cy-cell'].forEach(name => assert.ok(json.usingComponents[name], name));
 });
@@ -77,7 +77,7 @@ test('回应走 full 面板两步:填写 → 确认后果 → 提交;确认文�
   assert.match(wxml, /<text class="ac-confirm-text">\{\{flow\.consequence\}\}<\/text>/);
   ['AGREE', 'REJECT', 'EVIDENCE'].forEach((decision) => {
     const flow = vm.RESPONSE_FLOW[decision];
-    assert.match(flow.consequence, /提交后由平台审核/, decision);
+    assert.match(flow.consequence, /平台审核/, decision);
     assert.doesNotMatch(flow.consequence + flow.submitText, /\d+\s*(个)?(工作)?[日天小时]|到账|退款成功/, `${decision} 不得编造时效或成功`);
   });
 });

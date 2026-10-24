@@ -39,10 +39,78 @@ function loadComponent(source) {
     setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb.call(this) },
     triggerEvent() {},
   })
-  return { vm: vmInstance, requests }
+  return { vm: vmInstance, requests, observe: (show, activities) => definition.observers['show, activities'].call(vmInstance, show, activities), detach: () => definition.lifetimes.detached.call(vmInstance) }
 }
 
 const TICKETS = { omsTicketList: [{ id: 5, name: '单人票', price: 88 }] }
+
+test('同场次入会后重开刷新资格，旧gate及失败不得覆盖新票', () => {
+  const { vm, requests, observe } = loadComponent()
+  const activities = [{ id: 9, name: '单场' }]
+  observe(true, activities)
+  requests[0].success({ code: 200, data: { gate: true, clubId: 7001 } })
+  assert.equal(vm.data.ticketsState, 'gate')
+  observe(false, activities)
+  observe(true, activities)
+  assert.equal(requests.length, 2, '同ID重开仍须重新读取加入资格')
+  assert.equal(vm.data.pickedTicketId, 0)
+  assert.equal(vm.data.ticketsState, 'loading')
+  requests[1].success({ code: 200, data: TICKETS })
+  requests[0].success({ code: 200, data: { gate: true, clubId: 7001 } })
+  requests[0].fail({ msg: '旧失败' })
+  assert.equal(vm.data.ticketsState, 'ready')
+  assert.deepEqual(vm.data.tickets.map(t => t.id), [5])
+  assert.equal(vm.data.gateClubId, 0)
+})
+
+test('多场重开保留场次并重读库存，可见期间不重置选票，移除场次清选择', () => {
+  const { vm, requests, observe } = loadComponent()
+  const activities = [{ id: 9 }, { id: 10 }]
+  observe(true, activities)
+  assert.equal(requests.length, 0, '首次多场不得代用户预选')
+  vm.onPickDay({ currentTarget: { dataset: { id: 10 } } })
+  requests[0].success({ code: 200, data: TICKETS })
+  vm.onPickTicket({ currentTarget: { dataset: { id: 5 } } })
+  observe(true, activities)
+  assert.equal(requests.length, 1)
+  assert.equal(vm.data.pickedTicketId, 5)
+  observe(false, activities)
+  observe(true, activities)
+  assert.equal(requests.length, 2)
+  assert.equal(vm.data.pickedActivityId, 10)
+  assert.equal(vm.data.pickedTicketId, 0)
+  assert.equal(vm.data.totalText, '')
+  requests[1].success({ code: 200, data: { omsTicketList: [{ id: 5, name: '售罄', price: 0, remainingInventory: 0 }] } })
+  vm.onPickTicket({ currentTarget: { dataset: { id: 5 } } })
+  assert.equal(vm.data.pickedTicketId, 0)
+  observe(true, [{ id: 11 }, { id: 12 }])
+  assert.equal(vm.data.pickedActivityId, 0)
+  assert.equal(vm.data.ticketsState, 'idle')
+  requests[1].success({ code: 200, data: TICKETS })
+  assert.equal(vm.data.ticketsState, 'idle')
+})
+
+test('关闭期间的回包失效，重试同场次只接受最新请求', () => {
+  const { vm, requests, observe } = loadComponent()
+  observe(true, [{ id: 9 }])
+  observe(false, [{ id: 9 }])
+  requests[0].success({ code: 200, data: TICKETS })
+  assert.equal(vm.data.ticketsState, 'loading')
+  observe(true, [{ id: 9 }])
+  vm.retryTickets()
+  requests[2].success({ code: 200, data: TICKETS })
+  requests[1].fail({ msg: '旧失败' })
+  assert.equal(vm.data.ticketsState, 'ready')
+})
+
+test('组件卸载后旧请求不再写状态', () => {
+  const { vm, requests, detach } = loadComponent()
+  vm.pickActivity(9)
+  detach()
+  requests[0].success({ code: 200, data: TICKETS })
+  requests[0].fail({ msg: '旧失败' })
+  assert.equal(vm.data.ticketsState, 'loading')
+})
 
 test('成功体缺 omsTicketList 是「没放票」的空态,不是读取失败(CU-C-131 复现)', () => {
   const { vm, requests } = loadComponent()
@@ -91,7 +159,7 @@ test('负控:撤掉修复(成功体也走 error+回显 msg)时,复现用例必�
     /          if \(!rows && d\) \{[\s\S]*?\n          \}\n/,
     ''
   )
-  assert.notEqual(regressed, current, '负控锚点失效:empty 分支已改名,扫描口径需同步')
+  assert.notEqual(regressed, current, '负控锚点失效:empty 分支已改名，扫描口径需同步')
   const { vm, requests } = loadComponent(regressed)
   vm.pickActivity(9)
   requests[0].success({ code: 200, msg: '操作成功', data: { id: 9, name: '夜行' } })
@@ -122,3 +190,13 @@ test('主题选票拒绝已开始与已结束票，下一步重新检查时间',
   assert.equal(confirmed.length, 1)
   assert.equal(vm.data.pickedTicketId, 0)
 })
+
+
+test('same-day sessions expose distinct server names and Beijing assembly times', () => {
+  const { vm, observe } = loadComponent();
+  observe(true, [{ id: 21, name: '自办路线', startDate: '2026-10-14 09:00:00' },
+    { id: 20, name: '俱乐部场次', startDate: '2026-10-14T11:00:00Z' }]);
+  assert.equal(vm.data.days[0].detailText, '09:00 · 自办路线');
+  assert.equal(vm.data.days[1].detailText, '19:00 · 俱乐部场次');
+  assert.equal(vm.data.days[0].day, vm.data.days[1].day);
+});

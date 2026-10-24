@@ -1,13 +1,12 @@
 const { readReducedMotion } = require('../../utils/motion-preference.js');
-const modal = require('../../utils/modal.js');
+const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
 const cyToast = require('../../utils/toast.js');
 const { readPageStyle } = require('../../utils/font-scale.js');
 const app = getApp();
-const mockData = require('../../utils/mockData.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../utils/merchant-access-policy.js');
-const { formatDurationMinutes } = require('../../utils/template-display.js');
+const { formatDurationMinutes, gameTemplateCover } = require('../../utils/template-display.js');
 const { isRecord, isRecordList } = require('../../utils/response-shape.js');
 const analytics = require('../../utils/analytics.js');
 
@@ -67,7 +66,7 @@ Page({
     listLoaded: false,        // 任一 tab 拿到过数据 —— 四态里区分「首次加载」与「已有内容」
     banner: {},
     topList: [],
-    tailList: [],
+    tailList: [], flyClass: '',   // owner 10-22:每次打开页面卡片飞入(onShow 飞入、onHide 先藏好等下次重播)
     bannerTitle: '推荐',
     topTitle: '全部主题',
     emptyTitle: '',
@@ -117,14 +116,6 @@ Page({
     headerRightInset: 0
   },
 
-  isDevEnv() {
-    try {
-      return wx.getAccountInfoSync().miniProgram.envVersion === 'develop';
-    } catch (e) {
-      return false;
-    }
-  },
-
   onLoad(options) {
     options = options || {};
     const mi = getApp().globalData.menuButtonInfo || {};
@@ -144,15 +135,11 @@ Page({
       titBarHeight: safeTop - sh,     // titBar = 胶囊底到状态栏底的距离
       headerRightInset: headerRightInset
     });
-    if (this.isDevEnv()) {
-      const mock = mockData.getHomeData() || {};
-      this.applyCategoryList(mock.categoryList);
-    }
   },
 
   onShow() {
     this.setData({ reducedMotion: readReducedMotion() });
-
+    this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-in' });   // 卡片飞入
     this.setData({ pageMetaStyle: readPageStyle() });
     wx.hideTabBar();
     // 收敛:商家玩家共用发布广场,底部 tabBar 按本地身份立即渲染(避免等 /api/publish/home 异步返回时闪 consumer)
@@ -297,21 +284,8 @@ Page({
   /* CU-M-64:入口现在只搜模板。原来这里 (以及死代码 searchClick) 只是跳到通用搜索
      /pages/search2 —— 那里搜的是主题/活动/俱乐部/商家四类,一类都不是「节点玩法」,
      而入口写着「搜索节点玩法与主题」:按承诺搜的人走错搜索范围,还搜不到。 */
-  goSearch() {
-    modal.show({
-      title: '搜索模板',
-      editable: true,
-      placeholderText: '输入主题或玩法名称',
-      confirmText: '搜索',
-      validate: (content) => String(content || '').trim() ? '' : '请输入要搜索的名称',
-      success: (res) => {
-        if (!res || !res.confirm) return;
-        const keyword = String(res.content || '').trim();
-        if (!keyword) { cyToast('请输入要搜索的名称'); return; }
-        this.startTemplateSearch(keyword);
-      },
-    });
-  },
+  // 2026-10-22 owner 裁决:模板页搜索入口统一走通用搜索(pages/search2),模板作为结果类型出现在那里。
+  goSearch() { wx.navigateTo({ url: '/pages/search2/index' }); },
   goInbox() { wx.navigateTo({ url: '/subpackageB/pages/im/list/index' }); },
 
   // ===== 模板内搜索(2026-09-24 裁决 CU-M-64) =====
@@ -378,6 +352,8 @@ Page({
 
   onHide() {
     merchantTheme.merchantPageRestore();
+    // 离开时先把卡片藏好(cy-fly-wait 透明),下次回到本页 onShow 再飞进来,不会先闪一帧旧卡
+    this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-wait' });
   },
 
   // 主题模板走 name 字段(主题推荐/最新主题走 title),两边共用同一套真实图标映射
@@ -413,10 +389,11 @@ Page({
       if (dur) meta.push(dur);
       return Object.assign({}, item, {
         _kind: 'game',
+        imgUrl: gameTemplateCover(item),
         _title: item.title || '',
         _subText: item.description || '',
         _metaText: meta.join(' · '),
-        _iconUrl: INTERACTION_ICON_BY_TITLE[item.title || ''] || '',
+        _iconUrl: INTERACTION_ICON_BY_TITLE[item.title || ''] || (!item.imgUrl ? gameTemplateCover(item) : ''),
         // 后端按 FIND_IN_SET(activity_categoryids) 过滤,前端置顶排序照抄同一个字段;
         // 不要拿 categoryId —— 那是另一列,两者并不同步。
         _cats: String(item.activityCategoryids == null ? '' : item.activityCategoryids)
@@ -460,7 +437,7 @@ Page({
     // 同时 `topList: cat ? top : top.slice(1)` 只在不选分类时把横幅项摘掉,选了分类就
     // 横幅 + 列表各出现一次,同一张卡同屏两遍。横幅只认分类命中的首项,列表一律去重。
     const banner = top[0] || {};
-    const searching = !!keyword;
+    const searching = !!keyword; pageMotion.enter(this, 'pmList'); // 2026-10-23:换品类 / 标签 / 搜索后卡片依次浮上来
     this.setData({
       banner: banner,
       // activeCat=0 走运营编排,所以叫「推荐」不叫「全部」—— 叫全部会让用户
@@ -473,10 +450,10 @@ Page({
         : (cat ? (catName + ' · ' + top.length + ' 个') : (isTopic ? '全部主题' : '全部玩法')),
       emptyTitle: searching ? '没有找到相关模板' : (isTopic ? '还没有可复用的主题模板' : '这个品类还没有玩法'),
       emptySub: searching
-        ? '换个名称试试，或点上面的「清除」看全部模板'
+        ? '换个关键词试试'
         : (isTopic
-          ? '新的整包主题开放后会出现在这里,也可以先去「游戏」里挑单个玩法'
-          : '换个品类,或者看看「主题」里的整包路线')
+          ? ''
+          : '')
     });
   },
 
@@ -540,11 +517,6 @@ Page({
     const that = this;
     const seq = (this._homeSeq || 0) + 1;
     this._homeSeq = seq;
-    const fallback = function () {
-      if (!that.isDevEnv()) return;
-      const mock = mockData.getHomeData() || {};
-      that.applyCategoryList(mock.categoryList);
-    };
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -558,12 +530,12 @@ Page({
           that._categoryCacheReady = isRecordList(res.data.categoryList) && res.data.categoryList.length > 0;
         } else {
           // 品类拉不到不阻断:列表来自另外两个接口,没有分类行页面照常可用。
-          fallback();
+          // 保留已读分类；读取失败不能替换为演示分类。
         }
       },
       fail() {
         if (that._homeSeq !== seq) return;
-        fallback();
+        // 保留已读分类。
       },
       complete() {
         if (that._homeSeq === seq) that._homeRequestPending = false;
@@ -637,19 +609,11 @@ Page({
     // 主题与玩法是两种实体:主题直接进入既有配置入口；玩法进入既有详情页。
     if (item._kind === 'topic') { this.goTopicConfig(e); return; }
     if (!item.id) return;
-    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + item.id });
+    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + item.id +
+      (this.data.operationScope === 'MERCHANT' ? '&operationScope=MERCHANT' : '') });
   },
 
   // ===== 主题模板货架(/api/template/topic-template) =====
-  applyDevTopicPreview() {
-    if (!this.isDevEnv()) return;
-    this._topicRows = this.decorateTopic(mockData.getTopicTemplates());
-    this._topicLoaded = true;
-    if (this.data.tab !== 'topic') return;
-    this.setData({ listLoaded: true, errorMsg: '' });
-    this.rebuildLists();
-  },
-
   getTopicTemplates() {
     const that = this;
     const seq = (this._topicTemplateSeq || 0) + 1;
@@ -664,20 +628,14 @@ Page({
       success(res) {
         if (that._topicTemplateSeq !== seq) return;
         if (res.code == '200' && isRecordList(res.data)) {
-          if (res.data.length || !that.isDevEnv()) {
-            that._topicRows = that.decorateTopic(res.data);
-            that._topicLoaded = true;
-            // 同 getGameRows:缓存照收,屏幕状态只归当前 tab 管
-            if (that.data.tab === 'topic') {
-              that.setData({ listLoaded: true, errorMsg: '' });
-              that.rebuildLists();
-            }
-          } else {
-            that.applyDevTopicPreview();
+          that._topicRows = that.decorateTopic(res.data);
+          that._topicLoaded = true;
+          if (that.data.tab === 'topic') {
+            that.setData({ listLoaded: true, errorMsg: '' });
+            that.rebuildLists();
           }
         } else {
-          if (that.isDevEnv()) that.applyDevTopicPreview();
-          else if (that.data.tab === 'topic') {
+          if (that.data.tab === 'topic') {
             // 同 getGameRows:失败半边只归当前 tab 管,迟到失败不画到别的 tab 上
             that.setData({ errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
           }
@@ -685,8 +643,7 @@ Page({
       },
       fail(res) {
         if (that._topicTemplateSeq !== seq) return;
-        if (that.isDevEnv()) that.applyDevTopicPreview();
-        else if (that.data.tab === 'topic') {
+        if (that.data.tab === 'topic') {
           that.setData({ errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
         }
       },
@@ -762,7 +719,8 @@ Page({
     }
     if (!item.id) return;
     analytics.track('template_reuse', { bizType: 'template', bizId: item.id });
-    wx.navigateTo({ url: '/pages/publish/temp/index?id=' + item.id });
+    wx.navigateTo({ url: '/pages/publish/temp/index?id=' + item.id +
+      (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '') });
   },
 
   // 整包复制成我的草稿,章节/节点/玩法在「我的项目 → 编辑」里看和配。

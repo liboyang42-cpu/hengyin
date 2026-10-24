@@ -1,6 +1,10 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.Club;
+import com.chengyinhub.business.domain.ClubMember;
+import com.chengyinhub.business.domain.ClubPost;
+import com.chengyinhub.business.service.IClubMemberService;
+import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.ICmsTopicService;
@@ -116,6 +120,64 @@ class ApiClubTopicVisibilityTest {
                         && sql.contains("to_id = ?") && sql.contains("status = 0")
                         && sql.contains("del_flag = 0"),
                 "执行俱乐部的生效合作主题必须进入公开列表:" + sql);
+    }
+
+    @Test
+    void childListsReusePrivateClubVisibilityForEveryViewerState() {
+        // public, legacy public, owner, member, outsider, pending, removed, anonymous,
+        // identity failure, membership lookup failure.
+        for (int scenario = 0; scenario < 10; scenario++) {
+            final int state = scenario;
+            ApiClubController controller = new ApiClubController() {
+                @Override public Long getAppUserId() {
+                    if (state == 8) throw new IllegalStateException("identity unavailable");
+                    return state == 7 ? null : 42L;
+                }
+            };
+            Club club = new Club();
+            club.setId(73L);
+            club.setMemberId(scenario == 2 ? 42L : 9L);
+            club.setPublicVisible(scenario == 1 ? null : Integer.valueOf(scenario == 0 ? 1 : 0));
+            IClubService clubs = mock(IClubService.class);
+            when(clubs.selectClubById(73L)).thenReturn(club);
+            IClubMemberService members = mock(IClubMemberService.class);
+            if (scenario == 3 || scenario == 5 || scenario == 6) {
+                ClubMember membership = new ClubMember();
+                membership.setStatus(scenario == 3 ? 1 : scenario == 5 ? 0 : 2);
+                when(members.selectMembershipRecord(73L, 42L)).thenReturn(membership);
+            }
+            if (scenario == 9) {
+                when(members.selectMembershipRecord(73L, 42L))
+                        .thenThrow(new IllegalStateException("membership unavailable"));
+            }
+            ICmsTopicService topics = mock(ICmsTopicService.class);
+            when(topics.selectPublicCmsTopicList(any())).thenReturn(Collections.emptyList());
+            IClubPostService posts = mock(IClubPostService.class);
+            when(posts.selectClubPostPage(any(), any(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(Collections.emptyList());
+            ReflectionTestUtils.setField(controller, "clubService", clubs);
+            ReflectionTestUtils.setField(controller, "clubMemberService", members);
+            ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+            ReflectionTestUtils.setField(controller, "clubPostService", posts);
+            ClubPost postQuery = new ClubPost();
+            postQuery.setClubId(73L);
+            boolean allowed = scenario < 4;
+            assertEquals(allowed ? 200 : 500, controller.topics(club).get("code"), "topics state " + scenario);
+            assertEquals(allowed ? 200 : 500, controller.postList(postQuery).get("code"), "posts state " + scenario);
+            verify(topics, org.mockito.Mockito.times(allowed ? 1 : 0)).selectPublicCmsTopicList(any());
+            verify(posts, org.mockito.Mockito.times(allowed ? 1 : 0)).selectClubPostPage(any(), any(), org.mockito.ArgumentMatchers.anyInt());
+        }
+    }
+
+    @Test
+    void rosterSessionLabelUsesShanghaiTimeAndPreservesDateOnlyMidnight() {
+        ApiClubController controller = new ApiClubController();
+        com.chengyinhub.business.domain.CmsActivity session = new com.chengyinhub.business.domain.CmsActivity();
+        session.setStartDate(java.util.Date.from(java.time.Instant.parse("2026-10-15T06:00:00Z")));
+        assertEquals("10月15日 14:00", ReflectionTestUtils.invokeMethod(controller, "sessionLabel", session));
+        session.setStartDate(java.util.Date.from(java.time.Instant.parse("2026-10-14T16:00:00Z")));
+        assertEquals("10月15日", ReflectionTestUtils.invokeMethod(controller, "sessionLabel", session));
+        session.setStartDate(null);
+        org.junit.jupiter.api.Assertions.assertNull(ReflectionTestUtils.invokeMethod(controller, "sessionLabel", session));
     }
 
     private CmsTopic topic(Long id, String config) {

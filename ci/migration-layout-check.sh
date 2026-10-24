@@ -72,6 +72,21 @@ else
     | grep -E '\.sql$' \
     | grep -Ev "^${EXPECTED_DIR}/(migration_|_precheck_|_deploy_|bak_)" \
     | sort || true)"
+  # 2026-10-19:基线上已存在的历史件若只改了注释(如公开仓擦除生产地址),不算「新增要在库上跑的 SQL」。
+  # 判据:去掉 `--` 注释行与空行后与基线逐字相同。改了任何可执行行的照旧拦;新增文件照旧拦。
+  # 不改名 —— 历史文件的路径是审计事实(见 ci/migration_ledger.py)。
+  _executable() { sed -E '/^[[:space:]]*--/d; /^[[:space:]]*$/d'; }
+  _kept=""
+  while IFS= read -r _f; do
+    [ -n "$_f" ] || continue
+    if git cat-file -e "${BASE}:${_f}" 2>/dev/null \
+        && [ "$(git show "${BASE}:${_f}" | _executable)" = "$(_executable < "$_f")" ]; then
+      echo "  · 仅注释改动的历史件(放行):$_f"
+      continue
+    fi
+    _kept="${_kept}${_f}"$'\n'
+  done <<< "$changed"
+  changed="${_kept%$'\n'}"
   if [ -n "$changed" ]; then
     echo "::error::新增/修改的 SQL 前缀不合规 —— 要在库上跑的 SQL 一律用 migration_* 前缀"
     echo "$changed" | sed 's/^/  ✗ /'

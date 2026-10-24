@@ -19,7 +19,7 @@ function classifyFailure(error, fallback) {
   }
   const transportText = error && typeof error === 'object' ? String(error.errMsg || '') : '';
   if (code === undefined && /request:fail|timeout|network|网络|断网/i.test(transportText)) {
-    return { kind: 'network', text: '网络连接失败，请检查网络后重试。' };
+    return { kind: 'network', text: '网络异常，请重试。' };
   }
   return { kind: 'data', text: requestText(error, fallback) };
 }
@@ -89,6 +89,8 @@ Page({
     perks: [],
     perkTypes: PERK_TYPES,
     formVisible: false,
+    discardVisible: false,
+    backGuardOff: false,
     saving: false,
     saveReadbackPending: false,
     saveErrorKind: '',
@@ -117,6 +119,7 @@ Page({
   onShow() { merchantTheme.merchantPageShow && merchantTheme.merchantPageShow(); },
   onHide() { merchantTheme.merchantPageRestore && merchantTheme.merchantPageRestore(); },
   onUnload() {
+    this._destroyed = true;
     this._loadEpoch = (this._loadEpoch || 0) + 1;
     this._saveEpoch = (this._saveEpoch || 0) + 1;
     this._deleteEpoch = (this._deleteEpoch || 0) + 1;
@@ -167,17 +170,17 @@ Page({
       loadError: '',
     });
     app.sendRequest({
-      hideLoading: true, autoErrorToast: hasOldContent, url: '/api/coop/perk-template/list', method: 'POST',
+      hideLoading: true, autoErrorToast: false, url: '/api/coop/perk-template/list', method: 'POST',
       data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
       success(res) {
         if (!isCurrent()) return;
-        if (!(res.code === '200' || res.code === 200)) return fail(res, '常备权益暂时没能加载，请重试。');
-        if (!isPerkTemplateList(res.data)) return fail({ msg: '常备权益数据格式异常' }, '常备权益数据格式异常');
+        if (!(res.code === '200' || res.code === 200)) return fail(res, '常备权益加载失败，请重试。');
+        if (!isPerkTemplateList(res.data)) return fail({ msg: '常备权益加载失败' }, '常备权益加载失败');
         const perks = shapePerkTemplates(res.data);
         if (!finish()) return;
         that.setData({ refreshing: false, perks: perks, loadState: 'ready', loadError: '' });
       },
-      fail(error) { fail(error, '常备权益暂时没能加载，请重试。'); }
+      fail(error) { fail(error, '常备权益加载失败，请重试。'); }
     });
   },
 
@@ -195,6 +198,17 @@ Page({
     this.setData({formVisible:false});
   },
   keepForm(){this.setData({discardVisible:false});},
+  // BL-17 物理返回守卫(见 wxml 尾部 page-container,照 decor 主页):先关最上层(放弃确认 > 编辑表单),不退出权益页
+  onNativeBackGuard() {
+    const d = this.data;
+    if (d.discardVisible) this.keepForm();
+    else if (d.formVisible) this.closeForm();
+    const n = this.data;
+    if (n.formVisible || n.discardVisible) {
+      this.setData({backGuardOff: true});
+      setTimeout(() => { if (!this._destroyed) this.setData({backGuardOff: false}); }, 50);
+    }
+  },
   discardForm(){this.setData({form:JSON.parse(this._formAtOpen),discardVisible:false,formVisible:false});this.refreshSaveState();},
   onTypeChange(e) { this.pickType({currentTarget:{dataset:{value:e.detail.value}}}); },
   pickType(e) {
@@ -320,7 +334,7 @@ Page({
         }
         const perks = shapePerkTemplates(res.data);
         if (!perks) {
-          failReadback({ msg: '保存结果读取数据格式异常，请重新查询' });
+          failReadback({ msg: '保存结果读取加载失败，请重新查询' });
           return;
         }
         if (!perks.some((row) => matchesSavedPerk(row, pending))) {

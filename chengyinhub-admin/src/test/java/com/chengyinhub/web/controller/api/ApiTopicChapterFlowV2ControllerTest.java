@@ -4,11 +4,13 @@ import com.chengyinhub.business.domain.dto.ChapterBlockDTO;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.TopicUpdateDTO;
 import com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO;
+import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
 import com.chengyinhub.business.exception.ChapterFlowValidationException;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IQuotaService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
+import com.chengyinhub.business.service.support.ThemeRuntimeConfig;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +50,7 @@ class ApiTopicChapterFlowV2ControllerTest
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", wxSecurity);
+        TopicContentSafetyTestFixtures.wire(controller, wxSecurity);
         // X03:updateTopic 现在会先过节点数额度闸,mock 返回 null=放行,
         // 本用例断言的是章节流契约错误的 400 语义,不该被额度闸挡在前面。
         ReflectionTestUtils.setField(controller, "quotaService", mock(IQuotaService.class));
@@ -97,6 +100,32 @@ class ApiTopicChapterFlowV2ControllerTest
                 "A4 必须把具体下标闸文案返回给客户端");
     }
 
+    /** F-L6-09：blocks 已物化的主题拒绝旧版保存 → 426 走小程序「版本需更新」，文案不变。 */
+    @Test
+    void legacySaveOfMaterializedFlowAsksOldClientToUpgrade()
+    {
+        when(topicService.updateTopicByOwner(any(), anyLong(), anyString()))
+                .thenThrow(new ChapterFlowClientUpgradeRequiredException("请更新小程序后编辑该主题"));
+
+        AjaxResult result = controller.updateTopic(new TopicUpdateDTO());
+
+        assertEquals(HttpStatus.UPGRADE_REQUIRED, result.get(AjaxResult.CODE_TAG));
+        assertEquals("请更新小程序后编辑该主题", result.get(AjaxResult.MSG_TAG));
+    }
+
+    /** 负控：旧版保存接口上的普通章节流契约错误仍是 400，不被升级成 426。 */
+    @Test
+    void legacySaveOrdinaryChapterFlowErrorStaysBadRequest()
+    {
+        when(topicService.updateTopicByOwner(any(), anyLong(), anyString()))
+                .thenThrow(new ChapterFlowValidationException("扫码到达和 GPS 到达请添加为地点"));
+
+        AjaxResult result = controller.updateTopic(new TopicUpdateDTO());
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.get(AjaxResult.CODE_TAG));
+        assertEquals("扫码到达和 GPS 到达请添加为地点", result.get(AjaxResult.MSG_TAG));
+    }
+
     @Test
     void optionalStoryChapterReturnsBadRequest()
     {
@@ -127,5 +156,47 @@ class ApiTopicChapterFlowV2ControllerTest
         assertEquals("PENDING", ((TopicBundleSubmitResultVO) result.get(AjaxResult.DATA_TAG)).getReviewState());
         assertEquals(java.util.Arrays.asList(91L, 92L),
                 ((TopicBundleSubmitResultVO) result.get(AjaxResult.DATA_TAG)).getBundledTemplateIds());
+    }
+
+    @Test
+    void clientBindingPassesPreflightAndReachesServerNodeMapping()
+    {
+        TopicUpdateDTO dto = clientBinding("new-node");
+        when(topicService.updateTopicByOwnerV2WithReview(any(), anyLong(), anyString())).thenAnswer(call -> {
+            TopicUpdateDTO request = call.getArgument(0);
+            String persisted = ThemeRuntimeConfig.remapForNodeSave(request.getThemeRuntimeConfig(),
+                    Collections.emptyMap(), Collections.emptyMap(), Collections.singletonMap("new-node", 101L));
+            assertTrue(ThemeRuntimeConfig.parseDraft(persisted).path("templateBindings").has("101"));
+            return new TopicBundleSubmitResultVO(77L, null, "DRAFT", Collections.emptyList());
+        });
+
+        assertEquals(HttpStatus.SUCCESS, controller.updateTopicV2(dto).get(AjaxResult.CODE_TAG));
+        verify(topicService).updateTopicByOwnerV2WithReview(dto, 19L, "tester");
+    }
+
+    @Test
+    void unknownClientBindingIsStillRejectedByServerNodeMapping()
+    {
+        TopicUpdateDTO dto = clientBinding("foreign-node");
+        when(topicService.updateTopicByOwnerV2WithReview(any(), anyLong(), anyString())).thenAnswer(call -> {
+            TopicUpdateDTO request = call.getArgument(0);
+            ThemeRuntimeConfig.remapForNodeSave(request.getThemeRuntimeConfig(),
+                    Collections.emptyMap(), Collections.emptyMap(), Collections.singletonMap("new-node", 101L));
+            throw new AssertionError("外来 client 标识不应通过映射");
+        });
+
+        AjaxResult response = controller.updateTopicV2(dto);
+        assertEquals(HttpStatus.ERROR, response.get(AjaxResult.CODE_TAG));
+        assertTrue(response.get(AjaxResult.MSG_TAG).toString().contains("client:foreign-node"));
+    }
+
+    private TopicUpdateDTO clientBinding(String key)
+    {
+        TopicUpdateDTO dto = new TopicUpdateDTO();
+        dto.setId(77L);
+        dto.setThemeRuntimeConfig("{\"schemaVersion\":1,\"capacity\":6,\"templateBindings\":{\"client:" + key
+                + "\":{\"templateId\":501,\"values\":{},\"items\":{},\"slotDigest\":\""
+                + String.join("", Collections.nCopies(64, "0")) + "\"}}}");
+        return dto;
     }
 }

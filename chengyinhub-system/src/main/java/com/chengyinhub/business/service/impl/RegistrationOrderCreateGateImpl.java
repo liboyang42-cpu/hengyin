@@ -1,8 +1,12 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.MemberCapability;
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
+import com.chengyinhub.business.service.ICapabilityService;
+import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IMerchantBusinessStatusService;
@@ -19,6 +23,9 @@ import java.math.BigDecimal;
 @Service
 public class RegistrationOrderCreateGateImpl implements IRegistrationOrderCreateGate {
 
+    /** 拍板 2026-10-22:商家可以加入俱乐部,但不能报名俱乐部活动。前端「商家不能报名」同源。 */
+    public static final String MERCHANT_CLUB_SIGNUP_MESSAGE = "商家不能报名俱乐部活动";
+
     @Autowired
     private ICmsRegistrationService registrationService;
     @Autowired
@@ -27,6 +34,10 @@ public class RegistrationOrderCreateGateImpl implements IRegistrationOrderCreate
     private IWechatPayService wechatPayService;
     @Autowired
     private IMerchantBusinessStatusService merchantBusinessStatusService;
+    @Autowired
+    private ICmsActivityService activityService;
+    @Autowired
+    private ICapabilityService capabilityService;
 
     @Override
     public void validate(Long memberId, RegistrationRequest request) {
@@ -35,6 +46,9 @@ public class RegistrationOrderCreateGateImpl implements IRegistrationOrderCreate
         if (merchantBusinessStatusService.isTargetMerchantClosed(
                 request.getOwnerType(), request.getOwnerId())) {
             throw new RegistrationCheckoutException(423, IMerchantBusinessStatusService.MERCHANT_CLOSED_MESSAGE);
+        }
+        if (isClubOwned(request) && capabilityService.hasCapability(memberId, MemberCapability.CAP_MERCHANT)) {
+            throw new RegistrationCheckoutException(403, MERCHANT_CLUB_SIGNUP_MESSAGE);
         }
         if (Integer.valueOf(1).equals(request.getOwnerType())) {
             CmsTopic topic = topicService.selectCmsTopicById(request.getOwnerId());
@@ -60,6 +74,20 @@ public class RegistrationOrderCreateGateImpl implements IRegistrationOrderCreate
         if (positive(current.getPayAmount()) && !wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
         }
+    }
+
+    /** 报名标的(主题/活动)是否归属某个俱乐部:主题看 cms_topic.club_id,活动看 cms_activity.club_id。 */
+    private boolean isClubOwned(RegistrationRequest request) {
+        if (request.getOwnerId() == null) return false;
+        Long clubId = null;
+        if (Integer.valueOf(1).equals(request.getOwnerType())) {
+            CmsTopic topic = topicService.selectCmsTopicById(request.getOwnerId());
+            clubId = topic == null ? null : topic.getClubId();
+        } else if (Integer.valueOf(2).equals(request.getOwnerType())) {
+            CmsActivity activity = activityService.selectCmsActivityById(request.getOwnerId());
+            clubId = activity == null ? null : activity.getClubId();
+        }
+        return clubId != null && clubId > 0;
     }
 
     private boolean positive(BigDecimal amount) {

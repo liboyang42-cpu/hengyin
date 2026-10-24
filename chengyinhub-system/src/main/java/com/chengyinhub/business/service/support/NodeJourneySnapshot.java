@@ -69,7 +69,7 @@ public final class NodeJourneySnapshot {
     /** 块配置里要冻结的旅程相关段;其余玩法段落(如 timeWindow)不冻结,仍读实时配置。 */
     private static final List<String> JOURNEY_SEGMENTS = Collections.unmodifiableList(Arrays.asList(
             "requires", "effects", "check", "present", "enter", "outcome", "deliver", "unlock", "revisit",
-            "brief", "route", "roleViews"));
+            "brief", "route", "roleViews", "outcomeRules"));
 
     /**
      * R14:通过时执行段级 effects 的玩法段。这份名单是**唯一真源**:建局冻结投影
@@ -286,7 +286,7 @@ public final class NodeJourneySnapshot {
      * 漏收这个根层键 = 配了 hard 的模板在全新一局里静默按 easy 扣血。
      */
     private static final List<String> MECHANIC_SEGMENTS = Collections.unmodifiableList(Arrays.asList(
-            "requires", "effects", "check", "present", "roleViews", "mistakeTier"));
+            "requires", "effects", "check", "present", "roleViews", "mistakeTier", "outcomeRules"));
 
     /** 把块配置里的玩法段拷进目标节点;没配的段不写,非对象配置视为没有玩法段。 */
     public static void copyMechanicSegments(JsonNode blockConfig, ObjectNode target) {

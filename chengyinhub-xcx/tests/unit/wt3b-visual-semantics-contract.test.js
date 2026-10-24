@@ -41,7 +41,7 @@ function assertReadableDarkText(wxss) {
   assert.doesNotMatch(
     body,
     /color:\s*var\(--cy-(?:color-)?text-inverse\)/,
-    '.team-entry__k 是暗卡上的正文,用「反色字」token 会渲成近乎同色的黑字(实测对比度 ~1.05:1):' + body
+    '.team-entry__k 是暗卡上的正文，用「反色字」token 会渲成近乎同色的黑字(实测对比度 ~1.05:1):' + body
   )
   assert.match(
     body,
@@ -124,17 +124,18 @@ test('P1-5 前提:优惠券页属于商家浅色工作域', () => {
 // ---------- P1-2 排行榜失败不得再落「暂未开放」 ----------
 function assertRankFailureIsRetryable(wxml) {
   assert.doesNotMatch(wxml, /暂未开放|还没开放|gc-state--notice|boardState\s*===\s*'notice'/, '不得保留 notice/暂未开放 分流')
-  assert.match(wxml, /排行榜没有加载出来/, '排行失败标题必须走可重试错误文案')
-  assert.match(wxml, /bind:action="retryRank"/, '排行失败必须保留重试入口')
+  assert.doesNotMatch(wxml, /<cy-inline-error|排行榜加载失败/, '成长中心按已确认设计暂不展示错误提示')
+  assert.match(wxml, /bindtap="goLeaderboard"/, '完整排行榜入口必须保留')
+  assert.match(fs.readFileSync(GC_JS, 'utf8'), /onPullDownRefresh\(\)/, '失败后仍可通过下拉刷新恢复')
 }
 
-test('P1-2 成长中心排行失败走可重试错误,不再分流 notice', () => {
+test('P1-2 成长中心隐藏错误提示且保留恢复,不再分流 notice', () => {
   assertRankFailureIsRetryable(fs.readFileSync(GC_WXML, 'utf8'))
 })
 
 test('negative control: 把 404 又写回「暂未开放」必须判红', () => {
   const wxml = fs.readFileSync(GC_WXML, 'utf8')
-  const mutated = wxml.replace('排行榜没有加载出来', '排行榜暂未开放')
+  const mutated = wxml.replace('总积分榜</text>', '总积分榜暂未开放</text>')
   assert.notEqual(mutated, wxml, '变异锚点失效(源码已改动?)')
   assert.throws(() => assertRankFailureIsRetryable(mutated), assert.AssertionError)
 })
@@ -143,7 +144,7 @@ test('negative control: 把 404 又写回「暂未开放」必须判红', () => 
 // 只断言 class 不够 —— 分流对不对在 JS 里。这里真跑一遍三条分支。
 function loadGrowthPage() {
   const requests = []
-  global.getApp = () => ({ sendRequest: (options) => requests.push(options) })
+  global.getApp = () => ({ getUserID: () => '7', sendRequest: (options) => requests.push(options) })
   global.wx = { stopPullDownRefresh() {}, switchTab() {}, navigateBack() {} }
   let pageConfig = null
   global.Page = (config) => { pageConfig = config }
@@ -158,19 +159,19 @@ test('P1-2 行为:HTTP 404、网络失败与业务失败都落 error', () => {
   let ctx = loadGrowthPage()
   ctx.page.loadMyRank()
   ctx.requests[0].successStatusAbnormal({ statusCode: 404, msg: 'not found' })
-  assert.equal(ctx.page.data.boardState, 'error', '404 不得再落 notice')
-  assert.match(ctx.page.data.errorMsg, /not found|没有加载出来/)
-  assert.doesNotMatch(ctx.page.data.errorMsg, /暂未开放/)
+  assert.equal(ctx.page.boardState, 'error', '404 不得再落 notice')
+  assert.match(ctx.page.errorMsg, /not found|加载失败/)
+  assert.doesNotMatch(ctx.page.errorMsg, /暂未开放/)
 
   ctx = loadGrowthPage()
   ctx.page.loadMyRank()
   ctx.requests[0].fail()
-  assert.equal(ctx.page.data.boardState, 'error', '网络失败必须仍是 error')
+  assert.equal(ctx.page.boardState, 'error', '网络失败必须仍是 error')
 
   ctx = loadGrowthPage()
   ctx.page.loadMyRank()
   ctx.requests[0].success({ code: 500, msg: '炸了' })
-  assert.equal(ctx.page.data.boardState, 'error', '业务失败必须仍是 error')
+  assert.equal(ctx.page.boardState, 'error', '业务失败必须仍是 error')
 })
 
 test('negative control: 把 404 又降级成 notice 必须被行为断言抓到', () => {

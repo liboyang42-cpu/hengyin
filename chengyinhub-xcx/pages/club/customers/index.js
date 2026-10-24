@@ -5,7 +5,7 @@
 // 数据:POST /api/club/crm/customers/list  { clubId, filter, keyword }
 // ★ 手机号只认服务端渲染好的 phoneText —— 脱敏在服务端做,前端不藏号码(见 view-model.js)。
 const app = getApp();
-const { shapeCustomerList } = require('./view-model.js');
+const { shapeCustomerList } = require('./view-model.js'); const pageMotion = require('../../../utils/page-motion.js');
 
 const FILTERS = Object.freeze([
   { key: 'all', label: '全部' },
@@ -136,10 +136,10 @@ Page({
         }
         const shaped = shapeCustomerList(res.data);
         if (!shaped) {
-          that.setData({ state: 'error', errorText: '客户名单数据格式异常' });
+          that.setData({ state: 'error', errorText: '客户名单加载失败' });
           return;
         }
-        that.setData({
+        pageMotion.enter(that, 'pmList'); that.setData({
           state: shaped.items.length ? 'ready' : 'empty',
           everLoaded: true,
           countText: shaped.countText,
@@ -169,7 +169,7 @@ Page({
     this.setData({
       state: forbidden ? 'no-permission' : 'error',
       errorText: forbidden ? (msg || '请联系主理人调整角色权限')
-                           : (msg || '登录状态已变化,请重新进入客户名单'),
+                           : (msg || '登录状态已变化，请重新进入客户名单'),
       items: [],
     });
   },

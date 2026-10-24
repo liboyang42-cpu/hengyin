@@ -55,7 +55,7 @@ const realFiles = () => allWxml()
 test('WXML 表达式里不许有反斜杠转义 —— 微信解析器不认,整个小程序编译不出来', () => {
   const bad = findEscapesInExpressions(realFiles())
   assert.deepEqual(bad, [],
-    '这些表达式含反斜杠转义,微信开发者工具会报 "Bad attr ... error at token `$`" 并且'
+    '这些表达式含反斜杠转义，微信开发者工具会报 "Bad attr ... error at token `$`" 并且'
     + '**整个小程序编译不出来、模拟器起不来**。单测与 DS 门禁都不编译 WXML,所以只有真编译才炸。\n'
     + '把字符串拼接搬进 JS(observer / 计算属性),WXML 只负责摆样子:\n' + bad.join('\n'))
 })
@@ -77,5 +77,5 @@ test('负控:注释里写反例不算违规 —— 判据看代码不看注解',
   const withComment = [['x.wxml',
     "<!-- 反例:content=\"{{a + '\\n' + b}}\" 会让整个小程序编译不出来 -->\n<a content=\"{{c}}\" />"]]
   assert.deepEqual(findEscapesInExpressions(withComment), [],
-    '解释这条规则的注释里必然出现反例,按原文扫会把注释判成违规')
+    '解释这条规则的注释里必然出现反例，按原文扫会把注释判成违规')
 })

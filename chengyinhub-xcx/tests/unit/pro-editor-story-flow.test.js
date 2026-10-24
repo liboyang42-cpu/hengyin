@@ -2,7 +2,7 @@ const { test, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
 
 const storyFlow = require('../../pages/publish/utils/publish/pro-editor-story.js')
-const draftStore = require('../../utils/publish/pro-editor-draft.js')
+const draftStore = require('../../pages/publish/utils/publish/pro-editor-draft.js')
 
 const PAGE = '../../pages/publish/fabu/index.js'
 let pageConfig
@@ -137,7 +137,7 @@ test('故事玩法无需地点，保存并重新打开仍保留玩法位置和�
   page.insertStoryNodeAt({ currentTarget: { dataset: { index: 1, kind: 'game' } } })
   assert.equal(page.data.nodesForm._storyGame, true)
   page.data.nodesForm.name = '角色建档'
-  page.data.nodesForm.templateId = 71
+  page._bindNodeTemplate({ id: 71, title: '角色建档', advancedConfigJson: '{}' })
   page.confrimNode()
   const saved = storyFlow.toPayloadChapter(page.data.formData.chapters[0])
   assert.equal(saved.blocks[1].locationRequired, false, JSON.stringify({ saved, toasts, pending: page.data.pendingMaterials }))
@@ -249,7 +249,7 @@ test('negative control: 撤销快照少任一样,都塞不回原位', () => {
   assert.throws(() => storyFlow.applyStoryCommand(
     { chapter: restored(), pendingMaterials: [] },
     { type: 'insertNodeAt', index: blockIndex, blockKey: block.key, node: undefined },
-  ), /节点缺少本地标识/, '少了 node 竟然还能插回去 ⇒ 快照里 node 这一样是白存的')
+  ), /节点缺少本地信息/, '少了 node 竟然还能插回去 ⇒ 快照里 node 这一样是白存的')
 
   // ② 少了 blockIndex:插入点失效,不能默默塞到末尾(那是"位置丢了"却装作成功)
   assert.throws(() => storyFlow.applyStoryCommand(
@@ -418,7 +418,7 @@ test('A15：pendingInsertAt 存在页面 data，跳模板编辑页并回传后�
   assert.equal(page.data.pendingInsertAt, 1)
 
   page.onCreateGame()
-  navigated.events.templateCreated({ id: 19, title: '新建玩法' })
+  navigated.events.templateCreated({ id: 19, title: '新建玩法', advancedConfigJson: '{}' })
 
   assert.equal(page.data.pendingInsertAt, 1)
   assert.equal(page.data.nodesForm.templateId, 19)
@@ -460,7 +460,7 @@ test('A13：删除节点后一次 storage 写入,且删掉的节点不在信封�
 
   page.removeStoryNode({ currentTarget: { dataset: { blockkey: 'node-block' } } })
 
-  const envelope = storage[draftStore.draftKeyFor({ topicId: '77' })]
+  const envelope = storage[draftStore.draftKeyFor({ topicId: '77' }, 42)]
   assert.equal(envelope.baseRevision, 'server-v1')
   assert.deepEqual(envelope.chapters, page.data.formData.chapters)
   assert.deepEqual(envelope.pendingMaterials, page.data.pendingMaterials)
@@ -635,7 +635,7 @@ test('audio 块原样留在故事流里,不再被升成章节属性', () => {
   }, () => 'k' + (seq += 1))
 
   assert.deepEqual(chapter.blocks.map(b => b.type), ['audio', 'text', 'audio'],
-    '两段都留着:章节级那段是另一件事,不从块里迁')
+    '两段都留着:章节级那段是另一件事，不从块里迁')
   assert.equal(chapter.audioUrl, undefined, '不许顺手写章节级字段')
 })
 
