@@ -285,7 +285,7 @@ jobs:
       - name: Checkout frozen observer comparison tools (no Java execution)
         uses: actions/checkout@v4
         with:
-          ref: 1c138a000387583e224c9acb5369140fdf2dba18
+          ref: f671227c0bd483b290a72c04ca2ed60bb5f7748e
           path: evidence
           persist-credentials: false
       - uses: actions/download-artifact@v4
@@ -306,6 +306,10 @@ jobs:
           PAIR_STORAGE_RESULT: ${{ needs.storage_it.result }}
           PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}
         run: python3 gate/ci/real_storage_it.py m1-pair-verify --old-receipts old-receipts --new-receipts new-receipts
+      - name: Verify pinned comparator controls
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/test_compare_receipts.py
+          PYTHONDONTWRITEBYTECODE=1 python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-comparator-patches/test_member_fk_review.py
       - name: Frozen strict canonical comparison, both original 14 XML/CLEAN sets required
         env:
           OLD_SOURCE_SHA: ${{ inputs.old_source_sha }}

@@ -843,6 +843,68 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         actual = self.system_entries[source.replace(".", "/") + ".class"]
         self.assertEqual(producer.shared.digest(actual), bad["source_sha256"])
 
+    def test_final_d_publication_directions_facade_and_public_domain_ports_are_allowed(self):
+        ticket = "com.chengyinhub.business.service.IOmsTicketService"
+        self.system_entries[ticket.replace(".", "/") + ".class"] = b"NOT_COMPILED_PUBLIC_TICKET_PORT"
+        self.write_system()
+        self.output = self.output.with_name("final-d-public-ports")
+        self.collect()
+        directions = [("D_PUBLICATION", "D_PUBLICATION_CONTENT_GUARD"),
+                      ("D_PUBLICATION", "D_SELF_HOST_ACTIVITY"),
+                      ("D_PUBLICATION_CONTENT_GUARD", "D_CONTENT_RULES")]
+        for a, b in directions:
+            self.reference(self.owner_member(a), self.owner_member(b))
+        self.reference("com.chengyinhub.business.service.impl.CmsTopicServiceImpl", self.owner_member("D_PUBLICATION"))
+        self.reference(self.owner_member("D_PUBLICATION_CONTENT_GUARD"), "com.chengyinhub.business.service.ITopicRouteRuntimeService")
+        self.reference(self.owner_member("D_SELF_HOST_ACTIVITY"), ticket)
+        calls = len(self.calls)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual(set(directions), set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertEqual(calls, len(self.calls), "post-check adds no JDK invocation")
+
+    def test_final_d_all_three_new_owners_block_cms_god_and_its_interface(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for id_ in ("D_PUBLICATION", "D_PUBLICATION_CONTENT_GUARD", "D_SELF_HOST_ACTIVITY"):
+            for target in ("com.chengyinhub.business.service.ICmsTopicService", "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"):
+                with self.subTest(owner=id_, target=target):
+                    self.replace_evidence("jdeps.stdout.txt", original)
+                    self.reference(self.owner_member(id_), target)
+                    self.change_report("technical_dependencies", {"verdict": "PASS", "owner_edges": []})
+                    report = self.check_directions()
+                    self.assertEqual("BLOCKED", report["verdict"], report)
+                    bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                    self.assertEqual((id_, target), (bad["source_technical_owner"], bad["target_class"]))
+                    self.assertEqual(("chengyinhub-system", "chengyinhub-system"), (bad["source_owner"], bad["target_owner"]))
+                    self.assertEqual(64, len(bad["source_sha256"]))
+
+    def test_final_d_guard_cannot_reverse_call_publication_or_create_scoped_cycle(self):
+        publication, guard = self.owner_member("D_PUBLICATION"), self.owner_member("D_PUBLICATION_CONTENT_GUARD")
+        self.reference(publication, guard)
+        self.reference(guard, publication)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", {f["rule"] for f in report["findings"]})
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["D_PUBLICATION", "D_PUBLICATION_CONTENT_GUARD"], cycle["owners"])
+        self.assertEqual(2, len(cycle["witnesses"]))
+
+    def test_final_d_missing_actual_new_type_is_unknown_for_each_owner(self):
+        original = self.system_entries.copy()
+        for id_ in ("D_PUBLICATION", "D_PUBLICATION_CONTENT_GUARD", "D_SELF_HOST_ACTIVITY"):
+            with self.subTest(owner=id_):
+                self.system_entries = original.copy()
+                member = self.owner_member(id_)
+                del self.system_entries[member.replace(".", "/") + ".class"]
+                self.write_system()
+                self.output = self.boot.parent / ("missing-" + id_)
+                self.collect()
+                report = self.check_directions()
+                self.assert_unknown(report)
+                self.assertIn({"reason": "OWNER_TYPE_INPUT_UNKNOWN", "owner": id_, "type": member},
+                              report["technical_dependencies"]["review_items"])
+
     def test_new_reverse_direction_and_cycle_block_with_concrete_class_witnesses(self):
         graph, rules = self.owner_member("D_CONTENT_GRAPH"), self.owner_member("D_CONTENT_RULES")
         self.reference(graph, rules)

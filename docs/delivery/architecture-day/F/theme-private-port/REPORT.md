@@ -81,3 +81,13 @@ root 新消息提供的旧两目标实际证据：86e/source run40057561361，bu
 - 控制改动仅test_collect_jdeps.py/test_gate.py：Admin原jar、Boot/classes、target/classes同模块字节同步，不再把Controller与C新类型放入System夹具。所有原test id/业务断言保留；reference位置按真实绑定模块生成，旧System场景继续保留。新增9项test，覆盖七组新职责原God、接口伪装、叙事→编译正向及反向环、同Admin反向环及byte hash、跨模块直接绕端口、缺新class/错模块/raw位置UNKNOWN、真实CLI 0/1/2、候选删owner/清God/加反向白名单不可自批准。
 - **实际仅13项轻量定点Python unittest，1.063s，OK、0skip**：新增9+原4（全允许方向正控、原第三Mapper CLI、原D回God、3ports/2facts范围）。完整命令由[原始日志](evidence/owner-v11-targeted.txt)中的完整test id对应 `python3 -m unittest <ids> -v`；工作目录 `ci/architecture`。协议ZIP字节明确NOT_COMPILED，runner为原double。未重跑完整153/163/172，无Java/javac/jdeps/DB/CI/微信/真实模型；真正同源编译正反控与统一回归仍归root。
 - Python3.9语法/原test id保留/保护文件逐blob/实际32源类型存在/git diff检查及原配置秘密扫描在提交前执行。无依赖、schema、生产实现或workflow变化；回退须root审定可信ref，回退将失去新增19类型约束，不能将盲区称覆盖。
+
+
+## 最终D发布闭环：25d之后的策略增量
+
+- 工作树 `/workspace/hengyin-f-owner-final-d`，分支 `codex/architecture-day-f-owner-final-d`，parent `25d91038d40bc45778bc83c304d296eefc4bf4b1`；原25d/f45/Page候选冻结。真实D来源 `7f7752a16b010a5f6a0f3790919f722b80a1384f`（D报告基线 `6d668e381e8f0b6f33db93470c93056161be4b70`），完整读 `D/wp10-publication/README.md` 与三个实际生产类/调用位置；仅取guard精确增量，不覆盖root主线/生产文件。
+- owners只追加3个精确System类型：impl.TopicPublicationService、support.TopicPublicationContentGuard、support.TopicSelfHostActivityService。前三个方向为publication→content guard（原源码注入48行）、publication→self-host（49行）、content guard→原D_CONTENT_RULES（TopicContentWriteGuard/TopicRouteOutcomeReader，27/29行）。旧32类型/27职责/33方向逐项原样，合计35类型/30职责/36方向；原3Mapper/2facts及业务policy、2ec baseline、commands、lockingproposal、gate/producer逐字未动。
+- 三个新owner均禁反调ICmsTopicService/CmsTopicServiceImpl。旧门面→新应用及新应用→既有domain公开服务保持合法：content guard原ITopicRouteRuntimeService，self-host原IOmsTicketService并未列为禁用；不把结构约束当授权/业务整表写权，不改事务、锁、CAS、scope、回执、金额或SQL。新逆向依赖/环仍由原规则硬红，输入/类/图不明仍UNKNOWN。
+- 复用原strip_java_comments，仅作已列35个真实class的只读词法出现核对（原A/G/E三提交+986锚点，D类型取7f）：观察34对已允许的出现，无未允许方向或God引用；这不是JDK编译图，不能将36条允许边都说成实际jdeps边，更不证明方法/纯读/null/事务语义。没有另造scanner或扩大scope。
+- 新增4项编译协议控制+1项source冻结控制，实际连同原4项定点共 **9 tests / 0.714s / OK / 0skip**，日志 [owner-final-d-targeted.txt](evidence/owner-final-d-targeted.txt)。覆盖真实JAR形态字节/模块回读下的3方向正控、旧门面和公开路线/票务端口正控、三owner×原God接口/实现六负控、反向guard→publication及SCC、三个新类逐一缺失UNKNOWN、候选删owner/清God冻结拒绝；原全方向正控/第三Mapper CLI0-1-2/公开runtime接口边界/3ports-2facts控制保留。类字节故意NOT_COMPILED，runner为既有协议double，未运行Java/jdeps。
+- Python3.9语法通过，原65+88个相关test方法正文逐AST相同，本轮只追加5项；未运行完整177项或任何Java/DB/Redis/CI/微信，不派新批次。无新框架、依赖、job、producer或生产修改。原配置秘密扫描与git diff检查提交前完成；root审最终可信SHA后唯一双ref接线、统一真实编译/回归。回退此ref会失去D三owner约束，不能声称仍覆盖；无DDL/业务事实回退动作。

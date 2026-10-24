@@ -949,6 +949,22 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
                 self.assertEqual(1, status, report)
                 self.assertIn("POLICY_CHANGE", report["error"])
 
+    def test_final_d_candidate_cannot_delete_publication_owner_or_clear_god(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("remove_owner", "clear_backrefs"):
+            with self.subTest(change=change):
+                data = copy.deepcopy(original)
+                policy = data["technical_dependency_policy"]
+                if change == "remove_owner":
+                    policy["owners"] = [o for o in policy["owners"] if o["id"] != "D_PUBLICATION"]
+                else:
+                    next(o for o in policy["owners"] if o["id"] == "D_SELF_HOST_ACTIVITY")["forbidden_backrefs"] = []
+                self.write("ci/architecture/owners.json", gate.encode(data))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
 
 
 class RegisteredReferencesTest(unittest.TestCase):

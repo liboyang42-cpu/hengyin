@@ -981,8 +981,10 @@ def m1_workflow_problems(text):
                 "format('rs-m1-{0}-{1}-{2}-a{3}', matrix.side, matrix.source_sha, matrix.simple, github.run_attempt)",
                 "needs: [plan, storage_it, pair_summary]", "PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}",
                 "run: python3 gate/ci/real_storage_it.py m1-pair-verify --old-receipts old-receipts --new-receipts new-receipts",
-                "ref: 1c138a000387583e224c9acb5369140fdf2dba18", "evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/compare_receipts.py",
+                "ref: f671227c0bd483b290a72c04ca2ed60bb5f7748e", "evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/compare_receipts.py",
                 "format('rs-class-{0}-a{1}', matrix.simple, github.run_attempt)",
+                "python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/test_compare_receipts.py",
+                "python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-comparator-patches/test_member_fk_review.py",
                 "pattern: rs-class-*", "PLANNED: ${{ needs.plan.outputs.matrix }}"]
     problems = ["missing M1 workflow contract: " + item for item in required if item not in text]
     for job, mode in (("summary", "=="), ("pair_summary", "!="), ("compare", "!=")):
@@ -1012,7 +1014,9 @@ class M1PairWorkflowTest(unittest.TestCase):
     def test_pair_artifact_source_attempt_freeze_and_mode_negative_controls(self):
         text = WORKFLOW.read_text()
         for old, new in [("matrix.source_sha }}-*-a${{ github.run_attempt }}", "matrix.source_sha }}-*"),
-                         ("ref: 1c138a000387583e224c9acb5369140fdf2dba18", "ref: master"),
+                         ("ref: f671227c0bd483b290a72c04ca2ed60bb5f7748e", "ref: master"),
+                         ("python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/test_compare_receipts.py", "true"),
+                         ("python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-comparator-patches/test_member_fk_review.py", "true"),
                          ("VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}", "VALIDATED_SOURCE_SHA: ${{ inputs.source_sha }}"),
                          ("inputs.old_source_sha == ''", "inputs.old_source_sha != ''"),
                          ("PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}", "PAIR_SUMMARY_RESULT: success"),

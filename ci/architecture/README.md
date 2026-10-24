@@ -82,3 +82,5 @@ C应用禁反调旧ApiPlayProgressController及三个runtime实现，保留其�
 复用原JAR/class-index/raw回读及冻结策略，无新parser/采集/CI入口；模块图原口径、3私有Mapper/2事实、2ec精确baseline均不改。新增Admin协议夹具同步维护original/Boot/classes/target字节与模块，不把Admin类型伪造到System。
 
 这不证明Query纯读、具体方法无副作用、null语义或父事务/回执次序。特别ce49/IR05要求：null仅表示不适用共享局，已确认共享但缺RUN必须稳定失败，禁止回退旧个人ACTIVE/补局；由A/E/C实际业务测试另验，允许接口类型引用不等于该语义通过。缺真实编译图/类型/位置/身份仍UNKNOWN，未声称全图无环或全域owner完成。root独占双trusted ref，按审定新verifier完整SHA同时repin；本片不动workflow、不新增回归批次。
+
+D最终7f7752a增量只追加TopicPublicationService、TopicPublicationContentGuard、TopicSelfHostActivityService三个System职责（35类型/30职责/36方向），原32类型/27职责/33方向不变。明确允许publication→content guard/self-host、content guard→既有D_CONTENT_RULES；三者禁回依赖ICmsTopicService/CmsTopicServiceImpl。保留旧门面→新应用、guard→公开路线服务、self-host→既有票务服务等实际调用，不把这些接口一概禁用，不因此授整表写权。仍复用同一可信JAR/raw/class-index回读，缺任一新类型或实际产物UNKNOWN；没有新scanner、baseline例外或CIjob。root统一实际编译及集中验收。
