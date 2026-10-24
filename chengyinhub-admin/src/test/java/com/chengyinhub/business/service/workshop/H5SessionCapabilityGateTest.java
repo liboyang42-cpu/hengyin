@@ -45,4 +45,41 @@ class H5SessionCapabilityGateTest {
         assertFalse(H5SessionCapabilityGate.urlOnAllowlist("https://evil.example/", List.of("https://allowed.example/")));
         assertFalse(H5SessionCapabilityGate.urlOnAllowlist("https://allowed.example/", List.of()));
     }
+
+    @Test
+    void recoverOfNeverSeenIdDoesNotOccupyThenUniqueEvaluateApplies() {
+        WorkshopOriginalRequestBinder binder = new WorkshopOriginalRequestBinder();
+        H5SessionCapabilityGate gate = new H5SessionCapabilityGate(binder);
+        H5SessionCapabilityGate.Decision blank = gate.recover("  ");
+        assertNull(blank.originalRequestId());
+        assertEquals(H5SessionCapabilityGate.Outcome.UNKNOWN, blank.outcome());
+        assertNull(binder.existing("  "));
+        H5SessionCapabilityGate.Decision recovered = gate.recover("c10-h5-never-c10");
+        assertEquals("c10-h5-never-c10", recovered.originalRequestId());
+        assertEquals(H5SessionCapabilityGate.Outcome.UNKNOWN, recovered.outcome());
+        assertFalse(recovered.grantsSession());
+        assertNull(binder.existing("c10-h5-never-c10"));
+        H5SessionCapabilityGate.Decision first = gate.evaluate(new H5SessionCapabilityGate.SessionFact(
+                "c10-h5-never-c10",
+                "https://allowed.example/page",
+                "1",
+                "1",
+                List.of("https://allowed.example/"),
+                Set.of("preview"),
+                Set.of("preview")));
+        assertEquals(H5SessionCapabilityGate.Outcome.WAITING_SOURCE, first.outcome());
+        assertEquals("c10-h5-never-c10", first.originalRequestId());
+        assertFalse(first.openedArbitraryH5());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, binder.existing("c10-h5-never-c10").status());
+        H5SessionCapabilityGate.Decision replay = gate.evaluate(new H5SessionCapabilityGate.SessionFact(
+                "c10-h5-never-c10",
+                "https://allowed.example/page",
+                "1",
+                "1",
+                List.of("https://allowed.example/"),
+                Set.of("preview"),
+                Set.of("preview")));
+        assertEquals(H5SessionCapabilityGate.Outcome.WAITING_SOURCE, replay.outcome());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, binder.existing("c10-h5-never-c10").status());
+    }
 }

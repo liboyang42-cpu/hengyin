@@ -76,4 +76,28 @@ class WorkshopModuleImportGateTest {
         assertTrue(gate.binder().recover("c10-import-recover").get("clearedOriginalIntent") == Boolean.FALSE);
         assertTrue(gate.binder().recover("c10-import-recover").get("mintedNewRequestId") == Boolean.FALSE);
     }
+
+    @Test
+    void recoverOfNeverSeenIdDoesNotOccupyThenUniqueImportApplies() {
+        WorkshopOriginalRequestBinder binder = new WorkshopOriginalRequestBinder();
+        WorkshopModuleImportGate gate = new WorkshopModuleImportGate(binder);
+        WorkshopModuleImportGate.Decision blank = gate.recover("  ");
+        assertNull(blank.originalRequestId());
+        assertEquals(WorkshopModuleImportGate.Outcome.UNKNOWN, blank.outcome());
+        assertNull(binder.existing("  "));
+        WorkshopModuleImportGate.Decision recovered = gate.recover("c10-import-never-c10");
+        assertEquals("c10-import-never-c10", recovered.originalRequestId());
+        assertEquals(WorkshopModuleImportGate.Outcome.UNKNOWN, recovered.outcome());
+        assertFalse(recovered.grantsImport());
+        assertNull(binder.existing("c10-import-never-c10"));
+        WorkshopModuleImportGate.Decision first = gate.importPreview(new WorkshopModuleImportGate.Manifest(
+                "c10-import-never-c10", "mod-1", "1.0.0", HASH, 1, "qmod", Map.of("title", "demo")));
+        assertEquals(WorkshopModuleImportGate.Outcome.WAITING_SOURCE, first.outcome());
+        assertEquals("c10-import-never-c10", first.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, binder.existing("c10-import-never-c10").status());
+        WorkshopModuleImportGate.Decision replay = gate.importPreview(new WorkshopModuleImportGate.Manifest(
+                "c10-import-never-c10", "mod-1", "1.0.0", HASH, 1, "qmod", Map.of("title", "demo")));
+        assertEquals(WorkshopModuleImportGate.Outcome.WAITING_SOURCE, replay.outcome());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, binder.existing("c10-import-never-c10").status());
+    }
 }
