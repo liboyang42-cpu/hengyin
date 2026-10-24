@@ -335,7 +335,7 @@ class ApiAiThemeDraftHttpSecurityTest
 
     private static String signedAppToken(LoginAppUser app, String key, boolean expired)
     {
-        var builder = Jwts.builder().setClaims(Map.of(Constants.LOGIN_APP_USER_KEY, app.getToken()));
+        var builder = Jwts.builder().setClaims(new HashMap<>(Map.of(Constants.LOGIN_APP_USER_KEY, app.getToken())));
         if (expired) builder.setExpiration(new Date(System.currentTimeMillis() - 60_000));
         return builder.signWith(SignatureAlgorithm.HS512, key).compact();
     }
