@@ -24,6 +24,8 @@ class WechatPayTransferClassificationTest {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
         ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
+        ReflectionTestUtils.setField(gateway, "transferClientMchid", "merchant");
+        ReflectionTestUtils.setField(gateway, "transferClientWxAppid", "wx-origin");
     }
 
     @Test
@@ -169,6 +171,87 @@ class WechatPayTransferClassificationTest {
         }
     }
 
+    @Test
+    void frozenIntentIsTheSubmittedSdkRequestAndUncertainSubmitNeverProvesNotSent() {
+        var intent = intent();
+        doThrow(new RuntimeException("timeout")).when(sdk).initiateBatchTransfer(any());
+        Map<String, String> result = gateway.transferToBalance(intent);
+        assertUnknown(result);
+        assertEquals("false", result.get("notSent"));
+        assertEquals(intent.requestHash(), result.get("requestHash"));
+        var request = org.mockito.ArgumentCaptor.forClass(InitiateBatchTransferRequest.class);
+        verify(sdk).initiateBatchTransfer(request.capture());
+        assertEquals(intent.appid(), request.getValue().getAppid());
+        assertEquals(intent.outBatchNo(), request.getValue().getOutBatchNo());
+        assertEquals(intent.amountFen(), request.getValue().getTotalAmount());
+        var detail = request.getValue().getTransferDetailList().get(0);
+        assertEquals(intent.outDetailNo(), detail.getOutDetailNo());
+        assertEquals(intent.openid(), detail.getOpenid());
+        assertEquals(intent.remark(), detail.getTransferRemark());
+    }
+
+    @Test
+    void changedMerchantOrUncommittedSubmitNeverCallsSdkAndCannotInventChannelFailure() {
+        var intent = intent();
+        WxPayConfig config = (WxPayConfig) ReflectionTestUtils.getField(gateway, "wxPayConfig");
+        when(config.getMerchantId()).thenReturn("changed-merchant");
+        var result = gateway.transferToBalance(intent);
+        assertEquals("true", result.get("notSent"));
+        assertEquals(intent.requestHash(), result.get("requestHash"));
+        assertEquals("UNKNOWN", gateway.queryTransferResult(intent).get("result"));
+        when(config.getMerchantId()).thenReturn("merchant");
+        var unsubmitted = new com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent(
+                intent.withdrawId(), intent.memberId(), intent.mchid(), intent.appid(), intent.outBatchNo(),
+                intent.outDetailNo(), intent.amountFen(), intent.openid(), intent.remark(), intent.requestVersion(),
+                intent.requestHash(), intent.balanceBefore(), intent.balanceAfter(), false, false);
+        assertEquals("true", gateway.transferToBalance(unsubmitted).get("notSent"));
+        verifyNoInteractions(sdk);
+    }
+
+    @Test
+    void internallyConsistentForeignAppAmountOrPayeeCannotSatisfyOriginalIntent() {
+        var original = intent();
+        for (String mismatch : new String[]{"none", "appid", "amount", "openid", "missing-openid"}) {
+            var b = batch("FINISHED");
+            var d = detail("FAIL");
+            if ("appid".equals(mismatch)) { b.setAppid("other-app"); d.setAppid("other-app"); }
+            if ("amount".equals(mismatch)) { b.setTotalAmount(3001L); d.setTransferAmount(3001L); }
+            if ("openid".equals(mismatch)) d.setOpenid("another-player");
+            if ("missing-openid".equals(mismatch)) d.setOpenid(null);
+            var entity = new TransferBatchEntity(); entity.setTransferBatch(b);
+            doReturn(entity).when(sdk).getTransferBatchByOutNo(any());
+            doReturn(d).when(sdk).getTransferDetailByOutNo(any());
+            assertEquals("none".equals(mismatch) ? "FAIL" : "UNKNOWN",
+                    gateway.queryTransferResult(original).get("result"), mismatch);
+        }
+    }
+
+    @Test
+    void localRejectCarriesOnlyTheMatchingOriginalHashAndCorruptEvidenceNeverCallsSdk() {
+        var original = intent();
+        ReflectionTestUtils.setField(gateway, "transferBatchService", null);
+        var reject = gateway.transferToBalance(original);
+        assertEquals("true", reject.get("notSent"));
+        assertEquals(original.requestHash(), reject.get("requestHash"));
+        var corrupt = new com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent(
+                original.withdrawId(), original.memberId(), original.mchid(), original.appid(), original.outBatchNo(),
+                original.outDetailNo(), original.amountFen(), original.openid(), original.remark(), original.requestVersion(),
+                "forged", original.balanceBefore(), original.balanceAfter(), true, false);
+        assertThrows(IllegalStateException.class, () -> gateway.transferToBalance(corrupt));
+        verifyNoInteractions(sdk);
+    }
+
+    private com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent() {
+        var w = new com.chengyinhub.business.domain.MemberCashWithdraw();
+        w.setId(500L); w.setMemberId(42L); w.setAmount(new BigDecimal("30.00"));
+        w.setOpenid("openid-origin"); w.setOutBatchNo("CW500"); w.setOutDetailNo("CD500");
+        var i = com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.create(w, "merchant", "wx-origin",
+                "提现", new BigDecimal("100.00"), new BigDecimal("70.00"));
+        return new com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent(i.withdrawId(), i.memberId(),
+                i.mchid(), i.appid(), i.outBatchNo(), i.outDetailNo(), i.amountFen(), i.openid(), i.remark(),
+                i.requestVersion(), i.requestHash(), i.balanceBefore(), i.balanceAfter(), true, false);
+    }
+
     private TransferBatchGet batch(String status) {
         TransferBatchGet batch = new TransferBatchGet();
         batch.setMchid("merchant");
@@ -191,6 +274,7 @@ class WechatPayTransferClassificationTest {
         detail.setDetailId("wx-detail");
         detail.setDetailStatus(status);
         detail.setTransferAmount(3000L);
+        detail.setOpenid("openid-origin");
         return detail;
     }
 

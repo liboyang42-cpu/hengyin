@@ -224,6 +224,12 @@
         where id = #{id} and status = 0 and (frozen is null or frozen = 0)
     </update>
 
+    <update id="updateSuccessIfPending" parameterType="MemberCashWithdraw">
+        UPDATE member_cash_withdraw SET status = 1, wechat_batch_status = #{wechatBatchStatus},
+            wechat_detail_id = #{wechatDetailId}, finish_time = #{finishTime}, last_query_time = #{lastQueryTime}
+        WHERE id = #{id} AND status IN (0, 3, 4) AND (frozen IS NULL OR frozen = 0) AND del_flag = 0
+    </update>
+
     <!-- 后台列表:按状态/会员过滤 -->
     <select id="selectForAdmin" resultMap="MemberCashWithdrawResult">
         select <include refid="cols"/> from member_cash_withdraw

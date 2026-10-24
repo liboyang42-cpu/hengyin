@@ -106,6 +106,10 @@ public class WechatPayServiceImpl implements IWechatPayService {
     @Autowired
     private IUmsMemberService memberService;
 
+    private String transferClientMchid;
+    private String transferClientWxAppid;
+    private String transferClientAppAppid;
+
     /**
      * 初始化微信支付服务 - 容错版本
      */
@@ -117,6 +121,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
         }
         try {
             // 获取配置
+            String initializingMchid = wxPayConfig.getMerchantId();
             config = wxPayConfig.getConfig();
 
             // 如果配置获取成功，初始化服务
@@ -129,6 +134,11 @@ public class WechatPayServiceImpl implements IWechatPayService {
                 appServiceExtension = new com.wechat.pay.java.service.payments.app.AppServiceExtension.Builder().config(config).build();
                 refundService = new RefundService.Builder().config(config).build();
                 transferBatchService = new TransferBatchService.Builder().config(config).build();
+                if (!java.util.Objects.equals(initializingMchid, wxPayConfig.getMerchantId()))
+                    throw new IllegalStateException("支付商户配置在初始化期间变化");
+                transferClientMchid = initializingMchid;
+                transferClientWxAppid = wxPayConfig.getAppid();
+                transferClientAppAppid = wxPayConfig.getAppAppid();
 
                 // 初始化NotificationParser
                 notificationParser = new NotificationParser(notificationConfig);
@@ -323,6 +333,36 @@ public class WechatPayServiceImpl implements IWechatPayService {
         }
     }
 
+    @Override
+    public Map<String, String> transferToBalance(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        intent.requireValid();
+        if (!intent.submitted() || intent.locallyRejected() || !intent.mchid().equals(transferClientMchid)
+                || !intent.mchid().equals(wxPayConfig.getMerchantId())
+                || !(intent.appid().equals(transferClientWxAppid) || intent.appid().equals(transferClientAppAppid))
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            return Map.of("ok", "false", "ambiguous", "false", "notSent", "true",
+                    "requestHash", intent.requestHash(), "error", "原提现渠道未就绪或配置已变化，未发起转账");
+        }
+        Map<String, String> result = transferToBalance(intent.outBatchNo(), intent.outDetailNo(),
+                intent.amountYuan(), intent.openid(), intent.remark(), intent.appid());
+        result.put("requestHash", intent.requestHash());
+        result.put("notSent", String.valueOf("false".equals(result.get("ok"))
+                && "false".equals(result.get("ambiguous"))));
+        return result;
+    }
+
+    @Override
+    public Map<String, String> queryTransferResult(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        intent.requireValid();
+        if (!intent.mchid().equals(transferClientMchid) || !intent.mchid().equals(wxPayConfig.getMerchantId()))
+            return Map.of("result", "UNKNOWN", "error", "原提现商户渠道未就绪，须按原号核查");
+        Map<String, String> facts = queryTransferResult(intent.outBatchNo(), intent.outDetailNo());
+        if (("SUCCESS".equals(facts.get("result")) || "FAIL".equals(facts.get("result")))
+                && !intent.matchesObservation(facts))
+            return Map.of("result", "UNKNOWN", "error", "转账事实与原始扣款/提交证据不一致");
+        return facts;
+    }
+
     /**
      * 查询商家转账最终结果:FINISHED 后查明细；单纯 CLOSED 不推断资金未达。
      * result: SUCCESS=到账 / FAIL=失败(调用方应退余额) / PROCESSING=处理中(保持) / UNKNOWN=查询异常(勿判失败,重试)。
@@ -385,6 +425,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
             r.put("detailId", detailId == null ? "" : detailId);
             r.put("outDetailNo", de.getOutDetailNo());
             r.put("transferAmount", String.valueOf(de.getTransferAmount()));
+            r.put("openid", de.getOpenid());
             String failReasonCode = (de != null && de.getFailReason() != null) ? de.getFailReason().name() : "";
             r.put("failReasonCode", failReasonCode);
             if ("SUCCESS".equals(detailStatus)) {
