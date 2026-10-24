@@ -102,7 +102,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"var\":\"sys.outcome.9999\",\"op\":\"EQ\",\"value\":1}]}");
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("系统变量"), error.getMessage());
         assertTrue(error.getMessage().contains("9999"), error.getMessage());
@@ -117,7 +117,7 @@ class CmsTopicSysVarPublishGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
     }
@@ -132,7 +132,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"var\":\"sys.passed.9999\",\"op\":\"EQ\",\"value\":1}]}");
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("系统变量"), error.getMessage());
         assertTrue(error.getMessage().contains("9999"), error.getMessage());
@@ -147,7 +147,7 @@ class CmsTopicSysVarPublishGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
     }
 
     /**
@@ -161,7 +161,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"op\":\"NODE_COMPLETED\",\"nodeId\":9999}]}");
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("NODE_COMPLETED"), error.getMessage());
         assertTrue(error.getMessage().contains("9999"), error.getMessage());
@@ -175,7 +175,7 @@ class CmsTopicSysVarPublishGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
     }
 
     @Test
@@ -188,7 +188,7 @@ class CmsTopicSysVarPublishGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("counter.disposition")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("分支玩法"), error.getMessage());
     }
@@ -203,7 +203,7 @@ class CmsTopicSysVarPublishGateTest {
         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("counter.disposition")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
     }
 
     private void publishDraftWithBlock(String advancedConfigJson) {

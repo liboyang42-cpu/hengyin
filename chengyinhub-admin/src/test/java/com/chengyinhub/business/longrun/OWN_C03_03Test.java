@@ -72,27 +72,27 @@ class OWN_C03_03Test {
 
     @Test
     void legacyCrossChapterReorderKeepsPredecessorByIdentity() {
-        assertEquals(TOPIC, service.updateTopicByOwner(edit(false, true, true), MEMBER, "creator"));
+        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(edit(false, true, true), MEMBER, "creator"));
         assertRestored(901L, 902L); // dependent inserted before its predecessor, in another chapter
     }
 
     @Test
     void compiledBlocksAlsoKeepPredecessorAfterReorder() {
-        assertEquals(TOPIC, service.updateTopicByOwnerV2WithReview(edit(true, true, true), MEMBER, "creator").getTopicId());
+        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2WithReview(edit(true, true, true), MEMBER, "creator").getTopicId());
         assertRestored(901L, 902L);
     }
 
     @Test
     void retainedDependentCannotSilentlyLoseDeletedPredecessor() {
         IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
-                () -> service.updateTopicByOwner(edit(false, true, false), MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(edit(false, true, false), MEMBER, "creator"));
         assertTrue(failure.getMessage().contains("前置解锁引用不在本次提交里"));
         verify(nodes, never()).updateCmsTopicNode(any(CmsTopicNode.class));
     }
 
     @Test
     void removedDependentDoesNotKeepAnOrphanRelation() {
-        assertEquals(TOPIC, service.updateTopicByOwner(edit(false, false, true), MEMBER, "creator"));
+        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(edit(false, false, true), MEMBER, "creator"));
         verify(nodes, never()).updateCmsTopicNode(any(CmsTopicNode.class));
     }
 
@@ -100,7 +100,7 @@ class OWN_C03_03Test {
     void failedPredecessorWriteCannotReportSuccessfulUpdate() {
         when(nodes.updateCmsTopicNode(any(CmsTopicNode.class))).thenReturn(0);
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> service.updateTopicByOwner(edit(false, true, true), MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(edit(false, true, true), MEMBER, "creator"));
         assertTrue(failure.getMessage().contains("前置解锁保存失败"));
     }
 

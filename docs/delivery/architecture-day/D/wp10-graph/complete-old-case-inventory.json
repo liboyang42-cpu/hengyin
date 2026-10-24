@@ -1,0 +1,759 @@
+{
+  "base_sha": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+  "modified_old_test_files": 32,
+  "modified_old_test_classes": 31,
+  "modified_old_ordinary_cases": 366,
+  "new_unit_cases": 3,
+  "new_mysql_cases": 32,
+  "new_mysql_scenarios": 62,
+  "modified_old_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+      "base_blob": "1a14092e4aa90fa93addad0b7503fc4484ae4a74",
+      "base_sha256": "fdc5218b96e990522762d8e29d92772e3fda9ec7b3b830d371b0a31f5b797672",
+      "candidate_sha256": "50343d09a97efeb4a7c40af470f5576051a3d475d1676d12812622c1f82c204c",
+      "ordinary_test_count": 44,
+      "case_names": [
+        "storyGameStoresExplicitLocationIntentAndRejectsMissingTemplateOrCoordinates",
+        "storyGameRejectsArrivalTemplateBeforeReplacingChapters",
+        "submittedV2EditFreezesAfterRebuildAndRefreshesOneTopicTask",
+        "escalatedAuditTaskReadbackIsReportedAsEscalated",
+        "auditTaskReadbackThatIsNotAnOpenTaskFailsTheSubmission",
+        "submittedSimpleDraftPublishesWhileSavingItKeepsItPrivate",
+        "openBundleReviewCannotBeBypassedBySwitchingToSimpleMode",
+        "simpleV2PublishCannotBypassReviewWithAPrivateDraftTemplate",
+        "nonBlockSimpleV2PublishCannotBypassReviewWithAPrivateDraftTemplate",
+        "blockOrderDrivesGlobalSortAndSameChapterNodeIds",
+        "descriptionIsOnlyTextBeforeFirstNodeAndNewlinesStayInsideTextBlocks",
+        "narrativeBlocksBindToStationAndStayOutOfDescription",
+        "narrativeQuestionWithoutAnswerIsRejectedAtSave",
+        "nodeIndexAtNodesLengthHitsTheBoundsGate",
+        "duplicateNodeIndexHitsTheUniquenessGate",
+        "orphanNodeHitsTheCoverageGate",
+        "optionalChapterCannotEnterStoryFlow",
+        "omittedRequiredIsMaterializedAsRequired",
+        "freeExploreV2MaterializesBlocks",
+        "freeExploreV2RequestWithoutBlocksKeepsLegacyShape",
+        "legacyPathPersistsNoBlocks",
+        "legacyPathRefusesToOverwriteMaterializedTopic",
+        "legacyEndpointRejectsV2PayloadInsteadOfSilentlyDroppingIt",
+        "blockCountLimitRejectsInsteadOfTruncating",
+        "textLengthLimitRejectsInsteadOfTruncating",
+        "serializedSizeLimitUsesUtf8Bytes",
+        "exactPerItemLimitsRemainAccepted",
+        "descriptionProjectionOverColumnLimitIsRejectedBeforeWrite",
+        "descriptionProjectionAtColumnLimitRemainsAccepted",
+        "schemaAndBlockGrammarAreExplicitlyValidated",
+        "mediaAltTextJsonRoundTripSurvivesWriteAndPlayerProgressProjection",
+        "mediaAltTextMissingNullAndEmptyKeepExistingMediaCompatible",
+        "mediaAltTextAcceptsLimitAndRejectsOversizeBeforeWrites",
+        "mediaBlocksAreMaterializedWithUrl",
+        "audioStaysAValidBlockType",
+        "chapterAudioUrlIsCarriedOntoTheChapterEntity",
+        "mediaBlocksNeitherProjectIntoDescriptionNorCloseTheProjectionWindow",
+        "mediaBlockFieldShapeIsGated",
+        "blockIdentifiersSurviveV2SaveReadAndReordering",
+        "duplicateBlockIdentifiersCannotAmbiguouslyResume",
+        "openingIsSavedSeparatelyAndExistingStorySurvivesAnEditorThatOmitsIt",
+        "openingCannotBeARegularStationOrAppearAfterTheFirstChapter",
+        "existingOpeningSurvivesOmittedFlagAndCanBeExplicitlyRemoved",
+        "topicAddressComesFromFirstRealStationAfterTheOpening"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java",
+      "base_blob": "890f5332e87cf441c2bb2bf72a231bacb8cd0430",
+      "base_sha256": "e495464e83d2ab948fe71b0ed45c4278a2db1019df4901920a04b49e13f6280c",
+      "candidate_sha256": "992b5ebf4c0c580417d2c3173f27cee813af62aa0273563b5d411b0845cfc6f7",
+      "ordinary_test_count": 2,
+      "case_names": [
+        "blocksWriteFailureRollsBackDeletedAndInsertedFlowRows",
+        "auditTaskFailureRollsBackTheCompletedV2Rebuild"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CmsTopicDraftBindingsTest.java",
+      "base_blob": "55acb24be9761f6910bc276b71e27a55e4465cbc",
+      "base_sha256": "eafdabec5369610c2ce22c414158b6ec5d2d380dc8d58a619be369c0fd73f35b",
+      "candidate_sha256": "fa966d1f24428cfad5d30d750b234336933c7da5749d48d7dbca9d3e3080e435",
+      "ordinary_test_count": 9,
+      "case_names": [
+        "createPersistsTwoBindingsUsingGeneratedIdsOnly",
+        "v2BlockFlowUsesTheSameClientMapping",
+        "danglingClientKeyRollsBackTopicAndNodes",
+        "updateWithoutConfigKeepsRealBindingsAcrossReorder",
+        "updateCanBindANewNodeAlongsideRealNodeBindings",
+        "existingNodeCannotBeReboundUsingAClientAlias",
+        "deletingBoundNodeRejectsUnlessBindingIsExplicitlyRemoved",
+        "duplicateClientKeysRollBackAndCopyStillUsesRealIds",
+        "persistedParserStillRejectsClientKeysAndOwnershipIsUnchanged"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+      "base_blob": "9f1c74dc25c56d0fcd85f5148cadcc91127b4693",
+      "base_sha256": "63579dbf8741d91205c9c03fb17f1dce856cc52d50f9cea0ab8cf43a5c567696",
+      "candidate_sha256": "5e802619489b5450de7b37ab845a9f81368f0e0d8d3f0d5d33cc2887c92b69e3",
+      "ordinary_test_count": 38,
+      "case_names": [
+        "draftOwner_updatesInPlace_neverInsertsANewTopic",
+        "publishedFreeTopic_editThatMakesItCommercial_isRejected",
+        "publishedFreeTopic_addingRecruitDeadlineOnly_isRejected",
+        "clubBoundTopic_editCannotOpenPublicClubPool",
+        "independentTopic_editHonorsExplicitOpenClubPool",
+        "draftEdit_doesNotFlipAuditOrOnlineState",
+        "draftSave_neverSubmitsCommercialReview",
+        "pendingReviewSave_stillSubmitsCommercialReview",
+        "draftSave_neverBuildsSelfHostActivityShell",
+        "pendingSave_publishesSelfHostActivityShell",
+        "rejectedSave_republishesSelfHostActivityShell",
+        "rejectedTopic_republishesAndResubmitsAudit",
+        "draftEdit_persistsNormalizedJourneyRules",
+        "draftEdit_withoutJourneyRules_leavesColumnUntouched",
+        "draftEdit_illegalJourneyRules_rejectedBeforeAnyWrite",
+        "otherMember_cannotEdit",
+        "draftWithPastStartDate_isStillFullyEditable",
+        "startedTopic_isReadOnly",
+        "paidRegistration_blocksStructuralRebuild",
+        "approvedWhitelistRejectsUnknownOrOwnHeldMediaBeforeAnyWrite",
+        "foreignWhitelistOwnerIsRejectedBeforeMediaLookupOrWrite",
+        "approvedTopic_appliesWhitelistTextAndImagesOnly",
+        "approvedTopic_nullRecruitDeadline_rejectsNewDeadlineAndChangesNothing",
+        "approvedTopic_rejectsChangedRecruitDeadlineAndChangesNothing",
+        "approvedTopic_sameRecruitDeadline_allowsWhitelistTextUpdate",
+        "approvedTopic_omittedRecruitDeadline_keepsPatchSemantics",
+        "approvedTopic_rejectsDateChange_andChangesNothing",
+        "approvedTopic_rejectsChapterStructureChange_andChangesNothing",
+        "approvedTopic_rejectsTicketPriceChange_andLeavesTicketsUntouched",
+        "approvedTopic_listsEveryLockedFieldItRejects",
+        "missingId_rejected",
+        "deletedTopic_rejected",
+        "fullRebuild_clearsOldChildrenFirst",
+        "legacyEditWithoutRouteFieldsRemapsExistingBranchGraphToRebuiltNodeIds",
+        "fullRebuild_keepsBackOfficeHiddenNodeHidden_andLeavesVisibleAndNewNodesVisible",
+        "partialBody_doesNotSilentlyWipeChapters",
+        "partialBody_alsoProtectsTicketsCollaboratorsAndEggs",
+        "explicitEmptyArray_isHonoredAsDeliberateClear"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftPartialSaveGateTest.java",
+      "base_blob": "f287d2fc8e59d1c10dd1a1a682cf9f68a682919b",
+      "base_sha256": "9fba00d10f98875c3df766260960a09f31f384e6181bc199b0d9bf76b74bb6ef",
+      "candidate_sha256": "be06cadf928cc9ff08f14792192a2f5fb193e8bd2c5be7bdaa301498c97c5a82",
+      "ordinary_test_count": 19,
+      "case_names": [
+        "nameOnlyAiSimpleDraftSaves",
+        "nameOnlyDraftWithNullChaptersSaves",
+        "draftStillRequiresTopicName",
+        "draftRejectsFilledButIllegalCoordinate",
+        "draftRejectsNegativeTicketPrice",
+        "draftAllowsTicketWithoutTimeWindow",
+        "incompleteDraftPublishIsRejected",
+        "completeDraftPublishesWithTheSameId",
+        "persistedReversedSaleWindowBlocksPublication",
+        "draftDisappearingBeforeLockedPublishDoesNotBecomePublic",
+        "directPublishStillRequiresAiSimpleLocation",
+        "directPublishStillRequiresRecruitDeadlineForFreeExplore",
+        "directPublishStillRejectsTicketWithoutTimeWindow",
+        "draftUpdateSkipsPublishOnlyCompleteness",
+        "pendingReviewUpdateStillRequiresRecruitDeadline",
+        "draftUpdateRejectsBlankedName",
+        "directPublishStillBuildsSelfHostShell",
+        "publishDoesNotRewriteDraftFlag",
+        "directPublishRequiresName"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftLegacyFieldPreservationTest.java",
+      "base_blob": "345b7d2ded88a41cdeea54ccf46573421f246a15",
+      "base_sha256": "f40093e9fe3cfeb379ee481c2ae85340d620b4b44ae22994855e37f9a754b4bc",
+      "candidate_sha256": "bdb4993c349f2c089140eeddbb7fb51118c454b90d87e514f6ecaebc1a8e3680",
+      "ordinary_test_count": 5,
+      "case_names": [
+        "omittedFieldsKeepExistingAuthorConfiguration",
+        "freeExploreWithoutModeInLegacyPayloadKeepsItsProductType",
+        "explicitConfigurationChangesStillApply",
+        "oldTicketModeStillSelectsProductTypeWhenExplicitTypeIsAbsent",
+        "explicitInvalidTeamValueIsStillRejectedBeforeWriting"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicJourneyStorySaveTest.java",
+      "base_blob": "5e176c130134981d9c212dcc506a11a7af8b149f",
+      "base_sha256": "561a781aca9abdd61a7416a8cdd76997ea5ad8cd992c4663752d4adc8562d46e",
+      "candidate_sha256": "48ef6560fdc6c527a719ea19c86d0655d331aae5411c0f35f058331473b0a00f",
+      "ordinary_test_count": 4,
+      "case_names": [
+        "draftEdit_persistsStoryAndRemapsChapterIdAfterRebuild",
+        "draftEdit_withoutStory_leavesColumnUntouched",
+        "draftEdit_illegalStory_rejectedBeforeAnyWrite",
+        "draftEdit_storyReferencingForeignChapter_isRejected"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java",
+      "base_blob": "5dead3ee638bc727dae7462b70b4a4e18506302b",
+      "base_sha256": "cf556ebe906c1505cf7f3f83fa29dd3640cfca3f8d95dda5359eeb5b575ffff4",
+      "candidate_sha256": "ffb1d2cd82c389497294c3bc07db6d9fef854f269050e7099c5894e648340d2d",
+      "ordinary_test_count": 18,
+      "case_names": [
+        "editingTopicKeepsSoldShellTicketAndRecomputesRemainingFromSoldSeats",
+        "editingTopicWithoutTouchingTicketsKeepsBothRowsInPlace",
+        "droppingASoldTicketFromTheEditFailsClosedWithoutDestroyingIt",
+        "droppingAnUnsoldTicketDeletesItsShellRowAtomically",
+        "topicTicketIdentityIsNeverBorrowedFromAnotherTopic",
+        "repricingASoldSessionIsRefusedRatherThanQuietlyRebuiltUnderTheSoldSeats",
+        "twoIdenticalSessionsStayEditableInsteadOfBrickingTheTopic",
+        "concurrentlyChangedTopicTicketFailsClosedInsteadOfSilentlyInsertingASecondOne",
+        "failedConditionalOrphanDeleteFailsClosed",
+        "shellTicketPointingAtAnotherTopicsTicketIsTreatedAsAnOrphanNotAsAMatch",
+        "anotherActivitysShellTicketIsNotTouchedByThisTopicSync",
+        "adminAddingATicketOnAFreeExploreShellIsRefusedInsteadOfMintingAnUnkeyedOne",
+        "aGenuinelyUnkeyedShellRowStillForcesUnknownInventoryAndBlocksSync",
+        "addingATicketOnASelfHostClassicShellIsRefused",
+        "selfHostClassicShellTicketMustNotBrickTheNextTopicEdit",
+        "addingATicketOnAMerchantRunClassicActivityStaysAllowed",
+        "addingATicketOnAShellOfATopicWithoutAnOwnerStaysAllowed",
+        "addingATicketOnAnActivityWithoutATopicStaysAllowed"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+      "base_blob": "c1b066d468f13314e50e9b9389b2a2adb808705a",
+      "base_sha256": "5561cf30b9b9e8483b24080bf64e0116a495fdb264c0de678ee545db30494400",
+      "candidate_sha256": "188ca247a882997161a25c2617d05317ec29fbf7c64cde347c2f9d620012bec6",
+      "ordinary_test_count": 2,
+      "case_names": [
+        "createDraftAssignsChapterAndPerChapterNodeOrderFromSubmittedArrays",
+        "rebuildDraftUsesNewSubmittedOrderAndRestartsNodeOrderForEachChapter"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java",
+      "base_blob": "cf5d771159f88f58e2f67e8aae9c56362343d8f6",
+      "base_sha256": "0e46cbb1a291ddc6c409c30842daa42434513d7dd80ca2d5f1453f6877ac333c",
+      "candidate_sha256": "cebbff61745581b7dfe89a35ceb472a48a9222caba73e723a269b59bfd5e4010",
+      "ordinary_test_count": 5,
+      "case_names": [
+        "legacyCrossChapterReorderKeepsPredecessorByIdentity",
+        "compiledBlocksAlsoKeepPredecessorAfterReorder",
+        "retainedDependentCannotSilentlyLoseDeletedPredecessor",
+        "removedDependentDoesNotKeepAnOrphanRelation",
+        "failedPredecessorWriteCannotReportSuccessfulUpdate"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java",
+      "base_blob": "8d6ce48db4e04d6865a5cc37044b0a06c97960d6",
+      "base_sha256": "050af9891630b2f9b945ccbcc3518010e65acb5d7565bd224667d40d320d01fa",
+      "candidate_sha256": "f83bbae4c455bbf58b313b1163ac9cd9cbf5c952d26fda8596217ef13ff76ad5",
+      "ordinary_test_count": 3,
+      "case_names": [
+        "zeroMainRowUpdateStopsBeforeDeletingChildren",
+        "oneMainRowPreservesExistingExplicitReplacementBehavior",
+        "unexpectedAffectedCountDoesNotContinueReplacement"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java",
+      "base_blob": "c485c60ad5841522350f996c3cdcb256e35bcf57",
+      "base_sha256": "d0bdf72de1ba9c376cb0839e5550be5e17d222b4088f759c812af255004140b8",
+      "candidate_sha256": "f2290cfe66eb7aa1f8bdd17311fb45bb82cceaafc01c4703cf5a224e3f281554",
+      "ordinary_test_count": 4,
+      "case_names": [
+        "zeroRowsEvenWithAnIdCannotCreateChildren",
+        "missingGeneratedIdCannotCreateChildren",
+        "nonpositiveGeneratedIdCannotCreateChildren",
+        "validGeneratedIdentityKeepsExistingDraftFlow"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java",
+      "base_blob": "4f1d4cfd893e46a3289ee8091c92b6e03118ccae",
+      "base_sha256": "b14e22ac8a44df6eee0bd1746380fcd09d57459808d7677c897ff0325d738870",
+      "candidate_sha256": "e54b7fb6d937460eebbd736d7ed96612ae39f56f32903ba0e387beb7ecb2405b",
+      "ordinary_test_count": 5,
+      "case_names": [
+        "chapterZeroRowsCannotBeUsedEvenIfIdIsPresent",
+        "missingChapterIdentityStopsBeforeNodes",
+        "nodeZeroRowsCannotReachMaterializedBlocks",
+        "missingNodeIdentityCannotBeSilentlySkipped",
+        "positiveGeneratedIdentitiesKeepBothPathsWorking"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java",
+      "base_blob": "3c5768ebcd20a356ad3ffc49d62723d3f330ae25",
+      "base_sha256": "e98b424e972332dfa13fae35fc58872b5b374596bd283bbee50d6ea231feba0c",
+      "candidate_sha256": "c5818dbb44ad6181361cbe2cbd73beafd16f720040be07489c64bec18e95e9ba",
+      "ordinary_test_count": 10,
+      "case_names": [
+        "createRejectsNullZeroNegativeBeforeAnyAggregateWrite",
+        "fullUpdateRejectsNullZeroNegativeBeforeAnyAggregateWrite",
+        "createPreservesPositiveDuplicatesAndTheirOrder",
+        "fullUpdatePreservesPositiveDuplicatesAndTheirOrder",
+        "explicitEmptyListStillClearsExistingCollaborators",
+        "absentListWithExistingRowsStillFailsCompletenessGate",
+        "absentListWithoutExistingRowsStillAllowsCreateAndFullUpdate",
+        "whitelistStillIgnoresInvalidCollaboratorList",
+        "ownerGateStillPrecedesCollaboratorValidation",
+        "completenessGateStillPrecedesInvalidElementValidation"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java",
+      "base_blob": "658b46a622ba188bc82d5714a816769a5ca9b20e",
+      "base_sha256": "c99c873e4e82e78cfaf194205cdddd914ca6c4a240d6f13969ff56f8385bb43a",
+      "candidate_sha256": "ba03b379bc47c3436b2bd33559021a6cf128b69bdcf5aa7d6f330cbe0cd46ab6",
+      "ordinary_test_count": 4,
+      "case_names": [
+        "createDraftWithMissingNodeDurationStoresZeroTotal",
+        "editDraftWithMissingNodeDurationStoresZeroTotal",
+        "missingTimeDoesNotEraseKnownDurationsOrMutateInput",
+        "nullNodeIsStillInvalidRatherThanAcceptedAsMissingTime"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java",
+      "base_blob": "7f29db915617cae0b27d43dee7f5e4d7c4ab2f53",
+      "base_sha256": "bb33f7afbf0c76421cb276dfa66c7369758b46268e7df32141ebca4c86dca2f0",
+      "candidate_sha256": "90008ce0b705347b4d78f72dbad4ce4fa4cffa81b9f031957f237ce5c2e4a1fa",
+      "ordinary_test_count": 18,
+      "case_names": [
+        "notDraft_returnsFalse_noStatusMutation",
+        "draftSimple_publishesOnline",
+        "draftSimpleWithReviewFlag_publishesAsPostReview_andQueuesSpotCheck",
+        "draftSimpleWithReviewFlag_doesNotDuplicateOpenSpotCheck",
+        "draftFreeExploreWithRecruitDeadline_submitsProjectReview",
+        "draftAiSimple_publishesOnline",
+        "draftPro_publishesWhileAuditRemainsPending",
+        "heldDraftSimple_staysOfflineAndRequestsHumanReview",
+        "heldDraftPro_keepsBundleReviewButDoesNotGoOnline",
+        "directPublicationStillEnforcesOnlineQuota",
+        "refreshedEscalatedReviewReturnsItsPersistedState",
+        "draftPro_blocksUnregisteredStateKeyBeforeReview",
+        "draftPublish_buildsSelfHostActivityShellWhenMissing",
+        "draftPublish_doesNotBuildShellForMerchantPoolTopic",
+        "draftPublish_doesNotDuplicateExistingShell",
+        "changedOwnerAfterControllerReadRejectsEvenRealDraftFallbackBeforeMutation",
+        "noActorOverloadCannotExecuteSupplyReplacementAndExplicitActorMustBePositive",
+        "heldMediaCannotReachDraftCasEvenForCorrectOwner"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+      "base_blob": "53d7f1cb486db360eed487786604b1a0e1b952c4",
+      "base_sha256": "c22eca75314663af13ca41264735e52c0e536f0068ea8f24beba7d931d4609a0",
+      "candidate_sha256": "c4a21c7d665e05d4561356d0562362f68fc8a74a43fa253eb16eaba6ae60a6f8",
+      "ordinary_test_count": 5,
+      "case_names": [
+        "foreignBlockNarrativeNpcBlocksPublish",
+        "availableBlockNarrativeNpcPublishes",
+        "legacyBlockWithoutNarrativeNpcDoesNotTouchNpcProfiles",
+        "foreignStoryFlowNarrativeNpcBlocksPublish",
+        "availableStoryFlowNarrativeNpcPublishes"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+      "base_blob": "b40f3c48eaef97edfa7f7908f7b24ec913dbee41",
+      "base_sha256": "b8b048d49828b97e3ecbcd40a30659b41974db59b6cab2102bfe315b0fb20bdd",
+      "candidate_sha256": "233973a51f09cff7793f859962766105d13cdc2cbb6c5bb075557af04ddc96e5",
+      "ordinary_test_count": 25,
+      "case_names": [
+        "unregisteredKeyBlocksSimplePublishWithKeyAndNode",
+        "allReferencedKeysRegisteredPublishes",
+        "optionTagIsAutoRegisteredOnPublish_butCounterStillBlocks",
+        "legacyTopicWithoutAnyReferenceDoesNotTouchRegistry",
+        "journeyRulesExhaustTagMustBeRegistered",
+        "journeyRulesExhaustTagRegisteredPublishes",
+        "disabledJourneyRulesStillRequireExhaustTagRegistration",
+        "unparsableJourneyRulesFailClosed",
+        "approvedTopicSnapshotBlocksUnregisteredKey",
+        "approvedTopicSnapshotPassesWhenRegistered",
+        "chapterStoryFlowBeatWhenUnregisteredKeyBlocksPublish",
+        "chapterStoryFlowBeatWhenRegisteredPublishes",
+        "declaredThoughtDonePublishesWithoutRegisteringRuntimeTag",
+        "undeclaredThoughtDoneStillBlocksPublish",
+        "thoughtDeclaredByAnotherTopicDoesNotAuthorizeThisTopic",
+        "malformedThoughtRulesCannotAuthorizeRuntimeTag",
+        "declaredThoughtDoesNotAuthorizeUnregisteredOrdinaryKey",
+        "declaredThoughtCannotBeWrittenByAdvancedNodeEffects",
+        "declaredThoughtDoneCanBeReadByChapterConditions",
+        "undeclaredThoughtDoneInChapterConditionStillBlocksPublish",
+        "legacyChapterCannotTreatDeclaredThoughtTagAsANumericVariable",
+        "genericHpAndLuckChapterCostsAndItemsPublishWithoutSkillChecks",
+        "r5HpOutcomePublishesWithoutRegisteringSystemKeyAndFrozenFailClampsBeforeZeroPolicy",
+        "r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter",
+        "r5OutcomeRejectsDisabledHpAndLuckDomains"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java",
+      "base_blob": "59839a810b668fa7499b4f3851249eaa7fbc9550",
+      "base_sha256": "74a2263506a6b4b2db5abe3c2d9e698654385feb9c6960527736028b920cd5f4",
+      "candidate_sha256": "57fa11b7bde6e626fc2b94afa5a1f8c2d9a4dcc76901372cf68a5546280d12a7",
+      "ordinary_test_count": 8,
+      "case_names": [
+        "publishDraftRejectsBranchGraphForNonOrienteeringTopic",
+        "publishDraftRejectsAnEdgeWithoutADeterministicReachabilityFixture",
+        "successfulPublishCopiesTheNormalizedDraftIntoThePublishedSnapshot",
+        "professionalSubmissionRejectsInvalidRouteBeforeGoingOnline",
+        "approvedBranchGraphPublishesLatestNormalizedSnapshot",
+        "pendingTopicCannotAdvancePublishedSnapshot",
+        "approvedLinearTopicPublishesNullGraphAndAdvancesPublishedVersion",
+        "declaredOutcomesComeOnlyFromTheNodeActualGameplayTrigger"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java",
+      "base_blob": "816b9fa9e73468a9136473ca07b911fac2a7da76",
+      "base_sha256": "148b1234268a96495fc67f85750e6f8e958d4e8636cf4ae2d05b14bff8bcd913",
+      "candidate_sha256": "41abf3c444b31bfed79d2f678849851b5af890e615fa5addf872545a9efe01a4",
+      "ordinary_test_count": 8,
+      "case_names": [
+        "blockSysVarNodeOutsideThemeBlocksPublish",
+        "blockSysVarNodeInsideThemePublishesWithoutKeyRegistration",
+        "blockPassedSysVarNodeOutsideThemeBlocksPublish",
+        "blockPassedSysVarNodeInsideThemePublishes",
+        "blockNodeCompletedOutsideThemeBlocksPublish",
+        "blockNodeCompletedInsideThemePublishes",
+        "journeyStoryDispositionNodeMustBeBranch",
+        "journeyStoryDispositionNodeBranchPublishes"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NodeTemplateOwnershipTest.java",
+      "base_blob": "02331f0d8de5ca33e8a21af9863038613862fd83",
+      "base_sha256": "3dd9cd2bf0b3c068a33c8dc053d69f0d62e15171d60b142a1ad8b881143d8d18",
+      "candidate_sha256": "04f3ecc2b4384446f0f1fd4608ca1440399f230a747e37398d8fc16841121b54",
+      "ordinary_test_count": 6,
+      "case_names": [
+        "othersTemplate_rejected",
+        "ownTemplate_passes",
+        "noTemplate_passes",
+        "ownDraftTemplate_rejected",
+        "ownUnapprovedTemplate_rejected",
+        "missingTemplate_rejected"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java",
+      "base_blob": "14653b664085b95f8f9245ebb39a6bd09f1e277f",
+      "base_sha256": "f8e1b953c9c3bd6a0c5f93007cec1d2dbd196ce35d19d38e589df69db9115a3c",
+      "candidate_sha256": "4540bf7caf9729ecf033b4e75e76bef8a8ccd87d986fe50365bad117a8091cea",
+      "ordinary_test_count": 13,
+      "case_names": [
+        "proDraftPublish_whilePendingReview_createsPublicShell",
+        "simpleDraftPublish_stillCreatesPublicShell",
+        "approvedTopic_ensureShell_isIdempotent",
+        "explicitMemberOnlySelfHostShellCarriesItsActualClubScope",
+        "publicClubSelfHostTopicsRemainPublicForBothExplicitAndLegacyFlags",
+        "memberOnlyWithoutActualClubCannotSilentlyCreateAPublicShellOrCopyTickets",
+        "pendingTopic_ensureShell_neverBuilds",
+        "rejectedTopic_ensureShell_neverBuilds",
+        "merchantPoolTopic_ensureShell_neverBuilds",
+        "existingShell_ensureShell_neverBuilds",
+        "proDraftPublish_withOverdueDebt_isRejectedAtSubmission",
+        "approvedTopic_becameOverdueDuringReview_doesNotThrowAndBuildsNoShell",
+        "debtClearedAfterApproval_refreshBuildsTheMissingShell"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicProductTypeTest.java",
+      "base_blob": "a00acac9ab452f702ab6ce087ada33a914eed01e",
+      "base_sha256": "4df0d6bbf4f55c0955555ea5f5dbb3b055bbf675c475f8dae30ad87d2ec25947",
+      "candidate_sha256": "6f5c967ca43153d2f84748cb14a334a575e868715f38ba5b36708bbbb9d18385",
+      "ordinary_test_count": 16,
+      "case_names": [
+        "publisherRevshareRequiresOrdinaryClubContentAndExplicitFeeCap",
+        "explicitProductTypeWins",
+        "topicCreateGateReadsProductTypeResolver",
+        "derivesFromTicketsWhenNotSupplied",
+        "mixedTicketsNormalizedToEntryMode",
+        "mixedTicketsNormalizedToEntryMode_orienteering",
+        "mixedTicketsFirstModeNull_takesFirstNonNull",
+        "mixedTicketsAcceptedWhenProductTypeExplicit",
+        "noTicketsDefaultsToOrienteering",
+        "ticketsWithNullModesDefaultToOrienteering",
+        "invalidExplicitProductTypeRejected",
+        "invalidLegacyTicketModeRejected",
+        "recruitmentChapterRequiresControlledProfile",
+        "ticketModeOverriddenByProductType",
+        "ticketModeOverriddenToOrienteering",
+        "overridingModeKeepsOtherTicketFields"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java",
+      "base_blob": "3042f4cbd29770a362348f605947622886ddb4b8",
+      "base_sha256": "04856b24ab4e7f0cd0a057a2baf4754d77961cffb40836a793217ad43b899860",
+      "candidate_sha256": "8a312aa81d2c346179e61262ad466a5d2496b57bf50a02aa980510a52b68da1b",
+      "ordinary_test_count": 12,
+      "case_names": [
+        "unregisteredStoryKeyBlocksPublishWithSourceLabel",
+        "unregisteredOptionalClueBlocksPublish",
+        "registeredStoryKeysPublish",
+        "storyWithoutAnyConditionDoesNotTouchRegistry",
+        "storyChapterMustExistInTopicAtPublishTime",
+        "storyNpcMustBeAvailableInTopicAtPublishTime",
+        "unregisteredEpilogueRelationKeyBlocksPublish",
+        "epilogueRelationKeyWithWrongTypeBlocksPublish",
+        "registeredRelationTypeEpilogueKeyPublishes",
+        "legacyTopicWithoutStoryPublishesUntouched",
+        "thoughtBlockReferencingUnknownThoughtBlocksPublish",
+        "thoughtBlockWithRegisteredKeyPublishesFine"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
+      "base_blob": "571673ec03beeb108e40938dc5ca2f7fd0f6b7b1",
+      "base_sha256": "5b6331d68c340a4244d503ac7021afe8c437ed63089059f6a05f8e89d5c9c565",
+      "candidate_sha256": "12dd8fcd065ca0124f7d0f8135d01586c74a77f6a088fe67248412f50d8892e6",
+      "ordinary_test_count": 2,
+      "case_names": [
+        "storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask",
+        "priceEdit_resetsSaleReview"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java",
+      "base_blob": "0e083e2a3ae529869b34c6b5936fb1c707a3bb08",
+      "base_sha256": "7967f6ee29e3ddd25ad4a0d1592f971ad1221b1cba177b9f0e8e69337ca7a16b",
+      "candidate_sha256": "388bf88b8837edf3666fa462f104fd115b12739ef18cb5c4650a741f25029b19",
+      "ordinary_test_count": 0,
+      "case_names": [],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java",
+      "base_blob": "4ffb84cbe29ccf3ad6fd910f5741a0f139666724",
+      "base_sha256": "1606cd4a03dacd742354cd64028cc462c2ddf00d2124fd2860d99191c89ff613",
+      "candidate_sha256": "f8ffe63950f40a0f43da67924be650ccd61e1c9ec4883d2052255b3deca65dbb",
+      "ordinary_test_count": 49,
+      "case_names": [
+        "personalR5CheckActionProjectionReadsFrozenAttemptAndLuckWithoutWriting",
+        "replayReadbackRequiresFinishedSessionAndCurrentPublishedPermission",
+        "replayReadbackAndCommandShareLatestSessionAndIdempotentChildRules",
+        "replayReadbackDeniesExpiredEntitlementWithoutBlockingOwnedHistory",
+        "personalFallbackCannotOpenVotingOrBypassSessionOwnership",
+        "personalCatalogMatchesTeamCatalogWithoutRevealingInventory",
+        "readbackTracksArrivalAndOnlyTheCurrentTrustedInstancePass",
+        "readbackReportsCostsCountsAndFinishedSessions",
+        "personalToolsAndSessionToolsShareTheCommonReadbackShape",
+        "realFrozenRootAndChoiceEffectsMatchGuidedExtractionAndSettleOnce",
+        "basicRootEffectOfTwoRemainsTwoAndIsNotPaidAtArrival",
+        "frozenChoiceProjectionTakesPrecedenceWithoutBreakingLegacyDirectBlocks",
+        "anyTaskCompletesFromTrustedGroupOnlyWithOneReceiptAndWholePack",
+        "ownerVersionArrivalAndOldRoutesFailClosedWithoutMaterialChanges",
+        "arrivalRequiresOriginalIdentityAndRejectsChangedExpectedOrKind",
+        "gameplayReplayRequiresOriginalExpectedEvenAfterEntityVersionChanges",
+        "oldArrivalNamespaceNeverReleasesAnExecutedIdentity",
+        "arrivalsAreBoundToThisRunAndReplayReturnsTheOriginalScanReceipt",
+        "trustedTaskEffectsWaitForResolveAndProduceOneNetDecline",
+        "cancelledTaskCannotReuseOldTrustedProofOrAdvancedInstance",
+        "fullRecoveryIsFreeAndRealRecoveryUsesOneLimit",
+        "anyNChargesWholeChapterOnceWithoutCompletingEveryOptionalNode",
+        "ownerFacilityAndBoundQuestCommitAllCostsOrNeither",
+        "rewardDiscardNeedsFreshOwnerBoundPreviewAndNeverDropsExistingInventory",
+        "previewsAndAllowedActionsDoNotRevealHiddenAttributesOrChangeState",
+        "activeTaskKeepsReservedInventoryAndBalanceUntilResolveOrCancel",
+        "scanIsTheBasicTaskAndItsCurrentStartConsumesTheRealRunReceipt",
+        "publishedScanAndObjectiveIgnoreEnabledAddonsFromEditorDefaults",
+        "personalReceiveUsesOnlyOwnedPendingSourceAndRechecksCapacity",
+        "standaloneFacilityPreviewAndExplicitRewardDiscardUseSameSettlement",
+        "fullBagChapterEndPreviewMustResolveBeforePersonalCompletes",
+        "completedPendingClaimWorksAfterReplayAndRejectsOtherActions",
+        "personalCostOptionReadbackAndCommandUseOnlyFrozenGroup",
+        "gpsKindDoesNotReuseScanAndBasicOperationNeedsFreshGpsEachTime",
+        "basicScanAndGpsPublicationFreezeTheRealValidationWithoutAddingQa",
+        "standaloneOperationUsesRealArrivalFreshInstanceAndAtomicNetEffects",
+        "operationChoiceDeclineUsesTemplateReasonWithoutFacilityCosts",
+        "stateEnabledValuesAndOverflowPacksKeepARealPreviewEntry",
+        "guidedEffectsComeOnlyFromVerifiedFrozenOptions",
+        "publicationFreezeAndCopyRemapKeepTheActualTaskRules",
+        "guidedGroupReusesAllFourJudgesRejectingPartialAndForgedPassed",
+        "templateRulesCompileRealNodesOnceAndKeepLegacyWithoutRules",
+        "basicTextAndPickAnswersBindFreshControlledProofWithoutAdvanced",
+        "boundTemplateFirstUseThenRepeatUsesFreshProofAndNeverRepeatsChapterProgress",
+        "sceneTemplateRulesExecuteTheSelectedFrozenSceneAndKeepRealNodeIdentity",
+        "cmsPersistenceReadsBackActualNodesAndPersistsCompiledRules",
+        "templateTradeAndVoteToolsSaveAndFreezeTheActualWorldScopeAndCurrentScene",
+        "actionSummariesShowCanonicalCostsCountsAndScopesBeforeStartWithoutHiddenEffects",
+        "personalChallengeBypassesArrivalAndRetriesWithoutRewardsOrTaskCompletion"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java",
+      "base_blob": "aa9fa7c42587a292d1a67d6ff265f29e2d102898",
+      "base_sha256": "bcc29f1c24f56799e26499c97e9c67f696e0ac8980ee3e3ba3dc3576f9cc39d1",
+      "candidate_sha256": "1795e1ea4a86b23650edae7833fa688d752b17207aefb45d8d390668f7a9fed9",
+      "ordinary_test_count": 15,
+      "case_names": [
+        "createTopic_persists_open_club_pool_flag_for_city_orientation",
+        "createTopic_rejectsClubLeadForFreeExploreBeforePersisting",
+        "createTopic_carriesRecruitDeadlineButMustNotJumpStraightIntoRecruiting",
+        "createTopic_defaults_open_club_pool_to_open_for_city_orientation",
+        "createTopic_keeps_explicit_closed_switch_for_city_orientation",
+        "createTopic_neverOpensClubPoolForFreeExplore",
+        "createTopic_clubBound_neverOpensPublicClubPool",
+        "createTopic_clubBound_ignoresExplicitOpen",
+        "createTopic_autoAttachedClub_neverOpensPublicClubPool",
+        "createTopic_rejectsChapterRecruitmentForNonFreeExploreBeforePersisting",
+        "createTopic_rejectsRecruitmentMaxMerchantOutsideZeroTo127",
+        "createTopic_persists_owned_completion_reward_coupon",
+        "createAiSimpleTopic_rejectsUnconfirmedNodeLocations",
+        "createAiSimpleTopic_rejectsNodeWithoutCoordinatesAsValidationError",
+        "createAiSimpleTopic_rejectsGameConfigurationEvenWhenLocationIsConfirmed"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java",
+      "base_blob": "42585313f4fc07af0844390036a8041fdde7d4ff",
+      "base_sha256": "8ae237f52e89c33e0c4df3574b7c292b065ed38591863c028fe26cedc79f805e",
+      "candidate_sha256": "292af25cd5314f1720c08acbfe5ce27d091318852210f7ba3d7937b5754fd93e",
+      "ordinary_test_count": 5,
+      "case_names": [
+        "draftCreateSkipsSelfHostShellAndAudit",
+        "publishedProCreateSubmitsPostReviewAndBuildsPublicShell",
+        "publishedSimpleCreateStillBuildsSelfHostShell",
+        "proAndDraftCreateDoNotClaimMachinePassed",
+        "publishedProCreate_withOverdueDebt_isRejectedAtSubmission"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OldClientUpgradeRequiredContractTest.java",
+      "base_blob": "4022b7c7fdfaad2970de2dbbabbbc7eb254241bc",
+      "base_sha256": "67bf3c2cc397aef307ee8b3f1bc60abd4ba04e9d80d78c542c8a2a703840a13a",
+      "candidate_sha256": "1604c4ba069c6ddbbfb328a34bdff9757ea00dd50f180ec52bde3538a5649332",
+      "ordinary_test_count": 3,
+      "case_names": [
+        "legacySquareCommentAsksOldClientToUpgrade",
+        "legacySquarePublishAsksOldClientToUpgrade",
+        "materializedBlocksRejectLegacyWriteWithUpgradeRequiredException"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_05Test.java",
+      "base_blob": "33c089cae1e570f2a1cd10a6efa943b918dc5c37",
+      "base_sha256": "8607d606fd69faf52b6dbc170c4a4cc324934fb25ca36bcbfc27239cd2139e07",
+      "candidate_sha256": "bbbbc2b2a2fbde8b9059e9e71397ff6a592a42cc050b5f9e2445dcbca112dfed",
+      "ordinary_test_count": 3,
+      "case_names": [
+        "existingPlainStoryReferencesAndUnknownMetadataSurviveRebuild",
+        "missingOldNodeMappingFailsBeforeStoryWrite",
+        "generatedEndingConditionsAreMappedOnceAfterStoredStory"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_25Test.java",
+      "base_blob": "854a65a9fc960f26724d7a4e01b2c809bc1b99fc",
+      "base_sha256": "4682041205cef90d28902ca205585050f645ec34414420f79e8a153947d2008a",
+      "candidate_sha256": "bf65d2fc92e4348b3fd3e4f14d252c13ee35c932faf4255a91eb61c2cad4dbb7",
+      "ordinary_test_count": 6,
+      "case_names": [
+        "replacedOldEndingsDoNotRequireDeletedNodeMapping",
+        "retainedDispositionStillRequiresMapping",
+        "retainedStageStillRequiresMapping",
+        "retainedExhibitStillRequiresMapping",
+        "noReplacementKeepsOldEndingMappingStrict",
+        "unknownSchemaVersionStillRejectedByOriginalValidator"
+      ],
+      "status": "SOURCE_PRESERVED_NOT_JAVA_RUN"
+    }
+  ],
+  "unchanged_fixture_consumers": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayDraftCopyTest.java",
+      "blob": "6d479f0de562e5ad9507395b5a889c67adc81667",
+      "tests": 4,
+      "case_names": [
+        "firstSaveRegeneratesRealQuestsWithoutChangingActOrSurvivalIdentities",
+        "unmatchedEmptyActStaysInDraftButCannotFreeze",
+        "nativeThreeThemeCopiesSaveWithRealNodeMappingsAndRequireChallengeReselectionForPublish",
+        "clientSceneKeysAreOnlyAcceptedForCreatedNodesAndNeverByPublishParser"
+      ],
+      "role": "unchanged_indirect_authoring_fixture_consumer",
+      "status": "READ_ONLY_INVENTORY_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFrozenThemeComparisonTest.java",
+      "blob": "fc6afc3c384d0397511d0e282d97b0fc8a4aaa91",
+      "tests": 1,
+      "case_names": [
+        "onlyGeneratedFacilityPermutationIsEquivalentAndRealChangesRemainRejected"
+      ],
+      "role": "static_resource_comparison_only",
+      "status": "READ_ONLY_INVENTORY_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinMySqlIT.java",
+      "blob": "a3f545ae03e6cdb85b890c45878743d5b2763805",
+      "tests": 1,
+      "case_names": [
+        "threeThemesPublishWithTrustedBindingsAndPersistRenamedResources"
+      ],
+      "role": "existing_mysql_it",
+      "status": "READ_ONLY_INVENTORY_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinRuntimeServiceTest.java",
+      "blob": "08fbd0a8e757b68e84fecc8eda80a45ad1a0931f",
+      "tests": 7,
+      "case_names": [
+        "allThreeConfigurationsSavePublishAndFreezeThroughTheSameServices",
+        "templateFeesAndRationsUseTheBoundResourceAndBusinessReplayIsFree",
+        "zeroHpUsesTheSameTeamChallengeOrQuestionAlternativeAfterReskin",
+        "allThreeThemesFollowTheSameScriptToAnExecutedWorldEnding",
+        "configuredActionCeilingRejectsTheNextPaidTaskWithoutChangingResources",
+        "allThreePublishedThemesCanExplicitlyCloseToTheirConfiguredFallbackWithoutSpending",
+        "aFrozenWorldEndingDisablesAnOutstandingChallengeAndRejectsEveryNewProof"
+      ],
+      "role": "unchanged_indirect_authoring_fixture_consumer",
+      "status": "READ_ONLY_INVENTORY_NOT_EXECUTED"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplaySupportMatrixRuntimeTest.java",
+      "blob": "6a4c524ef41aceb8778ba5329a10d058b75a87af",
+      "tests": 2,
+      "case_names": [
+        "publishRejectsUnsupportedOrdinarySensorWithNodeTypeAndTool",
+        "legacyChallengeAnswerWithoutAdvancedProofCannotPublishAndFixedReferenceCanBeJudged"
+      ],
+      "role": "unchanged_indirect_authoring_fixture_consumer",
+      "status": "READ_ONLY_INVENTORY_NOT_EXECUTED"
+    }
+  ],
+  "java_mysql_executed": false
+}

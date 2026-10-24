@@ -89,6 +89,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private com.chengyinhub.business.service.support.TopicPlatformContentSlotGuard platformContentSlotGuard;
 
+    @Autowired
+    private com.chengyinhub.business.service.ITopicContentGraphAuthoringService contentGraphAuthoringService;
+    @Autowired
+    private com.chengyinhub.business.service.support.TopicContentWriteGuard contentWriteGuard;
+    @Autowired
+    private com.chengyinhub.business.service.support.TopicRouteOutcomeReader routeOutcomeReader;
+
     private final TopicCompletionRulePolicy topicCompletionRulePolicy = new TopicCompletionRulePolicy();
     private final TopicRouteConfigValidator topicRouteConfigValidator = new TopicRouteConfigValidator();
     private final TopicRoutePublishGate topicRoutePublishGate = new TopicRoutePublishGate();
@@ -536,28 +543,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
 
 
-    /**
-     * [W4闭环] 把节点引用的私有模板深拷贝给副本归属。
-     * 返回副本节点应引用的 templateId;无模板 / 无法判定归属(P0-35 无 memberId 的复制)时原样返回。
-     * {@code forceCopy=true}(块配置引用了 NPC)时,即使归属未变也深拷贝一份 —— 否则没有可回写的行,
-     * enter/outcome.npcId 只能继续指向来源主题的 NPC。
-     * 拷贝保留 status=1 / draft_status=1(源模板本就是审核通过的已发布模板,否则 W4 会拦节点引用),
-     * original_template_id 只继承源模板的公共库溯源 id；源模板无公共库溯源则写 0，
-     * 绝不把会员模板 id 冒充公共库 id。is_sync=0 不带进公共模板库。
-     */
-    private Long copyTemplateForOwner(Long templateId, Long newOwnerMemberId, Map<Long, Long> templateIdMap,
-                                      boolean forceCopy) {
-        if (templateId == null || templateId <= 0L || newOwnerMemberId == null) {
-            return templateId;
-        }
-        Long mapped = templateIdMap.get(templateId);
-        if (mapped != null) {
-            return mapped;
-        }
-        Long copiedId = cmsMemberTemplateService.copyForContentOwner(templateId, newOwnerMemberId, forceCopy);
-        templateIdMap.put(templateId, copiedId);
-        return copiedId;
-    }
+
 
 
 
@@ -3114,48 +3100,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
     }
 
-    /**
-     * R8-STORY:章节重建会整批换新 id,剧情 stages[].chapterId 必须按 old→new 重映射后回填,
-     * 否则保存「成功」而玩家读到的是上一批章节 id(静默错位、发布期才拦)。
-     *
-     * <p>映射不全时 fail-closed:剧情引用了本次提交里没有的章节就拒绝保存,不留坏引用。
-     */
-    private void persistJourneyStoryAfterChapterRebuild(Long topicId, String storedStory,
-                                                       RouteNodeMaps routeNodeMaps, String username) {
-        String sourceStory = storedStory;
-        if (!routeNodeMaps.endingChapters.isEmpty() && StringUtils.isNotBlank(storedStory)) {
-            // 本次结局章将整体替换旧 endings；只剔除待废弃列表，保留段仍严格换期。
-            try {
-                JsonNode source = ROUTE_JSON.readTree(storedStory);
-                JsonNode ending = source == null ? null : source.get("ending");
-                if (ending instanceof com.fasterxml.jackson.databind.node.ObjectNode) {
-                    ((com.fasterxml.jackson.databind.node.ObjectNode) ending).remove("endings");
-                    sourceStory = source.toString();
-                }
-            } catch (java.io.IOException invalidStory) {
-                throw new IllegalArgumentException("主题剧情配置无法解析", invalidStory);
-            }
-        }
-        // 来源剧情先按旧节点身份换期；结局章随后独立映射，避免把新 ID 再作旧 ID。
-        String content = JourneyStory.withOpeningChapterId(
-                JourneyStory.remapNodeIds(sourceStory, routeNodeMaps.oldToNew), null);
-        String remapped = JourneyStory.withOpeningChapterId(
-                JourneyStory.remapChapterIds(content, routeNodeMaps.chapterOldToNew), routeNodeMaps.openingChapterId);
-        if (!routeNodeMaps.endingChapters.isEmpty()) {
-            // 结局 = 结局章:按章节重建结局列表;形状在这里验,引用(章节 / 站点属于本主题)发布期全量重验
-            remapped = JourneyStory.withEndingChapters(remapped, routeNodeMaps.endingChapters, routeNodeMaps.oldToNew);
-            journeyStoryValidator.validate(remapped, com.chengyinhub.business.service.support.JourneyStoryValidator.Context.none());
-        }
-        if (StringUtils.isBlank(remapped)) return;
-        CmsTopic storyPatch = new CmsTopic();
-        storyPatch.setId(topicId);
-        storyPatch.setJourneyStoryJson(remapped);
-        storyPatch.setUpdateBy(username);
-        storyPatch.setUpdateTime(new Date());
-        if (cmsTopicMapper.updateCmsTopic(storyPatch) != 1) {
-            throw new IllegalStateException("主题剧情配置保存失败");
-        }
-    }
+
 
 
 
@@ -3316,36 +3261,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
     }
 
-    private void remapRebuiltTemplateNodes(Long topicId,Map<Long,Long> nodeMap,Long ownerId) {
-        if(cmsMemberTemplateMapper==null || nodeMap==null || nodeMap.isEmpty())return;
-        CmsTopicNode query=new CmsTopicNode();query.setTopicId(topicId);Map<Long,Long> copied=new LinkedHashMap<>();
-        for(CmsTopicNode node:nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(query))) {
-            if(node.getTemplateId()==null || node.getTemplateId()<=0)continue;
-            CmsMemberTemplate source=cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());
-            if(source==null || com.chengyinhub.business.util.StateKeyRefs.collectSysNodeIds(source.getAdvancedConfigJson()).isEmpty())continue;
-            String remapped=com.chengyinhub.business.util.StateKeyRefs.remapNodeIds(source.getAdvancedConfigJson(),nodeMap);
-            if(java.util.Objects.equals(remapped,source.getAdvancedConfigJson()))continue;
-            Long templateId=copyTemplateForOwner(source.getId(),ownerId,copied,true);
-            if(templateId==null || templateId.equals(source.getId()))throw new IllegalStateException("节点条件重映射未取得独立模板");
-            CmsMemberTemplate templatePatch=new CmsMemberTemplate();templatePatch.setId(templateId);templatePatch.setAdvancedConfigJson(remapped);
-            if(cmsMemberTemplateMapper.updateCmsMemberTemplate(templatePatch)!=1)throw new IllegalStateException("节点条件模板重映射失败");
-            CmsTopicNode nodePatch=new CmsTopicNode();nodePatch.setId(node.getId());nodePatch.setTemplateId(templateId);
-            if(cmsTopicNodeMapper.updateCmsTopicNode(nodePatch)!=1)throw new IllegalStateException("节点条件模板绑定失败");
-        }
-    }
+
 
     private String remapTemplateRuleIdentities(String raw,Map<Long,Long> nodes) {
         return com.chengyinhub.business.service.support.TopicTemplateRuleIdentityRemapper.remap(raw, nodes);
     }
 
-    private void persistTemplateInteractionRules(Long topicId) {
-        if(topicRouteRuntimeService==null)return;
-        CmsTopic actual = cmsTopicMapper.selectCmsTopicById(topicId); if(actual==null)return;
-        String compiled = topicRouteRuntimeService.compileTemplateRules(actual);
-        if(compiled==null || java.util.Objects.equals(compiled,actual.getThemeRuntimeConfigJson()))return;
-        CmsTopic patch=new CmsTopic(); patch.setId(topicId); patch.setThemeRuntimeConfigJson(compiled);
-        if(cmsTopicMapper.updateCmsTopic(patch)!=1)throw new IllegalStateException("模板使用规则保存失败");
-    }
+
 
     private boolean requiresFullRuntimeSnapshot(CmsTopic topic) {
         try {
@@ -3778,21 +3700,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
 
         // 4. 保存章节和节点（同时计算章节距离）
-        RouteNodeMaps routeNodeMaps = saveTopicChapters(dto.getChapters(), topicId, username, memberId,
+        com.chengyinhub.business.service.support.TopicAuthoredGraphIds routeNodeMaps = contentGraphAuthoringService.saveTopicChapters(dto.getChapters(), topicId, username, memberId,
                 productType, chapterFlowV2, chapterFlowV2 && (saveDraft || !simpleMode));
-        remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
-        persistJourneyStoryAfterChapterRebuild(topicId, topic.getJourneyStoryJson(), routeNodeMaps, username);
-        saveRouteDefinition(topicId, dto.getRouteMode(), dto.getRouteGraphJson(), routeNodeMaps,
+        contentGraphAuthoringService.remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
+        contentGraphAuthoringService.persistJourneyStoryAfterChapterRebuild(topicId, topic.getJourneyStoryJson(), routeNodeMaps, username);
+        contentGraphAuthoringService.saveRouteDefinition(topicId, dto.getRouteMode(), dto.getRouteGraphJson(), routeNodeMaps,
                 null, 1L, 1L, productType);
         if (topic.getThemeRuntimeConfigJson() != null) {
-            CmsTopic runtimePatch = new CmsTopic(); runtimePatch.setId(topicId);
-            runtimePatch.setThemeRuntimeConfigJson(remapTemplateRuleIdentities(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapForNodeSave(runtimeRaw,routeNodeMaps.oldToNew,routeNodeMaps.chapterOldToNew,routeNodeMaps.createdClientToNew),routeNodeMaps.oldToNew));
-            if (cmsTopicMapper.updateCmsTopic(runtimePatch) != 1) throw new IllegalStateException("主题运行配置保存失败");
+            contentGraphAuthoringService.persistCreatedRuntimeBindings(topicId, runtimeRaw, routeNodeMaps);
             if (!saveDraft && simpleMode) {
                 assertThemeRuntimeReferences(cmsTopicMapper.selectCmsTopicById(topicId));
             }
         }
-        persistTemplateInteractionRules(topicId);
+        contentGraphAuthoringService.persistTemplateInteractionRules(topicId);
         if (!saveDraft && simpleMode && !"BRANCH_GRAPH".equalsIgnoreCase(dto.getRouteMode())) {
             CmsTopic ready = cmsTopicMapper.selectCmsTopicById(topicId);
             if (requiresFullRuntimeSnapshot(ready) && cmsTopicMapper.publishRouteSnapshot(topicId,normalizedBranchRouteForPublish(ready),new Date()) != 1) throw new IllegalStateException("主题模板规则发布失败");
@@ -3909,7 +3829,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (!chapterFlowV2) {
             ChapterFlowCompiler.assertNoBlockPayload(dto.getChapters(),
                     "旧版保存接口不接受章节 blocks，请使用 /api/topic/v2/update");
-            assertLegacyChapterFlowWritable(topicId);
+            contentWriteGuard.assertLegacyChapterFlowWritable(topicId);
         }
         // is_draft 不在实体上,只能单查(见 TopicEditWindow 注释)
         Integer isDraft = cmsTopicMapper.selectTopicIsDraft(topicId);
@@ -4155,7 +4075,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         assertRebuildPayloadComplete(topicId, dto);
         assertCollaboratorIdShape(dto.getCollaboratorIds());
         // NodeDTO 不开放前置解锁编辑；重建前保存服务端既有关系，等全部新节点生成后翻译 ID。
-        Map<Long, Long> existingUnlocks = existingNodeUnlocks(topicId);
+        Map<Long, Long> existingUnlocks = contentGraphAuthoringService.existingNodeUnlocks(topicId);
         Long existingOpeningId = JourneyStory.openingChapterId(exist.getJourneyStoryJson());
         if (existingOpeningId != null && dto.getChapters() != null) {
             for (ChapterDTO chapter : dto.getChapters()) {
@@ -4284,29 +4204,27 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         boolean allowBundledDraft = chapterFlowV2
                 && (draft || !isSimplePublishMode(patch.getPublishMode()));
         // 重建会删掉全部节点再插回(插回一律 status=1);先记下后台隐藏的,插回后按旧 id 还原,作者重存不得取消隐藏
-        Set<Long> hiddenNodeIds = selectHiddenNodeIds(topicId);
-        RouteNodeMaps routeNodeMaps;
-        if (shouldCompileChapterFlow(chapterFlowV2, productType, dto.getChapters())) {
+        Set<Long> hiddenNodeIds = contentGraphAuthoringService.selectHiddenNodeIds(topicId);
+        com.chengyinhub.business.service.support.TopicAuthoredGraphIds routeNodeMaps;
+        if (contentGraphAuthoringService.shouldCompileChapterFlow(chapterFlowV2, productType, dto.getChapters())) {
             deleteTopicEditableNonFlowChildren(topicId);
-            routeNodeMaps = compileChapterFlow(dto.getChapters(), topicId, username, memberId, true,
+            routeNodeMaps = contentGraphAuthoringService.compileChapterFlow(dto.getChapters(), topicId, username, memberId, true,
                     allowBundledDraft);
         } else {
             deleteTopicEditableChildren(topicId);
-            routeNodeMaps = saveTopicChapters(dto.getChapters(), topicId, username, memberId,
+            routeNodeMaps = contentGraphAuthoringService.saveTopicChapters(dto.getChapters(), topicId, username, memberId,
                     productType, chapterFlowV2, allowBundledDraft);
         }
-        restoreHiddenNodes(hiddenNodeIds, routeNodeMaps.oldToNew);
-        remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
-        restoreNodeUnlocks(existingUnlocks, routeNodeMaps);
-        persistJourneyStoryAfterChapterRebuild(topicId,
+        contentGraphAuthoringService.restoreHiddenNodes(hiddenNodeIds, routeNodeMaps.oldToNew);
+        contentGraphAuthoringService.remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
+        contentGraphAuthoringService.restoreNodeUnlocks(existingUnlocks, routeNodeMaps);
+        contentGraphAuthoringService.persistJourneyStoryAfterChapterRebuild(topicId,
                 patch.getJourneyStoryJson() == null ? exist.getJourneyStoryJson() : patch.getJourneyStoryJson(),
                 routeNodeMaps, username);
         if (runtimeRaw != null) {
-            CmsTopic runtimePatch = new CmsTopic(); runtimePatch.setId(topicId);
-            runtimePatch.setThemeRuntimeConfigJson(remapTemplateRuleIdentities(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapForNodeSave(runtimeRaw, routeNodeMaps.oldToNew, routeNodeMaps.chapterOldToNew, routeNodeMaps.createdClientToNew),routeNodeMaps.oldToNew));
-            if (cmsTopicMapper.updateCmsTopic(runtimePatch) != 1) throw new IllegalStateException("主题运行配置重映射失败");
+            contentGraphAuthoringService.persistRebuiltRuntimeBindings(topicId, runtimeRaw, routeNodeMaps);
         }
-        persistTemplateInteractionRules(topicId);
+        contentGraphAuthoringService.persistTemplateInteractionRules(topicId);
         long expectedRouteVersion = exist.getConfigVersion() == null ? 1L : exist.getConfigVersion();
         String requestedRouteMode = dto.getRouteMode();
         String requestedRouteGraph = dto.getRouteGraphJson();
@@ -4319,7 +4237,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             requestedRouteMode = exist.getRouteMode();
             requestedRouteGraph = exist.getRouteGraphJson();
         }
-        saveRouteDefinition(topicId, requestedRouteMode, requestedRouteGraph, routeNodeMaps,
+        contentGraphAuthoringService.saveRouteDefinition(topicId, requestedRouteMode, requestedRouteGraph, routeNodeMaps,
                 dto.getConfigVersion(), expectedRouteVersion, expectedRouteVersion + 1L, productType);
         try {
             xpBudgetService.autoAllocate(topicId);
@@ -4400,35 +4318,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (open) topicCommercialReviewService.submitSaleReview(topicId, memberId);
     }
 
-    private Map<Long, Long> existingNodeUnlocks(Long topicId) {
-        CmsTopicNode query = new CmsTopicNode();
-        query.setTopicId(topicId);
-        Map<Long, Long> unlocks = new LinkedHashMap<Long, Long>();
-        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(query))) {
-            if (node.getId() != null && node.getUnlockAfterNodeId() != null
-                    && node.getUnlockAfterNodeId() > 0L) {
-                unlocks.put(node.getId(), node.getUnlockAfterNodeId());
-            }
-        }
-        return unlocks;
-    }
 
-    private void restoreNodeUnlocks(Map<Long, Long> existingUnlocks, RouteNodeMaps maps) {
-        for (Map.Entry<Long, Long> entry : existingUnlocks.entrySet()) {
-            Long nodeId = maps.oldToNew.get(entry.getKey());
-            if (nodeId == null) continue; // 依赖节点本次已删除，不再保留其前置关系。
-            Long predecessorId = maps.oldToNew.get(entry.getValue());
-            if (predecessorId == null) {
-                throw new IllegalArgumentException("节点前置解锁引用不在本次提交里: " + entry.getValue());
-            }
-            CmsTopicNode patch = new CmsTopicNode();
-            patch.setId(nodeId);
-            patch.setUnlockAfterNodeId(predecessorId);
-            if (cmsTopicNodeMapper.updateCmsTopicNode(patch) != 1) {
-                throw new IllegalStateException("节点前置解锁保存失败: " + nodeId);
-            }
-        }
-    }
+
+
 
     /** 更新沿用已有作者配置；创建时的默认值不能把旧编辑端未认识的字段重置。 */
     private void preserveOmittedAuthorConfig(CmsTopic exist, TopicCreateDTO dto) {
@@ -4509,30 +4401,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
     }
 
-    /** 本主题后台「隐藏」(status=0)的节点 id。走不带商家可见性闸的行锁查询,待审商家节点也算在内。 */
-    private Set<Long> selectHiddenNodeIds(Long topicId) {
-        Set<Long> hidden = new HashSet<Long>();
-        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectByTopicForUpdate(topicId))) {
-            if (node != null && node.getId() != null && Long.valueOf(0L).equals(node.getStatus())) {
-                hidden.add(node.getId());
-            }
-        }
-        return hidden;
-    }
 
-    /** 重建后按旧 id → 新 id 把隐藏态写回;只会隐藏、不会取消隐藏,新节点(无旧 id)不受影响。 */
-    private void restoreHiddenNodes(Set<Long> hiddenNodeIds, Map<Long, Long> oldToNew) {
-        for (Long oldId : hiddenNodeIds) {
-            Long newId = oldToNew.get(oldId);
-            if (newId == null) continue;
-            CmsTopicNode patch = new CmsTopicNode();
-            patch.setId(newId);
-            patch.setStatus(0L);
-            if (cmsTopicNodeMapper.updateCmsTopicNode(patch) != 1) {
-                throw new IllegalStateException("隐藏节点状态保留失败");
-            }
-        }
-    }
+
+
 
     /**
      * 整体重建前清掉可编辑子表。
@@ -4542,22 +4413,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * 商家报名、订单、结算一概不碰 —— 它们在这一档下不该存在,真存在了上面那道钱闸已经拦住。
      */
     private void deleteTopicEditableChildren(Long topicId) {
-        deleteTopicChapterFlow(topicId);
+        contentGraphAuthoringService.deleteTopicChapterFlow(topicId);
         deleteTopicEditableNonFlowChildren(topicId);
     }
 
-    private void deleteTopicChapterFlow(Long topicId) {
-        CmsTopicNode nodeQ = new CmsTopicNode();
-        nodeQ.setTopicId(topicId);
-        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(nodeQ))) {
-            cmsTopicNodeMapper.deleteCmsTopicNodeById(node.getId());
-        }
-        CmsTopicChapter chapterQ = new CmsTopicChapter();
-        chapterQ.setTopicId(topicId);
-        for (CmsTopicChapter chapter : nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQ))) {
-            cmsTopicChapterMapper.deleteCmsTopicChapterById(chapter.getId());
-        }
-    }
+
 
     /**
      * ⚠️ 主题票<b>不</b>在这里删。它由 {@link #saveTickets} 独占:那一步要按业务键把没变的票原地留住,
@@ -4893,374 +4753,39 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return BigDecimal.valueOf(distance);
     }
 
-    private RouteNodeMaps saveChaptersAndNodes(List<ChapterDTO> chapters, Long topicId, String username, Long memberId,
-                                               boolean allowBundledDraft) {
-        RouteNodeMaps routeNodeMaps = new RouteNodeMaps();
-        if (CollectionUtils.isEmpty(chapters)) {
-            return routeNodeMaps;
-        }
 
-        long chapterSortId = 0L;
-        for (ChapterDTO chapterDTO : chapters) {
-            CmsTopicChapter chapter = new CmsTopicChapter();
 
-            // [D21] copyProperties 会把前端送来的这几个字段**原样落库**(与下面 saveNodes 里
-            // templateId 那个洞同型 —— 同一个方法里已经栽过一次)。必须挡在 copy 之前。
-            assertChapterShapeForTopic(chapterDTO, topicId);
 
-            BeanUtils.copyProperties(chapterDTO, chapter);
-            // 旧章节 id 只用于剧情 chapterId 映射,绝不带进新行(与 saveNodes 的 id 处理同口径)
-            chapter.setId(null);
-            // 配色不靠 copyProperties 隐式透传:枚举必须当场收敛(存量别名也在这里被写成新档)
-            chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(chapterDTO.getAtmospherePreset()));
-            chapter.setSortId(++chapterSortId);
-            chapter.setTopicId(topicId);
-            chapter.setCreateBy(username);
-            chapter.setCreateTime(new Date());
-            if (cmsTopicChapterMapper.insertCmsTopicChapter(chapter) != 1
-                    || chapter.getId() == null || chapter.getId() <= 0L) {
-                throw new IllegalStateException("章节保存失败，未生成有效章节身份");
-            }
-            Long chapterId = chapter.getId();
-            routeNodeMaps.recordChapter(chapterDTO.getId(), chapterId);
 
-            // 保存节点
-            saveNodes(chapterDTO.getNodes(), topicId, chapterId, username, memberId, routeNodeMaps,
-                    allowBundledDraft);
-        }
-        return routeNodeMaps;
-    }
 
-    /** 旧接口永不物化 blocks；V2 的经典定向及显式提交 blocks 的自由探索走块化写路径。 */
-    private RouteNodeMaps saveTopicChapters(List<ChapterDTO> chapters, Long topicId, String username, Long memberId,
-                                   Integer productType, boolean chapterFlowV2, boolean allowBundledDraft) {
-        if (shouldCompileChapterFlow(chapterFlowV2, productType, chapters)) {
-            return compileChapterFlow(chapters, topicId, username, memberId, false, allowBundledDraft);
-        }
-        if (chapterFlowV2 && !Integer.valueOf(ProductType.FREE_EXPLORE).equals(productType)) {
-            ChapterFlowCompiler.assertNoBlockPayload(chapters,
-                    "当前产品类型不支持章节 blocks");
-        }
-        return saveChaptersAndNodes(chapters, topicId, username, memberId, allowBundledDraft);
-    }
 
-    private boolean shouldCompileChapterFlow(boolean chapterFlowV2, Integer productType,
-                                             List<ChapterDTO> chapters) {
-        if (!chapterFlowV2) {
-            return false;
-        }
-        if (Integer.valueOf(ProductType.ORIENTEERING).equals(productType)) {
-            return true;
-        }
-        return Integer.valueOf(ProductType.FREE_EXPLORE).equals(productType)
-                && ChapterFlowCompiler.hasBlockPayload(chapters);
-    }
 
-    /**
-     * V2 唯一块化写路径：校验完整 payload，按章节数组与块数组派生顺序，再把真实 nodeId 写入 blocks。
-     * 调用方 {@code createTopicV2/updateTopicByOwnerV2} 均由 Spring 事务代理进入；更新时删除与重建同事务。
-     */
-    private RouteNodeMaps compileChapterFlow(List<ChapterDTO> chapters, Long topicId, String username, Long memberId,
-                                    boolean replaceExisting, boolean allowBundledDraft) {
-        ChapterFlowCompiler.CompiledFlow flow = ChapterFlowCompiler.compileChapterFlow(chapters);
-        RouteNodeMaps routeNodeMaps = new RouteNodeMaps();
 
-        // 所有既有章节/模板规则也先验完，再开始任何删除或插入。
-        for (ChapterFlowCompiler.CompiledChapter compiled : flow.getChapters()) {
-            ChapterDTO chapter = compiled.getSource();
-            assertChapterShapeForTopic(chapter, topicId);
-            List<NodeDTO> nodes = chapter.getNodes() == null
-                    ? Collections.<NodeDTO>emptyList() : chapter.getNodes();
-            for (NodeDTO node : nodes) {
-                if (node == null) {
-                    throw new ChapterFlowValidationException(
-                            "第 " + compiled.getChapterSortId() + " 章包含空节点");
-                }
-                assertTemplateOwned(node.getTemplateId(), memberId, allowBundledDraft);
-            }
-            for (ChapterBlockDTO block : chapter.getBlocks()) {
-                if (!Boolean.FALSE.equals(block.getLocationRequired())) continue;
-                com.chengyinhub.business.domain.CmsMemberTemplate template = cmsMemberTemplateMapper
-                        .selectCmsMemberTemplateById(nodes.get(block.getNodeIndex()).getTemplateId());
-                Integer method = template.getValidationMethod();
-                if (Integer.valueOf(4).equals(method) || Integer.valueOf(5).equals(method)) {
-                    throw new ChapterFlowValidationException("扫码到达和 GPS 到达请添加为地点");
-                }
-            }
-        }
 
-        if (replaceExisting) {
-            deleteTopicChapterFlow(topicId);
-        }
 
-        for (ChapterFlowCompiler.CompiledChapter compiled : flow.getChapters()) {
-            ChapterDTO source = compiled.getSource();
-            CmsTopicChapter chapter = new CmsTopicChapter();
-            try {
-                BeanUtils.copyProperties(source, chapter);
-                // 旧章节 id 只用于剧情 chapterId 映射,绝不带进新行
-                chapter.setId(null);
-                chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(source.getAtmospherePreset()));
-                chapter.setTopicId(topicId);
-                chapter.setSortId(compiled.getChapterSortId());
-                chapter.setRequired(1);
-                chapter.setDescription(compiled.getDescription());
-                chapter.setBlocksJson(null);
-                chapter.setCreateBy(username);
-                chapter.setCreateTime(new Date());
-                if (cmsTopicChapterMapper.insertCmsTopicChapter(chapter) != 1
-                        || chapter.getId() == null || chapter.getId() <= 0L) {
-                    throw new IllegalStateException("章节保存失败，未生成有效章节身份");
-                }
-                routeNodeMaps.recordChapter(source.getId(), chapter.getId());
-                if (Boolean.TRUE.equals(source.getOpening())) routeNodeMaps.openingChapterId = chapter.getId();
-                if (source.getEnding() != null && !source.getEnding().isNull()) {
-                    routeNodeMaps.endingChapters.add(new JourneyStory.EndingChapter(
-                            chapter.getId(), source.getName(), compiled.getDescription(), source.getEnding()));
-                }
 
-                List<NodeDTO> nodes = source.getNodes() == null
-                        ? Collections.<NodeDTO>emptyList() : source.getNodes();
-                List<Long> nodeIds = new ArrayList<>(nodes.size());
-                for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++) {
-                    NodeDTO nodeDTO = nodes.get(nodeIndex);
-                    CmsTopicNode node = new CmsTopicNode();
-                    BeanUtils.copyProperties(nodeDTO, node);
-                    node.setId(null);
-                    node.setTopicId(topicId);
-                    node.setChapterId(chapter.getId());
-                    node.setSortId(compiled.getNodeSortId(nodeIndex));
-                    node.setStatus(1L);
-                    node.setCheckinCode(java.util.UUID.randomUUID().toString().replace("-", ""));
-                    node.setCreateBy(username);
-                    node.setCreateTime(new Date());
-                    if (cmsTopicNodeMapper.insertCmsTopicNode(node) != 1
-                            || node.getId() == null || node.getId() <= 0L) {
-                        throw new IllegalStateException("节点保存失败，未生成有效节点身份");
-                    }
-                    nodeIds.add(node.getId());
-                    routeNodeMaps.record(nodeDTO, node.getId());
-                }
 
-                chapter.setBlocksJson(compiled.materializeBlocks(nodeIds));
-                if (cmsTopicChapterMapper.updateCmsTopicChapter(chapter) <= 0) {
-                    throw new IllegalStateException("章节 blocks 写入失败: chapterId=" + chapter.getId());
-                }
-            } catch (RuntimeException e) {
-                logger.warn("章节故事流写入失败: topicId={}, chapterId={}", topicId, chapter.getId(), e);
-                throw e;
-            }
-        }
-        return routeNodeMaps;
-    }
 
-    /** blocks 已物化后，旧客户端不得再用 description + nodes 覆盖它。 */
-    private void assertLegacyChapterFlowWritable(Long topicId) {
-        CmsTopicChapter query = new CmsTopicChapter();
-        query.setTopicId(topicId);
-        for (CmsTopicChapter chapter : nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(query))) {
-            if (chapter.getBlocksJson() != null && !chapter.getBlocksJson().trim().isEmpty()) {
-                throw new ChapterFlowClientUpgradeRequiredException("请更新小程序后编辑该主题");
-            }
-        }
-    }
 
-    private void assertChapterShapeForTopic(ChapterDTO chapter, Long topicId) {
-        boolean direct = TermsMode.REVSHARE.equals(chapter.getTermsMode())
-                && com.chengyinhub.business.support.ClubDirectMerchantPolicy.payerClubId(
-                        cmsTopicMapper.selectCmsTopicById(topicId), productRoleService.activeContentSlot(topicId)) != null;
-        assertChapterShape(chapter, direct);
-    }
 
-    /** 无主题上下文的形状检查仍不得替平台承诺计酬。 */
-    private void assertChapterShape(ChapterDTO c) { assertChapterShape(c, false); }
 
-    private void assertChapterShape(ChapterDTO c, boolean clubDirect) {
-        // 章节背景旁白:列宽 512,超了 MySQL 会静默截断成一条点不开的坏地址,所以挡在写之前。
-        String audioUrl = c.getAudioUrl();
-        if (audioUrl != null && audioUrl.length() > 512) {
-            throw new IllegalStateException("章节音频地址不能超过 512 字符");
-        }
-        Integer recruitEnabled = c.getRecruitEnabled();
-        ChapterRecruitmentRules.assertRecruitEnabled(recruitEnabled);
-        ChapterRecruitmentRules.assertMaxMerchant(c.getMaxMerchant());
-        if (ChapterRecruitmentRules.isEnabled(recruitEnabled)) {
-            SysCategory category = c.getCategoryId() == null ? null
-                    : sysCategoryService.selectSysCategoryById(c.getCategoryId().longValue());
-            ChapterRecruitmentRules.assertMerchantCategory(c.getCategoryId(), category);
-        }
-        String termsMode = c.getTermsMode();
-        if (termsMode != null) {
-            if (!TermsMode.isValid(termsMode)) {
-                throw new IllegalStateException("章节条款档不合法:" + termsMode);
-            }
-            if (TermsMode.REVSHARE.equals(termsMode) && !clubDirect) {
-                throw new IllegalStateException("计酬档须由普通自由探索的归属俱乐部直接付款");
-            }
-        }
-        // ⚠️ 形状必须与后台 configureSupplyTerms 的口径**一致**:那边拒的组合这边也得拒,
-        //    否则发布器能造出后台改都改不动的章(改一下就被形状校验拒),而运营找不到人背锅。
-        //    ⇒ 非权益档不得带权益门槛(null 的 termsMode 按 PERK 算,与 DDL DEFAULT 同口径)。
-        ChapterRecruitmentRules.assertPerkMinValueForTerms(termsMode, c.getPerkMinValue());
-        if (TermsMode.REVSHARE.equals(termsMode)) {
-            if (c.getMaxPerHeadFee() == null || c.getMaxPerHeadFee().signum() <= 0
-                    || c.getMaxPerHeadFee().scale() > 2) {
-                throw new IllegalStateException("请填写正数计酬人头费上限，最多两位小数");
-            }
-        } else if (c.getMaxPerHeadFee() != null) {
-            throw new IllegalStateException("仅计酬档填写人头费上限");
-        }
-        assertAllowedValidationMethods(c.getAllowedValidationMethods());
-        if (c.getMaxNodeXp() != null && c.getMaxNodeXp() < 0) {
-            throw new IllegalStateException("单节点探索值上限不能为负");
-        }
-    }
 
-    /** 只收 1-5 的逗号串(对齐 cms_member_template.validation_method 的取值域);空 = 不限。 */
-    private void assertAllowedValidationMethods(String raw) {
-        if (raw == null || raw.trim().isEmpty()) {
-            return;
-        }
-        for (String one : raw.split(",")) {
-            String v = one.trim();
-            if (!("1".equals(v) || "2".equals(v) || "3".equals(v) || "4".equals(v) || "5".equals(v))) {
-                throw new IllegalStateException("允许的验证方式不合法:" + raw);
-            }
-        }
-    }
 
-    private void saveNodes(List<NodeDTO> nodes, Long topicId, Long chapterId, String username, Long memberId,
-                           RouteNodeMaps routeNodeMaps, boolean allowBundledDraft) {
-        if (CollectionUtils.isEmpty(nodes)) {
-            return;
-        }
 
-        long nodeSortId = 0L;
-        for (NodeDTO nodeDTO : nodes) {
-            CmsTopicNode node = new CmsTopicNode();
-            BeanUtils.copyProperties(nodeDTO, node);
-            node.setId(null);
 
-            // [W4] copyProperties 原样把前端送来的 templateId 落库 —— 挂谁的模板全凭前端说了算。
-            assertTemplateOwned(nodeDTO.getTemplateId(), memberId, allowBundledDraft);
 
-            node.setTopicId(topicId);
-            node.setChapterId(chapterId);
-            node.setSortId(++nodeSortId);
-            node.setStatus(1L); // 默认显示
-            node.setCheckinCode(java.util.UUID.randomUUID().toString().replace("-", "")); // 节点打卡码
-            node.setCreateBy(username);
-            node.setCreateTime(new Date());
 
-            if (cmsTopicNodeMapper.insertCmsTopicNode(node) != 1
-                    || node.getId() == null || node.getId() <= 0L) {
-                throw new IllegalStateException("节点保存失败，未生成有效节点身份");
-            }
-            routeNodeMaps.record(nodeDTO, node.getId());
-        }
-    }
 
-    /** 保留存量测试/反射 seam；旧调用未携带主题级路线图。 */
-    private void saveNodes(List<NodeDTO> nodes, Long topicId, Long chapterId, String username, Long memberId) {
-        saveNodes(nodes, topicId, chapterId, username, memberId, new RouteNodeMaps(), false);
-    }
-
-    /** 节点全部落库后才发布主题路线；任何未知 key/id 都抛错并回滚整次建题/编辑。 */
-    private void saveRouteDefinition(Long topicId, String requestedMode, String rawGraph,
-                                     RouteNodeMaps maps, Long requestExpectedVersion,
-                                     Long expectedVersion, Long targetVersion, Integer productType) {
-        if ((requestedMode == null || requestedMode.trim().isEmpty())
-                && (rawGraph == null || rawGraph.trim().isEmpty()) && requestExpectedVersion == null) {
-            return; // 老客户端未提交路线字段：保留原 LINEAR/既有配置，不额外触发 CAS。
-        }
-        String mode = requestedMode == null || requestedMode.trim().isEmpty()
-                ? "LINEAR" : requestedMode.trim().toUpperCase(Locale.ROOT);
-        if (!"LINEAR".equals(mode) && !"BRANCH_GRAPH".equals(mode)) {
-            throw new IllegalArgumentException("routeMode 仅支持 LINEAR/BRANCH_GRAPH");
-        }
-        assertBranchGraphOnlyForOrienteering(mode, productType);
-        if (requestExpectedVersion != null && !requestExpectedVersion.equals(expectedVersion)) {
-            throw new IllegalStateException("路线配置已更新，请刷新后重试");
-        }
-        String graph = null;
-        if ("BRANCH_GRAPH".equals(mode)) {
-            if (rawGraph == null || rawGraph.trim().isEmpty()) {
-                throw new IllegalArgumentException("BRANCH_GRAPH 必须配置 routeGraphJson");
-            }
-            com.fasterxml.jackson.databind.JsonNode tree = topicRouteConfigValidator.readTree(rawGraph);
-            boolean usesClientKeys = tree.has("startNodeKey") || tree.has("terminalNodeKeys")
-                    || containsNodeKey(tree.path("edges")) || containsNodeKey(tree.path("fallbacks"));
-            if (usesClientKeys) graph = topicRouteConfigValidator.remapClientNodeKeys(rawGraph, maps.clientToNew);
-            else if (!maps.oldToNew.isEmpty()) graph = topicRouteConfigValidator.remapNodeIds(rawGraph, maps.oldToNew);
-            else graph = rawGraph;
-            graph = topicRouteConfigValidator.validateAndNormalize(graph, maps.newNodeIds,
-                    declaredRouteOutcomes(topicId));
-        }
-        if (cmsTopicMapper.updateRouteDefinition(topicId, mode, graph, expectedVersion, targetVersion,
-                new Date()) != 1) {
-            throw new IllegalStateException("路线配置已更新，请刷新后重试");
-        }
-    }
 
     private Map<Long, Set<String>> declaredRouteOutcomes(Long topicId) {
-        CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(topicId); probe.setStatus(1L);
-        Map<Long, Set<String>> result = new LinkedHashMap<Long, Set<String>>();
-        for (CmsTopicNode node : nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(probe))) {
-            Set<String> values = new LinkedHashSet<String>();
-            CmsMemberTemplate template = node.getTemplateId() == null ? null
-                    : cmsMemberTemplateMapper.selectCmsMemberTemplateById(node.getTemplateId());
-            boolean advancedGameplay = false;
-            if (template != null && StringUtils.isNotBlank(template.getAdvancedConfigJson())) {
-                try {
-                    JsonNode config = ROUTE_JSON.readTree(template.getAdvancedConfigJson());
-                    JsonNode branch = config.path("branch");
-                    if (branch.path("enabled").asBoolean(false)) {
-                        advancedGameplay = true;
-                        for (JsonNode step : branch.path("steps")) {
-                            if (step.path("terminal").asBoolean(false)) {
-                                String code = step.path("outcomeCode").asText("").trim();
-                                if (!code.isEmpty()) values.add("ADVANCED_RESULT:" + code);
-                            }
-                        }
-                    } else if (config.path("diceRoll").path("enabled").asBoolean(false)
-                            && "d20".equals(config.path("diceRoll").path("mode").asText())) {
-                        advancedGameplay = true;
-                        values.add("ADVANCED_RESULT:D20_SUCCESS");
-                        values.add("ADVANCED_RESULT:D20_FAILURE");
-                    }
-                } catch (Exception e) { throw new IllegalArgumentException("高级玩法 outcomeCode 声明无效", e); }
-            }
-            if (!advancedGameplay && template != null
-                    && Integer.valueOf(ValidationMethod.PREFERENCE_GROUP).equals(template.getValidationMethod())) {
-                try {
-                    Iterator<String> names = ROUTE_JSON.readTree(template.getPreferenceJson()).path("results").fieldNames();
-                    while (names.hasNext()) values.add("PREFERENCE_RESULT:" + names.next());
-                } catch (Exception e) { throw new IllegalArgumentException("偏好玩法 outcomeCode 声明无效", e); }
-            } else if (!advancedGameplay) values.add("CHOICE:COMPLETED");
-            result.put(node.getId(), values);
-        }
-        return result;
+        return routeOutcomeReader.declaredRouteOutcomes(topicId);
     }
 
     private void assertBranchGraphOnlyForOrienteering(String routeMode, Integer productType) {
-        if ("BRANCH_GRAPH".equalsIgnoreCase(StringUtils.trim(routeMode))
-                && !Integer.valueOf(ProductType.ORIENTEERING).equals(productType)) {
-            throw new IllegalArgumentException("BRANCH_GRAPH 仅支持城市定向主题");
-        }
+        contentWriteGuard.assertBranchGraphOnlyForOrienteering(routeMode, productType);
     }
 
-    private boolean containsNodeKey(com.fasterxml.jackson.databind.JsonNode array) {
-        if (!array.isArray()) return false;
-        for (com.fasterxml.jackson.databind.JsonNode item : array) {
-            if (item.has("fromNodeKey") || item.has("toNodeKey")) return true;
-            if (item.path("conditions").isArray()) {
-                for (com.fasterxml.jackson.databind.JsonNode condition : item.path("conditions")) {
-                    if (condition.has("nodeKey")) return true;
-                }
-            }
-        }
-        return false;
-    }
+
 
     private String firstLocationAddress(List<ChapterDTO> chapters) {
         if (chapters == null) return "";
@@ -5284,40 +4809,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return "";
     }
 
-    private static final class RouteNodeMaps {
-        private Long openingChapterId;
-        /** 结局章(2026-09-24):按章节顺序,剧情落库前据此重建 ending.endings。 */
-        private final List<JourneyStory.EndingChapter> endingChapters = new ArrayList<JourneyStory.EndingChapter>();
-        private final Map<String, Long> clientToNew = new LinkedHashMap<String, Long>();
-        private final Map<String, Long> createdClientToNew = new LinkedHashMap<String, Long>();
-        private final Map<Long, Long> oldToNew = new LinkedHashMap<Long, Long>();
-        private final Set<Long> newNodeIds = new LinkedHashSet<Long>();
-        /** R8-STORY:章节 old→new,剧情 stages[].chapterId 重建后据此重映射。 */
-        private final Map<Long, Long> chapterOldToNew = new LinkedHashMap<Long, Long>();
 
-        private void record(NodeDTO source, Long newNodeId) {
-            if (newNodeId == null || newNodeId <= 0L) return;
-            newNodeIds.add(newNodeId);
-            if (source.getId() != null && source.getId() > 0L) {
-                Long old = oldToNew.put(source.getId(), newNodeId);
-                if (old != null) throw new IllegalArgumentException("节点 id 重复:" + source.getId());
-            }
-            String key = source.getClientNodeKey();
-            if (key != null && !key.trim().isEmpty()) {
-                key = key.trim();
-                if (key.length() > 64) throw new IllegalArgumentException("clientNodeKey 最多 64 位");
-                Long old = clientToNew.put(key, newNodeId);
-                if (old != null) throw new IllegalArgumentException("clientNodeKey 重复:" + key);
-                if (source.getId() == null || source.getId() <= 0L) createdClientToNew.put(key, newNodeId);
-            }
-        }
-
-        private void recordChapter(Long oldChapterId, Long newChapterId) {
-            if (oldChapterId == null || oldChapterId <= 0L || newChapterId == null || newChapterId <= 0L) return;
-            Long old = chapterOldToNew.put(oldChapterId, newChapterId);
-            if (old != null) throw new IllegalArgumentException("章节 id 重复:" + oldChapterId);
-        }
-    }
 
     /**
      * [C3] 主题创建者删除自己的主题:归属校验 + 有付费报名即拒。
@@ -5429,54 +4921,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return rows == null ? 0 : rows.size();
     }
 
-    /**
-     * [W4] 节点只能挂**自己的、已审核的、非草稿的**模板。
-     *
-     * <p><b>先分清两套模板,别把这条误当「模板本来就是公共的」</b>:
-     * <ul>
-     *   <li>{@code CmsTemplateLibrary} = 公共模板库({@code /api/template/list} 与 {@code /info},
-     *       按 status=1+publishStatus=1 过滤、<b>不看 memberId</b>)—— 那个确实人人可用。</li>
-     *   <li>{@code CmsMemberTemplate} = 我的模板(publish 时绑 memberId)。<b>节点的 templateId 指的是它</b>
-     *       ({@code ApiRegistrationMerchantController:88/179} 拿它查 CmsMemberTemplate),
-     *       小程序发布页选模板调的也是 {@code /api/template/my-list}(fabu/index.js:3329)。</li>
-     * </ul>
-     * ⇒ 挂他人 CmsMemberTemplate 从来不是产品意图,只是后端没拦。
-     *
-     * <p><b>为什么不止判归属</b>:my-list 的引用分支({@code ApiTemplateController:216-224})取的是
-     * <b>memberId=自己 + status=1 + draftStatus=1</b> 三条。只判归属会放过「自己的草稿/未审核模板」——
-     * 那同样是绕过前端拿到的东西,审核闸会被架空。
-     *
-     * @param templateId 节点上送的模板 id;null / ≤0 = 不挂模板(前端默认就是 0),放行
-     * @param memberId   当前建题人
-     * @param allowBundledDraft 是否放行建题人自己的私有草稿(随主题组合送审)
-     */
-    private void assertTemplateOwned(Long templateId, Long memberId, boolean allowBundledDraft) {
-        if (templateId == null || templateId <= 0L) {
-            return;
-        }
-        com.chengyinhub.business.domain.CmsMemberTemplate tpl =
-                cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
-        if (tpl == null || (tpl.getDelFlag() != null && tpl.getDelFlag() == 2)) {
-            throw new RuntimeException("模板不存在或已删除:" + templateId);
-        }
-        if (memberId == null || !memberId.equals(tpl.getMemberId())) {
-            throw new RuntimeException("不能引用他人的模板:" + templateId);
-        }
-        boolean privateDraft = allowBundledDraft
-                && Long.valueOf(0L).equals(tpl.getStatus())
-                && Integer.valueOf(0).equals(tpl.getDraftStatus())
-                && Integer.valueOf(0).equals(tpl.getCheckStatus())
-                && Long.valueOf(0L).equals(tpl.getPublishStatus());
-        if (privateDraft) {
-            return;
-        }
-        if (tpl.getStatus() == null || tpl.getStatus() != 1L) {
-            throw new RuntimeException("模板尚未通过审核,不能引用:" + templateId);
-        }
-        if (tpl.getDraftStatus() == null || tpl.getDraftStatus() != 1) {
-            throw new RuntimeException("草稿模板不能引用,请先发布:" + templateId);
-        }
-    }
+
 
     /** 仅保护署名 ID 形状；缺席/空集合与重复正 ID 的既有语义不变。 */
     private void assertCollaboratorIdShape(List<Long> collaboratorIds) {

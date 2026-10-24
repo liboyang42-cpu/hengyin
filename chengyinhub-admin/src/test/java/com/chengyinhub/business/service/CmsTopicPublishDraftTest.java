@@ -139,7 +139,7 @@ class CmsTopicPublishDraftTest {
         CmsTopic nonDraft = new CmsTopic(); nonDraft.setId(9L); nonDraft.setMemberId(7L);
         when(cmsTopicMapper.selectCmsTopicById(9L)).thenReturn(nonDraft);
         when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(9L)).thenReturn(nonDraft);
-        assertFalse(svc.publishDraft(9L), "非草稿不应发布(审核绕过防护)");
+        assertFalse(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(9L), "非草稿不应发布(审核绕过防护)");
         verify(cmsTopicMapper, never()).updateCmsTopic(any());
         verify(topicBundleReviewService, never()).freezeForSubmission(anyLong(), anyLong());
     }
@@ -153,7 +153,7 @@ class CmsTopicPublishDraftTest {
         // R19-DRAFT2:可发布的主题必须有名字(草稿保存时已要求非空)。
         t.setName("夜跑"); t.setImgUrl("media-asset:901");
         when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
-        assertTrue(svc.publishDraft(1L));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(1L));
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
         assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "简易版发布 → 已上架");
@@ -174,7 +174,7 @@ class CmsTopicPublishDraftTest {
         t.setName("夜跑"); t.setImgUrl("media-asset:901");
         when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
 
-        assertTrue(svc.publishDraft(1L));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(1L));
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
@@ -197,7 +197,7 @@ class CmsTopicPublishDraftTest {
         open.setSourceType("post_review_flag");
         when(auditTaskService.selectAuditTaskList(any())).thenReturn(Collections.singletonList(open));
 
-        assertTrue(svc.publishDraft(1L));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(1L));
 
         verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
     }
@@ -215,7 +215,7 @@ class CmsTopicPublishDraftTest {
         topic.setRecruitDeadline(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
         when(cmsTopicMapper.selectCmsTopicById(8L)).thenReturn(topic);
 
-        assertTrue(svc.publishDraft(8L));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(8L));
 
         verify(topicCommercialReviewService).submitProjectReview(
                 8L, 100L, com.chengyinhub.business.domain.enums.TopicLifecycleState.RECRUITING);
@@ -236,7 +236,7 @@ class CmsTopicPublishDraftTest {
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(aiNode));
 
-        assertTrue(svc.publishDraft(3L));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(3L));
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
@@ -253,7 +253,7 @@ class CmsTopicPublishDraftTest {
         t.setId(2L); t.setPublishMode("pro"); t.setMemberId(100L); t.setName("夜跑");
         when(cmsTopicMapper.selectCmsTopicById(2L)).thenReturn(t);
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
-                svc.publishDraftWithReview(2L);
+                com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L);
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
         assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "专业版发布 → 上架待后审");
@@ -279,7 +279,7 @@ class CmsTopicPublishDraftTest {
         t.setReason(com.chengyinhub.business.util.TopicContentSafetyHold.REASON);
         when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
 
-        svc.publishDraft(1L);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(1L);
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper, org.mockito.Mockito.atLeast(0)).updateCmsTopic(cap.capture());
@@ -302,7 +302,7 @@ class CmsTopicPublishDraftTest {
         open.setId(901L); open.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
         when(auditTaskService.selectAuditTaskList(any())).thenReturn(Collections.singletonList(open));
 
-        com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result = svc.publishDraftWithReview(2L);
+        com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result = com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L);
 
         verify(auditTaskService).submitOrRefreshTopicBundle(eq(2L), eq(100L), anyString());
         verify(cmsTopicMapper, never()).updateCmsTopic(any());
@@ -318,7 +318,7 @@ class CmsTopicPublishDraftTest {
         IQuotaService quota = (IQuotaService) ReflectionTestUtils.getField(svc, "quotaService");
         when(quota.lockAndCheckThemeOnline(100L, 2L)).thenReturn("在架额度已满");
         org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
-                () -> svc.publishDraftWithReview(2L));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L));
         verify(cmsTopicMapper, never()).updateCmsTopic(any());
         verify(cmsTopicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any());
     }
@@ -335,7 +335,7 @@ class CmsTopicPublishDraftTest {
         when(auditTaskService.selectAuditTaskById(901L)).thenReturn(task);
 
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
-                svc.publishDraftWithReview(2L);
+                com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L);
 
         assertEquals("ESCALATED", result.getReviewState());
     }
@@ -357,7 +357,7 @@ class CmsTopicPublishDraftTest {
         when(cmsMemberTemplateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template);
         when(themeStateKeyMapper.selectByTopicId(4L)).thenReturn(Collections.<ThemeStateKey>emptyList());
 
-        ServiceException error = assertThrows(ServiceException.class, () -> svc.publishDraft(4L));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(4L));
 
         assertTrue(error.getMessage().contains("clue.ledger_page"), error.getMessage());
         verify(cmsTopicMapper, never()).updateCmsTopic(any(CmsTopic.class));
@@ -386,7 +386,7 @@ class CmsTopicPublishDraftTest {
         when(cmsActivityMapper.selectCmsActivityList(any(CmsActivity.class)))
                 .thenReturn(Collections.<CmsActivity>emptyList());
 
-        assertTrue(svc.publishDraft(5L));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(5L));
 
         verify(cmsActivityMapper).insertCmsActivity(any(CmsActivity.class));
     }
@@ -400,7 +400,7 @@ class CmsTopicPublishDraftTest {
         t.setMerchantStatus(1);
         when(cmsTopicMapper.selectCmsTopicById(6L)).thenReturn(t);
 
-        assertTrue(svc.publishDraft(6L));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(6L));
 
         verify(cmsActivityMapper, never()).insertCmsActivity(any(CmsActivity.class));
     }
@@ -417,7 +417,7 @@ class CmsTopicPublishDraftTest {
         when(cmsActivityMapper.selectCmsActivityList(any(CmsActivity.class)))
                 .thenReturn(Collections.singletonList(existing));
 
-        assertTrue(svc.publishDraft(7L));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(7L));
 
         verify(cmsActivityMapper, never()).insertCmsActivity(any(CmsActivity.class));
     }
@@ -433,7 +433,7 @@ class CmsTopicPublishDraftTest {
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(91L)).thenReturn(locked);
         when(cmsTopicMapper.clearDraftIfDraft(91L)).thenReturn(1);
         com.chengyinhub.common.exception.ServiceException error = org.junit.jupiter.api.Assertions.assertThrows(
-                com.chengyinhub.common.exception.ServiceException.class, () -> svc.publishDraftWithReview(91L, 7L));
+                com.chengyinhub.common.exception.ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(91L, 7L));
         org.junit.jupiter.api.Assertions.assertEquals(403, error.getCode());
         org.mockito.Mockito.verify(cmsTopicMapper, org.mockito.Mockito.never()).clearDraftIfDraft(91L);
         org.mockito.Mockito.verify(topicBundleReviewService, org.mockito.Mockito.never()).freezeForSubmission(91L, 8L);
@@ -449,10 +449,10 @@ class CmsTopicPublishDraftTest {
                 (com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService");
         when(gate.canResubmit(locked)).thenReturn(true);
         when(cmsTopicMapper.clearDraftIfDraft(91L)).thenReturn(0);
-        org.junit.jupiter.api.Assertions.assertNull(svc.publishDraftWithReview(91L));
+        org.junit.jupiter.api.Assertions.assertNull(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(91L));
         org.mockito.Mockito.verify(gate, org.mockito.Mockito.never()).canResubmit(locked);
         com.chengyinhub.common.exception.ServiceException error = org.junit.jupiter.api.Assertions.assertThrows(
-                com.chengyinhub.common.exception.ServiceException.class, () -> svc.publishDraftWithReview(91L, null));
+                com.chengyinhub.common.exception.ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(91L, null));
         org.junit.jupiter.api.Assertions.assertEquals(403, error.getCode());
         org.mockito.Mockito.verify(topicBundleReviewService, org.mockito.Mockito.never()).freezeForSubmission(91L, 7L);
     }
@@ -464,7 +464,7 @@ class CmsTopicPublishDraftTest {
         when(cmsTopicMapper.selectCmsTopicById(92L)).thenReturn(topic);
         when(mediaAssetMapper.select(902L)).thenReturn(java.util.Map.of(
                 "id", 902L, "ownerType", "APP", "memberId", 7L, "reviewState", "HOLD"));
-        ServiceException error = assertThrows(ServiceException.class, () -> svc.publishDraftWithReview(92L, 7L));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(92L, 7L));
         assertEquals(422, error.getCode());
         verify(mediaAssetMapper).select(902L);
         verify(cmsTopicMapper, never()).clearDraftIfDraft(92L);

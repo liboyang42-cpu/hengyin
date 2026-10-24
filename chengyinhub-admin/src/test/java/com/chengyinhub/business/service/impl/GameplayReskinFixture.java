@@ -171,13 +171,13 @@ public class GameplayReskinFixture {
     void publish(JsonNode skin) throws Exception {
         variant=skin;
         TopicCreateDTO identity=new TopicCreateDTO();identity.setName(skin.path("name").asText());identity.setSaveDraft(1);identity.setPublishMode("simple");identity.setProductType(1);
-        Long id=authoring.createTopic(identity,7L,"配置作者");
+        Long id=com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).createTopic(identity,7L,"配置作者");
         keyService.register(id,keys);
         TopicUpdateDTO update=JSON.convertValue(definition(skin),TopicUpdateDTO.class);update.setId(id);
-        assertThrows(RuntimeException.class,()->authoring.updateTopicByOwner(update,8L,"外来作者"));
-        assertEquals(id,authoring.updateTopicByOwner(update,7L,"配置作者"));
+        assertThrows(RuntimeException.class,()->com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,8L,"外来作者"));
+        assertEquals(id,com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,7L,"配置作者"));
         topic=activeTopics.selectCmsTopicById(id);assertNotNull(topic);
-        assertTrue(authoring.publishDraft(id));topic=activeTopics.selectCmsTopicById(id);snapshot=JSON.readTree(topic.getPublishedRouteGraphJson());
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(authoring).publishDraft(id));topic=activeTopics.selectCmsTopicById(id);snapshot=JSON.readTree(topic.getPublishedRouteGraphJson());
         assertFalse(snapshot.toString().contains("resourceSlots"));assertFalse(snapshot.toString().contains("templateBindings"));
         assertSameFrozenTheme(snapshot.path("themeConfig"),JSON.readTree(route.freezePublishedJourney(topic)).path("themeConfig"));
     }

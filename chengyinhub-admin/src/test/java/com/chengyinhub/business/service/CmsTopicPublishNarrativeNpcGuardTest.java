@@ -102,7 +102,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
         assertTrue(error.getMessage().contains("enter"), error.getMessage());
@@ -124,7 +124,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
     }
@@ -142,7 +142,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 "{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(npcProfileMapper, never()).selectEnabledByScope(anyInt(), anyLong());
     }
@@ -167,7 +167,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
         assertTrue(error.getMessage().contains("故事流"), error.getMessage());
@@ -191,7 +191,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
     }

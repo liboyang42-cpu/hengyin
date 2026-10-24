@@ -85,7 +85,7 @@ class NodeTemplateOwnershipTest {
     }
 
     private void save(List<NodeDTO> nodes, Long memberId) {
-        ReflectionTestUtils.invokeMethod(service, "saveNodes", nodes, TOPIC, 1L, "tester", memberId);
+        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "saveNodes", nodes, TOPIC, 1L, "tester", memberId);
     }
 
     /** ★挂他人模板 ⇒ 拒。这是洞本身。 */

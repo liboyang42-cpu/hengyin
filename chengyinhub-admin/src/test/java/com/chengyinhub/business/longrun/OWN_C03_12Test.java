@@ -52,7 +52,7 @@ class OWN_C03_12Test {
     }
     @Test void validGeneratedIdentityKeepsExistingDraftFlow() {
         insertResult(1, 700L);
-        assertEquals(Long.valueOf(700), service.createTopic(draft(), 42L, "creator"));
+        assertEquals(Long.valueOf(700), com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(draft(), 42L, "creator"));
         verify(topics).updateTopicDraftState(700L, 1);
     }
 
@@ -71,7 +71,7 @@ class OWN_C03_12Test {
     }
     private void assertRejectedBeforeChildren() {
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> service.createTopic(draft(), 42L, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(draft(), 42L, "creator"));
         assertTrue(failure.getMessage().contains("未生成有效主题身份"));
         verify(topics, never()).updateTopicDraftState(any(), any());
         verify(chapters, never()).insertCmsTopicChapter(any());

@@ -57,7 +57,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertThrows(IllegalArgumentException.class, () -> service.publishDraft(10L));
+        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
     }
 
     @Test
@@ -93,7 +93,7 @@ class CmsTopicRoutePublishPolicyTest {
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> service.publishDraft(10L));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
 
         assertEquals("路线 edge impossible 没有确定性可达状态夹具", error.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
@@ -138,7 +138,7 @@ class CmsTopicRoutePublishPolicyTest {
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertEquals(true, service.publishDraft(10L));
+        assertEquals(true, com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
@@ -190,7 +190,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertThrows(IllegalArgumentException.class, () -> service.publishDraft(10L));
+        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
 
         verify(topicMapper, never()).publishRouteSnapshot(
                 any(Long.class), any(), any(java.util.Date.class));
@@ -221,7 +221,7 @@ class CmsTopicRoutePublishPolicyTest {
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        service.publishApprovedRouteSnapshot(10L);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L);
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
@@ -242,7 +242,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.publishApprovedRouteSnapshot(10L));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L));
 
         assertEquals("主题尚未成功通过审核，拒绝推进路线发布快照", error.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(
@@ -265,7 +265,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.publishRouteSnapshot(eq(10L), eq(null), any(java.util.Date.class))).thenReturn(1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        service.publishApprovedRouteSnapshot(10L);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L);
 
         verify(topicMapper).publishRouteSnapshot(
                 eq(10L), nullable(String.class), any(java.util.Date.class));
@@ -304,7 +304,7 @@ class CmsTopicRoutePublishPolicyTest {
         d20.setAdvancedConfigJson("{\"diceRoll\":{\"enabled\":true,\"mode\":\"d20\"}}");
         when(templateMapper.selectCmsMemberTemplateById(104L)).thenReturn(d20);
 
-        Map<Long, Set<String>> declared = ReflectionTestUtils.invokeMethod(service,
+        Map<Long, Set<String>> declared = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service),
                 "declaredRouteOutcomes", 10L);
 
         assertEquals(set("PREFERENCE_RESULT:HISTORY", "PREFERENCE_RESULT:ART"), declared.get(1L));
