@@ -1,0 +1,122 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "proposal": "5e2803424f4954d48efa07a7176176a289476d30",
+  "candidate": "61834b1ba96fcfb025d8442955b69f1d6b35d5f3",
+  "parent": "9a08a66cd35b465ce06c2dbdf76727e28e981102",
+  "tree": "1d2a5ec54d30d52b5cfe4fd4edd7411854d6433d",
+  "comparison": {
+    "commits_after_proposal": 2,
+    "added_files": 12,
+    "other_changes": 0,
+    "current_tree_truncated": false
+  },
+  "runtime": {
+    "actual_source": "4b85984c7a86af59240ab5698337041b590813bd",
+    "metadata_workflow_source": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+    "metadata_only_child_verified": true,
+    "run": 40043432031,
+    "all12_G_files_identical": true,
+    "base_schema_identical": true,
+    "original30_test_names_match_source": true,
+    "cancelled_wrong_source_run_40043394585_counted": false
+  },
+  "files": [
+    {
+      "path": "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_rollback_20261023.sql",
+      "sha": "142963521322d6cbeaaea7efbe7bef8b96f8fdf8",
+      "runtime_sha": "142963521322d6cbeaaea7efbe7bef8b96f8fdf8"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_g_cash_evidence_20261023.sql",
+      "sha": "463361a2c4acd64c9707128bdfd4ec80848f94c4",
+      "runtime_sha": "463361a2c4acd64c9707128bdfd4ec80848f94c4"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261023_g_cash_evidence_expand.sql",
+      "sha": "2e3819bbe21f11961f9f9c27a1aac5553163b63b",
+      "runtime_sha": "2e3819bbe21f11961f9f9c27a1aac5553163b63b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CashEvidenceExpandMySqlIT.java",
+      "sha": "50bec45010ab3764295c82fa2a979868d9f71b7d",
+      "runtime_sha": "50bec45010ab3764295c82fa2a979868d9f71b7d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashClose.java",
+      "sha": "cf27092cec3fef467950470649c58a03b4683ac0",
+      "runtime_sha": "cf27092cec3fef467950470649c58a03b4683ac0"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashContribution.java",
+      "sha": "c172545990d778f0cb15f3510eb9f3e5aed8e7d3",
+      "runtime_sha": "c172545990d778f0cb15f3510eb9f3e5aed8e7d3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashEvent.java",
+      "sha": "b1d3560d1095746f1425b2700d575463c7b64c94",
+      "runtime_sha": "b1d3560d1095746f1425b2700d575463c7b64c94"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java",
+      "sha": "49c9b98efa404bbad34e6cccb6f448e12925a9cc",
+      "runtime_sha": "49c9b98efa404bbad34e6cccb6f448e12925a9cc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml",
+      "sha": "625c0329b450962319f95f29d3ed89236fb7f1a6",
+      "runtime_sha": "625c0329b450962319f95f29d3ed89236fb7f1a6"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/cash-evidence-expand/CHECKPOINT.md",
+      "sha": "fb16926e93852c542b52f422e810d6403fe443e6",
+      "runtime_sha": "fb16926e93852c542b52f422e810d6403fe443e6"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/cash-evidence-expand/source-sha256.json",
+      "sha": "7d768cbdb3afa46bc89da557ed928fb653f2deb2",
+      "runtime_sha": "7d768cbdb3afa46bc89da557ed928fb653f2deb2"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/cash-evidence-expand/static-checks.txt",
+      "sha": "316588499d95a13e6b328afca12d9a6fea1839f1",
+      "runtime_sha": "316588499d95a13e6b328afca12d9a6fea1839f1"
+    }
+  ],
+  "review": {
+    "new_production_files_modified": false,
+    "H_start_HEAD": "be8624c5ee73012f8470333ee71e072d16513ce7",
+    "branch": "codex/architecture-day-h-review",
+    "worktree": "/workspace/hengyin-h-review",
+    "new_review_tests": 4,
+    "java_compiled": false,
+    "java_executed": false,
+    "mysql_executed_locally": false,
+    "ddl_executed_locally": false,
+    "CI_dispatched": false,
+    "patch_apply_check": "PASS",
+    "JSON_regex_literal_roundtrip": "PASS (Python only)",
+    "public_candidate_text_blobs_verified": 11,
+    "JSON_manifest": "structured read; raw reserialization not claimed exact"
+  },
+  "findings": [
+    {
+      "id": "H-G618-01",
+      "severity": "P2",
+      "test_names": [
+        "independentOrdersWithNullParentCannotBorrowEachOthersPaymentIdentity",
+        "zeroPayableSiblingCannotSelfDeclareAsTheParentPaymentIdentity"
+      ],
+      "status": "source-triggerable; new Java counterexamples NOT_RUN"
+    },
+    {
+      "id": "H-G618-02",
+      "severity": "P2",
+      "test_names": [
+        "reservedAdjustmentIndexNameCollisionMustBeRejectedBeforeAnyDdl",
+        "interruptedEmptyMigrationNeedsSafeRollbackBeforeAdjustmentAlterExists"
+      ],
+      "status": "source-triggerable schema/rollback boundary; new Java counterexamples NOT_RUN"
+    }
+  ]
+}

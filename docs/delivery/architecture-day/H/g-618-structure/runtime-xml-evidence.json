@@ -1,0 +1,75 @@
+{
+  "artifact_id": 12539952874,
+  "zip_sha256": "a0ef5cff2b1aa116c685177792c85cb15ccbb14ae3c48c0bced54c5fa36bf28d",
+  "receipt_sha256": "1c3aaa9f40372406187f8e91074b0f4025f55456562fabe945563091033173db",
+  "source": "4b85984c7a86af59240ab5698337041b590813bd",
+  "precheck_source": "4b85984c7a86af59240ab5698337041b590813bd",
+  "workflow_source": "0c0d61266b2ae54d77c5ad9cf8b3c8fdb86d4b16",
+  "run": "40043432031",
+  "attempt": "1",
+  "counts": {
+    "tests": 30,
+    "passed": 30,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "maven_exit": 0,
+  "registered_source": "4b85984c7a86af59240ab5698337041b590813bd",
+  "registered_source_match": true,
+  "xml": [
+    {
+      "path": "surefire-reports/TEST-com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT.xml",
+      "sha256": "194d957b23d50dec6b156663d1c1c02a1b16e35cf8161f3465934f94884a09e7",
+      "suite": {
+        "name": "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT",
+        "tests": "30",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      },
+      "testcases": [
+        "emptyOnlyRollbackRestoresOriginalColumnsAndIndexShape",
+        "globalHeadIdentityAndInitiatorMustMatchFrozenClose",
+        "eventCannotPointToRegistrationContributionInAnotherClose",
+        "existingPartialSchemaIsNotOverwrittenOrTreatedAsApplied",
+        "zeroSalesCloseNeedsNeitherPositiveAmountNorInventedMemberRateOrHead",
+        "originalContributionReceiptSurvivesSourceRefundAndRejectsChangedAmount",
+        "sqlNullCannotBypassAccountingKindRoleLineOrStatus",
+        "paidOriginalSnapshotCannotInventZeroBasisOrClaimDifferentCurrentState",
+        "zeroCloseCannotReplaceActualUnknownOwnerAndRatesWithInventedDefaults",
+        "parentOrderUsesOriginalPayerNotMinimumRegistrationId",
+        "sameCloseIdentityReadsOriginalAndDifferentPayloadCannotOverwrite",
+        "sourceTopicInitiatorAndJsonObjectMustActuallyMatch",
+        "zeroPositiveAndNullCloseKindsCannotMislabelFrozenBasis",
+        "dirtyLegacyPreflightFailsBeforeAnyDdlAndDoesNotDeleteTheEvidence",
+        "repeatedEventWithSameHashStillConflictsOnDifferentActualPayload",
+        "changedOriginalOrderUniqueKeyFailsPreflightBeforeAnyDdl",
+        "positiveCloseRequiresActualNonNullInitiatorAndEveryFrozenRate",
+        "rollbackAlsoRefusesAccountingRowsEvenWithoutCashClose",
+        "rollbackRefusesAnyCommittedEvidenceInsteadOfDroppingMoneyHistory",
+        "zeroCloseCanRetainWaitingOriginalOrderWithoutAddingItsPayableAmountToOriginalSales",
+        "originalAllStateSnapshotPreservesClosedAndNullStatesInsteadOfCallingThemPaid",
+        "expandPreservesLegacyOriginalRowsAndBothOldUniqueKeys",
+        "failureAfterEvidenceHeadAndAdjustmentRollsBackAllNewRows",
+        "refundAndContributionExistingIndependentlyDoNotProveTheSameSourceRegistration",
+        "headAndAdjustmentCompositeForeignKeysRejectCrossCloseAndHalfLinks",
+        "onlyExplicitAccountingPlatformAndDepositRowsMayHaveNoMember",
+        "eventStorageRejectsSelfDeclaredVerifiedPaymentEvenWithExistingRefundAndContribution",
+        "contributionCannotBorrowAnotherCloseTopicOrPayer",
+        "changedOriginalAdjustmentIdentityFailsPreflightEvenWithThreeUniqueColumns",
+        "defaultRecordRequiresRealTransactionAndOriginalSourceScope"
+      ]
+    }
+  ]
+}
