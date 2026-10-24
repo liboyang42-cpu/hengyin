@@ -1,0 +1,18 @@
+{
+  "base": "ef5331db7a4424acca5dfde5325e83149ff3e472",
+  "changed_in_candidate": "docs only; shared Java source untouched",
+  "proposed_patch_targets": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java"
+  ],
+  "old_source_sha256": "a2438c44de4bae43b48e9daf782950c0264cdbe1366e192f734be52284beb1b0",
+  "proposed_source_sha256": "25f27cc5f131ba2e035fb3a19bcd027cdf436c6e1afc09cd489afe898f426b30",
+  "patch_sha256": "28d5c637caf5d3c194f3d6270b229c50089f8b001e13a0cfa24cea828a80f49a",
+  "production_http_utils_sha256": "d9e793fe14e041910cbe1132425a87ac5b681c7b2f481a7134e1932fdb1d0308",
+  "original_method_assertions_preserved": 15,
+  "test_methods_before_after": [
+    8,
+    8
+  ],
+  "checks": "PASS: temporary-index apply; one method only; assertions and deadlines preserved; original production source untouched",
+  "execution": "Java/JUnit/HTTP/MySQL/Redis/CI NOT_RUN"
+}
