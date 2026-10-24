@@ -1,4 +1,4 @@
-// 城瘾 · 单次漫游回看 —— 读 roam_sessions 里指定 ts 的一次记录
+// 城瘾 · 单次漫游回看 —— 读本机会话记忆(roam_memory_v1:<玩家ID>:sessions)里指定 ts 的一次记录
 const modal = require('../../utils/modal.js');
 const loading = require('../../utils/loading.js');
 const toast = require('../../utils/toast.js');
