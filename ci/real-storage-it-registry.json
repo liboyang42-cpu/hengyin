@@ -533,27 +533,38 @@
     },
     "architecture-day-npc-voice-asr": {
       "registered_source": "b8b80968014a03ed4c9510db08b303e6c7e11794",
-      "classes": ["com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT", "com.chengyinhub.business.it.NpcAsrIntentMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT",
+        "com.chengyinhub.business.it.NpcAsrIntentMySqlIT"
+      ],
       "note": "Composed donor sources E c7a60fa + D 6f32127/b8b8096 + E 3856fde. Final runner source SHA must identify the integrated tree; no donor green is inherited. Ten exact cases."
     },
     "architecture-day-clm-commerce-proof": {
       "registered_source": "9f0c44025d42922bdc61f639075c77373792fc31",
-      "classes": ["com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT"
+      ],
       "note": "Eight source cases; final integrated SHA and CLEAN must be verified independently. No production DDL or real provider."
     },
     "architecture-day-media-retry-budget": {
       "registered_source": "0465b2910220f23e64c938e89c0a81a29a59301f",
-      "classes": ["com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT"
+      ],
       "note": "Eight source cases from the full reviewed delivery patch; source-only candidate, not runtime acceptance."
     },
     "architecture-day-before-start-notice": {
       "registered_source": "4eddcc93b5a9281e1d397069003c9aca12dd9119",
-      "classes": ["com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT"
+      ],
       "note": "Twelve original BEFORE_START frozen WX payload/storage/unknown/owner cases. Existing ledger, no IM for this type. Provider boundary double; no live delivery or full paid-recipient admission proof."
     },
     "architecture-day-commerce-generic-guard": {
       "registered_source": "b501ea03a432b68657930e0bf070a2fc80ce44ea",
-      "classes": ["com.chengyinhub.business.it.OmsOrderCommerceGuardMySqlIT"],
+      "classes": [
+        "com.chengyinhub.business.it.OmsOrderCommerceGuardMySqlIT"
+      ],
       "note": "Six H source cases: actual current rows protect the Commerce frozen snapshot, generic create/update/delete denial and ordinary positive cases; real E checkout/B facts, controlled provider."
     },
     "architecture-day-funds-closure": {
@@ -579,31 +590,125 @@
         "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
         "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest"
       ]
+    },
+    "architecture-day-integrated-changes": {
+      "registered_source": "a02d69e232b8cb77e26bf5d77114a4ac99e4dd47",
+      "classes": [
+        "com.chengyinhub.business.it.OmsOrderCommerceGuardMySqlIT",
+        "com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT",
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT",
+        "com.chengyinhub.business.it.NpcAsrIntentMySqlIT",
+        "com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT",
+        "com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT",
+        "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT",
+        "com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT",
+        "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT",
+        "com.chengyinhub.business.it.RegistrationSeatMySqlIT",
+        "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
+        "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT",
+        "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT",
+        "com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT",
+        "com.chengyinhub.quartz.util.SchedulerWorkFenceTwoProcessMySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+        "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
+        "com.chengyinhub.business.it.FreeSelfPlayCreateRealDbIT",
+        "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT",
+        "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
+        "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
+        "com.chengyinhub.web.controller.api.RoamLocationRetentionMySqlIT",
+        "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT",
+        "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT",
+        "com.chengyinhub.business.service.impl.ImConversationBatchReadMySqlIT",
+        "com.chengyinhub.business.service.impl.ImConversationQueryScopeMySqlIT",
+        "com.chengyinhub.business.it.AdvancedCommandFingerprintMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT",
+        "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT",
+        "com.chengyinhub.business.service.impl.SignupNoticeAfterCommitPersistenceMySqlIT",
+        "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT",
+        "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentLockReadMySqlIT",
+        "com.chengyinhub.business.it.Wp04CurrentCashBasisMySqlIT",
+        "com.chengyinhub.business.it.Wp08DeliveryJobsMySqlIT",
+        "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+        "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT",
+        "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT",
+        "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT",
+        "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+        "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT",
+        "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT",
+        "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT",
+        "com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT",
+        "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+        "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT",
+        "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT",
+        "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT",
+        "com.chengyinhub.business.service.impl.CoopComplaintCommittedNoticeMySqlIT",
+        "com.chengyinhub.business.service.impl.ComplaintCloseReporterNoticeMySqlIT",
+        "com.chengyinhub.business.service.impl.ChapterApplicationRoundMySqlIT",
+        "com.chengyinhub.business.service.RegistrationEquityMybatisIntegrationTest",
+        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+        "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT",
+        "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT",
+        "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
+        "com.chengyinhub.business.service.impl.ChapterApplicationOutcomeMySqlIT",
+        "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest",
+        "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest"
+      ],
+      "note": "62 unique registered storage classes, 782 declared cases, whose source changed from reviewed public 2ec68899. One matrix max-parallel20, no duplicate classes. Source SHA, original XML counts, zero skip and independent CLEAN required. Static inventory is not execution, HTTP, provider, restart, load or deployment acceptance."
     }
   },
   "classes": {
     "com.chengyinhub.business.it.OmsOrderCommerceGuardMySqlIT": {
-      "tests": 6, "storage": ["mysql"], "gates": {},
+      "tests": 6,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
       "note": "H b501 delivery review.patch, source-only. Canonical schema/actual domain/Mapper/transaction; hosted scratch and independent CLEAN required. Not HTTP or provider proof."
     },
     "com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT": {
-      "tests": 12, "storage": ["mysql"], "gates": {},
+      "tests": 12,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
       "note": "C4edd source-only candidate: canonical incremental typed migration and actual Mapper/transaction owner, old broadcast checks retained; NOT_RUN on this integration."
     },
     "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT": {
-      "tests": 3, "storage": ["mysql"], "gates": {},
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
       "note": "E c7a60fa original asset intent, paid create crash/unknown and stale version. Minimal profile schema component scope; no provider/device proof."
     },
     "com.chengyinhub.business.it.NpcAsrIntentMySqlIT": {
-      "tests": 7, "storage": ["mysql"], "gates": {},
+      "tests": 7,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
       "note": "D 6f32127 plus b8b8096 protocol: original request concurrency, durable transcript/handoff and deletion fence. Actual mapper and MySQL; controlled ASR/text ports."
     },
     "com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT": {
-      "tests": 8, "storage": ["mysql"], "gates": {},
+      "tests": 8,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
       "note": "E 9f0c440: actual canonical domain/proof/recovery transactions; historical NULL and conflict remain closed. SDK and provider are not called."
     },
     "com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT": {
-      "tests": 8, "storage": ["mysql"], "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "tests": 8,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "note": "H 0465b29 review.patch: actual original media owner/claim/trace with five-attempt cap and UNKNOWN. Incremental CHECK migration in isolated scratch only."
     },
     "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT": {
