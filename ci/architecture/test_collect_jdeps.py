@@ -995,6 +995,44 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
+    def test_topic_query_batch_limit_reuses_exact_existing_size_owner(self):
+        # Actual b9b894 source: selectChapterTemplates uses TopicSizeLimits.MAX_NODES.
+        # Protocol fixture only: constant inlining/actual JDK rows need real CI.
+        query = "com.chengyinhub.business.service.impl.TopicQueryService"
+        size = "com.chengyinhub.business.service.support.TopicSizeLimits"
+        self.assertEqual(query, self.owner_member("E_TOPIC_QUERY"))
+        self.assertEqual(size, self.owner_member("D_CONTENT_SIZE_POLICY"))
+        self.reference(query, size)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual([["E_TOPIC_QUERY", "D_CONTENT_SIZE_POLICY"]], report["technical_dependencies"]["owner_edges"])
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_size_owner_cannot_reverse_call_query_or_form_cycle(self):
+        query, size = self.owner_member("E_TOPIC_QUERY"), self.owner_member("D_CONTENT_SIZE_POLICY")
+        self.reference(query, size)
+        self.reference(size, query)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        bad = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_DEPENDENCY_DIRECTION")
+        self.assertEqual(("D_CONTENT_SIZE_POLICY", "E_TOPIC_QUERY"),
+                         (bad["source_technical_owner"], bad["target_technical_owner"]))
+        self.assertEqual((size, query), (bad["source_class"], bad["target_class"]))
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["D_CONTENT_SIZE_POLICY", "E_TOPIC_QUERY"], cycle["owners"])
+        self.assertEqual(2, len(cycle["witnesses"]))
+        self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
+    def test_allowed_query_size_edge_does_not_hide_missing_size_source_rows(self):
+        query, size = self.owner_member("E_TOPIC_QUERY"), self.owner_member("D_CONTENT_SIZE_POLICY")
+        self.reference(query, size)
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in text.splitlines()
+                              if not l.strip().startswith(size + " -> ")).encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": "D_CONTENT_SIZE_POLICY", "type": size}, report["review_items"])
+
     def test_topic_query_cannot_reverse_call_facade_publication_claim_or_runtime_writers(self):
         original = (self.output / "jdeps.stdout.txt").read_bytes()
         for target in self.dependencies["owners"]["E_TOPIC_QUERY"]["forbidden_backrefs"]:

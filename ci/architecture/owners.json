@@ -869,6 +869,10 @@
       [
         "D_CONTENT_RULES",
         "D_CONTENT_SIZE_POLICY"
+      ],
+      [
+        "E_TOPIC_QUERY",
+        "D_CONTENT_SIZE_POLICY"
       ]
     ]
   }
