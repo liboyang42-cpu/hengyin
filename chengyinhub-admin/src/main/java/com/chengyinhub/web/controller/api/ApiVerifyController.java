@@ -120,8 +120,14 @@ public class ApiVerifyController extends BaseController {
         // ⇒ ③ 的多章核销链路当场断掉,且零告警(玩家只看到「该票已核销」,商家只看到没人来)。
         // ⇒ 判据收进 isTicketFullyConsumed(与 AccountDeregistration 的活跃单判定同一真源)。
         //    非 ③ 的票没有 entitlement ⇒ 该方法退化成 verification_status==1 ⇒ 逐字走原逻辑,零影响。
-        boolean multiTopicSeat = Long.valueOf(1L).equals(reg.getOwnerType())
+        boolean multiTopicSeat = (Long.valueOf(1L).equals(reg.getOwnerType()) || Long.valueOf(2L).equals(reg.getOwnerType()))
                 && reg.getOrderNum() != null && reg.getOrderNum() > 1;
+        if (multiTopicSeat && seatNo == null) {
+            Map<String, Object> choice = new HashMap<>();
+            choice.put("requiresSeatSelection", true); choice.put("registrationId", registrationId);
+            choice.put("seatCount", reg.getOrderNum());
+            return AjaxResult.success("请选择本次出示的席位，一次仅核销一席", choice);
+        }
         com.chengyinhub.business.domain.RegistrationSeat selectedSeat = multiTopicSeat
                 ? registrationSeatService.prepareOwnedSeat(registrationId, memberId, seatNo) : null;
         if (!multiTopicSeat && perkLedgerService.isTicketFullyConsumed(reg.getVerificationStatus(), reg.getId())) {
@@ -144,7 +150,7 @@ public class ApiVerifyController extends BaseController {
         }
         String type = selectedSeat == null
                 ? ((ownerType != null && ownerType.longValue() == 2L) ? "activity" : "topic")
-                : com.chengyinhub.business.service.RegistrationSeatService.codeType(selectedSeat.getSeatNo());
+                : com.chengyinhub.business.service.RegistrationSeatService.codeType(ownerType, selectedSeat.getSeatNo());
         long now = System.currentTimeMillis();
         long nonce = ThreadLocalRandom.current().nextLong();
         String code = VerifyDynCodeUtil.issue(reg.getId(), type, now, DYN_TTL_MS, nonce, dynSecret);
@@ -173,6 +179,14 @@ public class ApiVerifyController extends BaseController {
 
     /** Java compatibility only; a multi-seat order still requires an explicit signed seat. */
     public AjaxResult issueDynCode(Long registrationId) { return issueDynCode(registrationId, null); }
+
+    @Operation(summary = "回读原席位核销事实，不再次核销")
+    @PostMapping("/seat/receipt")
+    public AjaxResult seatReceipt(Long registrationId, Integer seatNo, Long activityId) {
+        var receipt = registrationSeatService.seatReceipt(registrationId, seatNo, activityId, appUid());
+        return receipt == null ? new AjaxResult(520, "原席位核销结果待确认，请勿改选其他席位重发")
+                : AjaxResult.success("该席位已核销，请勿重复提供权益", receipt);
+    }
 
     @Operation(summary = "签发我的据点核销码(玩家出码,商家扫码领券)")
     @PostMapping("/citynode/issue")

@@ -37,21 +37,29 @@
     </select>
     <select id="selectUnprovenMultiGroupOrdersForUpdate" useCache="false" flushCache="true" resultType="long">
         select r.id from cms_registration r
-        join coop_group_member_verify gm on gm.registration_id = r.id
+        left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        left join coop_group_member_verify gm on gm.registration_id = r.id
         left join cms_registration_seat s on s.registration_id = r.id
-            and s.topic_id = gm.topic_id and s.activity_id = gm.activity_id and s.status = 1
-        where gm.topic_id = #{topicId} and gm.activity_id = #{activityId}
-          and gm.verify_time &lt; #{cutoff} and r.order_num &gt; 1 and s.id is null
+            and s.topic_id = #{topicId} and s.activity_id = #{activityId} and s.status = 1
+        where r.order_num &gt; 1 and s.id is null
+          and ((r.owner_type = 1 and r.owner_id = #{topicId} and gm.topic_id = #{topicId}
+                and gm.activity_id = #{activityId} and gm.verify_time &lt; #{cutoff})
+            or (r.owner_type = 2 and r.owner_id = #{activityId} and a.topic_id = #{topicId}
+                and r.verification_status = 1 and r.verification_time &lt; #{cutoff}))
         order by r.id for update
     </select>
     <!-- Facts only, not fee eligibility. Refunded rows remain historical facts; G applies its original
          frozen financial eligibility/reversal rules. No order_num expansion or date normalization. -->
     <select id="selectVerifiedForGroupForUpdate" useCache="false" flushCache="true" resultMap="seat">
         select s.* from cms_registration_seat s
-        join coop_group_member_verify gm on gm.registration_id = s.registration_id
+        join cms_registration r on r.id = s.registration_id
+        left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        left join coop_group_member_verify gm on gm.registration_id = s.registration_id
             and gm.topic_id = s.topic_id and gm.activity_id = s.activity_id
         where s.topic_id = #{topicId} and s.activity_id = #{activityId} and s.status = 1
           and s.verified_at &lt; #{cutoff}
+          and ((r.owner_type = 1 and r.owner_id = s.topic_id and gm.id is not null)
+            or (r.owner_type = 2 and r.owner_id = s.activity_id and a.topic_id = s.topic_id))
         order by s.registration_id, s.seat_no for update
     </select>
 </mapper>

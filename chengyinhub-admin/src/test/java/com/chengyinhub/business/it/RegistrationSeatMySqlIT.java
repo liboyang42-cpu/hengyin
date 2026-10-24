@@ -53,11 +53,11 @@ class RegistrationSeatMySqlIT {
         if (!Files.isRegularFile(baseline)) baseline = Path.of("sql", "base_schema_20260818.sql");
         String ddl = Files.readString(baseline);
         try (Connection connection = pool.getConnection(); Statement statement = connection.createStatement()) {
-            for (String table : List.of("cms_registration", "coop_group_member_verify", "club")) {
+            for (String table : List.of("cms_registration", "coop_group_member_verify", "club", "cms_activity")) {
                 var match = Pattern.compile("(?s)CREATE TABLE `" + table + "` \\(.*?\\) ENGINE=InnoDB[^;]*;").matcher(ddl);
                 assertTrue(match.find(), table); statement.execute(match.group()); assertFalse(match.find());
             }
-            ItSchema.applyMigrations(connection, "sql/migration_20261024_registration_verified_seats.sql");
+            ItSchema.applyMigrations(connection, "sql/migration_20261024_registration_verified_seats.sql", "sql/migration_20261024_registration_seat_activity_scope.sql");
         }
         Configuration config = new Configuration(new Environment("c-seats", new SpringManagedTransactionFactory(), pool));
         String resource = "mapper/business/RegistrationSeatMapper.xml";
@@ -81,7 +81,7 @@ class RegistrationSeatMySqlIT {
     }
 
     @BeforeEach void seed() {
-        for (String table : List.of("cms_registration_seat", "coop_group_member_verify", "cms_registration", "club")) jdbc.update("DELETE FROM " + table);
+        for (String table : List.of("cms_registration_seat", "coop_group_member_verify", "cms_registration", "club", "cms_activity")) jdbc.update("DELETE FROM " + table);
         jdbc.update("INSERT INTO cms_registration (id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,"
                 + "order_num,original_amount,total_amount,payable_amount,payment_status,registration_status,pay_expire_time)"
                 + " VALUES (31,'SEAT-IT-31',1,41,91,10,51,3,30,30,30,2,2,'2099-01-01')");
@@ -163,6 +163,33 @@ class RegistrationSeatMySqlIT {
         java.sql.SQLException sqlFailure = assertInstanceOf(java.sql.SQLException.class, rejected.getMostSpecificCause());
         assertEquals(3819, sqlFailure.getErrorCode(), "the actual MySQL CHECK must reject incomplete verification facts");
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM cms_registration_seat", Integer.class));
+    }
+
+    @Test void activityFactsUseTheirOriginalActivityAndNeverRequireAFabricatedGroupRow() {
+        jdbc.update("INSERT INTO cms_activity (id,member_id,topic_id,del_flag) VALUES (61,81,41,0)");
+        jdbc.update("UPDATE cms_registration SET owner_type=2,owner_id=61,verification_status=1,verification_time=NOW() WHERE id=31");
+        new TransactionTemplate(transactions).executeWithoutResult(status -> {
+            seats.lockRegistration(31L);
+            assertEquals(List.of(31L), seats.selectUnprovenMultiGroupOrdersForUpdate(41L, 61L, future()));
+            RegistrationSeat row = pending(2); assertEquals(1, seats.insertSeat(row));
+            verify(row); assertEquals(1, seats.markVerified(row));
+            assertTrue(seats.selectUnprovenMultiGroupOrdersForUpdate(41L, 61L, future()).isEmpty());
+            List<RegistrationSeat> actual = seats.selectVerifiedForGroupForUpdate(41L, 61L, future());
+            assertEquals(1, actual.size()); assertEquals(2, actual.get(0).getSeatNo());
+            assertTrue(seats.selectVerifiedForGroupForUpdate(41L, 62L, future()).isEmpty());
+        });
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM coop_group_member_verify", Integer.class));
+    }
+
+    @Test void standaloneActivityPersistsNullTopicWithoutScopeIdSubstitution() {
+        jdbc.update("INSERT INTO cms_activity (id,member_id,topic_id,del_flag) VALUES (61,81,NULL,0)");
+        jdbc.update("UPDATE cms_registration SET owner_type=2,owner_id=61 WHERE id=31");
+        new TransactionTemplate(transactions).executeWithoutResult(status -> {
+            seats.lockRegistration(31L); RegistrationSeat row = pending(1); seats.insertSeat(row);
+            verify(row); row.setTopicId(null); assertEquals(1, seats.markVerified(row));
+            assertNull(seats.selectByRegistrationForUpdate(31L).get(0).getTopicId());
+            assertTrue(seats.selectVerifiedForGroupForUpdate(41L, 61L, future()).isEmpty());
+        });
     }
 
     private static RegistrationSeat pending(int number) {

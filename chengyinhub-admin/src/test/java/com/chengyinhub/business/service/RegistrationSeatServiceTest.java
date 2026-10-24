@@ -27,6 +27,8 @@ class RegistrationSeatServiceTest {
     private IClubMemberService clubs;
     private BusinessAuditEventMapper audits;
     private CmsRegistration order;
+    private CmsActivity activity;
+    private com.chengyinhub.business.access.merchant.IMerchantAccessService merchants;
     private final List<RegistrationSeat> rows = new ArrayList<>();
     private final AtomicReference<CoopGroupMemberVerify> binding = new AtomicReference<>();
 
@@ -36,8 +38,9 @@ class RegistrationSeatServiceTest {
         registrations = mock(CmsRegistrationMapper.class); topics = mock(CmsTopicMapper.class);
         activities = mock(CmsActivityMapper.class); orders = mock(ICmsRegistrationService.class);
         clubs = mock(IClubMemberService.class); audits = mock(BusinessAuditEventMapper.class);
+        merchants = mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
         Object[][] fields = {{"seats", seats}, {"registrations", registrations}, {"topics", topics},
-                {"activities", activities}, {"registrationService", orders}, {"clubs", clubs}, {"audits", audits}};
+                {"activities", activities}, {"registrationService", orders}, {"clubs", clubs}, {"audits", audits}, {"merchants", merchants}};
         for (Object[] field : fields) ReflectionTestUtils.setField(service, (String) field[0], field[1]);
         order = new CmsRegistration(); order.setId(31L); order.setOwnerType(1L); order.setOwnerId(41L);
         order.setMemberId(51L); order.setOrderNum(3L); order.setRegistrationStatus(2); order.setPaymentStatus(2); order.setVerificationStatus(0);
@@ -45,8 +48,9 @@ class RegistrationSeatServiceTest {
         when(seats.lockRegistration(31L)).thenReturn(31L);
         CmsTopic topic = new CmsTopic(); topic.setId(41L); topic.setIsSettlement(0);
         when(topics.selectCmsTopicByIdForUpdate(41L)).thenReturn(topic);
-        CmsActivity activity = new CmsActivity(); activity.setId(61L); activity.setTopicId(41L); activity.setClubId(71L); activity.setDelFlag(0);
+        activity = new CmsActivity(); activity.setId(61L); activity.setTopicId(41L); activity.setClubId(71L); activity.setDelFlag(0);
         when(activities.selectCmsActivityByIdForUpdate(61L)).thenReturn(activity);
+        when(activities.selectCmsActivityById(61L)).thenReturn(activity);
         when(seats.lockClubOwner(71L)).thenReturn(81L);
         when(clubs.isTopicOwner(41L, 71L, 81L)).thenReturn(true);
         when(seats.selectByRegistrationForUpdate(31L)).thenReturn(rows);
@@ -146,6 +150,86 @@ class RegistrationSeatServiceTest {
         assertEquals(Integer.valueOf(409), assertThrowsExactly(ServiceException.class,
                 () -> service.verifiedSeatsForGroup(41L, 61L, cutoff)).getCode());
         verify(seats, never()).selectVerifiedForGroupForUpdate(any(), any(), any());
+    }
+
+    @Test void activitySeatsKeepTheOriginalPayeeAndAccrueTheWholeOrderOnlyOnce() {
+        activityOrder();
+        service.prepareOwnedSeat(31L, 51L, 1); service.prepareOwnedSeat(31L, 51L, 2);
+        var first = service.redeemActivitySeat(31L, 1, 81L);
+        var replay = service.redeemActivitySeat(31L, 1, 81L);
+        var second = service.redeemActivitySeat(31L, 2, 81L);
+        assertEquals(61L, first.activityId()); assertEquals(41L, first.topicId());
+        assertEquals(first.seatId(), replay.seatId()); assertTrue(replay.replayed());
+        assertTrue(first.registrationFirstTime()); assertFalse(replay.registrationFirstTime()); assertFalse(second.registrationFirstTime());
+        assertNotEquals(first.seatId(), second.seatId());
+        assertEquals(2, rows.stream().filter(row -> row.getStatus() == 1).count());
+        verify(orders).verifyAndSettle(order, 81L, 81L, null, 81L, "ACTIVITY_OWNER");
+        verify(orders, never()).verifyAndSettleForGroupActivity(any(), any(), any());
+        verify(seats, never()).selectGroupForUpdate(any());
+    }
+    @Test void activityDelegateMustStillResolveToTheOriginalMerchantOwner() {
+        activityOrder();
+        service.prepareOwnedSeat(31L, 51L, 1);
+        var access = new com.chengyinhub.business.access.merchant.MerchantAccessContext(82L, 91L, 999L, "MERCHANT_CHECKIN");
+        when(merchants.require(82L, com.chengyinhub.business.access.merchant.MerchantPermission.VERIFY)).thenReturn(access);
+        assertEquals(Integer.valueOf(403), assertThrowsExactly(ServiceException.class,
+                () -> service.redeemActivitySeat(31L, 1, 82L)).getCode());
+        verify(seats, never()).markVerified(any()); verifyNoInteractions(audits);
+        verify(orders, never()).verifyAndSettle(any(), any(), any(), any(), any(), any());
+    }
+    @Test void originalActivityDelegateRoleAndPayeeArePassedWithoutChangingAmounts() {
+        activityOrder();
+        service.prepareOwnedSeat(31L, 51L, 1);
+        var access = new com.chengyinhub.business.access.merchant.MerchantAccessContext(82L, 91L, 81L, "MERCHANT_CHECKIN");
+        when(merchants.require(82L, com.chengyinhub.business.access.merchant.MerchantPermission.VERIFY)).thenReturn(access);
+        when(orders.verifyAndSettle(order, 81L, 81L, null, 82L, "MERCHANT_CHECKIN")).thenAnswer(call -> {
+            order.setVerificationStatus(1); return true;
+        });
+        service.redeemActivitySeat(31L, 1, 82L);
+        verify(orders).verifyAndSettle(order, 81L, 81L, null, 82L, "MERCHANT_CHECKIN");
+        var audit = org.mockito.ArgumentCaptor.forClass(BusinessAuditEvent.class);
+        verify(audits).insertBusinessAuditEvent(audit.capture());
+        assertEquals(81L, audit.getValue().getOwnerMemberId()); assertEquals(82L, audit.getValue().getActorMemberId());
+        assertEquals("MERCHANT_CHECKIN", audit.getValue().getActorRoleCode());
+    }
+    @Test void standaloneActivityKeepsItsNullTopicInsteadOfInventingATopicId() {
+        activityOrder(); activity.setTopicId(null);
+        service.prepareOwnedSeat(31L, 51L, 1);
+        var receipt = service.redeemActivitySeat(31L, 1, 81L);
+        assertNull(receipt.topicId()); assertEquals(61L, receipt.activityId());
+    }
+    @Test void uncertainSeatLookupNeverExecutesAndTheBuyerCanReadItsCommittedFact() {
+        activityOrder(); service.prepareOwnedSeat(31L, 51L, 1);
+        assertNull(service.seatReceipt(31L, 1, null, 81L));
+        assertNull(service.seatReceipt(31L, 1, null, 51L));
+        verify(seats, never()).markVerified(any()); verifyNoInteractions(audits);
+        var original = service.redeemActivitySeat(31L, 1, 81L);
+        order.setPaymentStatus(4); order.setRegistrationStatus(3); activity.setCancelTime(new Date());
+        var replay = service.seatReceipt(31L, 1, null, 51L);
+        var verifierReplay = service.seatReceipt(31L, 1, null, 81L);
+        assertEquals(original.seatId(), replay.seatId()); assertEquals(original.verifiedAt(), replay.verifiedAt());
+        assertEquals(original.seatId(), verifierReplay.seatId());
+        verify(seats, times(1)).markVerified(any()); verify(audits, times(1)).insertBusinessAuditEvent(any());
+    }
+    @Test void lockedActivityWindowStillRefusesEarlyClubSeatWithoutCallingTheOriginalLedger() {
+        activityOrder(); service.prepareOwnedSeat(31L, 51L, 1);
+        activity.setStartDate(new Date(System.currentTimeMillis() + 2 * 60 * 60 * 1000L));
+        assertEquals("俱乐部场次开始前60分钟内才可核销", assertThrowsExactly(ServiceException.class,
+                () -> service.redeemActivitySeat(31L, 1, 81L)).getMessage());
+        verify(seats, never()).markVerified(any()); verifyNoInteractions(audits);
+        verify(orders, never()).verifyAndSettle(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test void signedActivitySeatRemainsInTheExistingHmacTypeField() {
+        assertEquals("activity_seat_3", RegistrationSeatService.codeType(2L, 3));
+        assertEquals(3, RegistrationSeatService.seatNumber("activity_seat_3"));
+        assertNull(RegistrationSeatService.seatNumber("activity_seat_03"));
+    }
+    private void activityOrder() {
+        order.setOwnerType(2L); order.setOwnerId(61L); activity.setMemberId(81L);
+        when(orders.verifyAndSettle(order, 81L, 81L, null, 81L, "ACTIVITY_OWNER")).thenAnswer(call -> {
+            order.setVerificationStatus(1); return true;
+        });
     }
 
     @Test void signedTypeCarriesExactlyOnePositiveSeatAndDoesNotAcceptOtherQrFamilies() {

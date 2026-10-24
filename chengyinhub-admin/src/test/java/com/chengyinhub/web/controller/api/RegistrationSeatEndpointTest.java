@@ -26,6 +26,11 @@ class RegistrationSeatEndpointTest {
     private RegistrationSeatService seats;
     private ICmsRegistrationService orders;
     private CmsRegistration order;
+    private com.chengyinhub.business.domain.CmsActivity activity;
+    private ICmsActivityService activities;
+    private IPointsAwardService points;
+    private IGrowthService growth;
+    private com.chengyinhub.business.access.merchant.IMerchantAccessService merchants;
     @BeforeEach void setup() {
         issuer = spy(new ApiVerifyController()); doReturn(51L).when(issuer).getAppUserId();
         scanner = spy(new ApiRegistrationController()); doReturn(81L).when(scanner).getAppUserId();
@@ -36,7 +41,18 @@ class RegistrationSeatEndpointTest {
         ReflectionTestUtils.setField(issuer, "qrcodeService", mock(QrcodeServiceImpl.class));
         ReflectionTestUtils.setField(issuer, "dynSecret", SECRET);
         ReflectionTestUtils.setField(scanner, "registrationSeatService", seats);
+        ReflectionTestUtils.setField(scanner, "registrationService", orders);
         ReflectionTestUtils.setField(scanner, "dynSecret", SECRET);
+        activities = mock(ICmsActivityService.class);
+        activity = new com.chengyinhub.business.domain.CmsActivity(); activity.setId(61L); activity.setTopicId(41L); activity.setMemberId(81L);
+        when(activities.selectCmsActivityById(61L)).thenReturn(activity);
+        ReflectionTestUtils.setField(scanner, "cmsActivityService", activities);
+        ReflectionTestUtils.setField(scanner, "activityService", activities);
+        points = mock(IPointsAwardService.class); growth = mock(IGrowthService.class);
+        ReflectionTestUtils.setField(scanner, "pointsAwardService", points);
+        ReflectionTestUtils.setField(scanner, "growthService", growth);
+        merchants = mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
+        ReflectionTestUtils.setField(scanner, "merchantAccessService", merchants);
         order = new CmsRegistration(); order.setId(31L); order.setOwnerType(1L); order.setOwnerId(41L);
         order.setMemberId(51L); order.setOrderNum(3L); order.setRegistrationStatus(2); order.setPaymentStatus(2);
         when(orders.selectCmsRegistrationById(31L)).thenReturn(order);
@@ -68,16 +84,107 @@ class RegistrationSeatEndpointTest {
         verify(scanner, never()).scanQrCode(anyString(), anyString(), anyLong());
     }
     @Test void missingExplicitSeatCannotFallBackToAnOrderWideCode() {
-        ServiceException refusal = new ServiceException("必须明确原订单中的合法席位，不能用整单码代替多人核销", 403);
-        when(seats.prepareOwnedSeat(31L, 51L, null)).thenThrow(refusal);
-        assertSame(refusal, assertThrowsExactly(ServiceException.class, () -> issuer.issueDynCode(31L)));
-        verify(seats).prepareOwnedSeat(31L, 51L, null);
+        AjaxResult response = issuer.issueDynCode(31L);
+        assertEquals(200, response.get("code"));
+        Map<?, ?> data = (Map<?, ?>) response.get("data");
+        assertEquals(true, data.get("requiresSeatSelection")); assertEquals(3L, data.get("seatCount"));
+        assertFalse(data.containsKey("code")); assertFalse(data.containsKey("qrcodeUrl"));
+        verifyNoInteractions(seats);
     }
     @Test void foreignBuyerIsRefusedBeforeSeatIdentityCreation() {
         doReturn(99L).when(issuer).getAppUserId();
         assertNotEquals(200, issuer.issueDynCode(31L, 2).get("code"));
         verifyNoInteractions(seats);
     }
+    @Test void activityIssueBindsItsOriginalActivityTypeAndSeat() {
+        order.setOwnerType(2L); order.setOwnerId(61L);
+        var activity = new com.chengyinhub.business.domain.CmsActivity(); activity.setId(61L);
+        ICmsActivityService activities = mock(ICmsActivityService.class);
+        when(activities.selectCmsActivityById(61L)).thenReturn(activity);
+        ReflectionTestUtils.setField(issuer, "activityService", activities);
+        Map<?, ?> data = (Map<?, ?>) issuer.issueDynCode(31L, 2).get("data");
+        var parsed = VerifyDynCodeUtil.verify((String) data.get("code"), System.currentTimeMillis(), SECRET);
+        assertTrue(parsed.valid); assertEquals("activity_seat_2", parsed.type); assertEquals(31L, parsed.regId);
+    }
+    @Test void dynamicActivitySeatRetainsTheOriginalActivityScanPath() {
+        String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
+        AjaxResult originalPath = AjaxResult.error("original activity guard");
+        doReturn(originalPath).when(scanner).scanQrCode("activity", code);
+        assertSame(originalPath, scanner.scanDynamicCode(code));
+        verify(scanner).scanQrCode("activity", code); verifyNoInteractions(seats);
+    }
+    @Test void groupScannerCannotRedirectAnActivitySeatIntoAnotherGroup() {
+        order.setOwnerType(2L); order.setOwnerId(61L);
+        String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
+        assertEquals("活动席位不属于当前带队场次", scanner.scanGroupMemberTicket(code, 62L).get("msg"));
+        verify(scanner, never()).scanQrCode(anyString(), anyString(), anyLong()); verifyNoInteractions(seats);
+    }
+    @Test void receiptLookupUnknownNeverCallsAnExecutionEntry() {
+        assertEquals(520, issuer.seatReceipt(31L, 2, 61L).get("code"));
+        verify(seats).seatReceipt(31L, 2, 61L, 51L);
+        verify(seats, never()).redeemActivitySeat(any(), any(), any());
+        verify(seats, never()).redeemGroupSeat(any(), any(), any(), any());
+    }
+
+    @Test void actualActivityEntryAppliesOriginalOwnerGuardBeforeTheSeatService() {
+        order.setOwnerType(2L); order.setOwnerId(61L);
+        String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
+        var receipt = new RegistrationSeatService.Receipt(102L, 31L, 2, 41L, 61L, 81L, new Date(), false);
+        when(seats.redeemActivitySeat(31L, 2, 81L)).thenReturn(receipt);
+        assertSame(receipt, scanner.scanDynamicCode(code).get("data"));
+        verify(seats).redeemActivitySeat(31L, 2, 81L);
+        verify(orders, never()).verifyAndSettle(any(), any(), any(), any());
+        verify(orders, never()).verifyAndSettle(any(), any(), any(), any(), any(), any());
+    }
+    @Test void originalClubTimeWindowRejectsBeforeAnySeatEffect() {
+        order.setOwnerType(2L); order.setOwnerId(61L); activity.setClubId(71L);
+        activity.setStartDate(new Date(System.currentTimeMillis() + 2L * 60 * 60 * 1000));
+        String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
+        assertEquals("俱乐部场次开始前60分钟内才可核销", scanner.scanDynamicCode(code).get("msg"));
+        verifyNoInteractions(seats);
+    }
+    @Test void foreignMerchantCannotBypassOriginalActivityOwnerScopeWithAValidSeatCode() {
+        order.setOwnerType(2L); order.setOwnerId(61L); activity.setMemberId(999L);
+        var foreign = new com.chengyinhub.business.access.merchant.MerchantAccessContext(81L, 91L, 88L, "MERCHANT_CHECKIN");
+        when(merchants.require(81L, com.chengyinhub.business.access.merchant.MerchantPermission.VERIFY)).thenReturn(foreign);
+        String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
+        assertEquals("该店无权核销本场玩家票；俱乐部带队请扫描领队团码", scanner.scanDynamicCode(code).get("msg"));
+        verifyNoInteractions(seats);
+    }
+    @Test void onlyFirstRegistrationVerificationKeepsOriginalPointsButEveryReplayCanDeliverQueuedGrowth() {
+        order.setOwnerType(2L); order.setOwnerId(61L);
+        String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
+        Date originalTime = new Date();
+        var first = new RegistrationSeatService.Receipt(102L, 31L, 2, 41L, 61L, 81L, originalTime, false, true);
+        var replay = new RegistrationSeatService.Receipt(102L, 31L, 2, 41L, 61L, 81L, originalTime, true);
+        when(seats.redeemActivitySeat(31L, 2, 81L)).thenReturn(first, replay);
+        assertEquals(200, scanner.scanDynamicCode(code).get("code"));
+        assertEquals(200, scanner.scanDynamicCode(code).get("code"));
+        verify(points, times(1)).award(51L, 11L, 31L, "到店核销");
+        verify(growth, times(2)).deliverStoreVerification(31L);
+    }
+
+    @Test void activitySeatDatabaseFailureKeepsUnknownAndNeverLeaksSqlOrCreatesAnotherIntent() {
+        order.setOwnerType(2L); order.setOwnerId(61L);
+        String code = VerifyDynCodeUtil.issue(31L, "activity_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
+        when(seats.redeemActivitySeat(31L, 2, 81L)).thenThrow(
+                new org.springframework.dao.DataAccessResourceFailureException("SELECT private_seat WHERE secret=value"));
+        AjaxResult response = scanner.scanDynamicCode(code);
+        assertEquals(520, response.get("code"));
+        assertEquals("原席位核销结果待确认，请按原席位查询，勿改选其他席位重发", response.get("msg"));
+        assertFalse(response.toString().contains("private_seat")); assertFalse(response.containsKey("intentNotExecuted"));
+        verify(seats, times(1)).redeemActivitySeat(31L, 2, 81L);
+    }
+
+    @Test void originalWholeActivityCodeCannotDefaultToAllPurchasedSeats() {
+        order.setOwnerType(2L); order.setOwnerId(61L);
+        String code = VerifyDynCodeUtil.issue(31L, "activity", System.currentTimeMillis(), 300000, 1, SECRET);
+        assertEquals("多人订单请逐席位出示核销码，整单码不能代替逐人核销", scanner.scanDynamicCode(code).get("msg"));
+        verifyNoInteractions(seats);
+        verify(orders, never()).verifyAndSettle(any(), any(), any(), any());
+        verify(orders, never()).verifyAndSettle(any(), any(), any(), any(), any(), any());
+    }
+
     @Test void responseLostReplayKeepsTheOriginalSeatFactAndExplicitReplayMessage() {
         String code = VerifyDynCodeUtil.issue(31L, "topic_seat_2", System.currentTimeMillis(), 300000, 1, SECRET);
         Date originalTime = new Date(1700000000000L);

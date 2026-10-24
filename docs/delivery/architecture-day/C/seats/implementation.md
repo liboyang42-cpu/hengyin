@@ -1,5 +1,7 @@
 # C：逐席位核销事实候选（主题团核销接线）
 
+本文件记录首批冻结1fbd范围；后续活动后端实际增量见 [activity-backend.md](activity-backend.md)，G读取合同见 [G-handoff.md](G-handoff.md)。
+
 已实现主题多人票的稳定席位扩展、现有动态码/团扫码入口、防重和实际事实读取；不计算费用。当前实际公共基线 `06a571b1247620a9bdcea068be0ded973671d17c`。独立 `codex/architecture-day-c-seat-verification`；仅交新增席位源及两个Controller的精确hunk，不覆盖root/A/G其他更改。
 
 ## 真实调用与范围差距

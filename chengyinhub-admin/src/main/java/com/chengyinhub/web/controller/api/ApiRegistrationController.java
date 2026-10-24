@@ -1113,9 +1113,6 @@ public class ApiRegistrationController extends BaseController {
         return registrationService.selectByverificationCode(code);
     }
 
-    /** 俱乐部场次整单核销的前置窗口，与集合签到(ClubGatherArrivalPolicy)同为开场前 60 分钟。 */
-    private static final long CLUB_SESSION_VERIFY_LEAD_MS = 60L * 60L * 1000L;
-
     /**
      * F-R2F-01:俱乐部场次的票不能在开场前几天被整单核销 —— 核销即「已到场/已交付」，
      * 提前核销后场次取消就会落入「整单全核销不退」。只约束俱乐部场次的整单核销，③ 按章核销与普通活动不变。
@@ -1123,14 +1120,8 @@ public class ApiRegistrationController extends BaseController {
      * @return null = 放行；非 null = 直接返回给扫码方的提示
      */
     static AjaxResult clubSessionVerificationTooEarly(CmsActivity activity, Date now) {
-        if (activity == null || activity.getClubId() == null || activity.getClubId() <= 0
-                || activity.getStartDate() == null || now == null) {
-            return null;
-        }
-        if (activity.getStartDate().getTime() - now.getTime() > CLUB_SESSION_VERIFY_LEAD_MS) {
-            return AjaxResult.error("俱乐部场次开始前60分钟内才可核销");
-        }
-        return null;
+        String refusal = com.chengyinhub.business.service.RegistrationSeatService.activityVerificationTooEarly(activity, now);
+        return refusal == null ? null : AjaxResult.error(refusal);
     }
 
     /**
@@ -1603,6 +1594,11 @@ public class ApiRegistrationController extends BaseController {
         if (!result.valid) {
             return AjaxResult.error(result.reason == null ? "核销码无效" : result.reason);
         }
+        // The existing activity path retains its real permission/time-window gates before seat verification.
+        if (result.type != null && result.type.startsWith("activity_seat_")
+                && com.chengyinhub.business.service.RegistrationSeatService.seatNumber(result.type) != null) {
+            return scanQrCode("activity", code);
+        }
         // type 来自 HMAC 已验签的码，不能再收小程序回传的 type；团码/据点码各走自己的专用端点。
         if (!"activity".equals(result.type) && !"topic".equals(result.type)) {
             return AjaxResult.error("非玩家动态核销码");
@@ -1630,10 +1626,21 @@ public class ApiRegistrationController extends BaseController {
                 return AjaxResult.error(result.reason == null ? "核销码无效" : result.reason);
             }
             Integer seatNo = com.chengyinhub.business.service.RegistrationSeatService.seatNumber(result.type);
+            if (seatNo != null && result.type.startsWith("activity_seat_")) {
+                Long actor;
+                try { actor = getAppUserId(); } catch (Exception unauthenticated) { return error("请先登录"); }
+                if (actor == null || actor <= 0) return error("请先登录");
+                CmsRegistration original = registrationService.selectCmsRegistrationById(result.regId);
+                if (original == null || !Long.valueOf(2L).equals(original.getOwnerType())
+                        || activityId == null || !activityId.equals(original.getOwnerId()))
+                    return AjaxResult.error("活动席位不属于当前带队场次");
+                return scanQrCode("activity", code, activityId);
+            }
             if (seatNo != null) {
                 Long actor;
                 try { actor = getAppUserId(); } catch (Exception unauthenticated) { return error("请先登录"); }
                 var receipt = registrationSeatService.redeemGroupSeat(result.regId, seatNo, activityId, actor);
+                applyOriginalSeatRewards(registrationService.selectCmsRegistrationById(receipt.registrationId()), receipt);
                 return AjaxResult.success(receipt.replayed() ? "该席位已核销，请勿重复提供权益" : "核销成功", receipt);
             }
             if (!"topic".equals(result.type)) {
@@ -1717,6 +1724,23 @@ public class ApiRegistrationController extends BaseController {
                 AjaxResult tooEarly = clubSessionVerificationTooEarly(cmsActivity, new Date());
                 if (tooEarly != null) {
                     return tooEarly;
+                }
+                if (cmsRegistration.getOrderNum() != null && cmsRegistration.getOrderNum() > 1) {
+                    VerifyDynCodeUtil.Result explicitSeat = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
+                    Integer seatNo = explicitSeat.valid && explicitSeat.type != null && explicitSeat.type.startsWith("activity_seat_")
+                            ? com.chengyinhub.business.service.RegistrationSeatService.seatNumber(explicitSeat.type) : null;
+                    if (seatNo == null) return AjaxResult.error("多人订单请逐席位出示核销码，整单码不能代替逐人核销");
+                    try {
+                        var receipt = registrationSeatService.redeemActivitySeat(cmsRegistration.getId(), seatNo, memberId);
+                        applyOriginalSeatRewards(cmsRegistration, receipt);
+                        return AjaxResult.success(receipt.replayed() ? "该席位已核销，请勿重复提供权益" : "核销成功", receipt);
+                    } catch (ServiceException refusal) {
+                        throw refusal;
+                    } catch (RuntimeException unknown) {
+                        logger.error("活动席位核销结果待确认 registrationId={} seatNo={} actor={}",
+                                cmsRegistration.getId(), seatNo, memberId, unknown);
+                        return new AjaxResult(520, "原席位核销结果待确认，请按原席位查询，勿改选其他席位重发");
+                    }
                 }
                 // [V2] 重复核销闸 + 入账 + 台账,同一事务(verifyAndSettle)。
                     // 条件置位而非读判:读判挡不住并发双扫。
@@ -1926,6 +1950,16 @@ public class ApiRegistrationController extends BaseController {
         Map<String, Object> data = new HashMap<>();
         data.put("alreadyVerified", true);
         return AjaxResult.error("该订单已核销", data);
+    }
+
+    /** Retains the original post-commit registration reward behavior; never multiplies by seats. */
+    private void applyOriginalSeatRewards(CmsRegistration registration,
+            com.chengyinhub.business.service.RegistrationSeatService.Receipt receipt) {
+        if (registration == null || !receipt.registrationId().equals(registration.getId()))
+            throw new IllegalStateException("原报名核销奖励上下文缺失");
+        if (receipt.registrationFirstTime())
+            pointsAwardService.award(registration.getMemberId(), 11L, registration.getId(), "到店核销");
+        applyStoreVerifyGrowth(registration);
     }
 
     private void applyStoreVerifyGrowth(CmsRegistration registration) {
