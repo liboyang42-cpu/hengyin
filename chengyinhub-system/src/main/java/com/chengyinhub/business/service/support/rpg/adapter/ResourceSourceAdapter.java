@@ -148,6 +148,7 @@ public class ResourceSourceAdapter {
     /**
      * 从既有 {@link IGameSessionRuntimeService#receipt} 回读。不调用 command。
      * 缺端口 WAITING_SOURCE。PENDING 不是已应用。不写入 resources 事实。
+     * requestId 或 activityId 与本次不符则返回 {@code null}。
      */
     public GameReceiptRead recoverFromGameReceipt(GameActorContext actor, Long activityId, String requestId,
             GameReceiptSource source) {
@@ -160,7 +161,8 @@ public class ResourceSourceAdapter {
             throw new WaitingSourceException(GAME_RECEIPT);
         }
         GameCommandReceiptView view = source.receipt(actor, activityId, id);
-        if (view == null || view.getRequestId() == null || !id.equals(view.getRequestId())) {
+        if (view == null || view.getRequestId() == null || !id.equals(view.getRequestId())
+                || view.getActivityId() == null || activityId.longValue() != view.getActivityId().longValue()) {
             return null;
         }
         return new GameReceiptRead(id, view.getOutcome(), view.isReplayed(), "APPLIED".equals(view.getOutcome()));

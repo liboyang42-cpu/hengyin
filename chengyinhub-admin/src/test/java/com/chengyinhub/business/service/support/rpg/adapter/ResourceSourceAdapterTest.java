@@ -274,12 +274,14 @@ class ResourceSourceAdapterTest {
         ResourceSourceAdapter.GameReceiptSource source = (a, activityId, requestId) -> {
             reads.incrementAndGet();
             GameCommandReceiptView view = new GameCommandReceiptView();
+            view.setActivityId("c02-game-activity".equals(requestId) ? Long.valueOf(99L) : activityId);
             view.setRequestId("c02-game-other".equals(requestId) ? "other-request" : requestId);
             view.setOutcome("c02-game-missing".equals(requestId) ? "PENDING" : "APPLIED");
             view.setReplayed(!"c02-game-missing".equals(requestId));
             return view;
         };
         assertNull(adapter.recoverFromGameReceipt(actor, 11L, "c02-game-other", source));
+        assertNull(adapter.recoverFromGameReceipt(actor, 11L, "c02-game-activity", source));
         ResourceSourceAdapter.GameReceiptRead pending = adapter.recoverFromGameReceipt(
                 actor, 11L, "c02-game-missing", source);
         assertEquals("PENDING", pending.outcome);
@@ -289,6 +291,6 @@ class ResourceSourceAdapterTest {
                 actor, 11L, "game-req-01", source);
         assertTrue(applied.applied);
         assertTrue(applied.replayed);
-        assertEquals(3, reads.get());
+        assertEquals(4, reads.get());
     }
 }
