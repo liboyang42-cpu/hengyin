@@ -153,6 +153,24 @@ class EnvironmentExpiryAdapterTest {
         assertEquals(EnvironmentExpiryAdapter.SENTINEL_EXPIRED, closed.getEnvironment().get("weather"));
     }
 
+    @Test
+    void inactiveExpiryDoesNotOccupyWeatherThenUniqueApplyWritesServerFact() {
+        EnvironmentExpiryAdapter adapter = new EnvironmentExpiryAdapter(rainService(BEFORE), BEFORE);
+        TopicRouteEngine.State idle = state();
+        Map<String, Object> frozen = adapter.apply(
+                ctx(rules(ENV), idle, null, RpgAdapterSpec.inactive(), BEFORE, dice(10)));
+        assertEquals(Boolean.FALSE, frozen.get("applied"));
+        assertTrue(idle.getEnvironment().isEmpty(), "inactive 观察不得占 weather");
+
+        TopicRouteEngine.State live = state();
+        Map<String, Object> first = adapter.apply(ctx(rules(ENV), live, null, expirySpec(), BEFORE, dice(10)));
+        assertEquals(Boolean.TRUE, first.get("applied"));
+        assertEquals("rain", live.getEnvironment().get("weather"));
+        assertEquals("rain", adapter.apply(ctx(rules(ENV), live, null, expirySpec(), BEFORE, dice(10)))
+                .get("serverSnapshot") == null ? null
+                : live.getEnvironment().get("weather"));
+    }
+
     private static Map<String, Object> mutatedCard(int skillPoints) {
         Map<String, Object> row = new java.util.LinkedHashMap<String, Object>();
         row.put("stateKey", "counter.skill_points");

@@ -91,4 +91,28 @@ class TeamOppositionAdapterTest {
         new TeamOppositionAdapter().apply(context);
         assertFalse(state.getStatusConditions().contains("opposed"));
     }
+
+    @Test
+    void unusedOppositionDoesNotOccupyThenUniqueHunterApplies() throws Exception {
+        JourneyRules journey = rules(null);
+        JsonNode check = JSON.readTree("{\"enabled\":true,\"checkId\":\"ask_arong\",\"tier\":\"easy\"}");
+        RpgAdapterSpec spec = new RpgAdapterSpec();
+        spec.setTeamOpposition(new RpgAdapterSpec.TeamOpposition());
+        spec.getTeamOpposition().setLane(TeamOppositionAdapter.LANE_RED);
+        spec.getTeamOpposition().setOpposeRoleCode("HUNTER");
+        spec.getTeamOpposition().setOpposedCondition("opposed");
+        TopicRouteEngine.State run = state();
+        RpgAdapterContext unseen = ctx(journey, run, check, spec, BEFORE, dice(10));
+        unseen.setPartyRoles(Arrays.asList(role(MEMBER, "NAVIGATOR")));
+        Map<String, Object> observed = new TeamOppositionAdapter().apply(unseen);
+        assertEquals(Boolean.TRUE, observed.get("applied"));
+        assertEquals(Boolean.FALSE, observed.get("opposed"));
+        assertFalse(run.getStatusConditions().contains("opposed"), "无对抗观察不得占 opposed");
+
+        unseen.setPartyRoles(Arrays.asList(role(MEMBER, "NAVIGATOR"), role(8L, "HUNTER")));
+        Map<String, Object> first = new TeamOppositionAdapter().apply(unseen);
+        assertEquals(Boolean.TRUE, first.get("opposed"));
+        assertEquals("opposed", first.get("opposedCondition"));
+        assertTrue(run.getStatusConditions().contains("opposed"));
+    }
 }

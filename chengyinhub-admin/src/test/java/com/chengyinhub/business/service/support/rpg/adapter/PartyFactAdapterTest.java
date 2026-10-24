@@ -58,4 +58,27 @@ class PartyFactAdapterTest {
         new PartyFactAdapter().apply(context);
         assertNull(state.getActorRoleCode());
     }
+
+    @Test
+    void missingActorDoesNotOccupyRoleThenUniqueNavigatorApplies() {
+        TopicRouteEngine.State run = state();
+        RpgAdapterSpec spec = new RpgAdapterSpec();
+        spec.setParty(new RpgAdapterSpec.Party());
+        spec.getParty().setRequireRole(true);
+        RpgAdapterContext unseen = ctx(rules(null), run, null, spec, BEFORE, dice(10));
+        unseen.setPartyRoles(Collections.<com.chengyinhub.business.domain.PlayerActivityRole>emptyList());
+        java.util.Map<String, Object> observed = new PartyFactAdapter().apply(unseen);
+        assertEquals(Boolean.TRUE, observed.get("applied"));
+        assertEquals(Boolean.FALSE, observed.get("roleKnown"));
+        assertNull(run.getActorRoleCode(), "缺角色观察不得占 actorRoleCode");
+
+        unseen.setActorRole(role(MEMBER, "NAVIGATOR"));
+        unseen.setPartyRoles(Arrays.asList(role(MEMBER, "NAVIGATOR")));
+        java.util.Map<String, Object> first = new PartyFactAdapter().apply(unseen);
+        assertEquals("NAVIGATOR", run.getActorRoleCode());
+        assertEquals("NAVIGATOR", first.get("actorRoleCode"));
+        assertNull(new PartyFactAdapter().apply(
+                ctx(rules(null), state(), null, RpgAdapterSpec.inactive(), BEFORE, dice(10)))
+                .get("actorRoleCode"));
+    }
 }

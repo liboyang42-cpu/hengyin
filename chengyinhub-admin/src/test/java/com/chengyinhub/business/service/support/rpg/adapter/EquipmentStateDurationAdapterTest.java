@@ -70,4 +70,34 @@ class EquipmentStateDurationAdapterTest {
         assertEquals("lantern", state.getEquipped().get("hand"));
         assertTrue(state.getStatusConditions().contains("soaked"));
     }
+
+    @Test
+    void unusedDurationDoesNotUnequipThenUniqueExpiryClears() throws Exception {
+        TopicRouteEngine.State run = state();
+        run.getEquipped().put("hand", "lantern");
+        run.getStatusConditions().add("soaked");
+        RpgAdapterSpec spec = new RpgAdapterSpec();
+        RpgAdapterSpec.EquipmentDuration lamp = new RpgAdapterSpec.EquipmentDuration();
+        lamp.setItemId("lantern");
+        lamp.setSlot("hand");
+        lamp.setExpiresAtEpochMillis(EXPIRES_AT);
+        spec.getEquipmentDurations().add(lamp);
+        RpgAdapterSpec.StatusDuration wet = new RpgAdapterSpec.StatusDuration();
+        wet.setCondition("soaked");
+        wet.setExpiresAtEpochMillis(EXPIRES_AT);
+        spec.getStatusDurations().add(wet);
+        RpgAdapterContext early = ctx(rules(null), run, JSON.readTree(
+                "{\"enabled\":true,\"checkId\":\"ask_arong\",\"tier\":\"easy\"}"), spec, BEFORE, dice(10));
+        java.util.Map<String, Object> observed = new EquipmentStateDurationAdapter(BEFORE).apply(early);
+        assertEquals(Boolean.TRUE, observed.get("applied"));
+        assertEquals("lantern", run.getEquipped().get("hand"), "未到期观察不得卸下");
+        assertTrue(run.getStatusConditions().contains("soaked"));
+
+        RpgAdapterContext late = ctx(rules(null), run, JSON.readTree(
+                "{\"enabled\":true,\"checkId\":\"ask_arong\",\"tier\":\"easy\"}"), spec, AFTER, dice(10));
+        java.util.Map<String, Object> first = new EquipmentStateDurationAdapter(AFTER).apply(late);
+        assertEquals(Boolean.TRUE, first.get("applied"));
+        assertFalse(run.getEquipped().containsValue("lantern"));
+        assertFalse(run.getStatusConditions().contains("soaked"));
+    }
 }
