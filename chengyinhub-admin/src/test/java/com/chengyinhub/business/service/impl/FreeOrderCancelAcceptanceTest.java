@@ -75,6 +75,7 @@ class FreeOrderCancelAcceptanceTest {
 
         regMapper = mock(CmsRegistrationMapper.class);
         when(regMapper.selectCmsRegistrationById(REG_ID)).thenReturn(registration);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG_ID)).thenReturn(registration);
         ticketMapper = mock(OmsTicketMapper.class);
         when(ticketMapper.restoreInventory(eq(TICKET), anyLong())).thenReturn(1);
         memberMapper = mock(UmsMemberMapper.class);
@@ -87,6 +88,7 @@ class FreeOrderCancelAcceptanceTest {
         activity.setStartDate(new Date(System.currentTimeMillis() + 3L * 24 * 3600 * 1000));
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(activityMapper.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
 
         service = new TeamGroupServiceImpl();
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", regMapper);
@@ -100,6 +102,8 @@ class FreeOrderCancelAcceptanceTest {
         ReflectionTestUtils.setField(service, "notifyService", mock(INotifyService.class));
         ReflectionTestUtils.setField(service, "firstReviewPointsClawback",
                 mock(FirstReviewPointsClawbackService.class));
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamTransactions(service,
+                com.chengyinhub.business.service.CancellationPhaseTestSupport.memoryTransactions());
     }
 
     @Test
@@ -129,11 +133,12 @@ class FreeOrderCancelAcceptanceTest {
                 .thenAnswer(inv -> claimed.compareAndSet(false, true) ? 1 : 0);
         // loser 当前读:已退款(payment_status=4)⇒ 视为已被处理,静默返回
         CmsRegistration current = new CmsRegistration();
+        org.springframework.beans.BeanUtils.copyProperties(registration, current);
         current.setId(REG_ID);
         current.setPaymentStatus(4);
         current.setRegistrationStatus(3);
         current.setVerificationStatus(0);
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG_ID)).thenReturn(current);
+        org.mockito.Mockito.doReturn(registration, registration, current).when(regMapper).selectCmsRegistrationByIdForUpdate(REG_ID);
 
         service.cancelPaidRegistration(REG_ID, MEMBER);
         service.cancelPaidRegistration(REG_ID, MEMBER);
