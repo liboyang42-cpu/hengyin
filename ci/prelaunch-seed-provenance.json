@@ -115,7 +115,7 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubGovernancePlatformController.java": "dd6e76dc0c573006c639cff3149555a32c7585f970de4fa1a4049060bd0994ed",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java": "8c2953bf9e1f429215d1c97cb4b4add01c78143ee4ed02e80adeb041c619f141",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java": "0f074d4e72bee13fbbdd161a376ed7edd56dd86b9f43a10d01f96c50188c436d",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RoamPoiAdminController.java": "33db10930e2071518f3ce7444661f9a20410cbd24469284cc7af252bab6979ed",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RoamPoiAdminController.java": "f95cb53929a9881e517d00def2709de67775a74a28230bba49bf1f3fda66a375",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerifyEvidenceController.java": "736303363af0589d98b5c84a1708a23bfd6785fd0c86845b88f982008e470c0f",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubRunController.java": "f40553d6f39eb21772a7471b0b709deb67c2f00caba061747cf1228ae5f53028",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AiGenerationLogController.java": "56c049dc3397525ca851abdfaee914002b70cd1750bd1414e514953b258ff263",
