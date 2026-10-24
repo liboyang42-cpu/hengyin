@@ -46,3 +46,9 @@ root已逐调用核对C精确证据，U4固定8字段路线投影5项、U5原核
 必要单类诊断已启动：候选 `aab91b9eb7b2732de09aa5513a5be8d5856c81a2`，run `40127844664`（仅 `CommittedOfficialNoticeMySqlIT`），不算最终验收；原9项前检仍失败即照常抛出。两声音错误恢复组件接线后台账源库存5121，localtap2185/event2541（分类变化待C精确说明）；原未知多写为0仅为源码合同，不是执行通过。
 
 C已完成定点生成器调用者对照：saveDraft普通分支仍POST、拒绝分支无请求；profile本人扫码与访客关注按variant合同均保留；注销apply真实wx.login归external，effectClasses.write/consent→apply/异常原status链仍保留，external验收仍验证写权威证据。root据此冻结台账5121/localtap2185/event2541，零未知多写断言不改。运行元数据已定位通知失败为CHECK_CLAUSE引号转义；G正在补前向严格入口及负控，不执行生产DDL，旧migration字节保留。
+
+## 必要残项源码已收齐，进入最终同候选验收
+
+G018c6253完整应用；新增严格v2只改原四处CHECK metadata规范化，原C/D字节不变，root逐字核对。六类共同fixture改用v2；原13用例不变，新增6用例声明。只用于未成功旧C且完整D形状，已typed首条拒绝重复ALTER；无生产DDL。root依赖声明v2仅依赖D，registry最终65唯一类/811声明，非通过数。
+
+原8会话全部必要修补与调用者已收齐；准备冻结完整候选后一次标准CI+真实存储，及最终定向源码审查。完整WP/Q/A/T/G仍未完成验收，all_complete=false；失败证据不继承新SHA，不将计划、SOURCE声明、构建或CLEAN写成业务通过。

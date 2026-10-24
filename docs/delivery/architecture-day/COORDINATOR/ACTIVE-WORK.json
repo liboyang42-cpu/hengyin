@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T19:59:29Z",
+  "updated_utc": "2026-10-24T20:10:50Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
   "all_complete": false,
-  "mode": "Explicit renewed source completion, original eight owners, final unified acceptance; only schema root-cause diagnostic before full freeze",
+  "mode": "All known residual implementation and callers collected; final same-candidate unified acceptance begins; fix only confirmed failures",
   "current_worker_assignments": {
     "A": {
       "state": "DELIVERED_APPLIED_NOT_RUN",
@@ -77,7 +77,7 @@
       "residual_delivery": "2faf2427c2f1d06d9c18cb7e378b830ea1abedc7 fullmanaged-cycle fixture increment applied,33cases retained"
     },
     "G": {
-      "state": "PARTIAL_DELIVERED_SCHEMA_DIAGNOSIS_REQUIRED",
+      "state": "DELIVERED_APPLIED_NOT_RUN",
       "task": "24945生产order_sn修补已集成，勿重做。你拥有7个通知/轮次真库失败及其共同fixture/必要通知路径：BeforeStartNoticeMySqlIT、CommittedOfficialNoticeMySqlIT、CoopComplaintCommittedNoticeMySqlIT、ComplaintCloseReporterNoticeMySqlIT、ChapterApplicationRoundMySqlIT、ChapterApplicationOutcomeMySqlIT均在migration_20261024_c_before_start_notice_typed.sql第1条严格schema/preflight CAST报错；SignupNoticeAfterCommitPersistenceMySqlIT.concurrentPaymentClaimLoser... ExecutionException/UndeclaredThrowableException。优先只修一次共同canonical DDL/fixture装配顺序并保持旧迁移字节/前置断言，不能跳过CAST、硬编码已通过或手写缩水表；若canonical迁移本身缺陷需提供证据给root做受控前向修正，不直接改已有迁移。原模板、wx/IM渠道冻结、UNKNOWN/一次外呼、通知同事务/并发唯一与rollback断言全部保留。A拥有RegistrationPaymentFlow/TeamGroup/WeChatFact共享helper，不改其生产文件，必要时给A精确装配需求。 Plus ClmCommercePaymentProofMySqlIT canonical audit schema and original closed payment proof fixtures; exact message sent.",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
@@ -89,7 +89,7 @@
         "Original settlement producer and its source query Mapper methods",
         "CmsTopic settlement/verified-seat fee consumption and durable manual path"
       ],
-      "residual_delivery": "fff8f312e2f21498001ce0a7ddcf3f3247ad00e3 plus db3eb060e4d589843432521d97f5548eed32c443 diagnosis only"
+      "residual_delivery": "018c6253bb086d0bb7e3b9ee492dfb1ba354be2a"
     },
     "H": {
       "state": "DELIVERED_APPLIED_NOT_RUN",
@@ -764,5 +764,5 @@
   ],
   "residual_original_candidate": "ca0e0d2598727f6e567c802b7a664f9634d945c6",
   "shared_repair_base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
-  "source_storage_declarations": 805
+  "source_storage_declarations": 811
 }

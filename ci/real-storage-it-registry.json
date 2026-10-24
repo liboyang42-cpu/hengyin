@@ -662,7 +662,7 @@
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
         "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT"
       ],
-      "note": "65 unique registered storage classes, 805 declared cases, including original producer/refund, manual-case read projection and ASR shared quota. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required. Static inventory is not execution, HTTP/provider/restart/load/deployment acceptance."
+      "note": "65 unique registered storage classes, 811 declared cases, including original producer/refund, manual-case read projection and ASR shared quota. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required. Static inventory is not execution, HTTP/provider/restart/load/deployment acceptance."
     }
   },
   "classes": {
@@ -717,7 +717,7 @@
       "note": "H 0465b29 review.patch: actual original media owner/claim/trace with five-attempt cap and UNKNOWN. Incremental CHECK migration in isolated scratch only."
     },
     "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT": {
-      "tests": 13,
+      "tests": 19,
       "storage": [
         "mysql"
       ],

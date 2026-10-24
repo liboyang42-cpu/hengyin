@@ -52,14 +52,21 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
     Path sqlRoot;
     boolean created;
 
+    static final String TYPED_NOTICE_MIGRATION = "migration_20261024_g_before_start_notice_metadata_v2.sql";
+
     void open() throws Exception {
+        openWithOriginalNoticeShape(ignored -> { });
+    }
+
+    /** Test-only drift/legacy-row setup after canonical D, before the strict replacement C entry. */
+    void openWithOriginalNoticeShape(java.util.function.Consumer<JdbcTemplate> beforeTyped) throws Exception {
         for (String key : List.of("CHENGYIN_TEST_MYSQL_PORT", "CHENGYIN_TEST_MYSQL_USER", "CHENGYIN_TEST_MYSQL_PASSWORD"))
             assertNotNull(System.getenv(key), "controlled runner must supply " + key);
         admin = new JdbcTemplate(new DriverManagerDataSource(mysql.adminUrl(), mysql.user(), mysql.password()));
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject("select version()", String.class)));
         admin.execute("create database " + mysql.databaseName() + " character set utf8mb4"); created = true;
         DriverManagerDataSource source = new DriverManagerDataSource(mysql.databaseUrl(), mysql.user(), mysql.password());
-        initialize(source, new DataSourceTransactionManager(source));
+        initialize(source, new DataSourceTransactionManager(source), beforeTyped);
         db.execute("create table complaint_notice_fact(id bigint primary key,status int,recipient bigint,"
                 + "title varchar(200),body text) engine=InnoDB");
         db.update("insert into complaint_notice_fact values(1,0,100,'投诉处理有进展',"
@@ -70,7 +77,7 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
     void attach(DataSourceTransactionManager original) throws Exception {
         for (String key : List.of("CHENGYIN_TEST_MYSQL_PORT", "CHENGYIN_TEST_MYSQL_USER", "CHENGYIN_TEST_MYSQL_PASSWORD"))
             assertNotNull(System.getenv(key), "controlled runner must supply " + key);
-        initialize(original.getDataSource(), original);
+        initialize(original.getDataSource(), original, ignored -> { });
     }
 
     private void appendNoticeDiagnostic(org.springframework.dao.DataAccessException failure, String label, String select) {
@@ -81,7 +88,8 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
         }
     }
 
-    private void initialize(DataSource source, DataSourceTransactionManager original) throws Exception {
+    private void initialize(DataSource source, DataSourceTransactionManager original,
+            java.util.function.Consumer<JdbcTemplate> beforeTyped) throws Exception {
         db = new JdbcTemplate(source);
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(db.queryForObject("select version()", String.class)));
         sqlRoot = Paths.get("chengyinhub-admin/sql");
@@ -94,10 +102,10 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
                 + "create_by varchar(64),create_time datetime,remark text) engine=InnoDB");
         new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve("migration_20261013_b_im_notification_intent.sql")),
                 new FileSystemResource(sqlRoot.resolve("migration_20261024_d_committed_official_notice_wx.sql"))).execute(source);
+        beforeTyped.accept(db);
         try {
-            // Execute the original strict preflight, DDL and readback without rewriting or skipping them.
-            new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve(
-                    "migration_20261024_c_before_start_notice_typed.sql"))).execute(source);
+            // Controlled replacement retains every strict gate/DDL; only metadata quote serialization differs.
+            new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve(TYPED_NOTICE_MIGRATION))).execute(source);
         } catch (org.springframework.dao.DataAccessException failedMigration) {
             // The old CAST failure contained no actual metadata. Preserve the failure and attach
             // only schema diagnostics from this exclusive scratch database, never notification rows.

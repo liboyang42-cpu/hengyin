@@ -74,8 +74,8 @@
       "threadId": "01a16a23-8904-73e8-a024-378a96f0800c",
       "scope": "24945生产order_sn修补已集成，勿重做。你拥有7个通知/轮次真库失败及其共同fixture/必要通知路径：BeforeStartNoticeMySqlIT、CommittedOfficialNoticeMySqlIT、CoopComplaintCommittedNoticeMySqlIT、ComplaintCloseReporterNoticeMySqlIT、ChapterApplicationRoundMySqlIT、ChapterApplicationOutcomeMySqlIT均在migration_20261024_c_before_start_notice_typed.sql第1条严格schema/preflight CAST报错；SignupNoticeAfterCommitPersistenceMySqlIT.concurrentPaymentClaimLoser... ExecutionException/UndeclaredThrowableException。优先只修一次共同canonical DDL/fixture装配顺序并保持旧迁移字节/前置断言，不能跳过CAST、硬编码已通过或手写缩水表；若canonical迁移本身缺陷需提供证据给root做受控前向修正，不直接改已有迁移。原模板、wx/IM渠道冻结、UNKNOWN/一次外呼、通知同事务/并发唯一与rollback断言全部保留。A拥有RegistrationPaymentFlow/TeamGroup/WeChatFact共享helper，不改其生产文件，必要时给A精确装配需求。 Plus ClmCommercePaymentProofMySqlIT canonical audit schema and original closed payment proof fixtures; exact message sent.",
       "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
-      "state": "PARTIAL_DELIVERED_SCHEMA_DIAGNOSIS_REQUIRED",
-      "delivery": "fff8f312e2f21498001ce0a7ddcf3f3247ad00e3 plus db3eb060e4d589843432521d97f5548eed32c443 diagnosis only"
+      "state": "DELIVERED_APPLIED_NOT_RUN",
+      "delivery": "fff8f312 + db3eb060 diagnostics + 018c6253bb086d0bb7e3b9ee492dfb1ba354be2a strict v2 migration and six cases"
     },
     {
       "owner": "H",
@@ -97,8 +97,8 @@
   },
   "new_declarations": {
     "storage_unique_classes": 65,
-    "storage_declared_cases": 805,
+    "storage_declared_cases": 811,
     "status": "SOURCE_ONLY_NOT_PASS"
   },
-  "open_root_cause": "Six shared committed-notice canonical C migration preflight failures; one selected-class hosted diagnostic pending; no migration bypass or immutable edits"
+  "open_root_cause": "Source repair collected and integrated; no known implementation work uncollected; final unified validation pending. Do not treat source delivery as acceptance."
 }
