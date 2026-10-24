@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAccount4Identity;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAuthorizationGrant;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelCatalogEntry;
@@ -218,6 +219,27 @@ class ChannelGovernanceProjectionTest {
         java.util.Map<String, Object> page = live.readMessages(70L, null, 20, null);
         assertEquals(12L, page.get("conversationId"));
         assertEquals(1, reads.get());
+        ChannelGovernanceProjection.ChannelMessageSource otherConversation =
+                (memberId, conversationId, cursorId, size, afterId) -> {
+                    java.util.Map<String, Object> foreign = new java.util.LinkedHashMap<String, Object>();
+                    foreign.put("conversationId", Long.valueOf(99L));
+                    return foreign;
+                };
+        ChannelGovernanceProjection mismatched = new ChannelGovernanceProjection(catalog, identity,
+                (memberId, conversationId) -> true, otherConversation);
+        assertNull(mismatched.readMessages(70L, null, 20, null));
+        ImMessage otherMessage = new ImMessage();
+        otherMessage.setConversationId(99L);
+        otherMessage.setContent("other-conversation");
+        ChannelGovernanceProjection.ChannelMessageSource otherList =
+                (memberId, conversationId, cursorId, size, afterId) -> {
+                    java.util.Map<String, Object> foreign = new java.util.LinkedHashMap<String, Object>();
+                    foreign.put("list", java.util.List.of(otherMessage));
+                    return foreign;
+                };
+        ChannelGovernanceProjection listed = new ChannelGovernanceProjection(catalog, identity,
+                (memberId, conversationId) -> true, otherList);
+        assertNull(listed.readMessages(70L, null, 20, null));
         assertEquals(ChannelGovernancePhase.CATALOGED, live.phase());
         assertEquals(1L, live.generation());
     }

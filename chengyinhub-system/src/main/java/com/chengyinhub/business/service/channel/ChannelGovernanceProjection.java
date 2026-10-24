@@ -1,7 +1,9 @@
 package com.chengyinhub.business.service.channel;
 
+import java.util.List;
 import java.util.Map;
 
+import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAccount4Identity;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAuthorizationGrant;
@@ -180,7 +182,29 @@ public final class ChannelGovernanceProjection {
         if (!membership.isActiveGroupMember(memberId, catalog.conversationId)) {
             throw new ChannelAuthorizationException(ChannelAuthorizationException.Code.NOT_MEMBER);
         }
-        return messages.listMessages(memberId, catalog.conversationId, cursorId, size, afterId);
+        Map<String, Object> page = messages.listMessages(memberId, catalog.conversationId, cursorId, size, afterId);
+        if (page == null || foreignConversation(page)) {
+            return null;
+        }
+        return page;
+    }
+
+    private boolean foreignConversation(Map<String, Object> page) {
+        Object echoed = page.get("conversationId");
+        if (echoed instanceof Number && ((Number) echoed).longValue() != catalog.conversationId) {
+            return true;
+        }
+        Object list = page.get("list");
+        if (!(list instanceof List<?> rows)) {
+            return false;
+        }
+        for (Object row : rows) {
+            if (row instanceof ImMessage message && message.getConversationId() != null
+                    && message.getConversationId().longValue() != catalog.conversationId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void govern() {
