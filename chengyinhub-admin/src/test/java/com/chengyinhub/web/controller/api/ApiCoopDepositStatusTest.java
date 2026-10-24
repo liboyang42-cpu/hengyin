@@ -121,9 +121,10 @@ class ApiCoopDepositStatusTest {
             assertEquals(409,controller.depositStatus(Collections.singletonMap("inviteId",7L)).get(AjaxResult.CODE_TAG));
             assertEquals(1,pending.getDepositStatus());
         }
-        org.mockito.Mockito.verify(service,org.mockito.Mockito.times(1)).markDepositPaid(
-                org.mockito.ArgumentMatchers.eq("DEP7"),org.mockito.ArgumentMatchers.eq(5000L),org.mockito.ArgumentMatchers.eq("TX7"),
-                org.mockito.ArgumentMatchers.argThat(reference -> reference != null && reference.hash() == null));
+        // Reference validates ID/hash at construction; missing evidence must never enter the write owner.
+        org.mockito.Mockito.verify(service,org.mockito.Mockito.never()).markDepositPaid(
+                org.mockito.ArgumentMatchers.any(),org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),org.mockito.ArgumentMatchers.any());
     }
 
     /** Explicit mock-gateway proof reference; this controller unit does not claim provider/storage verification. */

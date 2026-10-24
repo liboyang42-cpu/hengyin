@@ -141,6 +141,26 @@ class Wp04TopicSettlementEntryGuardsTest {
         verify(f.inviteService).requestTopicDepositRefunds(11L);
         verifyNoInteractions(f.claims,f.points); verify(f.heads,never()).insertCoopSettlement(any());
     }
+    @Test void approvedRefundHistoryCannotBeHiddenByAnEmptyCashBasis() {
+        Fixture f = new Fixture(); when(f.topics.claimTopicForSettlement(11L)).thenReturn(1);
+        when(f.evidence.selectTopicCashRowsForUpdate(11L)).thenReturn(List.of());
+        CoopSettlementOriginalMapper original = OriginalCloseRefundHistoryFixture.install(f.service,11L,List.of(91L));
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(f.service,"settleTopic",f.topic,new SettlementRule()));
+        assertTrue(failure.getMessage().contains("APPROVED_REFUND_PRECEDES_ORIGINAL_CLOSE"));
+        verify(original).selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(11L);
+        verifyNoInteractions(f.claims,f.points,f.inviteService); verify(f.heads,never()).insertCoopSettlement(any());
+    }
+    @Test void unavailableOriginalRefundReadCannotBecomeAnEmptyHistory() {
+        Fixture f = new Fixture(); when(f.topics.claimTopicForSettlement(11L)).thenReturn(1);
+        when(f.evidence.selectTopicCashRowsForUpdate(11L)).thenReturn(List.of());
+        CoopSettlementOriginalMapper original = OriginalCloseRefundHistoryFixture.install(f.service,11L,null);
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> ReflectionTestUtils.invokeMethod(f.service,"settleTopic",f.topic,new SettlementRule()));
+        assertTrue(failure.getMessage().contains("APPROVED_REFUND_PRECEDES_ORIGINAL_CLOSE"));
+        verify(original).selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(11L);
+        verifyNoInteractions(f.claims,f.points,f.inviteService); verify(f.heads,never()).insertCoopSettlement(any());
+    }
     private static final class Fixture {
         final CmsTopicServiceImpl service = new CmsTopicServiceImpl(); final CmsTopic topic = new CmsTopic();
         final CoopSettlementMapper heads = mock(CoopSettlementMapper.class);
@@ -167,6 +187,7 @@ class Wp04TopicSettlementEntryGuardsTest {
             when(heads.insertCoopSettlement(any())).thenReturn(1);
             ReflectionTestUtils.setField(service,"coopSettlementMapper",heads); ReflectionTestUtils.setField(service,"coopOrderMapper",orders);
             ReflectionTestUtils.setField(service,"cmsTopicMapper",topics); ReflectionTestUtils.setField(service,"coopSettlementEvidenceMapper",evidence);
+            OriginalCloseRefundHistoryFixture.install(service,11L,List.of());
             ReflectionTestUtils.setField(service,"cmsRegistrationMapper",registrations); ReflectionTestUtils.setField(service,"coopSettlementClaimService",claims);
             ReflectionTestUtils.setField(service,"pricingService",pricing); ReflectionTestUtils.setField(service,"pointsAwardService",points);
             ReflectionTestUtils.setField(service,"coopInviteMapper",mock(CoopInviteMapper.class)); ReflectionTestUtils.setField(service,"coopInviteService",inviteService);

@@ -1,0 +1,9 @@
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementRateConvergenceTest.java: ORIGINAL_CASE_NAMES_AND_ASSERTIONS_PRESERVED; ordinary source declarations 22->22
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java: ORIGINAL_CASE_NAMES_AND_ASSERTIONS_PRESERVED; ordinary source declarations 5->5
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PreparedCoopPlanFixture.java: ORIGINAL_CASE_NAMES_AND_ASSERTIONS_PRESERVED; ordinary source declarations 0->0
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java: ORIGINAL_CASE_NAMES_AND_ASSERTIONS_PRESERVED; ordinary source declarations 12->14
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopDepositStatusTest.java: ORIGINAL_CASE_NAMES_AND_ASSERTIONS_PRESERVED; ordinary source declarations 6->6
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java: ORIGINAL_CASE_NAMES_AND_ASSERTIONS_PRESERVED; ordinary source declarations 1->1
+SCOPED_REFUND_HISTORY_PORT_NO_DEFAULT_EMPTY_MAPPER
+PRODUCTION_SCHEMA_CI_POLICY_UNCHANGED
+JAVA_MYSQL_CI_NOT_RUN

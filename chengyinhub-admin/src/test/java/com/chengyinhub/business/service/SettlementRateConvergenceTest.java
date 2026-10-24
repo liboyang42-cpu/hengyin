@@ -523,6 +523,7 @@ class SettlementRateConvergenceTest {
         // 来证明**没有人再去读商家表**。
         ReflectionTestUtils.setField(topicSvc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(topicSvc, "coopSettlementEvidenceMapper", topicEvidenceMapper);
+        com.chengyinhub.business.service.impl.OriginalCloseRefundHistoryFixture.install(topicSvc, 200L, Collections.emptyList());
         ReflectionTestUtils.setField(topicSvc, "umsMemberService", topicMember);
         ReflectionTestUtils.setField(topicSvc, "umsMemberBalanceDetailService",
                 mock(IUmsMemberBalanceDetailService.class));
