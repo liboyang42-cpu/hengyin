@@ -138,3 +138,22 @@ HEAD `09515c68b`。`writeOriginal` of present never-seen `c02-resource-never` wi
 命令：`mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.support.rpg.adapter.*Test -Dsurefire.failIfNoSpecifiedTests=false test`
 
 结果：`BUILD SUCCESS` **21/0** 2026-10-23T23:44:26Z。`C02AccountSwitchRestartIsolationTest` 5/0。Runtime still unwired. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## Addendum 2026-10-23 18:04 America/Los_Angeles
+
+HEAD `0312e6445` tests. Class-level occupancy without inventing `recoverOriginal`:
+
+- `CharacterGrowthSourceAdapterTest.readCardOfNeverSeenIdDoesNotOccupyGrowthResetThenUniqueResetApplies` — `readCard` of `c02-growth-class` does not occupy `growth-reset:<id>`; later unique `resetIfRecovery` is the first write
+- `ResourceSourceAdapterTest.emptyEffectsOfPresentNeverSeenIdDoesNotOccupyStorySourceThenUniqueWriteApplies` — empty-effects `writeOriginal` of `c02-resource-class` does not occupy `story:1:clue_page`; later unique ADD_ITEM is the first write
+
+Isolation occupancy remains. Parent surefire `com.chengyinhub.business.service.support.rpg.adapter.*Test` **23/0** 2026-10-24T01:04:20Z：
+
+```
+Tests run: 3 -- CharacterGrowthSourceAdapterTest
+Tests run: 3 -- ResourceSourceAdapterTest
+Tests run: 5 -- C02AccountSwitchRestartIsolationTest
+Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+Runtime still unwired. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
