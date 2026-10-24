@@ -79,4 +79,24 @@ class SideQuestAcceptHoldTest {
         assertEquals(SideQuestAcceptHold.Terminal.COMPLETED, quest.original().terminal);
         assertEquals("sq-comp-unk", quest.recoverOriginal("sq-comp-unk").originalRequestId);
     }
+
+    @Test
+    void unusedSubmitProofBeforeHoldDoesNotOccupyThenUniqueSubmitApplies() {
+        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
+        assertEquals(SideQuestAcceptHold.Failure.HOLD_REQUIRED,
+                assertThrows(SideQuestAcceptHold.SideQuestException.class,
+                        () -> quest.submitProof(SideQuestAcceptHold.Proof.create(
+                                SideQuestAcceptHold.ProofKind.QR, true, false, null))).code);
+        assertEquals(SideQuestAcceptHold.Phase.DISCOVERED, quest.phase(), "未见预占 submitProof 观察不得占 proof");
+        assertNull(quest.hold());
+        assertNull(quest.original());
+        quest.acceptHold("hold-proof", "sq-proof-unk", 1);
+        assertEquals(SideQuestAcceptHold.Phase.HOLD_ACCEPTED, quest.phase());
+        assertNull(quest.original());
+        quest.submitProof(SideQuestAcceptHold.Proof.create(SideQuestAcceptHold.ProofKind.QR, true, false, null));
+        assertEquals(SideQuestAcceptHold.Phase.PROOF_PENDING, quest.phase());
+        assertEquals("sq-proof-unk", quest.hold().originalRequestId);
+        assertNull(quest.original());
+    }
 }
