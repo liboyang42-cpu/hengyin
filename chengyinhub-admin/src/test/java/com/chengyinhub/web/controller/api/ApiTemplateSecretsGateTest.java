@@ -402,13 +402,13 @@ class ApiTemplateSecretsGateTest {
 
         ApiRegistrationController c = spy(new ApiRegistrationController());
         doReturn(VIEWER).when(c).getAppUserId();
-        ReflectionTestUtils.setField(c, "registrationService", regSvc);
-        ReflectionTestUtils.setField(c, "topicService", topicSvc);
-        ReflectionTestUtils.setField(c, "registrationScanService", scanSvc);
-        ReflectionTestUtils.setField(c, "registrationMerchantService", merchantSvc);
-        ReflectionTestUtils.setField(c, "memberTemplateService", memberTplSvc);
-        ReflectionTestUtils.setField(c, "mmsMerchantService", mock(IMmsMerchantService.class));
-        ReflectionTestUtils.setField(c, "refundService", refundSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "registrationService", regSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "topicService", topicSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "registrationScanService", scanSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "registrationMerchantService", merchantSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "memberTemplateService", memberTplSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "mmsMerchantService", mock(IMmsMerchantService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "refundService", refundSvc);
         when(refundSvc.selectRefundList(any())).thenReturn(Collections.emptyList());
 
         CmsRegistration reg = new CmsRegistration();
@@ -432,7 +432,7 @@ class ApiTemplateSecretsGateTest {
         when(merchantSvc.selectCmsRegistrationMerchantList(any())).thenReturn(Collections.singletonList(rm));
         when(memberTplSvc.selectCmsMemberTemplateById(TPL)).thenReturn(memberTplWithSecrets(OTHER_OWNER));
 
-        AjaxResult res = c.getRegistrationDetail("5001");
+        AjaxResult res = RegistrationQueryTestFixtures.wire(c).getRegistrationDetail("5001");
 
         assertEquals(200, res.get("code"), res.toString());
         assertMemberTemplateSecretsStripped(scan.getMemberTemplate());

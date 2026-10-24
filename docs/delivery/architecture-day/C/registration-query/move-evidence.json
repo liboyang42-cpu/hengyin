@@ -1,0 +1,223 @@
+{
+  "baseline": "c7e0ff743f834345098651abe90ef4f55c2c8923",
+  "moved": [
+    {
+      "name": "getRegistrationDetail",
+      "adaptedBodySha256": "96c6978e07664ace003cf1ae0957706778a19f04bc80fabf355a69de46080391"
+    },
+    {
+      "name": "exploreCompletion",
+      "adaptedBodySha256": "a431ab61856509e0d502f282022f02c34383525e64c1b243715e740d182160ca"
+    },
+    {
+      "name": "getJoinRegistrationDetail",
+      "adaptedBodySha256": "2dc78c90a9bd5b4f53511790e20593779e8213e54ab9f971186bd2c657ba7b49"
+    },
+    {
+      "name": "countByDate",
+      "adaptedBodySha256": "774a3d396a610c1c7b1c7d2b864475cb7428007189477f1c0e3c5c250727a93a"
+    },
+    {
+      "name": "myRegistrationList",
+      "adaptedBodySha256": "b76a7076427e6e8d452b7e9a4b3e30502cf3c19b62fa88e21cbd0b237cb7d312"
+    },
+    {
+      "name": "myJoined",
+      "adaptedBodySha256": "55ded05c1d7ce0f1245f6502c14aeb1606c2edaa8d0d579d8d72137e7cc94eac"
+    },
+    {
+      "name": "readTopicProductType",
+      "adaptedBodySha256": "adb9d7f2068868fe5fa56ca8101379e8d5881818d63aa023a15a7a3f4a0f89d1"
+    },
+    {
+      "name": "latestRegistrationRefund",
+      "adaptedBodySha256": "8086c0c802c82938c1721d216e48e0790752750ef4af526e64c7f3ed2c1f99cb"
+    },
+    {
+      "name": "latestRegistrationRefunds",
+      "adaptedBodySha256": "a0f998643f035f9b022c35d380416a858ce127cfc2878fb4e10528dd00694849"
+    },
+    {
+      "name": "attachOrganizer",
+      "adaptedBodySha256": "560adbe12de02dac3aa000a47ba4283888676d94b724399807543d1e855bcd8c"
+    },
+    {
+      "name": "attachRefundInfoForList",
+      "adaptedBodySha256": "eb1f48ae3104680a3134c57fbb9d4921cc7dd489e595a10a29a579501b3f8f41"
+    },
+    {
+      "name": "attachRefundVerdict",
+      "adaptedBodySha256": "113c3ac46153f3bb3cf44dc8ec735ad01350a807172d9f1fa0997edf43e49f42"
+    },
+    {
+      "name": "attachManualRefundInfo",
+      "adaptedBodySha256": "df93aff5e53c1151c61889ca52a6d066a4520a6aa9b194aa6e663287aafda578"
+    },
+    {
+      "name": "filterEndedOverWeek",
+      "adaptedBodySha256": "87a11e6bdb18bdf93b0c02e5ccabd466bde80994e15a2d2367b20e1e4ce99db1"
+    },
+    {
+      "name": "resolveOwnerEndDate",
+      "adaptedBodySha256": "e548e33cecb213cf02ae36c8970b04ba63fb91000d8466fbba12cde2f6e2e199"
+    },
+    {
+      "name": "hasEffectiveMerchantCoopOrder",
+      "adaptedBodySha256": "179d178bc1a845d410cd2aaef276152332fb754152a084578188bb27459bce65"
+    }
+  ],
+  "unchangedNonQueryMethods": [
+    "quote",
+    "paymentReadiness",
+    "createRegistration",
+    "pay",
+    "payApp",
+    "hasCurrentSignupDataSharingConsent",
+    "cancelRegistration",
+    "cancelRefund",
+    "cancelByOwner",
+    "VerifyAnswer",
+    "manualReviewFeedback",
+    "checkoutError",
+    "cancellationFeedback",
+    "resolveRegistrationByScanCode",
+    "clubSessionVerificationTooEarly",
+    "assertScanTypeMatchesOwner",
+    "isExplorePass",
+    "redeemExploreChapter",
+    "chapterDisplayName",
+    "describeChapters",
+    "scanQrCodeChapter",
+    "requireStationChoice",
+    "scanQrCodeStation",
+    "resolveScanContext",
+    "resolveExploreScanContext",
+    "doRedeemExploreChapter",
+    "scanDynamicCode",
+    "replayOriginalSeat",
+    "scanGroupMemberTicket",
+    "scanQrCode",
+    "scanQrCode",
+    "duplicateVerificationResult",
+    "applyOriginalSeatRewards",
+    "applyStoreVerifyGrowth",
+    "hasEffectiveMerchantCoopOrder",
+    "isTopicOrganizer",
+    "topicHasOrganizer",
+    "isActiveOrganizerActivity",
+    "payCallback",
+    "refundCallback",
+    "callbackResponse"
+  ],
+  "originalHttpMappingsPreserved": true,
+  "sharedCoopReadBridgeApplied": false,
+  "fixtureResults": [
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationListStatusNullTest.java",
+      "httpCallsRewired": 2,
+      "leafInjectionsMoved": 4,
+      "testDeclarations": 2,
+      "originalAssertionLinesSha256": "e78839819a8875eaf7287ff829425c99b0eaa86c47befa11afc722f0083744f5",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationJoinInfoTest.java",
+      "httpCallsRewired": 2,
+      "leafInjectionsMoved": 1,
+      "testDeclarations": 1,
+      "originalAssertionLinesSha256": "bc282a3086784740922f64c2efc7ff004bdd70573e52a73bb347e3cc78cf27ea",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCountByDateAccessTest.java",
+      "httpCallsRewired": 4,
+      "leafInjectionsMoved": 6,
+      "testDeclarations": 4,
+      "originalAssertionLinesSha256": "1c7e892606a9c52c055ea5fc4c6c30337dd8e80a88938c87aa2edf1c61f22d28",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationRefundProjectionTest.java",
+      "httpCallsRewired": 8,
+      "leafInjectionsMoved": 9,
+      "testDeclarations": 13,
+      "originalAssertionLinesSha256": "e5ddcbf626a22cff694a42270a98159a26b46e80e601a1598f1807dbd6a2270a",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationListTopicModeTest.java",
+      "httpCallsRewired": 1,
+      "leafInjectionsMoved": 5,
+      "testDeclarations": 3,
+      "originalAssertionLinesSha256": "d3c7fd7edbb3c6eb804dd98df80e109ba38e38fd8677c110104a104ece34270b",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTemplateSecretsGateTest.java",
+      "httpCallsRewired": 1,
+      "leafInjectionsMoved": 7,
+      "testDeclarations": 35,
+      "originalAssertionLinesSha256": "4ff0ff12eadbe1d0131a2974fa5f69f774bb0e7aee58e6f310b95262733ed8c7",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreInfoEntitlementsTest.java",
+      "httpCallsRewired": 4,
+      "leafInjectionsMoved": 4,
+      "testDeclarations": 4,
+      "originalAssertionLinesSha256": "c4dd9e8ea0e2a2a441f9f9abcc33ca91554596dbfaa9591d7dbee5b9a535279e",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RefundManualReviewAlertTest.java",
+      "httpCallsRewired": 1,
+      "leafInjectionsMoved": 3,
+      "testDeclarations": 1,
+      "originalAssertionLinesSha256": "2ee411d3513480f501770a11c4ae87394d06c6e89a1fb4a916ccd186b07f8ac5",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationHideEndedTest.java",
+      "httpCallsRewired": 3,
+      "leafInjectionsMoved": 15,
+      "testDeclarations": 9,
+      "originalAssertionLinesSha256": "5d3b06d1d7f3bbff604efe0e6b67d741ad1461346f4dd9cd3c019acad9846740",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationOwnerScopeTest.java",
+      "httpCallsRewired": 4,
+      "leafInjectionsMoved": 4,
+      "testDeclarations": 4,
+      "originalAssertionLinesSha256": "61799eaccb8d440e109a4a8a741c8337d5ac3ee48f6aa86ae9b2e1906aeefbf7",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationInfoDisplayEnrichTest.java",
+      "httpCallsRewired": 4,
+      "leafInjectionsMoved": 5,
+      "testDeclarations": 4,
+      "originalAssertionLinesSha256": "278b3597e0c292a2475af3ffc75ef4ada9f337669c0ff512cc209453bb2a359f",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationFirstScanReadTest.java",
+      "httpCallsRewired": 5,
+      "leafInjectionsMoved": 7,
+      "testDeclarations": 4,
+      "originalAssertionLinesSha256": "db05aa314c215518e4a8762d0f3c5600525febf4a1a11c410596a1eaee1c6f7f",
+      "assertionsAndCleanupPreserved": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ComplaintPickerOwnerType3RealDbIT.java",
+      "httpCallsRewired": 2,
+      "leafInjectionsMoved": 5,
+      "testDeclarations": 6,
+      "originalAssertionLinesSha256": "5676bdf0c1794c5ed487d53cf533953b888db76cb10ad828e1d785a3ab184310",
+      "assertionsAndCleanupPreserved": true
+    }
+  ],
+  "testDeclarationsPreserved": 90,
+  "newJavaCasesNotRun": 6,
+  "reviewPatchesApplyCheck": true
+}

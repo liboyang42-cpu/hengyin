@@ -1,0 +1,67 @@
+[
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationListStatusNullTest.java",
+    "httpCallsRewired": 2,
+    "leafInjectionsMoved": 4
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationJoinInfoTest.java",
+    "httpCallsRewired": 2,
+    "leafInjectionsMoved": 1
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCountByDateAccessTest.java",
+    "httpCallsRewired": 4,
+    "leafInjectionsMoved": 6
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationRefundProjectionTest.java",
+    "httpCallsRewired": 8,
+    "leafInjectionsMoved": 9
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationListTopicModeTest.java",
+    "httpCallsRewired": 1,
+    "leafInjectionsMoved": 5
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTemplateSecretsGateTest.java",
+    "httpCallsRewired": 1,
+    "leafInjectionsMoved": 7
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreInfoEntitlementsTest.java",
+    "httpCallsRewired": 4,
+    "leafInjectionsMoved": 4
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RefundManualReviewAlertTest.java",
+    "httpCallsRewired": 1,
+    "leafInjectionsMoved": 3
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationHideEndedTest.java",
+    "httpCallsRewired": 3,
+    "leafInjectionsMoved": 15
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationOwnerScopeTest.java",
+    "httpCallsRewired": 4,
+    "leafInjectionsMoved": 4
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationInfoDisplayEnrichTest.java",
+    "httpCallsRewired": 4,
+    "leafInjectionsMoved": 5
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationFirstScanReadTest.java",
+    "httpCallsRewired": 5,
+    "leafInjectionsMoved": 7
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ComplaintPickerOwnerType3RealDbIT.java",
+    "httpCallsRewired": 2,
+    "leafInjectionsMoved": 5
+  }
+]

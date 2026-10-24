@@ -1,0 +1,114 @@
+{
+  "/api/registration/info": [
+    {
+      "file": "chengyinhub-xcx/components/cy/scene-route-content/index.js",
+      "line": 82,
+      "statement": "'member-order-detail': { url: '/api/registration/info', data: { id }, requiresId: true, detail: true },"
+    },
+    {
+      "file": "chengyinhub-xcx/utils/checkout/registration-payment-verifier.js",
+      "line": 17,
+      "statement": "url: '/api/registration/info',"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/signup/index.js",
+      "line": 173,
+      "statement": "url: '/api/registration/info', method: 'POST', hideLoading: true,"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js",
+      "line": 250,
+      "statement": "url: '/api/registration/info',"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js",
+      "line": 287,
+      "statement": "// 准备显示数据：字段真源 = /api/registration/info 回包(CmsRegistration + cmsTopic/cmsActivity)。"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-detail/index.js",
+      "line": 834,
+      "statement": "url: '/api/registration/info',"
+    }
+  ],
+  "/api/registration/explore-completion": [
+    {
+      "file": "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-detail/index.js",
+      "line": 708,
+      "statement": "url: '/api/registration/explore-completion',"
+    }
+  ],
+  "/api/registration/join_info": [
+    {
+      "file": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+      "line": 1267,
+      "statement": "return req('/api/registration/join_info', { member_id: app.getUserID() }).then(function (res) {"
+    }
+  ],
+  "/api/registration/count_by_date": [
+    {
+      "file": "chengyinhub-xcx/pages/club/topic-detail/index.js",
+      "line": 934,
+      "statement": "url: '/api/registration/count_by_date', method: 'POST',"
+    }
+  ],
+  "/api/registration/list": [
+    {
+      "file": "chengyinhub-xcx/components/cy/scene-route-content/index.js",
+      "line": 81,
+      "statement": "'member-order-history': { url: '/api/registration/list', data: { pageNum: 1, pageSize: app.getPageSize ? app.getPageSize() : 20, owner_type: 3, status: '0' } },"
+    },
+    {
+      "file": "chengyinhub-xcx/components/cy/scene-route-content/index.js",
+      "line": 87,
+      "statement": "'settings-feedback': { url: '/api/registration/list', data: { pageNum: 1, pageSize: app.getPageSize ? app.getPageSize() : 20, owner_type: 3, status: '0' }, formType: 'feedback' },"
+    },
+    {
+      "file": "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js",
+      "line": 471,
+      "statement": "url: '/api/registration/list',"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/complaint/index.js",
+      "line": 158,
+      "statement": "// 2026-08-18 换掉了原来的 /api/registration/list?owner_type=3:真库实测坐实它有两个缺陷 ——"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/signup/index.js",
+      "line": 398,
+      "statement": "url: '/api/registration/list',"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/signup/index.js",
+      "line": 465,
+      "statement": "url: '/api/registration/list',"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js",
+      "line": 1393,
+      "statement": "return req('/api/registration/list', {"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-history/index.js",
+      "line": 185,
+      "statement": "url: '/api/registration/list',"
+    }
+  ],
+  "/api/registration/my-joined": [
+    {
+      "file": "chengyinhub-xcx/pages/index/index.js",
+      "line": 1067,
+      "statement": "url: '/api/registration/my-joined',"
+    },
+    {
+      "file": "chengyinhub-xcx/pages/club/detail/index.js",
+      "line": 1899,
+      "statement": "url: '/api/registration/my-joined', method: 'POST',"
+    },
+    {
+      "file": "chengyinhub-xcx/subpackageMember/mycanyu/mycanyu.js",
+      "line": 171,
+      "statement": "url: '/api/registration/my-joined',"
+    }
+  ]
+}

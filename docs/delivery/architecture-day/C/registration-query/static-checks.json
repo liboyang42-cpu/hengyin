@@ -1,0 +1,25 @@
+{
+  "javaLexicalDelimiterOnly": [
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/RegistrationQueryApplication.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ComplaintPickerOwnerType3RealDbIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCountByDateAccessTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationFirstScanReadTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationHideEndedTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationJoinInfoTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationListStatusNullTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationListTopicModeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationOwnerScopeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationRefundProjectionTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTemplateSecretsGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreInfoEntitlementsTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RefundManualReviewAlertTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationInfoDisplayEnrichTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationQueryTestFixtures.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/registration/RegistrationQueryApplicationTest.java"
+  ],
+  "javaCompiled": false,
+  "javaTestsExecuted": false,
+  "mysqlExecuted": false,
+  "ciDispatched": false
+}

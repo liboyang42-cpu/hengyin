@@ -1,0 +1,30 @@
+[
+  {
+    "file": "registration-query-application-source.test.js",
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "bl98-registration-trend.test.js",
+    "tests": 4,
+    "pass": 4,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "orderinfo-load-state.test.js",
+    "tests": 46,
+    "pass": 46,
+    "fail": 0,
+    "skipped": 0
+  },
+  {
+    "file": "order-expired-rebuild-contract.test.js",
+    "tests": 19,
+    "pass": 19,
+    "fail": 0,
+    "skipped": 0
+  }
+]

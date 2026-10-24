@@ -65,13 +65,13 @@ class ExploreInfoEntitlementsTest {
 
         controller = spy(new ApiRegistrationController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", regSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", regSvc);
         // ⚠️ controller 里有**两个** ICmsActivityService 字段:activityService(:65)与 cmsActivityService(:94)。
         //    /info 用的是前者。注错那个 ⇒ 字段为 null ⇒ NPE ⇒ 被 /info 的 catch 吞成 AjaxResult.error
         //    ⇒ 测试看到的是 data=null 而不是异常栈,排查起来像"断言写错了"。这里踩过。
-        ReflectionTestUtils.setField(controller, "activityService", activitySvc);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkSvc);
-        ReflectionTestUtils.setField(controller, "refundService", refundSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activitySvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "perkLedgerService", perkSvc);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundSvc);
         when(refundSvc.selectRefundList(any(RefundApplication.class))).thenReturn(Collections.emptyList());
 
         CmsActivity act = new CmsActivity();
@@ -104,7 +104,7 @@ class ExploreInfoEntitlementsTest {
         List<RegistrationEntitlement> ents = Arrays.asList(ent(101L, 1), ent(102L, 0));
         when(perkSvc.listEntitlements(REG)).thenReturn(ents);
 
-        AjaxResult r = controller.getRegistrationDetail(String.valueOf(REG));
+        AjaxResult r = RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG));
 
         CmsRegistration data = (CmsRegistration) r.get("data");
         assertNotNull(data.getEntitlements(), "③ 票必须带权益清单");
@@ -122,7 +122,7 @@ class ExploreInfoEntitlementsTest {
     void guidedActivityTicket_doesNotQueryLedger() {
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(reg(PurchaseKind.GUIDED_TICKET));
 
-        AjaxResult r = controller.getRegistrationDetail(String.valueOf(REG));
+        AjaxResult r = RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG));
 
         CmsRegistration data = (CmsRegistration) r.get("data");
         assertNull(data.getEntitlements(), "① 没有权益概念,该字段应保持 null 而不是空表");
@@ -134,7 +134,7 @@ class ExploreInfoEntitlementsTest {
     void nullPurchaseKind_doesNotQueryLedger() {
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(reg(null));
 
-        controller.getRegistrationDetail(String.valueOf(REG));
+        RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG));
 
         verify(perkSvc, never()).listEntitlements(anyLong());
     }
@@ -151,7 +151,7 @@ class ExploreInfoEntitlementsTest {
         someoneElse.setMemberId(999L);
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(someoneElse);
 
-        AjaxResult r = controller.getRegistrationDetail(String.valueOf(REG));
+        AjaxResult r = RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG));
 
         assertEquals("无权查看该报名信息", r.get("msg"));
         verify(perkSvc, never()).listEntitlements(anyLong());
