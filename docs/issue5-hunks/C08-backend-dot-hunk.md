@@ -100,3 +100,21 @@ BUILD SUCCESS
 ```
 
 IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 18:50 America/Los_Angeles
+
+HEAD `50f88a638` tests. Class-level occupancy on `ChannelGovernanceProjectionTest`: unused cataloged `leave()` throws ROLE_REQUIRED without occupying LEFT (phase stays CATALOGED, grant null); unique `leave()` after authorize is the first LEFT write. Did not invent `recoverOriginal`. Vote-read and appeal occupancy remain.
+
+Parent surefire `com.chengyinhub.business.service.channel.*Test` **18/0** 2026-10-24T01:50:20Z：
+
+```
+Tests run: 5 -- ChannelGovernanceProjectionTest
+Tests run: 4 -- C08AccountSwitchRestartIsolationTest
+Tests run: 3 -- ChannelRevokeIsolationTest
+Tests run: 4 -- C08FirstJourneyIsolationTest
+Tests run: 2 -- FriendPermissionDistinctFromChannelTest
+Tests run: 18, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
