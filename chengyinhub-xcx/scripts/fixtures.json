@@ -5742,17 +5742,6 @@
    "navigationError"
   ]
  },
- "B46": {
-  "data": {
-   "validationError": "",
-   "navigationError": ""
-  },
-  "dropped": [],
-  "switchKeys": [
-   "validationError",
-   "navigationError"
-  ]
- },
  "B48": {
   "data": {
    "editorPage": 1,
@@ -14282,20 +14271,6 @@
    "cards",
    "cardsLoading",
    "cardsError",
-   "navigationError"
-  ]
- },
- "E21": {
-  "data": {
-   "id": 11,
-   "templateName": "老建筑年份线索",
-   "canSubmit": true,
-   "validationError": "",
-   "navigationError": ""
-  },
-  "dropped": [],
-  "switchKeys": [
-   "validationError",
    "navigationError"
   ]
  },

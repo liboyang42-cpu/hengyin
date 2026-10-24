@@ -68,7 +68,7 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageP3/pages/stamp-album/index/index', 'subpackageB/pages/im/list/index',
   'subpackageB/pages/im/chat/index', 'pages/publish/simple/index', 'pages/publish/temp/index',
   'pages/publish/activity/index',
-  'pages/publish/templateadd/templateadd', 'pages/publish/template-intro/index',
+  'pages/publish/template-intro/index', // 2026-10-23 templateadd 退役删除
   'pages/club/create/index', 'pages/club/detail/index', 'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/join-requests/index',
   'pages/club/topic-detail/index',
   'pages/club/topic-story/index',
@@ -142,7 +142,6 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageP3/pages/growthcenter/index/index',
   'subpackageP3/pages/growthcenter/leaderboard/index', 'subpackageP3/pages/stamp-album/index/index',
   'pages/publish/activity/index',
-  'pages/publish/templateadd/templateadd',
   'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/group-code/index', 'pages/club/join-requests/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
   'pages/club/badges/index', // 2026-10-15 CL3 俱乐部勋章页:cy-nav-bar + cy-page-title 标准二级页
   'pages/topic/pricing/index',
@@ -284,8 +283,9 @@ function assertTitleInventory(readSource = read) {
   /* 2026-10-19 +2:移植共享基线官方线路列表/详情(custom 导航 + cy-nav-bar + cy-page-title 二级页)⇒ 136+2 = 138;custom 同步 138。 */
   // 两线新增页面不重叠：本线145 + 官方线路列表/详情2 = 147。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测) ⇒ 145。
-  assert.equal(rows.length, 145, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 145)
+  // 2026-10-23 起名页 templateadd 退役删除(custom 导航页) ⇒ 145 → 144。
+  assert.equal(rows.length, 144, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 144)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

@@ -77,8 +77,8 @@ const LAYOUT_ANIMATION_CEILING = 12 // 2026-10-22 v13 票夹换成卡堆,旧 swi
 //   「前一个值」,transition 不播;它每次打开页面最多播一次,不属于会被快速重触发的元素。
 // 2026-10-22 147 → 148:owner「简单必要的动效」—— 帖文卡点亮时心形弹一下(post-card 是隔离样式组件,
 //   全站关键帧进不来,只能本地一条 pc-like-pop)。只在「未赞 → 赞」那一下播,进页已赞的不播。
-// 2026-10-23 148 → 147:弹层动效统一 —— cy-scene-sheet 的 ss-up 关键帧换成 transition(_in 开关),顺带补上退场。
-const KEYFRAMES_CEILING = 147
+// 2026-10-23 148 → 146:起名页 templateadd 整页删除带走 1 条(#565);弹层动效统一,cy-scene-sheet 的 ss-up 换成 transition(_in 开关)、顺带补上退场,再减 1。
+const KEYFRAMES_CEILING = 146
 
 /* 逐条豁免。**不是预算额度** —— 想加一组就得在这里写清楚为什么它不属于本门禁要防的场景,
    由 review 逐条看,而不是把上限往上抬一格了事。抬上限会让棘轮退化成台账:

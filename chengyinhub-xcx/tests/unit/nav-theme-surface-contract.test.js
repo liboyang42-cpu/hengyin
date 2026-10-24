@@ -248,7 +248,7 @@ test('负控:顶栏 token 退回 ② 旧名别名必须判红', () => {
 // 上面第 2 段只遍历【系统导航】页,navigationStyle:"custom" 的页从一开始就被 collectNativeNavPages 滤掉了。
 // 但 custom 关掉的是【标题栏】,状态栏(时间/信号/电量)那 44px 仍由 json 的
 // navigationBarTextStyle 决定,而它下面的底正是页面自己画的第一屏。
-// 创建域三页(templateadd / fabu / template-intro)根节点恒挂 .theme-topic-editor
+// 创建域页(fabu / temp;原起名页 templateadd 已于 2026-10-23 退役删除)根节点恒挂 .theme-topic-editor
 // (页底 #F3F4F4),却留着全局暗色带的 "white" ⇒ 白字压浅底只剩 1.06:1,
 // 状态栏时间和信号在屏幕上等于不存在(2026-09-24 走查 CU-M-158 / CU-C-151 两条实拍同一病)。
 // 判据要【black】而不是"别写 white":app.json window 全局就是 navigationBarTextStyle:"white",
@@ -313,7 +313,8 @@ test('恒浅色正文的自定义导航页,状态栏必须是深色字', () => {
 })
 
 test('负控:把创建节点玩法页状态栏改回 white 必须判红', () => {
-  const route = 'pages/publish/templateadd/templateadd'
+  // 2026-10-23 起名页 templateadd 退役删除,负控改钉同为恒浅 theme-topic-editor 的发布页 fabu
+  const route = 'pages/publish/fabu/index'
   const mutated = JSON.stringify({ ...JSON.parse(read(`${route}.json`)), navigationBarTextStyle: 'white' })
   assert.throws(
     () => assertCustomNavStatusColor(route, mutated),
@@ -323,12 +324,12 @@ test('负控:把创建节点玩法页状态栏改回 white 必须判红', () => 
 })
 
 test('负控:身份翻转页(根 class 可翻到 theme-dark)必须放行,而不是把判据拖成恒绿', () => {
-  // 反向变异:templateadd 的根 class 改成 {{isMerchant ? ... : 'theme-dark'}} 后,
+  // 反向变异:fabu(原 templateadd,已退役)的根 class 改成 {{isMerchant ? ... : 'theme-dark'}} 后,
   // 本条契约应当【放行】它 —— 放行是因为它落进"得走运行时 setNavigationBarColor"的另一格,
   // 不是因为 rootIsUnconditionallyLight 恒返回 false(那会让整条门禁假绿)。
-  const route = 'pages/publish/templateadd/templateadd'
+  const route = 'pages/publish/fabu/index'
   const original = read(`${route}.wxml`)
-  const flipped = original.replace(/<view class="theme-topic-editor/, `<view class="{{isMerchant ? 'theme-topic-editor' : 'theme-dark'}}`)
+  const flipped = original.replace(/<view class="fabu slopes theme-topic-editor/, `<view class="fabu slopes {{isMerchant ? 'theme-topic-editor' : 'theme-dark'}}`)
   assert.notEqual(flipped, original, '变异锚点漂了，负控本身是假的')
   assert.equal(rootIsUnconditionallyLight(flipped), false, '身份翻转页必须被排除在本条射程之外')
   // 排除确实生效:同一份 white config 在恒浅下判红、在翻转下放行。
