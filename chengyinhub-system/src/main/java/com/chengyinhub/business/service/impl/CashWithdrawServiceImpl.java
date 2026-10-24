@@ -522,7 +522,13 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         claim.setFinishTime(DateUtils.getNowDate()); claim.setAuditBy(0L);
         claim.setAuditTime(DateUtils.getNowDate());
         if (mapper.updateStatusIfRefundReview(claim) != 1) return false;
-        umsMemberService.addBalance(w.getMemberId(), intent.amountYuan());
+        try {
+            umsMemberService.addBalance(w.getMemberId(), intent.amountYuan());
+        } catch (RuntimeException failure) {
+            logger.error("人工回补事务失败并回滚 id={}", id, failure);
+            alarmService.alarm("提现待人工", "人工回补失败，保留待复核 id=" + id);
+            throw failure;
+        }
         return true;
     }
 
