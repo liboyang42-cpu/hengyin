@@ -64,3 +64,21 @@ BUILD SUCCESS
 ```
 
 IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 18:43 America/Los_Angeles
+
+HEAD `b2f6c58d8` tests. Class-level occupancy on `ChannelRevokeIsolationTest`: unused in-membership `HISTORICAL_VOTE_READ` does not occupy leave (phase stays `AUTHORIZED_READ_WRITE`, grant still present); unique `leave()` is the first LEFT write. Post-leave historical vote read of the old lease stays ALLOWED. Did not invent `recoverOriginal`.
+
+Parent surefire `com.chengyinhub.business.service.channel.*Test` **16/0** 2026-10-24T01:43:23Z：
+
+```
+Tests run: 3 -- ChannelGovernanceProjectionTest
+Tests run: 4 -- C08AccountSwitchRestartIsolationTest
+Tests run: 3 -- ChannelRevokeIsolationTest
+Tests run: 4 -- C08FirstJourneyIsolationTest
+Tests run: 2 -- FriendPermissionDistinctFromChannelTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
