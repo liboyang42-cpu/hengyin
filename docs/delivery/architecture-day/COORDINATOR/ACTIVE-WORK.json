@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T16:58:00Z",
+  "updated_utc": "2026-10-24T17:07:00Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -9,15 +9,16 @@
   "mode": "Fixed payment/refund/settlement integration batch; finish current other slices then queue; grouped regression after callers and fixtures close",
   "current_worker_assignments": {
     "A": {
-      "state": "active",
-      "task": "Implement three existing cancellation/publish fixture adaptations reassigned from E; no interim review or tests",
+      "state": "delivered_integrated_pending_final_validation",
+      "task": "Assigned fixture and caller closure delivered and applied; no interim review or tests",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
       "exclusive_files": [
         "ActivityCancelTest.java",
         "HostWeatherCancelTest.java",
         "ActivityPublishRoleGateTest.java"
-      ]
+      ],
+      "delivery": "Complete three-file diff based on 8490765f, received in cloud turn 01a16ed8-5796-748a-bb71-0c16ebb68105"
     },
     "B": {
       "state": "delivered_waiting_ci",
@@ -56,13 +57,14 @@
       "host_id": "durable"
     },
     "G": {
-      "state": "active",
-      "task": "Implement existing MerchantCommerce callback fixture task reassigned from E; no interim review or tests",
+      "state": "delivered_integrated_pending_final_validation",
+      "task": "Assigned fixture and caller closure delivered and applied; no interim review or tests",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
       "exclusive_files": [
         "MerchantCommerceServiceTest.java"
-      ]
+      ],
+      "delivery_sha": "af0ed9086625f87e6ccdc1282d870358dc322ee0"
     },
     "H": {
       "state": "delivered_integrated_pending_final_validation",
@@ -477,7 +479,7 @@
   "pending_business_questions": [
     "ASR: same NPC quota reserved before first ASR then handed to text once, or separate ASR budget. User reply pending; do not select budget/charges automatically."
   ],
-  "current_working_tree": "H exact U5 patch applied; only implementation integration and delivery-policy changes; no new audit/regression",
+  "current_working_tree": "H recovery registration and A/G four assigned fixture/caller adaptations integrated; E action-ledger implementation pending; no new audit or regression",
   "new_source_blockers_current": [
     "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
   ],
@@ -491,5 +493,13 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: synchronized latest human policy to all eight existing threads, updated existing coordinator heartbeat and cancelled queued intermediate CI; development goal remains active"
+  "previous_goal_turn_classification": "PROGRESS: applied complete A three-file and G commerce one-file deliveries; no interim review, test or CI executed",
+  "latest_fixture_integration": {
+    "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
+    "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
+    "G": "af0ed9086625f87e6ccdc1282d870358dc322ee0: complete original commerce order readback fixture",
+    "files": 4,
+    "validation": "NOT_RUN; defer to final consolidated review and regression",
+    "production_changed": false
+  }
 }

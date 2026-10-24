@@ -305,6 +305,7 @@ class ActivityCancelTest {
         owner.setMemberId(OWNER_ID);
         owner.setDelFlag(0);
         when(clubs.selectClubById(7L)).thenReturn(owner);
+        when(clubs.selectClubByIdForUpdate(7L)).thenReturn(owner);
         ReflectionTestUtils.setField(s, "clubMapper", clubs);
         s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因");
         verify(imService, never()).sendSystem(anyLong(), any(), anyString(), anyString());

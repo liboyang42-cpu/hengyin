@@ -273,18 +273,31 @@ class HostWeatherCancelTest {
         activity(SHELL, null, OWNER).setClubId(5L);          // 不挂主题的俱乐部系列场次
         paid(1L, 2L, ACTIVITY, 0);
         paid(2L, 2L, SHELL, 0);
+        var clubs = mock(com.chengyinhub.business.mapper.ClubMapper.class);
+        var club = new com.chengyinhub.business.domain.Club();
+        club.setId(5L);
+        club.setMemberId(OWNER);
+        club.setDelFlag(0);
+        when(clubs.selectClubByIdForUpdate(5L)).thenReturn(club);
+        ReflectionTestUtils.setField(service, "clubMapper", clubs);
 
+        // Preview remains read-only; cancellation now rechecks the current club
+        // owner under the original scope locks before rejecting merchant scope.
         for (Long id : Arrays.asList(ACTIVITY, SHELL)) {
-            ServiceException denied = assertThrows(ServiceException.class,
-                    () -> service.cancelActivityByMerchantHost(id, OWNER, STAFF, "暴雨预警"));
-            assertEquals(Integer.valueOf(403), denied.getCode());
             ServiceException previewDenied = assertThrows(ServiceException.class,
                     () -> service.countPaidPlayersForMerchantActivityCancel(id, OWNER));
             assertEquals(Integer.valueOf(403), previewDenied.getCode());
         }
+        verify(activityMapper, never()).selectCmsActivityByIdForUpdate(anyLong());
+        for (Long id : Arrays.asList(ACTIVITY, SHELL)) {
+            ServiceException denied = assertThrows(ServiceException.class,
+                    () -> service.cancelActivityByMerchantHost(id, OWNER, STAFF, "暴雨预警"));
+            assertEquals(Integer.valueOf(403), denied.getCode());
+        }
         verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(activityMapper, never()).updateCmsActivity(any(CmsActivity.class));
-        verify(activityMapper, never()).selectCmsActivityByIdForUpdate(anyLong());
+        verify(activityMapper, times(2)).selectCmsActivityByIdForUpdate(anyLong());
+        verify(regMapper, never()).selectCancellationRowsForUpdate(anyLong(), anyLong());
     }
 
     /** 重复点:第一次已把活动置取消,第二次必须被拒,不能对已退的单再走一遍退款。 */
