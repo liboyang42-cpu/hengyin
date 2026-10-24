@@ -14,6 +14,9 @@ public interface BusinessAuditEventMapper {
 
     int insertBusinessAuditEvent(BusinessAuditEvent event);
 
+    /** Append the complaint notice rejection through this sole table owner; immutable replay is checked by the producer. */
+    int insertComplaintCloseNoticeRejectionIgnore(BusinessAuditEvent event);
+
     /** F15 操作员日频控:数「今天」的审计行(每次成功揭示恰好一条)。当天边界由库侧 curdate() 定。 */
     long countActorActionToday(@Param("actorMemberId") Long actorMemberId,
                                @Param("action") String action);

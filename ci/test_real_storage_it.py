@@ -84,7 +84,7 @@ class RegistryContractTest(unittest.TestCase):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT'
         self.assertEqual([fqcn], reg['batches']['architecture-day-payment-inbox']['classes'])
-        self.assertEqual(8, reg['classes'][fqcn]['tests'])
+        self.assertEqual(13, reg['classes'][fqcn]['tests'])
         self.assertEqual(['mysql'], reg['classes'][fqcn]['storage'])
         self.assertEqual({}, reg['classes'][fqcn]['gates'])
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
@@ -161,7 +161,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-authoring": 32,
                     "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4,
-                    "architecture-day-payment-inbox": 8,
+                    "architecture-day-payment-inbox": 13,
                     "architecture-day-verified-payment-facts": 4,
                     "architecture-day-registration-seats": 7,
                     "architecture-day-original-refund": 11,
@@ -169,12 +169,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-content-budget": 15,
                     "architecture-day-committed-official-notice": 13,
                     "architecture-day-complaint-committed-notice": 11,
-                    "architecture-day-complaint-notice-rejection": 6,
+                    "architecture-day-complaint-notice-rejection": 8,
                     "architecture-day-chapter-application-round": 10,
                     "architecture-day-citynode-original-receipt": 6,
-                    "architecture-day-registration-topic-fence": 35,
+                    "architecture-day-registration-topic-fence": 46,
                     "architecture-day-topic-cash-fence": 5,
-                    "architecture-day-scheduler-two-process": 3}
+                    "architecture-day-scheduler-two-process": 3,
+                    "architecture-day-cash-recovery": 10,
+                    "architecture-day-funds-closure": 189}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

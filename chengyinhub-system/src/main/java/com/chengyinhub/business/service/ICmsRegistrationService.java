@@ -274,9 +274,8 @@ public interface ICmsRegistrationService
      * ({@code TeamGroupServiceImpl.cancelActivityByOwner})都走这里。这两条路以前各写一份,
      * 积分回补(读改写 vs CAS)与权益失效原因已经漂移过;差异只允许通过下面三个参数表达。
      *
-     * <p><b>调用前提</b>:调用方必须先向微信确认该单未支付(查询为 NOTPAY/USERPAYING/PAYERROR 时
-     * 还须先关闭微信订单,或查询为 CLOSED/REVOKED,或 ORDER_NOT_EXIST 已过宽限);
-     * 查单失败/未知态一律不得调用本方法。
+     * <p><b>调用前提</b>:原关单观察通过 settleClosedPayingOne 的原订单锁、原 attempt 与持久成功事实守卫后
+     * 才执行此资源释放实现；NOT_FOUND、查单失败或未知态均不证明未执行。
      *
      * @param releaseReason {@code registration_entitlement.invalid_reason},取 EntitlementInvalidReason 常量
      * @param updateBy      积分回补 CAS 写进 update_by 的来源标识
@@ -285,6 +284,11 @@ public interface ICmsRegistrationService
      * @return true=本次关闭;false=竞态下已支付/已变化,跳过
      */
     public boolean settlePayingOne(Long registrationId, String releaseReason, String updateBy, int finalStatus);
+
+    /** Original CLOSED observation: topic/order current locks, exact attempt and durable-success guard
+     * must precede the existing close CAS and resource release in the same transaction. */
+    boolean settleClosedPayingOne(CmsRegistration observed, String observedWxOutTradeNo,
+                                 String releaseReason, String updateBy, int finalStatus);
 
     /**
      * 核销码补偿:已支付但核销码为空的报名单 id 列表(供定时任务扫描,近7天限批)。

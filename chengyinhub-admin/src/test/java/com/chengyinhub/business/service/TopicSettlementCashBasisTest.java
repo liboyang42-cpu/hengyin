@@ -50,6 +50,26 @@ class TopicSettlementCashBasisTest {
         paid.setPayableAmount(new BigDecimal("-0.01"));
         assertThrows(IllegalStateException.class, () -> TopicSettlementCashBasis.fromLockedRows(11L, List.of(paid)));
     }
+    @Test void paidUnverifiedHalfStateCannotCloseAsZeroAndRepairRestoresOriginalTenYuan() {
+        CmsRegistration half=row(71,7L,2,1,0,"10.00");
+        IllegalStateException error=assertThrows(IllegalStateException.class,()->TopicSettlementCashBasis.fromLockedRows(11L,List.of(half)));
+        assertEquals("MANUAL_REPAIR:PAID_REGISTRATION_HALF_STATE_UNRESOLVED:registrationId=71",error.getMessage());
+        assertEquals(2,half.getPaymentStatus());assertEquals(1,half.getRegistrationStatus());assertEquals(0,half.getVerificationStatus());
+        half.setRegistrationStatus(2); // Original-order repair is A's command, not an automatic action of this reader.
+        TopicSettlementCashBasis repaired=TopicSettlementCashBasis.fromLockedRows(11L,List.of(half));
+        assertEquals(new BigDecimal("10.00"),repaired.getTotalSales());assertEquals(0,repaired.getVerifiedHeads());
+    }
+    @Test void paidHalfStateIsCheckedBeforeVerificationAndAlongsideOtherPaidCash() {
+        CmsRegistration normal=row(72,8L,2,2,1,"90.00"),half=row(73,9L,2,1,0,"10.00");
+        assertTrue(assertThrows(IllegalStateException.class,()->TopicSettlementCashBasis.fromLockedRows(11L,List.of(normal,half)))
+                .getMessage().contains("PAID_REGISTRATION_HALF_STATE_UNRESOLVED"));
+        half.setVerificationStatus(1);
+        assertTrue(assertThrows(IllegalStateException.class,()->TopicSettlementCashBasis.fromLockedRows(11L,List.of(half)))
+                .getMessage().contains("PAID_REGISTRATION_HALF_STATE_UNRESOLVED"));
+        half.setPaymentStatus(1);
+        assertTrue(assertThrows(IllegalStateException.class,()->TopicSettlementCashBasis.fromLockedRows(11L,List.of(half)))
+                .getMessage().contains("PAYMENT_CONFIRMATION_UNRESOLVED"));
+    }
     private CmsRegistration row(long id, Long member, int payment, int registration, int verified, String amount) {
         CmsRegistration row = new CmsRegistration(); row.setId(id); row.setOwnerType(1L); row.setOwnerId(11L);
         row.setMemberId(member); row.setPaymentStatus(payment); row.setRegistrationStatus(registration);

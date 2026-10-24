@@ -57,6 +57,52 @@ public class WechatVerifiedPaymentFactService {
         return transaction.execute(status -> read.get());
     }
 
+    public Stored findPaymentSuccess(String mchid,String wxNo,String transactionId) {
+        return findSuccess(WechatVerifiedPaymentFact.Kind.PAYMENT,mchid,transactionId,wxNo);
+    }
+    public Stored findRefundSuccess(String mchid,String refundNo,String refundId) {
+        return findSuccess(WechatVerifiedPaymentFact.Kind.REFUND,mchid,refundId,refundNo);
+    }
+    private Stored findSuccess(WechatVerifiedPaymentFact.Kind kind,String mchid,String providerId,String eventNo) {
+        if (mchid==null || mchid.isBlank() || providerId==null || providerId.isBlank() || eventNo==null || eventNo.isBlank()) throw new IllegalArgumentException("Original success identity required");
+        return readFresh(() -> {
+            var rows=mapper.selectMatching(kind.name(),mchid,providerId,eventNo);
+            if (rows.isEmpty()) return null;
+            if (rows.size()!=1) throw new ConflictException();
+            Stored value=checked(rows.get(0)); var fact=value.facts();
+            if (fact.kind()!=kind || !mchid.equals(fact.mchid()) || !providerId.equals(fact.providerId())
+                    || !eventNo.equals(fact.merchantEventNo())) throw new ConflictException();
+            return value;
+        });
+    }
+    /** Evidence guard only: no local paid/refunded state is inferred or mutated. */
+    public boolean hasConfirmedExternalSuccess(String mchid,String businessNo) {
+        if (mchid==null || mchid.isBlank() || businessNo==null || businessNo.isBlank())
+            throw new IllegalArgumentException("Original merchant and business identity required");
+        return readFresh(() -> {
+            var rows=mapper.selectSuccessesByBusiness(businessNo);
+            for (var row:rows) {
+                var fact=checked(row).facts();
+                if (!mchid.equals(fact.mchid()) || !businessNo.equals(fact.businessOutTradeNo())) throw new ConflictException();
+            }
+            return !rows.isEmpty();
+        });
+    }
+
+    /** Denial-only guard for owners holding the original business row; never selects a replacement merchant. */
+    public boolean hasConfirmedExternalSuccess(String businessNo) {
+        if (businessNo==null || businessNo.isBlank())
+            throw new IllegalArgumentException("Original business identity required");
+        return readFresh(() -> {
+            var rows=mapper.selectSuccessesByBusiness(businessNo);
+            for (var row:rows) {
+                var fact=checked(row).facts();
+                if (!businessNo.equals(fact.businessOutTradeNo())) throw new ConflictException();
+            }
+            return !rows.isEmpty();
+        });
+    }
+
     /** Caller has already locked its inbox row. Linking never upgrades an old unbound receipt. */
     public void bindNewInbox(long inboxId, String notifyHash, Reference reference, boolean newInbox) {
         notifyHash=canonicalNotifyHash(notifyHash);

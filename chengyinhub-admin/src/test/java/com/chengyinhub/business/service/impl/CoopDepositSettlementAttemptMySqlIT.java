@@ -145,7 +145,7 @@ class CoopDepositSettlementAttemptMySqlIT {
         var order = inOrder(gateway);
         order.verify(gateway).queryOrderStatus(BUSINESS);
         order.verify(gateway).closePaymentAttempt(BUSINESS, BUSINESS);
-        order.verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, BUSINESS);
+        order.verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, BUSINESS);
         verify(gateway, never()).closeOrder(anyString());
     }
 
@@ -160,7 +160,7 @@ class CoopDepositSettlementAttemptMySqlIT {
         provider.setTradeType(Transaction.TradeTypeEnum.APP); provider.setTradeState(Transaction.TradeStateEnum.PAYERROR);
         assertTrue(resolve());
         verify(gateway).closePaymentAttempt(BUSINESS, next);
-        verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, next);
+        verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, next);
         assertEquals(5, mapper.selectCoopInviteById(89L).getDepositStatus());
         assertEquals(BUSINESS, mapper.selectCoopInviteById(89L).getDepositOutTradeNo());
         assertEquals(AMOUNT, mapper.selectCoopInviteById(89L).getDepositAmount());

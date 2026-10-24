@@ -43,7 +43,7 @@ class MerchantCommerceServiceTest {
         orderMapper = mock(OmsOrderMapper.class);
         settlementRuleService = mock(ISettlementRuleService.class);
         wechatPayService = mock(IWechatPayService.class);
-        when(wechatPayService.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
+        when(wechatPayService.lockClosablePaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         permissionService = mock(IUserPermissionService.class);
         service = new MerchantCommerceService(false);
         ReflectionTestUtils.setField(service, "subscriptionMapper", subscriptionMapper);
@@ -288,9 +288,9 @@ class MerchantCommerceServiceTest {
         when(orderMapper.selectOmsOrderByOrderSn("PROMOT_18")).thenReturn(order);
         when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(java.util.Map.of(
                 "out_trade_no", "PROMOT_18", "wx_out_trade_no", "old-wx-attempt", "trade_state", "CLOSED"));
-        when(wechatPayService.lockPaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt")).thenReturn(false);
+        when(wechatPayService.lockClosablePaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt")).thenReturn(false);
         service.reconcileOrder("PROMOT_18");
-        verify(wechatPayService).lockPaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt");
+        verify(wechatPayService).lockClosablePaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt");
         verify(orderMapper, never()).markCommerceOrderClosed(any());
         verify(subscriptionMapper, never()).grantMerchantSubscription(any());
     }
@@ -316,7 +316,7 @@ class MerchantCommerceServiceTest {
         verify(orderMapper, never()).markCommerceOrderClosed(any());
 
         org.mockito.Mockito.reset(wechatPayService);
-        when(wechatPayService.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
+        when(wechatPayService.lockClosablePaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(observed);
         when(wechatPayService.closePaymentAttempt("PROMOT_18", "PROMOT_18")).thenReturn(true);
         service.reconcileOrder("PROMOT_18");

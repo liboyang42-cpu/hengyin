@@ -1,0 +1,11 @@
+-- READ ONLY; source for review/operator lookup. NOT EXECUTED here. No amount repair or manual completion implied.
+SELECT o.id AS recovery_id,o.biz_id AS registration_id,o.state,o.money_affecting,
+       r.owner_type,r.owner_id,r.payment_status,r.registration_status,
+       f.id AS original_fact_id,f.fact_hash,f.business_out_trade_no,f.wx_out_trade_no,
+       f.transaction_id,f.total_fen,f.amount_fen,f.success_at
+FROM wx_payment_callback_outbox o
+JOIN wx_verified_payment_fact f
+  ON BINARY o.idempotency_key=BINARY CONCAT('COOP_PAID_HALF_LATE_SUCCESS:',f.id,':',f.fact_hash)
+LEFT JOIN cms_registration r ON r.id=o.biz_id AND BINARY r.registration_no=BINARY f.business_out_trade_no
+WHERE o.biz_type=1 AND o.state=4 AND o.money_affecting=1 AND f.fact_kind='PAYMENT'
+ORDER BY o.id;

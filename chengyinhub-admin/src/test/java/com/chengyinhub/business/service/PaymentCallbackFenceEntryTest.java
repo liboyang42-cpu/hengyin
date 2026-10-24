@@ -47,6 +47,7 @@ class PaymentCallbackFenceEntryTest
     private CmsRegistrationMapper registrations;
     private IWxPaymentCallbackInboxService inbox;
     private AlarmService alarm;
+    private IWechatPayService gateway;
     private CmsRegistration registration;
     private Map<String, String> payload;
 
@@ -60,8 +61,8 @@ class PaymentCallbackFenceEntryTest
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(service, "wxPaymentCallbackInboxService", inbox);
         ReflectionTestUtils.setField(service, "alarmService", alarm);
-        var gateway = mock(com.chengyinhub.business.service.WechatPaymentOperations.class);
-        when(gateway.lockPaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(true);
+        gateway = mock(IWechatPayService.class);
+        when(gateway.lockClosablePaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(true);
         var attempts = mock(org.springframework.beans.factory.ObjectProvider.class);
         when(attempts.getObject()).thenReturn(gateway);
         ReflectionTestUtils.setField(service, "paymentAttemptGateway", attempts);
@@ -149,6 +150,23 @@ class PaymentCallbackFenceEntryTest
         when(inbox.process(anyString(), any())).thenAnswer(call -> runMutation(call.getArgument(1), row(11L, "CLOSED")));
         assertEquals("FAIL", service.handleWechatPayCallback(payload));
         verify(registrations, never()).claimPaymentFailure(anyLong(), any());
+        verify(alarm).alarmThrottled(eq("payment.callback.registration"), anyString(),
+                contains("reason=payment_attempt_conflict"));
+    }
+
+    @Test
+    void matchingAttemptWithDurableSuccessCannotCloseOrReturnReservedPoints()
+    {
+        when(gateway.lockPaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(true);
+        when(gateway.lockClosablePaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(false);
+        when(inbox.process(anyString(), any())).thenAnswer(call -> runMutation(call.getArgument(1), row(11L, "CLOSED")));
+
+        assertEquals("FAIL", service.handleWechatPayCallback(payload));
+
+        verify(gateway).lockClosablePaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL");
+        verify(gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(registrations, never()).claimPaymentFailure(anyLong(), any());
+        verify(registrations, never()).claimPointsReturn(anyLong(), anyString(), any());
         verify(alarm).alarmThrottled(eq("payment.callback.registration"), anyString(),
                 contains("reason=payment_attempt_conflict"));
     }

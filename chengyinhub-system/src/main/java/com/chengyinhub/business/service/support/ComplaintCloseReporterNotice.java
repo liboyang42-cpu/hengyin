@@ -3,7 +3,7 @@ package com.chengyinhub.business.service.support;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.BusinessAuditEvent;
-import com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper;
+import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
 import com.chengyinhub.business.service.impl.AlarmService;
 import com.chengyinhub.common.exception.ServiceException;
 import org.slf4j.Logger;
@@ -27,11 +27,11 @@ public class ComplaintCloseReporterNotice {
     public static final String REJECTED = "REJECTED_INVALID_RECIPIENT";
     private static final Logger log = LoggerFactory.getLogger(ComplaintCloseReporterNotice.class);
     private final CommittedOfficialNoticeService notices;
-    private final CommittedNoticeRejectionMapper rejections;
+    private final BusinessAuditEventMapper rejections;
     private final AlarmService alarm;
     private final ScheduledExecutorService executor;
 
-    public ComplaintCloseReporterNotice(CommittedOfficialNoticeService notices, CommittedNoticeRejectionMapper rejections,
+    public ComplaintCloseReporterNotice(CommittedOfficialNoticeService notices, BusinessAuditEventMapper rejections,
             AlarmService alarm, @Qualifier("scheduledExecutorService") ScheduledExecutorService executor) {
         this.notices=notices; this.rejections=rejections; this.alarm=alarm; this.executor=executor;
     }
@@ -51,7 +51,7 @@ public class ComplaintCloseReporterNotice {
                 key,recipient,operatorId,title,body)));
         if (recipient!=null && recipient>0) {
             // Never turn a prior immutable rejection into a new recipient through an internal retry.
-            if (rejections.selectForUpdate(complaintId,key)!=null)
+            if (rejections.selectByDomainActionRequestForUpdate("PLATFORM",complaintId,"COMPLAINT_CLOSE_NOTICE_REJECTED",key)!=null)
                 throw new ServiceException("原关闭通知提交记录冲突，须人工核实",409);
             return new Submission(SUBMITTED,notices.enqueueOfficial(key,recipient,title,body));
         }
@@ -66,8 +66,8 @@ public class ComplaintCloseReporterNotice {
         event.setActorMemberId(knownOperator ? operatorId : 0L);
         event.setActorRoleCode(knownOperator ? "SYS_USER" : "UNKNOWN");
         event.setRequestId(key); event.setBeforeJson(before.toJSONString()); event.setAfterJson(after.toJSONString());
-        rejections.insertIgnore(event);
-        BusinessAuditEvent stored=rejections.selectForUpdate(complaintId,key);
+        rejections.insertComplaintCloseNoticeRejectionIgnore(event);
+        BusinessAuditEvent stored=rejections.selectByDomainActionRequestForUpdate("PLATFORM",complaintId,"COMPLAINT_CLOSE_NOTICE_REJECTED",key);
         verifyRejection(stored,event,key,hash,kind);
         Long auditId=stored.getId();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

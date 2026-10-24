@@ -204,7 +204,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
 
     private boolean closeObservedOrder(OmsOrder order, String observedWxOutTradeNo) {
         return Boolean.TRUE.equals(paymentTransaction().execute(status -> {
-            if (!wechatPayService.lockPaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
+            if (!wechatPayService.lockClosablePaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
             return orderMapper.markCommerceOrderClosed(order.getId()) == 1;
         }));
     }

@@ -20,7 +20,7 @@
         <result property="createTime" column="create_time"/>
     </resultMap>
 
-    <select id="selectByDomainActionRequestForUpdate" resultMap="BusinessAuditEventResult">
+    <select id="selectByDomainActionRequestForUpdate" resultMap="BusinessAuditEventResult" useCache="false" flushCache="true">
         select id, domain_type, domain_id, owner_member_id, actor_type, actor_member_id, actor_role_code,
                action, target_type, target_id, relation_id, before_json, after_json,
                reason, request_id, create_time
@@ -93,4 +93,13 @@
         order by id desc
         limit #{fetchLimit}
     </select>
+    <!-- Moved unchanged from the removed rejection namespace; this remains the sole table writer. -->
+    <insert id="insertComplaintCloseNoticeRejectionIgnore" parameterType="com.chengyinhub.business.domain.BusinessAuditEvent">
+        insert ignore into business_audit_event
+            (domain_type,domain_id,owner_member_id,actor_type,actor_member_id,actor_role_code,
+             action,target_type,target_id,before_json,after_json,reason,request_id,create_time)
+        values ('PLATFORM',#{domainId},0,#{actorType},#{actorMemberId},#{actorRoleCode},
+                'COMPLAINT_CLOSE_NOTICE_REJECTED','COOP_COMPLAINT',#{targetId},
+                #{beforeJson},#{afterJson},'INVALID_RECIPIENT',#{requestId},now())
+    </insert>
 </mapper>

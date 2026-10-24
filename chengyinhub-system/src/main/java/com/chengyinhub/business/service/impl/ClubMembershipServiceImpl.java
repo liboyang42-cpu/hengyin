@@ -1126,7 +1126,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                                                            ClubAccessContext access,
                                                            String requestId,
                                                            String wechatState, String observedWxNo) {
-        if (!wechatPayService.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
+        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
             throw new ServiceException("支付尝试已变化，未关闭当前账单", HttpStatus.CONFLICT);
         }
         if (invoice.getVersion() == null || clubMembershipMapper.markInvoiceClosedCas(

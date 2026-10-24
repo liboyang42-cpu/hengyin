@@ -344,7 +344,7 @@ class RefundNotificationMybatisIntegrationTest {
 
     private Map<String, String> facts(String status) {
         Map<String, String> facts = Map.of("outRefundNo", "RF11", "outTradeNo", "REG11", "status", status,
-                "refund", "1250", "total", "3000", "currency", "CNY");
+                "refund", "1250", "total", "3000", "currency", "CNY", "mchid", "merchant", "refundId", "WX-RF11");
         return "SUCCESS".equals(status) ? ARefundFactFixture.bindSuccess(factsReader, facts, "TX11") : facts;
     }
 

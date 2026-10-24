@@ -923,11 +923,10 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      * 两份分叉过一次 —— 积分回补一边 CAS 一边读改写、权益失效原因一边 REFUND 一边 ORGANIZER_CANCEL。
      */
     private void closeLocally(CmsRegistration r, Long actorMemberId, String observedWxNo) {
-        if (!wechatPayService.lockPaymentAttemptForUpdate(r.getRegistrationNo(), observedWxNo)) throw retryLater();
         // 权益失效原因:枚举 javadoc 把「主办方取消活动」明确列在 ORGANIZER_CANCEL 定义里,与
         // 对账任务真超时同值;registration_status 用 finalStatus=3(已取消)与对账任务的 4(已过期)区分,
         // 这才是玩家看到「已取消」还是「已过期」的真实依据。
-        if (!cmsRegistrationService.settlePayingOne(r.getId(), EntitlementInvalidReason.ORGANIZER_CANCEL,
+        if (!cmsRegistrationService.settleClosedPayingOne(r, observedWxNo, EntitlementInvalidReason.ORGANIZER_CANCEL,
                 "activity-cancel:" + actorMemberId, 3)) {
             throw retryLater();
         }

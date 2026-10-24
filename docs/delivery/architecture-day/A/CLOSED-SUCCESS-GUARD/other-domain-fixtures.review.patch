@@ -1,0 +1,66 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java
+@@ -113,5 +113,5 @@
+         members = mock(IUmsMemberService.class);
+         pay = mock(IWechatPayService.class);
+-        when(pay.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
++        when(pay.lockClosablePaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
+         audits = mock(BusinessAuditEventMapper.class);
+         transactions = mock(PlatformTransactionManager.class);
+@@ -203,5 +203,5 @@
+         observed.put("wx_out_trade_no", "old-wx-attempt");
+         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(observed);
+-        when(pay.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), "old-wx-attempt")).thenReturn(false);
++        when(pay.lockClosablePaymentAttemptForUpdate(invoice.getOutTradeNo(), "old-wx-attempt")).thenReturn(false);
+         assertThrows(ServiceException.class, () -> service.resumeInvoice(
+                 MEMBER, action(invoice.getId(), "resume-stale-attempt")));
+@@ -1493,5 +1493,5 @@
+         verify(mapper, never()).insertTerm(any());
+         verify(mapper, never()).insertRefundReview(any());
+-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
++        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
+         f.verifyOriginalCloseAndSuccessorQuery();
+     }
+@@ -1541,5 +1541,5 @@
+         verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
+         verify(mapper, never()).insertRefundReview(any());
+-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
++        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
+         f.verifyOriginalCloseAndSuccessorQuery();
+     }
+@@ -1557,7 +1557,7 @@
+         assertFalse(result.isRecoverable());
+         InOrder order = inOrder(f.gateway, mapper);
+-        order.verify(f.gateway).lockPaymentAttemptForUpdate(f.invoice.getOutTradeNo(), f.w2);
++        order.verify(f.gateway).lockClosablePaymentAttemptForUpdate(f.invoice.getOutTradeNo(), f.w2);
+         order.verify(mapper).markInvoiceClosedCas(eq(f.invoice.getId()), eq(2), any());
+-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), eq(f.w1));
++        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), eq(f.w1));
+         verify(mapper, never()).markInvoicePaidCas(any(), anyInt(), any(), any());
+         verify(mapper, never()).insertTerm(any());
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java
+@@ -44,5 +44,5 @@
+         settlementRuleService = mock(ISettlementRuleService.class);
+         wechatPayService = mock(IWechatPayService.class);
+-        when(wechatPayService.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
++        when(wechatPayService.lockClosablePaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
+         permissionService = mock(IUserPermissionService.class);
+         service = new MerchantCommerceService(false);
+@@ -289,7 +289,7 @@
+         when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(java.util.Map.of(
+                 "out_trade_no", "PROMOT_18", "wx_out_trade_no", "old-wx-attempt", "trade_state", "CLOSED"));
+-        when(wechatPayService.lockPaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt")).thenReturn(false);
++        when(wechatPayService.lockClosablePaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt")).thenReturn(false);
+         service.reconcileOrder("PROMOT_18");
+-        verify(wechatPayService).lockPaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt");
++        verify(wechatPayService).lockClosablePaymentAttemptForUpdate("PROMOT_18", "old-wx-attempt");
+         verify(orderMapper, never()).markCommerceOrderClosed(any());
+         verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+@@ -317,5 +317,5 @@
+
+         org.mockito.Mockito.reset(wechatPayService);
+-        when(wechatPayService.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
++        when(wechatPayService.lockClosablePaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
+         when(wechatPayService.queryOrderStatus("PROMOT_18")).thenReturn(observed);
+         when(wechatPayService.closePaymentAttempt("PROMOT_18", "PROMOT_18")).thenReturn(true);

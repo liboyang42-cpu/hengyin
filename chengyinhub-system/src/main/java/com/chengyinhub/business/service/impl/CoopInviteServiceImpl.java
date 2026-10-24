@@ -74,6 +74,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     private CoopInviteMapper coopInviteMapper;
 
     @Autowired private CoopDepositRefundService depositRefundService;
+    @Autowired private WechatPaymentIntentStore paymentIntentStore;
     @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
     private com.chengyinhub.business.service.WechatPaymentOperations wechatPayService;
 
@@ -1466,8 +1467,15 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         if (inv.getDepositStatus() == null || inv.getDepositStatus() != 5) {
             throw new IllegalStateException("当前没有待缴保证金");
         }
+        String originalNo = inv.getDepositOutTradeNo();
+        if (originalNo != null && !originalNo.isBlank()
+                && !paymentIntentStore.lockClosedPaymentAttemptForRetry(originalNo)) {
+            throw new IllegalStateException("原保证金支付身份、金额或关闭事实未确认，请恢复原业务结果");
+        }
         BigDecimal amount = inv.getDepositAmount() == null ? DEPOSIT_AMOUNT : inv.getDepositAmount();
-        String outTradeNo = "DEP" + inviteId + "T" + System.currentTimeMillis();
+        // The business identity is permanent; wx_pay_order_intent alone assigns a new provider alias after proven CLOSED.
+        String outTradeNo = originalNo != null && !originalNo.isBlank() ? originalNo
+                : "DEP" + inviteId + "T" + System.currentTimeMillis();
         if (coopInviteMapper.updateDeposit(inviteId, 1, outTradeNo, null, amount) != 1)
             throw new IllegalStateException("保证金支付状态写入失败");
         java.util.Map<String, Object> m = new HashMap<>();

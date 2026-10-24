@@ -44,13 +44,13 @@ class CoopDepositSettlementAttemptTest {
     void payerrorClosesExactObservedAttemptThenFencesBeforeUnpaidCas() {
         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("PAYERROR"));
         when(gateway.closePaymentAttempt(BUSINESS, ATTEMPT)).thenReturn(true);
-        when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+        when(gateway.lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
         when(mapper.updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT)).thenReturn(1);
         assertTrue(resolve());
         var order = inOrder(gateway, mapper);
         order.verify(gateway).queryOrderStatus(BUSINESS);
         order.verify(gateway).closePaymentAttempt(BUSINESS, ATTEMPT);
-        order.verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT);
+        order.verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT);
         order.verify(mapper).updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT);
         verify(gateway, never()).closeOrder(anyString());
         assertEquals(5, row.getDepositStatus());
@@ -60,11 +60,11 @@ class CoopDepositSettlementAttemptTest {
     @Test
     void closedObservationStillRequiresCurrentAttemptFence() {
         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("CLOSED"));
-        when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+        when(gateway.lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
         when(mapper.updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT)).thenReturn(1);
         assertTrue(resolve());
         var order = inOrder(gateway, mapper);
-        order.verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT);
+        order.verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT);
         order.verify(mapper).updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT);
         verify(gateway, never()).closePaymentAttempt(anyString(), anyString());
     }
@@ -77,7 +77,7 @@ class CoopDepositSettlementAttemptTest {
             unchanged();
         }
         verifyNoInteractions(mapper, invites);
-        verify(gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
     }
 
     @Test
@@ -111,7 +111,7 @@ class CoopDepositSettlementAttemptTest {
         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("CLOSED"));
         assertThrows(IllegalStateException.class, this::resolve);
         unchanged();
-        verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT);
+        verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT);
         verifyNoInteractions(mapper, invites);
     }
 
@@ -143,7 +143,7 @@ class CoopDepositSettlementAttemptTest {
     @Test
     void failedUnpaidCasDoesNotMutateInMemoryReceipt() {
         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("CLOSED"));
-        when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+        when(gateway.lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
         assertThrows(IllegalStateException.class, this::resolve);
         unchanged();
     }

@@ -11,6 +11,7 @@ public class WechatPaymentIntentStore {
     @Autowired private org.springframework.jdbc.core.JdbcTemplate paymentIntentJdbc;
     @Autowired private org.springframework.transaction.PlatformTransactionManager paymentIntentTransactions;
     @Autowired private WechatPaymentOrderOwner businessOwner;
+    @Autowired private WechatVerifiedPaymentFactService verifiedFacts;
 
     String freezePaymentIntent(String outTradeNo, String mchid, String appid, String tradeType,
                              String currency, Integer totalFen, String openid, String description, String notifyUrl, Runnable verifyHistoricalOrder) {
@@ -54,6 +55,8 @@ public class WechatPaymentIntentStore {
                 long expectedFen = business.cents() ? business.amount().longValueExact()
                         : business.amount().movePointRight(2).longValueExact();
                 if (expectedFen != totalFen.longValue()) throw new IllegalStateException("支付金额与业务冻结金额不符");
+                if (verifiedFacts.hasConfirmedExternalSuccess(mchid,outTradeNo))
+                    throw new IllegalStateException("微信成功事实已持久化，须恢复原业务结果，不能再次预下单或换渠道");
                 var active = paymentIntentJdbc.queryForList("SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? AND closed_confirmed_at IS NULL FOR UPDATE", bizType, bizId.longValue());
                 var previous = paymentIntentJdbc.queryForList("SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? ORDER BY attempt_no DESC LIMIT 1 FOR UPDATE", bizType, bizId.longValue());
                 int attempt;
@@ -128,11 +131,51 @@ public class WechatPaymentIntentStore {
         var transaction = new org.springframework.transaction.support.TransactionTemplate(paymentIntentTransactions);
         transaction.execute(status -> {
             businessOwner.lock(businessNo);
+            if (verifiedFacts.hasConfirmedExternalSuccess(mchid,businessNo))
+                throw new IllegalStateException("原业务已有微信成功事实，不得释放原支付身份");
             paymentIntentJdbc.update(
                     "UPDATE wx_pay_order_intent SET closed_confirmed_at=COALESCE(closed_confirmed_at,CURRENT_TIMESTAMP(6)) WHERE mchid=? AND out_trade_no=?",
                     mchid, wxNo);
             return null;
         });
+    }
+
+    boolean currentAttemptClosable(String businessNo,String observedWxNo,String mchid) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("关单SDK调用须在原业务事务外");
+        var transaction=new org.springframework.transaction.support.TransactionTemplate(paymentIntentTransactions);
+        return Boolean.TRUE.equals(transaction.execute(status -> lockClosablePaymentAttemptForUpdate(businessNo,observedWxNo,mchid)));
+    }
+
+    boolean lockClosablePaymentAttemptForUpdate(String businessNo,String observedWxNo,String mchid) {
+        return lockPaymentAttemptForUpdate(businessNo,observedWxNo,mchid)
+                && !verifiedFacts.hasConfirmedExternalSuccess(mchid,businessNo);
+    }
+
+    /** For an owner already holding its original business transaction; no SDK call or channel selection. */
+    boolean lockClosedPaymentAttemptForRetry(String businessNo) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("支付重试事实核验必须与原业务准备共用事务");
+        if (businessNo==null || businessNo.isBlank()) return false;
+        WechatPaymentOrderOwner.Snapshot business=businessOwner.lock(businessNo);
+        if (verifiedFacts.hasConfirmedExternalSuccess(businessNo)) return false;
+        var rows=paymentIntentJdbc.queryForList(
+                "SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? ORDER BY attempt_no DESC LIMIT 1 FOR UPDATE",
+                business.type(),business.id().longValue());
+        if (rows.size()!=1) return false;
+        var original=rows.get(0);
+        long expectedFen=business.cents()?business.amount().longValueExact():business.amount().movePointRight(2).longValueExact();
+        return businessNo.equals(original.get("business_out_trade_no"))
+                && business.type().equals(original.get("biz_type"))
+                && original.get("biz_id") instanceof Number id && id.longValue()==business.id().longValue()
+                && original.get("mchid") instanceof String merchant && !merchant.isBlank()
+                && original.get("out_trade_no") instanceof String wxNo && !wxNo.isBlank()
+                && original.get("closed_confirmed_at")!=null
+                && original.get("total_fen") instanceof Number total && expectedFen>0 && total.longValue()==expectedFen
+                && "CNY".equals(original.get("currency"))
+                && ("APP".equals(original.get("trade_type")) || "JSAPI".equals(original.get("trade_type")))
+                && original.get("appid") instanceof String appid && !appid.isBlank()
+                && original.get("request_hash") instanceof String hash && hash.matches("[0-9a-f]{64}");
     }
 
     boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo, String mchid) {

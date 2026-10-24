@@ -29,6 +29,10 @@ class VerifiedRegistrationReceiptGuardTest {
         payments = new CmsRegistrationServiceImpl(); refunds = new RefundServiceImpl();
         registrations = mock(CmsRegistrationMapper.class); applications = mock(RefundApplicationMapper.class);
         reader = mock(WechatVerifiedPaymentFactService.class); inbox = mock(IWxPaymentCallbackInboxService.class);
+        // Unit scope: preserve A's receipt/busy boundary; this is not G cash-guard evidence.
+        var paymentCashAdmission = mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class);
+        when(paymentCashAdmission.retainClosedPaidHalfStateSuccess(org.mockito.ArgumentMatchers.anyLong(), any())).thenReturn(true);
+        ReflectionTestUtils.setField(payments, "coopSettlementClaimService", paymentCashAdmission);
         CmsRegistration registration = new CmsRegistration(); registration.setId(1L); registration.setRegistrationNo("REG1");
         registration.setOwnerType(1L); registration.setOwnerId(7L); registration.setMemberId(11L);
         registration.setWechatPaymentAmount(new BigDecimal("30.00"));
@@ -93,6 +97,9 @@ class VerifiedRegistrationReceiptGuardTest {
         verify(inbox).processVerified(eq("PAY:TX1:SUCCESS"), eq(payment.reference()), any());
         verify(inbox, never()).register(anyString(), anyInt(), anyLong(), any());
         verify(registrations, never()).claimPaymentSuccess(anyLong(), anyString(), any());
+        verify((com.chengyinhub.business.service.ICoopSettlementClaimService)
+                ReflectionTestUtils.getField(payments, "coopSettlementClaimService"))
+                .retainClosedPaidHalfStateSuccess(1L, payment.reference());
     }
     @Test void inlineConfirmedPathAlsoRequiresTheRealReferenceBeforeAnyPaymentCas() {
         Map<String, String> map = paymentMap(); map.remove("verified_fact_hash");

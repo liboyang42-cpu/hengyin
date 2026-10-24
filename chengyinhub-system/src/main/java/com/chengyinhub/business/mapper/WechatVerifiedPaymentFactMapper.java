@@ -9,6 +9,7 @@ public interface WechatVerifiedPaymentFactMapper {
     int insertIgnore(Map<String,Object> fact);
     List<Map<String,Object>> selectMatching(@Param("kind") String kind, @Param("mchid") String mchid,
             @Param("providerId") String providerId, @Param("eventNo") String eventNo);
+    List<Map<String,Object>> selectSuccessesByBusiness(@Param("businessNo") String businessNo);
     Map<String,Object> selectById(@Param("id") long id);
     int insertRejection(Map<String,Object> rejection);
     int insertInboxLink(Map<String,Object> link);

@@ -1,7 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper;
+import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
 import com.chengyinhub.business.service.support.ComplaintCloseReporterNotice;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-/** Real complaint/financial/IM mappers and new audit adapter; no new production schema.
+/** Real complaint/financial/IM mappers and the existing audit owner; no new production schema.
  * Reuses controlled scratch and the two existing canonical audit schema statements.
  * Policy, security filters and real WX/alert webhooks are not exercised. */
 class ComplaintCloseReporterNoticeMySqlIT {
@@ -73,6 +73,33 @@ class ComplaintCloseReporterNoticeMySqlIT {
             assertEquals(0,h.notice.count("business_audit_event"));
             assertEquals(0,h.notice.count("im_notification_intent")); assertEquals(0,h.notice.count("committed_official_notice_wx"));
             assertTrue(h.notice.wakes.isEmpty()); verifyNoInteractions(r.alarm,h.notice.wx);
+        }
+    }
+
+    @Test void exactRejectedReplayReadsTheOriginalAuditIdentityWithoutAnotherRow() throws Exception {
+        try (var h=new CoopComplaintCommittedNoticeMySqlIT.Harness()) {
+            Reporter r=attach(h); h.db.update("update coop_complaint set reporter_member_id=null where id=1");
+            assertEquals(1,h.closeComplaint()); Long auditId=assertRejected(h,"MISSING");
+            Long operator=h.db.queryForObject("select actor_member_id from business_audit_event where id=?",Long.class,auditId);
+            var replay=h.notice.tx.execute(status -> r.owner.submitReporter(1L,null,operator,TITLE,BODY));
+            assertEquals(ComplaintCloseReporterNotice.REJECTED,replay.state());
+            assertEquals(auditId,replay.referenceId()); assertEquals(1,h.notice.count("business_audit_event"));
+            assertClosed(h);
+        }
+    }
+
+    @Test void auditSqlFailureStillRollsBackTheOriginalCloseInsteadOfClaimingARecordedRejection() throws Exception {
+        try (var h=new CoopComplaintCommittedNoticeMySqlIT.Harness()) {
+            Reporter r=attach(h); h.db.update("update coop_complaint set reporter_member_id=null where id=1");
+            // Controlled disposable scratch only: force the actual owner INSERT to fail at the database boundary.
+            h.db.execute("create trigger fixture_rejection_write_failure before insert on business_audit_event "
+                    + "for each row signal sqlstate '45000' set message_text='fixture audit write failed'");
+            assertThrows(RuntimeException.class,h::closeComplaint);
+            h.assertAdvance(0,"0.00",0);
+            assertEquals(new BigDecimal("100.00"),h.db.queryForObject("select balance from ums_member where id=200",BigDecimal.class));
+            assertEquals(0,h.notice.count("business_audit_event")); assertEquals(0,h.notice.count("im_notification_intent"));
+            assertEquals(0,h.notice.count("committed_official_notice_wx")); assertTrue(h.notice.wakes.isEmpty());
+            verifyNoInteractions(r.alarm,h.notice.wx);
         }
     }
 
@@ -138,8 +165,8 @@ class ComplaintCloseReporterNoticeMySqlIT {
         assertEquals("NO",h.db.queryForObject("select is_nullable from information_schema.columns "
                 +"where table_schema=database() and table_name='business_audit_event' and column_name='request_id'",String.class));
         SqlSessionFactoryBean factory=new SqlSessionFactoryBean(); factory.setDataSource(h.notice.manager.getDataSource());
-        factory.setMapperLocations(new ClassPathResource("mapper/business/CommittedNoticeRejectionMapper.xml"));
-        CommittedNoticeRejectionMapper mapper=new SqlSessionTemplate(factory.getObject()).getMapper(CommittedNoticeRejectionMapper.class);
+        factory.setMapperLocations(new ClassPathResource("mapper/business/BusinessAuditEventMapper.xml"));
+        BusinessAuditEventMapper mapper=new SqlSessionTemplate(factory.getObject()).getMapper(BusinessAuditEventMapper.class);
         AlarmService alarm=mock(AlarmService.class);
         ComplaintCloseReporterNotice target=new ComplaintCloseReporterNotice(h.notice.notice,mapper,alarm,h.notice.executor);
         ProxyFactory proxy=new ProxyFactory(target); proxy.setProxyTargetClass(true);

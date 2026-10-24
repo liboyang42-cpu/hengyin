@@ -87,6 +87,11 @@ public class WechatPayServiceImpl implements IWechatPayService {
     public boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo){ return gateway.lockPaymentAttemptForUpdate(businessOutTradeNo, observedWxOutTradeNo); }
 
     @Override
+    public boolean lockClosablePaymentAttemptForUpdate(String businessOutTradeNo,String observedWxOutTradeNo) {
+        return gateway.lockClosablePaymentAttemptForUpdate(businessOutTradeNo,observedWxOutTradeNo);
+    }
+
+    @Override
     public String handlePayCallback(String requestBody, Map<String, String> headers) {
         boolean verifiedNotification = false;
         String safeReference = "UNKNOWN";
@@ -155,7 +160,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
             safeRefundReference = notif.getOutRefundNo() != null
                     && notif.getOutRefundNo().matches("[A-Za-z0-9_-]{1,64}") ? notif.getOutRefundNo() : "UNKNOWN";
             Status st = notif.getRefundStatus();
-            Map<String,String> facts=gateway.queryRefundFacts(notif.getOutRefundNo());
+            Map<String,String> facts=gateway.verifiedRefundFacts(notif);
             if (!gateway.matchesRefundNotification(notif,facts)) {
                 gateway.recordRejectedRefundNotification(notif,facts);
                 alarmService.alarmThrottled("refund.callback.facts", "退款回调原单事实缺失或不符",

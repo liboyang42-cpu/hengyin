@@ -80,6 +80,8 @@ on:
           - architecture-day-topic-cash-fence
           - architecture-day-scheduler-two-process
           - architecture-day-payment-intent
+          - architecture-day-cash-recovery
+          - architecture-day-funds-closure
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
         required: false
@@ -178,6 +180,7 @@ jobs:
       WP04_TOPIC_CASH_DDL_APPROVED: ${{ matrix.simple == 'Wp04TopicCashFenceMySqlIT' && '1' || '' }}
       B_PAYMENT_FACT_DDL_APPROVED: ${{ matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' && '1' || '' }}
       WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalRefundMySqlIT' && '1' || '' }}
+      WP04_PAID_HALF_STATE_DDL_APPROVED: ${{ (matrix.simple == 'Wp04PaidHalfStateMySqlIT' || matrix.simple == 'Wp04ApprovedRefundFenceMySqlIT') && '1' || '' }}
     steps:
       - name: Checkout gate scripts
         uses: actions/checkout@v4

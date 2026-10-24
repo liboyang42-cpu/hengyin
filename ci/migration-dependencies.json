@@ -9,6 +9,7 @@
     "20261024_cash_withdraw_transfer_intent": ["20261023_cash_withdraw_fund_fact"],
     "20261023_wx_pay_order_intent": [],
     "20261024_wx_verified_payment_fact": ["wx_payment_callback_inbox_outbox_20260725"],
+    "20261024_wx_success_fact_business_index": ["20261024_wx_verified_payment_fact"],
     "20261024_registration_payment_fact": ["20261024_wx_verified_payment_fact"],
     "20261024_registration_verified_seats": [],
     "20261024_registration_seat_activity_scope": ["20261024_registration_verified_seats"],

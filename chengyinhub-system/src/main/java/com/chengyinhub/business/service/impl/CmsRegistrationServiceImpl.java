@@ -94,6 +94,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.WechatPaymentOperations> paymentAttemptGateway;
+    @Autowired
+    private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaimService;
 
     @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
     private Long platformMemberId;
@@ -1652,6 +1654,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void releasePaymentAttempt(Long registrationId) {
+        if (hasVerifiedSuccessBeforeRelease(registrationId))
+            throw new IllegalStateException("原支付成功事实已保存，不能释放支付尝试，请恢复原业务结果");
         if (cmsRegistrationMapper.releasePaymentProcessing(registrationId, new Date()) > 0) {
             return;
         }
@@ -2211,6 +2215,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (completed) {
             return "SUCCESS";
         }
+        if (verifiedReference != null) {
+            try { coopSettlementClaimService.retainClosedPaidHalfStateSuccess(registration.getId(), verifiedReference); }
+            catch (RuntimeException unavailableRecovery) {
+                return registrationPaymentCallbackFailure(outTradeNo, "verified_cash_recovery_not_completed");
+            }
+        }
         // 业务判定失败时 applyWechatPayCallback 已按原因告警,事务回滚、inbox 释放待微信重投。
         return outcome[0] != null && !"SUCCESS".equalsIgnoreCase(outcome[0]) ? outcome[0]
                 : registrationPaymentCallbackFailure(outTradeNo, "callback_not_completed");
@@ -2261,6 +2271,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
                     return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
                 }
+                coopSettlementClaimService.requirePaidHalfStateCashAdmission(registration.getId(), consumed.reference());
                 if (lockedOrder.topic() != null && Integer.valueOf(1).equals(lockedOrder.topic().getIsSettlement())
                         && lockedOrder.rows().stream().anyMatch(row -> !isSameCompletedPayment(row, verified.transactionId()))) {
                     // Keep the immutable B fact; standard callbacks also retain their original verified inbox.
@@ -2284,7 +2295,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if ("CLOSED".equals(tradeState)
                         && (resultMap.get("wx_out_trade_no") == null || paymentAttemptGateway == null
                             || !paymentAttemptGateway.getObject()
-                            .lockPaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
+                            .lockClosablePaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
                     return registrationPaymentCallbackFailure(outTradeNo, "payment_attempt_conflict");
                 }
                 Date failedAt = new Date();
@@ -2845,6 +2856,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional
     public boolean closeExpiredOne(Long registrationId) {
+        if (hasVerifiedSuccessBeforeRelease(registrationId)) return false;
         if (cmsRegistrationMapper.closeExpired(registrationId, "order-close-task", 4) == 0) {
             return false;
         }
@@ -2857,6 +2869,20 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return true;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean settleClosedPayingOne(CmsRegistration observed, String observedWxOutTradeNo,
+                                         String releaseReason, String updateBy, int finalStatus) {
+        CmsRegistration current = RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
+                cmsActivityMapper, cmsTopicMapper).registration();
+        if (StringUtils.isBlank(observedWxOutTradeNo) || paymentAttemptGateway == null
+                || !paymentAttemptGateway.getObject().lockClosablePaymentAttemptForUpdate(
+                        current.getRegistrationNo(), observedWxOutTradeNo)) {
+            return false;
+        }
+        return settlePayingOne(current.getId(), releaseReason, updateBy, finalStatus);
+    }
+
     /**
      * PAYING 单确认未支付后的收口(对账任务与主办方取消活动共用,见接口 javadoc)。
      * 条件关单成功(仍处支付中)才回补库存/退积分/放权益;竞态下(刚支付成功)0 行直接跳过。
@@ -2865,6 +2891,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     @Transactional
     public boolean settlePayingOne(Long registrationId, String releaseReason, String updateBy, int finalStatus) {
+        if (hasVerifiedSuccessBeforeRelease(registrationId)) return false;
         if (cmsRegistrationMapper.closeExpiredPaying(registrationId, updateBy, finalStatus) == 0) {
             return false;
         }
@@ -2886,6 +2913,18 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         logger.info("支付中订单经查单确认未支付后关单 registrationId={}, memberId={}, updateBy={}",
                 registrationId, r.getMemberId(), updateBy);
         return true;
+    }
+
+    /** Denial-only evidence check under the original topic/order fence; never a replacement SDK query. */
+    private boolean hasVerifiedSuccessBeforeRelease(Long registrationId) {
+        CmsRegistration observed=cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+        if (observed==null) return false;
+        RegistrationTopicFence.LockedOrder locked=RegistrationTopicFence.lock(observed,
+                cmsRegistrationMapper,cmsActivityMapper,cmsTopicMapper);
+        for (CmsRegistration original:locked.rows()) {
+            if (verifiedPaymentFacts.hasConfirmedExternalSuccess(original.getRegistrationNo())) return true;
+        }
+        return false;
     }
 
     /**

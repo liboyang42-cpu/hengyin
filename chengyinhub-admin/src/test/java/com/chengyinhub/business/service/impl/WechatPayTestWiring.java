@@ -53,6 +53,9 @@ public final class WechatPayTestWiring {
         if ("alarmService".equals(name)) { ReflectionTestUtils.setField(facade, name, value); return; }
         Object actual = fieldTarget(facade, name);
         ReflectionTestUtils.setField(actual, name, value);
+        if (actual instanceof WechatPaymentSdkGateway gateway && "verifiedFacts".equals(name)) {
+            ReflectionTestUtils.setField(ReflectionTestUtils.getField(gateway,"intents"),"verifiedFacts",value);
+        }
         if (actual instanceof WechatPaymentSdkGateway gateway
                 && java.util.Set.of("wxPayConfig","jsapiService","refundService").contains(name)) {
             WechatVerifiedFactTestSupport.refreshSdkBinding(gateway);

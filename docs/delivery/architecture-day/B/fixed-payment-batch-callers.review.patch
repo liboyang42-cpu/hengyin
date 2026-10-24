@@ -1,0 +1,150 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -1645,7 +1646,9 @@
+
+     @Override
+     @Transactional(rollbackFor = Exception.class)
+-    public void releasePaymentAttempt(Long registrationId) {
++    public void releasePaymentAttempt(Long registrationId) {
++        if (hasVerifiedSuccessBeforeRelease(registrationId))
++            throw new IllegalStateException("原支付成功事实已保存，不能释放支付尝试，请恢复原业务结果");
+         if (cmsRegistrationMapper.releasePaymentProcessing(registrationId, new Date()) > 0) {
+             return;
+         }
+@@ -2279,7 +2282,7 @@
+                 if ("CLOSED".equals(tradeState)
+                         && (resultMap.get("wx_out_trade_no") == null || paymentAttemptGateway == null
+                             || !paymentAttemptGateway.getObject()
+-                            .lockPaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
++                            .lockClosablePaymentAttemptForUpdate(outTradeNo, resultMap.get("wx_out_trade_no")))) {
+                     return registrationPaymentCallbackFailure(outTradeNo, "payment_attempt_conflict");
+                 }
+                 Date failedAt = new Date();
+@@ -2839,7 +2842,8 @@
+      */
+     @Override
+     @Transactional
+-    public boolean closeExpiredOne(Long registrationId) {
++    public boolean closeExpiredOne(Long registrationId) {
++        if (hasVerifiedSuccessBeforeRelease(registrationId)) return false;
+         if (cmsRegistrationMapper.closeExpired(registrationId, "order-close-task", 4) == 0) {
+             return false;
+         }
+@@ -2859,7 +2863,8 @@
+      */
+     @Override
+     @Transactional
+-    public boolean settlePayingOne(Long registrationId, String releaseReason, String updateBy, int finalStatus) {
++    public boolean settlePayingOne(Long registrationId, String releaseReason, String updateBy, int finalStatus) {
++        if (hasVerifiedSuccessBeforeRelease(registrationId)) return false;
+         if (cmsRegistrationMapper.closeExpiredPaying(registrationId, updateBy, finalStatus) == 0) {
+             return false;
+         }
+@@ -2883,8 +2888,20 @@
+         return true;
+     }
+
+-    /**
+-     * 关单路径共用的持有资源释放:回补库存(原子)、退还预扣积分(标记防重)、释放 ③ 权益容量。
++    /** Denial-only check under the original topic/order fence; no SDK query or financial state inference. */
++    private boolean hasVerifiedSuccessBeforeRelease(Long registrationId) {
++        CmsRegistration observed=cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
++        if (observed==null) return false; // Existing conditional close/release still rejects a missing row.
++        RegistrationTopicFence.LockedOrder locked=RegistrationTopicFence.lock(observed,
++                cmsRegistrationMapper,cmsActivityMapper,cmsTopicMapper);
++        for (CmsRegistration original:locked.rows()) {
++            if (verifiedPaymentFacts.hasConfirmedExternalSuccess(original.getRegistrationNo())) return true;
++        }
++        return false;
++    }
++
++    /**
++     * 关单路径共用的持有资源释放:回补库存(原子)、退还预扣积分(标记防重)、释放 ③ 权益容量。
+      * 必须与条件关单更新在同一事务内 —— 任一步失败整体回滚,订单不关,等下轮重试。
+      */
+     private void releaseHeldResources(CmsRegistration r, String releaseReason, String updateBy) {
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
+@@ -1126,7 +1126,7 @@
+                                                            ClubAccessContext access,
+                                                            String requestId,
+                                                            String wechatState, String observedWxNo) {
+-        if (!wechatPayService.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
++        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
+             throw new ServiceException("支付尝试已变化，未关闭当前账单", HttpStatus.CONFLICT);
+         }
+         if (invoice.getVersion() == null || clubMembershipMapper.markInvoiceClosedCas(
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
+@@ -204,7 +204,7 @@
+
+     private boolean closeObservedOrder(OmsOrder order, String observedWxOutTradeNo) {
+         return Boolean.TRUE.equals(paymentTransaction().execute(status -> {
+-            if (!wechatPayService.lockPaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
++            if (!wechatPayService.lockClosablePaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
+             return orderMapper.markCommerceOrderClosed(order.getId()) == 1;
+         }));
+     }
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+@@ -1125,7 +1125,7 @@
+             throw new IllegalStateException("保证金支付状态无法确认 inviteId=" + invite.getId());
+         }
+         // 与下方邀约 CAS 共用原事务/行锁，旧尝试的关闭事实不得作用于新尝试。
+-        if (!wechatPayService.lockPaymentAttemptForUpdate(invite.getDepositOutTradeNo(), observedWxOutTradeNo)) {
++        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invite.getDepositOutTradeNo(), observedWxOutTradeNo)) {
+             throw new IllegalStateException("保证金支付尝试已变化 inviteId=" + invite.getId());
+         }
+         if (coopInviteMapper.updateDepositIfCurrent(invite.getId(), 1, invite.getDepositAmount(), 5, invite.getDepositAmount()) != 1) {
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java
+@@ -246,7 +246,7 @@
+     private boolean closeObservedRegistration(CmsRegistration registration, String observedWxNo) {
+         return Boolean.TRUE.equals(new org.springframework.transaction.support.TransactionTemplate(paymentTransactions)
+                 .execute(status -> {
+-                    if (!wechatPayService.lockPaymentAttemptForUpdate(registration.getRegistrationNo(), observedWxNo)) return false;
++                    if (!wechatPayService.lockClosablePaymentAttemptForUpdate(registration.getRegistrationNo(), observedWxNo)) return false;
+                     return cmsRegistrationService.settlePayingOne(registration.getId(),
+                             EntitlementInvalidReason.ORGANIZER_CANCEL, RECONCILE_UPDATE_BY, 4);
+                 }));
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java
+@@ -923,7 +923,7 @@
+      * 两份分叉过一次 —— 积分回补一边 CAS 一边读改写、权益失效原因一边 REFUND 一边 ORGANIZER_CANCEL。
+      */
+     private void closeLocally(CmsRegistration r, Long actorMemberId, String observedWxNo) {
+-        if (!wechatPayService.lockPaymentAttemptForUpdate(r.getRegistrationNo(), observedWxNo)) throw retryLater();
++        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(r.getRegistrationNo(), observedWxNo)) throw retryLater();
+         // 权益失效原因:枚举 javadoc 把「主办方取消活动」明确列在 ORGANIZER_CANCEL 定义里,与
+         // 对账任务真超时同值;registration_status 用 finalStatus=3(已取消)与对账任务的 4(已过期)区分,
+         // 这才是玩家看到「已取消」还是「已过期」的真实依据。
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java
+@@ -73,7 +73,8 @@
+     @Autowired
+     private CoopInviteMapper coopInviteMapper;
+
+-    @Autowired private CoopDepositRefundService depositRefundService;
++    @Autowired private CoopDepositRefundService depositRefundService;
++    @Autowired private WechatPaymentIntentStore paymentIntentStore;
+     @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+     private com.chengyinhub.business.service.WechatPaymentOperations wechatPayService;
+
+@@ -1466,8 +1467,15 @@
+         if (inv.getDepositStatus() == null || inv.getDepositStatus() != 5) {
+             throw new IllegalStateException("当前没有待缴保证金");
+         }
+-        BigDecimal amount = inv.getDepositAmount() == null ? DEPOSIT_AMOUNT : inv.getDepositAmount();
+-        String outTradeNo = "DEP" + inviteId + "T" + System.currentTimeMillis();
++        String originalNo = inv.getDepositOutTradeNo();
++        if (originalNo != null && !originalNo.isBlank()
++                && !paymentIntentStore.lockClosedPaymentAttemptForRetry(originalNo)) {
++            throw new IllegalStateException("原保证金支付身份、金额或关闭事实未确认，请恢复原业务结果");
++        }
++        BigDecimal amount = inv.getDepositAmount() == null ? DEPOSIT_AMOUNT : inv.getDepositAmount();
++        // The business identity is permanent; wx_pay_order_intent alone assigns a new provider alias after proven CLOSED.
++        String outTradeNo = originalNo != null && !originalNo.isBlank() ? originalNo
++                : "DEP" + inviteId + "T" + System.currentTimeMillis();
+         if (coopInviteMapper.updateDeposit(inviteId, 1, outTradeNo, null, amount) != 1)
+             throw new IllegalStateException("保证金支付状态写入失败");
+         java.util.Map<String, Object> m = new HashMap<>();

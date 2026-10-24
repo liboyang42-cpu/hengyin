@@ -974,6 +974,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         List<CmsRegistration> locked = new ArrayList<>(topicRows);
         locked.addAll(activityRows);
+        CoopSettlementOriginalLedger.requireNoApprovedRefundsForOriginalClose(coopSettlementOriginalMapper, topicId);
         TopicSettlementCashBasis basis = TopicSettlementCashBasis.fromLockedRows(topicId, locked);
         List<Long> refunds = coopSettlementEvidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(topicId);
         if (refunds == null || !refunds.isEmpty()) {
@@ -1125,7 +1126,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             throw new IllegalStateException("保证金支付状态无法确认 inviteId=" + invite.getId());
         }
         // 与下方邀约 CAS 共用原事务/行锁，旧尝试的关闭事实不得作用于新尝试。
-        if (!wechatPayService.lockPaymentAttemptForUpdate(invite.getDepositOutTradeNo(), observedWxOutTradeNo)) {
+        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invite.getDepositOutTradeNo(), observedWxOutTradeNo)) {
             throw new IllegalStateException("保证金支付尝试已变化 inviteId=" + invite.getId());
         }
         if (coopInviteMapper.updateDepositIfCurrent(invite.getId(), 1, invite.getDepositAmount(), 5, invite.getDepositAmount()) != 1) {

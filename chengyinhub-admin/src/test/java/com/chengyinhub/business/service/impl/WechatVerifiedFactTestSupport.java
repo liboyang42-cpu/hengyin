@@ -18,6 +18,7 @@ public final class WechatVerifiedFactTestSupport {
         ReflectionTestUtils.setField(facts,"mapper",new MemoryMapper());
         wireUnitReads(facts);
         ReflectionTestUtils.setField(gateway,"verifiedFacts",facts);
+        ReflectionTestUtils.setField(ReflectionTestUtils.getField(gateway,"intents"),"verifiedFacts",facts);
     }
     public static void setField(Object target,String name,Object value) {
         WechatPayTestWiring.setField(target,name,value);
@@ -84,6 +85,9 @@ public final class WechatVerifiedFactTestSupport {
             return rows.values().stream().filter(r -> kind.equals(r.get("fact_kind")) && mchid.equals(r.get("mchid"))
                     && (provider.equals(r.get("provider_id")) || event.equals(r.get("merchant_event_no"))))
                     .map(HashMap::new).map(r -> (Map<String,Object>)r).toList();
+        }
+        public synchronized List<Map<String,Object>> selectSuccessesByBusiness(String businessNo) {
+            return rows.values().stream().filter(r->businessNo.equals(r.get("business_out_trade_no"))).map(HashMap::new).map(r->(Map<String,Object>)r).toList();
         }
         public synchronized Map<String,Object> selectById(long id) { var row=rows.get(id);return row==null?null:new HashMap<>(row); }
         public synchronized int insertRejection(Map<String,Object> r) {

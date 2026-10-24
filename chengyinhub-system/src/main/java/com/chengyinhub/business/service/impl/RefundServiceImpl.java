@@ -451,12 +451,24 @@ public class RefundServiceImpl implements IRefundService {
                         boolean sameOriginal = verified == null ? matchesRefundFacts(current, locked, originalFacts)
                                 : matchesVerifiedRefundOriginal(verified.facts(), current, locked);
                         return sameOriginal
+                                && mayApplyRefundFailureProjection(current, refundStatus, originalFacts)
                                 && applyRefundPayoutEvent(current, refundStatus);
                     }
                 };
         return verified != null
                 ? wxPaymentCallbackInboxService.processVerified(notifyId, verified.reference(), mutation)
                 : wxPaymentCallbackInboxService.process(notifyId, mutation);
+    }
+
+    private boolean mayApplyRefundFailureProjection(RefundApplication refund, String refundStatus,
+                                                     Map<String, String> facts) {
+        if (!"ABNORMAL".equalsIgnoreCase(refundStatus) && !"CLOSED".equalsIgnoreCase(refundStatus)) {
+            return true;
+        }
+        // Under the original business locks, keep a durable external SUCCESS available for its own
+        // verified replay. A stale failure cannot open manual payout; read/conflict errors must retry.
+        return verifiedPaymentFacts.findRefundSuccess(facts.get("mchid"), refund.getRefundNo(),
+                facts.get("refundId")) == null;
     }
 
     private boolean applyRefundPayoutEvent(RefundApplication refund, String refundStatus) {

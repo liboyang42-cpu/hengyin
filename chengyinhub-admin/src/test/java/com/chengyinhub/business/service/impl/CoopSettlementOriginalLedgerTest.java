@@ -45,6 +45,7 @@ class CoopSettlementOriginalLedgerTest {
     @BeforeEach void arrangeOriginalFrozenOrder() {
         TransactionSynchronizationManager.setActualTransactionActive(true);
         TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
+        ReflectionTestUtils.setField(owner,"originalCloseEvidence",mock(CoopSettlementEvidenceMapper.class));
         CmsTopic topic = new CmsTopic(); topic.setId(11L); topic.setIsSettlement(1);
         when(topics.selectCmsTopicByIdForUpdate(11L)).thenReturn(topic);
         close = new CoopSettlementCashClose(); close.setId(1L); close.setTopicId(11L);
@@ -223,6 +224,22 @@ class CoopSettlementOriginalLedgerTest {
         assertFalse(owner.hasFrozenOriginalRefundComponents(901L));
         assertTrue(owner.applySucceededRefund(11L,901L).isEmpty());
         verify(originals,never()).insertReceipt(any()); verify(originals,never()).insertAdjustment(any());
+        verifyNoInteractions(members,ledger,debtRows,verified);
+    }
+
+    @Test void approvedLegacyRefundBlocksOriginalFreezeBeforeAnyCashEvidenceOrComponentWrite() {
+        when(originals.selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(11L)).thenReturn(List.of(901L));
+        IllegalStateException error=assertThrows(IllegalStateException.class,()->owner.freezeOriginals(close,List.of(source),components));
+        assertTrue(error.getMessage().contains("APPROVED_REFUND_PRECEDES_ORIGINAL_CLOSE"));
+        verify(evidence,never()).recordClose(any());verify(evidence,never()).recordContribution(any());
+        verify(originals,never()).bindHeadToClose(anyLong(),anyLong(),anyLong(),anyString());verify(originals,never()).insertComponent(any());
+        verifyNoInteractions(members,ledger,debtRows,verified);
+    }
+    @Test void unavailableApprovedRefundCurrentReadCannotBeTreatedAsAnEmptyLegacyHistory() {
+        when(originals.selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(11L)).thenReturn(null);
+        assertTrue(assertThrows(IllegalStateException.class,()->owner.freezeOriginals(close,List.of(source),components))
+                .getMessage().contains("APPROVED_REFUND_PRECEDES_ORIGINAL_CLOSE"));
+        verify(evidence,never()).recordClose(any());verify(originals,never()).insertComponent(any());
         verifyNoInteractions(members,ledger,debtRows,verified);
     }
 

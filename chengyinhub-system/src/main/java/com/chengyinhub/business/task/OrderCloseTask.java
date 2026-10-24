@@ -56,9 +56,6 @@ public class OrderCloseTask {
     @Autowired
     private AlarmService alarmService;
 
-    @Autowired
-    private org.springframework.transaction.PlatformTransactionManager paymentTransactions;
-
     /** 扫描 pay_expire_time 已过仍待支付的报名单:关单 + 回补库存 + 退还预扣积分 */
     public synchronized void closeExpired() {
         Date now = new Date();
@@ -244,12 +241,8 @@ public class OrderCloseTask {
         }
     }
     private boolean closeObservedRegistration(CmsRegistration registration, String observedWxNo) {
-        return Boolean.TRUE.equals(new org.springframework.transaction.support.TransactionTemplate(paymentTransactions)
-                .execute(status -> {
-                    if (!wechatPayService.lockPaymentAttemptForUpdate(registration.getRegistrationNo(), observedWxNo)) return false;
-                    return cmsRegistrationService.settlePayingOne(registration.getId(),
-                            EntitlementInvalidReason.ORGANIZER_CANCEL, RECONCILE_UPDATE_BY, 4);
-                }));
+        return cmsRegistrationService.settleClosedPayingOne(registration, observedWxNo,
+                EntitlementInvalidReason.ORGANIZER_CANCEL, RECONCILE_UPDATE_BY, 4);
     }
 
 }

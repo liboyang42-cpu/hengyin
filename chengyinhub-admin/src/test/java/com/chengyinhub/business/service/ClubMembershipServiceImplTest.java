@@ -112,7 +112,7 @@ class ClubMembershipServiceImplTest {
         clubMembers = mock(ClubMemberMapper.class);
         members = mock(IUmsMemberService.class);
         pay = mock(IWechatPayService.class);
-        when(pay.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
+        when(pay.lockClosablePaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         audits = mock(BusinessAuditEventMapper.class);
         transactions = mock(PlatformTransactionManager.class);
         transactionStatus = mock(TransactionStatus.class);
@@ -202,7 +202,7 @@ class ClubMembershipServiceImplTest {
         Map<String, String> observed = wxOrder(invoice, "CLOSED");
         observed.put("wx_out_trade_no", "old-wx-attempt");
         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(observed);
-        when(pay.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), "old-wx-attempt")).thenReturn(false);
+        when(pay.lockClosablePaymentAttemptForUpdate(invoice.getOutTradeNo(), "old-wx-attempt")).thenReturn(false);
         assertThrows(ServiceException.class, () -> service.resumeInvoice(
                 MEMBER, action(invoice.getId(), "resume-stale-attempt")));
         verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
@@ -1492,7 +1492,7 @@ class ClubMembershipServiceImplTest {
         verify(mapper, never()).markInvoicePaidCas(any(), anyInt(), any(), any());
         verify(mapper, never()).insertTerm(any());
         verify(mapper, never()).insertRefundReview(any());
-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
         f.verifyOriginalCloseAndSuccessorQuery();
     }
 
@@ -1540,7 +1540,7 @@ class ClubMembershipServiceImplTest {
         assertEquals(ClubMembershipTerm.STATUS_ACTIVE, term.getValue().getStatus());
         verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
         verify(mapper, never()).insertRefundReview(any());
-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
         f.verifyOriginalCloseAndSuccessorQuery();
     }
 
@@ -1556,9 +1556,9 @@ class ClubMembershipServiceImplTest {
         assertEquals(3, result.getInvoice().getVersion());
         assertFalse(result.isRecoverable());
         InOrder order = inOrder(f.gateway, mapper);
-        order.verify(f.gateway).lockPaymentAttemptForUpdate(f.invoice.getOutTradeNo(), f.w2);
+        order.verify(f.gateway).lockClosablePaymentAttemptForUpdate(f.invoice.getOutTradeNo(), f.w2);
         order.verify(mapper).markInvoiceClosedCas(eq(f.invoice.getId()), eq(2), any());
-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), eq(f.w1));
+        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), eq(f.w1));
         verify(mapper, never()).markInvoicePaidCas(any(), anyInt(), any(), any());
         verify(mapper, never()).insertTerm(any());
         verify(mapper, never()).insertRefundReview(any());

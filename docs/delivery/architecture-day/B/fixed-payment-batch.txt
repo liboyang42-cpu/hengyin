@@ -1,0 +1,14 @@
+B 支付固定批次；公共parent 99d84ce23afe8852d642ba21d791662ad06a9ebd/tree b2c3370eb492680368450cf3f566930423c3008f。
+来源只合并B相对420df2a7a8b385a308923fe5f332324dd4f5f973的13becff8bb4099ee1ee2a53e3eef280d7f2f18b3、8fc2b25e4e690c6fc22b85be50fbf867486b5f07、df72a54d73ad168f26277f8af2bf14d1cb4b05b8源码增量；三方合成无文本冲突。未覆盖root/A/G/其他owner文件。
+保留root Mockito any静态import、SDK原退款校验修复及MyBatis FOR SHARE useCache=false/flushCache=true；Controller ACK/CI/registry不修改。
+真实RegistrationCallbackIntentMySqlIT声明13项（420原8 + 同事务4 + 已持久SUCCESS恢复1），全部保留原用例/金额/owner/库存/积分/权益/回执断言。
+实际工厂加载A48规范CmsRegistrationPaymentFactMapper/XML和migration_20261024_registration_payment_fact.sql，向真实CmsRegistrationServiceImpl注入同一真实provider facts代理和消费mapper；WxPaymentCallbackMutationService保持真实事务代理，无mutation mock。
+新增消费表含FK/不可变trigger：每@BeforeEach新随机专属scratch schema，@AfterEach用原P0AcceptanceSchema.drop并回读；不DELETE消费证据、不拆trigger、不降低FK校验。
+真实业务事务内用消费mapper FOR UPDATE读回registrationId/业务号/transactionId/原fact引用，同原物理连接；旁路原始连接确认消费关联与业务/DONE提交前均不可见，rollback后零消费，commit后精确消费/sidecar/inbox关联只有1条。
+工厂按A真实字段绑定WechatPaymentOperations SDK出站端口，不给其ObjectProvider塞IWechatPayService facade。消费reader仍为root/A-owned service/support/RegistrationPaymentConsumptionReadService.java，仅A/G域持有，B fact service没有消费证明方法/mapper或领域依赖。
+另两个专属unit类实际声明WechatPaymentSuccessRecoveryTest=9、WechatPaymentKnownSuccessGuardTest=6；这三类合计28项源码声明，不是28项实跑。原4事实存储IT未改。
+原认证/原商户/App/币种/分金额/原号/冻结hash、同fact恢复、UNKNOWN不冒充成功、防已知成功重发、事务完成后release及精确事实同事务重复处理合同保留。
+caller接线仅在fixed-payment-batch-callers.review.patch单列，按99d实际公共owner源静态apply --check通过；不直接应用A/G/会员/商城/定时任务/取消业务正文。
+重要未闭合：当前lockClosable先拿原业务/attempt锁再fresh-read成功证据，但recordVerified(REQUIRES_NEW)写入方没有同业务序列锁；不能声称读后独立事实提交窗口已串行闭合。按root指示，本批不扩大修复、不在持attempt X锁时另开同表写事务。
+规范A工厂额外需要已批准受控runner标记A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED=1；原github-hosted/B_PAYMENT_INTENT_DDL_APPROVED和loopback/schema守卫保留。B没有修改CI标记、registry或执行任何DDL。
+实际执行仅git diff/check、XML解析、范围/秘密标记、原测试/断言保留与public源码/parent/tree/hash核验。Java/MySQL/CI/DDL/真实微信全部NOT_RUN。本片冻结后结束固定批次，不继续扩项。

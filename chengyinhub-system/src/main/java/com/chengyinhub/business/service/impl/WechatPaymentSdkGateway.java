@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.WechatPaymentOperations;
@@ -683,6 +684,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             request.setMchid(wxPayConfig.getMerchantId());
             request.setNotifyUrl(notifyUrl.trim());
             return createOrderWithExtension(request);
+        } catch (PaymentPreorderException deferredOriginal) {
+            throw deferredOriginal;
         } catch (Exception e) {
             throw new RuntimeException("创建微信支付订单异常：" + e.getMessage(), e);
         }
@@ -1019,10 +1022,12 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             throw new IllegalArgumentException("关单必须携带原业务及所观察的微信尝试身份");
         }
         try {
+            VerifiedProviderClients clients=verifiedProviderClients;
+            if (clients==null || !intents.currentAttemptClosable(businessOutTradeNo,observedWxOutTradeNo,clients.mchid())) return false;
             CloseOrderRequest request = new CloseOrderRequest();
-            request.setMchid(wxPayConfig.getMerchantId());
+            request.setMchid(clients.mchid());
             request.setOutTradeNo(observedWxOutTradeNo);
-            jsapiService.closeOrder(request);
+            clients.payments().closeOrder(request);
             Transaction observed = queryVerifiedOrder(observedWxOutTradeNo);
             if (observed.getTradeState() != Transaction.TradeStateEnum.CLOSED) return false;
             recordConfirmedClosedAttempt(observed);
@@ -1081,6 +1086,10 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
         if (businessNo == null || observedWxNo == null || observedWxNo.isBlank()) return false;
         return intents.lockPaymentAttemptForUpdate(businessNo, observedWxNo, wxPayConfig.getMerchantId());
     }
+    @Override
+    public boolean lockClosablePaymentAttemptForUpdate(String businessNo,String observedWxNo) {
+        return intents.lockClosablePaymentAttemptForUpdate(businessNo,observedWxNo,verifiedProviderMerchant());
+    }
     Transaction parsePaymentNotification(String body, Map<String, String> headers) {
         return notificationParser.parse(notification(body, headers), Transaction.class);
     }
@@ -1093,14 +1102,24 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 .timestamp(headers.get("wechatpay-timestamp")).body(body).build();
     }
     Map<String, String> verifiedPaymentFacts(Transaction transaction) {
+        if (transaction!=null && transaction.getTradeState()==Transaction.TradeStateEnum.SUCCESS) {
+            try {
+                Map<String,String> replay=replayVerifiedPaymentNotification(transaction);
+                if (replay!=null) return replay;
+            } catch (WechatVerifiedPaymentFactService.ConflictException | IllegalArgumentException inconsistent) {
+                rejectPaymentNotification(transaction);
+                return null;
+            }
+        }
         Transaction original=verifiedPaymentOriginal(transaction);
         if (original==null) {
-            verifiedFacts.recordRejectedPaymentNotification(transaction==null?new String[]{null}:new String[]{
-                    transaction.getMchid(),transaction.getAppid(),transaction.getOutTradeNo(),transaction.getTransactionId(),
-                    transaction.getTradeState()==null?null:transaction.getTradeState().name(),
-                    transaction.getTradeType()==null?null:transaction.getTradeType().name(),
-                    transaction.getAmount()==null?null:String.valueOf(transaction.getAmount().getTotal()),
-                    transaction.getAmount()==null?null:transaction.getAmount().getCurrency(),transaction.getSuccessTime()});
+            rejectPaymentNotification(transaction);
+            return null;
+        }
+        if (transaction.getTradeState()==Transaction.TradeStateEnum.CLOSED
+                && verifiedFacts.hasConfirmedExternalSuccess(businessPaymentOrderNo(original.getOutTradeNo()))) {
+            // A signed CLOSED observation cannot undo earlier immutable payment/refund success evidence.
+            rejectPaymentNotification(transaction);
             return null;
         }
         Map<String, String> facts = new HashMap<>();
@@ -1150,6 +1169,9 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 && original.getAmount() != null
                 && "CNY".equals(original.getAmount().getCurrency())
                 && transaction.getAmount().getTotal().equals(original.getAmount().getTotal());
+        if (matches && transaction.getTradeState()==Transaction.TradeStateEnum.SUCCESS) {
+            matches=matchesProviderSuccessTime(providerSuccessTime(original.getSuccessTime()),transaction.getSuccessTime());
+        }
         return matches ? original : null;
     }
 
@@ -1214,4 +1236,80 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                         notif.getAmount()==null?null:String.valueOf(notif.getAmount().getRefund()),
                         notif.getAmount()==null?null:notif.getAmount().getCurrency(),notif.getSuccessTime()});
     }
+    /** Called only after the facade has verified/decrypted the incoming notification. Never a current-status query fallback. */
+    private Map<String,String> replayVerifiedPaymentNotification(Transaction notification) {
+        String mchid=verifiedProviderMerchant();
+        if (!mchid.equals(notification.getMchid()) || notification.getOutTradeNo()==null
+                || notification.getTransactionId()==null) throw new IllegalArgumentException("Original signed payment identity missing");
+        var stored=verifiedFacts.findPaymentSuccess(mchid,notification.getOutTradeNo(),notification.getTransactionId());
+        if (stored==null) return null;
+        var fact=stored.facts();
+        if (!fact.appid().equals(notification.getAppid()) || notification.getTradeType()==null
+                || !fact.tradeType().equals(notification.getTradeType().name()) || notification.getAmount()==null
+                || notification.getAmount().getTotal()==null || fact.totalFen()!=notification.getAmount().getTotal().longValue()
+                || !fact.currency().equals(notification.getAmount().getCurrency())
+                || !matchesProviderSuccessTime(fact.successAt(),notification.getSuccessTime())) {
+            throw new WechatVerifiedPaymentFactService.ConflictException();
+        }
+        assertOriginalFactSnapshot(fact);
+        if (!fact.wxOutTradeNo().equals(currentWechatPaymentNo(fact.businessOutTradeNo())))
+            throw new WechatVerifiedPaymentFactService.ConflictException();
+        Map<String,String> result=new HashMap<>();
+        result.put("out_trade_no",fact.businessOutTradeNo());result.put("wx_out_trade_no",fact.wxOutTradeNo());
+        result.put("transaction_id",fact.transactionId());result.put("trade_state","SUCCESS");
+        result.put("appid",fact.appid());result.put("mchid",fact.mchid());result.put("trade_type",fact.tradeType());
+        result.put("total",Long.toString(fact.totalFen()));result.put("currency",fact.currency());
+        addVerifiedReference(result,stored.reference());return result;
+    }
+    /** Signature/decryption has already succeeded; persisted success never bypasses that SDK boundary. */
+    Map<String,String> verifiedRefundFacts(RefundNotification notification) {
+        if (notification==null) return null;
+        try {
+            var stored=verifiedFacts.findRefundSuccess(verifiedProviderMerchant(),notification.getOutRefundNo(),notification.getRefundId());
+            if (stored!=null) {
+                if (notification.getRefundStatus()!=Status.SUCCESS) {
+                    recordRejectedRefundNotification(notification,null);
+                    return null; // Keep UNKNOWN; never manufacture a SUCCESS callback from a conflicting status.
+                }
+                var fact=stored.facts();assertOriginalFactSnapshot(fact);
+                Map<String,String> result=new HashMap<>();
+                result.put("outRefundNo",fact.merchantEventNo());result.put("outTradeNo",fact.businessOutTradeNo());
+                result.put("wxOutTradeNo",fact.wxOutTradeNo());result.put("status","SUCCESS");
+                result.put("refund",Long.toString(fact.amountFen()));result.put("total",Long.toString(fact.totalFen()));
+                result.put("currency",fact.currency());result.put("mchid",fact.mchid());result.put("appid",fact.appid());
+                result.put("tradeType",fact.tradeType());result.put("refundId",fact.providerId());result.put("transactionId",fact.transactionId());
+                result.put("successTime",fact.successAt().toString());addVerifiedReference(result,stored.reference());return result;
+            }
+        } catch (WechatVerifiedPaymentFactService.ConflictException | IllegalArgumentException inconsistent) {
+            recordRejectedRefundNotification(notification,null);
+            return null;
+        }
+        return queryRefundFacts(notification.getOutRefundNo());
+    }
+    private static boolean matchesProviderSuccessTime(java.time.Instant expected,String raw) {
+        try { return expected.equals(providerSuccessTime(raw)); }
+        catch (RuntimeException invalidTime) { return false; }
+    }
+    private void assertOriginalFactSnapshot(WechatVerifiedPaymentFact fact) {
+        if (!verifiedProviderMerchant().equals(fact.mchid())
+                || !fact.businessOutTradeNo().equals(businessPaymentOrderNo(fact.wxOutTradeNo()))
+                || !java.util.Objects.equals(fact.intentRequestHash(),intents.frozenRequestHash(fact.mchid(),fact.wxOutTradeNo())))
+            throw new WechatVerifiedPaymentFactService.ConflictException();
+        var rows=intents.frozenFacts(fact.mchid(),fact.wxOutTradeNo());
+        if (rows.isEmpty() && fact.intentRequestHash()==null) return; // Actual previously verified historical provider order.
+        if (rows.size()!=1) throw new WechatVerifiedPaymentFactService.ConflictException();
+        var row=rows.get(0);
+        if (!fact.appid().equals(row.get("appid")) || !fact.tradeType().equals(row.get("trade_type"))
+                || !fact.currency().equals(row.get("currency")) || !(row.get("total_fen") instanceof Number total)
+                || total.longValue()!=fact.totalFen()) throw new WechatVerifiedPaymentFactService.ConflictException();
+    }
+    private void rejectPaymentNotification(Transaction transaction) {
+        verifiedFacts.recordRejectedPaymentNotification(transaction==null?new String[]{null}:new String[]{
+                transaction.getMchid(),transaction.getAppid(),transaction.getOutTradeNo(),transaction.getTransactionId(),
+                transaction.getTradeState()==null?null:transaction.getTradeState().name(),
+                transaction.getTradeType()==null?null:transaction.getTradeType().name(),
+                transaction.getAmount()==null?null:String.valueOf(transaction.getAmount().getTotal()),
+                transaction.getAmount()==null?null:transaction.getAmount().getCurrency(),transaction.getSuccessTime()});
+    }
+
 }

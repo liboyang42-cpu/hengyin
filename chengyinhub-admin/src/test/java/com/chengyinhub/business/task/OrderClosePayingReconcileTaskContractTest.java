@@ -69,10 +69,6 @@ class OrderClosePayingReconcileTaskContractTest {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
         IWechatPayService wechat = mock(IWechatPayService.class);
         OrderCloseTask task = new OrderCloseTask();
-        var tm = mock(org.springframework.transaction.PlatformTransactionManager.class);
-        when(tm.getTransaction(any())).thenReturn(new org.springframework.transaction.support.SimpleTransactionStatus());
-        ReflectionTestUtils.setField(task, "paymentTransactions", tm);
-        when(wechat.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         ReflectionTestUtils.setField(task, "cmsRegistrationService", service);
         ReflectionTestUtils.setField(task, "wechatPayService", wechat);
         ReflectionTestUtils.setField(task, "alarmService", mock(AlarmService.class));
@@ -102,13 +98,13 @@ class OrderClosePayingReconcileTaskContractTest {
             result.put("trade_state", "CLOSED");
             return result;
         });
-        when(service.settlePayingOne(eq(201L), anyString(), anyString(), eq(4))).thenReturn(true);
+        when(service.settleClosedPayingOne(argThat(r -> Long.valueOf(201L).equals(r.getId())), eq("PAYING-201"), anyString(), anyString(), eq(4))).thenReturn(true);
 
         assertThrows(IllegalStateException.class, task::reconcileExpiredPaying);
         assertEquals(200L, ReflectionTestUtils.getField(task, "reconcileCursor"));
         assertThrows(IllegalStateException.class, task::reconcileExpiredPaying);
         assertEquals(200L, ReflectionTestUtils.getField(task, "reconcileCursor"));
-        verify(service, never()).settlePayingOne(anyLong(), anyString(), anyString(), anyInt());
+        verify(service, never()).settleClosedPayingOne(any(), anyString(), anyString(), anyString(), anyInt());
 
         task.reconcileExpiredPaying();
 
@@ -117,12 +113,42 @@ class OrderClosePayingReconcileTaskContractTest {
         for (long id = 1L; id <= 201L; id++) {
             verify(wechat, times(1)).queryOrderStatus("PAYING-" + id);
         }
-        verify(service, times(1)).settlePayingOne(201L,
-                com.chengyinhub.common.constant.EntitlementInvalidReason.ORGANIZER_CANCEL,
-                "payment-reconcile-task", 4);
+        verify(service, times(1)).settleClosedPayingOne(argThat(r -> Long.valueOf(201L).equals(r.getId())), eq("PAYING-201"),
+                eq(com.chengyinhub.common.constant.EntitlementInvalidReason.ORGANIZER_CANCEL),
+                eq("payment-reconcile-task"), eq(4));
         verify(service, never()).handleWechatPayCallback(anyMap());
         verify(wechat, never()).closeOrder(anyString());
         assertEquals(0L, ReflectionTestUtils.getField(task, "reconcileCursor"));
+    }
+
+    @Test
+    void refusedOriginalClosedObservationCannotFallBackToAnUnguardedRelease() {
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class);
+        IWechatPayService wechat = mock(IWechatPayService.class);
+        OrderCloseTask task = new OrderCloseTask();
+        ReflectionTestUtils.setField(task, "cmsRegistrationService", service);
+        ReflectionTestUtils.setField(task, "wechatPayService", wechat);
+        ReflectionTestUtils.setField(task, "alarmService", mock(AlarmService.class));
+        CmsRegistration original = new CmsRegistration(); original.setId(1L);
+        original.setRegistrationNo("REG1"); original.setPaymentStatus(1); original.setRegistrationStatus(1);
+        when(wechat.isReady()).thenReturn(true);
+        when(service.listExpiredPayingIds(0L)).thenReturn(List.of(1L));
+        when(service.listExpiredPayingIds(1L)).thenReturn(List.of());
+        when(service.selectCmsRegistrationById(1L)).thenReturn(original);
+        when(wechat.queryOrderStatus("REG1")).thenReturn(Map.of("out_trade_no", "REG1", "wx_out_trade_no", "WX-ORIGINAL", "trade_state", "CLOSED"));
+        when(service.settleClosedPayingOne(original, "WX-ORIGINAL",
+                com.chengyinhub.common.constant.EntitlementInvalidReason.ORGANIZER_CANCEL, "payment-reconcile-task", 4))
+                .thenReturn(false);
+
+        task.reconcileExpiredPaying();
+
+        verify(service).settleClosedPayingOne(original, "WX-ORIGINAL",
+                com.chengyinhub.common.constant.EntitlementInvalidReason.ORGANIZER_CANCEL, "payment-reconcile-task", 4);
+        verify(service, never()).settlePayingOne(anyLong(), anyString(), anyString(), anyInt());
+        verify(service, never()).handleWechatPayCallback(anyMap());
+        verify(wechat, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(wechat, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
+        verify(wechat, never()).closeOrder(anyString());
     }
 
     private String readFirstExisting(Path... candidates) throws Exception {

@@ -161,6 +161,7 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         registrationTarget = target;
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(target, "verifiedPaymentFacts", fixturePaymentFacts);
+        ReflectionTestUtils.setField(target, "coopSettlementClaimService", mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class));
         var consumed = mock(com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper.class);
         when(consumed.insertConsumed(anyLong(), anyLong(), anyString())).thenAnswer(call -> {
             Long id = call.getArgument(0); long factId = call.getArgument(1); String hash = call.getArgument(2);
