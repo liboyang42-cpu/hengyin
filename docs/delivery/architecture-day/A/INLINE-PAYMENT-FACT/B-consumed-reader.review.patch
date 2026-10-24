@@ -1,15 +1,12 @@
 --- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
 +++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
-@@ -17,6 +17,7 @@
- public class WechatVerifiedPaymentFactService {
+@@ -18,4 +18,5 @@
      @Autowired private WechatVerifiedPaymentFactMapper mapper;
      @Autowired private org.springframework.transaction.PlatformTransactionManager factReadTransactions;
 +    @Autowired private com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper registrationConsumptions;
      public record Stored(Reference reference, WechatVerifiedPaymentFact facts) { }
      public static class ConflictException extends IllegalStateException {
-         public ConflictException() { super("Verified payment fact identity conflict; evidence retained"); }
-@@ -46,6 +47,23 @@
-             Stored stored=checked(row);
+@@ -47,4 +48,21 @@
              if (!stored.reference().equals(reference)) throw new ConflictException();
              return stored;
 +        });
@@ -31,4 +28,3 @@
 +            return java.util.Optional.of(stored);
          });
      }
- 

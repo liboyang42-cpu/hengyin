@@ -52,7 +52,10 @@
     "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/RegistrationPaymentFactReceipt.java": "2040bce2d4c336b7744d3bd4406d5e72ed66df63ff82bc4e45551b93d36069b9",
     "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationPaymentFactMapper.java": "ac3331a1c6c040a8a4f9530436e448726e7cf125ade9da41a0241449208c3bb5",
     "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "3013db66cbe3741dbfe9cc652fabd9401132478c228fc6ae15a0b8b893a3352f",
-    "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationPaymentFactMapper.xml": "b5aa4b7e26c2c1a7aa3603121996f07ba17efb3336539e25d72741281fdeb555"
+    "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationPaymentFactMapper.xml": "b5aa4b7e26c2c1a7aa3603121996f07ba17efb3336539e25d72741281fdeb555",
+    "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/B-consumed-reader.review.patch": "6b70fd9ae7ea86bc4e8a5bb4254b1cab21f8edcb9d147b77f3fb0b3bca4a99b9",
+    "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/G-consumed-component.review.patch": "85a61fdd599d7f939724d71ad4f31ed05a1ac377a42432de488bc87ab4b2ca1f",
+    "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/D-signup-fixture.review.patch": "1f17e3ba1c214683f5cbb0fc2ba784336d07a8068d794ed481edb2f6fc91ed30"
   },
   "required_controlled_runner_flags": [
     "B_PAYMENT_FACT_DDL_APPROVED=1",
@@ -70,5 +73,6 @@
     "root canonical migration/dependency/source registry",
     "G original plan/rounding/negative margin/closed recovery",
     "uniform same-head controlled acceptance"
-  ]
+  ],
+  "patch_asset_format": "Normalized empty context lines; rechecked exact B/G/D preimages, no source semantics changed"
 }
