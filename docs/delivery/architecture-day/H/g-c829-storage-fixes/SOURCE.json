@@ -1,0 +1,125 @@
+{
+  "candidate": "c829f158ea549ff4e844f92d35725a60ef58e864",
+  "tree": "cc55d2b8f032d857b21f4fbc4a4353ad373bc9dc",
+  "parent": "61834b1ba96fcfb025d8442955b69f1d6b35d5f3",
+  "delta": [
+    {
+      "path": "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_recovery.sh",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_rollback_20261023.sql",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_g_cash_evidence_20261023.sql",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261023_g_cash_evidence_expand.sql",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GCashEvidenceEmptyRecovery.java",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CashEvidenceExpandMySqlIT.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml",
+      "status": "modified"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/IMPLEMENTATION.md",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/original30-preserved.json",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/source-sha256.json",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/static-checks.txt",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/verify_static.py",
+      "status": "added"
+    }
+  ],
+  "read_files": [
+    {
+      "path": "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_recovery.sh",
+      "sha": "209007f369dabf373793e10d95de220131c38ef7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_rollback_20261023.sql",
+      "sha": "ba77d10079f67a6474e1ccc70dadc7a224be34fa"
+    },
+    {
+      "path": "chengyinhub-admin/sql/_precheck_g_cash_evidence_20261023.sql",
+      "sha": "bda3cccf9a6b2d8416ff1f613bf8ad33df7aa47b"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261023_g_cash_evidence_expand.sql",
+      "sha": "37c5ad1b2c0da23ebee6fd912f57123319dfff64"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GCashEvidenceEmptyRecovery.java",
+      "sha": "c46e45e42dd48758ac49347a507241125445994b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CashEvidenceExpandMySqlIT.java",
+      "sha": "5f08f45a2f91c8a18dd281633d9dc0acfbdea1a3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java",
+      "sha": "3847e4541294e238b86733b37838a69f02fa4409"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml",
+      "sha": "282f537a9bd1eb8ec2666c5c2379dbc6d3d0d505"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/IMPLEMENTATION.md",
+      "sha": "e1a5752c153761369f5ce45feca5042b3b7bba09"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/static-checks.txt",
+      "sha": "513b3f126ef3ceb4027353c902bb18024406da37"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/verify_static.py",
+      "sha": "8e9985c69dffb9f2447567e7aab8515e3d0857bc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha": "50b0652f389754e6bbe7ba3d9901e79a7c3d48d6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java",
+      "sha": "eea8a81d172b4cd1388152227a662a19531f63bf"
+    },
+    {
+      "path": "sql/base_schema_20260818.sql",
+      "sha": "033d8990a75fb99e6b02d05948c03ac58f4d017b"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/original30-preserved.json",
+      "sha": "c145b6ce904abc209f4d6a772cd96174e3b50deb"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/storage-fixes/source-sha256.json",
+      "sha": "b4aa2586f7594a77f61a17222ce3f0884e8cd416"
+    }
+  ]
+}
