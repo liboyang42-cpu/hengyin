@@ -79,4 +79,22 @@ class OfflinePackOperationTest {
         assertEquals(OfflinePackOperation.Phase.EXPIRED, pack.phase());
         assertEquals("op-exp", pack.operationId());
     }
+
+    @Test
+    void unusedRecordCorruptOfIdleDoesNotOccupyThenUniqueStartThenCorruptApplies() {
+        OfflinePackOperation pack = new OfflinePackOperation();
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase());
+        assertNull(pack.operationId());
+        assertEquals(OfflinePackOperation.Failure.INVALID_MANIFEST,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, pack::recordCorrupt).code);
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase(), "未见下载 recordCorrupt 观察不得占 CORRUPT");
+        assertNull(pack.operationId());
+        pack.startDownload(manifest("op-cor"), NOW);
+        assertEquals("op-cor", pack.operationId());
+        assertEquals(OfflinePackOperation.Phase.DOWNLOADING, pack.phase());
+        assertEquals(OfflinePackOperation.Failure.CORRUPT,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, pack::recordCorrupt).code);
+        assertEquals(OfflinePackOperation.Phase.CORRUPT, pack.phase());
+        assertEquals("op-cor", pack.operationId());
+    }
 }
