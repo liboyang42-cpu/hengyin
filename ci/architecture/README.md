@@ -72,3 +72,13 @@ PR 架构检查使用 PR head；原 Backend job 仍按既有 checkout 检查 int
 真实 Java/MySQL/Redis 验证继续使用现有批准的 `ci/backend-test.sh`、`ci/funds_it_gate.py`、`ci/real_storage_it.py` 及其 GitHub-hosted scratch workflow。不要把合成 XML 自测、push 总绿或路径过滤 skipped 当成 Backend tests 实跑。回读工具不独立证明存储身份、报告生产者诚实或测试语义覆盖。
 
 当前交付和合法 Java 执行入口见 `docs/delivery/architecture-day/F/FOLLOWUP.md`。旧 `REPORT.md`/verification 是 941612/1ce413 阶段的历史结果，不适用于本轮未提交代码。
+
+## 986 职责增量（iOS 采用合同 v1.1）
+
+在355策略之后保留原13类型/8职责和原4方向，仅追加986已落地的C Admin应用闭包13个精确类型、A GameSharedRunControl、E TopicRoutePublicationCompiler和support.GameplayActionProjection；同批再登记A1e的GameSessionConfiguration、Gca9的AdvancedActionJudgement及E1b的TopicRouteNarrativeProgress（各自冻结源SHA见owners.meaning），合计32类型/27职责/33允许方向。C的13类分别登记，既有Entry→Query、Command→Intent/Completion/Context等实际方向及应用→原hint/access服务明确列举，反向边和新scoped SCC仍由原闸阻断，不以包名通配授予依赖权。
+
+C应用禁反调旧ApiPlayProgressController及三个runtime实现，保留其实际公共runtime接口调用；A共享控制/配置协作者、E编译器/叙事/投影叶子与G判定器禁依赖三个runtime接口或实现。E叙事→编译器为明确允许方向，反向仍红。这些非Application协作者不把旧facade作为回调入口。既有God→新owner调用与未登记类型仍在结构切口外，不自动推定正确。
+
+复用原JAR/class-index/raw回读及冻结策略，无新parser/采集/CI入口；模块图原口径、3私有Mapper/2事实、2ec精确baseline均不改。新增Admin协议夹具同步维护original/Boot/classes/target字节与模块，不把Admin类型伪造到System。
+
+这不证明Query纯读、具体方法无副作用、null语义或父事务/回执次序。特别ce49/IR05要求：null仅表示不适用共享局，已确认共享但缺RUN必须稳定失败，禁止回退旧个人ACTIVE/补局；由A/E/C实际业务测试另验，允许接口类型引用不等于该语义通过。缺真实编译图/类型/位置/身份仍UNKNOWN，未声称全图无环或全域owner完成。root独占双trusted ref，按审定新verifier完整SHA同时repin；本片不动workflow、不新增回归批次。

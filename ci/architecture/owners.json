@@ -69,8 +69,8 @@
   "technical_dependency_policy": {
     "schema": 1,
     "coverage": "PARTIAL",
-    "observed_source": "d49c12b820419308236010e0710f96d7bf48c4c9",
-    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut.",
+    "observed_source": "986b88d9640bf45900bd807675bed1d6a06c5938",
+    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline.",
     "owners": [
       {
         "id": "A_WITHDRAW_ADMISSION",
@@ -163,6 +163,265 @@
           "com.chengyinhub.business.service.ICmsTopicService",
           "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
         ]
+      },
+      {
+        "id": "C_PLAY_BASIC_COMMAND",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayBasicCommandApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_BASIC_INTENT",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayBasicIntentApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_COMPLETION_FACTS",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayCompletionFacts"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_ENTRY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayEntryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_HISTORY_QUERY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayHistoryQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_NODE_COMPLETION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayNodeCompletionApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_NODE_CONTEXT",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayNodeContext"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_NODE_QUERY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayNodeQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_PHOTO_COMMAND",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayPhotoCommandApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_PLAYER_QUERY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayPlayerQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_PREFERENCE",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayPreferenceApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_PUZZLE_COMMAND",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayPuzzleCommandApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_TASK_PRESENTATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayTaskPresentation"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "A_SHARED_RUN_CONTROL",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.GameSharedRunControl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "E_ROUTE_PUBLICATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicRoutePublicationCompiler"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "E_GAMEPLAY_PROJECTION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.GameplayActionProjection"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "A_SESSION_CONFIGURATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.GameSessionConfiguration"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "G_ACTION_JUDGEMENT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.AdvancedActionJudgement"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "E_ROUTE_NARRATIVE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicRouteNarrativeProgress"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
       }
     ],
     "allowed_directions": [
@@ -181,6 +440,122 @@
       [
         "D_CONTENT_COPY",
         "D_CONTENT_RULES"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_BASIC_INTENT"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_NODE_COMPLETION"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_TASK_PRESENTATION"
+      ],
+      [
+        "C_PLAY_COMPLETION_FACTS",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_ENTRY",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_ENTRY",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_ENTRY",
+        "C_PLAY_NODE_QUERY"
+      ],
+      [
+        "C_PLAY_HISTORY_QUERY",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_NODE_COMPLETION",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_NODE_COMPLETION",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_NODE_QUERY",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_NODE_QUERY",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_PHOTO_COMMAND",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_PHOTO_COMMAND",
+        "C_PLAY_NODE_COMPLETION"
+      ],
+      [
+        "C_PLAY_PHOTO_COMMAND",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_PHOTO_COMMAND",
+        "C_PLAY_TASK_PRESENTATION"
+      ],
+      [
+        "C_PLAY_PLAYER_QUERY",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_PREFERENCE",
+        "C_PLAY_NODE_COMPLETION"
+      ],
+      [
+        "C_PLAY_PREFERENCE",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_PUZZLE_COMMAND",
+        "C_PLAY_NODE_COMPLETION"
+      ],
+      [
+        "C_PLAY_PUZZLE_COMMAND",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_HINT_APPLICATION"
+      ],
+      [
+        "C_PLAY_ENTRY",
+        "C_HINT_APPLICATION"
+      ],
+      [
+        "C_PLAY_NODE_QUERY",
+        "C_HINT_APPLICATION"
+      ],
+      [
+        "C_PLAY_PUZZLE_COMMAND",
+        "C_HINT_APPLICATION"
+      ],
+      [
+        "C_PLAY_NODE_CONTEXT",
+        "C_NODE_ACCESS"
+      ],
+      [
+        "E_ROUTE_NARRATIVE",
+        "E_ROUTE_PUBLICATION"
       ]
     ]
   }
