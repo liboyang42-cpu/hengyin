@@ -70,7 +70,7 @@
     "schema": 1,
     "coverage": "PARTIAL",
     "observed_source": "986b88d9640bf45900bd807675bed1d6a06c5938",
-    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline.",
+    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f.",
     "owners": [
       {
         "id": "A_WITHDRAW_ADMISSION",
@@ -422,6 +422,39 @@
           "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
           "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
         ]
+      },
+      {
+        "id": "D_PUBLICATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicPublicationService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "D_PUBLICATION_CONTENT_GUARD",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.TopicPublicationContentGuard"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "D_SELF_HOST_ACTIVITY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.TopicSelfHostActivityService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
       }
     ],
     "allowed_directions": [
@@ -556,6 +589,18 @@
       [
         "E_ROUTE_NARRATIVE",
         "E_ROUTE_PUBLICATION"
+      ],
+      [
+        "D_PUBLICATION",
+        "D_PUBLICATION_CONTENT_GUARD"
+      ],
+      [
+        "D_PUBLICATION",
+        "D_SELF_HOST_ACTIVITY"
+      ],
+      [
+        "D_PUBLICATION_CONTENT_GUARD",
+        "D_CONTENT_RULES"
       ]
     ]
   }
