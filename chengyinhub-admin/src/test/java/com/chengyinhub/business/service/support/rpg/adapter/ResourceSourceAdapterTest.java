@@ -168,6 +168,20 @@ class ResourceSourceAdapterTest {
         assertEquals(REQUEST, recovered.requestId);
         assertFalse(recovered.replay);
         assertNull(restarted.recoverFromPersist("c02-persist-missing"));
+        ResourceSourceAdapter.OriginalResourcePersist swapped =
+                new ResourceSourceAdapter.OriginalResourcePersist() {
+                    @Override
+                    public ResourceSourceAdapter.OriginalReceipt persist(
+                            String requestId, TopicRouteEngine.State snapshot) {
+                        throw new AssertionError("recover must not persist");
+                    }
+
+                    @Override
+                    public ResourceSourceAdapter.OriginalReceipt recover(String requestId) {
+                        return new ResourceSourceAdapter.OriginalReceipt("other-id", true);
+                    }
+                };
+        assertNull(new ResourceSourceAdapter(swapped).recoverFromPersist(REQUEST));
     }
 
     @Test

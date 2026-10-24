@@ -104,6 +104,7 @@ public class ResourceSourceAdapter {
 
     /**
      * 新实例从 Runtime 原请求账回读。缺端口 WAITING_SOURCE；未见过的键返回 {@code null}，不占进程 sources。
+     * 回读的 requestId 必须是这次的键，否则返回 {@code null}。
      * 缺/空 requestId 保持 Java {@code null}。
      */
     public OriginalReceipt recoverFromPersist(String requestId) {
@@ -114,7 +115,11 @@ public class ResourceSourceAdapter {
         if (persist == null) {
             throw new WaitingSourceException(RUNTIME_PERSIST);
         }
-        return persist.recover(id);
+        OriginalReceipt found = persist.recover(id);
+        if (found == null || found.requestId == null || !id.equals(found.requestId)) {
+            return null;
+        }
+        return found;
     }
 
     /**
