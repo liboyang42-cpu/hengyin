@@ -133,3 +133,17 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 8. Parent addendum 2026-10-23 18:31 America/Los_Angeles
+
+`ImmutableReceiptProducerTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueAcceptApplies`：未见 `c09-rcpt-never` 的 `recoverOriginal` 保持 UNKNOWN 且 store 仍空；后续唯一 `accept` 才是第一笔 ACCEPTED。缺 requestId 保持 Java null。C09 首次 UNKNOWN `accept` 仍是唯一原回执（有意保留）。
+
+父进程独立 surefire（`/tmp/hy-c09`，HEAD `ec5e6586c`，2026-10-24T01:31:02Z）：
+
+```
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- ImmutableReceiptProducerTest
+Tests run: 21, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
