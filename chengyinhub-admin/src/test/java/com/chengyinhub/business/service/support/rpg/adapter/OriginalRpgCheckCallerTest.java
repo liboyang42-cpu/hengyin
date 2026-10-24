@@ -44,8 +44,9 @@ class OriginalRpgCheckCallerTest {
         assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
         port.checkBody = JSON.readTree(EXECUTE.replace("\"runId\":9", "\"runId\":8"));
         assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
-        port.checkBody = JSON.readTree(EXECUTE.replace("\"stateVersion\":3", "\"stateVersion\":9"));
-        assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
+        port.checkBody = JSON.readTree(EXECUTE.replace("\"stateVersion\":3", "\"stateVersion\":1"));
+        JsonNode earlier = caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4");
+        assertEquals(1L, earlier.path("stateVersion").asLong());
         port.checkBody = JSON.readTree(EXECUTE);
         assertNull(caller.check(0L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
         assertNull(caller.receipt(7L, 9L, 4L, "spot", "req-1"));
