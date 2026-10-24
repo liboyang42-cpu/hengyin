@@ -1,0 +1,59 @@
+{
+  "base": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+  "latest_root_compared": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+  "source_test_blobs_identical_to_both": 63,
+  "counts": {
+    "shared_implementations": 14,
+    "d359_reference_files": 55,
+    "d359_direct_new_files": 41,
+    "current_reference_files": 59,
+    "current_direct_new_files": 45
+  },
+  "checks": {
+    "only_C_delivery_docs_changed": true,
+    "old55_and41_and_new4_explicitly_listed": true,
+    "inventory_reproducible": true
+  },
+  "files": [
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/wp09-m1/inspect-source.py",
+      "sha256": "5f6b2d0154cf72d052a6240f00747ea2d84b0f0ed077b312884c90ebbef4bfae"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/wp09-m1-source-inventory.json",
+      "sha256": "fcbdb2860574d6facb0444c82708b8cda8f2a632b25d2a1cfea65b7e26b76f2d"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/wp09-m1-test-wiring.md",
+      "sha256": "7b605bfd8c8c419ac882c0cc10dc23fd9318b153b736680256fca579f306ba62"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/wp09-m1-unlock-hint-contract.md",
+      "sha256": "b193cd8857245f4f18a45de2b10168be1aaf6c071c52ce2a96528fd8c540d302"
+    }
+  ],
+  "executed_here": [
+    "Python lexical/source hash inventory + exact scope check",
+    "git diff --cached --check"
+  ],
+  "not_executed_here": [
+    "Java compilation",
+    "JUnit",
+    "MySQL",
+    "Node",
+    "HTTP/JWT",
+    "CI dispatch"
+  ],
+  "external_root_evidence": {
+    "sql_source": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+    "sql_run": "40044166369",
+    "sql_tests": 14,
+    "sql_clean_groups": 2,
+    "unit_source": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+    "unit_run": "40044336447",
+    "unit_target_tests": 32,
+    "fail_error_skip": 0,
+    "full_workflow_final": "not reported"
+  },
+  "implementation_status": "DOC_ONLY; M1 production and tests NOT STARTED; B1 frozen"
+}
