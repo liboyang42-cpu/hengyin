@@ -57,6 +57,7 @@ public class OWN_C04_21Test {
         MemberCashWithdrawMapper cash = mock(MemberCashWithdrawMapper.class);
         MemberCashWithdraw original = new MemberCashWithdraw();
         original.setId(1L); original.setMemberId(7L); original.setAmount(new BigDecimal("100"));
+        original.setDelFlag(0); original.setOutBatchNo("CW1"); original.setOutDetailNo("CD1");
         original.setStatus(MemberCashWithdraw.STATUS_SUCCESS);
         when(cash.selectByIdForUpdate(1L)).thenReturn(original);
         WithdrawalFrozenAmountResolver resolver = mock(WithdrawalFrozenAmountResolver.class);
@@ -74,8 +75,10 @@ public class OWN_C04_21Test {
         PlayerWithdrawalCooldownMapper cooldown = mock(PlayerWithdrawalCooldownMapper.class);
         MemberCashWithdraw original = new MemberCashWithdraw();
         original.setId(1L); original.setMemberId(7L); original.setAmount(new BigDecimal("100"));
+        original.setDelFlag(0); original.setOutBatchNo("CW1"); original.setOutDetailNo("CD1");
         original.setStatus(MemberCashWithdraw.STATUS_PROCESSING);
-        when(cash.selectByIdForUpdate(1L)).thenReturn(original);
+        when(cash.selectById(1L)).thenReturn(original);
+        new com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture(cash);
         when(members.selectBalanceForUpdate(7L)).thenReturn(new BigDecimal("160"));
         when(bounty.selectFrozenAmountsForUpdate(eq(7L), any())).thenReturn(Collections.emptyList());
         when(cooldown.selectUnexpiredAmountsForUpdate(7L)).thenReturn(Collections.emptyList());
@@ -114,12 +117,14 @@ public class OWN_C04_21Test {
         when(members.selectUmsMemberById(7L)).thenReturn(member);
         com.chengyinhub.common.config.WxPayConfig config = mock(com.chengyinhub.common.config.WxPayConfig.class);
         when(config.getAppid()).thenReturn("wx-appid");
+        when(config.getMerchantId()).thenReturn("unit-merchant");
         MerchantReferralBountyService bounty = mock(MerchantReferralBountyService.class);
         IPlayerWithdrawalCooldownService cooldown = mock(IPlayerWithdrawalCooldownService.class);
         when(bounty.frozenAmount(7L)).thenReturn(BigDecimal.ZERO);
         when(cooldown.frozenAmount(7L)).thenReturn(BigDecimal.ZERO);
         // master 设计：原提现单由 CashWithdrawServiceImpl 直接插入并随后写入 CW/CD 业务号（无独立 FailureRecoveryService）。
         when(cash.insertMemberCashWithdraw(any())).thenAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return 1; });
+        when(cash.updateMemberCashWithdraw(any())).thenReturn(1);
         WithdrawalBalanceAdmissionService admission = mock(WithdrawalBalanceAdmissionService.class);
         when(admission.debitCash(eq(1L), eq(7L), any())).thenReturn(
                 new WithdrawalBalanceAdmissionService.Admission(null, null, null, false, false));
@@ -136,6 +141,7 @@ public class OWN_C04_21Test {
         verify(cash, never()).updateStatusIfProcessing(any());
         verify(members, never()).deductWithdrawableBalance(anyLong(), any(), any());
         verify(members, never()).addBalance(anyLong(), any());
+        verify(admission).debitCash(1L, 7L, new BigDecimal("100.00"));
     }
 
     @Test void bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock() {
@@ -207,7 +213,7 @@ public class OWN_C04_21Test {
         });
         when(members.deductWithdrawableBalance(anyLong(), any(), any())).thenAnswer(i ->
                 service.deductWithdrawableBalance(i.getArgument(0), i.getArgument(1), i.getArgument(2)) ? 1 : 0);
-        when(cash.selectByIdForUpdate(anyLong())).thenAnswer(i -> cash.selectById(i.getArgument(0)));
+        new com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture(cash);
         fixtureSources(resolver);
         return new WithdrawalBalanceAdmissionService(members, resolver, cash);
     }

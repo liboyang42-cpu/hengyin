@@ -1,4 +1,4 @@
-package com.chengyinhub.business.domain;
+package com.chengyinhub.business.domain.dto;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -8,25 +8,12 @@ import java.security.MessageDigest;
 import java.util.HexFormat;
 
 /** Immutable original wire parameters. Database association IDs are deliberately outside the wire hash. */
-public final class CashWithdrawTransferIntent {
+public record CashWithdrawTransferIntent(Long withdrawalId, Long submissionIntentId, String mchid,
+        String appid, String outBatchNo, String outDetailNo, long amountFen, String openid,
+        String effectiveRemark, int requestVersion, String requestHash) {
     public static final int REQUEST_VERSION = 1;
     public static final String BATCH_NAME = "城瘾分润提现";
     public static final int TOTAL_NUM = 1;
-    private final Long withdrawalId;
-    private final Long submissionIntentId;
-    private final String mchid, appid, outBatchNo, outDetailNo, openid, effectiveRemark, requestHash;
-    private final long amountFen;
-    private final int requestVersion;
-
-    private CashWithdrawTransferIntent(Long withdrawalId, Long submissionIntentId, String mchid, String appid,
-            String outBatchNo, String outDetailNo, long amountFen, String openid, String effectiveRemark,
-            int requestVersion, String requestHash) {
-        this.withdrawalId = withdrawalId; this.submissionIntentId = submissionIntentId;
-        this.mchid = mchid; this.appid = appid; this.outBatchNo = outBatchNo; this.outDetailNo = outDetailNo;
-        this.amountFen = amountFen; this.openid = openid; this.effectiveRemark = effectiveRemark;
-        this.requestVersion = requestVersion; this.requestHash = requestHash;
-        validate();
-    }
 
     public static CashWithdrawTransferIntent fromRequest(Long withdrawalId, String mchid, String appid,
             String outBatchNo, String outDetailNo, BigDecimal amountYuan, String openid, String remark) {
@@ -44,8 +31,9 @@ public final class CashWithdrawTransferIntent {
             String effectiveRemark, Integer requestVersion, String requestHash) {
         if (amountFen == null || requestVersion == null)
             throw new IllegalArgumentException("缺少原转账参数持久证据");
-        return new CashWithdrawTransferIntent(withdrawalId, submissionIntentId, mchid, appid, outBatchNo,
+        CashWithdrawTransferIntent restored = new CashWithdrawTransferIntent(withdrawalId, submissionIntentId, mchid, appid, outBatchNo,
                 outDetailNo, amountFen, openid, effectiveRemark, requestVersion, requestHash);
+        restored.requireValid(); return restored;
     }
 
     public CashWithdrawTransferIntent withSubmissionIntentId(Long id) {
@@ -53,24 +41,17 @@ public final class CashWithdrawTransferIntent {
                 effectiveRemark, requestVersion, requestHash);
     }
 
-    public void validate() {
-        if (withdrawalId == null || withdrawalId <= 0 || (submissionIntentId != null && submissionIntentId <= 0)
-                || blank(mchid) || mchid.length() > 64 || blank(appid) || appid.length() > 64
-                || outBatchNo == null || !outBatchNo.matches("[A-Za-z0-9]{1,32}")
-                || outDetailNo == null || !outDetailNo.matches("[A-Za-z0-9]{1,32}")
-                || amountFen <= 0 || blank(openid) || openid.length() > 128
-                || effectiveRemark == null || effectiveRemark.isEmpty() || effectiveRemark.length() > 32
-                || requestVersion != REQUEST_VERSION || requestHash == null || !requestHash.matches("[a-f0-9]{64}"))
-            throw new IllegalArgumentException("原转账意图证据不完整");
-        String expected = hash(mchid, appid, outBatchNo, outDetailNo, amountFen, openid, effectiveRemark, requestVersion);
+    public void requireValid() {
+        if (withdrawalId == null || withdrawalId <= 0 || submissionIntentId == null || submissionIntentId <= 0
+                || requestHash == null || !requestHash.matches("[a-f0-9]{64}"))
+            throw new IllegalArgumentException("原转账意图关联或指纹不完整");
+        String expected = canonicalRequestHash();
         if (!MessageDigest.isEqual(expected.getBytes(StandardCharsets.US_ASCII), requestHash.getBytes(StandardCharsets.US_ASCII)))
             throw new IllegalArgumentException("原转账请求指纹不一致");
     }
 
-    /** Gateway entrypoints require the association assigned by the committed SUBMIT_INTENT. */
-    public void requirePersisted() {
-        validate();
-        if (submissionIntentId == null) throw new IllegalArgumentException("缺少已提交的原转账意图关联");
+    public String canonicalRequestHash() {
+        return hash(mchid, appid, outBatchNo, outDetailNo, amountFen, openid, effectiveRemark, requestVersion);
     }
 
     private static boolean blank(String value) { return value == null || value.trim().isEmpty(); }
@@ -80,6 +61,12 @@ public final class CashWithdrawTransferIntent {
 
     private static String hash(String mchid, String appid, String batch, String detail, long fen,
             String openid, String remark, int version) {
+        if (blank(mchid) || mchid.length() > 64 || blank(appid) || appid.length() > 64
+                || batch == null || !batch.matches("[A-Za-z0-9]{1,32}")
+                || detail == null || !detail.matches("[A-Za-z0-9]{1,32}")
+                || fen <= 0 || blank(openid) || openid.length() > 128
+                || remark == null || remark.isEmpty() || remark.length() > 32 || version != REQUEST_VERSION)
+            throw new IllegalArgumentException("原转账参数证据不完整");
         try {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             DataOutputStream wire = new DataOutputStream(bytes);
@@ -98,16 +85,10 @@ public final class CashWithdrawTransferIntent {
         for (int index = 0; index < value.length(); index++) wire.writeChar(value.charAt(index));
     }
 
-    public Long getWithdrawalId() { return withdrawalId; }
-    public Long getSubmissionIntentId() { return submissionIntentId; }
-    public String getMchid() { return mchid; }
-    public String getAppid() { return appid; }
-    public String getOutBatchNo() { return outBatchNo; }
-    public String getOutDetailNo() { return outDetailNo; }
-    public long getAmountFen() { return amountFen; }
-    public BigDecimal getAmountYuan() { return BigDecimal.valueOf(amountFen, 2); }
-    public String getOpenid() { return openid; }
-    public String getEffectiveRemark() { return effectiveRemark; }
-    public int getRequestVersion() { return requestVersion; }
-    public String getRequestHash() { return requestHash; }
+    public BigDecimal amountYuan() { return BigDecimal.valueOf(amountFen, 2); }
+
+    @Override public String toString() {
+        return "CashWithdrawTransferIntent[withdrawalId=" + withdrawalId + ", submissionIntentId="
+                + submissionIntentId + ", requestVersion=" + requestVersion + "]";
+    }
 }

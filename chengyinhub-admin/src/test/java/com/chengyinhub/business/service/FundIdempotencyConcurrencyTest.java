@@ -137,7 +137,8 @@ class FundIdempotencyConcurrencyTest {
         final BigDecimal amount = new BigDecimal("30.00");
         MemberCashWithdraw pending = new MemberCashWithdraw();
         pending.setId(withdrawalId);
-        pending.setMemberId(memberId);
+        pending.setDelFlag(0);
+        pending.setMemberId(memberId); pending.setOpenid("openid-9101");
         pending.setAmount(amount);
         pending.setOutBatchNo("CW" + withdrawalId);
         pending.setOutDetailNo("CD" + withdrawalId);
@@ -169,21 +170,27 @@ class FundIdempotencyConcurrencyTest {
         CountDownLatch transferEntered = new CountDownLatch(1);
         CountDownLatch allowDeterministicFailure = new CountDownLatch(1);
         IWechatPayService wechatPayService = mock(IWechatPayService.class);
-        when(wechatPayService.transferToBalance(
-                eq("CW" + withdrawalId), eq("CD" + withdrawalId), eq(amount),
-                eq("openid-9101"), any(), any())).thenAnswer(invocation -> {
+        when(wechatPayService.transferToBalance(org.mockito.ArgumentMatchers.argThat(i -> i != null
+                && ("CW" + withdrawalId).equals(i.outBatchNo()) && ("CD" + withdrawalId).equals(i.outDetailNo())
+                && amount.equals(i.amountYuan()) && "openid-9101".equals(i.openid())))).thenAnswer(invocation -> {
             transferEntered.countDown();
             assertTrue(allowDeterministicFailure.await(5, TimeUnit.SECONDS),
                     "发起线程应等待对账线程先领取同一提现单");
             Map<String, String> result = new HashMap<>();
             result.put("ok", "false");
+            result.put("ambiguous", "false");
             result.put("error", "微信明确拒绝");
             return result;
         });
         Map<String, String> queryFailure = new HashMap<>();
         queryFailure.put("result", "FAIL");
-        queryFailure.put("batchStatus", "CLOSED");
-        when(wechatPayService.queryTransferResult("CW" + withdrawalId, "CD" + withdrawalId))
+        queryFailure.put("detailStatus", "FAIL");
+        queryFailure.put("batchStatus", "FINISHED");
+        queryFailure.put("mchid", "unit-merchant"); queryFailure.put("appid", "wx-appid");
+        queryFailure.put("outBatchNo", "CW" + withdrawalId); queryFailure.put("outDetailNo", "CD" + withdrawalId);
+        queryFailure.put("transferAmount", "3000"); queryFailure.put("openid", "openid-9101");
+        queryFailure.put("batchId", "provider-batch"); queryFailure.put("detailId", "provider-detail");
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && ("CW" + withdrawalId).equals(i.outBatchNo()) && ("CD" + withdrawalId).equals(i.outDetailNo()))))
                 .thenReturn(queryFailure);
 
         CashWithdrawServiceImpl service = new CashWithdrawServiceImpl();
@@ -197,6 +204,7 @@ class FundIdempotencyConcurrencyTest {
         ReflectionTestUtils.setField(service, "alarmService", mock(AlarmService.class));
         WxPayConfig payConfig = mock(WxPayConfig.class);
         when(payConfig.getAppid()).thenReturn("wx-appid");
+        when(payConfig.getMerchantId()).thenReturn("unit-merchant");
         ReflectionTestUtils.setField(service, "wxPayConfig", payConfig);
         MerchantReferralBountyService bountyService = mock(MerchantReferralBountyService.class);
         IPlayerWithdrawalCooldownService cooldownService = mock(IPlayerWithdrawalCooldownService.class);
@@ -206,6 +214,11 @@ class FundIdempotencyConcurrencyTest {
                 new WithdrawalFrozenAmountResolver(bountyService, cooldownService));
         ReflectionTestUtils.setField(service, "balanceAdmissionService",
                 com.chengyinhub.business.longrun.OWN_C04_21Test.cashFixture(memberService, mapper, (com.chengyinhub.business.service.support.WithdrawalFrozenAmountResolver) ReflectionTestUtils.getField(service, "frozenAmountResolver")));
+        // Keep the original single-winner assertion, and persist that winner's lifecycle for later fact checks.
+        org.mockito.Mockito.doAnswer(invocation -> {
+            if (!statusClaimed.compareAndSet(false, true)) return 0;
+            pending.setStatus(invocation.getArgument(0, MemberCashWithdraw.class).getStatus()); return 1;
+        }).when(mapper).updateStatusIfProcessing(any());
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
@@ -219,8 +232,8 @@ class FundIdempotencyConcurrencyTest {
             assertTrue(failure.getCause() instanceof IllegalStateException,
                     "发起线程应以提现失败异常结束，实际=" + failure.getCause());
             IllegalStateException cause = (IllegalStateException) failure.getCause();
-            assertTrue(cause.getMessage().contains("微信明确拒绝"),
-                    "发起线程仍应返回本次渠道确定性失败的具体原因");
+            assertTrue(cause.getMessage().contains("待核查"),
+                    "原单已由对账终结，迟到本地拒绝不能重新领取回补或覆盖原回执");
         } finally {
             allowDeterministicFailure.countDown();
             pool.shutdownNow();
@@ -228,7 +241,7 @@ class FundIdempotencyConcurrencyTest {
 
         verify(memberService, times(1)).addBalance(memberId, amount);
         ArgumentCaptor<MemberCashWithdraw> claims = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, times(2)).updateStatusIfProcessing(claims.capture());
+        verify(mapper, times(1)).updateStatusIfProcessing(claims.capture());
         List<MemberCashWithdraw> actualClaims = claims.getAllValues();
         assertTrue(actualClaims.stream().allMatch(claim ->
                         Long.valueOf(withdrawalId).equals(claim.getId())
