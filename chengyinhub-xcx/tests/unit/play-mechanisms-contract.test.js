@@ -27,7 +27,8 @@ test('O-01 删空精度放行:自动到达只在精度已知且 ≤80m 时发(�
   assert.equal(A.canAutoArrive(80), true);
   assert.equal(A.canAutoArrive(80.1), false);
   for (const v of [undefined, null, '', NaN, -1, '30']) assert.equal(A.canAutoArrive(v), false, String(v));
-  assert.match(src, /\(node\.vm === 0 \|\| node\.vm === 5\) && playAccuracy\.canAutoArrive\(loc\.accuracy\)\) that\.arrive\(node\.nodeId, 'gps'\)/);
+  // 2026-10-24 B:P1-067:字面量 0/5 换成 VM.NONE/VM.GPS(与后端 ValidationMethod 同值,见 validation-method-codes-contract)
+  assert.match(src, /\(node\.vm === VM\.NONE \|\| node\.vm === VM\.GPS\) && playAccuracy\.canAutoArrive\(loc\.accuracy\)\) that\.arrive\(node\.nodeId, 'gps'\)/);
   // 两个定位来源都把 accuracy 原样带进 _loc,arrive 请求从 _loc 取
   const locWrites = src.match(/_loc = \{ longitude: loc\.longitude, latitude: loc\.latitude, accuracy: loc\.accuracy \}/g) || [];
   assert.equal(locWrites.length, 2);

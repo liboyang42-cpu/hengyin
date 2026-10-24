@@ -123,3 +123,24 @@ test('UNKNOWN marker roundtrips without extra payload fields and remains account
   saveDraft(storage, input())
   assert.equal(loadDraft(storage, { draftUuid: 'draft-a' }, { memberId: 42 }).envelope.publishAttempt, undefined)
 })
+
+// B:P2-014:非主题草稿的命名空间是 draftKeyFor 的一等参数,且 key 与历史逐字节一致(老草稿照常恢复)
+test('scope 命名空间:广场发帖 key 与历史 square_post_<memberId> 槽位一致', () => {
+  const draft = require('../../pages/square/utils/publish/pro-editor-draft.js')
+  assert.equal(draft.DRAFT_SCOPES.SQUARE_POST, 'square_post')
+  assert.equal(draft.scopedTopicId(draft.DRAFT_SCOPES.SQUARE_POST, 7), 'square_post_7')
+  assert.equal(
+    draft.draftKeyFor({ scope: draft.DRAFT_SCOPES.SQUARE_POST, scopeId: 7 }),
+    'pro_editor_draft_topic_square_post_7'
+  )
+  assert.equal(draft.draftKeyFor({ topicId: 'square_post_7' }), 'pro_editor_draft_topic_square_post_7')
+  assert.throws(() => draft.draftKeyFor({ scope: 'not_registered', scopeId: 7 }), /未登记/)
+  assert.throws(() => draft.scopedTopicId(draft.DRAFT_SCOPES.SQUARE_POST, ''), /scopeId/)
+  assert.ok(Object.isFrozen(draft.DRAFT_SCOPES))
+})
+
+test('scope 命名空间:post-compose 不再手拼 square_post_ 前缀', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/square/components/cy/post-compose/index.js'), 'utf8')
+  assert.doesNotMatch(src, /'square_post_' \+/)
+  assert.match(src, /scopedTopicId\(proEditorDraft\.DRAFT_SCOPES\.SQUARE_POST/)
+})

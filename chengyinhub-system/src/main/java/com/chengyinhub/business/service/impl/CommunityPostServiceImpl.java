@@ -3,6 +3,8 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.community.CommunityPost;
 import com.chengyinhub.business.domain.community.CommunityPostFeedQuery;
+import com.chengyinhub.business.domain.community.CommunityCommandType;
+import com.chengyinhub.business.domain.community.CommunityReferenceType;
 import com.chengyinhub.business.domain.dto.CommunityPostRequests;
 import com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest;
 import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
@@ -53,7 +55,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     private static final Set<String> DISCLOSURES = set("NONE", "SPONSORED", "GIFTED", "MERCHANT_OWNER", "MERCHANT_EMPLOYEE");
     private static final Set<String> ACTIONS = set("LIKE", "BOOKMARK", "NOT_INTERESTED", "SEE_LESS_AUTHOR", "SEE_LESS_TOPIC");
     private static final Set<String> FEEDS = set("LATEST", "FOLLOWING", "NEARBY", "TOPIC", "COMMUNITY", "FEATURED", "FOR_YOU", "TRENDING");
-    private static final Set<String> REFERENCE_TYPES = set("ACTIVITY", "TOPIC", "ROUTE", "CLUB", "POI");
+    private static final Set<String> REFERENCE_TYPES = CommunityReferenceType.CODES;
     private static final Set<String> REFERENCE_PRIVACY = set("PUBLIC_SAFE");
     private static final Set<String> AUTHOR_SAFETY_LABELS = set("DANGEROUS_ACTIVITY", "SENSITIVE_CONTENT",
             "FLASHING_IMAGES", "SPOILER", "TEMPORARY_CLOSURE", "ACCESSIBILITY_LIMIT", "WEATHER_RISK");
@@ -2109,6 +2111,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
 
     private boolean trySaveCommandReceipt(Long memberId, String requestId, String commandType,
                                           Long aggregateId, Date now) {
+        // C:U-037:command_type 只收登记过的形状,写错字面量在这里就炸,不会悄悄落库
+        if (!CommunityCommandType.isKnown(commandType)) throw error("未登记的命令类型", 500);
         if (mapper.insertCommandReceipt(memberId, requestId, commandType, aggregateId,
                 payload("aggregateId", aggregateId), now) == 1) return true;
         if (isCommandReplay(memberId, requestId, commandType, aggregateId)) return false;

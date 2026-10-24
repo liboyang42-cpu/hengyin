@@ -85,8 +85,8 @@ function placeLine(poi) {
 // (loadDraft 本身也会按 memberId 判 member_mismatch,这里是第二道)。
 // 四个调用点(show 观察器 / persist / readDrafts / onPublish)都先判过 memberId,
 // 所以这里不再兜 falsy —— 兜了也永远走不到,只会让人以为「没登录也能存草稿」。
-function draftIdentity(memberId) {
-  return { topicId: 'square_post_' + String(memberId) };
+function draftIdentity(memberId) { // 命名空间登记在 pro-editor-draft DRAFT_SCOPES(B:P2-014),key 与历史逐字节一致
+  return { topicId: proEditorDraft.scopedTopicId(proEditorDraft.DRAFT_SCOPES.SQUARE_POST, memberId) };
 }
 
 // 面板顶 = 微信胶囊底 + 8px 视觉余量(留白值用户 2026-09-03 定)。

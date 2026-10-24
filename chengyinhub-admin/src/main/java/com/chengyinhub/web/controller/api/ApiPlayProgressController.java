@@ -741,7 +741,7 @@ public class ApiPlayProgressController extends BaseController
             m.put("validationMethod", validationMethod);
             m.put("needScan", validationMethod != null && validationMethod == 4);
             m.put("needAnswer", validationMethod != null && (validationMethod == 1 || validationMethod == 3));
-            m.put("needGps", validationMethod != null && validationMethod == 5);
+            m.put("needGps", validationMethod != null && validationMethod == ValidationMethod.GPS);
             m.put("done", doneNodeIds.contains(n.getId()));
             m.put("doneAt", doneAtMap.get(n.getId())); // 完成时间(epoch),手记按完成顺序排列用
             // 节点完成实际入账探索值:与 advanceProgress 用同一个 resolveNodeXp 真源。
@@ -2063,7 +2063,7 @@ public class ApiPlayProgressController extends BaseController
         String targetLongitude=node.getLongitude(),targetLatitude=node.getLatitude();
         if((personalArrival || sharedArrival!=null) && topicRouteRuntimeService!=null) {com.fasterxml.jackson.databind.JsonNode target=topicRouteRuntimeService.nodeArrivalConfig(memberId,ctx.topicId,actId,node.getId());if(target==null)return error("本局缺少冻结到达配置");targetLongitude=target.path("longitude").asText(null);targetLatitude=target.path("latitude").asText(null);}
         boolean hasNodeCoord = StringUtils.isNotBlank(targetLongitude) && StringUtils.isNotBlank(targetLatitude);
-        boolean gpsNode = Integer.valueOf(5).equals(arriveValidationMethod);
+        boolean gpsNode = Integer.valueOf(ValidationMethod.GPS).equals(arriveValidationMethod);
         if (gpsNode && !hasNodeCoord) return error("站点未设坐标，暂时无法打卡");
         if (hasNodeCoord) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return error("请开启定位");

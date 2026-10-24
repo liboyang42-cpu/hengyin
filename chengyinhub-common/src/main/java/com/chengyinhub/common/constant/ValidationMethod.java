@@ -7,6 +7,9 @@ public final class ValidationMethod {
     /** 拍照打卡（可选 App 伪 AR 滤镜子类）。 */
     public static final int PHOTO = 2;
 
+    /** GPS 到达:靠站点坐标判定"到没到",缺坐标不能退化成无验证节点。小程序侧同值见 utils/validation-method-labels.js VM.GPS。 */
+    public static final int GPS = 5;
+
     /** 多步骤偏好题组。 */
     public static final int PREFERENCE_GROUP = 6;
 
@@ -43,7 +46,7 @@ public final class ValidationMethod {
     public static boolean completesOnArrive(Integer vm) {
         if (vm == null) return true;              // 未配 = 到点即完成
         int v = vm;
-        return v == 0 || v == 5 || v == ESTIMATE || v == PRICE_PAIR || v == HIDDEN_OBJECT;
+        return v == 0 || v == GPS || v == ESTIMATE || v == PRICE_PAIR || v == HIDDEN_OBJECT;
     }
 
     /**
@@ -59,7 +62,7 @@ public final class ValidationMethod {
             case PHOTO: return "拍照打卡";
             case 3:  return "选项验证";
             case 4:  return "扫码打卡";
-            case 5:  return "GPS到达";
+            case 5:  return "GPS到达";   // = GPS;字面量被 xcx play-generic-flow 测试钉着
             case PREFERENCE_GROUP: return "偏好题组";
             case APP_SENSOR: return "传感器挑战";
             case ESTIMATE: return "估数题";

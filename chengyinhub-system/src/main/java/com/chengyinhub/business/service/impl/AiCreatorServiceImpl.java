@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import static com.chengyinhub.business.support.AiJsonResponses.PARSE_ERROR_MSG;
+import static com.chengyinhub.business.support.AiJsonResponses.parseAiJson;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.dto.ai.AiClubDesignReq;
 import com.chengyinhub.business.domain.dto.ai.AiMerchantPlanReq;
@@ -60,7 +62,6 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     private static final Logger log = LoggerFactory.getLogger(AiCreatorServiceImpl.class);
 
     /** 解析失败时给前端的统一文案(与 safety_precheck 的 parse_error issue message 一致)。 */
-    private static final String PARSE_ERROR_MSG = "AI 响应格式异常,请重试";
     private static final int PLAYER_THEME_DRAFT_DAILY_LIMIT = 3;
     /** merchant_insight 建议卡 type 白名单 —— 与小程序端 type→路由映射表一一对应 */
     private static final Set<String> INSIGHT_SUGGESTION_TYPES =
@@ -695,39 +696,6 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     {
         if (s == null) return "";
         return s.length() <= max ? s : s.substring(0, max);
-    }
-
-    /**
-     * 剥离 LLM 可能包上的 markdown 代码块围栏(```json ... ``` 或 ``` ... ```)。
-     * prompt 里只是「请求」模型不要包,模型仍可能包;不剥离则 fastjson2 必抛 JSONException。
-     * 无围栏时原样(trim 后)返回;null 返回 null。
-     */
-    private static String stripJsonFence(String text)
-    {
-        if (text == null) return null;
-        String s = text.trim();
-        if (!s.startsWith("```")) return s;
-        // 跳过首行围栏(首行可能带语言标注,如 ```json)
-        int nl = s.indexOf('\n');
-        if (nl < 0) return s;
-        s = s.substring(nl + 1);
-        int close = s.lastIndexOf("```");
-        if (close >= 0) s = s.substring(0, close);
-        return s.trim();
-    }
-
-    /**
-     * 统一的 AI 响应 JSON 解析:先剥围栏再解析;text 为 null/空 或解析结果为 null 时抛
-     * JSONException,让调用方复用既有的 catch 降级分支(否则后续 json.getXxx() 会抛 NPE 冒泡 500)。
-     */
-    private static JSONObject parseAiJson(String text)
-    {
-        JSONObject json = JSON.parseObject(stripJsonFence(text));
-        if (json == null)
-        {
-            throw new com.alibaba.fastjson2.JSONException("empty ai response");
-        }
-        return json;
     }
 
     // ---- 内嵌 prompt 模板(输出 JSON 模式, [BIZ:xxx] 标记供 MockLlmClient 路由) ----
