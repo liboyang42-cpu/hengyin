@@ -41,7 +41,7 @@ import java.util.Set;
 /**
  * 报名退款服务实现。
  *
- * 退款口径:现金走微信【原路退回】(IWechatPayService.refund,SUCCESS/PROCESSING 视为受理成功),
+ * 退款口径:现金走微信【原路退回】(WechatPaymentOperations.refund,SUCCESS/PROCESSING 视为受理成功),
  * 受理失败进 §6.1 人工兜底队列(不再自动转平台余额——那会造成二清);积分一并返还。
  * 现金部分复用 {@link IRefundService}(结算冲销 + 标记 registration.payment_status=4),
  * 再镜像积分返还 / 库存恢复 把钱与积分还给玩家。
@@ -120,7 +120,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     /** P1-PT-8:取消活动前对 PAYING 单查微信真实态。 */
     @Autowired
-    private com.chengyinhub.business.service.IWechatPayService wechatPayService;
+    @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private com.chengyinhub.business.service.WechatPaymentOperations wechatPayService;
 
     /** P1-PT-8:查到已付时走支付回调同一条补记链路(与 PAYING 超时对账同口径)。 */
     @Autowired

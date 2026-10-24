@@ -9,7 +9,7 @@ import com.wechat.pay.java.service.payments.jsapi.JsapiService;
 import com.wechat.pay.java.service.payments.model.Transaction;
 import com.wechat.pay.java.service.payments.model.TransactionAmount;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatPayTestWiring;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -82,21 +82,21 @@ class WechatPayOrderQueryTest {
     }
 
     private WechatPayServiceImpl serviceFailingWith(int status, String body) {
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatPayTestWiring.facade();
         WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayTestWiring.setField(service, "wxPayConfig", config);
         JsapiService jsapi = mock(JsapiService.class);
         HttpRequest request = new HttpRequest.Builder().httpMethod(HttpMethod.GET)
                 .url("https://api.mch.weixin.qq.com/v3/pay/transactions/out-trade-no/T1").build();
         when(jsapi.queryOrderByOutTradeNo(any())).thenThrow(new ServiceException(request, status, body));
-        ReflectionTestUtils.setField(service, "jsapiService", jsapi);
+        WechatPayTestWiring.setField(service, "jsapiService", jsapi);
         return service;
     }
 
     private void verifyOriginalQueryWasCalled(WechatPayServiceImpl service) {
-        JsapiService sdk = (JsapiService) ReflectionTestUtils.getField(service, "jsapiService");
+        JsapiService sdk = (JsapiService) WechatPayTestWiring.getField(service, "jsapiService");
         org.mockito.Mockito.verify(sdk).queryOrderByOutTradeNo(org.mockito.ArgumentMatchers.argThat(
                 request -> "merchant".equals(request.getMchid()) && "T1".equals(request.getOutTradeNo())));
     }
@@ -117,14 +117,14 @@ class WechatPayOrderQueryTest {
     }
 
     private WechatPayServiceImpl serviceReturning(Transaction t) {
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatPayTestWiring.facade();
         WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayTestWiring.setField(service, "wxPayConfig", config);
         JsapiService sdk = mock(JsapiService.class);
         when(sdk.queryOrderByOutTradeNo(any())).thenReturn(t);
-        ReflectionTestUtils.setField(service, "jsapiService", sdk);
+        WechatPayTestWiring.setField(service, "jsapiService", sdk);
         return service;
     }
 }

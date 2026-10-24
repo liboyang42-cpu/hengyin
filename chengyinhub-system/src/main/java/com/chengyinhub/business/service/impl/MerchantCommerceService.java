@@ -9,7 +9,7 @@ import com.chengyinhub.business.mapper.OmsOrderMapper;
 import com.chengyinhub.business.service.IMerchantCommerceService;
 import com.chengyinhub.business.service.ISettlementRuleService;
 import com.chengyinhub.business.service.IUserPermissionService;
-import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +36,8 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     @Autowired private MerchantSubscriptionMapper subscriptionMapper;
     @Autowired private OmsOrderMapper orderMapper;
     @Autowired private ISettlementRuleService settlementRuleService;
-    @Autowired private IWechatPayService wechatPayService;
+    @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private WechatPaymentOperations wechatPayService;
     @Autowired private IUserPermissionService permissionService;
     @Autowired private org.springframework.transaction.PlatformTransactionManager paymentTransactions;
 

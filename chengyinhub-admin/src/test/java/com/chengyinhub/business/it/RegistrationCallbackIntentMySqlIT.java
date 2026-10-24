@@ -46,7 +46,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatPayTestWiring;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -158,56 +158,56 @@ class RegistrationCallbackIntentMySqlIT {
             if (original == null) throw missing;
             return original;
         });
-        gateway = new WechatPayServiceImpl();
+        gateway = WechatPayTestWiring.facade();
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn(MERCHANT);
-        ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
-        ReflectionTestUtils.setField(gateway, "paymentIntentJdbc", db);
-        ReflectionTestUtils.setField(gateway, "paymentIntentTransactions", transactions);
-        ReflectionTestUtils.setField(gateway, "jsapiService", sdk);
-        ReflectionTestUtils.setField(gateway, "alarmService", mock(AlarmService.class));
+        WechatPayTestWiring.setField(gateway, "wxPayConfig", config);
+        WechatPayTestWiring.setField(gateway, "paymentIntentJdbc", db);
+        WechatPayTestWiring.setField(gateway, "paymentIntentTransactions", transactions);
+        WechatPayTestWiring.setField(gateway, "jsapiService", sdk);
+        WechatPayTestWiring.setField(gateway, "alarmService", mock(AlarmService.class));
         IMerchantCommerceService commerce = mock(IMerchantCommerceService.class);
         when(commerce.supportsOutTradeNo(anyString())).thenReturn(false); // This fixture is a registration, not commerce.
-        ReflectionTestUtils.setField(gateway, "merchantCommerceService", commerce);
+        WechatPayTestWiring.setField(gateway, "merchantCommerceService", commerce);
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA"); generator.initialize(2048);
         keys = generator.generateKeyPair(); apiV3Key = UUID.randomUUID().toString().replace("-", "");
-        ReflectionTestUtils.setField(gateway, "notificationParser", new NotificationParser(
+        WechatPayTestWiring.setField(gateway, "notificationParser", new NotificationParser(
                 new RSAPublicKeyNotificationConfig.Builder().publicKey(keys.getPublic())
                         .publicKeyId(SERIAL).apiV3Key(apiV3Key).build()));
 
         WxPaymentCallbackInboxMapper inboxMapper = sql.getMapper(WxPaymentCallbackInboxMapper.class);
         WxPaymentCallbackClaimService claims = new WxPaymentCallbackClaimService();
-        ReflectionTestUtils.setField(claims, "mapper", inboxMapper);
+        WechatPayTestWiring.setField(claims, "mapper", inboxMapper);
         WxPaymentCallbackMutationService mutations = new WxPaymentCallbackMutationService();
-        ReflectionTestUtils.setField(mutations, "mapper", inboxMapper);
+        WechatPayTestWiring.setField(mutations, "mapper", inboxMapper);
         WxPaymentCallbackInboxServiceImpl inbox = new WxPaymentCallbackInboxServiceImpl();
-        ReflectionTestUtils.setField(inbox, "mapper", inboxMapper);
-        ReflectionTestUtils.setField(inbox, "claimService", transactional(claims));
-        ReflectionTestUtils.setField(inbox, "mutationService", transactional(mutations));
-        ReflectionTestUtils.setField(inbox, "alarmService", mock(AlarmService.class));
+        WechatPayTestWiring.setField(inbox, "mapper", inboxMapper);
+        WechatPayTestWiring.setField(inbox, "claimService", transactional(claims));
+        WechatPayTestWiring.setField(inbox, "mutationService", transactional(mutations));
+        WechatPayTestWiring.setField(inbox, "alarmService", mock(AlarmService.class));
         CmsRegistrationServiceImpl registration = new CmsRegistrationServiceImpl();
-        ReflectionTestUtils.setField(registration, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
-        ReflectionTestUtils.setField(registration, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
-        ReflectionTestUtils.setField(registration, "umsMemberPointsDetailMapper", sql.getMapper(UmsMemberPointsDetailMapper.class));
-        ReflectionTestUtils.setField(registration, "cmsRegistrationScanMapper", sql.getMapper(CmsRegistrationScanMapper.class));
-        ReflectionTestUtils.setField(registration, "alarmService", mock(AlarmService.class));
-        ReflectionTestUtils.setField(registration, "wxPaymentCallbackInboxService", transactional(inbox));
+        WechatPayTestWiring.setField(registration, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        WechatPayTestWiring.setField(registration, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
+        WechatPayTestWiring.setField(registration, "umsMemberPointsDetailMapper", sql.getMapper(UmsMemberPointsDetailMapper.class));
+        WechatPayTestWiring.setField(registration, "cmsRegistrationScanMapper", sql.getMapper(CmsRegistrationScanMapper.class));
+        WechatPayTestWiring.setField(registration, "alarmService", mock(AlarmService.class));
+        WechatPayTestWiring.setField(registration, "wxPaymentCallbackInboxService", transactional(inbox));
         CmsPointsSettingServiceImpl settings = new CmsPointsSettingServiceImpl();
-        ReflectionTestUtils.setField(settings, "cmsPointsSettingMapper", sql.getMapper(CmsPointsSettingMapper.class));
-        ReflectionTestUtils.setField(registration, "cmsPointsSettingService", transactional(settings));
+        WechatPayTestWiring.setField(settings, "cmsPointsSettingMapper", sql.getMapper(CmsPointsSettingMapper.class));
+        WechatPayTestWiring.setField(registration, "cmsPointsSettingService", transactional(settings));
         // Original owner_type=1 policy defers merchant accrual until verification; this is the real service, not a success stub.
-        ReflectionTestUtils.setField(registration, "settlementEntryService", transactional(new SettlementEntryServiceImpl()));
+        WechatPayTestWiring.setField(registration, "settlementEntryService", transactional(new SettlementEntryServiceImpl()));
         StaticListableBeanFactory beans = new StaticListableBeanFactory(); beans.addBean("gateway", gateway);
-        ReflectionTestUtils.setField(registration, "paymentAttemptGateway", beans.getBeanProvider(IWechatPayService.class));
+        WechatPayTestWiring.setField(registration, "paymentAttemptGateway", beans.getBeanProvider(IWechatPayService.class));
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         when(executor.schedule(any(Runnable.class), eq(10L), eq(TimeUnit.MILLISECONDS))).thenAnswer(call -> {
             assertVisibleOutside(2, WxPaymentCallbackInbox.STATE_DONE, 95, 2, 1);
             scheduledNotices.incrementAndGet();
             return mock(ScheduledFuture.class); // Do not execute QR/HTTP effects; only verify post-commit enqueue.
         });
-        ReflectionTestUtils.setField(registration, "committedBusinessNotice", new CommittedBusinessNotice(
+        WechatPayTestWiring.setField(registration, "committedBusinessNotice", new CommittedBusinessNotice(
                 mock(com.chengyinhub.business.service.INotifyService.class), mock(AlarmService.class), transactions, executor));
-        ReflectionTestUtils.setField(gateway, "registrationService", transactional(registration));
+        WechatPayTestWiring.setField(gateway, "registrationService", transactional(registration));
         assertEquals(BUSINESS_NO, freeze("wx-mini", "JSAPI"));
         clearInvocations(sdk); // First preflight 404 is separate from the callback observations below.
     }
@@ -303,7 +303,7 @@ class RegistrationCallbackIntentMySqlIT {
     }
 
     private String freeze(String appid, String channel) {
-        return ReflectionTestUtils.invokeMethod(gateway, "freezePaymentIntent", BUSINESS_NO, MERCHANT,
+        return WechatPayTestWiring.invokeMethod(gateway, "freezePaymentIntent", BUSINESS_NO, MERCHANT,
                 appid, channel, "CNY", 1000, "JSAPI".equals(channel) ? "openid-original" : "",
                 "registration callback integration", "https://example.test/notify");
     }
