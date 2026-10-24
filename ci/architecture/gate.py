@@ -521,8 +521,35 @@ def business_write_findings(key, statement, kind, details, previous, previous_de
     return blockers, review
 
 
-def static_findings(base, current, changed, sql_details, base_details, policy=None):
+def statement_write_owners():
+    """Two reviewed recovery edges, never a namespace/table-wide waiver or SQL debt baseline."""
+    path = "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml"
+    expected = {path + "#insertRecovery": "insert", path + "#completeRecovery": "update"}
+    try:
+        records = json.loads((HERE / "owners.json").read_text())["statement_write_owners"]
+        if not isinstance(records, list) or len(records) != 2:
+            raise GateError("STATEMENT_OWNER_POLICY_INVALID")
+        bindings = {}
+        for record in records:
+            if (set(record) != {"key", "owner", "table", "kind", "sha256", "reviewed_source", "contract"}
+                    or record["key"] not in expected or record["key"] in bindings
+                    or record["kind"] != expected[record["key"]]
+                    or record["owner"] != "chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
+                    or record["table"] != "wx_payment_callback_outbox"
+                    or record["contract"] != "B_ORIGINAL_FACT_RECOVERY"
+                    or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])
+                    or not SHA.fullmatch(record["reviewed_source"])):
+                raise GateError("STATEMENT_OWNER_POLICY_INVALID")
+            bindings[record["key"]] = record
+        return bindings
+    except (OSError, ValueError, TypeError, KeyError) as error:
+        raise GateError("STATEMENT_OWNER_POLICY_INVALID: " + str(error)) from error
+
+
+def static_findings(base, current, changed, sql_details, base_details, policy=None, statement_owners=None):
     blockers, review = [], []
+    statement_owners = statement_owners or {}
+    limited_edges = {(r["table"], r["owner"]) for r in statement_owners.values()}
     known_owners = {}
     for key, statement in base["statements"].items():
         table = literal_write_target(statement["kind"], base_details[key])
@@ -547,6 +574,19 @@ def static_findings(base, current, changed, sql_details, base_details, policy=No
             blockers.append({"rule": "DEPENDENCY_EXPANSION", "key": pom,
                              "detail": "new dependency coordinate/scope or increased declaration count"})
     for key, statement in current["statements"].items():
+        operation = literal_write_operation(sql_details[key]) or statement["kind"]
+        operation = "insert" if operation == "replace" else operation
+        target = literal_write_target(operation, sql_details[key])
+        binding = statement_owners.get(key)
+        reviewed = bool(binding and all((binding["owner"] == statement["owner"], binding["kind"] == operation,
+                                       binding["table"] == target, binding["sha256"] == statement["sha256"])))
+        # Check before comparison-base equality: a reviewed namespace must never launder a third statement.
+        if binding and not reviewed:
+            blockers.append({"rule": "STATEMENT_OWNER_BINDING_CHANGED", "key": key,
+                             "detail": "reviewed recovery statement identity/body changed; independent review required"})
+        elif not binding and (target, statement["owner"]) in limited_edges:
+            blockers.append({"rule": "UNREVIEWED_STATEMENT_WRITER", "key": key,
+                             "detail": "the two approved recovery edges grant no other statement write"})
         if statement == base["statements"].get(key):
             continue
         details = sql_details[key]
@@ -566,7 +606,7 @@ def static_findings(base, current, changed, sql_details, base_details, policy=No
             continue
         table = literal_write_target(kind, details)
         owners = known_owners.get(table, set())
-        if owners and statement["owner"] not in owners:
+        if owners and statement["owner"] not in owners and not reviewed:
             blockers.append({"rule": "NEW_TABLE_WRITER", "key": key,
                              "detail": table + " <- " + statement["owner"]})
         if policy is not None:
@@ -708,7 +748,8 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
     current = inventory(root, candidate, details)
     previous_details = {}
     previous = inventory(root, compare_base, previous_details)
-    blockers, review = static_findings(previous, current, changed, details, previous_details, policy)
+    blockers, review = static_findings(previous, current, changed, details, previous_details, policy,
+                                       statement_write_owners())
     boundary_blockers, boundary_review, boundary_scope = boundary_findings(root, candidate, changed, names, technical, policy)
     blockers.extend(boundary_blockers)
     review.extend(boundary_review)

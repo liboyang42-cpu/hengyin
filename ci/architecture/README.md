@@ -96,3 +96,7 @@ E_TOPIC_QUERY增量（9e14a73e50c9afd5c8f38027c3ecd059967a51d3）只追加精确
 RegistrationRedemptionApplication 原端口保留、仅 Redemption→Query 共用谓词单向；其 Mapper 包引用只例外原 CoopOrderMapper 类型，例外不授任何表写权。CI/后置工具必须使用同一独立 reviewed verifier SHA。
 
 该 Redemption owner 的 business.service 与 merchant access 引用同样只保留原精确类型；Seat$Receipt 为独立明确例外，其它 $ 类型不自动放行。方法级授权仍不由 class 图证明。
+
+## 精确恢复语句写边（独立审阅）
+
+`owners.statement_write_owners` 仅声明 B `WechatVerifiedPaymentFactMapper.xml#insertRecovery/#completeRecovery` 对 `wx_payment_callback_outbox` 的两个原事实恢复写边，绑定原 path#id/module/namespace/kind/table/现有 statement+include 指纹及审阅源SHA。独立可信版本批准后，仅精确命中的语句不再报 NEW_TABLE_WRITER；不授同 namespace 第三条语句或同表其它 namespace 写权，不改变原 scope/cache/业务fact合同检查。限定writer的额外确定写边、原语句指纹漂移在比较base equality之前阻断；candidate自改metadata仍POLICY_CHANGE。原2ec baseline/locking proposal不变。未知动态效果仍须人审，不证明方法调用、事务或经济语义；root持有双CI ref最终接线。

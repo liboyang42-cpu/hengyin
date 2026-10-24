@@ -1453,5 +1453,25 @@
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/",
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/"
     ]
-  }
+  },
+  "statement_write_owners": [
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml#insertRecovery",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+      "table": "wx_payment_callback_outbox",
+      "kind": "insert",
+      "sha256": "3de6cc822e34c39f678762f37980b5d76f3098f7c0a5d1d161a1df4678b5a85a",
+      "reviewed_source": "9b284f0111b4337e388fc18d797b11c62112cd82",
+      "contract": "B_ORIGINAL_FACT_RECOVERY"
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml#completeRecovery",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+      "table": "wx_payment_callback_outbox",
+      "kind": "update",
+      "sha256": "e79cb5eeb2302bb96c6dc1fc136c3f7e74b36656d026b89e9acd7f3eeb535b44",
+      "reviewed_source": "9b284f0111b4337e388fc18d797b11c62112cd82",
+      "contract": "B_ORIGINAL_FACT_RECOVERY"
+    }
+  ]
 }

@@ -950,6 +950,114 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
 
 
+class RecoveryStatementOwnerTest(unittest.TestCase):
+    """Actual source CLI; public B SQL bodies in isolated Git fixtures, never DB/CI evidence."""
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    source_cli = BusinessOwnerPolicyTest.source_cli
+    assert_rule = BusinessOwnerPolicyTest.assert_rule
+    path = "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml"
+    namespace = "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
+    # Exact reviewed 9b284f0 elements, including original tails used by sql_shape.
+    body = '<insert id="insertRecovery" parameterType="map">\n        INSERT IGNORE INTO wx_payment_callback_outbox\n            (biz_type,biz_id,idempotency_key,money_affecting,state,fence_token,attempt_count,max_attempts,last_error_code,create_time,update_time)\n        VALUES (1,#{biz_id},#{idempotency_key},0,4,0,0,3,#{reason},NOW(3),NOW(3))\n    </insert>\n    <update id="completeRecovery">\n        UPDATE wx_payment_callback_outbox SET state=2,last_error_code=NULL,update_time=NOW(3)\n        WHERE idempotency_key=#{key} AND biz_type=1 AND biz_id=#{businessId} AND money_affecting=0 AND state=4\n    </update>\n    <select id="fixtureTail">SELECT 1</select>'
+
+    def prepare(self):
+        self.write(MAPPER, mapper('<update id="outbox">update wx_payment_callback_outbox set state=2 where id=#{id}</update>'))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        return self.prepare_policy()[0]
+
+    def put(self, body=None, namespace=None, path=None):
+        self.write(path or self.path, mapper(self.body if body is None else body, namespace or self.namespace))
+
+    def test_exact_two_reviewed_statements_are_green_and_match_fingerprints(self):
+        trusted = self.prepare()
+        self.put()
+        candidate = self.commit()
+        actual = gate.inventory(self.root, candidate)["statements"]
+        with patch.object(gate, "HERE", trusted):
+            bindings = gate.statement_write_owners()
+        for key, binding in bindings.items():
+            self.assertEqual(binding["sha256"], actual[key]["sha256"])
+            self.assertEqual("9b284f0111b4337e388fc18d797b11c62112cd82", binding["reviewed_source"])
+        status, report = self.source_cli(trusted, candidate)
+        self.assertEqual(0, status, report)
+        self.assertTrue(any(item["reason"] == "WRITE_CONTRACT_REVIEW" for item in report["review_items"]))
+
+    def test_third_statement_cannot_inherit_namespace_table_permission(self):
+        trusted = self.prepare()
+        self.put(self.body + '<update id="unreviewed">update wx_payment_callback_outbox set state=4 where id=#{id}</update>')
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNREVIEWED_STATEMENT_WRITER")
+
+    def test_prior_feature_commit_and_compare_base_cannot_launder_third_statement(self):
+        trusted = self.prepare()
+        self.put()
+        accepted = self.commit()
+        self.assertEqual(0, self.source_cli(trusted, accepted)[0])
+        self.put(self.body + '<update id="unreviewed">update wx_payment_callback_outbox set state=4 where id=#{id}</update>')
+        unreviewed = self.commit()
+        self.write("docs/later.md", b"second feature commit")
+        candidate = self.commit()
+        for compare in (self.base, accepted, unreviewed):
+            with self.subTest(compare=compare):
+                self.assert_rule(self.source_cli(trusted, candidate, compare), "UNREVIEWED_STATEMENT_WRITER")
+
+    def test_body_scope_dynamic_and_include_changes_cannot_reuse_reviewed_identity(self):
+        trusted = self.prepare()
+        for body in (self.body.replace('0,4,0,0,3', '1,4,0,0,3'),
+                     self.body.replace('AND money_affecting=0 AND state=4', 'AND state=4'),
+                     self.body.replace('wx_payment_callback_outbox SET', '${table} SET'),
+                     self.body.replace('AND state=4', '<include refid="scope"/>') + '<sql id="scope">AND state=4</sql>'):
+            with self.subTest(body=body):
+                self.put(body)
+                self.assert_rule(self.source_cli(trusted, self.commit()), "STATEMENT_OWNER_BINDING_CHANGED")
+
+    def test_unchanged_altered_binding_in_comparison_base_still_blocks(self):
+        trusted = self.prepare()
+        self.put(self.body.replace('AND money_affecting=0 AND state=4', 'AND state=4'))
+        unreviewed = self.commit()
+        self.write("docs/later.md", b"cannot bless prior feature SQL")
+        self.assert_rule(self.source_cli(trusted, self.commit(), unreviewed), "STATEMENT_OWNER_BINDING_CHANGED")
+
+    def test_renamed_statement_cannot_reuse_permission(self):
+        trusted = self.prepare()
+        self.put(self.body.replace('id="insertRecovery"', 'id="renamed"'))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNREVIEWED_STATEMENT_WRITER")
+
+    def test_other_namespace_is_not_approved_for_shared_outbox(self):
+        trusted = self.prepare()
+        self.put(namespace="com.chengyinhub.business.mapper.OtherMapper")
+        result = self.source_cli(trusted, self.commit())
+        self.assert_rule(result, "NEW_TABLE_WRITER")
+        self.assert_rule(result, "STATEMENT_OWNER_BINDING_CHANGED")
+
+    def test_candidate_cannot_clear_or_widen_statement_owner_policy(self):
+        trusted = self.prepare()
+        original = json.loads((trusted / "owners.json").read_text())
+        for records in ([], [{**original["statement_write_owners"][0], "table": "*"}]):
+            with self.subTest(records=records):
+                value = copy.deepcopy(original)
+                value["statement_write_owners"] = records
+                self.write("ci/architecture/owners.json", gate.encode(value))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_malformed_or_broad_trusted_metadata_is_not_a_namespace_grant(self):
+        trusted = self.prepare()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ({"table": "*"}, {"kind": "delete"}, {"key": self.path + "#*"},
+                       {"owner": "chengyinhub-system:foreign.Mapper"}, {"sha256": "short"}):
+            with self.subTest(change=change):
+                value = copy.deepcopy(original)
+                value["statement_write_owners"][0].update(change)
+                (trusted / "owners.json").write_bytes(gate.encode(value))
+                with patch.object(gate, "HERE", trusted), self.assertRaisesRegex(gate.GateError, "STATEMENT_OWNER_POLICY_INVALID"):
+                    gate.statement_write_owners()
+
+
 class NpcIntentWriterPolicyTest(unittest.TestCase):
     setUp = InventoryAndDeltaTest.setUp
     write = InventoryAndDeltaTest.write
