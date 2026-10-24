@@ -139,3 +139,17 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 9. Parent addendum 2026-10-23 18:18 America/Los_Angeles
+
+`SupportEventLocatorTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueWriteApplies`：未见 `c11-loc-class` 抛 `IllegalStateException` 且 `findByRequestId` 仍空；后续唯一 `add` 才是第一笔写入。保留 throw。Did not invent a second recoverOriginal. Isolation occupancy remains.
+
+父进程独立 surefire（`/tmp/hengyin-c11`，HEAD `52bd5a443`，2026-10-24T01:18:01Z）：
+
+```
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0 -- SupportEventLocatorTest
+Tests run: 24, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
