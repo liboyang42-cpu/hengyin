@@ -152,7 +152,7 @@ public class ResourceSourceAdapter {
             throw new WaitingSourceException(GAME_RECEIPT);
         }
         GameCommandReceiptView view = source.receipt(actor, activityId, id);
-        if (view == null) {
+        if (view == null || view.getRequestId() == null || !id.equals(view.getRequestId())) {
             return null;
         }
         return new GameReceiptRead(id, view.getOutcome(), view.isReplayed(), "APPLIED".equals(view.getOutcome()));
