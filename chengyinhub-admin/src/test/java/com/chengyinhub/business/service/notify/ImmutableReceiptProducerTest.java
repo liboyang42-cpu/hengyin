@@ -59,4 +59,26 @@ class ImmutableReceiptProducerTest {
                 producer.recoverOriginal("c09-rcpt-never", null).outcome);
         assertEquals(1, store.size());
     }
+
+    @Test
+    void unusedOfflineReopenOfNeverSeenDoesNotOccupyThenUniqueAcceptApplies() {
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store);
+        assertThrows(IllegalStateException.class, () -> producer.offlineReopen("c09-reopen-never", null));
+        assertEquals(0, store.size(), "未见回执 offlineReopen 观察不得占账");
+        assertNull(store.find("c09-reopen-never"));
+        ImmutableReceiptProducer.OriginalReceipt unused = producer.recoverOriginal("c09-reopen-never", null);
+        assertEquals("c09-reopen-never", unused.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, unused.outcome);
+        ImmutableReceiptProducer.OriginalReceipt first = producer.accept(
+                new ImmutableReceiptProducer.OriginalRequest("c09-reopen-never",
+                        ImmutableReceiptProducer.Kind.PIN, "{\"op\":\"pin\"}",
+                        ImmutableReceiptProducer.OUTCOME_ACCEPTED));
+        assertEquals(ImmutableReceiptProducer.OUTCOME_ACCEPTED, first.outcome);
+        assertEquals("c09-reopen-never", first.requestId);
+        assertEquals(1, store.size());
+        assertEquals(ImmutableReceiptProducer.OUTCOME_ACCEPTED,
+                producer.recoverOriginal("c09-reopen-never", null).outcome);
+        assertEquals(1, store.size());
+    }
 }
