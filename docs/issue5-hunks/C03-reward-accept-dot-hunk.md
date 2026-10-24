@@ -28,6 +28,23 @@ mvn -pl chengyinhub-admin -am test \
 
 Head：`9520f2001`。2026-10-23 16:06 America/Los_Angeles。App / MySQL / CI = NOT_RUN。不是 100%。阵营/领地/秘密目标经济值未编造。
 
+## 4. Parent addendum 2026-10-23 18:32 America/Los_Angeles
+
+Class-level `RewardAcceptLedgerTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueAcceptApplies`：未见 `c03-rew-class-never` 的 `recoverOriginal` 保持 UNKNOWN / `existing==null`；后续唯一 `accept` 才是第一笔 APPLIED。`TriggerActorProjection` 无 requestId 账本，不编 `recoverOriginal`。
+
+父进程独立 surefire（workspace `cursor/c03-reward-accept-ledger-e504`，HEAD `ef2bcb4e9`，2026-10-24T01:32:39Z）：
+
+```
+Tests run: 5 -- C03AccountSwitchRestartIsolationTest
+Tests run: 5 -- RewardAcceptLedgerTest
+Tests run: 1 -- C03RewardAcceptJourneyIsolationTest
+Tests run: 3 -- TriggerActorProjectionTest
+Tests run: 14, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
 ## 3. Needed hook（do not apply here）
 
 Runtime 一次效果后问 `RewardAcceptLedger.accept`；默认触发走 `TriggerActorProjection`，`defaultFired` 必须拒绝。
