@@ -52,6 +52,9 @@ public class ApiVerifyController extends BaseController {
     private ICmsRegistrationService registrationService;
 
     @Autowired
+    private com.chengyinhub.business.service.RegistrationSeatService registrationSeatService;
+
+    @Autowired
     private ICmsActivityService activityService;
 
     /** [P0-14] ③ 出码判据:还有没有欠的章节(verification_status 对 ③ 是「被核销过」不是「核销完」)。 */
@@ -82,7 +85,7 @@ public class ApiVerifyController extends BaseController {
 
     @Operation(summary = "签发我的动态核销码(玩家出码,商家/俱乐部扫)")
     @PostMapping("/dyncode/issue")
-    public AjaxResult issueDynCode(Long registrationId) {
+    public AjaxResult issueDynCode(Long registrationId, Integer seatNo) {
         Long memberId;
         try {
             memberId = getAppUserId();
@@ -117,7 +120,11 @@ public class ApiVerifyController extends BaseController {
         // ⇒ ③ 的多章核销链路当场断掉,且零告警(玩家只看到「该票已核销」,商家只看到没人来)。
         // ⇒ 判据收进 isTicketFullyConsumed(与 AccountDeregistration 的活跃单判定同一真源)。
         //    非 ③ 的票没有 entitlement ⇒ 该方法退化成 verification_status==1 ⇒ 逐字走原逻辑,零影响。
-        if (perkLedgerService.isTicketFullyConsumed(reg.getVerificationStatus(), reg.getId())) {
+        boolean multiTopicSeat = Long.valueOf(1L).equals(reg.getOwnerType())
+                && reg.getOrderNum() != null && reg.getOrderNum() > 1;
+        com.chengyinhub.business.domain.RegistrationSeat selectedSeat = multiTopicSeat
+                ? registrationSeatService.prepareOwnedSeat(registrationId, memberId, seatNo) : null;
+        if (!multiTopicSeat && perkLedgerService.isTicketFullyConsumed(reg.getVerificationStatus(), reg.getId())) {
             return error("该票已核销");
         }
 
@@ -135,7 +142,9 @@ public class ApiVerifyController extends BaseController {
         } else if (Integer.valueOf(3).equals(reg.getPurchaseKind())) {
             return error("探索票所属活动不可用");
         }
-        String type = (ownerType != null && ownerType.longValue() == 2L) ? "activity" : "topic";
+        String type = selectedSeat == null
+                ? ((ownerType != null && ownerType.longValue() == 2L) ? "activity" : "topic")
+                : com.chengyinhub.business.service.RegistrationSeatService.codeType(selectedSeat.getSeatNo());
         long now = System.currentTimeMillis();
         long nonce = ThreadLocalRandom.current().nextLong();
         String code = VerifyDynCodeUtil.issue(reg.getId(), type, now, DYN_TTL_MS, nonce, dynSecret);
@@ -154,8 +163,16 @@ public class ApiVerifyController extends BaseController {
         data.put("ttlMs", DYN_TTL_MS);
         data.put("expiresAt", now + DYN_TTL_MS);
         data.put("type", type);
+        if (selectedSeat != null) {
+            data.put("registrationId", registrationId); data.put("seatId", selectedSeat.getId());
+            data.put("seatNo", selectedSeat.getSeatNo()); data.put("seatStatus", selectedSeat.getStatus());
+            data.put("verifiedAt", selectedSeat.getVerifiedAt());
+        }
         return AjaxResult.success(data);
     }
+
+    /** Java compatibility only; a multi-seat order still requires an explicit signed seat. */
+    public AjaxResult issueDynCode(Long registrationId) { return issueDynCode(registrationId, null); }
 
     @Operation(summary = "签发我的据点核销码(玩家出码,商家扫码领券)")
     @PostMapping("/citynode/issue")

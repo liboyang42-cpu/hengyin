@@ -1610,6 +1610,9 @@ public class ApiRegistrationController extends BaseController {
         return scanQrCode(result.type, code);
     }
 
+    @Autowired
+    private com.chengyinhub.business.service.RegistrationSeatService registrationSeatService;
+
     @Operation(summary = "带队场次核销主题玩家票")
     @PostMapping("/scan_group_member_ticket")
     @Parameters({
@@ -1625,6 +1628,13 @@ public class ApiRegistrationController extends BaseController {
             VerifyDynCodeUtil.Result result = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
             if (!result.valid) {
                 return AjaxResult.error(result.reason == null ? "核销码无效" : result.reason);
+            }
+            Integer seatNo = com.chengyinhub.business.service.RegistrationSeatService.seatNumber(result.type);
+            if (seatNo != null) {
+                Long actor;
+                try { actor = getAppUserId(); } catch (Exception unauthenticated) { return error("请先登录"); }
+                var receipt = registrationSeatService.redeemGroupSeat(result.regId, seatNo, activityId, actor);
+                return AjaxResult.success(receipt.replayed() ? "该席位已核销，请勿重复提供权益" : "核销成功", receipt);
             }
             if (!"topic".equals(result.type)) {
                 return AjaxResult.error("本场次只可核销主题票");
@@ -1850,6 +1860,9 @@ public class ApiRegistrationController extends BaseController {
                                     || !clubMemberService.isTopicOwner(topicId,
                                     groupActivity.getClubId(), memberId)) {
                                 return AjaxResult.error("该带队场次不可核销");
+                            }
+                            if (cmsRegistration.getOrderNum() != null && cmsRegistration.getOrderNum() > 1) {
+                                return AjaxResult.error("多人订单请逐席位出示核销码，整单码不能代替逐人核销");
                             }
                             // 规则 1：同主题不同 activity 是不同团。核销事务里必须把报名单绑定当前场次，
                             // 结算只认这条事实，绝不再从 topic + 核销人猜归属。
