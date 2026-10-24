@@ -37,4 +37,5 @@
 - 无 wxml/wxss 改动；无鉴权/RBAC/JWT/Redis 改动；无新依赖；未改 C00 保留文件；未调高任何基线。
 
 ## CI
-- 见 PR #594 的 check runs（run ID 在最终推送后补记）。
+- head `459fb937`：全部 check 通过（success/skipped），Actions run 40064359303、40064359363、40064359392、40064359423。
+- 更早的 head `12852d49` 上，Migration safety gate 红了一次（run 40063778344）：PR 描述还没标 ③，而门禁读取的是推送那一刻冻结的 PR body。补上描述后的下一次推送已转绿。
