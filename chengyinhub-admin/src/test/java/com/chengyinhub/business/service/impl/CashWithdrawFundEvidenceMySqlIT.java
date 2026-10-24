@@ -217,6 +217,60 @@ class CashWithdrawFundEvidenceMySqlIT {
         observed.put("batchStatus", "FINISHED"); observed.putAll(values); return observed;
     }
 
+    @Test void amountAboveSdkFenLimitRejectsBeforeAnyOriginalOrEconomicEffect() throws Exception {
+        db.update("UPDATE ums_member SET balance=21474936.48 WHERE id=?", memberId);
+        var sdk = sdkForAmountBoundary();
+        IllegalStateException rejected = assertThrows(IllegalStateException.class,
+                () -> service.withdraw(memberId, new BigDecimal("21474836.48")));
+        assertEquals("提现金额超过渠道单次上限", rejected.getMessage());
+        money("21474936.48");
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM member_cash_withdraw WHERE member_id=?", Integer.class, memberId));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM member_cash_withdraw_fund_fact WHERE member_id=?", Integer.class, memberId));
+        verifyNoInteractions(sdk, channel, members);
+    }
+
+    @Test void exactSdkFenLimitCommitsOriginalDebitIntentAndOneSdkSubmission() throws Exception {
+        db.update("UPDATE ums_member SET balance=21474936.48 WHERE id=?", memberId);
+        var sdk = sdkForAmountBoundary();
+        when(sdk.initiateBatchTransfer(any())).thenAnswer(i -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            com.wechat.pay.java.service.transferbatch.model.InitiateBatchTransferRequest sent = i.getArgument(0);
+            Long id = Long.valueOf(sent.getOutBatchNo().substring(2));
+            CashWithdrawTransferIntent intent = cash.selectFundFacts(id).stream()
+                    .filter(f -> "SUBMIT_INTENT".equals(f.getKind())).findFirst().orElseThrow().transferIntent();
+            intent.requireValid();
+            assertEquals((long) Integer.MAX_VALUE, intent.amountFen());
+            assertEquals((long) Integer.MAX_VALUE, sent.getTotalAmount().longValue());
+            assertEquals(1, sent.getTransferDetailList().size());
+            assertEquals((long) Integer.MAX_VALUE, sent.getTransferDetailList().get(0).getTransferAmount().longValue());
+            assertEquals(intent.outBatchNo(), sent.getOutBatchNo());
+            assertEquals(intent.outDetailNo(), sent.getTransferDetailList().get(0).getOutDetailNo());
+            assertEquals(1, count(id, "DEBIT")); assertEquals(1, count(id, "SUBMIT_INTENT"));
+            var accepted = new com.wechat.pay.java.service.transferbatch.model.InitiateBatchTransferResponse();
+            accepted.setOutBatchNo(sent.getOutBatchNo()); accepted.setBatchId("provider-batch-" + id);
+            accepted.setBatchStatus("ACCEPTED"); return accepted;
+        });
+        MemberCashWithdraw w = service.withdraw(memberId, new BigDecimal("21474836.47"));
+        assertEquals(0, w.getStatus()); money("100.01");
+        assertEquals(0, new BigDecimal("21474836.47").compareTo(w.getAmount()));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM member_cash_withdraw WHERE member_id=?", Integer.class, memberId));
+        assertEquals(1, count(w.getId(), "DEBIT")); assertEquals(1, count(w.getId(), "SUBMIT_INTENT"));
+        assertEquals(1, count(w.getId(), "ACCEPTED")); assertEquals(0, count(w.getId(), "UNKNOWN"));
+        assertEquals(0, count(w.getId(), "REFUND"));
+        verify(sdk, times(1)).initiateBatchTransfer(any()); verifyNoMoreInteractions(sdk);
+        verifyNoInteractions(channel); verify(members, never()).addBalance(anyLong(), any());
+    }
+
+    private com.wechat.pay.java.service.transferbatch.TransferBatchService sdkForAmountBoundary() throws Exception {
+        var sdk = mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class);
+        WechatPayServiceImpl gateway = new WechatPayServiceImpl();
+        Class<?> binding = Class.forName(WechatPayServiceImpl.class.getName() + "$TransferClientBinding");
+        var constructor = binding.getDeclaredConstructor(com.wechat.pay.java.service.transferbatch.TransferBatchService.class, String.class);
+        constructor.setAccessible(true);
+        ReflectionTestUtils.setField(gateway, "transferClientBinding", constructor.newInstance(sdk, "unit-merchant"));
+        ReflectionTestUtils.setField(target, "wechatPayService", gateway); return sdk;
+    }
+
     @Test void noDebitEvidenceRejectsWithoutChangingStateOrMoney() {
         MemberCashWithdraw w = original(); state(w.getId(), 3);
         assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "maker", "调查", 3));

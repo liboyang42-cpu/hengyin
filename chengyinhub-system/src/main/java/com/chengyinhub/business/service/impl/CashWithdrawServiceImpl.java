@@ -84,6 +84,8 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (amountYuan == null) throw new IllegalStateException("请输入提现金额");
         BigDecimal amount = amountYuan.setScale(2, RoundingMode.DOWN);
         if (amount.compareTo(MIN_AMOUNT) < 0) throw new IllegalStateException("最低提现 ¥" + MIN_AMOUNT);
+        if (amount.compareTo(BigDecimal.valueOf(Integer.MAX_VALUE, 2)) > 0)
+            throw new IllegalStateException("提现金额超过渠道单次上限");
 
         // 软查在途(快速友好失败);真正的原子防重靠 insert 的唯一键 uk_pending_member
         if (mapper.countPendingByMember(memberId) > 0) {
