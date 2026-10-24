@@ -1,0 +1,18 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -2272,4 +2272,15 @@
+                     return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
+                 }
++                if (Integer.valueOf(3).equals(registration.getPaymentStatus())
++                        && (Integer.valueOf(1).equals(registration.getRegistrationStatus())
++                            || Integer.valueOf(3).equals(registration.getRegistrationStatus())
++                            || Integer.valueOf(4).equals(registration.getRegistrationStatus()))) {
++                    // The original fact is already durable. Keep a separately committed manual recovery
++                    // identity before refusing this closed order; never reopen capacity or force a G owner.
++                    verifiedPaymentFacts.recordClosedBusinessPaymentRecovery(consumed.reference(),
++                            "REGISTRATION", registration.getId(), registration.getRegistrationNo());
++                    return registrationPaymentCallbackFailure(outTradeNo,
++                            "closed_registration_original_payment_recovery_required");
++                }
+                 coopSettlementClaimService.requirePaidHalfStateCashAdmission(registration.getId(), consumed.reference());
+                 if (lockedOrder.topic() != null && Integer.valueOf(1).equals(lockedOrder.topic().getIsSettlement())

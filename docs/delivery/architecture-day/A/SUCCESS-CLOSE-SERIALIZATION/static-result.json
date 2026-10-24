@@ -1,0 +1,30 @@
+{
+  "status": "STATIC_ONLY",
+  "parent": "54ab9282bee31c7b6dd276682f4c86e9903709c9",
+  "B_observed": "30d88bdc5401f9b64c0a99656b466d494b454d17",
+  "new_test_source": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PaymentSuccessCloseSerializationMySqlIT.java",
+  "counts": {
+    "declared_tests": 1,
+    "dynamic": [],
+    "nested": [],
+    "gates": [],
+    "conditions": [],
+    "required_database_bases": []
+  },
+  "source_45_96_others": "unchanged from root54; only new fixed test",
+  "B13_df72_B30_root54_recordVerified_body_identical": true,
+  "late_test_business": "standalone activity (owner_type=2/topic_id=NULL); no G admission",
+  "recovery_api_status": "PROPOSED; B real method and writer implementation required before composed acceptance",
+  "A_patch_context_check": "PASS root54 temp copy only; not applied",
+  "denial_helper_wrapper_readleaf_unchanged_after_proposed_patch": true,
+  "production_root_B_G_F_CI_schema_changes": false,
+  "Java_MySQL_CI_DDL_SDK": "NOT_RUN",
+  "fix_status": "NOT_CLOSED: B writer mutex/late recovery + A proposed hook + lock-free-SDK caller stages must compose",
+  "sha256": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PaymentSuccessCloseSerializationMySqlIT.java": "c986d08de709204de3cf8249c2d89408c0e19497686b2fda759a166f2c644239",
+    "docs/delivery/architecture-day/A/SUCCESS-CLOSE-SERIALIZATION/FORWARD-TO-B.md": "bd1b9e18d25d16a7f98b1e4d02a6f2a5a853723513c18bd452d17635b83e62e3",
+    "docs/delivery/architecture-day/A/SUCCESS-CLOSE-SERIALIZATION/README.md": "7e4eef3ba3fc26549e8ecb8c723407f5e5a7b43a98fd7da600e9b863af98c5fe",
+    "docs/delivery/architecture-day/A/SUCCESS-CLOSE-SERIALIZATION/a-closed-success-recovery.review.patch": "d7864884f7a6a48238d384b56d3844c2f820b7c08afcece6c46beb051bd024e8",
+    "docs/delivery/architecture-day/A/SUCCESS-CLOSE-SERIALIZATION/recovery-patch-base.json": "f91b599aa15c74a16ea6873d32958b15a3fd7259671b5f34f194665eb208020e"
+  }
+}

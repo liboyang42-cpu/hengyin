@@ -1,0 +1,10 @@
+{
+  "base": "54ab9282bee31c7b6dd276682f4c86e9903709c9",
+  "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+  "base_sha256": "cfdaae22bbea249cc64a2b223a71a9d19183c52e2e40a8dab394063b76974250",
+  "candidate_sha256": "6a83eca6e255e17ad989535935ae83ae2f74831c0192188b163e3a8983729c03",
+  "applied": false,
+  "B_API_proposed_required": "recordClosedBusinessPaymentRecovery(Reference,String,Long,String)",
+  "unchanged_denial_helper": "hasVerifiedSuccessBeforeRelease",
+  "context_check": "PASS on exact root54 public source temp copy"
+}
