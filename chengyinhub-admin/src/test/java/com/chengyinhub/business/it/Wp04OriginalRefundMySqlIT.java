@@ -90,7 +90,7 @@ class Wp04OriginalRefundMySqlIT {
     }
     void applyNewSchemaAndFreezeOriginalOrder(boolean paid, String refundApp, boolean bindOriginalPaymentReceipt) throws Exception {
         P0AcceptanceSchema.migrations(source,MIGRATION);
-        SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper",
+        SqlSessionTemplate sql=P0AcceptanceSchema.sql(source,"CoopSettlementOriginalMapper","CoopSettlementCashEvidenceMapper","CoopSettlementEvidenceMapper",
                 "CoopSettlementMapper","CoopSettlementAdjustmentMapper","WechatVerifiedPaymentFactMapper",
                 "UmsMemberSettlementDebtMapper","UmsMemberBalanceDetailMapper");
         originals=sql.getMapper(CoopSettlementOriginalMapper.class); cash=sql.getMapper(CoopSettlementCashEvidenceMapper.class);
@@ -100,7 +100,6 @@ class Wp04OriginalRefundMySqlIT {
         db.update("INSERT INTO ums_member(id,balance) VALUES(7,2.00),(77,0.00)");
         db.update("INSERT INTO cms_topic(id,name,product_type,member_id,is_settlement,fee_platform_rate,fee_guarantee_base_rate,fee_guarantee_step_rate,fee_guarantee_max_merchant) VALUES(11,'G original refund fixture',1,7,1,0.10,0,0,0)");
         db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,original_amount,total_amount,payable_amount,payment_status,registration_status,verification_status,purchase_kind,pay_expire_time,transaction_id,wechat_payment_amount) VALUES(1,'REG1',1,11,21,10,77,1,10,10,10,2,2,0,1,'2026-10-01 08:00:00','WXTX1',10)");
-        db.update("INSERT INTO refund_application(id,refund_no,source_type,source_id,owner_type,owner_id,status,payout_status,refund_amount,paid_amount,del_flag) VALUES(901,'RF901','registration',1,1,11,1,0,10,10,0)");
         db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(11,11,NULL,'ACCOUNTING','PLATFORM','platform',1,1,0),(12,11,7,'MEMBER','INITIATOR_MARGIN','initiator',?,9,0)",paid?1:0);
         if (paid) {
             db.update("INSERT INTO ums_member_balance_detail(member_id,current_balance,after_balance,change_balance,change_reason,event_type,event_id,change_type,del_flag,create_time) VALUES(7,0,9,9,'Coop结算打款 - 主题11',5,12,1,0,NOW())");
@@ -133,6 +132,7 @@ class Wp04OriginalRefundMySqlIT {
         SettlementDebtLedger debts=new SettlementDebtLedger(sql.getMapper(UmsMemberSettlementDebtMapper.class),members,flows);
         owner=new CoopSettlementOriginalLedger(topics,cash,originals,sql.getMapper(CoopSettlementMapper.class),
                 sql.getMapper(CoopSettlementAdjustmentMapper.class),facts,members,ledger,debts);
+        ReflectionTestUtils.setField(owner,"originalCloseEvidence",sql.getMapper(CoopSettlementEvidenceMapper.class));
         CoopSettlementCashClose close=new CoopSettlementCashClose(); close.setTopicId(11L); close.setCommercialContextType("TOPIC_EDITION");
         close.setCommercialContextId(11L); close.setCloseKind("POSITIVE_SALES"); close.setInitiatorMemberId(7L);
         close.setOriginalSalesBasis(money("10")); close.setOriginalContributionCount(1); close.setPlatformRate(new BigDecimal("0.10"));
@@ -146,6 +146,7 @@ class Wp04OriginalRefundMySqlIT {
         contribution.setRegistrationSnapshot("{\"wechatPaymentAmount\":10.00}"); contribution.setSourceFingerprint(HASH);
         tx.executeWithoutResult(status -> owner.freezeOriginals(close,List.of(contribution),List.of(component(11L,null,"ACCOUNTING","PLATFORM","1"),component(12L,7L,"MEMBER","INITIATOR_MARGIN","9"))));
         assertEquals(2,count("coop_settlement_original_component"));
+        db.update("INSERT INTO refund_application(id,refund_no,source_type,source_id,owner_type,owner_id,status,payout_status,refund_amount,paid_amount,del_flag) VALUES(901,'RF901','registration',1,1,11,1,0,10,10,0)");
     }
 
     void terminalSuccessAndHook() {

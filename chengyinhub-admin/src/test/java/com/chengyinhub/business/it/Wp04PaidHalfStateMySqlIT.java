@@ -77,7 +77,7 @@ class Wp04PaidHalfStateMySqlIT {
         }));
         when(topics.claimTopicForSettlement(11L)).thenAnswer(call->db.update("UPDATE cms_topic SET is_settlement=1 WHERE id=11 AND is_settlement=0"));
         settlement=new CmsTopicServiceImpl();ReflectionTestUtils.setField(settlement,"cmsTopicMapper",topics);ReflectionTestUtils.setField(settlement,"cmsRegistrationMapper",registrations);
-        ReflectionTestUtils.setField(settlement,"coopSettlementEvidenceMapper",evidence);ReflectionTestUtils.setField(settlement,"coopOrderMapper",mock(CoopOrderMapper.class));
+        ReflectionTestUtils.setField(settlement,"coopSettlementEvidenceMapper",evidence);ReflectionTestUtils.setField(settlement,"coopSettlementOriginalMapper",originals);ReflectionTestUtils.setField(settlement,"coopOrderMapper",mock(CoopOrderMapper.class));
         deposits=mock(ICoopInviteService.class);ReflectionTestUtils.setField(settlement,"coopInviteService",deposits);
         payment=new CmsRegistrationServiceImpl();ReflectionTestUtils.setField(payment,"cmsRegistrationMapper",registrations);
         outbox=new WxPaymentCallbackOutboxServiceImpl();ReflectionTestUtils.setField(outbox,"mapper",sql.getMapper(WxPaymentCallbackOutboxMapper.class));

@@ -32,6 +32,9 @@ public class CoopSettlementOriginalLedger {
     private final IUmsMemberBalanceDetailService balanceLedger;
     private final SettlementDebtLedger debts;
     private final ObjectMapper json = new ObjectMapper();
+    @org.springframework.beans.factory.annotation.Autowired
+    private CoopSettlementEvidenceMapper originalCloseEvidence;
+
 
     public CoopSettlementOriginalLedger(CmsTopicMapper topics, CoopSettlementCashEvidenceMapper evidence,
             CoopSettlementOriginalMapper originals, CoopSettlementMapper heads, CoopSettlementAdjustmentMapper legacyAdjustments, WechatVerifiedPaymentFactService verifiedFacts,
@@ -49,6 +52,12 @@ public class CoopSettlementOriginalLedger {
         requireTransaction();
         if (proposed == null || contributions == null || components == null) throw conflict("ORIGINAL_PLAN_REQUIRED");
         lockTopic(proposed.getTopicId());
+        // Direct producer callers must use the same topic -> current registrations -> refund history order.
+        if (originalCloseEvidence.selectTopicCashRowsForUpdate(proposed.getTopicId()) == null
+                || originalCloseEvidence.selectTopicActivityCashRowsForUpdate(proposed.getTopicId()) == null) {
+            throw conflict("CURRENT_ORIGINAL_CLOSE_ROWS_REQUIRED");
+        }
+        requireNoApprovedRefundsForOriginalClose(originals, proposed.getTopicId());
         if (!Objects.equals(proposed.getOriginalContributionCount(), contributions.size())) throw conflict("CONTRIBUTION_COUNT_CONFLICT");
         for (var row : contributions) if (row == null || row.getRegistrationId() == null || row.getPayerRegistrationId() == null) throw conflict("CONTRIBUTION_IDENTITY_REQUIRED");
         CoopSettlementCashClose close = evidence.recordClose(proposed);
@@ -306,6 +315,14 @@ public class CoopSettlementOriginalLedger {
         }
         equal(sum(originals.selectAdjustmentsForReceiptForUpdate(receipt.getId())).negate(), receipt.getReversedAmount(), "REFUND_COMPONENT_CONSERVATION");
         return Optional.of(receipt);
+    }
+
+    /** Caller holds the original topic fence and current registration locks, including zero/refunded/activity rows. */
+    static void requireNoApprovedRefundsForOriginalClose(CoopSettlementOriginalMapper mapper, Long topicId) {
+        List<Long> approved = mapper.selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(topicId);
+        if (approved == null || !approved.isEmpty()) {
+            throw conflict("MANUAL_REPAIR:REFUND_NET_BASIS_UNPROVEN:APPROVED_REFUND_PRECEDES_ORIGINAL_CLOSE");
+        }
     }
 
     private CmsTopic lockTopic(Long id) {

@@ -70,6 +70,16 @@
         select id,biz_type as bizType,biz_id as bizId,idempotency_key as idempotencyKey,money_affecting as moneyAffecting,state
         from wx_payment_callback_outbox where idempotency_key=#{key} for update
     </select>
+    <!-- Raw current refund history, including legacy owner and soft-deleted financial evidence.
+         Scope comes from the actual registration/activity parent, never redundant refund.owner_* or existing originals. -->
+    <select id="selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate" resultType="long" useCache="false" flushCache="true">
+        select refund.id from refund_application refund
+        join cms_registration r on refund.source_type='registration' and r.id=refund.source_id
+        left join cms_activity a on r.owner_type=2 and a.id=r.owner_id
+        where refund.status=1 and ((r.owner_type=1 and r.owner_id=#{topicId})
+            or (r.owner_type=2 and a.topic_id=#{topicId}))
+        order by refund.id for update
+    </select>
     <update id="bindHeadToClose">
         update coop_settlement head join coop_settlement_cash_close c on c.id=#{cashCloseId} and c.topic_id=head.topic_id
         set head.cash_close_id=#{cashCloseId},head.cash_head_kind=#{receiverKind}

@@ -974,6 +974,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         List<CmsRegistration> locked = new ArrayList<>(topicRows);
         locked.addAll(activityRows);
+        CoopSettlementOriginalLedger.requireNoApprovedRefundsForOriginalClose(coopSettlementOriginalMapper, topicId);
         TopicSettlementCashBasis basis = TopicSettlementCashBasis.fromLockedRows(topicId, locked);
         List<Long> refunds = coopSettlementEvidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(topicId);
         if (refunds == null || !refunds.isEmpty()) {
