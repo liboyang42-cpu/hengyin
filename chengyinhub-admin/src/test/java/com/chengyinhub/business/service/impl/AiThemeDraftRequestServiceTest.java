@@ -144,4 +144,61 @@ class AiThemeDraftRequestServiceTest {
         assertFalse(AiThemeDraftRequestService.isValidRequestId("abc"));
         assertFalse(AiThemeDraftRequestService.isValidRequestId(null));
     }
+
+    // H60fc request-unknown.review.patch first case; the TTL case belongs to proposal 02.
+    @Test
+    void providerUnknownKeepsOriginalRequestUnknownOnSubmitReadAndReplay() {
+        when(creator.themeDraft(any(), eq(MEMBER))).thenThrow(
+                new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException("provider outcome unknown", null));
+        AiThemeDraftRequestState first = service.submit(req(), MEMBER);
+        assertEquals(AiThemeDraftRequestState.UNKNOWN, first.getState());
+        assertEquals(RID, first.getRequestId());
+        assertEquals(AiThemeDraftRequestState.UNKNOWN, service.read(MEMBER, RID).getState());
+        AiThemeDraftRequestState replay = service.submit(req(), MEMBER);
+        assertEquals(AiThemeDraftRequestState.UNKNOWN, replay.getState());
+        assertTrue(replay.isReplayed());
+        assertEquals(AiThemeDraftRequestState.UNKNOWN,
+                JSONObject.parseObject(String.valueOf(store.get(AiThemeDraftRequestService.key(MEMBER, RID)))).getString("state"));
+        assertNull(first.getResult()); assertNull(replay.getResult());
+        verify(creator, times(1)).themeDraft(any(), eq(MEMBER));
+    }
+
+    @Test
+    void genericInputUnknownKeepsOriginalFailedClassification() {
+        when(creator.themeDraft(any(), eq(MEMBER))).thenThrow(new AiServiceException(AiServiceException.Reason.UNKNOWN, "input review unavailable"));
+        AiThemeDraftRequestState first = service.submit(req(), MEMBER);
+        assertEquals(AiThemeDraftRequestState.FAILED, first.getState());
+        assertEquals("input review unavailable", first.getMessage());
+        assertEquals(AiThemeDraftRequestState.FAILED, service.read(MEMBER, RID).getState());
+        assertEquals(AiThemeDraftRequestState.FAILED, service.submit(req(), MEMBER).getState());
+        verify(creator, times(1)).themeDraft(any(), eq(MEMBER));
+    }
+
+    @Test
+    void wrappedProviderUnknownAndLookalikeMessagesDoNotExpandTheTypedRule() {
+        java.util.List<RuntimeException> failures = java.util.List.of(
+                new AiServiceException(AiServiceException.Reason.UNKNOWN, "ordinary failure",
+                        new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException("nested", null)),
+                new RuntimeException(new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException("nested", null)),
+                new AiServiceException("AiProviderOutcomeUnknownException UNKNOWN"));
+        for (RuntimeException failure : failures) {
+            AiThemeDraftReq request = req(); request.setRequestId(java.util.UUID.randomUUID().toString());
+            org.mockito.Mockito.doThrow(failure).when(creator).themeDraft(any(), eq(MEMBER));
+            assertEquals(AiThemeDraftRequestState.FAILED, service.submit(request, MEMBER).getState());
+            assertEquals(AiThemeDraftRequestState.FAILED, service.read(MEMBER, request.getRequestId()).getState());
+            assertEquals(AiThemeDraftRequestState.FAILED, service.submit(request, MEMBER).getState());
+        }
+        verify(creator, times(failures.size())).themeDraft(any(), eq(MEMBER));
+    }
+
+    @Test
+    void invalidDraftFailureKeepsExistingFailureAndSameRequestDoesNotRegenerate() {
+        when(creator.themeDraft(any(), eq(MEMBER))).thenThrow(new AiServiceException("AI 未生成可用草稿"));
+        AiThemeDraftRequestState first = service.submit(req(), MEMBER);
+        assertEquals(AiThemeDraftRequestState.FAILED, first.getState());
+        assertEquals("AI 未生成可用草稿", first.getMessage());
+        assertEquals(AiThemeDraftRequestState.FAILED, service.read(MEMBER, RID).getState());
+        assertEquals(AiThemeDraftRequestState.FAILED, service.submit(req(), MEMBER).getState());
+        verify(creator, times(1)).themeDraft(any(), eq(MEMBER));
+    }
 }

@@ -1,0 +1,271 @@
+{
+  "source_sha": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+  "run_id": 40044336447,
+  "workflow_at_readback": "SUCCESS",
+  "selected_groups": {
+    "F_HTTP_admission_and_legacy": 49,
+    "E_NOT_SENT_quota_contract": 11,
+    "C_lead_gate_caller_and_current_use": 32
+  },
+  "suites": [
+    {
+      "suite": "AiHttpAdmissionTest",
+      "fqcn": "com.chengyinhub.business.service.ai.AiHttpAdmissionTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "d22efd2643628637af929e421d7759091b208f1ba48238ca7ede7c13113b14ef",
+      "cases": [
+        "processGlobalFourCannotBeBypassedByDifferentAdmissionInstances",
+        "invalidOriginsAndInterruptFailBeforeAdmissionWithoutLosingSlots",
+        "oldConstructorCannotSendWithoutStartupAdmissionButReadinessRemainsLocal",
+        "canonicalOriginsShareTwoSlotsAndDoNotDynamicallyRegister",
+        "realAdmissionStaysHeldAfterCallerTimeoutAndCleanupRejectionUntilWorkersExit",
+        "productionBeansUseOneFixedOriginRegistry",
+        "fourRealAiCallsLeaveOtherCommonHttpUsableAndFifthNeverReachesServer",
+        "configurationAndSerializationFailuresAreTypedUnsentAndReleaseOriginalAdmission"
+      ]
+    },
+    {
+      "suite": "OWN_C05_15Test",
+      "fqcn": "com.chengyinhub.business.longrun.OWN_C05_15Test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "9224893f59caa7c705a92dcf142dbab42ca9e73be66916a6d05f287a068e6a5a",
+      "cases": [
+        "onlyNonblankStringContentCanBeReturnedAsModelText"
+      ]
+    },
+    {
+      "suite": "PhotoCheckVisionNotSentQuotaTest",
+      "fqcn": "com.chengyinhub.business.service.ai.PhotoCheckVisionNotSentQuotaTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "ac6d4820f37584e5fdb0e324348b06495232b92399fd5d1157511effa8793db3",
+      "cases": [
+        "validReceivedAnswerStillRetainsItsOriginalQuota",
+        "notSentFromRetentionAfterActualAnswerIsNotARefundProof",
+        "ordinaryFailureAndWrappedMarkerStayUnknownWithoutRefundOrRetry",
+        "directReviewUsesTheSameTypedCatchWithoutCreatingAnotherReservation",
+        "typedNotSentAfterSnapshotCompensatesOriginalDayTokenAndKeepsDegradedResult"
+      ]
+    },
+    {
+      "suite": "NpcChatGatewayNotSentContractTest",
+      "fqcn": "com.chengyinhub.business.service.impl.NpcChatGatewayNotSentContractTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "9e7d93627b791f3ff059efc611c4abbc1ec4c461190f1a05295a5e8dab06457c",
+      "cases": [
+        "typedUnsentMapsToStoredNotRunAndSameNpcRequestDoesNotReserveOrSendAgain",
+        "ordinaryProviderFailureKeepsOriginalUnknownAndNeverCompensates"
+      ]
+    },
+    {
+      "suite": "HttpUtilsJsonPostTest",
+      "fqcn": "com.chengyinhub.common.utils.http.HttpUtilsJsonPostTest",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "7b2396afecd73acebf880324bd3e9fb87950edda273f7092ab4107ba884ed32f",
+      "cases": [
+        "knownOversizedLengthIsRejectedBeforeWaitingForBody",
+        "callerCloseCannotReleaseATransferredRunningAttempt",
+        "slowDripIsBoundedByAbsoluteTotalAndIsNeverUnsent",
+        "lostProviderResponseNeverReplaysThePost",
+        "ownQueuedTimeoutRemovesOnlyThatTaskAndSaturationNeverDispatches",
+        "legacyExceptionNeverInventsNotSentEvidence",
+        "providerErrorsRedirectAndAuthChallengeNeverRetryOrBecomeUnsent",
+        "exactOneMiBResponseIsAccepted",
+        "queuedCancellationWinsCasAndPreventsEveryLaterDispatch",
+        "invalidHeaderUrlAndExpiredDeadlineAreUnsentAndReleaseOnce",
+        "blockedPhysicalPostRetainsLeaseWhenDeadlineAndCleanupRejectionReturnToCaller",
+        "concurrentCancelAndDispatchHaveOneWinnerAndNoPrematureRelease",
+        "cancellationDuringPreparationWaitsForPhysicalWorkerFinally",
+        "authenticatedJsonPostPreservesProtocolAndReleasesItsLease",
+        "decodedGzipAndChunkedBodiesCannotExceedOneMiB"
+      ]
+    },
+    {
+      "suite": "OWN_C05_16Test",
+      "fqcn": "com.chengyinhub.business.longrun.OWN_C05_16Test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "3cf900c24910d6758936c3d95c0ebb66810c5a577a338eb08d9773a5deb6ea82",
+      "cases": [
+        "missingOrWhitespaceOnlyKeyIsRejectedLocally"
+      ]
+    },
+    {
+      "suite": "OWN_C05_20Test",
+      "fqcn": "com.chengyinhub.business.longrun.OWN_C05_20Test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "fac064044c4f9f276fdf9d7e9413e3a67059c1df72be53659fe95d1bce25db5a",
+      "cases": [
+        "auditAndHttpErrorBriefsNeverSplitAnExistingSurrogatePair"
+      ]
+    },
+    {
+      "suite": "AiGatewayNotSentQuotaTest",
+      "fqcn": "com.chengyinhub.business.service.ai.impl.AiGatewayNotSentQuotaTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "7ca46b0cc0d13a79a7fd75f4f77418dc7456a35e3686a147519fe17de11c9c9a",
+      "cases": [
+        "playerDraftNotSentLeavesItsSeparateOriginalPoolToCreator",
+        "exactNotSentCompensatesOnlyOriginalReceiptAfterModelStageAndMapsToUnavailable",
+        "receivedResultRetentionFailureCannotBeTreatedAsUnsentEvenIfItThrowsThatClass",
+        "ordinaryFailuresAndWrappedNotSentNeverAcquireTheTrustedClassification"
+      ]
+    },
+    {
+      "suite": "OpenAiCompatibleLlmClientVisionTest",
+      "fqcn": "com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClientVisionTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "72fbb985b4181b524b23afe9663caf4618197a2625198f7ad4b03d9a51f6c793",
+      "cases": [
+        "视觉请求体是OpenAI数组格式且鉴权头正确",
+        "负控_未配置key时不发请求直接抛"
+      ]
+    },
+    {
+      "suite": "HttpUtilsSecurityTest",
+      "fqcn": "com.chengyinhub.common.utils.http.HttpUtilsSecurityTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "e8a6b3a7b8f5674a2ca3723a45040c2a9ae476d260f82de05bb78ae414d1c410",
+      "cases": [
+        "successfulResponsesReturnTheirConnectionToTheJdkKeepAlivePool",
+        "postIsNotAutomaticallyReplayedByTransport",
+        "transportDoesNotFollowRedirectsForAnyEntryPoint",
+        "knownOversizedContentLengthIsRejectedBeforeWaitingForBody",
+        "shorterTotalDeadlineCapsRealBlockedConnectAndWorkerReturns",
+        "realBlockedConnectHonorsConnectTimeoutAndWorkerReturns",
+        "retryBackoffIsInterruptibleAndDoesNotStartAnotherAttempt",
+        "streamedResponseBodyLimitFailsExplicitlyWithoutRetry",
+        "retryPolicyAllowsOnlyKnownTransientNetworkFailures",
+        "defaultGetAndPostNeverRetry",
+        "disconnectQueueSaturationRejectsWithoutRunningInCaller",
+        "readTimeoutAppliesBeforeTheLongerTotalDeadline",
+        "totalTimeoutDisconnectsABlockedPostBody",
+        "totalTimeoutStopsAResponseThatKeepsDrippingBytes",
+        "sslPostEntryPointIsNotAutomaticallyReplayedByTransport",
+        "explicitlyIdempotentGetRetriesOnceWithBoundedBackoff",
+        "infoLogsOnlyMetadataAndNeverQueryCredentialsPhoneOrResponseBody",
+        "noRetryGetIsNotAutomaticallyReplayedByTransport",
+        "idempotentGetRetryComesOnlyFromOurPolicy"
+      ]
+    },
+    {
+      "suite": "OpenAiCompatibleLlmClientLogRedactionTest",
+      "fqcn": "com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClientLogRedactionTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "0e1bb04cec4098715242dec85b24bb31c337840319165935f37db0d912b2ee5a",
+      "cases": [
+        "解析失败时异常信息不回显响应字节",
+        "非2xx响应体不进日志也不进异常"
+      ]
+    },
+    {
+      "suite": "ClubLeadGateTest",
+      "fqcn": "com.chengyinhub.web.controller.api.ClubLeadGateTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "bc19062116ab6ace7f37b8a4791485575b0e410b3fc99a2b9d2ad5ff526b8dac",
+      "cases": [
+        "chapterDependencyFailureDoesNotGrantAnUnopenedChapter",
+        "noLeadStateOrSettledOrSelfPlayNotBlocked",
+        "routeRuntimeOverridesStaleLegacyGatheringAndChapterState",
+        "selfPlayStillBypassesAllLeadDependencies",
+        "runtimeLookupFailureDoesNotFallBackToLegacyAdmission",
+        "gatheringBlocksAllProgress",
+        "lockedChapterRejected_unlockedAndEarlierAllowed",
+        "existingPermissionRefusalKeepsItsCodeAndIsNeverRelabeledUnknownOrNotRun",
+        "missingMandatoryMapperCannotGrantNonLeadAdmission",
+        "storageFailureIsSafeRetryableNotRunRatherThanNonLead"
+      ]
+    },
+    {
+      "suite": "ApiPlayCurrentUseBoundaryTest",
+      "fqcn": "com.chengyinhub.web.controller.api.ApiPlayCurrentUseBoundaryTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "445ed254ddb054c012fc971388e33cf9b629140a8de39183e33905ae8d2cbdd9",
+      "cases": [
+        "expiredSelfPlayPassStillFinishesARouteAlreadyStarted",
+        "missingEndRejectsAndCorrectionRestoresOriginalEntry",
+        "ordinaryFreeRegistrationReachesSameOriginalAnswerEntry",
+        "refundedCurrentRowDoesNotUseOldPaidSnapshot",
+        "expiredSelfPlayPassCannotStartANewRoute",
+        "expiredExploreOrderCannotReachOriginalAnswerMechanism"
+      ]
+    },
+    {
+      "suite": "PlayLeadAdmissionFailureTest",
+      "fqcn": "com.chengyinhub.web.controller.api.PlayLeadAdmissionFailureTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "raw_xml_sha256": "ce86d34afd9f1af1364815b15768fed447fa02dc9e7b038e42153075dda8b798",
+      "cases": [
+        "scanFaultDoesNotCompleteReceiptOrProgress",
+        "preferenceSubmitRecoveryPassesTheOriginalCommandAfterOriginalRouteAdmission",
+        "preferenceNodeOwnershipRefusalStillPrecedesLeadAndRouteForBothHttpMethods",
+        "preferenceBothHttpMethodsKeepOriginal403WithoutEnteringRouteOrPreference",
+        "answerFaultDoesNotCompleteReceiptOrAward",
+        "preferenceSubmitFaultNeverCallsPreferenceMutation",
+        "freeCollectFilterPhotoFaultEscapesTheInnerIllegalStateCatch",
+        "photoFaultEscapesLocalCatchAndDoesNotSubmitProof",
+        "preferenceLeadRefusalTakesPriorityOverUnlockAndRouteRefusalForBothHttpMethods",
+        "revealFaultReturnsNoAnswerOrCompletion",
+        "preferenceReadFaultReturnsNoPreferencePayload",
+        "hintUnlockFaultReturnsNoHintAndNeverReachesPricingOrDebit",
+        "preferenceReadRecoveryStillCallsOriginalRouteAndLoadsPreference",
+        "gpsFaultDoesNotCompleteReceiptOrProgress",
+        "puzzleHintFaultReturnsNoHintOrAttempt",
+        "sensorFaultNeverAcquiresSensorOrAwards"
+      ]
+    }
+  ],
+  "limits": [
+    "Named suites accepted on same6ec; raw aggregate includes619skips and multiple phases, not unique business-case count",
+    "Controlled loopback HTTP and doubles, not real provider",
+    "C true storage14 and E true storage4 have separate source-bound receipts",
+    "Not complete WP01/WP09/WP13 or deployment acceptance"
+  ],
+  "raw_xml_totals": {
+    "reports": 1840,
+    "tests": 14472,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 619
+  }
+}

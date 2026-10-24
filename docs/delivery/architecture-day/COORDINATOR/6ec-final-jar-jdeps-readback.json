@@ -1,0 +1,66 @@
+{
+  "source_sha": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+  "source_tree": "92c091832648ef379fe8e1af2c8b250e20acb8e7",
+  "run_id": 40044336447,
+  "conclusion": "success",
+  "actual_jar_sha256": "734310ca9cb37aab5c04fe3135e0a420f033f5c5b414d077119ad54df8253947",
+  "actual_jar_bytes": 118408995,
+  "startup_passed_in_this_job": true,
+  "all_jdeps_evidence_hashes_verified": 11,
+  "jdeps_version": "21.0.12.1",
+  "jdeps_status": "OBSERVATION_ONLY",
+  "static_graph_complete": true,
+  "graph_complete": false,
+  "module_edges": [
+    [
+      "chengyinhub-admin",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-framework"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-quartz"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-system"
+    ],
+    [
+      "chengyinhub-framework",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-framework",
+      "chengyinhub-system"
+    ],
+    [
+      "chengyinhub-generator",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-quartz",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-system",
+      "chengyinhub-common"
+    ]
+  ],
+  "missing_dependencies": [],
+  "source_gate": {
+    "verdict": "PASS_WITH_REVIEW_ITEMS",
+    "blocking_findings": 0,
+    "review_items": 97
+  },
+  "limits": [
+    "reflection/runtime/XML dependencies",
+    "business-domain ownership within System",
+    "baseline approval",
+    "Java tests or business correctness",
+    "Not all business gates, no production deployment/DDL or real provider acceptance",
+    "A95 P1, B old-attempt P1 and G2P2 remain open"
+  ]
+}
