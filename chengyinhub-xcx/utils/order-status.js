@@ -38,6 +38,14 @@ function payoutSummary(application) {
   return { key: 'refunding', text: '退款处理中', refundText: '退款进度更新中，请以微信退款通知为准' };
 }
 
+// U-033:未开始/进行中/已完成按服务端读时刻(row.serverNow,/api/registration/list|info|my-joined 下发)判,
+// 手机时钟只在后端没给该字段时兜底 —— 手机时间被调过时标签不再跟着跑偏。
+function orderClockNow(row, fallbackNow) {
+  const serverNow = row && Number(row.serverNow);
+  if (Number.isFinite(serverNow) && serverNow > 0) return serverNow;
+  return typeof fallbackNow === 'number' ? fallbackNow : Date.now();
+}
+
 function summarizeOrderState(row, now) {
   const value = row || {};
   const refund = payoutSummary(value.refundApplication);
@@ -86,7 +94,7 @@ function summarizeOrderState(row, now) {
   const source = sourceOf(value);
   const start = toTimestamp(source.startDate || source.startTime);
   const end = toTimestamp(source.endDate || source.endTime || source.startDate || source.startTime);
-  const current = typeof now === 'number' ? now : Date.now();
+  const current = typeof now === 'number' ? now : orderClockNow(value);
   if (!Number.isNaN(end) && current > end) {
     return { key: 'completed', text: '已完成', refundText: '活动已结束' };
   }
@@ -113,4 +121,4 @@ function formatRefundDeadline(value) {
     + ' ' + pad(date.hours) + ':' + pad(date.minutes);
 }
 
-module.exports = { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline };
+module.exports = { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, orderClockNow };
