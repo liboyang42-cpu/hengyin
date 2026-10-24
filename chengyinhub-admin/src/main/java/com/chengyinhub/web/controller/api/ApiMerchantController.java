@@ -1454,15 +1454,14 @@ public class ApiMerchantController extends BaseController {
         // 按项目拆的待办:工作台一张卡一个项目,没有这层拆分卡片上只能把全局数字
         // 复制一遍 = 假数据。项目 = (ownerType, ownerId):1 主题 / 2 活动,
         // 两者在工作台平起平坐,所以这里也一视同仁地拆。
+        // 口径同商家主题详情:已支付报名按核销态分(payment=2 / ownerType=1主题);
+        // 全部项目一次分组计数(不再逐项目拉全行 .size()),查询次数与项目数无关。
+        Map<Long, long[]> topicCounts = wonTopicIds.isEmpty() ? Collections.<Long, long[]>emptyMap()
+                : cmsRegistrationService.countPaidVerificationByOwners(1L, wonTopicIds);
         for (Long topicId : wonTopicIds) {
-            // 口径同商家主题详情:已支付报名按核销态分(payment=2 / ownerType=1主题)
-            CmsRegistration q = new CmsRegistration();
-            q.setPaymentStatus(2);
-            q.setOwnerType(1L);
-            q.setOwnerId(topicId);
-            q.setVerificationStatus(1);
+            long[] tc = topicCounts == null ? null : topicCounts.get(topicId);
             // verifiedCount 是累计成绩不是待办 ⇒ 已结束的项目也照算,别让历史核销数凭空消失。
-            verifiedCount += cmsRegistrationService.selectCmsRegistrationList(q).size();
+            verifiedCount += tc == null ? 0 : (int) tc[1];
 
             // 待办类(pendingVerify / 项目卡)才按结束时间过滤:结束满一周的主题不再进待办,
             // 口径同玩家侧 ApiRegistrationController.filterEndedOverWeek。不加这层的后果实测过:
@@ -1470,34 +1469,25 @@ public class ApiMerchantController extends BaseController {
             com.chengyinhub.business.domain.CmsTopic wonTopic = cmsTopicService.selectCmsTopicById(topicId);
             if (wonTopic != null && endedOverWeek(wonTopic.getEndDate(), todoNow)) continue;
 
-            q = new CmsRegistration();
-            q.setPaymentStatus(2);
-            q.setOwnerType(1L);
-            q.setOwnerId(topicId);
-            q.setVerificationStatus(0);
-            int topicPendingVerify = cmsRegistrationService.selectCmsRegistrationList(q).size();
+            int topicPendingVerify = tc == null ? 0 : (int) tc[0];
             pendingVerify += topicPendingVerify;
 
             byProject.put(projectKey(1L, topicId), projectRow(1L, topicId, topicPendingVerify));
         }
 
         // 活动(ownerType=2)同样逐个拆,不再只并进一个总数
-        for (com.chengyinhub.business.domain.CmsActivity a : myActivities(ownerMemberId)) {
-            CmsRegistration q = new CmsRegistration();
-            q.setPaymentStatus(2);
-            q.setOwnerType(2L);
-            q.setOwnerId(a.getId());
-            q.setVerificationStatus(1);
-            verifiedCount += cmsRegistrationService.selectCmsRegistrationList(q).size();  // 同上:累计成绩不过滤
+        List<com.chengyinhub.business.domain.CmsActivity> activities = myActivities(ownerMemberId);
+        LinkedHashSet<Long> activityIds = new LinkedHashSet<>();
+        for (com.chengyinhub.business.domain.CmsActivity a : activities) activityIds.add(a.getId());
+        Map<Long, long[]> activityCounts = activityIds.isEmpty() ? Collections.<Long, long[]>emptyMap()
+                : cmsRegistrationService.countPaidVerificationByOwners(2L, activityIds);
+        for (com.chengyinhub.business.domain.CmsActivity a : activities) {
+            long[] ac = activityCounts == null ? null : activityCounts.get(a.getId());
+            verifiedCount += ac == null ? 0 : (int) ac[1];  // 同上:累计成绩不过滤
 
             if (endedOverWeek(a.getEndDate(), todoNow)) continue;
 
-            q = new CmsRegistration();
-            q.setPaymentStatus(2);
-            q.setOwnerType(2L);
-            q.setOwnerId(a.getId());
-            q.setVerificationStatus(0);
-            int actPendingVerify = cmsRegistrationService.selectCmsRegistrationList(q).size();
+            int actPendingVerify = ac == null ? 0 : (int) ac[0];
             pendingVerify += actPendingVerify;
 
             byProject.put(projectKey(2L, a.getId()), projectRow(2L, a.getId(), actPendingVerify));
