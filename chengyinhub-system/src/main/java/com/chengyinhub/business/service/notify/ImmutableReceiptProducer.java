@@ -186,13 +186,14 @@ public final class ImmutableReceiptProducer {
             return unknownReceipt(required.requestId, null);
         }
         Object client = sent.get("client_message_id");
-        String id = client instanceof String ? parseRequestId((String) client) : required.requestId;
-        if (id == null) {
-            id = required.requestId;
+        Object digest = sent.get("digest");
+        if (!(client instanceof String) || !required.requestId.equals(client)
+                || !"SEND".equals(sent.get("operation"))
+                || !(digest instanceof String) || ((String) digest).isBlank()) {
+            return unknownReceipt(required.requestId, null);
         }
         Object body = sent.get("content");
-        Object hash = sent.get("request_hash");
-        return new OriginalReceipt(id, null, hash instanceof String ? (String) hash : null, OUTCOME_UNKNOWN,
+        return new OriginalReceipt(required.requestId, null, (String) digest, OUTCOME_UNKNOWN,
                 body instanceof String ? (String) body : content);
     }
 

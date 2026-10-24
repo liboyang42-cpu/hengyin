@@ -173,10 +173,21 @@ class ImmutableReceiptProducerTest {
         assertEquals(0, calls.get());
         assertEquals(0, store.size());
 
+        java.util.Map<String, Object> withoutDigest = new java.util.LinkedHashMap<String, Object>();
+        withoutDigest.put("client_message_id", "c09-send-01");
+        withoutDigest.put("operation", "SEND");
+        withoutDigest.put("content", "hello");
+        ImmutableReceiptProducer.OriginalReceipt ungarded = producer.sendOriginal(reply, 7L, 12L, Integer.valueOf(1),
+                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false,
+                (actorId, conversationId, clientMessageId, msgType, content, extraJson, replyToId, mentionMemberIds,
+                        mentionRoleIds, mentionEveryone) -> withoutDigest);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, ungarded.outcome);
+        assertNull(ungarded.originalBody);
         java.util.Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
         sent.put("client_message_id", "c09-send-01");
+        sent.put("operation", "SEND");
+        sent.put("digest", "send-digest-01");
         sent.put("content", "hello");
-        sent.put("request_hash", "hash-send-01");
         ImmutableReceiptProducer.OriginalReceipt receipt = producer.sendOriginal(reply, 7L, 12L, Integer.valueOf(1),
                 "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false,
                 (actorId, conversationId, clientMessageId, msgType, content, extraJson, replyToId, mentionMemberIds,
