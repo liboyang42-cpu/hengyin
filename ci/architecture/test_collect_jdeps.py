@@ -995,6 +995,82 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
+    def test_verified_payment_fact_and_original_ledger_actual_source_directions(self):
+        # de7f432 exact production types; NOT_COMPILED protocol controls only.
+        directions = (
+            ("B_PAYMENT_SDK", "B_VERIFIED_PAYMENT_FACT_STORE"),
+            ("B_PAYMENT_SDK", "B_VERIFIED_PAYMENT_FACT_DTO"),
+            ("B_PAYMENT_FACADE", "B_VERIFIED_PAYMENT_FACT_DTO"),
+            ("B_PAYMENT_OUTBOUND_PORT", "B_VERIFIED_PAYMENT_FACT_DTO"),
+            ("B_VERIFIED_PAYMENT_FACT_STORE", "B_VERIFIED_PAYMENT_FACT_DTO"),
+            ("G_ORIGINAL_SETTLEMENT_LEDGER", "B_VERIFIED_PAYMENT_FACT_STORE"),
+            ("G_ORIGINAL_SETTLEMENT_LEDGER", "B_VERIFIED_PAYMENT_FACT_DTO"),
+            ("G_CASH_CLAIM", "G_ORIGINAL_SETTLEMENT_LEDGER"),
+        )
+        for source, target in directions: self.reference(self.owner_member(source), self.owner_member(target))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual(set(directions), set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertEqual(3, len(report["references"]))
+
+    def test_verified_fact_dto_cannot_depend_on_store_sdk_domain_or_direct_mappers(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for target in self.dependencies["owners"]["B_VERIFIED_PAYMENT_FACT_DTO"]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member("B_VERIFIED_PAYMENT_FACT_DTO"), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                self.assertEqual(("B_VERIFIED_PAYMENT_FACT_DTO", target), (bad["source_technical_owner"], bad["target_class"]))
+
+    def test_fact_store_and_sdk_cannot_callback_domain_facades_or_original_storage(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("B_VERIFIED_PAYMENT_FACT_STORE", "B_PAYMENT_SDK"):
+            for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+                with self.subTest(owner=owner, target=target):
+                    self.replace_evidence("jdeps.stdout.txt", original)
+                    self.reference(self.owner_member(owner), target)
+                    report = self.check_directions()
+                    self.assertEqual("BLOCKED", report["verdict"], report)
+                    self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target
+                                        and f["source_technical_owner"] == owner for f in report["findings"]))
+
+    def test_original_ledger_cannot_call_sdk_claim_facade_or_bypass_fact_store(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "G_ORIGINAL_SETTLEMENT_LEDGER"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                self.assertEqual((owner, target), (bad["source_technical_owner"], bad["target_class"]))
+
+    def test_verified_fact_store_reverse_into_sdk_is_a_witnessed_cycle(self):
+        sdk, store = self.owner_member("B_PAYMENT_SDK"), self.owner_member("B_VERIFIED_PAYMENT_FACT_STORE")
+        self.reference(sdk, store)
+        self.reference(store, sdk)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["B_PAYMENT_SDK", "B_VERIFIED_PAYMENT_FACT_STORE"], cycle["owners"])
+        self.assertEqual(2, len(cycle["witnesses"]))
+        self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
+    def test_verified_fact_and_original_ledger_missing_raw_rows_stay_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("B_VERIFIED_PAYMENT_FACT_DTO", "B_VERIFIED_PAYMENT_FACT_STORE", "G_ORIGINAL_SETTLEMENT_LEDGER"):
+            member = self.owner_member(owner)
+            with self.subTest(owner=owner):
+                self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in original.decode().splitlines()
+                                      if not l.strip().startswith(member + " -> ")).encode())
+                report = self.check_directions()
+                self.assert_unknown(report)
+                self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
+
     def test_topic_query_batch_limit_reuses_exact_existing_size_owner(self):
         # Actual b9b894 source: selectChapterTemplates uses TopicSizeLimits.MAX_NODES.
         # Protocol fixture only: constant inlining/actual JDK rows need real CI.
