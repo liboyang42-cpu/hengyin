@@ -262,13 +262,11 @@ public class AiCreatorServiceImpl implements IAiCreatorService
             resp.setRemaining(gateway.remainingQuota(memberId, "theme_draft"));
             return resp;
         }
-        // player 走独立的 theme_draft 专项额度(比 gen 池更紧),两者取更紧的那个。
+        // 玩家起草只受独立专项额度限制，展示与实际预占、成功回包使用同一池。
         int playerRemaining = Math.max(0, PLAYER_THEME_DRAFT_DAILY_LIMIT - playerThemeDraftUsed(memberId));
-        // 网关 gen 池与其它创作类共用,被用光时专项额度再有剩余也生成不了。
-        int gatewayRemaining = Math.max(0, gateway.remainingQuota(memberId, "theme_draft"));
         resp.setLimited(true);
         resp.setLimit(PLAYER_THEME_DRAFT_DAILY_LIMIT);
-        resp.setRemaining(Math.min(playerRemaining, gatewayRemaining));
+        resp.setRemaining(playerRemaining);
         return resp;
     }
 

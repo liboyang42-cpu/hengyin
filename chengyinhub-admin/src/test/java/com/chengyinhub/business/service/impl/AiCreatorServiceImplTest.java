@@ -238,6 +238,7 @@ class AiCreatorServiceImplTest {
         AiThemeDraftResp resp = service.themeDraft(new AiThemeDraftReq(), MEMBER_ID);
 
         assertNotNull(resp.getDraft());
+        assertEquals(Integer.valueOf(2), resp.getRemainingQuota());
         assertEquals(1, reserved.size());
         assertEquals(0, refunded.size());
         LocalDateTime after = LocalDateTime.now(beijing);
@@ -336,6 +337,7 @@ class AiCreatorServiceImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void playerThemeDraftQuotaReportsZeroWhenSharedGatewayPoolIsExhausted() {
+        // 保留历史用例标识；人类已裁决 player 只受专用起草额度限制，旧0预期改为3。
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -348,7 +350,8 @@ class AiCreatorServiceImplTest {
 
         assertTrue(resp.isLimited());
         assertEquals(Integer.valueOf(3), resp.getLimit());
-        assertEquals(Integer.valueOf(0), resp.getRemaining());
+        assertEquals(Integer.valueOf(3), resp.getRemaining());
+        verify(gateway, never()).remainingQuota(MEMBER_ID, "theme_draft");
     }
 
     // ---- nodeGenerate ----
