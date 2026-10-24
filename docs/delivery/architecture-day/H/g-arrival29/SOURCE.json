@@ -1,0 +1,152 @@
+{
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+  "parent": "acc4bf5ea10bbefabb9d5db52dd17dc800b3a955",
+  "tree": "2dc3198d25c78f8f15148c2855e9526182d08cc4",
+  "negative": "acc4bf5ea10bbefabb9d5db52dd17dc800b3a955",
+  "review_base": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+  "delta": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+      "status": "modified"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/arrival-fix/CASES.md",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/arrival-fix/README.md",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/arrival-fix/artifact-sha256.json",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/arrival-fix/source-checks.json",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/arrival-fix/verify_static.py",
+      "status": "added"
+    }
+  ],
+  "read_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "f12a4fbf8100965f80bc99c23f0f2b1c4baf12d0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "7b9115c76647c7ad8d655be36f1d50a4a8f16abc"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "c6f5aed42f6393da8ac4e830c3365750f601154f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "aed160b50e57a2ebe47bb9ad6cfbeb23d56f79c4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "3e0e976dcdcc2183c6313980464e2b932359c048"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/arrival-fix/README.md",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "c7ca350e3db41fbd853f477a5cb256913a381d44"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "ac3d260753ba81d9e3de3766378914466bbc937f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPlayerNodeProgressService.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "1bce14722a0929a42cca7d5c53538220102ccd5a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "74841d0349abc059663a2486a767a5707222a61e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "768bcbd3cbe132aca673ab8b56c9f70c4156b7a4"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "8495e648e29ddb538ce84f2a92f4654083834d78"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "ref": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+      "sha": "dc807d26dbf2ec226a9f99d53f989de60451a83e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+      "ref": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+      "sha": "dcb477406bf57d3b7560e609a256d4afeb75c2b7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+      "ref": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+      "sha": "063646c257820fc9a41c42fdc5900ec39963c883"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+      "ref": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+      "sha": "113eaa7d0c7db36f70840a4fb3671f0625af006a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+      "ref": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+      "sha": "4d8a2c74de18850d47a7cf3a0faa7a6e6a5259c6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicNodeMapper.xml",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "96aae455e5c7386540321d67c3400cd9ded93f39"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IShopDayProofService.java",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "80c097606447b9044f49c9ebd42f54b6d8ba879f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_theme_runtime_20261004.sql",
+      "ref": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "sha": "35a987f891f9c5dc9c63b96270975d660da84f9e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "ref": "acc4bf5ea10bbefabb9d5db52dd17dc800b3a955",
+      "sha": "3c4f3119953e4e5fe9cb1eb12d810f4b38930e1c"
+    }
+  ]
+}

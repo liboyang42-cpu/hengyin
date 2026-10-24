@@ -1,0 +1,67 @@
+{
+  "candidate": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+  "negative": "acc4bf5ea10bbefabb9d5db52dd17dc800b3a955",
+  "base": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+  "checks": "static lexical/body comparison only; no Java/DB/CI",
+  "test_inventory": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+      "base_cases": 5,
+      "candidate_cases": 9,
+      "old_test_bodies_unchanged": true,
+      "new_cases": [
+        "arrivalAndSiblingsKeepTheOneResolvedInstanceWhenLatestChanges",
+        "duplicateReadbackKeepsTheResolvedInstanceAndOriginalProof",
+        "missingTopicFailsBeforeAnyArrivalLookupOrWrite",
+        "anUnresolvedInstanceCannotFallBackToADefaultInsert"
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+      "base_cases": 9,
+      "candidate_cases": 9,
+      "old_test_bodies_unchanged": true,
+      "new_cases": []
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+      "base_cases": 9,
+      "candidate_cases": 9,
+      "old_test_bodies_unchanged": true,
+      "new_cases": []
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "base_cases": 34,
+      "candidate_cases": 39,
+      "old_test_bodies_unchanged": true,
+      "new_cases": [
+        "replayArrivalMustBeReadableFromTheCurrentPlayInstance",
+        "replayArrivalMustNotCollideWithTheOldDefaultArrival",
+        "repeatedArrivalPreservesAllStoredColumnsAndPhotoWithinOneReplay",
+        "replaySiblingArrivalSharesOneInstanceWithoutMovingOldPhotosOrStatuses",
+        "anExistingSameRunSiblingKeepsItsCompletionAndPhoto"
+      ]
+    }
+  ],
+  "negative_two_assertion_bodies_preserved_except_required_owner_injection": true,
+  "protected_production_methods_byte_unchanged": [
+    "hasArrived",
+    "submitPhoto",
+    "markGameDone",
+    "probe",
+    "samePlace",
+    "parseCoordinate",
+    "isPhotoWritableStatus"
+  ],
+  "owner_resolver_call_sites": 1,
+  "controller_call_lines": [
+    1578,
+    1602,
+    1778,
+    2230,
+    2316
+  ],
+  "xml_parse": "PASS",
+  "runtime_verdict": "UNKNOWN"
+}
