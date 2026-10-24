@@ -20,7 +20,7 @@ function positiveId(value) {
 }
 
 let attemptSequence = 0
-const PREWRITE_REJECTIONS = new Set(['请先登录', '参数不合规', '据点未开放或已下线', '节点未上线', '节点未设置坐标', '缺少定位', '离据点太远,请到店后再完成', '答案不正确', '请上传拍照打卡照片', '照片地址不合法,请重新上传', '请扫描本店的到店打卡码', '这张码不属于本店'])
+const PREWRITE_REJECTIONS = new Set(['请先登录', '参数不合规', '据点未开放或已下线', '节点未上线', '节点未设置坐标', '缺少定位', '离据点太远,请到店后再完成', '答案不正确', '请上传拍照打卡照片', '照片地址不合法,请重新上传', '请扫描本店的到店打卡码', '这张码不属于本店', '照片未上传成功或不属于当前账号，请重新拍摄上传', '照片校验暂不可用，请稍后重试'])
 function ownerId() {
   try { return positiveId(app.getUserID()) } catch (_) { return null }
 }
@@ -52,6 +52,8 @@ Component({
     merchantId: { type: String, value: '' },
   },
   data: {
+    photoIndex: 0, photoCredit: '', creditOpen: false, ratingOptions: [1, 2, 3, 4, 5],
+    challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false,
     choiceSheetShow: false,
     choiceSheetItems: [],
     state: 'loading',
@@ -95,7 +97,7 @@ Component({
       if (!this.data.choiceSheetShow || this._choiceSheetToken !== this._interactionToken || this._closed) return
       const value = (this._choiceSheetValues || [])[e.detail.index]
       this.setData({ choiceSheetShow: false })
-      if (value) this.completeNode(value)
+      if (value) this.completeNode(value, this.data.challengePhoto || '')
     },
 
     /* 取消 = 原 showActionSheet 的 fail 分支:同一个失败通道,别让它静默消失 */
@@ -121,6 +123,8 @@ Component({
       try { if (context) pending = readPending(context) } catch (_) { storageError = true }
       const merchantId = this.data.merchantId
       const resetState = (state) => this.setData({
+        photoIndex: 0, photoCredit: '', creditOpen: false,
+        challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false,
         checkinPending: false,
         errorText: '',
         merchant: null,
@@ -180,7 +184,20 @@ Component({
               }
             } catch (_) { this._pendingNotice(true) }
           }
+          if (!node.merchantId) {
+            let images = []
+            try { images = JSON.parse(node.galleryJson || '[]') } catch (_) {}
+            this.setData({ gallery: (Array.isArray(images) ? images : []).filter(u => typeof u === 'string').map(u => app.getImgUrl(u)),
+              tags: String(node.tags || '').split(/[,，、]/).filter(Boolean) })
+          }
+          try {
+            const saved = context && wx.getStorageSync(context.key + ':photo')
+            if (saved && saved.templateId === node.templateId && typeof saved.url === 'string')
+              this.setData({ challengePhoto: saved.url })
+          } catch (_) {}
           if (node.merchantId && !this.data.checkinPending) this._loadMerchant(node.merchantId, token)
+          this.loadReviews()
+          this.loadPhotoCredit(node)
         },
         fail: () => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this.setData({ state: 'error', errorText: '网络异常，请重试' }) },
         successStatusAbnormal: (res) => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this._nodeLoadFailed(res) },
@@ -379,6 +396,10 @@ Component({
         this._setInteractionRecovery('unavailable', '—', '该节点尚未配置可用的核验方式，暂时不能打卡。', '')
         return
       }
+      if (node.photoRequired === true && !this.data.challengePhoto) {
+        this.takeChallengePhoto(token)
+        return
+      }
       if (node.validationMethod === 1) {
         modal.show({ title: '完成互动', editable: true, placeholderText: '输入答案 / 暗号', success: (result) => { if (token === this._interactionToken && !this._closed && result.confirm) this.completeNode(result.content || '') } })
         return
@@ -420,6 +441,103 @@ Component({
         return
       }
       this.completeNode('')
+    },
+    takeChallengePhoto(token) {
+      const node = this.data.node, actor = ownerId()
+      const current = () => !this._closed && token === this._interactionToken && actor === ownerId()
+      wx.getLocation({ type: 'gcj02', success: loc => {
+        if (!current()) return
+        const distance = require('../../../../utils/geo.js').haversine(loc.latitude, loc.longitude, Number(node.lat), Number(node.lng))
+        if (!Number.isFinite(distance) || distance > Number(node.radiusM || 80) + 30) {
+          this._setInteractionRecovery('retry', '还没到达地点', '先导航到地点附近，再拍摄任务照片。', 'start', '重新检查位置')
+          return
+        }
+        app.chooseImage(urls => {
+          if (!current() || !urls || !urls[0]) return
+          const context = pendingContext(this.data.poiId)
+          if (!context) return
+          try { wx.setStorageSync(context.key + ':photo', { templateId: node.templateId, url: urls[0] }) }
+          catch (_) { toast('照片进度保存失败，请重试'); return }
+          this.setData({ challengePhoto: urls[0] })
+          this.startInteract()
+        }, 1, { cameraOnly: true, skipCrop: true })
+      }, fail: error => {
+        if (current()) this._handleInteractionFailure('location', error, 'start')
+      } })
+    },
+    retakeChallengePhoto() {
+      if (this.data.completing || this.data.checkinPending) return
+      const context = pendingContext(this.data.poiId)
+      try { if (context) wx.removeStorageSync(context.key + ':photo') } catch (_) {}
+      this.setData({ challengePhoto: '' })
+      this.startInteract()
+    },
+    onPhotoPick(e) { this.setData({ photoIndex: Number(e.currentTarget.dataset.index) || 0 }) },
+    onPhotoCredit() { this.setData({ creditOpen: !this.data.creditOpen }) },
+    loadPhotoCredit(node) {
+      const key = node.coverImg, token = this._loadToken, actor = ownerId()
+      if (typeof key !== 'string' || !/^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*\.(?:jpg|png|webp)$/.test(key)) return
+      app.sendRequest({ url: '/profile/' + key.replace(/\.[^.]+$/, '.gallery.json'), method: 'GET', auth: false,
+        hideLoading: true, silentError: true, autoErrorToast: false, success: res => {
+          if (this._closed || token !== this._loadToken || actor !== ownerId()) return
+          const d = res && res.code == 200 && res.data
+          if (d && String(d.poiId) === String(this.data.poiId) && typeof d.credit === 'string')
+            this.setData({ photoCredit: d.credit.slice(0, 2000) })
+        } })
+    },
+    loadReviews() {
+      const poiId = this.data.poiId, token = this._loadToken, actor = ownerId()
+      if (!poiId) return
+      this.setData({ reviewsError: false })
+      app.sendRequest({ url: '/api/comment/list', method: 'POST', hideLoading: true, silentError: true,
+        data: { owner_type: 4, owner_id: poiId, pageNum: 1, pageSize: 10 },
+        success: res => {
+          if (this._closed || poiId !== this.data.poiId || token !== this._loadToken || actor !== ownerId()) return
+          const rows = res && res.code == 200 && res.data && res.data.rows
+          this.setData({ reviews: Array.isArray(rows) ? rows.map(row => ({ ...row, mine: String(row.memberId) === actor })) : [], reviewsError: !Array.isArray(rows) })
+        },
+        fail: () => { if (!this._closed && token === this._loadToken && actor === ownerId()) this.setData({ reviewsError: true }) },
+        successStatusAbnormal: () => { if (!this._closed && token === this._loadToken && actor === ownerId()) this.setData({ reviewsError: true }) },
+      })
+    },
+    onReviewInput(e) { this.setData({ reviewText: e.detail.value }) },
+    onReviewRating(e) { this.setData({ reviewRating: Number(e.currentTarget.dataset.rating) }) },
+    deleteOwnReview(e) {
+      if (this._loadedOwner !== ownerId()) { this._load(); return }
+      const id = e.currentTarget.dataset.id, poiId = this.data.poiId, actor = ownerId(), token = this._loadToken
+      if (!this.data.reviews.some(row => String(row.id) === String(id) && row.mine)) return
+      const current = () => !this._closed && token === this._loadToken && actor === ownerId() && poiId === this.data.poiId
+      modal.show({ title: '删除我的评价', content: '删除后会重新计算此地点评分。', success: result => {
+        if (!result.confirm || !current()) return
+        app.sendRequest({ url: '/api/comment/delete', method: 'POST', hideLoading: true, silentError: true, data: { id },
+          success: res => {
+            if (!current()) return
+            if (res && res.code == 200) this._load()
+            else toast(bizFailureMessage(res, '评价未删除，请重试'))
+          },
+          fail: () => { if (current()) toast('评价未删除，请重试') },
+        })
+      } })
+    },
+    submitReview() {
+      if (this._loadedOwner !== ownerId()) { this._load(); return }
+      if (!this.data.node || !this.data.node.completed || this.data.reviewSubmitting) return
+      const contents = this.data.reviewText.trim(), poiId = this.data.poiId, actor = ownerId(), token = this._loadToken
+      if (!contents) { toast('写下你的游玩感受'); return }
+      if (!(this.data.reviewRating >= 1 && this.data.reviewRating <= 5)) { toast('请选择评分'); return }
+      this.setData({ reviewSubmitting: true })
+      const current = () => !this._closed && token === this._loadToken && actor === ownerId() && poiId === this.data.poiId
+      app.sendRequest({ url: '/api/comment/add', method: 'POST', hideLoading: true, silentError: true,
+        data: { owner_type: 4, owner_id: poiId, rating: this.data.reviewRating, contents, reply_id: 0 },
+        success: res => {
+          if (!current()) return
+          this.setData({ reviewSubmitting: false })
+          if (res && res.code == 200) { toast('评价已提交'); this._load() }
+          else toast(bizFailureMessage(res, '评价未提交，请重试'))
+        },
+        fail: () => { if (current()) { this.setData({ reviewSubmitting: false }); toast('评价未提交，请重试') } },
+        successStatusAbnormal: () => { if (current()) { this.setData({ reviewSubmitting: false }); toast('评价未提交，请重试') } },
+      })
     },
     completeNode(answer, photoUrl, code) {
       if (this._closed || this.data.completing || !this.data.poiId || !this.data.node || this.data.node.completed === true) return
@@ -468,6 +586,8 @@ Component({
               this.setData({ completing: false, checkinPending: false })
               if (rejected) { this._setInteractionRecovery('retry', '打卡没有完成', res.msg, 'start', '重新作答'); return }
               const result = res.data
+              try { wx.removeStorageSync(context.key + ':photo') } catch (_) {}
+              this.setData({ challengePhoto: '' })
               this._clearInteractionRecovery()
               this.setData({ 'node.completed': !result.needRedeem, 'node.needRedeem': result.needRedeem })
               this.triggerEvent('completed', { poiId, alreadyClaimed: result.alreadyClaimed === true, needRedeem: result.needRedeem })

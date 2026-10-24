@@ -1,6 +1,6 @@
 // 漫游地图 · 附近的队伍(地图组队 P 方案,Figma txQoyVyKb3aQdFCnc8qmhj 590:1014 · P1–P6)。
 // 地图只做展示层:挂票务组队(公开队伍),不能开新局(9-15 裁决,搭子局 A 下架)。
-// 数据:GET /api/team/nearby(队伍点位)+ GET /api/roam/hangout/nearby(只取主题 / 活动点位,局一律不画)。
+// 数据:队伍 + 探店地点/商家 + 自由探索/活动；城市定向只在独立主题入口展示。
 // 纯函数在 utils/map-team.js(卡片五态 / errorCode 分支 / P6 三态)与 utils/roam-hangout*.js(主题点位 canvas),本文件只做接线。
 // ⚠️ 失败只按 errorCode 分支(map-team.resolveTeamError),走 cy-result-sheet 失败半屏,不解析 msg。
 const app = getApp();
@@ -13,6 +13,7 @@ const H = require('../../utils/roam-hangout.js');
 const T = require('../utils/map-team.js'); const L = require('../utils/map-layers.js'); // L:2026-10-22 三类点位/筛选/边缘缩小
 const cyToast = require('../../utils/toast.js');
 const modal = require('../../utils/modal.js');
+const mediaPreview = require('../../utils/media-preview.js');
 const M = require('../../utils/roam-hangout-marker.js');
 const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js'); const P = require('../utils/map-pins.js'); const kmText = (m) => T.rangeText(m).replace(/\s*km$/, ' 公里'); // v13 点位图 / 「范围 3 公里」
 
@@ -242,7 +243,7 @@ Page({
         if (that._nearbyOutcome('topics', owner, seq, res)) return;
         const d = res && res.code == 200 && res.data ? res.data : null;
         if (!d || !isRecordList(d.items)) { failed(res); return; }
-        that._items = d.items.filter((it) => it.kind !== 'hangout'); that._nearbyLayerResult('topics', false);
+        that._items = d.items.filter((it) => L.keepItem(it)); that._syncLayerOptions(); that._nearbyLayerResult('topics', false);
         that._syncMarkers();
         const items = that._items;
         that._queueIcons(() => current() ? that._genIcons(items, current) : false).then((made) => { if (made && current()) that._syncMarkers(); });
@@ -322,6 +323,7 @@ Page({
           if (url && !this._iconFailed[url]) { try { im = await this._loadImage(cv, url); } catch (e) { this._iconFailed[url] = true; } }
           imgs.push(im);
         }
+        if (sp.kind !== 'team' && !imgs[0]) continue;
         try {
           P.drawPin(cv.getContext('2d'), sp, imgs);
           this._pins[sp.id] = { icon: await this._save(cv), kind: sp.kind, key: P.pinKey(sp) }; made++;
@@ -892,7 +894,7 @@ Page({
       return { kind: shop ? 'shop' : 'spot', id: c.id, chipLetter: tag.slice(0, 1), chipColor: shop ? '#FF9F0A' : '#34C759', chipText: tag, img: img(c.img), faces: [], countText: '', // ds-ok v13 商家橙 / 地点绿
         ribbon: '', title: c.title, subName: shop ? (p.merchantName || '') : c.tags.slice(1, 3).join(' · '), metaLine: c.address, metaStrong: c.found ? '到过' : '',
         address: c.address, desc: c.desc, thumbs: [], rows: [{ k: '类型', v: c.tags.join(' · ') || c.tag }].concat(c.address ? [{ k: '地址', v: c.address }] : []),
-        primary: '去这里', secondary: '', lat: c.lat, lng: c.lng };
+        templateId: p.templateId || null, primary: p.templateId ? '查看玩法与详情' : '去这里', secondary: p.templateId ? '导航' : '', lat: c.lat, lng: c.lng };
     }
     const it = (this._items || []).find((x) => String(x.id) === String(id) && x.kind === kind);
     if (!it) return null;
@@ -924,6 +926,22 @@ Page({
     this._openPin = this._lastMarkerId; this._pcBox = { top: pcTop, h: Math.round(608 * (win.windowWidth || 375) / 750), w: Math.round(558 * (win.windowWidth || 375) / 750), W: win.windowWidth || 375, H: h };
     this.setData({ poiCard: card, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', sheet: 'poi', pcTop }); this._syncMarkers(); // 点开的那颗点位藏起来:卡片就是它长出来的
     this._poiInTimer = setTimeout(() => { if (!this._unloaded) this.setData({ poiCardIn: true }); }, 30);
+    const request = {}; this._poiGalleryRequest = request;
+    const poi = kind === 'poi' && (this._pois || []).find((row) => String(row.id) === String(id));
+    const url = poi && L.poiGalleryPath(poi.coverImg);
+    if (url) {
+      const identity = this._myIdentity();
+      app.sendRequest({ url, method: 'GET', auth: false, hideLoading: true, silentError: true, autoErrorToast: false,
+        success: (res) => {
+          if (this._unloaded || this._poiGalleryRequest !== request || this._myIdentity() !== identity
+              || this.data.sheet !== 'poi' || !this.data.poiCard || String(this.data.poiCard.id) !== String(id)) return;
+          const gallery = res && res.code === 200 && L.poiGallery(res.data, id, poi.coverImg);
+          if (gallery && gallery.keys.length) this.setData({
+            'poiCard.thumbs': gallery.keys.map((key) => app.getImgUrl(key)).filter(Boolean), 'poiCard.photoCredit': gallery.credit,
+          });
+        },
+      });
+    }
   },
   /* 点正面:队伍进原来的队伍半屏;其余翻到背面 */
   onPoiFront() {
@@ -948,14 +966,23 @@ Page({
       wx.navigateTo({ url: (c.item === 'topic' ? TOPIC_PAGE : ACTIVITY_PAGE) + '?id=' + encodeURIComponent(c.id), complete: () => { this._navigating = false; } });
       return;
     }
+    if (c.templateId) {
+      if (this._navigating) return; this._navigating = true;
+      wx.navigateTo({ url: '/subpackageRoam/poi-detail/index?poiId=' + encodeURIComponent(c.id),
+        complete: () => { this._navigating = false; } });
+      return;
+    }
     this.onPoiNavigate();
   },
-  onPoiSecondary() {},
+  onPoiSecondary() { this.onPoiNavigate(); },
+  onPoiImagePreview(e) { mediaPreview.open((this.data.poiCard || {}).thumbs || [], Number(e.currentTarget.dataset.index)); },
+  onPoiPhotoCredit() { if (this.data.poiCard) this.setData({ 'poiCard.creditOpen': !this.data.poiCard.creditOpen }); },
   onPoiFlip() { this.setData({ poiFlip: !this.data.poiFlip, poiExpand: false }); },
   onPoiExpand() { this._expand(!this.data.poiExpand); },
   /* 展开 / 收起:卡片先按大小切到目标版式,再用裁切从原卡位置放开(或收回到原卡位置),看起来是卡在长大,
      不去逐帧动 top / width / height(那些属性每帧重排) */
   _expand(on) {
+    if (on && this.data.poiCard && this.data.poiCard.templateId) { this.onPoiPrimary(); return; }
     const b = this._pcBox, hud = this.data.hudTop, bottom = this.data.safeBottom + 20;
     if (!b || this.data.reducedMotion) { this.setData({ poiExpand: on, pcClip: '' }); return; }
     const inset = 'clip-path: inset(' + Math.max(0, b.top - hud) + 'px ' + Math.round((b.W - b.w) / 2 - 12) + 'px ' + Math.max(0, (b.H - bottom) - (b.top + b.h)) + 'px ' + Math.round((b.W - b.w) / 2 - 12) + 'px round 21px);'
@@ -969,6 +996,7 @@ Page({
     }
   },
   closePoiCard() {
+    this._poiGalleryRequest = null;
     if (this._poiInTimer) { clearTimeout(this._poiInTimer); this._poiInTimer = null; }
     this.setData({ poiCardIn: false, poiExpand: false, pcClip: '' });
     this._poiInTimer = setTimeout(() => { if (this._unloaded) return; this._openPin = null; this.setData({ poiCard: null, sheet: this.data.sheet === 'poi' ? '' : this.data.sheet }); this._syncMarkers(); }, 460); // 卡缩回点位后点位再出现

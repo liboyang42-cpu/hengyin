@@ -164,6 +164,8 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pc.is-x .pb__d { display: block; color: rgba(255,255,255,.86); } /* ds-ok */
 .pb__more { display: block; margin: 12rpx 0 19rpx; font-size: 23rpx; color: #0A84FF; } /* ds-ok */
 .pb__th { display: flex; gap: 12rpx; }
+.pb__photo-note { font-size: 22rpx; line-height: 1.5; color: var(--sub); overflow-wrap: anywhere; }
+.pb__source { min-height: 88rpx; display: flex; align-items: center; }
 .pb__th image { flex: 1; height: 123rpx; border-radius: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .pb__info { margin-top: 27rpx; }
 .pb__row { display: flex; justify-content: space-between; gap: 23rpx; padding: 21rpx 0; border-top: 1rpx solid rgba(255,255,255,.08); font-size: 27rpx; } /* ds-ok */

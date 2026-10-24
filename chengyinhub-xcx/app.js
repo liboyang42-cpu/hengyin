@@ -632,7 +632,7 @@ App({
       mediaType: ['image'],
       // 跳过裁剪的那一路要原图:compressed 会把 PNG 转码,透明底同样保不住
       sizeType: options.skipCrop ? ['original'] : ['compressed'],
-      sourceType: ['album', 'camera'],
+      sourceType: options.cameraOnly ? ['camera'] : ['album', 'camera'],
       success: function (res) {
         if (operation.isAborted()) return;
         var paths = pickImagePaths(res);

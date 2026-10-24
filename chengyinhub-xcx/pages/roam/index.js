@@ -1335,6 +1335,7 @@ Page({
       if (!res.data.length) return;
       const imgBase = config.baseImgUrl || '';
       const merchants = res.data.map((n, i) => {
+        if (n.topicId && Number(n.productType) !== 2) return null;
         const lat = parseFloat(n.latitude);
         const lng = parseFloat(n.longitude);
         if (isNaN(lat) || isNaN(lng)) return null;
@@ -1432,7 +1433,7 @@ Page({
         const merchantAvatar = n.merchantAvatar || n.avatarUrl || n.avatar || '';
         const npcAvatar = n.npcAvatar || '';
         return {
-          id: ROAM_POI_MK_BASE + Number(n.id), _roamId: n.id, cat: m.cat, isCityNode: n.type === 2, name: n.name,
+          id: ROAM_POI_MK_BASE + Number(n.id), _roamId: n.id, cat: m.cat, isCityNode: n.type === 2 || !!n.templateId, name: n.name,
           lat: parseFloat(n.lat), lng: parseFloat(n.lng),
           // 非商户地点的 description 不是审核意义来源，绝不直出；商户说明仍走既有确定性探店信息。
           desc: n.type === 2 ? (n.description || '') : '', points: n.xp || 20,

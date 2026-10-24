@@ -13,6 +13,8 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface UmsCommentMapper 
 {
+    boolean hasCompletedPoi(@Param("poiId") Long poiId, @Param("memberId") Long memberId);
+    int countPoiReviews(@Param("poiId") Long poiId, @Param("memberId") Long memberId);
 
     /**
      * 查询用户评论

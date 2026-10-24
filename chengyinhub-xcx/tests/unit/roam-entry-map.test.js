@@ -16,12 +16,24 @@ test('活动与队伍同图，活动卡关联对应招募队伍', () => {
 })
 
 test('活动和招募队伍始终同时显示', () => {
-  const items = [{ id: 7, kind: 'topic', name: '城市主题', latitude: 31.2, longitude: 121.4 }]
+  const items = [{ id: 7, kind: 'topic', productType: 2, name: '自由探索主题', latitude: 31.2, longitude: 121.4 }]
   const view = entryMap.build(items, [], { activities: true, teams: true, posts: true }, value => value)
   assert.equal(view.markers.length, 1)
   assert.equal(view.cards.length, 1)
   assert.deepEqual(entryMap.parseMarker(73), { kind: 'topic', id: 7 })
 })
+
+test('漫游入口地图的点位、卡片、搜索结果都排除城市定向', () => {
+  const point = { kind: 'topic', latitude: 31.2, longitude: 121.4, postImages: ['scene.jpg'] };
+  const view = entryMap.build([
+    { ...point, id: 1, productType: 1 },
+    { ...point, id: 2 },
+    { ...point, id: 3, productType: 2 },
+  ], []);
+  assert.deepEqual(view.cards.map(row => row.id), [3]);
+  assert.deepEqual(view.searchPlaces.map(row => row.id), ['topic-3']);
+  assert.deepEqual(view.markers.map(row => row.id), [33, 35]);
+});
 
 test('空坐标不落到几内亚湾，活动沿用主题玩法类型', () => {
   const items = [

@@ -35,6 +35,7 @@ function mountPoiScene(node, overrides) {
     Component(options) { definition = options; },
     getApp() { return app; },
     require(request) {
+      if (request === '../../../../utils/geo.js') return require('../../utils/geo.js');
       if (request === '../../../../utils/response-shape.js') return require('../../utils/response-shape.js');
       if (request === '../../../../utils/validation-method-labels.js') return require('../../utils/validation-method-labels.js');
       if (request === '../../../../utils/media-preview.js') return loadMediaPreview(wx);
@@ -65,6 +66,62 @@ function mountPoiScene(node, overrides) {
   booting = false;
   return { instance, requests, initialRequests, storage, detach: () => definition.lifetimes.detached.call(instance) };
 }
+
+test('官方据点先到达拍照再答题，照片只随完成请求提交', () => {
+  assert.match(read('subpackageMember/components/cy/scene-roam-poi-detail/index.wxml'), /title="\{\{node.questionName \|\| '选择答案'\}\}"/);
+  let pick, options;
+  const h = mountPoiScene({ validationMethod: 3, photoRequired: true, templateId: 99,
+    lat: 31.2, lng: 121.5, questionA: '第一项', questionB: '第二项' },
+    { app: { chooseImage(callback, count, config) { pick = callback; options = config; } } });
+  h.instance.startInteract();
+  assert.equal(options.cameraOnly, true);
+  assert.equal(h.instance.data.choiceSheetShow, false);
+  assert.equal(h.requests.length, 0);
+  pick(['https://platform.example/owned-photo.jpg']);
+  assert.equal(h.instance.data.choiceSheetShow, true);
+  assert.equal(h.requests.length, 0);
+  h.instance.onChoiceSheetSelect({ detail: { index: 1 } });
+  const complete = h.requests.find(r => r.url.endsWith('/complete'));
+  assert.equal(complete.data.answer, 'B');
+  assert.equal(complete.data.photoUrl, 'https://platform.example/owned-photo.jpg');
+});
+
+test('不在据点附近不打开相机，完整照片不裁切', () => {
+  let picks = 0;
+  const h = mountPoiScene({ validationMethod: 3, photoRequired: true, lat: 30, lng: 120 },
+    { app: { chooseImage() { picks++; } } });
+  h.instance.startInteract();
+  assert.equal(picks, 0);
+  assert.equal(h.instance.data.interactionTitle, '还没到达地点');
+  const wxml = read('subpackageMember/components/cy/scene-roam-poi-detail/index.wxml');
+  assert.match(wxml, /class="poi-full-photo"[^>]*mode="widthFix"/);
+});
+
+test('地点评价只为已完成玩家发送，失败保留文字且允许重试', () => {
+  const h = mountPoiScene({ completed: false });
+  h.instance.setData({ reviewText: '真实游玩体验', reviewRating: 4 });
+  h.instance.submitReview();
+  assert.equal(h.requests.length, 0);
+  h.instance.data.node.completed = true;
+  h.instance.submitReview();
+  assert.equal(h.requests[0].url, '/api/comment/add');
+  assert.equal(h.requests[0].data.owner_type, 4);
+  h.requests[0].fail();
+  assert.equal(h.instance.data.reviewText, '真实游玩体验');
+  assert.equal(h.instance.data.reviewSubmitting, false);
+});
+
+test('切换账号后不把原账号的评价草稿或删除操作提交给新账号', () => {
+  for (const action of ['submitReview', 'deleteOwnReview']) {
+    let actor = 7;
+    const h = mountPoiScene({ completed: true }, { app: { getUserID() { return actor; } } });
+    h.instance.setData({ reviewText: '原账号的草稿', reviewRating: 4, reviews: [{ id: 9, mine: true }] });
+    actor = 8;
+    h.instance[action]({ currentTarget: { dataset: { id: 9 } } });
+    assert.equal(h.requests.some(r => r.url === '/api/comment/add' || r.url === '/api/comment/delete'), false);
+    assert.equal(h.instance.data.reviewText, '');
+  }
+});
 
 test('商家连续重试只接受最后请求，旧成功或失败不能覆盖恢复结果', () => {
   for (const callback of ['success', 'fail', 'successStatusAbnormal']) {
@@ -405,7 +462,7 @@ test('商家公开信息失败不遮挡真实历史待核销，补充信息可�
   h.instance.startInteract();
   assert.equal(events[0].detail.id, 'qr-citynode');
   h.instance.retryMerchant();
-  h.requests[2].success({ code: 200, data: { id: 77, name: '原商家' } });
+  h.requests.at(-1).success({ code: 200, data: { id: 77, name: '原商家' } });
   assert.equal(h.instance.data.merchantError, '');
   assert.equal(h.instance.data.merchant.name, '原商家');
   assert.equal(h.instance.data.node.couponId, 88);

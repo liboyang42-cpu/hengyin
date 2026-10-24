@@ -20,6 +20,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <resultMap type="RoamPoi" id="RoamPoiResult">
+        <result property="galleryJson" column="gallery_json" />
+        <result property="photoRequired" column="photo_required" />
+        <result property="badgeCode" column="badge_code" />
         <result property="id" column="id" />
         <result property="name" column="name" />
         <result property="type" column="type" />
@@ -438,6 +441,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- ===== 商家节点(漫游 · roam_poi type=2 联合商家+模板)===== -->
     <resultMap type="com.chengyinhub.business.domain.vo.CityNodeVO" id="CityNodeVOResult">
+        <result property="galleryJson" column="gallery_json" />
+        <result property="photoRequired" column="photo_required" />
+        <result property="photoRequireDesc" column="photo_require_desc" />
+        <result property="badgeCode" column="badge_code" />
+        <result property="averageRating" column="average_rating" />
+        <result property="ratingCount" column="rating_count" />
         <result property="poiId" column="poi_id" />
         <result property="name" column="name" />
         <result property="description" column="description" />
@@ -468,11 +477,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="cityNodeSelect">
-        select p.id as poi_id, p.name as name, p.description as description, p.lat as lat, p.lng as lng,
+        select (select round(avg(c.rating),1) from ums_comment c where c.owner_type=4 and c.owner_id=p.id
+                    and c.status=1 and c.del_flag=0 and (c.reply_id is null or c.reply_id=0)) as average_rating,
+               (select count(*) from ums_comment c where c.owner_type=4 and c.owner_id=p.id
+                    and c.status=1 and c.del_flag=0 and c.rating between 1 and 5 and (c.reply_id is null or c.reply_id=0)) as rating_count, p.gallery_json, p.photo_required, p.badge_code, t.photo_require_desc,
+               p.id as poi_id, p.name as name, p.description as description, p.lat as lat, p.lng as lng,
                p.radius_m as radius_m, p.node_level as node_level, p.tags as tags, p.cover_img as cover_img,
                p.city_code as city_code, p.status as status,
                p.merchant_id as merchant_id, m.name as merchant_name, m.logo as merchant_logo,
-               m.address as merchant_address, m.phone as merchant_phone,
+               coalesce(m.address,p.address) as merchant_address, m.phone as merchant_phone,
                p.template_id as template_id, t.title as template_title, t.interaction_type as interaction_type,
                t.validation_method as validation_method, t.coupon_id as coupon_id,
                <!-- vm=3 选项问答要让玩家看到题面和选项。⚠️ correct_answer 绝不出现在这里:
@@ -487,15 +500,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <sql id="cityNodeContentApproved">
         (p.application_type is null or p.application_type = 2
-         or (p.application_type = 1 and p.audit_status = 1))
+         or (p.application_type in (1, 3) and p.audit_status = 1))
     </sql>
 
     <select id="selectMerchantNodesNear" resultMap="CityNodeVOResult">
-        select p.id as poi_id, p.name as name, p.description as description, p.lat as lat, p.lng as lng,
+        select p.gallery_json, p.photo_required, p.badge_code, t.photo_require_desc,
+               p.id as poi_id, p.name as name, p.description as description, p.lat as lat, p.lng as lng,
                p.radius_m as radius_m, p.node_level as node_level, p.tags as tags, p.cover_img as cover_img,
                p.city_code as city_code, p.status as status,
                p.merchant_id as merchant_id, m.name as merchant_name, m.logo as merchant_logo,
-               m.address as merchant_address, m.phone as merchant_phone,
+               coalesce(m.address,p.address) as merchant_address, m.phone as merchant_phone,
                p.template_id as template_id, t.title as template_title, t.interaction_type as interaction_type,
                t.validation_method as validation_method, t.coupon_id as coupon_id,
                t.question_name as question_name,
@@ -529,7 +543,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectPlayerMerchantNodeDetail" resultMap="CityNodeVOResult">
         <include refid="cityNodeSelect" />
-        where p.id = #{id} and p.type = 2
+        where p.id = #{id} and (p.type = 2 or (p.type = 1 and p.template_id is not null and p.application_type = 3))
           and <include refid="cityNodeContentApproved" />
           and (p.status = 1 or (p.status = 0 and #{memberId} > 0 and exists (
               select 1 from roam_poi_reward_log r
@@ -546,7 +560,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="cityNodeSelect" />
         inner join member_collectible c on c.ref_id = p.id
             and c.member_id = #{memberId} and c.coll_type = 3
-        where p.type = 2 and p.status = 1
+        where (p.type = 2 or (p.type = 1 and p.application_type = 3 and p.template_id is not null)) and p.status = 1
           and <include refid="cityNodeContentApproved" />
         order by c.create_time desc, p.id desc
     </select>
@@ -634,14 +648,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectRoamApplications" resultMap="RoamPoiAdminResult">
-        select p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp,
+        select p.gallery_json, p.photo_required, p.badge_code, p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp,
                p.coupon_template_id, p.city_code, p.status, p.audit_status, p.application_type,
                p.applicant_merchant_id, p.audit_reason, p.create_time, p.merchant_id,
                p.template_id, p.node_level, p.tags, p.cover_img, p.sort,
                applicant.name as merchant_name
         from roam_poi p
         left join mms_merchant applicant on applicant.id = p.applicant_merchant_id
-        where p.application_type in (1, 2) and p.audit_status is not null
+        where p.application_type in (1, 2, 3) and p.audit_status is not null
         <if test="applicantMerchantId != null">and p.applicant_merchant_id = #{applicantMerchantId}</if>
         <if test="auditStatus != null">and p.audit_status = #{auditStatus}</if>
         order by p.id desc
@@ -729,7 +743,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- ⚠️ 刻意不硬编码 status:治理要看全量(status=1 是 selectPoisNear 的玩家口径) -->
     <select id="selectAdminPois" resultMap="RoamPoiAdminResult">
-        select p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp,
+        select p.gallery_json, p.photo_required, p.badge_code, p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp,
                p.coupon_template_id, p.city_code, p.status, p.audit_status, p.application_type,
                p.applicant_merchant_id, p.audit_reason, p.create_time, p.merchant_id,
                p.template_id, p.node_level, p.tags, p.cover_img, p.sort,
@@ -825,5 +839,33 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         update roam_poi_reward_log set trigger_lat=null,trigger_lng=null,claim_fingerprint=#{fingerprint},
             poi_id=case when coalesce(coupon_id,0)=0 then null else poi_id end
         where id=#{id} and member_id=#{memberId} and (poi_id is not null or trigger_lat is not null or trigger_lng is not null)
+    </update>
+    <select id="selectOfficialPoiForUpdate" resultMap="RoamPoiResult">
+        select gallery_json, photo_required, badge_code, <include refid="poiCols" /> from roam_poi where id=#{id} and type=1 and merchant_id is null for update
+    </select>
+    <insert id="insertOfficialPoi" useGeneratedKeys="true" keyProperty="id">
+        insert into roam_poi (name,type,lat,lng,radius_m,address,description,xp,city_code,status,audit_status,
+                              application_type,template_id,tags,cover_img,gallery_json,photo_required,create_time)
+        values (#{name},1,#{lat},#{lng},#{radiusM},#{address},#{description},#{xp},#{cityCode},0,0,
+                3,#{templateId},#{tags},#{coverImg},#{galleryJson},1,#{createTime})
+    </insert>
+    <update id="updateOfficialPoi">
+        update roam_poi set name=#{name},lat=#{lat},lng=#{lng},radius_m=#{radiusM},address=#{address},
+            description=#{description},city_code=#{cityCode},template_id=#{templateId},tags=#{tags},
+            cover_img=#{coverImg},gallery_json=#{galleryJson},photo_required=1,application_type=3,
+            status=0,audit_status=0,audit_reason=null
+        where id=#{id} and type=1 and merchant_id is null
+    </update>
+    <update id="approveOfficialPoi">
+        update roam_poi set status=1,audit_status=1,badge_code=#{badgeCode},audit_reason=null
+        where id=#{id} and type=1 and application_type=3 and audit_status=0 and merchant_id is null
+    </update>
+    <update id="rejectOfficialPoi">
+        update roam_poi set status=0,audit_status=2,audit_reason=#{reason}
+        where id=#{id} and type=1 and application_type=3 and audit_status=0 and merchant_id is null
+    </update>
+    <update id="savePoiEvidence">
+        update roam_poi_reward_log set photo_url=#{photoUrl},submitted_answer=#{answer}
+        where poi_id=#{poiId} and member_id=#{memberId} and photo_url is null
     </update>
 </mapper>

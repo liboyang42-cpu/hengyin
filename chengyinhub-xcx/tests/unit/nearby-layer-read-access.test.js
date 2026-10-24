@@ -38,7 +38,23 @@ function mount(uid = '7') {
 function reply(request, status, data) { request.success({ statusCode: status, data }); }
 async function settled() { for (let i = 0; i < 30; i++) await Promise.resolve(); }
 const team = { teamId: 42, title: 'fixture team', latitude: 31, longitude: 121, maxMembers: 4, joinedCount: 2 };
-const topic = { id: 5, kind: 'topic', name: 'fixture topic', latitude: 31, longitude: 121, distance: 20 };
+const topic = { id: 5, kind: 'topic', productType: 2, name: 'fixture topic', latitude: 31, longitude: 121, distance: 20 };
+
+test('city orientation is absent from map markers, list, counts and category options', () => {
+  const h = mount(); h.page.setData({ center: { lat: 31, lng: 121 } }); h.page.refresh(h.page.data.center);
+  reply(h.requests[0], 200, { code: 200, data: [] });
+  reply(h.requests[1], 200, { code: 200, data: { items: [
+    { ...topic, productType: 1 }, { ...topic, id: 6, productType: '1' },
+    { ...topic, id: 7, productType: null }, { ...topic, id: 8, productType: 2 },
+  ] } });
+  assert.deepEqual(Array.from(h.page._items, x => x.id), [8]);
+  assert.deepEqual(Array.from(h.page.data.listRows, x => x.id), [8]);
+  assert.deepEqual(Array.from(h.page.data.markers, x => x.id), [83]);
+  assert.equal(h.page.data.headerText, '附近 · 0 支队伍 · 1 处地点');
+  reply(h.requests[1], 200, { code: 200, data: { items: [{ ...topic, productType: 1 }] } });
+  assert.equal(h.page.data.listRows.length, 0);
+  assert.deepEqual(Array.from(h.page._layerOptions.place), ['全部地点']);
+});
 
 test('guest keeps the map and title, with no protected layer requests or fabricated zero', () => {
   const h = mount(''); h.page.refresh(h.page.data.center);

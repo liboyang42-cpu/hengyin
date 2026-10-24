@@ -51,6 +51,11 @@ public class ApiCityNodeController extends BaseController {
     @Autowired
     private IMerchantNodeDiscoveryService merchantNodeDiscoveryService;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.GrowthBadgeMapper growthBadges;
+    @Autowired
+    private com.chengyinhub.business.mapper.PlayerBadgeMapper playerBadges;
+
     /** 张贴码密钥:与核销动态码同一把,口径见 ApiVerifyController#dynSecret */
     @Value("${verify.dyncode-secret:${token.secret}}")
     private String dynSecret;
@@ -211,6 +216,16 @@ public class ApiCityNodeController extends BaseController {
         }
         // 5GPS到达 / 其它:以到店定位为准
 
+        if (Boolean.TRUE.equals(node.getPhotoRequired())) {
+            try {
+                com.chengyinhub.common.utils.file.FileOssUploadUtils.verifyUploadedPhoto(photoUrl, memberId);
+            } catch (IllegalArgumentException invalid) {
+                return error("照片未上传成功或不属于当前账号，请重新拍摄上传");
+            } catch (IllegalStateException unavailable) {
+                return error("照片校验暂不可用，请稍后重试");
+            }
+        }
+
         // ③ 每玩家每节点仅一次(uk_poi_member 幂等):记到店打卡(status=0「待核销」),券不在此发
         Long couponId = node.getCouponId();
         boolean hasCoupon = couponId != null && couponId > 0;
@@ -227,6 +242,25 @@ public class ApiCityNodeController extends BaseController {
             data.put("alreadyClaimed", true);
             return AjaxResult.success("你已完成过该据点", data);
         }
+        if (Boolean.TRUE.equals(node.getPhotoRequired())
+                && roamMapper.savePoiEvidence(id, memberId, photoUrl, answer) != 1)
+            throw new com.chengyinhub.common.exception.ServiceException("照片凭证保存失败，请重试");
+        if (!hasCoupon && node.getBadgeCode() != null) {
+            com.chengyinhub.business.domain.GrowthBadge def = growthBadges.selectByCode(node.getBadgeCode());
+            if (def == null || !"0".equals(def.getStatus()))
+                throw new com.chengyinhub.common.exception.ServiceException("地点勋章暂不可用，请重试");
+            if (playerBadges.countByMemberAndCode(memberId, def.getBadgeCode()) == 0) {
+                com.chengyinhub.business.domain.PlayerBadge badge = new com.chengyinhub.business.domain.PlayerBadge();
+                badge.setMemberId(memberId); badge.setBadgeCode(def.getBadgeCode()); badge.setBadgeName(def.getBadgeName());
+                badge.setIconUrl(def.getIconUrl()); badge.setSourceType(6); badge.setSourceId(id);
+                badge.setDelFlag(0); badge.setObtainTime(new Date()); badge.setCreateTime(new Date());
+                if (playerBadges.insertPlayerBadge(badge) != 1)
+                    throw new com.chengyinhub.common.exception.ServiceException("勋章发放失败，请重试");
+            }
+            data.put("badgeCode", def.getBadgeCode()); data.put("badgeName", def.getBadgeName());
+        }
+        data.put("poiId", id);
+        data.put("completed", !hasCoupon);
         // ④ C2 防伪造GPS薅券:到店券不再凭客户端 GPS 自动发放,改由商家扫玩家「据点核销码」核销发券
         //    (/api/verify/citynode/issue 玩家出码 → 商家扫 → /api/verify/citynode/redeem 验签+归属+幂等+发券)
         data.put("hint", hasCoupon ? "已到店打卡,出示据点核销码给商家即可领券" : "已到店打卡");

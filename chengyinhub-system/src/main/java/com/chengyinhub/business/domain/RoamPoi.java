@@ -5,6 +5,15 @@ import java.util.Date;
 
 /** P2 漫游 POI roam_poi(type=1 地标/公园 · 2 商户招牌)。 */
 public class RoamPoi {
+    private String galleryJson;
+    private Boolean photoRequired;
+    private String badgeCode;
+    public String getGalleryJson() { return galleryJson; }
+    public void setGalleryJson(String value) { galleryJson = value; }
+    public Boolean getPhotoRequired() { return photoRequired; }
+    public void setPhotoRequired(Boolean value) { photoRequired = value; }
+    public String getBadgeCode() { return badgeCode; }
+    public void setBadgeCode(String value) { badgeCode = value; }
     private Long id;
     private String name;
     private Integer type;

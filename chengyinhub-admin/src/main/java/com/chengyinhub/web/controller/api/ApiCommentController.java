@@ -89,6 +89,9 @@ public class ApiCommentController extends BaseController {
     private CommentPublicationService commentPublicationService;
 
     @Autowired
+    private com.chengyinhub.business.mapper.UmsCommentMapper commentFacts;
+
+    @Autowired
     private IWxContentSecurityService wxContentSecurityService;
 
 
@@ -187,9 +190,11 @@ public class ApiCommentController extends BaseController {
 
         Long ownerType = Convert.toLong(owner_type, 0L);
         Long ownerId = Convert.toLong(owner_id, 0L);
-        if (ownerType < 1 || ownerId < 1) {
+        if (ownerType < 1 || ownerType > 4 || ownerId < 1) {
             return error("参数不合规");
         }
+        if (ownerType == 4 && !commentFacts.reviewTargetExists(4L, ownerId))
+            return error("据点未开放或已下线");
 
         ViewComment viewComment = new ViewComment();
         viewComment.setOwnerType(ownerType);

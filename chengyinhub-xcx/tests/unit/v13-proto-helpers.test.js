@@ -21,6 +21,15 @@ test('点位规格:id 与页面 marker id 同一套,地标 / 商家 / 主题 / �
   assert.deepEqual([byId[74].kind, byId[74].count, byId[74].faces.length], ['team', '2/6', 2])
 })
 
+test('城市定向不生成点位图，缺照片地点保留小标记，真实照片地点正常生成', () => {
+  const specs = P.pinSpecs({
+    items: [{ kind: 'topic', id: 1, productType: 1, picUrl: 'game.png' }],
+    pois: [{ id: 2, coverImg: null }, { id: 3, coverImg: '' }, { id: 4, coverImg: 'real.jpg' }],
+  });
+  assert.deepEqual(specs.map(s => s.id), [46]);
+  assert.equal(specs[0].img, 'real.jpg');
+});
+
 test('点位图替换:有图换图并去掉旧名牌,没图的 marker 原样保留', () => {
   const out = P.applyPins([{ id: 36, width: 14, height: 14, callout: { content: 'x' } }, { id: 9, width: 20 }], { 36: { icon: 'p.png', kind: 'spot' } })
   assert.equal(out[0].iconPath, 'p.png')
