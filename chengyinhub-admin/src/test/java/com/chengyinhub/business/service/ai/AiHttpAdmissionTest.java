@@ -266,13 +266,17 @@ class AiHttpAdmissionTest
         List<java.util.concurrent.Future<RuntimeException>> replies = new ArrayList<>();
         String largePrompt = "x".repeat(16 * 1024 * 1024);
         try {
-            int capacity = cleanup.getMaximumPoolSize() + cleanup.getQueue().remainingCapacity();
-            for (int i = 0; i < capacity; i++) ownCleanup.add(cleanup.submit(() -> {
+            Runnable blocker = () -> {
                 cleanupEntered.countDown();
                 try { releaseCleanup.await(); }
                 catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
-            }));
+            };
+            int workers = cleanup.getMaximumPoolSize();
+            for (int i = 0; i < workers; i++) ownCleanup.add(cleanup.submit(blocker));
             assertTrue(cleanupEntered.await(5, TimeUnit.SECONDS));
+            int queued = cleanup.getQueue().remainingCapacity();
+            for (int i = 0; i < queued; i++) ownCleanup.add(cleanup.submit(blocker));
+            int capacity = workers + queued;
             for (int i = 0; i < 2; i++) replies.add(callers.submit(() ->
                     assertThrows(RuntimeException.class, () -> client.chat("s", largePrompt))));
             assertTrue(providerEntered.await(3, TimeUnit.SECONDS));
