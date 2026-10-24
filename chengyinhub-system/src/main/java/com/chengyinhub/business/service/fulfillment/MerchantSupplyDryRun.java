@@ -219,6 +219,7 @@ public final class MerchantSupplyDryRun {
     /**
      * 从既有 {@link IMerchantDeskService#receipt} 回读。不调用 saveSku。
      * 缺端口 WAITING_SOURCE。state=NOT_FOUND 返回 {@code null}，不占 holdCount。
+     * 已落地回执必须带非空 action 和正数 targetId。
      */
     public Map<String, Object> recoverFromDeskReceipt(MerchantAccessContext access, String requestId,
             DeskReceiptSource source) {
@@ -241,6 +242,12 @@ public final class MerchantSupplyDryRun {
         Object owner = found.get("ownerMemberId");
         if (owner instanceof Number
                 && ((Number) owner).longValue() != access.getOwnerMemberId().longValue()) {
+            return null;
+        }
+        Object action = found.get("action");
+        Object targetId = found.get("targetId");
+        if (!(action instanceof String) || ((String) action).isBlank()
+                || !(targetId instanceof Number) || ((Number) targetId).longValue() <= 0L) {
             return null;
         }
         return found;

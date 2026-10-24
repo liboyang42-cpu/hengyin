@@ -115,6 +115,7 @@ class MerchantSupplyDryRunTest {
         applied.put("state", "APPLIED");
         applied.put("requestId", "desk-req-01");
         applied.put("action", "SAVE_SKU");
+        applied.put("targetId", Long.valueOf(44L));
         MerchantSupplyDryRun.DeskReceiptSource source = (ctx, requestId) ->
                 "desk-missing".equals(requestId) ? absent : applied;
         assertNull(supply.recoverFromDeskReceipt(access, "desk-missing", source));
@@ -126,7 +127,13 @@ class MerchantSupplyDryRunTest {
         otherRequest.put("state", "APPLIED");
         otherRequest.put("requestId", "desk-req-01");
         otherRequest.put("action", "SAVE_SKU");
+        otherRequest.put("targetId", Long.valueOf(44L));
         assertNull(supply.recoverFromDeskReceipt(access, "desk-other", (ctx, requestId) -> otherRequest));
+        Map<String, Object> noTarget = new LinkedHashMap<String, Object>();
+        noTarget.put("state", "APPLIED");
+        noTarget.put("requestId", "desk-req-01");
+        noTarget.put("action", "SAVE_SKU");
+        assertNull(supply.recoverFromDeskReceipt(access, "desk-req-01", (ctx, requestId) -> noTarget));
         assertEquals(0, supply.holdCount("desk-other"));
         assertEquals(0, supply.holdCount("desk-req-01"));
         assertFalse(supply.recoverOriginal("desk-req-01").grantsIssue());
