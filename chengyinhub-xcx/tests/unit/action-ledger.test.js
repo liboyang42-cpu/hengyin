@@ -598,7 +598,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:2167 → 2173。
   // 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步,页面已无入口),按重建实测:tap 2173 → 2172(−1)。
   // 简易起草恢复新增 4 个 tap、2 个组件事件合同；未把新增控件计作动态通过。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2177)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2180)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -833,7 +833,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-23 上线前 bug 修复合并(BUG-ROAM1 P0-50):漫游地点详情答题半屏返回守卫 page-container bind:afterleave 事件合同 +1,2511 ⇒ 2512(重建实测)。
   // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:2512 → 2543。
   // 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步,页面已无入口),按重建实测:event-contract 2543 → 2540(−3)。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2539)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2540)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1665,8 +1665,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-23 上线前 bug 修复合并(BUG-ROAM1 P0-50):漫游地点详情答题半屏加 0 尺寸 page-container 返回守卫(bind:afterleave),+1 ⇒ 5070(重建实测)。
   // 2026-10-24 上线合并(#563 bug 修复 + #508 业主 UI + #554 文案)并 master 后重建实测:5070 → 5109。
   // 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步,页面已无入口),按重建实测:controlCount 5109 → 5105(−4)。
-  // 44699155 主线 5103 + 起草恢复 6 = 5109；tap 2177、组件事件 2539，动态结果不变。
-  assert.equal(ledger.controlCount, 5109)
+  // 9b284f01 实际源码重建：5113，local tap 2180、event-contract 2540；不计作动态验收通过。
+  assert.equal(ledger.controlCount, 5113)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
@@ -1956,4 +1956,27 @@ test('GET /api/publish/home 是读;真实发布写端点仍是写', () => {
   const homeRequests = ledger.controls.flatMap((item) => item.requiredRequests || [])
     .filter((request) => request.urlTemplate === '/api/publish/home')
   assert.equal(homeRequests.some((request) => request.kind === 'write'), false)
+})
+
+test('核销原回执是精确只读例外，发码/兑换及未知同前缀端点仍判写', () => {
+  const { isWriteApi } = require('../../scripts/uiaudit/build-action-ledger.js')
+  for (const api of ['/api/verify/seat/receipt', '/api/verify/citynode/receipt']) {
+    assert.equal(isWriteApi(api), false)
+    const consumers = readCurrentLedger().controls.filter(row => row.targets.apis.includes(api))
+    assert.ok(consumers.length > 0, `${api} 必须有真实消费者`)
+    assert.ok(consumers.every(row => !row.targets.writeApis.includes(api)))
+  }
+  for (const api of ['/api/verify/dyncode/issue', '/api/verify/groupcode/redeem',
+    '/api/verify/citynode/redeem', '/api/verify/seat/receipt/save', '/api/verify/new-operation']) {
+    assert.equal(isWriteApi(api), true, `${api} 不得被回执例外吞掉`)
+  }
+  const controls = readCurrentLedger().controls
+  for (const handler of ['retry', 'confirmSeat']) {
+    const row = controls.find(row => row.entry.js === 'components/cy/scene-qr-ticket/index.js'
+      && row.control.handler === handler)
+    assert.deepEqual(row.targets.writeApis, ['/api/verify/dyncode/issue'])
+  }
+  const city = controls.find(row => row.entry.js === 'pages/merchant/citynode/index.js'
+    && row.control.handler === 'scanRedeem')
+  assert.deepEqual(city.targets.writeApis, ['/api/verify/citynode/redeem'])
 })
