@@ -206,8 +206,8 @@ public class ApiStatsController extends BaseController {
         }
     }
 
-    /** 完成率百分比，保留一位小数 */
-    private double rate(int part, int total) {
-        return total > 0 ? Math.round(part * 1000.0 / total) / 10.0 : 0;
+    /** 完成率百分比，保留一位小数;无参与者时为 null(D4:端上显示「—」,不再给 0%) */
+    private Double rate(int part, int total) {
+        return com.chengyinhub.common.utils.SafeRatio.percent(part, total, 1);
     }
 }

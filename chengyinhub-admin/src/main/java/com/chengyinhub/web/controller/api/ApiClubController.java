@@ -192,6 +192,9 @@ public class ApiClubController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.AppMediaAssetMapper leaderCertificateAssets;
+
     private String reviewedMedia(Long memberId, String reference, boolean multiple) {
         if (reference == null || reference.trim().isEmpty()) return reference;
         return multiple ? mediaReferences.requireAttachments(memberId, reference, true)
@@ -449,8 +452,22 @@ public class ApiClubController extends BaseController {
                 body.getLeaderName(), body.getIdentity(), body.getCoFounders(), body.getExperience()), openidOf(memberId));
         if (leaderRisk != null) return error(leaderRisk);
         // 创建身份不代表收费；实名在收费发布入口检查。
-        ClubLeader profile = leaderProfilePatch(body);
         try {
+            ClubLeader profile = leaderProfilePatch(body);
+            String certImages = reviewedMedia(memberId, body.getCertImages(), true);
+            // 公开媒体可被复用，但资质证明必须由申请人本人上传。
+            if (StringUtils.isNotBlank(certImages)) {
+                for (String reference : certImages.split(";")) {
+                    Map<String, Object> certificate = leaderCertificateAssets.select(
+                            Long.valueOf(reference.substring("media-asset:".length())));
+                    if (certificate == null || !"APP".equals(certificate.get("ownerType"))
+                            || !(certificate.get("memberId") instanceof Number)
+                            || memberId.longValue() != ((Number) certificate.get("memberId")).longValue()) {
+                        throw new ServiceException("资质图片不属于当前账号，请重新上传", 403);
+                    }
+                }
+            }
+            profile.setCertImages(certImages);
             ClubLeader stored = clubService.saveLeaderProfileWithinIdentityMutex(memberId, profile);
             return AjaxResult.success("已成为主理人", stored);
         } catch (ServiceException e) {

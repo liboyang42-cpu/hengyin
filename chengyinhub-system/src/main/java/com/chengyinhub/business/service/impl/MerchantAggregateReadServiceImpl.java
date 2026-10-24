@@ -616,9 +616,8 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         item.put("label", label);
         item.put("currentCount", current);
         item.put("previousCount", previous);
-        item.put("changeRate", previous == 0L ? null
-                : new BigDecimal(current - previous)
-                .divide(new BigDecimal(previous), 4, BigDecimal.ROUND_HALF_UP).toPlainString());
+        // D4:零分母统一走 SafeRatio(返回 null,端上显示「—」)
+        item.put("changeRate", com.chengyinhub.common.utils.SafeRatio.change(current, previous, 4));
         return item;
     }
 
