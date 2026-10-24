@@ -97,4 +97,24 @@ class ChannelGovernanceProjectionTest {
         journey.appeal();
         assertEquals(ChannelGovernancePhase.APPEALING, journey.phase());
     }
+
+    @Test
+    void unusedCatalogedLeaveDoesNotOccupyThenUniqueLeaveApplies() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelGovernanceProjection journey = new ChannelGovernanceProjection(
+                new ChannelCatalogEntry(21, 12, ConversationKind.GROUP, new ChannelRulesCas(3, Integer.valueOf(4), 3)),
+                identity);
+        assertEquals(ChannelGovernancePhase.CATALOGED, journey.phase());
+        assertEquals(ChannelAuthorizationException.Code.ROLE_REQUIRED,
+                assertThrows(ChannelAuthorizationException.class, journey::leave).code);
+        assertEquals(ChannelGovernancePhase.CATALOGED, journey.phase(), "cataloged leave 观察不得占 LEFT");
+        assertNull(journey.grant());
+        journey.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        journey.submitInviteOrApply();
+        journey.assignMemberRole(ChannelRole.MEMBER);
+        assertNotNull(journey.authorizeReadWrite());
+        journey.leave();
+        assertEquals(ChannelGovernancePhase.LEFT, journey.phase());
+        assertNull(journey.grant());
+    }
 }
