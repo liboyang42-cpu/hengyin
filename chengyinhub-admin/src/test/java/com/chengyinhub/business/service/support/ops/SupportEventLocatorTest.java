@@ -71,6 +71,24 @@ class SupportEventLocatorTest {
     }
 
     @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueWriteApplies() {
+        InMemoryOriginalEventSource source = new InMemoryOriginalEventSource();
+        SupportEventLocator locator = new SupportEventLocator(source);
+        assertNull(locator.recoverOriginal(null, null));
+        assertNull(locator.recoverOriginal("  ", null));
+        IllegalStateException missing = assertThrows(IllegalStateException.class,
+                () -> locator.recoverOriginal("c11-loc-class", null));
+        assertTrue(missing.getMessage().contains("c11-loc-class"));
+        assertTrue(source.findByRequestId("c11-loc-class").isEmpty(), "未见 recover 不得占账");
+        source.add(event("c11-loc-class", "RUN", 11L, "SUBMIT", "UNKNOWN"));
+        SupportEventLocator.LocatedEvent recovered = locator.recoverOriginal("c11-loc-class", null);
+        assertEquals("c11-loc-class", recovered.getRequestId());
+        assertEquals("UNKNOWN", recovered.getOriginalOutcome());
+        assertEquals(1, source.findByRequestId("c11-loc-class").size());
+        assertNotEquals(SupportEventLocator.PROJECTION_APPLIED_SUCCESS, recovered.getOriginalOutcome());
+    }
+
+    @Test
     void missingRequestIdStaysNullNeverEmptyString() {
         SupportEventLocator locator = new SupportEventLocator(new InMemoryOriginalEventSource());
         assertNull(locator.locateByRequestId(null, null));
