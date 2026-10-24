@@ -33,6 +33,9 @@ public final class SideQuestAcceptHold {
         COMPLETED, FAILED, EXITED
     }
 
+    public static final String PLACE_CAPACITY_SOURCE = "sideQuest.placeCapacitySource";
+    public static final String APPROVED_ALTERNATIVE_AUTHORITY = "sideQuest.approvedAlternativeAuthority";
+
     private Phase phase = Phase.IDLE;
     private Place place;
     private CapacityHold hold;
@@ -40,6 +43,15 @@ public final class SideQuestAcceptHold {
     private OriginalRecord original;
     private Failure failure;
     private String waitingCapability;
+    private final PlaceCapacitySource capacitySource;
+
+    public SideQuestAcceptHold() {
+        this(null);
+    }
+
+    public SideQuestAcceptHold(PlaceCapacitySource capacitySource) {
+        this.capacitySource = capacitySource;
+    }
 
     public Phase phase() {
         return phase;
@@ -85,6 +97,12 @@ public final class SideQuestAcceptHold {
         }
         if (isBlank(holdId) || holdId.length() > 64 || isBlank(originalRequestId) || originalRequestId.length() > 64
                 || seats <= 0 || seats > place.capacity) {
+            throw fail(Failure.CAPACITY_UNAVAILABLE);
+        }
+        if (capacitySource == null) {
+            throw new SideQuestException(Failure.WAITING_SOURCE, PLACE_CAPACITY_SOURCE);
+        }
+        if (!capacitySource.reserve(originalRequestId, place.placeId, seats)) {
             throw fail(Failure.CAPACITY_UNAVAILABLE);
         }
         hold = new CapacityHold(holdId, originalRequestId, place.placeId, place.questId, seats);
@@ -158,6 +176,9 @@ public final class SideQuestAcceptHold {
             throw fail(Failure.PROOF_REQUIRED);
         }
         original = new OriginalRecord(hold.originalRequestId, terminal, proof == null ? null : proof.kind);
+        if (capacitySource != null) {
+            capacitySource.release(hold.originalRequestId);
+        }
         switch (terminal) {
             case COMPLETED:
                 phase = Phase.COMPLETED;
@@ -184,6 +205,12 @@ public final class SideQuestAcceptHold {
 
     private static boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    public interface PlaceCapacitySource {
+        boolean reserve(String originalRequestId, int placeId, int seats);
+
+        void release(String originalRequestId);
     }
 
     public static final class Place {
@@ -226,16 +253,27 @@ public final class SideQuestAcceptHold {
         public final boolean attested;
 
         public static Proof create(ProofKind kind, boolean attested, boolean simulated, String fogTileKey) {
+            return create(kind, attested, simulated, fogTileKey, null);
+        }
+
+        public static Proof create(ProofKind kind, boolean attested, boolean simulated, String fogTileKey,
+                String approvalAuthority) {
             if (simulated || fogTileKey != null) {
                 return null;
             }
             if (kind == ProofKind.GPS && !attested) {
                 return null;
             }
-            if (!attested && kind != ProofKind.APPROVED_ALTERNATIVE) {
+            if (kind == ProofKind.APPROVED_ALTERNATIVE) {
+                if (!attested || approvalAuthority == null || approvalAuthority.isBlank()) {
+                    return null;
+                }
+                return new Proof(kind, true);
+            }
+            if (!attested) {
                 return null;
             }
-            return new Proof(kind, attested || kind == ProofKind.APPROVED_ALTERNATIVE);
+            return new Proof(kind, true);
         }
 
         private Proof(ProofKind kind, boolean attested) {

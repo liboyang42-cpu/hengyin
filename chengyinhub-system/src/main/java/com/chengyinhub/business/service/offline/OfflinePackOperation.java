@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.offline;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +23,7 @@ public final class OfflinePackOperation {
     public static final String T41_SCORING_WRITER = "t41.scoringWriter";
     public static final String T41_FULL_LOOP = "t41.fullLoopUnproven";
     public static final String ORIGINAL_PAUSE_OPS_OWNER = "PlayExperienceCoordinator.paused";
+    public static final String PACK_PAYLOAD_CONSUMER = "offlinePack.payloadConsumer";
 
     public enum Failure {
         WAITING_SOURCE,
@@ -162,6 +165,17 @@ public final class OfflinePackOperation {
         if (phase != Phase.DOWNLOADING) {
             throw fail(Failure.NOT_DOWNLOADING);
         }
+        throw new OfflinePackException(Failure.WAITING_SOURCE, PACK_PAYLOAD_CONSUMER);
+    }
+
+    public void finishDownload(byte[] payload) {
+        if (phase != Phase.DOWNLOADING) {
+            throw fail(Failure.NOT_DOWNLOADING);
+        }
+        if (payload == null) {
+            throw waiting(PACK_PAYLOAD_CONSUMER);
+        }
+        verifyPayload(payload);
         phase = Phase.READY;
         failure = null;
     }
@@ -214,6 +228,17 @@ public final class OfflinePackOperation {
         if (phase != Phase.UPDATING) {
             throw fail(Failure.NOT_DOWNLOADING);
         }
+        throw new OfflinePackException(Failure.WAITING_SOURCE, PACK_PAYLOAD_CONSUMER);
+    }
+
+    public void finishUpdate(byte[] payload) {
+        if (phase != Phase.UPDATING) {
+            throw fail(Failure.NOT_DOWNLOADING);
+        }
+        if (payload == null) {
+            throw waiting(PACK_PAYLOAD_CONSUMER);
+        }
+        verifyPayload(payload);
         phase = Phase.READY;
         failure = null;
     }
@@ -222,8 +247,7 @@ public final class OfflinePackOperation {
         if (manifest == null) {
             throw fail(Failure.INVALID_MANIFEST);
         }
-        if (now.isBefore(manifest.expiresAt) && phase != Phase.READY && phase != Phase.PAUSED
-                && phase != Phase.DOWNLOADING) {
+        if (now == null || now.isBefore(manifest.expiresAt)) {
             throw fail(Failure.INVALID_MANIFEST);
         }
         phase = Phase.EXPIRED;
@@ -260,6 +284,28 @@ public final class OfflinePackOperation {
 
     public void hijackOriginalPauseOps() {
         throw fail(Failure.PAUSE_OPS_RESERVED);
+    }
+
+    private void verifyPayload(byte[] payload) {
+        if (manifest == null || payload.length != manifest.byteSize
+                || !manifest.checksum.equalsIgnoreCase(sha256Hex(payload))) {
+            phase = Phase.CORRUPT;
+            failure = Failure.CORRUPT;
+            throw failStatic(Failure.CORRUPT);
+        }
+    }
+
+    static String sha256Hex(byte[] payload) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(payload);
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte value : digest) {
+                hex.append(String.format("%02x", value));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException ex) {
+            throw failStatic(Failure.INVALID_MANIFEST);
+        }
     }
 
     private void restorePrior(Manifest prior) {

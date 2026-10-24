@@ -10,7 +10,7 @@ class SideQuestAcceptHoldTest {
 
     @Test
     void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueHoldApplies() {
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         assertEquals(SideQuestAcceptHold.Failure.ORIGINAL_RECORD_UNKNOWN,
                 assertThrows(SideQuestAcceptHold.SideQuestException.class, () -> quest.recoverOriginal("sq-class-unk"))
                         .code);
@@ -45,8 +45,25 @@ class SideQuestAcceptHoldTest {
     }
 
     @Test
+    void missingCapacitySourceIsWaitingSourceThenUniqueReserveApplies() {
+        SideQuestAcceptHold waiting = new SideQuestAcceptHold();
+        waiting.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
+        SideQuestAcceptHold.SideQuestException missing = assertThrows(SideQuestAcceptHold.SideQuestException.class,
+                () -> waiting.acceptHold("hold-wait", "sq-wait-1", 1));
+        assertEquals(SideQuestAcceptHold.Failure.WAITING_SOURCE, missing.code);
+        assertEquals(SideQuestAcceptHold.PLACE_CAPACITY_SOURCE, missing.capability);
+        assertEquals(SideQuestAcceptHold.Phase.DISCOVERED, waiting.phase(), "缺容量源不得占 hold");
+        assertNull(waiting.hold(), "缺容量源不得占 hold");
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
+        quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
+        quest.acceptHold("hold-wait", "sq-wait-1", 1);
+        assertEquals(SideQuestAcceptHold.Phase.HOLD_ACCEPTED, quest.phase());
+        assertEquals("sq-wait-1", quest.hold().originalRequestId);
+    }
+
+    @Test
     void unusedAcceptHoldBeforeDiscoverDoesNotOccupyThenUniqueHoldApplies() {
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         assertEquals(SideQuestAcceptHold.Failure.NOT_COMPLIANT,
                 assertThrows(SideQuestAcceptHold.SideQuestException.class,
                         () -> quest.acceptHold("hold-idle", "sq-idle-unk", 1)).code);
@@ -64,7 +81,7 @@ class SideQuestAcceptHoldTest {
 
     @Test
     void unusedCompleteBeforeHoldDoesNotOccupyThenUniqueCompleteApplies() {
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
         assertEquals(SideQuestAcceptHold.Failure.HOLD_REQUIRED,
                 assertThrows(SideQuestAcceptHold.SideQuestException.class, quest::complete).code);
@@ -82,7 +99,7 @@ class SideQuestAcceptHoldTest {
 
     @Test
     void unusedSubmitProofBeforeHoldDoesNotOccupyThenUniqueSubmitApplies() {
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
         assertEquals(SideQuestAcceptHold.Failure.HOLD_REQUIRED,
                 assertThrows(SideQuestAcceptHold.SideQuestException.class,
@@ -102,7 +119,7 @@ class SideQuestAcceptHoldTest {
 
     @Test
     void unusedExitBeforeHoldDoesNotOccupyThenUniqueExitApplies() {
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
         assertEquals(SideQuestAcceptHold.Failure.HOLD_REQUIRED,
                 assertThrows(SideQuestAcceptHold.SideQuestException.class, quest::exit).code);
@@ -114,5 +131,16 @@ class SideQuestAcceptHoldTest {
         assertEquals(SideQuestAcceptHold.Phase.EXITED, quest.phase());
         assertEquals("sq-exit-unk", quest.original().originalRequestId);
         assertEquals(SideQuestAcceptHold.Terminal.EXITED, quest.original().terminal);
+    }
+}
+
+final class MemoryPlaceCapacity implements SideQuestAcceptHold.PlaceCapacitySource {
+    @Override
+    public boolean reserve(String originalRequestId, int placeId, int seats) {
+        return originalRequestId != null && placeId > 0 && seats > 0;
+    }
+
+    @Override
+    public void release(String originalRequestId) {
     }
 }

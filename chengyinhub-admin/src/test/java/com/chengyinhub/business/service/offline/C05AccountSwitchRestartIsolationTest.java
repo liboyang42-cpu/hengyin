@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -17,12 +16,10 @@ import org.junit.jupiter.api.Test;
  */
 class C05AccountSwitchRestartIsolationTest {
 
-    private static final String CHECKSUM = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    private static final Instant NOW = Instant.parse("2026-10-23T20:00:00Z");
+    private static final Instant NOW = OfflinePackFixtures.NOW;
 
     private static OfflinePackOperation.Manifest manifest(String operationId) {
-        return new OfflinePackOperation.Manifest("pack-1", operationId, "v1", 1024, CHECKSUM, List.of(11, 12),
-                Instant.parse("2026-12-01T00:00:00Z"));
+        return OfflinePackFixtures.manifest(operationId);
     }
 
     @Test
@@ -34,11 +31,11 @@ class C05AccountSwitchRestartIsolationTest {
                 assertThrows(OfflinePackOperation.OfflinePackException.class, () -> pack.resume("op-other")).code);
         assertEquals("op-1", pack.operationId());
         pack.resume("op-1");
-        pack.finishDownload();
+        pack.finishDownload(OfflinePackFixtures.PAYLOAD);
         assertEquals("op-1", pack.operationId());
         assertEquals(OfflinePackOperation.Phase.READY, pack.phase());
 
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
         quest.acceptHold("hold-1", "sq-req-1", 1);
         quest.submitProof(SideQuestAcceptHold.Proof.create(SideQuestAcceptHold.ProofKind.QR, true, false, null));
@@ -62,11 +59,11 @@ class C05AccountSwitchRestartIsolationTest {
         pack.startDownload(manifest("op-1"), NOW);
         pack.pause();
         pack.resume("op-1");
-        pack.finishDownload();
+        pack.finishDownload(OfflinePackFixtures.PAYLOAD);
         assertEquals("op-1", pack.operationId());
         assertEquals("v1", pack.manifest().version);
 
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
         quest.acceptHold("hold-1", "sq-req-1", 1);
         quest.submitProof(SideQuestAcceptHold.Proof.create(SideQuestAcceptHold.ProofKind.QR, true, false, null));
@@ -90,7 +87,7 @@ class C05AccountSwitchRestartIsolationTest {
         assertEquals("op-1", pack.operationId());
         assertNotEquals("", pack.operationId());
 
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
         assertEquals(SideQuestAcceptHold.Failure.CAPACITY_UNAVAILABLE,
                 assertThrows(SideQuestAcceptHold.SideQuestException.class,
@@ -104,7 +101,7 @@ class C05AccountSwitchRestartIsolationTest {
 
     @Test
     void recoverOriginalOfNeverSeenIdDoesNotOccupyLedgerThenUniqueHoldApplies() {
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         assertEquals(SideQuestAcceptHold.Failure.ORIGINAL_RECORD_UNKNOWN,
                 assertThrows(SideQuestAcceptHold.SideQuestException.class, () -> quest.recoverOriginal("sq-orig-unk"))
                         .code);

@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,11 +15,8 @@ import org.junit.jupiter.api.Test;
 
 class C05FirstJourneyIsolationTest {
 
-    private static final String CHECKSUM = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-
     private OfflinePackOperation.Manifest manifest(String version) {
-        return new OfflinePackOperation.Manifest("pack-1", "op-1", version, 1024, CHECKSUM, List.of(11, 12),
-                Instant.parse("2026-12-01T00:00:00Z"));
+        return OfflinePackFixtures.manifest("op-1", version);
     }
 
     @Test
@@ -31,7 +27,12 @@ class C05FirstJourneyIsolationTest {
         assertEquals(OfflinePackOperation.Phase.DOWNLOADING, pack.phase());
         pack.pause();
         pack.resume("op-1");
-        pack.finishDownload();
+        OfflinePackOperation.OfflinePackException missingPayload = assertThrows(
+                OfflinePackOperation.OfflinePackException.class, pack::finishDownload);
+        assertEquals(OfflinePackOperation.Failure.WAITING_SOURCE, missingPayload.code);
+        assertEquals(OfflinePackOperation.PACK_PAYLOAD_CONSUMER, missingPayload.capability);
+        assertEquals(OfflinePackOperation.Phase.DOWNLOADING, pack.phase());
+        pack.finishDownload(OfflinePackFixtures.PAYLOAD);
         assertEquals(OfflinePackOperation.Phase.READY, pack.phase());
         pack.applyUpdate(manifest("v2"), true, now);
         pack.recordCorrupt();
@@ -82,7 +83,7 @@ class C05FirstJourneyIsolationTest {
                         PresenceProofDistinctFromFog::rejectSimulatedGps).code);
         assertNull(SideQuestAcceptHold.Proof.create(SideQuestAcceptHold.ProofKind.GPS, true, true, null));
 
-        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        SideQuestAcceptHold quest = new SideQuestAcceptHold(new MemoryPlaceCapacity());
         quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
         quest.acceptHold("hold-1", "sq-req-1", 1);
         quest.submitProof(SideQuestAcceptHold.Proof.create(SideQuestAcceptHold.ProofKind.QR, true, false, null));

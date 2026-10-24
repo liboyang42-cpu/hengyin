@@ -11,12 +11,10 @@ import org.junit.jupiter.api.Test;
 
 class OfflinePackOperationTest {
 
-    private static final String CHECKSUM = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    private static final Instant NOW = Instant.parse("2026-10-23T20:00:00Z");
+    private static final Instant NOW = OfflinePackFixtures.NOW;
 
     private static OfflinePackOperation.Manifest manifest(String operationId) {
-        return new OfflinePackOperation.Manifest("pack-1", operationId, "v1", 1024, CHECKSUM, List.of(11, 12),
-                Instant.parse("2026-12-01T00:00:00Z"));
+        return OfflinePackFixtures.manifest(operationId);
     }
 
     @Test
@@ -38,7 +36,7 @@ class OfflinePackOperationTest {
                 assertThrows(OfflinePackOperation.OfflinePackException.class, () -> pack.resume("op-other")).code);
         assertEquals("op-class", pack.operationId(), "错误 resume 不得改写原 operationId");
         pack.resume("op-class");
-        pack.finishDownload();
+        pack.finishDownload(OfflinePackFixtures.PAYLOAD);
         assertEquals("op-class", pack.operationId());
         assertEquals(OfflinePackOperation.Phase.READY, pack.phase());
         OfflinePackOperation restarted = new OfflinePackOperation();
@@ -75,7 +73,10 @@ class OfflinePackOperationTest {
         pack.startDownload(manifest("op-exp"), NOW);
         assertEquals("op-exp", pack.operationId());
         assertEquals(OfflinePackOperation.Phase.DOWNLOADING, pack.phase());
-        pack.expire(NOW);
+        assertEquals(OfflinePackOperation.Failure.INVALID_MANIFEST,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, () -> pack.expire(NOW)).code);
+        assertEquals(OfflinePackOperation.Phase.DOWNLOADING, pack.phase(), "未到期 expire 不得占 EXPIRED");
+        pack.expire(OfflinePackFixtures.EXPIRES);
         assertEquals(OfflinePackOperation.Phase.EXPIRED, pack.phase());
         assertEquals("op-exp", pack.operationId());
     }
@@ -127,11 +128,10 @@ class OfflinePackOperationTest {
         assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase(), "未见下载 applyUpdate 观察不得占 UPDATING");
         assertNull(pack.operationId());
         pack.startDownload(manifest("op-upd"), NOW);
-        pack.finishDownload();
+        pack.finishDownload(OfflinePackFixtures.PAYLOAD);
         assertEquals("op-upd", pack.operationId());
         assertEquals(OfflinePackOperation.Phase.READY, pack.phase());
-        pack.applyUpdate(new OfflinePackOperation.Manifest("pack-1", "op-upd", "v2", 1024, CHECKSUM,
-                List.of(11, 12), Instant.parse("2026-12-01T00:00:00Z")), true, NOW);
+        pack.applyUpdate(OfflinePackFixtures.manifest("op-upd", "v2"), true, NOW);
         assertEquals(OfflinePackOperation.Phase.UPDATING, pack.phase());
         assertEquals("op-upd", pack.operationId());
         assertEquals("v2", pack.manifest().version);
@@ -147,13 +147,36 @@ class OfflinePackOperationTest {
         assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase(), "未见下载 finishUpdate 观察不得占 READY-after-update");
         assertNull(pack.operationId());
         pack.startDownload(manifest("op-fin"), NOW);
-        pack.finishDownload();
-        pack.applyUpdate(new OfflinePackOperation.Manifest("pack-1", "op-fin", "v2", 1024, CHECKSUM,
-                List.of(11, 12), Instant.parse("2026-12-01T00:00:00Z")), true, NOW);
+        pack.finishDownload(OfflinePackFixtures.PAYLOAD);
+        pack.applyUpdate(OfflinePackFixtures.manifest("op-fin", "v2"), true, NOW);
         assertEquals(OfflinePackOperation.Phase.UPDATING, pack.phase());
-        pack.finishUpdate();
+        pack.finishUpdate(OfflinePackFixtures.PAYLOAD);
         assertEquals(OfflinePackOperation.Phase.READY, pack.phase());
         assertEquals("op-fin", pack.operationId());
         assertEquals("v2", pack.manifest().version);
+    }
+}
+
+final class OfflinePackFixtures {
+    static final Instant NOW = Instant.parse("2026-10-23T20:00:00Z");
+    static final Instant EXPIRES = Instant.parse("2026-12-01T00:00:00Z");
+    static final byte[] PAYLOAD = payload(1024);
+    static final String CHECKSUM = OfflinePackOperation.sha256Hex(PAYLOAD);
+
+    static byte[] payload(int byteSize) {
+        byte[] data = new byte[byteSize];
+        for (int i = 0; i < byteSize; i++) {
+            data[i] = (byte) (i & 0xff);
+        }
+        return data;
+    }
+
+    static OfflinePackOperation.Manifest manifest(String operationId) {
+        return manifest(operationId, "v1");
+    }
+
+    static OfflinePackOperation.Manifest manifest(String operationId, String version) {
+        return new OfflinePackOperation.Manifest("pack-1", operationId, version, PAYLOAD.length, CHECKSUM,
+                List.of(11, 12), EXPIRES);
     }
 }
