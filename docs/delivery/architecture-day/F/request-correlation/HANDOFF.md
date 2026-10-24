@@ -22,7 +22,7 @@ Parent `cc91b0845e3abd4a2060d54a857c8c179bd22d4f`；独立分支 `codex/architec
 2. 两处原错误日志及sys_job_log.exception_info只写异常类型；原JobExecutionException/cause/suppressed继续原样传播。原job_message追加jobId/jobRunId。表结构、成功/失败、存储调用次数和所有原JobDataMap/invoke_target字段不改。
 3. 配套既有4场景全保留；“原异常消息写入日志”的断言改为类型和原传播消息分别断言，追加失败/skip清理两例。
 
-已对cc91执行 `git apply --check`；A在并行改共享源码，不能覆盖其新版文件，须逐hunk适配。**应用前，生产Quartz入口尚不生成runId，告警只保留原标识；不能宣称已闭环。** 本候选新增Quartz支持测试可以独立编译；依赖共享接线的原执行器测试增量仅在review.patch内，避免让未接线候选假绿或无故红。
+已对cc91执行 `git apply --unidiff-zero --check`；A在并行改共享源码，不能覆盖其新版文件，须逐hunk适配。**应用前，生产Quartz入口尚不生成runId，告警只保留原标识；不能宣称已闭环。** 本候选新增Quartz支持测试可以独立编译；依赖共享接线的原执行器测试增量仅在review.patch内，避免让未接线候选假绿或无故红。
 
 ## 一条实际生产恢复链及最小断言
 
@@ -35,3 +35,5 @@ Parent `cc91b0845e3abd4a2060d54a857c8c179bd22d4f`；独立分支 `codex/architec
 实际只做：git diff/patch检查；复用仓库既有有限Java mask做括号配对（不是Java语法/类型检查）；原Roam函数body/remember/retryDue逐字核对；旧LogAspect/Quartz告警测试方法正文不变；原配置secret-file/gitleaks扫描。根可在原批准路径统一运行上述6个测试类，应用共享补丁后加AbstractQuartzJobFailureTest，并读回同源原XML和真实日志。
 
 剩余：协调器内建计划/其它直接scheduler或独立pool（如CommittedBusinessNotice、NpcChat等）本片未统一接线，Quartz之外入口没有证据不能冒充覆盖；receipt/entity/fence仅在原调用者已有可信ID时传递，不从body/错误文本猜取。MDC不会跨进程持久化，全系统Q7仍需root实日志与业务原账读回。无新库/依赖/线程池/数据库；回退为本片源码与串行接线整体撤回，不删任何持久意图或审计事实。
+
+补丁格式已改零上下文，避免补丁自身的空白上下文行被diff空白检查拒绝；临时Git从cc91逐字验证应用结果等同原提案。该格式修正不修改任何执行/测试源码，A的新源必须逐hunk审阅，不能只按行号盲套。

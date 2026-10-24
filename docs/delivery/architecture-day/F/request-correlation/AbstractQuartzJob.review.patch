@@ -1,26 +1,11 @@
 --- a/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/AbstractQuartzJob.java
 +++ b/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/AbstractQuartzJob.java
-@@ -1,6 +1,7 @@
- package com.chengyinhub.quartz.util;
- 
- import java.util.Date;
+@@ -3,0 +4 @@
 +import com.chengyinhub.common.utils.LogCorrelation;
- import org.quartz.Job;
- import org.quartz.JobExecutionContext;
- import org.quartz.JobExecutionException;
-@@ -8,8 +9,6 @@
- import org.slf4j.LoggerFactory;
- import com.chengyinhub.common.constant.Constants;
- import com.chengyinhub.common.constant.ScheduleConstants;
+@@ -11,2 +11,0 @@
 -import com.chengyinhub.common.utils.ExceptionUtil;
 -import com.chengyinhub.common.utils.StringUtils;
- import com.chengyinhub.common.utils.bean.BeanUtils;
- import com.chengyinhub.common.utils.spring.SpringUtils;
- import com.chengyinhub.quartz.domain.SysJob;
-@@ -35,6 +34,18 @@
-     @Override
-     public void execute(JobExecutionContext context) throws JobExecutionException
-     {
+@@ -37,0 +37,12 @@
 +        try (LogCorrelation.Scope ignored = QuartzJobCorrelation.open(context))
 +        {
 +            executeCorrelated(context);
@@ -33,87 +18,37 @@
 +
 +    private void executeCorrelated(JobExecutionContext context) throws JobExecutionException
 +    {
-         SysJob sysJob = new SysJob();
-         Exception executionFailure = null;
-         java.util.concurrent.atomic.AtomicReference<Exception> failure = new java.util.concurrent.atomic.AtomicReference<>();
-@@ -42,6 +53,7 @@
-         try
-         {
-             BeanUtils.copyBeanProp(sysJob, context.getMergedJobDataMap().get(ScheduleConstants.TASK_PROPERTIES));
+@@ -44,0 +56 @@
 +            if (sysJob.getJobId() != null) org.slf4j.MDC.put("jobId", sysJob.getJobId().toString());
-             boolean executed = SpringUtils.getBean(MySqlSchedulerCoordinator.class).execute(
-                     sysJob.getInvokeTarget(), context.getScheduledFireTime(), () -> {
-                         if (!SpringUtils.getBean(SysJobServiceImpl.class).isCurrentInvocation(sysJob,
-@@ -56,7 +68,8 @@
-         }
-         catch (Exception e)
-         {
+@@ -59 +71,2 @@
 -            log.error("任务执行异常  - ：", e);
 +            log.error("event=quartz.run.failure jobRunId={} errorType={}",
 +                    LogCorrelation.value(LogCorrelation.JOB_RUN_ID), e.getClass().getSimpleName());
-             executionFailure = failure.get();
-             if (executionFailure == null) executionFailure = e;
-             else executionFailure.addSuppressed(e);
-@@ -68,7 +81,8 @@
-         }
-         catch (Exception logFailure)
-         {
+@@ -71 +84,2 @@
 -            log.error("任务日志写入异常 - jobId:{}", sysJob.getJobId(), logFailure);
 +            log.error("任务日志写入异常 jobId={} jobRunId={} errorType={}", sysJob.getJobId(),
 +                    LogCorrelation.value(LogCorrelation.JOB_RUN_ID), logFailure.getClass().getSimpleName());
-             if (executionFailure == null)
-             {
-                 executionFailure = logFailure;
-@@ -118,11 +132,12 @@
-         sysJobLog.setStartTime(startTime);
-         sysJobLog.setStopTime(new Date());
-         long runMs = sysJobLog.getStopTime().getTime() - sysJobLog.getStartTime().getTime();
+@@ -121 +135,2 @@
 -        sysJobLog.setJobMessage(sysJobLog.getJobName() + " 总共耗时：" + runMs + "毫秒");
 +        sysJobLog.setJobMessage(sysJobLog.getJobName() + " 总共耗时：" + runMs + "毫秒 jobId="
 +                + LogCorrelation.value("jobId") + " jobRunId=" + LogCorrelation.value(LogCorrelation.JOB_RUN_ID));
-         if (e != null)
-         {
-             sysJobLog.setStatus(Constants.FAIL);
+@@ -125 +140 @@
 -            String errorMsg = StringUtils.substring(ExceptionUtil.getExceptionMessage(e), 0, 2000);
 +            String errorMsg = e.getClass().getSimpleName(); // Original cause still propagates to Quartz; no body in diagnostics.
-             sysJobLog.setExceptionInfo(errorMsg);
-         }
-         else
 --- a/chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/AbstractQuartzJobFailureTest.java
 +++ b/chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/AbstractQuartzJobFailureTest.java
-@@ -3,6 +3,9 @@
- import org.junit.jupiter.api.AfterEach;
- import org.junit.jupiter.api.BeforeEach;
- import org.junit.jupiter.api.Test;
+@@ -5,0 +6,3 @@
 +import org.slf4j.MDC;
 +import java.util.Map;
 +import java.util.concurrent.atomic.AtomicReference;
- import org.mockito.ArgumentCaptor;
- import org.quartz.JobDataMap;
- import org.quartz.JobExecutionContext;
-@@ -66,6 +69,7 @@
-     @AfterEach
-     void tearDown()
-     {
+@@ -68,0 +72 @@
 +        MDC.clear();
-         ReflectionTestUtils.setField(SpringUtils.class, "beanFactory", originalBeanFactory);
-     }
- 
-@@ -79,7 +83,9 @@
-         ArgumentCaptor<SysJobLog> captor = ArgumentCaptor.forClass(SysJobLog.class);
-         verify(jobLogService).addJobLog(captor.capture());
-         assertEquals(Constants.FAIL, captor.getValue().getStatus());
+@@ -82 +86,3 @@
 -        assertTrue(captor.getValue().getExceptionInfo().contains("task-boom"));
 +        assertEquals("IllegalStateException", captor.getValue().getExceptionInfo());
 +        assertEquals("task-boom", thrown.getCause().getMessage(), "original caller exception is unchanged");
 +        assertTrue(captor.getValue().getJobMessage().contains("jobRunId="));
-     }
- 
-     @Test
-@@ -117,6 +123,40 @@
-         verifyNoInteractions(jobLogService);
-     }
- 
+@@ -119,0 +126,34 @@
 +    @Test
 +    void failedInvocationKeepsItsRunInJobLogAndRestoresWorkerContext()
 +    {
@@ -148,6 +83,3 @@
 +        verifyNoInteractions(jobLogService);
 +    }
 +
-     private SysJob job()
-     {
-         SysJob job = new SysJob();
