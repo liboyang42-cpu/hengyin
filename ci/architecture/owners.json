@@ -813,6 +813,17 @@
           "com.chengyinhub.business.service.ICoopComplaintService",
           "com.chengyinhub.business.service.impl.CoopComplaintServiceImpl"
         ]
+      },
+      {
+        "id": "D_CHAPTER_INVITE_NOTICE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.ChapterApplicationInviteNotice"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IMerchantChapterApplicationService",
+          "com.chengyinhub.business.service.impl.MerchantChapterApplicationServiceImpl"
+        ]
       }
     ],
     "allowed_directions": [

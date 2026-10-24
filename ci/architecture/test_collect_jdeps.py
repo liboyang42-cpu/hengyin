@@ -995,6 +995,29 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
+    def test_chapter_invite_original_application_inbound_is_not_a_business_permission(self):
+        self.reference("com.chengyinhub.business.service.impl.MerchantChapterApplicationServiceImpl",
+                       self.owner_member("D_CHAPTER_INVITE_NOTICE"))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_chapter_invite_cannot_callback_original_application_and_missing_raw_is_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "D_CHAPTER_INVITE_NOTICE"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
+        member = self.owner_member(owner)
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in original.decode().splitlines()
+                              if not l.strip().startswith(member + " -> ")).encode())
+        self.assert_unknown(self.check_directions())
+
     def test_complaint_notice_rejection_port_preserves_actual_append_and_lock_read_dependency(self):
         notice = self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE")
         port = self.owner_member("D_COMMITTED_NOTICE_REJECTION_PORT")
