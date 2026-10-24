@@ -89,7 +89,7 @@ class NpcAsrIntentMySqlIT {
         when(speech.transcribe(any(),anyString())).thenThrow(new IllegalStateException("controlled response loss"));
         assertEquals("UNKNOWN",recognize().getState());assertEquals("ASR_OUTCOME_UNKNOWN",service().readOutcome("shop",21L,RID,7L).getAsrReason());
         assertEquals("UNKNOWN",recognize().getState());verify(speech,times(1)).transcribe(any(),anyString());
-        when(speech.transcribe(any(),anyString())).thenReturn(null);
+        doReturn((String) null).when(speech).transcribe(any(),anyString());
         var empty=service().recognize(8L,RID,21L,41L,AUDIO,"wav");assertEquals("",empty.getTranscript());
         assertEquals("ASR_EMPTY_TEXT",service().readOutcome("shop",21L,RID,8L).getErrorCode());
         service().recognize(8L,RID,21L,41L,AUDIO,"wav");assertEquals(2,count());verify(speech,times(2)).transcribe(any(),anyString());

@@ -104,7 +104,7 @@ public class TopicSettlementEvidenceService {
                             && seat.getVerifiedAt().before(settlementCutoff)) ids.add(seat.getId());
                 }
                 java.util.Collections.sort(ids);
-                candidate.setVerifiedSeatIds(ids);
+                candidate.setVerifiedSeatIds(seats.isEmpty() && Long.valueOf(1L).equals(candidate.getOrderQuantity()) ? null : ids);
             }
         }
         return candidates;

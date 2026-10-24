@@ -450,17 +450,23 @@
     "final_standard": {
       "run": 40122522919,
       "source": "ca0e0d2598727f6e567c802b7a664f9634d945c6",
-      "status": "IN_PROGRESS",
-      "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40122522919"
+      "status": "COMPLETED_FAILURE",
+      "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40122522919",
+      "successful_jobs": 20,
+      "failed_jobs": 11
     },
     "final_storage": {
       "run": 40122516880,
       "source": "ca0e0d2598727f6e567c802b7a664f9634d945c6",
-      "status": "IN_PROGRESS",
+      "status": "IN_PROGRESS_AT_1859",
       "unique_classes": 65,
       "declared_cases": 804,
       "max_parallel": 20,
-      "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40122516880"
+      "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40122516880",
+      "successful_jobs": 45,
+      "failed_jobs": 19,
+      "pending_jobs": 2,
+      "not_case_counts": true
     }
   },
   "current_cloud_assignment": {
@@ -514,7 +520,7 @@
   "pending_business_questions": [],
   "current_working_tree": "All assigned source frozen and pushed to codex/architecture-day-final-ca0e-20261024. Unified standard CI40122522919 and storage40122516880 started at exactca0e; source audit A/B/H same candidate. Results IN_PROGRESS, not accepted.",
   "new_source_blockers_current": [],
-  "execution_mode": "FINAL_UNIFIED_REVIEW_AND_REGRESSION",
+  "execution_mode": "FINAL_FAILURE_TARGETED_REPAIR_NOT_ACCEPTED",
   "latest_human_instruction": "不要再审查了 最后一起审查",
   "review_policy": {
     "intermediate_audit": false,
@@ -524,7 +530,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: complete candidate frozen and secret-scanned/pushed; both final CI workflows actually started and A/B/H final reviews dispatched. No acceptance claimed.",
+  "previous_goal_turn_classification": "PROGRESS: collected final A/B/H reviews, fixed A production fee defect andG production order-number defect plus precise F/root gate-fixture failures; dispatched C/D actual P2 repairs; final candidate failed, no acceptance.",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
@@ -551,7 +557,21 @@
       "acceptance": false
     }
   },
-  "known_remaining_implementation": [],
+  "known_remaining_implementation": [
+    {
+      "area": "D same-identity ASR/text terminal race fix and barrier test",
+      "state": "FINAL_REVIEW_CONFIRMED_P2_IMPLEMENTING"
+    },
+    {
+      "area": "C voice lifecycle flag P2 and final Node fixture/user-copy failures",
+      "state": "FINAL_REVIEW_AND_CI_REPAIR_IMPLEMENTING"
+    },
+    {
+      "area": "Remaining final CI failures:19backend suites, storage failures, mini/static/dependency gate",
+      "state": "NOT_ALL_DIAGNOSED_OR_REPAIRED",
+      "note": "Only confirmed independent bugs counted as bugs; never equate failing cases/jobs with business defects"
+    }
+  ],
   "remaining_acceptance_groups": [
     "Same-candidate standard CI, compiled architecture and real-storage class batch",
     "Real HTTP identities and provider unknown-result scenarios",
@@ -602,7 +622,7 @@
     "registry": "Voice MySQL3->4, voice+ASR10->11, combined782->783; declaration metadata only",
     "generated_ledger": "Regenerate once final client source is composed; 5113 belongs to preceding source"
   },
-  "updated_at": "2026-10-24T18:51:00Z",
+  "updated_at": "2026-10-24T19:01:00Z",
   "manual_case_read_source": {
     "source": "e57f0a32037bf88b2abf1626cca4760714d88592",
     "parent": "54c524ca99204804b6b84af517359eabc8c6ee8d",
@@ -613,7 +633,7 @@
     "permissions": "Existing business:settlement:list; GET only; no raw payment identity, resolve or debit API"
   },
   "current_final_candidate": {
-    "status": "FINAL_GATES_IN_PROGRESS",
+    "status": "FAILED_FINAL_GATES_REPAIR_IN_PROGRESS",
     "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
     "last_published": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "source_only": {
@@ -629,7 +649,7 @@
     },
     "registry_unique_classes": 65,
     "registry_declared_cases": 804,
-    "verification": "IN_PROGRESS_NOT_ACCEPTED",
+    "verification": "FAIL_NOT_ACCEPTED",
     "full_scope_complete": false,
     "missing_acceptance": [
       "Same-candidate standard CI and compiled architecture",
@@ -645,6 +665,51 @@
       "local_tap": 2186,
       "local_event_contract": 2540,
       "generation": "COMPLETED_NOT_RUNTIME_ACCEPTANCE"
+    },
+    "backend_xml": {
+      "run": 40122522919,
+      "source": "ca0e0d2598727f6e567c802b7a664f9634d945c6",
+      "xml_files": 1866,
+      "unique_testcase_keys": 15069,
+      "duplicates": 0,
+      "pass": 14384,
+      "failure": 31,
+      "error": 7,
+      "skipped": 647,
+      "not_business_bug_count": true,
+      "artifact": "backend-test-reports-40122522919-1"
     }
+  },
+  "final_source_reviews": {
+    "A": {
+      "source": "ca0e0d259",
+      "confirmed": "P2 single verified group order omitted fixed fulfillment fee because null became empty canonical seat list",
+      "repair": "Root only uses null when no canonical source seats and quantity exactly1; added2Java cases",
+      "validation": "JAVA_NOT_RUN"
+    },
+    "B": {
+      "source": "ca0e0d259",
+      "confirmed": "P2 text terminal rejection can shadow same-identity already reserved ASR after member-lock interleaving",
+      "repair": "D implementing same-member-lock ASR recheck plus exact caller/readback/barrier test",
+      "validation": "NOT_RUN"
+    },
+    "H": {
+      "source": "ca0e0d259",
+      "confirmed": "P2 stale page generation leaves voice confirming/modal flags permanently set after hide/reopen",
+      "repair": "C implementing generation-scoped flag cleanup, preserving journal/account guards",
+      "validation": "NOT_RUN"
+    }
+  },
+  "final_targeted_repairs": {
+    "F": "4255beb5 verifier/3bddbdbe tool applied; exact public checklist provenance, old4 commands remain baseline; owner reported3/3 controls, full NOT_RUN",
+    "G": "24945d27 applied: production checkout generated38/39char order_sn forcanonical32; preserve full UUID entropy via base36, no schema/guard change; JavaNOTRUN",
+    "root": [
+      "ASR MySQL mock restub switched from when to doReturn preserving all assertions; JavaNOTRUN",
+      "Seat-replay exact source regex updated for already-correct null-safe error code; Node9/9PASS",
+      "SettlementController reviewed newGET read permission and exact source hash updated; seed controls9/9PASS",
+      "A single-seat group fee fix and2Java regression source; JavaNOTRUN"
+    ],
+    "C": "Voice shared fixtures/terminology plus H lifecycle P2 still implementing",
+    "D": "B ASR/text terminal race P2 still implementing"
   }
 }

@@ -1,0 +1,4 @@
+1f6ad6fe8896263ba4b0112bc7cc89732c759a0b1039136043b1a0060b9b8420  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/OmsOrderCommerceGuardMySqlIT.java
+99c88568d64401b7d37778d1f838a15572bd5fdaa9c244d2c0a343f244ee4cda  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java
+a5b3f1bfcff58427b27d81449711a09e19c9146082e8c344f99370eca03c5137  chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
+133df58f9cbfca6f1f78d77c843fdc12e1fb9cc9adc538b408c91b830a37001c  docs/delivery/architecture-day/G/commerce-order-number-ca0e/README.md

@@ -18,7 +18,7 @@ function fallbackContract(source) {
   const scan = method(source, 'public AjaxResult scanQrCode(Actor actorContext, String type, String code, Long activityId)');
   assert.match(scan, /if \(ctx.error != null\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return ctx.error;/);
   assert.match(scan, /if \(tooEarly != null\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return tooEarly;/);
-  assert.match(scan, /catch \(ServiceException e\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return new AjaxResult\(e.getCode\(\), e.getMessage\(\)\)/);
+  assert.match(scan, /catch \(ServiceException e\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return new AjaxResult\(e.getCode\(\) == null \? com\.chengyinhub\.common\.constant\.HttpStatus\.ERROR : e.getCode\(\), e.getMessage\(\)\)/);
 }
 // Java execution belongs to controlled CI. These checks prove source wiring only, not HTTP/SQL authorization.
 test('seat terminal read is reachable before transport/payment/window refusal is returned', () => fallbackContract(read(applicationPath)));

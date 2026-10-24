@@ -42,6 +42,24 @@ class CoopSettlementSeatBillingTest {
         candidate.setGroupEvidenceMatchesOrder(false);
         assertTrue(CoopSettlementContract.originLines(snapshot,List.of(candidate),cutoff).isEmpty());
     }
+    @Test void singleVerifiedGroupWithoutCanonicalSeatRetainsTheOriginalOneSeatProof() {
+        snapshot.setFulfillmentEvidenceRule("COOP_GROUP_VERIFY");
+        CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(1L);candidate.setMerchantScanPresent(false);
+        candidate.setGroupEvidenceMatchesOrder(true);candidate.setGroupVerifyTime(new Date(600));candidate.setGroupMemberVerifyTime(new Date(500));
+        when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
+        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of());
+        var lines=CoopSettlementContract.originLines(snapshot,reader.lockCandidates(snapshot,cutoff),cutoff);
+        assertNull(candidate.getVerifiedSeatIds());assertEquals(1,lines.size());assertEquals(new BigDecimal("2.00"),lines.get(0).getOriginAmount());
+        candidate.setGroupEvidenceMatchesOrder(false);
+        assertTrue(CoopSettlementContract.originLines(snapshot,List.of(candidate),cutoff).isEmpty());
+    }
+    @Test void multipleSeatsWithoutCanonicalEvidenceDoNotUseTheSingleSeatFallback() {
+        CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(4L);
+        when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
+        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of());
+        assertTrue(CoopSettlementContract.originLines(snapshot,reader.lockCandidates(snapshot,cutoff),cutoff).isEmpty());
+        assertTrue(candidate.getVerifiedSeatIds().isEmpty());
+    }
     @Test void repeatedCanonicalSeatIdentityIsChargedOnce() {
         CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(4L);
         when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));

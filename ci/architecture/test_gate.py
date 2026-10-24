@@ -1504,12 +1504,37 @@ class RegisteredReferencesTest(unittest.TestCase):
     def test_command_checklist_references_real_baseline_sources(self):
         registry = json.loads((gate.HERE / "commands.json").read_text())
         self.assertEqual(gate.BASE, registry["source_baseline"])
+        self.assertEqual(set(gate.COMMAND_SOURCES), {c["id"] for c in registry["commands"]})
         for command in registry["commands"]:
+            source = gate.reviewed_command_source(command)
             paths = [command["entry"], *command["callers"], *command["persistent_sources"], *command["existing_test_sources"]]
             for path in paths:
                 with self.subTest(command=command["id"], path=path):
-                    self.assertTrue(gate.blob(gate.REPO, gate.BASE, path))
-            self.assertIn(command["symbol"].encode(), gate.blob(gate.REPO, gate.BASE, command["entry"]))
+                    self.assertTrue(gate.blob(gate.REPO, source, path))
+            self.assertIn(command["symbol"].encode(), gate.blob(gate.REPO, source, command["entry"]))
+
+
+    def test_original_sources_cannot_be_rebound_and_new_sources_cannot_default_to_candidate(self):
+        registry = json.loads((gate.HERE / "commands.json").read_text())
+        for command in registry["commands"]:
+            expected = gate.COMMAND_SOURCES[command["id"]]
+            if expected == gate.BASE:
+                self.assertEqual(gate.BASE, gate.reviewed_command_source(command))
+            else:
+                missing = {k: v for k, v in command.items() if k != "source_sha"}
+                with self.subTest(command=command["id"], source="missing"), self.assertRaisesRegex(gate.GateError, "COMMAND_SOURCE_MISMATCH"):
+                    gate.reviewed_command_source(missing)
+            for value in ("HEAD", "refs/heads/master", "f" * 40):
+                with self.subTest(command=command["id"], source=value), self.assertRaisesRegex(gate.GateError, "COMMAND_SOURCE_MISMATCH"):
+                    gate.reviewed_command_source({**command, "source_sha": value})
+        with self.assertRaisesRegex(gate.GateError, "COMMAND_SOURCE_MISMATCH"):
+            gate.reviewed_command_source({"id": "candidate-new-command", "source_sha": gate.BASE})
+
+    def test_missing_reference_is_not_satisfied_by_a_current_checkout_file(self):
+        source = gate.COMMAND_SOURCES["coop-original-produce"]
+        with self.assertRaises(gate.GateError):
+            gate.blob(gate.REPO, source, "docs/delivery/architecture-day/F/owner-wiring-8490/PIN.md")
+
 
 
 def wiring_problems(text):

@@ -479,6 +479,26 @@ class MerchantCommerceServiceTest {
         assertEquals(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW, transaction.getPropagationBehavior());
     }
 
+    @Test
+    void allCommercePrefixesKeepTheFullUuidValueWithinCanonicalOrderNumberLength() {
+        service = enabledService();
+        when(orderMapper.insertOmsOrder(any())).thenAnswer(call -> { call.getArgument(0, OmsOrder.class).setId(99L); return 1; });
+        when(wechatPayService.createGenericOrder(any(), any(), any(), any())).thenReturn(Collections.emptyMap());
+        String[] types = { MerchantCommerceService.BIZ_PREMIUM_TEMPLATE, MerchantCommerceService.BIZ_PROMOTION_SLOT, MerchantCommerceService.BIZ_CUSTOM_EVENT };
+        String[] prefixes = { "TPLTM_", "PROMOT_", "CUSTOM_" };
+        for (int i = 0; i < types.length; i++) {
+            when(settlementRuleService.getActiveRule(0L, types[i])).thenReturn(pricedRule());
+            var result = service.createOrder(12L, 34L, "openid", types[i], "req-1234567890123456-" + i);
+            String number = result.get("orderSn");
+            assertTrue(number.startsWith(prefixes[i]));
+            assertTrue(number.length() <= 32);
+            String encodedUuid = number.substring(prefixes[i].length());
+            assertTrue(encodedUuid.matches("[0-9a-z]{1,25}"));
+            assertTrue(new java.math.BigInteger(encodedUuid, 36).bitLength() <= 128);
+            assertTrue(service.supportsOutTradeNo(number));
+        }
+    }
+
     private boolean paidOrder(String no,boolean paid,Integer fen,String tx) {
         return service.handlePaidOrder(no,paid,fen,tx,proof.issue(no,fen,tx));
     }

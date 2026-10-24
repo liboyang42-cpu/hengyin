@@ -55,6 +55,7 @@
     },
     {
       "id": "coop-original-produce",
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
       "owner": "chengyinhub-system:CoopSettlementOriginalProducer",
       "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalProducer.java",
       "symbol": "freezeOriginals",
@@ -73,6 +74,7 @@
     },
     {
       "id": "npc-asr-original-quota-handoff",
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
       "owner": "chengyinhub-system:AiQuotaRecoveryService",
       "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
       "symbol": "requireNpcAsrHandoff",
@@ -91,6 +93,7 @@
     },
     {
       "id": "coop-original-manual-read",
+      "source_sha": "e57f0a32037bf88b2abf1626cca4760714d88592",
       "owner": "chengyinhub-system:CoopSettlementManualCaseReadService",
       "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementManualCaseReadService.java",
       "symbol": "detail",

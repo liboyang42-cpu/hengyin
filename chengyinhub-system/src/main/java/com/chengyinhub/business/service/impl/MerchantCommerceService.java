@@ -77,7 +77,9 @@ public class MerchantCommerceService implements IMerchantCommerceService {
                     || rule.getEntitlementDays() == null || rule.getEntitlementDays() <= 0) {
                 throw new IllegalStateException("该权益尚未配置用量或有效期，请联系官方");
             }
-            String orderSn = prefixOf(bizType) + UUID.randomUUID().toString().replace("-", "");
+            // Canonical order_sn is VARCHAR(32): preserve the entire UUID value in <=25 lowercase base36 digits.
+            String orderSn = prefixOf(bizType) + new java.math.BigInteger(
+                    UUID.randomUUID().toString().replace("-", ""), 16).toString(36);
             OmsOrder order = new OmsOrder();
             order.setOrderSn(orderSn);
             order.setMemberId(memberId);
