@@ -995,6 +995,62 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
+    def test_voice_factory_and_existing_admission_actual_four_directions(self):
+        edges = (("E_VOICE_PROVIDER_CLIENT", "F_AI_HTTP_ADMISSION"),
+                 ("E_VOICE_PROVIDER_CLIENT", "E_VOICE_CONFIGURATION"),
+                 ("E_LLM_CLIENT_FACTORY", "F_AI_HTTP_ADMISSION"),
+                 ("E_LLM_CLIENT_FACTORY", "E_VOICE_CONFIGURATION"))
+        voice = "com.chengyinhub.business.service.ai.DashScopeVoiceClient"
+        self.assertIn(voice, self.dependencies["owners"]["E_VOICE_PROVIDER_CLIENT"]["members"])
+        for source, target in edges:
+            self.reference(voice if source == "E_VOICE_PROVIDER_CLIENT" else self.owner_member(source), self.owner_member(target))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual(set(edges), set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_voice_common_config_cannot_depend_on_system_factory_or_provider(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "E_VOICE_CONFIGURATION"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
+
+    def test_voice_client_factory_and_admission_cannot_callback_domain_consumers(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("E_VOICE_PROVIDER_CLIENT", "E_LLM_CLIENT_FACTORY", "F_AI_HTTP_ADMISSION"):
+            source = "com.chengyinhub.business.service.ai.DashScopeVoiceClient" if owner == "E_VOICE_PROVIDER_CLIENT" else self.owner_member(owner)
+            for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+                with self.subTest(owner=owner, target=target):
+                    self.replace_evidence("jdeps.stdout.txt", original)
+                    self.reference(source, target)
+                    report = self.check_directions()
+                    self.assertEqual("BLOCKED", report["verdict"], report)
+                    self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
+
+    def test_admission_callback_factory_is_a_witnessed_new_cycle(self):
+        factory, admission = self.owner_member("E_LLM_CLIENT_FACTORY"), self.owner_member("F_AI_HTTP_ADMISSION")
+        self.reference(factory, admission)
+        self.reference(admission, factory)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["E_LLM_CLIENT_FACTORY", "F_AI_HTTP_ADMISSION"], cycle["owners"])
+        self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
+    def test_voice_declared_types_missing_raw_rows_are_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("E_VOICE_PROVIDER_CLIENT", "E_LLM_CLIENT_FACTORY", "F_AI_HTTP_ADMISSION", "E_VOICE_CONFIGURATION"):
+            for member in self.dependencies["owners"][owner]["members"]:
+                with self.subTest(owner=owner, member=member):
+                    self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in original.decode().splitlines()
+                                          if not l.strip().startswith(member + " -> ")).encode())
+                    self.assert_unknown(self.check_directions())
+
     def test_chapter_invite_original_application_inbound_is_not_a_business_permission(self):
         self.reference("com.chengyinhub.business.service.impl.MerchantChapterApplicationServiceImpl",
                        self.owner_member("D_CHAPTER_INVITE_NOTICE"))

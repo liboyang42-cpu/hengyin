@@ -824,6 +824,63 @@
           "com.chengyinhub.business.service.IMerchantChapterApplicationService",
           "com.chengyinhub.business.service.impl.MerchantChapterApplicationServiceImpl"
         ]
+      },
+      {
+        "id": "E_VOICE_PROVIDER_CLIENT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.VoiceCloneClient",
+          "com.chengyinhub.business.service.ai.DashScopeVoiceClient"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.LlmClientConfig",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService"
+        ]
+      },
+      {
+        "id": "E_LLM_CLIENT_FACTORY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.LlmClientConfig"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService"
+        ]
+      },
+      {
+        "id": "F_AI_HTTP_ADMISSION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.AiHttpAdmission"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.LlmClientConfig",
+          "com.chengyinhub.business.service.ai.VoiceCloneClient",
+          "com.chengyinhub.business.service.ai.DashScopeVoiceClient",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService"
+        ]
+      },
+      {
+        "id": "E_VOICE_CONFIGURATION",
+        "module": "chengyinhub-common",
+        "members": [
+          "com.chengyinhub.common.config.AiVoiceConfig"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.LlmClientConfig",
+          "com.chengyinhub.business.service.ai.AiHttpAdmission",
+          "com.chengyinhub.business.service.ai.VoiceCloneClient",
+          "com.chengyinhub.business.service.ai.DashScopeVoiceClient",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService"
+        ]
       }
     ],
     "allowed_directions": [
@@ -1070,6 +1127,22 @@
       [
         "D_COMPLAINT_CLOSE_REPORTER_NOTICE",
         "D_COMMITTED_NOTICE_REJECTION_PORT"
+      ],
+      [
+        "E_VOICE_PROVIDER_CLIENT",
+        "F_AI_HTTP_ADMISSION"
+      ],
+      [
+        "E_VOICE_PROVIDER_CLIENT",
+        "E_VOICE_CONFIGURATION"
+      ],
+      [
+        "E_LLM_CLIENT_FACTORY",
+        "F_AI_HTTP_ADMISSION"
+      ],
+      [
+        "E_LLM_CLIENT_FACTORY",
+        "E_VOICE_CONFIGURATION"
       ]
     ]
   }
