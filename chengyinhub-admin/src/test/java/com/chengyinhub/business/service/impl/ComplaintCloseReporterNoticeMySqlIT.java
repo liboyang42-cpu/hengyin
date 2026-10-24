@@ -1,7 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper;
+import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
 import com.chengyinhub.business.service.support.ComplaintCloseReporterNotice;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -128,6 +128,21 @@ class ComplaintCloseReporterNoticeMySqlIT {
         }
     }
 
+    @Test void auditSqlFailureStillRollsBackTheOriginalCloseInsteadOfClaimingARecordedRejection() throws Exception {
+        try (var h=new CoopComplaintCommittedNoticeMySqlIT.Harness()) {
+            Reporter r=attach(h); h.db.update("update coop_complaint set reporter_member_id=null where id=1");
+            // Controlled disposable scratch only: force the actual owner INSERT to fail at the database boundary.
+            h.db.execute("create trigger fixture_rejection_write_failure before insert on business_audit_event "
+                    + "for each row signal sqlstate '45000' set message_text='fixture audit write failed'");
+            assertThrows(RuntimeException.class,h::closeComplaint);
+            h.assertAdvance(0,"0.00",0);
+            assertEquals(new BigDecimal("100.00"),h.db.queryForObject("select balance from ums_member where id=200",BigDecimal.class));
+            assertEquals(0,h.notice.count("business_audit_event")); assertEquals(0,h.notice.count("im_notification_intent"));
+            assertEquals(0,h.notice.count("committed_official_notice_wx")); assertTrue(h.notice.wakes.isEmpty());
+            verifyNoInteractions(r.alarm,h.notice.wx);
+        }
+    }
+
     private static Reporter attach(CoopComplaintCommittedNoticeMySqlIT.Harness h) throws Exception {
         new ResourceDatabasePopulator(new FileSystemResource(h.notice.sqlRoot.resolve("migration_business_audit_event_20260823.sql")))
                 .execute(h.notice.manager.getDataSource());
@@ -138,8 +153,8 @@ class ComplaintCloseReporterNoticeMySqlIT {
         assertEquals("NO",h.db.queryForObject("select is_nullable from information_schema.columns "
                 +"where table_schema=database() and table_name='business_audit_event' and column_name='request_id'",String.class));
         SqlSessionFactoryBean factory=new SqlSessionFactoryBean(); factory.setDataSource(h.notice.manager.getDataSource());
-        factory.setMapperLocations(new ClassPathResource("mapper/business/CommittedNoticeRejectionMapper.xml"));
-        CommittedNoticeRejectionMapper mapper=new SqlSessionTemplate(factory.getObject()).getMapper(CommittedNoticeRejectionMapper.class);
+        factory.setMapperLocations(new ClassPathResource("mapper/business/BusinessAuditEventMapper.xml"));
+        BusinessAuditEventMapper mapper=new SqlSessionTemplate(factory.getObject()).getMapper(BusinessAuditEventMapper.class);
         AlarmService alarm=mock(AlarmService.class);
         ComplaintCloseReporterNotice target=new ComplaintCloseReporterNotice(h.notice.notice,mapper,alarm,h.notice.executor);
         ProxyFactory proxy=new ProxyFactory(target); proxy.setProxyTargetClass(true);
