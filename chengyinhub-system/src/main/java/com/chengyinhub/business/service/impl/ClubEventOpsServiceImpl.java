@@ -67,6 +67,13 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     private final IClubRoleAssignmentService clubRoleAssignmentService;
     private final ITeamGroupService teamGroupService;
 
+    /**
+     * 俱乐部排期唯一时区。club_event_series.timezone 目前只写入本值并原样回显,
+     * 所有日期/时刻计算都用 CLUB_ZONE,不读该列;要支持多时区需先让计算改读该列(产品决定)。
+     */
+    static final String CLUB_ZONE_ID = "Asia/Shanghai";
+    static final ZoneId CLUB_ZONE = ZoneId.of(CLUB_ZONE_ID);
+
     /** O5b-7 开关(默认关):系列 CLOSED 终态的关闭入口。 */
     @org.springframework.beans.factory.annotation.Value("${chengyin.club.o5b.series-close.enabled:false}")
     private boolean seriesCloseEnabled = false;
@@ -145,7 +152,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                 throw conflict("未来场次状态不完整");
             }
             dates.add(row.getOccurrenceAt().toInstant()
-                    .atZone(ZoneId.of("Asia/Shanghai")).toLocalDate().toString());
+                    .atZone(CLUB_ZONE).toLocalDate().toString());
         }
         return toSeriesView(series, dates, rows);
     }
@@ -239,7 +246,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         series.setClubId(request.getClubId());
         series.setTopicId(request.getTopicId());
         series.setRecurrenceType(recurrenceType);
-        series.setTimezone("Asia/Shanghai");
+        series.setTimezone(CLUB_ZONE_ID);
         series.setDefaultLeadMemberId(leadMemberId);
         series.setDefaultCapacity(capacity);
         series.setWaitlistEnabled(Boolean.TRUE.equals(request.getWaitlistEnabled()));
@@ -392,7 +399,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                 throw conflict("未来场次状态不完整");
             }
             LocalDate localDate = occurrence.getOccurrenceAt().toInstant()
-                    .atZone(ZoneId.of("Asia/Shanghai")).toLocalDate();
+                    .atZone(CLUB_ZONE).toLocalDate();
             if (existingByDate.put(localDate, occurrence) != null) throw conflict("未来场次日期重复");
         }
         Set<LocalDate> desired = new HashSet<>(desiredDates);
@@ -988,7 +995,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                     || !ClubEventOccurrence.STATUS_ACTIVE.equals(row.getStatus())) {
                 throw conflict("未来场次状态不完整");
             }
-            String time = row.getOccurrenceAt().toInstant().atZone(ZoneId.of("Asia/Shanghai"))
+            String time = row.getOccurrenceAt().toInstant().atZone(CLUB_ZONE)
                     .format(DateTimeFormatter.ofPattern("HH:mm"));
             if (shared != null && !shared.equals(time)) return null;
             shared = time;
@@ -1028,12 +1035,12 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
      * 两个字段必须是同一个值,否则场次列表显示 00:00、退款钟却按另一个时刻算。
      */
     private Date futureDateBoundary() {
-        return Date.from(todayShanghai().plusDays(1).atStartOfDay(ZoneId.of("Asia/Shanghai")).toInstant());
+        return Date.from(todayShanghai().plusDays(1).atStartOfDay(CLUB_ZONE).toInstant());
     }
 
     private Date assemblyMoment(LocalDate date, String startTime) {
         LocalTime time = LocalTime.parse(startTime, ASSEMBLY_TIME_FORMAT);
-        return Date.from(LocalDateTime.of(date, time).atZone(ZoneId.of("Asia/Shanghai")).toInstant());
+        return Date.from(LocalDateTime.of(date, time).atZone(CLUB_ZONE).toInstant());
     }
 
     /** 集合时刻唯一入参口径:缺省或非 HH:mm 一律拒,不允许静默落 00:00。 */
@@ -1053,7 +1060,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     protected Date now() { return new Date(); }
 
     protected LocalDate todayShanghai() {
-        return now().toInstant().atZone(ZoneId.of("Asia/Shanghai")).toLocalDate();
+        return now().toInstant().atZone(CLUB_ZONE).toLocalDate();
     }
 
     /**
