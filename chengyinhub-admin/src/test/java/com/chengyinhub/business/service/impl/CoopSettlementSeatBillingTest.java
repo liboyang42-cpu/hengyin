@@ -3,7 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.RegistrationSeat;
 import com.chengyinhub.business.domain.dto.*;
 import com.chengyinhub.business.mapper.*;
-import com.chengyinhub.business.service.RegistrationSeatService;
+import com.chengyinhub.business.service.RegistrationSeatSettlementReader;
 import com.chengyinhub.business.service.support.CoopSettlementContract;
 import java.math.BigDecimal;
 import java.util.*;
@@ -17,18 +17,19 @@ import static org.mockito.Mockito.*;
 class CoopSettlementSeatBillingTest {
     final CmsActivityMapper activities=mock(CmsActivityMapper.class);
     final CoopSettlementEvidenceMapper evidence=mock(CoopSettlementEvidenceMapper.class);
-    final RegistrationSeatService seatOwner=mock(RegistrationSeatService.class);
+    final RegistrationSeatMapper seatFacts=mock(RegistrationSeatMapper.class);
+    final RegistrationSeatSettlementReader seatOwner=new RegistrationSeatSettlementReader(seatFacts);
     final TopicSettlementEvidenceService reader=new TopicSettlementEvidenceService(activities,mock(CmsRegistrationMapper.class),mock(CoopGroupVerifyMapper.class),evidence);
     final Date cutoff=new Date(1000);
     final CoopSettlementSnapshot snapshot=snapshot();
-    CoopSettlementSeatBillingTest(){ReflectionTestUtils.setField(reader,"registrationSeats",seatOwner);when(activities.selectActiveActivityIdsByTopicId(11L)).thenReturn(List.of(201L));}
+    CoopSettlementSeatBillingTest(){ReflectionTestUtils.setField(reader,"registrationSeats",seatOwner);when(activities.selectActiveActivityIdsByTopicId(11L)).thenReturn(List.of(201L));when(seatFacts.selectUnprovenMultiGroupOrdersForUpdate(11L,201L,cutoff)).thenReturn(List.of());}
     @Test void fourPurchasedSeatsButOnlyTwoVerifiedChargeTwiceAndNeverExpandOrderQuantity() {
         CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(4L);
         when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
-        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of(seat(1L,500),seat(2L,600)));
+        when(seatFacts.selectVerifiedForGroupForUpdate(11L,201L,cutoff)).thenReturn(List.of(seat(1L,500),seat(2L,600)));
         var lines=CoopSettlementContract.originLines(snapshot,reader.lockCandidates(snapshot,cutoff),cutoff);
         assertEquals(1,lines.size());assertEquals(new BigDecimal("4.00"),lines.get(0).getOriginAmount());
-        assertEquals(List.of(1L,2L),candidate.getVerifiedSeatIds());verify(seatOwner).verifiedSeatsForGroup(11L,201L,cutoff);
+        assertEquals(List.of(1L,2L),candidate.getVerifiedSeatIds());verify(seatFacts).selectVerifiedForGroupForUpdate(11L,201L,cutoff);
     }
     @Test void frozenGroupReceiptAndCanonicalSeatsUseTheSameFixedFeeWithoutIndividualScans() {
         snapshot.setFulfillmentEvidenceRule("COOP_GROUP_VERIFY");
@@ -36,7 +37,7 @@ class CoopSettlementSeatBillingTest {
         CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(4L);candidate.setMerchantScanPresent(false);
         candidate.setGroupEvidenceMatchesOrder(true);candidate.setGroupVerifyTime(new Date(600));candidate.setGroupMemberVerifyTime(new Date(500));
         when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
-        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of(seat(1L,500),seat(2L,600)));
+        when(seatFacts.selectVerifiedForGroupForUpdate(11L,201L,cutoff)).thenReturn(List.of(seat(1L,500),seat(2L,600)));
         var lines=CoopSettlementContract.originLines(snapshot,reader.lockCandidates(snapshot,cutoff),cutoff);
         assertEquals(new BigDecimal("4.00"),lines.get(0).getOriginAmount());
         candidate.setGroupEvidenceMatchesOrder(false);
@@ -47,7 +48,7 @@ class CoopSettlementSeatBillingTest {
         CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(1L);candidate.setMerchantScanPresent(false);
         candidate.setGroupEvidenceMatchesOrder(true);candidate.setGroupVerifyTime(new Date(600));candidate.setGroupMemberVerifyTime(new Date(500));
         when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
-        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of());
+        when(seatFacts.selectVerifiedForGroupForUpdate(11L,201L,cutoff)).thenReturn(List.of());
         var lines=CoopSettlementContract.originLines(snapshot,reader.lockCandidates(snapshot,cutoff),cutoff);
         assertNull(candidate.getVerifiedSeatIds());assertEquals(1,lines.size());assertEquals(new BigDecimal("2.00"),lines.get(0).getOriginAmount());
         candidate.setGroupEvidenceMatchesOrder(false);
@@ -56,33 +57,33 @@ class CoopSettlementSeatBillingTest {
     @Test void multipleSeatsWithoutCanonicalEvidenceDoNotUseTheSingleSeatFallback() {
         CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(4L);
         when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
-        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of());
+        when(seatFacts.selectVerifiedForGroupForUpdate(11L,201L,cutoff)).thenReturn(List.of());
         assertTrue(CoopSettlementContract.originLines(snapshot,reader.lockCandidates(snapshot,cutoff),cutoff).isEmpty());
         assertTrue(candidate.getVerifiedSeatIds().isEmpty());
     }
     @Test void repeatedCanonicalSeatIdentityIsChargedOnce() {
         CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(4L);
         when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
-        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of(seat(1L,500),seat(1L,500)));
+        when(seatFacts.selectVerifiedForGroupForUpdate(11L,201L,cutoff)).thenReturn(List.of(seat(1L,500),seat(1L,500)));
         var lines=CoopSettlementContract.originLines(snapshot,reader.lockCandidates(snapshot,cutoff),cutoff);
         assertEquals(new BigDecimal("2.00"),lines.get(0).getOriginAmount());assertEquals(List.of(1L),candidate.getVerifiedSeatIds());
     }
     @Test void unverifiedAndCutoffSeatsNeverBecomeFeeEligibility() {
         CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(4L);
         when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
-        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of(seat(1L,1000)));
+        when(seatFacts.selectVerifiedForGroupForUpdate(11L,201L,cutoff)).thenReturn(List.of(seat(1L,1000)));
         assertTrue(CoopSettlementContract.originLines(snapshot,reader.lockCandidates(snapshot,cutoff),cutoff).isEmpty());
         assertTrue(candidate.getVerifiedSeatIds().isEmpty());
     }
     @Test void missingCanonicalMultiSeatEvidenceStillRefusesInsteadOfMultiplyingBoughtQuantity() {
         CoopSettlementCandidate candidate=candidate();candidate.setOrganizerScopeCovered(false);candidate.setOrderQuantity(4L);
         assertThrows(IllegalStateException.class,()->CoopSettlementContract.originLines(snapshot,List.of(candidate),cutoff));
-        verifyNoInteractions(seatOwner);
+        verifyNoInteractions(seatFacts);
     }
     @Test void foreignSeatScopeCannotEnterTheFrozenContract() {
         CoopSettlementCandidate candidate=candidate();candidate.setOrderQuantity(4L);RegistrationSeat foreign=seat(1L,500);foreign.setTopicId(99L);
         when(evidence.selectTopicEvidenceCandidatesForUpdate(eq(snapshot),anyList(),eq(cutoff))).thenReturn(List.of(candidate));
-        when(seatOwner.verifiedSeatsForGroup(11L,201L,cutoff)).thenReturn(List.of(foreign));
+        when(seatFacts.selectVerifiedForGroupForUpdate(11L,201L,cutoff)).thenReturn(List.of(foreign));
         assertThrows(IllegalStateException.class,()->reader.lockCandidates(snapshot,cutoff));
     }
     private static CoopSettlementSnapshot snapshot(){CoopSettlementSnapshot s=new CoopSettlementSnapshot();s.setOrderId(701L);s.setTopicId(11L);s.setProductType(1);s.setInitiatorMemberId(7L);s.setTermsVersion("v1");s.setCatalogFrozenAt(new Date(50));s.setCommercialContextType("TOPIC_EDITION");s.setCommercialContextId(11L);

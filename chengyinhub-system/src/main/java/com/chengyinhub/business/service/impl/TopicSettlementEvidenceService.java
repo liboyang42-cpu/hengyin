@@ -25,7 +25,7 @@ public class TopicSettlementEvidenceService {
     private final CoopGroupVerifyMapper groupVerifyMapper;
     private final CoopSettlementEvidenceMapper evidenceMapper;
     @org.springframework.beans.factory.annotation.Autowired
-    private com.chengyinhub.business.service.RegistrationSeatService registrationSeats;
+    private com.chengyinhub.business.service.RegistrationSeatSettlementReader registrationSeats;
 
     public TopicSettlementEvidenceService(CmsActivityMapper activityMapper,
             CmsRegistrationMapper registrationMapper, CoopGroupVerifyMapper groupVerifyMapper,
@@ -80,7 +80,7 @@ public class TopicSettlementEvidenceService {
                 activityIds == null ? Collections.<Long>emptyList() : activityIds, settlementCutoff);
         if ("FIXED_PER_FULFILLMENT".equals(snapshot.getCompensationMode()) && candidates != null
                 && candidates.stream().anyMatch(c -> c != null && c.isOrganizerScopeCovered())) {
-            // All original registrations are already locked. Reuse C's canonical current-read owner.
+            // All original registrations are already locked. Reuse the canonical mapper-only current-read owner.
             java.util.Map<Long, java.util.Map<Long, com.chengyinhub.business.domain.RegistrationSeat>> byRegistration = new java.util.HashMap<>();
             if (activityIds != null) for (Long activityId : new java.util.TreeSet<>(activityIds)) {
                 var verified = registrationSeats.verifiedSeatsForGroup(snapshot.getTopicId(), activityId, settlementCutoff);
