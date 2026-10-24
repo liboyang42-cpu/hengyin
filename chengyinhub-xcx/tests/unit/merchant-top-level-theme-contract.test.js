@@ -3,6 +3,8 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
+const vm = require('node:vm')
+const { createRequire } = require('node:module')
 
 const ROOT = path.resolve(__dirname, '../..')
 const PAGES = [
@@ -14,15 +16,47 @@ const PAGES = [
 ]
 const read = relativePath => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
+function assertLifecycleRestores(source, pagePath, lifecycle) {
+  const old = { getApp: global.getApp, wx: global.wx }
+  const app = { globalData: {} }
+  const navigation = [], backgrounds = []
+  global.getApp = () => app
+  global.wx = {
+    setNavigationBarColor: options => navigation.push(options),
+    setBackgroundColor: options => backgrounds.push(options),
+  }
+  try {
+    const requirePage = createRequire(path.join(ROOT, pagePath))
+    let definition
+    vm.runInNewContext(source, {
+      getApp: global.getApp, wx: global.wx, require: requirePage,
+      Page: config => { definition = config }, clearTimeout() {},
+    }, { filename: pagePath })
+    assert.equal(typeof definition[lifecycle], 'function', `${pagePath} must define ${lifecycle}`)
+    // Exercise the actual page hook and shared theme helper, including hooks that invalidate async callbacks.
+    requirePage('../../../utils/merchant-theme.js').merchantPageShow()
+    navigation.length = backgrounds.length = 0
+    definition[lifecycle].call({ _requestEpoch: 0 })
+    assert.equal(app.globalData.theme, 'dark', `${pagePath} must restore player dark on ${lifecycle}`)
+    assert.deepEqual(navigation, [{ frontColor: '#ffffff', backgroundColor: '#020104' }])
+    assert.deepEqual(backgrounds, [{
+      backgroundColor: '#020104', backgroundColorTop: '#020104', backgroundColorBottom: '#020104',
+    }])
+  } finally {
+    if (old.getApp === undefined) delete global.getApp; else global.getApp = old.getApp
+    if (old.wx === undefined) delete global.wx; else global.wx = old.wx
+  }
+}
+
 function assertMerchantThemeLifecycle(source, pagePath) {
   assert.match(source, /require\(['"]\.\.\/\.\.\/\.\.\/utils\/merchant-theme\.js['"]\)/,
     `${pagePath} must use the shared merchant theme helper`)
   assert.match(source, /onShow\(\)\s*\{[\s\S]*?merchantTheme\.merchantPageShow\(\);/,
     `${pagePath} must switch the native chrome to merchant light on show`)
-  assert.match(source, /onHide\(\)\s*\{\s*merchantTheme\.merchantPageRestore\(\);\s*\}/,
-    `${pagePath} must restore player dark chrome on hide`)
+  assertLifecycleRestores(source, pagePath, 'onHide')
   assert.match(source, /onUnload\(\)\s*\{[\s\S]*?merchantTheme\.merchantPageRestore\(\);[\s\S]*?\}/,
     `${pagePath} must restore player dark chrome on unload`)
+  assertLifecycleRestores(source, pagePath, 'onUnload')
 }
 
 test('merchant top-level and discover pages keep native chrome aligned with their light surface', () => {
@@ -37,6 +71,14 @@ test('negative control: removing a lifecycle restore is rejected', () => {
     'onHide() {},'
   )
   assert.notEqual(broken, source, 'negative control must mutate the source')
+  assert.throws(() => assertMerchantThemeLifecycle(broken, pagePath), assert.AssertionError)
+})
+
+test('negative control: an unreachable citynode restore cannot satisfy the lifecycle contract', () => {
+  const pagePath = 'pages/merchant/citynode/index.js'
+  const source = read(pagePath)
+  const broken = source.replace('merchantTheme.merchantPageRestore();', 'if (false) merchantTheme.merchantPageRestore();')
+  assert.notEqual(broken, source, 'negative control must mutate the real citynode hide hook')
   assert.throws(() => assertMerchantThemeLifecycle(broken, pagePath), assert.AssertionError)
 })
 
