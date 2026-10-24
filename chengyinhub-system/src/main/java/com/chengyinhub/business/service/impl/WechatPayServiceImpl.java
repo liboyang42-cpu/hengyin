@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IClubMembershipService;
@@ -99,6 +100,9 @@ public class WechatPayServiceImpl implements IWechatPayService {
     private com.wechat.pay.java.service.payments.app.AppServiceExtension appServiceExtension;
     private RefundService refundService;
     private TransferBatchService transferBatchService;
+    /** One immutable publication couples the client with its SDK credential merchant, never a mutable property. */
+    private record TransferClientBinding(TransferBatchService client, String mchid) { }
+    private volatile TransferClientBinding transferClientBinding;
     private Config config;
 
     private NotificationParser notificationParser;
@@ -111,6 +115,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
      */
     @PostConstruct
     public void init() {
+        transferClientBinding = null;
         if (!wxPayConfig.isWechatPayEnabled()) {
             logger.info("微信支付功能已禁用");
             return;
@@ -128,10 +133,24 @@ public class WechatPayServiceImpl implements IWechatPayService {
                 jsapiServiceExtension = new JsapiServiceExtension.Builder().config(config).build();
                 appServiceExtension = new com.wechat.pay.java.service.payments.app.AppServiceExtension.Builder().config(config).build();
                 refundService = new RefundService.Builder().config(config).build();
-                transferBatchService = new TransferBatchService.Builder().config(config).build();
+                com.wechat.pay.java.core.auth.Credential credential = config.createCredential();
+                if (credential == null || credential.getMerchantId() == null || credential.getMerchantId().isBlank()) {
+                    throw new IllegalStateException("微信转账client缺少真实商户绑定");
+                }
+                // The very same credential is used by this HTTP client and by the immutable merchant binding.
+                // Do not ask a mutable Config for another credential after the transfer client is constructed.
+                String boundMerchantId = credential.getMerchantId();
+                com.wechat.pay.java.core.http.HttpClient transferHttpClient =
+                        new com.wechat.pay.java.core.http.DefaultHttpClientBuilder()
+                                .credential(credential).validator(config.createValidator()).build();
+                TransferBatchService builtTransferClient = new TransferBatchService.Builder()
+                        .httpClient(transferHttpClient).encryptor(config.createEncryptor())
+                        .decryptor(config.createDecryptor()).build();
 
                 // 初始化NotificationParser
                 notificationParser = new NotificationParser(notificationConfig);
+                transferBatchService = builtTransferClient;
+                transferClientBinding = new TransferClientBinding(builtTransferClient, boundMerchantId);
 
                 logger.info("微信支付服务初始化成功");
             } else {
@@ -148,6 +167,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
             notificationParser = null;
             refundService = null;
             transferBatchService = null;
+            transferClientBinding = null;
         }
     }
 
@@ -238,9 +258,14 @@ public class WechatPayServiceImpl implements IWechatPayService {
     public Map<String, String> transferToBalance(String outBatchNo, String outDetailNo,
                                                   java.math.BigDecimal amountYuan, String openid, String remark,
                                                   String appid) {
+        return submitTransfer(transferBatchService, outBatchNo, outDetailNo, amountYuan, openid, remark, appid);
+    }
+
+    private Map<String, String> submitTransfer(TransferBatchService client, String outBatchNo, String outDetailNo,
+            java.math.BigDecimal amountYuan, String openid, String remark, String appid) {
         Map<String, String> r = new HashMap<>();
         r.put("ambiguous", "false");
-        if (transferBatchService == null) {
+        if (client == null) {
             r.put("ok", "false");
             r.put("error", "转账服务未就绪(商户号需开通「商家转账到零钱」并配置证书)");
             return r;
@@ -289,7 +314,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
             request.setTotalNum(1);
             request.setTransferDetailList(details);
 
-            InitiateBatchTransferResponse resp = transferBatchService.initiateBatchTransfer(request);
+            InitiateBatchTransferResponse resp = client.initiateBatchTransfer(request);
             if (resp == null || !outBatchNo.equals(resp.getOutBatchNo())
                     || resp.getBatchId() == null || resp.getBatchId().trim().isEmpty()) {
                 r.put("ok", "false");
@@ -325,12 +350,19 @@ public class WechatPayServiceImpl implements IWechatPayService {
 
     /**
      * 查询商家转账最终结果:FINISHED 后查明细；单纯 CLOSED 不推断资金未达。
-     * result: SUCCESS=到账 / FAIL=失败(调用方应退余额) / PROCESSING=处理中(保持) / UNKNOWN=查询异常(勿判失败,重试)。
+     * result: SUCCESS=到账 / FAIL=明细失败证据 / PROCESSING=处理中(保持) / UNKNOWN=查询异常(勿判失败,重试)。
+     * 业务回补还须核验原DEBIT/SUBMIT_INTENT，不能仅凭本次返回值释放原业务身份。
      */
     @Override
     public Map<String, String> queryTransferResult(String outBatchNo, String outDetailNo) {
+        return queryTransfer(transferBatchService, wxPayConfig == null ? null : wxPayConfig.getMerchantId(),
+                outBatchNo, outDetailNo);
+    }
+
+    private Map<String, String> queryTransfer(TransferBatchService client, String merchantId,
+            String outBatchNo, String outDetailNo) {
         Map<String, String> r = new HashMap<>();
-        if (transferBatchService == null) {
+        if (client == null) {
             r.put("result", "UNKNOWN");
             r.put("error", "转账服务未就绪");
             return r;
@@ -339,10 +371,10 @@ public class WechatPayServiceImpl implements IWechatPayService {
             GetTransferBatchByOutNoRequest bq = new GetTransferBatchByOutNoRequest();
             bq.setOutBatchNo(outBatchNo);
             bq.setNeedQueryDetail(false);
-            TransferBatchEntity be = transferBatchService.getTransferBatchByOutNo(bq);
+            TransferBatchEntity be = client.getTransferBatchByOutNo(bq);
             var batch = be == null ? null : be.getTransferBatch();
             if (batch == null || outBatchNo == null || !outBatchNo.equals(batch.getOutBatchNo())
-                    || batch.getMchid() == null || !batch.getMchid().equals(wxPayConfig.getMerchantId())
+                    || batch.getMchid() == null || !batch.getMchid().equals(merchantId)
                     || batch.getBatchId() == null || batch.getBatchId().trim().isEmpty()
                     || batch.getAppid() == null || batch.getAppid().trim().isEmpty()
                     || !Integer.valueOf(1).equals(batch.getTotalNum())
@@ -369,7 +401,7 @@ public class WechatPayServiceImpl implements IWechatPayService {
             GetTransferDetailByOutNoRequest dq = new GetTransferDetailByOutNoRequest();
             dq.setOutBatchNo(outBatchNo);
             dq.setOutDetailNo(outDetailNo);
-            TransferDetailEntity de = transferBatchService.getTransferDetailByOutNo(dq);
+            TransferDetailEntity de = client.getTransferDetailByOutNo(dq);
             if (de == null || !outBatchNo.equals(de.getOutBatchNo()) || outDetailNo == null
                     || !outDetailNo.equals(de.getOutDetailNo()) || !batch.getBatchId().equals(de.getBatchId())
                     || !batch.getMchid().equals(de.getMchid()) || !batch.getAppid().equals(de.getAppid())
@@ -385,6 +417,8 @@ public class WechatPayServiceImpl implements IWechatPayService {
             r.put("detailId", detailId == null ? "" : detailId);
             r.put("outDetailNo", de.getOutDetailNo());
             r.put("transferAmount", String.valueOf(de.getTransferAmount()));
+            // Provider evidence only. Never fill an absent receiver from the caller's expected intent.
+            if (de.getOpenid() != null) r.put("openid", de.getOpenid());
             String failReasonCode = (de != null && de.getFailReason() != null) ? de.getFailReason().name() : "";
             r.put("failReasonCode", failReasonCode);
             if ("SUCCESS".equals(detailStatus)) {
@@ -404,6 +438,75 @@ public class WechatPayServiceImpl implements IWechatPayService {
             r.put("error", "查询结果暂无法核实，须保留原号查证");
             return r;
         }
+    }
+
+    @Override
+    public Map<String, String> transferToBalance(CashWithdrawTransferIntent intent) {
+        try {
+            TransferClientBinding bound = originalTransferClient(intent);
+            // No normalization here: these exact parameters were sealed by the DTO owner before submission.
+            return submitTransfer(bound.client(), intent.outBatchNo(), intent.outDetailNo(),
+                    java.math.BigDecimal.valueOf(intent.amountFen(), 2), intent.openid(),
+                    intent.effectiveRemark(), intent.appid());
+        } catch (RuntimeException invalidOriginal) {
+            Map<String, String> result = new HashMap<>();
+            result.put("ok", "false"); result.put("ambiguous", "true");
+            result.put("error", "原提现意图或client商户绑定无法核验，保留原号查证");
+            return result;
+        }
+    }
+
+    @Override
+    public Map<String, String> queryTransferResult(CashWithdrawTransferIntent intent) {
+        try {
+            TransferClientBinding bound = originalTransferClient(intent);
+            Map<String, String> result = queryTransfer(bound.client(), bound.mchid(),
+                    intent.outBatchNo(), intent.outDetailNo());
+            String state = result.get("result");
+            // Pending/CLOSED/missing detail cannot prove the receiver or authorize any economic transition.
+            if (!("SUCCESS".equals(state) || "FAIL".equals(state))) {
+                result.put("result", "UNKNOWN");
+                return result;
+            }
+            if (!"FINISHED".equals(result.get("batchStatus")) || !state.equals(result.get("detailStatus"))
+                    || !intent.mchid().equals(result.get("mchid")) || !intent.appid().equals(result.get("appid"))
+                    || !intent.outBatchNo().equals(result.get("outBatchNo"))
+                    || !intent.outDetailNo().equals(result.get("outDetailNo"))
+                    || !intent.openid().equals(result.get("openid"))
+                    || intent.amountFen() != Long.parseLong(result.get("transferAmount"))) {
+                result.put("result", "UNKNOWN");
+                result.put("error", "微信转账查单与原提现提交事实不一致");
+            }
+            return result;
+        } catch (RuntimeException unverifiable) {
+            Map<String, String> result = new HashMap<>(); result.put("result", "UNKNOWN");
+            result.put("error", "原提现提交或查单事实暂无法核验，保留原号查证");
+            return result;
+        }
+    }
+
+    private TransferClientBinding originalTransferClient(CashWithdrawTransferIntent intent) {
+        if (intent == null) throw new IllegalArgumentException("原提现意图缺失");
+        // The DTO is the ONLY requestVersion/requestHash canonicalization authority; no second hash here.
+        intent.requireValid();
+        String canonicalHash = intent.canonicalRequestHash();
+        if (canonicalHash == null || !canonicalHash.equals(intent.requestHash())) {
+            throw new IllegalArgumentException("原提现请求hash不符");
+        }
+        long fen = intent.amountFen();
+        if (fen <= 0 || fen > Integer.MAX_VALUE || intent.mchid() == null || intent.mchid().isBlank()
+                || intent.appid() == null || intent.appid().isBlank() || intent.openid() == null || intent.openid().isBlank()
+                || intent.outBatchNo() == null || !intent.outBatchNo().matches("[A-Za-z0-9]{1,32}")
+                || intent.outDetailNo() == null || !intent.outDetailNo().matches("[A-Za-z0-9]{1,32}")
+                || intent.effectiveRemark() == null || intent.effectiveRemark().isEmpty()
+                || intent.effectiveRemark().length() > 32) {
+            throw new IllegalArgumentException("原提现参数不能被重写或归一化");
+        }
+        TransferClientBinding bound = transferClientBinding;
+        if (bound == null || bound.client() == null || !intent.mchid().equals(bound.mchid())) {
+            throw new IllegalStateException("原商户与SDK client绑定不符，不得改渠道重发");
+        }
+        return bound;
     }
 
     /**
