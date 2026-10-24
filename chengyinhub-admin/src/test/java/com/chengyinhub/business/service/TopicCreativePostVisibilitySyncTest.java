@@ -72,6 +72,13 @@ class TopicCreativePostVisibilitySyncTest {
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicService, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(topicService, "cmsTopicMapper", cmsTopicMapper);
+        // Online restores now run the real physical-content budget gate; this fixture has no content.
+        var chapters = mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class);
+        var nodes = mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        ReflectionTestUtils.setField(topicService, "cmsTopicChapterMapper", chapters);
+        ReflectionTestUtils.setField(topicService, "cmsTopicNodeMapper", nodes);
+        when(chapters.countContentByTopicForUpdate(TOPIC_ID)).thenReturn(0L);
+        when(nodes.countContentByTopicForUpdate(TOPIC_ID)).thenReturn(0L);
         ReflectionTestUtils.setField(topicService, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(topicService, "cmsActivityMapper", mock(CmsActivityMapper.class));
         ReflectionTestUtils.setField(topicService, "umsCreativeSquareService", squareService);

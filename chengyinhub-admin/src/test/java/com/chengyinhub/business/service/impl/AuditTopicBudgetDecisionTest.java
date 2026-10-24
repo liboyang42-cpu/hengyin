@@ -103,7 +103,8 @@ class AuditTopicBudgetDecisionTest {
         assertEquals(1, f.audit.review(TASK, ACTOR, f.request()));
         var order = inOrder(f.quota, f.topics);
         order.verify(f.quota).lockAndCheckThemeOnline(OWNER, TOPIC);
-        order.verify(f.topics).selectCmsTopicByIdForUpdate(TOPIC);
+        // The decision and its real supply preflight each read the same current row after quota locking.
+        order.verify(f.topics, times(2)).selectCmsTopicByIdForUpdate(TOPIC);
         f.assertPublicationChoice(0);
     }
 

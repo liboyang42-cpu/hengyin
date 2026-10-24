@@ -71,6 +71,9 @@ class TopicSizeLimitsTest {
     @Test
     void publishCountsRowsAlreadyInTheDatabase() {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        var topicMapper = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        when(topicMapper.lockTopicContentBudget(5L)).thenReturn(5L);
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);

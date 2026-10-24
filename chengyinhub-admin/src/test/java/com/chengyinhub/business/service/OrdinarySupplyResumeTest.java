@@ -17,6 +17,7 @@ class OrdinarySupplyResumeTest {
     private final CmsTopicServiceImpl service = new CmsTopicServiceImpl();
     private final CmsTopicMapper topics = mock(CmsTopicMapper.class);
     private final CmsTopicChapterMapper chapters = mock(CmsTopicChapterMapper.class);
+    private final CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
     private final MerchantChapterOfferMapper offers = mock(MerchantChapterOfferMapper.class);
     private final IUmsCreativeSquareService square = mock(IUmsCreativeSquareService.class);
     private CmsTopic topic;
@@ -26,12 +27,16 @@ class OrdinarySupplyResumeTest {
     void setUp() {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapters);
+        ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodes);
         ReflectionTestUtils.setField(service, "merchantChapterOfferMapper", offers);
         ReflectionTestUtils.setField(service, "umsCreativeSquareService", square);
         topic = new CmsTopic(); topic.setId(41L); topic.setProductType(ProductType.FREE_EXPLORE);
         topic.setLifecycle(1); topic.setUserStatus(0);
         chapter = new CmsTopicChapter(); chapter.setId(73L); chapter.setRequired(1);
         when(topics.selectCmsTopicByIdForUpdate(41L)).thenReturn(topic);
+        when(topics.lockTopicContentBudget(41L)).thenReturn(41L);
+        when(chapters.countContentByTopicForUpdate(41L)).thenReturn(1L);
+        when(nodes.countContentByTopicForUpdate(41L)).thenReturn(0L);
         when(topics.selectCmsTopicLifecycleById(41L)).thenReturn(topic);
         when(topics.casUserStatus(eq(41L), anyInt(), anyInt(), any())).thenReturn(1);
         when(chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(chapter));
@@ -138,7 +143,7 @@ class OrdinarySupplyResumeTest {
     void pauseDoesNotIntroduceTopicOfferOrChapterLocks() {
         assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 1, 0));
         verify(topics, never()).selectCmsTopicByIdForUpdate(anyLong());
-        verifyNoInteractions(offers, chapters);
+        verifyNoInteractions(offers, chapters, nodes);
     }
 
     @Test
