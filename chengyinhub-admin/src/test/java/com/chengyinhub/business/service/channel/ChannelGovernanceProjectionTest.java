@@ -136,4 +136,25 @@ class ChannelGovernanceProjectionTest {
         assertEquals(ChannelGovernancePhase.INVITE_OR_APPLY, journey.phase());
         assertNull(journey.grant());
     }
+
+    @Test
+    void unusedCatalogedAssignDoesNotOccupyMemberThenUniqueAssignApplies() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelGovernanceProjection journey = new ChannelGovernanceProjection(
+                new ChannelCatalogEntry(21, 12, ConversationKind.GROUP, new ChannelRulesCas(3, Integer.valueOf(4), 3)),
+                identity);
+        assertEquals(ChannelRole.NONE, journey.role());
+        assertEquals(ChannelAuthorizationException.Code.ROLE_REQUIRED,
+                assertThrows(ChannelAuthorizationException.class, () -> journey.assignMemberRole(ChannelRole.MEMBER))
+                        .code);
+        assertEquals(ChannelRole.NONE, journey.role(), "cataloged assign 观察不得占 member");
+        assertEquals(ChannelGovernancePhase.CATALOGED, journey.phase());
+        journey.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        journey.submitInviteOrApply();
+        assertEquals(ChannelRole.APPLICANT, journey.role());
+        journey.assignMemberRole(ChannelRole.MEMBER);
+        assertEquals(ChannelRole.MEMBER, journey.role());
+        assertEquals(ChannelGovernancePhase.MEMBER_ROLE_ASSIGNED, journey.phase());
+        assertNull(journey.grant());
+    }
 }
