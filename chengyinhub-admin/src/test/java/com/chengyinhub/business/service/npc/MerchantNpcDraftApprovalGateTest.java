@@ -280,4 +280,27 @@ class MerchantNpcDraftApprovalGateTest {
         assertEquals(Origin.AI, gate.origin());
         assertNull(fx.qualification().cachedPublic(fx.scope()), "核实不得占 published 账");
     }
+
+    @Test
+    void unusedSubmitBeforeAuthorizerDoesNotOccupyThenUniqueSubmitApplies() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        InMemoryNpcFixtures.RecordingPublisher publisher = new InMemoryNpcFixtures.RecordingPublisher();
+        MerchantNpcDraftApprovalGate gate = new MerchantNpcDraftApprovalGate(
+                fx.scope(), publisher, fx.isolation(), fx.qualification(), fx::scope);
+        assertEquals(Failure.AUTHORIZER_REQUIRED,
+                assertThrows(GateException.class, () -> gate.submitOriginalReview(fx.requestId()))
+                        .failure());
+        assertEquals(Phase.IDLE, gate.phase(), "未见授权 submit 观察不得占 phase");
+        assertNull(gate.authorizer());
+        assertEquals(0, publisher.submitted(), "未见授权 submit 观察不得占审核票");
+        assertNull(gate.visibilityForRequest(fx.requestId(), true).status());
+        gate.ingestAiDraft(fx.draft());
+        gate.verifyByAuthorizer(fx.authorizer());
+        assertEquals(0, publisher.submitted());
+        assertNull(gate.visibilityForRequest(fx.requestId(), true).status());
+        gate.submitOriginalReview(fx.requestId());
+        assertEquals(1, publisher.submitted());
+        assertEquals(Phase.ORIGINAL_REVIEW_PENDING, gate.phase());
+        assertEquals(ReviewStatus.PENDING, gate.visibilityForRequest(fx.requestId(), true).status());
+    }
 }
