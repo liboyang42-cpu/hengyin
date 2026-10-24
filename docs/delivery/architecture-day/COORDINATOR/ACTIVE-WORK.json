@@ -22,7 +22,7 @@
     },
     "B": {
       "state": "implementation_dispatched",
-      "task": "Implement approved cumulative partial-refund original-component reversal and full-refund remainder clearing in OriginalLedger only",
+      "task": "Prepare cumulative refund identity/basis/dedup/transaction closure; sub-cent allocation rule pending single explicit user answer",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable"
     },
@@ -94,7 +94,9 @@
     "NPC ASR and same subsequent NPC chat share existing quota: reserve before ASR, release only proven NOT_SENT, retain UNKNOWN, no second debit on text handoff; shop gen pool unchanged",
     "Voice enrollment UNKNOWN can start a separate original request only after explicit duplicate-cost confirmation; retain original record, never auto-resend"
   ],
-  "pending_business_decisions": [],
+  "pending_business_decisions": [
+    "Partial-refund sub-cent allocation: each reversal must sum to actual refund with original-component remainder allocation, or per-component cumulative floor allowing temporary zero adjustments; user follow-up question pending. Prior approved rules remain effective."
+  ],
   "actual_minimal_checks": {
     "m1_workflow_controls": "3 PASS",
     "merged_ui_static_gate": "PASS; not device or business evidence",
@@ -478,7 +480,9 @@
     "B": "exec transport disconnected; original workspace retained. Root supplied downloaded CI exact failures and real local-guard factory",
     "continuation": "Read public code through GitHub; deliver full source diff in chat. Root applies and scans before public writes; no executor rebuild or unscanned publishing."
   },
-  "pending_business_questions": [],
+  "pending_business_questions": [
+    "Original-order partial-refund penny conservation question sent after B confirmed no existing8490 rounding policy; do not select automatically."
+  ],
   "current_working_tree": "6de0ebc ledger integration committed. All three policy questions answered; four non-overlapping implementation assignments dispatched to existing B/C/D/G cloud threads. No interim review or tests.",
   "new_source_blockers_current": [
     "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"

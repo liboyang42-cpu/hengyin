@@ -24,7 +24,8 @@
         "Keep the original component precision and calculation version",
         "Duplicate and reordered callbacks cannot duplicate adjustment or debt",
         "Refund SUCCESS CAS, adjustment, economic effect and receipt remain atomic"
-      ]
+      ],
+      "pending_detail": "User clarification pending: conserve each actual refund across original components by remainder allocation, or allow temporary zero adjustments from cumulative floor. No automatic choice."
     },
     {
       "id": "VERIFIED_SEAT_FEE_AND_NEGATIVE_MARGIN",
