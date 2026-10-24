@@ -1,0 +1,9 @@
+{
+  "parent": "61834b1ba96fcfb025d8442955b69f1d6b35d5f3",
+  "files": {
+    "docs/delivery/architecture-day/G/cash-next-slice/PLAN.md": "52fec26089855bb8cd447fa0176d45dbb4d9b914c250acfc420bdb414968d45a",
+    "docs/delivery/architecture-day/G/cash-next-slice/callers.txt": "aa0065ecbce8f2c1ff2d0b0e3e47f417f1f82c0e40c05d8d0a9fd3a5cf98be22",
+    "docs/delivery/architecture-day/G/cash-next-slice/source-identity.json": "9021da7cbe2252494b201c7c80591e9904711e5a114d8618fe10eb8b4f339370",
+    "docs/delivery/architecture-day/G/cash-next-slice/static-checks.txt": "b1620eef6c9d7504072f298b5a3a5f8bda54d33b65ee263b0c96e39b59da76c6"
+  }
+}
