@@ -76,10 +76,8 @@ import static org.mockito.Mockito.when;
  * <p>服务走生产实现 + Spring 事务代理;Mockito 只替身非存储协作者(会话注册表、资金/商家/俱乐部阻断项来源)。
  * 一类一库 {@code privacy_visibility_export},结束 DROP 并回读确认。
  *
- * <p>⚠️ PR04「撤回漫游定位 / 关闭附近的人后不应再出现在店铺访客头像里」<b>本类没有断言</b>:
- * 2026-10-22 本地实测 {@code RoamMapper.selectShopVisitorAvatars} 不读 consent_record 也不读
- * roam_session.presence_visible,撤回者头像照常返回(缺陷另报,不在测试里压红也不 @Disabled)。
- * 这里只提交已成立的正向口径:30 天窗口、按店隔离、来源类型隔离、已注销账号不出现。
+ * <p>PR04 访客头像按最新 roam_location 撤回事件隐藏；presence_visible 只控制附近的人，
+ * 不改变历史到访头像。测试使用真实同意服务、事务与 MySQL mapper 查询。
  */
 class PrivacyVisibilityExportMySqlIT {
 
@@ -232,11 +230,10 @@ class PrivacyVisibilityExportMySqlIT {
                 "重放不追加");
     }
 
-    // ==================== PR04 历史可见性(仅已成立的正向口径) ====================
+    // ==================== PR04 历史可见性 ====================
 
     /**
      * PR04 正向口径:店铺访客头像只取 30 天内的局、只算这家店、只算这个来源类型、已注销账号不出现。
-     * (撤回漫游定位 / 关闭附近的人的成员仍会出现 —— 缺陷另报,见类注释。)
      */
     @Test
     void shopVisitorAvatarsHonourWindowShopSourceAndDeletedAccounts() {
@@ -262,6 +259,78 @@ class PrivacyVisibilityExportMySqlIT {
                 avatars(roam.selectShopVisitorAvatars(1, Arrays.asList(OTHER_SHOP), 10), OTHER_SHOP));
         assertEquals(new TreeSet<String>(Collections.singletonList("avatar-46")),
                 avatars(roam.selectShopVisitorAvatars(2, Arrays.asList(SHOP), 10), SHOP), "来源类型 2 只看自己");
+    }
+
+    @Test
+    void shopVisitorAvatarsFollowLatestLocationEventAcrossVersionsWithoutPresenceFiltering() {
+        ComplianceProperties oldPolicy = compliance();
+        oldPolicy.setDocVersions(Collections.singletonMap("privacy_policy", "pp-previous"));
+        RoamLocationConsentService oldLocation = locationConsent(oldPolicy);
+        RoamLocationConsentService location = locationConsent();
+        oldLocation.record(MEMBER_A, "AGREE", "visitor-a-agree", "", "127.0.0.1");
+        location.record(MEMBER_B, "AGREE", "visitor-b-agree", "", "127.0.0.1");
+        db.update("insert into roam_session(id,member_id,status,started_at,presence_visible) values"
+                + "(1,?,0,now(),0),(2,?,0,now(),0)", MEMBER_A, MEMBER_B);
+        db.update("insert into roam_shop_visit(member_id,session_id,source_type,source_id,shop_name,visited_at)"
+                + " values(?,1,1,?,'访客测试店',now()),(?,2,1,?,'访客测试店',now())",
+                MEMBER_A, SHOP, MEMBER_B, SHOP);
+        RoamMapper roam = sql.getMapper(RoamMapper.class);
+        TreeSet<String> both = new TreeSet<>(Arrays.asList("avatar-41", "avatar-42"));
+        assertEquals(both, avatars(roam.selectShopVisitorAvatars(1, Arrays.asList(SHOP), 10), SHOP),
+                "同意者即使 presence_visible=0 也保留历史到访头像；旧版本本身不是撤回");
+
+        location.record(MEMBER_A, "REVOKE", "visitor-a-revoke", null, "127.0.0.1");
+        // 定位服务按 id 判最新；旧同意的 occurred_at 更晚也不能复活已撤回者。
+        db.update("update consent_record set occurred_at=now()+interval 1 day where request_id='visitor-a-agree'");
+        location.record(MEMBER_A, "home_city_location", "AGREE", "visitor-a-home", "", "127.0.0.1");
+        // 不同 scope / 文档的事件不能覆盖本人的无 scope 定位撤回事件。
+        db.update("insert into consent_record(member_id,doc_type,doc_version,scene,scope_type,scope_id,"
+                + "event_type,occurred_at,request_id,create_time) values"
+                + "(?,'privacy_policy',?,'roam_location','MERCHANT',?,'AGREE',now(),'visitor-a-scoped',now()),"
+                + "(?,'other_document',?,'roam_location',null,null,'AGREE',now(),'visitor-a-other-doc',now())",
+                MEMBER_A, PRIVACY_VERSION, MERCHANT, MEMBER_A, PRIVACY_VERSION);
+        assertEquals(new TreeSet<>(Collections.singletonList("avatar-42")),
+                avatars(roam.selectShopVisitorAvatars(1, Arrays.asList(SHOP), 10), SHOP),
+                "最新定位事件跨版本为 REVOKE 时隐藏本人；另一账号及其他用途不受影响");
+        assertThrows(RoamLocationConsentService.ConsentChangedException.class,
+                () -> oldLocation.record(MEMBER_A, "AGREE", "visitor-a-agree", "", "127.0.0.1"),
+                "重放旧同意回执不能覆盖新撤回");
+        assertThrows(RoamLocationConsentService.ConsentChangedException.class,
+                () -> location.record(MEMBER_A, "AGREE", "visitor-a-stale", "visitor-a-agree", "127.0.0.1"),
+                "未确认最新撤回回执不能重新同意");
+        assertEquals(new TreeSet<>(Collections.singletonList("avatar-42")),
+                avatars(roam.selectShopVisitorAvatars(1, Arrays.asList(SHOP), 10), SHOP));
+
+        ConsentRecord agreed = location.record(MEMBER_A, "AGREE", "visitor-a-reagree",
+                "visitor-a-revoke", "127.0.0.1");
+        assertEquals(PRIVACY_VERSION, agreed.getDocVersion(), "重新同意必须使用当前文档版本");
+        assertEquals(both, avatars(roam.selectShopVisitorAvatars(1, Arrays.asList(SHOP), 10), SHOP),
+                "按当前态契约有效重新同意后恢复头像");
+        assertEquals(0, db.queryForObject("select presence_visible from roam_session where id=1", Integer.class),
+                "重新同意没有顺便打开附近的人");
+    }
+
+    @Test
+    void shopVisitorAvatarsDeduplicateBeforeLimitAndRefillAfterWithdrawal() {
+        RoamLocationConsentService location = locationConsent();
+        location.record(MEMBER_A, "AGREE", "limit-a-agree", "", "127.0.0.1");
+        db.update("insert into roam_session(id,member_id,status,started_at,presence_visible) values"
+                + "(1,41,0,now(),0),(2,41,0,now(),0),(3,42,0,now(),0),(4,43,0,now(),0)");
+        // 同一时间下按事实 id 稳定排序；同一个人来两次只占一张头像。
+        db.update("insert into roam_shop_visit(id,member_id,session_id,source_type,source_id,shop_name,visited_at)"
+                + " values(1,43,4,1,?,'排序测试店',now()),(2,42,3,1,?,'排序测试店',now()),"
+                + "(3,41,1,1,?,'排序测试店',now()),(4,41,2,1,?,'排序测试店',now())",
+                SHOP, SHOP, SHOP, SHOP);
+        RoamMapper roam = sql.getMapper(RoamMapper.class);
+        List<ShopVisitorAvatarVO> before = roam.selectShopVisitorAvatars(1, Arrays.asList(SHOP), 2);
+        assertEquals(2, before.size(), "去重后再取前两位");
+        assertEquals("avatar-41", before.get(0).getAvatar());
+        assertEquals("avatar-42", before.get(1).getAvatar());
+        location.record(MEMBER_A, "REVOKE", "limit-a-revoke", null, "127.0.0.1");
+        List<ShopVisitorAvatarVO> after = roam.selectShopVisitorAvatars(1, Arrays.asList(SHOP), 2);
+        assertEquals(2, after.size(), "撤回过滤发生在窗口限额前，由下一位访客补齐");
+        assertEquals("avatar-42", after.get(0).getAvatar());
+        assertEquals("avatar-43", after.get(1).getAvatar());
     }
 
     // ==================== PR05 导出:跨成员负控 ====================
@@ -371,8 +440,12 @@ class PrivacyVisibilityExportMySqlIT {
     }
 
     private static RoamLocationConsentService locationConsent() {
+        return locationConsent(compliance());
+    }
+
+    private static RoamLocationConsentService locationConsent(ComplianceProperties properties) {
         RoamLocationConsentService target = new RoamLocationConsentService(sql.getMapper(RoamMapper.class),
-                sql.getMapper(ConsentRecordMapper.class), compliance());
+                sql.getMapper(ConsentRecordMapper.class), properties);
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(transactionManager, new AnnotationTransactionAttributeSource()));
