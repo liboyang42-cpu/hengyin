@@ -331,4 +331,52 @@ class AiThemeDraftIntentServiceTest {
             values.remove(key);return (T)Long.valueOf(1);
         }
     }
+
+    // Input-boundary delta: all original 24 v2 cases above remain byte-for-byte unchanged.
+    @Test void prepareRejectsNullIdeaBeforeAnyDependencyAccess() {
+        for (boolean enabled : new boolean[]{true,false}) {
+            ReflectionTestUtils.setField(service,"intentEnabled",enabled);
+            var refusal=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
+                    ()->service.prepare(MEMBER,req(KEY,null,null)));
+            assertEquals(Integer.valueOf(400),refusal.getCode());
+            assertEquals("AI_DRAFT_INVALID_REQUEST",refusal.getErrorCode());
+        }
+        verifyNoInteractions(mapper,manager,creator);
+        assertTrue(rows.isEmpty());assertEquals(0,bodies.reads);assertEquals(0,bodies.writes);
+    }
+    @Test void prepareRejectsEmptyOrWhitespaceIdeaBeforeAnyDependencyAccess() {
+        for (String idea : List.of("", " ", " \t\r\n ")) {
+            var refusal=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
+                    ()->service.prepare(MEMBER,req(KEY,idea,null)));
+            assertEquals(Integer.valueOf(400),refusal.getCode());
+            assertEquals("AI_DRAFT_INVALID_REQUEST",refusal.getErrorCode());
+        }
+        verifyNoInteractions(mapper,manager,creator);
+        assertTrue(rows.isEmpty());assertEquals(0,bodies.reads);assertEquals(0,bodies.writes);
+    }
+    @Test void prepareRejectsRawIdeaOver300EvenIfTrimmedLengthWouldFit() {
+        for (String idea : List.of("a".repeat(301), " "+"a".repeat(299)+" ")) {
+            assertEquals(301,idea.length());
+            var refusal=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
+                    ()->service.prepare(MEMBER,req(KEY,idea,null)));
+            assertEquals(Integer.valueOf(400),refusal.getCode());
+            assertEquals("AI_DRAFT_INVALID_REQUEST",refusal.getErrorCode());
+        }
+        verifyNoInteractions(mapper,manager,creator);
+        assertTrue(rows.isEmpty());assertEquals(0,bodies.reads);assertEquals(0,bodies.writes);
+    }
+    @Test void prepareAcceptsExactly300AndPreservesOriginalWhitespacePayloadAndHash() {
+        String original=" "+"a".repeat(298)+" ";assertEquals(300,original.length());
+        var prepared=service.prepare(MEMBER,req(KEY,original,null));
+        assertEquals(AiThemeDraftIntentState.PREPARED,prepared.state());assertTrue(prepared.contextAvailable());
+        String envelope=bodies.values.get(bodyKey("context",prepared.requestId()));
+        var payload=com.alibaba.fastjson2.JSON.parseArray(com.alibaba.fastjson2.JSON.parseObject(envelope).getString("payload"));
+        assertEquals(original,payload.getString(1));assertNull(payload.get(2));assertNull(payload.get(3));
+        assertEquals(prepared.requestId(),service.prepare(MEMBER,req(KEY,original,null)).requestId());
+        var changed=assertThrows(AiThemeDraftRequestService.IntentRejectedException.class,
+                ()->service.prepare(MEMBER,req(KEY,original.trim(),null)));
+        assertEquals("AI_DRAFT_REQUEST_CONFLICT",changed.getErrorCode());
+        verify(creator,times(1)).planThemeDraft(eq(MEMBER),anyString());
+        verify(creator,never()).themeDraftPrepared(any(),anyLong(),any());
+    }
 }

@@ -213,8 +213,11 @@ public class AiThemeDraftRequestService
     /** First prepare persists the identity and original plan before writing a TTL body. */
     public AiThemeDraftIntentView prepare(Long memberId, AiThemeDraftPrepareReq req)
     {
+        // Match the current simple caller boundary; preserve the original bytes for context/hash.
+        if (req == null || req.idea() == null || req.idea().length() > 300 || req.idea().trim().isEmpty())
+            throw rejected(400, "AI_DRAFT_INVALID_REQUEST", null);
         requireIntentAdmission(); requireNoIntentTransaction(); requireMember(memberId);
-        if (req == null || !isValidRequestId(req.prepareKey())) throw rejected(400, "AI_DRAFT_INVALID_REQUEST", null);
+        if (!isValidRequestId(req.prepareKey())) throw rejected(400, "AI_DRAFT_INVALID_REQUEST", null);
         String prepareKey = req.prepareKey().trim().toLowerCase(Locale.ROOT);
         String payload = contextPayload(req);
         String requestHash = sha256(payload);
