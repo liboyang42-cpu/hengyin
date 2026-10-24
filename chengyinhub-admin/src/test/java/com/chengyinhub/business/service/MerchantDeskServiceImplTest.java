@@ -387,7 +387,12 @@ class MerchantDeskServiceImplTest {
         assertEquals("周末场", skus.get(0).get("skuName"));
         assertEquals(new BigDecimal("88.00"), skus.get(0).get("price"));
         assertEquals(5, skus.get(0).get("stock"));
+        assertEquals(Boolean.TRUE, detail.get("editable"));
         verify(mapper).selectProduct(MERCHANT_ID, 900L);
+        product.put("publishStatus", 1);
+        Map<String, Object> live = service.productDetail(access, 900L);
+        assertEquals(Boolean.FALSE, live.get("editable"));
+        assertEquals("周末场", ((List<Map<String, Object>>) live.get("skus")).get(0).get("skuName"));
 
         Map<String, Object> found = service.receipt(access, "req-sku-00004");
         assertEquals("APPLIED", found.get("state"));
