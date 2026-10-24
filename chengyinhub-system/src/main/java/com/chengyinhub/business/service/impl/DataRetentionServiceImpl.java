@@ -36,6 +36,9 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
     private NpcChatRequestMapper npcChatRequestMapper;
 
     @Autowired
+    private com.chengyinhub.business.mapper.NpcAsrIntentMapper npcAsrIntents;
+
+    @Autowired
     private com.chengyinhub.business.mapper.RoamMapper roamMapper;
     @Autowired
     private com.chengyinhub.business.mapper.RoamShareSnapshotMapper roamShareSnapshotMapper;
@@ -86,8 +89,10 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
 
     @Override
     public int cleanNpcChatRequests(Date cutoff, int batchSize, int maxBatches) {
-        return loopDelete("npc_chat_request", cutoff, batchSize, maxBatches,
+        int deleted=loopDelete("npc_chat_request", cutoff, batchSize, maxBatches,
                 (c, l) -> npcChatRequestMapper.deleteNpcChatRequestsBefore(c, l));
+        loopDelete("npc_asr_body",cutoff,batchSize,maxBatches,(c,l)->npcAsrIntents.redactExpired(l));
+        return deleted; // Preserve the original HTTP/task count: original text receipt rows only.
     }
 
     /** 逐批删除直至某批删除数 &lt; batchSize(删干净)或达到 maxBatches 护栏。 */

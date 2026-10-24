@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -177,14 +178,16 @@ class WechatPayCallbackForgedSignatureTest {
         IMerchantCommerceService commerceService = mock(IMerchantCommerceService.class);
         WechatVerifiedFactTestSupport.setField(service, "merchantCommerceService", commerceService);
         when(commerceService.supportsOutTradeNo("TPLTM_20260805")).thenReturn(true);
-        when(commerceService.handlePaidOrder("TPLTM_20260805", true, 1990, "TXN-COMMERCE"))
+        when(commerceService.handlePaidOrder(eq("TPLTM_20260805"), eq(true), eq(1990), eq("TXN-COMMERCE"),
+                argThat(ref -> matchesReference(service,ref,"TPLTM_20260805",1990,"TXN-COMMERCE"))))
                 .thenReturn(true);
 
         Forged n = buildValidPayNotification(kp.getPrivate(), "TPLTM_20260805", "TXN-COMMERCE", "SUCCESS", 1990);
         String resp = service.handlePayCallback(n.body, headersOf(n));
 
         assertTrue(resp.contains("SUCCESS"));
-        verify(commerceService).handlePaidOrder("TPLTM_20260805", true, 1990, "TXN-COMMERCE");
+        verify(commerceService).handlePaidOrder(eq("TPLTM_20260805"),eq(true),eq(1990),eq("TXN-COMMERCE"),
+                argThat(ref->matchesReference(service,ref,"TPLTM_20260805",1990,"TXN-COMMERCE")));
         verify(registrationService).getByRegistrationNo("TPLTM_20260805");
         verifyNoMoreInteractions(registrationService);
         verifyNoInteractions(coopInviteService);
@@ -210,9 +213,11 @@ class WechatPayCallbackForgedSignatureTest {
             IMerchantCommerceService commerce = (IMerchantCommerceService)
                     WechatVerifiedFactTestSupport.getField(service, "merchantCommerceService");
             when(membership.supportsOutTradeNo("CLM_UNKNOWN")).thenReturn(true);
-            when(membership.handlePaidInvoice("CLM_UNKNOWN", true, 100, "TX1")).thenReturn(true);
+            when(membership.handlePaidInvoice(eq("CLM_UNKNOWN"), eq(true), eq(100), eq("TX1"),
+                    argThat(ref -> matchesReference(service,ref,"CLM_UNKNOWN",100,"TX1")))).thenReturn(true);
             when(commerce.supportsOutTradeNo("TPLTM_20260805")).thenReturn(true);
-            when(commerce.handlePaidOrder("TPLTM_20260805", true, 1990, "TX1")).thenReturn(true);
+            when(commerce.handlePaidOrder(eq("TPLTM_20260805"), eq(true), eq(1990), eq("TX1"),
+                    argThat(ref -> matchesReference(service,ref,"TPLTM_20260805",1990,"TX1")))).thenReturn(true);
             when(coop.markDepositPaid(eq("DEP1T100"),eq(5000L),eq("TX1"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
                 .thenAnswer(call -> {
                     DepositVerifiedReferenceTestSupport.assertOriginal(service,call.getArgument(3),"DEP1T100",5000L,"TX1");
@@ -927,5 +932,14 @@ class WechatPayCallbackForgedSignatureTest {
         String headerNonce;
         String signature;
         String serial;
+    }
+    private static boolean matchesReference(WechatPayServiceImpl service,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference ref,String no,long fen,String tx) {
+        if(ref==null)return false;
+        var reader=(WechatVerifiedPaymentFactService)WechatVerifiedFactTestSupport.getField(service,"verifiedFacts");
+        var stored=reader.requireVerified(ref);var fact=stored.facts();
+        return stored.reference().equals(ref) && ref.hash().equals(fact.factHash())
+                && fact.kind()==com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                && no.equals(fact.businessOutTradeNo()) && fen==fact.totalFen() && tx.equals(fact.transactionId());
     }
 }

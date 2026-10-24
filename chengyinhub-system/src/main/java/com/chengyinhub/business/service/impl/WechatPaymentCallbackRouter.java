@@ -35,12 +35,12 @@ public class WechatPaymentCallbackRouter {
         // Reserve CLM even when malformed/unknown: it must never fall through to registration.
         owners = List.of(
                 new Owner("club-membership", no -> no != null && no.startsWith("CLM"), facts ->
-                        ack(club != null && club.supportsOutTradeNo(facts.get("out_trade_no"))
+                        ack(paid(facts) && club != null && club.supportsOutTradeNo(facts.get("out_trade_no"))
                                 && club.handlePaidInvoice(facts.get("out_trade_no"), paid(facts),
-                                        cents(facts), facts.get("transaction_id")))),
+                                        cents(facts), facts.get("transaction_id"), verifiedPaymentReference(facts)))),
                 new Owner("merchant-commerce", no -> commerce != null && commerce.supportsOutTradeNo(no), facts ->
-                        ack(commerce.handlePaidOrder(facts.get("out_trade_no"), paid(facts),
-                                cents(facts), facts.get("transaction_id")))),
+                        ack(paid(facts) && commerce.handlePaidOrder(facts.get("out_trade_no"), paid(facts),
+                                cents(facts), facts.get("transaction_id"), verifiedPaymentReference(facts)))),
                 new Owner("coop-deposit", no -> no != null && no.startsWith("DEP"), facts ->
                         ack(coop != null && paid(facts) && "CNY".equals(facts.get("currency"))
                                 && coop.markDepositPaid(facts.get("out_trade_no"),
@@ -92,4 +92,11 @@ public class WechatPaymentCallbackRouter {
         return facts.get("total") == null ? null : Integer.valueOf(facts.get("total"));
     }
     private static String ack(boolean committed) { return committed ? "SUCCESS" : "FAIL"; }
+    private static com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference verifiedPaymentReference(Map<String,String> facts) {
+        if (facts.get("verified_fact_id")==null || facts.get("verified_fact_hash")==null)
+            throw new IllegalArgumentException("原成功支付事实引用必填");
+        return new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                Long.parseLong(facts.get("verified_fact_id")), facts.get("verified_fact_hash"));
+    }
+
 }

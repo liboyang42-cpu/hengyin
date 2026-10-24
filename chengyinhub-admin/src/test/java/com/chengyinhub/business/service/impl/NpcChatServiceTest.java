@@ -107,6 +107,7 @@ class NpcChatServiceTest {
                 mock(org.springframework.transaction.PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenAnswer(inv -> new org.springframework.transaction.support.SimpleTransactionStatus());
         NpcChatWriteService writes = new NpcChatWriteService(npcChatRequestMapper, npcChatLogMapper, transactions);
+        ReflectionTestUtils.setField(writes,"asrIntents",mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         when(npcChatRequestMapper.renewLease(anyLong(), anyString(), anyString(), any(Date.class))).thenReturn(1);
         doReturn(leaseHeartbeat).when(scheduledExecutorService).scheduleAtFixedRate(any(Runnable.class),
                 eq(5000L), eq(5000L), eq(TimeUnit.MILLISECONDS));

@@ -31,5 +31,6 @@ public interface IClubMembershipService {
                                                              String eventType, String requestId);
     ClubMembershipAccessEndResultVO handleClubAccessEnded(Long clubId, String eventType, String requestId);
     boolean supportsOutTradeNo(String outTradeNo);
-    boolean handlePaidInvoice(String outTradeNo, boolean paid, Integer amountFen, String transactionId);
+    boolean handlePaidInvoice(String outTradeNo, boolean paid, Integer amountFen, String transactionId,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference);
 }

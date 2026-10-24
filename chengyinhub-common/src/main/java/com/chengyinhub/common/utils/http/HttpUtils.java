@@ -138,6 +138,12 @@ public class HttpUtils
     public static String sendJsonPost(String url, String json, String bearer,
             long deadlineNanos, AttemptLease lease)
     {
+        return sendJsonPost(url, json, bearer, deadlineNanos, lease, java.util.Map.of());
+    }
+
+    public static String sendJsonPost(String url, String json, String bearer,
+            long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
+    {
         if (lease == null || !lease.transfer())
         {
             throw notSent("third-party HTTP lease unavailable");
@@ -146,6 +152,7 @@ public class HttpUtils
         try
         {
             URL target = jsonTarget(url);
+            java.util.Map<String, String> headers = checkedJsonHeaders(additionalHeaders);
             if (bearer == null || bearer.isBlank() || bearer.chars().anyMatch(c -> c <= 32 || c >= 127))
             {
                 throw notSent("invalid third-party HTTP authorization");
@@ -168,7 +175,7 @@ public class HttpUtils
             if (remainingMillis(boundedDeadline) <= 0) throw notSent("third-party HTTP total timeout");
             handedToAttempt = true;
             return executeAttempt("POST", target, body, MediaType.APPLICATION_JSON_VALUE,
-                    Constants.UTF8, false, policy, boundedDeadline, bearer, lease).body;
+                    Constants.UTF8, false, policy, boundedDeadline, bearer, lease, headers).body;
         }
         catch (HttpRequestException error)
         {
@@ -185,6 +192,17 @@ public class HttpUtils
             if (!handedToAttempt) lease.complete();
         }
     }
+
+    /** Only the existing ASR non-streaming control is accepted; never forward arbitrary auth/host/framing headers. */
+    private static java.util.Map<String, String> checkedJsonHeaders(java.util.Map<String, String> headers)
+    {
+        if (headers == null) throw notSent("invalid third-party HTTP headers");
+        if (headers.isEmpty()) return java.util.Map.of();
+        if (headers.size() != 1 || !"disable".equals(headers.get("X-DashScope-SSE")))
+            throw notSent("invalid third-party HTTP headers");
+        return java.util.Map.of("X-DashScope-SSE", "disable");
+    }
+
 
     private static URL jsonTarget(String url)
     {
@@ -288,6 +306,14 @@ public class HttpUtils
             String requestContentType, String responseCharset, boolean trustAnyCertificate,
             RequestPolicy policy, long deadlineNanos, String bearer, AttemptLease lease)
     {
+        return executeAttempt(method, target, body, requestContentType, responseCharset,
+                trustAnyCertificate, policy, deadlineNanos, bearer, lease, java.util.Map.of());
+    }
+
+    private static AttemptResult executeAttempt(String method, URL target, byte[] body,
+            String requestContentType, String responseCharset, boolean trustAnyCertificate,
+            RequestPolicy policy, long deadlineNanos, String bearer, AttemptLease lease, java.util.Map<String, String> headers)
+    {
         AtomicReference<HttpRequestBase> activeRequest = new AtomicReference<>();
         AtomicBoolean cancelled = new AtomicBoolean(false);
         AttemptState state = lease == null ? null : new AttemptState(lease);
@@ -296,7 +322,7 @@ public class HttpUtils
             {
                 if (state != null && !state.startWorker()) throw notSent("third-party HTTP request cancelled");
                 return executeBlocking(method, target, body, requestContentType, responseCharset,
-                        trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state);
+                        trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, headers);
             }
             finally
             {
@@ -362,6 +388,16 @@ public class HttpUtils
             AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled,
             String bearer, AttemptState state)
     {
+        return executeBlocking(method, target, body, requestContentType, responseCharset,
+                trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, java.util.Map.of());
+    }
+
+    private static AttemptResult executeBlocking(String method, URL target, byte[] body,
+            String requestContentType, String responseCharset, boolean trustAnyCertificate,
+            RequestPolicy policy, long deadlineNanos,
+            AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled,
+            String bearer, AttemptState state, java.util.Map<String, String> headers)
+    {
         HttpRequestBase request = null;
         boolean reusable = false;
         try
@@ -378,6 +414,8 @@ public class HttpUtils
                 // A provider/proxy auth challenge must not automatically replay an authenticated POST.
                 request.setConfig(RequestConfig.copy(request.getConfig()).setAuthenticationEnabled(false).build());
             }
+            for (java.util.Map.Entry<String, String> header : headers.entrySet())
+                request.setHeader(header.getKey(), header.getValue());
             activeRequest.set(request);
             if (cancelled.get() || Thread.currentThread().isInterrupted())
             {

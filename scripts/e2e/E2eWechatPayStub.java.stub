@@ -56,6 +56,9 @@ public class E2eWechatPayStub implements IWechatPayService {
     @org.springframework.beans.factory.annotation.Autowired
     private WxPayConfig wxPayConfig;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedPaymentFacts;
+
     @Override
     public boolean isReady() {
         return true;
@@ -115,12 +118,12 @@ public class E2eWechatPayStub implements IWechatPayService {
                     ? null : clubMembershipServiceProvider.getIfAvailable();
             if (outTradeNo != null && outTradeNo.startsWith("CLM")) {
                 boolean paid = "SUCCESS".equals(resultMap.get("trade_state"));
-                result = membership != null && membership.supportsOutTradeNo(outTradeNo)
-                        && membership.handlePaidInvoice(outTradeNo, paid, total, transactionId)
+                result = paid && membership != null && membership.supportsOutTradeNo(outTradeNo)
+                        && membership.handlePaidInvoice(outTradeNo, paid, total, transactionId, verifiedReference(root,outTradeNo,total,transactionId))
                         ? "SUCCESS" : "FAIL";
             } else if (merchantCommerceService.supportsOutTradeNo(outTradeNo)) {
                 boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
-                result = merchantCommerceService.handlePaidOrder(outTradeNo, paid, total, transactionId)
+                result = paid && merchantCommerceService.handlePaidOrder(outTradeNo, paid, total, transactionId, verifiedReference(root,outTradeNo,total,transactionId))
                         ? "SUCCESS" : "FAIL";
             } else if (outTradeNo != null && outTradeNo.startsWith("DEP")) {
                 boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
@@ -148,6 +151,19 @@ public class E2eWechatPayStub implements IWechatPayService {
         } catch (Exception e) {
             return "{\"code\": \"FAIL\",\"message\": \"" + e.getClass().getSimpleName() + "\"}";
         }
+    }
+
+    /** Fixture consumes an explicitly stored original Reference; never creates proof from plaintext. */
+    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference verifiedReference(
+            JsonNode root,String no,Integer fen,String tx) {
+        var ref=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                root.path("verified_fact_id").asLong(0),root.path("verified_fact_hash").asText(null));
+        var stored=verifiedPaymentFacts.requireVerified(ref);var fact=stored.facts();
+        if(!ref.equals(stored.reference()) || !ref.hash().equals(fact.factHash())
+                || fact.kind()!=com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                || !no.equals(fact.businessOutTradeNo()) || fen==null || fact.totalFen()!=fen.longValue()
+                || !tx.equals(fact.transactionId()))throw new IllegalArgumentException("original fixture payment required");
+        return ref;
     }
 
     @Override

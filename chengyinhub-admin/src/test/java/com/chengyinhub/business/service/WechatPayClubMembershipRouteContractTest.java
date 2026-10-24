@@ -20,7 +20,8 @@ class WechatPayClubMembershipRouteContractTest {
                 "CLM 专属订单必须在活动票/商家订单前路由，不能掉进 registration callback");
         assertTrue(source.contains("club.handlePaidInvoice(facts.get(\"out_trade_no\"), paid(facts),")
                 && source.contains("cents(facts), facts.get(\"transaction_id\")"));
-        assertTrue(source.contains("facts.get(\"transaction_id\")"));
+        assertTrue(source.contains("facts.get(\"transaction_id\"), verifiedPaymentReference(facts)"),
+                "CLM 与商城必须转交持久原成功引用，不能回退可写 raw 参数入口");
         assertTrue(source.contains("return \"SUCCESS\".equals(facts.get(\"trade_state\"))"),
                 "会员回调必须严格认 SUCCESS，不能宽松猜测支付成功");
         assertTrue(source.contains("club != null && club.supportsOutTradeNo(facts.get(\"out_trade_no\"))"),

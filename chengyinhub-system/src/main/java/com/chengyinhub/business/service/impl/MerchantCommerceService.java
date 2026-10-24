@@ -17,6 +17,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
@@ -40,6 +42,8 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     private WechatPaymentOperations wechatPayService;
     @Autowired private IUserPermissionService permissionService;
     @Autowired private org.springframework.transaction.PlatformTransactionManager paymentTransactions;
+
+    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     private final boolean selfCheckoutEnabled;
 
@@ -125,20 +129,36 @@ public class MerchantCommerceService implements IMerchantCommerceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean handlePaidOrder(String outTradeNo, boolean paid, Integer paidAmountFen, String transactionId) {
+    public boolean handlePaidOrder(String outTradeNo, boolean paid, Integer paidAmountFen, String transactionId,
+            Reference reference) {
+        if (reference == null) throw new IllegalArgumentException("原成功支付事实引用必填");
         if (!paid || !supportsOutTradeNo(outTradeNo) || paidAmountFen == null
                 || transactionId == null || transactionId.trim().isEmpty()) return false;
-        OmsOrder order = orderMapper.selectOmsOrderByOrderSn(outTradeNo);
-        if (order == null || !bizMatchesPrefix(order.getBizType(), outTradeNo)) return false;
+        WechatVerifiedPaymentFactService.Stored verified = checkedPayment(reference, outTradeNo, paidAmountFen, transactionId);
+        // REQUIRED joins original callback/DONE; programmatic boundary also covers self/direct calls.
+        var application = new org.springframework.transaction.support.TransactionTemplate(paymentTransactions);
+        return Boolean.TRUE.equals(application.execute(status -> applyVerifiedPayment(
+                outTradeNo, paid, paidAmountFen, transactionId, verified)));
+    }
+
+    private boolean applyVerifiedPayment(String outTradeNo, boolean paid, Integer paidAmountFen, String transactionId,
+            WechatVerifiedPaymentFactService.Stored verified) {
+        if (!paid || !supportsOutTradeNo(outTradeNo) || paidAmountFen == null
+                || transactionId == null || transactionId.trim().isEmpty()) return false;
+        OmsOrder order = orderMapper.selectCommerceOrderForUpdate(outTradeNo);
+        if (order == null || order.getId() == null || order.getMemberId() == null || order.getMmsMerchantId() == null
+                || !bizMatchesPrefix(order.getBizType(), outTradeNo)) return false;
         if (order.getPayAmount() == null
                 || order.getPayAmount().movePointRight(2).intValueExact() != paidAmountFen) return false;
         if (Long.valueOf(1L).equals(order.getStatus())) {
-            return transactionId.equals(order.getPaymentTransactionId());
+            return completeCommerceProof(order, verified);
         }
+        if (!Long.valueOf(0L).equals(order.getStatus()) || order.getVerifiedPaymentFactId() != null
+                || order.getVerifiedPaymentFactHash() != null) return false;
+        if (!wechatPayService.lockPaymentAttemptForUpdate(outTradeNo, verified.facts().wxOutTradeNo())) return false;
         if (orderMapper.markCommerceOrderPaid(order.getId(), transactionId) == 0) {
-            OmsOrder persisted = orderMapper.selectOmsOrderByOrderSn(outTradeNo);
-            return persisted != null && Long.valueOf(1L).equals(persisted.getStatus())
-                    && transactionId.equals(persisted.getPaymentTransactionId());
+            OmsOrder persisted = orderMapper.selectCommerceOrderForUpdate(outTradeNo);
+            return completeCommerceProof(persisted, verified);
         }
 
         MerchantSubscription grant = new MerchantSubscription();
@@ -156,6 +176,15 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         if (grantRows != 1 && grantRows != 2) {
             throw new IllegalStateException("商业化权益授予失败");
         }
+        if (orderMapper.bindCommercePaymentProof(order, transactionId, verified.reference().id(), verified.reference().hash()) != 1)
+            throw new IllegalStateException("商业化原支付消费凭据绑定失败");
+        OmsOrder readback = orderMapper.selectCommerceOrderForUpdate(outTradeNo);
+        if (readback == null || !order.getId().equals(readback.getId())
+                || !java.util.Objects.equals(order.getMemberId(), readback.getMemberId())
+                || !java.util.Objects.equals(order.getMmsMerchantId(), readback.getMmsMerchantId())
+                || !java.util.Objects.equals(order.getBizType(), readback.getBizType())
+                || !completeCommerceProof(readback, verified))
+            throw new IllegalStateException("商业化原支付消费凭据回读不一致");
         return true;
     }
 
@@ -187,7 +216,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
                 throw new IllegalStateException("商业化支付金额或币种无法确认");
             }
             if (!Boolean.TRUE.equals(paymentTransaction().execute(status -> handlePaidOrder(outTradeNo, true,
-                    Integer.valueOf(observed.get("total")), observed.get("transaction_id"))))) {
+                    Integer.valueOf(observed.get("total")), observed.get("transaction_id"), paymentReference(observed))))) {
                 throw new IllegalStateException("商业化已支付订单补记失败");
             }
         } else if ("CLOSED".equals(state)) {
@@ -323,6 +352,39 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("支付外呼必须在原业务事务外，不能挂起持锁事务继续执行");
         }
+    }
+
+    private boolean completeCommerceProof(OmsOrder order, WechatVerifiedPaymentFactService.Stored verified) {
+        if (order == null || !Long.valueOf(1L).equals(order.getStatus())
+                || !verified.facts().businessOutTradeNo().equals(order.getOrderSn())
+                || !bizMatchesPrefix(order.getBizType(), order.getOrderSn()) || order.getPayAmount() == null
+                || order.getPayAmount().movePointRight(2).longValueExact() != verified.facts().totalFen()
+                || !verified.facts().transactionId().equals(order.getPaymentTransactionId())
+                || !Long.valueOf(verified.reference().id()).equals(order.getVerifiedPaymentFactId())
+                || !verified.reference().hash().equals(order.getVerifiedPaymentFactHash())) return false;
+        verifiedPaymentFacts.completePaymentRecovery(verified.reference(), order.getId());
+        return true;
+    }
+
+    private WechatVerifiedPaymentFactService.Stored checkedPayment(Reference reference, String outTradeNo,
+            Integer amountFen, String transactionId) {
+        WechatVerifiedPaymentFactService.Stored verified = verifiedPaymentFacts.requireVerified(reference);
+        WechatVerifiedPaymentFact fact = verified.facts();
+        fact.requireValid();
+        if (!reference.equals(verified.reference()) || !reference.hash().equals(fact.factHash())
+                || fact.kind() != WechatVerifiedPaymentFact.Kind.PAYMENT || !"CNY".equals(fact.currency())
+                || !outTradeNo.equals(fact.businessOutTradeNo()) || fact.totalFen() != amountFen.longValue()
+                || fact.amountFen() != fact.totalFen() || !transactionId.trim().equals(fact.transactionId()))
+            throw new IllegalStateException("原支付事实与业务单号、金额或交易身份不符");
+        // Original merchant/app/channel/intent hash are immutable B facts, never current-config defaults.
+        return verified;
+    }
+
+    private Reference paymentReference(Map<String, String> observed) {
+        if (observed == null || observed.get("verified_fact_id") == null || observed.get("verified_fact_hash") == null)
+            throw new IllegalStateException("微信成功观察缺少原支付事实引用");
+        try { return new Reference(Long.parseLong(observed.get("verified_fact_id")), observed.get("verified_fact_hash")); }
+        catch (IllegalArgumentException invalid) { throw new IllegalStateException("微信成功观察的原支付事实引用无效", invalid); }
     }
 
 }

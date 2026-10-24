@@ -63,7 +63,8 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         body.put("model", config.getEnrollModel());
         body.put("input", input);
 
-        JSONObject out = post(config.baseUrl() + "/customization", body, "复刻");
+        ProviderReply reply = post(config.baseUrl() + "/customization", body, "复刻");
+        JSONObject out = reply.output();
         // 官方在不同模型系列下字段名不同(voice_id / voice),两个都认 ——
         // 只认一个的话换模型系列会得到「成功但没有音色」,而那是不会报错的
         String voiceId = out.getString("voice_id");
@@ -73,7 +74,7 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         }
         if (voiceId == null || voiceId.trim().isEmpty())
         {
-            log.error("[VoiceClient] 复刻返回里没有音色 id: {}", truncate(out.toJSONString(), 400));
+            log.error("[VoiceClient] requestId={} action={} category={}", reply.requestId(), "复刻", "MISSING_VOICE_ID");
             throw new AiServiceException("复刻没有返回音色");
         }
         return voiceId;
@@ -93,7 +94,7 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         body.put("model", config.getEnrollModel());
         body.put("input", input);
 
-        JSONObject out = post(config.baseUrl() + "/customization", body, "查询音色");
+        JSONObject out = post(config.baseUrl() + "/customization", body, "查询音色").output();
         return STATUS_OK.equalsIgnoreCase(out.getString("status"));
     }
 
@@ -119,7 +120,8 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         body.put("model", config.getSynthModel());
         body.put("input", input);
 
-        JSONObject out = post(config.baseUrl() + "/SpeechSynthesizer", body, "合成");
+        ProviderReply reply = post(config.baseUrl() + "/SpeechSynthesizer", body, "合成");
+        JSONObject out = reply.output();
         String url = out.getString("audio_url");
         if (url == null || url.trim().isEmpty())
         {
@@ -128,7 +130,7 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         }
         if (url == null || url.trim().isEmpty())
         {
-            log.error("[VoiceClient] 合成返回里没有音频地址: {}", truncate(out.toJSONString(), 400));
+            log.error("[VoiceClient] requestId={} action={} category={}", reply.requestId(), "合成", "MISSING_AUDIO_URL");
             throw new AiServiceException("合成没有返回音频");
         }
         return url;
@@ -143,9 +145,10 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         }
     }
 
-    private JSONObject post(String url, JSONObject body, String what) throws AiServiceException
+    private ProviderReply post(String url, JSONObject body, String what) throws AiServiceException
     {
         String raw;
+        String correlationId = java.util.UUID.randomUUID().toString(); // log correlation only, never an external business identity
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.min(config.getTimeoutMs(), 10_000));
         // Reuse the existing admitted one-attempt transport; its physical worker owns the transferred lease.
         try (HttpUtils.AttemptLease lease = admission.acquire(url))
@@ -158,7 +161,8 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         }
         catch (Exception e)
         {
-            log.error("[VoiceClient] {} 调用异常", what, e);
+            log.error("[VoiceClient] requestId={} action={} category={} failureType={}",
+                    correlationId, what, "TRANSPORT_FAILURE", e.getClass().getSimpleName());
             // Keep VoiceCloneClient's existing exception contract. Do not turn a dispatched failure into NOT_SENT.
             throw new AiServiceException(what + "失败,请稍后再试", e);
         }
@@ -170,24 +174,34 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         }
         catch (Exception e)
         {
-            log.error("[VoiceClient] {} 返回不是 JSON: {}", what, truncate(raw, 300));
+            log.error("[VoiceClient] requestId={} action={} category={}", correlationId, what, "INVALID_JSON");
             throw new AiServiceException(what + "失败,请稍后再试");
         }
+        String requestId = safeRequestId(json, correlationId);
         // DashScope 的错误是 HTTP 200 带 code 字段 —— 只看状态码会把失败当成功,
         // 然后在下一步「取不到 voice_id」的地方以一个无关的错误暴露出来
         String code = json.getString("code");
         if (code != null && !code.trim().isEmpty())
         {
-            log.error("[VoiceClient] {} 业务失败 code={} msg={}", what, code, json.getString("message"));
+            log.error("[VoiceClient] requestId={} action={} category={}", requestId, what, "PROVIDER_REJECTED");
             throw new AiServiceException(what + "失败:" + code);
         }
         JSONObject out = json.getJSONObject("output");
         if (out == null)
         {
-            log.error("[VoiceClient] {} 返回没有 output: {}", what, truncate(raw, 300));
+            log.error("[VoiceClient] requestId={} action={} category={}", requestId, what, "MISSING_OUTPUT");
             throw new AiServiceException(what + "失败,请稍后再试");
         }
-        return out;
+        return new ProviderReply(out, requestId);
+    }
+
+    private record ProviderReply(JSONObject output, String requestId) {}
+
+    private static String safeRequestId(JSONObject response, String fallback)
+    {
+        String value = response == null ? null : response.getString("request_id");
+        return value != null && value.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+                ? value : fallback;
     }
 
     private static String truncate(String s, int max)

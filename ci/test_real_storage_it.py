@@ -127,7 +127,7 @@ class RegistryContractTest(unittest.TestCase):
         flag = 'B_PAYMENT_FACT_DDL_APPROVED'
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith(flag + ':'))
-        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}", line)
+        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest') && '1' || '' }}", line)
         self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
@@ -192,7 +192,10 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 191}
+                    "architecture-day-funds-closure": 191,
+                    "architecture-day-npc-voice-asr": 10,
+                    "architecture-day-clm-commerce-proof": 6,
+                    "architecture-day-media-retry-budget": 8}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

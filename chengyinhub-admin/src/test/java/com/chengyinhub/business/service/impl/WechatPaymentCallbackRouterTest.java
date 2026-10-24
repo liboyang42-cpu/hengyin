@@ -23,9 +23,9 @@ class WechatPaymentCallbackRouterTest {
     @Test
     void allFourOwnersReceiveTheOriginalVerifiedAmountAndTransactionWithoutRewritingFacts() {
         when(club.supportsOutTradeNo("CLM1")).thenReturn(true);
-        when(club.handlePaidInvoice("CLM1", true, 123, "TX-original")).thenReturn(true);
+        when(club.handlePaidInvoice("CLM1", true, 123, "TX-original", reference("CLM1"))).thenReturn(true);
         when(commerce.supportsOutTradeNo("TPLTM_1")).thenReturn(true);
-        when(commerce.handlePaidOrder("TPLTM_1", true, 123, "TX-original")).thenReturn(true);
+        when(commerce.handlePaidOrder("TPLTM_1", true, 123, "TX-original", reference("TPLTM_1"))).thenReturn(true);
         when(deposit.markDepositPaid("DEP1", 123L, "TX-original", reference("DEP1"))).thenReturn(true);
         CmsRegistration order = new CmsRegistration(); order.setRegistrationNo("A20261024ABCDEF01");
         when(registration.getByRegistrationNo(order.getRegistrationNo())).thenReturn(order);
@@ -38,8 +38,8 @@ class WechatPaymentCallbackRouterTest {
             assertEquals(new WechatPaymentCallbackRouter.Outcome(route[1], "SUCCESS"), router.payment(facts));
             assertEquals(original, facts);
         }
-        verify(club).handlePaidInvoice("CLM1", true, 123, "TX-original");
-        verify(commerce).handlePaidOrder("TPLTM_1", true, 123, "TX-original");
+        verify(club).handlePaidInvoice("CLM1", true, 123, "TX-original", reference("CLM1"));
+        verify(commerce).handlePaidOrder("TPLTM_1", true, 123, "TX-original", reference("TPLTM_1"));
         verify(deposit).markDepositPaid("DEP1", 123L, "TX-original", reference("DEP1"));
         verify(registration).handleWechatPayCallback(argThat(f -> f.equals(facts(order.getRegistrationNo()))));
         verifyNoInteractions(refunds);
@@ -189,8 +189,8 @@ class WechatPaymentCallbackRouterTest {
     }
 
     private void verifyNoMutations() {
-        verify(club, never()).handlePaidInvoice(anyString(), anyBoolean(), any(), anyString());
-        verify(commerce, never()).handlePaidOrder(anyString(), anyBoolean(), any(), anyString());
+        verify(club, never()).handlePaidInvoice(anyString(), anyBoolean(), any(), anyString(), any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class));
+        verify(commerce, never()).handlePaidOrder(anyString(), anyBoolean(), any(), anyString(), any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class));
         verify(deposit, never()).markDepositPaid(anyString(), any(), anyString(), any());
         verify(registration, never()).handleWechatPayCallback(anyMap());
         verifyNoInteractions(refunds);

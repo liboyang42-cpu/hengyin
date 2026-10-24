@@ -270,6 +270,7 @@ Component({
         return;
       }
       const state = this._stateOf(payload);
+      if (state === 'CHECKING' && payload.asrReason) this._retryMode = 'readback';
       if (state !== 'CHECKING') this._pendingRecovery = null;
       this._appendAssistant(payload.safeText || '这次暂时无法回答，请稍后再试。', state);
       if (state === 'CHECKING' && (this._retryCount || 0) < 3) {

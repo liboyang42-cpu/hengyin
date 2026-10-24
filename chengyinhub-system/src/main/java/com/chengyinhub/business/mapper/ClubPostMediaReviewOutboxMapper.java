@@ -15,6 +15,17 @@ public interface ClubPostMediaReviewOutboxMapper {
 
     List<Long> selectDueIds(@Param("limit") int limit);
 
+    /** Stop expired in-flight, legacy ambiguous retries and exhausted rows without reclaiming them. */
+    int retireUnsafeBatch(@Param("limit") int limit);
+
+    int retireUnsafeById(@Param("id") Long id);
+
+    int markManualReview(@Param("id") Long id,
+                         @Param("ownerToken") String ownerToken,
+                         @Param("fenceToken") Long fenceToken,
+                         @Param("traceHash") String traceHash,
+                         @Param("errorCode") String errorCode);
+
     long countBacklog();
 
     Date selectOldestBacklogCreatedAt();

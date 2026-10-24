@@ -1,5 +1,10 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Identity;
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Scope;
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Order;
+
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.business.domain.CmsRegistration;
@@ -130,6 +135,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     /** 清单 7:取消路径查单/关单失败要让运营看得到。与对账任务同为必注入;null 只会出现在直接 new 本类的单测里。 */
     @Autowired
     private AlarmService alarmService;
+    @Autowired private org.springframework.transaction.PlatformTransactionManager cancellationTransactions;
+    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -371,31 +378,30 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityByOwner(
             Long activityId, Long ownerMemberId, String reason) {
-        return cancelActivity(activityId, ownerMemberId, ownerMemberId, reason, false);
+        return cancelActivityOutsideTransaction(activityId, ownerMemberId, ownerMemberId, reason, false);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityByClubOperator(
             Long activityId, Long ownerMemberId, Long actorMemberId, String reason) {
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("活动取消操作人无效", HttpStatus.FORBIDDEN);
         }
-        return cancelActivity(activityId, ownerMemberId, actorMemberId, reason, false);
+        return cancelActivityOutsideTransaction(activityId, ownerMemberId, actorMemberId, reason, false);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityByMerchantHost(
             Long activityId, Long merchantOwnerMemberId, Long actorMemberId, String reason) {
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("活动取消操作人无效", HttpStatus.FORBIDDEN);
         }
-        requireMerchantHostsSession(cmsActivityMapper.selectCmsActivityById(activityId), merchantOwnerMemberId);
-        return cancelActivity(activityId, merchantOwnerMemberId, actorMemberId, reason, false);
+        return cancelActivityOutsideTransaction(activityId, merchantOwnerMemberId, actorMemberId, reason, true);
     }
 
     /**
@@ -420,13 +426,42 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelTopicByHost(
             Long topicId, Long hostMemberId, Long actorMemberId, String reason) {
+        requireNoCancellationTransaction();
+        if (actorMemberId == null || actorMemberId <= 0) {
+            throw new ServiceException("主题取消操作人无效", HttpStatus.FORBIDDEN);
+        }
+        RegistrationCancellationPayments captured = cancellationTransaction(() -> {
+            requireHostedTopicForCancel(topicId, hostMemberId, true);
+            List<Scope> scopes = new ArrayList<>(captureCancellationPayments(1L, topicId).scopes());
+            for (com.chengyinhub.business.domain.CmsActivity shell : topicSessionsToCancel(topicId)) {
+                if (shell.getClubId() != null) {
+                    scopes.addAll(clubEventOpsService.captureAuthorizedTopicCancellationPayments(
+                            actorMemberId, topicId, shell.getClubId(), shell.getId(), reason).scopes());
+                } else {
+                    requireCancellableActivity(shell.getId(), shell.getMemberId());
+                    scopes.addAll(captureCancellationPayments(2L, shell.getId()).scopes());
+                }
+            }
+            return new RegistrationCancellationPayments(scopes);
+        });
+        RegistrationCancellationPayments observed = observeCancellationPayments(captured);
+        return cancellationAfterObservation(observed,
+                () -> cancelTopicWithObservedPayments(topicId, hostMemberId, actorMemberId, reason, observed));
+    }
+
+    private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelTopicWithObservedPayments(
+            Long topicId, Long hostMemberId, Long actorMemberId, String reason, RegistrationCancellationPayments observed) {
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("主题取消操作人无效", HttpStatus.FORBIDDEN);
         }
         CmsTopic topic = requireHostedTopicForCancel(topicId, hostMemberId, true);
+        List<com.chengyinhub.business.domain.CmsActivity> sessions = topicSessionsToCancel(topicId);
+        observed.requireScope(1L, topicId);
+        if (observed.scopes().size() != sessions.size() + 1) throw retryLater();
+        for (com.chengyinhub.business.domain.CmsActivity session : sessions) observed.requireScope(2L, session.getId());
         // ① 先停售,再退款:反过来会在退款过程中又卖出新票。同事务,退款失败连停售一起回滚。
         if (Integer.valueOf(1).equals(topic.getUserStatus())
                 && cmsTopicService.casUserStatus(topicId, 1, 0) < 1) {
@@ -434,7 +469,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         // ② 主题级票(ownerType=1)
         com.chengyinhub.business.domain.dto.ActivityCancelResult topicSales =
-                cancelPaidSales(1L, topicId, null, actorMemberId, reason, true);
+                cancelPaidSales(1L, topicId, null, actorMemberId, reason, true, observed);
         int refunded = topicSales.getRefundedOrders();
         int manual = topicSales.getManualOrders();
         int closed = topicSales.getClosedPendingOrders();
@@ -444,11 +479,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         //    俱乐部名下的场次走 6-17 同一套俱乐部收尾(候补终止/领队回收/站内取消通知)。
         //    主题授权已在上面完成，系统收尾以 occurrence 和当前俱乐部主理人为真源，
         //    不再把历史场次创建人的现有岗位当作第二道授权；退款仍是同一个核心、同一个事务。
-        for (com.chengyinhub.business.domain.CmsActivity shell : topicSessionsToCancel(topicId)) {
+        for (com.chengyinhub.business.domain.CmsActivity shell : sessions) {
             com.chengyinhub.business.domain.dto.ActivityCancelResult r = shell.getClubId() != null
-                    ? clubEventOpsService.cancelActivityForAuthorizedTopicCancellation(
-                            actorMemberId, topicId, shell.getClubId(), shell.getId(), reason)
-                    : cancelActivity(shell.getId(), shell.getMemberId(), actorMemberId, reason, true);
+                    ? clubEventOpsService.cancelAuthorizedTopicWithObservedPayments(
+                            actorMemberId, topicId, shell.getClubId(), shell.getId(), reason, observed)
+                    : cancelActivity(shell.getId(), shell.getMemberId(), actorMemberId, reason, true, observed);
             if (r == null) {
                 throw new ServiceException("场次取消回执为空，无法确认是否退成", HttpStatus.CONFLICT);
             }
@@ -554,9 +589,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
     }
 
-    /** @param refuseSettled 主题取消传 true:有订单的钱已结算出去就整次 409,不经退款核心冲回(RV-p6line F1) */
-    private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivity(
-            Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean refuseSettled) {
+    private com.chengyinhub.business.domain.CmsActivity requireCancellableActivity(Long activityId, Long ownerMemberId) {
         com.chengyinhub.business.domain.CmsActivity act = RegistrationTopicFence.lockActivity(
                 cmsActivityMapper.selectCmsActivityById(activityId), cmsActivityMapper, cmsTopicMapper);
         // 这三条抛 ServiceException 而非裸 RuntimeException:文案是写给主办方看的,入口据此原样回显;
@@ -577,12 +610,20 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             throw new ServiceException("活动已取消,请勿重复操作");
         }
 
+        return act;
+    }
+
+    /** @param refuseSettled 主题取消传 true:有订单的钱已结算出去就整次 409,不经退款核心冲回(RV-p6line F1) */
+    private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivity(
+            Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean refuseSettled,
+            RegistrationCancellationPayments observed) {
+        com.chengyinhub.business.domain.CmsActivity act = requireCancellableActivity(activityId, ownerMemberId);
         // 系列场次沿用俱乐部通知任务；独立场次在退款改变报名状态前保留受影响玩家。
         Set<Long> noticeRecipients = act.getClubId() == null || act.getClubId() <= 0
                 ? standaloneCancellationRecipients(activityId) : Collections.emptySet();
 
         com.chengyinhub.business.domain.dto.ActivityCancelResult sales =
-                cancelPaidSales(2L, activityId, act, actorMemberId, reason, refuseSettled);
+                cancelPaidSales(2L, activityId, act, actorMemberId, reason, refuseSettled, observed);
 
         // 置取消态 + 下架(别让新用户继续报名一个已取消的活动)
         com.chengyinhub.business.domain.CmsActivity upd = new com.chengyinhub.business.domain.CmsActivity();
@@ -620,7 +661,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         CmsRegistration probe = new CmsRegistration();
         probe.setOwnerType(2L);
         probe.setOwnerId(activityId);
-        List<CmsRegistration> rows = cmsRegistrationMapper.selectCmsRegistrationList(probe);
+        List<CmsRegistration> rows = currentCancellationRows(2L, activityId);
         Set<Long> recipients = new java.util.LinkedHashSet<>();
         if (rows != null) for (CmsRegistration row : rows) {
             if (row == null || !Long.valueOf(2L).equals(row.getOwnerType())
@@ -649,19 +690,20 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      */
     private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelPaidSales(
             Long ownerType, Long ownerId, com.chengyinhub.business.domain.CmsActivity act,
-            Long actorMemberId, String reason, boolean refuseSettled) {
+            Long actorMemberId, String reason, boolean refuseSettled, RegistrationCancellationPayments observed) {
         Long activityId = ownerId; // 下面沿用原变量名的日志/校验:ownerType=1 时它就是 topicId
         boolean parentSettled = refuseSettled && isParentSettled(ownerType, ownerId, act);
         // P1-PT-8:支付中(PAYING)的单既不在下面的已付退款集合、也不在待支付关单集合,
         // 必须先问微信定性 —— 已付的补记后并入退款集合,未付的关单回补,定不了就整次拒绝。
-        settlePayingRegistrationsBeforeCancel(ownerType, activityId, actorMemberId);
+        settlePayingRegistrationsBeforeCancel(ownerType, activityId, actorMemberId, observed);
 
         // 捞该归属下所有已付款报名(selectCmsRegistrationList 支持 ownerType/ownerId/paymentStatus 过滤)
         CmsRegistration q = new CmsRegistration();
         q.setOwnerType(ownerType);
         q.setOwnerId(activityId);
         q.setPaymentStatus(2);
-        List<CmsRegistration> paid = cmsRegistrationMapper.selectCmsRegistrationList(q);
+        List<CmsRegistration> paid = currentCancellationRows(ownerType, activityId).stream()
+                .filter(row -> Integer.valueOf(2).equals(row.getPaymentStatus())).toList();
 
         int refundedOrders = 0;
         java.util.Set<String> handledOrders = new java.util.HashSet<>();
@@ -745,7 +787,9 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         pendingQuery.setOwnerId(activityId);
         pendingQuery.setPaymentStatus(0);
         pendingQuery.setRegistrationStatus(1);
-        List<CmsRegistration> pending = cmsRegistrationMapper.selectCmsRegistrationList(pendingQuery);
+        List<CmsRegistration> pending = currentCancellationRows(ownerType, activityId).stream()
+                .filter(row -> Integer.valueOf(0).equals(row.getPaymentStatus())
+                        && Integer.valueOf(1).equals(row.getRegistrationStatus())).toList();
         int closedPendingOrders = 0;
         if (pending != null) {
             for (CmsRegistration registration : pending) {
@@ -754,6 +798,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                         || !activityId.equals(registration.getOwnerId())) {
                     throw new ServiceException("待支付报名范围不一致，请刷新后重试", HttpStatus.CONFLICT);
                 }
+                if (verifiedPaymentFacts.hasConfirmedExternalSuccess(registration.getRegistrationNo())) throw retryLater();
                 if (cmsRegistrationMapper.cancelUnpaidIfActive(registration.getId(),
                         registration.getMemberId(), "activity-cancel:" + actorMemberId) != 1) {
                     CmsRegistration current = cmsRegistrationMapper
@@ -823,97 +868,257 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      *
      * <p>多票从单停 0 态,由 settlePayingOne 整单一并关。
      */
-    private void settlePayingRegistrationsBeforeCancel(Long ownerType, Long activityId, Long actorMemberId) {
-        CmsRegistration payingQuery = new CmsRegistration();
-        payingQuery.setOwnerType(ownerType);
-        payingQuery.setOwnerId(activityId);
-        payingQuery.setPaymentStatus(1);
-        payingQuery.setRegistrationStatus(1);
-        List<CmsRegistration> paying = cmsRegistrationMapper.selectCmsRegistrationList(payingQuery);
-        if (paying == null || paying.isEmpty()) {
-            return;
+    private static void requireNoCancellationTransaction() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("取消支付查证必须在原业务事务外执行，不能悬挂持锁调用方");
+    }
+
+    private static void requireCancellationTransaction() {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("取消支付业务应用必须加入原范围事务");
+    }
+
+    private <T> T cancellationTransaction(java.util.function.Supplier<T> work) {
+        return new org.springframework.transaction.support.TransactionTemplate(cancellationTransactions)
+                .execute(status -> work.get());
+    }
+
+    private <T> T cancellationAfterObservation(RegistrationCancellationPayments observed,
+                                                java.util.function.Supplier<T> work) {
+        try {
+            return cancellationTransaction(work);
+        } catch (RuntimeException failure) {
+            boolean closeIssued = observed.scopes().stream().flatMap(scope -> scope.orders().stream())
+                    .anyMatch(order -> order.confirmedClosed()
+                            && !"CLOSED".equalsIgnoreCase(order.providerFacts().get("trade_state")));
+            if (!closeIssued) throw failure;
+            alarmCancelFailure("原支付关闭后本地取消未确认", "原支付身份与已确认关闭意图保留，禁止换号或盲目回补");
+            ServiceException uncertain = retryLater().setDetailMessage("CANCELLATION_APPLY_AFTER_CONFIRMED_CLOSE");
+            uncertain.initCause(failure);
+            throw uncertain;
         }
-        if (wechatPayService == null || !wechatPayService.isReady()) {
-            throw retryLater();
+    }
+
+    private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityOutsideTransaction(
+            Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean merchantHost) {
+        requireNoCancellationTransaction();
+        RegistrationCancellationPayments captured = cancellationTransaction(() -> {
+            com.chengyinhub.business.domain.CmsActivity act = requireCancellableActivity(activityId, ownerMemberId);
+            if (merchantHost) requireMerchantHostsSession(act, ownerMemberId);
+            return captureCancellationPayments(2L, activityId);
+        });
+        RegistrationCancellationPayments observed = observeCancellationPayments(captured);
+        return cancellationAfterObservation(observed, () -> {
+            if (merchantHost) requireMerchantHostsSession(cmsActivityMapper.selectCmsActivityById(activityId), ownerMemberId);
+            return cancelActivity(activityId, ownerMemberId, actorMemberId, reason, false, observed);
+        });
+    }
+
+    @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY, rollbackFor = Exception.class)
+    public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityWithObservedPayments(
+            Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean refuseSettled,
+            RegistrationCancellationPayments observed) {
+        requireCancellationTransaction();
+        if (actorMemberId == null || actorMemberId <= 0)
+            throw new ServiceException("活动取消操作人无效", HttpStatus.FORBIDDEN);
+        return cancelActivity(activityId, ownerMemberId, actorMemberId, reason, refuseSettled, observed);
+    }
+
+    private List<CmsRegistration> currentCancellationRows(Long ownerType, Long ownerId) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("取消报名当前锁读必须与原范围事务共用");
+        List<CmsRegistration> rows = cmsRegistrationMapper.selectCancellationRowsForUpdate(ownerType, ownerId);
+        if (rows == null) throw new IllegalStateException("原取消报名列表读取失败");
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        for (CmsRegistration row : rows) {
+            if (row == null || row.getId() == null || !ids.add(row.getId())
+                    || !ownerType.equals(row.getOwnerType()) || !ownerId.equals(row.getOwnerId()))
+                throw new IllegalStateException("原取消报名当前范围不一致");
         }
-        // ===== 第一段:只查单定性 =====
-        List<PayingPlan> plans = new ArrayList<>();
-        for (CmsRegistration r : paying) {
-            String outTradeNo = r == null ? null : r.getRegistrationNo();
-            if (StringUtils.isEmpty(outTradeNo) || !ownerType.equals(r.getOwnerType())
-                    || !activityId.equals(r.getOwnerId())) {
-                throw retryLater();
+        return rows;
+    }
+
+    @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public RegistrationCancellationPayments captureCancellationPayments(Long ownerType, Long ownerId) {
+        requireCancellationTransaction();
+        if (ownerId == null || ownerId <= 0
+                || (!Long.valueOf(1).equals(ownerType) && !Long.valueOf(2).equals(ownerType))) throw retryLater();
+        Long topicId = ownerId, memberId = null, clubId = null;
+        if (Long.valueOf(2).equals(ownerType)) {
+            var activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(ownerId);
+            if (activity == null || !ownerId.equals(activity.getId())) throw retryLater();
+            topicId = activity.getTopicId(); memberId = activity.getMemberId(); clubId = activity.getClubId();
+        }
+        List<Order> orders = new ArrayList<>();
+        for (CmsRegistration row : currentCancellationRows(ownerType, ownerId)) {
+            if (!Integer.valueOf(1).equals(row.getPaymentStatus())
+                    || !Integer.valueOf(1).equals(row.getRegistrationStatus())) continue;
+            if (StringUtils.isBlank(row.getRegistrationNo()) || row.getMemberId() == null
+                    || row.getWechatPaymentAmount() == null || row.getWechatPaymentAmount().signum() <= 0) throw retryLater();
+            orders.add(new Order(Identity.of(row), null, false));
+        }
+        return new RegistrationCancellationPayments(
+                List.of(new Scope(ownerType, ownerId, topicId, memberId, clubId, orders)));
+    }
+
+    @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+    public RegistrationCancellationPayments observeCancellationPayments(RegistrationCancellationPayments captured) {
+        requireNoCancellationTransaction();
+        if (captured == null) throw retryLater();
+        java.util.Set<String> scopeKeys = new java.util.HashSet<>();
+        java.util.Set<Long> orderIds = new java.util.HashSet<>();
+        for (Scope scope : captured.scopes()) {
+            if (scope.ownerId() == null || scope.ownerId() <= 0
+                    || (!Long.valueOf(1).equals(scope.ownerType()) && !Long.valueOf(2).equals(scope.ownerType()))
+                    || !scopeKeys.add(scope.ownerType() + ":" + scope.ownerId())) throw retryLater();
+            for (Order order : scope.orders()) {
+                Identity original = order.original();
+                if (original.id() == null || original.id() <= 0 || !orderIds.add(original.id())
+                        || !scope.ownerType().equals(original.ownerType()) || !scope.ownerId().equals(original.ownerId())
+                        || original.memberId() == null || original.memberId() <= 0
+                        || StringUtils.isBlank(original.registrationNo()) || original.wechatAmount() == null
+                        || original.wechatAmount().signum() <= 0 || order.providerFacts() != null || order.confirmedClosed()) {
+                    throw retryLater();
+                }
             }
-            java.util.Map<String, String> wxOrder;
-            try {
-                wxOrder = wechatPayService.queryOrderStatus(outTradeNo);
-            } catch (WechatOrderNotExistException notExist) {
-                // A previous submit may still exist; elapsed grace is not non-execution evidence.
-                throw retryLater();
-            } catch (Exception queryFailure) {
-                logger.warn("取消活动前 PAYING 单查单失败 activityId={} registrationId={}",
-                        activityId, r.getId(), queryFailure);
-                alarmCancelFailure("取消活动前 PAYING 单查单失败",
-                        "activityId=" + activityId + " registrationId=" + r.getId()
-                                + " 查单失败:" + queryFailure.getMessage() + ";已拒绝本次取消,主办方会重试");
-                throw retryLater();
+        }
+        List<Scope> queried = new ArrayList<>();
+        // Validate every original query before the first irreversible external close.
+        for (Scope scope : captured.scopes()) {
+            List<Order> orders = new ArrayList<>();
+            for (Order order : scope.orders()) {
+                requireNoCancellationTransaction();
+                if (wechatPayService == null || !wechatPayService.isReady()) throw retryLater();
+                java.util.Map<String,String> facts;
+                try { facts = wechatPayService.queryOrderStatus(order.original().registrationNo()); }
+                catch (Exception unavailable) {
+                    alarmCancelFailure("取消活动前支付查证未确认", "ownerType=" + scope.ownerType()
+                            + " ownerId=" + scope.ownerId() + " registrationId=" + order.original().id());
+                    throw retryLater();
+                }
+                if (facts == null || !order.original().registrationNo().equals(facts.get("out_trade_no"))
+                        || StringUtils.isBlank(facts.get("wx_out_trade_no"))) throw retryLater();
+                String state = facts.get("trade_state");
+                if ("SUCCESS".equalsIgnoreCase(state)) {
+                    requireOriginalObservedSuccess(order.original(), facts);
+                } else if (!"CLOSED".equalsIgnoreCase(state) && !"NOTPAY".equalsIgnoreCase(state)
+                        && !"USERPAYING".equalsIgnoreCase(state) && !"PAYERROR".equalsIgnoreCase(state)) {
+                    throw retryLater();
+                }
+                orders.add(new Order(order.original(), facts, "CLOSED".equalsIgnoreCase(state)));
             }
-            String tradeState = wxOrder == null ? null : wxOrder.get("trade_state");
-            if (StringUtils.isEmpty(tradeState) || !outTradeNo.equals(wxOrder.get("out_trade_no"))) {
-                throw retryLater();
+            queried.add(new Scope(scope.ownerType(), scope.ownerId(), scope.topicId(),
+                    scope.activityMemberId(), scope.clubId(), orders));
+        }
+        // Repeat the existing success admission under current original scope locks before
+        // closing any other provider attempt. This transaction never applies payment effects.
+        cancellationTransaction(() -> {
+            for (Scope scope : queried) {
+                requireCurrentCancellationScope(scope);
+                requireCurrentCancellationOrders(scope);
+                for (Order order : scope.orders()) {
+                    if ("SUCCESS".equalsIgnoreCase(order.providerFacts().get("trade_state"))
+                            && !"SUCCESS".equals(cmsRegistrationService
+                                .checkConfirmedWechatPaymentWithinTransaction(order.providerFacts()))) throw retryLater();
+                }
             }
-            if ("SUCCESS".equalsIgnoreCase(tradeState)) {
-                plans.add(new PayingPlan(r, PayingAction.APPLY_PAYMENT, wxOrder));
-            } else if ("NOTPAY".equalsIgnoreCase(tradeState) || "USERPAYING".equalsIgnoreCase(tradeState)
-                    || "PAYERROR".equalsIgnoreCase(tradeState)) {
-                plans.add(new PayingPlan(r, PayingAction.CLOSE_ON_WECHAT_THEN_LOCAL, wxOrder));
-            } else if ("CLOSED".equalsIgnoreCase(tradeState)) {
-                plans.add(new PayingPlan(r, PayingAction.LOCAL_CLOSE, wxOrder));
+            return null;
+        });
+        List<Scope> observed = new ArrayList<>();
+        for (Scope scope : queried) {
+            List<Order> orders = new ArrayList<>();
+            for (Order order : scope.orders()) {
+                if (!"SUCCESS".equalsIgnoreCase(order.providerFacts().get("trade_state")) && !order.confirmedClosed()) {
+                    requireNoCancellationTransaction();
+                    boolean closed;
+                    try {
+                        closed = wechatPayService.closePaymentAttempt(order.original().registrationNo(),
+                                order.providerFacts().get("wx_out_trade_no"));
+                    } catch (Exception uncertain) { closed = false; }
+                    if (!closed) {
+                        alarmCancelFailure("取消活动前原支付关闭未确认", "registrationId=" + order.original().id()
+                                + ";原身份保留,未执行本地回补,请按原号查证");
+                        throw retryLater().setDetailMessage("CANCELLATION_PROVIDER_CLOSE_UNKNOWN");
+                    }
+                    orders.add(new Order(order.original(), order.providerFacts(), true));
+                } else orders.add(order);
+            }
+            observed.add(new Scope(scope.ownerType(), scope.ownerId(), scope.topicId(),
+                    scope.activityMemberId(), scope.clubId(), orders));
+        }
+        return new RegistrationCancellationPayments(observed);
+    }
+
+    private void requireOriginalObservedSuccess(Identity original, java.util.Map<String,String> facts) {
+        var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                Long.parseLong(facts.get("verified_fact_id")), facts.get("verified_fact_hash"));
+        var fact = verifiedPaymentFacts.requireVerified(reference).facts();
+        if (fact.kind() != com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                || !original.registrationNo().equals(fact.businessOutTradeNo())
+                || !fact.wxOutTradeNo().equals(facts.get("wx_out_trade_no"))
+                || !fact.transactionId().equals(facts.get("transaction_id"))
+                || !fact.mchid().equals(facts.get("mchid")) || !fact.appid().equals(facts.get("appid"))
+                || !fact.tradeType().equals(facts.get("trade_type")) || !fact.currency().equals(facts.get("currency"))
+                || fact.totalFen() != Long.parseLong(facts.get("total"))
+                || fact.totalFen() != original.wechatAmount().movePointRight(2).longValueExact()) throw retryLater();
+    }
+
+    private void requireCurrentCancellationScope(Scope scope) {
+        requireCancellationTransaction();
+        if (scope.topicId() != null) {
+            CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(scope.topicId());
+            if (topic == null || !scope.topicId().equals(topic.getId())) throw retryLater();
+        }
+        if (Long.valueOf(2).equals(scope.ownerType())) {
+            var activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(scope.ownerId());
+            if (activity == null || !java.util.Objects.equals(scope.topicId(), activity.getTopicId())
+                    || !java.util.Objects.equals(scope.activityMemberId(), activity.getMemberId())
+                    || !java.util.Objects.equals(scope.clubId(), activity.getClubId())) throw retryLater();
+        } else if (!java.util.Objects.equals(scope.ownerId(), scope.topicId())) throw retryLater();
+    }
+
+    private List<CmsRegistration> requireCurrentCancellationOrders(Scope scope) {
+        List<CmsRegistration> current = currentCancellationRows(scope.ownerType(), scope.ownerId());
+        java.util.Set<Long> originalIds = new java.util.HashSet<>();
+        for (Order order : scope.orders()) {
+            if (!originalIds.add(order.original().id()) || order.providerFacts() == null) throw retryLater();
+            CmsRegistration row = current.stream().filter(candidate -> order.original().id().equals(candidate.getId()))
+                    .findFirst().orElseThrow(this::retryLater);
+            if (!order.original().matches(row)) throw retryLater();
+        }
+        for (CmsRegistration row : current) {
+            if (Integer.valueOf(1).equals(row.getPaymentStatus()) && Integer.valueOf(1).equals(row.getRegistrationStatus())
+                    && !originalIds.contains(row.getId())) throw retryLater();
+        }
+        return current;
+    }
+
+    private void settlePayingRegistrationsBeforeCancel(Long ownerType, Long ownerId, Long actorMemberId,
+                                                        RegistrationCancellationPayments observed) {
+        if (observed == null) throw retryLater();
+        Scope scope = observed.requireScope(ownerType, ownerId);
+        requireCurrentCancellationScope(scope);
+        List<CmsRegistration> current = requireCurrentCancellationOrders(scope);
+        for (Order order : scope.orders()) {
+            CmsRegistration row = current.stream().filter(candidate -> order.original().id().equals(candidate.getId()))
+                    .findFirst().orElseThrow(this::retryLater);
+            if ("SUCCESS".equalsIgnoreCase(order.providerFacts().get("trade_state"))) {
+                requireOriginalObservedSuccess(order.original(), order.providerFacts());
+                if (!"SUCCESS".equalsIgnoreCase(cmsRegistrationService
+                        .applyConfirmedWechatPaymentWithinTransaction(order.providerFacts()))) throw retryLater();
             } else {
-                logger.warn("取消活动前 PAYING 单支付状态无法确认 activityId={} registrationId={} tradeState={}",
-                        activityId, r.getId(), tradeState);
-                throw retryLater();
-            }
-        }
-        // ===== 第二段:全部定性通过才执行 =====
-        // ★ 顺序刻意排成「可回滚的先做、不可回滚的最后做」:
-        //   ① 补记已付单 ② 纯本地关单 —— 这两步只写库,失败就整体回滚、不留痕迹;
-        //   ③ 才是 closeOrder(不可回滚),而且先把这一批全部关完再统一落库。
-        // 这样「事务回滚了但微信单已关」的夹层就只剩「closeOrder 自身失败」这一种。
-        for (PayingPlan plan : plans) {
-            if (plan.action == PayingAction.APPLY_PAYMENT
-                    && !"SUCCESS".equalsIgnoreCase(
-                            cmsRegistrationService.applyConfirmedWechatPaymentWithinTransaction(plan.wxOrder))) {
-                throw retryLater();
-            }
-        }
-        for (PayingPlan plan : plans) {
-            if (plan.action == PayingAction.LOCAL_CLOSE) {
-                closeLocally(plan.row, actorMemberId, plan.wxOrder.get("wx_out_trade_no"));
-            }
-        }
-        for (PayingPlan plan : plans) {
-            if (plan.action != PayingAction.CLOSE_ON_WECHAT_THEN_LOCAL) {
-                continue;
-            }
-            boolean closeAccepted;
-            try {
-                closeAccepted = wechatPayService.closePaymentAttempt(plan.row.getRegistrationNo(), plan.wxOrder.get("wx_out_trade_no"));
-            } catch (Exception closeFailure) {
-                logger.warn("取消活动前 PAYING 单关微信单失败 activityId={} registrationId={}",
-                        activityId, plan.row.getId(), closeFailure);
-                closeAccepted = false;
-            }
-            if (!closeAccepted) {
-                alarmCancelFailure("取消活动前 PAYING 单关微信单失败",
-                        "activityId=" + activityId + " registrationId=" + plan.row.getId()
-                                + " 微信关单未确认;已拒绝本次取消,请人工核对微信商户平台");
-                throw retryLater();
-            }
-        }
-        for (PayingPlan plan : plans) {
-            if (plan.action == PayingAction.CLOSE_ON_WECHAT_THEN_LOCAL) {
-                closeLocally(plan.row, actorMemberId, plan.wxOrder.get("wx_out_trade_no"));
+                if (!order.confirmedClosed()) throw retryLater();
+                if (Integer.valueOf(1).equals(row.getPaymentStatus()) && Integer.valueOf(1).equals(row.getRegistrationStatus())) {
+                    closeLocally(row, actorMemberId, order.providerFacts().get("wx_out_trade_no"));
+                } else if (!(Integer.valueOf(2).equals(row.getPaymentStatus()) && Integer.valueOf(2).equals(row.getRegistrationStatus()))
+                        && !(Integer.valueOf(0).equals(row.getPaymentStatus()) && Integer.valueOf(1).equals(row.getRegistrationStatus()))
+                        && !Integer.valueOf(3).equals(row.getRegistrationStatus())
+                        && !Integer.valueOf(4).equals(row.getRegistrationStatus())) {
+                    throw retryLater();
+                }
             }
         }
     }
@@ -967,20 +1172,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         return new ServiceException("有订单支付结果确认中，请稍后重试", HttpStatus.CONFLICT);
     }
 
-    private enum PayingAction { APPLY_PAYMENT, CLOSE_ON_WECHAT_THEN_LOCAL, LOCAL_CLOSE }
 
-    /** 第一段查单定性的结果,第二段照着执行。 */
-    private static final class PayingPlan {
-        private final CmsRegistration row;
-        private final PayingAction action;
-        private final java.util.Map<String, String> wxOrder;
-
-        private PayingPlan(CmsRegistration row, PayingAction action, java.util.Map<String, String> wxOrder) {
-            this.row = row;
-            this.action = action;
-            this.wxOrder = wxOrder;
-        }
-    }
 
     private PaidOrderSnapshot inspectPaidOrderForCancellation(
             CmsRegistration seed, Long ownerType, Long ownerId, Set<Long> paidRegistrationIds) {

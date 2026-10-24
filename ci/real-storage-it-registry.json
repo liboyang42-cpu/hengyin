@@ -531,6 +531,21 @@
       ],
       "note": "Ten fixed real-MySQL source cases: original paid-half repair boundary, durable late-success identity, current approved-refund fences, RR reads and family rollback. Canonical UUID scratch admission; terminal fixtures do not constitute a full A callback or provider acceptance."
     },
+    "architecture-day-npc-voice-asr": {
+      "registered_source": "b8b80968014a03ed4c9510db08b303e6c7e11794",
+      "classes": ["com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT", "com.chengyinhub.business.it.NpcAsrIntentMySqlIT"],
+      "note": "Composed donor sources E c7a60fa + D 6f32127/b8b8096 + E 3856fde. Final runner source SHA must identify the integrated tree; no donor green is inherited. Ten exact cases."
+    },
+    "architecture-day-clm-commerce-proof": {
+      "registered_source": "9f0c44025d42922bdc61f639075c77373792fc31",
+      "classes": ["com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT"],
+      "note": "Six source cases; final integrated SHA and CLEAN must be verified independently. No production DDL or real provider."
+    },
+    "architecture-day-media-retry-budget": {
+      "registered_source": "0465b2910220f23e64c938e89c0a81a29a59301f",
+      "classes": ["com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT"],
+      "note": "Eight source cases from the full reviewed delivery patch; source-only candidate, not runtime acceptance."
+    },
     "architecture-day-funds-closure": {
       "registered_source": "99d84ce23afe8852d642ba21d791662ad06a9ebd",
       "classes": [
@@ -547,6 +562,22 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT": {
+      "tests": 3, "storage": ["mysql"], "gates": {},
+      "note": "E c7a60fa original asset intent, paid create crash/unknown and stale version. Minimal profile schema component scope; no provider/device proof."
+    },
+    "com.chengyinhub.business.it.NpcAsrIntentMySqlIT": {
+      "tests": 7, "storage": ["mysql"], "gates": {},
+      "note": "D 6f32127 plus b8b8096 protocol: original request concurrency, durable transcript/handoff and deletion fence. Actual mapper and MySQL; controlled ASR/text ports."
+    },
+    "com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT": {
+      "tests": 6, "storage": ["mysql"], "gates": {},
+      "note": "E 9f0c440: actual canonical domain/proof/recovery transactions; historical NULL and conflict remain closed. SDK and provider are not called."
+    },
+    "com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT": {
+      "tests": 8, "storage": ["mysql"], "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "note": "H 0465b29 review.patch: actual original media owner/claim/trace with five-attempt cap and UNKNOWN. Incremental CHECK migration in isolated scratch only."
+    },
     "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT": {
       "tests": 13,
       "storage": [

@@ -2264,6 +2264,21 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return applyWechatPayCallback(registration, originalFacts);
     }
 
+    /** Denial-only preflight after external observation; no local payment/ledger/receipt transition. */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public String checkConfirmedWechatPaymentWithinTransaction(Map<String, String> facts) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("支付观察准入检查必须加入原范围事务");
+        WechatVerifiedPaymentFactService.Stored original = checkedVerifiedPayment(facts);
+        CmsRegistration observed = getByRegistrationNo(original.facts().businessOutTradeNo());
+        if (observed == null)
+            return registrationPaymentCallbackFailure(original.facts().businessOutTradeNo(), "order_disappeared");
+        RegistrationTopicFence.LockedOrder locked = RegistrationTopicFence.lock(observed,
+                cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        return checkVerifiedPaymentAdmission(locked, original, facts.get("total"));
+    }
+
     /** 支付回调的业务状态机;只在 inbox fence 的事务或调用方已开启的事务内执行。 */
     private String applyWechatPayCallback(CmsRegistration registration, Map<String, String> resultMap) {
         RegistrationTopicFence.LockedOrder lockedOrder = RegistrationTopicFence.lock(registration,
@@ -2278,33 +2293,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             case "SUCCESS": // 支付成功
                 WechatVerifiedPaymentFactService.Stored consumed = checkedVerifiedPayment(resultMap);
                 WechatVerifiedPaymentFact verified = consumed.facts();
-                if (!verified.businessOutTradeNo().equals(registration.getRegistrationNo())
-                        || !matchesFrozenWechatAmount(registration, Long.toString(verified.totalFen()))) {
-                    return registrationPaymentCallbackFailure(outTradeNo, "verified_original_order_mismatch");
-                }
-                if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
-                    return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
-                }
-                if (Integer.valueOf(3).equals(registration.getPaymentStatus())
-                        && (Integer.valueOf(1).equals(registration.getRegistrationStatus())
-                            || Integer.valueOf(3).equals(registration.getRegistrationStatus())
-                            || Integer.valueOf(4).equals(registration.getRegistrationStatus()))) {
-                    var recovery = verifiedPaymentFacts.findPaymentRecovery(consumed.reference())
-                            .orElseThrow(() -> new IllegalStateException("原支付关闭冲突缺少持久恢复任务"));
-                    if (recovery.id() <= 0 || recovery.businessId() != registration.getId()
-                            || !consumed.reference().equals(recovery.original().reference()) || recovery.state() != 4) {
-                        throw new IllegalStateException("原支付关闭恢复身份或状态冲突");
-                    }
-                    return registrationPaymentCallbackFailure(outTradeNo,
-                            "closed_registration_original_payment_recovery_required");
-                }
-                coopSettlementClaimService.requirePaidHalfStateCashAdmission(registration.getId(), consumed.reference());
-                if (lockedOrder.topic() != null && Integer.valueOf(1).equals(lockedOrder.topic().getIsSettlement())
-                        && lockedOrder.rows().stream().anyMatch(row -> !isSameCompletedPayment(row, verified.transactionId()))) {
-                    // Keep the immutable B fact; standard callbacks also retain their original verified inbox.
-                    // Do not repair a historical half-state outside the already closed cash contribution set.
-                    return registrationPaymentCallbackFailure(outTradeNo, "topic_closed_original_payment_recovery_required");
-                }
+                String admission = checkVerifiedPaymentAdmission(lockedOrder, consumed, resultMap.get("total"));
+                if (!"SUCCESS".equals(admission)) return admission;
                 String paymentResult = completePaymentSuccess(lockedOrder, verified.transactionId());
                 if ("SUCCESS".equals(paymentResult)) recordPaymentConsumption(registration.getId(), consumed);
                 return "SUCCESS".equalsIgnoreCase(paymentResult) ? paymentResult
@@ -3562,6 +3552,41 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new IllegalStateException("原支付消费事实关联冲突或未持久化");
         // The exact original receipt above is this owner's proof; complete its ticket in the same Tx.
         verifiedPaymentFacts.completePaymentRecovery(verified.reference(), registrationId);
+    }
+
+    private String checkVerifiedPaymentAdmission(RegistrationTopicFence.LockedOrder lockedOrder,
+            WechatVerifiedPaymentFactService.Stored consumed, String observedTotal) {
+        CmsRegistration registration = lockedOrder.registration();
+        String outTradeNo = registration.getRegistrationNo();
+        WechatVerifiedPaymentFact verified = consumed.facts();
+        if (!verified.businessOutTradeNo().equals(registration.getRegistrationNo())
+                || !matchesFrozenWechatAmount(registration, Long.toString(verified.totalFen()))) {
+            return registrationPaymentCallbackFailure(outTradeNo, "verified_original_order_mismatch");
+        }
+        if (!matchesFrozenWechatAmount(registration, observedTotal)) {
+            return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
+        }
+        if (Integer.valueOf(3).equals(registration.getPaymentStatus())
+                && (Integer.valueOf(1).equals(registration.getRegistrationStatus())
+                    || Integer.valueOf(3).equals(registration.getRegistrationStatus())
+                    || Integer.valueOf(4).equals(registration.getRegistrationStatus()))) {
+            var recovery = verifiedPaymentFacts.findPaymentRecovery(consumed.reference())
+                    .orElseThrow(() -> new IllegalStateException("原支付关闭冲突缺少持久恢复任务"));
+            if (recovery.id() <= 0 || recovery.businessId() != registration.getId()
+                    || !consumed.reference().equals(recovery.original().reference()) || recovery.state() != 4) {
+                throw new IllegalStateException("原支付关闭恢复身份或状态冲突");
+            }
+            return registrationPaymentCallbackFailure(outTradeNo,
+                    "closed_registration_original_payment_recovery_required");
+        }
+        coopSettlementClaimService.requirePaidHalfStateCashAdmission(registration.getId(), consumed.reference());
+        if (lockedOrder.topic() != null && Integer.valueOf(1).equals(lockedOrder.topic().getIsSettlement())
+                && lockedOrder.rows().stream().anyMatch(row -> !isSameCompletedPayment(row, verified.transactionId()))) {
+            // Keep the immutable B fact; standard callbacks also retain their original verified inbox.
+            // Do not repair a historical half-state outside the already closed cash contribution set.
+            return registrationPaymentCallbackFailure(outTradeNo, "topic_closed_original_payment_recovery_required");
+        }
+        return "SUCCESS";
     }
 
     private WechatVerifiedPaymentFactService.Stored checkedVerifiedPayment(Map<String, String> facts) {

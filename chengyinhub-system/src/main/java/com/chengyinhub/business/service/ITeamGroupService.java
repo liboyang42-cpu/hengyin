@@ -77,6 +77,19 @@ public interface ITeamGroupService {
     /** 取消前确认框用:主题级票 + 该主题下未取消场次里「已付款且未核销」的玩家人数(按人去重)。 */
     int countPaidPlayersForTopicCancel(Long topicId, Long hostMemberId);
 
+    /** Caller has authorized and locked the original scope in its short preparation transaction. */
+    com.chengyinhub.business.domain.dto.RegistrationCancellationPayments captureCancellationPayments(
+            Long ownerType, Long ownerId);
+
+    /** No active transaction: observe/close captured original attempts, with no local business mutation. */
+    com.chengyinhub.business.domain.dto.RegistrationCancellationPayments observeCancellationPayments(
+            com.chengyinhub.business.domain.dto.RegistrationCancellationPayments captured);
+
+    /** Join the original full cancellation transaction after external facts have committed. */
+    ActivityCancelResult cancelActivityWithObservedPayments(Long activityId, Long ownerMemberId,
+            Long actorMemberId, String reason, boolean refuseSettled,
+            com.chengyinhub.business.domain.dto.RegistrationCancellationPayments observed);
+
     /** 出发前提醒批扫:24h 内出发的经典定向票种,给已支付成员发订阅提醒(redis 去重)。供定时任务调用。 */
     BeforeStartNotifyResult notifyBeforeStartBatch();
 }

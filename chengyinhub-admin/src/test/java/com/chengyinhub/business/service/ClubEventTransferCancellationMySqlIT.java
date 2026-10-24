@@ -336,6 +336,7 @@ class ClubEventTransferCancellationMySqlIT {
         }).when(payoutService).payoutAfterReview(anyLong());
 
         TeamGroupServiceImpl teamTarget = new TeamGroupServiceImpl();
+        ReflectionTestUtils.setField(teamTarget, "cancellationTransactions", transactionManager);
         ReflectionTestUtils.setField(teamTarget, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
         ReflectionTestUtils.setField(teamTarget, "cmsTopicMapper", sql.getMapper(CmsTopicMapper.class));
         ReflectionTestUtils.setField(teamTarget, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
@@ -378,6 +379,7 @@ class ClubEventTransferCancellationMySqlIT {
                 access, new ClubEventScheduleMaterializer(), mock(IClubSessionService.class),
                 probedMapper, mock(ClubMemberMapper.class), mock(ClubLeadMapper.class),
                 mock(IClubRoleAssignmentService.class), teamGroup);
+        ReflectionTestUtils.setField(eventTarget, "cancellationTransactions", transactionManager);
         ReflectionTestUtils.setField(eventTarget, "cancellationActivityMapper", sql.getMapper(CmsActivityMapper.class));
         ReflectionTestUtils.setField(eventTarget, "cancellationTopicMapper", probedTopics);
         eventOps = transactionalProxy(eventTarget, IClubEventOpsService.class);

@@ -84,6 +84,8 @@ class RefundNotificationMybatisIntegrationTest {
             jdbc.execute(base.substring(from, to + 1));
         }
         new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(
+                new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql").toFile()),
+                new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql").toFile()),
                 new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260930_registration_first_successful_scan.sql").toFile()),
                 new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_merchant_aftercare_timeout_20260917.sql").toFile()),
                 new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_wx_payment_callback_inbox_outbox_20260725.sql").toFile()),
@@ -127,7 +129,8 @@ class RefundNotificationMybatisIntegrationTest {
         jdbc.update("INSERT INTO cms_activity(id,member_id,topic_id,start_date,is_settlement,del_flag)"
                 + " VALUES(22,3,NULL,DATE_ADD(NOW(),INTERVAL 72 HOUR),0,0)");
         jdbc.update("INSERT INTO cms_registration(id,registration_no,transaction_id,owner_type,owner_id,member_id,"
-                + "payment_status,registration_status,wechat_payment_amount,payable_amount) VALUES(11,'REG11','TX11',2,22,91,4,3,30,30)");
+                + "original_amount,total_amount,payment_status,registration_status,wechat_payment_amount,payable_amount,pay_expire_time)"
+                + " VALUES(11,'REG11','TX11',2,22,91,30,30,4,3,30,30,DATE_ADD(NOW(),INTERVAL 1 HOUR))");
         ReflectionTestUtils.setField(refundTarget, "wxPaymentCallbackInboxService",
                 PaymentCallbackInboxStubs.passThrough(transaction.getTransactionManager(), factsReader));
         delivered.clear();
@@ -142,8 +145,9 @@ class RefundNotificationMybatisIntegrationTest {
     }
 
     @Test void confirmedCashRefundNotifiesPayerOnlyAfterCommitAndOnlyOnce() {
+        Map<String, String> originalSuccess = facts("SUCCESS");
         transaction.executeWithoutResult(tx -> {
-            assertTrue(service.handleRefundNotify(facts("SUCCESS")));
+            assertTrue(service.handleRefundNotify(originalSuccess));
             assertTrue(delivered.isEmpty(), "提交前不能发送到账通知");
         });
         assertEquals(1, payoutStatus());
@@ -244,8 +248,9 @@ class RefundNotificationMybatisIntegrationTest {
     }
 
 @Test void rolledBackSuccessRemainsRetryableAndOnlyCommittedRetryNotifies() {
+        Map<String, String> originalSuccess = facts("SUCCESS");
         transaction.executeWithoutResult(tx -> {
-            assertTrue(service.handleRefundNotify(facts("SUCCESS")));
+            assertTrue(service.handleRefundNotify(originalSuccess));
             assertEquals(1, payoutStatus());
             tx.setRollbackOnly();
         });

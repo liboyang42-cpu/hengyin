@@ -28,6 +28,7 @@ public class LlmClientConfig
         addEndpoint(endpoints, text.getBaseUrl());
         addEndpoint(endpoints, vision.getBaseUrl());
         endpoints.add(voice.baseUrl()); // Fixed startup voice origin; the same registry/permits as text and vision.
+        if (voice.isAsrUsable()) endpoints.add(voice.asrUrl()); // Fixed ASR origin; no runtime registry.
         AiProviderProperties.ProviderConfig minimax = props.getProviders() == null
                 ? null : props.getProviders().get("minimax");
         if (minimax != null) addEndpoint(endpoints, minimax.getBaseUrl());

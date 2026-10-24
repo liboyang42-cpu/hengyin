@@ -23,6 +23,7 @@ import static org.mockito.Mockito.*;
 class E2eWechatPayStubContractTest {
     @TempDir static Path scratch;
     private static Class<?> stubClass;
+    private final VerifiedPaymentProofFixtures proof=new VerifiedPaymentProofFixtures();
 
     @BeforeAll
     static void compileActualFixture() throws Exception {
@@ -70,18 +71,19 @@ class E2eWechatPayStubContractTest {
         ReflectionTestUtils.setField(stub, "merchantCommerceService", commerce);
         ReflectionTestUtils.setField(stub, "coopInviteService", invite);
         ReflectionTestUtils.setField(stub, "wxPayConfig", config);
+        ReflectionTestUtils.setField(stub,"verifiedPaymentFacts",proof.reader);
 
         when(membership.supportsOutTradeNo("CLM1")).thenReturn(true);
-        when(membership.handlePaidInvoice("CLM1", true, 100, "tx")).thenReturn(true);
+        when(membership.handlePaidInvoice("CLM1", true, 100, "tx",proof.issue("CLM1",100,"tx"))).thenReturn(true);
         assertTrue(stub.handlePayCallback(body("CLM1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
-        verify(membership).handlePaidInvoice("CLM1", true, 100, "tx");
+        verify(membership).handlePaidInvoice("CLM1", true, 100, "tx",proof.issue("CLM1",100,"tx"));
         assertTrue(stub.handlePayCallback(body("CLM-unknown", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("FAIL"));
         verifyNoInteractions(registration);
 
         when(commerce.supportsOutTradeNo("COMM1")).thenReturn(true);
-        when(commerce.handlePaidOrder("COMM1", true, 100, "tx")).thenReturn(true);
+        when(commerce.handlePaidOrder("COMM1", true, 100, "tx",proof.issue("COMM1",100,"tx"))).thenReturn(true);
         assertTrue(stub.handlePayCallback(body("COMM1", "CNY", "fixture-merchant"), Collections.emptyMap()).contains("SUCCESS"));
-        verify(commerce).handlePaidOrder("COMM1", true, 100, "tx");
+        verify(commerce).handlePaidOrder("COMM1", true, 100, "tx",proof.issue("COMM1",100,"tx"));
 
         assertTrue(stub.handlePayCallback(body("DEP1", "USD", "fixture-merchant"), Collections.emptyMap()).contains("FAIL"));
         assertTrue(stub.handlePayCallback(body("DEP1", "CNY", "other-merchant"), Collections.emptyMap()).contains("FAIL"));
@@ -106,7 +108,8 @@ class E2eWechatPayStubContractTest {
     }
 
     private String body(String outTradeNo, String currency, String merchant) {
-        return "{\"out_trade_no\":\"" + outTradeNo + "\",\"transaction_id\":\"tx\",\"trade_state\":\"SUCCESS\","
+        var ref=proof.issue(outTradeNo,100,"tx");
+        return "{\"verified_fact_id\":"+ref.id()+",\"verified_fact_hash\":\""+ref.hash()+"\",\"out_trade_no\":\"" + outTradeNo + "\",\"transaction_id\":\"tx\",\"trade_state\":\"SUCCESS\","
                 + "\"total\":100,\"currency\":\"" + currency + "\",\"mchid\":\"" + merchant + "\"}";
     }
 }

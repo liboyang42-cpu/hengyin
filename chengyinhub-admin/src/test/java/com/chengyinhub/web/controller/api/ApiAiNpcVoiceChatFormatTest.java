@@ -74,6 +74,7 @@ class ApiAiNpcVoiceChatFormatTest
 
         ReflectionTestUtils.setField(controller, "npcFeatureFlags", featureFlags);
         ReflectionTestUtils.setField(controller, "speechToTextService", speechToTextService);
+        com.chengyinhub.business.service.impl.NpcAsrTestFixture.wireController(controller,speechToTextService);
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
         ReflectionTestUtils.setField(controller, "playTeamMapper", playTeamMapper);
         ReflectionTestUtils.setField(controller, "npcChatService", npcChatService);
@@ -305,8 +306,12 @@ class ApiAiNpcVoiceChatFormatTest
                         .file(new MockMultipartFile("file", "voice.mp3", "audio/mpeg", mp3Bytes()))
                         .param("nodeId", "21")
                         .param("requestId", "voice-request-1"))
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.msg").value("语音识别没成功，稍后再试"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.msg").value("语音识别没成功，稍后再试"))
+                .andExpect(jsonPath("$.data.outcomeStatus").value("PROCESSING"))
+                .andExpect(jsonPath("$.data.errorCode").value("REQUEST_OUTCOME_UNKNOWN"))
+                .andExpect(jsonPath("$.data.asrState").value("UNKNOWN"))
+                .andExpect(jsonPath("$.data.asrReason").value("ASR_OUTCOME_UNKNOWN"));
 
         verify(npcChatService, never()).chatWithShop(
                 anyString(), anyLong(), anyLong(), anyLong(), anyString(), anyString());

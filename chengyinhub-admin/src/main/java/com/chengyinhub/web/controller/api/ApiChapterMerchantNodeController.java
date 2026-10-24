@@ -315,6 +315,9 @@ public class ApiChapterMerchantNodeController extends BaseController {
             data.put("voiceStatus", mine == null || mine.getVoiceStatus() == null
                     ? NodeNpcService.VOICE_NONE : mine.getVoiceStatus());
             data.put("voiceSample", mine == null ? null : mine.getVoiceSample());
+            data.put("voiceIntentId", mine == null ? null : mine.getVoiceIntentId());
+            data.put("voiceIntentState", mine == null ? null : mine.getVoiceIntentState());
+            data.put("voiceReasonCode", mine == null ? null : mine.getVoiceReasonCode());
             return success(data);
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());

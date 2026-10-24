@@ -69,6 +69,8 @@ class RefundRetryAndRemainderMySqlIT {
         }
         assertEquals("1", System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
         new ResourceDatabasePopulator(
+                new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql").toFile()),
+                new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql").toFile()),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260930_registration_first_successful_scan.sql").toFile()),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_merchant_aftercare_timeout_20260917.sql").toFile()),
                 new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_wx_payment_callback_inbox_outbox_20260725.sql").toFile()),

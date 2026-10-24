@@ -72,7 +72,7 @@ class Wp04OriginalRefundMySqlIT {
         P0AcceptanceSchema.baseTables(db,"ums_member","cms_topic","cms_activity","cms_registration","refund_application",
                 "coop_settlement","coop_settlement_adjustment","settlement_claim","coop_settlement_detail",
                 "ums_member_balance_detail","wx_payment_callback_inbox");
-        P0AcceptanceSchema.migrations(source,"migration_20261023_g_cash_evidence_expand.sql",FACT_MIGRATION,
+        P0AcceptanceSchema.migrations(source,"migration_20261023_wx_pay_order_intent.sql","migration_20261023_g_cash_evidence_expand.sql",FACT_MIGRATION,
                 "migration_complaint_period_funds_gate_20260917.sql", "migration_20261024_registration_payment_fact.sql");
     }
 
@@ -100,11 +100,13 @@ class Wp04OriginalRefundMySqlIT {
                 "UmsMemberSettlementDebtMapper","UmsMemberBalanceDetailMapper");
         originals=sql.getMapper(CoopSettlementOriginalMapper.class); cash=sql.getMapper(CoopSettlementCashEvidenceMapper.class);
         facts=WechatVerifiedFactTestSupport.realFacts(source);
-        // Committed via B's real storage owner before the business transaction, never by a G VERIFIED table/flag.
-        originalPayment=facts.recordVerified(payment()); refundFact=facts.recordVerified(refund(refundApp));
         db.update("INSERT INTO ums_member(id,balance) VALUES(7,2.00),(77,0.00)");
         db.update("INSERT INTO cms_topic(id,name,product_type,member_id,is_settlement,fee_platform_rate,fee_guarantee_base_rate,fee_guarantee_step_rate,fee_guarantee_max_merchant) VALUES(11,'G original refund fixture',1,7,1,0.10,0,0,0)");
-        db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,original_amount,total_amount,payable_amount,payment_status,registration_status,verification_status,purchase_kind,pay_expire_time,transaction_id,wechat_payment_amount) VALUES(1,'REG1',1,11,21,10,77,1,10,10,10,2,2,0,1,'2026-10-01 08:00:00','WXTX1',10)");
+        db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,order_num,original_amount,total_amount,payable_amount,payment_status,registration_status,verification_status,purchase_kind,pay_expire_time,transaction_id,wechat_payment_amount) VALUES(1,'REG1',1,11,21,10,77,1,10,10,10,1,1,0,1,'2026-10-01 08:00:00',NULL,10)");
+        // The original payable row exists before provider success; only then arrange the original paid fixture.
+        originalPayment=facts.recordVerified(payment());
+        db.update("UPDATE cms_registration SET payment_status=2,registration_status=2,transaction_id='WXTX1' WHERE id=1");
+        refundFact=facts.recordVerified(refund(refundApp));
         db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(11,11,NULL,'ACCOUNTING','PLATFORM','platform',1,1,0),(12,11,7,'MEMBER','INITIATOR_MARGIN','initiator',?,9,0)",paid?1:0);
         if (paid) {
             db.update("INSERT INTO ums_member_balance_detail(member_id,current_balance,after_balance,change_balance,change_reason,event_type,event_id,change_type,del_flag,create_time) VALUES(7,0,9,9,'Coop结算打款 - 主题11',5,12,1,0,NOW())");

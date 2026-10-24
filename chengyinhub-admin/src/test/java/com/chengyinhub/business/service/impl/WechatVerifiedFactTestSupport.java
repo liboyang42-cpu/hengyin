@@ -142,6 +142,13 @@ public final class WechatVerifiedFactTestSupport {
         ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
         ReflectionTestUtils.setField(gateway, "intents", intents);
         ReflectionTestUtils.setField(gateway, "verifiedFacts", facts);
+        var payments = org.mockito.Mockito.mock(JsapiService.class, invocation -> {
+            if (invocation.getMethod().getDeclaringClass() == Object.class)
+                return org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation);
+            throw new AssertionError("Local payment guards must not call the SDK: "
+                    + invocation.getMethod().getName());
+        });
+        bind(gateway, payments, null, merchant);
         return gateway;
     }
 

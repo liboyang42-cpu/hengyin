@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,24 +70,56 @@ class ClubPostMediaReviewTransactionServiceTest {
     }
 
     @Test
-    void transientExternalFailureAtTheAlertThresholdRemainsRetryable() {
+    void finalPreDispatchFailureStopsAtTheExistingAttemptBudget() {
         ClubPostMediaReviewOutbox task = new ClubPostMediaReviewOutbox();
         task.setId(17L);
         task.setOwnerToken("00112233445566778899aabbccddeeff");
         task.setFenceToken(2L);
         task.setAttemptCount(5);
         task.setMaxAttempts(5);
-        when(mapper.markRetryable(org.mockito.ArgumentMatchers.eq(17L),
-                org.mockito.ArgumentMatchers.eq(task.getOwnerToken()),
-                org.mockito.ArgumentMatchers.eq(2L), any(),
-                org.mockito.ArgumentMatchers.eq("WX_NO_RECEIPT"))).thenReturn(1);
+        when(mapper.markManualReview(17L, task.getOwnerToken(), 2L, null,
+                ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED)).thenReturn(1);
 
-        assertTrue(service.retryTransient(task, "WX_NO_RECEIPT"));
+        assertTrue(service.retryTransient(task, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
 
-        verify(mapper).markRetryable(org.mockito.ArgumentMatchers.eq(17L),
-                org.mockito.ArgumentMatchers.eq(task.getOwnerToken()),
-                org.mockito.ArgumentMatchers.eq(2L), any(),
-                org.mockito.ArgumentMatchers.eq("WX_NO_RECEIPT"));
+        verify(mapper).markManualReview(17L, task.getOwnerToken(), 2L, null,
+                ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED);
+        verify(mapper, never()).markRetryable(any(), any(), any(), any(), any());
         verify(mapper, never()).markPoisoned(any(), any(), any(), any());
+    }
+
+    @Test
+    void knownLocalFailureBeforeLastAttemptCanRetryButGenericFailureCannot() {
+        ClubPostMediaReviewOutbox task = ownedTask(4);
+        when(mapper.markRetryable(org.mockito.ArgumentMatchers.eq(17L),
+                org.mockito.ArgumentMatchers.eq(task.getOwnerToken()), org.mockito.ArgumentMatchers.eq(2L),
+                any(), org.mockito.ArgumentMatchers.eq(ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE)))
+                .thenReturn(1);
+        assertTrue(service.retryTransient(task, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
+        when(mapper.markManualReview(17L, task.getOwnerToken(), 2L, null,
+                ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN)).thenReturn(1);
+        assertTrue(service.retryTransient(task, "WX_NO_RECEIPT"));
+        verify(mapper).markManualReview(17L, task.getOwnerToken(), 2L, null,
+                ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN);
+    }
+
+    @Test
+    void staleAttemptSnapshotCannotBypassDatabaseBudgetOrFence() {
+        ClubPostMediaReviewOutbox task = ownedTask(4);
+        when(mapper.markManualReview(17L, task.getOwnerToken(), 2L, null,
+                ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED)).thenReturn(0);
+        assertFalse(service.retryTransient(task, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
+        verify(mapper).markManualReview(17L, task.getOwnerToken(), 2L, null,
+                ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED);
+    }
+
+    private ClubPostMediaReviewOutbox ownedTask(int attempts) {
+        ClubPostMediaReviewOutbox task = new ClubPostMediaReviewOutbox();
+        task.setId(17L);
+        task.setOwnerToken("00112233445566778899aabbccddeeff");
+        task.setFenceToken(2L);
+        task.setAttemptCount(attempts);
+        task.setMaxAttempts(5);
+        return task;
     }
 }

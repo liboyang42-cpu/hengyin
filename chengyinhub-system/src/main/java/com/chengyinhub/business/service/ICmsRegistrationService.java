@@ -216,6 +216,9 @@ public interface ICmsRegistrationService
      */
     public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
 
+    /** 原范围事务内重复支付准入校验；不写支付状态、消费回执、积分或库存。 */
+    String checkConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
+
     /** 零现金报名专用完成入口；不得伪造微信 SUCCESS 回调。 */
     public String completeZeroAmountPayment(String registrationNo);
 

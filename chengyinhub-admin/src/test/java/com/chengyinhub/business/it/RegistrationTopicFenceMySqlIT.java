@@ -86,7 +86,8 @@ class RegistrationTopicFenceMySqlIT {
                 + " ADD COLUMN club_member_only TINYINT NOT NULL DEFAULT 0");
         db.execute("ALTER TABLE cms_registration ADD COLUMN first_successful_scan_at DATETIME(3)");
         db.execute("ALTER TABLE refund_application ADD COLUMN platform_takeover_at DATETIME");
-        P0AcceptanceSchema.migrations(source, "migration_wx_payment_callback_inbox_outbox_20260725.sql",
+        P0AcceptanceSchema.migrations(source, "migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql", "migration_20261023_wx_pay_order_intent.sql",
+                "migration_wx_payment_callback_inbox_outbox_20260725.sql",
                 "migration_20261024_wx_verified_payment_fact.sql");
         SqlSessionTemplate sql = P0AcceptanceSchema.sql(source, "CmsTopicMapper", "CmsActivityMapper", "CmsRegistrationMapper",
                 "RefundApplicationMapper", "WxPaymentCallbackInboxMapper", "WechatVerifiedPaymentFactMapper", "CmsRegistrationPaymentFactMapper");
@@ -112,6 +113,7 @@ class RegistrationTopicFenceMySqlIT {
         db.update("DELETE FROM wx_payment_callback_fact_link");
         db.update("DELETE FROM wx_payment_callback_inbox");
         db.update("DELETE FROM wx_verified_payment_fact_rejection"); db.update("DELETE FROM wx_verified_payment_fact");
+        db.update("DELETE FROM wx_payment_callback_outbox"); db.update("DELETE FROM wx_pay_order_intent");
         db.update("DELETE FROM refund_application");
         db.update("DELETE FROM cms_registration"); db.update("DELETE FROM cms_activity"); db.update("DELETE FROM cms_topic");
         db.update("INSERT INTO cms_topic(id,member_id) VALUES(7,70),(8,80)");
@@ -233,6 +235,17 @@ class RegistrationTopicFenceMySqlIT {
         facts.put("verified_fact_id", Long.toString(reference.id())); facts.put("verified_fact_hash", reference.hash());
         facts.put("mchid", fact.mchid()); facts.put("appid", fact.appid()); facts.put("trade_type", fact.tradeType());
         facts.put("currency", fact.currency()); return facts;
+    }
+
+    /** This RR scenario holds only an ordinary read view, never the original business row lock. */
+    private Map<String, String> independentProducerPaymentFacts() {
+        try (var producer = java.util.concurrent.Executors.newSingleThreadExecutor()) {
+            return producer.submit(this::paymentFacts).get(10, TimeUnit.SECONDS);
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt(); throw new AssertionError(interrupted);
+        } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException failed) {
+            throw new AssertionError("Independent original fact producer failed", failed);
+        }
     }
 
     /** Actual topic lock remains held while a third connection proves registration/refund locks are still free. */
@@ -524,7 +537,7 @@ class RegistrationTopicFenceMySqlIT {
         caller.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
         caller.executeWithoutResult(tx -> {
             assertEquals(0, db.queryForObject("SELECT payment_status FROM cms_registration WHERE id=1", Integer.class));
-            Map<String, String> facts = paymentFacts(); // real REQUIRES_NEW fact insert, not a Map-only success
+            Map<String, String> facts = independentProducerPaymentFacts(); // Separate producer, no suspension of the old business RR view
             assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact", Integer.class),
                     "ordinary RR read must actually demonstrate the older snapshot");
             assertEquals("SUCCESS", payments.applyConfirmedWechatPaymentWithinTransaction(facts));

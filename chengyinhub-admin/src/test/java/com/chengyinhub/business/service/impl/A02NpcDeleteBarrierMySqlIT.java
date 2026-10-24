@@ -103,10 +103,16 @@ class A02NpcDeleteBarrierMySqlIT
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
                     new org.springframework.core.io.FileSystemResource(mediaMigration.toFile()));
         }
+        Path asrMigration=Paths.get("chengyinhub-admin/sql/migration_20261024_d_npc_asr_intent.sql");
+        if(!Files.exists(asrMigration))asrMigration=Paths.get("sql/migration_20261024_d_npc_asr_intent.sql");
+        try(java.sql.Connection connection=source.getConnection()) {
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource(asrMigration.toFile()));
+        }
         Configuration cfg = new Configuration();
         cfg.setEnvironment(new Environment("a02-delete", new SpringManagedTransactionFactory(), source));
         cfg.addInterceptor(new FinishPause(afterFinish));
-        for (String path : Arrays.asList("mapper/business/NpcChatRequestMapper.xml", "mapper/business/NpcChatLogMapper.xml")) {
+        for (String path : Arrays.asList("mapper/business/NpcChatRequestMapper.xml", "mapper/business/NpcChatLogMapper.xml", "mapper/business/NpcAsrIntentMapper.xml")) {
             try (InputStream xml = Resources.getResourceAsStream(path)) {
                 new XMLMapperBuilder(xml, cfg, path, cfg.getSqlFragments()).parse();
             }
@@ -116,6 +122,7 @@ class A02NpcDeleteBarrierMySqlIT
         logs = template.getMapper(NpcChatLogMapper.class);
         transactions = new DataSourceTransactionManager(source);
         writes = new NpcChatWriteService(requests, logs, transactions);
+        ReflectionTestUtils.setField(writes,"asrIntents",template.getMapper(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         sql("insert into ums_member(id) values (1001),(1002)");
     }
 
@@ -139,6 +146,7 @@ class A02NpcDeleteBarrierMySqlIT
         afterFinish.set(null);
         sql("delete from npc_chat_log");
         sql("delete from npc_chat_request");
+        sql("delete from npc_asr_intent");
         heartbeat = Executors.newSingleThreadScheduledExecutor();
         workers = Executors.newFixedThreadPool(3);
     }

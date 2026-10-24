@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.service.ai.AiServiceException;
+import com.chengyinhub.business.service.ai.AiHttpAdmission;
+import org.springframework.test.util.ReflectionTestUtils;
 import com.chengyinhub.common.config.AiVoiceConfig;
 import com.sun.net.httpserver.HttpServer;
 import cn.hutool.core.io.IoUtil;
@@ -102,7 +104,7 @@ class DashScopeSpeechToTextServiceTest
         {
             AiVoiceConfig config = usableConfig();
             String endpoint = "http://127.0.0.1:" + server.getAddress().getPort() + "/asr";
-            DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(config, endpoint);
+            DashScopeSpeechToTextService service = admittedService(config, endpoint);
 
             String text = service.transcribe("ID3-test".getBytes(StandardCharsets.UTF_8), "mp3");
 
@@ -132,8 +134,7 @@ class DashScopeSpeechToTextServiceTest
         HttpServer server = fixedResponse(200, "{\"code\":\"InvalidParameter\",\"message\":\"bad audio\"}");
         try
         {
-            DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(
-                    usableConfig(), endpoint(server));
+            DashScopeSpeechToTextService service = admittedService(usableConfig(), endpoint(server));
 
             assertThrows(AiServiceException.class,
                     () -> service.transcribe(new byte[]{'x'}, "mp3"));
@@ -150,8 +151,7 @@ class DashScopeSpeechToTextServiceTest
         HttpServer server = fixedResponse(200, "{\"output\":{\"text\":\"   \"}}");
         try
         {
-            DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(
-                    usableConfig(), endpoint(server));
+            DashScopeSpeechToTextService service = admittedService(usableConfig(), endpoint(server));
 
             assertNull(service.transcribe(new byte[]{'x'}, "wav"));
         }
@@ -193,7 +193,7 @@ class DashScopeSpeechToTextServiceTest
         try
         {
             String endpoint = "http://127.0.0.1:" + server.getAddress().getPort() + "/asr";
-            DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(usableConfig(), endpoint);
+            DashScopeSpeechToTextService service = admittedService(usableConfig(), endpoint);
 
             assertEquals("收到", service.transcribe(new byte[]{'x'}, format));
 
@@ -207,6 +207,13 @@ class DashScopeSpeechToTextServiceTest
         {
             server.stop(0);
         }
+    }
+
+    private DashScopeSpeechToTextService admittedService(AiVoiceConfig config, String endpoint)
+    {
+        DashScopeSpeechToTextService service = new DashScopeSpeechToTextService(config, endpoint);
+        ReflectionTestUtils.setField(service, "admission", new AiHttpAdmission(java.util.List.of(endpoint)));
+        return service;
     }
 
     private AiVoiceConfig usableConfig()

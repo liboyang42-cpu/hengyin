@@ -26,3 +26,5 @@
 无迁移/DDL。回退须同撤 Controller/新应用和夹具装配，无数据回退动作。未验证：编译、122+4 Java、原真实存储/并发事务、HTTP/JWT、Spring 启动、台账重建；不借用 bdb 的绿色结果。本片不改变金额、票码 TTL、权限、产品或退款政策。
 
 补充静态引用审计：已扫全仓 class.field / class.method / Javadoc / 源码反射。ApiMerchantController 的 HIDE_AFTER_END_DAYS 消费者由 root 修正到查询 owner，本候选不包含/覆盖该文件或 RegistrationQueryApplication；其它旧 controller 指向仅历史注释，仍存在的 HTTP/Java 兼容方法链接保持有效。未执行 e2e_regression/DevTools。
+
+7c8 后清理：删去 Controller 中只有声明的 redemptionMapper、topicCompletionAwardService、qrcodeService、umsMemberService、umsMemberBalanceDetailService；删除已迁真实应用的 CompletionCoupon 夹具两条旧无用字段 setter，其余 setup/断言仍保留。检查器只登记这两条精确空接线删除，25 个迁移体/22 个未迁体及原 132 个测试声明继续精确对照。退款夹具仍依赖的 refundService 不删；RegistrationQueryApplication/public 常量与 ApiMerchant 外部 caller 不改。只做静态验证，未运行 Java。

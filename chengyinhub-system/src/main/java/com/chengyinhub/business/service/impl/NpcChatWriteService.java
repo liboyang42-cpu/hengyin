@@ -16,6 +16,8 @@ public class NpcChatWriteService
 {
     /** Existing NPC lease duration, shared with the heartbeat; only its admission start moves. */
     static final long LEASE_MILLIS = 20_000L;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.NpcAsrIntentMapper asrIntents;
     private final NpcChatRequestMapper requests;
     private final NpcChatLogMapper logs;
     private final TransactionTemplate transaction;
@@ -48,6 +50,9 @@ public class NpcChatWriteService
         return locked(request.getUserId(), () -> {
             NpcChatRequest existing = requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
             if (existing != null) return existing;
+            if (asrIntents.selectForUpdate(request.getUserId(),request.getRequestId())!=null
+                    && asrIntents.claimTextAdmission(request.getUserId(),request.getRequestId(),request.getSessionId())!=1)
+                throw new IllegalStateException("Original ASR text admission is unavailable; read the original receipt");
             requests.expireProcessingByUserAndSession(request.getUserId(), request.getSessionId(), timeoutText);
             // Waiting for the per-user lock must not consume a new request's entire initial lease.
             // Existing rows returned above are never renewed here, including expired/deleted tombstones.
@@ -85,6 +90,7 @@ public class NpcChatWriteService
     public int deleteForUser(Long userId)
     {
         return locked(userId, () -> {
+            asrIntents.redactForUser(userId);
             requests.redactChatRequestsByUserId(userId);
             // This count retains the existing HTTP contract: log rows only, not receipt tombstones.
             return logs.deleteNpcChatLogsByUserId(userId);

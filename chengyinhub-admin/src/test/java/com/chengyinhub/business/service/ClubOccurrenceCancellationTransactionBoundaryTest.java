@@ -10,6 +10,7 @@ import com.chengyinhub.business.domain.ClubEventOccurrence;
 import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.ClubWaitlistEntry;
 import com.chengyinhub.business.domain.dto.ActivityCancelResult;
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
 import com.chengyinhub.business.domain.dto.ClubEventCancellationRequest;
 import com.chengyinhub.business.mapper.ClubEventOpsMapper;
 import com.chengyinhub.business.mapper.ClubLeadMapper;
@@ -79,8 +80,7 @@ class ClubOccurrenceCancellationTransactionBoundaryTest {
     void successCommitsEveryCancellationStateAndBothDurableAudienceReceipts() {
         ClubEventOpsServiceImpl service = service(false);
 
-        transaction.executeWithoutResult(status -> service.cancelOccurrence(
-                ACTOR, "co-owner", request()));
+        service.cancelOccurrence(ACTOR, "co-owner", request());
 
         assertEquals(0, value("select active from activity_state where id=?", ACTIVITY));
         assertEquals(1, value("select requested from refund_state where activity_id=?", ACTIVITY));
@@ -97,8 +97,7 @@ class ClubOccurrenceCancellationTransactionBoundaryTest {
     void secondCampaignReceiptFailureRollsBackRefundOccurrenceRoleWaitlistHoldAndFirstOutbox() throws Exception {
         ClubEventOpsServiceImpl service = service(true);
 
-        assertThrows(ServiceException.class, () -> transaction.executeWithoutResult(
-                status -> service.cancelOccurrence(ACTOR, "co-owner", request())));
+        assertThrows(ServiceException.class, () -> service.cancelOccurrence(ACTOR, "co-owner", request()));
 
         assertEquals(1, value("select active from activity_state where id=?", ACTIVITY));
         assertEquals(0, value("select requested from refund_state where activity_id=?", ACTIVITY));
@@ -126,7 +125,8 @@ class ClubOccurrenceCancellationTransactionBoundaryTest {
         when(roles.revokeEventLeadForCancelledOccurrence(any(), any(), any(), any()))
                 .thenAnswer(call -> jdbc.update("update role_state set active=0 where id=91 and active=1"));
         ITeamGroupService teamGroup = mock(ITeamGroupService.class);
-        when(teamGroup.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, "场地临时关闭"))
+        RegistrationCancellationPayments payments = CancellationPhaseTestSupport.stubEmptyObservation(teamGroup,ACTIVITY);
+        when(teamGroup.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, "场地临时关闭", false, payments))
                 .thenAnswer(call -> {
                     if (jdbc.update("update activity_state set active=0 where id=? and active=1", ACTIVITY) != 1) {
                         throw new ServiceException("活动状态已变化", 409);
@@ -134,9 +134,19 @@ class ClubOccurrenceCancellationTransactionBoundaryTest {
                     jdbc.update("update refund_state set requested=1 where activity_id=?", ACTIVITY);
                     return new ActivityCancelResult(1, 0, 0);
                 });
-        return new ClubEventOpsServiceImpl(access, new ClubEventScheduleMaterializer(),
+        ClubEventOpsServiceImpl service = new ClubEventOpsServiceImpl(access, new ClubEventScheduleMaterializer(),
                 mock(IClubSessionService.class), mapper(failWaitlistCampaign),
                 mock(ClubMemberMapper.class), mock(ClubLeadMapper.class), roles, teamGroup);
+        CancellationPhaseTestSupport.wireTransactions(service,transaction.getTransactionManager());
+        var activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        var activity = new com.chengyinhub.business.domain.CmsActivity();
+        activity.setId(ACTIVITY); activity.setClubId(CLUB); activity.setMemberId(OWNER);
+        when(activities.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"cancellationActivityMapper",activities);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"cancellationTopicMapper",
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
+        return service;
     }
 
     private ClubEventOpsMapper mapper(boolean failWaitlistCampaign) {

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T12:06:32.005392+00:00",
+  "updated_utc": "2026-10-24T14:43:00Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -11,120 +11,58 @@
     "A": {
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
-      "task": "Original-business-row linearization protocol and deterministic CLOSED/SUCCESS race source",
-      "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService的栅栏与接线；G账本正文不改；外层两个服务精确报名/支付/退款包装",
-      "dispatch": "Existing inline ownership renewed with exact production receipt bottleneck and workspace probe; source slice pending",
-      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:18",
-      "last_observed_status": {
-        "type": "active",
-        "activeFlags": []
-      },
-      "last_turn_id": "01a16d46-60a9-7156-a826-42d62116087c",
-      "last_progress_evidence": "48d24f8 inline source integrated; active command marker observed; next guards not yet frozen",
-      "last_tool_status": "completed"
+      "task": "取消phase源码已根端应用；复核原权限/锁顺序/原SUCCESS准入",
+      "last_verified_state": "active",
+      "verified_utc": "2026-10-24T14:39:00Z"
     },
     "B": {
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
-      "task": "Implement B durable fact/close serialization and caller seams; preserve frozen30d",
-      "ownership": "SDK/router/intent/inbox事实层及最小additive SQL源码；不改A/G领域正文",
-      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:14",
-      "last_observed_status": {
-        "type": "active",
-        "activeFlags": []
-      },
-      "last_turn_id": "01a16d52-7171-7674-8506-33e02262ab39",
-      "last_progress_evidence": "Resumed from idle; command marker observed; A leaf clarified not required by B fixture",
-      "last_tool_status": "completed"
+      "task": "六工厂+helper已应用；检查退款通知完整列/原事实生产顺序",
+      "last_verified_state": "active",
+      "verified_utc": "2026-10-24T14:39:00Z"
     },
     "C": {
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable",
-      "task": "Frozen query extraction queued; inspect missing A mandatory payment fixture bindings only",
-      "ownership": "席位/票码/核销事实；共享下单/退款文件只给review.patch",
-      "dispatch": "Workspace probe read back actual source work; continues current task",
-      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:19",
-      "last_observed_status": {
-        "type": "active",
-        "activeFlags": []
-      },
-      "last_turn_id": "01a16d5a-8f05-7165-9329-80777539349c",
-      "last_progress_evidence": "Read-only factory scan found guarded negative fixture early-exit gaps; exact proposals pending",
-      "last_tool_status": null
+      "task": "清理800337已应用；实施BEFORE_START原微信持久提醒",
+      "last_verified_state": "active",
+      "verified_utc": "2026-10-24T14:39:00Z"
     },
     "D": {
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable",
-      "task": "Current slice complete; queued behind fixed funds batch, do not invent unrelated work",
-      "ownership": "三服务上述精确符号已补授；CmsTopic共享只给patch",
-      "dispatch": "Probe read back: actual bc5 source delivery, continues application identity task",
-      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:14",
-      "last_observed_status": {
-        "type": "idle"
-      },
-      "last_turn_id": "01a16d52-7f2f-74ad-b0cd-6329728cad00",
-      "last_progress_evidence": "Frozen source delivered and fetched, queued for root integration: c643faf54b3cfc65298a099421ced9cc294a73d6",
-      "last_tool_status": "completed"
+      "task": "ASR6f/b8b已应用；补组合必需caller/fixture并核对恢复",
+      "last_verified_state": "active",
+      "verified_utc": "2026-10-24T14:39:00Z"
     },
     "E": {
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
-      "task": "Current slice complete; queued behind fixed funds batch, do not invent unrelated work",
-      "ownership": "新TopicQuery owner及测试；CmsTopic只交精确只读delegate patch，root串行合成",
-      "dispatch": "Probe read back: github.fetch_blob completed, actual source work resumed",
-      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:14",
-      "last_observed_status": {
-        "type": "idle"
-      },
-      "last_turn_id": "01a16d46-88a2-7403-bf44-90f5c10ace26",
-      "last_progress_evidence": "Frozen source delivered and fetched, queued for root integration: c7a60fa60d5d4d5db153ddb730aff95cd4d63cb0",
-      "last_tool_status": "completed"
+      "task": "付款proof9f0已应用；核对CLM/Commerce旧attempt准入",
+      "last_verified_state": "active",
+      "verified_utc": "2026-10-24T14:39:00Z"
     },
     "F": {
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
-      "task": "Remove deleted rejection-port declaration against actual80b; actual G Spring fixture dependencies",
-      "ownership": "既有policy/控制例；不改root CI refs或新造scanner",
-      "dispatch": "renewal accepted; live readback active, execution progress must be verified separately",
-      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:17",
-      "last_observed_status": {
-        "type": "active",
-        "activeFlags": []
-      },
-      "last_turn_id": "01a16d52-8cfb-71d5-92a3-042953793a19",
-      "last_progress_evidence": "224 Python controls worker reported; no actual Java/jdeps acceptance",
-      "last_tool_status": "completed"
+      "task": "新边界owner棘轮与真实新增C/NPC/资金类型登记",
+      "last_verified_state": "active",
+      "verified_utc": "2026-10-24T14:39:00Z"
     },
     "G": {
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
-      "task": "Finish only differential consumption safety and CoopInvite retry fixtures",
-      "ownership": "结算/claim/adjustment/debt和additive SQL源码；旧claim约束保留",
-      "dispatch": "Prior delivery collected, next precise task sent; active readback, code results independently checked.",
-      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:16",
-      "last_observed_status": {
-        "type": "active",
-        "activeFlags": []
-      },
-      "last_turn_id": "01a16d5b-078e-73e0-85dc-602d3ab736f5",
-      "last_progress_evidence": "Original consumption reader contract supplied; source guards not yet frozen",
-      "last_tool_status": "completed"
+      "task": "修报名/押金SUCCESS current-attempt P1及原重放",
+      "last_verified_state": "active",
+      "verified_utc": "2026-10-24T14:39:00Z"
     },
     "H": {
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable",
-      "task": "Review actual D80b writer consolidation after completed8fc/df72 and99d review",
-      "ownership": "只读独立审查，未运行单列",
-      "dispatch": "Renewed D/bc5 audit; active readback; independent new tool result pending",
-      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:21",
-      "last_observed_status": {
-        "type": "active",
-        "activeFlags": []
-      },
-      "last_turn_id": "01a16d5b-85ee-723a-b93e-a5df2b749b4b",
-      "last_progress_evidence": "13bec review completed no new evidenced P1/P2; new exact review dispatched",
-      "last_tool_status": null
+      "task": "媒体budget已应用；独立审CLM/Commerce完整typed消费链",
+      "last_verified_state": "active",
+      "verified_utc": "2026-10-24T14:39:00Z"
     }
   },
   "root_ownership": [
@@ -168,7 +106,8 @@
     "ABCFG_secret_scan": "770884bytes0leaks before new receipt; final staged scan pending",
     "ABCFG_Mapper_XML": "6 actual XML parsed; actual MySQL NOT_RUN",
     "current_freeze": "107 registered classes exact source precheck PASS;16 registry/workflow controls PASS; changed XML parse/diff/secret-file gate PASS; earlier current C291 Node PASS. No new Java/DB execution.",
-    "funds_source_composition": "109 registered source classes precheck PASS;16 registry/workflow controls PASS;189 declared tests across8 unique funds classes; changed XML parse PASS. D three production files byte-exact80b. G original11 and new5+5 cases composed, one now actual A inline -> G mandatory guard -> rollback -> durable manual identity; source only."
+    "funds_source_composition": "109 registered source classes precheck PASS;16 registry/workflow controls PASS;189 declared tests across8 unique funds classes; changed XML parse PASS. D three production files byte-exact80b. G original11 and new5+5 cases composed, one now actual A inline -> G mandatory guard -> rollback -> durable manual identity; source only.",
+    "current_1443": "NPC Node9 PASS; registry15 PASS;114 source prechecks PASS;4 SQL splitter/dependency checks PASS;5 changed XML PASS. No Java/DB acceptance."
   },
   "unified_regression_pending": [
     "A53 boundary and original-fact Java/DB acceptance; strict source parser/registry metadata PASS",
@@ -473,21 +412,7 @@
     "source_scan": "staged secret gate and gitleaks diff+commit PASS",
     "not_acceptance": "No production migration,merge,deployment or full-system acceptance"
   },
-  "current_ci_pending": {
-    "run_id": 40096453368,
-    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40096453368",
-    "source_sha": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
-    "status": "TERMINAL_FAIL_BATCH_SOURCE_REPAIR_IN_PROGRESS",
-    "executed": {
-      "tests": 163,
-      "passed": 128,
-      "failures": 21,
-      "errors": 14,
-      "skipped": 0
-    },
-    "cleanup": "4of4CLEAN",
-    "not_live": "No additional CI dispatched until shared factory prerequisites are corrected"
-  },
+  "current_ci_pending": "Known current-attempt guard and owner ratchet in progress. No new CI dispatched. Last terminal 40096453368 remains failed.",
   "current_cloud_assignment": {
     "A": "Environment-offline. Complete TeamGroup/ClubEventOps diff in chat, no unscanned GitHub publishing",
     "B": "Environment-offline. Complete A4/G2 canonical schemas/seeds/real guard/fact sequencing via chatdiff",
@@ -508,7 +433,7 @@
     "A": "f079 checkout/claim locked-current fence and NEVER+OrderClose outerTx refusal;84d7 exact local consumption completeRecovery and closed-order original ticket guard nowAPPLIED. TeamGroup/ClubEventOps still separate active work. New2dedicated test files present; recovery scenarios queued, not Java verified.",
     "root_guard_factory": "WechatVerifiedFactTestSupport.realPaymentGuards: real same-source JdbcOrderOwner+IntentStore+SdkGateway local guard, outbound doubles kept separate. No SDK init/network. B factory callers pending."
   },
-  "current_source_head": "e4bdaceb8c1eb800b38c93601bbbd82ca15b26e5",
+  "current_source_head": "173f24da622d81f9725345e2a4ac768f3a7eb5d9",
   "current_source_manifest_counts": {
     "registered_sql_classes": 110,
     "funds_declared_tests": 191,
@@ -538,5 +463,6 @@
   },
   "pending_business_questions": [
     "ASR: same NPC quota reserved before first ASR then handed to text once, or separate ASR budget. User reply pending; do not select budget/charges automatically."
-  ]
+  ],
+  "current_working_tree": "Pending freeze: A cancellation phases+B six factories+C800337+D ASR6f/b8b+E voice c7/STT385/proof9f+Hmedia0465"
 }
