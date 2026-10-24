@@ -115,6 +115,8 @@ class ApiClubSettlementControllerTest {
         assertEquals(9001L, topics.get(0).get("topicId"),
                 "结算行必须带 topicId —— 明细页按它匹配 /api/coop/finance 的主题行");
         assertEquals(31L, topics.get(0).get("id"), "结算行 id 原样保留");
+        assertEquals(false, ((Map<?, ?>) data).containsKey("pendingAdjustment"),
+                "恒 null 的 pendingAdjustment 占位字段已删,不再下发");
     }
 
     /** CU-C-40:卡片上的主题名来自 cms_topic(summarySelectFrom 左连一次带出),不是展示层拼编号。 */

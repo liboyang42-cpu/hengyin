@@ -117,7 +117,7 @@ public class ApiClubSettlementController extends BaseController {
         data.put("settledAmountText", unverified == 0 ? money(settled) : null);
         data.put("settledAmountStatus", unverified == 0 ? "verified" : "unverified");
         data.put("unverifiedSettledCount", unverified);
-        data.put("pendingAdjustment", null);
+        // pendingAdjustment 恒 null 占位已删(拍板9 前端调整卡已下线,无读方)。
         data.put("topics", topics);
         // 2026-09-17 总控裁定:余额三段只给俱乐部主理人本人看,联席主理人不显示。
         Club club = clubService.selectClubById(clubId);
