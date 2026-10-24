@@ -158,7 +158,7 @@ function sanitizeProperties(properties) {
   const sanitized = {};
   Object.keys(source).forEach(function (key) {
     const value = source[key];
-    if (SENSITIVE_PROPERTY_KEY.test(key) || value === null || value === undefined) return;
+    if ((SENSITIVE_PROPERTY_KEY.test(key) && warnDroppedSensitiveKey(key)) || value === null || value === undefined) return;
     if (typeof value === 'number' && Number.isFinite(value)) {
       sanitized[key] = value;
       return;
@@ -335,6 +335,26 @@ function track(eventName, payload) {
   const persisted = setQueue(queue, accountId);
   if (persisted) flush();
   return persisted;
+}
+
+// 敏感键正则是宽匹配(name/text/content 等未锚定),会顺带丢掉 topicName/titleLength 之类的无害键。
+// 隐私方向仍 fail-closed 不放宽;只在开发版对每个被丢的键提示一次,避免埋点属性静默消失。恒返回 true(键照丢)。
+const warnedDroppedKeys = {};
+function isDevelopEnv() {
+  try {
+    return typeof wx !== 'undefined' && wx.getAccountInfoSync().miniProgram.envVersion === 'develop';
+  } catch (e) {
+    return false;
+  }
+}
+
+function warnDroppedSensitiveKey(key) {
+  if (warnedDroppedKeys[key] || !isDevelopEnv()) return true;
+  warnedDroppedKeys[key] = true;
+  if (typeof console !== 'undefined' && console.warn) {
+    console.warn('[analytics] 属性键 "' + key + '" 命中敏感键规则已被丢弃，如需上报请换不含敏感词的键名');
+  }
+  return true;
 }
 
 module.exports = {
