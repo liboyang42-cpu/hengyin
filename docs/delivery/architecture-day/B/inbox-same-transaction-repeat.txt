@@ -1,0 +1,11 @@
+B 独立同事务重复处理修复；parent 420df2a7a8b385a308923fe5f332324dd4f5f973，原420保持冻结。
+问题：第一次mutation+DONE已在外层事务执行但尚未提交，第二次同notify的REQUIRES_NEW claim等自己的inbox X锁。
+实现：用当前bean的Spring事务resource+Synchronization保存本实际事务内的处理进度；每notify保留完整verified Reference与实际inbox id/bizType/bizId/event/owner/fence，不是全局map或自建ThreadLocal。
+重复只在相同完整verified引用、首次已完成、原inbox当前读身份完全相同且原fact link重新核验成功、真实行已DONE/IGNORED_STALE时true；不会再次claim/apply，不造DONE、不提前commit。
+处理中/前次失败/引用冲突都不能成功。裸legacy调用不能借用尚未提交的verified ACK（false）；提交后的原DONE重复仍按原claim返回true，测试保留。
+事务suspend解绑，resume重绑原scope，afterCompletion无条件清空并解绑；嵌套REQUIRES_NEW与其他线程不能借用外层标记。独立新事务仍受数据库原owner/fence/锁约束，不因本地标记绕过。
+原420 afterCompletion release不变：失败或外层rollback只在事务完成后按原owner/fence释放，成功提交不release；mutation和DONE仍同原REQUIRED事务。
+新增4项真实MySQL源码，原8项保留=12：同Tx重入/完成后重复/冲突ref/裸legacy拒绝/提交后legacy ACK；新Tx悬挂与另线程真实锁竞争不借标记；异常rollback清理后同存储回执新Tx恢复；不同notify分别claim（第二条走原真实STALE终态，不伪造业务成功）。
+复用原schema/XML/真实报名/事实reader/inbox/事务代理及420真实回滚fixture。查询拦截器仅给scratch连接设置1秒锁等待，以有限真实竞争验证隔离；不跳过错误，不改生产SQL/索引。
+实际静态：diff check、范围、秘密标记、旧测试/断言保留检查；Java/MySQL/CI/DDL/真实微信全部NOT_RUN。root统一同头验证，本片未触CI/registry/Controller/SDK/any导入/事实FORSHARE flags。
+四域后续代码保留在/workspace/b-success-entry-guards，尚未混入本片。回退不得删除事实、回执或原身份。
