@@ -12,6 +12,7 @@ import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFi
 import static com.chengyinhub.business.service.support.rpg.mechanism.MechanismFixtures.play;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -69,5 +70,31 @@ class TradeBargainConsumerTest {
         MechanismRequestIdBinder.Play session = play(binder);
         session.setPlayerChoice(choice(MechanismRequestIdBinder.MECH_TRADE_BARGAIN, "AUTO"));
         assertThrows(IllegalArgumentException.class, () -> trade.apply(session));
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueAcceptApplies() throws Exception {
+        MechanismRequestIdBinder binder = new MechanismRequestIdBinder();
+        TradeBargainConsumer trade = new TradeBargainConsumer(binder);
+        MechanismRequestIdBinder.Play unseen = play(binder);
+        unseen.setOriginalRequestId("c03-bargain-never");
+        unseen.setOriginalAction(null);
+        Map<String, Object> recovered = trade.recoverOriginal(unseen);
+        assertEquals("c03-bargain-never", recovered.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.UNKNOWN, recovered.get("status"));
+        assertEquals(Boolean.FALSE, recovered.get("mintedNewRequest"));
+        assertEquals(Boolean.FALSE, recovered.get("replay"));
+        assertNull(binder.existing("c03-bargain-never"));
+        unseen.setPlayerChoice(choice(MechanismRequestIdBinder.MECH_TRADE_BARGAIN, TradeBargainConsumer.ACTION_ACCEPT));
+        unseen.setDice(dice(11));
+        Map<String, Object> first = trade.apply(unseen);
+        assertEquals("c03-bargain-never", first.get("requestId"));
+        assertEquals(Boolean.TRUE, first.get("accepted"));
+        assertEquals(Boolean.FALSE, first.get("replay"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-bargain-never").getStatus());
+        Map<String, Object> replay = trade.apply(unseen);
+        assertEquals(Boolean.TRUE, replay.get("replay"));
+        assertEquals("c03-bargain-never", replay.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-bargain-never").getStatus());
     }
 }
