@@ -7,12 +7,11 @@
 
 | 状态 | 数量 |
 |---|---|
-| FIXED | 8 |
+| FIXED | 9 |
 | PARTIAL | 2 |
 | ALREADY_FIXED | 0 |
 | NEEDS_OWNER | 1 |
 
-（另：C:U-139 记为 FIXED，库表列注释部分见备注。）
 
 ## 明细
 
@@ -40,6 +39,6 @@
 
 ## 验证
 
-- 本地（LANG=C.UTF-8）：`mvn -pl chengyinhub-admin test -Dtest=MerchantInsightMapperSqlTest,MerchantInsightServiceImplTest,MerchantMetricDictionaryTest,UmsMemberBalanceDetailDashboardSqlTest,ApiMerchantLedgerControllerTest,ApiMerchantOperatorReadScopeTest,ApiMerchantAwardedTopicStatsTest,CmsRegistrationVerificationCountTest,ApiClubSettlementControllerTest` 全部通过。
+- 本地（LANG=C.UTF-8）：`mvn -pl chengyinhub-admin test -Dtest=MerchantInsightMapperSqlTest,MerchantInsightServiceImplTest,MerchantMetricDictionaryTest,UmsMemberBalanceDetailDashboardSqlTest,ApiMerchantLedgerControllerTest,ApiMerchantOperatorReadScopeTest,ApiMerchantAwardedTopicStatsTest,CmsRegistrationVerificationCountTest,ApiClubSettlementControllerTest` 全部通过；合并 master（`3937086e`）后在合并树上重跑 `MerchantInsight*`、`ApiMerchant*`、`NodePublicVisibilityPredicateContractTest` 等 244 例，0 失败。
 - 小程序：`npm run lint` PASS；`node --test` analytics-privacy / analytics / analytics-whitelist-crossstack / club-settlement-page-contract / funds-stages-owner-only-contract 全部通过。
 - CI run ID：见 PR #587（完成后补录）。

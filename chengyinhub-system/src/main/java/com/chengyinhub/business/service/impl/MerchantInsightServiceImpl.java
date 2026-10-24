@@ -664,7 +664,7 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
             }
         }
         checkin.put("total", checkins);
-        checkin.put("redeemRate", entitlements == 0 ? null : round2((double) redeems / entitlements));
+        checkin.put("redeemRate", com.chengyinhub.common.utils.SafeRatio.ratio(redeems, entitlements, 2));
         // 24 列在几十次样本下必然稀稀拉拉,收成 4 段(调研结论:早/午/晚/夜)
         String[] slotNames = { "早", "午", "晚", "夜" };
         int[] slotCounts = new int[4];
@@ -687,7 +687,7 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         {
             if (n >= 2) repeatMembers++;
         }
-        checkin.put("repeatRate", redeemMembers == 0 ? null : round2((double) repeatMembers / redeemMembers));
+        checkin.put("repeatRate", com.chengyinhub.common.utils.SafeRatio.ratio(repeatMembers, redeemMembers, 2));
         checkin.put("avgWaitMinutes", waitCount == 0 ? null : Math.round(waitSumMs / 60000.0 / waitCount));
         return checkin;
     }
@@ -809,7 +809,7 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
             if (f.getQuotaUsed() != null) quotaUsed += f.getQuotaUsed();
         }
         out.put("topics", new ArrayList<>(topics.values()));
-        out.put("quotaUsedRate", quotaTotal == 0 ? null : round2((double) quotaUsed / quotaTotal));
+        out.put("quotaUsedRate", com.chengyinhub.common.utils.SafeRatio.ratio(quotaUsed, quotaTotal, 2));
         return out;
     }
 

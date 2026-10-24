@@ -57,8 +57,6 @@ import com.chengyinhub.business.domain.vo.ExploreChapterRedemptionResult;
 import com.chengyinhub.business.domain.vo.TopicCompletionAwardVO;
 import com.chengyinhub.common.utils.sign.Md5Utils;
 
-import static com.chengyinhub.common.constant.CmsConstants.MAX_POINT_DEDUCT_AMOUNT;
-import static com.chengyinhub.common.constant.CmsConstants.POINT_DEDUCT_RATE;
 import static com.chengyinhub.common.constant.CmsConstants.QUOTE_SIGN_SALT;
 
 /**
@@ -69,6 +67,11 @@ import static com.chengyinhub.common.constant.CmsConstants.QUOTE_SIGN_SALT;
  */
 @Service
 public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IRegistrationCreationTransaction {
+
+    /** D1:积分汇率与单笔上限的唯一真源(sys_config,缺省 = 原 CmsConstants 常量);手工 new 的实例走缺省值。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.PointsValuePolicy pointsValuePolicy =
+            com.chengyinhub.business.service.support.PointsValuePolicy.codeDefaults();
 
     @Autowired
     private com.chengyinhub.business.service.INotifyService notifyService;
@@ -559,7 +562,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         registration.setTotalAmount(totalAmount);
         registration.setPointUsed(Convert.toLong(pointUsed));
         registration.setPointDeductAmount(pointDeductAmount);
-        registration.setPointDeductRate(POINT_DEDUCT_RATE);
+        registration.setPointDeductRate(calc.pointDeductRate);
         // 多票主单：覆盖 payableAmount 为汇总金额，其他从单为 0
         BigDecimal finalPayable = overridePayable != null ? overridePayable : payableAmount;
         registration.setPayableAmount(finalPayable);
@@ -892,7 +895,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setTotalAmount(price);
         r.setPointUsed(0L);
         r.setPointDeductAmount(BigDecimal.ZERO);
-        r.setPointDeductRate(POINT_DEDUCT_RATE);
+        r.setPointDeductRate(pointsValuePolicy.rate());
         r.setPayableAmount(price);
         r.setPointPaymentAmount(BigDecimal.ZERO);
         r.setWechatPaymentAmount(price);
@@ -1074,14 +1077,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         c.memberDiscountAmount = c.originalAmount.subtract(c.totalAmount);
         c.pointDeductAmount = BigDecimal.ZERO;
         c.pointUsed = 0;
+        // 报价与下单同一次读:汇率与上限取自 PointsValuePolicy,落库的 point_deduct_rate 也用这一份
+        BigDecimal pointDeductRate = pointsValuePolicy.rate();
+        c.pointDeductRate = pointDeductRate;
         if (use == 1 && userPoint > 0) {
-            BigDecimal maxDeductAmount = MAX_POINT_DEDUCT_AMOUNT;
+            BigDecimal maxDeductAmount = pointsValuePolicy.maxPerOrder();
             if (c.totalAmount.compareTo(maxDeductAmount) < 0) {
                 maxDeductAmount = c.totalAmount;
             }
-            BigDecimal userPointCanDeduct = new BigDecimal(userPoint).multiply(POINT_DEDUCT_RATE);
+            BigDecimal userPointCanDeduct = new BigDecimal(userPoint).multiply(pointDeductRate);
             c.pointDeductAmount = userPointCanDeduct.compareTo(maxDeductAmount) > 0 ? maxDeductAmount : userPointCanDeduct;
-            c.pointUsed = c.pointDeductAmount.divide(POINT_DEDUCT_RATE, 0, BigDecimal.ROUND_UP).intValue();
+            c.pointUsed = c.pointDeductAmount.divide(pointDeductRate, 0, BigDecimal.ROUND_UP).intValue();
         }
         c.payableAmount = c.totalAmount.subtract(c.pointDeductAmount);
         if (use == 1) {
@@ -1165,6 +1171,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         BigDecimal totalAmount = BigDecimal.ZERO;
         BigDecimal memberDiscountAmount = BigDecimal.ZERO;
         BigDecimal pointDeductAmount = BigDecimal.ZERO;
+        BigDecimal pointDeductRate = BigDecimal.ZERO;
         int pointUsed = 0;
         BigDecimal payableAmount = BigDecimal.ZERO;
         int paymentType = 1;
@@ -1972,7 +1979,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
 
         // 计算可抵扣的最大积分金额
-        BigDecimal maxDeductByPoints = new BigDecimal(availablePoints).multiply(POINT_DEDUCT_RATE);
+        BigDecimal maxDeductByPoints = new BigDecimal(availablePoints).multiply(pointsValuePolicy.rate());
         BigDecimal maxDeduct = maxPointDeduct.min(maxDeductByPoints);
 
         // 纯积分支付，使用最大可抵扣金额，但不超过总金额

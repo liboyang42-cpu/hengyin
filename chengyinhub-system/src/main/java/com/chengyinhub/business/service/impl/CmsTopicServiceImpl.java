@@ -2919,6 +2919,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         boolean supplyResubmission = allowSupplyResubmission && supplyReviewService.canResubmit(topic);
         if (topic != null) mediaPublicationGuard.requireTopicPublication(id);
         if (cmsTopicMapper.clearDraftIfDraft(id) <= 0 && !supplyResubmission) return null;
+        // D8:逐章/逐节点增量写入的路径(后台章节节点 CRUD、商家补节点)不经整包保存,发布口按库内实数再拦一次
+        assertTopicSizeWithinLimits(id);
         if (supplyResubmission) {
             assertOrdinarySupplyRestored(topic);
             assertPublishReady(topic);
@@ -3059,6 +3061,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * {@code UserSafeMessage} 的 120 字上限内 —— 超限会被全局异常处理器换成「系统繁忙」,
      * 等于又把「缺什么」藏回去。
      */
+    private void assertTopicSizeWithinLimits(Long topicId) {
+        CmsTopicChapter chapterQuery = new CmsTopicChapter();
+        chapterQuery.setTopicId(topicId);
+        CmsTopicNode nodeQuery = new CmsTopicNode();
+        nodeQuery.setTopicId(topicId);
+        String violation = com.chengyinhub.business.service.support.TopicSizeLimits.violation(
+                nullToEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery)).size(),
+                nullToEmpty(cmsTopicNodeMapper.selectCmsTopicNodeList(nodeQuery)).size());
+        if (violation != null) {
+            throw new IllegalStateException("发布前请先调整:" + violation);
+        }
+    }
+
     private void assertPublishReady(CmsTopic topic) {
         List<String> issues = new ArrayList<String>();
         Long topicId = topic == null ? null : topic.getId();
@@ -5423,6 +5438,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (CollectionUtils.isEmpty(chapters)) {
             return routeNodeMaps;
         }
+        // D8(owner 2026-10-23):主题规模上限,任何删除/插入之前先拦
+        com.chengyinhub.business.service.support.TopicSizeLimits.requireWithinLimits(chapters);
 
         long chapterSortId = 0L;
         for (ChapterDTO chapterDTO : chapters) {
@@ -5486,6 +5503,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      */
     private RouteNodeMaps compileChapterFlow(List<ChapterDTO> chapters, Long topicId, String username, Long memberId,
                                     boolean replaceExisting, boolean allowBundledDraft) {
+        // D8(owner 2026-10-23):主题规模上限,任何删除/插入之前先拦
+        com.chengyinhub.business.service.support.TopicSizeLimits.requireWithinLimits(chapters);
         ChapterFlowCompiler.CompiledFlow flow = ChapterFlowCompiler.compileChapterFlow(chapters);
         RouteNodeMaps routeNodeMaps = new RouteNodeMaps();
 

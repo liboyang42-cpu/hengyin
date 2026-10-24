@@ -147,6 +147,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by f.found_at desc limit 1
     </select>
 
+    <!-- D7(owner 2026-10-23):探店瞬移留痕的「上一个已入账点」之一。坐标一律取来源表(不落玩家原始定位) -->
+    <select id="selectLastShopVisitLoc" resultType="java.util.HashMap">
+        select v.visited_at as visitedAt,
+               case when v.source_type = 1 then cast(p.lat as char) else m.latitude end as lat,
+               case when v.source_type = 1 then cast(p.lng as char) else m.longitude end as lng
+        from roam_shop_visit v
+        left join roam_poi p on v.source_type = 1 and p.id = v.source_id
+        left join cms_registration_merchant m on v.source_type = 2 and m.id = v.source_id
+        where v.member_id = #{memberId} and v.visited_at is not null
+        order by v.visited_at desc, v.id desc
+        limit 1
+    </select>
+
     <insert id="insertSession" parameterType="RoamSession" useGeneratedKeys="true" keyProperty="id">
         insert into roam_session (member_id, started_at, status, create_time)
         values (#{memberId}, #{startedAt}, #{status}, #{createTime})
@@ -388,6 +401,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 group by f.source_id, f.member_id
             ) v join ums_member m on m.id = v.member_id
             where m.del_flag = 0 and m.avatar is not null and m.avatar &lt;&gt; ''
+              <!-- 与 selectLatestRoamLocation 一致：跨版本按事件 id 取最新态，仅撤回者隐藏。
+                   不按 presence_visible 过滤；无同意记录的历史访客沿用原展示口径。 -->
+              and coalesce((
+                  select c.event_type from consent_record c
+                  where c.member_id = v.member_id and c.doc_type = 'privacy_policy'
+                    and c.scene = 'roam_location' and c.scope_type is null and c.scope_id is null
+                  order by c.id desc limit 1
+              ), 'AGREE') &lt;&gt; 'REVOKE'
         ) t where t.rn &lt;= #{limit}
     </select>
 
