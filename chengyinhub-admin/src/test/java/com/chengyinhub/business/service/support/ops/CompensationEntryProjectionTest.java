@@ -223,6 +223,48 @@ class CompensationEntryProjectionTest {
         assertTrue(view.permissioned());
     }
 
+    @Test
+    void recoverTrailReadsExistingUnifiedTrailWithoutWritingAudit() {
+        CompensationEntryProjection projection = new CompensationEntryProjection(
+                topicId -> frozenTerms(),
+                new CompensationAuditSource() {
+                    @Override
+                    public List<BusinessAuditEvent> eventsForRequest(String requestId) {
+                        throw new AssertionError("trail read must not use request audit");
+                    }
+
+                    @Override
+                    public List<AuditTrailEntryVO> trailForTopic(Long topicId) {
+                        throw new AssertionError("trail read must not guess topic trail");
+                    }
+                });
+        CompensationEntryProjection.WaitingSourceException waiting = assertThrows(
+                CompensationEntryProjection.WaitingSourceException.class,
+                () -> projection.recoverTrail("ACTIVITY", 10L, null));
+        assertEquals(CompensationEntryProjection.AUDIT_TRAIL, waiting.getWaitingCapability());
+        assertNull(projection.recoverTrail("  ", 10L, (bizType, bizId) -> {
+            throw new AssertionError("blank bizType must not read");
+        }));
+        assertNull(projection.recoverTrail("ACTIVITY", 0L, (bizType, bizId) -> {
+            throw new AssertionError("invalid bizId must not read");
+        }));
+        CompensationEntryProjection.WaitingSourceException missingService = assertThrows(
+                CompensationEntryProjection.WaitingSourceException.class,
+                () -> CompensationEntryProjection.fromAuditTrail(null).trail("ACTIVITY", 10L));
+        assertEquals(CompensationEntryProjection.AUDIT_TRAIL, missingService.getWaitingCapability());
+
+        AuditTrailEntryVO row = new AuditTrailEntryVO();
+        row.setSource(AuditTrailEntryVO.SOURCE_BUSINESS_AUDIT_EVENT);
+        row.setAction("COMPENSATION_FREEZE");
+        List<AuditTrailEntryVO> recovered = projection.recoverTrail("ACTIVITY", 10L, (bizType, bizId) -> {
+            assertEquals("ACTIVITY", bizType);
+            assertEquals(Long.valueOf(10L), bizId);
+            return List.of(row);
+        });
+        assertEquals(1, recovered.size());
+        assertEquals("COMPENSATION_FREEZE", recovered.get(0).getAction());
+    }
+
     private static ClubEditionCompensationTerms frozenTerms() {
         ClubEditionCompensationTerms terms = new ClubEditionCompensationTerms();
         terms.setTopicId(10L);

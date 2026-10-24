@@ -12,6 +12,7 @@ import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.ClubEditionCompensationTerms;
 import com.chengyinhub.business.domain.vo.AuditTrailEntryVO;
 import com.chengyinhub.business.service.IClubEditionCompensationService;
+import com.chengyinhub.business.service.support.AuditTrailProjectionService;
 import com.chengyinhub.business.service.support.ExtraApproverReachability;
 import com.chengyinhub.business.service.support.FinalCompensationFacts;
 
@@ -29,6 +30,7 @@ public final class CompensationEntryProjection {
     public static final String TERMS_MISSING = "EDITION_TERMS_MISSING";
     public static final String FROZEN_TERMS = "clubEditionCompensation.requireFrozenTerms";
     public static final String EXTRA_APPROVE = "extraApprover.canApproveExtraHours";
+    public static final String AUDIT_TRAIL = "auditTrail.trail";
 
     private final FrozenTermsSource termsSource;
     private final CompensationAuditSource auditSource;
@@ -104,6 +106,29 @@ public final class CompensationEntryProjection {
         return compensation::requireFrozenTerms;
     }
 
+    /**
+     * 只读既有 {@link AuditTrailProjectionService#trail}。bizType/bizId 由调用方给出，不从 topicId 猜。
+     * 缺端口 WAITING_SOURCE。空列表是真的空留痕，不另写审计表。
+     */
+    public List<AuditTrailEntryVO> recoverTrail(String bizType, Long bizId, AuditTrailReader reader) {
+        if (bizType == null || bizType.isBlank() || bizId == null || bizId.longValue() <= 0L) {
+            return null;
+        }
+        if (reader == null) {
+            throw new WaitingSourceException(AUDIT_TRAIL);
+        }
+        return reader.trail(bizType.trim(), bizId);
+    }
+
+    public static AuditTrailReader fromAuditTrail(AuditTrailProjectionService service) {
+        if (service == null) {
+            return (bizType, bizId) -> {
+                throw new WaitingSourceException(AUDIT_TRAIL);
+            };
+        }
+        return service::trail;
+    }
+
     public static ExtraApproverSource fromReachability(ExtraApproverReachability reachability) {
         if (reachability == null) {
             return userId -> {
@@ -123,6 +148,11 @@ public final class CompensationEntryProjection {
     /** 开售冻结条款真源，复用 {@code IClubEditionCompensationService#requireFrozenTerms} 合同。 */
     public interface FrozenTermsSource {
         ClubEditionCompensationTerms requireFrozenTerms(Long topicId);
+    }
+
+    /** 只读统一留痕；不写审计表。 */
+    public interface AuditTrailReader {
+        List<AuditTrailEntryVO> trail(String bizType, Long bizId);
     }
 
     /** 只回答权限位可达，不代替冻结审批人。 */
