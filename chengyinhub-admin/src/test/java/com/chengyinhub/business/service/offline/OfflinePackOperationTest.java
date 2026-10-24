@@ -45,4 +45,21 @@ class OfflinePackOperationTest {
         assertNull(restarted.operationId());
         assertEquals(OfflinePackOperation.Phase.IDLE, restarted.phase());
     }
+
+    @Test
+    void unusedDeleteOfIdleDoesNotOccupyThenUniqueStartThenDeleteApplies() {
+        OfflinePackOperation pack = new OfflinePackOperation();
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase());
+        assertNull(pack.operationId());
+        assertEquals(OfflinePackOperation.Failure.INVALID_MANIFEST,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, pack::delete).code);
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase(), "未见下载 delete 观察不得占 DELETED");
+        assertNull(pack.operationId());
+        pack.startDownload(manifest("op-del"), NOW);
+        assertEquals("op-del", pack.operationId());
+        assertEquals(OfflinePackOperation.Phase.DOWNLOADING, pack.phase());
+        pack.delete();
+        assertEquals(OfflinePackOperation.Phase.DELETED, pack.phase());
+        assertEquals("op-del", pack.operationId());
+    }
 }
