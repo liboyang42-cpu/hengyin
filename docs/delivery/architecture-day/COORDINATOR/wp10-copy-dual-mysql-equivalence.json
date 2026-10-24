@@ -1,0 +1,111 @@
+{
+  "status": "PASS_25_ACTUAL_LEGACY_EXTRACTED_RECEIPT_PAIRS",
+  "comparison_output": "PASS: 25 old/new MySQL receipt pairs; full content rows, outcomes and mapper write order equal",
+  "executions": [
+    {
+      "source_sha": "7c08db495bdb22384265591df916a5c578add476",
+      "run_id": 40046406502,
+      "mode": "extracted",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "status": "CLEAN"
+      },
+      "xml_sha256": "70a557302a049483db895bfcab46dc04029f30812b99abeff955802ad6bd07c4",
+      "receipt_sha256": "d83f53992acd906c80e221092accba61e2f944796c974ab72dfb3df9aca5c2c1",
+      "business_receipt_folder": "/private/tmp/hengyin-architecture-day-receipts/run-40046406502/all/rs-class-TopicContentCopyMySqlIT-a1/surefire-reports/wp10-copy-equivalence",
+      "business_receipt_sha256": {
+        "transferOriginalOfflineFailureRollsBackRealCopyAndClubBinding.json": "5e2c8d2aaf477c87f2926c42172d9e05bff929bbf308e96e05da1a5ad4d2995b",
+        "malformedCopyTypeKeepsExistingBasicConversion.json": "27068908969fbf9599ce4614f7cd4b8c11758a18c93c80fa52215b03472f6438",
+        "missingSourceRejectsWithoutContentWrites.json": "e64b516177356b15da6b7bb7d15293075bc879f9cd8893ea2ff35c9179ff8069",
+        "completeCopyTypeThreeCommitsWholeContentGraphAndMemberSlot.json": "6a1a182d5d201c9302bfb33722d589610df14f532e3a5d9805911911c8694d3c",
+        "sameOwnerKeepsCompletionRuleAndSharesOnlyUnreferencedTemplate.json": "448f0a18361022347ff2843c017ee076317c65c35b5b47a9a00ebfb60294e23e",
+        "graphPatchFailureRollsBackChildrenAndRuntimePatch.json": "52b43fc79dbaaba1695110545a3aaddfc8d100fb6f9c81ca5a59a95b4f1f2394",
+        "collaboratorZeroRowsRemainsAnExplicitUnfixedLegacyRisk.json": "4c87455ba5b0b27289d163c56f3d0f5bc3b34451c1d56eccba988f2388c997af",
+        "repeatedCopyCreatesIndependentGraphsRatherThanInventedIdempotency.json": "ec742e1f37adb161cc24e4e2274d45be907100c41910ab59e7e9120c7907bfd7",
+        "runtimePatchFailureRollsBackCompleteChildren.json": "273ee28a3861a41fb34fb7b909b2f83c7b1e9c8b684f3dd6f058cd1d093e7732",
+        "transferSuccessKeepsOuterAlgorithmAndDoesNotCopyCollaborators.json": "d0df1257910fe7ae316979aef8ab7d5a9cadb1d14f3efb3dfc72d2484893b234",
+        "nodeFailureRollsBackClonedTemplateAndAllEarlierRows.json": "dc89c7939091f6e647ea8736ff2e9fb78e98d81a3a8506d10c1e420b53bc10ad",
+        "npcFailureRollsBackNodeTemplateAndContentSlot.json": "49930d9b29431f03da7cf610c300ce86e9863e062f9d6bb1aa9d7138c7d0c584",
+        "nonPlatformOfficialSourceRejectsBeforeAnyWrite.json": "5bbe84314718942efab7fb31bb45d641b6b62088aadc65732cdce0d3fa850156",
+        "deletedSourceRejectsWithoutContentWrites.json": "3cadf444412f1aa82543864ed5dbba6627e9aacbffe1c7ffafae5d97aaa36e76",
+        "blockPatchFailureRollsBackCopiedGraph.json": "edc298b798485e2848dae28d1c9140eb192968be01b74b99fe2283e6447c4cb1",
+        "memberSlotZeroRowsRemainsAnExplicitUnfixedLegacyRisk.json": "fa9bf1266808247e323b1cc3bdef10564adc4d703dcc2e133db6dab652754875",
+        "defaultBasicCopyKeepsExistingDefaultsWithoutInventingContentSlot.json": "c777f0fab8a2497a3b4e6641b452f540f8f56fab14c14e16a0f35a5837d27c42",
+        "storyPatchFailureRollsBackEveryContentTable.json": "31088d92fe14b4e921aae1928d7e27430ea08f344baf48fb224ad2a4c77ef3c1",
+        "officialMemberParameterRejectsBeforeAnyWrite.json": "ffe1344a108af6b5ab5b803f019f43728733c03949c8fa651f2edb62744babb0",
+        "callerRollbackAfterFullCopyRollsBackWholeGraph.json": "bd083d92d8fd84659237c62544c297e2d1e10765d84a223df4fab5317ac75404",
+        "officialCopyUsesPlatformSlotAndDoesNotInferSourceFromMemberId.json": "07d68404b839ceda0216c91c956594f08e7e6f9b7fe906c01475d525d07324db",
+        "secondChapterFailureRollsBackTopicSlotAndBothChapters.json": "7ead24b0f1f9b22709a613f722bce4399a0d1abc58a8482feea5b617e446b49e",
+        "transferSquareFailureRollsBackRealCopyAndOriginalVisibility.json": "b886052ee1cd0e16a38c36fa4dce748e64940acab9de1a01acaa86b459253883",
+        "zeroTopicInsertRejectsBeforeChildren.json": "52925c79b2f54ca8fa86aa06bddbce80c0bee0e2560943aef3559678059e914a",
+        "officialMissingPersistedSlotRollsBackInsertedTopic.json": "c357377f2d508d66aa276773e7443809989b759da9c733155889faf9232de156"
+      }
+    },
+    {
+      "source_sha": "b4a5509cc396f1fc2c4e8b0613c3fee787c6393a",
+      "run_id": 40046506038,
+      "mode": "legacy",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "status": "CLEAN"
+      },
+      "xml_sha256": "13d11816d7aef95e747ea5da15050063185e119d732e9250f8a5189ed7d3e749",
+      "receipt_sha256": "c73c2f1e529540372a382ea02eaa3f1bb2febf5646fa2377635687a2ffe9b09e",
+      "business_receipt_folder": "/private/tmp/hengyin-architecture-day-receipts/run-40046506038/all/rs-class-TopicContentCopyMySqlIT-a1/surefire-reports/wp10-copy-equivalence",
+      "business_receipt_sha256": {
+        "transferOriginalOfflineFailureRollsBackRealCopyAndClubBinding.json": "138479d54e8a49f84e88868316426876bade10bdfba67ba2c80061877c11c4c3",
+        "malformedCopyTypeKeepsExistingBasicConversion.json": "98bef924167687cb498611d7bc43449c5ad841e39115ff244e1f225404d8e35b",
+        "missingSourceRejectsWithoutContentWrites.json": "7313c39828da466987a1520914df21a718109226593a47ef524cee8225366df2",
+        "completeCopyTypeThreeCommitsWholeContentGraphAndMemberSlot.json": "dfe518e714c353a4194a74e51575223e4868ad8dc5c40001d48c88400fb0ad28",
+        "sameOwnerKeepsCompletionRuleAndSharesOnlyUnreferencedTemplate.json": "3dc2945380630f36bae5cd36856e0cefbbde93561ea5a9890dfe1000552a9888",
+        "graphPatchFailureRollsBackChildrenAndRuntimePatch.json": "ec599db20910776e20d3069f7197767334af0048d296b15a83f43d2784d84fc6",
+        "collaboratorZeroRowsRemainsAnExplicitUnfixedLegacyRisk.json": "f841ee0cbbbfb8840ace42cebe190dee629e9286213dbc1e7a7a5ffb3448bcba",
+        "repeatedCopyCreatesIndependentGraphsRatherThanInventedIdempotency.json": "12a64d031111d4bf341b53c11c0d6c2cc0469220ca114bb61684b4135dc4dabe",
+        "runtimePatchFailureRollsBackCompleteChildren.json": "f50f082fc4ef06d9b6f25a56278a09643524294fe32a6546a8fc3bf424ecca76",
+        "transferSuccessKeepsOuterAlgorithmAndDoesNotCopyCollaborators.json": "c569348deba44d0d913e8b9c519732abe63744682fc5f12f9e6c6eb7359cb897",
+        "nodeFailureRollsBackClonedTemplateAndAllEarlierRows.json": "c5b0ac55f76e92e036939872d6b6ba0df79abc90cb14937b6e64c3a1833694a2",
+        "npcFailureRollsBackNodeTemplateAndContentSlot.json": "8c057b0634002aa5f8f3bdcfb667a8140f42939761932f11e3de9d5332195d34",
+        "nonPlatformOfficialSourceRejectsBeforeAnyWrite.json": "eb0822d6602bf3234c0509a6c88e1c68a164ca75048686289d2f729ed1643bb1",
+        "deletedSourceRejectsWithoutContentWrites.json": "f273630f51f8389ec307c364828df3ed5ae49309bc9adee570a2a17a2cb48ccb",
+        "blockPatchFailureRollsBackCopiedGraph.json": "fef387b96aeea70057d5a69cb7132a2a5fb6d388c1615ec6300250354df59d76",
+        "memberSlotZeroRowsRemainsAnExplicitUnfixedLegacyRisk.json": "942fc0692252ae967449f73b6d5bdb90b7de19d94b7571041474f800877cd679",
+        "defaultBasicCopyKeepsExistingDefaultsWithoutInventingContentSlot.json": "036396e885c0b3045baa598dce82e1fdaef2709704ba305876e8ebe672a6175c",
+        "storyPatchFailureRollsBackEveryContentTable.json": "160c9b6f946eba4315022d15fc54529bcab3538a7d65a03f0a79fd627f3a0f38",
+        "officialMemberParameterRejectsBeforeAnyWrite.json": "dfa880d329746ee25dfc760dfc103eea6bc0ee68ec36904a3960caab06ea5ec3",
+        "callerRollbackAfterFullCopyRollsBackWholeGraph.json": "2d1f50687911d420ca5e63f27f3c68138926b659c1b3ab711942f7065fa76721",
+        "officialCopyUsesPlatformSlotAndDoesNotInferSourceFromMemberId.json": "5855729883dfe0b7f2d35fdd957fae4bf0f522736f31815d0da8750aa6d48018",
+        "secondChapterFailureRollsBackTopicSlotAndBothChapters.json": "f5309db67a0455032c4fb852d3886c4f1ecf7cd7caa370040acb136ec8f0a436",
+        "transferSquareFailureRollsBackRealCopyAndOriginalVisibility.json": "103d1bce15ac570c7ea0dc615e69421983deffd19d536649c7817abb69eb4815",
+        "zeroTopicInsertRejectsBeforeChildren.json": "34b6713e7b1a552685fe0ed2619c0e3f1c59a82d5f177533430fe7a3b0adb157",
+        "officialMissingPersistedSlotRollsBackInsertedTopic.json": "486e47574bff8fc3c51e923b9e7a506e311a2bb834b204f9c6547e55881022c4"
+      }
+    }
+  ],
+  "allowed_normalization": "Only operation audit times and fresh checkin bytes; original rows separately asserted unchanged; surrogate IDs exactly compared",
+  "not_proven": [
+    "94relatedunit not yet executed on extracted source",
+    "Full Spring startup/new extracted candidate full CI pending",
+    "Existing MEMBER-slot/rowcount/fallback/eligibility/window risks intentionally retained",
+    "Not full WP10 publishing/sale/settlement separation or Q5/T15 all change drills"
+  ]
+}
