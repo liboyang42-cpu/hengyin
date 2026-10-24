@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.common.exception.ServiceException;
 
 /**
  * C09 独占：消息原请求的不可变回执生产者。概念上复用既有 IM writer/journal
@@ -181,19 +182,31 @@ public final class ImmutableReceiptProducer {
     public Map<String, Object> sendOriginalMap(OriginalRequest request, Long actorId, Long conversationId,
             Integer msgType, String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
             List<Long> mentionRoleIds, boolean mentionEveryone) {
-        OriginalRequest required = requireRequest(request);
-        if (required.kind != Kind.REPLY && required.kind != Kind.MENTION) {
-            throw new NotASendException(required.kind);
+        if (request == null) {
+            throw new IllegalArgumentException("原请求不能为空");
         }
-        if (content == null || content.isBlank() || content.equals(required.body) || msgType == null
+        if (request.kind == null) {
+            throw new IllegalArgumentException("原请求 kind 不能为空");
+        }
+        if (request.kind != Kind.REPLY && request.kind != Kind.MENTION) {
+            throw new NotASendException(request.kind);
+        }
+        String key = request.requestId;
+        if (key == null || !key.matches("[A-Za-z0-9_-]{16,64}")) {
+            throw originalRejection("INVALID_REQUEST_ID");
+        }
+        if (content == null || content.trim().isEmpty()) {
+            throw originalRejection("INVALID_MESSAGE_CONTENT");
+        }
+        if (content.equals(request.body) || msgType == null
                 || actorId == null || actorId.longValue() <= 0L
                 || conversationId == null || conversationId.longValue() <= 0L) {
             throw new WaitingSourceException(IM_SEND_COMMAND);
         }
-        if (required.kind == Kind.REPLY && (replyToId == null || replyToId.longValue() <= 0L)) {
+        if (request.kind == Kind.REPLY && (replyToId == null || replyToId.longValue() <= 0L)) {
             throw new WaitingSourceException(IM_SEND_WIRE);
         }
-        if (required.kind == Kind.MENTION && !hasMention(mentionMemberIds, mentionRoleIds, mentionEveryone)) {
+        if (request.kind == Kind.MENTION && !hasMention(mentionMemberIds, mentionRoleIds, mentionEveryone)) {
             throw new WaitingSourceException(IM_SEND_WIRE);
         }
         if (extraJson != null) {
@@ -201,11 +214,6 @@ public final class ImmutableReceiptProducer {
         }
         if (channelSend == null) {
             throw new WaitingSourceException(CHANNEL_MESSAGE_SEND);
-        }
-        // 原 send 对整串做 16–64 校验，不 trim。裁完再发会换成另一个键。
-        String key = request.requestId;
-        if (key == null || !key.matches("[A-Za-z0-9_-]{16,64}")) {
-            throw new IllegalArgumentException("INVALID_REQUEST_ID");
         }
         Map<String, Object> sent = channelSend.send(actorId, conversationId, key, msgType, content,
                 extraJson, replyToId, mentionMemberIds, mentionRoleIds, mentionEveryone);
@@ -271,7 +279,15 @@ public final class ImmutableReceiptProducer {
         if (topId.value != null && nestedId.value != null && !topId.value.equals(nestedId.value)) {
             return false;
         }
-        return messageId.value != null || topId.value != null || nestedId.value != null;
+        if (messageId.value != null || topId.value != null || nestedId.value != null) {
+            return true;
+        }
+        // 原重放可以只有同键和 message_unavailable，没有 id。不造 id。
+        return Boolean.TRUE.equals(sent.get("message_unavailable"));
+    }
+
+    private static ServiceException originalRejection(String name) {
+        return new ServiceException(name, Integer.valueOf(400)).setDetailMessage(name);
     }
 
     /** 缺席不是非法。键在场但不是正整数时不能当成没提供。 */

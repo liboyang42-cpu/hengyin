@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
+import com.chengyinhub.common.exception.ServiceException;
+
 class ChannelReplyMentionEntryTest {
 
     @Test
@@ -33,7 +35,6 @@ class ChannelReplyMentionEntryTest {
             public Map<String, Object> send(Long actor, Long conversation, String client, Integer type, String content,
                     String extra, Long replyTo, List<Long> members, List<Long> roles, boolean everyone) {
                 sends.incrementAndGet();
-                assertEquals(key, client);
                 if (replyTo != null) {
                     assertEquals(Long.valueOf(88120L), replyTo);
                 } else {
@@ -69,11 +70,14 @@ class ChannelReplyMentionEntryTest {
         assertEquals(key, recovered.get("request_id"));
         assertEquals("PENDING", recovered.get("state"));
         assertEquals(0, store.size());
-        assertThrows(IllegalArgumentException.class, () -> entry.reply(" c09-send-key-0001 ", 7L, 12L, Integer.valueOf(1),
-                "hello", null, 88120L));
+        ServiceException padded = assertThrows(ServiceException.class, () -> entry.reply(" c09-send-key-0001 ", 7L, 12L,
+                Integer.valueOf(1), "hello", null, 88120L));
+        assertEquals("INVALID_REQUEST_ID", padded.getDetailMessage());
         assertEquals(1, sends.get());
-        ImmutableReceiptProducer.OriginalReceipt mentioned = entry.mention(key, 7L, 12L, Integer.valueOf(1), "hello",
-                null, List.of(Long.valueOf(8L)), List.of(), false);
+        String mentionKey = "c09-send-key-0002";
+        ImmutableReceiptProducer.OriginalReceipt mentioned = entry.mention(mentionKey, 7L, 12L, Integer.valueOf(1),
+                "hello", null, List.of(Long.valueOf(8L)), List.of(), false);
+        assertEquals(mentionKey, mentioned.requestId);
         assertEquals(2, sends.get());
         assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, mentioned.outcome);
         assertEquals(0, store.size());
@@ -88,8 +92,12 @@ class ChannelReplyMentionEntryTest {
                 (actor, conversation, client, type, content, extra, replyTo, members, roles, everyone) -> {
                     sends.incrementAndGet();
                     Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
-                    sent.put("id", Long.valueOf(42L));
                     sent.put("request_id", client);
+                    if ("c09-send-key-0003".equals(client)) {
+                        sent.put("message_unavailable", Boolean.TRUE);
+                        return sent;
+                    }
+                    sent.put("id", Long.valueOf(42L));
                     return sent;
                 };
         ChannelReplyMentionEntry entry = new ChannelReplyMentionEntry(store, channel);
@@ -99,5 +107,17 @@ class ChannelReplyMentionEntryTest {
         assertEquals(Long.valueOf(42L), sent.get("id"));
         assertEquals(key, sent.get("request_id"));
         assertEquals(0, store.size());
+        Map<String, Object> unavailable = entry.forward(7L, 12L, "c09-send-key-0003", Integer.valueOf(1), "hello",
+                null, 88120L, List.of(), List.of(), false);
+        assertEquals(Boolean.TRUE, unavailable.get("message_unavailable"));
+        assertNull(unavailable.get("id"));
+        ServiceException blank = assertThrows(ServiceException.class, () -> entry.forward(7L, 12L, " ", Integer.valueOf(1),
+                "hello", null, 88120L, List.of(), List.of(), false));
+        assertEquals(Integer.valueOf(400), blank.getCode());
+        assertEquals("INVALID_REQUEST_ID", blank.getDetailMessage());
+        ServiceException empty = assertThrows(ServiceException.class, () -> entry.forward(7L, 12L, key, Integer.valueOf(1),
+                "  ", null, 88120L, List.of(), List.of(), false));
+        assertEquals("INVALID_MESSAGE_CONTENT", empty.getDetailMessage());
+        assertEquals(2, sends.get());
     }
 }

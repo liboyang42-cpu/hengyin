@@ -200,7 +200,7 @@ class ImmutableReceiptProducerTest {
             assertEquals(kind, refused.getKind());
         }
         ImmutableReceiptProducer.OriginalRequest reply = new ImmutableReceiptProducer.OriginalRequest(
-                "c09-send-01", ImmutableReceiptProducer.Kind.REPLY, "{\"fp\":1}",
+                "c09-send-key-0001", ImmutableReceiptProducer.Kind.REPLY, "{\"fp\":1}",
                 ImmutableReceiptProducer.OUTCOME_ACCEPTED);
         ImmutableReceiptProducer.WaitingSourceException fingerprint = assertThrows(
                 ImmutableReceiptProducer.WaitingSourceException.class,
@@ -256,14 +256,17 @@ class ImmutableReceiptProducerTest {
         ImmutableReceiptProducer.OriginalRequest shortKey = new ImmutableReceiptProducer.OriginalRequest(
                 "c09-send-01", ImmutableReceiptProducer.Kind.REPLY, "{\"fp\":1}",
                 ImmutableReceiptProducer.OUTCOME_ACCEPTED);
-        assertThrows(IllegalArgumentException.class, () -> producer.sendOriginal(shortKey, 7L, 12L, Integer.valueOf(1),
-                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
+        ServiceException shortRejected = assertThrows(ServiceException.class, () -> producer.sendOriginal(shortKey, 7L, 12L,
+                Integer.valueOf(1), "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
+        assertEquals(Integer.valueOf(400), shortRejected.getCode());
+        assertEquals("INVALID_REQUEST_ID", shortRejected.getDetailMessage());
         assertEquals(1, calls.size());
         ImmutableReceiptProducer.OriginalRequest padded = new ImmutableReceiptProducer.OriginalRequest(
                 " c09-send-key-0001 ", ImmutableReceiptProducer.Kind.REPLY, "{\"fp\":1}",
                 ImmutableReceiptProducer.OUTCOME_ACCEPTED);
-        assertThrows(IllegalArgumentException.class, () -> producer.sendOriginal(padded, 7L, 12L, Integer.valueOf(1),
-                "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
+        ServiceException paddedRejected = assertThrows(ServiceException.class, () -> producer.sendOriginal(padded, 7L,
+                12L, Integer.valueOf(1), "hello", null, 88120L, java.util.List.of(), java.util.List.of(), false));
+        assertEquals("INVALID_REQUEST_ID", paddedRejected.getDetailMessage());
         assertEquals(1, calls.size());
         ImmutableReceiptProducer.ChannelMessageOriginalSend splitIds = (actor, conversation, client, type, content,
                 extra, replyTo, members, roles, everyone) -> {
