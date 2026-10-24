@@ -184,6 +184,43 @@ class ChannelGovernanceProjectionTest {
         assertEquals(7, grant.identity.accountId);
     }
 
+    @Test
+    void readMessagesUsesListMessagesOnlyAfterActiveMembershipAndDoesNotChangePhase() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelCatalogEntry catalog = new ChannelCatalogEntry(21, 12, ConversationKind.GROUP,
+                new ChannelRulesCas(3, Integer.valueOf(4), 3));
+        java.util.concurrent.atomic.AtomicInteger reads = new java.util.concurrent.atomic.AtomicInteger();
+        ChannelGovernanceProjection.ChannelMessageSource messages = (memberId, conversationId, cursorId, size, afterId) -> {
+            reads.incrementAndGet();
+            java.util.Map<String, Object> page = new java.util.LinkedHashMap<String, Object>();
+            page.put("conversationId", Long.valueOf(conversationId));
+            page.put("size", Integer.valueOf(size));
+            return page;
+        };
+        ChannelGovernanceProjection missingMessages = new ChannelGovernanceProjection(catalog, identity,
+                (memberId, conversationId) -> true, null);
+        IllegalStateException waiting = assertThrows(IllegalStateException.class,
+                () -> missingMessages.readMessages(70L, null, 20, null));
+        assertTrue(waiting.getMessage().contains(ChannelGovernanceProjection.IM_LIST_MESSAGES));
+        assertEquals(ChannelGovernancePhase.CATALOGED, missingMessages.phase());
+        assertEquals(0, reads.get());
+
+        ChannelGovernanceProjection denied = new ChannelGovernanceProjection(catalog, identity,
+                (memberId, conversationId) -> false, messages);
+        assertEquals(ChannelAuthorizationException.Code.NOT_MEMBER,
+                assertThrows(ChannelAuthorizationException.class, () -> denied.readMessages(70L, null, 20, null)).code);
+        assertEquals(0, reads.get());
+        assertEquals(ChannelGovernancePhase.CATALOGED, denied.phase());
+
+        ChannelGovernanceProjection live = new ChannelGovernanceProjection(catalog, identity,
+                (memberId, conversationId) -> memberId == 70L && conversationId == 12L, messages);
+        java.util.Map<String, Object> page = live.readMessages(70L, null, 20, null);
+        assertEquals(12L, page.get("conversationId"));
+        assertEquals(1, reads.get());
+        assertEquals(ChannelGovernancePhase.CATALOGED, live.phase());
+        assertEquals(1L, live.generation());
+    }
+
     private static ChannelGovernanceProjection memberReady(ChannelCatalogEntry catalog,
             ChannelAccount4Identity identity, ChannelGovernanceProjection.ChannelMembershipSource membership) {
         ChannelGovernanceProjection journey = new ChannelGovernanceProjection(catalog, identity, membership);

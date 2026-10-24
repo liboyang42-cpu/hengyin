@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.channel;
 
+import java.util.Map;
+
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAccount4Identity;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAuthorizationGrant;
@@ -22,6 +24,7 @@ import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelRo
 public final class ChannelGovernanceProjection {
 
     public static final String IM_ACTIVE_GROUP_MEMBER = "im.isActiveGroupMember";
+    public static final String IM_LIST_MESSAGES = "im.listMessages";
 
     public final ChannelCatalogEntry catalog;
     public final ChannelAccount4Identity identity;
@@ -31,6 +34,7 @@ public final class ChannelGovernanceProjection {
     private ChannelRole role;
     private ChannelRevokeReason revokeReason;
     private final ChannelMembershipSource membership;
+    private final ChannelMessageSource messages;
 
     public ChannelGovernanceProjection(ChannelCatalogEntry catalog, ChannelAccount4Identity identity) {
         this(catalog, identity, null);
@@ -38,6 +42,11 @@ public final class ChannelGovernanceProjection {
 
     public ChannelGovernanceProjection(ChannelCatalogEntry catalog, ChannelAccount4Identity identity,
             ChannelMembershipSource membership) {
+        this(catalog, identity, membership, null);
+    }
+
+    public ChannelGovernanceProjection(ChannelCatalogEntry catalog, ChannelAccount4Identity identity,
+            ChannelMembershipSource membership, ChannelMessageSource messages) {
         this.catalog = catalog;
         this.identity = identity;
         this.phase = ChannelGovernancePhase.CATALOGED;
@@ -46,6 +55,7 @@ public final class ChannelGovernanceProjection {
         this.role = ChannelRole.NONE;
         this.revokeReason = null;
         this.membership = membership;
+        this.messages = messages;
     }
 
     public ChannelGovernancePhase phase() {
@@ -151,6 +161,27 @@ public final class ChannelGovernanceProjection {
         return authorizeReadWrite();
     }
 
+    /**
+     * 用既有 {@link IImService#listMessages} 读会话页。先过群成员闸。
+     * 缺成员口或消息口为 WAITING_SOURCE。非成员不调用 listMessages，也不改 phase。
+     * 不 send、不 markRead。
+     */
+    public Map<String, Object> readMessages(long memberId, Long cursorId, int size, Long afterId) {
+        if (membership == null) {
+            throw new IllegalStateException("WAITING_SOURCE:" + IM_ACTIVE_GROUP_MEMBER);
+        }
+        if (messages == null) {
+            throw new IllegalStateException("WAITING_SOURCE:" + IM_LIST_MESSAGES);
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException("size 不合法");
+        }
+        if (!membership.isActiveGroupMember(memberId, catalog.conversationId)) {
+            throw new ChannelAuthorizationException(ChannelAuthorizationException.Code.NOT_MEMBER);
+        }
+        return messages.listMessages(memberId, catalog.conversationId, cursorId, size, afterId);
+    }
+
     public void govern() {
         authorizeReadWrite();
         ChannelMemberAuthorizationProjection.authorize(identity, catalog, role, consentedRulesVersion,
@@ -214,6 +245,28 @@ public final class ChannelGovernanceProjection {
         if (revokeReason != null || phase == ChannelGovernancePhase.ISOLATED || phase == ChannelGovernancePhase.LEFT
                 || phase == ChannelGovernancePhase.BANNED) {
             throw new ChannelAuthorizationException(ChannelAuthorizationException.Code.REVOKED);
+        }
+    }
+
+    /** 只读既有会话页；不 send、不 markRead。 */
+    public interface ChannelMessageSource {
+        Map<String, Object> listMessages(long memberId, long conversationId, Long cursorId, int size, Long afterId);
+    }
+
+    public static final class ImServiceChannelMessages implements ChannelMessageSource {
+        private final IImService im;
+
+        public ImServiceChannelMessages(IImService im) {
+            this.im = im;
+        }
+
+        @Override
+        public Map<String, Object> listMessages(long memberId, long conversationId, Long cursorId, int size,
+                Long afterId) {
+            if (im == null) {
+                throw new IllegalStateException("WAITING_SOURCE:" + IM_LIST_MESSAGES);
+            }
+            return im.listMessages(Long.valueOf(memberId), Long.valueOf(conversationId), cursorId, size, afterId);
         }
     }
 
