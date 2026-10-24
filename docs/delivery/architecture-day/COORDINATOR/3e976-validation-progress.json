@@ -1,0 +1,174 @@
+{
+  "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+  "standard_run": 40130007237,
+  "storage_run": 40130012017,
+  "standard_completed_success": 28,
+  "storage_completed_class_jobs": [
+    {
+      "job_id": 120979607368,
+      "class": "ClubPostMediaReviewBudgetMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607378,
+      "class": "ClmCommercePaymentProofMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607396,
+      "class": "BeforeStartNoticeMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607404,
+      "class": "RegistrationSeatMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607406,
+      "class": "RegistrationTopicFenceMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607410,
+      "class": "OmsOrderCommerceGuardMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607427,
+      "class": "NpcVoiceEnrollmentMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607428,
+      "class": "AuditTopicCurrentPublicationMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607437,
+      "class": "Wp04OriginalRefundMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607462,
+      "class": "CommittedOfficialNoticeMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607463,
+      "class": "NpcAsrIntentMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607494,
+      "class": "OfficialBroadcastDeliveryMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607495,
+      "class": "AiQuotaReservationRedisIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607505,
+      "class": "FreeSelfPlayCreateRealDbIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607518,
+      "class": "RefundNotificationMybatisIntegrationTest",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607530,
+      "class": "AdvancedCommandFingerprintMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607539,
+      "class": "PhotoCheckIntentRecoveryMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607553,
+      "class": "GameplayReskinMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607566,
+      "class": "OWN_C04_21MySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607585,
+      "class": "Wp04TopicCashFenceMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607599,
+      "class": "WechatVerifiedPaymentFactMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607603,
+      "class": "SchedulerWorkFenceTwoProcessMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979607667,
+      "class": "TopicContentBudgetMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    },
+    {
+      "job_id": 120979608601,
+      "class": "ClubLeadChapterIntentMySqlIT",
+      "job_conclusion": "success",
+      "independent_artifact_readback": "PENDING"
+    }
+  ],
+  "all_complete": false,
+  "architecture_source": {
+    "candidate_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+    "comparison_base_sha": "e2e05b9614a3c5d62b774718797f9a6792a3eeca",
+    "verdict": "PASS_WITH_REVIEW_ITEMS",
+    "automatic_blockers": 0,
+    "manual_review_items": 567,
+    "categories": {
+      "UNKNOWN_SQL_SCRIPT: use existing migration gates and PR review": 36,
+      "MAPPER_XML_CHANGED: dynamic fragment reachability/metadata need PR review": 39,
+      "WRITE_CONTRACT_REVIEW": 60,
+      "SQL_QUERY_CHANGED: effects/locking are not semantically parsed": 165,
+      "BUSINESS_WRITE_OUTSIDE_POLICY": 54,
+      "UNKNOWN_LOCKING_SELECT": 63,
+      "UNKNOWN_BUSINESS_WRITE_EFFECT": 17,
+      "UNKNOWN": 17,
+      "SQL_REMOVED: review receipt/recovery callers": 2,
+      "LEGACY_UNOWNED_BOUNDARY": 105,
+      "BOUNDARY_ROLE_UNKNOWN": 9
+    },
+    "meaning": "Review items are leads/legacy coverage, not 567 bugs or blanket proof; no full manual disposition claimed"
+  }
+}

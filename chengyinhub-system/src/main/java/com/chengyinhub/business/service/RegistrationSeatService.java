@@ -17,6 +17,7 @@ import java.util.Objects;
 @Service
 public class RegistrationSeatService {
     @Autowired private RegistrationSeatMapper seats;
+    @Autowired private RegistrationSeatSettlementReader settlementReader;
     @Autowired private CmsRegistrationMapper registrations;
     @Autowired private CmsTopicMapper topics;
     @Autowired private CmsActivityMapper activities;
@@ -233,16 +234,10 @@ public class RegistrationSeatService {
                 seat.getVerifierMemberId(), seat.getVerifiedAt(), false, registrationFirstTime);
     }
 
-    /** G reads actual facts after locking its original parents/registrations. No money eligibility inference. */
+    /** Compatibility entry; settlement consumers depend on the mapper-only reader directly. */
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public List<RegistrationSeat> verifiedSeatsForGroup(Long topicId, Long activityId, Date cutoff) {
-        if (topicId == null || topicId <= 0 || activityId == null || activityId <= 0 || cutoff == null) {
-            throw new IllegalArgumentException("席位事实查询范围缺失");
-        }
-        if (!seats.selectUnprovenMultiGroupOrdersForUpdate(topicId, activityId, cutoff).isEmpty()) {
-            throw conflict("多人整单核销缺少逐席位证明，不能推算履约费，请人工核验");
-        }
-        return seats.selectVerifiedForGroupForUpdate(topicId, activityId, cutoff);
+        return settlementReader.verifiedSeatsForGroup(topicId, activityId, cutoff);
     }
 
     private CmsRegistration lockCurrent(CmsRegistration seed) {

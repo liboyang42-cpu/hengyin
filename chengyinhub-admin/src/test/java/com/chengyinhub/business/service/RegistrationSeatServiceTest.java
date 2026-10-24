@@ -39,7 +39,7 @@ class RegistrationSeatServiceTest {
         activities = mock(CmsActivityMapper.class); orders = mock(ICmsRegistrationService.class);
         clubs = mock(IClubMemberService.class); audits = mock(BusinessAuditEventMapper.class);
         merchants = mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
-        Object[][] fields = {{"seats", seats}, {"registrations", registrations}, {"topics", topics},
+        Object[][] fields = {{"seats", seats}, {"settlementReader", new RegistrationSeatSettlementReader(seats)}, {"registrations", registrations}, {"topics", topics},
                 {"activities", activities}, {"registrationService", orders}, {"clubs", clubs}, {"audits", audits}, {"merchants", merchants}};
         for (Object[] field : fields) ReflectionTestUtils.setField(service, (String) field[0], field[1]);
         order = new CmsRegistration(); order.setId(31L); order.setOwnerType(1L); order.setOwnerId(41L);

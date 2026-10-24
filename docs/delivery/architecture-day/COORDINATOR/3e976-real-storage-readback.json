@@ -1,0 +1,932 @@
+{
+  "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+  "run": 40130012017,
+  "unique_classes": 65,
+  "receipts": 65,
+  "xml_testcases": 810,
+  "xml_counts": {
+    "passed": 809,
+    "failure": 1
+  },
+  "duplicate_cases": 0,
+  "class_verdicts": {
+    "PASS": 64,
+    "FAIL": 1
+  },
+  "independently_read_clean": 65,
+  "binding_problems": [],
+  "classes": [
+    {
+      "class": "com.chengyinhub.business.it.AdvancedCommandFingerprintMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 5,
+      "xml_counts": {
+        "passed": 5
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "abfab22e93eecd7e8e720e59bcc0e268d5c83728cb13193eb1675d135156c041",
+      "xml_sha256": [
+        "4fa4624b22eb78598021cfc0e629e9ea54fd720ed1724696100956b29c8336d8"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.AiNotSentQuotaRecoveryMySqlRedisIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 4,
+      "xml_counts": {
+        "passed": 4
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "97775e3d376f8fef740aeef39e2aead4fd82d4a2c0020a6a3294551476e65f30",
+      "xml_sha256": [
+        "7e54735860ddbda0ee648c6b0853514e70451e68a8d47648ab2f29e18502c8f3"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 9,
+      "xml_counts": {
+        "passed": 9
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "76c92b32dd9b08e6081557f05539520d61ec6275c5960c7914cb26a723fd5cb5",
+      "xml_sha256": [
+        "c52026487d4b6e10202331a4779bf5d0044c345b3af5a2f329c9c2539a8da7d7"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 15,
+      "xml_counts": {
+        "passed": 15
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "e9cd65a37128d8443fb6cf2920878fd405961dd18c22b2346e365ce4a09793cf",
+      "xml_sha256": [
+        "3a0fc0790115a2bb23397e4181b0cc3d107a4ff6a70b62a981c5101c6aadd570"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.AiThemeDraftIntentMySqlRedisIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 23,
+      "xml_counts": {
+        "passed": 23
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "4de51212caf3877b817ebfc101380e299f76fd9244247639fa656419dd12fb29",
+      "xml_sha256": [
+        "b0fd34b3b22e6a3a2c7853c9652aeb33145cc8451ab880b4d40a061f4d17fd09"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.AuditTopicCurrentPublicationMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 1,
+      "xml_counts": {
+        "passed": 1
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "3ddfdac5201d17f4bd73a049421127cbe24b2c8598f03dbacbdb33f0f047e6a3",
+      "xml_sha256": [
+        "9d10304a1e27994d5d3aad8061f1976e2511f45d741cfe6d04bb28cd5dac5e04"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 12,
+      "xml_counts": {
+        "passed": 12
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "667a9275c89af14fa0a01be09c93f301816042a5e2b6464a066f7c694a0263a8",
+      "xml_sha256": [
+        "32cf5dfb486ee5bc8a96a657424f89dc47ed5188d72cea7f62b7997c743f93db"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 53,
+      "xml_counts": {
+        "passed": 53
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "6edb55c23db3d9e28d5a39154646033bd6b56fa36e21bd6fda82927c5b4dcca9",
+      "xml_sha256": [
+        "13df7e97731c7c1ddfb63bb1a6f3d49f0a3dce3d33b2287ceb76c2d4738cd582"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ChapterApplicationOutcomeMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 10,
+      "xml_counts": {
+        "passed": 10
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "884be29fc1dfdbb6451725faa846d329c2296c3b9a5c7de9bb07f05319394b40",
+      "xml_sha256": [
+        "1ba1d47cf7785e8f69515835611a655c3b99b1cfa21f91c55076174cda998704"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ChapterApplicationRoundMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 10,
+      "xml_counts": {
+        "passed": 10
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "c9c69a8a9a962a5f3cc474b41a80bcc91685cfec1f88f1f58fe094b582021f91",
+      "xml_sha256": [
+        "0f9363838f1c28d12aeb31d80e32ebbcfd2e26f17febae4704c113fc025ed9b6"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.ClmCommercePaymentProofMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 8,
+      "xml_counts": {
+        "passed": 8
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "49008ceced0b9be2bc80e7a583dbd85e80c027ff7fa78a2628a01d9b257159a9",
+      "xml_sha256": [
+        "a0fbd9797cc96cb24db78a482247756bd933c9d6ac72d52218a11ecc891a7e2b"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 3,
+      "xml_counts": {
+        "passed": 3
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "db5b3611825b668ba070a76cb2979d4356863ee7c67720fd1cefef12ce02d060",
+      "xml_sha256": [
+        "34cad1394568b5f1c6b4bcdf520de70e7ce9892729bb1a3aebff8a6a30f392ba"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ClubPostMediaReviewBudgetMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 8,
+      "xml_counts": {
+        "passed": 8
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "86173f9d74c94713feab81d5b411668d5e1e24033fc086903b6a43ccd639373b",
+      "xml_sha256": [
+        "e718a48d247767352b5264f9d94750e72ca7b7f47bade3c316c017bad5073857"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CommittedOfficialNoticeMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 19,
+      "xml_counts": {
+        "passed": 19
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "4f66ae67bc66cf2b280a67942d80187f0c84a69ba2cd0394ebeb7ec471441668",
+      "xml_sha256": [
+        "5115a9837670ae01518e30d301f3de8060e08f13e233d9a19df705a068b51a3e"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ComplaintCloseReporterNoticeMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 8,
+      "xml_counts": {
+        "passed": 8
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "576536d868c57b53613a9a96264bcb014caa2ebab9f0ad187522822c4208d61b",
+      "xml_sha256": [
+        "f0f03570926d7742a804972600d8dda09f637c8da6b5711f989bccddf6cd77e8"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopComplaintCommittedNoticeMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 11,
+      "xml_counts": {
+        "passed": 11
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "dbe3f6bfa3b55fcbde0f7a4d81cee116c475286b58baffc9a8b79863e7ecb76c",
+      "xml_sha256": [
+        "ef874f2a58da3937a99ec5857ec9568fbf2aea4ba67f43454cda308a28fd4b0d"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 36,
+      "xml_counts": {
+        "passed": 36
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "a79e0ab422e77edaae6af217231820952e29bf31e24433bdafbba682b45be099",
+      "xml_sha256": [
+        "291443d2063657b6c09dae736d0b21041e7bee064e52f4ef17e3a771f4608f47"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 11,
+      "xml_counts": {
+        "passed": 11
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "bf0d0284ddef3428d358cf92ac9506007c037f676dc2638cf236cae428076701",
+      "xml_sha256": [
+        "87ae9fd129f7be20f896fdb7815830393d363527acbf72b6aef214e47e5e8261"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 3,
+      "xml_counts": {
+        "passed": 3
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "d5828777c1702f3488440b04d95575ba3659b7c8da98ba93a53d50b267a137e5",
+      "xml_sha256": [
+        "6b0efefdebd9698871828c4a3273c2e989f9a921bc499ddd669d80a287c4b48b"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 8,
+      "xml_counts": {
+        "passed": 8
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "d097b1a787b3a18956fb7c076cb411d76bac6b93b78ba095d16aebd1f9775c04",
+      "xml_sha256": [
+        "39fa0288c3eaaf751874e025555ce214b9bff9120fba335627bfdfed95a76821"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.FreeSelfPlayCreateRealDbIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 1,
+      "xml_counts": {
+        "passed": 1
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "8eff61dba0c15f56786474e31ebedd28f067333753fb5c821f403d8a2ecefe45",
+      "xml_sha256": [
+        "8b4a8f6432e7b1c16cd92380ea5435967463f5b870965084ec9c569b6b649c49"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 1,
+      "xml_counts": {
+        "passed": 1
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "26778d5bf30163a8b8abce20164c579979cb6d59574dda21911188647d78ff47",
+      "xml_sha256": [
+        "7c9b9b9a56d4ca9feb7c9a4de5550a8ad00c7c8a8184e313ca0b67df77767dcb"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 2,
+      "xml_counts": {
+        "passed": 2
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "5263e74357ed7596aa277ce213c7a49d27af21956ae231cf356d2ec640ef4954",
+      "xml_sha256": [
+        "2aefad00696a3ed952d9e32d70fc04214f2f8e603a2e6d4e2b3684c15fc99e7f"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ImConversationBatchReadMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 4,
+      "xml_counts": {
+        "passed": 4
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "c62e7007992f1a1c6e7f9f3c838d9b1c4d13872aab709f31d7843138c7998a0e",
+      "xml_sha256": [
+        "21baca3d7cb095659c1e8952385df2250a3aba9e50f506295270e6aaeede8cfd"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.ImConversationQueryScopeMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 7,
+      "xml_counts": {
+        "passed": 7
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "d1d09e6b6e82d62de37ffc3797ad52bd8e5febf74eba0a1a428994929e493ba0",
+      "xml_sha256": [
+        "ff78951aed72bc83ccea1f9ca648d0c0c15f651e5abd8aa4fcd0b7b66d1c8fda"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 21,
+      "xml_counts": {
+        "passed": 21
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "0d102061cacb4f815fa8d19f2f3706fb0dacfa3b1f99be4caba1fcb4c673de1b",
+      "xml_sha256": [
+        "93ce38ee0e0b5812f01a586baa85c1ae4ed09c448a86d16336eb4a8da9644959"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 15,
+      "xml_counts": {
+        "passed": 15
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "13c16825dd5d4c0397cba8d404221fa2a92259bf8ac6461a2033f008be69600d",
+      "xml_sha256": [
+        "63618964bbfcb7cab4e6cadcf952ef95bd98c2a0cff3f8f1dd9546aaf06ed5b1"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.NpcAsrIntentMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 10,
+      "xml_counts": {
+        "passed": 10
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "0c8657ad0833b794b402f218fff46d55a15bdfcee2aa6cd2be9cf7c5457f277a",
+      "xml_sha256": [
+        "1bb3cb76204b5fa33e2972f7bbcc1507a36e79ed6bc8106701c26057c4f61d69"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 4,
+      "xml_counts": {
+        "passed": 4
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "a91d1bb467fcb3bf2a81180953c0f2559498eef0ae1a48d926d841f82369155e",
+      "xml_sha256": [
+        "e20a5264e5911b8ee6aa39f95f7e2e87dc1d13e78e76828273afaaae52eecb10"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 3,
+      "xml_counts": {
+        "passed": 3
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "f00ebf0cf850383a77228b261503619fde8b2667af2cf7b1b2fd305442b58dec",
+      "xml_sha256": [
+        "c89308ac790bc5a97289daa3c693b8d33079a84dfc971b8aa47983d6d2407bdf"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 10,
+      "xml_counts": {
+        "passed": 10
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "95be58973703818460ac2eb5cb89eb727a4d01dcc9ac2320f163d8bda117752d",
+      "xml_sha256": [
+        "006ad73cc478cd0b1b3d5469c78cd31a2fa4a4a4204ef3d6c32fffc7776b9aff"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.OmsOrderCommerceGuardMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 6,
+      "xml_counts": {
+        "passed": 6
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "a43505af405589711625fe199b4432849b970a5c8598fee3eb5277bf89eea510",
+      "xml_sha256": [
+        "4ed69fa1ec7fad1d42cebc3ddd43e07caa201514f530284101643093950cdbb8"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 3,
+      "xml_counts": {
+        "passed": 3
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "0c07954e48bb67206df1f3f7f3018e8ac256df202937de412d379bc884d89f8f",
+      "xml_sha256": [
+        "2d4da5560cc4f6d29038c61fb8d26840656f9dd822b32048087ee1183898376e"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.PhotoCheckIntentLockReadMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 1,
+      "xml_counts": {
+        "passed": 1
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "4548b444c8e0e820586e2a821da5d493e3a2a981d9e738b53fd6dc750583b262",
+      "xml_sha256": [
+        "a697413c532eff401d5ab2aa05de7e7bd169d1927a869a5fc0ef7c0886a2ea0a"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 10,
+      "xml_counts": {
+        "passed": 10
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "33e4454874d733e8c09838ab8a2cfcf8f587c8043ab8bcfcf758391222fdc52a",
+      "xml_sha256": [
+        "13748b56bea8e26f728775afd51a01a6a35af9c75e2ac72ca1b7d964fd107890"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 4,
+      "xml_counts": {
+        "passed": 4
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "bc5092fd9117626c91da9f25ac1693b67ffce325d079cad8c98bac8c17cbcd67",
+      "xml_sha256": [
+        "0f7b9ed9d124006a8bfe30143d57c0bfb2a49a7c369cc58578800a5daf4c06a9"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 10,
+      "xml_counts": {
+        "passed": 10
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "dab8db6efe9886885d93f9ade69860640a0f375728c75670d10e61dde32a98c8",
+      "xml_sha256": [
+        "e147f018393505686b2f7d1886b9dc42667840d896536de3931d05c7431073c1"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 4,
+      "xml_counts": {
+        "passed": 4
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "9ef9cf015d8a5c375f136ab2de0bd8fd4e73c4d6aecc0aa466a81129dc03aecf",
+      "xml_sha256": [
+        "bea42c43e4586ba59e1084d206797355670dc1791ac0ebb1a66566f05d283c34"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 9,
+      "xml_counts": {
+        "passed": 9
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "5625fb91e8329c348f1fbf688788ee67cf5e125f1dc304393b94102b46379454",
+      "xml_sha256": [
+        "f8c8b06c2c52963aff95a8ab61df72bb95d53a3e02ecb6f467d3a112c6c69251"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 30,
+      "xml_counts": {
+        "passed": 30
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "acf3b684e97c373e8593fcc5e5d504e009b32eb8c92b1806a039d688678e66a9",
+      "xml_sha256": [
+        "bc812201f0ee76e136c8335aee60c3973dad02877c84be7914aa8e43bfe13ab3"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 6,
+      "xml_counts": {
+        "passed": 6
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "2fcb5156f2bcfac4a89b82d3e2392e6ca8a49083ba5b2743869acf63648fe5c3",
+      "xml_sha256": [
+        "611e2d2eff3c2a14acc4b526222222073f4095b512b4c0527d81e102acd3704a"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 14,
+      "xml_counts": {
+        "passed": 14
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "6bf2b5a425bf607d37e0fe1e6ecf3bf44e01bdfb6c7d9508d0b09304f747e14e",
+      "xml_sha256": [
+        "cfd745f7b7b68a93bae188b7a13617213d9a8adab11e8e9dcce61f54441163f2"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.RegistrationEquityMybatisIntegrationTest",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 6,
+      "xml_counts": {
+        "passed": 6
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "fa7fd1f92887886dfe90f188fd0128e6323869ef5618e02bf8593239f56156b5",
+      "xml_sha256": [
+        "ece0e8efb865c25215e897e8640fea224cb65d6e332e5a8dbededc8ec01942f2"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "FAIL",
+      "xml_tests": 96,
+      "xml_counts": {
+        "passed": 95,
+        "failure": 1
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "dfe766af700b34a25813af50d14f8b8debcf4ec6bd539fc5741d12b5ee601c03",
+      "xml_sha256": [
+        "5c835841b61b279070ff85dafef271cc1b540ea91de85cd05345394cecee4d74"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.RegistrationSeatMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 7,
+      "xml_counts": {
+        "passed": 7
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "f20db69bd1deafbd544157e6c3447139cf2d7290592c48e83b7bfea64e985f12",
+      "xml_sha256": [
+        "2ed4382bb317b53f9156b2b6a776ef8913735280d466bfb3701d37fa51676885"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 46,
+      "xml_counts": {
+        "passed": 46
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "237c93273512802ac0ff2336b38e62dd1d9d319a47777b48f635eeff3ba4c459",
+      "xml_sha256": [
+        "d2d7cc95a9cfc2e8c16804c21ed6f667b55530091556f2ec4149bacc14033b8f"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.RoamLocationRetentionMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 21,
+      "xml_counts": {
+        "passed": 21
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "46427b2b8068066a04169475d4efefb3b90cc782719ea2ca34a96b6ed7af7959",
+      "xml_sha256": [
+        "86240c21c64f18db54578b8543102f89295f27ffe6c7ba4cbbaa4afe23b688d3"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 3,
+      "xml_counts": {
+        "passed": 3
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "69137f3fd65710da06f9bee52986ec11d45e63c73fffb06e6d4768aae210ecc2",
+      "xml_sha256": [
+        "603eb9a316622933cd5008c09d24db1fa94c600425a8b8f501687f07883e2c43"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 3,
+      "xml_counts": {
+        "passed": 3
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "a6fc5f8ecdb744f95ae44b662901e29df1fa183c6575b85a751af123970bedea",
+      "xml_sha256": [
+        "fc0731b7f88b73828a219f72c2eb061bf52f3c831e8a243891d4b2bd66c16a2b"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.quartz.util.SchedulerWorkFenceTwoProcessMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 3,
+      "xml_counts": {
+        "passed": 3
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "04eb4177e829f857faa2142e16a74b63607f769ca938f4161de81ba7f5c28ff7",
+      "xml_sha256": [
+        "c26feefe1438d6b97279f4fb2ab01d0353f4e7ea8639a994acccfa64bdb930ce"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.SignupNoticeAfterCommitPersistenceMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 18,
+      "xml_counts": {
+        "passed": 18
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "bc7cf854107e4c435210b3b6097fa0fc36023735a93cb946f72edcb1eb86dd56",
+      "xml_sha256": [
+        "755bc2a4467af15d014547ff266116fb3b42d1300d4385334cee4fdc1d25a093"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicContentBudgetMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 14,
+      "xml_counts": {
+        "passed": 14
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "409d51fb8a06039491a267a05d3563763da46e17c4e32e06e183f3f09ef85485",
+      "xml_sha256": [
+        "bb20c0ddfcc0d09431adca2936aa745d17a4fead6c7d70e25ccba0d68fe7fa28"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 25,
+      "xml_counts": {
+        "passed": 25
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "6e5dc421184f0180c241684ef08a5c12bedf485d8bba3f060584379fd46d187d",
+      "xml_sha256": [
+        "483e04389e4f28b4544930b66831eae0c5194e13fbfa0128cae1608414da5027"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 32,
+      "xml_counts": {
+        "passed": 32
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "02d0d2953a136501772950af29b89628c5534a8440f97b6d240cee4a0337ae10",
+      "xml_sha256": [
+        "959b956ec27e5dac9538569d200cce65eee856db5c7e5fa7cd381330bc5aef3f"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 4,
+      "xml_counts": {
+        "passed": 4
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "83ef11ee526d80c9f26c944db83c525c2f4ba449343ec25f41b43e109ccb13d7",
+      "xml_sha256": [
+        "168b73700e99e9664f28ecd76bc88e9e1611bdbc83c675fdb33bf793886c730f"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 4,
+      "xml_counts": {
+        "passed": 4
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "e37404f5d06c10795148f4c69a4033b24cd43123df3f103a43710290266c7e48",
+      "xml_sha256": [
+        "dfd40e74b6f4b942bea017760df637043b3994a9297d53d727b7ce1ceaf2dbf5"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 5,
+      "xml_counts": {
+        "passed": 5
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "8e6b804db82b93d71d6cf71e39c27c633af58825410ed8e8161cc5b8f8bc800e",
+      "xml_sha256": [
+        "a063b8817041969ef8e669889df48c0e3e684154f16cb021c445206fdf88c950"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 45,
+      "xml_counts": {
+        "passed": 45
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "6eddf1f392bdbb3f658602380163bd0660b57966cf598a9fe0666e70d0438277",
+      "xml_sha256": [
+        "0b81e934b14a92d83303b9554f6ecfbab02688a4f7b84145d05402becbbbd1b9"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 7,
+      "xml_counts": {
+        "passed": 7
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "eccc48f34feca66187af54308c0356db736c84cbe2c7dc4f0c257aa4914baa4d",
+      "xml_sha256": [
+        "22e4a91186be95463e883be55ea9668e32e13fece89798c0dfef228bf85d4830"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04CurrentCashBasisMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 4,
+      "xml_counts": {
+        "passed": 4
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "a5fad71b197cdcfdb2fd6bc2a9c922ce2533a9aa083fcad20566c82e10f17c70",
+      "xml_sha256": [
+        "be83f2a3896ac842a4ef6b34a9df7287b94e1cbe3b8e4d36694577cfd50d79b8"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 3,
+      "xml_counts": {
+        "passed": 3
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "0dae8a02e2ec1f4d4450153cc13bb6211ce8895cd5b7d81616205f5d0fcfc077",
+      "xml_sha256": [
+        "900f13acc06128d1adc9faa6a198a82c612ea6d3188c2ccd5a681f48098c37bf"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 15,
+      "xml_counts": {
+        "passed": 15
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "8a7bcdb3d4a3683635940c5e2281c1c488decb5fad817c325d81719d715ae8b8",
+      "xml_sha256": [
+        "68bb0705d8bbc1f2b223bbae08f2c7da7aaf0bfa2a9d3040e0e0dbb4359ef621"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 5,
+      "xml_counts": {
+        "passed": 5
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "78fb6f20fba7dc0f5af311681fadbd466f7f45845abc341c0fb56188a667006c",
+      "xml_sha256": [
+        "1cff0ee36589a5e0ffee4abc1a00f780f907f1762ebee0fbb6a673e0bfd4f612"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04TopicCashFenceMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 5,
+      "xml_counts": {
+        "passed": 5
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "919f18ea899d913594324a56f24924235116fc81518a7a4de5bffbc63b858a6c",
+      "xml_sha256": [
+        "0985901675bc7a46f75e66989cb60a1bfdb1b92f52cc7a47ae56d5848f642284"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp08DeliveryJobsMySqlIT",
+      "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+      "verdict": "PASS",
+      "xml_tests": 7,
+      "xml_counts": {
+        "passed": 7
+      },
+      "cleanup": "CLEAN",
+      "receipt_sha256": "2f5d746f7b2d87beee1d52d93535de261a665aab360e785952878186d3c43843",
+      "xml_sha256": [
+        "645bc2905ac20146d1cf7fd86c721fc56b3c32fc163930b75179be00773bc922"
+      ]
+    }
+  ],
+  "all_complete": false
+}

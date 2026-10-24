@@ -64,3 +64,17 @@ A/B/H三个最终指定增量源码核验均已收口：未发现新的确定阻
 本轮统一失败必要修补已收齐：Cbd776b6e精确U1三调用点/二迁行及4负控，root审定9key digest（cap13不扩大）；F4a149 verifier/81a597工具及root双pin，严格两LCA唯一共同祖先，原五策略/旧snapshot字节不变；H9484bfc3按canonical迁移补P0注销夹具，原case正文不变。尚未重新运行Java/DB组合，待冻结下一候选。上轮原38个failure/error按完整(classname,name)逐个匹配：本轮38/38实际PASS、无missing/skip；仍有新显露P0夹具失败，不能当整体完成。原Zod High在ee815实际Grype报告中消失（0High/Critical），余一Medium一Low，不将依赖门当实际renderer浏览器验收。
 
 C新增测试首次3PASS/1FAIL源于测试错把profile的var声明当const；Ccd6f41d5按两页真实AST修正，原guard/URL来源/覆盖负控不删，root同一4例复验4PASS/0skip（约0.3s），非整批回归。原生产JS未改；台账生成物无需改变。F6可信文件实际bytes及donor4a149逐个比对一致，只有gate变化，五个旧策略快照不变，双ref和工具VERIFIER一致。H9484只改建库装配，原测试正文不变。上述实际失败源码已收齐，将冻结后再统一CI/真实存储，旧ee815仍FAIL。
+
+## 当前同SHA统一验收
+
+当前冻结完整修补候选：`3e976bcefb2a14b19600e6bc4a20029767d58b75`，隔离分支`codex/architecture-day-final-3e976-20261024`。标准CI [40130007237](https://github.com/liboyang42-cpu/hengyin/actions/runs/40130007237)，65唯一类/810声明真实存储 [40130012017](https://github.com/liboyang42-cpu/hengyin/actions/runs/40130012017)均已启动。旧ee815结果不继承新SHA绿色；真实存储上轮0类启动，本轮须逐个原XML/receipt/CLEAN回读。已交付者保持冻结，仅实际失败才回对应原owner；不再广泛审计。all_complete=false。
+
+3e976存储65类job已全部结束，仅RegistrationFunds的一例FAIL（其它64类job success），不是64类业务独立回读PASS结论。A定位为该case指Activity55.topic3但seed只存在topic99，真实主题围栏正确拒绝；root只补topic3父行，所有原SUCCESS/scan/template30断言不变，生产代码不改。原XML/receipt/CLEAN正在一次性下载核对，标准后端job仍在原run，不取消不重开。
+
+上线阻断新证据：3e976标准Backend在完整隔离应用启动时失败，真实环为CmsRegistration→CoopSettlementClaim→TopicSettlementEvidence→RegistrationSeat→CmsRegistration（原unit/core步骤已过，不能替代整图）。G接最小原席位结算读owner边界拆分，F接真实Spring图回归和精确新类型policy，不开circular/不lazy隐藏。存储65原receipt/XML已独立回读同SHA：810例809PASS/1FAIL、0skip/0重复、64类PASS/1FAIL、65CLEAN，只有A父主题fixture待新SHA验证。证据在`3e976-real-storage-readback.json`，后续修补不可继承旧绿色。
+
+3e976后端原XML亦已独立读回：1933份/15453唯一case，14820PASS、633门控skip、0failure/0error/0重复；ASR终态barrier3例及P0注销1例实过。该事实不改变整应用启动FAIL：必须修真实装配环再证明启动。65存储810原case中809PASS/1FAIL，65份原source/precheck SHA均为3e976且CLEAN，已验证classes精确集合与原XML条数，摘要保存在两份readback JSON；未把旧registered_source历史锚当本次执行源。
+
+G4e5ee6e1窄读owner已集成：唯一构造RegistrationSeatMapper，原MANDATORY/rollbackFor/两个FOR UPDATE/current-read方法及legacy409原义搬入；TopicEvidence直依赖Reader，旧SeatService同签名委托，不经过报名命令链。Mapper/XML不变，新增4单测源码，原Seat真库case内增读回而声明数不变；严格65类source precheck无错误（非执行PASS）。F d7df真实图首片已合入，等最后精确owner/consumer及tool pin，未再次开CI。
+
+真实startup环的必要源码全部收齐：G4e5窄读owner；F首片d7df+最终verifier16ce2a26/tool3c25f3bb及35场景源码，精确两个incoming consumers、禁止反调，未授Mapper/table新写权；root六可信文件与donor逐字哈希一致、双workflow ref/VERIFIER一致、旧baseline/locking/commands不变。A原资金用例只补Topic3父行，原96方法/断言保留。下一完整候选编译、全启动和65类真实存储均未运行，禁止继承3e旧绿色或把567静态review线索写成已逐个审完。

@@ -121,6 +121,10 @@ class RegistrationSeatMySqlIT {
             List<RegistrationSeat> actual = seats.selectVerifiedForGroupForUpdate(41L, 61L, future());
             assertEquals(1, actual.size()); assertEquals(selected.getId(), actual.get(0).getId());
             assertEquals(1, actual.get(0).getSeatNo());
+            var settlementFacts = new com.chengyinhub.business.service.RegistrationSeatSettlementReader(seats)
+                    .verifiedSeatsForGroup(41L, 61L, future());
+            assertEquals(actual.stream().map(RegistrationSeat::getId).toList(),
+                    settlementFacts.stream().map(RegistrationSeat::getId).toList());
             assertTrue(seats.selectVerifiedForGroupForUpdate(41L, 62L, future()).isEmpty());
         });
         assertEquals(3L, jdbc.queryForObject("SELECT order_num FROM cms_registration WHERE id=31", Long.class));
@@ -176,6 +180,9 @@ class RegistrationSeatMySqlIT {
         tx.executeWithoutResult(status -> {
             seats.lockRegistration(31L); bindGroup();
             assertEquals(List.of(31L), seats.selectUnprovenMultiGroupOrdersForUpdate(41L, 61L, future()));
+            assertEquals(Integer.valueOf(409), assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                    () -> new com.chengyinhub.business.service.RegistrationSeatSettlementReader(seats)
+                            .verifiedSeatsForGroup(41L, 61L, future())).getCode());
             assertTrue(seats.selectVerifiedForGroupForUpdate(41L, 61L, future()).isEmpty());
         });
         var rejected = assertThrows(org.springframework.dao.DataAccessException.class,
@@ -196,6 +203,9 @@ class RegistrationSeatMySqlIT {
             assertTrue(seats.selectUnprovenMultiGroupOrdersForUpdate(41L, 61L, future()).isEmpty());
             List<RegistrationSeat> actual = seats.selectVerifiedForGroupForUpdate(41L, 61L, future());
             assertEquals(1, actual.size()); assertEquals(2, actual.get(0).getSeatNo());
+            var settlementFacts = new com.chengyinhub.business.service.RegistrationSeatSettlementReader(seats)
+                    .verifiedSeatsForGroup(41L, 61L, future());
+            assertEquals(List.of(row.getId()), settlementFacts.stream().map(RegistrationSeat::getId).toList());
             assertTrue(seats.selectVerifiedForGroupForUpdate(41L, 62L, future()).isEmpty());
         });
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM coop_group_member_verify", Integer.class));
@@ -283,7 +293,9 @@ class RegistrationSeatMySqlIT {
         org.mockito.Mockito.when(activityMapper.selectCmsActivityByIdForUpdate(61L)).thenReturn(activity);
         var clubs = org.mockito.Mockito.mock(com.chengyinhub.business.service.IClubMemberService.class);
         org.mockito.Mockito.when(clubs.isTopicOwner(41L, 71L, 81L)).thenReturn(true);
-        Object[][] fields = {{"seats", seats}, {"registrations", registrationMapper}, {"registrationService", originalOrders},
+        Object[][] fields = {{"seats", seats},
+                {"settlementReader", new com.chengyinhub.business.service.RegistrationSeatSettlementReader(seats)},
+                {"registrations", registrationMapper}, {"registrationService", originalOrders},
                 {"topics", topicMapper}, {"activities", activityMapper}, {"clubs", clubs},
                 {"audits", sql.getMapper(com.chengyinhub.business.mapper.BusinessAuditEventMapper.class)}};
         for (Object[] field : fields) org.springframework.test.util.ReflectionTestUtils.setField(service, (String) field[0], field[1]);

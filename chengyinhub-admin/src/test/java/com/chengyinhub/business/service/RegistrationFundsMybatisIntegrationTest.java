@@ -965,7 +965,8 @@ class RegistrationFundsMybatisIntegrationTest {
 
     @Test
     void paymentCreatesScansOnlyFromActivityAuthoritativeTopic() throws Exception {
-        execute("UPDATE cms_activity SET topic_id=3,member_id=NULL WHERE id=55",
+        execute("INSERT INTO cms_topic(id,member_id,product_type) VALUES (3,1,1)",
+                "UPDATE cms_activity SET topic_id=3,member_id=NULL WHERE id=55",
                 "UPDATE cms_registration SET owner_type=2,owner_id=55,purchase_kind=NULL WHERE id=11",
                 "INSERT INTO cms_member_template(id,member_id,validation_method,del_flag) VALUES (30,300,1,0),(550,5500,1,0)",
                 "INSERT INTO cms_topic_node(topic_id,name,template_id) VALUES (3,'真实主题节点',30),(55,'错误 ownerId 主题节点',550)");

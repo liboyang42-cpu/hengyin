@@ -1,16 +1,16 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T20:10:50Z",
+  "updated_utc": "2026-10-24T20:30:04Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
   "all_complete": false,
-  "mode": "All real final failures repaired in source; all original owners delivered; prepare next full immutable candidate and unified validation",
+  "mode": "Real startup-cycle G/F implementation and A canonical parent fixture all collected; freeze complete next candidate then unified acceptance",
   "current_worker_assignments": {
     "A": {
-      "state": "FINAL_FROZEN_CANDIDATE_REVIEW_IN_PROGRESS",
-      "task": "Final same-candidate funds/caller proof only",
+      "state": "DELIVERED_APPLIED_PENDING_TARGETED_VALIDATION",
+      "task": "Original Activity authoritative-topic case canonical parent row, one-line fixture only; original SUCCESS/scans/template assertions preserved",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
       "exclusive_files": [
@@ -70,15 +70,15 @@
       "residual_delivery": "2f09aa52011938785e686a42f0e1f58eb57833cc"
     },
     "F": {
-      "state": "DELIVERED_APPLIED_PENDING_SAME_CANDIDATE_VALIDATION",
-      "task": "Fix actual ambiguous manual merge-base using existing exact trusted sources; no broad baseline permission",
+      "state": "DELIVERED_APPLIED_PENDING_UNIFIED_VALIDATION",
+      "task": "Actual graph startup regression and exact new reader owner/consumer trust wiring only; preserve snapshots and no circular enable",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
-      "residual_delivery": "4a149406 frozen verifier /81a597613 tool; actual6file hashes and dualrefs equal"
+      "residual_delivery": "d7df first+verifier16ce2a260f59a377dfac337749435d04f1d72ab7/tool3c25f3bbc6cec89c7d27002cc73bbce9c6fb1be4; actual6file and dualref matched;35Java sourcecases NOT_RUN"
     },
     "G": {
-      "state": "DELIVERED_FROZEN_PENDING_UNIFIED_VALIDATION",
-      "task": "24945生产order_sn修补已集成，勿重做。你拥有7个通知/轮次真库失败及其共同fixture/必要通知路径：BeforeStartNoticeMySqlIT、CommittedOfficialNoticeMySqlIT、CoopComplaintCommittedNoticeMySqlIT、ComplaintCloseReporterNoticeMySqlIT、ChapterApplicationRoundMySqlIT、ChapterApplicationOutcomeMySqlIT均在migration_20261024_c_before_start_notice_typed.sql第1条严格schema/preflight CAST报错；SignupNoticeAfterCommitPersistenceMySqlIT.concurrentPaymentClaimLoser... ExecutionException/UndeclaredThrowableException。优先只修一次共同canonical DDL/fixture装配顺序并保持旧迁移字节/前置断言，不能跳过CAST、硬编码已通过或手写缩水表；若canonical迁移本身缺陷需提供证据给root做受控前向修正，不直接改已有迁移。原模板、wx/IM渠道冻结、UNKNOWN/一次外呼、通知同事务/并发唯一与rollback断言全部保留。A拥有RegistrationPaymentFlow/TeamGroup/WeChatFact共享helper，不改其生产文件，必要时给A精确装配需求。 Plus ClmCommercePaymentProofMySqlIT canonical audit schema and original closed payment proof fixtures; exact message sent.",
+      "state": "DELIVERED_APPLIED_PENDING_UNIFIED_VALIDATION",
+      "task": "Break CmsRegistration→CoopSettlementClaim→TopicSettlementEvidence→RegistrationSeat→CmsRegistration via minimal original seat-read boundary; preserve locks/fee/filters and money rules",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
       "delivery_sha": "af0ed9086625f87e6ccdc1282d870358dc322ee0",
@@ -89,7 +89,7 @@
         "Original settlement producer and its source query Mapper methods",
         "CmsTopic settlement/verified-seat fee consumption and durable manual path"
       ],
-      "residual_delivery": "018c6253bb086d0bb7e3b9ee492dfb1ba354be2a"
+      "residual_delivery": "4e5ee6e1acafa5cd4efbf366c29445d5d5c1249e"
     },
     "H": {
       "state": "DELIVERED_APPLIED_PENDING_SAME_CANDIDATE_VALIDATION",
@@ -766,31 +766,43 @@
   "shared_repair_base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
   "source_storage_declarations": 810,
   "final_candidate": {
-    "sha": "ee815c108b791f7f2dbf801d50e4d302419e754f",
-    "branch": "codex/architecture-day-final-ee815-20261024",
-    "standard_ci_run": 40128663849,
-    "real_storage_run": 40128669303,
+    "sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+    "branch": "codex/architecture-day-final-3e976-20261024",
+    "standard_ci_run": 40130007237,
+    "real_storage_run": 40130012017,
     "unique_storage_classes": 65,
     "declared_storage_cases": 810,
-    "status": "FAIL; C/F/H precise repairs in progress",
-    "review_owners": [
-      "A",
-      "B",
-      "H"
-    ],
-    "real_storage_status": "PLAN_FAILED_ZERO_STORAGE_JOBS_STARTED",
-    "declared_count_correction": "Graph new negative assertion remains in original test, strict comment/string-stripping scanner shows32, no @Test deleted",
-    "backend_xml": {
-      "pass": 14819,
-      "skipped": 633,
-      "failure": 1
-    },
-    "backend_unique": 15453,
-    "next_source_repairs": {
-      "C": "bd776b6ea0ba8ee91d75b6cb72102d2948626c09 + root9-key digest",
-      "F": "verifier4a14940614d6ebe8d6d28a8b5314fef366541bc9 / tool81a59761323466cdb43bbfea9a382c617e3664ec / root dual pin",
-      "H": "9484bfc3ad533298cb8c997e5d5efb9952b9bde2",
-      "root": "Registry32/810 source correction; diagnosticdocument .md; all old code and monetary assertions retained"
+    "status": "FAIL: real full application startup cycle; storage809pass1fixturefail, all65CLEAN",
+    "source_reviews": "Known source delta reviews recorded at ee815; actual new C/F/H/root repair files separately delivered. No blanket green inheritance."
+  },
+  "previous_final_candidates": [
+    {
+      "sha": "ee815c108b791f7f2dbf801d50e4d302419e754f",
+      "branch": "codex/architecture-day-final-ee815-20261024",
+      "standard_ci_run": 40128663849,
+      "real_storage_run": 40128669303,
+      "unique_storage_classes": 65,
+      "declared_storage_cases": 810,
+      "status": "FAIL; C/F/H precise repairs in progress",
+      "review_owners": [
+        "A",
+        "B",
+        "H"
+      ],
+      "real_storage_status": "PLAN_FAILED_ZERO_STORAGE_JOBS_STARTED",
+      "declared_count_correction": "Graph new negative assertion remains in original test, strict comment/string-stripping scanner shows32, no @Test deleted",
+      "backend_xml": {
+        "pass": 14819,
+        "skipped": 633,
+        "failure": 1
+      },
+      "backend_unique": 15453,
+      "next_source_repairs": {
+        "C": "bd776b6ea0ba8ee91d75b6cb72102d2948626c09 + root9-key digest",
+        "F": "verifier4a14940614d6ebe8d6d28a8b5314fef366541bc9 / tool81a59761323466cdb43bbfea9a382c617e3664ec / root dual pin",
+        "H": "9484bfc3ad533298cb8c997e5d5efb9952b9bde2",
+        "root": "Registry32/810 source correction; diagnosticdocument .md; all old code and monetary assertions retained"
+      }
     }
-  }
+  ]
 }
