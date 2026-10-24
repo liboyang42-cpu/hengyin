@@ -1,0 +1,3 @@
+79cd703873eca67e2d82a7627d61c66109f5406788ac7bb3b0a01056e2190eb9  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlIT.java
+555be5539f396becd95311f0ffe2ed3fb7808dbcb76b59850271cdc009b8e3e0  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlFixture.java
+907eb2b9e7a5e809d4f3cfe497fc3284feba85aba71b257a071d3c4756627d4d  chengyinhub-admin/src/test/resources/it-schema/wp10-content-graph-scratch.sql
