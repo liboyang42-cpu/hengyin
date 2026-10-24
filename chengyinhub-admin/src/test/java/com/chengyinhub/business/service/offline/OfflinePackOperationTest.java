@@ -136,4 +136,24 @@ class OfflinePackOperationTest {
         assertEquals("op-upd", pack.operationId());
         assertEquals("v2", pack.manifest().version);
     }
+
+    @Test
+    void unusedFinishUpdateOfIdleDoesNotOccupyThenUniqueUpdateThenFinishApplies() {
+        OfflinePackOperation pack = new OfflinePackOperation();
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase());
+        assertNull(pack.operationId());
+        assertEquals(OfflinePackOperation.Failure.NOT_DOWNLOADING,
+                assertThrows(OfflinePackOperation.OfflinePackException.class, pack::finishUpdate).code);
+        assertEquals(OfflinePackOperation.Phase.IDLE, pack.phase(), "未见下载 finishUpdate 观察不得占 READY-after-update");
+        assertNull(pack.operationId());
+        pack.startDownload(manifest("op-fin"), NOW);
+        pack.finishDownload();
+        pack.applyUpdate(new OfflinePackOperation.Manifest("pack-1", "op-fin", "v2", 1024, CHECKSUM,
+                List.of(11, 12), Instant.parse("2026-12-01T00:00:00Z")), true, NOW);
+        assertEquals(OfflinePackOperation.Phase.UPDATING, pack.phase());
+        pack.finishUpdate();
+        assertEquals(OfflinePackOperation.Phase.READY, pack.phase());
+        assertEquals("op-fin", pack.operationId());
+        assertEquals("v2", pack.manifest().version);
+    }
 }
