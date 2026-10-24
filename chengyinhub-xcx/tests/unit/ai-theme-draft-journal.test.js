@@ -80,3 +80,27 @@ test('terminal and legacy facts retain identity without a 24-hour deletion rule 
   assert.equal(journal.isServerId(RID), true);
   assert.equal(journal.key(''), ''); assert.equal(journal.key('0'), '');
 });
+
+test('confirmed server identity and unknown execution cannot be replaced or reset to prepared', () => {
+  const wx = storage();
+  const unknown = { ...prepared(), requestId: RID, stage: 'KNOWN', state: 'UNKNOWN' };
+  assert.equal(journal.save(wx, '7', unknown, null).ok, true);
+  for (const next of [{ ...unknown, requestId: 'td2_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+    { ...unknown, createdAt: 101 }, { ...unknown, state: 'PREPARED', stage: 'PREPARED' },
+    { ...prepared(), prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }])
+    assert.equal(journal.save(wx, '7', next, unknown).ok, false);
+  assert.deepEqual(journal.load(wx, '7').value, unknown);
+});
+
+test('known terminal facts may update availability but cannot become unknown or a different terminal fact', () => {
+  const wx = storage();
+  const success = { ...prepared(), requestId: RID, stage: 'KNOWN', state: 'SUCCEEDED' };
+  assert.equal(journal.save(wx, '7', success, null).ok, true);
+  for (const state of ['UNKNOWN', 'PROCESSING', 'PREPARED', 'FAILED'])
+    assert.equal(journal.save(wx, '7', { ...success, state }, success).ok, false);
+  const expired = { ...success, reasonCode: 'AI_DRAFT_RESULT_EXPIRED' };
+  assert.equal(journal.save(wx, '7', expired, success).ok, true);
+  const newAction = { ...prepared(), prepareKey: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+  assert.equal(journal.save(wx, '7', newAction, expired).ok, true);
+  assert.deepEqual(journal.load(wx, '7').value, newAction);
+});

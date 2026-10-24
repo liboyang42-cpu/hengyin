@@ -47,8 +47,17 @@ function sameIdentity(left, right) {
   return !!left && !!right && left.version === right.version && left.memberId === right.memberId
     && left.prepareKey === right.prepareKey && left.requestId === right.requestId && left.createdAt === right.createdAt;
 }
+function allowsUpdate(previous, next) {
+  if (previous.prepareKey !== next.prepareKey)
+    return ['SUCCEEDED', 'FAILED'].indexOf(previous.state) >= 0 && next.requestId === null
+      && next.stage === 'PREPARE_UNCONFIRMED' && next.state === null;
+  if (previous.createdAt !== next.createdAt || (previous.requestId !== null && previous.requestId !== next.requestId)) return false;
+  if (['SUCCEEDED', 'FAILED'].indexOf(previous.state) >= 0) return next.state === previous.state;
+  return !(['PROCESSING', 'UNKNOWN'].indexOf(previous.state) >= 0 && next.state === 'PREPARED');
+}
 function save(storage, member, value, expected) {
   if (!valid(value, member) || (expected !== null && !valid(expected, member))) return { ok: false };
+  if (expected !== null && !allowsUpdate(expected, value)) return { ok: false };
   const current = load(storage, member);
   if (expected === null ? current.kind !== 'ABSENT'
     : current.kind !== 'READY' || JSON.stringify(current.value) !== JSON.stringify(copy(expected))) return { ok: false };
