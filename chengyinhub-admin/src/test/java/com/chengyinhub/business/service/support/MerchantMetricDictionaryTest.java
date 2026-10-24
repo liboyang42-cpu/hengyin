@@ -19,7 +19,7 @@ class MerchantMetricDictionaryTest {
     void pathsMatchDashboardFields() {
         Set<String> paths = new LinkedHashSet<>();
         for (Map<String, Object> m : MerchantMetricDictionary.metrics()) paths.add(String.valueOf(m.get("path")));
-        assertEquals(new LinkedHashSet<>(Arrays.asList("revenue", "revenue7d", "pendingOrders", "insight.exposure",
+        assertEquals(new LinkedHashSet<>(Arrays.asList("revenue", "revenue7d", "pendingOrders", "insight.exposure", "insight.exposureUv",
                 "insight.checkin.total", "insight.checkin.redeemRate", "insight.checkin.slotBuckets",
                 "insight.checkin.repeatRate", "insight.checkin.avgWaitMinutes", "insight.supplyCount")), paths);
     }

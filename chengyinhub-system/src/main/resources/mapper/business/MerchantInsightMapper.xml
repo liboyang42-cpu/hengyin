@@ -85,6 +85,16 @@
                select distinct n.topic_id from cms_topic_node n
                 where n.merchant_member_id = #{merchantMemberId})
     </select>
+    <!-- 曝光人数(UV):同 countTopicExposure 口径,按浏览会员去重。PV 与到店不可直接相除,端上要比值用这个。 -->
+    <select id="countTopicExposureVisitors" resultType="int">
+        select count(distinct b.member_id)
+          from tms_browse_record b
+         where b.browse_type = 1
+           and b.browse_time &gt;= #{since}
+           and b.target_id in (
+               select distinct n.topic_id from cms_topic_node n
+                where n.merchant_member_id = #{merchantMemberId})
+    </select>
 
 
     <!-- 全历史访客事件行:仅页面展示与 Java 聚合;允许 nickname/avatar,禁 phone/real_name(SQL 守卫锁)。 -->

@@ -597,10 +597,13 @@ class MerchantInsightServiceImplTest {
         when(mapper.selectSupplyFacts(eq(MERCHANT_ID))).thenReturn(
                 Collections.singletonList(new MerchantInsightSupplyFact()));
         when(mapper.countTopicExposure(eq(MERCHANT_ID), any(Date.class))).thenReturn(123);
+        when(mapper.countTopicExposureVisitors(eq(MERCHANT_ID), any(Date.class))).thenReturn(40);
 
         JSONObject data = service.dashboard(MERCHANT_ID);
 
         assertEquals(Integer.valueOf(123), data.getInteger("exposure"));
+        assertEquals(Integer.valueOf(40), data.getInteger("exposureUv"), "UV 与 PV 分开下发");
+        assertEquals("PV", data.getString("exposureSemantics"), "exposure 必须声明为 PV 口径");
         assertEquals(Integer.valueOf(1), data.getInteger("supplyCount"));
         JSONObject checkin = data.getJSONObject("checkin");
         assertNotNull(checkin);

@@ -31,6 +31,9 @@ public interface MerchantInsightMapper
 
     /** 曝光(升级5):本商家参与节点所在主题的窗口内浏览数(tms_browse_record,browse_type=1 主题)。 */
     int countTopicExposure(@Param("merchantMemberId") Long merchantMemberId, @Param("since") java.util.Date since);
+
+    /** 曝光人数(UV):同 {@link #countTopicExposure} 口径,按 member_id 去重。 */
+    int countTopicExposureVisitors(@Param("merchantMemberId") Long merchantMemberId, @Param("since") java.util.Date since);
     /**
      * 全历史访客事件行(有打卡或核销的 entitlement,带昵称/头像/主题名)。
      * 单客行/来源主题/环比/新老客全部由 Java 从这一份聚合;绝不进 AI 事实包。

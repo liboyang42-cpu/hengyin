@@ -167,7 +167,10 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         JSONObject data = new JSONObject();
         data.put("windowDays", WINDOW_DAYS);
         // 曝光 = 我有节点的主题近窗口浏览数(店铺页/分享暂无埋点,不造数 —— 有埋点后再补字段)
+        // exposure 是浏览次数(PV),与到店人次不可直接相除;exposureUv 为去重浏览人数,exposureSemantics 声明口径。
         data.put("exposure", merchantInsightMapper.countTopicExposure(merchantMemberId, since));
+        data.put("exposureUv", merchantInsightMapper.countTopicExposureVisitors(merchantMemberId, since));
+        data.put("exposureSemantics", "PV");
         // 到店/核销率/时段/复购率:与店铺参谋同一 facts 口径,数字直出不走 AI
         data.put("checkin", buildCheckinFacts(visits));
         data.put("supplyCount", supply == null ? 0 : supply.size());

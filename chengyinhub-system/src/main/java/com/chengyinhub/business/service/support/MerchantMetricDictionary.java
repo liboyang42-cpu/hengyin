@@ -19,7 +19,7 @@ import java.util.Map;
 public final class MerchantMetricDictionary {
 
     /** 字典版本:口径变化时 +1,端上据此判断缓存的释义是否过期 */
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
 
     private static final List<Map<String, Object>> METRICS;
 
@@ -35,7 +35,10 @@ public final class MerchantMetricDictionary {
                 "oms_order 中 mms_merchant_id = 本门店、status=1 且未删除的订单数。",
                 "oms_order", null));
         m.add(metric("insight.exposure", "曝光", "次", MerchantPermission.MARKETING_READ,
-                "近 30 天内,含本商家节点的主题被浏览次数。店铺页/分享暂无埋点,不计入。",
+                "近 30 天内,含本商家节点的主题被浏览次数(PV)。店铺页/分享暂无埋点,不计入。",
+                "主题浏览记录", 30));
+        m.add(metric("insight.exposureUv", "曝光人数", "人", MerchantPermission.MARKETING_READ,
+                "同 insight.exposure 范围,按浏览会员去重(UV)。insight.exposure 为浏览次数(PV),与到店人次不可直接相除。",
                 "主题浏览记录", 30));
         m.add(metric("insight.checkin.total", "到店", "人次", MerchantPermission.MARKETING_READ,
                 "近 30 天本商家权益事实中有到店打卡时间的条数。",
