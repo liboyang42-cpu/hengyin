@@ -51,6 +51,13 @@ class OriginalRpgCheckCallerTest {
         assertNull(caller.receipt(7L, 9L, 4L, "spot", "req-1"));
         port.receiptBody = JSON.readTree("{\"runId\":9,\"requestId\":\"req-1\",\"status\":\"APPLIED\"}");
         assertNull(caller.receipt(7L, 9L, 4L, "spot", "req-1"));
+        port.receiptBody = JSON.readTree("{\"runId\":9,\"requestId\":\"req-1\",\"status\":\"COMMITTED\"}");
+        assertNull(caller.receipt(7L, 9L, 4L, "spot", "req-1"));
+        port.receiptBody = JSON.readTree("{\"runId\":9,\"requestId\":\"req-1\",\"status\":\"COMMITTED\","
+                + "\"receipt\":{\"runId\":9,\"stateVersion\":2}}");
+        JsonNode committed = caller.receipt(7L, 9L, 4L, "spot", "req-1");
+        assertEquals("COMMITTED", committed.path("status").asText());
+        assertEquals(2L, committed.path("receipt").path("stateVersion").asLong());
     }
 
     @Test

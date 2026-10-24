@@ -109,9 +109,14 @@ public final class OriginalRpgCheckCaller {
         if (body == null || body.isNull() || !body.isObject()) {
             return false;
         }
+        if (!body.path("runId").isNumber() || body.path("runId").longValue() != runId.longValue()
+                || !requestId.equals(body.path("requestId").asText())) {
+            return false;
+        }
         String status = body.path("status").asText("");
-        return body.path("runId").isNumber() && body.path("runId").longValue() == runId.longValue()
-                && requestId.equals(body.path("requestId").asText())
-                && ("COMMITTED".equals(status) || "UNKNOWN".equals(status));
+        if ("UNKNOWN".equals(status)) {
+            return !body.has("receipt");
+        }
+        return "COMMITTED".equals(status) && body.path("receipt").isObject();
     }
 }
