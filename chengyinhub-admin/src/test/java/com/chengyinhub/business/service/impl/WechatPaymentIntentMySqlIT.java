@@ -178,6 +178,13 @@ class WechatPaymentIntentMySqlIT {
                 alias = freeze("TPLTM_1", "wx-app", "APP");
                 assertTrue(alias.matches("WXP[0-9a-f]{29}"));
                 assertEquals(0, jdbc.queryForObject("SELECT status FROM oms_order WHERE id=1", Integer.class));
+                String originalAppHash = jdbc.queryForObject(
+                        "SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?", String.class, alias);
+                assertEquals(alias, freeze("TPLTM_1", "wx-app", "APP"),
+                        "same APP request while payable must replay the existing alias");
+                assertEquals(originalAppHash, jdbc.queryForObject(
+                        "SELECT request_hash FROM wx_pay_order_intent WHERE out_trade_no=?", String.class, alias));
+                assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent", Integer.class));
             } finally { allowOldClose.countDown(); }
             oldReconcile.get(15, TimeUnit.SECONDS);
         }
