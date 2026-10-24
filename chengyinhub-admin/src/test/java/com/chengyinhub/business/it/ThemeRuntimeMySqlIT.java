@@ -815,4 +815,43 @@ class ThemeRuntimeMySqlIT {
         assertEquals(Integer.valueOf(409),assertThrows(com.chengyinhub.common.exception.ServiceException.class,action).getCode());
     }
     private static void exec(Connection c,String text)throws SQLException{try(Statement st=c.createStatement()){st.execute(text);}}
+    // G WP05 negative-only additions: production unchanged; not executed here.
+    @Test void replayArrivalMustBeReadableFromTheCurrentPlayInstance() throws Exception {
+        Map<String,Object> first=runtime.themeView(7L,10L,0L,null);
+        long oldId=((Number)first.get("sessionId")).longValue();
+        runtime.themeAction(7L,oldId,((Number)first.get("version")).intValue(),"g-end","END",null);
+        Map<String,Object> replay=runtime.replayTheme(7L,oldId);
+        String expected=(String)replay.get("playInstanceId");
+        assertNotEquals("default",expected);
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=new com.chengyinhub.business.service.impl.ShopDayProofServiceImpl();
+        ReflectionTestUtils.setField(realArrival,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        com.chengyinhub.business.domain.CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
+        realArrival.markArrived(7L,0L,node);
+        com.chengyinhub.business.domain.PlayerNodeProgress probe=new com.chengyinhub.business.domain.PlayerNodeProgress();
+        probe.setMemberId(7L);probe.setActivityId(0L);probe.setTopicId(10L);probe.setNodeId(11L);
+        List<com.chengyinhub.business.domain.PlayerNodeProgress> visible=sql.getMapper(PlayerNodeProgressMapper.class).selectPlayerNodeProgressList(probe);
+        assertEquals(1,visible.size(),"a newly accepted arrival must be visible in this same current replay");
+        assertEquals(expected,visible.get(0).getPlayInstanceId());
+        assertEquals(0,visible.get(0).getStatus(),"arrival is not node completion or reward eligibility");
+    }
+    @Test void replayArrivalMustNotCollideWithTheOldDefaultArrival() throws Exception {
+        Map<String,Object> first=runtime.themeView(7L,10L,0L,null);
+        long oldId=((Number)first.get("sessionId")).longValue();
+        try(Connection c=ds.getConnection()) {
+            exec(c,"INSERT INTO player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,status,checkin_time,del_flag) VALUES(7,0,10,11,'default',0,'2026-01-01 12:00:00',0)");
+        }
+        runtime.themeAction(7L,oldId,((Number)first.get("version")).intValue(),"g-end-old-arrival","END",null);
+        Map<String,Object> replay=runtime.replayTheme(7L,oldId);
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=new com.chengyinhub.business.service.impl.ShopDayProofServiceImpl();
+        ReflectionTestUtils.setField(realArrival,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        com.chengyinhub.business.domain.CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
+        assertDoesNotThrow(()->realArrival.markArrived(7L,0L,node),"old-run arrival must not make the replay action fail");
+        com.chengyinhub.business.domain.PlayerNodeProgress probe=new com.chengyinhub.business.domain.PlayerNodeProgress();
+        probe.setMemberId(7L);probe.setActivityId(0L);probe.setTopicId(10L);probe.setNodeId(11L);probe.setPlayInstanceId((String)replay.get("playInstanceId"));
+        assertEquals(1,sql.getMapper(PlayerNodeProgressMapper.class).selectPlayerNodeProgressList(probe).size());
+        probe.setPlayInstanceId("default");
+        List<com.chengyinhub.business.domain.PlayerNodeProgress> old=sql.getMapper(PlayerNodeProgressMapper.class).selectPlayerNodeProgressList(probe);
+        assertEquals(1,old.size());assertEquals(0,old.get(0).getStatus());
+    }
+
 }
