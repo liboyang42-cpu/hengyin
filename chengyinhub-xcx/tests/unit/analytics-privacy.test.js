@@ -36,7 +36,8 @@ test('开发版对被敏感键规则丢弃的属性键各提示一次，正式�
     assert.deepEqual(sanitizeProperties({ devTopicName: 'x', count: 1 }), { count: 1 }, '开发版同样丢键，不放宽');
     sanitizeProperties({ devTopicName: 'y' });
     assert.equal(warnings.length, 1, '同一键只提示一次');
-    assert.match(warnings[0], /devTopicName/);
+    assert.match(warnings[0], /敏感键规则已被丢弃/);
+    assert.doesNotMatch(warnings[0], /devTopicName/, '固定标签，不把键名带进开发者日志');
   } finally {
     console.warn = originalWarn;
     if (originalWx === undefined) delete global.wx; else global.wx = originalWx;

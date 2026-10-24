@@ -352,7 +352,8 @@ function warnDroppedSensitiveKey(key) {
   if (warnedDroppedKeys[key] || !isDevelopEnv()) return true;
   warnedDroppedKeys[key] = true;
   if (typeof console !== 'undefined' && console.warn) {
-    console.warn('[analytics] 属性键 "' + key + '" 命中敏感键规则已被丢弃，如需上报请换不含敏感词的键名');
+    // 生产 console 只许固定标签(no-sensitive-console 门禁),不打印键名本身;每个新键提示一次。
+    console.warn('[analytics] 有属性键命中敏感键规则已被丢弃，如需上报请换不含敏感词的键名');
   }
   return true;
 }
