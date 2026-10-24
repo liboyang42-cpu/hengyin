@@ -1,0 +1,760 @@
+diff --git a/chengyinhub-xcx/pages/roam/index.js b/chengyinhub-xcx/pages/roam/index.js
+index 2965313f..eee127b4 100644
+--- a/chengyinhub-xcx/pages/roam/index.js
++++ b/chengyinhub-xcx/pages/roam/index.js
+@@ -93,7 +93,6 @@ const TILE_REVEAL_M = 110;
+ // 揭雾边缘羽化倍率:核心全透到 1/FOG_FEATHER,向外渐隐到 FOG_FEATHER×半径。
+ // 纯视觉;isPointRevealed / 到店判定仍用 REVEAL_M 硬半径,不受影响。
+ const FOG_FEATHER = 1.6;
+-const FOG_UPDATE_MS = 2000;  // poly 全量替换有一帧透底(闪白),放宽节流降频
+ const PLAYER_MK = 99;
+ const STATUS_MARKER_ID = 99997;
+ /* 后端真 POI(/api/roam/pois)的 marker id 基数。微信 <map> 的 marker id 契约是数字
+@@ -126,7 +125,7 @@ const BRAND = '#FFFFFF';
+ const GAME_STAR = MAP_AVATAR_COLORS.gameStar;
+ // 顶部输入地址那一行占掉的高度。提示栈按它整体下让,不写死绝对 top —— 胶囊位置各机型不同。
+ const SEARCH_ROW_H = 56;
+-const SCALE_FAR = 14;        // 开场最远视角(视野半径需 ≤ 迷雾网格 HALF,见 _initFogGrid)
++const SCALE_FAR = 14;        // 开场最远视角
+ const SCALE_WALK = 17;       // 步行视角(半视野~280m):能看到街道网+POI 标签,对齐 Fog of World 中景
+ const SCALE_PAUSE_MIN = 13;  // 暂停至少缩到此级别
+ const OVERVIEW_PAD = 1.55;   // 暂停总览:轨迹半径 × 此系数 + 底栏留白(m)
+@@ -173,40 +172,17 @@ function buildOpeningEmojis(rand) {
+ const ROAM_INTRO_RULE_VERSION = '2026-07-22';
+ 
+ /** 迷雾渲染契约:
+- *  ① screen(主路径):离屏 canvas 生成全黑圆洞 PNG,普通 image 压在 map 上方,真正遮住原生文字。
++ *  ① screen(主路径,唯一渲染路径):离屏 canvas 生成全黑圆洞 PNG,普通 image 压在 map 上方,真正遮住原生文字。
+  *  ② screen 初始化失败:保持全黑 guard + 明示重试,不退回会浮出腾讯文字的 map 内雾。
+- *  ⚠️ 旧 overlay/poly 实现【生产已不可达,待删】—— 别照这段注释以为还有一条活的降级路。
+- *     `_fogMode` 现在只被赋 null/'screen'/'blocked'/'poly';而 'overlay' **没有任何赋值点**
+- *     (screen 接管 setup 后就没了),'poly' 唯一入口 `_fogToPoly` 只被 `_fogFallbackToPoly` 调,
+- *     后者三个调用点全在 `_flushFogOverlay` 内、全被 `_fogMode === 'overlay'` 守着 ⇒ 整条链路
+- *     (_fogToPoly/_paintFogBase/_stampReveal/_flushFogOverlay/_edgeSlabs/_initFogGrid/
+- *      _fogApplyReveal/_updateFogNow/_fogPt + #fogcv + FOG_PX/FOG_ALPHA/FOG_GRID_M/FOG_POLY_LIMIT)
+- *     只有单测靠手工 `page._fogToPoly()` / `page._fogMode='overlay'` 点火才跑得到,恒不代表生产行为。
+- *     保留只是为了让这次改动的 diff 停在「行为变更」而不混进一次 500 行删除;
+- *     删除动作单独走一个 PR,那样它自己的回归才审得清。算法说明留档如下:
+- *     overlay:±FOG_HALF_M 世界位图 destination-out 硬边擦除,
+- *     导出 PNG → MapContext.addGroundOverlay 贴地(零接缝/边缘平滑)。
+- *     poly:±FOG_HALF_M 的 2m 网格合并成矩形 polygon。
+- *     ★这条路径 2026-08-04 前被断开(降级 = 不画雾),结果是工具里和 overlay 失败的真机
+- *     完全看不到迷雾、且零报错 —— 玩法核心静默消失。改动请保证降级永远仍有雾。
+- *  screen 主路径的揭示边缘做径向渐变羽化(FOG_FEATHER);遗留 overlay/poly 仍是清除/全雾硬边。
+- *  FOG_ALPHA 统一约束三条路径的浓度(screen 直用,poly 用同档 hex)。 */
+-const FOG_MAX = 1;           // poly 路径只有「清除 / 全雾」两态,不做透明度过渡环
+-const FOG_GRID_M = 2;        // poly 硬边完整轮廓误差 ≤1.4m
+-const FOG_POLY_LIMIT = 500;
+-const FOG_RENDER_MIN_HALF_M = 80; // 离散历史过多时只缩玩家周边渲染窗,网格/揭雾半径不降级
+-const FOG_HALF_M = 2500;      // 雾覆盖半径(m),需 ≥ SCALE_FAR 的可视半径
+-const FOG_PX = 1024;          // 雾位图边长(px),Canvas 圆弧抗锯齿后导出
++ *  旧 overlay(groundOverlay 贴图)/poly(map polygon 网格)两条降级路径生产不可达,2026-10-24 已删除
++ *  (C:U-089);wxml 上的 #fogcv 与 map-polygons="{{fogPolys}}" 绑定按「不改 wxml」约束暂留,fogPolys 恒为 []。
++ *  ★降级永远不能是「什么都不画」:2026-08-04 前降级 = 不画雾,工具里与失败的真机完全看不到迷雾且零报错。
++ *  揭示边缘做径向渐变羽化(FOG_FEATHER)。 */
+ const FOG_ALPHA = 0.7;        // 未探索区雾浓度。2026-08-20 用户裁决(对比条选档):70% 浓度、留三成透出,雾下地图可辨,不再全遮
+                               // 的探索游戏观感,推翻原来「腾讯地图道路与 POI 必须始终可读」的 0.24 上限。
+                               // 代价是没走过的区域看不到路 —— 这是有意的,别当 bug 调回去。
+-const FOG_FLUSH_MS = 2200;    // 位图导出 + overlay 刷新节流
+-const FOG_OVERLAY_ID = 501;
+ 
+ // m2lat / m2lng / distM 收口到 utils/roam-geo(见文件顶部 require)
+-function fogLevel(d, R) {
+-  return d <= R ? 0 : FOG_MAX;
+-}
+ // 注:hideLoading 全仓零消费方(死参数);真正抑制自动错误 toast 的开关是 silentError(app.js:343)。
+ // 要自定义错误文案的调用方须传 { silentError: true },否则会被自动 toast 一次 + 自己再 toast 一次 = 双弹。
+ function req(url, method, data, opts) {
+@@ -1252,19 +1228,7 @@ Page({
+ 
+   /** 历史 + 本会话轨迹重绘雾层(异步拉回 tiles 后调用) */
+   _rebuildFogDisplay() {
+-    if (this._fogMode === 'screen') {
+-      this._scheduleScreenFogRender();
+-    } else if (this._fogMode === 'overlay') {
+-      this._paintFogBase();
+-      this._applyHistoryFog();
+-      (this._reveals || []).forEach((p) => this._stampReveal(p, 1));
+-      this._flushFogOverlay();
+-    } else if (this._fog) {
+-      this._initFogGrid();
+-      this._applyHistoryFog();
+-      (this._reveals || []).forEach((p) => this._fogApplyReveal(p));
+-      this._updateFogNow();
+-    }
++    if (this._fogMode === 'screen') this._scheduleScreenFogRender();
+   },
+ 
+   _fetchRoamTiles() {
+@@ -3016,21 +2980,12 @@ Page({
+       resolve(false);
+     }
+     (this.data.fogScreenLayers || []).forEach((layer) => this._deleteScreenFogFile(layer.src));
+-    if (this._fogOverlayAdded && this._mapCtx && typeof this._mapCtx.removeGroundOverlay === 'function') {
+-      try { this._mapCtx.removeGroundOverlay({ id: FOG_OVERLAY_ID }); } catch (e) { /* 组件可能已卸载 */ }
+-    }
+     this._fogMode = null;
+     this._fogScreenCv = null;
+     this._fogScreenG = null;
+     this._fogScreenSize = null;
+     this._fogScreenVersion = (this._fogScreenVersion || 0) + 1;
+-    this._fogCv = null;
+-    this._fogG = null;
+-    this._fog = null;
+-    this._fogOverlayAdded = false;
+-    this._fogExporting = false;
+     this._fogDirty = false;
+-    this._fogFlushDirty = false;
+     this._fogStartPending = null;
+     this._mapCtx = null;
+   },
+@@ -3075,13 +3030,6 @@ Page({
+           this._fogScreenCv = node;
+           this._fogScreenG = g;
+           this._fogScreenSize = { width, height };
+-          if (this._fogOverlayAdded && this._mapCtx && typeof this._mapCtx.removeGroundOverlay === 'function') {
+-            try { this._mapCtx.removeGroundOverlay({ id: FOG_OVERLAY_ID }); } catch (e) { /* 降级层可能已卸载 */ }
+-          }
+-          this._fog = null;
+-          this._fogCv = null;
+-          this._fogG = null;
+-          this._fogOverlayAdded = false;
+           this.setData({ fogPolys: [], fogScreenReady: false, fogScreenLayers: [], fogScreenGuard: true });
+           this._finishFogSetup(true, generation);
+           return;
+@@ -3280,263 +3228,6 @@ Page({
+     }, 1500);
+   },
+ 
+-  /** 降级到 poly 网格雾。★不要改回「什么都不画」——那等于迷雾静默消失,
+-   *  开发者工具与 overlay 失败的设备会看到一张裸地图,玩法核心不见了还零报错。 */
+-  _fogToPoly() {
+-    if (this._fogFlushTimer) { clearTimeout(this._fogFlushTimer); this._fogFlushTimer = null; }
+-    this._fogMode = 'poly';
+-    this._initFogGrid();
+-    this._applyHistoryFog();
+-    (this._reveals || []).forEach((p) => this._fogApplyReveal(p));
+-    this._updateFogNow();
+-  },
+-
+-  /** 回放历史探索区(格子中心 + 本地轨迹),开局即亮 */
+-  _applyHistoryFog() {
+-    (this._historyReveals || []).forEach((p) => {
+-      if (this._fogMode === 'overlay') this._stampReveal(p, 1);
+-      else this._fogApplyReveal(p);
+-    });
+-  },
+-
+-  _paintFogBase() {
+-    const g = this._fogG;
+-    if (!g) return;
+-    g.globalCompositeOperation = 'source-over';
+-    g.clearRect(0, 0, FOG_PX, FOG_PX);
+-    g.fillStyle = 'rgba(6,6,6,' + FOG_ALPHA + ')';
+-    g.fillRect(0, 0, FOG_PX, FOG_PX);
+-  },
+-
+-  _fogPt(p) {
+-    const c = this._c;
+-    const x = (p.lng - c.lng) / m2lng(1, c.lat);
+-    const y = (p.lat - c.lat) / m2lat(1);
+-    return {
+-      px: (x + FOG_HALF_M) / (2 * FOG_HALF_M) * FOG_PX,
+-      py: (FOG_HALF_M - y) / (2 * FOG_HALF_M) * FOG_PX,
+-    };
+-  },
+-
+-  _stampReveal(p, strength) {
+-    const g = this._fogG;
+-    if (!g) return;
+-    const pt = this._fogPt(p);
+-    // 逐点半径与 screen 路径同口径：历史格 r=110 才能连片。写死 REVEAL_M 的话，
+-    // overlay 降级下重开仍是一片互不相接的 55m 圆点 —— 正是本批要根治的症状。
+-    const rM = Number(p && p.r) > 0 ? Number(p.r) : REVEAL_M;
+-    const rPx = rM / (2 * FOG_HALF_M) * FOG_PX;
+-    if (pt.px < -rPx || pt.py < -rPx || pt.px > FOG_PX + rPx || pt.py > FOG_PX + rPx) return;
+-    const a = strength == null ? 1 : strength;
+-    g.globalCompositeOperation = 'destination-out';
+-    g.fillStyle = 'rgba(0,0,0,' + a + ')';
+-    g.beginPath(); g.arc(pt.px, pt.py, rPx, 0, Math.PI * 2); g.fill();
+-  },
+-
+-  _scheduleFogFlush() {
+-    this._fogFlushDirty = true;
+-    if (this._fogFlushTimer) return;
+-    this._fogFlushTimer = setTimeout(() => {
+-      this._fogFlushTimer = null;
+-      if (this._fogFlushDirty) { this._fogFlushDirty = false; this._flushFogOverlay(); }
+-    }, FOG_FLUSH_MS);
+-  },
+-
+-  _flushFogOverlay() {
+-    if (this._fogMode !== 'overlay' || !this._fogCv || this._fogExporting) return;
+-    this._fogExporting = true;
+-    let path;
+-    try {
+-      const dataUrl = this._fogCv.toDataURL('image/png');
+-      const b64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+-      this._fogFileFlip = 1 - (this._fogFileFlip || 0);
+-      path = wx.env.USER_DATA_PATH + '/roam_fog_' + this._fogFileFlip + '.png';
+-      wx.getFileSystemManager().writeFileSync(path, b64, 'base64');
+-    } catch (e) {
+-      this._fogExporting = false;
+-      this._fogErr = 'export:' + (e && e.message);
+-      this._fogFallbackToPoly();
+-      return;
+-    }
+-    const c = this._c;
+-    const args = {
+-      id: FOG_OVERLAY_ID,
+-      src: path,
+-      bounds: {
+-        southwest: { latitude: c.lat - m2lat(FOG_HALF_M), longitude: c.lng - m2lng(FOG_HALF_M, c.lat) },
+-        northeast: { latitude: c.lat + m2lat(FOG_HALF_M), longitude: c.lng + m2lng(FOG_HALF_M, c.lat) },
+-      },
+-      opacity: 1,
+-      zIndex: 1,
+-    };
+-    const done = () => { this._fogExporting = false; this._fogFlushCount = (this._fogFlushCount || 0) + 1; };
+-    if (!this._fogOverlayAdded) {
+-      const watchdog = setTimeout(() => {
+-        if (this._fogOverlayAdded || this._fogMode !== 'overlay') return;
+-        this._fogExporting = false;
+-        this._fogFallbackToPoly();
+-      }, 5000);
+-      args.success = () => {
+-        clearTimeout(watchdog);
+-        if (this._fogMode !== 'overlay') return;
+-        this._fogOverlayAdded = true;
+-        done();
+-      };
+-      args.fail = () => {
+-        clearTimeout(watchdog);
+-        this._fogExporting = false;
+-        this._fogFallbackToPoly();
+-      };
+-      this._mapCtx.addGroundOverlay(args);
+-    } else {
+-      args.complete = done;
+-      this._mapCtx.updateGroundOverlay(args);
+-    }
+-  },
+-
+-  /** overlay 路径挂了(导出失败 / addGroundOverlay 失败或超时)→ 退到 poly 网格,而不是无雾 */
+-  _fogFallbackToPoly() {
+-    if (this._fogMode === 'poly') return;
+-    this._fogToPoly();
+-  },
+-
+-  _edgeSlabs() {
+-    const c = this._c;
+-    const B = 0.2;
+-    const swLat = c.lat - m2lat(FOG_HALF_M); const neLat = c.lat + m2lat(FOG_HALF_M);
+-    const swLng = c.lng - m2lng(FOG_HALF_M, c.lat); const neLng = c.lng + m2lng(FOG_HALF_M, c.lat);
+-    const slab = (a, b, d, e) => ({
+-      points: [
+-        { latitude: a, longitude: d }, { latitude: a, longitude: e },
+-        { latitude: b, longitude: e }, { latitude: b, longitude: d }],
+-      fillColor: '#060606B3', strokeColor: '#00000000', strokeWidth: 0, zIndex: 1,
+-    });
+-    return [
+-      slab(neLat, neLat + B, swLng - B, neLng + B),
+-      slab(swLat - B, swLat, swLng - B, neLng + B),
+-      slab(swLat, neLat, swLng - B, swLng),
+-      slab(swLat, neLat, neLng, neLng + B),
+-    ];
+-  },
+-
+-  /* ============ 迷雾 · poly 路径(开发者工具 + 降级) ============ */
+-
+-  _initFogGrid() {
+-    // HALF 需覆盖 SCALE_FAR 对应的最大可视半径(_halfViewM),否则远景会看到雾区边界的硬线
+-    // 2m 网格把硬边圆的完整阶梯轮廓误差压到 1.4m 内;矩形仍按连续行合并。
+-    const HALF = FOG_HALF_M, CELL = FOG_GRID_M;
+-    const N = Math.ceil(HALF * 2 / CELL);
+-    const st = new Uint8Array(N * N);
+-    st.fill(FOG_MAX); // 未探索区域默认最浓,而不是 Uint8Array 默认的 0(那是"完全清除")
+-    this._fog = { HALF, CELL, N, st };
+-  },
+-
+-  /** lvl: 0 完全清除(不画) → 1 全雾;硬边不做透明度过渡。 */
+-  _fogBandColor(lvl) {
+-    if (lvl <= 0) return null;
+-    return '#060606B3'; // 约 70%,与 FOG_ALPHA 同档,三条路径观感必须一致
+-  },
+-
+-  _scheduleFogUpdate() {
+-    if (!this._fog) return;
+-    this._fogDirty = true;
+-    if (this._fogTimer) return;
+-    this._fogTimer = setTimeout(() => {
+-      this._fogTimer = null;
+-      if (this._fogDirty) {
+-        this._fogDirty = false;
+-        this._updateFogNow();
+-      }
+-    }, FOG_UPDATE_MS);
+-  },
+-
+-  _updateFogNow(clipping, renderHalfM) {
+-    const F = this._fog;
+-    if (!F) return;
+-    if (!clipping) this._fogUpdates = (this._fogUpdates || 0) + 1; // 全量替换次数(闪白事件代理指标,_dbg 可读)
+-    const c = this._c;
+-    const focus = this._player || this._reveals[this._reveals.length - 1] || c;
+-    const focusX = (focus.lng - c.lng) / m2lng(1, c.lat);
+-    const focusY = (focus.lat - c.lat) / m2lat(1);
+-    const renderHalf = Math.min(F.HALF, renderHalfM || F.HALF);
+-    const clampI = (i) => Math.max(0, Math.min(F.N - 1, i));
+-    const iStart = clampI(Math.floor((focusX - renderHalf + F.HALF) / F.CELL));
+-    const iEnd = clampI(Math.floor((focusX + renderHalf + F.HALF) / F.CELL));
+-    const jStart = clampI(Math.floor((focusY - renderHalf + F.HALF) / F.CELL));
+-    const jEnd = clampI(Math.floor((focusY + renderHalf + F.HALF) / F.CELL));
+-    const lngAt = (i) => c.lng + m2lng(i * F.CELL - F.HALF, c.lat);
+-    const latAt = (j) => c.lat + m2lat(j * F.CELL - F.HALF);
+-    // 不再外扩重叠:半透明矩形一旦重叠,透明度叠加会形成明显的深色横线,
+-    // 比浮点缝隙的细白线更刺眼;相邻矩形直接共享同一条边界坐标
+-    const OV_M = 0;
+-    const ovLat = m2lat(OV_M);
+-    const ovLng = m2lng(OV_M, c.lat);
+-    const rect = (i0, i1, j0, j1, fill) => ({
+-      points: [
+-        { latitude: latAt(j0) - ovLat, longitude: lngAt(i0) - ovLng },
+-        { latitude: latAt(j0) - ovLat, longitude: lngAt(i1 + 1) + ovLng },
+-        { latitude: latAt(j1 + 1) + ovLat, longitude: lngAt(i1 + 1) + ovLng },
+-        { latitude: latAt(j1 + 1) + ovLat, longitude: lngAt(i0) - ovLng },
+-      ],
+-      fillColor: fill, strokeColor: '#00000000', strokeWidth: 0, zIndex: 1,
+-    });
+-    const rowRuns = [];
+-    for (let j = jStart; j <= jEnd; j++) {
+-      const runs = [];
+-      let i = iStart;
+-      while (i <= iEnd) {
+-        const s = F.st[j * F.N + i];
+-        if (s === 0) { i++; continue; }
+-        let e = i;
+-        while (e + 1 <= iEnd && F.st[j * F.N + e + 1] === s) e++;
+-        runs.push([i, e, s]);
+-        i = e + 1;
+-      }
+-      rowRuns.push(runs);
+-    }
+-    const polys = [];
+-    let j = 0;
+-    while (j < rowRuns.length) {
+-      const sig = JSON.stringify(rowRuns[j]);
+-      let je = j;
+-      while (je + 1 < rowRuns.length && JSON.stringify(rowRuns[je + 1]) === sig) je++;
+-      for (const [i0, i1, s] of rowRuns[j]) {
+-        const fill = this._fogBandColor(s);
+-        if (fill) polys.push(rect(i0, i1, jStart + j, jStart + je, fill));
+-      }
+-      j = je + 1;
+-    }
+-    const B = 0.2;
+-    const worldSwLat = latAt(0); const worldNeLat = latAt(F.N);
+-    const worldSwLng = lngAt(0); const worldNeLng = lngAt(F.N);
+-    const swLat = latAt(jStart); const neLat = latAt(jEnd + 1);
+-    const swLng = lngAt(iStart); const neLng = lngAt(iEnd + 1);
+-    const slab = (a, b, d, e) => ({
+-      points: [
+-        { latitude: a, longitude: d }, { latitude: a, longitude: e },
+-        { latitude: b, longitude: e }, { latitude: b, longitude: d }],
+-      fillColor: '#060606B3', strokeColor: '#00000000', strokeWidth: 0, zIndex: 1,
+-    });
+-    polys.push(slab(neLat - ovLat, worldNeLat + B, worldSwLng - B, worldNeLng + B));
+-    polys.push(slab(worldSwLat - B, swLat + ovLat, worldSwLng - B, worldNeLng + B));
+-    polys.push(slab(swLat - ovLat, neLat + ovLat, worldSwLng - B, swLng + ovLng));
+-    polys.push(slab(swLat - ovLat, neLat + ovLat, neLng - ovLng, worldNeLng + B));
+-    if (polys.length > FOG_POLY_LIMIT) {
+-      if (renderHalf > FOG_RENDER_MIN_HALF_M) {
+-        const nextHalf = Math.max(FOG_RENDER_MIN_HALF_M, Math.floor(renderHalf / 2));
+-        this._updateFogNow(true, nextHalf);
+-      } else {
+-        this._fogRenderClipped = true;
+-        this.setData({ fogPolys: [slab(
+-          worldSwLat - B, worldNeLat + B, worldSwLng - B, worldNeLng + B
+-        )] });
+-      }
+-      return;
+-    }
+-    this._fogRenderClipped = renderHalf < F.HALF;
+-    this.setData({ fogPolys: polys });
+-  },
+-
+   _syncSparkCircles() {
+     const sparks = (this._pois || []).filter((p) => p.state === 'fog' && p.cat === 'merchant').map((p) => ({
+       latitude: p.lat, longitude: p.lng, radius: 9,
+@@ -3589,30 +3280,6 @@ Page({
+     }, 100);
+   },
+ 
+-  /** @returns {boolean} 是否有格子真的变清(false=区域早已探过,无需重建 poly) */
+-  _fogApplyReveal(p) {
+-    const F = this._fog; if (!F) return false;
+-    const c = this._c;
+-    const x = (p.lng - c.lng) / m2lng(1, c.lat);
+-    const y = (p.lat - c.lat) / m2lat(1);
+-    const R = Number(p && p.r) > 0 ? Number(p.r) : REVEAL_M;   // 同上：poly 降级也认逐点半径
+-    const R2 = R + F.CELL;
+-    const lo = (v) => Math.max(0, Math.floor((v + F.HALF) / F.CELL));
+-    const hi = (v) => Math.min(F.N - 1, Math.floor((v + F.HALF) / F.CELL));
+-    let changed = false;
+-    for (let i = lo(x - R2); i <= hi(x + R2); i++) {
+-      for (let j = lo(y - R2); j <= hi(y + R2); j++) {
+-        const cx = (i + 0.5) * F.CELL - F.HALF;
+-        const cy = (j + 0.5) * F.CELL - F.HALF;
+-        const d = Math.hypot(cx - x, cy - y);
+-        const nl = fogLevel(d, R);
+-        const k = j * F.N + i;
+-        if (nl < F.st[k]) { F.st[k] = nl; changed = true; } // 只会变得更清,不会重新变浓
+-      }
+-    }
+-    return changed;
+-  },
+-
+   _flushTrackLine() {
+     if (!this._track || !this._track.length) return;
+     this.setData({
+@@ -3963,16 +3630,10 @@ Page({
+   _addReveal(p) {
+     this._reveals.push({ lat: p.lat, lng: p.lng });
+     if (this._markSeenNear(p)) { this._syncMarkers(); this._syncSparkCircles(); }
++    // blocked / 未初始化时不画:全黑 guard 已盖住地图,重试成功后 _rebuildFogDisplay 会按 _reveals 重绘。
+     if (this._fogMode === 'screen') {
+       if (this.data.fogScreenReady) this._scheduleScreenFogRender();
+       else this._renderScreenFog();
+-    } else if (this._fogMode === 'overlay') {
+-      this._stampReveal(p, 1);
+-      this._scheduleFogFlush();
+-    } else {
+-      // 只有格子真的变清了才重建 poly(走已探索区时跳过全量替换 → 不闪白)
+-      // 但 polygon 已裁窗时,回走旧区域也必须让渲染窗跟玩家走,否则外侧全雾挡板会盖住玩家。
+-      if (this._fogApplyReveal(p) || this._fogRenderClipped) this._scheduleFogUpdate();
+     }
+     this._accumulateTile(p.lat, p.lng); // P2 接真:格子入上报队列
+     const c = this._c; const cell = 60; const half = 600;
+diff --git a/chengyinhub-xcx/tests/unit/play-ui-contract.test.js b/chengyinhub-xcx/tests/unit/play-ui-contract.test.js
+index 715c3327..f86d0200 100644
+--- a/chengyinhub-xcx/tests/unit/play-ui-contract.test.js
++++ b/chengyinhub-xcx/tests/unit/play-ui-contract.test.js
+@@ -129,29 +129,19 @@ test('三模式与自由探索过场均使用真实腾讯原生地图', () => {
+ })
+ 
+ // 2026-08-04 用户裁决:推翻原「雾层不会遮蔽腾讯地图道路与 POI」——按参考图走未探区几乎不透的
+-// 探索游戏观感。这条测试改为锁「两条渲染路径浓度一致」:overlay 的 FOG_ALPHA 与 poly 的最高档
+-// 必须同值,否则同一个玩家在真机和降级设备上看到的是两种游戏。
+-test('自由漫游雾层浓度:overlay 与 poly 两条路径同档,且降级不得退成无雾', () => {
++// 探索游戏观感。2026-10-24(C:U-089)overlay/poly 两条不可达降级路径已删,screen 是唯一渲染路径:
++// 这条测试锁「screen 用 FOG_ALPHA 铺雾」+「降级不得退成无雾、也不得回到 map 内雾」。
++test('自由漫游雾层浓度:screen 路径按 FOG_ALPHA 铺雾,且降级不得退成无雾', () => {
+   const roamJs = readXcx('pages/roam/index.js')
+ 
+   const alpha = roamJs.match(/const FOG_ALPHA = ([0-9.]+);/)
+   assert.ok(alpha, '找不到 FOG_ALPHA')
+-  // 最高档 = _fogBandColor 里那条无条件 return(前两档都挂在 if 后面)
+-  const topBand = roamJs.match(/\n\s*return '#060606([0-9A-F]{2})'; \/\/ 约/)
+-  assert.ok(topBand, '找不到 poly 最高档雾色')
+-  const bandAlpha = parseInt(topBand[1], 16) / 255
+-  assert.ok(Math.abs(Number(alpha[1]) - bandAlpha) < 0.02,
+-    'poly 最高档 ' + bandAlpha.toFixed(2) + ' 与 FOG_ALPHA ' + alpha[1] + ' 不同档 —— 真机与降级设备会看到两种雾')
+-  // 边缘挡板必须和最高档同色,否则雾区边界会出现一条明显的深浅硬线
+-  assert.ok((roamJs.match(new RegExp("fillColor: '#060606" + topBand[1] + "'", 'g')) || []).length >= 2,
+-    '边缘 slab 的填色必须跟最高档雾色同步改')
++  assert.match(roamJs, /g\.fillStyle = 'rgba\(6,6,6,' \+ FOG_ALPHA \+ '\)';/, 'screen 雾底色必须吃 FOG_ALPHA')
+   // 浓度是可调的产品裁决,但「把雾关掉」不是 —— 下面锁的是这个。
+-  // 2026-08-04 前这里锁的是 _fogMode='none' + fogPolys:[] —— 那两行正是「漫游看不到迷雾」的成因,
+-  // 被当成契约锁住后,修 bug 反而会判红。改锁真正的不变量:降级路径必须仍然画雾。
+   assert.doesNotMatch(roamJs, /this\._fogMode = 'none';/,
+-    '降级不得退成无雾；要保留浓度上限请改 FOG_ALPHA / _fogBandColor')
+-  assert.match(roamJs, /_fogFallbackToPoly\(\)/)
+-  assert.match(roamJs, /this\._fogMode = 'poly';[\s\S]{0,120}this\._initFogGrid\(\);/)
++    '降级不得退成无雾；要调浓度请改 FOG_ALPHA')
++  assert.match(roamJs, /this\._fogMode = 'blocked';/, 'screen 初始化失败必须进入全黑 blocked 态')
++  assert.doesNotMatch(roamJs, /this\._fogMode = '(poly|overlay)';/, '不得回到会浮出腾讯文字的 map 内雾')
+ })
+ 
+ test('黑白地图控件保持前景与背景可辨', () => {
+diff --git a/chengyinhub-xcx/tests/unit/roam-fog-fallback.test.js b/chengyinhub-xcx/tests/unit/roam-fog-fallback.test.js
+index 55cef5dd..d03b27b5 100644
+--- a/chengyinhub-xcx/tests/unit/roam-fog-fallback.test.js
++++ b/chengyinhub-xcx/tests/unit/roam-fog-fallback.test.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+ 
+ // screen 主路径失败必须显式全黑并可重试，不能回到会浮出腾讯文字的 map 内雾。
+-// 旧 overlay/poly helper 仍须 fail-closed 为有雾，不能静默清空。
++// 旧 overlay/poly 降级路径已删除(C:U-089);blocked 态揭雾只记 _reveals,不能回到 map polygon。
+ 
+ const assert = require('assert');
+ const test = require('node:test');
+@@ -36,63 +36,6 @@ function loadRoamPage() {
+   return page;
+ }
+ 
+-function makeFogContext() {
+-  const calls = { arcs: [], fills: 0, gradients: 0 };
+-  const context = {
+-    createRadialGradient() {
+-      calls.gradients++;
+-      return { addColorStop() {} };
+-    },
+-    beginPath() {},
+-    arc(x, y, radius) { calls.arcs.push({ x, y, radius }); },
+-    fill() { calls.fills++; },
+-  };
+-  return { calls, context };
+-}
+-
+-function radialContourError(fog, radiusM) {
+-  const { CELL, HALF, N, st } = fog;
+-  const lo = Math.max(0, Math.floor((HALF - radiusM - CELL * 2) / CELL));
+-  const hi = Math.min(N - 2, Math.ceil((HALF + radiusM + CELL * 2) / CELL));
+-  let maxErrorM = 0;
+-  let edgeCount = 0;
+-  for (let j = lo; j <= hi; j++) {
+-    for (let i = lo; i <= hi; i++) {
+-      const k = j * N + i;
+-      const clear = st[k] === 0;
+-      if (clear !== (st[k + 1] === 0)) {
+-        const x = (i + 1) * CELL - HALF;
+-        [j * CELL - HALF, (j + 1) * CELL - HALF].forEach((y) => {
+-          maxErrorM = Math.max(maxErrorM, Math.abs(Math.hypot(x, y) - radiusM));
+-        });
+-        edgeCount++;
+-      }
+-      if (clear !== (st[k + N] === 0)) {
+-        const y = (j + 1) * CELL - HALF;
+-        [i * CELL - HALF, (i + 1) * CELL - HALF].forEach((x) => {
+-          maxErrorM = Math.max(maxErrorM, Math.abs(Math.hypot(x, y) - radiusM));
+-        });
+-        edgeCount++;
+-      }
+-    }
+-  }
+-  assert.ok(edgeCount > 0, '必须找到已探索区与雾区的边界');
+-  return maxErrorM;
+-}
+-
+-function offsetPoint(center, eastM, northM) {
+-  return {
+-    lat: center.lat + northM / 111320,
+-    lng: center.lng + eastM / (111320 * Math.cos(center.lat * Math.PI / 180)),
+-  };
+-}
+-
+-function fogStateAtOffset(fog, eastM, northM) {
+-  const i = Math.floor((eastM + fog.HALF) / fog.CELL);
+-  const j = Math.floor((northM + fog.HALF) / fog.CELL);
+-  return fog.st[j * fog.N + i];
+-}
+-
+ test('screen canvas 不可用时显式阻断并可重试，不在背后白画 poly', async () => {
+   const page = loadRoamPage();
+   const ready = await page._setupFog();
+@@ -104,15 +47,6 @@ test('screen canvas 不可用时显式阻断并可重试，不在背后白画 po
+   assert.strictEqual(page.data.fogScreenError, undefined, '读取失败留白，fail-closed guard仍保留');
+ });
+ 
+-test('旧 overlay helper 中途失败仍回落到 poly,不清空雾', () => {
+-  const page = loadRoamPage();
+-  page._fogMode = 'overlay';           // 假装真机走上了 overlay
+-  page.data.fogPolys = [];
+-  page._fogFallbackToPoly();
+-  assert.strictEqual(page._fogMode, 'poly');
+-  assert.ok(page.data.fogPolys.length > 0, 'overlay 失败后必须仍有雾');
+-});
+-
+ test('页面销毁后在途 getRegion 回调不能继续绘制或 setData', () => {
+   const page = loadRoamPage();
+   let regionSuccess;
+@@ -248,112 +182,21 @@ test('缺用途授权世代的旧fog pending不能开启持续定位', () => {
+   assert.strictEqual(locations, 0, '未知授权的旧pending只读地图，不能补授定位许可');
+ });
+ 
+-test('已探索点会在雾上擦出洞(降级路径的擦除真的生效)', async () => {
+-  const page = loadRoamPage();
+-  page._fogToPoly();
+-  const before = page._fog.st.reduce((a, b) => a + b, 0);
+-  page._fogApplyReveal({ lat: 31.23, lng: 121.47 });
+-  const after = page._fog.st.reduce((a, b) => a + b, 0);
+-  assert.ok(after < before, '揭雾后网格总浓度必须下降');
+-});
+-
+-test('overlay 揭雾使用单色硬边圆,不再创建径向渐变', () => {
+-  const page = loadRoamPage();
+-  const { calls, context } = makeFogContext();
+-  page._fogG = context;
+-  page._stampReveal(page._c, 1);
+-  assert.strictEqual(calls.gradients, 0, '硬边揭雾不应创建径向渐变');
+-  assert.strictEqual(calls.arcs.length, 1, '揭雾应绘制一个圆形擦除区');
+-  assert.ok(calls.arcs[0].radius > 0, '圆形擦除区必须有有效半径');
+-  assert.strictEqual(calls.fills, 1, '圆形擦除区必须真正填充');
+-});
+ 
+-test('poly 揭雾只有清除与全雾两态,不存在透明度过渡环', async () => {
++test('U-089: blocked 态揭雾只记轨迹,不复活 map polygon 雾;旧 overlay/poly 实现不得回流', () => {
+   const page = loadRoamPage();
+-  page._fogToPoly();
+-  page._fogApplyReveal(page._c);
+-  const positiveLevels = new Set(page._fog.st);
+-  positiveLevels.delete(0);
+-  assert.strictEqual(positiveLevels.size, 1, '硬边迷雾不应保留多档透明度过渡环');
+-});
+-
+-test('poly 硬边圆的完整阶梯轮廓误差不超过 1.4m', async () => {
+-  const page = loadRoamPage();
+-  page._fogToPoly();
+-  page._fogApplyReveal(page._c);
+-  const errorM = radialContourError(page._fog, 55);
+-  assert.ok(errorM <= 1.4, '径向轮廓误差 ' + errorM.toFixed(2) + 'm,硬边仍有明显台阶');
+-});
+-
+-test('poly 连续 1km L 形路线仍保持百个量级 polygon 与小体积 setData', async (t) => {
+-  const page = loadRoamPage();
+-  page._fogToPoly();
+-  const route = Array.from({ length: 51 }, (_, i) => offsetPoint(page._c, (i - 25) * 10, 0))
+-    .concat(Array.from({ length: 51 }, (_, i) => offsetPoint(page._c, 250, i * 10)));
+-  route.forEach((point) => page._fogApplyReveal(point));
+-  page._updateFogNow();
+-  const polygonCount = page.data.fogPolys.length;
+-  const payloadBytes = Buffer.byteLength(JSON.stringify(page.data.fogPolys));
+-  t.diagnostic('fogPolys=' + polygonCount + ',setData=' + (payloadBytes / 1024).toFixed(1) + 'KiB');
+-  assert.ok(polygonCount < 500, '连续路线 polygon 数量失控:' + polygonCount);
+-  assert.ok(payloadBytes < 256 * 1024, 'fogPolys setData 体积失控:' + payloadBytes + 'B');
+-});
+-
+-test('poly 800 个离散历史点会保留揭雾且压住 polygon/setData 上限', (t) => {
+-  const page = loadRoamPage();
+-  page._player = page._c;
+-  page._initFogGrid();
+-  const samples = [];
+-  for (let northM = -2400; northM <= 2400 && samples.length < 800; northM += 100) {
+-    for (let eastM = -2400; eastM <= 2400 && samples.length < 800; eastM += 100) {
+-      samples.push({ eastM, northM, point: offsetPoint(page._c, eastM, northM) });
+-    }
+-  }
+-  page._historyReveals = samples.map((sample) => sample.point);
+-  page._applyHistoryFog();
+-  page._updateFogNow();
+-  samples.forEach(({ eastM, northM }) => {
+-    assert.strictEqual(fogStateAtOffset(page._fog, eastM, northM), 0, '离散历史揭雾点不能被性能降级吞掉');
+-  });
+-  assert.ok(fogStateAtOffset(page._fog, -2350, -2350) > 0,
+-    '四个 55m 揭雾圆之间的未探索间隙必须保留雾，不能靠过度揭雾压 polygon');
+-  page._fogApplyReveal(page._c);
+-  const nextRevealErrorM = radialContourError(page._fog, 55);
+-  assert.ok(nextRevealErrorM <= 1.4,
+-    '超限保护后新揭雾仍须保持精细硬边，当前误差 ' + nextRevealErrorM.toFixed(2) + 'm');
+-  page._updateFogNow();
+-  const polygonCount = page.data.fogPolys.length;
+-  const payloadBytes = Buffer.byteLength(JSON.stringify(page.data.fogPolys));
+-  assert.ok(polygonCount > 4, '玩家周边的新揭雾必须进入 map-polygons,不能只剩全雾挡板');
+-  t.diagnostic('fogPolys=' + polygonCount + ',setData=' + (payloadBytes / 1024).toFixed(1) + 'KiB');
+-  assert.ok(polygonCount < 500, '离散历史 polygon 数量失控:' + polygonCount);
+-  assert.ok(payloadBytes < 256 * 1024, '离散历史 setData 体积失控:' + payloadBytes + 'B');
+-
+-  const backtrack = samples[400].point;
+-  page._player = backtrack;
++  page._fogMode = 'blocked';
++  page.data.fogPolys = [];
+   page._reveals = [];
+-  page._gridHit = {};
+   page._accumulateTile = () => {};
+-  let scheduled = 0;
+-  page._scheduleFogUpdate = () => { scheduled++; page._updateFogNow(); };
+-  page._addReveal(backtrack);
+-  assert.strictEqual(scheduled, 1, '裁窗后回走已探索区也必须重算玩家周边，不能被旧全雾挡板盖住');
+-  assert.ok(page.data.fogPolys.length > 4, '回走点周边必须重新显示已揭区域，不能只剩全雾挡板');
+-});
+-
+-test('poly 最小渲染窗仍碎片过多时 fail-closed 为全雾,绝不发超限或空数组', () => {
+-  const page = loadRoamPage();
+-  page._player = page._c;
+-  page._initFogGrid();
+-  const F = page._fog;
+-  const lo = Math.floor((F.HALF - 80) / F.CELL);
+-  const hi = Math.floor((F.HALF + 80) / F.CELL);
+-  for (let j = lo; j <= hi; j++) {
+-    for (let i = lo; i <= hi; i++) F.st[j * F.N + i] = (i + j) % 2;
+-  }
+-  page._updateFogNow();
+-  assert.ok(page.data.fogPolys.length > 0, '极端碎片时不能退成什么都不画');
+-  assert.strictEqual(page.data.fogPolys.length, 1, '极端碎片必须收口成单块全雾，不能继续发送碎片 polygons');
+-  assert.strictEqual(page.data.fogPolys[0].fillColor, page._fogBandColor(1),
+-    'fail-closed 只能回到全雾，不能通过降低浓度或透明来伪装通过');
++  page._gridHit = {};
++  page._stats = { explorePct: 0 };
++  page._rollStat = () => {};
++  page._addReveal({ lat: 31.23, lng: 121.47 });
++  assert.strictEqual(page._reveals.length, 1, '揭雾点必须记下,screen 重试成功后据此重绘');
++  assert.deepStrictEqual(page.data.fogPolys, [], 'blocked 态不能把 map polygon 当作降级');
++  ['_fogToPoly', '_fogFallbackToPoly', '_initFogGrid', '_updateFogNow', '_fogApplyReveal',
++    '_stampReveal', '_flushFogOverlay', '_paintFogBase'].forEach((name) => {
++    assert.strictEqual(page[name], undefined, name + ' 是已删除的不可达降级路径');
++  });
+ });
+diff --git a/chengyinhub-xcx/tests/unit/roam-fog-persist-feather.test.js b/chengyinhub-xcx/tests/unit/roam-fog-persist-feather.test.js
+index a84891ed..ea167467 100644
+--- a/chengyinhub-xcx/tests/unit/roam-fog-persist-feather.test.js
++++ b/chengyinhub-xcx/tests/unit/roam-fog-persist-feather.test.js
+@@ -6,7 +6,6 @@
+ // ② _drawScreenFog 的揭示边缘用径向渐变羽化(FOG_FEATHER),不再是硬边贴纸圆。
+ //    判定半径不吃羽化(FOG_FEATHER 是渐变、软边不算「已揭开」),但**必须吃逐点 r** ——
+ //    历史格画出 110m 却按 55m 判定,55–110m 带里点 POI 会被静默 return、零反馈。
+-// ③ 逐点 r 三条渲染路径都要认(screen / overlay / poly),只有 screen 认 = 降级下连片失效。
+ 
+ const assert = require('assert');
+ const test = require('node:test');
+@@ -138,50 +137,3 @@ test('_drawScreenFog 用径向渐变羽化擦除,且羽化倍率作用在缩放
+   const [projected] = projectRevealCircles(REGION, { width: 400, height: 400 }, page._reveals, 55);
+   assert.ok(Math.abs(ops.scales[0][0] - projected.radiusX * 1.6) < 1e-6, '羽化倍率必须作用在 scale 上');
+ });
+-
+-// ③ 逐点 r 必须三条渲染路径都认。只有 screen 认的话，overlay/poly 降级下
+-//    重开仍是互不相接的 55m 圆点 —— 正是本批要根治的症状，且降级路径没有任何报错。
+-test('_stampReveal(overlay 路径) 认逐点 r：110m 点画出的圆是 55m 点的 2 倍', () => {
+-  const page = loadRoamPage({});
+-  page._c = { lat: 31.230, lng: 121.470 };
+-  const radii = [];
+-  page._fogG = {
+-    globalCompositeOperation: '', fillStyle: '',
+-    beginPath() {}, fill() {},
+-    arc(px, py, r) { radii.push(r); },
+-  };
+-  page._stampReveal({ lat: 31.230, lng: 121.470, r: 110 }, 1);
+-  page._stampReveal({ lat: 31.230, lng: 121.470 }, 1);
+-  assert.strictEqual(radii.length, 2, '两次擦除都应真的画出来');
+-  assert.ok(Math.abs(radii[0] / radii[1] - 2) < 0.01, `110m 应是 55m 的 2 倍，实得 ${radii[0]}/${radii[1]}`);
+-});
+-
+-test('_fogApplyReveal(poly 路径) 认逐点 r：80m 处的格子只有 r=110 才会变清', () => {
+-  const mkFog = () => {
+-    const HALF = 2500, CELL = 10, N = Math.ceil(HALF * 2 / CELL);
+-    const st = new Uint8Array(N * N); st.fill(255);
+-    return { HALF, CELL, N, st };
+-  };
+-  const cellAt = (F, xM, yM) => {
+-    const i = Math.floor((xM + F.HALF) / F.CELL);
+-    const j = Math.floor((yM + F.HALF) / F.CELL);
+-    return F.st[j * F.N + i];
+-  };
+-  const center = { lat: 31.230, lng: 121.470 };
+-  // 正东 80m：55m 圆够不着，110m 圆够得着
+-  const east80 = { lat: center.lat, lng: center.lng + 80 / (111320 * Math.cos(center.lat * Math.PI / 180)) };
+-
+-  const page = loadRoamPage({});
+-  page._c = center;
+-
+-  page._fog = mkFog();
+-  page._fogApplyReveal({ ...center, r: 110 });
+-  const withR = cellAt(page._fog, 80, 0);
+-
+-  page._fog = mkFog();
+-  page._fogApplyReveal({ ...center });
+-  const withoutR = cellAt(page._fog, 80, 0);
+-
+-  assert.ok(withR < 255, `r=110 必须把 80m 处的格子擦清，实得 ${withR}`);
+-  assert.strictEqual(withoutR, 255, `负控：没有 r 时按 55m，80m 处必须仍是满雾，实得 ${withoutR}`);
+-});
