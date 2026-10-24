@@ -981,6 +981,19 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
                 self.assertEqual(1, status, report)
                 self.assertIn("POLICY_CHANGE", report["error"])
 
+    def test_candidate_cannot_remove_topic_query_owner_or_clear_writer_restrictions(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("remove", "clear"):
+            data = copy.deepcopy(original)
+            policy = data["technical_dependency_policy"]
+            if change == "remove": policy["owners"] = [o for o in policy["owners"] if o["id"] != "E_TOPIC_QUERY"]
+            else: next(o for o in policy["owners"] if o["id"] == "E_TOPIC_QUERY")["forbidden_backrefs"] = []
+            self.write("ci/architecture/owners.json", gate.encode(data))
+            status, report = self.source_cli(trusted, self.commit())
+            self.assertEqual(1, status, report)
+            self.assertIn("POLICY_CHANGE", report["error"])
+
 
 
 class RegisteredReferencesTest(unittest.TestCase):

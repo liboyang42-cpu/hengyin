@@ -70,7 +70,7 @@
     "schema": 1,
     "coverage": "PARTIAL",
     "observed_source": "06a571b1247620a9bdcea068be0ded973671d17c",
-    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f. Follow-up exact sources: public 06a571b1247620a9bdcea068be0ded973671d17c/A immutable DTO; B 0ffb9c8fee278c11fe47aa6bcfd95745c9e73850; D 4061bac25dbe113574632dde61d4ae416185db77; G 2457bf1851c0573df7a69270a4532b00b9e8404c; F MDC 1fb99670c066496c3b19da6b3ac4b132e14ab785. Structural directions only; no lock/immutability/log-safety proof.",
+    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f. Follow-up exact sources: public 06a571b1247620a9bdcea068be0ded973671d17c/A immutable DTO; B 0ffb9c8fee278c11fe47aa6bcfd95745c9e73850; D 4061bac25dbe113574632dde61d4ae416185db77; G 2457bf1851c0573df7a69270a4532b00b9e8404c; F MDC 1fb99670c066496c3b19da6b3ac4b132e14ab785. Structural directions only; no lock/immutability/log-safety proof. E_TOPIC_QUERY exact System class from 9e14a73e50c9afd5c8f38027c3ecd059967a51d3; existing seven read-side dependencies retained, no transitive read-only or table authority inference.",
     "owners": [
       {
         "id": "A_WITHDRAW_ADMISSION",
@@ -643,6 +643,25 @@
           "com.chengyinhub.framework.manager.AsyncManager",
           "com.chengyinhub.quartz.util.AbstractQuartzJob",
           "com.chengyinhub.quartz.service.MySqlSchedulerCoordinator"
+        ]
+      },
+      {
+        "id": "E_TOPIC_QUERY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicQueryService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicPublicationService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicEditionFinalizationServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSaleFinalizationServiceImpl",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.GameSharedRunControl"
         ]
       }
     ],

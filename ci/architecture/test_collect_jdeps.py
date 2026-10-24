@@ -976,6 +976,44 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertEqual(["B_PAYMENT_INTENTS", "B_PAYMENT_SDK"], cycle["owners"])
         self.assertEqual(2, len(cycle["witnesses"]))
 
+    def test_topic_query_preserves_seven_existing_read_ports_and_incoming_facade(self):
+        dependencies = ["com.chengyinhub.business.mapper." + n for n in
+                        ("CmsTopicMapper", "CmsTopicChapterMapper", "CmsTopicNodeMapper",
+                         "CmsTopicTemplateMetaMapper", "CmsMemberTemplateMapper")]
+        dependencies += ["com.chengyinhub.system.service.ISysCategoryService",
+                         "com.chengyinhub.business.service.IMerchantChapterApplicationService"]
+        for name in dependencies:
+            self.system_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_READ_PORT_" + name).encode()
+        self.write_system()
+        self.output = self.output.with_name("topic-query-read-ports")
+        self.collect()
+        query = self.owner_member("E_TOPIC_QUERY")
+        for target in dependencies: self.reference(query, target)
+        self.reference("com.chengyinhub.business.service.impl.CmsTopicServiceImpl", query)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
+
+    def test_topic_query_cannot_reverse_call_facade_publication_claim_or_runtime_writers(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for target in self.dependencies["owners"]["E_TOPIC_QUERY"]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member("E_TOPIC_QUERY"), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                self.assertEqual(("E_TOPIC_QUERY", target), (bad["source_technical_owner"], bad["target_class"]))
+
+    def test_topic_query_missing_its_raw_rows_is_unknown_despite_same_system_output(self):
+        query = self.owner_member("E_TOPIC_QUERY")
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in text.splitlines() if not l.strip().startswith(query + " -> ")).encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": "E_TOPIC_QUERY", "type": query}, report["review_items"])
+
     def test_followup_missing_common_input_or_wrong_module_remains_unknown(self):
         policy = copy.deepcopy(self.dependencies)
         policy["owners"]["F_REQUEST_CONTEXT"]["module"] = "chengyinhub-system"
