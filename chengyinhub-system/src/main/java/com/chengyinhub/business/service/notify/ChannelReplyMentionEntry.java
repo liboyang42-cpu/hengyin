@@ -37,7 +37,17 @@ public final class ChannelReplyMentionEntry {
 
     private static ImmutableReceiptProducer.OriginalRequest request(String requestId,
             ImmutableReceiptProducer.Kind kind) {
-        return new ImmutableReceiptProducer.OriginalRequest(requestId, kind, "{\"fp\":1}",
+        return new ImmutableReceiptProducer.OriginalRequest(requestId, kind, null,
                 ImmutableReceiptProducer.OUTCOME_ACCEPTED);
+    }
+
+    /** 原 send 的返回图。一次调用，不读第二遍，不写入回执库。 */
+    public Map<String, Object> forward(Long actorId, Long conversationId, String requestId, Integer msgType,
+            String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
+            List<Long> mentionRoleIds, boolean mentionEveryone) {
+        ImmutableReceiptProducer.Kind kind = replyToId != null && replyToId.longValue() > 0L
+                ? ImmutableReceiptProducer.Kind.REPLY : ImmutableReceiptProducer.Kind.MENTION;
+        return producer.sendOriginalMap(request(requestId, kind), actorId, conversationId, msgType, content,
+                extraJson, replyToId, mentionMemberIds, mentionRoleIds, mentionEveryone);
     }
 }

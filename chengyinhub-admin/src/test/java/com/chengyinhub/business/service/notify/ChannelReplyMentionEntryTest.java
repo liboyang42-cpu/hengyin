@@ -78,4 +78,26 @@ class ChannelReplyMentionEntryTest {
         assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, mentioned.outcome);
         assertEquals(0, store.size());
     }
+
+    @Test
+    void forwardReturnsTheOriginalSendMapOnce() {
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        String key = "c09-send-key-0001";
+        AtomicInteger sends = new AtomicInteger();
+        ImmutableReceiptProducer.ChannelMessageOriginalSend channel =
+                (actor, conversation, client, type, content, extra, replyTo, members, roles, everyone) -> {
+                    sends.incrementAndGet();
+                    Map<String, Object> sent = new java.util.LinkedHashMap<String, Object>();
+                    sent.put("id", Long.valueOf(42L));
+                    sent.put("request_id", client);
+                    return sent;
+                };
+        ChannelReplyMentionEntry entry = new ChannelReplyMentionEntry(store, channel);
+        Map<String, Object> sent = entry.forward(7L, 12L, key, Integer.valueOf(1), "hello", null, 88120L, List.of(),
+                List.of(), false);
+        assertEquals(1, sends.get());
+        assertEquals(Long.valueOf(42L), sent.get("id"));
+        assertEquals(key, sent.get("request_id"));
+        assertEquals(0, store.size());
+    }
 }

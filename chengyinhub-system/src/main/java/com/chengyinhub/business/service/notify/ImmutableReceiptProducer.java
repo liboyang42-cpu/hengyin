@@ -170,6 +170,17 @@ public final class ImmutableReceiptProducer {
     public OriginalReceipt sendOriginal(OriginalRequest request, Long actorId, Long conversationId,
             Integer msgType, String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
             List<Long> mentionRoleIds, boolean mentionEveryone) {
+        sendOriginalMap(request, actorId, conversationId, msgType, content, extraJson, replyToId, mentionMemberIds,
+                mentionRoleIds, mentionEveryone);
+        return new OriginalReceipt(request.requestId, requireRequest(request).kind, null, OUTCOME_UNKNOWN, null);
+    }
+
+    /**
+     * 同一次原 send 的返回图。给共享调度保持原 HTTP 正文，不另造回执。
+     */
+    public Map<String, Object> sendOriginalMap(OriginalRequest request, Long actorId, Long conversationId,
+            Integer msgType, String content, String extraJson, Long replyToId, List<Long> mentionMemberIds,
+            List<Long> mentionRoleIds, boolean mentionEveryone) {
         OriginalRequest required = requireRequest(request);
         if (required.kind != Kind.REPLY && required.kind != Kind.MENTION) {
             throw new NotASendException(required.kind);
@@ -201,7 +212,7 @@ public final class ImmutableReceiptProducer {
         if (!sameChannelReceipt(sent, key)) {
             throw new IllegalStateException("channel send receipt is not this request");
         }
-        return new OriginalReceipt(key, required.kind, null, OUTCOME_UNKNOWN, null);
+        return sent;
     }
 
     /**
