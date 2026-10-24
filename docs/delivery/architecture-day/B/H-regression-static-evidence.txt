@@ -1,0 +1,10 @@
+Base 7b12bd43dc7df9df3d80e9019df0a3977caa87e8
+Test-only scope: PASS; no production/shared E2E/CI/dependency changes.
+MySQL 4 @Test retained; CLM 73->76; original test lines/defences retained.
+git apply --check + applied exact file bytes: PASS.
+Secret-file gate + Python credential-marker scan: PASS.
+Local Java/JUnit/MySQL/real SDK/production DDL: NOT RUN.
+b79898836c2b6fed1751d2b07b6dc41f0778a98d02aa0e9b6e42bdce95d7be18  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java
+e3cc342b978f1bcd041e167eae367a55883561ce4f0ec7e3d074b6b05458e0b4  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentMySqlIT.java
+8417f061fbaab809c8964c7af6fc553ebfe161f61295453384f2722168c467de  docs/delivery/architecture-day/B/H-regression-followup.md
+2d7db957bfd3b94f682a7a9447457670a2eb390cb5643fe375600398d653a44e  docs/delivery/architecture-day/B/H-regression-from7b12.patch
