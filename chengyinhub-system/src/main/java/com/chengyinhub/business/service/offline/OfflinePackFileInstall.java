@@ -3,16 +3,18 @@ package com.chengyinhub.business.service.offline;
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 import com.chengyinhub.business.service.offline.OfflinePackOperation.Failure;
 import com.chengyinhub.business.service.offline.OfflinePackOperation.Manifest;
 import com.chengyinhub.business.service.offline.OfflinePackOperation.OfflinePackException;
+import com.chengyinhub.business.service.offline.OfflinePackOperation.Phase;
 
 /**
  * 把已经校验过的离线包字节原子写进调用方给出的目录。
- * 没有字节、摘要不对，都不替换已有文件。这里不发起下载，也不编造地址。
+ * 阶段不对、摘要不对、或目标是链接时，都不改已有文件。这里不发起下载。
  */
 public final class OfflinePackFileInstall {
     private OfflinePackFileInstall() {
@@ -22,31 +24,54 @@ public final class OfflinePackFileInstall {
         if (operation == null || operation.manifest() == null) {
             throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
         }
-        Manifest manifest = operation.manifest();
+        Phase phase = operation.phase();
+        if (phase != Phase.DOWNLOADING && phase != Phase.UPDATING) {
+            throw new OfflinePackException(Failure.NOT_DOWNLOADING, null);
+        }
         if (payload == null) {
             throw new OfflinePackException(Failure.WAITING_SOURCE, OfflinePackOperation.PACK_PAYLOAD_CONSUMER);
         }
-        Path part = partFile(root, manifest);
-        Path finalFile = packFile(root, manifest);
-        Files.write(part, payload);
-        byte[] stored = Files.readAllBytes(part);
-        boolean same = stored.length == payload.length && stored.length == manifest.byteSize
-                && manifest.checksum.equalsIgnoreCase(OfflinePackOperation.sha256Hex(stored));
-        if (!same) {
-            Files.deleteIfExists(part);
-            finish(operation, payload);
-            return;
+        Manifest manifest = operation.manifest();
+        Path base = directory(root);
+        Path finalFile = base.resolve(fileName(manifest)).normalize();
+        if (!finalFile.startsWith(base) || Files.isSymbolicLink(finalFile)) {
+            throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
         }
-        move(part, finalFile);
-        finish(operation, stored);
+        Path temp = Files.createTempFile(base, ".offline-part-", ".tmp");
+        boolean keepTemp = true;
+        try {
+            if (Files.isSymbolicLink(temp)) {
+                throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
+            }
+            Files.write(temp, payload);
+            byte[] stored = Files.readAllBytes(temp);
+            boolean same = stored.length == payload.length && stored.length == manifest.byteSize
+                    && manifest.checksum.equalsIgnoreCase(OfflinePackOperation.sha256Hex(stored));
+            requireSameOperation(operation, phase, manifest);
+            if (!same) {
+                finish(operation, payload);
+                return;
+            }
+            if (Files.isSymbolicLink(finalFile)) {
+                throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
+            }
+            requireSameOperation(operation, phase, manifest);
+            move(temp, finalFile);
+            keepTemp = false;
+            finish(operation, stored);
+        } finally {
+            if (keepTemp) {
+                Files.deleteIfExists(temp);
+            }
+        }
     }
 
     public static byte[] readVerified(Path root, Manifest manifest) throws IOException {
         if (manifest == null) {
             throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
         }
-        Path file = packFile(root, manifest);
-        if (!Files.isRegularFile(file)) {
+        Path file = directory(root).resolve(fileName(manifest)).normalize();
+        if (Files.isSymbolicLink(file) || !Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
             throw new OfflinePackException(Failure.WAITING_SOURCE, OfflinePackOperation.PACK_PAYLOAD_CONSUMER);
         }
         byte[] stored = Files.readAllBytes(file);
@@ -57,8 +82,29 @@ public final class OfflinePackFileInstall {
         return stored;
     }
 
+    static String fileName(Manifest manifest) {
+        return bind(manifest.operationId) + bind(manifest.packId) + bind(manifest.version) + "pack";
+    }
+
+    private static String bind(String value) {
+        if (value.indexOf('/') >= 0 || value.indexOf('\\') >= 0 || value.contains("..")) {
+            throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
+        }
+        return value.length() + "." + value + ".";
+    }
+
+    private static void requireSameOperation(OfflinePackOperation operation, Phase phase, Manifest manifest) {
+        Manifest current = operation.manifest();
+        if (operation.phase() != phase || current == null
+                || !manifest.operationId.equals(current.operationId)
+                || !manifest.packId.equals(current.packId)
+                || !manifest.version.equals(current.version)) {
+            throw new OfflinePackException(Failure.OPERATION_MISMATCH, null);
+        }
+    }
+
     private static void finish(OfflinePackOperation operation, byte[] payload) {
-        if (operation.phase() == OfflinePackOperation.Phase.UPDATING) {
+        if (operation.phase() == Phase.UPDATING) {
             operation.finishUpdate(payload);
             return;
         }
@@ -73,31 +119,10 @@ public final class OfflinePackFileInstall {
         }
     }
 
-    private static Path packFile(Path root, Manifest manifest) {
-        return contained(root, fileName(manifest));
-    }
-
-    private static Path partFile(Path root, Manifest manifest) {
-        return contained(root, fileName(manifest) + ".part");
-    }
-
-    private static String fileName(Manifest manifest) {
-        String name = manifest.packId + "-" + manifest.version + ".pack";
-        if (name.indexOf('/') >= 0 || name.indexOf('\\') >= 0 || name.contains("..")) {
-            throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
-        }
-        return name;
-    }
-
-    private static Path contained(Path root, String name) {
+    private static Path directory(Path root) {
         if (root == null || !Files.isDirectory(root)) {
             throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
         }
-        Path base = root.toAbsolutePath().normalize();
-        Path target = base.resolve(name).normalize();
-        if (!target.startsWith(base)) {
-            throw new OfflinePackException(Failure.INVALID_MANIFEST, null);
-        }
-        return target;
+        return root.toAbsolutePath().normalize();
     }
 }
