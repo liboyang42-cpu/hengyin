@@ -179,6 +179,9 @@ class WechatPayCallbackFactsTest {
             row.put("business_out_trade_no", business); row.put("attempt_no", 2);
             row.put("appid", "wx-app"); row.put("trade_type", "APP");
             row.put("currency", "CNY"); row.put("total_fen", 5000L);
+            // The original fixture business row is id=1; keep its frozen attempt binding complete.
+            row.put("biz_type",business.startsWith("CLM")?"CLM":business.startsWith("TPLTM_")?"COMMERCE":business.startsWith("DEP")?"DEP":"REGISTRATION");
+            row.put("biz_id",1L);row.put("request_hash","a".repeat(64));
             f.intentDb.intents.put("merchant:" + alias, row);
             assertTrue(f.deliver().contains("SUCCESS"), business);
             f.verifyRouted();
@@ -266,8 +269,10 @@ class WechatPayCallbackFactsTest {
             WechatVerifiedFactTestSupport.setField(gateway, "coopInviteService", coop);
             lenient().when(membership.supportsOutTradeNo(anyString())).thenAnswer(c -> no.equals(c.getArgument(0)));
             lenient().when(commerce.supportsOutTradeNo(anyString())).thenAnswer(c -> ((String) c.getArgument(0)).startsWith("TPLTM_"));
-            lenient().when(membership.handlePaidInvoice(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);
-            lenient().when(commerce.handlePaidOrder(eq(no), eq(true), eq(5000), anyString())).thenAnswer(c -> !rejectDomain);
+            lenient().when(membership.handlePaidInvoice(eq(no), eq(true), eq(5000), eq("TX1"),
+                    argThat(reference -> reference!=null && originalReference().equals(reference)))).thenAnswer(c -> !rejectDomain);
+            lenient().when(commerce.handlePaidOrder(eq(no), eq(true), eq(5000), eq("TX1"),
+                    argThat(reference -> reference!=null && originalReference().equals(reference)))).thenAnswer(c -> !rejectDomain);
             lenient().when(coop.markDepositPaid(eq(no), eq(5000L), anyString(), any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class))).thenAnswer(c -> {
                 DepositVerifiedReferenceTestSupport.assertOriginal(gateway,c.getArgument(3),no,5000L,c.getArgument(2));
                 return !rejectDomain;
@@ -285,14 +290,30 @@ class WechatPayCallbackFactsTest {
                     "wechatpay-nonce", "nonce", "wechatpay-signature", "signature", "wechatpay-timestamp", "1"));
         }
 
+        private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalReference() {
+            Transaction original=createdOrders.values().iterator().next();
+            var reader=(WechatVerifiedPaymentFactService)WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts");
+            var stored=reader.findPaymentSuccess(original.getMchid(),original.getOutTradeNo(),original.getTransactionId());
+            assertNotNull(stored,"callback must already have independently saved the original verified fact");
+            var facts=reader.requireVerified(stored.reference()).facts();
+            DepositVerifiedReferenceTestSupport.assertOriginal(gateway,stored.reference(),order,
+                    original.getAmount().getTotal().longValue(),original.getTransactionId());
+            assertEquals(original.getOutTradeNo(),facts.wxOutTradeNo());assertEquals(original.getOutTradeNo(),facts.merchantEventNo());
+            assertEquals(original.getAppid(),facts.appid());assertEquals(original.getMchid(),facts.mchid());
+            assertEquals(original.getTradeType().name(),facts.tradeType());assertEquals(original.getAmount().getCurrency(),facts.currency());
+            assertEquals(java.time.OffsetDateTime.parse(original.getSuccessTime()).toInstant(),facts.successAt());
+            var intent=intentDb.intents.get(original.getMchid()+":"+original.getOutTradeNo());
+            assertEquals(intent==null?null:intent.get("request_hash"),facts.intentRequestHash());
+            return stored.reference();
+        }
+
         void verifyNoBusinessCalls() { verifyNoInteractions(registration, membership, commerce, coop); }
 
         void verifyRouted() {
-            if (order.startsWith("CLM")) verify(membership).handlePaidInvoice(order, true, 5000, "TX1");
-            else if (order.startsWith("TPLTM_")) verify(commerce).handlePaidOrder(order, true, 5000, "TX1");
+            if (order.startsWith("CLM")) verify(membership).handlePaidInvoice(eq(order),eq(true),eq(5000),eq("TX1"),eq(originalReference()));
+            else if (order.startsWith("TPLTM_")) verify(commerce).handlePaidOrder(eq(order),eq(true),eq(5000),eq("TX1"),eq(originalReference()));
             else if (order.startsWith("DEP")) verify(coop).markDepositPaid(eq(order), eq(5000L), eq("TX1"),
-                    eq(((WechatVerifiedPaymentFactService)WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts"))
-                            .findPaymentSuccess("merchant",order,"TX1").reference()));
+                    eq(originalReference()));
             else verify(registration).handleWechatPayCallback(anyMap());
         }
     }

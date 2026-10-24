@@ -42,8 +42,10 @@ class WechatPaymentSuccessRecoveryTest {
             WechatVerifiedFactTestSupport.setField(f.gateway,"merchantCommerceService",commerce);
             when(membership.supportsOutTradeNo("CLM1")).thenReturn(true);
             when(commerce.supportsOutTradeNo("TPLTM_1")).thenReturn(true);
-            when(membership.handlePaidInvoice("CLM1",true,1000,"TX1")).thenReturn(false,true);
-            when(commerce.handlePaidOrder("TPLTM_1",true,1000,"TX1")).thenReturn(false,true);
+            when(membership.handlePaidInvoice(eq("CLM1"),eq(true),eq(1000),eq("TX1"),
+                    argThat(reference -> reference!=null && originalReference(f).equals(reference)))).thenReturn(false,true);
+            when(commerce.handlePaidOrder(eq("TPLTM_1"),eq(true),eq(1000),eq("TX1"),
+                    argThat(reference -> reference!=null && originalReference(f).equals(reference)))).thenReturn(false,true);
             when(f.depositOwner.markDepositPaid(eq("DEP1"),eq(1000L),eq("TX1"),any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
                     .thenAnswer(call -> {
                         DepositVerifiedReferenceTestSupport.assertOriginal(f.gateway,call.getArgument(3),"DEP1",1000L,"TX1");
@@ -62,8 +64,8 @@ class WechatPaymentSuccessRecoveryTest {
                     new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(id,hash)).reference().hash());
             verifyNoInteractions(f.payments);
             switch(no) {
-                case "CLM1" -> verify(membership,times(2)).handlePaidInvoice(no,true,1000,"TX1");
-                case "TPLTM_1" -> verify(commerce,times(2)).handlePaidOrder(no,true,1000,"TX1");
+                case "CLM1" -> verify(membership,times(2)).handlePaidInvoice(eq(no),eq(true),eq(1000),eq("TX1"),eq(originalReference(f)));
+                case "TPLTM_1" -> verify(commerce,times(2)).handlePaidOrder(eq(no),eq(true),eq(1000),eq("TX1"),eq(originalReference(f)));
                 case "DEP1" -> verify(f.depositOwner,times(2)).markDepositPaid(eq(no),eq(1000L),eq("TX1"),
                         eq(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(id,hash)));
                 default -> verify(f.registration,times(2)).handleWechatPayCallback(argThat(map->Long.toString(id).equals(map.get("verified_fact_id"))
@@ -193,6 +195,22 @@ class WechatPaymentSuccessRecoveryTest {
         assertEquals(1,intent.intents.size());assertEquals("a".repeat(64),row.get("request_hash"));
         verifyNoInteractions(extension,app);verify(f.payments,never()).closeOrder(any());
     }
+    private static com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalReference(
+            WechatVerifiedPaymentFactGatewayTest.Fixture fixture) {
+        Transaction original=fixture.original;
+        var stored=fixture.store.findPaymentSuccess(original.getMchid(),original.getOutTradeNo(),original.getTransactionId());
+        assertNotNull(stored,"redelivery must reuse the actual saved original fact, without a provider query");
+        var fact=fixture.store.requireVerified(stored.reference()).facts();
+        DepositVerifiedReferenceTestSupport.assertOriginal(fixture.gateway,stored.reference(),original.getOutTradeNo(),
+                original.getAmount().getTotal().longValue(),original.getTransactionId());
+        assertEquals(original.getOutTradeNo(),fact.wxOutTradeNo());assertEquals(original.getOutTradeNo(),fact.merchantEventNo());
+        assertEquals(original.getAppid(),fact.appid());assertEquals(original.getMchid(),fact.mchid());
+        assertEquals(original.getTradeType().name(),fact.tradeType());assertEquals(original.getAmount().getCurrency(),fact.currency());
+        assertEquals(java.time.OffsetDateTime.parse(original.getSuccessTime()).toInstant(),fact.successAt());
+        assertEquals(fixture.frozenHash,fact.intentRequestHash());
+        return stored.reference();
+    }
+
     private static Transaction payment() {
         Transaction transaction=new Transaction();transaction.setOutTradeNo("REG1");transaction.setMchid("merchant");transaction.setAppid("wx-original");
         transaction.setTransactionId("TX1");transaction.setTradeType(Transaction.TradeTypeEnum.APP);transaction.setTradeState(Transaction.TradeStateEnum.SUCCESS);
