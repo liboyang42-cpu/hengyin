@@ -1,0 +1,222 @@
+{
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "current": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+  "current_tree": "cba1815abaae3077103b9a9b01d27e0e9e4c81d0",
+  "later_current": "2b4024cdcb185c56ee05126e02b9a0c79fcff34a",
+  "A_unapplied": "40fdffaa345c4c239553f54f36a4ae9147191a1b",
+  "read_files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "63f2a81ed380b8fed9ed98c0c4c50bbf5b2672aa"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "d733e306845898191295827502bc8a7ca8f8a153"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "5470ba47cf79fe95bb37bc7087e886f44c56d3f5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "444e5a61bae0ef6d9a0a6d06329cc2588f2a1cc6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiControllerTest.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "8c02b6b723146a4027f2716162fcb9fc1a7a25c8"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMemberIdentityController.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "42599a23fbe70ec302f91c1a284ee8e623e03ec0"
+    },
+    {
+      "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/AppLoginService.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "83ca7b486375c970e56cdf5edd1512902d6648b3"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoleController.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "0e4cae77904ffc797d246c99e01aa69f9b96ca2e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoleServiceImpl.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "1f8b46000b3ce218791c8f082e754c9ec00f8990"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/config/AiModelConfig.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "613fb457af5b420d7ddb78ce49922fb9ba1b399d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "50128ed2e397c12e417e953e4637104284a880fd"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "cd914f872507f71a47d64cb922d2b37068d71e60"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CapabilityServiceImpl.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "5d75cda9b779b2be6f49125ac45ccc7e86ccc513"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubGovernanceServiceImpl.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "c3f854a7dcb9a91f63a59af86a8d3c4a04b86cbe"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubController.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "ff6f92ba0e5e69e7fb08483dc1bd38edd5a7f3da"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MmsMerchantServiceImpl.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "2a49c16a1421d387a638521dad23febc3918ea3d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "05d6fda769001b49d21d36bd0c3fdcc62f85a10e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-theme-prepared/README.md",
+      "ref": "40fdffaa345c4c239553f54f36a4ae9147191a1b",
+      "sha": "01a43eaecb7d7f8ec6f4a2f49e0e543cd06a73bc"
+    },
+    {
+      "path": "docs/delivery/bugfix-20261023/BUG-STORY.md",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "06e4541d95bbe1d12b926b66b38e0bc09edca89f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "ref": "40fdffaa345c4c239553f54f36a4ae9147191a1b",
+      "sha": "0588449ff30f465f374a30cdfb8e7b6a2dd869e7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "ref": "40fdffaa345c4c239553f54f36a4ae9147191a1b",
+      "sha": "abe7b7fafc6eaef8e01d677e339c413176bad258"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "ref": "40fdffaa345c4c239553f54f36a4ae9147191a1b",
+      "sha": "444e5a61bae0ef6d9a0a6d06329cc2588f2a1cc6"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUmsMemberController.java",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "b15f16ff358298d9cb15942e4f0897716c6dfbb7"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.js",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "377072bfc7e1fb1f19d01e95fe5aa5cc24b63b2f",
+      "read_from": "cached exact blob; current identity verified"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/session/login-reload.js",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "01d0457593e8627a01cb5decc3bd683df2cd9764",
+      "read_from": "cached exact blob; current identity verified"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/motion-preference.js",
+      "ref": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+      "sha": "369d1aee4834356047c8083cdaae0a5662ab68d5",
+      "read_from": "cached exact blob; current identity verified"
+    }
+  ],
+  "current_blob_comparison": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+      "blob919": "5470ba47cf79fe95bb37bc7087e886f44c56d3f5",
+      "blob2b": "5470ba47cf79fe95bb37bc7087e886f44c56d3f5",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "blob919": "444e5a61bae0ef6d9a0a6d06329cc2588f2a1cc6",
+      "blob2b": "444e5a61bae0ef6d9a0a6d06329cc2588f2a1cc6",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "blob919": "d733e306845898191295827502bc8a7ca8f8a153",
+      "blob2b": "d733e306845898191295827502bc8a7ca8f8a153",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "blob919": "63f2a81ed380b8fed9ed98c0c4c50bbf5b2672aa",
+      "blob2b": "63f2a81ed380b8fed9ed98c0c4c50bbf5b2672aa",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerRoleServiceImpl.java",
+      "blob919": "dcd97df23681b116d1eb8ac39334efce6452122a",
+      "blob2b": "dcd97df23681b116d1eb8ac39334efce6452122a",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProductRoleServiceImpl.java",
+      "blob919": "38c77cf7be9522163d1f06d697a5bf4289dc5c7d",
+      "blob2b": "38c77cf7be9522163d1f06d697a5bf4289dc5c7d",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoleServiceImpl.java",
+      "blob919": "1f8b46000b3ce218791c8f082e754c9ec00f8990",
+      "blob2b": "1f8b46000b3ce218791c8f082e754c9ec00f8990",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysRoleServiceImpl.java",
+      "blob919": "070224b46fa89d88ff01413ac46f1c82d1aa9b9b",
+      "blob2b": "070224b46fa89d88ff01413ac46f1c82d1aa9b9b",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.js",
+      "blob919": "377072bfc7e1fb1f19d01e95fe5aa5cc24b63b2f",
+      "blob2b": "377072bfc7e1fb1f19d01e95fe5aa5cc24b63b2f",
+      "same": true
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.json",
+      "blob919": "69d102e126409cad7567629f0f7fe116b5840324",
+      "blob2b": "69d102e126409cad7567629f0f7fe116b5840324",
+      "same": true
+    }
+  ],
+  "tests_preservation": {
+    "authored_test_methods": 35,
+    "parameterized_boolean_cases": 2,
+    "authored_case_total": 37,
+    "old_and_A_bytes_identical": true,
+    "sha256": "cfe5a151b39ce394531b6eb6fe5856cec60d57cc98060a633617a90ed571638c",
+    "java_executed_here": false
+  },
+  "policy_discovery": {
+    "historical_bug_story": "B:P2-042 min display recorded as fix; not a proven shared admission path or new authorized billing rule",
+    "A_readme_line": 60,
+    "no_new_policy_assumed": true
+  }
+}

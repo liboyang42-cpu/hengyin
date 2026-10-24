@@ -1,0 +1,23 @@
+{
+  "current_source": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+  "same_page_blob_at_2b4024": "377072bfc7e1fb1f19d01e95fe5aa5cc24b63b2f",
+  "node_version": "v24.19.0",
+  "command": [
+    "node",
+    "docs/delivery/architecture-day/H/theme-quota-display/quota-zero-page.review.test.cjs"
+  ],
+  "exit_code": 0,
+  "tests": 1,
+  "pass": 1,
+  "fail": 0,
+  "skip": 0,
+  "output_sha256": "f5dd374ec65e9331c2122f75c8d54cd3190a777ded35128af8f580acc2c6678e",
+  "boundary": "Actual frozen Page, injected quota response and local wx/app doubles. No backend quota calculation, canonical role transition, Java, Redis or supplier was executed. H12 not rerun.",
+  "review_test_sha256": "3ab544c8262edf486a9b5f583ec970e0722f0c7ed4b27897cdc9d69f1e58619c",
+  "delivery_checks": {
+    "git_diff_cached_check": "PASS",
+    "secret_file_gate": "PASS",
+    "bounded_token_scan": "PASS",
+    "gitleaks": "NOT_RUN; unavailable"
+  }
+}
