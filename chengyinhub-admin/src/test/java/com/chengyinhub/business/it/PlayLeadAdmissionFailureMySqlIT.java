@@ -4,6 +4,13 @@ import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.impl.CmsActivityServiceImpl;
+import com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl;
+import com.chengyinhub.business.service.support.RouteReachabilityProvider;
+import com.chengyinhub.business.domain.dto.PreferenceSubmitRequest;
+import com.chengyinhub.common.constant.ValidationMethod;
+import com.chengyinhub.web.service.PreferencePlayService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Clock;
 import com.chengyinhub.business.service.impl.CmsPointsSettingServiceImpl;
 import com.chengyinhub.business.service.impl.UmsMemberPointsDetailServiceImpl;
 import com.chengyinhub.business.service.impl.UmsMemberServiceImpl;
@@ -84,12 +91,22 @@ class PlayLeadAdmissionFailureMySqlIT {
                     statement.execute(match.group()); assertFalse(match.find(), "Ambiguous canonical DDL: " + table);
                 }
             }
+            // Only the two canonical route tables are needed: topic/node/template catalogue reads remain explicit doubles.
+            Path routeDdl = Path.of("sql", "migration_20260823_topic_route_graph.sql");
+            String routeSchema = Files.readString(routeDdl);
+            try (Statement statement = connection.createStatement()) {
+                for (String table : List.of("topic_route_session", "topic_route_action")) {
+                    java.util.regex.Matcher match = Pattern.compile("(?s)CREATE TABLE IF NOT EXISTS " + table + " \\(.*?\\) ENGINE=InnoDB[^;]*;").matcher(routeSchema);
+                    assertTrue(match.find(), "Missing canonical route DDL: " + table);
+                    statement.execute(match.group()); assertFalse(match.find(), "Ambiguous canonical route DDL: " + table);
+                }
+            }
             ItSchema.applyMigrations(connection, "sql/migration_20260930_registration_first_successful_scan.sql", "sql/migration_club_lead.sql", "sql/migration_20260823_game_session_runtime.sql");
         }
         Configuration config = new Configuration(new Environment("c-lead-admission-failure", new SpringManagedTransactionFactory(), ds));
         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String mapper : List.of("CmsRegistrationMapper", "CmsActivityMapper", "ClubLeadMapper", "CmsPointsSettingMapper",
-                "UmsMemberMapper", "UmsMemberPointsDetailMapper", "GameSessionRuntimeMapper")) {
+                "UmsMemberMapper", "UmsMemberPointsDetailMapper", "GameSessionRuntimeMapper", "TopicRouteSessionMapper")) {
             String resource = "mapper/business/" + mapper + ".xml";
             try (InputStream input = PlayLeadAdmissionFailureMySqlIT.class.getClassLoader().getResourceAsStream(resource)) {
                 assertNotNull(input, resource); new XMLMapperBuilder(input, config, resource, config.getSqlFragments()).parse();
@@ -114,7 +131,7 @@ class PlayLeadAdmissionFailureMySqlIT {
     }
 
     @BeforeEach void seedOnlyOwnedSchema() {
-        for (String table : List.of("game_command_receipt", "player_node_progress", "ums_member_points_detail", "cms_points_setting", "cms_registration", "club_lead_state", "cms_activity", "cms_topic", "ums_member")) {
+        for (String table : List.of("topic_route_action", "topic_route_session", "game_command_receipt", "player_node_progress", "ums_member_points_detail", "cms_points_setting", "cms_registration", "club_lead_state", "cms_activity", "cms_topic", "ums_member")) {
             jdbc.update("DELETE FROM " + table);
         }
         jdbc.update("INSERT INTO ums_member(id,point) VALUES(7,100),(8,100)");
@@ -133,9 +150,13 @@ class PlayLeadAdmissionFailureMySqlIT {
     }
 
     private ApiPlayProgressController controller(long actor, IUmsMemberService memberService, IUmsMemberPointsDetailService details) {
+        return controller(actor, memberService, details, true);
+    }
+    private ApiPlayProgressController controller(long actor, IUmsMemberService memberService,
+                                                IUmsMemberPointsDetailService details, boolean expectOuterTransaction) {
         ApiPlayProgressController target = new ApiPlayProgressController() {
             @Override public Long getAppUserId() {
-                assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+                assertEquals(expectOuterTransaction, TransactionSynchronizationManager.isActualTransactionActive());
                 assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
                 return actor;
             }
@@ -178,6 +199,87 @@ class PlayLeadAdmissionFailureMySqlIT {
         return (ApiPlayProgressController) proxy.getProxy();
     }
     private ApiPlayProgressController controller(long actor) { return controller(actor, members, ledger); }
+
+    @Test void preferenceLeadStorageFaultCannotCreateBranchSessionBeforeEitherHttpAdmission() throws Exception {
+        assertPreferenceAdmissionBeforeRoute(true);
+    }
+
+    @Test void preferenceLeadStorageFaultCannotCreateJourneySessionBeforeEitherHttpAdmission() throws Exception {
+        assertPreferenceAdmissionBeforeRoute(false);
+    }
+
+    private void assertPreferenceAdmissionBeforeRoute(boolean branch) throws Exception {
+        jdbc.update("UPDATE cms_activity SET status=1 WHERE id=500");
+        jdbc.update("UPDATE cms_topic SET product_type=1 WHERE id=300");
+        ApiPlayProgressController controller = controller(MEMBER, members, ledger, false);
+        ICmsTopicNodeService nodeService = (ICmsTopicNodeService) ReflectionTestUtils.getField(controller, "cmsTopicNodeService");
+        CmsTopicNode first = nodeService.selectCmsTopicNodeById(NODE);
+        CmsTopicNode last = new CmsTopicNode(); last.setId(402L); last.setTopicId(TOPIC); last.setSortId(2L); last.setStatus(1L);
+        ICmsTopicService topics = (ICmsTopicService) ReflectionTestUtils.getField(controller, "cmsTopicService");
+        CmsTopic topic = topics.selectCmsTopicById(TOPIC); topic.setProductType(1); topic.setPublishedConfigVersion(1L);
+        if (branch) topic.setPublishedRouteGraphJson("{\"schemaVersion\":1,\"startNodeId\":401,\"terminalNodeIds\":[402],"
+                + "\"edges\":[{\"id\":\"next\",\"fromNodeId\":401,\"toNodeId\":402,"
+                + "\"trigger\":{\"type\":\"CHOICE\",\"outcomeCode\":\"COMPLETED\"}}]}");
+        else topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true}");
+        ICmsMemberTemplateService templates = (ICmsMemberTemplateService) ReflectionTestUtils.getField(controller, "cmsMemberTemplateService");
+        CmsMemberTemplate template = templates.selectCmsMemberTemplateById(39L);
+        template.setValidationMethod(ValidationMethod.PREFERENCE_GROUP);
+        CmsTopicMapper topicMapper = mock(CmsTopicMapper.class); when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
+        when(nodeMapper.selectCmsTopicNodeById(NODE)).thenReturn(first);
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(List.of(first, last));
+        CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
+        when(templateMapper.selectCmsMemberTemplateByIds(any())).thenReturn(List.of(template));
+        PlayerNodeProgressMapper progressMapper = mock(PlayerNodeProgressMapper.class);
+        when(progressMapper.selectPlayerNodeProgressList(any())).thenReturn(List.of());
+        TopicRouteRuntimeServiceImpl routeTarget = spy(new TopicRouteRuntimeServiceImpl(
+                sql.getMapper(TopicRouteSessionMapper.class), topicMapper, nodeMapper, templateMapper, progressMapper,
+                sql.getMapper(CmsActivityMapper.class), sql.getMapper(CmsRegistrationMapper.class),
+                mock(PlayerActivityRoleMapper.class), () -> 123L, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN));
+        ReflectionTestUtils.setField(routeTarget, "cmsTopicChapterMapper", mock(CmsTopicChapterMapper.class));
+        doAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+            return call.callRealMethod(); // Actual canPlay, session creation, canonical SQL and commit.
+        }).when(routeTarget).canPlay(anyLong(), anyLong(), anyLong(), anyLong(), nullable(String.class));
+        ProxyFactory routeProxy = new ProxyFactory(routeTarget); routeProxy.setInterfaces(ITopicRouteRuntimeService.class);
+        routeProxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
+        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routeProxy.getProxy());
+        PreferencePlayService preferences = mock(PreferencePlayService.class);
+        when(preferences.load(eq(MEMBER), eq(TOPIC), eq(NODE), any())).thenReturn(Map.of("question", "original-preference"));
+        when(preferences.submit(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE), any(), any(), any()))
+                .thenReturn(Map.of("needsTiebreak", false));
+        ReflectionTestUtils.setField(controller, "preferencePlayService", preferences);
+        PreferenceSubmitRequest command = new PreferenceSubmitRequest(); command.setActivityId("500");
+        command.setRouteActionId("preference-original"); command.setExpectedRouteVersion(0); command.setChoices(Map.of("one", "A"));
+        Map<String,Object> before = vector();
+        assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+        jdbc.execute("RENAME TABLE club_lead_state TO c_hidden_lead_state");
+        try {
+            unavailable(() -> controller.preference(NODE, "500", null));
+            unavailable(() -> controller.submitPreference(NODE, command));
+            verifyNoInteractions(routeTarget, preferences);
+            assertEquals(before, vector()); assertEquals(0, claims.get());
+            assertEquals(0L, jdbc.queryForObject("SELECT COUNT(*) FROM topic_route_session", Long.class));
+            assertEquals(0L, jdbc.queryForObject("SELECT COUNT(*) FROM topic_route_action", Long.class));
+        } finally { jdbc.execute("RENAME TABLE c_hidden_lead_state TO club_lead_state"); }
+        // No lead row after recovery is legal. The same real route now commits a session, proving the former side effect is reachable.
+        AjaxResult read = controller.preference(NODE, "500", null);
+        assertEquals(200, read.get("code")); assertEquals(Map.of("question", "original-preference"), read.get("data"));
+        assertEquals(200, controller.submitPreference(NODE, command).get("code"));
+        verify(routeTarget).canPlay(MEMBER, TOPIC, ACTIVITY, NODE, null);
+        verify(routeTarget).canPlay(MEMBER, TOPIC, ACTIVITY, NODE, "preference-original");
+        verify(preferences).submit(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE), any(), same(command), any());
+        assertEquals("preference-original", command.getRouteActionId()); assertEquals(Integer.valueOf(0), command.getExpectedRouteVersion());
+        assertEquals(Map.of("one", "A"), command.getChoices());
+        assertEquals(1L, jdbc.queryForObject("SELECT COUNT(*) FROM topic_route_session", Long.class));
+        assertEquals("500:300:7:default:0", jdbc.queryForObject("SELECT CONCAT(activity_id,':',topic_id,':',member_id,':',play_instance_id,':',version) FROM topic_route_session", String.class));
+        String snapshot = jdbc.queryForObject("SELECT config_snapshot_json FROM topic_route_session", String.class);
+        assertEquals(branch, new ObjectMapper().readTree(snapshot).has("edges"));
+        assertEquals(0L, jdbc.queryForObject("SELECT COUNT(*) FROM topic_route_action", Long.class));
+        assertEquals(before, vector(), "route admission alone must not complete preference, debit or grant rewards");
+        assertFalse(TransactionSynchronizationManager.isActualTransactionActive(), "GET/POST must not gain an outer transaction");
+    }
 
     private Map<String,Object> vector() {
         return Map.of("points", jdbc.queryForObject("SELECT point FROM ums_member WHERE id=7", Long.class),

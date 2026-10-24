@@ -2008,13 +2008,13 @@ public class ApiPlayProgressController extends BaseController
         if (out.node == null) { out.error = error("节点不存在"); return out; }
         out.playCtx = resolveCtx(memberId, activityId, topicId, out.node);
         if (out.playCtx.error != null) { out.error = out.playCtx.error; return out; }
+        String leadErr = leadGateError(out.playCtx.actId, out.node);
+        if (leadErr != null) { out.error = error(leadErr); return out; }
         String unlockErr = unlockGateError(memberId, out.playCtx.actId, out.node);
         if (unlockErr == null) {
             unlockErr = routeAccessError(memberId, out.playCtx.actId, out.playCtx.topicId, out.node, routeActionId);
         }
         if (unlockErr != null) { out.error = error(unlockErr); return out; }
-        String leadErr = leadGateError(out.playCtx.actId, out.node);
-        if (leadErr != null) { out.error = error(leadErr); return out; }
         int mode = resolveMode(out.playCtx.actId, out.playCtx.topicId);
         if (mode == PlayMode.FREE_COLLECT
                 && !isPureOnlineNode(out.node)

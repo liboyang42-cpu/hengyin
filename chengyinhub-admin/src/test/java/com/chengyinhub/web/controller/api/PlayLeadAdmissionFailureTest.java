@@ -8,6 +8,7 @@ import com.chengyinhub.business.mapper.GameSessionRuntimeMapper;
 import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.constant.ValidationMethod;
 import com.chengyinhub.framework.web.exception.GlobalExceptionHandler;
 import com.chengyinhub.web.service.PreferencePlayService;
 import org.junit.jupiter.api.BeforeEach;
@@ -137,11 +138,71 @@ class PlayLeadAdmissionFailureTest {
     }
     @Test void preferenceReadFaultReturnsNoPreferencePayload() {
         reject(() -> controller.preference(401L, "500", null));
+        verifyNoInteractions(routes);
     }
     @Test void preferenceSubmitFaultNeverCallsPreferenceMutation() {
         PreferenceSubmitRequest request = new PreferenceSubmitRequest(); request.setActivityId("500"); request.setChoices(Map.of("one", "A"));
         request.setRouteActionId("lead-preference"); request.setExpectedRouteVersion(0);
         reject(() -> controller.submitPreference(401L, request));
+        verifyNoInteractions(routes);
+    }
+
+    @Test void preferenceReadRecoveryStillCallsOriginalRouteAndLoadsPreference() {
+        doReturn(null).when(leads).selectByActivity(500L);
+        template.setValidationMethod(ValidationMethod.PREFERENCE_GROUP);
+        Map<String, Object> data = Map.of("question", "original-preference");
+        when(preferences.load(7L, 300L, 401L, template)).thenReturn(data);
+        assertEquals(data, controller.preference(401L, "500", null).get("data"));
+        verify(routes).canPlay(7L, 300L, 500L, 401L, null);
+        verify(preferences).load(7L, 300L, 401L, template);
+    }
+
+    @Test void preferenceSubmitRecoveryPassesTheOriginalCommandAfterOriginalRouteAdmission() {
+        doReturn(null).when(leads).selectByActivity(500L);
+        template.setValidationMethod(ValidationMethod.PREFERENCE_GROUP);
+        PreferenceSubmitRequest request = preferenceRequest();
+        when(preferences.submit(eq(7L), eq(300L), eq(500L), eq(401L), same(template), same(request), any()))
+                .thenReturn(Map.of("needsTiebreak", false));
+        assertEquals(200, controller.submitPreference(401L, request).get("code"));
+        verify(routes).canPlay(7L, 300L, 500L, 401L, "lead-preference");
+        verify(preferences).submit(eq(7L), eq(300L), eq(500L), eq(401L), same(template), same(request), any());
+        assertEquals("lead-preference", request.getRouteActionId());
+        assertEquals(Integer.valueOf(0), request.getExpectedRouteVersion());
+        assertEquals(Map.of("one", "A"), request.getChoices());
+    }
+
+    @Test void preferenceBothHttpMethodsKeepOriginal403WithoutEnteringRouteOrPreference() {
+        ServiceException forbidden = new ServiceException("无权读取本场带领状态", 403);
+        doThrow(forbidden).when(leads).selectByActivity(500L);
+        assertSame(forbidden, assertThrowsExactly(ServiceException.class, () -> controller.preference(401L, "500", null)));
+        assertSame(forbidden, assertThrowsExactly(ServiceException.class, () -> controller.submitPreference(401L, preferenceRequest())));
+        assertEquals(Integer.valueOf(403), forbidden.getCode());
+        verify(leads, times(2)).selectByActivity(500L);
+        verifyNoInteractions(routes, preferences, progress, points, ledger, attempts);
+    }
+
+    @Test void preferenceLeadRefusalTakesPriorityOverUnlockAndRouteRefusalForBothHttpMethods() {
+        ClubLeadState gathering = new ClubLeadState(); gathering.setStatus(1);
+        doReturn(gathering).when(leads).selectByActivity(500L);
+        node.setUnlockAfterNodeId(400L); // Would read progress and refuse at the former first gate.
+        doReturn(false).when(routes).canPlay(anyLong(), anyLong(), anyLong(), anyLong(), nullable(String.class));
+        assertEquals("队伍集合中,等队长开始行程", controller.preference(401L, "500", null).get("msg"));
+        assertEquals("队伍集合中,等队长开始行程", controller.submitPreference(401L, preferenceRequest()).get("msg"));
+        verify(leads, times(2)).selectByActivity(500L);
+        verifyNoInteractions(routes, progress, preferences);
+    }
+
+    @Test void preferenceNodeOwnershipRefusalStillPrecedesLeadAndRouteForBothHttpMethods() {
+        node.setTopicId(301L);
+        assertEquals("该节点不属于本次活动", controller.preference(401L, "500", null).get("msg"));
+        assertEquals("该节点不属于本次活动", controller.submitPreference(401L, preferenceRequest()).get("msg"));
+        verifyNoInteractions(leads, routes, preferences);
+    }
+
+    private PreferenceSubmitRequest preferenceRequest() {
+        PreferenceSubmitRequest request = new PreferenceSubmitRequest(); request.setActivityId("500");
+        request.setChoices(Map.of("one", "A")); request.setRouteActionId("lead-preference"); request.setExpectedRouteVersion(0);
+        return request;
     }
 
     private void reject(Executable operation) {
