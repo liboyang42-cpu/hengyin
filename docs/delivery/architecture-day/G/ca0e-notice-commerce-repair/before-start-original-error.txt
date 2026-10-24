@@ -1,0 +1,8 @@
+Existing run40122516880 / job120957029411 / ca0e0d2598727f6e567c802b7a664f9634d945c6
+The first C migration statement failed in CommittedOfficialNoticeMySqlFixture.initialize:89.
+2026-10-24T18:52:22.6773124Z Caused by: com.mysql.cj.jdbc.exceptions.MysqlDataTruncation: Data truncation: Invalid JSON text in argument 1 to function json_extract: "Invalid value." at position 0.
+2026-10-24T18:52:22.6774094Z 	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:96)
+2026-10-24T18:52:22.6774771Z 	at com.mysql.cj.jdbc.StatementImpl.executeInternal(StatementImpl.java:839)
+2026-10-24T18:52:22.6775283Z 	at com.mysql.cj.jdbc.StatementImpl.execute(StatementImpl.java:687)
+2026-10-24T18:52:22.6775901Z 	at org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(ScriptUtils.java:261)
+2026-10-24T18:52:22.6776622Z 	... 6 more

@@ -73,6 +73,14 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
         initialize(original.getDataSource(), original);
     }
 
+    private void appendNoticeDiagnostic(org.springframework.dao.DataAccessException failure, String label, String select) {
+        try {
+            failure.addSuppressed(new IllegalStateException("Canonical notice " + label + "=" + db.queryForList(select)));
+        } catch (RuntimeException diagnosticsFailure) {
+            failure.addSuppressed(new IllegalStateException("Canonical notice diagnostic failed: " + label, diagnosticsFailure));
+        }
+    }
+
     private void initialize(DataSource source, DataSourceTransactionManager original) throws Exception {
         db = new JdbcTemplate(source);
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(db.queryForObject("select version()", String.class)));
@@ -85,8 +93,76 @@ final class CommittedOfficialNoticeMySqlFixture implements AutoCloseable {
                 + "cron_expression varchar(255),misfire_policy varchar(20),concurrent varchar(20),status varchar(20),"
                 + "create_by varchar(64),create_time datetime,remark text) engine=InnoDB");
         new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve("migration_20261013_b_im_notification_intent.sql")),
-                new FileSystemResource(sqlRoot.resolve("migration_20261024_d_committed_official_notice_wx.sql")),
-                new FileSystemResource(sqlRoot.resolve("migration_20261024_c_before_start_notice_typed.sql"))).execute(source);
+                new FileSystemResource(sqlRoot.resolve("migration_20261024_d_committed_official_notice_wx.sql"))).execute(source);
+        try {
+            // Execute the original strict preflight, DDL and readback without rewriting or skipping them.
+            new ResourceDatabasePopulator(new FileSystemResource(sqlRoot.resolve(
+                    "migration_20261024_c_before_start_notice_typed.sql"))).execute(source);
+        } catch (org.springframework.dao.DataAccessException failedMigration) {
+            // The old CAST failure contained no actual metadata. Preserve the failure and attach
+            // only schema diagnostics from this exclusive scratch database, never notification rows.
+            appendNoticeDiagnostic(failedMigration, "context",
+                    "SELECT VERSION() AS version, DATABASE() AS selected_schema, @@SESSION.sql_mode AS sql_mode");
+            // These are the nine original C #1 predicates, projected independently without coercing NULL.
+            appendNoticeDiagnostic(failedMigration, "original_preflight_predicates", """
+                    SELECT
+                     (DATABASE() IS NOT NULL) AS database_selected,
+                     ((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()
+                          AND table_name='committed_official_notice_wx' AND table_type='BASE TABLE' AND engine='InnoDB')=1) AS canonical_innodb_table,
+                     ((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()
+                          AND table_name='committed_official_notice_wx')=12) AS canonical_12_columns,
+                     ((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()
+                          AND table_name='committed_official_notice_wx' AND column_name IN ('notice_type','wx_payload_json'))=0) AS typed_columns_not_yet_present,
+                     ((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()
+                          AND table_name='committed_official_notice_wx' AND (
+                           (column_name='id' AND data_type='bigint' AND column_type NOT LIKE '%unsigned%' AND column_type NOT LIKE '%zerofill%' AND is_nullable='NO' AND extra='auto_increment')
+                           OR (column_name='event_key' AND data_type='varchar' AND character_maximum_length=96 AND is_nullable='NO' AND collation_name='ascii_bin')
+                           OR (column_name='recipient' AND data_type='bigint' AND column_type NOT LIKE '%unsigned%' AND column_type NOT LIKE '%zerofill%' AND is_nullable='NO')
+                           OR (column_name='title' AND data_type='varchar' AND character_maximum_length=200 AND is_nullable='NO')
+                           OR (column_name='body' AND data_type='text' AND is_nullable='NO')
+                           OR (column_name='im_intent_id' AND data_type='bigint' AND column_type NOT LIKE '%unsigned%' AND column_type NOT LIKE '%zerofill%' AND is_nullable='NO')
+                           OR (column_name='request_hash' AND data_type='char' AND character_maximum_length=64 AND is_nullable='NO' AND collation_name='ascii_bin')
+                           OR (column_name='wx_state' AND data_type='varchar' AND character_maximum_length=16 AND is_nullable='NO' AND collation_name='ascii_bin' AND column_default='PENDING')
+                           OR (column_name='owner_token' AND data_type='char' AND character_maximum_length=36 AND is_nullable='YES' AND collation_name='ascii_bin')
+                           OR (column_name='created_at' AND data_type='datetime' AND datetime_precision=3 AND is_nullable='NO')
+                           OR (column_name='attempted_at' AND data_type='datetime' AND datetime_precision=3 AND is_nullable='YES')
+                           OR (column_name='accepted_at' AND data_type='datetime' AND datetime_precision=3 AND is_nullable='YES')))=12) AS all_12_column_shapes,
+                     ((SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE()
+                          AND table_name='committed_official_notice_wx' AND constraint_type='CHECK')=3) AS exactly_3_checks,
+                     ((SELECT COUNT(*) FROM information_schema.table_constraints tc
+                          JOIN information_schema.check_constraints cc ON cc.constraint_schema=tc.constraint_schema AND cc.constraint_name=tc.constraint_name
+                          WHERE tc.constraint_schema=DATABASE() AND tc.table_name='committed_official_notice_wx'
+                          AND tc.constraint_type='CHECK' AND tc.enforced='YES' AND (
+                           (tc.constraint_name='ck_committed_official_notice_recipient' AND LOWER(REGEXP_REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(cc.check_clause,'_utf8mb4',''),'_utf8mb3',''),'_ascii',''),'_latin1',''),'[[:space:]()`]',''))='recipient>0andim_intent_id>0')
+                           OR (tc.constraint_name='ck_committed_official_notice_state' AND LOWER(REGEXP_REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(cc.check_clause,'_utf8mb4',''),'_utf8mb3',''),'_ascii',''),'_latin1',''),'[[:space:]()`]',''))='wx_statein''pending'',''unknown'',''accepted''')
+                           OR (tc.constraint_name='ck_committed_official_notice_owner' AND LOWER(REGEXP_REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(cc.check_clause,'_utf8mb4',''),'_utf8mb3',''),'_ascii',''),'_latin1',''),'[[:space:]()`]',''))='wx_state=''pending''andowner_tokenisnullandattempted_atisnullandaccepted_atisnullorwx_state=''unknown''andowner_tokenisnotnullandattempted_atisnotnullandaccepted_atisnullorwx_state=''accepted''andowner_tokenisnotnullandattempted_atisnotnullandaccepted_atisnotnull')))=3) AS all_3_enforced_exact_check_texts,
+                     ((SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE()
+                          AND constraint_name='ck_committed_official_notice_typed')=0) AS typed_constraint_name_not_reserved,
+                     ((SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()
+                          AND table_name='committed_official_notice_wx' AND index_name='idx_committed_official_notice_typed_pending')=0) AS typed_index_name_not_reserved
+                    """);
+            appendNoticeDiagnostic(failedMigration, "canonical_table", "SHOW CREATE TABLE committed_official_notice_wx");
+            appendNoticeDiagnostic(failedMigration, "columns",
+                    "SELECT column_name,data_type,column_type,is_nullable,character_maximum_length,"
+                            + "collation_name,column_default,extra,datetime_precision FROM information_schema.columns "
+                            + "WHERE table_schema=DATABASE() AND table_name='committed_official_notice_wx' "
+                            + "ORDER BY ordinal_position");
+            appendNoticeDiagnostic(failedMigration, "checks", """
+                    SELECT tc.constraint_name,tc.constraint_type,tc.enforced,cc.check_clause,
+                           LOWER(REGEXP_REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(cc.check_clause,
+                             '_utf8mb4',''),'_utf8mb3',''),'_ascii',''),'_latin1',''),'[[:space:]()`]','')) AS original_guard_normalized
+                    FROM information_schema.table_constraints tc
+                    LEFT JOIN information_schema.check_constraints cc
+                      ON cc.constraint_schema=tc.constraint_schema AND cc.constraint_name=tc.constraint_name
+                    WHERE tc.constraint_schema=DATABASE() AND tc.table_name='committed_official_notice_wx'
+                    ORDER BY tc.constraint_name
+                    """);
+            appendNoticeDiagnostic(failedMigration, "indexes",
+                    "SELECT index_name,non_unique,seq_in_index,column_name FROM information_schema.statistics "
+                            + "WHERE table_schema=DATABASE() AND table_name='committed_official_notice_wx' "
+                            + "ORDER BY index_name,seq_in_index");
+            throw failedMigration;
+        }
         manager = original; tx = new TransactionTemplate(manager);
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
