@@ -1,0 +1,508 @@
+{
+  "base_sha": "864e708e2f38130e21780485e462f8dc147bb76f",
+  "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+  "source_blob": "e7b9f22805e8d28292b46e36c68c62e5d5a1d41a",
+  "definitions": [
+    {
+      "name": "copyTemplateForOwner",
+      "args": "Long templateId, Long newOwnerMemberId, Map<Long, Long> templateIdMap, boolean forceCopy",
+      "line": 548,
+      "body_sha256": "a6c12fc40a5889fe09ece1700db88638579e186d2223c2987cf1e86f73ba0cac",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 4,
+      "callsites_by_name": [
+        {
+          "line": 3328,
+          "caller": "remapRebuiltTemplateNodes",
+          "caller_args": "Long topicId,Map<Long,Long> nodeMap,Long ownerId",
+          "source_line": "Long templateId=copyTemplateForOwner(source.getId(),ownerId,copied,true);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "persistJourneyStoryAfterChapterRebuild",
+      "args": "Long topicId, String storedStory, RouteNodeMaps routeNodeMaps, String username",
+      "line": 3123,
+      "body_sha256": "fef5be20f2bc89b07acc7081415f6b8d980fd7e41caaa22234141d229af14240",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 4,
+      "callsites_by_name": [
+        {
+          "line": 3784,
+          "caller": "createTopicInternal",
+          "caller_args": "TopicCreateDTO dto, Long memberId, String username, boolean chapterFlowV2",
+          "source_line": "persistJourneyStoryAfterChapterRebuild(topicId, topic.getJourneyStoryJson(), routeNodeMaps, username);"
+        },
+        {
+          "line": 4301,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "persistJourneyStoryAfterChapterRebuild(topicId,"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "remapRebuiltTemplateNodes",
+      "args": "Long topicId,Map<Long,Long> nodeMap,Long ownerId",
+      "line": 3319,
+      "body_sha256": "9372f85aeedf25c081424fdc31997c81c68c696ec9e84ef132cb4347270739f9",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 3,
+      "callsites_by_name": [
+        {
+          "line": 3783,
+          "caller": "createTopicInternal",
+          "caller_args": "TopicCreateDTO dto, Long memberId, String username, boolean chapterFlowV2",
+          "source_line": "remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);"
+        },
+        {
+          "line": 4299,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "persistTemplateInteractionRules",
+      "args": "Long topicId",
+      "line": 3341,
+      "body_sha256": "ae3c69a7dd77289b79879211325612f888e2dfdbde42ed05d4595349d1ea5177",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 1,
+      "callsites_by_name": [
+        {
+          "line": 3795,
+          "caller": "createTopicInternal",
+          "caller_args": "TopicCreateDTO dto, Long memberId, String username, boolean chapterFlowV2",
+          "source_line": "persistTemplateInteractionRules(topicId);"
+        },
+        {
+          "line": 4309,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "persistTemplateInteractionRules(topicId);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "existingNodeUnlocks",
+      "args": "Long topicId",
+      "line": 4403,
+      "body_sha256": "b3821aec6b3eae2421c1d32307075adf0394c02981ff87d4dbb335553462695e",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 1,
+      "callsites_by_name": [
+        {
+          "line": 4158,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "Map<Long, Long> existingUnlocks = existingNodeUnlocks(topicId);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "restoreNodeUnlocks",
+      "args": "Map<Long, Long> existingUnlocks, RouteNodeMaps maps",
+      "line": 4416,
+      "body_sha256": "4f1ab4428ac339c1e9c77ff9a7523fa756f7150c19046fbef287afedd5ab3a49",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 2,
+      "callsites_by_name": [
+        {
+          "line": 4300,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "restoreNodeUnlocks(existingUnlocks, routeNodeMaps);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "selectHiddenNodeIds",
+      "args": "Long topicId",
+      "line": 4513,
+      "body_sha256": "02ec5b4ac20755a50025556346aa64b01d4324537b74fccfdae398f87a474cc9",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 1,
+      "callsites_by_name": [
+        {
+          "line": 4287,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "Set<Long> hiddenNodeIds = selectHiddenNodeIds(topicId);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "restoreHiddenNodes",
+      "args": "Set<Long> hiddenNodeIds, Map<Long, Long> oldToNew",
+      "line": 4524,
+      "body_sha256": "3ef73ad155d9120bc09a9ba6098780a35a63214f24033da10594a4c23ff4ff1b",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 2,
+      "callsites_by_name": [
+        {
+          "line": 4298,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "restoreHiddenNodes(hiddenNodeIds, routeNodeMaps.oldToNew);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "deleteTopicChapterFlow",
+      "args": "Long topicId",
+      "line": 4549,
+      "body_sha256": "84a693801af7bf3b117d0c1d79768299f42d30733237e450be52f527f73e30f3",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 1,
+      "callsites_by_name": [
+        {
+          "line": 4545,
+          "caller": "deleteTopicEditableChildren",
+          "caller_args": "Long topicId",
+          "source_line": "deleteTopicChapterFlow(topicId);"
+        },
+        {
+          "line": 4993,
+          "caller": "compileChapterFlow",
+          "caller_args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, boolean replaceExisting, boolean allowBundledDraft",
+          "source_line": "deleteTopicChapterFlow(topicId);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "saveChaptersAndNodes",
+      "args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, boolean allowBundledDraft",
+      "line": 4896,
+      "body_sha256": "5a2959974b39fcf9c797f5dfb2200a09a443f1cadedda79b0c6f5baee2ce7c64",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 5,
+      "callsites_by_name": [
+        {
+          "line": 4944,
+          "caller": "saveTopicChapters",
+          "caller_args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, Integer productType, boolean chapterFlowV2, boolean allowBundledDraft",
+          "source_line": "return saveChaptersAndNodes(chapters, topicId, username, memberId, allowBundledDraft);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "saveTopicChapters",
+      "args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, Integer productType, boolean chapterFlowV2, boolean allowBundledDraft",
+      "line": 4935,
+      "body_sha256": "a800a449984e3c9c4ad23ae953de96a75132cf3c2578f76f0d571e5069e1b21e",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 7,
+      "callsites_by_name": [
+        {
+          "line": 3781,
+          "caller": "createTopicInternal",
+          "caller_args": "TopicCreateDTO dto, Long memberId, String username, boolean chapterFlowV2",
+          "source_line": "RouteNodeMaps routeNodeMaps = saveTopicChapters(dto.getChapters(), topicId, username, memberId,"
+        },
+        {
+          "line": 4295,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "routeNodeMaps = saveTopicChapters(dto.getChapters(), topicId, username, memberId,"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "shouldCompileChapterFlow",
+      "args": "boolean chapterFlowV2, Integer productType, List<ChapterDTO> chapters",
+      "line": 4947,
+      "body_sha256": "56869dd99ae9aa5a4c276254695071e9e1c332fc0c9cdb3c031f77e0c7507102",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 3,
+      "callsites_by_name": [
+        {
+          "line": 4289,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "if (shouldCompileChapterFlow(chapterFlowV2, productType, dto.getChapters())) {"
+        },
+        {
+          "line": 4937,
+          "caller": "saveTopicChapters",
+          "caller_args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, Integer productType, boolean chapterFlowV2, boolean allowBundledDraft",
+          "source_line": "if (shouldCompileChapterFlow(chapterFlowV2, productType, chapters)) {"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "compileChapterFlow",
+      "args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, boolean replaceExisting, boolean allowBundledDraft",
+      "line": 4963,
+      "body_sha256": "06ed7cc85d6f124491f76f2c1aec613984817fa24f72d3b009ac59a90a872200",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 6,
+      "callsites_by_name": [
+        {
+          "line": 4291,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "routeNodeMaps = compileChapterFlow(dto.getChapters(), topicId, username, memberId, true,"
+        },
+        {
+          "line": 4938,
+          "caller": "saveTopicChapters",
+          "caller_args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, Integer productType, boolean chapterFlowV2, boolean allowBundledDraft",
+          "source_line": "return compileChapterFlow(chapters, topicId, username, memberId, false, allowBundledDraft);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "assertLegacyChapterFlowWritable",
+      "args": "Long topicId",
+      "line": 5058,
+      "body_sha256": "cb113626c72a26fe7e25bda000abe80a0364edb3c45edc5db66135d2a2905e62",
+      "proposed_owner": "TopicContentWriteGuard",
+      "arity": 1,
+      "callsites_by_name": [
+        {
+          "line": 3912,
+          "caller": "updateTopicByOwnerInternal",
+          "caller_args": "com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2",
+          "source_line": "assertLegacyChapterFlowWritable(topicId);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "assertChapterShapeForTopic",
+      "args": "ChapterDTO chapter, Long topicId",
+      "line": 5068,
+      "body_sha256": "ee07db76fcff2d620fc655eb76e34d9938b91fcbb63b56456ec24b6714552058",
+      "proposed_owner": "TopicContentWriteGuard",
+      "arity": 2,
+      "callsites_by_name": [
+        {
+          "line": 4909,
+          "caller": "saveChaptersAndNodes",
+          "caller_args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, boolean allowBundledDraft",
+          "source_line": "assertChapterShapeForTopic(chapterDTO, topicId);"
+        },
+        {
+          "line": 4971,
+          "caller": "compileChapterFlow",
+          "caller_args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, boolean replaceExisting, boolean allowBundledDraft",
+          "source_line": "assertChapterShapeForTopic(chapter, topicId);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "assertChapterShape",
+      "args": "ChapterDTO c",
+      "line": 5076,
+      "body_sha256": "219f23a17d5b4f231996c2f3757b2841cce1f5454afe7be0a139ed9aa660eca8",
+      "proposed_owner": "TopicContentWriteGuard",
+      "arity": 1,
+      "callsites_by_name": [],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "assertChapterShape",
+      "args": "ChapterDTO c, boolean clubDirect",
+      "line": 5078,
+      "body_sha256": "2c879d425dad01514f1baa53784bf16bf68c471719bdda01885abaa30863a11f",
+      "proposed_owner": "TopicContentWriteGuard",
+      "arity": 2,
+      "callsites_by_name": [
+        {
+          "line": 5072,
+          "caller": "assertChapterShapeForTopic",
+          "caller_args": "ChapterDTO chapter, Long topicId",
+          "source_line": "assertChapterShape(chapter, direct);"
+        },
+        {
+          "line": 5076,
+          "caller": "assertChapterShape",
+          "caller_args": "ChapterDTO c",
+          "source_line": "private void assertChapterShape(ChapterDTO c) { assertChapterShape(c, false); }"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "assertAllowedValidationMethods",
+      "args": "String raw",
+      "line": 5120,
+      "body_sha256": "0862c07bdafaa12712c598ff17f51ec33e6982d14a682415ec5cd772ff68abb9",
+      "proposed_owner": "TopicContentWriteGuard",
+      "arity": 1,
+      "callsites_by_name": [
+        {
+          "line": 5113,
+          "caller": "assertChapterShape",
+          "caller_args": "ChapterDTO c, boolean clubDirect",
+          "source_line": "assertAllowedValidationMethods(c.getAllowedValidationMethods());"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "saveNodes",
+      "args": "List<NodeDTO> nodes, Long topicId, Long chapterId, String username, Long memberId, RouteNodeMaps routeNodeMaps, boolean allowBundledDraft",
+      "line": 5132,
+      "body_sha256": "7e17502d755de25ee57755bef1bdd40f99c591b86ad6c917df2e7efde525bb30",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 7,
+      "callsites_by_name": [
+        {
+          "line": 4928,
+          "caller": "saveChaptersAndNodes",
+          "caller_args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, boolean allowBundledDraft",
+          "source_line": "saveNodes(chapterDTO.getNodes(), topicId, chapterId, username, memberId, routeNodeMaps,"
+        },
+        {
+          "line": 5165,
+          "caller": "saveNodes",
+          "caller_args": "List<NodeDTO> nodes, Long topicId, Long chapterId, String username, Long memberId",
+          "source_line": "saveNodes(nodes, topicId, chapterId, username, memberId, new RouteNodeMaps(), false);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "saveNodes",
+      "args": "List<NodeDTO> nodes, Long topicId, Long chapterId, String username, Long memberId",
+      "line": 5164,
+      "body_sha256": "9bcb63722754ebe030f16790c01cf2e14d3f2b411b3266bef985fee350411784",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 5,
+      "callsites_by_name": [],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "saveRouteDefinition",
+      "args": "Long topicId, String requestedMode, String rawGraph, RouteNodeMaps maps, Long requestExpectedVersion, Long expectedVersion, Long targetVersion, Integer productType",
+      "line": 5169,
+      "body_sha256": "c4e21e07b8973cb8009924c2d9062135137da2c93691a4474a422f873a7408ee",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 8,
+      "callsites_by_name": [
+        {
+          "line": 3785,
+          "caller": "createTopicInternal",
+          "caller_args": "TopicCreateDTO dto, Long memberId, String username, boolean chapterFlowV2",
+          "source_line": "saveRouteDefinition(topicId, dto.getRouteMode(), dto.getRouteGraphJson(), routeNodeMaps,"
+        },
+        {
+          "line": 4322,
+          "caller": "rebuildTopicContent",
+          "caller_args": "CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username, boolean chapterFlowV2, boolean draft",
+          "source_line": "saveRouteDefinition(topicId, requestedRouteMode, requestedRouteGraph, routeNodeMaps,"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "declaredRouteOutcomes",
+      "args": "Long topicId",
+      "line": 5205,
+      "body_sha256": "8095233dfc607a49ad40738f4558630a517fd2726d55bb165a686d4a660a4ded",
+      "proposed_owner": "TopicRouteOutcomeReader",
+      "arity": 1,
+      "callsites_by_name": [
+        {
+          "line": 3376,
+          "caller": "normalizedBranchRouteForPublish",
+          "caller_args": "CmsTopic topic",
+          "source_line": "topic.getRouteGraphJson(), nodeIds, declaredRouteOutcomes(topic.getId()));"
+        },
+        {
+          "line": 5197,
+          "caller": "saveRouteDefinition",
+          "caller_args": "Long topicId, String requestedMode, String rawGraph, RouteNodeMaps maps, Long requestExpectedVersion, Long expectedVersion, Long targetVersion, Integer productType",
+          "source_line": "declaredRouteOutcomes(topicId));"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "assertBranchGraphOnlyForOrienteering",
+      "args": "String routeMode, Integer productType",
+      "line": 5245,
+      "body_sha256": "59d7fc578cc6d44c85f077bf5c20ac1bd9f778861c584af72a383127179a20ea",
+      "proposed_owner": "TopicContentWriteGuard",
+      "arity": 2,
+      "callsites_by_name": [
+        {
+          "line": 2464,
+          "caller": "publishDraftInternal",
+          "caller_args": "Long id, Long expectedOwnerId, boolean allowSupplyResubmission",
+          "source_line": "assertBranchGraphOnlyForOrienteering(topic.getRouteMode(), topic.getProductType());"
+        },
+        {
+          "line": 5181,
+          "caller": "saveRouteDefinition",
+          "caller_args": "Long topicId, String requestedMode, String rawGraph, RouteNodeMaps maps, Long requestExpectedVersion, Long expectedVersion, Long targetVersion, Integer productType",
+          "source_line": "assertBranchGraphOnlyForOrienteering(mode, productType);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "containsNodeKey",
+      "args": "com.fasterxml.jackson.databind.JsonNode array",
+      "line": 5252,
+      "body_sha256": "20837b2004e07123d7a01145e2d5753b4c0b92a12be9b39ad296f8b461c60cfd",
+      "proposed_owner": "TopicContentGraphAuthoringServiceImpl",
+      "arity": 1,
+      "callsites_by_name": [
+        {
+          "line": 5192,
+          "caller": "saveRouteDefinition",
+          "caller_args": "Long topicId, String requestedMode, String rawGraph, RouteNodeMaps maps, Long requestExpectedVersion, Long expectedVersion, Long targetVersion, Integer productType",
+          "source_line": "|| containsNodeKey(tree.path(\"edges\")) || containsNodeKey(tree.path(\"fallbacks\"));"
+        },
+        {
+          "line": 5192,
+          "caller": "saveRouteDefinition",
+          "caller_args": "Long topicId, String requestedMode, String rawGraph, RouteNodeMaps maps, Long requestExpectedVersion, Long expectedVersion, Long targetVersion, Integer productType",
+          "source_line": "|| containsNodeKey(tree.path(\"edges\")) || containsNodeKey(tree.path(\"fallbacks\"));"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    },
+    {
+      "name": "assertTemplateOwned",
+      "args": "Long templateId, Long memberId, boolean allowBundledDraft",
+      "line": 5453,
+      "body_sha256": "da9e7d6861c218518a7565005fd196ffeab3483764b2c4a11380be55bf8f328d",
+      "proposed_owner": "TopicContentWriteGuard",
+      "arity": 3,
+      "callsites_by_name": [
+        {
+          "line": 4979,
+          "caller": "compileChapterFlow",
+          "caller_args": "List<ChapterDTO> chapters, Long topicId, String username, Long memberId, boolean replaceExisting, boolean allowBundledDraft",
+          "source_line": "assertTemplateOwned(node.getTemplateId(), memberId, allowBundledDraft);"
+        },
+        {
+          "line": 5145,
+          "caller": "saveNodes",
+          "caller_args": "List<NodeDTO> nodes, Long topicId, Long chapterId, String username, Long memberId, RouteNodeMaps routeNodeMaps, boolean allowBundledDraft",
+          "source_line": "assertTemplateOwned(nodeDTO.getTemplateId(), memberId, allowBundledDraft);"
+        }
+      ],
+      "resolution": "private unqualified lexical callsites, filtered by unique declaration arity; not javac type binding"
+    }
+  ]
+}

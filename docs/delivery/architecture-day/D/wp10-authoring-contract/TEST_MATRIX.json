@@ -1,0 +1,1461 @@
+{
+  "base_sha": "864e708e2f38130e21780485e462f8dc147bb76f",
+  "case_count": 141,
+  "executed_this_turn": false,
+  "preservation": "case名、异常、verify/inOrder/SQL和全部assert原样；只改实际owner装配/必要反射目标，不改业务预期",
+  "classes": [
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+      "tests": 44,
+      "wiring": "原公开V1/V2门面入口保留；接入真实graph/guard/reader，共用原mapper mock；玩家读取投影与审核stub保持原owner。"
+    },
+    {
+      "class_name": "ChapterFlowTransactionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java",
+      "tests": 2,
+      "wiring": "保留原Spring门面事务代理/H2测试；新增真实graph代理使用同一manager和原JDBC mapper adapter；不能升级称为MySQL证据。"
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CmsTopicDraftBindingsTest.java",
+      "tests": 9,
+      "wiring": "保留原门面与真实runtime配置算法，接真实graph/guard/reader；原copy相关接线继续使用冻结copy owner。"
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+      "tests": 38,
+      "wiring": "保留owner/edit-window/商业/票务/壳的门面断言；只将图mapper依赖装配到真实graph，不stub掉重建。"
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftPartialSaveGateTest.java",
+      "tests": 19,
+      "wiring": "保留create/update/publish门面及所有完整度差异断言；publish不迁；图成功路径接真实graph。"
+    },
+    {
+      "class_name": "TopicDraftLegacyFieldPreservationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftLegacyFieldPreservationTest.java",
+      "tests": 5,
+      "wiring": "保留原门面DTO保留/default语义；只增真实graph owner装配，不修改默认、null或票mode预期。"
+    },
+    {
+      "class_name": "TopicJourneyStorySaveTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicJourneyStorySaveTest.java",
+      "tests": 4,
+      "wiring": "保留原门面story输入校验；真实graph执行chapter/node/story remap，原异常/原字段断言不变。"
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java",
+      "tests": 18,
+      "wiring": "保留真实原票务/活动同步链、条件SQL和库存断言；内容图仅接真实graph，其他域service/controller不迁。"
+    },
+    {
+      "class_name": "TopicDraftSubmittedOrderTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+      "tests": 2,
+      "wiring": "原门面create/edit入口，共用原chapter/node mapper；图owner实际记录顺序，不新增排序或去重。"
+    }
+  ],
+  "cases": [
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "storyGameStoresExplicitLocationIntentAndRejectsMissingTemplateOrCoordinates",
+      "line": 194,
+      "old_body_sha256": "2c1d9f79ef6659a4e55b41a314daa00554d29967e59e031e5ca2bb94a0eb764f",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "storyGameRejectsArrivalTemplateBeforeReplacingChapters",
+      "line": 218,
+      "old_body_sha256": "6e7a2bf43ad61e52613ddbbf265c9ea682a325e41fa92f02c4df09e7f46711ec",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "submittedV2EditFreezesAfterRebuildAndRefreshesOneTopicTask",
+      "line": 240,
+      "old_body_sha256": "d2831b80482d9c8be5851dd1a74b133c19f5364fe253a8c2507731b26eb0f774",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "escalatedAuditTaskReadbackIsReportedAsEscalated",
+      "line": 282,
+      "old_body_sha256": "9e415181ac2788839ae804264d329c4ea57c6471a287d74267303fe897341cb9",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2WithReview"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "auditTaskReadbackThatIsNotAnOpenTaskFailsTheSubmission",
+      "line": 299,
+      "old_body_sha256": "156586adc0e30670314685d2f8f78a3d14302fc94f09e68b05977d05dc2330f8",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2WithReview"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "submittedSimpleDraftPublishesWhileSavingItKeepsItPrivate",
+      "line": 347,
+      "old_body_sha256": "ed05abb3ec0a7ceaff35fa2f73d12a744c6d8c0aba60deb9526e7633178ef468",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2WithReview"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "openBundleReviewCannotBeBypassedBySwitchingToSimpleMode",
+      "line": 374,
+      "old_body_sha256": "f263e944a701cf01fb77fefc77ab7ebbc105dd6d0c12e8af7b72fc8de811b3a9",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "simpleV2PublishCannotBypassReviewWithAPrivateDraftTemplate",
+      "line": 388,
+      "old_body_sha256": "1459621f13ea5f876ae214355211c15f134b63736373f397a1b96c6da316a207",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "nonBlockSimpleV2PublishCannotBypassReviewWithAPrivateDraftTemplate",
+      "line": 416,
+      "old_body_sha256": "4bdef7750028a1196963574fe96fecaa521d01e5da653576eeba653f7092cf01",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "blockOrderDrivesGlobalSortAndSameChapterNodeIds",
+      "line": 445,
+      "old_body_sha256": "3b3634e7d4c4f7c090efadf828662d0c90f9835bc4de80d20971b8eeaa42c1ec",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": [
+        "isPrevDone",
+        "isPrevDone"
+      ]
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "descriptionIsOnlyTextBeforeFirstNodeAndNewlinesStayInsideTextBlocks",
+      "line": 519,
+      "old_body_sha256": "cc02a098c1aa119b6464d0e0f07b6b782201907c74ba38282e598cf4daabffc4",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "narrativeBlocksBindToStationAndStayOutOfDescription",
+      "line": 538,
+      "old_body_sha256": "6b89bdca127f8f707d4b318cde0e0860d95eaf19f932973719e95356fe83ab93",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "narrativeQuestionWithoutAnswerIsRejectedAtSave",
+      "line": 566,
+      "old_body_sha256": "e307a981d032464e3fa62fd7bad4985429fb0c5a7bd510bacaa3a90e3e27a90d",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "nodeIndexAtNodesLengthHitsTheBoundsGate",
+      "line": 579,
+      "old_body_sha256": "f0a0c5b23d74120eb8c02f22b0cd23911366552b756928f91361dcdf731724a7",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "duplicateNodeIndexHitsTheUniquenessGate",
+      "line": 592,
+      "old_body_sha256": "76234f76e2a791907634ad3c466f70c3bfaf7171f9afcbbbc4e8d59f46a30a02",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "orphanNodeHitsTheCoverageGate",
+      "line": 605,
+      "old_body_sha256": "41acb2a03e6272def9f94ebed02b3edf8705169155e9113f3bb2fa142c34e4db",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "optionalChapterCannotEnterStoryFlow",
+      "line": 618,
+      "old_body_sha256": "b505655205003114d7f382b3dd86f7b669dca361b109f7b9d1eac846e9fafcb5",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "omittedRequiredIsMaterializedAsRequired",
+      "line": 632,
+      "old_body_sha256": "b151de29b5aa45faccc85cb28ab0fd27e884921d2966955b637595b950ca951a",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "freeExploreV2MaterializesBlocks",
+      "line": 645,
+      "old_body_sha256": "ea1110fe1100b85a6f8f59e710aa93ae7b4f7ce87c7c6ecab7cea2a4b899e523",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "freeExploreV2RequestWithoutBlocksKeepsLegacyShape",
+      "line": 661,
+      "old_body_sha256": "e8b22b9e7b2eb060c6a57819eb11d110044812b8ee0f4155e911ddeb478d1605",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "legacyPathPersistsNoBlocks",
+      "line": 677,
+      "old_body_sha256": "238b7cb3a23925309efcda4b6907b32b40459f6c088d5ed324be5e36e435fab8",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "legacyPathRefusesToOverwriteMaterializedTopic",
+      "line": 693,
+      "old_body_sha256": "d79d84c90f577ee8de25b8d7537776f0d49d3001c250b7a94a416766d725c417",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "legacyEndpointRejectsV2PayloadInsteadOfSilentlyDroppingIt",
+      "line": 711,
+      "old_body_sha256": "f9ef352028dc6e155c941fda73c94294341783c6075877f9c23037c7e693bea1",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "blockCountLimitRejectsInsteadOfTruncating",
+      "line": 724,
+      "old_body_sha256": "939d6a3b065db027854f8c3a6275d0ae84847a67c1efb6b539cbdb4d91b0c6a1",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "textLengthLimitRejectsInsteadOfTruncating",
+      "line": 741,
+      "old_body_sha256": "032bad5d98d9a8ce4bd06c02c8c4513c57b6fd60fef470fc0aad61fdad2ba327",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "serializedSizeLimitUsesUtf8Bytes",
+      "line": 754,
+      "old_body_sha256": "f6c4b8ede9b78d71b5f3906817fb8910425928ba4edad702fb1efdd68cbb117d",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "exactPerItemLimitsRemainAccepted",
+      "line": 773,
+      "old_body_sha256": "3aa90987c14858c63d5ac0b76d45f9f5f3326dfc4e86c9c2ca03711ae8c0152c",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "descriptionProjectionOverColumnLimitIsRejectedBeforeWrite",
+      "line": 791,
+      "old_body_sha256": "ff9a222ae1af659a91849f5d56858eec43ad96a59c718dbcecf7da67ec2d0e5f",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "descriptionProjectionAtColumnLimitRemainsAccepted",
+      "line": 806,
+      "old_body_sha256": "72ab81c1a0116dd63310fe5678039cae4614c31480aa78282ba875d7f4c39901",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "schemaAndBlockGrammarAreExplicitlyValidated",
+      "line": 819,
+      "old_body_sha256": "b3d2ead0c0a87c21e7a63d2fd5f0df826a9c781ec3c6c8b6a047b3b69963cb88",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "mediaAltTextJsonRoundTripSurvivesWriteAndPlayerProgressProjection",
+      "line": 860,
+      "old_body_sha256": "b81871e832cc6c09b3c1df690ee5491af12fdd8af6f9a378f145d55aa2dfd583",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "mediaAltTextMissingNullAndEmptyKeepExistingMediaCompatible",
+      "line": 888,
+      "old_body_sha256": "3061721289c8496ee489cf8bd977b9a56f0ac3de3547fd3a6b8657d8cfea0566",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "mediaAltTextAcceptsLimitAndRejectsOversizeBeforeWrites",
+      "line": 912,
+      "old_body_sha256": "0e6025b9f3329e7d49755e74e2640d898ac9c84b1399482a861a0126d8337801",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "mediaBlocksAreMaterializedWithUrl",
+      "line": 939,
+      "old_body_sha256": "2b5d953c10c3e8069acef36a8024ffa5bbf2841cb6e20a8a5a0194bef6c12806",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "audioStaysAValidBlockType",
+      "line": 962,
+      "old_body_sha256": "612c24d1526a68b524ae9d5f62ca85c58664f242f7e478d196daa9efe87266f8",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "chapterAudioUrlIsCarriedOntoTheChapterEntity",
+      "line": 978,
+      "old_body_sha256": "112907933ad9add5562d46598125b27de9b58aa8963aba100b1124b46a28bfa1",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "mediaBlocksNeitherProjectIntoDescriptionNorCloseTheProjectionWindow",
+      "line": 994,
+      "old_body_sha256": "488c7e5828289e7e87b188feaf2b726c3c02a5630692735e0c6294986c8b6d90",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "mediaBlockFieldShapeIsGated",
+      "line": 1007,
+      "old_body_sha256": "34baf5816243b6373ce999fa416e6778b73f9f9e28f6ce34e32010395e800477",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "blockIdentifiersSurviveV2SaveReadAndReordering",
+      "line": 1040,
+      "old_body_sha256": "eca662f27a726033a150daf666c4dd5c09b6994e3826a129062f20301198c187",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "duplicateBlockIdentifiersCannotAmbiguouslyResume",
+      "line": 1063,
+      "old_body_sha256": "f40a6c43b06cdb97214dfb59c8e72f5fefab89b2f854e33c75dbe016bd114398",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "openingIsSavedSeparatelyAndExistingStorySurvivesAnEditorThatOmitsIt",
+      "line": 1076,
+      "old_body_sha256": "fd809666e513fb839adf89123791362c238e45f5b5bbe9c25083a75c3797461b",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "openingCannotBeARegularStationOrAppearAfterTheFirstChapter",
+      "line": 1094,
+      "old_body_sha256": "1fb65e59032d4d2fd7b6ea55719b54ba2eeddacddf2c20e1ee8e1ee4ea08ee83",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "existingOpeningSurvivesOmittedFlagAndCanBeExplicitlyRemoved",
+      "line": 1112,
+      "old_body_sha256": "e08ef7c68bf99411ebdc561c5c4155f9eeadca49c4d27e16e96828185b270915",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowWriteServiceTest",
+      "case_name": "topicAddressComesFromFirstRealStationAfterTheOpening",
+      "line": 1131,
+      "old_body_sha256": "b6c4d863c3906b306d82b6787a2613c767d3eab4b7e08c392814fdc27c1d4b46",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowTransactionTest",
+      "case_name": "blocksWriteFailureRollsBackDeletedAndInsertedFlowRows",
+      "line": 54,
+      "old_body_sha256": "d9978468e660b501ecf49a597d886d34c3217bf8e95be6489113afcd55e9f4d6",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "ChapterFlowTransactionTest",
+      "case_name": "auditTaskFailureRollsBackTheCompletedV2Rebuild",
+      "line": 90,
+      "old_body_sha256": "cdaa0a0622dc87f36857a08033b6dd2cc78469aa6c63e916abe663b4e5923bee",
+      "explicit_entry_calls": [
+        "updateTopicByOwnerV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "createPersistsTwoBindingsUsingGeneratedIdsOnly",
+      "line": 133,
+      "old_body_sha256": "c7e577df6743d98c74352b7c0809e2f8452e8ae20056d06a6866b63be78f3282",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "v2BlockFlowUsesTheSameClientMapping",
+      "line": 138,
+      "old_body_sha256": "dd914980f0c9410fbaeb88230e8e86f543222927b44641ca51abac26bdf848cd",
+      "explicit_entry_calls": [
+        "createTopicV2"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "danglingClientKeyRollsBackTopicAndNodes",
+      "line": 147,
+      "old_body_sha256": "7961d96e3b729a09800f1bc4d26ce80240a83ad65a2817b0f83f00479d8d0622",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "updateWithoutConfigKeepsRealBindingsAcrossReorder",
+      "line": 154,
+      "old_body_sha256": "c231d32e4dcdb894899caa1b348190b6cc7ea9abc49a801af8a28425eddb1010",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "updateCanBindANewNodeAlongsideRealNodeBindings",
+      "line": 163,
+      "old_body_sha256": "db159c6f451613a783866639fddcaf7e75738a8fbe2bd1afcf94310f068f0225",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "existingNodeCannotBeReboundUsingAClientAlias",
+      "line": 170,
+      "old_body_sha256": "6e1a23f7b5561f30b4594c7baa976aa7869277061d8ca2637496bf1888b86ad4",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "deletingBoundNodeRejectsUnlessBindingIsExplicitlyRemoved",
+      "line": 178,
+      "old_body_sha256": "8648a57c54063b281604cd2c09c671cf41377ae6bf030377161f0ab0e94cf512",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "duplicateClientKeysRollBackAndCopyStillUsesRealIds",
+      "line": 186,
+      "old_body_sha256": "917d71d7f1253e4b07896eebaeabb45bd62c06f4587552a26efe6712915d06d5",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "CmsTopicDraftBindingsTest",
+      "case_name": "persistedParserStillRejectsClientKeysAndOwnershipIsUnchanged",
+      "line": 193,
+      "old_body_sha256": "3ad8591a628c2fc9f31471ab0d201d9f63ebd22c5aac9ed117e9fff6cc4d27a5",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "draftOwner_updatesInPlace_neverInsertsANewTopic",
+      "line": 217,
+      "old_body_sha256": "77cb19f8ab19bc068a2bff9f7bed53b4c68c4e5d4838f6b2451a85f059ed260a",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "publishedFreeTopic_editThatMakesItCommercial_isRejected",
+      "line": 245,
+      "old_body_sha256": "c29426e67a0c2fb502028b96317869fc3d1c2c79ae8796ebc4dae53f1a406ba9",
+      "explicit_entry_calls": [
+        "insertOmsTicket",
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "publishedFreeTopic_addingRecruitDeadlineOnly_isRejected",
+      "line": 271,
+      "old_body_sha256": "4188800576de1a4084f27570db0f78fc4b8e1975f880262ed0a7ca0eb3ecc783",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "clubBoundTopic_editCannotOpenPublicClubPool",
+      "line": 291,
+      "old_body_sha256": "0eedaf4b2a87b6973d4ce0ff552dc7375d7346d25008ed42f100f394db3bccf2",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "independentTopic_editHonorsExplicitOpenClubPool",
+      "line": 313,
+      "old_body_sha256": "4e0acd30fa0082c609d50348c7cbdb34881b0bba8ba912cc9279aab5bd3f8ddf",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "draftEdit_doesNotFlipAuditOrOnlineState",
+      "line": 327,
+      "old_body_sha256": "11919aca0e43f6957ee82187eb72b82e56fc9b414f63188f64c42817c33bfe32",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "draftSave_neverSubmitsCommercialReview",
+      "line": 344,
+      "old_body_sha256": "9d2ca4f8a01fad316291a8142925b343e037e3cc781e7ae3cf6269a1299d9ac0",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "pendingReviewSave_stillSubmitsCommercialReview",
+      "line": 359,
+      "old_body_sha256": "6917de5d405449181c5dc8a9fd9c93609084d25fdf737c5c42077b30acf1d6b1",
+      "explicit_entry_calls": [
+        "insertOmsTicket",
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "draftSave_neverBuildsSelfHostActivityShell",
+      "line": 406,
+      "old_body_sha256": "8cb3a27fcc4e95dea8c99a0699e7900752f5fd7a13b14bd14c612ea2cd7a79d7",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "pendingSave_publishesSelfHostActivityShell",
+      "line": 417,
+      "old_body_sha256": "26b0dff36f46b9f5852ba9a80e88ea20bb70c1395cf9f64525599e64634752d8",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "rejectedSave_republishesSelfHostActivityShell",
+      "line": 428,
+      "old_body_sha256": "90a9cf76fdd43bd5190ffedf33e514f4814a7a471bc2b66119d427524d34637c",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "rejectedTopic_republishesAndResubmitsAudit",
+      "line": 438,
+      "old_body_sha256": "a5074d05fd9e5511987255d0532c98569cdf4866fc25cd076936cb7d2348e649",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "draftEdit_persistsNormalizedJourneyRules",
+      "line": 456,
+      "old_body_sha256": "90a3f63ec10254ab00e299835e6b14c837da1ca47864a6b16c8513b1f46aaa46",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "draftEdit_withoutJourneyRules_leavesColumnUntouched",
+      "line": 478,
+      "old_body_sha256": "c333adbaf86cb796420e71c3e8607b85904bc532f74d4da2453c60acb66d47c4",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "draftEdit_illegalJourneyRules_rejectedBeforeAnyWrite",
+      "line": 492,
+      "old_body_sha256": "24142dae293405587a9ac7bcb62a51a5dce9558dfe1679d9128dd5b37831ff99",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "otherMember_cannotEdit",
+      "line": 506,
+      "old_body_sha256": "08b662fe593b845da2d0acbce41627d3fa12f667cd67fe86ccc1c3533af0df24",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "draftWithPastStartDate_isStillFullyEditable",
+      "line": 526,
+      "old_body_sha256": "9e210a7c458a02fc522a5a623881297962d29ba4894478d9a5bc5db596a0bcb9",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "startedTopic_isReadOnly",
+      "line": 539,
+      "old_body_sha256": "2d60e5a990bf48d02ba56463cf1a5b80c454390ed99b75526a657d660303f5a4",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "paidRegistration_blocksStructuralRebuild",
+      "line": 550,
+      "old_body_sha256": "e50044b49b5203f7dbfcd0c1c8fcc9f6a9783085a2d92f267e5ab14f225af70a",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedWhitelistRejectsUnknownOrOwnHeldMediaBeforeAnyWrite",
+      "line": 565,
+      "old_body_sha256": "32310bda20bc5fd0ffbe601c10d642bde0138e70ab252831c01e679b825ac457",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "foreignWhitelistOwnerIsRejectedBeforeMediaLookupOrWrite",
+      "line": 585,
+      "old_body_sha256": "2da02a3c36718b9c7555807462ec4ee33e441a23193fabb4221bf007e1655381",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_appliesWhitelistTextAndImagesOnly",
+      "line": 602,
+      "old_body_sha256": "8032a4e0c3c974dfc1c383f00317db26e301ca98ad68f5993d3afa4cdabcf8e7",
+      "explicit_entry_calls": [
+        "insertOmsTicket",
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_nullRecruitDeadline_rejectsNewDeadlineAndChangesNothing",
+      "line": 628,
+      "old_body_sha256": "1083d935deee24e2825730ca8988d4d3747ba07eadda2e10d0d9e383768004ea",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_rejectsChangedRecruitDeadlineAndChangesNothing",
+      "line": 644,
+      "old_body_sha256": "ee212de36d45492010e553d49417d2f7450521e991e08cb6b274382aacd54069",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_sameRecruitDeadline_allowsWhitelistTextUpdate",
+      "line": 661,
+      "old_body_sha256": "6c98f7a72e977b2c2cf6c9309c4525fc8c8d9c77204d960eec23a2fac050081c",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_omittedRecruitDeadline_keepsPatchSemantics",
+      "line": 681,
+      "old_body_sha256": "92603a7b84cbd714290e7b93a081c876958318923a0dba81c893ada24472ec43",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_rejectsDateChange_andChangesNothing",
+      "line": 698,
+      "old_body_sha256": "b1d9a6118c7c57a0b66c249104627d637f8072493e952ce0b06dee7b2e59bf47",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_rejectsChapterStructureChange_andChangesNothing",
+      "line": 711,
+      "old_body_sha256": "7c9e10c408622b3051e3b743dda063d0893a292d4b1b02f3204463d966c06683",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_rejectsTicketPriceChange_andLeavesTicketsUntouched",
+      "line": 730,
+      "old_body_sha256": "c3461d3e8b21499b7ce0fc9a21a6c1d6bfced417bd9bd4cf9618a3c542757eb1",
+      "explicit_entry_calls": [
+        "insertOmsTicket",
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "approvedTopic_listsEveryLockedFieldItRejects",
+      "line": 749,
+      "old_body_sha256": "7565a87ffe1cbe56f3f765fbfb75c304470b1b2ecb83a80de23c54d8b6d771a3",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "missingId_rejected",
+      "line": 769,
+      "old_body_sha256": "3defbfc48fb5355af280a0a4c7542e1c234568d4de26ec603918806464560849",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "deletedTopic_rejected",
+      "line": 779,
+      "old_body_sha256": "c9db58ae7432f9ada8e44bbc6952ccb6222acdc97e350fc75aff0e8bbf2da026",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "fullRebuild_clearsOldChildrenFirst",
+      "line": 791,
+      "old_body_sha256": "2bf7d379334a2105a1df38796b16c8c7b5d20cc5296fd33590faf710d0464974",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "legacyEditWithoutRouteFieldsRemapsExistingBranchGraphToRebuiltNodeIds",
+      "line": 812,
+      "old_body_sha256": "54449788fbb8b5bcce11d587bba7a13f6a6d26eb3d71d423fa76836b28b591e3",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "fullRebuild_keepsBackOfficeHiddenNodeHidden_andLeavesVisibleAndNewNodesVisible",
+      "line": 877,
+      "old_body_sha256": "84ba7f2258491bf34257e251d80bf16f79fd9d5442a5f2cde60cbedabb4a650b",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "partialBody_doesNotSilentlyWipeChapters",
+      "line": 951,
+      "old_body_sha256": "570c640fa943f6c98af14e99b0cf45bc87bdfca6859b669d2687f5f9355891cc",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "partialBody_alsoProtectsTicketsCollaboratorsAndEggs",
+      "line": 977,
+      "old_body_sha256": "0c2948e09b0b872c022a1a9f1c0bbd6fd3dfd176bc21589be642daf91953604c",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicUpdateByOwnerTest",
+      "case_name": "explicitEmptyArray_isHonoredAsDeliberateClear",
+      "line": 1007,
+      "old_body_sha256": "27f26ca9eaf4daa5035668cad495aeab54275b1d174fe166cc60cb58f62acc1f",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "nameOnlyAiSimpleDraftSaves",
+      "line": 207,
+      "old_body_sha256": "2a1b9f555a1ee126c1e9109251c7c08d924abee4d60e022d00881a544073d83c",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "nameOnlyDraftWithNullChaptersSaves",
+      "line": 220,
+      "old_body_sha256": "ac8ecbc078a35cbe54ea09df0f1c96d2e332d7344e0403170f3025ad007d854d",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "draftStillRequiresTopicName",
+      "line": 233,
+      "old_body_sha256": "b4b80f2fae5d2363fb6bbf83e8f408e87e87de3eacb2ee01020ab76142c84b93",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "draftRejectsFilledButIllegalCoordinate",
+      "line": 247,
+      "old_body_sha256": "34504511643afdf9a000073e43ca76adb2b7acf6afbc230feea6e236f4d78ce5",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "draftRejectsNegativeTicketPrice",
+      "line": 266,
+      "old_body_sha256": "5d3ad4239c7291a7c5b291f838b43af9e21eac747ca4e19bfa0d8ee0f20ea5dd",
+      "explicit_entry_calls": [
+        "createTopic",
+        "insertOmsTicket"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "draftAllowsTicketWithoutTimeWindow",
+      "line": 282,
+      "old_body_sha256": "4f59a7511630ede2601aa8ad758974444818976274140fe8fa36cf84de03f1a6",
+      "explicit_entry_calls": [
+        "createTopic",
+        "insertOmsTicket"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "incompleteDraftPublishIsRejected",
+      "line": 299,
+      "old_body_sha256": "875eb11cbd7dfa53fe8d7e2bf841c0ee351d36dbcbf615d63378db20b4fdfe3a",
+      "explicit_entry_calls": [
+        "publishDraft"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "completeDraftPublishesWithTheSameId",
+      "line": 316,
+      "old_body_sha256": "4120a085162fc31e1c5fd59953bd74705cc49b0ce9d2cf498848a316e4903950",
+      "explicit_entry_calls": [
+        "publishDraft"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "persistedReversedSaleWindowBlocksPublication",
+      "line": 338,
+      "old_body_sha256": "bc9869dd87b5e13c4ae992b0899f41dc02be7660bf26b558cffda24db3bb0c54",
+      "explicit_entry_calls": [
+        "publishDraft"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "draftDisappearingBeforeLockedPublishDoesNotBecomePublic",
+      "line": 360,
+      "old_body_sha256": "00c1a4538124c919c0fe827de8db18f0ea49025268b93079f9070293ff0ab2dd",
+      "explicit_entry_calls": [
+        "publishDraft"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "directPublishStillRequiresAiSimpleLocation",
+      "line": 380,
+      "old_body_sha256": "198a55118771da395b07fd1404c43c5196df032fd5b34a6caa213b41b9b6239c",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "directPublishStillRequiresRecruitDeadlineForFreeExplore",
+      "line": 392,
+      "old_body_sha256": "1f26149317fde8e0c55395bac5295a3fa1867b46008f161115ac38cf0df034d3",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "directPublishStillRejectsTicketWithoutTimeWindow",
+      "line": 404,
+      "old_body_sha256": "a0899836fbbdc92adec5745fefb7c93278213617658a8763714c59e8f5bb8e74",
+      "explicit_entry_calls": [
+        "createTopic",
+        "insertOmsTicket"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "draftUpdateSkipsPublishOnlyCompleteness",
+      "line": 424,
+      "old_body_sha256": "1289ea04e75f018b5f34c125fd6263a8c10f5776351b05ccba2d2ac5b0474798",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "pendingReviewUpdateStillRequiresRecruitDeadline",
+      "line": 445,
+      "old_body_sha256": "96a90c61ad346a48eb704c78122dc6148c2c19856a472eecd894993a3d4f733d",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "draftUpdateRejectsBlankedName",
+      "line": 465,
+      "old_body_sha256": "614cea0d239dc93a21041d604626811436392487178ecefa03dcf01e44458b31",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "directPublishStillBuildsSelfHostShell",
+      "line": 484,
+      "old_body_sha256": "55a658097f893a29a2f43de4d4c8a9177e2166b53f9bfa1df4ef9e51a6e30544",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "publishDoesNotRewriteDraftFlag",
+      "line": 499,
+      "old_body_sha256": "e1211c6ad7d80cfa96fe56c15d80a119666fa2e361cf0e5a1fdab3e117773900",
+      "explicit_entry_calls": [
+        "publishDraft"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftPartialSaveGateTest",
+      "case_name": "directPublishRequiresName",
+      "line": 519,
+      "old_body_sha256": "7403fd669447835de45823f9f68d9dc4a1a40d17c73e07eec1586f1785e20e06",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftLegacyFieldPreservationTest",
+      "case_name": "omittedFieldsKeepExistingAuthorConfiguration",
+      "line": 104,
+      "old_body_sha256": "fbfac5e6052573505ad71b7a385bd2dc06fbbe183678d77e53b281d29e655e4e",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftLegacyFieldPreservationTest",
+      "case_name": "freeExploreWithoutModeInLegacyPayloadKeepsItsProductType",
+      "line": 116,
+      "old_body_sha256": "a22cf226da04f1a9fedf46b81a5056bb83449134ef1935f7eb265ab1d54ced66",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftLegacyFieldPreservationTest",
+      "case_name": "explicitConfigurationChangesStillApply",
+      "line": 124,
+      "old_body_sha256": "9e9f1210e53faac3208a82536df193e2617198061058c225ebaeb2f992df2afd",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftLegacyFieldPreservationTest",
+      "case_name": "oldTicketModeStillSelectsProductTypeWhenExplicitTypeIsAbsent",
+      "line": 140,
+      "old_body_sha256": "6833785166b0aee25917e58af9114ea7ce474be95b32f279a39c0967126eb78b",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftLegacyFieldPreservationTest",
+      "case_name": "explicitInvalidTeamValueIsStillRejectedBeforeWriting",
+      "line": 153,
+      "old_body_sha256": "c2709616abba7f6599268a135dadef8ff1a7ba1efe065b4fd5442b111ea3084b",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicJourneyStorySaveTest",
+      "case_name": "draftEdit_persistsStoryAndRemapsChapterIdAfterRebuild",
+      "line": 170,
+      "old_body_sha256": "76e801588aaf53de1be59ef3a35c92dd66b375e2914f033fbca97fb455e32afd",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicJourneyStorySaveTest",
+      "case_name": "draftEdit_withoutStory_leavesColumnUntouched",
+      "line": 186,
+      "old_body_sha256": "b41f2071d965aaef53e469cc2b6b40a310d242b9a075bbde8a4aeb91b5b2829f",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicJourneyStorySaveTest",
+      "case_name": "draftEdit_illegalStory_rejectedBeforeAnyWrite",
+      "line": 198,
+      "old_body_sha256": "7b30839ddabbd3deb9346ac04e1429d150912a535e247cfe9040c0379ae73687",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicJourneyStorySaveTest",
+      "case_name": "draftEdit_storyReferencingForeignChapter_isRejected",
+      "line": 211,
+      "old_body_sha256": "821ceed33524ad05aa83df343e7c1f76d2cab330cf5ef60aa17f092aea6aec4e",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "editingTopicKeepsSoldShellTicketAndRecomputesRemainingFromSoldSeats",
+      "line": 158,
+      "old_body_sha256": "1136f3a09142c3fba33f3ee17a825e3f12331f8996f2dd7809701bdb5b574d42",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "editingTopicWithoutTouchingTicketsKeepsBothRowsInPlace",
+      "line": 175,
+      "old_body_sha256": "6669305a7093f7366964c3b11dc67173348d2ced3b5d4226897add5586b4d4d0",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "droppingASoldTicketFromTheEditFailsClosedWithoutDestroyingIt",
+      "line": 189,
+      "old_body_sha256": "ba5959e516342387065c362e9e4a5f1b123b0e3fbe17184e2641e29ca00c5783",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "droppingAnUnsoldTicketDeletesItsShellRowAtomically",
+      "line": 204,
+      "old_body_sha256": "148b54449bd2bf668f6663c8b598de420b858f7391653ab95e9a2842b0bc268c",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "topicTicketIdentityIsNeverBorrowedFromAnotherTopic",
+      "line": 217,
+      "old_body_sha256": "be6885659f8e56de94aa994442ab8d1815372de1d9b8f07530ddfad2085c97ab",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "repricingASoldSessionIsRefusedRatherThanQuietlyRebuiltUnderTheSoldSeats",
+      "line": 232,
+      "old_body_sha256": "c5e707ebd8e130c3f932796a7aacf7e0c1c4a25a092b57e87df14e5ed424547a",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "twoIdenticalSessionsStayEditableInsteadOfBrickingTheTopic",
+      "line": 246,
+      "old_body_sha256": "491fc36ad18c10d4a2547119246ea971d33567c91356c1cd1544f55b225592b1",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "concurrentlyChangedTopicTicketFailsClosedInsteadOfSilentlyInsertingASecondOne",
+      "line": 263,
+      "old_body_sha256": "3ed8407925de5c895e77d5b9e65b51aaa7cb1ce32feb35dd5e6d12f954cfc6fb",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "failedConditionalOrphanDeleteFailsClosed",
+      "line": 280,
+      "old_body_sha256": "5e2ef80d42315bc8cc55fa136bc9df2e35156c25066edecfd9d1429de7057ae0",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "shellTicketPointingAtAnotherTopicsTicketIsTreatedAsAnOrphanNotAsAMatch",
+      "line": 296,
+      "old_body_sha256": "d60a6991b2a79667d11a3059993fe7082cf9a57842fb0e2da11a32a29b3680cc",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "anotherActivitysShellTicketIsNotTouchedByThisTopicSync",
+      "line": 310,
+      "old_body_sha256": "3056d0ceaade617d14570e0fd00e305f7579b5bf7bc9039ee7026b99f30e5b3f",
+      "explicit_entry_calls": [
+        "insertOmsTicket",
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "adminAddingATicketOnAFreeExploreShellIsRefusedInsteadOfMintingAnUnkeyedOne",
+      "line": 335,
+      "old_body_sha256": "a73d98759038f31b089cfeb7d72bbb94602bdddcee41b08218af51fdd244a5f9",
+      "explicit_entry_calls": [
+        "insertOmsTicket",
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "aGenuinelyUnkeyedShellRowStillForcesUnknownInventoryAndBlocksSync",
+      "line": 361,
+      "old_body_sha256": "f5ebffa50ede2e8426d508674c2052973fd1d8a6ede0f6d75fb348f8478f4766",
+      "explicit_entry_calls": [],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "addingATicketOnASelfHostClassicShellIsRefused",
+      "line": 378,
+      "old_body_sha256": "4bab0c9fc01028fd66b6f9de10a6e288ae76ed4b5949b58d8cbd088c0ffbd505",
+      "explicit_entry_calls": [
+        "insertOmsTicket"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "selfHostClassicShellTicketMustNotBrickTheNextTopicEdit",
+      "line": 394,
+      "old_body_sha256": "72697ce09cf47046c7c50abf8933244e865038d0a5774f1deed23181f92a34c9",
+      "explicit_entry_calls": [
+        "insertOmsTicket",
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "addingATicketOnAMerchantRunClassicActivityStaysAllowed",
+      "line": 414,
+      "old_body_sha256": "47da6f7730a2a70ed775780f78621a73729c4c43b3636794a8b92f7bd77d010c",
+      "explicit_entry_calls": [
+        "insertOmsTicket"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "addingATicketOnAShellOfATopicWithoutAnOwnerStaysAllowed",
+      "line": 437,
+      "old_body_sha256": "f2b34047b81b608135f22c4d9fa2a95b0553a6338037325275bbd059585ca90b",
+      "explicit_entry_calls": [
+        "insertOmsTicket"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicEditActivityShellTicketSyncChainTest",
+      "case_name": "addingATicketOnAnActivityWithoutATopicStaysAllowed",
+      "line": 460,
+      "old_body_sha256": "c645efcec01c95f905ab1bd04c038ef5880b22e200a163b94cb3cde45c4f9588",
+      "explicit_entry_calls": [
+        "insertOmsTicket"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftSubmittedOrderTest",
+      "case_name": "createDraftAssignsChapterAndPerChapterNodeOrderFromSubmittedArrays",
+      "line": 77,
+      "old_body_sha256": "b1376e6ee612562e20ad0b935a1ba1b1fddd24a7beb55171d23dfecedee4f84f",
+      "explicit_entry_calls": [
+        "createTopic"
+      ],
+      "reflective_calls": []
+    },
+    {
+      "class_name": "TopicDraftSubmittedOrderTest",
+      "case_name": "rebuildDraftUsesNewSubmittedOrderAndRestartsNodeOrderForEachChapter",
+      "line": 89,
+      "old_body_sha256": "50ede28998e48091c7c77b54552ee1d3afee4024d84ad9a3239cb1351b4b5076",
+      "explicit_entry_calls": [
+        "updateTopicByOwner"
+      ],
+      "reflective_calls": []
+    }
+  ]
+}

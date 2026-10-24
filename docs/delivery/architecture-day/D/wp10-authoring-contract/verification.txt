@@ -1,0 +1,20 @@
+D WP10 authoring contract — documentation only
+Pinned public base: 864e708e2f38130e21780485e462f8dc147bb76f
+Pinned base tree: 4f3bfd77f199992c84cdf7d538d4554f5a712e7f
+CmsTopicServiceImpl blob: e7b9f22805e8d28292b46e36c68c62e5d5a1d41a
+
+Actual lightweight source validation:
+python3 docs/delivery/architecture-day/D/wp10-authoring-contract/verify_contract.py --source-root /workspace/architecture-day-d-wp10-copy --fallback-source-root /tmp/wp10_ad7e_snapshot
+{"result": "PASS", "pinned_source_files": 15, "move_definitions": 25, "move_names": 23, "old_classes": 9, "old_case_bodies": 141, "planned_graph_cases": 32, "java_mysql_executed": false, "equivalence_proven": false}
+
+Before/after frozen worktree diff SHA256 actually compared equal:
+staged f4d44b4a11738f99f1a3e49b663bcb314316f2a2fceb02b03b1ede8d945111ec
+unstaged e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+Original staged source candidate and original workspaces preserved. Only this delivery directory added.
+
+Executed: Python source inventory / source blob+SHA256 / case body hashes / documentation checks.
+Not executed: Java compile/unit, MySQL/Redis, Spring startup, HTTP, old/new graph runs, provider calls, DDL, CI dispatch.
+32 graph cases are a proposed contract, not implemented tests and not results.
+141 old cases are an inventory/wiring contract, not execution evidence this turn.
+Root-reported prior copy25+25/fac5 D94/startup evidence remains scoped to its own source/run; not reused as graph acceptance.
+No production/test fixture Java, schema, mapper, scheduler, controller, CI/registry or dependency changes.

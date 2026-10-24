@@ -1,0 +1,111 @@
+{
+  "base_sha": "864e708e2f38130e21780485e462f8dc147bb76f",
+  "base_tree": "4f3bfd77f199992c84cdf7d538d4554f5a712e7f",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "sha": "fe2d26e7220104a01f9927cd7d384741d0111ff0",
+      "chars": 125686,
+      "tests": 0,
+      "sha256": "7d93a2829f7a37159bf1130ccbecc7422044ab4f8045c339a2e027df7177c406"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsTopicService.java",
+      "sha": "dc8518034b80e71118e751aacf48bf312dc021c4",
+      "chars": 10717,
+      "tests": 0,
+      "sha256": "4cc6dce4a5ad6cf6b5d5ab916733e08c2fbf3f5acd81532634ff9a73c1c1cdd5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+      "sha": "5a3770164de2f4d1d4c6b43c2a7a7a8df677ac33",
+      "chars": 60187,
+      "tests": 44,
+      "sha256": "12f1db22623e4ec8c4e5fcaf33c038bc9998989dfa6f8732158b9e43d49d57b0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java",
+      "sha": "890f5332e87cf441c2bb2bf72a231bacb8cd0430",
+      "chars": 17702,
+      "tests": 2,
+      "sha256": "e495464e83d2ab948fe71b0ed45c4278a2db1019df4901920a04b49e13f6280c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CmsTopicDraftBindingsTest.java",
+      "sha": "55acb24be9761f6910bc276b71e27a55e4465cbc",
+      "chars": 14657,
+      "tests": 9,
+      "sha256": "eafdabec5369610c2ce22c414158b6ec5d2d380dc8d58a619be369c0fd73f35b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+      "sha": "9f1c74dc25c56d0fcd85f5148cadcc91127b4693",
+      "chars": 48408,
+      "tests": 38,
+      "sha256": "63579dbf8741d91205c9c03fb17f1dce856cc52d50f9cea0ab8cf43a5c567696"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftPartialSaveGateTest.java",
+      "sha": "f287d2fc8e59d1c10dd1a1a682cf9f68a682919b",
+      "chars": 24100,
+      "tests": 19,
+      "sha256": "9fba00d10f98875c3df766260960a09f31f384e6181bc199b0d9bf76b74bb6ef"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftLegacyFieldPreservationTest.java",
+      "sha": "345b7d2ded88a41cdeea54ccf46573421f246a15",
+      "chars": 7228,
+      "tests": 5,
+      "sha256": "f40093e9fe3cfeb379ee481c2ae85340d620b4b44ae22994855e37f9a754b4bc"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicJourneyStorySaveTest.java",
+      "sha": "5e176c130134981d9c212dcc506a11a7af8b149f",
+      "chars": 10760,
+      "tests": 4,
+      "sha256": "561a781aca9abdd61a7416a8cdd76997ea5ad8cd992c4663752d4adc8562d46e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java",
+      "sha": "5dead3ee638bc727dae7462b70b4a4e18506302b",
+      "chars": 38111,
+      "tests": 18,
+      "sha256": "cf556ebe906c1505cf7f3f83fa29dd3640cfca3f8d95dda5359eeb5b575ffff4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+      "sha": "c1b066d468f13314e50e9b9389b2a2adb808705a",
+      "chars": 7757,
+      "tests": 2,
+      "sha256": "5561cf30b9b9e8483b24080bf64e0116a495fdb264c0de678ee545db30494400"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "sha": "e7b9f22805e8d28292b46e36c68c62e5d5a1d41a",
+      "chars": 281940,
+      "tests": 0,
+      "sha256": "9defc30b6cd2f9428b38d51afabb693aeb4811382d2f365a5b3457b7539dd1af"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterFlowCompiler.java",
+      "sha": "0ec52314ed875b2ae6ab2aa2f5d9051a2b04a323",
+      "chars": 31350,
+      "tests": 0,
+      "sha256": "715c8b72382d991bf26eb09704e3ceb002f5757cfabcbb8edc6f3bd099d09084"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "sha": "63c0abc5f26f1a7aba4037c34677154ac2955bf9",
+      "chars": 328246,
+      "tests": 0,
+      "sha256": "6426ef799fa77f7313fb1554c668033dde11817baacafa45a499b75ee3dc31e9"
+    },
+    {
+      "path": "docs/delivery/architecture-day/COORDINATOR/governance-scope.md",
+      "sha": "083ffae0db6c6c02d019de1b1766e786a2a9af4a",
+      "chars": 21861,
+      "tests": 0,
+      "sha256": "aa0469b16953b604639305f1db13400e16545519d9c386a4f6a5c2ab8da24043"
+    }
+  ]
+}
