@@ -1007,13 +1007,13 @@
       "gates": {}
     },
     "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT": {
-      "tests": 23,
+      "tests": 53,
       "storage": [
         "mysql"
       ],
       "gates": {},
       "database_base": "architecture_a",
-      "note": "Architecture day A: source now declares23 tests including four never-submitted recovery/race regressions. Original debit/submit intent/refund evidence and transaction races; provider is a stub."
+      "note": "Architecture day A afcabd575fd03f7437f12b1210077266a270b88f: 53 fixed ordinary tests; four parameterized scenarios expanded with original arguments and bodies preserved; adds above/exact SDK integer-fen boundary cases. Real MySQL with deterministic SDK stub; no provider acceptance. Historical receipts remain bound to their original source and counts."
     },
     "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
       "tests": 10,

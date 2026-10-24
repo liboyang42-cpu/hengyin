@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T06:53:23.731010+00:00",
-  "source_parent": "09555e150a1f9875b66c6c7af4490bfe944ca301",
+  "updated_utc": "2026-10-24T07:10:50.220713+00:00",
+  "source_parent": "06a571b1247620a9bdcea068be0ded973671d17c",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
@@ -11,58 +11,106 @@
     "A": {
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
       "host_id": "durable",
-      "task": "先完成提现金额SDK整数分上限的建单前guard及普通Test转换，再继续调度接管；不放宽UNKNOWN回补。",
-      "ownership": "提现测试、MySqlSchedulerCoordinator/AbstractQuartzJob控制；不改F日志",
-      "dispatch": "accepted; refresh wait_threads for current live status"
+      "task": "支付/退款首个业务锁统一topic，锁下归属复核；保留交易、CAS和回放",
+      "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService的栅栏与接线；G账本正文不改",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:8",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbc-cb2e-7083-9828-8936232ca7c3"
     },
     "B": {
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
       "host_id": "durable",
-      "task": "复用已写路由候选，完成四域支付路由和唯一匹配；新转账绑定保留。",
-      "ownership": "支付网关路由及域适配；不改A提现/G结算",
-      "dispatch": "accepted; refresh wait_threads for current live status"
+      "task": "持久化已验证的原支付/退款事实，复用现有inbox/attempt",
+      "ownership": "SDK/router/intent/inbox事实层及最小additive SQL源码；不改A/G领域正文",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbc-db09-7068-84ff-3432b1b53f63"
     },
     "C": {
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
       "host_id": "durable",
-      "task": "鉴权合同接线ab8已纳；核对25个HTTP端点的真实应用守卫、事务和原意图重试。",
-      "ownership": "13个Play application及其直接支持/测试",
-      "dispatch": "accepted; refresh wait_threads for current live status"
+      "task": "复用现有票码建立稳定逐席位身份和实际核销事实",
+      "ownership": "席位/票码/核销事实；共享下单/退款文件只给review.patch",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbc-e80c-7082-9a04-f2dd5521ef56"
     },
     "D": {
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable",
-      "task": "三发布入口5d25已纳；继续alreadyPublished语义、隐藏节点计数和topic→chapter锁序。",
-      "ownership": "发布/内容图D专属符号；不改G资金方法",
-      "dispatch": "accepted; refresh wait_threads for current live status"
+      "task": "补齐章节、节点CRUD和审核alreadyPublished写入的topic栅栏",
+      "ownership": "三服务上述精确符号已补授；CmsTopic共享只给patch",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbd-0ad2-71c0-a0ab-06dcefe9ed94"
     },
     "E": {
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
       "host_id": "durable",
-      "task": "路线查询、地图外呼及几何缓存的容量/字节/TTL/inflight边界；只修真实SQL放大。",
-      "ownership": "TencentMapClient/ApiMapService/路线缓存；不改F公共传输",
-      "dispatch": "accepted; refresh wait_threads for current live status"
+      "task": "地图外呼、缓存及城市地理查询容量和失败语义",
+      "ownership": "TencentMapClient/ApiMapService/MapGeocodeServiceImpl；不改公共传输",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:3",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cb3-8388-723a-af9f-128ebbc00e14"
     },
     "F": {
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
-      "task": "补已证实异步MDC、任务运行关联和脱敏断点。",
-      "ownership": "RequestIdFilter/纯日志关联；调度共享触点只交review.patch",
-      "dispatch": "accepted; refresh wait_threads for current live status"
+      "task": "为新真实类型补既有架构owner/direction约束",
+      "ownership": "既有policy/控制例；不改root CI refs或新造scanner",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbc-f72a-77ca-bdf1-8969cee6b15a"
     },
     "G": {
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
       "host_id": "durable",
-      "task": "共同topic资金fence、迟到成功；按用户批准的原冻结订单分项执行退款冲回。",
-      "ownership": "结算/claim/finalization/调整；不改SDK或未批准计费口径",
-      "dispatch": "accepted; refresh wait_threads for current live status"
+      "task": "原冻结逐订单分项、实际核销席位固定费、成功退款冲回和debt",
+      "ownership": "结算/claim/adjustment/debt和additive SQL源码；旧claim约束保留",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbd-1835-7769-9896-ba9b9a9a3e97"
     },
     "H": {
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
       "host_id": "durable",
-      "task": "独立审A2450+Bdc87真实提交/查单/原事实/回补及迁移；只报可复现证据。",
-      "ownership": "只读候选审查；不以静态或测试数量认定通过",
-      "dispatch": "accepted; refresh wait_threads for current live status"
+      "task": "审查新B路由、A金额边界及root正式下单封口组合",
+      "ownership": "只读独立审查，未运行单列",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:5",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbd-2580-7609-b680-7466fc699b8b"
     }
   },
   "root_ownership": [
@@ -76,11 +124,10 @@
     "Refund only original frozen order allocation; do not recalculate other orders",
     "First payment locks channel until original confirmed closed",
     "Retain original AI unknown and reservation; independent new action requires explicit confirmation",
-    "Player draft uses only dedicated draft quota"
+    "Player draft uses only dedicated draft quota",
+    "Fixed fulfillment fee once per actually verified seat; unverified seats do not accrue fees"
   ],
-  "pending_business_decisions": [
-    "Fixed fulfillment fee: per actually verified seat or once per group service; user requested recommendation, clarification pending"
-  ],
+  "pending_business_decisions": [],
   "actual_minimal_checks": {
     "m1_workflow_controls": "3 PASS",
     "merged_ui_static_gate": "PASS; not device or business evidence",
@@ -89,10 +136,12 @@
     "admin_ui": "Vue2 template compile and API/SFC script syntax PASS; no real browser walkthrough",
     "new_admin_Java_MySQL": "NOT_RUN",
     "gate_selftests_initial": "56 executed: 51 passed, 3 metadata/count failures and 2 loopback-bind environment errors. Metadata/count wiring corrected; non-network targeted rerun pending result. No business/Java/DB acceptance.",
-    "gate_metadata_targeted_after_fix": "21 non-network gate contract/source-count tests PASS; original2 loopback environment errors not rerun locally, final hosted CI still required"
+    "gate_metadata_targeted_after_fix": "21 non-network gate contract/source-count tests PASS; original2 loopback environment errors not rerun locally, final hosted CI still required",
+    "A_strict_precheck": "53 declared_tests; dynamic/nested/gates/conditions empty; real precheck errors=[]; Java/DB NOT_RUN",
+    "registry_after_A": "2 targeted registry validation/batch totals selftests PASS; secret-file-gate and diff check PASS"
   },
   "unified_regression_pending": [
-    "A51 ordinary-test conversion and source precheck",
+    "A53 boundary and original-fact Java/DB acceptance; strict source parser/registry metadata PASS",
     "new schema dependencies/precise scratch admissions/registered test counts",
     "all current batch Java/DB/compiled architecture/startup/required business scenarios",
     "additional reviewed worker slices"
@@ -101,12 +150,19 @@
   "new_confirmed_issue": {
     "id": "H-AB-AMOUNT-P2",
     "mechanism": "amount beyond Integer.MAX_VALUE cents can enter original DEBIT/SUBMIT before SDK preflight rejects; UNKNOWN then cannot self-resolve",
-    "status": "revision requested from A; not yet fixed or runtime-verified"
+    "status": "source repair integrated from afcabd575fd03f7437f12b1210077266a270b88f; actual Java/DB boundary tests NOT_RUN"
   },
   "automatic_review": {
     "rejected_action": "registry insertion with a placeholder source SHA",
     "effect": "not written",
     "resolution": "full actual commit 09555e150a1f9875b66c6c7af4490bfe944ca301 read from git rev-parse, exact registry insertion accepted",
     "blocked": false
+  },
+  "new_source_integration": {
+    "candidate": "afcabd575fd03f7437f12b1210077266a270b88f",
+    "files": 2,
+    "exact_candidate_bytes": true,
+    "fixed_test_count": 53,
+    "Java_DB": "NOT_RUN"
   }
 }

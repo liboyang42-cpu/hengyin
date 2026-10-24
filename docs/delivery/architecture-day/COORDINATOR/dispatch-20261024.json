@@ -1,0 +1,324 @@
+{
+  "schema": 1,
+  "observed_utc": "2026-10-24T07:10:50.220713+00:00",
+  "user_request": "resume existing eight agents; code first",
+  "all_eight_active_at_observation": true,
+  "polls": [
+    {
+      "schemaVersion": 1,
+      "cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:8",
+      "revision": 8,
+      "changed": true,
+      "thread": {
+        "id": "01a16a22-3076-7196-88f5-86d5b2c83036",
+        "hostId": "durable",
+        "status": {
+          "type": "active",
+          "activeFlags": []
+        }
+      },
+      "latestTurn": {
+        "id": "01a16cbc-cb2e-7083-9828-8936232ca7c3",
+        "status": "inProgress",
+        "error": null,
+        "startedAt": 1792825674,
+        "completedAt": null,
+        "durationMs": null
+      },
+      "latestAssistantMessageId": null,
+      "latestAssistantMessage": null,
+      "latestToolMarkerId": null,
+      "latestToolMarker": null
+    },
+    {
+      "schemaVersion": 1,
+      "cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:4",
+      "revision": 4,
+      "changed": true,
+      "thread": {
+        "id": "01a16a22-956c-723f-b51b-afcbee69802b",
+        "hostId": "durable",
+        "status": {
+          "type": "active",
+          "activeFlags": []
+        }
+      },
+      "latestTurn": {
+        "id": "01a16cbc-db09-7068-84ff-3432b1b53f63",
+        "status": "inProgress",
+        "error": null,
+        "startedAt": 1792825678,
+        "completedAt": null,
+        "durationMs": null
+      },
+      "latestAssistantMessageId": null,
+      "latestAssistantMessage": null,
+      "latestToolMarkerId": null,
+      "latestToolMarker": null
+    },
+    {
+      "schemaVersion": 1,
+      "cursor": "04667806-5015-4116-b5cc-5f2df01b0163:4",
+      "revision": 4,
+      "changed": true,
+      "thread": {
+        "id": "01a16a22-c697-7637-ae29-cdff6341000b",
+        "hostId": "durable",
+        "status": {
+          "type": "active",
+          "activeFlags": []
+        }
+      },
+      "latestTurn": {
+        "id": "01a16cbc-e80c-7082-9a04-f2dd5521ef56",
+        "status": "inProgress",
+        "error": null,
+        "startedAt": 1792825682,
+        "completedAt": null,
+        "durationMs": null
+      },
+      "latestAssistantMessageId": null,
+      "latestAssistantMessage": null,
+      "latestToolMarkerId": null,
+      "latestToolMarker": null
+    },
+    {
+      "schemaVersion": 1,
+      "cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:4",
+      "revision": 4,
+      "changed": true,
+      "thread": {
+        "id": "01a16a22-f399-7110-ba27-ef3f7245603b",
+        "hostId": "durable",
+        "status": {
+          "type": "active",
+          "activeFlags": []
+        }
+      },
+      "latestTurn": {
+        "id": "01a16cbd-0ad2-71c0-a0ab-06dcefe9ed94",
+        "status": "inProgress",
+        "error": null,
+        "startedAt": 1792825691,
+        "completedAt": null,
+        "durationMs": null
+      },
+      "latestAssistantMessageId": null,
+      "latestAssistantMessage": null,
+      "latestToolMarkerId": null,
+      "latestToolMarker": null
+    },
+    {
+      "schemaVersion": 1,
+      "cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:3",
+      "revision": 3,
+      "changed": false,
+      "thread": {
+        "id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+        "hostId": "durable",
+        "status": {
+          "type": "active",
+          "activeFlags": []
+        }
+      },
+      "latestTurn": {
+        "id": "01a16cb3-8388-723a-af9f-128ebbc00e14",
+        "status": "inProgress",
+        "error": null,
+        "startedAt": 1792825066,
+        "completedAt": null,
+        "durationMs": null
+      },
+      "latestAssistantMessageId": null,
+      "latestAssistantMessage": null,
+      "latestToolMarkerId": null,
+      "latestToolMarker": null
+    },
+    {
+      "schemaVersion": 1,
+      "cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:4",
+      "revision": 4,
+      "changed": true,
+      "thread": {
+        "id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+        "hostId": "durable",
+        "status": {
+          "type": "active",
+          "activeFlags": []
+        }
+      },
+      "latestTurn": {
+        "id": "01a16cbc-f72a-77ca-bdf1-8969cee6b15a",
+        "status": "inProgress",
+        "error": null,
+        "startedAt": 1792825686,
+        "completedAt": null,
+        "durationMs": null
+      },
+      "latestAssistantMessageId": null,
+      "latestAssistantMessage": null,
+      "latestToolMarkerId": null,
+      "latestToolMarker": null
+    },
+    {
+      "schemaVersion": 1,
+      "cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:4",
+      "revision": 4,
+      "changed": true,
+      "thread": {
+        "id": "01a16a23-8904-73e8-a024-378a96f0800c",
+        "hostId": "durable",
+        "status": {
+          "type": "active",
+          "activeFlags": []
+        }
+      },
+      "latestTurn": {
+        "id": "01a16cbd-1835-7769-9896-ba9b9a9a3e97",
+        "status": "inProgress",
+        "error": null,
+        "startedAt": 1792825694,
+        "completedAt": null,
+        "durationMs": null
+      },
+      "latestAssistantMessageId": null,
+      "latestAssistantMessage": null,
+      "latestToolMarkerId": null,
+      "latestToolMarker": null
+    },
+    {
+      "schemaVersion": 1,
+      "cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:5",
+      "revision": 5,
+      "changed": true,
+      "thread": {
+        "id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+        "hostId": "durable",
+        "status": {
+          "type": "active",
+          "activeFlags": []
+        }
+      },
+      "latestTurn": {
+        "id": "01a16cbd-2580-7609-b680-7466fc699b8b",
+        "status": "inProgress",
+        "error": null,
+        "startedAt": 1792825698,
+        "completedAt": null,
+        "durationMs": null
+      },
+      "latestAssistantMessageId": null,
+      "latestAssistantMessage": null,
+      "latestToolMarkerId": null,
+      "latestToolMarker": null
+    }
+  ],
+  "new_assignments": {
+    "A": {
+      "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
+      "host_id": "durable",
+      "task": "支付/退款首个业务锁统一topic，锁下归属复核；保留交易、CAS和回放",
+      "ownership": "CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService的栅栏与接线；G账本正文不改",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:8",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbc-cb2e-7083-9828-8936232ca7c3"
+    },
+    "B": {
+      "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
+      "host_id": "durable",
+      "task": "持久化已验证的原支付/退款事实，复用现有inbox/attempt",
+      "ownership": "SDK/router/intent/inbox事实层及最小additive SQL源码；不改A/G领域正文",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "037fb3f0-51df-4d9e-a9fa-f2d0be7950b4:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbc-db09-7068-84ff-3432b1b53f63"
+    },
+    "C": {
+      "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
+      "host_id": "durable",
+      "task": "复用现有票码建立稳定逐席位身份和实际核销事实",
+      "ownership": "席位/票码/核销事实；共享下单/退款文件只给review.patch",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbc-e80c-7082-9a04-f2dd5521ef56"
+    },
+    "D": {
+      "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
+      "host_id": "durable",
+      "task": "补齐章节、节点CRUD和审核alreadyPublished写入的topic栅栏",
+      "ownership": "三服务上述精确符号已补授；CmsTopic共享只给patch",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbd-0ad2-71c0-a0ab-06dcefe9ed94"
+    },
+    "E": {
+      "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+      "host_id": "durable",
+      "task": "地图外呼、缓存及城市地理查询容量和失败语义",
+      "ownership": "TencentMapClient/ApiMapService/MapGeocodeServiceImpl；不改公共传输",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:3",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cb3-8388-723a-af9f-128ebbc00e14"
+    },
+    "F": {
+      "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+      "host_id": "durable",
+      "task": "为新真实类型补既有架构owner/direction约束",
+      "ownership": "既有policy/控制例；不改root CI refs或新造scanner",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "09bef78c-bc99-472f-b3fc-b50c0c7bbbf3:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbc-f72a-77ca-bdf1-8969cee6b15a"
+    },
+    "G": {
+      "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
+      "host_id": "durable",
+      "task": "原冻结逐订单分项、实际核销席位固定费、成功退款冲回和debt",
+      "ownership": "结算/claim/adjustment/debt和additive SQL源码；旧claim约束保留",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:4",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbd-1835-7769-9896-ba9b9a9a3e97"
+    },
+    "H": {
+      "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+      "host_id": "durable",
+      "task": "审查新B路由、A金额边界及root正式下单封口组合",
+      "ownership": "只读独立审查，未运行单列",
+      "dispatch": "accepted; authoritative active readback",
+      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:5",
+      "last_observed_status": {
+        "type": "active",
+        "activeFlags": []
+      },
+      "last_turn_id": "01a16cbd-2580-7609-b680-7466fc699b8b"
+    }
+  },
+  "automatic_renewal": "existing hengyin-agent heartbeat updated successfully; every10min; respects full original goal/deadline",
+  "all_complete": false
+}

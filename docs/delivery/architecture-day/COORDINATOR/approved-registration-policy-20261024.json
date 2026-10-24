@@ -2,7 +2,8 @@
   "schema": 1,
   "user_decisions": [
     "Generic admin registration creation disabled; formal checkout only",
-    "Refund original frozen order allocation only; no other-order recalculation"
+    "Refund original frozen order allocation only; no other-order recalculation",
+    "Fixed fulfillment fee once per actually verified seat; unverified seats do not accrue fees"
   ],
   "source_scope": [
     "CmsRegistrationController.add rejects all generic writes with403 body and stable errorCode",
@@ -19,8 +20,8 @@
   },
   "registry_changes": "RegistrationFunds96 ordinary cases counted; SignupNotice18 existing source methods counted, source931 provenance retained; new deposit8 registered with exact commit and class-specific hosted scratch admission",
   "not_complete": [
-    "A integer-fen bound P2",
-    "A dynamic Test shape conversion/registry",
+    "A integer-fen boundary source integrated; Java/MySQL not run",
+    "A53 ordinary tests integrated; coordinated hosted CI still required",
     "D8 remainingentry/count/lock gaps",
     "G original-allocation refund integration/commonfence",
     "current batch compiled/runtime/DB/wholebusiness acceptance"
