@@ -25,6 +25,15 @@ FIXED 6 · PARTIAL 2 · ALREADY_FIXED 1 · NEEDS_OWNER 3
 
 - 小程序全量单测本地：13901 pass / 0 fail（P1-067、U-027 之后）；后续各项跑了相关测试文件 + `lint:scope` + `audit:actions`
 - 后端：`mvn -pl chengyinhub-admin test -Dtest=...` 覆盖上表所列测试类
-- CI run：见 PR #593 检查（最终绿灯的 run ID 补在下方）
+- CI run：见下方
 
 ## CI run IDs
+
+全绿 head `938f8acd`（2026-10-24）：
+
+- GitHub CI：40066478989（success）
+- Mini followup focused regression：40066478986（success）
+- Funds MySQL IT：40066479017（success）
+- Isolated authenticated Redis recovery：40066479009（success）
+
+过程中的红灯：40063725286 / 40064176335 的「Mini program static gates」—— UI-GATE-0 的 silentError / 动态 setData 登记按行号锁定（基线文件 C00 保留不可改），本 PR 在 play 页与发帖组件各加一行导致位移；a1e587d6 改为不增行修复，未动基线。
