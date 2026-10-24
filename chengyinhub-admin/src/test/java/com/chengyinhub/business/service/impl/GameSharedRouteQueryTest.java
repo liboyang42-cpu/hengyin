@@ -99,9 +99,10 @@ class GameSharedRouteQueryTest {
         verifyNoMoreInteractions(mapper); verifyNoInteractions(teams, activities);
     }
 
-    @Test void missingPersistedRunDoesNotInventAnOnlineLedger() {
+    @Test void missingPersistedRunRejectsInsteadOfFallingBackToAnIndividualSession() {
         when(mapper.selectStoryState(50L, "RUN", 50L)).thenReturn(null);
-        assertNull(runtime.querySharedRouteState(7L, 80L, 70L));
+        GameSessionException unavailable = assertThrows(GameSessionException.class, () -> runtime.querySharedRouteState(7L, 80L, 70L));
+        assertEquals("GAME_CONFIG_INVALID", unavailable.getErrorCode());
         verify(mapper).selectSessionByActivity(70L); verify(mapper).selectActiveTeamId(70L, 7L);
         verify(mapper).selectStoryState(50L, "RUN", 50L);
         verify(teams).hasPaidRegistration(7L, 2, 70L); verify(activities).selectCmsActivityById(70L);

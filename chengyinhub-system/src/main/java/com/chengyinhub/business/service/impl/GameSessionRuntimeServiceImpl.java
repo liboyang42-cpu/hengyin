@@ -1397,7 +1397,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (!Objects.equals(topicId, session.getTopicId())) throw error("GAME_FORBIDDEN_SCOPE", "活动与主题不匹配");
         CmsActivity activity = requireActivity(activityId, true);
         PlayerScope player = requirePlayer(GameActorContext.player(memberId), activity);
-        if (sharedRunControl().persistedRunControl(session) == null) return null;
+        if (sharedRunControl().persistedRunControl(session) == null) throw error("GAME_CONFIG_INVALID", "本局共享运行控制账不可用");
         TopicRouteEngine.State state = routeOwnerState(requireRouteOwner(session, player.teamId));
         return projectSharedRouteState(session, sessionConfig(session), state);
     }
