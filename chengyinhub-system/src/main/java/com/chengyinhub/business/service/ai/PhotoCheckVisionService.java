@@ -149,6 +149,23 @@ public class PhotoCheckVisionService
         try
         {
             answer = visionClient.chatVision(SYSTEM_PROMPT, encoded.getDataUrl(), buildUserPrompt(requirement));
+        }
+        catch (AiProviderNotSentException notSent)
+        {
+            // This proof belongs only to this chatVision attempt, not to any older UNKNOWN.
+            refundQuota(memberId, reservation);
+            alarm("拍照视觉审核请求未发送", "memberId=" + memberId);
+            return unavailable("照片暂时无法审核", "NOT_SENT", "PROVIDER_NOT_SENT");
+        }
+        catch (RuntimeException unknown)
+        {
+            // 供应商可能已计费；保留原预占，首个本地降级结果仍由原意图持久化。
+            alarm("拍照视觉审核结果待确认", "memberId=" + memberId);
+            return unavailable("照片审核结果待确认", "UNKNOWN", "PROVIDER_RESULT_UNKNOWN");
+        }
+        try
+        {
+            // A failure here follows an actual answer and cannot prove the attempt was unsent.
             aiGatewayService.retainQuota(memberId, BIZ_TYPE, reservation, "PHOTO_RESULT");
         }
         catch (RuntimeException unknown)

@@ -209,6 +209,14 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 throw new IllegalStateException("AI 模型返回为空");
             }
         }
+        catch (com.chengyinhub.business.service.ai.AiProviderNotSentException notSent)
+        {
+            // Only the dedicated transport proof can compensate after MODEL_STARTED.
+            // The player's separate draft reservation remains owned by Creator.
+            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务暂时不可用，请稍后重试", notSent);
+        }
         catch (RuntimeException e)
         {
             log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
