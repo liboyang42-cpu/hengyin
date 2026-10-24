@@ -1,0 +1,46 @@
+{
+  "status": "STATIC_ONLY",
+  "base": "0cb8115ee34e4647a76c76bda608fae62bbd51e1",
+  "source_counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationCheckoutTransactionBoundaryTest.java": {
+      "declared_tests": 8,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentClaimFenceTest.java": {
+      "declared_tests": 3,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "original_tests_and_readleaf_unchanged": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ZeroAmountCheckoutRosterV2Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/compliance/MinorCheckoutGateTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RegistrationPaymentConsumptionReadService.java",
+    "ci/real_storage_it.py",
+    "ci/real-storage-it-registry.json"
+  ],
+  "claim_after_current_scope_and_success_guard": true,
+  "validation_body_preserved": true,
+  "old_claim_CAS_tail_and_expired_release_preserved": true,
+  "B_G_D_RBAC_CI_schema_changes": false,
+  "production_patch_context": "PASS base0cb public temp copy",
+  "Java_MySQL_CI_DDL_SDK": "NOT_RUN",
+  "remaining_blocker": "outer TeamGroup/ClubEventOps cancellation stage still needs original authorization/receipt-aware split; no claim of full cancellation closure",
+  "sha256": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "0a463bac4f0739dd3120bc20c98ec8393dde014953c6ef961d6863dd68704703",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java": "18fe2611bda4cf91a6d37f60ce126c9c80e2791e1b0f4060b4dfe0aee9f11bbe",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java": "2a078c274654172d778a454f69a5dfe56848ab97bccdaa0fbbdc2ac86296fffe",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationCheckoutTransactionBoundaryTest.java": "6dc23ac9dd5aef8a1f8f033e229e0975c8801d06a87082b341a42c9301c6d4d7",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentClaimFenceTest.java": "657083a9983354270ca3c0e0d1a37e2325082b45b657859f57a30168e3687df3",
+    "README.md": "1dbdbf2925c19e9b08e4592a7a43fb6b1b905b53aae1cef292c33fcba8eda420"
+  }
+}

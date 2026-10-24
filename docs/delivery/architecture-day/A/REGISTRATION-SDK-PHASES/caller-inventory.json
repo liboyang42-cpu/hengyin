@@ -1,0 +1,113 @@
+{
+  "base": "0cb8115ee34e4647a76c76bda608fae62bbd51e1",
+  "rows": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "method": "create / pay / payApp",
+      "transaction": "none declared",
+      "calls": "IRegistrationCheckoutService.createOrReplay / retryPayment",
+      "owner": "A application; controller unchanged"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "method": "createOrReplay",
+      "transaction": "NEVER + direct active-Tx precheck",
+      "calls": "registrationOrderService.createOrReplay (own committed creation Tx) -> finishOrder -> beginPaymentAttempt (own committed claim Tx) -> createWechatOrder (SDK outside)",
+      "writer": "existing order + claim only; amounts/fingerprint unchanged"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "method": "retryPayment(Long,Long) -> retryPayment(Long,Long,boolean)",
+      "transaction": "NEVER + checks at both direct/self entries",
+      "calls": "minor gate -> beginPaymentAttempt commit -> createWechatOrder outside",
+      "writer": "existing claim only"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java",
+      "method": "createOrReplay",
+      "transaction": "none; calls creation transaction leaf",
+      "calls": "CmsRegistrationServiceImpl.create / replay reader",
+      "SDK": "none",
+      "changed": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "method": "preparePaymentRetry",
+      "transaction": "none; pure validation facade",
+      "calls": "requirePayableRegistration(existing row read)",
+      "SDK": "none",
+      "note": "validation body unchanged; current row supplied by beginPaymentAttempt under original locks"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "method": "beginPaymentAttempt",
+      "transaction": "REQUIRED; original expired noRollbackFor preserved",
+      "calls": "scope precheck -> RegistrationTopicFence.current locks -> latest B success denial -> original validation -> claimPaymentProcessing -> commit",
+      "SDK": "none"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "method": "createWechatOrder",
+      "transaction": "private; guard before SDK catch",
+      "calls": "B createOrder / createAppOrder -> freeze original intent short Tx -> SDK outside",
+      "note": "original typed pre-order/UNKNOWN classification preserved; no release or changed alias"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "method": "handleWechatPayCallback",
+      "transaction": "existing rejection if active caller; B verified Ref already committed",
+      "calls": "verified inbox claim -> original atomic mutation/DONE",
+      "SDK": "none",
+      "changed": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "method": "applyConfirmedWechatPaymentWithinTransaction",
+      "transaction": "MANDATORY",
+      "calls": "requireVerified read -> original topic/registration/CAS + consumption receipt",
+      "SDK": "none; not a recordVerified writer",
+      "changed": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "method": "settleClosedPayingOne / settlePayingOne / closeExpiredOne / releasePaymentAttempt",
+      "transaction": "existing REQUIRED; topic/parent/order locks",
+      "calls": "B denial-only reads/attempt lock + original resource CAS",
+      "SDK": "none",
+      "changed": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java",
+      "method": "reconcileExpiredPaying",
+      "transaction": "none; new active-Tx precheck before readiness/scan",
+      "calls": "query/record fact commit outside -> SUCCESS handler own Tx OR close SDK outside -> settleClosedPayingOne own Tx"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "method": "cancelActivityByOwner / cancelActivityByClubOperator / cancelActivityByMerchantHost / cancelTopicByHost -> cancelActivity/cancelPaidSales -> settlePayingRegistrationsBeforeCancel",
+      "transaction": "existing REQUIRED + topic/activity locks BEFORE queryOrderStatus/closePaymentAttempt",
+      "status": "OPEN: must split outer cancellation SDK stage, not edit by suspension",
+      "changed": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
+      "method": "cancelOccurrence / cancelActivityByOwnerWithClubWrapUp / cancelActivityForAuthorizedTopicCancellation",
+      "transaction": "existing REQUIRED; topic/series/occurrence/club locks and role/campaign receipt work before TeamGroup",
+      "status": "OPEN: outermost cancellation boundary must participate; inner TeamGroup annotation change alone cannot fix",
+      "changed": false
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "method": "original deposit cancellation -> queryOrderStatus / closePaymentAttempt",
+      "owner": "G/shared root",
+      "status": "owner patch only; no change in A source"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java",
+      "method": "query/close/SDK verified notification -> recordVerified",
+      "owner": "B",
+      "dependency": "B independent writer rejects active outer Tx before SDK; same original business-row mutex; preserve exact original Ref; never reacquire parent-held row through REQUIRES_NEW"
+    }
+  ],
+  "dynamic_invocation": "Quartz invoke_target/reflection/actual container wiring NOT_EXECUTED; task rejects accidental active outer Tx before effects"
+}

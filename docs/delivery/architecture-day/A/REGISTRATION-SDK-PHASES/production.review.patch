@@ -1,0 +1,94 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+index bb2b81cc..4dcc0a05 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -1507,5 +1507,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
+     @Override
+     public CmsRegistration preparePaymentRetry(Long registrationId, Long memberId) {
+-        CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
++        return requirePayableRegistration(cmsRegistrationMapper.selectCmsRegistrationById(registrationId), memberId);
++    }
++
++    private CmsRegistration requirePayableRegistration(CmsRegistration registration, Long memberId) {
+         if (registration == null || registration.getMemberId() == null
+                 || !registration.getMemberId().equals(memberId)) {
+@@ -1623,7 +1626,18 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
+     @Transactional(rollbackFor = Exception.class, noRollbackFor = RegistrationOrderExpiredException.class)
+     public CmsRegistration beginPaymentAttempt(Long registrationId, Long memberId) {
++        CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
++        if (observed == null || observed.getMemberId() == null || !observed.getMemberId().equals(memberId)) {
++            throw new RuntimeException("报名不存在或无权操作");
++        }
++        RegistrationTopicFence.LockedOrder locked = RegistrationTopicFence.lock(observed,
++                cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
++        for (CmsRegistration original : locked.rows()) {
++            if (verifiedPaymentFacts.hasConfirmedExternalSuccess(original.getRegistrationNo())) {
++                throw new IllegalStateException("原支付成功事实已保存，请恢复原业务结果，不能重新发起支付");
++            }
++        }
+         CmsRegistration registration;
+         try {
+-            registration = preparePaymentRetry(registrationId, memberId);
++            registration = requirePayableRegistration(locked.registration(), memberId);
+         } catch (RegistrationOrderExpiredException expired) {
+             // [CR-527] 过期即拒 + 即时关单:拒绝之后这单永远不会再被支付,只拒不管会让库存/积分/权益
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java
+index 8043f97d..79094d94 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java
+@@ -60,6 +60,7 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
+
+     @Override
+-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
++    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+     public RegistrationCheckoutResult createOrReplay(Long memberId, RegistrationRequest request) {
++        requireNoActiveTransaction();
+         if (request == null) {
+             throw new RegistrationCheckoutException(400, "报名参数不能为空");
+@@ -76,12 +77,14 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
+
+     @Override
+-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
++    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId) {
++        requireNoActiveTransaction();
+         return retryPayment(memberId, registrationId, false);
+     }
+
+     @Override
+-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
++    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId, boolean appChannel) {
++        requireNoActiveTransaction();
+         if (!wechatPayService.isReady()) {
+             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
+@@ -146,4 +149,5 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
+      */
+     private Map<String, String> createWechatOrder(CmsRegistration registration, boolean appChannel) {
++        requireNoActiveTransaction();
+         try {
+             return appChannel
+@@ -159,4 +163,11 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
+     }
+
++    /** Never suspend a transaction whose original business locks would remain held across the SDK. */
++    private static void requireNoActiveTransaction() {
++        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
++            throw new RegistrationCheckoutException(409, "报名支付必须在原业务事务提交后发起");
++        }
++    }
++
+     private Map<String, Object> mapOrder(CmsRegistration primary, List<CmsRegistration> registrations) {
+         Map<String, Object> data = new LinkedHashMap<>();
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java
+index 263b6cfa..2fdd8a77 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java
+@@ -105,4 +105,7 @@ public class OrderCloseTask {
+      */
+     public void reconcileExpiredPaying() {
++        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
++            throw new IllegalStateException("支付对账必须在原业务事务外执行");
++        }
+         if (wechatPayService == null || !wechatPayService.isReady()) {
+             log.warn("微信支付能力未就绪,跳过支付中过期订单对账");
