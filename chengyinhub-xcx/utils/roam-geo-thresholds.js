@@ -13,6 +13,7 @@ const ROAM_GPS_TOLERANCE_M = 30       // ApiRoamController.ROAM_GPS_TOLERANCE_M:
 const POI_DISCOVER_RADIUS_M = 120     // ApiRoamController.POI_DISCOVER_RADIUS_M:POI 未配 radius_m 时的发现半径
 const CHECKIN_NEAR_M = SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M // 打卡按钮可用半径 = 后端拒收分界点
 const ROAM_MAX_ACCURACY_M = 80        // roam-track-filter:定位 accuracy 超过它的点直接丢弃
+const ROAM_MAX_SPEED_MPS = 35         // ApiRoamController.MAX_MOVE_SPEED_MPS:两点间速度超过它视为瞬移(本端过滤与后端反作弊同一口径)
 const PLAY_GEOFENCE_M = 50            // ApiPlayProgressController.GEOFENCE_METERS(备查,漫游不用)
 
 module.exports = {
@@ -21,5 +22,6 @@ module.exports = {
   POI_DISCOVER_RADIUS_M,
   CHECKIN_NEAR_M,
   ROAM_MAX_ACCURACY_M,
+  ROAM_MAX_SPEED_MPS,
   PLAY_GEOFENCE_M,
 }

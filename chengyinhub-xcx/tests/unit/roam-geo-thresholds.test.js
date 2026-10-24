@@ -29,6 +29,17 @@ test('U-110: 玩法地理围栏备查值与 ApiPlayProgressController 一致', (
   assert.equal(T.PLAY_GEOFENCE_M, javaConst(read('ApiPlayProgressController.java'), 'GEOFENCE_METERS'))
 })
 
+test('U-110: 本端轨迹过滤的瞬移速度与后端反作弊同一口径,且过滤器引用共享表而非字面量', () => {
+  assert.equal(T.ROAM_MAX_SPEED_MPS, javaConst(read('ApiRoamController.java'), 'MAX_MOVE_SPEED_MPS'))
+  const filter = fs.readFileSync(path.resolve(__dirname, '../../utils/roam-track-filter.js'), 'utf8')
+  assert.match(filter, /loc\.accuracy > ROAM_MAX_ACCURACY_M/)
+  assert.match(filter, /> ROAM_MAX_SPEED_MPS\) return null/)
+  const { acceptRoamLocation } = require('../../utils/roam-track-filter.js')
+  const base = { latitude: 31.23, longitude: 121.47, type: 'gcj02' }
+  assert.ok(acceptRoamLocation({ ...base, accuracy: T.ROAM_MAX_ACCURACY_M }, null, 1000), '等于门槛放行')
+  assert.equal(acceptRoamLocation({ ...base, accuracy: T.ROAM_MAX_ACCURACY_M + 1 }, null, 1000), null, '超过门槛丢弃')
+})
+
 test('U-120: 漫游页打卡半径取自共享表,不再手抄 130', () => {
   const page = fs.readFileSync(path.resolve(__dirname, '../../pages/roam/index.js'), 'utf8')
   assert.match(page, /const \{ CHECKIN_NEAR_M \} = require\('\.\.\/\.\.\/utils\/roam-geo-thresholds\.js'\);/)
