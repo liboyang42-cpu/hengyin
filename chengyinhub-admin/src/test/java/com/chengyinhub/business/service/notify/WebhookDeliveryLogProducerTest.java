@@ -91,4 +91,31 @@ class WebhookDeliveryLogProducerTest {
         assertEquals(first.deliveryId, producer.recoverOriginal("evt-dlv-never-c09", null).deliveryId);
         assertEquals(1, store.size());
     }
+
+    @Test
+    void unusedRequireOriginalOfNeverSeenDoesNotOccupyThenUniqueDeliverApplies() {
+        InMemoryNotifyFixtures.RecordingTransport transport =
+                new InMemoryNotifyFixtures.RecordingTransport(204, "ok");
+        InMemoryNotifyFixtures.MemoryDeliveryStore store = new InMemoryNotifyFixtures.MemoryDeliveryStore();
+        WebhookDeliveryLogProducer producer = new WebhookDeliveryLogProducer(
+                transport, new WebhookSsrfHopGuard(), store,
+                new InMemoryNotifyFixtures.FixedNonceSource("nonce-req"));
+        assertThrows(IllegalStateException.class, () -> producer.requireOriginal("evt-req-never-c09"));
+        assertEquals(0, store.size(), "未见投递 requireOriginal 观察不得占账");
+        assertNull(store.findByEventId("evt-req-never-c09"));
+        WebhookDeliveryLogProducer.DeliveryLog unused = producer.recoverOriginal(
+                "evt-req-never-c09", ImmutableReceiptProducer.PROJECTION_APPLIED);
+        assertEquals("evt-req-never-c09", unused.eventId);
+        assertEquals(WebhookDeliveryLogProducer.STATUS_UNKNOWN, unused.status);
+        WebhookDeliveryLogProducer.DeliveryLog first = producer.deliver(
+                InMemoryNotifyFixtures.fixtureConfig(true, false),
+                new WebhookDeliveryLogProducer.OriginalEvent("evt-req-never-c09", "PIN", "original-body"),
+                Collections.singletonList(InMemoryNotifyFixtures.publicHop()));
+        assertEquals("evt-req-never-c09", first.eventId);
+        assertEquals("dlv-evt-req-never-c09", first.deliveryId);
+        assertEquals(WebhookDeliveryLogProducer.STATUS_DELIVERED, first.status);
+        assertEquals(1, store.size());
+        assertEquals(first.deliveryId, producer.recoverOriginal("evt-req-never-c09", null).deliveryId);
+        assertEquals(1, store.size());
+    }
 }
