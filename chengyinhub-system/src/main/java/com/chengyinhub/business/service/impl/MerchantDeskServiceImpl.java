@@ -56,6 +56,10 @@ public class MerchantDeskServiceImpl implements IMerchantDeskService {
     static final int MAX_ANCHOR_OFFSET_M = 1000;
 
     private static final Pattern REQUEST_ID = Pattern.compile("[A-Za-z0-9_-]{8,64}");
+
+    private static boolean mismatchedRequest(Object echoed, String requested) {
+        return echoed != null && !requested.equals(String.valueOf(echoed));
+    }
     private static final Pattern HOURS = Pattern.compile(
             "周(一至周日|[一二三四五六日](?:、[一二三四五六日])*) ([01][0-9]|2[0-3]):([0-5][0-9])-(次日)?([01][0-9]|2[0-3]):([0-5][0-9])");
     private static final String WEEK = "一二三四五六日";
@@ -71,8 +75,9 @@ public class MerchantDeskServiceImpl implements IMerchantDeskService {
         Map<String, Object> row = mapper.selectReceipt(access.getOwnerMemberId(), key);
         Map<String, Object> view = new LinkedHashMap<>();
         view.put("requestId", key);
-        if (row == null) {
-            // 查不到 = 没落地(写与回执同事务),用同一个 requestId 重试是安全的
+        if (row == null || mismatchedRequest(row.get("requestId"), key)) {
+            // 查不到 = 没落地(写与回执同事务),用同一个 requestId 重试是安全的。
+            // 回读行里的请求号若是另一个，也不把这张回执交回去。
             view.put("state", "NOT_FOUND");
             return view;
         }

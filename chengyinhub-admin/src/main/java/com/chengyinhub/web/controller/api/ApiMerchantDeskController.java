@@ -4,6 +4,7 @@ import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.service.IMerchantDeskService;
+import com.chengyinhub.business.service.fulfillment.MerchantSupplyDryRun;
 import com.chengyinhub.business.service.MerchantDeskException;
 import com.chengyinhub.business.service.support.MerchantDeskCodePolicy;
 import com.chengyinhub.business.service.support.MerchantDeskSwitch;
@@ -43,7 +44,19 @@ public class ApiMerchantDeskController extends BaseController {
     @Operation(summary = "按请求号读回写操作回执(超时/UNKNOWN 时用)")
     @PostMapping("/receipt")
     public AjaxResult receipt(@RequestBody(required = false) Map<String, Object> body) {
-        return run(MerchantPermission.BASIC_READ, access -> merchantDeskService.receipt(access, text(body, "requestId")));
+        return run(MerchantPermission.BASIC_READ, access -> {
+            String requestId = text(body, "requestId");
+            Map<String, Object> raw = merchantDeskService.receipt(access, requestId);
+            Map<String, Object> original = new MerchantSupplyDryRun().recoverFromDeskReceipt(
+                    access, requestId, (ctx, id) -> raw);
+            if (original != null) {
+                return original;
+            }
+            if (raw != null && "NOT_FOUND".equals(raw.get("state"))) {
+                return raw;
+            }
+            return null;
+        });
     }
 
     @Operation(summary = "我的门店(含营业时间解析、锚点是否配置、各项编辑入口)")
