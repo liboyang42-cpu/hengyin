@@ -25,6 +25,20 @@ function item(i, state = 'PREPARED', extra = {}) {
     requestId: i === 100 ? RID : 'td2_' + String(i).padStart(32, '0'), state, reasonCode: null, productType: 2,
     createdAt: new Date().toISOString(), executeBefore: future(), resultExpiresAt: state === 'SUCCEEDED' ? future() : null }, extra);
 }
+// Execute the real component; fixtures only model mounting/event delivery.
+function makeOptionSheet(properties = {}, onEvent = () => {}) {
+  const file = path.resolve(__dirname, '../../components/cy/option-sheet/index.js');
+  let definition; global.Component = value => { definition = value; };
+  const mod = new Module(file, module); mod.filename = file; mod.paths = module.paths;
+  mod._compile(fs.readFileSync(file, 'utf8'), file);
+  const defaults = Object.fromEntries(Object.entries(definition.properties).map(([key, prop]) => [key, prop.value]));
+  const sheet = Object.assign({}, definition.methods, { data: Object.assign({}, defaults, JSON.parse(JSON.stringify(definition.data)), properties) });
+  sheet.setData = patch => Object.assign(sheet.data, patch);
+  sheet.triggerEvent = (name, detail) => onEvent(name, detail === undefined ? undefined : JSON.parse(JSON.stringify(detail)));
+  sheet.detach = () => { if (definition.lifetimes && definition.lifetimes.detached) definition.lifetimes.detached.call(sheet); };
+  definition.observers.items.call(sheet, sheet.data.items); definition.observers.show.call(sheet, sheet.data.show);
+  return sheet;
+}
 function harness(options = {}) {
   const values = Object.assign({}, options.values), sent = [], pois = [], navigations = [], delayed = [], modals = [], writes = [];
   const flags = { read: false, write: false, noop: false, failRid: false, failExecute: false, afterWriteRead: false, archive: false, archiveRead: false, keys: false, active: false };
@@ -58,15 +72,21 @@ function harness(options = {}) {
     const mod = new Module(PAGE, module); mod.filename = PAGE; mod.paths = module.paths;
     mod._compile(options.pageSource || fs.readFileSync(PAGE, 'utf8'), PAGE);
     const p = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) });
+    let optionSheet = null;
+    p._sheetEvents = [];
     p.setData = (patch, cb) => {
       for (const key of Object.keys(patch)) {
         const parts = key.replace(/\[(\d+)\]/g, '.$1').split('.'); let target = p.data;
         for (const part of parts.slice(0, -1)) target = target[part];
         target[parts[parts.length - 1]] = patch[key];
       }
+      if (p.data.aiHistoryShow && !optionSheet) {
+        optionSheet = makeOptionSheet({ show: true, items: p.data.aiHistoryItems }, (name, detail) => p._sheetEvents.push({ name, detail }));
+      } else if (!p.data.aiHistoryShow && optionSheet) { optionSheet.detach(); optionSheet = null; }
       if (cb) options.deferSetData ? delayed.push(cb) : cb();
     };
-    p.selectComponent = id => id === '#cy-modal-host' ? { open: opts => modals.push(opts) } : null;
+    p.selectComponent = id => id === '#cy-modal-host' ? { open: opts => modals.push(opts) }
+      : id === '#ai-history-sheet' && !options.missingOptionSheet ? optionSheet : null;
     global.getCurrentPages = () => [p];
     if (load) p.onLoad(Object.assign({ mode: '2' }, options.entry)); return p;
   }
@@ -78,10 +98,15 @@ function harness(options = {}) {
   const begin = () => { page.generateAiPlan(); return take('/prepare'); };
   const prepare = () => { const req = begin(); finish(req, { code: 200, data: view('PREPARED', { replayed: false, productType: page.data.mode }) }); return take('/execute'); };
   const switchOwner = (id, token) => store.applySnapshot({ user_id: id, authorization: token, role: 'player' });
-  const selection = index => ({ detail: { index }, currentTarget: { dataset: { hop: page.data.aiSheetHop, epoch: page.data.aiSheetEpoch } } });
+  const selection = (index, target = page) => {
+    const sheet = target.selectComponent('#ai-history-sheet'); assert.ok(sheet, 'real option sheet mounted');
+    sheet.onRow({ currentTarget: { dataset: { index } } }); sheet.onConfirm();
+    const event = target._sheetEvents.shift(); assert.equal(event.name, 'select');
+    return { detail: event.detail, currentTarget: { dataset: {} } };
+  };
   return { page, app, wx, store, sent, values, flags, pois, navigations, delayed, modals, writes, createPage, take, finish, ready, begin, prepare, switchOwner, selection };
 }
-module.exports = { harness, journal, view, record, item, RID, OTHER, PK, DRAFT, future };
+module.exports = { makeOptionSheet, harness, journal, view, record, item, RID, OTHER, PK, DRAFT, future };
 
 if (require.main === module) {
   test('H1/H2 journal write throw or no-op causes zero prepare/execute HTTP writes', () => {
@@ -427,7 +452,7 @@ if (require.main === module) {
     const next = h.take('/prepare'); next.fail({}); next.complete();
     assert.deepEqual(journal.history(h.wx, '7').values, [original]);
     const cold = h.createPage(); h.finish(h.take('/request'), { code: 500 }); cold.openLocalAiHistory();
-    cold.onAiHistorySelect({ detail: { index: 0 }, currentTarget: { dataset: { hop: cold.data.aiSheetHop, epoch: cold.data.aiSheetEpoch } } });
+    cold.onAiHistorySelect(h.selection(0, cold));
     assert.deepEqual(h.take('/request').data, { prepareKey: original.prepareKey });
     assert.equal(h.sent.filter(r => /prepare|execute/.test(r.url)).length, 0);
   });

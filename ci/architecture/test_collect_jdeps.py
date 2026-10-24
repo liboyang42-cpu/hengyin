@@ -317,6 +317,7 @@ class PrivatePortsReadbackTest(unittest.TestCase):
     def setUp(self):
         CollectorTest.setUp(self)
         self.ports = producer.shared.business_policy()["private_ports"]
+        self.dependencies = producer.shared.technical_dependency_policy()
         self.foreign = "example.system.ForeignConsumer"
         self.nested = next(iter(self.ports.values()))["consumer"] + "$Nested"
         self.theme_target = "com.chengyinhub.business.mapper.AiThemeDraftIntentMapper"
@@ -325,11 +326,13 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.system_jar = self.root / "chengyinhub-system/target/chengyinhub-system-1.jar"
         with zipfile.ZipFile(self.system_jar) as z:
             self.system_entries = {name: z.read(name) for name in z.namelist()}
-        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested, self.theme_foreign, self.theme_consumer + "$Nested"]:
+        dependency_types = {n for o in self.dependencies["owners"].values() for n in o["members"] + o["forbidden_backrefs"]}
+        for name in [*self.ports, *(b["consumer"] for b in self.ports.values()), self.foreign, self.nested, self.theme_foreign, self.theme_consumer + "$Nested", *sorted(dependency_types)]:
             self.system_entries[name.replace(".", "/") + ".class"] = ("NOT_COMPILED_FIXTURE_" + name).encode()
         self.write_system()
         for target, binding in self.ports.items():
             self.stdout += "   " + binding["consumer"] + " -> " + target + " chengyinhub-system.jar\n"
+        self.stdout += "".join("   " + n + " -> java.lang.Object java.base\n" for n in sorted(dependency_types))
         report = self.collect()
         self.assertTrue(report["static_graph_complete"], report)
 
@@ -640,6 +643,115 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                 self.assertEqual(expected, producer.shared.main())
             report = json.loads(output.read_text())
             self.assertEqual(["PASS_SCOPED_COMPILED_REFERENCES", "BLOCKED", "UNKNOWN"][expected], report["verdict"])
+
+
+
+    def check_directions(self, policy=None):
+        return producer.check_private_ports(self.root, self.boot, self.identity, self.output, self.env,
+                                            self.ports, self.dependencies if policy is None else policy)
+
+    def reference(self, source, target):
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", (text + "   " + source + " -> " + target + " chengyinhub-system.jar\n").encode())
+
+    def owner_member(self, id_):
+        members = self.dependencies["owners"][id_]["members"]
+        return next((m for m in members if ".impl." in m), members[0])
+
+    def test_declared_owner_directions_use_verified_same_module_refs_without_a_second_jdeps(self):
+        for a, b in self.dependencies["allowed_directions"]:
+            self.reference(self.owner_member(a), self.owner_member(b))
+        calls = len(self.calls)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual("PASS_DECLARED_OWNER_DIRECTIONS", report["technical_dependencies"]["verdict"])
+        self.assertEqual(len(self.dependencies["allowed_directions"]), len(report["technical_dependencies"]["owner_edges"]))
+        self.assertEqual(calls, len(self.calls))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertEqual(3, len(report["references"]))
+
+    def test_god_backreference_is_blocked_despite_forged_safe_owner_JSON(self):
+        source = self.owner_member("D_CONTENT_GRAPH")
+        target = "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        self.reference(source, target)
+        self.change_report("technical_dependencies", {"verdict": "PASS", "owner_edges": []})
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+        self.assertEqual(source, bad["source_class"])
+        self.assertEqual(target, bad["target_class"])
+        self.assertEqual("chengyinhub-system", bad["source_owner"])
+        self.assertEqual("chengyinhub-system", bad["target_owner"])
+        actual = self.system_entries[source.replace(".", "/") + ".class"]
+        self.assertEqual(producer.shared.digest(actual), bad["source_sha256"])
+
+    def test_new_reverse_direction_and_cycle_block_with_concrete_class_witnesses(self):
+        graph, rules = self.owner_member("D_CONTENT_GRAPH"), self.owner_member("D_CONTENT_RULES")
+        self.reference(graph, rules)
+        self.reference(rules, graph)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", {f["rule"] for f in report["findings"]})
+        cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
+        self.assertEqual(["D_CONTENT_GRAPH", "D_CONTENT_RULES"], cycle["owners"])
+        self.assertEqual(2, len(cycle["witnesses"]))
+        self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
+
+    def test_missing_owner_class_or_module_binding_remains_unknown(self):
+        policy = copy.deepcopy(self.dependencies)
+        policy["owners"]["D_CONTENT_GRAPH"]["module"] = "chengyinhub-admin"
+        self.assert_unknown(self.check_directions(policy))
+        target = self.owner_member("D_CONTENT_RULES")
+        del self.system_entries[target.replace(".", "/") + ".class"]
+        self.write_system()
+        self.output = self.output.with_name("owner-class-missing")
+        self.collect()
+        self.assert_unknown(self.check_directions())
+
+    def test_binary_companion_is_restricted_but_private_mapper_consumer_is_still_exact(self):
+        source = self.owner_member("D_CONTENT_GRAPH") + "$Nested"
+        self.system_entries[source.replace(".", "/") + ".class"] = b"NOT_COMPILED_NESTED_FIXTURE"
+        self.write_system()
+        self.output = self.output.with_name("owner-companion")
+        self.collect()
+        self.reference(source, "com.chengyinhub.business.service.impl.CmsTopicServiceImpl")
+        self.add_reference(self.nested)
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
+        self.assertIn("PRIVATE_MAPPER_CONSUMER", {f["rule"] for f in report["findings"]})
+
+    def test_incomplete_raw_is_unknown_even_when_no_forbidden_owner_edge_was_seen(self):
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", (text + "UNRECOGNIZED FIXTURE ROW\n").encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertEqual("UNKNOWN", report["technical_dependencies"]["verdict"])
+        self.assertFalse(report["technical_dependencies"]["scope_complete"])
+
+    def test_existing_unregistered_class_cycle_is_not_claimed_governed_or_a_new_policy_baseline(self):
+        a, b = "fixture.legacy.OldA", "fixture.legacy.OldB"
+        for name in (a, b):
+            self.system_entries[name.replace(".", "/") + ".class"] = b"NOT_COMPILED_LEGACY_FIXTURE"
+        self.write_system()
+        self.output = self.output.with_name("legacy-outside-owner-cut")
+        self.collect()
+        self.reference(a, b)
+        self.reference(b, a)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+        self.assertNotIn("baseline", report["technical_dependencies"])
+        self.assertIn("full graph or global SCC acceptance", report["technical_dependencies"]["not_proven"])
+
+    def test_definite_owner_violation_stays_blocked_when_other_raw_input_is_unknown(self):
+        self.reference(self.owner_member("D_CONTENT_GRAPH"), "com.chengyinhub.business.service.impl.CmsTopicServiceImpl")
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", (text + "UNRECOGNIZED FIXTURE ROW\n").encode())
+        report = self.check_directions()
+        self.assertEqual("BLOCKED", report["verdict"], report)
+        self.assertFalse(report["coverage_complete"])
+        self.assertTrue(report["review_items"])
 
 
 

@@ -150,13 +150,9 @@ class PlayLeadAdmissionFailureMySqlIT {
     }
 
     private ApiPlayProgressController controller(long actor, IUmsMemberService memberService, IUmsMemberPointsDetailService details) {
-        return controller(actor, memberService, details, true);
-    }
-    private ApiPlayProgressController controller(long actor, IUmsMemberService memberService,
-                                                IUmsMemberPointsDetailService details, boolean expectOuterTransaction) {
         ApiPlayProgressController target = new ApiPlayProgressController() {
             @Override public Long getAppUserId() {
-                assertEquals(expectOuterTransaction, TransactionSynchronizationManager.isActualTransactionActive());
+                assertFalse(TransactionSynchronizationManager.isActualTransactionActive(), "identity extraction is outside the application transaction");
                 assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
                 return actor;
             }
@@ -193,13 +189,14 @@ class PlayLeadAdmissionFailureMySqlIT {
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "playCommandReceiptMapper", observedReceipts);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "playCommandRouteMapper", mock(TopicRouteSessionMapper.class));
         com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.wire(target,settings,memberService,details,transactions);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.installTransactions(target, transactions);
         ProxyFactory proxy = new ProxyFactory(target); proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         return (ApiPlayProgressController) proxy.getProxy();
     }
     private ApiPlayProgressController controller(long actor) { return controller(actor, members, ledger); }
     private ApiPlayProgressController hintController(long actor) {
-        ApiPlayProgressController controller=controller(actor,members,ledger,false);
+        ApiPlayProgressController controller=controller(actor,members,ledger);
         ICmsTopicNodeService nodes=(ICmsTopicNodeService)com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller,"cmsTopicNodeService");
         CmsTopicNode node=nodes.selectCmsTopicNodeById(NODE);
         doAnswer(call -> {
@@ -221,7 +218,7 @@ class PlayLeadAdmissionFailureMySqlIT {
     private void assertPreferenceAdmissionBeforeRoute(boolean branch) throws Exception {
         jdbc.update("UPDATE cms_activity SET status=1 WHERE id=500");
         jdbc.update("UPDATE cms_topic SET product_type=1 WHERE id=300");
-        ApiPlayProgressController controller = controller(MEMBER, members, ledger, false);
+        ApiPlayProgressController controller = controller(MEMBER, members, ledger);
         ICmsTopicNodeService nodeService = (ICmsTopicNodeService) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "cmsTopicNodeService");
         CmsTopicNode first = nodeService.selectCmsTopicNodeById(NODE);
         CmsTopicNode last = new CmsTopicNode(); last.setId(402L); last.setTopicId(TOPIC); last.setSortId(2L); last.setStatus(1L);

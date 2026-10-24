@@ -1,0 +1,242 @@
+{
+  "root_base": "986b88d9640bf45900bd807675bed1d6a06c5938",
+  "source_candidates": [
+    "1e74766d3832953af2b8bc621e984f2e43601dc6",
+    "ca9d608e5c7a193d402ca51d52a1f6a456ef0f91",
+    "5fa8b6b35401282814616b3767da54c0b884b93f",
+    "355fb5a9773fce34db8764649a977ffb93164de2",
+    "82dab219f3f5d5e13de68d6230b4ea8c4e6ade5d",
+    "1b743737f374e6b4c251e2819062c510b11488f5",
+    "788fac20b1bacf4ec529940258fa042afe5a08d2"
+  ],
+  "files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionConfiguration.java",
+      "source": "1e74766d3832953af2b8bc621e984f2e43601dc6",
+      "sha256": "80fd416b52a571059cf4ef9826bf0f0082a1b6e7fb28360b669b480634f659c1",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "source": "1e74766d3832953af2b8bc621e984f2e43601dc6",
+      "sha256": "8b2f153cb6cf550371a4b777400c8c0c5cb1274166e1466bfc921a691563cd1c",
+      "verification": "composed"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/RUNTIME-CONFIG/README.md",
+      "source": "1e74766d3832953af2b8bc621e984f2e43601dc6",
+      "sha256": "29e367f1a414328e99103a6c587e2ff69203a577c2b464be9df11bced9ba1a94",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/RUNTIME-CONFIG/static-result.json",
+      "source": "1e74766d3832953af2b8bc621e984f2e43601dc6",
+      "sha256": "cd2526ab76fba973829ae4066dc1d606c3a6613276422fffb7f7b00de146a233",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/RUNTIME-CONFIG/verify_static.py",
+      "source": "1e74766d3832953af2b8bc621e984f2e43601dc6",
+      "sha256": "1d892160ec48555eab874245ddb6f8ff4ebf8b78ce682c685d73eaac4086ed29",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedActionJudgementTest.java",
+      "source": "ca9d608e5c7a193d402ca51d52a1f6a456ef0f91",
+      "sha256": "3ebec48d20164e6f7780b662a8a7cd414e6f31759d838f3a3aa9837c01b1eea4",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedActionJudgement.java",
+      "source": "ca9d608e5c7a193d402ca51d52a1f6a456ef0f91",
+      "sha256": "bee6366696b96dff53a6f38f24dc6f7abaf4082acc820610deaa977d26bb1471",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "source": "ca9d608e5c7a193d402ca51d52a1f6a456ef0f91",
+      "sha256": "366aa1b4c74a631b682ce58237fedf12f57c9067354433dc5fe4324ee8867c2a",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/advanced-judgement/README.md",
+      "source": "ca9d608e5c7a193d402ca51d52a1f6a456ef0f91",
+      "sha256": "9ba7b2d1170aafe153ec299831981c7dc507e8ac75e769dcaddd0666fb1f50f3",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "docs/delivery/architecture-day/G/advanced-judgement/source-checks.json",
+      "source": "ca9d608e5c7a193d402ca51d52a1f6a456ef0f91",
+      "sha256": "d0a826dd10aa7e77cc2f0a09b2ba7f22ca000110d615f260aad4abf41211361d",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "source": "5fa8b6b35401282814616b3767da54c0b884b93f",
+      "sha256": "2748652fce46da3fc86675ed0247b9cf571946b420aa0e5b57de5c13207fb4f0",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayBasicIntentApplication.java",
+      "source": "5fa8b6b35401282814616b3767da54c0b884b93f",
+      "sha256": "f85798e26f31f970bf37e38eea1922cee0fee465b9740c148c59eff52e731f26",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPhotoCommandApplication.java",
+      "source": "5fa8b6b35401282814616b3767da54c0b884b93f",
+      "sha256": "3d0b5e4d271855a5e7fdb1af4828984be782d23a08b862f4b061222798910243",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPuzzleCommandApplication.java",
+      "source": "5fa8b6b35401282814616b3767da54c0b884b93f",
+      "sha256": "6e8fe3078fb1ce68d738498cb3c28923834fc5484b25910cf66c81ee338c51c4",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+      "source": "5fa8b6b35401282814616b3767da54c0b884b93f",
+      "sha256": "748a203465f6361a7f6fb81cb77696ac038f48de4b8391a47f60bb33350e5bea",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java",
+      "source": "5fa8b6b35401282814616b3767da54c0b884b93f",
+      "sha256": "da2fe440d3c52dcd9f409d6b99f4e3c1c7e5afc317e291780091f679f13bd873",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayNodeAccessTestFixtures.java",
+      "source": "5fa8b6b35401282814616b3767da54c0b884b93f",
+      "sha256": "78a8d574590003e9afc26041c9182fee7ff3a49b4e9762ccffa3891cf9ac5ee6",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/play-boundary/README.md",
+      "source": "5fa8b6b35401282814616b3767da54c0b884b93f",
+      "sha256": "9f36e01603a5333014fe7827f529370ac22fbee61c3fc83f24c4b82f7de70b8e",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "ci/architecture/README.md",
+      "source": "355fb5a9773fce34db8764649a977ffb93164de2",
+      "sha256": "ade9f2fc480ab3e7003fa5f81e3505061bfd73ea850beab1bc57fd3644a2bf75",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "ci/architecture/collect_jdeps.py",
+      "source": "355fb5a9773fce34db8764649a977ffb93164de2",
+      "sha256": "818804cb3bccc98d8eb3d0d0e329ec0250b83bcd3ca1202f88976d1e75503cde",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "ci/architecture/gate.py",
+      "source": "355fb5a9773fce34db8764649a977ffb93164de2",
+      "sha256": "435d1fe2bc3edae4d90026c6f04478cbc2b3a630757698ef1adc94780f891c01",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "ci/architecture/owners.json",
+      "source": "355fb5a9773fce34db8764649a977ffb93164de2",
+      "sha256": "51e376f67b81f8d03d80fa1f75163fba9819ef9ae465cdb5ce531b734f1cb87c",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "ci/architecture/test_collect_jdeps.py",
+      "source": "355fb5a9773fce34db8764649a977ffb93164de2",
+      "sha256": "930c6cde07c07bfdf1b67010662b4d6f4edb9478a878af98bc0e29ad27038d82",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "ci/architecture/test_gate.py",
+      "source": "355fb5a9773fce34db8764649a977ffb93164de2",
+      "sha256": "078ec8d7426b2b60a6a2988ee7b010c1e15da8b17676b0cd2248e0491aeac264",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/theme-private-port/evidence/owner-directions-targeted.txt",
+      "source": "355fb5a9773fce34db8764649a977ffb93164de2",
+      "sha256": "71c141cccb86cded73c6f2a5509a12ce9d45421e82cdb6656b5e5c1438192177",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-xcx/components/cy/option-sheet/index.js",
+      "source": "82dab219f3f5d5e13de68d6230b4ea8c4e6ade5d",
+      "sha256": "4002afff72193082dbf422a727155450917eacb2c643a18e3bb74cfcad625f5e",
+      "verification": "composed"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.js",
+      "source": "82dab219f3f5d5e13de68d6230b4ea8c4e6ade5d",
+      "sha256": "f53cbb274218d954b828755d82c3cd59b6f7daed48d11dda7b90c2096d9aa67a",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.wxml",
+      "source": "82dab219f3f5d5e13de68d6230b4ea8c4e6ade5d",
+      "sha256": "31c6ffa96b9635b6bfc8030ef411b2b3cdd9aa4232178405320b4607a16acaad",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/simple-ai-sheet-context.test.js",
+      "source": "82dab219f3f5d5e13de68d6230b4ea8c4e6ade5d",
+      "sha256": "f924cad886dad55db0abdf175af0bb3445a01ffde3c2e541c244aa4f01b840be",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/simple-ai-v2-guards.test.js",
+      "source": "82dab219f3f5d5e13de68d6230b4ea8c4e6ade5d",
+      "sha256": "c0beea3e6d8a4aa11786205a7e9620471e6b28982020c20efdf7dfa98ca2e073",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/simple-intent-v2/REPORT.md",
+      "source": "82dab219f3f5d5e13de68d6230b4ea8c4e6ade5d",
+      "sha256": "26ffd43a873659704260943d6093cc6f6f66add278413079442b845e4bae9073",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteNarrativeProgress.java",
+      "source": "1b743737f374e6b4c251e2819062c510b11488f5",
+      "sha256": "76d2cbfa4ea8d1540e16a3252a571780fe209953833285a3972bd3abb6d7014f",
+      "verification": "byte_exact"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "source": "788fac20b1bacf4ec529940258fa042afe5a08d2",
+      "sha256": "44be160a328da9e28c45967b614ff0ff0fc4d16cc23c00bbdf550db87c92ea20",
+      "verification": "composed"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/ROUTE-NARRATIVE/README.md",
+      "source": "1b743737f374e6b4c251e2819062c510b11488f5",
+      "sha256": "71cdfb6f63da1004b823c4881323ece8e9cba2e80725ceefba2b6704568851d1",
+      "verification": "byte_exact"
+    }
+  ],
+  "compositions": {
+    "A_runtime": "1e plus exact ce49 missing-RUN rejection",
+    "E_runtime": "1b narrative plus two788 judgement leaf calls",
+    "F_component": "82d event-context contract plus unchanged public master danger-label row builder"
+  },
+  "independent_review": "H: ce49 closes H-AE-01; A1e and Gca9 no other proven source blocker; E narrative review pending",
+  "controller_transactions": 0,
+  "known_pending_fixes": [
+    "E stored terminal must not project ACTIVE via opening",
+    "C compatibility action-context readOnly transaction may write during zero-HP refresh"
+  ],
+  "guard_ref": "355fb5a9773fce34db8764649a977ffb93164de2",
+  "compiled_guard_scope": "PARTIAL; original3 private mapper targets and2 business facts retained; new owner binary graph must be read from actual joint artifact",
+  "verification": {
+    "source_bytes_and_composition": "PASS",
+    "node_parse": "PASS",
+    "python_ast": "PASS",
+    "diff_check": "PASS",
+    "java": "NOT_RUN",
+    "mysql": "NOT_RUN",
+    "joint_ci": "NOT_RUN"
+  },
+  "not_accepted": true,
+  "no_production_operations": true
+}

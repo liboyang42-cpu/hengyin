@@ -42,6 +42,16 @@
 
 现有root工作流已使用两个固定可信checkout、单次producer及post-build回读；本片不改它，root需独立审阅并同时repin同一新完整verifier SHA。第三目标真实同System编译负控待root在隔离CI执行，Python ZIP/protocol fixtures不是编译证据。参数、忽略target可信checkout、单次采集及失败保留原artifacts的建议见 `docs/delivery/architecture-day/F/private-mapper-compiled/CONTRACT.md`；第三目标最小delta、具体Java负控与未验证项见 `docs/delivery/architecture-day/F/theme-private-port/REPORT.md`。
 
+## 新职责 owner 的编译方向约束（窄增量切口）
+
+`technical_dependency_policy` 与两个 whole-table fact 分开，不授表/字段/命令业务权限。它登记 d49 已实际落地的八个技术职责：A withdrawal admission、C hint application/node access、D graph/copy/content rules、E quota recovery、G settlement evidence；精确类名/模块/原God目标在冻结owners.json，不按包目录或观察次数推断owner。当前明确方向为 hint→access、graph→copy/rules、copy→rules；这个新职责切口要求无环，原全局存量环/2ec SQL与依赖baseline均不改，不把存量全图变成每PR门槛。
+
+原 `compiled-ports` 在同一次真实JAR/11项证据回读后复用raw parser检查方向、回依赖原God以及scoped owner SCC：`OWNER_GOD_BACKREFERENCE`、`NEW_OWNER_DEPENDENCY_DIRECTION`、`NEW_OWNER_CYCLE` 为确定阻断。类/模块/原始输入缺失时，包括owner子结果在内都保持UNKNOWN。成员的binary companion仅纳入限制，不授予私有Mapper消费权，原三项exact Service规则仍独立保留；默认采集和模块图格式不改，不新增Java/jdeps调用或job。
+
+这是声明类集合的结构约束，不是方法/事务/只读性证明。特别不把旧带refresh写的GET状态当只读证据；新readAssigned/runtime投影须由其真实实现/业务合同另验。未登记职责、间接调用、XML/反射、同owner内部类型环及全图仍未证明，`graph_complete=false`；不能拿候选自行生成图来增加baseline或放行。source入口只核对冻结policy，编译方向结论只能来自既有可信post-build入口；没有新审批JSON、全仓新scanner或ArchUnit。
+
+root单一将两处trusted ref从5451672替换为本片审定完整SHA，原单次producer/post-check/artifact上传原样；F不修改ci.yml。原API/持久化/业务实现和测试场景不因本片改变。按当前批次约定，只做新增负控的轻量定点，完整153及真实编译正反控由root统一调度。
+
 ## 运行与 CI 接线
 
 ```sh

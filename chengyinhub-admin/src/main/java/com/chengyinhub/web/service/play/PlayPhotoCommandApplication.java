@@ -189,6 +189,7 @@ public class PlayPhotoCommandApplication {
         return AjaxResult.success(firstTime ? "已提交,打卡成功" : "该节点已完成", data);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult photo(Long actorMemberId, String activityId, String nodeId, String picUrl, String topicId) {
         return photo(actorMemberId, activityId, nodeId, picUrl, topicId, null, null);
     }

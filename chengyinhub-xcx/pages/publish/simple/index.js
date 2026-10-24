@@ -35,7 +35,7 @@ Page({
     aiIdea: '', aiPlanProductType: null, aiPlanModeKnown: false, aiGenerating: false, aiError: '', aiPlan: null, aiPlanNodes: [], canEnterAiEditor: false,
     aiTraceId: '', aiQuotaLoaded: false, aiDraftPending: false, aiRemaining: 0, reducedMotion: false,
     aiIntentLabel: '', aiIntentIdentity: '', aiCanContinue: false, aiCanConfirmNew: false, aiHistoryPreviewLabel: '',
-    aiRecoveryLoading: false, aiHistoryShow: false, aiHistoryItems: [], aiSheetHop: 0, aiSheetEpoch: 0,
+    aiRecoveryLoading: false, aiHistoryShow: false, aiHistoryItems: [],
     aiPrompts: ['老城建筑与咖啡', '周末亲子探险', '雨天室内漫游'], mode: 2, operationScope: ''
   },
   onCreatorLogin() { return retryLogin(this, app, this._resumeCreatorLoad); },
@@ -462,13 +462,32 @@ Page({
   },
   _showAiHistory(labels) {
     const ctx = this._capture('sheet', this._aiPending); if (!ctx) return;
+    // UI event identity only: never a backend prepareKey, quota nonce or stored value.
+    ctx.eventContext = 'sheet_' + makeRequestId();
     this._sheetContext = ctx;
-    this.setData({ aiHistoryItems: labels, aiHistoryShow: true, aiSheetHop: ctx.hop, aiSheetEpoch: ctx.epoch });
+    // A fresh instance owns each opening. Old queued events keep its old context.
+    this.setData({ aiHistoryShow: false }, () => {
+      if (this._sheetContext !== ctx || !this._current(ctx)) return;
+      this.setData({ aiHistoryItems: labels, aiHistoryShow: true }, () => {
+        if (this._sheetContext !== ctx || !this.data.aiHistoryShow) return;
+        if (!this._current(ctx)) {
+          if (this._sheetContext === ctx && this._baseCurrent(ctx)) {
+            this._sheetContext = null; this.setData({ aiHistoryShow: false });
+          }
+          return;
+        }
+        const sheet = this.selectComponent('#ai-history-sheet');
+        if (!sheet || typeof sheet.bindEventContext !== 'function' || !sheet.bindEventContext(ctx.eventContext)) {
+          this._sheetContext = null;
+          this.setData({ aiHistoryShow: false, aiError: '历史选择暂不可用，原身份已保留，请重新查看。' });
+        }
+      });
+    });
   },
   _historyEventCurrent(e) {
-    const ctx = this._sheetContext, ds = e && e.currentTarget && e.currentTarget.dataset;
-    return !!ctx && !!ds && this.data.aiHistoryShow
-      && String(ds.hop) === String(ctx.hop) && String(ds.epoch) === String(ctx.epoch) && this._current(ctx);
+    const ctx = this._sheetContext;
+    return !!ctx && !!e && !!e.detail && this.data.aiHistoryShow
+      && e.detail.eventContext === ctx.eventContext && this._current(ctx);
   },
   onAiHistoryCancel(e) { if (this._historyEventCurrent(e)) { this._sheetContext = null; this.setData({ aiHistoryShow: false }); } },
   onAiHistorySelect(e) {

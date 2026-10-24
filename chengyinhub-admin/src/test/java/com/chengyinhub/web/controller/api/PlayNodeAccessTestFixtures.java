@@ -20,6 +20,7 @@ public final class PlayNodeAccessTestFixtures {
     private PlayNodeAccessTestFixtures() {}
     private static final Map<ApiPlayProgressController, Map<String,Object>> INPUTS = new WeakHashMap<>();
     private static final Map<ApiPlayProgressController, Map<Class<?>,Object>> GRAPHS = new WeakHashMap<>();
+    private static final Map<ApiPlayProgressController, org.springframework.transaction.PlatformTransactionManager> TRANSACTIONS = new WeakHashMap<>();
     private static final Class<?>[] OWNERS = {
         PlayNodeContext.class,
         PlayCompletionFacts.class,
@@ -39,12 +40,14 @@ public final class PlayNodeAccessTestFixtures {
         if (!(target instanceof ApiPlayProgressController controller)) {
             ReflectionTestUtils.setField(target,field,value); return;
         }
+        controller = target(controller);
         Map<String,Object> input=INPUTS.computeIfAbsent(controller,key -> new LinkedHashMap<>());
         input.put(field,value);
         install(controller);
     }
     public static synchronized Object getField(Object target, String field) {
         if (!(target instanceof ApiPlayProgressController controller)) return ReflectionTestUtils.getField(target,field);
+        controller = target(controller);
         installIfAbsent(controller);
         Map<String,Object> input=INPUTS.get(controller);
         if(input.containsKey(field)) return input.get(field);
@@ -55,6 +58,7 @@ public final class PlayNodeAccessTestFixtures {
         return ReflectionTestUtils.getField(controller,field);
     }
     public static synchronized Object owner(ApiPlayProgressController controller,Class<?> type) {
+        controller = target(controller);
         installIfAbsent(controller);return GRAPHS.get(controller).get(type);
     }
     public static <T> T invokeMethod(Object target,String name,Object... arguments) {
@@ -77,10 +81,25 @@ public final class PlayNodeAccessTestFixtures {
         };
         return ReflectionTestUtils.invokeMethod(type==ApiPlayProgressController.class?controller:owner(controller,type),name,arguments);
     }
+    private static ApiPlayProgressController target(ApiPlayProgressController controller) {
+        try {
+            while (controller instanceof org.springframework.aop.framework.Advised advised)
+                controller = (ApiPlayProgressController) advised.getTargetSource().getTarget();
+            return controller;
+        } catch (Exception failed) { throw new IllegalStateException("Cannot resolve play fixture target", failed); }
+    }
+    /** Explicit storage/transaction fixture wiring; ordinary unit fixtures stay plain objects. */
+    public static synchronized void installTransactions(ApiPlayProgressController controller,
+            org.springframework.transaction.PlatformTransactionManager transactions) {
+        controller = target(controller);
+        TRANSACTIONS.put(controller, transactions);
+        install(controller);
+    }
     private static void installIfAbsent(ApiPlayProgressController controller) {
         if(!GRAPHS.containsKey(controller)) install(controller);
     }
     public static synchronized void install(ApiPlayProgressController controller) {
+        controller = target(controller);
         Map<String,Object> input=INPUTS.computeIfAbsent(controller,key -> new LinkedHashMap<>());
         // Explicit ordinary no-lead/unused-ticket fixtures, never production nullable fallbacks.
         if(!input.containsKey("clubLeadMapper")) {
@@ -98,11 +117,26 @@ public final class PlayNodeAccessTestFixtures {
                 (ICmsTopicService)input.get("cmsTopicService"),(IOmsTicketService)input.get("omsTicketService"),
                 (ClubLeadMapper)input.get("clubLeadMapper"),(IGameSessionRuntimeService)input.get("gameSessionRuntimeService"),
                 (ICmsTopicChapterService)input.get("cmsTopicChapterService"),(ITopicRouteRuntimeService)input.get("topicRouteRuntimeService"));
+        Map<Class<?>,Object> targets=new LinkedHashMap<>();
         Map<Class<?>,Object> graph=new LinkedHashMap<>();
         try {
-            for(Class<?> type:OWNERS) graph.put(type,type.getDeclaredConstructor().newInstance());
+            for(Class<?> type:OWNERS) {
+                Object application=type.getDeclaredConstructor().newInstance();
+                targets.put(type,application);
+                Object entry=application;
+                org.springframework.transaction.PlatformTransactionManager transactions=TRANSACTIONS.get(controller);
+                if(transactions!=null && java.util.Arrays.stream(type.getMethods()).anyMatch(method ->
+                        method.isAnnotationPresent(org.springframework.transaction.annotation.Transactional.class))) {
+                    org.springframework.aop.framework.ProxyFactory proxy=new org.springframework.aop.framework.ProxyFactory(application);
+                    proxy.setProxyTargetClass(true);
+                    proxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(transactions,
+                            new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+                    entry=proxy.getProxy();
+                }
+                graph.put(type,entry);
+            }
         } catch(ReflectiveOperationException failed) { throw new IllegalStateException("Cannot assemble play applications",failed); }
-        for(Object application:graph.values()) {
+        for(Object application:targets.values()) {
             for(Map.Entry<String,Object> dependency:input.entrySet()) {
                 if(ReflectionUtils.findField(application.getClass(),dependency.getKey())!=null)
                     ReflectionTestUtils.setField(application,dependency.getKey(),dependency.getValue());

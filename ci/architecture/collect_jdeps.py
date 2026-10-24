@@ -244,7 +244,86 @@ def collect(root, artifact, identity_path, output, env, runner=subprocess.run):
     return report
 
 
-def check_private_ports(root, artifact, identity_path, observation, env, ports):
+
+def owner_components(nodes, edges):
+    """Reuse 02e691 dependencies.components reachability on the tiny owner cut."""
+    adjacency = {node: set() for node in nodes}
+    for source, target in edges:
+        adjacency[source].add(target)
+    reach = {}
+    for node in nodes:
+        seen, pending = set(), [node]
+        while pending:
+            current = pending.pop()
+            if current not in seen:
+                seen.add(current)
+                pending.extend(adjacency[current] - seen)
+        reach[node] = seen
+    groups = {tuple(sorted(other for other in nodes if other in reach[node] and node in reach[other])) for node in nodes}
+    return sorted(group for group in groups if len(group) > 1)
+
+
+def technical_dependency_findings(index, selected, policy, input_complete=True):
+    """Verified raw class refs only. Restrict declared owners, not package domains.
+
+    Binary companions are included only to apply restrictive rules; this never
+    relaxes the private Mapper checker's exact allowed Service consumer.
+    """
+    owners, allowed = policy["owners"], policy["allowed_directions"]
+    result = {"coverage": "DECLARED_TECHNICAL_OWNER_TYPES_ONLY", "graph_complete": False,
+              "observed_source": policy["observed_source"], "owner_edges": [], "scc": [],
+              "findings": [], "review_items": [], "unscoped_reference_count": 0,
+              "unscoped_ownership": "UNKNOWN; not approved by this partial cut",
+              "not_proven": ["business table/field authority", "unregistered responsibilities and indirect calls",
+                             "method/Spring/reflection/XML dependency graph", "full graph or global SCC acceptance"]}
+    if not input_complete:
+        result["review_items"].append({"reason": "OWNER_GRAPH_INPUT_UNKNOWN"})
+    assigned = {}
+    for id_, owner in owners.items():
+        for member in owner["members"]:
+            if index.get(member, {}).get("owner") != owner["module"]:
+                result["review_items"].append({"reason": "OWNER_TYPE_INPUT_UNKNOWN", "owner": id_, "type": member})
+            for name, record in index.items():
+                if name == member or name.startswith(member + "$"):
+                    if record["owner"] == owner["module"]:
+                        assigned[name] = id_
+                    else:
+                        result["review_items"].append({"reason": "OWNER_BINARY_MODULE_UNKNOWN", "owner": id_, "type": name})
+        for target in owner["forbidden_backrefs"]:
+            if target not in index:
+                result["review_items"].append({"reason": "GOD_TYPE_INPUT_UNKNOWN", "owner": id_, "type": target})
+    edges, witnesses = set(), {}
+    for references in selected.values():
+        for ref in references.values():
+            a = assigned.get(ref["source_class"])
+            b = assigned.get(ref["target_class"])
+            if a is None:
+                result["unscoped_reference_count"] += 1
+                continue
+            for target in owners[a]["forbidden_backrefs"]:
+                if ref["target_class"] == target or ref["target_class"].startswith(target + "$"):
+                    result["findings"].append({"rule": "OWNER_GOD_BACKREFERENCE", "source_technical_owner": a, **ref})
+            if b is None:
+                result["unscoped_reference_count"] += 1
+                continue
+            if a != b:
+                edge = (a, b)
+                edges.add(edge)
+                witnesses.setdefault(edge, ref)
+                if edge not in allowed:
+                    result["findings"].append({"rule": "NEW_OWNER_DEPENDENCY_DIRECTION", "source_technical_owner": a,
+                                               "target_technical_owner": b, **ref})
+    result["owner_edges"] = [list(e) for e in sorted(edges)]
+    result["scc"] = owner_components(owners, edges)
+    for group in result["scc"]:
+        result["findings"].append({"rule": "NEW_OWNER_CYCLE", "owners": list(group),
+                                  "witnesses": [witnesses[e] for e in sorted(edges) if set(e) <= set(group)]})
+    result["scope_complete"] = not result["review_items"]
+    result["verdict"] = "BLOCKED" if result["findings"] else "UNKNOWN" if not result["scope_complete"] else "PASS_DECLARED_OWNER_DIRECTIONS"
+    return result
+
+
+def check_private_ports(root, artifact, identity_path, observation, env, ports, dependency_policy=None):
     """Post-build readback of three declared private types, not a new graph or JDK run.
 
     Re-enumerate the actual original/Boot/target class bytes using stage_inputs;
@@ -315,6 +394,9 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports):
                     and "*" not in args[6] and invocation["locale"] == "C" and invocation["timeout_seconds"] == 180,
                     "jdeps classpath/locale/budget mismatch")
             selected = {target: {} for target in ports}
+            if dependency_policy is not None:
+                roots = {n for owner in dependency_policy["owners"].values() for n in owner["members"] + owner["forbidden_backrefs"]}
+                selected.update({name: {} for name in index if any(name == n or name.startswith(n + "$") for n in roots)})
             _, _, missing, unknown, seen = parse_output(files["jdeps.stdout.txt"].decode(), index, inputs, selected)
             result["evidence_verified"] = True
             result["evidence_sha256"] = hashes
@@ -338,6 +420,11 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports):
                 for ref in refs:
                     if ref["source_class"] != consumer:
                         result["findings"].append({"rule": "PRIVATE_MAPPER_CONSUMER", "allowed_consumer": consumer, **ref})
+            if dependency_policy is not None:
+                directions = technical_dependency_findings(index, selected, dependency_policy, not result["review_items"])
+                result["technical_dependencies"] = directions
+                result["findings"].extend(directions["findings"])
+                result["review_items"].extend(directions["review_items"])
     except (OSError, ValueError, TypeError, KeyError, AttributeError, zipfile.BadZipFile) as error:
         result["review_items"].append({"reason": "INPUT_EVIDENCE_UNKNOWN", "detail": str(error)})
     result["coverage_complete"] = result["evidence_verified"] and not result["review_items"]
