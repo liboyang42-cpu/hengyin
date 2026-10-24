@@ -2123,6 +2123,87 @@ function communityRequestPlan(contracts) {
     requiredRequestOutcomes: outcomes, branches: Object.keys(byBranch).filter((b) => b !== 'forbidden-owner') }
 }
 
+/** Prove the existing Page/Component _request adapter before binding a literal caller URL to its method. */
+function pageRequestContracts(source, jsFile) {
+  const code = maskNonCodeSafely(source)
+  const calls = [...source.matchAll(/\b(?:this|that|self)\._request\s*\(\s*['"](\/api\/[^'"]+)['"]/g)]
+    .filter(call => /^(?:this|that|self)\._request/.test(code.slice(call.index)))
+  if (!calls.length) return []
+  const wrapper = handlerSlices(jsFile).get('_request')
+  const signature = wrapper && wrapper.match(/^\s*_request\s*\(\s*([A-Za-z_$][\w$]*)[^)]*\)\s*\{/)
+  if (!signature) return []
+  const masked = maskNonCodeSafely(wrapper)
+  const sends = [...wrapper.matchAll(/\bapp\.sendRequest\s*\(\s*\{/g)]
+    .filter(send => masked.slice(send.index).startsWith('app.sendRequest'))
+  if (sends.length !== 1) return []
+  const param = signature[1].replace(/[$]/g, '\\$&')
+  const preamble = masked.slice(signature[0].length, sends[0].index)
+  if (new RegExp(`\\b${param}\\s*(?:[+*/-]?=|\\+\\+|--)|\\b(?:const|let|var)\\s+${param}\\b|\\([^)]*\\b${param}\\b[^)]*\\)\\s*=>`).test(preamble)) return []
+  const open = wrapper.indexOf('{', sends[0].index)
+  const close = matchBrace(masked, open)
+  if (close < 0) return []
+  let request
+  try { request = parseJavaScript('(' + wrapper.slice(open, close + 1) + ')').body[0].expression } catch (error) {
+    if (error.name === 'SyntaxError') return []
+    throw error
+  }
+  if (request.type !== 'ObjectExpression' || request.properties.some(property => property.type !== 'Property' || property.computed)) return []
+  const urls = request.properties.filter(property => (property.key.name || property.key.value) === 'url')
+  const methods = request.properties.filter(property => (property.key.name || property.key.value) === 'method')
+  if (urls.length !== 1 || urls[0].value.type !== 'Identifier' || urls[0].value.name !== signature[1]
+      || methods.length !== 1 || methods[0].value.type !== 'Literal'
+      || !['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(methods[0].value.value)) return []
+  return calls.map(call => ({ url: call[1], method: methods[0].value.value, auth: 'authenticated',
+    source: 'local-wrapper', wrapper: '_request' }))
+}
+
+/** One control, mutually exclusive direct Promise-chain outcomes; timed status polling is never enrollment. */
+function voiceConfirmedRequestPlan(relative, handler, contracts) {
+  const prefixes = {
+    'pages/merchant/decor/ai-npc/index.js': '/api/merchant/npc/voice',
+    'pages/topic/components/cy/node-npc-form/index.js': '/api/merchant/chapter-node/npc/voice',
+  }
+  const prefix = prefixes[relative]
+  if (!prefix || handler !== 'confirmNewVoiceRequest') return null
+  const status = prefix + '/status', enroll = prefix + '/enroll', consent = '/api/compliance/consents'
+  const expected = new Set([status, consent, enroll])
+  if (contracts.some(contract => !expected.has(contract.url) && !AUXILIARY_APIS.has(contract.url))
+      || [status, enroll].some(url => !contracts.some(contract => contract.url === url
+        && contract.method === 'POST' && contract.wrapper === '_request'))
+      || !contracts.some(contract => contract.url === consent && contract.method === 'POST')) {
+    throw new Error(`${relative}:${handler}: 未登记或未证明的声音请求流程,禁止隐藏额外请求`)
+  }
+  const read = { urlTemplate: status, method: 'POST', kind: 'read' }
+  const agree = { urlTemplate: consent, method: 'POST', kind: 'write' }
+  const submit = { urlTemplate: enroll, method: 'POST', kind: 'write' }
+  const success = [read, agree, submit, read]
+  const byBranch = {
+    success, 'duplicate-trigger': success,
+    blocked: [], cancelled: [read], 'consent-declined': [read], 'original-no-longer-unknown': [read],
+    'stale-after-read': [read], 'stale-after-consent': [read, agree],
+    error: [read, agree], 'consent-timeout': [read, agree], timeout: success, 'forbidden-owner': success,
+    'enroll-disabled': [read, agree, submit], 'enroll-error': success, 'refresh-error': success,
+    'status-error-confirmed': success, 'status-timeout-confirmed': success,
+    'status-timeout-cancelled': [read], 'status-error-cancelled': [read], 'refresh-timeout': success,
+  }
+  const outcomes = Object.fromEntries(Object.entries(byBranch).map(([branch, sequence]) =>
+    [branch, sequence.map(() => 'success')]))
+  outcomes.error = ['success', 'error']
+  outcomes['consent-timeout'] = ['success', 'timeout']
+  outcomes.timeout = ['success', 'success', 'timeout', 'success']
+  outcomes['forbidden-owner'] = ['success', 'success', 'forbidden-owner', 'success']
+  outcomes['enroll-disabled'] = ['success', 'success', 'error']
+  outcomes['enroll-error'] = ['success', 'success', 'error', 'success']
+  outcomes['refresh-error'] = ['success', 'success', 'success', 'error']
+  outcomes['status-error-confirmed'] = ['error', 'success', 'success', 'success']
+  outcomes['status-timeout-confirmed'] = ['timeout', 'success', 'success', 'success']
+  outcomes['status-timeout-cancelled'] = ['timeout']
+  outcomes['status-error-cancelled'] = ['error']
+  outcomes['refresh-timeout'] = ['success', 'success', 'success', 'timeout']
+  return { writeApis: [consent, enroll], requiredRequests: success, requiredRequestsByBranch: byBranch,
+    requiredRequestOutcomes: outcomes, requiredBranches: Object.keys(byBranch) }
+}
+
 function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodies) {
   const expandedSource = [source].concat(appHelperCalls(source, appHelperBodies).map(([, body]) => body)).join('\n')
   const targets = extractTargets(expandedSource)
@@ -2163,6 +2244,9 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     }
   }
   const fileSource = fs.readFileSync(jsFile, 'utf8')
+  const pageRequests = pageRequestContracts(source, jsFile)
+  targets.apis.push(...pageRequests.map(contract => contract.url))
+  targets.apiContracts.push(...pageRequests)
   const communityAliases = communityAliasesForSource(fileSource, jsFile)
   const communityTargets = communityRequestContracts(expandedSource, communityAliases)
   targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
@@ -2437,6 +2521,8 @@ function buildLedger() {
         const confirmationMode = Object.prototype.hasOwnProperty.call(variant, 'confirmationMode')
           ? variant.confirmationMode
           : modalContractForHandler(variant.handler, slices, interactionModeFor(binding.attrName))
+        const voicePlan = voiceConfirmedRequestPlan(rel(jsFile), variant.handler, targets.apiContracts)
+        if (voicePlan) variant = { ...variant, ...voicePlan }
         const inferredWriteApis = effectClasses.includes('write') ? targets.primaryApis.filter((api) => {
           return targets.apiContracts.some((contract) => contract.url === api && contract.method && contract.method !== 'GET'
             && (contract.adapterBranch || isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api)))
@@ -3417,6 +3503,7 @@ module.exports = {
   communityRequestContracts,
   communityAliasesForSource,
   communityRequestPlan,
+  voiceConfirmedRequestPlan,
   isSelfOnlyWriteApi,
   isWriteApi,
   extractTargets,
