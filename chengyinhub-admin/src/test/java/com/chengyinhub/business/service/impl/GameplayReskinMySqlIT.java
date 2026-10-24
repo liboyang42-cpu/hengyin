@@ -30,10 +30,26 @@ class GameplayReskinMySqlIT {
             ItSchema.apply(connection,"it-schema/cms-topic-it-schema.sql");
             ItSchema.apply(connection,"it-schema/journey-full-flow-it-schema.sql");
             ItSchema.apply(connection,"it-schema/gameplay-reskin-commercial-it-schema.sql");
+            // 完整保留真实 community_post DDL 及其外键前置，再执行审核列迁移。
+            // 不运行平台迁移中与本 IT 无关的历史回填，也不手写 review_flag。
+            String platform = java.nio.file.Files.readString(java.nio.file.Path.of(
+                    "sql/migration_community_post_platform_20260909.sql"));
+            for (String table : Arrays.asList("community_guideline_version", "community_post")) {
+                String start = "CREATE TABLE IF NOT EXISTS " + table + " (";
+                int offset = platform.indexOf(start);
+                assertTrue(offset >= 0, "missing canonical CREATE TABLE: " + table);
+                assertEquals(offset, platform.lastIndexOf(start), "ambiguous canonical CREATE TABLE: " + table);
+                int end = platform.indexOf(";\n", offset);
+                assertTrue(end > offset, "missing canonical DDL terminator: " + table);
+                try (java.sql.Statement ddl = connection.createStatement()) {
+                    ddl.execute(platform.substring(offset, end));
+                }
+            }
             ItSchema.applyMigrations(connection,"sql/migration_theme_state_key_20260916.sql", "sql/migration_20261022_theme_state_key_attribute_def.sql","sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
                     "sql/migration_club_direct_merchant_receivable_20261004.sql",
                     "sql/migration_20261012_app_media_asset.sql",
-                    "sql/migration_20261012_app_media_asset_namespaces.sql");
+                    "sql/migration_20261012_app_media_asset_namespaces.sql",
+                    "sql/migration_audit_level_20261020.sql");
         }
         Configuration configuration=new Configuration();configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for(String name:Arrays.asList("CmsTopicMapper","CmsTopicChapterMapper","CmsTopicNodeMapper","CmsMemberTemplateMapper","OmsTicketMapper","MerchantChapterOfferMapper","AppMediaAssetMapper","ThemeStateKeyMapper","GameSessionRuntimeMapper","PlayTeamMapper")) {

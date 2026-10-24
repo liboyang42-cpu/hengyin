@@ -658,7 +658,7 @@ Page({
       '城市旅团': '/pages/searchmap/images/d_smapicon.png',
       // 添加更多分类图标映射
     };
-    return iconMap[category] || '/images/d_location2.png';
+    return iconMap[category] || '/pages/searchmap/images/d_location2.png';
   },
 
   openMerchantCategorySheet() {

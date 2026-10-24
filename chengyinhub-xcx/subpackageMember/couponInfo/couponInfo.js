@@ -1,7 +1,7 @@
 const modal = require('../../utils/modal.js');
 const cyToast = require('../../utils/toast.js');
 const app = getApp();
-const { currentOwnerId } = require('../../utils/coupon-credential.js');
+const { currentOwnerId } = require('../utils/coupon-credential.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const couponForm = require('../../utils/coupon-form.js');
 // 起止时刻的拆装(跨天必须按「日期+时刻」一起算,见该文件注释)

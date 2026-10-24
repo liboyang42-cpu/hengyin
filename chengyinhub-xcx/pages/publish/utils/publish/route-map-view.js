@@ -15,7 +15,7 @@
 //   this._markerMap = {}             → 局部 markerMap,随返回值交回页面
 //   this.setData(patch)              → return { markerMap, patch }
 
-const proEditorPolicy = require('../../../../utils/publish/pro-editor-policy.js');
+const proEditorPolicy = require('./pro-editor-policy.js');
 const lastLocation = require('../../../../utils/location/last-location.js');
 
 const ROUTE_COLORS = ['#1A1A1A', '#155DFC', '#12B886', '#0CA5A5', '#F59F00', '#E64980'];

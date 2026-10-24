@@ -503,6 +503,13 @@ Page({
   exitPage() {
     if (this._disposed) return;
     this.destroyPreviewAudio();
+    if (this._exitAfterPreview) return;
+    // 原生返回拦截关闭完成后再退页，setData 回调时它可能仍在退场。
+    if (this.data.previewVisible) {
+      this._exitAfterPreview = true;
+      this.setData({ previewVisible: false });
+      return;
+    }
     wx.navigateBack({
       delta: 1,
       fail: () => wx.switchTab({ url: '/pages/template/index' })
@@ -2847,6 +2854,11 @@ Page({
 
   // 物理返回守卫(见 wxml 尾部 page-container):关最上层浮层,而不是退出编辑页
   onNativeBackGuard: function () {
+    if (this._exitAfterPreview) {
+      this._exitAfterPreview = false;
+      this.exitPage();
+      return;
+    }
     if (this.data.pickerSheet && this.data.pickerSheet.open) {
       this.closePickerSheet();
     } else if (this.data.afterEditor.show) {

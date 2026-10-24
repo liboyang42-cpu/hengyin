@@ -1,5 +1,5 @@
 const app = getApp();
-const { currentOwnerId } = require('../../utils/coupon-credential.js');
+const { currentOwnerId } = require('../utils/coupon-credential.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const datetime = require('../../utils/datetime.js');
 const modal = require('../../utils/modal.js');

@@ -1,7 +1,7 @@
 // 待编排素材与正式节点之间的唯一投影。
 // pendingMaterials 不进入发布 payload，但从正式节点移回时不能丢玩法、钩子或地点配置。
 
-var policy = require('../../../../utils/publish/pro-editor-policy.js');
+var policy = require('./pro-editor-policy.js');
 
 function text(value) {
   return String(value == null ? '' : value).trim();

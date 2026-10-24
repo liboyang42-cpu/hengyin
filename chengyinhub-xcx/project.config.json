@@ -297,7 +297,7 @@
       },
       {
         "type": "file",
-        "value": "utils/publish/guide-progress.js"
+        "value": "pages/publish/utils/publish/guide-progress.js"
       }
     ],
     "include": []
