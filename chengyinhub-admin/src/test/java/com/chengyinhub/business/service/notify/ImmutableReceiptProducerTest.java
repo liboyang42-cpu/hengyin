@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.notify;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,5 +33,30 @@ class ImmutableReceiptProducerTest {
         assertThrows(IllegalStateException.class, () -> producer.accept(
                 new ImmutableReceiptProducer.OriginalRequest("req-reply", ImmutableReceiptProducer.Kind.REPLY,
                         "tampered", "UNKNOWN")));
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueAcceptApplies() {
+        InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
+        ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store);
+        ImmutableReceiptProducer.OriginalReceipt blank = producer.recoverOriginal(null, null);
+        assertNull(blank.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, blank.outcome);
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.OriginalReceipt recovered = producer.recoverOriginal("c09-rcpt-never", null);
+        assertEquals("c09-rcpt-never", recovered.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, recovered.outcome);
+        assertNull(store.find("c09-rcpt-never"), "未见 id 的 recoverOriginal 不得占账");
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.OriginalReceipt first = producer.accept(
+                new ImmutableReceiptProducer.OriginalRequest("c09-rcpt-never",
+                        ImmutableReceiptProducer.Kind.PIN, "{\"op\":\"pin\"}",
+                        ImmutableReceiptProducer.OUTCOME_ACCEPTED));
+        assertEquals(ImmutableReceiptProducer.OUTCOME_ACCEPTED, first.outcome);
+        assertEquals("c09-rcpt-never", first.requestId);
+        assertEquals(1, store.size());
+        assertEquals(ImmutableReceiptProducer.OUTCOME_ACCEPTED,
+                producer.recoverOriginal("c09-rcpt-never", null).outcome);
+        assertEquals(1, store.size());
     }
 }
