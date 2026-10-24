@@ -125,7 +125,7 @@ class ApiChapterMerchantNodeNpcAccessTest {
         NodeNpcService npc = mock(NodeNpcService.class);
         IMerchantAccessService access = mock(IMerchantAccessService.class);
         when(access.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE)).thenReturn(ownerAccess());
-        when(npc.voiceStatus(OWNER, NODE)).thenReturn(null);
+        when(npc.voiceStatus(PRINCIPAL, OWNER, NODE, null)).thenReturn(null);
 
         AjaxResult result = controller(npc, access, null).npcVoiceStatus(request(NODE));
 
@@ -146,6 +146,6 @@ class ApiChapterMerchantNodeNpcAccessTest {
         AjaxResult result = controller(npc, access, null).npcVoiceEnroll(req);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(npc).voiceEnroll(PRINCIPAL, OWNER, NODE, "/profile/voice/a.mp3");
+        verify(npc).voiceEnroll(PRINCIPAL, OWNER, NODE, "/profile/voice/a.mp3", null, null, false);
     }
 }

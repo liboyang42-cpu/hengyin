@@ -42,17 +42,29 @@ public class NpcVoiceEnrollmentService
     public NpcProfile enroll(Long actorMemberId, int scopeType, Long scopeId, Long npcId, String sample,
             Supplier<String> approvedProcessingUrl)
     {
+        return enroll(actorMemberId, scopeType, scopeId, npcId, sample, null, null, false, approvedProcessingUrl);
+    }
+
+    /** A second independent attempt requires a distinct immutable request and explicit risk acknowledgement. */
+    public NpcProfile enroll(Long actorMemberId, int scopeType, Long scopeId, Long npcId, String sample,
+            String requestId, Long previousIntentId, boolean duplicateChargeConsent, Supplier<String> approvedProcessingUrl)
+    {
         outsideBusinessTransaction();
         validate(scopeType, scopeId, npcId);
         if (actorMemberId == null || actorMemberId <= 0 || sample == null
                 || !sample.matches("media-asset:[1-9][0-9]{0,18}")) throw new Rejected("录音引用无效");
         String hash = fingerprint(sample);
-        Decision prior = tx(() -> inspect(scopeType, scopeId, npcId, sample, hash, false, actorMemberId));
+        if (requestId != null && !requestId.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))
+            throw new Rejected("声音请求身份无效");
+        if ((previousIntentId != null && (previousIntentId <= 0 || requestId == null || !duplicateChargeConsent))
+                || (previousIntentId == null && duplicateChargeConsent)) throw new Rejected("请确认重复音色或额度占用风险后另起请求");
+        String identity = requestId == null ? "sample:" + hash : requestId;
+        Decision prior = tx(() -> inspect(scopeType, scopeId, npcId, sample, hash, identity, previousIntentId, false, actorMemberId));
         if (!prior.winner() && prior.profile() != null) return prior.profile();
         if (!provider.usable()) throw new Rejected("语音服务未开通");
         // Security refusal must occur before inserting/claiming or changing the profile. Never store this signed URL.
         String processingUrl = approvedProcessingUrl.get();
-        Decision claimed = tx(() -> inspect(scopeType, scopeId, npcId, sample, hash, true, actorMemberId));
+        Decision claimed = tx(() -> inspect(scopeType, scopeId, npcId, sample, hash, identity, previousIntentId, true, actorMemberId));
         if (!claimed.winner()) return claimed.profile();
 
         String voiceId;
@@ -64,28 +76,37 @@ public class NpcVoiceEnrollmentService
         {
             // Only the exact trusted transport class/disposition is positive evidence. No messages, status or timeout guesses.
             boolean notSent = provenNotSent(failure);
-            return finish(scopeType, scopeId, npcId, hash, notSent ? "NOT_SENT" : "UNKNOWN", null,
+            return finish(scopeType, scopeId, npcId, identity, notSent ? "NOT_SENT" : "UNKNOWN", null,
                     notSent ? "VOICE_PROVIDER_NOT_SENT" : "VOICE_PROVIDER_OUTCOME_UNKNOWN");
         }
         if (voiceId == null || voiceId.isBlank() || voiceId.length() > 96)
-            return finish(scopeType, scopeId, npcId, hash, "UNKNOWN", null, "VOICE_PROVIDER_OUTCOME_UNKNOWN");
+            return finish(scopeType, scopeId, npcId, identity, "UNKNOWN", null, "VOICE_PROVIDER_OUTCOME_UNKNOWN");
 
         // Persist the returned original id in its own transaction BEFORE the first query; query errors cannot erase it.
-        NpcProfile known = finish(scopeType, scopeId, npcId, hash, "PENDING", voiceId, null);
-        return refresh(scopeType, scopeId, npcId, hash, voiceId, known);
+        NpcProfile known = finish(scopeType, scopeId, npcId, identity, "PENDING", voiceId, null);
+        return refresh(scopeType, scopeId, npcId, identity, voiceId, known);
     }
 
     /** Original authorized status endpoint; may query a known original id but never create an enrollment. */
     public NpcProfile status(int scopeType, Long scopeId, Long npcId)
     {
+        return status(null, scopeType, scopeId, npcId, null);
+    }
+
+    public NpcProfile status(Long actorMemberId, int scopeType, Long scopeId, Long npcId, String requestId)
+    {
         outsideBusinessTransaction();
         validate(scopeType, scopeId, npcId);
-        Snapshot snapshot = snapshot(scopeType, scopeId, npcId, null);
+        if (requestId != null && !requestId.matches("(?:sample:[0-9a-f]{64}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"))
+            throw new Rejected("声音请求身份无效");
+        Snapshot snapshot = snapshot(scopeType, scopeId, npcId, requestId);
+        if (snapshot.intent() != null && actorMemberId != null
+                && !actorMemberId.equals(snapshot.intent().getActorMemberId())) throw new Rejected("声音任务归属不符");
         if (snapshot.intent() != null)
         {
             NpcVoiceEnrollment row = snapshot.intent();
             if ("PENDING".equals(row.getState()) && row.getVoiceId() != null)
-                return refresh(scopeType, scopeId, npcId, row.getSampleSha256(), row.getVoiceId(), snapshot.profile());
+                return refresh(scopeType, scopeId, npcId, row.getRequestId(), row.getVoiceId(), snapshot.profile());
             return snapshot.profile();
         }
         // Preserve legacy known-id polling. No absent/new intent is ever inserted by status.
@@ -115,35 +136,51 @@ public class NpcVoiceEnrollmentService
     {
         return tx(() -> {
             NpcProfile current = profile(scopeType, scopeId, npcId);
-            String hash = originalHash != null ? originalHash
-                    : current.getVoiceSample() == null ? null : fingerprint(current.getVoiceSample());
-            NpcVoiceEnrollment row = hash == null ? null : intents.find(npcId, hash);
+            NpcVoiceEnrollment row = originalHash == null ? intents.findLatest(npcId) : find(npcId, originalHash);
+            if (originalHash != null && row == null) throw new Rejected("原声音请求不存在，请保留原记录核对");
             if (row != null) { requireScope(row, scopeType, scopeId); return new Snapshot(project(current, row), row); }
             return new Snapshot(legacy(current), null);
         });
     }
 
-    private Decision inspect(int scopeType, Long scopeId, Long npcId, String sample, String hash,
-            boolean create, Long actorMemberId)
+    private Decision inspect(int scopeType, Long scopeId, Long npcId, String sample, String hash, String identity,
+            Long previousIntentId, boolean create, Long actorMemberId)
     {
         NpcProfile current = profile(scopeType, scopeId, npcId);
-        NpcVoiceEnrollment existing = intents.find(npcId, hash);
+        NpcVoiceEnrollment existing = find(npcId, identity);
         if (existing != null)
         {
             requireScope(existing, scopeType, scopeId);
-            if (!sample.equals(existing.getSampleReference())) throw new Rejected("录音身份冲突");
+            if (!sample.equals(existing.getSampleReference()) || !hash.equals(existing.getSampleSha256())
+                    || !actorMemberId.equals(existing.getActorMemberId())
+                    || !Objects.equals(previousIntentId, existing.getPreviousIntentId())) throw new Rejected("录音身份冲突");
             return new Decision(false, project(current, existing));
         }
-        // Neither reset nor a different sample proves an unresolved external enrollment did not execute.
-        if (intents.findUnresolved(npcId) != null) throw new Rejected("声音结果未知，请先查询原任务");
-        if (sample.equals(current.getVoiceSample())) return new Decision(false, legacy(current));
-        if (Integer.valueOf(1).equals(current.getVoiceStatus())) throw new Rejected("声音仍在生成，请稍后再试");
-        if (current.getVoiceSample() != null && current.getVoiceId() == null
-                && intents.find(npcId, fingerprint(current.getVoiceSample())) == null)
-            throw new Rejected("历史声音结果待确认，不能重新复刻");
+        NpcVoiceEnrollment latest = intents.findLatest(npcId);
+        if (previousIntentId != null)
+        {
+            NpcVoiceEnrollment previous = intents.findById(npcId, previousIntentId);
+            if (previous == null || latest == null || !previousIntentId.equals(latest.getId()))
+                throw new Rejected("原声音任务已改变，请查询原请求");
+            requireScope(previous, scopeType, scopeId);
+            if (!actorMemberId.equals(previous.getActorMemberId())
+                    || !("IN_FLIGHT".equals(previous.getState()) || "UNKNOWN".equals(previous.getState())))
+                throw new Rejected("原声音任务不是当前账号的未知请求");
+        }
+        else
+        {
+            // Superseded UNKNOWN rows remain durable; they never reopen or block a newer decided identity.
+            if (latest != null && ("IN_FLIGHT".equals(latest.getState()) || "UNKNOWN".equals(latest.getState())))
+                throw new Rejected("声音结果未知，请先查询原任务");
+            if (identity.startsWith("sample:") && sample.equals(current.getVoiceSample())) return new Decision(false, legacy(current));
+            if (Integer.valueOf(1).equals(current.getVoiceStatus())) throw new Rejected("声音仍在生成，请稍后再试");
+            if (current.getVoiceSample() != null && current.getVoiceId() == null && latest == null)
+                throw new Rejected("历史声音结果待确认，不能重新复刻");
+        }
         if (!create) return new Decision(false, null);
 
         NpcVoiceEnrollment row = new NpcVoiceEnrollment();
+        row.setRequestId(identity); row.setPreviousIntentId(previousIntentId);
         row.setNpcId(npcId); row.setScopeType(scopeType); row.setScopeId(scopeId); row.setActorMemberId(actorMemberId);
         row.setSampleSha256(hash); row.setSampleReference(sample); row.setState("PREPARED");
         row.setProfileVersion(current.getVoiceVersion() + 1);
@@ -158,21 +195,21 @@ public class NpcVoiceEnrollmentService
         return new Decision(true, project(current, row));
     }
 
-    private NpcProfile refresh(int scopeType, Long scopeId, Long npcId, String hash, String voiceId, NpcProfile known)
+    private NpcProfile refresh(int scopeType, Long scopeId, Long npcId, String identity, String voiceId, NpcProfile known)
     {
         if (!provider.usable()) return known;
         boolean ready;
         try { ready = provider.isReady(voiceId); }
-        catch (RuntimeException unavailable) { return snapshot(scopeType, scopeId, npcId, hash).profile(); }
-        if (!ready) return snapshot(scopeType, scopeId, npcId, hash).profile();
-        return finish(scopeType, scopeId, npcId, hash, "READY", voiceId, null);
+        catch (RuntimeException unavailable) { return snapshot(scopeType, scopeId, npcId, identity).profile(); }
+        if (!ready) return snapshot(scopeType, scopeId, npcId, identity).profile();
+        return finish(scopeType, scopeId, npcId, identity, "READY", voiceId, null);
     }
 
-    private NpcProfile finish(int scopeType, Long scopeId, Long npcId, String hash, String state, String voiceId, String reason)
+    private NpcProfile finish(int scopeType, Long scopeId, Long npcId, String identity, String state, String voiceId, String reason)
     {
         return tx(() -> {
             NpcProfile current = profile(scopeType, scopeId, npcId);
-            NpcVoiceEnrollment row = intents.find(npcId, hash);
+            NpcVoiceEnrollment row = find(npcId, identity);
             if (row == null) throw new StateUnavailableException();
             requireScope(row, scopeType, scopeId);
             // A concurrent query must not downgrade READY. No path transitions a terminal fact back to a claim.
@@ -213,10 +250,14 @@ public class NpcVoiceEnrollmentService
 
     private NpcProfile project(NpcProfile profile, NpcVoiceEnrollment row)
     {
+        profile.setVoiceRequestId(row.getRequestId());
+        profile.setVoicePreviousIntentId(row.getPreviousIntentId());
+        profile.setVoiceSelected(Objects.equals(profile.getVoiceVersion(), row.getProfileVersion())
+                && Objects.equals(profile.getVoiceSample(), row.getSampleReference()));
+        if (!Boolean.TRUE.equals(profile.getVoiceSelected())) profile.setVoiceSample(null);
         profile.setVoiceIntentId(row.getId()); profile.setVoiceIntentState(row.getState()); profile.setVoiceReasonCode(row.getReasonCode());
         if (("PENDING".equals(row.getState()) || "READY".equals(row.getState()))
-                && (!Objects.equals(profile.getVoiceVersion(), row.getProfileVersion())
-                    || !Objects.equals(profile.getVoiceSample(), row.getSampleReference())))
+                && !Boolean.TRUE.equals(profile.getVoiceSelected()))
             profile.setVoiceReasonCode("VOICE_PROFILE_CHANGED");
         return profile;
     }
@@ -234,6 +275,31 @@ public class NpcVoiceEnrollmentService
     {
         if (!Integer.valueOf(scopeType).equals(row.getScopeType()) || !scopeId.equals(row.getScopeId()))
             throw new Rejected("声音任务归属不符");
+    }
+
+    /** Metadata only; samples, provider ids and signed URLs never enter the recovery list. */
+    public java.util.List<java.util.Map<String, Object>> history(Long actorMemberId, int scopeType, Long scopeId, Long npcId)
+    {
+        outsideBusinessTransaction(); validate(scopeType, scopeId, npcId);
+        if (actorMemberId == null || actorMemberId <= 0) throw new Rejected("请先登录");
+        return tx(() -> {
+            NpcProfile selected = profile(scopeType, scopeId, npcId);
+            return intents.history(npcId, actorMemberId).stream().map(row -> {
+                requireScope(row, scopeType, scopeId);
+                java.util.Map<String, Object> value = new java.util.LinkedHashMap<>();
+                value.put("requestId", row.getRequestId()); value.put("intentId", row.getId());
+                value.put("state", row.getState()); value.put("reasonCode", row.getReasonCode());
+                value.put("previousIntentId", row.getPreviousIntentId());
+                value.put("selected", Objects.equals(selected.getVoiceVersion(), row.getProfileVersion())
+                        && Objects.equals(selected.getVoiceSample(), row.getSampleReference()));
+                return value;
+            }).toList();
+        });
+    }
+
+    private NpcVoiceEnrollment find(Long npcId, String identity)
+    {
+        return identity.startsWith("sample:") ? intents.find(npcId, identity.substring(7)) : intents.findRequest(npcId, identity);
     }
 
     private static boolean provenNotSent(RuntimeException failure)

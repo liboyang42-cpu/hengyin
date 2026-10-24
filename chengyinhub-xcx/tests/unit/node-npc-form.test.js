@@ -35,7 +35,7 @@ function load(options = {}) {
     wxUploadFile(opts) {
       state.uploads.push(opts);
       // 真实 wx.uploadFile 是回调式的:这里同步回一个成功包,走完共享入口的完整链路
-      opts.success({ data: JSON.stringify({ code: 200, url: options.uploadUrl || 'https://o/up.png' }) });
+      opts.success({ data: JSON.stringify({ code: 200, assetId: 73, url: options.uploadUrl || 'https://o/up.png' }) });
       return { abort() {} };
     },
     getBaseUrl: () => 'https://base',
@@ -61,7 +61,10 @@ function load(options = {}) {
     chooseMedia(opts) { state.media = opts; },
     createInnerAudioContext: () => audio,
   };
+  require('../helpers/voice-enrollment-environment.cjs').install(app, wx);
   const localRequire = (id) => {
+    if (id.endsWith('voice-enrollment-journal.js')) return require('../../utils/voice-enrollment-journal.js');
+    if (id.endsWith('modal.js')) return { show() {} };
     if (id.endsWith('pixel-avatar.js')) return {
       AVATAR_IDS: ['p01', 'p04'],
       isPixelAvatar: (code) => String(code || '').indexOf('px1:') === 0,
@@ -271,8 +274,8 @@ test('录音 15MiB:前置拒绝并给可操作文案,不产生 voiceFile', () =>
 test('录音 8MiB / 20 秒:接受并走共享入口的 fileSizes,再发起复刻', async () => {
   const h = load({
     responses: {
-      '/api/merchant/chapter-node/npc/voice/enroll': { code: 200, data: { voiceStatus: 1, voiceSample: 'https://o/v.mp3' } },
-      '/api/merchant/chapter-node/npc/voice/status': { code: 200, data: { voiceStatus: 1, voiceSample: 'https://o/v.mp3' } },
+      '/api/merchant/chapter-node/npc/voice/enroll': { code: 200, data: { voiceStatus: 1, voiceSample: 'media-asset:73' } },
+      '/api/merchant/chapter-node/npc/voice/status': { code: 200, data: { voiceStatus: 1, voiceSample: 'media-asset:73' } },
     },
   });
   h.component.chooseVoice();

@@ -67,15 +67,23 @@ public class NpcVoiceEnrollmentServiceTest
                     stored.getId().equals(i.getArgument(0)) && stored.getScopeType().equals(i.getArgument(1))
                     && stored.getScopeId().equals(i.getArgument(2)) ? copy(stored) : null);
             when(intents.find(anyLong(),anyString())).thenAnswer(i->copy(rows.get(i.getArgument(1))));
+            when(intents.findRequest(anyLong(),anyString())).thenAnswer(i->copy(rows.get(i.getArgument(1))));
+            when(intents.findById(anyLong(),anyLong())).thenAnswer(i->rows.values().stream()
+                    .filter(r->r.getId().equals(i.getArgument(1))).findFirst().map(Fixture::copy).orElse(null));
+            when(intents.findLatest(anyLong())).thenAnswer(i->rows.values().stream()
+                    .max(java.util.Comparator.comparing(NpcVoiceEnrollment::getId)).map(Fixture::copy).orElse(null));
+            when(intents.history(anyLong(),anyLong())).thenAnswer(i->rows.values().stream()
+                    .filter(r->r.getActorMemberId().equals(i.getArgument(1)))
+                    .sorted(java.util.Comparator.comparing(NpcVoiceEnrollment::getId).reversed()).limit(20).map(Fixture::copy).toList());
             when(intents.findUnresolved(NPC)).thenAnswer(i->rows.values().stream()
                     .filter(r->r.getState().equals("IN_FLIGHT")||r.getState().equals("UNKNOWN")).findFirst().map(Fixture::copy).orElse(null));
             when(intents.insert(any())).thenAnswer(i->{NpcVoiceEnrollment row=i.getArgument(0);
-                assertFalse(rows.containsKey(row.getSampleSha256()));row.setId(nextId++);rows.put(row.getSampleSha256(),copy(row));return 1;});
+                assertFalse(rows.containsKey(key(row)));row.setId(nextId++);rows.put(key(row),copy(row));return 1;});
             when(intents.claim(anyLong())).thenAnswer(i->{NpcVoiceEnrollment row=rows.values().stream()
                 .filter(r->r.getId().equals(i.getArgument(0))).findFirst().orElseThrow();
                 if(!row.getState().equals("PREPARED"))return 0;row.setState("IN_FLIGHT");return 1;});
             when(intents.complete(any())).thenAnswer(i->{if(failComplete)throw new IllegalStateException("controlled DB failure");
-                NpcVoiceEnrollment row=i.getArgument(0);rows.put(row.getSampleSha256(),copy(row));return 1;});
+                NpcVoiceEnrollment row=i.getArgument(0);rows.put(key(row),copy(row));return 1;});
             when(profiles.updateMerchantNpcVoice(any())).thenAnswer(i->write(i.getArgument(0)));
             when(profiles.updateNodeNpcVoice(any())).thenAnswer(i->write(i.getArgument(0)));
             when(provider.usable()).thenReturn(true);
@@ -90,6 +98,7 @@ public class NpcVoiceEnrollmentServiceTest
             if(!stored.getVoiceVersion().equals(change.getVoiceVersion()))return 0;
             stored=copy(change);stored.setVoiceVersion(change.getVoiceVersion()+1);return 1;
         }
+        private static String key(NpcVoiceEnrollment row) { return row.getRequestId().startsWith("sample:") ? row.getSampleSha256() : row.getRequestId(); }
         public NpcProfile enroll() {return service.enroll(ACTOR,stored.getScopeType(),SCOPE,NPC,SAMPLE,
                 ()->{signatures.incrementAndGet();return "approved-private-provider-input";});}
         public NpcProfile status() {return service.status(stored.getScopeType(),SCOPE,NPC);}

@@ -177,6 +177,11 @@ public class NodeNpcService {
     private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
 
     public NpcProfile voiceEnroll(Long actorMemberId, Long ownerMemberId, Long nodeId, String rawSample) {
+        return voiceEnroll(actorMemberId, ownerMemberId, nodeId, rawSample, null, null, false);
+    }
+
+    public NpcProfile voiceEnroll(Long actorMemberId, Long ownerMemberId, Long nodeId, String rawSample,
+            String requestId, Long previousIntentId, boolean duplicateChargeConsent) {
         chapterMerchantNodeService.requireOwnLiveNode(ownerMemberId, nodeId);
         consentGuard.requireCurrentAgreement(actorMemberId, "voice_clone_processing", "merchant_voice");
 
@@ -194,7 +199,7 @@ public class NodeNpcService {
         sample = mediaReferences.requireAttachment(actorMemberId, sample, true);
         if (sample.length() > 255) throw new IllegalStateException("录音引用过长");
         final String canonicalSample = sample;
-        return voiceEnrollmentService.enroll(actorMemberId, SCOPE_NODE, nodeId, mine.getId(), canonicalSample,
+        return voiceEnrollmentService.enroll(actorMemberId, SCOPE_NODE, nodeId, mine.getId(), canonicalSample, requestId, previousIntentId, duplicateChargeConsent,
                 () -> mediaReferences.processingUrl(canonicalSample, actorMemberId, "AUDIO"));
     }
 
@@ -205,6 +210,18 @@ public class NodeNpcService {
         NpcProfile mine = npcProfileMapper.selectNodeNpcByNodeId(nodeId);
         if (mine == null) return null;
         return voiceEnrollmentService.status(SCOPE_NODE, nodeId, mine.getId());
+    }
+
+    public NpcProfile voiceStatus(Long actorMemberId, Long ownerMemberId, Long nodeId, String requestId) {
+        chapterMerchantNodeService.requireOwnNode(ownerMemberId, nodeId);
+        NpcProfile mine = npcProfileMapper.selectNodeNpcByNodeId(nodeId);
+        return mine == null ? null : voiceEnrollmentService.status(actorMemberId, SCOPE_NODE, nodeId, mine.getId(), requestId);
+    }
+
+    public java.util.List<java.util.Map<String,Object>> voiceHistory(Long actorMemberId, Long ownerMemberId, Long nodeId) {
+        chapterMerchantNodeService.requireOwnNode(ownerMemberId, nodeId);
+        NpcProfile mine = npcProfileMapper.selectNodeNpcByNodeId(nodeId);
+        return mine == null ? java.util.List.of() : voiceEnrollmentService.history(actorMemberId, SCOPE_NODE, nodeId, mine.getId());
     }
 
     /** 清除音色,允许重录(旧音色继续留着会被拿去合成,商家想换声音时得先清)。 */

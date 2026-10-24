@@ -967,7 +967,8 @@ public class ApiMerchantController extends BaseController {
         NpcProfile result;
         try {
             result = voiceEnrollmentService.enroll(memberId, NPC_SCOPE_MERCHANT, access.getMerchantId(),
-                    mine.getId(), canonicalSample,
+                    mine.getId(), canonicalSample, body.getVoiceRequestId(), body.getVoicePreviousIntentId(),
+                    Boolean.TRUE.equals(body.getVoiceDuplicateChargeConsent()),
                     () -> mediaReferences.processingUrl(canonicalSample, memberId, "AUDIO"));
         } catch (com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService.Rejected rejected) {
             return error(rejected.getMessage());
@@ -975,6 +976,10 @@ public class ApiMerchantController extends BaseController {
         AjaxResult r = AjaxResult.success(Integer.valueOf(VOICE_READY).equals(result.getVoiceStatus())
                 ? "声音已就绪" : "声音结果已记录，请查询原任务");
         r.put("voiceStatus", result.getVoiceStatus());
+        r.put("voiceSample", result.getVoiceSample());
+        r.put("voicePreviousIntentId", result.getVoicePreviousIntentId());
+        r.put("voiceRequestId", result.getVoiceRequestId());
+        r.put("voiceSelected", result.getVoiceSelected());
         r.put("voiceIntentId", result.getVoiceIntentId());
         r.put("voiceIntentState", result.getVoiceIntentState());
         r.put("voiceReasonCode", result.getVoiceReasonCode());
@@ -982,8 +987,10 @@ public class ApiMerchantController extends BaseController {
     }
 
     /** 查声音状态。复刻中时前端轮询这里,不要拿合成失败去反推状态。 */
+    public AjaxResult npcVoiceStatus() { return npcVoiceStatus(null); }
+
     @PostMapping("/npc/voice/status")
-    public AjaxResult npcVoiceStatus() {
+    public AjaxResult npcVoiceStatus(@RequestBody(required = false) NpcProfile body) {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         if (memberId == null || memberId < 1) return error("请先登录");
@@ -996,9 +1003,14 @@ public class ApiMerchantController extends BaseController {
             r.put("voiceStatus", VOICE_NONE);
             return r;
         }
-        mine = voiceEnrollmentService.status(NPC_SCOPE_MERCHANT, access.getMerchantId(), mine.getId());
+        mine = voiceEnrollmentService.status(memberId, NPC_SCOPE_MERCHANT, access.getMerchantId(), mine.getId(),
+                body == null ? null : body.getVoiceRequestId());
         r.put("voiceStatus", mine.getVoiceStatus() == null ? VOICE_NONE : mine.getVoiceStatus());
         r.put("voiceSample", mine.getVoiceSample());
+        r.put("voicePreviousIntentId", mine.getVoicePreviousIntentId());
+        r.put("voiceRequestId", mine.getVoiceRequestId());
+        r.put("voiceSelected", mine.getVoiceSelected());
+        r.put("voiceHistory", voiceEnrollmentService.history(memberId, NPC_SCOPE_MERCHANT, access.getMerchantId(), mine.getId()));
         r.put("voiceIntentId", mine.getVoiceIntentId());
         r.put("voiceIntentState", mine.getVoiceIntentState());
         r.put("voiceReasonCode", mine.getVoiceReasonCode());
