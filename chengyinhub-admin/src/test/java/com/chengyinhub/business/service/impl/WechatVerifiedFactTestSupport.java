@@ -67,6 +67,12 @@ public final class WechatVerifiedFactTestSupport {
             @Override public List<Map<String,Object>> queryForList(String sql,Object... args) {
                 if(sql.startsWith("SELECT appid,trade_type,currency,total_fen FROM wx_pay_order_intent")
                         || sql.startsWith("SELECT closed_confirmed_at FROM wx_pay_order_intent")) return List.of();
+                if(sql.equals("SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? ORDER BY attempt_no DESC LIMIT 1 FOR UPDATE")) {
+                    // Explicit historical fixture: independently declares that no intent was ever frozen.
+                    // The real consumer still rejects a hash-bearing fact or a provider alias here.
+                    org.junit.jupiter.api.Assertions.assertEquals(2,args.length);
+                    return List.of();
+                }
                 throw new AssertionError("Unexpected SQL in explicit historical memory fixture: "+sql);
             }
         });

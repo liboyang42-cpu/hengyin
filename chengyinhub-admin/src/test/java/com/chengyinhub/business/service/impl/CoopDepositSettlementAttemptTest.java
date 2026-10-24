@@ -46,6 +46,7 @@ class CoopDepositSettlementAttemptTest {
                 5000, 5000, java.time.Instant.ofEpochSecond(1700000000), "a".repeat(64), "SUCCESS");
         paymentReference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L, paymentProof.factHash());
         when(verified.requireVerified(paymentReference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(paymentReference, paymentProof));
+        when(verified.requireConsumablePayment(paymentReference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(paymentReference, paymentProof));
         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.empty());
         row = new CoopInvite();
         row.setId(89L); row.setDepositStatus(1); row.setDepositOutTradeNo(BUSINESS); row.setDepositAmount(AMOUNT);
@@ -248,7 +249,7 @@ class CoopDepositSettlementAttemptTest {
         useRealTypedDepositOwner();
         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.of(
                 new WechatVerifiedPaymentFactService.RecoveryTicket(17L,89L,
-                        new WechatVerifiedPaymentFactService.Stored(paymentReference,paymentProof),4,"VERIFIED_SUCCESS_AFTER_CLOSED")));
+                        new WechatVerifiedPaymentFactService.Stored(paymentReference,paymentProof),4,"VERIFIED_SUCCESS_LOCAL_CONFLICT")));
         doAnswer(call -> {
             assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
             assertEquals(2,row.getDepositStatus()); assertEquals("WXTX89",row.getDepositPaidTransactionId()); return null;
@@ -265,13 +266,13 @@ class CoopDepositSettlementAttemptTest {
         useRealTypedDepositOwner();
         when(verified.findPaymentRecovery(paymentReference)).thenReturn(java.util.Optional.of(
                 new WechatVerifiedPaymentFactService.RecoveryTicket(17L,90L,
-                        new WechatVerifiedPaymentFactService.Stored(paymentReference,paymentProof),4,"VERIFIED_SUCCESS_AFTER_CLOSED")));
+                        new WechatVerifiedPaymentFactService.Stored(paymentReference,paymentProof),4,"VERIFIED_SUCCESS_LOCAL_CONFLICT")));
         assertThrows(IllegalStateException.class,this::resolve);
         verify(verified,never()).completePaymentRecovery(any(),anyLong());
         // Unit doubles do not roll back mutable row objects; the MySQL case verifies actual rollback.
     }
 
-    private void useRealTypedDepositOwner() {
+    private CoopInviteServiceImpl useRealTypedDepositOwner() {
         CoopInviteServiceImpl owner = new CoopInviteServiceImpl();
         ReflectionTestUtils.setField(owner,"coopInviteMapper",mapper);
         ReflectionTestUtils.setField(owner,"depositVerifiedFacts",verified);
@@ -280,6 +281,30 @@ class CoopDepositSettlementAttemptTest {
         when(mapper.markDepositPaidConfirmed(89L,BUSINESS,AMOUNT,"WXTX89")).thenAnswer(call -> {
             row.setDepositStatus(2);row.setDepositPaidTransactionId("WXTX89");return 1;
         });
+        return owner;
+    }
+
+    @Test
+    void typedEntryRejectsOldReferenceAfterAttemptSwitchWithoutTouchingReceiptOrRecovery() {
+        var owner = useRealTypedDepositOwner();
+        when(verified.requireConsumablePayment(paymentReference)).thenThrow(new WechatVerifiedPaymentFactService.ConflictException());
+        var mutation = new org.springframework.transaction.support.TransactionTemplate(
+                (org.springframework.transaction.PlatformTransactionManager)ReflectionTestUtils.getField(topic,"transactionManager"));
+        assertThrows(IllegalStateException.class,()->mutation.execute(status -> owner.markDepositPaid(BUSINESS,5000L,"WXTX89",paymentReference)));
+        unchanged();verify(mapper,never()).markDepositPaidConfirmed(any(),any(),any(),any());
+        verify(verified,never()).completePaymentRecovery(any(),anyLong());
+        assertEquals(paymentReference,verified.requireVerified(paymentReference).reference());
+    }
+
+    @Test
+    void directTypedEntryAcceptsCurrentReferenceAndExactReplayWithoutASecondCas() {
+        var owner = useRealTypedDepositOwner();
+        var mutation = new org.springframework.transaction.support.TransactionTemplate(
+                (org.springframework.transaction.PlatformTransactionManager)ReflectionTestUtils.getField(topic,"transactionManager"));
+        assertEquals(Boolean.TRUE,mutation.execute(status -> owner.markDepositPaid(BUSINESS,5000L,"WXTX89",paymentReference)));
+        assertEquals(Boolean.TRUE,mutation.execute(status -> owner.markDepositPaid(BUSINESS,5000L,"WXTX89",paymentReference)));
+        verify(mapper,times(1)).markDepositPaidConfirmed(89L,BUSINESS,AMOUNT,"WXTX89");
+        assertEquals(2,row.getDepositStatus());assertEquals("WXTX89",row.getDepositPaidTransactionId());
     }
 
     private boolean resolve() {

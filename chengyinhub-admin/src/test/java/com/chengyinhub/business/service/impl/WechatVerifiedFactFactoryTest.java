@@ -50,9 +50,27 @@ class WechatVerifiedFactFactoryTest {
         new TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
             assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
             assertEquals(original,facts.requireVerified(reference).facts());
+            // Real common consumer, explicit historical no-intent SQL port; never a frozen-attempt proof.
+            assertEquals(reference,facts.requireConsumablePayment(reference).reference());
+            assertEquals(reference,facts.requireConsumablePayment(reference).reference());
             assertThrows(IllegalStateException.class,()->facts.recordVerified(original));
         });
         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
         assertEquals(reference,facts.recordVerified(original));
     }
+
+    @Test void historicalFactoryCannotConsumeAnAliasedProviderAsAnOriginalLegacyNumber() {
+        var facts=WechatVerifiedFactTestSupport.memoryHistoricalFacts();
+        var original=new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "fixture-mch","fixture-app","REG99","WXP-OLD","WXP-OLD","fixture-tx99","fixture-tx99",
+                "JSAPI","CNY",6800,6800,Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME),null,"SUCCESS");
+        var reference=facts.recordVerified(original);
+        new TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+            assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,
+                    ()->facts.requireConsumablePayment(reference));
+        });
+        assertEquals(original,facts.requireVerified(reference).facts(),"rejection retains the original evidence");
+        assertTrue(facts.findPaymentRecovery(reference).isEmpty());
+    }
+
 }

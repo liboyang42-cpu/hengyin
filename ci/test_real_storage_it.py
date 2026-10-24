@@ -181,7 +181,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-verified-payment-facts": 4,
                     "architecture-day-registration-seats": 7,
                     "architecture-day-original-refund": 12,
-                    "architecture-day-deposit-attempt": 9,
+                    "architecture-day-deposit-attempt": 11,
                     "architecture-day-topic-content-budget": 15,
                     "architecture-day-committed-official-notice": 13,
                     "architecture-day-complaint-committed-notice": 11,

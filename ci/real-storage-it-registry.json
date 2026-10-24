@@ -1516,7 +1516,7 @@
       "note": "Four real MySQL intent/commit/concurrency contracts, actual gateway and SDK doubles, JDBC-backed domain mapper adapter. Dedicated UUID scratch only; no real payment/provider or full MyBatis four-domain acceptance."
     },
     "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT": {
-      "tests": 9,
+      "tests": 11,
       "storage": [
         "mysql"
       ],

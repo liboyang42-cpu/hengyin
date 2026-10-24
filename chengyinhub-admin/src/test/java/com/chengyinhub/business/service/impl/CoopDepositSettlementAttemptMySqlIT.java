@@ -274,7 +274,114 @@ class CoopDepositSettlementAttemptMySqlIT {
 
     @Test
     void realFactAndRecoveryTicketSurviveBusinessFailureThenCompleteWithExactPaidReceipt() throws Exception {
-        // This case alone uses B's real fact/recovery SQL, not the other cases' unit fact mapper.
+        var real = installRealFactRecoveryStorage();
+        db.update("UPDATE coop_invite SET status=3 WHERE id=89"); // Existing canceled-invite payment rule; never reopen it.
+        provider.setTradeState(Transaction.TradeStateEnum.SUCCESS);provider.setTransactionId("WXTX89");
+        provider.setSuccessTime("2026-10-24T00:00:00+08:00");
+        var originalFacts = gateway.queryOrderStatus(BUSINESS); // Real B writer queues the non-payable original business.
+        var originalReference = CoopInviteServiceImpl.checkedDepositPaymentReference(originalFacts);
+        assertEquals(4,real.findPaymentRecovery(originalReference).orElseThrow().state());
+        var failing = spy(real);
+        doThrow(new IllegalStateException("INJECTED_BEFORE_RECOVERY_RECEIPT_COMPLETION"))
+                .when(failing).completePaymentRecovery(any(),eq(89L));
+        ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",failing);
+        Map<String,Object> before = row();
+        assertThrows(IllegalStateException.class,()->tx.execute(status -> depositOwner.markDepositPaid(BUSINESS,5000L,"WXTX89",originalReference)));
+        assertEquals(before,row(),"Paid CAS must roll back if its recovery receipt cannot commit");
+        var reference=real.findPaymentSuccess("merchant",BUSINESS,"WXTX89").reference();
+        var pending=real.findPaymentRecovery(reference).orElseThrow();
+        assertEquals(89L,pending.businessId());assertEquals(4,pending.state());
+        assertEquals(reference,pending.original().reference());
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
+        ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",real);
+        assertEquals(Boolean.TRUE,tx.execute(status -> depositOwner.markDepositPaid(BUSINESS,5000L,"WXTX89",originalReference)));
+        assertEquals(3,mapper.selectCoopInviteById(89L).getStatus()); // The canceled cooperation was not reopened.
+        assertEquals(2,mapper.selectCoopInviteById(89L).getDepositStatus());
+        assertEquals(BUSINESS,mapper.selectCoopInviteById(89L).getDepositOutTradeNo());
+        assertEquals("WXTX89",mapper.selectCoopInviteById(89L).getDepositPaidTransactionId());
+        var completed=real.findPaymentRecovery(reference).orElseThrow();
+        assertEquals(2,completed.state());assertEquals(reference,completed.original().reference());
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
+        assertEquals(0,db.queryForObject("SELECT money_affecting FROM wx_payment_callback_outbox",Integer.class));
+    }
+
+    @Test
+    void oldSuccessAfterNewAttemptCannotConsumeOrCompleteButCurrentSuccessAndReplayCan() throws Exception {
+        // Separate owned UUID schema: no immutable facts/receipts from the original nine cases are cleared/reused.
+        CoopDepositSettlementAttemptMySqlIT isolated = new CoopDepositSettlementAttemptMySqlIT();
+        try {
+            isolated.originalSchemaAndMapper();isolated.originalIntentAndRealServices();
+            var real = isolated.installRealFactRecoveryStorage();
+            isolated.provider.setTradeState(Transaction.TradeStateEnum.CLOSED);
+            isolated.gateway.queryOrderStatus(BUSINESS);
+            String next = isolated.gateway.freezePaymentIntent(BUSINESS,"merchant","wx-next","APP","CNY",5000,
+                    "","deposit","https://example.test/notify");
+            assertNotEquals(BUSINESS,next);
+            isolated.provider.setTradeState(Transaction.TradeStateEnum.SUCCESS);
+            isolated.provider.setTransactionId("WXTX89");isolated.provider.setSuccessTime("2026-10-24T00:00:00+08:00");
+            Map<String,String> oldFacts = isolated.gateway.verifiedPaymentFacts(independentObservation(isolated.provider));
+            assertNotNull(oldFacts,"The original late SUCCESS must be retained, not silently discarded");
+            var oldReference = CoopInviteServiceImpl.checkedDepositPaymentReference(oldFacts);
+            var oldTicket = real.findPaymentRecovery(oldReference).orElseThrow();
+            assertEquals(4,oldTicket.state());assertEquals(89L,oldTicket.businessId());
+            Map<String,Object> before = isolated.row();
+            assertThrows(IllegalStateException.class,()->isolated.tx.execute(status -> isolated.depositOwner.markDepositPaid(
+                    BUSINESS,5000L,"WXTX89",oldReference)));
+            assertEquals(before,isolated.row());
+            assertEquals(oldReference,real.requireVerified(oldReference).reference());
+            assertEquals(4,real.findPaymentRecovery(oldReference).orElseThrow().state());
+            assertEquals(2,isolated.db.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent",Integer.class));
+            assertNull(isolated.db.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent WHERE out_trade_no=?",java.sql.Timestamp.class,next));
+            assertNull(isolated.mapper.selectCoopInviteById(89L).getDepositRefundNo());
+            // A genuine original SUCCESS for the current attempt still consumes; never use closable for SUCCESS.
+            isolated.provider.setOutTradeNo(next);isolated.provider.setAppid("wx-next");
+            isolated.provider.setTradeType(Transaction.TradeTypeEnum.APP);isolated.provider.setTransactionId("WXTX_NEXT");
+            isolated.provider.setSuccessTime("2026-10-24T00:00:01+08:00");
+            Map<String,String> currentFacts = isolated.gateway.verifiedPaymentFacts(independentObservation(isolated.provider));
+            assertNotNull(currentFacts);
+            var currentReference = CoopInviteServiceImpl.checkedDepositPaymentReference(currentFacts);
+            assertNotEquals(oldReference,currentReference);
+            assertEquals(Boolean.TRUE,isolated.tx.execute(status -> isolated.depositOwner.markDepositPaid(
+                    BUSINESS,5000L,"WXTX_NEXT",currentReference)));
+            Map<String,Object> paid = isolated.row();
+            assertEquals(2,isolated.mapper.selectCoopInviteById(89L).getDepositStatus());
+            assertEquals("WXTX_NEXT",isolated.mapper.selectCoopInviteById(89L).getDepositPaidTransactionId());
+            assertEquals(Boolean.TRUE,isolated.tx.execute(status -> isolated.depositOwner.markDepositPaid(
+                    BUSINESS,5000L,"WXTX_NEXT",currentReference)));
+            assertEquals(paid,isolated.row(),"Exact replay must not write another paid receipt or change amounts/times");
+            assertEquals(4,real.findPaymentRecovery(oldReference).orElseThrow().state());
+            assertEquals(oldReference,real.findPaymentRecovery(oldReference).orElseThrow().original().reference());
+            assertEquals(2,isolated.db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
+            assertEquals(1,isolated.db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
+            assertNull(isolated.mapper.selectCoopInviteById(89L).getDepositRefundNo());
+        } finally { isolated.cleanupOnlyOwnedSchema(); }
+    }
+
+    @Test
+    void currentButClosedAttemptLateSuccessCannotConsumeOrCompleteRecovery() throws Exception {
+        CoopDepositSettlementAttemptMySqlIT isolated = new CoopDepositSettlementAttemptMySqlIT();
+        try {
+            isolated.originalSchemaAndMapper();isolated.originalIntentAndRealServices();
+            var real = isolated.installRealFactRecoveryStorage();
+            isolated.provider.setTradeState(Transaction.TradeStateEnum.CLOSED);isolated.gateway.queryOrderStatus(BUSINESS);
+            isolated.provider.setTradeState(Transaction.TradeStateEnum.SUCCESS);isolated.provider.setTransactionId("WXTX89");
+            isolated.provider.setSuccessTime("2026-10-24T00:00:00+08:00");
+            var observed=isolated.gateway.verifiedPaymentFacts(independentObservation(isolated.provider));assertNotNull(observed);
+            var reference=CoopInviteServiceImpl.checkedDepositPaymentReference(observed);
+            var before=isolated.row();assertEquals(4,real.findPaymentRecovery(reference).orElseThrow().state());
+            assertThrows(IllegalStateException.class,()->isolated.tx.execute(status -> isolated.depositOwner.markDepositPaid(
+                    BUSINESS,5000L,"WXTX89",reference)));
+            assertEquals(before,isolated.row());assertEquals(reference,real.requireVerified(reference).reference());
+            assertEquals(4,real.findPaymentRecovery(reference).orElseThrow().state());
+            assertEquals(1,isolated.db.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent",Integer.class));
+            assertNotNull(isolated.db.queryForObject("SELECT closed_confirmed_at FROM wx_pay_order_intent",java.sql.Timestamp.class));
+            assertNull(isolated.mapper.selectCoopInviteById(89L).getDepositRefundNo());
+        } finally { isolated.cleanupOnlyOwnedSchema(); }
+    }
+
+    private WechatVerifiedPaymentFactService installRealFactRecoveryStorage() throws Exception {
         Path root = Files.exists(Path.of("sql/base_schema_20260818.sql")) ? Path.of("") : Path.of("..");
         String base = Files.readString(root.resolve("sql/base_schema_20260818.sql"));
         for (String table : List.of("wx_payment_callback_inbox", "wx_payment_callback_outbox")) {
@@ -287,33 +394,17 @@ class CoopDepositSettlementAttemptMySqlIT {
         var real = WechatVerifiedFactTestSupport.realFacts(db.getDataSource());
         ReflectionTestUtils.setField(gateway,"verifiedFacts",real);
         ReflectionTestUtils.setField(ReflectionTestUtils.getField(gateway,"intents"),"verifiedFacts",real);
-        provider.setTradeState(Transaction.TradeStateEnum.CLOSED);
-        gateway.queryOrderStatus(BUSINESS); // Original CLOSED receipt precedes this late, immutable SUCCESS.
-        provider.setTradeState(Transaction.TradeStateEnum.SUCCESS);provider.setTransactionId("WXTX89");
-        provider.setSuccessTime("2026-10-24T00:00:00+08:00");
-        var failing = spy(real);
-        doThrow(new IllegalStateException("INJECTED_BEFORE_RECOVERY_RECEIPT_COMPLETION"))
-                .when(failing).completePaymentRecovery(any(),eq(89L));
-        ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",failing);
-        Map<String,Object> before = row();
-        assertThrows(IllegalStateException.class,this::resolve);
-        assertEquals(before,row(),"Paid CAS must roll back if its recovery receipt cannot commit");
-        var reference=real.findPaymentSuccess("merchant",BUSINESS,"WXTX89").reference();
-        var pending=real.findPaymentRecovery(reference).orElseThrow();
-        assertEquals(89L,pending.businessId());assertEquals(4,pending.state());
-        assertEquals(reference,pending.original().reference());
-        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
-        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
         ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",real);
-        assertFalse(resolve()); // Same original fact/attempt, no automatic refund or reopening.
-        assertEquals(2,mapper.selectCoopInviteById(89L).getDepositStatus());
-        assertEquals(BUSINESS,mapper.selectCoopInviteById(89L).getDepositOutTradeNo());
-        assertEquals("WXTX89",mapper.selectCoopInviteById(89L).getDepositPaidTransactionId());
-        var completed=real.findPaymentRecovery(reference).orElseThrow();
-        assertEquals(2,completed.state());assertEquals(reference,completed.original().reference());
-        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_verified_payment_fact",Integer.class));
-        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM wx_payment_callback_outbox",Integer.class));
-        assertEquals(0,db.queryForObject("SELECT money_affecting FROM wx_payment_callback_outbox",Integer.class));
+        return real;
+    }
+
+    private static Transaction independentObservation(Transaction provider) {
+        Transaction notification = new Transaction();notification.setOutTradeNo(provider.getOutTradeNo());
+        notification.setMchid(provider.getMchid());notification.setAppid(provider.getAppid());
+        notification.setTradeState(provider.getTradeState());notification.setTradeType(provider.getTradeType());
+        notification.setTransactionId(provider.getTransactionId());notification.setSuccessTime(provider.getSuccessTime());
+        TransactionAmount amount = new TransactionAmount();amount.setTotal(provider.getAmount().getTotal());
+        amount.setCurrency(provider.getAmount().getCurrency());notification.setAmount(amount);return notification;
     }
 
     private boolean resolve() {

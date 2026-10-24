@@ -3579,6 +3579,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             return registrationPaymentCallbackFailure(outTradeNo,
                     "closed_registration_original_payment_recovery_required");
         }
+        // Shared by cancellation preflight and consumption, under the original topic/activity/order locks.
+        verifiedPaymentFacts.requireConsumablePayment(consumed.reference());
         coopSettlementClaimService.requirePaidHalfStateCashAdmission(registration.getId(), consumed.reference());
         if (lockedOrder.topic() != null && Integer.valueOf(1).equals(lockedOrder.topic().getIsSettlement())
                 && lockedOrder.rows().stream().anyMatch(row -> !isSameCompletedPayment(row, verified.transactionId()))) {

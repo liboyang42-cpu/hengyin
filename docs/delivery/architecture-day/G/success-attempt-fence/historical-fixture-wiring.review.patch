@@ -1,0 +1,47 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java
+@@ -67,6 +67,12 @@
+             @Override public List<Map<String,Object>> queryForList(String sql,Object... args) {
+                 if(sql.startsWith("SELECT appid,trade_type,currency,total_fen FROM wx_pay_order_intent")
+                         || sql.startsWith("SELECT closed_confirmed_at FROM wx_pay_order_intent")) return List.of();
++                if(sql.equals("SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? ORDER BY attempt_no DESC LIMIT 1 FOR UPDATE")) {
++                    // Explicit historical fixture: independently declares that no intent was ever frozen.
++                    // The real consumer still rejects a hash-bearing fact or a provider alias here.
++                    org.junit.jupiter.api.Assertions.assertEquals(2,args.length);
++                    return List.of();
++                }
+                 throw new AssertionError("Unexpected SQL in explicit historical memory fixture: "+sql);
+             }
+         });
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactFactoryTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactFactoryTest.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactFactoryTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactFactoryTest.java
+@@ -50,9 +50,27 @@
+         new TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
+             assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+             assertEquals(original,facts.requireVerified(reference).facts());
++            // Real common consumer, explicit historical no-intent SQL port; never a frozen-attempt proof.
++            assertEquals(reference,facts.requireConsumablePayment(reference).reference());
++            assertEquals(reference,facts.requireConsumablePayment(reference).reference());
+             assertThrows(IllegalStateException.class,()->facts.recordVerified(original));
+         });
+         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+         assertEquals(reference,facts.recordVerified(original));
+     }
++
++    @Test void historicalFactoryCannotConsumeAnAliasedProviderAsAnOriginalLegacyNumber() {
++        var facts=WechatVerifiedFactTestSupport.memoryHistoricalFacts();
++        var original=new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
++                "fixture-mch","fixture-app","REG99","WXP-OLD","WXP-OLD","fixture-tx99","fixture-tx99",
++                "JSAPI","CNY",6800,6800,Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME),null,"SUCCESS");
++        var reference=facts.recordVerified(original);
++        new TransactionTemplate(WechatVerifiedFactTestSupport.unitWriteTransactions()).executeWithoutResult(status->{
++            assertThrows(WechatVerifiedPaymentFactService.ConflictException.class,
++                    ()->facts.requireConsumablePayment(reference));
++        });
++        assertEquals(original,facts.requireVerified(reference).facts(),"rejection retains the original evidence");
++        assertTrue(facts.findPaymentRecovery(reference).isEmpty());
++    }
++
+ }

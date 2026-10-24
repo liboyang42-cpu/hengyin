@@ -1642,7 +1642,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {
         if (!TransactionSynchronizationManager.isActualTransactionActive())
             throw new IllegalStateException("保证金事实消费必须与原业务回执同事务");
-        var payment = depositVerifiedFacts.requireVerified(reference).facts(); payment.requireValid();
+        var payment = depositVerifiedFacts.requireConsumablePayment(reference).facts(); payment.requireValid();
         if (payment.kind() != com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
                 || !payment.businessOutTradeNo().equals(outTradeNo) || !payment.transactionId().equals(transactionId)
                 || paidCents == null || payment.amountFen() != paidCents || payment.totalFen() != paidCents
