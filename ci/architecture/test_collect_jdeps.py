@@ -1166,6 +1166,59 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                 self.assert_unknown(report)
                 self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
 
+    def test_original_producer_manual_callback_and_quota_handoff_exact_directions(self):
+        edges = [("G_ORIGINAL_PRODUCER", target) for target in
+                 ("G_ORIGINAL_SETTLEMENT_LEDGER", "G_ORIGINAL_MANUAL_CASES", "G_ORIGINAL_ALLOCATION",
+                  "B_VERIFIED_PAYMENT_FACT_STORE", "B_VERIFIED_PAYMENT_FACT_DTO")]
+        edges += [("G_ORIGINAL_MANUAL_CASES", "G_ORIGINAL_MANUAL_STORAGE"),
+                  ("G_ORIGINAL_MANUAL_CASES", "B_VERIFIED_PAYMENT_FACT_DTO"),
+                  ("E_QUOTA_RECOVERY", "D_NPC_ASR_INTENT_STORAGE"),
+                  ("E_QUOTA_RECOVERY", "D_NPC_ASR_QUOTA_HANDOFF")]
+        for source, target in edges: self.reference(self.owner_member(source), self.owner_member(target))
+        callback = "com.chengyinhub.business.service.impl.CoopSettlementManualCases$1"
+        self.reference(callback, self.owner_member("G_ORIGINAL_MANUAL_STORAGE"))
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual(set(edges), set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_manual_storage_does_not_grant_other_or_prefixed_callback_consumers(self):
+        outer = "com.chengyinhub.business.service.impl.CoopSettlementManualCases"
+        sources = [self.foreign, self.owner_member("G_ORIGINAL_PRODUCER"), outer + "$2", outer + "$1$Nested"]
+        for source in sources:
+            self.system_entries[source.replace(".", "/") + ".class"] = ("NOT_COMPILED_CALLBACK_CONTROL_" + source).encode()
+        self.write_system(); self.output = self.output.with_name("manual-exact-consumers"); self.collect()
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for source in sources:
+            with self.subTest(source=source):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(source, self.owner_member("G_ORIGINAL_MANUAL_STORAGE"))
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                self.assertTrue(any(f["rule"] == "EXACT_STORAGE_PORT_CONSUMER" and f["source_class"] == source for f in report["findings"]))
+
+    def test_original_and_handoff_owners_do_not_gain_god_backreferences(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("G_ORIGINAL_PRODUCER", "G_ORIGINAL_MANUAL_CASES", "G_ORIGINAL_MANUAL_STORAGE",
+                      "G_ORIGINAL_ALLOCATION", "D_NPC_ASR_QUOTA_HANDOFF"):
+            for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+                with self.subTest(owner=owner, target=target):
+                    self.replace_evidence("jdeps.stdout.txt", original)
+                    self.reference(self.owner_member(owner), target)
+                    report = self.check_directions()
+                    self.assertEqual("BLOCKED", report["verdict"], report)
+                    self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
+
+    def test_original_callback_or_handoff_missing_raw_rows_remains_unknown(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for owner in ("G_ORIGINAL_PRODUCER", "G_ORIGINAL_MANUAL_CASES", "G_ORIGINAL_MANUAL_STORAGE",
+                      "G_ORIGINAL_ALLOCATION", "D_NPC_ASR_QUOTA_HANDOFF"):
+            for member in self.dependencies["owners"][owner]["members"]:
+                with self.subTest(owner=owner, member=member):
+                    self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.decode().splitlines()
+                                          if not line.strip().startswith(member + " -> ")).encode())
+                    self.assert_unknown(self.check_directions())
+
     def test_npc_actual_enrollment_asr_provider_and_factory_directions_are_green(self):
         edges = [("E_NPC_VOICE_ENROLLMENT", "E_NPC_VOICE_INTENT_STORAGE"),
                  ("E_NPC_VOICE_ENROLLMENT", "E_VOICE_PROVIDER_CLIENT"),

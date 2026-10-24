@@ -429,6 +429,8 @@ def technical_dependency_policy():
         require(isinstance(policy["owners"], list) and policy["owners"])
         owners, members = {}, {}
         fqcn = r"(?:" + IDENT + r"\.)+" + IDENT
+        # Only the actual G rollback callback; retain the old grammar for every other binding.
+        rollback_callback = "com.chengyinhub.business.service.impl.CoopSettlementManualCases$1"
         for owner in policy["owners"]:
             fields = {"id", "module", "members", "forbidden_backrefs"}
             require(fields <= set(owner) and set(owner) <= fields | {"restricted_packages", "allowed_consumers"})
@@ -436,7 +438,7 @@ def technical_dependency_policy():
                 consumers = owner["allowed_consumers"]
                 require(len(owner["members"]) == 1 and isinstance(consumers, list) and consumers
                         and len(set(consumers)) == len(consumers))
-                require(all(isinstance(n, str) and re.fullmatch(fqcn, n) for n in consumers))
+                require(all(isinstance(n, str) and (re.fullmatch(fqcn, n) or n == rollback_callback) for n in consumers))
             restricted = owner.get("restricted_packages", {})
             require(isinstance(restricted, dict))
             for package, exceptions in restricted.items():
@@ -449,7 +451,7 @@ def technical_dependency_policy():
             require(owner["module"] in modules)
             for field in ("members", "forbidden_backrefs"):
                 require(isinstance(owner[field], list) and owner[field] and len(owner[field]) == len(set(owner[field])))
-                require(all(isinstance(n, str) and re.fullmatch(fqcn, n) for n in owner[field]))
+                require(all(isinstance(n, str) and (re.fullmatch(fqcn, n) or (field == "members" and n == rollback_callback)) for n in owner[field]))
             for member in owner["members"]:
                 require(member not in members)
                 members[member] = id_

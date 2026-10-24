@@ -52,6 +52,42 @@
       "check": "原支付号/退款号/金额匹配；持久状态与 token CAS；UNKNOWN 原号查单，历史已退/归档不得猜测补发；afterCommit 必须有可达的持久恢复入口。",
       "existing_test_sources": ["chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java"],
       "test_limit": "CHENGYIN_FUNDS_MYSQL_IT 门控未就绪必须红，不能 skip；不代表真实渠道回执。"
+    },
+    {
+      "id": "coop-original-produce",
+      "owner": "chengyinhub-system:CoopSettlementOriginalProducer",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalProducer.java",
+      "symbol": "freezeOriginals",
+      "callers": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ],
+      "persistent_sources": [
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml"
+      ],
+      "check": "原topic事务/锁/原payment fact/seat及五分项守恒合同不变；负毛利只在物理rollback后持久MANUAL_REQUIRED，不扣款/批准/冲账。",
+      "existing_test_sources": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalProducerMySqlIT.java"
+      ],
+      "test_limit": "登记不是执行；源方法/事务与金额语义不能由class graph证明。"
+    },
+    {
+      "id": "npc-asr-original-quota-handoff",
+      "owner": "chengyinhub-system:AiQuotaRecoveryService",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "symbol": "requireNpcAsrHandoff",
+      "callers": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java"
+      ],
+      "persistent_sources": [
+        "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml"
+      ],
+      "check": "沿用原ASR reservation与持久handoff；退款只读原NOT_SENT proof并CAS原pending，UNKNOWN不当NOT_SENT，不放宽原额度/恢复合同。",
+      "existing_test_sources": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/NpcAsrIntentMySqlIT.java"
+      ],
+      "test_limit": "NOT_RUN；类型及Mapper owner登记不证明方法级经济授权或Redis/MySQL原子性。"
     }
   ],
   "business_commands": [
@@ -67,7 +103,9 @@
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#stage",
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#retain",
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#requireRefund",
-        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#runDue"
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#runDue",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#requireNpcAsrHandoff",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#refundNpcAsrNotSent"
       ]
     },
     {
@@ -91,7 +129,8 @@
       ],
       "public_methods": [
         "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#enroll",
-        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#status"
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#status",
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#history"
       ]
     },
     {
@@ -107,7 +146,21 @@
         "com.chengyinhub.business.service.impl.NpcAsrIntentService#readOutcome",
         "com.chengyinhub.business.service.impl.NpcChatWriteService#admit",
         "com.chengyinhub.business.service.impl.NpcChatWriteService#deleteForUser",
-        "com.chengyinhub.business.service.impl.DataRetentionServiceImpl#cleanNpcChatRequests"
+        "com.chengyinhub.business.service.impl.DataRetentionServiceImpl#cleanNpcChatRequests",
+        "com.chengyinhub.business.service.impl.NpcChatWriteService#admitShop",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#refundNpcAsrNotSent",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#runDue"
+      ]
+    },
+    {
+      "id": "coop-original-manual-case",
+      "business_owner": "G_ORIGINAL_MANUAL_CASES",
+      "writes": [
+        "COOP_SETTLEMENT_MANUAL_CASE"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.impl.CoopSettlementManualCases#requireNoOpenCase",
+        "com.chengyinhub.business.service.impl.CoopSettlementManualCases#afterRollback"
       ]
     }
   ],
