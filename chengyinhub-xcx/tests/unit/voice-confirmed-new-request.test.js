@@ -29,7 +29,9 @@ function fixture(kind, previousStorage) {
     setTimeout:()=>0,clearTimeout(){},console,require(id){
       if(id.endsWith('voice-enrollment-journal.js'))return journal;
       if(id.endsWith('modal.js'))return {show:options=>modals.push(options)};
-      if(id.endsWith('pixel-avatar.js'))return {AVATAR_IDS:['one'],stringifyCode:()=> 'px1:one'};
+      if(id.endsWith('merchant-theme.js'))return {merchantPageShow(){},merchantPageRestore(){}};
+      if(id.endsWith('pixel-avatar.js'))return {AVATAR_IDS:['one'],stringifyCode:()=> 'px1:one',
+        isPixelAvatar:code=>String(code||'').startsWith('px1:'),parseCode:code=>String(code).slice(4)};
       if(id.endsWith('pixel-avatar-data.js'))return {AVATARS:{one:{name:'fixture'}}};
       if(id.endsWith('upload-client.js'))return {MAX_UPLOAD_FILE_SIZE:10485760};
       return {};
@@ -49,6 +51,48 @@ function fixture(kind, previousStorage) {
   return {target,storage,values,app,session,requests,modals,scope,read,payload,state};
 }
 for(const kind of ['merchant','node']) {
+
+  async function hideAndReopen(f) {
+    f.state.holdStatus=false;
+    if(kind==='merchant') { f.target.onHide(); f.target.onShow(); }
+    else {
+      f.target._onHide();f.target.data.show=false;f.target.data.show=true;f.target._onOpen();
+      const detail=f.requests.filter(row=>row.url.endsWith('/npc/detail')).at(-1);
+      detail.success({code:200,data:{name:'fixture',avatar:'px1:one',voiceStatus:1,voiceSample:SAMPLE}});
+    }
+    await settle();
+  }
+  function unknownReply(f, request) {
+    request.success({code:200,data:{voiceRequestId:f.payload(request).voiceRequestId,voiceIntentId:7,
+      voiceIntentState:'UNKNOWN',voiceStatus:1,voiceSample:SAMPLE,voiceSelected:true}});
+  }
+  test(kind+' 隐藏重开释放旧状态查询flag，旧finally不能清新查询代次',async()=>{
+    for(const outcome of ['success','failure']) {
+      const f=fixture(kind),original=JSON.stringify(f.read());f.state.holdStatus=true;
+      f.target.confirmNewVoiceRequest();const old=f.requests.at(-1);assert.equal(f.target._voiceConfirming,true);
+      await hideAndReopen(f);assert.equal(f.target._voiceConfirming,false);assert.equal(f.target._voiceRiskModalOpen,false);
+      f.state.holdStatus=true;f.target.confirmNewVoiceRequest();const fresh=f.requests.at(-1);
+      assert.notEqual(fresh,old);assert.equal(f.target._voiceConfirming,true);
+      if(outcome==='success')unknownReply(f,old);else old.successStatusAbnormal({code:500,msg:'old-query-failure'});
+      await settle();assert.equal(f.target._voiceConfirming,true);assert.equal(f.modals.length,0);
+      unknownReply(f,fresh);await settle();assert.equal(f.modals.length,1);assert.equal(f.target._voiceRiskModalOpen,true);
+      f.modals[0].success({confirm:false});await settle();assert.equal(JSON.stringify(f.read()),original);
+      assert.equal(f.requests.filter(row=>row.url.endsWith('/enroll')).length,0);
+    }
+  });
+  test(kind+' 隐藏重开释放旧modal，迟到success和complete不能碰新owner',async()=>{
+    const f=fixture(kind),original=f.read().active;
+    f.target.confirmNewVoiceRequest();await settle();const old=f.modals[0],oldOwner=f.target._voiceRiskModalOwner;
+    assert.equal(f.target._voiceRiskModalOpen,true);await hideAndReopen(f);
+    assert.equal(f.target._voiceRiskModalOpen,false);assert.equal(f.target._voiceRiskModalOwner,null);
+    f.target.confirmNewVoiceRequest();await settle();assert.equal(f.modals.length,2);
+    const fresh=f.modals[1],newOwner=f.target._voiceRiskModalOwner;assert.notEqual(newOwner,oldOwner);
+    old.success({confirm:true});old.complete();await settle();
+    assert.equal(f.target._voiceRiskModalOpen,true);assert.equal(f.target._voiceRiskModalOwner,newOwner);
+    assert.equal(f.read().active,original);assert.equal(f.requests.filter(row=>row.url.endsWith('/enroll')).length,0);
+    fresh.success({confirm:true});await settle();assert.equal(f.requests.filter(row=>row.url.endsWith('/enroll')).length,1);
+    assert.notEqual(f.read().active,original);assert.equal(f.read().records.find(row=>row.requestId===original).state,'UNKNOWN');
+  });
   test(kind+' 取消风险确认不创建身份也不派发',async()=>{
     const f=fixture(kind),original=JSON.stringify(f.read());f.target.confirmNewVoiceRequest();await settle();
     assert.match(f.modals[0].content,/重复音色或占用额度/);f.modals[0].success({confirm:false});await settle();

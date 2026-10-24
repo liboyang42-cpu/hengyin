@@ -40,6 +40,8 @@ function fixture(kind) {
   }, { filename: file });
   const target = Object.assign({}, kind === 'merchant' ? definition : definition.methods);
   target.data = JSON.parse(JSON.stringify(definition.data));
+  // Real node voice commands require an open form and a concrete node scope.
+  if (kind === 'node') Object.assign(target.data, { show: true, nodeId: 1 });
   target.setData = (patch, callback) => {
     state.patches.push(patch);
     for (const [key, value] of Object.entries(patch)) {

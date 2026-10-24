@@ -458,15 +458,16 @@
     "final_storage": {
       "run": 40122516880,
       "source": "ca0e0d2598727f6e567c802b7a664f9634d945c6",
-      "status": "IN_PROGRESS_AT_1859",
+      "status": "COMPLETED_FAILURE",
       "unique_classes": 65,
       "declared_cases": 804,
       "max_parallel": 20,
       "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40122516880",
-      "successful_jobs": 45,
-      "failed_jobs": 19,
-      "pending_jobs": 2,
-      "not_case_counts": true
+      "successful_jobs": 47,
+      "failed_jobs": 20,
+      "pending_jobs": 0,
+      "not_case_counts": true,
+      "total_jobs": 69
     }
   },
   "current_cloud_assignment": {
@@ -563,10 +564,6 @@
       "state": "FINAL_REVIEW_CONFIRMED_P2_IMPLEMENTING"
     },
     {
-      "area": "C voice lifecycle flag P2 and final Node fixture/user-copy failures",
-      "state": "FINAL_REVIEW_AND_CI_REPAIR_IMPLEMENTING"
-    },
-    {
       "area": "Remaining final CI failures:19backend suites, storage failures, mini/static/dependency gate",
       "state": "NOT_ALL_DIAGNOSED_OR_REPAIRED",
       "note": "Only confirmed independent bugs counted as bugs; never equate failing cases/jobs with business defects"
@@ -597,11 +594,9 @@
       "validation": "NOT_RUN"
     },
     "C": {
-      "cursor": "44c18d1e-8e5a-4abb-89e4-7e129265b5bd:3",
-      "turn": "01a16ef9-4e08-717f-ad39-fb548e29e55a",
-      "state": "completed_delivered_integrated",
-      "source": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
-      "reported": "Complete source delivered and applied; root migration/count wiring added; not runtime acceptance"
+      "source": "3579e5ef0e4567b87f5a7816694ff0134b45aec6",
+      "state": "complete applied; targetedNodePASS, full candidate not accepted",
+      "cursor": "44c18d1e-8e5a-4abb-89e4-7e129265b5bd:5"
     },
     "F": {
       "cursor": "65230fb5-d1c0-4cae-8bda-71f83e84f096:2",
@@ -622,7 +617,7 @@
     "registry": "Voice MySQL3->4, voice+ASR10->11, combined782->783; declaration metadata only",
     "generated_ledger": "Regenerate once final client source is composed; 5113 belongs to preceding source"
   },
-  "updated_at": "2026-10-24T19:01:00Z",
+  "updated_at": "2026-10-24T19:03:51Z",
   "manual_case_read_source": {
     "source": "e57f0a32037bf88b2abf1626cca4760714d88592",
     "parent": "54c524ca99204804b6b84af517359eabc8c6ee8d",
@@ -678,7 +673,8 @@
       "skipped": 647,
       "not_business_bug_count": true,
       "artifact": "backend-test-reports-40122522919-1"
-    }
+    },
+    "latest_source_repair_state": "Root d957 plus applied C3579 source and regenerated ledger; ASR terminal race D delivery still pending; full repair candidate not accepted"
   },
   "final_source_reviews": {
     "A": {
@@ -709,7 +705,16 @@
       "SettlementController reviewed newGET read permission and exact source hash updated; seed controls9/9PASS",
       "A single-seat group fee fix and2Java regression source; JavaNOTRUN"
     ],
-    "C": "Voice shared fixtures/terminology plus H lifecycle P2 still implementing",
+    "C": "3579e5ef full9files applied; five targetedNode files156/156PASS0skip and ledger regeneration5119 complete; fullCI/source review of repaired candidate NOT_RUN",
     "D": "B ASR/text terminal race P2 still implementing"
+  },
+  "automation_closeout": {
+    "id": "hengyin-agent",
+    "status": "DELETED_AT_AUTHORIZED_DEADLINE",
+    "deadline": "2026-10-24T19:03:41Z",
+    "deleted_at": "2026-10-24T19:03:51Z",
+    "goal_complete": false,
+    "goal_paused": false,
+    "no_new_ci_dispatched": true
   }
 }
