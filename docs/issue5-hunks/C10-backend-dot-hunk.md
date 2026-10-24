@@ -155,3 +155,17 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 11. Parent addendum 2026-10-23 17:37 America/Los_Angeles
+
+`WorkshopRunServerVerificationTest.recoverOfNeverSeenIdDoesNotOccupyThenUniqueVerifyApplies`：未见 `c10-run-never-c10` 的 `recover` 保持 UNKNOWN 且 binder 空；后续唯一 verifyServer 的 WAITING_SOURCE 才是该 id 的唯一原文。未发明新 API。
+
+父进程独立 surefire（`/tmp/hy-c10-rev`，HEAD `b88f6993a`，2026-10-24T00:37:35Z）：
+
+```
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- WorkshopRunServerVerificationTest
+Tests run: 34, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
