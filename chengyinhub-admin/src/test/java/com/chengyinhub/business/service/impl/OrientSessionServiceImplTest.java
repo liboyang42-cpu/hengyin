@@ -212,8 +212,11 @@ class OrientSessionServiceImplTest {
         assertEquals(((Number) first.get("serverNow")).longValue(), ((Number) replay.get("serverNow")).longValue());
         assertErr("ORIENT_IDEMPOTENCY_CONFLICT", () -> service.start(MEMBER, SESSION, CONFIG_VERSION + 9, "key-start-1"));
 
+        int written = actions.size();
         Map<String, Object> readBack = service.receipt(MEMBER, SESSION, "key-start-1");
+        assertEquals(true, readBack.get("replayed"));
         assertEquals(((Number) first.get("serverNow")).longValue(), ((Number) readBack.get("serverNow")).longValue());
+        assertEquals(written, actions.size());
         assertErr("ORIENT_RECEIPT_NOT_FOUND", () -> service.receipt(MEMBER, SESSION, "key-never-sent"));
         assertErr("ORIENT_IDEMPOTENCY_KEY_REQUIRED", () -> service.start(MEMBER, SESSION, CONFIG_VERSION, null));
         assertErr("ORIENT_IDEMPOTENCY_KEY_REQUIRED", () -> service.abandon(MEMBER, SESSION, "bad key!"));
