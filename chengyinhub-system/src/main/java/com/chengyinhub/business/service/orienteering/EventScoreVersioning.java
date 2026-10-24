@@ -3,6 +3,8 @@ package com.chengyinhub.business.service.orienteering;
 import com.chengyinhub.business.domain.OrientScoreEntry;
 import com.chengyinhub.business.mapper.OrientScoringMapper;
 import com.chengyinhub.business.service.IOrientScoringService;
+import com.chengyinhub.business.service.IOrientSessionService;
+import com.chengyinhub.business.service.support.OrientSessionException;
 import com.chengyinhub.business.service.orienteering.OrdinaryCityTimezoneQualifier.SafetyConfirmation;
 import com.chengyinhub.business.service.orienteering.PublishedRuleSelector.FrozenPublishedRule;
 import com.chengyinhub.business.service.orienteering.TeamClubEligibilityAuthority.Registration;
@@ -37,6 +39,9 @@ public final class EventScoreVersioning {
     public static final String SCORE_LEDGER_SESSION = "orientScoring.topicRouteSession";
     /** 原回执回读走 {@link IOrientScoringService#receipt}。缺服务 WAITING_SOURCE。 */
     public static final String SCORING_RECEIPT = "orientScoring.receipt";
+    /** 定向会话回执走 {@link IOrientSessionService#receipt}。缺服务 WAITING_SOURCE。 */
+    public static final String SESSION_RECEIPT = "orientSession.receipt";
+    public static final String SESSION_RECEIPT_NOT_FOUND = "ORIENT_RECEIPT_NOT_FOUND";
     /** 原奖励来源不是成绩；finish 不得把 scoreCenti 抄进 originalRewardCenti。 */
     public static final String ORIGINAL_REWARD_SOURCE = "eventScore.originalRewardSource";
 
@@ -288,6 +293,46 @@ public final class EventScoreVersioning {
             return null;
         }
         return found;
+    }
+
+    /**
+     * 从既有 {@link IOrientSessionService#receipt} 回读。缺服务 WAITING_SOURCE。
+     * {@code ORIENT_RECEIPT_NOT_FOUND} 返回 {@code null}，不占进程完赛账，不调用 start/abandon。
+     */
+    public Map<String, Object> recoverFromSessionReceipt(Long memberId, Long sessionId, String idempotencyKey,
+            SessionReceiptSource source) {
+        String key = parseKey(idempotencyKey);
+        if (memberId == null || memberId.longValue() <= 0L || sessionId == null || sessionId.longValue() <= 0L
+                || key == null) {
+            return null;
+        }
+        if (source == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                    "定向会话回执需要 IOrientSessionService.receipt", SESSION_RECEIPT);
+        }
+        try {
+            return source.receipt(memberId, sessionId, key);
+        } catch (OrientSessionException missing) {
+            if (SESSION_RECEIPT_NOT_FOUND.equals(missing.getErr())) {
+                return null;
+            }
+            throw missing;
+        }
+    }
+
+    public static SessionReceiptSource fromSession(IOrientSessionService sessions) {
+        if (sessions == null) {
+            return (memberId, sessionId, idempotencyKey) -> {
+                throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
+                        "定向会话回执需要 IOrientSessionService.receipt", SESSION_RECEIPT);
+            };
+        }
+        return sessions::receipt;
+    }
+
+    /** 只读定向会话回执；不 start / abandon / disqualify。 */
+    public interface SessionReceiptSource {
+        Map<String, Object> receipt(Long memberId, Long sessionId, String idempotencyKey);
     }
 
     private static boolean knownReceiptKind(String kind) {

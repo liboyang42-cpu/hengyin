@@ -301,4 +301,36 @@ class EventScoreVersioningTest {
         assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("scr-rcpt-01").outcome);
         verify(scoring, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
     }
+
+    @Test
+    void recoverFromSessionReceiptReadsOriginalWithoutOccupyingFinishLedger() {
+        EventScoreVersioning missing = new EventScoreVersioning();
+        OrienteeringEventException waiting = assertThrows(OrienteeringEventException.class,
+                () -> missing.recoverFromSessionReceipt(7L, 30L, "orient-ses-01", null));
+        assertEquals(OrienteeringEventException.WAITING_SOURCE, waiting.getErrorCode());
+        assertEquals(EventScoreVersioning.SESSION_RECEIPT, waiting.getWaitingCapability());
+        assertNull(missing.recoverFromSessionReceipt(7L, 30L, null, (memberId, sessionId, key) -> {
+            throw new AssertionError("blank key must not read");
+        }));
+        OrienteeringEventException missingService = assertThrows(OrienteeringEventException.class,
+                () -> EventScoreVersioning.fromSession(null).receipt(7L, 30L, "orient-ses-01"));
+        assertEquals(EventScoreVersioning.SESSION_RECEIPT, missingService.getWaitingCapability());
+
+        EventScoreVersioning.SessionReceiptSource source = (memberId, sessionId, key) -> {
+            if ("orient-ses-none".equals(key)) {
+                throw new com.chengyinhub.business.service.support.OrientSessionException(
+                        EventScoreVersioning.SESSION_RECEIPT_NOT_FOUND, 404, "没有这次请求的回执");
+            }
+            Map<String, Object> found = new LinkedHashMap<String, Object>();
+            found.put("replayed", Boolean.TRUE);
+            found.put("idempotencyKey", key);
+            return found;
+        };
+        EventScoreVersioning wired = new EventScoreVersioning();
+        assertNull(wired.recoverFromSessionReceipt(7L, 30L, "orient-ses-none", source));
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("orient-ses-none").outcome);
+        Map<String, Object> recovered = wired.recoverFromSessionReceipt(7L, 30L, "orient-ses-01", source);
+        assertEquals(Boolean.TRUE, recovered.get("replayed"));
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("orient-ses-01").outcome);
+    }
 }
