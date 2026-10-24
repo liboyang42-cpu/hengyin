@@ -1,0 +1,10 @@
+Base a3fdd1650f26d88ec8c0cccd30bb37488cda06a9
+Existing tracked source/fixtures unchanged: PASS
+Three @Test methods; no passthrough or domain/inbox mapper doubles: PASS
+Original base schema + app_open_id/first_successful_scan original migrations; snapshot-to-mapper column scan: PASS
+Six original mapper XML resources exist: PASS
+Secret-file gate + Python credential-marker scan: PASS
+git apply --check + applied exact new-file bytes: PASS
+Java/JUnit/MySQL/WeChat/production DDL/CI dispatch: NOT RUN.
+43a98a7a57526ee6ac6cdbf9f5777238a1fd02eef0379b9acdf4c2d061352b17  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationCallbackIntentMySqlIT.java
+e2d4958648aecac0a5cc57e060f72cf90420b59d779c0e22d5d6b6fa3e6de472  docs/delivery/architecture-day/B/registration-callback-intent-delivery.md
