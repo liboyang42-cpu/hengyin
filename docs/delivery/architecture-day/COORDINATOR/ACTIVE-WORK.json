@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T17:14:00Z",
+  "updated_utc": "2026-10-24T17:18:08Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -34,7 +34,7 @@
     },
     "D": {
       "state": "implementation_assigned_independent_candidate",
-      "task": "Implement only two previously identified action-ledger classification/reachability defects on an independent 8490 branch; no interim review or tests; root integrates one candidate only",
+      "task": "Implement only named-helper dependency reachability on independent 8490 candidate; root owns exact read endpoint registration; no interim review or tests",
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
       "host_id": "durable"
     },
@@ -479,7 +479,7 @@
   "pending_business_questions": [
     "ASR: same NPC quota reserved before first ASR then handed to text once, or separate ASR budget. User reply pending; do not select budget/charges automatically."
   ],
-  "current_working_tree": "A/G/H deliveries committed at16b492feb; D independent targeted ledger implementation assigned, E original work retained; no interim review or tests",
+  "current_working_tree": "Root exact receipt classification and test source committed; A/G/H integrated; named-helper reachability candidate pending. No interim review, regression or CI.",
   "new_source_blockers_current": [
     "CI plan negative control fails on precise refund scratch-DDL admission; Java has not started"
   ],
@@ -493,7 +493,7 @@
     "preserve_guards_and_test_assertions": true,
     "final_gate": "Collect required code, callers and fixtures; freeze one complete candidate; then conduct consolidated review and regression"
   },
-  "previous_goal_turn_classification": "PROGRESS: assigned bounded independent ledger implementation to existing D because original delivery could not be read; retained original active E handle and all work",
+  "previous_goal_turn_classification": "PROGRESS: root implemented exact receipt-read classification plus test source; assigned independent helper-reachability implementation to existing D; no tests run",
   "latest_fixture_integration": {
     "base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
     "A": "Three cancellation/publish fixtures: current club owner and capture/observe/apply caller wiring",
@@ -507,6 +507,11 @@
     "original_work_preserved": "E",
     "selection": "Integrate one complete candidate only; preserve other candidate, resolve exact source conflicts at integration",
     "production_behavior_changes": false,
-    "validation": "Deferred to final consolidated review and regression"
+    "validation": "Deferred to final consolidated review and regression",
+    "root_implemented": [
+      "EXPLICIT_READ_APIS: exact /api/verify/seat/receipt and /api/verify/citynode/receipt",
+      "Read classification test source including write and unknown-endpoint negative assertions; NOT_RUN"
+    ],
+    "remaining": "D dependency reachability implementation and final single regeneration; retain E original work"
   }
 }
