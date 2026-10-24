@@ -133,3 +133,21 @@ mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteeri
 结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **20 run, 0 fail, 0 error, 0 skip**（2026-10-23T23:12:25Z）。`C04AccountSwitchRestartIsolationTest` 5/0。
 
 Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## 8. Addendum 2026-10-23 17:51 America/Los_Angeles — class-level recoverOriginal occupancy
+
+HEAD `49f672fb3`（`test(c04): recoverOriginal 未见完赛/报名/争议 id 不占账再唯一写入 [skip ci]`）。未发明 recoverOriginal。生产 SHA256 与 `eb95ffb50` 相同。
+
+- `EventScoreVersioningTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueFinishApplies`：未见 `c04-fin-never` 保持 `NOT_FOUND` 且 `readback` 仍 throw；后续唯一 finish 才是 FINISHED。
+- `TeamClubEligibilityAuthorityTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueRegisterApplies`：未见 `c04-reg-never` 不占账；后续唯一 register 才是 REGISTERED。
+- `EventResultDisputeTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueOpenApplies`：未见 `c04-dsp-never` 不占账；后续唯一 open 才是 PENDING。
+
+命令：
+
+```
+mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteering.*Test -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **23 run, 0 fail, 0 error, 0 skip**（2026-10-24T00:51:06Z）。EventScoreVersioningTest 4/0。TeamClubEligibilityAuthorityTest 5/0。EventResultDisputeTest 2/0。Isolation 5/0。
+
+Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
