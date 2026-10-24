@@ -24,6 +24,7 @@ import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.ImConversationMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper.ClubConversationSummary;
 import com.chengyinhub.business.mapper.ImMessageMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.IAuditTaskService;
@@ -444,8 +445,9 @@ class ImServiceImplTest {
         Club club = new Club();
         club.setId(42L);
         club.setMemberId(9L);
-        when(clubMapper.selectClubById(42L)).thenReturn(club);
-        when(clubMemberMapper.selectByClubAndMember(42L, 1L)).thenReturn(null);
+        ClubConversationSummary projected = new ClubConversationSummary();
+        org.springframework.beans.BeanUtils.copyProperties(club, projected);projected.setViewerMember(false);
+        when(memberMapper.selectClubConversationSummaries(1L, List.of(42L))).thenReturn(List.of(projected));
 
         List<Map<String, Object>> conversations = service.listConversations(1L);
 
@@ -825,7 +827,9 @@ class ImServiceImplTest {
         club.setMemberCount(32);
         club.setStatus(1L);
         club.setDelFlag(0);
-        when(clubMapper.selectClubById(42L)).thenReturn(club);
+        ClubConversationSummary projected = new ClubConversationSummary();
+        org.springframework.beans.BeanUtils.copyProperties(club, projected);
+        when(memberMapper.selectClubConversationSummaries(1L, List.of(42L))).thenReturn(List.of(projected));
 
         java.util.List<java.util.Map<String, Object>> rows = service.listConversations(1L);
 
@@ -842,7 +846,7 @@ class ImServiceImplTest {
         ImServiceImpl service = service();
         when(memberMapper.selectMyConversationSummaries(1L)).thenReturn(Collections.singletonList(
                 summary(member(1L), groupConv(100L, "club_42"))));
-        when(clubMapper.selectClubById(42L)).thenReturn(null); // 俱乐部已删
+        when(memberMapper.selectClubConversationSummaries(1L, List.of(42L))).thenReturn(Collections.emptyList()); // 俱乐部已删
 
         java.util.List<java.util.Map<String, Object>> rows = service.listConversations(1L);
 

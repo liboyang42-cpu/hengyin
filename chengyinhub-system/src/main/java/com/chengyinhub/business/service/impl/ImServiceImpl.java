@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.LinkedHashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.ImConversationMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper.ClubConversationSummary;
 import com.chengyinhub.business.mapper.ImMessageMapper;
 import com.chengyinhub.business.mapper.ImNotificationIntentMapper;
 import com.chengyinhub.business.mapper.ImPollMapper;
@@ -123,6 +125,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             return out;
         }
+        Map<Long, ClubConversationSummary> clubs = listClubSummaries(mine, memberId);
         for (ConversationSummary m : mine)
         {
             ImConversation c = m.getConversation();
@@ -130,7 +133,9 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             {
                 continue;
             }
-            if (!hasActiveGroupAccess(c, memberId, false))
+            Long clubId = Integer.valueOf(ImConversation.TYPE_GROUP).equals(c.getType()) ? clubIdOf(c) : null;
+            ClubConversationSummary club = clubId == null ? null : clubs.get(clubId);
+            if (clubId == null ? !hasActiveGroupAccess(c, memberId, false) : !hasActiveClubSummaryAccess(club, memberId))
             {
                 continue;
             }
@@ -149,7 +154,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             row.put("lastMsgAt", latest == null ? null : latest.getCreateTime());
             row.put("unread", m.getUnreadCount());
             row.put("muted", m.getMuted() == null ? 0 : m.getMuted());
-            row.put("counterparty", summaryCounterparty(m, memberId));
+            row.put("counterparty", clubId == null ? summaryCounterparty(m, memberId) : clubSummaryCounterparty(c, club));
             out.add(row);
         }
         out.sort((left, right) -> {
@@ -167,6 +172,40 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             return Long.compare(bId, aId);
         });
         return out;
+    }
+
+    private Map<Long, ClubConversationSummary> listClubSummaries(List<ConversationSummary> summaries, Long memberId)
+    {
+        Set<Long> ids = new LinkedHashSet<>();
+        for (ConversationSummary summary : summaries)
+        {
+            ImConversation c = summary.getConversation();
+            Long id = c != null && Integer.valueOf(ImConversation.TYPE_GROUP).equals(c.getType()) ? clubIdOf(c) : null;
+            if (id != null) ids.add(id);
+        }
+        Map<Long, ClubConversationSummary> clubs = new HashMap<>();
+        if (!ids.isEmpty())
+        {
+            for (ClubConversationSummary club : memberMapper.selectClubConversationSummaries(memberId, new ArrayList<>(ids)))
+                clubs.put(club.getId(), club);
+        }
+        return clubs;
+    }
+
+    private boolean hasActiveClubSummaryAccess(ClubConversationSummary club, Long memberId)
+    {
+        return club != null && memberId != null && Long.valueOf(1L).equals(club.getStatus())
+                && Integer.valueOf(0).equals(club.getDelFlag())
+                && (memberId.equals(club.getMemberId()) || Boolean.TRUE.equals(club.getViewerMember()));
+    }
+
+    private Map<String, Object> clubSummaryCounterparty(ImConversation c, Club club)
+    {
+        Map<String, Object> cp = new HashMap<>();
+        cp.put("id", 0); cp.put("bizKey", c.getBizKey());
+        cp.put("nickname", club.getName()); cp.put("avatar", club.getLogo() == null ? "" : club.getLogo());
+        cp.put("memberCount", club.getMemberCount()); cp.put("clubId", club.getId());
+        return cp;
     }
 
     private Map<String, Object> summaryCounterparty(ConversationSummary summary, Long memberId)

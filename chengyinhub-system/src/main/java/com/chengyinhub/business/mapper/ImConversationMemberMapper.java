@@ -6,6 +6,7 @@ import com.chengyinhub.business.domain.ImConversationMember;
 import com.chengyinhub.business.domain.ImConversation;
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.Club;
 
 /**
  * IM 会话参与者 Mapper
@@ -28,6 +29,19 @@ public interface ImConversationMemberMapper
 
     /** 列表批量读模型；群资格与路线卡投影仍由原业务守卫校验。 */
     List<ConversationSummary> selectMyConversationSummaries(@Param("memberId") Long memberId);
+
+    /** 仅本次列表涉及的俱乐部；当前会员谓词与 ClubMemberMapper.selectByClubAndMember 一致。 */
+    List<ClubConversationSummary> selectClubConversationSummaries(@Param("memberId") Long memberId,
+                                                                @Param("clubIds") List<Long> clubIds);
+
+    /** 请求内只读投影，不作为发送/已读/投票授权的真源，不跨请求缓存。 */
+    class ClubConversationSummary extends Club
+    {
+        private static final long serialVersionUID = 1L;
+        private Boolean viewerMember;
+        public Boolean getViewerMember() { return viewerMember; }
+        public void setViewerMember(Boolean value) { viewerMember = value; }
+    }
 
     /** 小程序红点：与现有列表口径一致，排除隐藏群聊及 muted=1。 */
     Long sumInboxUnread(@Param("memberId") Long memberId);

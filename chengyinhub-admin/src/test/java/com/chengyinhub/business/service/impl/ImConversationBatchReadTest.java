@@ -8,7 +8,6 @@ import java.util.Map;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.Club;
-import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.ImConversation;
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.domain.UmsMember;
@@ -18,6 +17,7 @@ import com.chengyinhub.business.mapper.ClubMemberMapper;
 import com.chengyinhub.business.mapper.ImConversationMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper.ClubConversationSummary;
 import com.chengyinhub.business.mapper.ImMessageMapper;
 import com.chengyinhub.business.service.IUmsMemberService;
 import org.junit.jupiter.api.Test;
@@ -148,19 +148,22 @@ class ImConversationBatchReadTest
         Club club = new Club();
         club.setId(42L); club.setMemberId(9L); club.setStatus(1L); club.setDelFlag(0);
         club.setName("current club"); club.setMemberCount(8);
-        when(clubs.selectClubById(42L)).thenReturn(club);
+        ClubConversationSummary projected = new ClubConversationSummary();
+        org.springframework.beans.BeanUtils.copyProperties(club, projected);
+        projected.setViewerMember(false);
+        when(members.selectClubConversationSummaries(7L, List.of(42L))).thenReturn(List.of(projected));
         ImServiceImpl service = service();
         ReflectionTestUtils.setField(service, "clubMapper", clubs);
         ReflectionTestUtils.setField(service, "clubMemberMapper", clubMembers);
 
         assertTrue(service.listConversations(7L).isEmpty(), "批量取得摘要不能替代实时群资格");
-        when(clubMembers.selectByClubAndMember(42L, 7L)).thenReturn(new ClubMember());
+        projected.setViewerMember(true);
         List<Map<String, Object>> allowed = service.listConversations(7L);
         assertEquals(1, allowed.size());
         assertEquals("group secret", allowed.get(0).get("lastMsgText"));
         assertEquals("current club", ((Map<?, ?>) allowed.get(0).get("counterparty")).get("nickname"));
-        verify(clubMembers, times(2)).selectByClubAndMember(42L, 7L);
-        verifyNoInteractions(conversations, messages, profiles, topics);
+        verify(members, times(2)).selectClubConversationSummaries(7L, List.of(42L));
+        verifyNoInteractions(clubs, clubMembers, conversations, messages, profiles, topics);
     }
 
     @Test
@@ -184,6 +187,54 @@ class ImConversationBatchReadTest
         verify(members).selectMyConversationSummaries(7L);
         verifyNoMoreInteractions(members);
         verifyNoInteractions(conversations, messages, profiles, topics);
+    }
+
+    @Test
+    void sixtyFourClubGroupsUseOneScopedBatchAndKeepOwnerOrActiveMemberPredicate()
+    {
+        List<ConversationSummary> input = new ArrayList<>();
+        List<ClubConversationSummary> clubs = new ArrayList<>();
+        List<Long> ids = new ArrayList<>(), expected = new ArrayList<>();
+        for (int i=1;i<=64;i++)
+        {
+            ConversationSummary row = row(i,(long)i,"2026-10-23 10:00:00.000000");
+            row.getConversation().setType(ImConversation.TYPE_GROUP);row.getConversation().setBizKey("club_"+(1000+i));
+            input.add(row);ids.add(1000L+i);
+            ClubConversationSummary club = new ClubConversationSummary();club.setId(1000L+i);
+            club.setMemberId(i%3==0?7L:99L);club.setViewerMember(i%3==1);
+            club.setStatus(1L);club.setDelFlag(0);club.setName("club-"+i);club.setMemberCount(i);clubs.add(club);
+            if(i%3!=2)expected.add(0,(long)i);
+        }
+        when(members.selectMyConversationSummaries(7L)).thenReturn(input);
+        when(members.selectClubConversationSummaries(7L,ids)).thenReturn(clubs);
+        var result=service().listConversations(7L);
+        assertEquals(expected,result.stream().map(r->(Long)r.get("conversationId")).toList());
+        for(var row:result) {
+            long id=(Long)row.get("conversationId");var cp=(Map<?,?>)row.get("counterparty");
+            assertEquals("message-"+id,row.get("lastMsgText"));assertEquals("club-"+id,cp.get("nickname"));
+            assertEquals(1000L+id,cp.get("clubId"));assertEquals("",cp.get("avatar"));assertEquals((int)id,cp.get("memberCount"));
+        }
+        verify(members).selectMyConversationSummaries(7L);verify(members).selectClubConversationSummaries(7L,ids);
+        verifyNoMoreInteractions(members);verifyNoInteractions(conversations,messages,profiles,topics);
+    }
+
+    @Test
+    void clubBatchKeepsNumericBizKeyParsingAndDatabaseFailureNeverFallsBack()
+    {
+        List<ConversationSummary> input=new ArrayList<>();int id=0;
+        for(String key:List.of("club_+0042","club_0042","club_bad","club_9223372036854775808")) {
+            var row=row(++id,(long)id,"2026-10-23 10:00:00.000000");
+            row.getConversation().setType(ImConversation.TYPE_GROUP);row.getConversation().setBizKey(key);input.add(row);
+        }
+        ClubConversationSummary club=new ClubConversationSummary();club.setId(42L);club.setMemberId(7L);club.setStatus(1L);club.setDelFlag(0);
+        when(members.selectMyConversationSummaries(7L)).thenReturn(input);
+        when(members.selectClubConversationSummaries(7L,List.of(42L))).thenReturn(List.of(club));
+        var result=service().listConversations(7L);assertEquals(List.of(2L,1L),result.stream().map(r->r.get("conversationId")).toList());
+        var cp=(Map<?,?>)result.get(0).get("counterparty");assertTrue(cp.containsKey("nickname"));assertNull(cp.get("nickname"));
+        assertTrue(cp.containsKey("memberCount"));assertNull(cp.get("memberCount"));assertEquals("",cp.get("avatar"));
+        doThrow(new IllegalStateException("controlled club storage failure")).when(members).selectClubConversationSummaries(7L,List.of(42L));
+        assertThrows(IllegalStateException.class,()->service().listConversations(7L));
+        verifyNoInteractions(conversations,messages,profiles,topics);
     }
 
     private ImServiceImpl service()

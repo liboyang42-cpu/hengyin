@@ -15,11 +15,7 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.chengyinhub.business.domain.Club;
-import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.CmsTopic;
-import com.chengyinhub.business.mapper.ClubMapper;
-import com.chengyinhub.business.mapper.ClubMemberMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
 import org.apache.ibatis.mapping.BoundSql;
@@ -34,14 +30,15 @@ import org.junit.jupiter.api.Timeout;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * 下一批验证准备：真实 IM SQL 的范围/statement 数；群和路线跨域守卫用显式 mock，
- * 不声称验证了跨域真实存储、SQL O(1) 工作量或性能。只能受控端显式点名运行。
+ * 真实 IM SQL 的范围/statement 数；club/会员谓词改用真表，路线守卫仍用显式 mock。
+ * 不声称全部跨域真实存储、SQL O(1) 工作量或性能。只能受控端显式点名运行。
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Timeout(90)
@@ -58,6 +55,8 @@ class ImConversationQueryScopeMySqlIT
     {
         fixture.setup(); // 同一显式开关/loopback/独占 UUID 库，无凭据默认值或 assume 跳过。
         db = (JdbcTemplate) ReflectionTestUtils.getField(fixture, "db");
+        new ResourceDatabasePopulator(new ClassPathResource("fixtures/im-club-conversation-batch.sql"))
+                .execute(db.getDataSource());
         service = (ImServiceImpl) ReflectionTestUtils.getField(fixture, "service");
         members = (ImConversationMemberMapper) ReflectionTestUtils.getField(fixture, "members");
         Object counter = ReflectionTestUtils.getField(fixture, "statements");
@@ -68,6 +67,7 @@ class ImConversationQueryScopeMySqlIT
     void seed()
     {
         fixture.seed();
+        db.update("delete from club_member");db.update("delete from club");
     }
 
     @AfterAll
@@ -160,39 +160,21 @@ class ImConversationQueryScopeMySqlIT
     {
         conversation(201, 4, "club_42", 50, 2L);
         conversation(202, 4, "club_43", 60, 2L);
-        ClubMapper clubs = mock(ClubMapper.class);
-        ClubMemberMapper clubMembers = mock(ClubMemberMapper.class);
         for (long id : new long[] {42, 43})
         {
-            Club club = new Club();
-            club.setId(id); club.setMemberId(99L); club.setStatus(1L); club.setDelFlag(0);
-            club.setName("club-" + id);
-            when(clubs.selectClubById(id)).thenReturn(club);
+            db.update("insert into club(id,member_id,status,del_flag,name) values(?,99,1,0,?)",id,"club-"+id);
         }
-        when(clubMembers.selectByClubAndMember(42L, 1L)).thenReturn(new ClubMember());
-        ReflectionTestUtils.setField(service, "clubMapper", clubs);
-        ReflectionTestUtils.setField(service, "clubMemberMapper", clubMembers);
+        db.update("insert into club_member(club_id,member_id,status,del_flag) values(42,1,1,0)");
 
         statements.set(0);
         assertEquals(Set.of(101L, 102L, 103L, 104L, 105L, 201L), ids(service.listConversations(1L)));
-        assertEquals(1, statements.get());
-        verify(clubs, times(2)).selectClubById(42L); // 资格一次 + 展示一次，未冒充全部 O(1)。
-        verify(clubs).selectClubById(43L);
-        verify(clubMembers).selectByClubAndMember(42L, 1L);
-        verify(clubMembers).selectByClubAndMember(43L, 1L);
-        verifyNoMoreInteractions(clubs, clubMembers);
-        clearInvocations(clubs, clubMembers);
+        assertEquals(2, statements.get(), "真实IM摘要一次 + 当前club/会员批量一次；不再把mock当SQL证据");
         statements.set(0);
         assertEquals(Set.of(101L), ids(service.listConversations(2L)));
-        assertEquals(1, statements.get());
-        verify(clubs).selectClubById(42L);
-        verify(clubs).selectClubById(43L);
-        verify(clubMembers).selectByClubAndMember(42L, 2L);
-        verify(clubMembers).selectByClubAndMember(43L, 2L);
+        assertEquals(2, statements.get());
         statements.set(0);
         assertEquals(10, service.unreadTotal(1L));
         assertEquals(1, statements.get());
-        verifyNoMoreInteractions(clubs, clubMembers);
     }
 
     @Test

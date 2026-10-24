@@ -113,6 +113,36 @@
         order by c.last_msg_at desc
     </select>
 
+    <resultMap id="ClubConversationSummaryResult"
+               type="com.chengyinhub.business.mapper.ImConversationMemberMapper$ClubConversationSummary">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="name" column="name"/>
+        <result property="logo" column="logo"/>
+        <result property="memberCount" column="member_count"/>
+        <result property="status" column="status"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="viewerMember" column="viewer_member"/>
+    </resultMap>
+
+    <!-- ClubMapper.selectClubById: id + del_flag=0；会员 EXISTS 保留原 status=1/del_flag=0。
+         IDs 由 Java 沿原 Long.valueOf(bizKey) 解析，不能用字符串 JOIN 改写 +号/前导零语义。
+         EXISTS 不扇出历史会员；只返回本次摘要涉及的 club。空集合绝不全表加载。 -->
+    <select id="selectClubConversationSummaries" resultMap="ClubConversationSummaryResult" useCache="false" flushCache="true">
+        select c.id,c.member_id,c.name,c.logo,c.member_count,c.status,c.del_flag,
+               exists(select 1 from club_member cm
+                      where cm.club_id=c.id and cm.member_id=#{memberId}
+                        and cm.status=1 and cm.del_flag=0) as viewer_member
+        from club c
+        where c.del_flag=0
+        <choose>
+            <when test="clubIds != null and clubIds.size() > 0">
+                and c.id in <foreach collection="clubIds" item="clubId" open="(" separator="," close=")">#{clubId}</foreach>
+            </when>
+            <otherwise>and 1=0</otherwise>
+        </choose>
+    </select>
+
     <select id="sumInboxUnread" resultType="java.lang.Long">
         select coalesce(sum(m.unread_count), 0)
         from im_conversation_member m
