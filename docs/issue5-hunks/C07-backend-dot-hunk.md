@@ -122,3 +122,24 @@ SHA256（生产 6 类）：
 - 转赠：在 sold-policy 原文到达前保持 `WAITING_SOURCE`；禁止把 17 SMS 身份当接收者授权。
 
 WAITING_SOURCE：未 push 的 D4 商业 SHA `e16c2c5` `5b92889` 及 25-App T01–20 原文。
+
+## 8. Parent addendum 2026-10-23 17:53 America/Los_Angeles — class-level recoverOriginal occupancy
+
+HEAD `11867df3f`（`test(c07): recoverOriginal 未见履约 id 不占账再唯一写入 [skip ci]`）。未发明 recoverOriginal。未写 D1–D6。未写 stale `/tmp/hengyin-c07`。
+
+- Hold `c07-hold-never-seen`：recover UNKNOWN 且 occupyCount=0；缺 status 不占账；唯一 HELD 才是第一笔。
+- Four-ledger `c07-bill-never-seen`：缺账单 UNKNOWN 不占账；唯一 MATCHED 才是第一笔。
+- Invoice `c07-inv-never-seen`：SUBMITTED 无文件 UNKNOWN 不占账；唯一 ISSUED+file 才是 PRESENT。
+- Supply `c07-supply-never-seen`：缺库存 UNKNOWN 不占 holdCount；唯一 ACCEPT 才是第一笔。
+- Evidence `c07-ev-never-seen`：recover UNKNOWN 不占账；唯一 recordJourney RECORDED 才是第一笔。
+- TransferSold `c07-xfer-never-seen`：recover WAITING_SOURCE reason=`original intent unknown` 不占账；唯一 evaluate WAITING_SOURCE 才是该 id 的原文。
+
+命令：
+
+```
+mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.fulfillment.*Test -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **31 run, 0 fail, 0 error, 0 skip**（2026-10-24T00:53:58Z）。Supply 6/0。FourLedger 6/0。Hold 4/0。Evidence 3/0。Invoice 3/0。TransferSold 4/0。Isolation 4/0。FirstJourney 1/0。
+
+Mapper / Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
