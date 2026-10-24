@@ -1,0 +1,36 @@
+# 负利润人工记录只读可见性
+
+Parent: `54c524ca99204804b6b84af517359eabc8c6ee8d`。本片只新增调用者，不重交/修改原20文件。
+
+现有SettlementController与后台Settlement页只查询批次/明细/对账，未读取coop_settlement_manual_case。本片在同页增加“合作结算人工核对”分页列表与来源详情，两个GET端点：
+- `/business/settlement/manual-case/list?topicId=&state=MANUAL_REQUIRED&pageNum=1&pageSize=10`
+- `/business/settlement/manual-case/{id}`
+两者精确复用现有 `business:settlement:list`；不新增权限、菜单、角色或数据归属政策。独立readMapper/readOnly服务只做SELECT，无FOR UPDATE，无写API，无扣款/判赔/清除阻断入口；原写Mapper/manual服务/producer/退款Ledger均不动。无新迁移。
+
+列表仅选case ID、原topic ID/name、原因、状态、原负利润、创建时间；left join保留原topic不存在时的原case。详情把source_snapshot解析成独立白名单VO，只展示计算版本、原付款报名ID、原现金/成本及计划合作单/报名/claim/head/分项金额/费率；不返回原JSON、provider TX/单号、mchid/appid、fact ID/hash/原支付reference。内部存储Row的raw getter亦JsonIgnore。未知/损坏来源保留topic/reason/state可见，不回显原文或解析异常。页面明确为触发人工核对的计算计划，不能把已回滚的计划head/claim当作已完成收付款凭证。
+
+按root最新指令，退款仍沿用户已批准原冻结订单分项/累计差额守恒，不重算他单、无固定费不退例外。本片只是来源可见性，不增加任何费用责任或退款决定。
+
+## 配套测试源码（全部NOT_RUN）
+
+CoopSettlementManualCaseReadServiceTest（6）:
+- listUsesTheExplicitTopicAndManualStateWithoutLoadingSourceSnapshots
+- detailProjectsBusinessSourcesAndNeverReturnsPaymentIdentifiersOrRawJson
+- originalHeadFeeTermsAreShownAsFactsWithoutAddingARefundabilityDecision
+- malformedSourcePreservesVisibleTopicReasonAndStateWithoutReturningParserContent
+- invalidScopeOrStatusIsRejectedBeforeAnyReadAndMissingDetailStaysMissing
+- readOwnerIsExplicitlyReadOnlyAndPersistenceSnapshotIsNotSerializable
+
+SettlementManualCaseControllerTest（3）:
+- listAndDetailKeepTheExistingSettlementReadPermissionAndGetOnlyRoutes
+- operationalListUsesTopicFilterAndTheOriginalPaginatedResponseShape
+- detailHidesPaymentIdentityAndMissingRecordIsExplicitWithoutAnyWriteRoute
+此MVC夹具核对接线与原权限声明，不冒充完整security-context验收。
+
+CoopSettlementManualCaseReadMySqlIT（3个源码声明，未运行）:
+- actualListFiltersByOriginalTopicAndDoesNotMutateManualState
+- actualDetailPreservesBusinessSourceButExcludesRawPaymentIdentifiers
+- missingTopicStillLeavesTheOriginalManualIdentityVisibleAndUnknownCaseStaysMissing
+沿原独占UUID与全显式连接/hosted gates，另需WP04_MANUAL_CASE_READ_DDL_APPROVED=1，继承WP04_ORIGINAL_REFUND_DDL_APPROVED=1；只在root批准scratch应用原migration，精确cleanup自身库。未派CI/改registry/执行DDL。
+
+审查、Java、MySQL、前端构建/测试、CI全部NOT_RUN。交root集成并在最后统一审查回归。旧业务/测试/校验/恢复围栏均保留。
