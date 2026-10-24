@@ -64,9 +64,15 @@ function assertLead(source) {
   assert.match(body, /seatRecovery\(app,\s*target,\s*seatCurrent\)/);
   assert.match(body, /_leadVerificationWorkflow\.run\(key/);
 }
-function assertCallers(source, expected) {
+function assertCallers(source, expected, scanKind) {
   assert.match(source, /require\(['"][^'"]*utils\/verification-scan(?:\.js)?['"]\)/);
-  assert.match(source, /const scan = resolveVerificationScan\(res\.result\);/);
+  const scans = nodes(source, n => n.type === 'VariableDeclaration' && n.kind === scanKind)
+    .flatMap(n => n.declarations).filter(n => n.id.name === 'scan' && n.init
+      && n.init.type === 'CallExpression' && n.init.callee.name === 'resolveVerificationScan');
+  assert.equal(scans.length, 1);
+  assert.equal(scans[0].init.arguments.length, 1);
+  const input = scans[0].init.arguments[0];
+  assert.ok(named(input, 'result') && input.object.name === 'res');
   assert.match(source, /if \(scan\.kind === 'invalid'\) \{\s*cyToast\(scan\.message\);\s*return;\s*\}/);
   const calls = nodes(source, n => n.type === 'CallExpression' && named(n.callee, '_submitVerification'));
   assert.equal(calls.length, expected.length);
@@ -129,10 +135,10 @@ test('共享扫码仅四个固定端点，外部URL和未知类型不成为请�
 test('个人页三caller及参与详情唯一caller闭包固定，破坏guard/输入来源/请求覆盖必须红', () => {
   const profile = read(PROFILE), detail = read(DETAIL);
   const profileExpected = ['scan.url', '/api/registration/scan_qr_code_chapter', '/api/registration/scan_qr_code_station'];
-  assertCallers(profile, profileExpected);
-  assertCallers(detail, ['scan.url']);
-  assert.throws(() => assertCallers(profile.replace('url: scan.url,', 'url: supplied.url,'), profileExpected));
-  assert.throws(() => assertCallers(detail.replace("if (scan.kind === 'invalid')", "if (false)"), ['scan.url']));
+  assertCallers(profile, profileExpected, 'var');
+  assertCallers(detail, ['scan.url'], 'const');
+  assert.throws(() => assertCallers(profile.replace('url: scan.url,', 'url: supplied.url,'), profileExpected, 'var'));
+  assert.throws(() => assertCallers(detail.replace("if (scan.kind === 'invalid')", "if (false)"), ['scan.url'], 'const'));
   assert.throws(() => assertCallers(profile.replace('autoErrorToast: false,\n          hideLoading:',
-    "url: '/api/arbitrary', autoErrorToast: false,\n          hideLoading:"), profileExpected));
+    "url: '/api/arbitrary', autoErrorToast: false,\n          hideLoading:"), profileExpected, 'var'));
 });
