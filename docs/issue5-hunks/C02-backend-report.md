@@ -33,7 +33,7 @@ FixedTopicWeatherProvider 精确 sha256 以签收命令输出为准：`a11f51825
        CharacterGrowthSourceAdapter.prepare → 已有 counter.* / statusConditions
   → GameplayCheckEngine.roll     （现有骰点 / breakdown / natAuto）
   → ResourceSourceAdapter.writeOriginal → TopicRouteEngine.applyEffects
-       （themeRuntime.sources + storyGrants，不是第二钱包）
+       （themeRuntime.sources + storyGrants，进程投影；persistOriginal 走 Runtime 原请求账，缺端口 WAITING_SOURCE）
   → CharacterGrowthSourceAdapter.readCard
        原 TopicRouteAction.responseJson.characterCard + requestId
   → TopicRouteRuntimeServiceImpl.commitCheck（dot hunk；现有 actionId 账）

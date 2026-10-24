@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.chengyinhub.business.service.support.rpg.adapter.RpgAdapterFixtures.BEFORE;
 import static com.chengyinhub.business.service.support.rpg.adapter.RpgAdapterFixtures.JSON;
@@ -18,7 +19,11 @@ import static com.chengyinhub.business.service.support.rpg.adapter.RpgAdapterFix
 import static com.chengyinhub.business.service.support.rpg.adapter.RpgAdapterFixtures.state;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 class ResourceSourceAdapterTest {
 
@@ -103,5 +108,63 @@ class ResourceSourceAdapterTest {
         assertEquals("c02-resource-class", replay.get("requestId"));
         assertEquals(0, ((Number) replay.get("sourcesDelta")).intValue(), "同一 originalRequestId 不二发物资");
         assertEquals(1, run.getThemeRuntime().path("sources").size());
+        assertEquals(Boolean.FALSE, first.get("persisted"));
+        assertEquals(ResourceSourceAdapter.RUNTIME_PERSIST, first.get("waitingCapability"));
+    }
+
+    @Test
+    void persistOriginalRequiresRuntimeAndNewInstanceReadsSameReceipt() throws Exception {
+        TopicRouteEngine.State run = state();
+        enableInventory(run);
+        RpgAdapterSpec spec = new RpgAdapterSpec();
+        spec.setResources(new RpgAdapterSpec.Resources());
+        spec.getResources().setSuccessEffects(JSON.readTree(
+                "[{\"op\":\"ADD_ITEM\",\"itemId\":\"clue_page\",\"quantity\":1}]"));
+        RpgAdapterContext context = ctx(rules(null), run,
+                JSON.readTree("{\"enabled\":true,\"checkId\":\"ask_arong\",\"tier\":\"easy\"}"),
+                spec, BEFORE, dice(12));
+        context.setWriteResources(true);
+        PlayCheckReceipt receipt = new PlayCheckReceipt();
+        receipt.setSuccess(Boolean.TRUE);
+        context.setReceipt(receipt);
+
+        ResourceSourceAdapter missing = new ResourceSourceAdapter();
+        ResourceSourceAdapter.WaitingSourceException waiting = assertThrows(
+                ResourceSourceAdapter.WaitingSourceException.class,
+                () -> missing.persistOriginal(context));
+        assertEquals(ResourceSourceAdapter.RUNTIME_PERSIST, waiting.getWaitingCapability());
+        assertNull(missing.recoverFromPersist(null));
+
+        Map<String, ResourceSourceAdapter.OriginalReceipt> ledger =
+                new ConcurrentHashMap<String, ResourceSourceAdapter.OriginalReceipt>();
+        ResourceSourceAdapter.OriginalResourcePersist persist =
+                new ResourceSourceAdapter.OriginalResourcePersist() {
+                    @Override
+                    public ResourceSourceAdapter.OriginalReceipt persist(
+                            String requestId, TopicRouteEngine.State snapshot) {
+                        ResourceSourceAdapter.OriginalReceipt existing = ledger.get(requestId);
+                        if (existing != null) {
+                            return new ResourceSourceAdapter.OriginalReceipt(requestId, true);
+                        }
+                        ResourceSourceAdapter.OriginalReceipt written =
+                                new ResourceSourceAdapter.OriginalReceipt(requestId, false);
+                        ledger.put(requestId, written);
+                        return written;
+                    }
+
+                    @Override
+                    public ResourceSourceAdapter.OriginalReceipt recover(String requestId) {
+                        return ledger.get(requestId);
+                    }
+                };
+        ResourceSourceAdapter wired = new ResourceSourceAdapter(persist);
+        ResourceSourceAdapter.OriginalReceipt first = wired.persistOriginal(context);
+        assertEquals(REQUEST, first.requestId);
+        assertFalse(first.replay);
+        ResourceSourceAdapter restarted = new ResourceSourceAdapter(persist);
+        ResourceSourceAdapter.OriginalReceipt recovered = restarted.recoverFromPersist(REQUEST);
+        assertEquals(REQUEST, recovered.requestId);
+        assertFalse(recovered.replay);
+        assertNull(restarted.recoverFromPersist("c02-persist-missing"));
     }
 }
