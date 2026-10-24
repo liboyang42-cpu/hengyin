@@ -1046,61 +1046,8 @@ Page({
    */
   toggleDiscount() {
     const that = this;
-    const useDiscount = !that.data.useDiscount;
-    
-    let discountAmount = 0;
-    let usedPoints = 0;
-    
-    if (useDiscount) {
-      // 计算可抵扣金额：1积分 = 0.02元
-      const maxDiscount = 50; // 最多抵扣50元
-      const pointValue = 0.02; // 1积分价值
-      
-      // 获取用户积分
-      const userPoints = that.data.userInfo.point || 0;
-      const calculatedDiscount = userPoints * pointValue;
-      
-      // 取计算值和最大值中的较小值
-      discountAmount = Math.min(calculatedDiscount, maxDiscount);
-      
-      // 如果票务价格小于可抵扣金额，则最多抵扣票务价格
-      const ticketPrice = that.data.selectedTicket ? that.data.selectedTicket.price : 0;
-      discountAmount = Math.min(discountAmount, ticketPrice);
-      
-      // 保留两位小数
-      discountAmount = Math.round(discountAmount * 100) / 100;
-      
-      // 计算实际使用的积分
-      let theoreticalPoints = Math.round(discountAmount / pointValue);
-      
-      const maxPointsFromDiscount = Math.floor(maxDiscount / pointValue);
-      const maxPointsFromPrice = Math.floor(ticketPrice / pointValue);
-      
-      usedPoints = Math.min(
-        theoreticalPoints,
-        userPoints,
-        maxPointsFromDiscount,
-        maxPointsFromPrice
-      );
-      
-      // 重新计算实际的折扣金额
-      discountAmount = Math.min(usedPoints * pointValue, ticketPrice, maxDiscount);
-      discountAmount = Math.round(discountAmount * 100) / 100;
-    }
-    
-    // 计算总金额
-    const baseAmount = that.data.selectedTicket ? that.data.selectedTicket.price : 0;
-    const totalAmount = Math.max(0, baseAmount - discountAmount);
-    
-    that.setData({
-      useDiscount: useDiscount,
-      discountAmount: discountAmount,
-      totalAmount: parseFloat(totalAmount.toFixed(2)),
-      usedPoints: usedPoints,
-      submitError: ''
-    }, () => that.refreshPaymentState());
-    // M0-1 实扣报价一致:本地仅做即时估算,随即用服务端 quote 覆盖为权威金额
-    that.refreshQuote();
+    // D1(owner 2026-10-23):抵扣额只认服务端报价,本地不再按汇率/上限估算;切换后先回到票面价等报价覆盖
+    that.setData({ useDiscount: !that.data.useDiscount, submitError: '' }, () => that.recalculateDiscount());
   },
 
   /**
@@ -1181,57 +1128,15 @@ Page({
    */
   recalculateDiscount() {
     const that = this;
-    const { useDiscount, userInfo, selectedTicket } = that.data;
-    
-    if (useDiscount) {
-      let discountAmount = 0;
-      let usedPoints = 0;
-      
-      // 计算可抵扣金额
-      const maxDiscount = 50;
-      const pointValue = 0.02;
-      const userPoints = userInfo.point || 0;
-      const ticketPrice = selectedTicket ? selectedTicket.price : 0;
-      
-      // 计算理论最大可抵扣金额
-      const calculatedDiscount = userPoints * pointValue;
-      discountAmount = Math.min(calculatedDiscount, maxDiscount, ticketPrice);
-      discountAmount = Math.round(discountAmount * 100) / 100;
-      
-      // 计算实际使用的积分
-      let theoreticalPoints = Math.round(discountAmount / pointValue);
-      
-      const maxPointsFromDiscount = Math.floor(maxDiscount / pointValue);
-      const maxPointsFromPrice = Math.floor(ticketPrice / pointValue);
-      
-      usedPoints = Math.min(
-        theoreticalPoints,
-        userPoints,
-        maxPointsFromDiscount,
-        maxPointsFromPrice
-      );
-      
-      // 重新计算实际的折扣金额
-      discountAmount = Math.min(usedPoints * pointValue, ticketPrice, maxDiscount);
-      discountAmount = Math.round(discountAmount * 100) / 100;
-      
-      // 计算总金额
-      const totalAmount = Math.max(0, ticketPrice - discountAmount);
-      
-      that.setData({
-        discountAmount: discountAmount,
-        totalAmount: parseFloat(totalAmount.toFixed(2)),
-        usedPoints: usedPoints
-      }, () => that.refreshPaymentState());
-    } else {
-      // 如果不使用折扣，重置使用的积分为0
-      const ticketPrice = selectedTicket ? selectedTicket.price : 0;
-      that.setData({
-        totalAmount: parseFloat(ticketPrice.toFixed(2)),
-        usedPoints: 0
-      }, () => that.refreshPaymentState());
-    }
-    // M0-1:用服务端 quote 覆盖为权威金额
+    const { selectedTicket } = that.data;
+    // D1(owner 2026-10-23):积分汇率与单笔上限只在服务端(sys_config),端上不算可抵扣额。
+    // 报价回来之前按票面价展示、抵扣记 0;refreshQuote 用 /api/registration/quote 的权威金额覆盖。
+    const ticketPrice = selectedTicket ? Number(selectedTicket.price) || 0 : 0;
+    that.setData({
+      discountAmount: 0,
+      totalAmount: parseFloat(ticketPrice.toFixed(2)),
+      usedPoints: 0
+    }, () => that.refreshPaymentState());
     that.refreshQuote();
   },
 
