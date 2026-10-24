@@ -84,6 +84,7 @@ public class PlayPuzzleCommandApplication {
         return AjaxResult.success("已查看答案,本题解谜分为 0", data);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult revealPuzzle(Long actorMemberId, String activityId, String nodeId, String topicId) {
         return revealPuzzle(actorMemberId, activityId, nodeId, topicId, null, null);
     }

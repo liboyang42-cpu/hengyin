@@ -10,8 +10,6 @@ import com.chengyinhub.business.domain.dto.PreferenceSubmitRequest;
 import com.chengyinhub.business.domain.dto.PreferenceTagCorrectionRequest;
 import com.chengyinhub.web.service.play.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -73,13 +71,11 @@ public class ApiPlayProgressController extends BaseController {
     }
 
     @GetMapping("/action-context")
-    @Transactional(readOnly = true)
     public AjaxResult basicActionContext(String activityId, String topicId, String nodeId) {
         return playBasicIntentApplication.basicActionContext(currentMemberId(), activityId, topicId, nodeId);
     }
 
     @GetMapping("/action-receipt")
-    @Transactional(readOnly = true)
     public AjaxResult basicActionReceipt(String activityId, String topicId, String nodeId, String routeActionId) {
         return playBasicIntentApplication.basicActionReceipt(currentMemberId(), activityId, topicId, nodeId, routeActionId);
     }
@@ -88,7 +84,6 @@ public class ApiPlayProgressController extends BaseController {
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/checkin")
     @DeadlockRetry
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult checkin(String activityId, String code, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long registrationId,
             String nodeId, Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
@@ -122,7 +117,6 @@ public class ApiPlayProgressController extends BaseController {
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/answer")
     @DeadlockRetry
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
     {
@@ -142,7 +136,6 @@ public class ApiPlayProgressController extends BaseController {
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/puzzle/reveal")
     @DeadlockRetry
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult revealPuzzle(String activityId, String nodeId, String topicId,
             String routeActionId, Integer expectedRouteVersion)
     {
@@ -156,7 +149,6 @@ public class ApiPlayProgressController extends BaseController {
     @Operation(summary = "城市定向谜题逐级提示")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/puzzle/hint")
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult puzzleHint(String activityId, String nodeId, String topicId, Integer level)
     {
         return playPuzzleCommandApplication.puzzleHint(currentMemberId(), activityId, nodeId, topicId, level);
@@ -213,7 +205,6 @@ public class ApiPlayProgressController extends BaseController {
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/sensor-result")
     @DeadlockRetry
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult sensorResult(@RequestBody SensorResultRequest request)
     {
         return playBasicCommandApplication.sensorResult(currentMemberId(), request);
@@ -223,7 +214,6 @@ public class ApiPlayProgressController extends BaseController {
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/arrive")
     @DeadlockRetry
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
             String routeActionId, Integer expectedRouteVersion, String accuracy, Long routeSessionId,
             String runtimeInstance, Integer authorityEpoch)
@@ -249,7 +239,6 @@ public class ApiPlayProgressController extends BaseController {
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/photo")
     @DeadlockRetry
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult photo(String activityId, String nodeId, String picUrl, String topicId,
             String routeActionId, Integer expectedRouteVersion)
     {
