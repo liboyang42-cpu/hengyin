@@ -77,7 +77,7 @@ class OWN_C03_20Test {
     @Test void fullCopyUsesGeneratedIdentityDespiteTiedSortOrder() throws Exception {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("memberId", 42L); params.put("copyType", 2);
-        assertEquals(COPY, service.copyCmsTopic(SOURCE, params));
+        assertEquals(COPY, com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE, params));
         ArgumentCaptor<CmsTopic> patch = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topics).updateCmsTopic(patch.capture());
         com.fasterxml.jackson.databind.JsonNode story = new ObjectMapper().readTree(patch.getValue().getJourneyStoryJson());

@@ -1,0 +1,77 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyJourneyRulesTest.java",
+    "tests_before": 3,
+    "tests_after": 3
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyNpcRemapTest.java",
+    "tests_before": 5,
+    "tests_after": 5
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyRecruitmentGuardTest.java",
+    "tests_before": 4,
+    "tests_after": 4
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyTemplateOwnershipTest.java",
+    "tests_before": 11,
+    "tests_after": 11
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicJourneyStoryCarryTest.java",
+    "tests_before": 3,
+    "tests_after": 3
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowCopyTest.java",
+    "tests_before": 2,
+    "tests_after": 2
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CopyTopicCopyTypeNpeTest.java",
+    "tests_before": 5,
+    "tests_after": 5
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicOfficialCopyBoundaryTest.java",
+    "tests_before": 4,
+    "tests_after": 4
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_19Test.java",
+    "tests_before": 5,
+    "tests_after": 5
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+    "tests_before": 1,
+    "tests_after": 1
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_22Test.java",
+    "tests_before": 4,
+    "tests_after": 4
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_23Test.java",
+    "tests_before": 3,
+    "tests_after": 3
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicPublisherSlotTest.java",
+    "tests_before": 14,
+    "tests_after": 14
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java",
+    "tests_before": 19,
+    "tests_after": 19
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RevshareGateWiringTest.java",
+    "tests_before": 9,
+    "tests_after": 9
+  }
+]

@@ -1,0 +1,9 @@
+Static source validation only. Java/MySQL/HTTP/CI were not executed by D.
+
+{"result": "PASS", "unowned_facade_methods_byte_identical": 192, "moved_method_bodies_matched": 12, "shared_guard_and_pure_bodies_matched": 2, "old_test_classes": 15, "old_test_cases_preserved": 92, "java_mysql_executed": false}
+
+scope allowlist: PASS; production files=7; production SQL/schema/CI/pom/Controller changes=0
+all six non-topic mapper resultMap columns present in scratch resource: PASS (static only)
+Python artifact AST: PASS; bounded Java delimiter scan: PASS (not Java compilation)
+old test classes=15; old cases=92; new unit cases=2; new MySQL cases=25; all Java tests NOT_RUN
+old/new MySQL receipt comparator: NOT_RUN (no real receipts fabricated)

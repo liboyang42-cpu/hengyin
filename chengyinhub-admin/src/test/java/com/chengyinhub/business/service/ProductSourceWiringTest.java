@@ -151,7 +151,7 @@ class ProductSourceWiringTest {
      */
     @Test
     void copyTopicCarriesProductType() throws Exception {
-        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java");
         assertEquals(1, countOccurrences(src, "newTopic.setProductType(original.getProductType())"),
                 "copyTopicBasicInfo 必须手抄 productType —— 它是手抄清单,加字段不会自动带;"
                         + "漏了会让模板复制持续新生 product_type=NULL,NULL 集合永不收敛");
@@ -160,7 +160,7 @@ class ProductSourceWiringTest {
     /** 复制章节同样要带上全部承接与供给条款字段(同一个手抄陷阱的另一处)。 */
     @Test
     void copyChaptersCarryConfigFields() throws Exception {
-        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java");
         for (String f : new String[]{"setCategory(originalChapter.getCategory())",
                 "setCategoryId(originalChapter.getCategoryId())",
                 "setRecruitEnabled(originalChapter.getRecruitEnabled())",
