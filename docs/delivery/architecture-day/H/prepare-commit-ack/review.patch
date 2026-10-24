@@ -1,0 +1,91 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiThemeDraftIntentMySqlRedisIT.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiThemeDraftIntentMySqlRedisIT.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiThemeDraftIntentMySqlRedisIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiThemeDraftIntentMySqlRedisIT.java
+@@ -626,4 +626,87 @@
+         assertEquals(count,quotaRows());verify(fixture.model,times(3)).chat(anyString(),anyString());
+         verify(creator,times(3)).themeDraftPrepared(any(),eq(member),any());
+     }
++
++    @Test void committedPrepareAckLossKeepsOriginalIdentityWithoutContextOrExternalEffects() throws Exception {
++        var request=new AiThemeDraftPrepareReq(prepareKey,"private-prepare-ack-loss",2,List.of("original-node"));
++        var lostAck=new IllegalStateException("controlled committed-prepare acknowledgement loss");
++        AtomicBoolean failOnce=new AtomicBoolean(true);
++        AtomicReference<AiThemeDraftIntentRow> inserted=new AtomicReference<>();
++        AiThemeDraftIntentMapper boundary=mock(AiThemeDraftIntentMapper.class,
++                org.mockito.AdditionalAnswers.delegatesTo(intents));
++        doAnswer(call->{
++            AiThemeDraftIntentRow pending=call.getArgument(0);
++            int count=intents.insertPrepared(pending); // Original mapped INSERT, generated key and transaction.
++            assertEquals(1,count); inserted.set(pending);
++            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
++            assertTrue(TransactionSynchronizationManager.isSynchronizationActive());
++            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
++                @Override public void afterCommit() {
++                    if(failOnce.compareAndSet(true,false)) throw lostAck;
++                }
++            });
++            return count;
++        }).when(boundary).insertPrepared(any(AiThemeDraftIntentRow.class));
++        service=wiredService(boundary);
++        var unavailable=assertThrows(AiThemeDraftRequestService.StateUnavailableException.class,
++                ()->service.prepare(member,request));
++        assertSame(lostAck,unavailable.getCause()); assertFalse(failOnce.get());
++        AiThemeDraftIntentRow original=inserted.get(); assertNotNull(original);
++        Map<String,Object> committed=new LinkedHashMap<>();
++        // Direct DriverManagerDataSource connection: never reuse Spring's thread-bound connection/snapshot.
++        try(Connection connection=source(schema).getConnection();
++                PreparedStatement query=connection.prepareStatement(
++                        "SELECT * FROM ai_theme_draft_request_intent WHERE member_id=? AND prepare_key=?")) {
++            assertTrue(connection.getAutoCommit()); query.setLong(1,member); query.setString(2,prepareKey);
++            try(ResultSet found=query.executeQuery()) {
++                assertTrue(found.next(),"original INSERT must already be committed on another connection");
++                for(int column=1;column<=found.getMetaData().getColumnCount();column++)
++                    committed.put(found.getMetaData().getColumnLabel(column),found.getObject(column));
++                assertEquals(original.getExecuteBefore(),found.getTimestamp("execute_before").toInstant());
++                assertFalse(found.next(),"only one identity may exist for the original owner/key");
++            }
++        }
++        assertEquals(member,((Number)committed.get("member_id")).longValue());
++        assertEquals(original.getId().longValue(),((Number)committed.get("id")).longValue());
++        assertEquals(prepareKey,committed.get("prepare_key")); assertEquals(original.getRequestId(),committed.get("request_id"));
++        assertEquals(2,((Number)committed.get("product_type")).intValue()); assertEquals("PREPARED",committed.get("state"));
++        assertEquals("player",committed.get("role")); assertEquals("player-draft",committed.get("pool"));
++        for(var binding:Map.ofEntries(
++                Map.entry("request_hash",original.getRequestHash()),Map.entry("plan_hash",original.getPlanHash()),
++                Map.entry("original_day",original.getOriginalDay()),Map.entry("counter_key",original.getCounterKey()),
++                Map.entry("nonce",original.getNonce()),Map.entry("receipt_key",original.getReceiptKey()),
++                Map.entry("reservation",original.getReservation()),Map.entry("creator_config_hash",original.getCreatorConfigHash()),
++                Map.entry("gateway_config_hash",original.getGatewayConfigHash())).entrySet())
++            assertEquals(binding.getValue(),committed.get(binding.getKey()),binding.getKey());
++        assertEquals(0,quotaRows()); verifyNoInteractions(fixture.safety,fixture.logs);
++        verify(fixture.model,never()).chat(anyString(),anyString());
++        var recovered=service.readPrepared(member,prepareKey);
++        assertEquals(original.getRequestId(),recovered.requestId()); assertEquals(Integer.valueOf(2),recovered.productType());
++        assertEquals(AiThemeDraftIntentState.PREPARED,recovered.state());
++        assertFalse(recovered.contextAvailable()); assertFalse(recovered.resultAvailable()); assertNull(recovered.result());
++        assertEquals(recovered.requestId(),service.prepare(member,request).requestId());
++        var refused=execute(recovered); // Missing original body must not be recreated or sent.
++        assertEquals(AiThemeDraftIntentState.FAILED,refused.state());
++        assertEquals("AI_DRAFT_CONTEXT_UNAVAILABLE",refused.reasonCode());
++        assertFalse(refused.contextAvailable()); assertFalse(refused.resultAvailable()); assertNull(refused.result());
++        assertEquals("NOT_SENT",row(recovered).get("provider_state"));
++        assertEquals(recovered.requestId(),service.readPrepared(member,prepareKey).requestId());
++        assertEquals(AiThemeDraftIntentState.FAILED,service.readPrepared(member,prepareKey).state());
++        assertEquals(recovered.requestId(),service.prepare(member,request).requestId());
++        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM ai_theme_draft_request_intent WHERE member_id=?",Integer.class,member));
++        var finalRow=row(recovered);
++        for(String field:List.of("id","member_id","prepare_key","request_id","request_hash","product_type","plan_hash","role","pool",
++                "original_day","counter_key","nonce","receipt_key","reservation","creator_config_hash","gateway_config_hash",
++                "created_at","execute_before","context_expires_at"))
++            assertEquals(String.valueOf(committed.get(field)),String.valueOf(finalRow.get(field)),"original metadata: "+field);
++        for(String key:List.of(original.getCounterKey(),original.getCounterKey()+":generation",original.getReceiptKey(),
++                bodyKey("context",original.getRequestId()),bodyKey("result",original.getRequestId())))
++            assertFalse(Boolean.TRUE.equals(raw.hasKey(key)),"no original quota or body may be created");
++        for(String key:ownedKeys) assertFalse(Boolean.TRUE.equals(raw.hasKey(key)),"both task quota pools stay untouched");
++        assertEquals(0,quotaRows()); verifyNoInteractions(fixture.safety,fixture.logs);
++        verify(fixture.model,never()).chat(anyString(),anyString());
++        verify(creator,times(1)).planThemeDraft(eq(member),anyString());
++        verify(creator,never()).themeDraftPrepared(any(),anyLong(),any());
++        verify(boundary,times(1)).insertPrepared(any(AiThemeDraftIntentRow.class));
++    }
+ }
