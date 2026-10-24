@@ -23,6 +23,8 @@ function reasonLabels(res) {
 // current():页面仍在、登录身份没换,才继续下一步或弹结果。submit 发本入口唯一的举报写请求。
 function run(page, app, id, submit) {
   if (!id || page._contentReporting) return false;
+  // 2026-10-24 游客写前登录:举报写库,游客先弹「登录后继续」,登录后恢复这次举报。
+  if (app.ensureLoginFor && !app.ensureLoginFor('report', function () { run(page, app, id, submit); })) return false;
   const owner = String(app.getUserID() || '');
   const current = function () { return !page._unloaded && !page._disposed && owner === String(app.getUserID() || ''); };
   const done = function () { page._contentReporting = false; };

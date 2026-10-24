@@ -3232,6 +3232,7 @@ Page({
   },
 
   publishGame: function () {
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.publishGame())) return; // 2026-10-24 游客写前登录
     if (this.data.from === 'citynode' && !this.data.merchantAccess.canManageProjects) {
       toast('当前岗位没有节点管理权限');
       return;
@@ -3300,6 +3301,7 @@ Page({
   },
 
   saveDraft: function () {
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.saveDraft())) return; // 2026-10-24 游客写前登录
     if (this.data.from === 'fabu') return this.publishGame();
     if (this.data.from === 'citynode') {
       toast('节点玩法请配置完成后直接保存');

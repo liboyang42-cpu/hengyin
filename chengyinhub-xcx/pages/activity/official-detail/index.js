@@ -467,6 +467,7 @@ Page({
   },
 
   doSignup() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup())) return; // 2026-10-24 游客写前登录
     // BL-199:报名/完成任务共用在途标记,连点只发一次。
     if (this._ctaBusy) return;
     this._ctaBusy = true;

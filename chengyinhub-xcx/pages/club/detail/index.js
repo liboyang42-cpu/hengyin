@@ -1696,6 +1696,7 @@ Page({
     });
   },
   onReportPost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.onReportPost(e))) return; // 2026-10-24 游客写前登录
     const id = e.currentTarget.dataset.id;
     modal.show({
       title: '举报动态', content: '确认举报?平台将尽快处理。', confirmText: '举报',
@@ -1813,6 +1814,7 @@ Page({
   },
 
   onPostSubmit() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPostSubmit())) return; // 2026-10-24 游客写前登录
     const text = (this.data.postText || '').trim();
     const imgs = this.data.postImages;
     if (!text && !imgs.length) { cyToast('说点什么，或加张图'); return; }
@@ -2525,6 +2527,7 @@ Page({
 
   // 加入俱乐部：公开团即时加入，审批团只进入待审态。
   onJoin() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('club', () => this.onJoin())) return; // 2026-10-24 游客写前登录
     const that = this;
     if (this.data.joinFx) return;   // 请求中 / 已加入动效进行中,不重复提交
     if (isDemoClubId(this.data.clubId)) {
@@ -2684,6 +2687,7 @@ Page({
   },
 
   reportClubMember(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportClubMember(e))) return; // 2026-10-24 游客写前登录
     const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {};
     const memberId = positiveId(dataset.memberId);
     const clubId = positiveId(this.data.clubId);
@@ -2699,6 +2703,7 @@ Page({
   },
 
   reportClub() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportClub())) return; // 2026-10-24 游客写前登录
     const clubId = positiveId(this.data.clubId);
     if (!this.data.canSeeMembers || !clubId) return;
     const clubName = reportTargetName(this.data.club && this.data.club.name);
@@ -2710,6 +2715,7 @@ Page({
   },
 
   reportTopicActivity(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportTopicActivity(e))) return; // 2026-10-24 游客写前登录
     const topicId = positiveId(e && e.currentTarget && e.currentTarget.dataset.id);
     if (!this.data.canSeeMembers || !topicId || this._activityReportLoading) return;
     // CU-C-149:卡面上的入口已按作者隐藏,这里再守一道 —— 名单刚刷新、渲染还没跟上时,
@@ -2881,6 +2887,7 @@ Page({
     });
   },
   onReportComment(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.onReportComment(e))) return; // 2026-10-24 游客写前登录
     const id = e.currentTarget.dataset.id;
     // CU-C-138:与卡面入口同一判据 —— 自己的评论不该给自己开审核单。渲染有延迟时这一行才是真闸,
     // 后端 commentReport 再兜住绕过本页的直调。
@@ -3156,6 +3163,7 @@ Page({
   // 与发起时的目标意图比对后才允许下一次切换;未知期间再点只回读不切换。锁/意图按 owner+俱乐部隔离。
   // 后端 post/like 只是切换、没有目标状态幂等,迟到落库仍可能与回读交错——这是后端依赖,前端不假设。
   onLikePost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onLikePost(e))) return; // 2026-10-24 游客写前登录
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
     if (!id) return;
     const owner = String(app.getUserID && app.getUserID() || '');
@@ -3263,6 +3271,7 @@ Page({
   onCommentInput(e) { this.setData({ commentText: e.detail.value }); },
 
   onCommentSubmit() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onCommentSubmit())) return; // 2026-10-24 游客写前登录
     const postId = this.data.openCommentPost;
     const text = (this.data.commentText || '').trim();
     if (!postId) return;

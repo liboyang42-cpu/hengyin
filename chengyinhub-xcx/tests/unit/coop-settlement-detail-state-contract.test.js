@@ -533,16 +533,16 @@ test('真实请求封装把HTTP403放在fail第二参数时也清除旧金额', 
   assert.equal(e.page.data.loadState,'error')
 })
 
+// 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:游客读私有结算被 401 拦下时不再静默 wx.login 建号,
+// 页面停在可见的失败态、不出任何金额;登录只在写入动作或页面自己的登录入口里发生。
 test('真实匿名首登完成后无需手动重试即可读取当前身份结算', () => {
   const e = loadPage(null,{}); e.app._memberId = ''
   e.page.onLoad({source:'finance',topicId:'7'})
   e.requests[0].success({statusCode:401,data:{code:401}})
-  const result = {statusCode:200,data:{code:200,data:{topics:[financeRow({revision:'own-first-login'})]}}}
-  e.requests[1].success(result)
-  if (e.requests[2]) e.requests[2].success(result)
-  assert.ok(e.requests.length <= 3,'初次身份落地只需至多一次新的当前身份读取')
-  assert.equal(e.page.data.loadState,'ready')
-  assert.equal(e.page.data.detail.revision,'own-first-login')
+  assert.equal(e.requests.length,1,'游客 401 不得静默登录后重读')
+  assert.equal(e.app._memberId,'','游客读私有页不得建号')
+  assert.equal(e.page.data.loadState,'error')
+  assert.equal(e.page.data.detail,null)
 })
 
 test('成功码但金额字段畸形时不用“操作成功”充当错误说明', () => {
