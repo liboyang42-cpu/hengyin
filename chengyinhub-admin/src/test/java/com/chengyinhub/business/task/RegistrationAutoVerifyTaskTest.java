@@ -29,7 +29,7 @@ class RegistrationAutoVerifyTaskTest {
     @Test
     void run_closesEveryExpiredOrderPerId() {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
-        when(service.listExpiredUnverifiedIds()).thenReturn(Arrays.asList(101L, 102L, 103L));
+        when(service.listExpiredUnverifiedIdsAfter(0L)).thenReturn(Arrays.asList(101L, 102L, 103L));
         when(service.autoVerifyExpiredOne(101L)).thenReturn(true);
         when(service.autoVerifyExpiredOne(102L)).thenReturn(false); // 竞态已被商家真核销,跳过
         when(service.autoVerifyExpiredOne(103L)).thenReturn(true);
@@ -44,7 +44,7 @@ class RegistrationAutoVerifyTaskTest {
     @Test
     void run_singleFailureDoesNotAbortRemainingIds() {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
-        when(service.listExpiredUnverifiedIds()).thenReturn(Arrays.asList(201L, 202L));
+        when(service.listExpiredUnverifiedIdsAfter(0L)).thenReturn(Arrays.asList(201L, 202L));
         when(service.autoVerifyExpiredOne(201L)).thenThrow(new RuntimeException("模拟单笔异常"));
         when(service.autoVerifyExpiredOne(202L)).thenReturn(true);
 
@@ -56,11 +56,110 @@ class RegistrationAutoVerifyTaskTest {
     @Test
     void run_emptyScan_touchesNothing() {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
-        when(service.listExpiredUnverifiedIds()).thenReturn(Collections.emptyList());
+        when(service.listExpiredUnverifiedIdsAfter(0L)).thenReturn(Collections.emptyList());
 
         task(service).run();
 
         verify(service, never()).autoVerifyExpiredOne(org.mockito.ArgumentMatchers.anyLong());
+    }
+
+
+    @Test
+    void run_firstTwoHundredFailuresStillReachOrder201() {
+        java.util.List<Long> candidates = java.util.stream.LongStream.rangeClosed(1, 201)
+                .boxed().collect(java.util.stream.Collectors.toList());
+        java.util.List<Long> attempted = new java.util.ArrayList<>();
+        java.util.List<Long> cursors = new java.util.ArrayList<>();
+        RuntimeException permanentFailure = new IllegalStateException("persistent first-page failure");
+        permanentFailure.setStackTrace(new StackTraceElement[0]);
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class, invocation -> {
+            String method = invocation.getMethod().getName();
+            // Both the legacy scan and its cursor successor model the same eligible rows and 200-row cap.
+            if ("listExpiredUnverifiedIds".equals(method) || "listExpiredUnverifiedIdsAfter".equals(method)) {
+                long after = invocation.getArguments().length == 0 ? 0L
+                        : ((Number) invocation.getArgument(0)).longValue();
+                cursors.add(after);
+                assertTrue(cursors.size() <= 4, "scan must advance instead of retrying the same page");
+                return candidates.stream().filter(id -> id > after).limit(200)
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            if ("autoVerifyExpiredOne".equals(method)) {
+                long id = ((Number) invocation.getArgument(0)).longValue();
+                attempted.add(id);
+                if (id <= 200) throw permanentFailure;
+                return true;
+            }
+            return org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation);
+        });
+
+        task(service).run();
+
+        assertTrue(attempted.contains(201L), "first-page failures must not starve order 201");
+        assertEquals(candidates, attempted, "each candidate must be attempted once in ascending order");
+        assertEquals(Arrays.asList(0L, 200L, 201L), cursors, "advance past failed IDs and terminate on empty page");
+    }
+
+
+    @Test
+    void run_firstPageRaceSkipsStillReachOrder201() {
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class);
+        java.util.List<Long> firstPage = java.util.stream.LongStream.rangeClosed(1, 200)
+                .boxed().collect(java.util.stream.Collectors.toList());
+        when(service.listExpiredUnverifiedIdsAfter(0L)).thenReturn(firstPage);
+        when(service.listExpiredUnverifiedIdsAfter(200L)).thenReturn(Collections.singletonList(201L));
+        // The first 200 conditional writes all lose a race and return false, without changing eligibility.
+        when(service.autoVerifyExpiredOne(201L)).thenReturn(true);
+
+        task(service).run();
+
+        for (long id = 1; id <= 201; id++) verify(service).autoVerifyExpiredOne(id);
+        verify(service).listExpiredUnverifiedIdsAfter(201L);
+        verify(service, never()).listExpiredUnverifiedIds();
+    }
+
+    @Test
+    void run_multipleSuccessfulPagesAreOrderedUniqueAndRestartFromBeginning() {
+        ICmsRegistrationService service = mock(ICmsRegistrationService.class);
+        java.util.List<Long> candidates = java.util.stream.LongStream.rangeClosed(1, 401)
+                .boxed().collect(java.util.stream.Collectors.toList());
+        java.util.List<Long> attempted = new java.util.ArrayList<>();
+        java.util.List<Long> cursors = new java.util.ArrayList<>();
+        when(service.listExpiredUnverifiedIdsAfter(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(invocation -> {
+                    long after = ((Number) invocation.getArgument(0)).longValue();
+                    cursors.add(after);
+                    assertTrue(cursors.size() <= 4, "page scan must advance and stop on empty");
+                    return candidates.stream().filter(id -> id > after).limit(200)
+                            .collect(java.util.stream.Collectors.toList());
+                });
+        when(service.autoVerifyExpiredOne(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(invocation -> {
+            attempted.add(invocation.getArgument(0));
+            return true;
+        });
+        RegistrationAutoVerifyTask task = task(service);
+
+        task.run();
+
+        assertEquals(candidates, attempted, "all pages in ascending order, without duplicates");
+        assertEquals(Arrays.asList(0L, 200L, 400L, 401L), cursors);
+        attempted.clear();
+        cursors.clear();
+        task.run();
+        assertEquals(candidates, attempted, "a new run starts at zero rather than retaining the old cursor");
+        assertEquals(Arrays.asList(0L, 200L, 400L, 401L), cursors);
+        verify(service, never()).listExpiredUnverifiedIds();
+    }
+
+    @Test
+    void pagedMapperKeepsLegacyEligibilityAndTwoHundredRowBound() throws Exception {
+        String xml = new String(Files.readAllBytes(Paths.get("..", "chengyinhub-system",
+                "src/main/resources/mapper/business/CmsRegistrationMapper.xml")), StandardCharsets.UTF_8);
+        String legacy = statement(xml, "selectExpiredUnverifiedIds").replaceAll("\\s+", " ").trim();
+        String paged = statement(xml, "selectExpiredUnverifiedIdsAfter").replaceAll("\\s+", " ").trim();
+        assertTrue(paged.contains("and r.id &gt; #{afterId}"), "cursor is exclusive");
+        assertTrue(paged.contains("order by r.id asc limit 200"), "each page remains bounded and ordered");
+        assertEquals(legacy, paged.replace("and r.id &gt; #{afterId}", "").replaceAll("\\s+", " ").trim(),
+                "only the cursor predicate may differ from the legacy eligibility");
     }
 
     @Test
@@ -96,6 +195,15 @@ class RegistrationAutoVerifyTaskTest {
         String tag = xml.substring(open + 1).split("[\\s>]")[0];
         int close = xml.indexOf("</" + tag + ">", begin);
         assertTrue(close > begin);
-        return xml.substring(begin, close);
+        String body = xml.substring(xml.indexOf('>', begin) + 1, close);
+        java.util.regex.Matcher includes = java.util.regex.Pattern
+                .compile("<include\\s+refid=\"([^\"]+)\"\\s*/>").matcher(body);
+        StringBuffer resolved = new StringBuffer();
+        while (includes.find()) {
+            includes.appendReplacement(resolved, java.util.regex.Matcher.quoteReplacement(
+                    statement(xml, includes.group(1))));
+        }
+        includes.appendTail(resolved);
+        return resolved.toString();
     }
 }

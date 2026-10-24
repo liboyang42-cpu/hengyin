@@ -301,6 +301,9 @@ public interface ICmsRegistrationService
      */
     public List<Long> listExpiredUnverifiedIds();
 
+    /** 同一到期判据，按 id 升序扫描严格大于 afterId 的下一页，每页最多 200 单。 */
+    public List<Long> listExpiredUnverifiedIdsAfter(long afterId);
+
     /**
      * RUN-01 到期自动核销:把一笔已确认到期的场次票置成已核销并记 {@code update_by}=自动任务来源。
      *

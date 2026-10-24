@@ -926,8 +926,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          锚点=cms_activity.end_date + 安全缓冲(缺锚点 fail-closed 不扫,与 RefundPolicy 缺锚点转人工同一口径);
          退款在途(待审核/已审核未回单)的单 payment_status 仍停在 2,必须在闸外排除,
          否则会把"正在退钱"的票钉成已核销。del_flag 口径同 TopicEditionFundsMapper。
-         限批 200/轮、按 id 升序最老先收(7 天缓冲下不存在饿死竞争,无需游标)。 -->
-    <select id="selectExpiredUnverifiedIds" resultType="java.lang.Long">
+         每页限批 200、按 id 升序游标扫描；失败/竞态跳过也推进，不让头页阻挡后续单。 -->
+    <sql id="expiredUnverifiedScan">
         select r.id from cms_registration r
         where r.owner_type = 2
           and (r.purchase_kind is null or r.purchase_kind &lt;&gt; 3)
@@ -945,6 +945,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               where ra.source_type = 'registration' and ra.source_id = r.id
                 and ra.status in (0, 1)
                 and (ra.del_flag is null or ra.del_flag &lt;&gt; 2))
+    </sql>
+
+    <select id="selectExpiredUnverifiedIds" resultType="java.lang.Long">
+        <include refid="expiredUnverifiedScan"/>
+        order by r.id asc
+        limit 200
+    </select>
+
+    <select id="selectExpiredUnverifiedIdsAfter" resultType="java.lang.Long">
+        <include refid="expiredUnverifiedScan"/>
+        and r.id &gt; #{afterId}
         order by r.id asc
         limit 200
     </select>

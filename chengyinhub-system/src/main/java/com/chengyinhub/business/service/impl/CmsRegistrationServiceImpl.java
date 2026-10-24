@@ -2751,6 +2751,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return cmsRegistrationMapper.selectExpiredUnverifiedIds(new Date(), AUTO_VERIFY_END_BUFFER_DAYS);
     }
 
+    @Override
+    public List<Long> listExpiredUnverifiedIdsAfter(long afterId) {
+        return cmsRegistrationMapper.selectExpiredUnverifiedIdsAfter(new Date(), AUTO_VERIFY_END_BUFFER_DAYS, afterId);
+    }
+
     /**
      * RUN-01 到期自动核销:纯状态收口(条件置位,0 行=竞态已变则跳过),不发奖励、不写台账、不做结算。
      * 全部判据在 {@code autoVerifyExpiredSession} 的当前读里,这里不做任何先读后判。

@@ -32,19 +32,29 @@ public class RegistrationAutoVerifyTask {
 
     /** 扫描活动已结束满安全缓冲仍未核销的场次票:逐单自动核销收口(不退款、不发奖励、不写台账)。 */
     public void run() {
-        List<Long> ids = cmsRegistrationService.listExpiredUnverifiedIds();
+        long afterId = 0L;
+        int scanned = 0;
         int verified = 0;
-        for (Long id : ids) {
-            try {
-                if (cmsRegistrationService.autoVerifyExpiredOne(id)) {
-                    verified++;
-                }
-            } catch (Exception e) {
-                log.error("到期未核销自动收口失败 registrationId={}", id, e);
+        while (true) {
+            List<Long> ids = cmsRegistrationService.listExpiredUnverifiedIdsAfter(afterId);
+            if (ids.isEmpty()) {
+                break;
             }
+            for (Long id : ids) {
+                scanned++;
+                try {
+                    if (cmsRegistrationService.autoVerifyExpiredOne(id)) {
+                        verified++;
+                    }
+                } catch (Exception e) {
+                    log.error("到期未核销自动收口失败 registrationId={}", id, e);
+                }
+            }
+            // 按扫描页推进，失败或竞态跳过的单不阻挡后面的 ID；下次任务仍会从头重试。
+            afterId = ids.get(ids.size() - 1);
         }
-        if (!ids.isEmpty()) {
-            log.info("到期未核销自动收口完成:扫描 {} 单,收口 {} 单", ids.size(), verified);
+        if (scanned > 0) {
+            log.info("到期未核销自动收口完成:扫描 {} 单,收口 {} 单", scanned, verified);
         }
     }
 }
