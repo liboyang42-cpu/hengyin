@@ -82,7 +82,13 @@ public final class FulfillmentEvidence {
             boolean holdOccupiesCapacity,
             BookingFact booking,
             RefundEstimateFact refund,
-            AftercareFact aftercare) {
+            AftercareFact aftercare,
+            Boolean inStoreAttested) {
+
+        public JourneyFacts(boolean orderIssued, boolean holdOccupiesCapacity, BookingFact booking,
+                RefundEstimateFact refund, AftercareFact aftercare) {
+            this(orderIssued, holdOccupiesCapacity, booking, refund, aftercare, null);
+        }
     }
 
     private final ConcurrentHashMap<String, List<ChainStep>> originalStepsByRequestId =
@@ -125,8 +131,13 @@ public final class FulfillmentEvidence {
                         "same requestId moved to slot " + booking.newSlotId()));
             }
         }
-        steps.add(new ChainStep(Stage.IN_STORE_REDEEM, requestId, Outcome.RECORDED, false,
-                "in-store redeem evidence only; PerkLedger.redeemChapter not called"));
+        if (Boolean.TRUE.equals(facts.inStoreAttested)) {
+            steps.add(new ChainStep(Stage.IN_STORE_REDEEM, requestId, Outcome.RECORDED, false,
+                    "in-store redeem evidence only; PerkLedger.redeemChapter not called"));
+        } else {
+            steps.add(unknown(Stage.IN_STORE_REDEEM, requestId,
+                    "in-store evidence missing; GPS is not a redemption"));
+        }
         steps.add(refundEstimate(requestId, facts.refund));
         AftercareFact aftercare = facts.aftercare == null ? new AftercareFact(false, false) : facts.aftercare;
         if (!aftercare.caseOpen()) {

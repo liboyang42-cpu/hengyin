@@ -39,7 +39,10 @@ class FulfillmentEvidenceTest {
         assertEquals(Outcome.RECORDED, reschedule.outcome());
         assertTrue(reschedule.detail().contains("slot-b"));
         ChainStep redeem = step(steps, Stage.IN_STORE_REDEEM);
-        assertEquals(Outcome.RECORDED, redeem.outcome());
+        assertEquals(Outcome.UNKNOWN, redeem.outcome());
+        JourneyFacts attested = new JourneyFacts(facts.orderIssued(), facts.holdOccupiesCapacity(),
+                facts.booking(), facts.refund(), facts.aftercare(), Boolean.TRUE);
+        assertEquals(Outcome.RECORDED, step(evidence.recordJourney("c07-ev-store", attested), Stage.IN_STORE_REDEEM).outcome());
         assertFalse(redeem.executedWriter());
         ChainStep refund = step(steps, Stage.REFUND_ESTIMATE);
         assertEquals(Outcome.RECORDED, refund.outcome());

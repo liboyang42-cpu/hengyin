@@ -141,7 +141,8 @@ class C07AccountSwitchRestartIsolationTest {
         HoldView steal = holds.project(
                 new HoldFact("c07-hold-never-seen", 99L, 1L, 2L,
                         EntitlementHoldProjection.STATUS_REDEEMED, END, ""), NOW);
-        assertEquals(Outcome.HELD, steal.outcome());
+        assertEquals(Outcome.UNKNOWN, steal.outcome());
+        assertEquals(Outcome.HELD, holds.recoverOriginal("c07-hold-never-seen").outcome());
         assertEquals(1, holds.occupyCount("c07-hold-never-seen"));
 
         FourLedgerBillReread bills = new FourLedgerBillReread();

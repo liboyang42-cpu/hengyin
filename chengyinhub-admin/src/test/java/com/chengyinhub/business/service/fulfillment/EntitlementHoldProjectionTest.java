@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.fulfillment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -77,7 +78,8 @@ class EntitlementHoldProjectionTest {
         HoldView steal = holds.project(
                 new HoldFact("c07-hold-never-seen", 99L, 1L, 2L,
                         EntitlementHoldProjection.STATUS_REDEEMED, END, ""), NOW);
-        assertEquals(Outcome.HELD, steal.outcome());
+        assertEquals(Outcome.UNKNOWN, steal.outcome());
+        assertEquals(Outcome.HELD, holds.recoverOriginal("c07-hold-never-seen").outcome());
         assertEquals(1, holds.occupyCount("c07-hold-never-seen"));
     }
 
@@ -148,10 +150,30 @@ class EntitlementHoldProjectionTest {
         assertEquals(0, wired.occupyCount("c07-rdm-1"));
         HoldView redeemed = wired.recoverFromRedemptions("c07-rdm-1", 78L, 124L, NOW);
         assertEquals(Outcome.REDEEMED, redeemed.outcome());
+        assertNull(redeemed.originalRequestId());
         assertFalse(redeemed.executedRedeem());
         assertFalse(redeemed.occupiesCapacity());
         assertEquals(0, wired.occupyCount("c07-rdm-1"));
+        assertEquals(Outcome.UNKNOWN, wired.recoverOriginal("c07-rdm-1").outcome());
         EntitlementHoldProjection restarted = new EntitlementHoldProjection(null, source);
         assertEquals(Outcome.REDEEMED, restarted.recoverFromRedemptions("c07-rdm-1", 78L, 124L, NOW).outcome());
+        assertEquals(Outcome.UNKNOWN, restarted.recoverOriginal("c07-rdm-1").outcome());
+    }
+
+    @Test
+    void currentFulfillmentFactDoesNotReplaceImmutableOriginalOrCrossScope() {
+        EntitlementHoldProjection holds = new EntitlementHoldProjection();
+        HoldFact held = new HoldFact("c07-hold-live", 78L, 124L, 9L,
+                EntitlementHoldProjection.STATUS_HELD, END, "");
+        assertEquals(Outcome.HELD, holds.project(held, NOW).outcome());
+        HoldFact redeemed = new HoldFact("c07-hold-live", 78L, 124L, 9L,
+                EntitlementHoldProjection.STATUS_REDEEMED, END, "");
+        assertEquals(Outcome.REDEEMED, holds.project(redeemed, NOW).outcome());
+        assertEquals(Outcome.HELD, holds.recoverOriginal("c07-hold-live").outcome());
+        assertEquals(1, holds.occupyCount("c07-hold-live"));
+        HoldFact otherRegistration = new HoldFact("c07-hold-live", 99L, 124L, 9L,
+                EntitlementHoldProjection.STATUS_HELD, END, "");
+        assertEquals(Outcome.UNKNOWN, holds.project(otherRegistration, NOW).outcome());
+        assertEquals(Outcome.HELD, holds.recoverOriginal("c07-hold-live").outcome());
     }
 }

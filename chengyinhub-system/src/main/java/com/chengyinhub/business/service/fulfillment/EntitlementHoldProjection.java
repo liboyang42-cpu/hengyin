@@ -74,6 +74,8 @@ public final class EntitlementHoldProjection {
 
     private final ConcurrentHashMap<String, HoldView> originalIntentByRequestId =
             new ConcurrentHashMap<String, HoldView>();
+    private final ConcurrentHashMap<String, HoldFact> originalFactByRequestId =
+            new ConcurrentHashMap<String, HoldFact>();
     private final ConcurrentHashMap<String, Integer> occupyCountByRequestId =
             new ConcurrentHashMap<String, Integer>();
     private final OriginalEntitlementSource source;
@@ -99,20 +101,27 @@ public final class EntitlementHoldProjection {
      */
     public HoldView project(HoldFact fact, Instant serverNow) {
         Objects.requireNonNull(serverNow, "serverNow");
+        HoldView current = compute(fact, serverNow);
         if (fact != null && fact.originalRequestId() != null) {
-            HoldView original = originalIntentByRequestId.get(fact.originalRequestId());
-            if (original != null) {
-                return original;
+            HoldFact stored = originalFactByRequestId.get(fact.originalRequestId());
+            if (stored != null && !sameScope(stored, fact)) {
+                return unknown(fact.originalRequestId());
+            }
+            if (stored == null && current.outcome() != Outcome.UNKNOWN) {
+                originalFactByRequestId.putIfAbsent(fact.originalRequestId(), fact);
+                originalIntentByRequestId.putIfAbsent(fact.originalRequestId(), current);
+                if (current.occupiesCapacity()) {
+                    occupyCountByRequestId.putIfAbsent(fact.originalRequestId(), 1);
+                }
             }
         }
-        HoldView view = compute(fact, serverNow);
-        if (view.originalRequestId() != null && view.outcome() != Outcome.UNKNOWN) {
-            originalIntentByRequestId.putIfAbsent(view.originalRequestId(), view);
-            if (view.occupiesCapacity()) {
-                occupyCountByRequestId.putIfAbsent(view.originalRequestId(), 1);
-            }
-        }
-        return view;
+        return current;
+    }
+
+    private static boolean sameScope(HoldFact stored, HoldFact incoming) {
+        return Objects.equals(stored.registrationId(), incoming.registrationId())
+                && Objects.equals(stored.chapterId(), incoming.chapterId())
+                && Objects.equals(stored.merchantId(), incoming.merchantId());
     }
 
     public HoldView requery(HoldFact fact, Instant serverNow) {
@@ -153,7 +162,8 @@ public final class EntitlementHoldProjection {
     /**
      * 从既有核销流水回读。缺 {@link IPerkLedgerService#listRedemptions} 为 WAITING_SOURCE。
      * 未见过的章保持 UNKNOWN，不占容量，不调用 {@code redeemChapter}。
-     * 已撤销流水不是生效原核销。
+     * 已撤销流水不是当前生效核销。这是当前账目观察，不把调用方 originalRequestId
+     * 写成这次原请求已成功，也不清 UNKNOWN。
      */
     public HoldView recoverFromRedemptions(String originalRequestId, Long registrationId, Long chapterId,
             Instant serverNow) {
@@ -167,10 +177,9 @@ public final class EntitlementHoldProjection {
         List<Redemption> rows = redemptions.listRedemptions(registrationId);
         Redemption match = findActiveRedemption(rows, chapterId);
         if (match == null) {
-            return recoverOriginal(originalRequestId);
+            return unknown(null);
         }
-        return project(new HoldFact(originalRequestId, registrationId, chapterId, match.getMerchantId(),
-                STATUS_REDEEMED, null, ""), serverNow);
+        return new HoldView(null, Outcome.REDEEMED, false, false, false, false);
     }
 
     private static Redemption findActiveRedemption(List<Redemption> rows, Long chapterId) {
