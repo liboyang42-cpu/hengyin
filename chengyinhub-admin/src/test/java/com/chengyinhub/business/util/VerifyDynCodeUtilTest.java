@@ -101,4 +101,24 @@ class VerifyDynCodeUtilTest {
         assertNotEquals(code, tampered);
         assertFalse(VerifyDynCodeUtil.verify(tampered, NOW + 1000, SECRET).valid);
     }
+    @Test
+    void receipt_identity_can_outlive_transport_but_default_new_use_verification_stays_expired() {
+        String code = VerifyDynCodeUtil.issue(8801, "activity_seat_2", NOW, TTL, 7, SECRET);
+        assertEquals("已过期", VerifyDynCodeUtil.verify(code, NOW + TTL + 1, SECRET).reason);
+        VerifyDynCodeUtil.Result identity = VerifyDynCodeUtil.verifyForReceipt(code, SECRET);
+        assertTrue(identity.valid); assertEquals(8801L, identity.regId); assertEquals("activity_seat_2", identity.type);
+        assertTrue(VerifyDynCodeUtil.verify(code, NOW + TTL, SECRET).valid, "original expiry boundary remains inclusive");
+    }
+
+    @Test
+    void receipt_identity_does_not_trust_tampered_registration_seat_expiry_nonce_or_other_secret() {
+        String code = VerifyDynCodeUtil.issue(8801, "topic_seat_2", NOW, TTL, 7, SECRET);
+        for (String changed : new String[]{code.replace(".8801.", ".8802."), code.replace("topic_seat_2", "topic_seat_3"),
+                code.replace(String.valueOf(NOW + TTL), String.valueOf(NOW + TTL + 1)), code.replace(".7.", ".8.")}) {
+            assertNotEquals(code, changed); assertFalse(VerifyDynCodeUtil.verifyForReceipt(changed, SECRET).valid);
+        }
+        assertFalse(VerifyDynCodeUtil.verifyForReceipt(code, "other-secret").valid);
+        assertFalse(VerifyDynCodeUtil.verifyForReceipt("garbage", SECRET).valid);
+    }
+
 }

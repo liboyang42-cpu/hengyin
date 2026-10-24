@@ -100,6 +100,12 @@ public class RegistrationSeatService {
         return redeemSeat(registrationId, seatNo, null, actor, true, true);
     }
 
+    /** Verifier-only read: buyer self-read permission must never become scan acknowledgement permission. */
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public Receipt verifierSeatReceipt(Long registrationId, Integer seatNo, Long activityId, Long actor, boolean activityTicket) {
+        return redeemSeat(registrationId, seatNo, activityId, actor, activityTicket, false);
+    }
+
     /** Current locking read only: no initialization, aggregate verification, CAS or audit on this path. */
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public Receipt seatReceipt(Long registrationId, Integer seatNo, Long activityId, Long actor) {
@@ -111,6 +117,8 @@ public class RegistrationSeatService {
             CmsRegistration current = lockCurrent(seed);
             if (!actor.equals(current.getMemberId())) throw denied("无权读取原席位");
             RegistrationSeat selected = find(seats.selectByRegistrationForUpdate(registrationId), seatNo);
+            if (selected != null && verified(selected) && activityId != null && !activityId.equals(selected.getActivityId()))
+                throw conflict("原席位不属于当前场次");
             return selected != null && verified(selected) ? receipt(selected, true) : null;
         }
         return redeemSeat(registrationId, seatNo, activityId, actor, Long.valueOf(2L).equals(seed.getOwnerType()), false);
@@ -126,6 +134,8 @@ public class RegistrationSeatService {
         if (!(activityTicket ? Long.valueOf(2L) : Long.valueOf(1L)).equals(seed.getOwnerType()))
             throw denied("核销码类型与原订单不匹配");
         Long activityId = activityTicket ? seed.getOwnerId() : requestedActivityId;
+        if (activityTicket && requestedActivityId != null && !requestedActivityId.equals(activityId))
+            throw denied("活动席位不属于当前带队场次");
         if (activityId == null || activityId <= 0) throw denied("请选择带队场次后再核销");
         Long topicId = topicOf(seed);
         CmsTopic topic = topicId == null ? null : topics.selectCmsTopicByIdForUpdate(topicId);
@@ -273,6 +283,10 @@ public class RegistrationSeatService {
     }
     private boolean verified(RegistrationSeat row) { return Integer.valueOf(1).equals(row.getStatus()); }
     private Receipt receipt(RegistrationSeat row, boolean replayed) {
+        if (!verified(row) || row.getId() == null || row.getId() <= 0 || row.getRegistrationId() == null || row.getRegistrationId() <= 0
+                || row.getSeatNo() == null || row.getSeatNo() <= 0 || row.getActivityId() == null || row.getActivityId() <= 0
+                || row.getVerifierMemberId() == null || row.getVerifierMemberId() <= 0 || row.getVerifiedAt() == null)
+            throw conflict("原席位核销事实不完整，请联系人工核验");
         return new Receipt(row.getId(), row.getRegistrationId(), row.getSeatNo(), row.getTopicId(), row.getActivityId(),
                 row.getVerifierMemberId(), row.getVerifiedAt(), replayed);
     }

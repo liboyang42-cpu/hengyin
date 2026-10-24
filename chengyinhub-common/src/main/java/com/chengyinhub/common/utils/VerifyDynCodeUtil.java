@@ -8,7 +8,7 @@ import java.util.Base64;
 /**
  * 核销动态码签发/校验(BE-11 · Layer B 游戏外核销)。
  *
- * <p>玩家侧签发带 nonce+TTL 的动态核销码,收数据方(商家/俱乐部)扫码后由后端 {@link #verify} 校验。
+ * <p>玩家侧签发带 nonce+TTL 的动态核销码,收数据方(商家/俱乐部)扫码后由后端 {@link #verify(String, long, String)} 校验。
  * 设计为<b>纯静态无状态</b>:签名保真、TTL 防重放拍照转赠、"一次性"由业务侧 verificationStatus 幂等兜底。
  *
  * <p>码格式:{@code v1.{regId}.{type}.{expMs}.{nonce}.{sig}},
@@ -68,6 +68,19 @@ public class VerifyDynCodeUtil {
      * @param secret 服务端密钥
      */
     public static Result verify(String code, long nowMs, String secret) {
+        return verify(code, nowMs, secret, true);
+    }
+
+    /**
+     * Signature/identity check for an authorized terminal receipt read only. An expired transport
+     * may identify a fact already committed; this result must never authorize a new redemption.
+     * New use must still call {@link #verify(String, long, String)} with the actual current time.
+     */
+    public static Result verifyForReceipt(String code, String secret) {
+        return verify(code, 0L, secret, false);
+    }
+
+    private static Result verify(String code, long nowMs, String secret, boolean enforceExpiry) {
         if (code == null || code.isEmpty()) {
             return Result.fail("空码");
         }
@@ -88,7 +101,7 @@ public class VerifyDynCodeUtil {
         } catch (NumberFormatException e) {
             return Result.fail("参数错误");
         }
-        if (nowMs > exp) {
+        if (enforceExpiry && nowMs > exp) {
             return Result.fail("已过期");
         }
         return Result.ok(regId, p[2]);
