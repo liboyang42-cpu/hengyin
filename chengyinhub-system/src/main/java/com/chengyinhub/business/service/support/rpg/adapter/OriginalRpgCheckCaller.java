@@ -3,9 +3,10 @@ package com.chengyinhub.business.service.support.rpg.adapter;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
- * 正常检定成长调用者。只把同一 member、run、node、check、request 交给原
- * {@code ITopicRouteRuntimeService.rpgV2Check} / {@code rpgV2CheckReceipt}。
- * 不写资源账，也不把进程内 adapter 当成原 writer。
+ * Separates the original POST execute result from the GET receipt shell.
+ * A successful execute body has runId, attemptId, checkId and stateVersion.
+ * requestId and status belong only to {@code rpgV2CheckReceipt}.
+ * This class does not write a resource ledger and does not invent those fields.
  */
 public final class OriginalRpgCheckCaller {
     public interface Port {
@@ -25,6 +26,24 @@ public final class OriginalRpgCheckCaller {
         this.port = port;
     }
 
+    public static boolean explicitV2(Long runId, String requestId, Integer expectedVersion,
+                                     String attemptId, Boolean useInspiration) {
+        return runId != null || (requestId != null && !requestId.trim().isEmpty())
+                || expectedVersion != null || (attemptId != null && !attemptId.trim().isEmpty())
+                || useInspiration != null;
+    }
+
+    /** An explicit v2 call that returns null must not fall back to the legacy roll. */
+    public static JsonNode acceptOriginalOrLegacy(JsonNode original, boolean explicitV2, JsonNode legacy) {
+        if (original != null && !original.isNull()) {
+            return original;
+        }
+        if (explicitV2) {
+            return null;
+        }
+        return legacy;
+    }
+
     public JsonNode check(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId,
             Long runId, String requestId, Integer expectedVersion, String operation,
             boolean useInspiration, String attemptId) {
@@ -34,7 +53,7 @@ public final class OriginalRpgCheckCaller {
         }
         JsonNode body = port.check(memberId, topicId, activityId, nodeId, checkId, runId, requestId,
                 expectedVersion, operation, useInspiration, attemptId);
-        if (!sameRequest(body, runId, requestId)) {
+        if (!executeResult(body, memberId, runId, checkId, expectedVersion)) {
             return null;
         }
         return body;
@@ -45,11 +64,7 @@ public final class OriginalRpgCheckCaller {
             return null;
         }
         JsonNode body = port.receipt(memberId, runId, nodeId, checkId, requestId);
-        if (body == null || !sameRequest(body, runId, requestId)) {
-            return null;
-        }
-        String status = body.path("status").asText("");
-        if (!"COMMITTED".equals(status) && !"UNKNOWN".equals(status)) {
+        if (!receiptShell(body, runId, requestId)) {
             return null;
         }
         return body;
@@ -68,9 +83,27 @@ public final class OriginalRpgCheckCaller {
                 || "SUBMIT_CHECK".equals(operation) || "RETRY_CHECK".equals(operation);
     }
 
-    private static boolean sameRequest(JsonNode body, Long runId, String requestId) {
-        return body != null && !body.isNull()
-                && body.path("runId").isNumber() && body.path("runId").longValue() == runId.longValue()
-                && requestId.equals(body.path("requestId").asText());
+    static boolean executeResult(JsonNode body, Long memberId, Long runId, String checkId, Integer expectedVersion) {
+        if (body == null || body.isNull() || !body.isObject() || body.has("status") || body.has("requestId")) {
+            return false;
+        }
+        if (body.has("memberId") && body.path("memberId").asLong() != memberId.longValue()) {
+            return false;
+        }
+        return body.path("runId").isNumber() && body.path("runId").longValue() == runId.longValue()
+                && checkId.equals(body.path("checkId").asText(""))
+                && body.path("attemptId").isTextual() && !body.path("attemptId").asText().isEmpty()
+                && body.path("stateVersion").isNumber()
+                && body.path("stateVersion").longValue() == expectedVersion.longValue() + 1L;
+    }
+
+    static boolean receiptShell(JsonNode body, Long runId, String requestId) {
+        if (body == null || body.isNull() || !body.isObject()) {
+            return false;
+        }
+        String status = body.path("status").asText("");
+        return body.path("runId").isNumber() && body.path("runId").longValue() == runId.longValue()
+                && requestId.equals(body.path("requestId").asText())
+                && ("COMMITTED".equals(status) || "UNKNOWN".equals(status));
     }
 }

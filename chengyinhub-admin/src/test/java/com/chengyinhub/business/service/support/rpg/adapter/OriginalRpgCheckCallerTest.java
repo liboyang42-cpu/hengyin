@@ -13,35 +13,44 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OriginalRpgCheckCallerTest {
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String EXECUTE = "{\"runId\":9,\"attemptId\":\"4\",\"checkId\":\"spot\","
+            + "\"stateVersion\":3,\"characterVersion\":1,\"definitionVersion\":1,\"releaseId\":\"rel\"}";
 
     @Test
-    void sameIdentityReachesOriginalCheckAndReceiptDoesNotCallCheck() throws Exception {
+    void legalPostSuccessIsKeptAndSameKeyReceiptDoesNotWrite() throws Exception {
         Recording port = new Recording();
-        port.checkBody = JSON.readTree("{\"runId\":9,\"requestId\":\"req-1\",\"status\":\"COMMITTED\"}");
+        port.checkBody = JSON.readTree(EXECUTE);
         port.receiptBody = JSON.readTree("{\"runId\":9,\"requestId\":\"req-1\",\"status\":\"UNKNOWN\"}");
         OriginalRpgCheckCaller caller = new OriginalRpgCheckCaller(port);
-        JsonNode checked = caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, null);
-        assertEquals("COMMITTED", checked.path("status").asText());
-        assertEquals(1, port.checks.size());
+        JsonNode checked = caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4");
+        assertEquals(9L, checked.path("runId").asLong());
+        assertEquals("spot", checked.path("checkId").asText());
+        assertEquals(3L, checked.path("stateVersion").asLong());
+        assertTrue(checked.path("requestId").isMissingNode());
         JsonNode read = caller.receipt(7L, 9L, 4L, "spot", "req-1");
         assertEquals("UNKNOWN", read.path("status").asText());
         assertEquals(1, port.checks.size());
         assertEquals(1, port.receipts.size());
+        assertNull(OriginalRpgCheckCaller.acceptOriginalOrLegacy(null, true, JSON.readTree("{\"legacy\":true}")));
+        assertEquals(true, OriginalRpgCheckCaller.acceptOriginalOrLegacy(null, false,
+                JSON.readTree("{\"legacy\":true}")).path("legacy").asBoolean());
     }
 
     @Test
-    void otherRunOrGameReceiptDoesNotOccupyTheOriginalCheck() throws Exception {
+    void receiptShapedPostAndWrongRunOrVersionAreNotTheExecuteResult() throws Exception {
         Recording port = new Recording();
-        port.checkBody = JSON.readTree("{\"runId\":8,\"requestId\":\"req-1\",\"status\":\"COMMITTED\"}");
-        port.receiptBody = JSON.readTree("{\"runId\":9,\"requestId\":\"req-1\",\"status\":\"APPLIED\"}");
+        port.checkBody = JSON.readTree("{\"runId\":9,\"requestId\":\"req-1\",\"status\":\"COMMITTED\"}");
         OriginalRpgCheckCaller caller = new OriginalRpgCheckCaller(port);
-        assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, null));
-        assertEquals(1, port.checks.size());
+        assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
+        port.checkBody = JSON.readTree(EXECUTE.replace("\"runId\":9", "\"runId\":8"));
+        assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
+        port.checkBody = JSON.readTree(EXECUTE.replace("\"stateVersion\":3", "\"stateVersion\":9"));
+        assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
+        port.checkBody = JSON.readTree(EXECUTE);
+        assertNull(caller.check(0L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, "4"));
         assertNull(caller.receipt(7L, 9L, 4L, "spot", "req-1"));
-        assertNull(caller.check(0L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "ROLL_CHECK", false, null));
-        assertNull(caller.check(7L, 3L, 1L, 4L, "spot", 9L, "req-1", 2, "CREATE_CHARACTER", false, null));
-        assertEquals(1, port.checks.size());
-        assertTrue(port.receipts.isEmpty() == false);
+        port.receiptBody = JSON.readTree("{\"runId\":9,\"requestId\":\"req-1\",\"status\":\"APPLIED\"}");
+        assertNull(caller.receipt(7L, 9L, 4L, "spot", "req-1"));
     }
 
     private static final class Recording implements OriginalRpgCheckCaller.Port {
