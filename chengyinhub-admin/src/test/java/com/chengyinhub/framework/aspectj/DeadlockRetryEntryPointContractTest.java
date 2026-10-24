@@ -141,6 +141,9 @@ class DeadlockRetryEntryPointContractTest {
         var result = boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original-1", 0);
         assertEquals(500, result.get("code"));
         assertEquals("节点不存在", result.get("msg"));
+        List<Object> originalCommand = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original-1", 0);
+        assertEquals(List.of(originalCommand, originalCommand), boundary.commands(),
+                "IR-T07: retry must preserve original actor, scope, media, command identity and expected version");
         assertEquals(List.of("identity", "begin1", "node1", "rollback1", "close1",
                 "identity", "begin2", "node2", "commit2", "close2"), boundary.events());
         assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
@@ -151,16 +154,20 @@ class DeadlockRetryEntryPointContractTest {
         PlayBoundary photo = playBoundary(false);
         assertEquals("节点不存在", photo.controller().photo("500", "401", "media-asset:71", null).get("msg"));
         assertEquals(List.of("identity", "begin1", "node1", "commit1", "close1"), photo.events());
+        assertEquals(List.of(Arrays.asList(7L, "500", "401", "media-asset:71", null)), photo.commands());
         PlayBoundary reveal = playBoundary(false);
         assertEquals("节点不存在", reveal.controller().revealPuzzle("500", "401", null).get("msg"));
         assertEquals(List.of("identity", "begin1", "node1", "commit1", "close1"), reveal.events());
+        assertEquals(List.of(Arrays.asList(7L, "500", "401", null)), reveal.commands());
         assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
     }
 
-    private record PlayBoundary(ApiPlayProgressController controller, List<String> events) { }
+    private record PlayBoundary(ApiPlayProgressController controller, List<String> events,
+            List<List<Object>> commands) { }
 
     private static PlayBoundary playBoundary(boolean deadlockFirst) throws Exception {
         List<String> events = new ArrayList<>();
+        List<List<Object>> commands = new ArrayList<>();
         javax.sql.DataSource dataSource = org.mockito.Mockito.mock(javax.sql.DataSource.class);
         java.sql.Connection first = boundaryConnection(events, 1);
         java.sql.Connection second = boundaryConnection(events, 2);
@@ -192,6 +199,12 @@ class DeadlockRetryEntryPointContractTest {
             org.springframework.test.util.ReflectionTestUtils.setField(row[0], "cmsTopicNodeService", nodes);
             var application = new org.springframework.aop.framework.ProxyFactory(row[0]);
             application.setProxyTargetClass(true);
+            application.addAdvice((org.springframework.aop.MethodBeforeAdvice) (method, arguments, target) -> {
+                if (method.getName().equals("photo") || method.getName().equals("revealPuzzle")) {
+                    assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                    commands.add(java.util.Collections.unmodifiableList(Arrays.asList(arguments.clone())));
+                }
+            });
             application.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(transactions,
                     new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
             org.springframework.test.util.ReflectionTestUtils.setField(controller, (String) row[1], application.getProxy());
@@ -199,7 +212,7 @@ class DeadlockRetryEntryPointContractTest {
         var outer = new org.springframework.aop.framework.ProxyFactory(controller);
         outer.setProxyTargetClass(true);
         outer.addAdvisor(com.chengyinhub.framework.config.DeadlockRetryConfig.deadlockRetryAdvisor());
-        return new PlayBoundary((ApiPlayProgressController) outer.getProxy(), events);
+        return new PlayBoundary((ApiPlayProgressController) outer.getProxy(), events, commands);
     }
 
     private static java.sql.Connection boundaryConnection(List<String> events, int id) throws Exception {

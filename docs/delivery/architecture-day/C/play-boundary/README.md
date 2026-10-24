@@ -31,3 +31,5 @@ Controller 9→0个@Transactional，六个DeadlockRetry保持原HTTP位置。Rat
 原4个DeadlockRetryEntryPointContractTest用例保留并把事务断言指向实际owner；同suite另补2个测试，使用实际Controller/Photo/Puzzle应用+Spring事务/重试代理和mock JDBC，拟检查rollback→close→第二identity→新connection事务、原隔离、照片/揭示短兼容入口，不能当MySQL证据。B1真库原4个@Test/wrapper正文逐字不变，只有identity断言移到无TX层、setup显式为真实应用安装事务代理；原claim/路线/Hint叶子的TX与真实回滚断言未削减。夹具按Controller真实target归一身份，防止后置替换经过CGLIB代理时另建空对象图。root-owned PlayHintUnlockMySqlIT未改。
 
 实际仅执行Python源码静态核对：HTTP事务移除/六重试、命令body和原事务参数无改、两兼容owner、B1四正文、旧合同case保留+2、词法/独占范围，及diff检查。Java/DB/CI均未运行；本批无新增CI/回归批次，由root同源联合执行既有suite和启动验证。
+
+第17节采用记录：本唯一应用事务owner片对应IR01/IR06/IR-T07；代理测试另捕获每次应用入参，逐次断言原actor/activity/node/media/actionId/expected不漂移，短兼容入口亦按原参数断言。该增量仅增强既有2测试，不新增suite/CI；尚未运行Java。IR-T01/05旧代次小程序cleanup不在本事务增量改动范围，不以本片源码/测试冒充其验收；后端原回执先于新版本检查的正文未动。
