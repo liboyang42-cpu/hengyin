@@ -1,0 +1,151 @@
+{
+  "status": "STATIC_PASS_NOT_EXECUTED",
+  "side": "new",
+  "baseline": "27471b00989e15f7641f4ee77c497cca2f9e53c1",
+  "branch": "codex/architecture-day-c-m1-observed-new",
+  "frozen_source": "1c138a000387583e224c9acb5369140fdf2dba18",
+  "helper_sha256": "e6ec0822c17a98ad86945dae18f361f1fe306eb15bf500b143fff3e3dccb8908",
+  "original_inputs_manifest_sha256": "3e95b92b5d06154004a8c065a4c98b22e48ca0c55f63bbedc851e04bb2ab2474",
+  "fixtures": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java",
+      "before_sha256": "4da9afb0f58d127d0a40de4d7019c3091d2af678eb0f74a11fdc5059298f93df",
+      "after_sha256": "19c9b51207ffc760672131d490e17e05cb9050211c3114d8d512a41f4f01898b",
+      "original_test_wrappers_assert_helper_tail_sha256": "99f6f09107bd332763ba7d97e545b4a86f3202d581fc9c7047ff13dfe8f159ec",
+      "original_test_wrappers_assert_helper_tail_unchanged": true,
+      "seed_original_sha256": "6c53d96e9262d7d0b54cdf385f3690a5bcf424043dab565c32312b35a1105997",
+      "seed_body_preserved_except_final_observer_begin": true,
+      "cleanup_original_sha256": "0a9831381e6e3cf3e24982c1ff0d6af6456d81091c1652a46c8f400e5f384acd",
+      "cleanup_unchanged": true,
+      "declared_case_order_unchanged": [
+        "legalSelfPlayUsesOneRealDebitAndOriginalEventIdentity",
+        "legalActivityUsesOneRealDebitAndOriginalEventIdentity",
+        "unauthorizedOrWrongScopeNeverReturnsHintsOrChangesEconomicState",
+        "duplicateAfterLostReplyAndReconstructionKeepsOneDebitAcrossAuthorizedScopes",
+        "twoConnectionsSerializeOriginalRegistrationAndDebitOnce",
+        "balanceLostAfterPrecheckRollsBackHintLedgerButRetainsOtherCommittedSpend",
+        "ledgerWriteThenThrowRollsBackRealRowAndLeavesDebitUntouched",
+        "debitWriteThenThrowRollsBackBothRealBalanceAndLedgerBeforeOriginalRetry",
+        "revokedRegistrationBlocksPreviouslyPurchasedHintWithoutChangingItsOriginalLedger",
+        "disabledRuleStillRequiresEntitlementAndWritesNoPoints"
+      ],
+      "test_method_order_annotation": []
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+      "before_sha256": "9d40dbfefac0278d0a4f44b787398967b62057417d842e6dd6399da3b36a5b1c",
+      "after_sha256": "9c02c9c35338738237cd0a35c91cd276df68625c8a2bf681b3fe2b4f9093d223",
+      "original_test_wrappers_assert_helper_tail_sha256": "75f443eaa84a0510acf3bcb83f3db90fad5a9554c38fc3b765691e279980655c",
+      "original_test_wrappers_assert_helper_tail_unchanged": true,
+      "seed_original_sha256": "1da83cf7a449aa67ce22284c10af6f805e4b8f88aa48f6e1b4599183a20244a3",
+      "seed_body_preserved_except_final_observer_begin": true,
+      "cleanup_original_sha256": "f2bde90e2298c48722752d34bbec3a1ccbdb1f0188fffbb388655758526f2e7a",
+      "cleanup_unchanged": true,
+      "declared_case_order_unchanged": [
+        "preferenceLeadStorageFaultCannotCreateBranchSessionBeforeEitherHttpAdmission",
+        "preferenceLeadStorageFaultCannotCreateJourneySessionBeforeEitherHttpAdmission",
+        "realLeadStorageFaultReturnsNoHintAndHasZeroEconomicOrRegistrationEffect",
+        "realLeadStorageFaultRollsBackTheOriginalBasicActionClaimWithoutTerminalReceipt"
+      ],
+      "test_method_order_annotation": []
+    }
+  ],
+  "declared_case_count": 14,
+  "shared_source_files_unchanged": [
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "sha256": "2e0c38d4d8426aacf10b8759507992b319c791cc3b1a178d4ff01f0bb1e07c44"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml",
+      "sha256": "ea65005310fc6b616379d1deb54d7c888599793a69ff5dbf605291e892b194fd"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubLeadMapper.xml",
+      "sha256": "8e14a91363772ebf2a1f598db128c3f524676a62099cecde94f9065a966dc65f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsPointsSettingMapper.xml",
+      "sha256": "b0513608ae6be667814ddf757547381ee48a8db3336d5a537f232fb77006bae3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberMapper.xml",
+      "sha256": "88899cba0960ce4be8909e91f528a6c7595394216b36f0d477bd300522b45e49"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberPointsDetailMapper.xml",
+      "sha256": "b786d51ce1249c1c434c12f3a3bfcc68aa713bdf72bc66a16ad30eb36868a809"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml",
+      "sha256": "96753ea2c7d484c673fd70e3fd73a322a19a09c96d31cf02d5f6239b066276da"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml",
+      "sha256": "7e05fb1cad8af4507aa6fb44be1d10449b9b4041376b5b91cc37a5789742d5ee"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/resources/it-schema/run41-prod-ddl.sql",
+      "sha256": "a2deb2ed4bbfe07fc1e005164ec18b7a0119219342c47ccca8a891087f0bbea5"
+    },
+    {
+      "path": "sql/base_schema_20260818.sql",
+      "sha256": "dcf816b8d735bb81b3aee7b921a6fc61d4b0355a02fc0e0e443e2ad1cca4b358"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260823_topic_route_graph.sql",
+      "sha256": "a3655b35c4616d60b753c1aa6b78befa964fbc0a6d8b3c0a5d9f88194775e811"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260930_registration_first_successful_scan.sql",
+      "sha256": "6d6e56f7d39585a2baaca825856496c893208a6a4b4511e1dc046144871e168f"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_club_lead.sql",
+      "sha256": "9fb2cccf9a727887df51c47e587cdb76f851d462e36002069359139dbdc9e993"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20260823_game_session_runtime.sql",
+      "sha256": "ca7e9c57cf3d82cdca79796a120fda6197a68a9fab0b3a241c45a3a83ee68250"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CurrentPlayRegistration.java",
+      "sha256": "53495a67081e3c3215a872f340796a66cbb8af05ebc685118a2228fded2e6ebe"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/PreferenceSubmitRequest.java",
+      "sha256": "63ce9c70e42864e2c5e95782c9b67bc7bb74f326a1ac8fc82e3edeb3ea6b548c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java",
+      "sha256": "48dd675353f103b9a7320987a1a0d2747e652b2e7b8f901086e52cd1a07f9d38"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberPointsDetailServiceImpl.java",
+      "sha256": "dce310336921026d52e8f2ff5283aab47d1615b3d69f8687597366bd0e6877c5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java",
+      "sha256": "3df1021ffe78cb9148096179a2b21a4db540a5b3242225826f4b1422aee73181"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsPointsSettingServiceImpl.java",
+      "sha256": "b42a60b40f1ffd36e471a6b68b05455e44f92a007e6a656ad6779dd709899f07"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "sha256": "6426ef799fa77f7313fb1554c668033dde11817baacafa45a499b75ee3dc31e9"
+    }
+  ],
+  "shared_source_count": 21,
+  "case_execution_order_not_verified": true,
+  "fixture_prestate_source_preserved_not_actual_database_rows": true,
+  "java_mysql_ci_executed": false,
+  "only_frozen_helper_and_exact_side_patches": true,
+  "secret_scan": {
+    "tool": "gitleaks 8.24.3",
+    "scope": "exact four staged files plus raw staged diff",
+    "findings": 0,
+    "ignore_or_baseline_changed": false
+  }
+}
