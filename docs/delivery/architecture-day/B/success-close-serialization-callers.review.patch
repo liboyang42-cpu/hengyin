@@ -1,0 +1,11 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -3533,6 +3533,8 @@
+                 || !fact.transactionId().equals(receipt.transactionId())
+                 || !verified.reference().equals(receipt.reference()))
+             throw new IllegalStateException("原支付消费事实关联冲突或未持久化");
++        // Complete only the exact original manual handoff after the A-owned consumption proof above.
++        verifiedPaymentFacts.completePaymentRecovery(verified.reference(), registrationId);
+     }
+ 
+     private WechatVerifiedPaymentFactService.Stored checkedVerifiedPayment(Map<String, String> facts) {

@@ -38,7 +38,8 @@ class WechatVerifiedPaymentFactMySqlIT {
         source=P0AcceptanceSchema.dataSource(suite); db=new JdbcTemplate(source);
         assertEquals(MybatisItDatabase.databaseName(suite),db.queryForObject("SELECT DATABASE()",String.class));
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(db.queryForObject("SELECT VERSION()",String.class)));
-        P0AcceptanceSchema.migrations(source,"migration_wx_payment_callback_inbox_outbox_20260725.sql",
+        P0AcceptanceSchema.baseTables(db,"cms_registration");
+        P0AcceptanceSchema.migrations(source,"migration_20261023_wx_pay_order_intent.sql","migration_wx_payment_callback_inbox_outbox_20260725.sql",
                 "migration_20261024_wx_verified_payment_fact.sql");
         facts=WechatVerifiedFactTestSupport.realFacts(source);
         SqlSessionFactoryBean factory=new SqlSessionFactoryBean(); factory.setDataSource(source);
@@ -53,6 +54,14 @@ class WechatVerifiedPaymentFactMySqlIT {
     @BeforeEach void clearOnlyOwnedScratch() {
         for (String table:List.of("wx_payment_callback_fact_link","wx_verified_payment_fact_rejection",
                 "wx_verified_payment_fact","wx_payment_callback_inbox","wx_payment_callback_outbox")) db.update("DELETE FROM "+table);
+        db.update("DELETE FROM wx_pay_order_intent");db.update("DELETE FROM cms_registration");
+        for(int id:List.of(1,2)) {
+            db.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,"
+                    +"original_amount,total_amount,payable_amount,wechat_payment_amount,payment_status,registration_status,pay_expire_time)"
+                    +" VALUES(?,?,1,23,9,10.00,7,10.00,10.00,10.00,10.00,1,1,DATE_ADD(NOW(),INTERVAL 1 HOUR))",id,"REG"+id);
+            db.update("INSERT INTO wx_pay_order_intent(mchid,out_trade_no,business_out_trade_no,biz_type,biz_id,attempt_no,appid,trade_type,currency,total_fen,request_hash,payer_openid,request_description,notify_url) VALUES('merchant',?,?,'REGISTRATION',?,1,'wx-original','APP','CNY',1000,?,'','','https://example.test/notify')",
+                    "REG"+id,"REG"+id,id,"a".repeat(64));
+        }
         clearInvocations(mutations);
     }
     @AfterAll void cleanup() {

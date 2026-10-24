@@ -1,0 +1,33 @@
+B 原业务行 SUCCESS/关闭串行化源码候选；Java/MySQL/CI/DDL/真实渠道均 NOT_RUN。
+
+parent: 30d88bdc5401f9b64c0a99656b466d494b454d17（公共历史、独立工作树/分支）。
+上游精确参考: faccd991c3060d14d0b0e967cce03d32a84ceb8c；采用其 assertVisibleOutside SQLException→AssertionError helper，原13个@Test正文逐字保留。root正在独立修原callback真实IM接线，本片不触该工厂/Controller/CI/registry。
+
+失败机制与合同
+- 原guard/CAS持原业务行，但旧独立fact writer未持该行，能在guard读无SUCCESS后提交成功事实；CAS随后错误关闭。新writer在SDK完成后短事务锁同一WechatPaymentOrderOwner原业务行，复核原商户/APP/渠道/币种/分金额/业务ID与原attempt/hash，再持锁提交事实。guard/CAS也必须在同一业务事务持该行。两者以原行锁的释放/提交排序；支付真实发生时间不被本地CLOSED伪造。
+- 不先持attempt再独立写同键；不持DB锁访问SDK。recordVerified签名不变，程序化REQUIRES_NEW之前显式拒绝活动外层事务。queryVerifiedOrder、官方refund查证、通知解析及closePaymentAttempt在SDK前同样拒绝活动外层事务；不得通过NOT_SUPPORTED悬挂尚未提交且持行锁的业务调用规避。
+- writer锁住原业务行后读冻结意图；INSERT IGNORE后的事实回读使用FOR SHARE current read且禁用缓存，避免跨业务唯一身份冲突落在旧RR view。普通不可变reader仍用原独立只读边界。
+- CLOSED先提交/原业务已不payable再遇真实SUCCESS：原不可变事实与拒绝证据、原引用绑定的既有wx_payment_callback_outbox人工处理态4同事务提交。key=VERIFIED:<factId>:<factHash>，biz_type=1支付终态查询、money_affecting=0、原真实businessId。原worker仅领0/3，不能自动重发、退款、恢复容量或无限自动重试。重复同事实幂等；state2完成后不重开。缺原业务行只保留原事实及BUSINESS_MISSING审计，绝不造businessId。
+- 所有query Map继续返回本次真实SDK观察，不用历史SUCCESS伪造当前状态；持久恢复票不是授权退款/重开权益。业务失败仍FAIL，#586 ACK不改。人工决策仍须领域owner执行；本片不宣称支付与已关闭权益矛盾被自动解决。
+
+准确接缝
+WechatVerifiedPaymentFactService.recordVerified(WechatVerifiedPaymentFact): Reference，事务外入口。
+WechatVerifiedPaymentFactService.findPaymentRecovery(Reference): Optional<RecoveryTicket>；RecoveryTicket(long id,long businessId,Stored original,int state,String reason)。
+WechatVerifiedPaymentFactService.completePaymentRecovery(Reference,long businessId): void，MANDATORY，owner核实其自身原成功消费凭据后，和原业务/DONE同事务将该确切人工票4→2。B不读取/持有A消费mapper，A-owned read leaf不改。
+WechatPaymentOperations.lockClosablePaymentAttemptForUpdate(String businessNo,String observedWxNo): boolean，原业务事务中无SDK，保留原签名与金额/身份锁。
+
+caller审查（基于fac，不直接改A/E/G正文）
+- A CmsRegistrationServiceImpl.recordPaymentConsumption 已有真实A消费mapper+原订单/交易/金额/reference校验；附精确review.patch仅在证明完成后调用completePaymentRecovery。git apply --check对fac公开字节通过，尚未应用。
+- A TeamGroupServiceImpl.cancelPaidSales→settlePayingRegistrationsBeforeCancel:849当前仍在外层取消事务查单；A已接锁外SDK拆段，必须先外部观察/落fact，再原业务事务复核原attempt与guard/CAS。不能只悬挂持锁事务。
+- G CmsTopicServiceImpl.resolvePendingDepositPaymentForSettlement:1094在结算事务查原押金；G拆段，不能把普通报名关闭塞进保证金结算。原topic/邀约顺序仍由G持有。
+- G CoopInviteServiceImpl.markDepositPaid(String):1549外层@Transactional后查单，且调用三参数重载是self-invocation；G需将SDK观察与后续实际事务明确拆开，不能简单删注解丢失原行锁/CAS事务。
+- G CoopDepositRefundService.afterCommit:56→refresh:81：原物理提交后Spring同步资源仍可能标active；G需在已提交后明确资源脱离再查单，或由原持久意图对账入口恢复。不得在未提交业务事务套用同样脱离。
+- E CLM/Commerce调用拆段由E负责。所有owner接线未包含在本源码head，不宣称四域集成完成。
+
+最小验证源码
+RegistrationCallbackIntentMySqlIT原13正文不变；新增1条真实原schema/XML/业务mapper+SDK查询受控double的双顺序barrier测试：writer先持原行→closer不可通过guard；closer先guard→真实本地CAS提交→迟到writer保留SUCCESS原商户/APP/币种/金额/attempt/hash和人工恢复票。无业务mutation mock，不宣称单独的close CAS测试覆盖关闭库存/退款政策。
+WechatVerifiedPaymentFactMySqlIT原4正文不变，新增真实原业务/冻结意图fixture以满足生产writer锁；canonical原schema完整必填列，未执行。
+FactService原9条中独立提交合同测试改为事务提交/冲突证据与outer failfast行为断言，另新增3条：人工票幂等/原事务完成/不重开、缺业务不造ID、本地冲突及原owner/hash拒绝。Gateway原8条另增1条outerTx不能触SDK。Mapper XML原断言保留并新增current shared read缓存属性。
+
+限制与回退
+无新schema/依赖/真实外呼，无生产操作；复用现有outbox，持久事实/拒绝/人工票不可因代码回退删除。提交为已授权隔离source候选例外，不满足正式集成前编译/测试门禁；由root同源统一执行。root0cb原13条当前实际FAIL由H定位，发生在本片之前，不能用本片源码冒充通过。

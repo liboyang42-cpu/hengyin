@@ -27,6 +27,7 @@ public class JdbcWechatPaymentOrderOwner implements WechatPaymentOrderOwner {
             sql = "SELECT id,wechat_payment_amount AS amount,CASE WHEN payment_status=1 AND registration_status=1 THEN 1 ELSE 0 END AS payable FROM cms_registration WHERE registration_no=? FOR UPDATE";
         }
         var rows = paymentIntentJdbc.queryForList(sql, businessNo);
+        if (rows.isEmpty()) throw new WechatPaymentOrderOwner.MissingOrderException();
         if (rows.size() != 1 || !(rows.get(0).get("id") instanceof Number id)
                 || rows.get(0).get("amount") == null) throw new IllegalStateException("已提交业务支付身份缺失");
         var row = rows.get(0);
