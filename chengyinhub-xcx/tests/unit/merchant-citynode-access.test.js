@@ -56,6 +56,7 @@ function mountCityNodePage() {
         // 据点核销与 #424 共用核销写闸(PRIVATE-GROUP-nucleation-original-request),给真实现
         if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
         if (request.includes('citynode-redeem-outcome')) return require('../../pages/merchant/utils/citynode-redeem-outcome.js');
+        if (request.includes('registration-seat')) return require('../../utils/registration-seat.js');
         throw new Error('unexpected require: ' + request);
       },
       wx,
@@ -116,6 +117,7 @@ function mountCityNodeCreatePage() {
         // 据点核销与 #424 共用核销写闸(PRIVATE-GROUP-nucleation-original-request),给真实现
         if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
         if (request.includes('citynode-redeem-outcome')) return require('../../pages/merchant/utils/citynode-redeem-outcome.js');
+        if (request.includes('registration-seat')) return require('../../utils/registration-seat.js');
         throw new Error('unexpected require: ' + request);
       },
       wx,

@@ -67,6 +67,12 @@ public class ApiVerifyController extends BaseController {
         return cityNodeRedemptionApplication.redeemCityNodeCode(appUid(), code);
     }
 
+    @Operation(summary = "回读原据点核销结果，不再次发券")
+    @PostMapping("/citynode/receipt")
+    public AjaxResult cityNodeReceipt(String code) {
+        return cityNodeRedemptionApplication.cityNodeReceipt(appUid(), code);
+    }
+
     @Operation(summary = "签发本团的团核销码(D22:主理人/管理员出码,商家扫)")
     @PostMapping("/groupcode/issue")
     public AjaxResult issueGroupCode(Long activityId) {
