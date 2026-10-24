@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T22:44:37Z",
+  "updated_utc": "2026-10-24T23:14:57Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
   "scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5",
   "all_complete": false,
-  "mode": "Identified ASR and all actual residual source failures closed with unified ccd5 automatic acceptance; full architecture Q1-Q10 business/runtime/capacity acceptance still incomplete",
+  "mode": "OriginalF pool provenance/cleanup patch7898408 applied; only concrete operational harness changes, scan/freeze then one targeted new pool run; accepted coreccd5 remains unchanged",
   "current_worker_assignments": {
     "A": {
       "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
@@ -75,8 +75,8 @@
       "accepted_failure_stage_source": "ccd55005c75d105f8245b0591e63adcd0dd15280"
     },
     "F": {
-      "state": "DELIVERED_NO_OPEN_IDENTIFIED_FAILURE_CODE_TASK",
-      "task": "b626 run40135082606/job120994889568 11 NEW_OWNER_DEPENDENCY_DIRECTION refs/5 directions; prove semantic direction and minimal exact policy/controls, no broad grant or gate weakening",
+      "state": "DELIVERED_POOL_EVIDENCE_PATCH_PENDING_HOSTED_RUNTIME",
+      "task": "7898408 applied; no new code assignment unless targeted actual runtime fails",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
       "host_id": "durable",
       "residual_delivery": "verifier d58288edc65e4c57bc98ef61253fb084f38642f1; tool4b3239a559d2a81f057ab7356cb21e58e855b537; exact10 class refs/4 directions, C not granted; root6file+pin hashes exact",
@@ -1007,5 +1007,53 @@
     "original_artifact_hashes_verified": 292,
     "jar_sha256": "4ef3cf8a76ad15552586aea8efc4628c35701f09c06e049712f31ad949bf2235",
     "full_scope_complete": false
+  },
+  "next_runtime_validation": {
+    "id": "RUNTIME_POOL_CCD5_01",
+    "workflow": "isolated-pool-recovery.yml",
+    "run": 40140513624,
+    "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+    "status": "BOUNDED_BEHAVIOR_OBSERVED_EVIDENCE_GAPS",
+    "owner": "F",
+    "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+    "host_id": "durable",
+    "scope": "Existing bounded real SQL-pool timeout/overflow/release and same-process recovery; no capacity baseline or full business acceptance",
+    "evidence_dir": "docs/delivery/architecture-day/F/ccd5-pool-recovery/",
+    "java_db_location": "GitHub-hosted ubuntu24.04 only",
+    "not_repeated": [
+      "standard40138581031",
+      "storage40138589827"
+    ],
+    "jobs": [
+      {
+        "databaseId": 121011084232,
+        "name": "isolated-pool-recovery",
+        "status": "in_progress"
+      }
+    ],
+    "readback": "ccd5-pool-recovery-readback.json",
+    "pending_evidence": [
+      "Actual rebuiltJAR identity",
+      "Independent post-outer-cleanup exact resource absence",
+      "Unobserved connectTimeout metadata correction"
+    ],
+    "pending_implementation_owners": [
+      "F"
+    ]
+  },
+  "runtime_evidence_implementation": {
+    "owner": "F",
+    "source_base": "ccd5/7d742 public",
+    "files": [
+      "ci/upgrade-startup-smoke.sh (existing pool-mode branch only)",
+      ".github/workflows/isolated-pool-recovery.yml",
+      "ci/test_pool_recovery_probe.py",
+      "docs/delivery/architecture-day/F/ccd5-pool-recovery/"
+    ],
+    "status": "DELIVERED_APPLIED_PENDING_TARGETED_RUNTIME",
+    "core_failure_stage_reopened": false,
+    "delivery_sha": "78984087323fe460f543d0f9f496137e7a7f172b",
+    "parent_sha": "7d742dc7442ead070cd23fcf9048b054e431a69a",
+    "source_control_evidence": "F12/12 Python protocol controls0skip, bash syntax/diff/secret scans PASS; not real Java/DB/resource evidence"
   }
 }

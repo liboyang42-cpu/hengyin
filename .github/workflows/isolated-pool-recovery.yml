@@ -52,7 +52,26 @@ jobs:
           # Fail closed: a green startup smoke alone is not pool-recovery evidence.
           receipts=$(find "$TMPDIR" -name pool-recovery.json -type f)
           test "$(printf '%s\n' "$receipts" | grep -c .)" = 1
-          python3 -I -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r["result"]=="PASS_BOUNDED_POOL_TIMEOUT_RELEASE_SAME_PROCESS_RECOVERY", r.get("result"); print("PASS pool receipt", r["nativeDruidTimeoutWaitMs"], r["overflowRequest"])' "$receipts"
+          python3 -I - "$receipts" <<'PY'
+          import json, os, pathlib, subprocess, sys
+          path = pathlib.Path(sys.argv[1])
+          r = json.loads(path.read_text())
+          identity = json.loads(path.with_name('pool-execution.json').read_text())
+          cleanup = json.loads(path.with_name('pool-cleanup.json').read_text())
+          assert r['result'] == 'PASS_BOUNDED_POOL_TIMEOUT_RELEASE_SAME_PROCESS_RECOVERY', r.get('result')
+          assert identity['sourceSha'] == os.environ['GITHUB_SHA']
+          assert identity['sourceTree'] == subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
+          assert identity['runId'] == os.environ['GITHUB_RUN_ID'] and identity['runAttempt'] == os.environ['GITHUB_RUN_ATTEMPT']
+          assert identity['result'] == 'PASS_SOURCE_JAR_UNCHANGED'
+          assert identity['jarBefore'] == identity['jarRunning'] == identity['jarAfter'] == identity['jarMountedRunning'] == identity['jarMountedAfter']
+          assert cleanup['taskName'] == identity['taskName']
+          assert cleanup['originalExitCode'] == 0 and cleanup['result'] == 'PASS_OWNED_RESOURCES_ABSENT'
+          assert cleanup['remaining'] == [] and cleanup['errors'] == []
+          assert 'connectTimeoutMs' not in r['profile'] and r['connectTimeoutObservation'] == 'UNKNOWN_NOT_MEASURED'
+          print('PASS pool receipt', r['nativeDruidTimeoutWaitMs'], r['overflowRequest'])
+          print('POOL_EXECUTION_IDENTITY', json.dumps(identity, sort_keys=True))
+          print('POOL_OWNED_CLEANUP', json.dumps(cleanup, sort_keys=True))
+          PY
       - name: Preserve bounded recovery evidence including failures
         if: ${{ !cancelled() && steps.pool.outcome != 'skipped' }}
         uses: actions/upload-artifact@v4
@@ -63,6 +82,8 @@ jobs:
           path: |
             ${{ runner.temp }}/isolated-pool-recovery/entry.log
             ${{ runner.temp }}/isolated-pool-recovery/**/pool-recovery.json
+            ${{ runner.temp }}/isolated-pool-recovery/**/pool-execution.json
+            ${{ runner.temp }}/isolated-pool-recovery/**/pool-cleanup.json
             ${{ runner.temp }}/isolated-pool-recovery/**/pool-recovery-health.log
             ${{ runner.temp }}/isolated-pool-recovery/**/application.log
             ${{ runner.temp }}/isolated-pool-recovery/**/mysql-version
