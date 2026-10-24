@@ -750,3 +750,29 @@ test('委派行的作用期限来自后端 expiresAt，没有期限就不编一�
   assert.match(read('pages/club/roles/index.wxml'), /\{\{item\.expiresText\}\}/,
     '算出来的期限要在委派行里渲染')
 })
+
+test('U-013:可分配角色以服务端目录 assignable/scopeType 为准，前端不再写死角色清单', () => {
+  const harness = createHarness()
+  harness.page.onLoad({ clubId: '9' })
+  harness.requests[0].success({
+    code: '200',
+    data: { active: true, canManageRoles: true, club: { id: 9, name: '夜行者' }, permissions: ['club:role:manage'] },
+  })
+  requestByUrl(harness, '/api/club/roles/list').success({
+    code: '200',
+    data: {
+      roles: [
+        { roleCode: 'CLUB_CO_OWNER', name: '副主理人', scopeType: 'CLUB', assignable: false, permissions: ['club:write'] },
+        { roleCode: 'CLUB_OPERATOR', name: '俱乐部运营', scopeType: 'CLUB', assignable: true, permissions: ['club:notify:send'] },
+        { roleCode: 'CLUB_FUTURE_ROLE', name: '新角色', scopeType: 'CLUB', assignable: true, permissions: [] },
+      ],
+      assignments: [
+        { id: 3, targetMemberId: 901, roleCode: 'CLUB_CO_OWNER', scopeType: 'CLUB', scopeId: 9, version: 0 },
+        { id: 4, targetMemberId: 901, roleCode: 'CLUB_OPERATOR', scopeType: 'CLUB', scopeId: 9, version: 0 },
+      ],
+    },
+  })
+  assert.deepEqual(Array.from(harness.page.data.roles, (role) => role.roleCode), ['CLUB_OPERATOR', 'CLUB_FUTURE_ROLE'])
+  assert.deepEqual(Array.from(harness.page.data.assignments, (row) => row.id), [4])
+  assert.doesNotMatch(read('pages/club/roles/index.js'), /CLUB_ROLE_CODES|EVENT_ROLE_CODES/)
+})

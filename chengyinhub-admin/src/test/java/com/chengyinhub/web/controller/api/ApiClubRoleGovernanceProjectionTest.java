@@ -45,6 +45,24 @@ class ApiClubRoleGovernanceProjectionTest {
         assertEquals(coOwner.get("permissions"), coOwner.get("permissionKeys"));
     }
 
+    /** U-013:前端按目录的 assignable 筛角色;目录必须恰好是服务端可分配集合且逐行带 assignable=true。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void roleCatalogMarksEveryRowAssignableAndMatchesServerSet() {
+        IClubRoleAssignmentService service = mock(IClubRoleAssignmentService.class);
+        ApiClubRoleController controller = new TestableController(OWNER_ID);
+        ReflectionTestUtils.setField(controller, "clubRoleAssignmentService", service);
+        ClubAccessRequest request = new ClubAccessRequest();
+        request.setClubId(CLUB_ID);
+        when(service.list(OWNER_ID, CLUB_ID, null)).thenReturn(java.util.Collections.emptyList());
+
+        Map<String, Object> data = (Map<String, Object>) controller.list(request).get(AjaxResult.DATA_TAG);
+        List<Map<String, Object>> roles = (List<Map<String, Object>>) data.get("roles");
+        assertEquals(new java.util.ArrayList<>(ClubRoleCode.assignableRoles()),
+                roles.stream().map(role -> role.get("roleCode")).collect(java.util.stream.Collectors.toList()));
+        roles.forEach(role -> assertEquals(Boolean.TRUE, role.get("assignable"), String.valueOf(role.get("roleCode"))));
+    }
+
     private ClubRoleAssignment assignment(Long memberId) {
         ClubRoleAssignment assignment = new ClubRoleAssignment();
         assignment.setRoleCode(ClubRoleCode.CLUB_CO_OWNER);
