@@ -108,10 +108,16 @@ class EntitlementHoldProjectionTest {
         assertEquals(0, wired.occupyCount("c07-hold-led1"));
         HoldView held = wired.projectFromLedger("c07-hold-led1", 78L, 124L, 9L, END, NOW);
         assertEquals(Outcome.HELD, held.outcome());
+        assertNull(held.originalRequestId());
         assertTrue(held.occupiesCapacity());
         assertFalse(held.executedReserve());
         assertFalse(held.executedRedeem());
-        assertEquals(1, wired.occupyCount("c07-hold-led1"));
+        assertEquals(0, wired.occupyCount("c07-hold-led1"));
+        assertEquals(Outcome.UNKNOWN, wired.recoverOriginal("c07-hold-led1").outcome());
+        wired.project(new HoldFact("c07-hold-led1", 78L, 124L, 9L, EntitlementHoldProjection.STATUS_HELD, END, ""), NOW);
+        HoldView missingAfterOriginal = wired.projectFromLedger("c07-hold-led1", 78L, 999L, 9L, END, NOW);
+        assertEquals(Outcome.UNKNOWN, missingAfterOriginal.outcome());
+        assertEquals(Outcome.HELD, wired.recoverOriginal("c07-hold-led1").outcome());
         EntitlementHoldProjection restarted = new EntitlementHoldProjection(source);
         assertEquals(Outcome.HELD, restarted.projectFromLedger("c07-hold-led1", 78L, 124L, 9L, END, NOW).outcome());
         assertEquals(Outcome.UNKNOWN, restarted.recoverOriginal("c07-hold-missing").outcome());

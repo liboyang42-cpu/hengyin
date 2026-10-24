@@ -139,7 +139,7 @@ public final class EntitlementHoldProjection {
 
     /**
      * 从既有权益账回读一章。缺 {@link IPerkLedgerService#listEntitlements} 为 WAITING_SOURCE。
-     * 未见过的 registration/chapter 保持 UNKNOWN，不占容量。不调用 reserve/redeem。
+     * 这是当前账目，不写入原请求回执，也不把缺行回落到旧缓存。不调用 reserve/redeem。
      */
     public HoldView projectFromLedger(String originalRequestId, Long registrationId, Long chapterId,
             Long merchantId, Instant validEndExclusive, Instant serverNow) {
@@ -153,10 +153,11 @@ public final class EntitlementHoldProjection {
         List<RegistrationEntitlement> rows = source.listEntitlements(registrationId);
         RegistrationEntitlement match = findChapter(rows, chapterId);
         if (match == null) {
-            return recoverOriginal(originalRequestId);
+            return unknown(FulfillmentEvidence.blankToNull(originalRequestId));
         }
-        return project(new HoldFact(originalRequestId, registrationId, chapterId, merchantId,
+        HoldView observed = compute(new HoldFact(originalRequestId, registrationId, chapterId, merchantId,
                 match.getStatus(), validEndExclusive, match.getInvalidReason()), serverNow);
+        return new HoldView(null, observed.outcome(), observed.occupiesCapacity(), false, false, false);
     }
 
     /**
