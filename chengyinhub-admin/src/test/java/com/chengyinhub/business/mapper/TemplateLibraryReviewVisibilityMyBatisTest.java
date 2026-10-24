@@ -85,6 +85,25 @@ class TemplateLibraryReviewVisibilityMyBatisTest {
         }
     }
 
+    /** owner 2026-10-23 D5(U-036):同名判重比对池 = 同作者、未删除、不含本模板自己的投影。 */
+    @Test
+    void authorLiveTitlesExcludeOwnProjectionDeletedRowsAndOtherAuthors() throws Exception {
+        DriverManagerDataSource ds = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        seed(jdbc);
+        String sql = "insert into cms_template_library(id,member_id,member_template_id,title,category_id,status,publish_status,del_flag,create_time) values (?,?,?,?,1,0,0,?,now())";
+        jdbc.update(sql, 20, 30L, 300L, "我的夜游", 0);       // 本模板自己的投影:不算「另一个」
+        jdbc.update(sql, 21, 30L, 301L, " 我的夜游 ", 0);     // 同作者另一份:进比对池(Java 侧 trim)
+        jdbc.update(sql, 22, 30L, 302L, "已删的夜游", 2);     // 已删除:不进
+        jdbc.update(sql, 23, 31L, 303L, "我的夜游", 0);       // 别人的:不进
+        jdbc.update(sql, 24, 30L, null, "平台迁入", 0);       // member_template_id 为空也算同作者条目
+        try (SqlSession session = factory(ds).openSession(true)) {
+            List<String> titles = session.getMapper(CmsTemplateLibraryMapper.class)
+                    .selectAuthorLiveTitles(30L, 300L).stream().sorted().collect(Collectors.toList());
+            assertEquals(List.of(" 我的夜游 ", "平台迁入"), titles);
+        }
+    }
+
     private void seed(JdbcTemplate jdbc) {
         jdbc.execute("create table cms_template_library("
                 + "id bigint auto_increment primary key,"

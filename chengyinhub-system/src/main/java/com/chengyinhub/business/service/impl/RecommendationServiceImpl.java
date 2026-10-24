@@ -72,7 +72,8 @@ public class RecommendationServiceImpl implements IRecommendationService {
         if ("content_like".equals(eventName)) return 3;
         if ("content_favorite".equals(eventName)) return 4;
         if ("signup_submit".equals(eventName)) return 5;
-        if ("payment_success".equals(eventName)) return 8;
+        // owner 2026-10-23 D2(P0-33/P0-77):付费不再压过浏览,与 content_view 同权;打分任务保持暂停
+        if ("payment_success".equals(eventName)) return 1;
         return 0;
     }
 

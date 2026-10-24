@@ -117,7 +117,6 @@
         </el-form-item>
         <el-form-item label="平台抽成" prop="platformCommissionRate"><el-input-number v-model="form.platformCommissionRate" :min="0" :max="1" :step="0.01" /></el-form-item>
         <el-form-item label="商家比例" prop="merchantRate"><el-input-number v-model="form.merchantRate" :min="0" :max="1" :step="0.01" /></el-form-item>
-        <el-form-item label="创作者比例" prop="creatorRate"><el-input-number v-model="form.creatorRate" :min="0" :max="1" :step="0.01" /></el-form-item>
         <el-form-item label="邀请人比例" prop="inviterRate"><el-input-number v-model="form.inviterRate" :min="0" :max="1" :step="0.01" /></el-form-item>
         <el-form-item label="最低结算金额" prop="minSettlementAmount"><el-input-number v-model="form.minSettlementAmount" :min="0" :step="10" /></el-form-item>
         <el-form-item label="退款截止小时" prop="refundDeadlineHours"><el-input-number v-model="form.refundDeadlineHours" :min="0" :step="1" /></el-form-item>
