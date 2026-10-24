@@ -45,6 +45,7 @@ class RegistrationSeatServiceTest {
         order = new CmsRegistration(); order.setId(31L); order.setOwnerType(1L); order.setOwnerId(41L);
         order.setMemberId(51L); order.setOrderNum(3L); order.setRegistrationStatus(2); order.setPaymentStatus(2); order.setVerificationStatus(0);
         when(orders.selectCmsRegistrationById(31L)).thenReturn(order);
+        when(registrations.selectCmsRegistrationByIdForUpdate(31L)).thenReturn(order);
         when(seats.lockRegistration(31L)).thenReturn(31L);
         CmsTopic topic = new CmsTopic(); topic.setId(41L); topic.setIsSettlement(0);
         when(topics.selectCmsTopicByIdForUpdate(41L)).thenReturn(topic);
@@ -218,6 +219,20 @@ class RegistrationSeatServiceTest {
                 () -> service.redeemActivitySeat(31L, 1, 81L)).getMessage());
         verify(seats, never()).markVerified(any()); verifyNoInteractions(audits);
         verify(orders, never()).verifyAndSettle(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test void lockedCompleteRowRejectsARefundEvenWhenTheOrdinarySeedRemainsPaid() {
+        service.prepareOwnedSeat(31L, 51L, 1); service.prepareOwnedSeat(31L, 51L, 2);
+        service.redeemGroupSeat(31L, 1, 61L, 81L);
+        CmsRegistration refunded = new CmsRegistration(); refunded.setId(31L); refunded.setMemberId(51L);
+        refunded.setOwnerType(1L); refunded.setOwnerId(41L); refunded.setOrderNum(3L);
+        refunded.setVerificationStatus(1); refunded.setRegistrationStatus(3); refunded.setPaymentStatus(4);
+        when(registrations.selectCmsRegistrationByIdForUpdate(31L)).thenReturn(refunded);
+        assertEquals(Integer.valueOf(403), assertThrowsExactly(ServiceException.class,
+                () -> service.redeemGroupSeat(31L, 2, 61L, 81L)).getCode());
+        assertEquals(2, order.getPaymentStatus(), "the ordinary seed deliberately remains stale");
+        assertEquals(0, rows.get(1).getStatus()); verify(seats, times(1)).markVerified(any());
+        verify(audits, times(1)).insertBusinessAuditEvent(any());
     }
 
     @Test void signedActivitySeatRemainsInTheExistingHmacTypeField() {

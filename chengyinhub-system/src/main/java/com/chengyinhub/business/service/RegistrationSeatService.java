@@ -237,8 +237,9 @@ public class RegistrationSeatService {
 
     private CmsRegistration lockCurrent(CmsRegistration seed) {
         if (seats.lockRegistration(seed.getId()) == null) throw denied("报名单不存在");
-        // lockRegistration flushes L1; do not reuse the pre-lock snapshot or its ownership.
-        CmsRegistration current = registrationService.selectCmsRegistrationById(seed.getId());
+        // Flushing L1 does not reset an existing MySQL RR snapshot. Return the complete row
+        // from a current locking read, never an ordinary SELECT after the ID lock.
+        CmsRegistration current = registrations.selectCmsRegistrationByIdForUpdate(seed.getId());
         if (current == null || !Objects.equals(seed.getMemberId(), current.getMemberId())
                 || !Objects.equals(seed.getOwnerType(), current.getOwnerType()) || !Objects.equals(seed.getOwnerId(), current.getOwnerId())) {
             throw conflict("原订单归属已变化，请重新核验");
