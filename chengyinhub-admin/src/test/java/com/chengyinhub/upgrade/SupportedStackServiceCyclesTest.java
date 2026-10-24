@@ -46,6 +46,9 @@ import com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService;
 import com.chengyinhub.business.service.impl.RefundServiceImpl;
 import com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl;
 import com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger;
+import com.chengyinhub.business.service.impl.CoopClosedPaymentRecovery;
+import com.chengyinhub.business.service.impl.WxPaymentCallbackOutboxServiceImpl;
+import com.chengyinhub.business.mapper.WxPaymentCallbackOutboxMapper;
 import com.chengyinhub.business.service.impl.TopicSettlementEvidenceService;
 import com.chengyinhub.business.service.support.CommittedBusinessNotice;
 import com.chengyinhub.business.service.support.CommittedOfficialNoticeService;
@@ -268,7 +271,8 @@ class SupportedStackServiceCyclesTest
             assertThat(context).hasNotFailed();
             for (Class<?> service : List.of(WechatVerifiedPaymentFactService.class,
                     WechatPaymentSdkGateway.class, CoopSettlementClaimServiceImpl.class,
-                    CoopSettlementOriginalLedger.class, SettlementDebtLedger.class,
+                    CoopSettlementOriginalLedger.class, CoopClosedPaymentRecovery.class,
+                    WxPaymentCallbackOutboxServiceImpl.class, SettlementDebtLedger.class,
                     RegistrationPaymentConsumptionReadService.class,
                     CommittedBusinessNotice.class, CommittedOfficialNoticeService.class,
                     CommittedOfficialNoticeTask.class, ChapterApplicationInviteNotice.class,
@@ -292,6 +296,18 @@ class SupportedStackServiceCyclesTest
             Object claim = AopTestUtils.getUltimateTargetObject(context.getBean(CoopSettlementClaimServiceImpl.class));
             Object ledger = context.getBean(CoopSettlementOriginalLedger.class);
             assertThat(ReflectionTestUtils.getField(claim, "originalLedger")).isSameAs(ledger);
+            Object recovery = context.getBean(CoopClosedPaymentRecovery.class);
+            Object recoveryTarget = AopTestUtils.getUltimateTargetObject(recovery);
+            assertThat(ReflectionTestUtils.getField(claim, "closedPaymentRecovery")).isSameAs(recovery);
+            assertThat(ReflectionTestUtils.getField(recoveryTarget, "facts")).isSameAs(facts);
+            assertThat(ReflectionTestUtils.getField(recoveryTarget, "outbox"))
+                    .isSameAs(context.getBean(WxPaymentCallbackOutboxServiceImpl.class));
+            ObjectProvider<?> recoverySelf = (ObjectProvider<?>) ReflectionTestUtils.getField(recoveryTarget, "self");
+            assertThat(recoverySelf).isNotNull();
+            assertThat(recoverySelf.getObject()).isSameAs(recovery);
+            Object outbox = AopTestUtils.getUltimateTargetObject(context.getBean(WxPaymentCallbackOutboxServiceImpl.class));
+            assertThat(ReflectionTestUtils.getField(outbox, "mapper"))
+                    .isSameAs(context.getBean(WxPaymentCallbackOutboxMapper.class));
             assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(ledger), "verifiedFacts"))
                     .isSameAs(facts);
             Object consumptions = context.getBean(RegistrationPaymentConsumptionReadService.class);
@@ -460,7 +476,8 @@ class SupportedStackServiceCyclesTest
         {
             assembly.addAll(List.of(CoopSettlementClaimServiceImpl.class, CoopSettlementOriginalLedger.class,
                     TopicSettlementEvidenceService.class, SettlementDebtLedger.class,
-                    WechatVerifiedPaymentFactService.class, RegistrationPaymentConsumptionReadService.class));
+                    WechatVerifiedPaymentFactService.class, RegistrationPaymentConsumptionReadService.class,
+                    CoopClosedPaymentRecovery.class, WxPaymentCallbackOutboxServiceImpl.class));
         }
         if (assembly.contains(MerchantChapterApplicationServiceImpl.class) || assembly.contains(ChapterApplicationInviteNotice.class))
         {
