@@ -24,4 +24,4 @@ d117336751fb799ffb885fdeddf9db14629c60b05c2bd5cf6fcfb8caa8336c08  docs/delivery/
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/delivery/architecture-day/A-writer-facts/unindexed-mapper-write-calls.jsonl
 4b99a5864a1a3c87334c10e113a3760b54d0efceeb12542b86317f0fc4d5dde0  docs/delivery/architecture-day/A-writer-facts/unknown-java-write-name-calls.jsonl
 d2cad66a5bd57cd9242ae71489f731c8d52764f2e4638d319c5005d77fbf3f62  docs/delivery/architecture-day/A-writer-facts/verification.json
-ba5ec45f5b6b09ce85b8d524f6a29105495ad6783a827466e5861728f6595aee  docs/delivery/architecture-day/A-writer-facts/verify.py
+4c652d3e720a0c0c51e6616e042b9076a3e182788a33ad7e05a73f0318e67a48  docs/delivery/architecture-day/A-writer-facts/verify.py

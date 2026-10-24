@@ -79,7 +79,8 @@ def main():
             'source_file_sha256_and_git_blob_identity':'PASS','call_offsets_namespace_method_and_entry_annotation_links':'PASS',
             'policy_candidates_unapproved_not_allowlist':'PASS','scope_own_docs_only':'PASS',
             'runtime_authorization_grants_schedule':'UNKNOWN_NOT_READ','java_mysql_redis_ddl_http_ci_runs':0}
-    (OUT/'verification.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+    # Frozen verification.json also records separately executed scan/replay checks;
+    # re-verification prints results without rewriting that historical record.
     print(json.dumps(result,ensure_ascii=False,indent=2))
 
 
