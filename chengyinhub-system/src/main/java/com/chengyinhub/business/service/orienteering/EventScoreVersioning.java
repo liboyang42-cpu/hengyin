@@ -46,7 +46,10 @@ public final class EventScoreVersioning {
     public static final String ORIGINAL_REWARD_SOURCE = "eventScore.originalRewardSource";
     /** 客户端 sessionId 不能当成已授权原局。 */
     public static final String AUTHORIZED_SESSION = "orientScoring.authorizedSession";
-    /** 首局完整 policy Binding 不在本公开树。不另造绑定方法。 */
+    /**
+     * 公开 {@code IOrientSessionService.receipt} 带回 configVersion，不带回 policy_key / sourceIdentity。
+     * 不另造读口去补这两个字段。
+     */
     public static final String POLICY_BINDING = "orientation.policyBinding";
     /** 与 {@code OrientScoringServiceImpl} 同一合法域。不把 PROGRESS 映射成 TASK。 */
     private static final Set<String> SCORE_DIMENSIONS = Set.of("TASK", "PUZZLE", "PENALTY", "BONUS", "ADJUSTMENT");

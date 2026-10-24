@@ -148,6 +148,7 @@ class OrdinaryCityTeamEventJourneyTest {
         Map<String, Object> original = new LinkedHashMap<String, Object>();
         original.put("replayed", Boolean.TRUE);
         original.put("sessionId", Long.valueOf(88L));
+        original.put("configVersion", Long.valueOf(7L));
         original.put("scoreCenti", Integer.valueOf(15000));
         Map<String, Object> sameSession = scores.recoverFromSessionReceipt(7L, 88L, "fin-journey1",
                 (memberId, sessionId, key) -> sessionId.longValue() == 88L ? original
@@ -155,6 +156,9 @@ class OrdinaryCityTeamEventJourneyTest {
         assertEquals(Boolean.TRUE, sameSession.get("replayed"));
         assertEquals(Long.valueOf(88L), sameSession.get("sessionId"));
         assertEquals(Integer.valueOf(15000), sameSession.get("scoreCenti"));
+        assertEquals(Long.valueOf(7L), sameSession.get("configVersion"));
+        assertNull(sameSession.get("policy_key"));
+        assertNull(sameSession.get("sourceIdentity"));
         assertNull(scores.recoverFromSessionReceipt(7L, 99L, "fin-journey1",
                 (memberId, sessionId, key) -> failNotFound()));
     }
