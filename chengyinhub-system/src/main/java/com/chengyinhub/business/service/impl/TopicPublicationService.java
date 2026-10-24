@@ -182,6 +182,7 @@ public class TopicPublicationService {
     public TopicBundleSubmitResultVO submitTopicBundle(Long topicId, Long memberId) {
         com.chengyinhub.business.service.support.TopicBundleReviewService.Submission submission =
                 topicBundleReviewService.freezeForSubmission(topicId, memberId);
+        publicationContentGuard.assertTopicSizeWithinLimits(topicId);
         Long taskId = auditTaskService.submitOrRefreshTopicBundle(topicId, memberId, submission.getSnapshotJson());
         AuditTask task = auditTaskService.selectAuditTaskById(taskId);
         if (task == null || (!AuditTask.STATUS_PENDING.equals(task.getStatus())
@@ -245,6 +246,8 @@ public class TopicPublicationService {
 
     public boolean publishBeforeReview(Long topicId, Long memberId) {
         mediaPublicationGuard.requireTopicPublication(topicId);
+        // Re-publishing an existing topic does not pass through publishDraftInternal.
+        publicationContentGuard.assertTopicSizeWithinLimits(topicId);
         CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
         if (com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(current)) {
             // 已发布过的主题照常刷新路线快照,复核通过上架时就是最新内容;未发布的由过审时统一发布。
@@ -320,6 +323,7 @@ public class TopicPublicationService {
         if (topic == null || !Integer.valueOf(1).equals(topic.getStatus())) {
             throw new IllegalStateException("主题尚未成功通过审核，拒绝推进路线发布快照");
         }
+        publicationContentGuard.assertTopicSizeWithinLimits(topicId);
         publishValidatedRouteSnapshot(topic);
     }
 

@@ -362,6 +362,37 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
+    void disabledGenericAdminAddCannotCreateRefundablePointsOrInventory() {
+        long registrations = number("SELECT COUNT(*) FROM cms_registration");
+        long memberPoints = number("SELECT point FROM ums_member WHERE id=8");
+        long inventory = number("SELECT remaining_inventory FROM oms_ticket WHERE id=9");
+        long ledgers = number("SELECT COUNT(*) FROM ums_member_points_detail");
+        com.chengyinhub.web.controller.business.CmsRegistrationController controller =
+                new com.chengyinhub.web.controller.business.CmsRegistrationController();
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        CmsRegistration forged = new CmsRegistration();
+        forged.setId(900001L);
+        forged.setRegistrationNo("FORGED-ADMIN-POST");
+        forged.setMemberId(8L);
+        forged.setTicketId(9L);
+        forged.setPointUsed(1000L);
+        forged.setPointsReturned(0);
+        forged.setOrderNum(1L);
+        forged.setRegistrationStatus(1);
+        forged.setPaymentStatus(2);
+
+        com.chengyinhub.common.core.domain.AjaxResult rejected = controller.add(forged);
+
+        assertEquals(403, rejected.get(com.chengyinhub.common.core.domain.AjaxResult.CODE_TAG));
+        assertEquals("REGISTRATION_GENERIC_CREATE_DISABLED", rejected.get("errorCode"));
+        assertEquals(registrations, number("SELECT COUNT(*) FROM cms_registration"));
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_registration WHERE id=900001"));
+        assertEquals(memberPoints, number("SELECT point FROM ums_member WHERE id=8"));
+        assertEquals(inventory, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(ledgers, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+    }
+
+    @Test
     void adminEditOfZeroPointOrderCannotMintPointsOrMoveInventoryOnMemberCancellation() throws Exception {
         assertAdminEditCannotRewriteCancellationBasis(0, 0L);
     }

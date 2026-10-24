@@ -217,7 +217,8 @@ public class CmsRegistrationController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody CmsRegistration cmsRegistration)
     {
-        return toAjax(cmsRegistrationService.insertCmsRegistration(cmsRegistration));
+        return AjaxResult.error(403, "通用新增报名已关闭，请通过正式下单流程创建报名")
+                .put("errorCode", "REGISTRATION_GENERIC_CREATE_DISABLED");
     }
 
     /**

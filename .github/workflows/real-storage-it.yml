@@ -161,7 +161,7 @@ jobs:
       VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}
       BATCH: ${{ inputs.batch }}
       TIMEZONE: ${{ inputs.timezone }}
-      B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT') && '1' || '' }}
+      B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT') && '1' || '' }}
     steps:
       - name: Checkout gate scripts
         uses: actions/checkout@v4

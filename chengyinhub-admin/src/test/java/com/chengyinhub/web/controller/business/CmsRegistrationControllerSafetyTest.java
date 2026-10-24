@@ -79,6 +79,24 @@ class CmsRegistrationControllerSafetyTest {
     }
 
     @Test
+    void genericAddRejectsForgedFinancialFactsWithoutCallingWriter() {
+        loginAs(1L, "business:registration:add");
+        CmsRegistration request = new CmsRegistration();
+        request.setMemberId(300L);
+        request.setTicketId(200L);
+        request.setPointUsed(1000L);
+        request.setPointsReturned(0);
+        request.setOrderNum(100L);
+
+        AjaxResult result = controller.add(request);
+
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
+        assertEquals("REGISTRATION_GENERIC_CREATE_DISABLED", result.get("errorCode"));
+        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("正式下单"));
+        verifyNoInteractions(registrationService, perkLedgerService);
+    }
+
+    @Test
     void removeRejectsDeletingPaymentRecord() {
         AjaxResult result = controller.remove(new Long[] { 1L });
 

@@ -412,6 +412,11 @@
       ],
       "lineage": "E785 v2 durable intent plus Aef080 prepared generation; root Controller/maintenance wiring"
     },
+    "architecture-day-deposit-attempt": {
+      "registered_source": "09555e150a1f9875b66c6c7af4490bfe944ca301",
+      "classes": ["com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT"],
+      "note": "G961 precise original payment-attempt closure and transaction fence; eight ordinary Test cases, exact hosted scratch admission and zero-skip XML/CLEAN required."
+    },
     "architecture-day-payment-inbox": {
       "registered_source": "4ffa600cbb89abfc7e1e5a77d5d99c8aa8b10e3d",
       "lineage": "B original registration/inbox/mutation transaction and signed SDK parser fixture",
@@ -1125,14 +1130,14 @@
       "note": "Default paused exact task seeds, preserved existing definitions, real original IM/XP/badge effects and MySQL task fence; no real cron/operator/provider claim"
     },
     "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": {
-      "tests": 94,
+      "tests": 96,
       "storage": [
         "mysql"
       ],
       "gates": {
         "CHENGYIN_FUNDS_MYSQL_IT": "1"
       },
-      "note": "Original92 funds cases byte-preserved plus2 real admin economic identity mutation negative controls. Dedicated scratch MySQL; external providers mocked, not settlement/refund cross-domain acceptance."
+      "note": "Original92 scenarios plus2 admin economic-edit negatives, stale original payment-attempt fence, and user-approved generic-admin-add rejection. Exact96 ordinary Test declarations; dedicated scratch MySQL. Provider doubles, not full settlement or HTTP authorization acceptance."
     },
     "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT": {
       "tests": 2,
@@ -1245,6 +1250,12 @@
       ],
       "gates": {},
       "note": "Four real MySQL intent/commit/concurrency contracts, actual gateway and SDK doubles, JDBC-backed domain mapper adapter. Dedicated UUID scratch only; no real payment/provider or full MyBatis four-domain acceptance."
+    },
+    "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT": {
+      "tests": 8,
+      "storage": ["mysql"],
+      "gates": {},
+      "note": "G961 exact observed-attempt closure/fence with real gateway, original coop_invite mapper and transaction; SDK doubles. Explicit hosted scratch DDL admission, owned UUID schema and CLEAN required. No real provider or whole financial-domain acceptance."
     }
   }
 }

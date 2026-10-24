@@ -89,7 +89,7 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual({}, reg['classes'][fqcn]['gates'])
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
                     if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
-        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT') && '1' || '' }}", line)
+        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT') && '1' || '' }}", line)
 
     def test_registry_is_valid(self):
         self.assertEqual([], rs.validate_registry(registry()))
@@ -113,7 +113,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
                     "architecture-day-state-recovery": 50,
                     "architecture-day-runtime-governance": 36,
-                    "architecture-day-registration-write": 109,
+                    "architecture-day-registration-write": 111,
                     "architecture-day-im-revocation": 2,
                     "architecture-day-w19-owner-notice": 29,
                     "architecture-day-play-scheduler": 16,
@@ -124,7 +124,8 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-authoring": 32,
                     "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4,
-                    "architecture-day-payment-inbox": 3}
+                    "architecture-day-payment-inbox": 3,
+                    "architecture-day-deposit-attempt": 8}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -157,7 +158,7 @@ class RegistryContractTest(unittest.TestCase):
     def test_registration_and_revocation_batches_require_current_counts_and_real_gates(self):
         reg = registry()
         expected = {
-            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (94, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
+            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (96, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
             "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": (15, {}),
         }
         self.assertEqual(list(expected), reg["batches"]["architecture-day-registration-write"]["classes"])
