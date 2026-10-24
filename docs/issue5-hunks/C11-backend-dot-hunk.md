@@ -160,4 +160,12 @@ Dot 20:20 PDT：只并行 READY 组，衡量闭环吞吐，不再刷 unused-acti
 
 `SupportEventLocator.MapperOriginalEventSource` 消费既有 `BusinessAuditEventMapper.selectByTarget`。按 requestId 单独查询仍 WAITING_SOURCE。locateByRunId 在 WAITING_SOURCE 时回退到 target 原行，不另造审计表。
 
-父进程将独立 surefire `support.ops.*Test`。MySQL / HTTP / App / CI = NOT_RUN。不是 100%。
+父进程独立 surefire（`/tmp/hengyin-c11`，HEAD `2de93c338`，2026-10-24T03:27:22Z）：
+
+```
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0 -- SupportEventLocatorTest
+Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+MySQL / HTTP / App / CI = NOT_RUN。不是 100%。
