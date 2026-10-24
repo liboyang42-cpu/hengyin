@@ -1,6 +1,8 @@
 package com.chengyinhub.business.it;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
+import com.chengyinhub.business.service.IUmsMemberBalanceDetailService;
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
@@ -13,11 +15,28 @@ import org.junit.jupiter.api.Test;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -33,6 +52,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /** 真实 MySQL + 真实 mapper：聚合必须与原明细口径一致；默认 *Test 发现，无跳过门控。 */
 class MerchantDashboardAggregationMyBatisTest {
     private static final String SUITE = "merchant_dashboard_aggregation";
+    private static DriverManagerDataSource source;
+    private static DataSourceTransactionManager transactionManager;
     private static JdbcTemplate db;
     private static SqlSessionTemplate sql;
     private static String database;
@@ -40,7 +61,7 @@ class MerchantDashboardAggregationMyBatisTest {
     @BeforeAll
     static void setup() throws Exception {
         assertEquals("127.0.0.1", MybatisItDatabase.host(), "只允许隔离的 loopback 测试库");
-        DriverManagerDataSource source = new DriverManagerDataSource(MybatisItDatabase.url(SUITE),
+        source = new DriverManagerDataSource(MybatisItDatabase.url(SUITE),
                 MybatisItDatabase.user(), MybatisItDatabase.password());
         database = MybatisItDatabase.databaseName(SUITE);
         db = new JdbcTemplate(source);
@@ -61,6 +82,7 @@ class MerchantDashboardAggregationMyBatisTest {
         factory.setMapperLocations(new ClassPathResource("mapper/business/UmsMemberBalanceDetailMapper.xml"),
                 new ClassPathResource("mapper/business/CmsRegistrationMapper.xml"));
         sql = new SqlSessionTemplate(factory.getObject());
+        transactionManager = new DataSourceTransactionManager(source);
     }
 
     @AfterAll
@@ -90,8 +112,7 @@ class MerchantDashboardAggregationMyBatisTest {
                 + "(11,2,100,0,'2026-10-24 12:00:00'),(12,1,999,0,'2026-10-24 12:00:00'),"
                 + "(11,1,4,0,null)");
         UmsMemberBalanceDetailMapper mapper = sql.getMapper(UmsMemberBalanceDetailMapper.class);
-        UmsMemberBalanceDetailServiceImpl service = new UmsMemberBalanceDetailServiceImpl();
-        ReflectionTestUtils.setField(service, "umsMemberBalanceDetailMapper", mapper);
+        IUmsMemberBalanceDetailService service = incomeService(mapper);
         UmsMemberBalanceDetail query = new UmsMemberBalanceDetail();
         query.setMemberId(11L);
         query.setChangeType(1L);
@@ -99,16 +120,18 @@ class MerchantDashboardAggregationMyBatisTest {
                 .filter(row -> row.getChangeBalance() != null)
                 .map(UmsMemberBalanceDetail::getChangeBalance).reduce(BigDecimal.ZERO, BigDecimal::add);
         assertEquals(0, new BigDecimal("38.25").compareTo(oldTotal));
-        assertEquals(0, oldTotal.compareTo(service.sumDashboardIncome(11L)),
-                "不因聚合额外排除 del_flag=2、负收入或无日期流水");
         Date since = Date.from(LocalDateTime.parse("2026-10-18T00:00:00")
                 .atZone(ZoneId.of("Asia/Shanghai")).toInstant());
-        Map<String, BigDecimal> byDay = service.sumDashboardIncomeByDay(11L, since);
+        MerchantDashboardIncome income = service.readDashboardIncome(11L, since);
+        assertEquals(0, oldTotal.compareTo(income.getTotal()),
+                "不因聚合额外排除 del_flag=2、负收入或无日期流水");
+        Map<String, BigDecimal> byDay = income.getByDay();
         assertEquals(java.util.Set.of("2026-10-18", "2026-10-24"), byDay.keySet());
         assertEquals(0, new BigDecimal("10.00").compareTo(byDay.get("2026-10-18")));
         assertEquals(0, new BigDecimal("4.25").compareTo(byDay.get("2026-10-24")));
-        assertEquals(0, BigDecimal.ZERO.compareTo(service.sumDashboardIncome(13L)));
-        assertTrue(service.sumDashboardIncomeByDay(13L, since).isEmpty());
+        MerchantDashboardIncome empty = service.readDashboardIncome(13L, since);
+        assertEquals(0, BigDecimal.ZERO.compareTo(empty.getTotal()));
+        assertTrue(empty.getByDay().isEmpty());
     }
 
     @Test
@@ -142,6 +165,124 @@ class MerchantDashboardAggregationMyBatisTest {
         assertArrayEquals(new long[] {1, 0},
                 service.countPaidVerificationByOwners(2L, Collections.singletonList(7L)).get(7L));
         assertTrue(service.countPaidVerificationByOwners(1L, Collections.emptyList()).isEmpty());
+    }
+
+    @Test
+    void concurrentIncomeCommitCannotMixTotalAndDailySnapshots() throws Exception {
+        MerchantDashboardIncome income = raceIncomeRead(true);
+        assertEquals(0, income.getTotal().compareTo(BigDecimal.ZERO));
+        assertTrue(income.getByDay().isEmpty(), "两次读取之间提交的新收入不能只出现在每日收入");
+
+        MerchantDashboardIncome next = incomeService(sql.getMapper(UmsMemberBalanceDetailMapper.class))
+                .readDashboardIncome(11L, new Date(0));
+        assertEquals(0, next.getTotal().compareTo(new BigDecimal("10")));
+        assertEquals(0, next.getByDay().get("2026-10-24").compareTo(new BigDecimal("10")),
+                "下一次服务调用必须看到已经提交的收入，不能靠固定结果通过");
+    }
+
+    @Test
+    void unproxiedServiceIsANegativeControlForTheMixedSnapshotRace() throws Exception {
+        MerchantDashboardIncome income = raceIncomeRead(false);
+        assertEquals(0, income.getTotal().compareTo(BigDecimal.ZERO));
+        assertEquals(0, income.getByDay().get("2026-10-24").compareTo(new BigDecimal("10")),
+                "去掉事务代理后，真实并发写入必须复现总收入 0 / 今日收入 10");
+    }
+
+    @Test
+    void readCommittedCallerCannotWeakenTheDashboardSnapshot() {
+        TransactionTemplate outer = new TransactionTemplate(transactionManager);
+        outer.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+        MerchantDashboardIncome income = outer.execute(status -> assertDoesNotThrow(() -> raceIncomeRead(true)));
+        assertNotNull(income);
+        assertEquals(0, income.getTotal().compareTo(BigDecimal.ZERO));
+        assertTrue(income.getByDay().isEmpty(), "服务必须建立自己的 RR 只读事务，而不是加入外层 RC");
+    }
+
+    private static IUmsMemberBalanceDetailService incomeService(UmsMemberBalanceDetailMapper mapper) {
+        UmsMemberBalanceDetailServiceImpl target = incomeTarget(mapper);
+        ProxyFactory proxy = new ProxyFactory(target);
+        proxy.setProxyTargetClass(true);
+        proxy.addAdvice(new TransactionInterceptor(transactionManager, new AnnotationTransactionAttributeSource()));
+        return (IUmsMemberBalanceDetailService) proxy.getProxy();
+    }
+
+    private static UmsMemberBalanceDetailServiceImpl incomeTarget(UmsMemberBalanceDetailMapper mapper) {
+        UmsMemberBalanceDetailServiceImpl target = new UmsMemberBalanceDetailServiceImpl();
+        ReflectionTestUtils.setField(target, "umsMemberBalanceDetailMapper", mapper);
+        return target;
+    }
+
+    /** 两条 SQL 均委托真实 mapper；只在第一条查完后用 latch 安排另一连接完成并提交插入。 */
+    private MerchantDashboardIncome raceIncomeRead(boolean transactional) throws Exception {
+        db.update("insert into ums_member_balance_detail(member_id,change_type,change_balance,create_time)"
+                + " values(11,1,0,null)"); // 确保首查读取真实 InnoDB 行并建立快照。
+        CountDownLatch totalRead = new CountDownLatch(1);
+        CountDownLatch incomeCommitted = new CountDownLatch(1);
+        AtomicInteger queries = new AtomicInteger();
+        AtomicReference<Connection> connection = new AtomicReference<>();
+        UmsMemberBalanceDetailMapper real = sql.getMapper(UmsMemberBalanceDetailMapper.class);
+        UmsMemberBalanceDetailMapper coordinated = (UmsMemberBalanceDetailMapper) Proxy.newProxyInstance(
+                UmsMemberBalanceDetailMapper.class.getClassLoader(),
+                new Class<?>[] {UmsMemberBalanceDetailMapper.class}, (proxy, method, args) -> {
+                    boolean aggregate = method.getName().equals("selectDashboardIncomeTotal")
+                            || method.getName().equals("selectDashboardIncomeDaily");
+                    if (aggregate) {
+                        queries.incrementAndGet();
+                        if (transactional) {
+                            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+                            assertTrue(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+                            assertEquals(Connection.TRANSACTION_REPEATABLE_READ,
+                                    TransactionSynchronizationManager.getCurrentTransactionIsolationLevel());
+                            Connection current = DataSourceUtils.getConnection(source);
+                            try {
+                                assertEquals(Connection.TRANSACTION_REPEATABLE_READ, current.getTransactionIsolation());
+                                assertTrue(current.isReadOnly());
+                                assertFalse(current.getAutoCommit());
+                                if (!connection.compareAndSet(null, current)) assertSame(connection.get(), current,
+                                        "两个聚合必须使用同一个事务绑定的 JDBC 连接");
+                            } finally {
+                                DataSourceUtils.releaseConnection(current, source);
+                            }
+                        } else {
+                            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+                        }
+                    }
+                    Object value;
+                    try {
+                        value = method.invoke(real, args);
+                    } catch (InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                    if (method.getName().equals("selectDashboardIncomeTotal")) {
+                        totalRead.countDown();
+                        assertTrue(incomeCommitted.await(10, TimeUnit.SECONDS), "并发收入未能在两条查询之间提交");
+                    }
+                    return value;
+                });
+        ExecutorService writer = Executors.newSingleThreadExecutor();
+        Future<Integer> committed = writer.submit(() -> {
+            try {
+                assertTrue(totalRead.await(10, TimeUnit.SECONDS), "未观察到首条真实聚合查询");
+                db.update("insert into ums_member_balance_detail(member_id,change_type,change_balance,create_time)"
+                        + " values(11,1,10,'2026-10-24 12:00:00')");
+                return db.queryForObject("select count(*) from ums_member_balance_detail"
+                        + " where member_id=11 and change_balance=10", Integer.class);
+            } finally {
+                incomeCommitted.countDown();
+            }
+        });
+        try {
+            IUmsMemberBalanceDetailService service = transactional ? incomeService(coordinated) : incomeTarget(coordinated);
+            MerchantDashboardIncome result = service.readDashboardIncome(11L, new Date(0));
+            assertEquals(1, committed.get(10, TimeUnit.SECONDS), "另一连接必须已经提交真实收入");
+            assertEquals(2, queries.get());
+            return result;
+        } finally {
+            totalRead.countDown();
+            incomeCommitted.countDown();
+            writer.shutdownNow();
+            assertTrue(writer.awaitTermination(5, TimeUnit.SECONDS), "并发写线程未结束");
+        }
     }
 
     private void registration(long id, long type, long owner, int payment, Integer verification, int status) {

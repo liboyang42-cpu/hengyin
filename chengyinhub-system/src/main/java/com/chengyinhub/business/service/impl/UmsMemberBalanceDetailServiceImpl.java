@@ -1,5 +1,10 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -190,25 +195,21 @@ public class UmsMemberBalanceDetailServiceImpl implements IUmsMemberBalanceDetai
     }
 
     @Override
-    public BigDecimal sumDashboardIncome(Long memberId)
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, propagation = Propagation.REQUIRES_NEW)
+    public MerchantDashboardIncome readDashboardIncome(Long memberId, java.util.Date since)
     {
         BigDecimal total = umsMemberBalanceDetailMapper.selectDashboardIncomeTotal(memberId);
-        return total == null ? BigDecimal.ZERO : total;
-    }
-
-    @Override
-    public Map<String, BigDecimal> sumDashboardIncomeByDay(Long memberId, java.util.Date since)
-    {
         Map<String, BigDecimal> byDay = new java.util.HashMap<>();
         List<Map<String, Object>> rows = umsMemberBalanceDetailMapper.selectDashboardIncomeDaily(memberId, since);
-        if (rows == null) return byDay;
-        for (Map<String, Object> row : rows)
-        {
-            Object day = row.get("day");
-            Object amount = row.get("amount");
-            if (day == null || amount == null) continue;
-            byDay.put(String.valueOf(day), new BigDecimal(String.valueOf(amount)));
+        if (rows != null) {
+            for (Map<String, Object> row : rows)
+            {
+                Object day = row.get("day");
+                Object amount = row.get("amount");
+                if (day == null || amount == null) continue;
+                byDay.put(String.valueOf(day), new BigDecimal(String.valueOf(amount)));
+            }
         }
-        return byDay;
+        return new MerchantDashboardIncome(total, byDay);
     }
 }

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
+
 import com.chengyinhub.business.domain.OmsOrder;
 import com.chengyinhub.business.domain.SettlementBatch;
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
@@ -299,7 +301,8 @@ class ApiMerchantLedgerControllerTest {
         ReflectionTestUtils.setField(controller, "umsMemberBalanceDetailService", balanceService);
         ReflectionTestUtils.setField(controller, "omsOrderService", orderService);
         ReflectionTestUtils.setField(controller, "merchantInsightService", insightService);
-        when(balanceService.sumDashboardIncome(OWNER_MEMBER_ID)).thenReturn(java.math.BigDecimal.ZERO);
+        when(balanceService.readDashboardIncome(eq(OWNER_MEMBER_ID), any(java.util.Date.class)))
+                .thenReturn(new MerchantDashboardIncome(java.math.BigDecimal.ZERO, Collections.emptyMap()));
         when(orderService.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
         when(insightService.dashboard(OWNER_MEMBER_ID)).thenReturn(new com.alibaba.fastjson2.JSONObject());
 
@@ -307,8 +310,7 @@ class ApiMerchantLedgerControllerTest {
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         // 收入走 SQL 聚合,且按 owner 会员取数;不再拉全量明细
-        verify(balanceService).sumDashboardIncome(OWNER_MEMBER_ID);
-        verify(balanceService).sumDashboardIncomeByDay(eq(OWNER_MEMBER_ID), any(java.util.Date.class));
+        verify(balanceService).readDashboardIncome(eq(OWNER_MEMBER_ID), any(java.util.Date.class));
         verify(balanceService, never()).selectUmsMemberBalanceDetailList(any(UmsMemberBalanceDetail.class));
         org.mockito.ArgumentCaptor<OmsOrder> orderCaptor = org.mockito.ArgumentCaptor.forClass(OmsOrder.class);
         verify(orderService).selectOmsOrderList(orderCaptor.capture());
@@ -328,9 +330,9 @@ class ApiMerchantLedgerControllerTest {
         ReflectionTestUtils.setField(controller, "omsOrderService", orderService);
         ReflectionTestUtils.setField(controller, "merchantInsightService", insightService);
         String today = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
-        when(balanceService.sumDashboardIncome(OWNER_MEMBER_ID)).thenReturn(new java.math.BigDecimal("12.345"));
-        when(balanceService.sumDashboardIncomeByDay(eq(OWNER_MEMBER_ID), any(java.util.Date.class)))
-                .thenReturn(Collections.singletonMap(today, new java.math.BigDecimal("5")));
+        when(balanceService.readDashboardIncome(eq(OWNER_MEMBER_ID), any(java.util.Date.class)))
+                .thenReturn(new MerchantDashboardIncome(new java.math.BigDecimal("12.345"),
+                        Collections.singletonMap(today, new java.math.BigDecimal("5"))));
         when(orderService.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
 
         AjaxResult result = controller.getDashboard();
@@ -353,7 +355,7 @@ class ApiMerchantLedgerControllerTest {
         }
         // 分桶起点 = 今天往前 6 天的零点(含今天共 7 个自然日)
         org.mockito.ArgumentCaptor<java.util.Date> since = org.mockito.ArgumentCaptor.forClass(java.util.Date.class);
-        verify(balanceService).sumDashboardIncomeByDay(eq(OWNER_MEMBER_ID), since.capture());
+        verify(balanceService).readDashboardIncome(eq(OWNER_MEMBER_ID), since.capture());
         java.util.Calendar start = java.util.Calendar.getInstance();
         start.set(java.util.Calendar.HOUR_OF_DAY, 0);
         start.set(java.util.Calendar.MINUTE, 0);
@@ -374,6 +376,8 @@ class ApiMerchantLedgerControllerTest {
         ReflectionTestUtils.setField(controller, "omsOrderService", orders);
         ReflectionTestUtils.setField(controller, "merchantInsightService", insight);
         when(orders.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
+        when(balance.readDashboardIncome(eq(OWNER_MEMBER_ID), any(java.util.Date.class)))
+                .thenReturn(new MerchantDashboardIncome(java.math.BigDecimal.ZERO, Collections.emptyMap()));
         when(insight.dashboard(OWNER_MEMBER_ID)).thenThrow(new IllegalStateException("unavailable"));
 
         AjaxResult result = controller.getDashboard();

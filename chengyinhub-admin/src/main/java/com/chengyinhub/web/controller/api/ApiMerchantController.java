@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.service.support.MerchantMetricWindow;
+import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -1356,10 +1357,6 @@ public class ApiMerchantController extends BaseController {
         // 品牌收入与趋势属于资金域，非财务角色连查询都不执行。
         if (access.hasPermission(MerchantPermission.FINANCE_READ)) {
             // 累计收入与近7日分桶都在 SQL 聚合(SUM / GROUP BY 日),不再把全量流水拉回内存。
-            BigDecimal revenue = umsMemberBalanceDetailService.sumDashboardIncome(ownerMemberId);
-            if (revenue == null) revenue = BigDecimal.ZERO;
-            data.put("revenue", revenue.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
-
             // 近7日收入趋势(按天):收入流水(changeType=1)按自然日分桶,缺天补0
             java.text.SimpleDateFormat keyFmt = new java.text.SimpleDateFormat("yyyy-MM-dd");
             java.text.SimpleDateFormat labelFmt = new java.text.SimpleDateFormat("MM-dd");
@@ -1369,8 +1366,10 @@ public class ApiMerchantController extends BaseController {
             cal.set(java.util.Calendar.SECOND, 0);
             cal.set(java.util.Calendar.MILLISECOND, 0);
             cal.add(java.util.Calendar.DATE, -6);
-            Map<String, BigDecimal> incomeByDay =
-                    umsMemberBalanceDetailService.sumDashboardIncomeByDay(ownerMemberId, cal.getTime());
+            MerchantDashboardIncome income =
+                    umsMemberBalanceDetailService.readDashboardIncome(ownerMemberId, cal.getTime());
+            data.put("revenue", income.getTotal().setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
+            Map<String, BigDecimal> incomeByDay = income.getByDay();
             String[] dayKeys = new String[7];
             String[] dayLabels = new String[7];
             Map<String, BigDecimal> dayMap = new HashMap<>();

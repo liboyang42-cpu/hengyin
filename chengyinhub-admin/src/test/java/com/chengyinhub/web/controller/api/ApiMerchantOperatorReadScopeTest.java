@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.domain.dto.MerchantDashboardIncome;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -85,14 +87,16 @@ class ApiMerchantOperatorReadScopeTest {
         ReflectionTestUtils.setField(controller, "omsOrderService", orders);
         ReflectionTestUtils.setField(controller, "merchantInsightService", insight);
 
+        when(balance.readDashboardIncome(eq(OWNER), any(java.util.Date.class)))
+                .thenReturn(new MerchantDashboardIncome(java.math.BigDecimal.ZERO, Collections.emptyMap()));
+
         AjaxResult result = controller.getDashboard();
 
         assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
         Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
         assertEquals("0.00", data.get("revenue"));
         assertNotNull(data.get("revenue7d"));
-        verify(balance).sumDashboardIncome(OWNER);
-        verify(balance).sumDashboardIncomeByDay(eq(OWNER), any(java.util.Date.class));
+        verify(balance).readDashboardIncome(eq(OWNER), any(java.util.Date.class));
         verify(insight, never()).dashboard(any(Long.class));
         Map<?, ?> windows = (Map<?, ?>) data.get("windows");
         assertEquals(false, windows.containsKey("insight.exposure"));
