@@ -101,4 +101,7 @@ public interface OmsOrderMapper
                                         @Param("receiverName") String receiverName,
                                         @Param("receiverPhone") String receiverPhone,
                                         @Param("receiverDetailAddress") String receiverDetailAddress);
+    OmsOrder selectCommerceOrderForUpdate(@Param("orderSn") String orderSn);
+    int bindCommercePaymentProof(@Param("order") OmsOrder order, @Param("transactionId") String transactionId,
+            @Param("factId") Long factId, @Param("factHash") String factHash);
 }

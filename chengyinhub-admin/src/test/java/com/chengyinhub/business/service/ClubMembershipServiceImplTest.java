@@ -102,6 +102,7 @@ class ClubMembershipServiceImplTest {
     private PlatformTransactionManager transactions;
     private TransactionStatus transactionStatus;
     private ClubMembershipServiceImpl service;
+    private VerifiedPaymentProofFixtures proof;
 
     @BeforeEach
     void setUp() {
@@ -113,10 +114,13 @@ class ClubMembershipServiceImplTest {
         members = mock(IUmsMemberService.class);
         pay = mock(IWechatPayService.class);
         when(pay.lockClosablePaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
+        when(pay.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         audits = mock(BusinessAuditEventMapper.class);
         transactions = mock(PlatformTransactionManager.class);
         transactionStatus = mock(TransactionStatus.class);
         service = new ClubMembershipServiceImpl();
+        proof = new VerifiedPaymentProofFixtures();
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"verifiedPaymentFacts",proof.reader);
         com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "featureGate", feature);
         com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubAccessService", access);
         com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubMembershipMapper", mapper);
@@ -145,6 +149,12 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceByIdForUpdate(any())).thenAnswer(call ->
                 mapper.selectInvoiceById(call.getArgument(0, Long.class)));
         when(audits.insertBusinessAuditEvent(any(BusinessAuditEvent.class))).thenReturn(1);
+        when(mapper.bindInvoicePaymentProof(any(),anyString(),any(),anyString(),any(),anyString())).thenAnswer(call -> {
+            ClubMembershipInvoice invoice=mapper.selectInvoiceByOutTradeNoForUpdate("CLM01234567890123456789012345678");
+            if(invoice==null)throw new AssertionError("missing original invoice fixture");
+            invoice.setStatus(ClubMembershipInvoice.STATUS_PAID);invoice.setTransactionId(call.getArgument(1));
+            invoice.setVerifiedPaymentFactId(call.getArgument(4));invoice.setVerifiedPaymentFactHash(call.getArgument(5));return 1;
+        });
     }
 
     @Test
@@ -1151,6 +1161,8 @@ class ClubMembershipServiceImplTest {
         ClubMembershipInvoice paidInvoice = validPayingInvoice();
         paidInvoice.setStatus(ClubMembershipInvoice.STATUS_PAID);
         paidInvoice.setTransactionId("wx-tx-recovered");
+        var consumed=proof.issue(paidInvoice.getOutTradeNo(),9900,"wx-tx-recovered");
+        paidInvoice.setVerifiedPaymentFactId(consumed.id());paidInvoice.setVerifiedPaymentFactHash(consumed.hash());
         paidInvoice.setVersion(2);
         when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice, paidInvoice);
         UmsMember member = new UmsMember();
@@ -1164,6 +1176,8 @@ class ClubMembershipServiceImplTest {
         Map<String, String> wxOrder = new HashMap<>();
         wxOrder.put("trade_state", "SUCCESS");
         wxOrder.put("transaction_id", "wx-tx-recovered");
+        var originalProof=proof.issue(invoice.getOutTradeNo(),9900,"wx-tx-recovered");
+        wxOrder.put("verified_fact_id",Long.toString(originalProof.id()));wxOrder.put("verified_fact_hash",originalProof.hash());
         wxOrder.put("out_trade_no", invoice.getOutTradeNo());
         wxOrder.put("total", "9900");
         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder);
@@ -1189,6 +1203,8 @@ class ClubMembershipServiceImplTest {
         Map<String, String> wxOrder = new HashMap<>();
         wxOrder.put("trade_state", "SUCCESS");
         wxOrder.put("transaction_id", "wx-tx-wrong-amount");
+        var originalProof=proof.issue(invoice.getOutTradeNo(),9900,"wx-tx-wrong-amount");
+        wxOrder.put("verified_fact_id",Long.toString(originalProof.id()));wxOrder.put("verified_fact_hash",originalProof.hash());
         wxOrder.put("out_trade_no", invoice.getOutTradeNo());
         wxOrder.put("total", "9899");
         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder);
@@ -1614,7 +1630,7 @@ class ClubMembershipServiceImplTest {
         ClubMembershipInvoice invoice = validPayingInvoice();
         stubActiveCallback(invoice);
 
-        assertFalse(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9899, "wx-tx-1"));
+        assertFalse(paidInvoice(invoice.getOutTradeNo(), true, 9899, "wx-tx-1"));
 
         verify(mapper, never()).markInvoicePaidCas(any(), any(Integer.class), any(), any());
         verify(mapper, never()).insertTerm(any());
@@ -1628,7 +1644,7 @@ class ClubMembershipServiceImplTest {
                 .thenReturn(1);
         when(mapper.insertTerm(any(ClubMembershipTerm.class))).thenReturn(1);
 
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-1"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-1"));
         ArgumentCaptor<ClubMembershipTerm> term = ArgumentCaptor.forClass(ClubMembershipTerm.class);
         verify(mapper).insertTerm(term.capture());
         assertEquals(Instant.parse("2026-08-23T16:00:00Z"), term.getValue().getStartsAt().toInstant());
@@ -1637,7 +1653,7 @@ class ClubMembershipServiceImplTest {
 
         invoice.setStatus(ClubMembershipInvoice.STATUS_PAID);
         invoice.setTransactionId("wx-tx-1");
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-1"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-1"));
         verify(mapper, times(1)).insertTerm(any());
     }
 
@@ -1649,7 +1665,7 @@ class ClubMembershipServiceImplTest {
                 .thenReturn(1);
         when(mapper.insertTerm(any(ClubMembershipTerm.class))).thenReturn(1);
 
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-order"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-order"));
 
         InOrder order = inOrder(mapper, clubs, clubMembers);
         order.verify(mapper).selectInvoiceByOutTradeNo(invoice.getOutTradeNo());
@@ -1668,7 +1684,7 @@ class ClubMembershipServiceImplTest {
         stubActiveCallback(invoice);
         when(mapper.selectInvoiceByTransactionId("wx-tx-used")).thenReturn(other);
 
-        assertFalse(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-used"));
+        assertFalse(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-used"));
 
         verify(mapper, never()).markInvoicePaidCas(any(), any(Integer.class), any(), any());
         verify(mapper, never()).insertTerm(any());
@@ -1679,9 +1695,11 @@ class ClubMembershipServiceImplTest {
         ClubMembershipInvoice invoice = validPayingInvoice();
         invoice.setStatus(ClubMembershipInvoice.STATUS_PAID);
         invoice.setTransactionId("wx-tx-original");
+        var original=proof.issue(invoice.getOutTradeNo(),9900,"wx-tx-original");
+        invoice.setVerifiedPaymentFactId(original.id());invoice.setVerifiedPaymentFactHash(original.hash());
         stubActiveCallback(invoice);
 
-        assertFalse(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-other"));
+        assertFalse(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-other"));
 
         verify(mapper, never()).insertTerm(any());
         verify(mapper, never()).markInvoicePaidCas(any(), any(Integer.class), any(), any());
@@ -1702,7 +1720,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectLatestTermForUpdate(CLUB, MEMBER)).thenReturn(current);
         when(mapper.insertTerm(any())).thenReturn(1);
 
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-next"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-next"));
 
         ArgumentCaptor<ClubMembershipTerm> term = ArgumentCaptor.forClass(ClubMembershipTerm.class);
         verify(mapper).insertTerm(term.capture());
@@ -1791,7 +1809,7 @@ class ClubMembershipServiceImplTest {
             return 1;
         });
 
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-late"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-late"));
 
         ArgumentCaptor<ClubMembershipTerm> term = ArgumentCaptor.forClass(ClubMembershipTerm.class);
         verify(mapper).insertTerm(term.capture());
@@ -1817,7 +1835,7 @@ class ClubMembershipServiceImplTest {
             return 1;
         });
 
-        assertTrue(service.handlePaidInvoice(
+        assertTrue(paidInvoice(
                 invoice.getOutTradeNo(), true, 9900, "wx-tx-late-nonref"));
 
         ArgumentCaptor<com.chengyinhub.business.domain.ClubMembershipRefundReview> review =
@@ -1851,6 +1869,8 @@ class ClubMembershipServiceImplTest {
             };
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "transactionManager", manager);
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "wechatPayService", gateway);
+            org.springframework.test.util.ReflectionTestUtils.setField(service,"verifiedPaymentFacts",
+                    com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts"));
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "paymentIntentTransactions", manager);
             com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "jsapiService", sdk);
             WxPayConfig config = mock(WxPayConfig.class);
@@ -1887,6 +1907,13 @@ class ClubMembershipServiceImplTest {
                     return 1;
                 }
             });
+            var actualFacts=(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService)
+                    com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts");
+            var originalJdbc=(JdbcTemplate)com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.getField(gateway,"paymentIntentJdbc");
+            var originalOwner=new com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner();
+            org.springframework.test.util.ReflectionTestUtils.setField(originalOwner,"paymentIntentJdbc",originalJdbc);
+            org.springframework.test.util.ReflectionTestUtils.setField(actualFacts,"factBusinessOwner",originalOwner);
+            org.springframework.test.util.ReflectionTestUtils.setField(actualFacts,"factIntentJdbc",originalJdbc);
             when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
             when(mapper.selectInvoiceByIdForUpdate(invoice.getId())).thenReturn(invoice);
             when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(call -> {
@@ -1915,10 +1942,13 @@ class ClubMembershipServiceImplTest {
         }
 
         Map<String, Object> intent(String no) {
-            return Map.of("out_trade_no", no, "business_out_trade_no", w1, "mchid", "merchant-clm",
+            Map<String,Object> original=new HashMap<>(Map.of("out_trade_no", no, "business_out_trade_no", w1, "mchid", "merchant-clm",
                     "appid", w1.equals(no) ? "wx-clm-mini" : "wx-clm-app",
                     "trade_type", w1.equals(no) ? "JSAPI" : "APP", "currency", "CNY",
-                    "total_fen", invoice.getAmountFen(), "request_hash", (w1.equals(no) ? "a" : "b").repeat(64));
+                    "total_fen", invoice.getAmountFen(), "request_hash", (w1.equals(no) ? "a" : "b").repeat(64),
+                    "biz_type","CLM","biz_id",invoice.getId()));
+            if(closedAttempts.contains(no))original.put("closed_confirmed_at",new Date(1));
+            return original;
         }
 
         Transaction facts(String no, Transaction.TradeStateEnum state) {
@@ -2314,6 +2344,10 @@ class ClubMembershipServiceImplTest {
                 org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "transaction");
         assertNotNull(transaction);
         assertEquals(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW, transaction.getPropagationBehavior());
+    }
+
+    private boolean paidInvoice(String no,boolean paid,Integer fen,String tx) {
+        return service.handlePaidInvoice(no,paid,fen,tx,proof.issue(no,fen,tx));
     }
 
 }
