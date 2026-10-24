@@ -1,0 +1,12 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatWriteService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatWriteService.java
+@@ -50,6 +50,9 @@
+         return locked(request.getUserId(), () -> {
+             NpcChatRequest existing = requests.selectByUserAndRequestId(request.getUserId(), request.getRequestId());
+             if (existing != null) return existing;
++            if (asrIntents.selectForUpdate(request.getUserId(),request.getRequestId())!=null
++                    && asrIntents.claimTextAdmission(request.getUserId(),request.getRequestId(),request.getSessionId())!=1)
++                throw new IllegalStateException("Original ASR text admission is unavailable; read the original receipt");
+             requests.expireProcessingByUserAndSession(request.getUserId(), request.getSessionId(), timeoutText);
+             // Waiting for the per-user lock must not consume a new request's entire initial lease.
+             // Existing rows returned above are never renewed here, including expired/deleted tombstones.

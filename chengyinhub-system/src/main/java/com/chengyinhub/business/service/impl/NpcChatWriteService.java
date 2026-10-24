@@ -16,6 +16,8 @@ public class NpcChatWriteService
 {
     /** Existing NPC lease duration, shared with the heartbeat; only its admission start moves. */
     static final long LEASE_MILLIS = 20_000L;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.NpcAsrIntentMapper asrIntents;
     private final NpcChatRequestMapper requests;
     private final NpcChatLogMapper logs;
     private final TransactionTemplate transaction;
@@ -85,6 +87,7 @@ public class NpcChatWriteService
     public int deleteForUser(Long userId)
     {
         return locked(userId, () -> {
+            asrIntents.redactForUser(userId);
             requests.redactChatRequestsByUserId(userId);
             // This count retains the existing HTTP contract: log rows only, not receipt tombstones.
             return logs.deleteNpcChatLogsByUserId(userId);

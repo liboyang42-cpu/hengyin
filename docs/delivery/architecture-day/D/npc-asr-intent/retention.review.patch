@@ -1,0 +1,34 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/DataRetentionServiceImplTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/DataRetentionServiceImplTest.java
+@@ -43,6 +43,7 @@
+         ReflectionTestUtils.setField(svc, "bizEventLogMapper", eventMapper);
+         ReflectionTestUtils.setField(svc, "npcChatLogMapper", npcChatMapper);
+         ReflectionTestUtils.setField(svc, "npcChatRequestMapper", npcChatRequestMapper);
++        ReflectionTestUtils.setField(svc,"npcAsrIntents",mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
+         cutoff = new Date();
+     }
+ 
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/DataRetentionServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/DataRetentionServiceImpl.java
+@@ -34,6 +34,9 @@
+ 
+     @Autowired
+     private NpcChatRequestMapper npcChatRequestMapper;
++
++    @Autowired
++    private com.chengyinhub.business.mapper.NpcAsrIntentMapper npcAsrIntents;
+ 
+     @Autowired
+     private com.chengyinhub.business.mapper.RoamMapper roamMapper;
+@@ -86,8 +89,10 @@
+ 
+     @Override
+     public int cleanNpcChatRequests(Date cutoff, int batchSize, int maxBatches) {
+-        return loopDelete("npc_chat_request", cutoff, batchSize, maxBatches,
++        int deleted=loopDelete("npc_chat_request", cutoff, batchSize, maxBatches,
+                 (c, l) -> npcChatRequestMapper.deleteNpcChatRequestsBefore(c, l));
++        loopDelete("npc_asr_body",cutoff,batchSize,maxBatches,(c,l)->npcAsrIntents.redactExpired(l));
++        return deleted; // Preserve the original HTTP/task count: original text receipt rows only.
+     }
+ 
+     /** 逐批删除直至某批删除数 &lt; batchSize(删干净)或达到 maxBatches 护栏。 */
