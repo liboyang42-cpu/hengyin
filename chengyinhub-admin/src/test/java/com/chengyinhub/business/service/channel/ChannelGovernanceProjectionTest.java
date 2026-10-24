@@ -7,8 +7,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import com.chengyinhub.business.domain.Club;
+import com.chengyinhub.business.domain.ImConversation;
+import com.chengyinhub.business.domain.ImConversationMember;
 import com.chengyinhub.business.domain.ImMessage;
+import com.chengyinhub.business.mapper.ClubMapper;
+import com.chengyinhub.business.mapper.ImConversationMapper;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper;
+import com.chengyinhub.business.service.impl.ImServiceImpl;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAccount4Identity;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelAuthorizationGrant;
 import com.chengyinhub.business.service.channel.ChannelGovernanceTypes.ChannelCatalogEntry;
@@ -184,6 +195,48 @@ class ChannelGovernanceProjectionTest {
         assertNotNull(grant);
         assertEquals(ChannelGovernancePhase.AUTHORIZED_READ_WRITE, live.phase());
         assertEquals(7, grant.identity.accountId);
+    }
+
+    @Test
+    void authorizeFromMembershipUsesOriginalImActiveGroupMember() {
+        ImConversationMapper conversations = mock(ImConversationMapper.class);
+        ImConversationMemberMapper members = mock(ImConversationMemberMapper.class);
+        ClubMapper clubs = mock(ClubMapper.class);
+        ImServiceImpl im = new ImServiceImpl();
+        ReflectionTestUtils.setField(im, "conversationMapper", conversations);
+        ReflectionTestUtils.setField(im, "memberMapper", members);
+        ReflectionTestUtils.setField(im, "clubMapper", clubs);
+        ImConversation group = new ImConversation();
+        group.setId(12L);
+        group.setType(ImConversation.TYPE_GROUP);
+        group.setStatus(0);
+        group.setBizKey("club_42");
+        when(conversations.selectImConversationById(12L)).thenReturn(group);
+        ImConversationMember row = new ImConversationMember();
+        row.setMemberId(70L);
+        row.setDeleted(0);
+        when(members.selectByConvAndMember(12L, 70L)).thenReturn(row);
+        Club club = new Club();
+        club.setId(42L);
+        club.setMemberId(70L);
+        club.setStatus(1L);
+        club.setDelFlag(0);
+        when(clubs.selectClubById(42L)).thenReturn(club);
+
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelCatalogEntry catalog = new ChannelCatalogEntry(21, 12, ConversationKind.GROUP,
+                new ChannelRulesCas(3, Integer.valueOf(4), 3));
+        ChannelGovernanceProjection live = memberReady(catalog, identity,
+                new ChannelGovernanceProjection.ImServiceChannelMembership(im));
+        ChannelAuthorizationGrant grant = live.authorizeFromMembership(70L);
+        assertNotNull(grant);
+        assertEquals(ChannelGovernancePhase.AUTHORIZED_READ_WRITE, live.phase());
+
+        ChannelGovernanceProjection denied = memberReady(catalog, identity,
+                new ChannelGovernanceProjection.ImServiceChannelMembership(im));
+        assertEquals(ChannelAuthorizationException.Code.NOT_MEMBER,
+                assertThrows(ChannelAuthorizationException.class, () -> denied.authorizeFromMembership(71L)).code);
+        assertNull(denied.grant());
     }
 
     @Test
