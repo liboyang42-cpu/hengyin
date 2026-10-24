@@ -318,6 +318,40 @@ class OrientScoringServiceImplTest {
     }
 
     @Test
+    void receiptReadsTheOriginalSettlementAndDoesNotWrite() {
+        Map<String, Object> missing = service.receipt(7L, "SETTLE", 10L, "orient-key-1");
+        assertEquals("NOT_FOUND", missing.get("state"));
+        assertEquals("SETTLE", missing.get("kind"));
+        assertEquals("orient-key-1", missing.get("idempotencyKey"));
+        verify(mapper, never()).insertSettlement(any());
+        verify(pointsDetails, never()).insertOrientSettlementPointsDetail(any());
+
+        OrientScoreSettlement row = new OrientScoreSettlement();
+        row.setId(44L);
+        row.setSessionId(10L);
+        row.setTotalCenti(8800L);
+        row.setIdempotencyKey("orient-key-1");
+        settled = row;
+        Map<String, Object> found = service.receipt(7L, "SETTLE", 10L, "orient-key-2");
+        assertEquals("SETTLED", found.get("state"));
+        assertEquals(Boolean.TRUE, found.get("replayed"));
+        assertEquals(10L, found.get("sessionId"));
+        assertEquals(44L, found.get("settlementId"));
+        assertEquals(8800L, found.get("totalCenti"));
+        assertEquals("orient-key-1", found.get("idempotencyKey"));
+        verify(mapper, never()).insertSettlement(any());
+
+        TopicRouteSession other = new TopicRouteSession();
+        other.setId(11L);
+        other.setMemberId(8L);
+        when(mapper.selectSessionById(11L)).thenReturn(other);
+        OrientScoringException denied = assertThrows(OrientScoringException.class,
+                () -> service.receipt(7L, "SETTLE", 11L, "orient-key-1"));
+        assertEquals(OrientScoringException.SESSION_NOT_FOUND, denied.getErrorCode());
+        verify(mapper, never()).selectSettlementBySession(11L);
+    }
+
+    @Test
     void projectionRoundsDownAndNeverPenalisesRewards() {
         assertEquals(0, OrientScoringServiceImpl.project(-5000, 100));
         assertEquals(0, OrientScoringServiceImpl.project(99, 100));
