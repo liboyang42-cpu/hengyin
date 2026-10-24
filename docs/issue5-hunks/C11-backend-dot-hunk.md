@@ -108,7 +108,7 @@ SHA256（生产 5 类）：
 
 ## 6. 未解决
 
-- 生产接线：`MapperOriginalEventSource` 已挂 `selectByTarget`（run/order 定位）。`findByRequestId` 仍 WAITING_SOURCE（`businessAuditEvent.selectByRequestId` 不在现有 Mapper，禁止本组改 Mapper XML）。`FrozenTermsSource` 仍未挂。
+- 生产接线：`MapperOriginalEventSource` 已挂 `selectByTarget`（run/order 定位）。全局 `selectByRequestId` 继续拒绝，那不是缺口。授权多事件页见第 11 节，共享 XML 仍未改。`FrozenTermsSource` 仍未挂。
 - 支持台 UI / Controller 未做（禁止本组加公共 Controller）。
 - 真实 App / 商店 / 备案旅程属 C12 与运营门禁，本组未跑。
 
@@ -169,3 +169,20 @@ BUILD SUCCESS
 ```
 
 MySQL / HTTP / App / CI = NOT_RUN。不是 100%。
+
+## 11. Parent addendum 2026-10-24 03:30 America/Los_Angeles
+
+Dot 02:39 PDT：原 `selectByDomainActionRequestForUpdate` 是单回执。缺的是已授权 typed 资源上的多事件分页，不是 `selectByRequestId`，也不是第二套审计写入。
+
+`AuthorizedTypedResourceEventPage` 只认 domainType、domainId 和 `VIEW_AUDIT`。`platformAdmin` 与员工 memberId 不能当授权。同一 request 跨域、同一数字不同 targetType、来源多返回的行都不进入结果。撤权不查询。空白、带空格和超过 64 的 requestId 在查询前拒绝。`9007199254740993` 保持 Long，不经 Double。缺行是未确认 UNKNOWN，投影 SUCCESS 不回退。手机号和 token 脱敏。
+
+共享 hunk 未应用到本分支。补丁 3615 字节，SHA256 `19f4ddc2c39649c5f2fad39f50e3b595311447066ad70258a9e466c5bdec5bfd`。本树 `git apply --check` 为 0。副本 apply 后查询带 requestId 等值。工作区里 DTO、XML、QueryService 无 diff。
+
+父进程 surefire（`/tmp/hengyin-c11`，2026-10-24T10:30:58Z）：
+
+```
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0 -- AuthorizedTypedResourceEventPageTest
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0 -- SupportEventLocatorTest
+```
+
+MySQL / HTTP / App / CI = NOT_RUN。这不是完整 C11 闭环。

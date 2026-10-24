@@ -21,7 +21,10 @@ public final class SupportEventLocator {
 
     /** 当前投影把原请求标成已成功时使用的标记；定位器必须忽略它。 */
     public static final String PROJECTION_APPLIED_SUCCESS = "APPLIED+SUCCESS";
-    /** 既有 Mapper 没有按 requestId 单独查询；缺该方法时 WAITING_SOURCE，不另造审计表。 */
+    /**
+     * 全局 selectByRequestId 不是缺口，保持拒绝。
+     * 授权后的多事件页走 {@link AuthorizedTypedResourceEventPage}。
+     */
     public static final String REQUEST_ID_QUERY = "businessAuditEvent.selectByRequestId";
 
     private final OriginalEventSource originalEvents;
@@ -163,8 +166,7 @@ public final class SupportEventLocator {
 
     /**
      * 生产消费者：走既有 {@link BusinessAuditEventMapper#selectByTarget}。
-     * {@code selectByRequestId} 不在现有 Mapper 上，findByRequestId 保持 WAITING_SOURCE，
-     * 不另造审计表，也不改共享 Mapper XML。
+     * 全局 {@code selectByRequestId} 继续拒绝。授权页不从这里走。
      */
     public static final class MapperOriginalEventSource implements OriginalEventSource {
         private final BusinessAuditEventMapper mapper;
