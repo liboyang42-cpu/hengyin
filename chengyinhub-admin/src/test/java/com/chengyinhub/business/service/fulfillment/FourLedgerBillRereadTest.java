@@ -72,4 +72,24 @@ class FourLedgerBillRereadTest {
         View blank = reread.reread("  ", List.of());
         assertNull(blank.originalRequestId());
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueMatchedApplies() {
+        FourLedgerBillReread bills = new FourLedgerBillReread();
+        View neverBill = bills.recoverOriginal("c07-bill-never-seen");
+        assertEquals("c07-bill-never-seen", neverBill.originalRequestId());
+        assertEquals(Outcome.UNKNOWN, neverBill.outcome(Dimension.WECHAT_TRADE));
+        View unknownBill = bills.reread("c07-bill-never-seen", List.of(
+                new BillFact("c07-bill-never-seen", Dimension.WECHAT_TRADE,
+                        new BigDecimal("69.00"), BigDecimal.ZERO, false, "")));
+        assertEquals(Outcome.UNKNOWN, unknownBill.outcome(Dimension.WECHAT_TRADE));
+        assertEquals(Outcome.UNKNOWN,
+                bills.recoverOriginal("c07-bill-never-seen").outcome(Dimension.WECHAT_TRADE));
+        View matched = bills.reread("c07-bill-never-seen", List.of(
+                new BillFact("c07-bill-never-seen", Dimension.WECHAT_TRADE,
+                        new BigDecimal("69.00"), new BigDecimal("69.00"), true, "wx-hash")));
+        assertEquals(Outcome.MATCHED, matched.outcome(Dimension.WECHAT_TRADE));
+        assertEquals(Outcome.MATCHED,
+                bills.recoverOriginal("c07-bill-never-seen").outcome(Dimension.WECHAT_TRADE));
+    }
 }

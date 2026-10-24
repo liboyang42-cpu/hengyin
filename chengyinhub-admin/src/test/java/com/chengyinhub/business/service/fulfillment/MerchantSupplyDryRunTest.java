@@ -70,6 +70,23 @@ class MerchantSupplyDryRunTest {
         assertThrows(NullPointerException.class, () -> dryRun.evaluate(bookable(10L, 0, 4), null, 1));
     }
 
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueAcceptApplies() {
+        MerchantSupplyDryRun supply = new MerchantSupplyDryRun();
+        Decision neverSupply = supply.recoverOriginal("c07-supply-never-seen");
+        assertEquals(Outcome.UNKNOWN, neverSupply.outcome());
+        assertEquals("c07-supply-never-seen", neverSupply.originalRequestId());
+        assertEquals(0, supply.holdCount("c07-supply-never-seen"));
+        supply.evaluate(new SkuSupplyFact(8L, 3L, null, false, 60, 0, null, null,
+                VALID_START, VALID_END, null, null, "c07-supply-never-seen"), NOON, 1);
+        assertEquals(0, supply.holdCount("c07-supply-never-seen"));
+        Decision accepted = supply.evaluate(new SkuSupplyFact(8L, 3L, 10L, false, 60, 0, null, null,
+                VALID_START, VALID_END, null, null, "c07-supply-never-seen"), NOON, 1);
+        assertEquals(Outcome.ACCEPT, accepted.outcome());
+        assertEquals(1, supply.holdCount("c07-supply-never-seen"));
+        assertEquals(Outcome.ACCEPT, supply.recoverOriginal("c07-supply-never-seen").outcome());
+    }
+
     private static SkuSupplyFact bookable(long stock, int reserved, int total) {
         return new SkuSupplyFact(8L, 3L, stock, true, 60, 4, total, reserved,
                 VALID_START, VALID_END, 10 * 60, 21 * 60, "c07-supply-1");

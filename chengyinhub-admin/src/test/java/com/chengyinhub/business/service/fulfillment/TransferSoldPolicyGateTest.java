@@ -43,4 +43,21 @@ class TransferSoldPolicyGateTest {
         assertEquals("c07-xfer-3", decision.originalRequestId());
         assertFalse(decision.grantsTransfer());
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueWaitingSourceApplies() {
+        TransferSoldPolicyGate transfer = new TransferSoldPolicyGate();
+        Decision neverTransfer = transfer.recoverOriginal("c07-xfer-never-seen");
+        assertEquals(Outcome.WAITING_SOURCE, neverTransfer.outcome());
+        assertEquals("c07-xfer-never-seen", neverTransfer.originalRequestId());
+        assertTrue(neverTransfer.reason().contains("original intent unknown"));
+        Decision firstWrite = transfer.evaluate(
+                new TransferFact("c07-xfer-never-seen", "", 88L, true, true));
+        assertEquals(Outcome.WAITING_SOURCE, firstWrite.outcome());
+        assertEquals("c07-xfer-never-seen", firstWrite.originalRequestId());
+        assertTrue(firstWrite.reason().contains("sold-policy")
+                || firstWrite.reason().contains(TransferSoldPolicyGate.WAITING_SOURCE));
+        assertEquals(firstWrite.reason(), transfer.recoverOriginal("c07-xfer-never-seen").reason());
+        assertEquals(Outcome.WAITING_SOURCE, transfer.recoverOriginal("c07-xfer-never-seen").outcome());
+    }
 }

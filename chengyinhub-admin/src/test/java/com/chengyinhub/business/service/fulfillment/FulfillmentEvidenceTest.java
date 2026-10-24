@@ -58,6 +58,20 @@ class FulfillmentEvidenceTest {
         assertEquals(Outcome.UNKNOWN, step(steps, Stage.REFUND_ESTIMATE).outcome());
     }
 
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueRecordedApplies() {
+        FulfillmentEvidence ledger = new FulfillmentEvidence();
+        assertEquals(Outcome.UNKNOWN, ledger.recoverOriginal("c07-ev-never-seen").get(0).outcome());
+        assertEquals(1, ledger.recoverOriginal("c07-ev-never-seen").size());
+        List<ChainStep> firstJourney = ledger.recordJourney(
+                "c07-ev-never-seen",
+                new JourneyFacts(true, true, null, null, null));
+        assertEquals(Outcome.RECORDED, firstJourney.get(0).outcome());
+        assertEquals(firstJourney.size(), ledger.recoverOriginal("c07-ev-never-seen").size());
+        assertEquals("c07-ev-never-seen",
+                ledger.recoverOriginal("c07-ev-never-seen").get(0).originalRequestId());
+    }
+
     private static ChainStep step(List<ChainStep> steps, Stage stage) {
         return steps.stream().filter(item -> item.stage() == stage).findFirst().orElseThrow();
     }

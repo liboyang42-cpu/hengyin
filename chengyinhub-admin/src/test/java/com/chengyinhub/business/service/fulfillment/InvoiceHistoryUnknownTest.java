@@ -38,4 +38,16 @@ class InvoiceHistoryUnknownTest {
         assertFalse(view.startedNewApply());
         assertEquals("c07-inv-2", view.originalRequestId());
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniquePresentApplies() {
+        InvoiceHistoryUnknown invoices = new InvoiceHistoryUnknown();
+        assertEquals(FileStatus.UNKNOWN, invoices.recoverOriginal("c07-inv-never-seen").fileStatus());
+        assertEquals("c07-inv-never-seen", invoices.recoverOriginal("c07-inv-never-seen").originalRequestId());
+        invoices.reread(new ApplicationFact("c07-inv-never-seen", "SUBMITTED", "", "", "MANUAL"));
+        assertEquals(FileStatus.UNKNOWN, invoices.recoverOriginal("c07-inv-never-seen").fileStatus());
+        invoices.reread(new ApplicationFact("c07-inv-never-seen",
+                UserInvoiceApplication.STATUS_ISSUED, "INV-9", "file://x", "OTHER"));
+        assertEquals(FileStatus.PRESENT, invoices.recoverOriginal("c07-inv-never-seen").fileStatus());
+    }
 }
