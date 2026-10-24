@@ -198,3 +198,20 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 12. Parent addendum 2026-10-23 19:18 America/Los_Angeles
+
+HEAD `a6d993d26` tests. Did not invent recoverOriginal.
+
+`WebhookDeliveryLogProducerTest.unusedRequireOriginalOfNeverSeenDoesNotOccupyThenUniqueDeliverApplies`：未见 `evt-req-never-c09` 的 `requireOriginal` 抛原投递日志不存在且 store 仍空；`recoverOriginal` 保持 UNKNOWN；后续唯一 `deliver` 才是 DELIVERED。
+
+父进程独立 surefire（`/tmp/hy-c09`，2026-10-24T02:18:28Z）：
+
+```
+Tests run: 3 -- WebhookDeliveryLogProducerTest
+Tests run: 4 -- C09AccountSwitchRestartIsolationTest
+Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
