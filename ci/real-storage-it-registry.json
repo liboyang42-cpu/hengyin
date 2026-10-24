@@ -15,11 +15,13 @@
   "batches": {
     "payment-intent-correctness": {
       "lineage": "Reviewed payment correctness PR598 only; no architecture extraction",
-      "registered_source": "ae7b93f62bb62385bed8dc4110a85e4c0f315a8b",
-      "note": "Real MySQL intent freeze/alias fencing and signed registration callback mutation+inbox atomicity; SDK doubles are not external payment acceptance. Explicit hosted scratch DDL approval only.",
+      "registered_source": "bf4e45de05d80ce032b983b4f15b924794bf9c73",
+      "note": "Original payment intent/callback fences plus original cash debit, immutable submit identity and exact-once refund evidence. Real MySQL with provider doubles; not external-channel acceptance.",
       "classes": [
         "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
-        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT"
+        "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+        "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT"
       ]
     },
     "core-funds": {
@@ -268,6 +270,7 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.service.CashWithdrawTransferIntentMySqlIT": {"tests": 9, "storage": ["mysql"], "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}, "database_base": "cyit"},
     "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT": {
       "tests": 4,
       "storage": [
