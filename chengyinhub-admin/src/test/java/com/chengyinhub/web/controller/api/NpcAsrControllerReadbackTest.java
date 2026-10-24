@@ -58,4 +58,18 @@ class NpcAsrControllerReadbackTest {
         assertEquals("ASR_TEXT_HANDOFF_STARTED",((NpcChatResp)second.get("data")).getErrorCode());
         verifyNoInteractions(speech);verify(text,times(1)).chatWithShop(eq(RID),eq(7L),eq(21L),eq(41L),anyString(),eq("saved original"));
     }
+    @Test void deletionDuringTextHandoffCannotEchoTheOldAsrBody(){
+        when(speech.transcribe(any(),anyString())).thenReturn("body removed by its owner");
+        asr.recognize(7L,RID,21L,41L,new byte[]{1},"wav");clearInvocations(speech);
+        NpcChatResp deletedReply=new NpcChatResp();deletedReply.setOutcomeStatus("FAILED");
+        when(text.chatWithShop(eq(RID),eq(7L),eq(21L),eq(41L),anyString(),eq("body removed by its owner")))
+                .thenAnswer(call->{
+                    ((com.chengyinhub.business.mapper.NpcAsrIntentMapper)ReflectionTestUtils.getField(asr,"intents")).redactForUser(7L);
+                    return deletedReply;
+                });
+        var result=controller().voiceChat(null,21L,RID);
+        assertSame(deletedReply,result.get("data"));assertFalse(result.containsKey("asr"));
+        assertEquals("ASR_TEXT_UNAVAILABLE",asr.readOutcome("shop",21L,RID,7L).getErrorCode());
+        verifyNoInteractions(speech);
+    }
 }

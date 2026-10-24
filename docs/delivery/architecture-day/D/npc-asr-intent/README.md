@@ -10,6 +10,6 @@
 调用链：原文本回执优先 → 原格式/大小/本人资格 gate → ASR admission 提交确认 → 事务外原 STT 一次 → 独立保存 RECEIVED(含空)/NOT_SENT/UNKNOWN → 原资格重读 → 原ASR handoff提交 → chatWithShop(rid) → 原admit一次性登记及原模型/额度/安全算法。
 未知提交、异常、超时或进程退出不再授外呼；IN_FLIGHT 无租约回收。异音频SHA256/格式/节点/商家冲突。GET只合读阶段，不外呼/不启动handoff。成功正文缺失、到期或本人删除保留原身份并明确不可恢复；原UNKNOWN/无voiceId不升级、不查询供应商、不重发。
 
-测试源码：原8类72个case及全部原断言保留（仅必要装配）；新增11 owner unit +3 Controller +7 MySQL。原 provider/额度算法未改。静态检查实际通过：原case/断言、8个Mapper绑定、token/state/delete fence、claim→provider及handoff→text顺序；不能替代Java编译、真实并发、完整模型/额度或进程kill验收。
+测试源码：原8类72个case及全部原断言保留（仅必要装配）；新增11 owner unit +4 Controller +7 MySQL。原 provider/额度算法未改。静态检查实际通过：原case/断言、8个Mapper绑定、token/state/delete fence、claim→provider及handoff→text顺序；不能替代Java编译、真实并发、完整模型/额度或进程kill验收。
 迁移仅一份 canonical additive CREATE，无历史补写、无生产执行。只读预检：information_schema.tables 中 npc_asr_intent 必须不存在；columns/statistics/table_constraints 核对本文列、唯一(user_id,request_id)、两expiry索引及3个CHECK；确认 MySQL8/InnoDB、原 ums_member 锁和 Mapper 可用。占位/结果/文本墓碑不得TTL删除。
 回退先停新ASR入口及协调消费者；保留新表、已知/UNKNOWN事实和handoff/text_admitted标记。不得删历史或恢复旧直发代码绕过这些身份。

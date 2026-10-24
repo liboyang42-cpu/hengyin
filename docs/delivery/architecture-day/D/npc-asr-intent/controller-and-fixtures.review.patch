@@ -51,7 +51,7 @@
                                  @RequestParam("nodeId") Long nodeId,
                                  @RequestParam("requestId") String requestId)
      {
-@@ -302,61 +315,66 @@
+@@ -302,61 +315,70 @@
          com.chengyinhub.business.domain.vo.ai.NpcChatResp stored=
                  npcChatService.storedShopRequest(requestId,userId,nodeId);
          if(stored!=null) return success(stored);
@@ -144,7 +144,11 @@
 +            }
 +            AjaxResult ok=success(npcChatService.chatWithShop(requestId,userId,node.getId(),
 +                    node.getMerchantMemberId(),shopMemoryOf(node),receipt.getTranscript()));
-+            ok.put("asr",receipt.getTranscript());
++            // Deletion/expiry may have revoked the body while the text request was running.
++            // Read its current persisted snapshot, never resurrect the captured pre-handoff transcript.
++            com.chengyinhub.business.domain.NpcAsrIntent echo=npcAsrIntentService.read(userId,requestId,nodeId);
++            if(echo!=null && !echo.isBodyErased() && echo.getTranscript()!=null)
++                ok.put("asr",echo.getTranscript());
 +            return ok;
 +        } catch(IllegalArgumentException conflict) {
 +            return success(com.chengyinhub.business.service.impl.NpcAsrIntentService.unavailable(requestId,"INVALID_REQUEST"));
