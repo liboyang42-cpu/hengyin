@@ -168,6 +168,8 @@ class MerchantDeskServiceImplTest {
         MerchantDeskException e = assertThrows(MerchantDeskException.class, () -> service.saveSku(access, body));
         assertEquals(MerchantDeskException.PRODUCT_LIVE_LOCKED, e.getErrorCode());
         verify(mapper, never()).insertSku(anyMap());
+        verify(mapper, never()).updateSku(anyMap());
+        verify(mapper, never()).insertReceipt(anyMap());
     }
 
     @Test
