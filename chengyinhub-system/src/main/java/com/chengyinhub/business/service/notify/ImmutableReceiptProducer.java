@@ -31,6 +31,9 @@ public final class ImmutableReceiptProducer {
     public static final String UNKNOWN_NOT_RECOVERED = "UNKNOWN_NOT_RECOVERED";
     public static final String IM_READ_SENT = "im.readSentMessage";
     public static final String IM_SEND = "im.send";
+    /** 真实发消息命令：content、msgType、extraJson、身份。指纹 body 不是正文。 */
+    public static final String IM_SEND_COMMAND = "im.send.originalCommand";
+    public static final String NOT_A_SEND = "IM_OPERATION_NOT_SEND";
 
     public enum Kind {
         REPLY,
@@ -144,26 +147,46 @@ public final class ImmutableReceiptProducer {
     }
 
     /**
-     * 把已带齐路由字段的原请求交给既有 {@link IImService#send}。
-     * 缺端口 WAITING_SOURCE。任一路由字段缺失返回 {@code null} 且不发送。
-     * 不写入内存 store。
+     * 只有带真实 content、msgType、extraJson 和身份的 REPLY/MENTION 才交给 {@link IImService#send}。
+     * SEARCH/EDIT/WITHDRAW/PIN 不发送。{@link OriginalRequest#body} 是指纹材料，不能当正文。
+     * 缺真实命令源为 WAITING_SOURCE {@link #IM_SEND_COMMAND}。不写入内存 store。
      */
     public OriginalReceipt sendOriginal(OriginalRequest request, Long memberId, Long conversationId,
-            Long targetMemberId, Integer msgType, ImSendSource send) {
+            Long targetMemberId, Integer msgType, String content, String extraJson, ImSendSource send) {
         OriginalRequest required = requireRequest(request);
-        if (memberId == null || memberId.longValue() <= 0L || conversationId == null || conversationId.longValue() <= 0L
-                || targetMemberId == null || targetMemberId.longValue() <= 0L || msgType == null) {
-            return null;
+        if (required.kind != Kind.REPLY && required.kind != Kind.MENTION) {
+            throw new NotASendException(required.kind);
+        }
+        if (content == null || content.isBlank() || content.equals(required.body)
+                || extraJson == null || extraJson.isBlank() || msgType == null
+                || memberId == null || memberId.longValue() <= 0L
+                || conversationId == null || conversationId.longValue() <= 0L
+                || targetMemberId == null || targetMemberId.longValue() <= 0L) {
+            throw new WaitingSourceException(IM_SEND_COMMAND);
         }
         if (send == null) {
-            throw new WaitingSourceException(IM_SEND);
+            throw new WaitingSourceException(IM_SEND_COMMAND);
         }
-        ImMessage sent = send.send(memberId, conversationId, targetMemberId, msgType, required.body, null,
+        ImMessage sent = send.send(memberId, conversationId, targetMemberId, msgType, content, extraJson,
                 required.requestId);
         if (sent == null) {
             return unknownReceipt(required.requestId, null);
         }
         return fromMessage(sent);
+    }
+
+    public static final class NotASendException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+        private final Kind kind;
+
+        public NotASendException(Kind kind) {
+            super(NOT_A_SEND + " " + kind);
+            this.kind = kind;
+        }
+
+        public Kind getKind() {
+            return kind;
+        }
     }
 
     public static ImSendSource fromIm(IImService im) {

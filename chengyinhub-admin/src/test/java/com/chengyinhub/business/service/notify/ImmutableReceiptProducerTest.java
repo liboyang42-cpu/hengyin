@@ -131,44 +131,59 @@ class ImmutableReceiptProducerTest {
     }
 
     @Test
-    void sendOriginalDelegatesToExistingSendOnlyWhenRoutingFieldsArePresent() {
+    void sendOriginalDoesNotSendNonMessageKindsOrFingerprintBody() {
         InMemoryNotifyFixtures.MemoryReceiptStore store = new InMemoryNotifyFixtures.MemoryReceiptStore();
         ImmutableReceiptProducer producer = new ImmutableReceiptProducer(store);
-        ImmutableReceiptProducer.OriginalRequest request = new ImmutableReceiptProducer.OriginalRequest(
-                "c09-send-01", ImmutableReceiptProducer.Kind.REPLY, "hello",
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        ImmutableReceiptProducer.ImSendSource send = (memberId, conversationId, targetMemberId, msgType, content,
+                extraJson, clientMessageId) -> {
+            calls.incrementAndGet();
+            throw new AssertionError("non-send kind must not call IImService.send");
+        };
+        for (ImmutableReceiptProducer.Kind kind : new ImmutableReceiptProducer.Kind[] {
+                ImmutableReceiptProducer.Kind.SEARCH, ImmutableReceiptProducer.Kind.EDIT,
+                ImmutableReceiptProducer.Kind.WITHDRAW, ImmutableReceiptProducer.Kind.PIN }) {
+            ImmutableReceiptProducer.OriginalRequest request = new ImmutableReceiptProducer.OriginalRequest(
+                    "c09-op-01", kind, "{\"fp\":1}", ImmutableReceiptProducer.OUTCOME_ACCEPTED);
+            ImmutableReceiptProducer.NotASendException refused = assertThrows(
+                    ImmutableReceiptProducer.NotASendException.class,
+                    () -> producer.sendOriginal(request, 7L, 12L, 8L, Integer.valueOf(1), "hello",
+                            "{\"mention\":8}", send));
+            assertEquals(kind, refused.getKind());
+        }
+        assertEquals(0, calls.get());
+        ImmutableReceiptProducer.OriginalRequest reply = new ImmutableReceiptProducer.OriginalRequest(
+                "c09-send-01", ImmutableReceiptProducer.Kind.REPLY, "{\"fp\":1}",
                 ImmutableReceiptProducer.OUTCOME_ACCEPTED);
-        assertNull(producer.sendOriginal(request, null, 12L, 8L, Integer.valueOf(1), (memberId, conversationId,
-                targetMemberId, msgType, content, extraJson, clientMessageId) -> {
-            throw new AssertionError("missing member must not send");
-        }));
+        ImmutableReceiptProducer.WaitingSourceException fingerprint = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> producer.sendOriginal(reply, 7L, 12L, 8L, Integer.valueOf(1), "{\"fp\":1}",
+                        "{\"mention\":8}", send));
+        assertEquals(ImmutableReceiptProducer.IM_SEND_COMMAND, fingerprint.getWaitingCapability());
+        ImmutableReceiptProducer.WaitingSourceException missingExtra = assertThrows(
+                ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> producer.sendOriginal(reply, 7L, 12L, 8L, Integer.valueOf(1), "hello", null, send));
+        assertEquals(ImmutableReceiptProducer.IM_SEND_COMMAND, missingExtra.getWaitingCapability());
+        assertEquals(0, calls.get());
         assertEquals(0, store.size());
-        ImmutableReceiptProducer.WaitingSourceException waiting = assertThrows(
-                ImmutableReceiptProducer.WaitingSourceException.class,
-                () -> producer.sendOriginal(request, 7L, 12L, 8L, Integer.valueOf(1), null));
-        assertEquals(ImmutableReceiptProducer.IM_SEND, waiting.getWaitingCapability());
-        ImmutableReceiptProducer.WaitingSourceException missingIm = assertThrows(
-                ImmutableReceiptProducer.WaitingSourceException.class,
-                () -> ImmutableReceiptProducer.fromIm(null).send(7L, 12L, 8L, Integer.valueOf(1), "hello", null,
-                        "c09-send-01"));
-        assertEquals(ImmutableReceiptProducer.IM_SEND, missingIm.getWaitingCapability());
 
         ImMessage sent = new ImMessage();
         sent.setClientMessageId("c09-send-01");
         sent.setContent("hello");
         sent.setRequestHash("hash-send-01");
-        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
-        ImmutableReceiptProducer.OriginalReceipt receipt = producer.sendOriginal(request, 7L, 12L, 8L,
-                Integer.valueOf(1), (memberId, conversationId, targetMemberId, msgType, content, extraJson,
-                        clientMessageId) -> {
+        ImmutableReceiptProducer.OriginalReceipt receipt = producer.sendOriginal(reply, 7L, 12L, 8L,
+                Integer.valueOf(1), "hello", "{\"mention\":8}", (memberId, conversationId, targetMemberId, msgType,
+                        content, extraJson, clientMessageId) -> {
                     calls.incrementAndGet();
-                    assertEquals(Long.valueOf(7L), memberId);
-                    assertEquals("c09-send-01", clientMessageId);
                     assertEquals("hello", content);
+                    assertEquals("{\"mention\":8}", extraJson);
+                    assertEquals("c09-send-01", clientMessageId);
                     return sent;
                 });
-        assertEquals("c09-send-01", receipt.requestId);
         assertEquals("hello", receipt.originalBody);
-        assertNull(receipt.kind);
+        assertEquals(1, calls.get());
+        assertThrows(ImmutableReceiptProducer.WaitingSourceException.class,
+                () -> producer.recoverFromJournal(7L, 12L, "c09-send-01"));
         assertEquals(1, calls.get());
         assertEquals(0, store.size());
     }
