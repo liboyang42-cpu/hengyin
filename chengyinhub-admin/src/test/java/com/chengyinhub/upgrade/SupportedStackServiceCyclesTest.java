@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
+import java.util.concurrent.ScheduledExecutorService;
 
 import com.chengyinhub.business.notify.InAppNotifyChannel;
 import com.chengyinhub.business.notify.WxSubscribeChannel;
@@ -41,6 +42,15 @@ import com.chengyinhub.business.service.impl.WechatPaymentSdkGateway;
 import com.chengyinhub.business.service.impl.WechatPaymentIntentStore;
 import com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner;
 import com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter;
+import com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService;
+import com.chengyinhub.business.service.impl.RefundServiceImpl;
+import com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl;
+import com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger;
+import com.chengyinhub.business.service.impl.TopicSettlementEvidenceService;
+import com.chengyinhub.business.service.support.CommittedBusinessNotice;
+import com.chengyinhub.business.service.support.SettlementDebtLedger;
+import com.chengyinhub.business.service.ISystemNotificationIntentService;
+import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;
 
 import com.chengyinhub.business.service.impl.WxContentSecurityServiceImpl;
 import com.chengyinhub.common.config.WxPayConfig;
@@ -51,11 +61,13 @@ import org.mockito.Mockito;
 import org.springframework.aop.framework.Advised;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanCurrentlyInCreationException;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ContextAnnotationAutowireCandidateResolver;
@@ -64,6 +76,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -71,7 +84,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Real service wiring with Boot 4's circular-reference policy and transaction AOP.
  * There is no component scan, Boot auto-configuration, application property loading,
  * database, Redis connection, scheduler, or external provider. Every collaborator
- * outside the named cycle is registered as an inert singleton before initialization;
+ * outside the named cycles and explicit payment/ledger/notice closure is an inert singleton;
  * even an unexpected call caught by production code is recorded and fails the test.
  */
 class SupportedStackServiceCyclesTest
@@ -237,13 +250,150 @@ class SupportedStackServiceCyclesTest
         });
     }
 
+    @Test
+    void paymentFactsOriginalLedgerAndTypedNoticesUseRealManagedDependencies()
+    {
+        List<Method> unexpectedCalls = new ArrayList<>();
+        Class<?>[] services = Stream.concat(cycles().flatMap(cycle -> Arrays.stream(cycle.services())),
+                Stream.of(RefundServiceImpl.class, CoopSettlementClaimServiceImpl.class))
+                .distinct().toArray(Class<?>[]::new);
+        runner(unexpectedCalls, null, services).run(context -> {
+            assertThat(context).hasNotFailed();
+            for (Class<?> service : List.of(WechatVerifiedPaymentFactService.class,
+                    WechatPaymentSdkGateway.class, CoopSettlementClaimServiceImpl.class,
+                    CoopSettlementOriginalLedger.class, SettlementDebtLedger.class,
+                    CommittedBusinessNotice.class, ImServiceImpl.class, NotifyServiceImpl.class,
+                    InAppNotifyChannel.class))
+            {
+                assertThat(context).hasSingleBean(service);
+                Object target = AopTestUtils.getUltimateTargetObject(context.getBean(service));
+                assertThat(Mockito.mockingDetails(target).isMock()).as(service.getName()).isFalse();
+            }
+            Object facts = context.getBean(WechatVerifiedPaymentFactService.class);
+            Object reader = AopTestUtils.getUltimateTargetObject(facts);
+            assertThat(AopUtils.isAopProxy(facts)).isTrue();
+            assertThat(ReflectionTestUtils.getField(reader, "mapper"))
+                    .isSameAs(context.getBean(WechatVerifiedPaymentFactMapper.class));
+            // B f6f382 reader: the existing PTM is required, not another mocked fact service.
+            assertThat(ReflectionTestUtils.getField(reader, "factReadTransactions"))
+                    .isSameAs(context.getBean(PlatformTransactionManager.class));
+            Object sdk = AopTestUtils.getUltimateTargetObject(context.getBean(WechatPaymentSdkGateway.class));
+            assertThat(ReflectionTestUtils.getField(sdk, "verifiedFacts")).isSameAs(facts);
+            Object claim = AopTestUtils.getUltimateTargetObject(context.getBean(CoopSettlementClaimServiceImpl.class));
+            Object ledger = context.getBean(CoopSettlementOriginalLedger.class);
+            assertThat(ReflectionTestUtils.getField(claim, "originalLedger")).isSameAs(ledger);
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.getUltimateTargetObject(ledger), "verifiedFacts"))
+                    .isSameAs(facts);
+            Object registration = AopTestUtils.getUltimateTargetObject(context.getBean(CmsRegistrationServiceImpl.class));
+            Object refund = AopTestUtils.getUltimateTargetObject(context.getBean(RefundServiceImpl.class));
+            // Ae6's actual new edges must resolve eagerly to the same managed evidence bean.
+            assertThat(ReflectionTestUtils.getField(registration, "verifiedPaymentFacts")).isSameAs(facts);
+            assertThat(ReflectionTestUtils.getField(refund, "verifiedPaymentFacts")).isSameAs(facts);
+            assertThat(ReflectionTestUtils.getField(refund, "coopSettlementClaimService"))
+                    .isSameAs(context.getBean(CoopSettlementClaimServiceImpl.class));
+            assertThat(ReflectionTestUtils.getField(registration, "systemNotificationIntents"))
+                    .isSameAs(context.getBean(ImServiceImpl.class))
+                    .isSameAs(context.getBean(ISystemNotificationIntentService.class));
+            Object notice = AopTestUtils.getUltimateTargetObject(context.getBean(CommittedBusinessNotice.class));
+            assertThat(ReflectionTestUtils.getField(notice, "notifyService"))
+                    .isSameAs(context.getBean(NotifyServiceImpl.class));
+            assertThat(ReflectionTestUtils.getField(notice, "existingExecutor"))
+                    .isSameAs(context.getBean("scheduledExecutorService"));
+            TransactionTemplate transaction = (TransactionTemplate) ReflectionTestUtils.getField(notice, "independentTransaction");
+            assertThat(transaction).isNotNull();
+            assertThat(transaction.getTransactionManager()).isSameAs(context.getBean(PlatformTransactionManager.class));
+            Object channel = AopTestUtils.getUltimateTargetObject(context.getBean(InAppNotifyChannel.class));
+            assertThat(ReflectionTestUtils.getField(channel, "imService")).isSameAs(context.getBean(ImServiceImpl.class));
+            assertThat(unexpectedCalls).isEmpty();
+        });
+    }
+
+    static Stream<Class<?>> requiredFactCollaborators()
+    {
+        return Stream.of(WechatVerifiedPaymentFactMapper.class, PlatformTransactionManager.class);
+    }
+
+    @ParameterizedTest(name = "real fact reader cannot start without {0}")
+    @MethodSource("requiredFactCollaborators")
+    void realFactReaderDoesNotHideMissingMapperOrTransactionManager(Class<?> dependency)
+    {
+        List<Method> unexpectedCalls = new ArrayList<>();
+        runner(unexpectedCalls, null, WechatVerifiedPaymentFactService.class)
+                .withInitializer(context -> ((DefaultListableBeanFactory) context.getBeanFactory())
+                        .destroySingleton("inert." + dependency.getName()))
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure()).hasRootCauseInstanceOf(NoSuchBeanDefinitionException.class)
+                            .hasStackTraceContaining(dependency.getName());
+                    assertThat(unexpectedCalls).isEmpty();
+                });
+    }
+
+    @Test
+    void factReaderCallingBackIntoRealSdkFailsWithCircularReferencesDisabled()
+    {
+        List<Method> unexpectedCalls = new ArrayList<>();
+        boolean[] replaced = { false };
+        runner(unexpectedCalls, null, WechatPayServiceImpl.class)
+                .withInitializer(context -> context.addBeanFactoryPostProcessor(factory -> {
+                    for (String name : factory.getBeanDefinitionNames())
+                    {
+                        var definition = factory.getBeanDefinition(name);
+                        if (WechatVerifiedPaymentFactService.class.getName().equals(definition.getBeanClassName()))
+                        {
+                            // Same real reader superclass/mapper/PTM/AOP, plus one forbidden eager reverse edge.
+                            ((AbstractBeanDefinition) definition).setBeanClass(FactReaderCallingSdk.class);
+                            replaced[0] = true;
+                        }
+                    }
+                }))
+                .run(context -> {
+                    assertThat(replaced[0]).isTrue();
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure()).hasRootCauseInstanceOf(BeanCurrentlyInCreationException.class);
+                    assertThat(unexpectedCalls).isEmpty();
+                });
+    }
+
+    static class FactReaderCallingSdk extends WechatVerifiedPaymentFactService
+    {
+        @Autowired
+        private WechatPaymentSdkGateway forbiddenSdkBackReference;
+    }
+
+    private Class<?>[] realDependencyClosure(Class<?>... realServices)
+    {
+        Set<Class<?>> assembly = new LinkedHashSet<>(Arrays.asList(realServices));
+        if (assembly.contains(WechatPayServiceImpl.class))
+        {
+            assembly.addAll(List.of(WechatPaymentSdkGateway.class, WechatPaymentIntentStore.class,
+                    JdbcWechatPaymentOrderOwner.class, WechatPaymentCallbackRouter.class));
+        }
+        if (assembly.contains(WechatPaymentSdkGateway.class) || assembly.contains(CmsRegistrationServiceImpl.class)
+                || assembly.contains(RefundServiceImpl.class))
+        {
+            assembly.add(WechatVerifiedPaymentFactService.class);
+        }
+        if (assembly.contains(RefundServiceImpl.class) || assembly.contains(CoopSettlementClaimServiceImpl.class)
+                || assembly.contains(CoopSettlementOriginalLedger.class))
+        {
+            assembly.addAll(List.of(CoopSettlementClaimServiceImpl.class, CoopSettlementOriginalLedger.class,
+                    TopicSettlementEvidenceService.class, SettlementDebtLedger.class,
+                    WechatVerifiedPaymentFactService.class));
+        }
+        if (assembly.contains(CmsRegistrationServiceImpl.class) || assembly.contains(MerchantChapterApplicationServiceImpl.class)
+                || assembly.contains(ChapterMerchantNodeServiceImpl.class) || assembly.contains(CommittedBusinessNotice.class))
+        {
+            assembly.addAll(List.of(CommittedBusinessNotice.class, NotifyServiceImpl.class,
+                    InAppNotifyChannel.class, WxSubscribeChannel.class, ImServiceImpl.class));
+        }
+        return assembly.toArray(Class<?>[]::new);
+    }
+
     private ApplicationContextRunner runner(List<Method> unexpectedCalls, Cycle eagerCycle,
                                              Class<?>... realServices)
     {
-        Class<?>[] assembly = Arrays.stream(realServices).anyMatch(type -> type == WechatPayServiceImpl.class)
-                ? Stream.concat(Arrays.stream(realServices), Stream.of(WechatPaymentSdkGateway.class,
-                        WechatPaymentIntentStore.class, JdbcWechatPaymentOrderOwner.class,
-                        WechatPaymentCallbackRouter.class)).distinct().toArray(Class<?>[]::new) : realServices;
+        Class<?>[] assembly = realDependencyClosure(realServices);
         return new ApplicationContextRunner()
                 .withInitializer(context -> {
                     DefaultListableBeanFactory factory =
@@ -300,7 +450,11 @@ class SupportedStackServiceCyclesTest
         {
             if (ObjectProvider.class.isAssignableFrom(dependency)
                     || Arrays.stream(realServices).anyMatch(dependency::isAssignableFrom)) continue;
-            factory.registerSingleton("inert." + dependency.getName(), inert(dependency, unexpectedCalls));
+            // Real CommittedBusinessNotice uses this exact existing executor qualifier.
+            // It remains an inert external boundary: no threads, scheduling or provider calls.
+            String name = dependency == ScheduledExecutorService.class
+                    ? "scheduledExecutorService" : "inert." + dependency.getName();
+            factory.registerSingleton(name, inert(dependency, unexpectedCalls));
         }
     }
 
