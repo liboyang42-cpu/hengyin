@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.chengyinhub.business.domain.OrientScoreAppeal;
 import com.chengyinhub.business.service.IOrientScoringService;
 import com.chengyinhub.common.core.domain.AjaxResult;
 
@@ -55,5 +56,52 @@ class ApiOrientScoringControllerTest {
         Map<String, Object> kept = (Map<String, Object>) controller.receipt("SETTLE", "9", "key-settle-3")
                 .get(AjaxResult.DATA_TAG);
         assertEquals(9L, kept.get("sessionId"));
+    }
+
+    @Test
+    void receiptDropsADifferentMemberAndKeepsNotFound() {
+        Map<String, Object> missing = new LinkedHashMap<>();
+        missing.put("state", "NOT_FOUND");
+        missing.put("kind", "SETTLE");
+        missing.put("memberId", 8L);
+        when(scoring.receipt(7L, "SETTLE", 9L, "key-mem-none")).thenReturn(missing);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> notFound = (Map<String, Object>) controller.receipt("SETTLE", "9", "key-mem-none")
+                .get(AjaxResult.DATA_TAG);
+        assertEquals("NOT_FOUND", notFound.get("state"));
+
+        Map<String, Object> otherMember = new LinkedHashMap<>();
+        otherMember.put("state", "SETTLED");
+        otherMember.put("sessionId", 9L);
+        otherMember.put("memberId", 8L);
+        when(scoring.receipt(7L, "SETTLE", 9L, "key-mem-other")).thenReturn(otherMember);
+        assertNull(controller.receipt("SETTLE", "9", "key-mem-other").get(AjaxResult.DATA_TAG));
+
+        Map<String, Object> bare = new LinkedHashMap<>();
+        bare.put("state", "SETTLED");
+        bare.put("sessionId", 9L);
+        when(scoring.receipt(7L, "SETTLE", 9L, "key-mem-bare")).thenReturn(bare);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> kept = (Map<String, Object>) controller.receipt("SETTLE", "9", "key-mem-bare")
+                .get(AjaxResult.DATA_TAG);
+        assertEquals(9L, kept.get("sessionId"));
+
+        OrientScoreAppeal foreign = new OrientScoreAppeal();
+        foreign.setSessionId(9L);
+        foreign.setMemberId(8L);
+        Map<String, Object> appeal = new LinkedHashMap<>();
+        appeal.put("state", "ACCEPTED");
+        appeal.put("record", foreign);
+        when(scoring.receipt(7L, "APPEAL", 9L, "key-mem-appeal")).thenReturn(appeal);
+        assertNull(controller.receipt("APPEAL", "9", "key-mem-appeal").get(AjaxResult.DATA_TAG));
+
+        Map<String, Object> disputeRecord = new LinkedHashMap<>();
+        disputeRecord.put("sessionId", 9L);
+        disputeRecord.put("memberId", 8L);
+        Map<String, Object> dispute = new LinkedHashMap<>();
+        dispute.put("state", "PENDING");
+        dispute.put("record", disputeRecord);
+        when(scoring.receipt(7L, "DISPUTE", 9L, "key-mem-dispute")).thenReturn(dispute);
+        assertNull(controller.receipt("DISPUTE", "9", "key-mem-dispute").get(AjaxResult.DATA_TAG));
     }
 }

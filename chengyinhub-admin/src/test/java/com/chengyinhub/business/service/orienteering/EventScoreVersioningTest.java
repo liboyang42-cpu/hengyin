@@ -351,6 +351,64 @@ class EventScoreVersioningTest {
         assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-settle-oth"));
         assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, wired.recoverOriginal("scr-rcpt-01").outcome);
         verify(scoring, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
+
+        Map<String, Object> bareSettlement = new LinkedHashMap<String, Object>();
+        bareSettlement.put("state", "SETTLED");
+        bareSettlement.put("sessionId", Long.valueOf(30L));
+        when(scoring.receipt(7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-mem-bare")).thenReturn(bareSettlement);
+        Map<String, Object> otherMember = new LinkedHashMap<String, Object>();
+        otherMember.put("state", "SETTLED");
+        otherMember.put("sessionId", Long.valueOf(30L));
+        otherMember.put("memberId", Long.valueOf(8L));
+        when(scoring.receipt(7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-mem-other")).thenReturn(otherMember);
+        Map<String, Object> sameMember = new LinkedHashMap<String, Object>();
+        sameMember.put("state", "SETTLED");
+        sameMember.put("sessionId", Long.valueOf(30L));
+        sameMember.put("memberId", Integer.valueOf(7));
+        when(scoring.receipt(7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-mem-same")).thenReturn(sameMember);
+        com.chengyinhub.business.domain.OrientScoreAppeal foreignAppeal =
+                new com.chengyinhub.business.domain.OrientScoreAppeal();
+        foreignAppeal.setSessionId(30L);
+        foreignAppeal.setMemberId(8L);
+        Map<String, Object> appealOther = new LinkedHashMap<String, Object>();
+        appealOther.put("state", "ACCEPTED");
+        appealOther.put("record", foreignAppeal);
+        when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-mem-appeal")).thenReturn(appealOther);
+        Map<String, Object> disputeRecord = new LinkedHashMap<String, Object>();
+        disputeRecord.put("sessionId", Long.valueOf(30L));
+        disputeRecord.put("memberId", Long.valueOf(8L));
+        Map<String, Object> disputeOther = new LinkedHashMap<String, Object>();
+        disputeOther.put("state", "PENDING");
+        disputeOther.put("record", disputeRecord);
+        when(scoring.receipt(7L, IOrientScoringService.KIND_DISPUTE, 30L, "scr-mem-dispute")).thenReturn(disputeOther);
+        com.chengyinhub.business.domain.OrientScoreAppeal bareAppeal =
+                new com.chengyinhub.business.domain.OrientScoreAppeal();
+        bareAppeal.setSessionId(30L);
+        Map<String, Object> appealBare = new LinkedHashMap<String, Object>();
+        appealBare.put("state", "ACCEPTED");
+        appealBare.put("record", bareAppeal);
+        when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-mem-bare")).thenReturn(appealBare);
+        com.chengyinhub.business.domain.OrientScoreAppeal ownAppeal =
+                new com.chengyinhub.business.domain.OrientScoreAppeal();
+        ownAppeal.setSessionId(30L);
+        ownAppeal.setMemberId(7L);
+        Map<String, Object> appealTop = new LinkedHashMap<String, Object>();
+        appealTop.put("state", "ACCEPTED");
+        appealTop.put("memberId", Long.valueOf(8L));
+        appealTop.put("record", ownAppeal);
+        when(scoring.receipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-mem-top")).thenReturn(appealTop);
+
+        assertSame(bareSettlement, wired.recoverFromScoringReceipt(
+                7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-mem-bare"));
+        assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-mem-other"));
+        assertSame(sameMember, wired.recoverFromScoringReceipt(
+                7L, IOrientScoringService.KIND_SETTLE, 30L, "scr-mem-same"));
+        assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-mem-appeal"));
+        assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_DISPUTE, 30L, "scr-mem-dispute"));
+        assertSame(appealBare, wired.recoverFromScoringReceipt(
+                7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-mem-bare"));
+        assertNull(wired.recoverFromScoringReceipt(7L, IOrientScoringService.KIND_APPEAL, 30L, "scr-mem-top"));
+        verify(scoring, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
         EventScoreVersioning.EventRun bad = scores.start(registration, frozen, safety, 7L, "start-bad-dom");
         OrienteeringEventException illegal = assertThrows(OrienteeringEventException.class,
                 () -> scores.appendScore(bad.id, 100, "PROGRESS", "task-done", "scr-bad-dom"));

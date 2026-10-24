@@ -316,8 +316,10 @@ public final class EventScoreVersioning {
 
     /**
      * 从既有 {@link IOrientScoringService#receipt} 回读。kind 只接受 SETTLE/APPEAL/DISPUTE。
-     * 缺服务 WAITING_SOURCE。state=NOT_FOUND 返回 {@code null}，不占进程完赛账，不 appendEntry。
+     * 缺服务 WAITING_SOURCE。state=NOT_FOUND 返回 {@code null}，不占进程完赛账，不 appendEntry，也不编造成绩。
      * 结算按局一份，幂等键可以不同；sessionId 必须是这次的局。
+     * 回执上若带了别的 memberId（顶层，或 APPEAL/DISPUTE 的 record.memberId），不返回这张图。
+     * 没带 memberId 的回执仍只走既有局号核对。
      */
     public Map<String, Object> recoverFromScoringReceipt(Long memberId, String kind, Long sessionId,
             String idempotencyKey) {
@@ -334,6 +336,9 @@ public final class EventScoreVersioning {
         if (found == null || "NOT_FOUND".equals(found.get("state"))) {
             return null;
         }
+        if (differentMember(found.get("memberId"), memberId)) {
+            return null;
+        }
         if (IOrientScoringService.KIND_SETTLE.equals(kind)) {
             Object value = found.get("sessionId");
             if (!(value instanceof Number) || ((Number) value).longValue() != sessionId.longValue()) {
@@ -345,8 +350,29 @@ public final class EventScoreVersioning {
             if (recordSession == null || recordSession.longValue() != sessionId.longValue()) {
                 return null;
             }
+            if (differentMember(memberOn(found.get("record")), memberId)) {
+                return null;
+            }
         }
         return found;
+    }
+
+    /** 回执没带 memberId 时返回 false，交给既有局号核对。带了且不是这次的成员则拒绝这张图。 */
+    private static boolean differentMember(Object value, Long memberId) {
+        if (!(value instanceof Number number)) {
+            return false;
+        }
+        return number.longValue() != memberId.longValue();
+    }
+
+    private static Object memberOn(Object record) {
+        if (record instanceof com.chengyinhub.business.domain.OrientScoreAppeal appeal) {
+            return appeal.getMemberId();
+        }
+        if (record instanceof Map<?, ?> map) {
+            return map.get("memberId");
+        }
+        return null;
     }
 
     private static Long sessionOf(Object record) {
