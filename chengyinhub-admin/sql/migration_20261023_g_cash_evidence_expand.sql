@@ -25,8 +25,11 @@ SELECT CAST(IF(
        AND data_type='bigint' AND column_type NOT LIKE '%unsigned%' AND is_nullable='NO')=2
   AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()
        AND table_name='ums_member' AND column_name='id' AND data_type='bigint' AND column_type LIKE '%unsigned%')=1
+  AND (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()
+       AND ((table_name='coop_settlement' AND index_name IN ('idx_g_cash_head_member','idx_g_cash_head_close','idx_g_cash_head_initiator','uk_g_cash_head_id_close','uk_g_cash_global_head'))
+         OR (table_name='coop_settlement_adjustment' AND index_name IN ('idx_g_cash_adjustment_event','idx_g_cash_adjustment_head','uk_g_cash_adjustment_event'))))=0
   AND (SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE()
-       AND constraint_name LIKE 'fk_g_cash_%')=0
+       AND constraint_name IN ('fk_g_cash_close_member','ck_g_cash_close','fk_g_cash_contribution_close','fk_g_cash_contribution_registration','fk_g_cash_contribution_payer','ck_g_cash_contribution','fk_g_cash_event_refund','fk_g_cash_event_contribution','ck_g_cash_event','fk_g_cash_head_member','fk_g_cash_head_close','fk_g_cash_head_initiator','ck_g_cash_head_payee','fk_g_cash_adjustment_event','fk_g_cash_adjustment_head','ck_g_cash_adjustment_link'))=0
   AND (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()
        AND table_name='coop_settlement' AND index_name='uk_settle_order' AND non_unique=0 AND column_name='coop_order_id')=1
   AND (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()
@@ -117,6 +120,8 @@ CREATE TABLE coop_settlement_cash_contribution (
     REFERENCES coop_settlement_cash_contribution(cash_close_id,registration_id,registration_no),
   CONSTRAINT ck_g_cash_contribution CHECK (
     CASE WHEN registration_id>0 AND payer_registration_id>0 AND owner_type=1 AND owner_id=source_topic_id
+      AND (parent_order_no IS NOT NULL OR
+        (payer_registration_id=registration_id AND BINARY payer_order_no=BINARY registration_no))
       AND sales_basis_amount>=0
       AND sales_basis_amount=CASE WHEN snapshot_payment_status=2 AND snapshot_registration_status=2
             THEN snapshot_payable_amount ELSE 0 END
@@ -210,8 +215,8 @@ SELECT CAST(IF(
   AND (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()
     AND table_name='coop_settlement_adjustment' AND index_name='uk_coop_adjustment_event' AND non_unique=0)=3
   AND (SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()
-    AND constraint_name LIKE 'fk_g_cash_%')=11
+    AND constraint_name IN ('fk_g_cash_close_member','fk_g_cash_contribution_close','fk_g_cash_contribution_registration','fk_g_cash_contribution_payer','fk_g_cash_event_refund','fk_g_cash_event_contribution','fk_g_cash_head_member','fk_g_cash_head_close','fk_g_cash_head_initiator','fk_g_cash_adjustment_event','fk_g_cash_adjustment_head'))=11
   AND (SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE()
-    AND constraint_type='CHECK' AND constraint_name LIKE 'ck_g_cash_%' AND enforced='YES')=5,
+    AND constraint_type='CHECK' AND constraint_name IN ('ck_g_cash_close','ck_g_cash_contribution','ck_g_cash_event','ck_g_cash_head_payee','ck_g_cash_adjustment_link') AND enforced='YES')=5,
   1, JSON_EXTRACT('ASSERT_FAILED__g_cash_evidence_after_ddl','$')
 ) AS UNSIGNED) AS assertion_ok;

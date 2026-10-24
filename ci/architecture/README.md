@@ -13,7 +13,7 @@
 - workflow_dispatch：candidate 为 GITHUB_SHA；从真实事件 repository.default_branch 读取主干名，校验 origin 是固定公共仓库 HTTPS 地址，显式 fetch 此主干到 origin tracking ref 并与 FETCH_HEAD 核对，再取其与 candidate 的唯一 merge-base。缺事件、错误远端、fetch 失败、歧义 merge-base 均拒绝，不回退到 candidate 父提交。执行 source 时再次核对；主干在两次计算间移动导致比较点变化时拒绝并重跑。
 - 缺可信 CI 上下文、错误仓库、短 SHA、任意祖先冒充 merge-base、自身充当 base 均拒绝。GitHub 事件文件和 verifier 必须由受信任工作流提供；这是 CI 来源信任，不是本地环境变量的密码学证明。
 
-已进入比较 base 的历史改动不重复列出，也不修改固定存量 baseline。owner 检查从比较 base 中可明确识别的字面写目标取得技术 Mapper/module 写入口；历史已审 writer 不要求后续每个 PR 重审。
+已进入比较 base 的历史改动不重复列出，也不修改固定存量 baseline。原技术 owner 检查仍从比较 base 的字面写目标取得 Mapper/module 写入口；新增的窄 business policy 则只使用独立受信任版本中经root明确批准的两项事实，不从 observed writers 推定业务权限。未改历史不要求后续每个 PR 重审，也不成为新增写能力的许可。
 
 ## 自动阻断与审阅项
 
@@ -21,13 +21,16 @@
 | --- | --- |
 | 新增依赖/扩大 scope | 比较标准化 group/artifact/type/classifier、声明数量及已知 scope 使用范围；新增坐标、增量声明、test→compile 等扩大为红。仅格式、版本变化或 compile→runtime 不作为新增依赖，POM 仍列审阅项。不是 effective POM/传递依赖分析。 |
 | 跨技术 owner 写 | 新/变更语句的字面写目标是已有表，而 module/Mapper namespace 不在比较 base 的已知写入口中，判红。表名不明确或新表无既定 owner，列 UNKNOWN，不猜归属。 |
+| 两项已批准 whole-table 写权 | 仅 `AI_QUOTA_RESERVATION` / `PHOTO_CHECK_INTENT`：新增确定写边的 module+namespace 未声明为纯writer，报 `UNDECLARED_WRITE_BINDING`；已声明但属于另一批准业务owner，报 `NEW_BUSINESS_OWNER_WRITE`。比较 base 无该表也适用。按 path#id、writer、操作、字面目标比较新增能力，旧债不因普通修改反复列出；删后重引/改id/新增操作不能借旧债。固定前缀目标确定、字段动态时可同时红且列 UNKNOWN；不证明完整效果。 |
 | 明确无作用域写 | 新/变更的可识别字面 UPDATE/DELETE 缺 WHERE 或 WHERE 恒为 1=1/true，判红。复用 `ci/sql_splitter.py` 处理引号/注释，避免字符串中的 where 伪装作用域；select 标签伪装的直接 DML 同样检查。 |
 | 动态/复杂 SQL、include | 不做完整 SQL 语义证明。动态标签/表名、未解析/循环 refid、复杂 SQL、删除语句、新表等输出 `review_items`，交普通 PR 审阅。保留跨 namespace 传递 include 指纹和片段文件级提示，动态 refid 片段变化不会漏出清单。 |
 | Java、测试、workflow 变化 | 不是违规本身，不要求 JSON 审批/Java 报告；由既有测试/成本/报告门禁及 PR review 处理。不声明自动证明 JDBC、反射、授权、事务、版本/CAS、意图/恢复和拒绝零副作用。 |
 
 `findings` 是可识别阻断项，非空退出 1；`review_items` 是仍需审阅的未知/合同提示，单独存在不导致退出 1。`PASS` 或 `PASS_WITH_REVIEW_ITEMS` 只代表该源级检查，没有表示业务合同安全或后端测试通过。
 
-`owners.json` 解释技术入口含义；`commands.json` 仍是四条高风险业务链的代码/恢复源/已有测试参考，不是审批 JSON 或运行时合规认证。scope、唯一身份、关键意图、版本/CAS、恢复调度和原子提交只有业务 owner+相应故障/并发测试才能确认；静态解析做不到的必须保留在 PR 审阅中。
+`owners.json.business_policy` 只启用两个whole-table事实及其唯一纯writer，`commands.json.business_commands` 引用原 AiQuotaRecoveryService / PhotoCheckIntentService 公开合同；整份owners/commands与gate/原baseline/locking proposal共五个文件按可信verifier字节冻结。未声明或无效policy不得静默关闭检查，candidate修改owner/删除fact/清空scope/伪造command都须独立review的trusted revision，不能自批准；本片不修改现有CI固定155引用，须root单独repin后才启用。
+
+输出 `business_policy.coverage=PARTIAL`；范围外字面写列 `BUSINESS_WRITE_OUTSIDE_POLICY`，动态/未知目标或效果列 `UNKNOWN_BUSINESS_WRITE_EFFECT`，不把UNKNOWN叫安全或宣称完整A02。原四条高风险链仍是代码/恢复源/已有测试参考。所有command引用均不证明Java调用必经Service，不授权其它domain直接调用Mapper，不是新审批系统或运行时合规认证。scope、唯一身份、关键意图、版本/CAS、恢复调度和原子提交只有业务 owner+相应故障/并发测试才能确认；静态解析做不到的必须保留在 PR 审阅中。
 
 ## 运行与 CI 接线
 

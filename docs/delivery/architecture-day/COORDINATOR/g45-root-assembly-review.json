@@ -1,0 +1,32 @@
+{
+  "G_candidate": "c829f158ea549ff4e844f92d35725a60ef58e864",
+  "G_parent": "61834b1ba96fcfb025d8442955b69f1d6b35d5f3",
+  "root_adaptations": [
+    "Registry/class and exact batch totals30→45",
+    "Preservation report methods rendered as {method_name,body_sha256} rows to avoid test method name UniqueKeys being mistaken for a credential assignment; no scanner exemption or test body change",
+    "Full-CI failures: classify only reviewed wp10-content-copy-scratch.sql; preserve copy boundary assertions on actual new owner plus facade/transfer reachability"
+  ],
+  "checks": {
+    "G_static_checks": "PASS original30/header/helpers unchanged; H4 only authorized recovery call substitution",
+    "source_gitleaks": "0 findings; exact tracked+new source tree only, ignored target artifacts excluded",
+    "architecture_selftests": 115,
+    "storage_harness_selftests": 47,
+    "migration_selftests": 188,
+    "chapter_boundary_node_tests": 6,
+    "ci_cost_contract": "PASS"
+  },
+  "selected_root_files_sha256": {
+    "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_recovery.sh": "e0ea01cf7877ec8c16c69a7f8b6fde2a958b04f351a6ed82d1f4c2b3b6f37c39",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GCashEvidenceEmptyRecovery.java": "26bec327c543ea11e144b19b18ec1f569ba49b025baa27f1633bd6dbc4f222e6",
+    "docs/delivery/architecture-day/G/storage-fixes/verify_static.py": "44c1547901a19e18ab8255cb4fd70602144919be34224181db94c88611aa110d",
+    "docs/delivery/architecture-day/G/storage-fixes/original30-preserved.json": "28405be042494a6fa8968e0f040bde21134cb48e5a2c357a1560ea709df10658"
+  },
+  "java_mysql45": "NOT_RUN",
+  "H_independent_review": "PENDING",
+  "production_ddl_executed": false,
+  "limits": [
+    "Only storage boundary evidence; full funds/late-payment/refund/fence work remains open",
+    "Recovery launcher is exclusively controlled CI IT UUID schema, never production recovery permission",
+    "Author c829 original source fingerprint manifest retained as original; root report layout changes separately hashed here"
+  ]
+}

@@ -106,7 +106,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-im-revocation": 2,
                     "architecture-day-w19-owner-notice": 29,
                     "architecture-day-play-scheduler": 16,
-                    "architecture-day-cash-expand": 30,
+                    "architecture-day-cash-expand": 45,
                     "architecture-day-ai-not-sent": 4,
                     "architecture-day-lead-admission": 14,
                     "architecture-day-topic-copy": 25}

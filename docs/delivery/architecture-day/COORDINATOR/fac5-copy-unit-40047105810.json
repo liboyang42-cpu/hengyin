@@ -1,0 +1,135 @@
+{
+  "source_sha": "fac5fba822187569c0e20c64bf4c87e660f6b28a",
+  "run_id": 40047105810,
+  "workflow_conclusion": "failure",
+  "backend_job_conclusion": "success",
+  "verified_report_hashes": 1841,
+  "selected_suites": [
+    {
+      "name": "com.chengyinhub.business.service.TopicCopyJourneyRulesTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.TopicCopyNpcRemapTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.TopicCopyRecruitmentGuardTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.TopicCopyTemplateOwnershipTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.TopicJourneyStoryCarryTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.ChapterFlowCopyTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.CopyTopicCopyTypeNpeTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.TopicOfficialCopyBoundaryTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.longrun.OWN_C03_19Test",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.longrun.OWN_C03_20Test",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.longrun.OWN_C03_23Test",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.TopicPublisherSlotTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.ProductSourceWiringTest",
+      "tests": "19",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.RevshareGateWiringTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.TopicContentCopyFacadeTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "selected_tests": 94,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "non_backend_failures": [
+    "Migration ledger missing exact new test fixture classification",
+    "Node chapter boundary copy source path stale",
+    "Mini Program aggregate depends on failing Node shard"
+  ],
+  "limits": [
+    "Full workflow remains failed; next source must pass all gates",
+    "94 unit tests and separate25+25 full MySQL equality are bounded WP10 copy evidence, not entireWP10",
+    "Actual final JAR identity/startup readback still pending"
+  ]
+}

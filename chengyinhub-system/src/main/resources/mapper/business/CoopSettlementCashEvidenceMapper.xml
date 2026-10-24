@@ -62,6 +62,16 @@
           and binary payer.registration_no=binary #{payerOrderNo}
           and (binary r.parent_order_no &lt;=> binary #{parentOrderNo})
           and (binary payer.parent_order_no &lt;=> binary r.parent_order_no)
+          and ((r.parent_order_no is null and payer.id=r.id)
+            or (r.parent_order_no is not null and r.parent_order_no regexp '[^[:space:]]'
+              and payer.payable_amount is not null and payer.payable_amount&gt;0
+              and not exists (
+                select 1 from cms_registration sibling
+                where binary sibling.parent_order_no=binary r.parent_order_no
+                  and (not (sibling.owner_type &lt;=> r.owner_type)
+                    or not (sibling.owner_id &lt;=> r.owner_id) or not (sibling.member_id &lt;=> r.member_id)
+                    or sibling.payable_amount is null or sibling.payable_amount&lt;0
+                    or (sibling.id&lt;&gt;payer.id and sibling.payable_amount&lt;&gt;0)))))
           and (r.payment_status &lt;=> #{snapshotPaymentStatus})
           and (r.registration_status &lt;=> #{snapshotRegistrationStatus})
           and (r.verification_status &lt;=> #{snapshotVerificationStatus})

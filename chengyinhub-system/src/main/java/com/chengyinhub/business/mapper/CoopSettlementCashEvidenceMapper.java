@@ -33,7 +33,9 @@ public interface CoopSettlementCashEvidenceMapper {
         requireTransaction();
         CoopSettlementCashContribution prior = selectContributionForUpdate(row.getRegistrationId());
         if (prior!=null) { requireSame(prior,row); return prior; }
-        try { requireOne(insertContribution(row)); } catch (DuplicateKeyException duplicate) { /* read exact key below */ }
+        try {
+            if (insertContribution(row)!=1) throw new IllegalStateException("CASH_EVIDENCE_PAYER_OR_SOURCE_IDENTITY_UNPROVEN");
+        } catch (DuplicateKeyException duplicate) { /* read exact key below */ }
         CoopSettlementCashContribution current = selectContributionForUpdate(row.getRegistrationId());
         requireSame(current,row); return current;
     }

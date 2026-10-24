@@ -366,9 +366,9 @@
       ]
     },
     "architecture-day-cash-expand": {
-      "lineage": "G618 expand-only storage constraints on root50f reviewed assembly",
+      "lineage": "G c829 reviewed storage fixes assembled by root; original30 + H4 + new11",
       "registered_source": "4b85984c7a86af59240ab5698337041b590813bd",
-      "note": "30 exact ordinary@Test methods using production migration and mapper on UUID scratch schemas; not settlement, payout, late payment or refund allocation acceptance. No production DDL. Actual dispatched source/zero-skip XML and independent cleanup required.",
+      "note": "45 exact ordinary@Test methods on exclusive UUID scratch: payer identity, DDL name preflight, empty staged recovery; not settlement/payment/refund algorithm acceptance. Actual source-bound zero-skip XML and cleanup required.",
       "classes": [
         "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT"
       ]
@@ -1157,7 +1157,7 @@
       "note": "Real coordinator/lock SQL deterministic in-flight/old epoch/post-lock leadership races. KILL only exact owned scratch leader connection, no business effects/Quartz/production or multi-JVM disaster proof."
     },
     "com.chengyinhub.business.it.Wp04CashEvidenceExpandMySqlIT": {
-      "tests": 30,
+      "tests": 45,
       "storage": [
         "mysql"
       ],

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
-  "meaning": "技术写入口 owner，不授予业务权限。表/字段提示来自 baseline.json 的 observed_table_field_writers；该字段是观察清单，不是经业务批准的领域 owner。",
+  "meaning": "技术module/namespace观察与经root明确批准的窄business_policy分开；observed writers不授业务写权。",
   "modules": {
     "chengyinhub-admin": "入口与测试宿主；新增生产写调用必须审阅，不从 Controller 行数判断架构。",
     "chengyinhub-system": "业务与持久层；每个 Mapper namespace 为独立技术写 owner，不能因同属 system 模块默认允许跨表写。",
@@ -12,5 +12,41 @@
   },
   "legacy": "存量仅按 statement 的 path#id、内容哈希及传递 include 哈希精确识别。多 owner 表保持显式多值，不归并为一个万能 owner。没有目录通配豁免或自增 baseline。",
   "unknown": "动态表/字段、foreach/if/choose、include properties、未解析或循环引用及复杂 SQL 均保持 UNKNOWN；table_hints/column_hints 不完整时不猜 owner。DELETE 的字段集合为空不表示无写效果。",
-  "business_domain_assignment": "待集成人与 A–H 合同确认；本清单不擅自决定金额、退款、结算或授权语义。"
+  "business_domain_assignment": "仅business_policy中两项whole-table事实获root技术写权批准；其它域保持UNKNOWN，不改变产品/授权/金额政策。",
+  "business_policy": {
+    "schema": 1,
+    "coverage": "PARTIAL",
+    "scope": [
+      "AI_QUOTA_RESERVATION",
+      "PHOTO_CHECK_INTENT"
+    ],
+    "facts": [
+      {
+        "id": "AI_QUOTA_RESERVATION",
+        "table": "ai_quota_reservation",
+        "coverage": "whole_table",
+        "business_owner": "AI_QUOTA_RECOVERY"
+      },
+      {
+        "id": "PHOTO_CHECK_INTENT",
+        "table": "photo_check_intent",
+        "coverage": "whole_table",
+        "business_owner": "AI_PHOTO_INTENT"
+      }
+    ],
+    "pure_writers": [
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+        "business_owner": "AI_QUOTA_RECOVERY",
+        "command_id": "ai-quota-recovery"
+      },
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+        "business_owner": "AI_PHOTO_INTENT",
+        "command_id": "photo-check-intent"
+      }
+    ]
+  }
 }

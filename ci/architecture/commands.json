@@ -53,5 +53,36 @@
       "existing_test_sources": ["chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java"],
       "test_limit": "CHENGYIN_FUNDS_MYSQL_IT 门控未就绪必须红，不能 skip；不代表真实渠道回执。"
     }
-  ]
+  ],
+  "business_commands": [
+    {
+      "id": "ai-quota-recovery",
+      "business_owner": "AI_QUOTA_RECOVERY",
+      "writes": [
+        "AI_QUOTA_RESERVATION"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#prepare",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#reserved",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#stage",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#retain",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#requireRefund",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#runDue"
+      ]
+    },
+    {
+      "id": "photo-check-intent",
+      "business_owner": "AI_PHOTO_INTENT",
+      "writes": [
+        "PHOTO_CHECK_INTENT"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentService#prepare",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentService#executeOnce",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentService#read",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentService#markApplied"
+      ]
+    }
+  ],
+  "business_commands_limit": "root批准的应用合同引用；read两个重载同方法名。登记不证明Java调用必经Service，不授play或其它domain直接Mapper写权；scope/原身份/退款/原子恢复仍由既有业务合同验证。"
 }

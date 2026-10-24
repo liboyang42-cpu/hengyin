@@ -423,6 +423,173 @@ class Wp04CashEvidenceExpandMySqlIT {
         assertEquals(0,count(CONTRIBUTION)); assertEquals(0,count(EVENT));
     }
 
+
+    @Test void independentOrdersWithNullParentCannotBorrowEachOthersPaymentIdentity() throws Exception {
+        expand();
+        CoopSettlementCashClose request=close(11); request.setOriginalContributionCount(2);
+        CoopSettlementCashClose c=fenced(11,()->mapper.recordClose(request));
+        CoopSettlementCashContribution waiting=contribution(c.getId(),102,11,"0.00");
+        waiting.setSnapshotPaymentStatus(0); waiting.setSnapshotRegistrationStatus(1);
+        waiting.setSnapshotPayableAmount(new BigDecimal("90.00"));
+        waiting.setRegistrationSnapshot("{\"paymentStatus\":0,\"registrationStatus\":1,\"verificationStatus\":0}");
+        fenced(11,()->mapper.recordContribution(waiting));
+        CoopSettlementCashContribution wrong=contribution(c.getId(),101,11,"10.00");
+        wrong.setPayerRegistrationId(102L); wrong.setPayerOrderNo("G-REG-102");
+        assertThrows(IllegalStateException.class,()->fenced(11,()->mapper.recordContribution(wrong)),
+                "NULL parent is absence of a payment group, not proof that two independent orders share a payer");
+        assertEquals(1,count(CONTRIBUTION));
+        assertNull(fenced(11,()->mapper.selectContributionForUpdate(101L))); assertLegacy();
+    }
+    @Test void zeroPayableSiblingCannotSelfDeclareAsTheParentPaymentIdentity() throws Exception {
+        expand();
+        CoopSettlementCashClose request=close(33); request.setOriginalContributionCount(2);
+        CoopSettlementCashClose saved=fenced(33,()->mapper.recordClose(request));
+        CoopSettlementCashContribution child=contribution(saved.getId(),301,33,"0.00");
+        child.setParentOrderNo("PARENT-302");
+        assertThrows(IllegalStateException.class,()->fenced(33,()->mapper.recordContribution(child)),
+                "fixture302 is the original100 payment subject; sibling301 is not made payer by caller choice");
+        assertEquals(0,count(CONTRIBUTION)); assertLegacy();
+    }
+    @Test void reservedAdjustmentIndexNameCollisionMustBeRejectedBeforeAnyDdl() {
+        db.execute("ALTER TABLE coop_settlement_adjustment ADD UNIQUE KEY uk_g_cash_adjustment_event(id)");
+        assertEquals(1,preflight(),"existing planned index name is a migration blocker even without new columns");
+        assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
+        assertEquals(0,newTables()); assertEquals(0,newHeadColumns()); assertLegacy();
+        assertEquals(List.of("id"),indexColumns("coop_settlement_adjustment","uk_g_cash_adjustment_event"));
+    }
+    @Test void interruptedEmptyMigrationNeedsSafeRollbackBeforeAdjustmentAlterExists() throws Exception {
+        List<Map<String,Object>> columns=legacyColumns(); List<Map<String,Object>> indexes=legacyIndexes();
+        assertEquals(0,preflight());
+        String text=Files.readString(sql.resolve("migration_20261023_g_cash_evidence_expand.sql"))
+                .replaceAll("(?m)^\\s*--.*$","");
+        int executed=0;
+        for (String part:text.split(";")) {
+            String statement=part.trim(); if (statement.isEmpty()) continue;
+            if (statement.startsWith("ALTER TABLE coop_settlement_adjustment")) break;
+            db.execute(statement); executed++;
+        }
+        assertEquals(5,executed); // preflight SELECT, three CREATEs, first ALTER each actually auto-committed
+        assertEquals(3,newTables()); assertEquals(1,newHeadColumns());
+        assertEquals(0,count(CLOSE)); assertEquals(0,count(CONTRIBUTION)); assertEquals(0,count(EVENT));
+        assertDoesNotThrow(()->GCashEvidenceEmptyRecovery.recoverEmpty(source,sql.toAbsolutePath().normalize().getParent().getParent()),
+                "empty partial apply must have a reviewed recovery route; no money/evidence row may be removed");
+        assertEquals(0,newTables()); assertEquals(columns,legacyColumns()); assertEquals(indexes,legacyIndexes()); assertLegacy();
+    }
+
+    @Test void parentWithOnePositiveOriginalPayerStillRecordsAndReplaysBothRows() throws Exception {
+        expand();
+        CoopSettlementCashClose c=fenced(33,()->mapper.recordClose(close(33)));
+        CoopSettlementCashContribution payer=contribution(c.getId(),302,33,"100.00"); payer.setParentOrderNo("PARENT-302");
+        CoopSettlementCashContribution saved=fenced(33,()->mapper.recordContribution(payer));
+        assertEquals(saved.getId(),fenced(33,()->mapper.recordContribution(payer)).getId());
+        CoopSettlementCashContribution child=contribution(c.getId(),301,33,"0.00"); child.setParentOrderNo("PARENT-302");
+        child.setPayerRegistrationId(302L); child.setPayerOrderNo("G-REG-302");
+        assertEquals(302L,fenced(33,()->mapper.recordContribution(child)).getPayerRegistrationId());
+        assertEquals(2,count(CONTRIBUTION)); assertLegacy();
+    }
+    @Test void parentWithAllZeroAmountsHasNoProvenPaymentSubject() throws Exception {
+        expand(); db.update("UPDATE cms_registration SET payable_amount=0 WHERE id=302");
+        CoopSettlementCashClose c=fenced(33,()->mapper.recordClose(zeroClose(33,2)));
+        CoopSettlementCashContribution unknown=contribution(c.getId(),302,33,"0.00"); unknown.setParentOrderNo("PARENT-302");
+        IllegalStateException rejected=assertThrows(IllegalStateException.class,()->fenced(33,()->mapper.recordContribution(unknown)));
+        assertEquals("CASH_EVIDENCE_PAYER_OR_SOURCE_IDENTITY_UNPROVEN",rejected.getMessage());
+        assertEquals(0,count(CONTRIBUTION)); assertLegacy();
+    }
+    @Test void parentWithTwoPositiveOrMissingSiblingAmountsCannotGuessItsPayer() throws Exception {
+        expand(); CoopSettlementCashClose c=fenced(33,()->mapper.recordClose(close(33)));
+        CoopSettlementCashContribution payer=contribution(c.getId(),302,33,"100.00"); payer.setParentOrderNo("PARENT-302");
+        db.update("UPDATE cms_registration SET payable_amount=1 WHERE id=301");
+        assertThrows(IllegalStateException.class,()->fenced(33,()->mapper.recordContribution(payer)));
+        db.update("UPDATE cms_registration SET payable_amount=NULL WHERE id=301");
+        assertThrows(IllegalStateException.class,()->fenced(33,()->mapper.recordContribution(payer)));
+        assertEquals(0,count(CONTRIBUTION)); assertLegacy();
+    }
+    @Test void nullParentCannotBorrowPayerThroughDirectInsertEither() throws Exception {
+        expand(); CoopSettlementCashClose c=evidence(11,101,"10.00");
+        assertThrows(DataAccessException.class,()->db.update("INSERT INTO "+CONTRIBUTION
+                +"(cash_close_id,registration_id,payer_registration_id,parent_order_no,registration_no,payer_order_no,owner_type,owner_id,source_topic_id,"
+                +"snapshot_payment_status,snapshot_registration_status,snapshot_verification_status,snapshot_payable_amount,sales_basis_amount,registration_snapshot,source_fingerprint)"
+                +" VALUES(?,102,101,NULL,'G-REG-102','G-REG-101',1,11,11,0,1,0,90,0,'{}',?)",c.getId(),HASH));
+        assertEquals(1,count(CONTRIBUTION)); assertLegacy();
+    }
+    @Test void everyPlannedLegacyTableIndexNameIsABeforeDdlBlocker() {
+        Map<String,List<String>> planned=new LinkedHashMap<>();
+        planned.put("coop_settlement",List.of("idx_g_cash_head_member","idx_g_cash_head_close","idx_g_cash_head_initiator","uk_g_cash_head_id_close","uk_g_cash_global_head"));
+        planned.put("coop_settlement_adjustment",List.of("idx_g_cash_adjustment_event","idx_g_cash_adjustment_head","uk_g_cash_adjustment_event"));
+        planned.forEach((table,names)->names.forEach(name->{
+            db.execute("ALTER TABLE "+table+" ADD KEY "+name+"(id)");
+            assertEquals(1,preflight(),name);
+            assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
+            assertEquals(0,newTables()); assertEquals(0,newHeadColumns()); assertEquals(List.of("id"),indexColumns(table,name)); assertLegacy();
+            db.execute("ALTER TABLE "+table+" DROP INDEX "+name); // only the fixture object created immediately above.
+        }));
+        assertEquals(0,preflight());
+    }
+    @Test void plannedCheckAndForeignKeySymbolsAreBeforeDdlBlockers() {
+        db.execute("ALTER TABLE cms_topic ADD CONSTRAINT ck_g_cash_close CHECK(id>0)");
+        assertEquals(1,preflight());
+        assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
+        assertEquals(0,newTables()); assertEquals(0,newHeadColumns()); assertLegacy();
+        db.execute("ALTER TABLE cms_topic DROP CHECK ck_g_cash_close");
+        db.execute("ALTER TABLE cms_topic ADD recovery_fixture_member BIGINT UNSIGNED NULL, "
+                +"ADD CONSTRAINT fk_g_cash_close_member FOREIGN KEY(recovery_fixture_member) REFERENCES ums_member(id)");
+        assertEquals(1,preflight());
+        assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
+        assertEquals(0,newTables()); assertEquals(0,newHeadColumns()); assertLegacy();
+    }
+    @Test void everyEmptyCommittedDdlPrefixCanRecoverAndForwardApplyAgain() throws Exception {
+        List<Map<String,Object>> columns=legacyColumns(); List<Map<String,Object>> indexes=legacyIndexes();
+        for (int stage=1;stage<=5;stage++) {
+            applyCommittedPrefix(stage);
+            GCashEvidenceEmptyRecovery.Result result=GCashEvidenceEmptyRecovery.recoverEmpty(source,sql.toAbsolutePath().normalize().getParent().getParent());
+            assertEquals(stage,result.stage());
+            assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?",Integer.class,result.referenceSchema()));
+            assertEquals(0,newTables()); assertEquals(columns,legacyColumns()); assertEquals(indexes,legacyIndexes()); assertLegacy();
+            assertEquals(0,preflight());
+        }
+        expand(); assertEquals(3,newTables()); assertLegacy();
+    }
+    @Test void recoveryRefusesNonemptyCommittedClosePrefix() throws Exception {
+        applyCommittedPrefix(1); bindExistingMapper();
+        fenced(11,()->mapper.recordClose(close(11)));
+        assertThrows(IllegalStateException.class,()->GCashEvidenceEmptyRecovery.recoverEmpty(source,sql.toAbsolutePath().normalize().getParent().getParent()));
+        assertEquals(1,newTables()); assertEquals(1,count(CLOSE)); assertEquals(0,newHeadColumns()); assertLegacy();
+    }
+    @Test void recoveryRefusesUnknownColumnsAndChangedCheckEvenWhenEmpty() throws Exception {
+        applyCommittedPrefix(3);
+        db.execute("ALTER TABLE "+CLOSE+" ADD unknown_owner_fact INT NULL");
+        assertThrows(IllegalStateException.class,()->GCashEvidenceEmptyRecovery.recoverEmpty(source,sql.toAbsolutePath().normalize().getParent().getParent()));
+        assertEquals(3,newTables()); assertLegacy();
+        db.execute("ALTER TABLE "+CLOSE+" DROP COLUMN unknown_owner_fact"); // only own test column.
+        db.execute("ALTER TABLE "+CLOSE+" DROP CHECK ck_g_cash_close, ADD CONSTRAINT ck_g_cash_close CHECK(topic_id>0)");
+        assertThrows(IllegalStateException.class,()->GCashEvidenceEmptyRecovery.recoverEmpty(source,sql.toAbsolutePath().normalize().getParent().getParent()));
+        assertEquals(3,newTables()); assertEquals(0,count(CLOSE)); assertLegacy();
+    }
+    @Test void recoveryRefusesAccountingHeadAtCommittedHeadStage() throws Exception {
+        applyCommittedPrefix(4); head(10,11,null,"ACCOUNTING","PLATFORM","platform",1,null);
+        assertThrows(IllegalStateException.class,()->GCashEvidenceEmptyRecovery.recoverEmpty(source,sql.toAbsolutePath().normalize().getParent().getParent()));
+        assertEquals(3,newTables()); assertEquals(1,newHeadColumns()); assertEquals(2,count("coop_settlement")); assertLegacy();
+    }
+    @Test void fullOnlyRollbackRefusesPrefixBeforeReferencingMissingColumns() throws Exception {
+        applyCommittedPrefix(2);
+        assertThrows(DataAccessException.class,()->run("_deploy_g_cash_evidence_empty_rollback_20261023.sql"));
+        assertEquals(2,newTables()); assertEquals(0,newHeadColumns()); assertLegacy();
+    }
+
+    private void applyCommittedPrefix(int ddlCount) throws Exception {
+        String text=Files.readString(sql.resolve("migration_20261023_g_cash_evidence_expand.sql")).replaceAll("(?m)^\\s*--.*$","");
+        List<String> statements=Arrays.stream(text.split(";")).map(String::trim).filter(v->!v.isEmpty()).toList();
+        assertEquals(7,statements.size());
+        db.execute(statements.get(0));
+        for (int i=1;i<=ddlCount;i++) db.execute(statements.get(i));
+        assertEquals(Math.min(ddlCount,3),newTables());
+    }
+    private void bindExistingMapper() throws Exception {
+        SqlSessionFactoryBean factory=new SqlSessionFactoryBean(); factory.setDataSource(source);
+        factory.setMapperLocations(new ClassPathResource("mapper/business/CoopSettlementCashEvidenceMapper.xml"));
+        mapper=new SqlSessionTemplate(factory.getObject()).getMapper(CoopSettlementCashEvidenceMapper.class);
+    }
+
     private void expand() throws Exception {
         run("migration_20261023_g_cash_evidence_expand.sql");
         SqlSessionFactoryBean factory=new SqlSessionFactoryBean(); factory.setDataSource(source);

@@ -1,0 +1,29 @@
+{
+  "trusted_verifier_sha": "8da17d4c4efed6ebbe426e6257ecaf174a349fa8",
+  "reviewed_by": "root",
+  "source": "Independent public F branch, reviewed delta not candidate self-approval",
+  "protected_files_sha256": {
+    "ci/architecture/gate.py": "65c269353a2dc96f48072e06285ea5035875306d3e677cd1e7b807a0bc8e927e",
+    "ci/architecture/baseline.json": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+    "ci/architecture/locking-select-baseline.proposal.json": "c71bbc7fdbf4996b68f5977ebd344dac150f56128dea4837c69ec3f91b83e52b",
+    "ci/architecture/owners.json": "74add8f567f34f84e11c7a4c8b47a2eb2b522bb52d8c78d5ddca094660d53d55",
+    "ci/architecture/commands.json": "55f5773dd613d6728985d3daea7e4fca6c3788171c5338d97d5919cf1ab7b0de"
+  },
+  "business_scope": [
+    "AI_QUOTA_RESERVATION",
+    "PHOTO_CHECK_INTENT"
+  ],
+  "coverage": "PARTIAL",
+  "legacy_baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "baseline_and_locking_proposal_byte_unchanged": true,
+  "root_checks": [
+    "Reviewed production policy/command/schema loader, incremental edge rule and new21 CLI negative controls",
+    "Original NEW_TABLE_WRITER/scope/locking cache blockers retained",
+    "Current candidate exact protected bytes match independently fetched F8da"
+  ],
+  "actual_source_ci": "PENDING_NEXT_FULL_WORKFLOW",
+  "limits": [
+    "Only two known whole-table facts, no field ownership or complete Java/service invocation graph",
+    "Unknown SQL effects remain review requirements"
+  ]
+}
