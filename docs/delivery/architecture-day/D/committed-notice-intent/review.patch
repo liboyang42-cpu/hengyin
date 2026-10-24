@@ -1,0 +1,88 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCloseMybatisIntegrationTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCloseMybatisIntegrationTest.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCloseMybatisIntegrationTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCloseMybatisIntegrationTest.java
+@@ -92,6 +92,7 @@
+         details = spy(detailService);
+         CoopComplaintServiceImpl target = new CoopComplaintServiceImpl();
+         ReflectionTestUtils.setField(target, "businessNotice", mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
++        ReflectionTestUtils.setField(target, "committedOfficialNoticeService", mock(com.chengyinhub.business.service.support.CommittedOfficialNoticeService.class));
+         ReflectionTestUtils.setField(target, "coopComplaintMapper", mapper);
+         ReflectionTestUtils.setField(target, "umsMemberService", members);
+         ReflectionTestUtils.setField(target, "umsMemberBalanceDetailService", details);
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImplTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImplTest.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImplTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImplTest.java
+@@ -35,6 +35,7 @@
+     private IPlayerWithdrawalCooldownService cooldownService;
+     private CoopComplaintServiceImpl svc;
+     private com.chengyinhub.business.service.support.CommittedBusinessNotice notices;
++    private com.chengyinhub.business.service.support.CommittedOfficialNoticeService durableNotices;
+
+     private final com.chengyinhub.business.service.support.SettlementDebtLedger debtLedger = org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class);
+
+@@ -46,6 +47,8 @@
+         svc = new CoopComplaintServiceImpl();
+         notices = mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class);
+         ReflectionTestUtils.setField(svc, "businessNotice", notices);
++        durableNotices = mock(com.chengyinhub.business.service.support.CommittedOfficialNoticeService.class);
++        ReflectionTestUtils.setField(svc, "committedOfficialNoticeService", durableNotices);
+         ReflectionTestUtils.setField(svc, "settlementDebtLedger", debtLedger);
+         ReflectionTestUtils.setField(svc, "coopComplaintMapper", mapper);
+         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
+@@ -94,7 +97,9 @@
+         verify(mapper).claimAcceptedForAdvance(eq(1L), eq(new BigDecimal("50")), eq(999L), any());
+         // 资金状态迁移不得再走无旧状态条件的通用 UPDATE —— 那正是双付的成因。
+         verify(mapper, never()).updateCoopComplaint(any());
+-        verify(notices).sendAfterCommit(eq(100L), any(), any(), eq("complaint-advance"), eq(1L));
++        verify(durableNotices).enqueueOfficial(eq("complaint-advance:1"), eq(100L),
++                eq("投诉处理有进展"), eq("工单#1已先行垫付 ¥50，请在投诉记录查看处理进度。"));
++        org.mockito.Mockito.verifyNoInteractions(notices);
+     }
+
+     /** ★并发双付:第二个 advance 抢不到 CAS,必须在任何余额变动之前出局。 */
+@@ -111,7 +116,7 @@
+         verify(umsMemberService, never()).addBalance(any(), any());
+         verify(balanceDetailService, never()).insertUmsMemberBalanceDetail(any());
+         verify(cooldownService, never()).registerFromPositiveComplaintDetail(any(), any(), any(), any());
+-        org.mockito.Mockito.verifyNoInteractions(notices);
++        org.mockito.Mockito.verifyNoInteractions(notices, durableNotices);
+     }
+
+     /** 冷静期必须挂在刚插入那条明细的 generated id 上,不许按 complaintId 二次模糊查。 */
+diff --git a/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java b/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java
+--- a/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java
++++ b/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java
+@@ -38,6 +38,7 @@
+             Map.entry("clubSessionReconciliationTask.run()", "com.chengyinhub.business.task.ClubSessionReconciliationTask"),
+             Map.entry("dataRetentionCleanupTask.run()", "com.chengyinhub.business.task.DataRetentionCleanupTask"),
+             Map.entry("imNotificationDeliveryTask.deliverPending()", "com.chengyinhub.business.task.ImNotificationDeliveryTask"),
++            Map.entry("committedOfficialNoticeTask.deliverPending()", "com.chengyinhub.business.task.CommittedOfficialNoticeTask"),
+             Map.entry("merchantAftercareTimeoutTask.run()", "com.chengyinhub.business.task.MerchantAftercareTimeoutTask"),
+             Map.entry("merchantCommerceReconcileTask.reconcile()", "com.chengyinhub.business.task.MerchantCommerceReconcileTask"),
+             Map.entry("merchantCrmDeliveryRecoveryTask.run()", "com.chengyinhub.business.task.MerchantCrmDeliveryRecoveryTask"),
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java
+@@ -28,6 +28,8 @@
+
+     @Autowired
+     private com.chengyinhub.business.service.support.CommittedBusinessNotice businessNotice;
++    @Autowired
++    private com.chengyinhub.business.service.support.CommittedOfficialNoticeService committedOfficialNoticeService;
+     @Autowired
+     private IUmsMemberService umsMemberService;
+     @Autowired
+@@ -94,9 +96,8 @@
+         // 禁止按 complaintId 二次模糊查「刚才那条」，也禁止把它挪到事务外。
+         playerWithdrawalCooldownService.registerFromPositiveComplaintDetail(
+                 detail.getId(), c.getReporterMemberId(), id, amount);
+-        businessNotice.sendAfterCommit(c.getReporterMemberId(), "投诉处理有进展",
+-                "工单#" + id + "已先行垫付 ¥" + amount.toPlainString() + "，请在投诉记录查看处理进度。",
+-                "complaint-advance", id);
++        committedOfficialNoticeService.enqueueOfficial("complaint-advance:" + id, c.getReporterMemberId(), "投诉处理有进展",
++                "工单#" + id + "已先行垫付 ¥" + amount.toPlainString() + "，请在投诉记录查看处理进度。");
+         return 1;
+     }
+
+
+# End of reviewed patch: four shared paths only.

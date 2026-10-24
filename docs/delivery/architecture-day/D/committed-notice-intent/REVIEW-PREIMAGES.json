@@ -1,0 +1,22 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCloseMybatisIntegrationTest.java",
+    "base_sha256": "6381166294c72158ba1868dbf610ef5ce2f73b169bd2a44c2c955b98886f0fdc",
+    "patch_result_sha256": "585e1843a144c2f399a705c709e894acd6150ed3dbff911410b01d84b300491e"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImplTest.java",
+    "base_sha256": "409a34df402ae2db142264e4f77c62d28627406ae51ba088ac7b84a3ed664626",
+    "patch_result_sha256": "d0eae078a90b14f0e5d7c737ad311bc75574a7ce5e5bfde9e480fcf325d6ec9d"
+  },
+  {
+    "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java",
+    "base_sha256": "90dd7154c56fa192e467b80ebfd88e5a96147f70ff6cc652c20503fdf2f31c11",
+    "patch_result_sha256": "908134983a04bf48e7701e0a1d83c984a6534286be20ddb992e0f5aed4a2b9cf"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java",
+    "base_sha256": "aabd9c9bc163ee3dd0cbbf4f1a5525bb9930a4db741747fcdf863cdeacb8f8f1",
+    "patch_result_sha256": "0ff42ecc7712fc0b28420bb722a05afe5adee7bf367fb2c74f7e06149c384548"
+  }
+]
