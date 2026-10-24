@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T10:17:15.433175+00:00",
+  "updated_utc": "2026-10-24T10:18:52.879234+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -43,14 +43,14 @@
       "host_id": "durable",
       "task": "\u7968\u7801\u5e94\u7528\u5c42\u5df2\u4ea4\uff0c\u7ee7\u7eed\u636e\u70b9\u6838\u9500\u4e8b\u52a1\u95ed\u5305\u63d0\u53d6",
       "ownership": "\u5e2d\u4f4d/\u7968\u7801/\u6838\u9500\u4e8b\u5b9e\uff1b\u5171\u4eab\u4e0b\u5355/\u9000\u6b3e\u6587\u4ef6\u53ea\u7ed9review.patch",
-      "dispatch": "Exact workspace/first-source probe sent; still no fresh tool evidence, not counted as resumed implementation",
-      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:17",
+      "dispatch": "Workspace probe read back actual source work; continues current task",
+      "last_cursor": "04667806-5015-4116-b5cc-5f2df01b0163:18",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
       },
       "last_turn_id": "01a16d5a-8f05-7165-9329-80777539349c",
-      "last_progress_evidence": "No fresh tool in compact snapshot",
+      "last_progress_evidence": "Actual command completed; station transaction migration and old fixture wiring implemented, explicit proxy/transaction-manager checks being authored; Java NOT_RUN",
       "last_tool_status": null
     },
     "D": {
@@ -118,8 +118,8 @@
       "host_id": "durable",
       "task": "D/bc5 actual complaint rejection path independent review",
       "ownership": "\u53ea\u8bfb\u72ec\u7acb\u5ba1\u67e5\uff0c\u672a\u8fd0\u884c\u5355\u5217",
-      "dispatch": "G findings forwarded, next precise D task sent; active readback pending",
-      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:20",
+      "dispatch": "Renewed D/bc5 audit; active readback; independent new tool result pending",
+      "last_cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:21",
       "last_observed_status": {
         "type": "active",
         "activeFlags": []
@@ -263,19 +263,14 @@
     "integrated_at": "7da3e4ea385596aa850dc760f2cf6adc6c554602"
   },
   "latest_targeted_run": {
-    "run_id": 40084928209,
-    "source": "07359d3dac777b67090f7febfbaed68b3ec5d336",
-    "frozen_branch": "codex/architecture-day-facts-rr-notice-ci2-20261024",
+    "run_id": 40085356128,
+    "source": "251dbdd8c28ac2e05c815e044afb02c584fd7908",
+    "frozen_branch": "codex/architecture-day-facts-rr-notice-ci3-20261024",
     "batch": "architecture-day-verified-payment-facts",
     "expected": 4,
-    "executed": 0,
-    "verdict": "FAIL",
-    "plan_precheck": "PASS",
-    "current_step": "WechatVerifiedPaymentFactMySqlIT / Run class on real storage and read back",
-    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40084928209",
-    "cleanup": "CLEAN",
-    "failure": "Admin testCompile: missing checked Exception declaration, two missing static imports, one generic assertEquals overload ambiguity; no cases executed",
-    "source_repairs": "4 test files,5 insertions/2 deletions, test bodies and assertions preserved; new candidate pending compile"
+    "executed": "NOT_YET_READ_BACK",
+    "verdict": "DISPATCHED",
+    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40085356128"
   },
   "map_input_P2": {
     "source": "H reviewed E8372, inherited input-node filtering changes cache route identity",
@@ -352,13 +347,13 @@
     "existing_chats": 8,
     "new_chats": 0,
     "actions": "C/G/H renewed precise tasks, B priority failure self-lock, F actual C type; D/E explicit environment probes",
-    "readback": "Eight active; D bc5 actual delivery and E tool record now read back. New tools for C/H checked separately.",
+    "readback": "A57e,Dbc5,F4bb actual frozen deliveries; C new transaction source work, E source fetch tool; B/G ongoing code and H renewed independent review. Not acceptance.",
     "automation": "hengyin-agent ACTIVE every10min persisted policy verified"
   },
   "latest_combined_source_current": {
     "receipt": "batch-ACDEF-source-20261024.json",
     "parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
-    "status": "07359 failed Admin testCompile,0/4,CLEAN; four minimal fixture compilation repairs assembled, production source unchanged",
+    "status": "251dbdd four minimal test compile repairs pushed; newest4-case workflow dispatched, no result yet",
     "Java_DB": "NOT_RUN",
     "registry_classes": 104,
     "integrated_at": "56d0e68e6bd2cdb2066af5940c497587df131d8c"
@@ -373,6 +368,21 @@
       "verdict": "FAIL",
       "failure": "Two strict workflow/registry option-order assertions; Java not reached",
       "repair": "Strict options order aligned. Local full69 first attempt:68 passed/1 loopback bind PermissionError; not code failure. Hosted follow-up precheck passed on exact07359 source."
+    },
+    {
+      "run_id": 40084928209,
+      "source": "07359d3dac777b67090f7febfbaed68b3ec5d336",
+      "frozen_branch": "codex/architecture-day-facts-rr-notice-ci2-20261024",
+      "batch": "architecture-day-verified-payment-facts",
+      "expected": 4,
+      "executed": 0,
+      "verdict": "FAIL",
+      "plan_precheck": "PASS",
+      "current_step": "WechatVerifiedPaymentFactMySqlIT / Run class on real storage and read back",
+      "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40084928209",
+      "cleanup": "CLEAN",
+      "failure": "Admin testCompile: missing checked Exception declaration, two missing static imports, one generic assertEquals overload ambiguity; no cases executed",
+      "source_repairs": "4 test files,5 insertions/2 deletions, test bodies and assertions preserved; new candidate pending compile"
     }
   ],
   "next_batch_frozen_deliveries": {

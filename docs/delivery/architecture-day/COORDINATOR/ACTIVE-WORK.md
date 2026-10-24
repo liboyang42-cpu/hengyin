@@ -36,3 +36,5 @@ B外层失败release自锁已有源码证据并已派修，尚无真实MySQL验�
 最新托管运行[40084928209](https://github.com/liboyang42-cpu/hengyin/actions/runs/40084928209)绑定独立冻结候选 `07359d3dac777b67090f7febfbaed68b3ec5d336`：Plan/precheck PASS，真存储类作业执行中；实际Java/4条XML报告和CLEAN尚待回读。
 
 上述run40084928209已失败于Admin testCompile：四个测试文件的checked Exception声明、两处静态导入和一处断言泛型歧义。实跑0/4，清理CLEAN。root已完成最小5增/2删夹具修复，保留原断言和用例，生产源码未改；待新冻结候选验证。
+
+最新已派发[40085356128](https://github.com/liboyang42-cpu/hengyin/actions/runs/40085356128)，绑定新冻结候选 `251dbdd8c28ac2e05c815e044afb02c584fd7908`，仅复验同一4条真存储类和所需编译，不是全量回归，结果待回读。A57e、Dbc5、F4bb已有实际源码交付；C新事务迁移已有工具产出，E已有源码读取记录。
