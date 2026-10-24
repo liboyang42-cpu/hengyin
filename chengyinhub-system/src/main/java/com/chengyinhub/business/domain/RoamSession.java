@@ -20,6 +20,7 @@ public class RoamSession {
     private Date startedAt;
     private Date finishedAt;
     private Date locationClearedAt;
+    /** 客户端自报里程(米),不可信:落库前由 ApiRoamController.clampClientDistance 封顶,仅用于展示、不参与结算。 */
     private Integer distanceM;
     private Integer tilesRevealed;
     private Integer poisFound;

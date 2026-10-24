@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "roam_session_distance_comment_20261024": ["roam"],
     "preset_route_node_geo_numeric_20261024": ["preset_route"],
     "roam_session_status_check_20261024": ["roam"],
     "merchant_wechat_qrcode_20261022": [],
