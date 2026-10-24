@@ -108,7 +108,8 @@ public class PlayNodeCompletionApplication {
         try { memberCollectibleMapper.insertMemberCollectible(c); } catch (DuplicateKeyException ignore) {}
     }
 
-    /** M9 埋点:记录一次节点尝试(best-effort,失败不影响主流程)。attemptType 1答题2扫码3GPS4拍照;result 1过0错2放弃 */
+    /** M9 埋点:记录一次节点尝试。普通旁路失败保持 best-effort；瞬态数据库失败必须交外层回滚。
+     * attemptType 1答题2扫码3GPS4拍照;result 1过0错2放弃 */
     public void logAttempt(Long memberId, CmsTopicNode node, Long actId, int attemptType, int result, String wrongAnswer) {
         try {
             com.chengyinhub.business.domain.PlayAttemptLog log = new com.chengyinhub.business.domain.PlayAttemptLog();
@@ -122,6 +123,9 @@ public class PlayNodeCompletionApplication {
             log.setWrongAnswer(wrongAnswer);
             log.setCreatedAt(new java.util.Date());
             playAttemptLogMapper.insertPlayAttemptLog(log);
+        } catch (TransientDataAccessException failure) {
+            // A lock failure can abort the database transaction; let the outer owner roll back/retry.
+            throw failure;
         } catch (Exception e) {
             logger.warn("埋点写入失败 member={} activity={} topic={} node={} attemptType={} result={} errorType={}",
                     memberId, actId,
@@ -510,6 +514,7 @@ public class PlayNodeCompletionApplication {
      * 它出问题不能让节点完成失败,否则玩家会卡在这一站反复重试,而原因是一个
      * 跟他这次动作毫无关系的九宫格。少填一格是可修的(evaluate 返回的是「当前
      * 该是什么样」,下一次完成会把漏掉的补上),让整条游玩链路挂掉不可修。
+     * 数据库瞬态失败例外：原事务可能已经中止，必须交外层回滚，不能继续完成/回执。
      */
     public void refreshBingo(Long memberId, Long topicId, Map<String, Object> data)
     {
@@ -523,6 +528,9 @@ public class PlayNodeCompletionApplication {
                 bingo.put("rewardMask", card.getRewardMask());
                 data.put("bingo", bingo);
             }
+        } catch (TransientDataAccessException failure) {
+            // A lock failure can abort the database transaction; let the outer owner roll back/retry.
+            throw failure;
         } catch (Exception e) {
             logger.error("宾果刷新失败 member={} topic={},节点完成不受影响,下次完成会自愈",
                     memberId, topicId, e);
