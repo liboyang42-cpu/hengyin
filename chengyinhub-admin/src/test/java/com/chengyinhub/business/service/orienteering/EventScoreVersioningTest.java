@@ -260,7 +260,13 @@ class EventScoreVersioningTest {
                 () -> wired.persistOriginal("fin-sc-w001"));
         assertEquals(EventScoreVersioning.AUTHORIZED_SESSION, clientSession.getWaitingCapability());
         verify(writer, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
-        List<OrientScoreEntry> persisted = wired.persistOriginal("fin-sc-w001", memberId -> Long.valueOf(88L), 7L);
+        assertEquals(EventScoreVersioning.AUTHORIZED_SESSION,
+                assertThrows(OrienteeringEventException.class,
+                        () -> wired.persistOriginal("fin-sc-w001", (memberId, originalSessionId) -> Long.valueOf(99L),
+                                7L, 88L)).getWaitingCapability());
+        verify(writer, never()).appendEntry(any(), any(), anyInt(), any(), any(), any(), any(), any());
+        List<OrientScoreEntry> persisted = wired.persistOriginal("fin-sc-w001",
+                (memberId, originalSessionId) -> originalSessionId, 7L, 88L);
         assertEquals(2, persisted.size());
         assertEquals("scr-led-01", persisted.get(0).getIdempotencyKey());
 

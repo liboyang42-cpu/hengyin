@@ -252,14 +252,15 @@ public final class EventScoreVersioning {
                 "原计分写入需要已授权原局", AUTHORIZED_SESSION);
     }
 
-    public List<OrientScoreEntry> persistOriginal(String finishRequestId, OwnedSessionSource owned, Long memberId) {
+    public List<OrientScoreEntry> persistOriginal(String finishRequestId, OwnedSessionSource owned, Long memberId,
+            Long originalSessionId) {
         ResultVersion result = readback(finishRequestId);
-        if (originalScoring == null || owned == null) {
+        if (originalScoring == null || owned == null || originalSessionId == null || originalSessionId.longValue() <= 0L) {
             throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
                     "原计分写入需要已授权原局", AUTHORIZED_SESSION);
         }
-        Long authorized = owned.ownedSessionId(memberId);
-        if (authorized == null || authorized.longValue() <= 0L) {
+        Long authorized = owned.ownedSessionId(memberId, originalSessionId);
+        if (authorized == null || authorized.longValue() != originalSessionId.longValue()) {
             throw new OrienteeringEventException(OrienteeringEventException.WAITING_SOURCE,
                     "原计分写入需要已授权原局", AUTHORIZED_SESSION);
         }
@@ -275,9 +276,9 @@ public final class EventScoreVersioning {
         return Collections.unmodifiableList(written);
     }
 
-    /** 服务端已核对归属的原局。客户端 sessionId 不能自己造这个结果。 */
+    /** 服务端按原局核对归属。返回成员最新局不能冒充这条 finish 的原局。 */
     public interface OwnedSessionSource {
-        Long ownedSessionId(Long memberId);
+        Long ownedSessionId(Long memberId, Long originalSessionId);
     }
 
     private static boolean legalScore(String dimension, String reasonCode) {

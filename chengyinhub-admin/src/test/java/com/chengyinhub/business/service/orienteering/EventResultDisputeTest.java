@@ -164,6 +164,16 @@ class EventResultDisputeTest {
         Map<String, Object> recovered = restarted.recoverFromOriginalRewardRead(7L, 30L);
         assertEquals("PARTIAL", recovered.get("state"));
         assertEquals(30L, recovered.get("session_id"));
+        Map<String, Object> itemized = new LinkedHashMap<String, Object>();
+        itemized.put("state", "PARTIAL");
+        itemized.put("items", List.of(Integer.valueOf(1000), Integer.valueOf(1400)));
+        EventResultDispute partial = new EventResultDispute(scores, (memberId, sessionId) -> itemized);
+        partial.open("fin-disp-01", "分项不是总额", "dsp-partial");
+        assertEquals(EventResultDispute.ORIGINAL_REWARD_READ,
+                assertThrows(OrienteeringEventException.class,
+                        () -> partial.restoreOriginalReward("dsp-partial", "rst-partial", 7L, 30L))
+                        .getWaitingCapability());
+        assertEquals(EventResultDispute.STATUS_PENDING, partial.readback("dsp-partial").status());
         assertEquals(0, restarted.recoverUnknown("c04-reward-missing").dispute == null ? 0 : 1);
         assertEquals(EventResultDispute.OUTCOME_NOT_FOUND,
                 restarted.recoverUnknown("c04-reward-missing").outcome);

@@ -139,7 +139,14 @@ public final class EventResultDispute {
     }
 
     private static Integer confirmedRewardCenti(Map<String, Object> fact) {
-        if (fact == null || !"AVAILABLE".equals(fact.get("state")) || !(fact.get("originalRewardCenti") instanceof Number)) {
+        if (fact == null) {
+            return null;
+        }
+        Object state = fact.get("state");
+        if ("PARTIAL".equals(state) || "UNAVAILABLE".equals(state)) {
+            return null;
+        }
+        if (!"AVAILABLE".equals(state) || !(fact.get("originalRewardCenti") instanceof Number)) {
             return null;
         }
         return Integer.valueOf(((Number) fact.get("originalRewardCenti")).intValue());
