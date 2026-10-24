@@ -1,0 +1,166 @@
+{
+  "source": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+  "tree": "2808646e339058941f289f47d7d7549cd4bbe8d7",
+  "parent": "1e7a3332df68e0ad583543168528faac9d46379c",
+  "review_worktree": "/workspace/hengyin-h-review",
+  "review_start_head": "e5d356447a3039e1755249a12af66f766ae8b12a",
+  "public_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "read_files": [
+    {
+      "path": "chengyinhub-admin/sql/migration_ai_theme_draft_request_intent_20261024.sql",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "cb24b1401aacb0ea46deda68b3f47c48a39ae1cb"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "b6a74b194f80ac9c6de808bc0a8b871be2d6ad23"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/resources/application.yml",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "fc347fddd60df20aa2467e3cc2f8deed5dbcb1f2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/AiThemeDraftIntentRow.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "a33ca10e256ad60485218e0ae654269684885909"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/ai/AiThemeDraftExecuteReq.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "857160644b209a2c3f343137c035a5db527181f7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/ai/AiThemeDraftPrepareReq.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "4057cd3487f0d858f9d685304daceb28bb25c449"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ai/AiThemeDraftIntentState.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "b95dd7ecb95b3002d03c1372e15c5e4620420629"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ai/AiThemeDraftIntentView.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "7774c86eb445c60162374b4de1f86ded497b8757"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ai/AiThemeDraftRecoveryItem.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "7a1d231cd64900ff47c23c38af57a59b3c16899f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AiThemeDraftIntentMapper.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "716da961b06d210f2e9ce282862baf4739837cf2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "dae442a4ed9033607ab5e762effb9c6becff3c3f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "7c1db5029e1bcc78dea157a4347983605720cf96"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlan.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "42e3a65a862b5b4483fd1cfd386dbe22b6fd005e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiThemeDraftPlanRejectedException.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "2a90db54ae95025a8f6fb8a60a09d974acb647ef"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "160d931dac6d344acde9b9c95ab82897af2cb91a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "0588449ff30f465f374a30cdfb8e7b6a2dd869e7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "8fb0e0f0ed3d62096dcd4f066d527daab5fd9dbf"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/AiQuotaRecoveryTask.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "3163ead68f8213d2441a266b3d365b0dac2b1d45"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiThemeDraftIntentMapper.xml",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "7595a253f713c872843dc2c07bbce66f0d387398"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/THEME-DURABILITY-02/IMPLEMENTATION.md",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "6447d8fab4e9d7d9e8a21abc70ca9f6b60ec6b0f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderResultReceivedException.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "b918af2bda7485e4cfb8ceb008951558df9f5a85"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderOutcomeUnknownException.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "241b35fcde9443f7d5beb864625703fc5d90f306"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "05d6fda769001b49d21d36bd0c3fdcc62f85a10e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorPreparedThemeDraftTest.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "9bf9e663d6180c147812a20468a20323501c6c0b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayPreparedLatePreflightTest.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "2eb3ab7372e5444df0909e4370fffe34eec12fd0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiThemeDraftIntentMySqlRedisIT.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "6a2a266b741c8a4342782d4e46a398ed894a16fc"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/AiQuotaRecoveryTaskTest.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "f72425385c75de1bc9e7fee654690b29a15c503a"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiThemeDraftIntentServiceTest.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "c93c727575c39c0a2479904f0c27a91b4fccd4db"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiThemeDraftRequestTest.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "cb6224f71d6aa1b5466a5991f5628f5bae1d4fb7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiControllerTest.java",
+      "ref": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+      "sha": "a06ff84c22e5ace5894f18df60692d620a9c6f65"
+    }
+  ],
+  "runtime": "NOT_RUN; root run40058848452 reported in progress; no H runtime verification"
+}
