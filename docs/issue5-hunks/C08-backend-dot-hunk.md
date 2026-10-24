@@ -82,3 +82,21 @@ BUILD SUCCESS
 ```
 
 IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
+
+## Addendum 2026-10-23 18:46 America/Los_Angeles
+
+HEAD `5aa879a6e` tests. Class-level occupancy on `ChannelGovernanceProjectionTest`: unused in-membership `appeal()` throws REVOKED without occupying ban (phase stays `AUTHORIZED_READ_WRITE`, grant still present); unique `ban()` is the first BANNED write; later `appeal()` is APPEALING. Did not invent `recoverOriginal`. Leave occupancy remains.
+
+Parent surefire `com.chengyinhub.business.service.channel.*Test` **17/0** 2026-10-24T01:46:38Z：
+
+```
+Tests run: 4 -- ChannelGovernanceProjectionTest
+Tests run: 4 -- C08AccountSwitchRestartIsolationTest
+Tests run: 3 -- ChannelRevokeIsolationTest
+Tests run: 4 -- C08FirstJourneyIsolationTest
+Tests run: 2 -- FriendPermissionDistinctFromChannelTest
+Tests run: 17, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不是 100%。
