@@ -50,7 +50,7 @@ class ClmCommercePaymentProofMySqlIT {
         source=new DriverManagerDataSource(endpoint+schema+"?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true",
             MybatisItDatabase.user(),MybatisItDatabase.password());db=new JdbcTemplate(source);
         assertTrue(db.queryForObject("SELECT VERSION()",String.class).startsWith("8."));
-        P0AcceptanceSchema.baseTables(db,"ums_member","club","club_member","oms_order","merchant_subscription");
+        P0AcceptanceSchema.baseTables(db,"sys_config","ums_member","club","club_member","oms_order","merchant_subscription");
         P0AcceptanceSchema.migrations(source,"migration_club_open_settings_20260909.sql","migration_club_role_membership_20260823.sql",
             "migration_club_role_membership_resume_fence_20260826.sql","migration_20260821_commerce_order_idempotency.sql",
             "migration_business_audit_event_20260823.sql","migration_20261023_wx_pay_order_intent.sql",

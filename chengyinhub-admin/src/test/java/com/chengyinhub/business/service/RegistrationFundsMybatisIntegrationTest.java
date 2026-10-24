@@ -2486,6 +2486,10 @@ class RegistrationFundsMybatisIntegrationTest {
             IWechatPayService wechat, IRefundService refunds, AlarmService alarm) {
         com.chengyinhub.business.service.impl.TeamGroupServiceImpl target =
                 new com.chengyinhub.business.service.impl.TeamGroupServiceImpl();
+        ReflectionTestUtils.setField(target, "cancellationTransactions", transactionManager);
+        ReflectionTestUtils.setField(target, "verifiedPaymentFacts", verifiedFacts);
+        ReflectionTestUtils.setField(target, "cmsTopicMapper",
+                ReflectionTestUtils.getField(registrationTarget, "cmsTopicMapper"));
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", template.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(target, "cmsActivityMapper", template.getMapper(CmsActivityMapper.class));
         ReflectionTestUtils.setField(target, "omsTicketMapper", template.getMapper(OmsTicketMapper.class));
@@ -2499,15 +2503,27 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "alarmService", alarm);
         // 本套检查支付/退票落库；站内通知持久化另由取消通知事务测试覆盖。
         IImService notices = mock(IImService.class);
-        when(notices.sendSystem(any(), any(), any(), any())).thenReturn(1L);
+        when(notices.sendSystem(any(), any(), any(), any())).thenAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                    "取消通知必须仍在生产最终应用事务内");
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(dataSource),
+                    "取消报名、库存、积分和通知必须共用本套 SQL 数据源事务");
+            return 1L;
+        });
         ReflectionTestUtils.setField(target, "imService", notices);
         return target;
     }
 
-    /** 与生产 @Transactional 同一提交边界:取消在一个事务里,抛异常整体回滚。 */
+    /** 生产入口自行分段；最终报名/库存/积分/通知由其内部原 SQL manager 原子提交或回滚。 */
     private void cancelActivity(com.chengyinhub.business.service.impl.TeamGroupServiceImpl target) {
-        new TransactionTemplate(transactionManager).executeWithoutResult(
-                tx -> target.cancelActivityByOwner(55L, 1L, "场地临时不可用"));
+        assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                "调用取消入口前不能持有外层事务");
+        try {
+            target.cancelActivityByOwner(55L, 1L, "场地临时不可用");
+        } finally {
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                    "最终 phase 完成或失败后再独立读回资金与库存");
+        }
     }
 
     /** 用 JVM 时间经 JDBC 写 pay_expire_time,与任务读回比较走同一时区换算(避开库 NOW() 与 JVM 错位,§5-9)。 */

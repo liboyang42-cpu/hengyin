@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "run_id": 40106969030,
+  "source_sha": "ad2228771f532c21ac5328e577e308578d6fd231",
+  "class": "RegistrationCallbackIntentMySqlIT",
+  "executed": 14,
+  "passed": 14,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "xml_sha256": "966e05dbcd777823fd02ff55045a40b66f5a1d8b795f58975e10cf53166353e4",
+  "receipt_sha256": "b2d32965f1a17779a496bf0c50e78359f3c10e59f02cb4420a6c6582d4690822",
+  "scope": "Original signed callback/current-attempt/fact/consumption/DONE SQL scenarios, not full financial acceptance, provider/device/deployment",
+  "not_full_goal_acceptance": true
+}

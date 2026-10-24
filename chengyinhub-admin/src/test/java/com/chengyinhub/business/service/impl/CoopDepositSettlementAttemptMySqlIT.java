@@ -281,7 +281,8 @@ class CoopDepositSettlementAttemptMySqlIT {
         var originalFacts = gateway.queryOrderStatus(BUSINESS); // Real B writer queues the non-payable original business.
         var originalReference = CoopInviteServiceImpl.checkedDepositPaymentReference(originalFacts);
         assertEquals(4,real.findPaymentRecovery(originalReference).orElseThrow().state());
-        var failing = spy(real);
+        var target = org.springframework.test.util.AopTestUtils.<WechatVerifiedPaymentFactService>getUltimateTargetObject(real);
+        var failing = spy(target);
         doThrow(new IllegalStateException("INJECTED_BEFORE_RECOVERY_RECEIPT_COMPLETION"))
                 .when(failing).completePaymentRecovery(any(),eq(89L));
         ReflectionTestUtils.setField(depositOwner,"depositVerifiedFacts",failing);

@@ -337,6 +337,13 @@ class ClubEventTransferCancellationMySqlIT {
 
         TeamGroupServiceImpl teamTarget = new TeamGroupServiceImpl();
         ReflectionTestUtils.setField(teamTarget, "cancellationTransactions", transactionManager);
+        // 本套只有既有 2/2 已付款领域行；不构造供应商事实或让缺证据读取默认为成功。
+        ReflectionTestUtils.setField(teamTarget, "verifiedPaymentFacts",
+                mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class, invocation -> {
+                    if (invocation.getMethod().getDeclaringClass() == Object.class)
+                        return org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation);
+                    throw new AssertionError("本领域取消夹具不应读取供应商事实: " + invocation.getMethod().getName());
+                }));
         ReflectionTestUtils.setField(teamTarget, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
         ReflectionTestUtils.setField(teamTarget, "cmsTopicMapper", sql.getMapper(CmsTopicMapper.class));
         ReflectionTestUtils.setField(teamTarget, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));

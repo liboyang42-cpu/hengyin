@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T14:46:00Z",
+  "updated_utc": "2026-10-24T15:45:00Z",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -9,60 +9,52 @@
   "mode": "Fixed payment/refund/settlement integration batch; finish current other slices then queue; grouped regression after callers and fixtures close",
   "current_worker_assignments": {
     "A": {
+      "state": "delivered_waiting_validation",
+      "task": "4 cancellation SQL fixtures delivered and applied; original economic/rollback assertions retained",
       "thread_id": "01a16a22-3076-7196-88f5-86d5b2c83036",
-      "host_id": "durable",
-      "task": "取消phase源码已根端应用；复核原权限/锁顺序/原SUCCESS准入",
-      "last_verified_state": "active",
-      "verified_utc": "2026-10-24T14:39:00Z"
+      "host_id": "durable"
     },
     "B": {
+      "state": "active",
+      "task": "Finish original-reference refund gateway, close old current-alias overload, wire registration refund caller",
       "thread_id": "01a16a22-956c-723f-b51b-afcbee69802b",
-      "host_id": "durable",
-      "task": "六工厂+helper已应用；检查退款通知完整列/原事实生产顺序",
-      "last_verified_state": "active",
-      "verified_utc": "2026-10-24T14:39:00Z"
+      "host_id": "durable"
     },
     "C": {
+      "state": "delivered_waiting_validation",
+      "task": "Before-start typed notice, executable migration assertions and 3 cancellation fixtures applied; integrated comparator limitation recorded",
       "thread_id": "01a16a22-c697-7637-ae29-cdff6341000b",
-      "host_id": "durable",
-      "task": "清理800337已应用；实施BEFORE_START原微信持久提醒",
-      "last_verified_state": "active",
-      "verified_utc": "2026-10-24T14:39:00Z"
+      "host_id": "durable"
     },
     "D": {
+      "state": "delivered_waiting_validation",
+      "task": "Typed payment callers and free cancellation SQL fixture applied; preserve REQUIRED boundary in other two original cases",
       "thread_id": "01a16a22-f399-7110-ba27-ef3f7245603b",
-      "host_id": "durable",
-      "task": "ASR6f/b8b已应用；补组合必需caller/fixture并核对恢复",
-      "last_verified_state": "active",
-      "verified_utc": "2026-10-24T14:39:00Z"
+      "host_id": "durable"
     },
     "E": {
+      "state": "active",
+      "task": "ActivityCancelTest and HostWeatherCancelTest complete phase migration; original rules/assertions retained",
       "thread_id": "01a16a23-2723-72e4-813f-03d7f1aa6017",
-      "host_id": "durable",
-      "task": "付款proof9f0已应用；核对CLM/Commerce旧attempt准入",
-      "last_verified_state": "active",
-      "verified_utc": "2026-10-24T14:39:00Z"
+      "host_id": "durable"
     },
     "F": {
+      "state": "active",
+      "task": "Actual Spring beforeStartWx dependency closure and exact binding assertion; trusted six files remain exact 3d3a63d",
       "thread_id": "01a16a23-5e0c-736b-9fc1-d4d070393009",
-      "host_id": "durable",
-      "task": "新边界owner棘轮与真实新增C/NPC/资金类型登记",
-      "last_verified_state": "active",
-      "verified_utc": "2026-10-24T14:39:00Z"
+      "host_id": "durable"
     },
     "G": {
+      "state": "active",
+      "task": "Deposit original-payment reference bound to refund submission; consumption fence already integrated",
       "thread_id": "01a16a23-8904-73e8-a024-378a96f0800c",
-      "host_id": "durable",
-      "task": "修报名/押金SUCCESS current-attempt P1及原重放",
-      "last_verified_state": "active",
-      "verified_utc": "2026-10-24T14:39:00Z"
+      "host_id": "durable"
     },
     "H": {
+      "state": "active",
+      "task": "OuterCancellationTopicFenceTest phase/lock-order adaptation; Commerce generic guard integrated",
       "thread_id": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
-      "host_id": "durable",
-      "task": "媒体budget已应用；独立审CLM/Commerce完整typed消费链",
-      "last_verified_state": "active",
-      "verified_utc": "2026-10-24T14:39:00Z"
+      "host_id": "durable"
     }
   },
   "root_ownership": [
@@ -107,7 +99,9 @@
     "ABCFG_Mapper_XML": "6 actual XML parsed; actual MySQL NOT_RUN",
     "current_freeze": "107 registered classes exact source precheck PASS;16 registry/workflow controls PASS; changed XML parse/diff/secret-file gate PASS; earlier current C291 Node PASS. No new Java/DB execution.",
     "funds_source_composition": "109 registered source classes precheck PASS;16 registry/workflow controls PASS;189 declared tests across8 unique funds classes; changed XML parse PASS. D three production files byte-exact80b. G original11 and new5+5 cases composed, one now actual A inline -> G mandatory guard -> rollback -> durable manual identity; source only.",
-    "current_1443": "NPC Node9 PASS; registry15 PASS;114 source prechecks PASS;4 SQL splitter/dependency checks PASS;5 changed XML PASS. No Java/DB acceptance."
+    "current_1443": "NPC Node9 PASS; registry15 PASS;114 source prechecks PASS;4 SQL splitter/dependency checks PASS;5 changed XML PASS. No Java/DB acceptance.",
+    "full_real_storage_controls": "70/70 PASS after allowed temporary127.0.0.1 socket fixture; original sandbox-only PermissionError separately retained",
+    "current_1545": "272 Python architecture/tool controls PASS;70 real-storage controls PASS;116 exact source prechecks PASS;core14 XML/CLEAN independently PASS. C original comparator rejects approved A drift; immutable A+C composition independently byte-exact."
   },
   "unified_regression_pending": [
     "A53 boundary and original-fact Java/DB acceptance; strict source parser/registry metadata PASS",
@@ -413,15 +407,15 @@
     "not_acceptance": "No production migration,merge,deployment or full-system acceptance"
   },
   "current_ci_pending": {
-    "run_id": 40103902405,
-    "source_sha": "def951bef36a94417d90259906f6bda6abe6efb3",
-    "classes": [
-      "RegistrationCallbackIntentMySqlIT"
-    ],
-    "expected": 14,
-    "status": "FAILED_IN_PLAN_NO_JAVA",
-    "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40103902405",
-    "reason": "workflow batch choice order differs from registry; source ordered list corrected; full70 lightweight controls checked before retry"
+    "core": {
+      "run": 40106969030,
+      "source": "ad2228771f532c21ac5328e577e308578d6fd231",
+      "tests": 14,
+      "pass": 14,
+      "cleanup": "CLEAN",
+      "xml_independently_verified": true
+    },
+    "parallel_first_results": "G11:10PASS+1fixtureERROR;E8/H6:beforeAll sys_config prerequisite error; source-only fixes pending new frozen validation"
   },
   "current_cloud_assignment": {
     "A": "Environment-offline. Complete TeamGroup/ClubEventOps diff in chat, no unscanned GitHub publishing",
@@ -443,7 +437,7 @@
     "A": "f079 checkout/claim locked-current fence and NEVER+OrderClose outerTx refusal;84d7 exact local consumption completeRecovery and closed-order original ticket guard nowAPPLIED. TeamGroup/ClubEventOps still separate active work. New2dedicated test files present; recovery scenarios queued, not Java verified.",
     "root_guard_factory": "WechatVerifiedFactTestSupport.realPaymentGuards: real same-source JdbcOrderOwner+IntentStore+SdkGateway local guard, outbound doubles kept separate. No SDK init/network. B factory callers pending."
   },
-  "current_source_head": "def951bef36a94417d90259906f6bda6abe6efb3",
+  "current_source_head": "ad2228771f532c21ac5328e577e308578d6fd231",
   "current_source_manifest_counts": {
     "registered_sql_classes": 110,
     "funds_declared_tests": 191,
@@ -474,5 +468,12 @@
   "pending_business_questions": [
     "ASR: same NPC quota reserved before first ASR then handed to text once, or separate ASR budget. User reply pending; do not select budget/charges automatically."
   ],
-  "current_working_tree": "def951bef committed; source/test proof pending, G current-attempt fence and F owner ratchet not yet integrated"
+  "current_working_tree": "C61f9+10c44+A4SQL+D1545/2fc + three first-storage fixture fixes pending freeze",
+  "new_source_blockers_current": [
+    "G shared current/not-CLOSED originalReference consumption guard with A/E four-domain callers",
+    "H generic Commerce writes can mutate frozen entitlements; implementation assigned",
+    "C BEFORE_START durable original WX payload",
+    "F new production-boundary owner ratchet",
+    "ASR quota policy pending human answer"
+  ]
 }
