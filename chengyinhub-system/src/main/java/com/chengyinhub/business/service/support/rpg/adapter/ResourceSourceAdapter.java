@@ -1,30 +1,42 @@
 package com.chengyinhub.business.service.support.rpg.adapter;
 
+import com.chengyinhub.business.domain.TopicRouteAction;
 import com.chengyinhub.business.domain.route.PlayCheckReceipt;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
 import com.chengyinhub.business.service.support.TopicRouteEngine;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 原资源写入:局内效果只走 {@link TopicRouteEngine#applyEffects} 已有 ADD_ITEM / GRANT_XP / GRANT_BADGE /
  * SET / INC,幂等键仍是 themeRuntime.sources 与 storyGrants。不另造钱包。
  * 持久原请求走 {@link OriginalResourcePersist}（Runtime/dot）；缺端口 WAITING_SOURCE，
  * 进程内 applyEffects 不是重启恢复证明。
+ * 原动作回读走既有 {@link TopicRouteSessionMapper#selectActionByAction}；
+ * 不复制 rpgv2.RpgRequestReceipts，不发明 rpg2:sha256。
  */
 public class ResourceSourceAdapter {
     public static final String RUNTIME_PERSIST = "topicRouteRuntime.persistOriginal";
+    public static final String RPG_REQUEST_RECEIPTS = "rpgv2.RpgRequestReceipts";
 
     private final TopicRouteEngine engine = new TopicRouteEngine();
     private final OriginalResourcePersist persist;
+    private final OriginalRouteActionSource routeActions;
 
     public ResourceSourceAdapter() {
-        this(null);
+        this(null, null);
     }
 
     public ResourceSourceAdapter(OriginalResourcePersist persist) {
+        this(persist, null);
+    }
+
+    public ResourceSourceAdapter(OriginalResourcePersist persist, OriginalRouteActionSource routeActions) {
         this.persist = persist;
+        this.routeActions = routeActions;
     }
 
     public Map<String, Object> writeOriginal(RpgAdapterContext context) {
@@ -101,11 +113,49 @@ public class ResourceSourceAdapter {
         return persist.recover(id);
     }
 
+    /**
+     * 新实例从既有 {@code selectActionByAction} 回读。调用方传入已解析的 actionId，
+     * 本适配器不发明 {@code rpg2:} SHA-256。缺端口 WAITING_SOURCE {@link #RPG_REQUEST_RECEIPTS}；
+     * 缺/空 session、member、actionId 返回 {@code null}；未见过的键返回 {@code null}，不占进程 sources。
+     */
+    public OriginalReceipt recoverFromRouteAction(Long sessionId, Long memberId, String actionId) {
+        String id = RpgAdapterSupport.blankToNull(actionId);
+        if (sessionId == null || memberId == null || id == null) {
+            return null;
+        }
+        if (routeActions == null) {
+            throw new WaitingSourceException(RPG_REQUEST_RECEIPTS);
+        }
+        TopicRouteAction row = routeActions.selectActionByAction(sessionId, memberId, id);
+        if (row == null) {
+            return null;
+        }
+        return new OriginalReceipt(row.getActionId() == null ? id : row.getActionId(), true);
+    }
+
     /** Runtime/dot 持有的原请求持久化；本适配器不实现第二套账。 */
     public interface OriginalResourcePersist {
         OriginalReceipt persist(String requestId, TopicRouteEngine.State snapshot);
 
         OriginalReceipt recover(String requestId);
+    }
+
+    /** 只读既有动作表；不 insertAction。 */
+    public interface OriginalRouteActionSource {
+        TopicRouteAction selectActionByAction(Long sessionId, Long memberId, String actionId);
+    }
+
+    public static final class MapperOriginalRouteActionSource implements OriginalRouteActionSource {
+        private final TopicRouteSessionMapper mapper;
+
+        public MapperOriginalRouteActionSource(TopicRouteSessionMapper mapper) {
+            this.mapper = Objects.requireNonNull(mapper, "topicRouteSessionMapper");
+        }
+
+        @Override
+        public TopicRouteAction selectActionByAction(Long sessionId, Long memberId, String actionId) {
+            return mapper.selectActionByAction(sessionId, memberId, actionId);
+        }
     }
 
     public static final class OriginalReceipt {

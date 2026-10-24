@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.support.rpg.adapter;
 
 import com.chengyinhub.business.domain.JourneyRules;
+import com.chengyinhub.business.domain.TopicRouteAction;
 import com.chengyinhub.business.domain.route.PlayCheckReceipt;
 import com.chengyinhub.business.service.support.TopicRouteEngine;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -164,5 +165,48 @@ class ResourceSourceAdapterTest {
         assertEquals(REQUEST, recovered.requestId);
         assertFalse(recovered.replay);
         assertNull(restarted.recoverFromPersist("c02-persist-missing"));
+    }
+
+    @Test
+    void recoverFromRouteActionReadsExistingMapperRowWithoutOccupyingSources() throws Exception {
+        TopicRouteEngine.State run = state();
+        enableInventory(run);
+        int sourcesBefore = run.getThemeRuntime().path("sources").size();
+
+        ResourceSourceAdapter missing = new ResourceSourceAdapter();
+        ResourceSourceAdapter.WaitingSourceException waiting = assertThrows(
+                ResourceSourceAdapter.WaitingSourceException.class,
+                () -> missing.recoverFromRouteAction(30L, 7L, "ask:40:why"));
+        assertEquals(ResourceSourceAdapter.RPG_REQUEST_RECEIPTS, waiting.getWaitingCapability());
+        assertNull(missing.recoverFromRouteAction(null, 7L, "ask:40:why"));
+        assertNull(missing.recoverFromRouteAction(30L, null, "ask:40:why"));
+        assertNull(missing.recoverFromRouteAction(30L, 7L, null));
+        assertNull(missing.recoverFromRouteAction(30L, 7L, "   "));
+        assertEquals(sourcesBefore, run.getThemeRuntime().path("sources").size());
+
+        Map<String, TopicRouteAction> rows = new ConcurrentHashMap<String, TopicRouteAction>();
+        TopicRouteAction stored = new TopicRouteAction();
+        stored.setSessionId(30L);
+        stored.setMemberId(7L);
+        stored.setActionId("ask:40:why");
+        rows.put("30:7:ask:40:why", stored);
+        ResourceSourceAdapter.OriginalRouteActionSource source =
+                new ResourceSourceAdapter.OriginalRouteActionSource() {
+                    @Override
+                    public TopicRouteAction selectActionByAction(Long sessionId, Long memberId, String actionId) {
+                        return rows.get(sessionId + ":" + memberId + ":" + actionId);
+                    }
+                };
+        ResourceSourceAdapter wired = new ResourceSourceAdapter(null, source);
+        assertNull(wired.recoverFromRouteAction(30L, 7L, "c02-route-missing"));
+        assertEquals(sourcesBefore, run.getThemeRuntime().path("sources").size(),
+                "未见过的 actionId 不得占 sources");
+
+        ResourceSourceAdapter restarted = new ResourceSourceAdapter(null, source);
+        ResourceSourceAdapter.OriginalReceipt recovered =
+                restarted.recoverFromRouteAction(30L, 7L, "ask:40:why");
+        assertEquals("ask:40:why", recovered.requestId);
+        assertTrue(recovered.replay);
+        assertEquals(sourcesBefore, run.getThemeRuntime().path("sources").size());
     }
 }
