@@ -304,6 +304,16 @@
         order by coalesce(deposit_refund_lease_at,create_time),id limit 100
     </select>
 
+    <!-- First consistent read in the caller's fresh short transaction, after the original invite lock.
+         Every B writer locks that same invite before appending facts; no inherited RR snapshot or
+         whole-fact-table locking scan. Two rows reject ambiguity, never choose latest/current merchant. -->
+    <select id="selectDepositPaidFactReferences" resultType="map" useCache="false" flushCache="true">
+        select id,fact_hash from wx_verified_payment_fact
+        where fact_kind='PAYMENT' and business_out_trade_no=#{outTradeNo}
+          and transaction_id=#{transactionId}
+        order by id limit 2
+    </select>
+
     <!-- 资金恢复按原事实读取，软删展示过滤不能吞掉已提交资金责任。 -->
     <select id="selectDepositFactByIdForUpdate" resultMap="CoopInviteResult" useCache="false" flushCache="true">
         <include refid="selectCoopInviteVo"/> where id=#{id} and invite_type != 2 for update

@@ -2,6 +2,7 @@ package com.chengyinhub.business.mapper;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import org.apache.ibatis.annotations.Param;
 import com.chengyinhub.business.domain.CoopInvite;
 
@@ -63,6 +64,9 @@ public interface CoopInviteMapper {
         @Param("expectedAmount") java.math.BigDecimal expectedAmount,@Param("status") Integer status,
         @Param("amount") java.math.BigDecimal amount);
     CoopInvite selectDepositFactByIdForUpdate(@Param("id") Long id);
+    /** Original locally consumed TX + business identity only; no latest/current-attempt selection. */
+    List<Map<String,Object>> selectDepositPaidFactReferences(@Param("outTradeNo") String outTradeNo,
+        @Param("transactionId") String transactionId);
     Long selectClubOwnerForDepositQueryNowait(@Param("clubId") Long clubId);
     List<CoopInvite> selectDepositsForRefundReconcile();
     List<CoopInvite> selectAcceptedByTopicForUpdate(@Param("topicId") Long topicId);
