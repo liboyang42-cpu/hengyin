@@ -155,6 +155,38 @@ public class WechatVerifiedPaymentFactService {
         });
     }
 
+    /** The domain row and the latest attempt stay locked until the caller commits its own effects. */
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public Stored requireConsumablePayment(Reference reference) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("Payment consumption requires the original business transaction");
+        Stored stored = requireVerified(reference);
+        WechatVerifiedPaymentFact fact = stored.facts();
+        if (fact.kind() != WechatVerifiedPaymentFact.Kind.PAYMENT) throw new ConflictException();
+        WechatPaymentOrderOwner.Snapshot business = factBusinessOwner.lock(fact.businessOutTradeNo());
+        if (business.id() == null || business.id().longValue() <= 0) throw new ConflictException();
+        var rows = factIntentJdbc.queryForList(
+                "SELECT * FROM wx_pay_order_intent WHERE biz_type=? AND biz_id=? ORDER BY attempt_no DESC LIMIT 1 FOR UPDATE",
+                business.type(), business.id().longValue());
+        if (rows.isEmpty()) {
+            if (fact.intentRequestHash() != null || !fact.businessOutTradeNo().equals(fact.wxOutTradeNo()))
+                throw new ConflictException();
+            return stored;
+        }
+        var current = rows.get(0);
+        if (current.get("closed_confirmed_at") != null
+                || !fact.mchid().equals(current.get("mchid"))
+                || !fact.businessOutTradeNo().equals(current.get("business_out_trade_no"))
+                || !fact.wxOutTradeNo().equals(current.get("out_trade_no"))
+                || !fact.appid().equals(current.get("appid"))
+                || !fact.tradeType().equals(current.get("trade_type"))
+                || !fact.currency().equals(current.get("currency"))
+                || !(current.get("total_fen") instanceof Number total) || total.longValue() != fact.totalFen()
+                || fact.intentRequestHash() == null || !fact.intentRequestHash().equals(current.get("request_hash")))
+            throw new ConflictException();
+        return stored;
+    }
+
     /** Programmatic boundary also covers self-invocation from binding/audit paths; no business lock is acquired. */
     private <T> T readFresh(java.util.function.Supplier<T> read) {
         var transaction=new org.springframework.transaction.support.TransactionTemplate(factReadTransactions);
