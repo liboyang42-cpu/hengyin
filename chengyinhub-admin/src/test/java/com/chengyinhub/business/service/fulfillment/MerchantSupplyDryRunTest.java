@@ -122,6 +122,12 @@ class MerchantSupplyDryRunTest {
         Map<String, Object> recovered = supply.recoverFromDeskReceipt(access, "desk-req-01", source);
         assertEquals("APPLIED", recovered.get("state"));
         assertEquals("SAVE_SKU", recovered.get("action"));
+        Map<String, Object> otherRequest = new LinkedHashMap<String, Object>();
+        otherRequest.put("state", "APPLIED");
+        otherRequest.put("requestId", "desk-req-01");
+        otherRequest.put("action", "SAVE_SKU");
+        assertNull(supply.recoverFromDeskReceipt(access, "desk-other", (ctx, requestId) -> otherRequest));
+        assertEquals(0, supply.holdCount("desk-other"));
         assertEquals(0, supply.holdCount("desk-req-01"));
         assertFalse(supply.recoverOriginal("desk-req-01").grantsIssue());
     }

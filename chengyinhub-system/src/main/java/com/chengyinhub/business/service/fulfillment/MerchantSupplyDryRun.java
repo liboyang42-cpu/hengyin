@@ -234,6 +234,15 @@ public final class MerchantSupplyDryRun {
         if (found == null || "NOT_FOUND".equals(found.get("state"))) {
             return null;
         }
+        Object echoed = found.get("requestId");
+        if (!(echoed instanceof String) || !id.equals(echoed)) {
+            return null;
+        }
+        Object owner = found.get("ownerMemberId");
+        if (owner instanceof Number
+                && ((Number) owner).longValue() != access.getOwnerMemberId().longValue()) {
+            return null;
+        }
         return found;
     }
 
