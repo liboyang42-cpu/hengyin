@@ -425,7 +425,8 @@ def technical_dependency_policy():
             for package, exceptions in restricted.items():
                 require(isinstance(package, str) and re.fullmatch(fqcn + r"\.", package))
                 require(isinstance(exceptions, list) and len(exceptions) == len(set(exceptions)))
-                require(all(isinstance(n, str) and re.fullmatch(fqcn, n) and n.startswith(package) for n in exceptions))
+                require(all(isinstance(n, str) and re.fullmatch(fqcn + r"(?:\$" + IDENT + r")*", n)
+                            and n.startswith(package) for n in exceptions))
             id_ = owner["id"]
             require(isinstance(id_, str) and re.fullmatch(r"[A-Z][A-Z0-9_]*", id_) and id_ not in owners)
             require(owner["module"] in modules)

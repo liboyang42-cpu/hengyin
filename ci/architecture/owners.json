@@ -914,6 +914,26 @@
         "restricted_packages": {
           "com.chengyinhub.business.mapper.": [
             "com.chengyinhub.business.mapper.CoopOrderMapper"
+          ],
+          "com.chengyinhub.business.service.": [
+            "com.chengyinhub.business.service.ICmsRegistrationService",
+            "com.chengyinhub.business.service.IClubMemberService",
+            "com.chengyinhub.business.service.ICmsTopicService",
+            "com.chengyinhub.business.service.ICmsActivityService",
+            "com.chengyinhub.business.service.ICmsRegistrationMerchantService",
+            "com.chengyinhub.business.service.IPerkLedgerService",
+            "com.chengyinhub.business.service.IExploreCollectibleService",
+            "com.chengyinhub.business.service.ICmsTopicChapterService",
+            "com.chengyinhub.business.service.IPointsAwardService",
+            "com.chengyinhub.business.service.IGrowthService",
+            "com.chengyinhub.business.service.RegistrationSeatService",
+            "com.chengyinhub.business.service.RegistrationSeatService$Receipt",
+            "com.chengyinhub.business.service.support.ExploreTicketUsePolicy"
+          ],
+          "com.chengyinhub.business.access.merchant.": [
+            "com.chengyinhub.business.access.merchant.IMerchantAccessService",
+            "com.chengyinhub.business.access.merchant.MerchantAccessContext",
+            "com.chengyinhub.business.access.merchant.MerchantPermission"
           ]
         }
       }

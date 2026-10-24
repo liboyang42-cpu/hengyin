@@ -94,3 +94,5 @@ E_TOPIC_QUERY增量（9e14a73e50c9afd5c8f38027c3ecd059967a51d3）只追加精确
 新增边界登记棘轮仅覆盖 owners.json 的四个 scope_roots；固定公开 477696c8 为存量身份快照，不能由 candidate 扩大。新增 public Service/ServiceImpl/Controller/Application/Mapper 或确定角色注解的 primary type 须登记；原 DTO/私有 helper 不要求 owner，无法可靠定位角色保持 UNKNOWN。源码登记不替代编译 raw/index 回读或方法级写语义。
 
 RegistrationRedemptionApplication 原端口保留、仅 Redemption→Query 共用谓词单向；其 Mapper 包引用只例外原 CoopOrderMapper 类型，例外不授任何表写权。CI/后置工具必须使用同一独立 reviewed verifier SHA。
+
+该 Redemption owner 的 business.service 与 merchant access 引用同样只保留原精确类型；Seat$Receipt 为独立明确例外，其它 $ 类型不自动放行。方法级授权仍不由 class 图证明。

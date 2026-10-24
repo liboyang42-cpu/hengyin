@@ -1236,7 +1236,11 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                  "com.chengyinhub.business.service.ICmsTopicChapterService",
                  "com.chengyinhub.business.service.IPointsAwardService",
                  "com.chengyinhub.business.service.IGrowthService",
-                 "com.chengyinhub.business.service.RegistrationSeatService"]
+                 "com.chengyinhub.business.service.RegistrationSeatService",
+                 "com.chengyinhub.business.service.RegistrationSeatService$Receipt",
+                 "com.chengyinhub.business.service.support.ExploreTicketUsePolicy",
+                 "com.chengyinhub.business.access.merchant.MerchantAccessContext",
+                 "com.chengyinhub.business.access.merchant.MerchantPermission"]
         for target in ports:
             self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_REDEMPTION_PORT_" + target).encode()
         self.write_system()
@@ -1261,6 +1265,27 @@ class PrivatePortsReadbackTest(unittest.TestCase):
             self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_FORBIDDEN_REDEMPTION_MAPPER_" + target).encode()
         self.write_system()
         self.output = self.output.with_name("registration-redemption-mapper-negatives")
+        self.collect()
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        for target in targets:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member("C_REGISTRATION_REDEMPTION_APPLICATION"), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "RESTRICTED_OWNER_PACKAGE_REFERENCE")
+                self.assertEqual(target, bad["target_class"])
+                self.assertTrue(bad["source_sha256"] and bad["target_sha256"])
+
+    def test_registration_redemption_cannot_add_unrelated_domain_or_access_ports(self):
+        targets = ["com.chengyinhub.business.service.ICashWithdrawService",
+                   "com.chengyinhub.business.service.IRefundService",
+                   "com.chengyinhub.business.service.RegistrationSeatService$Foreign",
+                   "com.chengyinhub.business.access.merchant.UnownedAccessService"]
+        for target in targets:
+            self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_UNRELATED_REDEMPTION_PORT_" + target).encode()
+        self.write_system()
+        self.output = self.output.with_name("registration-redemption-port-negatives")
         self.collect()
         original = (self.output / "jdeps.stdout.txt").read_bytes()
         for target in targets:
