@@ -1,0 +1,3 @@
+1127994a6a870d1efe39ba5a70baa21b69295c92559a7464414b8c674fc1d608  chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java
+4058ed1a3139366f8f41509bab9f57cba2c995e7bf9af2145d469681eb339fa7  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicPublicationSizeEntryTest.java
+fa6252e184678f79b14410fec422c1119d66e1381014077a3d296024f9c539f6  docs/delivery/architecture-day/D/d8-publication-entry-checks/README.md
