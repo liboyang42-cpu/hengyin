@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MechanismRequestIdBinderTest {
@@ -70,5 +71,25 @@ class MechanismRequestIdBinderTest {
         MechanismRequestIdBinder.Play play = new MechanismRequestIdBinder.Play();
         assertThrows(IllegalArgumentException.class, () -> binder.recoverUnknown(play));
         assertThrows(IllegalArgumentException.class, () -> binder.recoverOriginal(play));
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueBindApplies() {
+        MechanismRequestIdBinder binder = new MechanismRequestIdBinder();
+        MechanismRequestIdBinder.Play unseen = new MechanismRequestIdBinder.Play();
+        unseen.setOriginalRequestId("c03-bind-never");
+        Map<String, Object> recovered = binder.recoverOriginal(unseen);
+        assertEquals("c03-bind-never", recovered.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.UNKNOWN, recovered.get("status"));
+        assertEquals(Boolean.FALSE, recovered.get("mintedNewRequest"));
+        assertEquals(Boolean.FALSE, recovered.get("replay"));
+        assertNull(binder.existing("c03-bind-never"), "未见 id 的 recoverOriginal 不得占账");
+        MechanismRequestIdBinder.LedgerEntry first = binder.bind("c03-bind-never", "progressClock", "TICK_CLOCK");
+        assertEquals("c03-bind-never", first.getRequestId());
+        assertEquals(MechanismRequestIdBinder.PENDING, first.getStatus());
+        assertEquals(first, binder.existing("c03-bind-never"));
+        MechanismRequestIdBinder.LedgerEntry replay = binder.bind("c03-bind-never", "progressClock", "TICK_CLOCK");
+        assertEquals(first, replay);
+        assertEquals("c03-bind-never", binder.existing("c03-bind-never").getRequestId());
     }
 }
