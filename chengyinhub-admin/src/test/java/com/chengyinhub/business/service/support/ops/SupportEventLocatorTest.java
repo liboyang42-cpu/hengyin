@@ -64,6 +64,14 @@ class SupportEventLocatorTest {
         assertEquals("req-same", byOrder.getRequestId());
         assertEquals(2L, byRun.getRunId());
         assertEquals(9L, byOrder.getOrderId());
+
+        InMemoryOriginalEventSource mixed = new InMemoryOriginalEventSource();
+        mixed.add(event("req-mix", "RUN", 2L, "START", "PENDING"));
+        mixed.add(event("req-mix", "RUN", 7L, "START", "PENDING"));
+        SupportEventLocator mixedLocator = new SupportEventLocator(mixed);
+        IllegalStateException other = assertThrows(IllegalStateException.class,
+                () -> mixedLocator.locateByRunId(7L, null));
+        assertTrue(other.getMessage().contains("runId=7"));
     }
 
     @Test

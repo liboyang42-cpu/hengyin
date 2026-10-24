@@ -66,7 +66,11 @@ public final class SupportEventLocator {
         if (found == null || isBlank(found.getRequestId())) {
             throw new IllegalStateException("原事件不存在 runId=" + runId);
         }
-        return locateByRequestIdOrTarget(found.getRequestId(), found, currentProjection);
+        LocatedEvent located = locateByRequestIdOrTarget(found.getRequestId(), found, currentProjection);
+        if (!runId.equals(located.getRunId())) {
+            throw new IllegalStateException("原事件不存在 runId=" + runId);
+        }
+        return located;
     }
 
     public LocatedEvent locateByOrderId(Long orderId, CurrentProjection currentProjection) {
@@ -77,7 +81,11 @@ public final class SupportEventLocator {
         if (found == null || isBlank(found.getRequestId())) {
             throw new IllegalStateException("原事件不存在 orderId=" + orderId);
         }
-        return locateByRequestIdOrTarget(found.getRequestId(), found, currentProjection);
+        LocatedEvent located = locateByRequestIdOrTarget(found.getRequestId(), found, currentProjection);
+        if (!orderId.equals(located.getOrderId())) {
+            throw new IllegalStateException("原事件不存在 orderId=" + orderId);
+        }
+        return located;
     }
 
     private LocatedEvent locateByRequestIdOrTarget(String requestId, BusinessAuditEvent targetFallback,
