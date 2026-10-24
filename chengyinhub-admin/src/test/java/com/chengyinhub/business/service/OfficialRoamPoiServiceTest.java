@@ -41,6 +41,10 @@ class OfficialRoamPoiServiceTest {
         assertEquals(0, d.poi.getStatus()); assertEquals(0, d.poi.getAuditStatus());
         assertTrue(d.poi.getPhotoRequired()); assertEquals(88L, d.poi.getTemplateId());
         verify(pois, never()).approveOfficialPoi(any(), any());
+        OfficialRoamPoiDraft quizOnly = draft(); quizOnly.poi.setPhotoRequired(false);
+        quizOnly.game.setPhotoRequireDesc(null);
+        assertEquals(42L, service.save(1L, quizOnly));
+        assertFalse(quizOnly.poi.getPhotoRequired());
     }
 
     @Test void rejectsInvalidAnswersCoordinatesAndRemoteImagesBeforeWriting() {

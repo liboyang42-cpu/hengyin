@@ -26,11 +26,11 @@ class CityNodePhotoQuizTest {
     private final GrowthBadgeMapper definitions = mock(GrowthBadgeMapper.class);
     private final ICmsMemberTemplateService templates = mock(ICmsMemberTemplateService.class);
 
-    private Controller controller() {
+    private Controller controller(boolean photoRequired) {
         CityNodeVO node = new CityNodeVO(); node.setPoiId(42L); node.setStatus(1);
         node.setLat(new BigDecimal("31.2")); node.setLng(new BigDecimal("121.4"));
         node.setRadiusM(80); node.setValidationMethod(3); node.setTemplateId(88L);
-        node.setPhotoRequired(true); node.setBadgeCode("ROAM_POI_42");
+        node.setPhotoRequired(photoRequired); node.setBadgeCode("ROAM_POI_42");
         when(pois.selectPlayerMerchantNodeDetail(42L, 0L)).thenReturn(node);
         CmsMemberTemplate game = new CmsMemberTemplate(); game.setCorrectAnswer("B");
         when(templates.selectCmsMemberTemplateById(88L)).thenReturn(game);
@@ -46,13 +46,13 @@ class CityNodePhotoQuizTest {
     }
 
     @Test void wrongAnswerDoesNotUploadVerifyWriteOrAward() {
-        Controller c = controller(); assertEquals(500, c.complete(42L,31.2,121.4,"A","","").get("code"));
+        Controller c = controller(true); assertEquals(500, c.complete(42L,31.2,121.4,"A","","").get("code"));
         verify(pois, never()).insertRewardLogIgnore(any(),any(),any(),any(),any(),any(),any());
         verifyNoInteractions(earned);
     }
 
     @Test void foreignPhotoIsRejectedBeforeCompletionOrBadge() {
-        Controller c = controller();
+        Controller c = controller(true);
         try (MockedStatic<FileOssUploadUtils> photos = mockStatic(FileOssUploadUtils.class)) {
             photos.when(() -> FileOssUploadUtils.verifyUploadedPhoto("foreign",7L)).thenThrow(new IllegalArgumentException());
             assertEquals(500, c.complete(42L,31.2,121.4,"B","foreign","").get("code"));
@@ -62,7 +62,7 @@ class CityNodePhotoQuizTest {
     }
 
     @Test void completionSavesPrivateEvidenceAndAwardsOnce() {
-        Controller c = controller();
+        Controller c = controller(true);
         try (MockedStatic<FileOssUploadUtils> photos = mockStatic(FileOssUploadUtils.class)) {
             assertEquals(200, c.complete(42L,31.2,121.4,"B","owned","").get("code"));
             verify(pois).savePoiEvidence(42L,7L,"owned","B");
@@ -71,5 +71,12 @@ class CityNodePhotoQuizTest {
             assertEquals(true, ((java.util.Map<?,?>) c.complete(42L,31.2,121.4,"B","owned","").get("data")).get("alreadyClaimed"));
             verify(earned, times(1)).insertPlayerBadge(any());
         }
+    }
+
+    @Test void observationOnlyPoiCompletesWithoutPhotoAndStillAwardsItsBadge() {
+        Controller c = controller(false);
+        assertEquals(200, c.complete(42L,31.2,121.4,"B","","").get("code"));
+        verify(pois, never()).savePoiEvidence(any(),any(),any(),any());
+        verify(earned).insertPlayerBadge(any(PlayerBadge.class));
     }
 }

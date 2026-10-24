@@ -11,11 +11,12 @@
       <el-form-item label="地点相册"><image-upload v-model="pictures" :limit="6" :file-size="20" /><span>第一张作为封面；玩家详情完整展示原图比例。</span></el-form-item>
       <el-form-item label="游戏名称"><el-input v-model="game.title" maxlength="80" /></el-form-item>
       <el-form-item label="游戏介绍"><el-input v-model="game.description" type="textarea" maxlength="255" /></el-form-item>
-      <el-form-item label="拍照任务"><el-input v-model="game.photoRequireDesc" type="textarea" maxlength="255" placeholder="说明到场后拍什么；须符合场馆拍摄要求" /></el-form-item>
+      <el-form-item label="拍照核验"><el-switch v-model="poi.photoRequired" active-text="先拍照，再答题" inactive-text="仅观察答题" /></el-form-item>
+      <el-form-item v-if="poi.photoRequired" label="拍照任务"><el-input v-model="game.photoRequireDesc" type="textarea" maxlength="255" placeholder="说明到场后拍什么；须符合场馆拍摄要求" /></el-form-item>
       <el-form-item label="观察题"><el-input v-model="game.questionName" maxlength="255" /></el-form-item>
       <el-form-item v-for="letter in letters" :key="letter" :label="'选项' + letter"><el-input v-model="game['question' + letter]" maxlength="255" /></el-form-item>
       <el-form-item label="正确答案"><el-radio-group v-model="game.correctAnswer"><el-radio-button v-for="letter in letters" :key="letter" :label="letter" /></el-radio-group></el-form-item>
-      <el-form-item label="完成奖励">完成拍照和答题后获得本地点探索勋章；不要求消费。</el-form-item>
+      <el-form-item label="完成奖励">完成{{ poi.photoRequired ? '拍照和' : '' }}答题后获得本地点探索勋章；不要求消费。</el-form-item>
       <el-alert v-if="error" :title="error" type="error" :closable="false" />
     </el-form>
     <span slot="footer"><el-button :disabled="saving" @click="$emit('close')">取消</el-button><el-button type="primary" :loading="saving" :disabled="loading" @click="save">保存并提交审核</el-button></span>
@@ -26,7 +27,7 @@
 import ImageUpload from '@/components/ImageUpload'
 import { officialPoiDraft, saveOfficialPoi } from '@/api/business/roamPoi'
 
-const blankPoi = () => ({ name: '', address: '', cityCode: '', lat: null, lng: null, tags: '', description: '' })
+const blankPoi = () => ({ name: '', address: '', cityCode: '', lat: null, lng: null, tags: '', description: '', photoRequired: true })
 const blankGame = () => ({ title: '', description: '', photoRequireDesc: '', questionName: '', questionA: '', questionB: '', questionC: '', questionD: '', correctAnswer: 'A' })
 function assetKey(value) {
   const text = String(value || '').trim()

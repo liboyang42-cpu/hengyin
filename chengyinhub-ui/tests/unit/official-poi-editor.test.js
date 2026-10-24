@@ -18,11 +18,12 @@ function mount(api) {
 test('official editor preserves full gallery, blocks double submits and retains failed draft for retry', async () => {
   const calls = []; let reject, resolve
   const h = mount({ saveOfficialPoi: payload => { calls.push(payload); return new Promise((yes, no) => { resolve = yes; reject = no }) } })
-  h.vm.poi = { id: 42, name: '街角艺术馆' }; h.vm.game.questionName = '入口出现哪一个字？'
+  h.vm.poi = { id: 42, name: '街角艺术馆', photoRequired: false }; h.vm.game.questionName = '入口出现哪一个字？'
   h.vm.pictures = '/profile/curated/entrance.jpg,/profile/curated/detail.png'
   const first = h.vm.save(); await h.vm.save()
   assert.equal(calls.length, 1)
   assert.equal(calls[0].poi.coverImg, 'curated/entrance.jpg')
+  assert.equal(calls[0].poi.photoRequired, false)
   assert.deepEqual(JSON.parse(calls[0].poi.galleryJson), ['curated/entrance.jpg', 'curated/detail.png'])
   reject(new Error('测试后端暂时不可用')); await first
   assert.equal(h.vm.game.questionName, '入口出现哪一个字？'); assert.equal(h.vm.saving, false)

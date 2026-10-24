@@ -49,7 +49,7 @@ public class OfficialRoamPoiService {
         game.setQuestionA(requested.getQuestionA().trim()); game.setQuestionB(requested.getQuestionB().trim());
         game.setQuestionC(requested.getQuestionC()); game.setQuestionD(requested.getQuestionD());
         game.setCorrectAnswer(requested.getCorrectAnswer().trim().toUpperCase());
-        game.setPhotoRequireDesc(requested.getPhotoRequireDesc().trim());
+        game.setPhotoRequireDesc(requested.getPhotoRequireDesc() == null ? null : requested.getPhotoRequireDesc().trim());
         game.setFeedbackText("挑战完成，获得本地点探索勋章");
         game.setIsSync(0); game.setDraftStatus(1); game.setStatus(1L);
         // 修改生成新模板，旧完成记录不被新题目覆盖。
@@ -57,7 +57,7 @@ public class OfficialRoamPoiService {
             throw new ServiceException("据点玩法保存失败");
         p.setTemplateId(game.getId()); p.setType(1); p.setMerchantId(null);
         p.setStatus(0); p.setAuditStatus(0); p.setApplicationType(3);
-        p.setPhotoRequired(true); p.setRadiusM(80); p.setXp(20); p.setCreateTime(new Date());
+        p.setPhotoRequired(!Boolean.FALSE.equals(p.getPhotoRequired())); p.setRadiusM(80); p.setXp(20); p.setCreateTime(new Date());
         p.setBadgeCode(null);
         int changed = p.getId() == null ? pois.insertOfficialPoi(p) : pois.updateOfficialPoi(p);
         if (changed != 1 || p.getId() == null) throw new ServiceException("官方据点保存失败");
@@ -76,7 +76,7 @@ public class OfficialRoamPoiService {
         if (badges.selectByCode(code) == null) {
             GrowthBadge badge = new GrowthBadge();
             badge.setBadgeCode(code); badge.setBadgeName(p.getName() + "·探索者");
-            badge.setBadgeDesc("完成地点拍照与观察挑战"); badge.setIconUrl(p.getCoverImg());
+            badge.setBadgeDesc(Boolean.TRUE.equals(p.getPhotoRequired()) ? "完成地点拍照与观察挑战" : "完成地点观察答题挑战"); badge.setIconUrl(p.getCoverImg());
             badge.setStatus("0"); badge.setSortNo(0); badge.setAssetType("COLLECTION");
             badge.setTriggerEvent("POI_GAME_COMPLETED"); badge.setUnlockRule("{}");
             badge.setUnlockRuleJson("{\"eventType\":\"POI_GAME_COMPLETED\",\"poiId\":" + p.getId() + "}");
@@ -96,7 +96,7 @@ public class OfficialRoamPoiService {
                 || (g.getQuestionD() != null && g.getQuestionD().length() > 255)
                 || (g.getDescription() != null && g.getDescription().length() > 255))
             throw new ServiceException("游戏介绍或选项过长");
-        required(g.getPhotoRequireDesc(), 255, "拍照要求");
+        if (!Boolean.FALSE.equals(p.getPhotoRequired())) required(g.getPhotoRequireDesc(), 255, "拍照要求");
         String key = g.getCorrectAnswer() == null ? "" : g.getCorrectAnswer().trim().toUpperCase();
         int index = "ABCD".indexOf(key);
         String[] options = {g.getQuestionA(), g.getQuestionB(), g.getQuestionC(), g.getQuestionD()};

@@ -847,12 +847,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into roam_poi (name,type,lat,lng,radius_m,address,description,xp,city_code,status,audit_status,
                               application_type,template_id,tags,cover_img,gallery_json,photo_required,create_time)
         values (#{name},1,#{lat},#{lng},#{radiusM},#{address},#{description},#{xp},#{cityCode},0,0,
-                3,#{templateId},#{tags},#{coverImg},#{galleryJson},1,#{createTime})
+                3,#{templateId},#{tags},#{coverImg},#{galleryJson},#{photoRequired},#{createTime})
     </insert>
     <update id="updateOfficialPoi">
         update roam_poi set name=#{name},lat=#{lat},lng=#{lng},radius_m=#{radiusM},address=#{address},
             description=#{description},city_code=#{cityCode},template_id=#{templateId},tags=#{tags},
-            cover_img=#{coverImg},gallery_json=#{galleryJson},photo_required=1,application_type=3,
+            cover_img=#{coverImg},gallery_json=#{galleryJson},photo_required=#{photoRequired},application_type=3,
             status=0,audit_status=0,audit_reason=null
         where id=#{id} and type=1 and merchant_id is null
     </update>
