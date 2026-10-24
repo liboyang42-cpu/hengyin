@@ -14,13 +14,34 @@ def number(value):
 def key(row):
     need('id' in row,'seed-date fixture row has no original id')
     return stable(row['id'])
-def operation_time(value,identity,document,persisted=False):
+def proven_ledger_rounding_endpoint(value,document,source_row):
+    # Only the already registered ledger Date column may use this exact DATETIME(0) boundary.
+    if source_row is None or 'TIME_TRUNCATE_FRACTIONAL' in document['environment'].get('sql_mode','').split(','):return False
+    columns=document['initial']['tables']['ums_member_points_detail']['columns']
+    if not any(c.get('name')=='create_time' and c.get('typeName')=='DATETIME' and c.get('scale')==0 for c in columns):return False
+    committed={e['transaction'] for e in document['rawTrace'] if e['kind']=='tx.complete' and e.get('completion')==0}
+    delta=document['timestampCodec']['roundtripEpochMillis']-document['timestampCodec']['anchorEpochMillis']
+    fields={'memberId':'member_id','eventType':'event_type','eventId':'event_id','currentPoints':'current_points','afterPoints':'after_points','changePoints':'change_points','changeType':'change_type'}
+    for event in document['rawTrace']:
+        if event['kind']!='db.end' or event.get('operation')!='update' or event.get('statement')!='com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper.insertUmsMemberPointsDetail':continue
+        if 'exception' in event or event.get('transaction') not in committed or number(event['result'])!=1:continue
+        params={p['property']:p['value'] for p in event['parameters']}
+        if not all(a in params and b in source_row and number(params[a])==number(source_row[b]) for a,b in fields.items()):continue
+        bound=params.get('createTime')
+        if not isinstance(bound,dict) or bound.get('kind')!='time':continue
+        if not document['jvmStartMillis']<=bound['epochMillis']<=document['jvmEndMillis']:continue
+        if ((bound['epochMillis']+delta+500)//1000)*1000==value['epochMillis']:return True
+    return False
+
+def operation_time(value,identity,document,persisted=False,source_row=None):
     if value is None:return None
     need(isinstance(value,dict) and value.get('kind')=='time','untyped operation date '+identity)
     low=(document['jvmStartMillis']//1000)*1000
     high=(document['jvmEndMillis']//1000+1)*1000-1
     codec=document['timestampCodec'];delta=codec['roundtripEpochMillis']-codec['anchorEpochMillis'] if persisted else 0
-    need(low<=value['epochMillis']-delta<=high,'operation date outside exact case/one-second precision + observed JDBC codec window: '+identity)
+    in_window=low<=value['epochMillis']-delta<=high
+    rounded_endpoint=persisted and identity=='ums_member_points_detail.create_time' and value['epochMillis']-delta==high+1 and proven_ledger_rounding_endpoint(value,document,source_row)
+    need(in_window or rounded_endpoint,'operation date outside exact case/one-second precision + observed JDBC codec window: '+identity)
     return {'kind':'operationTime','javaType':value['javaType'],'field':identity}
 def snapshot(value,document,manifest):
     need(value['schema']==document['initial']['schema'],'schema changed inside a case')
@@ -36,7 +57,7 @@ def snapshot(value,document,manifest):
                 need(raw[column]==matches[0][column],'seeded date changed within case: '+table+'.'+column)
                 if raw[column] is not None:row[column]={'kind':'seedTimeUnchanged','javaType':raw[column]['javaType'],'table':table,'column':column,'id':raw['id']}
             for column in manifest['normalization']['operation_dates'].get(table,[]):
-                if column in row:row[column]=operation_time(raw[column],table+'.'+column,document,persisted=True)
+                if column in row:row[column]=operation_time(raw[column],table+'.'+column,document,persisted=True,source_row=raw)
             rows.append(row)
         result['tables'][table]={'columns':content['columns'],'rows':sorted(rows,key=stable)}
     return result
@@ -80,6 +101,10 @@ def invariants(document):
     need(active==set(txs),'missing transaction completion')
     first=document['initial']['tables'];last=document['final']['tables']
     initial_members={stable(r['id']):number(r['point']) for r in first['ums_member']['rows']}
+    # SQL FK equality is numeric across BIGINT UNSIGNED (BigInteger) and BIGINT (Long).
+    # Keep all raw typed identities and canonical snapshots unchanged.
+    member_keys={number(r['id']):stable(r['id']) for r in first['ums_member']['rows']}
+    need(len(member_keys)==len(initial_members),'duplicate numeric member identity')
     final_members={stable(r['id']):number(r['point']) for r in last['ums_member']['rows']}
     need(initial_members.keys()==final_members.keys(),'member identity set changed')
     need(not first['ums_member_points_detail']['rows'],'fixture starts with an unexpected prior ledger')
@@ -99,7 +124,9 @@ def invariants(document):
             if all(number(p[a])==number(row[b]) for a,b in fields.items()) and txs[event['transaction']]==0:related.append(event)
         need(related,'committed ledger row has no matching actual INSERT in a committed transaction')
         need(number(row['change_type'])==2,'unexpected ledger change type')
-        spending[stable(row['member_id'])]+=number(row['change_points'])
+        member=number(row['member_id'])
+        need(member in member_keys,'ledger refers to a member outside the complete fixture member set')
+        spending[member_keys[member]]+=number(row['change_points'])
     for member,before in initial_members.items():need(before-spending[member]==final_members[member],'committed balance/complete ledger rows do not conserve points')
     if document['case']=='twoConnectionsSerializeOriginalRegistrationAndDebitOnce':
         ids=document['originalObservations']['testConnectionIds'];need(len(ids)==2 and len({stable(v) for v in ids})==2,'original two-connection proof missing')
