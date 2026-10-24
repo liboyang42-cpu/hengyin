@@ -20,7 +20,7 @@
     "A14",
     "A15"
   ],
-  "relative_links_checked": 3,
+  "relative_links_checked": 4,
   "frozen_code_equal": [
     {
       "path": "ci/architecture/gate.py",
@@ -45,7 +45,7 @@
   ],
   "doc_only_scope": "PASS",
   "secret_file_gate": "PASS scoped documents",
-  "gitleaks": "PASS 4 scoped documents, 0 findings",
+  "gitleaks": "PASS 5 scoped proposal documents, 0 findings",
   "actual_read_only_query": "existing gate.inventory(root,source_sha)+literal_write_target; no new parser/caller scanner",
   "source_gate_execution": "NOT_RUN",
   "new_policy_or_controls_implemented": false,
@@ -57,7 +57,20 @@
   "new_baseline_or_allowlist_entries": 0,
   "artifact_sha256": {
     "A01-A15.md": "ac47aa8b268a3fdc001b35a1694650b2c9c6b0ac7056e2bf5ec69d6b48965b1d",
-    "REPORT.md": "3f53483e044918d7d0590cf5bfd15a975590e3d2d804c853dc1b80d509f448c3",
+    "HANDOFF.md": "326384ad80bb7fcbde8e22c54406e703e8dff89025627e4a244378516f65f274",
+    "REPORT.md": "7224d959f66fc3348e25b8c6aafed1d685686251a215a75e30f4624bc7e68318",
     "evidence.json": "d985db685327253234a49f85ebddeb59cd3bed4a7cab90972e06e5bf22f5da8d"
+  },
+  "original_proposal_commit": "2e622cb9b4f6dbfb2dcccaf4af902db6e51da707",
+  "followup_parent": "2e622cb9b4f6dbfb2dcccaf4af902db6e51da707",
+  "coordinator_reported_not_independently_verified": {
+    "reported_date_utc": "2026-10-24",
+    "run": 40043910446,
+    "source_hint_not_full_identity": "a0f",
+    "E4": "PASS/0skip/CLEAN/Redis DBSIZE0 per root report",
+    "F663_H": "testCompile only; JUnit execution not demonstrated",
+    "transport49": "NOT_PROVEN_EXECUTED",
+    "other_ci_source_hint": "50f",
+    "other_ci_at_report_time": "startup passed; H8/JAR/jdeps running, not terminal"
   }
 }
