@@ -62,6 +62,7 @@ class TopicChapterRecruitmentGuardTest {
         service = new CmsTopicChapterServiceImpl();
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.chapter(service);
         ReflectionTestUtils.setField(service, "merchantChapterApplicationMapper", applicationMapper);
         ReflectionTestUtils.setField(service, "merchantChapterOfferMapper", offerMapper);
         ReflectionTestUtils.setField(service, "sysCategoryService", categoryService);
@@ -364,9 +365,10 @@ class TopicChapterRecruitmentGuardTest {
 
         service.updateCmsTopicChapter(patch);
 
-        org.mockito.InOrder order = inOrder(chapterMapper);
-        order.verify(chapterMapper).lockChaptersForCapacity(Collections.singletonList(CHAPTER));
+        org.mockito.InOrder order = inOrder(chapterMapper, topicMapper);
         order.verify(chapterMapper).selectCmsTopicChapterById(CHAPTER);
+        order.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
+        order.verify(chapterMapper).selectContentByIdForUpdate(CHAPTER);
         order.verify(chapterMapper).updateCmsTopicChapter(patch);
         assertNotNull(CmsTopicChapterServiceImpl.class
                 .getMethod("updateCmsTopicChapter", CmsTopicChapter.class)

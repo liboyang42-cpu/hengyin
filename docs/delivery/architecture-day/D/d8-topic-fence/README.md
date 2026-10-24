@@ -1,5 +1,7 @@
 # D8 topic 栅栏核心候选（禁止脱离三个 caller 接线单独集成）
 
+> 本页记录历史4061核心交付状态；后续候选已补齐三个caller接线，见 `../d8-caller-closure/README.md`。两批均未在本执行器运行Java/MySQL，不以源码完成替代实际验收。
+
 Parent：`5d25cbce8b813f9bf3ef9bc57c8f71187fc082b4`。Java/MySQL/HTTP/CI：**NOT_RUN**。未执行 DDL、未改 schema/依赖/金额/权限政策。
 
 已实现：`TopicContentWriteGuard` 是 D8 库内预算的真实 owner；`lockTopicContent` 使用同一 `cms_topic` 行，原图保存/重建/删除在碰章节、节点前持有该行至原事务结束。保存的原两处 payload 30/300 校验保留；图写后再按实际存量复核，失败由原 REQUIRED/外层事务回滚。发布 guard 委托同一预算 owner。

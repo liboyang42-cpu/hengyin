@@ -42,6 +42,7 @@ public final class TopicPublicationTestWiring {
         // Existing unit fixtures predate the narrow parent-lock query. Keep their original topic doubles;
         // only supply the newly introduced lock acknowledgement, never override an explicit new stub.
         if (topicMapper != null && Mockito.mockingDetails(topicMapper).isMock()
+                && !Mockito.mockingDetails(topicMapper).isSpy()
                 && Mockito.mockingDetails(topicMapper).getStubbings().stream().noneMatch(stub ->
                 "lockTopicContentBudget".equals(stub.getInvocation().getMethod().getName()))) {
             Mockito.when(topicMapper.lockTopicContentBudget(org.mockito.ArgumentMatchers.anyLong()))

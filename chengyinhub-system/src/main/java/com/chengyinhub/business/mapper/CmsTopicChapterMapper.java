@@ -15,6 +15,9 @@ public interface CmsTopicChapterMapper
     /** All physically retained content, including hidden rows; caller holds the topic content fence. */
     Long countContentByTopicForUpdate(@Param("topicId") Long topicId);
 
+    /** Parent fence first; current row read proves the locator still belongs to that parent. */
+    CmsTopicChapter selectContentByIdForUpdate(@Param("id") Long id);
+
     /**
      * 查询主题章节
      * 

@@ -5,6 +5,7 @@ import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.NodeDTO;
 import com.chengyinhub.business.mapper.*;
+import com.chengyinhub.business.service.impl.NpcProfileService;
 import com.chengyinhub.business.service.support.ChapterNarrativeBlocks;
 import com.chengyinhub.business.service.support.TopicRouteConfigValidator;
 import com.chengyinhub.business.service.support.TopicRoutePublishGate;
@@ -63,6 +64,8 @@ public class TopicPublicationContentGuard {
     }
 
     public String ordinarySupplyResumeBlockReason(CmsTopic topic, boolean explicitRestore) {
+        // Both manual restore and a new moderation decision may make an existing publication public again.
+        if (topic != null) assertTopicSizeWithinLimits(topic.getId());
         if (topic == null) return "主题不存在";
         if (!Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())
                 || (topic.getCircleThemeCode() != null && !topic.getCircleThemeCode().trim().isEmpty())) return null;
