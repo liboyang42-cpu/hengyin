@@ -995,6 +995,47 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
         self.assertIn("method/Spring/reflection/XML dependency graph", report["technical_dependencies"]["not_proven"])
 
+    def test_city_node_actual_public_ports_and_http_inbound_remain_scoped(self):
+        ports = ["com.chengyinhub.business.access.merchant.IMerchantAccessService",
+                 "com.chengyinhub.business.mapper.RoamMapper",
+                 "com.chengyinhub.business.service.ISmsCouponHistoryService",
+                 "com.chengyinhub.business.mapper.BusinessAuditEventMapper"]
+        for target in ports:
+            self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_CITY_NODE_PORT_" + target).encode()
+        self.write_system()
+        self.output = self.output.with_name("city-node-observed-ports")
+        self.collect()
+        application = self.owner_member("C_CITY_NODE_REDEMPTION_APPLICATION")
+        for target in ports: self.reference(application, target)
+        self.reference("com.chengyinhub.web.controller.api.ApiVerifyController", application)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual([], report["technical_dependencies"]["owner_edges"])
+        self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_city_node_reverse_http_entry_dependencies_block(self):
+        original = (self.output / "jdeps.stdout.txt").read_bytes()
+        owner = "C_CITY_NODE_REDEMPTION_APPLICATION"
+        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
+            with self.subTest(target=target):
+                self.replace_evidence("jdeps.stdout.txt", original)
+                self.reference(self.owner_member(owner), target)
+                report = self.check_directions()
+                self.assertEqual("BLOCKED", report["verdict"], report)
+                bad = next(f for f in report["findings"] if f["rule"] == "OWNER_GOD_BACKREFERENCE")
+                self.assertEqual((owner, target), (bad["source_technical_owner"], bad["target_class"]))
+
+    def test_city_node_missing_raw_rows_stays_unknown_despite_other_admin_output(self):
+        owner = "C_CITY_NODE_REDEMPTION_APPLICATION"
+        member = self.owner_member(owner)
+        text = (self.output / "jdeps.stdout.txt").read_text()
+        self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in text.splitlines()
+                              if not l.strip().startswith(member + " -> ")).encode())
+        report = self.check_directions()
+        self.assert_unknown(report)
+        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
+
     def test_registration_ticket_actual_public_domain_ports_and_http_inbound_remain_legal(self):
         ports = ["com.chengyinhub.business.service." + name for name in
                  ("ICmsRegistrationService", "RegistrationSeatService", "ICmsActivityService", "IPerkLedgerService")]
