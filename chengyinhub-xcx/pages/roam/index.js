@@ -2693,7 +2693,7 @@ Page({
     if (Math.abs(deg - (this._heading || 0)) > 1.5) {
       this._heading = deg;
       this.setData({ heading: Math.round(deg) });
-      this._syncMarkers();
+      this._mkTimer = 0; // C:U-092 转向不另起全量同步:清节流戳,让 _applyMovePatch 本 tick 只同步一次
     }
   },
 
@@ -3918,7 +3918,7 @@ Page({
     }
 
     if (Object.keys(patch).length) this.setData(patch);
-    // markers 全量重发节流(每 tick 重发是图层闪烁源之一);转向时 _updateHeading 会即时同步
+    // markers 全量重发节流(每 tick 重发是图层闪烁源之一);转向时 _updateHeading 清戳 → 本 tick 同步一次
     if (!this._mkTimer || now - this._mkTimer >= 600) {
       this._mkTimer = now;
       this._syncMarkers();
