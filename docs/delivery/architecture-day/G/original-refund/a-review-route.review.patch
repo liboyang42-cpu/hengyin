@@ -1,0 +1,23 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java
+@@ -669,6 +669,9 @@
+                 ensureWithinOrderCash(refund);
+             }
+         }
++        // G原分项在真实SUCCESS时冲回；审核阶段不能再从旧明细并行扣同一笔资金。
++        boolean originalComponentOwner = Integer.valueOf(1).equals(request.getStatus())
++                && coopSettlementClaimService.hasFrozenOriginalRefundComponents(refund.getId());
+         int rows = refundApplicationMapper.updateRefundStatusIfPending(
+                 request.getId(), request.getStatus(), operatorId, DateUtils.getNowDate(), request.getReviewReason());
+         if (rows <= 0 || !Integer.valueOf(1).equals(request.getStatus())) {
+@@ -679,8 +682,8 @@
+         // P0-B 多方分账退款漏冲:一笔支付拆 merchant/platform/creator 多条明细,必须逐条负向冲销。
+         // 旧 selectSettledDetail 的 `order by id desc limit 1` 只冲最大 id 一条(商家 id 最小 → 永远漏冲),
+         // 改用 selectSettledDetails 取全部已结算明细逐条冲销;退款比例按订单口径统一算一次再套到每条。
+-        List<SettlementDetail> settledList = settlementDetailMapper.selectSettledDetails(
+-                refund.getSourceType(), refund.getSourceId());
++        List<SettlementDetail> settledList = originalComponentOwner ? java.util.Collections.emptyList()
++                : settlementDetailMapper.selectSettledDetails(refund.getSourceType(), refund.getSourceId());
+         if (settledList != null && !settledList.isEmpty()) {
+             settledList = new ArrayList<>(settledList);
+             settledList.sort(Comparator.comparing(SettlementDetail::getReceiverId,

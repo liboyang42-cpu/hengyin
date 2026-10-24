@@ -6,6 +6,7 @@
 
     <resultMap type="CoopSettlement" id="CoopSettlementResult">
         <result property="id"    column="id"    />
+        <result property="cashHeadKind" column="cash_head_kind"/>
         <result property="settlementRoute" column="settlement_route"/>
         <result property="sourceContractType" column="source_contract_type"/>
         <result property="sourceContractId" column="source_contract_id"/>
@@ -66,6 +67,7 @@
     <insert id="insertCoopSettlement" parameterType="CoopSettlement" useGeneratedKeys="true" keyProperty="id">
         insert into coop_settlement
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="cashHeadKind != null">cash_head_kind,</if>
             <if test="settlementRoute != null">settlement_route,</if>
             <if test="sourceContractType != null">source_contract_type,</if>
             <if test="sourceContractId != null">source_contract_id,</if>
@@ -94,6 +96,7 @@
             <if test="payeeType != null">payee_type,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="cashHeadKind != null">#{cashHeadKind},</if>
             <if test="settlementRoute != null">#{settlementRoute},</if>
             <if test="sourceContractType != null">#{sourceContractType},</if>
             <if test="sourceContractId != null">#{sourceContractId},</if>

@@ -27,6 +27,12 @@
         FOR UPDATE
     </select>
 
+    <select id="selectBySourceForUpdate" resultMap="DebtResult" useCache="false" flushCache="true">
+        SELECT id,member_id,source_type,source_id,amount,repaid_amount,status,due_time
+        FROM ums_member_settlement_debt
+        WHERE member_id=#{memberId} AND source_type=#{sourceType} AND source_id=#{sourceId} FOR UPDATE
+    </select>
+
     <!-- MySQL 单表 UPDATE 的 SET 自左向右求值:status 读到的是已加过的 repaid_amount -->
     <update id="addRepaid">
         UPDATE ums_member_settlement_debt

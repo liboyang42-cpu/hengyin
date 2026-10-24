@@ -130,6 +130,8 @@ class CoopSettlementTest {
         PlatformTransactionManager transactionManager = mock(PlatformTransactionManager.class);
         when(transactionManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         ReflectionTestUtils.setField(svc, "transactionManager", transactionManager);
+        ReflectionTestUtils.setField(svc, "coopSettlementOriginalMapper", mock(com.chengyinhub.business.mapper.CoopSettlementOriginalMapper.class));
+        ReflectionTestUtils.setField(svc, "coopSettlementAdjustmentMapper", mock(com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper.class));
         when(coopSettlementMapper.insertCoopSettlement(any())).thenReturn(1);
     }
 

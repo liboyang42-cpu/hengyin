@@ -69,6 +69,8 @@ class CoopSettlementPayoutTransactionTest {
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(target, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(target, "transactionManager", transactionManager);
+        ReflectionTestUtils.setField(target, "coopSettlementOriginalMapper", mock(com.chengyinhub.business.mapper.CoopSettlementOriginalMapper.class));
+        ReflectionTestUtils.setField(target, "coopSettlementAdjustmentMapper", mock(com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper.class));
         com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
         when(topics.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenAnswer(call -> jdbc.queryForObject(
                 "SELECT id FROM cms_topic WHERE id=? FOR UPDATE", (rs, n) -> {

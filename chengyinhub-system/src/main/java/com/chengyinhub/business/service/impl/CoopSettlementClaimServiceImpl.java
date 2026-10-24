@@ -41,6 +41,21 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
     private CmsTopicMapper topicMapper;
 
     @Autowired
+    private CoopSettlementOriginalLedger originalLedger;
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public void reverseCompletedRegistrationRefund(Long refundId) {
+        originalLedger.reverseCompletedRegistrationRefund(refundId);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public boolean hasFrozenOriginalRefundComponents(Long refundId) {
+        return originalLedger.hasFrozenOriginalRefundComponents(refundId);
+    }
+
+    @Autowired
     public CoopSettlementClaimServiceImpl(ICoopOrderSettlementSnapshotReader snapshotReader,
             FulfillmentWindowResolver windowResolver, TopicSettlementEvidenceService evidenceService,
             ISettlementClaimService claimService, CoopSettlementMapper settlementMapper,

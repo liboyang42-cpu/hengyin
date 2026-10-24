@@ -27,4 +27,8 @@
         select coalesce(sum(amount), 0) from coop_settlement_adjustment
         where settlement_id = #{settlementId} and status = 'EXECUTED'
     </select>
+    <select id="selectExecutedBySettlementForUpdate" resultMap="AdjustmentResult" useCache="false" flushCache="true">
+        select id,settlement_id,claim_id,entry_kind,event_key,amount,status,create_time
+        from coop_settlement_adjustment where settlement_id=#{settlementId} and status='EXECUTED' order by id for update
+    </select>
 </mapper>
