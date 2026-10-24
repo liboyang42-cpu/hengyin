@@ -1,0 +1,144 @@
+{
+  "task": "F/cycle-observation",
+  "source_sha": "27471b00989e15f7641f4ee77c497cca2f9e53c1",
+  "source_tree": "51322a16c1085b4a59967b1265666a0f3b20df9d",
+  "parent_sha": "27471b00989e15f7641f4ee77c497cca2f9e53c1",
+  "branch": "codex/architecture-day-f-cycle-observation",
+  "python": "Python 3.12.14",
+  "executed_entry": "docs/delivery/architecture-day/F/cycle-observation/analyze.py",
+  "execution": "twice, same immutable source/helper, local Git/Python only, exits0; --all-references enabled",
+  "helper_sha": "02e69111a83d19d2ad53051a44c629d5e0a5a38a",
+  "helper_files": [
+    {
+      "path": "ci/architecture/dependencies.py",
+      "sha256": "96978524ed2b1d673064521efa0b5589baceb344687d11a2e9842ae079c724e8"
+    },
+    {
+      "path": "ci/architecture/gate.py",
+      "sha256": "e42c6b75e5cb72cdd98f13da3a0f925b5fce50a6d96a36bf7bda164c562c264a"
+    },
+    {
+      "path": "ci/real_storage_it.py",
+      "sha256": "269813582a0ae72efc2d397cca9376658cadf9bdcd5c635fb1dd95dce1084678"
+    },
+    {
+      "path": "ci/sql_splitter.py",
+      "sha256": "91a29ac3c09022b27a59c5d938bf8a6696dabfa0917692f775d3193cd88546ec"
+    }
+  ],
+  "source_helpers": [
+    {
+      "path": "ci/architecture/gate.py",
+      "sha256": "4ed706853cd6579424a2da3efb98621230b0ec216bfdf2fbc1bfdd750e67f535"
+    },
+    {
+      "path": "ci/sql_splitter.py",
+      "sha256": "a46e731d99c707bd5cd3b769fe8b2225e2b60298696d0de82a29c50bf96e0ce1"
+    }
+  ],
+  "deterministic_outputs": [
+    {
+      "file": "summary.json",
+      "sha256": "b0904e74c29defa2aa4503aa15b5d9c8623e5cca30053bfd11d6ec841a144bd9",
+      "bytes": 54960,
+      "committed": true
+    },
+    {
+      "file": "package-edges.tsv",
+      "sha256": "a47ab4cee5efe21d73887e9d6db0519908f99bb7a16d24ebeaefdff57c968cbe",
+      "bytes": 123633,
+      "committed": true
+    },
+    {
+      "file": "mapper-writes.tsv",
+      "sha256": "f73fe2ee1f98e62bd9f0b56f6dafe55e488091d063094dd3ccafa74b6bb59e27",
+      "bytes": 100083,
+      "committed": true
+    },
+    {
+      "file": "unknown.json",
+      "sha256": "a201a678634ff88eb78dfd4760a12d67de604ea07f52b6968f481b96b88a7b15",
+      "bytes": 83020,
+      "committed": true
+    },
+    {
+      "file": "all-import-references.jsonl",
+      "sha256": "291c4b6e90757bd8307f80eab9c8349b315702095b7a6a766c688699fe5ad854",
+      "bytes": 5117182,
+      "committed": false
+    }
+  ],
+  "checks": {
+    "five_outputs_identical_on_rebuild": true,
+    "type_edges": 8035,
+    "package_edges": 562,
+    "all_import_locations_unique_in_raw": true,
+    "selected_three_cycle_counts_and_member_hashes": true,
+    "eight_actual_code_line_and_blob_hash_checks": true,
+    "SCC_member_mutual_reachability": true,
+    "python3_9_syntax": true,
+    "input_guards": "wrong helper and production output rejected before analysis; no source writes"
+  },
+  "not_run": [
+    "Java/javac/jdeps/current compiled JAR readback",
+    "MySQL/Redis/SQL execution",
+    "HTTP/provider/WeChat",
+    "CI dispatch",
+    "business change drills or cycle fixes"
+  ],
+  "graph_complete": false,
+  "baseline_created": false,
+  "policy_changed": false,
+  "delivery_files": [
+    {
+      "file": "README.md",
+      "sha256": "efe40bc6599e615acab2f7d85c3f9abd1e6560e92e3d9dae0684b28696b39bb9"
+    },
+    {
+      "file": "REPORT.md",
+      "sha256": "3b417ba102dd4bb4d4db63a4e9ae1e050a9eb163cf906f9eee30937ebacf90fb"
+    },
+    {
+      "file": "analyze.py",
+      "sha256": "6702c0b6347f919ffe5e56b3b60a8a558a685f30aa1d58512b3d299400c1c967"
+    },
+    {
+      "file": "cycle-traces.json",
+      "sha256": "97e786fef46aa9933a2b107fa720a2367423dedf02f41febf34174468aead284"
+    },
+    {
+      "file": "evidence/analysis-run.txt",
+      "sha256": "fa00371a9075272cc9b01f03fcabe033b58c72e42672d28484a02621d0f060ad"
+    },
+    {
+      "file": "evidence/input-controls.json",
+      "sha256": "e6ee83054f985aaeebdf1e72c2d4d7ab9d8f32fda6ef678346b7c949e9c1e957"
+    },
+    {
+      "file": "evidence/reproduction-run.txt",
+      "sha256": "fa00371a9075272cc9b01f03fcabe033b58c72e42672d28484a02621d0f060ad"
+    },
+    {
+      "file": "mapper-writes.tsv",
+      "sha256": "f73fe2ee1f98e62bd9f0b56f6dafe55e488091d063094dd3ccafa74b6bb59e27"
+    },
+    {
+      "file": "package-edges.tsv",
+      "sha256": "a47ab4cee5efe21d73887e9d6db0519908f99bb7a16d24ebeaefdff57c968cbe"
+    },
+    {
+      "file": "summary.json",
+      "sha256": "b0904e74c29defa2aa4503aa15b5d9c8623e5cca30053bfd11d6ec841a144bd9"
+    },
+    {
+      "file": "unknown.json",
+      "sha256": "a201a678634ff88eb78dfd4760a12d67de604ea07f52b6968f481b96b88a7b15"
+    }
+  ],
+  "secret_scan": {
+    "tool": "gitleaks 8.21.2 and original ci/secret-file-gate.py scan_paths",
+    "scope": "this F delivery directory only",
+    "findings": 0,
+    "exceptions_added": false
+  }
+}

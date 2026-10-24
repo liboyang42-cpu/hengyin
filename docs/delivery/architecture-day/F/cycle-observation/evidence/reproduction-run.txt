@@ -1,0 +1,1 @@
+{"source": "27471b00989e15f7641f4ee77c497cca2f9e53c1", "units": 2460, "supported": 2445, "maven_edges": 7, "module_import_edges": 9, "package_edges": 562, "package_nontrivial_scc": 4, "type_nontrivial_scc": 2, "graph_complete": false}

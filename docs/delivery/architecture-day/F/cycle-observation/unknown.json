@@ -1,0 +1,1904 @@
+[
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AdminFileUploadPolicy.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/core/config/SwaggerConfig.java",
+    "reason": "COMMENT_ONLY_OR_PACKAGE_UNKNOWN"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/text/Convert.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/FileUtils.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/sql/SqlUtil.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/config/ScheduleConfig.java",
+    "reason": "COMMENT_ONLY_OR_PACKAGE_UNKNOWN"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImPollServiceImpl.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientScoringServiceImpl.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientSessionServiceImpl.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CanonicalDigest.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ContentEditClassifier.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WxBillCsvParser.java",
+    "reason": "UNSUPPORTED_UNICODE_OR_TEXT_BLOCK"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/business/util/PlayNarrativeSupport.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AdminFileUploadService.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.file.FileUtils"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.lang.Math.min"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiBalanceController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiBetaGameController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiBetaGameController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiBetaGameController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiBetaGameController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCartController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCategoryController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiChapterMerchantNodeController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubCalendarController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubCompensationController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubCrmController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubDirectMerchantReceivableController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubEventOpsController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubMembershipController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommentController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommentController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommentController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommonController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommonController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommonController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommonController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.file.FileUtils"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommonController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCommonController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiComplianceController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiContentDraftController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiContentSecurityController.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.IWxContentSecurityService.CallbackResult"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopPoolController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCouponController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCouponController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCrowdfundingController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGameSessionController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGiftController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiImController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiImPollController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.file.FileUtils"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMapController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMedalController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMediaAssetController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantChapterApplicationController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantCrmController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.file.FileUtils"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantNodeController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientScoringController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCharacterController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayCheckController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyReadController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayRpgController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayTeamController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPointsController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPredictSettleController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiProductController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiProductController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiProjectController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPublishController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRecommendationController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoleController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiStatsController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTemplateController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTemplateController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTemplateController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTemplateController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiThemeRuntimeController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicTemplateController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicTemplateController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTrackController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUmsMemberController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUmsMemberController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.dto.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUmsMemberController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUmsMemberController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUmsMemberController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWalletController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiWithdrawalController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AppUploadService.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.file.FileUtils"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AppUploadService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/CapsuleController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ExplorationAnniversaryController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/MonthlyRecapController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/PersonalExplorationExportController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.fasterxml.jackson.databind.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/PersonalExplorationExportController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/PersonalExplorationGoalController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/RatingSummaryAggregator.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/WxImageSecurityCopy.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "javax.imageio.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AuditWorkbenchController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessImController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubCorporatePayeeController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubDirectMerchantReceivableController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubEditionCompensationController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubEditionCompensationController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MediaReviewController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MediaReviewController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OrientScoringAdminController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/PlayerWithdrawalCooldownController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/PlayerWithdrawalCooldownController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/TopicEditionFinalizationController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/TopicEditionFinalizationController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/TopicEditionFundsController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/common/CommonController.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "org.springframework.web.bind.annotation.*"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/common/CommonController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.file.FileUtils"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/common/CommonController.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysLoginController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysProfileController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.file.FileUtils"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/PreferencePlayService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/metrics/DruidMetricsProbe.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/controller/BaseController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/controller/BaseController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.sql.SqlUtil"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/domain/entity/SysDictData.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/domain/entity/SysDictType.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/domain/entity/SysRole.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/domain/entity/SysUser.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "jakarta.validation.constraints.*"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/domain/entity/SysUser.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/domain/entity/SysUser.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.Type"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/page/TableSupport.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/PageUtils.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.sql.SqlUtil"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/ServletUtils.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/StringUtils.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/poi/ExcelUtil.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/poi/ExcelUtil.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.Type"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/poi/ExcelUtil.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/poi/ExcelUtil.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.file.FileUtils"
+  },
+  {
+    "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/reflect/ReflectUtils.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/aspectj/DataScopeAspect.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/AppMediaOutputConfiguration.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/CaptchaConfig.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.google.code.kaptcha.Constants.*"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/security/context/PermissionContextHolder.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/GlobalExceptionHandler.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/RuntimeFailureAlarmFilter.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/AppLoginService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.common.exception.user.*"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/AppTokenService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/TokenService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-generator/src/main/java/com/chengyinhub/generator/controller/GenController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-generator/src/main/java/com/chengyinhub/generator/controller/GenController.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.utils.sql.SqlUtil"
+  },
+  {
+    "path": "chengyinhub-generator/src/main/java/com/chengyinhub/generator/service/GenTableColumnServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/domain/SysJob.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.exception.job.TaskException.Code"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/access/club/ClubAccessServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/access/merchant/MerchantAccessServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/AuditRecord.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CmsRegistration.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CmsTopic.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopInvite.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/TopicSaleCanonicalDraft.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopSettlementPlan.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicSettlementCashBasis.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/PublicActivitySummaryVO.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/PublicTicketVO.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ActivitySettlementHoldMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopComplaintMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementEvidenceMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CouponSourceGrantMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerNodeProgressMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PublicMemberMapper.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.domain.vo.PublicMemberVO.PublicCategoryVO"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/SettlementBatchMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/SettlementDetailMapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/notify/InAppNotifyChannel.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/CapsuleService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ExplorationAnniversaryService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.time.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ExplorationAnniversaryService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.time.format.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ExplorationAnniversaryService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAuditTaskService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsTopicChapterService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsTopicService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICommunityPostService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopComplaintService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopInviteService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IGameSessionRuntimeService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPricingService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicCommercialReviewService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteRuntimeService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxContentSecurityService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/MonthlyRecapService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.time.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/MonthlyRecapService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/PersonalExplorationExportService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.time.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/PersonalExplorationExportService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/PersonalExplorationGoalService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.time.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/PersonalExplorationGoalService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.ai.AiThemeDraftPlanRejectedException.Code"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/OssCardCutoutStorage.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.ai.AiThemeDraftPlanRejectedException.Code"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CapabilityServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubCorporatePayeeServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubCrmAppServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEditionCompensationServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventNotificationServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMemberServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipSnapshotCodec.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubSessionServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsActivityServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.mapper.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.common.constant.CmsConstants.MAX_POINT_DEDUCT_AMOUNT"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.common.constant.CmsConstants.POINT_DEDUCT_RATE"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.common.constant.CmsConstants.QUOTE_SIGN_SALT"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicChapterServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityTrustServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ContentDraftServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ContentSafetyGateImpl.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.domain.dto.PublishSafetyRequest.ReviewMode"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopClubApplyServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/DataRetentionServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ExploreCompletionReadServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.GameplayToolState.Reason"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GroupCodeServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MemberFundsStageService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClaimBatchServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClaimServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantClawbackServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmCampaignServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantOfferServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantReviewServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MmsMerchantServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NodeNpcService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ObjectCardServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventV2ServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OmsTicketServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientGeoServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTaskServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTeamBoardServiceImpl.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.OrientTeamProgressCalculator.TaskCell"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTeamBoardServiceImpl.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.OrientTeamProgressCalculator.TeamProgress"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PricingServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProjectHomeReadServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProjectPlayerReadServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/QrcodeServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.io.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.common.constant.CmsConstants.QUOTE_SIGN_SALT"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RewardDropServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamHangoutServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamLocationRetentionService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoleServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TemplatePublishServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TemplatePublishServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TemplatePublishServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCommercialReviewServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicLifecycleServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOnsiteMetricsServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.GameplayToolState.Reason"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleCanonicalDraftServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicWorkspaceServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberFollowServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/VerificationRiskService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WeChatMiniSessionServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.wechat.pay.java.service.payments.jsapi.model.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxSubscribeMsgServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxTradeBillServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.business.service.support.WxBillCsvParser"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ActivityReviewPolicy.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.domain.dto.PublishSafetyRequest.ReviewMode"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.mapper.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaPublicationGuard.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ArriveLocationGuard.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.ArriveLocationGuardPolicy.Decision"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ArriveLocationGuard.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.ArriveLocationGuardPolicy.Fix"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCheckEngine.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCooperationEngine.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.TopicRouteEngine.State"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayCooperationEngine.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayOutcomeEngine.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayOutcomeRules.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayRuntimeConfig.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySupportMatrix.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySurvivalEngine.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.TopicRouteEngine.State"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayTaskEngine.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.TopicRouteEngine.State"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayTaskEngine.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayTemplateRules.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyRulesValidator.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyStatLinks.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.service.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayNodeAccessService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PureContentExploreService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PureContentExploreService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.mapper.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PureContentExploreService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamRecoveryService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamShareSnapshotService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TemplateResourceSlots.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeConfig.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeRuntimeEngine.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "java.util.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicAiPrecheckService.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.business.service.support.TopicPublishCheckService.PublishCheckIssue"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicBundleReviewService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPlatformContentSlotGuard.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRouteSessionScope.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicSaleCanonicalBuilder.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicSupplyReviewService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.domain.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicSupplyReviewService.java",
+    "reason": "STATIC_OR_WILDCARD_IMPORT_NOT_EXPANDED",
+    "target": "com.chengyinhub.business.mapper.*"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicTemplateRuleIdentityRemapper.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalFrozenAmountResolver.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/support/OrdinarySupplyReplacementPolicy.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/support/RoamLocationRetention.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/DataRetentionCleanupTask.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RoamRewardDeliveryTask.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WxTradeBillDownloadTask.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/util/JourneyReviewTexts.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/util/StateKeyRefs.java",
+    "reason": "FQN_BODY_USAGE_NOT_EXPANDED"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/domain/SysConfig.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/domain/SysLogininfor.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/domain/SysOperLog.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/domain/SysPost.java",
+    "reason": "NESTED_IMPORT_AGGREGATED_TO_OUTER_FILE_TYPE",
+    "target": "com.chengyinhub.common.annotation.Excel.ColumnType"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysConfigServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysDeptServiceImpl.java",
+    "reason": "LOCAL_TYPE_UNRESOLVED",
+    "target": "com.chengyinhub.common.core.text.Convert"
+  }
+]

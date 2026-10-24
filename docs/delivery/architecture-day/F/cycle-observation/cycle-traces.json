@@ -1,0 +1,146 @@
+{
+  "source_sha": "27471b00989e15f7641f4ee77c497cca2f9e53c1",
+  "risk_metric": "distinct supported production source files outside the two packages importing a project type in either package with matching body token; broad package coupling, not predicted exact change count",
+  "selected_package_cycles": [
+    {
+      "rank": 1,
+      "packages": [
+        "com.chengyinhub.business.domain",
+        "com.chengyinhub.business.domain.vo"
+      ],
+      "direct_outside_dependent_units": 943,
+      "forward_import_records": 2,
+      "reverse_import_records": 77,
+      "level": "DECLARED_JAVA_PACKAGE_CYCLE_NOT_TYPE_OR_RUNTIME_CALL_CYCLE",
+      "outside_dependent_list_sha256": "1eff14a8e75e1fce81759de4d8936d11b0de4b66b55ec9e1fa3cf173182d730c",
+      "outside_dependent_samples": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/business/util/PlayNarrativeSupport.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAccountDeregistrationController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAgreementController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAuditController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiBalanceController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCartController.java"
+      ],
+      "sites": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CmsTopic.java",
+          "line": 354,
+          "code": "private List<TopicChapterVO> chaptersList;",
+          "label": "domain→vo actual field and public getter/setter contract",
+          "git_blob": "e5fc1afcc5ce1e0dfd583eccc8bf6dc35fa3f5a5",
+          "source_sha256": "798e02fcd4266e61340e8dd4ceda43d6368bfe406b02d10630c78eea9bc0d579"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/TopicChapterVO.java",
+          "line": 10,
+          "code": "public class TopicChapterVO extends CmsTopicChapter {",
+          "label": "vo→domain inheritance; a different domain type, not CmsTopic recursion",
+          "git_blob": "233e3bd5791c9f617d29deae0887ccaef67b9b62",
+          "source_sha256": "a26550f1bcd4d0b4a774f4ffaea170105055cc52aa064065e7e27176f4d69e40"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "packages": [
+        "com.chengyinhub.business.domain",
+        "com.chengyinhub.business.service.support"
+      ],
+      "direct_outside_dependent_units": 899,
+      "forward_import_records": 2,
+      "reverse_import_records": 111,
+      "level": "DECLARED_JAVA_PACKAGE_CYCLE_NOT_TYPE_OR_RUNTIME_CALL_CYCLE",
+      "outside_dependent_list_sha256": "01d161a32708643f732c908bed828d662e988111d8e693609ef29aebfd7dcd02",
+      "outside_dependent_samples": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/business/util/PlayNarrativeSupport.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAccountDeregistrationController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAgreementController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAuditController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiBalanceController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCartController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiChapterMerchantNodeController.java"
+      ],
+      "sites": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/JourneyRules.java",
+          "line": 76,
+          "code": "String normalized = new JourneyRulesValidator().validateAndNormalize(rawJson);",
+          "label": "domain→support actual parse→validator call",
+          "git_blob": "cf391d52ff87ea77ce2fb4a85ff3e4dfdafbad06",
+          "source_sha256": "9cccfb97c5bb58b892eaa565e5fb534cd3e72d726daabef3386059f0d7f8bc99"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeCharacterService.java",
+          "line": 118,
+          "code": "JourneyRules rules = JourneyRules.parse(journeyRulesJson);",
+          "label": "support→domain actual parse call; not a recursive call back into ThemeCharacterService",
+          "git_blob": "82569f963294b6ec0b18b137e550810856ce5a52",
+          "source_sha256": "78f26a8c6d0c621dd92bd3754ece69a7bbea6aec0aa5da4c7efe914c1d5a91f4"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "packages": [
+        "com.chengyinhub.business.access.merchant",
+        "com.chengyinhub.business.service"
+      ],
+      "direct_outside_dependent_units": 522,
+      "forward_import_records": 1,
+      "reverse_import_records": 1,
+      "level": "DECLARED_JAVA_PACKAGE_CYCLE_NOT_TYPE_OR_RUNTIME_CALL_CYCLE",
+      "outside_dependent_list_sha256": "f0acd3d4253367acf9287e2adee7e1eaee27915f351b76888082cdf0f4b99633",
+      "outside_dependent_samples": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAccountDeregistrationController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAgreementController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAuditController.java"
+      ],
+      "sites": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/access/merchant/MerchantAccessServiceImpl.java",
+          "line": 46,
+          "code": "List<MmsMerchant> ownerRows = merchantService.selectMmsMerchantList(ownerQuery);",
+          "label": "access→service actual call through IMmsMerchantService field",
+          "git_blob": "077b269f82639382ab2dcc4e8c5d64c51c4833be",
+          "source_sha256": "4c9297521b008c52c85683763f100f419dcb64986997a525b738f508a11d72ad"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IMerchantDeskService.java",
+          "line": 17,
+          "code": "Map<String, Object> receipt(MerchantAccessContext access, String requestId);",
+          "label": "service→access public method parameter type, not a call to access implementation",
+          "git_blob": "e6364cf9fa027135f3fb94f8059296096f1f5e13",
+          "source_sha256": "90ce9a0409b4bf16dbdaef3232a2849ff2313109b83f1c1f46890b78c40083e2"
+        }
+      ]
+    }
+  ],
+  "additional_actual_type_cycle": [
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/StringUtils.java",
+      "line": 357,
+      "code": "return StrFormatter.format(template, params);",
+      "label": "StringUtils.format→StrFormatter.format",
+      "git_blob": "f3b6e8dd5d22c163c7be053ec0c2701d418c4581",
+      "source_sha256": "e6dd50de5ea6724d50c46c282ff09499511a201ef21e94aba27a810a780c7d4e"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/text/StrFormatter.java",
+      "line": 32,
+      "code": "if (StringUtils.isEmpty(strPattern) || StringUtils.isEmpty(argArray))",
+      "label": "StrFormatter.format→StringUtils.isEmpty; not infinite format recursion",
+      "git_blob": "a7182b7b06a909c23ba0b07fd623a10424376c9b",
+      "source_sha256": "22b0a03b47ec4fbb75fc08e556d154a9c31a31bcbbedc807499704b75d6b0ff0"
+    }
+  ],
+  "type_scc_count_in_observed_subgraph": 2,
+  "not_a_claim_of_three_type_or_Spring_cycles": true
+}

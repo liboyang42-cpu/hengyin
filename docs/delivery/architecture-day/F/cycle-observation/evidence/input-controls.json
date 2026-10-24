@@ -1,0 +1,12 @@
+[
+  {
+    "case": "bad-helper",
+    "exit": 1,
+    "last_error_line": "ValueError: helper must be the public immutable 02e691 checkout"
+  },
+  {
+    "case": "production-output",
+    "exit": 1,
+    "last_error_line": "ValueError: outputs inside source checkout must stay in the F delivery directory"
+  }
+]
