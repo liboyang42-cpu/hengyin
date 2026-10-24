@@ -1,0 +1,751 @@
+{
+  "run_id": 40041038593,
+  "source_sha": "26f3764ce0d81594be02c0eeace04aacdd483e58",
+  "workflow_conclusion": "failure",
+  "evidence": "Downloaded raw Surefire XML; named suite results only, not all-system acceptance",
+  "root_cause": "SchedulerSessionLockMySqlIT BeforeAll schema regex rejected default empty database suffix; business cases in that class did not run",
+  "named_suites": [
+    {
+      "suite": "com.chengyinhub.business.service.impl.PlayKitPhotoCheckRuntimeTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "92501eaedbb5bbb5423913506fd17301675c4502ba85411f7c7e4f5d8f5d3db3",
+      "cases": [
+        {
+          "name": "存量快照里的越界不透明度下发前夹回0至100",
+          "failure": []
+        },
+        {
+          "name": "负控_模型说pass但置信度低于阈值不算过",
+          "failure": []
+        },
+        {
+          "name": "负控_老模板不投影卡片键回包不变",
+          "failure": []
+        },
+        {
+          "name": "兜底为pass时次数用尽才放过并打标",
+          "failure": []
+        },
+        {
+          "name": "只配轮廓不配不透明度时按缺省四成下发",
+          "failure": []
+        },
+        {
+          "name": "降级后再拿到真结论_degraded清掉而flagged留痕",
+          "failure": []
+        },
+        {
+          "name": "负控_模型判不过必须真被打回且计次",
+          "failure": []
+        },
+        {
+          "name": "卡片三字段投影进kit",
+          "failure": []
+        },
+        {
+          "name": "降级且兜底为pass时才放行_且不给分",
+          "failure": []
+        },
+        {
+          "name": "模型判过且置信度达标才通过并给分",
+          "failure": []
+        },
+        {
+          "name": "不过时兜底为retake则次数用尽也不放过",
+          "failure": []
+        },
+        {
+          "name": "未配取景轮廓时下发形状与今天逐字相同",
+          "failure": []
+        },
+        {
+          "name": "取景轮廓开局就下发_不必等passed",
+          "failure": []
+        },
+        {
+          "name": "负控_客户端score字段对判定毫无影响",
+          "failure": []
+        },
+        {
+          "name": "负控_key未注入必须走降级且绝不能变成通过",
+          "failure": []
+        },
+        {
+          "name": "负控_模型回非JSON必须同样降级_不能变成通过",
+          "failure": []
+        },
+        {
+          "name": "负控_模型JSON缺pass字段也算拿不到结论",
+          "failure": []
+        }
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.business.it.AdvancedGameRuntimeMySqlIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "5158f3c1809a3d81627b21220564d56d99c7142eaeb3b981f55911af6268403d",
+      "cases": [
+        {
+          "name": "zeroChallengeHistoryRequiresExactCurrentRunReceiptOrFrozenOrigin",
+          "failure": []
+        },
+        {
+          "name": "allLegacyMultiplayerPathsPersistTurnsAndReplayAtEveryAllowedTeamSize",
+          "failure": []
+        },
+        {
+          "name": "legacyFrozenBranchCommitsOnceAndInvalidOutcomeRollsBack",
+          "failure": []
+        },
+        {
+          "name": "migrationCreatesJsonColumnsRuntimeStateAndOwnerUniqueness",
+          "failure": []
+        }
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.business.service.impl.ObjectCardMintHookTest",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "7d80ba497016d6832a5409e802dd4c646f10e3aba94835a716e354156cf5409e",
+      "cases": [
+        {
+          "name": "判过且模板是CARD时铸一张卡_参数带得上玩家照片卡面与来源节点",
+          "failure": []
+        },
+        {
+          "name": "负控_降级放行不铸卡",
+          "failure": []
+        },
+        {
+          "name": "负控_次数用尽被放过不铸卡",
+          "failure": []
+        },
+        {
+          "name": "mintedCardNeverReturnsUnreviewedSourceCutoutOrTurntableUrls",
+          "failure": []
+        },
+        {
+          "name": "act本身不铸卡_铸卡留给事务外的收尾",
+          "failure": []
+        },
+        {
+          "name": "收尾之后回包里不留内部标记_能正常序列化",
+          "failure": []
+        },
+        {
+          "name": "铸卡抛异常时回包不带objectCard",
+          "failure": []
+        },
+        {
+          "name": "负控_判不过不铸卡",
+          "failure": []
+        },
+        {
+          "name": "照片先提交原意图_模型NEVER_玩法回执与APPLIED同事务_提交后铸卡",
+          "failure": []
+        },
+        {
+          "name": "负控_其他动作不触发铸卡",
+          "failure": []
+        },
+        {
+          "name": "负控_铸卡服务缺失时通关不受影响",
+          "failure": []
+        },
+        {
+          "name": "mediaRegistryFailureKeepsCommittedGameplayWithoutLeakingCardUrls",
+          "failure": []
+        },
+        {
+          "name": "铸卡抛异常时通关判定与得分原样成立",
+          "failure": []
+        },
+        {
+          "name": "负控_过了再交不再铸第二张卡",
+          "failure": []
+        },
+        {
+          "name": "负控_老模板判过不铸卡",
+          "failure": []
+        },
+        {
+          "name": "负控_没铸卡时回包不带objectCard",
+          "failure": []
+        },
+        {
+          "name": "判过时回包带上刚铸出来的那张卡",
+          "failure": []
+        },
+        {
+          "name": "负控_收尾两次只铸一次",
+          "failure": []
+        }
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.business.service.impl.AdvancedPhotoOrchestrationTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "699a40684526132ac08f0a8abd1cc1cc6ea2b425c50576d06de746649288a98d",
+      "cases": [
+        {
+          "name": "revokedReadAccessCannotObtainTerminalOrOriginalIntent",
+          "failure": []
+        },
+        {
+          "name": "sameKeyDifferentExpectedOrImageConflictsWithoutNewExecution",
+          "failure": []
+        },
+        {
+          "name": "firstPhaseMissingIdentityAndStaleExpectationHaveZeroLocalOrExternalEffects",
+          "failure": []
+        },
+        {
+          "name": "externalAuthorityEpochChangeKeepsOriginalResultWithoutAnyLocalGrant",
+          "failure": []
+        },
+        {
+          "name": "savedFirstDegradedPreservesConfiguredFallbackWithoutRewardOrSecondProviderCall",
+          "failure": []
+        },
+        {
+          "name": "newAttemptWithSameRejectedPhotoCountsAgainButOriginalReplayDoesNot",
+          "failure": []
+        },
+        {
+          "name": "originalResultIsReadBeforeCurrentVersionConflictAndRemainsRecoverable",
+          "failure": []
+        },
+        {
+          "name": "r5EvidenceHeadIsOutsideTransactionAndSavedResultRetryNeverRepeatsIt",
+          "failure": []
+        },
+        {
+          "name": "intentCommitsBeforeProviderAndReceiptCommitsWithApplied",
+          "failure": []
+        },
+        {
+          "name": "lostPrepareReplyRecoversOriginalKeyWithoutAllocatingNewIntent",
+          "failure": []
+        },
+        {
+          "name": "terminalReplayPrecedesCurrentVersionStatusChecksAndDoesNotExecute",
+          "failure": []
+        },
+        {
+          "name": "inFlightAndUnknownNeverSynthesizeDegradedOrExecuteAgain",
+          "failure": []
+        },
+        {
+          "name": "receiptFailureRollsBackLocalEffectButKeepsFirstResult",
+          "failure": []
+        },
+        {
+          "name": "appliedWriteFailureRollsBackLocalReceiptAndGrantButRetainsFirstProviderResult",
+          "failure": []
+        },
+        {
+          "name": "changedFrozenAuthorityOrConfigDoesNotRebindOriginalIntent",
+          "failure": []
+        },
+        {
+          "name": "casFailureRetainsOriginalResultAndRetryDoesNotCallProviderAgain",
+          "failure": []
+        },
+        {
+          "name": "outerTransactionIsRejectedBeforeReadingIntentOrCallingProvider",
+          "failure": []
+        }
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.business.it.ThemeRuntimeMySqlIT",
+      "tests": 58,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "76d4632623b64867c668bc51ed52adfe335d7884489ff10e3a22c015f181fc43",
+      "cases": [
+        {
+          "name": "draftAndPublishedConfigRoundTripKeepExistingRunFrozen",
+          "failure": []
+        },
+        {
+          "name": "r5PersonalZeroViewUsesCurrentMemberAndDoesNotPublishWeRunReadings",
+          "failure": []
+        },
+        {
+          "name": "r5WaitReadRestoresOnceAndPersistsTheServerDeadline",
+          "failure": []
+        },
+        {
+          "name": "r5CheckUsesRealFrozenDiceAndRerollPaysOnceWithNoLegacyDamage",
+          "failure": []
+        },
+        {
+          "name": "scanOnlyTaskUsesTheValidatedRunReceiptWithoutInventingAnObjectiveQuiz",
+          "failure": []
+        },
+        {
+          "name": "r5OutcomeOnlyTemplateAdoptsRealTasksWithoutTheRemovedCostTool",
+          "failure": []
+        },
+        {
+          "name": "r5TrustedFailureChargesOnceAndPassWaitsForConfirmation",
+          "failure": []
+        },
+        {
+          "name": "personalTaskDatabaseFailureRollsBackInventoryStateAndReceipt",
+          "failure": []
+        },
+        {
+          "name": "migrationAddsRunToBothUniqueKeys",
+          "failure": []
+        },
+        {
+          "name": "r5PersonalStepsUsesVerifiedBaselineReplaysAndRollsBackFailedRestore",
+          "failure": []
+        },
+        {
+          "name": "r5ActualCompletionSaveUsesOnePendingConfirmationAndReplaysNoSecondFee(String)[1]",
+          "failure": []
+        },
+        {
+          "name": "r5ActualCompletionSaveUsesOnePendingConfirmationAndReplaysNoSecondFee(String)[2]",
+          "failure": []
+        },
+        {
+          "name": "r5ActualCompletionSaveUsesOnePendingConfirmationAndReplaysNoSecondFee(String)[3]",
+          "failure": []
+        },
+        {
+          "name": "ownReplayIsFreshAndKeepsOldResult",
+          "failure": []
+        },
+        {
+          "name": "legacyRankNeedsCurrentRunClaimAndDoesNotReappearOnReplay",
+          "failure": []
+        },
+        {
+          "name": "r5TimeoutCompletedUsesPassPendingAndRetainsFixedProofWhenBalanceFalls",
+          "failure": []
+        },
+        {
+          "name": "automaticBroadcastRetriesMessageWithoutRepeatingInventory",
+          "failure": []
+        },
+        {
+          "name": "r5TypeInActualFrozenTimerOverridesLegacySeconds(boolean)[1]",
+          "failure": []
+        },
+        {
+          "name": "r5TypeInActualFrozenTimerOverridesLegacySeconds(boolean)[2]",
+          "failure": []
+        },
+        {
+          "name": "rescueLimitReusesRecoveryAndDoesNotResetInventoryOrActions",
+          "failure": []
+        },
+        {
+          "name": "r5PhotoAlbumAndStepsPublishFreezeAndConfirmTheirRealSave(String)[1]",
+          "failure": []
+        },
+        {
+          "name": "r5PhotoAlbumAndStepsPublishFreezeAndConfirmTheirRealSave(String)[2]",
+          "failure": []
+        },
+        {
+          "name": "r5PhotoAlbumAndStepsPublishFreezeAndConfirmTheirRealSave(String)[3]",
+          "failure": []
+        },
+        {
+          "name": "r5PhotoAlbumAndStepsPublishFreezeAndConfirmTheirRealSave(String)[4]",
+          "failure": []
+        },
+        {
+          "name": "r5PhotoAlbumAndStepsPublishFreezeAndConfirmTheirRealSave(String)[5]",
+          "failure": []
+        },
+        {
+          "name": "negativeItemEndsAtomicallyAndOldResultIsReadOnly",
+          "failure": []
+        },
+        {
+          "name": "r5PredictActualRoundSettlementWaitsForRevealAndUsesOriginalAttempt(String)[1]",
+          "failure": []
+        },
+        {
+          "name": "r5PredictActualRoundSettlementWaitsForRevealAndUsesOriginalAttempt(String)[2]",
+          "failure": []
+        },
+        {
+          "name": "r5PredictActualRoundSettlementWaitsForRevealAndUsesOriginalAttempt(String)[3]",
+          "failure": []
+        },
+        {
+          "name": "r5PredictActualRoundSettlementWaitsForRevealAndUsesOriginalAttempt(String)[4]",
+          "failure": []
+        },
+        {
+          "name": "r5PredictActualRoundSettlementWaitsForRevealAndUsesOriginalAttempt(String)[5]",
+          "failure": []
+        },
+        {
+          "name": "r5PredictActualRoundSettlementWaitsForRevealAndUsesOriginalAttempt(String)[6]",
+          "failure": []
+        },
+        {
+          "name": "r5PredictActualRoundSettlementWaitsForRevealAndUsesOriginalAttempt(String)[7]",
+          "failure": []
+        },
+        {
+          "name": "r5ZeroFailureFreezesFailureCardFromActualFeeTransaction",
+          "failure": []
+        },
+        {
+          "name": "oneTemplateResourceSlotsPublishFreezeAndChargeDifferentThemes",
+          "failure": []
+        },
+        {
+          "name": "r5TimerDatabaseFailureRollsBackAdvancedCasAndOutcomeFeeTogether",
+          "failure": []
+        },
+        {
+          "name": "personalOperationCommitsOnlyTheCurrentProofWithCostsEffectsAndReceipt",
+          "failure": []
+        },
+        {
+          "name": "personalAnyTaskCommitsCostWholePackReceiptAndTerminalTogether",
+          "failure": []
+        },
+        {
+          "name": "photoOriginalResultSurvivesLocalRollbackAndSameCommandAppliesOnce(String)[1]",
+          "failure": []
+        },
+        {
+          "name": "photoOriginalResultSurvivesLocalRollbackAndSameCommandAppliesOnce(String)[2]",
+          "failure": []
+        },
+        {
+          "name": "photoOriginalResultSurvivesLocalRollbackAndSameCommandAppliesOnce(String)[3]",
+          "failure": []
+        },
+        {
+          "name": "photoOriginalResultSurvivesLocalRollbackAndSameCommandAppliesOnce(String)[4]",
+          "failure": []
+        },
+        {
+          "name": "sameRequestReturnsReceiptAndCannotChangePayload",
+          "failure": []
+        },
+        {
+          "name": "verifiedNodeCompletionGrantsAndFreezesFinalCard",
+          "failure": []
+        },
+        {
+          "name": "r5TamperedAuthorHpWriteCannotAcquirePublishedValidationMarker",
+          "failure": []
+        },
+        {
+          "name": "choiceOnlyTaskSettlesFromControlledFrozenAnswerProof",
+          "failure": []
+        },
+        {
+          "name": "mobileChapterConfigGrantsUsesAndReloadsWithoutRepeating",
+          "failure": []
+        },
+        {
+          "name": "r5FeedbackStartsOnlyAfterSettlementAndNeverResettlesTheMainResult(String)[1]",
+          "failure": []
+        },
+        {
+          "name": "r5FeedbackStartsOnlyAfterSettlementAndNeverResettlesTheMainResult(String)[2]",
+          "failure": []
+        },
+        {
+          "name": "r5FeedbackStartsOnlyAfterSettlementAndNeverResettlesTheMainResult(String)[3]",
+          "failure": []
+        },
+        {
+          "name": "lastItemConcurrentUseHasOneWinnerAndNoPartialWrites",
+          "failure": []
+        },
+        {
+          "name": "completedRouteWithInsufficientEndingIsNotSuccessfulCompletion",
+          "failure": []
+        },
+        {
+          "name": "concurrentPersonalOperationCannotUseTheSameProofTwice",
+          "failure": []
+        },
+        {
+          "name": "textOnlyTaskSettlesFromControlledFrozenAnswerProof",
+          "failure": []
+        },
+        {
+          "name": "concurrentPersonalRequestsCannotDoubleChargeBusinessSlot",
+          "failure": []
+        },
+        {
+          "name": "gpsOnlyTaskUsesTheValidatedRunReceiptAndFrozenStationCoordinates",
+          "failure": []
+        },
+        {
+          "name": "r5TimedStateSettlesBothSessionsOnceWithoutOpeningAnotherAttempt",
+          "failure": []
+        },
+        {
+          "name": "r5ChallengeTwoActualCoinSessionsRestoreOnceWithoutCompletingTheRegularTask",
+          "failure": []
+        }
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "cd116bf8c7effdc11f3e2572e37542b8897c74ad4ec259e0ba4ddbc4085cb7b6",
+      "cases": [
+        {
+          "name": "existingIdentityIsWokenWithoutRebuildingLivePayloadOrRetryingWx",
+          "failure": []
+        },
+        {
+          "name": "intentConflictCannotBecomeAcceptedWake",
+          "failure": []
+        },
+        {
+          "name": "invalidOriginalRecipientOrContentCannotEnqueueOrWake",
+          "failure": []
+        },
+        {
+          "name": "repeatedHelperReusesIdButDoesNotScheduleAnotherWxAttempt",
+          "failure": []
+        },
+        {
+          "name": "rejectedWxQueueDoesNotUndoTheOriginalImWake",
+          "failure": []
+        },
+        {
+          "name": "missingOrInvalidIntentReceiptCannotRegisterCallbacks",
+          "failure": []
+        },
+        {
+          "name": "firstOriginalIntentIsEnqueuedBeforeCommitAndWakesOnlyItsId",
+          "failure": []
+        },
+        {
+          "name": "wxFalseIsOneOutsideTransactionAttemptAndCannotRepeatIm",
+          "failure": []
+        },
+        {
+          "name": "outsideOriginalTransactionRejectsBeforeLookupOrAnyAction",
+          "failure": []
+        },
+        {
+          "name": "wronglyInlineExecutorCannotCallWxInsideDatabaseTransaction",
+          "failure": []
+        },
+        {
+          "name": "wxChannelExceptionIsUnknownAndCannotCauseAnotherAttemptOrIm",
+          "failure": []
+        }
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT",
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "42f5102a97736013a1d2a150af6837c5ec6ee931941dd30c3df5bf3124ba9c05",
+      "cases": [
+        {
+          "name": "",
+          "failure": [
+            [
+              "failure",
+              "expected: <true> but was: <false>"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.business.service.impl.AiCreatorServiceImplTest",
+      "tests": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "fabdb7c188e402a920263f4f9053cf8c341db32ac5abdb9c4a95e791a07927bb",
+      "cases": [
+        {
+          "name": "playerThemeDraftDoesNotCountIncompleteOutput",
+          "failure": []
+        },
+        {
+          "name": "merchantTaskSuggestValidJsonWithoutSuggestionsKeepsParseErrorNull",
+          "failure": []
+        },
+        {
+          "name": "merchantPlanDelegatesToTopicPlanModule",
+          "failure": []
+        },
+        {
+          "name": "merchantTaskSuggestParsesFencedResponse",
+          "failure": []
+        },
+        {
+          "name": "resolveRoleForNullMemberReturnsPlayer",
+          "failure": []
+        },
+        {
+          "name": "playerThemeDraftReleasesReservationWhenMockModel",
+          "failure": []
+        },
+        {
+          "name": "playerThemeDraftReleasesReservationWhenModelFails",
+          "failure": []
+        },
+        {
+          "name": "merchantInsightParsesAndSanitizesSuggestions",
+          "failure": []
+        },
+        {
+          "name": "clubDesignGarbageTextSetsParseError",
+          "failure": []
+        },
+        {
+          "name": "playerProviderUnknownKeepsOriginalReservation(boolean)[1]",
+          "failure": []
+        },
+        {
+          "name": "playerProviderUnknownKeepsOriginalReservation(boolean)[2]",
+          "failure": []
+        },
+        {
+          "name": "themeDraftRejectsMockModelForMerchant",
+          "failure": []
+        },
+        {
+          "name": "merchantTaskSuggestNormalFlow",
+          "failure": []
+        },
+        {
+          "name": "merchantInsightRejectsMockModel",
+          "failure": []
+        },
+        {
+          "name": "safetyPrecheckContentSecurityBlock",
+          "failure": []
+        },
+        {
+          "name": "themeDraftAndNodeGenAndChapterOverviewNullTextDegradeWithoutNpe",
+          "failure": []
+        },
+        {
+          "name": "playerThemeDraftQuotaReportsZeroWhenSharedGatewayPoolIsExhausted",
+          "failure": []
+        },
+        {
+          "name": "safetyPrecheckNullTextDegradesWithoutNpe",
+          "failure": []
+        },
+        {
+          "name": "merchantInsightParseFailureThrows",
+          "failure": []
+        },
+        {
+          "name": "playerThemeDraftFourthRequestIsRejectedBeforeCallingModel",
+          "failure": []
+        },
+        {
+          "name": "themeDraftNormalFlow",
+          "failure": []
+        },
+        {
+          "name": "clubDesignParsesFencedResponse",
+          "failure": []
+        },
+        {
+          "name": "nodeGenerateNormalFlow",
+          "failure": []
+        },
+        {
+          "name": "clubDesignNormalFlow",
+          "failure": []
+        },
+        {
+          "name": "merchantTaskSuggestNullTextSetsParseError",
+          "failure": []
+        },
+        {
+          "name": "playerReviewRequiredUnknownRetainsOldRefundPolicy",
+          "failure": []
+        },
+        {
+          "name": "playerThemeDraftQuotaReturnsRemainingCount",
+          "failure": []
+        },
+        {
+          "name": "playerThemeDraftCountsOnlyCompleteRealDraft",
+          "failure": []
+        },
+        {
+          "name": "playerExplicitInputBlockedKeepsReservation",
+          "failure": []
+        },
+        {
+          "name": "themeDraftRejectsMockModelForClub",
+          "failure": []
+        },
+        {
+          "name": "merchantTaskSuggestGarbageTextSetsParseError",
+          "failure": []
+        },
+        {
+          "name": "safetyPrecheckPassCase",
+          "failure": []
+        },
+        {
+          "name": "chapterOverviewNormalFlow",
+          "failure": []
+        },
+        {
+          "name": "resolveRoleForReturnsRole",
+          "failure": []
+        },
+        {
+          "name": "clubDesignNullTextSetsParseError",
+          "failure": []
+        },
+        {
+          "name": "safetyPrecheckGarbageTextDegrades",
+          "failure": []
+        },
+        {
+          "name": "safetyPrecheckParsesFencedResponse",
+          "failure": []
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "No full CI success; later startup/JAR/jdeps not executed",
+    "No HTTP/JWT/device/provider acceptance",
+    "Typed UNKNOWN and Photo results apply only to this source SHA"
+  ]
+}

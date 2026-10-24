@@ -47,15 +47,17 @@ class SchedulerSessionLockMySqlIT {
         assertTrue(suffix == null || suffix.matches("[a-zA-Z0-9_]*"));
         assertTrue(MybatisItDatabase.databaseName("scheduler_lock").length() <= 64);
         String schema = MybatisItDatabase.databaseName("scheduler_lock");
-        assertTrue(schema.matches("chengyin_mybatis_scheduler_lock_[a-zA-Z0-9_]+"));
+        assertTrue(schema.matches("chengyin_mybatis_scheduler_lock[a-zA-Z0-9_]*"));
         try (Connection admin = java.sql.DriverManager.getConnection("jdbc:mysql://" + MybatisItDatabase.host()
                 + ":" + MybatisItDatabase.port() + "/mysql?useSSL=false&allowPublicKeyRetrieval=true",
                 MybatisItDatabase.user(), MybatisItDatabase.password()); Statement statement = admin.createStatement()) {
-            statement.executeUpdate("CREATE DATABASE `" + schema + "`");
+            statement.executeUpdate("CREATE DATABASE `" + schema + "` CHARACTER SET utf8mb4");
             ownedSchema = schema;
         }
         source = new DruidDataSource();
-        source.setUrl(MybatisItDatabase.url("scheduler_lock")); source.setUsername(MybatisItDatabase.user());
+        // This fixture already exclusively created its schema; the shared helper would DROP and recreate it.
+        source.setUrl("jdbc:mysql://" + MybatisItDatabase.host() + ":" + MybatisItDatabase.port() + "/" + ownedSchema
+                + "?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true"); source.setUsername(MybatisItDatabase.user());
         source.setPassword(MybatisItDatabase.password()); source.setMaxActive(8); source.setMinIdle(0); source.setInitialSize(0);
         source.setMaxWait(3000);
         WallConfig config = new WallConfig(); config.setMultiStatementAllow(false);
