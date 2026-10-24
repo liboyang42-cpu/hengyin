@@ -1,0 +1,18 @@
+{
+  "baseline": "40fdffaa345c4c239553f54f36a4ae9147191a1b",
+  "gateway_sha256": "3e245cdfed0b67ecd118734e112ec077f1cbc25ea1a4760c2927c790476fc1d9",
+  "creator_sha256": "5388516d3fd387d0386c1cd584e2a4c085369db4efbb2f08b788a51824e9a698",
+  "gen_consumed_before_unprotected_reserved_call": true,
+  "input_stage_and_review_already_wrapped_as_ordinary_ai_service_exception": true,
+  "actual_unprotected_site": "generateReserved -> retainQuota(..., INPUT_REJECTED)",
+  "fault_schedule": [
+    "valid gen plan preflight",
+    "consume original quota succeeds",
+    "input review returns explicit rejection",
+    "INPUT_REJECTED retain throws AiThemeDraftPlanRejectedException",
+    "old Gateway returns that outer type; old Creator gen branch rethrows it"
+  ],
+  "conclusion": "STATIC_FAULT_INJECTION_ESCAPE_WITNESS; not a production occurrence or executed JUnit failure",
+  "old_stage_review_negative_controls": "EXPECTED_TO_ALREADY_PASS; not claimed as old red tests",
+  "java_mysql_ci_executed": 0
+}

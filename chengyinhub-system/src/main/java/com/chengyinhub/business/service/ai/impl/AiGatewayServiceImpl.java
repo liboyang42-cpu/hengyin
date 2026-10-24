@@ -177,8 +177,14 @@ public class AiGatewayServiceImpl implements AiGatewayService
                         "AI 草稿原计划执行失败");
             }
         }
-        return generateReserved(memberId, plan.role(), "theme_draft", systemPrompt, userPrompt,
-                reservation, plan.nonce(), snapshot, plan, openid);
+        try {
+            return generateReserved(memberId, plan.role(), "theme_draft", systemPrompt, userPrompt,
+                    reservation, plan.nonce(), snapshot, plan, openid);
+        } catch (AiThemeDraftPlanRejectedException lateFailure) {
+            // Quota/review may already have effects; only this local type loses preflight authority.
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 草稿原计划执行失败");
+        }
     }
 
     private RuntimeException preparedRejection(AiThemeDraftPlan plan, Code code)
