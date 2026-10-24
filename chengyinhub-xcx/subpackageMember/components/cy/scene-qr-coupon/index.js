@@ -1,7 +1,7 @@
 'use strict'
 
 const app = getApp()
-const credential = require('../../../../utils/coupon-credential.js')
+const credential = require('../../../utils/coupon-credential.js')
 const datetime = require('../../../../utils/datetime.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }

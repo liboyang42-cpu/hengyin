@@ -7,7 +7,7 @@
 //  - allDone 只在四步全 true 时为 true
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const { guideStepsOf } = require('../../utils/publish/guide-progress.js')
+const { guideStepsOf } = require('../../pages/publish/utils/publish/guide-progress.js')
 
 const node = (over) => Object.assign({
   name: '邻里苑', longitude: '121.38', latitude: '31.11',

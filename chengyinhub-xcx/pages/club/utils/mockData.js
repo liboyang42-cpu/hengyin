@@ -271,7 +271,7 @@ function getDemoClubPosts() {
     {
       id: 90090101,
       content: '✨ 🆕 室内/户外挑战 ✨\n本周开启城市骑游挑战：完成 3 条推荐路线即可解锁限定徽章。室内台骑里程同样计入，和队友一起冲榜吧！',
-      images: '/images/d_frametu.jpg',
+      images: '/pages/club/images/d_frametu.jpg',
       createTime: '2026-07-01 09:16:00',
       likeCount: 42,
       commentCount: 8,
@@ -309,7 +309,7 @@ function getDemoProjectPreviews() {
   return [
     { id: 90011, title: '愚园路 · 城市解谜路线', sub: '2026.07.01 - 2026.08.31', cover: '/images/route_free_cover.png' },
     { id: 90012, title: '巨富长街拍立得巡游', sub: '2026.06.15 - 2026.07.15', cover: '/images/mer1.jpg' },
-    { id: 90013, title: '苏州河步行叙事线', sub: '长期开放 · 12 人参与', cover: '/images/d_frametu.jpg' },
+    { id: 90013, title: '苏州河步行叙事线', sub: '长期开放 · 12 人参与', cover: '/pages/club/images/d_frametu.jpg' },
   ];
 }
 

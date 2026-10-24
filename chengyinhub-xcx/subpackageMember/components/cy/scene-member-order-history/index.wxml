@@ -43,8 +43,8 @@
 
           </view>
           <view class="orderbox_li_con_info_name ep1">{{item.cmsActivity.name}}</view>
-          <view class="orderbox_li_con_info_time" wx:if="{{item.cmsActivity.timeRangeFormatted}}"><image lazy-load="true" class="moh-ico" src="/images/d_orderIcon.png" mode="widthFix" />{{item.cmsActivity.timeRangeFormatted}}</view>
-          <view class="orderbox_li_con_info_txt ep1"><image lazy-load="true" class="moh-ico" src="/images/d_orderIcon2.png" mode="widthFix" />{{item.addressText}}</view>
+          <view class="orderbox_li_con_info_time" wx:if="{{item.cmsActivity.timeRangeFormatted}}"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon.png" mode="widthFix" />{{item.cmsActivity.timeRangeFormatted}}</view>
+          <view class="orderbox_li_con_info_txt ep1"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon2.png" mode="widthFix" />{{item.addressText}}</view>
         </view>
       </view>
 
@@ -62,8 +62,8 @@
 
           </view>
           <view class="orderbox_li_con_info_name ep1">{{item.cmsTopic.name}}</view>
-          <view class="orderbox_li_con_info_time" wx:if="{{item.cmsTopic.timeRangeFormatted}}"><image lazy-load="true" class="moh-ico" src="/images/d_orderIcon.png" mode="widthFix" />{{item.cmsTopic.timeRangeFormatted}}</view>
-          <view class="orderbox_li_con_info_txt ep1"><image lazy-load="true" class="moh-ico" src="/images/d_orderIcon2.png" mode="widthFix" />{{item.addressText}}</view>
+          <view class="orderbox_li_con_info_time" wx:if="{{item.cmsTopic.timeRangeFormatted}}"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon.png" mode="widthFix" />{{item.cmsTopic.timeRangeFormatted}}</view>
+          <view class="orderbox_li_con_info_txt ep1"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon2.png" mode="widthFix" />{{item.addressText}}</view>
         </view>
       </view>
 

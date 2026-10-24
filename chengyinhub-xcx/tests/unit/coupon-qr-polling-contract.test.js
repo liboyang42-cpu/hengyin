@@ -31,7 +31,7 @@ function loadPage(js = source()) {
       vibrateShort() {},
     },
     // 页面会 require utils/motion-preference 读「减少动态效果」偏好,沙箱得给它 require
-    require(id) { return require(require('node:path').resolve(__dirname, '../../', id.replace(/^(\.\.\/)+/, ''))) },
+    require(id) { return require(path.resolve(ROOT, 'subpackageMember/coupon-qr', id)) },
     console,
   }
   vm.createContext(context)

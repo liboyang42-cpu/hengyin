@@ -988,4 +988,4 @@ function decorate(p) {
 
 // FOLLOWUP-A-2 的依赖放在文件尾:上方 U1 基线(tests/lint/ui-integrity-baseline.js)按行号锚定,不挪既有行。
 // 页面方法都在模块求值完成后才被调用,此处的 const 届时已初始化。
-const auditTimeline = require('../../../utils/audit-timeline.js');
+const auditTimeline = require('../../utils/audit-timeline.js');

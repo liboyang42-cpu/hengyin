@@ -3,7 +3,7 @@
 //  - 距离保留 km 单位 + atan2 写法(不复用 utils/geo 的米制 haversine,避免 .toFixed(2) 浮点漂移)
 //  - 显示格式("Xh,Ymin" / "X.XXkm")、完成度勾项与顺序均不变
 // 页面读 this.data 的部分由调用方以显式入参传入(chapters / formData / ctx),模块本身不碰 this.data。
-const { hasUsableCoords } = require('../../../../utils/publish/pro-editor-policy.js');
+const { hasUsableCoords } = require('./pro-editor-policy.js');
 
 // 两点球面距离(公里)。Haversine,R=6371km(= 原 calculateDistance)。
 function haversineKm(lat1, lon1, lat2, lon2) {

@@ -297,3 +297,29 @@ test('负控：共享导航栏移除根栈出口时必须判红', () => {
   ))
   assert.equal(events.some((event) => event.api === 'exitMiniProgram'), false)
 })
+
+test('玩法预览保存后等原生返回拦截关闭完成，再回到已有主题来源', () => {
+  const events = []
+  let context
+  const source = read('pages/publish/temp/index.js')
+  const methods = vm.runInNewContext(`({exitPage() ${methodBody(source, 'exitPage')},onNativeBackGuard() ${methodBody(source, 'onNativeBackGuard')}})`, {
+    wx: {
+      navigateBack(options) {
+        if (!context.nativeGuardClosed) return options.fail({ errMsg: 'navigateBack:fail page-container intercepted' })
+        events.push('return-to-theme')
+      },
+      switchTab() { events.push('lost-theme-stack') },
+    },
+  })
+  context = Object.assign({
+    data: { previewVisible: true }, nativeGuardClosed: false,
+    destroyPreviewAudio() {},
+    setData(patch) { Object.assign(this.data, patch) },
+  }, methods)
+  context.exitPage()
+  context.exitPage()
+  assert.deepEqual(events, [], 'DOM 隐藏回执和连点都不能提前消耗导航栈')
+  context.nativeGuardClosed = true
+  context.onNativeBackGuard()
+  assert.deepEqual(events, ['return-to-theme'])
+})

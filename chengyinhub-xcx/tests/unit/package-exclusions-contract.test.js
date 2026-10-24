@@ -14,7 +14,7 @@ const selected = componentNames.flatMap((name) => ['js', 'json', 'wxml', 'wxss']
   'images/publish-sheet-template.svg', 'images/publish-sheet-topic.svg',
   'images/publish-sheet-activity.svg', 'images/d_ok.png', 'images/publish-sheet-lock.svg',
   'components/cy/icon/spec.json', 'images/publish-quick/README.md', '.gitignore',
-  'project.private.config.json', 'project.config.json', 'utils/publish/guide-progress.js',
+  'project.private.config.json', 'project.config.json', 'pages/publish/utils/publish/guide-progress.js',
 ]);
 const config = JSON.parse(fs.readFileSync(path.join(ROOT, 'project.config.json'), 'utf8'));
 const ignore = config.packOptions.ignore;

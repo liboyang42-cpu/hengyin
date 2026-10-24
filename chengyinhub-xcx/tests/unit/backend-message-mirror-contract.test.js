@@ -37,7 +37,7 @@ test('漫游据点预写拒绝原话与后端逐字一致', () => {
 });
 
 test('据点核销未执行原话与后端逐字一致', () => {
-  for (const msg of literalsOf('utils/citynode-redeem-outcome.js', 'const NOT_REDEEMED')) {
+  for (const msg of literalsOf('pages/merchant/utils/citynode-redeem-outcome.js', 'const NOT_REDEEMED')) {
     assert.ok(javaText.includes('"' + msg + '"'), `后端找不到原话：${msg}`);
   }
 });

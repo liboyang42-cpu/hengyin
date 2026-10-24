@@ -1,4 +1,4 @@
-@import '../../style/tool-ui.wxss';
+@import '../style/tool-ui.wxss';
 .rd-label { padding: 31rpx 31rpx 15rpx; font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
 .gl-detail { margin-top: 31rpx; display: flex; flex-direction: column; }
 .gl-k { font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }

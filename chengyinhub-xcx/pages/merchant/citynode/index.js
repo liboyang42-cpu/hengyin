@@ -7,7 +7,7 @@ const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
 const codeTextUtil = require('../utils/code-text.js');
 const { createVerificationWorkflow } = require('../../../utils/verification-readback.js');
-const { cityNodeTarget, classifyCityNodeRedeem } = require('../../../utils/citynode-redeem-outcome.js');
+const { cityNodeTarget, classifyCityNodeRedeem } = require('../utils/citynode-redeem-outcome.js');
 
 function scalarText(value, fallback) {
   if (value === null || value === undefined || value === '') return fallback || '—';

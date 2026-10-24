@@ -10,7 +10,7 @@
 const cyToast = require('../../../../../utils/toast.js');
 const app = getApp();
 const community = require('../../../../../utils/community-post-api.js').createClient(app, wx);
-const proEditorDraft = require('../../../../../utils/publish/pro-editor-draft.js');
+const proEditorDraft = require('../../../utils/publish/pro-editor-draft.js');
 const publishIntent = require('../../../../../utils/publish/publish-intent.js');
 const { chinaParts } = require('../../../../../utils/datetime.js');
 const { resolveMenuChrome } = require('../../../../../utils/nav-safe-area.js');
