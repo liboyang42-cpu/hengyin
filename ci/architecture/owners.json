@@ -803,10 +803,10 @@
         ]
       },
       {
-        "id": "D_COMMITTED_NOTICE_REJECTION_PORT",
+        "id": "SHARED_BUSINESS_AUDIT_PORT",
         "module": "chengyinhub-system",
         "members": [
-          "com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"
+          "com.chengyinhub.business.mapper.BusinessAuditEventMapper"
         ],
         "forbidden_backrefs": [
           "com.chengyinhub.business.service.support.ComplaintCloseReporterNotice",
@@ -1126,7 +1126,7 @@
       ],
       [
         "D_COMPLAINT_CLOSE_REPORTER_NOTICE",
-        "D_COMMITTED_NOTICE_REJECTION_PORT"
+        "SHARED_BUSINESS_AUDIT_PORT"
       ],
       [
         "E_VOICE_PROVIDER_CLIENT",
@@ -1143,6 +1143,14 @@
       [
         "E_LLM_CLIENT_FACTORY",
         "E_VOICE_CONFIGURATION"
+      ],
+      [
+        "C_PLAY_NODE_COMPLETION",
+        "SHARED_BUSINESS_AUDIT_PORT"
+      ],
+      [
+        "C_CITY_NODE_REDEMPTION_APPLICATION",
+        "SHARED_BUSINESS_AUDIT_PORT"
       ]
     ]
   }

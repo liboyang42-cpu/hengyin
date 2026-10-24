@@ -1074,14 +1074,32 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                               if not l.strip().startswith(member + " -> ")).encode())
         self.assert_unknown(self.check_directions())
 
+    def test_retired_rejection_port_is_not_an_active_required_type_or_a_missing_input_exception(self):
+        retired = "com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"
+        self.assertNotIn("D_COMMITTED_NOTICE_REJECTION_PORT", self.dependencies["owners"])
+        self.assertEqual("com.chengyinhub.business.mapper.BusinessAuditEventMapper", self.owner_member("SHARED_BUSINESS_AUDIT_PORT"))
+        index = json.loads((self.output / "class-index.json").read_text())
+        self.assertNotIn(retired, index)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertFalse(report["technical_dependencies"]["graph_complete"])
+
+    def test_existing_registered_audit_consumers_keep_exact_original_directions(self):
+        audit = self.owner_member("SHARED_BUSINESS_AUDIT_PORT")
+        consumers = ("C_PLAY_NODE_COMPLETION", "C_CITY_NODE_REDEMPTION_APPLICATION", "D_COMPLAINT_CLOSE_REPORTER_NOTICE")
+        for owner in consumers: self.reference(self.owner_member(owner), audit)
+        report = self.check_directions()
+        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
+        self.assertEqual({(owner, "SHARED_BUSINESS_AUDIT_PORT") for owner in consumers}, set(map(tuple, report["technical_dependencies"]["owner_edges"])))
+
     def test_complaint_notice_rejection_port_preserves_actual_append_and_lock_read_dependency(self):
         notice = self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE")
-        port = self.owner_member("D_COMMITTED_NOTICE_REJECTION_PORT")
+        port = self.owner_member("SHARED_BUSINESS_AUDIT_PORT")
         self.reference(notice, port)
         self.reference("com.chengyinhub.business.service.impl.CoopComplaintServiceImpl", notice)
         report = self.check_directions()
         self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
-        self.assertEqual([["D_COMPLAINT_CLOSE_REPORTER_NOTICE", "D_COMMITTED_NOTICE_REJECTION_PORT"]], report["technical_dependencies"]["owner_edges"])
+        self.assertEqual([["D_COMPLAINT_CLOSE_REPORTER_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"]], report["technical_dependencies"]["owner_edges"])
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
 
     def test_complaint_notice_cannot_callback_its_original_domain_caller(self):
@@ -1096,17 +1114,17 @@ class PrivatePortsReadbackTest(unittest.TestCase):
                 self.assertTrue(any(f["rule"] == "OWNER_GOD_BACKREFERENCE" and f["target_class"] == target for f in report["findings"]))
 
     def test_rejection_mapper_reverse_notice_dependency_is_a_witnessed_cycle(self):
-        self.reference(self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE"), self.owner_member("D_COMMITTED_NOTICE_REJECTION_PORT"))
-        self.reference(self.owner_member("D_COMMITTED_NOTICE_REJECTION_PORT"), self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE"))
+        self.reference(self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE"), self.owner_member("SHARED_BUSINESS_AUDIT_PORT"))
+        self.reference(self.owner_member("SHARED_BUSINESS_AUDIT_PORT"), self.owner_member("D_COMPLAINT_CLOSE_REPORTER_NOTICE"))
         report = self.check_directions()
         self.assertEqual("BLOCKED", report["verdict"], report)
         cycle = next(f for f in report["findings"] if f["rule"] == "NEW_OWNER_CYCLE")
-        self.assertEqual(["D_COMMITTED_NOTICE_REJECTION_PORT", "D_COMPLAINT_CLOSE_REPORTER_NOTICE"], cycle["owners"])
+        self.assertEqual(["D_COMPLAINT_CLOSE_REPORTER_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"], cycle["owners"])
         self.assertTrue(all(w["source_sha256"] and w["target_sha256"] for w in cycle["witnesses"]))
 
     def test_notice_or_rejection_port_missing_raw_rows_remains_unknown(self):
         original = (self.output / "jdeps.stdout.txt").read_bytes()
-        for owner in ("D_COMPLAINT_CLOSE_REPORTER_NOTICE", "D_COMMITTED_NOTICE_REJECTION_PORT"):
+        for owner in ("D_COMPLAINT_CLOSE_REPORTER_NOTICE", "SHARED_BUSINESS_AUDIT_PORT"):
             member = self.owner_member(owner)
             with self.subTest(owner=owner):
                 self.replace_evidence("jdeps.stdout.txt", "\n".join(l for l in original.decode().splitlines()
@@ -1130,7 +1148,7 @@ class PrivatePortsReadbackTest(unittest.TestCase):
         self.reference("com.chengyinhub.web.controller.api.ApiVerifyController", application)
         report = self.check_directions()
         self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
-        self.assertEqual([], report["technical_dependencies"]["owner_edges"])
+        self.assertEqual([["C_CITY_NODE_REDEMPTION_APPLICATION", "SHARED_BUSINESS_AUDIT_PORT"]], report["technical_dependencies"]["owner_edges"])
         self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
         self.assertFalse(report["technical_dependencies"]["graph_complete"])
 

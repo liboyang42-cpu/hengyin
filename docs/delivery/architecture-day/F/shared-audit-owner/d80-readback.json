@@ -1,0 +1,116 @@
+{
+  "kind": "READ_ONLY_STATIC_NOT_CI_OR_DB",
+  "records": [
+    {
+      "source": "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae",
+      "unique_merge_base": "e1083c6c5f4dd5fa992a43015d2ae8c764626d52",
+      "table_writers": {
+        "chengyinhub-system:com.chengyinhub.business.mapper.BusinessAuditEventMapper": [
+          "action",
+          "actor_member_id",
+          "actor_role_code",
+          "actor_type",
+          "after_json",
+          "before_json",
+          "create_time",
+          "domain_id",
+          "domain_type",
+          "owner_member_id",
+          "reason",
+          "relation_id",
+          "request_id",
+          "target_id",
+          "target_type"
+        ]
+      },
+      "old_rejection_type_present": false,
+      "old_namespace_xml_present": false,
+      "focused_findings": [],
+      "determined_literal_xml_writers": {
+        "chengyinhub-system:com.chengyinhub.business.mapper.BusinessAuditEventMapper": [
+          "chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml#insertBusinessAuditEvent",
+          "chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml#insertComplaintCloseNoticeRejectionIgnore"
+        ]
+      },
+      "inventory_hints_are_not_writer_proof": true,
+      "production_table_literal_occurrences": [
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java:151:     * 撤销事实与操作者另落 redemption + business_audit_event,由",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SmsCouponHistoryController.java:81:     * 撤销事实与操作者另落 business_audit_event,由",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/java/com/chengyinhub/business/domain/BusinessAuditEvent.java:61:    /** NF-15 查询契约别名；底表沿用既有 business_audit_event，避免新建第二套审计真源。 */",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/MerchantCrmContactVO.java:5: * 明文不进列表、导出或审计正文;每次下发都由服务端留一条 business_audit_event。",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AuditTrailMapper.java:18:    /** business_audit_event:审核裁决/撤销事件(domain_type=PLATFORM, target_type=AUDIT_TASK)。 */",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/SettlementDetailMapper.java:57:     * 待结算行从未进过批次、没有资金动过,删除即正确冲正;撤销事实由 business_audit_event 留痕。",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPerkLedgerService.java:180:     * {@code business_audit_event}(actor_type=SYS_USER, action=REDEMPTION_REVERSE,",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AuditTrailProjectionService.java:22: *   <li>所有类型:audit_record(经 audit_task)+ business_audit_event(审核裁决/撤销,target=AUDIT_TASK);</li>",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/resources/mapper/business/AuditTrailMapper.xml:34:        from business_audit_event e",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:27:        from business_audit_event",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:37:        insert into business_audit_event",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:58:        select count(1) from business_audit_event",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:69:        from business_audit_event",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:80:        from business_audit_event",
+        "80b1126b0c73b5f67e66945e5371cfadb0d2d5ae:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:98:        insert ignore into business_audit_event"
+      ],
+      "not_proven": "dynamic/annotation/JDBC SQL without a literal table; runtime transactions, DB effects and CI"
+    },
+    {
+      "source": "99d84ce23afe8852d642ba21d791662ad06a9ebd",
+      "unique_merge_base": "e1083c6c5f4dd5fa992a43015d2ae8c764626d52",
+      "table_writers": {
+        "chengyinhub-system:com.chengyinhub.business.mapper.BusinessAuditEventMapper": [
+          "action",
+          "actor_member_id",
+          "actor_role_code",
+          "actor_type",
+          "after_json",
+          "before_json",
+          "create_time",
+          "domain_id",
+          "domain_type",
+          "owner_member_id",
+          "reason",
+          "relation_id",
+          "request_id",
+          "target_id",
+          "target_type"
+        ]
+      },
+      "old_rejection_type_present": true,
+      "old_namespace_xml_present": true,
+      "focused_findings": [
+        {
+          "rule": "NEW_TABLE_WRITER",
+          "key": "chengyinhub-system/src/main/resources/mapper/business/CommittedNoticeRejectionMapper.xml#insertIgnore",
+          "detail": "business_audit_event <- chengyinhub-system:com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"
+        }
+      ],
+      "determined_literal_xml_writers": {
+        "chengyinhub-system:com.chengyinhub.business.mapper.BusinessAuditEventMapper": [
+          "chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml#insertBusinessAuditEvent"
+        ],
+        "chengyinhub-system:com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper": [
+          "chengyinhub-system/src/main/resources/mapper/business/CommittedNoticeRejectionMapper.xml#insertIgnore"
+        ]
+      },
+      "inventory_hints_are_not_writer_proof": true,
+      "production_table_literal_occurrences": [
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java:151:     * 撤销事实与操作者另落 redemption + business_audit_event,由",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SmsCouponHistoryController.java:81:     * 撤销事实与操作者另落 business_audit_event,由",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/java/com/chengyinhub/business/domain/BusinessAuditEvent.java:61:    /** NF-15 查询契约别名；底表沿用既有 business_audit_event，避免新建第二套审计真源。 */",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/MerchantCrmContactVO.java:5: * 明文不进列表、导出或审计正文;每次下发都由服务端留一条 business_audit_event。",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AuditTrailMapper.java:18:    /** business_audit_event:审核裁决/撤销事件(domain_type=PLATFORM, target_type=AUDIT_TASK)。 */",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/SettlementDetailMapper.java:57:     * 待结算行从未进过批次、没有资金动过,删除即正确冲正;撤销事实由 business_audit_event 留痕。",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPerkLedgerService.java:180:     * {@code business_audit_event}(actor_type=SYS_USER, action=REDEMPTION_REVERSE,",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AuditTrailProjectionService.java:22: *   <li>所有类型:audit_record(经 audit_task)+ business_audit_event(审核裁决/撤销,target=AUDIT_TASK);</li>",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/resources/mapper/business/AuditTrailMapper.xml:34:        from business_audit_event e",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:27:        from business_audit_event",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:37:        insert into business_audit_event",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:58:        select count(1) from business_audit_event",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:69:        from business_audit_event",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/resources/mapper/business/BusinessAuditEventMapper.xml:80:        from business_audit_event",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/resources/mapper/business/CommittedNoticeRejectionMapper.xml:13:        insert ignore into business_audit_event",
+        "99d84ce23afe8852d642ba21d791662ad06a9ebd:chengyinhub-system/src/main/resources/mapper/business/CommittedNoticeRejectionMapper.xml:21:        select id,actor_type,actor_member_id,before_json,after_json from business_audit_event"
+      ],
+      "not_proven": "dynamic/annotation/JDBC SQL without a literal table; runtime transactions, DB effects and CI"
+    }
+  ]
+}
