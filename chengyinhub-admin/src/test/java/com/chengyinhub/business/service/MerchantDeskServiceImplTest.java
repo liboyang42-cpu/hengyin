@@ -288,6 +288,18 @@ class MerchantDeskServiceImplTest {
     }
 
     @Test
+    void receiptWithAnotherRequestIdIsNotThisRead() {
+        Map<String, Object> row = new HashMap<>();
+        row.put("requestId", "req-other-0001");
+        row.put("action", "SKU_SAVE");
+        when(mapper.selectReceipt(OWNER, "req-sku-00009")).thenReturn(row);
+        Map<String, Object> view = service.receipt(access, "req-sku-00009");
+        assertEquals("NOT_FOUND", view.get("state"));
+        assertEquals("req-sku-00009", view.get("requestId"));
+        assertEquals(null, view.get("action"));
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void businessHoursParsedFromExistingFormat() {
         Map<String, Object> all = (Map<String, Object>) ReflectionTestUtils.invokeMethod(
