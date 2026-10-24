@@ -24,7 +24,7 @@
         INSERT IGNORE INTO wx_payment_callback_fact_link (inbox_id,notify_hash,fact_id,fact_hash)
         VALUES (#{inbox_id},#{notify_hash},#{fact_id},#{fact_hash})
     </insert>
-    <select id="selectInboxLink" resultType="map">
-        SELECT inbox_id,notify_hash,fact_id,fact_hash FROM wx_payment_callback_fact_link WHERE notify_hash=#{notifyHash}
+    <select id="selectInboxLink" resultType="map" useCache="false" flushCache="true">
+        SELECT inbox_id,notify_hash,fact_id,fact_hash FROM wx_payment_callback_fact_link WHERE notify_hash IN (LOWER(#{notifyHash}),UPPER(#{notifyHash})) FOR SHARE
     </select>
 </mapper>

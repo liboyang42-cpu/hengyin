@@ -189,6 +189,7 @@ class TopicCreativePostVisibilitySyncTest {
                 });
         when(auditRecordMapper.insertAuditRecord(any())).thenReturn(1);
         when(cmsTopicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(ownedTopic());
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(ownedTopic());
         when(cmsTopicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         com.chengyinhub.business.service.support.AppMediaPublicationGuard media =
                 com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(OWNER_ID);

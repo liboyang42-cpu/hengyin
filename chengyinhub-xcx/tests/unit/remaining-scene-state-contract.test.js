@@ -26,6 +26,7 @@ function mount(relativePath, appOverrides, wxOverrides) {
   const app = Object.assign({
     sendRequest(options) { requests.push(options) },
     getPageSize() { return 20 },
+    getSession() { return { getRevision: () => 0 } },
     getUserID() { return 7 },
   }, appOverrides || {})
   const wx = Object.assign({

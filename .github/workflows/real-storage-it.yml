@@ -70,6 +70,8 @@ on:
           - architecture-day-verified-payment-facts
           - architecture-day-registration-seats
           - architecture-day-original-refund
+          - architecture-day-committed-official-notice
+          - architecture-day-complaint-committed-notice
           - architecture-day-topic-content-budget
           - architecture-day-registration-topic-fence
           - architecture-day-topic-cash-fence

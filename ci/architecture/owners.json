@@ -493,7 +493,18 @@
           "com.chengyinhub.business.service.IMerchantCommerceService",
           "com.chengyinhub.business.service.ICoopInviteService",
           "com.chengyinhub.business.service.ICmsRegistrationService",
-          "com.chengyinhub.business.service.IRefundService"
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.business.service.impl.CoopInviteServiceImpl",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+          "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper"
         ]
       },
       {
@@ -662,6 +673,100 @@
           "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
           "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl",
           "com.chengyinhub.business.service.impl.GameSharedRunControl"
+        ]
+      },
+      {
+        "id": "B_VERIFIED_PAYMENT_FACT_DTO",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.WechatPaymentOperations",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
+          "com.chengyinhub.business.service.IClubMembershipService",
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.IMerchantCommerceService",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.business.service.ICoopInviteService",
+          "com.chengyinhub.business.service.impl.CoopInviteServiceImpl",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger",
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+          "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper"
+        ]
+      },
+      {
+        "id": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.WechatPaymentOperations",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
+          "com.chengyinhub.business.service.IClubMembershipService",
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.IMerchantCommerceService",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.business.service.ICoopInviteService",
+          "com.chengyinhub.business.service.impl.CoopInviteServiceImpl",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger",
+          "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper"
+        ]
+      },
+      {
+        "id": "G_ORIGINAL_SETTLEMENT_LEDGER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.WechatPaymentOperations",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
         ]
       }
     ],
@@ -869,6 +974,42 @@
       [
         "D_CONTENT_RULES",
         "D_CONTENT_SIZE_POLICY"
+      ],
+      [
+        "E_TOPIC_QUERY",
+        "D_CONTENT_SIZE_POLICY"
+      ],
+      [
+        "B_VERIFIED_PAYMENT_FACT_STORE",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "B_PAYMENT_OUTBOUND_PORT",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "G_ORIGINAL_SETTLEMENT_LEDGER",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      [
+        "G_ORIGINAL_SETTLEMENT_LEDGER",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_ORIGINAL_SETTLEMENT_LEDGER"
       ]
     ]
   }

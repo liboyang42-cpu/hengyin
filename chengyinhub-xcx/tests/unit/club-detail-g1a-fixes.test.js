@@ -23,6 +23,7 @@ let persisted;
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
+  getSession: () => ({ getRevision: () => 0 }),
   getUserID: () => 1,
   getUserRole: () => 'club',
   getImgUrl: (url) => url,

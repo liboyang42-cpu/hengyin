@@ -95,6 +95,48 @@ class AuditTopicBudgetDecisionTest {
         assertEquals(0, update.getValue().getUserStatus());
     }
 
+    @Test void currentLockedRowKeepsAnAuthorsCommittedOfflineChoiceDespiteStaleRrOnlineRow() {
+        Fixture f = new Fixture(300);
+        f.task.setSourceType("post_review_flag");
+        CmsTopic current = f.currentRow(1, 0, 1, 1L);
+        when(f.topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(current);
+        assertEquals(1, f.audit.review(TASK, ACTOR, f.request()));
+        var order = inOrder(f.quota, f.topics);
+        order.verify(f.quota).lockAndCheckThemeOnline(OWNER, TOPIC);
+        order.verify(f.topics).selectCmsTopicByIdForUpdate(TOPIC);
+        f.assertPublicationChoice(0);
+    }
+
+    @Test void staleSafetyHoldCannotRelistAfterTheCurrentHoldWasCleared() {
+        Fixture f = new Fixture(300); f.topic.setCheckStatus(2);
+        when(f.topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(f.currentRow(1, 0, 1, 1L));
+        assertEquals(1, f.audit.review(TASK, ACTOR, f.request()));
+        f.assertPublicationChoice(0);
+    }
+
+    @Test void currentSafetyHoldStillUsesTheExistingManualReleasePolicy() {
+        Fixture f = new Fixture(300);
+        when(f.topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(f.currentRow(1, 0, 2, 1L));
+        assertEquals(1, f.audit.review(TASK, ACTOR, f.request()));
+        f.assertPublicationChoice(1);
+    }
+
+    @Test void currentPublishedVersionPreventsAStaleSnapshotFromPublishingAgain() {
+        Fixture f = new Fixture(300); f.topic.setPublishedConfigVersion(0L);
+        when(f.topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(f.currentRow(1, 0, 1, 7L));
+        assertEquals(1, f.audit.review(TASK, ACTOR, f.request()));
+        f.assertPublicationChoice(0);
+    }
+
+    @Test void changedOwnerCannotContinueUnderTheWrongMemberLock() {
+        Fixture f = new Fixture(300); CmsTopic current=f.currentRow(1, 0, 1, 1L);
+        current.setMemberId(OWNER + 1);
+        when(f.topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(current);
+        assertThrows(ServiceException.class, () -> f.audit.review(TASK, ACTOR, f.request()));
+        f.noPublicationEffects();
+        verify(f.facade, never()).topicSupplyAutoOnlineBlockReason(anyLong());
+    }
+
     private static final class Fixture {
         final AuditTaskServiceImpl audit=new AuditTaskServiceImpl();
         final AuditTaskMapper tasks=mock(AuditTaskMapper.class);
@@ -144,6 +186,21 @@ class AuditTopicBudgetDecisionTest {
             ReflectionTestUtils.setField(audit,"cmsTopicServiceProvider",provider);
             ReflectionTestUtils.setField(audit,"imServiceProvider",imProvider);
             ReflectionTestUtils.setField(audit,"mediaPublicationGuard",mock(AppMediaPublicationGuard.class));
+        }
+        CmsTopic currentRow(int status, int userStatus, int checkStatus, long version) {
+            CmsTopic current = new CmsTopic(); current.setId(TOPIC); current.setMemberId(OWNER);
+            current.setProductType(ProductType.ORIENTEERING); current.setStatus(status);
+            current.setUserStatus(userStatus); current.setCheckStatus(checkStatus);
+            current.setPublishedConfigVersion(version); return current;
+        }
+        void assertPublicationChoice(int userStatus) {
+            var update = org.mockito.ArgumentCaptor.forClass(CmsTopic.class);
+            verify(topics).updateCmsTopic(update.capture());
+            assertEquals(1, update.getValue().getStatus());
+            assertEquals(userStatus, update.getValue().getUserStatus());
+            assertNull(update.getValue().getBetaFlag(), "published content must not restart beta");
+            verify(facade, never()).publishApprovedRouteSnapshot(anyLong());
+            verify(facade).syncCreativeSquarePostVisibility(TOPIC, userStatus == 1);
         }
         AuditReviewDTO request() {
             AuditReviewDTO request=new AuditReviewDTO(); request.setStatus(AuditTask.STATUS_APPROVED);

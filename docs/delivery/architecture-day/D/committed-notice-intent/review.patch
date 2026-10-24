@@ -1,0 +1,13 @@
+diff --git a/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java b/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java
+--- a/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java
++++ b/chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java
+@@ -38,6 +38,7 @@
+             Map.entry("clubSessionReconciliationTask.run()", "com.chengyinhub.business.task.ClubSessionReconciliationTask"),
+             Map.entry("dataRetentionCleanupTask.run()", "com.chengyinhub.business.task.DataRetentionCleanupTask"),
+             Map.entry("imNotificationDeliveryTask.deliverPending()", "com.chengyinhub.business.task.ImNotificationDeliveryTask"),
++            Map.entry("committedOfficialNoticeTask.deliverPending()", "com.chengyinhub.business.task.CommittedOfficialNoticeTask"),
+             Map.entry("merchantAftercareTimeoutTask.run()", "com.chengyinhub.business.task.MerchantAftercareTimeoutTask"),
+             Map.entry("merchantCommerceReconcileTask.reconcile()", "com.chengyinhub.business.task.MerchantCommerceReconcileTask"),
+             Map.entry("merchantCrmDeliveryRecoveryTask.run()", "com.chengyinhub.business.task.MerchantCrmDeliveryRecoveryTask"),
+
+# G-owned target registration only; complaint producer hook is now source, not a pending patch.

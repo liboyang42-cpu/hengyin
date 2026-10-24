@@ -80,7 +80,13 @@ class TopicTemplateMetaBuildTest {
         when(cmsTopicChapterMapper.selectCmsTopicChapterList(any())).thenReturn(Arrays.asList(chapter()));
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
         when(categoryService.selectSysCategoryById(18L)).thenReturn(activeCategory());
-        when(merchantChapterApplicationService.getRecruitmentStats(anyLong(), any())).thenReturn(stats());
+        when(merchantChapterApplicationService.getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap()))
+                .thenAnswer(invocation -> {
+                    java.util.Map<Long, Integer> requested = invocation.getArgument(0);
+                    java.util.Map<Long, MerchantChapterRecruitmentStats> result = new java.util.LinkedHashMap<>();
+                    for (Long chapterId : requested.keySet()) result.put(chapterId, stats());
+                    return result;
+                });
     }
 
     /** 附表无行 = 该模板尚未录入元数据,是合法状态,不能被渲染成任何确定结论。 */

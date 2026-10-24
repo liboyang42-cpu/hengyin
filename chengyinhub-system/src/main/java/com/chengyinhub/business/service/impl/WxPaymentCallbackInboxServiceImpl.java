@@ -113,9 +113,8 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
     public boolean processVerified(String notifyId,
             com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference, Mutation mutation) {
         if (StringUtils.isEmpty(notifyId) || mutation == null) return false;
-        WxPaymentCallbackInbox inbox = mapper.selectByNotifyHash(sha256Hex(notifyId));
-        if (inbox == null || inbox.getId() == null
-                || !verifiedFacts.hasInboxLink(inbox.getId(),sha256Hex(notifyId),reference)) return false;
+        // Avoid the caller's old RR view and do not hold an inbox lock before the independent claim.
+        if (!verifiedFacts.hasInboxLinkForNotify(sha256Hex(notifyId),reference)) return false;
         return process(notifyId,new Mutation() {
             @Override public boolean isCurrent(WxPaymentCallbackInbox lockedInbox) {
                 // Executed by the original mutation service after inbox and business target locks,

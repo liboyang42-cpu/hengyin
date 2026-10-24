@@ -12,6 +12,7 @@
     "20261024_registration_verified_seats": [],
     "20261024_registration_seat_activity_scope": ["20261024_registration_verified_seats"],
     "20261024_coop_original_refund_components": ["20261023_g_cash_evidence_expand", "20261024_wx_verified_payment_fact"],
+    "20261024_d_committed_official_notice_wx": ["20261013_b_im_notification_intent"],
     "20261023_d_official_broadcast_delivery": ["official_broadcast"],
     "merchant_wechat_qrcode_20261022": [],
     "merchant_category_ids_20261022": [],

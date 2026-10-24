@@ -189,6 +189,7 @@ class RegistrationCallbackIntentMySqlIT {
         WechatVerifiedFactTestSupport.setField(inbox, "claimService", transactional(claims));
         WechatVerifiedFactTestSupport.setField(inbox, "mutationService", transactional(mutations));
         WechatVerifiedFactTestSupport.setField(inbox, "alarmService", mock(AlarmService.class));
+        WechatVerifiedFactTestSupport.setField(inbox,"verifiedFacts",WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts"));
         CmsRegistrationServiceImpl registration = new CmsRegistrationServiceImpl();
         WechatVerifiedFactTestSupport.setField(registration, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         WechatVerifiedFactTestSupport.setField(registration, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
@@ -304,6 +305,47 @@ class RegistrationCallbackIntentMySqlIT {
         assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM wx_pay_order_intent WHERE out_trade_no=? AND closed_confirmed_at IS NOT NULL", Integer.class, w2));
         assertEquals(1, probe.doneProbes.get()); assertEquals(1, scheduledNotices.get());
         verify(sdk, never()).closeOrder(any());
+    }
+
+    @Test
+    void oldOuterRepeatableReadViewCanVerifyAndApplyANewCommittedFactInItsOriginalDomainTransaction() {
+        providerOrders.put(BUSINESS_NO,original(BUSINESS_NO,"wx-mini","JSAPI","SUCCESS","WX-RR"));
+        var store=(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService)
+                WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts");
+        var registration=(CmsRegistrationServiceImpl)WechatVerifiedFactTestSupport.getField(gateway,"registrationService");
+        var inbox=(com.chengyinhub.business.service.IWxPaymentCallbackInboxService)
+                WechatVerifiedFactTestSupport.getField(registration,"wxPaymentCallbackInboxService");
+        var suspended=new org.springframework.transaction.support.TransactionTemplate(transactions);
+        suspended.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
+        var outer=new org.springframework.transaction.support.TransactionTemplate(transactions);
+        outer.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        outer.executeWithoutResult(status->{
+            assertEquals(BUSINESS_NO,sql.getMapper(CmsRegistrationMapper.class).selectByRegistrationNo(BUSINESS_NO).getRegistrationNo());
+            assertEquals(0,number("SELECT COUNT(*) FROM wx_verified_payment_fact"));
+            Map<String,String> facts=suspended.execute(ignored->gateway.queryOrderStatus(BUSINESS_NO));
+            var reference=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                    Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash"));
+            assertEquals(0,number("SELECT COUNT(*) FROM wx_verified_payment_fact"),"outer RR snapshot stays old");
+            assertEquals("WX-RR",store.requireVerified(reference).facts().transactionId());
+            assertEquals(0,number("SELECT COUNT(*) FROM wx_verified_payment_fact"),"reader must not weaken caller isolation");
+            assertNotNull(sql.getMapper(CmsRegistrationMapper.class).selectCmsRegistrationByIdForUpdate(11L));
+            String notify="PAY:WX-RR:SUCCESS";String hash=WxPaymentCallbackInboxServiceImpl.sha256Hex(notify);activeHash.set(hash);
+            assertTrue(Boolean.TRUE.equals(suspended.execute(ignored->inbox.registerVerified(notify,1,11L,"SUCCESS",reference))));
+            assertEquals(0,number("SELECT COUNT(*) FROM wx_payment_callback_fact_link"),"link committed after old RR view");
+            suspended.executeWithoutResult(ignored->db.update("UPDATE wx_payment_callback_fact_link SET notify_hash=UPPER(notify_hash)"));
+            assertTrue(store.hasInboxLinkForNotify(hash.toUpperCase(java.util.Locale.ROOT),reference));
+            assertTrue(inbox.processVerified(notify,reference,new com.chengyinhub.business.service.IWxPaymentCallbackInboxService.Mutation(){
+                @Override public boolean isCurrent(WxPaymentCallbackInbox row) {
+                    return Long.valueOf(11L).equals(row.getBizId()) && "SUCCESS".equals(row.getEventType());
+                }
+                @Override public boolean apply(WxPaymentCallbackInbox row) {
+                    return "SUCCESS".equals(registration.applyConfirmedWechatPaymentWithinTransaction(facts));
+                }
+            }));
+        });
+        assertCompleted("WX-RR",1);assertEquals(1,scheduledNotices.get());
+        assertEquals(1,number("SELECT COUNT(*) FROM wx_payment_callback_fact_link l JOIN wx_payment_callback_inbox i ON i.id=l.inbox_id AND i.notify_hash=UNHEX(l.notify_hash)"));
+        assertEquals(0,number("SELECT COUNT(*) FROM wx_payment_callback_fact_link l JOIN wx_payment_callback_inbox i ON i.notify_hash=l.notify_hash"));
     }
 
     private String freeze(String appid, String channel) {

@@ -1592,6 +1592,8 @@ public class ApiRegistrationController extends BaseController {
         }
         VerifyDynCodeUtil.Result result = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
         if (!result.valid) {
+            AjaxResult original = replayOriginalSeat("activity", code, null, false);
+            if (original != null) return original;
             return AjaxResult.error(result.reason == null ? "核销码无效" : result.reason);
         }
         // The existing activity path retains its real permission/time-window gates before seat verification.
@@ -1609,6 +1611,34 @@ public class ApiRegistrationController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.RegistrationSeatService registrationSeatService;
 
+    /**
+     * Failed new-use gates do not erase a committed seat. Signature-only identity checking is
+     * confined to this terminal read; current verifier authorization and locking scope stay in
+     * the seat service. A buyer's self-read permission is deliberately not used here.
+     */
+    private AjaxResult replayOriginalSeat(String type, String code, Long activityId, boolean requireActivity) {
+        if (code == null || !code.startsWith("v1.")) return null;
+        try {
+            VerifyDynCodeUtil.Result identity = VerifyDynCodeUtil.verifyForReceipt(code, dynSecret);
+            Integer seatNo = identity.valid
+                    ? com.chengyinhub.business.service.RegistrationSeatService.seatNumber(identity.type) : null;
+            if (seatNo == null) return null;
+            boolean activityTicket = identity.type.startsWith("activity_seat_");
+            if (type != null && !type.equals(activityTicket ? "activity" : "topic")) return null;
+            if ((requireActivity || !activityTicket) && (activityId == null || activityId <= 0)) return null;
+            Long actor;
+            try { actor = getAppUserId(); } catch (Exception unauthenticated) { return error("请先登录"); }
+            if (actor == null || actor <= 0) return error("请先登录");
+            var receipt = registrationSeatService.verifierSeatReceipt(identity.regId, seatNo, activityId, actor, activityTicket);
+            return receipt == null ? null : AjaxResult.success("该席位已核销，请勿重复提供权益", receipt);
+        } catch (ServiceException refusal) {
+            return new AjaxResult(refusal.getCode() == null ? 500 : refusal.getCode(), refusal.getMessage());
+        } catch (RuntimeException unknown) {
+            logger.error("原席位核销事实读取失败，保留待确认状态", unknown);
+            return new AjaxResult(520, "原席位核销结果待确认，请按原席位查询，勿改选其他席位重发");
+        }
+    }
+
     @Operation(summary = "带队场次核销主题玩家票")
     @PostMapping("/scan_group_member_ticket")
     @Parameters({
@@ -1623,6 +1653,8 @@ public class ApiRegistrationController extends BaseController {
         if (code.startsWith("v1.")) {
             VerifyDynCodeUtil.Result result = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
             if (!result.valid) {
+                AjaxResult original = replayOriginalSeat(null, code, activityId, true);
+                if (original != null) return original;
                 return AjaxResult.error(result.reason == null ? "核销码无效" : result.reason);
             }
             Integer seatNo = com.chengyinhub.business.service.RegistrationSeatService.seatNumber(result.type);
@@ -1682,6 +1714,8 @@ public class ApiRegistrationController extends BaseController {
                 //   而从没消灭掉的形态。加第四道闸时改一处即可,两个入口一起生效(负控可证)。
                 ScanContext ctx = resolveScanContext(type, code);
                 if (ctx.error != null) {
+                    AjaxResult original = replayOriginalSeat(type, code, activityId, false);
+                    if (original != null) return original;
                     return ctx.error;
                 }
                 CmsRegistration cmsRegistration = ctx.registration;
@@ -1723,6 +1757,8 @@ public class ApiRegistrationController extends BaseController {
                 // PR10 复审:时间窗在权限之后判 —— 无权扫码方先拿到权限拒绝,不能借时间提示探测场次开场时间。
                 AjaxResult tooEarly = clubSessionVerificationTooEarly(cmsActivity, new Date());
                 if (tooEarly != null) {
+                    AjaxResult original = replayOriginalSeat(type, code, activityId, false);
+                    if (original != null) return original;
                     return tooEarly;
                 }
                 if (cmsRegistration.getOrderNum() != null && cmsRegistration.getOrderNum() > 1) {
@@ -1789,6 +1825,12 @@ public class ApiRegistrationController extends BaseController {
 
                 return AjaxResult.success("核销成功");
             } else if (type.equals("topic")) {
+                // An explicit seat cannot fall through to legacy whole-order merchant verification.
+                // Route to the existing scoped group entry, which still enforces TTL for any new use.
+                VerifyDynCodeUtil.Result seatIdentity = VerifyDynCodeUtil.verifyForReceipt(code, dynSecret);
+                if (seatIdentity.valid && seatIdentity.type.startsWith("topic_seat_")
+                        && com.chengyinhub.business.service.RegistrationSeatService.seatNumber(seatIdentity.type) != null)
+                    return scanGroupMemberTicket(code, activityId);
                 CmsRegistration cmsRegistration = resolveRegistrationByScanCode(code);
                 if (cmsRegistration != null) {
                     // ★ [资损·根因] 与 activity 分支同一道闸:type 是扫码方传的,必须核对它与 ownerType 一致。
@@ -1935,6 +1977,8 @@ public class ApiRegistrationController extends BaseController {
             }
             return AjaxResult.error("查询失败");
         } catch (ServiceException e) {
+            AjaxResult original = replayOriginalSeat(type, code, activityId, false);
+            if (original != null) return original;
             return new AjaxResult(e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());

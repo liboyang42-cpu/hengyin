@@ -84,7 +84,7 @@ class RegistryContractTest(unittest.TestCase):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT'
         self.assertEqual([fqcn], reg['batches']['architecture-day-payment-inbox']['classes'])
-        self.assertEqual(3, reg['classes'][fqcn]['tests'])
+        self.assertEqual(4, reg['classes'][fqcn]['tests'])
         self.assertEqual(['mysql'], reg['classes'][fqcn]['storage'])
         self.assertEqual({}, reg['classes'][fqcn]['gates'])
         line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
@@ -161,13 +161,15 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-authoring": 32,
                     "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4,
-                    "architecture-day-payment-inbox": 3,
+                    "architecture-day-payment-inbox": 4,
                     "architecture-day-verified-payment-facts": 4,
                     "architecture-day-registration-seats": 7,
                     "architecture-day-original-refund": 10,
                     "architecture-day-deposit-attempt": 8,
-                    "architecture-day-topic-content-budget": 14,
-                    "architecture-day-registration-topic-fence": 14,
+                    "architecture-day-topic-content-budget": 15,
+                    "architecture-day-committed-official-notice": 13,
+                    "architecture-day-complaint-committed-notice": 11,
+                    "architecture-day-registration-topic-fence": 26,
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3}
         reg = registry()

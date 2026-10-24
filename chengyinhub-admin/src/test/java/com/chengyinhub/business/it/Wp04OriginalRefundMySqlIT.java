@@ -94,7 +94,7 @@ class Wp04OriginalRefundMySqlIT {
                 "CoopSettlementMapper","CoopSettlementAdjustmentMapper","WechatVerifiedPaymentFactMapper",
                 "UmsMemberSettlementDebtMapper","UmsMemberBalanceDetailMapper");
         originals=sql.getMapper(CoopSettlementOriginalMapper.class); cash=sql.getMapper(CoopSettlementCashEvidenceMapper.class);
-        facts=new WechatVerifiedPaymentFactService(); ReflectionTestUtils.setField(facts,"mapper",sql.getMapper(WechatVerifiedPaymentFactMapper.class));
+        facts=WechatVerifiedFactTestSupport.realFacts(source);
         // Committed via B's real storage owner before the business transaction, never by a G VERIFIED table/flag.
         originalPayment=facts.recordVerified(payment()); refundFact=facts.recordVerified(refund(refundApp));
         db.update("INSERT INTO ums_member(id,balance) VALUES(7,2.00),(77,0.00)");

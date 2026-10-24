@@ -48,6 +48,8 @@ class RefundManualPayoutTest {
         notifyService = mock(INotifyService.class);
         alarmService = mock(AlarmService.class);
         svc = new RefundServiceImpl();
+        ReflectionTestUtils.setField(svc, "coopSettlementClaimService",
+                mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class));
         ReflectionTestUtils.setField(svc, "refundApplicationMapper", refundApplicationMapper);
         CmsRegistration registration = new CmsRegistration();
         registration.setRegistrationNo("REG88");

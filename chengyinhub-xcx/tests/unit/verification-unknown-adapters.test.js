@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const verification = require('../../utils/merchant-verification.js');
+const seats = require('../../utils/registration-seat.js');
 const entries = [
   ['pages/club/detail/index.js', 'submitClubScan'],
   ['pages/merchant/index/index.js', '_submitVerification'],
@@ -10,9 +11,9 @@ const entries = [
   ['subpackageMember/components/scene-member-participation-detail/index.js', '_submitVerification'],
 ];
 // 执行生产 adapter 方法本体及真实 workflow，隔离无关页面加载/相机 UI。
-function harness(file, method, transport, request, sharedStorage) {
+function harness(file, method, transport, request, sharedStorage, sourceOverride) {
   request = request || { url: '/api/registration/scan_qr_code', method: 'POST', data: { type: 'activity', code: 'ticket' } };
-  const source = fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
+  const source = sourceOverride || fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
   const match = source.match(new RegExp('^( +)' + method + '(?:\\(|: function)', 'm'));
   assert.ok(match);
   const start = match.index + match[1].length;
@@ -44,7 +45,7 @@ function harness(file, method, transport, request, sharedStorage) {
   const requests = [], messages = [];
   let memberId = 11;
   let deadline;
-  const app = { getUserID: () => memberId, getAvatar: () => '', getNickname: () => '', sendRequest(options) { requests.push(options); return { abort() {} }; } };
+  const app = { getSession: () => ({ getRevision: () => 0 }), getUserID: () => memberId, getAvatar: () => '', getNickname: () => '', sendRequest(options) { requests.push(options); return { abort() {} }; } };
   if (transport) {
     const { createRequestClient } = require('../../utils/transport/request-client.js');
     const client = createRequestClient({ getBaseUrl: () => 'https://example.invalid', getUserID: () => memberId,
@@ -56,9 +57,11 @@ function harness(file, method, transport, request, sharedStorage) {
     setTimer(fn) { deadline = fn; return 1; }, clearTimer() {} });
   const methodObject = new Function('app', 'loading', 'cyLoading', 'cyToast', 'modal',
     'jsonHeader', 'readReducedMotion', 'applyTheme', 'merchantTheme', 'createVerificationWorkflow', 'wx', 'classifyVerificationOutcome', 'offerVerificationReadback',
+    'seatTarget', 'seatKey', 'captureLogin', 'loginCurrent', 'seatRecovery',
     'return ({' + body + '});')(app, loading, loading, m => messages.push(m),
-      { show: o => messages.push(o.content) }, () => ({}), () => false, () => {}, { merchantPageRestore() {}, merchantPageShow() {} }, workflow, storage,
-      verification.classifyVerificationOutcome, () => {});
+      { show: o => messages.push(o.content) }, () => ({ 'Content-Type': 'application/json' }), () => false, () => {}, { merchantPageRestore() {}, merchantPageShow() {} }, workflow, storage,
+      verification.classifyVerificationOutcome, () => {},
+      seats.seatTarget, seats.seatKey, seats.captureLogin, seats.loginCurrent, seats.seatRecovery);
   const owner = { ...methodObject, clearGroupCodeTimer() {}, resetGameStationSummaries() {}, _invalidateParticipationCancellation() {},
     data: { reducedMotion: false, myAvatar: '', myNickname: '', pointsSheet: {}, id: '' },
     _profileAttached: true, _syncProfileReadIdentity: () => true, initializeProfile() {}, _syncCommunityProfile() {},
@@ -66,7 +69,7 @@ function harness(file, method, transport, request, sharedStorage) {
   const invoke = () => method === 'submitClubScan'
     ? owner[method](request.url, { code: request.data.code, data: request.data })
     : owner[method](request.url + ':' + (request.data.code || ''), '核销中', request, r => messages.push(r.msg));
-  return { owner, storage, requests, messages, invoke, dispose: () => { if (hook) owner[hook](); else if (owner._verificationWorkflow) { owner._verificationWorkflow.destroy(); owner._verificationWorkflow = null; } }, switchOwner: id => { memberId = id; }, deadline: () => deadline() };
+  return { owner, storage, requests, messages, invoke, dispose: () => { if (hook) owner[hook](); else if (owner._verificationWorkflow) { owner._verificationWorkflow.destroy(); owner._verificationWorkflow = null; } }, switchOwner: id => { memberId = id; }, advanceLogin: () => { app._featureFlagsEpoch = (app._featureFlagsEpoch || 0) + 1; }, deadline: () => deadline() };
 }
 for (const [file, method] of entries) {
   for (const [label, callback, response, status] of [
@@ -364,4 +367,70 @@ test('历史登录拒绝仅接受fail通道的精确status2与code2，其余仍U
   for (const [code, channel, status] of [[2, 'success', 200], [2, 'abnormal', 2], ['2e0', 'fail', 2], [true, 'fail', 2], [500, 'fail', 2], [2, 'fail', '2']]) {
     assert.equal(verification.classifyVerificationOutcome({ code }, channel, status).status, 'unknown');
   }
+});
+
+
+const seatEntries = entries;
+const seatRequest = nonce => ({ url: '/api/registration/scan_dynamic_code', method: 'POST',
+  data: { code: 'v1.71.activity_seat_2.1999999999999.' + nonce + '.signature' } });
+const actualSeat = { code: 200, msg: '该席位已核销，请勿重复提供权益', data: {
+  seatId: 102, registrationId: 71, seatNo: 2, topicId: null, activityId: 9, verifierMemberId: 11,
+  verifiedAt: '2026-10-24T08:00:00.000+08:00', replayed: true, registrationFirstTime: false } };
+for (const [file, method] of seatEntries) {
+  test(file + ' 席位丢包销毁重建/刷新码只读原席位，不重发写', () => {
+    const disk = durableStorage(), a = harness(file, method, false, seatRequest(7), disk);
+    a.invoke(); a.requests[0].fail(); a.dispose();
+    const b = harness(file, method, false, seatRequest(99), disk); b.invoke();
+    assert.equal(b.requests.length, 1); assert.equal(b.requests[0].url, '/api/verify/seat/receipt');
+    assert.deepEqual(b.requests[0].data, { registrationId: '71', seatNo: 2 });
+    b.requests[0].success(actualSeat);
+    assert.match(b.messages.at(-1), /该席位已核销/); assert.equal(Object.keys(disk.values).length, 0);
+    b.dispose();
+  });
+  test(file + ' 席位待确认与畸形200都不释放原UNKNOWN', () => {
+    const h = harness(file, method, false, seatRequest(7)); h.invoke(); h.requests[0].fail(); h.invoke();
+    assert.equal(h.requests[1].url, '/api/verify/seat/receipt'); h.requests[1].success({ code: 520 });
+    h.invoke(); h.requests[2].success({ code: 200, msg: '核销成功' }); h.invoke();
+    assert.equal(h.requests[3].url, '/api/verify/seat/receipt');
+    assert.equal(h.requests.filter(r => r.url === '/api/registration/scan_dynamic_code').length, 1);
+    h.dispose();
+  });
+  test(file + ' 席位A→B→A迟回包不删原pending，不显示新代次UI', () => {
+    const h = harness(file, method, false, seatRequest(7)); h.invoke();
+    h.switchOwner(22); h.advanceLogin(); h.switchOwner(11); h.advanceLogin();
+    h.requests[0].success(actualSeat); assert.deepEqual(h.messages, []);
+    h.invoke(); assert.equal(h.requests[1].url, '/api/verify/seat/receipt'); h.dispose();
+  });
+  test(file + ' 席位存储故障明确未提交且零POST', () => {
+    const disk = durableStorage(); disk.setStorageSync = () => { throw Error('disk unavailable'); };
+    const h = harness(file, method, false, seatRequest(7), disk); h.invoke();
+    assert.equal(h.requests.length, 0); assert.match(h.messages[0], /本次未提交/); h.dispose();
+  });
+}
+
+for (const [url, data] of [
+  ['/api/registration/scan_dynamic_code', { code: 'v1.71.activity_seat_2.1999999999999.7.signature' }],
+  ['/api/registration/scan_qr_code', { type: 'activity', code: 'original-static-ticket' }],
+  ['/api/verify/groupcode/redeem', { code: 'v1.2.group_v2_3_4.1999999999999.7.signature' }],
+  ['/api/coupon/verification', { code: 'cq1.71.1999999999.signature' }],
+]) test('club scan actual request-client encodes Spring form parameters: ' + url, () => {
+  const h = harness('pages/club/detail/index.js', 'submitClubScan', true, { url, method: 'POST', data });
+  h.invoke(); const wire = h.requests[0];
+  assert.equal(wire.method, 'POST');
+  const contentType = Object.entries(wire.header).find(([key]) => key.toLowerCase() === 'content-type');
+  assert.match(contentType && contentType[1], /^application\/x-www-form-urlencoded(?:;|$)/);
+  assert.deepEqual(wire.data, data); h.dispose();
+});
+
+
+test('club original JSON header mutation fails the actual Spring form wire contract', () => {
+  const file = 'pages/club/detail/index.js';
+  const source = fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
+  const original = source.replace("url: url, data: scan.data, method: 'POST',", "url: url, data: scan.data, method: 'POST', header: jsonHeader(),");
+  assert.notEqual(original, source, 'original header mutation anchor must remain exact');
+  const h = harness(file, 'submitClubScan', true, seatRequest(7), undefined, original); h.invoke();
+  const contentType = Object.entries(h.requests[0].header).find(([key]) => key.toLowerCase() === 'content-type');
+  assert.equal(contentType[1], 'application/json');
+  assert.throws(() => assert.match(contentType[1], /^application\/x-www-form-urlencoded(?:;|$)/), assert.AssertionError);
+  h.dispose();
 });

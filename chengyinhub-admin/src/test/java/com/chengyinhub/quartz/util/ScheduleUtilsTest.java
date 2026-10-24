@@ -172,6 +172,7 @@ class ScheduleUtilsTest
                 Arguments.of("clubSessionReconciliationTask.run()", "com.chengyinhub.business.task.ClubSessionReconciliationTask"),
                 Arguments.of("dataRetentionCleanupTask.run()", "com.chengyinhub.business.task.DataRetentionCleanupTask"),
                 Arguments.of("imNotificationDeliveryTask.deliverPending()", "com.chengyinhub.business.task.ImNotificationDeliveryTask"),
+                Arguments.of("committedOfficialNoticeTask.deliverPending()", "com.chengyinhub.business.task.CommittedOfficialNoticeTask"),
                 Arguments.of("merchantAftercareTimeoutTask.run()", "com.chengyinhub.business.task.MerchantAftercareTimeoutTask"),
                 Arguments.of("merchantCommerceReconcileTask.reconcile()", "com.chengyinhub.business.task.MerchantCommerceReconcileTask"),
                 Arguments.of("merchantCrmDeliveryRecoveryTask.run()", "com.chengyinhub.business.task.MerchantCrmDeliveryRecoveryTask"),

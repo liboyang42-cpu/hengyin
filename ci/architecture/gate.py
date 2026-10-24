@@ -271,18 +271,42 @@ def dependency_counts(declarations):
     return result
 
 
-def literal_write_target(kind, details):
-    # Only an unambiguous literal leading target, not arbitrary regex table hints.
+def literal_sql_prefix(details):
+    """Reuse the SQL scanner for ordinary comments, preserving quoted tokens.
+
+    Only the fixed prefix before dynamic XML/substitution is evidence. This is
+    not a complete target/effects parser; executable comments remain UNKNOWN.
+    Value placeholders must not be mistaken for '#' comment syntax.
+    """
     dynamic = [reason for reason in details["unknown"] if reason != "unsupported_sql_shape"]
     text = details["leading"] if dynamic else details["text"]
-    target = r"`?(" + IDENT + r")`?"
+    text = re.sub(r"#\{[^{}]*\}", "?", text)
+    splitter = sql_splitter()
+    if splitter.delimiter_error(text):
+        return ""
+    statements = splitter.split_statements_with_delimiters(text)
+    return statements[0][0] if statements else ""
+
+
+def literal_write_operation(details):
+    mutation = re.match(r"\s*(insert|replace|update|delete)\b", literal_sql_prefix(details), re.I)
+    return mutation.group(1).lower() if mutation else None
+
+
+def literal_write_target(kind, details):
+    # Determine the real literal operation even when the MyBatis tag differs.
+    # Only single-table leading forms, not regex table hints or dynamic effects.
+    text = literal_sql_prefix(details)
+    operation = literal_write_operation(details)
+    target = r"(?:`(?P<quoted>" + IDENT + r")`|(?P<plain>" + IDENT + r"))"
     patterns = {
-        "update": r"^\s*update\s+" + target + r"(?=\s+set\b|\s*$)",
-        "delete": r"^\s*delete\s+from\s+" + target + r"(?=\s+where\b|\s*$)",
-        "insert": r"^\s*(?:insert(?:\s+ignore)?|replace)\s+into\s+" + target + r"(?=\s|\(|$)",
+        "update": r"^\s*update\s+(?:low_priority\s+)?(?:ignore\s+)?" + target + r"(?=\s+set\b|\s*$)",
+        "delete": r"^\s*delete\s+(?:low_priority\s+)?(?:quick\s+)?(?:ignore\s+)?from\s+" + target + r"(?=\s+where\b|\s*$)",
+        "insert": r"^\s*insert\s+(?:(?:low_priority|delayed|high_priority)\s+)?(?:ignore\s+)?(?:into\s+)?" + target + r"(?=\s|\(|$)",
+        "replace": r"^\s*replace\s+(?:(?:low_priority|delayed)\s+)?(?:into\s+)?" + target + r"(?=\s|\(|$)",
     }
-    match = re.match(patterns.get(kind, r"(?!)"), text, re.I)
-    return match.group(1) if match else None
+    match = re.match(patterns.get(operation, r"(?!)"), text, re.I)
+    return (match.group("quoted") or match.group("plain")) if match else None
 
 
 def scope_violation(kind, details):
@@ -446,8 +470,7 @@ def business_write_findings(key, statement, kind, details, previous, previous_de
         operation = record["kind"]
         # Preserve REPLACE vs INSERT as distinct capability, including select
         # tags with a literal leading DML. Complex/unknown SQL is not proven equal.
-        mutation = re.match(r"\s*(insert|replace|update|delete)\b", info["text"], re.I)
-        operation = mutation.group(1).lower() if mutation else operation
+        operation = literal_write_operation(info) or operation
         target_kind = "insert" if operation == "replace" else operation
         return record["owner"], operation, literal_write_target(target_kind, info)
 
@@ -475,8 +498,6 @@ def static_findings(base, current, changed, sql_details, base_details, policy=No
     blockers, review = [], []
     known_owners = {}
     for key, statement in base["statements"].items():
-        if statement["kind"] == "select":
-            continue
         table = literal_write_target(statement["kind"], base_details[key])
         if table:
             known_owners.setdefault(table, set()).add(statement["owner"])
@@ -511,9 +532,8 @@ def static_findings(base, current, changed, sql_details, base_details, policy=No
                 blockers.append({"rule": "LOCKING_SELECT_CACHE", "key": key,
                                  "detail": "explicit FOR UPDATE requires useCache=false AND flushCache=true",
                                  "statement": lock})
-            mutation = re.match(r"\s*(insert|replace|update|delete)\b", details["text"], re.I)
-            kind = mutation.group(1).lower() if mutation else "select"
-            kind = "insert" if kind == "replace" else kind
+        kind = literal_write_operation(details) or kind
+        kind = "insert" if kind == "replace" else kind
         if kind == "select":
             review.append({"key": key, "reason": "SQL_QUERY_CHANGED: effects/locking are not semantically parsed"})
             continue

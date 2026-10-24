@@ -1,81 +1,30 @@
-# 当前八 Agent 施工与验收状态
+# Current eight-agent implementation checkpoint
 
-更新：2026-10-24T07:10:50.220713+00:00。源码父提交 `06a571b1247620a9bdcea068be0ded973671d17c`。**全范围未完成，未部署。**
+2026-10-24T10:06:53.166019+00:00
 
-本轮最初回读：E执行中，其余7个已交付后空闲。7个已发送新任务；再次逐一回读，8个均active。下表是最新所有权；active仅证明任务执行，不能作为业务验收。
+Full scope WP00-WP17 / Q1-Q10 / A01-A15 / T01-T22 / G0-G5 remains incomplete. No deployment.
 
-| Agent | 当前独占任务 | 写入边界 |
+| Agent | Current task | Evidence |
 |---|---|---|
-| A | 支付/退款首个业务锁统一topic，锁下归属复核；保留交易、CAS和回放 | CmsRegistrationServiceImpl/RefundServiceImpl/WxPaymentCallbackMutationService的栅栏与接线；G账本正文不改 |
-| B | 持久化已验证的原支付/退款事实，复用现有inbox/attempt | SDK/router/intent/inbox事实层及最小additive SQL源码；不改A/G领域正文 |
-| C | 复用现有票码建立稳定逐席位身份和实际核销事实 | 席位/票码/核销事实；共享下单/退款文件只给review.patch |
-| D | 补齐章节、节点CRUD和审核alreadyPublished写入的topic栅栏 | 三服务上述精确符号已补授；CmsTopic共享只给patch |
-| E | 地图外呼、缓存及城市地理查询容量和失败语义 | TencentMapClient/ApiMapService/MapGeocodeServiceImpl；不改公共传输 |
-| F | 为新真实类型补既有架构owner/direction约束 | 既有policy/控制例；不改root CI refs或新造scanner |
-| G | 原冻结逐订单分项、实际核销席位固定费、成功退款冲回和debt | 结算/claim/adjustment/debt和additive SQL源码；旧claim约束保留 |
-| H | 审查新B路由、A金额边界及root正式下单封口组合 | 只读独立审查，未运行单列 |
+| A | 原付款事实精确关联、原退款夹具接线 | Active status; source results independently reviewed |
+| B | 优先修外层失败 release 自锁，再完成原已验证成功通知恢复 | Active status; source results independently reviewed |
+| C | 票码应用层已交，继续据点核销事务闭包提取 | Active status; source results independently reviewed |
+| D | 投诉无效收件人持久结果、申请事件身份 | Workspace probe pending; no tool progress proven |
+| E | 非支付 AI/音视频外呼资源边界 | Workspace probe pending; no tool progress proven |
+| F | 真实 Bean 依赖闭包和故意循环负控 | Active status; source results independently reviewed |
+| G | 关账前当前读已批退款防双冲、迟到付款恢复身份 | Active status; source results independently reviewed |
+| H | 独立审查 G 新事务恢复及 B 失败修复 | Active status; source results independently reviewed |
 
-root负责统一集成、共享合同、CI与实际业务验收，不新增第9个会话。先做复杂高收益代码，整批组合后统一回归。每10分钟巡查沿用现有自动化，已更新新分工。
+Each inspection checks evidence, dispatches or unblocks only when needed, reads back and checkpoints. Existing eight chats only. Root integrates shared contracts and accepts results. Active is not evidence of implementation.
 
-## 已批准的业务规则
+## Current source batch
 
-- 关闭后台通用新增报名，统一正式下单；已纳06a源码。
-- 退款仅按该订单原冻结分项冲回，其他订单不重算。
-- 固定履约费按每个实际核销席位一次，未核销不计费；必须有稳定席位身份和实际核销事实，不能按购票数推定履约。
+A/e6 verified domain consumption and original refund terminal hooks, B/f6 fresh-reader and fixtures, C/b7+6d session isolation and terminal receipt replay, D/83 current audit state and9a actual complaint notice producer, E/7ac bounded query batches, F/e9+615 trusted policy are composed. See batch-ACDEF-source-20261024.json for exact hashes. C/d2 subsequent application extraction and new G producers remain next-batch work.
 
-## 本轮集成
+104 registered classes pass source precheck. Registry14 and new F policy/tools14 Python controls pass. Node308+6+63 pass, zero skips. Action ledger5113 controls, zero runtime receipts. No Java, MySQL, HTTP, device or provider acceptance is claimed.
 
-A afcabd的两个文件逐字节纳入：建单/扣款前拒绝超过渠道整数分上限的金额，原参数化场景等价展开，53个普通@Test；未执行Java/真库。既有旧回执保留其原SHA和数量，不能当作新候选绿项。
+B outer failure release self-lock is explicitly assigned. Original allocation producers, recovery and old refund fixtures remain unfinished. Three money-policy decisions remain pending and their algorithms are not enabled.
 
-## 待统一验收
+## Next acceptance step
 
-完整WP00–WP17 / Q1–Q10 / A01–A15 / T01–T22 / G0–G5仍保留。支付路由、topic资金锁、逐席位履约和原分项退款尚在组合施工；Java/数据库/编译后架构/故障恢复与业务持久读回未闭合。缺少验证证据本身不登记为业务BUG。
-
-## 最新组合批次
-
-已组合A5c269调度准入复验、B0ff支付SDK/意图/唯一owner路由、Cf8玩法瞬态故障传播、F1fb请求/异步/Quartz关联及G2457主题资金锁序。两处A/B测试binding、原主题装配、共享CmsTopic字段及资金方法、F/A执行器已串行合成。96个已登记类严格源码预检无错；15个测试入口/登记合同自测通过。Java/数据库/双JVM/业务读回仍NOT_RUN。详见batch-ABCFG-composition-20261024.json。
-
-宾果内层补丁：topicRule和grantCellRewards先透传原TransientDataAccessException，与Cf8外层回滚闭合；普通旁路失败仍best-effort。新增4个普通测试源码，原6例不改，Java/真库未运行。偏好固定回执fingerprint问题仍待治理，不归入本修复。
-
-## 集中CI实际失败与后续修复
-
-run40074201165 / e4e9f6042整体FAIL：发布守卫缺NpcProfileService导入导致Java测试未执行；公共主干新增迁移声明未同步；小程序若干源码契约仍引用已迁移成员及选项弹层旧形式。原失败保留，不计作通过。当前窄修复已补导入、共享扫描/原子领取资格和G8真库夹具的新SDK接线；36项相关Python门禁自测PASS。Java/真库待新批次集中运行，不重复派旧已知失败候选。
-
-后续修复：已同步公共主干e108的2文件原迁移/声明，未改迁移棘轮、未执行DDL。F新增精确类型约束已纳，6份可信文件逐字匹配5caf，两处CI ref一并更新；9项定点Python控制通过，真实编译图未知。4个小程序测试文件改读实际owner并实调选项组件事件，55/55通过、0skip，未改页面行为。两项分币尾差问题已向用户提问，等待确认；C新席位候选已取得，活动席位继续施工。
-
-F完整Python约束自检164/164通过（39.693s），包含原控制和新增精确职责；使用协议/合成产物，实际Java/jdeps图仍UNKNOWN。不能将本控制层通过改写为本批后端/业务通过。
-
-最新巡查8会话均active。A已交ae160、E已交d811/8372并续派外层锁序/主题纯读职责；C735b活动席位仍待审，H发现旧1fbd在RR快照下放行已退款第二席P1，已交C优先修复，旧候选未纳。C云环境缺skill原文已由root补齐，不再等待路径。三项分币/亏损归属问题待人类明确，G不擅自新增扣款责任，独立事实与事务工作继续。
-
-最新A/E组合：A ae160内层支付退款topic首锁、当前行终态/inbox同事务与E d811/8372地图预算/城市缓存/真实来源展示已纳工作树。A11文件、E20文件逐字匹配冻结候选；A共享报名支付字段保留B出站端口，E仅修新工具文案一处错字。28地图与63原scope/action Node用例通过，97登记类严格源码预检无错；Java/真库未运行。外层A锁序、B事实SDK组合及G分项退款仍在施工，不能据此宣称WP04或生产可用。
-
-A/E组合已7da提交推送；点名run40077180059在Admin编译阶段因PlayBasicCommandApplication残留success(Map)失败，实际0/9、CLEAN，未执行事务测试。System仅该冻结源码编译通过。root已改成AjaxResult.success并横扫其它迁移helper，尚未复跑。H确认非法中间节点使缓存命中合法子集的P2，root已在查缓存前拒绝所有非法/缺失节点，并补暖缓存+真实DTO标志反例，Java未跑。C4619当前读修复正由H复核，未纳旧席位候选。
-
-## 最新续派巡查 2026-10-24T08:44:38.440082+00:00
-
-B/C/E/H交付后空闲，root已续派；A/D/F/G同步更新具体接缝和阻塞处理。逐一回读8个均active，active不等于已执行工具，D尚无本轮执行输出。
-
-- A：TeamGroup/ClubEventOps外层首锁；消费B真实付款退款事实并完成原事务接线。
-- B：3893/0415已交；继续外部SUCCESS到本地领域失败的持久恢复与渠道锁缺口。
-- C：f1cfe74已交；继续实际选席、核销、UNKNOWN与账号/页面代次隔离。
-- D：5632已暂存组合；优先修H确认审核RR旧快照覆盖作者下架P2，再做持久通知。
-- E：9e14已暂存组合、b9b894待纳；继续真实查询热点与职责减负。
-- F：0e00独立verifier已交；完成固定可信引用的编译后控制与缺raw行约束。
-- G：冻结原分项/退款终态同事务安全子集；修BINARY(32)/hex事实hash接线。
-- H：只读审B3893/0415成功事实闭环，再审C f1cfe74账号页面UNKNOWN。
-
-D32文件和E Query21方法迁移已暂存组合；真实CmsTopic4150→3606行，13公开委托、128未迁移方法保持原体；新增Query666行。暂存secret-file/gitleaks与diff检查通过，Java/DB未运行。H确认C4619源码修复，D审核覆盖下架P2已转修；B/C/E新候选待独立合成，未部署。
-
-D详细会话后续已读到持久通知的fileChange及工具调用完成；原“尚无执行输出”是较早快照，现已补齐施工证据，仍不代表业务验收。
-
-## Inspection dispatch loop 2026-10-24T08:49:50.466917+00:00
-
-Existing hengyin-agent updated and read back ACTIVE, every10minutes, original deadline retained. Each check requires evidence, necessary dispatch/unblock, readback and checkpoint; root also advances composition. Two consecutive checks without real progress trigger targeted unblocking, never blind restarts or active-as-acceptance. A RR reader gap and G binary/hex identity mismatch forwarded to B.
-
-Root reviewed/applied E b9b894 five-file batch-read patch using existing mapper and maximum300 IDs per IN. Static comparison passes:21 old bodies unchanged, only template acquisition changed; existing SQL projection/result map retained. Five new Java scenarios are source only. Java/DB/production NOT_RUN; no measured performance claim. Previous D/EQuery source committed a0b8d5d01.
-
-## Combined A/B/C-backend/F/G source 2026-10-24T09:13:36.840869+00:00
-
-A outer/create parent fence, B verified facts, C backend seat identity/current row, G original refund ledger and F bd33/c135 controls assembled. B split compile residues removed/restored from6d; A/G shared outbound qualifiers and E Query composition retained. New B4/C7/G10 routes and A14 source count registered;101 exact source prechecks,14 registry Python and80+21 F Python controls PASS. Staged13 migration dependency order PASS, no DDL.
-
-C frontend session revision P2, A/B durable fact transaction hooks, G actual allocation producer/financial decisions, D audit RR and durable notices remain incomplete. Same-source Java/MySQL/JDK and business readback NOT_RUN. No deployment/master merge. Receipt:batch-ABCFG-source-20261024.json.
+Secret scan and isolated candidate commit, then one hosted compilation plus4 actual verified-payment-fact storage tests. Do not expand this frozen batch with future work or repeat full CI per patch. Historical failures40074201165/e4 and40077180059/7da remain failures bound to their source. No master merge, production DDL, deployment or WeChat/live paid calls.

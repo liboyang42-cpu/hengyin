@@ -628,6 +628,88 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
         self.assertEqual(["AI_QUOTA_RESERVATION", "PHOTO_CHECK_INTENT"], report["business_policy"]["fact_ids"])
         self.assertTrue(any("service call paths" in x for x in report["not_proven"]))
 
+    def test_literal_modifiers_comments_and_tag_mismatch_keep_owner_enforcement(self):
+        trusted, _ = self.prepare_policy()
+        variants = (
+            ("update", "update low_priority ai_quota_reservation set state=1 where id=#{id}"),
+            ("update", "update ignore ai_quota_reservation set state=1 where id=#{id}"),
+            ("update", "update low_priority ignore `ai_quota_reservation` set state=1 where id=#{id}"),
+            ("update", "/* note */ update /* target */ ai_quota_reservation set state=1 where id=#{id}"),
+            ("select", "-- ordinary note\n update ai_quota_reservation set state=1 where id=#{id}"),
+            ("insert", "insert low_priority ignore into ai_quota_reservation(id) values(#{id})"),
+            ("insert", "insert high_priority ai_quota_reservation(id) values(#{id})"),
+            ("insert", "insert delayed into ai_quota_reservation(id) values(#{id})"),
+            ("insert", "replace low_priority into ai_quota_reservation(id) values(#{id})"),
+            ("insert", "replace delayed ai_quota_reservation(id) values(#{id})"),
+            ("delete", "delete low_priority quick ignore from ai_quota_reservation where id=#{id}"),
+            ("update", "insert into ai_quota_reservation(id) values(#{id})"),
+            ("insert", "delete from ai_quota_reservation where id=#{id}"),
+            ("delete", "replace into ai_quota_reservation(id) values(#{id})"),
+            ("update", "update ai_quota_reservation set note='/*+ is data */' where id=#{id}"),
+        )
+        for writer, expected in (("AiQuotaReservationMapper", None),
+                                 ("ForeignMapper", "UNDECLARED_WRITE_BINDING"),
+                                 ("PhotoCheckIntentMapper", "NEW_BUSINESS_OWNER_WRITE")):
+            path = self.put_write("ai_quota_reservation", writer)
+            for tag, sql in variants:
+                with self.subTest(writer=writer, tag=tag, sql=sql):
+                    self.write(path, mapper('<%s id="mutate">%s</%s>' % (tag, sql, tag),
+                                            "com.chengyinhub.business.mapper." + writer))
+                    result = self.source_cli(trusted, self.commit())
+                    if expected:
+                        self.assert_rule(result, expected)
+                    else:
+                        self.assertEqual(0, result[0], result[1])
+                        self.assertEqual("PARTIAL", result[1]["business_policy"]["coverage"])
+
+    def test_comment_modifier_in_cross_namespace_include_is_red(self):
+        self.write(MAPPER, mapper('<update id="finish"><include refid="example.Target.sql"/></update>'))
+        other = MAPPER.replace("OrderMapper", "TargetMapper")
+        self.write(other, mapper('<sql id="sql">update orders set state=1 where id=#{id}</sql>', "example.Target"))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.write(other, mapper('<sql id="sql">/* note */ update ignore photo_check_intent set state=1 where id=#{id}</sql>', "example.Target"))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
+
+    def test_existing_select_tag_writer_cannot_hide_technical_table_owner(self):
+        self.write(MAPPER, mapper('<select id="legacyWrite">/* note */ update low_priority existing_fact set state=1 where id=#{id}</select>'))
+        self.base = self.commit()
+        self.before = gate.inventory(self.root, self.base)
+        trusted, _ = self.prepare_policy()
+        self.put_write("existing_fact", "ForeignMapper", 'update existing_fact set state=2 where id=#{id}')
+        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_TABLE_WRITER")
+
+    def test_unknown_targets_and_quoted_data_do_not_invent_write_edges(self):
+        trusted, _ = self.prepare_policy()
+        path = self.put_write("ai_quota_reservation", "ForeignMapper")
+        for sql in ("update ignore ${table} set state=1 where id=#{id}",
+                    "/*! update ai_quota_reservation set state=1 */",
+                    "select '/* note */ update ai_quota_reservation set state=1' as note",
+                    "update first_table, ai_quota_reservation set state=1 where id=#{id}"):
+            with self.subTest(sql=sql):
+                self.write(path, mapper('<select id="mutate">%s</select>' % sql,
+                                        "com.chengyinhub.business.mapper.ForeignMapper"))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(0, status, report)
+                self.assertEqual("PASS_WITH_REVIEW_ITEMS", report["verdict"])
+                self.assertTrue(report["review_items"])
+
+    def test_modifier_fixed_target_before_dynamic_fields_remains_red_and_unknown(self):
+        trusted, _ = self.prepare_policy()
+        self.put_write("ai_quota_reservation", "ForeignMapper",
+                       '/* note */ update ignore ai_quota_reservation set <if test="change">state=1</if> where id=#{id}')
+        result = self.source_cli(trusted, self.commit())
+        self.assert_rule(result, "UNDECLARED_WRITE_BINDING")
+        self.assertTrue(any(r["reason"] == "UNKNOWN_BUSINESS_WRITE_EFFECT" for r in result[1]["review_items"]))
+
+    def test_modified_disguised_delete_without_scope_still_blocks(self):
+        trusted, _ = self.prepare_policy()
+        path = self.put_write("ai_quota_reservation", "AiQuotaReservationMapper")
+        self.write(path, mapper('<insert id="mutate">/* note */ delete low_priority quick ignore from ai_quota_reservation</insert>',
+                                "com.chengyinhub.business.mapper.AiQuotaReservationMapper"))
+        self.assert_rule(self.source_cli(trusted, self.commit()), "UNSCOPED_WRITE")
+
     def test_foreign_namespace_is_red_even_if_table_absent_in_compare_base(self):
         trusted, _ = self.prepare_policy()
         self.put_write("ai_quota_reservation", "ForeignMapper")

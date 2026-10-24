@@ -1,3 +1,4 @@
+const { seatTarget, validSeatReceipt } = require('./registration-seat.js');
 const { createVerificationWorkflow } = require('./verification-readback.js');
 // 只使用现有端点的回执合同；通用业务500可能发生在核销事务提交之后。
 const UNKNOWN_MESSAGE = '核销结果待确认，请勿重复核销；请先查看核销记录';
@@ -36,6 +37,7 @@ function classifyVerificationOutcome(response, channel, httpStatus, request) {
   if (channel !== 'success' || httpStatus && status !== 200 || !record(response)) return unknown();
   request = request || {};
   const url = request.url, data = response.data;
+  const originalSeat = seatTarget(request);
   const ticket = ['/api/registration/scan_qr_code', '/api/registration/scan_dynamic_code',
     '/api/registration/scan_group_member_ticket', '/api/registration/scan_qr_code_station'].includes(url);
   const chapter = url === '/api/registration/scan_qr_code_chapter';
@@ -44,6 +46,8 @@ function classifyVerificationOutcome(response, channel, httpStatus, request) {
   const group = url === '/api/verify/groupcode/redeem';
   if (!(ticket || chapter || coupon || group)) return unknown();
   if (response.code === 200 || response.code === '200') {
+    if (originalSeat) return validSeatReceipt(data, originalSeat)
+      ? { status: 'success', response } : unknown();
     const simple = response.msg === '核销成功' && (data == null || record(data) && Object.keys(data).length === 0);
     if (group ? groupReceipt(data, request) && response.msg === (data.alreadyVerified ? '已记录过' : '已记录接待该团') : chapter ? chapterReceipt(data, request)
         : coupon ? simple || record(data) && data.alreadyUsed === true && response.msg === '该优惠券已核销'
@@ -73,7 +77,8 @@ function isReplayed(response) {
 }
 
 function completionReceiptMessage(response, fallback) {
-  if (isReplayed(response)) return '该章节已核销，请勿重复提供权益';
+  if (isReplayed(response)) return response.data.seatId
+    ? '该席位已核销，请勿重复提供权益' : '该章节已核销，请勿重复提供权益';
   const message = (response && response.msg) || fallback;
   const earnedXp = Number(response && response.data && response.data.completionEarnedXp) || 0;
   return earnedXp > 0 ? (message + ' · 玩家通关 +' + earnedXp + ' 探索值已到账') : message;

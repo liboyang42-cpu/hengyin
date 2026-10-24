@@ -236,6 +236,7 @@ class TopicContentSafetyHoldTest {
             when(records.insertAuditRecord(any())).thenReturn(1);
             when(events.insertBusinessAuditEvent(any())).thenReturn(1);
             when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(stored);
+            when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(stored);
             when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         }
 

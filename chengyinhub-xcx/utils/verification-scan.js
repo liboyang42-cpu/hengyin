@@ -13,7 +13,8 @@ function resolveVerificationScan(raw) {
     if (type.indexOf('group_') === 0) {
       return route('group', code, '/api/verify/groupcode/redeem', '核销中...', '已记录接待该团');
     }
-    if (type === 'activity' || type === 'topic') {
+    if (/^topic_seat_[1-9]\d*$/.test(type)) return invalid('这是主题席位码，请由本场带队者从带队核销入口扫码');
+    if (type === 'activity' || type === 'topic' || /^activity_seat_[1-9]\d*$/.test(type)) {
       // 类型与报名单归属由 scan_dynamic_code 在服务端验签后决定，不能信任客户端回传。
       return route('dynamic-ticket', code, '/api/registration/scan_dynamic_code', '验票中...', '验票成功');
     }

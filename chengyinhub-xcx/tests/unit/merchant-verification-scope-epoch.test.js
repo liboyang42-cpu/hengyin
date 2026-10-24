@@ -18,6 +18,7 @@ beforeEach(() => {
   pageConfig = null;
   app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    getSession: () => ({ getRevision: () => 0 }),
     getUserID: () => userId,
     setUserRole() {},
     setUserType() {},
