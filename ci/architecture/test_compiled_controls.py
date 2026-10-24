@@ -99,7 +99,7 @@ class CompiledControlSourceTest(unittest.TestCase):
         self.assertIn(b"public interface", controls.LEAF_SOURCES["architecture.leafcontrol.EmptyInterface"])
 
     def test_wrong_or_dirty_frozen_verifier_is_refused_before_loading_any_code(self):
-        for wrong in ("refs/heads/master", "5caf6b288c8df612d8420e4007032e4d9568e18e", "bd33ed0be7fafaf89daaec2eb772c15b034d3ec0", "0" * 40):
+        for wrong in ("refs/heads/master", "5caf6b288c8df612d8420e4007032e4d9568e18e", "bd33ed0be7fafaf89daaec2eb772c15b034d3ec0", "0e00ce639dea8e7f266dd326878532f45c59a032", "0" * 40):
             with self.subTest(wrong=wrong), patch.object(controls, "git", return_value=wrong.encode()), \
                     patch.object(controls.importlib.util, "spec_from_file_location", side_effect=AssertionError("must not load untrusted code")):
                 with self.assertRaises(ValueError): controls.load_verifier(Path("unused"))

@@ -1,0 +1,10 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 997c5fe..50315cb 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -326 +326 @@ jobs:
+-          ref: 5caf6b288c8df612d8420e4007032e4d9568e18e
++          ref: f8531bfd6cca90d88f9c281d1904a170b635f990
+@@ -572 +572 @@ jobs:
+-          ref: 5caf6b288c8df612d8420e4007032e4d9568e18e
++          ref: f8531bfd6cca90d88f9c281d1904a170b635f990
