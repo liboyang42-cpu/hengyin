@@ -23,6 +23,7 @@ import com.chengyinhub.business.service.npc.MerchantNpcDraftApprovalGate.ReviewV
 import com.chengyinhub.business.service.npc.MerchantNpcDraftApprovalGate.ThemeMainline;
 import com.chengyinhub.business.service.npc.MerchantNpcKnowledgeDraft.ForbiddenAiCommerce;
 import com.chengyinhub.business.service.npc.MerchantNpcKnowledgeDraft.Origin;
+import com.chengyinhub.business.service.npc.MerchantNpcKnowledgeDraft.Product;
 
 class MerchantNpcDraftApprovalGateTest {
 
@@ -302,5 +303,28 @@ class MerchantNpcDraftApprovalGateTest {
         assertEquals(1, publisher.submitted());
         assertEquals(Phase.ORIGINAL_REVIEW_PENDING, gate.phase());
         assertEquals(ReviewStatus.PENDING, gate.visibilityForRequest(fx.requestId(), true).status());
+    }
+
+    @Test
+    void unusedInvalidIngestDoesNotOccupyThenUniqueValidIngestApplies() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        MerchantNpcDraftApprovalGate gate = fx.gateWithRecordingPublisher();
+        MerchantNpcKnowledgeDraft invalid = MerchantNpcKnowledgeDraft.aiDraft(fx.requestId(),
+                List.of(new Product("Tea", "-1", "CNY")));
+        assertFalse(invalid.validationIssues().isEmpty());
+        assertEquals(Failure.INVALID_DRAFT,
+                assertThrows(GateException.class, () -> gate.ingestAiDraft(invalid))
+                        .failure());
+        assertEquals(Phase.IDLE, gate.phase(), "无效 ingest 观察不得占 phase");
+        assertNull(gate.origin(), "无效 ingest 观察不得占 origin");
+        assertTrue(gate.draft().isEmpty(), "无效 ingest 观察不得占 draft");
+        assertNull(gate.authorizer());
+        assertNull(fx.qualification().cachedPublic(fx.scope()));
+        gate.ingestAiDraft(fx.draft());
+        assertEquals(Phase.AI_DRAFT, gate.phase());
+        assertEquals(Origin.AI, gate.origin());
+        assertEquals(fx.requestId(), gate.draft().requestId());
+        assertFalse(gate.draft().isEmpty());
+        assertNull(fx.qualification().cachedPublic(fx.scope()), "合法 ingest 不得占 published 账");
     }
 }
