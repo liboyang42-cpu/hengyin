@@ -1,0 +1,1133 @@
+diff --git a/ci/architecture/README.md b/ci/architecture/README.md
+index 04200755..e192367a 100644
+--- a/ci/architecture/README.md
++++ b/ci/architecture/README.md
+@@ -90,3 +90,9 @@ D最终7f7752a增量只追加TopicPublicationService、TopicPublicationContentGu
+ 声明类型覆盖回读：原parse_output增加可选source_rows收集，五返回值及模块图口径不变；compiled-ports要求每个exact member有至少一条原解析器认可的source行。JDK-only依赖（如java.lang.Object）同样计入，不要求业务/项目外向边、不设leaf豁免；仅模块汇总/同模块其它类不足以覆盖该类型。缺行UNKNOWN，原确定违规仍BLOCKED；身份/原JAR/哈希/index/工具校验全部保留。合法空class/interface的OpenJDK21源码核对与协议对照已交F/source-row-verifier；真实JDK leaf形态仍待获准CI，不把协议fixture当实测。
+ 
+ E_TOPIC_QUERY增量（9e14a73e50c9afd5c8f38027c3ecd059967a51d3）只追加精确System TopicQueryService，原55类型/44职责/51方向保留，现56/45/51。保留它的五个Mapper及ISysCategoryService/IMerchantChapterApplicationService七依赖和原门面入向；禁反调ICmsTopicService/CmsTopicServiceImpl及列明publication/claim/finalization/runtime具体写owner，且未批准其它已登记owner出向边。不是整表写权、逐方法权限或传递纯读证明；raw缺行规则同样适用新Query。
++
++新增边界登记棘轮仅覆盖 owners.json 的四个 scope_roots；固定公开 477696c8 为存量身份快照，不能由 candidate 扩大。新增 public Service/ServiceImpl/Controller/Application/Mapper 或确定角色注解的 primary type 须登记；原 DTO/私有 helper 不要求 owner，无法可靠定位角色保持 UNKNOWN。源码登记不替代编译 raw/index 回读或方法级写语义。
++
++RegistrationRedemptionApplication 原端口保留、仅 Redemption→Query 共用谓词单向；其 Mapper 包引用只例外原 CoopOrderMapper 类型，例外不授任何表写权。CI/后置工具必须使用同一独立 reviewed verifier SHA。
++
++该 Redemption owner 的 business.service 与 merchant access 引用同样只保留原精确类型；Seat$Receipt 为独立明确例外，其它 $ 类型不自动放行。方法级授权仍不由 class 图证明。
+diff --git a/ci/architecture/collect_jdeps.py b/ci/architecture/collect_jdeps.py
+index 8f1e2911..68039a4c 100644
+--- a/ci/architecture/collect_jdeps.py
++++ b/ci/architecture/collect_jdeps.py
+@@ -310,12 +310,22 @@ def technical_dependency_findings(index, selected, policy, input_complete=True):
+         for ref in references.values():
+             a = assigned.get(ref["source_class"])
+             b = assigned.get(ref["target_class"])
++            # Restrict exact storage consumers even when the source is an existing unowned class.
++            if b is not None and "allowed_consumers" in owners[b]:
++                allowed_consumers = owners[b]["allowed_consumers"]
++                if ref["source_class"] not in allowed_consumers:
++                    result["findings"].append({"rule": "EXACT_STORAGE_PORT_CONSUMER",
++                                               "target_technical_owner": b, "allowed_consumers": allowed_consumers, **ref})
+             if a is None:
+                 result["unscoped_reference_count"] += 1
+                 continue
+             for target in owners[a]["forbidden_backrefs"]:
+                 if ref["target_class"] == target or ref["target_class"].startswith(target + "$"):
+                     result["findings"].append({"rule": "OWNER_GOD_BACKREFERENCE", "source_technical_owner": a, **ref})
++            for package, exceptions in owners[a].get("restricted_packages", {}).items():
++                if ref["target_class"].startswith(package) and ref["target_class"] not in exceptions:
++                    result["findings"].append({"rule": "RESTRICTED_OWNER_PACKAGE_REFERENCE",
++                                               "source_technical_owner": a, "restricted_package": package, **ref})
+             if b is None:
+                 result["unscoped_reference_count"] += 1
+                 continue
+@@ -409,7 +419,10 @@ def check_private_ports(root, artifact, identity_path, observation, env, ports,
+             selected = {target: {} for target in ports}
+             if dependency_policy is not None:
+                 roots = {n for owner in dependency_policy["owners"].values() for n in owner["members"] + owner["forbidden_backrefs"]}
+-                selected.update({name: {} for name in index if any(name == n or name.startswith(n + "$") for n in roots)})
++                packages = tuple(p for owner in dependency_policy["owners"].values()
++                                 for p in owner.get("restricted_packages", {}))
++                selected.update({name: {} for name in index if name.startswith(packages)
++                                 or any(name == n or name.startswith(n + "$") for n in roots)})
+             source_rows = set()
+             _, _, missing, unknown, seen = parse_output(files["jdeps.stdout.txt"].decode(), index, inputs, selected, source_rows)
+             result["evidence_verified"] = True
+diff --git a/ci/architecture/commands.json b/ci/architecture/commands.json
+index 42c91c58..dc4b6308 100644
+--- a/ci/architecture/commands.json
++++ b/ci/architecture/commands.json
+@@ -82,6 +82,33 @@
+         "com.chengyinhub.business.service.ai.PhotoCheckIntentService#read",
+         "com.chengyinhub.business.service.ai.PhotoCheckIntentService#markApplied"
+       ]
++    },
++    {
++      "id": "npc-voice-enrollment-intent",
++      "business_owner": "E_NPC_VOICE_ENROLLMENT",
++      "writes": [
++        "NPC_VOICE_ENROLLMENT_INTENT"
++      ],
++      "public_methods": [
++        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#enroll",
++        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#status"
++      ]
++    },
++    {
++      "id": "npc-asr-intent",
++      "business_owner": "D_NPC_ASR_INTENT",
++      "writes": [
++        "NPC_ASR_INTENT"
++      ],
++      "public_methods": [
++        "com.chengyinhub.business.service.impl.NpcAsrIntentService#read",
++        "com.chengyinhub.business.service.impl.NpcAsrIntentService#recognize",
++        "com.chengyinhub.business.service.impl.NpcAsrIntentService#beginHandoff",
++        "com.chengyinhub.business.service.impl.NpcAsrIntentService#readOutcome",
++        "com.chengyinhub.business.service.impl.NpcChatWriteService#admit",
++        "com.chengyinhub.business.service.impl.NpcChatWriteService#deleteForUser",
++        "com.chengyinhub.business.service.impl.DataRetentionServiceImpl#cleanNpcChatRequests"
++      ]
+     }
+   ],
+   "business_commands_limit": "root批准的应用合同引用；read两个重载同方法名。登记不证明Java调用必经Service，不授play或其它domain直接Mapper写权；scope/原身份/退款/原子恢复仍由既有业务合同验证。"
+diff --git a/ci/architecture/gate.py b/ci/architecture/gate.py
+index b41c9fae..9294592d 100644
+--- a/ci/architecture/gate.py
++++ b/ci/architecture/gate.py
+@@ -20,9 +20,11 @@ import xml.etree.ElementTree as ET
+ from pathlib import Path
+ 
+ BASE = "2ec68899099a1e250df0949a8383bf85b5d3ffe0"
++BOUNDARY_BASE = "477696c8eb2fa24bd3d7febc896415bf0d1b67c0"
+ HERE = Path(__file__).resolve().parent
+ REPO = HERE.parent.parent
+ SQL_SPLITTER_PATH = REPO / "ci/sql_splitter.py"
++JAVA_MASK_PATH = REPO / "ci/real_storage_it.py"
+ SHA = re.compile(r"[0-9a-f]{40}\Z")
+ IDENT = r"[A-Za-z_][A-Za-z0-9_]*"
+ MAPPER = re.compile(r"chengyinhub-[^/]+/src/main/resources/mapper/.+\.xml\Z")
+@@ -392,7 +394,19 @@ def business_policy():
+                 require(port["consumer"] in {m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]})
+             require(port["target"] not in ports)
+             ports[port["target"]] = {"owner": port["owner"], "consumer": port["consumer"]}
+-        require(all(w["namespace"] in ports and ports[w["namespace"]]["owner"] == w["module"] for w in writers.values()))
++        # A namespace writer and a one-consumer private port are distinct contracts.
++        # Keep all three private ports; shared intent storage needs explicit exact consumers instead.
++        for writer in writers.values():
++            if writer["namespace"] in ports:
++                require(ports[writer["namespace"]]["owner"] == writer["module"])
++                continue
++            if "technical_dependency_policy" not in owners:
++                raise GateError("OWNER_DEPENDENCY_POLICY_INVALID: missing shared storage binding")
++            storage = [o for o in owners["technical_dependency_policy"]["owners"]
++                       if o["module"] == writer["module"] and o["members"] == [writer["namespace"]]]
++            require(len(storage) == 1 and bool(storage[0].get("allowed_consumers")))
++            require({m.split("#")[0] for m in entries[writer["command_id"]]["public_methods"]}
++                    <= set(storage[0]["allowed_consumers"]))
+         return {"facts": facts, "writers": writers, "commands": entries, "private_ports": ports}
+     except GateError:
+         raise
+@@ -416,7 +430,20 @@ def technical_dependency_policy():
+         owners, members = {}, {}
+         fqcn = r"(?:" + IDENT + r"\.)+" + IDENT
+         for owner in policy["owners"]:
+-            require(set(owner) == {"id", "module", "members", "forbidden_backrefs"})
++            fields = {"id", "module", "members", "forbidden_backrefs"}
++            require(fields <= set(owner) and set(owner) <= fields | {"restricted_packages", "allowed_consumers"})
++            if "allowed_consumers" in owner:
++                consumers = owner["allowed_consumers"]
++                require(len(owner["members"]) == 1 and isinstance(consumers, list) and consumers
++                        and len(set(consumers)) == len(consumers))
++                require(all(isinstance(n, str) and re.fullmatch(fqcn, n) for n in consumers))
++            restricted = owner.get("restricted_packages", {})
++            require(isinstance(restricted, dict))
++            for package, exceptions in restricted.items():
++                require(isinstance(package, str) and re.fullmatch(fqcn + r"\.", package))
++                require(isinstance(exceptions, list) and len(exceptions) == len(set(exceptions)))
++                require(all(isinstance(n, str) and re.fullmatch(fqcn + r"(?:\$" + IDENT + r")*", n)
++                            and n.startswith(package) for n in exceptions))
+             id_ = owner["id"]
+             require(isinstance(id_, str) and re.fullmatch(r"[A-Z][A-Z0-9_]*", id_) and id_ not in owners)
+             require(owner["module"] in modules)
+@@ -682,10 +709,14 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
+     previous_details = {}
+     previous = inventory(root, compare_base, previous_details)
+     blockers, review = static_findings(previous, current, changed, details, previous_details, policy)
++    boundary_blockers, boundary_review, boundary_scope = boundary_findings(root, candidate, changed, names, technical, policy)
++    blockers.extend(boundary_blockers)
++    review.extend(boundary_review)
+     return {"schema": 2, "candidate_sha": candidate, "comparison_base_sha": compare_base,
+             "legacy_baseline_sha": BASE, "ci_checkout_sha": context["checkout_sha"],
+             "verdict": "BLOCKED" if blockers else "PASS_WITH_REVIEW_ITEMS" if review else "PASS",
+             "findings": blockers, "review_items": review, "changed_files": sorted(changed),
++            "boundary_registration": boundary_scope,
+             "business_policy": {"coverage": "PARTIAL", "fact_ids": sorted(f["id"] for f in policy["facts"].values())},
+             "technical_dependencies": {"coverage": "PARTIAL", "owners": sorted(technical["owners"]), "compiled_inputs": "NOT_CHECKED_BY_SOURCE_GATE"},
+             "not_proven": ["Java/SQL authorization semantics", "transaction atomicity",
+@@ -694,6 +725,73 @@ def check_source(root, candidate, compare_base, context, baseline_path=HERE / "b
+                            "business service call paths and writes outside declared facts"]}
+ 
+ 
++@functools.lru_cache(maxsize=1)
++def java_mask():
++    # Existing stdlib-only scanner, from the trusted checkout, never candidate code.
++    spec = importlib.util.spec_from_file_location("architecture_java_mask", JAVA_MASK_PATH)
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module.strip_java_comments
++
++
++def boundary_type(root, ref, path):
++    """Narrow primary-type role detection, not Java/type/annotation semantics."""
++    code = java_mask()(blob(root, ref, path).decode("utf-8"), keep_strings=False)
++    expected = path.split("/src/main/java/", 1)[1][:-5].replace("/", ".")
++    package = re.search(r"\bpackage\s+([A-Za-z_][\w.]*)\s*;", code)
++    primary = re.search(r"\b(?:class|interface|record|enum)\s+(" + IDENT + r")\b", code)
++    if (not package or not primary or expected != package[1] + "." + primary[1]
++            or re.search(r"\\u[0-9a-fA-F]{4}", code)):
++        return {"type": expected, "role": "UNKNOWN"}
++    prefix = code[:primary.start()]
++    role = bool((re.search(r"\bpublic\b", prefix)
++                 and re.search(r"(?:Service(?:Impl)?|Controller|Application|Mapper)$", primary[1]))
++                or re.search(r"@(?:[\w]+\.)*(?:Service|Controller|RestController|Mapper|Repository)\b", prefix))
++    if not role and re.search(r"@(?:[\w]+\.)*(?:Service|Controller|RestController|Mapper|Repository|Component)\b",
++                              code):
++        return {"type": expected, "role": "UNKNOWN"}
++    return {"type": expected, "role": "BOUNDARY" if role else "OTHER"}
++
++
++def boundary_findings(root, candidate, changed, names, technical, business):
++    """New boundary identities only; old unowned code is debt, not new permission."""
++    try:
++        policy = json.loads((HERE / "owners.json").read_text())["boundary_registration"]
++        roots = policy["scope_roots"]
++        if (set(policy) != {"schema", "legacy_source", "scope_roots"} or type(policy["schema"]) is not int or policy["schema"] != 1
++                or policy["legacy_source"] != BOUNDARY_BASE or not isinstance(roots, list) or not roots
++                or len(set(roots)) != len(roots) or any(not re.fullmatch(
++                    r"chengyinhub-(?:admin|system)/src/main/java/com/chengyinhub/(?:business|web)/[a-z/]+/", p) for p in roots)):
++            raise GateError("BOUNDARY_POLICY_INVALID")
++    except (OSError, ValueError, KeyError, TypeError) as error:
++        raise GateError("BOUNDARY_POLICY_INVALID: " + str(error)) from error
++    legacy = set(tree(root, BOUNDARY_BASE))
++    registered = {(o["module"], n) for o in technical["owners"].values() for n in o["members"]}
++    registered.update((b["owner"], n) for target, b in business["private_ports"].items()
++                      for n in (target, b["consumer"]))
++    blockers, review = [], []
++    for path in sorted(names):
++        if not path.endswith(".java") or not any(path.startswith(p) for p in roots):
++            continue
++        # Untouched snapshot identities need no reclassification or mass registration.
++        if path in legacy and path not in changed:
++            continue
++        current = boundary_type(root, candidate, path)
++        if current["role"] == "UNKNOWN":
++            review.append({"key": path, "reason": "BOUNDARY_ROLE_UNKNOWN", "type": current["type"]})
++        if current["role"] != "BOUNDARY" or (path.split("/")[0], current["type"]) in registered:
++            continue
++        previous = boundary_type(root, BOUNDARY_BASE, path) if path in legacy else None
++        if previous == current:
++            review.append({"key": path, "reason": "LEGACY_UNOWNED_BOUNDARY", "type": current["type"],
++                           "legacy_source": BOUNDARY_BASE, "legacy_sha256": digest(blob(root, BOUNDARY_BASE, path))})
++        else:
++            blockers.append({"rule": "NEW_UNOWNED_BOUNDARY", "key": path, "type": current["type"],
++                             "detail": "register exact technical owner in an independently reviewed verifier"})
++    return blockers, review, {"coverage": "SCOPED_PRIMARY_BOUNDARY_ROLES", "legacy_source": BOUNDARY_BASE,
++                             "scope_roots": roots, "semantic_read_only": "UNKNOWN"}
++
++
+ def readback(plan, receipt, reports, assert_path=REPO / "ci/assert_it_ran.py"):
+     """Trusted CI plan + job receipt + report bytes. Not self-attestation proof.
+ 
+diff --git a/ci/architecture/owners.json b/ci/architecture/owners.json
+index 64fdbe60..28b3dc49 100644
+--- a/ci/architecture/owners.json
++++ b/ci/architecture/owners.json
+@@ -12,13 +12,15 @@
+   },
+   "legacy": "存量仅按 statement 的 path#id、内容哈希及传递 include 哈希精确识别。多 owner 表保持显式多值，不归并为一个万能 owner。没有目录通配豁免或自增 baseline。",
+   "unknown": "动态表/字段、foreach/if/choose、include properties、未解析或循环引用及复杂 SQL 均保持 UNKNOWN；table_hints/column_hints 不完整时不猜 owner。DELETE 的字段集合为空不表示无写效果。",
+-  "business_domain_assignment": "仅business_policy中两项whole-table事实获root技术写权批准；private_ports另有三项精确编译依赖技术合同，不推定其它表/字段business owner，不改变产品/授权/金额政策。",
++  "business_domain_assignment": "原两AI事实与root明确指定的NPC voice/ASR两意图表仅登记各自唯一writer namespace；原三private_ports保持。注册不批准ASR额度、用户余额/个人表写权、运行授权或方法级语义。",
+   "business_policy": {
+     "schema": 1,
+     "coverage": "PARTIAL",
+     "scope": [
+       "AI_QUOTA_RESERVATION",
+-      "PHOTO_CHECK_INTENT"
++      "PHOTO_CHECK_INTENT",
++      "NPC_VOICE_ENROLLMENT_INTENT",
++      "NPC_ASR_INTENT"
+     ],
+     "facts": [
+       {
+@@ -32,6 +34,18 @@
+         "table": "photo_check_intent",
+         "coverage": "whole_table",
+         "business_owner": "AI_PHOTO_INTENT"
++      },
++      {
++        "id": "NPC_VOICE_ENROLLMENT_INTENT",
++        "table": "npc_voice_enrollment_intent",
++        "coverage": "whole_table",
++        "business_owner": "E_NPC_VOICE_ENROLLMENT"
++      },
++      {
++        "id": "NPC_ASR_INTENT",
++        "table": "npc_asr_intent",
++        "coverage": "whole_table",
++        "business_owner": "D_NPC_ASR_INTENT"
+       }
+     ],
+     "pure_writers": [
+@@ -46,6 +60,18 @@
+         "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+         "business_owner": "AI_PHOTO_INTENT",
+         "command_id": "photo-check-intent"
++      },
++      {
++        "module": "chengyinhub-system",
++        "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
++        "business_owner": "E_NPC_VOICE_ENROLLMENT",
++        "command_id": "npc-voice-enrollment-intent"
++      },
++      {
++        "module": "chengyinhub-system",
++        "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
++        "business_owner": "D_NPC_ASR_INTENT",
++        "command_id": "npc-asr-intent"
+       }
+     ],
+     "private_ports": [
+@@ -836,7 +862,10 @@
+           "com.chengyinhub.business.service.ai.LlmClientConfig",
+           "com.chengyinhub.web.controller.api.ApiMerchantController",
+           "com.chengyinhub.business.service.impl.NodeNpcService",
+-          "com.chengyinhub.business.service.impl.NpcChatService"
++          "com.chengyinhub.business.service.impl.NpcChatService",
++          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
++          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
++          "com.chengyinhub.web.controller.api.ApiAiNpcController"
+         ]
+       },
+       {
+@@ -896,7 +925,203 @@
+           "com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper",
+           "com.chengyinhub.business.service.impl.RefundServiceImpl",
+           "com.chengyinhub.business.mapper.RefundApplicationMapper",
+-          "com.chengyinhub.business.service.impl.RegistrationCheckoutServiceImpl"
++          "com.chengyinhub.business.service.impl.RegistrationCheckoutServiceImpl",
++          "com.chengyinhub.web.service.registration.RegistrationRedemptionApplication"
++        ]
++      },
++      {
++        "id": "C_REGISTRATION_REDEMPTION_APPLICATION",
++        "module": "chengyinhub-admin",
++        "members": [
++          "com.chengyinhub.web.service.registration.RegistrationRedemptionApplication"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.web.controller.api.ApiRegistrationController",
++          "com.chengyinhub.web.controller.api.ApiVerifyController",
++          "com.chengyinhub.common.core.controller.BaseController"
++        ],
++        "restricted_packages": {
++          "com.chengyinhub.business.mapper.": [
++            "com.chengyinhub.business.mapper.CoopOrderMapper"
++          ],
++          "com.chengyinhub.business.service.": [
++            "com.chengyinhub.business.service.ICmsRegistrationService",
++            "com.chengyinhub.business.service.IClubMemberService",
++            "com.chengyinhub.business.service.ICmsTopicService",
++            "com.chengyinhub.business.service.ICmsActivityService",
++            "com.chengyinhub.business.service.ICmsRegistrationMerchantService",
++            "com.chengyinhub.business.service.IPerkLedgerService",
++            "com.chengyinhub.business.service.IExploreCollectibleService",
++            "com.chengyinhub.business.service.ICmsTopicChapterService",
++            "com.chengyinhub.business.service.IPointsAwardService",
++            "com.chengyinhub.business.service.IGrowthService",
++            "com.chengyinhub.business.service.RegistrationSeatService",
++            "com.chengyinhub.business.service.RegistrationSeatService$Receipt",
++            "com.chengyinhub.business.service.support.ExploreTicketUsePolicy"
++          ],
++          "com.chengyinhub.business.access.merchant.": [
++            "com.chengyinhub.business.access.merchant.IMerchantAccessService",
++            "com.chengyinhub.business.access.merchant.MerchantAccessContext",
++            "com.chengyinhub.business.access.merchant.MerchantPermission"
++          ]
++        }
++      },
++      {
++        "id": "E_NPC_VOICE_ENROLLMENT",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.NodeNpcService",
++          "com.chengyinhub.business.service.impl.NpcChatService",
++          "com.chengyinhub.web.controller.api.ApiMerchantController",
++          "com.chengyinhub.web.controller.api.ApiAiNpcController"
++        ]
++      },
++      {
++        "id": "E_NPC_VOICE_INTENT_STORAGE",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
++          "com.chengyinhub.business.service.impl.NodeNpcService",
++          "com.chengyinhub.business.service.impl.NpcChatService",
++          "com.chengyinhub.web.controller.api.ApiMerchantController",
++          "com.chengyinhub.web.controller.api.ApiAiNpcController"
++        ],
++        "allowed_consumers": [
++          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService"
++        ]
++      },
++      {
++        "id": "D_NPC_ASR_INTENT",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.service.impl.NpcAsrIntentService"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.web.controller.api.ApiAiNpcController",
++          "com.chengyinhub.web.controller.api.ApiMerchantController"
++        ]
++      },
++      {
++        "id": "D_NPC_ASR_INTENT_STORAGE",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.mapper.NpcAsrIntentMapper"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
++          "com.chengyinhub.business.service.impl.NpcChatService",
++          "com.chengyinhub.business.service.impl.NodeNpcService",
++          "com.chengyinhub.web.controller.api.ApiAiNpcController",
++          "com.chengyinhub.web.controller.api.ApiMerchantController"
++        ],
++        "allowed_consumers": [
++          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
++          "com.chengyinhub.business.service.impl.NpcChatWriteService",
++          "com.chengyinhub.business.service.impl.DataRetentionServiceImpl"
++        ]
++      },
++      {
++        "id": "E_STT_PROVIDER",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.service.ai.SpeechToTextService",
++          "com.chengyinhub.business.service.ai.impl.DashScopeSpeechToTextService",
++          "com.chengyinhub.business.service.ai.impl.NoopSpeechToTextService"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
++          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
++          "com.chengyinhub.business.service.impl.NpcChatService",
++          "com.chengyinhub.business.service.impl.NodeNpcService",
++          "com.chengyinhub.web.controller.api.ApiAiNpcController",
++          "com.chengyinhub.web.controller.api.ApiMerchantController"
++        ]
++      },
++      {
++        "id": "E_STT_FACTORY",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.service.ai.impl.SpeechToTextConfig"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
++          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
++          "com.chengyinhub.business.service.impl.NpcChatService",
++          "com.chengyinhub.business.service.impl.NodeNpcService",
++          "com.chengyinhub.web.controller.api.ApiAiNpcController",
++          "com.chengyinhub.web.controller.api.ApiMerchantController"
++        ]
++      },
++      {
++        "id": "E_CLM_SHARED_PROOF_PORT",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.mapper.ClubMembershipMapper"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
++          "com.chengyinhub.business.service.impl.MerchantCommerceService",
++          "com.chengyinhub.web.controller.api.ApiMerchantController",
++          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
++        ]
++      },
++      {
++        "id": "E_COMMERCE_SHARED_PROOF_PORT",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.mapper.OmsOrderMapper"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
++          "com.chengyinhub.business.service.impl.MerchantCommerceService",
++          "com.chengyinhub.web.controller.api.ApiMerchantController",
++          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
++        ]
++      },
++      {
++        "id": "H_CLUB_POST_MEDIA_REVIEW",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
++          "com.chengyinhub.web.controller.api.ApiMerchantController"
++        ]
++      },
++      {
++        "id": "H_CLUB_POST_MEDIA_TRANSACTION",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
++          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
++          "com.chengyinhub.web.controller.api.ApiMerchantController"
++        ]
++      },
++      {
++        "id": "H_CLUB_POST_MEDIA_STORAGE",
++        "module": "chengyinhub-system",
++        "members": [
++          "com.chengyinhub.business.mapper.ClubPostMediaReviewOutboxMapper"
++        ],
++        "forbidden_backrefs": [
++          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
++          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService",
++          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
++          "com.chengyinhub.web.controller.api.ApiMerchantController"
++        ],
++        "allowed_consumers": [
++          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
++          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService"
+         ]
+       }
+     ],
+@@ -1172,7 +1397,61 @@
+       [
+         "D_CHAPTER_INVITE_NOTICE",
+         "SHARED_BUSINESS_AUDIT_PORT"
++      ],
++      [
++        "C_REGISTRATION_REDEMPTION_APPLICATION",
++        "C_REGISTRATION_QUERY_APPLICATION"
++      ],
++      [
++        "E_NPC_VOICE_ENROLLMENT",
++        "E_NPC_VOICE_INTENT_STORAGE"
++      ],
++      [
++        "E_NPC_VOICE_ENROLLMENT",
++        "E_VOICE_PROVIDER_CLIENT"
++      ],
++      [
++        "D_NPC_ASR_INTENT",
++        "D_NPC_ASR_INTENT_STORAGE"
++      ],
++      [
++        "D_NPC_ASR_INTENT",
++        "E_STT_PROVIDER"
++      ],
++      [
++        "E_STT_PROVIDER",
++        "F_AI_HTTP_ADMISSION"
++      ],
++      [
++        "E_STT_PROVIDER",
++        "E_VOICE_CONFIGURATION"
++      ],
++      [
++        "E_STT_FACTORY",
++        "E_STT_PROVIDER"
++      ],
++      [
++        "H_CLUB_POST_MEDIA_REVIEW",
++        "H_CLUB_POST_MEDIA_TRANSACTION"
++      ],
++      [
++        "H_CLUB_POST_MEDIA_REVIEW",
++        "H_CLUB_POST_MEDIA_STORAGE"
++      ],
++      [
++        "H_CLUB_POST_MEDIA_TRANSACTION",
++        "H_CLUB_POST_MEDIA_STORAGE"
+       ]
+     ]
++  },
++  "boundary_registration": {
++    "schema": 1,
++    "legacy_source": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
++    "scope_roots": [
++      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/",
++      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/",
++      "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/",
++      "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/"
++    ]
+   }
+ }
+diff --git a/ci/architecture/test_collect_jdeps.py b/ci/architecture/test_collect_jdeps.py
+index 109f2301..42845a82 100644
+--- a/ci/architecture/test_collect_jdeps.py
++++ b/ci/architecture/test_collect_jdeps.py
+@@ -1166,6 +1166,114 @@ class PrivatePortsReadbackTest(unittest.TestCase):
+                 self.assert_unknown(report)
+                 self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
+ 
++    def test_npc_actual_enrollment_asr_provider_and_factory_directions_are_green(self):
++        edges = [("E_NPC_VOICE_ENROLLMENT", "E_NPC_VOICE_INTENT_STORAGE"),
++                 ("E_NPC_VOICE_ENROLLMENT", "E_VOICE_PROVIDER_CLIENT"),
++                 ("D_NPC_ASR_INTENT", "D_NPC_ASR_INTENT_STORAGE"),
++                 ("D_NPC_ASR_INTENT", "E_STT_PROVIDER"),
++                 ("E_STT_PROVIDER", "F_AI_HTTP_ADMISSION"),
++                 ("E_STT_PROVIDER", "E_VOICE_CONFIGURATION"),
++                 ("E_STT_FACTORY", "E_STT_PROVIDER")]
++        for a, b in edges:
++            target = ("com.chengyinhub.business.service.ai.SpeechToTextService"
++                      if b == "E_STT_PROVIDER" else self.owner_member(b))
++            self.reference(self.owner_member(a), target)
++        self.reference(self.owner_member("E_STT_FACTORY"),
++                       "com.chengyinhub.business.service.ai.impl.NoopSpeechToTextService")
++        report = self.check_directions()
++        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
++        self.assertEqual(set(edges), set(map(tuple, report["technical_dependencies"]["owner_edges"])))
++        self.assertFalse(report["technical_dependencies"]["graph_complete"])
++
++    def test_npc_shared_asr_storage_keeps_exact_cleanup_callers_without_granting_god_ownership(self):
++        owner = "D_NPC_ASR_INTENT_STORAGE"
++        callers = self.dependencies["owners"][owner]["allowed_consumers"]
++        for source in callers:
++            self.system_entries[source.replace(".", "/") + ".class"] = ("NOT_COMPILED_NPC_STORAGE_CALLER_" + source).encode()
++        self.write_system(); self.output = self.output.with_name("npc-asr-cleanup-callers"); self.collect()
++        for source in callers: self.reference(source, self.owner_member(owner))
++        report = self.check_directions()
++        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
++        self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
++        self.assertFalse(report["technical_dependencies"]["graph_complete"])
++
++    def test_npc_new_storage_ports_reject_unowned_provider_and_nested_consumer_bypass(self):
++        nested = self.owner_member("E_NPC_VOICE_ENROLLMENT") + "$Nested"
++        self.system_entries[nested.replace(".", "/") + ".class"] = b"NOT_COMPILED_NPC_NESTED_CONSUMER"
++        self.write_system(); self.output = self.output.with_name("npc-storage-negative-consumers"); self.collect()
++        original = (self.output / "jdeps.stdout.txt").read_bytes()
++        for source in (self.foreign, nested, self.owner_member("E_VOICE_PROVIDER_CLIENT"), self.owner_member("E_STT_PROVIDER")):
++            for target in ("E_NPC_VOICE_INTENT_STORAGE", "D_NPC_ASR_INTENT_STORAGE"):
++                with self.subTest(source=source, target=target):
++                    self.replace_evidence("jdeps.stdout.txt", original)
++                    self.reference(source, self.owner_member(target))
++                    report = self.check_directions()
++                    self.assertEqual("BLOCKED", report["verdict"], report)
++                    self.assertTrue(any(f["rule"] == "EXACT_STORAGE_PORT_CONSUMER" and f["source_class"] == source
++                                        for f in report["findings"]), report)
++
++    def test_npc_provider_domain_or_controller_backrefs_and_storage_callbacks_are_red(self):
++        original = (self.output / "jdeps.stdout.txt").read_bytes()
++        for owner in ("E_VOICE_PROVIDER_CLIENT", "E_STT_PROVIDER", "E_NPC_VOICE_INTENT_STORAGE", "D_NPC_ASR_INTENT_STORAGE"):
++            for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
++                with self.subTest(owner=owner, target=target):
++                    self.replace_evidence("jdeps.stdout.txt", original)
++                    self.reference(self.owner_member(owner), target)
++                    report = self.check_directions()
++                    self.assertEqual("BLOCKED", report["verdict"], report)
++                    self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
++
++    def test_existing_payment_proof_ports_remain_shared_partial_references_not_table_write_grants(self):
++        pairs = [("com.chengyinhub.business.service.impl.ClubMembershipServiceImpl", "E_CLM_SHARED_PROOF_PORT"),
++                 ("com.chengyinhub.business.service.impl.MerchantCommerceService", "E_COMMERCE_SHARED_PROOF_PORT"),
++                 ("com.chengyinhub.business.service.impl.OmsOrderServiceImpl", "E_COMMERCE_SHARED_PROOF_PORT")]
++        for source, _ in pairs:
++            self.system_entries[source.replace(".", "/") + ".class"] = ("NOT_COMPILED_SHARED_PROOF_CALLER_" + source).encode()
++        self.write_system(); self.output = self.output.with_name("shared-domain-proof-ports"); self.collect()
++        for source, target in pairs: self.reference(source, self.owner_member(target))
++        report = self.check_directions()
++        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
++        self.assertGreater(report["technical_dependencies"]["unscoped_reference_count"], 0)
++        self.assertFalse(report["technical_dependencies"]["graph_complete"])
++        self.assertFalse({"club_membership_invoice", "oms_order", "club_post_media_review_outbox"} & set(producer.shared.business_policy()["facts"]))
++
++    def test_media_original_owner_directions_and_lower_layer_backrefs_remain_restricted(self):
++        edges = [("H_CLUB_POST_MEDIA_REVIEW", "H_CLUB_POST_MEDIA_TRANSACTION"),
++                 ("H_CLUB_POST_MEDIA_REVIEW", "H_CLUB_POST_MEDIA_STORAGE"),
++                 ("H_CLUB_POST_MEDIA_TRANSACTION", "H_CLUB_POST_MEDIA_STORAGE")]
++        original = (self.output / "jdeps.stdout.txt").read_bytes()
++        for a, b in edges: self.reference(self.owner_member(a), self.owner_member(b))
++        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", self.check_directions()["verdict"])
++        for owner in ("E_CLM_SHARED_PROOF_PORT", "E_COMMERCE_SHARED_PROOF_PORT", "H_CLUB_POST_MEDIA_REVIEW", "H_CLUB_POST_MEDIA_TRANSACTION", "H_CLUB_POST_MEDIA_STORAGE"):
++            for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
++                with self.subTest(owner=owner, target=target):
++                    self.replace_evidence("jdeps.stdout.txt", original)
++                    self.reference(self.owner_member(owner), target)
++                    report = self.check_directions()
++                    self.assertEqual("BLOCKED", report["verdict"], report)
++                    self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
++        self.replace_evidence("jdeps.stdout.txt", original)
++        self.reference(self.foreign, self.owner_member("H_CLUB_POST_MEDIA_STORAGE"))
++        self.assertIn("EXACT_STORAGE_PORT_CONSUMER", {f["rule"] for f in self.check_directions()["findings"]})
++
++    def test_added_shared_proof_or_media_type_missing_raw_is_unknown(self):
++        original = (self.output / "jdeps.stdout.txt").read_bytes()
++        for owner in ("E_CLM_SHARED_PROOF_PORT", "E_COMMERCE_SHARED_PROOF_PORT", "H_CLUB_POST_MEDIA_REVIEW", "H_CLUB_POST_MEDIA_TRANSACTION", "H_CLUB_POST_MEDIA_STORAGE"):
++            member = self.owner_member(owner)
++            with self.subTest(owner=owner):
++                self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.decode().splitlines()
++                                      if not line.strip().startswith(member + " -> ")).encode())
++                self.assert_unknown(self.check_directions())
++
++    def test_npc_new_declared_type_missing_raw_remains_unknown(self):
++        original = (self.output / "jdeps.stdout.txt").read_bytes()
++        for owner in ("E_NPC_VOICE_ENROLLMENT", "E_NPC_VOICE_INTENT_STORAGE", "D_NPC_ASR_INTENT", "D_NPC_ASR_INTENT_STORAGE", "E_STT_PROVIDER", "E_STT_FACTORY"):
++            for member in self.dependencies["owners"][owner]["members"]:
++                with self.subTest(owner=owner, member=member):
++                    self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.decode().splitlines()
++                                          if not line.strip().startswith(member + " -> ")).encode())
++                    self.assert_unknown(self.check_directions())
++
+     def test_registration_query_original_read_ports_and_controller_inbound_remain_scoped(self):
+         # Exact bdb6 field types, not approval of every method exposed by these mixed service interfaces.
+         ports = ["com.chengyinhub.business.service.ICmsRegistrationService",
+@@ -1223,6 +1331,109 @@ class PrivatePortsReadbackTest(unittest.TestCase):
+         self.assert_unknown(report)
+         self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
+ 
++    def test_registration_redemption_original_ports_and_one_way_shared_predicate_are_preserved(self):
++        ports = ["com.chengyinhub.business.service.ICmsRegistrationService",
++                 "com.chengyinhub.business.access.merchant.IMerchantAccessService",
++                 "com.chengyinhub.business.mapper.CoopOrderMapper",
++                 "com.chengyinhub.business.service.IClubMemberService",
++                 "com.chengyinhub.business.service.ICmsTopicService",
++                 "com.chengyinhub.business.service.ICmsActivityService",
++                 "com.chengyinhub.business.service.ICmsRegistrationMerchantService",
++                 "com.chengyinhub.business.service.IPerkLedgerService",
++                 "com.chengyinhub.business.service.IExploreCollectibleService",
++                 "com.chengyinhub.business.service.ICmsTopicChapterService",
++                 "com.chengyinhub.business.service.IPointsAwardService",
++                 "com.chengyinhub.business.service.IGrowthService",
++                 "com.chengyinhub.business.service.RegistrationSeatService",
++                 "com.chengyinhub.business.service.RegistrationSeatService$Receipt",
++                 "com.chengyinhub.business.service.support.ExploreTicketUsePolicy",
++                 "com.chengyinhub.business.access.merchant.MerchantAccessContext",
++                 "com.chengyinhub.business.access.merchant.MerchantPermission"]
++        for target in ports:
++            self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_REDEMPTION_PORT_" + target).encode()
++        self.write_system()
++        self.output = self.output.with_name("registration-redemption-ports")
++        self.collect()
++        redemption = self.owner_member("C_REGISTRATION_REDEMPTION_APPLICATION")
++        for target in ports: self.reference(redemption, target)
++        self.reference(redemption, self.owner_member("C_REGISTRATION_QUERY_APPLICATION"))
++        self.reference("com.chengyinhub.web.controller.api.ApiRegistrationController", redemption)
++        report = self.check_directions()
++        self.assertEqual("PASS_SCOPED_COMPILED_REFERENCES", report["verdict"], report)
++        self.assertEqual([["C_REGISTRATION_REDEMPTION_APPLICATION", "C_REGISTRATION_QUERY_APPLICATION"]],
++                         report["technical_dependencies"]["owner_edges"])
++        self.assertFalse(report["technical_dependencies"]["graph_complete"])
++
++    def test_registration_redemption_does_not_grant_arbitrary_or_nested_mapper_access(self):
++        targets = ["com.chengyinhub.business.mapper.CmsRegistrationMapper",
++                   "com.chengyinhub.business.mapper.RegistrationSeatMapper",
++                   "com.chengyinhub.business.mapper.UnownedRedemptionWriteMapper",
++                   "com.chengyinhub.business.mapper.CoopOrderMapper$Foreign"]
++        for target in targets:
++            self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_FORBIDDEN_REDEMPTION_MAPPER_" + target).encode()
++        self.write_system()
++        self.output = self.output.with_name("registration-redemption-mapper-negatives")
++        self.collect()
++        original = (self.output / "jdeps.stdout.txt").read_bytes()
++        for target in targets:
++            with self.subTest(target=target):
++                self.replace_evidence("jdeps.stdout.txt", original)
++                self.reference(self.owner_member("C_REGISTRATION_REDEMPTION_APPLICATION"), target)
++                report = self.check_directions()
++                self.assertEqual("BLOCKED", report["verdict"], report)
++                bad = next(f for f in report["findings"] if f["rule"] == "RESTRICTED_OWNER_PACKAGE_REFERENCE")
++                self.assertEqual(target, bad["target_class"])
++                self.assertTrue(bad["source_sha256"] and bad["target_sha256"])
++
++    def test_registration_redemption_cannot_add_unrelated_domain_or_access_ports(self):
++        targets = ["com.chengyinhub.business.service.ICashWithdrawService",
++                   "com.chengyinhub.business.service.IRefundService",
++                   "com.chengyinhub.business.service.RegistrationSeatService$Foreign",
++                   "com.chengyinhub.business.access.merchant.UnownedAccessService"]
++        for target in targets:
++            self.system_entries[target.replace(".", "/") + ".class"] = ("NOT_COMPILED_UNRELATED_REDEMPTION_PORT_" + target).encode()
++        self.write_system()
++        self.output = self.output.with_name("registration-redemption-port-negatives")
++        self.collect()
++        original = (self.output / "jdeps.stdout.txt").read_bytes()
++        for target in targets:
++            with self.subTest(target=target):
++                self.replace_evidence("jdeps.stdout.txt", original)
++                self.reference(self.owner_member("C_REGISTRATION_REDEMPTION_APPLICATION"), target)
++                report = self.check_directions()
++                self.assertEqual("BLOCKED", report["verdict"], report)
++                bad = next(f for f in report["findings"] if f["rule"] == "RESTRICTED_OWNER_PACKAGE_REFERENCE")
++                self.assertEqual(target, bad["target_class"])
++                self.assertTrue(bad["source_sha256"] and bad["target_sha256"])
++
++    def test_registration_redemption_cannot_callback_http_and_query_cannot_callback_redemption(self):
++        original = (self.output / "jdeps.stdout.txt").read_bytes()
++        owner = "C_REGISTRATION_REDEMPTION_APPLICATION"
++        for target in self.dependencies["owners"][owner]["forbidden_backrefs"]:
++            with self.subTest(target=target):
++                self.replace_evidence("jdeps.stdout.txt", original)
++                self.reference(self.owner_member(owner), target)
++                report = self.check_directions()
++                self.assertEqual("BLOCKED", report["verdict"], report)
++                self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
++        self.replace_evidence("jdeps.stdout.txt", original)
++        self.reference(self.owner_member(owner), self.owner_member("C_REGISTRATION_QUERY_APPLICATION"))
++        self.reference(self.owner_member("C_REGISTRATION_QUERY_APPLICATION"), self.owner_member(owner))
++        report = self.check_directions()
++        self.assertEqual("BLOCKED", report["verdict"], report)
++        self.assertIn("OWNER_GOD_BACKREFERENCE", {f["rule"] for f in report["findings"]})
++        self.assertIn("NEW_OWNER_CYCLE", {f["rule"] for f in report["findings"]})
++
++    def test_registration_redemption_missing_raw_is_unknown_despite_query_output(self):
++        owner = "C_REGISTRATION_REDEMPTION_APPLICATION"
++        member = self.owner_member(owner)
++        original = (self.output / "jdeps.stdout.txt").read_text()
++        self.replace_evidence("jdeps.stdout.txt", "\n".join(line for line in original.splitlines()
++                              if not line.strip().startswith(member + " -> ")).encode())
++        report = self.check_directions()
++        self.assert_unknown(report)
++        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member}, report["review_items"])
++
+     def test_city_node_actual_public_ports_and_http_inbound_remain_scoped(self):
+         ports = ["com.chengyinhub.business.access.merchant.IMerchantAccessService",
+                  "com.chengyinhub.business.mapper.RoamMapper",
+diff --git a/ci/architecture/test_gate.py b/ci/architecture/test_gate.py
+index 24f7bb3f..8120d7e3 100644
+--- a/ci/architecture/test_gate.py
++++ b/ci/architecture/test_gate.py
+@@ -210,6 +210,10 @@ class InventoryAndDeltaTest(unittest.TestCase):
+         (policy / "gate.py").write_bytes((gate.HERE / "gate.py").read_bytes())
+         for name in ("owners.json", "commands.json", "collect_jdeps.py"):
+             (policy / name).write_bytes((gate.HERE / name).read_bytes())
++        # Isolated Git source-event fixture: pin the legacy snapshot to this fixture's immutable base.
++        data = json.loads((policy / "owners.json").read_text())
++        data["boundary_registration"]["legacy_source"] = self.base
++        (policy / "owners.json").write_bytes(gate.encode(data))
+         candidate = self.commit()
+         # Trusted files are kept outside candidate to exercise PR policy changes.
+         trusted = self.root / ".git/trusted/ci/architecture"
+@@ -223,7 +227,7 @@ class InventoryAndDeltaTest(unittest.TestCase):
+         context = context or {"event": "push", "checkout_sha": candidate,
+                               "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
+                                           "before": compare, "after": candidate}}
+-        with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), patch.object(gate, "REPO", trusted.parent.parent):
++        with patch.object(gate, "BASE", self.base), patch.object(gate, "BOUNDARY_BASE", self.base), patch.object(gate, "HERE", trusted), patch.object(gate, "REPO", trusted.parent.parent):
+             return gate.check_source(self.root, candidate, compare, context, trusted / "baseline.json")
+ 
+     def test_clean_exact_candidate_and_trusted_policy_are_green(self):
+@@ -606,7 +610,7 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
+         check = gate.check_source
+         # Same production CLI/parser/checker. Only isolated public-base/event and
+         # trusted-checkout location replace real CI context; no mocked verdict.
+-        with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), \
++        with patch.object(gate, "BASE", self.base), patch.object(gate, "BOUNDARY_BASE", self.base), patch.object(gate, "HERE", trusted), \
+              patch.object(gate, "check_source", side_effect=lambda *args: check(*args, baseline_path=trusted / "baseline.json")), \
+              patch.object(gate, "ci_context", return_value=context), \
+              patch.object(sys, "argv", argv), redirect_stdout(output):
+@@ -667,7 +671,8 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
+         status, report = self.source_cli(trusted, self.commit())
+         self.assertEqual(0, status, report)
+         self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
+-        self.assertEqual(["AI_QUOTA_RESERVATION", "PHOTO_CHECK_INTENT"], report["business_policy"]["fact_ids"])
++        self.assertEqual(["AI_QUOTA_RESERVATION", "NPC_ASR_INTENT", "NPC_VOICE_ENROLLMENT_INTENT", "PHOTO_CHECK_INTENT"],
++                         report["business_policy"]["fact_ids"])
+         self.assertTrue(any("service call paths" in x for x in report["not_proven"]))
+ 
+     def test_literal_modifiers_comments_and_tag_mismatch_keep_owner_enforcement(self):
+@@ -945,6 +950,208 @@ class BusinessOwnerPolicyTest(unittest.TestCase):
+         self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
+ 
+ 
++class NpcIntentWriterPolicyTest(unittest.TestCase):
++    setUp = InventoryAndDeltaTest.setUp
++    write = InventoryAndDeltaTest.write
++    commit = InventoryAndDeltaTest.commit
++    prepare_policy = InventoryAndDeltaTest.prepare_policy
++    source_cli = BusinessOwnerPolicyTest.source_cli
++    assert_rule = BusinessOwnerPolicyTest.assert_rule
++    put_write = BusinessOwnerPolicyTest.put_write
++    facts = BusinessOwnerPolicyTest.facts + (("npc_voice_enrollment_intent", "NpcVoiceEnrollmentMapper"),
++                                           ("npc_asr_intent", "NpcAsrIntentMapper"))
++
++    def test_npc_intent_namespaces_do_not_expand_original_three_private_ports(self):
++        policy = gate.business_policy()
++        self.assertEqual(3, len(policy["private_ports"]))
++        self.assertEqual(4, len(policy["facts"]))
++        for table, namespace in self.facts[2:]:
++            key = "chengyinhub-system:com.chengyinhub.business.mapper." + namespace
++            self.assertIn(key, policy["writers"])
++            self.assertEqual("whole_table", policy["facts"][table]["coverage"])
++            self.assertNotIn("com.chengyinhub.business.mapper." + namespace, policy["private_ports"])
++
++    def test_npc_expected_literal_writers_are_green_and_foreign_namespaces_are_red(self):
++        trusted, _ = self.prepare_policy()
++        for table, namespace in self.facts[2:]: self.put_write(table, namespace)
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(0, status, report)
++        self.assertEqual("PARTIAL", report["business_policy"]["coverage"])
++        for table, _ in self.facts[2:]:
++            with self.subTest(table=table):
++                self.put_write(table, "ForeignNpcMapper")
++                self.assert_rule(self.source_cli(trusted, self.commit()), "UNDECLARED_WRITE_BINDING")
++
++    def test_npc_consumer_metadata_cannot_be_candidate_self_approval_or_trusted_disable(self):
++        trusted, _ = self.prepare_policy()
++        original = json.loads((trusted / "owners.json").read_text())
++        data = copy.deepcopy(original)
++        storage = next(o for o in data["technical_dependency_policy"]["owners"] if o["id"] == "D_NPC_ASR_INTENT_STORAGE")
++        storage["allowed_consumers"].append("example.UnapprovedConsumer")
++        self.write("ci/architecture/owners.json", gate.encode(data))
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(1, status, report)
++        self.assertIn("POLICY_CHANGE", report["error"])
++        data = copy.deepcopy(original)
++        del next(o for o in data["technical_dependency_policy"]["owners"] if o["id"] == "D_NPC_ASR_INTENT_STORAGE")["allowed_consumers"]
++        payload = gate.encode(data)
++        self.write("ci/architecture/owners.json", payload); (trusted / "owners.json").write_bytes(payload)
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(1, status, report)
++        self.assertIn("BUSINESS_POLICY_INVALID", report["error"])
++
++    def test_asr_writer_cannot_write_voice_fact_or_old_ai_quota(self):
++        trusted, _ = self.prepare_policy()
++        for table in ("npc_voice_enrollment_intent", "ai_quota_reservation"):
++            with self.subTest(table=table):
++                self.put_write(table, "NpcAsrIntentMapper")
++                self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_BUSINESS_OWNER_WRITE")
++
++    def test_voice_intent_registration_does_not_grant_profile_table_write_namespace(self):
++        path = "chengyinhub-system/src/main/resources/mapper/business/NpcProfileMapper.xml"
++        self.write(path, mapper('<update id="update">update npc_profile set voice_status=1 where id=#{id}</update>',
++                                "com.chengyinhub.business.mapper.NpcProfileMapper"))
++        self.base = self.commit(); self.before = gate.inventory(self.root, self.base)
++        trusted, _ = self.prepare_policy()
++        self.put_write("npc_profile", "NpcVoiceEnrollmentMapper")
++        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_TABLE_WRITER")
++
++
++class BoundaryRegistrationTest(unittest.TestCase):
++    setUp = InventoryAndDeltaTest.setUp
++    write = InventoryAndDeltaTest.write
++    commit = InventoryAndDeltaTest.commit
++    prepare_policy = InventoryAndDeltaTest.prepare_policy
++    source_cli = BusinessOwnerPolicyTest.source_cli
++    assert_rule = BusinessOwnerPolicyTest.assert_rule
++    path = "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/NewApplication.java"
++
++    def java(self, path, annotation="", body=""):
++        name = Path(path).stem
++        package = path.split("/src/main/java/", 1)[1].rsplit("/", 1)[0].replace("/", ".")
++        return ("package %s; %s public class %s { %s }" % (package, annotation, name, body)).encode()
++
++    def test_new_service_controller_application_mapper_are_blocked_by_actual_source_cli(self):
++        trusted, _ = self.prepare_policy()
++        paths = [self.path,
++                 "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NewService.java",
++                 "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/NewMapper.java",
++                 "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/NewController.java"]
++        for path in paths:
++            with self.subTest(path=path):
++                self.write(path, self.java(path))
++                result = self.source_cli(trusted, self.commit())
++                self.assert_rule(result, "NEW_UNOWNED_BOUNDARY")
++                self.assertTrue(any(f["key"] == path for f in result[1]["findings"]))
++
++    def test_service_annotation_without_service_suffix_cannot_escape_registration(self):
++        trusted, _ = self.prepare_policy()
++        path = self.path.replace("NewApplication", "ManagedThing")
++        self.write(path, self.java(path, "@org.springframework.stereotype.Service"))
++        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
++
++    def test_earlier_unowned_feature_commit_is_not_hidden_by_a_later_documentation_commit(self):
++        trusted, _ = self.prepare_policy()
++        self.write(self.path, self.java(self.path))
++        self.commit()
++        self.write("docs/feature.md", b"second feature commit")
++        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
++
++    def test_fixed_legacy_unowned_identity_can_change_without_becoming_new_permission(self):
++        self.write(self.path, self.java(self.path))
++        self.base = self.commit()
++        self.before = gate.inventory(self.root, self.base)
++        trusted, _ = self.prepare_policy()
++        self.write(self.path, self.java(self.path, body="int version = 2;"))
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(0, status, report)
++        item = next(r for r in report["review_items"] if r["reason"] == "LEGACY_UNOWNED_BOUNDARY")
++        self.assertEqual(self.base, item["legacy_source"])
++        self.assertEqual(gate.digest(gate.blob(self.root, self.base, self.path)), item["legacy_sha256"])
++
++    def test_old_plain_helper_promoted_to_managed_service_is_a_new_boundary(self):
++        path = self.path.replace("NewApplication", "Helper")
++        self.write(path, self.java(path))
++        self.base = self.commit()
++        self.before = gate.inventory(self.root, self.base)
++        trusted, _ = self.prepare_policy()
++        self.write(path, self.java(path, "@org.springframework.stereotype.Service"))
++        self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
++
++    def test_dto_entity_private_helper_comments_and_strings_do_not_require_new_owners(self):
++        trusted, _ = self.prepare_policy()
++        for name in ("DraftDto", "Entity", "Helper"):
++            path = self.path.replace("NewApplication", name)
++            self.write(path, self.java(path, body='String note="@Service class Fake"; /* @Service */ private static class Leaf {}'))
++        private_helper = self.path.replace("NewApplication", "PrivateHelperService")
++        self.write(private_helper, self.java(private_helper).replace(b"public class", b"class"))
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(0, status, report)
++        self.assertEqual([], report["findings"])
++
++    def test_payment_proof_test_fixture_is_not_a_production_owner(self):
++        trusted, _ = self.prepare_policy()
++        self.write("chengyinhub-admin/src/test/java/com/chengyinhub/business/service/VerifiedDomainPaymentProofTest.java",
++                   b"package com.chengyinhub.business.service; @org.springframework.stereotype.Service public class VerifiedDomainPaymentProofTest {}")
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(0, status, report)
++        self.assertFalse(any(f["rule"] == "NEW_UNOWNED_BOUNDARY" for f in report["findings"]))
++
++    def test_registered_primary_type_is_not_blocked_and_compilation_is_still_unproven(self):
++        trusted, _ = self.prepare_policy()
++        path = self.path.replace("NewApplication", "RegistrationQueryApplication")
++        self.write(path, self.java(path))
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(0, status, report)
++        self.assertEqual("NOT_CHECKED_BY_SOURCE_GATE", report["technical_dependencies"]["compiled_inputs"])
++
++    def test_candidate_cannot_remove_owner_or_clear_scope_or_grow_legacy_snapshot(self):
++        trusted, _ = self.prepare_policy()
++        original = (trusted / "owners.json").read_bytes()
++        for mutation in ("owner", "scope", "baseline"):
++            with self.subTest(mutation=mutation):
++                data = json.loads(original)
++                if mutation == "owner": data["technical_dependency_policy"]["owners"].pop()
++                elif mutation == "scope": data["boundary_registration"]["scope_roots"] = []
++                else: data["boundary_registration"]["legacy_source"] = "a" * 40
++                self.write("ci/architecture/owners.json", gate.encode(data))
++                status, report = self.source_cli(trusted, self.commit())
++                self.assertEqual(1, status, report)
++                self.assertIn("POLICY_CHANGE", report["error"])
++
++    def test_legacy_source_coedited_with_trusted_data_cannot_self_accept(self):
++        trusted, _ = self.prepare_policy()
++        self.write(self.path, self.java(self.path))
++        first = self.commit()
++        data = json.loads((trusted / "owners.json").read_text())
++        data["boundary_registration"]["legacy_source"] = first
++        payload = gate.encode(data)
++        self.write("ci/architecture/owners.json", payload)
++        (trusted / "owners.json").write_bytes(payload)
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(1, status, report)
++        self.assertIn("BOUNDARY_POLICY_INVALID", report["error"])
++
++    def test_component_or_secondary_managed_type_is_unknown_without_forcing_helper_owners(self):
++        trusted, _ = self.prepare_policy()
++        path = self.path.replace("NewApplication", "ManagedHelper")
++        for annotation, body in (("@org.springframework.stereotype.Component", ""),
++                                 ("", "@org.springframework.stereotype.Service private static class Nested {}")):
++            with self.subTest(annotation=annotation, body=body):
++                self.write(path, self.java(path, annotation, body))
++                status, report = self.source_cli(trusted, self.commit())
++                self.assertEqual(0, status, report)
++                self.assertIn("BOUNDARY_ROLE_UNKNOWN", {r["reason"] for r in report["review_items"]})
++
++    def test_unparseable_primary_role_is_unknown_not_a_safe_boundary_claim(self):
++        trusted, _ = self.prepare_policy()
++        self.write(self.path, b"package other; public class NewApplication {}")
++        status, report = self.source_cli(trusted, self.commit())
++        self.assertEqual(0, status, report)
++        self.assertIn("BOUNDARY_ROLE_UNKNOWN", {r["reason"] for r in report["review_items"]})
++        self.assertEqual("UNKNOWN", report["boundary_registration"]["semantic_read_only"])
++
++
+ class PrivatePortPolicyFreezeTest(unittest.TestCase):
+     setUp = InventoryAndDeltaTest.setUp
+     write = InventoryAndDeltaTest.write
+@@ -982,9 +1189,11 @@ class PrivatePortPolicyFreezeTest(unittest.TestCase):
+ 
+     def test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command(self):
+         policy = gate.business_policy()
+-        self.assertEqual({"ai_quota_reservation", "photo_check_intent"}, set(policy["facts"]))
+-        self.assertEqual(2, len(policy["writers"]))
+-        self.assertEqual(2, len(policy["commands"]))
++        self.assertEqual({"ai_quota_reservation", "photo_check_intent", "npc_voice_enrollment_intent", "npc_asr_intent"},
++                         set(policy["facts"]))
++        self.assertEqual(4, len(policy["writers"]))
++        self.assertEqual(4, len(policy["commands"]))
++        self.assertNotIn("ai_theme_draft_intent", policy["facts"], "the old third private port still grants no whole-table fact")
+         self.assertEqual(3, len(policy["private_ports"]))
+         self.assertEqual({"owner": "chengyinhub-system", "consumer":
+                          "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"},
+diff --git a/ci/architecture/test_locking_select.py b/ci/architecture/test_locking_select.py
+index 460f0332..2c3ee900 100644
+--- a/ci/architecture/test_locking_select.py
++++ b/ci/architecture/test_locking_select.py
+@@ -170,7 +170,7 @@ class LockingSelectTest(unittest.TestCase):
+                 # The function's default baseline path was bound at import;
+                 # inject the isolated trusted fixture policy, as source_check does.
+                 check = gate.check_source
+-                with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), \
++                with patch.object(gate, "BASE", self.base), patch.object(gate, "BOUNDARY_BASE", self.base), patch.object(gate, "HERE", trusted), \
+                      patch.object(gate, "check_source", side_effect=lambda *args: check(*args, baseline_path=trusted / "baseline.json")), \
+                      patch.object(gate, "ci_context", return_value=context), \
+                      patch.object(sys, "argv", argv), redirect_stdout(output):
+diff --git a/ci/architecture/compiled_controls.py b/ci/architecture/compiled_controls.py
+index 03a562b6..dc9c53b0 100644
+--- a/ci/architecture/compiled_controls.py
++++ b/ci/architecture/compiled_controls.py
+@@ -15,7 +15,7 @@ import re
+ import subprocess
+ import zipfile
+ 
+-VERIFIER = "f35cf5cc49215017669061950e39071bbb5ce2fa"
++VERIFIER = "3d3a63d4120c83eaecd8b2bf70a12b51d5f4988c"
+ BASE = "e4e9f6042ba34fb571c3bcfbfe59e248000ef637"
+ CASES = {
+     "sdk-router": ("chengyinhub-system", "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+diff --git a/ci/architecture/test_compiled_controls.py b/ci/architecture/test_compiled_controls.py
+index 194562f8..9ae49c05 100644
+--- a/ci/architecture/test_compiled_controls.py
++++ b/ci/architecture/test_compiled_controls.py
+@@ -99,7 +99,7 @@ class CompiledControlSourceTest(unittest.TestCase):
+         self.assertIn(b"public interface", controls.LEAF_SOURCES["architecture.leafcontrol.EmptyInterface"])
+ 
+     def test_wrong_or_dirty_frozen_verifier_is_refused_before_loading_any_code(self):
+-        for wrong in ("refs/heads/master", "5caf6b288c8df612d8420e4007032e4d9568e18e", "0e00ce639dea8e7f266dd326878532f45c59a032", "bd33ed0be7fafaf89daaec2eb772c15b034d3ec0", "f8531bfd6cca90d88f9c281d1904a170b635f990", "0979b03b594b5b5bbc4ad500c89bca6b3d353d70", "e9a9db4949e5bf8d51647ccb3d44ea5684960901", "8a5a781edeaec0dc7e24a460a0fdba1394252ded", "f15fcf2161868732a188d9c2892a4c31bba496b9", "20f0ed72f4dcdb1db73758095dd896a33f702c72", "5c2e2d8c46f17fec3a3e61dfe7e020577a187cc1", "beffa2023a68ffba2da5fce35f00e697252e72f4", "0" * 40):
++        for wrong in ("refs/heads/master", "5caf6b288c8df612d8420e4007032e4d9568e18e", "0e00ce639dea8e7f266dd326878532f45c59a032", "bd33ed0be7fafaf89daaec2eb772c15b034d3ec0", "f8531bfd6cca90d88f9c281d1904a170b635f990", "0979b03b594b5b5bbc4ad500c89bca6b3d353d70", "e9a9db4949e5bf8d51647ccb3d44ea5684960901", "8a5a781edeaec0dc7e24a460a0fdba1394252ded", "f15fcf2161868732a188d9c2892a4c31bba496b9", "20f0ed72f4dcdb1db73758095dd896a33f702c72", "5c2e2d8c46f17fec3a3e61dfe7e020577a187cc1", "beffa2023a68ffba2da5fce35f00e697252e72f4", "f35cf5cc49215017669061950e39071bbb5ce2fa", "f864f4f4311ef6106f78d15b4c0a2276688e3dfc", "e5b5818f2230eb9e81d2a825960c0470ac1640ec", "0" * 40):
+             with self.subTest(wrong=wrong), patch.object(controls, "git", return_value=wrong.encode()), \
+                     patch.object(controls.importlib.util, "spec_from_file_location", side_effect=AssertionError("must not load untrusted code")):
+                 with self.assertRaises(ValueError): controls.load_verifier(Path("unused"))
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -323,7 +323,7 @@
+         uses: actions/checkout@v4
+         with:
+           repository: liboyang42-cpu/hengyin
+-          ref: f35cf5cc49215017669061950e39071bbb5ce2fa
++          ref: 3d3a63d4120c83eaecd8b2bf70a12b51d5f4988c
+           path: .architecture-gate
+           fetch-depth: 0
+           persist-credentials: false
+@@ -569,7 +569,7 @@
+         uses: actions/checkout@v4
+         with:
+           repository: liboyang42-cpu/hengyin
+-          ref: f35cf5cc49215017669061950e39071bbb5ce2fa
++          ref: 3d3a63d4120c83eaecd8b2bf70a12b51d5f4988c
+           path: chengyinhub-admin/target/f-private-port-verifier
+           fetch-depth: 1
+           persist-credentials: false
