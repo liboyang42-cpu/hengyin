@@ -111,8 +111,7 @@
       </view>
     </view>
   </view>
-  <cy-option-sheet show="{{aiHistoryShow}}" title="选择原起草记录" items="{{aiHistoryItems}}" default-index="{{-1}}"
-                   data-hop="{{aiSheetHop}}" data-epoch="{{aiSheetEpoch}}"
+  <cy-option-sheet wx:if="{{aiHistoryShow}}" id="ai-history-sheet" show="{{aiHistoryShow}}" title="选择原起草记录" items="{{aiHistoryItems}}" default-index="{{-1}}"
                    bind:select="onAiHistorySelect" bind:cancel="onAiHistoryCancel" />
   </block>
 </view>

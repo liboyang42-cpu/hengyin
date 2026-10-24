@@ -61,3 +61,11 @@ Node `v24.19.0`；直接 `node tests/unit/<name>.test.js`，不是把 `node --te
 - 需 root 对整合后的同一完整 SHA 实际跑后端编译、维护 flag/鉴权、prepare 零模型/零配额、一次 execute、恢复/保留与 SQL/Redis 合同，并运行完整小程序检查。共同通过前不得把本候选描述为可启用/端到端验收完成。
 - 秘密扫描中两个 path→SHA256 同行字段被 generic-api-key 误识别；已改为 path / sha256 分行数据格式，并按原配置重扫 0 findings，不添加 allowlist。
 - 无 F schema、DDL、依赖或全局配置变动。回退仅客户端候选，但不能恢复已关闭的旧 POST 作执行 fallback，也不能清 journal/history/业务草稿/资金/回执；后端与入口维护状态由 root 独立控制。已发 UNKNOWN 不能靠回退认作 NOT_SENT 或换号自动执行。
+
+## d49 定点补片：sheet event context 的正确状态归属
+
+本片以公开 `d49c12b820419308236010e0710f96d7bf48c4c9` 为parent，只修Page/WXML、原option-sheet及对应Node fixture/10项定点控制。真实 `scripts/setdata-dead-field-lint.js` 的两项B2已先复现，修后该实际U4、U2、U3均通过，baseline未改；此前ui-integrity局部检查不能替代此门。
+
+完整owner/auth/revision/pageEpoch/hop/原pending仍在Page私有`_sheetContext`。Page每次打开先卸载旧sheet，再挂新实例；组件可选`bindEventContext`只绑定一次私有、不落data的UI事件标识，select/cancel回传原实例标识。旧排队事件、已detached实例、旧render callback无法冒充新opening。认证/原pending仍由原`_current`逐次核对；没有把安全身份删去或放进隐藏文本。组件旧宿主不调用此API时，props及原select/cancel payload和重复选择行为保持。
+
+当前实际轻量定点：原59项guard和新增10项真实Page+组件控制均PASS、0skip，4份JS语法通过。按用户最新“先源码批次、统一回归”裁决，不再重复原175/整仓全套；统一回归、ledger维护、Java/CI和微信仍由root安排。本片不改登录/权限、journal、action-ledger、CI、额度政策或任何baseline。
