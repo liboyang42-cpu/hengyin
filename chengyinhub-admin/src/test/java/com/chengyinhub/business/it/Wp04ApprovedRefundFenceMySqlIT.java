@@ -103,7 +103,10 @@ class Wp04ApprovedRefundFenceMySqlIT {
         ReflectionTestUtils.setField(f.payment,"cmsTopicMapper",topicMapper());
         ReflectionTestUtils.setField(f.payment,"cmsActivityMapper",mock(CmsActivityMapper.class));
         ReflectionTestUtils.setField(f.payment,"verifiedPaymentFacts",f.facts);
-        CoopSettlementClaimServiceImpl claims=new CoopSettlementClaimServiceImpl();
+        CoopSettlementClaimServiceImpl claims=new CoopSettlementClaimServiceImpl(
+                mock(ICoopOrderSettlementSnapshotReader.class),mock(FulfillmentWindowResolver.class),
+                mock(TopicSettlementEvidenceService.class),mock(ISettlementClaimService.class),
+                mock(CoopSettlementMapper.class),mock(CoopSettlementDetailMapper.class),mock(CoopSettlementAdjustmentMapper.class));
         ReflectionTestUtils.setField(claims,"closedPaymentRecovery",f.recovery);
         ReflectionTestUtils.setField(f.payment,"coopSettlementClaimService",proxy(claims));
         CmsRegistrationServiceImpl inline=proxy(f.payment);

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T11:42:56.609921+00:00",
+  "updated_utc": "2026-10-24T11:54:01.947890+00:00",
   "source_parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
   "integration_branch": "codex/architecture-day-ci-integration2-20261023",
   "integration_worktree": "/private/tmp/hengyin-architecture-day-integration2-20261023",
@@ -218,14 +218,14 @@
     "remaining": "preference fixed receipt/fingerprint semantics still open"
   },
   "latest_ci": {
-    "run_id": 40074201165,
-    "source": "e4e9f6042ba34fb571c3bcfbfe59e248000ef637",
-    "frozen_branch": "codex/architecture-day-batch-abcf-g-20261024",
+    "run_id": 40091200759,
+    "source": "54ab9282bee31c7b6dd276682f4c86e9903709c9",
     "conclusion": "FAIL",
-    "backend": "compile failed TopicPublicationContentGuard:375 missing NpcProfileService import; Java tests not reached",
-    "migration": "new master community_open_flags declaration absent in behind candidate; preserve ratchet, inspect actual upstream",
-    "mini": "five unit shard source-contract failures; some still inspect moved controller members; inspect each before classifying",
-    "passed": "secret scan, source architecture gate, admin UI gates, migration layout and mini static gates; not business acceptance"
+    "stage": "testCompile",
+    "executed_tests": 0,
+    "expected_tests": 189,
+    "cleanup": "8/8 CLEAN from independent downloaded receipts",
+    "repair": "Three fixture files corrected; no production/test assertions removed. New B-only validation pending."
   },
   "followup_repairs": {
     "topic_atomic_eligibility": "original scan predicate extracted unchanged to one shared SQL fragment, atomic claim rechecks same predicate; deterministic scan-to-mutation MySQL case added",

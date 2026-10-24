@@ -101,7 +101,7 @@ class ChapterApplicationRoundMySqlIT {
             MerchantChapterApplication restored=f.service.apply(73L,2001L,"restored");
             assertEquals(first.getId(),restored.getId()); assertEquals(2L,restored.getApplicationRound());
             assertThrows(IllegalStateException.class,() -> f.service.apply(73L,2001L,"repeat"));
-            assertEquals(0,f.storage.tx.execute(tx -> f.mapper.restoreWithdrawn(first.getId(),"lost","2001")));
+            assertEquals(Integer.valueOf(0),f.storage.tx.execute(tx -> f.mapper.restoreWithdrawn(first.getId(),"lost","2001")));
             assertEquals(2L,f.round(first.getId())); assertEquals(0,f.storage.count("im_notification_intent"));
         }
     }

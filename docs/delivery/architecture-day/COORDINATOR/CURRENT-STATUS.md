@@ -11,3 +11,5 @@ Known blocker: a separately committed SUCCESS may arrive between the guard read 
 Other pending work: C fixture early-exit corrections; F real Spring/raw graph evidence; G retry owner fixtures; queued controller query extraction, voice intent/STT and D round notices. Full WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5 scope remains open.
 
 No production DDL, deployment, live paid provider or WeChat upload.
+
+Latest diagnostic: run40091200759 at54ab failed testCompile in3 fixture files (4 source locations).189 expected,0 executed;8/8 independent scratch receipts CLEAN.Production compilation passed in the observed job.Three fixture corrections are ready; next recheck targets only13 callback cases first.

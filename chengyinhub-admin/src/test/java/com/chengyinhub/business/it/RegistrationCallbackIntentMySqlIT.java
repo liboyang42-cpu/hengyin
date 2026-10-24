@@ -732,7 +732,7 @@ class RegistrationCallbackIntentMySqlIT {
     }
 
     /** A raw new connection (not DataSourceUtils) must see the prior committed snapshot while mutation is open. */
-    private void assertVisibleOutside(int payment, int inboxState, int points, int rewardRows, int scanRows) throws Exception {
+    private void assertVisibleOutside(int payment, int inboxState, int points, int rewardRows, int scanRows) {
         try (Connection observer = source.getConnection(); PreparedStatement statement = observer.prepareStatement(
                 "SELECT payment_status,(SELECT state FROM wx_payment_callback_inbox WHERE notify_hash=UNHEX(?)),"
                         + "(SELECT point FROM ums_member WHERE id=7),(SELECT COUNT(*) FROM ums_member_points_detail),"
@@ -746,6 +746,8 @@ class RegistrationCallbackIntentMySqlIT {
                 assertNotEquals(probe.businessConnection.get(), Long.valueOf(rows.getLong(6)), "observer must use a different physical connection");
                 assertEquals(payment==2?1:0,rows.getInt(7),"local consumption becomes visible with the real business and DONE commit only");
             }
+        } catch (java.sql.SQLException observerFailure) {
+            throw new AssertionError("Independent original transaction readback failed",observerFailure);
         }
     }
 
