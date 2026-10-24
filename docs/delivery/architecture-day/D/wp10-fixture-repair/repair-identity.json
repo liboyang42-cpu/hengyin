@@ -1,0 +1,76 @@
+{
+  "new_parent": "d49c12b820419308236010e0710f96d7bf48c4c9",
+  "old_parent": "ed5e5626a7278371c886fe3b14a0aa85d9cfa935",
+  "records": {
+    "extracted": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlFixture.java",
+        "sha256": "758a607514df60af12efb806fe2fe86b5178975546fbbffad33a1b39ecba8d92",
+        "blob": "267628acb57de2cbecb9c8a78c36af5d27549cf2",
+        "preimage_sha256": "4d9e8c23e0ded3812d7825237016020aa3c14d078576542cc3681f39dc72606d"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlIT.java",
+        "sha256": "36d42e29cd35486b11c758a274b00f88b4e4fa43ed0367ad3b44be25eec16abf",
+        "blob": "0d9d1fc7b36a9eb9b0cc08db95abbadaa84e3be5",
+        "preimage_sha256": "79cd703873eca67e2d82a7627d61c66109f5406788ac7bb3b0a01056e2190eb9"
+      }
+    ],
+    "legacy": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlFixture.java",
+        "sha256": "3676c251652a91fd2102dd8f97ecf0ab6c29800782161f7c62190ae3c65cc51b",
+        "blob": "8f5e9d44a993f6d52e1da3e0663dbbb40476ecf7",
+        "preimage_sha256": "555be5539f396becd95311f0ffe2ed3fb7808dbcb76b59850271cdc009b8e3e0"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlIT.java",
+        "sha256": "36d42e29cd35486b11c758a274b00f88b4e4fa43ed0367ad3b44be25eec16abf",
+        "blob": "0d9d1fc7b36a9eb9b0cc08db95abbadaa84e3be5",
+        "preimage_sha256": "79cd703873eca67e2d82a7627d61c66109f5406788ac7bb3b0a01056e2190eb9"
+      }
+    ]
+  },
+  "shared_patch_sha256": "1ed1a73307ebe973e51bc97fa1a845ac9820e1505dce11ada755286e30568058",
+  "case_count": 32,
+  "scenario_count": 62,
+  "all_assertion_expressions_byte_identical": true,
+  "schema_changed": false,
+  "receipt_normalization_changed": false,
+  "production_changed": false,
+  "java_mysql_executed_by_D": false,
+  "new_owner_unit_tests": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java",
+      "preimage_blob": "a9d553189c69d3a71b8497573a62f2580f7019d8",
+      "preimage_sha256": "992b5ebf4c0c580417d2c3173f27cee813af62aa0273563b5d411b0845cfc6f7",
+      "sha256": "55c0bd4337f9a7a229c64a14294332546b2d9a5465bd2ee1284828931b47316e",
+      "blob": "0d6e31102782fbadcc82f227dac4a0b7bb5ea7a1",
+      "case_count": 2
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/ChapterAtmospherePersistenceContractTest.java",
+      "preimage_blob": "1a84d623ccd889221005ce8814c70e6571fc70bc",
+      "preimage_sha256": "bbc837b66540ce37152d710267a8737e3461b6427c736afc210be55459ae887c",
+      "sha256": "35210175770516a0776cfbcb51cccd2a7a2198d6f05c8dc7487c1e5482d05edd",
+      "blob": "63066a8f2166bc9a0520fb5b6fe7990d5c99188a",
+      "case_count": 5
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java",
+      "preimage_blob": "b09da3b7ac5634107bf6b83206d19c10c658470d",
+      "preimage_sha256": "87d735b189ea0f0e919d31e95fc2da61fcc8e7dd7f9991cf0b5480ddb757a1f4",
+      "sha256": "1a9f1ec99b136cbac502fa6bd9ea1bb5464cfccfdfbe9465be8fd3ea4bef8ee7",
+      "blob": "93db42bd93739717680fb2de7eccc6d20f84a678",
+      "case_count": 19
+    }
+  ],
+  "static_checks": {
+    "shared_patch_applies_both_sides": true,
+    "new_owner_unit_patch_applies_new_side": true,
+    "receipt_function_bytes_unchanged": true,
+    "normalization_2_and_negative_0": true,
+    "facade_writer_guard_shared_rule_counts": true,
+    "original_target_rollback_file_restores_byte_exact": true
+  }
+}

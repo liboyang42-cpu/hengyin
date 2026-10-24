@@ -146,7 +146,9 @@ class TopicContentGraphMySqlIT {
     @Test void runtimeBindingsUseCorrectOldAndCreatedClientMaps() throws Exception {
         ObjectNode advanced=TopicContentGraphMySqlFixture.JSON.createObjectNode().put("schemaVersion",1);
         JsonNode slots=f.json("[{\"key\":\"material\",\"kind\":\"ITEM\",\"label\":\"material\",\"required\":true}]");
-        advanced.putObject("interactionRules").set("resourceSlots",slots);f.db.update("update cms_member_template set advanced_config_json=? where id=701",advanced.toString());f.mark();
+        ObjectNode rules=advanced.putObject("interactionRules");rules.set("resourceSlots",slots);
+        rules.putArray("resourceCosts").addObject().put("itemId","material").put("quantity",1);
+        f.db.update("update cms_member_template set advanced_config_json=? where id=701",advanced.toString());f.mark();
         TopicUpdateDTO dto=f.update(true,1);dto.getChapters().get(1).getNodes().get(0).setId(null);
         dto.setRouteMode("LINEAR");dto.setConfigVersion(7L);
         ObjectNode runtime=TopicContentGraphMySqlFixture.JSON.createObjectNode().put("schemaVersion",1).put("capacity",3);
