@@ -1,0 +1,63 @@
+'use strict';
+
+const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+const SERVER_ID = /^td2_[a-f0-9]{32}$/;
+const STATES = ['PREPARED', 'PROCESSING', 'UNKNOWN', 'SUCCEEDED', 'FAILED'];
+const STAGES = ['PREPARE_UNCONFIRMED', 'PREPARED', 'EXECUTE_UNCONFIRMED', 'KNOWN'];
+const FIELDS = ['version', 'memberId', 'prepareKey', 'requestId', 'stage', 'state', 'reasonCode', 'createdAt'];
+const SHAPE = FIELDS.slice().sort().join(',');
+const isUuid = value => typeof value === 'string' && UUID.test(value);
+
+function key(member) {
+  const owner = String(member == null ? '' : member);
+  return /^[1-9][0-9]*$/.test(owner) ? 'ai_theme_draft_v2:m' + owner + ':active' : '';
+}
+function valid(value, member) {
+  if (!value || Array.isArray(value) || typeof value !== 'object'
+      || Object.keys(value).sort().join(',') !== SHAPE || value.version !== 2
+      || value.memberId !== String(member) || !key(member)
+      || !Number.isSafeInteger(value.createdAt) || value.createdAt < 0
+      || STAGES.indexOf(value.stage) < 0
+      || (value.state !== null && STATES.indexOf(value.state) < 0)
+      || (value.reasonCode !== null && (typeof value.reasonCode !== 'string' || !/^[A-Z][A-Z0-9_]{0,79}$/.test(value.reasonCode)))) return false;
+  if (value.requestId === null)
+    return isUuid(value.prepareKey) && value.stage === 'PREPARE_UNCONFIRMED' && value.state === null;
+  if (typeof value.requestId !== 'string') return false;
+  if (SERVER_ID.test(value.requestId)) return isUuid(value.prepareKey) && value.state !== null
+    && value.stage !== 'PREPARE_UNCONFIRMED';
+  // Historical identities are read-only, never upgraded into an execution permit.
+  return UUID.test(value.requestId) && value.prepareKey === null && value.stage === 'KNOWN'
+    && value.state !== null && value.state !== 'PREPARED';
+}
+function copy(value) {
+  const result = {};
+  FIELDS.forEach(field => { result[field] = value[field]; });
+  return result;
+}
+function load(storage, member) {
+  const storageKey = key(member);
+  if (!storageKey) return { kind: 'CORRUPT' };
+  try {
+    const value = storage.getStorageSync(storageKey);
+    if (value === '' || value === null || value === undefined) return { kind: 'ABSENT' };
+    return valid(value, member) ? { kind: 'READY', value: copy(value) } : { kind: 'CORRUPT' };
+  } catch (_) { return { kind: 'UNAVAILABLE' }; }
+}
+function sameIdentity(left, right) {
+  return !!left && !!right && left.version === right.version && left.memberId === right.memberId
+    && left.prepareKey === right.prepareKey && left.requestId === right.requestId && left.createdAt === right.createdAt;
+}
+function save(storage, member, value, expected) {
+  if (!valid(value, member) || (expected !== null && !valid(expected, member))) return { ok: false };
+  const current = load(storage, member);
+  if (expected === null ? current.kind !== 'ABSENT'
+    : current.kind !== 'READY' || JSON.stringify(current.value) !== JSON.stringify(copy(expected))) return { ok: false };
+  try {
+    storage.setStorageSync(key(member), copy(value));
+    const readback = load(storage, member);
+    if (readback.kind !== 'READY' || JSON.stringify(readback.value) !== JSON.stringify(copy(value))) return { ok: false };
+    return { ok: true, value: copy(readback.value) };
+  } catch (_) { return { ok: false }; }
+}
+
+module.exports = { key, load, save, sameIdentity, valid, isServerId: value => typeof value === 'string' && SERVER_ID.test(value) };
