@@ -125,3 +125,18 @@ BUILD SUCCESS
 ```
 
 App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
+
+## 9. Parent addendum 2026-10-23 17:24 America/Los_Angeles
+
+`WorkshopPackageVersionPublishTest.recoverOfNeverSeenIdDoesNotOccupyThenUniqueFreezeApplies`：未见 `c10-pub-never-c10` 的 `recover` 保持 UNKNOWN 且 binder 空；后续唯一 freeze 才是第一笔 FROZEN。`WorkshopInstallUpgradeRollbackTest.recoverOfNeverSeenIdDoesNotOccupyThenUniqueInstallApplies`：未见 `c10-ins-never-c10` 不占账；后续唯一 install 的 WAITING_SOURCE 才是该 id 的唯一原文。未发明 recoverOriginal。
+
+父进程独立 surefire（`/tmp/hy-c10-rev`，HEAD `e21143695`，2026-10-24T00:24:17Z）：
+
+```
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- WorkshopPackageVersionPublishTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- WorkshopInstallUpgradeRollbackTest
+Tests run: 31, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
