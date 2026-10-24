@@ -392,7 +392,7 @@
     },
     "architecture-day-topic-copy": {
       "lineage": "D0aa3 full copy closure plus root evidence path on reviewed assembly",
-      "registered_source": "0cef7270d48db8f690584ec021b55ccd32f44609",
+      "registered_source": "7c08db495bdb22384265591df916a5c578add476",
       "classes": [
         "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT"
       ],
