@@ -364,6 +364,14 @@
         "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT",
         "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT"
       ]
+    },
+    "architecture-day-topic-copy": {
+      "lineage": "ad7 real legacy owner baseline evidence only, no production delta",
+      "registered_source": "ad7e59fbf6a20e85e741318afe654c5411bf1101",
+      "classes": [
+        "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT"
+      ],
+      "note": "Baseline25 requires actual old owner absence of new class; not a production change, no merge/deploy. Pair25 JSON with new owner before equivalence acceptance."
     }
   },
   "classes": {
@@ -1122,6 +1130,14 @@
       ],
       "gates": {},
       "note": "Real coordinator/lock SQL deterministic in-flight/old epoch/post-lock leadership races. KILL only exact owned scratch leader connection, no business effects/Quartz/production or multi-JVM disaster proof."
+    },
+    "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT": {
+      "tests": 25,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Legacy source actually lacks extracted class; same25business assertions and schema, fixture default owner=legacy, evidence under Surefire."
     }
   }
 }
