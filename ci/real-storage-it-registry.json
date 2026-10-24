@@ -551,6 +551,11 @@
       "classes": ["com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT"],
       "note": "Twelve original BEFORE_START frozen WX payload/storage/unknown/owner cases. Existing ledger, no IM for this type. Provider boundary double; no live delivery or full paid-recipient admission proof."
     },
+    "architecture-day-commerce-generic-guard": {
+      "registered_source": "b501ea03a432b68657930e0bf070a2fc80ce44ea",
+      "classes": ["com.chengyinhub.business.it.OmsOrderCommerceGuardMySqlIT"],
+      "note": "Six H source cases: actual current rows protect the Commerce frozen snapshot, generic create/update/delete denial and ordinary positive cases; real E checkout/B facts, controlled provider."
+    },
     "architecture-day-funds-closure": {
       "registered_source": "99d84ce23afe8852d642ba21d791662ad06a9ebd",
       "classes": [
@@ -567,6 +572,10 @@
     }
   },
   "classes": {
+    "com.chengyinhub.business.it.OmsOrderCommerceGuardMySqlIT": {
+      "tests": 6, "storage": ["mysql"], "gates": {},
+      "note": "H b501 delivery review.patch, source-only. Canonical schema/actual domain/Mapper/transaction; hosted scratch and independent CLEAN required. Not HTTP or provider proof."
+    },
     "com.chengyinhub.business.service.impl.BeforeStartNoticeMySqlIT": {
       "tests": 12, "storage": ["mysql"], "gates": {},
       "note": "C4edd source-only candidate: canonical incremental typed migration and actual Mapper/transaction owner, old broadcast checks retained; NOT_RUN on this integration."

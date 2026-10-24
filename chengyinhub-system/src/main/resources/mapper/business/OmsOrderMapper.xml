@@ -333,4 +333,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           AND status=1 AND payment_transaction_id=#{transactionId}
           AND verified_payment_fact_id IS NULL AND verified_payment_fact_hash IS NULL
     </update>
+    <select id="selectOmsOrderByIdForUpdate" resultMap="OmsOrderResult" useCache="false" flushCache="true">
+        <include refid="selectOmsOrderVo"/>
+        WHERE id=#{id} FOR UPDATE
+    </select>
 </mapper>

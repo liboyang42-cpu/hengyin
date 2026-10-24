@@ -22,6 +22,9 @@ public interface OmsOrderMapper
      */
     public OmsOrder selectOmsOrderById(Long id);
 
+    /** Original row/current scope for generic write admission; caller retains the transaction lock. */
+    OmsOrder selectOmsOrderByIdForUpdate(@Param("id") Long id);
+
     public OmsOrder selectOmsOrderByOrderSn(String orderSn);
 
     public OmsOrder selectCommerceOrderByRequest(@Param("memberId") Long memberId,
