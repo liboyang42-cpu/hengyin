@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.npc;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -235,5 +236,27 @@ class MerchantNpcDraftApprovalGateTest {
         assertNull(gate.requeryPublished("c06-pub-never-seen"), "另一未见 id 仍不得占账");
         assertEquals(ReviewStatus.APPROVED, fx.isolation().reviewStatusForRequest(unseen, true));
         assertNull(fx.isolation().reviewStatusForRequest("c06-pub-never-seen", true));
+    }
+
+    @Test
+    void unpublishedProjectionDoesNotOccupyPrivateScopesThenUniqueRetainPrivateApplies() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        MerchantNpcPublicPrivateIsolation isolation = new MerchantNpcPublicPrivateIsolation();
+        MerchantNpcQualificationRevoke qualification = new MerchantNpcQualificationRevoke();
+        assertEquals(Failure.UNPUBLISHED,
+                assertThrows(GateException.class, () -> isolation.playerProjection(fx.scope(), qualification))
+                        .failure());
+        MerchantNpcKnowledgeDraft value = fx.draft();
+        PublishedRevision first = new PublishedRevision("rev-iso-first", fx.requestId(), fx.scope(),
+                value.validatedPublicFactsJson(), value.factsHash());
+        qualification.rememberPublished(first, fx.scope());
+        assertArrayEquals(first.facts(), isolation.playerProjection(fx.scope(), qualification),
+                "unpublished 观察不得占 privateScopes");
+        isolation.retainPrivate(value, fx.scope());
+        assertEquals(Failure.ISOLATION_VIOLATION,
+                assertThrows(GateException.class, () -> isolation.playerProjection(fx.scope(), qualification))
+                        .failure());
+        isolation.publish(first, fx.scope());
+        assertArrayEquals(first.facts(), isolation.playerProjection(fx.scope(), qualification));
     }
 }
